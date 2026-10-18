@@ -105,6 +105,20 @@ def main(out: Path, real: bool = False) -> None:
         pages = {"index.html": "/", "lifecycle.html": "/lifecycle", "rules.html": "/rules"}
         pick = ",".join(str(ids[m]) for m in ["SR8641", "SA7741", "SB8441", "SC141", "SD8641A"])
         pages["compare.html"] = f"/compare?ids={pick}&baseline={ids['SR8641']}"
+    if real:
+        # Add the best TI / Novosense candidate per company for each exported Skyworks
+        # part, so competitor pages (Skyworks replacements) can be tried too.
+        extra: dict[int, dict] = {}
+        for p in parts:
+            crosses = client.get(f"/api/parts/{p['id']}/crosses").json()
+            seen = set()
+            for cat in ("fff", "upgrade", "p2p", "downgrade"):
+                for r in crosses[cat]:
+                    mfr = r["candidate"]["label"].split()[0]
+                    if mfr not in seen:
+                        seen.add(mfr)
+                        extra.setdefault(r["candidate"]["id"], {"id": r["candidate"]["id"]})
+        parts = parts + list(extra.values())[:60]
     pages.update({f"part-{p['id']}.html": f"/parts/{p['id']}" for p in parts})
     exported = {p["id"] for p in parts}
     everything = client.get("/api/parts?limit=5000").json()

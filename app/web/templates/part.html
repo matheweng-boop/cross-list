@@ -48,26 +48,37 @@
 </details>
 
 <h2>{{ 'Suitable Skyworks parts' if not part.is_reference and scope == 'auto' else 'Replacements' }}</h2>
-<p class="muted"><b>Priority 1</b> must be equal or better for a functional match; priority 2 and 3 are for information.
-  <b>FFF</b> = same package, pin-to-pin (P2P) and priority 1 (P1) met. <b>Package eq.</b> = same package, different features.
+<p class="muted">In order of preference: <b>Drop-in</b> = same package, pin-to-pin, priority 1 equal or better.
+  <b>Functional</b> = different package (or pinout), at most {{ dev }} priority 1 deviation{{ '' if dev == 1 else 's' }}.
+  <b>Package eq.</b> = same package, different technical spec. Priority 2 and 3 are for information.
   {% if not part.is_reference %}{% if scope == 'auto' %}<a href="?scope=all">Include other competitors</a>{% else %}<a href="?">Skyworks parts only</a>{% endif %}{% endif %}</p>
+{% set keep = ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') %}
+<nav class="company-filter type-filter" aria-label="Filter by cross type">
+  <a href="?{{ keep[1:] }}" class="badge cat{{ ' on' if not type }}">All ({{ type_counts.values()|sum }})</a>
+  {% for c in order %}<a href="?type={{ c }}{{ keep }}" class="badge cat{{ ' on' if type == c }}">{{ category_short[c] }} ({{ type_counts[c] }})</a>{% endfor %}
+</nav>
 <form method="get" class="result-filters">
   {% if scope != 'auto' %}<input type="hidden" name="scope" value="{{ scope }}">{% endif %}
   {% if company %}<input type="hidden" name="company" value="{{ company }}">{% endif %}
-  <label><input type="checkbox" name="p2p" value="true" onchange="this.form.submit()" {{ 'checked' if p2p }}> Pin-to-pin only ({{ p2p_count }})</label>
+  {% if type %}<input type="hidden" name="type" value="{{ type }}">{% endif %}
+  <label>Functional: accept
+    <select name="dev" onchange="this.form.submit()" aria-label="Priority 1 deviations accepted">
+      {% for n in (0, 1, 2, 3) %}<option value="{{ n }}" {{ 'selected' if n == dev }}>{{ n }}</option>{% endfor %}
+    </select> P1 deviation{{ '' if dev == 1 else 's' }}</label>
   <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / obsolete</label>
 </form>
 {% if companies|length > 1 or company %}
 <nav class="company-filter" aria-label="Filter by company">
-  <a href="?{{ 'scope=all&' if scope == 'all' }}{{ 'p2p=true&' if p2p }}{{ 'hide_eol=true' if hide_eol }}" class="badge cat{{ ' on' if not company }}">All</a>
-  {% for name, count in companies %}<a href="?company={{ name|urlencode }}{{ '&scope=all' if scope == 'all' }}{{ '&p2p=true' if p2p }}{{ '&hide_eol=true' if hide_eol }}" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ count }})</a>{% endfor %}
+  {% set keep2 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') %}
+  <a href="?{{ keep2[1:] }}" class="badge cat{{ ' on' if not company }}">All companies</a>
+  {% for name, count in companies %}<a href="?company={{ name|urlencode }}{{ keep2 }}" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ count }})</a>{% endfor %}
 </nav>
 {% endif %}
 
 <form method="get" action="/compare">
 <input type="hidden" name="pick" value="{{ part.id }}">
 {% if rows %}
-{% set badge = {'fff': 'ok', 'upgrade': 'ok', 'functional': 'info', 'package': 'cat', 'downgrade': 'bad'} %}
+{% set badge = {'fff': 'ok', 'functional': 'info', 'package': 'cat'} %}
 <div class="table-wrap"><table class="results">
   <thead><tr><th>Part</th><th>Cross</th><th title="Pin-to-pin">P2P</th><th title="Priority 1 vs {{ part.mpn }}">P1</th>{% if pricing_enabled() %}<th>DigiKey</th>{% endif %}</tr></thead>
   <tbody>
@@ -86,7 +97,7 @@
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
       <td colspan="{{ 5 if pricing_enabled() else 4 }}">
         {% if v.better %}<p class="spec-list better">Priority 1 better: {{ v.better|map(attribute='label')|join(', ') }}</p>{% endif %}
-        {% if v.worse %}<p class="spec-list worse">Priority 1 worse or different: {{ v.worse|map(attribute='label')|join(', ') }}</p>{% endif %}
+        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
         {% if v.info_better or v.info_worse %}<p class="spec-list muted">For information (priority 2/3):
           {% if v.info_better %}<span class="better">better {{ v.info_better|map(attribute='label')|join(', ') }}</span>{% endif %}{% if v.info_better and v.info_worse %}; {% endif %}
           {% if v.info_worse %}<span class="worse">worse {{ v.info_worse|map(attribute='label')|join(', ') }}</span>{% endif %}</p>{% endif %}
@@ -115,11 +126,11 @@
   {% endfor %}
   </tbody>
 </table></div>
-{% set q = ('?scope=all' if scope == 'all' else '?') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&p2p=true' if p2p else '') %}
+{% set q = '?dev=' ~ dev ~ ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&type=' ~ type if type else '') %}
 <p class="downloads"><a href="/parts/{{ part.id }}/replacements.xlsx{{ q }}" role="button" class="outline">Download table (Excel)</a>
   <a href="/parts/{{ part.id }}/replacements.csv{{ q }}" role="button" class="outline secondary">CSV</a></p>
 {% else %}
-<p class="muted">No FFF, upgrade, functional or package equivalents{{ ' with these filters' if p2p or company or hide_eol }}.</p>
+<p class="muted">No drop-in, functional or package equivalents{{ ' with these filters' if type or company or hide_eol }}.</p>
 {% endif %}
 
 <details class="category-view">

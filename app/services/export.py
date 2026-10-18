@@ -126,13 +126,7 @@ def comparison_csv(c: Comparison) -> str:
 RESULT_HEADER = ["Part", "Manufacturer", "Cross type", "Pin-to-pin", "Priority 1", "P1 better", "P1 worse or different",
                  "P2/P3 better (info)", "P2/P3 worse (info)", "Package", "Lifecycle", "Top 5 differences",
                  "Priority 3 notes"]  # fmt: skip
-VERDICT_FILLS = {
-    "fff": FILLS["better"],
-    "upgrade": FILLS["better"],
-    "functional": FILLS["baseline"],
-    "package": FILLS["different"],
-    "downgrade": FILLS["worse"],
-}
+VERDICT_FILLS = {"fff": FILLS["better"], "functional": FILLS["baseline"], "package": FILLS["different"]}
 
 
 def _result_cells(r: CrossResult, v) -> list[str]:
@@ -160,7 +154,12 @@ def results_xlsx(reference, rows) -> bytes:
     ws.title = "Replacements"
     ws.append([f"Replacements for {reference.mpn} ({reference.manufacturer.name}, {reference.package.code})"])
     ws["A1"].font = Font(bold=True, size=13)
-    ws.append(["FFF = same package, pin-to-pin, priority 1 equal or better. Priority 2/3 are for information."])
+    ws.append(
+        [
+            "Drop-in = same package, pin-to-pin, priority 1 equal or better. Functional = different package, "
+            "few priority 1 deviations. Package eq. = same package, different spec. Priority 2/3 for information."
+        ]
+    )
     if reference.is_synthetic:
         ws.append([SYNTHETIC_NOTE])
     ws.append([])

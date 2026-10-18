@@ -11,7 +11,15 @@ from sqlalchemy.orm import Session
 from app.auth.deps import get_current_user
 from app.config import get_settings
 from app.db import get_session
-from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, FFF_STATUS_LABELS, LIFECYCLE_RISK, format_value
+from app.matching.engine import (
+    CATEGORY_LABELS,
+    CATEGORY_ORDER,
+    CATEGORY_SHORT,
+    DEFAULT_MAX_DEVIATIONS,
+    FFF_STATUS_LABELS,
+    LIFECYCLE_RISK,
+    format_value,
+)
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
 from app.services import export, lifecycle, mechanical, pricing
@@ -35,6 +43,7 @@ templates.env.globals.update(
     pricing_enabled=pricing.enabled,
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
+    category_short=CATEGORY_SHORT,
 )
 
 
@@ -126,15 +135,26 @@ CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
 def result_rows(crosses: dict) -> list:
-    """Each listed candidate once with its verdict: FFF first, then upgrades, functional,
-    package equivalents (pin-to-pin first) and downgrades; closest first within each."""
+    """Each listed candidate once with its verdict, in order of preference: drop-ins,
+    functional equivalents (fewest deviations first), package equivalents (pin-to-pin
+    first); closest first within each."""
     seen = {}
     for cat in CATEGORY_ORDER:
         for r in crosses.get(cat, []):
             seen.setdefault(r.candidate.id, r)
     rows = [(r, r.verdict()) for r in seen.values()]
-    rows.sort(key=lambda rv: (rv[0].lifecycle_risk, CATEGORY_RANK[rv[1].category], not rv[1].p2p, rv[0].closeness))
+
+    def key(rv):
+        r, v = rv
+        devs = len(r.deviations) if v.category == "functional" else 0
+        return (r.lifecycle_risk, CATEGORY_RANK[v.category], devs, not v.p2p, r.closeness)
+
+    rows.sort(key=key)
     return rows
+
+
+def _deviations(dev: int) -> int:
+    return min(max(dev, 0), 3)
 
 
 def companies_of(rows: list) -> list[tuple[str, int]]:
@@ -151,7 +171,8 @@ def part_detail(
     hide_eol: bool = False,
     company: str = "",
     scope: str = "auto",
-    p2p: bool = False,
+    type: str = "",
+    dev: int = DEFAULT_MAX_DEVIATIONS,
     session: Session = Depends(get_session),
 ):
     part = session.get(Part, part_id)
@@ -159,7 +180,8 @@ def part_detail(
         raise HTTPException(404, "Part not found")
     rules = get_rules(part.family)
     scope = scope if scope in ("auto", "all") else "auto"
-    crosses = crosses_for(session, part, scope)
+    dev = _deviations(dev)
+    crosses = crosses_for(session, part, scope, dev)
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
@@ -167,9 +189,10 @@ def part_detail(
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     rows = result_rows(crosses)
-    p2p_count = sum(v.p2p for _, v in rows)
-    if p2p:
-        rows = [(r, v) for r, v in rows if v.p2p]
+    type_counts = {c: sum(v.category == c for _, v in rows) for c in CATEGORY_ORDER}
+    type = type if type in CATEGORY_ORDER else ""
+    if type:
+        rows = [(r, v) for r, v in rows if v.category == type]
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
     groups = {
@@ -192,24 +215,25 @@ def part_detail(
             "company": company,
             "scope": scope,
             "rows": rows,
-            "p2p": p2p,
-            "p2p_count": p2p_count,
+            "type": type,
+            "type_counts": type_counts,
+            "dev": dev,
         },
     )
 
 
 @router.get("/parts/{part_id}/replacements.{fmt}")
 def results_download(
-    part_id: int, fmt: str, scope: str = "auto", company: str = "", p2p: bool = False,
-    session: Session = Depends(get_session),
+    part_id: int, fmt: str, scope: str = "auto", company: str = "", type: str = "",
+    dev: int = DEFAULT_MAX_DEVIATIONS, session: Session = Depends(get_session),
 ):  # fmt: skip
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Part not found")
-    crosses = crosses_for(session, part, scope if scope in ("auto", "all") else "auto")
+    crosses = crosses_for(session, part, scope if scope in ("auto", "all") else "auto", _deviations(dev))
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
-    rows = [(r, v) for r, v in result_rows(crosses) if not p2p or v.p2p]
+    rows = [(r, v) for r, v in result_rows(crosses) if not type or v.category == type]
     if fmt == "xlsx":
         return _download(export.results_xlsx(part, rows), f"replacements_{part.mpn}.xlsx", XLSX)
     if fmt == "csv":

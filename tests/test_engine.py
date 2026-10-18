@@ -17,22 +17,21 @@ def names(results):
     return [r.candidate.mpn for r in results]
 
 
-EXPECTED = {
+EXPECTED = {  # with the default of 2 accepted priority 1 deviations
     "SR8641": {
-        # SC141 is only worse in priority 2, SD8641A is automotive (P1 better): both still FFF
+        # SC141 is only worse in priority 2, SD8641A is automotive (P1 better): both drop-ins
         "fff": ["SC141", "SD8641A", "SA7741", "SA7741X"],
         "functional": ["SB8641N"],  # same package, other pinout
-        "package": ["SB8441"],  # same package, other default output (SC142: other channels, not listed)
+        "package": ["SB8441"],  # pin-to-pin, other default output (SC142: other channels, not listed)
     },
     "SR8640N": {
         "fff": ["SA7740N"],
-        "upgrade": ["SB8140Q"],  # smaller package, better
-        "functional": ["SD4100", "SC141", "SD8641A", "SA7741", "SB8641N", "SA7741X"],  # wide body
-        "package": ["SD140N"],
-        "downgrade": ["SC140N"],
+        # other packages, fewest deviations first; SB8441 deviates in its default output
+        "functional": ["SD4100", "SB8140Q", "SC141", "SD8641A", "SA7741", "SB8641N", "SB8441", "SA7741X"],
+        "package": ["SC140N", "SD140N"],
     },
-    "SR8233": {"fff": ["SA21520", "SA21521"], "package": ["SB6602", "SC4223"]},  # pin-to-pin first
-    "SR8286": {"fff": ["SC4135", "SA5870"], "functional": ["SB6601"]},  # package-locked: no upgrade
+    "SR8233": {"fff": ["SA21520", "SA21521"], "functional": ["SC4223"], "package": ["SB6602"]},
+    "SR8286": {"fff": ["SC4135", "SA5870"]},  # package-locked: SB6601 (smaller package) not listed
     "SR8920": {"fff": ["SA1300", "SB1300", "SA1301"]},  # gain is priority 3 (sensitivity)
     "SR8501": {"fff": ["SA1100", "SB2011"], "functional": ["SC712"]},
 }
@@ -81,11 +80,19 @@ def test_rejected_fff_becomes_package_equivalent(part):
     assert rejected.fff_status == "rejected" and rejected.categories == ["package"]
 
 
-def test_downgrade_only_pin_to_pin_with_lower_priority_1(part):
-    rules = get_rules("digital_isolator")
-    down = cross(part("SR8640N"), part("SC140N"), rules)
-    assert down.categories == ["downgrade"] and down.fit.fits
-    assert any(d.status == "worse" for d in down.diffs if d.priority == 1)
+def test_functional_accepts_a_few_priority_1_deviations(part):
+    rules = get_rules("gate_driver")
+    ref, cand = part("SR8233"), part("SC4223")  # same package, other pinout, peak sink current lower
+    r = cross(ref, cand, rules)
+    assert r.categories == ["functional"] and [d.key for d in r.deviations] == ["peak_sink_a"]
+    assert cross(ref, cand, rules, max_deviations=0).categories == ["package"]
+    other_package = cross(part("SR8640N"), part("SB8441"), get_rules("digital_isolator"), max_deviations=0)
+    assert other_package.categories == []  # other package and a deviation: not listed at 0
+
+
+def test_pin_to_pin_with_lower_priority_1_is_package_equivalent(part):
+    r = cross(part("SR8640N"), part("SC140N"), get_rules("digital_isolator"))
+    assert r.fit.fits and r.categories == ["package"] and r.verdict().spec == "under"
 
 
 def test_same_package_ignores_pin_count_but_not_dimensions():
@@ -129,9 +136,10 @@ def test_hard_mismatch_is_not_listed(part):
     assert r.hard_fail and r.fit.fits and r.categories == []  # same pins, CMOS vs opto input
 
 
-def test_smaller_package_upgrade_allowed(part):
+def test_smaller_better_package_is_functional_and_marked_better(part):
     r = cross(part("SR8640N"), part("SB8140Q"), get_rules("digital_isolator"))
-    assert r.fit.package_relation == "smaller" and "upgrade" in r.categories
+    assert r.fit.package_relation == "smaller" and r.categories == ["functional"]
+    assert r.verdict().spec == "over"
 
 
 def test_larger_package_is_functional_not_upgrade(part):
@@ -139,11 +147,11 @@ def test_larger_package_is_functional_not_upgrade(part):
     assert r.fit.package_relation == "larger" and r.categories == ["functional"]
 
 
-def test_package_lock_blocks_smaller_package_upgrade(part):
+def test_package_lock_rejects_other_packages(part):
     ref, cand = part("SR8286"), part("SB6601")
     assert ref.package_locked
     r = cross(ref, cand, get_rules("gate_driver"))
-    assert r.fit.package_relation == "smaller" and "upgrade" not in r.categories
+    assert r.fit.package_relation == "smaller" and r.categories == []
 
 
 def test_other_packages_with_worse_priority_1_are_not_listed(session, part):

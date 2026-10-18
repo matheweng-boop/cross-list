@@ -2,24 +2,22 @@
 
 Given a reference part (the part being crossed) and a candidate, decide which cross
 type the candidate is. Priority 1 parameters decide function; priority 2 and 3 are
-shown for information and never block a cross.
+shown for information and never block a cross. In order of preference:
 
-* FFF                   – same package, pin-to-pin, every priority 1 parameter equal or
-                          better (better ones are marked): an exact drop-in.
-* Upgrade               – every priority 1 parameter equal or better, at least one better,
-                          but not a drop-in (other package or pinout). A smaller package
-                          counts, unless the reference is package-locked.
-* Functional equivalent – every priority 1 parameter equal (or better where an upgrade is
-                          not allowed), other package or pinout.
-* Package equivalent    – same package and basic function (hard parameters such as the
-                          channel configuration match), other features: a priority 1
-                          parameter worse or different; marked pin-to-pin or not.
-* Downgrade             – same package and pin-to-pin, a priority 1 parameter worse:
-                          offered as a lower-spec drop-in.
+* Drop-in (FFF)         – same package, pin-to-pin, every priority 1 parameter equal or
+                          better (better ones are marked).
+* Functional equivalent – another package or pinout; priority 1 equal or better except
+                          for at most ``max_deviations`` parameters (worse, different or
+                          unknown). Better ones are marked, deviations listed. A
+                          package-locked reference (thermal / technical reasons) only
+                          accepts other pinouts in its own package.
+* Package equivalent    – same package and basic function, other technical specs (more
+                          deviations, or a pin-to-pin part with a lower priority 1 value);
+                          marked pin-to-pin or not.
 
-Anything else is not listed. A "hard" parameter mismatch (e.g. channel configuration)
-means the parts do different things: they are not listed at all.
-An engineer can reject an FFF; it is then listed as a package equivalent.
+Anything else is not listed. "Hard" parameters (e.g. channel configuration) define what
+the part does: they never count as a deviation, a mismatch is not listed at all.
+An engineer can reject a drop-in; it is then listed as a package equivalent.
 """
 
 from dataclasses import dataclass, field
@@ -30,18 +28,16 @@ from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
 UNKNOWN_SEVERITY = 0.25
-CATEGORY_ORDER = ("fff", "upgrade", "functional", "package", "downgrade")
+CATEGORY_ORDER = ("fff", "functional", "package")
 CATEGORY_LABELS = {
-    "fff": "FFF – form, fit & function",
-    "upgrade": "Upgrade",
-    "functional": "Functional equivalent",
-    "package": "Package equivalent",
-    "downgrade": "Downgrade",
+    "fff": "Drop-in (FFF)",
+    "functional": "Functional equivalent (different package)",
+    "package": "Package equivalent (different technical spec)",
 }
+DEFAULT_MAX_DEVIATIONS = 2  # priority 1 deviations accepted for a functional equivalent
 LIFECYCLE_RISK = {LifecycleStatus.nrnd, LifecycleStatus.last_time_buy, LifecycleStatus.obsolete}
 # Short names for the result table on phones
-CATEGORY_SHORT = {"fff": "FFF", "upgrade": "Upgrade", "functional": "Functional", "package": "Package eq.",
-                  "downgrade": "Downgrade"}  # fmt: skip
+CATEGORY_SHORT = {"fff": "Drop-in", "functional": "Functional", "package": "Package eq."}
 # FFF status: an engineer may reject an FFF cross
 FFF_AUTO, FFF_REJECTED = "auto", "rejected"
 FFF_STATUS_LABELS = {FFF_AUTO: "FFF", FFF_REJECTED: "FFF – rejected"}
@@ -91,7 +87,7 @@ SPEC_LABELS = {"exact": "Exact", "over": "Better", "under": "Worse", "mixed": "M
 
 @dataclass
 class Verdict:
-    """Cross type, pin-to-pin flag and how priority 1 compares (better/worse lists).
+    """Cross type, pin-to-pin flag and how priority 1 compares (better list, deviations).
 
     Priority 2/3 differences are counted separately, for information only.
     """
@@ -139,16 +135,17 @@ class CrossResult:
         """Lower is closer to the reference."""
         return sum(d.score for d in self.all_diffs)
 
-    @property
-    def improvement(self) -> float:
-        return sum(d.score for d in self.diffs if d.status == BETTER and d.priority == 1)
-
     def top_differences(self, n: int = 5) -> list[Diff]:
         ranked = sorted(
             (d for d in self.all_diffs if d.status != EQUAL),
             key=lambda d: (-d.score, d.priority, not d.is_negative),
         )
         return ranked[:n]
+
+    @property
+    def deviations(self) -> list[Diff]:
+        """Priority 1 parameters that are worse, different or unknown."""
+        return [d for d in self.diffs if d.priority == 1 and (d.is_negative or d.status == UNKNOWN)]
 
     @property
     def category(self) -> str | None:
@@ -158,7 +155,7 @@ class CrossResult:
         p1 = [d for d in self.diffs if d.priority == 1]
         info = [d for d in self.diffs if d.priority in (2, 3)]
         better = [d for d in p1 if d.status == BETTER]
-        worse = [d for d in p1 if d.is_negative or d.status == UNKNOWN]
+        worse = self.deviations
         spec = ("mixed" if better else "under") if worse else ("over" if better else "exact")
         return Verdict(
             self.category or "package",
@@ -392,7 +389,9 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 # ---------------------------------------------------------------- classify
 
 
-def cross(ref: Part, cand: Part, rules: FamilyRules, feedback=None) -> CrossResult:
+def cross(
+    ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS
+) -> CrossResult:
     fit = check_fit(ref, cand)
     rv, cv = rules.values(ref), rules.values(cand)
     diffs = []
@@ -412,31 +411,21 @@ def cross(ref: Part, cand: Part, rules: FamilyRules, feedback=None) -> CrossResu
         )
 
     hard_fail = any(d.hard and d.is_negative for d in diffs)
-    p1 = [d for d in diffs if d.priority == 1]
     incomplete = any(d.status == UNKNOWN for d in diffs if d.priority in (1, 2))
-    functional = not hard_fail and all(d.status in (EQUAL, BETTER) for d in p1)
-    better = any(d.status == BETTER for d in p1)
+    deviations = [d for d in diffs if d.priority == 1 and (d.is_negative or d.status == UNKNOWN)]
     rejected = feedback is not None and feedback.verdict == FeedbackVerdict.reject
-    package_ok = fit.same_package if ref.package_locked else fit.package_relation in ("same", "smaller", "similar")
 
     fff_status = None
-    if fit.fits and functional:
+    if fit.fits and not hard_fail and not deviations:
         fff_status = FFF_REJECTED if rejected else FFF_AUTO
-    if fff_status == FFF_AUTO:
+    if hard_fail:
+        category = None
+    elif fff_status == FFF_AUTO:
         category = "fff"
-    elif functional and better and package_ok and not fit.fits:
-        category = "upgrade"
-    elif functional and not fit.fits:
-        category = "functional"
-    elif (
-        fit.fits
-        and not hard_fail
-        and any(d.status == WORSE for d in p1)
-        and not any(d.status == DIFFERENT for d in p1)
-    ):
-        category = "downgrade"  # same package and pinout, lower priority 1 values
-    elif fit.same_package and not hard_fail:
-        category = "package"  # same package and basic function (e.g. channels), other features
+    elif not fit.fits and len(deviations) <= max_deviations and (fit.same_package or not ref.package_locked):
+        category = "functional"  # a package-locked reference only accepts its own package
+    elif fit.same_package:
+        category = "package"
     else:
         category = None
     cats = [category] if category else []
@@ -450,8 +439,8 @@ def sort_key(category: str):
     """Ordering within a category. Lifecycle-risk parts always sink to the bottom."""
 
     def key(r: CrossResult):
-        if category == "upgrade":
-            main = -r.improvement
+        if category == "functional":
+            main = (len(r.deviations), r.closeness)  # fewest deviations first
         elif category == "package":
             main = (not r.fit.same_pinout, r.closeness)  # pin-to-pin first
         else:
@@ -462,7 +451,11 @@ def sort_key(category: str):
 
 
 def find_crosses(
-    ref: Part, candidates: list[Part], rules: FamilyRules, feedback: dict | None = None
+    ref: Part,
+    candidates: list[Part],
+    rules: FamilyRules,
+    feedback: dict | None = None,
+    max_deviations: int = DEFAULT_MAX_DEVIATIONS,
 ) -> dict[str, list[CrossResult]]:
     """``feedback`` maps candidate id -> CrossFeedback for this reference."""
     out: dict[str, list[CrossResult]] = {c: [] for c in CATEGORY_ORDER}
@@ -470,7 +463,7 @@ def find_crosses(
     for cand in candidates:
         if cand.id == ref.id or cand.family != ref.family:
             continue
-        result = cross(ref, cand, rules, feedback.get(cand.id))
+        result = cross(ref, cand, rules, feedback.get(cand.id), max_deviations)
         for c in result.categories:
             out[c].append(result)
     for c in out:

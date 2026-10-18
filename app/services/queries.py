@@ -5,7 +5,7 @@ import re
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.matching.engine import CrossResult, cross, find_crosses
+from app.matching.engine import DEFAULT_MAX_DEVIATIONS, CrossResult, cross, find_crosses
 from app.matching.rules import get_rules
 from app.models import CrossFeedback, FeedbackVerdict, LifecycleStatus, Manufacturer, ManufacturerRole, Part
 
@@ -67,16 +67,20 @@ def feedback_for(session: Session, ref_id: int) -> dict[int, CrossFeedback]:
     return {fb.candidate_id: fb for fb in rows}
 
 
-def crosses_for(session: Session, ref: Part, scope: str = "auto") -> dict[str, list[CrossResult]]:
+def crosses_for(
+    session: Session, ref: Part, scope: str = "auto", max_deviations: int = DEFAULT_MAX_DEVIATIONS
+) -> dict[str, list[CrossResult]]:
     candidates = candidates_for(session, ref, scope)
-    return find_crosses(ref, candidates, get_rules(ref.family), feedback_for(session, ref.id))
+    return find_crosses(ref, candidates, get_rules(ref.family), feedback_for(session, ref.id), max_deviations)
 
 
-def single_cross(session: Session, ref_id: int, cand_id: int) -> CrossResult | None:
+def single_cross(
+    session: Session, ref_id: int, cand_id: int, max_deviations: int = DEFAULT_MAX_DEVIATIONS
+) -> CrossResult | None:
     ref, cand = session.get(Part, ref_id), session.get(Part, cand_id)
     if ref is None or cand is None or ref.family != cand.family:
         return None
-    return cross(ref, cand, get_rules(ref.family), feedback_for(session, ref_id).get(cand_id))
+    return cross(ref, cand, get_rules(ref.family), feedback_for(session, ref_id).get(cand_id), max_deviations)
 
 
 def record_feedback(

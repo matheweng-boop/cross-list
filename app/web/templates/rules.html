@@ -7,12 +7,10 @@
 <details open><summary>How a cross type is decided</summary>
 <ul>
   <li><b>Same package</b> – same body length, body width, lead span and pitch. The pin count may differ: a position without a pin counts as a no-connect. <b>Pin-to-pin</b> – same package and the same function on every pin.</li>
-  <li><b>FFF (form, fit &amp; function)</b> – pin-to-pin and every priority 1 parameter equal or better (better ones are marked): an exact drop-in.</li>
-  <li><b>Upgrade</b> – every priority 1 parameter equal or better, at least one better, in another package or pinout; a smaller package counts unless the reference is package-locked.</li>
-  <li><b>Functional equivalent</b> – priority 1 met, but another package or pinout.</li>
-  <li><b>Package equivalent</b> – same package, different features; marked pin-to-pin or not.</li>
-  <li><b>Downgrade</b> – pin-to-pin, with a priority 1 value lower than the reference.</li>
-  <li>Anything else is not listed. Obsolete / NRND / last-time-buy candidates are always listed last.</li>
+  <li><b>Drop-in (FFF)</b> – pin-to-pin and every priority 1 parameter equal or better (better ones are marked).</li>
+  <li><b>Functional equivalent</b> – different package or pinout; priority 1 equal or better apart from at most 2 deviations (adjustable on the part page: 0–3). A package-locked reference only accepts its own package.</li>
+  <li><b>Package equivalent</b> – same package and basic function, different technical spec; marked pin-to-pin or not.</li>
+  <li>Preference: drop-in, then functional, then package equivalent. Anything else is not listed. Obsolete / NRND / last-time-buy candidates are always listed last.</li>
 </ul>
 </details>
 {% for fam, rules in all_rules.items() %}

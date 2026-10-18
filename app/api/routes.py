@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.matching.engine import CrossResult
+from app.matching.engine import DEFAULT_MAX_DEVIATIONS, CrossResult
 from app.matching.rules import get_rules
 from app.models import Part
 from app.services.compare import compare_parts
@@ -51,6 +51,8 @@ def cross_json(r: CrossResult) -> dict:
             "same_pinout": r.fit.same_pinout,
         },
         "hard_fail": r.hard_fail,
+        "pin_to_pin": r.fit.fits,
+        "deviations": [d.label for d in r.deviations],
         "fff_status": r.fff_status,
         "feedback": {"verdict": r.feedback.verdict.value, "note": r.feedback.note} if r.feedback else None,
         "incomplete": r.incomplete,
@@ -85,14 +87,16 @@ def get_part(part_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/parts/{part_id}/crosses")
-def get_crosses(part_id: int, scope: str = "auto", session: Session = Depends(get_session)):
+def get_crosses(
+    part_id: int, scope: str = "auto", dev: int = DEFAULT_MAX_DEVIATIONS, session: Session = Depends(get_session)
+):
+    """Crosses by type; ``dev`` = priority 1 deviations accepted for a functional equivalent."""
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Part not found")
-    return {
-        cat: [cross_json(r) for r in results]
-        for cat, results in crosses_for(session, part, scope if scope in ("auto", "all") else "auto").items()
-    }
+    scope = scope if scope in ("auto", "all") else "auto"
+    crosses = crosses_for(session, part, scope, min(max(dev, 0), 3))
+    return {cat: [cross_json(r) for r in results] for cat, results in crosses.items()}
 
 
 @router.get("/compare")

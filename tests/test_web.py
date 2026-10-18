@@ -18,10 +18,10 @@ def test_pages_render(client):
         assert "synthetic" in r.text.lower()
 
 
-def test_part_page_shows_four_categories_and_top5(client):
+def test_part_page_shows_cross_types_and_top5(client):
     (ref,) = ids(client, "SR8641")
     html = client.get(f"/parts/{ref}").text
-    for label in ["FFF", "Pin-to-pin", "Upgrade", "Downgrade", "Top 5 differences", "Download Excel"]:
+    for label in ["Drop-in", "Functional", "Package eq.", "P2P", "Top 5 differences", "Download Excel"]:
         assert label in html
 
 
@@ -76,7 +76,7 @@ def test_compare_downloads(client):
 def test_api_crosses(client):
     (ref,) = ids(client, "SR8286")
     data = client.get(f"/api/parts/{ref}/crosses").json()
-    assert set(data) == {"fff", "upgrade", "functional", "package", "downgrade"}
+    assert set(data) == {"fff", "functional", "package"}
     assert len(data["fff"][0]["top_differences"]) <= 5
 
 
@@ -158,18 +158,25 @@ def test_result_table_cross_types(client):
     def row(pid):
         return table.split(f'id="row-{pid}"')[1].split("</tr>")[0]
 
-    assert "FFF" in row(exact) and "spec-exact" in row(exact) and "p2p yes" in row(exact)
-    assert "FFF" in row(better) and "spec-over" in row(better)
-    assert "FFF" in row(info_worse) and "spec-exact" in row(info_worse)  # only priority 2 worse
-    assert "Package equivalent" in row(other_out) and "p2p yes" in row(other_out)
-    assert "Functional equivalent" in row(other_pins) and "p2p no" in row(other_pins)
-    assert table.index(f'id="row-{better}"') < table.index(f'id="row-{other_out}"')  # FFF listed first
-    only = (
-        client.get(f"/parts/{ref}?p2p=true")
-        .text.split('<table class="results">')[1]
-        .split('<details class="category-view">')[0]
+    assert "Drop-in" in row(exact) and "spec-exact" in row(exact) and "p2p yes" in row(exact)
+    assert "Drop-in" in row(better) and "spec-over" in row(better)
+    assert "Drop-in" in row(info_worse) and "spec-exact" in row(info_worse)  # only priority 2 worse
+    assert "Package eq." in row(other_out) and "p2p yes" in row(other_out)
+    assert "Functional" in row(other_pins) and "p2p no" in row(other_pins)
+    assert (
+        table.index(f'id="row-{better}"') < table.index(f'id="row-{other_pins}"') < table.index(f'id="row-{other_out}"')
     )
-    assert f'id="row-{other_pins}"' not in only and f'id="row-{other_out}"' in only
+    page = client.get(f"/parts/{ref}?type=functional").text
+    only = page.split('<table class="results">')[1].split('<details class="category-view">')[0]
+    assert f'id="row-{other_pins}"' in only and f'id="row-{other_out}"' not in only and f'id="row-{exact}"' not in only
+    assert "Functional (1)" in page and "Drop-in (4)" in page
+
+
+def test_deviation_setting(client):
+    ref, cand = ids(client, "SR8640N", "SB8441")  # other package, one priority 1 deviation
+    assert f'id="row-{cand}"' in client.get(f"/parts/{ref}").text
+    assert f'id="row-{cand}"' not in client.get(f"/parts/{ref}?dev=0").text
+    assert "SB8441" not in client.get(f"/parts/{ref}/replacements.csv?dev=0").text
 
 
 def test_competitor_part_finds_reference_replacements(client):
@@ -221,7 +228,7 @@ def test_result_table_download(client):
     rows = [[c.value for c in row] for row in ws.iter_rows()]
     header = next(i for i, row in enumerate(rows) if row[0] == "Part")
     verdicts = {row[0]: row[2] for row in rows[header + 1 :]}
-    assert verdicts["SA7741"].startswith("FFF") and verdicts["SB8441"] == "Package equivalent"
-    assert verdicts["SB8641N"] == "Functional equivalent"
-    text = client.get(f"/parts/{ref}/replacements.csv?p2p=true").text
+    assert verdicts["SA7741"] == "Drop-in (FFF)" and verdicts["SB8441"].startswith("Package equivalent")
+    assert verdicts["SB8641N"].startswith("Functional equivalent")
+    text = client.get(f"/parts/{ref}/replacements.csv?type=fff").text
     assert "SA7741" in text and "SB8641N" not in text

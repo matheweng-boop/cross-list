@@ -10,16 +10,14 @@ and others.
 
 ## Cross types
 
-Priority 1 parameters decide function and must be equal or better; priority 2 and 3
-are shown for information and never block a cross. Each candidate gets one type:
+Priority 1 parameters decide function; priority 2 and 3 are shown for information and
+never block a cross. Each candidate gets one type, in order of preference:
 
 | Type | Rule |
 |---|---|
-| **FFF** | Same package, pin-to-pin, every priority 1 parameter equal or better (better ones marked). An engineer can reject it; it then becomes a package equivalent |
-| **Upgrade** | Priority 1 equal or better, at least one better, in another package or pinout; a smaller package counts unless the reference is *package-locked* |
-| **Functional equivalent** | Priority 1 met, another package or pinout |
-| **Package equivalent** | Same package, different features; marked pin-to-pin or not |
-| **Downgrade** | Pin-to-pin, a priority 1 value lower than the reference |
+| **Drop-in (FFF)** | Same package, pin-to-pin, every priority 1 parameter equal or better (better ones marked). An engineer can reject it; it then becomes a package equivalent |
+| **Functional equivalent** | Different package or pinout; priority 1 equal or better apart from at most 2 deviations (worse, different or unknown; adjustable 0–3 on the part page). A *package-locked* reference only accepts its own package |
+| **Package equivalent** | Same package and basic function, different technical spec; marked pin-to-pin or not |
 
 Anything else is not listed. "Same package" means the same body length, body width,
 lead span and pitch; the pin count may differ, because a missing pin position is

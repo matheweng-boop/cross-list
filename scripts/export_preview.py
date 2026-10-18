@@ -188,8 +188,11 @@ def main(out: Path, real: bool = False) -> None:
             lands = load_mechanical().get(next(p["package"] for p in everything if p["package_id"] == a))
             for lp in range(max(1, len(lands.land_patterns) if lands else 1)):
                 pages[_overlay_file(a, b, lp)] = f"/packages/{a}/overlay/{b}?lp={lp}"
-    for name, url in pages.items():
-        html = rewrite(client.get(url).text, {p["id"]: p["package_id"] for p in everything})
+    package = {p["id"]: p["package_id"] for p in everything}
+    queue = list(pages.items())
+    while queue:
+        name, url = queue.pop(0)
+        html = rewrite(client.get(url).text, package)
         if name == "cross.html":
             main = re.compile(r'(<main class="container">).*</main>', re.S)
             html = main.sub(lambda m: m.group(1) + CROSS_VIEW + "</main>", html)
@@ -213,6 +216,12 @@ def main(out: Path, real: bool = False) -> None:
             body = re.search(r"<body>(.*)</body>", html, re.S).group(1)
             html = head.strip() + "\n" + body
         (out / name).write_text(html)
+        # Drawings linked from pages that list more crosses than the cross data keeps.
+        for m in re.finditer(r'href="overlay-(\d+)-(\d+)(?:-lp(\d+))?\.html"', html):
+            target = _overlay_file(int(m.group(1)), int(m.group(2)), int(m.group(3) or 0))
+            if target not in pages:
+                pages[target] = f"/packages/{m.group(1)}/overlay/{m.group(2)}?lp={m.group(3) or 0}"
+                queue.append((target, pages[target]))
     static = Path(__file__).resolve().parent.parent / "app" / "web" / "static"
     shutil.copytree(static, out / "static", dirs_exist_ok=True)
     tmp.unlink(missing_ok=True)

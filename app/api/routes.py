@@ -84,11 +84,14 @@ def get_part(part_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/parts/{part_id}/crosses")
-def get_crosses(part_id: int, session: Session = Depends(get_session)):
+def get_crosses(part_id: int, scope: str = "auto", session: Session = Depends(get_session)):
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Part not found")
-    return {cat: [cross_json(r) for r in results] for cat, results in crosses_for(session, part).items()}
+    return {
+        cat: [cross_json(r) for r in results]
+        for cat, results in crosses_for(session, part, scope if scope in ("auto", "all") else "auto").items()
+    }
 
 
 @router.get("/compare")

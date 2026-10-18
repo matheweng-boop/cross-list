@@ -49,8 +49,16 @@ def search_parts(
     return list(session.scalars(stmt).unique())
 
 
-def candidates_for(session: Session, ref: Part) -> list[Part]:
+def candidates_for(session: Session, ref: Part, scope: str = "auto") -> list[Part]:
+    """Parts of other manufacturers in the same family.
+
+    ``scope="auto"``: a reference (Skyworks) part is crossed against every competitor;
+    a competitor part against the reference manufacturer only (finding a Skyworks
+    replacement). ``scope="all"``: every other manufacturer.
+    """
     stmt = select(Part).where(Part.family == ref.family, Part.id != ref.id, Part.manufacturer_id != ref.manufacturer_id)
+    if scope == "auto" and not ref.is_reference:
+        stmt = stmt.join(Part.manufacturer).where(Manufacturer.role == ManufacturerRole.reference)
     return list(session.scalars(stmt).unique())
 
 
@@ -59,8 +67,9 @@ def feedback_for(session: Session, ref_id: int) -> dict[int, CrossFeedback]:
     return {fb.candidate_id: fb for fb in rows}
 
 
-def crosses_for(session: Session, ref: Part) -> dict[str, list[CrossResult]]:
-    return find_crosses(ref, candidates_for(session, ref), get_rules(ref.family), feedback_for(session, ref.id))
+def crosses_for(session: Session, ref: Part, scope: str = "auto") -> dict[str, list[CrossResult]]:
+    candidates = candidates_for(session, ref, scope)
+    return find_crosses(ref, candidates, get_rules(ref.family), feedback_for(session, ref.id))
 
 
 def single_cross(session: Session, ref_id: int, cand_id: int) -> CrossResult | None:

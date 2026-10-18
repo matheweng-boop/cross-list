@@ -4,7 +4,8 @@
   {% for p in parts %}
   <li role="option"><a href="/parts/{{ p.id }}">
     <span class="sg-mpn">{{ p.mpn }}</span>
-    <span class="sg-meta">{{ p.manufacturer.name }} · {{ p.package.code }}{% if p.is_reference %} · reference{% endif %}</span>
+    <span class="sg-meta">{{ p.manufacturer.name }} · {{ p.package.code }}</span>
+    {% if not p.is_reference %}<span class="badge new">find Skyworks part</span>{% endif %}
     {{ part_badges(p) }}
   </a></li>
   {% endfor %}

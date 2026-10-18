@@ -121,13 +121,15 @@ def part_detail(
     part_id: int,
     hide_eol: bool = False,
     company: str = "",
+    scope: str = "auto",
     session: Session = Depends(get_session),
 ):
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Part not found")
     rules = get_rules(part.family)
-    crosses = crosses_for(session, part)
+    scope = scope if scope in ("auto", "all") else "auto"
+    crosses = crosses_for(session, part, scope)
     rejected = [r for r in crosses["p2p"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
@@ -154,6 +156,7 @@ def part_detail(
             "rejected": rejected,
             "companies": companies,
             "company": company,
+            "scope": scope,
         },
     )
 

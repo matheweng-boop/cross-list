@@ -140,3 +140,27 @@ def test_part_page_groups_suggestions_by_company(client):
     only = client.get(f"/parts/{ref}?company=SynBeta").text
     section = only.split('id="cat-fff"')[1]
     assert "SynBeta SB8441" in section and "SynAlpha SA7741" not in section
+
+
+def test_competitor_part_finds_reference_replacements(client):
+    (comp,) = ids(client, "SA7741X")  # identical to SR8641, but obsolete
+    html = client.get(f"/parts/{comp}").text
+    assert "Skyworks replacements" in html and "Include other competitors" in html
+    data = client.get(f"/api/parts/{comp}/crosses").json()
+    fff = [x["candidate"]["label"] for x in data["fff"]]
+    assert fff == ["SynRef SR8641"]
+    every = {x["candidate"]["label"] for cat in data.values() for x in cat}
+    assert all(label.startswith("SynRef") for label in every)  # only reference parts by default
+    wide = client.get(f"/parts/{comp}?scope=all").text
+    assert "Crosses with all manufacturers" in wide and "SynBeta SB8441" in wide
+
+
+def test_reference_part_page_unchanged(client):
+    (ref,) = ids(client, "SR8641")
+    html = client.get(f"/parts/{ref}").text
+    assert "<h2>Crosses</h2>" in html and "Skyworks replacements" not in html
+
+
+def test_suggestions_mark_competitor_parts(client):
+    html = client.get("/suggest?q=7741").text
+    assert "find Skyworks part" in html

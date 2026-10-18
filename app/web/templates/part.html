@@ -41,16 +41,23 @@
   </table></div>
 </details>
 
+{% if part.is_reference %}
 <h2>Crosses</h2>
+{% else %}
+<h2>{{ 'Skyworks replacements' if scope == 'auto' else 'Crosses with all manufacturers' }}</h2>
+<p class="muted">Categories are relative to {{ part.label }}: an <b>upgrade</b> is better than this part, a <b>downgrade</b> worse.
+  {% if scope == 'auto' %}<a href="?scope=all">Include other competitors</a>{% else %}<a href="?">Show Skyworks parts only</a>{% endif %}</p>
+{% endif %}
 <form method="get" style="margin-bottom:.5rem">
+  {% if scope != 'auto' %}<input type="hidden" name="scope" value="{{ scope }}">{% endif %}
   <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / last-time-buy / obsolete candidates</label>
 </form>
 {% if companies %}
 <section class="by-company" aria-label="Suggestions by company">
   <h3>By company</h3>
   <nav class="company-filter">
-    <a href="?{{ 'hide_eol=true&' if hide_eol }}#cat-fff" class="badge cat{{ ' on' if not company }}">All companies</a>
-    {% for name, items in companies %}<a href="?company={{ name|urlencode }}{{ '&hide_eol=true' if hide_eol }}#cat-fff" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ items|length }})</a>{% endfor %}
+    <a href="?{{ 'hide_eol=true&' if hide_eol }}{{ 'scope=all&' if scope == 'all' }}#cat-fff" class="badge cat{{ ' on' if not company }}">All companies</a>
+    {% for name, items in companies %}<a href="?company={{ name|urlencode }}{{ '&hide_eol=true' if hide_eol }}{{ '&scope=all' if scope == 'all' }}#cat-fff" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ items|length }})</a>{% endfor %}
   </nav>
   {% for name, items in companies if not company or company == name %}
   <div class="company">

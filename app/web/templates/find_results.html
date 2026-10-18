@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import part_badges %}
+{% block title %}“{{ q }}” – Cross List{% endblock %}
+{% block content %}
+<h1>Parts matching “{{ q }}”</h1>
+{% if competitors %}
+<p class="subtitle muted">Tap a part to see suitable Skyworks parts.</p>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th>Part</th><th>Manufacturer</th><th>Package</th><th>Lifecycle</th></tr></thead>
+  {% for p in competitors %}
+  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name }}</td><td>{{ p.package.code }}</td><td>{{ part_badges(p) }}</td></tr>
+  {% endfor %}
+</table></div>
+{% endif %}
+{% if references %}
+<h2>Skyworks parts</h2>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th>Part</th><th>Package</th><th>Lifecycle</th></tr></thead>
+  {% for p in references %}
+  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.package.code }}</td><td>{{ part_badges(p) }}</td></tr>
+  {% endfor %}
+</table></div>
+{% endif %}
+{% if not competitors and not references %}
+<p>No part numbers contain “{{ q }}”. ADI, Diodes and other manufacturers are not in the database yet.</p>
+{% endif %}
+<p><a href="/">New search</a></p>
+{% endblock %}

@@ -48,8 +48,8 @@ def _rank_value(p: ParamDef, v):
 
 def compare_parts(parts: list[Part], baseline: Part, rules: FamilyRules, priorities=(1, 2)) -> Comparison:
     rows = []
-    maps = [p.param_map() for p in parts]
-    base_map = baseline.param_map()
+    maps = [rules.values(p) for p in parts]
+    base_map = rules.values(baseline)
     for pdef in rules.by_priority(*priorities):
         cells = []
         for part, values in zip(parts, maps, strict=True):

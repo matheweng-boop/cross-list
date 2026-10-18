@@ -68,6 +68,32 @@ XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 @router.get("/", response_class=HTMLResponse)
+def finder(request: Request, session: Session = Depends(get_session)):
+    """Start page: enter a competitor part number to find a Skyworks part."""
+    examples = [p for p in search_parts(session, "ISO7741", role="competitor", limit=1)] + [
+        p for p in search_parts(session, "NSI8241", role="competitor", limit=1)
+    ]
+    return templates.TemplateResponse(request, "finder.html", {"examples": examples, "hide_header_search": True})
+
+
+@router.get("/find", response_class=HTMLResponse)
+def find(request: Request, q: str = "", session: Session = Depends(get_session)):
+    """A full part number opens its page; a partial one lists the matches."""
+    q = q.strip()
+    if not q:
+        return RedirectResponse("/", status_code=303)
+    matches = search_parts(session, q, limit=500)
+    exact = [p for p in matches if normalize_pn(p.mpn) == normalize_pn(q)]
+    if len(exact) == 1 or len(matches) == 1:
+        return RedirectResponse(f"/parts/{(exact or matches)[0].id}", status_code=303)
+    competitors = [p for p in matches if not p.is_reference]
+    references = [p for p in matches if p.is_reference]
+    return templates.TemplateResponse(
+        request, "find_results.html", {"q": q, "competitors": competitors, "references": references}
+    )
+
+
+@router.get("/parts", response_class=HTMLResponse)
 def index(
     request: Request,
     q: str = "",
@@ -136,7 +162,7 @@ def part_detail(
     companies = by_company(crosses)
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
-    values = part.param_map()
+    values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
     groups = {
         prio: [(p, format_value(p, values.get(p.key)), sources.get(p.key)) for p in rules.by_priority(prio)]

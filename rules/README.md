@@ -11,6 +11,8 @@ One YAML file per product family. Each parameter has:
 | `direction` | `number`: `higher` or `lower` is better. `bool`: `true_better` or `match` |
 | `levels` | `ordinal` only: ordered worst → best |
 | `tolerance` | `number`/`range`: relative difference still treated as equal (default 0.02) |
+| `exclude` | `set` only: items shown but ignored when comparing (e.g. TUV) |
+| `from` | derived `bool`: `{param: certifications, contains: TUV}` is true when that set contains the item |
 | `hard` | a mismatch makes the parts functionally different: excluded from FFF, Upgrade and Downgrade |
 
 Edit a file and restart the app to apply changes.

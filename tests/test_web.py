@@ -12,7 +12,7 @@ def ids(client, *mpns):
 
 
 def test_pages_render(client):
-    for url in ["/", "/?role=&q=SA", "/compare", "/lifecycle", "/rules"]:
+    for url in ["/parts", "/parts?role=&q=SA", "/compare", "/lifecycle", "/rules"]:
         r = client.get(url)
         assert r.status_code == 200, url
         assert "synthetic" in r.text.lower()
@@ -121,9 +121,9 @@ def test_partial_part_numbers(client):
 
 
 def test_search_page_covers_all_companies(client):
-    html = client.get("/?q=7741").text
+    html = client.get("/parts?q=7741").text
     assert "SA7741" in html  # competitor part found without changing the filter
-    assert "SR8641" in client.get("/").text and "SA7741X" not in client.get("/").text  # no query: references only
+    assert "SR8641" in client.get("/parts").text and "SA7741X" not in client.get("/parts").text
 
 
 def test_suggestions_fragment(client):
@@ -164,3 +164,21 @@ def test_reference_part_page_unchanged(client):
 def test_suggestions_mark_competitor_parts(client):
     html = client.get("/suggest?q=7741").text
     assert "find Skyworks part" in html
+
+
+def test_finder_start_page(client):
+    html = client.get("/").text
+    assert "Find a Skyworks part" in html and 'action="/find"' in html
+
+
+def test_find_full_part_number_opens_its_page(client):
+    (comp,) = ids(client, "SA7741X")
+    r = client.get("/find?q=sa-7741x", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == f"/parts/{comp}"
+
+
+def test_find_partial_lists_competitors_first(client):
+    html = client.get("/find?q=7741").text
+    assert "Tap a part to see suitable Skyworks parts" in html and "SA7741X" in html
+    assert "No part numbers contain" in client.get("/find?q=ADUM1401").text
+    assert client.get("/find?q=", follow_redirects=False).status_code == 303

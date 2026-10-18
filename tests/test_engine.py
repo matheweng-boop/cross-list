@@ -21,7 +21,7 @@ EXPECTED = {
     "SR8641": {
         "fff": ["SD8641A", "SA7741", "SC141", "SA7741X"],  # SC141 needs review (P2 worse)
         "p2p": ["SD8641A", "SC141", "SA7741", "SB8441", "SA7741X"],
-        "upgrade": ["SB8641N", "SA7741"],
+        "upgrade": ["SA7741"],  # SB8641N only adds TUV, which is priority 3
         "downgrade": ["SB8441"],
     },
     "SR8640N": {
@@ -173,3 +173,21 @@ def test_pin_alternatives_are_compatible():
     assert pins_compatible("VDD1/NC", "NC") and pins_compatible("GND2/NC", "GND2")
     assert pins_compatible("INA", "ina")
     assert not pins_compatible("EN1", "NC") and not pins_compatible("GND1", "NC")
+
+
+def test_tuv_and_supply_range_are_priority_3(part):
+    r = cross(part("SR8641"), part("SB8641N"), get_rules("digital_isolator"))
+    by_key = {d.key: d for d in r.diffs}
+    assert by_key["certifications"].status == "equal"  # TUV is not judged in the P1 certification set
+    assert by_key["tuv_certified"].priority == 3 and by_key["tuv_certified"].status == "better"
+    assert get_rules("digital_isolator").get("vdd_range_v").priority == 3
+
+
+def test_priority_3_differences_are_noted_in_the_comment(part):
+    rules = get_rules("digital_isolator")
+    r = cross(part("SB8641N"), part("SR8641"), rules)  # SR8641 lacks TUV
+    assert [d.key for d in r.p3_notes()] == ["tuv_certified"]
+    assert "TÜV certification: no vs yes (P3, worse)" in r.comment()  # already in the top 5
+    r.top_differences = lambda n=5: []  # when it is not in the top 5 it gets its own note
+    assert "Also note (priority 3): TÜV certification no vs yes" in r.comment()
+    assert "Also note" not in cross(part("SR8641"), part("SA7741"), rules).comment()

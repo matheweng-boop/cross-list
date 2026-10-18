@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Find a Skyworks part – Cross List{% endblock %}
+{% block content %}
+<section class="finder">
+  <h1>Find a Skyworks part</h1>
+  <p class="subtitle muted">Enter a TI, Novosense or other competitor part number – the full number or any part of it – to see suitable Skyworks parts.</p>
+  <div class="search-bar finder-bar">
+    <form action="/find" method="get" role="search">
+      <input type="search" name="q" id="finder-search" placeholder="e.g. ISO7741DWR, iso77, NSI8241" autocomplete="off" autofocus
+        aria-label="Competitor part number"
+        hx-get="/suggest" hx-trigger="input changed delay:250ms, search" hx-target="#suggestions" hx-sync="this:replace">
+      <button type="submit">Find Skyworks parts</button>
+    </form>
+    <div id="suggestions" aria-live="polite"></div>
+  </div>
+  {% if examples %}
+  <p class="muted">Try: {% for p in examples %}<a href="/parts/{{ p.id }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>
+  {% endif %}
+</section>
+<section class="finder-help">
+  <h2>What you get</h2>
+  <ul>
+    <li><b>FFF</b> – Skyworks parts with the same package and pinout that match on every priority 1 parameter; priority 2 differences are listed for review.</li>
+    <li><b>Upgrade / Downgrade</b> – Skyworks parts that are better or worse than the part you entered.</li>
+    <li><b>Pin-to-pin</b> – same package and pinout, function differences shown.</li>
+  </ul>
+  <p class="muted">Looking from the other side? <a href="/parts">Browse Skyworks parts</a> to see their competitor crosses.</p>
+</section>
+{% endblock %}

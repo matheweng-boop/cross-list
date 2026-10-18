@@ -13,31 +13,33 @@
   <nav>
     <ul><li><a href="/" class="brand contrast">Cross List</a></li></ul>
     <ul>
-      <li><a href="/">Parts</a></li>
+      <li><a href="/">Find</a></li>
+      <li><a href="/parts">Parts</a></li>
       <li><a href="/compare">Compare</a></li>
       <li><a href="/lifecycle">Lifecycle</a></li>
       <li><a href="/rules">Rules</a></li>
     </ul>
   </nav>
 </header>
+{% if not hide_header_search %}
 <div class="container search-bar">
-  <form action="/" method="get" role="search">
+  <form action="/find" method="get" role="search">
     <input type="search" name="q" id="global-search" placeholder="Part number, or part of one (e.g. 8641, ISO77, nsi824)"
       autocomplete="off" aria-label="Search part numbers"
       hx-get="/suggest" hx-trigger="input changed delay:250ms, search" hx-target="#suggestions" hx-sync="this:replace">
   </form>
   <div id="suggestions" aria-live="polite"></div>
 </div>
+{% endif %}
 <main class="container">
   {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}
   {% block content %}{% endblock %}
 </main>
 <script>
   // Close the suggestion list on Escape or a tap outside the search bar.
-  document.addEventListener("keydown", e => { if (e.key === "Escape") document.getElementById("suggestions").innerHTML = ""; });
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".search-bar")) document.getElementById("suggestions").innerHTML = "";
-  });
+  const clear = () => document.querySelectorAll("#suggestions").forEach(el => (el.innerHTML = ""));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") clear(); });
+  document.addEventListener("click", e => { if (!e.target.closest(".search-bar")) clear(); });
 </script>
 </body>
 </html>

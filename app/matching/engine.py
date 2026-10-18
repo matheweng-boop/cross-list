@@ -120,11 +120,24 @@ class CrossResult:
         )
         return ranked[:n]
 
+    def p3_notes(self) -> list[Diff]:
+        """Priority 3 parameters where the candidate is worse or different. They never
+        decide a category but are always worth noting in the comment."""
+        return [d for d in self.diffs if d.priority == 3 and d.is_negative]
+
     def comment(self, n: int = 5) -> str:
         top = self.top_differences(n)
-        if not top:
-            return "No differences found in the compared parameters."
-        return " · ".join(f"{i}) {d.summary()}" for i, d in enumerate(top, 1))
+        text = (
+            " · ".join(f"{i}) {d.summary()}" for i, d in enumerate(top, 1))
+            if top
+            else "No differences found in the compared parameters."
+        )
+        extra = [d for d in self.p3_notes() if d not in top]
+        if extra:
+            text += " · Also note (priority 3): " + "; ".join(
+                f"{d.label} {d.cand_display} vs {d.ref_display}" for d in extra
+            )
+        return text
 
     @property
     def lifecycle_risk(self) -> bool:
@@ -188,7 +201,8 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
         return (EQUAL, 0.0) if _norm(ref) == _norm(cand) else (DIFFERENT, 1.0)
 
     if p.kind == "set":
-        r, c = {_norm(x) for x in ref}, {_norm(x) for x in cand}
+        skip = {_norm(x) for x in p.exclude}
+        r, c = {_norm(x) for x in ref} - skip, {_norm(x) for x in cand} - skip
         if r == c:
             return EQUAL, 0.0
         if c >= r:
@@ -330,7 +344,7 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 
 def cross(ref: Part, cand: Part, rules: FamilyRules, feedback=None) -> CrossResult:
     fit = check_fit(ref, cand)
-    rv, cv = ref.param_map(), cand.param_map()
+    rv, cv = rules.values(ref), rules.values(cand)
     diffs = []
     for p in rules.params:
         status, sev = compare_param(p, rv.get(p.key), cv.get(p.key))

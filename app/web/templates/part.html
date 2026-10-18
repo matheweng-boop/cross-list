@@ -54,7 +54,7 @@
 </form>
 {% if companies %}
 <section class="by-company" aria-label="Suggestions by company">
-  <h3>By company</h3>
+  <h3>{{ 'Suitable Skyworks parts' if not part.is_reference and scope == 'auto' else 'By company' }}</h3>
   <nav class="company-filter">
     <a href="?{{ 'hide_eol=true&' if hide_eol }}{{ 'scope=all&' if scope == 'all' }}#cat-fff" class="badge cat{{ ' on' if not company }}">All companies</a>
     {% for name, items in companies %}<a href="?company={{ name|urlencode }}{{ '&hide_eol=true' if hide_eol }}{{ '&scope=all' if scope == 'all' }}#cat-fff" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ items|length }})</a>{% endfor %}
@@ -70,6 +70,7 @@
         <span class="muted">{{ r.candidate.package.code }} · {{ lifecycle_badge(r.candidate)[0] }}</span>
         {% set top = r.top_differences(1) %}
         <span class="strip-diff {{ top[0].status if top }}">{{ top[0].summary() if top else 'No differences' }}</span>
+        {% if r.p3_notes() %}<span class="muted">Note: {{ r.p3_notes()|map(attribute='label')|join(', ') }}</span>{% endif %}
       </a>
       {% endfor %}
     </div>
@@ -104,6 +105,9 @@
         {% if top %}
         <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
         {% else %}<br>No differences in the compared parameters.{% endif %}
+        {% set notes = r.p3_notes()|reject('in', top)|list %}
+        {% if notes %}<p class="p3-notes">Also note (priority 3):
+          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
       </summary>
       {{ diff_table(r) }}
     </details>

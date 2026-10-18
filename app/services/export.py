@@ -44,6 +44,10 @@ def cross_xlsx(r: CrossResult) -> bytes:
     if r.fff_status:
         ws.append(["FFF status", r.fff_status + (f" – {r.feedback.note}" if r.feedback and r.feedback.note else "")])
     ws.append(["Top 5 differences", r.comment()])
+    if r.p3_notes():
+        ws.append(
+            ["Priority 3 notes", "; ".join(f"{d.label}: {d.cand_display} vs {d.ref_display}" for d in r.p3_notes())]
+        )
     ws.append(["Candidate lifecycle", r.candidate.lifecycle_status.value])
     if r.reference.is_synthetic or r.candidate.is_synthetic:
         ws.append([SYNTHETIC_NOTE])

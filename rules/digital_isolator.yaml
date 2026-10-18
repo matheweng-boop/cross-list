@@ -8,8 +8,7 @@ params:
   - {key: channel_config, label: Channels (fwd/rev), priority: 1, kind: category, hard: true}
   - {key: integrated_power, label: Integrated isolated power, priority: 1, kind: category, hard: true}
   - {key: default_output, label: Default output, priority: 1, kind: category}
-  - {key: vdd_range_v, label: Supply range, unit: V, priority: 1, kind: range}
-  - {key: certifications, label: Safety certifications, priority: 1, kind: set}
+  - {key: certifications, label: Safety certifications (UL, VDE, CSA, CQC), priority: 1, kind: set, exclude: [TUV]}
   # --- Priority 2: should match ---
   - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 2, kind: number, direction: higher}
   - {key: prop_delay_ns, label: Propagation delay (max), unit: ns, priority: 2, kind: number, direction: lower}
@@ -23,4 +22,6 @@ params:
   - {key: skew_ns, label: Channel-to-channel skew, unit: ns, priority: 3, kind: number, direction: lower}
   - {key: esd_hbm_kv, label: ESD (HBM), unit: kV, priority: 3, kind: number, direction: higher}
   - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 3, kind: number, direction: higher}
+  - {key: vdd_range_v, label: Supply range, unit: V, priority: 3, kind: range}
+  - {key: tuv_certified, label: TÜV certification, priority: 3, kind: bool, direction: true_better, from: {param: certifications, contains: TUV}}
   - {key: surge_10kv, label: 10 kV surge capable, priority: 3, kind: bool, direction: true_better}

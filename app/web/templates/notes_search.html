@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Search notes – Cross List{% endblock %}
+{% block content %}
+<h1>Search notes</h1>
+<p class="subtitle muted">Searches {{ n_notes }} Skyworks application notes ({{ n_pages }} pages: isolation and RF switches)
+  and the Cross List <a href="/engineering">engineering notes</a>. Type a question or keywords; the search runs on this site only.</p>
+<form method="get" action="/notes" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="e.g. creepage for reinforced isolation at 800 V" aria-label="Search notes" autofocus>
+</form>
+{% if q %}
+  {% if hits %}
+  <ul class="note-hits">
+  {% for h in hits %}
+    <li>
+      <a href="{{ h.url }}" {% if h.url.startswith('http') %}target="_blank" rel="noopener"{% endif %}><b>{{ h.title }}</b></a>
+      <br><small class="muted">{{ h.source }}{% if h.page %} · page {{ h.page }}{% endif %}</small>
+      <p class="snippet">{{ h.snippet|safe }}</p>
+    </li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Nothing found for “{{ q }}”. Try fewer or different words.</p>
+  {% endif %}
+{% else %}
+<p class="muted">Examples:
+  <a href="?q=creepage+clearance+reinforced">creepage and clearance</a> ·
+  <a href="?q=replace+optocoupler">replacing an optocoupler</a> ·
+  <a href="?q=CMTI+layout">CMTI and layout</a> ·
+  <a href="?q=SiC+MOSFET+gate+driver">driving SiC MOSFETs</a> ·
+  <a href="?q=PIN+diode+switch+bias">PIN diode switch bias</a></p>
+{% endif %}
+{% endblock %}

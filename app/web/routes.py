@@ -22,7 +22,7 @@ from app.matching.engine import (
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import engineering, export, lifecycle, mechanical, pricing
+from app.services import engineering, export, lifecycle, mechanical, notes_search, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -340,6 +340,22 @@ def package_overlay(request: Request, a_id: int, b_id: int, lp: int = 0, session
 def impact_page(ids: str = ""):
     """Old address of the CMTI explorer: now the CMTI engineering note."""
     return RedirectResponse(f"/engineering/cmti_kv_us?ids={ids}", status_code=307)
+
+
+@router.get("/notes", response_class=HTMLResponse)
+def notes_search_page(request: Request, q: str = ""):
+    """Keyword search over the Skyworks application notes and the engineering notes (local only)."""
+    hits = notes_search.search(q[:200], limit=60)
+    per_doc: dict[str, int] = {}
+    shown = []
+    for h in hits:  # at most three passages per document, so one long note does not fill the page
+        per_doc[h.ref] = per_doc.get(h.ref, 0) + 1
+        if per_doc[h.ref] <= 3:
+            shown.append(h)
+    notes, pages = notes_search.count()
+    return templates.TemplateResponse(
+        request, "notes_search.html", {"q": q, "hits": shown[:25], "n_notes": notes, "n_pages": pages}
+    )
 
 
 @router.get("/engineering", response_class=HTMLResponse)

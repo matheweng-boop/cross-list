@@ -44,6 +44,7 @@ layouts:
   single16w: {pins: 16, ch: [[4,13]], fixed: {1: GND1, 2: NC, 3: VDD1, 5: NC, 6: NC, 7: GND1, 8: NC, 9: GND2, 10: NC, 11: NC, 12: NC, 14: VDD2, 15: NC, 16: GND2}, ctl: []}
   dual16w:  {pins: 16, ch: [[4,13],[5,12]], fixed: {1: GND1, 2: NC, 3: VDD1, 6: NC, 7: GND1, 8: NC, 9: GND2, 10: NC, 11: NC, 14: VDD2, 15: NC, 16: GND2}, ctl: []}
   i2c8:     {pins: 8, ch: [[2,7],[3,6]], fixed: {1: VDD1, 4: GND1, 5: GND2, 8: VDD2}, ctl: []}
+  i2c16w:   {pins: 16, ch: [[5,12],[6,11]], fixed: {1: GND1, 2: NC, 3: VDD1, 4: NC, 7: GND1, 8: NC, 9: GND2, 10: NC, 13: NC, 14: VDD2, 15: NC, 16: GND2}, ctl: []}
   i2c16:    {pins: 16, ch: [[3,14],[4,13],[5,12],[6,11]], fixed: {1: VDD1, 2: NC, 7: NC, 8: GND1, 9: GND2, 10: NC, 15: NC, 16: VDD2}, ctl: []}
   power16:  {pins: 16, ch: [[7,10],[8,9]], fixed: {1: DNC, 2: VI, 3: GNDI, 4: GNDI, 5: VDD1, 6: GND1, 11: VDD2, 12: CTRL, 13: GND2, 14: DNC, 15: GNDO, 16: VO}, ctl: []}
   power20:  {pins: 20, ch: [[7,14],[8,13],[9,12],[10,11]], fixed: {1: DNC, 2: VI, 3: GNDI, 4: GNDI, 5: VDD1, 6: GND1, 15: VDD2, 16: CTRL, 17: GND2, 18: DNC, 19: GNDO, 20: VO}, ctl: []}
@@ -79,8 +80,8 @@ base_parts:
   Si8662: {dirs: FFFFRR, layout: hexa16, pinout_evidence: ["Table 5.1. Si866x Pin Descriptions", "Si866x Pin Descriptions"]}
   Si8663: {dirs: FFFRRR, layout: hexa16, pinout_evidence: ["Table 5.1. Si866x Pin Descriptions", "Si866x Pin Descriptions"]}
   # --- Si860x I2C ---
-  Si8600: {dirs: BB, layout: i2c8, pinout_evidence: "Si8600/02 SOIC-8 Package"}
-  Si8602: {dirs: BF, layout: i2c8, pinout_evidence: "Si8600/02 SOIC-8 Package"}
+  Si8600: {dirs: BB, layout: {SOIC-8N: i2c8, SOIC-16N: i2c16w, SOIC-16W: i2c16w}, pinout_evidence: ["Si8600/02 SOIC-8 Package", "Si8600/02 SOIC-16 Package"]}
+  Si8602: {dirs: BF, layout: {SOIC-8N: i2c8, SOIC-16N: i2c16w, SOIC-16W: i2c16w}, pinout_evidence: ["Si8600/02 SOIC-8 Package", "Si8600/02 SOIC-16 Package"]}
   Si8605: {dirs: BFRB, layout: i2c16, pinout_evidence: "Si8605/06 SOIC-16 Package"}
   Si8606: {dirs: BFFB, layout: i2c16, pinout_evidence: "Si8605/06 SOIC-16 Package"}
   # --- Si86S60x I2C ---

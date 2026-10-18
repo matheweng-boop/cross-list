@@ -42,6 +42,7 @@ LIFECYCLE_MAP = {
     "end of life": "obsolete",
     "discontinued": "obsolete",
     "sampling": "preview",
+    "samples only": "preview",
     "pre-production": "preview",
     "preview": "preview",
 }
@@ -109,12 +110,30 @@ def fetch(facts_file: Path = FACTS_FILE, log=print) -> None:
         path.write_bytes(_get(url))
         log(f"datasheet {path.name}: {path.stat().st_size // 1024} kB")
 
-    statuses: dict[str, str] = {}
-    for prefix in sorted({opn[:10] for opn in records}):
-        for opn, status in fetch_lifecycle(prefix):
-            statuses[opn.upper()] = status
-    (RAW_DIR / "lifecycle.json").write_text(json.dumps(statuses, indent=0))
-    log(f"lifecycle: {len(statuses)} part numbers")
+    fetch_statuses(records, log)
+
+
+def fetch_statuses(records: dict[str, dict], log=print) -> None:
+    # Saved after every lookup so an interrupted run resumes where it stopped.
+    path = RAW_DIR / "lifecycle.json"
+    state = json.loads(path.read_text()) if path.exists() else {"done": [], "statuses": {}}
+    # One lookup per base part; the lookup returns at most 100 rows, so a full
+    # answer is split into base + grade lookups.
+    by_base: dict[str, set[str]] = {}
+    for opn in records:
+        if m := BASE_RE.match(opn):
+            by_base.setdefault(m.group(0), set()).add(m.group(0) + opn[m.end() : m.end() + 2])
+    for base, grades in sorted(by_base.items()):
+        if base in state["done"]:
+            continue
+        rows = fetch_lifecycle(base)
+        if len(rows) >= 100:
+            rows = [row for grade in sorted(grades) for row in fetch_lifecycle(grade)]
+        for opn, status in rows:
+            state["statuses"][opn.upper()] = status
+        state["done"].append(base)
+        path.write_text(json.dumps(state))
+    log(f"lifecycle: {len(state['statuses'])} part numbers")
 
 
 def _slug(s: str) -> str:
@@ -259,7 +278,11 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
     facts = yaml.safe_load(facts_file.read_text())
     records = parse_tables(raw_dir)
     lifecycle_path = raw_dir / "lifecycle.json"
-    statuses = json.loads(lifecycle_path.read_text()) if lifecycle_path.exists() else {}
+    statuses = json.loads(lifecycle_path.read_text())["statuses"] if lifecycle_path.exists() else {}
+    # The lookup spells part numbers with the die revision ("SI8641BD-B-IS"); the
+    # product table does not ("SI8641BD-IS"). Index both spellings.
+    for opn, status in list(statuses.items()):
+        statuses.setdefault(re.sub(r"-[A-C]-", "-", opn), status)
     alias = {a.upper(): p["code"] for p in facts["packages"] for a in p["aliases"] + [p["code"]]}
     bases = {k.upper(): (k, v) for k, v in facts["base_parts"].items()}
 
@@ -278,19 +301,27 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
             sheets[ds_name] = Datasheet(ds_dir / ds_name)
         sheet = sheets[ds_name]
         guide = sheet.ordering_line(opn)
-        pkg = alias.get((f.get("Package Type") or "").upper())
-        guide_iso = None
+        table_pkg = alias.get((f.get("Package Type") or "").upper())
+        guide_pkg = guide_iso = None
         if guide:
             line = guide[0]
             hits = sorted(
                 ((line.upper().find(a), a) for a in alias if a in line.upper()), key=lambda h: (h[0], -len(h[1]))
             )
-            if hits:
-                pkg = pkg or alias[hits[0][1]]
+            guide_pkg = alias[hits[0][1]] if hits else None
             # "... <default output> <isolation kV> <package>"
             iso = re.search(r"\b(?:Low|High)\s+(\d+(?:\.\d+)?)\b", line)
             before_pkg = re.findall(r"(\d+(?:\.\d+)?)\s", line[: hits[0][0]]) if hits else []
             guide_iso = float(iso.group(1)) if iso else float(before_pkg[-1]) if before_pkg else None
+        # The datasheet ordering guide is authoritative; the web table has errors.
+        if table_pkg and guide_pkg and table_pkg != guide_pkg:
+            mismatches.append(f"{opn}: table says {table_pkg}, datasheet ordering guide says {guide_pkg}")
+        pkg = guide_pkg or table_pkg
+        pkg_pins = {p["code"]: p["pin_count"] for p in facts["packages"]}
+        layouts = base["layout"].values() if isinstance(base["layout"], dict) else [base["layout"]]
+        if pkg is not None and pkg_pins[pkg] not in {facts["layouts"][lay]["pins"] for lay in layouts}:
+            mismatches.append(f"{opn}: package {pkg} does not fit the {base_name} pinout")
+            pkg = None
         if pkg is None:
             skipped.append((opn, "package unknown"))
             continue

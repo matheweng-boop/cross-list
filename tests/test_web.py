@@ -262,3 +262,19 @@ def test_deviation_links_open_the_note_with_both_parts(client):
     assert link in page
     note = client.get(link.replace("&amp;", "&")).text
     assert "Your comparison" in note and "SR8640N" in note and "SB8441" in note and "different" in note
+
+
+def test_grade_badges_and_filter(client):
+    (ref,) = ids(client, "SR8641")
+    html = client.get(f"/parts/{ref}").text
+    assert "Non-automotive reference" in html and 'class="badge grade-auto"' in html
+    auto = client.get(f"/parts/{ref}?grade=automotive").text
+    assert "SD8641A" in auto and "SC141" not in auto.split('<details class="category-view">')[0]
+    ind = client.get(f"/parts/{ref}?grade=industrial").text
+    assert "SD8641A" not in ind.split('<details class="category-view">')[0]
+
+
+def test_automotive_reference_banner(client):
+    (ref,) = ids(client, "SD8641A")
+    html = client.get(f"/parts/{ref}").text
+    assert "Automotive reference" in html and "Filter by grade" not in html

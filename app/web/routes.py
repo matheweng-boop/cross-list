@@ -53,6 +53,23 @@ def _is_new(part: Part) -> bool:
 
 templates.env.globals["is_new"] = _is_new
 
+GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
+
+
+def grade_of(part: Part) -> str:
+    """'automotive' for AEC-Q100 parts, 'industrial' for everything else (grade unknown included)."""
+    q = next((pv.value for pv in part.params if pv.key == "qualification"), None)
+    return "automotive" if q == "automotive" else "industrial"
+
+
+def _grade_badge(part: Part) -> tuple[str, str] | None:
+    q = next((pv.value for pv in part.params if pv.key == "qualification"), None)
+    return GRADES.get(q)
+
+
+templates.env.globals["grade_badge"] = _grade_badge
+templates.env.globals["grade_of"] = grade_of
+
 
 def _has_synthetic() -> bool:
     from app.db import get_engine
@@ -173,6 +190,7 @@ def part_detail(
     scope: str = "auto",
     type: str = "",
     dev: int = DEFAULT_MAX_DEVIATIONS,
+    grade: str = "",
     session: Session = Depends(get_session),
 ):
     part = session.get(Part, part_id)
@@ -185,6 +203,12 @@ def part_detail(
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
+    grade = grade if grade in ("automotive", "industrial") else ""
+    grade_counts = {
+        g: sum(grade_of(r.candidate) == g for r, _ in result_rows(crosses)) for g in ("automotive", "industrial")
+    }
+    if grade:
+        crosses = {c: [r for r in rs if grade_of(r.candidate) == grade] for c, rs in crosses.items()}
     companies = companies_of(result_rows(crosses))
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
@@ -218,6 +242,9 @@ def part_detail(
             "type": type,
             "type_counts": type_counts,
             "dev": dev,
+            "grade": grade,
+            "grade_counts": grade_counts,
+            "ref_grade": grade_of(part),
         },
     )
 
@@ -225,7 +252,7 @@ def part_detail(
 @router.get("/parts/{part_id}/replacements.{fmt}")
 def results_download(
     part_id: int, fmt: str, scope: str = "auto", company: str = "", type: str = "",
-    dev: int = DEFAULT_MAX_DEVIATIONS, session: Session = Depends(get_session),
+    dev: int = DEFAULT_MAX_DEVIATIONS, grade: str = "", session: Session = Depends(get_session),
 ):  # fmt: skip
     part = session.get(Part, part_id)
     if part is None:
@@ -234,6 +261,8 @@ def results_download(
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     rows = [(r, v) for r, v in result_rows(crosses) if not type or v.category == type]
+    if grade in ("automotive", "industrial"):
+        rows = [(r, v) for r, v in rows if grade_of(r.candidate) == grade]
     if fmt == "xlsx":
         return _download(export.results_xlsx(part, rows), f"replacements_{part.mpn}.xlsx", XLSX)
     if fmt == "csv":

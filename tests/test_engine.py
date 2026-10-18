@@ -216,3 +216,19 @@ def test_priority_3_differences_are_noted_in_the_comment(part):
     r.top_differences = lambda n=5: []  # when it is not in the top 5 it gets its own note
     assert "Also note (priority 3): TÜV certification no vs yes" in r.comment()
     assert "Also note" not in cross(part("SR8641"), part("SA7741"), rules).comment()
+
+
+def test_automotive_reference_lists_only_automotive_parts(session, part):
+    # AEC-Q100 is a hard requirement when the reference has it: industrial parts are never listed.
+    got = crosses(session, part, "SD8641A")
+    listed = [r.candidate for rs in got.values() for r in rs]
+    # (the demo data has no other automotive isolator, so nothing may be listed at all)
+    for c in listed:
+        assert {pv.key: pv.value for pv in c.params}.get("qualification") == "automotive", c.mpn
+    r = cross(part("SD8641A"), part("SR8641"), get_rules("digital_isolator"))
+    assert r.hard_fail and r.categories == []
+
+
+def test_industrial_reference_accepts_automotive_upgrade(part):
+    r = cross(part("SR8641"), part("SD8641A"), get_rules("digital_isolator"))
+    assert "fff" in r.categories and any(d.key == "qualification" for d in r.verdict().better)

@@ -17,6 +17,8 @@ shown for information and never block a cross. In order of preference:
 
 Anything else is not listed. "Hard" parameters (e.g. channel configuration) define what
 the part does: they never count as a deviation, a mismatch is not listed at all.
+"Must meet" parameters (automotive grade) work one way: a candidate below the reference
+(an industrial part for an AEC-Q100 reference) is not listed; a better one is fine.
 An engineer can reject a drop-in; it is then listed as a package equivalent.
 """
 
@@ -53,6 +55,7 @@ class Diff:
     cand_display: str
     severity: float = 0.0
     hard: bool = False
+    must_meet: bool = False
 
     @property
     def score(self) -> float:
@@ -407,10 +410,18 @@ def cross(
                 format_value(p, cv.get(p.key)),
                 sev,
                 p.hard,
+                p.must_meet,
             )
         )
 
-    hard_fail = any(d.hard and d.is_negative for d in diffs)
+    # hard: any mismatch; must_meet: the candidate falls below the reference (e.g. an industrial
+    # part for an automotive reference), while a better value (automotive for industrial) is fine
+    # (an unknown value cannot prove it reaches the reference's level either)
+    hard_fail = any(
+        (d.hard and d.is_negative)
+        or (d.must_meet and (d.is_negative or (d.status == UNKNOWN and rv.get(d.key) is not None)))
+        for d in diffs
+    )
     incomplete = any(d.status == UNKNOWN for d in diffs if d.priority in (1, 2))
     deviations = [d for d in diffs if d.priority == 1 and (d.is_negative or d.status == UNKNOWN)]
     rejected = feedback is not None and feedback.verdict == FeedbackVerdict.reject

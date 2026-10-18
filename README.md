@@ -23,6 +23,11 @@ Anything else is not listed. "Same package" means the same body length, body wid
 lead span and pitch; the pin count may differ, because a missing pin position is
 equivalent to a no-connect pin. Pinouts are compared by physical position.
 
+Automotive and non-automotive parts are kept apart: every part carries an AEC-Q100 or
+Industrial badge, and AEC-Q100 is a hard requirement when the reference has it (industrial
+parts are then not listed at all). For an industrial reference, automotive parts are listed
+as an upgrade and the results can be filtered by grade.
+
 "Hard" parameters (channel configuration, input type, output type…) define what the
 part does: a mismatch is not listed at all. Obsolete /
 NRND / last-time-buy candidates are always listed last. Priority groups live in

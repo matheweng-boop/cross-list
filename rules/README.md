@@ -13,6 +13,7 @@ One YAML file per product family. Each parameter has:
 | `tolerance` | `number`/`range`: relative difference still treated as equal (default 0.02) |
 | `exclude` | `set` only: items shown but ignored when comparing (e.g. TUV) |
 | `from` | derived `bool`: `{param: certifications, contains: TUV}` is true when that set contains the item |
-| `hard` | a mismatch makes the parts functionally different: excluded from FFF, Upgrade and Downgrade |
+| `hard` | defines the function: any mismatch means a different part, which is not listed at all |
+| `must_meet` | one-way requirement: a candidate below the reference (or without a value) is not listed; a better one is fine. Used for the automotive grade: an AEC-Q100 reference only gets AEC-Q100 candidates |
 
 Edit a file and restart the app to apply changes.

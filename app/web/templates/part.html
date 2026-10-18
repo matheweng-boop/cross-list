@@ -45,6 +45,32 @@
 <form method="get" style="margin-bottom:.5rem">
   <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / last-time-buy / obsolete candidates</label>
 </form>
+{% if companies %}
+<section class="by-company" aria-label="Suggestions by company">
+  <h3>By company</h3>
+  <nav class="company-filter">
+    <a href="?{{ 'hide_eol=true&' if hide_eol }}#cat-fff" class="badge cat{{ ' on' if not company }}">All companies</a>
+    {% for name, items in companies %}<a href="?company={{ name|urlencode }}{{ '&hide_eol=true' if hide_eol }}#cat-fff" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ items|length }})</a>{% endfor %}
+  </nav>
+  {% for name, items in companies if not company or company == name %}
+  <div class="company">
+    <h4>{{ name }} <small class="muted">{{ items|length }} candidate{{ '' if items|length == 1 else 's' }} · swipe for more</small></h4>
+    <div class="strip">
+      {% for it in items %}{% set r = it.r %}
+      <a class="strip-card rank-{{ it.rank }}" href="#{{ it.cat }}-{{ r.candidate.id }}">
+        <span class="badge {{ 'ok' if it.rank == 0 else 'warn' if it.rank == 1 else 'cat' }}">{{ it.label }}</span>
+        <b>{{ r.candidate.mpn }}</b>
+        <span class="muted">{{ r.candidate.package.code }} · {{ lifecycle_badge(r.candidate)[0] }}</span>
+        {% set top = r.top_differences(1) %}
+        <span class="strip-diff {{ top[0].status if top }}">{{ top[0].summary() if top else 'No differences' }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
 <nav class="catnav">
   {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
 </nav>
@@ -55,7 +81,7 @@
 <section id="cat-{{ c }}">
   <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
   {% for r in crosses[c] %}
-  <article class="cross" id="{{ 'cand-%d' % r.candidate.id if c == 'fff' }}">
+  <article class="cross" id="{{ c }}-{{ r.candidate.id }}">
     <header>
       <label><input type="checkbox" name="pick" value="{{ r.candidate.id }}"> {{ r.candidate.label }}</label>
       <span class="muted">{{ r.candidate.package.code }}</span>

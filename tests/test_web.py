@@ -107,3 +107,36 @@ def test_feedback_reject_moves_out_of_fff(client):
         client.post("/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "maybe"}).status_code
         == 400
     )
+
+
+def test_partial_part_numbers(client):
+    from app.services.queries import normalize_pn
+
+    assert normalize_pn(" si-86 41 ") == "SI8641"
+    rows = client.get("/api/parts?q=8641").json()
+    mpns = [p["mpn"] for p in rows]
+    assert "SR8641" in mpns and "SD8641A" in mpns and "SB8641N" in mpns
+    assert [p["mpn"] for p in client.get("/api/parts?q=sr86*41").json()][:1] == ["SR8641"]  # wildcard, prefix first
+    assert {p["mpn"] for p in client.get("/api/parts?q=sa-77").json()} >= {"SA7741", "SA7740N", "SA7721"}
+
+
+def test_search_page_covers_all_companies(client):
+    html = client.get("/?q=7741").text
+    assert "SA7741" in html  # competitor part found without changing the filter
+    assert "SR8641" in client.get("/").text and "SA7741X" not in client.get("/").text  # no query: references only
+
+
+def test_suggestions_fragment(client):
+    html = client.get("/suggest?q=864").text
+    assert "SR8641" in html and "suggest-list" in html and "<html" not in html
+    assert client.get("/suggest?q=8").text.strip() == ""  # at least two characters
+    assert "No part numbers contain" in client.get("/suggest?q=zzzz").text
+
+
+def test_part_page_groups_suggestions_by_company(client):
+    (ref,) = ids(client, "SR8641")
+    html = client.get(f"/parts/{ref}").text
+    assert "By company" in html and "SynAlpha" in html and 'class="strip"' in html
+    only = client.get(f"/parts/{ref}?company=SynBeta").text
+    section = only.split('id="cat-fff"')[1]
+    assert "SynBeta SB8441" in section and "SynAlpha SA7741" not in section

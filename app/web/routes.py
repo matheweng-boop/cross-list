@@ -16,7 +16,14 @@ from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Part, User
 from app.services import export, lifecycle
 from app.services.compare import compare_parts
-from app.services.queries import crosses_for, parts_by_ids, record_feedback, search_parts, single_cross
+from app.services.queries import (
+    crosses_for,
+    normalize_pn,
+    parts_by_ids,
+    record_feedback,
+    search_parts,
+    single_cross,
+)
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -65,10 +72,12 @@ def index(
     request: Request,
     q: str = "",
     family: str = "",
-    role: str = "reference",
+    role: str | None = None,
     lifecycle_status: str = Query("", alias="lifecycle"),
     session: Session = Depends(get_session),
 ):
+    # Without a search the list shows the reference parts; a search covers every company.
+    role = role if role is not None else ("" if q.strip() else "reference")
     parts = search_parts(session, q, family, role, lifecycle_status)
     return templates.TemplateResponse(
         request,
@@ -84,8 +93,36 @@ def index(
     )
 
 
+# Order in which a candidate's best category is shown in the per-company rows.
+BEST_RANK = {("fff", "auto"): 0, ("fff", "accepted"): 0, ("fff", "review"): 1, "upgrade": 2, "p2p": 3, "downgrade": 4}
+BEST_LABEL = {0: "FFF", 1: "FFF – review", 2: "Upgrade", 3: "Pin-to-pin", 4: "Downgrade"}
+
+
+def by_company(crosses: dict) -> list[tuple[str, list[dict]]]:
+    """Each candidate once, under its best category, grouped by manufacturer."""
+    best: dict[int, dict] = {}
+    for cat, results in crosses.items():
+        for r in results:
+            rank = BEST_RANK[(cat, r.fff_status)] if cat == "fff" else BEST_RANK[cat]
+            cur = best.get(r.candidate.id)
+            if cur is None or rank < cur["rank"]:
+                best[r.candidate.id] = {"rank": rank, "label": BEST_LABEL[rank], "cat": cat, "r": r}
+    groups: dict[str, list[dict]] = {}
+    for item in best.values():
+        groups.setdefault(item["r"].candidate.manufacturer.name, []).append(item)
+    for items in groups.values():
+        items.sort(key=lambda i: (i["r"].lifecycle_risk, i["rank"], i["r"].closeness))
+    return sorted(groups.items(), key=lambda g: (min(i["rank"] for i in g[1]), g[0]))
+
+
 @router.get("/parts/{part_id}", response_class=HTMLResponse)
-def part_detail(request: Request, part_id: int, hide_eol: bool = False, session: Session = Depends(get_session)):
+def part_detail(
+    request: Request,
+    part_id: int,
+    hide_eol: bool = False,
+    company: str = "",
+    session: Session = Depends(get_session),
+):
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Part not found")
@@ -94,6 +131,9 @@ def part_detail(request: Request, part_id: int, hide_eol: bool = False, session:
     rejected = [r for r in crosses["p2p"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
+    companies = by_company(crosses)
+    if company:
+        crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     values = part.param_map()
     sources = {pv.key: pv.source for pv in part.params}
     groups = {
@@ -112,6 +152,8 @@ def part_detail(request: Request, part_id: int, hide_eol: bool = False, session:
             "order": CATEGORY_ORDER,
             "hide_eol": hide_eol,
             "rejected": rejected,
+            "companies": companies,
+            "company": company,
         },
     )
 
@@ -212,4 +254,11 @@ def feedback(
     if session.get(Part, reference_id) is None or session.get(Part, candidate_id) is None:
         raise HTTPException(404, "Part not found")
     record_feedback(session, reference_id, candidate_id, None if verdict == "clear" else verdict, note, user.id)
-    return RedirectResponse(f"/parts/{reference_id}#cand-{candidate_id}", status_code=303)
+    return RedirectResponse(f"/parts/{reference_id}#fff-{candidate_id}", status_code=303)
+
+
+@router.get("/suggest", response_class=HTMLResponse)
+def suggest(request: Request, q: str = "", session: Session = Depends(get_session)):
+    """Live part-number suggestions (HTML fragment for the header search box)."""
+    parts = search_parts(session, q, limit=60) if len(normalize_pn(q).replace("*", "")) >= 2 else []
+    return templates.TemplateResponse(request, "_suggest.html", {"parts": parts, "q": q})

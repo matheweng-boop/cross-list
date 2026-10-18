@@ -1,0 +1,15 @@
+{% from "_macros.html" import part_badges %}
+{% if parts %}
+<ul class="suggest-list" role="listbox">
+  {% for p in parts %}
+  <li role="option"><a href="/parts/{{ p.id }}">
+    <span class="sg-mpn">{{ p.mpn }}</span>
+    <span class="sg-meta">{{ p.manufacturer.name }} · {{ p.package.code }}{% if p.is_reference %} · reference{% endif %}</span>
+    {{ part_badges(p) }}
+  </a></li>
+  {% endfor %}
+  {% if parts|length == 60 %}<li class="muted sg-more"><a href="/?q={{ q|urlencode }}">Showing the first 60 – see all results</a></li>{% endif %}
+</ul>
+{% elif q|length >= 2 %}
+<p class="suggest-list muted sg-empty">No part numbers contain “{{ q }}”.</p>
+{% endif %}

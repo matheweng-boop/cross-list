@@ -1,11 +1,25 @@
 """Shared database queries."""
 
-from sqlalchemy import or_, select
+import re
+
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.matching.engine import CrossResult, cross, find_crosses
 from app.matching.rules import get_rules
 from app.models import CrossFeedback, FeedbackVerdict, LifecycleStatus, Manufacturer, ManufacturerRole, Part
+
+
+def normalize_pn(text: str) -> str:
+    """Part numbers compare without case, dashes, spaces or slashes; ``*`` is a wildcard."""
+    return re.sub(r"[\s\-_/]", "", text).upper()
+
+
+def _pn_column():
+    col = func.upper(Part.mpn)
+    for ch in ("-", " ", "_", "/"):
+        col = func.replace(col, ch, "")
+    return col
 
 
 def search_parts(
@@ -17,16 +31,21 @@ def search_parts(
     limit: int = 200,
 ) -> list[Part]:
     stmt = select(Part).join(Part.manufacturer)
-    if q:
-        like = f"%{q.strip()}%"
-        stmt = stmt.where(or_(Part.mpn.ilike(like), Part.description.ilike(like), Manufacturer.name.ilike(like)))
+    order = []
+    if q.strip():
+        pn = normalize_pn(q).replace("*", "%")
+        pn_col = _pn_column()
+        text = f"%{q.strip()}%"
+        stmt = stmt.where(or_(pn_col.like(f"%{pn}%"), Part.description.ilike(text), Manufacturer.name.ilike(text)))
+        # Part numbers that start with the query first, then other part-number hits.
+        order.append(case((pn_col.like(f"{pn}%"), 0), (pn_col.like(f"%{pn}%"), 1), else_=2))
     if family:
         stmt = stmt.where(Part.family == family)
     if role:
         stmt = stmt.where(Manufacturer.role == ManufacturerRole(role))
     if lifecycle:
         stmt = stmt.where(Part.lifecycle_status == LifecycleStatus(lifecycle))
-    stmt = stmt.order_by(Manufacturer.role, Part.family, Part.mpn).limit(limit)
+    stmt = stmt.order_by(*order, Manufacturer.role, Part.family, Part.mpn).limit(limit)
     return list(session.scalars(stmt).unique())
 
 

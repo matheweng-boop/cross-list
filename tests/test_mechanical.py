@@ -88,3 +88,19 @@ def test_overlay_pages(client):
     r = client.get(f"/packages/{ref['package_id']}/overlay/{cand['package_id']}")
     assert r.status_code == 200
     assert f'href="/overlay/{ref["id"]}/{cand["id"]}"' in client.get(f"/parts/{ref['id']}").text
+
+
+def test_quad_package_pins_run_counter_clockwise(monkeypatch):
+    import app.services.mechanical as mechanical
+
+    qfn = mechanical.Mechanical((0.2, 0.3), (0.3, 0.4), sides=4)
+    monkeypatch.setattr(mechanical, "load_mechanical", lambda: {"QFN-12 2x2": qfn})
+    o = outline(pkg("QFN-12 2x2", pins=12, pitch=0.5, length=2, width=2, span=2, height=0.55))
+    side = {n: s for n, _, s in o.pins}
+    assert [side[n] for n in (1, 3, 4, 6, 7, 9, 10, 12)] == [-1, -1, 2, 2, 1, 1, -2, -2]
+    pos = {n: t for n, t, _ in o.pins}
+    assert pos[1] < pos[3]  # left side: top to bottom
+    assert pos[4] < pos[6]  # bottom: left to right
+    assert pos[7] > pos[9]  # right side: bottom to top
+    assert pos[10] > pos[12]  # top: right to left
+    assert o.quad and "<svg" in svg(compare(o, o))

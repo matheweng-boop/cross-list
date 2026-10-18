@@ -1,0 +1,25 @@
+family: rf_switch
+title: RF switches
+params:
+  # --- Priority 1: must match ---
+  # SPDT cannot replace SP3T, and a MIPI part cannot replace a GPIO-controlled one.
+  - {key: configuration, label: Configuration, priority: 1, kind: category, hard: true}
+  - {key: control_interface, label: Control interface, priority: 1, kind: category, hard: true}
+  # The candidate's band must cover the reference's band.
+  - {key: freq_range_ghz, label: Frequency range, unit: GHz, priority: 1, kind: range}
+  # An absorptive switch also works where a reflective one was used, not the other way round.
+  - {key: termination, label: Termination, priority: 1, kind: ordinal, levels: [reflective, absorptive]}
+  - {key: max_input_power_dbm, label: Max input power (abs. max), unit: dBm, priority: 1, kind: number, direction: higher}
+  - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive]}
+  # --- Priority 2: should match ---
+  - {key: insertion_loss_db, label: Insertion loss (worst in band), unit: dB, priority: 2, kind: number, direction: lower, tolerance: 0.05}
+  - {key: isolation_db, label: Isolation (worst in band), unit: dB, priority: 2, kind: number, direction: higher, tolerance: 0.05}
+  - {key: p1db_dbm, label: Input P1dB, unit: dBm, priority: 2, kind: number, direction: higher}
+  - {key: iip3_dbm, label: IIP3, unit: dBm, priority: 2, kind: number, direction: higher}
+  # The board's supply and logic levels must lie inside the candidate's ranges.
+  - {key: vdd_range_v, label: Supply range, unit: V, priority: 2, kind: range}
+  - {key: control_high_v, label: Control logic high, unit: V, priority: 2, kind: range}
+  - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
+  # --- Priority 3: informative ---
+  - {key: switching_time_ns, label: Switching time, unit: ns, priority: 3, kind: number, direction: lower}
+  - {key: esd_hbm_kv, label: ESD (HBM), unit: kV, priority: 3, kind: number, direction: higher}

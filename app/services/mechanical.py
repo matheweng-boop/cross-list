@@ -23,6 +23,7 @@ class LandPattern:
     row_spacing: float  # pad centre to pad centre across the body
     source: str = ""
     note: str = ""
+    row_spacing_y: float | None = None  # top/bottom rows of a 4-sided package, if different
 
     @property
     def inner_edge(self) -> float:  # distance from the package centre line
@@ -32,6 +33,11 @@ class LandPattern:
     def outer_edge(self) -> float:
         return (self.row_spacing + self.pad_length) / 2
 
+    def edges(self, vertical: bool) -> tuple[float, float]:
+        """Inner and outer pad edge for the left/right rows, or the top/bottom rows."""
+        spacing = (self.row_spacing_y or self.row_spacing) if vertical else self.row_spacing
+        return (spacing - self.pad_length) / 2, (spacing + self.pad_length) / 2
+
 
 @dataclass(frozen=True)
 class Mechanical:
@@ -40,13 +46,20 @@ class Mechanical:
     source: str = ""
     note: str = ""
     land_patterns: tuple[LandPattern, ...] = ()
+    sides: int = 2  # 2 = dual row (SOIC, DFN), 4 = quad (QFN, MLP)
 
 
 @lru_cache
 def load_mechanical(path: Path = MECH_FILE) -> dict[str, Mechanical]:
-    """Package code -> lead and land pattern data."""
+    """Package code -> lead and land pattern data (data/mechanical.yaml plus generated
+    data/mechanical_*.yaml files written by the importers)."""
     out = {}
-    for packages in (yaml.safe_load(path.read_text()) or {}).values():
+    files = [path, *sorted(path.parent.glob("mechanical_*.yaml"))] if path == MECH_FILE else [path]
+    tree = {}
+    for file in files:
+        for maker, packages in (yaml.safe_load(file.read_text()) or {}).items():
+            tree.setdefault(maker, {}).update(packages)
+    for packages in tree.values():
         for code, m in packages.items():
             lps = tuple(
                 LandPattern(
@@ -56,6 +69,7 @@ def load_mechanical(path: Path = MECH_FILE) -> dict[str, Mechanical]:
                     row_spacing=lp["row_spacing_mm"],
                     source=lp.get("source", ""),
                     note=lp.get("note", ""),
+                    row_spacing_y=lp.get("row_spacing_y_mm"),
                 )
                 for lp in m.get("land_patterns", [])
             )
@@ -65,6 +79,7 @@ def load_mechanical(path: Path = MECH_FILE) -> dict[str, Mechanical]:
                 source=m.get("source", ""),
                 note=m.get("note", ""),
                 land_patterns=lps,
+                sides=int(m.get("sides", 2)),
             )
     return out
 
@@ -75,7 +90,8 @@ def mid(r: tuple[float, float]) -> float:
 
 @dataclass
 class Outline:
-    """One package, centred on the origin: pins on the left and right, pin 1 top left."""
+    """One package, centred on the origin, pin 1 top left. Dual-row packages have pins on the
+    left and right; quad packages also on the bottom and top."""
 
     code: str
     label: str
@@ -84,13 +100,24 @@ class Outline:
     body_width: float  # across the body (horizontal)
     span: float  # lead tip to lead tip
     height: float | None
-    pins: list[tuple[int, float, int]]  # (pin number, y, side -1 left / +1 right)
+    # (pin number, position along its side, side): -1 left, +1 right, +2 bottom, -2 top
+    pins: list[tuple[int, float, int]]
     mech: Mechanical | None
     land: LandPattern | None
 
     @property
     def no_lead(self) -> bool:  # DFN / SON: terminals end at the body edge
         return self.span - self.body_width < 0.1
+
+    @property
+    def quad(self) -> bool:
+        return any(abs(side) == 2 for _, _, side in self.pins)
+
+    def half(self, side: int) -> tuple[float, float]:
+        """Body edge and lead tip distance from the centre for pins on ``side``."""
+        if abs(side) == 1:
+            return self.body_width / 2, (self.body_width if self.no_lead else self.span) / 2
+        return self.body_length / 2, self.body_length / 2  # quad packages here are no-lead
 
     def foot(self, length: float) -> tuple[float, float]:
         """x range (from the centre line) of the lead's foot that sits on the board."""
@@ -101,14 +128,24 @@ class Outline:
 def outline(package, label: str = "", land_index: int = 0) -> Outline:
     mech = load_mechanical().get(package.code)
     positions = package.positions_total or package.pin_count
-    per_side = positions // 2
+    sides = mech.sides if mech else 2
+    n = positions // sides
+    pitch = package.pitch_mm
     numbers = package.pin_positions or list(range(1, package.pin_count + 1))
     pins = []
     for number, pos in zip(range(1, package.pin_count + 1), numbers, strict=False):
-        if pos <= per_side:  # left side, top to bottom
-            pins.append((number, (pos - 1 - (per_side - 1) / 2) * package.pitch_mm, -1))
-        else:  # right side, bottom to top
-            pins.append((number, ((positions - pos) - (per_side - 1) / 2) * package.pitch_mm, 1))
+        k, i = divmod(pos - 1, n)  # side index counter-clockwise from the left, place on that side
+        if sides == 2:
+            k = 0 if k == 0 else 2  # dual row: left side then right side
+        t = (i - (n - 1) / 2) * pitch
+        if k == 0:  # left, top to bottom
+            pins.append((number, t, -1))
+        elif k == 1:  # bottom, left to right
+            pins.append((number, t, 2))
+        elif k == 2:  # right, bottom to top
+            pins.append((number, -t, 1))
+        else:  # top, right to left
+            pins.append((number, -t, -2))
     lands = mech.land_patterns if mech else ()
     return Outline(
         code=package.code,
@@ -292,47 +329,48 @@ def _rect(x0, y0, x1, y1, cls, title=""):
     )
 
 
+def _side_rect(side: int, r0: float, r1: float, t: float, w: float, cls: str, title: str = "") -> str:
+    """Rectangle from r0 to r1 out from the centre on ``side``, centred at t along it, w wide."""
+    sign = 1 if side > 0 else -1
+    if abs(side) == 1:
+        return _rect(sign * r0, t - w / 2, sign * r1, t + w / 2, cls, title)
+    return _rect(t - w / 2, sign * r0, t + w / 2, sign * r1, cls, title)
+
+
 def _layer(o: Outline, cls: str, numbers: bool) -> str:
     parts = [f'<g class="{cls}">']
     bw, bl = o.body_width / 2, o.body_length / 2
     if o.land:
         lp = o.land
-        for n, y, side in o.pins:
-            parts.append(
-                _rect(
-                    side * lp.inner_edge,
-                    y - lp.pad_width / 2,
-                    side * lp.outer_edge,
-                    y + lp.pad_width / 2,
-                    "pad layer-pads",
-                    f"{o.label} pad {n}: {lp.pad_length} x {lp.pad_width} mm",
-                )
-            )
+        for n, t, side in o.pins:
+            r0, r1 = lp.edges(abs(side) == 2)
+            title = f"{o.label} pad {n}: {lp.pad_length} x {lp.pad_width} mm"
+            parts.append(_side_rect(side, r0, r1, t, lp.pad_width, "pad layer-pads", title))
     parts.append(_rect(-bw, -bl, bw, bl, "body layer-body", f"{o.label} body {o.body_width} x {o.body_length} mm"))
-    if o.mech:
-        b, length = mid(o.mech.lead_width), mid(o.mech.lead_length)
-        for n, y, side in o.pins:
-            if o.no_lead:
-                x0, x1 = bw - length, bw
-            else:
-                x0, x1 = bw, o.span / 2
-            parts.append(_rect(side * x0, y - b / 2, side * x1, y + b / 2, "lead layer-leads", f"{o.label} pin {n}"))
+    for n, t, side in o.pins:
+        edge, tip = o.half(side)
+        if o.mech:
+            b, length = mid(o.mech.lead_width), mid(o.mech.lead_length)
+            r0 = edge - length if o.no_lead else edge
+            parts.append(_side_rect(side, r0, tip, t, b, "lead layer-leads", f"{o.label} pin {n}"))
             if not o.no_lead:  # foot in contact with the board
-                f0, f1 = o.foot(length)
-                parts.append(_rect(side * f0, y - b / 2, side * f1, y + b / 2, "lead layer-leads"))
-    else:  # no lead data: mark the lead tips only
-        for _n, y, side in o.pins:
-            parts.append(_rect(side * (o.span / 2 - 0.05), y - 0.1, side * o.span / 2, y + 0.1, "lead layer-leads"))
+                parts.append(_side_rect(side, tip - length, tip, t, b, "lead layer-leads"))
+        else:  # no lead data: mark the lead tips only
+            parts.append(_side_rect(side, tip - 0.05, tip, t, 0.2, "lead layer-leads"))
     # pin 1 marker inside the body corner
-    _, y1, _ = o.pins[0]
-    r = min(0.25, o.body_width / 12)
+    _, t1, _ = o.pins[0]
+    r = min(0.25, min(o.body_width, o.body_length) / 12)
+    cy = -bl + 2.2 * r if o.quad else t1
     parts.append(
-        f'<circle class="pin1" cx="{-bw + 2.2 * r:.3f}" cy="{y1:.3f}" r="{r:.3f}"><title>pin 1</title></circle>'
+        f'<circle class="pin1" cx="{-bw + 2.2 * r:.3f}" cy="{cy:.3f}" r="{r:.3f}"><title>pin 1</title></circle>'
     )
     if numbers:
-        for n, y, side in o.pins:
-            x = side * (max(o.span / 2, o.land.outer_edge if o.land else 0) + 0.35)
-            parts.append(f'<text class="num" x="{x:.3f}" y="{y + 0.11:.3f}" text-anchor="middle">{n}</text>')
+        for n, t, side in o.pins:
+            _, tip = o.half(side)
+            out = max(tip, o.land.edges(abs(side) == 2)[1] if o.land else 0) + 0.3
+            sign = 1 if side > 0 else -1
+            x, y = (sign * out, t + 0.11) if abs(side) == 1 else (t, sign * out + 0.11)
+            parts.append(f'<text class="num" x="{x:.3f}" y="{y:.3f}" text-anchor="middle">{n}</text>')
     parts.append("</g>")
     return "".join(parts)
 
@@ -355,10 +393,14 @@ def _text(x: float, y: float, label: str, cls: str, anchor: str = "start") -> st
 def svg(ov: Overlay, standalone: bool = False) -> str:
     ref, cand = ov.ref, ov.cand
     half_w = max(o.span / 2 for o in (ref, cand))
+    half_h = max(max(o.body_length, (len(o.pins) // 2) * o.pitch) / 2 for o in (ref, cand))
     for o in (ref, cand):
         if o.land:
             half_w = max(half_w, o.land.outer_edge)
-    half_h = max(max(o.body_length, (len(o.pins) // 2) * o.pitch) / 2 for o in (ref, cand))
+            if o.quad:
+                half_h = max(half_h, o.land.edges(True)[1])
+        if o.quad:
+            half_h += 0.4  # room for the pin numbers above and below
     m = 1.2
     x0, w = -half_w - m, 2 * (half_w + m)
     y0, h = -half_h - m - 2.4, 2 * (half_h + m) + 2.4 + 1.6

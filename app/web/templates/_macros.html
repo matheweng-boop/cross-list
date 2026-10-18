@@ -6,13 +6,12 @@
 
 {% macro diff_table(r) -%}
 <div class="table-wrap">
-<table>
-  <thead><tr><th>Parameter</th><th>P</th><th>{{ r.reference.mpn }} (ref)</th><th>{{ r.candidate.mpn }}</th><th>Status</th></tr></thead>
+<table class="diff">
+  <thead><tr><th>Parameter</th><th>{{ r.reference.mpn }} (ref)</th><th>{{ r.candidate.mpn }}</th><th>Status</th></tr></thead>
   <tbody>
   {% for d in r.all_diffs %}
     <tr>
-      <td>{{ d.label }}{% if d.hard %} <span class="muted">(hard)</span>{% endif %}</td>
-      <td>{{ d.priority }}</td>
+      <td>{{ d.label }} <span class="prio">P{{ d.priority }}{% if d.hard %} hard{% endif %}</span></td>
       <td>{{ d.ref_display }}</td>
       <td class="{{ d.status if d.status != 'equal' }}">{{ d.cand_display }}</td>
       <td class="{{ d.status if d.status != 'equal' }}"><span class="status">{{ d.status }}</span></td>

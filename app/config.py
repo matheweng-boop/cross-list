@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     new_part_days: int = 365
     # Load the synthetic demo dataset on startup when the database is empty.
     seed_synthetic: bool = True
+    # Site password: when set, every page asks for it once (cookie for 30 days).
+    site_password: str = ""
+    # Signs the login cookie; set a long random value in production.
+    secret_key: str = ""
+    # Load data/real/*.yaml on startup when the database has no parts (fresh server disk).
+    load_real_on_start: bool = False
     # DigiKey Product Information API (developer.digikey.com). Without these, pricing is off.
     digikey_client_id: str = ""
     digikey_client_secret: str = ""

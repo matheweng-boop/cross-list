@@ -140,6 +140,9 @@ def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
         if sheet is not None and sheet not in part.datasheets:
             part.datasheets.append(sheet)
         sources = spec.get("param_sources", {})
+        if part.params:  # reload: remove the old values before inserting new ones (unique part/key)
+            part.params.clear()
+            session.flush()
         part.params = [
             ParamValue(key=k, value=v, num=_num(v), source=sources.get(k), datasheet_id=sheet.id if sheet else None)
             for k, v in params.items()

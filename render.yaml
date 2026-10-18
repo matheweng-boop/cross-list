@@ -1,0 +1,22 @@
+# Render Blueprint: one web service built from the Dockerfile, with a disk for the database.
+services:
+  - type: web
+    name: cross-list
+    runtime: docker
+    plan: starter            # a persistent disk needs a paid plan
+    region: frankfurt        # change to oregon / ohio / virginia / singapore if closer
+    healthCheckPath: /healthz
+    autoDeploy: true         # redeploys on every push to the main branch
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: CROSSLIST_SECRET_KEY
+        generateValue: true  # Render creates a random value
+      - key: CROSSLIST_SITE_PASSWORD
+        sync: false          # you type it in Render's dashboard
+      - key: CROSSLIST_DIGIKEY_CLIENT_ID
+        sync: false
+      - key: CROSSLIST_DIGIKEY_CLIENT_SECRET
+        sync: false

@@ -34,6 +34,7 @@ templates.env.globals.update(
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
     pricing_enabled=pricing.enabled,
     qty_label=pricing.qty_label,
+    site_locked=lambda: bool(get_settings().site_password),
 )
 
 

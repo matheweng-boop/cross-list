@@ -48,3 +48,19 @@ def test_pinout_length_must_match_package(session, tmp_path):
     )
     with pytest.raises(ValueError, match="pinout has 6 pins"):
         load_file(session, path)
+
+
+def test_real_data_reloads_only_when_files_change(session, tmp_path, monkeypatch):
+    import shutil
+
+    import app.main as main
+    from app.config import get_settings
+
+    (tmp_path / "data" / "real").mkdir(parents=True)
+    shutil.copy(main.SYNTHETIC_FILE, tmp_path / "data" / "real" / "demo.yaml")
+    monkeypatch.setattr(main, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(get_settings(), "data_dir", tmp_path / "var")
+    assert main.load_real_if_changed(session) is True
+    assert main.load_real_if_changed(session) is False
+    (tmp_path / "data" / "real" / "demo.yaml").write_text(main.SYNTHETIC_FILE.read_text() + "\n# changed\n")
+    assert main.load_real_if_changed(session) is True

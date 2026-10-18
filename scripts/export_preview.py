@@ -52,7 +52,7 @@ OFFLINE_SUGGEST = """<script>
 def rewrite(html: str) -> str:
     html = re.sub(r'href="/parts/(\d+)(?:\?[^"]*)?"', r'href="part-\1.html"', html)
     html = re.sub(r'href="/compare[^".]*"', 'href="compare.html"', html)
-    html = re.sub(r'href="/(lifecycle|rules)"', r'href="\1.html"', html)
+    html = re.sub(r'href="/(lifecycle|rules|parts)"', r'href="\1.html"', html)
     html = html.replace('href="/"', 'href="index.html"').replace('href="/static/', 'href="static/')
     html = html.replace('src="/static/', 'src="static/')
     # downloads need the server
@@ -93,7 +93,7 @@ def main(out: Path, real: bool = False) -> None:
     if real:
         client = TestClient(create_app(seed_synthetic=False))
         parts = _representatives(client.get("/api/parts?role=reference&limit=5000").json())
-        pages = {"index.html": "/?q=", "rules.html": "/rules", "lifecycle.html": "/lifecycle"}
+        pages = {"index.html": "/", "parts.html": "/parts", "rules.html": "/rules", "lifecycle.html": "/lifecycle"}
         by_mpn = {p["mpn"]: p["id"] for p in client.get("/api/parts?limit=5000").json()}
         pick = [by_mpn[m] for m in ("SI8641BD-IS", "ISO7741DWR", "NSI8241W0-DSWR", "ISO6741DWR") if m in by_mpn]
         if pick:

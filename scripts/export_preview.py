@@ -1,9 +1,11 @@
 """Export a static, read-only snapshot of the app (for viewing without a server).
 
-    uv run python -m scripts.export_preview OUT_DIR
+    uv run python -m scripts.export_preview OUT_DIR          # synthetic demo data
+    uv run python -m scripts.export_preview OUT_DIR --real   # current database, one
+                                                             # page per Skyworks base part
 
-Uses the synthetic demo data. Links are rewritten to local files; search, filters
-and downloads are disabled because they need the live server.
+Links are rewritten to local files; search, filters and downloads are disabled
+because they need the live server. Links to pages that are not exported are removed.
 """
 
 import re
@@ -39,19 +41,50 @@ def rewrite(html: str) -> str:
     return html
 
 
-def main(out: Path) -> None:
+def _representatives(parts: list[dict]) -> list[dict]:
+    """One Skyworks part per base part, preferring wide-body default-low parts."""
+    best: dict[str, dict] = {}
+    for p in parts:
+        if p["role"] != "reference":
+            continue
+        m = re.match(r"^(SI86(?:S\d{3}|S[A-Z]\d{2}|P\d{3}|\d{2}))", p["mpn"])
+        key = m.group(1) if m else p["mpn"]
+        rank = (p["package"] != "SOIC-16W", "-A" in p["mpn"], len(p["mpn"]), p["mpn"])
+        if key not in best or rank < best[key][0]:
+            best[key] = (rank, p)
+    return [v[1] for v in best.values()]
+
+
+def main(out: Path, real: bool = False) -> None:
     out.mkdir(parents=True, exist_ok=True)
     tmp = out / "_preview.db"
     tmp.unlink(missing_ok=True)
-    client = TestClient(create_app(f"sqlite:///{tmp}", seed_synthetic=True))
-    parts = client.get("/api/parts").json()
-    ids = {p["mpn"]: p["id"] for p in parts}
-    pages = {"index.html": "/", "lifecycle.html": "/lifecycle", "rules.html": "/rules"}
-    pick = ",".join(str(ids[m]) for m in ["SR8641", "SA7741", "SB8441", "SC141", "SD8641A"])
-    pages["compare.html"] = f"/compare?ids={pick}&baseline={ids['SR8641']}"
+    if real:
+        client = TestClient(create_app(seed_synthetic=False))
+        parts = _representatives(client.get("/api/parts?role=reference&limit=5000").json())
+        pages = {"index.html": "/?q=", "rules.html": "/rules", "lifecycle.html": "/lifecycle"}
+        by_mpn = {p["mpn"]: p["id"] for p in client.get("/api/parts?limit=5000").json()}
+        pick = [by_mpn[m] for m in ("SI8641BD-IS", "ISO7741DWR", "NSI8241W0-DSWR", "ISO6741DWR") if m in by_mpn]
+        if pick:
+            pages["compare.html"] = f"/compare?ids={','.join(map(str, pick))}&baseline={pick[0]}"
+    else:
+        client = TestClient(create_app(f"sqlite:///{tmp}", seed_synthetic=True))
+        parts = client.get("/api/parts").json()
+        ids = {p["mpn"]: p["id"] for p in parts}
+        pages = {"index.html": "/", "lifecycle.html": "/lifecycle", "rules.html": "/rules"}
+        pick = ",".join(str(ids[m]) for m in ["SR8641", "SA7741", "SB8441", "SC141", "SD8641A"])
+        pages["compare.html"] = f"/compare?ids={pick}&baseline={ids['SR8641']}"
     pages.update({f"part-{p['id']}.html": f"/parts/{p['id']}" for p in parts})
+    exported = {p["id"] for p in parts}
     for name, url in pages.items():
         html = rewrite(client.get(url).text)
+        # Drop links to part pages that are not part of this export.
+        html = re.sub(
+            r'<a href="part-(\d+)\.html"[^>]*>(.*?)</a>',
+            lambda m: m.group(0) if int(m.group(1)) in exported else m.group(2),
+            html,
+            flags=re.S,
+        )
         if name == "index.html":  # the artifact host supplies the document skeleton for the main page
             head = re.search(r"<head>(.*?)</head>", html, re.S).group(1)
             head = re.sub(r"<meta[^>]*>\s*", "", head)
@@ -65,4 +98,4 @@ def main(out: Path) -> None:
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]))
+    main(Path(sys.argv[1]), real="--real" in sys.argv)

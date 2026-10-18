@@ -67,8 +67,10 @@ def cross_json(r: CrossResult) -> dict:
 
 
 @router.get("/parts")
-def list_parts(q: str = "", family: str = "", role: str = "", session: Session = Depends(get_session)):
-    return [part_json(p) for p in search_parts(session, q, family, role)]
+def list_parts(
+    q: str = "", family: str = "", role: str = "", limit: int = 200, session: Session = Depends(get_session)
+):
+    return [part_json(p) for p in search_parts(session, q, family, role, limit=min(limit, 5000))]
 
 
 @router.get("/parts/{part_id}")

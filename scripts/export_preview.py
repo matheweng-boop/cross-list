@@ -8,6 +8,7 @@ Links are rewritten to local files; search, filters and downloads are disabled
 because they need the live server. Links to pages that are not exported are removed.
 """
 
+import json
 import re
 import shutil
 import sys
@@ -21,6 +22,31 @@ NOTE = (
     '<p class="banner">Static preview: tap parts and expand the top-5 differences. '
     "Search, filters, the part picker and Excel/CSV downloads work in the full app.</p>"
 )
+
+
+# Suggestions without a server: filter an embedded part list in the browser.
+OFFLINE_SUGGEST = """<script>
+(() => {
+  const parts = __INDEX__;
+  const box = document.getElementById("global-search"), out = document.getElementById("suggestions");
+  if (!box || !out) return;
+  const norm = s => s.replace(/[\\s\\-_/]/g, "").toUpperCase();
+  const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  box.addEventListener("input", () => {
+    const q = norm(box.value);
+    if (q.replace(/\\*/g, "").length < 2) { out.innerHTML = ""; return; }
+    const rx = new RegExp(q.split("*").map(s => s.replace(/[.+?^${}()|[\\]\\\\]/g, "\\\\$&")).join(".*"));
+    const hits = parts.filter(p => rx.test(norm(p[0])))
+      .sort((a, b) => (norm(b[0]).startsWith(q) - norm(a[0]).startsWith(q)) || a[0].localeCompare(b[0])).slice(0, 60);
+    out.innerHTML = hits.length ? '<ul class="suggest-list">' + hits.map(p => {
+      const meta = esc(p[1]) + " · " + esc(p[2]) + " · " + esc(p[3]);
+      const body = '<span class="sg-mpn">' + esc(p[0]) + '</span><span class="sg-meta">' + meta + "</span>";
+      if (p[4]) return '<li><a href="part-' + p[4] + '.html">' + body + "</a></li>";
+      return '<li><a aria-disabled="true">' + body + ' <span class="sg-meta">(not in preview)</span></a></li>';
+    }).join("") + "</ul>" : '<p class="suggest-list muted sg-empty">No part numbers contain that.</p>';
+  });
+})();
+</script>"""
 
 
 def rewrite(html: str) -> str:
@@ -56,7 +82,12 @@ def _representatives(parts: list[dict]) -> list[dict]:
 
 
 def main(out: Path, real: bool = False) -> None:
+    out = out.resolve()
+    if out == Path.cwd().resolve() or (out / "pyproject.toml").exists():
+        raise SystemExit(f"Refusing to export into {out}: choose an empty output folder")
     out.mkdir(parents=True, exist_ok=True)
+    for old in out.glob("*.html"):  # previous export in this folder only
+        old.unlink()
     tmp = out / "_preview.db"
     tmp.unlink(missing_ok=True)
     if real:
@@ -76,8 +107,15 @@ def main(out: Path, real: bool = False) -> None:
         pages["compare.html"] = f"/compare?ids={pick}&baseline={ids['SR8641']}"
     pages.update({f"part-{p['id']}.html": f"/parts/{p['id']}" for p in parts})
     exported = {p["id"] for p in parts}
+    everything = client.get("/api/parts?limit=5000").json()
+    index = [
+        [p["mpn"], p["manufacturer"], p["package"], p["lifecycle"]["status"], p["id"] if p["id"] in exported else 0]
+        for p in everything
+    ]
     for name, url in pages.items():
         html = rewrite(client.get(url).text)
+        html = html.replace('hx-get="/suggest"', "data-static-suggest")
+        html = html.replace("</body>", OFFLINE_SUGGEST.replace("__INDEX__", json.dumps(index)) + "</body>")
         # Drop links to part pages that are not part of this export.
         html = re.sub(
             r'<a href="part-(\d+)\.html"[^>]*>(.*?)</a>',

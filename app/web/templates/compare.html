@@ -41,7 +41,7 @@
     <tr><td>Package</td><td>1</td>{% for p in comparison.parts %}<td>{{ p.package.code }}</td>{% endfor %}</tr>
     <tr><td>Lifecycle</td><td>–</td>{% for p in comparison.parts %}<td>{{ lifecycle_badge(p)[0] }}</td>{% endfor %}</tr>
     {% for row in comparison.rows %}
-      <tr><td>{{ row.param.label }}</td><td>{{ row.param.priority }}</td>
+      <tr><td>{{ row.param.label }}</td><td>{{ row.param.priority or 'DigiKey' }}</td>
         {% for cell in row.cells %}<td class="{{ cell.status if cell.status != 'equal' }}{{ ' best' if cell.best }}">{{ cell.display }}</td>{% endfor %}
       </tr>
     {% endfor %}

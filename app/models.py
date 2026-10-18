@@ -219,3 +219,24 @@ class CrossFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     user: Mapped["User"] = relationship(lazy="joined")
+
+
+class PriceQuote(Base):
+    """Distributor price and stock for a part, cached so pages stay fast and API quotas last."""
+
+    __tablename__ = "price_quotes"
+    __table_args__ = (UniqueConstraint("part_id", "source"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    part_id: Mapped[int] = mapped_column(ForeignKey("parts.id", ondelete="CASCADE"), index=True)
+    source: Mapped[str] = mapped_column(String(30))  # e.g. digikey
+    found: Mapped[bool] = mapped_column(Boolean, default=False)
+    distributor_pn: Mapped[str | None] = mapped_column(String(100))
+    product_url: Mapped[str | None] = mapped_column(String(500))
+    stock: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str | None] = mapped_column(String(50))  # distributor's product status, e.g. Active
+    lead_weeks: Mapped[str | None] = mapped_column(String(20))
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    # [{"package": "Cut Tape (CT)", "min_qty": 1, "breaks": [[1, 3.21], [10, 2.9], ...]}, ...]
+    offers: Mapped[list] = mapped_column(JSON, default=list)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

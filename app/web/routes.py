@@ -14,7 +14,7 @@ from app.db import get_session
 from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, FFF_STATUS_LABELS, LIFECYCLE_RISK, format_value
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import export, lifecycle, mechanical
+from app.services import export, lifecycle, mechanical, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -32,6 +32,8 @@ templates.env.globals.update(
     category_labels=CATEGORY_LABELS,
     fff_labels=FFF_STATUS_LABELS,
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
+    pricing_enabled=pricing.enabled,
+    qty_label=pricing.qty_label,
 )
 
 
@@ -270,6 +272,12 @@ def compare_page(
         family = family or selected[0].family
         base = next((p for p in selected if p.id == baseline), selected[0])
         comparison = compare_parts(selected, base, get_rules(base.family))
+        if pricing.enabled():
+            try:
+                pricing.add_to_comparison(session, comparison)
+                session.commit()
+            except pricing.DigiKeyError:
+                session.rollback()
     family = family or next(iter(load_all_rules()))
     available = list(session.scalars(select(Part).where(Part.family == family).order_by(Part.mpn)).unique())
     return templates.TemplateResponse(
@@ -292,6 +300,12 @@ def compare_download(fmt: str, ids: str, baseline: int | None = None, session: S
         raise HTTPException(400, "No parts selected")
     base = next((p for p in selected if p.id == baseline), selected[0])
     comparison = compare_parts(selected, base, get_rules(base.family))
+    if pricing.enabled():
+        try:
+            pricing.add_to_comparison(session, comparison)
+            session.commit()
+        except pricing.DigiKeyError:
+            session.rollback()
     if fmt == "xlsx":
         return _download(export.comparison_xlsx(comparison), "comparison.xlsx", XLSX)
     if fmt == "csv":
@@ -337,6 +351,35 @@ def feedback(
         raise HTTPException(404, "Part not found")
     record_feedback(session, reference_id, candidate_id, None if verdict == "clear" else verdict, note, user.id)
     return RedirectResponse(f"/parts/{reference_id}#fff-{candidate_id}", status_code=303)
+
+
+CURRENCY_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£"}
+
+
+@router.get("/pricing/{part_id}", response_class=HTMLResponse)
+def pricing_line(request: Request, part_id: int, ref: int | None = None, session: Session = Depends(get_session)):
+    """Price and stock from DigiKey (cached), loaded into the part page as it scrolls into view."""
+    part = session.get(Part, part_id)
+    if part is None:
+        raise HTTPException(404, "Part not found")
+    error, pq, ref_pq = None, None, None
+    try:
+        pq = pricing.quote_for(session, part)
+        if ref is not None and (ref_part := session.get(Part, ref)) is not None:
+            ref_pq = pricing.quote_for(session, ref_part)
+        session.commit()
+    except pricing.DigiKeyError as e:
+        session.rollback()
+        error = str(e)
+    prices = [
+        (q, pricing.price_at(pq, q), pricing.delta_pct(ref_pq, pq, q) if ref_pq else None) for q in pricing.QUANTITIES
+    ]
+    currency = pq.currency if pq else get_settings().digikey_currency
+    return templates.TemplateResponse(
+        request,
+        "_pricing.html",
+        {"pq": pq, "prices": prices, "error": error, "symbol": CURRENCY_SYMBOLS.get(currency, currency + " ")},
+    )
 
 
 @router.get("/suggest", response_class=HTMLResponse)

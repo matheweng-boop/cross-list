@@ -20,6 +20,8 @@
     <tr><th>Lifecycle</th><td>{{ lifecycle_badge(part)[0] }}{% if part.lifecycle_source %} <span class="muted">({{ part.lifecycle_source }})</span>{% endif %}</td></tr>
     <tr><th>Release date</th><td>{{ part.release_date or 'unknown' }}</td></tr>
     <tr><th>Datasheet revision</th><td>{{ part.datasheet_revision or 'unknown' }}{% if part.datasheet_date %} ({{ part.datasheet_date }}){% endif %}</td></tr>
+    <tr><th>DigiKey</th>{% if pricing_enabled() %}<td hx-get="/pricing/{{ part.id }}" hx-trigger="load"><span class="muted">Loading price and stock…</span></td>
+      {% else %}<td class="muted">Not connected: add a DigiKey API key to see price and stock.</td>{% endif %}</tr>
   </tbody>
 </table>
 </div>
@@ -99,6 +101,7 @@
       {% if c == 'fff' and r.fff_status in ('review', 'accepted') %}<span class="badge {{ 'warn' if r.fff_status == 'review' else 'ok' }}">{{ fff_labels[r.fff_status] }}</span>{% endif %}
       <a href="/parts/{{ r.candidate.id }}" class="muted">details</a>
     </header>
+    {% if pricing_enabled() %}<div class="pricing" hx-get="/pricing/{{ r.candidate.id }}?ref={{ part.id }}" hx-trigger="revealed"></div>{% endif %}
     <details>
       <summary><b>Top 5 differences</b>
         {% set top = r.top_differences() %}

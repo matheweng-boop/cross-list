@@ -82,6 +82,10 @@ def _comparison_header(c: Comparison) -> list[str]:
     return ["Priority", "Parameter"] + [p.label + (" (baseline)" if p.id == c.baseline.id else "") for p in c.parts]
 
 
+def _prio(param) -> str:
+    return f"P{param.priority}" if param.priority else "DigiKey"
+
+
 def comparison_xlsx(c: Comparison) -> bytes:
     wb = Workbook()
     ws = wb.active
@@ -96,7 +100,7 @@ def comparison_xlsx(c: Comparison) -> bytes:
     for cell in ws[ws.max_row]:
         cell.font = BOLD
     for row in c.rows:
-        ws.append([f"P{row.param.priority}", row.param.label] + [cell.display for cell in row.cells])
+        ws.append([_prio(row.param), row.param.label] + [cell.display for cell in row.cells])
         for xl, cell in zip(ws[ws.max_row][2:], row.cells, strict=True):
             if cell.status in FILLS:
                 xl.fill = FILLS[cell.status]
@@ -115,5 +119,5 @@ def comparison_csv(c: Comparison) -> str:
     for row in c.rows:
         best = [p.label for p, cell in zip(c.parts, row.cells, strict=True) if cell.best]
         values = [cell.display for cell in row.cells]
-        w.writerow([f"P{row.param.priority}", row.param.label, *values, "; ".join(best)])
+        w.writerow([_prio(row.param), row.param.label, *values, "; ".join(best)])
     return buf.getvalue()

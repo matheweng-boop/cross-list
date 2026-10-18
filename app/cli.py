@@ -10,6 +10,7 @@ import-ti [--offline]
 import-novosense [--offline]
                      fetch Novosense digital isolator data and load it
 load-real            load every data/real/*.yaml file
+fetch-prices [N]     refresh DigiKey price and stock for up to N parts (default 500), oldest first
 """
 
 import sys
@@ -84,6 +85,32 @@ def main(argv: list[str]) -> int:
             for path in sorted(Path("data/real").glob("*.yaml")):
                 print(f"{path}: {load_file(s, path)} parts")
             s.commit()
+    elif cmd == "fetch-prices":
+        from sqlalchemy import select
+
+        from app.models import Part, PriceQuote
+        from app.services import pricing
+
+        if not pricing.enabled():
+            print("DigiKey is not configured: set CROSSLIST_DIGIKEY_CLIENT_ID and CROSSLIST_DIGIKEY_CLIENT_SECRET")
+            return 1
+        limit = int(args[0]) if args else 500
+        with Session(engine) as s:
+            fetched = {q.part_id: q.fetched_at for q in s.scalars(select(PriceQuote))}
+            parts = sorted(
+                s.scalars(select(Part)).unique(), key=lambda p: (p.id in fetched, str(fetched.get(p.id, "")))
+            )
+            done = 0
+            for part in parts[:limit]:
+                try:
+                    pq = pricing.quote_for(s, part, refresh=True)
+                except pricing.RateLimited as e:
+                    print(e)
+                    break
+                s.commit()
+                done += 1
+                print(f"{part.mpn}: " + ("not listed" if not pq.found else f"{pq.stock} in stock"))
+        print(f"Updated {done} parts")
     else:
         print(__doc__)
         return 1

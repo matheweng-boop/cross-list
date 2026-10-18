@@ -1,0 +1,17 @@
+{# Price and stock line for one part; with `ref`, also the price difference to the reference. #}
+{% if error %}<span class="muted">DigiKey: {{ error }}</span>
+{% elif pq is none %}<span class="muted">DigiKey: no price yet</span>
+{% elif not pq.found %}<span class="muted">Not listed at DigiKey</span>
+{% else %}
+<span class="price-line">
+  <span class="badge {{ 'ok' if pq.stock else 'bad' }}">{{ '{:,}'.format(pq.stock) if pq.stock is not none else '?' }} in stock</span>
+  {% for q, p, d in prices %}{% if p %}
+  <span class="price">{{ symbol }}{{ '%.2f'|format(p[0]) if p[0] >= 1 else '%.3f'|format(p[0]) }} <small class="muted">@{{ qty_label(q) }}</small>{% if d is not none %}
+    <small class="{{ 'better' if d < 0 else 'worse' if d > 0 else '' }}">{{ '%+d'|format(d) }}%</small>{% endif %}</span>
+  {% endif %}{% endfor %}
+  {% if pq.lead_weeks %}<small class="muted">lead {{ pq.lead_weeks }} wk</small>{% endif %}
+  {% if pq.status and pq.status != 'Active' %}<span class="badge warn">{{ pq.status }}</span>{% endif %}
+  {% if pq.product_url %}<a href="{{ pq.product_url }}" target="_blank" rel="noopener">DigiKey</a>{% endif %}
+  <small class="muted">{{ pq.fetched_at.strftime('%d %b %H:%M') }}</small>
+</span>
+{% endif %}

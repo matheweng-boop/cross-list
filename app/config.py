@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     new_part_days: int = 365
     # Load the synthetic demo dataset on startup when the database is empty.
     seed_synthetic: bool = True
+    # DigiKey Product Information API (developer.digikey.com). Without these, pricing is off.
+    digikey_client_id: str = ""
+    digikey_client_secret: str = ""
+    digikey_site: str = "US"
+    digikey_currency: str = "USD"
+    # Re-fetch cached prices older than this.
+    price_max_age_hours: int = 24
 
 
 @lru_cache

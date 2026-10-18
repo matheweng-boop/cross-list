@@ -3,7 +3,7 @@
 (() => {
   const root = document.getElementById("impact");
   if (!root) return;
-  const devices = JSON.parse(root.dataset.devices);
+  const devices = JSON.parse(root.dataset.devices).map(d => ({...d, cmti: d.values ? d.values.cmti_kv_us : d.cmti}));
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   const fmt = (x, d = 1) => (x >= 100 ? x.toFixed(0) : x.toFixed(d));

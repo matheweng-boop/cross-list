@@ -96,11 +96,13 @@
     </tr>
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
       <td colspan="{{ 5 if pricing_enabled() else 4 }}">
-        {% if v.better %}<p class="spec-list better">Priority 1 better: {{ v.better|map(attribute='label')|join(', ') }}</p>{% endif %}
-        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+        {% set note = '/engineering/{}?ref=' ~ part.id ~ '&cand=' ~ c.id %}
+        {% if v.better %}<p class="spec-list better">Priority 1 better: {% for d in v.better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
         {% if v.info_better or v.info_worse %}<p class="spec-list muted">For information (priority 2/3):
-          {% if v.info_better %}<span class="better">better {{ v.info_better|map(attribute='label')|join(', ') }}</span>{% endif %}{% if v.info_better and v.info_worse %}; {% endif %}
-          {% if v.info_worse %}<span class="worse">worse {{ v.info_worse|map(attribute='label')|join(', ') }}</span>{% endif %}</p>{% endif %}
+          {% if v.info_better %}<span class="better">better {% for d in v.info_better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}{% if v.info_better and v.info_worse %}; {% endif %}
+          {% if v.info_worse %}<span class="worse">worse {% for d in v.info_worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}</p>{% endif %}
+        {% if v.worse or v.info_worse %}<p class="small muted">Tap a specification for what the deviation means in your application.</p>{% endif %}
         {% set top = r.top_differences() %}
         <b>Top 5 differences</b>
         {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
@@ -120,7 +122,7 @@
         </div>
         {% endif %}
         <details><summary>All parameters</summary>{{ diff_table(r) }}</details>
-        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a>{% if rules.get('cmti_kv_us') %} · <a href="/impact?ids={{ part.id }},{{ c.id }}">CMTI explorer</a>{% endif %}</p>
+        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a>{% if rules.get('cmti_kv_us') %} · <a href="/engineering/cmti_kv_us?ref={{ part.id }}&cand={{ c.id }}">CMTI explorer</a>{% endif %}</p>
       </td>
     </tr>
   {% endfor %}
@@ -129,7 +131,7 @@
 {% set q = '?dev=' ~ dev ~ ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&type=' ~ type if type else '') %}
 <p class="downloads"><a href="/parts/{{ part.id }}/replacements.xlsx{{ q }}" role="button" class="outline">Download table (Excel)</a>
   <a href="/parts/{{ part.id }}/replacements.csv{{ q }}" role="button" class="outline secondary">CSV</a>
-  {% if rules.get('cmti_kv_us') %}<a href="/impact?ids={{ part.id }}{% for r, v in rows[:3] %},{{ r.candidate.id }}{% endfor %}" role="button" class="outline">CMTI explorer (top 3)</a>{% endif %}</p>
+  {% if rules.get('cmti_kv_us') %}<a href="/engineering/cmti_kv_us?ids={{ part.id }}{% for r, v in rows[:3] %},{{ r.candidate.id }}{% endfor %}" role="button" class="outline">CMTI explorer (top 3)</a>{% endif %}</p>
 {% else %}
 <p class="muted">No drop-in, functional or package equivalents{{ ' with these filters' if type or company or hide_eol }}.</p>
 {% endif %}

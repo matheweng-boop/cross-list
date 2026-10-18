@@ -11,7 +11,9 @@
   <tbody>
   {% for d in r.all_diffs %}
     <tr>
-      <td>{{ d.label }} <span class="prio">P{{ d.priority }}{% if d.hard %} hard{% endif %}</span></td>
+      <td>{% if d.key in ('package', 'pinout') %}{% if d.status != 'equal' %}<a class="dev-link" href="/overlay/{{ r.reference.id }}/{{ r.candidate.id }}">{{ d.label }}</a>{% else %}{{ d.label }}{% endif %}
+        {%- elif d.status != 'equal' %}<a class="dev-link" href="/engineering/{{ d.key }}?ref={{ r.reference.id }}&cand={{ r.candidate.id }}">{{ d.label }}</a>
+        {%- else %}{{ d.label }}{% endif %} <span class="prio">P{{ d.priority }}{% if d.hard %} hard{% endif %}</span></td>
       <td>{{ d.ref_display }}</td>
       <td class="{{ d.status if d.status != 'equal' }}">{{ d.cand_display }}</td>
       <td class="{{ d.status if d.status != 'equal' }}"><span class="status">{{ d.status }}</span></td>

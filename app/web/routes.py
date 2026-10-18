@@ -22,7 +22,7 @@ from app.matching.engine import (
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import export, lifecycle, mechanical, pricing
+from app.services import engineering, export, lifecycle, mechanical, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -307,24 +307,49 @@ def package_overlay(request: Request, a_id: int, b_id: int, lp: int = 0, session
     return _overlay_page(request, ov, a, f"/packages/{a_id}/overlay/{b_id}", lp)
 
 
-@router.get("/impact", response_class=HTMLResponse)
-def impact_page(request: Request, ids: str = "", session: Session = Depends(get_session)):
-    """Application impact: what the CMTI ratings of the parts mean at the user's operating point.
-    The first part is the reference; the calculations run in the page."""
-    parts = parts_by_ids(session, _parse_ids(ids))[:4]  # four series at most in the chart
-    devices = []
-    for p in parts:
-        cmti = next((pv for pv in p.params if pv.key == "cmti_kv_us"), None)
-        devices.append(
-            {
-                "id": p.id,
-                "mpn": p.mpn,
-                "maker": p.manufacturer.name,
-                "cmti": cmti.num if cmti else None,
-                "source": (cmti.source if cmti and cmti.source else "") if cmti else "",
-            }
-        )
-    return templates.TemplateResponse(request, "impact.html", {"parts": parts, "devices": devices})
+@router.get("/impact")
+def impact_page(ids: str = ""):
+    """Old address of the CMTI explorer: now the CMTI engineering note."""
+    return RedirectResponse(f"/engineering/cmti_kv_us?ids={ids}", status_code=307)
+
+
+@router.get("/engineering", response_class=HTMLResponse)
+def engineering_index(request: Request):
+    return templates.TemplateResponse(request, "engineering/index.html", {"notes": engineering.index()})
+
+
+@router.get("/engineering/{key}", response_class=HTMLResponse)
+def engineering_note(
+    request: Request, key: str, ref: int | None = None, cand: int | None = None, ids: str = "",
+    session: Session = Depends(get_session),
+):  # fmt: skip
+    """One engineering note. ``ref``/``cand`` come from a result row; ``ids`` lists parts for
+    the calculators (reference first, four at most)."""
+    note = engineering.note_key(key)
+    reference = session.get(Part, ref) if ref else None
+    candidate = session.get(Part, cand) if cand else None
+    param = engineering.param_def(key, reference.family if reference else None)
+    if param is None and note not in engineering.NOTES:
+        raise HTTPException(404, "No such specification")
+    wanted = _parse_ids(ids) or [p for p in (ref, cand) if p]
+    parts = parts_by_ids(session, wanted)[:4]
+    title, summary = engineering.NOTES.get(note, (param.label if param else key, ""))
+    return templates.TemplateResponse(
+        request,
+        "engineering/note.html",
+        {
+            "key": note,
+            "title": title,
+            "summary": summary,
+            "param": param,
+            "families": engineering.families_using(key),
+            "ctx": engineering.context(key, reference, candidate),
+            "body": f"engineering/notes/{note}.html" if engineering.has_body(note) else None,
+            "parts": parts,
+            "devices": [engineering.device(p) for p in parts],
+            "others": [n for n in engineering.index() if n["key"] != note],
+        },
+    )
 
 
 @router.get("/compare", response_class=HTMLResponse)

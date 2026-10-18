@@ -1,0 +1,17 @@
+<h2>What it is</h2>
+<p>The maximum time from an input edge to the output edge. It adds latency to control loops and protection paths and limits
+  how fast a clocked interface such as SPI can run through the isolator.</p>
+<h2>When it deviates</h2>
+<p>A longer delay lowers the maximum SPI clock (the MISO data must make the round trip within half a clock period), adds loop
+  delay and slows fault reaction. For gate drivers, the <a href="/engineering/pwd_ns">variation</a> of the delay matters more
+  than the delay itself.</p>
+<h2>Quick check: isolated SPI <span class="evidence est">Engineering estimate</span></h2>
+<div data-calc="spi">
+  <label>Slave clock-to-output time <output for="spi-co"></output>
+    <input type="range" id="spi-co" name="tco" min="0" max="50" step="1" value="10" data-unit="ns"></label>
+  <label>Master input setup time <output for="spi-su"></output>
+    <input type="range" id="spi-su" name="tsu" min="0" max="30" step="1" value="5" data-unit="ns"></label>
+  <div class="table-wrap"><table class="impact-table"><thead></thead><tbody></tbody></table></div>
+</div>
+<p class="muted small">f<sub>SCLK</sub> ≤ 1 / (2·(2·t<sub>PD</sub> + t<sub>CO</sub> + t<sub>SU</sub>)), with the same part's maximum delay in both
+  directions. Ignores skew and jitter.</p>

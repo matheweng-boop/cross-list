@@ -1,12 +1,19 @@
-{% extends "base.html" %}
-{% block title %}CMTI design explorer – Cross List{% endblock %}
-{% block content %}
-<h1>CMTI design explorer</h1>
-<p class="subtitle muted">What the CMTI ratings mean at your operating point: margin, the fastest edge each part tolerates,
-  and what slowing the edges would cost. {% if parts %}Reference: <b>{{ parts[0].mpn }}</b>.{% endif %}</p>
-
+<h2>What it is</h2>
+<p>Common-mode transient immunity is the fastest rate of change of the voltage <i>across</i> the isolation barrier that the
+  part tolerates without an output upset, under the datasheet's test conditions. It is quoted in kV/µs (1 kV/µs = 1 V/ns).
+  The guaranteed minimum is what counts; typical values are not a design limit.</p>
+<h2>Why it matters</h2>
+<p>Required CMTI ≈ ΔV / Δt of the switch node. An 800 V bus switching in 20 ns produces 40 kV/µs: a 50 kV/µs part has
+  1.25× margin, a 150 kV/µs part 3.75×. Too little margin means either <b>slowing the edges</b> (gate resistors, softer
+  turn-on: more switching loss and heat) or <b>risking upsets</b>: output glitches, corrupted data, false faults and, in
+  gate drivers, possible shoot-through. The mechanism differs between gate drivers, digital isolators, current sensors
+  and isolated power, but the margin check is the same.</p>
+<p>Higher CMTI does not by itself improve efficiency or EMI. It gives the freedom to switch faster without upsets.
+  If both parts hold the required margin at the real slew rate, the higher rating brings no functional advantage there.</p>
+<h2>Quick check</h2>
 {% if not parts %}
-<p>Pick parts first: open a part and use <b>CMTI explorer</b>, or select parts on the <a href="/compare">Compare</a> page.</p>
+<p class="muted">To run the explorer, open it from a cross (tap a CMTI deviation or <b>CMTI explorer</b> in a result row) or from the
+  <a href="/compare">Compare</a> page.</p>
 {% else %}
 <div class="viz-root impact" id="impact" data-devices='{{ devices|tojson }}'>
   <fieldset class="impact-inputs">
@@ -73,7 +80,6 @@
   </ul>
 </div>
 <p class="muted small">Assumes the full voltage swing appears across the isolation barrier and the edge duration uses the same
-  measurement convention as the CMTI test. 1 V/ns = 1 kV/µs. Sources: {% for d in devices %}{{ d.mpn }} {{ d.source or 'CMTI not in data' }}{{ '; ' if not loop.last }}{% endfor %}.</p>
+  measurement convention as the CMTI test. 1 V/ns = 1 kV/µs. Sources: {% for d in devices %}{{ d.mpn }} {{ d.sources.get('cmti_kv_us') or 'CMTI not in data' }}{{ '; ' if not loop.last }}{% endfor %}.</p>
 <script src="/static/impact.js"></script>
 {% endif %}
-{% endblock %}

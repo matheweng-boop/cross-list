@@ -237,10 +237,28 @@ def test_result_table_download(client):
 
 def test_cmti_explorer_page(client):
     ref, cand = ids(client, "SR8641", "SA7741")
-    html = client.get(f"/impact?ids={ref},{cand}").text
-    assert "CMTI design explorer" in html and "Datasheet guaranteed" in html and "Engineering estimate" in html
+    html = client.get(f"/engineering/cmti_kv_us?ids={ref},{cand}").text
+    assert "CMTI" in html and "Datasheet guaranteed" in html and "Engineering estimate" in html
     devices = json.loads(html.split("data-devices='")[1].split("'")[0])
     assert [d["mpn"] for d in devices] == ["SR8641", "SA7741"]  # reference first
-    assert all(isinstance(d["cmti"], float) for d in devices)
-    assert f'href="/impact?ids={ref},' in client.get(f"/parts/{ref}").text
-    assert "Pick parts first" in client.get("/impact").text
+    assert all(isinstance(d["values"]["cmti_kv_us"], int | float) for d in devices)
+    assert f'href="/engineering/cmti_kv_us?ids={ref},' in client.get(f"/parts/{ref}").text
+    r = client.get(f"/impact?ids={ref},{cand}", follow_redirects=False)  # old address
+    assert r.headers["location"] == f"/engineering/cmti_kv_us?ids={ref},{cand}"
+
+
+def test_engineering_notes(client):
+    html = client.get("/engineering").text
+    assert "Engineering notes" in html and "/engineering/creepage_mm" in html
+    for key in ("isolation_rating_kvrms", "viorm_vpk", "prop_delay_ns", "peak_sink_a", "enable_pins"):
+        assert client.get(f"/engineering/{key}").status_code == 200, key
+    assert client.get("/engineering/no_such_thing").status_code == 404
+
+
+def test_deviation_links_open_the_note_with_both_parts(client):
+    ref, cand = ids(client, "SR8640N", "SB8441")  # default output deviates
+    page = client.get(f"/parts/{ref}").text
+    link = f"/engineering/default_output?ref={ref}&amp;cand={cand}"
+    assert link in page
+    note = client.get(link.replace("&amp;", "&")).text
+    assert "Your comparison" in note and "SR8640N" in note and "SB8441" in note and "different" in note

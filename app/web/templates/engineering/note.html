@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} – Engineering notes – Cross List{% endblock %}
+{% block content %}
+<p class="muted small"><a href="/engineering">Engineering notes</a> ›</p>
+<h1>{{ title }}</h1>
+<p class="subtitle muted">{{ summary }}</p>
+
+{% if ctx %}
+<article class="note-context">
+  <p><b>Your comparison</b> — {{ ctx.param.label }}{% if ctx.param.unit %} ({{ ctx.param.unit }}){% endif %}, priority {{ ctx.param.priority }}{{ ' (defines the function)' if ctx.param.hard }}</p>
+  <div class="table-wrap"><table>
+    <tr><th>{{ ctx.reference.mpn }}<br><small class="muted">{{ ctx.reference.manufacturer.name }} · reference</small></th>
+        <th>{{ ctx.candidate.mpn }}<br><small class="muted">{{ ctx.candidate.manufacturer.name }}</small></th><th></th></tr>
+    <tr><td>{{ ctx.ref_display }}</td><td class="{{ ctx.status if ctx.status != 'equal' }}">{{ ctx.cand_display }}</td><td><span class="status">{{ ctx.status }}</span></td></tr>
+  </table></div>
+  <p class="small"><a href="/parts/{{ ctx.reference.id }}#row-{{ ctx.candidate.id }}">Back to the crosses for {{ ctx.reference.mpn }}</a></p>
+</article>
+{% endif %}
+
+{% if body %}{% include body %}{% else %}
+<h2>What it is</h2>
+<p>{{ param.label }}{% if param.unit %}, in {{ param.unit }}{% endif %}.
+  {% if param.kind == 'number' %}{{ 'Higher' if param.direction == 'higher' else 'Lower' }} is better.
+  {% elif param.kind == 'range' %}A wider range that covers the reference's range is better.
+  {% elif param.kind == 'ordinal' %}Ordered from {{ param.levels|join(' to ') }}; later is better.
+  {% else %}Must match the reference.{% endif %}</p>
+<h2>When it deviates</h2>
+<p>{% if param.priority == 1 %}This is a priority 1 parameter: a worse or different value makes the candidate a deviation
+  (functional equivalents accept a few). Check the application's need for this value before accepting it.
+  {% else %}This is a priority {{ param.priority }} parameter: shown for information, it never blocks a cross. Check it when the application depends on it.{% endif %}</p>
+<p class="muted small">No detailed note yet for this specification.</p>
+{% endif %}
+
+<script type="application/json" id="note-devices">{{ devices|tojson }}</script>
+<script src="/static/notes.js"></script>
+<p class="muted small">Used in: {% for fam, prio in families %}{{ fam }} (priority {{ prio }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+<details><summary>Other notes</summary><ul>{% for n in others %}<li><a href="/engineering/{{ n.key }}">{{ n.title }}</a> <span class="muted">– {{ n.summary }}</span></li>{% endfor %}</ul></details>
+{% endblock %}

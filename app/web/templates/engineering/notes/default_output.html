@@ -1,0 +1,10 @@
+<h2>What it is</h2>
+<p>The <b>default output state</b> is what the outputs do while the input side is unpowered or the input is floating:
+  high or low. Most families come in both variants with the same pinout (for example TI's "F" parts default low).</p>
+<h2>When it deviates</h2>
+<p>The system behaves differently at power-up, brown-out and when the input side loses supply. A gate driver or enable line
+  that defaults high can switch something on while the controller is still dead; a reset line that defaults low can hold a
+  device in reset. Pin-to-pin, the wrong variant looks like a drop-in but is not.</p>
+<h2>How to judge it</h2>
+<p>For each channel, ask what the receiving circuit must see while the sending side is off. Only accept the deviation if that
+  state is harmless.</p>

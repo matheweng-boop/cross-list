@@ -19,9 +19,10 @@ def names(results):
 
 EXPECTED = {
     "SR8641": {
-        "fff": ["SD8641A", "SA7741", "SC141", "SA7741X"],  # SC141 needs review (P2 worse)
-        "p2p": ["SD8641A", "SC141", "SA7741", "SB8441", "SA7741X"],
-        "upgrade": ["SA7741"],  # SB8641N only adds TUV, which is priority 3
+        # SC141 needs review (P2 worse); SD8641A is automotive (P1 better), so further from the industrial reference
+        "fff": ["SA7741", "SD8641A", "SC141", "SA7741X"],
+        "p2p": ["SC141", "SA7741", "SD8641A", "SB8441", "SA7741X"],
+        "upgrade": ["SD8641A", "SA7741"],  # automotive grade is priority 1; SB8641N only adds TUV (priority 3)
         "downgrade": ["SB8441"],
     },
     "SR8640N": {

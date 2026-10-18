@@ -13,8 +13,8 @@ from app.config import get_settings
 from app.db import get_session
 from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, FFF_STATUS_LABELS, LIFECYCLE_RISK, format_value
 from app.matching.rules import get_rules, load_all_rules
-from app.models import ChangeEvent, LifecycleStatus, Part, User
-from app.services import export, lifecycle
+from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
+from app.services import export, lifecycle, mechanical
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -198,6 +198,59 @@ def cross_download(ref_id: int, cand_id: int, fmt: str, session: Session = Depen
     if fmt == "csv":
         return _download(export.cross_csv(result), name + ".csv", "text/csv")
     raise HTTPException(404, "Unknown format")
+
+
+def _overlay(ref_pkg: Package, cand_pkg: Package, ref_label: str, cand_label: str, lp: int):
+    ref = mechanical.outline(ref_pkg, ref_label, lp)
+    cand = mechanical.outline(cand_pkg, cand_label, lp if ref_pkg.code == cand_pkg.code else 0)
+    return mechanical.compare(ref, cand)
+
+
+def _overlay_page(request: Request, ov, ref_pkg: Package, base: str, lp: int, parts=(None, None)):
+    return templates.TemplateResponse(
+        request,
+        "overlay.html",
+        {
+            "ov": ov,
+            "svg": mechanical.svg(ov),
+            "ref_part": parts[0],
+            "cand_part": parts[1],
+            "land_patterns": ov.ref.mech.land_patterns if ov.ref.mech else (),
+            "lp": lp,
+            "base": base,
+        },
+    )
+
+
+@router.get("/overlay/{ref_id}/{cand_id}.svg")
+def overlay_svg(ref_id: int, cand_id: int, lp: int = 0, session: Session = Depends(get_session)):
+    ref, cand = session.get(Part, ref_id), session.get(Part, cand_id)
+    if ref is None or cand is None or ref.package is None or cand.package is None:
+        raise HTTPException(404, "Part or package not found")
+    ov = _overlay(ref.package, cand.package, ref.mpn, cand.mpn, lp)
+    return _download(
+        mechanical.svg(ov, standalone=True).encode(), f"overlay_{ref.mpn}_vs_{cand.mpn}.svg", "image/svg+xml"
+    )
+
+
+@router.get("/overlay/{ref_id}/{cand_id}", response_class=HTMLResponse)
+def overlay_page(request: Request, ref_id: int, cand_id: int, lp: int = 0, session: Session = Depends(get_session)):
+    """Package outline, leads and pads of a cross drawn on top of each other."""
+    ref, cand = session.get(Part, ref_id), session.get(Part, cand_id)
+    if ref is None or cand is None or ref.package is None or cand.package is None:
+        raise HTTPException(404, "Part or package not found")
+    ov = _overlay(ref.package, cand.package, ref.mpn, cand.mpn, lp)
+    return _overlay_page(request, ov, ref.package, f"/overlay/{ref_id}/{cand_id}", lp, (ref, cand))
+
+
+@router.get("/packages/{a_id}/overlay/{b_id}", response_class=HTMLResponse)
+def package_overlay(request: Request, a_id: int, b_id: int, lp: int = 0, session: Session = Depends(get_session)):
+    """The same drawing for two packages, without parts (used by the static preview)."""
+    a, b = session.get(Package, a_id), session.get(Package, b_id)
+    if a is None or b is None:
+        raise HTTPException(404, "Package not found")
+    ov = _overlay(a, b, a.code, b.code, lp)
+    return _overlay_page(request, ov, a, f"/packages/{a_id}/overlay/{b_id}", lp)
 
 
 @router.get("/compare", response_class=HTMLResponse)

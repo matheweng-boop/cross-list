@@ -37,6 +37,7 @@
           + '<span class="badge muted">' + esc(q[2]) + '</span> <span class="badge muted">' + esc(q[3]) + "</span> " + badge + "</header>"
           + "<strong>Top 5 differences</strong>" + (top.length ? '<ol class="top5">' + top.map(t => '<li class="' + cls(t) + '">' + esc(t) + "</li>").join("") + "</ol>" : '<p class="muted">No differences found.</p>')
           + (p3.length ? '<p class="p3-notes">Also note (priority 3): ' + p3.map(t => '<span class="worse">' + esc(t) + "</span>").join("; ") + "</p>" : "")
+          + '<p class="downloads"><a href="overlay-' + p[6] + "-" + q[6] + '.html" role="button" class="outline">Package overlay</a></p>'
           + "</article>";
       }
       if (total > rows.length) h += '<p class="muted">Showing the best ' + rows.length + " of " + total + ". The full app lists all of them.</p>";

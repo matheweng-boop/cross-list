@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Package overlay – Cross List{% endblock %}
+{% block content %}
+<h1>Package overlay</h1>
+<p class="subtitle">
+  <span class="swatch ref"></span> <b>{{ ov.ref.label }}</b> <span class="muted">{{ ov.ref.code }} · reference</span><br>
+  <span class="swatch cand"></span> <b>{{ ov.cand.label }}</b> <span class="muted">{{ ov.cand.code }} · candidate</span>
+</p>
+{% if ref_part and cand_part %}
+<p class="muted">Leads of {{ cand_part.mpn }} placed on the recommended pads of {{ ref_part.mpn }}, the footprint a board designed for {{ ref_part.mpn }} has.
+  <a href="/parts/{{ ref_part.id }}">Back to {{ ref_part.mpn }}</a></p>
+{% endif %}
+
+{% if land_patterns|length > 1 %}
+<nav class="catnav" aria-label="Reference land pattern">
+  {% for p in land_patterns %}
+  <a class="badge cat{{ ' on' if loop.index0 == lp }}" href="{{ base }}?lp={{ loop.index0 }}">{{ p.name }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<div class="layer-toggles" role="group" aria-label="Layers">
+  {% for key, label in [("pads", "Pads"), ("leads", "Leads"), ("body", "Body"), ("dims", "Dimensions")] %}
+  <label><input type="checkbox" checked data-layer="{{ key }}"> {{ label }}</label>
+  {% endfor %}
+</div>
+<figure class="overlay" id="overlay">{{ svg|safe }}</figure>
+{% if ref_part and cand_part %}
+<p class="downloads"><a href="{{ base }}.svg?lp={{ lp }}" role="button" class="outline">Download drawing (SVG)</a></p>
+{% endif %}
+
+<h2>Fit checks</h2>
+<ul class="checks">
+  {% for c in ov.checks %}
+  <li><span class="badge {{ c.status }}">{{ {"ok": "OK", "warn": "Check", "bad": "Fail", "unknown": "No data"}[c.status] }}</span>
+    <b>{{ c.label }}</b>: {{ c.detail }}</li>
+  {% endfor %}
+</ul>
+
+<h2>Dimensions</h2>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th>Dimension</th><th>{{ ov.ref.label }}</th><th>{{ ov.cand.label }}</th><th>Difference</th></tr></thead>
+  <tbody>
+  {% for label, a, b, d in ov.dims %}
+    <tr><td>{{ label }}</td><td>{{ a }}</td><td>{{ b }}</td><td class="{{ 'different' if d and d != 'same' }}">{{ d }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>Sources</h2>
+<ul class="muted">
+  {% for o in [ov.ref, ov.cand] %}
+  <li>{{ o.label }} ({{ o.code }}):
+    {% if o.mech %}leads from {{ o.mech.source }}{% if o.land %}; pads "{{ o.land.name }}" from {{ o.land.source }}{% endif %}{% if o.mech.note %}. {{ o.mech.note }}{% endif %}{% if o.land and o.land.note %}. {{ o.land.note }}{% endif %}
+    {% else %}no lead or pad data yet; the drawing shows the body and lead tips only{% endif %}</li>
+  {% endfor %}
+  <li>Leads are drawn at the middle of their min–max range; the checks use the worst case. Pre-mechanical check only: confirm against the manufacturers' drawings before release.</li>
+</ul>
+<script>
+  document.querySelectorAll("[data-layer]").forEach(box => box.addEventListener("change", () =>
+    document.getElementById("overlay").classList.toggle("hide-" + box.dataset.layer, !box.checked)));
+</script>
+{% endblock %}

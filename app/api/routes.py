@@ -22,6 +22,7 @@ def part_json(p: Part) -> dict:
         "family": p.family,
         "description": p.description,
         "package": p.package.code,
+        "package_id": p.package_id,
         "pinout": p.pinout,
         "package_locked": p.package_locked,
         "lifecycle": {

@@ -17,6 +17,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from app.services.mechanical import load_mechanical
 
 NOTE = (
     '<p class="banner">Static preview: tap parts and expand the top-5 differences. '
@@ -46,7 +47,22 @@ CROSS_VIEW = (
 )
 
 
-def rewrite(html: str) -> str:
+def _overlay_file(a: int, b: int, lp: int = 0) -> str:
+    return f"overlay-{a}-{b}" + (f"-lp{lp}" if lp else "") + ".html"
+
+
+def rewrite(html: str, package: dict[int, int] | None = None) -> str:
+    html = re.sub(
+        r'href="/packages/(\d+)/overlay/(\d+)\?lp=(\d+)"',
+        lambda m: f'href="{_overlay_file(int(m.group(1)), int(m.group(2)), int(m.group(3)))}"',
+        html,
+    )
+    if package:  # cross details on full part pages link to the package-pair drawing
+        html = re.sub(
+            r'href="/overlay/(\d+)/(\d+)"',
+            lambda m: f'href="{_overlay_file(package[int(m.group(1))], package[int(m.group(2))])}"',
+            html,
+        )
     html = re.sub(r'href="/parts/(\d+)(?:\?[^"]*)?"', r'href="part-\1.html"', html)
     html = re.sub(r'href="/compare[^".]*"', 'href="compare.html"', html)
     html = re.sub(r'href="/(lifecycle|rules|parts)"', r'href="\1.html"', html)
@@ -64,12 +80,14 @@ def rewrite(html: str) -> str:
     return html
 
 
-def _write_cross_data(client: TestClient, everything: list[dict], data: Path) -> None:
+def _write_cross_data(client: TestClient, everything: list[dict], data: Path) -> set[tuple[int, int]]:
     """Best crosses per category for every part, split into shards loaded on demand by cross.html.
 
     A competitor part is crossed against Skyworks parts only, like the app does by default.
     """
     shards: list[dict] = [{} for _ in range(SHARDS)]
+    package = {p["id"]: p["package_id"] for p in everything}
+    pairs = set()
     for p in everything:
         crosses = client.get(f"/api/parts/{p['id']}/crosses").json()
         rec = {}
@@ -85,10 +103,12 @@ def _write_cross_data(client: TestClient, everything: list[dict], data: Path) ->
                     and not any(t.startswith(d["label"] + ":") for t in top)
                 ]
                 rows.append([r["candidate"]["id"], r["fff_status"] if cat == "fff" else "", top, p3])
+                pairs.add((package[p["id"]], package[r["candidate"]["id"]]))
             rec[cat] = [rows, len(crosses[cat])]
         shards[p["id"] % SHARDS][p["id"]] = rec
     for n, shard in enumerate(shards):
         (data / f"x{n}.js").write_text(f"CL_SHARD({n}," + json.dumps(shard, separators=(",", ":")) + ");\n")
+    return pairs
 
 
 def _representatives(parts: list[dict]) -> list[dict]:
@@ -147,7 +167,15 @@ def main(out: Path, real: bool = False) -> None:
     exported = {p["id"] for p in parts}
     everything = client.get("/api/parts?limit=5000").json()
     index = [
-        [p["mpn"], p["manufacturer"], p["package"], p["lifecycle"]["status"], p["id"] * (p["id"] in exported), p["id"]]
+        [
+            p["mpn"],
+            p["manufacturer"],
+            p["package"],
+            p["lifecycle"]["status"],
+            p["id"] * (p["id"] in exported),
+            p["id"],
+            p["package_id"],
+        ]
         for p in everything
     ]
     data = out / "static" / "preview"
@@ -156,9 +184,12 @@ def main(out: Path, real: bool = False) -> None:
     (data / "parts.js").write_text("window.CL_PARTS=" + json.dumps(index, separators=(",", ":")) + ";\n")
     if real:
         pages["cross.html"] = "/rules"  # page frame only; the body is replaced below
-        _write_cross_data(client, everything, data)
+        for a, b in sorted(_write_cross_data(client, everything, data)):
+            lands = load_mechanical().get(next(p["package"] for p in everything if p["package_id"] == a))
+            for lp in range(max(1, len(lands.land_patterns) if lands else 1)):
+                pages[_overlay_file(a, b, lp)] = f"/packages/{a}/overlay/{b}?lp={lp}"
     for name, url in pages.items():
-        html = rewrite(client.get(url).text)
+        html = rewrite(client.get(url).text, {p["id"]: p["package_id"] for p in everything})
         if name == "cross.html":
             main = re.compile(r'(<main class="container">).*</main>', re.S)
             html = main.sub(lambda m: m.group(1) + CROSS_VIEW + "</main>", html)
@@ -168,9 +199,11 @@ def main(out: Path, real: bool = False) -> None:
         # Parts without a full page open the light crosses view (real data) or lose the link.
         html = re.sub(
             r'<a href="part-(\d+)\.html"([^>]*)>(.*?)</a>',
-            lambda m: m.group(0)
-            if int(m.group(1)) in exported
-            else (f'<a href="cross.html#{m.group(1)}"{m.group(2)}>{m.group(3)}</a>' if real else m.group(3)),
+            lambda m: (
+                m.group(0)
+                if int(m.group(1)) in exported
+                else (f'<a href="cross.html#{m.group(1)}"{m.group(2)}>{m.group(3)}</a>' if real else m.group(3))
+            ),
             html,
             flags=re.S,
         )

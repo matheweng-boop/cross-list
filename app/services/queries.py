@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.matching.engine import CrossResult, cross, find_crosses
 from app.matching.rules import get_rules
-from app.models import LifecycleStatus, Manufacturer, ManufacturerRole, Part
+from app.models import CrossFeedback, FeedbackVerdict, LifecycleStatus, Manufacturer, ManufacturerRole, Part
 
 
 def search_parts(
@@ -35,15 +35,39 @@ def candidates_for(session: Session, ref: Part) -> list[Part]:
     return list(session.scalars(stmt).unique())
 
 
+def feedback_for(session: Session, ref_id: int) -> dict[int, CrossFeedback]:
+    rows = session.scalars(select(CrossFeedback).where(CrossFeedback.reference_id == ref_id)).unique()
+    return {fb.candidate_id: fb for fb in rows}
+
+
 def crosses_for(session: Session, ref: Part) -> dict[str, list[CrossResult]]:
-    return find_crosses(ref, candidates_for(session, ref), get_rules(ref.family))
+    return find_crosses(ref, candidates_for(session, ref), get_rules(ref.family), feedback_for(session, ref.id))
 
 
 def single_cross(session: Session, ref_id: int, cand_id: int) -> CrossResult | None:
     ref, cand = session.get(Part, ref_id), session.get(Part, cand_id)
     if ref is None or cand is None or ref.family != cand.family:
         return None
-    return cross(ref, cand, get_rules(ref.family))
+    return cross(ref, cand, get_rules(ref.family), feedback_for(session, ref_id).get(cand_id))
+
+
+def record_feedback(
+    session: Session, ref_id: int, cand_id: int, verdict: str | None, note: str, user_id: int | None
+) -> CrossFeedback | None:
+    """Store (or replace) the FFF decision for a cross; ``verdict=None`` clears it."""
+    existing = session.scalar(
+        select(CrossFeedback).where(CrossFeedback.reference_id == ref_id, CrossFeedback.candidate_id == cand_id)
+    )
+    if verdict is None:
+        if existing:
+            session.delete(existing)
+        session.commit()
+        return None
+    fb = existing or CrossFeedback(reference_id=ref_id, candidate_id=cand_id)
+    fb.verdict, fb.note, fb.user_id = FeedbackVerdict(verdict), note.strip()[:2000], user_id
+    session.add(fb)
+    session.commit()
+    return fb
 
 
 def parts_by_ids(session: Session, ids: list[int]) -> list[Part]:

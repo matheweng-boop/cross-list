@@ -50,6 +50,8 @@ def cross_json(r: CrossResult) -> dict:
             "same_pinout": r.fit.same_pinout,
         },
         "hard_fail": r.hard_fail,
+        "fff_status": r.fff_status,
+        "feedback": {"verdict": r.feedback.verdict.value, "note": r.feedback.note} if r.feedback else None,
         "incomplete": r.incomplete,
         "top_differences": [d.summary() for d in r.top_differences()],
         "differences": [

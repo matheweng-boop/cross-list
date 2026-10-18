@@ -55,13 +55,14 @@
 <section id="cat-{{ c }}">
   <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
   {% for r in crosses[c] %}
-  <article class="cross">
+  <article class="cross" id="{{ 'cand-%d' % r.candidate.id if c == 'fff' }}">
     <header>
       <label><input type="checkbox" name="pick" value="{{ r.candidate.id }}"> {{ r.candidate.label }}</label>
       <span class="muted">{{ r.candidate.package.code }}</span>
       {{ part_badges(r.candidate) }}
       {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
       {% if r.incomplete %}<span class="badge muted">incomplete data</span>{% endif %}
+      {% if c == 'fff' and r.fff_status in ('review', 'accepted') %}<span class="badge {{ 'warn' if r.fff_status == 'review' else 'ok' }}">{{ fff_labels[r.fff_status] }}</span>{% endif %}
       <a href="/parts/{{ r.candidate.id }}" class="muted">details</a>
     </header>
     <details>
@@ -73,6 +74,25 @@
       </summary>
       {{ diff_table(r) }}
     </details>
+    {% if c == 'fff' and r.fff_status in ('review', 'accepted') %}
+    <div class="review">
+      <p class="muted">Priority 2 differences to judge:
+        {% for d in r.review_items %}<b>{{ d.label }}</b> {{ d.cand_display }} vs {{ d.ref_display }}{{ '; ' if not loop.last }}{% endfor %}</p>
+      {% if r.feedback %}
+      <p class="muted">{{ 'Accepted' if r.feedback.verdict == 'accept' else 'Rejected' }} as FFF by {{ r.feedback.user.display_name if r.feedback.user else 'unknown' }}
+        on {{ r.feedback.created_at.strftime('%Y-%m-%d') }}{% if r.feedback.note %}: “{{ r.feedback.note }}”{% endif %}</p>
+      {% endif %}
+      <div class="review-actions">
+        <input type="text" name="note" form="fb-{{ r.candidate.id }}" placeholder="Note (optional)" aria-label="Feedback note">
+        {% if r.fff_status == 'review' %}
+        <button type="submit" form="fb-{{ r.candidate.id }}" name="verdict" value="accept">Accept as FFF</button>
+        <button type="submit" form="fb-{{ r.candidate.id }}" name="verdict" value="reject" class="secondary">Reject</button>
+        {% else %}
+        <button type="submit" form="fb-{{ r.candidate.id }}" name="verdict" value="clear" class="secondary outline">Undo decision</button>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </article>
   {% else %}
   <p class="muted">No candidates in this category.</p>
@@ -81,4 +101,20 @@
 {% endfor %}
 <div class="sticky-actions"><button type="submit">Compare selected with {{ part.mpn }}</button></div>
 </form>
+{# Feedback forms live outside the compare form; the controls above refer to them with form="…". #}
+{% for r in crosses['fff'] if r.fff_status in ('review', 'accepted') %}
+<form id="fb-{{ r.candidate.id }}" method="post" action="/feedback" hidden>
+  <input type="hidden" name="reference_id" value="{{ part.id }}">
+  <input type="hidden" name="candidate_id" value="{{ r.candidate.id }}">
+</form>
+{% endfor %}
+{% if rejected %}
+<details class="rejected"><summary>Rejected as FFF ({{ rejected|length }})</summary>
+  <ul>{% for r in rejected %}<li>{{ r.candidate.label }} – {{ r.feedback.note or 'no note' }}
+    <button type="submit" form="fbr-{{ r.candidate.id }}" name="verdict" value="clear" class="secondary outline">Undo</button>
+    <form id="fbr-{{ r.candidate.id }}" method="post" action="/feedback" hidden>
+      <input type="hidden" name="reference_id" value="{{ part.id }}"><input type="hidden" name="candidate_id" value="{{ r.candidate.id }}">
+    </form></li>{% endfor %}</ul>
+</details>
+{% endif %}
 {% endblock %}

@@ -3,8 +3,10 @@
 Given a reference part (the Skyworks part being crossed) and a candidate, decide
 which cross categories the candidate falls into:
 
-* FFF       – fit (same package + same pinout) and every priority 1 and 2
-              parameter equal or better.
+* FFF       – fit (same package + same pinout), no priority 1 parameter worse.
+              If every priority 2 parameter is also equal or better the cross is
+              FFF automatically; otherwise it "needs review" until an engineer
+              accepts or rejects it (stored feedback).
 * P2P       – fit only; function is ignored, all differences are reported.
 * Upgrade   – no priority 1 parameter worse and at least one better. The package
               may be the same or smaller, unless the reference is package-locked.
@@ -18,7 +20,7 @@ functionally different, which excludes FFF, Upgrade and Downgrade.
 from dataclasses import dataclass, field
 
 from app.matching.rules import FamilyRules, ParamDef
-from app.models import LifecycleStatus, Package, Part
+from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
@@ -31,6 +33,14 @@ CATEGORY_LABELS = {
     "downgrade": "Downgrade",
 }
 LIFECYCLE_RISK = {LifecycleStatus.nrnd, LifecycleStatus.last_time_buy, LifecycleStatus.obsolete}
+# FFF status of a cross that fits and matches priority 1
+FFF_AUTO, FFF_ACCEPTED, FFF_REVIEW, FFF_REJECTED = "auto", "accepted", "review", "rejected"
+FFF_STATUS_LABELS = {
+    FFF_AUTO: "FFF",
+    FFF_ACCEPTED: "FFF – accepted",
+    FFF_REVIEW: "FFF – needs review",
+    FFF_REJECTED: "FFF – rejected",
+}
 
 
 @dataclass
@@ -65,6 +75,7 @@ class Fit:
     package_relation: str  # same | smaller | larger | similar
     same_pinout: bool
     pin_diffs: list[tuple[int, str, str]] = field(default_factory=list)
+    positions_unknown: bool = False  # same body, different pin counts, pin positions not known
 
     @property
     def fits(self) -> bool:
@@ -81,6 +92,13 @@ class CrossResult:
     categories: list[str]
     hard_fail: bool
     incomplete: bool
+    fff_status: str | None = None
+    feedback: object | None = None  # CrossFeedback row, if any
+
+    @property
+    def review_items(self) -> list[Diff]:
+        """Priority 2 differences an engineer has to judge for FFF."""
+        return [d for d in self.diffs if d.priority == 2 and d.status not in (EQUAL, BETTER)]
 
     @property
     def all_diffs(self) -> list[Diff]:
@@ -210,9 +228,10 @@ def pins_compatible(ref: str, cand: str) -> bool:
 def same_package(a: Package, b: Package) -> bool:
     if a.id is not None and a.id == b.id:
         return True
+    # Pin count may differ: one package can leave positions empty where another
+    # has a no-connect pin. Pinouts are compared by position in check_fit.
     return (
-        a.pin_count == b.pin_count
-        and abs(a.pitch_mm - b.pitch_mm) <= 0.01
+        abs(a.pitch_mm - b.pitch_mm) <= 0.01
         and abs(a.body_length_mm - b.body_length_mm) <= 0.05
         and abs(a.body_width_mm - b.body_width_mm) <= 0.05
         and abs(a.span_mm - b.span_mm) <= 0.1
@@ -229,14 +248,32 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         relation = "smaller" if ca < ra * 0.98 else "larger" if ca > ra * 1.02 else "similar"
 
     pin_diffs = []
-    if len(ref.pinout) != len(cand.pinout):
-        same_pins = False
-    else:
-        for i, (r, c) in enumerate(zip(ref.pinout, cand.pinout, strict=True), 1):
-            if not pins_compatible(r, c):
-                pin_diffs.append((i, r, c))
-        same_pins = not pin_diffs
-    return Fit(same_pkg, relation, same_pins, pin_diffs)
+    ref_pos, cand_pos = pin_positions(ref), pin_positions(cand)
+    if not ref.pinout or not cand.pinout:
+        return Fit(same_pkg, relation, False, pin_diffs)
+    if ref_pos is None or cand_pos is None or (same_pkg and len(ref_pos) != len(cand_pos)):
+        return Fit(same_pkg, relation, False, pin_diffs, positions_unknown=same_pkg)
+    if len(ref_pos) != len(cand_pos):
+        return Fit(same_pkg, relation, False, pin_diffs)
+    for i, (r, c) in enumerate(zip(ref_pos, cand_pos, strict=True), 1):
+        if not pins_compatible(r, c):
+            pin_diffs.append((i, r, c))
+    return Fit(same_pkg, relation, not pin_diffs, pin_diffs)
+
+
+def pin_positions(part: Part) -> list[str] | None:
+    """Pin functions by physical position. Positions without a pin count as NC.
+    Returns None when a package leaves positions out but does not say which."""
+    pkg = part.package
+    total = pkg.positions_total or pkg.pin_count
+    if len(part.pinout) == total:
+        return list(part.pinout)
+    if pkg.pin_positions and len(pkg.pin_positions) == len(part.pinout):
+        slots = ["NC"] * total
+        for pos, fn in zip(pkg.pin_positions, part.pinout, strict=True):
+            slots[pos - 1] = fn
+        return slots
+    return None
 
 
 def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
@@ -258,7 +295,20 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
     )
     if fit.same_pinout:
         pin = Diff("pinout", "Pinout", 1, EQUAL, "matches", "matches")
-    elif len(ref.pinout) != len(cand.pinout):
+    elif not ref.pinout or not cand.pinout:
+        pin = Diff(
+            "pinout",
+            "Pinout",
+            1,
+            UNKNOWN,
+            "known" if ref.pinout else "not read",
+            "not read" if not cand.pinout else "known",
+        )
+    elif fit.positions_unknown:
+        pin = Diff(
+            "pinout", "Pinout", 1, UNKNOWN, f"{len(ref.pinout)} pins", f"{len(cand.pinout)} pins (positions not known)"
+        )
+    elif len(ref.pinout) != len(cand.pinout) and not fit.pin_diffs:
         pin = Diff("pinout", "Pinout", 1, DIFFERENT, f"{len(ref.pinout)} pins", f"{len(cand.pinout)} pins", 1.0)
     else:
         listed = ", ".join(f"{i}" for i, _, _ in fit.pin_diffs[:6])
@@ -278,7 +328,7 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 # ---------------------------------------------------------------- classify
 
 
-def cross(ref: Part, cand: Part, rules: FamilyRules) -> CrossResult:
+def cross(ref: Part, cand: Part, rules: FamilyRules, feedback=None) -> CrossResult:
     fit = check_fit(ref, cand)
     rv, cv = ref.param_map(), cand.param_map()
     diffs = []
@@ -304,8 +354,16 @@ def cross(ref: Part, cand: Part, rules: FamilyRules) -> CrossResult:
     incomplete = any(d.status == UNKNOWN for d in p12)
 
     cats = []
-    if fit.fits and not hard_fail and all(d.status in ok for d in p12):
-        cats.append("fff")
+    fff_status = None
+    if fit.fits and not hard_fail and all(d.status in ok for d in p1):
+        if all(d.status in ok for d in p12):
+            fff_status = FFF_AUTO
+        elif feedback is None:
+            fff_status = FFF_REVIEW
+        else:
+            fff_status = FFF_ACCEPTED if feedback.verdict == FeedbackVerdict.accept else FFF_REJECTED
+        if fff_status != FFF_REJECTED:
+            cats.append("fff")
     if fit.fits:
         cats.append("p2p")
     package_ok_for_upgrade = (
@@ -321,7 +379,9 @@ def cross(ref: Part, cand: Part, rules: FamilyRules) -> CrossResult:
     if not hard_fail and fit.same_package and any(d.is_negative for d in p1):
         cats.append("downgrade")
 
-    return CrossResult(ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete)
+    return CrossResult(
+        ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback
+    )
 
 
 def sort_key(category: str):
@@ -332,6 +392,8 @@ def sort_key(category: str):
             main = -r.improvement
         elif category == "downgrade":
             main = (not r.fit.same_pinout, r.closeness)
+        elif category == "fff":
+            main = (r.fff_status == FFF_REVIEW, r.closeness)  # confirmed FFF first
         else:
             main = r.closeness
         return (r.lifecycle_risk, main, r.candidate.label)
@@ -339,12 +401,16 @@ def sort_key(category: str):
     return key
 
 
-def find_crosses(ref: Part, candidates: list[Part], rules: FamilyRules) -> dict[str, list[CrossResult]]:
+def find_crosses(
+    ref: Part, candidates: list[Part], rules: FamilyRules, feedback: dict | None = None
+) -> dict[str, list[CrossResult]]:
+    """``feedback`` maps candidate id -> CrossFeedback for this reference."""
     out: dict[str, list[CrossResult]] = {c: [] for c in CATEGORY_ORDER}
+    feedback = feedback or {}
     for cand in candidates:
         if cand.id == ref.id or cand.family != ref.family:
             continue
-        result = cross(ref, cand, rules)
+        result = cross(ref, cand, rules, feedback.get(cand.id))
         for c in result.categories:
             out[c].append(result)
     for c in out:

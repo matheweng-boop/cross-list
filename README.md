@@ -12,10 +12,14 @@ and others.
 
 | Category | Rule |
 |---|---|
-| **FFF** | Same package and pinout; every priority 1 & 2 parameter equal or better |
+| **FFF** | Same package and pinout; every priority 1 parameter equal or better. Priority 2 differences need an engineer's review: accepted crosses become FFF, rejected ones drop out |
 | **Pin-to-pin** | Same package and pinout; function ignored |
 | **Upgrade** | No priority 1 parameter worse, at least one better; same or smaller package (same only if the reference is *package-locked*) |
 | **Downgrade** | At least one priority 1 parameter worse; same package; closest first |
+
+"Same package" means the same body length, body width, lead span and pitch; the
+pin count may differ, because a missing pin position is equivalent to a no-connect
+pin. Pinouts are compared by physical position.
 
 "Hard" parameters (channel configuration, input type, output type…) must match for
 FFF, Upgrade and Downgrade. Obsolete / NRND / last-time-buy candidates are always

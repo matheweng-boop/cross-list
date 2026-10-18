@@ -19,7 +19,7 @@ def names(results):
 
 EXPECTED = {
     "SR8641": {
-        "fff": ["SD8641A", "SA7741", "SA7741X"],
+        "fff": ["SD8641A", "SA7741", "SC141", "SA7741X"],  # SC141 needs review (P2 worse)
         "p2p": ["SD8641A", "SC141", "SA7741", "SB8441", "SA7741X"],
         "upgrade": ["SB8641N", "SA7741"],
         "downgrade": ["SB8441"],
@@ -54,9 +54,59 @@ def test_p2p_ignores_function(part):
     assert r.categories == ["p2p", "downgrade"]
 
 
-def test_p2p_only_when_p2_worse(part):
+def test_p2_worse_needs_review_for_fff(part):
     r = cross(part("SR8641"), part("SC141"), get_rules("digital_isolator"))
-    assert r.categories == ["p2p"]
+    assert r.categories == ["fff", "p2p"] and r.fff_status == "review"
+    assert {d.key for d in r.review_items} == {"data_rate_mbps", "prop_delay_ns"}
+
+
+def test_feedback_decides_fff(part):
+    from types import SimpleNamespace
+
+    from app.models import FeedbackVerdict
+
+    rules = get_rules("digital_isolator")
+    accepted = cross(part("SR8641"), part("SC141"), rules, SimpleNamespace(verdict=FeedbackVerdict.accept))
+    assert accepted.fff_status == "accepted" and "fff" in accepted.categories
+    rejected = cross(part("SR8641"), part("SC141"), rules, SimpleNamespace(verdict=FeedbackVerdict.reject))
+    assert rejected.fff_status == "rejected" and rejected.categories == ["p2p"]
+    # feedback does not change a cross that is FFF on its own
+    auto = cross(part("SR8641"), part("SA7741"), rules, SimpleNamespace(verdict=FeedbackVerdict.reject))
+    assert auto.fff_status == "auto"
+
+
+def test_same_package_ignores_pin_count_but_not_dimensions():
+    from app.matching.engine import same_package
+    from app.models import Package
+
+    wide16 = Package(
+        code="A", name="", pin_count=16, pitch_mm=1.27, body_length_mm=10.3, body_width_mm=7.5, span_mm=10.3
+    )
+    wide12 = Package(
+        code="B", name="", pin_count=12, pitch_mm=1.27, body_length_mm=10.3, body_width_mm=7.5, span_mm=10.3
+    )
+    ssop = Package(code="C", name="", pin_count=16, pitch_mm=0.635, body_length_mm=5.4, body_width_mm=3.9, span_mm=6.0)
+    qsop = Package(code="D", name="", pin_count=16, pitch_mm=0.635, body_length_mm=4.9, body_width_mm=3.9, span_mm=6.0)
+    assert same_package(wide16, wide12)
+    assert not same_package(ssop, qsop)  # 5.4 mm vs 4.9 mm body
+
+
+def test_missing_pin_positions_match_nc():
+    from app.matching.engine import check_fit
+    from app.models import Package, Part
+
+    full = Package(code="F", name="", pin_count=8, pitch_mm=1.27, body_length_mm=4.9, body_width_mm=3.9, span_mm=6.0)
+    gaps = Package(
+        code="G", name="", pin_count=6, pitch_mm=1.27, body_length_mm=4.9, body_width_mm=3.9, span_mm=6.0,
+        positions_total=8, pin_positions=[1, 2, 4, 5, 7, 8],
+    )  # fmt: skip
+    ref = Part(mpn="R", package=full, pinout=["VDD1", "INA", "NC", "GND1", "GND2", "NC", "OUTA", "VDD2"])
+    cand = Part(mpn="C", package=gaps, pinout=["VDD1", "INA", "GND1", "GND2", "OUTA", "VDD2"])
+    fit = check_fit(ref, cand)
+    assert fit.same_package and fit.same_pinout
+    unknown = Package(code="U", name="", pin_count=6, pitch_mm=1.27, body_length_mm=4.9, body_width_mm=3.9, span_mm=6.0)
+    fit = check_fit(ref, Part(mpn="U", package=unknown, pinout=cand.pinout))
+    assert fit.same_package and not fit.same_pinout and fit.positions_unknown
 
 
 def test_hard_mismatch_excludes_functional_categories(part):

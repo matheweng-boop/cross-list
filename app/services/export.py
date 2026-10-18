@@ -41,6 +41,8 @@ def cross_xlsx(r: CrossResult) -> bytes:
     ws.append([f"Cross: {r.reference.label} → {r.candidate.label}"])
     ws["A1"].font = Font(bold=True, size=13)
     ws.append(["Categories", ", ".join(r.categories) or "none"])
+    if r.fff_status:
+        ws.append(["FFF status", r.fff_status + (f" – {r.feedback.note}" if r.feedback and r.feedback.note else "")])
     ws.append(["Top 5 differences", r.comment()])
     ws.append(["Candidate lifecycle", r.candidate.lifecycle_status.value])
     if r.reference.is_synthetic or r.candidate.is_synthetic:

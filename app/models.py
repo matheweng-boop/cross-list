@@ -74,6 +74,10 @@ class Package(Base):
     span_mm: Mapped[float] = mapped_column(Float)  # lead tip to lead tip
     height_mm: Mapped[float | None] = mapped_column(Float)
     exposed_pad: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Packages that leave pin positions empty: total positions and the position
+    # of each numbered pin (e.g. a 16-position body with 12 pins).
+    positions_total: Mapped[int | None] = mapped_column(Integer)
+    pin_positions: Mapped[list[int] | None] = mapped_column(JSON)
 
     @property
     def footprint_mm2(self) -> float:
@@ -193,3 +197,25 @@ class ChangeEvent(Base):
     detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     part: Mapped[Part] = relationship(lazy="joined")
+
+
+class FeedbackVerdict(enum.StrEnum):
+    accept = "accept"
+    reject = "reject"
+
+
+class CrossFeedback(Base):
+    """An engineer's decision on whether a cross that needs review is FFF."""
+
+    __tablename__ = "cross_feedback"
+    __table_args__ = (UniqueConstraint("reference_id", "candidate_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    reference_id: Mapped[int] = mapped_column(ForeignKey("parts.id", ondelete="CASCADE"), index=True)
+    candidate_id: Mapped[int] = mapped_column(ForeignKey("parts.id", ondelete="CASCADE"))
+    verdict: Mapped[FeedbackVerdict] = mapped_column(Enum(FeedbackVerdict))
+    note: Mapped[str] = mapped_column(Text, default="")
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped["User"] = relationship(lazy="joined")

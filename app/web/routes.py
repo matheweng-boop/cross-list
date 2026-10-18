@@ -2,26 +2,28 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.deps import get_current_user
 from app.config import get_settings
 from app.db import get_session
-from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, LIFECYCLE_RISK, format_value
+from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, FFF_STATUS_LABELS, LIFECYCLE_RISK, format_value
 from app.matching.rules import get_rules, load_all_rules
-from app.models import ChangeEvent, LifecycleStatus, Part
+from app.models import ChangeEvent, LifecycleStatus, Part, User
 from app.services import export, lifecycle
 from app.services.compare import compare_parts
-from app.services.queries import crosses_for, parts_by_ids, search_parts, single_cross
+from app.services.queries import crosses_for, parts_by_ids, record_feedback, search_parts, single_cross
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 templates.env.globals.update(
     lifecycle_badge=lifecycle.badge,
     category_labels=CATEGORY_LABELS,
+    fff_labels=FFF_STATUS_LABELS,
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
 )
 
@@ -89,6 +91,7 @@ def part_detail(request: Request, part_id: int, hide_eol: bool = False, session:
         raise HTTPException(404, "Part not found")
     rules = get_rules(part.family)
     crosses = crosses_for(session, part)
+    rejected = [r for r in crosses["p2p"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
     values = part.param_map()
@@ -108,6 +111,7 @@ def part_detail(request: Request, part_id: int, hide_eol: bool = False, session:
             "crosses": crosses,
             "order": CATEGORY_ORDER,
             "hide_eol": hide_eol,
+            "rejected": rejected,
         },
     )
 
@@ -191,3 +195,21 @@ def lifecycle_page(request: Request, session: Session = Depends(get_session)):
 @router.get("/rules", response_class=HTMLResponse)
 def rules_page(request: Request):
     return templates.TemplateResponse(request, "rules.html", {"all_rules": load_all_rules()})
+
+
+@router.post("/feedback")
+def feedback(
+    reference_id: int = Form(...),
+    candidate_id: int = Form(...),
+    verdict: str = Form(...),
+    note: str = Form(""),
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """Accept or reject a cross that needs review as FFF ("clear" removes the decision)."""
+    if verdict not in ("accept", "reject", "clear"):
+        raise HTTPException(400, "verdict must be accept, reject or clear")
+    if session.get(Part, reference_id) is None or session.get(Part, candidate_id) is None:
+        raise HTTPException(404, "Part not found")
+    record_feedback(session, reference_id, candidate_id, None if verdict == "clear" else verdict, note, user.id)
+    return RedirectResponse(f"/parts/{reference_id}#cand-{candidate_id}", status_code=303)

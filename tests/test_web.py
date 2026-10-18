@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 
 from openpyxl import load_workbook
 
@@ -232,3 +233,14 @@ def test_result_table_download(client):
     assert verdicts["SB8641N"].startswith("Functional equivalent")
     text = client.get(f"/parts/{ref}/replacements.csv?type=fff").text
     assert "SA7741" in text and "SB8641N" not in text
+
+
+def test_cmti_explorer_page(client):
+    ref, cand = ids(client, "SR8641", "SA7741")
+    html = client.get(f"/impact?ids={ref},{cand}").text
+    assert "CMTI design explorer" in html and "Datasheet guaranteed" in html and "Engineering estimate" in html
+    devices = json.loads(html.split("data-devices='")[1].split("'")[0])
+    assert [d["mpn"] for d in devices] == ["SR8641", "SA7741"]  # reference first
+    assert all(isinstance(d["cmti"], float) for d in devices)
+    assert f'href="/impact?ids={ref},' in client.get(f"/parts/{ref}").text
+    assert "Pick parts first" in client.get("/impact").text

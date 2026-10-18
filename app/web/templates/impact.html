@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}CMTI design explorer – Cross List{% endblock %}
+{% block content %}
+<h1>CMTI design explorer</h1>
+<p class="subtitle muted">What the CMTI ratings mean at your operating point: margin, the fastest edge each part tolerates,
+  and what slowing the edges would cost. {% if parts %}Reference: <b>{{ parts[0].mpn }}</b>.{% endif %}</p>
+
+{% if not parts %}
+<p>Pick parts first: open a part and use <b>CMTI explorer</b>, or select parts on the <a href="/compare">Compare</a> page.</p>
+{% else %}
+<div class="viz-root impact" id="impact" data-devices='{{ devices|tojson }}'>
+  <fieldset class="impact-inputs">
+    <label>DC-link voltage swing <output id="o-v"></output>
+      <input type="range" id="v" min="200" max="1500" step="10" value="800"></label>
+    <label>Switching-edge duration <output id="o-t"></output>
+      <input type="range" id="t" min="5" max="100" step="1" value="20"></label>
+    <div class="margin-pick" role="radiogroup" aria-label="Desired design margin">
+      <span>Desired margin</span>
+      {% for m in (1, 1.5, 2, 3) %}<label><input type="radio" name="m" value="{{ m }}" {{ 'checked' if m == 1.5 }}> {{ m }}×</label>{% endfor %}
+    </div>
+  </fieldset>
+
+  <div class="tiles">
+    <div class="tile"><span class="tile-label">Your slew rate</span><span class="tile-value" id="slew"></span><span class="tile-unit">kV/µs</span></div>
+    <div class="tile"><span class="tile-label">CMTI needed for the margin</span><span class="tile-value" id="need"></span><span class="tile-unit">kV/µs</span></div>
+  </div>
+
+  <h2>Margin vs edge speed <span class="evidence ds">Datasheet guaranteed</span></h2>
+  <p class="muted small">Guaranteed minimum CMTI ÷ your slew rate. Above the target line the part holds the chosen margin;
+    the dot marks your current edge.</p>
+  <ul class="chart-legend" id="legend"></ul>
+  <figure class="chart" id="chart" aria-label="CMTI margin against switching-edge duration"></figure>
+
+  <div class="table-wrap">
+    <table class="impact-table">
+      <thead><tr><th>Part</th><th>CMTI (min)</th><th>Margin now</th><th>Fastest edge at target</th><th>Holds target?</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="muted small" id="boundary"></p>
+
+  <h2>If a part forces slower edges <span class="evidence est">Engineering estimate</span></h2>
+  <fieldset class="impact-inputs">
+    <label>Load current <output id="o-i"></output><input type="range" id="i" min="5" max="600" step="5" value="100"></label>
+    <label>Switching frequency <output id="o-f"></output><input type="range" id="f" min="5" max="200" step="5" value="20"></label>
+  </fieldset>
+  <div class="table-wrap">
+    <table class="impact-table">
+      <thead><tr><th>Part</th><th>Edge you can use</th><th>Est. switching loss</th><th>vs your edge</th></tr></thead>
+      <tbody id="loss"></tbody>
+    </table>
+  </div>
+  <p class="muted small">P<sub>sw</sub> ≈ ½·V·I·(t<sub>r</sub>+t<sub>f</sub>)·f per switch, taking the voltage/current overlap as equal to the edge
+    duration. That is a simplification: gate-edge time is not the overlap time. Use the power device's E<sub>on</sub>/E<sub>off</sub>
+    curves or measured waveforms for real numbers; excludes E<sub>oss</sub> and reverse recovery.</p>
+
+  <h2>Parasitic coupling through the barrier <span class="evidence est">Engineering estimate</span></h2>
+  <fieldset class="impact-inputs">
+    <label>Barrier capacitance C<sub>IO</sub> <output id="o-c"></output><input type="range" id="c" min="0.2" max="10" step="0.1" value="2"></label>
+  </fieldset>
+  <div class="tiles">
+    <div class="tile"><span class="tile-label">Peak displacement current</span><span class="tile-value" id="icm"></span><span class="tile-unit">mA</span></div>
+    <div class="tile"><span class="tile-label">Charge per edge</span><span class="tile-value" id="q"></span><span class="tile-unit">nC</span></div>
+  </div>
+  <p class="muted small">I = C·dV/dt and Q = C·ΔV for an ideal capacitive path. Enter C<sub>IO</sub> from the datasheet (not yet in
+    our data). Barrier capacitance does not set CMTI, and the resulting EMI depends on layout and return paths.</p>
+
+  <h2>Needs simulation or measurement <span class="evidence meas">Not modelled</span></h2>
+  <ul class="muted small">
+    <li>Actual EMI / conducted emissions, filter size and compliance.</li>
+    <li>Real switching losses and efficiency (needs E<sub>on</sub>/E<sub>off</sub> or waveforms).</li>
+    <li>Behaviour outside the datasheet's CMTI test conditions (polarity, amplitude, input/output state).</li>
+  </ul>
+</div>
+<p class="muted small">Assumes the full voltage swing appears across the isolation barrier and the edge duration uses the same
+  measurement convention as the CMTI test. 1 V/ns = 1 kV/µs. Sources: {% for d in devices %}{{ d.mpn }} {{ d.source or 'CMTI not in data' }}{{ '; ' if not loop.last }}{% endfor %}.</p>
+<script src="/static/impact.js"></script>
+{% endif %}
+{% endblock %}

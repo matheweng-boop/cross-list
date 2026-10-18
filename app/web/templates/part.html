@@ -120,7 +120,7 @@
         </div>
         {% endif %}
         <details><summary>All parameters</summary>{{ diff_table(r) }}</details>
-        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a></p>
+        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a>{% if rules.get('cmti_kv_us') %} · <a href="/impact?ids={{ part.id }},{{ c.id }}">CMTI explorer</a>{% endif %}</p>
       </td>
     </tr>
   {% endfor %}
@@ -128,7 +128,8 @@
 </table></div>
 {% set q = '?dev=' ~ dev ~ ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&type=' ~ type if type else '') %}
 <p class="downloads"><a href="/parts/{{ part.id }}/replacements.xlsx{{ q }}" role="button" class="outline">Download table (Excel)</a>
-  <a href="/parts/{{ part.id }}/replacements.csv{{ q }}" role="button" class="outline secondary">CSV</a></p>
+  <a href="/parts/{{ part.id }}/replacements.csv{{ q }}" role="button" class="outline secondary">CSV</a>
+  {% if rules.get('cmti_kv_us') %}<a href="/impact?ids={{ part.id }}{% for r, v in rows[:3] %},{{ r.candidate.id }}{% endfor %}" role="button" class="outline">CMTI explorer (top 3)</a>{% endif %}</p>
 {% else %}
 <p class="muted">No drop-in, functional or package equivalents{{ ' with these filters' if type or company or hide_eol }}.</p>
 {% endif %}

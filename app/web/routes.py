@@ -307,6 +307,26 @@ def package_overlay(request: Request, a_id: int, b_id: int, lp: int = 0, session
     return _overlay_page(request, ov, a, f"/packages/{a_id}/overlay/{b_id}", lp)
 
 
+@router.get("/impact", response_class=HTMLResponse)
+def impact_page(request: Request, ids: str = "", session: Session = Depends(get_session)):
+    """Application impact: what the CMTI ratings of the parts mean at the user's operating point.
+    The first part is the reference; the calculations run in the page."""
+    parts = parts_by_ids(session, _parse_ids(ids))[:4]  # four series at most in the chart
+    devices = []
+    for p in parts:
+        cmti = next((pv for pv in p.params if pv.key == "cmti_kv_us"), None)
+        devices.append(
+            {
+                "id": p.id,
+                "mpn": p.mpn,
+                "maker": p.manufacturer.name,
+                "cmti": cmti.num if cmti else None,
+                "source": (cmti.source if cmti and cmti.source else "") if cmti else "",
+            }
+        )
+    return templates.TemplateResponse(request, "impact.html", {"parts": parts, "devices": devices})
+
+
 @router.get("/compare", response_class=HTMLResponse)
 def compare_page(
     request: Request,

@@ -136,3 +136,50 @@ table.results .badge { white-space: normal; }
 .spec-over { color: var(--cl-better); }
 .type-filter { margin-bottom: .5rem; }
 .result-filters select { width: auto; display: inline-block; margin: 0 .3rem; padding: .1rem 1.8rem .1rem .5rem; height: auto; }
+/* CMTI explorer: chart tokens (reference palette slots 1-4, validated light + dark) */
+.viz-root { --surface-1: #fcfcfb; --grid: #e4e3df; --text-secondary: #52514e;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root { --surface-1: #1a1a19; --grid: #333330; --text-secondary: #c3c2b7;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; }
+}
+:root[data-theme="dark"] .viz-root { --surface-1: #1a1a19; --grid: #333330; --text-secondary: #c3c2b7;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; }
+.impact-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .3rem 1.2rem; border: 0; padding: 0; margin: 0 0 .6rem; }
+.impact-inputs label { font-size: .9rem; margin: 0; }
+.impact-inputs output { float: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.margin-pick { display: flex; flex-wrap: wrap; gap: .2rem .9rem; align-items: center; font-size: .9rem; }
+.margin-pick label { display: flex; align-items: center; gap: .25rem; }
+.margin-pick input { margin: 0; }
+.tiles { display: flex; flex-wrap: wrap; gap: .6rem; margin: .4rem 0 1rem; }
+.tile { flex: 1 1 9rem; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; padding: .5rem .8rem; }
+.tile-label { display: block; font-size: .8rem; color: var(--pico-muted-color); }
+.tile-value { font-size: 1.8rem; font-weight: 600; }
+.tile-unit { margin-left: .3rem; color: var(--pico-muted-color); font-size: .85rem; }
+.evidence { font-size: .7rem; font-weight: 600; padding: .05rem .45rem; border-radius: 1rem; vertical-align: middle; white-space: nowrap; }
+.evidence.ds { background: var(--cl-better-bg); color: var(--cl-better); }
+.evidence.est { background: var(--cl-diff-bg); color: var(--cl-diff); }
+.evidence.meas { background: var(--cl-unknown-bg); color: var(--pico-muted-color); }
+.small { font-size: .82rem; }
+.chart { position: relative; margin: 0 0 .6rem; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart .surface { fill: var(--surface-1); }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .tick { fill: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart .target { stroke: var(--text-secondary); stroke-width: 1.5; }
+.chart .now, .chart .cross { stroke: var(--text-secondary); stroke-width: 1; }
+.chart .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { stroke: var(--surface-1); stroke-width: 2; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+.series.s1 { stroke: var(--series-1); } .dot.s1, .key.s1 { fill: var(--series-1); background: var(--series-1); }
+.series.s2 { stroke: var(--series-2); } .dot.s2, .key.s2 { fill: var(--series-2); background: var(--series-2); }
+.series.s3 { stroke: var(--series-3); } .dot.s3, .key.s3 { fill: var(--series-3); background: var(--series-3); }
+.series.s4 { stroke: var(--series-4); } .dot.s4, .key.s4 { fill: var(--series-4); background: var(--series-4); }
+.key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; }
+.chart-legend { list-style: none; padding: 0; margin: 0 0 .3rem; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .85rem; }
+.chart-legend li { list-style: none; margin: 0; }
+.chart-tip { position: absolute; background: var(--pico-background-color); border: 1px solid var(--pico-muted-border-color);
+  border-radius: .4rem; padding: .35rem .55rem; font-size: .8rem; box-shadow: 0 4px 14px rgba(0,0,0,.12); pointer-events: none; min-width: 160px; }
+.state { font-weight: 600; white-space: nowrap; }
+.state.good { color: var(--cl-better); } .state.bad { color: var(--cl-worse); }
+.impact-table td { vertical-align: top; }

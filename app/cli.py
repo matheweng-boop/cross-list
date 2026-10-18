@@ -7,6 +7,8 @@ import-skyworks [--offline]
                      fetch Skyworks Si86 data, build data/real/skyworks_si86.yaml and load it
 import-ti [--offline]
                      fetch TI digital isolator data, build data/real/ti_digital_isolators.yaml and load it
+import-novosense [--offline]
+                     fetch Novosense digital isolator data and load it
 load-real            load every data/real/*.yaml file
 """
 
@@ -54,15 +56,16 @@ def main(argv: list[str]) -> int:
         print(f"Revised: {info.revision_date}  First issue: {info.first_issue_date}")
         for sug in info.suggestions:
             print(f"  p{sug.page} {sug.key} = {sug.value}   …{sug.snippet}…")
-    elif cmd in ("import-skyworks", "import-ti"):
+    elif cmd in ("import-skyworks", "import-ti", "import-novosense"):
         import yaml
 
         from app.services.seed import load_file
-        from app.sources import skyworks, ti
+        from app.sources import novosense, skyworks, ti
 
         source, out = {
             "import-skyworks": (skyworks, Path("data/real/skyworks_si86.yaml")),
             "import-ti": (ti, Path("data/real/ti_digital_isolators.yaml")),
+            "import-novosense": (novosense, Path("data/real/novosense_digital_isolators.yaml")),
         }[cmd]
         if "--offline" not in args:
             source.fetch()

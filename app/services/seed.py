@@ -112,7 +112,7 @@ def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
         pkg = pkgs.get(spec["package"]) or session.scalar(select(Package).where(Package.code == spec["package"]))
         pinout = spec["pinout"]
         pinout = pinouts[pinout] if isinstance(pinout, str) else pinout
-        if len(pinout) != pkg.pin_count:
+        if pinout and len(pinout) != pkg.pin_count:
             raise ValueError(f"{spec['mpn']}: pinout has {len(pinout)} pins, package {pkg.code} has {pkg.pin_count}")
 
         life = spec.get("lifecycle", {})

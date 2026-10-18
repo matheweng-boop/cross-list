@@ -5,6 +5,9 @@ refresh [CSV ...]    run the lifecycle refresh using CSV lists (default: var/lif
 analyze PDF          show revision/date/parameter suggestions from a datasheet
 import-skyworks [--offline]
                      fetch Skyworks Si86 data, build data/real/skyworks_si86.yaml and load it
+import-ti [--offline]
+                     fetch TI digital isolator data, build data/real/ti_digital_isolators.yaml and load it
+load-real            load every data/real/*.yaml file
 """
 
 import sys
@@ -51,16 +54,19 @@ def main(argv: list[str]) -> int:
         print(f"Revised: {info.revision_date}  First issue: {info.first_issue_date}")
         for sug in info.suggestions:
             print(f"  p{sug.page} {sug.key} = {sug.value}   …{sug.snippet}…")
-    elif cmd == "import-skyworks":
+    elif cmd in ("import-skyworks", "import-ti"):
         import yaml
 
         from app.services.seed import load_file
-        from app.sources import skyworks
+        from app.sources import skyworks, ti
 
+        source, out = {
+            "import-skyworks": (skyworks, Path("data/real/skyworks_si86.yaml")),
+            "import-ti": (ti, Path("data/real/ti_digital_isolators.yaml")),
+        }[cmd]
         if "--offline" not in args:
-            skyworks.fetch()
-        data = skyworks.build()
-        out = Path("data/real/skyworks_si86.yaml")
+            source.fetch()
+        data = source.build()
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=200))
         print(f"Built {len(data['parts'])} parts ({len(data['skipped'])} skipped) -> {out}")
@@ -68,6 +74,13 @@ def main(argv: list[str]) -> int:
             n = load_file(s, out)
             s.commit()
         print(f"Loaded {n} parts")
+    elif cmd == "load-real":
+        from app.services.seed import load_file
+
+        with Session(engine) as s:
+            for path in sorted(Path("data/real").glob("*.yaml")):
+                print(f"{path}: {load_file(s, path)} parts")
+            s.commit()
     else:
         print(__doc__)
         return 1

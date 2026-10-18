@@ -9,9 +9,6 @@ TI datasheets lay these tables out consistently:
 import re
 from dataclasses import dataclass, field
 
-PKG_COL_RE = re.compile(r"\b(\d{1,2})-([A-Z]{1,4})\b|\b([A-Z]{1,4})-(\d{1,2})\b")
-NUM_RE = re.compile(r"[>≥<]?\s?(\d+(?:\.\d+)?)")
-
 
 @dataclass
 class Insulation:
@@ -22,6 +19,7 @@ class Insulation:
     viorm_vpk: dict[str, float] = field(default_factory=dict)
     viosm_vpk: dict[str, float] = field(default_factory=dict)
     viso_vrms: dict[str, float] = field(default_factory=dict)
+    columns: dict[int, str] = field(default_factory=dict)  # table column -> package
 
     def isolation_class(self, pkg: str) -> str | None:
         """IEC 60747-17 reinforced isolation requires a surge rating of at least 10 kV."""
@@ -29,134 +27,200 @@ class Insulation:
         return None if v is None else "reinforced" if v >= 10000 else "basic"
 
 
-def _row_values(line: str, n: int) -> list[float] | None:
-    nums = [float(x) for x in NUM_RE.findall(line)]
-    return nums[-n:] if len(nums) >= n else None
+def _num(cell) -> float | None:
+    m = re.search(r"(\d+(?:\.\d+)?)", str(cell or "").replace(" ", ""))
+    return float(m.group(1)) if m else None
 
 
-def _find_section(pages: list[str], title: str) -> tuple[int, str] | None:
-    """(page number, text from the title to the end of that page and the next)."""
-    for i, text in enumerate(pages):
-        for m in re.finditer(re.escape(title), text):
-            before = text[max(0, m.start() - 3) : m.start()]
-            tail = text[m.end() : m.end() + 40]
-            if "..." in tail or ". ." in tail or "...." in before:
-                continue  # table of contents entry
-            nxt = pages[i + 1] if i + 1 < len(pages) else ""
-            return i + 1, text[m.start() :] + "\n" + nxt
-    return None
+INSULATION_KEYS = [
+    ("creepage_mm", r"^cpg|externalcreepage|externaltracking"),
+    ("clearance_mm", r"^clr|externalclearance|externalairgap"),
+    ("viorm_vpk", r"acvoltage\(bipolar\)|maximumrepetitivepeak|^viorm"),
+    ("viosm_vpk", r"maximumsurge|^viosm"),
+    ("viso_vrms", r"withstandisolationvoltage|^viso"),
+]
+PKG_HEADER_RE = re.compile(r"^(?:\d{1,2}-)?([A-Z]{1,4})(?:-\d{1,2})?$")
 
 
-def parse_insulation(pages: list[str]) -> Insulation | None:
-    found = _find_section(pages, "Insulation Specifications")
-    if not found:
+def parse_insulation(pdf_path, pages: list[str]) -> Insulation | None:
+    """Per-package insulation values from the "Insulation Specifications" table."""
+    import pdfplumber
+
+    starts = [
+        i
+        for i, t in enumerate(pages)
+        if re.search(r"Insulation Specifications|Insulation Characteristics", t, re.I)
+        and not re.search(r"Insulation (Specifications|Characteristics)\s*\.{3,}", t, re.I)
+    ]
+    if not starts:
         return None
-    page, text = found
-    lines = text.splitlines()
-    packages: list[str] = []
-    for line in lines[:15]:
-        cols = PKG_COL_RE.findall(line)
-        words = [w for w in line.split() if w not in ("PARAMETER", "TEST", "CONDITIONS", "UNIT", "PACKAGE")]
-        if cols and len(cols) * 2 >= len(words):  # a header line made of package names
-            packages = [c[1] or c[2] for c in cols]
+    ins = None
+    with pdfplumber.open(pdf_path) as pdf:
+        for i in (starts[0], starts[0] + 1):
+            if i >= len(pdf.pages):
+                break
+            for table in pdf.pages[i].extract_tables():
+                ins = _read_insulation_table(table, i + 1, ins)
+    return ins if ins and (ins.creepage_mm or ins.viorm_vpk) else None
+
+
+def _read_insulation_table(table: list[list], page: int, ins: Insulation | None) -> Insulation | None:
+    value_cols: dict[int, str] = {}
+    body = 0
+    for r, row in enumerate(table[:4]):
+        found = {}
+        for c, cell in enumerate(row):
+            text = re.sub(r"\s+", "", str(cell or "")).upper()
+            m = PKG_HEADER_RE.match(text)
+            if m and text not in ("UNIT", "VALUE", "CLR", "CPG", "DTI", "CTI"):
+                found[c] = m.group(1)
+        if found:
+            value_cols, body = found, r + 1
             break
-    if not packages:
-        return None
-    n = len(packages)
-    ins = Insulation(packages, page)
-    for i, line in enumerate(lines):
-        low = line.lower()
-        target = None
-        if re.search(r"\bcpg\b|external creepage", low):
-            target = ins.creepage_mm
-        elif re.search(r"\bclr\b|external clearance", low):
-            target = ins.clearance_mm
-        elif "ac voltage (bipolar)" in low:
-            target = ins.viorm_vpk
-        elif "iosm" in low.replace(" ", ""):
-            target = ins.viosm_vpk
-        elif "withstand isolation voltage" in low:
-            target = ins.viso_vrms
-        if target is None or target:
-            continue
-        values = _row_values(line, n) or _row_values(lines[i + 1] if i + 1 < len(lines) else "", n)
-        if values:
-            target.update(zip(packages, values, strict=True))
+    if not value_cols:
+        if ins is not None:  # continuation of the table on the next page
+            value_cols = dict(ins.columns)
+        else:
+            for r, row in enumerate(table[:3]):
+                for c, cell in enumerate(row):
+                    if re.sub(r"\s+", "", str(cell or "")).upper() in ("VALUE", "SPECIFICATION"):
+                        value_cols, body = {c: "*"}, r + 1
+            if not value_cols:
+                return ins
+    if ins is None:
+        ins = Insulation(list(value_cols.values()), page, columns=value_cols)
+    for row in table[body:]:
+        label = "".join(str(c or "") for c in row[: min(value_cols)]).lower().replace(" ", "").replace("\n", "")
+        for key, rx in INSULATION_KEYS:
+            target = getattr(ins, key)
+            if target or not re.search(rx, label):
+                continue
+            values = {pkg: _num(row[c]) for c, pkg in value_cols.items() if c < len(row)}
+            if all(v is not None for v in values.values()):
+                target.update(values)
     return ins
 
 
 # ------------------------------------------------------------------ pins
 
-# A hyphen marks a pin a device does not have; an em dash is the "type" of supply pins.
-PIN_ROW_RE = re.compile(r"^([A-Z][A-Z0-9_/]*?)\s+((?:(?:\d+(?:\s*,\s*\d+)*|-)\s+)+)(?:(?:I/O|I|O|—|P|G)(?=\s|$))?")
-GROUP_RE = re.compile(r"\d+(?:\s*,\s*\d+)*|-")
+ABSENT = {"", "—", "–", "-", "n/a", "NA"}
+PKG_LABEL_RE = re.compile(r"^(?:\d{1,2}-)?([A-Z]{1,4})(?:-\d{1,2})?$")
 
 
-def parse_pin_table(pages: list[str]) -> tuple[int, list[str], dict[str, list[list[int]]]] | None:
-    """(page, device names in column order, {pin name: [pins per column]})."""
-    found = _find_section(pages, "Pin Functions")
-    if not found:
+@dataclass
+class PinTable:
+    page: int
+    columns: list[str]  # device names ("ISO7741") or package designators ("DW")
+    by_package: bool
+    rows: dict[str, list[list[int]]]  # pin name -> pins per column
+
+
+def _clean_name(cell) -> str:
+    return re.sub(r"\s+", "", str(cell or "")).upper()
+
+
+def _pins(cell) -> list[int] | None:
+    text = str(cell or "").strip()
+    if text in ABSENT:
+        return []
+    nums = re.findall(r"\d+", text)
+    return [int(n) for n in nums] if nums and re.fullmatch(r"[\d,\s]+", text) else None
+
+
+def parse_pin_table(pdf_path, pages: list[str]) -> PinTable | None:
+    """Pin function table, read with pdfplumber's table extraction."""
+    import pdfplumber
+
+    candidates = [
+        i
+        for i, t in enumerate(pages)
+        if re.search(r"Pin Functions|Pin Descriptions|Terminal Functions|Pin Configuration", t, re.I)
+        and not re.search(r"(Pin|Terminal) Functions\s*\.{3,}", t, re.I)
+    ]
+    with pdfplumber.open(pdf_path) as pdf:
+        for i in candidates[:4]:
+            for table in pdf.pages[i].extract_tables():
+                parsed = _parse_pin_rows(table)
+                if parsed:
+                    columns, by_package, rows = parsed
+                    return PinTable(i + 1, columns, by_package, rows)
+    return None
+
+
+def _parse_pin_rows(table: list[list]) -> tuple[list[str], bool, dict] | None:
+    if len(table) < 4:
         return None
-    page, text = found
-    lines = text.splitlines()
-    header = " ".join(lines[1:6])
-    devices = []
-    for name in re.findall(r"\b(ISO[A-Z]?\d{3,4}[A-Z0-9-]*)", header):
-        base = name.rstrip(",")
-        if base not in devices:
-            devices.append(base)
+    header_text = " ".join(str(c) for row in table[:3] for c in row if c)
+    if "NAME" not in header_text.upper() and "PIN" not in header_text.upper():
+        return None
+    # Column labels: the header cells between the name column and "Type"/"I/O".
+    labels: dict[int, str] = {}
+    body_start = 0
+    for r, row in enumerate(table[:4]):
+        found = False
+        for c, cell in enumerate(row[1:], 1):
+            text = re.sub(r"\s+", "", str(cell or ""))
+            if re.match(r"^ISO", text, re.I):
+                for name in re.findall(r"ISO[A-Z]?\d{3,4}[A-Z0-9-]*", text, re.I):
+                    labels.setdefault(c, name.upper().rstrip(",-"))
+                found = True
+            elif PKG_LABEL_RE.match(text) and text not in ("NO.", "I", "O", "NAME", "PIN"):
+                labels.setdefault(c, PKG_LABEL_RE.match(text).group(1))
+                found = True
+        if found:
+            body_start = r + 1
     rows: dict[str, list[list[int]]] = {}
-    counts: dict[int, int] = {}
-    pending_v = None
-    for line in lines[1:80]:
-        line = line.strip()
-        if line.startswith("(1)") or line.lower().startswith("copyright"):
-            break
-        if pending_v and re.fullmatch(r"(CC|DD)\d", line):
-            rows["V" + line] = rows.pop(pending_v)
-            pending_v = None
+    last = None
+    cols = sorted(labels) or None
+    for row in table[body_start or 1 :]:
+        name = _clean_name(row[0])
+        if cols is None:  # single-device table: the first numeric column
+            cols = [next((c for c, cell in enumerate(row[1:], 1) if _pins(cell)), None)]
+            if cols[0] is None:
+                cols = None
+                continue
+        values = [_pins(row[c]) if c < len(row) else None for c in cols]
+        if any(v is None for v in values):
             continue
-        m = PIN_ROW_RE.match(line + " ")
-        if not m:
+        if not name and last:  # continuation row: more pins for the previous name
+            rows[last] = [a + b for a, b in zip(rows[last], values, strict=True)]
             continue
-        name = m.group(1)
-        groups = GROUP_RE.findall(m.group(2))
-        cols = [[] if g == "-" else [int(x) for x in re.split(r"\s*,\s*", g)] for g in groups]
-        if name == "V":  # VCC1 / VDD1 split across lines by the subscript
-            pending_v = f"V#{len(rows)}"
-            name = pending_v
-        rows[name] = cols
-        counts[len(cols)] = counts.get(len(cols), 0) + 1
-    if not rows:
+        if not name or name in ("NAME", "PIN"):
+            continue
+        rows[name] = values
+        last = name
+    if len(rows) < 4 or cols is None:
         return None
-    ncols = max(counts, key=counts.get)
-    rows = {k: v for k, v in rows.items() if len(v) == ncols}
-    # Devices sharing a pinout are sometimes grouped in one column ("ISO6440, ISO6440F").
-    if len(devices) != ncols:
-        devices = [d for d in devices if not re.search(r"\d+F$", d)]
-    return page, devices[:ncols] if len(devices) >= ncols else devices, rows
+    columns = [labels.get(c, "") for c in cols]
+    by_package = bool(columns) and all(c and not c.startswith("ISO") for c in columns)
+    return columns, by_package, rows
 
 
 SUPPLY = {"VCC1": "VDD1", "VDD1": "VDD1", "VCCI": "VDD1", "VCC2": "VDD2", "VDD2": "VDD2", "VCCO": "VDD2"}
 
 
-def canonical_pinout(rows: dict[str, list[list[int]]], col: int, pin_count: int) -> list[str] | None:
+def column_pin_count(rows: dict[str, list[list[int]]], col: int) -> int:
+    return max((p for cols in rows.values() for p in cols[col]), default=0)
+
+
+def canonical_pinout(rows: dict[str, list[list[int]]], col: int, pin_count: int | None = None) -> list[str] | None:
     """Pin list in the normalised vocabulary used across manufacturers."""
+    pin_count = pin_count or column_pin_count(rows, col)
     pins: dict[int, str] = {}
     channels: dict[str, dict[str, int]] = {}
     for name, cols in rows.items():
         for pin in cols[col]:
             if name in SUPPLY:
                 fn = SUPPLY[name]
-            elif m := re.fullmatch(r"(IN|OUT)([A-H])", name):
-                channels.setdefault(m.group(2), {})[m.group(1)] = pin
+            elif m := re.fullmatch(r"(IN|OUT)([A-H]?)", name):
+                channels.setdefault(m.group(2) or "A", {})[m.group(1)] = pin
                 continue
             else:
                 fn = name
             pins[pin] = fn
     half = pin_count // 2
     side1 = []
-    for letter, ends in channels.items():
+    for ends in channels.values():
         if set(ends) != {"IN", "OUT"}:
             return None
         s1 = ends["IN"] if ends["IN"] <= half else ends["OUT"]
@@ -167,3 +231,64 @@ def canonical_pinout(rows: dict[str, list[list[int]]], col: int, pin_count: int)
     if sorted(pins) != list(range(1, pin_count + 1)):
         return None
     return [pins[p] for p in range(1, pin_count + 1)]
+
+
+def certified_classes(pdf_path, pages: list[str]) -> dict[str, str]:
+    """{package: "reinforced" | "basic"} from the VDE column of the Safety-Related
+    Certifications table, e.g. "2121 VPK (DW-16, DWV-8, Reinforced), 1414 VPK (D-8, Basic)"
+    or "Reinforced certificate: 40040142 (DW-16)"."""
+    import pdfplumber
+
+    heading = re.compile(r"^\d+(?:\.\d+)+\s+Safety-Related Certifications\s*$", re.M)
+    page_idx = next((i for i, t in enumerate(pages) if heading.search(t)), None)
+    if page_idx is None:
+        return {}
+    with pdfplumber.open(pdf_path) as pdf:
+        tables = pdf.pages[page_idx].extract_tables()
+    for table in tables:
+        header = [re.sub(r"\s+", "", str(c or "")).upper() for c in table[0]]
+        if "VDE" not in header:
+            continue
+        col = header.index("VDE")
+        cell = " ".join(str(row[col] or "") for row in table[1:] if col < len(row)).replace("\n", " ")
+        found = classes_from_text(cell)
+        if found:
+            return found
+    # No table found: "Reinforced certificate: … (DW-16) … Basic certificate: … (DBQ-16)"
+    m = heading.search(pages[page_idx])
+    return classes_from_text(pages[page_idx][m.end() : m.end() + 1500])
+
+
+def classes_from_text(text: str) -> dict[str, str]:
+    out: dict[str, str] = {}
+    # "(DW-16, DWV-8, Reinforced)"
+    for inside in re.findall(r"\(([^()]*)\)", text):
+        cls = re.search(r"\b(Reinforced|Basic)\b", inside, re.I)
+        if cls:
+            for pkg in re.findall(r"\b([A-Z]{1,4})-\d{1,2}\b", inside):
+                out.setdefault(pkg, cls.group(1).lower())
+    if out:
+        return out
+    # "Reinforced certificate: 40040142 (DW-16)"
+    last = None
+    for tok in re.finditer(r"\b(Reinforced|Basic)\b|\b([A-Z]{1,4})-\d{1,2}\b", text):
+        if tok.group(1):
+            last = tok.group(1).lower()
+        elif last:
+            out.setdefault(tok.group(2), last)
+    return out
+
+
+AGENCIES = ("VDE", "CSA", "UL", "CQC", "TUV")
+
+
+def certification_agencies(pages: list[str]) -> list[str]:
+    """Agencies named in the header row of the Safety-Related Certifications table."""
+    heading = re.compile(r"^\d+(?:\.\d+)+\s+Safety-Related Certifications\s*$", re.M)
+    for text in pages:
+        m = heading.search(text)
+        if m:
+            header = text[m.end() : m.end() + 200].strip().splitlines()[0]
+            found = [a for a in AGENCIES if re.search(rf"\b{a}\b", header.upper())]
+            return sorted(found)
+    return []

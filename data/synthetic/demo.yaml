@@ -1,0 +1,314 @@
+# SYNTHETIC DEMO DATA — fictional manufacturers and parts with invented values.
+# Used for development, tests and demos only. Package dimensions are generic
+# industry outlines. Real data is imported from public datasheets.
+#
+# Parts can inherit from an earlier part with `like:`; `params` are merged.
+
+manufacturers:
+  - {name: SynRef, role: reference, website: null}   # stands in for Skyworks
+  - {name: SynAlpha, role: competitor}
+  - {name: SynBeta, role: competitor}
+  - {name: SynGamma, role: competitor}
+  - {name: SynDelta, role: competitor}
+
+packages:
+  - {code: SOIC-8N,  name: "SOIC 8-pin narrow body", pin_count: 8,  pitch_mm: 1.27,  body_length_mm: 4.9,  body_width_mm: 3.9, span_mm: 6.0,  height_mm: 1.75}
+  - {code: SOIC-8W,  name: "SOIC 8-pin wide body (stretched)", pin_count: 8, pitch_mm: 1.27, body_length_mm: 5.85, body_width_mm: 7.5, span_mm: 11.5, height_mm: 2.65}
+  - {code: SOIC-16N, name: "SOIC 16-pin narrow body", pin_count: 16, pitch_mm: 1.27,  body_length_mm: 9.9,  body_width_mm: 3.9, span_mm: 6.0,  height_mm: 1.75}
+  - {code: SOIC-16W, name: "SOIC 16-pin wide body", pin_count: 16, pitch_mm: 1.27,  body_length_mm: 10.3, body_width_mm: 7.5, span_mm: 10.3, height_mm: 2.65}
+  - {code: SSOP-16,  name: "SSOP/QSOP 16-pin", pin_count: 16, pitch_mm: 0.635, body_length_mm: 4.9,  body_width_mm: 3.9, span_mm: 6.0,  height_mm: 1.75}
+
+pinouts:
+  quad_4_0: [VDD1, GND1, INA, INB, INC, IND, EN1, GND1, GND2, EN2, OUTD, OUTC, OUTB, OUTA, GND2, VDD2]
+  quad_4_0_nc: [VDD1, GND1, INA, INB, INC, IND, NC, GND1, GND2, NC, OUTD, OUTC, OUTB, OUTA, GND2, VDD2]
+  quad_3_1: [VDD1, GND1, INA, INB, INC, OUTD, EN1, GND1, GND2, EN2, IND, OUTC, OUTB, OUTA, GND2, VDD2]
+  dual_2_0: [VDD1, INA, INB, GND1, GND2, OUTB, OUTA, VDD2]
+  dual_1_1: [VDD1, INA, OUTB, GND1, GND2, INB, OUTA, VDD2]
+  gd_dual: [INA, INB, VCCI, GND, DIS, DT, NC, VCCI, VSSB, OUTB, VDDB, NC, NC, VSSA, OUTA, VDDA]
+  gd_dual_alt: [VDDI, INA, INB, VDDI, GND, DIS, DT, NC, VSSB, OUTB, VDDB, NC, NC, VSSA, OUTA, VDDA]
+  gd_desat: [VSS2, DESAT, GND2, NC, VDD2, OUT, CLAMP, VSS2, GND1, IN+, IN-, RDY, FLT, RST, VDD1, GND1]
+  gd_desat_8: [VDD1, IN, FLT, GND1, VSS2, OUT, DESAT, VDD2]
+  gd_opto: [NC, ANODE, CATHODE, NC, VSS, VOUT, VOUT, VDD]
+  amp_diff: [VDD1, VINP, VINN, GND1, GND2, VOUTN, VOUTP, VDD2]
+  mod_ds: [VDD1, AINP, AINN, GND1, GND2, DOUT, CLKIN, VDD2]
+  hall_8: [IP+, IP+, IP-, IP-, GND, FILTER, VIOUT, VCC]
+  hall_16: [IP+, IP+, IP+, IP+, IP-, IP-, IP-, IP-, GND, NC, NC, FILTER, NC, VIOUT, NC, VCC]
+
+parts:
+  # ======================================================= digital isolators
+  - mpn: SR8641
+    manufacturer: SynRef
+    family: digital_isolator
+    description: Quad-channel 4/0 reinforced digital isolator
+    package: SOIC-16W
+    pinout: quad_4_0
+    lifecycle: {status: active, release_date: 2015-06-01, revision: "1.8", revision_date: 2023-11-10}
+    params:
+      isolation_rating_kvrms: 5.0
+      isolation_class: reinforced
+      creepage_mm: 8.0
+      channel_config: "4/0"
+      default_output: high
+      vdd_range_v: [2.5, 5.5]
+      certifications: [UL1577, VDE 0884-17, CSA, CQC]
+      data_rate_mbps: 150
+      prop_delay_ns: 13
+      cmti_kv_us: 100
+      temp_range_c: [-40, 125]
+      qualification: industrial
+      enable_pins: EN1/EN2 active-high
+      idd_per_channel_ma: 1.6
+      pwd_ns: 4.5
+      skew_ns: 2.5
+      esd_hbm_kv: 4
+      viorm_vpk: 1414
+
+  - {mpn: SA7741, manufacturer: SynAlpha, like: SR8641, description: "Quad 4/0 isolator, higher isolation and CMTI",
+     lifecycle: {status: active, release_date: 2025-09-15, revision: B, revision_date: 2026-02-01},
+     params: {isolation_rating_kvrms: 5.7, cmti_kv_us: 150}}
+  - {mpn: SB8441, manufacturer: SynBeta, like: SR8641, description: "Quad 4/0 isolator, default-low output",
+     lifecycle: {status: active, release_date: 2019-03-01, revision: "1.2", revision_date: 2022-05-01},
+     params: {default_output: low}}
+  - {mpn: SC141, manufacturer: SynGamma, like: SR8641, description: "Quad 4/0 isolator, 100 Mbps",
+     lifecycle: {status: active, release_date: 2018-01-10, revision: C, revision_date: 2021-07-01},
+     params: {data_rate_mbps: 100, prop_delay_ns: 20, idd_per_channel_ma: 1.2}}
+  - {mpn: SD4100, manufacturer: SynDelta, like: SR8641, description: "Quad 4/0 basic isolator, small package",
+     package: SSOP-16, lifecycle: {status: active, release_date: 2020-04-01, revision: "2.0", revision_date: 2024-01-15},
+     params: {isolation_rating_kvrms: 3.75, isolation_class: basic, creepage_mm: 4.0}}
+  - {mpn: SA7741X, manufacturer: SynAlpha, like: SR8641, description: "Quad 4/0 isolator (discontinued)",
+     lifecycle: {status: obsolete, release_date: 2012-02-01, revision: D, revision_date: 2019-08-01}}
+  - {mpn: SB8641N, manufacturer: SynBeta, like: SR8641, pinout: quad_4_0_nc, description: "Quad 4/0 isolator, no enable pins, TUV certified",
+     lifecycle: {status: active, release_date: 2023-06-01, revision: "1.0", revision_date: 2023-06-01},
+     params: {certifications: [UL1577, VDE 0884-17, CSA, CQC, TUV], enable_pins: none}}
+  - {mpn: SC142, manufacturer: SynGamma, like: SR8641, pinout: quad_3_1, description: "Quad 3/1 isolator",
+     lifecycle: {status: active, release_date: 2018-01-10, revision: C, revision_date: 2021-07-01},
+     params: {channel_config: "3/1"}}
+  - {mpn: SD8641A, manufacturer: SynDelta, like: SR8641, description: "Quad 4/0 isolator, automotive",
+     lifecycle: {status: active, release_date: 2026-05-20, revision: "1.0", revision_date: 2026-05-20},
+     params: {qualification: automotive, temp_range_c: [-40, 150]}}
+
+  - mpn: SR8640N
+    manufacturer: SynRef
+    like: SR8641
+    description: Quad-channel 4/0 basic digital isolator, narrow body
+    package: SOIC-16N
+    lifecycle: {status: active, release_date: 2016-02-01, revision: "1.5", revision_date: 2022-09-01}
+    params: {isolation_rating_kvrms: 3.75, isolation_class: basic, creepage_mm: 4.0, certifications: [UL1577, VDE 0884-17, CQC]}
+  - {mpn: SB8140Q, manufacturer: SynBeta, like: SR8640N, package: SSOP-16, description: "Quad 4/0 basic isolator in QSOP, CSA added",
+     lifecycle: {status: preview, release_date: 2026-08-01, revision: "0.9", revision_date: 2026-08-01},
+     params: {certifications: [UL1577, VDE 0884-17, CQC, CSA], cmti_kv_us: 150}}
+  - {mpn: SC140N, manufacturer: SynGamma, like: SR8640N, description: "Quad 4/0 isolator, 3 kVrms",
+     lifecycle: {status: active, release_date: 2017-01-01, revision: B, revision_date: 2020-01-01},
+     params: {isolation_rating_kvrms: 3.0}}
+  - {mpn: SD140N, manufacturer: SynDelta, like: SR8640N, description: "Quad 4/0 isolator, 2.5 kVrms, default low",
+     lifecycle: {status: nrnd, release_date: 2013-01-01, revision: E, revision_date: 2021-03-01},
+     params: {isolation_rating_kvrms: 2.5, default_output: low}}
+  - {mpn: SA7740N, manufacturer: SynAlpha, like: SR8640N, description: "Quad 4/0 basic isolator",
+     lifecycle: {status: active, release_date: 2021-10-01, revision: A, revision_date: 2021-10-01}}
+
+  - mpn: SR8621
+    manufacturer: SynRef
+    like: SR8640N
+    description: Dual-channel 2/0 basic digital isolator
+    package: SOIC-8N
+    pinout: dual_2_0
+    lifecycle: {status: active, release_date: 2016-02-01, revision: "1.5", revision_date: 2022-09-01}
+    params: {channel_config: "2/0", enable_pins: none}
+  - {mpn: SA7721, manufacturer: SynAlpha, like: SR8621, description: "Dual 2/0 basic isolator",
+     lifecycle: {status: active, release_date: 2021-10-01, revision: A, revision_date: 2021-10-01}}
+  - {mpn: SB8121, manufacturer: SynBeta, like: SR8621, pinout: dual_1_1, description: "Dual 1/1 basic isolator",
+     lifecycle: {status: active, release_date: 2019-03-01, revision: "1.1", revision_date: 2020-02-01},
+     params: {channel_config: "1/1"}}
+
+  # ======================================================= gate drivers
+  - mpn: SR8233
+    manufacturer: SynRef
+    family: gate_driver
+    description: Dual isolated gate driver, 4 A / 6 A, 8 V UVLO
+    package: SOIC-16W
+    pinout: gd_dual
+    lifecycle: {status: active, release_date: 2014-09-01, revision: "1.6", revision_date: 2023-04-01}
+    params:
+      isolation_rating_kvrms: 5.0
+      isolation_class: reinforced
+      creepage_mm: 8.0
+      channel_config: dual
+      input_type: CMOS
+      peak_source_a: 4.0
+      peak_sink_a: 6.0
+      uvlo_v: "8"
+      protection: [disable]
+      prop_delay_ns: 60
+      cmti_kv_us: 125
+      output_supply_v: [6.5, 25]
+      temp_range_c: [-40, 125]
+      qualification: industrial
+      deadtime: programmable
+      theta_ja_c_w: 70
+      iq_ma: 2.0
+      rise_time_ns: 6
+      fall_time_ns: 7
+      pwd_ns: 5
+  - {mpn: SA21520, manufacturer: SynAlpha, like: SR8233, description: "Dual gate driver, faster, 5.7 kVrms",
+     lifecycle: {status: active, release_date: 2022-11-01, revision: C, revision_date: 2025-06-01},
+     params: {isolation_rating_kvrms: 5.7, prop_delay_ns: 25}}
+  - {mpn: SB6602, manufacturer: SynBeta, like: SR8233, description: "Dual gate driver, 12 V UVLO",
+     lifecycle: {status: active, release_date: 2020-05-01, revision: "1.3", revision_date: 2023-01-01},
+     params: {uvlo_v: "12"}}
+  - {mpn: SC4223, manufacturer: SynGamma, like: SR8233, pinout: gd_dual_alt, description: "Dual gate driver, 4 A sink",
+     lifecycle: {status: active, release_date: 2016-06-01, revision: D, revision_date: 2022-02-01},
+     params: {peak_sink_a: 4.0}}
+  - {mpn: SD6602N, manufacturer: SynDelta, like: SR8233, package: SOIC-16N, description: "Dual gate driver, narrow body basic",
+     lifecycle: {status: active, release_date: 2021-01-01, revision: "1.0", revision_date: 2021-01-01},
+     params: {isolation_rating_kvrms: 3.0, isolation_class: basic, creepage_mm: 4.0}}
+  - {mpn: SA21521, manufacturer: SynAlpha, like: SR8233, description: "Dual gate driver (not recommended for new designs)",
+     lifecycle: {status: nrnd, release_date: 2015-01-01, revision: F, revision_date: 2024-10-01}}
+
+  - mpn: SR8286
+    manufacturer: SynRef
+    family: gate_driver
+    description: Single isolated gate driver with desaturation detection
+    package: SOIC-16W
+    pinout: gd_desat
+    package_locked: true
+    package_lock_reason: "Thermal: wide-body package needed for dissipation at 4 A / 100 kHz"
+    lifecycle: {status: active, release_date: 2017-03-01, revision: "1.4", revision_date: 2024-05-01}
+    params:
+      isolation_rating_kvrms: 5.0
+      isolation_class: reinforced
+      creepage_mm: 8.0
+      channel_config: single
+      input_type: CMOS
+      peak_source_a: 4.0
+      peak_sink_a: 4.0
+      uvlo_v: "12"
+      protection: [desat, miller_clamp, soft_shutdown, fault_reporting]
+      prop_delay_ns: 50
+      cmti_kv_us: 150
+      output_supply_v: [13, 30]
+      temp_range_c: [-40, 125]
+      qualification: automotive
+      deadtime: none
+      theta_ja_c_w: 65
+      iq_ma: 3.0
+      rise_time_ns: 10
+      fall_time_ns: 10
+      pwd_ns: 8
+  - {mpn: SA5870, manufacturer: SynAlpha, like: SR8286, description: "Single desat driver, 10 A",
+     lifecycle: {status: active, release_date: 2024-02-01, revision: A, revision_date: 2024-02-01},
+     params: {peak_source_a: 10.0, peak_sink_a: 10.0}}
+  - {mpn: SB6601, manufacturer: SynBeta, like: SR8286, package: SOIC-8W, pinout: gd_desat_8, description: "Single desat driver, 5 A, 8-pin",
+     lifecycle: {status: active, release_date: 2023-09-01, revision: "1.1", revision_date: 2025-01-01},
+     params: {peak_source_a: 5.0, peak_sink_a: 5.0, theta_ja_c_w: 110}}
+  - {mpn: SC4135, manufacturer: SynGamma, like: SR8286, description: "Single desat driver, no soft shutdown",
+     lifecycle: {status: active, release_date: 2015-05-01, revision: G, revision_date: 2023-03-01},
+     params: {protection: [desat, miller_clamp, fault_reporting]}}
+
+  - mpn: SR8261
+    manufacturer: SynRef
+    family: gate_driver
+    description: Opto-compatible single isolated gate driver
+    package: SOIC-8W
+    pinout: gd_opto
+    lifecycle: {status: active, release_date: 2013-10-01, revision: "1.9", revision_date: 2022-12-01}
+    params: {isolation_rating_kvrms: 5.0, isolation_class: reinforced, creepage_mm: 8.0, channel_config: single, input_type: opto-emulator,
+             peak_source_a: 4.0, peak_sink_a: 4.0, uvlo_v: "8", protection: [], prop_delay_ns: 60, cmti_kv_us: 50,
+             output_supply_v: [6.5, 30], temp_range_c: [-40, 125], qualification: industrial, deadtime: none, theta_ja_c_w: 100,
+             iq_ma: 2.0, rise_time_ns: 15, fall_time_ns: 15, pwd_ns: 10}
+  - {mpn: SB3120, manufacturer: SynBeta, like: SR8261, description: "Opto-compatible gate driver",
+     lifecycle: {status: active, release_date: 2019-07-01, revision: "1.0", revision_date: 2019-07-01}}
+  - {mpn: SA5350, manufacturer: SynAlpha, like: SR8261, description: "CMOS-input single gate driver",
+     lifecycle: {status: active, release_date: 2020-07-01, revision: B, revision_date: 2022-07-01},
+     params: {input_type: CMOS}}
+
+  # ======================================================= isolated amplifiers
+  - mpn: SR8920
+    manufacturer: SynRef
+    family: isolated_amplifier
+    description: Isolated current-shunt amplifier, ±250 mV input
+    package: SOIC-8W
+    pinout: amp_diff
+    lifecycle: {status: active, release_date: 2016-08-01, revision: "1.3", revision_date: 2021-11-01}
+    params:
+      isolation_rating_kvrms: 5.0
+      isolation_class: reinforced
+      creepage_mm: 8.0
+      sense_type: current (shunt)
+      output_type: analog differential
+      input_range: "±250 mV"
+      gain: "8 V/V"
+      vdd1_range_v: [3.0, 5.5]
+      vdd2_range_v: [3.0, 5.5]
+      offset_uv: 300
+      gain_error_pct: 0.5
+      bandwidth_khz: 750
+      cmti_kv_us: 75
+      temp_range_c: [-40, 125]
+      qualification: automotive
+      nonlinearity_pct: 0.05
+      snr_db: 80
+      idd1_ma: 6.0
+      idd2_ma: 5.0
+  - {mpn: SA1300, manufacturer: SynAlpha, like: SR8920, description: "Isolated shunt amplifier, gain 8.2",
+     lifecycle: {status: active, release_date: 2018-04-01, revision: D, revision_date: 2023-08-01},
+     params: {gain: "8.2 V/V"}}
+  - {mpn: SB1300, manufacturer: SynBeta, like: SR8920, description: "Isolated shunt amplifier, low offset",
+     lifecycle: {status: active, release_date: 2021-12-01, revision: "1.2", revision_date: 2024-03-01},
+     params: {offset_uv: 100, bandwidth_khz: 1000}}
+  - {mpn: SA1301, manufacturer: SynAlpha, like: SR8920, description: "Isolated shunt amplifier, 7 kVrms",
+     lifecycle: {status: active, release_date: 2025-11-01, revision: A, revision_date: 2025-11-01},
+     params: {isolation_rating_kvrms: 7.0}}
+  - {mpn: SC7701, manufacturer: SynGamma, like: SR8920, pinout: mod_ds, description: "Delta-sigma modulator",
+     lifecycle: {status: active, release_date: 2019-02-01, revision: B, revision_date: 2021-02-01},
+     params: {output_type: delta-sigma bitstream, gain: "n/a"}}
+  - {mpn: SD1311, manufacturer: SynDelta, like: SR8920, description: "Isolated voltage-sense amplifier, 2 V input",
+     lifecycle: {status: active, release_date: 2020-09-01, revision: "1.0", revision_date: 2020-09-01},
+     params: {sense_type: voltage, input_range: "0 to 2 V", gain: "1 V/V"}}
+
+  - mpn: SR8931
+    manufacturer: SynRef
+    like: SR8920
+    description: Isolated delta-sigma modulator
+    pinout: mod_ds
+    lifecycle: {status: active, release_date: 2018-05-01, revision: "1.1", revision_date: 2022-06-01}
+    params: {output_type: delta-sigma bitstream, gain: "n/a", bandwidth_khz: 10000, snr_db: 82}
+  - {mpn: SA1306, manufacturer: SynAlpha, like: SR8931, description: "Isolated delta-sigma modulator",
+     lifecycle: {status: active, release_date: 2019-09-01, revision: C, revision_date: 2023-02-01},
+     params: {snr_db: 85}}
+  - {mpn: SB7701, manufacturer: SynBeta, like: SR8931, description: "Isolated delta-sigma modulator, 105 °C",
+     lifecycle: {status: active, release_date: 2017-06-01, revision: "2.1", revision_date: 2022-01-01},
+     params: {temp_range_c: [-40, 105], qualification: industrial}}
+
+  # ======================================================= current sensors
+  - mpn: SR8501
+    manufacturer: SynRef
+    family: current_sensor
+    description: Integrated Hall-effect current sensor, ±20 A
+    package: SOIC-8N
+    pinout: hall_8
+    lifecycle: {status: last_time_buy, release_date: 2012-05-01, revision: "1.7", revision_date: 2020-03-01}
+    params:
+      isolation_rating_kvrms: 2.4
+      isolation_class: basic
+      creepage_mm: 4.0
+      output_type: analog ratiometric
+      current_range_a: 20
+      sensitivity_mv_a: "100"
+      supply_v: [4.5, 5.5]
+      total_error_pct: 1.5
+      bandwidth_khz: 120
+      primary_resistance_mohm: 1.2
+      temp_range_c: [-40, 125]
+      qualification: automotive
+      response_time_us: 4
+      noise_ma_rms: 30
+      idd_ma: 10
+  - {mpn: SA1100, manufacturer: SynAlpha, like: SR8501, description: "Hall current sensor, 3 kVrms",
+     lifecycle: {status: active, release_date: 2022-03-01, revision: B, revision_date: 2024-09-01},
+     params: {isolation_rating_kvrms: 3.0}}
+  - {mpn: SB2011, manufacturer: SynBeta, like: SR8501, description: "Hall current sensor, 66 mV/A",
+     lifecycle: {status: active, release_date: 2021-06-01, revision: "1.0", revision_date: 2021-06-01},
+     params: {sensitivity_mv_a: "66", current_range_a: 30}}
+  - {mpn: SC712, manufacturer: SynGamma, like: SR8501, package: SOIC-16W, pinout: hall_16, description: "Hall current sensor, reinforced, wide body",
+     lifecycle: {status: active, release_date: 2020-01-01, revision: C, revision_date: 2023-05-01},
+     params: {isolation_rating_kvrms: 5.0, isolation_class: reinforced, creepage_mm: 8.0}}

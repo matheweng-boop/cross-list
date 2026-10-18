@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Compare – Cross List{% endblock %}
+{% block content %}
+<h1>Compare parts</h1>
+<p class="subtitle muted">Select parts to compare on priority 1 &amp; 2 parameters. Colours are relative to the baseline part; bold marks the best value in a row.</p>
+
+<form method="get" class="grid-form" style="margin-bottom:1rem">
+  <select name="family" onchange="this.form.submit()" aria-label="Family">
+    {% for key, title in family_titles().items() %}<option value="{{ key }}" {{ 'selected' if family == key }}>{{ title }}</option>{% endfor %}
+  </select>
+  <noscript><button type="submit">Change family</button></noscript>
+</form>
+
+<form method="get">
+  <input type="hidden" name="family" value="{{ family }}">
+  <div class="picklist">
+    {% set chosen = selected|map(attribute='id')|list %}
+    {% for p in available %}
+    <label><input type="checkbox" name="pick" value="{{ p.id }}" {{ 'checked' if p.id in chosen }}> {{ p.mpn }} <span class="muted">{{ p.manufacturer.name }} · {{ p.package.code }}</span></label>
+    {% endfor %}
+  </div>
+  {% if selected %}
+  <label>Baseline
+    <select name="baseline">
+      {% for p in selected %}<option value="{{ p.id }}" {{ 'selected' if comparison and p.id == comparison.baseline.id }}>{{ p.label }}</option>{% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <div class="sticky-actions"><button type="submit">Compare</button></div>
+</form>
+
+{% if comparison %}
+  {% if comparison.mixed_families %}<p class="banner">Selected parts are from different families; parameters of the baseline family are shown.</p>{% endif %}
+  <h2>Result</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>P</th>
+      {% for p in comparison.parts %}<th><a href="/parts/{{ p.id }}">{{ p.mpn }}</a><br><span class="muted">{{ p.manufacturer.name }}{% if p.id == comparison.baseline.id %} · baseline{% endif %}</span></th>{% endfor %}
+    </tr></thead>
+    <tbody>
+    <tr><td>Package</td><td>1</td>{% for p in comparison.parts %}<td>{{ p.package.code }}</td>{% endfor %}</tr>
+    <tr><td>Lifecycle</td><td>–</td>{% for p in comparison.parts %}<td>{{ lifecycle_badge(p)[0] }}</td>{% endfor %}</tr>
+    {% for row in comparison.rows %}
+      <tr><td>{{ row.param.label }}</td><td>{{ row.param.priority }}</td>
+        {% for cell in row.cells %}<td class="{{ cell.status if cell.status != 'equal' }}{{ ' best' if cell.best }}">{{ cell.display }}</td>{% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="downloads">
+    <a role="button" class="outline" href="/compare.xlsx?ids={{ ids }}&baseline={{ comparison.baseline.id }}">Download Excel</a>
+    <a role="button" class="outline secondary" href="/compare.csv?ids={{ ids }}&baseline={{ comparison.baseline.id }}">CSV</a>
+  </div>
+{% endif %}
+{% endblock %}

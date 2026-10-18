@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_macros.html" import part_badges, diff_table %}
+{% block title %}{{ part.mpn }} – Cross List{% endblock %}
+{% block content %}
+<h1>{{ part.mpn }}</h1>
+<p class="subtitle">{{ part.manufacturer.name }} · {{ family_titles()[part.family] }} · {{ part_badges(part) }}
+  {% if part.is_reference %}<span class="badge cat">Reference</span>{% endif %}</p>
+<p>{{ part.description }}</p>
+
+<div class="table-wrap">
+<table>
+  <tbody>
+    <tr><th>Package</th><td>{{ part.package.code }} – {{ part.package.name }} ({{ part.package.body_length_mm }}×{{ part.package.span_mm }} mm, {{ part.package.pin_count }} pins, {{ part.package.pitch_mm }} mm pitch)
+      {% if part.package_locked %}<br><span class="badge warn">Package locked</span> <span class="muted">{{ part.package_lock_reason }}</span>{% endif %}</td></tr>
+    <tr><th>Lifecycle</th><td>{{ lifecycle_badge(part)[0] }}{% if part.lifecycle_source %} <span class="muted">({{ part.lifecycle_source }})</span>{% endif %}</td></tr>
+    <tr><th>Release date</th><td>{{ part.release_date or 'unknown' }}</td></tr>
+    <tr><th>Datasheet revision</th><td>{{ part.datasheet_revision or 'unknown' }}{% if part.datasheet_date %} ({{ part.datasheet_date }}){% endif %}</td></tr>
+  </tbody>
+</table>
+</div>
+
+<details>
+  <summary>Parameters</summary>
+  {% for prio, items in groups.items() %}
+  <h4>Priority {{ prio }}</h4>
+  <div class="table-wrap"><table>
+    {% for p, v in items %}<tr><td>{{ p.label }}</td><td>{{ v }}</td></tr>{% endfor %}
+  </table></div>
+  {% endfor %}
+</details>
+<details>
+  <summary>Pinout</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Pin</th><th>Function</th></tr></thead>
+    {% for f in part.pinout %}<tr><td>{{ loop.index }}</td><td>{{ f }}</td></tr>{% endfor %}
+  </table></div>
+</details>
+
+<h2>Crosses</h2>
+<form method="get" style="margin-bottom:.5rem">
+  <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / last-time-buy / obsolete candidates</label>
+</form>
+<nav class="catnav">
+  {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
+</nav>
+
+<form method="get" action="/compare">
+<input type="hidden" name="pick" value="{{ part.id }}">
+{% for c in order %}
+<section id="cat-{{ c }}">
+  <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
+  {% for r in crosses[c] %}
+  <article class="cross">
+    <header>
+      <label><input type="checkbox" name="pick" value="{{ r.candidate.id }}"> {{ r.candidate.label }}</label>
+      <span class="muted">{{ r.candidate.package.code }}</span>
+      {{ part_badges(r.candidate) }}
+      {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
+      {% if r.incomplete %}<span class="badge muted">incomplete data</span>{% endif %}
+      <a href="/parts/{{ r.candidate.id }}" class="muted">details</a>
+    </header>
+    <details>
+      <summary><b>Top 5 differences</b>
+        {% set top = r.top_differences() %}
+        {% if top %}
+        <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
+        {% else %}<br>No differences in the compared parameters.{% endif %}
+      </summary>
+      {{ diff_table(r) }}
+    </details>
+  </article>
+  {% else %}
+  <p class="muted">No candidates in this category.</p>
+  {% endfor %}
+</section>
+{% endfor %}
+<div class="sticky-actions"><button type="submit">Compare selected with {{ part.mpn }}</button></div>
+</form>
+{% endblock %}

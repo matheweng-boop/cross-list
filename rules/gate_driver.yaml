@@ -1,0 +1,24 @@
+family: gate_driver
+title: Isolated gate drivers
+params:
+  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
+  - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [basic, reinforced]}
+  - {key: creepage_mm, label: Creepage, unit: mm, priority: 1, kind: number, direction: higher}
+  - {key: channel_config, label: Channel configuration, priority: 1, kind: category, hard: true}
+  - {key: input_type, label: Input type, priority: 1, kind: category, hard: true}
+  - {key: peak_source_a, label: Peak source current, unit: A, priority: 1, kind: number, direction: higher}
+  - {key: peak_sink_a, label: Peak sink current, unit: A, priority: 1, kind: number, direction: higher}
+  # UVLO variants are not interchangeable: a 12 V UVLO part cannot replace an 8 V one.
+  - {key: uvlo_v, label: Output UVLO threshold, unit: V, priority: 1, kind: category}
+  - {key: protection, label: Protection features, priority: 1, kind: set}
+  - {key: prop_delay_ns, label: Propagation delay (max), unit: ns, priority: 2, kind: number, direction: lower}
+  - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 2, kind: number, direction: higher}
+  - {key: output_supply_v, label: Output supply range, unit: V, priority: 2, kind: range}
+  - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
+  - {key: qualification, label: Qualification, priority: 2, kind: ordinal, levels: [commercial, industrial, automotive]}
+  - {key: deadtime, label: Dead-time control, priority: 2, kind: category}
+  - {key: theta_ja_c_w, label: Thermal resistance θJA, unit: °C/W, priority: 2, kind: number, direction: lower}
+  - {key: iq_ma, label: Quiescent current, unit: mA, priority: 3, kind: number, direction: lower}
+  - {key: rise_time_ns, label: Rise time, unit: ns, priority: 3, kind: number, direction: lower}
+  - {key: fall_time_ns, label: Fall time, unit: ns, priority: 3, kind: number, direction: lower}
+  - {key: pwd_ns, label: Pulse width distortion, unit: ns, priority: 3, kind: number, direction: lower}

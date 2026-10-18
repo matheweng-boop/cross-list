@@ -1,0 +1,24 @@
+family: digital_isolator
+title: Digital isolators
+params:
+  # --- Priority 1: must match ---
+  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
+  - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [basic, reinforced]}
+  - {key: creepage_mm, label: Creepage, unit: mm, priority: 1, kind: number, direction: higher}
+  - {key: channel_config, label: Channels (fwd/rev), priority: 1, kind: category, hard: true}
+  - {key: default_output, label: Default output, priority: 1, kind: category}
+  - {key: vdd_range_v, label: Supply range, unit: V, priority: 1, kind: range}
+  - {key: certifications, label: Safety certifications, priority: 1, kind: set}
+  # --- Priority 2: should match ---
+  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 2, kind: number, direction: higher}
+  - {key: prop_delay_ns, label: Propagation delay (max), unit: ns, priority: 2, kind: number, direction: lower}
+  - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 2, kind: number, direction: higher}
+  - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
+  - {key: qualification, label: Qualification, priority: 2, kind: ordinal, levels: [commercial, industrial, automotive]}
+  - {key: enable_pins, label: Enable pins, priority: 2, kind: category}
+  # --- Priority 3: informative ---
+  - {key: idd_per_channel_ma, label: Supply current per channel, unit: mA, priority: 3, kind: number, direction: lower}
+  - {key: pwd_ns, label: Pulse width distortion, unit: ns, priority: 3, kind: number, direction: lower}
+  - {key: skew_ns, label: Channel-to-channel skew, unit: ns, priority: 3, kind: number, direction: lower}
+  - {key: esd_hbm_kv, label: ESD (HBM), unit: kV, priority: 3, kind: number, direction: higher}
+  - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 3, kind: number, direction: higher}

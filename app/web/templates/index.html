@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import part_badges %}
+{% block content %}
+<h1>Parts</h1>
+<p class="subtitle muted">Pick a reference part to see its crosses, or search all manufacturers.</p>
+<form method="get" class="grid-form">
+  <input type="search" name="q" value="{{ q }}" placeholder="Part number, description, manufacturer" aria-label="Search">
+  <select name="family" aria-label="Family">
+    <option value="">All families</option>
+    {% for key, title in family_titles().items() %}<option value="{{ key }}" {{ 'selected' if family == key }}>{{ title }}</option>{% endfor %}
+  </select>
+  <select name="role" aria-label="Manufacturer role">
+    <option value="reference" {{ 'selected' if role == 'reference' }}>Reference parts</option>
+    <option value="competitor" {{ 'selected' if role == 'competitor' }}>Competitor parts</option>
+    <option value="" {{ 'selected' if role == '' }}>All manufacturers</option>
+  </select>
+  <select name="lifecycle" aria-label="Lifecycle">
+    <option value="">Any lifecycle</option>
+    {% for s in statuses %}<option value="{{ s.value }}" {{ 'selected' if lifecycle == s.value }}>{{ s.value }}</option>{% endfor %}
+  </select>
+  <button type="submit">Search</button>
+</form>
+<p class="muted">{{ parts|length }} part{{ '' if parts|length == 1 else 's' }}</p>
+<div class="table-wrap">
+<table class="striped">
+  <thead><tr><th>Part</th><th>Manufacturer</th><th>Family</th><th>Package</th><th>Lifecycle</th><th>Released</th><th>Datasheet</th></tr></thead>
+  <tbody>
+  {% for p in parts %}
+    <tr>
+      <td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td>
+      <td>{{ p.manufacturer.name }}</td>
+      <td>{{ family_titles()[p.family] }}</td>
+      <td>{{ p.package.code }}</td>
+      <td>{{ part_badges(p) }}</td>
+      <td>{{ p.release_date or '—' }}</td>
+      <td>{{ ('Rev ' ~ p.datasheet_revision) if p.datasheet_revision else '—' }}{% if p.datasheet_date %} <span class="muted">{{ p.datasheet_date }}</span>{% endif %}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7">No parts found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

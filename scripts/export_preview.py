@@ -25,28 +25,25 @@ NOTE = (
 
 
 # Suggestions without a server: filter an embedded part list in the browser.
-OFFLINE_SUGGEST = """<script>
-(() => {
-  const parts = __INDEX__;
-  const box = document.getElementById("global-search"), out = document.getElementById("suggestions");
-  if (!box || !out) return;
-  const norm = s => s.replace(/[\\s\\-_/]/g, "").toUpperCase();
-  const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
-  box.addEventListener("input", () => {
-    const q = norm(box.value);
-    if (q.replace(/\\*/g, "").length < 2) { out.innerHTML = ""; return; }
-    const rx = new RegExp(q.split("*").map(s => s.replace(/[.+?^${}()|[\\]\\\\]/g, "\\\\$&")).join(".*"));
-    const hits = parts.filter(p => rx.test(norm(p[0])))
-      .sort((a, b) => (norm(b[0]).startsWith(q) - norm(a[0]).startsWith(q)) || a[0].localeCompare(b[0])).slice(0, 60);
-    out.innerHTML = hits.length ? '<ul class="suggest-list">' + hits.map(p => {
-      const meta = esc(p[1]) + " · " + esc(p[2]) + " · " + esc(p[3]);
-      const body = '<span class="sg-mpn">' + esc(p[0]) + '</span><span class="sg-meta">' + meta + "</span>";
-      if (p[4]) return '<li><a href="part-' + p[4] + '.html">' + body + "</a></li>";
-      return '<li><a aria-disabled="true">' + body + ' <span class="sg-meta">(not in preview)</span></a></li>';
-    }).join("") + "</ul>" : '<p class="suggest-list muted sg-empty">No part numbers contain that.</p>';
-  });
-})();
-</script>"""
+# Enter opens the exact match (or the only match); parts without a full page open cross.html.
+HERE = Path(__file__).resolve().parent
+OFFLINE_SUGGEST = (
+    '<script src="static/preview/parts.js"></script>\n<script>\n'
+    + (HERE / "preview" / "search.js").read_text()
+    + "</script>"
+)
+
+
+SHARDS = 32  # cross data files, loaded on demand
+PER_CATEGORY = 8
+
+# Lightweight part page for parts without a full exported page: renders the crosses from static/preview/x*.js.
+CROSS_VIEW = (
+    '\n<div id="cross-view"><p class="muted">Loading…</p></div>\n'
+    f"<script>window.CL_SHARDS = {SHARDS};</script>\n<script>\n"
+    + (HERE / "preview" / "cross.js").read_text()
+    + "</script>\n"
+)
 
 
 def rewrite(html: str) -> str:
@@ -65,6 +62,33 @@ def rewrite(html: str) -> str:
     html = html.replace('onchange="this.form.submit()"', "disabled")
     html = html.replace('<main class="container">', '<main class="container">\n  ' + NOTE, 1)
     return html
+
+
+def _write_cross_data(client: TestClient, everything: list[dict], data: Path) -> None:
+    """Best crosses per category for every part, split into shards loaded on demand by cross.html.
+
+    A competitor part is crossed against Skyworks parts only, like the app does by default.
+    """
+    shards: list[dict] = [{} for _ in range(SHARDS)]
+    for p in everything:
+        crosses = client.get(f"/api/parts/{p['id']}/crosses").json()
+        rec = {}
+        for cat in ("fff", "upgrade", "p2p", "downgrade"):
+            rows = []
+            for r in crosses[cat][:PER_CATEGORY]:
+                top = r["top_differences"]
+                p3 = [
+                    f"{d['label']} {d['candidate']} vs {d['reference']}"
+                    for d in r["differences"]
+                    if d["priority"] == 3
+                    and d["status"] in ("worse", "different")
+                    and not any(t.startswith(d["label"] + ":") for t in top)
+                ]
+                rows.append([r["candidate"]["id"], r["fff_status"] if cat == "fff" else "", top, p3])
+            rec[cat] = [rows, len(crosses[cat])]
+        shards[p["id"] % SHARDS][p["id"]] = rec
+    for n, shard in enumerate(shards):
+        (data / f"x{n}.js").write_text(f"CL_SHARD({n}," + json.dumps(shard, separators=(",", ":")) + ");\n")
 
 
 def _representatives(parts: list[dict]) -> list[dict]:
@@ -123,17 +147,30 @@ def main(out: Path, real: bool = False) -> None:
     exported = {p["id"] for p in parts}
     everything = client.get("/api/parts?limit=5000").json()
     index = [
-        [p["mpn"], p["manufacturer"], p["package"], p["lifecycle"]["status"], p["id"] if p["id"] in exported else 0]
+        [p["mpn"], p["manufacturer"], p["package"], p["lifecycle"]["status"], p["id"] * (p["id"] in exported), p["id"]]
         for p in everything
     ]
+    data = out / "static" / "preview"
+    shutil.rmtree(data, ignore_errors=True)
+    data.mkdir(parents=True)
+    (data / "parts.js").write_text("window.CL_PARTS=" + json.dumps(index, separators=(",", ":")) + ";\n")
+    if real:
+        pages["cross.html"] = "/rules"  # page frame only; the body is replaced below
+        _write_cross_data(client, everything, data)
     for name, url in pages.items():
         html = rewrite(client.get(url).text)
+        if name == "cross.html":
+            main = re.compile(r'(<main class="container">).*</main>', re.S)
+            html = main.sub(lambda m: m.group(1) + CROSS_VIEW + "</main>", html)
+            html = re.sub(r"<title>[^<]*</title>", "<title>Part crosses · Cross List</title>", html)
         html = html.replace('hx-get="/suggest"', "data-static-suggest")
-        html = html.replace("</body>", OFFLINE_SUGGEST.replace("__INDEX__", json.dumps(index)) + "</body>")
-        # Drop links to part pages that are not part of this export.
+        html = html.replace("</body>", OFFLINE_SUGGEST + "</body>")
+        # Parts without a full page open the light crosses view (real data) or lose the link.
         html = re.sub(
-            r'<a href="part-(\d+)\.html"[^>]*>(.*?)</a>',
-            lambda m: m.group(0) if int(m.group(1)) in exported else m.group(2),
+            r'<a href="part-(\d+)\.html"([^>]*)>(.*?)</a>',
+            lambda m: m.group(0)
+            if int(m.group(1)) in exported
+            else (f'<a href="cross.html#{m.group(1)}"{m.group(2)}>{m.group(3)}</a>' if real else m.group(3)),
             html,
             flags=re.S,
         )

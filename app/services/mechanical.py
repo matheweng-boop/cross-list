@@ -5,6 +5,7 @@ The checks place the candidate's leads on the reference's recommended pads: the 
 was designed for the reference part, so that is the question a pre-mechanical review asks.
 """
 
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -41,8 +42,8 @@ class LandPattern:
 
 @dataclass(frozen=True)
 class Mechanical:
-    lead_width: tuple[float, float]
-    lead_length: tuple[float, float]
+    lead_width: tuple[float, float] | None  # None: not given in the datasheet
+    lead_length: tuple[float, float] | None
     source: str = ""
     note: str = ""
     land_patterns: tuple[LandPattern, ...] = ()
@@ -74,12 +75,12 @@ def load_mechanical(path: Path = MECH_FILE) -> dict[str, Mechanical]:
                 for lp in m.get("land_patterns", [])
             )
             out[code] = Mechanical(
-                lead_width=tuple(m["lead_width_mm"]),
-                lead_length=tuple(m["lead_length_mm"]),
+                lead_width=tuple(m["lead_width_mm"]) if m.get("lead_width_mm") else None,
+                lead_length=tuple(m["lead_length_mm"]) if m.get("lead_length_mm") else None,
                 source=m.get("source", ""),
                 note=m.get("note", ""),
                 land_patterns=lps,
-                sides=int(m.get("sides", 2)),
+                sides=int(m.get("sides") or 2),
             )
     return out
 
@@ -232,7 +233,7 @@ def compare(ref: Outline, cand: Outline) -> Overlay:
     elif len(cand.pins) < len(ref.pins):
         checks.append(Check("Pin count", "warn", f"{len(ref.pins) - len(cand.pins)} reference pads left unused"))
     land = ref.land
-    if land is None or cm is None:
+    if land is None or cm is None or not (cm.lead_width and cm.lead_length):
         missing = "reference land pattern" if land is None else "candidate lead dimensions"
         checks.append(Check("Leads on pads", "unknown", f"no {missing} in the datasheet"))
     else:
@@ -321,6 +322,16 @@ text { font-family: -apple-system, Segoe UI, Roboto, sans-serif; fill: #333; }
 """
 
 
+def _style(k: float) -> str:
+    """STYLE with stroke widths, dashes and font sizes scaled by k (drawings are in mm)."""
+
+    def scaled(m: re.Match) -> str:
+        values = " ".join(f"{float(v) * k:.4g}" for v in m.group(2).split())
+        return f"{m.group(1)}{values}{m.group(3) or ''};"
+
+    return re.sub(r"(stroke-width: |stroke-dasharray: |font-size: )([\d. ]+?)(px)?;", scaled, STYLE)
+
+
 def _rect(x0, y0, x1, y1, cls, title=""):
     x, y = min(x0, x1), min(y0, y1)
     t = f"<title>{escape(title)}</title>" if title else ""
@@ -337,7 +348,7 @@ def _side_rect(side: int, r0: float, r1: float, t: float, w: float, cls: str, ti
     return _rect(t - w / 2, sign * r0, t + w / 2, sign * r1, cls, title)
 
 
-def _layer(o: Outline, cls: str, numbers: bool) -> str:
+def _layer(o: Outline, cls: str, numbers: bool, k: float = 1.0) -> str:
     parts = [f'<g class="{cls}">']
     bw, bl = o.body_width / 2, o.body_length / 2
     if o.land:
@@ -349,7 +360,7 @@ def _layer(o: Outline, cls: str, numbers: bool) -> str:
     parts.append(_rect(-bw, -bl, bw, bl, "body layer-body", f"{o.label} body {o.body_width} x {o.body_length} mm"))
     for n, t, side in o.pins:
         edge, tip = o.half(side)
-        if o.mech:
+        if o.mech and o.mech.lead_width and o.mech.lead_length:
             b, length = mid(o.mech.lead_width), mid(o.mech.lead_length)
             r0 = edge - length if o.no_lead else edge
             parts.append(_side_rect(side, r0, tip, t, b, "lead layer-leads", f"{o.label} pin {n}"))
@@ -359,7 +370,7 @@ def _layer(o: Outline, cls: str, numbers: bool) -> str:
             parts.append(_side_rect(side, tip - 0.05, tip, t, 0.2, "lead layer-leads"))
     # pin 1 marker inside the body corner
     _, t1, _ = o.pins[0]
-    r = min(0.25, min(o.body_width, o.body_length) / 12)
+    r = min(0.25, min(o.body_width, o.body_length) / (25 if o.quad else 12))
     cy = -bl + 2.2 * r if o.quad else t1
     parts.append(
         f'<circle class="pin1" cx="{-bw + 2.2 * r:.3f}" cy="{cy:.3f}" r="{r:.3f}"><title>pin 1</title></circle>'
@@ -367,21 +378,21 @@ def _layer(o: Outline, cls: str, numbers: bool) -> str:
     if numbers:
         for n, t, side in o.pins:
             _, tip = o.half(side)
-            out = max(tip, o.land.edges(abs(side) == 2)[1] if o.land else 0) + 0.3
+            out = max(tip, o.land.edges(abs(side) == 2)[1] if o.land else 0) + 0.3 * k
             sign = 1 if side > 0 else -1
-            x, y = (sign * out, t + 0.11) if abs(side) == 1 else (t, sign * out + 0.11)
+            x, y = (sign * out, t + 0.11 * k) if abs(side) == 1 else (t, sign * out + 0.11 * k)
             parts.append(f'<text class="num" x="{x:.3f}" y="{y:.3f}" text-anchor="middle">{n}</text>')
     parts.append("</g>")
     return "".join(parts)
 
 
-def _hdim(x0: float, x1: float, y: float, label: str) -> str:
-    t = 0.12
+def _hdim(x0: float, x1: float, y: float, label: str, k: float = 1.0) -> str:
+    t = 0.12 * k
     return (
         f'<g class="layer-dims"><line class="dim" x1="{x0:.3f}" y1="{y:.3f}" x2="{x1:.3f}" y2="{y:.3f}"/>'
         f'<line class="dim" x1="{x0:.3f}" y1="{y - t:.3f}" x2="{x0:.3f}" y2="{y + t:.3f}"/>'
         f'<line class="dim" x1="{x1:.3f}" y1="{y - t:.3f}" x2="{x1:.3f}" y2="{y + t:.3f}"/>'
-        + _text((x0 + x1) / 2, y - 0.12, label, "dimtext", anchor="middle")
+        + _text((x0 + x1) / 2, y - t, label, "dimtext", anchor="middle")
         + "</g>"
     )
 
@@ -399,37 +410,40 @@ def svg(ov: Overlay, standalone: bool = False) -> str:
             half_w = max(half_w, o.land.outer_edge)
             if o.quad:
                 half_h = max(half_h, o.land.edges(True)[1])
-        if o.quad:
-            half_h += 0.4  # room for the pin numbers above and below
-    m = 1.2
+    k = min(max(max(half_w, half_h) / 5.5, 0.22), 1.5)  # text and spacing scale with the package
+    if ref.quad or cand.quad:
+        half_h += 0.4 * k  # room for the pin numbers above and below
+    m = 1.2 * k
     x0, w = -half_w - m, 2 * (half_w + m)
-    y0, h = -half_h - m - 2.4, 2 * (half_h + m) + 2.4 + 1.6
+    y0, h = -half_h - m - 2.4 * k, 2 * (half_h + m) + 4.0 * k
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.3f} {y0:.3f} {w:.3f} {h:.3f}"'
         + (f' width="{w * 40:.0f}" height="{h * 40:.0f}"' if standalone else ' class="overlay-svg"')
         + ' role="img" aria-label="Package overlay">',
-        f"<style>{STYLE}</style>",
+        f"<style>{_style(k)}</style>",
         f'<rect class="paper" x="{x0:.3f}" y="{y0:.3f}" width="{w:.3f}" height="{h:.3f}"/>',
         f'<line class="axis" x1="{x0:.3f}" y1="0" x2="{x0 + w:.3f}" y2="0"/>',
         f'<line class="axis" x1="0" y1="{y0:.3f}" x2="0" y2="{y0 + h:.3f}"/>',
-        _layer(ref, "ref", numbers=True),
-        _layer(cand, "cand", numbers=False),
+        _layer(ref, "ref", numbers=True, k=k),
+        _layer(cand, "cand", numbers=False, k=k),
     ]
-    top = -half_h - 0.5
-    out.append(_hdim(-ref.span / 2, ref.span / 2, top - 0.9, f"span {ref.span} / {cand.span}"))
-    out.append(_hdim(-ref.body_width / 2, ref.body_width / 2, top - 0.25, f"body {ref.body_width} / {cand.body_width}"))
+    top = -half_h - 0.5 * k
+    out.append(_hdim(-ref.span / 2, ref.span / 2, top - 0.9 * k, f"span {ref.span} / {cand.span}", k))
+    body = f"body {ref.body_width} / {cand.body_width}"
+    out.append(_hdim(-ref.body_width / 2, ref.body_width / 2, top - 0.25 * k, body, k))
     if ref.land:
         lp = ref.land
-        out.append(_hdim(-lp.inner_edge, lp.inner_edge, half_h + 0.75, f"pad gap {lp.row_spacing - lp.pad_length:.2f}"))
-    ly, lx = y0 + 0.55, x0 + 0.3
+        gap = f"pad gap {lp.row_spacing - lp.pad_length:.2f}"
+        out.append(_hdim(-lp.inner_edge, lp.inner_edge, half_h + 0.75 * k, gap, k))
+    ly, lx = y0 + 0.55 * k, x0 + 0.3 * k
     for i, (o, cls, role) in enumerate(((ref, "ref", "reference"), (cand, "cand", "candidate"))):
         out.append(
-            f'<g class="legend {cls}">{_rect(lx, ly - 0.3 + 0.6 * i, lx + 0.5, ly + 0.6 * i, "lead")}'
-            + _text(lx + 0.65, ly + 0.6 * i, f"{o.label} ({role})", "legend")
+            f'<g class="legend {cls}">{_rect(lx, ly + (0.6 * i - 0.3) * k, lx + 0.5 * k, ly + 0.6 * i * k, "lead")}'
+            + _text(lx + 0.65 * k, ly + 0.6 * i * k, f"{o.label} ({role})", "legend")
             + "</g>"
         )
     pads = ref.land.name if ref.land else "none published"
-    out.append(_text(lx, y0 + h - 0.75, "Top view, mm. Leads at nominal b and L.", "dimtext"))
-    out.append(_text(lx, y0 + h - 0.3, f"Reference pads: {pads}", "dimtext"))
+    out.append(_text(lx, y0 + h - 0.75 * k, "Top view, mm. Leads at nominal b and L.", "dimtext"))
+    out.append(_text(lx, y0 + h - 0.3 * k, f"Reference pads: {pads}", "dimtext"))
     out.append("</svg>")
     return "".join(out)

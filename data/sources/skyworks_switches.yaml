@@ -1,0 +1,3529 @@
+# Facts read from the Skyworks RF switch datasheets. page = PDF page number (1-based).
+# Values are typical unless noted; insertion_loss_db = highest typical IL over the specified bands (common path),
+# isolation_db = lowest typical isolation (common path). p_compression_note is present only when p1db_dbm holds
+# a P0.1dB/P0.2dB/P0.5dB value instead of P1dB. Pin names normalised (RFC/RF1..n/V1..n/VDD/GND/NC/EN/SCLK/SDATA/VIO);
+# port-name mappings are given in notes. Drawing dimensions read visually from rendered pages are flagged in notes.
+parts:
+  SKY5A2108:
+    datasheet: "SKY5A2108_206432E.pdf"
+    revision: E
+    revision_date: 2025-03-26
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 2.4
+    freq_max_ghz: 8.3
+    insertion_loss_db: 0.9
+    isolation_db: 20
+    p1db_dbm: 31
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 63
+    max_input_power_dbm: 32
+    switching_time_ns: 120
+    vdd_v: [2.7, 5.0]
+    control_high_v: [1.1, 2.0]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 1500
+    package:
+      name: "MLPD 6-pin 1.1 x 0.7 x 0.45 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.1
+      body_width_mm: 0.7
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 0.7
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 0.5
+      page: 7
+    pinout: [RF2, GND, RF1, VDD, RFC, V1]
+    pinout_page: 2
+    notes: "AEC-Q100 Grade 2 qualified Sky5 Wi-Fi 6E SPDT, \"reflective short\" on isolated port. New-format datasheet: footer has doc number 206432E but no date; date March 26, 2025 printed on each page. VCTL -> V1. Control high 1.1-2.0 V (up to 3.6 V only with an external 650k/1M divider). Worst typ IL 0.9 dB (5.925-8.3 GHz, 25 C); worst typ ISO 20 dB (7.125-8.3 GHz). Only P0.1dB (+31 dBm). IIP3 +63 dBm (25 C). Switching 120 ns typ. Package drawing p.8 is the same 206042-007 drawing as SKY59608-711LF (1.100 x 0.700, A max 0.500, 2 x 3 terminals 0.2+/-0.05 at 0.400 BSC, no exposed pad drawn although the text says \"exposed pad\"); footprint p.7 pads 0.300 x 0.200, 0.400 pitch -> row spacing computed 0.50."
+  SKY59608-711LF:
+    datasheet: "SKY59608-711LF_206042D.pdf"
+    revision: D
+    revision_date: 2025-04-08
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 2.4
+    freq_max_ghz: 8.3
+    insertion_loss_db: 0.8
+    isolation_db: 20
+    p1db_dbm: 31
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 63
+    max_input_power_dbm: 32
+    switching_time_ns: 120
+    vdd_v: [2.7, 5.0]
+    control_high_v: [1.1, 3.6]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1.1 x 0.7 x 0.45 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.1
+      body_width_mm: 0.7
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 0.7
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 6
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 0.5
+      page: 5
+    pinout: [RF2, GND, RF1, VDD, RFC, V1]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 206042D but no date; date April 8, 2025 printed on each page. Sky5 Wi-Fi 6E SPDT, \"reflective short\" on isolated port, single control VCTL -> V1. Worst typ IL 0.8 dB and ISO 20 dB (7.125-8.3 GHz). Only P0.1dB given (+31 dBm). Switching 120 ns typ (200 max). Text calls it an \"exposed pad\" MLPD but the drawing (p.6) shows only 2 x 3 terminals (0.2+/-0.05 sq, 0.400 BSC pitch), no exposed pad; A = 0.40/0.45/0.50 (max 0.50). Footprint p.5: pads 0.300 x 0.200, 0.400 pitch, pad outer edges 0.400 from centre -> row spacing computed 0.50 (read visually)."
+  SKYA21038:
+    datasheet: "SKYA21038_203525I.pdf"
+    revision: I
+    revision_date: 2026-01-16
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.9
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.7
+    isolation_db: 22
+    p1db_dbm: 31
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 300
+    vdd_v: [3.0, 5.0]
+    control_high_v: [1.6, 3.6]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 1000
+    package:
+      name: "MLPD 6-pin 1 x 1 x 0.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.35
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.1, 0.2]
+      terminal_length_mm: [0.1, 0.25]
+      page: 9
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.35
+      row_spacing_mm: 0.97
+      page: 10
+    pinout: [RF1, GND, RF2, V1, RFC, VDD]
+    pinout_page: 2
+    notes: "AEC-Q100 Grade 2 automotive SPDT (pinout like SKY13585-679LF), \"reflective short\" on isolated port, integrated DC blocking caps. New-format footer without date; date January 16, 2026 printed on pages. INPUT->RFC, OUTPUT1->RF1, OUTPUT2->RF2, VCTL->V1. Title 0.9-6.0 GHz (recommended operating table says 1.0-6.0 GHz). Only P0.1dB (+31 dBm). IIP3 +56 (2.4 GHz) / +50 dBm (5.8 GHz) - lower used. Switching 300 ns is 10%-90% RF. Package (-378LF, 1 x 1 mm MLPD) read visually: height 0.50/0.41 (max 0.50), pitch 0.35, terminal 0.15+/-0.05 x 0.175+/-0.075; exposed pad is an irregular narrow centre strip (~0.13-0.21 wide) merged with pin 2 (GND), so exposed_pad_mm left null. Footprint: pads 0.33 x 0.15, pad outer edge 0.65 from centre -> row spacing computed 0.97."
+  SKYA21024:
+    datasheet: "SKYA21024_204618C.pdf"
+    revision: C
+    revision_date: 2017-09-07
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.01
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.7
+    isolation_db: 15
+    p1db_dbm: 33
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 56
+    max_input_power_dbm: 33
+    switching_time_ns: 650
+    vdd_v: [2.5, 3.5]
+    control_high_v: [1.35, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 6-pin 1 x 1 mm"
+      type: QFN
+      pins: 6
+      sides: 4
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.124, 0.224]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.5
+      row_spacing_x_mm: 0.97
+      row_spacing_y_mm: null
+      page: 7
+    pinout: [VDD, RF1, GND, RF2, V1, RFC]
+    pinout_page: 2
+    notes: "Automotive-application version of SKY13453-385LF (same pinout, package and specs). Website table lists SKYA21024 as \"DPDT\" - datasheet is a single-control SPDT (datasheet wins). Datasheet mentions automotive PPAP/IMDS but no AEC-Q100 statement -> aec_q100 false. VCTL -> V1. Only P0.1dB (+33 dBm). IIP3 +57 / +56 dBm typ (lower used). On time 650 ns. Termination not stated. Package p.8 read visually: 1 x 1, height 0.45 +0.05/-0.04, no exposed pad, 2 terminals on two sides (0.5 pitch, 0.2 x 0.174) plus one elongated terminal centred on each other side (0.2 x 0.356) -> sides 4. Footprint p.7: side pads 0.33 x 0.15, outer edge 0.65 from centre -> row spacing X computed 0.97."
+  SKYA21003:
+    datasheet: "SKYA21003_202938M.pdf"
+    revision: M
+    revision_date: 2025-09-30
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.1
+    freq_max_ghz: 8.5
+    insertion_loss_db: 0.8
+    isolation_db: 21
+    p1db_dbm: 38.5
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 40
+    switching_time_ns: 2000
+    vdd_v: [2.3, 4.8]
+    control_high_v: [1.35, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 1500
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.76, 0.76]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 9
+    pinout: [GND, RFC, GND, GND, RF2, GND, V1, EN, VDD, GND, RF1, GND]
+    pinout_page: 2
+    notes: "AEC-Q100 Grade 2 automotive version of SKY13330-397LF (same pinout/package). SOI SPDT, \"reflective short\" on isolated port. New-format footer without date; date September 30, 2025 printed on pages. Datasheet RF1 (common) -> RFC, RF2 -> RF1, RF3 -> RF2; CTRL -> V1, ENABLE -> EN, VBATT -> VDD. Specs are over -40 to +105 C: worst typ IL 0.80 dB (7.125-8.5 GHz), worst typ ISO 21 dB (5-8.5 GHz). Only P0.1dB (+38.5 typ). No IIP3 (IMD3 only). Switching on time 2 us. Control high 1.35-3.0 V in DC table (truth table note says 1.65-3.0 V). Drawing p.8 (2.00 sq, height 0.55 +0.05/-0.04, EP 0.76, terminal 0.2+/-0.05 x 0.29+/-0.075) and footprint p.9 (pads 0.440 x 0.200, 12X 1.150 centre-to-pad-outer-edge -> row spacing computed 1.86), read visually."
+  SKYA21001:
+    datasheet: "SKYA21001_202936I.pdf"
+    revision: I
+    revision_date: 2022-08-15
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.02
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.4
+    isolation_db: 23
+    p1db_dbm: 34
+    iip3_dbm: 53
+    max_input_power_dbm: 36
+    switching_time_ns: 125
+    vdd_v: null
+    control_high_v: [2.0, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 250
+    package:
+      name: "SC-70 6-pin 2.00 x 1.25 mm"
+      type: SC-70
+      pins: 6
+      sides: 2
+      body_length_mm: 2.0
+      body_width_mm: 1.25
+      height_mm: 1.1
+      pitch_mm: 0.65
+      span_mm: 2.2
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: [0.1, 0.3]
+      page: 6
+    land_pattern:
+      pad_length_mm: 0.75
+      pad_width_mm: 0.4
+      pitch_mm: 0.65
+      row_spacing_mm: 1.65
+      page: 6
+    pinout: [RF2, GND, RF1, V1, RFC, V2]
+    pinout_page: 2
+    notes: "AEC-Q100 qualified automotive SPDT in SC-70 (AS179-family pinout). Ports J1 (pin 5, common)->RFC, J2 (pin 3)->RF1, J3 (pin 1)->RF2. Title 20 MHz-3.0 GHz but specs given 0.7-3.0 GHz: worst typ IL 0.4 dB, ISO 23 dB (2-3 GHz, 25 C). P1dB +34 dBm and IP3 +53 dBm at VCTL 0/5 V (+30 / +52 at 0/3 V). Abs max input +36 dBm >500 MHz. On/off 125 ns. ESD HBM 250 V (Class 1A) read from rendered table p.2. Package drawing p.6 (same SC-70 drawing as AS179: 2.00+/-0.20 x 1.25+/-0.10, span 2.10+/-0.20? shown as \"x.x0 +/-0.20\" partly cut, height 0.95+/-0.15, pitch 0.65 BSC, lead 0.23 ref) and footprint p.6 (pads 0.75 x 0.40, pitch 0.65, rows 1.65 apart, all \"Ref\")."
+  SKY13592-689LF:
+    datasheet: "SKY13592_689LF_203513F.pdf"
+    revision: F
+    revision_date: 2017-09-07
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 1.0
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.55
+    isolation_db: 24
+    p1db_dbm: 30
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 450
+    vdd_v: null
+    control_high_v: [3.0, 3.6]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1 x 1 x 0.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.35
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.1, 0.2]
+      terminal_length_mm: [0.1, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.35
+      row_spacing_mm: 0.97
+      page: 6
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "\"Reflective short\" on isolated port; integrated DC blocking caps; no VDD pin. INPUT->RFC, OUTPUT1->RF1, OUTPUT2->RF2, VCTL1->V1, VCTL2->V2. Only P0.1dB given (+30 dBm). IIP3 +55 (2.4 GHz) / +50 dBm (5.8 GHz) - lower used. Switching 450 ns (50% VCTL to 90% RF). Control high 3.0-3.6 V. Package (-378LF, 1 x 1 mm MLPD) read visually: height 0.50/0.41 (max 0.50), pitch 0.35, terminal 0.15+/-0.05 x 0.175+/-0.075; exposed pad is an irregular narrow centre strip (~0.13-0.21 wide) merged with pin 2 (GND), so exposed_pad_mm left null. Footprint: pads 0.33 x 0.15, pad outer edge 0.65 from centre -> row spacing computed 0.97."
+  SKY13587-378LF:
+    datasheet: "SKY13587_378LF_203489D.pdf"
+    revision: D
+    revision_date: 2017-09-07
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.02
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.5
+    isolation_db: 24
+    p1db_dbm: 30
+    p_compression_note: "P0.5dB"
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 100
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1 x 1 x 0.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.35
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.1, 0.2]
+      terminal_length_mm: [0.1, 0.25]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.35
+      row_spacing_mm: 0.97
+      page: 7
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "\"Reflective short\" on the isolated port. INPUT->RFC, OUTPUT1->RF1, OUTPUT2->RF2, VCTL1->V1, VCTL2->V2. Only P0.5dB given (+30 dBm @2.45 GHz, VCTL 2.7 V). IIP3 +50 dBm @2.45 GHz/2.7 V (+46 @5.8 GHz). Operating temp -40 to +105 C. Package (-378LF, 1 x 1 mm MLPD) read visually: height 0.50/0.41 (max 0.50), pitch 0.35, terminal 0.15+/-0.05 x 0.175+/-0.075; exposed pad is an irregular narrow centre strip (~0.13-0.21 wide) merged with pin 2 (GND), so exposed_pad_mm left null. Footprint: pads 0.33 x 0.15, pad outer edge 0.65 from centre -> row spacing computed 0.97."
+  SKY13585-679LF:
+    datasheet: "SKY13585_679LF_203458G.pdf"
+    revision: G
+    revision_date: 2017-05-09
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 1.0
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.7
+    isolation_db: 22
+    p1db_dbm: 31
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 300
+    vdd_v: [2.7, 5.0]
+    control_high_v: [1.6, 3.6]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1 x 1 x 0.32 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.35
+      pitch_mm: 0.35
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.1, 0.2]
+      terminal_length_mm: [0.1, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.35
+      row_spacing_mm: 0.97
+      page: 6
+    pinout: [RF1, GND, RF2, V1, RFC, VDD]
+    pinout_page: 2
+    notes: "\"Reflective short\" on isolated port; integrated DC blocking caps. INPUT->RFC, OUTPUT1->RF1, OUTPUT2->RF2, VCTL->V1. Only P0.1dB given (+31 dBm). IIP3 +56 (2.4 GHz) / +50 dBm (5.8 GHz) typ - lower used. Switching speed 300 ns is 10%-90% RF. VDD 2.7-5 V per recommended operating table (truth-table note says 3-5 V). Package as -378LF family but height 0.32 +0.03/-0.04 (max 0.35); drawing p.7 read visually (pitch 0.35, terminal 0.15+/-0.05 x 0.175+/-0.075, exposed pad is a narrow centre strip joined to pin 2 -> exposed_pad_mm null). Footprint p.6: pads 0.33 x 0.15, outer edge 0.65 from centre -> row spacing computed 0.97."
+  SKY13581-676LF:
+    datasheet: "SKY13581_676LF_204178B_PS.pdf"
+    revision: B
+    revision_date: 2017-08-08
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 9-pin 1.1 x 1.1 x 0.5 mm"
+      type: QFN
+      pins: 9
+      sides: null
+      body_length_mm: 1.1
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; GPIO SPDT (VDD, VC1, VC2; RFC/RF1/RF2), isolation 25 dB at 2.7 GHz (feature list). Package \"QFN (9-pin, 1.1 x 1.1 x 0.5 mm)\" - website table says \"QFN, 12L\" (conflict; datasheet wins). Height 0.5 is the nominal from text. Pinout/pitch not given."
+  SKY13548-385LF:
+    datasheet: "SKY13548-385LF_203802B_PS_discontinued.pdf"
+    revision: B
+    revision_date: 2025-11-19
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.005
+    freq_max_ghz: 1.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 6-pin 1 x 1 mm"
+      type: QFN
+      pins: 6
+      sides: null
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; discontinued 75 ohm single-control SPDT (VCTL) for set-top boxes / cable modems. Feature list only: IL 0.40 dB @900 MHz, isolation >25 dB @900 MHz. Termination not stated (website: reflective). Pinout, pitch, height, side arrangement not given."
+  SKY13547-490LF:
+    datasheet: "SKY13547_490LF_PS_203803A.pdf"
+    revision: A
+    revision_date: 2015-12-15
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.005
+    freq_max_ghz: 1.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: 38
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: [2.5, 4.8]
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 2.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; 75 ohm SPDT for DOCSIS 3.1, \"reflective short\" on isolated port. Feature list only: IL 0.3 dB @1.0 GHz, IP0.1dB +38 dBm, IMD2/3 < -110 dBc, VDD 2.5-4.8 V, single CTRL input (block diagram RF1 common, RF2/RF3 throws, VDD, CTRL). Pinout, pitch, height not given."
+  SKY13453-385LF:
+    datasheet: "SKY13453-385LF_202830G.pdf"
+    revision: G
+    revision_date: 2020-02-11
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.01
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.7
+    isolation_db: 15
+    p1db_dbm: 33
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 56
+    max_input_power_dbm: 33
+    switching_time_ns: 650
+    vdd_v: [2.5, 3.5]
+    control_high_v: [1.35, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 6-pin 1 x 1 mm"
+      type: QFN
+      pins: 6
+      sides: 4
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.124, 0.224]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.5
+      row_spacing_x_mm: 0.97
+      row_spacing_y_mm: null
+      page: 7
+    pinout: [VDD, RF1, GND, RF2, V1, RFC]
+    pinout_page: 2
+    notes: "Single-control SPDT (VCTL -> V1). Only P0.1dB given (+33 dBm). IIP3 +57 (2.45 GHz) / +56 dBm (5.8 GHz) typ - lower used. On time 650 ns. Termination not stated. Package drawing p.8 read visually: 1 x 1 mm, height 0.45 +0.05/-0.04, no exposed pad; 2 terminals on each of two sides (0.5 pitch, 0.2+/-0.05 x 0.174+/-0.05) plus one elongated terminal centred on each of the other two sides (pins 3 GND and 6 RFC, 0.2+/-0.05 x 0.356+/-0.05) -> sides 4. Footprint p.7: side pads 0.33 x 0.15, outer edge 0.65 from centre -> row spacing X computed 0.97; centre pads 0.20 wide x 0.51 (Y spacing not determinable)."
+  SKY13405-490LF:
+    datasheet: "SKY13405_490LF_201609I.pdf"
+    revision: I
+    revision_date: 2015-09-25
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.4
+    isolation_db: 27
+    p1db_dbm: 38
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 40
+    switching_time_ns: 2300
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: 500
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.455
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.09, 0.3]
+      terminal_length_mm: [0.15, 0.25]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.31
+      pitch_mm: 0.455
+      row_spacing_mm: 1.9
+      page: 7
+    pinout: [GND, RF2, GND, GND, RFC, GND, GND, RF1, GND, VDD, GND, V1]
+    pinout_page: 2
+    notes: "SOI SPDT, \"reflective short\" on isolated port. Common port is datasheet RF1 -> RFC; datasheet RF2 -> RF1, RF3 -> RF2; CTRL -> V1, VBATT -> VDD. Only P0.1dB (+38 dBm); no IIP3 (IMD3 only). On time 2.3 us. Unusual 0.455 mm pitch read from drawing p.8 (4X 0.455) and footprint p.7; centre terminals 0.14+/-0.05 wide, others 0.25+/-0.05 (terminal_width gives overall range), length 0.2+/-0.05; height 0.55+/-0.05; EP 1+/-0.1 sq. Footprint: pads 0.300 long, 0.310 wide (0.200 for the 4 centre pads), inner edge 0.800 from centre -> row spacing computed 1.90."
+  SKY13374-397LF:
+    datasheet: "SKY13374_397LF_201447L.pdf"
+    revision: L
+    revision_date: 2015-09-18
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.0003
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.8
+    isolation_db: 22
+    p1db_dbm: 39
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 68
+    max_input_power_dbm: 39
+    switching_time_ns: 1200
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.92, 0.92]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 6
+    pinout: [NC, RFC, GND, GND, RF2, GND, V1, V2, VDD, GND, RF1, GND]
+    pinout_page: 2
+    notes: "SOI SPDT. Common port is datasheet RF1 -> RFC; datasheet RF2 -> RF1, RF3 -> RF2; VBATT -> VDD. V1=V2=0 is shutdown. Only P0.1dB given (+39 dBm). Switching 1200 ns (50% VCTL to 90% RF). IL band 3.0-4.9 GHz not specified. Termination not stated. Dims read from drawing p.7 (height 0.55 +0.05/-0.04, EP 0.92 sq, terminal 0.2+/-0.05 x 0.29+/-0.075) and footprint p.6 (pads 0.44 x 0.20, inner edge 0.710 from centre -> row spacing computed 1.86)."
+  SKY13370-374LF:
+    datasheet: "SKY13370_374LF_201408G.pdf"
+    revision: G
+    revision_date: 2018-01-15
+    configuration: SPDT
+    termination: absorptive
+    freq_min_ghz: 0.5
+    freq_max_ghz: 6.0
+    insertion_loss_db: 1.15
+    isolation_db: 24.0
+    p1db_dbm: 39
+    iip3_dbm: 55
+    max_input_power_dbm: 40
+    switching_time_ns: 100
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "DFN 6-pin 1.5 x 1.5 mm"
+      type: DFN
+      pins: 6
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.2, 0.3]
+      terminal_length_mm: [0.1, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.45
+      page: 6
+    pinout: [V1, RFC, V2, RF2, GND, RF1]
+    pinout_page: 2
+    notes: "50 ohm terminated (absorptive) outputs. Electrical specs only to 5.85 GHz. IIP3 printed as \"55 dB\" (unit typo) at VCTL 3.0 V. P1dB +39 dBm at 3.0 V. Switching 100 ns typ (250 max). Package (-374LF 1.5 x 1.5 mm, 6-pin) read visually: height 0.45+/-0.05 (max 0.50), pitch 0.5, EP 0.70 x 1.20, terminal 0.25+/-0.05 x 0.175+/-0.075; footprint pads 0.35 x 0.25, inner edge 0.55 from centre -> row spacing computed 1.45."
+  SKY13351-378LF:
+    datasheet: "SKY13351_378LF_201132I.pdf"
+    revision: I
+    revision_date: 2017-09-08
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.02
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.5
+    isolation_db: 24
+    p1db_dbm: 30
+    p_compression_note: "P0.5dB"
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 100
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1 x 1 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.35
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.1, 0.2]
+      terminal_length_mm: [0.1, 0.25]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.35
+      row_spacing_mm: 0.97
+      page: 7
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "\"Reflective short\" on the isolated port (p.1). INPUT->RFC, OUTPUT1->RF1, OUTPUT2->RF2, VCTL1->V1, VCTL2->V2. Only P0.5dB given (+30 dBm @2.45 GHz, VCTL 2.7 V) - stored in p1db_dbm with note P0.5dB. IIP3 +50 dBm @2.45 GHz/2.7 V (+46 @5.8 GHz). Truth table (p.5) maps VCTL1=1 to INPUT-OUTPUT2 low loss, opposite to the description text - not resolved. Website lists \"QFN, 6L\". Package (-378LF, 1 x 1 mm MLPD) read visually: height 0.50/0.41 (max 0.50), pitch 0.35, terminal 0.15+/-0.05 x 0.175+/-0.075; exposed pad is an irregular narrow centre strip (~0.13-0.21 wide) merged with pin 2 (GND), so exposed_pad_mm left null. Footprint: pads 0.33 x 0.15, pad outer edge 0.65 from centre -> row spacing computed 0.97."
+  SKY13330-397LF:
+    datasheet: "SKY13330_397LF_201407E.pdf"
+    revision: E
+    revision_date: 2020-03-30
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.6
+    isolation_db: 21
+    p1db_dbm: 38.5
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 40
+    switching_time_ns: 1700
+    vdd_v: [2.3, 4.8]
+    control_high_v: [1.65, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.76, 0.76]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 7
+    pinout: [GND, RFC, GND, GND, RF2, GND, V1, EN, VDD, GND, RF1, GND]
+    pinout_page: 2
+    notes: "SOI SPDT, \"reflective short\" on isolated port. Common port is datasheet RF1 -> RFC; datasheet RF2 -> RF1, RF3 -> RF2. CTRL -> V1, ENABLE -> EN, VBATT -> VDD. Only P0.1dB given (+38.5 dBm; feature list says IP1dB +39 dBm); no IIP3 (IMD3 only). Switching on time 1.70 us (50% VCTL to 10/90% RF). Dims read from drawing p.8 (height 0.55 +0.05/-0.04, EP 0.76 sq, terminal 0.2+/-0.05 x 0.29+/-0.075) and footprint p.7 (pads 0.44 x 0.20, 12X 1.150 centre-to-pad-outer-edge -> row spacing computed 1.86)."
+  SKY13323-378LF:
+    datasheet: "SKY13323_378LF_201080F.pdf"
+    revision: F
+    revision_date: 2017-08-03
+    configuration: SPDT
+    termination: reflective
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.35
+    isolation_db: 25.5
+    p1db_dbm: 27
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 100
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1 x 1 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.0
+      body_width_mm: 1.0
+      height_mm: 0.5
+      pitch_mm: 0.35
+      span_mm: 1.0
+      exposed_pad_mm: null
+      terminal_width_mm: [0.1, 0.2]
+      terminal_length_mm: [0.1, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.33
+      pad_width_mm: 0.15
+      pitch_mm: 0.35
+      row_spacing_mm: 0.97
+      page: 6
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "\"Reflective short\" on the isolated port (p.1). INPUT->RFC, OUTPUT1->RF1, OUTPUT2->RF2, VCTL1->V1, VCTL2->V2. P1dB +27 and IIP3 +50 dBm at VCTL 0/2.7 V (highest listed). Abs max input +32 dBm (5 V). Operating temp from abs max (-40 to +85 C). Website lists \"QFN, 6L\". Package (-378LF, 1 x 1 mm MLPD) read visually: height 0.50/0.41 (max 0.50), pitch 0.35, terminal 0.15+/-0.05 x 0.175+/-0.075; exposed pad is an irregular narrow centre strip (~0.13-0.21 wide) merged with pin 2 (GND), so exposed_pad_mm left null. Footprint: pads 0.33 x 0.15, pad outer edge 0.65 from centre -> row spacing computed 0.97."
+  SKY13319-374LF:
+    datasheet: "SKY13319_374LF_201096E.pdf"
+    revision: E
+    revision_date: 2018-01-12
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.6
+    isolation_db: 17
+    p1db_dbm: 38
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 60
+    max_input_power_dbm: 37
+    switching_time_ns: 80
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1.5 x 1.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.2, 0.3]
+      terminal_length_mm: [0.1, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.45
+      page: 6
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "Ports J1->RF1, J2->RF2. Only P0.1dB given (+38 dBm at VCTL 3.3 V; +37 at 3.0 V). Abs max input +37 dBm @3.3 V. Website lists \"QFN, 6L\"; datasheet says MLPD. Dims read from drawing p.7 (height 0.45+/-0.05, EP 0.70 x 1.20, terminal 0.25+/-0.05 x 0.175+/-0.075) and footprint p.6 (pads 0.35 x 0.25, inner edge 0.55 from centre -> row spacing computed 1.45). Termination not stated."
+  SKY13290-313LF:
+    datasheet: "SKY13290_313LF_200488G.pdf"
+    revision: G
+    revision_date: 2013-03-11
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.02
+    freq_max_ghz: 2.5
+    insertion_loss_db: 0.55
+    isolation_db: 18
+    p1db_dbm: 40.5
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 43.5
+    switching_time_ns: 800
+    vdd_v: null
+    control_high_v: [2.7, 10.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: 250
+    package:
+      name: "QFN 6-pin 2 x 3 mm"
+      type: QFN
+      pins: 6
+      sides: 2
+      body_length_mm: 3.0
+      body_width_mm: 2.0
+      height_mm: 1.0
+      pitch_mm: 0.95
+      span_mm: 2.0
+      exposed_pad_mm: [0.841, 1.222]
+      terminal_width_mm: [0.3, 0.4]
+      terminal_length_mm: [0.217, 0.367]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.442
+      pad_width_mm: 0.35
+      pitch_mm: 0.95
+      row_spacing_mm: 1.858
+      page: 6
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "Ports J1 (pin 5, common)->RFC, J2 (pin 1)->RF1, J3 (pin 3)->RF2. Only P0.1dB given (+40.5 dBm @900 MHz, +37.6 @48 MHz at VCTL 0/3 V); no IIP3. Control high 2.7-10 V (truth-table header says 2 to 5 V, note says 2.7 to 10 V; used note). Drawing S2492 p.7 read visually: 3 x 2 mm, height 0.9+/-0.1, pitch 0.95, exposed pad 0.841 x 1.222 with a stem joined to pin 2 (GND) - only 5 discrete terminals (Detail A 5 places), terminal 0.35+/-0.05 x 0.292+/-0.075. Footprint S2491 p.6: pads 0.442 x 0.350, 6X 1.150 centre-to-pad-outer-edge -> row spacing computed 1.858."
+  SKY13270-92LF:
+    datasheet: "SKY13270_92LF_200128H.pdf"
+    revision: H
+    revision_date: 2013-03-06
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.02
+    freq_max_ghz: 2.7
+    insertion_loss_db: 0.6
+    isolation_db: 19
+    p1db_dbm: 37.0
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 37.8
+    switching_time_ns: 100
+    vdd_v: null
+    control_high_v: [2.5, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "SC-70 6-pin 2.00 x 1.25 mm"
+      type: SC-70
+      pins: 6
+      sides: 2
+      body_length_mm: 2.0
+      body_width_mm: 1.25
+      height_mm: 1.1
+      pitch_mm: 0.65
+      span_mm: 2.2
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: [0.1, 0.3]
+      page: 6
+    land_pattern: null
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "Website table lists \"SC-88, 6L\"; datasheet calls it SC-70 6-pin (same 2.0 x 1.25 mm 6-lead outline). Ports J1 (pin 5, common)->RFC, J2 (pin 1)->RF1, J3 (pin 3)->RF2. Only P0.1dB given (+37.0 dBm @900 MHz, +33.9 dBm @48 MHz, VCTL 0/3 V); no IIP3 spec. Truth-table header says VHIGH = 2 to 5 V, note says 2.5 to 5.0 V (used). Package drawing S1479 p.6 read visually (height 0.95+/-0.15, lead width 0.23 ref, foot 0.20+/-0.10). No PCB footprint in datasheet. Termination not stated."
+  AS213-92LF:
+    datasheet: "200193D.pdf"
+    revision: D
+    revision_date: null
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.5
+    isolation_db: 19
+    p1db_dbm: 27
+    iip3_dbm: 40
+    max_input_power_dbm: 33.0
+    switching_time_ns: 20
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "SC-70 6-lead"
+      type: SC-70
+      pins: 6
+      sides: 2
+      body_length_mm: 2.0
+      body_width_mm: 1.25
+      height_mm: 1.1
+      pitch_mm: 0.65
+      span_mm: 2.2
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: [0.1, 0.3]
+      page: 3
+    land_pattern: null
+    pinout: [RF2, GND, RF1, V1, RFC, V2]
+    pinout_page: 1
+    notes: "Website table lists \"SC-88, 6L\"; datasheet calls it SC-70 6-pin (same 2.0 x 1.25 mm 6-lead outline). Old-format datasheet (covers AS213-92 and AS213-92LF); no footer revision/date in text - revision D taken from file name 200193D, date not stated. Pinout from pin-out drawing p.1: J1 (common)->RFC, J2 (pin 3)->RF1, J3 (pin 1)->RF2. P1dB 27 dBm and IP3 40 dBm at 0/3 V (P1dB 20 dBm at 0/1.8 V). Abs max RF input 2 W for f>500 MHz (33 dBm). No electrical-spec switching beyond on/off 20 ns. Package dims from SC-70 drawing p.3 (height 0.95+/-0.15, lead width 0.23 ref, foot 0.20+/-0.10). No PCB land pattern given. Termination not stated."
+  AS183-92LF:
+    datasheet: "200177D.pdf"
+    revision: D
+    revision_date: 2011-12-22
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.0003
+    freq_max_ghz: 2.5
+    insertion_loss_db: 0.55
+    isolation_db: 13
+    p1db_dbm: 34
+    iip3_dbm: 50
+    max_input_power_dbm: 37.8
+    switching_time_ns: 20
+    vdd_v: null
+    control_high_v: [3.0, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "SC-70 6-pin 2.00 x 1.25 mm"
+      type: SC-70
+      pins: 6
+      sides: 2
+      body_length_mm: 2.0
+      body_width_mm: 1.25
+      height_mm: 1.1
+      pitch_mm: 0.65
+      span_mm: 2.2
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: [0.1, 0.3]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.75
+      pad_width_mm: 0.4
+      pitch_mm: 0.65
+      row_spacing_mm: 1.65
+      page: 6
+    pinout: [RF1, GND, RF2, V2, RFC, V1]
+    pinout_page: 2
+    notes: "Website table lists \"SC-88, 6L\"; datasheet calls it SC-70 6-pin (same 2.0 x 1.25 mm 6-lead outline). Datasheet covers AS183-92 and AS183-92LF. Ports J1 (common)->RFC, J2->RF1, J3->RF2. Abs max RF input power 6 W @ >500 MHz (converted to 37.8 dBm). P1dB/IP3 at VCTL=0/5 V (+30 dBm / +43 dBm at 0/3 V nominal). Termination not stated. Package dims read from drawing p.7 (height 0.95+/-0.15 overall, lead width 0.23 ref, foot 0.20+/-0.10); land pattern read from p.6 (all \"Ref\")."
+  AS179-92LF:
+    datasheet: "AS179-92LF_200176J.pdf"
+    revision: J
+    revision_date: 2022-03-10
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.02
+    freq_max_ghz: 4.0
+    insertion_loss_db: 0.5
+    isolation_db: 23
+    p1db_dbm: 34
+    iip3_dbm: 50
+    max_input_power_dbm: 37.8
+    switching_time_ns: 100
+    vdd_v: null
+    control_high_v: [2.0, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "SC-70 6-pin 2.00 x 1.25 mm"
+      type: SC-70
+      pins: 6
+      sides: 2
+      body_length_mm: 2.0
+      body_width_mm: 1.25
+      height_mm: 1.1
+      pitch_mm: 0.65
+      span_mm: 2.2
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: [0.1, 0.3]
+      page: 7
+    land_pattern: null
+    pinout: [RF2, GND, RF1, V1, RFC, V2]
+    pinout_page: 2
+    notes: "Website table lists \"SC-88, 6L\"; datasheet calls it SC-70 6-pin (same 2.0 x 1.25 mm 6-lead outline). PDF has no extractable text layer; all values read visually from rendered pages. Ports J1 (pin 5, common)->RFC, J2 (pin 3)->RF1, J3 (pin 1)->RF2. IL worst typ 0.5 dB (3-4 GHz); isolation only specified to 3 GHz (worst typ 23 dB at 2-3 GHz). P1dB 34 dBm and IP3 +50 dBm at VCTL=0/5 V (+30/+43 dBm at 0/3 V). Abs max RF input 6 W >500 MHz (37.8 dBm). Operating temp -40 to +85 C (to +105 C if Pin <= 32 dBm). Package drawing p.7: height 0.95+/-0.15, lead width 0.23 ref, foot 0.20+/-0.10. No PCB footprint in datasheet. Termination not stated."
+  AS169-73LF:
+    datasheet: "AS169_200105E.pdf"
+    revision: E
+    revision_date: 2006-06-08
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.0003
+    freq_max_ghz: 2.5
+    insertion_loss_db: 0.4
+    isolation_db: 24
+    p1db_dbm: 34
+    iip3_dbm: 50
+    max_input_power_dbm: 37.8
+    switching_time_ns: 35
+    vdd_v: null
+    control_high_v: [3.0, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "SOT-6 (SOT-23-6)"
+      type: SOT-23
+      pins: 6
+      sides: 2
+      body_length_mm: 2.9
+      body_width_mm: 1.55
+      height_mm: 1.45
+      pitch_mm: 0.95
+      span_mm: 2.7
+      exposed_pad_mm: null
+      terminal_width_mm: [0.35, 0.51]
+      terminal_length_mm: [0.1, 0.61]
+      page: 3
+    land_pattern: null
+    pinout: [RF2, GND, RF1, V1, RFC, V2]
+    pinout_page: 1
+    notes: "Old-format datasheet covering AS169-73 and AS169-73LF; footer \"200105 Rev.E\", June 8, 2006. Pinout from p.1 pin-out drawing: J1 (pin 5, common)->RFC, J2 (pin 3)->RF1, J3 (pin 1)->RF2. P1dB 34 dBm / IP3 50 dBm at VCTL=0/5 V (30 / 43 dBm at 0/3 V; feature list claims IP3 52 dBm typical). Abs max RF input 6 W >500 MHz (37.8 dBm). ESD: \"Human body model (Class 1A)\" with no voltage -> esd_hbm_v null. SOT-6 drawing p.3 gives only min/max: body length 2.70-3.10, width 1.30-1.80, span 2.20-3.20, height 0.90-1.45, pitch 0.95 ref; nominals here are midpoints. No land pattern. Termination not stated."
+  SKY5A5109:
+    datasheet: "SKY5A5109_206521C.pdf"
+    revision: C
+    revision_date: 2024-09-23
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.8
+    freq_max_ghz: 8.0
+    insertion_loss_db: 0.8
+    isolation_db: 16
+    p1db_dbm: 39
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 65
+    max_input_power_dbm: 39
+    switching_time_ns: 1700
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 1000
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.76, 0.76]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 10
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 9
+    pinout: [RF1, GND, RF3, V1, V2, VDD, GND, GND, RF2, GND, RFC, GND]
+    pinout_page: 2
+    notes: "AEC-Q100 Grade 2 SOI SP3T (same pinout/package as SKY13373/SKY13588). New-format datasheet: footer has doc number 206521C but no date; date September 23, 2024 printed on each page. J1..J3 -> RF1..RF3; V1=V2=0 is shutdown. Worst typ IL 0.8 dB (6-8 GHz) and ISO 16 dB (7-8 GHz) at +25 C. Only P0.1dB (+39 dBm). Switching on time 1700 ns. Termination not stated. Drawing p.10 (2.00 sq, height 0.55 +0.05/-0.04, EP 0.76, terminal 0.2+/-0.05 x 0.29+/-0.075) and footprint p.9 (pads 0.440 x 0.200, 12X 1.150 centre-to-pad-outer-edge -> row spacing computed 1.86), read visually."
+  SKYA21039:
+    datasheet: "SKYA21039_205149B_PS.pdf"
+    revision: B
+    revision_date: 2022-12-05
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 2.4
+    freq_max_ghz: 2.5
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: 300
+    vdd_v: [3.0, 5.0]
+    control_high_v: [1.8, 3.6]
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: true
+    esd_hbm_v: null
+    package:
+      name: "MLP 8-pin 1.1 x 1.1 x 0.5 mm"
+      type: MLP
+      pins: 8
+      sides: null
+      body_length_mm: 1.1
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; AEC-Q100 Grade 2 automotive 2.4-2.5 GHz SP3T with integrated DC blocking caps (appears to be the automotive counterpart of SKY13586-678LF, not confirmed by the document). Feature list: switching 300 ns typ, control 0/1.8 to 3.6 V, supply 3-5 V. Pinout and package drawing not given; height 0.5 is the nominal from text."
+  SKYA21002:
+    datasheet: "SKYA21002_202937E.pdf"
+    revision: E
+    revision_date: 2025-11-21
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.6
+    isolation_db: 25
+    p1db_dbm: 29.0
+    iip3_dbm: 45
+    max_input_power_dbm: 32
+    switching_time_ns: 55
+    vdd_v: null
+    control_high_v: [2.1, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "DFN 8-pin 2 x 2 mm"
+      type: DFN
+      pins: 8
+      sides: 2
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.9, 1.7]
+      terminal_width_mm: [0.2, 0.3]
+      terminal_length_mm: [0.225, 0.375]
+      page: 10
+    land_pattern:
+      pad_length_mm: 0.45
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.85
+      page: 11
+    pinout: [RFC, NC, V1, RF1, RF2, V2, V3, RF3]
+    pinout_page: 2
+    notes: "Automotive-application SP3T (pinout like SKY13317). Datasheet lists automotive applications and JEDEC JESD22 qualification but does not state AEC-Q100 -> aec_q100 false. New-format footer without date; date November 21, 2025 printed on pages. Worst typ IL 0.60 dB (0.1-3.0 GHz); ISO 25 dB typ. P1dB +29 dBm and IIP3 +45 dBm at VHIGH 3.3 V (+37 dBm IIP3 at 2.1 V). Abs max input +30 dBm @0/3 V, +32 dBm @0/5 V (higher listed). On time 55 ns. Abs max lists \"operating voltage VDD 8 V\" but there is no VDD pin. Drawing p.10 read visually (2 x 2, height 0.55+/-0.05, 0.5 pitch, EP 0.90 x 1.70, terminal 0.25+/-0.05 x 0.30+/-0.075); footprint p.11 text: 8X 0.70 (centre to pad inner edge), 8X 0.45 pad length, 8X 0.25 width, 0.50 pitch -> row spacing computed 2 x (0.70 + 0.225) = 1.85."
+  SKY13593-690LF:
+    datasheet: "SKY13593-690LF_203516E.pdf"
+    revision: E
+    revision_date: 2023-06-06
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 2.4
+    freq_max_ghz: 2.5
+    insertion_loss_db: 0.6
+    isolation_db: 31
+    p1db_dbm: 31
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 54
+    max_input_power_dbm: 32
+    switching_time_ns: 340
+    vdd_v: null
+    control_high_v: [3.0, 3.6]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLP 8-pin 1.5 x 1.5 mm"
+      type: MLP
+      pins: 8
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.1, 0.25]
+      page: 6
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 1.45
+      page: 5
+    pinout: [RFC, NC, V1, RF1, RF2, V2, V3, RF3]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 203516E but no date; date June 6, 2023 printed on each page. 2.4-2.5 GHz SP3T with integrated DC blocking caps, no VDD pin. Only P0.1dB given (+31 dBm). Switching 340 ns (50% VCTL to 90% RF). Termination not stated. Package identical to SKY13317 (8-pin MLP 1.5 x 1.5, pins on two sides, 0.40 pitch, height 0.40/0.50, EP 0.70 x 1.20, terminal 0.20+/-0.05 x 0.175+/-0.075) read from drawing p.6; footprint p.5 (pads 0.35 x 0.20, inner edge 0.55 from centre -> row spacing computed 1.45). Website lists \"MLPD, 8L\"."
+  SKY13588-460LF:
+    datasheet: "SKY13588_460LF_203512D.pdf"
+    revision: D
+    revision_date: 2017-07-07
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.8
+    isolation_db: 22
+    p1db_dbm: 39
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 70
+    max_input_power_dbm: 39
+    switching_time_ns: 1500
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.76, 0.76]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 7
+    pinout: [RF1, GND, RF3, V1, V2, VDD, GND, GND, RF2, GND, RFC, GND]
+    pinout_page: 2
+    notes: "SOI SP3T (same pinout as SKY13373-460LF), ports J1..J3 -> RF1..RF3. Worst typ IL 0.80 dB and ISO 22 dB (4.9-6.0 GHz). Only P0.1dB given (+39 dBm). V1=V2=0 is shutdown. Operating temp -40 to +105 C. Termination not stated. Drawing p.8 read visually (2.00 sq, height 0.55 +0.05/-0.04, EP 0.76, terminal 0.2+/-0.05 x 0.29+/-0.075); footprint p.7 text layer: 12X 0.440, 12X 0.200, 12X 1.150 centre-to-pad-outer-edge -> row spacing computed 1.86."
+  SKY13586-678LF:
+    datasheet: "SKY13586-678LF_203452G.pdf"
+    revision: G
+    revision_date: 2022-12-05
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 2.4
+    freq_max_ghz: 2.5
+    insertion_loss_db: 0.75
+    isolation_db: 35
+    p1db_dbm: 29
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 46
+    max_input_power_dbm: 32
+    switching_time_ns: 300
+    vdd_v: [3.0, 5.0]
+    control_high_v: [1.6, 3.6]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLP 8-pin 1.1 x 1.1 x 0.33 mm"
+      type: MLP
+      pins: 8
+      sides: 4
+      body_length_mm: 1.1
+      body_width_mm: 1.1
+      height_mm: 0.33
+      pitch_mm: 0.4
+      span_mm: 1.1
+      exposed_pad_mm: [0.29, 0.29]
+      terminal_width_mm: [0.125, 0.175]
+      terminal_length_mm: [0.175, 0.225]
+      page: 6
+    land_pattern:
+      pad_length_mm: 0.25
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 0.95
+      page: 5
+    pinout: [RFC, V1, RF1, V2, RF2, VDD, RF3, GND]
+    pinout_page: 2
+    notes: "2.4-2.5 GHz Wi-Fi/BT SP3T with integrated DC blocking caps. Only P0.1dB given (+29 dBm). Switching 300 ns (50% VCTL to 90% RF). Termination not stated. Drawing p.6 read visually: 1.10+/-0.05 sq, height 0.31+/-0.02, 3 x 3 grid at 0.40 pitch with the centre position being the 0.29 sq exposed pad (8 terminals, corners included), terminal 0.15+/-0.025 x 0.2+/-0.025. Footprint p.5: pads 0.250 x 0.200, inner edge 0.350 from centre -> row spacing computed 0.95."
+  SKY13582-676LF:
+    datasheet: "SKY13582-676LF_203357G.pdf"
+    revision: G
+    revision_date: 2026-03-10
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: 0.6
+    isolation_db: 23
+    p1db_dbm: 35
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 66
+    max_input_power_dbm: 35
+    switching_time_ns: 2000
+    vdd_v: [2.45, 4.8]
+    control_high_v: [1.35, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 9-pin 1.1 x 1.1 x 0.5 mm"
+      type: QFN
+      pins: 9
+      sides: 4
+      body_length_mm: 1.1
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 1.1
+      exposed_pad_mm: [0.2, 0.2]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 0.8
+      page: 9
+    pinout: [V1, RF2, RF1, RFC, RF3, GND, VDD, V2, GND]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 203357G but no date; date March 10, 2026 printed on each page. VC1/VC2 -> V1/V2. Worst typ IL 0.6 dB and RFC-RFn ISO 23 dB (2.7-3.8 GHz). Only P0.1dB given (+35 typ). \"IIP3\" +66 dBm typ is the Tx/blocker intermodulation IIP3 (bands 1/5/7). Switching 2 us typ. Temp is case temperature. Drawing p.8 read visually: 1.10 sq, height 0.45 +0.045/-0.05, 3 x 3 array of 0.2+/-0.05 sq terminals at 0.400 pitch; the centre pad is labelled exposed pad and pin 9 is a GND pin in the pin table (it is kept in the pinout since the table lists 9 pins). Footprint p.9: pads 0.300 x 0.200, 0.400 pitch -> outer pad centres 0.80 apart."
+  SKY13408-465LF:
+    datasheet: "SKY13408_465LF_201652C.pdf"
+    revision: C
+    revision_date: 2015-09-25
+    configuration: SP3T
+    termination: absorptive
+    freq_min_ghz: 1.0
+    freq_max_ghz: 6.0
+    insertion_loss_db: 1.1
+    isolation_db: 24
+    p1db_dbm: 34
+    iip3_dbm: 54
+    max_input_power_dbm: 40
+    switching_time_ns: 150
+    vdd_v: null
+    control_high_v: [2.5, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.76, 0.76]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 6
+    pinout: [V3, RF3, GND, GND, RF2, V2, GND, RF1, V1, GND, RFC, GND]
+    pinout_page: 2
+    notes: "GaAs pHEMT SP3T with 50 ohm terminated (absorptive) outputs (matched 4.5-6.0 GHz). IIP3 printed as \"54 dB\" (unit typo) at VCTL 3.0 V. Dims read from drawing p.7 (height 0.55 +0.05/-0.04, EP 0.76 sq, terminal 0.2+/-0.05 x 0.29+/-0.075) and footprint p.6 (pads 0.44 x 0.20, inner edge 0.71 from centre -> row spacing computed 1.86)."
+  SKY13373-460LF:
+    datasheet: "SKY13373_460LF_201264O.pdf"
+    revision: O
+    revision_date: 2016-05-06
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 8.0
+    insertion_loss_db: 0.65
+    isolation_db: 20.5
+    p1db_dbm: 39
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 70
+    max_input_power_dbm: 39
+    switching_time_ns: 1500
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 3.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.76, 0.76]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.215, 0.365]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.5
+      row_spacing_mm: 1.86
+      page: 6
+    pinout: [RF1, GND, RF3, V1, V2, VDD, GND, GND, RF2, GND, RFC, GND]
+    pinout_page: 2
+    notes: "SOI SP3T; ports J1..J3 -> RF1..RF3. Footer date May 6, 2016 although p.1 lists WiFi 6E. Electrical specs cover 0.8-7.125 GHz only (title 0.1-8.0 GHz): worst typ IL 0.65 dB, ISO 20.5 dB (6-7.125 GHz). Only P0.1dB given (+39 dBm). V1=V2=0 is shutdown. Termination not stated. Dims read from drawing p.7 (height 0.55 +0.05/-0.04, EP 0.76 sq, terminal 0.2+/-0.05 x 0.29+/-0.075) and footprint p.6 (pads 0.44 x 0.20, 12X 1.150 centre-to-pad-outer-edge -> row spacing computed 1.86)."
+  SKY13317-373LF:
+    datasheet: "SKY13317-373LF_200914L.pdf"
+    revision: L
+    revision_date: 2022-12-05
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.02
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.8
+    isolation_db: 25
+    p1db_dbm: 29.0
+    iip3_dbm: 50
+    max_input_power_dbm: 30
+    switching_time_ns: 55
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 100]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLP 8-pin 1.5 x 1.5 mm"
+      type: MLP
+      pins: 8
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.1, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 1.45
+      page: 6
+    pinout: [RFC, NC, V1, RF1, RF2, V2, V3, RF3]
+    pinout_page: 2
+    notes: "Termination not stated in datasheet (website: reflective). IL/ISO typ from Table 3 (worst typ 3-6 GHz IL 0.80, ISO 25). P1dB and IIP3 at VHIGH=3.3 V. Temp from abs max (no recommended operating table); abs max lists \"Operating voltage VDD 8 V\" but part has no VDD pin. Pins on two sides only (4 per side), pitch 0.40 read from drawing p.7 detail D and footprint p.6; package height 0.40/0.50 (max 0.50); terminal width 0.20+/-0.05 and length 0.175+/-0.075 read from detail C p.7. Land row spacing computed: pad inner edge 0.55 from centre + 0.35 pad length (p.6)."
+  SKY5A5110:
+    datasheet: "SKY5A5110_206573D.pdf"
+    revision: D
+    revision_date: 2024-09-26
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: 0.6
+    isolation_db: 20
+    p1db_dbm: 40
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 38
+    switching_time_ns: 2000
+    vdd_v: [2.45, 4.8]
+    control_high_v: [1.65, 2.8]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 2000
+    package:
+      name: "QFN 10-pin 1.1 x 1.5 mm"
+      type: QFN
+      pins: 10
+      sides: 4
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 11
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 0.9
+      page: 10
+    pinout: [V1, GND, RF2, RF1, RFC, RF3, RF4, GND, VDD, V2]
+    pinout_page: 1
+    notes: "AEC-Q100 Grade 2 SP4T high-power GPIO switch. New-format datasheet: footer has doc number 206573D but no date; date September 26, 2024 printed on each page. VC1/VC2 -> V1/V2. Worst typ IL 0.6 dB and ISO 20 dB (3.4-3.8 GHz). Only IP0.1dB given (+40 dBm). No IIP3 (IMD2/IMD3 only). RF path switching time 2 us. Temp is case temperature (-40 to +105 C). Drawing p.11 read visually: 1.10 x 1.50, height 0.45 +0.045/-0.05, 10 terminals 0.2+/-0.05 sq on a 0.400 grid (3 on each short side incl. corners, 2 on each long side); no exposed pad drawn although the pin table note says \"exposed pads must be grounded\". Footprint p.10: pads 0.300 x 0.200, inner edge 0.300 from centre -> column spacing computed 0.90."
+  SKY19257-684LF:
+    datasheet: "SKY19257_684LF_205065B_PS.pdf"
+    revision: B
+    revision_date: 2018-08-10
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 10-pin 1.5 x 1.1 x 0.45 mm (typical)"
+      type: QFN
+      pins: 10
+      sides: null
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.45
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SP4T GPIO antenna tuning switch with output shunt switches (VDD, VC1, VC2). Vpeak 42 V, RON 2 ohm, COFF 189 fF. Feature list says \"QFN (10-pin, 1.1 x 1.5 x 0.5 mm)\" while description says \"1.5 x 1.1 x 0.45 mm (typical)\" (typical used). Operating temperature -40 to +90 C from text."
+  SKY19249-686LF:
+    datasheet: "SKY19249_686LF_205063B_PS.pdf"
+    revision: B
+    revision_date: 2018-08-10
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 10-pin 1.5 x 1.1 x 0.45 mm (typical)"
+      type: QFN
+      pins: 10
+      sides: null
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.45
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SP4T MIPI v2.0 antenna tuning switch (VDD, VIO, SDATA, SCLK). Vpeak 40 V, RON 0.9 ohm, COFF 110 fF. Height 0.45 mm typical."
+  SKY13626-685LF:
+    datasheet: "SKY13626_685LF_204180A_PS.pdf"
+    revision: A
+    revision_date: 2016-08-19
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 9-pin 1.1 x 1.1 x 0.5 mm"
+      type: QFN
+      pins: 9
+      sides: null
+      body_length_mm: 1.1
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; GPIO SP4T (VDD, VC1, VC2). Package \"QFN (9-pin, 1.1 x 1.1 x 0.5 mm)\" - website table says \"QFN, 12L\" (conflict; datasheet wins). Operating temperature -40 to +90 C from text. Height 0.5 nominal from text."
+  SKY13597-684LF:
+    datasheet: "SKY13597_684LF_204181A_PS.pdf"
+    revision: A
+    revision_date: 2016-08-19
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 10-pin 1.1 x 1.5 x 0.5 mm"
+      type: QFN
+      pins: 10
+      sides: null
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; High-power GPIO SP4T (VDD, VC1, VC2). Title says 0.7-3.8 GHz, feature list says 0.8-3.8 GHz (title used). Isolation 23 dB at 2.7 GHz (feature). Operating temperature -40 to +90 C from text. Height 0.5 is the nominal from the text."
+  SKY13575-639LF:
+    datasheet: "SKY13575_639LF_203270D.pdf"
+    revision: D
+    revision_date: 2018-07-23
+    configuration: SP4T
+    termination: absorptive
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 1.1
+    isolation_db: 30
+    p1db_dbm: null
+    iip3_dbm: 55
+    max_input_power_dbm: 32
+    switching_time_ns: 400
+    vdd_v: [2.5, 3.5]
+    control_high_v: [2.5, 3.3]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 14-pin 1.6 x 1.6 x 0.45 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 1.6
+      body_width_mm: 1.6
+      height_mm: 0.5
+      pitch_mm: 0.4
+      span_mm: 1.6
+      exposed_pad_mm: [0.74, 0.74]
+      terminal_width_mm: [0.13, 0.23]
+      terminal_length_mm: [0.15, 0.25]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.4
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 1.544
+      page: 6
+    pinout: [GND, RFC, GND, GND, RF4, GND, RF3, V1, V2, VDD, GND, RF2, GND, RF1]
+    pinout_page: 2
+    notes: "Dual-band Wi-Fi SP4T with all off ports matched/terminated to 50 ohm (absorptive). VC1/VC2 -> V1/V2. Frequency range taken from spec table (0.1-6.0 GHz bands). No P1dB given (EVM power +27 dBm); IIP3 +55 dBm typ (LB and HB). Switching speed 400 ns typ. Temp is case temperature (-40 to +90 C). Drawing p.7 read visually: 1.60 sq, height 0.45 +0.05/-0.04, 0.40 pitch, 4 pins on two sides and 3 on the other two, EP 0.74 +0.1/-0.15, terminals 0.18+/-0.05 x 0.20+/-0.05. Footprint p.6: pads 0.400 x 0.200 (corner pads 0.345), outer extents 1.944 -> row spacing computed 1.544. Website table lists \"QFN, 12L\"; datasheet pin table has 14 pins."
+  SKY13322-375LF:
+    datasheet: "201098D.pdf"
+    revision: D
+    revision_date: 2010-10-06
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.02
+    freq_max_ghz: 6.0
+    insertion_loss_db: 2.0
+    isolation_db: 18
+    p1db_dbm: 30.0
+    iip3_dbm: 54
+    max_input_power_dbm: 33
+    switching_time_ns: 60
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 10-pin 2 x 3 mm"
+      type: MLPD
+      pins: 10
+      sides: 2
+      body_length_mm: 3.0
+      body_width_mm: 2.0
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 2.0
+      exposed_pad_mm: [0.75, 2.4]
+      terminal_width_mm: [0.18, 0.3]
+      terminal_length_mm: [0.3, 0.5]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.55
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.75
+      page: 6
+    pinout: [RF2, V2, NC, V1, RF1, RF3, V3, RFC, V4, RF4]
+    pinout_page: 2
+    notes: "Ports J1..J4 -> RF1..RF4. Worst typ IL is 2.00 dB at 4-6 GHz (1.00 dB up to 4 GHz); worst typ ISO 18 dB at 4-6 GHz. P1dB at VCTL=3.3 V; IIP3 +54 dBm @0.9 GHz (+51 @2.45 GHz). Figure 13 caption says \"6-Pin QFN\" but drawing/text is 10-pin MLPD; website lists QFN 10L. Dimensions read from drawing p.7 (height 0.41/0.50, EP 0.75 x 2.40, terminal 0.25 +0.05/-0.07 x 0.40+/-0.10) and footprint p.6 (pad 0.55 x 0.25, inner edge 0.60 from centre -> row spacing computed 1.75). Termination not stated."
+  SKY13638-700LF:
+    datasheet: "SKY13638-700LF_204586F.pdf"
+    revision: F
+    revision_date: 2026-01-20
+    configuration: SP10T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: 0.9
+    isolation_db: 24
+    p1db_dbm: 38
+    p_compression_note: "P0.2dB"
+    iip3_dbm: null
+    max_input_power_dbm: 35
+    switching_time_ns: 2000
+    vdd_v: [2.4, 5.8]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: 1500
+    package:
+      name: "QFN 20-pin 2.4 x 2.4 x 0.50 mm"
+      type: QFN
+      pins: 20
+      sides: 4
+      body_length_mm: 2.4
+      body_width_mm: 2.4
+      height_mm: 0.55
+      pitch_mm: 0.4
+      span_mm: 2.4
+      exposed_pad_mm: [1.3, 1.3]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 16
+    land_pattern:
+      pad_length_mm: 0.22
+      pad_width_mm: 0.22
+      pitch_mm: 0.4
+      row_spacing_mm: 1.78
+      page: 17
+    pinout: [GND, RF10, RF9, RF8, RF7, RF6, GND, GND, RFC, GND, RF5, RF4, RF3, RF2, RF1, GND, VDD, VIO, SDATA, SCLK]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 204586F but no date; date January 20, 2026 printed on each page. SP10T with MIPI RFFE v2.0 (default USID 1010), multi-closed (any two arms) for CA. ANT -> RFC, TRX1..TRX10 -> RF1..RF10. Worst typ IL 0.9 dB (3.4-3.8 GHz); worst typ ANT-TRX isolation 24 dB (adjacent, 3.4-3.8 GHz). Only P0.2dB given (+38 dBm typ). No IIP3 spec. Switching 2 us typ (last clock edge to 90% RF). control_high_v gives VIO range. ESD HBM 1500 V read from rendered abs-max table p.4 (value missing in text layer). Drawing p.16 (2.40+/-0.05 sq, height 0.50+/-0.05, 0.400 pitch with corner pads, EP 1.3+/-0.05, terminal 0.20+/-0.05 sq) and footprint p.17 (pads 0.220 sq, 0.890 centre-to-pad-centre -> row spacing 1.78), read visually."
+  SKY13637-695LF:
+    datasheet: "SKY13637_695LF_204812_PS.pdf"
+    revision: A
+    revision_date: 2017-11-10
+    configuration: SP8T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 14-pin 2 x 2 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 2.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SP8T LTE Tx/Rx switch with MIPI RFFE v2.0. File name has no revision letter; footer reads 204812A. Description text says \"connected to one of six switched RF ports\" (copy error from SP6T). Pinout not given."
+  SKY13636-695LF:
+    datasheet: "SKY13636_695LF_204810A_PS.pdf"
+    revision: A
+    revision_date: 2017-11-09
+    configuration: SP6T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 14-pin 2 x 2 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 2.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SP6T LTE Tx/Rx switch with MIPI RFFE v2.0 (VDD, VIO, SCLK, SDATA, USID pin shown in block diagram). Pinout not given."
+  SKY13594-666LF:
+    datasheet: "SKY13594_666LF_204443A_PS.pdf"
+    revision: A
+    revision_date: 2016-12-21
+    configuration: "3P4T"
+    termination: null
+    freq_min_ghz: null
+    freq_max_ghz: null
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "12-lead surface-mount package 1.9 x 1.1 mm"
+      type: QFN
+      pins: 12
+      sides: null
+      body_length_mm: 1.9
+      body_width_mm: 1.1
+      height_mm: null
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; 3P4T Tx/Rx LTE switch with MIPI RFFE (Rev 2.0): poles RF1/RF2/RF3, throws RF4-RF7 (RF1->RF5, RF2->RF7, RF3->RF4..RF7). No frequency range stated (FDD/TDD high band). Features list \"QFN (12-lead, 1.9 x 1.1 mm)\"; description says \"12-lead surface-mount package\". Height not given (website: 0.55)."
+  SKY13562-670LF:
+    datasheet: "SKY13562-670LF_203108B.pdf"
+    revision: B
+    revision_date: 2014-10-20
+    configuration: SP10T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 2.7
+    insertion_loss_db: 1.25
+    isolation_db: 23
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 31
+    switching_time_ns: 2000
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 20-pin 2.5 x 2.5 x 0.75 mm"
+      type: QFN
+      pins: 20
+      sides: 4
+      body_length_mm: 2.5
+      body_width_mm: 2.5
+      height_mm: 0.8
+      pitch_mm: 0.4
+      span_mm: 2.5
+      exposed_pad_mm: [0.9, 0.9]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 16
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 1.9
+      page: 15
+    pinout: [RFC, RF4, RF3, RF2, GND, MIPI_SELECT, VDD, VIO, SDATA, SCLK, GND, RF1, RF8, RF7, RF6, RF5, GND, RF10, RF9, GND]
+    pinout_page: 2
+    notes: "SP10T diversity switch with MIPI RFFE. ANT -> RFC, TRX1..TRX10 -> RF1..RF10; MIPI_SELECT kept. Worst typ IL 1.25 dB (TRX4 1.98-2.69 GHz). isolation_db = 23 dB = lowest typical in ANT-to-OFF-arm matrix (Table 9); spec table gives TRX-TRX isolation 20-35 dB typ. No compression/IIP3 spec. Abs max +31 dBm (TRX9 +36, TRX10 +34). Switching 2 us typ. control_high_v gives VIO range. Package p.16 read visually (2.50 sq, height 0.75+/-0.05, 0.400 pitch with corner pads, EP 0.9+/-0.1 sq, terminal 0.2+/-0.05 sq); footprint p.15: pads 0.30 x 0.20, 1.90 centre-to-centre."
+  SKY13526-485LF:
+    datasheet: "SKY13526_485LF_202853G.pdf"
+    revision: G
+    revision_date: 2017-04-03
+    configuration: SP6T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: 1.1
+    isolation_db: 20
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 34
+    switching_time_ns: 2000
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 14-pin 2.0 x 2.0 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.45
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.13, 0.23]
+      page: 16
+    land_pattern:
+      pad_length_mm: 0.395
+      pad_width_mm: 0.2
+      pitch_mm: 0.45
+      row_spacing_mm: 1.905
+      page: 15
+    pinout: [RF5, RF3, RF1, VDD, VIO, SDATA, SCLK, MIPI_SELECT, RF2, RF4, RF6, NC, RFC, NC]
+    pinout_page: 2
+    notes: "SP6T with MIPI RFFE. ANT -> RFC, TRX1..TRX6 -> RF1..RF6; MIPI_SELECT kept. Worst typ IL 1.10 dB and ISO 20 dB (3.6-3.8 GHz). No compression or IIP3 spec (IMD/TBR/harmonics only). Abs max +34 dBm TRX1-4, +38 dBm TRX5/6. Switching time 2 us typ. control_high_v gives VIO range (logic high 0.8 x VIO). Termination not stated. Package (-485LF QFN14 2 x 2 mm) read visually: 4 pins on each of two sides at 0.45 pitch and 3 pins on the other two sides at 0.40 pitch (pitch_mm gives 0.45); height 0.55+/-0.05; EP 1+/-0.1 sq; terminal (Detail A) 0.2+/-0.05 x 0.18+/-0.05. Footprint: pads 0.395 x 0.200, inner edge 0.755 from centre -> row spacing computed 1.905 (both directions)."
+  SKY13477-001A:
+    datasheet: "SKY13477_001A_203104B.pdf"
+    revision: B
+    revision_date: 2014-05-20
+    configuration: "3P4T"
+    termination: null
+    freq_min_ghz: 2.3
+    freq_max_ghz: 2.69
+    insertion_loss_db: 0.66
+    isolation_db: 30
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 30
+    switching_time_ns: 1500
+    vdd_v: [2.45, 3.0]
+    control_high_v: [1.35, 2.7]
+    control_interface: GPIO
+    temp_c: [-35, 90]
+    aec_q100: false
+    esd_hbm_v: 500
+    package:
+      name: "WLCSP 15-bump 1.942 x 1.142 x 0.420 mm (max)"
+      type: WLCSP
+      pins: 15
+      sides: null
+      body_length_mm: 1.942
+      body_width_mm: 1.142
+      height_mm: 0.42
+      pitch_mm: 0.4
+      span_mm: 1.142
+      exposed_pad_mm: null
+      terminal_width_mm: [0.207, 0.217]
+      terminal_length_mm: null
+      page: 8
+    land_pattern: null
+    pinout: [VDD, V3, RF4, RF2, RF3, V1, GND, GND, GND, RF1, V2, V4, RFC3, RFC2, RFC1]
+    pinout_page: 2
+    notes: "3P4T in 15-bump WLCSP (3 x 5 array, 0.4 mm pitch, bump dia 0.212+/-0.005; body dims are maxima). Pinout list is in bump order A1..A5, B1..B5, C1..C5. Mapping: poles RF1/RF2/RF3 -> RFC1/RFC2/RFC3; throws RF4/RF5/RF6/RF7 -> RF1/RF2/RF3/RF4; VC1..VC4 -> V1..V4; DGND, GND1, GND2 -> GND. sides not applicable (area array) -> null. Specs only for 2300-2690 MHz band paths: worst typ IL 0.66 dB (RF3-RF6). Isolation given only as minimum: 30 dB (NTC) / 23 dB (ETC), some paths 15-20 dB min - isolation_db = 30 (min, no typical). No compression or IIP3 spec; abs max +30 dBm burst LTE. RF path switching time 1.5 us (to final power +/-1 dB). No PCB land pattern."
+  SKY13473-569LF:
+    datasheet: "SKY13473_569LF_202148F.pdf"
+    revision: F
+    revision_date: 2013-12-17
+    configuration: SP10T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 2.7
+    insertion_loss_db: 0.8
+    isolation_db: 27
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 33
+    switching_time_ns: 2000
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 20-pin 2.4 x 2.4 x 0.75 mm"
+      type: QFN
+      pins: 20
+      sides: 4
+      body_length_mm: 2.4
+      body_width_mm: 2.4
+      height_mm: 0.8
+      pitch_mm: 0.4
+      span_mm: 2.4
+      exposed_pad_mm: [1.3, 1.3]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 17
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.225
+      pitch_mm: 0.4
+      row_spacing_mm: 1.8
+      page: 16
+    pinout: [NC, RF10, RF9, RF8, RF7, RF6, GND, GND, RFC, GND, RF5, RF4, RF3, RF2, RF1, GND, VDD, VIO, SDATA, SCLK]
+    pinout_page: 2
+    notes: "SP10T with MIPI RFFE (default USID 1011). ANT -> RFC, TRX1..TRX10 -> RF1..RF10. control_high_v gives the VIO interface supply range (logic high = 0.8 x VIO). No P1dB/P0.1dB and no IIP3 spec (IMD2/IMD3/TBR only). Switching time 2 us typ (from last SCLK edge to 90% RF; turn-on 20 us). Abs max RF input +33 dBm. No HBM rating given. Package drawing p.17: 2.40 sq, height 0.75+/-0.05, 0.40 pitch with corner pads, EP 1.3+/-0.1, terminal 0.2+/-0.05 sq. Footprint p.10/16: pads 0.300 x 0.225, pitch 0.400, 8X 0.900 centre-to-pad-centre -> row spacing 1.80 (read visually)."
+  SKY13418-485LF:
+    datasheet: "SKY13418_485LF_201712F.pdf"
+    revision: F
+    revision_date: 2019-08-09
+    configuration: SP8T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 1.8
+    isolation_db: 15
+    p1db_dbm: 36
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 66
+    max_input_power_dbm: 37.5
+    switching_time_ns: 1500
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.35, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: 1000
+    package:
+      name: "QFN 14-pin 2.0 x 2.0 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.45
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.13, 0.23]
+      page: 12
+    land_pattern:
+      pad_length_mm: 0.395
+      pad_width_mm: 0.2
+      pitch_mm: 0.45
+      row_spacing_mm: 1.905
+      page: 11
+    pinout: [RF5, RF3, RF1, VDD, V3, V2, V1, NC, RF2, RF4, RF6, RF8, RFC, RF7]
+    pinout_page: 2
+    notes: "ANT -> RFC. Termination not stated. Worst typ IL 1.80 dB (RF1-6, 5.0-6.0 GHz); worst typ ISO 15 dB (RF1-6 5-6 GHz and RF7/8 3.8-5 GHz). P0.1dB +37.5 dBm (0.8-3.0 GHz), +36 (3.4-3.8 GHz) - lower used; P0.3dB +38 dBm 3.8-5 GHz. Turn-on 1.5 us. Package (-485LF QFN14 2 x 2 mm) read visually: 4 pins on each of two sides at 0.45 pitch and 3 pins on the other two sides at 0.40 pitch (pitch_mm gives 0.45); height 0.55+/-0.05; EP 1+/-0.1 sq; terminal (Detail A) 0.2+/-0.05 x 0.18+/-0.05. Footprint: pads 0.395 x 0.200, inner edge 0.755 from centre -> row spacing computed 1.905 (both directions)."
+  SKY13417-485LF:
+    datasheet: "SKY13417_485LF_201661E.pdf"
+    revision: E
+    revision_date: 2013-04-11
+    configuration: SP7T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.8
+    isolation_db: 21
+    p1db_dbm: 37.5
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 66
+    max_input_power_dbm: 37.5
+    switching_time_ns: 1500
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.35, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: 1000
+    package:
+      name: "QFN 14-pin 2.0 x 2.0 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.45
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.13, 0.23]
+      page: 10
+    land_pattern:
+      pad_length_mm: 0.395
+      pad_width_mm: 0.2
+      pitch_mm: 0.45
+      row_spacing_mm: 1.905
+      page: 9
+    pinout: [RF5, RF3, RF1, VDD, V3, V2, V1, NC, RF2, RF4, RF6, NC, RFC, RF7]
+    pinout_page: 2
+    notes: "ANT -> RFC. Antenna can be switched to internal 50 ohm load (V1..V3 = 111); throw-port termination not stated -> null. Worst typ IL 0.80 dB and ISO 21 dB on the RF7 arm (2.0-2.7 GHz); RF1-6 worst typ IL 0.70 / ISO 27. Only P0.1dB given (+37.5 dBm). Turn-on time 1.5 us. Package drawing p.10 assumed identical to family drawing (footprint p.9 checked: same as SKY13414). Package (-485LF QFN14 2 x 2 mm) read visually: 4 pins on each of two sides at 0.45 pitch and 3 pins on the other two sides at 0.40 pitch (pitch_mm gives 0.45); height 0.55+/-0.05; EP 1+/-0.1 sq; terminal (Detail A) 0.2+/-0.05 x 0.18+/-0.05. Footprint: pads 0.395 x 0.200, inner edge 0.755 from centre -> row spacing computed 1.905 (both directions)."
+  SKY13416-485LF:
+    datasheet: "SKY13416-485LF_201679K.pdf"
+    revision: K
+    revision_date: 2025-12-11
+    configuration: SP6T
+    termination: reflective
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.9
+    isolation_db: 18
+    p1db_dbm: 37.1
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 70
+    max_input_power_dbm: 37.5
+    switching_time_ns: 1750
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.35, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: 500
+    package:
+      name: "QFN 14-pin 2.0 x 2.0 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.45
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.13, 0.23]
+      page: 16
+    land_pattern:
+      pad_length_mm: 0.28
+      pad_width_mm: 0.2
+      pitch_mm: 0.45
+      row_spacing_mm: 1.79
+      page: 16
+    pinout: [RF5, RF3, RF1, VDD, V3, V2, V1, NC, RF2, RF4, RF6, NC, RFC, NC]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 201679K but no date; date December 11, 2025 printed on each page. ANT -> RFC; pin 15 = heat slug/GND (exposed pad, not listed). Termination: text says \"The SKY13642-485LF is a reflective short on the isolated port\" (part-number typo in this datasheet) -> reflective. Also usable as 75 ohm switch (DOCSIS). Worst typ IL 0.9 dB (ANT-RF5/6, 3.8-6.0 GHz); worst typ ISO 18 dB (3.4-3.8 GHz; no isolation spec above 3.8 GHz). P0.1dB +37.5 dBm (0.1-2.7 GHz), +37.1 typ (3.4-5.0 GHz) - lower used. Abs max +37.5 dBm (0.1-2.7 GHz). Footprint (p.16) differs from SKY13414/15: pad length 0.280, inner edge 0.755 -> row spacing computed 1.79. Package (-485LF QFN14 2 x 2 mm) read visually: 4 pins on each of two sides at 0.45 pitch and 3 pins on the other two sides at 0.40 pitch (pitch_mm gives 0.45); height 0.55+/-0.05; EP 1+/-0.1 sq; terminal (Detail A) 0.2+/-0.05 x 0.18+/-0.05."
+  SKY13415-485LF:
+    datasheet: "SKY13415_485LF_201704I.pdf"
+    revision: I
+    revision_date: 2016-11-30
+    configuration: SP5T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.8
+    insertion_loss_db: 0.6
+    isolation_db: 26
+    p1db_dbm: 37.5
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 70
+    max_input_power_dbm: 37.5
+    switching_time_ns: 1750
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.35, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: 1000
+    package:
+      name: "QFN 14-pin 2.0 x 2.0 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.45
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.13, 0.23]
+      page: 9
+    land_pattern:
+      pad_length_mm: 0.395
+      pad_width_mm: 0.2
+      pitch_mm: 0.45
+      row_spacing_mm: 1.905
+      page: 8
+    pinout: [RF5, RF3, RF1, VDD, V3, V2, V1, NC, RF2, RF4, NC, NC, RFC, NC]
+    pinout_page: 2
+    notes: "ANT -> RFC. Antenna can be switched to internal 50 ohm load; throw-port termination not stated -> null. Worst typ IL 0.60 dB and ISO 26 dB (3.4-3.8 GHz). Only P0.1dB given (+37.5 dBm, 0.8-3.0 GHz). Turn-on time 1.75 us. Control high 1.35-2.70 V; all-high = shutdown. Package (-485LF QFN14 2 x 2 mm) read visually: 4 pins on each of two sides at 0.45 pitch and 3 pins on the other two sides at 0.40 pitch (pitch_mm gives 0.45); height 0.55+/-0.05; EP 1+/-0.1 sq; terminal (Detail A) 0.2+/-0.05 x 0.18+/-0.05. Footprint: pads 0.395 x 0.200, inner edge 0.755 from centre -> row spacing computed 1.905 (both directions)."
+  SKY13414-485LF:
+    datasheet: "SKY13414_485LF_201689J.pdf"
+    revision: J
+    revision_date: 2016-11-23
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.8
+    insertion_loss_db: 0.6
+    isolation_db: 26
+    p1db_dbm: 37
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 70
+    max_input_power_dbm: 37.5
+    switching_time_ns: 1750
+    vdd_v: [2.5, 4.8]
+    control_high_v: [1.35, 2.7]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: 500
+    package:
+      name: "QFN 14-pin 2.0 x 2.0 mm"
+      type: QFN
+      pins: 14
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.45
+      span_mm: 2.0
+      exposed_pad_mm: [1.0, 1.0]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.13, 0.23]
+      page: 9
+    land_pattern:
+      pad_length_mm: 0.395
+      pad_width_mm: 0.2
+      pitch_mm: 0.45
+      row_spacing_mm: 1.905
+      page: 8
+    pinout: [NC, RF3, RF1, VDD, V3, V2, V1, NC, RF2, RF4, NC, NC, RFC, NC]
+    pinout_page: 2
+    notes: "ANT -> RFC. Antenna can be switched to an internal 50 ohm load (state V1..V3=1,0,1); throw-port termination (reflective/absorptive) not stated -> null. Worst typ IL 0.6 dB and ISO 26 dB (3.4-3.8 GHz). Only P0.1dB given: +37.5 dBm (0.8-3.0 GHz), +37 dBm (3.4-3.8 GHz) - lower used. Turn-on time 1.75 us. Abs max +37.5 dBm (0.1-2.7 GHz). Control high 1.35-2.70 V; all-high = shutdown. Package (-485LF QFN14 2 x 2 mm) read visually: 4 pins on each of two sides at 0.45 pitch and 3 pins on the other two sides at 0.40 pitch (pitch_mm gives 0.45); height 0.55+/-0.05; EP 1+/-0.1 sq; terminal (Detail A) 0.2+/-0.05 x 0.18+/-0.05. Footprint: pads 0.395 x 0.200, inner edge 0.755 from centre -> row spacing computed 1.905 (both directions)."
+  SKY5A1007:
+    datasheet: "SKY5A1007_205232H.pdf"
+    revision: H
+    revision_date: 2026-01-20
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.7
+    isolation_db: 30
+    p1db_dbm: 36
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 75
+    max_input_power_dbm: 36
+    switching_time_ns: 2500
+    vdd_v: [2.3, 5.8]
+    control_high_v: [1.35, 2.8]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: 3000
+    package:
+      name: "QFN 12-pin 1.83 x 1.83 x 0.5 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 1.83
+      body_width_mm: 1.83
+      height_mm: 0.55
+      pitch_mm: 0.51
+      span_mm: 1.83
+      exposed_pad_mm: [0.71, 0.71]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 16
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.51
+      row_spacing_mm: 1.63
+      page: 17
+    pinout: [GND, VDD, GND, V1, GND, RF2, GND, RFC2, GND, RF1, GND, RFC1]
+    pinout_page: 2
+    notes: "AEC-Q100 Grade 2 qualified Sky5 automotive SOI DPDT (same pinout/package as SKY13698-694LF). New-format datasheet: footer has doc number 205232H but no date; date January 20, 2026 printed on each page. CTRL1 -> V1; PORT1->RFC1, PORT2->RFC2, PORT3->RF1, PORT4->RF2. Worst typ IL 0.7 dB (5.15-6.0 GHz, external matching); worst typ through-path isolation 30 dB (5.15-6.0 GHz). P0.1dB +39.7 (0.4-2.7 GHz) / +38 (3.4-3.8) / +36 dBm (5.15-6.0 GHz) - lowest used. Abs max input +39/+38/+36 dBm CW per band (lowest used). Ambient operating temperature -40 to +105 C. Switching 2.5 us typ. ESD values (CDM 1000 V, HBM 3000 V) read from rendered table p.3. Drawing p.16 (1.83 sq, height 0.50+/-0.05, 0.510 pitch, EP 0.71+/-0.05, terminal 0.20+/-0.05 sq) and footprint p.17 (pads 0.3 x 0.2, inner gap 1.33 -> centre spacing computed 1.63), read visually."
+  SKYA21037:
+    datasheet: "SKYA21037_PS_203811B.pdf"
+    revision: G
+    revision_date: 2018-06-28
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: true
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm (low profile)"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 2.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; AEC-Q100 Grade 2 (-40 to +105 C) automotive SOI DPDT (PORT1/PORT2 to PORT3/PORT4), single control CTRL1; IL 0.5 dB @2.7 GHz (feature list). File name says document 203811B but the page footer reads \"203507G ... June 28, 2018\" (footer used for revision/date). Pinout not given."
+  SKY13438-374LF:
+    datasheet: "SKY13438_374LF_201844B.pdf"
+    revision: B
+    revision_date: 2013-07-17
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 1.2
+    isolation_db: 24
+    p1db_dbm: 29
+    iip3_dbm: 52
+    max_input_power_dbm: 32
+    switching_time_ns: 160
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1.5 x 1.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.18, 0.3]
+      terminal_length_mm: [0.075, 0.275]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.45
+      page: 6
+    pinout: [RFC2, V2, RF2, RF1, V1, RFC1]
+    pinout_page: 2
+    notes: "DPDT port mapping: ANT1->RFC1, ANT2->RFC2, TX->RF1, RX->RF2. Worst typ IL 1.20 dB (4.9-6 GHz); worst typ ANT-RX/TX isolation 24 dB (2.5-4.9 GHz). P1dB +31 (0.1-2.4 GHz) / +29 dBm (4.9-6 GHz) and IIP3 +54 / +52 dBm - lower values used. Termination not stated. Package drawing S1536 p.7 (height 0.41/0.50, EP 0.70 x 1.20, terminal 0.25 +0.05/-0.07 x 0.175+/-0.10); footprint S1535 p.6 (pads 0.35 x 0.25, inner edge 0.55 from centre -> row spacing computed 1.45)."
+  SKY13411-374LF:
+    datasheet: "SKY13411_374LF_201665C.pdf"
+    revision: C
+    revision_date: 2014-11-03
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.9
+    isolation_db: 14
+    p1db_dbm: 30
+    iip3_dbm: 50
+    max_input_power_dbm: 32
+    switching_time_ns: 70
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1.5 x 1.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.2, 0.3]
+      terminal_length_mm: [0.1, 0.25]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.45
+      page: 7
+    pinout: [RFC2, V2, RF2, RF1, V1, RFC1]
+    pinout_page: 2
+    notes: "DPDT port mapping: ANT1->RFC1, ANT2->RFC2, TX->RF1, RX->RF2. P1dB +31 dBm (0.1-4 GHz) / +30 dBm (4-6 GHz) - lower value used. Worst typ IL 0.90 dB and ISO 14 dB at 4-6 GHz. Termination not stated. Package (-374LF 1.5 x 1.5 mm, 6-pin) read visually: height 0.45+/-0.05 (max 0.50), pitch 0.5, EP 0.70 x 1.20, terminal 0.25+/-0.05 x 0.175+/-0.075; footprint pads 0.35 x 0.25, inner edge 0.55 from centre -> row spacing computed 1.45."
+  SKY13355-374LF:
+    datasheet: "201341C.pdf"
+    revision: C
+    revision_date: 2011-10-11
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 6.0
+    insertion_loss_db: 0.9
+    isolation_db: 15.0
+    p1db_dbm: 33
+    iip3_dbm: 55
+    max_input_power_dbm: 34
+    switching_time_ns: 30
+    vdd_v: null
+    control_high_v: [1.8, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MLPD 6-pin 1.5 x 1.5 mm"
+      type: MLPD
+      pins: 6
+      sides: 2
+      body_length_mm: 1.5
+      body_width_mm: 1.5
+      height_mm: 0.5
+      pitch_mm: 0.5
+      span_mm: 1.5
+      exposed_pad_mm: [0.7, 1.2]
+      terminal_width_mm: [0.18, 0.3]
+      terminal_length_mm: [0.075, 0.275]
+      page: 7
+    land_pattern:
+      pad_length_mm: 0.35
+      pad_width_mm: 0.25
+      pitch_mm: 0.5
+      row_spacing_mm: 1.45
+      page: 6
+    pinout: [RFC2, V2, RF2, RF1, V1, RFC1]
+    pinout_page: 2
+    notes: "DPDT port mapping: ANT1->RFC1, ANT2->RFC2, TX->RF1, RX->RF2. IL worst typ 0.90 dB (4.9-6 GHz), ISO worst typ 15.0 dB (4.9-6 GHz). Switching time 30 ns (50% V1/V2 to 90/10% RF). Figure 13 caption says \"6-Pin QFN\" while text says MLPD. Dims read from drawing p.7 (height 0.41/0.50, EP 0.70 x 1.20, terminal 0.25 +0.05/-0.07 x 0.175+/-0.10) and footprint p.6 (pad 0.35 x 0.25, inner edge 0.55 from centre -> row spacing computed 1.45). Termination not stated."
+  SKY12255-708LF:
+    datasheet: "SKY12255-708LF_205993A_PS.pdf"
+    revision: A
+    revision_date: 2021-03-24
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.3
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: null
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 20-pin 5 x 5 mm"
+      type: QFN
+      pins: 20
+      sides: 4
+      body_length_mm: 5.0
+      body_width_mm: 5.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 5.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary only: no pin table, spec tables or package drawing. Features: IL <0.3 dB at 2.6 GHz, 160 W average power at 120 C case, fail-safe; pin-to-pin compatible with SKY12248. Ordering table lists evaluation board for 1.8-3.8 GHz (title says 0.3-3.8 GHz). Pinout, pitch, height, supplies, temps not given -> null."
+  SKY12248-492LF:
+    datasheet: "SKY12248-492LF_205992B_PS.pdf"
+    revision: B
+    revision_date: 2025-08-28
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 2.3
+    freq_max_ghz: 4.2
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: null
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 20-pin 5 x 5 mm"
+      type: QFN
+      pins: 20
+      sides: 4
+      body_length_mm: 5.0
+      body_width_mm: 5.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 5.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary only: no pin table, spec tables, abs max or package drawing. Features: <0.4 dB IL typ @2.6 GHz, 47 dB TX-RX isolation typ @2.6 GHz, 120 W average LTE power (8 dB PAR) at 120 C case, Idd 150 mA @ VCC 5 V; operates from a 5 V supply plus a 16-48 V supply (vdd_v left null, no range given). Ports ANT/TX/RX/RX_BIAS from block diagram. Footer has no date; date \"August 28, 2025\" printed on page 1. Pinout, pitch, height, temps, control interface not given -> null."
+  SKY12245-492LF:
+    datasheet: "SKY12245-492LF_204135P.pdf"
+    revision: P
+    revision_date: 2020-06-25
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.3
+    freq_max_ghz: 5.0
+    insertion_loss_db: 0.7
+    isolation_db: 17
+    p1db_dbm: 48
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 68
+    max_input_power_dbm: 49.6
+    switching_time_ns: 678
+    vdd_v: [4.5, 5.5]
+    control_high_v: [1.2, 5.5]
+    control_interface: GPIO
+    temp_c: [-40, 105]
+    aec_q100: false
+    esd_hbm_v: 500
+    package:
+      name: "QFN 20-pin 5 x 5 mm"
+      type: QFN
+      pins: 20
+      sides: 4
+      body_length_mm: 5.0
+      body_width_mm: 5.0
+      height_mm: 1.6
+      pitch_mm: 0.65
+      span_mm: 5.0
+      exposed_pad_mm: [3.15, 3.15]
+      terminal_width_mm: [0.25, 0.35]
+      terminal_length_mm: [0.45, 0.65]
+      page: 22
+    land_pattern:
+      pad_length_mm: 0.69
+      pad_width_mm: 0.3
+      pitch_mm: 0.65
+      row_spacing_mm: 3.9
+      page: 21
+    pinout: [GND, RFC, RFC, GND, GND, RF2, GND, RX_BIAS, GND, RXD, GND, COMP, FB, VREC, VUREC, VDD, V1, TXD, TX_BIAS, RF1]
+    pinout_page: 2
+    notes: "PIN-diode SPDT with integrated CMOS driver/boost converter; single VCC (5 V) supply named VDD here, VCTRL -> V1 (0/3 V logic, high 1.2 V to VCC). ANT (pins 2 and 3) -> RFC, TX -> RF1, RX -> RF2; pin 21 = exposed GND pad. Specs are per evaluation BoM (tuned per band 0.5-4.6 GHz): worst typ IL 0.7 dB (ANT-RX 4.6 GHz, BoM 5); worst typ common-port isolation 17 dB (ANT-TX 4.6 GHz). Only P0.1dB given: TX +48 to +50 dBm (lowest used), RX +38 dBm. IIP3 +68 to +71 dBm (lowest used). On time (50% VCTRL to 90% RF) TX 431-678 ns typ (worst used). Abs max 91 W CW at TC=85 C (49.6 dBm); 100 W max CW in spec table. Temp is case temperature. Dims read from p.22 (5.00 sq, height 1.5+/-0.1, EP 3.15, terminal 0.3+/-0.05 x 0.55+/-0.1) and footprint p.21 (pads 0.69 x 0.30, 10X 1.95 centre-to-pad-centre -> row spacing 3.90)."
+  SKY12212-478LF:
+    datasheet: "SKY12212_478LF_202368E.pdf"
+    revision: E
+    revision_date: 2018-06-28
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.05
+    freq_max_ghz: 2.7
+    insertion_loss_db: 0.55
+    isolation_db: 28
+    p1db_dbm: 49
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 67
+    max_input_power_dbm: 50.8
+    switching_time_ns: 600
+    vdd_v: null
+    control_high_v: null
+    control_interface: none
+    temp_c: [-55, 175]
+    aec_q100: false
+    esd_hbm_v: 250
+    package:
+      name: "QFN 16-pin 4 x 4 mm"
+      type: QFN
+      pins: 16
+      sides: 4
+      body_length_mm: 4.0
+      body_width_mm: 4.0
+      height_mm: 1.6
+      pitch_mm: 0.65
+      span_mm: 4.0
+      exposed_pad_mm: [2.15, 2.15]
+      terminal_width_mm: null
+      terminal_length_mm: [0.45, 0.65]
+      page: 13
+    land_pattern:
+      pad_length_mm: 0.75
+      pad_width_mm: 0.3
+      pitch_mm: 0.65
+      row_spacing_mm: 3.65
+      page: 12
+    pinout: [GND, RFC, GND, NC, NC, GND, RF2, GND, RX_BIAS, NC, NC, NC, GND, RF1, GND, NC]
+    pinout_page: 2
+    notes: "Silicon PIN diode T/R switch. Ports ANT->RFC, TX->RF1, RX->RF2; RX_BIAS kept. Bias-controlled (5-100 V reverse, 50-100 mA forward) -> control_high_v null. Worst typ IL 0.55 dB (TX-ANT 2.7 GHz); worst typ common-port isolation 28 dB (ANT-TX 2.7 GHz). Only P0.1dB given (+49 dBm TX). Abs max 120 W CW TX/ANT (50.8 dBm). Switching time = 10-90% RF rise 600 ns @1.2 GHz. Operating temp is abs-max range. Package drawing S2400a p.13 read visually: 4 x 4 mm, height 1.50+/-0.10 (max 1.60), pitch 0.65, EP 2.15 sq, terminal length 0.55+/-0.10; terminal width shown only as \"0.30 +0.05\" (lower tolerance not legible) -> left null. Footprint S2274 p.12: pads 0.75 x 0.30, pitch 0.65, 2.15 sq GND pad, \"16X 1.45 (to metal pads)\" from centre -> row spacing computed 2 x (1.45 + 0.375) = 3.65."
+  SKY12210-478LF:
+    datasheet: "SKY12210-478LF_201634J_discontinued.pdf"
+    revision: J
+    revision_date: 2026-05-06
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.9
+    freq_max_ghz: 5.0
+    insertion_loss_db: 0.56
+    isolation_db: 25
+    p1db_dbm: 49
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 78
+    max_input_power_dbm: 50.8
+    switching_time_ns: 157
+    vdd_v: null
+    control_high_v: null
+    control_interface: none
+    temp_c: [-55, 175]
+    aec_q100: false
+    esd_hbm_v: 1500
+    package:
+      name: "QFN 16-pin 4 x 4 mm"
+      type: QFN
+      pins: 16
+      sides: 4
+      body_length_mm: 4.0
+      body_width_mm: 4.0
+      height_mm: 1.6
+      pitch_mm: 0.65
+      span_mm: 4.0
+      exposed_pad_mm: [2.15, 2.15]
+      terminal_width_mm: null
+      terminal_length_mm: [0.45, 0.65]
+      page: 13
+    land_pattern:
+      pad_length_mm: 0.75
+      pad_width_mm: 0.3
+      pitch_mm: 0.65
+      row_spacing_mm: 3.65
+      page: 12
+    pinout: [GND, RFC, GND, NC, NC, GND, RF2, GND, RX_BIAS, NC, NC, NC, GND, RF1, GND, NC]
+    pinout_page: 2
+    notes: "Silicon PIN diode T/R switch, marked DISCONTINUED. Ports ANT->RFC, TX->RF1, RX->RF2; RX_BIAS kept. Bias-controlled (5-100 V reverse, 50-150 mA forward) -> control_high_v null. Worst typ IL 0.56 dB (ANT-RX 900 MHz); worst typ common-port isolation 25 dB (ANT-TX at 3.5 GHz). Only P0.1dB given (+49 dBm TX, +46 dBm RX). Abs max 120 W CW TX/ANT (50.8 dBm), 60 W RX port. Switching time = 10-90% RF-on 157 ns. Operating temp is abs-max range. Package drawing S2400a p.13 read visually: 4 x 4 mm, height 1.50+/-0.10 (max 1.60), pitch 0.65, EP 2.15 sq, terminal length 0.55+/-0.10; terminal width shown only as \"0.30 +0.05\" (lower tolerance not legible) -> left null. Footprint S2274 p.12: pads 0.75 x 0.30, pitch 0.65, 2.15 sq GND pad, \"16X 1.45 (to metal pads)\" from centre -> row spacing computed 2 x (1.45 + 0.375) = 3.65."
+  SKY12209-478LF:
+    datasheet: "SKY12209-478LF_201905E_discontinued.pdf"
+    revision: E
+    revision_date: 2026-05-04
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.9
+    freq_max_ghz: 4.0
+    insertion_loss_db: 0.62
+    isolation_db: 35
+    p1db_dbm: null
+    iip3_dbm: 76
+    max_input_power_dbm: 47.8
+    switching_time_ns: 40
+    vdd_v: null
+    control_high_v: null
+    control_interface: none
+    temp_c: [-55, 175]
+    aec_q100: false
+    esd_hbm_v: 1000
+    package:
+      name: "QFN 16-pin 4 x 4 mm"
+      type: QFN
+      pins: 16
+      sides: 4
+      body_length_mm: 4.0
+      body_width_mm: 4.0
+      height_mm: 1.6
+      pitch_mm: 0.65
+      span_mm: 4.0
+      exposed_pad_mm: [2.15, 2.15]
+      terminal_width_mm: null
+      terminal_length_mm: [0.45, 0.65]
+      page: 13
+    land_pattern:
+      pad_length_mm: 0.75
+      pad_width_mm: 0.3
+      pitch_mm: 0.65
+      row_spacing_mm: 3.65
+      page: 12
+    pinout: [GND, RFC, GND, NC, NC, GND, RF2, GND, RF2_BIAS, NC, RF1_BIAS, NC, GND, RF1, GND, NC]
+    pinout_page: 2
+    notes: "Silicon PIN diode switch, marked DISCONTINUED; controlled by DC bias on RF ports (control port reverse voltage 5-100 V typ 28 V, forward current 20-100 mA) -> control_high_v null, no logic interface. RF1_BIAS/RF2_BIAS kept as datasheet names. IL/ISO from Table 4 (28 V bias): worst typ IL 0.62 dB at 0.9 GHz, worst typ RFC-RFn isolation 35 dB at 0.9 GHz (specified 0.9-3.5 GHz). No P1dB/P0.1dB given. Abs max 60 W CW (47.8 dBm); max CW operating 40 W at 28 V. Switching time = 10-90% RF rise time 40 ns (not 50% control). Operating temp is abs-max range -55 to +175 C. Package drawing S2400a p.13 read visually: 4 x 4 mm, height 1.50+/-0.10 (max 1.60), pitch 0.65, EP 2.15 sq, terminal length 0.55+/-0.10; terminal width shown only as \"0.30 +0.05\" (lower tolerance not legible) -> left null. Footprint S2274 p.12: pads 0.75 x 0.30, pitch 0.65, 2.15 sq GND pad, \"16X 1.45 (to metal pads)\" from centre -> row spacing computed 2 x (1.45 + 0.375) = 3.65."
+  SKY13699-21:
+    datasheet: "SKY13699-21_204984D.pdf"
+    revision: D
+    revision_date: 2026-01-13
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 6.0
+    insertion_loss_db: 1.2
+    isolation_db: 30
+    p1db_dbm: 39
+    p_compression_note: "P0.1dB"
+    iip3_dbm: null
+    max_input_power_dbm: 39
+    switching_time_ns: 2700
+    vdd_v: [2.3, 4.8]
+    control_high_v: [1.35, 2.8]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: 3000
+    package:
+      name: "MCM 10-pin 1.55 x 1.15 x 0.59 mm"
+      type: MCM
+      pins: 10
+      sides: 4
+      body_length_mm: 1.55
+      body_width_mm: 1.15
+      height_mm: 0.64
+      pitch_mm: 0.4
+      span_mm: 1.15
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.35]
+      page: 9
+    land_pattern:
+      pad_length_mm: 0.425
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_x_mm: null
+      row_spacing_y_mm: 1.025
+      page: 10
+    pinout: [GND, RF1, GND, RFC1, GND, RFC2, GND, RF2, V1, VDD]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 204984D but no date; date January 13, 2026 printed on each page. SOI DPDT, single control CTL1 -> V1. Datasheet ports RF1/RF2 are the poles -> RFC1/RFC2; RF3 -> RF1, RF4 -> RF2. Package is \"MCM (10-pin, 1.55 x 1.15 x 0.59 mm typical)\"; website lists \"QFN, 10L, 1.1 x 1.5 x 0.59\". Worst typ IL 1.2 dB (RF2-RF4, 5.1-5.9 GHz); worst typ through-path isolation 30 dB (RF1-RF3/RF2-RF4, 5.1-5.9 GHz). P0.1dB printed \"38.5 min / 39 typ dB\" (unit typo). No IIP3 given. Switching 2.7 us typ. Drawing p.9 read visually: 1.55+/-0.075 x 1.15+/-0.075, height 0.59+/-0.05 (max 0.64), 4 pads on each long side and 1 on each short side, pads 0.2+/-0.05 x 0.2-0.3; no exposed pad dimensioned. Footprint p.10 (metallization): 0.4 pitch, middle pads 0.2 x 0.425, corner pads 0.425 sq, outer extents 1.85 x 1.45 -> long-side pad rows centre spacing computed 1.025."
+  SKY13698-694LF:
+    datasheet: "SKY13698-694LF_204057H.pdf"
+    revision: H
+    revision_date: 2026-01-20
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 5.9
+    insertion_loss_db: 1.3
+    isolation_db: 30
+    p1db_dbm: 39.7
+    p_compression_note: "P0.1dB"
+    iip3_dbm: 75
+    max_input_power_dbm: 36
+    switching_time_ns: 2500
+    vdd_v: [2.3, 5.8]
+    control_high_v: [1.35, 2.8]
+    control_interface: GPIO
+    temp_c: [-40, 90]
+    aec_q100: false
+    esd_hbm_v: 3000
+    package:
+      name: "QFN 12-pin 1.83 x 1.83 x 0.5 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 1.83
+      body_width_mm: 1.83
+      height_mm: 0.55
+      pitch_mm: 0.51
+      span_mm: 1.83
+      exposed_pad_mm: [0.71, 0.71]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.15, 0.25]
+      page: 10
+    land_pattern:
+      pad_length_mm: 0.3
+      pad_width_mm: 0.2
+      pitch_mm: 0.51
+      row_spacing_mm: 1.63
+      page: 11
+    pinout: [GND, VDD, GND, V1, GND, RF2, GND, RFC2, GND, RF1, GND, RFC1]
+    pinout_page: 2
+    notes: "New-format datasheet: footer has doc number 204057H but no date; date January 20, 2026 printed on each page. SOI DPDT antenna-swap switch, single control CTRL1 -> V1. Port mapping: PORT1->RFC1, PORT2->RFC2, PORT3->RF1, PORT4->RF2. Worst typ IL 1.3 dB (PORT1-PORT3, 5.15-5.925 GHz); worst typ through-path isolation 30 dB (5.15-5.925 GHz). Only P0.1dB given (+39.7 dBm, 0.4-2.7 GHz). IIP3 printed as \"65 min / 75 typ dB\" (unit typo). Abs max input: +39/+38/+36 dBm CW for 0.4-0.91/1.71-2.7/2.7-5.925 GHz (lowest +36 used), +34 dBm at 10:1 VSWR. Switching 2.5 us (50% CTRL1 to 90/10% RF). ESD HBM 3000 V read from rendered abs-max table p.3. Drawing p.10 (1.83+/-0.05 sq, height 0.5+/-0.05, 0.510 pitch, 4 pins on two sides and 2 on the others, EP 0.71+/-0.1, terminal 0.2+/-0.05 sq) and footprint p.11 (pads 0.3 x 0.2, inner gap 1.33 -> centre spacing computed 1.63), read visually."
+  SKY13596-397LF:
+    datasheet: "SKY13596_397LF_203871A_PS.pdf"
+    revision: A
+    revision_date: 2016-02-12
+    configuration: DPDT
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: [1.35, 3.1]
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: null
+      pitch_mm: null
+      span_mm: 2.0
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SOI DPDT (PORT1/PORT2 to PORT3/PORT4) with single control CTRL1; positive control 1.35-3.1 V; IL 0.5 dB @2.7 GHz (feature list); GSM power handling. Pinout not given."
+  SKY13532:
+    datasheet: "SKY13532_203130A.pdf"
+    revision: A
+    revision_date: 2014-02-18
+    configuration: SP8T+SP6T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 2.7
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "24-lead surface mount package 2.8 x 2.8 x 1.0 mm"
+      type: null
+      pins: 24
+      sides: null
+      body_length_mm: 2.8
+      body_width_mm: 2.8
+      height_mm: 1.0
+      pitch_mm: null
+      span_mm: null
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; title \"DP14T (SP8T/SP6T) MIPI main antenna switch for carrier aggregation\"; block diagram: ANT_HB with TXHB + HB_TRX1-7 (SP8T) and ANT_LB with TXLB + LB_TRX1-5 (SP6T). Description text says \"The SKY13530 is an SP8T and SP6T\" (copy error). Package type not stated. Operating temperature -30 to +90 C from text. Website table has no configuration/package for this part."
+  SKY13530:
+    datasheet: "SKY13530_203129A.pdf"
+    revision: A
+    revision_date: 2014-02-18
+    configuration: SP6T+SP4T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 2.7
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "22-lead surface mount package 2.4 x 2.8 x 1.0 mm"
+      type: null
+      pins: 22
+      sides: null
+      body_length_mm: 2.8
+      body_width_mm: 2.4
+      height_mm: 1.0
+      pitch_mm: null
+      span_mm: null
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; title \"DP10T (SP6T/SP4T) MIPI main antenna switch for carrier aggregation\"; block diagram: ANT_HB with TXHB + HB_TRX1-5 (SP6T) and ANT_LB with TXLB + LB_TRX1-3 (SP4T). Package only described as \"2.4 x 2.8 x 1.0 mm 22-lead surface mount package\" (type not stated; height 1.0 is the nominal from the title). Operating temperature -30 to +90 C from text. Website table has no configuration/package for this part."
+  SKY13484:
+    datasheet: "SKY13484_202745A.pdf"
+    revision: A
+    revision_date: 2013-02-22
+    configuration: SP7T+SP5T
+    termination: null
+    freq_min_ghz: 0.6
+    freq_max_ghz: 2.7
+    insertion_loss_db: 0.7
+    isolation_db: 25
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 31
+    switching_time_ns: 2000
+    vdd_v: [2.5, 6.0]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MCM 22-pin 2.5 x 2.9 x 0.8 mm"
+      type: MCM
+      pins: 22
+      sides: 4
+      body_length_mm: 2.9
+      body_width_mm: 2.5
+      height_mm: 0.9
+      pitch_mm: 0.4
+      span_mm: 2.5
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.25, 0.35]
+      page: 14
+    land_pattern:
+      pad_length_mm: 0.5
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_x_mm: 2.7
+      row_spacing_y_mm: 2.3
+      page: 12
+    pinout: [RF6, RF7, RF8, RF9, RF10, RF11, RF12, GND, RFC2, RFC1, GND, RF1, RF2, RF3, RF4, RF5, GND, VDD, VIO, SDATA, SCLK, GND]
+    pinout_page: 2
+    notes: "PRELIMINARY data sheet. \"DP12T (SP7T/SP5T)\" receive-diversity switch: low band SP5T (ANT_LB -> RFC1, TRX1-5 -> RF1-5) and high band SP7T (ANT_HB -> RFC2, TRX6-12 -> RF6-12), MIPI RFFE. Website table has no configuration/package for this part. Worst typ IL 0.7 dB (HB 2170-2690 MHz); worst typ ANT-to-off-port isolation 25 dB (HB up to 2690 MHz). No compression/IIP3 spec. Switching 2 us typ (any state to any other). control_high_v gives VIO range (SDATA high >= 0.7 x VIO). Package drawing p.14 read visually: 2.9 x 2.5, height 0.8+/-0.1, 0.4 pitch, pads 0.2+/-0.05 x 0.3+/-0.05 (corner pads 0.25 sq), centre ground pad about 1.3 wide (irregular) -> exposed_pad_mm null. Footprint p.12 (metallization): pads 0.5 x 0.2 at 0.4 pitch, outer extents 3.2 x 2.8 -> row spacing computed X 2.7 / Y 2.3."
+  SKY59269-702LF:
+    datasheet: "SKY59269_702LF_205276B_PS.pdf"
+    revision: B
+    revision_date: 2019-06-13
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.6
+    freq_max_ghz: 6.0
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: [1.8, 1.8]
+    control_high_v: null
+    control_interface: MIPI
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 1.6 x 1.6 x 0.45 mm (typical)"
+      type: QFN
+      pins: 12
+      sides: null
+      body_length_mm: 1.6
+      body_width_mm: 1.6
+      height_mm: 0.45
+      pitch_mm: null
+      span_mm: 1.6
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; Sky5 SP4T MIPI v2.0 antenna tuning switch (title \"SKY5-9269-702LF\"). VPEAK 84 V, RON 1.4 ohm, COFF 104 fF, IP2/IP3 155/90 dBm (feature list; iip3_dbm left null because no test conditions/table), supply voltage 1.8 V (single value). Height 0.45 typical."
+  SKY19245-686LF:
+    datasheet: "SKY19245_686LF_203870B_PS.pdf"
+    revision: B
+    revision_date: 2018-07-12
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 2.7
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 10-pin 1.5 x 1.1 x 0.45 mm (typical)"
+      type: QFN
+      pins: 10
+      sides: null
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.45
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SP4T GPIO antenna tuning switch (VDD, CTL1-3). Vpeak 39 V, RON 0.8 ohm, COFF 150 fF. Height 0.45 mm is typical (no max given)."
+  SKY19244-686LF:
+    datasheet: "SKY19244_686LF_204012C_PS_Discontinued.pdf"
+    revision: B
+    revision_date: 2018-08-10
+    configuration: SP3T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 2.7
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 10-pin 1.5 x 1.1 x 0.5 mm (max)"
+      type: QFN
+      pins: 10
+      sides: null
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; Discontinued SP3T GPIO antenna tuning switch (VDD, CTRL1-3). Vpeak 39 V, RON 0.8 ohm, COFF 180 fF. File name says revision C but the page footer reads 204012B (footer used). Package dims are maxima."
+  SKY19243-686LF:
+    datasheet: "SKY19243_686LF_204011B_PS.pdf"
+    revision: B
+    revision_date: 2018-07-12
+    configuration: SPDT
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.8
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: null
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 10-pin 1.5 x 1.1 x 0.5 mm (max)"
+      type: QFN
+      pins: 10
+      sides: null
+      body_length_mm: 1.5
+      body_width_mm: 1.1
+      height_mm: 0.5
+      pitch_mm: null
+      span_mm: 1.1
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; SPDT GPIO antenna tuning switch (VDD, CTRL1, CTRL2); antenna can connect to one or both outputs. Vpeak 42 V, RON 0.8 ohm, COFF 195 fF. Package dims are maxima (1.5 x 1.1 x 0.5 mm)."
+  SKY19225-001:
+    datasheet: "SKY19225-001_204046C_PS_Discontinued.pdf"
+    revision: C
+    revision_date: 2024-09-11
+    configuration: SP4T
+    termination: null
+    freq_min_ghz: 0.1
+    freq_max_ghz: 2.7
+    insertion_loss_db: null
+    isolation_db: null
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: null
+    switching_time_ns: null
+    vdd_v: [2.4, 4.8]
+    control_high_v: null
+    control_interface: GPIO
+    temp_c: null
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "WLCSP 11-bump 1.685 x 1.685 x 0.547 mm (max)"
+      type: WLCSP
+      pins: 11
+      sides: null
+      body_length_mm: 1.685
+      body_width_mm: 1.685
+      height_mm: 0.547
+      pitch_mm: 0.4
+      span_mm: 1.685
+      exposed_pad_mm: null
+      terminal_width_mm: null
+      terminal_length_mm: null
+      page: 1
+    land_pattern: null
+    pinout: null
+    pinout_page: null
+    notes: "2-page Product Summary: no pin table, spec tables, abs max or package drawing; discontinued high-power SP4T antenna tuning switch; Vpeak 39 V, RON 1.3 ohm, COFF 285 fF, isolation 33 dB @2.7 GHz (feature list); GPIO with two control pins and an enable pin; supply 2.4-4.8 V. Package: 11-bump WLCSP, 1.685 x 1.685 x 0.547 mm maximum, 262 um bump diameter, 400 um minimum bump pitch (body dims are maxima). Bump map not given."
+  SKY18106-455LF:
+    datasheet: "SKY18106-455LF_201162R-discontinued.pdf"
+    revision: R
+    revision_date: 2024-12-05
+    configuration: SP8T
+    termination: null
+    freq_min_ghz: 0.4
+    freq_max_ghz: 2.2
+    insertion_loss_db: 0.9
+    isolation_db: 25
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 36
+    switching_time_ns: 2000
+    vdd_v: [2.65, 6.0]
+    control_high_v: [1.6, 2.0]
+    control_interface: SPI
+    temp_c: [-30, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 26-pin 3.0 x 3.8 mm"
+      type: QFN
+      pins: 26
+      sides: 4
+      body_length_mm: 3.8
+      body_width_mm: 3.0
+      height_mm: 0.8
+      pitch_mm: 0.4
+      span_mm: 3.0
+      exposed_pad_mm: [1.855, 2.655]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.17, 0.37]
+      page: 11
+    land_pattern:
+      pad_length_mm: 0.42
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_x_mm: 2.88
+      row_spacing_y_mm: 3.68
+      page: 10
+    pinout: [GND, RF6, GND, RF5, GND, RF4, GND, GND, RF7, GND, GND, RF8, GND, RFC, GND, RF3, GND, RF2, GND, RF1, GND, SPI_DATA, SPI_CLK, SPI_FRM, SPI_VDD, VDD]
+    pinout_page: 2
+    notes: "Discontinued SP8T antenna switch module with GSM TX harmonic filters and SPI control (SPI pin names kept: SPI_DATA, SPI_CLK, SPI_FRM, SPI_VDD). ANT -> RFC, TRX1..TRX6 -> RF1..RF6, 2G_LB_TX -> RF7, 2G_HB_TX -> RF8. Date \"December 5, 2024\" printed on pages; footer doc number 201162R. Website lists SP8T (A); datasheet does not state absorptive/reflective (\"all ports terminated with a 50 ohm load\" is only the test condition) -> null. Worst typ IL 0.90 dB (2G HB TX path, 25 C); worst typ common-port isolation 25 dB (ANT to off TRX @2170 MHz). No compression/IIP3 spec (harmonics/IMD3 only). Switching 2 us path to path. control_high_v gives SPI_VDD range (1.6-2.0 V; input high >= 70% SPI_VDD). Drawing p.11 read visually: 3.00 x 3.80, height 0.75+/-0.05, 0.40 pitch, EP 1.855 x 2.655 (+0.10/-0.15), terminal 0.2+/-0.05 x 0.27+/-0.1. Footprint p.10 metallization: pads 0.42 x 0.2, inner edges 1.23 (X) and 1.63 (Y) from centre -> row spacing computed 2.88 (X) / 3.68 (Y)."
+  SKY13498-31:
+    datasheet: "SKY13498_31_203734A.pdf"
+    revision: A
+    revision_date: 2015-10-05
+    configuration: SP10T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 2.7
+    insertion_loss_db: 1.1
+    isolation_db: 23
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 31
+    switching_time_ns: 2000
+    vdd_v: [2.5, 6.0]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MCM 20-pin 2.5 x 2.5 x 0.8 mm"
+      type: MCM
+      pins: 20
+      sides: 4
+      body_length_mm: 2.5
+      body_width_mm: 2.5
+      height_mm: 0.9
+      pitch_mm: 0.4
+      span_mm: 2.5
+      exposed_pad_mm: [0.9, 0.9]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.25, 0.35]
+      page: 19
+    land_pattern:
+      pad_length_mm: 0.5
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 2.3
+      page: 18
+    pinout: [RFC, RF6, RF5, RF4, RF3, MIPI_SELECT, VDD, VIO, SDATA, SCLK, RF2, RF1, NC, NC, RF8, RF7, GND, RF9, RF10, GND]
+    pinout_page: 2
+    notes: "Worst typ TRX IL 1.1 dB (TRX6 2.3-2.69 GHz); GSM TX ports 1.0 (LB) / 1.25 (HB) dB. SP10T antenna switch module with MIPI RFFE and GSM harmonic filters: ANT -> RFC; TRX1..TRX8 -> RF1..RF8; TXHB -> RF9, TXLB -> RF10; MIPI_SELECT kept. isolation_db = lowest typical value in the ANT-to-off-arm matrix (Table 9); spec table gives TRX-TRX isolation 30-35 dB typ. No compression/IIP3 spec. Abs max +31 dBm TRX pins (+36 LTX, +34 HTX). Switching 2 us typ. control_high_v gives VIO range (SDATA high >= 0.8 x VIO). Package p.19 read visually (2.5 sq, height 0.8+/-0.1, 0.4 pitch, pads 0.2+/-0.05 x 0.3+/-0.05, centre pad 0.9 x 0.9 with chamfer); footprint p.18 metallization: pads 0.5 x 0.2, extents 2.8 x 2.8 -> row spacing 2.3."
+  SKY13498-21:
+    datasheet: "SKY13498_21_202807E.pdf"
+    revision: E
+    revision_date: 2014-04-23
+    configuration: SP10T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 2.7
+    insertion_loss_db: 1.05
+    isolation_db: 23
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 31
+    switching_time_ns: 2000
+    vdd_v: [2.5, 6.0]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MCM 20-pin 2.5 x 2.5 x 0.8 mm"
+      type: MCM
+      pins: 20
+      sides: 4
+      body_length_mm: 2.5
+      body_width_mm: 2.5
+      height_mm: 0.9
+      pitch_mm: 0.4
+      span_mm: 2.5
+      exposed_pad_mm: [0.9, 0.9]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.25, 0.35]
+      page: 19
+    land_pattern:
+      pad_length_mm: 0.5
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 2.3
+      page: 18
+    pinout: [RFC, RF6, RF5, RF4, RF3, MIPI_SELECT, VDD, VIO, SDATA, SCLK, RF2, RF1, NC, NC, RF8, RF7, GND, RF9, RF10, GND]
+    pinout_page: 2
+    notes: "Worst typ TRX IL 1.05 dB (TRX6 2.3-2.69 GHz); GSM TX ports 1.25 dB. SP10T antenna switch module with MIPI RFFE and GSM harmonic filters: ANT -> RFC; TRX1..TRX8 -> RF1..RF8; TXHB -> RF9, TXLB -> RF10; MIPI_SELECT kept. isolation_db = lowest typical value in the ANT-to-off-arm matrix (Table 9); spec table gives TRX-TRX isolation 30-35 dB typ. No compression/IIP3 spec. Abs max +31 dBm TRX pins (+36 LTX, +34 HTX). Switching 2 us typ. control_high_v gives VIO range (SDATA high >= 0.8 x VIO). Package p.19 read visually (2.5 sq, height 0.8+/-0.1, 0.4 pitch, pads 0.2+/-0.05 x 0.3+/-0.05, centre pad 0.9 x 0.9 with chamfer); footprint p.18 metallization: pads 0.5 x 0.2, extents 2.8 x 2.8 -> row spacing 2.3."
+  SKY13492-21:
+    datasheet: "SKY13492_21_202826F.pdf"
+    revision: F
+    revision_date: 2016-11-16
+    configuration: SP16T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 2.7
+    insertion_loss_db: 1.15
+    isolation_db: 21
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 31
+    switching_time_ns: 2000
+    vdd_v: [2.5, 6.0]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MCM 24-pin 2.5 x 3.3 x 0.8 mm"
+      type: MCM
+      pins: 24
+      sides: 4
+      body_length_mm: 3.3
+      body_width_mm: 2.5
+      height_mm: 0.9
+      pitch_mm: 0.4
+      span_mm: 2.5
+      exposed_pad_mm: [1.7, 0.9]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.25, 0.35]
+      page: 21
+    land_pattern:
+      pad_length_mm: 0.5
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_x_mm: 3.1
+      row_spacing_y_mm: 2.3
+      page: 20
+    pinout: [RFC, RF7, RF6, RF5, RF4, RF3, RF13, MIPI_SELECT, VDD, VIO, SDATA, SCLK, RF14, RF2, RF1, RF12, RF11, RF10, RF9, RF8, GND, RF15, RF16, GND]
+    pinout_page: 2
+    notes: "SP16T antenna switch module with MIPI RFFE and GSM harmonic filters. Pin table (pp.2-3, read from rendered page) lists 24 pins; website table says \"MCM, 22L\" - datasheet wins (24 pins, 24X SMT pad in drawing). ANT -> RFC; TRX1..TRX14 -> RF1..RF14; TXHB -> RF15, TXLB -> RF16; MIPI_SELECT kept. Worst typ TRX IL 1.15 dB (TRX7 2.11-2.69 GHz); GSM TX 1.25-1.35 dB. isolation_db = 21 dB = lowest typical in ANT-to-off-arm matrix (Table 9); spec table gives TRX-TRX isolation 17-28 dB. No compression/IIP3 spec. Abs max +31 dBm TRX pins (+36 LTX, +34 HTX). Switching 2 us typ. control_high_v gives VIO range. Package p.21 read visually (3.3 x 2.5, height 0.80+/-0.1, 0.4 pitch, pads 0.2+/-0.05 x 0.3+/-0.05, centre pad 1.7 x 0.9); footprint p.20 metallization: pads 0.5 x 0.2, extents 3.6 x 2.8 -> row spacing X 3.1 / Y 2.3."
+  SKY13491-31:
+    datasheet: "SKY13491_31_203750A.pdf"
+    revision: A
+    revision_date: 2015-10-22
+    configuration: SP14T
+    termination: null
+    freq_min_ghz: 0.7
+    freq_max_ghz: 2.7
+    insertion_loss_db: 1.15
+    isolation_db: 21
+    p1db_dbm: null
+    iip3_dbm: null
+    max_input_power_dbm: 31
+    switching_time_ns: 2000
+    vdd_v: [2.5, 6.0]
+    control_high_v: [1.65, 1.95]
+    control_interface: MIPI
+    temp_c: [-30, 90]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "MCM 22-pin 2.5 x 2.9 x 0.8 mm"
+      type: MCM
+      pins: 22
+      sides: 4
+      body_length_mm: 2.9
+      body_width_mm: 2.5
+      height_mm: 0.9
+      pitch_mm: 0.4
+      span_mm: 2.5
+      exposed_pad_mm: null
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.25, 0.35]
+      page: 21
+    land_pattern:
+      pad_length_mm: 0.5
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_x_mm: 2.7
+      row_spacing_y_mm: 2.3
+      page: 20
+    pinout: [RFC, RF7, RF6, RF5, RF4, RF3, MIPI_SELECT, VDD, VIO, SDATA, SCLK, RF2, RF1, RF12, RF11, RF10, RF9, RF8, GND, RF13, RF14, GND]
+    pinout_page: 2
+    notes: "SP14T antenna switch module with MIPI RFFE and integrated GSM harmonic filters. ANT -> RFC; TRX1..TRX12 -> RF1..RF12; TXHB -> RF13, TXLB -> RF14; MIPI_SELECT kept. Worst typ TRX IL 1.15 dB (TRX7 2300-2690 MHz); GSM TX ports 1.00-1.05 dB. Isolation: spec table gives only TRX-to-TRX values (typ 20-28 non-adjacent, 16-23 adjacent); isolation_db = 21 dB = lowest typical value of the ANT-to-off-arm matrix (Table 9). No compression/IIP3 spec. Abs max input +31 dBm on TRX pins (+36 dBm LTX, +34 dBm HTX). Switching 2 us typ. control_high_v gives VIO range. Package S3324-style MCM drawing p.21 (2.9 x 2.5, height 0.8+/-0.1, pitch 0.4, pads 0.2+/-0.05 x 0.3+/-0.05) and footprint p.20 (pads 0.5 x 0.2, extents 3.2 x 2.8 -> row spacing X 2.7 / Y 2.3), read visually."
+  SKY13354-368LF:
+    datasheet: "SKY13354_368LF_201425D.pdf"
+    revision: D
+    revision_date: 2015-09-16
+    configuration: SPDT+SPDT
+    termination: reflective
+    freq_min_ghz: 0.1
+    freq_max_ghz: 3.0
+    insertion_loss_db: 0.55
+    isolation_db: 29
+    p1db_dbm: 33
+    p_compression_note: "P0.2dB"
+    iip3_dbm: 55
+    max_input_power_dbm: 30
+    switching_time_ns: 40
+    vdd_v: null
+    control_high_v: [1.6, 5.0]
+    control_interface: GPIO
+    temp_c: [-40, 85]
+    aec_q100: false
+    esd_hbm_v: null
+    package:
+      name: "QFN 12-pin 2 x 2 mm"
+      type: QFN
+      pins: 12
+      sides: 4
+      body_length_mm: 2.0
+      body_width_mm: 2.0
+      height_mm: 0.6
+      pitch_mm: 0.4
+      span_mm: 2.0
+      exposed_pad_mm: [0.92, 0.92]
+      terminal_width_mm: [0.15, 0.25]
+      terminal_length_mm: [0.19, 0.39]
+      page: 8
+    land_pattern:
+      pad_length_mm: 0.44
+      pad_width_mm: 0.2
+      pitch_mm: 0.4
+      row_spacing_mm: 1.86
+      page: 7
+    pinout: [RF3, NC, RF2, RF4, V1, NC, RFC2, NC, RFC1, NC, V2, RF1]
+    pinout_page: 2
+    notes: "Datasheet: \"dual SPDT crossed switch\" with ganged control (website calls it DPxDT). \"Reflective short\" on isolated port. Port mapping: RFCA->RFC1, RFCB->RFC2, RF1A->RF1, RF2A->RF2, RF1B->RF3, RF2B->RF4. Only P0.2dB given (+33 dBm at VCTL 5.0 V; +28 at 2.7 V). Worst typ IL 0.55 dB, worst typ ISO 29 dB (0.1-1 GHz). Pitch 0.40 read from drawing p.8 (0.40 basic) and footprint p.7; height 0.55 +0.05/-0.04, EP 0.92 sq, terminal 0.2+/-0.05 x 0.29+/-0.10. Footprint pads 0.44 x 0.20 with inner edge 0.71 from centre -> row spacing computed 1.86."
+missing:
+  - AS227-099LF   # no datasheet link on the product table

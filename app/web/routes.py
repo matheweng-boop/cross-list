@@ -31,7 +31,16 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
-templates.env.globals["synthetic_banner"] = lambda: get_settings().seed_synthetic
+
+
+def _has_synthetic() -> bool:
+    from app.db import get_engine
+
+    with Session(get_engine()) as s:
+        return s.scalar(select(Part.id).where(Part.is_synthetic.is_(True)).limit(1)) is not None
+
+
+templates.env.globals["synthetic_banner"] = _has_synthetic
 
 
 def _parse_ids(ids: str) -> list[int]:
@@ -83,12 +92,17 @@ def part_detail(request: Request, part_id: int, hide_eol: bool = False, session:
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
     values = part.param_map()
-    groups = {prio: [(p, format_value(p, values.get(p.key))) for p in rules.by_priority(prio)] for prio in (1, 2, 3)}
+    sources = {pv.key: pv.source for pv in part.params}
+    groups = {
+        prio: [(p, format_value(p, values.get(p.key)), sources.get(p.key)) for p in rules.by_priority(prio)]
+        for prio in (1, 2, 3)
+    }
     return templates.TemplateResponse(
         request,
         "part.html",
         {
             "part": part,
+            "pinout_source": part.pinout_source,
             "rules": rules,
             "groups": groups,
             "crosses": crosses,

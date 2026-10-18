@@ -200,6 +200,13 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
 # ---------------------------------------------------------------- fit
 
 
+def pins_compatible(ref: str, cand: str) -> bool:
+    """Pins match when equal, or when a datasheet allows alternatives ("VDD1/NC")
+    and the other part's function is one of them."""
+    r, c = {_norm(x) for x in ref.split("/")}, {_norm(x) for x in cand.split("/")}
+    return bool(r & c)
+
+
 def same_package(a: Package, b: Package) -> bool:
     if a.id is not None and a.id == b.id:
         return True
@@ -226,7 +233,7 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         same_pins = False
     else:
         for i, (r, c) in enumerate(zip(ref.pinout, cand.pinout, strict=True), 1):
-            if _norm(r) != _norm(c):
+            if not pins_compatible(r, c):
                 pin_diffs.append((i, r, c))
         same_pins = not pin_diffs
     return Fit(same_pkg, relation, same_pins, pin_diffs)

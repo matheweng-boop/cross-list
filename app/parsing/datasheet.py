@@ -29,6 +29,16 @@ TI_RE = re.compile(
     r"(?:\s*[–—-]\s*REVISED\s+" + _MONTH_RE + r"\s+(\d{4}))?",
     re.IGNORECASE,
 )
+# Skyworks footer: "206329A • Skyworks Proprietary Information • … • July 26, 2022"
+SKYWORKS_RE = re.compile(r"\b(\d{6}[A-Z])\s*•\s*Skyworks")
+# Revision history entries: "Revision 2.16\nJune, 2021"
+HISTORY_RE = re.compile(
+    r"^\s*Revision\s+([0-9]+(?:\.[0-9]+)*|[A-Z]{1,2})\s*\n\s*(" + _MONTH_RE + r"[^\n]{0,15}\d{4})", re.M | re.I
+)
+# Tabular revision history: "B August, 2023 Corrections…"
+HISTORY_TABLE_RE = re.compile(
+    r"^([0-9]+(?:\.[0-9]+)*|[A-Z]{1,2})\s+(" + _MONTH_RE + r",?\s+(?:\d{1,2},\s*)?\d{4})", re.M
+)
 REV_RE = re.compile(r"\bRev(?:ision)?\.?\s*:?\s*([0-9]+(?:\.[0-9]+)?|[A-Z]{1,2})\b(?![a-z])")
 DATE_PATTERNS = [
     (re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b"), lambda m: date(int(m[1]), int(m[2]), int(m[3]))),
@@ -37,7 +47,7 @@ DATE_PATTERNS = [
         lambda m: date(int(m[3]), _month(m[2]), int(m[1])),
     ),
     (re.compile(_MONTH_RE + r"\.?\s+(\d{1,2}),\s*(\d{4})\b", re.I), lambda m: date(int(m[3]), _month(m[1]), int(m[2]))),
-    (re.compile(_MONTH_RE + r"\.?\s+(\d{4})\b", re.I), lambda m: date(int(m[2]), _month(m[1]), 1)),
+    (re.compile(_MONTH_RE + r"\.?,?\s+(\d{4})\b", re.I), lambda m: date(int(m[2]), _month(m[1]), 1)),
     (re.compile(r"\b(\d{1,2})/(\d{4})\b"), lambda m: date(int(m[2]), int(m[1]), 1)),
 ]
 
@@ -81,8 +91,30 @@ def find_date(text: str) -> date | None:
     return best[1] if best else None
 
 
+def revision_history(pages: list[str]) -> list[tuple[str, date]]:
+    """(revision, date) entries from a revision-history section, newest first."""
+    out = []
+    for text in pages:
+        start = text.lower().find("revision history")
+        if start < 0:
+            continue
+        section = text[start:]
+        matches = list(HISTORY_RE.finditer(section)) or list(HISTORY_TABLE_RE.finditer(section))
+        for m in matches:
+            d = find_date(m.group(2))
+            if d:
+                out.append((m.group(1), d))
+    return out
+
+
 def detect_revision(pages: list[str]) -> tuple[str | None, date | None, date | None]:
     """Return (revision, revision_date, first_issue_date)."""
+    history = revision_history(pages)
+    first_issue = min((d for _, d in history), default=None)
+    for text in pages[:2]:
+        m = SKYWORKS_RE.search(text)
+        if m:
+            return m.group(1), find_date(text[m.end() : m.end() + 250]), first_issue
     # Revision info is usually on the first page or in a page footer / last page.
     candidates = [pages[0]] + pages[-1:] if pages else []
     for text in candidates:

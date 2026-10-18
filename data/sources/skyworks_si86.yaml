@@ -1,0 +1,236 @@
+# Curated facts for Skyworks Si86xx / Si86Sxx / Si86Px digital isolators.
+#
+# Part numbers, channel counts, isolation rating, default output, data rate,
+# propagation delay, supplies and package per OPN come from Skyworks' product
+# table (fetched by app/sources/skyworks.py). This file adds what the table lacks,
+# read from the public datasheets. Every fact has an `evidence` regex that the
+# importer looks up in the datasheet text; the import fails if it is not found,
+# and the page it is found on is stored as the source page.
+
+manufacturer: {name: Skyworks, role: reference, website: https://www.skyworksinc.com}
+
+# Product-table pages on skyworksinc.com (Sitecore item IDs used by its own grid).
+product_tables:
+  Si86xx: "{97741772-AE23-40E0-990D-2C2E8777F13F}"
+  Si86xx automotive: "{A1A01F10-FD63-4ABD-AB69-848959283338}"
+  Si86xxT: "{15E35BA5-E70F-4F17-8934-4834251B4D9A}"
+  Si86xxT automotive: "{FC057EF6-9245-44E2-95D4-E89573F41B37}"
+  Si86Sx: "{F604842E-5C60-4DC7-8F8D-1BBA04AE8D71}"
+  Si86Sx automotive: "{2548127D-F7BB-45C5-B003-0CCD26329C32}"
+  Si86Px: "{10B63547-2A7F-4914-B2D9-26A9F9F62FEF}"
+
+# Package names used by Skyworks -> package code; dimensions from the datasheet
+# package outline tables (nominal values, mm).
+packages:
+  - {code: SOIC-8N,  aliases: [NB SOIC8, NB SOIC-8], name: "SOIC-8 narrow body", pin_count: 8, pitch_mm: 1.27, body_length_mm: 4.9, body_width_mm: 3.9, span_mm: 6.0, height_mm: 1.75}
+  - {code: SSO-8,    aliases: [SSO-8, SSO8], name: "SSO-8 stretched SOIC-8 (wide body)", pin_count: 8, pitch_mm: 1.27, body_length_mm: 5.84, body_width_mm: 7.49, span_mm: 11.5, height_mm: 2.79}
+  - {code: SOIC-16N, aliases: [NB SOIC16, NB SOIC-16], name: "SOIC-16 narrow body", pin_count: 16, pitch_mm: 1.27, body_length_mm: 9.9, body_width_mm: 3.9, span_mm: 6.0, height_mm: 1.75}
+  - {code: SOIC-16W, aliases: [WB SOIC16, WB SOIC-16], name: "SOIC-16 wide body", pin_count: 16, pitch_mm: 1.27, body_length_mm: 10.3, body_width_mm: 7.5, span_mm: 10.3, height_mm: 2.65}
+  - {code: QSOP-16,  aliases: [QSOP16, QSOP-16], name: "QSOP-16", pin_count: 16, pitch_mm: 0.635, body_length_mm: 4.9, body_width_mm: 3.9, span_mm: 6.0, height_mm: 1.75}
+  - {code: SOIC-20W, aliases: [WB SOIC-20, WB SOIC20], name: "SOIC-20 wide body", pin_count: 20, pitch_mm: 1.27, body_length_mm: 12.8, body_width_mm: 7.5, span_mm: 10.3, height_mm: 2.65}
+
+# Pin layouts. `ch` lists (side-1 pin, side-2 pin) per channel slot; `fixed` gives
+# the other pins; `ctl` lists control pins filled per base part.
+layouts:
+  quad16:   {pins: 16, ch: [[3,14],[4,13],[5,12],[6,11]], fixed: {1: VDD1, 2: GND1, 8: GND1, 9: GND2, 15: GND2, 16: VDD2}, ctl: [7, 10]}
+  quad16x:  {pins: 16, ch: [[3,14],[4,13],[5,12],[6,11],[7,10]], fixed: {1: VDD1, 2: GND1, 8: GND1, 9: GND2, 15: GND2, 16: VDD2}, ctl: []}
+  tri16:    {pins: 16, ch: [[3,14],[4,13],[5,12]], fixed: {1: VDD1, 2: GND1, 6: NC, 8: GND1, 9: GND2, 11: NC, 15: GND2, 16: VDD2}, ctl: [7, 10]}
+  penta16:  {pins: 16, ch: [[2,15],[3,14],[4,13],[5,12],[6,11]], fixed: {1: VDD1, 8: GND1, 9: GND2, 16: VDD2}, ctl: [7, 10]}
+  penta16b: {pins: 16, ch: [[3,14],[4,13],[5,12],[6,11],[7,10]], fixed: {1: VDD1, 2: GND1, 8: GND1, 9: GND2, 15: GND2, 16: VDD2}, ctl: []}
+  hexa16:   {pins: 16, ch: [[2,15],[3,14],[4,13],[5,12],[6,11],[7,10]], fixed: {1: VDD1, 8: GND1, 9: GND2, 16: VDD2}, ctl: []}
+  dual8:    {pins: 8, ch: [[2,7],[3,6]], fixed: {1: VDD1, 4: GND1, 5: GND2, 8: VDD2}, ctl: []}
+  single8:  {pins: 8, ch: [[2,6]], fixed: {1: VDD1, 3: VDD1/NC, 4: GND1, 5: GND2/NC, 7: GND2/NC, 8: VDD2}, ctl: []}
+  single8s: {pins: 8, ch: [[2,6]], fixed: {1: VDD1, 3: NC, 4: GND1, 5: GND2, 7: NC, 8: VDD2}, ctl: []}
+  single16w: {pins: 16, ch: [[4,13]], fixed: {1: GND1, 2: NC, 3: VDD1, 5: NC, 6: NC, 7: GND1, 8: NC, 9: GND2, 10: NC, 11: NC, 12: NC, 14: VDD2, 15: NC, 16: GND2}, ctl: []}
+  dual16w:  {pins: 16, ch: [[4,13],[5,12]], fixed: {1: GND1, 2: NC, 3: VDD1, 6: NC, 7: GND1, 8: NC, 9: GND2, 10: NC, 11: NC, 14: VDD2, 15: NC, 16: GND2}, ctl: []}
+  i2c8:     {pins: 8, ch: [[2,7],[3,6]], fixed: {1: VDD1, 4: GND1, 5: GND2, 8: VDD2}, ctl: []}
+  i2c16:    {pins: 16, ch: [[3,14],[4,13],[5,12],[6,11]], fixed: {1: VDD1, 2: NC, 7: NC, 8: GND1, 9: GND2, 10: NC, 15: NC, 16: VDD2}, ctl: []}
+  power16:  {pins: 16, ch: [[7,10],[8,9]], fixed: {1: DNC, 2: VI, 3: GNDI, 4: GNDI, 5: VDD1, 6: GND1, 11: VDD2, 12: CTRL, 13: GND2, 14: DNC, 15: GNDO, 16: VO}, ctl: []}
+  power20:  {pins: 20, ch: [[7,14],[8,13],[9,12],[10,11]], fixed: {1: DNC, 2: VI, 3: GNDI, 4: GNDI, 5: VDD1, 6: GND1, 15: VDD2, 16: CTRL, 17: GND2, 18: DNC, 19: GNDO, 20: VO}, ctl: []}
+  qspi16:   {pins: 16, ch: [[3,14],[4,13],[5,12],[6,11],[7,10]], fixed: {1: VDD1, 2: EN1, 8: GND1, 9: GND2, 15: EN2, 16: VDD2}, ctl: []}
+
+# Base parts: channel directions per slot (F forward, R reverse, B bidirectional),
+# layout per package (default = any other package), control pins, and where the
+# pinout was read. `inferred` marks pinouts not drawn in the datasheet.
+base_parts:
+  # --- Si861x/2x (also 1 Mbps versions) ---
+  Si8610: {dirs: F,  layout: {SOIC-8N: single8, SOIC-16W: single16w}, pinout_evidence: ["Si8610 SOIC-8", "Si861x/2x Narrow Body SOIC-8 Pin Descriptions"]}
+  Si8620: {dirs: FF, layout: {SOIC-8N: dual8, SOIC-16W: dual16w}, pinout_evidence: ["Si8620 SOIC-8", "Si861x/2x Narrow Body SOIC-8 Pin Descriptions"]}
+  Si8621: {dirs: FR, layout: {SOIC-8N: dual8, SOIC-16W: dual16w}, pinout_evidence: ["Si8621 SOIC-8", "Si861x/2x Narrow Body SOIC-8 Pin Descriptions"]}
+  Si8622: {dirs: RF, layout: {SOIC-8N: dual8, SOIC-16W: dual16w}, pinout_evidence: ["Si8622 SOIC-8", "Si861x/2x Narrow Body SOIC-8 Pin Descriptions"]}
+  # --- Si863x ---
+  Si8630: {dirs: FFF, layout: tri16, ctl: [NC, EN2], pinout_evidence: ["EN1/NC2 7 Digital Input Side 1 active high enable. NC on Si8630/35", "Si863x Pin Descriptions"]}
+  Si8631: {dirs: FFR, layout: tri16, ctl: [EN1, EN2], pinout_evidence: ["GND1 Si8630/35 GND2 GND1 Si8631 GND2", "Si863x Pin Descriptions"]}
+  Si8635: {dirs: FFF, layout: tri16, ctl: [NC, NC], pinout_evidence: ["NC on Si8635", "Si863x Pin Descriptions"]}
+  Si8638: {dirs: FFF, layout: tri16, ctl: [NC, EN2], inferred: "not drawn in the datasheet; assumed equal to Si8630"}
+  # --- Si864x ---
+  Si8640: {dirs: FFFF, layout: quad16, ctl: [NC, EN2], pinout_evidence: ["NC on Si8640/45", "Si864x Pin Descriptions"]}
+  Si8641: {dirs: FFFR, layout: quad16, ctl: [EN1, EN2], pinout_evidence: ["GND1 Si8641 GND2", "Si864x Pin Descriptions"]}
+  Si8642: {dirs: FFRR, layout: quad16, ctl: [EN1, EN2], pinout_evidence: ["GND1 Si8640/45 GND2 GND1 Si8642 GND2", "Si864x Pin Descriptions"]}
+  Si8645: {dirs: FFFF, layout: quad16, ctl: [NC, NC], pinout_evidence: ["NC on Si8645", "Si864x Pin Descriptions"]}
+  # --- Si865x ---
+  Si8650: {dirs: FFFFF, layout: penta16, ctl: [NC, EN2], pinout_evidence: ["Table 5.1. Si8650/51/52 Pin Descriptions", "Si865x Pin Descriptions"]}
+  Si8651: {dirs: FFFFR, layout: penta16, ctl: [EN1, EN2], pinout_evidence: ["Table 5.1. Si8650/51/52 Pin Descriptions", "Si865x Pin Descriptions"]}
+  Si8652: {dirs: FFFRR, layout: penta16, ctl: [EN1, EN2], pinout_evidence: ["Table 5.1. Si8650/51/52 Pin Descriptions", "Si865x Pin Descriptions"]}
+  Si8655: {dirs: FFFFF, layout: penta16b, pinout_evidence: ["Table 5.2. Si8655 Pin Descriptions", "Si865x Pin Descriptions"]}
+  # --- Si866x ---
+  Si8660: {dirs: FFFFFF, layout: hexa16, pinout_evidence: ["Table 5.1. Si866x Pin Descriptions", "Si866x Pin Descriptions"]}
+  Si8661: {dirs: FFFFFR, layout: hexa16, pinout_evidence: ["Table 5.1. Si866x Pin Descriptions", "Si866x Pin Descriptions"]}
+  Si8662: {dirs: FFFFRR, layout: hexa16, pinout_evidence: ["Table 5.1. Si866x Pin Descriptions", "Si866x Pin Descriptions"]}
+  Si8663: {dirs: FFFRRR, layout: hexa16, pinout_evidence: ["Table 5.1. Si866x Pin Descriptions", "Si866x Pin Descriptions"]}
+  # --- Si860x I2C ---
+  Si8600: {dirs: BB, layout: i2c8, pinout_evidence: "Si8600/02 SOIC-8 Package"}
+  Si8602: {dirs: BF, layout: i2c8, pinout_evidence: "Si8600/02 SOIC-8 Package"}
+  Si8605: {dirs: BFRB, layout: i2c16, pinout_evidence: "Si8605/06 SOIC-16 Package"}
+  Si8606: {dirs: BFFB, layout: i2c16, pinout_evidence: "Si8605/06 SOIC-16 Package"}
+  # --- Si86S60x I2C ---
+  Si86S600: {dirs: BB, layout: i2c8, pinout_evidence: "Si86S600/02 Pinout"}
+  Si86S602: {dirs: BF, layout: i2c8, pinout_evidence: "Si86S600/02 Pinout"}
+  Si86S605: {dirs: BFRB, layout: i2c16, pinout_evidence: "Si86S605/06 Pinout"}
+  Si86S606: {dirs: BFFB, layout: i2c16, pinout_evidence: "Si86S605/06 Pinout"}
+  # --- Si86S61x/2x/Ox ---
+  Si86S610: {dirs: F,  layout: single8s, pinout_evidence: "Si86S61x/2x/Ox Pinout"}
+  Si86S620: {dirs: FF, layout: dual8, pinout_evidence: "Si86S61x/2x/Ox Pinout"}
+  Si86S621: {dirs: FR, layout: dual8, pinout_evidence: "Si86S61x/2x/Ox Pinout"}
+  Si86S622: {dirs: RF, layout: dual8, pinout_evidence: "Si86S61x/2x/Ox Pinout"}
+  Si86SO20: {dirs: FF, layout: dual8, inferred: "covered by the Si86S61x/2x/Ox pin table but not drawn; assumed equal to Si86S620"}
+  Si86SO21: {dirs: FR, layout: dual8, inferred: "covered by the Si86S61x/2x/Ox pin table but not drawn; assumed equal to Si86S621"}
+  # --- Si86S6xx ---
+  Si86S630: {dirs: FFF,  layout: tri16, ctl: [NC, EN2], pinout_evidence: "Si86S63x Pinouts"}
+  Si86S631: {dirs: FFR,  layout: tri16, ctl: [EN1, EN2], pinout_evidence: "Si86S63x Pinouts"}
+  Si86S640: {dirs: FFFF, layout: quad16, ctl: [NC, EN2], pinout_evidence: "Si86S64x/L4x Pinouts"}
+  Si86S641: {dirs: FFFR, layout: quad16, ctl: [EN1, EN2], pinout_evidence: "Si86S64x/L4x Pinouts"}
+  Si86S642: {dirs: FFRR, layout: quad16, ctl: [EN1, EN2], pinout_evidence: "Si86S64x/L4x Pinouts"}
+  Si86SL40: {dirs: FFFF, layout: quad16, ctl: [NC, EN2], pinout_evidence: "Si86S64x/L4x Pinouts"}
+  Si86SL41: {dirs: FFFR, layout: quad16, ctl: [EN1, EN2], pinout_evidence: "Si86S64x/L4x Pinouts"}
+  Si86SL42: {dirs: FFRR, layout: quad16, ctl: [EN1, EN2], pinout_evidence: "Si86S64x/L4x Pinouts"}
+  Si86SM40: {dirs: FFFF, layout: quad16, ctl: [SLEEP1, NC], pinout_evidence: "Si86SM4x Pinouts"}
+  Si86SM41: {dirs: FFFR, layout: quad16, ctl: [SLEEP1, NC], pinout_evidence: "Si86SM4x Pinouts"}
+  Si86SM42: {dirs: FFRR, layout: quad16, ctl: [SLEEP1, NC], pinout_evidence: "Si86SM4x Pinouts"}
+  Si86SS41: {dirs: FFFR, layout: quad16, ctl: [NC, NC], pinout_evidence: "Si86SS41/51 Pinouts"}
+  Si86SS51: {dirs: FFFRF, layout: quad16x, pinout_evidence: "Si86SS41/51 Pinouts"}
+  Si86SQ44: {dirs: BBBBF, layout: qspi16, pinout_evidence: "Si86SQ44 Pinout"}
+  Si86SW41: {dirs: FFFR, layout: quad16, ctl: [EN1, EN2], inferred: "not drawn in the datasheet; assumed equal to Si86S641"}
+  Si86S660: {dirs: FFFFFF, layout: hexa16, pinout_evidence: "Si86S66x Pinouts"}
+  Si86S661: {dirs: FFFFFR, layout: hexa16, pinout_evidence: "Si86S66x Pinouts"}
+  Si86S662: {dirs: FFFFRR, layout: hexa16, pinout_evidence: "Si86S66x Pinouts"}
+  Si86S663: {dirs: FFFRRR, layout: hexa16, pinout_evidence: "Si86S66x Pinouts"}
+  Si86SW62: {dirs: FFFFRR, layout: hexa16, inferred: "not drawn in the datasheet; assumed equal to Si86S662"}
+  # --- Si86Px (integrated isolated power) ---
+  Si86P320: {dirs: FF, layout: power16, pinout_evidence: "Si86P320x/420x/520x"}
+  Si86P321: {dirs: FR, layout: power16, pinout_evidence: "Si86P321x/421x/521x"}
+  Si86P420: {dirs: FF, layout: power16, pinout_evidence: "Si86P320x/420x/520x"}
+  Si86P421: {dirs: FR, layout: power16, pinout_evidence: "Si86P321x/421x/521x"}
+  Si86P520: {dirs: FF, layout: power16, pinout_evidence: "Si86P320x/420x/520x"}
+  Si86P521: {dirs: FR, layout: power16, pinout_evidence: "Si86P321x/421x/521x"}
+  Si86P340: {dirs: FFFF, layout: power20, pinout_evidence: "Si86P340x/440x/540x"}
+  Si86P341: {dirs: FFFR, layout: power20, pinout_evidence: "Si86P341x/441x/541x"}
+  Si86P342: {dirs: FFRR, layout: power20, pinout_evidence: "Si86P342x/442x/542x"}
+  Si86P440: {dirs: FFFF, layout: power20, pinout_evidence: "Si86P340x/440x/540x"}
+  Si86P441: {dirs: FFFR, layout: power20, pinout_evidence: "Si86P341x/441x/541x"}
+  Si86P442: {dirs: FFRR, layout: power20, pinout_evidence: "Si86P342x/442x/542x"}
+  Si86P540: {dirs: FFFF, layout: power20, pinout_evidence: "Si86P340x/440x/540x"}
+  Si86P541: {dirs: FFFR, layout: power20, pinout_evidence: "Si86P341x/441x/541x"}
+  Si86P542: {dirs: FFRR, layout: power20, pinout_evidence: "Si86P342x/442x/542x"}
+
+# Per-datasheet facts. Values by package where the datasheet tabulates them.
+# `t_option` values apply to Si86xx "T" grade parts (reinforced, 10 kV surge).
+datasheets:
+  si864x-datasheet.pdf:
+    isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8640BT-IS Si8640BT-AS 4 0 150 Low 5.0"}
+    cmti_kv_us:  {value: 35, t_option: 60, evidence: "Si86xxxA/B/C/D See Figure 4.3 Common- 35 50"}
+    isolation_class: {value: basic, t_option: reinforced, evidence: "All other options certified to basic"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "certified under GB4943.1-2011"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, QSOP-16: 3.6}, evidence: "Nominal External Tracking \\(Creepage\\) 1 CPG 8.0 4.01 3.6"}
+    viorm_vpk:   {by_package: {SOIC-16W: 1200, SOIC-16N: 630, QSOP-16: 630}, evidence: "Voltage V IORM 1200 630 630"}
+    pwd_ns:      {value: 4.5, evidence: "PWD — 0.2 4.5 ns"}
+    skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
+  si863x-datasheet.pdf:
+    isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8630BT-IS Si8630BT-AS 3 0 150 Low 5.0"}
+    cmti_kv_us:  {value: 35, t_option: 60, evidence: "Si86xxxT Circuit on page 14 60 100"}
+    isolation_class: {value: basic, t_option: reinforced, evidence: "Si862xxT options certified to rein"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "GB4943.1"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01}, evidence: "Nominal External Tracking 1 L\\(IO2\\) 8.0 4.01"}
+    pwd_ns:      {value: 4.5, evidence: "PWD Delay Timing on page 14 — 0.2 4.5 ns"}
+    skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
+  si861x-2x-datasheet.pdf:
+    isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8620BT-IS Si8620BT-AS 2 0 150 Low 5.0"}
+    cmti_kv_us:  {value: 35, t_option: 60, evidence: "Si86xxxT Mode Transient Immunity 60 100"}
+    isolation_class: {value: basic, t_option: reinforced, evidence: "Si862xxT options certified to reinforced per"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "The Si861x/2x is certified under GB4943.1"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-8N: 4.01}, evidence: "Nominal external tracking \\(creepage\\)1 CPG 8.0 4.01"}
+    pwd_ns:      {value: 4.5, evidence: "PWD — 0.2 4.5 ns"}
+    skew_ns:     {value: 2.5, evidence: "Channel-channel skew t — 0.4 2.5 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature1 TA –40 25 125"}
+  si865x-datasheet.pdf:
+    cmti_kv_us:  {value: 35, evidence: "Common Mode Transient Immunity CMTI V = V or 0 V 35 50"}
+    isolation_class: {value: basic, evidence: "VDE 0884-10"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "The Si865x is certified under GB4943.1-2011"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, QSOP-16: 3.6}, evidence: "Nominal External Tracking \\(Creepage\\) 1 CPG 8.0 4.01 3.6"}
+    viorm_vpk:   {by_package: {SOIC-16W: 1200, SOIC-16N: 630, QSOP-16: 630}, evidence: "Voltage V IORM 1200 630 630"}
+    skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
+  si866x.pdf:
+    cmti_kv_us:  {value: 35, evidence: "CMTI 35 50 — kV/µs"}
+    isolation_class: {value: basic, evidence: "VDE 0884-10"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "The Si866x is certified under GB4943.1-2011"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, QSOP-16: 3.6}, evidence: "Nominal External Tracking \\(Creepage\\) 1 CPG 8.0 4.01 3.6"}
+    viorm_vpk:   {by_package: {SOIC-16W: 1200, SOIC-16N: 630, QSOP-16: 630}, evidence: "Voltage V IORM 1200 630 630"}
+    pwd_ns:      {value: 4.5, evidence: "PWD — 0.2 4.5 ns"}
+    skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t PSK — 0.4 2.5 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
+  si860x.pdf:
+    cmti_kv_us:  {value: 35, evidence: "CMTI 35 50 — kV/µs"}
+    isolation_class: {value: basic, evidence: "60747-5-2: Up to 1200 V for basic insulation working voltage"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "The Si860x is certified under GB4943.1-2011"}
+    creepage_mm: {by_package: {SOIC-8N: 4.01, SOIC-16N: 4.01, SOIC-16W: 8.0}, evidence: "Nominal External Tracking \\(Creepage\\)1 L\\(1O2\\) 4.01 4.01 8.0"}
+    pwd_ns:      {value: 12, evidence: "PWD — — 12 ns"}
+    skew_ns:     {value: 10, evidence: "Channel-Channel Skew t PSK — — 10 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature1 T A –40 25 125"}
+  si86xx-1Mbps-datasheet.pdf:
+    cmti_kv_us:  {value: 35, evidence: "Common Mode CMTI V = V or 0 V 35 50"}
+    isolation_class: {value: basic, evidence: "certified according to IEC 60747-5-2"}
+    certifications: {value: [UL1577, CSA, VDE 0884-10, CQC], evidence: "The Si86xx is certified under GB4943.1-2011"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, SOIC-8N: 4.01}, evidence: "Nominal External Tracking L\\(IO2\\) 8.0 4.01 4.01"}
+    skew_ns:     {value: 35, evidence: "Channel-Channel Skew t — — 35 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature1 T A –40 25 125"}
+  si86s60x-datasheet.pdf:
+    cmti_kv_us:  {value: 100, evidence: "Common mode transient immunity CMTI VCM = 1500 V 100"}
+    isolation_class: {value: reinforced, evidence: "60747-17 \\(reinforced insulation\\)"}
+    certifications: {value: [UL1577, CSA, VDE 0884-17, CQC], evidence: "The Si86S60x is certified under GB4943.1"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, QSOP-16: 3.6, SSO-8: 8.0, SOIC-8N: 3.9}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.6 8.0 3.9"}
+    viorm_vpk:   {by_package: {SOIC-16W: 2121, SSO-8: 2121, SOIC-8N: 630, QSOP-16: 630}, evidence: "Maximum repetitive isolation voltage V 2121 630"}
+    esd_hbm_kv:  {value: 8, evidence: "HBM — 8 kV"}
+    skew_ns:     {value: 4, evidence: "Channel-channel skew t — 1.5 4 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature T –40 25 125"}
+  si86s61x_2x_Ox-datasheet.pdf:
+    cmti_kv_us:  {value: 100, high_cmti: 150, evidence: "Si86SxxxB/Ex 100"}
+    isolation_class: {value: reinforced, evidence: "Reinforced IEC 60747-17 rating"}
+    certifications: {value: [UL1577, CSA, VDE 0884-17, CQC], evidence: "The Si86S61x/2x/Ox is certified under GB4943.1"}
+    creepage_mm: {by_package: {SSO-8: 8.0, SOIC-8N: 3.9}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.9"}
+    viorm_vpk:   {by_package: {SSO-8: 2121, SOIC-8N: 630}, evidence: "Maximum repetitive isolation voltage V IORM Test 2121 630"}
+    esd_hbm_kv:  {value: 8, evidence: "HBM — 8 kV"}
+    skew_ns:     {value: 3, evidence: "t PSK — 0.8 3 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature T A –40 25 125"}
+  si86s6xx-datasheet.pdf:
+    cmti_kv_us:  {value: 100, high_cmti: 150, evidence: "Si86SxxxB/Ex 100 — —"}
+    isolation_class: {value: reinforced, evidence: "Reinforced IEC 60747-17 rating"}
+    certifications: {value: [UL1577, CSA, VDE 0884-17, CQC], evidence: "The Si86Sx is certified under GB4943.1"}
+    creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 3.9, QSOP-16: 3.6}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.9 3.6"}
+    viorm_vpk:   {by_package: {SOIC-16W: 2121, SOIC-16N: 630, QSOP-16: 630}, evidence: "Breakdown \\(TDDB\\) Test 2121 630 630"}
+    esd_hbm_kv:  {value: 8, evidence: "ESD HBM — 8 kV"}
+    skew_ns:     {value: 2, evidence: "\\(Si86SxxxB/Ex\\) t PSK — 0.8 2 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature1 T A –40 25 125"}
+  Si86Px-datasheet.pdf:
+    integrated_power: {value: isolated dc-dc, evidence: "Power supply for integrated power"}
+    cmti_kv_us:  {value: 100, evidence: "Common-mode transient immunity CMTI\\W*100 — — kV"}
+    isolation_class: {value: basic, evidence: "60747-17 \\(basic insulation\\)"}
+    certifications: {value: [UL1577, CSA, VDE 0884-17, CQC], evidence: "The Si86Px is certified under GB4943.1"}
+    creepage_mm: {by_package: {SOIC-16W: 7.6, SOIC-20W: 7.6}, evidence: "Nominal external tracking \\(creepage\\)1,2,3 CRP 7.6 7.6"}
+    viorm_vpk:   {by_package: {SOIC-16W: 891, SOIC-20W: 891}, evidence: "891 V"}
+    esd_hbm_kv:  {value: 4, evidence: "Human body model HBM –4 4 kV"}
+    pwd_ns:      {value: 3.0, evidence: "PWD — 0.2 3.0 ns"}
+    skew_ns:     {value: 2.5, evidence: "Channel-channel skew t — 0.4 2.5 ns"}
+    temp_range_c: {value: [-40, 125], evidence: "Operating temperature T –40 125"}

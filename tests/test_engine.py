@@ -115,3 +115,11 @@ def test_identical_part_has_no_differences(part):
     r = cross(part("SR8641"), part("SR8641"), get_rules("digital_isolator"))
     assert r.top_differences() == []
     assert r.comment().startswith("No differences")
+
+
+def test_pin_alternatives_are_compatible():
+    from app.matching.engine import pins_compatible
+
+    assert pins_compatible("VDD1/NC", "NC") and pins_compatible("GND2/NC", "GND2")
+    assert pins_compatible("INA", "ina")
+    assert not pins_compatible("EN1", "NC") and not pins_compatible("GND1", "NC")

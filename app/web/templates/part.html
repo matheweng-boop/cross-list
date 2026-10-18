@@ -6,6 +6,11 @@
 <p class="subtitle">{{ part.manufacturer.name }} · {{ family_titles()[part.family] }} · {{ part_badges(part) }}
   {% if part.is_reference %}<span class="badge cat">Reference</span>{% endif %}</p>
 <p>{{ part.description }}</p>
+{% if part.notes %}<p class="banner">{{ part.notes }}</p>{% endif %}
+{% if part.datasheet_url or part.product_url %}<p class="downloads">
+  {% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}
+  {% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}
+</p>{% endif %}
 
 <div class="table-wrap">
 <table>
@@ -24,12 +29,12 @@
   {% for prio, items in groups.items() %}
   <h4>Priority {{ prio }}</h4>
   <div class="table-wrap"><table>
-    {% for p, v in items %}<tr><td>{{ p.label }}</td><td>{{ v }}</td></tr>{% endfor %}
+    {% for p, v, src in items %}<tr><td>{{ p.label }}</td><td>{{ v }}</td><td class="muted">{{ src or '' }}</td></tr>{% endfor %}
   </table></div>
   {% endfor %}
 </details>
 <details>
-  <summary>Pinout</summary>
+  <summary>Pinout{% if pinout_source %} <span class="muted">({{ pinout_source }})</span>{% endif %}</summary>
   <div class="table-wrap"><table>
     <thead><tr><th>Pin</th><th>Function</th></tr></thead>
     {% for f in part.pinout %}<tr><td>{{ loop.index }}</td><td>{{ f }}</td></tr>{% endfor %}

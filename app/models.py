@@ -120,6 +120,11 @@ class Part(Base):
     lifecycle_source: Mapped[str | None] = mapped_column(String(300))
     lifecycle_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    datasheet_url: Mapped[str | None] = mapped_column(String(500))
+    product_url: Mapped[str | None] = mapped_column(String(500))
+    notes: Mapped[str | None] = mapped_column(Text)  # e.g. "pinout inferred: …"
+    pinout_source: Mapped[str | None] = mapped_column(String(300))
+
     is_synthetic: Mapped[bool] = mapped_column(Boolean, default=False)
     organization_id: Mapped[int | None] = mapped_column(ForeignKey("organizations.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -156,6 +161,7 @@ class ParamValue(Base):
     value: Mapped[object] = mapped_column(JSON)
     num: Mapped[float | None] = mapped_column(Float, index=True)
     conditions: Mapped[str | None] = mapped_column(String(300))
+    source: Mapped[str | None] = mapped_column(String(300))  # e.g. "si864x-datasheet.pdf p.25"
     datasheet_id: Mapped[int | None] = mapped_column(ForeignKey("datasheets.id"))
     source_page: Mapped[int | None] = mapped_column(Integer)
 

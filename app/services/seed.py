@@ -9,7 +9,17 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.matching.rules import load_all_rules
-from app.models import LifecycleStatus, Manufacturer, ManufacturerRole, Organization, Package, ParamValue, Part, User
+from app.models import (
+    Datasheet,
+    LifecycleStatus,
+    Manufacturer,
+    ManufacturerRole,
+    Organization,
+    Package,
+    ParamValue,
+    Part,
+    User,
+)
 
 
 def ensure_local_user(session: Session) -> User:
@@ -60,6 +70,20 @@ def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
         pkgs[p["code"]] = obj
     session.flush()
 
+    sheets = {}
+    for d in data.get("datasheets", []):
+        obj = session.scalar(select(Datasheet).where(Datasheet.sha256 == d["sha256"]))
+        if obj is None:
+            obj = Datasheet(sha256=d["sha256"], filename=d["file"])
+            session.add(obj)
+        obj.source_url, obj.revision, obj.revision_date = (
+            d.get("url"),
+            d.get("revision"),
+            _to_date(d.get("revision_date")),
+        )
+        sheets[d["file"]] = obj
+    session.flush()
+
     pinouts = data.get("pinouts", {})
     resolved: dict[str, dict] = {}
     count = 0
@@ -108,7 +132,18 @@ def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
         part.datasheet_date = _to_date(life.get("revision_date"))
         part.lifecycle_source = "synthetic demo data" if synthetic else life.get("source")
         part.is_synthetic = synthetic
-        part.params = [ParamValue(key=k, value=v, num=_num(v)) for k, v in params.items()]
+        part.datasheet_url = spec.get("datasheet_url")
+        part.product_url = spec.get("product_url")
+        part.notes = spec.get("notes")
+        part.pinout_source = spec.get("param_sources", {}).get("pinout")
+        sheet = sheets.get(spec.get("datasheet"))
+        if sheet is not None and sheet not in part.datasheets:
+            part.datasheets.append(sheet)
+        sources = spec.get("param_sources", {})
+        part.params = [
+            ParamValue(key=k, value=v, num=_num(v), source=sources.get(k), datasheet_id=sheet.id if sheet else None)
+            for k, v in params.items()
+        ]
         count += 1
     session.flush()
     return count

@@ -3,18 +3,21 @@
 {% block title %}{{ part.mpn }} – Cross List{% endblock %}
 {% block content %}
 <h1>{{ part.mpn }}</h1>
-<p class="subtitle">{{ part.manufacturer.name }} · {{ family_titles()[part.family] }} · {{ part_badges(part) }}
+<p class="subtitle">{{ part.manufacturer.name }} · {{ part.package.code }} · {{ part_badges(part) }}
   {% if part.is_reference %}<span class="badge cat">Reference</span>{% endif %}</p>
-<p>{{ part.description }}</p>
+<p class="muted">{{ part.description }}</p>
 {% if part.notes %}<p class="banner">{{ part.notes }}</p>{% endif %}
 {% if part.datasheet_url or part.product_url %}<p class="downloads">
   {% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}
   {% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}
 </p>{% endif %}
 
+<details>
+<summary>Part details</summary>
 <div class="table-wrap">
 <table>
   <tbody>
+    <tr><th>Family</th><td>{{ family_titles()[part.family] }}</td></tr>
     <tr><th>Package</th><td>{{ part.package.code }} – {{ part.package.name }} ({{ part.package.body_length_mm }}×{{ part.package.span_mm }} mm, {{ part.package.pin_count }} pins, {{ part.package.pitch_mm }} mm pitch)
       {% if part.package_locked %}<br><span class="badge warn">Package locked</span> <span class="muted">{{ part.package_lock_reason }}</span>{% endif %}</td></tr>
     <tr><th>Lifecycle</th><td>{{ lifecycle_badge(part)[0] }}{% if part.lifecycle_source %} <span class="muted">({{ part.lifecycle_source }})</span>{% endif %}</td></tr>
@@ -25,6 +28,7 @@
   </tbody>
 </table>
 </div>
+</details>
 
 <details>
   <summary>Parameters</summary>
@@ -43,57 +47,94 @@
   </table></div>
 </details>
 
-{% if part.is_reference %}
-<h2>Crosses</h2>
-{% else %}
-<h2>{{ 'Skyworks replacements' if scope == 'auto' else 'Crosses with all manufacturers' }}</h2>
-<p class="muted">Categories are relative to {{ part.label }}: an <b>upgrade</b> is better than this part, a <b>downgrade</b> worse.
-  {% if scope == 'auto' %}<a href="?scope=all">Include other competitors</a>{% else %}<a href="?">Show Skyworks parts only</a>{% endif %}</p>
-{% endif %}
-<form method="get" style="margin-bottom:.5rem">
+<h2>{{ 'Suitable Skyworks parts' if not part.is_reference and scope == 'auto' else 'Replacements' }}</h2>
+<p class="muted"><b>Exact drop-in</b> = same footprint and pinout, nothing worse in priority 1; <b>Drop-in?</b> = a priority 2 spec is worse, your call.
+  <b>Spec</b> compares priority 1 &amp; 2 with {{ part.mpn }}: overspecified (better), underspecified (worse) or mixed.
+  {% if not part.is_reference %}{% if scope == 'auto' %}<a href="?scope=all">Include other competitors</a>{% else %}<a href="?">Skyworks parts only</a>{% endif %}{% endif %}</p>
+<form method="get" class="result-filters">
   {% if scope != 'auto' %}<input type="hidden" name="scope" value="{{ scope }}">{% endif %}
-  <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / last-time-buy / obsolete candidates</label>
+  {% if company %}<input type="hidden" name="company" value="{{ company }}">{% endif %}
+  <label><input type="checkbox" name="dropin" value="true" onchange="this.form.submit()" {{ 'checked' if dropin }}> Drop-in only ({{ dropin_count }})</label>
+  <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / obsolete</label>
 </form>
-{% if companies %}
-<section class="by-company" aria-label="Suggestions by company">
-  <h3>{{ 'Suitable Skyworks parts' if not part.is_reference and scope == 'auto' else 'By company' }}</h3>
-  <nav class="company-filter">
-    <a href="?{{ 'hide_eol=true&' if hide_eol }}{{ 'scope=all&' if scope == 'all' }}#cat-fff" class="badge cat{{ ' on' if not company }}">All companies</a>
-    {% for name, items in companies %}<a href="?company={{ name|urlencode }}{{ '&hide_eol=true' if hide_eol }}{{ '&scope=all' if scope == 'all' }}#cat-fff" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ items|length }})</a>{% endfor %}
-  </nav>
-  {% for name, items in companies if not company or company == name %}
-  <div class="company">
-    <h4>{{ name }} <small class="muted">{{ items|length }} candidate{{ '' if items|length == 1 else 's' }} · swipe for more</small></h4>
-    <div class="strip">
-      {% for it in items %}{% set r = it.r %}
-      <a class="strip-card rank-{{ it.rank }}" href="#{{ it.cat }}-{{ r.candidate.id }}">
-        <span class="badge {{ 'ok' if it.rank == 0 else 'warn' if it.rank == 1 else 'cat' }}">{{ it.label }}</span>
-        <b>{{ r.candidate.mpn }}</b>
-        <span class="muted">{{ r.candidate.package.code }} · {{ lifecycle_badge(r.candidate)[0] }}</span>
-        {% set top = r.top_differences(1) %}
-        <span class="strip-diff {{ top[0].status if top }}">{{ top[0].summary() if top else 'No differences' }}</span>
-        {% if r.p3_notes() %}<span class="muted">Note: {{ r.p3_notes()|map(attribute='label')|join(', ') }}</span>{% endif %}
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-  {% endfor %}
-</section>
+{% if companies|length > 1 or company %}
+<nav class="company-filter" aria-label="Filter by company">
+  <a href="?{{ 'scope=all&' if scope == 'all' }}{{ 'dropin=true&' if dropin }}{{ 'hide_eol=true' if hide_eol }}" class="badge cat{{ ' on' if not company }}">All</a>
+  {% for name, items in companies %}<a href="?company={{ name|urlencode }}{{ '&scope=all' if scope == 'all' }}{{ '&dropin=true' if dropin }}{{ '&hide_eol=true' if hide_eol }}" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ items|length }})</a>{% endfor %}
+</nav>
 {% endif %}
 
+<form method="get" action="/compare">
+<input type="hidden" name="pick" value="{{ part.id }}">
+{% if rows %}
+<div class="table-wrap"><table class="results">
+  <thead><tr><th>Part</th><th>Drop-in</th><th>Spec</th>{% if pricing_enabled() %}<th>DigiKey</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for r, v in rows %}{% set c = r.candidate %}
+    <tr class="result-row dropin-{{ v.dropin }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
+      <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
+        <button type="button" class="linklike" aria-expanded="false" aria-controls="d-{{ c.id }}"><b>{{ c.mpn }}</b></button>
+        <br><small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small></td>
+      <td><span class="badge {{ {'exact': 'ok', 'over': 'ok', 'review': 'warn', 'no': 'bad'}[v.dropin] }}">{{ v.label }}</span>
+        {% if v.dropin == 'no' or 'accepted' in v.reasons|join %}<br><small class="muted">{{ v.reasons|join(', ') }}</small>{% endif %}</td>
+      <td><span class="spec spec-{{ v.spec }}">{{ v.spec_label }}</span>
+        {% if v.better or v.worse %}<br><small>{% if v.better %}<span class="better">+{{ v.better|length }}</span>{% endif %}{% if v.better and v.worse %} / {% endif %}{% if v.worse %}<span class="worse">−{{ v.worse|length }}</span>{% endif %}</small>{% endif %}</td>
+      {% if pricing_enabled() %}<td class="pricing" hx-get="/pricing/{{ c.id }}?ref={{ part.id }}&compact=true" hx-trigger="revealed"></td>{% endif %}
+    </tr>
+    <tr class="detail-row" id="d-{{ c.id }}" hidden>
+      <td colspan="{{ 4 if pricing_enabled() else 3 }}">
+        {% if v.better %}<p class="spec-list better">Better: {{ v.better|map(attribute='label')|join(', ') }}</p>{% endif %}
+        {% if v.worse %}<p class="spec-list worse">Worse: {{ v.worse|map(attribute='label')|join(', ') }}</p>{% endif %}
+        {% set top = r.top_differences() %}
+        <b>Top 5 differences</b>
+        {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
+        {% else %}<p>No differences in the compared parameters.</p>{% endif %}
+        {% set notes = r.p3_notes()|reject('in', top)|list %}
+        {% if notes %}<p class="p3-notes">Also note (priority 3):
+          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+        {% if r.fff_status in ('review', 'accepted') %}
+        <div class="review">
+          <p class="muted">Priority 2 differences to judge:
+            {% for d in r.review_items %}<b>{{ d.label }}</b> {{ d.cand_display }} vs {{ d.ref_display }}{{ '; ' if not loop.last }}{% endfor %}</p>
+          {% if r.feedback %}<p class="muted">{{ 'Accepted' if r.feedback.verdict == 'accept' else 'Rejected' }} by {{ r.feedback.user.display_name if r.feedback.user else 'unknown' }} on {{ r.feedback.created_at.strftime('%Y-%m-%d') }}{% if r.feedback.note %}: “{{ r.feedback.note }}”{% endif %}</p>{% endif %}
+          <div class="review-actions">
+            <input type="text" name="note" form="fb-{{ c.id }}" placeholder="Note (optional)" aria-label="Feedback note">
+            {% if r.fff_status == 'review' %}
+            <button type="submit" form="fb-{{ c.id }}" name="verdict" value="accept">Accept as drop-in</button>
+            <button type="submit" form="fb-{{ c.id }}" name="verdict" value="reject" class="secondary">Reject</button>
+            {% else %}
+            <button type="submit" form="fb-{{ c.id }}" name="verdict" value="clear" class="secondary outline">Undo decision</button>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <details><summary>All parameters</summary>{{ diff_table(r) }}</details>
+        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a></p>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% set q = ('?scope=all' if scope == 'all' else '?') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&dropin=true' if dropin else '') %}
+<p class="downloads"><a href="/parts/{{ part.id }}/replacements.xlsx{{ q }}" role="button" class="outline">Download table (Excel)</a>
+  <a href="/parts/{{ part.id }}/replacements.csv{{ q }}" role="button" class="outline secondary">CSV</a></p>
+{% else %}
+<p class="muted">No candidates{{ ' with these filters' if dropin or company or hide_eol }}.</p>
+{% endif %}
+
+<details class="category-view">
+<summary>Category view (FFF, pin-to-pin, upgrade, downgrade)</summary>
 <nav class="catnav">
   {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
 </nav>
 
-<form method="get" action="/compare">
-<input type="hidden" name="pick" value="{{ part.id }}">
 {% for c in order %}
 <section id="cat-{{ c }}">
   <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
   {% for r in crosses[c] %}
   <article class="cross" id="{{ c }}-{{ r.candidate.id }}">
     <header>
-      <label><input type="checkbox" name="pick" value="{{ r.candidate.id }}"> {{ r.candidate.label }}</label>
+      <b>{{ r.candidate.label }}</b>
       <span class="muted">{{ r.candidate.package.code }}</span>
       {{ part_badges(r.candidate) }}
       {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
@@ -114,35 +155,17 @@
       </summary>
       {{ diff_table(r) }}
     </details>
-    {% if c == 'fff' and r.fff_status in ('review', 'accepted') %}
-    <div class="review">
-      <p class="muted">Priority 2 differences to judge:
-        {% for d in r.review_items %}<b>{{ d.label }}</b> {{ d.cand_display }} vs {{ d.ref_display }}{{ '; ' if not loop.last }}{% endfor %}</p>
-      {% if r.feedback %}
-      <p class="muted">{{ 'Accepted' if r.feedback.verdict == 'accept' else 'Rejected' }} as FFF by {{ r.feedback.user.display_name if r.feedback.user else 'unknown' }}
-        on {{ r.feedback.created_at.strftime('%Y-%m-%d') }}{% if r.feedback.note %}: “{{ r.feedback.note }}”{% endif %}</p>
-      {% endif %}
-      <div class="review-actions">
-        <input type="text" name="note" form="fb-{{ r.candidate.id }}" placeholder="Note (optional)" aria-label="Feedback note">
-        {% if r.fff_status == 'review' %}
-        <button type="submit" form="fb-{{ r.candidate.id }}" name="verdict" value="accept">Accept as FFF</button>
-        <button type="submit" form="fb-{{ r.candidate.id }}" name="verdict" value="reject" class="secondary">Reject</button>
-        {% else %}
-        <button type="submit" form="fb-{{ r.candidate.id }}" name="verdict" value="clear" class="secondary outline">Undo decision</button>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
   </article>
   {% else %}
   <p class="muted">No candidates in this category.</p>
   {% endfor %}
 </section>
 {% endfor %}
+</details>
 <div class="sticky-actions"><button type="submit">Compare selected with {{ part.mpn }}</button></div>
 </form>
 {# Feedback forms live outside the compare form; the controls above refer to them with form="…". #}
-{% for r in crosses['fff'] if r.fff_status in ('review', 'accepted') %}
+{% for r, v in rows if r.fff_status in ('review', 'accepted') %}
 <form id="fb-{{ r.candidate.id }}" method="post" action="/feedback" hidden>
   <input type="hidden" name="reference_id" value="{{ part.id }}">
   <input type="hidden" name="candidate_id" value="{{ r.candidate.id }}">
@@ -157,4 +180,14 @@
     </form></li>{% endfor %}</ul>
 </details>
 {% endif %}
+<script>
+  // Tap a result row to show its differences, review buttons and downloads.
+  document.querySelectorAll("tr.result-row").forEach(row => row.addEventListener("click", e => {
+    if (e.target.closest("input, a, label, [hx-get]")) return;
+    const detail = document.getElementById(row.dataset.detail), btn = row.querySelector("[aria-expanded]");
+    detail.hidden = !detail.hidden;
+    btn.setAttribute("aria-expanded", String(!detail.hidden));
+  }));
+  if (location.hash.startsWith("#row-")) document.querySelector(location.hash + " .linklike")?.click();
+</script>
 {% endblock %}

@@ -82,6 +82,45 @@ class Fit:
         return self.same_package and self.same_pinout
 
 
+# Drop-in verdict shown in the result table
+DROPIN_EXACT, DROPIN_OVER, DROPIN_REVIEW, NOT_DROPIN = "exact", "over", "review", "no"
+DROPIN_LABELS = {
+    DROPIN_EXACT: "Exact drop-in",
+    DROPIN_OVER: "Exact drop-in",  # same footprint, better specs: the Spec column says "Overspecified"
+    DROPIN_REVIEW: "Drop-in?",
+    NOT_DROPIN: "Not drop-in",
+}
+SPEC_LABELS = {"exact": "Exact", "over": "Overspecified", "under": "Underspecified", "mixed": "Mixed"}
+
+
+@dataclass
+class Verdict:
+    """Is the candidate a drop-in replacement, and is it over- or underspecified?
+
+    Drop-in = same footprint and pinout (pin-to-pin) and no priority 1 parameter worse or
+    unknown; a priority 2 shortfall needs an engineer's accept/reject. The spec level looks
+    at priority 1 and 2: better only = overspecified, worse only = underspecified.
+    """
+
+    dropin: str
+    spec: str
+    better: list[Diff]
+    worse: list[Diff]
+    reasons: list[str]  # why it is not (or not yet) a drop-in
+
+    @property
+    def label(self) -> str:
+        return DROPIN_LABELS[self.dropin]
+
+    @property
+    def spec_label(self) -> str:
+        return SPEC_LABELS[self.spec]
+
+    @property
+    def is_dropin(self) -> bool:
+        return self.dropin in (DROPIN_EXACT, DROPIN_OVER)
+
+
 @dataclass
 class CrossResult:
     reference: Part
@@ -119,6 +158,27 @@ class CrossResult:
             key=lambda d: (-d.score, d.priority, not d.is_negative),
         )
         return ranked[:n]
+
+    def verdict(self) -> Verdict:
+        p12 = [d for d in self.diffs if d.priority in (1, 2)]
+        better = [d for d in p12 if d.status == BETTER]
+        worse = [d for d in p12 if d.is_negative]
+        spec = ("mixed" if better else "under") if worse else ("over" if better else "exact")
+        reasons = []
+        if not self.fit.same_package:
+            reasons.append(f"different footprint ({self.fit.package_relation} package)")
+        elif not self.fit.same_pinout:
+            reasons.append("pin positions not known" if self.fit.positions_unknown else "different pinout")
+        reasons += [f"{d.label} {d.status}" for d in self.diffs if d.priority == 1 and d.is_negative]
+        reasons += [f"{d.label} unknown" for d in self.diffs if d.priority == 1 and d.status == UNKNOWN]
+        if reasons or self.hard_fail:
+            return Verdict(NOT_DROPIN, spec, better, worse, reasons or ["function differs"])
+        level = DROPIN_OVER if better else DROPIN_EXACT
+        if self.fff_status == FFF_REVIEW:
+            return Verdict(DROPIN_REVIEW, spec, better, worse, [f"{d.label} {d.status}" for d in self.review_items])
+        if self.fff_status == FFF_REJECTED:
+            return Verdict(NOT_DROPIN, spec, better, worse, ["rejected in review"])
+        return Verdict(level, spec, better, worse, ["accepted in review"] if self.fff_status == FFF_ACCEPTED else [])
 
     def p3_notes(self) -> list[Diff]:
         """Priority 3 parameters where the candidate is worse or different. They never

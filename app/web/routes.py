@@ -11,7 +11,17 @@ from sqlalchemy.orm import Session
 from app.auth.deps import get_current_user
 from app.config import get_settings
 from app.db import get_session
-from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, FFF_STATUS_LABELS, LIFECYCLE_RISK, format_value
+from app.matching.engine import (
+    CATEGORY_LABELS,
+    CATEGORY_ORDER,
+    DROPIN_EXACT,
+    DROPIN_OVER,
+    DROPIN_REVIEW,
+    FFF_STATUS_LABELS,
+    LIFECYCLE_RISK,
+    NOT_DROPIN,
+    format_value,
+)
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
 from app.services import export, lifecycle, mechanical, pricing
@@ -144,6 +154,20 @@ def by_company(crosses: dict) -> list[tuple[str, list[dict]]]:
     return sorted(groups.items(), key=lambda g: (min(i["rank"] for i in g[1]), g[0]))
 
 
+DROPIN_RANK = {DROPIN_EXACT: 0, DROPIN_OVER: 1, DROPIN_REVIEW: 2, NOT_DROPIN: 3}
+
+
+def result_rows(crosses: dict) -> list:
+    """Each candidate once with its drop-in verdict: drop-ins first, then closest."""
+    seen = {}
+    for cat in CATEGORY_ORDER:
+        for r in crosses.get(cat, []):
+            seen.setdefault(r.candidate.id, r)
+    rows = [(r, r.verdict()) for r in seen.values()]
+    rows.sort(key=lambda rv: (rv[0].lifecycle_risk, DROPIN_RANK[rv[1].dropin], rv[0].closeness))
+    return rows
+
+
 @router.get("/parts/{part_id}", response_class=HTMLResponse)
 def part_detail(
     request: Request,
@@ -151,6 +175,7 @@ def part_detail(
     hide_eol: bool = False,
     company: str = "",
     scope: str = "auto",
+    dropin: bool = False,
     session: Session = Depends(get_session),
 ):
     part = session.get(Part, part_id)
@@ -165,6 +190,10 @@ def part_detail(
     companies = by_company(crosses)
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
+    rows = result_rows(crosses)
+    dropin_count = sum(v.dropin != NOT_DROPIN for _, v in rows)
+    if dropin:
+        rows = [(r, v) for r, v in rows if v.dropin != NOT_DROPIN]
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
     groups = {
@@ -186,8 +215,30 @@ def part_detail(
             "companies": companies,
             "company": company,
             "scope": scope,
+            "rows": rows,
+            "dropin": dropin,
+            "dropin_count": dropin_count,
         },
     )
+
+
+@router.get("/parts/{part_id}/replacements.{fmt}")
+def results_download(
+    part_id: int, fmt: str, scope: str = "auto", company: str = "", dropin: bool = False,
+    session: Session = Depends(get_session),
+):  # fmt: skip
+    part = session.get(Part, part_id)
+    if part is None:
+        raise HTTPException(404, "Part not found")
+    crosses = crosses_for(session, part, scope if scope in ("auto", "all") else "auto")
+    if company:
+        crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
+    rows = [(r, v) for r, v in result_rows(crosses) if not dropin or v.dropin != NOT_DROPIN]
+    if fmt == "xlsx":
+        return _download(export.results_xlsx(part, rows), f"replacements_{part.mpn}.xlsx", XLSX)
+    if fmt == "csv":
+        return _download(export.results_csv(rows), f"replacements_{part.mpn}.csv", "text/csv")
+    raise HTTPException(404, "Unknown format")
 
 
 @router.get("/cross/{ref_id}/{cand_id}.{fmt}")
@@ -351,14 +402,20 @@ def feedback(
     if session.get(Part, reference_id) is None or session.get(Part, candidate_id) is None:
         raise HTTPException(404, "Part not found")
     record_feedback(session, reference_id, candidate_id, None if verdict == "clear" else verdict, note, user.id)
-    return RedirectResponse(f"/parts/{reference_id}#fff-{candidate_id}", status_code=303)
+    return RedirectResponse(f"/parts/{reference_id}#row-{candidate_id}", status_code=303)
 
 
 CURRENCY_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£"}
 
 
 @router.get("/pricing/{part_id}", response_class=HTMLResponse)
-def pricing_line(request: Request, part_id: int, ref: int | None = None, session: Session = Depends(get_session)):
+def pricing_line(
+    request: Request,
+    part_id: int,
+    ref: int | None = None,
+    compact: bool = False,
+    session: Session = Depends(get_session),
+):
     """Price and stock from DigiKey (cached), loaded into the part page as it scrolls into view."""
     part = session.get(Part, part_id)
     if part is None:
@@ -379,7 +436,13 @@ def pricing_line(request: Request, part_id: int, ref: int | None = None, session
     return templates.TemplateResponse(
         request,
         "_pricing.html",
-        {"pq": pq, "prices": prices, "error": error, "symbol": CURRENCY_SYMBOLS.get(currency, currency + " ")},
+        {
+            "pq": pq,
+            "prices": prices[-1:] if compact else prices,
+            "compact": compact,
+            "error": error,
+            "symbol": CURRENCY_SYMBOLS.get(currency, currency + " "),
+        },
     )
 
 

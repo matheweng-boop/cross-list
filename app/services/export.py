@@ -121,3 +121,56 @@ def comparison_csv(c: Comparison) -> str:
         values = [cell.display for cell in row.cells]
         w.writerow([_prio(row.param), row.param.label, *values, "; ".join(best)])
     return buf.getvalue()
+
+
+RESULT_HEADER = ["Part", "Manufacturer", "Drop-in", "Spec", "Better", "Worse", "Why not drop-in / note", "Package",
+                 "Lifecycle", "Top 5 differences", "Priority 3 notes"]  # fmt: skip
+VERDICT_FILLS = {"exact": FILLS["better"], "over": FILLS["better"], "review": FILLS["different"], "no": FILLS["worse"]}
+
+
+def _result_cells(r: CrossResult, v) -> list[str]:
+    return [
+        r.candidate.mpn,
+        r.candidate.manufacturer.name,
+        v.label,
+        v.spec_label,
+        ", ".join(d.label for d in v.better),
+        ", ".join(d.label for d in v.worse),
+        ", ".join(v.reasons),
+        r.candidate.package.code,
+        r.candidate.lifecycle_status.value,
+        " · ".join(d.summary() for d in r.top_differences()),
+        "; ".join(f"{d.label} {d.cand_display} vs {d.ref_display}" for d in r.p3_notes()),
+    ]
+
+
+def results_xlsx(reference, rows) -> bytes:
+    """The part page's result table: one row per candidate with its drop-in verdict."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Replacements"
+    ws.append([f"Replacements for {reference.mpn} ({reference.manufacturer.name}, {reference.package.code})"])
+    ws["A1"].font = Font(bold=True, size=13)
+    ws.append(["Drop-in = same footprint and pinout, nothing worse in priority 1. Spec compares priority 1 & 2."])
+    if reference.is_synthetic:
+        ws.append([SYNTHETIC_NOTE])
+    ws.append([])
+    ws.append(RESULT_HEADER)
+    for cell in ws[ws.max_row]:
+        cell.font = BOLD
+    for r, v in rows:
+        ws.append(_result_cells(r, v))
+        ws.cell(ws.max_row, 3).fill = VERDICT_FILLS[v.dropin]
+    _autosize(ws)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def results_csv(rows) -> str:
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(RESULT_HEADER)
+    for r, v in rows:
+        w.writerow(_result_cells(r, v))
+    return buf.getvalue()

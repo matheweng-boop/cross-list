@@ -9,9 +9,11 @@
   <span class="price">{{ symbol }}{{ '%.2f'|format(p[0]) if p[0] >= 1 else '%.3f'|format(p[0]) }} <small class="muted">@{{ qty_label(q) }}</small>{% if d is not none %}
     <small class="{{ 'better' if d < 0 else 'worse' if d > 0 else '' }}">{{ '%+d'|format(d) }}%</small>{% endif %}</span>
   {% endif %}{% endfor %}
-  {% if pq.lead_weeks %}<small class="muted">lead {{ pq.lead_weeks }} wk</small>{% endif %}
+  {% if compact %}{% elif pq.lead_weeks %}<small class="muted">lead {{ pq.lead_weeks }} wk</small>{% endif %}
   {% if pq.status and pq.status != 'Active' %}<span class="badge warn">{{ pq.status }}</span>{% endif %}
+  {% if not compact %}
   {% if pq.product_url %}<a href="{{ pq.product_url }}" target="_blank" rel="noopener">DigiKey</a>{% endif %}
   <small class="muted">{{ pq.fetched_at.strftime('%d %b %H:%M') }}</small>
+  {% endif %}
 </span>
 {% endif %}

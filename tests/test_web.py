@@ -83,18 +83,21 @@ def test_api_crosses(client):
 def test_feedback_accept_and_undo(client):
     ref, cand = ids(client, "SR8641", "SC141")
     html = client.get(f"/parts/{ref}").text
-    assert "FFF – needs review" in html and "Accept as FFF" in html
+    row = html.split(f'id="row-{cand}"')[1].split("</tr>")[0]
+    assert "Drop-in?" in row and "Accept as drop-in" in html
     r = client.post(
         "/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "accept", "note": "OK at 100 Mbps"}
     )
     assert r.status_code == 200  # redirect followed back to the part page
     html = client.get(f"/parts/{ref}").text
-    assert "FFF – accepted" in html and "OK at 100 Mbps" in html and "Local user" in html
+    row = html.split(f'id="row-{cand}"')[1].split("</tr>")[0]
+    assert "drop-in" in row and "Not drop-in" not in row and "accepted in review" in row
+    assert "OK at 100 Mbps" in html and "Local user" in html
     data = client.get(f"/api/parts/{ref}/crosses").json()
     sc141 = next(x for x in data["fff"] if x["candidate"]["label"].endswith("SC141"))
     assert sc141["fff_status"] == "accepted" and sc141["feedback"]["note"] == "OK at 100 Mbps"
     client.post("/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "clear"})
-    assert "FFF – needs review" in client.get(f"/parts/{ref}").text
+    assert "Drop-in?" in client.get(f"/parts/{ref}").text
 
 
 def test_feedback_reject_moves_out_of_fff(client):
@@ -133,32 +136,53 @@ def test_suggestions_fragment(client):
     assert "No part numbers contain" in client.get("/suggest?q=zzzz").text
 
 
-def test_part_page_groups_suggestions_by_company(client):
+def test_result_table_filters_by_company(client):
     (ref,) = ids(client, "SR8641")
     html = client.get(f"/parts/{ref}").text
-    assert "By company" in html and "SynAlpha" in html and 'class="strip"' in html
-    only = client.get(f"/parts/{ref}?company=SynBeta").text
-    section = only.split('id="cat-fff"')[1]
-    assert "SynBeta SB8441" in section and "SynAlpha SA7741" not in section
+    assert 'class="company-filter"' in html and "SynAlpha (" in html
+    table = (
+        client.get(f"/parts/{ref}?company=SynBeta")
+        .text.split('<table class="results">')[1]
+        .split('<details class="category-view">')[0]
+    )
+    assert "SB8441" in table and "SA7741" not in table
+
+
+def test_result_table_verdicts(client):
+    ref, exact, over, review, down = ids(client, "SR8641", "SA7741X", "SA7741", "SC141", "SB8441")
+    html = client.get(f"/parts/{ref}").text
+    table = html.split('<table class="results">')[1].split('<details class="category-view">')[0]
+
+    def row(pid):
+        return table.split(f'id="row-{pid}"')[1].split("</tr>")[0]
+
+    assert "Exact drop-in" in row(exact) and "spec-exact" in row(exact)
+    assert "Exact drop-in" in row(over) and "spec-over" in row(over) and "Overspecified" in row(over)
+    assert "Drop-in?" in row(review)
+    assert "Not drop-in" in row(down) and "spec-under" in row(down)
+    # drop-ins are listed before the rest
+    assert table.index(f'id="row-{over}"') < table.index(f'id="row-{down}"')
+    only = client.get(f"/parts/{ref}?dropin=true").text.split('<table class="results">')[1]
+    assert f'id="row-{down}"' not in only and f'id="row-{over}"' in only
 
 
 def test_competitor_part_finds_reference_replacements(client):
     (comp,) = ids(client, "SA7741X")  # identical to SR8641, but obsolete
     html = client.get(f"/parts/{comp}").text
-    assert "Skyworks replacements" in html and "Include other competitors" in html
+    assert "Suitable Skyworks parts" in html and "Include other competitors" in html
     data = client.get(f"/api/parts/{comp}/crosses").json()
     fff = [x["candidate"]["label"] for x in data["fff"]]
     assert fff == ["SynRef SR8641"]
     every = {x["candidate"]["label"] for cat in data.values() for x in cat}
     assert all(label.startswith("SynRef") for label in every)  # only reference parts by default
     wide = client.get(f"/parts/{comp}?scope=all").text
-    assert "Crosses with all manufacturers" in wide and "SynBeta SB8441" in wide
+    assert "Replacements" in wide and "SB8441" in wide
 
 
 def test_reference_part_page_unchanged(client):
     (ref,) = ids(client, "SR8641")
     html = client.get(f"/parts/{ref}").text
-    assert "<h2>Crosses</h2>" in html and "Skyworks replacements" not in html
+    assert "<h2>Replacements</h2>" in html and "Suitable Skyworks parts" not in html
 
 
 def test_suggestions_mark_competitor_parts(client):
@@ -182,3 +206,15 @@ def test_find_partial_lists_competitors_first(client):
     assert "Tap a part to see suitable Skyworks parts" in html and "SA7741X" in html
     assert "No part numbers contain" in client.get("/find?q=ADUM1401").text
     assert client.get("/find?q=", follow_redirects=False).status_code == 303
+
+
+def test_result_table_download(client):
+    (ref,) = ids(client, "SR8641")
+    r = client.get(f"/parts/{ref}/replacements.xlsx")
+    ws = load_workbook(io.BytesIO(r.content)).active
+    rows = [[c.value for c in row] for row in ws.iter_rows()]
+    header = next(i for i, row in enumerate(rows) if row[0] == "Part")
+    verdicts = {row[0]: row[2] for row in rows[header + 1 :]}
+    assert verdicts["SA7741"] == "Exact drop-in" and verdicts["SB8441"] == "Not drop-in"
+    text = client.get(f"/parts/{ref}/replacements.csv?dropin=true").text
+    assert "SA7741" in text and "SB8441" not in text

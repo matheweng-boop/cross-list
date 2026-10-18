@@ -4,8 +4,9 @@
   const loaded = {};
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   const cls = t => (t.match(/, (better|worse|different|unknown)\)$/) || [])[1] || "";
-  const NAMES = {fff: "FFF – form, fit & function", upgrade: "Upgrade", p2p: "Pin-to-pin", downgrade: "Downgrade"};
-  const FFF = {auto: ["ok", "FFF"], accepted: ["ok", "FFF – accepted"], review: ["warn", "FFF – needs review"], rejected: ["bad", "FFF – rejected"]};
+  const NAMES = {fff: "FFF – form, fit & function", upgrade: "Upgrade", functional: "Functional equivalent",
+    package: "Package equivalent", downgrade: "Downgrade"};
+  const FFF = {auto: ["ok", "FFF"], rejected: ["bad", "FFF – rejected"]};
   const link = p => p[4] ? "part-" + p[4] + ".html" : "cross.html#" + p[5];
   window.CL_SHARD = (n, d) => { loaded[n] = d; render(); };
   function render() {

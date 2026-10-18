@@ -1,20 +1,25 @@
 """Cross-reference matching engine.
 
-Given a reference part (the Skyworks part being crossed) and a candidate, decide
-which cross categories the candidate falls into:
+Given a reference part (the part being crossed) and a candidate, decide which cross
+type the candidate is. Priority 1 parameters decide function; priority 2 and 3 are
+shown for information and never block a cross.
 
-* FFF       – fit (same package + same pinout), no priority 1 parameter worse.
-              If every priority 2 parameter is also equal or better the cross is
-              FFF automatically; otherwise it "needs review" until an engineer
-              accepts or rejects it (stored feedback).
-* P2P       – fit only; function is ignored, all differences are reported.
-* Upgrade   – no priority 1 parameter worse and at least one better. The package
-              may be the same or smaller, unless the reference is package-locked.
-* Downgrade – at least one priority 1 parameter worse, same package; ranked by
-              closeness to the reference.
+* FFF                   – same package, pin-to-pin, every priority 1 parameter equal or
+                          better (better ones are marked): an exact drop-in.
+* Upgrade               – every priority 1 parameter equal or better, at least one better,
+                          but not a drop-in (other package or pinout). A smaller package
+                          counts, unless the reference is package-locked.
+* Functional equivalent – every priority 1 parameter equal (or better where an upgrade is
+                          not allowed), other package or pinout.
+* Package equivalent    – same package and basic function (hard parameters such as the
+                          channel configuration match), other features: a priority 1
+                          parameter worse or different; marked pin-to-pin or not.
+* Downgrade             – same package and pin-to-pin, a priority 1 parameter worse:
+                          offered as a lower-spec drop-in.
 
-A "hard" parameter mismatch (e.g. channel configuration) makes the parts
-functionally different, which excludes FFF, Upgrade and Downgrade.
+Anything else is not listed. A "hard" parameter mismatch (e.g. channel configuration)
+means the parts do different things: they are not listed at all.
+An engineer can reject an FFF; it is then listed as a package equivalent.
 """
 
 from dataclasses import dataclass, field
@@ -25,22 +30,21 @@ from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
 UNKNOWN_SEVERITY = 0.25
-CATEGORY_ORDER = ("fff", "p2p", "upgrade", "downgrade")
+CATEGORY_ORDER = ("fff", "upgrade", "functional", "package", "downgrade")
 CATEGORY_LABELS = {
     "fff": "FFF – form, fit & function",
-    "p2p": "Pin-to-pin",
     "upgrade": "Upgrade",
+    "functional": "Functional equivalent",
+    "package": "Package equivalent",
     "downgrade": "Downgrade",
 }
 LIFECYCLE_RISK = {LifecycleStatus.nrnd, LifecycleStatus.last_time_buy, LifecycleStatus.obsolete}
-# FFF status of a cross that fits and matches priority 1
-FFF_AUTO, FFF_ACCEPTED, FFF_REVIEW, FFF_REJECTED = "auto", "accepted", "review", "rejected"
-FFF_STATUS_LABELS = {
-    FFF_AUTO: "FFF",
-    FFF_ACCEPTED: "FFF – accepted",
-    FFF_REVIEW: "FFF – needs review",
-    FFF_REJECTED: "FFF – rejected",
-}
+# Short names for the result table on phones
+CATEGORY_SHORT = {"fff": "FFF", "upgrade": "Upgrade", "functional": "Functional", "package": "Package eq.",
+                  "downgrade": "Downgrade"}  # fmt: skip
+# FFF status: an engineer may reject an FFF cross
+FFF_AUTO, FFF_REJECTED = "auto", "rejected"
+FFF_STATUS_LABELS = {FFF_AUTO: "FFF", FFF_REJECTED: "FFF – rejected"}
 
 
 @dataclass
@@ -82,43 +86,35 @@ class Fit:
         return self.same_package and self.same_pinout
 
 
-# Drop-in verdict shown in the result table
-DROPIN_EXACT, DROPIN_OVER, DROPIN_REVIEW, NOT_DROPIN = "exact", "over", "review", "no"
-DROPIN_LABELS = {
-    DROPIN_EXACT: "Exact drop-in",
-    DROPIN_OVER: "Exact drop-in",  # same footprint, better specs: the Spec column says "Overspecified"
-    DROPIN_REVIEW: "Drop-in?",
-    NOT_DROPIN: "Not drop-in",
-}
-SPEC_LABELS = {"exact": "Exact", "over": "Overspecified", "under": "Underspecified", "mixed": "Mixed"}
+SPEC_LABELS = {"exact": "Exact", "over": "Better", "under": "Worse", "mixed": "Mixed"}
 
 
 @dataclass
 class Verdict:
-    """Is the candidate a drop-in replacement, and is it over- or underspecified?
+    """Cross type, pin-to-pin flag and how priority 1 compares (better/worse lists).
 
-    Drop-in = same footprint and pinout (pin-to-pin) and no priority 1 parameter worse or
-    unknown; a priority 2 shortfall needs an engineer's accept/reject. The spec level looks
-    at priority 1 and 2: better only = overspecified, worse only = underspecified.
+    Priority 2/3 differences are counted separately, for information only.
     """
 
-    dropin: str
-    spec: str
+    category: str
+    p2p: bool
+    spec: str  # priority 1: exact | over | under | mixed
     better: list[Diff]
     worse: list[Diff]
-    reasons: list[str]  # why it is not (or not yet) a drop-in
+    info_better: list[Diff]
+    info_worse: list[Diff]
 
     @property
     def label(self) -> str:
-        return DROPIN_LABELS[self.dropin]
+        return CATEGORY_LABELS[self.category]
+
+    @property
+    def short(self) -> str:
+        return CATEGORY_SHORT[self.category]
 
     @property
     def spec_label(self) -> str:
         return SPEC_LABELS[self.spec]
-
-    @property
-    def is_dropin(self) -> bool:
-        return self.dropin in (DROPIN_EXACT, DROPIN_OVER)
 
 
 @dataclass
@@ -133,11 +129,6 @@ class CrossResult:
     incomplete: bool
     fff_status: str | None = None
     feedback: object | None = None  # CrossFeedback row, if any
-
-    @property
-    def review_items(self) -> list[Diff]:
-        """Priority 2 differences an engineer has to judge for FFF."""
-        return [d for d in self.diffs if d.priority == 2 and d.status not in (EQUAL, BETTER)]
 
     @property
     def all_diffs(self) -> list[Diff]:
@@ -159,26 +150,25 @@ class CrossResult:
         )
         return ranked[:n]
 
+    @property
+    def category(self) -> str | None:
+        return self.categories[0] if self.categories else None
+
     def verdict(self) -> Verdict:
-        p12 = [d for d in self.diffs if d.priority in (1, 2)]
-        better = [d for d in p12 if d.status == BETTER]
-        worse = [d for d in p12 if d.is_negative]
+        p1 = [d for d in self.diffs if d.priority == 1]
+        info = [d for d in self.diffs if d.priority in (2, 3)]
+        better = [d for d in p1 if d.status == BETTER]
+        worse = [d for d in p1 if d.is_negative or d.status == UNKNOWN]
         spec = ("mixed" if better else "under") if worse else ("over" if better else "exact")
-        reasons = []
-        if not self.fit.same_package:
-            reasons.append(f"different footprint ({self.fit.package_relation} package)")
-        elif not self.fit.same_pinout:
-            reasons.append("pin positions not known" if self.fit.positions_unknown else "different pinout")
-        reasons += [f"{d.label} {d.status}" for d in self.diffs if d.priority == 1 and d.is_negative]
-        reasons += [f"{d.label} unknown" for d in self.diffs if d.priority == 1 and d.status == UNKNOWN]
-        if reasons or self.hard_fail:
-            return Verdict(NOT_DROPIN, spec, better, worse, reasons or ["function differs"])
-        level = DROPIN_OVER if better else DROPIN_EXACT
-        if self.fff_status == FFF_REVIEW:
-            return Verdict(DROPIN_REVIEW, spec, better, worse, [f"{d.label} {d.status}" for d in self.review_items])
-        if self.fff_status == FFF_REJECTED:
-            return Verdict(NOT_DROPIN, spec, better, worse, ["rejected in review"])
-        return Verdict(level, spec, better, worse, ["accepted in review"] if self.fff_status == FFF_ACCEPTED else [])
+        return Verdict(
+            self.category or "package",
+            self.fit.fits,
+            spec,
+            better,
+            worse,
+            [d for d in info if d.status == BETTER],
+            [d for d in info if d.is_negative],
+        )
 
     def p3_notes(self) -> list[Diff]:
         """Priority 3 parameters where the candidate is worse or different. They never
@@ -423,35 +413,33 @@ def cross(ref: Part, cand: Part, rules: FamilyRules, feedback=None) -> CrossResu
 
     hard_fail = any(d.hard and d.is_negative for d in diffs)
     p1 = [d for d in diffs if d.priority == 1]
-    p12 = [d for d in diffs if d.priority in (1, 2)]
-    ok = (EQUAL, BETTER)
-    incomplete = any(d.status == UNKNOWN for d in p12)
+    incomplete = any(d.status == UNKNOWN for d in diffs if d.priority in (1, 2))
+    functional = not hard_fail and all(d.status in (EQUAL, BETTER) for d in p1)
+    better = any(d.status == BETTER for d in p1)
+    rejected = feedback is not None and feedback.verdict == FeedbackVerdict.reject
+    package_ok = fit.same_package if ref.package_locked else fit.package_relation in ("same", "smaller", "similar")
 
-    cats = []
     fff_status = None
-    if fit.fits and not hard_fail and all(d.status in ok for d in p1):
-        if all(d.status in ok for d in p12):
-            fff_status = FFF_AUTO
-        elif feedback is None:
-            fff_status = FFF_REVIEW
-        else:
-            fff_status = FFF_ACCEPTED if feedback.verdict == FeedbackVerdict.accept else FFF_REJECTED
-        if fff_status != FFF_REJECTED:
-            cats.append("fff")
-    if fit.fits:
-        cats.append("p2p")
-    package_ok_for_upgrade = (
-        fit.same_package if ref.package_locked else fit.package_relation in ("same", "smaller", "similar")
-    )
-    if (
-        not hard_fail
-        and package_ok_for_upgrade
-        and all(d.status in ok for d in p1)
-        and any(d.status == BETTER for d in p1)
+    if fit.fits and functional:
+        fff_status = FFF_REJECTED if rejected else FFF_AUTO
+    if fff_status == FFF_AUTO:
+        category = "fff"
+    elif functional and better and package_ok and not fit.fits:
+        category = "upgrade"
+    elif functional and not fit.fits:
+        category = "functional"
+    elif (
+        fit.fits
+        and not hard_fail
+        and any(d.status == WORSE for d in p1)
+        and not any(d.status == DIFFERENT for d in p1)
     ):
-        cats.append("upgrade")
-    if not hard_fail and fit.same_package and any(d.is_negative for d in p1):
-        cats.append("downgrade")
+        category = "downgrade"  # same package and pinout, lower priority 1 values
+    elif fit.same_package and not hard_fail:
+        category = "package"  # same package and basic function (e.g. channels), other features
+    else:
+        category = None
+    cats = [category] if category else []
 
     return CrossResult(
         ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback
@@ -464,10 +452,8 @@ def sort_key(category: str):
     def key(r: CrossResult):
         if category == "upgrade":
             main = -r.improvement
-        elif category == "downgrade":
-            main = (not r.fit.same_pinout, r.closeness)
-        elif category == "fff":
-            main = (r.fff_status == FFF_REVIEW, r.closeness)  # confirmed FFF first
+        elif category == "package":
+            main = (not r.fit.same_pinout, r.closeness)  # pin-to-pin first
         else:
             main = r.closeness
         return (r.lifecycle_risk, main, r.candidate.label)

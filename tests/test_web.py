@@ -41,7 +41,7 @@ def test_cross_excel_highlights_differences(client):
     assert r.status_code == 200 and "attachment" in r.headers["content-disposition"]
     ws = load_workbook(io.BytesIO(r.content)).active
     rows = {row[1].value: row for row in ws.iter_rows() if len(row) >= 5 and row[1].value}
-    default_out = rows["Default output"]
+    default_out = rows["Output type (default state)"]
     assert default_out[4].value == "different"
     assert default_out[3].fill.fgColor.rgb.endswith("FFEB9C")
 
@@ -76,28 +76,29 @@ def test_compare_downloads(client):
 def test_api_crosses(client):
     (ref,) = ids(client, "SR8286")
     data = client.get(f"/api/parts/{ref}/crosses").json()
-    assert set(data) == {"fff", "p2p", "upgrade", "downgrade"}
+    assert set(data) == {"fff", "upgrade", "functional", "package", "downgrade"}
     assert len(data["fff"][0]["top_differences"]) <= 5
 
 
-def test_feedback_accept_and_undo(client):
+def test_reject_fff_and_undo(client):
     ref, cand = ids(client, "SR8641", "SC141")
     html = client.get(f"/parts/{ref}").text
     row = html.split(f'id="row-{cand}"')[1].split("</tr>")[0]
-    assert "Drop-in?" in row and "Accept as drop-in" in html
+    assert "FFF" in row and "Reject as FFF" in html
     r = client.post(
-        "/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "accept", "note": "OK at 100 Mbps"}
+        "/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "reject", "note": "too slow"}
     )
     assert r.status_code == 200  # redirect followed back to the part page
     html = client.get(f"/parts/{ref}").text
     row = html.split(f'id="row-{cand}"')[1].split("</tr>")[0]
-    assert "drop-in" in row and "Not drop-in" not in row and "accepted in review" in row
-    assert "OK at 100 Mbps" in html and "Local user" in html
+    assert "Package equivalent" in row and "FFF rejected in review" in row
+    assert "too slow" in html and "Local user" in html
     data = client.get(f"/api/parts/{ref}/crosses").json()
-    sc141 = next(x for x in data["fff"] if x["candidate"]["label"].endswith("SC141"))
-    assert sc141["fff_status"] == "accepted" and sc141["feedback"]["note"] == "OK at 100 Mbps"
+    sc141 = next(x for x in data["package"] if x["candidate"]["label"].endswith("SC141"))
+    assert sc141["fff_status"] == "rejected" and sc141["feedback"]["note"] == "too slow"
     client.post("/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "clear"})
-    assert "Drop-in?" in client.get(f"/parts/{ref}").text
+    data = client.get(f"/api/parts/{ref}/crosses").json()
+    assert any(x["candidate"]["label"].endswith("SC141") for x in data["fff"])
 
 
 def test_feedback_reject_moves_out_of_fff(client):
@@ -106,10 +107,9 @@ def test_feedback_reject_moves_out_of_fff(client):
     data = client.get(f"/api/parts/{ref}/crosses").json()
     assert all(not x["candidate"]["label"].endswith("SC141") for x in data["fff"])
     assert "Rejected as FFF (1)" in client.get(f"/parts/{ref}").text
-    assert (
-        client.post("/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": "maybe"}).status_code
-        == 400
-    )
+    for verdict in ("maybe", "accept"):
+        r = client.post("/feedback", data={"reference_id": ref, "candidate_id": cand, "verdict": verdict})
+        assert r.status_code == 400
 
 
 def test_partial_part_numbers(client):
@@ -148,22 +148,28 @@ def test_result_table_filters_by_company(client):
     assert "SB8441" in table and "SA7741" not in table
 
 
-def test_result_table_verdicts(client):
-    ref, exact, over, review, down = ids(client, "SR8641", "SA7741X", "SA7741", "SC141", "SB8441")
+def test_result_table_cross_types(client):
+    ref, exact, better, info_worse, other_out, other_pins = ids(
+        client, "SR8641", "SA7741X", "SD8641A", "SC141", "SB8441", "SB8641N"
+    )
     html = client.get(f"/parts/{ref}").text
     table = html.split('<table class="results">')[1].split('<details class="category-view">')[0]
 
     def row(pid):
         return table.split(f'id="row-{pid}"')[1].split("</tr>")[0]
 
-    assert "Exact drop-in" in row(exact) and "spec-exact" in row(exact)
-    assert "Exact drop-in" in row(over) and "spec-over" in row(over) and "Overspecified" in row(over)
-    assert "Drop-in?" in row(review)
-    assert "Not drop-in" in row(down) and "spec-under" in row(down)
-    # drop-ins are listed before the rest
-    assert table.index(f'id="row-{over}"') < table.index(f'id="row-{down}"')
-    only = client.get(f"/parts/{ref}?dropin=true").text.split('<table class="results">')[1]
-    assert f'id="row-{down}"' not in only and f'id="row-{over}"' in only
+    assert "FFF" in row(exact) and "spec-exact" in row(exact) and "p2p yes" in row(exact)
+    assert "FFF" in row(better) and "spec-over" in row(better)
+    assert "FFF" in row(info_worse) and "spec-exact" in row(info_worse)  # only priority 2 worse
+    assert "Package equivalent" in row(other_out) and "p2p yes" in row(other_out)
+    assert "Functional equivalent" in row(other_pins) and "p2p no" in row(other_pins)
+    assert table.index(f'id="row-{better}"') < table.index(f'id="row-{other_out}"')  # FFF listed first
+    only = (
+        client.get(f"/parts/{ref}?p2p=true")
+        .text.split('<table class="results">')[1]
+        .split('<details class="category-view">')[0]
+    )
+    assert f'id="row-{other_pins}"' not in only and f'id="row-{other_out}"' in only
 
 
 def test_competitor_part_finds_reference_replacements(client):
@@ -215,6 +221,7 @@ def test_result_table_download(client):
     rows = [[c.value for c in row] for row in ws.iter_rows()]
     header = next(i for i, row in enumerate(rows) if row[0] == "Part")
     verdicts = {row[0]: row[2] for row in rows[header + 1 :]}
-    assert verdicts["SA7741"] == "Exact drop-in" and verdicts["SB8441"] == "Not drop-in"
-    text = client.get(f"/parts/{ref}/replacements.csv?dropin=true").text
-    assert "SA7741" in text and "SB8441" not in text
+    assert verdicts["SA7741"].startswith("FFF") and verdicts["SB8441"] == "Package equivalent"
+    assert verdicts["SB8641N"] == "Functional equivalent"
+    text = client.get(f"/parts/{ref}/replacements.csv?p2p=true").text
+    assert "SA7741" in text and "SB8641N" not in text

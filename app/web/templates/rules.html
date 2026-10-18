@@ -2,15 +2,17 @@
 {% block title %}Rules – Cross List{% endblock %}
 {% block content %}
 <h1>Matching rules</h1>
-<p class="subtitle muted">Priority groups per product family (edit <code>rules/*.yaml</code>). <b>Hard</b> parameters must match for FFF, Upgrade and Downgrade.</p>
-<details open><summary>How the categories are decided</summary>
+<p class="subtitle muted">Priority groups per product family (edit <code>rules/*.yaml</code>). <b>Priority 1</b> must be equal or better for a functional match;
+  priority 2 and 3 are shown for information and never block a cross. <b>Hard</b> parameters define what the part does.</p>
+<details open><summary>How a cross type is decided</summary>
 <ul>
-  <li><b>Same package</b> – same body length, body width, lead span and pitch. The pin count may differ: a position without a pin counts as a no-connect.</li>
-  <li><b>FFF</b> – same package and pinout, and every priority 1 parameter equal or better. If every priority 2 parameter is also equal or better it is FFF automatically; otherwise it <b>needs review</b> and an engineer accepts or rejects it.</li>
-  <li><b>Pin-to-pin</b> – same package and pinout; function ignored.</li>
-  <li><b>Upgrade</b> – no priority 1 parameter worse, at least one better; same or smaller package (same package only if the reference is package-locked).</li>
-  <li><b>Downgrade</b> – at least one priority 1 parameter worse, same package; closest first.</li>
-  <li>Obsolete / NRND / last-time-buy candidates are always listed last.</li>
+  <li><b>Same package</b> – same body length, body width, lead span and pitch. The pin count may differ: a position without a pin counts as a no-connect. <b>Pin-to-pin</b> – same package and the same function on every pin.</li>
+  <li><b>FFF (form, fit &amp; function)</b> – pin-to-pin and every priority 1 parameter equal or better (better ones are marked): an exact drop-in.</li>
+  <li><b>Upgrade</b> – every priority 1 parameter equal or better, at least one better, in another package or pinout; a smaller package counts unless the reference is package-locked.</li>
+  <li><b>Functional equivalent</b> – priority 1 met, but another package or pinout.</li>
+  <li><b>Package equivalent</b> – same package, different features; marked pin-to-pin or not.</li>
+  <li><b>Downgrade</b> – pin-to-pin, with a priority 1 value lower than the reference.</li>
+  <li>Anything else is not listed. Obsolete / NRND / last-time-buy candidates are always listed last.</li>
 </ul>
 </details>
 {% for fam, rules in all_rules.items() %}

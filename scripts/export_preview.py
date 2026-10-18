@@ -17,6 +17,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from app.matching.engine import CATEGORY_ORDER
 from app.services.mechanical import load_mechanical
 
 NOTE = (
@@ -91,7 +92,7 @@ def _write_cross_data(client: TestClient, everything: list[dict], data: Path) ->
     for p in everything:
         crosses = client.get(f"/api/parts/{p['id']}/crosses").json()
         rec = {}
-        for cat in ("fff", "upgrade", "p2p", "downgrade"):
+        for cat in CATEGORY_ORDER:
             rows = []
             for r in crosses[cat][:PER_CATEGORY]:
                 top = r["top_differences"]
@@ -156,7 +157,7 @@ def main(out: Path, real: bool = False) -> None:
         for p in parts:
             crosses = client.get(f"/api/parts/{p['id']}/crosses").json()
             seen = set()
-            for cat in ("fff", "upgrade", "p2p", "downgrade"):
+            for cat in CATEGORY_ORDER:
                 for r in crosses[cat]:
                     mfr = r["candidate"]["label"].split()[0]
                     if mfr not in seen:

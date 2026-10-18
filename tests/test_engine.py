@@ -19,21 +19,22 @@ def names(results):
 
 EXPECTED = {
     "SR8641": {
-        # SC141 needs review (P2 worse); SD8641A is automotive (P1 better), so further from the industrial reference
-        "fff": ["SA7741", "SD8641A", "SC141", "SA7741X"],
-        "p2p": ["SC141", "SA7741", "SD8641A", "SB8441", "SA7741X"],
-        "upgrade": ["SD8641A", "SA7741"],  # automotive grade is priority 1; SB8641N only adds TUV (priority 3)
-        "downgrade": ["SB8441"],
+        # SC141 is only worse in priority 2, SD8641A is automotive (P1 better): both still FFF
+        "fff": ["SC141", "SD8641A", "SA7741", "SA7741X"],
+        "functional": ["SB8641N"],  # same package, other pinout
+        "package": ["SB8441"],  # same package, other default output (SC142: other channels, not listed)
     },
     "SR8640N": {
         "fff": ["SA7740N"],
-        "upgrade": ["SB8140Q", "SD4100"],
-        "downgrade": ["SC140N", "SD140N"],
+        "upgrade": ["SB8140Q"],  # smaller package, better
+        "functional": ["SD4100", "SC141", "SD8641A", "SA7741", "SB8641N", "SA7741X"],  # wide body
+        "package": ["SD140N"],
+        "downgrade": ["SC140N"],
     },
-    "SR8233": {"fff": ["SA21520", "SA21521"], "upgrade": ["SA21520"], "downgrade": ["SB6602", "SC4223"]},
-    "SR8286": {"fff": ["SA5870"], "upgrade": ["SA5870"], "downgrade": ["SC4135"]},
-    "SR8920": {"fff": ["SB1300", "SA1301"], "upgrade": ["SA1301"], "downgrade": ["SA1300"]},
-    "SR8501": {"fff": ["SA1100"], "upgrade": ["SA1100"], "downgrade": ["SB2011"]},
+    "SR8233": {"fff": ["SA21520", "SA21521"], "package": ["SB6602", "SC4223"]},  # pin-to-pin first
+    "SR8286": {"fff": ["SC4135", "SA5870"], "functional": ["SB6601"]},  # package-locked: no upgrade
+    "SR8920": {"fff": ["SA1300", "SB1300", "SA1301"]},  # gain is priority 3 (sensitivity)
+    "SR8501": {"fff": ["SA1100", "SB2011"], "functional": ["SC712"]},
 }
 
 
@@ -42,38 +43,49 @@ def test_expected_categories(session, part, ref):
     got = crosses(session, part, ref)
     for cat, expected in EXPECTED[ref].items():
         assert names(got[cat]) == expected, f"{ref} {cat}"
+    for cat in set(got) - set(EXPECTED[ref]):
+        assert got[cat] == [], f"{ref} {cat}"
 
 
-def test_fff_requires_same_pinout(session, part):
-    got = crosses(session, part, "SR8641")
-    assert "SB8641N" not in names(got["fff"]) + names(got["p2p"])  # pinout differs
+def test_fff_requires_same_pinout(part):
+    r = cross(part("SR8641"), part("SB8641N"), get_rules("digital_isolator"))
+    assert r.fit.same_package and not r.fit.same_pinout and r.categories == ["functional"]
+    assert not r.verdict().p2p
 
 
-def test_p2p_ignores_function(part):
-    # Different default output: not FFF, but still pin-to-pin.
+def test_package_equivalent_is_same_package_other_features(part):
+    # Different default output: same package and pins, but not the same function.
     r = cross(part("SR8641"), part("SB8441"), get_rules("digital_isolator"))
-    assert r.categories == ["p2p", "downgrade"]
+    assert r.categories == ["package"] and r.verdict().p2p
 
 
-def test_p2_worse_needs_review_for_fff(part):
+def test_priority_2_never_blocks_fff(part):
     r = cross(part("SR8641"), part("SC141"), get_rules("digital_isolator"))
-    assert r.categories == ["fff", "p2p"] and r.fff_status == "review"
-    assert {d.key for d in r.review_items} == {"data_rate_mbps", "prop_delay_ns"}
+    assert r.categories == ["fff"] and r.fff_status == "auto"
+    v = r.verdict()
+    assert v.spec == "exact" and {d.key for d in v.info_worse} >= {"data_rate_mbps", "prop_delay_ns"}
 
 
-def test_feedback_decides_fff(part):
+def test_better_priority_1_marked_on_fff(part):
+    v = cross(part("SR8641"), part("SD8641A"), get_rules("digital_isolator")).verdict()
+    assert v.category == "fff" and v.spec == "over" and [d.key for d in v.better] == ["qualification"]
+
+
+def test_rejected_fff_becomes_package_equivalent(part):
     from types import SimpleNamespace
 
     from app.models import FeedbackVerdict
 
     rules = get_rules("digital_isolator")
-    accepted = cross(part("SR8641"), part("SC141"), rules, SimpleNamespace(verdict=FeedbackVerdict.accept))
-    assert accepted.fff_status == "accepted" and "fff" in accepted.categories
     rejected = cross(part("SR8641"), part("SC141"), rules, SimpleNamespace(verdict=FeedbackVerdict.reject))
-    assert rejected.fff_status == "rejected" and rejected.categories == ["p2p"]
-    # feedback does not change a cross that is FFF on its own
-    auto = cross(part("SR8641"), part("SA7741"), rules, SimpleNamespace(verdict=FeedbackVerdict.reject))
-    assert auto.fff_status == "auto"
+    assert rejected.fff_status == "rejected" and rejected.categories == ["package"]
+
+
+def test_downgrade_only_pin_to_pin_with_lower_priority_1(part):
+    rules = get_rules("digital_isolator")
+    down = cross(part("SR8640N"), part("SC140N"), rules)
+    assert down.categories == ["downgrade"] and down.fit.fits
+    assert any(d.status == "worse" for d in down.diffs if d.priority == 1)
 
 
 def test_same_package_ignores_pin_count_but_not_dimensions():
@@ -110,11 +122,11 @@ def test_missing_pin_positions_match_nc():
     assert fit.same_package and not fit.same_pinout and fit.positions_unknown
 
 
-def test_hard_mismatch_excludes_functional_categories(part):
+def test_hard_mismatch_is_not_listed(part):
     r = cross(part("SR8641"), part("SC142"), get_rules("digital_isolator"))
-    assert r.hard_fail and r.categories == []
+    assert r.hard_fail and r.fit.same_package and r.categories == []  # other channels
     r = cross(part("SR8261"), part("SA5350"), get_rules("gate_driver"))
-    assert r.hard_fail and r.categories == ["p2p"]  # same pins, CMOS vs opto input
+    assert r.hard_fail and r.fit.fits and r.categories == []  # same pins, CMOS vs opto input
 
 
 def test_smaller_package_upgrade_allowed(part):
@@ -122,9 +134,9 @@ def test_smaller_package_upgrade_allowed(part):
     assert r.fit.package_relation == "smaller" and "upgrade" in r.categories
 
 
-def test_larger_package_never_upgrade(part):
+def test_larger_package_is_functional_not_upgrade(part):
     r = cross(part("SR8640N"), part("SA7741"), get_rules("digital_isolator"))
-    assert r.fit.package_relation == "larger" and r.categories == []
+    assert r.fit.package_relation == "larger" and r.categories == ["functional"]
 
 
 def test_package_lock_blocks_smaller_package_upgrade(part):
@@ -134,10 +146,10 @@ def test_package_lock_blocks_smaller_package_upgrade(part):
     assert r.fit.package_relation == "smaller" and "upgrade" not in r.categories
 
 
-def test_downgrade_requires_same_package_and_prefers_same_pinout(session, part):
+def test_other_packages_with_worse_priority_1_are_not_listed(session, part):
     got = crosses(session, part, "SR8233")
-    assert "SD6602N" not in names(got["downgrade"])  # narrow body
-    assert names(got["downgrade"]) == ["SB6602", "SC4223"]  # pinout match ranked first
+    listed = {r.candidate.mpn for rs in got.values() for r in rs}
+    assert "SD6602N" not in listed  # narrow body and worse
 
 
 def test_lifecycle_risk_parts_sorted_last(session, part):
@@ -176,12 +188,16 @@ def test_pin_alternatives_are_compatible():
     assert not pins_compatible("EN1", "NC") and not pins_compatible("GND1", "NC")
 
 
-def test_tuv_and_supply_range_are_priority_3(part):
-    r = cross(part("SR8641"), part("SB8641N"), get_rules("digital_isolator"))
+def test_isolator_priorities(part):
+    rules = get_rules("digital_isolator")
+    p1 = {p.key for p in rules.by_priority(1)}
+    assert {"isolation_rating_kvrms", "isolation_class", "creepage_mm", "default_output", "qualification"} <= p1
+    assert "cmti_kv_us" in p1
+    assert {p.key for p in rules.by_priority(2)} >= {"vdd_range_v", "viorm_vpk", "prop_delay_ns"}
+    r = cross(part("SR8641"), part("SB8641N"), rules)
     by_key = {d.key: d for d in r.diffs}
-    assert by_key["certifications"].status == "equal"  # TUV is not judged in the P1 certification set
+    assert by_key["certifications"].status == "equal"  # TUV is not judged in the certification set
     assert by_key["tuv_certified"].priority == 3 and by_key["tuv_certified"].status == "better"
-    assert get_rules("digital_isolator").get("vdd_range_v").priority == 3
 
 
 def test_priority_3_differences_are_noted_in_the_comment(part):

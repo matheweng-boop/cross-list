@@ -11,17 +11,7 @@ from sqlalchemy.orm import Session
 from app.auth.deps import get_current_user
 from app.config import get_settings
 from app.db import get_session
-from app.matching.engine import (
-    CATEGORY_LABELS,
-    CATEGORY_ORDER,
-    DROPIN_EXACT,
-    DROPIN_OVER,
-    DROPIN_REVIEW,
-    FFF_STATUS_LABELS,
-    LIFECYCLE_RISK,
-    NOT_DROPIN,
-    format_value,
-)
+from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER, FFF_STATUS_LABELS, LIFECYCLE_RISK, format_value
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
 from app.services import export, lifecycle, mechanical, pricing
@@ -132,40 +122,26 @@ def index(
     )
 
 
-# Order in which a candidate's best category is shown in the per-company rows.
-BEST_RANK = {("fff", "auto"): 0, ("fff", "accepted"): 0, ("fff", "review"): 1, "upgrade": 2, "p2p": 3, "downgrade": 4}
-BEST_LABEL = {0: "FFF", 1: "FFF – review", 2: "Upgrade", 3: "Pin-to-pin", 4: "Downgrade"}
-
-
-def by_company(crosses: dict) -> list[tuple[str, list[dict]]]:
-    """Each candidate once, under its best category, grouped by manufacturer."""
-    best: dict[int, dict] = {}
-    for cat, results in crosses.items():
-        for r in results:
-            rank = BEST_RANK[(cat, r.fff_status)] if cat == "fff" else BEST_RANK[cat]
-            cur = best.get(r.candidate.id)
-            if cur is None or rank < cur["rank"]:
-                best[r.candidate.id] = {"rank": rank, "label": BEST_LABEL[rank], "cat": cat, "r": r}
-    groups: dict[str, list[dict]] = {}
-    for item in best.values():
-        groups.setdefault(item["r"].candidate.manufacturer.name, []).append(item)
-    for items in groups.values():
-        items.sort(key=lambda i: (i["r"].lifecycle_risk, i["rank"], i["r"].closeness))
-    return sorted(groups.items(), key=lambda g: (min(i["rank"] for i in g[1]), g[0]))
-
-
-DROPIN_RANK = {DROPIN_EXACT: 0, DROPIN_OVER: 1, DROPIN_REVIEW: 2, NOT_DROPIN: 3}
+CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
 def result_rows(crosses: dict) -> list:
-    """Each candidate once with its drop-in verdict: drop-ins first, then closest."""
+    """Each listed candidate once with its verdict: FFF first, then upgrades, functional,
+    package equivalents (pin-to-pin first) and downgrades; closest first within each."""
     seen = {}
     for cat in CATEGORY_ORDER:
         for r in crosses.get(cat, []):
             seen.setdefault(r.candidate.id, r)
     rows = [(r, r.verdict()) for r in seen.values()]
-    rows.sort(key=lambda rv: (rv[0].lifecycle_risk, DROPIN_RANK[rv[1].dropin], rv[0].closeness))
+    rows.sort(key=lambda rv: (rv[0].lifecycle_risk, CATEGORY_RANK[rv[1].category], not rv[1].p2p, rv[0].closeness))
     return rows
+
+
+def companies_of(rows: list) -> list[tuple[str, int]]:
+    counts: dict[str, int] = {}
+    for r, _ in rows:
+        counts[r.candidate.manufacturer.name] = counts.get(r.candidate.manufacturer.name, 0) + 1
+    return sorted(counts.items())
 
 
 @router.get("/parts/{part_id}", response_class=HTMLResponse)
@@ -175,7 +151,7 @@ def part_detail(
     hide_eol: bool = False,
     company: str = "",
     scope: str = "auto",
-    dropin: bool = False,
+    p2p: bool = False,
     session: Session = Depends(get_session),
 ):
     part = session.get(Part, part_id)
@@ -184,16 +160,16 @@ def part_detail(
     rules = get_rules(part.family)
     scope = scope if scope in ("auto", "all") else "auto"
     crosses = crosses_for(session, part, scope)
-    rejected = [r for r in crosses["p2p"] if r.fff_status == "rejected"]
+    rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
-    companies = by_company(crosses)
+    companies = companies_of(result_rows(crosses))
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     rows = result_rows(crosses)
-    dropin_count = sum(v.dropin != NOT_DROPIN for _, v in rows)
-    if dropin:
-        rows = [(r, v) for r, v in rows if v.dropin != NOT_DROPIN]
+    p2p_count = sum(v.p2p for _, v in rows)
+    if p2p:
+        rows = [(r, v) for r, v in rows if v.p2p]
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
     groups = {
@@ -216,15 +192,15 @@ def part_detail(
             "company": company,
             "scope": scope,
             "rows": rows,
-            "dropin": dropin,
-            "dropin_count": dropin_count,
+            "p2p": p2p,
+            "p2p_count": p2p_count,
         },
     )
 
 
 @router.get("/parts/{part_id}/replacements.{fmt}")
 def results_download(
-    part_id: int, fmt: str, scope: str = "auto", company: str = "", dropin: bool = False,
+    part_id: int, fmt: str, scope: str = "auto", company: str = "", p2p: bool = False,
     session: Session = Depends(get_session),
 ):  # fmt: skip
     part = session.get(Part, part_id)
@@ -233,7 +209,7 @@ def results_download(
     crosses = crosses_for(session, part, scope if scope in ("auto", "all") else "auto")
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
-    rows = [(r, v) for r, v in result_rows(crosses) if not dropin or v.dropin != NOT_DROPIN]
+    rows = [(r, v) for r, v in result_rows(crosses) if not p2p or v.p2p]
     if fmt == "xlsx":
         return _download(export.results_xlsx(part, rows), f"replacements_{part.mpn}.xlsx", XLSX)
     if fmt == "csv":
@@ -396,9 +372,9 @@ def feedback(
     session: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
-    """Accept or reject a cross that needs review as FFF ("clear" removes the decision)."""
-    if verdict not in ("accept", "reject", "clear"):
-        raise HTTPException(400, "verdict must be accept, reject or clear")
+    """Reject an FFF cross (it is then listed as a package equivalent); "clear" undoes it."""
+    if verdict not in ("reject", "clear"):
+        raise HTTPException(400, "verdict must be reject or clear")
     if session.get(Part, reference_id) is None or session.get(Part, candidate_id) is None:
         raise HTTPException(404, "Part not found")
     record_feedback(session, reference_id, candidate_id, None if verdict == "clear" else verdict, note, user.id)

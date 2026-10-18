@@ -123,20 +123,29 @@ def comparison_csv(c: Comparison) -> str:
     return buf.getvalue()
 
 
-RESULT_HEADER = ["Part", "Manufacturer", "Drop-in", "Spec", "Better", "Worse", "Why not drop-in / note", "Package",
-                 "Lifecycle", "Top 5 differences", "Priority 3 notes"]  # fmt: skip
-VERDICT_FILLS = {"exact": FILLS["better"], "over": FILLS["better"], "review": FILLS["different"], "no": FILLS["worse"]}
+RESULT_HEADER = ["Part", "Manufacturer", "Cross type", "Pin-to-pin", "Priority 1", "P1 better", "P1 worse or different",
+                 "P2/P3 better (info)", "P2/P3 worse (info)", "Package", "Lifecycle", "Top 5 differences",
+                 "Priority 3 notes"]  # fmt: skip
+VERDICT_FILLS = {
+    "fff": FILLS["better"],
+    "upgrade": FILLS["better"],
+    "functional": FILLS["baseline"],
+    "package": FILLS["different"],
+    "downgrade": FILLS["worse"],
+}
 
 
 def _result_cells(r: CrossResult, v) -> list[str]:
     return [
         r.candidate.mpn,
         r.candidate.manufacturer.name,
-        v.label,
+        v.label + (" (FFF rejected in review)" if r.fff_status == "rejected" else ""),
+        "yes" if v.p2p else "no",
         v.spec_label,
         ", ".join(d.label for d in v.better),
         ", ".join(d.label for d in v.worse),
-        ", ".join(v.reasons),
+        ", ".join(d.label for d in v.info_better),
+        ", ".join(d.label for d in v.info_worse),
         r.candidate.package.code,
         r.candidate.lifecycle_status.value,
         " · ".join(d.summary() for d in r.top_differences()),
@@ -151,7 +160,7 @@ def results_xlsx(reference, rows) -> bytes:
     ws.title = "Replacements"
     ws.append([f"Replacements for {reference.mpn} ({reference.manufacturer.name}, {reference.package.code})"])
     ws["A1"].font = Font(bold=True, size=13)
-    ws.append(["Drop-in = same footprint and pinout, nothing worse in priority 1. Spec compares priority 1 & 2."])
+    ws.append(["FFF = same package, pin-to-pin, priority 1 equal or better. Priority 2/3 are for information."])
     if reference.is_synthetic:
         ws.append([SYNTHETIC_NOTE])
     ws.append([])
@@ -160,7 +169,7 @@ def results_xlsx(reference, rows) -> bytes:
         cell.font = BOLD
     for r, v in rows:
         ws.append(_result_cells(r, v))
-        ws.cell(ws.max_row, 3).fill = VERDICT_FILLS[v.dropin]
+        ws.cell(ws.max_row, 3).fill = VERDICT_FILLS[v.category]
     _autosize(ws)
     buf = io.BytesIO()
     wb.save(buf)

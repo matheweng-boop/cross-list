@@ -1,27 +1,30 @@
 family: digital_isolator
 title: Digital isolators
+# Priority 1 must be equal or better for a functional equivalent; priority 2 and 3
+# never block a cross, they are shown for information.
 params:
-  # --- Priority 1: must match ---
+  # --- Priority 1: must be equal or better ---
   - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
   - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [basic, reinforced]}
   - {key: creepage_mm, label: Creepage, unit: mm, priority: 1, kind: number, direction: higher}
+  - {key: default_output, label: Output type (default state), priority: 1, kind: category}
+  - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive]}
+  - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 1, kind: number, direction: higher}
+  # What the part does: a 3/1 isolator cannot replace a 4/0 one.
   - {key: channel_config, label: Channels (fwd/rev), priority: 1, kind: category, hard: true}
   - {key: integrated_power, label: Integrated isolated power, priority: 1, kind: category, hard: true}
-  - {key: default_output, label: Default output, priority: 1, kind: category}
-  - {key: certifications, label: Safety certifications (UL, VDE, CSA, CQC), priority: 1, kind: set, exclude: [TUV]}
-  - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive]}
-  # --- Priority 2: should match ---
-  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 2, kind: number, direction: higher}
+  # --- Priority 2: for information ---
+  - {key: vdd_range_v, label: Supply range, unit: V, priority: 2, kind: range}
+  - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 2, kind: number, direction: higher}
   - {key: prop_delay_ns, label: Propagation delay (max), unit: ns, priority: 2, kind: number, direction: lower}
-  - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 2, kind: number, direction: higher}
+  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 2, kind: number, direction: higher}
+  - {key: certifications, label: Safety certifications (UL, VDE, CSA, CQC), priority: 2, kind: set, exclude: [TUV]}
   - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
   - {key: enable_pins, label: Enable pins, priority: 2, kind: category}
-  # --- Priority 3: informative ---
+  # --- Priority 3: for information ---
   - {key: idd_per_channel_ma, label: Supply current per channel, unit: mA, priority: 3, kind: number, direction: lower}
   - {key: pwd_ns, label: Pulse width distortion, unit: ns, priority: 3, kind: number, direction: lower}
   - {key: skew_ns, label: Channel-to-channel skew, unit: ns, priority: 3, kind: number, direction: lower}
   - {key: esd_hbm_kv, label: ESD (HBM), unit: kV, priority: 3, kind: number, direction: higher}
-  - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 3, kind: number, direction: higher}
-  - {key: vdd_range_v, label: Supply range, unit: V, priority: 3, kind: range}
   - {key: tuv_certified, label: TÜV certification, priority: 3, kind: bool, direction: true_better, from: {param: certifications, contains: TUV}}
   - {key: surge_10kv, label: 10 kV surge capable, priority: 3, kind: bool, direction: true_better}

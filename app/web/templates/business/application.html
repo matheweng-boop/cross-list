@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct, usd, company_switch, status_chip %}
+{% block title %}{{ app.name }} – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<p class="small"><a href="/business/applications?co={{ co }}">← All applications</a></p>
+<h1>{{ app.name }}</h1>
+<p class="subtitle muted">{{ app.category }} · functional blocks (level 2) and their design-in positions (level 3). Change a status, quantity or
+  ASP to see what it means: the simulator runs on this page only. ASPs can be saved for every application.</p>
+{{ company_switch('/business/applications/' ~ app.i, co, companies) }}
+<div id="bo-sim" class="bo-sim">
+  <div class="bo-tiles">
+    <div class="bo-tile"><b data-m="cov">{{ pct(m.coverage) }}</b><span>functional coverage</span><small data-m="cov-sub">{{ m.supported }} of {{ m.in_scope }} in-scope positions</small></div>
+    <div class="bo-tile"><b data-m="share">{{ pct(m.content_share) }}</b><span>modeled portfolio content</span><small data-m="share-sub">priced positions only</small></div>
+    <div class="bo-tile"><b data-m="open">{{ usd(m.content_open) }}</b><span>additional content opportunity</span><small>per system, priced positions</small></div>
+    <div class="bo-tile"><b data-m="unaddr">{{ m.gap + m.competitor }}</b><span>unaddressed positions</span><small>gaps + competitor only</small></div>
+    <div class="bo-tile"><b data-m="pc">{{ pct(m.price_completeness) }}</b><span>pricing completeness</span><small data-m="pc-sub">{{ m.priced }} of {{ m.in_scope }} positions priced</small></div>
+  </div>
+  <div class="bo-legend small"><span class="bo-st st-supported">Portfolio</span><span class="bo-st st-gap">Gap (opportunity)</span><span class="bo-st st-competitor">Competitor only</span><span class="bo-st st-na">Outside scope</span> · outside scope is excluded from the denominator</div>
+  {% for g, gm in groups %}
+  <section class="bo-group"><h3>{{ g }} <span class="small muted" data-g="{{ loop.index0 }}">{{ pct(gm.coverage) }} coverage · {{ gm.supported }}/{{ gm.in_scope }}</span></h3>
+    <div class="bo-pos-list">
+    {% for p in app.positions if p.group == g %}
+      <div class="bo-pos" data-fn="{{ p.fn }}" data-g="{{ loop.index0 }}" data-gi="{{ loop.index0 }}">
+        <div class="bo-pos-name"><b>{{ p.label }}</b>
+          <small class="muted">{% for mname, n in p.makers|dictsort if n %}{{ mname }} {{ n }}{{ ' · ' if not loop.last }}{% else %}no parts in Cross List{% endfor %}</small></div>
+        <select class="bo-status" aria-label="Status of {{ p.label }}">
+          {% for s in ['supported', 'gap', 'competitor', 'na'] %}<option value="{{ s }}"{{ ' selected' if p.status == s }}>{{ status_label[s] }}</option>{% endfor %}
+        </select>
+        <label class="bo-num">qty <input type="number" min="0" step="1" value="{{ p.qty }}" class="bo-qty"></label>
+        <label class="bo-num">ASP $ <input type="number" min="0" step="0.01" value="{{ asp.get(p.fn, '') }}" class="bo-asp" placeholder="?"></label>
+        <span class="bo-content small" aria-live="polite"></span>
+      </div>
+    {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  <p><button type="button" id="bo-save-asp" class="small-btn">Save ASPs for all applications</button> <button type="button" id="bo-reset" class="outline secondary small-btn">Reset</button> <span id="bo-saved" class="small muted"></span></p>
+  <p class="small muted">Statuses come from Cross List parts for {{ co_label }}; “Portfolio” means a candidate part exists, not yet verified against this
+    application's electrical requirements. Quantities and ASPs are inputs, not market data. The content percentage is a screening metric,
+    not market share or revenue.</p>
+</div>
+<script>
+(() => {
+  const root = document.getElementById("bo-sim"), money = v => "$" + v.toFixed(2), pct = v => (v == null ? "—" : Math.round(v * 100) + "%");
+  const rows = [...root.querySelectorAll(".bo-pos")];
+  const groupsOf = [...new Set(rows.map(r => r.closest(".bo-group")))];
+  const initial = rows.map(r => [r.querySelector(".bo-status").value, r.querySelector(".bo-qty").value, r.querySelector(".bo-asp").value]);
+  function calc(list) {
+    const scope = list.filter(r => r.st !== "na"), sup = scope.filter(r => r.st === "supported"), priced = scope.filter(r => r.asp != null);
+    const total = priced.reduce((k, r) => k + r.q * r.asp, 0), mine = priced.filter(r => r.st === "supported").reduce((k, r) => k + r.q * r.asp, 0);
+    return {scope: scope.length, sup: sup.length, cov: scope.length ? sup.length / scope.length : null, total, mine, priced: priced.length,
+      unaddr: scope.length - sup.length};
+  }
+  function update() {
+    const data = rows.map(r => {
+      const st = r.querySelector(".bo-status").value, q = +r.querySelector(".bo-qty").value || 0, a = r.querySelector(".bo-asp").value;
+      const asp = a === "" ? null : +a;
+      r.className = `bo-pos st-${st}`;
+      r.querySelector(".bo-content").textContent = asp == null ? "" : `${money(q * asp)} / system`;
+      return {st, q, asp, el: r};
+    });
+    const m = calc(data), set = (k, v) => (root.querySelector(`[data-m="${k}"]`).textContent = v);
+    set("cov", pct(m.cov)); set("cov-sub", `${m.sup} of ${m.scope} in-scope positions`);
+    set("share", m.total ? pct(m.mine / m.total) : "—"); set("share-sub", m.total ? `${money(m.mine)} of ${money(m.total)} per system, priced positions only` : "no ASPs entered");
+    set("open", money(m.total - m.mine)); set("unaddr", m.unaddr);
+    set("pc", pct(m.scope ? m.priced / m.scope : null)); set("pc-sub", `${m.priced} of ${m.scope} positions priced`);
+    groupsOf.forEach(g => {
+      const gm = calc(data.filter(d => g.contains(d.el)));
+      g.querySelector("h3 .small").textContent = `${pct(gm.cov)} coverage · ${gm.sup}/${gm.scope}`;
+    });
+  }
+  root.addEventListener("input", update);
+  root.addEventListener("change", update);
+  document.getElementById("bo-reset").onclick = () => { rows.forEach((r, i) => { [r.querySelector(".bo-status").value, r.querySelector(".bo-qty").value, r.querySelector(".bo-asp").value] = initial[i]; }); update(); };
+  document.getElementById("bo-save-asp").onclick = async () => {
+    const body = {};
+    rows.forEach(r => (body[r.dataset.fn] = r.querySelector(".bo-asp").value || null));
+    const res = await fetch("/api/business/asp", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    document.getElementById("bo-saved").textContent = res.ok ? "Saved: these ASPs now apply to every application" : `Not saved (${res.status})`;
+  };
+  update();
+})();
+</script>
+{% endblock %}

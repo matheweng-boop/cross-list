@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct, usd, company_switch %}
+{% block title %}Applications – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Application view</h1>
+<p class="subtitle muted">Functional coverage per application: in-scope design-in positions with a {{ co_label }} part. Click an application for its
+  functional blocks, positions and the coverage simulator.</p>
+{{ company_switch('/business/applications', co, companies) }}
+{% set ns = namespace(cat='') %}
+<div class="table-wrap"><table class="striped bo-apps">
+  <thead><tr><th>Application</th><th>Coverage</th><th>Positions</th><th>Gaps</th><th>Competitor only</th><th>Content (priced)</th></tr></thead>
+  <tbody>
+  {% for a, m in rows %}
+    {% if a.category != ns.cat %}{% set ns.cat = a.category %}<tr class="bo-cat"><td colspan="6">{{ a.category }}</td></tr>{% endif %}
+    <tr><td><a href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a></td>
+      <td><div class="bo-bar" title="{{ m.supported }} of {{ m.in_scope }}"><span style="width:{{ ((m.coverage or 0) * 100)|round }}%"></span></div> {{ pct(m.coverage) }}</td>
+      <td>{{ m.supported }}/{{ m.in_scope }}</td><td>{{ m.gap }}</td><td>{{ m.competitor }}</td>
+      <td class="small">{% if m.priced %}{{ usd(m.content_mine) }} of {{ usd(m.content_total) }} <span class="muted">({{ m.priced }}/{{ m.in_scope }} priced)</span>{% else %}<span class="muted">no ASPs</span>{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

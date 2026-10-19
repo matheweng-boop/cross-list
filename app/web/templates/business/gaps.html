@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct, usd, company_switch, status_chip %}
+{% block title %}Gaps & ranking – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Gaps &amp; ranking</h1>
+<p class="subtitle muted">Every function that is a gap or competitor-only for {{ co_label }} in at least one application, ranked. Application reach =
+  applications that need it; with anchor = of those, how many already have a {{ co_label }} position (attach-addressable);
+  TAM only where ASP and application volumes are known.</p>
+{{ company_switch('/business/gaps', co, companies, '&sort=' ~ sort) }}
+<div class="chip-row"><span class="chip-lbl">Sort by</span>
+  {% for k, label in [('reach', 'Application reach'), ('adjacency', 'Existing anchor share'), ('positions', 'Design-in positions'), ('tam', 'TAM')] %}
+  <a class="fchip{{ ' on' if sort == k }}" href="/business/gaps?co={{ co }}&sort={{ k }}">{{ label }}</a>{% endfor %}
+</div>
+<div class="table-wrap"><table class="striped bo-gaps">
+  <thead><tr><th>Function</th><th>Status</th><th>Application reach</th><th>With portfolio anchor</th><th>Design-in positions</th><th>TAM / year</th></tr></thead>
+  <tbody>{% for e in rows %}
+    <tr id="fn-{{ e.fn }}"><td><b>{{ e.label }}</b><details class="small"><summary>applications</summary>{{ e.apps|join(', ') }}</details></td>
+      <td>{{ status_chip(e.status, status_label) }}</td>
+      <td>{{ e.reach }}/{{ apps|length }}</td>
+      <td><div class="bo-bar"><span style="width:{{ (e.adjacency * 100)|round }}%"></span></div> {{ e.adjacent }}/{{ e.reach }}</td>
+      <td>{{ e.positions }}</td>
+      <td class="small">{% if e.tam_apps %}{{ usd(e.tam) }} <span class="muted">({{ e.tam_apps }}/{{ e.reach }} apps with data)</span>{% else %}<span class="muted">insufficient data</span>{% endif %}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+<h2>Existing products with wide reach <span class="small muted">· push before you build</span></h2>
+<p class="small muted">Functions {{ co_label }} already covers, by how many applications need them: candidates for application engineering and
+  marketing rather than a new product.</p>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th>Function</th><th>Applications</th><th>Design-in positions</th><th></th></tr></thead>
+  <tbody>{% for e in portfolio %}<tr><td>{{ e.label }}</td><td>{{ e.reach }}/{{ apps|length }}</td><td>{{ e.positions }}</td><td><a href="/business/attach?co={{ co }}&fn={{ e.fn }}">attach view</a></td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Clustering by electrical requirements (stage 4) is not applied yet: one row = one function, which may need several product variants.</p>
+{% endblock %}

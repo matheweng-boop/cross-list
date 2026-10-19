@@ -290,3 +290,18 @@ class BlockFeedback(Base):
     message: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="open")  # open | agreed | rejected | done
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class BusinessInput(Base):
+    """Commercial inputs for the Business opportunity pages: ASP per function (USD) or annual production
+    volume per application (units). Missing values stay missing; nothing is estimated."""
+
+    __tablename__ = "business_inputs"
+    __table_args__ = (UniqueConstraint("kind", "key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(20))  # asp | volume
+    key: Mapped[str] = mapped_column(String(300))  # function id (asp) or application name (volume)
+    value: Mapped[float] = mapped_column(Float)
+    note: Mapped[str | None] = mapped_column(String(300))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

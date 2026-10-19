@@ -1,0 +1,8 @@
+{% macro pct(v) %}{{ '—' if v is none else ((v * 100)|round|int ~ '%') }}{% endmacro %}
+{% macro usd(v) %}${{ '{:,.2f}'.format(v) }}{% endmacro %}
+{% macro company_switch(path, co, companies, extra='') %}
+<div class="chip-row bo-co"><span class="chip-lbl">Portfolio</span>
+  {% for k, (label, _) in companies.items() %}<a class="fchip{{ ' on' if co == k }}" href="{{ path }}?co={{ k }}{{ extra }}">{{ label }}</a>{% endfor %}
+</div>
+{% endmacro %}
+{% macro status_chip(s, labels) %}<span class="bo-st st-{{ s }}">{{ labels[s] }}</span>{% endmacro %}

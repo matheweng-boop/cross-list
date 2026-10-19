@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct, company_switch %}
+{% block title %}Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Business opportunity</h1>
+<p class="subtitle muted">Application-driven portfolio intelligence: how much of each application the portfolio covers, what else can be
+  sold next to an existing design-in, and which missing functions would open the most opportunity across all applications.
+  Count-based results work today; revenue figures appear as ASPs and volumes are added, always with their completeness.</p>
+{{ company_switch('/business', co, companies) }}
+<div class="bo-tiles">
+  <div class="bo-tile"><b>{{ pct(ov.metrics.coverage) }}</b><span>functional coverage, all positions</span><small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope design-in positions</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.avg_coverage) }}</b><span>average per application</span><small>{{ ov.apps }} applications</small></div>
+  <div class="bo-tile"><b>{{ ov.gap_functions }}</b><span>functions with gaps</span><small>gap or competitor-only somewhere</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.asp_known / ov.asp_needed if ov.asp_needed else none) }}</b><span>pricing completeness</span><small>ASP known for {{ ov.asp_known }} of {{ ov.asp_needed }} functions · volume for {{ ov.vol_known }} of {{ ov.apps }} applications</small></div>
+</div>
+
+<h2>Pipeline</h2>
+<ol class="bo-pipeline">
+  <li class="done"><b>1 · Normalize architectures</b><span>{{ ov.apps }} applications, {{ ov.positions }} design-in positions on {{ ov.functions }} normalized functions. {{ ov.metrics.unknown }} positions on unknown functions.</span><a href="/blocks">Applications</a></li>
+  <li class="done"><b>2 · Match existing products</b><span>Each position checked for {{ co_label }} parts in Cross List (catalogue + full-parameter families). Electrical requirements per application are not yet applied: “supported” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Applications</a></li>
+  <li class="done"><b>3 · Identify coverage gaps</b><span>{{ ov.metrics.gap }} gap and {{ ov.metrics.competitor }} competitor-only positions; {{ ov.metrics.na }} outside scope (customer / platform parts).</span><a href="/business/gaps?co={{ co }}">Gaps &amp; ranking</a></li>
+  <li class="todo"><b>4 · Cluster compatible opportunities</b><span>Needs electrical requirements per position (input voltage, current, qualification…). Today gaps are grouped by function only.</span></li>
+  <li class="part"><b>5 · Rank product concepts</b><span>Ranked by application reach, design-in positions and adjacency to existing portfolio positions; TAM joins as ASPs and volumes are entered.</span><a href="/business/data?co={{ co }}">TAM data</a></li>
+</ol>
+
+<h2>Top gaps <span class="small muted">· by application reach</span></h2>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th>Function</th><th>Applications</th><th>With an existing portfolio anchor</th><th>Design-in positions</th></tr></thead>
+  <tbody>{% for e in top_gaps %}<tr><td><a href="/business/gaps?co={{ co }}#fn-{{ e.fn }}">{{ e.label }}</a></td><td>{{ e.reach }}/{{ ov.apps }}</td><td>{{ e.adjacent }}/{{ e.reach }}</td><td>{{ e.positions }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Modeled from the application diagrams; not observed sales attach rates or verified market share.</p>
+{% endblock %}

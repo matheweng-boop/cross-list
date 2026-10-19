@@ -67,11 +67,17 @@ SECTIONS = (
                                              ("Feedback", "/blocks/feedback")]),
     ("broadcast", "Broadcast", "/broadcast", [("Overview", "/broadcast"),
                                               ("Configurations", "/broadcast/configurations")]),
+    ("business", "Business opportunity", "/business", [("Overview", "/business"),
+                                                       ("Applications", "/business/applications"),
+                                                       ("Attach", "/business/attach"),
+                                                       ("Gaps & ranking", "/business/gaps"),
+                                                       ("TAM data", "/business/data")]),
 )  # fmt: skip
 SECTION_PREFIXES = {
     "technical": ("/technical", "/engineering", "/impact"),
     "broadcast": ("/broadcast",),
     "blocks": ("/blocks",),
+    "business": ("/business",),
 }
 
 

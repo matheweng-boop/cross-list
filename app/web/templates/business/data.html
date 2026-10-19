@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import company_switch %}
+{% block title %}TAM data – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>TAM data</h1>
+<p class="subtitle muted">Commercial inputs. Leave a field empty when the value is unknown: missing values are never estimated, and every
+  revenue figure says how much of it is priced. TAM per function = Σ over applications of annual volume × quantity per system × ASP
+  (alternative parts for one position count once).</p>
+{% if request.query_params.get('saved') %}<p class="uc-ok">Saved.</p>{% endif %}
+<form method="post" action="/business/data">
+  <input type="hidden" name="co" value="{{ co }}">
+  <div class="bo-two">
+    <section><h2>ASP per function <span class="small muted">· USD per device · {{ asp|length }} of {{ asp_fns|length }} known</span></h2>
+      <div class="bo-inputs">{% for f in asp_fns %}<label><span>{{ fns[f].label }}</span><input name="asp:{{ f }}" type="text" inputmode="decimal" value="{{ asp.get(f, '') }}" placeholder="unknown"></label>{% endfor %}</div></section>
+    <section><h2>Annual volume per application <span class="small muted">· systems per year · {{ vol|length }} of {{ apps|length }} known</span></h2>
+      <div class="bo-inputs">{% for a in apps %}<label><span>{{ a.name }}</span><input name="vol:{{ a.name }}" type="text" inputmode="numeric" value="{{ '%d'|format(vol[a.name]) if a.name in vol else '' }}" placeholder="unknown"></label>{% endfor %}</div></section>
+  </div>
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

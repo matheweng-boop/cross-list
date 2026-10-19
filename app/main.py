@@ -67,6 +67,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.auth.gate import router as auth_router
     from app.web.blocks import router as blocks_router
     from app.web.broadcast import router as broadcast_router
+    from app.web.business import router as business_router
     from app.web.requests import router as requests_router
     from app.web.routes import router as web_router
 
@@ -82,4 +83,5 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(broadcast_router)
     app.include_router(requests_router)
     app.include_router(blocks_router)
+    app.include_router(business_router)
     return app

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import company_switch, status_chip %}
+{% block title %}Attach – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Attach view</h1>
+<p class="subtitle muted">Pick an anchor: a function where {{ co_label }} already has a design-in. See the applications it sits in, which neighbouring
+  positions the portfolio can already sell into (cross-sell) and which need a new product (attach opportunity). Modeled from the
+  application diagrams, not an observed sales attach rate.</p>
+{{ company_switch('/business/attach', co, companies, '&fn=' ~ fn) }}
+<form method="get" action="/business/attach" class="bo-anchor">
+  <input type="hidden" name="co" value="{{ co }}">
+  <label>Anchor function <select name="fn" onchange="this.form.submit()"><option value="">choose…</option>
+    {% for f in anchors %}<option value="{{ f }}"{{ ' selected' if f == fn }}>{{ fns[f].label }}</option>{% endfor %}</select></label>
+</form>
+{% if result %}
+<p><b>{{ result.apps|length }}</b> application{{ 's' if result.apps|length != 1 }} contain {{ fns[fn].label }}:
+  {% for a in result.apps %}<a href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>
+<div class="bo-two">
+  <section><h2>Cross-sell <span class="small muted">· portfolio products for the neighbouring positions</span></h2>
+    <ul class="bo-attach">{% for e in result.cross_sell %}<li><span>{{ e.label }}</span><span class="bo-bar"><span style="width:{{ (100 * e.apps / result.apps|length)|round }}%"></span></span><small>{{ e.apps }}/{{ result.apps|length }} apps · {{ e.positions }} positions</small></li>{% else %}<li class="muted">none</li>{% endfor %}</ul></section>
+  <section><h2>New-product attach <span class="small muted">· gaps and competitor-only positions next to the anchor</span></h2>
+    <ul class="bo-attach">{% for e in result.new %}<li><span>{{ e.label }} {{ status_chip(e.status, status_label) }}</span><span class="bo-bar gap"><span style="width:{{ (100 * e.apps / result.apps|length)|round }}%"></span></span><small>{{ e.apps }}/{{ result.apps|length }} apps · {{ e.positions }} positions</small></li>{% else %}<li class="muted">none</li>{% endfor %}</ul></section>
+</div>
+{% endif %}
+{% endblock %}

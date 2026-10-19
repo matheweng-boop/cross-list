@@ -74,7 +74,8 @@ async def main():
         # 3 cross-sell
         async def w3():
             await pg.goto(B + "/business/attach?fn=digital_isolator")
-            await expect(pg.locator("text=Modeled, not observed")).to_be_visible()
+            await expect(pg.locator("p.subtitle", has_text="not observed sales")).to_be_visible()
+            await expect(pg.locator("a.offer").first).to_be_visible()  # named parts to offer
             await pg.goto(B + "/business/markets")
             await pg.locator("text=customers →").first.click()
             await pg.wait_for_url(re.compile(r"/business/customers\?.*fn="))

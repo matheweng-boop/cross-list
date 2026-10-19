@@ -1,36 +1,58 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch, status_chip, crowd, about, term %}
-{% block title %}Attach – Business opportunity – Cross List{% endblock %}
+{% from "business/_common.html" import company_switch, crowd, about, term, push with context %}
+{% block title %}Cross-sell – Cross List{% endblock %}
+{% macro partlinks(ps) %}{% for p in ps %}<a class="offer" href="{{ p.url }}"{% if not p.url.startswith('/') %} target="_blank" rel="noopener"{% endif %} title="{{ p.manufacturer }}">{{ p.mpn }}</a>{% else %}<span class="muted small">no part listed</span>{% endfor %}{% endmacro %}
 {% block content %}
 <h1>Cross-sell</h1>
-<p class="limits small"><b>Modeled, not observed:</b> "how often" counts reference architectures in which two functions appear together. It is not a sales attach rate.</p>
-<p class="subtitle muted">Pick one of our products (a function where {{ co_label }} already has parts). The list shows the other functions that sit in
-  the same applications, and whether we can sell an existing part there or would need a new one. Modeled from the application diagrams,
-  not observed sales.</p>
+<p class="subtitle muted">Which of our parts to offer together, and which new products would sit next to a product we already sell.
+  Modeled from {{ apps|length }} reference architectures (two functions in the same design), not observed sales.</p>
 {{ company_switch('/business/attach', co, companies, '&fn=' ~ fn) }}
-{{ about('attach') }}
 <form method="get" action="/business/attach" class="bo-anchor">
   <input type="hidden" name="co" value="{{ co }}">
-  <label>Our product <select name="fn" onchange="this.form.submit()"><option value="">choose…</option>
+  <label>Start from a product we sell <select name="fn" onchange="this.form.submit()"><option value="">– overview: best bundles –</option>
     {% for f, k in anchors %}<option value="{{ f }}"{{ ' selected' if f == fn }}>{{ fns[f].label }} · in {{ k }} application{{ 's' if k != 1 }}</option>{% endfor %}</select></label>
 </form>
-{% if result %}
-{% set n = result.apps|length %}
-<p>{{ fns[fn].label }} is in <b>{{ n }}</b> application{{ 's' if n != 1 }}.
-  <details class="small bo-inline"><summary>show them</summary>{% for a in result.apps %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endfor %}</details></p>
-{% set common = result.rows|selectattr('apps', 'ge', 2 if n > 3 else 1)|list %}
-{% set rare = result.rows|selectattr('apps', 'lt', 2 if n > 3 else 1)|list %}
-<div class="table-wrap"><table class="striped bo-attach-t">
-  <thead><tr><th>Also in those applications</th><th>How often</th><th>Our position</th><th>What it means</th></tr></thead>
-  <tbody>{% for e in common %}<tr>
-    <td>{{ e.label }}<br><small class="muted">In {{ e.apps }} of the {{ n }} applications with {{ fns[fn].label }}, {{ e.positions }} socket{{ 's' if e.positions != 1 }}</small></td>
-    <td><span class="bo-bar{{ ' gap' if e.status != 'supported' }}"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
-    <td>{{ status_chip(e.status, status_label) }}</td>
-    <td class="small">{% if e.status == 'supported' %}Cross-sell: offer our existing part with it{% elif e.status == 'gap' %}New product: nobody in Cross List has it yet{% else %}New product: only competitors have it today{% endif %}</td>
-  </tr>{% else %}<tr><td colspan="4" class="muted">No function appears in more than one of these applications.</td></tr>{% endfor %}</tbody>
+
+{% if not result %}
+<h2>Best bundles <small class="muted">· our products that most often sit in the same design</small></h2>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th scope="col">Our product</th><th scope="col">Offer together with</th><th scope="col">Together in</th><th scope="col"></th></tr></thead>
+  <tbody>{% for p in pairs %}<tr>
+    <td><a href="/business/attach?co={{ co }}&fn={{ p.a }}">{{ p.a_label }}</a></td>
+    <td><a href="/business/attach?co={{ co }}&fn={{ p.b }}">{{ p.b_label }}</a></td>
+    <td>{{ p.apps }} architecture{{ 's' if p.apps != 1 }}</td>
+    <td>{{ push('crosssell', p.a ~ '+' ~ p.b, p.a_label ~ ' + ' ~ p.b_label, 'Bundle: together in ' ~ p.apps ~ ' reference architectures', '', (p.a ~ '+' ~ p.b) in shortlisted) }}</td>
+  </tr>{% else %}<tr><td colspan="4" class="muted">No two of our products appear in the same architecture.</td></tr>{% endfor %}</tbody>
 </table></div>
-{% if rare %}<details class="small"><summary>{{ rare|length }} more that appear in only one application</summary>
-  <p>{% for e in rare %}<span class="bo-ours{{ ' bo-ours-gap' if e.status != 'supported' }}" title="{{ status_label[e.status] }}">{{ e.label }}</span>{% endfor %}</p></details>{% endif %}
-<p class="small muted">Blue = we have a part; amber = new product needed. Sorted by how often the function appears with {{ fns[fn].label }}.</p>
+<p class="small muted">Pick a product above to see the parts to offer next to it and the new products that would sit beside it.</p>
+{% else %}
+{% set n = result.apps|length %}
+<p><b>{{ fns[fn].label }}</b> sits in <b>{{ n }}</b> architecture{{ 's' if n != 1 }} · our parts: {{ partlinks(anchor_parts) }}
+  <details class="small bo-inline"><summary>which architectures</summary>{% for a in result.apps %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endfor %}</details></p>
+{% set ours = result.rows|selectattr('status', 'equalto', 'supported')|list %}
+{% set new = result.rows|rejectattr('status', 'equalto', 'supported')|list %}
+
+<h2>Offer with it <small class="muted">· we already have parts · {{ ours|length }}</small></h2>
+<div class="table-wrap"><table class="striped bo-attach-t">
+  <thead><tr><th scope="col">Function</th><th scope="col">Together in</th><th scope="col">Parts to offer</th><th scope="col"></th></tr></thead>
+  <tbody>{% for e in ours %}<tr>
+    <td>{{ e.label }}</td>
+    <td><span class="bo-bar"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
+    <td class="small">{{ partlinks(e.offer) }}</td>
+    <td>{{ push('crosssell', fn ~ '+' ~ e.fn, fns[fn].label ~ ' + ' ~ e.label, 'Offer together: in ' ~ e.apps ~ ' of ' ~ n ~ ' architectures with ' ~ fns[fn].label, e.fn, (fn ~ '+' ~ e.fn) in shortlisted) }}</td>
+  </tr>{% else %}<tr><td colspan="4" class="muted">None of our other products appears with it.</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>New products next to it <small class="muted">· no part of ours yet · {{ new|length }}</small></h2>
+<div class="table-wrap"><table class="striped bo-attach-t">
+  <thead><tr><th scope="col">Function</th><th scope="col">Together in</th><th scope="col">Today</th><th scope="col"></th></tr></thead>
+  <tbody>{% for e in new %}<tr>
+    <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td>
+    <td><span class="bo-bar gap"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
+    <td class="small">{{ 'Nobody in Cross List has it' if e.status == 'gap' else 'Only competitors' }}</td>
+    <td>{{ push('crosssell', fn ~ '+' ~ e.fn, e.label ~ ' (next to ' ~ fns[fn].label ~ ')', 'New product: in ' ~ e.apps ~ ' of ' ~ n ~ ' architectures with ' ~ fns[fn].label, e.fn, (fn ~ '+' ~ e.fn) in shortlisted) }}</td>
+  </tr>{% else %}<tr><td colspan="4" class="muted">Every function next to it is covered.</td></tr>{% endfor %}</tbody>
+</table></div>
 {% endif %}
+{{ about('attach') }}
 {% endblock %}

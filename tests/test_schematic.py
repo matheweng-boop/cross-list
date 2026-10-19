@@ -92,3 +92,16 @@ def test_typical_application_data_is_consistent():
         # datasheet text lives under var/ (not committed): without it only the structure is checked
         errs = [e for e in check(f) if "datasheet text not found" not in e]
         assert not errs, errs[:5]
+
+
+def test_only_blocks_we_can_draw(client, real):
+    out = post(client, scope={"kind": "all", "drawable": True})
+    assert [d["mpn"] for d in out["devices"]] == ["ISO7741DBQR", "SI8233BB-D-IS1", "SKY13317-373LF"]
+    assert [d["ref"] for d in out["devices"]] == ["U1", "U2", "U3"]
+    assert any("MCU" in s for s in out["skipped"])
+
+
+def test_suggested_parts_say_which_can_be_drawn(client, real):
+    r = client.get("/api/blocks/parts?fn=digital_isolator&lite=1").json()
+    best = [p for m in r["manufacturers"] for p in m["best"]]
+    assert best and all("pins" in p for p in best) and any(p["pins"] for p in best)

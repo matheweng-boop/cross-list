@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import re
 
 from openpyxl import load_workbook
 
@@ -227,7 +228,7 @@ def test_finder_start_page(client):
     html = client.get("/").text
     assert "Find a replacement" in html and 'action="/find"' in html
     # three starting actions and one definition of the cross types
-    assert all(x in html for x in ('href="/parts"', 'href="/blocks"', 'href="/business"'))
+    assert all(x in html for x in ('href="/compare"', 'href="/blocks"', 'href="/business"'))
     assert "every priority 1 parameter equal or better" in html
 
 
@@ -309,7 +310,7 @@ def test_automotive_reference_banner(client):
 def test_navigation_sections_and_old_urls(client):
     """Sections in the top row, the section's pages in the second: every old URL lands in the right section and item."""
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
-                               ("/parts", "Products", "Browse products"),
+                               ("/parts", "Products", "Search &amp; replacements"),
                                ("/compare", "Products", "Compare"), ("/broadcast", "Products", "Radio &amp; audio"),
                                ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
@@ -323,10 +324,7 @@ def test_navigation_sections_and_old_urls(client):
         r = client.get(url)
         assert r.status_code == 200, url
         assert f'aria-current="page" class="on">{item}<' in r.text, url
-        assert (
-            f'aria-current="true" class="on">{section}<' in r.text
-            or f'class="utility on" aria-current="true">{section}<' in r.text
-        ), url
+        assert re.search(r'aria-current="true"[^>]*><svg[^>]*>.*?</svg>' + re.escape(section) + "<", r.text), url
         assert 'class="sub-nav"' in r.text and 'id="sidebar"' not in r.text, url
     # in-page tabs connect related views instead of a long row of sibling tabs
     html = client.get("/blocks/coverage").text

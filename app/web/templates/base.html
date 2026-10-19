@@ -13,22 +13,24 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
   <div class="head-row">
-    <a href="/" class="brand">Cross List</a>
+    <a href="/" class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M7 8h10M7 12h6M7 16h10"/></svg>Cross List</a>
     <nav class="main-nav" aria-label="Sections">
-      {% for key, label, items in nav_sections %}<a href="{{ items[0][1] }}"{% if ns.section == key %} aria-current="true" class="on"{% endif %}>{{ label }}</a>{% endfor %}
-      {% set ukey, ulabel, uitems = nav_utility %}<a href="{{ uitems[0][1] }}" class="utility{{ ' on' if ns.section == ukey }}"{% if ns.section == ukey %} aria-current="true"{% endif %}>{{ ulabel }}</a>
+      {% for key, label, items in nav_sections %}<a href="{{ items[0][1] }}"{% if ns.section == key %} aria-current="true" class="on"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[key]|safe }}</svg>{{ label }}</a>{% endfor %}
+      {% set ukey, ulabel, uitems = nav_utility %}<a href="{{ uitems[0][1] }}" class="utility{{ ' on' if ns.section == ukey }}"{% if ns.section == ukey %} aria-current="true"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[ukey]|safe }}</svg>{{ ulabel }}</a>
     </nav>
-    {% if not hide_header_search and path not in ('/', '/parts') %}
+    {% if site_locked() %}<a href="/logout" class="sign-out small">Sign out</a>{% endif %}
+  </div>
+  {% for key, label, items in nav_sections + (nav_utility,) if key == ns.section %}
+  <div class="sub-row">
+  <nav class="sub-nav" aria-label="{{ label }}">{% for ilabel, href, desc in items %}<a href="{{ href }}" title="{{ desc }}"{% if ns.item == href %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a>{% endfor %}</nav>
+  {% if not hide_header_search and path not in ('/', '/parts') %}
     <search class="top-search"><form action="/find" method="get">
       <input type="search" name="q" id="global-search" placeholder="Find a part number" autocomplete="off" aria-label="Find a part number"
         hx-get="/suggest" hx-trigger="input changed delay:250ms, search" hx-target="#suggestions" hx-sync="this:replace">
       </form><div id="suggestions" aria-live="polite"></div>
     </search>
     {% endif %}
-    {% if site_locked() %}<a href="/logout" class="sign-out small">Sign out</a>{% endif %}
   </div>
-  {% for key, label, items in nav_sections + (nav_utility,) if key == ns.section %}
-  <nav class="sub-nav" aria-label="{{ label }}">{% for ilabel, href, desc in items %}<a href="{{ href }}" title="{{ desc }}"{% if ns.item == href %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a>{% endfor %}</nav>
   {% endfor %}
 </header>
 <main id="main" class="content" tabindex="-1">

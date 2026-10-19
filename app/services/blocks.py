@@ -370,7 +370,7 @@ def _candidates_uncached(session: Session, key: str) -> list[dict] | None:
                     bits.append(f"{'-'.join(map(str, v)) if isinstance(v, list) else v}{unit}")
             out.append({"mpn": p.mpn, "manufacturer": p.manufacturer.name, "url": f"/parts/{p.id}",
                         "detail": " · ".join(bits), "values": values, "description": p.description or "",
-                        "full": True, "preview": p.lifecycle_status.value == "preview",
+                        "full": True, "preview": p.lifecycle_status.value == "preview", "pins": bool(p.pinout),
                         "risk": p.lifecycle_status.value not in ("active", "preview")})  # fmt: skip
     elif isinstance(src, dict) and "broadcast" in src:
         for d in broadcast.catalog():
@@ -527,7 +527,7 @@ def parts_for(session: Session, key: str, q: str = "", answers: dict | None = No
         def strip(c):
             v = c.get("values") or {}
             implies = {k: v[k] for k in ("qualification", "isolation_class", "feature", "decode") if v.get(k)}
-            keep = {k: c[k] for k in ("mpn", "url", "detail", "risk")}
+            keep = {k: c[k] for k in ("mpn", "url", "detail", "risk")} | {"pins": bool(c.get("pins"))}
             return {**keep, "description": c.get("description", ""), "implies": implies}
 
         result.append(

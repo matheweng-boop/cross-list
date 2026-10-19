@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Business-case candidates – Cross List{% endblock %}
+{% macro table(items, empty) %}
+{% if items %}
+<div class="table-wrap"><table class="striped sl-table">
+  <thead><tr><th scope="col">Candidate</th><th scope="col">From</th><th scope="col">Your note</th><th scope="col"></th></tr></thead>
+  <tbody>{% for i in items %}<tr>
+    <td><b>{{ i.title }}</b>{% if i.detail %}<br><small class="muted">{{ i.detail }}</small>{% endif %}{% if i.fn %}<br><a class="small" href="/business/evidence/{{ i.fn }}?co={{ co }}">evidence →</a>{% endif %}</td>
+    <td><span class="sl-origin so-{{ i.origin }}">{{ origins[i.origin] }}</span><br><small class="muted">{{ i.created_at.strftime('%Y-%m-%d') }}</small></td>
+    <td><form method="post" action="/business/shortlist/{{ i.id }}" class="sl-note"><input type="text" name="note" value="{{ i.note or '' }}" placeholder="why it is interesting" aria-label="Note"><button type="submit" class="outline small-btn">Save</button></form></td>
+    <td class="sl-act">{% if i.case_id %}<a class="small-btn" role="button" href="/business/cases/{{ i.case_id }}">Open case: {{ case_titles.get(i.case_id, 'case') }}</a>
+      {% else %}<a class="small-btn" role="button" href="/business/cases/new?co={{ co }}&shortlist={{ i.id }}{{ '&fn=' ~ i.fn if i.fn }}">Start analysing</a>{% endif %}
+      <form method="post" action="/business/shortlist/{{ i.id }}" class="push-form"><input type="hidden" name="remove" value="1"><button type="submit" class="outline secondary small-btn" title="Remove from the candidates">Remove</button></form></td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="small muted">{{ empty }}</p>{% endif %}
+{% endmacro %}
+{% block content %}
+<h1>Business-case candidates</h1>
+<p class="subtitle muted">What you pushed here with “+ Business case” from the Opportunity explorer, Cross-sell, Markets and Customers, and from New ideas.
+  Pick the ones worth following up and start analysing: each becomes a business case.</p>
+
+<h2>From the existing portfolio <small class="muted">· {{ portfolio|length }}</small></h2>
+{{ table(portfolio, 'Nothing yet. Use “+ Business case” in the Opportunity explorer, Cross-sell, Markets or Customers.') }}
+
+<h2>New ideas <small class="muted">· {{ ideas|length }}</small></h2>
+{{ table(ideas, 'Nothing yet. Push an idea from New ideas, or write one below.') }}
+<form method="post" action="/business/shortlist" class="sl-add"><input type="hidden" name="origin" value="idea">
+  <input type="text" name="key" placeholder="A new idea, e.g. wireless audio module for e-bikes" required aria-label="New idea" maxlength="200">
+  <button type="submit" class="small-btn">Add idea</button></form>
+
+<details class="sl-next"><summary class="small"><b>On hold: what a business case needs</b></summary>
+  <p class="small">To compare candidates on real numbers, each business case will need market research behind it: units sold per year, ASP and the
+    resulting market size (TAM), each with its source, year and confidence. This is not built yet; today a case collects inputs and notes.</p></details>
+{% endblock %}

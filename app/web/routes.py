@@ -77,7 +77,7 @@ def _is_new(part: Part) -> bool:
 templates.env.globals["is_new"] = _is_new
 
 # Navigation: task-based sections (app/web/nav.py); every existing URL keeps working
-templates.env.globals.update(nav_state=nav.state, nav_sections=nav.NAV, nav_utility=nav.UTILITY)
+templates.env.globals.update(nav_state=nav.state, nav_sections=nav.NAV, nav_utility=nav.UTILITY, nav_icons=nav.ICONS)
 
 GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
 

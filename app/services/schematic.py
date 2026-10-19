@@ -173,7 +173,9 @@ def _in_scope(data: dict, scope: dict) -> list[tuple[dict, dict]]:
     return out
 
 
-def resolve(session: Session, data: dict, scope: dict) -> list[Device]:
+def resolve(session: Session, data: dict, scope: dict, skipped: list | None = None) -> list[Device]:
+    """Devices for the blocks in scope. With scope["drawable"], blocks without a part that has a pin list are left out
+    (named in `skipped`) instead of being drawn as placeholders."""
     fns = blocks.catalogue()["functions"]
     devs = []
     for i, (g, b) in enumerate(_in_scope(data, scope), 1):
@@ -204,7 +206,13 @@ def resolve(session: Session, data: dict, scope: dict) -> list[Device]:
                 if part is None
                 else "pin list not in Cross List"
             )
+        if d.placeholder and (scope or {}).get("drawable"):
+            if skipped is not None:
+                skipped.append(f"{d.label} ({d.why})")
+            continue
         devs.append(d)
+    for i, d in enumerate(devs, 1):  # number the drawn devices U1, U2 … without gaps
+        d.ref = f"U{i}"
     return devs
 
 
@@ -524,7 +532,7 @@ def rules(session: Session, data: dict, devs: list[Device], qs: list[dict], answ
     by_id = {q["id"]: q for q in qs}
     reqs = blocks.catalogue()["functions"]
     if not devs:
-        add("error", "Nothing to convert: the selection has no blocks.")
+        add("error", "Nothing to draw: no block in the selection has a chosen part with a pin list. Pick parts first.")
     for d in devs:
         b = d.block
         if d.placeholder:
@@ -1029,10 +1037,12 @@ def draw_sheets(data: dict, devs: list[Device], net: dict, comps: list[dict], ti
 
 
 def check(session: Session, data: dict, scope: dict, answers: dict | None = None) -> dict:
-    devs = resolve(session, data, scope)
+    skipped: list[str] = []
+    devs = resolve(session, data, scope, skipped)
     qs = questions(data, devs)
     issues = rules(session, data, devs, qs, answers or {})
     return {
+        "skipped": skipped,
         "devices": [
             {
                 "ref": d.ref,

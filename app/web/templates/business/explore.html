@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import about, review %}
+{% from "business/_common.html" import about, review, push with context %}
 {% block title %}New markets – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Ideas <small class="muted">· existing technology, new markets</small></h1>
@@ -24,7 +24,8 @@
         {% set sg = sg|string %}{% set i_http = sg.find('http') %}{% set url = sg[i_http:].split(' ')[0].rstrip(').,;') if i_http >= 0 else '' %}
         <li>{{ sg[:i_http].rstrip(' -–(') if url else sg }}{% if url %} <a href="{{ url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}</ul></details>
       {% else %}<p class="small muted">No public signal found yet.</p>{% endif %}
-      <p class="small"><a href="/business/cases/new?title={{ (t.technology ~ ' for ' ~ i.market)|urlencode }}&idea={{ (i.application ~ ' – ' ~ i.why_fit)|urlencode }}">Develop into a business case →</a></p>
+      {% set ikey = t.technology ~ ' → ' ~ i.market ~ ': ' ~ i.application %}<p class="small">{{ push('idea', ikey[:200], t.technology ~ ' for ' ~ i.market, i.application ~ ' – ' ~ i.why_fit, '', ikey[:200] in shortlisted) }}
+        <a href="/business/cases/new?title={{ (t.technology ~ ' for ' ~ i.market)|urlencode }}&idea={{ (i.application ~ ' – ' ~ i.why_fit)|urlencode }}">or start the business case now →</a></p>
     </article>
   {% endfor %}
   </div>

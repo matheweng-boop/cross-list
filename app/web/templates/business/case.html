@@ -14,6 +14,7 @@
   <h2 id="inputs">1 · Inputs and features</h2>
   <form method="post" action="{{ '/business/cases/' ~ case.id if case else '/business/cases' }}" class="case-form">
     <input type="hidden" name="act" value="inputs">
+    {% if shortlist %}<input type="hidden" name="shortlist" value="{{ shortlist }}">{% endif %}
     <label>Title <input name="title" value="{{ title }}" required placeholder="e.g. Automotive 3 A PoL LDO"></label>
     <label>Function <select name="fn"><option value="">none (free topic)</option>
       {% for k, flabel in fn_choices %}<option value="{{ k }}"{{ ' selected' if k == fn }}>{{ flabel }}</option>{% endfor %}</select></label>

@@ -1,31 +1,51 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch, status_chip, about, term %}
-{% block title %}Markets – Business opportunity – Cross List{% endblock %}
+{% from "business/_common.html" import company_switch, about, term, path_chip, push with context %}
+{% block title %}Markets – Cross List{% endblock %}
+{% macro url() -%}
+  {%- set base = {'co': co, 'view': view, 'm': chosen|join(','), 'g': g} -%}{%- set _ = base.update(kwargs) -%}
+  /business/markets?{{ base|dictsort|selectattr('1')|list|urlencode }}
+{%- endmacro %}
 {% block content %}
 <h1>Markets <small class="muted">· one product, several markets</small></h1>
-<p class="subtitle muted">Each function and the end markets whose applications need it. A product that already sells in one market can be
-  offered in the others; an industrial or commercial part that automotive applications also need is a qualification opportunity
-  (AEC-Q100 instead of a new design).</p>
-{{ company_switch('/business/markets', co, companies, '&view=' ~ view) }}
-{{ about('markets') }}
-<div class="chip-row"><span class="chip-lbl">Show</span>
-  <a class="fchip{{ ' on' if view == 'all' }}" href="/business/markets?co={{ co }}&view=all">All functions</a>
-  <a class="fchip{{ ' on' if view == 'multi' }}" href="/business/markets?co={{ co }}&view=multi">Needed in 2+ markets <small>{{ n_multi }}</small></a>
-  <a class="fchip{{ ' on' if view == 'requalify' }}" href="/business/markets?co={{ co }}&view=requalify">Qualify for automotive <small>{{ n_requalify }}</small></a>
-  <a class="fchip{{ ' on' if view == 'qual_unknown' }}" href="/business/markets?co={{ co }}&view=qual_unknown" title="Automotive needs it, but our parts do not state a grade: check the datasheets before calling it an opportunity">Grade not stated <small>{{ n_qual_unknown }}</small></a>
+<p class="subtitle muted">Functions and the end markets whose reference architectures need them, split by the leap it takes: sell what we have, fill a portfolio gap, or new technology.</p>
+{{ company_switch('/business/markets', co, companies, '&view=' ~ view ~ '&m=' ~ chosen|join(',')) }}
+<div class="scope-bar small">
+  <div class="chip-row"><span class="chip-lbl">Markets</span>
+    <a class="fchip{{ ' on' if not chosen }}" href="{{ url(m='') }}">All {{ markets|length }}</a>
+    {% for mk in markets %}{% set on = mk in chosen %}{% set nxt = (chosen|reject('equalto', mk)|list) if on else (chosen + [mk]) %}<a class="fchip{{ ' on' if on }}" href="{{ url(m=nxt|join(',')) }}" title="{{ per_market[mk] }} reference architectures">{{ mk }} <small>{{ per_market[mk] }}</small></a>{% endfor %}
+  </div>
+  <div class="chip-row"><span class="chip-lbl">Show</span>
+    {% for k, label in groups.items() %}<a class="fchip{{ ' on' if g == k }}" href="{{ url(g=('' if g == k else k)) }}" title="{{ label[1] }}">{{ label[0] }} <small>{{ by_group[k]|length }}</small></a>{% endfor %}
+    <a class="fchip{{ ' on' if view == 'multi' }}" href="{{ url(view=('all' if view == 'multi' else 'multi')) }}">2+ markets</a>
+    <a class="fchip{{ ' on' if view == 'requalify' }}" href="{{ url(view=('all' if view == 'requalify' else 'requalify')) }}" title="{{ bo_help().terms.requalify.short }}">Qualify for automotive <small>{{ n_requalify }}</small></a>
+    <a class="fchip{{ ' on' if view == 'qual_unknown' }}" href="{{ url(view=('all' if view == 'qual_unknown' else 'qual_unknown')) }}" title="Automotive needs it, but our parts do not state a grade">Grade not stated <small>{{ n_qual_unknown }}</small></a>
+  </div>
 </div>
+
+{% for k, (title, help) in groups.items() if not g or g == k %}{% set rows = by_group[k] %}
+<section class="mk-group">
+<h2>{{ title }} <small class="muted">· {{ rows|length }} function{{ 's' if rows|length != 1 }}</small></h2>
+<p class="small muted">{{ help }}</p>
+{% if rows %}
 <div class="table-wrap"><table class="striped bo-markets">
-  <thead><tr><th>{{ term('function', 'Function') }}</th><th>Our position</th><th>Our parts<br><small class="muted">automotive · not · not stated</small></th>
-    {% for m in markets %}<th class="bo-mk">{{ term('market', m) }}<br><small class="muted">{{ per_market[m] }} apps</small></th>{% endfor %}</tr></thead>
+  <thead><tr><th scope="col">{{ term('function', 'Function') }}</th><th scope="col">Markets</th><th scope="col">Applications</th>
+    <th scope="col">{{ 'Our parts' if k == 'portfolio' else 'Path' }}</th>
+    {% for mk in shown %}<th scope="col" class="bo-mk" title="{{ per_market[mk] }} reference architectures">{{ mk }}</th>{% endfor %}<th scope="col"></th></tr></thead>
   <tbody>{% for e in rows %}<tr>
-    <td><b>{{ e.label }}</b> <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}" title="Companies that build systems needing it">customers →</a>{% if e.requalify %}<br><span class="bo-requal bo-term" title="{{ bo_help().terms.requalify.short }}">stated industrial → qualify for automotive</span>{% elif e.qual_unknown %}<br><span class="qual q-unknown" title="No part states a grade: verify before treating it as an opportunity">grade not stated – check datasheets</span>{% endif %}<br><small class="muted">Needed in {{ e.n_apps }} application{{ 's' if e.n_apps != 1 }} across {{ e.n_markets }} market{{ 's' if e.n_markets != 1 }}{% if e.parts %}; we have {{ e.parts }} part{{ 's' if e.parts != 1 }}: {{ e.auto_parts }} automotive, {{ e.not_auto_parts }} stated not automotive, {{ e.unknown_parts }} not stated{% endif %}.</small></td>
-    <td>{{ status_chip(e.status, status_label) }}</td>
-    <td>{% if e.parts %}{{ e.parts }}<br><small><span class="q-automotive" title="stated AEC-Q100">{{ e.auto_parts }} auto</span> · <span title="stated not automotive">{{ e.not_auto_parts }} not</span> · <span class="q-unknown" title="grade not stated">{{ e.unknown_parts }} ?</span></small>{% else %}<span class="muted">–</span>{% endif %}</td>
-    {% for m in markets %}{% set a = e.by_market.get(m, []) %}<td class="bo-mk">{% if a %}<details><summary><span class="bo-dot{{ ' auto' if m == 'Automotive' }}">{{ a|length }}</span></summary>
+    <td><b>{{ e.label }}</b> <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}" title="Companies that build systems needing it">customers →</a>
+      {% if e.requalify %}<br><span class="bo-requal bo-term" title="{{ bo_help().terms.requalify.short }}">qualify for automotive</span>{% elif e.qual_unknown %}<br><span class="qual q-unknown">grade not stated</span>{% endif %}</td>
+    <td>{{ e.n_markets }}</td>
+    <td>{{ e.n_apps }}</td>
+    <td class="small">{% if k == 'portfolio' %}{{ e.parts }} <span class="muted" title="automotive · stated not automotive · not stated">({{ e.auto_parts }} auto · {{ e.not_auto_parts }} not · {{ e.unknown_parts }} ?)</span>{% else %}{{ path_chip({'path': e.path} if e.path else none, path_label) }}{% endif %}</td>
+    {% for mk in shown %}{% set a = e.by_market.get(mk, []) %}<td class="bo-mk">{% if a %}<details><summary><span class="bo-dot{{ ' auto' if mk == 'Automotive' }}">{{ a|length }}</span></summary>
       <div class="bo-mk-apps">{% for x in a %}<a href="/business/applications/{{ x.i }}?co={{ co }}">{{ x.name }}</a>{% endfor %}</div></details>{% endif %}</td>{% endfor %}
-  </tr>{% else %}<tr><td colspan="{{ 3 + markets|length }}">Nothing to show.</td></tr>{% endfor %}</tbody>
+    <td>{{ push('markets', e.fn, e.label ~ ' in ' ~ e.n_markets ~ ' market' ~ ('s' if e.n_markets != 1 else ''), title ~ ' · ' ~ e.n_apps ~ ' applications in ' ~ e.by_market.keys()|join(', '), e.fn, e.fn in shortlisted) }}</td>
+  </tr>{% endfor %}</tbody>
 </table></div>
-<p class="small muted">Numbers in the market columns = applications in that market that need the function; click one to list them. Automotive =
-  vehicle systems (by application name), whatever their library category. Automotive grade comes from the public catalogue: Skyworks states
-  it for most parts, Qorvo's site rarely does, so a Qorvo part shown without it may still be qualified.</p>
+{% else %}<p class="small muted">None in the chosen markets.</p>{% endif %}
+</section>
+{% endfor %}
+<p class="small muted">Numbers in the market columns = reference architectures in that market that need the function; click one to list them.
+  Automotive grade comes from the public catalogues (Qorvo's rarely states it).</p>
+{{ about('markets') }}
 {% endblock %}

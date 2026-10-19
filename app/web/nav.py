@@ -7,7 +7,6 @@ working; this module only decides where a page sits.
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
-        ("Browse products", "/parts", "Browse by product family and company"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Lifecycle", "/lifecycle", "New, NRND and obsolete parts"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
@@ -22,7 +21,7 @@ NAV = (
         ("Opportunity explorer", "/business/explorer", "Rank missing functions by reach, feasibility, competition"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
-        ("Business cases", "/business/cases", "Ideas and case analyses"),
+        ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
     )),
     ("knowledge", "Engineering knowledge", (
         ("Knowledge search", "/technical", "Search application notes and specification guides together"),
@@ -46,7 +45,7 @@ PLACES = {
     "/overlay/": ("products", "/"),
     "/packages/": ("products", "/"),
     "/pricing/": ("products", "/"),
-    "/parts": ("products", "/parts"),
+    "/parts": ("products", "/"),  # Browse products: no longer in the menu, the page still works
     "/compare": ("products", "/compare"),
     "/lifecycle": ("products", "/lifecycle"),
     "/broadcast/configurations": ("systems", "/broadcast/configurations"),
@@ -64,8 +63,9 @@ PLACES = {
     "/business/attach": ("opportunities", "/business/attach"),
     "/business/markets": ("opportunities", "/business/markets"),
     "/business/customers": ("opportunities", "/business/markets"),
-    "/business/cases": ("opportunities", "/business/cases"),
-    "/business/explore": ("opportunities", "/business/cases"),
+    "/business/cases": ("opportunities", "/business/shortlist"),
+    "/business/explore": ("opportunities", "/business/shortlist"),
+    "/business/shortlist": ("opportunities", "/business/shortlist"),
     "/business/capabilities": ("knowledge", "/business/capabilities"),
     "/business/data": ("manage", "/business/data"),
     "/business/quality": ("manage", "/business/quality"),
@@ -89,7 +89,7 @@ TABS = (
         ("Portfolio coverage", "/business/applications"),
     ),
     (("Markets", "/business/markets"), ("Customers", "/business/customers")),
-    (("Ideas", "/business/explore"), ("Business cases", "/business/cases")),
+    (("Candidates", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
     (("Review queue", "/manage/reviews"), ("Part requests", "/requests"), ("Diagram feedback", "/blocks/feedback")),
     (("Data quality", "/business/quality"), ("Human validation", "/business/validation")),
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),
@@ -120,3 +120,13 @@ def state(path: str) -> dict:
     tabs = next((g for g in TABS if any(_tab_match(path, h) for _, h in g)), None)
     active_tab = next((h for _, h in (tabs or ()) if _tab_match(path, h)), None)
     return {"section": key, "item": href, "crumbs": crumbs, "tabs": tabs, "active_tab": active_tab}
+
+
+# small line icons for the section row (SVG path data, 24 x 24, stroked)
+ICONS = {  # fmt: skip
+    "products": '<path d="M7 7h10v10H7z M4 9h3M4 12h3M4 15h3M17 9h3M17 12h3M17 15h3M9 4v3M12 4v3M15 4v3M9 17v3M12 17v3M15 17v3"/>',  # noqa: E501
+    "systems": '<path d="M3 5h7v5H3zM14 14h7v5h-7zM14 5h7v5h-7zM10 7.5h4M17.5 10v4"/>',
+    "opportunities": '<path d="M4 19V11M10 19V5M16 19v-6M3 19h18"/>',
+    "knowledge": '<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h10"/>',
+    "manage": '<path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',  # noqa: E501
+}

@@ -1235,6 +1235,9 @@
     const std = [...c.analog, ...c.digital_iq, ...c.digital_decode];
     if (slot === DEMOD_SLOT) {
       if (S.digital === false) return false;
+      // no more demod channels than tuners can feed (the smallest demods have two)
+      const nT = S.tuners || TUNER_SLOTS.reduce((k, sl) => k + tunerCount(slotDev(sl)), 0);
+      if (nT && c.channels && c.channels > Math.max(nT, 2)) return false;
       if (S.region === "North America") return c.digital_decode.includes("HD") || c.digital_decode.length > 2;
       if (S.region === "Europe") return c.digital_decode.includes("DAB");
       return true;
@@ -1267,7 +1270,7 @@
     // candidates ticked by the user win
     TUNER_SLOTS.forEach((sl, k) => { if (S.pick && S.pick[sl] && chips[k]) chips[k] = S.pick[sl]; });
     const ics = {IC0: chips[0] || null, IC1: chips[1] || null, IC2: chips[2] || null, IC3: null};
-    if (na && S.digital !== false) ics.IC3 = n >= 2 ? "Si46931A1GE1AM" : "Si46921A1GE1AM";
+    if (na && S.digital !== false) ics.IC3 = n >= 4 ? "Si46941A1GE1AM" : n === 3 ? "Si46931A1GE1AM" : "Si46921A1GE1AM";
     if (eu && S.digital !== false) ics.IC3 = n >= 5 ? "Si46942A1GE1AM" : n >= 4 ? "Si46932A1GE1AM" : "Si46922A1GE1AM";
     if (region === "Rest of world" && S.digital === true) ics.IC3 = n >= 3 ? "Si46934A1GE1AM" : "Si46924A1GE1AM";
     if (S.pick && S.pick.IC3 && ics.IC3) ics.IC3 = S.pick.IC3;
@@ -1294,8 +1297,8 @@
     }
     // a further companion IC has no free loop-through: it shares the antennas through a band splitter
     for (const sl of slots.filter(sl => sl !== "IC0" && sl !== dabIc)) {
-      set(sl, "FMB", A.amfm && "ANT1"); set(sl, "AMI", A.amfm && "ANT1");
-      if (A.dab) set(sl, "B3A/WXI", "ANT3");
+      set(sl, "FMA", A.amfm && "ANT1"); set(sl, "FMB", A.amfm && "ANT1"); set(sl, "AMI", A.amfm && "ANT1");
+      if (A.dab) { set(sl, "B3A/WXI", "ANT3"); set(sl, "B3B", "ANT3"); }
     }
     const used = {};
     for (const pins of Object.values(rf)) for (const f of Object.values(pins)) if (!f.startsWith("loop:")) used[f] = (used[f] || 0) + 1;

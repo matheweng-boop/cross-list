@@ -1245,6 +1245,15 @@
 
   // ---- step bar: 1 region, 2 hardware, 3 software modes
   // candidates per slot for the chosen tuner count; tick one per slot, then create the block diagram
+  // short comment next to a candidate: channels for a demod; for a tuner, the features that matter in this
+  // region beyond AM/FM (the slot already says how many tuners)
+  function candNote(c, sl) {
+    if (sl === DEMOD_SLOT) return [c.channels ? `${c.channels} ch` : "", c.digital_decode.join("/")].filter(Boolean).join(" · ");
+    const rel = relevant(), f = FEATS(c);
+    const shown = f.filter(x => rel.includes(x) && !["AM", "FM"].includes(x));
+    return [...shown.map(x => ({HD_MRC: "MRC", DAB_MRC: "MRC", AUDIO: "audio"}[x] || x)), ...(f.includes("AUDIO") && !shown.includes("AUDIO") ? ["audio"] : [])]
+      .filter((x, i, a) => a.indexOf(x) === i).join(" · ");
+  }
   function renderCandidates() {
     const box = $("#bc-cands");
     if (!box || !S.tuners) return;
@@ -1257,7 +1266,7 @@
       if (S.pick[sl] && !cands.some(c => c.mpn === S.pick[sl])) delete S.pick[sl];
       const role = sl === "IC0" ? "primary tuner" : sl === DEMOD_SLOT ? "demod" : "companion tuner";
       return `<div class="cand-slot"><b>${sl}</b> <span class="muted small">${role}${sl !== DEMOD_SLOT ? `, ${slotTuners(sl, S.tuners)}T` : ""} · ${cands.length}</span>
-        <div class="cand-list">${cands.map(c => `<label class="cand${c.borrowed_pins ? " borrowed" : ""}" title="${esc(FEATS(c).join(", ") || [...c.digital_decode].join(", "))}"><input type="checkbox" data-pick="${sl}|${esc(c.mpn)}"${S.pick[sl] === c.mpn ? " checked" : ""}> ${esc(c.mpn)}${c.borrowed_pins ? "*" : ""}</label>`).join("") || `<span class="small uc-error">none</span>`}</div></div>`;
+        <div class="cand-list">${cands.map(c => `<label class="cand${c.borrowed_pins ? " borrowed" : ""}"><input type="checkbox" data-pick="${sl}|${esc(c.mpn)}"${S.pick[sl] === c.mpn ? " checked" : ""}> ${esc(c.mpn)}${c.borrowed_pins ? "*" : ""} <span class="cand-note">${esc(candNote(c, sl))}</span></label>`).join("") || `<span class="small uc-error">none</span>`}</div></div>`;
     }).join("");
     S.showAll = save;
     box.innerHTML = html + `<div class="cand-actions"><button type="button" class="small-btn" id="bc-create">Create block diagram</button>
@@ -1296,6 +1305,8 @@
     $("#bc-cands").hidden = !S.tuners;
     $("#bc-hw-cards").hidden = !S.tuners;
     $("#st-sw").hidden = !u;
+    $("#st-sw").classList.toggle("closed", !!S.swClosed);
+    $("#bc-usecase").hidden = !!S.swClosed;
     renderCandidates();
     const fit = CATALOG.filter(ic0Ok);
     $("#bc-feat-match").innerHTML = S.audio == null && !S.features.length ? "" : fit.length
@@ -1320,6 +1331,7 @@
     const r = e.target.closest("[data-region]"), h = e.target.closest("[data-hw]"), md = e.target.closest("[data-mode]");
     const tn = e.target.closest("[data-tuners]"), gen = e.target.closest("[data-gen]"), au = e.target.closest("[data-audio]");
     const dg = e.target.closest("[data-digital]");
+    if (e.target.closest("#bc-sw-toggle")) { S.swClosed = !S.swClosed; render(); return; }
     if (dg) {
       const v = dg.dataset.digital === "true";
       S.digital = S.digital === v ? null : v;

@@ -17,6 +17,7 @@
   S.req ||= {}; // requirement answers per function: {fn: {reqId: value}}; unanswered = no filter
   S.qa ||= {}; // answers to the template's design questions: {questionId: choice}; unanswered = nothing assumed
   let sel = null; // {group} or {group, block}
+  const DIM = new Set(["opp", "ext"]); // statuses greyed out in the diagram (legend buttons toggle them)
   let dirty = false;
   let configId = design.id;
 
@@ -96,7 +97,7 @@
         const st = status(b), f = fnOf(b);
         const label = b.label || f.label;
         const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "opportunity" : st === "ext" ? "customer part" : "");
-        parts.push(`<g class="blk st-${st}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
+        parts.push(`<g class="blk st-${st}${DIM.has(st) ? " dim" : ""}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
           `<rect x="${cx}" y="${cy}" width="${BW}" height="${BH}"/>` +
           wrap(label, 16).slice(0, 2).map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + 15 + k * 13}" text-anchor="middle">${esc(t)}</text>`).join("") +
           `<text class="b-sub" x="${cx + BW / 2}" y="${cy + BH - 5}" text-anchor="middle">${esc(sub.slice(0, 19))}${b.qty > 1 ? ` ×${b.qty}` : ""}</text></g>`);
@@ -110,6 +111,8 @@
     applyView();
     renderSummary();
     renderReqs();
+    renderLegend();
+    if (!(sel && sel.block)) renderBelow();
   }
   const wrap = (s, n) => {
     const out = [];
@@ -171,6 +174,34 @@
       (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
   }
 
+  // ---- legend: one button per status; a pressed button is highlighted, the others are greyed out
+  function renderLegend() {
+    root.querySelectorAll("[data-st]").forEach(b => b.setAttribute("aria-pressed", String(!DIM.has(b.dataset.st))));
+  }
+  root.querySelectorAll("[data-st]").forEach(b => (b.onclick = () => {
+    const st = b.dataset.st;
+    DIM.has(st) ? DIM.delete(st) : DIM.add(st);
+    render();
+  }));
+
+  // ---- below the diagram: the most likely parts per block (overview), or the clicked block in full
+  const below = () => $("#bk-below");
+  async function renderBelow() {
+    const box = below();
+    if (!box) return;
+    const fns = [...new Set(S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have" || status(b) === "part").map(b => b.fn))];
+    if (!fns.length) { box.innerHTML = `<h3>Suggested parts</h3><p class="small muted">No block in this diagram has Skyworks or Qorvo parts in Cross List yet.</p>`; return; }
+    const token = (renderBelow.token = (renderBelow.token || 0) + 1);
+    const results = await Promise.all(fns.map(fn => parts(fn).then(r => [fn, r])));
+    if (token !== renderBelow.token || (sel && sel.block)) return;
+    const li = p => `<li><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.risk ? ' <small class="worse">NRND / obsolete</small>' : ""} <small class="muted">${esc(p.detail)}</small></li>`;
+    box.innerHTML = `<h3>Suggested parts <span class="small muted">· the two most likely per manufacturer for each block; click a block for its full list and requirements</span></h3>
+      <div class="bk-sugg">${results.map(([fn, r]) => `<div class="bk-sugg-fn"><p class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${r.total} fit${Object.keys(S.req[fn] || {}).length ? " the requirements" : ""}</span></p>
+        ${r.manufacturers.map(m => `<p class="small bk-mfr">${esc(m.manufacturer)}</p><ul class="bk-parts">${m.best.map(li).join("")}</ul>
+          ${m.total > m.best.length ? `<details><summary class="small">More ${esc(m.manufacturer)} (${m.total - m.best.length})</summary><ul class="bk-parts">${m.all.slice(m.best.length, 60).map(li).join("")}</ul></details>` : ""}`).join("") || `<p class="small uc-error">None meets the requirements.</p>`}
+      </div>`).join("")}</div>`;
+  }
+
   // ---- side panel
   const panel = $("#bk-panel-body");
   const group = id => S.groups.find(g => g.id === id);
@@ -209,7 +240,12 @@
   }
 
   function showBlock(g, b) {
-    openPanel();
+    root.classList.remove("panel-open");
+    const box = below();
+    box.innerHTML = `<div class="bk-below-head"><button type="button" class="outline secondary small-btn" data-act="overview">← All suggested parts</button></div><div class="bk-below-body"></div>`;
+    box.querySelector('[data-act="overview"]').onclick = () => { sel = null; render(); };
+    const panel = box.querySelector(".bk-below-body");
+    box.scrollIntoView({behavior: "smooth", block: "nearest"});
     const f = fnOf(b), st = status(b);
     const comp = (f.companions || []).filter(c => FN[c]);
     panel.innerHTML = `<h3>${esc(b.label || f.label)}</h3>
@@ -333,29 +369,73 @@
   // Requirements above the diagram: design questions and part filters in a readable grid, collapsible so the
   // diagram stays in view. Open by default while nothing is answered yet.
   let reqOpen = null;
+  const openGroups = new Set();
+  // Requirements as a list, one collapsible group per function (its design questions + its part filters), then
+  // the recorded system decisions. Dependencies: a filter that exists on other blocks too (automotive,
+  // reinforced) offers to apply it there; a function with answers lists related blocks (companions) to check.
   function renderReqs() {
     const box = $("#bk-reqs");
     if (!box) return;
-    const fns = [...new Set(S.groups.flatMap(g => g.blocks.map(b => b.fn)))].filter(fn => (REQ[fn] || []).length);
+    const inDiagram = new Set(S.groups.flatMap(g => g.blocks.map(b => b.fn)));
+    const fnsReq = [...inDiagram].filter(fn => (REQ[fn] || []).length);
     const qs = S.questions || [];
-    if (!qs.length && !fns.length) { box.innerHTML = ""; return; }
+    if (!qs.length && !fnsReq.length) { box.innerHTML = ""; return; }
+    const qByFn = {}, recorded = [];
+    for (const q of qs) (q.sets && q.sets.length ? (qByFn[q.sets[0].fn] ||= []) : recorded).push(q);
+    const groupFns = [...new Set([...Object.keys(qByFn), ...fnsReq])];
     const nQ = Object.keys(S.qa).length, nR = Object.values(S.req).reduce((k, a) => k + Object.keys(a).length, 0);
     if (reqOpen === null) reqOpen = !nQ && !nR;
-    const card = q => {
-      const fl = filterLabel(q);
-      return `<label class="rq-card" title="${esc(q.source || "")}"><span class="rq-q">${esc(q.question)} <span class="lg ${fl.length ? "lg-have" : "lg-ext"}" title="${esc(fl.length ? "Narrows: " + fl.join(", ") : "Recorded with the design")}">${fl.length ? "narrows" : "recorded"}</span></span>
-        <select data-q="${esc(q.id)}"${S.qa[q.id] ? ' class="rq-set"' : ""}><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${S.qa[q.id] === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></label>`;
+    const qRow = q => {
+      const fl = filterLabel(q), set = S.qa[q.id];
+      return `<li class="rq-item${set ? " rq-on" : ""}" title="${esc(q.source || "")}"><span class="rq-label">${esc(q.question)}${fl.length > 1 ? ` <small class="muted">· also filters ${esc(fl.slice(1).join(", "))}</small>` : ""}</span>
+        <select data-q="${esc(q.id)}"><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${set === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></li>`;
     };
+    const rRow = (fn, r) => {
+      const v = (S.req[fn] || {})[r.id];
+      const others = v ? fnsReq.filter(f => f !== fn && (REQ[f] || []).some(x => x.id === r.id) && !(S.req[f] || {})[r.id]) : [];
+      const ctl = r.choices
+        ? `<select data-req="${fn}|${r.id}"><option value="">any</option>${r.choices.map(c => `<option value="${esc(c)}"${String(v ?? "") === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>`
+        : `<input type="checkbox" data-req="${fn}|${r.id}"${v ? " checked" : ""} aria-label="${esc(r.label)}">`;
+      return `<li class="rq-item${v ? " rq-on" : ""}"><span class="rq-label">${esc(r.label)}${others.length ? ` <button type="button" class="link-btn" data-apply="${fn}|${r.id}" title="${esc(others.map(f => FN[f].label).join(", "))}">also for ${others.length} other block${others.length > 1 ? "s" : ""}</button>` : ""}</span>${ctl}</li>`;
+    };
+    const related = fn => (FN[fn].companions || []).filter(c => inDiagram.has(c) && (REQ[c] || []).length && c !== fn);
+    const group = (key, title, sub, rows, answered, extra = "") => {
+      const open = openGroups.has(key) || (!openGroups.size && answered);
+      return `<details class="rq-group" data-g="${esc(key)}"${open ? " open" : ""}><summary><b>${esc(title)}</b> <span class="small muted">${sub}${answered ? ` · <span class="rq-count">${answered} set</span>` : ""}</span>${extra}</summary><ul class="rq-list">${rows}</ul></details>`;
+    };
+    const fnGroups = groupFns.map(fn => {
+      const qsF = qByFn[fn] || [], rs = REQ[fn] || [];
+      const answered = qsF.filter(q => S.qa[q.id]).length + Object.keys(S.req[fn] || {}).length;
+      const rel = answered ? related(fn) : [];
+      const extra = rel.length ? ` <span class="small rq-rel">→ check also: ${rel.map(c => `<a href="#" data-goto="${c}">${esc(FN[c].label)}</a>`).join(", ")}</span>` : "";
+      return group(fn, FN[fn] ? FN[fn].label : fn, `${COUNTS[fn] ?? "–"} parts fit${inDiagram.has(fn) ? "" : " · not in this diagram"}`,
+        (qsF.length ? qsF.map(qRow).join("") : "") + (rs.length ? `<li class="rq-sub small muted">Part filters</li>` + rs.map(r => rRow(fn, r)).join("") : ""), answered, extra);
+    }).join("");
+    const recGroup = recorded.length ? group("_recorded", "System decisions", "recorded with the design, no part filter", recorded.map(qRow).join(""), recorded.filter(q => S.qa[q.id]).length) : "";
     box.innerHTML = `<details class="bk-reqs-box"${reqOpen ? " open" : ""}><summary><b>Requirements</b> <span class="small muted">· ${qs.length ? `${nQ} of ${qs.length} design questions answered · ` : ""}${nR} part filter${nR === 1 ? "" : "s"} set · unanswered = no filter, nothing is assumed</span></summary><div class="bk-reqs-body">
-      ${qs.length ? `<p class="small muted bk-reqs-legend"><span class="lg lg-have">narrows</span> the answer filters the parts · <span class="lg lg-ext">recorded</span> kept with the design (no matching parameter in Cross List yet)</p>
-        <div class="bk-reqs-grid">${qs.map(card).join("")}</div>` : ""}
-      ${fns.length ? `<details class="bk-reqs-fns"${nR ? " open" : ""}><summary class="small"><b>Part filters per function</b> <span class="muted">· ${fns.map(fn => `${esc(FN[fn].label)} ${COUNTS[fn] ?? "–"}`).join(" · ")} parts fit${nR ? ` · ${nR} set` : ""}</span></summary>
-        <div class="bk-reqs-grid">${fns.map(fn => `<div class="rq-card rq-fn"><span class="rq-q"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} parts fit</span></span><div class="rq-fn-rows">${reqControls(fn)}</div></div>`).join("")}</div></details>` : ""}
+      <div class="rq-tools small"><button type="button" class="link-btn" data-all="open">expand all</button> · <button type="button" class="link-btn" data-all="close">collapse all</button></div>
+      ${fnGroups}${recGroup}
       ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")}</p>` : ""}
     </div></details>`;
-    const body = box.querySelector(".bk-reqs-body"), keep = renderReqs.scroll || 0;
-    if (body) { body.scrollTop = keep; body.onscroll = () => (renderReqs.scroll = body.scrollTop); }
-    box.querySelector("details").ontoggle = e => { if (e.target === box.querySelector("details")) reqOpen = e.target.open; };
+    const body = box.querySelector(".bk-reqs-body");
+    if (body) { body.scrollTop = renderReqs.scroll || 0; body.onscroll = () => (renderReqs.scroll = body.scrollTop); }
+    const top = box.querySelector(".bk-reqs-box");
+    top.ontoggle = () => (reqOpen = top.open);
+    box.querySelectorAll(".rq-group").forEach(d => (d.ontoggle = () => (d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g))));
+    box.querySelectorAll("[data-all]").forEach(btn => (btn.onclick = () => {
+      box.querySelectorAll(".rq-group").forEach(d => { d.open = btn.dataset.all === "open"; d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g); });
+    }));
+    box.querySelectorAll("[data-goto]").forEach(a => (a.onclick = e => {
+      e.preventDefault();
+      const d = box.querySelector(`.rq-group[data-g="${a.dataset.goto}"]`);
+      if (d) { d.open = true; openGroups.add(a.dataset.goto); d.scrollIntoView({behavior: "smooth", block: "nearest"}); d.classList.add("rq-flash"); setTimeout(() => d.classList.remove("rq-flash"), 1200); }
+    }));
+    box.querySelectorAll("[data-apply]").forEach(btn => (btn.onclick = async () => {
+      const [fn, rid] = btn.dataset.apply.split("|"), v = S.req[fn][rid];
+      for (const f of fnsReq) if (f !== fn && (REQ[f] || []).some(x => x.id === rid)) { (S.req[f] ||= {})[rid] = v; openGroups.add(f); }
+      dirty = true; $("#bk-status").textContent = "Unsaved changes";
+      await refreshCounts();
+    }));
     bindReq(box, null);
     bindQuestions(box, null);
   }

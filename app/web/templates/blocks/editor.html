@@ -17,7 +17,7 @@
     <button id="bk-add-group" type="button" class="outline small-btn">+ Group</button>
     <button id="bk-req" type="button" class="secondary small-btn">Requirements</button>
     <button id="bk-feedback" type="button" class="outline secondary small-btn">Feedback</button>
-    <span class="bk-legend"><span class="lg lg-part">part chosen</span><span class="lg lg-have">Skyworks / Qorvo parts fit</span><span class="lg lg-opp">opportunity</span><span class="lg lg-ext">customer part</span></span>
+    <span class="bk-legend" role="group" aria-label="Highlight in the diagram"><button type="button" class="lg lg-part" data-st="part">part chosen</button><button type="button" class="lg lg-have" data-st="have">Skyworks / Qorvo parts</button><button type="button" class="lg lg-opp" data-st="opp">opportunity</button><button type="button" class="lg lg-ext" data-st="ext">customer part</button></span>
     <span class="bc-tools-right"><span aria-hidden="true">🔍</span><button id="bk-zoom-all" type="button" class="outline small-btn">All</button><button id="bk-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bk-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button>
       <button id="bk-svg-dl" type="button" class="outline small-btn">SVG</button></span>
   </div>
@@ -26,7 +26,8 @@
     <div class="bc-canvas"><svg id="bk-svg" role="application" aria-label="Block diagram"></svg></div>
     <aside id="bk-panel" class="bk-panel" aria-live="polite"><button type="button" id="bk-close" class="outline secondary small-btn bk-close" aria-label="Close panel">×</button><div id="bk-panel-body"></div></aside>
   </div>
-  <p class="small muted">Click a block to see which Skyworks and Qorvo parts fit (best two of each), choose one, or add what usually goes with it. Click a group title to rename, move or connect it.</p>
+  <p class="small muted">Click a block for its parts and requirements below; the legend buttons highlight or grey out each kind of block. Click a group title to rename, move or connect it.</p>
+  <section id="bk-below" class="bk-below" aria-live="polite"></section>
   <section id="bk-summary" class="bk-summary"></section>
 </div>
 <style id="bk-svg-style">
@@ -41,6 +42,7 @@
 #bk-svg .st-opp rect { fill: #fff8ea; stroke: #c98500; stroke-dasharray: 4 2; } #bk-svg .st-opp text { fill: #6b4a00; }
 #bk-svg .st-ext rect { fill: #eeeeee; stroke: #9a9a9a; } #bk-svg .st-ext text { fill: #444; }
 #bk-svg .blk.sel rect { stroke: #eb6834; stroke-width: 2.4; }
+#bk-svg .blk.dim { opacity: .28; filter: grayscale(1); }
 #bk-svg .b-label { font-size: 12px; font-weight: 600; }
 #bk-svg .b-sub { font-size: 10px; }
 #bk-svg .link { stroke: #3a3f47; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }

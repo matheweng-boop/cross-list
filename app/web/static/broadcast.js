@@ -81,7 +81,11 @@
   // ---------------------------------------------------------------- actions on a pin
   // Supply rails: one block per voltage. A pin that accepts several voltages ("1.8 or 3.3") goes on
   // the rail chosen for I/O (S.vio), or on whichever of its rails already exists.
-  const voltOptions = (o, p) => (volts(o, p) || "").split(/\s*(?:or|\/)\s*/).map(v => v.replace(/\s*V$/, "").trim()).filter(Boolean);
+  // an I/O supply pin whose data brief gives no voltage (Si469x VIO0 / VIO1) follows the I/O rail of the tuners
+  // it talks to; that link is labelled "assumed" until the full datasheet confirms it
+  const assumedIo = (o, p) => !volts(o, p) && /^VIO/i.test(p.name);
+  const voltOptions = (o, p) => (volts(o, p) || (assumedIo(o, p) ? "1.8 or 3.3" : "")).split(/\s*(?:or|\/)\s*/).map(v => v.replace(/\s*V$/, "").trim()).filter(Boolean);
+  const railLabel = (o, p) => (assumedIo(o, p) ? "assumed: I/O rail (no voltage in data brief)" : "");
   const railOf = v => S.blocks.find(b => b.kind === "supply" && b.volts === v);
   function rail(v) {
     return railOf(v) || Object.assign(addBlock("supply", `${v} V`, ""), {volts: v});
@@ -96,7 +100,7 @@
     const v = opts.length === 1 ? opts[0] : opts.includes(S.vio || "3.3") ? S.vio || "3.3" : opts.find(railOf) || opts[opts.length - 1];
     const old = powerLink(d, p.n);
     if (old) S.links = S.links.filter(l => l !== old);
-    link({d, pins: [p.n]}, {blk: rail(v).id}, "power");
+    link({d, pins: [p.n]}, {blk: rail(v).id}, "power", railLabel(dev(d), p));
   }
   // Connect every supply pin of every chip that accepts v; pins that also accept another voltage move to v.
   function connectRail(v) {
@@ -108,10 +112,10 @@
         const cur = powerLink(o.id, p.n), curB = cur && block(cur.b.blk);
         if (curB && curB.volts === v) { n++; continue; }
         if (cur) S.links = S.links.filter(l => l !== cur);
-        link({d: o.id, pins: [p.n]}, {blk: rail(v).id}, "power");
+        link({d: o.id, pins: [p.n]}, {blk: rail(v).id}, "power", railLabel(o, p));
         n++;
       }
-    if (S.devices.some(o => pinsOf(o).some(p => p.fn === "power" && voltOptions(o, p).length > 1 && voltOptions(o, p).includes(v)))) S.vio = v;
+    if (S.devices.some(o => pinsOf(o).some(p => p.fn === "power" && !assumedIo(o, p) && voltOptions(o, p).length > 1 && voltOptions(o, p).includes(v)))) S.vio = v;
     rail(v);
     pruneBlocks();
     return n;
@@ -777,7 +781,16 @@
         const iq = pinsOf(o).filter(p => p.fn === "iq_out");
         const data = iq.filter(p => /ZIF[IQ]/.test(p.name)).filter(p => { const m = p.name.match(/ZIF[IQ](\d)/); return !m || +m[1] === ti; });
         const shared = iq.filter(p => /CLK|FS/.test(p.name));
-        if (data.length) ucLink({d: o.id, pins: [...shared, ...data].map(p => p.n), bus: `${port} from ${t}`}, endOf(demod.id, portPin), "iq", `${slot} ${t} I/Q → ${port.replace("ZIF I/Q ", "ZIF")}`);
+        if (!data.length) continue;
+        // one line per signal into the matching pin of the demod port: ZIFCLK, ZIFFS (shared by both tuners of
+        // a dual), ZIFI, ZIFQ; falls back to the whole port when the demod pins are not named that way
+        const inPins = busPins(demod, port), k = port.replace(/\D+/g, "");
+        const target = sig => inPins.find(q => new RegExp(`^ZIF${sig}${k}$`).test(q.name));
+        const sigOf = p => (p.name.match(/ZIF(CLK|FS|I|Q)/) || [])[1];
+        const pairs = [...shared, ...data].map(p => [p, sigOf(p) && target(sigOf(p))]);
+        if (pairs.every(([, q]) => q)) {
+          for (const [p, q] of pairs) ucLink({d: o.id, pins: [p.n]}, {d: demod.id, pins: [q.n]}, "iq", `${slot} ${t} ${sigOf(p) === "CLK" || sigOf(p) === "FS" ? "ZIF" + sigOf(p) : sigOf(p)} → ${q.name}`);
+        } else ucLink({d: o.id, pins: [...shared, ...data].map(p => p.n), bus: `${port} from ${t}`}, endOf(demod.id, portPin), "iq", `${slot} ${t} I/Q → ${port.replace("ZIF I/Q ", "ZIF")}`);
       }
     }
     // control: SoC -> demod -> tuners (tuner SPI + per-tuner select / reset), or SoC -> every IC

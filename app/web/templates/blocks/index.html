@@ -5,12 +5,16 @@
 <h1>Application library</h1>
 <p class="subtitle muted">Reference architectures from public material. Open one to see its blocks, candidate parts and unmet requirements.
   On each card: <span class="tpl-chip have">solid</span> = a Skyworks / Qorvo candidate exists in BizDev, <span class="tpl-chip">dashed</span> = no candidate yet.</p>
-<div class="lib-facets small">
-  <div class="chip-row"><span class="chip-lbl">End market</span><a class="fchip{{ ' on' if not market }}" href="{{ url(market='') }}">All</a>
-    {% for m, n in markets %}<a class="fchip{{ ' on' if market == m }}" href="{{ url(market=m) }}">{{ m }} <small>{{ n }}</small></a>{% endfor %}</div>
+{% set mcount = dict(markets) %}
+<div class="lib-facets small filter-cols">
+  {% for title, ms in market_groups(mcount.keys()) %}<div class="chip-row"><span class="chip-lbl">{{ title }}</span>
+    {% if loop.first %}<a class="fchip{{ ' on' if not market }}" href="{{ url(market='') }}">All end markets</a>{% endif %}
+    {% for m in ms %}<a class="fchip{{ ' on' if market == m }}" href="{{ url(market=m) }}">{{ m }} <small>{{ mcount[m] }}</small></a>{% endfor %}</div>{% endfor %}
   <div class="chip-row"><span class="chip-lbl">Source</span><a class="fchip{{ ' on' if not source }}" href="{{ url(source='') }}">All</a>
     {% for m, n in sources %}<a class="fchip{{ ' on' if source == m }}" href="{{ url(source=m) }}">{{ m }} <small>{{ n }}</small></a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">Variants</span><a class="fchip{{ ' on' if variants }}" href="{{ url(variants='' if variants else 'true') }}" title="Architectures that may describe the same application: kept separate, counted separately">Possible variants only <small>{{ n_variant }} in {{ n_groups }} groups</small></a></div>
+</div>
+<div class="lib-facets small">
   <p class="muted">{{ n_shown }} of {{ n_all }} library architectures. Related architectures (e.g. two traction inverters) are kept as separate sources and flagged as possible variants; they are not merged and each counts once in every metric.</p>
 </div>
 {% for cat, items in cards %}

@@ -13,8 +13,8 @@
 </div>
 
 <h2>Needs a person</h2>
-<div class="chip-row small"><span class="chip-lbl">Priority</span>
-  {% for k in ['', 'high', 'medium', 'low'] %}<a class="fchip{{ ' on' if prio == k }}" href="/business/validation?prio={{ k }}">{{ k|capitalize or 'All' }}</a>{% endfor %}</div>
+<div class="filter-cols small"><div class="chip-row small"><span class="chip-lbl">Priority</span>
+  {% for k in ['', 'high', 'medium', 'low'] %}<a class="fchip{{ ' on' if prio == k }}" href="/business/validation?prio={{ k }}">{{ k|capitalize or 'All' }}</a>{% endfor %}</div></div>
 {% set shown = scan['items']|selectattr('priority', 'equalto', prio)|list if prio else scan['items'] %}
 {% if shown %}
 <div class="table-wrap"><table class="striped small hv-table">

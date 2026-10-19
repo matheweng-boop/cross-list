@@ -612,3 +612,21 @@ def explorer(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
         }  # fmt: skip
         out.append(row)
     return out
+
+
+# end markets in sub-groups, so a market filter is a few short columns instead of one long row
+MARKET_SUBGROUPS = {
+    "Vehicles & motion": ["Automotive", "Motor drives"],
+    "Industrial & power": ["Industrial", "Power & isolation", "Appliances & building", "Medical"],
+    "Communications & computing": ["Communications equipment", "RF & connectivity", "Enterprise & data center"],
+    "Consumer": ["Consumer & personal electronics"],
+}
+
+
+def market_subgroups(names) -> list[tuple[str, list[str]]]:
+    """The given market names grouped as MARKET_SUBGROUPS (in that order); unknown names under 'Other'."""
+    names = list(names)
+    out = [(t, [m for m in ms if m in names]) for t, ms in MARKET_SUBGROUPS.items()]
+    known = {m for ms in MARKET_SUBGROUPS.values() for m in ms}
+    out.append(("Other", [m for m in names if m not in known]))
+    return [(t, ms) for t, ms in out if ms]

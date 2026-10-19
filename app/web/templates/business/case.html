@@ -4,6 +4,7 @@
 {% block content %}
 <p class="small"><a href="/business/cases">← All cases</a></p>
 <h1>{{ title or 'New case' }}</h1>
+{% if case and case.status == 'merged' %}<p class="banner">Merged into {% if merged_into %}<a href="/business/cases/{{ merged_into.id }}">{{ merged_into.title }}</a>{% else %}another case{% endif %}: its parts, notes and inputs are there now.</p>{% endif %}
 {% if case %}<form method="post" action="/business/cases/{{ case.id }}" class="case-status">
   <input type="hidden" name="act" value="status">
   {% for k, label in statuses.items() %}<button type="submit" name="status" value="{{ k }}" class="fchip case-st cs-{{ k }}{{ ' on' if case.status == k }}">{{ loop.index }} · {{ label }}</button>{% endfor %}
@@ -47,6 +48,32 @@
 </div>
 
 {% if case %}
+<h2 id="lines">Parts in this business case <small class="muted">· {{ totals.lines }}</small></h2>
+{% if lines %}
+<form method="post" action="/business/cases/{{ case.id }}"><input type="hidden" name="act" value="lines">
+<div class="table-wrap"><table class="striped case-lines">
+  <thead><tr><th scope="col">Line</th><th scope="col">Competitor</th><th scope="col">Our part</th><th scope="col">Per system</th><th scope="col">Systems / year</th><th scope="col">Target price (USD)</th><th scope="col">Revenue / year</th><th scope="col">Remove</th></tr></thead>
+  <tbody>{% for ln in lines %}<tr>
+    <td>{{ ln.label }}<br><span class="pl-role role-{{ ln.role }}">{{ role_label[ln.role] }}</span>{% if ln.price_source %} <small class="muted" title="Price based on">· {{ ln.price_source }}</small>{% endif %}</td>
+    <td class="small">{{ ln.competitor_mpn or '–' }}</td><td class="small"><b>{{ ln.our_mpn or '–' }}</b></td><td>{{ ln.qty }}</td>
+    <td><input name="vol:{{ ln.id }}" inputmode="numeric" value="{{ ln.volume or '' }}" aria-label="Systems per year"></td>
+    <td><input name="price:{{ ln.id }}" inputmode="decimal" value="{{ ln.price if ln.price is not none else '' }}" aria-label="Target price"></td>
+    <td>{{ ('$' ~ '{:,.0f}'.format(ln.volume * ln.qty * ln.price)) if ln.volume and ln.price is not none and ln.our_mpn else '–' }}</td>
+    <td><input type="checkbox" name="del:{{ ln.id }}" aria-label="Remove {{ ln.label }}"></td></tr>{% endfor %}</tbody>
+  <tfoot><tr><th colspan="6">Assumed revenue for our parts ({{ totals.priced }} priced)</th><th colspan="2">${{ '{:,.0f}'.format(totals.revenue) }}</th></tr></tfoot>
+</table></div>
+<button type="submit" class="small-btn">Save numbers</button>
+</form>
+{% else %}<p class="small muted">No parts yet. Start from a part page (“Start a business case”) to add a cross and the parts in its design, or add this case's parts by choosing it as the target in the guided path.</p>{% endif %}
+{% if others and case.status != 'merged' %}
+<details class="case-merge"><summary class="small"><b>Merge into another business case</b></summary>
+  <form method="post" action="/business/cases/{{ case.id }}" onsubmit="return confirm('Move the parts, notes and inputs of this case into the chosen one?')">
+    <input type="hidden" name="act" value="merge">
+    <p class="small muted">For parts that belong to the same project: the parts, discussion notes and linked candidates move to the chosen case; this one stays, marked as merged.</p>
+    <select name="target" aria-label="Merge into">{% for o in others %}<option value="{{ o.id }}">{{ o.title }}</option>{% endfor %}</select>
+    <button type="submit" class="small-btn">Merge</button></form></details>
+{% endif %}
+
 <h2 id="brief">2 · Analysis brief for the AI</h2>
 <p class="small muted">The brief combines your inputs with the BizDev facts. Copy it into Claude (or another assistant with web research) and paste the
   answer below. BizDev itself sends nothing to any outside service.</p>

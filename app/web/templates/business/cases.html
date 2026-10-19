@@ -15,7 +15,7 @@
 <div class="table-wrap"><table class="striped">
   <thead><tr><th>Case</th><th>Function</th><th>Status</th><th>Discussion</th><th>Updated</th></tr></thead>
   <tbody>{% for c in cases %}<tr><td><a href="/business/cases/{{ c.id }}"><b>{{ c.title }}</b></a></td><td class="small">{{ fns[c.fn].label if c.fn in fns else '–' }}</td>
-    <td><span class="case-st cs-{{ c.status }}">{{ statuses[c.status] }}</span></td><td class="small">{{ c.notes|length }} point{{ 's' if c.notes|length != 1 }}</td>
+    <td><span class="case-st cs-{{ c.status }}">{{ statuses.get(c.status, 'Merged') }}</span></td><td class="small">{{ c.notes|length }} point{{ 's' if c.notes|length != 1 }}</td>
     <td class="small">{{ c.updated_at.strftime('%Y-%m-%d') }}</td></tr>
   {% else %}<tr><td colspan="5"><div class="empty-state"><p><b>No business cases yet.</b></p><p class="small">A case collects the inputs for one product idea (decision, markets, features, specs, price), an AI market-analysis brief and the team's discussion. Start one from a function above, from the <a href="/business/explorer">Opportunity explorer</a> or from an <a href="/business/explore">idea</a>.</p></div></td></tr>{% endfor %}</tbody>
 </table></div>

@@ -16,10 +16,11 @@ from app.models import (
     DataReview,
     OpportunityDecision,
     PartMapping,
+    PipelineDraft,
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, quality
+from app.services import blocks, cases, pipeline, quality
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -437,15 +438,21 @@ def case_detail(request: Request, case_id: int, co: str = "combined", session: S
     c = _case_ctx(session, co)
     case = _case(session, case_id)
     ctx = cases.context(session, case.fn, co)
+    lines = pipeline.lines_of(session, case.id)
+    merged = (case.inputs or {}).get("merged_into")
+    others = [x for x in session.scalars(select(Case).order_by(Case.title)) if x.id != case.id and x.status != "merged"]
     c.update(case=case, fn=case.fn or "", ctx=ctx, values=case.inputs or {}, title=case.title,
-             brief=cases.brief(case, ctx))  # fmt: skip
+             brief=cases.brief(case, ctx, lines), lines=lines, totals=pipeline.totals(lines),
+             role_label=pipeline.ROLE_LABEL, others=others,
+             merged_into=session.get(Case, int(merged)) if str(merged or "").isdigit() else None)  # fmt: skip
     return templates.TemplateResponse(request, "business/case.html", c)
 
 
 @router.get("/business/cases/{case_id:int}/brief.md", response_class=PlainTextResponse)
 def case_brief(case_id: int, co: str = "combined", session: Session = Depends(get_session)):
     case = _case(session, case_id)
-    return PlainTextResponse(cases.brief(case, cases.context(session, case.fn, co)), media_type="text/markdown")
+    lines = pipeline.lines_of(session, case.id)
+    return PlainTextResponse(cases.brief(case, cases.context(session, case.fn, co), lines), media_type="text/markdown")
 
 
 @router.post("/business/cases/{case_id:int}")
@@ -471,7 +478,27 @@ async def case_update(case_id: int, request: Request, session: Session = Depends
                                    text=str(form.get("text")).strip()))  # fmt: skip
     elif act == "delnote":
         case.notes = [n for n in case.notes if str(n.id) != str(form.get("note"))]
+    elif act == "lines":  # volumes and target prices of the part lines; a ticked line is removed
+        for ln in pipeline.lines_of(session, case.id):
+            if form.get(f"del:{ln.id}"):
+                session.delete(ln)
+                continue
+            ln.volume = pipeline._num(form.get(f"vol:{ln.id}"), int)
+            ln.price = pipeline._num(form.get(f"price:{ln.id}"), float)
+    elif act == "merge":
+        target = session.get(Case, int(form.get("target") or 0)) if str(form.get("target") or "").isdigit() else None
+        if target is None or target.id == case.id:
+            raise HTTPException(400, "Choose another business case to merge into")
+        pipeline.merge(session, case, target)
+        session.commit()
+        return RedirectResponse(f"/business/cases/{target.id}#lines", status_code=303)
     elif act == "delete":
+        for ln in pipeline.lines_of(session, case.id):
+            session.delete(ln)
+        for it in session.scalars(select(ShortlistItem).where(ShortlistItem.case_id == case.id)):
+            it.case_id = None
+        for dr in session.scalars(select(PipelineDraft).where(PipelineDraft.case_id == case.id)):
+            dr.case_id = None
         session.delete(case)
         session.commit()
         return RedirectResponse("/business/cases", status_code=303)

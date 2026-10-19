@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Business case from {{ (s.competitor or s.ours or s.part).mpn }} – BizDev{% endblock %}
+{% macro money(v) %}{{ '$' ~ '{:,.0f}'.format(v) if v else '–' }}{% endmacro %}
+{% block content %}
+<h1>Business case from a part</h1>
+<p class="pl-parts">
+  {% if s.competitor %}<a class="pl-chip comp" href="/parts/{{ s.competitor.id }}">{{ s.competitor.mpn }} <small>{{ s.competitor.manufacturer }}</small></a>
+  <span class="pl-arrow" aria-hidden="true">→</span>{% endif %}
+  {% if s.ours %}<a class="pl-chip ours" href="/parts/{{ s.ours.id }}">{{ s.ours.mpn }} <small>{{ s.ours.manufacturer }}</small></a>
+  {% else %}<span class="pl-chip gap">no part of ours yet</span>{% endif %}
+  <span class="muted small">· {{ s.fn_label }}{% if s.application %} · in {{ s.application }}{% endif %}</span>
+</p>
+
+<ol class="pl-steps">{% set cur = steps|map(attribute=0)|list %}
+  {% for k, label in steps %}<li class="{{ 'on' if k == step else ('done' if loop.index0 < cur.index(step) else '') }}"><a href="/pipeline/{{ d.id }}?step={{ k }}"><span>{{ loop.index }}</span>{{ label }}</a></li>{% endfor %}
+</ol>
+
+{% if step == 'part' %}
+<section class="pl-card">
+  {% if s.competitor %}
+  <h2>Our part for {{ s.competitor.mpn }}</h2>
+  <p class="small muted">Ranked as on the cross page: best first. No match is fine too: the function becomes a gap in the business case.
+    <a href="/parts/{{ s.competitor.id }}">See the full cross comparison →</a></p>
+  <form method="post" action="/pipeline/{{ d.id }}"><input type="hidden" name="act" value="ours">
+    <div class="pl-choices">
+      {% for x in crosses %}<label class="pl-choice"><input type="radio" name="our" value="{{ x.id }}"{{ ' checked' if s.ours and s.ours.id == x.id }}>
+        <b>{{ x.mpn }}</b> <span class="small muted">{{ x.category }}</span>{% if x.rank == 0 %} <span class="badge rank-badge rank-0">Best</span>{% elif x.rank == 1 %} <span class="badge rank-badge rank-1">Next best</span>{% endif %}</label>{% endfor %}
+      <label class="pl-choice"><input type="radio" name="our" value=""{{ ' checked' if not s.ours }}> <b>No Skyworks part</b> <span class="small muted">treat it as a portfolio gap</span></label>
+    </div>
+    <button type="submit">Continue</button>
+  </form>
+  {% else %}
+  <h2>Starting from our part {{ s.ours.mpn }}</h2>
+  <p class="small muted">No competitor part: the business case is about where {{ s.ours.mpn }} could be designed in.</p>
+  <a role="button" href="/pipeline/{{ d.id }}?step=application">Continue</a>
+  {% endif %}
+  {% if not s.fn %}<p class="small uc-error">This part's family is not in the block catalogue yet, so it cannot be placed in a diagram. Skip to <a href="/pipeline/{{ d.id }}?step=numbers">volume &amp; price</a>.</p>{% endif %}
+</section>
+
+{% elif step == 'application' %}
+<section class="pl-card">
+  <h2>Which application is it for?</h2>
+  {% if s.diagram_id %}<p class="small">Current: <b>{{ s.application }}</b> · <a href="/blocks/{{ s.diagram_id }}" target="_blank" rel="noopener">open in the workspace ↗</a> · <a href="/pipeline/{{ d.id }}?step=design">continue with it →</a>. Choosing another starts a new copy.</p>{% endif %}
+  <h3>Reference designs with a {{ s.fn_label }} <small class="muted">· {{ apps.templates|length }}</small></h3>
+  {% if apps.templates %}<div class="pl-list">{% for t in apps.templates %}
+    <form method="post" action="/pipeline/{{ d.id }}" class="pl-row"><input type="hidden" name="act" value="template"><input type="hidden" name="i" value="{{ t.i }}">
+      <span><b>{{ t.name }}</b> <small class="muted">{{ t.blocks }} functions</small></span><button type="submit" class="outline small-btn">Use this design</button></form>{% endfor %}</div>
+  {% else %}<p class="small muted">No reference design contains this function yet.</p>{% endif %}
+  {% if apps.saved %}<h3>Your saved diagrams with it</h3><div class="pl-list">{% for t in apps.saved %}
+    <form method="post" action="/pipeline/{{ d.id }}" class="pl-row"><input type="hidden" name="act" value="saved"><input type="hidden" name="id" value="{{ t.id }}">
+      <span><b>{{ t.name }}</b></span><button type="submit" class="outline small-btn">Use a copy</button></form>{% endfor %}</div>{% endif %}
+  <h3>Or start a new diagram</h3>
+  <form method="post" action="/pipeline/{{ d.id }}" class="pl-new"><input type="hidden" name="act" value="new_diagram">
+    <input name="name" placeholder="Application name, e.g. 800 V battery junction box" aria-label="Application name"><button type="submit" class="small-btn">Create with this part</button></form>
+  <p class="small muted">The part is placed in its block; the diagram is saved in the Application workspace, where you can add and move blocks.</p>
+</section>
+
+{% elif step == 'design' %}
+<section class="pl-card">
+  <h2>Parts in the design</h2>
+  {% if not s.diagram_id %}<p class="small">No diagram yet. <a href="/pipeline/{{ d.id }}?step=application">Choose an application</a> first, or skip to <a href="/pipeline/{{ d.id }}?step=numbers">volume &amp; price</a>.</p>
+  {% else %}
+  <p class="small">{{ s.application }} · <a href="/blocks/{{ s.diagram_id }}" target="_blank" rel="noopener">open in the workspace to add, move or change blocks ↗</a> (reload this page afterwards)</p>
+  <form method="post" action="/pipeline/{{ d.id }}" class="pl-inline"><input type="hidden" name="act" value="pick_all"><button type="submit" class="small-btn">Pick the best match for every open block</button></form>
+  {% if s.picked %}<p class="small pt-applied">Picked: {{ s.picked|join(' · ') }}</p>{% endif %}
+  <div class="table-wrap"><table class="striped pl-table">
+    <thead><tr><th scope="col">Frame</th><th scope="col">Function</th><th scope="col">Per system</th><th scope="col">Part</th></tr></thead>
+    <tbody>{% for r in rows %}<tr{% if r.is_cross %} class="pl-cross"{% endif %}><td class="small">{{ r.group }}</td><td>{{ r.label }}{% if r.is_cross %} <span class="badge">this part</span>{% endif %}</td><td>{{ r.qty }}</td>
+      <td>{% if r.part %}<b>{{ r.part }}</b>{% elif r.status == 'have' %}<span class="muted small">{{ r.candidates }} parts fit – not picked</span>{% elif r.status == 'gap' %}<span class="lg lg-opp">gap: no part of ours</span>{% else %}<span class="lg lg-ext">customer part</span>{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <form method="post" action="/pipeline/{{ d.id }}"><input type="hidden" name="act" value="design_done"><button type="submit">Continue to volume &amp; price</button></form>
+  <p class="small muted">Every block with a part of ours becomes a line of the business case (the cross-sell); blocks with no part of ours become gap lines; customer parts are left out.</p>
+  {% endif %}
+</section>
+
+{% elif step == 'numbers' %}
+<section class="pl-card">
+  <h2>Volume and target price</h2>
+  <p class="small muted">Your assumptions, per line: systems per year and the target price per part in USD. They are labelled as assumptions in the business case.
+    {% if suggest %}<br><b>Competitor price:</b> {{ suggest }}{% else %}<br>Competitor prices appear here once DigiKey is connected; until then enter your own.{% endif %}</p>
+  <form method="post" action="/pipeline/{{ d.id }}"><input type="hidden" name="act" value="numbers">
+    <label class="pl-volall">Systems per year (for every line without its own) <input name="volume_all" inputmode="numeric" placeholder="e.g. 250000" value="{{ (s.lines|selectattr('volume')|map(attribute='volume')|list|first) or '' }}"></label>
+    <div class="table-wrap"><table class="striped pl-table">
+      <thead><tr><th scope="col">Include</th><th scope="col">Line</th><th scope="col">Competitor</th><th scope="col">Our part</th><th scope="col">Per system</th><th scope="col">Systems / year</th><th scope="col">Target price (USD)</th><th scope="col">Price based on</th><th scope="col">Revenue / year</th></tr></thead>
+      <tbody>{% for x in s.lines %}<tr>
+        <td><input type="checkbox" name="inc:{{ x.key }}" aria-label="Include {{ x.label }}"{{ ' checked' if x.include }}></td>
+        <td>{{ x.label }}<br><span class="pl-role role-{{ x.role }}">{{ role_label[x.role] }}</span></td>
+        <td class="small">{{ x.competitor_mpn or '–' }}</td><td class="small"><b>{{ x.our_mpn or '–' }}</b></td><td>{{ x.qty }}</td>
+        <td><input name="vol:{{ x.key }}" inputmode="numeric" value="{{ x.volume or '' }}" aria-label="Systems per year"></td>
+        <td><input name="price:{{ x.key }}" inputmode="decimal" value="{{ x.price if x.price is not none else '' }}" aria-label="Target price"{% if not x.our_mpn %} placeholder="for a new part"{% endif %}></td>
+        <td><input name="src:{{ x.key }}" value="{{ x.price_source or '' }}" placeholder="e.g. competitor price −10%" aria-label="Price based on"></td>
+        <td>{{ money(revenue.get(x.key)) }}</td></tr>{% else %}<tr><td colspan="9" class="muted">No lines yet: go back to <a href="/pipeline/{{ d.id }}?step=design">parts in the design</a>.</td></tr>{% endfor %}</tbody>
+      <tfoot><tr><th colspan="8">Total for our parts (gap lines are not counted)</th><th>{{ money(total) }}</th></tr></tfoot>
+    </table></div>
+    <button type="submit">Save and continue</button>
+  </form>
+</section>
+
+{% elif step == 'case' %}
+<section class="pl-card">
+  <h2>Create the business case</h2>
+  <ul class="small">{% for x in s.lines if x.include %}<li>{{ x.label }}: <b>{{ x.our_mpn or 'no part of ours' }}</b>{% if x.competitor_mpn %} vs {{ x.competitor_mpn }}{% endif %}{% if x.volume %} · {{ '{:,}'.format(x.volume) }}/yr{% endif %}{% if x.price is not none %} · ${{ '%.2f'|format(x.price) }}{% endif %}</li>{% else %}<li class="muted">No lines included yet.</li>{% endfor %}</ul>
+  <p class="small">Assumed revenue for our parts: <b>{{ money(total) }}</b> per year.</p>
+  <form method="post" action="/pipeline/{{ d.id }}" class="pl-finish"><input type="hidden" name="act" value="finish">
+    <label class="pl-choice"><input type="radio" name="target" value="new" checked> <b>New business case</b></label>
+    <div class="pl-newcase">
+      <label>Title <input name="title" value="{{ (s.ours or s.competitor).mpn }}{{ ' in ' ~ s.application if s.application }}" maxlength="200"></label>
+      <label>Customer <input name="customer" placeholder="optional"></label>
+      <label>Markets <input name="markets" placeholder="optional, e.g. Automotive"></label>
+    </div>
+    {% if cases %}<label class="pl-choice"><input type="radio" name="target" value="existing" id="pl-existing"> <b>Add to an existing business case</b></label>
+    <select name="existing" aria-label="Existing business case" onchange="document.getElementById('pl-existing').checked = true">
+      {% for c in cases %}<option value="{{ c.id }}">{{ c.title }}</option>{% endfor %}</select>{% endif %}
+    <button type="submit">Create business case</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

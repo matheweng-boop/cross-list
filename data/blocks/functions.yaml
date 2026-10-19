@@ -4,6 +4,8 @@
 #          {broadcast: tuner|coprocessor|receiver}  Skyworks broadcast parts of that role
 #          external                         the customer's own part (processor, memory, sensors): not counted
 #          (omitted)                        no Skyworks part in Cross List yet: shown as an opportunity
+# Qorvo catalogue parts (data/blocks/research/qorvo_parts.yaml, store.qorvo.com) are added to the function named
+# in that file, so a block can show the best two Skyworks and the best two Qorvo parts.
 # companions: functions usually designed in next to this one (suggested when the block is added)
 # requirements: optional questions that narrow the parts that fit (nothing is assumed; unanswered = no filter)
 #   {id, label, param, op: contains | eq | gte | in, value} for yes/no; {id, label, param, op, choices: [...] | auto} for a choice
@@ -24,7 +26,7 @@ categories:
   processing: Processing
   memory: Memory
   audio: Audio
-  sensors: Sensors
+  sensors: Sensors & external parts
 
 functions:
   # power
@@ -41,6 +43,11 @@ functions:
   voltage_reference: {label: Voltage reference, category: power}
   load_switch: {label: High-side / load switch, category: power, companions: [tvs_esd]}
   isolated_dcdc: {label: Isolated DC-DC, category: power, companions: [digital_isolator], note: Power across an isolation barrier}
+  pre_regulator: {label: Pre-regulator (SEPIC / boost / buck-boost), category: power, companions: [isolated_dcdc], note: Stabilises the battery voltage for the isolated bias supplies}
+  hv_flyback: {label: HV flyback controller, category: power, companions: [isolated_dcdc], note: Supply from the 400 / 800 V battery (redundant or main bias input)}
+  isolated_switch_driver: {label: Isolated switch driver, category: isolation, note: "Drives a switch across the barrier with its own secondary bias (e.g. DC-link active discharge). Skyworks Si875x isolated FET drivers fit here but are not imported yet"}
+  power_loss_protection: {label: Power-loss protection (eFuse + hold-up), category: power, companions: [pmic]}
+  cc_regulator: {label: Constant-current regulator, category: power}
   # protection
   tvs_esd: {label: TVS / ESD protection, category: protection}
   reverse_polarity: {label: Reverse-polarity / ideal-diode controller, category: protection}
@@ -69,9 +76,12 @@ functions:
       - {id: input, label: Input type, param: input_type, op: eq, choices: auto}
       - {id: channels, label: Channels, param: channel_config, op: eq, choices: auto}
       - {id: uvlo, label: Output UVLO, param: uvlo_v, op: eq, choices: auto}
-      - {id: peak, label: Peak sink current at least (A), param: peak_sink_a, op: gte, choices: [2, 4, 6, 10]}
+      - {id: peak, label: Peak sink current at least (A), param: peak_sink_a, op: gte, choices: [2, 4, 6, 10, 15, 20, 30]}
+      - {id: reinforced, label: Reinforced isolation, param: isolation_class, op: eq, value: reinforced}
+      - {id: cmti, label: CMTI at least (kV/µs), param: cmti_kv_us, op: gte, choices: [50, 100, 150]}
       - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
   isolated_amplifier: {label: Isolated amplifier / modulator, category: isolation, source: {family: isolated_amplifier}, companions: [isolated_dcdc, adc]}
+  isolated_can: {label: Isolated CAN transceiver, category: networking, companions: [isolated_dcdc, tvs_esd]}
   current_sensor: {label: Isolated current sensor, category: isolation, source: {family: current_sensor}, companions: [adc, mcu]}
   # timing
   crystal_oscillator: {label: Crystal / oscillator, category: timing, companions: [clock_buffer]}
@@ -93,6 +103,7 @@ functions:
       - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
   rf_switch: {label: RF switch, category: rf, source: {family: rf_switch}, requirements: *switch_req}
   lna: {label: LNA, category: rf, companions: [antenna_switch]}
+  rf_pa_bias: {label: RF PA bias controller, category: rf}
   rf_frontend: {label: RF front-end module, category: rf}
   # broadcast radio
   am_fm_tuner:
@@ -120,8 +131,10 @@ functions:
   single_chip_radio: {label: Single-chip radio receiver, category: radio, source: {broadcast: receiver}, companions: [crystal_oscillator, pol_ldo, audio_amp]}
   # sensing
   amplifier: {label: Amplifier, category: sensing, companions: [adc]}
+  position_interface: {label: Resolver / position sensor interface, category: sensing, note: Excitation amplifier and signal conditioning for a resolver, inductive or Hall position sensor}
   temperature_sensor: {label: Temperature sensor, category: sensing, note: e.g. power-module NTC / diode sensing across the isolation barrier}
   adc: {label: ADC, category: sensing}
+  motor_controller: {label: Motor controller SoC (MCU + gate drivers + power), category: processing, companions: [can_transceiver, tvs_esd, current_sensor], note: e.g. Qorvo PAC52xx / PAC55xx; up to 160 V or 600 V gate drive}
   # interface
   voltage_translator: {label: Voltage translator, category: interface}
   io_expander: {label: I/O expander, category: interface}
@@ -144,4 +157,8 @@ functions:
   audio_codec: {label: Audio codec / DSP, category: audio}
   # sensors (external inputs)
   vehicle_sensors: {label: Vehicle sensors (wheel speed, steering, brake...), category: sensors, source: external}
+  hv_battery: {label: HV battery (400 / 800 V), category: sensors, source: external}
+  dc_link_cap: {label: DC-link capacitor, category: sensors, source: external}
+  power_module: {label: IGBT / SiC power switch, category: sensors, source: external, note: Power module or discrete switches; not a Cross List part}
+  motor: {label: Traction motor, category: sensors, source: external}
   camera_radar: {label: Camera / lidar / radar modules, category: sensors, source: external}

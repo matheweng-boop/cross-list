@@ -10,6 +10,10 @@ def test_templates_use_known_functions():
                 assert (b["fn"] if isinstance(b, dict) else b.split()[0]) in fns, (t["name"], b)
         for a, b, _ in t["links"]:
             assert a in ids and b in ids, (t["name"], a, b)
+        for q in t.get("questions") or []:  # answers map only to existing requirements and choices
+            for st in q.get("sets") or []:
+                assert st["req"] in {r["id"] for r in fns[st["fn"]].get("requirements") or []}, (q["id"], st)
+                assert set(st["map"]) <= set(q["choices"]), q["id"]
     for key, f in fns.items():
         assert f["category"] in blocks.catalogue()["categories"], key
         for c in f.get("companions") or []:
@@ -34,7 +38,7 @@ def test_pages_counts_and_parts(client):
     assert all("DAB" in p["detail"] and "PD" in p["detail"] for m in narrowed["manufacturers"] for p in m["all"])
     counts = client.post("/api/blocks/counts", json={"req": {"am_fm_tuner": {"dab": True, "pd": True}}}).json()
     assert counts["am_fm_tuner"] == narrowed["total"] and counts["soc"] is None
-    assert client.get("/api/blocks/parts?fn=pmic").json()["total"] == 0  # opportunity
+    assert client.get("/api/blocks/parts?fn=lna").json()["total"] == 0  # opportunity
     d = client.post("/api/blocks/designs", json={"name": "T", "data": {"groups": [], "links": []}}).json()
     assert client.get(f"/blocks/{d['id']}").status_code == 200
 
@@ -48,3 +52,25 @@ def test_feedback_is_saved_for_discussion(client):
     assert "Needs DESAT" in client.get("/blocks/feedback").text
     assert "- [Open] Inverter / Gate drive: Needs DESAT" in client.get("/blocks/feedback.txt").text
     assert client.post("/api/blocks/feedback", json={"message": " "}).status_code == 400
+
+
+def test_qorvo_and_skyworks_best_two_each(client):
+    pmic = client.get("/api/blocks/parts?fn=pmic").json()
+    qorvo = {m["manufacturer"]: m for m in pmic["manufacturers"]}["Qorvo"]
+    assert qorvo["total"] >= 10 and len(qorvo["best"]) == 2
+    assert all(not p["risk"] for p in qorvo["best"])  # active parts first
+    switches = {m["manufacturer"] for m in client.get("/api/blocks/parts?fn=rf_switch").json()["manufacturers"]}
+    assert "Qorvo" in switches
+
+
+def test_inverter_template_questions(client):
+    names = [t["name"] for t in blocks.templates()]
+    i = names.index("HEV/EV traction inverter (TI reference)")
+    page = client.get(f"/blocks/new?template={i}").text
+    assert "sc_detect" in page and "slua963b" in page
+    # DESAT answer narrows the gate drivers; Si823x has no DESAT, so none are left (an opportunity)
+    import json
+
+    req = json.dumps({"desat": True})
+    assert client.get("/api/blocks/parts?fn=gate_driver").json()["total"] > 0
+    assert client.get(f"/api/blocks/parts?fn=gate_driver&req={req}").json()["total"] == 0

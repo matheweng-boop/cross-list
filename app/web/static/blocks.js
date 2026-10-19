@@ -15,6 +15,7 @@
   const uid = p => `${p}${Date.now().toString(36)}${seq++}`;
   let S = design.data || fromTemplate(tpl) || {groups: [], links: []};
   S.req ||= {}; // requirement answers per function: {fn: {reqId: value}}; unanswered = no filter
+  S.qa ||= {}; // answers to the template's design questions: {questionId: choice}; unanswered = nothing assumed
   let sel = null; // {group} or {group, block}
   let dirty = false;
   let configId = design.id;
@@ -29,7 +30,7 @@
         return {id: uid("b"), fn, label: "", qty: q ? +q : 1, part: null};
       }),
     }));
-    return {groups, links: (t.links || []).map(l => [...l])};
+    return {groups, links: (t.links || []).map(l => [...l]), questions: t.questions || [], sources: t.sources || []};
   }
 
   // ---- block status
@@ -39,7 +40,7 @@
     const n = COUNTS[b.fn];
     return n === null ? "ext" : n ? "have" : "opp";
   }
-  const STATUS_TEXT = {part: "Skyworks part chosen", have: "Skyworks parts fit", opp: "Opportunity: no Skyworks part in Cross List yet", ext: "Customer part"};
+  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Opportunity: no Skyworks or Qorvo part in Cross List yet", ext: "Customer part"};
 
   // ---- layout
   const CELL = 250, GAP_X = 40, GAP_Y = 36, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
@@ -94,7 +95,7 @@
         const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + HEAD + Math.floor(i / r.cols) * (BH + BG);
         const st = status(b), f = fnOf(b);
         const label = b.label || f.label;
-        const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} Skyworks parts` : st === "opp" ? "opportunity" : st === "ext" ? "customer part" : "");
+        const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "opportunity" : st === "ext" ? "customer part" : "");
         parts.push(`<g class="blk st-${st}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
           `<rect x="${cx}" y="${cy}" width="${BW}" height="${BH}"/>` +
           wrap(label, 16).slice(0, 2).map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + 15 + k * 13}" text-anchor="middle">${esc(t)}</text>`).join("") +
@@ -163,7 +164,7 @@
     const opp = {}, chosen = [];
     all.forEach(b => { if (status(b) === "opp") opp[fnOf(b).label] = (opp[fnOf(b).label] || 0) + (b.qty || 1); if (b.part) chosen.push(`${b.part}${b.qty > 1 ? ` ×${b.qty}` : ""}`); });
     $("#bk-summary").innerHTML = `<div class="tiles">
-        <div class="tile"><b>${by.part}</b>Skyworks parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks can fill</div>
+        <div class="tile"><b>${by.part}</b>parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks / Qorvo can fill</div>
         <div class="tile"><b>${by.opp}</b>opportunities</div><div class="tile"><b>${by.ext}</b>customer parts</div></div>` +
       (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
       (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
@@ -276,14 +277,57 @@
     };
   }
 
+  // design questions of the template: an answer narrows parts only where it maps to a function requirement
+  // (question.sets); otherwise it is recorded with the design. Nothing is pre-answered.
+  const filterLabel = q => (q.sets || []).map(st => FN[st.fn]?.label).filter(Boolean);
+  function questionControls() {
+    const qs = S.questions || [];
+    if (!qs.length) return "";
+    const n = Object.keys(S.qa).length;
+    return `<details class="req-box" open><summary class="small"><b>Design questions</b> <span class="muted">· ${n} of ${qs.length} answered</span></summary>
+      <p class="small muted">From the reference documents below. <span class="lg lg-have">narrows</span> = the answer filters parts; <span class="lg lg-ext">recorded</span> = kept with the design (no matching parameter in Cross List yet).</p>
+      ${qs.map(q => {
+        const fl = filterLabel(q);
+        return `<label class="small req-row" title="${esc(q.source || "")}">${esc(q.question)}
+          <select data-q="${esc(q.id)}"><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${S.qa[q.id] === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
+          <span class="lg ${fl.length ? "lg-have" : "lg-ext"}" title="${esc(fl.length ? "Narrows: " + fl.join(", ") : "Recorded only")}">${fl.length ? "narrows" : "recorded"}</span></label>`;
+      }).join("")}
+      ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")} (TI, public)</p>` : ""}
+    </details>`;
+  }
+  function applyQuestion(q, choice) {
+    for (const st of q.sets || []) {
+      const a = (S.req[st.fn] ||= {});
+      const before = S.qa[q.id] !== undefined ? st.map[S.qa[q.id]] : undefined;
+      if (before !== undefined && String(a[st.req]) === String(before)) delete a[st.req];
+      const v = choice ? st.map[choice] : undefined;
+      if (v !== undefined) a[st.req] = v;
+      if (!Object.keys(a).length) delete S.req[st.fn];
+    }
+    if (choice) S.qa[q.id] = choice; else delete S.qa[q.id];
+  }
+  function bindQuestions(box, after) {
+    box.querySelectorAll("[data-q]").forEach(el => (el.onchange = async () => {
+      const q = (S.questions || []).find(x => x.id === el.dataset.q);
+      if (!q) return;
+      applyQuestion(q, el.value);
+      dirty = true;
+      $("#bk-status").textContent = "Unsaved changes";
+      await refreshCounts();
+      if (after) after();
+    }));
+  }
+
   // all requirement questions of the functions in the diagram, one place
   function showRequirements() {
     openPanel();
     const fns = [...new Set(S.groups.flatMap(g => g.blocks.map(b => b.fn)))].filter(fn => (REQ[fn] || []).length);
     panel.innerHTML = `<h3>Requirements</h3><p class="small muted">Answer only what the design needs; unanswered questions do not filter. Each answer narrows the parts for every block of that function.</p>` +
+      questionControls() + (fns.length ? `<p class="small"><b>Per function</b></p>` : "") +
       (fns.length ? fns.map(fn => `<details class="req-box"${Object.keys(S.req[fn] || {}).length ? " open" : ""}><summary class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} parts fit</span></summary>${reqControls(fn)}</details>`).join("")
         : `<p class="small muted">No block in this diagram has requirement questions yet (they come with functions that have parts in Cross List).</p>`);
     bindReq(panel, showRequirements);
+    bindQuestions(panel, showRequirements);
   }
   $("#bk-req").onclick = showRequirements;
 
@@ -376,4 +420,5 @@
 
   if (!design.data && tpl) dirty = true;
   if (Object.keys(S.req).length) refreshCounts(); else render();
+  if (!design.data && (S.questions || []).length) showRequirements(); // a new diagram from a template opens on its questions
 })();

@@ -8,7 +8,7 @@
 <div class="tpl-grid">
   {% for t in templates_ %}
   <a class="tpl-card" href="/blocks/new?template={{ loop.index0 }}"><b>{{ t.name }}</b><br><small class="muted">{{ t.note }}</small>
-    <br><small>{{ t.groups|length }} groups · {{ t.groups|map(attribute='blocks')|map('length')|sum }} blocks</small></a>
+    <br><small>{{ t.groups|length }} groups · {{ t.groups|map(attribute='blocks')|map('length')|sum }} blocks{% if t.questions %} · {{ t.questions|length }} design questions{% endif %}</small></a>
   {% endfor %}
   <a class="tpl-card tpl-empty" href="/blocks/new"><b>Empty diagram</b><br><small class="muted">Add groups and functions yourself.</small></a>
 </div>

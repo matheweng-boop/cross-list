@@ -34,6 +34,35 @@ def templates() -> list[dict]:
     return _yaml("templates.yaml") or []
 
 
+# Qorvo (combined with Skyworks): public catalogue parts read from store.qorvo.com, not datasheet-verified and
+# without Cross List parameters, so an answered requirement leaves them out (unknown is not assumed).
+QORVO_FILE = "research/qorvo_parts.yaml"
+_QORVO_SHOWN = ("Function", "Type", "Topology", "Input Voltage", "Power Supply Input Voltage", "Max Output Current",
+                "Buck Converters", "LDO Regulators", "Frequency Range Max", "Package")  # fmt: skip
+
+
+@lru_cache
+def qorvo_parts() -> dict[str, list[dict]]:
+    out: dict[str, list[dict]] = {}
+    for p in (_yaml(QORVO_FILE) or {}).get("parts") or []:
+        specs = p.get("key_specs") or {}
+        text = " ".join([p.get("summary") or "", *map(str, specs.values())])
+        bits = [p.get("summary") or ""] + [f"{k} {specs[k]}" for k in _QORVO_SHOWN if specs.get(k)]
+        values = {"qualification": "automotive" if "AEC-Q" in text else None}
+        status = p.get("status") or ""
+        out.setdefault(p["function"], []).append(
+            {
+                "mpn": p["mpn"],
+                "manufacturer": "Qorvo",
+                "url": p.get("source") or "",
+                "values": values,
+                "detail": " · ".join(b for b in bits[:4] if b) + (f" · {status}" if status != "Standard" else ""),
+                "risk": status != "Standard",
+            }  # fmt: skip
+        )
+    return out
+
+
 def _reference_parts(session: Session, family: str):
     return (
         select(Part)
@@ -89,6 +118,7 @@ def _candidates(session: Session, key: str) -> list[dict] | None:
             out.append(
                 dict(mpn=d["mpn"], manufacturer="Skyworks", url="/broadcast", values=values, risk=False, detail=detail)
             )
+    out += qorvo_parts().get(key, [])
     return out
 
 

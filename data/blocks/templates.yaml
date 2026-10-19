@@ -1,6 +1,10 @@
 # Block-diagram templates. Groups are placed on a grid (col, row; width / height in grid cells);
 # blocks are function ids (optionally "id x2" for two of them, or {fn: id, label: "..."}).
 # links connect groups: [from, to, label].
+# questions (optional): high-level design questions, unanswered by default. Nothing is assumed:
+#   sets: [{fn, req, map: {choice: value}}]  an answer in `map` sets that function requirement (narrows the parts);
+#   no `sets` (or a choice not in `map`)     the answer is recorded with the design only (no parameter in Cross List yet).
+# sources: documents the template and the questions come from (data/blocks/research/).
 
 - name: ADAS domain controller
   note: Layout after a reference ADAS block diagram the user shared; every block is a function to fill.
@@ -74,3 +78,221 @@
     - [ctrl, iso, UART / SPI]
     - [iso, field, ""]
     - [power, ctrl, ""]
+
+- name: HEV/EV traction inverter (TI reference)
+  note: After TI SLUA963B Fig 2-4, SLUAAS4 Fig 1-1 and TIDM-02014 Fig 2-1; groups from LV side (left) over the barrier to HV (right).
+  sources: &ti_inv
+    - {doc: SLUA963B, title: HEV/EV Traction Inverter Design Guide Using Isolated IGBT and SiC Gate Drivers, url: "https://www.ti.com/lit/an/slua963b/slua963b.pdf"}
+    - {doc: SLUAAS4, title: Isolated Bias Power Supply Architecture for HEV and EV Traction Inverters, url: "https://www.ti.com/lit/pdf/sluaas4"}
+    - {doc: TIDUF23A, title: TIDM-02014 SiC Traction Inverter Reference Design, url: "https://www.ti.com/lit/ug/tiduf23a/tiduf23a.pdf"}
+    - {doc: SPRAD58B, title: Design Priorities in EV Traction Inverters, url: "https://www.ti.com/lit/wp/sprad58b/sprad58b.pdf"}
+    - {doc: SLYY169, title: IGBT & SiC Gate Driver Fundamentals, url: "https://www.ti.com/lit/eb/slyy169/slyy169.pdf"}
+  groups:
+    - {id: lv_input, label: LV battery input & protection, col: 0, row: 0, blocks: [reverse_polarity, load_switch, tvs_esd]}
+    - {id: lv_power, label: LV power / PMIC, col: 1, row: 0, blocks: [pmic, pol_ldo, supervisor, watchdog]}
+    - {id: control, label: Control, col: 2, row: 0, blocks: [mcu, crystal_oscillator]}
+    - {id: comms, label: Vehicle network, col: 3, row: 0, blocks: [can_transceiver, isolated_can, tvs_esd]}
+    - {id: redundant, label: Redundant HV-to-LV supply, col: 0, row: 1, blocks: [hv_flyback]}
+    - {id: bias, label: Isolated bias supply, col: 1, row: 1, blocks: [pre_regulator, {fn: isolated_dcdc, label: Bias supply high side, qty: 3}, {fn: isolated_dcdc, label: Bias supply low side}]}
+    - {id: signal_iso, label: Signal isolation, col: 2, row: 1, blocks: [digital_isolator, {fn: adc, label: ADC for temperature}]}
+    - {id: gate_drive, label: Isolated gate drivers (HS + LS), col: 3, row: 1, blocks: [gate_driver x6]}
+    - {id: sensing, label: Isolated voltage & current sensing, col: 2, row: 2, blocks: [{fn: isolated_amplifier, label: DC-link voltage}, {fn: current_sensor, label: Phase current, qty: 3}]}
+    - {id: power_stage, label: Power stage, col: 3, row: 2, blocks: [hv_battery, dc_link_cap, {fn: power_module, qty: 3}, {fn: temperature_sensor, label: Module NTC / diode}]}
+    - {id: discharge, label: DC-link active discharge, col: 4, row: 2, blocks: [isolated_switch_driver]}
+    - {id: motor, label: Motor & position, col: 4, row: 1, blocks: [motor, position_interface]}
+  links:
+    - [lv_input, lv_power, 12 V]
+    - [lv_input, bias, 12 V]
+    - [lv_power, control, "supply, watchdog"]
+    - [control, comms, CAN]
+    - [control, gate_drive, "PWM 6x, SPI, ASC"]
+    - [bias, gate_drive, VCC2 / VEE2]
+    - [redundant, lv_input, backup LV rail]
+    - [gate_drive, power_stage, gate OUT 6x]
+    - [signal_iso, control, temperature]
+    - [sensing, control, isolated feedback]
+    - [power_stage, discharge, DC link]
+    - [motor, control, position]
+  questions:
+    - {id: switch_tech, question: Power switch technology, choices: [SiC MOSFET, IGBT], source: "SLUA963B p.5; SLYY169 p.6 Table 2"}
+    - {id: bus_voltage, question: DC bus voltage class, choices: [400 V, 800 V], source: "SLUAAS4 p.3; SPRAD58B p.3, p.6"}
+    - {id: asil, question: Functional safety target (ISO 26262), choices: [QM, ASIL C, ASIL D], source: "SPRAD58B p.3, p.13; SLUA963B p.19"}
+    - id: automotive
+      question: Automotive qualified (AEC-Q100)
+      choices: ["yes", "no"]
+      sets:
+        - {fn: gate_driver, req: automotive, map: {"yes": true}}
+        - {fn: digital_isolator, req: automotive, map: {"yes": true}}
+      source: SPRAD58B p.13
+    - id: isolation_class
+      question: Isolation class
+      choices: [basic, reinforced]
+      sets:
+        - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
+        - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
+      source: "SLUA963B p.2, p.9, p.19; SPRAD58B p.11"
+    - id: sc_detect
+      question: Short-circuit detection method
+      choices: [DESAT (VCE / VDS sensing), shunt / sense-FET overcurrent, both]
+      sets: [{fn: gate_driver, req: desat, map: {DESAT (VCE / VDS sensing): true, both: true}}]
+      source: "SLUA963B p.12-13, p.22; SLYY169 p.27 Table 4"
+    - id: fault_turnoff
+      question: Turn-off behaviour on a fault
+      choices: [normal, soft turn-off, two-level turn-off]
+      sets: [{fn: gate_driver, req: soft_off, map: {soft turn-off: true}}]
+      source: "SLUA963B p.14-15, p.23"
+    - id: miller_clamp
+      question: Active Miller clamp
+      choices: [none, internal, external FET driver]
+      sets: [{fn: gate_driver, req: miller, map: {internal: true}}]
+      source: "SLUA963B p.17 Fig 3-11; SLYY169 p.23-25"
+    - id: uvlo
+      question: Gate-driver secondary UVLO
+      choices: [12 V, 15 V, 17 V]
+      sets: [{fn: gate_driver, req: uvlo, map: {12 V: "12", 15 V: "15", 17 V: "17"}}]
+      source: "SPRAD58B p.11; SLUA963B p.11"
+    - id: drive_strength
+      question: Peak gate drive current at least
+      choices: [10 A, 15 A, 20 A, 30 A]
+      sets: [{fn: gate_driver, req: peak, map: {10 A: "10", 15 A: "15", 20 A: "20", 30 A: "30"}}]
+      source: "SLUA963B p.9, p.19; TIDUF23A p.5"
+    - id: cmti
+      question: Gate-driver CMTI at least
+      choices: [100 V/ns, 150 V/ns]
+      sets: [{fn: gate_driver, req: cmti, map: {100 V/ns: "100", 150 V/ns: "150"}}]
+      source: "SLUA963B p.9, p.19; SLYY169 p.20"
+    - id: interlock
+      question: Shoot-through protection
+      choices: [none, fixed interlock, programmable dead time]
+      sets: [{fn: gate_driver, req: deadtime, map: {programmable dead time: true}}]
+      source: "SLUA963B p.16-17; SLYY169 p.13"
+    - {id: asc, question: Active short circuit (ASC) safe-state path, choices: [none, primary side, secondary side, both], source: "SLUA963B p.26-27; SPRAD58B p.11"}
+    - {id: config_interface, question: Gate-driver configuration / diagnostics, choices: [pins only (nFLT / RDY), SPI programmable], source: "SLUA963B p.9, p.19, p.30"}
+    - {id: module_temp, question: Power-module temperature sensing, choices: [NTC thermistor, thermal diode, none], source: "SLUA963B p.18, p.28; TIDUF23A p.19-20"}
+    - {id: dc_link_sensing, question: DC-link voltage sensing, choices: [isolated amplifier, isolated delta-sigma modulator, gate-driver isolated ADC channel], source: "SLUA963B p.18; TIDUF23A p.6, p.17"}
+    - {id: phase_current_sensing, question: Phase current sensing, choices: [Hall with core, coreless Hall, shunt + isolated amplifier], source: "SPRAD58B p.19-20 Table 10-1"}
+    - {id: phases_sensed, question: Phase currents sensed, choices: ["3", 2 (third calculated)], source: SPRAD58B p.20}
+    - {id: position_sensing, question: Rotor position sensor, choices: [resolver, inductive, Hall], source: "SPRAD58B p.18-19"}
+    - {id: redundant_hv_supply, question: Redundant supply from the HV battery, choices: ["yes", "no"], source: "SLUAAS4 p.8-10; SPRAD58B p.16"}
+    - {id: active_discharge, question: DC-link active discharge, choices: [switched resistor, PWM-controlled resistor, through motor windings, passive bleed resistor], source: "SPRAD58B p.16-17; TIDUF23A p.22"}
+    - {id: isolated_can, question: Isolated CAN interface, choices: ["yes", "no"], source: "SLUAAS4 p.2 Fig 1-1; TIDUF23A p.7"}
+
+- name: Isolated gate driver subsystem
+  note: One switch position after TI SLUA963B Fig 3-1 / 3-15 - primary control, the driver across the barrier, its bias supply and the power switch.
+  sources: *ti_inv
+  groups:
+    - {id: primary, label: Primary-side control, col: 0, row: 0, blocks: [mcu, pmic]}
+    - {id: driver, label: Isolated gate driver, col: 1, row: 0, blocks: [gate_driver]}
+    - {id: switch, label: Power switch, col: 2, row: 0, blocks: [power_module, {fn: temperature_sensor, label: NTC / thermal diode}, {fn: tvs_esd, label: TVS clamp}]}
+    - {id: selftest, label: External monitor & self-test, col: 0, row: 1, blocks: [digital_isolator, {fn: amplifier, label: OVLO / VGE comparator}]}
+    - {id: bias, label: Isolated bias supply, col: 1, row: 1, blocks: [pre_regulator, isolated_dcdc]}
+  links:
+    - [primary, driver, "PWM, SPI, EN, ASC"]
+    - [driver, switch, "OUTH / OUTL, CLAMP"]
+    - [bias, driver, VCC2 / VEE2]
+    - [primary, bias, enable / power good]
+    - [selftest, primary, monitor / test]
+  questions:
+    - id: automotive
+      question: Automotive qualified (AEC-Q100)
+      choices: ["yes", "no"]
+      sets: [{fn: gate_driver, req: automotive, map: {"yes": true}}]
+      source: SPRAD58B p.13
+    - id: isolation_class
+      question: Isolation class
+      choices: [basic, reinforced]
+      sets: [{fn: gate_driver, req: reinforced, map: {reinforced: true}}]
+      source: "SLUA963B p.2, p.9; SLYY169 p.9"
+    - id: channels
+      question: Channels per driver
+      choices: [single, dual with internal interlock]
+      source: "SLYY169 p.15, p.18"
+    - id: sc_detect
+      question: Short-circuit detection method
+      choices: [DESAT (VCE / VDS sensing), shunt / sense-FET overcurrent, both]
+      sets: [{fn: gate_driver, req: desat, map: {DESAT (VCE / VDS sensing): true, both: true}}]
+      source: "SLUA963B p.12-13; SLYY169 p.27"
+    - id: fault_turnoff
+      question: Turn-off behaviour on a fault
+      choices: [normal, soft turn-off, two-level turn-off]
+      sets: [{fn: gate_driver, req: soft_off, map: {soft turn-off: true}}]
+      source: "SLUA963B p.14-15"
+    - id: miller_clamp
+      question: Active Miller clamp
+      choices: [none, internal, external FET driver]
+      sets: [{fn: gate_driver, req: miller, map: {internal: true}}]
+      source: SLUA963B p.17
+    - id: uvlo
+      question: Secondary UVLO
+      choices: [12 V, 15 V, 17 V]
+      sets: [{fn: gate_driver, req: uvlo, map: {12 V: "12", 15 V: "15", 17 V: "17"}}]
+      source: SPRAD58B p.11
+    - id: drive_strength
+      question: Peak gate drive current at least
+      choices: [10 A, 15 A, 20 A, 30 A]
+      sets: [{fn: gate_driver, req: peak, map: {10 A: "10", 15 A: "15", 20 A: "20", 30 A: "30"}}]
+      source: "SLUA963B p.9, p.19"
+    - id: cmti
+      question: CMTI at least
+      choices: [100 V/ns, 150 V/ns]
+      sets: [{fn: gate_driver, req: cmti, map: {100 V/ns: "100", 150 V/ns: "150"}}]
+      source: SLYY169 p.20
+    - id: interlock
+      question: Shoot-through protection
+      choices: [none, fixed interlock, programmable dead time]
+      sets: [{fn: gate_driver, req: deadtime, map: {programmable dead time: true}}]
+      source: "SLUA963B p.16-17"
+    - {id: split_outputs, question: Split outputs (OUTH / OUTL), choices: ["yes", "no"], source: "SLYY169 p.11"}
+    - {id: negative_rail, question: Bipolar gate supply (negative VEE), choices: ["yes", "no"], source: "SLUAAH0 p.10-11; SLYY169 p.16"}
+    - {id: ovlo, question: Supply overvoltage lockout, choices: [integrated, external circuit, none], source: "SLUA963B p.11, p.21"}
+    - {id: gate_monitor, question: Gate voltage monitoring, choices: [integrated, external comparator, none], source: "SLUA963B p.15-16"}
+    - {id: active_hv_clamp, question: Active VCE / VDS clamp, choices: ["yes", "no"], source: "SLUA963B p.19, p.23-24"}
+    - {id: temp_input, question: Module temperature input on the driver, choices: [NTC / PTC, thermal diode, none], source: "SLUA963B p.18, p.28"}
+    - {id: isolated_sense_channel, question: Isolated analog channel in the driver, choices: [none, analog-to-PWM, multi-channel ADC over SPI], source: "SLUA963B p.18-19"}
+    - {id: asc_driver, question: ASC inputs on the driver, choices: [none, primary only, primary and secondary], source: "SLUA963B p.26-27"}
+    - {id: config_interface, question: Configuration / diagnostics, choices: [pins only (nFLT / RDY), SPI programmable], source: "SLUA963B p.9, p.19"}
+    - {id: self_test, question: Built-in self-test / CRC, choices: [integrated, external circuits, none], source: "SLUA963B p.13-14, p.29-30"}
+    - {id: fusa_driver, question: Driver functional safety category, choices: [Functional Safety-Compliant, Functional Safety Quality-Managed], source: "SLUA963B p.19; TIDUF23A p.1"}
+
+- name: Isolated bias power for gate drivers
+  note: After TI SLUAAS4 Fig 2-1 to 6-4 - LV source, pre-regulator, isolated supplies per driver and an optional HV flyback.
+  sources: *ti_inv
+  groups:
+    - {id: lv, label: LV battery source, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd]}
+    - {id: pre, label: Pre-regulator, col: 1, row: 0, blocks: [pre_regulator]}
+    - {id: hs, label: Isolated bias high side, col: 2, row: 0, blocks: [{fn: isolated_dcdc, label: HS bias, qty: 3}]}
+    - {id: ls, label: Isolated bias low side, col: 2, row: 1, blocks: [{fn: isolated_dcdc, label: LS bias (or one shared)}]}
+    - {id: drivers, label: Gate drivers, col: 3, row: 0, blocks: [gate_driver x6]}
+    - {id: hv, label: HV battery flyback, col: 1, row: 1, blocks: [hv_battery, hv_flyback]}
+    - {id: post, label: Post-regulation, col: 3, row: 1, blocks: [pol_ldo]}
+    - {id: host, label: Host / monitoring, col: 0, row: 1, blocks: [mcu, supervisor]}
+    - {id: aux, label: Other isolated rails, col: 4, row: 0, blocks: [{fn: isolated_dcdc, label: Isolated 5 V / 3.3 V}]}
+  links:
+    - [lv, pre, 12 V]
+    - [pre, hs, 24 V]
+    - [pre, ls, 24 V]
+    - [hv, hs, redundant input]
+    - [hs, drivers, VCC2 / VEE2]
+    - [ls, post, ""]
+    - [post, drivers, ""]
+    - [host, hs, enable / power good]
+    - [lv, aux, 5 V]
+  questions:
+    - {id: architecture, question: Bias supply architecture, choices: [centralized, LS shared, HS + LS shared, fully distributed], source: "SLUA963B p.31-32; SLUAAS4 p.6-8"}
+    - {id: topology, question: Isolated bias topology, choices: [integrated transformer module, PSR flyback, push-pull, LLC], source: "SLUAAS4 p.2-3 Table 1-1"}
+    - {id: input_source, question: Input source, choices: [12 V battery, 48 V battery, HV battery, LV + HV], source: "SLUAAS4 p.2-3; SPRAD58B p.14, p.16"}
+    - {id: pre_regulator, question: Pre-regulator, choices: [none (wide-Vin device), single shared, separate HS and LS], source: "SLUAAS4 p.4-5"}
+    - {id: redundancy, question: Redundant supply from the HV battery, choices: [none, all drivers, low side only, high side only], source: "SLUAAS4 p.8-10"}
+    - {id: output_config, question: Output rails, choices: [single positive, positive / negative, dual positive], source: "SLUAAH0 p.10-12"}
+    - {id: gate_voltages, question: Gate-drive voltages, choices: [+15 / -4 V (SiC), +15 / -5 V, +15 / -8 V (IGBT), +20 V single], source: "TIDUF23A p.9; SLUAAH0 p.8 Table 3-1"}
+    - {id: regulation, question: Output regulation, choices: [open loop, about 5 %, 1.5 % or better], source: "SLUAAH0 p.10; SLUAAS4 p.3"}
+    - {id: power_per_driver, question: Bias power per driver at least, choices: [1.0 W, 1.5 W, 2.0 W, 2.5 W], source: "SLUAAH0 p.8-9 Eq 1-5"}
+    - {id: bias_isolation, question: Bias supply isolation, choices: [basic 3 kVrms, reinforced 5 kVrms], source: "SLUAAS4 p.6 Table 3-1"}
+    - {id: enable_pg, question: Enable input and power-good output, choices: ["yes", "no"], source: "SLUAAH0 p.4, p.24-25"}
+    - {id: low_emi, question: Low-EMI features (spread spectrum, low barrier capacitance), choices: ["yes", "no"], source: "SPRAD58B p.15-16"}
+    - {id: low_profile, question: Low-profile module (under 4 mm), choices: ["yes", "no"], source: "SLUAAH0 p.8; TIDUF23A p.2"}
+    - id: automotive
+      question: Automotive qualified (AEC-Q100)
+      choices: ["yes", "no"]
+      sets: [{fn: gate_driver, req: automotive, map: {"yes": true}}]
+      source: SPRAD58B p.13

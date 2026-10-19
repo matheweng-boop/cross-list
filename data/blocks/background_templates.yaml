@@ -1,0 +1,4068 @@
+# Diagrams that do not fit the Skyworks / Qorvo portfolio (tools/import_diagrams.py): not shown in
+# the library, used only for occurrence and attach statistics on the Business opportunity pages.
+
+# ---- imported by tools/import_diagrams.py
+- name: Automotive body control module (BCM) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-BCM'
+  sources:
+  - {doc: TI-SOL-BCM, title: Automotive body control module (BCM) - block diagram + subsystems, url: 'https://www.ti.com/solution/body-control-module-bcm'}
+  groups:
+  - id: power
+    label: Power supply (discrete or SBC)
+    blocks: [reverse_polarity, wide_vin_buck, pol_ldo, ldo_tracker, watchdog, supervisor]
+    col: 0
+    row: 0
+  - id: can
+    label: CAN
+    blocks: [can_transceiver, tvs_esd]
+    col: 1
+    row: 0
+  - id: lin
+    label: LIN
+    blocks: [can_transceiver, tvs_esd]
+    col: 2
+    row: 0
+  - id: digital_inputs
+    label: Digital inputs (switch detection)
+    blocks: [io_expander]
+    col: 3
+    row: 0
+  - id: analog_inputs
+    label: Analog inputs
+    blocks: [io_expander, amplifier]
+    col: 0
+    row: 1
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: load_drivers
+    label: Load drivers
+    blocks: [load_switch, relay_driver, motor_driver_brushed, amplifier]
+    col: 2
+    row: 1
+  - id: telltale
+    label: Tell-tale indicators
+    blocks: [led_driver]
+    col: 3
+    row: 1
+  - id: diagnostics
+    label: Diagnostic inputs
+    blocks: [voltage_reference, amplifier, temperature_sensor]
+    col: 0
+    row: 2
+  - id: loads
+    label: Output functions (fused loads, relays)
+    blocks: [external_block]
+    col: 1
+    row: 2
+  links:
+  - [power, mcu, '']
+  - [can, mcu, CAN bus]
+  - [lin, mcu, LIN bus]
+  - [digital_inputs, mcu, discrete inputs (switches)]
+  - [analog_inputs, mcu, 'analog inputs (temperature, light, current feedback)']
+  - [diagnostics, mcu, '']
+  - [mcu, load_drivers, '']
+  - [mcu, telltale, '']
+  - [load_drivers, loads, fused outputs / relays]
+  questions:
+  - id: sbc
+    question: Power and transceivers as discrete parts or a system basis chip (SBC)
+    choices: [discrete, SBC]
+    source: TI-SOL-BCM SVG 'Discrete implementation or system basis chip (SBC)'
+  - id: load_switching
+    question: Load switching technology
+    choices: [relays + relay drivers, smart high-side switches, mixed]
+    source: TI-SOL-BCM 'Load drivers'
+  - id: switch_inputs
+    question: Switch input count / method
+    choices: [MSDI ICs, mux + MCU ADC, direct GPIO]
+    source: TI-SOL-BCM 'Digital inputs', 'Analog inputs'
+  - id: buses
+    question: Vehicle buses
+    choices: [CAN only, CAN + LIN, CAN FD + LIN]
+    source: TI-SOL-BCM SVG
+- name: Automotive zone control module (zonal ECU with smart fuses) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-ZONE'
+  sources:
+  - {doc: TI-SOL-ZONE, title: Automotive zone control module (zonal ECU with smart fuses) - block diagram + subsystems, url: 'https://www.ti.com/solution/zone-control-module'}
+  groups:
+  - id: power
+    label: Power supply
+    blocks: [reverse_polarity, wide_vin_buck, pmic, ldo_tracker, pol_ldo, watchdog, supervisor]
+    col: 0
+    row: 0
+  - id: can
+    label: CAN
+    blocks: [can_transceiver, tvs_esd]
+    col: 1
+    row: 0
+  - id: lin
+    label: LIN
+    blocks: [can_transceiver, tvs_esd]
+    col: 2
+    row: 0
+  - id: ethernet
+    label: Ethernet
+    blocks: [ethernet_phy, tvs_esd]
+    col: 3
+    row: 0
+  - id: pcie
+    label: PCIe
+    blocks: [redriver]
+    col: 0
+    row: 1
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: inputs
+    label: Analog and digital inputs
+    blocks: [amplifier, io_expander, audio_codec]
+    col: 2
+    row: 1
+  - id: diagnostics
+    label: Diagnostic inputs
+    blocks: [voltage_reference, amplifier, temperature_sensor]
+    col: 3
+    row: 1
+  - id: smart_fuse
+    label: Smart fuse
+    blocks: [load_switch, amplifier]
+    col: 0
+    row: 2
+  - id: load_drivers
+    label: Load drivers
+    blocks: [load_switch, motor_driver_brushed, three_phase_gate_driver, led_driver, audio_amp]
+    col: 1
+    row: 2
+  - id: io_expansion
+    label: I/O expansion
+    blocks: [io_expander]
+    col: 2
+    row: 2
+  - id: offboard
+    label: 'Off-board: PDB, edge nodes, loads (motors, lights, speakers)'
+    blocks: [external_block]
+    col: 3
+    row: 2
+  links:
+  - [offboard, power, from power distribution box]
+  - [power, mcu, '']
+  - [can, mcu, '']
+  - [lin, mcu, '']
+  - [ethernet, mcu, to central compute]
+  - [pcie, mcu, to central compute]
+  - [inputs, mcu, discrete / analog inputs]
+  - [diagnostics, mcu, '']
+  - [mcu, io_expansion, '']
+  - [mcu, smart_fuse, '']
+  - [mcu, load_drivers, '']
+  - [smart_fuse, offboard, powered at all times (edge nodes)]
+  - [load_drivers, offboard, power switched on/off]
+  questions:
+  - id: backbone
+    question: Backbone link to central compute
+    choices: [100BASE-T1, 1000BASE-T1, PCIe]
+    source: TI-SOL-ZONE 'Ethernet', 'PCIe'
+  - id: fuse_type
+    question: Wire protection
+    choices: [melting fuses, smart fuse (eFuse high-side switch / controller)]
+    source: TI-SOL-ZONE 'Smart fuse'
+  - id: switch_type
+    question: High-current outputs
+    choices: [integrated high-side switches, high-side switch controller + external FETs]
+    source: TI-SOL-ZONE 'Load drivers'
+  - id: motor_loads
+    question: Motor loads driven locally
+    choices: [none, brushed DC, BLDC, both]
+    source: TI-SOL-ZONE 'Load drivers'
+- name: Automotive LED headlight driving module (high beam / low beam) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-HEADLIGHT'
+  sources:
+  - {doc: TI-SOL-HEADLIGHT, title: Automotive LED headlight driving module (high beam / low beam) - block diagram + subsystems, url: 'https://www.ti.com/solution/automotive-headlight'}
+  groups:
+  - id: power
+    label: Power supply
+    blocks: [reverse_polarity, pol_ldo, watchdog, supervisor]
+    col: 0
+    row: 0
+  - id: led_driver
+    label: LED driver (constant-current regulator)
+    blocks: [led_driver]
+    col: 1
+    row: 0
+  - id: comms
+    label: Communication interface
+    blocks: [can_transceiver, tvs_esd]
+    col: 2
+    row: 0
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 0
+    row: 1
+  - id: thermal
+    label: Thermal protection
+    blocks: [temperature_sensor]
+    col: 1
+    row: 1
+  - id: fan
+    label: Fan driver
+    blocks: [load_switch]
+    col: 2
+    row: 1
+  - id: level
+    label: Level control (beam levelling motor)
+    blocks: [motor_driver_brushed]
+    col: 0
+    row: 2
+  - id: led_board
+    label: LED board (high beam / low beam strings)
+    blocks: [external_block]
+    col: 1
+    row: 2
+  links:
+  - [power, led_driver, car battery]
+  - [power, mcu, '']
+  - [comms, mcu, from body control module]
+  - [mcu, led_driver, '']
+  - [led_driver, led_board, high beam / low beam]
+  - [mcu, thermal, '']
+  - [mcu, fan, '']
+  - [mcu, level, '']
+  questions:
+  - id: function
+    question: Lamp function
+    choices: [HB/LB, DRL / position, fog, adaptive (matrix / pixel), high-resolution DLP]
+    source: TI-SOL-HEADLIGHT variant list (8 variants)
+  - id: driver_topology
+    question: LED driver topology
+    choices: [boost-to-buck / buck-boost CC regulator, linear]
+    source: TI-SOL-HEADLIGHT 'LED driver'
+  - id: bus
+    question: Interface to BCM
+    choices: [CAN, LIN, discrete]
+    source: TI-SOL-HEADLIGHT 'Communication interface'
+  - id: levelling
+    question: Beam levelling motor
+    choices: [stepper, none]
+    source: TI-SOL-HEADLIGHT 'Level control'
+- name: Automotive electric pump / fan drive (12 V or 48 V, BLDC) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-PUMP'
+  sources:
+  - {doc: TI-SOL-PUMP, title: 'Automotive electric pump / fan drive (12 V or 48 V, BLDC) - block diagram + subsystems', url: 'https://www.ti.com/solution/automotive-pump'}
+  groups:
+  - id: input_protection
+    label: Input power protection (12 V)
+    blocks: [reverse_polarity]
+    col: 0
+    row: 0
+  - id: iso_dcdc
+    label: Isolated DC/DC power supply (48 V systems)
+    blocks: [isolated_dcdc]
+    col: 1
+    row: 0
+  - id: nonisolated_dcdc
+    label: Non-isolated DC/DC power supply (from 48 V / 12 V)
+    blocks: [wide_vin_buck]
+    col: 2
+    row: 0
+  - id: aux_power
+    label: Minor auxiliary power supply
+    blocks: [pol_ldo, pmic]
+    col: 3
+    row: 0
+  - id: wired
+    label: Wired interface
+    blocks: [can_transceiver]
+    col: 0
+    row: 1
+  - id: isolation
+    label: Signal isolation
+    blocks: [digital_isolator]
+    col: 1
+    row: 1
+  - id: mcu
+    label: Digital processing
+    blocks: [mcu]
+    col: 2
+    row: 1
+  - id: power_stage
+    label: Power stage
+    blocks: [three_phase_gate_driver, half_bridge_driver, power_fets]
+    col: 3
+    row: 1
+  - id: sense
+    label: Current and voltage sense
+    blocks: [amplifier, adc, voltage_reference]
+    col: 0
+    row: 2
+  - id: position
+    label: Rotor position sensing (optional)
+    blocks: [hall_switch, position_sensor]
+    col: 1
+    row: 2
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [temperature_sensor, adc]
+    col: 2
+    row: 2
+  - id: safety_logic
+    label: Safety and glue logic
+    blocks:
+    - {fn: external_block, label: Safety and glue logic}
+    col: 3
+    row: 2
+  - id: motor
+    label: BLDC motor + position sensor
+    blocks: [motor]
+    col: 0
+    row: 3
+  links:
+  - [input_protection, iso_dcdc, 12 V]
+  - [nonisolated_dcdc, aux_power, 48 V (alternatively 12 V without isolation)]
+  - [aux_power, mcu, '']
+  - [wired, isolation, '']
+  - [isolation, mcu, '']
+  - [mcu, power_stage, PWM]
+  - [power_stage, motor, '']
+  - [motor, sense, I sense / V sense]
+  - [sense, mcu, '']
+  - [position, mcu, optional position sensing]
+  - [diagnostics, mcu, '']
+  - [safety_logic, mcu, '']
+  questions:
+  - id: supply
+    question: Supply voltage
+    choices: [12 V, 48 V (with isolated LV interface)]
+    source: TI-SOL-PUMP SVG '48V (alternatively 12V without isolation)'
+  - id: sensorless
+    question: Rotor position
+    choices: [sensorless, Hall sensors]
+    source: TI-SOL-PUMP 'Rotor position sensing'
+  - id: driver_integration
+    question: Gate driver
+    choices: [smart 3-phase gate driver, half-bridge drivers, integrated MCU + driver]
+    source: TI-SOL-PUMP 'Power stage'
+  - id: bus
+    question: Vehicle interface
+    choices: [CAN, LIN, PWM]
+    source: TI-SOL-PUMP 'Wired interface'
+- name: Automotive USB-C charging and data hub (dual port) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-AUTOUSB'
+  sources:
+  - {doc: TI-SOL-AUTOUSB, title: Automotive USB-C charging and data hub (dual port) - block diagram + subsystems, url: 'https://www.ti.com/solution/automotive-usb-charging'}
+  groups:
+  - id: off_battery
+    label: Off-battery power
+    blocks: [reverse_polarity, wide_vin_buck]
+    col: 0
+    row: 0
+  - id: port_power
+    label: USB port power (per port)
+    blocks: [usb_pd_controller, load_switch, amplifier, temperature_sensor, tvs_esd, pol_ldo]
+    col: 1
+    row: 0
+  - id: usb_data
+    label: USB data (hub, redrivers, mux)
+    blocks: [redriver, tvs_esd, supervisor]
+    col: 2
+    row: 0
+  - id: head_unit
+    label: Head unit (USB host)
+    blocks: [external_block]
+    col: 0
+    row: 1
+  links:
+  - [off_battery, port_power, off-battery power]
+  - [head_unit, usb_data, 'D+/D-, Tx/Rx']
+  - [usb_data, port_power, D+/D- to CDP negotiation]
+  - [port_power, usb_data, '']
+  questions:
+  - id: power_level
+    question: Power per port
+    choices: [USB BC1.2 (7.5 W), USB PD 27-45 W, USB PD 60-100 W]
+    source: TI-SOL-AUTOUSB 'USB port power'
+  - id: ports
+    question: Number of ports
+    choices: ['1', '2', 3+]
+    source: TI-SOL-AUTOUSB SVG (two ports drawn)
+  - id: data
+    question: Data path
+    choices: [charge only, USB 2.0, USB 3.x with hub]
+    source: TI-SOL-AUTOUSB 'USB data'
+- name: Ultrasonic park assist sensor (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-USPARK'
+  sources:
+  - {doc: TI-SOL-USPARK, title: Ultrasonic park assist sensor - block diagram + subsystems, url: 'https://www.ti.com/solution/ultrasonic-park-assist-sensor'}
+  groups:
+  - id: supply
+    label: Battery or pre-regulated power
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: soc
+    label: Ultrasonic distance sensing SoC
+    blocks: [ultrasonic_afe]
+    col: 1
+    row: 0
+  - id: transducer
+    label: Transformer + ultrasonic transducer
+    blocks: [external_block]
+    col: 2
+    row: 0
+  - id: ecu
+    label: Park assist / sensor fusion ECU / body controller
+    blocks: [external_block]
+    col: 0
+    row: 1
+  links:
+  - [supply, soc, '']
+  - [soc, transducer, drive]
+  - [transducer, soc, echo]
+  - [soc, ecu, LIN / interface]
+  questions:
+  - id: drive
+    question: Transducer drive
+    choices: [transformer drive, direct (H-bridge) drive]
+    source: TI-SOL-USPARK SVG (transformer drawn)
+  - id: interface
+    question: ECU interface
+    choices: [LIN, DSI3 / IO]
+    source: TI-SOL-USPARK SVG 'LIN', 'Interface'
+- name: Electric power steering (EPS) ECU (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-EPS'
+  sources:
+  - {doc: TI-SOL-EPS, title: Electric power steering (EPS) ECU - block diagram + subsystems, url: 'https://www.ti.com/solution/electric-power-steering-eps'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks: [reverse_polarity, load_switch]
+    col: 0
+    row: 0
+  - id: power
+    label: Non-isolated DC/DC power supply & monitoring
+    blocks: [wide_vin_buck, pmic, pol_ldo, supervisor, watchdog, crystal_oscillator]
+    col: 1
+    row: 0
+  - id: load_drivers
+    label: Load drivers
+    blocks: [three_phase_gate_driver, load_switch]
+    col: 2
+    row: 0
+  - id: inverter
+    label: 3-phase inverter + BLDC motor
+    blocks: [power_fets, motor]
+    col: 0
+    row: 1
+  - id: mcu
+    label: Digital processing
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: sensing
+    label: Sensing
+    blocks: [position_sensor, amplifier, temperature_sensor]
+    col: 2
+    row: 1
+  - id: diagnostics
+    label: Diagnostics
+    blocks: [amplifier, voltage_reference]
+    col: 0
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [can_transceiver, ethernet_phy, tvs_esd]
+    col: 1
+    row: 2
+  links:
+  - [input_protection, power, battery]
+  - [input_protection, inverter, battery to bridge]
+  - [power, load_drivers, '']
+  - [power, mcu, '']
+  - [mcu, load_drivers, '']
+  - [load_drivers, inverter, gate drive]
+  - [inverter, sensing, motor position / current]
+  - [sensing, mcu, '']
+  - [diagnostics, mcu, '']
+  - [wired, mcu, '']
+  questions:
+  - id: redundancy
+    question: Redundancy
+    choices: [single channel, dual (fail-operational) channel]
+    source: TI-SOL-EPS (ASIL D steering; not drawn)
+  - id: position_sensor
+    question: Motor position sensor
+    choices: [inductive, magnetic (AMR / TMR / Hall), resolver]
+    source: TI-SOL-EPS 'Sensing' (LDC5072-Q1 inductive AFE)
+  - id: phase_isolation
+    question: Motor phase isolation FETs
+    choices: ['yes', 'no']
+    source: TI-SOL-EPS SVG (FETs drawn between bridge and motor)
+  - id: network
+    question: Vehicle network
+    choices: [CAN FD, Ethernet, both]
+    source: TI-SOL-EPS 'Wired interface'
+- name: USB-C PD wall adapter / AC adapter with PFC (GaN) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-USBADAPTER'
+  sources:
+  - {doc: TI-SOL-USBADAPTER, title: USB-C PD wall adapter / AC adapter with PFC (GaN) - block diagram + subsystems, url: 'https://www.ti.com/solution/usb-acdc-adapter'}
+  groups:
+  - id: filter
+    label: Filter and rectifier
+    blocks:
+    - {fn: external_block, label: Filter and rectifier}
+    col: 0
+    row: 0
+  - id: pfc
+    label: PFC stage
+    blocks: [acdc_controller, power_fets]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Isolated DC/DC stage
+    blocks: [acdc_controller, power_fets, voltage_reference]
+    col: 2
+    row: 0
+  - id: pd
+    label: USB PD / QC / VOOC control stage
+    blocks: [usb_pd_controller, mcu, amplifier, load_switch]
+    col: 0
+    row: 1
+  - id: aux
+    label: Auxiliary power supply
+    blocks: [acdc_controller, hv_flyback]
+    col: 1
+    row: 1
+  links:
+  - [filter, pfc, AC mains 1-ph]
+  - [pfc, dcdc, PFC bus]
+  - [pfc, aux, '']
+  - [dcdc, pd, '']
+  questions:
+  - id: pfc
+    question: PFC stage
+    choices: [with PFC (>75 W), without PFC (<75 W)]
+    source: TI-SOL-USBADAPTER variant list
+  - id: dcdc_topology
+    question: Isolated stage topology
+    choices: [QR / active-clamp flyback, LLC]
+    source: TI-SOL-USBADAPTER 'Isolated DC/DC stage'
+  - id: switch_tech
+    question: Primary switch
+    choices: [Si MOSFET, GaN]
+    source: TI-SOL-USBADAPTER (LMG3614 GaN listed)
+  - id: protocol
+    question: Fast-charge protocols
+    choices: [USB PD only, USB PD + PPS, PD + QC / VOOC (MCU)]
+    source: TI-SOL-USBADAPTER SVG 'USB PD/QC/VOOC control stage'
+- name: Single-phase online UPS (PFC + inverter + battery charger) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-UPS'
+  sources:
+  - {doc: TI-SOL-UPS, title: Single-phase online UPS (PFC + inverter + battery charger) - block diagram + subsystems, url: 'https://www.ti.com/solution/uninterruptible-power-supply'}
+  groups:
+  - id: input_relay
+    label: Input power relay
+    blocks: [relay_driver]
+    col: 0
+    row: 0
+  - id: pfc
+    label: PFC power stage
+    blocks: [gate_driver, acdc_controller, temperature_sensor, power_fets]
+    col: 1
+    row: 0
+  - id: static_switch
+    label: Static transfer relay
+    blocks: [relay_driver]
+    col: 2
+    row: 0
+  - id: inverter
+    label: Inverter power stage
+    blocks: [gate_driver, temperature_sensor, power_module]
+    col: 3
+    row: 0
+  - id: output_relay
+    label: Output power relay
+    blocks: [relay_driver]
+    col: 0
+    row: 1
+  - id: charger
+    label: Battery charger
+    blocks: [acdc_controller, voltage_reference, amplifier]
+    col: 1
+    row: 1
+  - id: battery
+    label: Battery stack
+    blocks: [battery_monitor, temperature_sensor, battery_pack]
+    col: 2
+    row: 1
+  - id: dcdc
+    label: DC/DC converter (battery to DC bus)
+    blocks: [half_bridge_driver, gate_driver, power_fets]
+    col: 3
+    row: 1
+  - id: gd_power
+    label: Isolated power supply for gate driver
+    blocks: [isolated_dcdc]
+    col: 0
+    row: 2
+  - id: aux_power
+    label: Auxiliary power supply
+    blocks: [acdc_controller, wide_vin_buck, pol_ldo, voltage_reference]
+    col: 1
+    row: 2
+  - id: sense
+    label: Current & voltage sense (battery, DC bus, input / output)
+    blocks: [amplifier, isolated_amplifier, voltage_reference]
+    col: 2
+    row: 2
+  - id: interface_board
+    label: Interface board
+    blocks: [adc, amplifier]
+    col: 3
+    row: 2
+  - id: control
+    label: Control card
+    blocks: [mcu, crystal_oscillator, relay_driver, supervisor]
+    col: 0
+    row: 3
+  - id: comm_power
+    label: Isolated DC/DC for communication interface
+    blocks: [isolated_dcdc, pol_ldo]
+    col: 1
+    row: 3
+  - id: comms
+    label: Communication interface
+    blocks: [digital_isolator, rs485_transceiver, can_transceiver, ethernet_phy, tvs_esd]
+    col: 2
+    row: 3
+  - id: wireless
+    label: Wireless interface
+    blocks: [ble_soc, wifi_soc]
+    col: 3
+    row: 3
+  - id: ui
+    label: Output user interface
+    blocks: [led_driver, display_driver]
+    col: 0
+    row: 4
+  links:
+  - [input_relay, pfc, AC line (input)]
+  - [input_relay, static_switch, bypass]
+  - [input_relay, charger, '']
+  - [pfc, inverter, DC bus]
+  - [static_switch, output_relay, '']
+  - [inverter, output_relay, '']
+  - [charger, battery, '']
+  - [battery, dcdc, '']
+  - [dcdc, inverter, DC bus]
+  - [battery, aux_power, '']
+  - [gd_power, inverter, '']
+  - [aux_power, sense, '']
+  - [aux_power, interface_board, '']
+  - [sense, interface_board, '']
+  - [interface_board, control, '']
+  - [control, dcdc, '']
+  - [control, inverter, '']
+  - [control, ui, '']
+  - [control, comms, '']
+  - [comm_power, comms, '']
+  questions:
+  - id: topology
+    question: UPS topology
+    choices: [offline / standby, line-interactive, online double conversion, three-phase]
+    source: TI-SOL-UPS variant list
+  - id: switch_tech
+    question: PFC / inverter switches
+    choices: [IGBT, Si MOSFET, GaN]
+    source: TI-SOL-UPS 'PFC stage' (LMG3410R050 listed)
+  - id: battery_chem
+    question: Battery chemistry
+    choices: [lead-acid, Li-ion (with cell monitor)]
+    source: TI-SOL-UPS 'Battery stack'
+  - id: comms
+    question: Management interface
+    choices: [USB / RS-232, Ethernet (SNMP card), wireless]
+    source: TI-SOL-UPS 'Communication interface'
+- name: Cordless power tool (battery-powered BDC / BLDC drive) (TI)
+  category: Motor drives
+  note: 'From TI public material: TI-SOL-POWERTOOL'
+  sources:
+  - {doc: TI-SOL-POWERTOOL, title: Cordless power tool (battery-powered BDC / BLDC drive) - block diagram + subsystems, url: 'https://www.ti.com/solution/cordless-power-tool'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 0
+  - id: battery_protection
+    label: Battery protection
+    blocks: [efuse_hotswap, battery_protector, load_switch]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo]
+    col: 2
+    row: 0
+  - id: power_stage
+    label: Power stage
+    blocks: [three_phase_gate_driver, motor_driver_brushed, half_bridge_driver, power_fets]
+    col: 3
+    row: 0
+  - id: motor
+    label: BDC / BLDC motor
+    blocks: [motor]
+    col: 0
+    row: 1
+  - id: sense
+    label: Current & voltage sense
+    blocks: [amplifier, voltage_reference]
+    col: 1
+    row: 1
+  - id: position
+    label: Position sensor
+    blocks: [hall_switch]
+    col: 2
+    row: 1
+  - id: sensors
+    label: Sensor
+    blocks: [position_sensor, temperature_sensor]
+    col: 3
+    row: 1
+  - id: afe
+    label: Analog front end
+    blocks: [adc, amplifier, voltage_reference]
+    col: 0
+    row: 2
+  - id: input_ui
+    label: Input user interface (trigger, clutch dial, fwd/rev, touch keys)
+    blocks: [touch_controller, hall_switch]
+    col: 1
+    row: 2
+  - id: processing
+    label: Digital processing
+    blocks: [mcu]
+    col: 2
+    row: 2
+  - id: monitoring
+    label: Monitoring
+    blocks: [watchdog, supervisor, temperature_sensor]
+    col: 3
+    row: 2
+  - id: wired
+    label: Wired interface (battery pack / charger)
+    blocks: [can_transceiver, rs485_transceiver, io_expander]
+    col: 0
+    row: 3
+  - id: io_protection
+    label: Signal input/output protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 3
+  - id: wireless
+    label: Wireless interface
+    blocks: [ble_soc, bt_fem]
+    col: 2
+    row: 3
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, audio_amp]
+    col: 3
+    row: 3
+  links:
+  - [input_protection, battery_protection, '']
+  - [dcdc, power_stage, '']
+  - [power_stage, motor, '']
+  - [sensors, afe, '']
+  - [afe, processing, '']
+  - [input_ui, processing, '']
+  - [wired, processing, '']
+  - [sense, processing, '']
+  - [monitoring, processing, '']
+  - [processing, position, '']
+  - [processing, output_ui, '']
+  questions:
+  - id: motor_type
+    question: Motor type
+    choices: [brushed DC, BLDC (sensored), BLDC (sensorless)]
+    source: TI-SOL-POWERTOOL SVG 'BDC / BLDC motor'
+  - id: pack_voltage
+    question: Battery pack voltage
+    choices: [12 V, 18-20 V, 36-60 V]
+    source: TI-SOL-POWERTOOL (not drawn)
+  - id: trigger
+    question: Trigger / speed input
+    choices: [potentiometer, Hall, inductive]
+    source: TI-SOL-POWERTOOL 'Input user interface'
+  - id: wireless
+    question: Wireless (tool tracking / app)
+    choices: [none, Bluetooth LE]
+    source: TI-SOL-POWERTOOL 'Wireless interface'
+- name: Pressure transmitter (silicon / capacitive sensor, 4-20 mA HART) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-PRESSURE'
+  sources:
+  - {doc: TI-SOL-PRESSURE, title: 'Pressure transmitter (silicon / capacitive sensor, 4-20 mA HART) - block diagram + subsystems', url: 'https://www.ti.com/solution/pressure-transmitter'}
+  groups:
+  - id: afe
+    label: Analog front-end
+    blocks: [adc, amplifier, voltage_reference, temperature_sensor]
+    col: 0
+    row: 0
+  - id: processing
+    label: Digital processing
+    blocks: [mcu]
+    col: 1
+    row: 0
+  - id: wired
+    label: Wired interface
+    blocks: [dac, modem_daa, can_transceiver, ethernet_phy]
+    col: 2
+    row: 0
+  - id: output_protection
+    label: Signal input/output protection (output)
+    blocks: [tvs_esd]
+    col: 3
+    row: 0
+  - id: wireless
+    label: Wireless interface
+    blocks: [nfc_frontend, ble_soc, wireless_soc]
+    col: 0
+    row: 1
+  - id: hmi
+    label: Input / output user interface (HMI)
+    blocks: [display_driver, touch_controller]
+    col: 1
+    row: 1
+  - id: input_protection
+    label: Input power protection (24 V field power)
+    blocks: [tvs_esd, efuse_hotswap]
+    col: 2
+    row: 1
+  - id: acdc
+    label: Isolated AC/DC power supply (AC mains or DC)
+    blocks: [acdc_controller]
+    col: 3
+    row: 1
+  - id: main_power
+    label: Non-isolated DC/DC power supply (main)
+    blocks: [wide_vin_buck, pol_ldo]
+    col: 0
+    row: 2
+  - id: pol_power
+    label: Non-isolated DC/DC power supply (PoL)
+    blocks: [pol_buck, supervisor]
+    col: 1
+    row: 2
+  links:
+  - [afe, processing, '']
+  - [processing, wired, '']
+  - [wired, output_protection, '']
+  - [processing, wireless, '']
+  questions:
+  - id: sensor
+    question: Pressure sensing element
+    choices: [silicon piezoresistive, capacitive, LVDT, resistive (strain gauge)]
+    source: TI-SOL-PRESSURE variant list
+  - id: output
+    question: Output / communication
+    choices: [4-20 mA, 4-20 mA + HART, IO-Link, Ethernet-APL, PROFIBUS PA / FF]
+    source: TI-SOL-PRESSURE SVG 'Wired interface'
+  - id: power
+    question: Powering
+    choices: [loop-powered (2-wire), 24 V field power, AC mains]
+    source: TI-SOL-PRESSURE SVG
+  - id: wireless
+    question: Wireless
+    choices: [none, NFC configuration, BLE, WirelessHART / ISA100]
+    source: TI-SOL-PRESSURE 'Wireless interface'
+- name: Robot vacuum cleaner (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-VACUUMROBOT'
+  sources:
+  - {doc: TI-SOL-VACUUMROBOT, title: Robot vacuum cleaner - block diagram + subsystems, url: 'https://www.ti.com/solution/vacuum-robot'}
+  groups:
+  - id: charger
+    label: Charger
+    blocks: [battery_charger]
+    col: 0
+    row: 0
+  - id: battery
+    label: Battery management and protection
+    blocks: [battery_protector, battery_monitor]
+    col: 1
+    row: 0
+  - id: power_gating
+    label: Power protection & gating
+    blocks: [efuse_hotswap, load_switch]
+    col: 2
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, pmic, sequencer]
+    col: 3
+    row: 0
+  - id: io_protection
+    label: Signal input / output protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 1
+  - id: wired
+    label: Wired interface
+    blocks: [can_transceiver, rs485_transceiver, voltage_translator]
+    col: 1
+    row: 1
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, ble_soc]
+    col: 2
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, audio_codec, haptics_driver]
+    col: 3
+    row: 1
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, touch_controller, audio_codec]
+    col: 0
+    row: 2
+  - id: afe
+    label: Analog front end
+    blocks: [adc, amplifier, voltage_reference]
+    col: 1
+    row: 2
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, soc]
+    col: 2
+    row: 2
+  - id: sensors
+    label: Sensors
+    blocks: [hall_switch, env_sensor, temperature_sensor, radar_transceiver]
+    col: 3
+    row: 2
+  - id: vision
+    label: Machine vision
+    blocks: [radar_transceiver, camera_radar]
+    col: 0
+    row: 3
+  - id: motor_drive
+    label: Motor drive (suction, brushes, wheels, lift gear, vision drive)
+    blocks: [three_phase_gate_driver, motor_driver_brushed, half_bridge_driver, power_fets]
+    col: 1
+    row: 3
+  - id: sense
+    label: Current & voltage sense
+    blocks: [amplifier, voltage_reference]
+    col: 2
+    row: 3
+  - id: position
+    label: Position sensor
+    blocks: [hall_switch, position_sensor]
+    col: 3
+    row: 3
+  - id: led_stage
+    label: Power stage (LED / laser)
+    blocks: [led_driver]
+    col: 0
+    row: 4
+  - id: monitoring
+    label: Monitoring
+    blocks: [watchdog, temperature_sensor, supervisor]
+    col: 1
+    row: 4
+  links:
+  - [charger, battery, '']
+  - [battery, power_gating, '']
+  - [power_gating, dcdc, '']
+  - [wired, processing, '']
+  - [wireless, processing, '']
+  - [input_ui, processing, '']
+  - [afe, processing, '']
+  - [sensors, processing, '']
+  - [processing, output_ui, '']
+  - [processing, vision, '']
+  - [processing, led_stage, '']
+  - [processing, motor_drive, '']
+  - [sense, processing, '']
+  - [position, processing, '']
+  - [monitoring, processing, '']
+  questions:
+  - id: navigation
+    question: Navigation sensing
+    choices: [bump + IR cliff only, 3D ToF, mmWave radar, camera / stereo vision, lidar]
+    source: TI-SOL-VACUUMROBOT 'Machine vision'
+  - id: suction_motor
+    question: Suction motor
+    choices: [brushed DC, BLDC]
+    source: TI-SOL-VACUUMROBOT 'Motor drive'
+  - id: pack
+    question: Battery pack
+    choices: [4S Li-ion, 5S-7S Li-ion]
+    source: TI-SOL-VACUUMROBOT 'Battery management and protection'
+  - id: connectivity
+    question: Connectivity
+    choices: [Wi-Fi, Wi-Fi + BLE, none]
+    source: TI-SOL-VACUUMROBOT 'Wireless interface'
+- name: Continuous glucose monitor (CGM) sensor patch (TI)
+  category: Medical
+  note: 'From TI public material: TI-SOL-CGM'
+  sources:
+  - {doc: TI-SOL-CGM, title: Continuous glucose monitor (CGM) sensor patch - block diagram + subsystems, url: 'https://www.ti.com/solution/continuous-glucose-monitor-sensor'}
+  groups:
+  - id: power
+    label: Off-battery power supply
+    blocks: [hall_switch, pre_regulator]
+    col: 0
+    row: 0
+  - id: afe
+    label: Sensor front end
+    blocks: [amplifier, adc, temperature_sensor]
+    col: 1
+    row: 0
+  - id: processing
+    label: Processing (wireless MCU)
+    blocks: [ble_soc, nfc_frontend, antenna]
+    col: 2
+    row: 0
+  links:
+  - [afe, processing, '']
+  - [power, processing, '']
+  questions:
+  - id: link
+    question: Link to reader / phone
+    choices: [BLE, NFC, BLE + NFC]
+    source: TI-SOL-CGM SVG 'Processing'
+  - id: wear
+    question: Wear time
+    choices: [7-10 days, 14-15 days]
+    source: TI-SOL-CGM (not drawn)
+  - id: activation
+    question: Activation
+    choices: [magnetic (Hall) wake-up, NFC wake-up]
+    source: TI-SOL-CGM SVG 'Magnetic sensor'
+- name: Washing machine / dryer controller (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-WASHER'
+  sources:
+  - {doc: TI-SOL-WASHER, title: Washing machine / dryer controller - block diagram + subsystems, url: 'https://www.ti.com/solution/washer-dryer'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks:
+    - {fn: external_block, label: Input power protection}
+    col: 0
+    row: 0
+  - id: iso_acdc
+    label: Isolated AC/DC power supply
+    blocks: [acdc_controller, voltage_reference]
+    col: 1
+    row: 0
+  - id: noniso_acdc
+    label: Non-isolated AC/DC power supply (PFC)
+    blocks: [acdc_controller, half_bridge_driver]
+    col: 2
+    row: 0
+  - id: gating
+    label: Power protection & gating
+    blocks: [efuse_hotswap, load_switch]
+    col: 3
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, pmic, sequencer]
+    col: 0
+    row: 1
+  - id: sensors
+    label: Sensors
+    blocks: [temperature_sensor, env_sensor, hall_switch, position_sensor]
+    col: 1
+    row: 1
+  - id: afe
+    label: Analog front end
+    blocks: [adc, amplifier, voltage_reference]
+    col: 2
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, haptics_driver, audio_codec]
+    col: 3
+    row: 1
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, ble_soc, antenna]
+    col: 0
+    row: 2
+  - id: wired
+    label: Wired interface (board to board)
+    blocks: [rs485_transceiver, digital_isolator, tvs_esd]
+    col: 1
+    row: 2
+  - id: system_ctrl
+    label: System controller
+    blocks: [mcu]
+    col: 2
+    row: 2
+  - id: output_ui
+    label: Output user interface
+    blocks: [display_driver, led_driver, touch_controller, audio_amp]
+    col: 3
+    row: 2
+  - id: motor_ctrl
+    label: Motor and power controller
+    blocks: [mcu]
+    col: 0
+    row: 3
+  - id: isolation
+    label: Signal isolation
+    blocks: [digital_isolator]
+    col: 1
+    row: 3
+  - id: monitoring
+    label: Self-diagnostics / monitoring
+    blocks: [watchdog, temperature_sensor, supervisor]
+    col: 2
+    row: 3
+  - id: power_stage
+    label: Power stage (heaters, valves, door lock, lighting)
+    blocks: [gate_driver, relay_driver, led_driver, power_fets]
+    col: 3
+    row: 3
+  - id: motor_drive
+    label: Motor drive (washing motor, drain pump, dryer fan)
+    blocks: [gate_driver, motor_driver_brushed, three_phase_gate_driver, hall_switch, power_module]
+    col: 0
+    row: 4
+  - id: sense
+    label: Current & voltage sense
+    blocks: [amplifier, voltage_reference]
+    col: 1
+    row: 4
+  links:
+  - [input_protection, iso_acdc, AC input]
+  - [input_protection, noniso_acdc, AC input]
+  - [iso_acdc, gating, DC]
+  - [gating, dcdc, '']
+  - [sensors, afe, '']
+  - [afe, system_ctrl, '']
+  - [input_ui, system_ctrl, '']
+  - [wireless, system_ctrl, '']
+  - [system_ctrl, wired, '']
+  - [system_ctrl, output_ui, '']
+  - [system_ctrl, isolation, '']
+  - [motor_ctrl, isolation, '']
+  - [system_ctrl, motor_ctrl, '']
+  - [isolation, power_stage, '']
+  - [isolation, motor_drive, '']
+  - [sense, isolation, '']
+  - [motor_ctrl, monitoring, '']
+  questions:
+  - id: motor
+    question: Drum motor
+    choices: [universal (triac), BLDC / PMSM inverter, direct drive]
+    source: TI-SOL-WASHER 'Motor drive'
+  - id: pfc
+    question: PFC
+    choices: [none, boost PFC]
+    source: TI-SOL-WASHER 'Non-isolated AC/DC power supply'
+  - id: display
+    question: User interface
+    choices: [LED + dial, segment LCD + touch keys, TFT touch screen]
+    source: TI-SOL-WASHER 'Output user interface'
+  - id: connectivity
+    question: Connectivity
+    choices: [none, Wi-Fi, Wi-Fi + BLE]
+    source: TI-SOL-WASHER 'Wireless interface'
+- name: Refrigerator / freezer controller (inverter compressor) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-FRIDGE'
+  sources:
+  - {doc: TI-SOL-FRIDGE, title: Refrigerator / freezer controller (inverter compressor) - block diagram + subsystems, url: 'https://www.ti.com/solution/refrigerators-and-freezers'}
+  groups:
+  - id: noniso_acdc
+    label: Non-isolated AC/DC power supply (PFC)
+    blocks: [acdc_controller, half_bridge_driver]
+    col: 0
+    row: 0
+  - id: iso_acdc
+    label: Isolated AC/DC power supply
+    blocks: [acdc_controller, voltage_reference]
+    col: 1
+    row: 0
+  - id: gating
+    label: Power protection & gating
+    blocks: [efuse_hotswap, load_switch]
+    col: 2
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, pmic, sequencer]
+    col: 3
+    row: 0
+  - id: sensors
+    label: Sensors
+    blocks: [temperature_sensor, env_sensor, hall_switch, position_sensor]
+    col: 0
+    row: 1
+  - id: afe
+    label: Analog front end
+    blocks: [adc, amplifier, voltage_reference]
+    col: 1
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [haptics_driver, touch_controller, audio_codec]
+    col: 2
+    row: 1
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, display_driver, touch_controller, audio_codec]
+    col: 3
+    row: 1
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, ble_soc]
+    col: 0
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [rs485_transceiver, io_expander, tvs_esd]
+    col: 1
+    row: 2
+  - id: system_ctrl
+    label: System controller
+    blocks: [mcu]
+    col: 2
+    row: 2
+  - id: motor_ctrl
+    label: Motor & power controller
+    blocks: [mcu]
+    col: 3
+    row: 2
+  - id: isolation
+    label: Signal isolation
+    blocks: [digital_isolator]
+    col: 0
+    row: 3
+  - id: monitoring
+    label: Monitoring
+    blocks: [watchdog, supervisor, temperature_sensor]
+    col: 1
+    row: 3
+  - id: power_stage
+    label: Power stage (heaters, valves, lighting)
+    blocks: [relay_driver, led_driver, half_bridge_driver, gate_driver]
+    col: 2
+    row: 3
+  - id: motor_drive
+    label: Motor drive (compressor, fans, damper)
+    blocks: [motor_driver_brushed, three_phase_gate_driver, gate_driver, hall_switch, power_fets]
+    col: 3
+    row: 3
+  - id: sense
+    label: Current & voltage sense
+    blocks: [amplifier, voltage_reference]
+    col: 0
+    row: 4
+  links:
+  - [noniso_acdc, gating, DC]
+  - [iso_acdc, gating, DC]
+  - [gating, dcdc, '']
+  - [sensors, afe, '']
+  - [afe, system_ctrl, '']
+  - [input_ui, system_ctrl, '']
+  - [wireless, system_ctrl, '']
+  - [system_ctrl, wired, '']
+  - [system_ctrl, output_ui, '']
+  - [system_ctrl, isolation, '']
+  - [motor_ctrl, isolation, '']
+  - [isolation, power_stage, '']
+  - [isolation, motor_drive, '']
+  - [sense, isolation, '']
+  - [motor_ctrl, monitoring, '']
+  questions:
+  - id: compressor
+    question: Compressor drive
+    choices: [fixed-speed (relay), variable-speed inverter (BLDC, sensorless)]
+    source: TI-SOL-FRIDGE 'Motor drive' (GaN LMG3650R025 listed)
+  - id: switch_tech
+    question: Compressor inverter switches
+    choices: [IPM / IGBT, MOSFET, GaN]
+    source: TI-SOL-FRIDGE 'Motor driver'
+  - id: ui
+    question: User interface
+    choices: [LED + touch keys, TFT touch screen]
+    source: TI-SOL-FRIDGE 'Output user interface'
+  - id: connectivity
+    question: Connectivity
+    choices: [none, Wi-Fi, Wi-Fi + BLE]
+    source: TI-SOL-FRIDGE 'Wireless interface'
+- name: Cooktop / hob controller (induction, radiant or gas) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-COOKTOP'
+  sources:
+  - {doc: TI-SOL-COOKTOP, title: 'Cooktop / hob controller (induction, radiant or gas) - block diagram + subsystems', url: 'https://www.ti.com/solution/cooking-top'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks: [efuse_hotswap, amplifier]
+    col: 0
+    row: 0
+  - id: noniso_acdc
+    label: Non-isolated AC/DC power supply (PFC)
+    blocks: [acdc_controller]
+    col: 1
+    row: 0
+  - id: iso_acdc
+    label: Isolated AC/DC power supply
+    blocks: [acdc_controller, voltage_reference]
+    col: 2
+    row: 0
+  - id: gating
+    label: Power protection and gating
+    blocks: [efuse_hotswap, load_switch]
+    col: 3
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, sequencer]
+    col: 0
+    row: 1
+  - id: sensors
+    label: Sensors
+    blocks: [temperature_sensor, env_sensor, position_sensor, hall_switch]
+    col: 1
+    row: 1
+  - id: afe
+    label: Analog front-end
+    blocks: [adc, amplifier, voltage_reference]
+    col: 2
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, haptics_driver, audio_codec]
+    col: 3
+    row: 1
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, display_driver, touch_controller, audio_codec]
+    col: 0
+    row: 2
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, ble_soc]
+    col: 1
+    row: 2
+  - id: wired
+    label: Wired interface (board to board)
+    blocks: [digital_isolator, tvs_esd]
+    col: 2
+    row: 2
+  - id: system_ctrl
+    label: System controller
+    blocks: [mcu]
+    col: 3
+    row: 2
+  - id: motor_ctrl
+    label: Motor and power controller
+    blocks: [mcu]
+    col: 0
+    row: 3
+  - id: isolation
+    label: Signal isolation
+    blocks: [digital_isolator, gate_driver]
+    col: 1
+    row: 3
+  - id: monitoring
+    label: Monitoring
+    blocks: [watchdog, temperature_sensor, supervisor]
+    col: 2
+    row: 3
+  - id: power_stage
+    label: Power stage (induction coil, heaters, lighting, gas valve)
+    blocks: [gate_driver, half_bridge_driver, relay_driver, led_driver, power_module]
+    col: 3
+    row: 3
+  - id: motor_drive
+    label: Motor drive (gas flow, venting / suction, cooling fan)
+    blocks: [motor_driver_brushed, three_phase_gate_driver, hall_switch]
+    col: 0
+    row: 4
+  - id: sense
+    label: Current and voltage sense
+    blocks: [amplifier, voltage_reference]
+    col: 1
+    row: 4
+  links:
+  - [input_protection, noniso_acdc, AC input]
+  - [input_protection, iso_acdc, AC input]
+  - [noniso_acdc, gating, DC]
+  - [gating, dcdc, '']
+  - [sensors, afe, '']
+  - [afe, system_ctrl, '']
+  - [input_ui, system_ctrl, '']
+  - [wireless, system_ctrl, '']
+  - [system_ctrl, output_ui, '']
+  - [system_ctrl, isolation, '']
+  - [wired, motor_ctrl, '']
+  - [motor_ctrl, isolation, '']
+  - [isolation, power_stage, '']
+  - [isolation, motor_drive, '']
+  - [motor_ctrl, monitoring, '']
+  questions:
+  - id: heating
+    question: Heating technology
+    choices: [induction (resonant IGBT inverter), radiant / halogen (relay / triac), gas (valve + ignition)]
+    source: TI-SOL-COOKTOP SVG power-stage loads
+  - id: zones
+    question: Cooking zones
+    choices: [1-2, '4', 5+ / flex zone]
+    source: TI-SOL-COOKTOP (not drawn)
+  - id: controls
+    question: Controls
+    choices: [capacitive touch slider, inductive (metal touch), rotary knob]
+    source: TI-SOL-COOKTOP 'Input user interface'
+  - id: hood_link
+    question: Hob-to-hood link
+    choices: [none, Wi-Fi / BLE, IR]
+    source: TI-SOL-COOKTOP 'Wireless interface'
+- name: Residential smoke & heat detector (photoelectric / ionization, CO) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-SMOKE'
+  sources:
+  - {doc: TI-SOL-SMOKE, title: 'Residential smoke & heat detector (photoelectric / ionization, CO) - block diagram + subsystems', url: 'https://www.ti.com/solution/smoke-heat-detector'}
+  groups:
+  - id: ir_led
+    label: Photoelectric IR LED drive
+    blocks: [amplifier, led_driver]
+    col: 0
+    row: 0
+  - id: photo_afe
+    label: Photoelectric analog front-end
+    blocks: [amplifier]
+    col: 1
+    row: 0
+  - id: ion_afe
+    label: Ionization analog front-end
+    blocks: [amplifier]
+    col: 2
+    row: 0
+  - id: heat_afe
+    label: Heat detector analog front-end
+    blocks: [temperature_sensor, amplifier]
+    col: 3
+    row: 0
+  - id: gas_afe
+    label: Gas detection analog front-end (CO)
+    blocks: [amplifier]
+    col: 0
+    row: 1
+  - id: obstruction
+    label: Obstruction sensing
+    blocks: [amplifier, env_sensor]
+    col: 1
+    row: 1
+  - id: indicators
+    label: Visual indicators
+    blocks: [led_driver]
+    col: 2
+    row: 1
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, wireless_soc, voltage_reference, voltage_translator]
+    col: 3
+    row: 1
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, pre_regulator, load_switch]
+    col: 0
+    row: 2
+  - id: acdc
+    label: Isolated AC/DC power supply (wired AC with battery backup)
+    blocks: [acdc_controller, voltage_reference]
+    col: 1
+    row: 2
+  - id: energy
+    label: Energy storage (battery power option)
+    blocks: [reverse_polarity, battery_monitor, battery_protector]
+    col: 2
+    row: 2
+  - id: wireless
+    label: Wireless interface (interconnect)
+    blocks: [wireless_soc, wifi_soc, antenna]
+    col: 3
+    row: 2
+  - id: test_button
+    label: Push to test and silence function
+    blocks: [tvs_esd, hall_switch, supervisor]
+    col: 0
+    row: 3
+  - id: tamper
+    label: Tamper detection
+    blocks: [env_sensor, hall_switch]
+    col: 1
+    row: 3
+  - id: audio
+    label: Audio interface (voice alarm)
+    blocks: [audio_codec, audio_amp]
+    col: 2
+    row: 3
+  - id: alarm
+    label: Audible alarm interface
+    blocks: [haptics_driver, amplifier]
+    col: 3
+    row: 3
+  - id: monitoring
+    label: Self-diagnostics / monitoring
+    blocks: [supervisor, watchdog]
+    col: 0
+    row: 4
+  links:
+  - [processing, ir_led, '']
+  - [photo_afe, processing, '']
+  - [ion_afe, processing, '']
+  - [heat_afe, processing, '']
+  - [gas_afe, processing, '']
+  - [obstruction, processing, '']
+  - [processing, indicators, '']
+  - [acdc, dcdc, 120/230 V AC]
+  - [energy, dcdc, battery power option]
+  - [dcdc, processing, point of load]
+  - [processing, wireless, '']
+  - [test_button, processing, '']
+  - [tamper, processing, '']
+  - [processing, audio, '']
+  - [processing, alarm, piezo buzzer]
+  - [monitoring, processing, '']
+  questions:
+  - id: sensing
+    question: Smoke sensing
+    choices: [photoelectric single-wavelength, photoelectric dual-wavelength (IR + blue), ionization]
+    source: TI-SOL-SMOKE SVG 'Photoelectric', 'Ionization'
+  - id: co
+    question: CO detection
+    choices: ['no', yes (electrochemical)]
+    source: TI-SOL-SMOKE 'Gas detection analog front end'
+  - id: power
+    question: Power
+    choices: [battery only (10-year), 120/230 V AC with backup battery, 24 V DC wired]
+    source: TI-SOL-SMOKE SVG power options
+  - id: interconnect
+    question: Interconnect
+    choices: [none, wired, wireless sub-1 GHz, Wi-Fi]
+    source: TI-SOL-SMOKE 'Wireless interface'
+- name: Server / rack power distribution board (48 V input) (TI)
+  category: Enterprise & data center
+  note: 'From TI public material: TI-SOL-PDB48V'
+  sources:
+  - {doc: TI-SOL-PDB48V, title: Server / rack power distribution board (48 V input) - block diagram + subsystems, url: 'https://www.ti.com/solution/power-distribution-board-with-48-v-input'}
+  groups:
+  - id: supply
+    label: 48 V power supply (rack busbar / PSU)
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: main_protection
+    label: Main input power protection
+    blocks: [efuse_hotswap]
+    col: 1
+    row: 0
+  - id: ibc
+    label: Voltage conversion (48 V / 12 V intermediate bus converter)
+    blocks: [isolated_dcdc, half_bridge_driver, power_fets]
+    col: 2
+    row: 0
+  - id: pol
+    label: POL power supply & monitoring
+    blocks: [amplifier, supervisor, pol_buck]
+    col: 0
+    row: 1
+  - id: fans
+    label: Fan power monitoring
+    blocks: [amplifier, temperature_sensor, motor_controller]
+    col: 1
+    row: 1
+  - id: aux_protection
+    label: Auxiliary input power protection
+    blocks: [wide_vin_buck, efuse_hotswap]
+    col: 2
+    row: 1
+  - id: housekeeping
+    label: PDB housekeeping
+    blocks: [amplifier, voltage_reference, io_expander, mcu]
+    col: 0
+    row: 2
+  - id: motherboard
+    label: Motherboard
+    blocks: [external_block]
+    col: 1
+    row: 2
+  links:
+  - [supply, main_protection, 48 V]
+  - [supply, aux_protection, 48 V]
+  - [supply, housekeeping, 48 V]
+  - [main_protection, ibc, '']
+  - [ibc, pol, 12 V]
+  - [ibc, fans, 12 V]
+  - [housekeeping, motherboard, I2C / PMBus]
+  questions:
+  - id: ibc_type
+    question: 48 V to 12 V conversion
+    choices: [regulated isolated, unregulated fixed-ratio (DCX), non-isolated (GaN buck / hybrid)]
+    source: TI-SOL-PDB48V 'Voltage conversion' (GaN power stage listed)
+  - id: power_level
+    question: Board power
+    choices: [< 1 kW, 1-3 kW, '> 3 kW (paralleled eFuses)']
+    source: TI-SOL-PDB48V SVG (stacked eFuses)
+  - id: telemetry
+    question: Input telemetry
+    choices: [eFuse with PMBus telemetry, separate power monitor]
+    source: TI-SOL-PDB48V 'Main input power protection'
+- name: Fixed data center Ethernet switch (top of rack) (TI)
+  category: Enterprise & data center
+  note: 'From TI public material: TI-SOL-DCSWITCH'
+  sources:
+  - {doc: TI-SOL-DCSWITCH, title: Fixed data center Ethernet switch (top of rack) - block diagram + subsystems, url: 'https://www.ti.com/solution/fixed-data-center-switch'}
+  groups:
+  - id: psu
+    label: N+1 PSU
+    blocks: [efuse_hotswap, power_fets]
+    col: 0
+    row: 0
+  - id: bus_converter
+    label: Bus converter (optional)
+    blocks: [isolated_dcdc, half_bridge_driver, efuse_hotswap]
+    col: 1
+    row: 0
+  - id: pol
+    label: POL power (FPGA, ASIC, merchant silicon, clocks)
+    blocks: [pol_buck, pol_ldo, multiphase, load_switch]
+    col: 2
+    row: 0
+  - id: cpu_power
+    label: CPU & memory power
+    blocks: [multiphase, pol_buck, termination_ldo]
+    col: 3
+    row: 0
+  - id: sequencing
+    label: Sequencing & monitoring
+    blocks: [sequencer, supervisor]
+    col: 0
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [clock_generator, clock_buffer, crystal_oscillator, rtc]
+    col: 1
+    row: 1
+  - id: fans
+    label: Fan control
+    blocks: [efuse_hotswap, motor_controller, temperature_sensor, amplifier]
+    col: 2
+    row: 1
+  - id: fabric
+    label: Switch fabric
+    blocks: [soc, voltage_translator, io_expander, temperature_sensor, redriver, voltage_reference]
+    col: 3
+    row: 1
+  - id: cpu
+    label: CPU
+    blocks: [soc, voltage_translator, io_expander, redriver, digital_isolator]
+    col: 0
+    row: 2
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 1
+    row: 2
+  - id: io
+    label: IO (JTAG, RS-232, RS-485)
+    blocks: [rs485_transceiver, ethernet_phy, pol_ldo, tvs_esd]
+    col: 2
+    row: 2
+  - id: usb
+    label: USB
+    blocks: [load_switch, redriver, tvs_esd]
+    col: 3
+    row: 2
+  - id: leds
+    label: LED driver
+    blocks: [led_driver]
+    col: 0
+    row: 3
+  - id: downlink
+    label: Downlink (optical interface)
+    blocks: [redriver, ethernet_phy, efuse_hotswap, optical_driver]
+    col: 1
+    row: 3
+  - id: uplink
+    label: Uplink (optical interface)
+    blocks: [redriver, efuse_hotswap, optical_driver]
+    col: 2
+    row: 3
+  links:
+  - [psu, bus_converter, IBV1]
+  - [bus_converter, pol, IBV2]
+  - [bus_converter, cpu_power, IBV2]
+  - [clocking, fabric, '']
+  - [clocking, cpu, '']
+  - [fans, fabric, '']
+  - [cpu, fabric, '']
+  - [fabric, downlink, '']
+  - [fabric, uplink, '']
+  - [memory, cpu, '']
+  - [io, cpu, JTAG / console]
+  - [usb, cpu, '']
+  - [fabric, leds, '']
+  - [sequencing, pol, '']
+  questions:
+  - id: port_speed
+    question: Port speed
+    choices: [25/100G, 400G, 800G]
+    source: TI-SOL-DCSWITCH (not drawn)
+  - id: input
+    question: PSU input
+    choices: [AC, -48 V DC, HV DC bus]
+    source: TI-SOL-DCSWITCH SVG 'N+1 PSU'
+  - id: ibc
+    question: Intermediate bus converter on board
+    choices: ['yes', 'no']
+    source: TI-SOL-DCSWITCH SVG 'Bus converter (optional)'
+  - id: cpu
+    question: Control-plane CPU
+    choices: [x86, Arm]
+    source: TI-SOL-DCSWITCH SVG 'CPU'
+- name: Optical transceiver module (SFP / QSFP pluggable) (TI)
+  category: Communications equipment
+  note: 'From TI public material: TI-SOL-OPTMODULE'
+  sources:
+  - {doc: TI-SOL-OPTMODULE, title: Optical transceiver module (SFP / QSFP pluggable) - block diagram + subsystems, url: 'https://www.ti.com/solution/optical-module-small-form-factor-pluggable'}
+  groups:
+  - id: protection
+    label: Protection (3.3 V host supply)
+    blocks: [load_switch, efuse_hotswap]
+    col: 0
+    row: 0
+  - id: power
+    label: Power
+    blocks: [pol_buck, pol_ldo, supervisor, sequencer]
+    col: 1
+    row: 0
+  - id: serdes
+    label: SerDes, clock data recovery & laser driver
+    blocks: [serdes, optical_driver, crystal_oscillator, dac, amplifier]
+    col: 2
+    row: 0
+  - id: pd_bias
+    label: Photodiode bias (APD)
+    blocks: [dac, amplifier, pre_regulator]
+    col: 3
+    row: 0
+  - id: eml_bias
+    label: Externally modulated laser electro-absorption bias
+    blocks: [dac, amplifier, buck_boost]
+    col: 0
+    row: 1
+  - id: rosa
+    label: Receiver optical sub-assembly (ROSA)
+    blocks: [optical_tia, amplifier, pre_regulator]
+    col: 1
+    row: 1
+  - id: tosa
+    label: Transmitter optical sub-assembly (TOSA)
+    blocks: [buck_boost]
+    col: 2
+    row: 1
+  - id: mcu
+    label: MCU
+    blocks: [mcu, voltage_translator, io_expander]
+    col: 3
+    row: 1
+  - id: feedback
+    label: Measurement feedback
+    blocks: [adc]
+    col: 0
+    row: 2
+  - id: misc
+    label: Miscellaneous
+    blocks: [temperature_sensor]
+    col: 1
+    row: 2
+  links:
+  - [protection, power, 3.3 V]
+  - [serdes, tosa, TX (xM lanes)]
+  - [rosa, serdes, RX]
+  - [mcu, serdes, '']
+  - [mcu, pd_bias, '']
+  - [mcu, eml_bias, '']
+  - [pd_bias, rosa, APD bias]
+  - [eml_bias, tosa, EA bias]
+  - [rosa, feedback, '']
+  - [tosa, feedback, '']
+  - [pd_bias, feedback, '']
+  - [feedback, mcu, '']
+  questions:
+  - id: form_factor
+    question: Form factor
+    choices: [SFP, QSFP, OSFP]
+    source: TI-SOL-OPTMODULE page title
+  - id: laser
+    question: Laser type
+    choices: [VCSEL, DML, EML]
+    source: TI-SOL-OPTMODULE SVG 'Laser (EML, DML or VCSEL)'
+  - id: detector
+    question: Photodetector
+    choices: [PIN, APD (HV bias)]
+    source: TI-SOL-OPTMODULE SVG 'Photo diode (pin or APD)'
+  - id: tec
+    question: TEC temperature control
+    choices: ['yes', 'no']
+    source: TI-SOL-OPTMODULE SVG 'TEC'
+- name: Automotive zone controller (body / zonal I/O, CAN/LIN, Ethernet switch, smart high-side switches) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_ZONE'
+  sources:
+  - {doc: NXP_ZONE, title: NXP Automotive Zone Controller application page, url: 'https://www.nxp.com/applications/AUTOMOTIVE-ZONE-CONTROLLER'}
+  groups:
+  - id: vbat
+    label: VBAT1 / VBAT2 with reverse diodes
+    blocks: [reverse_polarity]
+    col: 0
+    row: 0
+  - id: pmic
+    label: 'PMIC (x2: MCU/CAN supply, Ethernet supply)'
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: mcu
+    label: Zone MCU
+    blocks: [mcu]
+    col: 2
+    row: 0
+  - id: can
+    label: CAN transceivers (8x)
+    blocks: [can_transceiver]
+    col: 3
+    row: 0
+  - id: lin
+    label: LIN transceivers (2x 4-channel)
+    blocks: [lin_transceiver]
+    col: 0
+    row: 1
+  - id: hs_switch
+    label: Quad high-side switches (loads)
+    blocks: [load_switch]
+    col: 1
+    row: 1
+  - id: msdi
+    label: 22-ch multi-switch detection interface
+    blocks: [switch_detection_interface]
+    col: 2
+    row: 1
+  - id: eth_switch
+    label: Ethernet switch
+    blocks: [ethernet_phy]
+    col: 3
+    row: 1
+  - id: eth_phy
+    label: 1000BASE-T1 PHYs (x2)
+    blocks: [ethernet_phy]
+    col: 0
+    row: 2
+  - id: qflash
+    label: QSPI flash
+    blocks: [flash]
+    col: 1
+    row: 2
+  - id: io
+    label: Loads, switch inputs and vehicle I/O
+    blocks: [external_block]
+    col: 2
+    row: 2
+  - id: central
+    label: Central computer / ECU nodes (system view)
+    blocks: [soc]
+    col: 3
+    row: 2
+  links:
+  - [vbat, pmic, 12 V]
+  - [pmic, mcu, Supply_MCU_CAN 3.3 V / 5 V]
+  - [pmic, eth_switch, Supply_ETH]
+  - [can, mcu, CAN Tx/Rx]
+  - [lin, mcu, UART Tx/Rx / SPI]
+  - [mcu, hs_switch, SPI]
+  - [msdi, mcu, SPI / AMUX]
+  - [hs_switch, io, '']
+  - [io, msdi, switch inputs]
+  - [mcu, eth_switch, RGMII / SPI]
+  - [eth_switch, eth_phy, SGMII]
+  - [qflash, eth_switch, QSPI]
+  - [eth_switch, central, 100BASE-T1 / 1000BASE-T1 Ethernet]
+  questions:
+  - id: zone_role
+    question: Zone controller role
+    choices: [zone I/O aggregator (MCU), zone + local compute (S32G / S32N class)]
+    source: ZONE Functional Blocks (Zone Controller lists S32K3/K5 and S32G2/G3, S32Z2, S32E2)
+  - id: backbone
+    question: Backbone link to the central computer
+    choices: [100BASE-T1, 1000BASE-T1, multi-gig]
+    source: ZONE BD3 (100BASE-T1 and 1000BASE-T1 ports)
+  - id: can_count
+    question: Number of CAN (FD / SIC) channels
+    choices: [1-4, 5-8, '>8']
+    source: ZONE BD3 ('8x CAN (SIG)')
+  - id: load_switching
+    question: Load switching
+    choices: [smart high-side switches (eFuse), relays, mixed]
+    source: ZONE BD3 ('Quad HS-Switch')
+  - id: supply_redundancy
+    question: Redundant battery feed
+    choices: [single VBAT, dual VBAT (VBAT1/VBAT2)]
+    source: ZONE BD3 (VBAT1, VBAT2 with diodes)
+- name: Electric power steering (EPS) ECU (MCU + 3-phase MOSFET pre-driver + safety SBC) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_EPS'
+  sources:
+  - {doc: NXP_EPS, title: NXP Electric Power Steering (EPS) application page, url: 'https://www.nxp.com/applications/ELECTRIC-POWER-STEERING'}
+  groups:
+  - id: sbc
+    label: Safety SBC
+    blocks: [pmic, can_transceiver, watchdog]
+    col: 0
+    row: 0
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 1
+    row: 0
+  - id: predriver
+    label: MOSFET pre-driver
+    blocks: [three_phase_gate_driver]
+    col: 2
+    row: 0
+  - id: inverter
+    label: Power inverter module
+    blocks: [power_fets]
+    col: 3
+    row: 0
+  - id: power_switch
+    label: Power switch + fail-safe switch
+    blocks: [load_switch, reverse_polarity]
+    col: 0
+    row: 1
+  - id: current_sense
+    label: Current sensing
+    blocks: [amplifier]
+    col: 1
+    row: 1
+  - id: signal_cond
+    label: Signal conditioning
+    blocks: [switch_detection_interface]
+    col: 2
+    row: 1
+  - id: rotor_pos
+    label: Motor position sensor
+    blocks: [position_sensor]
+    col: 3
+    row: 1
+  - id: steering_sensors
+    label: Steering wheel position + steering torque sensors
+    blocks: [vehicle_sensors]
+    col: 0
+    row: 2
+  - id: motor
+    label: Steering motor
+    blocks: [motor]
+    col: 1
+    row: 2
+  links:
+  - [sbc, power_switch, enable]
+  - [sbc, mcu, fail-safe monitor / communication]
+  - [mcu, predriver, SPI + 6 PWM]
+  - [predriver, inverter, 6 gate drives]
+  - [power_switch, inverter, Vlink]
+  - [inverter, motor, 3 phases]
+  - [inverter, current_sense, '']
+  - [current_sense, signal_cond, '']
+  - [signal_cond, mcu, '']
+  - [rotor_pos, mcu, '']
+  - [steering_sensors, mcu, '']
+  questions:
+  - id: redundancy
+    question: Architecture
+    choices: [single channel, dual / redundant (fail-operational)]
+    source: EPS SVG (fail-safe switch, fail-safe monitor); NXP S32K376 EPS POC image on page
+  - id: motor_type
+    question: Motor type
+    choices: [3-phase BLDC / PMSM, brushed DC]
+    source: EPS SVG (6 gate drives, 3 phases)
+  - id: position_sensing
+    question: Rotor position sensing
+    choices: [magnetic angle sensor (GMR/TMR/AMR), resolver, sensorless]
+    source: EPS SVG ('Position Sensor')
+  - id: asil
+    question: Functional safety target
+    choices: [ASIL B, ASIL C, ASIL D]
+    source: EPS SVG ('Safety SBC', 'Fail Safe Monitor')
+- name: Automotive advanced exterior lighting (LED driver module + matrix module) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_LIGHTING'
+  sources:
+  - {doc: NXP_LIGHTING, title: NXP Automotive Advanced Exterior Lighting application page, url: 'https://www.nxp.com/applications/AUTOMOTIVE-SMART-LIGHTING'}
+  groups:
+  - id: compute
+    label: Automotive compute + ADAS sensors
+    blocks: [soc, camera_radar]
+    col: 0
+    row: 0
+  - id: bcm
+    label: Body controller module
+    blocks: [mcu]
+    col: 1
+    row: 0
+  - id: battery
+    label: Battery management system (supply input)
+    blocks: [external_block]
+    col: 2
+    row: 0
+  - id: sbc
+    label: SBC (LED driver module and matrix module)
+    blocks: [pmic, can_transceiver]
+    col: 3
+    row: 0
+  - id: mcu
+    label: LED driver module MCU
+    blocks: [mcu]
+    col: 0
+    row: 1
+  - id: boost
+    label: Multi-phase boost IC
+    blocks: [pre_regulator, led_driver]
+    col: 1
+    row: 1
+  - id: buck
+    label: Multi-channel buck IC (LED current)
+    blocks: [led_driver]
+    col: 2
+    row: 1
+  - id: can
+    label: CAN-HS transceiver
+    blocks: [can_transceiver]
+    col: 3
+    row: 1
+  - id: matrix
+    label: Matrix LED controller (x2)
+    blocks: [led_driver]
+    col: 0
+    row: 2
+  - id: lamps
+    label: Lamps
+    blocks: [external_block]
+    col: 1
+    row: 2
+  links:
+  - [compute, bcm, '']
+  - [compute, battery, '']
+  - [bcm, sbc, '']
+  - [battery, boost, supply]
+  - [sbc, mcu, '']
+  - [mcu, boost, '']
+  - [boost, buck, boosted LED supply]
+  - [mcu, buck, '']
+  - [buck, lamps, LED strings]
+  - [mcu, can, '']
+  - [can, sbc, to matrix module SBC]
+  - [sbc, matrix, '']
+  - [matrix, lamps, pixel control]
+  questions:
+  - id: function
+    question: Lighting function
+    choices: [low / high beam, adaptive driving beam (matrix / pixel), 'signal lamps (turn, DRL, position)', rear lighting]
+    source: LIGHTING SVG (lamp list); page text (Glare Free High Beam, Adaptive Driving Beam, Dynamic Signaling)
+  - id: led_topology
+    question: LED supply topology
+    choices: [boost + multi-channel buck, single-stage linear, buck only]
+    source: LIGHTING SVG (Multi-Phase BOOST -> Multi Channel BUCK)
+  - id: matrix_link
+    question: Matrix module control link
+    choices: [CAN-HS, CAN FD, LIN]
+    source: LIGHTING SVG ('CAN-HS Transceiver')
+- name: Tire pressure monitoring system (TPMS sensor SiP + RKE receiver / BCM) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_TPMS'
+  sources:
+  - {doc: NXP_TPMS, title: NXP Tire Pressure Monitoring Systems (TPMS) application page, url: 'https://www.nxp.com/applications/TIRE-PRESSURE-MONITORING-SYSTEM-TPMS'}
+  groups:
+  - id: sensor_cells
+    label: Pressure / temperature / acceleration cells
+    blocks: [vehicle_sensors]
+    col: 0
+    row: 0
+  - id: sensor_mcu
+    label: Sensor pre-processing + 8-bit MCU
+    blocks: [mcu]
+    col: 1
+    row: 0
+  - id: rf_tx
+    label: RF transmitter 315 / 434 MHz + antenna
+    blocks: [rf_transceiver, antenna]
+    col: 2
+    row: 0
+  - id: lf_input
+    label: 125 kHz LF input
+    blocks:
+    - {fn: external_block, label: 125 kHz LF input}
+    col: 0
+    row: 1
+  - id: sensor_pmic
+    label: Power management IC + 3 V battery
+    blocks: [pmic, battery_pack]
+    col: 1
+    row: 1
+  - id: rx_antenna
+    label: Receiver RF antenna
+    blocks: [antenna]
+    col: 2
+    row: 1
+  - id: rx_mcu
+    label: Receiver / BCM MCU
+    blocks: [mcu]
+    col: 0
+    row: 2
+  - id: rx_phy
+    label: Physical interface (CAN / LIN)
+    blocks: [can_transceiver, lin_transceiver]
+    col: 1
+    row: 2
+  links:
+  - [sensor_cells, sensor_mcu, pressure / temperature / acceleration]
+  - [lf_input, sensor_mcu, 125 kHz wake-up / configuration]
+  - [sensor_mcu, rf_tx, '']
+  - [sensor_pmic, sensor_mcu, 3 V battery]
+  - [rf_tx, rx_antenna, 315 / 434 MHz]
+  - [rx_antenna, rx_mcu, '']
+  - [rx_mcu, rx_phy, '']
+  questions:
+  - id: rf_band
+    question: RF band
+    choices: [315 MHz, 434 MHz]
+    source: TPMS SVG ('315/434 MHz')
+  - id: accel_axes
+    question: Accelerometer
+    choices: [single axis (radial), dual axis (radial + tangential)]
+    source: TPMS SVG (Radial / Tangential Acceleration); page text
+  - id: receiver
+    question: Receiver location
+    choices: [dedicated TPMS receiver, shared RKE receiver / BCM]
+    source: TPMS SVG ('TPMS (RKE) Receiver or BCM')
+  - id: output
+    question: Receiver output
+    choices: [CAN, LIN, direct display]
+    source: TPMS SVG ('Serial Data (CAN/LIN) or Display')
+- name: Airbag and crash detection ECU (PSI5 / DSI3 satellite sensors, squib drivers) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_AIRBAG'
+  sources:
+  - {doc: NXP_AIRBAG, title: NXP Airbag and Crash Detection application page, url: 'https://www.nxp.com/applications/AIRBAG'}
+  groups:
+  - id: power
+    label: Power supply (buck-boost)
+    blocks: [pmic, buck_boost]
+    col: 0
+    row: 0
+  - id: sat_if
+    label: PSI5 / DSI3 transceiver
+    blocks:
+    - {fn: external_block, label: PSI5 / DSI3 transceiver}
+    col: 1
+    row: 0
+  - id: sat_sensors
+    label: Satellite sensors
+    blocks: [vehicle_sensors]
+    col: 2
+    row: 0
+  - id: central_sensors
+    label: Central + rollover sensors
+    blocks: [vehicle_sensors]
+    col: 3
+    row: 0
+  - id: mcu
+    label: Main MCU
+    blocks: [mcu]
+    col: 0
+    row: 1
+  - id: squib_driver
+    label: Squib driver
+    blocks:
+    - {fn: external_block, label: Squib driver}
+    col: 1
+    row: 1
+  - id: squibs
+    label: Squibs
+    blocks: [external_block]
+    col: 2
+    row: 1
+  - id: lin
+    label: LIN transceiver (passenger detection)
+    blocks: [lin_transceiver]
+    col: 3
+    row: 1
+  - id: can
+    label: CAN transceiver (vehicle network)
+    blocks: [can_transceiver]
+    col: 0
+    row: 2
+  - id: hmi_io
+    label: Buckle switch, warning lamp, airbag-off
+    blocks: [external_block]
+    col: 1
+    row: 2
+  links:
+  - [power, mcu, VBuck / VBoost / VLogic]
+  - [sat_sensors, sat_if, PSI5 / DSI3 safety bus]
+  - [sat_if, mcu, SPI bus]
+  - [central_sensors, mcu, SPI bus]
+  - [mcu, squib_driver, SPI bus]
+  - [squib_driver, squibs, firing loops]
+  - [mcu, lin, '']
+  - [mcu, can, '']
+  questions:
+  - id: sat_bus
+    question: Satellite sensor bus
+    choices: [PSI5, DSI3]
+    source: AIRBAG BD1 (PSI5) / BD2 (DSI3)
+  - id: squib_count
+    question: Number of firing loops
+    choices: [4-8, 12-16, '>16']
+    source: AIRBAG SVG (stacked 'Squib' blocks)
+  - id: energy_reserve
+    question: Energy reserve / boost supply
+    choices: [integrated buck-boost (system IC), discrete boost + buck]
+    source: 'AIRBAG SVG (''Power Supply Buck Boost'': VBuck, VBoost, VLogic)'
+- name: Braking and stability control (ABS / ESC) ECU (valve drivers, pump motor, sensor cluster) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_BRAKING'
+  sources:
+  - {doc: NXP_BRAKING, title: NXP Braking and Stability Control application page, url: 'https://www.nxp.com/applications/BRAKING-STABILITY-CONTROL'}
+  groups:
+  - id: power_if
+    label: Power supply and physical I/F (SBC)
+    blocks: [pmic, can_transceiver]
+    col: 0
+    row: 0
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 1
+    row: 0
+  - id: sensor_cond
+    label: Sensor signal conditioning
+    blocks: [amplifier]
+    col: 2
+    row: 0
+  - id: wheel_sensors
+    label: Wheel speed / pressure / pedal / steering sensors
+    blocks: [vehicle_sensors]
+    col: 3
+    row: 0
+  - id: sensor_cluster
+    label: Sensor cluster (yaw rate + accelerometer)
+    blocks: [vehicle_sensors]
+    col: 0
+    row: 1
+  - id: watchdog
+    label: Watchdog microcontroller
+    blocks: [watchdog, mcu]
+    col: 1
+    row: 1
+  - id: failsafe_switch
+    label: Fail-safe high-side switch
+    blocks: [load_switch]
+    col: 2
+    row: 1
+  - id: valve_drivers
+    label: Valve 2/3-channel low-side switches (up to 12 valves)
+    blocks: [load_switch]
+    col: 3
+    row: 1
+  - id: motor_driver
+    label: Pump motor driver
+    blocks: [motor_driver_brushed, three_phase_gate_driver]
+    col: 0
+    row: 2
+  - id: flexray
+    label: FlexRay interface (optional)
+    blocks:
+    - {fn: external_block, label: FlexRay interface (optional)}
+    col: 1
+    row: 2
+  links:
+  - [power_if, mcu, '']
+  - [wheel_sensors, sensor_cond, '']
+  - [sensor_cond, mcu, '']
+  - [mcu, sensor_cluster, '']
+  - [mcu, watchdog, '']
+  - [mcu, flexray, '']
+  - [mcu, failsafe_switch, '']
+  - [mcu, valve_drivers, '']
+  - [failsafe_switch, valve_drivers, valve supply]
+  - [mcu, motor_driver, '']
+  questions:
+  - id: system
+    question: System
+    choices: [ABS, ESC (ABS + stability), integrated brake / brake-by-wire]
+    source: BRAKING page (Braking and Stability Control)
+  - id: valve_count
+    question: Number of solenoid valves
+    choices: [<=8, '12', '>12']
+    source: BRAKING SVG ('Up to 12 Valves')
+  - id: pump_motor
+    question: Pump motor
+    choices: [brushed DC (H-bridge), BLDC (3-phase pre-driver)]
+    source: BRAKING Functional Blocks (HB200x H-bridges and MC33937 / GD3000 pre-drivers)
+  - id: network
+    question: Vehicle network
+    choices: [CAN, CAN + FlexRay]
+    source: BRAKING SVG ('Flex Ray Interface' optional)
+- name: Automotive central gateway (CAN / LIN / FlexRay / Ethernet, secure element) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_GATEWAY'
+  sources:
+  - {doc: NXP_GATEWAY, title: NXP Gateway (automotive) application page, url: 'https://www.nxp.com/applications/GATEWAY'}
+  groups:
+  - id: processor
+    label: Gateway processor
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic_sbc
+    label: PMIC and CAN/LIN SBC
+    blocks: [pmic, can_transceiver, lin_transceiver]
+    col: 1
+    row: 0
+  - id: can_if
+    label: CAN interface (multi-channel)
+    blocks: [can_transceiver]
+    col: 2
+    row: 0
+  - id: lin_if
+    label: LIN interface (multi-channel)
+    blocks: [lin_transceiver]
+    col: 0
+    row: 1
+  - id: flexray_sbc
+    label: System basis chip (FlexRay)
+    blocks: [pmic]
+    col: 1
+    row: 1
+  - id: eth_phy
+    label: Ethernet PHY
+    blocks: [ethernet_phy]
+    col: 2
+    row: 1
+  - id: eth_switch
+    label: Ethernet switch
+    blocks: [ethernet_phy]
+    col: 0
+    row: 2
+  - id: se
+    label: Secure element
+    blocks: [secure_element]
+    col: 1
+    row: 2
+  links:
+  - [pmic_sbc, processor, '']
+  - [can_if, processor, CAN networks]
+  - [lin_if, processor, LIN networks]
+  - [flexray_sbc, processor, FlexRay network]
+  - [processor, eth_phy, Ethernet network(s)]
+  - [processor, eth_switch, '']
+  - [processor, se, '']
+  questions:
+  - id: networks
+    question: Vehicle networks bridged
+    choices: [CAN / LIN only, CAN / LIN + FlexRay, CAN / LIN + Ethernet]
+    source: GATEWAY SVG
+  - id: can_channels
+    question: Number of CAN channels
+    choices: [<=4, 6-8, '>8']
+    source: GATEWAY SVG (stacked CAN Interface, 6 CAN networks drawn)
+  - id: security
+    question: Secure element / HSM for secure gateway
+    choices: [external secure element, processor HSM only]
+    source: GATEWAY SVG ('Secure Element')
+- name: Automotive HVAC control module (blower motor, shutters, cabin sensors, CAN/LIN) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_HVAC'
+  sources:
+  - {doc: NXP_HVAC, title: 'NXP Heating, Ventilation and Air Conditioning (automotive HVAC) application page', url: 'https://www.nxp.com/applications/HEATING-VENTILATION-AIR-CONDITIONING'}
+  groups:
+  - id: sbc
+    label: CAN/LIN SBCs
+    blocks: [pmic, can_transceiver, lin_transceiver]
+    col: 0
+    row: 0
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 1
+    row: 0
+  - id: can_if
+    label: CAN interface (CAN slaves)
+    blocks: [can_transceiver]
+    col: 2
+    row: 0
+  - id: lin_if
+    label: LIN interface (LIN slaves)
+    blocks: [lin_transceiver]
+    col: 3
+    row: 0
+  - id: switch_mon
+    label: Switch monitoring
+    blocks: [switch_detection_interface]
+    col: 0
+    row: 1
+  - id: pressure
+    label: Pressure sensors (blower output, air distribution, external, cabin)
+    blocks: [vehicle_sensors]
+    col: 1
+    row: 1
+  - id: env_sensors
+    label: Humidity / temperature / sunlight sensors
+    blocks: [vehicle_sensors, temperature_sensor]
+    col: 2
+    row: 1
+  - id: motor_ctrl
+    label: Motor control (BLDC blower fan)
+    blocks: [three_phase_gate_driver, motor_controller]
+    col: 3
+    row: 1
+  - id: hs_switch
+    label: High-side switches (DC blower, bypass valves)
+    blocks: [load_switch, motor_driver_brushed]
+    col: 0
+    row: 2
+  - id: shutters
+    label: Shutter / flap control x5
+    blocks: [motor_driver_brushed]
+    col: 1
+    row: 2
+  - id: gpio
+    label: GPIO expander
+    blocks: [io_expander]
+    col: 2
+    row: 2
+  links:
+  - [sbc, mcu, '']
+  - [can_if, mcu, '']
+  - [lin_if, mcu, '']
+  - [switch_mon, mcu, '']
+  - [pressure, mcu, '']
+  - [env_sensors, mcu, '']
+  - [mcu, motor_ctrl, '']
+  - [mcu, hs_switch, '']
+  - [mcu, shutters, '']
+  - [mcu, gpio, '']
+  questions:
+  - id: blower
+    question: Blower motor
+    choices: [BLDC (3-phase), brushed DC (high-side switch / PWM)]
+    source: HVAC SVG ('Motor Control' -> BLDC Blower Fan; 'High Side Switches' -> DC Blower Fan)
+  - id: flap_actuators
+    question: Flap / shutter actuators
+    choices: [DC motors driven from the module, LIN smart actuators]
+    source: HVAC SVG ('Shutter Control x5', 'LIN Slaves')
+  - id: zones
+    question: Climate zones
+    choices: [single zone, dual zone, multi-zone]
+    source: HVAC SVG (Right / Left Temperature shutters)
+- name: Programmable logic controller (PLC) control module with input / output modules (NXP)
+  category: Industrial
+  note: 'From NXP public material: NXP_PLC'
+  sources:
+  - {doc: NXP_PLC, title: NXP PLC and Remote I/O application page, url: 'https://www.nxp.com/applications/PLC-REMOTE-IOS'}
+  groups:
+  - id: power
+    label: AC/DC + power management (multiple Vout)
+    blocks: [acdc_controller, pmic]
+    col: 0
+    row: 0
+  - id: mpu
+    label: MPU / MCU (control module)
+    blocks: [soc, mcu]
+    col: 1
+    row: 0
+  - id: memory
+    label: RAM DDR, flash, SD card, EEPROM
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 0
+  - id: nfc
+    label: NFC controller (optional)
+    blocks: [nfc_frontend]
+    col: 3
+    row: 0
+  - id: rs485
+    label: RS-485 (serial)
+    blocks: [rs485_transceiver]
+    col: 0
+    row: 1
+  - id: ethernet
+    label: Ethernet
+    blocks: [ethernet_phy]
+    col: 1
+    row: 1
+  - id: interfaces
+    label: Interfaces + voltage level translator
+    blocks: [voltage_translator, isolated_can, switch_detection_interface]
+    col: 2
+    row: 1
+  - id: usb
+    label: USB Type-C, load switch, USB protection, USB switch (optional)
+    blocks: [usb_pd_controller, load_switch, tvs_esd]
+    col: 3
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 0
+    row: 2
+  - id: smart_switch
+    label: Smart switches and drivers (high-voltage outputs)
+    blocks: [load_switch, isolated_smart_switch]
+    col: 1
+    row: 2
+  - id: can
+    label: CAN transceiver
+    blocks: [can_transceiver, isolated_can]
+    col: 2
+    row: 2
+  - id: rtc
+    label: RTC
+    blocks: [rtc]
+    col: 3
+    row: 2
+  - id: afe
+    label: AFE analog input / output
+    blocks: [adc]
+    col: 0
+    row: 3
+  - id: gpio
+    label: GPIO expander
+    blocks: [io_expander]
+    col: 1
+    row: 3
+  links:
+  - [power, mpu, multiple Vout]
+  - [mpu, memory, '']
+  - [nfc, mpu, '']
+  - [rs485, mpu, serial]
+  - [ethernet, mpu, '']
+  - [interfaces, mpu, '']
+  - [usb, mpu, '']
+  - [mpu, security, '']
+  - [mpu, smart_switch, '']
+  - [mpu, can, '']
+  - [mpu, rtc, '']
+  - [mpu, afe, '']
+  - [mpu, gpio, '']
+  questions:
+  - id: processor_class
+    question: Controller class
+    choices: [MCU (compact PLC / remote I/O), MPU with DDR (modular PLC)]
+    source: PLC SVG ('MPU' / 'MCU' block); Functional Blocks MCU/MPU list
+  - id: fieldbus
+    question: Fieldbus / network
+    choices: [Ethernet (TSN / industrial Ethernet), RS-485, CAN]
+    source: PLC SVG ('Ethernet', 'RS485', 'CAN Transceiver')
+  - id: analog_io
+    question: Analog I/O
+    choices: [universal AFE (V / mA / RTD / TC), digital I/O only]
+    source: PLC SVG ('AFE Analog Input / Output')
+  - id: outputs
+    question: Output type
+    choices: [smart high-side switches (24 V), relays, high-voltage drivers]
+    source: PLC SVG ('Smart Switched and Drivers' -> High Voltage)
+- name: 3-phase PMSM motor drive with sensorless FOC (AC-fed inverter, MCU / DSC) (NXP)
+  category: Motor drives
+  note: 'From NXP public material: NXP_PMSM'
+  sources:
+  - {doc: NXP_PMSM, title: NXP Permanent Magnet Synchronous Motors (PMSM) application page, url: 'https://www.nxp.com/applications/PMSM-MOTORS'}
+  groups:
+  - id: rectifier
+    label: AC/DC rectifier + DC bus (brake chopper)
+    blocks: [dc_link_cap]
+    col: 0
+    row: 0
+  - id: inverter
+    label: 3-phase inverter + shunts
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: driver
+    label: Power stage driver
+    blocks: [three_phase_gate_driver]
+    col: 2
+    row: 0
+  - id: regulator
+    label: Voltage regulator (VPWR -> VDD)
+    blocks: [pol_buck, pmic]
+    col: 0
+    row: 1
+  - id: mcu
+    label: 'MCU / DSC (FOC: PWM, ADC, quad timer, fault protection)'
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 2
+    row: 1
+  - id: software
+    label: Motor control software
+    blocks:
+    - {fn: external_block, label: Motor control software}
+    col: 0
+    row: 2
+  - id: motor
+    label: PMSM motor (load)
+    blocks: [motor]
+    col: 1
+    row: 2
+  links:
+  - [rectifier, inverter, U_DC bus]
+  - [inverter, motor, 3 phases]
+  - [mcu, driver, PWM]
+  - [driver, inverter, gate drives]
+  - [driver, mcu, faults / temperature]
+  - [inverter, mcu, 'phase currents isa / isb / isc, DC-bus voltage (ADC)']
+  - [regulator, mcu, VDD]
+  - [mcu, rectifier, brake control (GPIO)]
+  - [mcu, security, '']
+  - [software, mcu, '']
+  questions:
+  - id: control
+    question: Control method
+    choices: [sensorless FOC, FOC with encoder / resolver, six-step]
+    source: PMSM SVG (FOC loop, position / speed evaluation)
+  - id: supply
+    question: Supply
+    choices: [AC mains (rectified DC bus), low-voltage DC (12-48 V)]
+    source: PMSM SVG ('AC / DC', VPWR)
+  - id: current_sense
+    question: Current sensing
+    choices: [3 shunts, single DC-link shunt, isolated sensors]
+    source: PMSM SVG (3 shunts, isa / isb / isc)
+  - id: switches
+    question: Inverter switches
+    choices: [IGBT, Si MOSFET, SiC / GaN]
+    source: PMSM SVG (IGBT symbols)
+- name: Brushless DC (BLDC) motor control with Hall sensors (1-3 phase AC input, MCU / DSC) (NXP)
+  category: Motor drives
+  note: 'From NXP public material: NXP_BLDC'
+  sources:
+  - {doc: NXP_BLDC, title: NXP Brushless DC Motors application page, url: 'https://www.nxp.com/applications/BRUSHLESS-DC-MOTORS'}
+  groups:
+  - id: rectifier
+    label: 1-3 phase AC rectifier + DC bus
+    blocks: [dc_link_cap]
+    col: 0
+    row: 0
+  - id: inverter
+    label: 3-phase inverter
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: driver
+    label: Power stage driver
+    blocks: [three_phase_gate_driver]
+    col: 2
+    row: 0
+  - id: regulator
+    label: Voltage regulator
+    blocks: [pol_buck, pol_ldo]
+    col: 3
+    row: 0
+  - id: mcu
+    label: MCU / DSC (ADC, PWM, decoder, serial)
+    blocks: [mcu]
+    col: 0
+    row: 1
+  - id: hall
+    label: Hall sensors (optional)
+    blocks: [position_sensor]
+    col: 1
+    row: 1
+  - id: transceiver
+    label: Transceiver (optional)
+    blocks: [can_transceiver]
+    col: 2
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 3
+    row: 1
+  - id: motor
+    label: BLDC motor
+    blocks: [motor]
+    col: 0
+    row: 2
+  links:
+  - [rectifier, inverter, DC bus]
+  - [mcu, driver, PWM]
+  - [driver, inverter, gate drives]
+  - [inverter, motor, 3 phases]
+  - [hall, mcu, Hall decoder]
+  - [inverter, mcu, phase / DC-bus sense (ADC)]
+  - [regulator, mcu, VDD]
+  - [mcu, transceiver, serial comm]
+  - [mcu, security, '']
+  questions:
+  - id: commutation
+    question: Commutation
+    choices: [six-step with Hall sensors, sensorless six-step (BEMF), sinusoidal / FOC]
+    source: BLDC SVG ('Hall Sensors' optional, 'Decoder')
+  - id: supply
+    question: Supply
+    choices: [1-phase AC, 3-phase AC, low-voltage DC]
+    source: BLDC SVG ('1-3ph AC')
+  - id: comms
+    question: Host interface
+    choices: [CAN / CAN FD, UART / LIN, none]
+    source: BLDC SVG ('Transceiver' optional)
+- name: USB Type-C PD wall charger / power adapter (AC/DC + PD PHY + PD policy MCU) (NXP)
+  category: Power & isolation
+  note: 'From NXP public material: NXP_ADAPTER'
+  sources:
+  - {doc: NXP_ADAPTER, title: NXP Power Adapters and Chargers application page, url: 'https://www.nxp.com/applications/POWER-ADAPTERS-CHARGERS'}
+  groups:
+  - id: primary
+    label: AC/DC primary controller
+    blocks: [acdc_controller]
+    col: 0
+    row: 0
+  - id: secondary
+    label: AC/DC secondary controller + MOSFETs
+    blocks: [acdc_controller, power_fets]
+    col: 1
+    row: 0
+  - id: load_switch
+    label: Load switches (VBUS)
+    blocks: [load_switch]
+    col: 2
+    row: 0
+  - id: pd_phy
+    label: USB PD PHY
+    blocks: [usb_pd_controller]
+    col: 0
+    row: 1
+  - id: mcu
+    label: LPC MCU (PD policy)
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 2
+    row: 1
+  - id: protection
+    label: I/F protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 2
+  - id: connector
+    label: USB Type-C receptacle
+    blocks: [external_block]
+    col: 1
+    row: 2
+  links:
+  - [primary, secondary, isolated flyback]
+  - [secondary, load_switch, VBUS]
+  - [load_switch, protection, VBUS]
+  - [pd_phy, protection, CC]
+  - [protection, connector, '']
+  - [mcu, pd_phy, '']
+  - [mcu, secondary, voltage request]
+  - [mcu, security, '']
+  questions:
+  - id: power
+    question: Output power class
+    choices: [<=30 W, 45-65 W, 100 W, 140-240 W (EPR)]
+    source: ADAPTER page (wall charger); TEA2376 / TEA2093 listed
+  - id: ports
+    question: Number of Type-C ports
+    choices: ['1', 2-3]
+    source: ADAPTER SVG (single Type-C drawn)
+  - id: pps
+    question: PD programmable power supply (PPS)
+    choices: ['yes', 'no']
+    source: ADAPTER SVG ('USB PD PHY', 'PD Policy')
+  - id: auth
+    question: Charger authentication (secure element)
+    choices: ['yes', 'no']
+    source: ADAPTER SVG ('Security (EdgeLock Discrete)')
+- name: Battery-powered flow meter (water / gas / heat) with wireless AMR (NXP)
+  category: Industrial
+  note: 'From NXP public material: NXP_FLOW'
+  sources:
+  - {doc: NXP_FLOW, title: 'NXP Flow Metering (water, gas, heat) application page', url: 'https://www.nxp.com/applications/FLOW-METERING'}
+  groups:
+  - id: power
+    label: 'Power management: battery + DC-DC (optional)'
+    blocks: [battery_pack, pol_buck]
+    col: 0
+    row: 0
+  - id: metrology
+    label: 'Metrology sensor: ultrasonic / inductive / electromagnetic'
+    blocks: [external_block]
+    col: 1
+    row: 0
+  - id: sensors
+    label: Pressure sensor (optional) + temperature sensor
+    blocks: [temperature_sensor, external_block]
+    col: 2
+    row: 0
+  - id: controller
+    label: Controller (low-power MCU with LCD)
+    blocks: [mcu]
+    col: 3
+    row: 0
+  - id: hmi
+    label: 'HMI: display + display driver (optional)'
+    blocks: [display, display_driver]
+    col: 0
+    row: 1
+  - id: wireless
+    label: 'Wireless: Wi-Fi / BT / 802.15.4, sub-GHz, NFC, NB-IoT, LoRa'
+    blocks: [wireless_soc, nfc_frontend, modem]
+    col: 1
+    row: 1
+  - id: security
+    label: Secure element (optional)
+    blocks: [secure_element]
+    col: 2
+    row: 1
+  - id: flash
+    label: External flash
+    blocks: [flash]
+    col: 3
+    row: 1
+  - id: rtc
+    label: Real time clock (optional)
+    blocks: [rtc]
+    col: 0
+    row: 2
+  links:
+  - [power, controller, '']
+  - [metrology, controller, GPIO / I2C / UART / SPI]
+  - [sensors, controller, I2C / UART]
+  - [hmi, controller, I2C / SPI / SLCD]
+  - [controller, wireless, UART / I2C / SPI]
+  - [controller, security, I2C]
+  - [controller, flash, SPI]
+  - [controller, rtc, I2C]
+  questions:
+  - id: medium
+    question: Metered medium
+    choices: [water, gas, heat]
+    source: FLOW page title (water, gas, heat)
+  - id: sensing
+    question: Flow sensing principle
+    choices: [ultrasonic, inductive, electromagnetic]
+    source: FLOW SVG (Metrology)
+  - id: radio
+    question: AMR / AMI radio
+    choices: [sub-GHz (wM-Bus), NB-IoT / LTE-M, LoRa, BLE / 802.15.4]
+    source: FLOW SVG (Wireless Communication)
+  - id: battery_life
+    question: Battery life target
+    choices: [<10 years, '>=10 years']
+    source: FLOW SVG (Battery + optional DC-DC)
+- name: Physical access control reader (smart card reader + MCU, door lock output) (NXP)
+  category: Appliances & building
+  note: 'From NXP public material: NXP_ACCESS'
+  sources:
+  - {doc: NXP_ACCESS, title: NXP Access Management application page (physical and logical access), url: 'https://www.nxp.com/applications/ACCESS-MANAGEMENT-ASP'}
+  groups:
+  - id: mcu
+    label: MCU / MPU
+    blocks: [mcu]
+    col: 0
+    row: 0
+  - id: reader
+    label: Reader (NFC / contactless front end)
+    blocks: [nfc_frontend]
+    col: 1
+    row: 0
+  - id: card
+    label: Smart card (credential)
+    blocks: [secure_element]
+    col: 2
+    row: 0
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 3
+    row: 0
+  - id: power
+    label: Power management
+    blocks: [pmic]
+    col: 0
+    row: 1
+  - id: load_switch
+    label: Load switch (door lock drive)
+    blocks: [load_switch]
+    col: 1
+    row: 1
+  - id: rtc
+    label: RTC
+    blocks: [rtc]
+    col: 2
+    row: 1
+  - id: door_lock
+    label: Door lock (optional)
+    blocks: [external_block]
+    col: 3
+    row: 1
+  - id: backend
+    label: Verification + local database
+    blocks: [external_block]
+    col: 0
+    row: 2
+  links:
+  - [card, reader, 13.56 MHz]
+  - [reader, mcu, '']
+  - [security, mcu, '']
+  - [power, mcu, '']
+  - [rtc, mcu, '']
+  - [mcu, load_switch, '']
+  - [load_switch, door_lock, '']
+  - [mcu, backend, '']
+  questions:
+  - id: credential
+    question: Credential technology
+    choices: [MIFARE / ISO 14443 card, mobile credential (NFC / BLE), PIV / government ID]
+    source: ACCESS page (physical and logical access; SmartMX listed)
+  - id: decision
+    question: Access decision
+    choices: [local database in reader, online verification (controller / cloud)]
+    source: ACCESS BD2 SVG ('Verification', 'Local Database')
+  - id: lock_drive
+    question: Lock drive
+    choices: [load switch / relay output, networked lock (separate controller)]
+    source: ACCESS BD2 SVG ('Load Switch' -> 'Door lock')
+- name: Open / closed-loop contactless payment terminal (EMVCo contact + contactless, SAMs, transit / QR) (NXP)
+  category: Consumer & personal electronics
+  note: 'From NXP public material: NXP_PAYMENT'
+  sources:
+  - {doc: NXP_PAYMENT, title: NXP Open and Closed-Loop Payment application page, url: 'https://www.nxp.com/applications/OPEN-CLOSE-LOOP-PAYMENT'}
+  groups:
+  - id: mcu
+    label: Secure MCU (crypto engine, tamper module)
+    blocks: [mcu]
+    col: 0
+    row: 0
+  - id: pmic
+    label: PMIC & integrated battery charger
+    blocks: [pmic, battery_charger]
+    col: 1
+    row: 0
+  - id: memory
+    label: External memory
+    blocks: [ddr_flash]
+    col: 2
+    row: 0
+  - id: rtc
+    label: RTC
+    blocks: [rtc]
+    col: 3
+    row: 0
+  - id: wired
+    label: Wired interfaces
+    blocks: [external_block]
+    col: 0
+    row: 1
+  - id: wireless
+    label: Wi-Fi / Bluetooth + GPRS / 3G / 4G / LTE
+    blocks: [wifi_soc, ble_soc, modem]
+    col: 1
+    row: 1
+  - id: contact
+    label: Contact reader interface
+    blocks: [smartcard_interface]
+    col: 2
+    row: 1
+  - id: contactless
+    label: Contactless reader interface + antenna matching
+    blocks: [nfc_frontend]
+    col: 3
+    row: 1
+  - id: sams
+    label: SAMs (up to 5)
+    blocks: [secure_element]
+    col: 0
+    row: 2
+  - id: cards
+    label: Contact / dual-interface and contactless smart cards
+    blocks: [external_block]
+    col: 1
+    row: 2
+  - id: legacy
+    label: Magstripe, fingerprint sensor, camera (QR)
+    blocks: [external_block]
+    col: 2
+    row: 2
+  - id: ui
+    label: LCD driver (optional), display, LEDs, keypad
+    blocks: [display_driver, display]
+    col: 3
+    row: 2
+  - id: gpio
+    label: GPIO expander
+    blocks: [io_expander]
+    col: 0
+    row: 3
+  - id: tamper_sensors
+    label: Sensors (tamper resistance)
+    blocks: [external_block]
+    col: 1
+    row: 3
+  links:
+  - [pmic, mcu, '']
+  - [memory, mcu, '']
+  - [rtc, mcu, '']
+  - [wired, mcu, USB OTG]
+  - [wireless, mcu, SDIO / UART (CTS/RTS)]
+  - [mcu, contact, '']
+  - [mcu, contactless, '']
+  - [contact, sams, '']
+  - [contact, cards, '']
+  - [contactless, cards, 13.56 MHz]
+  - [mcu, legacy, '']
+  - [mcu, ui, '']
+  - [mcu, gpio, '']
+  - [tamper_sensors, mcu, '']
+  questions:
+  - id: architecture
+    question: Payment architecture
+    choices: [open loop (EMVCo bank cards), 'closed loop (transit / campus, MIFARE + SAM)']
+    source: PAYMENT page diagrams (Open Architecture, Closed Architecture)
+  - id: sam_count
+    question: Number of SAM slots
+    choices: ['0', 1-2, up to 5]
+    source: PAYMENT SVG ('SAMs (Up to 5)')
+  - id: alt_payment
+    question: Additional payment methods
+    choices: [QR code (camera), magstripe, biometric (fingerprint), none]
+    source: PAYMENT SVG
+  - id: backhaul
+    question: Backhaul
+    choices: [wired, Wi-Fi / BT, cellular]
+    source: PAYMENT SVG (Standard / Wireless Connectivity)
+- name: Refrigerator inverter compressor + system control (sensorless vector control, 220 VAC) (NXP)
+  category: Appliances & building
+  note: 'From NXP public material: NXP_MAJOR_APPLIANCE'
+  sources:
+  - {doc: NXP_MAJOR_APPLIANCE, title: NXP Major Home Appliance application page, url: 'https://www.nxp.com/applications/MAJOR-HOME-APPLIANCE'}
+  groups:
+  - id: rectifier
+    label: 220 VAC rectifier + DC bus
+    blocks: [dc_link_cap]
+    col: 0
+    row: 0
+  - id: inverter
+    label: 3-phase inverter + shunts
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: gate_driver
+    label: Gate driver
+    blocks: [three_phase_gate_driver]
+    col: 2
+    row: 0
+  - id: dcdc
+    label: DC/DC (15 V -> 3.3 V)
+    blocks: [wide_vin_buck]
+    col: 3
+    row: 0
+  - id: diff_amp
+    label: Differential amplifier (phase currents)
+    blocks: [amplifier]
+    col: 0
+    row: 1
+  - id: comp_mcu
+    label: Compressor control MCU
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: opto
+    label: Optocoupler (speed command)
+    blocks: [optocoupler]
+    col: 2
+    row: 1
+  - id: sys_mcu
+    label: System control MCU
+    blocks: [mcu]
+    col: 3
+    row: 1
+  - id: sys_io
+    label: Temperature sensors, fans, defrost heater
+    blocks: [temperature_sensor, external_block]
+    col: 0
+    row: 2
+  - id: hmi
+    label: Display panel HMI + USB converter
+    blocks: [display, external_block]
+    col: 1
+    row: 2
+  - id: motor
+    label: Compressor motor
+    blocks: [motor]
+    col: 2
+    row: 2
+  links:
+  - [rectifier, inverter, DC bus]
+  - [inverter, motor, 3 phases]
+  - [comp_mcu, gate_driver, 8 PWM signals]
+  - [gate_driver, comp_mcu, fault signal]
+  - [gate_driver, inverter, gate drives]
+  - [rectifier, dcdc, 15 V]
+  - [dcdc, comp_mcu, 3.3 V]
+  - [inverter, diff_amp, shunt voltages]
+  - [diff_amp, comp_mcu, Ia / Ib / Ic (ADC)]
+  - [rectifier, comp_mcu, Vdc (ADC)]
+  - [sys_mcu, opto, speed command]
+  - [opto, comp_mcu, timer / capture]
+  - [sys_io, sys_mcu, '']
+  - [sys_mcu, hmi, '']
+  questions:
+  - id: compressor_drive
+    question: Compressor drive
+    choices: [variable-speed inverter (FOC), fixed-speed (relay)]
+    source: FRIDGE image ('Vector Control Algorithm')
+  - id: partition
+    question: Controller partition
+    choices: [separate compressor MCU + system MCU (opto link), single MCU]
+    source: FRIDGE image (Compressor Control / System Control / Optocoupler)
+  - id: safety
+    question: Household safety class (IEC 60730)
+    choices: [Class B, not required]
+    source: NXP IEC 60730 page (sitemap APIEC60730); not drawn
+- name: Continuous glucose monitor, disposable sensor patch (electrochemical AFE + BLE MCU, NFC) (NXP)
+  category: Medical
+  note: 'From NXP public material: NXP_CGM'
+  sources:
+  - {doc: NXP_CGM, title: NXP Continuous Glucose Monitoring application page, url: 'https://www.nxp.com/applications/CONTINUOUS-GLUCOSE-MONITORING'}
+  groups:
+  - id: bio_sensor
+    label: Electrochemical bio sensor
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: afe
+    label: Electrochemical AFE sensor (with temperature, NFC)
+    blocks: [adc, temperature_sensor, nfc_frontend]
+    col: 1
+    row: 0
+  - id: mcu
+    label: BLE MCU (processing)
+    blocks: [ble_soc, mcu]
+    col: 2
+    row: 0
+  - id: battery
+    label: Battery
+    blocks: [battery_pack]
+    col: 0
+    row: 1
+  - id: activation
+    label: Magnetic switch activation (optional)
+    blocks: [external_block]
+    col: 1
+    row: 1
+  - id: nfc_antenna
+    label: NFC antenna (optional)
+    blocks: [antenna]
+    col: 2
+    row: 1
+  links:
+  - [bio_sensor, afe, electrodes]
+  - [battery, afe, '']
+  - [activation, afe, '']
+  - [nfc_antenna, afe, NFC]
+  - [afe, mcu, SPI + interrupt]
+  questions:
+  - id: form
+    question: Device form
+    choices: [disposable patch (primary battery), 'durable transmitter (rechargeable, NFC wireless charging)']
+    source: CGM page diagrams (Disposable / Durable)
+  - id: activation
+    question: Activation
+    choices: [NFC tap, magnetic switch, always on]
+    source: CGM SVG (optional NFC antenna / magnetic switch)
+  - id: link
+    question: Data link to reader / phone
+    choices: [BLE, NFC only]
+    source: CGM SVG (Bluetooth MCU, NFC); page also lists a CGM reader application
+- name: 5G mmWave fixed-wireless-access CPE (SoC + programmable baseband + analog beamformers) (NXP)
+  category: Communications equipment
+  note: 'From NXP public material: NXP_5G_FWA'
+  sources:
+  - {doc: NXP_5G_FWA, title: NXP 5G Fixed Wireless Access application page, url: 'https://www.nxp.com/applications/5G-FIXED-WIRELESS-ACCESS'}
+  groups:
+  - id: soc
+    label: SoC (5G/NR L2, RRC, edge compute)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: baseband
+    label: Programmable baseband (5G/NR L1)
+    blocks: [modem]
+    col: 1
+    row: 0
+  - id: abf
+    label: Analog beamformers (up to 4)
+    blocks: [beamformer_ic]
+    col: 2
+    row: 0
+  - id: ddr
+    label: DDR (32 / 64 bit)
+    blocks: [ddr_flash]
+    col: 0
+    row: 1
+  - id: flash
+    label: Flash
+    blocks: [flash]
+    col: 1
+    row: 1
+  - id: phy
+    label: Ethernet PHY + RJ45 (1 / 2.5 / 10 GbE)
+    blocks: [ethernet_phy]
+    col: 2
+    row: 1
+  - id: poe
+    label: PoE / PoE+
+    blocks: [poe_pd]
+    col: 0
+    row: 2
+  links:
+  - [soc, baseband, PCIe Gen 3 x2]
+  - [baseband, abf, IF / control]
+  - [ddr, soc, 32 / 64 bit]
+  - [soc, flash, '']
+  - [soc, phy, '']
+  - [phy, poe, '']
+  questions:
+  - id: band
+    question: Radio band
+    choices: [mmWave (FR2), sub-6 GHz (FR1)]
+    source: FWA page ('5G CPE (mmWave)')
+  - id: beamformers
+    question: Number of beamformer ICs / panels
+    choices: ['1', '2', '4']
+    source: FWA SVG ('ABF' <= 4x)
+  - id: lan
+    question: LAN port speed
+    choices: [1 GbE, 2.5 GbE, 10 GbE]
+    source: FWA SVG
+  - id: install
+    question: Installation
+    choices: [outdoor unit (PoE powered), indoor unit]
+    source: FWA SVG ('PoE/ PoE+')
+- name: Camera / AI smart glasses (Snapdragon AR1 Gen 1) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-AR1'
+  sources:
+  - {doc: QC-PB-AR1, title: Snapdragon AR1 Gen 1 Platform product brief (87-86507-1 rev B), url: 'https://docs.qualcomm.com/doc/87-86507-1/87-86507-1_REV_B_Snapdragon_AR1_Gen_1_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: AR1 Gen 1 SoC (Kryo 4x 1.9 GHz, Hexagon NPU, sensing hub, dual 14-bit ISP)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi 7 + Bluetooth 5.4 (FastConnect 7800)
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: camera
+    label: Camera (12 MP photo, 6 MP video)
+    blocks: [camera_radar]
+    col: 2
+    row: 0
+  - id: display
+    label: Single or binocular display (1280 x 1280 per eye, 60 Hz)
+    blocks: [display]
+    col: 0
+    row: 1
+  - id: audio
+    label: Audio (stereo speakers with protection, up to 8 mics)
+    blocks: [audio_amp, acoustic_transducer]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 2
+    row: 1
+  links:
+  - [camera, soc, '']
+  - [soc, display, RGB display output]
+  - [soc, wifi_bt, '']
+  - [soc, audio, '']
+  - [memory, soc, '']
+  questions:
+  - id: display_cfg
+    question: Display configuration
+    choices: [no display, single-lens display, binocular display]
+    source: QC-PB-AR1 'single or double lens displays'
+  - id: mics
+    question: Microphone count
+    choices: ['2', '4', up to 8]
+    source: QC-PB-AR1 'Up to eight microphones'
+  - id: streaming
+    question: Livestream directly from the glasses over Wi-Fi
+    choices: [yes (Wi-Fi 7 / 6E), no (Bluetooth to phone only)]
+    source: QC-PB-AR1 'Seamless sharing and streaming'
+- name: Windows on Arm laptop (Snapdragon X Elite / X2 Elite) - 5G WWAN and Wi-Fi 7 M.2 cards, memory, display (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-XELITE, QC-PB-X2ELITE'
+  sources:
+  - {doc: QC-PB-XELITE, title: Snapdragon X Elite product brief (87-71417-1 rev F), url: 'https://docs.qualcomm.com/doc/87-71417-1/87-71417-1_REV_F_Snapdragon_X_Elite_Product_Brief.pdf'}
+  - {doc: QC-PB-X2ELITE, title: Snapdragon X2 Elite product brief, url: 'https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-X2-Elite-Product-Brief.pdf'}
+  groups:
+  - id: soc
+    label: Compute SoC (Oryon CPU, Adreno GPU, Hexagon NPU, sensing hub)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wwan
+    label: 5G modem-RF M.2 card (PCIe Gen 3)
+    blocks: [modem, rf_pa_bias, antenna_tuner]
+    col: 1
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi 7 + Bluetooth 5.4 M.2 card (FastConnect 7800, PCIe Gen 3)
+    blocks: [wifi_soc]
+    col: 2
+    row: 0
+  - id: memory
+    label: Memory (LPDDR5x, 8 channels)
+    blocks: [ddr_flash]
+    col: 3
+    row: 0
+  - id: storage
+    label: Storage (NVMe SSD over PCIe Gen 4 / dual PCIe 5.0, UFS 4.0, SD)
+    blocks: [flash]
+    col: 0
+    row: 1
+  - id: display
+    label: Displays (internal eDP; up to 3 external DP)
+    blocks: [display]
+    col: 1
+    row: 1
+  - id: usb
+    label: USB4 / USB 3.2 Type-C ports
+    blocks:
+    - {fn: external_block, label: USB4 / USB 3.2 Type-C ports}
+    col: 2
+    row: 1
+  - id: camera
+    label: MIPI cameras (dual 18-bit ISP, always-sensing)
+    blocks: [camera_radar]
+    col: 3
+    row: 1
+  - id: audio
+    label: Audio codec (Aqstic)
+    blocks: [audio_codec]
+    col: 0
+    row: 2
+  links:
+  - [soc, wwan, PCIe Gen 3 (M.2)]
+  - [soc, wifi_bt, PCIe Gen 3 (M.2)]
+  - [memory, soc, LPDDR5x]
+  - [soc, storage, PCIe / UFS]
+  - [soc, display, eDP / DP]
+  - [soc, usb, USB4]
+  - [camera, soc, MIPI CSI]
+  - [soc, audio, '']
+  questions:
+  - id: wwan
+    question: Cellular WWAN
+    choices: [none, 5G sub-6, 5G sub-6 + mmWave]
+    source: QC-PB-XELITE 'Snapdragon X65 ... mmWave, sub-6 GHz'
+  - id: storage
+    question: Primary storage
+    choices: [NVMe SSD (M.2), UFS 4.0]
+    source: QC-PB-XELITE 'Storage'
+  - id: external_displays
+    question: External displays
+    choices: ['1', '2', '3']
+    source: QC-PB-XELITE 'DP v1.4 - 3 displays'
+  - id: wifi
+    question: Wi-Fi
+    choices: [Wi-Fi 7 HBS (FastConnect 7800), Wi-Fi 6E]
+    source: 'QC-PB-XELITE ''Generations: Wi-Fi 7, Wi-Fi 6E, Wi-Fi 6'''
+- name: Thin LTE Cat 1bis tracker / IoT device with external RF front end (Qualcomm 216 modem QCX216, QTS112) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC-PB-QCX216, QC-PB-QTS112'
+  sources:
+  - {doc: QC-PB-QCX216, title: Qualcomm 216 LTE IoT Modem (QCX216) product brief (87-PW324-1 rev C), url: 'https://docs.qualcomm.com/doc/87-PW324-1/87-PW324-1_REV_C_Qualcomm_QCX216_LTE_IOT_Modem_Product_Brief.pdf'}
+  - {doc: QC-PB-QTS112, title: Qualcomm QTS112 Thin Tracker product brief (87-43684-1 rev G), url: 'https://docs.qualcomm.com/doc/87-43684-1/87-43684-1_REV_G_Qualcomm_QTS112_Thin_Tracker_Product_Brief.pdf'}
+  groups:
+  - id: modem
+    label: QCX216 (Cortex-M3, LTE Cat 1bis modem, LTE transceiver, Wi-Fi 2.4 GHz Rx scanner)
+    blocks: [modem]
+    col: 0
+    row: 0
+  - id: rffe
+    label: External RF front end (multiband PA)
+    blocks: [pa_module]
+    col: 1
+    row: 0
+  - id: antenna
+    label: Shared LTE / Wi-Fi antenna
+    blocks: [antenna]
+    col: 2
+    row: 0
+  - id: memory
+    label: SRAM + stacked flash
+    blocks: [flash]
+    col: 0
+    row: 1
+  - id: clocks
+    label: Crystals (clock management)
+    blocks: [crystal_oscillator]
+    col: 1
+    row: 1
+  - id: sim
+    label: Dual SIM / eSIM
+    blocks: [secure_element]
+    col: 2
+    row: 1
+  - id: peripherals
+    label: 'Peripherals (I2C, 1-wire, USB, GPIO, UART, ADC, SPI): sensors, LED'
+    blocks: [env_sensor]
+    col: 0
+    row: 2
+  - id: battery
+    label: Battery (200 mAh Li-ion polymer, 3.1-4.5 V supply)
+    blocks: [battery_pack]
+    col: 1
+    row: 2
+  links:
+  - [modem, rffe, '']
+  - [rffe, antenna, '']
+  - [memory, modem, '']
+  - [clocks, modem, '']
+  - [sim, modem, UIM]
+  - [peripherals, modem, I2C / SPI / UART / ADC]
+  - [battery, modem, Input power management]
+  questions:
+  - id: region
+    question: LTE band set
+    choices: [regional (EU bands 1/3/5/7/8/20/28), global (700 MHz-2.6 GHz)]
+    source: QC-PB-QTS112 'RF Bands - LTE FDD'; QC-PB-QCX216 'RF'
+  - id: wifi_positioning
+    question: Wi-Fi scan positioning
+    choices: ['yes', 'no']
+    source: QC-PB-QCX216 'Wi-Fi receiver for indoor positioning'
+  - id: sim
+    question: SIM
+    choices: [eSIM, plastic SIM, dual SIM]
+    source: QC-PB-QCX216 '2x SIM or eSIM'
+- name: Matter smart-home / appliance device (QCC74x Wi-Fi 6 + Bluetooth LE + 802.15.4 Thread tri-radio SoC) (Qualcomm)
+  category: Appliances & building
+  note: 'From Qualcomm public material: QC-PB-QCC74X, QC-SCH-QCC74X'
+  sources:
+  - {doc: QC-PB-QCC74X, title: Qualcomm QCC74x Tri-radio SoC product brief (87-75957-1 rev H), url: 'https://docs.qualcomm.com/doc/87-75957-1/87-75957-1_REV_H_Qualcomm_QCC74x_Tri-radio_SoC_Product_Brief.pdf'}
+  - {doc: QC-SCH-QCC74X, title: QCC74x Reference Schematic (80-WL740-41 rev AE), url: 'https://docs.qualcomm.com/doc/80-WL740-41/80-WL740-41_REV_AE_QCC74x_Reference_Schematic.pdf'}
+  groups:
+  - id: soc
+    label: QCC743 / 744 / 748 tri-radio SoC (RISC-V MCU, Wi-Fi 6 1x1, BT 5.4, 802.15.4, radio front amplifier with LNA / balun / PA)
+    blocks: [wireless_soc, wifi_soc]
+    col: 0
+    row: 0
+  - id: antenna
+    label: 2.4 GHz antenna (pi match, U.FL)
+    blocks: [antenna]
+    col: 1
+    row: 0
+  - id: xtal
+    label: 40 MHz crystal + optional 32.768 kHz crystal
+    blocks: [crystal_oscillator]
+    col: 2
+    row: 0
+  - id: memory
+    label: Memory (SiP pSRAM / flash option, external serial flash)
+    blocks: [flash]
+    col: 3
+    row: 0
+  - id: ethernet
+    label: Ethernet (RMII 10/100) PHY
+    blocks: [ethernet_phy]
+    col: 0
+    row: 1
+  - id: can
+    label: CAN (ISO 11898)
+    blocks: [can_transceiver]
+    col: 1
+    row: 1
+  - id: audio
+    label: Audio (mic ADC, speaker DAC, I2S)
+    blocks: [acoustic_transducer]
+    col: 2
+    row: 1
+  - id: video
+    label: Camera (DVP) and display (DBI)
+    blocks: [camera_radar, display]
+    col: 3
+    row: 1
+  - id: power
+    label: 3.3 V supply, on-chip DC-DC (2.2 uH inductor)
+    blocks:
+    - {fn: external_block, label: '3.3 V supply, on-chip DC-DC (2.2 uH inductor)'}
+    col: 0
+    row: 2
+  links:
+  - [soc, antenna, RF]
+  - [xtal, soc, XTAL_IN / XTAL_OUT]
+  - [memory, soc, QSPI]
+  - [soc, ethernet, RMII]
+  - [soc, can, '']
+  - [soc, audio, ADC / DAC / I2S]
+  - [video, soc, DVP / DBI]
+  - [power, soc, '']
+  questions:
+  - id: radios
+    question: Radios used
+    choices: [Wi-Fi + BLE, Wi-Fi + BLE + Thread (Matter over Thread border router), BLE + Thread only]
+    source: QC-PB-QCC74X block diagram
+  - id: mode
+    question: Operating mode
+    choices: [hostless, hosted (RCP / NCP)]
+    source: QC-PB-QCC74X 'Support hostless and hosted (RCP and NCP) operation modes'
+  - id: wired
+    question: Wired interface
+    choices: [none, Ethernet, CAN]
+    source: QC-PB-QCC74X interface list
+  - id: range
+    question: Range extension front end
+    choices: [none (integrated PA / LNA), external 2.4 GHz FEM]
+    source: QC-PB-QCC74X 'Radio Front Amplifier (RFA)' integrated; external FEM not shown
+- name: Smart IP / security camera (QCS410 / QCS610 with PM6150 PMIC and WCN3980 Wi-Fi/BT) (Qualcomm)
+  category: Appliances & building
+  note: 'From Qualcomm public material: QC-PB-QCS610'
+  sources:
+  - {doc: QC-PB-QCS610, title: Qualcomm QCS410 / QCS610 product brief (87-PN006-1 rev F), url: 'https://docs.qualcomm.com/doc/87-PN006-1/87-PN006-1_REV_F_Qualcomm_R__QCS410_QCS610_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: QCS410 / QCS610 SoC (Kryo 460, Adreno 612, dual ISP, Hexagon DSP, video)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: PMIC
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi 1x1 802.11ac + Bluetooth 5.0 + FM
+    blocks: [wifi_soc]
+    col: 2
+    row: 0
+  - id: ethernet
+    label: Ethernet (RGMII)
+    blocks: [ethernet_phy]
+    col: 3
+    row: 0
+  - id: gnss
+    label: GNSS (GPS / GLONASS / BeiDou / Galileo)
+    blocks: [gnss_lna]
+    col: 0
+    row: 1
+  - id: cameras
+    label: Image sensors (up to 2, 16 MP each; CSI 4+4+4)
+    blocks: [camera_radar]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory and storage
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 1
+  - id: audio
+    label: Audio codec + speaker amplifier
+    blocks: [audio_codec, audio_amp]
+    col: 3
+    row: 1
+  - id: display
+    label: Display (DSI; DP over USB-C)
+    blocks: [display]
+    col: 0
+    row: 2
+  links:
+  - [cameras, soc, MIPI CSI]
+  - [pmic, soc, '']
+  - [soc, wifi_bt, '']
+  - [soc, ethernet, RGMII]
+  - [gnss, soc, '']
+  - [memory, soc, LPDDR4x]
+  - [soc, audio, '']
+  - [soc, display, DSI / DP]
+  questions:
+  - id: sensors
+    question: Image sensors
+    choices: ['1', 2 (dual ISP)]
+    source: QC-PB-QCS610 'Dual 14-bit ISP ... up to dual sensors'
+  - id: backhaul
+    question: Network backhaul
+    choices: [Wi-Fi, Ethernet, Wi-Fi + Ethernet]
+    source: QC-PB-QCS610 'Ethernet RGMII, Integrated 1x1 802.11a/b/g/n/ac'
+  - id: two_way_audio
+    question: Two-way audio (speaker)
+    choices: ['yes', microphone only]
+    source: QC-PB-QCS610 'Audio'
+  - id: tier
+    question: SoC tier
+    choices: ['QCS410 (4 cores, 1080p)', 'QCS610 (8 cores, 4K30)']
+    source: QC-PB-QCS610 specifications
+- name: Robot vacuum / home service robot board (Robotics RB2, QRB4210 SoM + mainboard + vision and 5G mezzanines) (Qualcomm)
+  category: Appliances & building
+  note: 'From Qualcomm public material: QC-PB-RB2'
+  sources:
+  - {doc: QC-PB-RB2, title: Qualcomm Robotics RB2 Platform (QRB4210) product brief (87-61721-1 rev B), url: 'https://docs.qualcomm.com/doc/87-61721-1/87-61721-1_REV_B_Qualcomm_Robotics_RB2_Platform__Qualcomm_QRB4210__Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: QRB4210 SoC (Kryo 260, Adreno 610, Hexagon DSP, 3x ISP)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: PMIC (on SoM)
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: memory
+    label: RAM 2 GB + eMMC 16 GB (on SoM)
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi / BT RF (FastConnect 6100, 1x1 11ac + BT 5.0) + antenna
+    blocks: [wifi_soc, antenna]
+    col: 3
+    row: 0
+  - id: can
+    label: Automotive CAN bus
+    blocks: [can_transceiver]
+    col: 0
+    row: 1
+  - id: ethernet
+    label: Gigabit Ethernet
+    blocks: [ethernet_phy]
+    col: 1
+    row: 1
+  - id: usb
+    label: USB 3.1 hub, USB-C, 2x USB-A, debug USB
+    blocks: [usb_typec_hub]
+    col: 2
+    row: 1
+  - id: imu_audio
+    label: IMU and audio (mic / amp)
+    blocks: [env_sensor, audio_amp, acoustic_transducer]
+    col: 3
+    row: 1
+  - id: display
+    label: 4K display HDMI, DSI / CSI expansion
+    blocks: [display]
+    col: 0
+    row: 2
+  - id: vision
+    label: Vision mezzanine (cameras 3x CSI, sensors, audio IO)
+    blocks: [camera_radar, env_sensor]
+    col: 1
+    row: 2
+  - id: wwan
+    label: 5G communication mezzanine (4G / 5G WWAN, GPS, 2x USIM)
+    blocks: [modem, gnss_lna, secure_element]
+    col: 2
+    row: 2
+  links:
+  - [pmic, soc, '']
+  - [memory, soc, '']
+  - [soc, wifi_bt, '']
+  - [soc, can, B2B]
+  - [soc, ethernet, B2B]
+  - [soc, usb, B2B]
+  - [imu_audio, soc, B2B]
+  - [soc, display, B2B]
+  - [vision, soc, high-speed / low-speed expansion]
+  - [soc, wwan, high-speed / low-speed expansion]
+  questions:
+  - id: cameras
+    question: Cameras
+    choices: ['1', '2', 3 (3x ISP)]
+    source: QC-PB-RB2 'Triple ISPs enable support for up to 3 cameras'
+  - id: depth
+    question: Navigation / depth sensing
+    choices: [camera vSLAM, ToF camera, camera + IMU fusion]
+    source: 'QC-PB-RB2 block diagram (Vision Mezzanine: ToF, tracking camera, sensors)'
+  - id: cellular
+    question: Cellular
+    choices: [none, 4G, 5G]
+    source: QC-PB-RB2 '5G Communication Mezzanine (4G/5G WWAN)'
+  - id: drive_bus
+    question: Motor / base controller link
+    choices: [CAN, UART, USB]
+    source: QC-PB-RB2 block diagram ('Automotive CAN Bus', 'GPIO/I2C/UART/SPI')
+- name: Robotics / machine-vision development platform (RB3 Gen 2 Vision Kit, QCS6490 SoM + RBx mainboard + vision mezzanine) (Qualcomm)
+  category: Industrial
+  note: 'From Qualcomm public material: QC-PB-RB3G2'
+  sources:
+  - {doc: QC-PB-RB3G2, title: Qualcomm RB3 Gen 2 Development Kit product brief (87-74789-1 rev A), url: 'https://docs.qualcomm.com/doc/87-74789-1/87-74789-1_REV_A_Qualcomm_RB3_Gen_2_Development_Kit_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: QCS6490 SoC (on SoM + interposer)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: PMICs (on SoM)
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: memory
+    label: RAM 6 GB + flash 128 GB (uMCP)
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi 6E / BT 5.2 with onboard printed antennas and RF expansion connectors
+    blocks: [wifi_soc, antenna]
+    col: 3
+    row: 0
+  - id: gnss
+    label: GNSS receiver with external antenna
+    blocks: [gnss_lna, antenna]
+    col: 0
+    row: 1
+  - id: ethernet
+    label: Ethernet (2.5 GbE, 10 GbE, Gigabit RJ45)
+    blocks: [ethernet_phy]
+    col: 1
+    row: 1
+  - id: can
+    label: Automotive CAN bus
+    blocks: [can_transceiver]
+    col: 2
+    row: 1
+  - id: usb
+    label: USB 3.1 hub (2 ports), USB-C with alt mode, USB 2.0
+    blocks: [usb_typec_hub]
+    col: 3
+    row: 1
+  - id: audio
+    label: Audio amplifiers (x2) to speakers, DMICs
+    blocks: [audio_amp, acoustic_transducer]
+    col: 0
+    row: 2
+  - id: display
+    label: Displays (HDMI, mini-DP / DP, DSI)
+    blocks: [display]
+    col: 1
+    row: 2
+  - id: sensors
+    label: Sensors (IMU, pressure, magnetometer)
+    blocks: [env_sensor]
+    col: 2
+    row: 2
+  - id: cameras
+    label: Cameras (main 12 MP, tracking 1 MP, GMSL2, ToF, depth)
+    blocks: [camera_radar, serdes]
+    col: 3
+    row: 2
+  links:
+  - [pmic, soc, '']
+  - [memory, soc, '']
+  - [soc, wifi_bt, '']
+  - [gnss, soc, '']
+  - [soc, ethernet, networking IX connector]
+  - [soc, can, board-to-board]
+  - [soc, usb, USB 2.0 / 3.1]
+  - [soc, audio, '']
+  - [soc, display, HDMI / DP]
+  - [sensors, soc, low-speed expansion]
+  - [cameras, soc, 5x CSI (4L) D-PHY]
+  questions:
+  - id: cameras
+    question: Camera set
+    choices: [single main camera, main + tracking (vSLAM), GMSL2 multi-camera, ToF / depth]
+    source: QC-PB-RB3G2 block diagram (optional accessories)
+  - id: network
+    question: Wired network
+    choices: [Gigabit, 2.5 GbE, 10 GbE]
+    source: QC-PB-RB3G2 block diagram
+  - id: gnss
+    question: GNSS
+    choices: [yes (external antenna), 'no']
+    source: QC-PB-RB3G2 block diagram ('GNSS Rx', 'External Antenna')
+  - id: wifi_antenna
+    question: Wi-Fi antennas
+    choices: [onboard printed antennas, external antennas via RF connectors]
+    source: QC-PB-RB3G2 'WLAN/Bluetooth'
+- name: 5G / Wi-Fi 6 drone flight computer (Flight RB5 reference design, QRB5165) (Qualcomm)
+  category: Industrial
+  note: 'From Qualcomm public material: QC-PB-QRB5165, QC-PB-FLIGHT-RB5, QC-MD-FLIGHT-RB5'
+  sources:
+  - {doc: QC-PB-QRB5165, title: Qualcomm Dragonwing QRB5165 Processor product brief (87-28730-1 rev D), url: 'https://docs.qualcomm.com/doc/87-28730-1/87-28730-1_REV_D_Qualcomm_Dragonwing_QRB5165_Processor_Product_Brief.pdf'}
+  - {doc: QC-PB-FLIGHT-RB5, title: Qualcomm Flight RB5 5G Platform product brief (87-28734-1 rev A), url: 'https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/qualcomm_flight-rb5-5g-platform-product-brief_87-28734-1.pdf'}
+  - {doc: QC-MD-FLIGHT-RB5, title: Flight RB5 5G Platform page (markdown), url: 'https://www.qualcomm.com/internet-of-things/products/flight-rb5-platform.md'}
+  groups:
+  - id: soc
+    label: QRB5165 (Kryo 585, Adreno 650, Spectra 480, Hexagon 698 + tensor accelerator, SPU)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi 6 + 802.11ad/ay + Bluetooth 5.1 (companion module, FastConnect 6800)
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: cellular
+    label: 4G / 5G module (optional; sub-6 + mmWave, LTE, CBRS)
+    blocks: [modem]
+    col: 2
+    row: 0
+  - id: memory
+    label: LPDDR5 / LPDDR4x memory (up to 16 GB)
+    blocks: [ddr_flash]
+    col: 0
+    row: 1
+  - id: cameras
+    label: Cameras (up to 7 concurrent; tracking, stereo, high-resolution)
+    blocks: [camera_radar]
+    col: 1
+    row: 1
+  links:
+  - [soc, wifi_bt, '']
+  - [soc, cellular, '']
+  - [memory, soc, '']
+  - [cameras, soc, MIPI CSI]
+  questions:
+  - id: cellular
+    question: Cellular link (BVLOS)
+    choices: [none, LTE, 5G sub-6, 5G sub-6 + mmWave, CBRS]
+    source: QC-PB-FLIGHT-RB5 'Optional 5G, LTE, CBRS'
+  - id: swarm
+    question: Drone-to-drone link
+    choices: [Wi-Fi 6, none]
+    source: QC-PB-FLIGHT-RB5 'Wi-Fi 6 for drone-to-drone / swarm support'
+  - id: cameras
+    question: Concurrent cameras
+    choices: [1-2, 3-4, 5-7]
+    source: QC-PB-FLIGHT-RB5 '7 concurrent'
+- name: Humanoid / autonomous mobile manipulator robot controller (Dragonwing IQ10 Robotics Reference Design) (Qualcomm)
+  category: Industrial
+  note: 'From Qualcomm public material: QC-PB-IQ10-RRD, QC-PB-IQ10'
+  sources:
+  - {doc: QC-PB-IQ10-RRD, title: Qualcomm Dragonwing IQ10 Robotics Reference Design product brief (87-A0789-1 rev A), url: 'https://docs.qualcomm.com/doc/87-A0789-1/87-A0789-1_REV_A_Qualcomm_Dragonwing_IQ10_Robotics_Reference_Design_Product_Brief.pdf'}
+  - {doc: QC-PB-IQ10, title: Qualcomm Dragonwing IQ10 Series Platform product brief (87-A2811-1 rev A), url: 'https://docs.qualcomm.com/doc/87-A2811-1/87-A2811-1_REV_A_Qualcomm_Dragonwing_IQ10_Series_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: IQ10 processor (18-core Oryon, Hexagon NPU 700 TOPS, dual Adreno GPU, MCU-like safety subsystem)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: Companion PMICs (8x PMAU0102, 1x PMAU0101)
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: power_in
+    label: 12 V / 24 V input with input protection (26 V)
+    blocks: [tvs_esd]
+    col: 2
+    row: 0
+  - id: memory
+    label: Memory and storage (64 GB LPDDR5x ECC, 512 GB UFS 4.0, PCIe Gen5 NVMe)
+    blocks: [ddr_flash, flash]
+    col: 3
+    row: 0
+  - id: cameras
+    label: Up to 12 GMSL2 cameras (deserializer to CSI)
+    blocks: [serdes, camera_radar]
+    col: 0
+    row: 1
+  - id: sensors
+    label: LiDAR, IMU, ToF sensors
+    blocks: [camera_radar, env_sensor]
+    col: 1
+    row: 1
+  - id: ethernet
+    label: 'Ethernet: 2x 10GBase-T (main), 1x 2.5GBase-T (safety island), 4x 1G EtherCAT'
+    blocks: [ethernet_phy]
+    col: 2
+    row: 1
+  - id: can
+    label: 8x CAN-FD (4 native + 4 external via SPI)
+    blocks: [can_transceiver]
+    col: 3
+    row: 1
+  - id: wireless
+    label: Wi-Fi 7 + Bluetooth; optional 5G add-on
+    blocks: [wifi_soc, modem]
+    col: 0
+    row: 2
+  - id: usb
+    label: USB (4x USB-C via hub + native USB 3.2 Gen 2)
+    blocks: [usb_typec_hub]
+    col: 1
+    row: 2
+  - id: display
+    label: 2x DisplayPort 2.1 (MST)
+    blocks: [display]
+    col: 2
+    row: 2
+  links:
+  - [power_in, pmic, 12 V / 24 V]
+  - [pmic, soc, '']
+  - [memory, soc, '']
+  - [cameras, soc, CSI]
+  - [sensors, soc, '']
+  - [soc, ethernet, USXGMII / TSN]
+  - [soc, can, CAN-FD / SPI]
+  - [soc, wireless, PCIe]
+  - [soc, usb, '']
+  - [soc, display, DP]
+  questions:
+  - id: cameras
+    question: Camera count
+    choices: [up to 4, 5-8, 9-12 (GMSL2)]
+    source: QC-PB-IQ10-RRD
+  - id: motion_bus
+    question: Motion-control network
+    choices: [EtherCAT, CAN-FD, TSN Ethernet]
+    source: QC-PB-IQ10-RRD 'Deterministic I/O'
+  - id: cellular
+    question: Cellular
+    choices: [none, 5G add-on]
+    source: QC-PB-IQ10-RRD 'Cellular 5G modem (optional, can be an add-on)'
+  - id: safety
+    question: Functional safety target
+    choices: [none, SIL 2, SIL 3]
+    source: QC-PB-IQ10 'planned SIL compliance up to SIL3'
+- name: Industrial edge-AI / machine-vision computer (QCS9100 / Dragonwing IQ9, IQ-9075 module) with PMICs, SerDes, Ethernet switch (Qualcomm)
+  category: Industrial
+  note: 'From Qualcomm public material: QC-DS-QCS9100, QC-PB-IQ9075, QC-PB-IQ9'
+  sources:
+  - {doc: QC-DS-QCS9100, title: QCS9100 Data Sheet (80-73415-1 rev AD), url: 'https://docs.qualcomm.com/doc/80-73415-1/80-73415-1_REV_AD_QCS9100_Data_Sheet.pdf'}
+  - {doc: QC-PB-IQ9075, title: Qualcomm Dragonwing IQ-9075 Module product brief (87-97354-1 rev C), url: 'https://docs.qualcomm.com/doc/87-97354-1/87-97354-1_REV_C_Qualcomm_Dragonwing_IQ-9075_Module_Product_Brief.pdf'}
+  - {doc: QC-PB-IQ9, title: Qualcomm Dragonwing IQ9 Series Platform product brief (87-83840-1 rev G), url: 'https://docs.qualcomm.com/doc/87-83840-1/87-83840-1_REV_G_Qualcomm_Dragonwing_IQ9_Series_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: QCS9100 / IQ-9075 (Kryo, dual Hexagon tensor processor, Spectra 690, safety island SAIL)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: dram
+    label: LPDDR5 (3 devices; 3x 12 GB on the module, ECC)
+    blocks: [ddr_flash]
+    col: 1
+    row: 0
+  - id: storage
+    label: UFS 3.1 + octal-SPI NOR flash
+    blocks: [flash]
+    col: 2
+    row: 0
+  - id: pmics
+    label: PMICs (4x PMM8650AU + SIL-3 PMIC)
+    blocks: [pmic, supervisor]
+    col: 3
+    row: 0
+  - id: clocks
+    label: Crystal oscillators and clocks (to the PMICs)
+    blocks: [crystal_oscillator]
+    col: 0
+    row: 1
+  - id: wlan_bt
+    label: Wireless LAN / Bluetooth (PCIe, UART, PCM)
+    blocks: [wifi_soc]
+    col: 1
+    row: 1
+  - id: ethernet
+    label: Ethernet switch / transceiver (SGMII x2, PCIe)
+    blocks: [ethernet_phy]
+    col: 2
+    row: 1
+  - id: display_serdes
+    label: Display SerDes to remote displays (eDP / DP / DSI)
+    blocks: [serdes, display]
+    col: 3
+    row: 1
+  - id: camera_serdes
+    label: Camera SerDes (4x 4-lane CSI) to cameras
+    blocks: [serdes, camera_radar]
+    col: 0
+    row: 2
+  - id: audio
+    label: Audio codec (DACs, ADCs, DMICs; I2S / TDM)
+    blocks: [audio_codec]
+    col: 1
+    row: 2
+  - id: sdr
+    label: Software-defined radio (HS-I2S)
+    blocks:
+    - {fn: external_block, label: Software-defined radio (HS-I2S)}
+    col: 2
+    row: 2
+  - id: sail_io
+    label: Safety-island IO (QUPs, RGMII, CAN)
+    blocks: [can_transceiver, ethernet_phy]
+    col: 3
+    row: 2
+  links:
+  - [dram, soc, EBI0 to EBI5]
+  - [soc, storage, UFS 3.1 gear 4 / Octal-SPI]
+  - [pmics, soc, supply voltages / SPMI]
+  - [clocks, pmics, '']
+  - [wlan_bt, soc, PCIe / UART / PCM]
+  - [ethernet, soc, SGMII (x2) / PCIe]
+  - [soc, display_serdes, eDP / DP / DSI]
+  - [camera_serdes, soc, 4-lane CSI]
+  - [audio, soc, I2S / TDM]
+  - [sdr, soc, HS-I2S]
+  - [sail_io, soc, SAIL_IO]
+  questions:
+  - id: build
+    question: Build
+    choices: [chip-down SoC + PMICs, 'SoM / module (IQ-9075: SoC + PMICs + LPDDR5)']
+    source: QC-PB-IQ9075 'this module integrates SoC, PMICs, and LPDDR5 memory'
+  - id: cameras
+    question: Camera link
+    choices: [direct MIPI CSI, SerDes (long-reach coax)]
+    source: QC-DS-QCS9100 Fig 1-1
+  - id: safety
+    question: Functional safety
+    choices: [none, SIL-3 PMIC + safety island]
+    source: QC-DS-QCS9100 Fig 1-1 ('SIL-3 PMIC', 'Safety Island (SAIL)')
+  - id: wireless
+    question: Wireless attach
+    choices: [none, Wi-Fi 6E + Bluetooth, Wi-Fi + 5G]
+    source: QC-PB-IQ9 'Wi-Fi 6E attach'

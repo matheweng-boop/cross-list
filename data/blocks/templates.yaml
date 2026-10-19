@@ -4168,3 +4168,4657 @@
     question: Automotive qualification
     choices: [AEC-Q100]
     source: automotive application
+
+# ---- imported by tools/import_diagrams.py
+- name: Automotive in-cabin 60 GHz radar module (occupancy / child presence / vital signs) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-INCABINRADAR'
+  sources:
+  - {doc: TI-SOL-INCABINRADAR, title: Automotive in-cabin 60 GHz radar module (occupancy / child presence / vital signs) - block diagram + subsystems, url: 'https://www.ti.com/solution/in-cabin-radar-module'}
+  groups:
+  - id: input_protection
+    label: Battery input protection
+    blocks: [tvs_esd, reverse_polarity]
+    col: 0
+    row: 0
+  - id: power
+    label: System power supply (discrete or integrated PMIC)
+    blocks: [wide_vin_buck, pmic, pol_buck, pol_ldo, sequencer]
+    col: 1
+    row: 0
+  - id: radar
+    label: Radar front end and processing
+    blocks: [radar_transceiver, crystal_oscillator, flash, antenna]
+    col: 2
+    row: 0
+  - id: vehicle_if
+    label: Vehicle interface
+    blocks: [can_transceiver, tvs_esd]
+    col: 0
+    row: 1
+  - id: diagnostics
+    label: Diagnostics / monitoring
+    blocks: [supervisor, temperature_sensor]
+    col: 1
+    row: 1
+  links:
+  - [input_protection, power, battery]
+  - [power, radar, '']
+  - [radar, vehicle_if, CAN network]
+  questions:
+  - id: use_case
+    question: Use case
+    choices: [child presence detection, seat-belt reminder / occupancy, intrusion alert, driver vital signs]
+    source: TI-SOL-INCABINRADAR page title / SVG title
+  - id: band
+    question: Radar band
+    choices: [60 GHz, 77 GHz]
+    source: TI-SOL-INCABINRADAR SVG '60GHz Radar SoC'
+  - id: pmic
+    question: Power architecture
+    choices: [discrete buck/boost + LDO, integrated PMIC]
+    source: TI-SOL-INCABINRADAR SVG 'Discrete or integrated PMIC'
+- name: AC EV charging station / wallbox (Level 2 residential) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-ACCHARGER'
+  sources:
+  - {doc: TI-SOL-ACCHARGER, title: AC EV charging station / wallbox (Level 2 residential) - block diagram + subsystems, url: 'https://www.ti.com/solution/ac-charging-pile-station'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks: [efuse_hotswap]
+    col: 0
+    row: 0
+  - id: iso_acdc
+    label: Isolated AC/DC power supply
+    blocks: [acdc_controller]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_buck, pol_ldo, supervisor]
+    col: 2
+    row: 0
+  - id: iso_dcdc
+    label: Isolated DC/DC power supply
+    blocks: [isolated_dcdc]
+    col: 3
+    row: 0
+  - id: in_sense
+    label: Input current and voltage sense
+    blocks: [current_sensor, amplifier, isolated_amplifier]
+    col: 0
+    row: 1
+  - id: relay
+    label: Relay control power stage
+    blocks: [relay_driver]
+    col: 1
+    row: 1
+  - id: out_sense
+    label: Output current and voltage sense
+    blocks: [current_sensor, amplifier, isolated_amplifier]
+    col: 2
+    row: 1
+  - id: afe
+    label: Analog front end
+    blocks: [adc, voltage_reference]
+    col: 3
+    row: 1
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, supervisor, rtc]
+    col: 0
+    row: 2
+  - id: clocking
+    label: Clocking
+    blocks: [rtc, clock_buffer]
+    col: 1
+    row: 2
+  - id: isolation
+    label: Signal isolation
+    blocks: [digital_isolator, isolated_can]
+    col: 2
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [ethernet_phy, amplifier]
+    col: 3
+    row: 2
+  - id: protection
+    label: Signal input/output protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 3
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, wireless_soc, ble_soc]
+    col: 1
+    row: 3
+  - id: hmi
+    label: HMI output user interface
+    blocks: [display_driver, audio_amp, led_driver]
+    col: 2
+    row: 3
+  links:
+  - [input_protection, iso_acdc, from AC grid]
+  - [iso_acdc, dcdc, '']
+  - [dcdc, iso_dcdc, IO voltages]
+  - [in_sense, relay, AC line]
+  - [relay, out_sense, to vehicle connection]
+  - [in_sense, afe, '']
+  - [out_sense, afe, '']
+  - [afe, processing, '']
+  - [clocking, processing, '']
+  - [processing, relay, '']
+  - [processing, isolation, '']
+  - [isolation, wired, '']
+  - [processing, wired, pilot wire]
+  - [wired, protection, '']
+  - [processing, wireless, '']
+  - [processing, hmi, '']
+  questions:
+  - id: level
+    question: Charger class
+    choices: [L1 residential, L2 residential, L2 commercial]
+    source: TI-SOL-ACCHARGER variant list
+  - id: rcd
+    question: Residual current detection
+    choices: [external RCD, integrated RCM (6 mA DC)]
+    source: TI-SOL-ACCHARGER 'Input current and voltage sense'
+  - id: connectivity
+    question: Back-end connectivity
+    choices: [Ethernet, Wi-Fi, sub-1 GHz, cellular, none]
+    source: TI-SOL-ACCHARGER 'Wired interface', 'Wireless interface'
+  - id: metering
+    question: Energy metering
+    choices: [integrated (isolated amp / ADC), external meter]
+    source: TI-SOL-ACCHARGER 'Analog front end'
+- name: DC fast charging station (power module + controller + HMI) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-DCFC'
+  sources:
+  - {doc: TI-SOL-DCFC, title: DC fast charging station (power module + controller + HMI) - block diagram + subsystems, url: 'https://www.ti.com/solution/dc-fast-charging-station'}
+  groups:
+  - id: in_sense
+    label: Input / bus / output current & voltage sense
+    blocks: [current_sensor, isolated_amplifier, amplifier, voltage_reference]
+    col: 0
+    row: 0
+  - id: acdc_stage
+    label: AC/DC power stage (PFC)
+    blocks: [gate_driver, half_bridge_driver, digital_isolator, power_fets]
+    col: 1
+    row: 0
+  - id: dcdc_stage
+    label: DC/DC power stage
+    blocks: [gate_driver, half_bridge_driver, digital_isolator, power_fets]
+    col: 2
+    row: 0
+  - id: relay
+    label: Relay control power stage + weld detector
+    blocks: [relay_driver, isolated_digital_input]
+    col: 3
+    row: 0
+  - id: insulation
+    label: Insulation monitor
+    blocks: [isolated_switch_driver, isolated_amplifier]
+    col: 0
+    row: 1
+  - id: rcm
+    label: Residual current monitor (IEC 62752 / 62955)
+    blocks: [motor_driver_brushed, amplifier]
+    col: 1
+    row: 1
+  - id: afe
+    label: Analog front end (optional)
+    blocks: [adc, voltage_reference, dac]
+    col: 2
+    row: 1
+  - id: power_mcu
+    label: Power digital processing
+    blocks: [mcu, rtc, voltage_translator]
+    col: 3
+    row: 1
+  - id: board_power
+    label: Isolated AC/DC + isolated DC/DC + power-board rails
+    blocks: [acdc_controller, isolated_dcdc, efuse_hotswap, sequencer, pol_buck, pol_ldo]
+    col: 0
+    row: 2
+  - id: board_diag
+    label: Power board diagnostics + fans
+    blocks: [supervisor, temperature_sensor, motor_driver_brushed]
+    col: 1
+    row: 2
+  - id: board_comms
+    label: Power board signal isolation + wired interface
+    blocks: [digital_isolator, isolated_can, rs485_transceiver, tvs_esd]
+    col: 2
+    row: 2
+  - id: plug_lock
+    label: Plug lock driver
+    blocks: [motor_driver_brushed]
+    col: 3
+    row: 2
+  - id: front_end
+    label: Front-end wired interface (EVSE to EV)
+    blocks: [can_transceiver, isolated_can, tvs_esd]
+    col: 0
+    row: 3
+  - id: controller
+    label: Controller digital processing + memory
+    blocks: [mcu, soc, rtc, ddr_flash]
+    col: 1
+    row: 3
+  - id: controller_power
+    label: Controller power (eFuse, rails, supercap, ideal diode) + diagnostics
+    blocks: [efuse_hotswap, sequencer, pol_buck, termination_ldo, reverse_polarity, supervisor, temperature_sensor]
+    col: 2
+    row: 3
+  - id: inter_module
+    label: Controller signal isolation + inter-module wired interface
+    blocks: [digital_isolator, can_transceiver, rs485_transceiver, tvs_esd]
+    col: 3
+    row: 3
+  - id: backend
+    label: Back-end wired + wireless interface (OCPP)
+    blocks: [ethernet_phy, tvs_esd, wifi_soc, wireless_soc, modem]
+    col: 0
+    row: 4
+  - id: hmi
+    label: HMI input / output / wireless
+    blocks: [env_sensor, io_expander, touch_controller, led_driver, display_driver, audio_amp, nfc_frontend, ble_soc]
+    col: 1
+    row: 4
+  links:
+  - [in_sense, acdc_stage, grid]
+  - [acdc_stage, dcdc_stage, DC bus (bus current & voltage sense)]
+  - [dcdc_stage, relay, output current & voltage sense]
+  - [relay, front_end, charger connector]
+  - [in_sense, afe, '']
+  - [afe, power_mcu, '']
+  - [rcm, afe, '']
+  - [power_mcu, acdc_stage, PWM]
+  - [power_mcu, dcdc_stage, PWM]
+  - [power_mcu, relay, '']
+  - [insulation, power_mcu, '']
+  - [power_mcu, plug_lock, '']
+  - [board_power, power_mcu, DC rail / ISO rail]
+  - [board_diag, power_mcu, '']
+  - [power_mcu, board_comms, '']
+  - [board_comms, inter_module, '']
+  - [inter_module, controller, '']
+  - [front_end, controller, '']
+  - [controller_power, controller, '']
+  - [controller, backend, '']
+  - [controller, hmi, '']
+  questions:
+  - id: acdc_topology
+    question: AC/DC (PFC) topology
+    choices: [2-level PFC, 3-level Vienna, 3-level T-type / ANPC (bidirectional)]
+    source: TI-SOL-DCFC SVG 'AC/DC power topologies'
+  - id: dcdc_topology
+    question: DC/DC topology
+    choices: [phase-shifted full bridge, LLC, DAB / CLLLC (bidirectional)]
+    source: TI-SOL-DCFC SVG 'DC/DC power topologies'
+  - id: switch_tech
+    question: Power switch technology
+    choices: [Si, SiC, GaN]
+    source: TI-SOL-DCFC 'DC/DC power stage' (GaN power stage listed)
+  - id: ev_protocol
+    question: Vehicle communication
+    choices: [CCS (HPGP / ISO 15118), CHAdeMO (CAN), GB/T (CAN)]
+    source: TI-SOL-DCFC SVG 'Front-end communication'
+  - id: backend
+    question: Back-end link (OCPP)
+    choices: [Ethernet, Wi-Fi, cellular]
+    source: TI-SOL-DCFC SVG 'Back-end communication'
+- name: USB-C power bank (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-POWERBANK'
+  sources:
+  - {doc: TI-SOL-POWERBANK, title: USB-C power bank - block diagram + subsystems, url: 'https://www.ti.com/solution/power-bank'}
+  groups:
+  - id: ports
+    label: USB-C / USB-A ports
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: input_protection
+    label: Input power protection
+    blocks: [efuse_hotswap, tvs_esd]
+    col: 1
+    row: 0
+  - id: usb_if
+    label: USB interface
+    blocks: [usb_pd_controller, load_switch]
+    col: 2
+    row: 0
+  - id: charger
+    label: Battery charging
+    blocks: [battery_charger]
+    col: 3
+    row: 0
+  - id: battery_pack
+    label: Battery pack
+    blocks: [battery_protector, battery_monitor, battery_pack]
+    col: 0
+    row: 1
+  - id: dcdc
+    label: DC/DC power (discharge path)
+    blocks: [buck_boost, pol_ldo, load_switch]
+    col: 1
+    row: 1
+  - id: current_sense
+    label: Current sense
+    blocks: [amplifier]
+    col: 2
+    row: 1
+  - id: temp
+    label: Temperature sense
+    blocks: [temperature_sensor]
+    col: 3
+    row: 1
+  - id: mcu
+    label: MCU + logic / control + LED indicator
+    blocks: [mcu]
+    col: 0
+    row: 2
+  links:
+  - [ports, input_protection, input]
+  - [input_protection, charger, '']
+  - [charger, battery_pack, '']
+  - [battery_pack, dcdc, battery (via sense resistor)]
+  - [dcdc, input_protection, output]
+  - [input_protection, ports, output]
+  - [battery_pack, current_sense, '']
+  - [current_sense, mcu, '']
+  - [temp, mcu, '']
+  - [mcu, usb_if, '']
+  questions:
+  - id: charger_arch
+    question: Charge / discharge architecture
+    choices: [separate charger + boost, bidirectional buck-boost charger (NVDC / OTG)]
+    source: TI-SOL-POWERBANK 'Battery charging', 'DC/DC power'
+  - id: ports
+    question: Ports
+    choices: [USB-C only, USB-C + USB-A]
+    source: TI-SOL-POWERBANK SVG
+  - id: power
+    question: Max USB PD power
+    choices: [18-20 W, 45-65 W, 100 W+]
+    source: TI-SOL-POWERBANK 'USB interface'
+  - id: cells
+    question: Cells in series
+    choices: [1S, 2S, 3-4S]
+    source: TI-SOL-POWERBANK 'Battery pack'
+- name: Solar micro inverter (GaN, single panel) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-MICROINV'
+  sources:
+  - {doc: TI-SOL-MICROINV, title: 'Solar micro inverter (GaN, single panel) - block diagram + subsystems', url: 'https://www.ti.com/solution/micro-inverter'}
+  groups:
+  - id: in_sense
+    label: Input current & voltage sense (PV 20-60 V)
+    blocks: [amplifier]
+    col: 0
+    row: 0
+  - id: dcdc_stage
+    label: 'DC/DC power stage (boost: flyback, push-pull or LLC)'
+    blocks: [half_bridge_driver, temperature_sensor, power_fets]
+    col: 1
+    row: 0
+  - id: bus_sense
+    label: Bus current & voltage sense
+    blocks: [amplifier, isolated_amplifier, current_sensor]
+    col: 2
+    row: 0
+  - id: dcac_stage
+    label: DC/AC power stage (totem-pole or full-bridge inverter)
+    blocks: [gate_driver, half_bridge_driver, temperature_sensor, power_fets]
+    col: 3
+    row: 0
+  - id: out_sense
+    label: Output current & voltage sense (isolated current sensor)
+    blocks: [current_sensor, isolated_amplifier]
+    col: 0
+    row: 1
+  - id: relay
+    label: Relay control power stage (grid connection)
+    blocks: [relay_driver]
+    col: 1
+    row: 1
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, supervisor, rtc]
+    col: 2
+    row: 1
+  - id: aux_power
+    label: PV-side DC/DC or grid-side isolated AC/DC power supply
+    blocks: [wide_vin_buck, acdc_controller]
+    col: 3
+    row: 1
+  - id: iso_dcdc
+    label: Isolated DC/DC power supply (isolated gate drivers)
+    blocks: [isolated_dcdc]
+    col: 0
+    row: 2
+  - id: pol
+    label: Non-isolated DC/DC power supply (IO voltages)
+    blocks: [pol_buck, pol_ldo]
+    col: 1
+    row: 2
+  - id: isolation
+    label: Signal isolation (optional)
+    blocks: [digital_isolator]
+    col: 2
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [rs485_transceiver, modem_daa]
+    col: 3
+    row: 2
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, wireless_soc, ble_soc]
+    col: 0
+    row: 3
+  links:
+  - [in_sense, dcdc_stage, PV input 20-60 V]
+  - [dcdc_stage, bus_sense, '']
+  - [bus_sense, dcac_stage, DC bus]
+  - [dcac_stage, out_sense, '']
+  - [out_sense, relay, '']
+  - [in_sense, processing, '']
+  - [bus_sense, processing, '']
+  - [out_sense, processing, '']
+  - [processing, dcdc_stage, PWM]
+  - [processing, dcac_stage, PWM (4)]
+  - [processing, relay, '']
+  - [aux_power, iso_dcdc, internal rail]
+  - [aux_power, pol, internal rail]
+  - [processing, isolation, '']
+  - [isolation, wired, '']
+  - [processing, wireless, '']
+  questions:
+  - id: dcdc_topology
+    question: Boost stage topology
+    choices: [flyback, push-pull, LLC]
+    source: TI-SOL-MICROINV SVG
+  - id: inverter_topology
+    question: Inverter topology
+    choices: [totem pole, full bridge]
+    source: TI-SOL-MICROINV SVG
+  - id: panels
+    question: Panels per inverter
+    choices: ['1', '2', '4']
+    source: TI-SOL-MICROINV (not drawn)
+  - id: comms
+    question: Monitoring link
+    choices: [PLC, RS-485, Wi-Fi, ZigBee / sub-1 GHz, Bluetooth]
+    source: TI-SOL-MICROINV 'Wired interface', 'Wireless interface'
+- name: Industrial servo drive (single axis, AC motor) (TI)
+  category: Motor drives
+  note: 'From TI public material: TI-SOL-SERVO'
+  sources:
+  - {doc: TI-SOL-SERVO, title: 'Industrial servo drive (single axis, AC motor) - block diagram + subsystems', url: 'https://www.ti.com/solution/robot-servo-drive'}
+  groups:
+  - id: input_protection
+    label: Input power protection (24 V aux)
+    blocks: [reverse_polarity, efuse_hotswap, load_switch]
+    col: 0
+    row: 0
+  - id: iso_dcdc
+    label: Isolated DC/DC power supply (from DC link)
+    blocks: [hv_flyback, acdc_controller]
+    col: 1
+    row: 0
+  - id: hot_side
+    label: Isolated DC/DC hot side (gate driver supplies)
+    blocks: [isolated_dcdc]
+    col: 2
+    row: 0
+  - id: pol
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_buck, pol_ldo, pmic]
+    col: 3
+    row: 0
+  - id: power_stage
+    label: 3-phase power stage
+    blocks: [gate_driver, digital_isolator, power_module]
+    col: 0
+    row: 1
+  - id: dclink_sense
+    label: DC link current & voltage sense
+    blocks: [amplifier, voltage_reference, adc]
+    col: 1
+    row: 1
+  - id: motor_sense
+    label: Motor current & voltage sense
+    blocks: [current_sensor, isolated_amplifier, adc, amplifier]
+    col: 2
+    row: 1
+  - id: mcu
+    label: Digital processing
+    blocks: [mcu, soc]
+    col: 3
+    row: 1
+  - id: safety
+    label: Self-diagnostics / safety monitoring (STO)
+    blocks: [mcu, watchdog, supervisor, temperature_sensor]
+    col: 0
+    row: 2
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_buffer]
+    col: 1
+    row: 2
+  - id: brake
+    label: Holding brake power stage
+    blocks: [load_switch]
+    col: 2
+    row: 2
+  - id: encoder_afe
+    label: Encoder AFE (digital Hall, resolver, sin/cos encoder)
+    blocks: [position_interface, adc, dac, amplifier, tvs_esd]
+    col: 3
+    row: 2
+  - id: encoder_if
+    label: Encoder interface (digital angle encoder)
+    blocks: [rs485_transceiver, voltage_translator]
+    col: 0
+    row: 3
+  - id: wired
+    label: Wired interface (to control module)
+    blocks: [ethernet_phy, rs485_transceiver, can_transceiver, digital_isolator, tvs_esd]
+    col: 1
+    row: 3
+  - id: motor
+    label: AC motor + holding brake
+    blocks: [motor]
+    col: 2
+    row: 3
+  links:
+  - [iso_dcdc, input_protection, 24 V & other rails]
+  - [input_protection, pol, '']
+  - [input_protection, hot_side, '']
+  - [hot_side, power_stage, gate driver supply]
+  - [pol, mcu, multiple rails]
+  - [dclink_sense, mcu, '']
+  - [mcu, power_stage, PWM & FLT]
+  - [safety, power_stage, STO]
+  - [power_stage, motor, '']
+  - [power_stage, motor_sense, '']
+  - [motor_sense, mcu, '']
+  - [brake, mcu, '']
+  - [brake, motor, holding brake]
+  - [encoder_afe, mcu, '']
+  - [encoder_if, mcu, '']
+  - [wired, mcu, connection to control module]
+  questions:
+  - id: switch_tech
+    question: Power stage
+    choices: [IGBT + isolated gate drivers, IPM, GaN module]
+    source: TI-SOL-SERVO SVG '3-phase power stage'
+  - id: current_sensing
+    question: Motor current sensing
+    choices: [shunt + isolated delta-sigma modulator, shunt + isolated amplifier, fluxgate / Hall]
+    source: TI-SOL-SERVO SVG 'Motor current & voltage sense'
+  - id: encoder
+    question: Position feedback
+    choices: [digital Hall, resolver, sin/cos encoder, digital absolute encoder (RS-485)]
+    source: 'TI-SOL-SERVO SVG ''Connector to: digital hall, resolver, encoder'''
+  - id: fieldbus
+    question: Connection to controller
+    choices: [EtherCAT / industrial Ethernet, CAN, RS-485, LVDS]
+    source: TI-SOL-SERVO 'Wired interface'
+  - id: axes
+    question: Axes per drive
+    choices: [single, multi-axis]
+    source: TI-SOL-SERVO variant list
+- name: HVAC motor control (AC input, PFC + 3-phase inverter) (TI)
+  category: Motor drives
+  note: 'From TI public material: TI-SOL-HVACMOTOR'
+  sources:
+  - {doc: TI-SOL-HVACMOTOR, title: 'HVAC motor control (AC input, PFC + 3-phase inverter) - block diagram + subsystems', url: 'https://www.ti.com/solution/hvac-motor-control'}
+  groups:
+  - id: rectifier
+    label: Input rectifier & filter
+    blocks: [relay_driver]
+    col: 0
+    row: 0
+  - id: pfc
+    label: PFC stage
+    blocks: [acdc_controller, half_bridge_driver, temperature_sensor]
+    col: 1
+    row: 0
+  - id: dclink_sense
+    label: DC-link current & voltage sense
+    blocks: [amplifier, current_sensor, voltage_reference]
+    col: 2
+    row: 0
+  - id: aux_power
+    label: Non-isolated DC/DC power supply (from DC link)
+    blocks: [acdc_controller]
+    col: 3
+    row: 0
+  - id: pol
+    label: Point of load power supply
+    blocks: [pol_buck, pmic, supervisor, pol_ldo]
+    col: 0
+    row: 1
+  - id: power_stage
+    label: 3-phase power stage
+    blocks: [half_bridge_driver, gate_driver, power_module]
+    col: 1
+    row: 1
+  - id: motor_sense
+    label: Motor current & voltage sense
+    blocks: [adc, amplifier, voltage_reference]
+    col: 2
+    row: 1
+  - id: temp
+    label: Temperature monitoring
+    blocks: [temperature_sensor]
+    col: 3
+    row: 1
+  - id: motor_ctrl
+    label: Motor controller
+    blocks: [mcu]
+    col: 0
+    row: 2
+  - id: isolation
+    label: Isolation (SPI between motor and application controller)
+    blocks: [digital_isolator]
+    col: 1
+    row: 2
+  - id: diagnostics
+    label: Diagnostics / monitoring (STO)
+    blocks: [digital_isolator, load_switch]
+    col: 2
+    row: 2
+  - id: app_ctrl
+    label: Application controller
+    blocks: [mcu]
+    col: 3
+    row: 2
+  - id: digital_io
+    label: Digital IO interface
+    blocks: [isolated_digital_input, load_switch, tvs_esd]
+    col: 0
+    row: 3
+  - id: analog_io
+    label: Analog IO interface
+    blocks: [adc, dac, amplifier, voltage_reference]
+    col: 1
+    row: 3
+  - id: fieldbus
+    label: Fieldbus / configuration interface
+    blocks: [isolated_can, rs485_transceiver, tvs_esd]
+    col: 2
+    row: 3
+  - id: ui
+    label: Input / output user interface
+    blocks: [io_expander]
+    col: 3
+    row: 3
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, ble_soc]
+    col: 0
+    row: 4
+  - id: motor
+    label: Motor
+    blocks: [motor]
+    col: 1
+    row: 4
+  links:
+  - [rectifier, pfc, AC mains (100-400 VAC)]
+  - [pfc, dclink_sense, DC link]
+  - [pfc, aux_power, DC link]
+  - [aux_power, pol, '']
+  - [dclink_sense, power_stage, DC link]
+  - [diagnostics, power_stage, STO]
+  - [motor_ctrl, power_stage, '']
+  - [power_stage, motor, '']
+  - [power_stage, motor_sense, '']
+  - [power_stage, temp, '']
+  - [motor_sense, motor_ctrl, '']
+  - [temp, motor_ctrl, '']
+  - [motor_ctrl, isolation, SPI]
+  - [isolation, app_ctrl, '']
+  - [digital_io, app_ctrl, '']
+  - [analog_io, app_ctrl, '']
+  - [app_ctrl, fieldbus, '']
+  - [app_ctrl, ui, '']
+  - [app_ctrl, wireless, '']
+  questions:
+  - id: input
+    question: Supply
+    choices: [AC input with PFC, DC input (48 V / DC bus)]
+    source: TI-SOL-HVACMOTOR variant list
+  - id: power_stage
+    question: Power stage
+    choices: [IGBTs + half-bridge gate drivers, IPM, MOSFETs / GaN]
+    source: TI-SOL-HVACMOTOR '3-phase power stage'
+  - id: controller_split
+    question: Controller split
+    choices: [single MCU, motor MCU + isolated application MCU]
+    source: TI-SOL-HVACMOTOR SVG (isolation between controllers)
+  - id: fieldbus
+    question: Building interface
+    choices: [RS-485 (Modbus / BACnet), CAN, 0-10 V analog, wireless]
+    source: TI-SOL-HVACMOTOR 'Fieldbus/configuration interface', 'Analog IO interface'
+- name: Humanoid / collaborative robot joint motor drive (48 V) (TI)
+  category: Motor drives
+  note: 'From TI public material: TI-SOL-HUMANOIDJOINT'
+  sources:
+  - {doc: TI-SOL-HUMANOIDJOINT, title: Humanoid / collaborative robot joint motor drive (48 V) - block diagram + subsystems, url: 'https://www.ti.com/solution/humanoid-robot-joint-motor-control'}
+  groups:
+  - id: power
+    label: Power management (from 48 V DC link)
+    blocks: [efuse_hotswap, wide_vin_buck, pol_ldo, pmic]
+    col: 0
+    row: 0
+  - id: power_stage
+    label: 3-phase power stage
+    blocks: [three_phase_gate_driver, half_bridge_driver, digital_isolator, power_fets]
+    col: 1
+    row: 0
+  - id: brake
+    label: Holding brake power
+    blocks: [load_switch]
+    col: 2
+    row: 0
+  - id: mcu
+    label: Motor control MCU
+    blocks: [mcu]
+    col: 3
+    row: 0
+  - id: sense
+    label: Motor current & voltage sense
+    blocks: [isolated_amplifier, amplifier, current_sensor, temperature_sensor]
+    col: 0
+    row: 1
+  - id: encoder
+    label: Encoder front end / interface
+    blocks: [position_interface, adc, rs485_transceiver, voltage_translator, tvs_esd]
+    col: 1
+    row: 1
+  - id: wired
+    label: Wired interface to controller
+    blocks: [ethernet_phy, can_transceiver, tvs_esd]
+    col: 2
+    row: 1
+  - id: safety
+    label: Self-diagnostics / safety monitoring
+    blocks: [temperature_sensor, mcu, supervisor, watchdog]
+    col: 3
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_buffer]
+    col: 0
+    row: 2
+  - id: motor
+    label: Joint motor + holding brake + position sensors
+    blocks: [motor, position_sensor]
+    col: 1
+    row: 2
+  links:
+  - [power, power_stage, gate driver supply (48 V DC link)]
+  - [mcu, power_stage, '']
+  - [power_stage, motor, '']
+  - [motor, sense, '']
+  - [sense, mcu, '']
+  - [encoder, mcu, '']
+  - [motor, encoder, Hall / resolver / encoder / angle encoder]
+  - [wired, mcu, to system controller]
+  - [safety, mcu, '']
+  - [clocking, mcu, '']
+  - [brake, motor, holding brake]
+  questions:
+  - id: switch_tech
+    question: Power stage
+    choices: [Si FETs + integrated gate driver, GaN FETs + half-bridge GaN drivers]
+    source: TI-SOL-HUMANOIDJOINT SVG '- or -'
+  - id: current_sensing
+    question: Phase current sensing
+    choices: [shunt + amplifier, shunt + isolated delta-sigma, Hall-effect]
+    source: TI-SOL-HUMANOIDJOINT 'Motor current & voltage sense'
+  - id: position
+    question: Position feedback
+    choices: [digital Hall, resolver, absolute encoder (RS-485 / CAN), dual encoder (motor + output side)]
+    source: TI-SOL-HUMANOIDJOINT 'Encoder front end/interface'
+  - id: bus
+    question: Link to system controller
+    choices: [EtherCAT / Ethernet, CAN FD, LVDS]
+    source: TI-SOL-HUMANOIDJOINT 'Wired interface to controller'
+- name: PLC CPU / programmable controller (standard) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-PLCCPU'
+  sources:
+  - {doc: TI-SOL-PLCCPU, title: PLC CPU / programmable controller (standard) - block diagram + subsystems, url: 'https://www.ti.com/solution/cpu-plc-controller'}
+  groups:
+  - id: input_protection
+    label: Input power protection (24 V field power)
+    blocks: [efuse_hotswap, reverse_polarity]
+    col: 0
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, pmic]
+    col: 1
+    row: 0
+  - id: energy_storage
+    label: Energy storage (RTC / data retention backup)
+    blocks: [battery_charger, battery_monitor]
+    col: 2
+    row: 0
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [temperature_sensor, supervisor, adc]
+    col: 3
+    row: 0
+  - id: processing
+    label: Digital processing
+    blocks: [soc, digital_isolator]
+    col: 0
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [termination_ldo, ddr_flash]
+    col: 1
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [clock_generator, clock_buffer, crystal_oscillator, rtc]
+    col: 2
+    row: 1
+  - id: wired
+    label: Wired interface
+    blocks: [ethernet_phy, rs485_transceiver, can_transceiver, io_expander]
+    col: 3
+    row: 1
+  - id: protection
+    label: Signal input/output protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 2
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc]
+    col: 1
+    row: 2
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, audio_codec]
+    col: 2
+    row: 2
+  links:
+  - [input_protection, dcdc, 24 V field power]
+  - [dcdc, processing, '']
+  - [energy_storage, processing, '']
+  - [diagnostics, processing, '']
+  - [memory, processing, '']
+  - [clocking, processing, '']
+  - [processing, wired, backplane / comms]
+  - [wired, protection, comms]
+  - [processing, wireless, '']
+  - [processing, output_ui, '']
+  questions:
+  - id: class
+    question: Controller class
+    choices: [standard (modular, backplane), micro PLC (integrated I/O)]
+    source: TI-SOL-PLCCPU variant list
+  - id: fieldbus
+    question: Fieldbus / network
+    choices: [industrial Ethernet (PROFINET / EtherNet/IP / EtherCAT), RS-485 (Modbus / PROFIBUS), CAN]
+    source: TI-SOL-PLCCPU 'Wired interface'
+  - id: holdup
+    question: Backup / hold-up
+    choices: [battery, supercap, none]
+    source: TI-SOL-PLCCPU 'Energy storage'
+  - id: input_redundancy
+    question: Redundant 24 V inputs (ORing)
+    choices: ['yes', 'no']
+    source: TI-SOL-PLCCPU SVG (two 24 V inputs + ORing)
+- name: Single-phase smart electricity meter (e-meter) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-EMETER'
+  sources:
+  - {doc: TI-SOL-EMETER, title: Single-phase smart electricity meter (e-meter) - block diagram + subsystems, url: 'https://www.ti.com/solution/electricity-meter'}
+  groups:
+  - id: sensors
+    label: Current / voltage sensors
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: line_protection
+    label: Line protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 0
+  - id: flyback
+    label: AC/DC flyback
+    blocks: [acdc_controller, optocoupler, voltage_reference, load_switch]
+    col: 2
+    row: 0
+  - id: energy_storage
+    label: Energy storage (battery / supercap backup)
+    blocks: [battery_charger, battery_monitor]
+    col: 3
+    row: 0
+  - id: dcdc
+    label: DC/DC power supply (MCU and RF supplies)
+    blocks: [reverse_polarity, pol_ldo, pol_buck, supervisor]
+    col: 0
+    row: 1
+  - id: input_protection
+    label: Signal input protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 1
+  - id: rogowski_afe
+    label: Signal conditioning AFE for Rogowski coil
+    blocks: [amplifier, pol_ldo]
+    col: 2
+    row: 1
+  - id: metrology
+    label: Metrology MCU
+    blocks: [mcu, adc, voltage_reference, digital_isolator, crystal_oscillator]
+    col: 3
+    row: 1
+  - id: app_mcu
+    label: Application MCU / processor (isolated)
+    blocks: [digital_isolator, mcu, crystal_oscillator]
+    col: 0
+    row: 2
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [watchdog, supervisor, rtc, temperature_sensor]
+    col: 1
+    row: 2
+  - id: wireless
+    label: Wireless interface
+    blocks: [wireless_soc, ble_soc, nfc_frontend, modem, voltage_translator, io_expander, tvs_esd]
+    col: 2
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [modem_daa, amplifier, rs485_transceiver, digital_isolator, optocoupler, tvs_esd]
+    col: 3
+    row: 2
+  - id: anti_tamper
+    label: Anti-tamper
+    blocks: [hall_switch, env_sensor, position_sensor]
+    col: 0
+    row: 3
+  - id: relay
+    label: Contactor / actuator control (disconnect relay)
+    blocks: [relay_driver]
+    col: 1
+    row: 3
+  - id: hmi
+    label: HMI (display, keypad)
+    blocks: [touch_controller, tvs_esd]
+    col: 2
+    row: 3
+  links:
+  - [sensors, input_protection, '']
+  - [sensors, rogowski_afe, Rogowski coil (optional)]
+  - [input_protection, metrology, '']
+  - [rogowski_afe, metrology, '']
+  - [line_protection, flyback, L / N]
+  - [flyback, dcdc, '']
+  - [energy_storage, dcdc, '']
+  - [metrology, app_mcu, '']
+  - [app_mcu, wireless, '']
+  - [app_mcu, wired, '']
+  - [anti_tamper, app_mcu, case open / external magnet]
+  - [app_mcu, relay, '']
+  - [app_mcu, hmi, '']
+  - [diagnostics, app_mcu, '']
+  questions:
+  - id: phases
+    question: Meter type
+    choices: [basic single-phase, single-phase smart, polyphase]
+    source: TI-SOL-EMETER variant list
+  - id: current_sensor
+    question: Current sensor
+    choices: [shunt, CT, Rogowski coil]
+    source: TI-SOL-EMETER SVG
+  - id: metrology_arch
+    question: Metrology architecture
+    choices: [single SoC (metrology + application), separate metrology MCU + application MCU]
+    source: TI-SOL-EMETER SVG
+  - id: comms
+    question: AMI communication
+    choices: [PLC, RF mesh (sub-1 GHz / ZigBee), cellular (NB-IoT / LTE-M), wired M-Bus / RS-485]
+    source: TI-SOL-EMETER 'Wireless interface', 'Wired interface'
+  - id: disconnect
+    question: Remote disconnect relay
+    choices: ['yes', 'no']
+    source: TI-SOL-EMETER 'Contactor/actuator control'
+- name: Ultrasonic gas meter (battery powered) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-GASMETER, TI-SOL-WATERMETER'
+  sources:
+  - {doc: TI-SOL-GASMETER, title: Ultrasonic gas meter (battery powered) - block diagram + subsystems, url: 'https://www.ti.com/solution/gas-meter'}
+  - {doc: TI-SOL-WATERMETER, title: Ultrasonic gas meter (battery powered) - block diagram + subsystems, url: 'https://www.ti.com/solution/water-meter'}
+  groups:
+  - id: power
+    label: DC/DC power supply (primary battery)
+    blocks: [buck_boost, pol_ldo, battery_monitor, battery_pack]
+    col: 0
+    row: 0
+  - id: metrology
+    label: Metrology (ultrasonic time of flight)
+    blocks: [ultrasonic_afe, amplifier, mcu, temperature_sensor]
+    col: 1
+    row: 0
+  - id: application
+    label: Applications (display, valve, user input)
+    blocks: [mcu, supervisor, touch_controller, motor_driver_brushed, rtc]
+    col: 2
+    row: 0
+  - id: wireless
+    label: Wireless communications
+    blocks: [wireless_soc, bt_fem, load_switch, voltage_translator, modem, nfc_frontend, tvs_esd]
+    col: 0
+    row: 1
+  - id: wired
+    label: Wired communications
+    blocks: [rs485_transceiver, digital_isolator, tvs_esd]
+    col: 1
+    row: 1
+  - id: anti_tamper
+    label: Anti-tamper
+    blocks: [position_sensor]
+    col: 2
+    row: 1
+  links:
+  - [metrology, application, '']
+  - [application, wireless, '']
+  - [application, wired, '']
+  - [anti_tamper, application, '']
+  questions:
+  - id: meter_type
+    question: Measurement principle
+    choices: [ultrasonic (time of flight), rotary / diaphragm (mechanical + sensor)]
+    source: TI-SOL-GASMETER variant list
+  - id: comms
+    question: AMR / AMI link
+    choices: [sub-1 GHz (wM-Bus / mesh), NB-IoT / LTE-M cellular, wired M-Bus, none]
+    source: TI-SOL-GASMETER 'Wireless communications', 'Wired communications'
+  - id: valve
+    question: Shut-off valve
+    choices: [motorized valve, none]
+    source: TI-SOL-GASMETER SVG 'Valve'
+  - id: battery
+    question: Battery life target
+    choices: [10 years, 15-20 years]
+    source: TI-SOL-GASMETER 'DC/DC power supply' (battery gauge)
+- name: Occupancy / people-counting sensor (mmWave radar or 3D ToF, PoE) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-OCCUPANCY'
+  sources:
+  - {doc: TI-SOL-OCCUPANCY, title: 'Occupancy / people-counting sensor (mmWave radar or 3D ToF, PoE) - block diagram + subsystems', url: 'https://www.ti.com/solution/occupancy-detection-people-tracking-people-counting'}
+  groups:
+  - id: poe
+    label: Power over Ethernet
+    blocks: [poe_pd, voltage_reference]
+    col: 0
+    row: 0
+  - id: power
+    label: Non-isolated DC/DC power supply
+    blocks: [efuse_hotswap, wide_vin_buck, pol_buck, pol_ldo, load_switch, pmic]
+    col: 1
+    row: 0
+  - id: afe
+    label: People counting analog front-end (mmWave or 3D ToF option)
+    blocks: [radar_transceiver, antenna, temperature_sensor, led_driver]
+    col: 2
+    row: 0
+  - id: motion
+    label: Motion detection (PIR)
+    blocks: [amplifier, adc]
+    col: 3
+    row: 0
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, soc]
+    col: 0
+    row: 1
+  - id: wired
+    label: Wired interface + protection
+    blocks: [ethernet_phy, tvs_esd]
+    col: 1
+    row: 1
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, wireless_soc]
+    col: 2
+    row: 1
+  - id: button
+    label: Input user interface + button protection
+    blocks: [tvs_esd]
+    col: 3
+    row: 1
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver]
+    col: 0
+    row: 2
+  links:
+  - [poe, power, Power over Ethernet option (or 12-24 VDC)]
+  - [afe, processing, '']
+  - [motion, processing, '']
+  - [button, processing, '']
+  - [processing, wired, '']
+  - [processing, wireless, '']
+  - [processing, output_ui, '']
+  questions:
+  - id: sensing
+    question: People-counting sensor
+    choices: [60 GHz mmWave radar, 3D time-of-flight, PIR only]
+    source: TI-SOL-OCCUPANCY SVG '3D TOF Option' / 'mmWave Option'
+  - id: power
+    question: Power input
+    choices: [PoE, 12-24 VDC wired]
+    source: TI-SOL-OCCUPANCY SVG
+  - id: link
+    question: Data link
+    choices: [Ethernet, Wi-Fi, sub-1 GHz / BLE]
+    source: TI-SOL-OCCUPANCY 'Wired interface', 'Wireless interface'
+- name: Land mobile radio (public safety handheld) (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-LMR'
+  sources:
+  - {doc: TI-SOL-LMR, title: Land mobile radio (public safety handheld) - block diagram + subsystems, url: 'https://www.ti.com/solution/land-mobile-radio'}
+  groups:
+  - id: rf_path
+    label: RF path (drawn outside the TI subsystems)
+    blocks: [antenna, antenna_switch, lna, rf_mixer, power_amplifier]
+    col: 0
+    row: 0
+  - id: rx
+    label: RF front-end receiver
+    blocks: [rf_gain_block, adc]
+    col: 1
+    row: 0
+  - id: clock
+    label: Clock & timing
+    blocks: [rf_synthesizer, clock_generator, clock_buffer, dac]
+    col: 2
+    row: 0
+  - id: sensing
+    label: Sensing
+    blocks: [temperature_sensor, amplifier, rf_mixer]
+    col: 3
+    row: 0
+  - id: diagnostics
+    label: Self diagnostics / monitoring (PA bias, power control)
+    blocks: [rf_pa_bias, adc, dac, mcu]
+    col: 0
+    row: 1
+  - id: input_protection
+    label: Input power protection (battery)
+    blocks: [efuse_hotswap]
+    col: 1
+    row: 1
+  - id: switching
+    label: Switching supply
+    blocks: [pre_regulator, pol_buck, pmic]
+    col: 2
+    row: 1
+  - id: low_noise
+    label: Low noise supply
+    blocks: [pol_ldo]
+    col: 3
+    row: 1
+  - id: monitoring
+    label: Voltage diagnostics & monitoring
+    blocks: [supervisor, voltage_reference, load_switch]
+    col: 0
+    row: 2
+  - id: processing
+    label: Digital processing
+    blocks: [soc, voltage_translator]
+    col: 1
+    row: 2
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash, termination_ldo]
+    col: 2
+    row: 2
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, ble_soc, gnss_lna]
+    col: 3
+    row: 2
+  - id: display
+    label: Display interface
+    blocks: [touch_controller, led_driver, display_driver]
+    col: 0
+    row: 3
+  - id: audio
+    label: Audio interface
+    blocks: [audio_codec, audio_amp]
+    col: 1
+    row: 3
+  - id: comms
+    label: Communication interface
+    blocks: [ethernet_phy, rs485_transceiver, redriver]
+    col: 2
+    row: 3
+  - id: io_protection
+    label: Signal input/output protection
+    blocks: [tvs_esd]
+    col: 3
+    row: 3
+  - id: keypad
+    label: Input user interface
+    blocks: [io_expander]
+    col: 0
+    row: 4
+  links:
+  - [rf_path, rx, LNA -> mixer]
+  - [rx, processing, to digital processing]
+  - [processing, clock, from digital processing]
+  - [clock, rf_path, LO to mixer; PLL to PA]
+  - [clock, rx, '']
+  - [sensing, diagnostics, '']
+  - [input_protection, switching, battery]
+  - [switching, rf_path, PA supply]
+  - [switching, low_noise, '']
+  - [low_noise, monitoring, '']
+  - [memory, processing, '']
+  - [wireless, processing, '']
+  - [processing, display, '']
+  - [processing, audio, '']
+  - [keypad, processing, '']
+  questions:
+  - id: standard
+    question: Air interface
+    choices: [P25, TETRA, DMR, analog FM]
+    source: TI-SOL-LMR (not drawn)
+  - id: receiver_arch
+    question: Receiver architecture
+    choices: [superheterodyne (mixer + IF ADC), direct RF sampling]
+    source: TI-SOL-LMR SVG 'RF front-end receiver'
+  - id: bands
+    question: Bands
+    choices: [VHF, UHF, 700/800 MHz, multiband]
+    source: TI-SOL-LMR (not drawn)
+  - id: connectivity
+    question: Secondary radios
+    choices: [Bluetooth, Wi-Fi, GPS, LTE]
+    source: TI-SOL-LMR 'Wireless interface'
+- name: Satellite communications payload (RF-sampling transponder with beamforming) (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-SATPAYLOAD'
+  sources:
+  - {doc: TI-SOL-SATPAYLOAD, title: Satellite communications payload (RF-sampling transponder with beamforming) - block diagram + subsystems, url: 'https://www.ti.com/solution/communications-payload'}
+  groups:
+  - id: antenna_path
+    label: Antenna, T/R switch, LNA, PA, power detector, beamformers (drawn outside the TI subsystems)
+    blocks: [antenna, antenna_switch, lna, power_amplifier, schottky_diode, beamformer_ic]
+    col: 0
+    row: 0
+  - id: rx_chain
+    label: Receiver signal chain
+    blocks: [filter_saw_baw, rf_mixer, rf_gain_block, adc]
+    col: 1
+    row: 0
+  - id: tx_chain
+    label: Transmitter signal chain
+    blocks: [dac, rf_gain_block, rf_mixer, filter_saw_baw]
+    col: 2
+    row: 0
+  - id: pa_bias
+    label: PA bias
+    blocks: [rf_pa_bias]
+    col: 3
+    row: 0
+  - id: clocking
+    label: 'Clocking: LO, doubler, clock synthesizer, buffer / jitter cleaner'
+    blocks: [rf_synthesizer, frequency_multiplier, jitter_attenuator, crystal_oscillator]
+    col: 0
+    row: 1
+  - id: fpga
+    label: FPGA + memory + converter PoL
+    blocks: [soc, termination_ldo, pol_buck, pol_ldo, sequencer]
+    col: 1
+    row: 1
+  - id: interface
+    label: Interface
+    blocks: [can_transceiver, rs485_transceiver, serdes, digital_isolator, ethernet_phy]
+    col: 2
+    row: 1
+  - id: power
+    label: Power management
+    blocks: [acdc_controller, half_bridge_driver, pol_buck, load_switch, pol_ldo]
+    col: 3
+    row: 1
+  - id: control
+    label: Control & monitoring
+    blocks: [temperature_sensor, amplifier, voltage_reference, adc, dac, voltage_translator, mcu]
+    col: 0
+    row: 2
+  links:
+  - [antenna_path, rx_chain, LNA -> beamformer -> receiver]
+  - [rx_chain, fpga, RF ADC]
+  - [fpga, tx_chain, RF DAC]
+  - [tx_chain, antenna_path, beamformer -> PA]
+  - [clocking, rx_chain, LO / sample clock]
+  - [clocking, tx_chain, LO / sample clock]
+  - [clocking, fpga, '']
+  - [pa_bias, antenna_path, '']
+  - [interface, fpga, '']
+  - [control, fpga, '']
+  questions:
+  - id: architecture
+    question: Payload architecture
+    choices: [bent-pipe (analog), regenerative / digital (RF sampling + FPGA)]
+    source: TI-SOL-SATPAYLOAD SVG
+  - id: radiation
+    question: Radiation grade
+    choices: [space-enhanced plastic (-SEP), QML / rad-hard (-SP)]
+    source: TI-SOL-SATPAYLOAD part list
+  - id: antenna
+    question: Antenna
+    choices: [phased array with beamformers, reflector / single feed]
+    source: TI-SOL-SATPAYLOAD SVG 'Beam former'
+  - id: frequency
+    question: Mixer / direct sampling
+    choices: [IF with mixers, direct RF sampling]
+    source: TI-SOL-SATPAYLOAD SVG (mixer + RF ADC/DAC drawn)
+- name: Smart asset tracker (GNSS + cellular + BLE / Wi-Fi) (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-ASSETTRACKER'
+  sources:
+  - {doc: TI-SOL-ASSETTRACKER, title: Smart asset tracker (GNSS + cellular + BLE / Wi-Fi) - block diagram + subsystems, url: 'https://www.ti.com/solution/smart-asset-tracker'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks: [load_switch, tvs_esd]
+    col: 0
+    row: 0
+  - id: energy
+    label: Energy storage
+    blocks: [wireless_power, battery_charger, battery_monitor, battery_pack]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_ldo, supervisor, pol_buck, buck_boost, pmic]
+    col: 2
+    row: 0
+  - id: wireless
+    label: Wireless interface
+    blocks: [antenna, wifi_soc, ble_soc, nfc_frontend, modem, gnss_lna]
+    col: 0
+    row: 1
+  - id: sensing
+    label: Sensing
+    blocks: [temperature_sensor, env_sensor]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 2
+    row: 1
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, voltage_translator]
+    col: 0
+    row: 2
+  links:
+  - [input_protection, energy, '']
+  - [energy, dcdc, '']
+  - [dcdc, processing, '']
+  - [processing, wireless, '']
+  - [sensing, processing, '']
+  - [memory, processing, '']
+  questions:
+  - id: wan
+    question: Wide-area link
+    choices: [LTE-M / NB-IoT, 2G GPRS, LoRa / sub-1 GHz, BLE-only (phone gateway)]
+    source: TI-SOL-ASSETTRACKER SVG 'GPRS module'
+  - id: positioning
+    question: Positioning
+    choices: [GNSS, Wi-Fi scanning, BLE beacons, cell ID]
+    source: TI-SOL-ASSETTRACKER SVG 'GPS module', 'Wi-Fi'
+  - id: charging
+    question: Charging
+    choices: [USB wired, Qi wireless, primary (non-rechargeable) battery]
+    source: TI-SOL-ASSETTRACKER 'Energy storage'
+- name: Smartwatch / wearable (BLE + LTE + GPS, PPG / ECG sensing) (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-SMARTWATCH'
+  sources:
+  - {doc: TI-SOL-SMARTWATCH, title: 'Smartwatch / wearable (BLE + LTE + GPS, PPG / ECG sensing) - block diagram + subsystems', url: 'https://www.ti.com/solution/smartwatch'}
+  groups:
+  - id: charging
+    label: Battery charging
+    blocks: [load_switch, wireless_power, battery_charger, battery_monitor, battery_pack]
+    col: 0
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_ldo, pol_buck, buck_boost, load_switch, supervisor]
+    col: 1
+    row: 0
+  - id: processing
+    label: Digital processing + memory
+    blocks: [soc, ddr_flash]
+    col: 2
+    row: 0
+  - id: wireless
+    label: Wireless interface
+    blocks: [antenna, ble_soc, nfc_frontend, modem, gnss_lna]
+    col: 0
+    row: 1
+  - id: sensing
+    label: Sensing
+    blocks: [ppg_afe, ecg_afe, temperature_sensor, env_sensor, touch_controller, hall_switch]
+    col: 1
+    row: 1
+  - id: audio
+    label: Audio input / output
+    blocks: [audio_codec, audio_amp]
+    col: 2
+    row: 1
+  - id: output_ui
+    label: Output user interface
+    blocks: [display_driver, led_driver, haptics_driver]
+    col: 0
+    row: 2
+  links:
+  - [charging, dcdc, '']
+  - [dcdc, processing, '']
+  - [sensing, processing, '']
+  - [processing, wireless, '']
+  - [processing, audio, '']
+  - [processing, output_ui, '']
+  questions:
+  - id: display
+    question: Display
+    choices: [LCD + LED backlight, AMOLED]
+    source: TI-SOL-SMARTWATCH SVG 'LCD display' / 'AMOLED display'
+  - id: cellular
+    question: Cellular
+    choices: [none (BLE companion), LTE]
+    source: TI-SOL-SMARTWATCH 'Wireless interface'
+  - id: biosensing
+    question: Biosensing
+    choices: [PPG heart rate, PPG + SpO2, PPG + ECG]
+    source: TI-SOL-SMARTWATCH 'Sensing'
+  - id: charging
+    question: Charging
+    choices: [wired pogo / USB, wireless (Qi / proprietary)]
+    source: TI-SOL-SMARTWATCH 'Battery charging'
+- name: True wireless (TWS) earbuds + charging case (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-HEARABLES'
+  sources:
+  - {doc: TI-SOL-HEARABLES, title: True wireless (TWS) earbuds + charging case - block diagram + subsystems, url: 'https://www.ti.com/solution/headsets-headphones-earbuds'}
+  groups:
+  - id: bud_esd
+    label: Earbuds ESD protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 0
+  - id: bud_energy
+    label: Earbuds energy storage
+    blocks: [battery_charger, temperature_sensor, battery_pack]
+    col: 1
+    row: 0
+  - id: bud_power
+    label: Earbuds DC/DC power supply
+    blocks: [pol_ldo, pol_buck]
+    col: 2
+    row: 0
+  - id: bud_touch
+    label: Capacitive interface
+    blocks: [touch_controller]
+    col: 3
+    row: 0
+  - id: bud_processing
+    label: Earbuds digital processing
+    blocks: [wireless_audio_soc, voltage_translator]
+    col: 0
+    row: 1
+  - id: bud_wireless
+    label: Wireless interface
+    blocks: [wireless_audio_soc, ble_soc]
+    col: 1
+    row: 1
+  - id: bud_audio
+    label: Audio interface
+    blocks: [audio_codec]
+    col: 2
+    row: 1
+  - id: case_input
+    label: Charging case input power protection
+    blocks: [load_switch, usb_pd_controller]
+    col: 3
+    row: 1
+  - id: case_esd
+    label: Charging case ESD protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 2
+  - id: case_energy
+    label: Charging case energy storage
+    blocks: [battery_charger, battery_monitor, battery_protector, temperature_sensor]
+    col: 1
+    row: 2
+  - id: case_power
+    label: Charging case DC/DC power supply
+    blocks: [pol_ldo, pol_buck, pre_regulator, load_switch]
+    col: 2
+    row: 2
+  - id: case_processing
+    label: Charging case digital processing
+    blocks: [mcu, voltage_translator]
+    col: 3
+    row: 2
+  - id: case_sensing
+    label: Sensing (lid / bud detect)
+    blocks: [amplifier, hall_switch]
+    col: 0
+    row: 3
+  - id: case_wired
+    label: Wired interface
+    blocks:
+    - {fn: external_block, label: Wired interface}
+    col: 1
+    row: 3
+  links:
+  - [case_input, case_energy, USB]
+  - [case_energy, case_power, '']
+  - [case_power, bud_energy, charging contacts]
+  - [case_sensing, case_processing, '']
+  - [bud_energy, bud_power, '']
+  - [bud_power, bud_processing, '']
+  - [bud_touch, bud_processing, '']
+  - [bud_processing, bud_wireless, '']
+  - [bud_processing, bud_audio, '']
+  questions:
+  - id: anc
+    question: Active noise cancellation
+    choices: [none, feed-forward, hybrid ANC]
+    source: TI-SOL-HEARABLES (variant list 'Hearables'; not drawn)
+  - id: controls
+    question: User controls
+    choices: [capacitive touch, force / pressure, buttons]
+    source: TI-SOL-HEARABLES 'Capacitive interface'
+  - id: case_charging
+    question: Case charging
+    choices: [USB-C wired, USB-C + Qi wireless]
+    source: TI-SOL-HEARABLES 'Input power protection'
+  - id: lid_detect
+    question: Lid / in-case detection
+    choices: [Hall sensor, none]
+    source: TI-SOL-HEARABLES 'Sensing'
+- name: Multimedia tablet (cellular + Wi-Fi, USB-C) (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-TABLET'
+  sources:
+  - {doc: TI-SOL-TABLET, title: 'Multimedia tablet (cellular + Wi-Fi, USB-C) - block diagram + subsystems', url: 'https://www.ti.com/solution/tablet-multimedia'}
+  groups:
+  - id: input_protection
+    label: Input power protection
+    blocks: [efuse_hotswap, tvs_esd]
+    col: 0
+    row: 0
+  - id: battery
+    label: Battery and charger
+    blocks: [battery_charger, battery_protector, battery_monitor]
+    col: 1
+    row: 0
+  - id: pmic
+    label: Power management
+    blocks: [pmic, multiphase]
+    col: 2
+    row: 0
+  - id: dcdc
+    label: DC/DC power
+    blocks: [pol_buck, pre_regulator, pol_ldo, load_switch]
+    col: 3
+    row: 0
+  - id: io_protection
+    label: I/O protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 1
+  - id: io_connector
+    label: I/O connector (USB-C)
+    blocks: [usb_pd_controller, redriver]
+    col: 1
+    row: 1
+  - id: logic
+    label: Logic / control
+    blocks: [io_expander]
+    col: 2
+    row: 1
+  - id: processor
+    label: Platform and processor
+    blocks: [soc, modem]
+    col: 3
+    row: 1
+  - id: rf_front_end
+    label: RF front end (cellular)
+    blocks: [pa_module, diversity_rx_module, antenna_switch, filter_saw_baw, diplexer, antenna_tuner, antenna]
+    col: 0
+    row: 2
+  - id: wireless
+    label: Wireless connectivity
+    blocks: [wifi_soc, wifi_fem, nfc_frontend, gnss_lna, antenna]
+    col: 1
+    row: 2
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller]
+    col: 2
+    row: 2
+  - id: sensors
+    label: Sensors
+    blocks: [temperature_sensor, env_sensor, amplifier, hall_switch]
+    col: 3
+    row: 2
+  - id: camera
+    label: Camera
+    blocks: [led_driver, motor_driver_brushed, camera_radar]
+    col: 0
+    row: 3
+  - id: display
+    label: Display
+    blocks: [env_sensor, led_driver, display_driver, serdes]
+    col: 1
+    row: 3
+  - id: audio
+    label: Acoustic / audio / haptics
+    blocks: [audio_codec, audio_amp, haptics_driver]
+    col: 2
+    row: 3
+  links:
+  - [input_protection, battery, '']
+  - [battery, pmic, '']
+  - [pmic, dcdc, '']
+  - [processor, io_connector, '']
+  - [io_connector, io_protection, USB-C]
+  - [processor, logic, '']
+  - [processor, rf_front_end, '']
+  - [processor, wireless, '']
+  - [processor, input_ui, '']
+  - [processor, sensors, '']
+  - [processor, camera, '']
+  - [processor, display, '']
+  - [processor, audio, '']
+  questions:
+  - id: cellular
+    question: Cellular
+    choices: [Wi-Fi only, LTE, 5G sub-6]
+    source: TI-SOL-TABLET SVG 'Modem', 'RF front end'
+  - id: wifi
+    question: Wi-Fi generation
+    choices: [Wi-Fi 5, Wi-Fi 6/6E, Wi-Fi 7]
+    source: TI-SOL-TABLET 'Wireless connectivity'
+  - id: charging
+    question: USB-C charging power
+    choices: [15 W, 20-45 W, 65 W+]
+    source: TI-SOL-TABLET 'I/O connector', 'Battery and charger'
+  - id: speakers
+    question: Speakers
+    choices: ['2', '4']
+    source: TI-SOL-TABLET SVG (Speaker 1, Speaker 2)
+- name: Notebook PC (power, USB-C charging, embedded controller) (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-NOTEBOOK'
+  sources:
+  - {doc: TI-SOL-NOTEBOOK, title: 'Notebook PC (power, USB-C charging, embedded controller) - block diagram + subsystems', url: 'https://www.ti.com/solution/standard-notebook-pc'}
+  groups:
+  - id: usb
+    label: 'USB A and C: power path, PD / USB Type-C and charging controller, mux and signal conditioning'
+    blocks: [usb_pd_controller, reverse_polarity, redriver]
+    col: 0
+    row: 0
+  - id: interface_protection
+    label: Interface protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 0
+  - id: battery
+    label: Battery management
+    blocks: [battery_charger, battery_monitor, battery_protector, power_fets]
+    col: 2
+    row: 0
+  - id: system_power
+    label: System power management
+    blocks: [pol_buck, pre_regulator, buck_boost, multiphase, pmic, load_switch, termination_ldo, pol_ldo]
+    col: 3
+    row: 0
+  - id: soc
+    label: PC system on chip
+    blocks: [soc]
+    col: 0
+    row: 1
+  - id: ec
+    label: Embedded controller
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: power_monitor
+    label: Power mux, current monitor, power monitoring
+    blocks: [load_switch, amplifier, supervisor]
+    col: 2
+    row: 1
+  - id: comms
+    label: Ethernet + communications (Wi-Fi, BLE)
+    blocks: [ethernet_phy, wifi_soc, ble_soc]
+    col: 3
+    row: 1
+  - id: video_pcie
+    label: Video, interface switch, PCIe interface
+    blocks: [redriver]
+    col: 0
+    row: 2
+  - id: audio
+    label: Audio
+    blocks: [audio_amp, audio_codec]
+    col: 1
+    row: 2
+  - id: display
+    label: Backlight driver + LED driver (RGB and illumination)
+    blocks: [led_driver, display_driver]
+    col: 2
+    row: 2
+  - id: analog
+    label: Analog switches, data converter, comparator, op amps, voltage reference, logic
+    blocks: [adc, amplifier, voltage_reference]
+    col: 3
+    row: 2
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_generator, clock_buffer]
+    col: 0
+    row: 3
+  - id: fan
+    label: Fan control
+    blocks: [three_phase_gate_driver]
+    col: 1
+    row: 3
+  - id: sensors
+    label: Sensors + actuator
+    blocks: [temperature_sensor, env_sensor, radar_transceiver, hall_switch, haptics_driver]
+    col: 2
+    row: 3
+  links:
+  - [usb, battery, power path]
+  - [battery, system_power, '']
+  - [usb, soc, '']
+  - [comms, soc, '']
+  - [video_pcie, soc, '']
+  - [audio, soc, '']
+  - [soc, display, '']
+  - [ec, soc, '']
+  - [ec, fan, '']
+  - [sensors, soc, sensor hub]
+  questions:
+  - id: charging
+    question: Charging input
+    choices: [barrel jack, USB-C PD (65-100 W), USB-C PD EPR (140 W+)]
+    source: TI-SOL-NOTEBOOK 'PD, USB Type-C and charging controller'
+  - id: cells
+    question: Battery cells in series
+    choices: [2S, 3S, 4S]
+    source: TI-SOL-NOTEBOOK 'Battery management'
+  - id: display
+    question: Display
+    choices: [LCD + LED backlight, OLED]
+    source: TI-SOL-NOTEBOOK 'Backlight driver'
+  - id: presence
+    question: User presence detection
+    choices: [none, mmWave radar, camera / ToF]
+    source: TI-SOL-NOTEBOOK SVG 'mmWave'
+- name: Smart speaker (voice assistant, Wi-Fi / BT / Thread) (TI)
+  category: Consumer & personal electronics
+  note: 'From TI public material: TI-SOL-SMARTSPEAKER'
+  sources:
+  - {doc: TI-SOL-SMARTSPEAKER, title: 'Smart speaker (voice assistant, Wi-Fi / BT / Thread) - block diagram + subsystems', url: 'https://www.ti.com/solution/smart-speaker'}
+  groups:
+  - id: acdc
+    label: Isolated AC/DC power supply
+    blocks: [acdc_controller]
+    col: 0
+    row: 0
+  - id: input_protection
+    label: Input power protection
+    blocks: [usb_pd_controller, efuse_hotswap, amplifier]
+    col: 1
+    row: 0
+  - id: energy
+    label: Energy storage (portable)
+    blocks: [battery_charger, battery_monitor, battery_pack]
+    col: 2
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_buck, pol_ldo, load_switch, supervisor, pmic]
+    col: 3
+    row: 0
+  - id: led
+    label: LED indicator
+    blocks: [led_driver]
+    col: 0
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, haptics_driver]
+    col: 1
+    row: 1
+  - id: voice
+    label: Voice recognition (microphone array)
+    blocks: [audio_codec]
+    col: 2
+    row: 1
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, wireless_soc, wifi_fem]
+    col: 3
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 0
+    row: 2
+  - id: processing
+    label: Digital processing
+    blocks: [soc, crystal_oscillator]
+    col: 1
+    row: 2
+  - id: audio_out
+    label: Audio output
+    blocks: [pre_regulator, temperature_sensor, audio_amp]
+    col: 2
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [ethernet_phy]
+    col: 3
+    row: 2
+  - id: logic
+    label: Logic & control
+    blocks: [voltage_translator]
+    col: 0
+    row: 3
+  links:
+  - [acdc, input_protection, mains]
+  - [input_protection, energy, '']
+  - [energy, dcdc, '']
+  - [wireless, processing, '']
+  - [wireless, memory, '']
+  - [memory, processing, '']
+  - [input_ui, processing, '']
+  - [led, input_ui, '']
+  - [voice, processing, '']
+  - [processing, audio_out, '']
+  - [processing, wired, '']
+  - [processing, logic, '']
+  questions:
+  - id: power
+    question: Power source
+    choices: [mains (AC/DC), USB-C, battery portable]
+    source: TI-SOL-SMARTSPEAKER SVG
+  - id: mics
+    question: Microphone array
+    choices: [2 mics, 4 mics, 6+ mics]
+    source: TI-SOL-SMARTSPEAKER 'Voice recognition'
+  - id: smart_home
+    question: Smart-home radio
+    choices: [none, Zigbee, Thread / Matter]
+    source: TI-SOL-SMARTSPEAKER SVG 'Bluetooth Zigbee Thread'
+  - id: amp
+    question: Audio amplifier
+    choices: [single class-D, stereo / multi-channel class-D with boost]
+    source: TI-SOL-SMARTSPEAKER 'Audio output'
+- name: Medical ultrasound scanner (cart-based standard system) (TI)
+  category: Medical
+  note: 'From TI public material: TI-SOL-ULTRASOUND'
+  sources:
+  - {doc: TI-SOL-ULTRASOUND, title: Medical ultrasound scanner (cart-based standard system) - block diagram + subsystems, url: 'https://www.ti.com/solution/ultrasound-scanner'}
+  groups:
+  - id: acdc
+    label: Isolated AC/DC power supply (adapter)
+    blocks: [acdc_controller]
+    col: 0
+    row: 0
+  - id: input_protection
+    label: Input power protection
+    blocks: [efuse_hotswap, reverse_polarity]
+    col: 1
+    row: 0
+  - id: energy
+    label: Energy storage
+    blocks: [battery_charger, battery_monitor]
+    col: 2
+    row: 0
+  - id: tx_power
+    label: Transmit power supply (HV)
+    blocks: [pre_regulator, pol_ldo, dac, voltage_reference]
+    col: 3
+    row: 0
+  - id: pol
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_buck, pmic, pol_ldo, sequencer]
+    col: 0
+    row: 1
+  - id: protection
+    label: Over-current & over-temperature protection (HV rail)
+    blocks: [amplifier, adc, temperature_sensor]
+    col: 1
+    row: 1
+  - id: tx_chain
+    label: Transmit signal chain
+    blocks: [hv_pulser]
+    col: 2
+    row: 1
+  - id: rx_chain
+    label: Receive signal chain / AFE
+    blocks: [ultrasound_afe, adc, amplifier]
+    col: 3
+    row: 1
+  - id: probe
+    label: Authentication (probe ID) + probe isolation
+    blocks: [secure_element, digital_isolator]
+    col: 0
+    row: 2
+  - id: beamforming
+    label: Beamforming
+    blocks: [soc, serdes]
+    col: 1
+    row: 2
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_generator, clock_buffer, jitter_attenuator]
+    col: 2
+    row: 2
+  - id: processing
+    label: Digital processing
+    blocks: [soc]
+    col: 3
+    row: 2
+  - id: memory
+    label: Memory
+    blocks: [termination_ldo, ddr_flash]
+    col: 0
+    row: 3
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, nfc_frontend, ble_soc]
+    col: 1
+    row: 3
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, haptics_driver, tvs_esd]
+    col: 2
+    row: 3
+  - id: output_ui
+    label: Output user interface
+    blocks: [audio_codec, audio_amp, serdes, led_driver, tvs_esd]
+    col: 3
+    row: 3
+  - id: isolation
+    label: Signal isolation
+    blocks: [digital_isolator]
+    col: 0
+    row: 4
+  - id: wired
+    label: Wired interface
+    blocks: [redriver, rs485_transceiver, ethernet_phy, tvs_esd]
+    col: 1
+    row: 4
+  - id: transducer
+    label: Transducer / CW pencil probe
+    blocks: [external_block]
+    col: 2
+    row: 4
+  links:
+  - [acdc, input_protection, 12 V / 19 V / 24 V]
+  - [input_protection, tx_power, '']
+  - [input_protection, energy, '']
+  - [input_protection, pol, '']
+  - [tx_power, protection, HV power]
+  - [tx_power, tx_chain, HV power]
+  - [tx_chain, transducer, '']
+  - [transducer, rx_chain, via T/R switch]
+  - [probe, transducer, '']
+  - [rx_chain, beamforming, '']
+  - [clocking, rx_chain, '']
+  - [beamforming, processing, '']
+  - [processing, probe, '']
+  - [processing, wireless, '']
+  - [input_ui, processing, '']
+  - [processing, output_ui, '']
+  - [processing, isolation, '']
+  - [isolation, wired, '']
+  - [memory, processing, DDR memory]
+  questions:
+  - id: class
+    question: System class
+    choices: [premium cart, standard cart, portable / laptop, handheld smart probe]
+    source: TI-SOL-ULTRASOUND variant list
+  - id: channels
+    question: Channel count
+    choices: ['32', '64', '128', 192+]
+    source: TI-SOL-ULTRASOUND 'Receive signal chain'
+  - id: pulser
+    question: Transmit waveform
+    choices: [3-level / 5-level pulser, linear transmit (DAC + amplifier)]
+    source: TI-SOL-ULTRASOUND 'Transmit signal chain' (OPA455 + DAC37J82 listed)
+  - id: cw_doppler
+    question: CW Doppler (pencil probe)
+    choices: ['yes', 'no']
+    source: TI-SOL-ULTRASOUND SVG 'CW Pencil Probe', 'CW Mixer'
+- name: Multiparameter patient monitor (ECG, SpO2, NIBP, IBP, CO2, temperature) (TI)
+  category: Medical
+  note: 'From TI public material: TI-SOL-PATIENTMON'
+  sources:
+  - {doc: TI-SOL-PATIENTMON, title: 'Multiparameter patient monitor (ECG, SpO2, NIBP, IBP, CO2, temperature) - block diagram + subsystems', url: 'https://www.ti.com/solution/multiparameter-patient-monitor'}
+  groups:
+  - id: acdc
+    label: Isolated AC/DC power supply
+    blocks: [acdc_controller, wide_vin_buck, voltage_reference]
+    col: 0
+    row: 0
+  - id: battery
+    label: Battery management
+    blocks: [battery_charger, battery_monitor, secure_element]
+    col: 1
+    row: 0
+  - id: pol
+    label: Non-isolated DC/DC power supply + input power protection
+    blocks: [supervisor, pol_ldo, buck_boost, pmic, efuse_hotswap]
+    col: 2
+    row: 0
+  - id: auth
+    label: Module authentication and calibration
+    blocks: [secure_element, adc]
+    col: 3
+    row: 0
+  - id: clocking_memory
+    label: Clocking + memory
+    blocks: [clock_generator, clock_buffer, rtc, ddr_flash, termination_ldo]
+    col: 0
+    row: 1
+  - id: ecg_afe
+    label: ECG analog front end + defibrillator protection
+    blocks: [ecg_afe, tvs_esd, amplifier]
+    col: 1
+    row: 1
+  - id: spo2_afe
+    label: SpO2 analog front end
+    blocks: [ppg_afe, led_driver, tvs_esd]
+    col: 2
+    row: 1
+  - id: ibp_afe
+    label: IBP analog front end (invasive blood pressure)
+    blocks: [adc, amplifier, dac, tvs_esd]
+    col: 3
+    row: 1
+  - id: co2_afe
+    label: CO2 capnography analog front end
+    blocks: [adc, amplifier, led_driver]
+    col: 0
+    row: 2
+  - id: nibp
+    label: NIBP analog front end + power stage (pump, valve)
+    blocks: [adc, amplifier, motor_driver_brushed, dac]
+    col: 1
+    row: 2
+  - id: temp_afe
+    label: Temperature analog front end
+    blocks: [adc, temperature_sensor]
+    col: 2
+    row: 2
+  - id: isolation
+    label: Module isolation
+    blocks: [digital_isolator, isolated_dcdc]
+    col: 3
+    row: 2
+  - id: processing
+    label: Digital processing
+    blocks: [soc]
+    col: 0
+    row: 3
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, io_expander, haptics_driver]
+    col: 1
+    row: 3
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, display_driver, serdes, audio_amp]
+    col: 2
+    row: 3
+  - id: diagnostics
+    label: Self diagnostics / monitoring
+    blocks: [amplifier, temperature_sensor]
+    col: 3
+    row: 3
+  - id: wireless
+    label: Wireless interface
+    blocks: [ble_soc, wireless_soc, wifi_soc, nfc_frontend, bt_fem]
+    col: 0
+    row: 4
+  - id: wired
+    label: Wired interface
+    blocks: [load_switch, tvs_esd]
+    col: 1
+    row: 4
+  links:
+  - [acdc, battery, '']
+  - [battery, pol, battery]
+  - [ecg_afe, isolation, '']
+  - [spo2_afe, isolation, '']
+  - [ibp_afe, isolation, '']
+  - [co2_afe, isolation, '']
+  - [temp_afe, isolation, '']
+  - [nibp, isolation, '']
+  - [isolation, processing, '']
+  - [input_ui, processing, '']
+  - [processing, output_ui, '']
+  - [processing, wireless, '']
+  - [processing, wired, from the digital isolator]
+  questions:
+  - id: parameters
+    question: Parameters measured
+    choices: [ECG + SpO2 + NIBP (basic), + temperature, + IBP + CO2 (high acuity)]
+    source: TI-SOL-PATIENTMON subsystem list
+  - id: ecg_leads
+    question: ECG leads
+    choices: [3-lead, 5-lead, 12-lead]
+    source: TI-SOL-PATIENTMON 'Analog front end (ECG)'
+  - id: isolation
+    question: Patient isolation
+    choices: [per-module isolation, single isolated front-end board]
+    source: TI-SOL-PATIENTMON SVG 'Module isolation'
+  - id: wireless
+    question: Wireless (telemetry)
+    choices: [none, Wi-Fi, BLE, sub-1 GHz / WMTS]
+    source: TI-SOL-PATIENTMON 'Wireless interface'
+- name: Pulse oximeter (SpO2, fingertip or bedside) (TI)
+  category: Medical
+  note: 'From TI public material: TI-SOL-PULSEOX'
+  sources:
+  - {doc: TI-SOL-PULSEOX, title: 'Pulse oximeter (SpO2, fingertip or bedside) - block diagram + subsystems', url: 'https://www.ti.com/solution/pulse-oximeter'}
+  groups:
+  - id: adapter
+    label: AC/DC adapter
+    blocks: [acdc_controller]
+    col: 0
+    row: 0
+  - id: battery
+    label: Battery management
+    blocks: [battery_charger, battery_monitor, battery_protector]
+    col: 1
+    row: 0
+  - id: lv_power
+    label: Low voltage power supply
+    blocks: [pol_buck, pre_regulator, buck_boost, pol_ldo, supervisor, load_switch]
+    col: 2
+    row: 0
+  - id: auth
+    label: Authentication (sensor ID)
+    blocks: [secure_element]
+    col: 3
+    row: 0
+  - id: line_protection
+    label: Line protection
+    blocks: [tvs_esd]
+    col: 0
+    row: 1
+  - id: sensor_afe
+    label: Sensor front end (photodiode, red / IR LEDs)
+    blocks: [ppg_afe, led_driver, adc, dac, temperature_sensor]
+    col: 1
+    row: 1
+  - id: processing
+    label: Digital processing
+    blocks: [mcu]
+    col: 2
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [clock_buffer, rtc, clock_generator, crystal_oscillator]
+    col: 3
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, haptics_driver, io_expander]
+    col: 0
+    row: 2
+  - id: output_ui
+    label: Output user interface
+    blocks: [haptics_driver, audio_amp, led_driver, display_driver]
+    col: 1
+    row: 2
+  - id: wired
+    label: Wired interface
+    blocks: [ethernet_phy, load_switch, tvs_esd]
+    col: 2
+    row: 2
+  links:
+  - [adapter, battery, '']
+  - [battery, lv_power, battery]
+  - [line_protection, sensor_afe, photodiode]
+  - [sensor_afe, line_protection, red / IR LED drive]
+  - [sensor_afe, processing, '']
+  - [input_ui, processing, '']
+  - [processing, output_ui, '']
+  - [processing, wired, '']
+  questions:
+  - id: form
+    question: Form factor
+    choices: [fingertip (battery), handheld, bedside (AC + battery)]
+    source: TI-SOL-PULSEOX SVG
+  - id: afe
+    question: Front end
+    choices: [integrated optical AFE, discrete TIA + ADC + LED driver]
+    source: TI-SOL-PULSEOX 'Sensor front end'
+  - id: connectivity
+    question: Connectivity
+    choices: [none, USB, BLE, Ethernet]
+    source: TI-SOL-PULSEOX 'Wired interface'
+- name: Smart thermostat (HVAC, 24 V AC powered) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-THERMOSTAT'
+  sources:
+  - {doc: TI-SOL-THERMOSTAT, title: 'Smart thermostat (HVAC, 24 V AC powered) - block diagram + subsystems', url: 'https://www.ti.com/solution/thermostat'}
+  groups:
+  - id: acdc
+    label: Non-isolated AC/DC power supply (24 V AC)
+    blocks: [efuse_hotswap, wide_vin_buck, acdc_controller]
+    col: 0
+    row: 0
+  - id: energy
+    label: Energy storage (USB, backup battery)
+    blocks: [reverse_polarity, battery_charger, battery_monitor]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_buck, pol_ldo, pmic]
+    col: 2
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [clock_generator, rtc, crystal_oscillator]
+    col: 3
+    row: 0
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, soc, io_expander]
+    col: 0
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [termination_ldo, voltage_translator]
+    col: 1
+    row: 1
+  - id: input_ui
+    label: Input user interface
+    blocks: [touch_controller, haptics_driver]
+    col: 2
+    row: 1
+  - id: temp
+    label: Temperature sensor
+    blocks: [temperature_sensor, env_sensor, adc]
+    col: 3
+    row: 1
+  - id: proximity
+    label: Proximity sensor (PIR)
+    blocks: [amplifier, adc]
+    col: 0
+    row: 2
+  - id: presence
+    label: Presence detection
+    blocks: [radar_transceiver, antenna]
+    col: 1
+    row: 2
+  - id: als
+    label: Ambient light sensor
+    blocks: [env_sensor]
+    col: 2
+    row: 2
+  - id: audio
+    label: Audio interface
+    blocks: [audio_codec, audio_amp]
+    col: 3
+    row: 2
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [supervisor, amplifier, adc, temperature_sensor]
+    col: 0
+    row: 3
+  - id: isolation
+    label: Signal isolation
+    blocks: [optocoupler, digital_isolator]
+    col: 1
+    row: 3
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver]
+    col: 2
+    row: 3
+  - id: wired
+    label: Wired interface + protection
+    blocks: [rs485_transceiver, ethernet_phy, tvs_esd]
+    col: 3
+    row: 3
+  - id: relays
+    label: Relay system (to HVAC wires)
+    blocks: [isolated_switch_driver, relay_driver]
+    col: 0
+    row: 4
+  - id: wireless
+    label: Wireless interface
+    blocks: [wifi_soc, wireless_soc]
+    col: 1
+    row: 4
+  links:
+  - [acdc, dcdc, 24 V AC]
+  - [energy, dcdc, USB / backup battery]
+  - [dcdc, processing, point of load]
+  - [clocking, processing, '']
+  - [input_ui, processing, '']
+  - [temp, processing, '']
+  - [proximity, processing, '']
+  - [presence, processing, '']
+  - [als, processing, '']
+  - [audio, processing, '']
+  - [processing, output_ui, '']
+  - [processing, wired, '']
+  - [processing, relays, HVAC wire system]
+  - [processing, wireless, '']
+  questions:
+  - id: power
+    question: Power source
+    choices: [24 V AC C-wire, battery only, power stealing]
+    source: TI-SOL-THERMOSTAT SVG '24V AC', 'Backup battery'
+  - id: relay
+    question: HVAC switching
+    choices: [mechanical relays, solid-state relays (SSR FET)]
+    source: TI-SOL-THERMOSTAT 'Relay system'
+  - id: radio
+    question: Radio
+    choices: [Wi-Fi, Wi-Fi + Thread / Zigbee, sub-1 GHz]
+    source: TI-SOL-THERMOSTAT 'Wireless interface'
+  - id: occupancy
+    question: Occupancy sensing
+    choices: [none, PIR, mmWave radar]
+    source: TI-SOL-THERMOSTAT 'Proximity sensor', 'Presence detection'
+  - id: voice
+    question: Voice assistant
+    choices: ['no', yes (mic + speaker)]
+    source: TI-SOL-THERMOSTAT 'Audio interface'
+- name: Video doorbell (battery powered, Wi-Fi) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-DOORBELL'
+  sources:
+  - {doc: TI-SOL-DOORBELL, title: 'Video doorbell (battery powered, Wi-Fi) - block diagram + subsystems', url: 'https://www.ti.com/solution/video-doorbell'}
+  groups:
+  - id: input_power
+    label: Input power supply (AC/DC adapter, solar panel)
+    blocks: [wide_vin_buck, reverse_polarity, tvs_esd]
+    col: 0
+    row: 0
+  - id: usb_protection
+    label: USB supply protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 0
+  - id: energy
+    label: Energy storage
+    blocks: [reverse_polarity, battery_charger, battery_monitor, load_switch, battery_pack]
+    col: 2
+    row: 0
+  - id: dcdc
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_ldo, buck_boost, sequencer, pmic]
+    col: 3
+    row: 0
+  - id: memory
+    label: Memory
+    blocks: [termination_ldo, ddr_flash]
+    col: 0
+    row: 1
+  - id: wireless
+    label: Wireless interface
+    blocks: [wireless_soc, wifi_soc, wifi_fem, antenna]
+    col: 1
+    row: 1
+  - id: processing
+    label: Digital media processing
+    blocks: [soc, voltage_reference, voltage_translator]
+    col: 2
+    row: 1
+  - id: ir_led
+    label: IR LED illumination
+    blocks: [led_driver]
+    col: 3
+    row: 1
+  - id: als
+    label: Ambient light sensor
+    blocks: [env_sensor, amplifier, adc]
+    col: 0
+    row: 2
+  - id: motion
+    label: Motion detector
+    blocks: [amplifier, adc, radar_transceiver]
+    col: 1
+    row: 2
+  - id: lens
+    label: Lens motor driver (IRIS, IR-cut filter, focus, zoom)
+    blocks: [motor_driver_brushed, dac]
+    col: 2
+    row: 2
+  - id: image_if
+    label: Image sensor interface
+    blocks: [serdes, clock_buffer, voltage_translator, camera_radar]
+    col: 3
+    row: 2
+  - id: audio
+    label: Two-way audio communication
+    blocks: [audio_codec, audio_amp]
+    col: 0
+    row: 3
+  - id: input_ui
+    label: Input user interface (push button)
+    blocks: [io_expander, tvs_esd]
+    col: 1
+    row: 3
+  - id: sd_card
+    label: SD card interface
+    blocks: [efuse_hotswap, load_switch, tvs_esd]
+    col: 2
+    row: 3
+  - id: clocking
+    label: Clocking
+    blocks: [clock_generator, clock_buffer, crystal_oscillator]
+    col: 3
+    row: 3
+  - id: output_ui
+    label: Output user interface (status LEDs)
+    blocks: [led_driver, io_expander]
+    col: 0
+    row: 4
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [supervisor, watchdog, rtc, temperature_sensor, amplifier]
+    col: 1
+    row: 4
+  - id: env
+    label: Environmental sensing
+    blocks: [temperature_sensor, env_sensor]
+    col: 2
+    row: 4
+  links:
+  - [input_power, energy, AC/DC adapter / solar panel]
+  - [usb_protection, energy, USB]
+  - [energy, dcdc, '']
+  - [dcdc, processing, point of load]
+  - [processing, ir_led, '']
+  - [als, processing, '']
+  - [motion, processing, '']
+  - [memory, processing, '']
+  - [processing, wireless, '']
+  - [input_ui, processing, '']
+  - [processing, sd_card, '']
+  - [clocking, processing, '']
+  - [processing, output_ui, '']
+  - [processing, lens, '']
+  - [image_if, processing, '']
+  - [diagnostics, processing, '']
+  - [audio, processing, '']
+  - [env, processing, '']
+  questions:
+  - id: power
+    question: Power
+    choices: [battery (rechargeable), line powered (doorbell transformer), battery + solar]
+    source: TI-SOL-DOORBELL variant list; SVG 'Solar panel'
+  - id: motion
+    question: Motion detection
+    choices: [PIR, mmWave radar, both]
+    source: TI-SOL-DOORBELL 'Motion detector'
+  - id: radio
+    question: Radios
+    choices: [Wi-Fi only, Wi-Fi + sub-1 GHz chime link, Wi-Fi + BLE (setup)]
+    source: TI-SOL-DOORBELL 'Wireless interface'
+  - id: night_vision
+    question: Night vision
+    choices: [IR LEDs + IR-cut filter, none]
+    source: TI-SOL-DOORBELL 'IR LED illumination', 'Lens motor driver'
+- name: Wired IP security camera (PoE) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-IPCAMERA'
+  sources:
+  - {doc: TI-SOL-IPCAMERA, title: Wired IP security camera (PoE) - block diagram + subsystems, url: 'https://www.ti.com/solution/ip-network-camera'}
+  groups:
+  - id: poe_power
+    label: Isolated DC/DC power supply (PoE)
+    blocks: [poe_pd, acdc_controller, reverse_polarity, optocoupler, voltage_reference]
+    col: 0
+    row: 0
+  - id: ac_power
+    label: Non-isolated AC/DC power supply (24 V AC)
+    blocks: [wide_vin_buck, efuse_hotswap, tvs_esd]
+    col: 1
+    row: 0
+  - id: dc_power
+    label: Wide-Vin DC/DC power supply (12 V DC)
+    blocks: [reverse_polarity, wide_vin_buck, tvs_esd]
+    col: 2
+    row: 0
+  - id: pol
+    label: Non-isolated DC/DC power supply
+    blocks: [pol_buck, sequencer, pmic]
+    col: 3
+    row: 0
+  - id: ethernet
+    label: Ethernet interface
+    blocks: [ethernet_phy, crystal_oscillator]
+    col: 0
+    row: 1
+  - id: processing
+    label: Digital media processing
+    blocks: [soc, voltage_translator, voltage_reference]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash, termination_ldo]
+    col: 2
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [clock_generator, clock_buffer, crystal_oscillator]
+    col: 3
+    row: 1
+  - id: image_if
+    label: Image sensor interface
+    blocks: [serdes, clock_buffer, voltage_translator, camera_radar]
+    col: 0
+    row: 2
+  - id: lens
+    label: Lens motor driver
+    blocks: [motor_driver_brushed, dac]
+    col: 1
+    row: 2
+  - id: ir_led
+    label: IR LED illumination
+    blocks: [led_driver]
+    col: 2
+    row: 2
+  - id: motion
+    label: Motion detection (mmWave or PIR) + ambient light sensor
+    blocks: [radar_transceiver, amplifier, adc, env_sensor]
+    col: 3
+    row: 2
+  - id: audio
+    label: Two-way audio communication + audio protection
+    blocks: [audio_codec, audio_amp, tvs_esd]
+    col: 0
+    row: 3
+  - id: alarm_io
+    label: Alarm input / output interface
+    blocks: [io_expander, efuse_hotswap]
+    col: 1
+    row: 3
+  - id: serial
+    label: Serial interface (PTZ control)
+    blocks: [rs485_transceiver]
+    col: 2
+    row: 3
+  - id: video_out
+    label: Video output interface
+    blocks: [amplifier, serdes]
+    col: 3
+    row: 3
+  - id: sd_card
+    label: SD card interface
+    blocks: [load_switch, efuse_hotswap]
+    col: 0
+    row: 4
+  - id: tamper
+    label: Tamper detection
+    blocks: [hall_switch, env_sensor, secure_element]
+    col: 1
+    row: 4
+  - id: env_diag
+    label: Environmental sensing + self-diagnostics
+    blocks: [temperature_sensor, env_sensor, rtc, supervisor, amplifier]
+    col: 2
+    row: 4
+  - id: io_protection
+    label: Signal input/output protection
+    blocks: [tvs_esd]
+    col: 3
+    row: 4
+  links:
+  - [poe_power, pol, PoE]
+  - [ac_power, pol, 24 V AC]
+  - [dc_power, pol, 12 V DC]
+  - [pol, processing, '']
+  - [ethernet, processing, '']
+  - [memory, processing, '']
+  - [clocking, processing, '']
+  - [image_if, processing, '']
+  - [processing, lens, '']
+  - [processing, ir_led, '']
+  - [motion, processing, '']
+  - [audio, processing, '']
+  - [alarm_io, processing, '']
+  - [serial, processing, '']
+  - [processing, video_out, '']
+  - [processing, sd_card, '']
+  - [tamper, processing, '']
+  - [env_diag, processing, '']
+  questions:
+  - id: power
+    question: Power input
+    choices: [PoE (802.3af/at), 12 V DC, 24 V AC]
+    source: TI-SOL-IPCAMERA SVG power subsystems
+  - id: type
+    question: Camera type
+    choices: [fixed, PTZ (pan-tilt-zoom)]
+    source: TI-SOL-IPCAMERA variant list
+  - id: analytics
+    question: Motion trigger
+    choices: [video analytics only, PIR, mmWave radar]
+    source: TI-SOL-IPCAMERA 'mmWave-based', 'PIR-based motion detection'
+  - id: audio
+    question: Two-way audio
+    choices: ['yes', 'no']
+    source: TI-SOL-IPCAMERA 'Two-way audio communication'
+- name: Server motherboard (x86 CPU, PCH, BMC, VR power) (TI)
+  category: Enterprise & data center
+  note: 'From TI public material: TI-SOL-SERVER'
+  sources:
+  - {doc: TI-SOL-SERVER, title: 'Server motherboard (x86 CPU, PCH, BMC, VR power) - block diagram + subsystems', url: 'https://www.ti.com/solution/intel-server'}
+  groups:
+  - id: psu
+    label: Power supply unit (PSU, external)
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: system_power
+    label: System power
+    blocks: [efuse_hotswap, sequencer, multiphase, pol_buck, pmic, power_fets]
+    col: 1
+    row: 0
+  - id: cpu
+    label: CPU (VR + processor)
+    blocks: [multiphase, pol_buck, soc]
+    col: 2
+    row: 0
+  - id: memory
+    label: Memory
+    blocks: [multiphase, pmic, termination_ldo, ddr_flash]
+    col: 0
+    row: 1
+  - id: pch
+    label: Platform controller hub (PCH)
+    blocks: [voltage_translator, clock_generator, multiphase, redriver, pcie_buffer, voltage_reference, load_switch, tvs_esd, soc]
+    col: 1
+    row: 1
+  - id: bmc
+    label: Board management controller (BMC)
+    blocks: [mcu, voltage_translator, clock_buffer, crystal_oscillator, ethernet_phy, adc, tvs_esd]
+    col: 2
+    row: 1
+  - id: cpld
+    label: CPLD / board level sequencer
+    blocks: [sequencer, voltage_translator]
+    col: 0
+    row: 2
+  - id: sensing
+    label: Sensing
+    blocks: [temperature_sensor, amplifier]
+    col: 1
+    row: 2
+  links:
+  - [psu, system_power, '']
+  - [memory, cpu, '']
+  - [cpu, pch, '']
+  - [bmc, pch, '']
+  - [sensing, bmc, '']
+  - [cpld, bmc, '']
+  questions:
+  - id: input_rail
+    question: Board input rail
+    choices: [12 V, 48 V (with intermediate bus converter)]
+    source: TI-SOL-SERVER 'System power' (see TI-SOL-PDB48V)
+  - id: vr
+    question: CPU core VR
+    choices: [multiphase controller + smart power stages, integrated multiphase converter]
+    source: TI-SOL-SERVER 'CPU'
+  - id: pcie_gen
+    question: PCIe generation (signal conditioning)
+    choices: [Gen4, Gen5, Gen6]
+    source: TI-SOL-SERVER 'PCH' (retimers, redrivers)
+  - id: bmc_link
+    question: BMC management link
+    choices: [dedicated Ethernet PHY, NC-SI shared]
+    source: TI-SOL-SERVER 'BMC'
+- name: Optical network terminal (PON ONT) with 4x4 Wi-Fi and PoE ports (TI)
+  category: Communications equipment
+  note: 'From TI public material: TI-SOL-ONT'
+  sources:
+  - {doc: TI-SOL-ONT, title: Optical network terminal (PON ONT) with 4x4 Wi-Fi and PoE ports - block diagram + subsystems, url: 'https://www.ti.com/solution/optical-network-terminal-unit-ont'}
+  groups:
+  - id: pol
+    label: Non-isolated POL power (12 V adapter)
+    blocks: [wide_vin_buck, pol_ldo, termination_ldo, amplifier, supervisor]
+    col: 0
+    row: 0
+  - id: pon
+    label: PON (1G / 2.5G / 10G / 25G optical input)
+    blocks: [optical_driver, optical_tia, tvs_esd, voltage_translator]
+    col: 1
+    row: 0
+  - id: processing
+    label: Processing
+    blocks: [soc, ddr_flash, io_expander, voltage_translator]
+    col: 2
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_generator, clock_buffer]
+    col: 3
+    row: 0
+  - id: sensing
+    label: Sensing
+    blocks: [temperature_sensor, env_sensor]
+    col: 0
+    row: 1
+  - id: wifi
+    label: 4x4 radio front end (dual band x2)
+    blocks: [wifi_soc, wifi_fem, tvs_esd, antenna]
+    col: 1
+    row: 1
+  - id: zigbee
+    label: Zigbee
+    blocks: [wireless_soc, antenna]
+    col: 2
+    row: 1
+  - id: lan
+    label: Gigabit LAN ports (with PoE passthrough)
+    blocks: [ethernet_phy, poe_pse, tvs_esd]
+    col: 3
+    row: 1
+  - id: usb
+    label: USB
+    blocks: [load_switch, usb_pd_controller, tvs_esd]
+    col: 0
+    row: 2
+  - id: rs232
+    label: RS-232 (console)
+    blocks: [rs485_transceiver]
+    col: 1
+    row: 2
+  - id: leds
+    label: LED driver
+    blocks: [led_driver]
+    col: 2
+    row: 2
+  links:
+  - [pon, processing, RGMII / SGMII]
+  - [rs232, processing, UART]
+  - [usb, processing, USB]
+  - [clocking, processing, '']
+  - [sensing, processing, I2C]
+  - [processing, wifi, PCIe or IQ]
+  - [processing, leds, I2C or GPIO]
+  - [processing, lan, '']
+  - [processing, zigbee, UART]
+  questions:
+  - id: pon_type
+    question: PON standard
+    choices: [GPON, XGS-PON, 25G / 50G PON]
+    source: TI-SOL-ONT SVG '1G/2.5G/10G/25G'
+  - id: wifi
+    question: Wi-Fi
+    choices: [none, 2x2, 4x4 dual band, tri-band Wi-Fi 7]
+    source: TI-SOL-ONT SVG '4x4 radio front end'
+  - id: poe
+    question: PoE on LAN ports
+    choices: [none, PSE passthrough]
+    source: TI-SOL-ONT 'Gigabit LAN ports (with PoE passthrough)'
+  - id: voice
+    question: Smart-home / voice
+    choices: [none, Zigbee, POTS (FXS)]
+    source: TI-SOL-ONT SVG 'Zigbee'; phone drawn on LAN
+- name: EV high-voltage battery management system (BMU + cell monitoring unit + battery junction box) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_BMS'
+  sources:
+  - {doc: NXP_BMS, title: NXP Battery Management System (BMS) application page, url: 'https://www.nxp.com/applications/BATTERY-MANAGEMENT-SYSTEM'}
+  groups:
+  - id: mcu
+    label: BMU MCU
+    blocks: [mcu]
+    col: 0
+    row: 0
+  - id: sbc
+    label: System basis chip (SBC)
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: contactor
+    label: Contactor driver
+    blocks: [motor_driver_brushed]
+    col: 2
+    row: 0
+  - id: can_phy
+    label: CAN physical layer
+    blocks: [can_transceiver]
+    col: 3
+    row: 0
+  - id: rtc
+    label: Real time clock (RTC)
+    blocks: [rtc]
+    col: 0
+    row: 1
+  - id: pressure
+    label: Pressure sensor (pack venting)
+    blocks: [vehicle_sensors]
+    col: 1
+    row: 1
+  - id: load_driver
+    label: Load driver
+    blocks: [load_switch]
+    col: 2
+    row: 1
+  - id: gateway
+    label: Battery gateway (TPL / CAN FD)
+    blocks: [can_transceiver]
+    col: 3
+    row: 1
+  - id: bcc
+    label: Battery cell controller (CMU)
+    blocks: [battery_monitor]
+    col: 0
+    row: 2
+  - id: pack_monitor
+    label: 'Battery junction box: battery pack monitor'
+    blocks: [battery_monitor, current_sensor]
+    col: 1
+    row: 2
+  - id: battery
+    label: High-voltage Li-ion battery
+    blocks: [hv_battery]
+    col: 2
+    row: 2
+  links:
+  - [contactor, mcu, '']
+  - [can_phy, mcu, '']
+  - [rtc, mcu, '']
+  - [sbc, mcu, '']
+  - [mcu, pressure, '']
+  - [mcu, load_driver, '']
+  - [mcu, gateway, '']
+  - [gateway, bcc, daisy chain]
+  - [gateway, pack_monitor, '']
+  - [bcc, battery, cell voltage / temperature]
+  - [battery, pack_monitor, pack current / isolation]
+  questions:
+  - id: bms_comm
+    question: Cell-monitor communication
+    choices: [wired daisy chain (TPL), wireless BMS]
+    source: BMS page diagrams (High Voltage BMS, Wireless BMS)
+  - id: cells_per_bcc
+    question: Cells per cell controller
+    choices: ['6', '14', '18', 24-26]
+    source: BMS-HV PDF recommendations (MC33772C 6-ch, MC33771C 14-ch, BMA7118 18-ch, BMA712X 24/26-ch)
+  - id: eis
+    question: Electrochemical impedance spectroscopy (EIS)
+    choices: ['yes', 'no']
+    source: BMS page 'BMS-EIS' diagram; BMA8420 / BMA742X 'with EIS'
+  - id: asil
+    question: Functional safety target
+    choices: [ASIL C, ASIL D]
+    source: BMS page text (ISO 26262 up to ASIL D)
+- name: 'Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD) (NXP)'
+  category: Automotive systems
+  note: 'From NXP public material: NXP_CLUSTER'
+  sources:
+  - {doc: NXP_CLUSTER, title: NXP Instrument Cluster application page, url: 'https://www.nxp.com/applications/INSTRUMENT-CLUSTER'}
+  groups:
+  - id: mcu
+    label: MCU / MPU
+    blocks: [mcu, soc]
+    col: 0
+    row: 0
+  - id: memory
+    label: External memory (optional)
+    blocks: [ddr_flash]
+    col: 1
+    row: 0
+  - id: eth
+    label: Ethernet PHY
+    blocks: [ethernet_phy]
+    col: 2
+    row: 0
+  - id: can_lin
+    label: CAN / LIN transceiver
+    blocks: [can_transceiver, lin_transceiver]
+    col: 3
+    row: 0
+  - id: gpio
+    label: GPIO expander
+    blocks: [io_expander]
+    col: 0
+    row: 1
+  - id: sbc
+    label: Safety SBC
+    blocks: [pmic]
+    col: 1
+    row: 1
+  - id: io_prot
+    label: I/O protection
+    blocks: [tvs_esd]
+    col: 2
+    row: 1
+  - id: signal_cond
+    label: Signal conditioning + sensors
+    blocks: [switch_detection_interface, vehicle_sensors]
+    col: 3
+    row: 1
+  - id: audio
+    label: Audio amplifier + buzzer
+    blocks: [audio_amp]
+    col: 0
+    row: 2
+  - id: displays
+    label: Gauges, segment LCD, color TFT LCDs
+    blocks: [display, display_driver]
+    col: 1
+    row: 2
+  - id: led
+    label: LED driver + LED backlight driver
+    blocks: [led_driver]
+    col: 2
+    row: 2
+  links:
+  - [memory, mcu, '']
+  - [eth, mcu, '']
+  - [gpio, mcu, '']
+  - [can_lin, mcu, '']
+  - [sbc, mcu, supply]
+  - [io_prot, mcu, '']
+  - [signal_cond, mcu, '']
+  - [mcu, audio, '']
+  - [mcu, displays, gauges / segment LCD / TFT]
+  - [mcu, led, '']
+  questions:
+  - id: cluster_class
+    question: Cluster class
+    choices: ['entry (MCU, segment LCD + gauges)', hybrid 2D (gauges + TFT), hybrid 3D / full digital (MPU + GPU)]
+    source: CLUSTER page diagrams (Entry, Hybrid 2D, Hybrid 3D)
+  - id: display_type
+    question: Display
+    choices: [segment LCD, color TFT, both]
+    source: CLUSTER SVG
+  - id: vehicle_link
+    question: Vehicle network
+    choices: [CAN / LIN only, CAN + automotive Ethernet]
+    source: CLUSTER SVG ('Ethernet PHY', 'CAN/LIN Tranceiver')
+- name: Smart electricity meter (metrology AFE + controller, PLC / wireless, LCD, secure element) (NXP)
+  category: Industrial
+  note: 'From NXP public material: NXP_EMETER'
+  sources:
+  - {doc: NXP_EMETER, title: NXP Electricity Meter application page, url: 'https://www.nxp.com/applications/ELECTRICITY-METER'}
+  groups:
+  - id: acdc
+    label: 'Power management: AC/DC + PMIC (optional)'
+    blocks: [acdc_controller, pmic]
+    col: 0
+    row: 0
+  - id: afe
+    label: Metrology analog front end
+    blocks: [adc]
+    col: 1
+    row: 0
+  - id: controller
+    label: Controller with secure enclave
+    blocks: [mcu]
+    col: 2
+    row: 0
+  - id: plc
+    label: 'Wired communication: powerline (PLC) + line drivers'
+    blocks: [mcu, amplifier]
+    col: 3
+    row: 0
+  - id: hmi
+    label: 'HMI: LCD / dot matrix, LED driver, segment LCD driver'
+    blocks: [display_driver, led_driver, display]
+    col: 0
+    row: 1
+  - id: wireless
+    label: 'Wireless: Wi-Fi / BT / 802.15.4, sub-GHz, NFC, NB-IoT, cellular'
+    blocks: [wireless_soc, wifi_soc, nfc_frontend, modem]
+    col: 1
+    row: 1
+  - id: optical
+    label: Optical port LED driver
+    blocks: [led_driver]
+    col: 2
+    row: 1
+  - id: security
+    label: 'Security: secure element + tamper sensors'
+    blocks: [secure_element, external_block]
+    col: 3
+    row: 1
+  - id: rtc
+    label: Real time clock (optional)
+    blocks: [rtc]
+    col: 0
+    row: 2
+  - id: flash
+    label: 'Memory: flash'
+    blocks: [flash]
+    col: 1
+    row: 2
+  links:
+  - [acdc, controller, supply]
+  - [afe, controller, SPI]
+  - [plc, controller, '']
+  - [hmi, controller, I2C / SPI]
+  - [controller, wireless, UART / I2C / SPI]
+  - [controller, optical, I2C / SPI]
+  - [controller, security, I2C]
+  - [controller, rtc, '']
+  - [controller, flash, '']
+  questions:
+  - id: phases
+    question: Meter type
+    choices: [single-phase, two-phase, three-phase]
+    source: EMETER Functional Blocks reference designs (single / two / three-phase)
+  - id: comms
+    question: AMI communication
+    choices: [powerline (PLC), sub-GHz RF mesh, Wi-Fi / Thread / Zigbee, NB-IoT / cellular]
+    source: EMETER SVG (Wired / Wireless communication)
+  - id: metrology_arch
+    question: Metrology architecture
+    choices: [metrology MCU with integrated AFE, separate AFE + application MCU]
+    source: EMETER SVG ('Analog Front End' + 'Controller'; KM3x listed for both)
+  - id: display
+    question: Display
+    choices: [segment LCD, dot matrix LCD]
+    source: EMETER SVG (HMI)
+- name: AC EV charging station (wallbox, level 1-3; metrology MCU + host controller, ISO 15118 PLC) (NXP)
+  category: Industrial
+  note: 'From NXP public material: NXP_EVSE'
+  sources:
+  - {doc: NXP_EVSE, title: NXP EV Charging Station application page, url: 'https://www.nxp.com/applications/EV-CHARGER-STATION'}
+  groups:
+  - id: signal_cond
+    label: Signal conditioning (voltage, live / neutral current)
+    blocks: [amplifier]
+    col: 0
+    row: 0
+  - id: metrology_mcu
+    label: Metrology MCU
+    blocks: [mcu, adc]
+    col: 1
+    row: 0
+  - id: pilot
+    label: Pilot signal interface (CP / PP)
+    blocks: [amplifier]
+    col: 2
+    row: 0
+  - id: meter_periph
+    label: Metrology-side peripherals
+    blocks: [nfc_frontend, temperature_sensor, display]
+    col: 3
+    row: 0
+  - id: acdc
+    label: AC/DC supplies (x2, metrology side and host side)
+    blocks: [acdc_controller]
+    col: 0
+    row: 1
+  - id: isolation
+    label: Isolation (metrology to host UART, pilot to PLC)
+    blocks: [digital_isolator]
+    col: 1
+    row: 1
+  - id: host
+    label: Host controller
+    blocks: [soc, mcu]
+    col: 2
+    row: 1
+  - id: pmic
+    label: PMIC (optional)
+    blocks: [pmic]
+    col: 3
+    row: 1
+  - id: plc
+    label: ISO 15118 PLC modem
+    blocks: [external_block]
+    col: 0
+    row: 2
+  - id: host_periph
+    label: 'Host peripherals: HMI, flash, LED controller, RTC, UART-to-I2C/SPI bridge'
+    blocks: [display, flash, led_driver, rtc]
+    col: 1
+    row: 2
+  - id: access
+    label: Contactless reader + smartcard IC
+    blocks: [nfc_frontend, secure_element]
+    col: 2
+    row: 2
+  - id: wireless
+    label: Wireless platform
+    blocks: [wifi_soc, wireless_soc]
+    col: 3
+    row: 2
+  - id: se
+    label: Secure element
+    blocks: [secure_element]
+    col: 0
+    row: 3
+  - id: usb_sys
+    label: USB (CC logic, load and signal switch) + system management (EEPROM, GPIO expander, VLT)
+    blocks: [usb_pd_controller, load_switch, io_expander, voltage_translator]
+    col: 1
+    row: 3
+  - id: connector
+    label: Vehicle connector (CP, PP, N, L1, PE)
+    blocks: [external_block]
+    col: 2
+    row: 3
+  links:
+  - [connector, signal_cond, '1, 2 or 3 phases + neutral']
+  - [signal_cond, metrology_mcu, voltage / live current / neutral current]
+  - [metrology_mcu, pilot, PWM]
+  - [pilot, connector, CP]
+  - [metrology_mcu, meter_periph, I2C]
+  - [acdc, metrology_mcu, Vcc]
+  - [metrology_mcu, isolation, UART]
+  - [isolation, host, UART]
+  - [pilot, plc, isolated pilot line]
+  - [plc, host, '']
+  - [pmic, host, VCC]
+  - [host_periph, host, '']
+  - [host, access, SPI]
+  - [host, wireless, UART / SDIO]
+  - [host, se, I2C]
+  questions:
+  - id: phases
+    question: Grid connection
+    choices: [1-phase, 2-phase, 3-phase]
+    source: EVSE SVG ('1,2 or 3 Phases')
+  - id: iso15118
+    question: ISO 15118 (plug and charge) PLC
+    choices: ['yes', no (IEC 61851 PWM pilot only)]
+    source: EVSE SVG ('ISO 15118 PLC')
+  - id: billing_meter
+    question: Billing-grade metrology
+    choices: [integrated metrology MCU, external MID meter]
+    source: EVSE SVG ('Metrology MCU')
+  - id: user_auth
+    question: User authentication
+    choices: [RFID / NFC card, app (Wi-Fi / BLE), plug and charge, none]
+    source: EVSE SVG ('Contactless Reader', 'Wireless Platform', 'Secure Element')
+  - id: charger_type
+    question: Charger type
+    choices: [AC wallbox, DC fast charger]
+    source: EVSE page diagrams (AC residential L1-3, DC fast)
+- name: Smart plug / power socket with energy metering and Zigbee (NXP)
+  category: Appliances & building
+  note: 'From NXP public material: NXP_SMARTPLUG'
+  sources:
+  - {doc: NXP_SMARTPLUG, title: NXP Smart Power Socket and Light application page, url: 'https://www.nxp.com/applications/SMART-POWER-SOCKET-LIGHT'}
+  groups:
+  - id: psu
+    label: 10 W PSU
+    blocks: [acdc_controller]
+    col: 0
+    row: 0
+  - id: boost
+    label: DC-DC boost converter
+    blocks: [pol_buck]
+    col: 1
+    row: 0
+  - id: mcu
+    label: MCU (metrology)
+    blocks: [mcu, adc]
+    col: 2
+    row: 0
+  - id: signal_cond
+    label: Signal conditioning (live current, neutral current, voltage)
+    blocks: [amplifier]
+    col: 3
+    row: 0
+  - id: relays
+    label: Main relays
+    blocks: [external_block]
+    col: 0
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 1
+    row: 1
+  - id: radio
+    label: 'HAN: Zigbee / 802.15.4'
+    blocks: [wireless_soc]
+    col: 2
+    row: 1
+  - id: rtc
+    label: RTC
+    blocks: [rtc]
+    col: 3
+    row: 1
+  - id: led
+    label: LED driver + LEDs
+    blocks: [led_driver]
+    col: 0
+    row: 2
+  links:
+  - [psu, boost, VCC]
+  - [boost, mcu, VCC]
+  - [signal_cond, mcu, live current / neutral current / voltage]
+  - [mcu, relays, control line]
+  - [mcu, security, '']
+  - [mcu, radio, UART]
+  - [mcu, rtc, I2C]
+  - [mcu, led, I2C]
+  questions:
+  - id: metering
+    question: Energy metering
+    choices: ['yes', 'no']
+    source: 'SMARTPLUG SVG (Signal Conditioning: live / neutral current, voltage)'
+  - id: radio
+    question: Home-network radio
+    choices: [Zigbee / 802.15.4, Thread / Matter, Wi-Fi, BLE]
+    source: 'SMARTPLUG SVG (''HAN: Zigbee and 802.15.14'')'
+  - id: load_rating
+    question: Switched load rating
+    choices: [10 A, 16 A, '>16 A']
+    source: SMARTPLUG SVG ('Main Relays')
+- name: Smart home control panel / hub (MPU, touch display, Wi-Fi + Zigbee / BLE, NFC; Matter-style appliance control) (NXP)
+  category: Appliances & building
+  note: 'From NXP public material: NXP_HOMEPANEL'
+  sources:
+  - {doc: NXP_HOMEPANEL, title: NXP Home Control Panel application page, url: 'https://www.nxp.com/applications/HOME-CONTROL-PANEL'}
+  groups:
+  - id: mpu
+    label: MPU
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: PMIC
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: battery_mgmt
+    label: Battery management + battery
+    blocks: [battery_charger, battery_pack]
+    col: 2
+    row: 0
+  - id: nfc
+    label: NFC reader
+    blocks: [nfc_frontend]
+    col: 3
+    row: 0
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 0
+    row: 1
+  - id: bt_zigbee
+    label: Bluetooth / Zigbee
+    blocks: [ble_soc, wireless_soc]
+    col: 1
+    row: 1
+  - id: wifi
+    label: Wi-Fi
+    blocks: [wifi_soc]
+    col: 2
+    row: 1
+  - id: display
+    label: Touch display
+    blocks: [display]
+    col: 3
+    row: 1
+  - id: mic
+    label: Microphone
+    blocks: [external_block]
+    col: 0
+    row: 2
+  - id: gpio
+    label: GPIO expander
+    blocks: [io_expander]
+    col: 1
+    row: 2
+  - id: endpoints
+    label: Controlled devices
+    blocks: [external_block]
+    col: 2
+    row: 2
+  links:
+  - [pmic, battery_mgmt, '']
+  - [battery_mgmt, mpu, '']
+  - [nfc, mpu, '']
+  - [security, mpu, '']
+  - [mpu, bt_zigbee, '']
+  - [mpu, wifi, '']
+  - [mpu, display, '']
+  - [mic, mpu, '']
+  - [mpu, gpio, '']
+  - [wifi, endpoints, wireless]
+  questions:
+  - id: protocol
+    question: Home-network protocols
+    choices: [Wi-Fi + Thread / Matter, Wi-Fi + Zigbee, Wi-Fi + BLE only]
+    source: HOMEPANEL SVG ('Bluetooth/ Zigbee', 'Wi-Fi'); IW612 / RW612 (tri-radio) listed
+  - id: voice
+    question: Voice control (microphone)
+    choices: ['yes', 'no']
+    source: HOMEPANEL SVG ('MIC')
+  - id: battery_backup
+    question: Battery backup
+    choices: ['yes', no (mains only)]
+    source: HOMEPANEL SVG ('Battery Management', 'Battery')
+  - id: processor
+    question: Processor class
+    choices: [MPU with Linux (rich GUI), crossover MCU (RTOS GUI)]
+    source: HOMEPANEL SVG ('MPU'; i.MX 8M Mini listed)
+- name: Smart door lock (NFC controller, MIFARE credentials, BLE / Wi-Fi, motor driver) (NXP)
+  category: Appliances & building
+  note: 'From NXP public material: NXP_SMARTLOCK'
+  sources:
+  - {doc: NXP_SMARTLOCK, title: NXP Smart Lock application page, url: 'https://www.nxp.com/applications/SMART-LOCK'}
+  groups:
+  - id: nfc_ctrl
+    label: NFC controller (with MCU)
+    blocks: [nfc_frontend, mcu]
+    col: 0
+    row: 0
+  - id: dcdc
+    label: DC/DC
+    blocks: [pol_buck]
+    col: 1
+    row: 0
+  - id: rtc
+    label: RTC
+    blocks: [rtc]
+    col: 2
+    row: 0
+  - id: motor_driver
+    label: Motor driver + lock motor
+    blocks: [motor_driver_brushed, motor]
+    col: 3
+    row: 0
+  - id: tamper
+    label: Door handle / tamper detect
+    blocks: [external_block]
+    col: 0
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete)
+    blocks: [secure_element]
+    col: 1
+    row: 1
+  - id: led
+    label: LED controller + LEDs
+    blocks: [led_driver]
+    col: 2
+    row: 1
+  - id: wifi
+    label: Wi-Fi module
+    blocks: [wifi_soc]
+    col: 3
+    row: 1
+  - id: ble
+    label: Wireless connectivity MCU (BLE)
+    blocks: [ble_soc, wireless_soc]
+    col: 0
+    row: 2
+  - id: credential
+    label: MIFARE DESFire EV3 credential
+    blocks: [external_block]
+    col: 1
+    row: 2
+  - id: sam
+    label: MIFARE SAM AV3
+    blocks: [secure_element]
+    col: 2
+    row: 2
+  links:
+  - [dcdc, nfc_ctrl, '']
+  - [rtc, nfc_ctrl, '']
+  - [nfc_ctrl, motor_driver, '']
+  - [tamper, nfc_ctrl, '']
+  - [security, nfc_ctrl, '']
+  - [nfc_ctrl, led, '']
+  - [nfc_ctrl, wifi, '']
+  - [credential, nfc_ctrl, NFC]
+  - [nfc_ctrl, ble, '']
+  - [nfc_ctrl, sam, '']
+  questions:
+  - id: credentials
+    question: Credentials supported
+    choices: [NFC card / tag (MIFARE), phone (BLE / NFC), UWB hands-free, PIN / fingerprint]
+    source: SMARTLOCK page diagrams (PN7362, CLRC663, UWB variants)
+  - id: connectivity
+    question: Remote connectivity
+    choices: [BLE only, Wi-Fi, Thread / Matter (802.15.4)]
+    source: SMARTLOCK BD1 SVG ('Wi-Fi Module', 'Wireless Connectivity MCU')
+  - id: power
+    question: Power source
+    choices: [AA / Li battery, mains]
+    source: SMARTLOCK BD1 SVG ('DC/DC')
+- name: Smartwatch (MCU, PMIC, BLE / Wi-Fi, NFC, sensors, audio codec, eMMC) (NXP)
+  category: Consumer & personal electronics
+  note: 'From NXP public material: NXP_SMARTWATCH'
+  sources:
+  - {doc: NXP_SMARTWATCH, title: NXP Smartwatch application page, url: 'https://www.nxp.com/applications/SMARTWATCH'}
+  groups:
+  - id: mcu
+    label: MCU
+    blocks: [mcu, soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: Power management
+    blocks: [pmic, battery_charger]
+    col: 1
+    row: 0
+  - id: wireless
+    label: Wireless communication
+    blocks: [ble_soc, wifi_soc]
+    col: 2
+    row: 0
+  - id: nfc
+    label: NFC
+    blocks: [nfc_frontend]
+    col: 3
+    row: 0
+  - id: sensors
+    label: Sensors
+    blocks: [external_block]
+    col: 0
+    row: 1
+  - id: audio
+    label: Audio codec
+    blocks: [audio_codec]
+    col: 1
+    row: 1
+  - id: storage
+    label: Storage eMMC
+    blocks: [flash]
+    col: 2
+    row: 1
+  - id: display
+    label: Display
+    blocks: [display]
+    col: 3
+    row: 1
+  - id: ui
+    label: UI buttons
+    blocks: [external_block]
+    col: 0
+    row: 2
+  - id: usb
+    label: I/O micro USB
+    blocks: [tvs_esd, load_switch]
+    col: 1
+    row: 2
+  links:
+  - [pmic, mcu, '']
+  - [mcu, wireless, '']
+  - [nfc, mcu, '']
+  - [sensors, mcu, '']
+  - [mcu, audio, '']
+  - [mcu, storage, '']
+  - [mcu, display, '']
+  - [ui, mcu, '']
+  - [mcu, usb, '']
+  questions:
+  - id: wearable_class
+    question: Device class
+    choices: ['smartwatch (display, apps)', fitness wristband]
+    source: SMARTWATCH page diagrams (Smartwatch, Wristband)
+  - id: radios
+    question: Radios
+    choices: [BLE only, BLE + Wi-Fi, BLE + UWB]
+    source: SMARTWATCH page diagrams ('Smart Watch UWB' lists SR150)
+  - id: nfc_payment
+    question: NFC (payment / pairing)
+    choices: ['yes', 'no']
+    source: SMARTWATCH SVG ('NFC')
+  - id: charging
+    question: Charging
+    choices: [USB (wired), wireless / pogo]
+    source: SMARTWATCH SVG ('I/O Micro USB')
+- name: Smart mobile POS terminal (EMV contact + contactless, magstripe, Wi-Fi/BT + cellular, battery) (NXP)
+  category: Consumer & personal electronics
+  note: 'From NXP public material: NXP_MPOS'
+  sources:
+  - {doc: NXP_MPOS, title: NXP Smart Mobile POS application page, url: 'https://www.nxp.com/applications/SMART-MOBILE-POS'}
+  groups:
+  - id: mcu
+    label: Secure MCU
+    blocks: [mcu]
+    col: 0
+    row: 0
+  - id: power_in
+    label: USB Type-C power delivery + wireless charging receiver
+    blocks: [usb_pd_controller, battery_charger]
+    col: 1
+    row: 0
+  - id: pmu
+    label: Battery PMU (discrete) + button cell
+    blocks: [battery_charger, pmic, battery_pack]
+    col: 2
+    row: 0
+  - id: usb_sw
+    label: Serial USB / USB load switch
+    blocks: [load_switch]
+    col: 3
+    row: 0
+  - id: wireless
+    label: Wi-Fi / Bluetooth (optional) + GPRS / cellular
+    blocks: [wifi_soc, ble_soc, modem]
+    col: 0
+    row: 1
+  - id: level_tr
+    label: Level translator
+    blocks: [voltage_translator]
+    col: 1
+    row: 1
+  - id: security
+    label: Security (EdgeLock discrete, optional)
+    blocks: [secure_element]
+    col: 2
+    row: 1
+  - id: contact
+    label: Contact reader (ISO 7816-3)
+    blocks: [smartcard_interface]
+    col: 3
+    row: 1
+  - id: contactless
+    label: Contactless reader (SPI)
+    blocks: [nfc_frontend]
+    col: 0
+    row: 2
+  - id: magstripe
+    label: Magstripe card reader
+    blocks: [external_block]
+    col: 1
+    row: 2
+  - id: io
+    label: I2C expanders + matrix keyboard
+    blocks: [io_expander]
+    col: 2
+    row: 2
+  - id: rtc
+    label: RTC (tamper)
+    blocks: [rtc]
+    col: 3
+    row: 2
+  - id: led
+    label: LED driver + LEDs
+    blocks: [led_driver]
+    col: 0
+    row: 3
+  - id: peripherals
+    label: Display, thermal printer, buzzer, proximity sensor, external memory
+    blocks: [display, ddr_flash, external_block]
+    col: 1
+    row: 3
+  links:
+  - [power_in, pmu, VCC]
+  - [pmu, mcu, VCC]
+  - [usb_sw, mcu, USB]
+  - [mcu, wireless, UART]
+  - [mcu, level_tr, I2C]
+  - [level_tr, security, '']
+  - [mcu, contact, ISO 7816-3]
+  - [mcu, contactless, SPI]
+  - [magstripe, mcu, ADC]
+  - [mcu, io, I2C / analog]
+  - [mcu, rtc, I2C / tamper pins]
+  - [mcu, led, I2C]
+  - [mcu, peripherals, I2C / PWM / bus]
+  questions:
+  - id: payment_methods
+    question: Payment methods
+    choices: [EMV contact, EMV contactless / NFC, magstripe, QR]
+    source: MPOS SVG (Contact Reader, Contactless Reader, Magstripe)
+  - id: backhaul
+    question: Backhaul
+    choices: [Wi-Fi / BT to phone, cellular, both]
+    source: MPOS SVG (Wi-Fi/Bluetooth, GPRS/Cellular)
+  - id: charging
+    question: Charging
+    choices: [USB Type-C PD, wireless (Qi), both]
+    source: MPOS SVG
+  - id: pci
+    question: PCI PTS tamper protection
+    choices: [secure MCU with tamper pins, secure MCU + external secure element]
+    source: MPOS SVG ('Tamper Pins', 'Security (EdgeLock Discrete)')
+- name: Smart speaker (applications processor, Wi-Fi + BLE with external FEMs, audio amplifier, AC/DC) (NXP)
+  category: Consumer & personal electronics
+  note: 'From NXP public material: NXP_SPEAKER'
+  sources:
+  - {doc: NXP_SPEAKER, title: NXP Smart Speaker application page, url: 'https://www.nxp.com/applications/SMART-SPEAKER'}
+  groups:
+  - id: mcu
+    label: Applications processor
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: PMIC
+    blocks: [pmic]
+    col: 1
+    row: 0
+  - id: acdc
+    label: AC/DC flyback
+    blocks: [acdc_controller]
+    col: 2
+    row: 0
+  - id: wifi
+    label: Wi-Fi (PCIe x2)
+    blocks: [wifi_soc, antenna]
+    col: 3
+    row: 0
+  - id: fem
+    label: RF FEM x4
+    blocks: [wifi_fem]
+    col: 0
+    row: 1
+  - id: ble
+    label: BLE
+    blocks: [ble_soc, antenna]
+    col: 1
+    row: 1
+  - id: nfc
+    label: NTAG I2C plus (pairing)
+    blocks: [nfc_frontend]
+    col: 2
+    row: 1
+  - id: temp
+    label: Temperature sensor
+    blocks: [temperature_sensor]
+    col: 3
+    row: 1
+  - id: led
+    label: LED controller
+    blocks: [led_driver]
+    col: 0
+    row: 2
+  - id: audio_amp
+    label: Audio amplifier + speaker
+    blocks: [audio_amp]
+    col: 1
+    row: 2
+  - id: memory
+    label: DDR3 + NAND flash
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 2
+  - id: others
+    label: Capacitive sensor, Apple Auth 3.0, FPGA (HDMI)
+    blocks: [external_block, secure_element]
+    col: 3
+    row: 2
+  links:
+  - [acdc, pmic, VCC]
+  - [pmic, mcu, VCC]
+  - [mcu, wifi, PCIe x2]
+  - [wifi, fem, PCIe (as drawn)]
+  - [mcu, ble, I2C (as drawn)]
+  - [nfc, mcu, I2C]
+  - [temp, mcu, I2C]
+  - [mcu, led, I2C]
+  - [mcu, audio_amp, I2S]
+  - [mcu, memory, DDR / QSPI]
+  - [others, mcu, I2C / HDMI]
+  questions:
+  - id: wifi_chains
+    question: Wi-Fi configuration
+    choices: [1x1, '2x2 (4 FEMs, dual band)']
+    source: SPEAKER SVG ('RF FEM x4')
+  - id: voice
+    question: Voice assistant (far-field mics)
+    choices: ['yes', 'no']
+    source: SPEAKER page (smart speaker); 'Capacitive Sensor'
+  - id: ecosystem
+    question: Ecosystem features
+    choices: [AirPlay (Apple auth), Matter / Thread, none]
+    source: SPEAKER SVG ('Apple Auth 3.0')
+  - id: power
+    question: Power
+    choices: [mains (AC/DC flyback), battery (portable)]
+    source: SPEAKER SVG ('AC/DC Flyback')
+- name: Multiparameter patient monitor, mainstream MPU-based (measurement modules, Wi-Fi / BLE / UWB / NFC) (NXP)
+  category: Medical
+  note: 'From NXP public material: NXP_PATIENT_MONITOR'
+  sources:
+  - {doc: NXP_PATIENT_MONITOR, title: NXP Multiparameter Patient Monitor application page, url: 'https://www.nxp.com/applications/MULTIPARAMETER-PATIENT-MONITOR'}
+  groups:
+  - id: mpu
+    label: 'Processing: MPU'
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 1
+    row: 0
+  - id: power
+    label: 'Power management: PMIC, load switch, battery'
+    blocks: [pmic, load_switch, battery_pack]
+    col: 2
+    row: 0
+  - id: security
+    label: 'Security and authentication: secure element'
+    blocks: [secure_element]
+    col: 3
+    row: 0
+  - id: ui
+    label: 'User interface: display, buttons, speakers'
+    blocks: [display, audio_amp]
+    col: 0
+    row: 1
+  - id: wifi_ble
+    label: Wi-Fi + BLE (optional)
+    blocks: [wifi_soc, ble_soc]
+    col: 1
+    row: 1
+  - id: uwb
+    label: UWB (optional)
+    blocks: [uwb_soc]
+    col: 2
+    row: 1
+  - id: nfc
+    label: NFC reader (optional)
+    blocks: [nfc_frontend]
+    col: 3
+    row: 1
+  - id: ethernet
+    label: Ethernet (optional)
+    blocks: [ethernet_phy]
+    col: 0
+    row: 2
+  - id: tags
+    label: 'Tags: NFC tag, UWB tag'
+    blocks: [external_block]
+    col: 1
+    row: 2
+  - id: measurement
+    label: Measurement subsystem (ECG, NIBP, SpO2, temperature)
+    blocks: [adc, amplifier]
+    col: 2
+    row: 2
+  - id: hospital
+    label: EMR + remote alarm system
+    blocks: [external_block]
+    col: 3
+    row: 2
+  links:
+  - [power, mpu, '']
+  - [mpu, memory, '']
+  - [security, mpu, '']
+  - [ui, mpu, '']
+  - [mpu, wifi_ble, '']
+  - [mpu, measurement, '']
+  - [wifi_ble, measurement, BLE to external modules]
+  - [nfc, tags, '']
+  - [uwb, tags, '']
+  - [wifi_ble, hospital, '']
+  questions:
+  - id: tier
+    question: Monitor tier
+    choices: [entry level, mainstream MCU-based, mainstream MPU-based, high-end / AI-powered]
+    source: PATMON page diagrams
+  - id: parameters
+    question: Parameters measured
+    choices: [ECG, NIBP, SpO2, temperature]
+    source: PATMON SVG ('ECG, NIBP, SPO2, Temp')
+  - id: module_link
+    question: Measurement module connection
+    choices: [integrated modules, external wired modules, wireless (BLE) modules]
+    source: PATMON SVG (Integrated / External Modules; BLE link)
+  - id: tracking
+    question: Asset / patient tracking
+    choices: [NFC tags, UWB tags, none]
+    source: PATMON SVG (Tags)
+- name: Standalone VR / MR headset (Snapdragon XR2 Gen 2 reference design QXR2230P) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-XR2G2-RD, QC-PB-XR2G2, QC-PB-REALITY'
+  sources:
+  - {doc: QC-PB-XR2G2-RD, title: Snapdragon XR2 Gen 2 Reference Design (QXR2230P) product brief (87-61723-1 rev B), url: 'https://docs.qualcomm.com/doc/87-61723-1/87-61723-1_REV_B_Snapdragon_XR2_Gen_2_Reference_Design_Product_Brief.pdf'}
+  - {doc: QC-PB-XR2G2, title: Snapdragon XR2 Gen 2 Platform product brief (87-73689-1 rev A), url: 'https://docs.qualcomm.com/doc/87-73689-1/87-73689-1_REV_A_Snapdragon_XR2_Gen_2_Platform_Product_Brief.pdf'}
+  - {doc: QC-PB-REALITY, title: Snapdragon Reality Elite Platform product brief (87-A1008-1 rev B), url: 'https://docs.qualcomm.com/doc/87-A1008-1/87-A1008-1_REV_B_Snapdragon_Reality_Elite_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: XR platform SoC (XR2 Gen 2; Reality Elite successor)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi + Bluetooth (2x2 Wi-Fi, BT 5.3; FastConnect 7800 Wi-Fi 7 on the platform)
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: pmic
+    label: Power management (PMICs listed for the platform)
+    blocks: [pmic]
+    col: 2
+    row: 0
+  - id: charging
+    label: Battery and charging (USB-C, 6000 mAh)
+    blocks: [battery_charger, battery_pack]
+    col: 3
+    row: 0
+  - id: audio
+    label: Audio (codec, speaker amplifier, 4 speakers, 6 DMICs)
+    blocks: [audio_codec, audio_amp, acoustic_transducer]
+    col: 0
+    row: 1
+  - id: cameras
+    label: Tracking, passthrough and eye-tracking cameras
+    blocks: [camera_radar]
+    col: 1
+    row: 1
+  - id: sensors
+    label: Context sensors
+    blocks: [env_sensor]
+    col: 2
+    row: 1
+  - id: display
+    label: Dual micro-OLED displays + pancake optics
+    blocks: [display]
+    col: 3
+    row: 1
+  - id: memory
+    label: Memory and storage
+    blocks: [ddr_flash, flash]
+    col: 0
+    row: 2
+  - id: controllers
+    label: 6DoF controllers
+    blocks:
+    - {fn: external_block, label: 6DoF controllers}
+    col: 1
+    row: 2
+  links:
+  - [cameras, soc, MIPI CSI (10 concurrent)]
+  - [soc, display, DSI]
+  - [soc, wifi_bt, PCIe]
+  - [wifi_bt, controllers, Bluetooth]
+  - [soc, audio, '']
+  - [sensors, soc, sensor hub]
+  - [memory, soc, LPDDR5 / UFS]
+  - [pmic, soc, rails]
+  - [charging, pmic, USB-C power]
+  questions:
+  - id: architecture
+    question: Headset architecture
+    choices: [standalone all-in-one, tethered to phone / PC, split rendering]
+    source: QC-PB-REALITY 'Support for all-in-one and tethered configurations'; QC-PB-XR2G2-RD 'Split Rendering'
+  - id: see_through
+    question: Mixed reality method
+    choices: [video see-through (RGB passthrough cameras), optical see-through, VR only]
+    source: QC-PB-REALITY 'optical-see-through and video-see-through'
+  - id: eye_tracking
+    question: Eye tracking
+    choices: ['yes', 'no']
+    source: QC-PB-XR2G2-RD 'Eye tracking'
+  - id: wifi_gen
+    question: Wi-Fi generation
+    choices: [Wi-Fi 6 / 6E, Wi-Fi 7 HBS]
+    source: QC-PB-XR2G2-RD (802.11ax) vs QC-PB-XR2G2 (FastConnect 7800 Wi-Fi 7)
+- name: Wireless-tethered AR smart viewer glasses (Snapdragon AR2 Gen 1 development kit QAR2130P) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-AR2-SV'
+  sources:
+  - {doc: QC-PB-AR2-SV, title: Snapdragon AR2 Gen 1 Smart Viewer Development Kit (QAR2130P) product brief (87-61722-1 rev C), url: 'https://docs.qualcomm.com/doc/87-61722-1/87-61722-1_REV_C_Snapdragon_AR2_GEN_1_Smart_Viewer_Development_Kit_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: AR2 Gen 1 platform
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi + Bluetooth link to the phone / host
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: pmic
+    label: Power management
+    blocks: [pmic]
+    col: 2
+    row: 0
+  - id: battery
+    label: Battery and charging
+    blocks: [battery_charger, battery_pack]
+    col: 0
+    row: 1
+  - id: audio
+    label: Audio (2 speakers, 4 DMICs)
+    blocks: [audio_amp, acoustic_transducer]
+    col: 1
+    row: 1
+  - id: cameras
+    label: Tracking, RGB and eye-tracking cameras
+    blocks: [camera_radar]
+    col: 2
+    row: 1
+  - id: sensors
+    label: Context sensors
+    blocks: [env_sensor]
+    col: 0
+    row: 2
+  - id: display
+    label: Dual LCoS displays with waveguide
+    blocks: [display]
+    col: 1
+    row: 2
+  links:
+  - [cameras, soc, '']
+  - [sensors, soc, '']
+  - [soc, display, '']
+  - [soc, wifi_bt, '']
+  - [soc, audio, '']
+  - [pmic, soc, '']
+  - [battery, pmic, '']
+  questions:
+  - id: tethering
+    question: Compute split
+    choices: [wireless tethered to phone, standalone]
+    source: QC-PB-AR2-SV 'Wireless tethered smart viewer'
+  - id: tracking
+    question: Tracking features
+    choices: [6DoF head tracking only, 6DoF + hand tracking, 6DoF + hand + eye tracking]
+    source: QC-PB-AR2-SV 'Key Features'
+  - id: battery_size
+    question: Battery capacity class
+    choices: [< 300 mAh, 300-700 mAh, '> 700 mAh']
+    source: QC-PB-AR2-SV '600mAh'
+- name: 4G LTE smartwatch with always-on co-processor (Snapdragon W5+ Gen 1) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-W5'
+  sources:
+  - {doc: QC-PB-W5, title: Snapdragon W5+ and W5 Gen 1 Wearable Platforms product brief (87-43671-1 rev C), url: 'https://docs.qualcomm.com/doc/87-43671-1/87-43671-1_REV_C_Snapdragon_W5__and_Snapdragon_W5_Gen_1_Wearable_Platforms_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: 4 nm SoC (SW5100 / SW5100P)
+    blocks: [soc, modem]
+    col: 0
+    row: 0
+  - id: aon_coprocessor
+    label: 22 nm always-on co-processor (QCC5100)
+    blocks: [mcu, ble_soc]
+    col: 1
+    row: 0
+  - id: rf
+    label: Modem / GNSS RF and RFFE
+    blocks: [rf_transceiver, pa_module, rf_frontend]
+    col: 2
+    row: 0
+  - id: gnss
+    label: GNSS (L1 with WTR2965, or L1 + L5 with WTR3925)
+    blocks: [gnss_lna]
+    col: 3
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi 802.11n (2.4 / 5 GHz) + Bluetooth, integrated PA and LNA
+    blocks: [antenna]
+    col: 0
+    row: 1
+  - id: pmic
+    label: 'Wearable PMIC (PMW5100): output power management'
+    blocks: [pmic, battery_monitor, battery_charger, haptics_driver, audio_amp]
+    col: 1
+    row: 1
+  - id: display
+    label: OLED display (640 x 640 @ 60 Hz)
+    blocks: [display]
+    col: 2
+    row: 1
+  - id: memory
+    label: Memory (1x16 LPDDR4 2133 MHz)
+    blocks: [ddr_flash]
+    col: 3
+    row: 1
+  - id: camera
+    label: Camera (dual ISP 16 MP + 16 MP, 2x CSI)
+    blocks: [camera_radar]
+    col: 0
+    row: 2
+  - id: nfc
+    label: NFC (third party)
+    blocks: [nfc_frontend]
+    col: 1
+    row: 2
+  links:
+  - [soc, display, MIPI-DSI]
+  - [aon_coprocessor, display, QSPI w/DDR]
+  - [soc, rf, '']
+  - [rf, pmic, '']
+  - [pmic, aon_coprocessor, '']
+  - [soc, aon_coprocessor, '']
+  - [rf, gnss, '']
+  - [soc, wifi_bt, '']
+  - [memory, soc, '']
+  - [camera, soc, CSI]
+  - [nfc, soc, '']
+  questions:
+  - id: cellular
+    question: Cellular
+    choices: [4G LTE (SW5100), 'no cellular, Bluetooth only (SW5100P)']
+    source: QC-PB-W5 ordering information
+  - id: coprocessor
+    question: Always-on co-processor
+    choices: ['yes (W5+, QCC5100)', no (W5)]
+    source: QC-PB-W5 p.1
+  - id: gnss_bands
+    question: GNSS bands
+    choices: [L1, L1 + L5]
+    source: QC-PB-W5 'GNSS L1 (WTR2965) or L1 + L5 (WTR3925)'
+  - id: payments
+    question: NFC payments
+    choices: ['yes', 'no']
+    source: QC-PB-W5 'NFC supported via third party'
+- name: 5G RedCap smartwatch with satellite NB-NTN, UWB and dual-band GNSS (Snapdragon Wear Elite) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-WEAR-ELITE'
+  sources:
+  - {doc: QC-PB-WEAR-ELITE, title: Snapdragon Wear Elite Platform product brief (87-97359-1 rev C), url: 'https://docs.qualcomm.com/doc/87-97359-1/87-97359-1_REV_C_Snapdragon_Wear_Elite_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: Wear Elite SoC (3 nm, Hexagon NPU, co-processor, sensing hub)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: cellular
+    label: Cellular modem-RF (5G RedCap Rel-17, LTE) + satellite NB-NTN + Qualcomm RFFE
+    blocks: [modem, rf_frontend]
+    col: 1
+    row: 0
+  - id: gnss
+    label: GNSS dual-band (L1 / L5)
+    blocks: [gnss_lna]
+    col: 2
+    row: 0
+  - id: wifi_bt
+    label: Micro-power Wi-Fi 6 1x1 (2.4 / 5 / 6 GHz) + Bluetooth 6.0
+    blocks: [wifi_soc]
+    col: 3
+    row: 0
+  - id: uwb
+    label: UWB (digital keys, proximity)
+    blocks: [uwb_soc]
+    col: 0
+    row: 1
+  - id: nfc
+    label: NFC (third party)
+    blocks: [nfc_frontend]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory and storage
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 1
+  - id: camera
+    label: Camera (2x CSI 4-lane)
+    blocks: [camera_radar]
+    col: 3
+    row: 1
+  - id: sensors
+    label: Health and context sensors (over 50 sensors via the sensing hub)
+    blocks: [env_sensor]
+    col: 0
+    row: 2
+  - id: charging
+    label: Fast charging (50 % in 10 min)
+    blocks: [battery_charger, battery_pack]
+    col: 1
+    row: 2
+  links:
+  - [soc, cellular, '']
+  - [soc, gnss, '']
+  - [soc, wifi_bt, '']
+  - [soc, uwb, '']
+  - [nfc, soc, '']
+  - [memory, soc, '']
+  - [camera, soc, CSI]
+  - [sensors, soc, sensing hub]
+  - [charging, soc, '']
+  questions:
+  - id: cellular
+    question: Cellular
+    choices: [none, LTE, 5G RedCap]
+    source: QC-PB-WEAR-ELITE 'Cellular Technology'
+  - id: ntn
+    question: Satellite emergency messaging (NB-NTN)
+    choices: ['yes', 'no']
+    source: QC-PB-WEAR-ELITE 'satellite NB-NTN'
+  - id: uwb
+    question: UWB
+    choices: ['yes', 'no']
+    source: QC-PB-WEAR-ELITE hexa-connectivity
+  - id: gnss_bands
+    question: GNSS bands
+    choices: [L1, L1 + L5]
+    source: QC-PB-WEAR-ELITE 'Dual (L1/L5)'
+- name: True-wireless (TWS) earbuds with charging case (QCC3020 / QCC5141 / QCC5171 reference designs, S5 Gen 1) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-QCC3020-RD, QC-PB-QCC5141-RD, QC-PB-QCC5171-RD, QC-PB-S5G1'
+  sources:
+  - {doc: QC-PB-QCC3020-RD, title: QCC3020 Low-cost Occluded Earbud Reference Design product brief (87-CG935-1 rev A), url: 'https://docs.qualcomm.com/doc/87-CG935-1/87-CG935-1_REV_A_QCC3020_Low_Cost_Occluded_Earbud_Ref_Design_Product_Brief.pdf'}
+  - {doc: QC-PB-QCC5141-RD, title: QCC5141 Occluded Earbud Reference Design product brief (87-CG936-1 rev B), url: 'https://docs.qualcomm.com/doc/87-CG936-1/87-CG936-1_REV_B_Qualcomm_QCC5141_-_Occluded_Earbud_Reference_Design_Product_Brief.pdf'}
+  - {doc: QC-PB-QCC5171-RD, title: QCC5171 Earbud Reference Design product brief (87-CG939-1 rev A), url: 'https://docs.qualcomm.com/doc/87-CG939-1/87-CG939-1_REV_A_Qualcomm_QCC5171_Earbud_Reference_Design_Product_Brief.pdf'}
+  - {doc: QC-PB-S5G1, title: Snapdragon S5 Gen 1 Sound Platform product brief (87-75475-1 rev D), url: 'https://docs.qualcomm.com/doc/87-75475-1/87-75475-1_REV_D_Snapdragon_S5_Gen_1_Sound_Platform.pdf'}
+  groups:
+  - id: audio_soc
+    label: Bluetooth audio SoC (radio, DSP, app processor, PMU, charger)
+    blocks: [wireless_audio_soc]
+    col: 0
+    row: 0
+  - id: flash
+    label: Serial flash (32 Mb, QSPI)
+    blocks: [flash]
+    col: 1
+    row: 0
+  - id: rf_filter
+    label: RF filter + antenna
+    blocks: [filter_saw_baw, antenna]
+    col: 2
+    row: 0
+  - id: speaker
+    label: Speaker (6 mm; 10 mm 32 ohm)
+    blocks: [acoustic_transducer]
+    col: 3
+    row: 0
+  - id: mics
+    label: Microphones and voice sensor (1 to 3 mics, bone-conduction sensor)
+    blocks: [acoustic_transducer, env_sensor]
+    col: 0
+    row: 1
+  - id: sensors
+    label: In-ear detection and touch sensors
+    blocks: [env_sensor]
+    col: 1
+    row: 1
+  - id: ui
+    label: Button + LED user interface
+    blocks:
+    - {fn: external_block, label: Button + LED user interface}
+    col: 2
+    row: 1
+  - id: battery
+    label: Earbud battery (40 / 85 mAh)
+    blocks: [battery_pack]
+    col: 3
+    row: 1
+  - id: case
+    label: Charging case (280-590 mAh) with 2-wire comms to the earbuds
+    blocks: [battery_charger, battery_pack]
+    col: 0
+    row: 2
+  links:
+  - [audio_soc, flash, QSPI]
+  - [audio_soc, rf_filter, RF]
+  - [audio_soc, speaker, '']
+  - [mics, audio_soc, '']
+  - [sensors, audio_soc, '']
+  - [ui, audio_soc, PIO / LED]
+  - [battery, audio_soc, '']
+  - [case, audio_soc, +5 V / GND comms]
+  questions:
+  - id: anc
+    question: Active noise cancellation
+    choices: [none, hybrid ANC, adaptive hybrid ANC]
+    source: QC-PB-QCC5141-RD 'Hybrid ANC'; QC-PB-QCC5171-RD '3rd Gen AANC'; QC-PB-S5G1 '4th Gen Adaptive ANC'
+  - id: voice_mics
+    question: Voice pickup (cVc)
+    choices: [1 mic, 2 mics, 3 mics + bone-conduction sensor]
+    source: QC-PB-QCC3020-RD / QCC5141-RD / QCC5171-RD
+  - id: le_audio
+    question: Bluetooth LE Audio / Auracast
+    choices: ['yes', 'no']
+    source: QC-PB-QCC5171-RD 'Support for LE Audio'; QC-PB-S5G1 'Bluetooth 6.2 ... Auracast'
+  - id: tx_power
+    question: Bluetooth max conducted Tx power
+    choices: [~8 dBm, ~12 dBm, ~15 dBm]
+    source: QC-PB-QCC3020-RD / QCC5141-RD / QCC5171-RD specifications
+  - id: in_ear
+    question: In-ear detection
+    choices: [infrared proximity sensor, none]
+    source: QC-PB-QCC5171-RD 'Infrared proximity sensor'
+- name: Soundbar with wireless subwoofer (MAPX audio processor + Bluetooth audio SoC + DDFA power stage) (Qualcomm)
+  category: Consumer & personal electronics
+  note: 'From Qualcomm public material: QC-PB-MAPX'
+  sources:
+  - {doc: QC-PB-MAPX, title: MAPX Soundbar Platform product brief (87-CF480-1 rev B), url: 'https://docs.qualcomm.com/doc/87-CF480-1/87-CF480-1_REV_B_MAPX_Soundbar_Platform_Product_Brief.pdf'}
+  groups:
+  - id: mapx
+    label: MAPX audio processor (MAPX-6 / -7 / -8)
+    blocks: [audio_codec]
+    col: 0
+    row: 0
+  - id: bt_processor
+    label: Bluetooth processor
+    blocks: [wireless_audio_soc]
+    col: 1
+    row: 0
+  - id: inputs
+    label: Audio inputs (SPDIF, analog, USB host)
+    blocks:
+    - {fn: external_block, label: 'Audio inputs (SPDIF, analog, USB host)'}
+    col: 2
+    row: 0
+  - id: hdmi
+    label: HDMI in / out with CEC / ARC (optional)
+    blocks:
+    - {fn: external_block, label: HDMI in / out with CEC / ARC (optional)}
+    col: 3
+    row: 0
+  - id: power_stage
+    label: Soundbar power stage (DDFA amplifier)
+    blocks: [audio_amp]
+    col: 0
+    row: 1
+  - id: speakers
+    label: Speakers
+    blocks: [acoustic_transducer]
+    col: 1
+    row: 1
+  - id: subwoofer
+    label: Wireless subwoofer PCB (optional)
+    blocks: [wireless_audio_soc, audio_amp]
+    col: 2
+    row: 1
+  - id: remote
+    label: IR and / or Bluetooth LE remote control
+    blocks:
+    - {fn: external_block, label: IR and / or Bluetooth LE remote control}
+    col: 3
+    row: 1
+  - id: ui
+    label: LCD / VFD display, LEDs, NFC pairing
+    blocks: [display, led_driver, nfc_frontend]
+    col: 0
+    row: 2
+  links:
+  - [inputs, mapx, SPDIF / analog / USB]
+  - [hdmi, mapx, '']
+  - [bt_processor, mapx, SPDIF / UART]
+  - [mapx, power_stage, '']
+  - [power_stage, speakers, '']
+  - [bt_processor, subwoofer, SWAT via Bluetooth]
+  - [remote, bt_processor, '']
+  - [ui, mapx, '']
+  questions:
+  - id: hdmi
+    question: HDMI ARC / eARC input
+    choices: ['yes', 'no']
+    source: QC-PB-MAPX 'HDMI (optional)'
+  - id: subwoofer
+    question: Subwoofer
+    choices: [wireless (Bluetooth SWAT), wired, none]
+    source: QC-PB-MAPX 'Subwoofer PCB (optional)'
+  - id: channels
+    question: Speaker channels
+    choices: [2.0 / 2.1, 3.1 / 5.1, 'virtual surround (DTS Virtual:X)']
+    source: QC-PB-MAPX features ('Multichannel', 'DTS Virtual:X')
+  - id: streaming
+    question: Streaming beyond Bluetooth
+    choices: [Bluetooth only, Wi-Fi multiroom (AllPlay)]
+    source: QC-PB-MAPX 'AllPlay smart media platform extension'
+- name: Global asset tracker - LTE-M / NB-IoT / EGPRS with GEO satellite NTN (9205S modem, QTS110 tracker) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC-PB-9205S, QC-PB-QTS110, QC-MD-QTS110'
+  sources:
+  - {doc: QC-PB-9205S, title: Qualcomm 9205S Modem product brief (87-64336-1 rev D), url: 'https://docs.qualcomm.com/doc/87-64336-1/87-64336-1_REV_D_Qualcomm_9205s_Modem_Product_Brief.pdf'}
+  - {doc: QC-PB-QTS110, title: Qualcomm QTS110 Tracker product brief (87-43678-1 rev J), url: 'https://docs.qualcomm.com/doc/87-43678-1/87-43678-1_REV_J_Qualcomm_QTS110_Tracker_Product_Brief.pdf'}
+  - {doc: QC-MD-QTS110, title: 'QTS110 Tracker page (markdown, listed in qualcomm.com/en-us/internet-of-things/llms.txt)', url: 'https://www.qualcomm.com/internet-of-things/solutions/aware/qts110-tracker.md'}
+  groups:
+  - id: modem
+    label: 9205S modem (processor, LTE Cat-M1 / NB2 / EGPRS / NTN modem, GNSS)
+    blocks: [modem]
+    col: 0
+    row: 0
+  - id: rf
+    label: RF transceiver and front end with integrated PA (SDR105)
+    blocks: [rf_transceiver, pa_module]
+    col: 1
+    row: 0
+  - id: antenna
+    label: GNSS + LTE antenna
+    blocks: [antenna]
+    col: 2
+    row: 0
+  - id: memory
+    label: Stacked DRAM + flash
+    blocks: [ddr_flash]
+    col: 3
+    row: 0
+  - id: power
+    label: PMIC, battery charger and clocks
+    blocks: [pmic, battery_charger, crystal_oscillator]
+    col: 0
+    row: 1
+  - id: codec
+    label: Audio codec (optional, I2S)
+    blocks: [audio_codec]
+    col: 1
+    row: 1
+  - id: sim
+    label: SIM / eSIM (UIM)
+    blocks: [secure_element]
+    col: 2
+    row: 1
+  - id: host_if
+    label: Host / peripheral interfaces (I2C, SPI, UART, MIPI DBI display, HS USB 2.0)
+    blocks: [mcu]
+    col: 3
+    row: 1
+  - id: sensors
+    label: Condition sensors (tracker)
+    blocks: [env_sensor, temperature_sensor]
+    col: 0
+    row: 2
+  - id: wifi_scan
+    label: Wi-Fi 2.4 GHz scan receiver (Rx only, positioning)
+    blocks: [wifi_soc]
+    col: 1
+    row: 2
+  - id: battery
+    label: Battery (2600 mAh Li-ion, charging cradle) and LEDs
+    blocks: [battery_pack]
+    col: 2
+    row: 2
+  links:
+  - [modem, rf, RFFE interface]
+  - [rf, antenna, '']
+  - [memory, modem, '']
+  - [power, modem, PMIC / clocks]
+  - [modem, codec, I2S]
+  - [sim, modem, UIM]
+  - [modem, host_if, I2C / SPI / UART / USB]
+  - [sensors, host_if, '']
+  - [wifi_scan, modem, '']
+  - [battery, power, '']
+  questions:
+  - id: ntn
+    question: Satellite (3GPP Rel-17 IoT-NTN, GEO)
+    choices: [yes (9205S), no (9205)]
+    source: QC-PB-9205S features
+  - id: rat
+    question: Terrestrial radio
+    choices: [LTE Cat-M1, LTE Cat-NB2, Cat-M1 + NB2 + EGPRS fallback]
+    source: QC-PB-9205S 'Cellular Technology'
+  - id: positioning
+    question: Positioning
+    choices: [GNSS only, GNSS + cellular scan, GNSS + cellular + Wi-Fi scan]
+    source: QC-PB-QTS110 'Multi-technology positioning'
+  - id: hosted
+    question: Application processing
+    choices: [on the modem (hostless), external host MCU]
+    source: QC-PB-9205S 'Can be attached to any host (MCU)'
+- name: Battery-powered Wi-Fi IoT node with external PA (QCC730 xPA, dual-band 802.11n micro-power Wi-Fi) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC-PB-QCC730M, QC-SCH-QCC730-XPA'
+  sources:
+  - {doc: QC-PB-QCC730M, title: Qualcomm QCC730M micro-power dual-band Wi-Fi module product brief (87-84453-1 rev D), url: 'https://docs.qualcomm.com/doc/87-84453-1/87-84453-1_REV_D_Qualcomm_QCC730M_micro-power_dual-band_Wi-Fi_module_Product_Brief.pdf'}
+  - {doc: QC-SCH-QCC730-XPA, title: QCC730 xPA Hostless Design Sample Reference Schematic (80-WL730-41 rev AG), url: 'https://docs.qualcomm.com/doc/80-WL730-41/80-WL730-41_REV_AG_QCC730_xPA_Hostless_Design_Sample_Reference_Schematic.pdf'}
+  groups:
+  - id: soc
+    label: QCC730 Wi-Fi SoC (WLCSP-90, FreeRTOS, 60 MHz app processor, RRAM)
+    blocks: [wifi_soc]
+    col: 0
+    row: 0
+  - id: xpa_2g
+    label: 2.4 GHz external PA (FEM)
+    blocks: [wifi_fem]
+    col: 1
+    row: 0
+  - id: xpa_5g
+    label: 5 GHz external PA (FEM)
+    blocks: [wifi_fem]
+    col: 2
+    row: 0
+  - id: bpf
+    label: 2.4 GHz and 5 GHz band-pass filters
+    blocks: [filter_saw_baw]
+    col: 3
+    row: 0
+  - id: diplexer
+    label: Diplexer (2.4 / 5-7 GHz)
+    blocks: [diplexer]
+    col: 0
+    row: 1
+  - id: antenna
+    label: Wi-Fi antenna (PCB antenna or RF connector)
+    blocks: [antenna]
+    col: 1
+    row: 1
+  - id: flash
+    label: 4 MB NOR flash (QSPI)
+    blocks: [flash]
+    col: 2
+    row: 1
+  - id: xtal
+    label: 38.4 MHz crystal
+    blocks: [crystal_oscillator]
+    col: 3
+    row: 1
+  - id: osc32k
+    label: 32.768 kHz oscillator (optional)
+    blocks: [crystal_oscillator]
+    col: 0
+    row: 2
+  - id: bt_coex
+    label: Bluetooth coexistence (to an external BT device)
+    blocks: [ble_soc]
+    col: 1
+    row: 2
+  - id: host_io
+    label: Host / IO (SPI slave, UART, I2C, JTAG, GPIO, wake-up, chip enable)
+    blocks: [mcu]
+    col: 2
+    row: 2
+  - id: power
+    label: Battery supply (VBATT) and on-chip regulator inductors
+    blocks: [battery_pack]
+    col: 3
+    row: 2
+  links:
+  - [soc, xpa_2g, WL_RFIO_2G]
+  - [soc, xpa_5g, WL_RFIO_5G]
+  - [xpa_2g, bpf, '']
+  - [xpa_5g, bpf, '']
+  - [bpf, diplexer, '']
+  - [diplexer, antenna, '']
+  - [soc, flash, QSPI]
+  - [xtal, soc, 38.4 MHz]
+  - [osc32k, soc, GPIO8]
+  - [soc, bt_coex, COEX]
+  - [host_io, soc, SPI / UART / I2C]
+  - [power, soc, VBATT]
+  questions:
+  - id: pa
+    question: Transmit path
+    choices: [integrated PA (iPA), external PA / FEM per band (xPA)]
+    source: QC-PB-QCC730M iPA vs xPA block diagrams
+  - id: bands
+    question: Wi-Fi bands
+    choices: [2.4 GHz only, 2.4 + 5 GHz]
+    source: QC-PB-QCC730M 'Dual-band 1x1 802.11a/b/g/n'
+  - id: antenna
+    question: Antenna
+    choices: [PCB antenna, RF connector (external antenna)]
+    source: QC-PB-QCC730M package variants
+  - id: host
+    question: Host
+    choices: [hostless (app on QCC730), hosted (external MCU over SPI)]
+    source: QC-SCH-QCC730-XPA title 'Hostless Design Sample'
+  - id: sleep_clock
+    question: External 32.768 kHz oscillator
+    choices: ['yes', no (internal)]
+    source: QC-PB-QCC730M '(Optional)'
+- name: Fiber broadband gateway (XGS-PON + Wi-Fi 8, Dragonwing FiberPro A8 Elite IPQ96) (Qualcomm)
+  category: Communications equipment
+  note: 'From Qualcomm public material: QC-PB-FIBERPRO-A8'
+  sources:
+  - {doc: QC-PB-FIBERPRO-A8, title: Qualcomm Dragonwing FiberPro A8 Elite Platform product brief (87-96768-1 rev A), url: 'https://docs.qualcomm.com/doc/87-96768-1/87-96768-1_REV_A_Qualcomm_Dragonwing_FiberPro_A8_Elite_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: FiberPro A8 Elite network SoC (penta-core CPU, Hexagon NPU, packet processing engine)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pon
+    label: PON optical interface (GPON / XG-PON / XGS-PON, 10G)
+    blocks: [optical_driver, optical_tia]
+    col: 1
+    row: 0
+  - id: wifi
+    label: Wi-Fi 8 radios (penta-band, 5x5 or 2x2 + 3x3, scan radio, up to 20 antennas)
+    blocks: [wifi_soc]
+    col: 2
+    row: 0
+  - id: rffe
+    label: RF front end (platform-supplied) per chain (2.4 / 4.9 / 5 / 6 GHz)
+    blocks: [wifi_fem, filter_saw_baw]
+    col: 0
+    row: 1
+  - id: ethernet
+    label: Ethernet (2x 25GE, 4x 2.5GE; USXGMII)
+    blocks: [ethernet_phy]
+    col: 1
+    row: 1
+  - id: voice
+    label: Voice (SLIC over PCM)
+    blocks: [slic]
+    col: 2
+    row: 1
+  - id: memory
+    label: Memory (DDR4 / DDR5 32-bit) and flash (eMMC / NAND / NOR)
+    blocks: [ddr_flash, flash]
+    col: 0
+    row: 2
+  - id: extensions
+    label: Platform extensions (4G / 5G FWA, 802.15.4 Zigbee / Thread, Bluetooth)
+    blocks: [modem, wireless_soc]
+    col: 1
+    row: 2
+  links:
+  - [pon, soc, XGS-PON WAN]
+  - [soc, wifi, '']
+  - [wifi, rffe, per chain]
+  - [soc, ethernet, USXGMII]
+  - [soc, voice, PCM]
+  - [memory, soc, '']
+  - [soc, extensions, PCIe / USB / coex]
+  questions:
+  - id: pon
+    question: PON standard
+    choices: [GPON, XG-PON, XGS-PON]
+    source: QC-PB-FIBERPRO-A8 'Passive Optical Network'
+  - id: radio_cfg
+    question: Wi-Fi radio configuration
+    choices: [5x5, 2x2 + 3x3 dual-band simultaneous]
+    source: QC-PB-FIBERPRO-A8 'Flexible radio configuration'
+  - id: public_safety
+    question: 4.9 GHz public-safety band
+    choices: ['yes', 'no']
+    source: QC-PB-FIBERPRO-A8 'Spectral Bands'
+  - id: voice
+    question: Telephony port (SLIC)
+    choices: ['yes', 'no']
+    source: 'QC-PB-FIBERPRO-A8 ''Voice: SLIC PCM'''
+  - id: fwa_backup
+    question: 4G / 5G FWA backup
+    choices: ['yes', 'no']
+    source: QC-PB-FIBERPRO-A8 'Platform Extensions'
+- name: Wi-Fi 7 home router / broadband gateway with AI coprocessor and 10G PON (Dragonwing NPro A7 Elite IPQ5424) (Qualcomm)
+  category: Communications equipment
+  note: 'From Qualcomm public material: QC-PB-NPRO-A7'
+  sources:
+  - {doc: QC-PB-NPRO-A7, title: Qualcomm Dragonwing NPro A7 Elite Platform product brief (87-82994-1 rev C), url: 'https://docs.qualcomm.com/doc/87-82994-1/87-82994-1_REV_C_Qualcomm_Dragonwing_NPro_A7_Elite_Platform_Product_Brief.pdf'}
+  groups:
+  - id: soc
+    label: NPro A7 Elite network SoC (quad-core) + AI coprocessor (Hexagon NPU, 40 TOPS)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi
+    label: Wi-Fi 7 radios (up to quad-band, 16 streams, 320 MHz)
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: rffe
+    label: Front-end modules and filters (platform-supplied)
+    blocks: [wifi_fem, filter_saw_baw]
+    col: 2
+    row: 0
+  - id: pon
+    label: 10G XGS-PON (residential gateway / SFU ONU)
+    blocks: [optical_driver, optical_tia]
+    col: 0
+    row: 1
+  - id: ethernet
+    label: Ethernet (3 ports 10 / 2.5 GE; 3x USXGMII / SGMII+)
+    blocks: [ethernet_phy]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory (DDR3L / DDR4) and flash (NOR / NAND / eMMC)
+    blocks: [ddr_flash, flash]
+    col: 2
+    row: 1
+  - id: extensions
+    label: Platform extensions (4G / 5G FWA, 802.15.4, Bluetooth; PTA coex)
+    blocks: [modem, wireless_soc]
+    col: 0
+    row: 2
+  links:
+  - [pon, soc, XGS-PON WAN]
+  - [soc, wifi, '']
+  - [wifi, rffe, per chain]
+  - [soc, ethernet, USXGMII / SGMII+]
+  - [memory, soc, '']
+  - [soc, extensions, PCIe / USB / PTA coex]
+  questions:
+  - id: bands
+    question: Wi-Fi bands
+    choices: [dual-band, tri-band, quad-band]
+    source: 'QC-PB-NPRO-A7 ''Maximum Band Configuration: Quad-band'''
+  - id: wan
+    question: WAN
+    choices: [XGS-PON (gateway / ONT), Ethernet WAN (router / mesh node), 4G / 5G FWA]
+    source: QC-PB-NPRO-A7 'Deployment Types'; 'Platform Extensions'
+  - id: afc
+    question: 6 GHz standard power (AFC)
+    choices: ['yes', no (low power indoor)]
+    source: QC-PB-NPRO-A7 'Dragonwing Automated Frequency Coordination (AFC) Suite'
+  - id: smart_home
+    question: Smart-home radio (Zigbee / Thread / BLE)
+    choices: ['yes', 'no']
+    source: QC-PB-NPRO-A7 'Platform Extensions'

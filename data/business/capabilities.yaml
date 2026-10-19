@@ -1,0 +1,562 @@
+# Public technology platforms of Skyworks and Qorvo (indicative; from public sources). Used by the Technology fit page.
+#
+# Compiled 2026-10-19 from public sources only: SEC 10-K filings (Skyworks FY2025 ended 2025-10-03, FY2021, FY2015;
+# Qorvo FY2025 ended 2025-03-29, FY2024, FY2020), company press releases / product pages, foundry and trade-press
+# articles. No confidential data. Where a detail (process node, fab of record, foundry partner) is not disclosed,
+# the entry says "not public" instead of guessing.
+#
+# owner: who holds the platform today. An empty list means neither company has it (gap) or it was divested.
+# status (optional): current | divested | closing | closed | in development. Omitted = current.
+# kind: process | filter | packaging | design IP | manufacturing
+# functions: ids from data/blocks/functions.yaml that the platform serves (or served, for divested entries).
+#
+# Context: on 2025-10-27 Skyworks and Qorvo signed a merger agreement (Skyworks FY2025 10-K, "Proposed Transaction
+# with Qorvo"); entries keep the two owners separate. Skyworks' timing, isolation, broadcast, voice and PoE lines come
+# from the Infrastructure & Automotive business of Silicon Labs (acquired 2021).
+platforms:
+
+  # ------------------------------------------------------------------ compound-semiconductor processes
+  gaas_hbt:
+    name: GaAs HBT (InGaP/GaAs heterojunction bipolar)
+    owner: [Skyworks, Qorvo]
+    kind: process
+    details: >-
+      Skyworks: in-house GaAs HBT power-amplifier fab at Newbury Park, CA (converted from 4- to 6-inch wafers from 2007);
+      Skyworks also uses foundries "to supplement our gallium arsenide wafer manufacturing capacity" (FY2025 10-K).
+      Qorvo: makes GaAs wafers in-house (FY2025 10-K: BAW, GaAs, GaN and SAW fabs in NC, OR, TX); GaAs wafer
+      production was moved from Greensboro, NC to Hillsboro, OR in 2025, and Qorvo also sources GaAs from suppliers.
+      HBT generation names, emitter widths and wafer-size per site today: not public.
+    functions: [power_amplifier, pa_module, rf_frontend, wifi_fem, bt_fem, v2x_fem, rf_gain_block, rf_predriver, optical_driver]
+    could_also: "Linear PAs for satellite direct-to-device / NTN handsets and FR3 (7-15 GHz) user equipment, and higher-voltage HBT drivers for CATV/DOCSIS 4.0 if not already covered."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://siliconsemiconductor.net/article/70116/Skyworks_converting_GaAs_HBT_fab_to_6-inches ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.semiconductor-today.com/news_items/2025/aug/qorvo-040825.shtml"
+
+  gaas_phemt:
+    name: GaAs pHEMT
+    owner: [Skyworks, Qorvo]
+    kind: process
+    details: >-
+      Qorvo: foundry PDKs for QPHT15 (0.15 um power pHEMT) and QPHT25 (0.25 um power pHEMT) listed by Keysight; TQPHT09
+      (90 nm pHEMT, launched 2015 for optical modulator drivers) made in the Richardson, TX GaAs fab; older TQP15/TQP25
+      were 150 mm processes in Hillsboro, OR (2008-2010). Current fab of record per process: not public.
+      Skyworks: GaAs pHEMT switch fab in Woburn, MA (2007 release); Woburn still listed as a wafer fab in the FY2025 10-K;
+      pHEMT node/generation: not public. Skyworks FY2015 10-K also lists BiFET (HBT + FET on one die).
+    functions: [lna, gnss_lna, rf_switch, rf_gain_block, rf_attenuator, rf_phase_shifter, power_amplifier, optical_driver, active_antenna_amp, rf_mixer]
+    could_also: "Low-noise E-band / D-band backhaul and 200G-per-lane optical driver amplifiers, building on the 90 nm pHEMT driver process."
+    source: "https://www.keysight.com/fi/en/lib/resources/miscellaneous/foundry-partners--qorvo-2753095.html ; https://www.qorvo.com/about/news-events/news-releases/2015/qorvo-ups-optical-bandwidth-with-new-gaas-process-technology ; https://siliconsemiconductor.net/article/70116/Skyworks_converting_GaAs_HBT_fab_to_6-inches ; https://www.sec.gov/Archives/edgar/data/0000004127/000000412715000037/fy1510k1022015.htm"
+
+  gan_on_sic:
+    name: GaN-on-SiC HEMT
+    owner: [Qorvo]
+    kind: process
+    details: >-
+      Qorvo (TriQuint heritage), Richardson, TX (DoD Category 1A Trusted Source foundry; also offered as open foundry).
+      QGaN25: 0.25 um GaN-on-SiC, up to 40 V, DC-18 GHz (foundry page: operation through 23 GHz), production 2012,
+      scaled to 6-inch (150 mm) wafers in 2015; QGaN25HV variant used for discrete transistors (e.g. QPD1010).
+      QGaN15: 0.15 um GaN-on-SiC, up to 28 V, DC-40 GHz (foundry page: through 50 GHz), 100 mm wafers, released 2013-2015.
+      90 nm GaN node in development under the DoD STARRY NITE program (2022 award, target up to W-band); release
+      status not public. Skyworks: no public GaN process.
+    functions: [power_amplifier, rf_predriver, rf_gain_block, lna, rf_switch, rf_limiter, rf_frontend, beamformer_ic, mmwave_antenna_module]
+    could_also: "Solid-state RF energy sources (industrial heating, plasma, cooking), FR3 / 7-15 GHz massive-MIMO base-station PAs and Ka-band LEO terminal PAs."
+    source: "https://qorvo.com/foundry ; https://cn.qorvo.com/resources/d/qorvo-field-proven-gan-solutions-brochure ; https://www.mwrf.com/semiconductors/qorvo-starts-manufacturing-six-inch-gallium-nitride-wafers ; https://cn.qorvo.com/design-hub/blog/a-brighter-rf-future-for-gan-and-starry-nite ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  gan_on_si:
+    name: GaN-on-Si (RF or power)
+    owner: []
+    status: not held
+    kind: process
+    details: >-
+      No public GaN-on-Si RF or power process found at either company. Qorvo's GaN is GaN-on-SiC; its 10-K lists
+      "GaN on silicon carbide" wafers as raw material. Skyworks discloses no GaN process. Gap, not a platform.
+    functions: []
+    could_also: "Would be needed for low-cost GaN power FETs / GaN gate-driver co-packs (power_fets, half_bridge_driver) or handset GaN PAs; today only via a foundry partner."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm"
+
+  sic_jfet_divested:
+    name: SiC power JFETs / cascodes (UnitedSiC)
+    owner: []
+    status: divested
+    kind: process
+    details: >-
+      Qorvo's SiC power device business (United Silicon Carbide, acquired 2021) was sold to onsemi; closed January 2025
+      (USD 115 M). Not current technology for either company.
+    functions: [power_fets, power_module]
+    could_also: "None in the combined portfolio; SiC power devices would have to be re-entered or partnered."
+    source: "https://investor.onsemi.com/news-releases/news-release-details/onsemi-completes-acquisition-qorvos-silicon-carbide-jfet ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  # ------------------------------------------------------------------ silicon RF processes (foundry)
+  rf_soi:
+    name: RF SOI switch / LNA / tuner processes
+    owner: [Skyworks, Qorvo]
+    kind: process
+    details: >-
+      Both are fabless for SOI. Qorvo FY2025 10-K: SOI "for LNAs, switches and tuners" sourced from key suppliers.
+      Both companies are quoted in GlobalFoundries 8SW RF SOI releases (300 mm, Fab 10 East Fishkill, NY; 2017-2019)
+      as users of its switch/LNA technology. Which node each company uses in production (e.g. 130/45 nm) and other
+      foundry partners: not public. Silicon-on-sapphire (SOS): no public SOS process at either company.
+    functions: [antenna_switch, rf_switch, antenna_tuner, lna, gnss_lna, diversity_rx_module, rf_frontend, rf_attenuator, wifi_fem, bt_fem]
+    could_also: "SOI digital step attenuators / phase shifters for FR3 and SATCOM phased arrays and SOI PAs for low-power IoT / Wi-Fi HaLow front ends."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.microwavejournal.com/articles/29090-globalfoundries-delivers-8sw-rf-soi-technology-for-mobile-5g-applications ; https://www.qorvo.com/about/news-events/news-releases/2019/globalfoundries-crosses-billion-dollar-design-win-threshold-with-8sw-rf-soi-technology"
+
+  sige_bicmos:
+    name: SiGe / BiCMOS
+    owner: [Skyworks, Qorvo]
+    kind: process
+    details: >-
+      Qorvo FY2025 10-K: SiGe "for amplifiers and LNAs", sourced from foundries. Skyworks FY2015 10-K lists silicon
+      germanium among its process technologies; Skyworks sells CMOS/SiGe Wi-Fi "RFeIC" front ends (SiGe Semiconductor
+      heritage). Foundry, node and fT/fmax: not public.
+    functions: [lna, gnss_lna, rf_gain_block, rf_mixer, rf_transceiver, wifi_fem, bt_fem, active_antenna_amp, beamformer_ic, optical_tia]
+    could_also: "Optical TIAs and drivers for 800G/1.6T modules and automotive radar front ends, which use SiGe BiCMOS elsewhere in the industry."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.sec.gov/Archives/edgar/data/0000004127/000000412715000037/fy1510k1022015.htm"
+
+  # ------------------------------------------------------------------ CMOS mixed-signal (foundry)
+  cmos_mixed_signal:
+    name: Bulk CMOS / mixed-signal CMOS (controllers, SoCs, power)
+    owner: [Skyworks, Qorvo]
+    kind: process
+    details: >-
+      Both fabless for CMOS. Qorvo FY2025 10-K: CMOS for digital controllers and "specialized CMOS for PMICs, SoC
+      solutions, ET and APT power management". Skyworks: silicon-based products from foundries in Asia-Pacific (FY2025
+      10-K); Silicon Labs-heritage timing, isolation, broadcast and voice ICs are CMOS ("RF CMOS" for tuners).
+      Process nodes (e.g. 55/90/130/180 nm) and foundry names for any of these lines: not public.
+    functions: [clock_generator, jitter_attenuator, digital_isolator, am_fm_tuner, tv_tuner, tv_demodulator, digital_radio_demod, single_chip_radio, slic, modem_daa, pmic, motor_controller, wireless_soc, uwb_soc, ble_soc, rf_pa_bias]
+    could_also: "Generic mixed-signal blocks (ADCs, supervisors, sequencers, RTC, watchdog) that reuse existing CMOS design flows but are not sold as catalogue parts today."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://news.silabs.com/2015-03-25-Silicon-Labs-Pumps-Up-the-Volume-for-Automotive-Infotainment-with-Scalable-Car-Radio-System-Solutions"
+
+  # ------------------------------------------------------------------ acoustic and passive filter technologies
+  saw_filter:
+    name: SAW filters
+    owner: [Skyworks, Qorvo]
+    kind: filter
+    details: >-
+      Skyworks: SAW/TC-SAW/BAW wafer processing in Osaka, Japan (Panasonic filter business: 66 % JV 2014, 100 % 2016);
+      filter assembly/test in Singapore. Kadoma, Japan was also a filter wafer fab in the FY2021 10-K but is not in the
+      FY2025 facility table. Qorvo: SAW wafers made in Greensboro, NC (Apopka, FL SAW fab consolidated into Greensboro
+      in FY2020); in Aug 2025 Qorvo announced closing the Greensboro fab and moving SAW production to a new line in
+      Richardson, TX. Substrates: lithium tantalate / lithium niobate (Qorvo 10-K). Frequency limits per process: not public.
+    functions: [filter_saw_baw, diplexer, pa_module, diversity_rx_module, rf_frontend, gnss_lna]
+    could_also: "Discrete automotive/industrial SAW filters and duplexers for LPWAN, GNSS L1/L5 and V2X modules sold outside the companies' own modules."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://www.sec.gov/Archives/edgar/data/4127/000000412721000058/swks-20211001.htm ; https://www.everythingrf.com/news/details/2823-skyworks-acquires-remaining-34-interest-in-filter-joint-venture-with-panasonic ; https://www.sec.gov/Archives/edgar/data/1604778/000160477820000030/qorvo2020032810-k.htm ; https://www.semiconductor-today.com/news_items/2025/aug/qorvo-040825.shtml"
+
+  tc_saw_filter:
+    name: TC-SAW (temperature-compensated SAW)
+    owner: [Skyworks, Qorvo]
+    kind: filter
+    details: >-
+      Skyworks names TC-SAW explicitly (FY2025 10-K; wafers in Osaka). Qorvo markets temperature-compensated SAW and BAW
+      as "LowDrift" / "NoDrift" (NoDrift: about 0 +/- 2 ppm/degC per distributor material); Qorvo's 10-K says only "SAW".
+      Layer stack, IHP/POI variants and frequency range: not public.
+    functions: [filter_saw_baw, diplexer, pa_module, diversity_rx_module, rf_frontend]
+    could_also: "Narrow-guard-band coexistence filters for n79 / Wi-Fi 6E-7 and automotive shark-fin modules sold as discretes."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://www.mouser.ch/qorvo-lowdrift-nodrift-baw-saw-filters ; https://cn.qorvo.com/resources/d/qorvo-advanced-filtering-solutions-brochure"
+
+  baw_filter:
+    name: BAW filters
+    owner: [Qorvo, Skyworks]
+    kind: filter
+    details: >-
+      Qorvo: SMR-type BAW (TriQuint heritage), LowDrift/NoDrift temperature-compensated variants, automotive AEC-Q
+      parts; BAW production consolidated in Richardson, TX after Farmers Branch, TX BAW fab was idled (FY2020-21) and
+      sold (FY2024). Skyworks: BAW wafer processing in Osaka, Japan (FY2025 10-K) and BAW filter catalogue parts
+      (e.g. Wi-Fi 5/6 GHz and automotive 6 GHz filters); Skyworks BAW structure (SMR vs FBAR) not public.
+      "XBAW" is an Akoustis brand, not a Skyworks or Qorvo platform. Upper frequency per process: not public.
+    functions: [filter_saw_baw, wifi_fem, diplexer, pa_module, v2x_fem, diversity_rx_module, rf_frontend]
+    could_also: "Discrete BAW filters for FR3 (7-15 GHz), UWB channel 9 and satellite (L/S/C-band) terminals, and BAW resonators reused for timing."
+    source: "https://qorvo.com/innovation/technology/baw ; https://www.sec.gov/Archives/edgar/data/1604778/000160477824000036/rfmd-20240330.htm ; https://www.sec.gov/Archives/edgar/data/1604778/000160477820000030/qorvo2020032810-k.htm ; https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://www.skyworksinc.com/en/Products/Filters/SKY5A1005"
+
+  ipd_thin_film:
+    name: IPD / thin-film and silicon passives
+    owner: [Skyworks]
+    kind: process
+    details: >-
+      Skyworks FY2025 10-K calls Skyworks "a leader in passive devices"; catalogue includes MIS silicon chip
+      capacitors, power splitters/combiners and Wi-Fi multiplexers ("Meshplexer"). Process and fab: not public.
+      Qorvo: integrated passives inside modules are implied by its packaging description, but a named IPD process is
+      not public.
+    functions: [rf_passive, diplexer, filter_saw_baw]
+    could_also: "IPD-based baluns, couplers and low-pass filters as discretes for Wi-Fi 7 / UWB reference designs and mmWave AiP feed networks."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://www.skyworksinc.com/en/Products/RF-Passives/APS3606"
+
+  ceramics_ferrites:
+    name: Technical ceramics, dielectric resonators and ferrites (Trans-Tech / RF Ceramics)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: >-
+      Skyworks subsidiary Trans-Tech (now "RF Ceramics"), Adamstown, Maryland: dielectric resonators and coaxial
+      resonators (DRO/VCO), ceramic bandpass filters (ceramic-based filters to 7 GHz launched 2015), ferrite and garnet
+      materials for circulators/isolators, coaxial inductors, powders. Current product scope should be checked on
+      Skyworks' site.
+    functions: [filter_saw_baw, circulator_isolator, rf_passive]
+    could_also: "Finished drop-in circulators/isolators for GaN radar and base-station PAs, and ceramic GNSS/UWB chip antennas (function: antenna)."
+    source: "https://electronics360.globalspec.com/article/18403/skyworks-aerospace-and-defense ; https://www.wirelessdesignonline.com/doc/technical-ceramics-for-dielectric-and-magnetic-materials-brochure-0001"
+
+  # ------------------------------------------------------------------ MEMS
+  rf_mems:
+    name: RF MEMS switches / tuners (Cavendish Kinetics)
+    owner: [Qorvo]
+    kind: process
+    details: >-
+      Qorvo acquired the rest of Cavendish Kinetics (FY2020) for RF MEMS; FY2025 10-K lists "MEMS technology for switches
+      and tuners" among sourced technologies. Fab/foundry and volume status: not public.
+    functions: [antenna_tuner, rf_switch]
+    could_also: "Low-loss MEMS tunable matching for IoT/wearable antennas and MEMS switches for test & measurement."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477820000008/qorvo2019122810-q.htm ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  mems_force_sensing:
+    name: MEMS force sensing (NextInput)
+    owner: [Qorvo]
+    status: closing
+    kind: process
+    details: >-
+      Qorvo acquired NextInput (MEMS force sensors for smartphones, wearables, automotive HMI) in May 2021. In Aug 2025
+      Qorvo said it had "begun a sales process related to our MEMS force-sensing business". Treat as being divested.
+    functions: []
+    could_also: "Force/strain sensing for automotive HMI and industrial buttons, if retained; no matching function id in functions.yaml."
+    source: "https://www.qorvo.com/about/news-events/news-releases/2021/qorvo-acquires-leading-mems-based-sensor-solution-provider-nextinput ; https://www.semiconductor-today.com/news_items/2025/aug/qorvo-040825.shtml"
+
+  # ------------------------------------------------------------------ isolation
+  digital_isolation_capacitive:
+    name: Capacitive digital isolation (Si86xx / Si88xx / Si82xx / Si89xx)
+    owner: [Skyworks]
+    kind: design IP
+    details: >-
+      Silicon Labs heritage. CMOS capacitive-coupled isolation barrier: Si86xx up to 5 kVrms, 150 Mbps, CMTI 50 kV/us
+      (distributor data); families include digital isolators (Si84xx, Si86xx, Si86Sx, Si87xx, Si80xx), isolators with
+      integrated dc-dc (Si88xx), isolated gate drivers (Si82xx), isolated amplifiers and delta-sigma modulators
+      (Si892x, Si894x), isolated smart switch (Si834x), isolated digital input (Si838x), isolated RS-485 (Si858x).
+      Foundry, node and barrier dielectric details: not public. Qorvo: no isolation products.
+    functions: [digital_isolator, gate_driver, isolated_switch_driver, isolated_amplifier, current_sensor, isolated_dcdc, isolated_smart_switch, isolated_digital_input, rs485_transceiver, adc]
+    could_also: "Isolated CAN / CAN-FD transceivers, isolated I2C/SPI with power, and isolated ADCs for 800 V BMS."
+    source: "https://www.skyworksinc.com/en/Products/Isolation/Si86xx-Digital-Isolators/Si8600AB-IS ; https://www.mouser.in/new/skyworks-solutions/skyworks-si86x-isolators ; https://microwavejournal.com/articles/35874-skyworks-to-acquire-the-infrastructure-and-automotive-business-of-silicon-labs"
+
+  optocouplers:
+    name: Hermetic / radiation-tolerant optocouplers (Isolink)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: >-
+      Skyworks Defense & Space / Isolink (Milpitas, CA; founded 1987): hermetic phototransistor optocouplers (OLH series,
+      TO-5, ceramic DIP, LCC), linear optocouplers (OLH7000), photovoltaic optocouplers for MOS gate drive (OLH910),
+      radiation-tolerant parts; 1000-1500 VDC isolation, -55 to +125 degC. Production site and LED/detector source:
+      not public. Not a plastic commercial optocoupler line.
+    functions: [optocoupler, isolated_switch_driver]
+    could_also: "Space-grade isolated gate drivers and isolated power for LEO satellites, combining hermetic packaging with the capacitive isolator IP."
+    source: "https://www.skyworksinc.com/Products/Optocouplers/OLH2047-OLH2048-OLH2049 ; https://www.skyworksinc.com/en/Products/Optocouplers/OLH5800-OLH5801 ; https://www.rfcafe.com/miscellany/press-releases/2013/Isolink-Dual-Channel-Radiation-Tolerant-Phototransistor-Optocoupler-5-24-2013.htm"
+
+  # ------------------------------------------------------------------ timing
+  timing_dspll_crystal:
+    name: Timing - DSPLL / MultiSynth clocks and crystal oscillators
+    owner: [Skyworks]
+    kind: design IP
+    details: >-
+      Silicon Labs heritage: DSPLL and MultiSynth architectures; clock generators, jitter attenuators (incl. NetSync
+      network synchronizers, IEEE 1588), clock buffers, PCIe clocks, RF synthesizers, crystal XO/VCXO (quartz + PLL).
+      Silicon Labs also introduced single-die CMOS+MEMS oscillators (Si50x, 2013); whether that line continues at Skyworks
+      is not confirmed. CMOS node and foundry: not public. Qorvo: no timing products.
+    functions: [crystal_oscillator, clock_generator, clock_buffer, jitter_attenuator, pcie_buffer, rf_synthesizer]
+    could_also: "Automotive Ethernet / SerDes reference clocks and RTCs (function: rtc), which use the same PLL IP but are not in the portfolio."
+    source: "https://www.skyworksinc.com/en/Products/Timing/Any-Format-Clock-Buffers/SKY53510 ; https://news.silabs.com/2013-06-26-Silicon-Labs-Introduces-the-Industrys-First-Single-Die-MEMS-Oscillator ; https://microwavejournal.com/articles/35874-skyworks-to-acquire-the-infrastructure-and-automotive-business-of-silicon-labs"
+
+  timing_baw_resonator:
+    name: BAW-resonator timing (crystal-free clocks)
+    owner: [Skyworks]
+    kind: design IP
+    details: >-
+      Nov 2025: Skyworks SKY63101/02/03 jitter-attenuating clocks and SKY69001/02/101 NetSync clocks combine DSPLL /
+      MultiSynth with an integrated BAW resonator (no external quartz/XO/VCXO); ~17 fs jitter for 224G PAM4 SerDes,
+      -142 dBc/Hz @ 100 kHz for CPRI. Where the BAW resonator is made (Osaka or other): not public.
+    functions: [jitter_attenuator, clock_generator, crystal_oscillator]
+    could_also: "Crystal-free BAW oscillators (XO replacements) for automotive and data-center modules."
+    source: "https://investors.skyworksinc.com/news-releases/news-release-details/skyworks-introduces-new-programmable-bulk-acoustic-wave-clocks"
+
+  # ------------------------------------------------------------------ broadcast, voice, PoE (Silicon Labs heritage)
+  broadcast_radio_tv:
+    name: Broadcast radio and TV receivers (RF CMOS)
+    owner: [Skyworks]
+    kind: design IP
+    details: >-
+      Si479xx hybrid SDR automotive AM/FM/DAB tuners, Si469xx digital radio coprocessors (HD Radio / DAB / DRM),
+      Si47xx single-chip radios, Si21xx TV/STB tuners and DVB-T2/C2/S2X and ISDB-T demodulators. Low-IF RF CMOS
+      architecture; process node and foundry: not public.
+    functions: [am_fm_tuner, digital_radio_demod, single_chip_radio, tv_tuner, tv_demodulator]
+    could_also: "Satellite-radio and 5G broadcast receivers and active antenna amplifiers paired with the tuners."
+    source: "https://audioxpress.com/news/skyworks-introduces-si469xx-product-family-of-digital-radio-coprocessors-for-automotive-infotainment-systems ; https://news.silabs.com/2015-03-25-Silicon-Labs-Pumps-Up-the-Volume-for-Automotive-Infotainment-with-Scalable-Car-Radio-System-Solutions"
+
+  voice_slic_daa_poe:
+    name: ProSLIC voice, modem/DAA and PoE controllers
+    owner: [Skyworks]
+    kind: design IP
+    details: >-
+      ProSLIC subscriber-line interfaces (Si3217x, Si3228x, Si3229x), data/voice modems and DAAs, PoE PSE controllers
+      (Si347x, IEEE 802.3bt) and powered-device interfaces (Si34xx, Class 3-8). Processes (high-voltage CMOS): not public.
+    functions: [slic, modem_daa, poe_pse, poe_pd]
+    could_also: "Single-pair Ethernet PoDL (power over data line) controllers for industrial and automotive networks."
+    source: "https://www.skyworksinc.com/en/Products/Power/Multi-port-PSE-Controllers/Si3472A-IM ; https://microwavejournal.com/articles/35874-skyworks-to-acquire-the-infrastructure-and-automotive-business-of-silicon-labs"
+
+  # ------------------------------------------------------------------ power management
+  pmic_configurable_power:
+    name: Configurable PMICs and motor-control SoCs (Active-Semi heritage)
+    owner: [Qorvo]
+    kind: design IP
+    details: >-
+      Qorvo acquired Active-Semi (fabless, programmable analog power) in 2019. Products: configurable/OTP PMICs (ACT8xxxx),
+      Power Application Controllers (PAC: MCU + gate drivers + power manager), bucks, buck-boosts, SSD power-loss
+      protection; FY2025 10-K: "configurable power management IP" for motor control, BMS, SSDs, power tools.
+      Also ET/APT power management for Qorvo cellular modules. Process: "specialized CMOS" from foundries; node not public.
+    functions: [pmic, motor_controller, wide_vin_buck, pol_buck, buck_boost, power_loss_protection, cc_regulator, three_phase_gate_driver, half_bridge_driver, rf_pa_bias]
+    could_also: "Automotive-grade (AEC-Q100) configurable PMICs for zonal controllers and battery monitor AFEs for e-bike / power-tool packs."
+    source: "https://www.qorvo.com/about/news-events/news-releases/2019/qorvo-to-acquire-active-semi-international ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  power_management_skyworks:
+    name: Skyworks power management (LED drivers, RF PMICs)
+    owner: [Skyworks]
+    kind: design IP
+    details: >-
+      Catalogue includes charge-pump and boost white-LED backlight and camera-flash drivers (AAT/SKY81xxx; Analogic
+      Technologies heritage), RF PMICs (Sky5 PMIC, PA envelope-tracking supply, step-down for PAs), step-down converters
+      and over-voltage protection. Process and foundry: not public.
+    functions: [led_driver, rf_pa_bias, pol_buck, pmic, load_switch]
+    could_also: "Automotive LED drivers and wearable PMICs reusing the charge-pump and buck IP."
+    source: "https://www.skyworksinc.com/en/Products/Power-Management/AAT3693 ; https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm"
+
+  # ------------------------------------------------------------------ low-power radio SoCs and beamformers
+  uwb_soc:
+    name: UWB transceivers / SoCs (Decawave)
+    owner: [Qorvo]
+    kind: design IP
+    details: >-
+      Decawave acquired Feb 2020 (USD 372.7 M per 10-Q). DW1000 / DW3000 family (IEEE 802.15.4z impulse-radio UWB,
+      channels 5 and 9 at 6.5/8 GHz, PDoA variants, Apple U1/U2 interoperable), automotive UWB for digital key and child
+      presence detection (radar mode). Process node and foundry: not public. Skyworks: no UWB SoC public.
+    functions: [uwb_soc, wireless_soc, uwb_fem, radar_transceiver]
+    could_also: "UWB radar sensors for in-cabin and smart-home presence detection as standalone parts."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477820000057/qorvo2020062710-q.htm ; https://www.qorvo.com/feature/uwb-solutions-compatible-with-apple-u1 ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  low_power_radio_soc:
+    name: 802.15.4 / BLE / Matter SoCs (QPG, GreenPeak heritage)
+    owner: [Qorvo]
+    kind: design IP
+    details: >-
+      QPG multi-protocol SoCs (e.g. QPG6200: Zigbee, Thread, BLE, Matter; smart home). FY2025 10-K lists Matter, BLE,
+      Zigbee, Thread, Wi-Fi and cellular IoT in CSG. Process node and foundry: not public.
+    functions: [ble_soc, wireless_soc]
+    could_also: "Combined UWB + BLE + 802.15.4 single-chip SoCs for smart locks and trackers."
+    source: "https://www.everythingrf.com/products/wireless-soc-s/qorvo/787-483-qpg6200n ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  mmwave_beamformer:
+    name: Silicon beamformer and IF up/down-converter ICs (Anokiwave)
+    owner: [Qorvo]
+    kind: design IP
+    details: >-
+      Anokiwave acquired Feb 2024 (USD 83 M net cash): silicon beamformers and IF-RF converters for 5G mmWave, SATCOM,
+      AESA radar and EW; Gen 3 beamformers in the AWA-0213 24-30 GHz 32-element kit. Silicon process (SiGe BiCMOS vs
+      CMOS / SOI) and foundry: not public. Qorvo also sells GaN/GaAs mmWave FEMs (QPF4001 26-30 GHz, QPF4006 37-40.5 GHz,
+      QPF4010 24-27.5 GHz). Skyworks: none public.
+    functions: [beamformer_ic, mmwave_antenna_module, rf_transceiver, rf_mixer, rf_frontend]
+    could_also: "Ku/Ka-band LEO user-terminal tiles and FR3 (7-15 GHz) beamformers combining Anokiwave ICs with Qorvo GaN FEMs."
+    source: "https://ir.qorvo.com/node/23691 ; https://www.qorvo.com/products/p/AWA-0213 ; https://microwavejournal.com/articles/32596-mmwave-5g-front-end-module-qpf4001 ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  silicon_rf_diodes:
+    name: Silicon / GaAs RF diodes (PIN, Schottky, varactor, limiter)
+    owner: [Skyworks]
+    kind: process
+    details: >-
+      Skyworks catalogue: PIN, Schottky (beam-lead, chips, hermetic hi-rel), varactor and limiter diodes in plastic SMT,
+      chip and hermetic ceramic packages. Wafer source/site: not public (Woburn historically did silicon wafer
+      fabrication; not confirmed for today).
+    functions: [pin_diode, schottky_diode, varactor_diode, rf_limiter]
+    could_also: "High-power PIN/limiter modules and GaAs/GaN-protected receiver front ends for radar, combining diodes with Qorvo GaN."
+    source: "https://www.skyworksinc.com/en/Products/Diodes/APD1510-000"
+
+  # ------------------------------------------------------------------ packaging and module integration
+  sip_module_integration:
+    name: SiP / front-end module integration (Sky5, PAMiD, FEM)
+    owner: [Skyworks, Qorvo]
+    kind: packaging
+    details: >-
+      Skyworks: Sky5 platform, proprietary shielding and 3-D die stacking (FY2025 10-K); patents on dual-sided modules
+      with overmold and conformal (sputtered) shielding. Assembly/test in Mexicali (majority of finished products per
+      FY2021 10-K) and Singapore (filters). Qorvo: module integration combining GaAs, BAW, SAW, SOI, CMOS; internal
+      assembly in Costa Rica (wind-down by early 2026), Nuremberg (Germany) and US; China assembly sold to Luxshare
+      (2024), which now supplies Qorvo. Double-sided molding in production at either company: not public (patents only
+      for Skyworks).
+    functions: [pa_module, rf_frontend, diversity_rx_module, wifi_fem, bt_fem, uwb_fem, v2x_fem, gnss_lna, antenna_tuner]
+    could_also: "Complete connectivity SiPs (Wi-Fi/BT/UWB SoC + FEM + filters) for wearables and automotive telematics."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://patents.google.com/patent/US10888040 ; https://patents.justia.com/patent/11127690 ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  flip_chip_wlp:
+    name: Flip-chip, copper pillar and wafer-level packaging
+    owner: [Qorvo, Skyworks]
+    kind: packaging
+    details: >-
+      Qorvo FY2025 10-K: "our own flip chip, wire bond and wafer-level packaging technologies" deployable internally and at
+      OSATs; copper pillar seen in Qorvo FEM teardowns. Skyworks: in-house flip-chip / WLP process not public. Qorvo DW3000 UWB is offered in WLCSP.
+    functions: [filter_saw_baw, rf_switch, antenna_switch, lna, uwb_soc, pa_module, rf_frontend]
+    could_also: "Chip-scale discrete filters and LNAs for space-constrained wearables and hearables."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.prnewswire.co.uk/news-releases/complete-tear-down-analysis-of-qorvos-smr-baw-high-band-filter---tqf6405---a-complete-front-end-module-for-high-band-lte-application---research-and-markets-574593801.html"
+
+  microwave_module_assembly:
+    name: Microwave / defense module assembly and heterogeneous integration
+    owner: [Qorvo]
+    kind: packaging
+    details: >-
+      Qorvo Richardson, TX: "advanced microwave module assembly facility"; Trusted Source accreditation covers design, wafer
+      fab, post-processing, packaging, assembly and test; foundry services incl. "advanced packaging and heterogeneous
+      integration" for defense primes.
+    functions: [power_amplifier, rf_frontend, beamformer_ic, mmwave_antenna_module, rf_limiter, rf_switch]
+    could_also: "Space-qualified multi-chip modules for LEO payloads and GaN-on-SiC transmit/receive modules for commercial radar."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  antenna_in_package:
+    name: Antenna-in-package (AiP)
+    owner: []
+    status: not held
+    kind: packaging
+    details: >-
+      No public AiP product or process at either company found. Qorvo sells mmWave FEMs (QFN/overmold) and a 32-element
+      active antenna evaluation kit (AWA-0213, antenna on PCB); Skyworks patents describe conformal-shield antennas in RF
+      modules but no AiP product is public.
+    functions: []
+    could_also: "mmWave antenna modules (function mmwave_antenna_module) and UWB / GNSS antenna-integrated modules would need this capability."
+    source: "https://www.qorvo.com/products/p/AWA-0213 ; https://patents.google.com/patent/US11069978"
+
+  # ------------------------------------------------------------------ fabs and sites
+  site_skyworks_woburn:
+    name: Woburn, MA (Skyworks)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: "Owned, 158,000 sq ft, manufacturing and office (FY2025 10-K); listed as a semiconductor wafer fab; GaAs pHEMT switch fab (2007). Current process mix: not public."
+    functions: [rf_switch, antenna_switch, lna, rf_attenuator, pin_diode, schottky_diode]
+    could_also: "Low-volume compound-semiconductor runs for defense/space switch and diode products."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://siliconsemiconductor.net/article/70116/Skyworks_converting_GaAs_HBT_fab_to_6-inches"
+
+  site_skyworks_newbury_park:
+    name: Newbury Park, CA (Skyworks)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: "Owned 111,600 sq ft manufacturing + leased 110,000 sq ft design center (FY2025 10-K); GaAs HBT PA wafer fab, 6-inch since 2007-08."
+    functions: [power_amplifier, pa_module, wifi_fem]
+    could_also: "HBT PAs for NTN / satellite handsets."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://sst.semiconductor-digest.com/?p=27941"
+
+  site_skyworks_osaka:
+    name: Osaka, Japan (Skyworks)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: "Building owned (land leased to 2061), 383,600 sq ft; SAW, TC-SAW and BAW filter wafer processing (FY2025 10-K). Panasonic filter heritage."
+    functions: [filter_saw_baw, diplexer, pa_module]
+    could_also: "BAW resonators for crystal-free timing (location of BAW for SKY63xxx clocks not public)."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm"
+
+  site_skyworks_kadoma:
+    name: Kadoma, Japan (Skyworks)
+    owner: [Skyworks]
+    status: not listed
+    kind: manufacturing
+    details: "Leased, 97,300 sq ft, SAW/TC-SAW/BAW filter wafer fab in FY2021 10-K; not listed among principal facilities in FY2025 10-K. Whether it is closed or just no longer principal: not public."
+    functions: [filter_saw_baw]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412721000058/swks-20211001.htm ; https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm"
+
+  site_skyworks_mexicali:
+    name: Mexicali, Mexico (Skyworks)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: "Owned 380,000 sq ft + leased 378,000 sq ft; packaging, assembly and test (FY2025 10-K); substantial majority of finished products assembled/tested there (FY2021 10-K)."
+    functions: [pa_module, rf_frontend, wifi_fem, diversity_rx_module]
+    could_also: "Near-shore SiP assembly for North American automotive customers."
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm ; https://www.sec.gov/Archives/edgar/data/4127/000000412721000058/swks-20211001.htm"
+
+  site_skyworks_singapore:
+    name: Singapore (Skyworks)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: "Leased, 429,500 sq ft, filter manufacturing / filter packaging, assembly and test (FY2025 10-K)."
+    functions: [filter_saw_baw, diplexer]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm"
+
+  site_skyworks_adamstown:
+    name: Adamstown, MD (Skyworks Trans-Tech / RF Ceramics)
+    owner: [Skyworks]
+    kind: manufacturing
+    details: "Ceramic, dielectric and ferrite materials and components (see ceramics_ferrites). Not in the FY2025 10-K principal-facility table; size not public."
+    functions: [circulator_isolator, filter_saw_baw, rf_passive]
+    could_also: "Ceramic antennas and circulators."
+    source: "https://electronics360.globalspec.com/article/18403/skyworks-aerospace-and-defense"
+
+  site_qorvo_greensboro:
+    name: Greensboro, NC (Qorvo)
+    owner: [Qorvo]
+    status: closing
+    kind: manufacturing
+    details: "HQ (leased) and owned wafer fab (FY2025 10-K). GaAs wafer production moved to Hillsboro in 2025; Aug 2025 Qorvo announced closure of the fab and transfer of SAW production to Richardson, TX (cost benefit from late FY2027)."
+    functions: [filter_saw_baw, power_amplifier, pa_module]
+    could_also: "n/a (closing)"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.semiconductor-today.com/news_items/2025/aug/qorvo-040825.shtml"
+
+  site_qorvo_hillsboro:
+    name: Hillsboro, OR (Qorvo)
+    owner: [Qorvo]
+    kind: manufacturing
+    details: "Owned wafer fab (FY2025 10-K); GaAs (TriQuint heritage, 150 mm pHEMT since 2008); received Greensboro GaAs production in 2025."
+    functions: [power_amplifier, pa_module, rf_switch, lna, rf_gain_block]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.semiconductor-today.com/news_items/2025/aug/qorvo-040825.shtml"
+
+  site_qorvo_richardson:
+    name: Richardson, TX (Qorvo)
+    owner: [Qorvo]
+    kind: manufacturing
+    details: "Owned; wafer fabrication, assembly and test (FY2025 10-K). GaN-on-SiC and GaAs (DoD Trusted Source foundry), BAW (consolidated from Farmers Branch), new SAW line from 2025, microwave module assembly."
+    functions: [power_amplifier, filter_saw_baw, wifi_fem, rf_frontend, beamformer_ic, optical_driver]
+    could_also: "Single site for GaN + BAW + SAW heterogeneous modules."
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm ; https://www.semiconductor-today.com/news_items/2025/aug/qorvo-040825.shtml"
+
+  site_qorvo_farmers_branch:
+    name: Farmers Branch, TX (Qorvo)
+    owner: []
+    status: divested
+    kind: manufacturing
+    details: "BAW wafer fab idled (FY2020-21 per 10-Ks) and sold in FY2024 (about USD 49.5 M proceeds)."
+    functions: [filter_saw_baw]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477824000036/rfmd-20240330.htm ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  site_qorvo_apopka:
+    name: Apopka, FL (Qorvo)
+    owner: [Qorvo]
+    status: closed
+    kind: manufacturing
+    details: "Former SAW wafer fab; operations consolidated into Greensboro in FY2020, site repurposed as R&D center."
+    functions: [filter_saw_baw]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477820000030/qorvo2020032810-k.htm"
+
+  site_qorvo_costa_rica:
+    name: Heredia, Costa Rica (Qorvo)
+    owner: [Qorvo]
+    status: closing
+    kind: manufacturing
+    details: "Owned module and filter assembly and test (FY2025 10-K); wind-down announced Q4 FY2025, completion expected early calendar 2026, production moved to outsourced partners."
+    functions: [pa_module, filter_saw_baw, rf_frontend]
+    could_also: "n/a (closing)"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  site_qorvo_nuremberg:
+    name: Nuremberg, Germany (Qorvo)
+    owner: [Qorvo]
+    kind: manufacturing
+    details: "Leased, packaging and test (FY2025 10-K). Product scope at the site: not public."
+    functions: [rf_frontend, wireless_soc]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"
+
+  site_qorvo_beijing_dezhou:
+    name: Beijing and Dezhou, China (Qorvo)
+    owner: []
+    status: divested
+    kind: manufacturing
+    details: "Module assembly and test sites (Beijing owned, Dezhou leased) sold to Luxshare; closed May 2024 (Q1 FY2025). Luxshare now supplies assembly/test to Qorvo."
+    functions: [pa_module, rf_frontend]
+    could_also: "n/a"
+    source: "https://www.sec.gov/Archives/edgar/data/1604778/000160477824000036/rfmd-20240330.htm ; https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"

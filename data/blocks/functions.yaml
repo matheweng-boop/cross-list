@@ -223,3 +223,29 @@ functions:
   power_module: {label: IGBT / SiC power switch, category: sensors, source: external, note: Power module or discrete switches; not a Cross List part}
   motor: {label: Traction motor, category: sensors, source: external}
   camera_radar: {label: Camera / lidar / radar modules, category: sensors, source: external}
+  # added by tools/import_diagrams.py from research files
+  acdc_controller: {category: power, label: AC/DC controller (PFC / flyback / LLC / SR), note: 'Offline PWM, PFC and synchronous-rectifier controllers for mains-powered supplies (adapters, appliances, chargers, UPS). hv_flyback stays the HV-battery bias fl'}
+  efuse_hotswap: {category: protection, label: eFuse / hot-swap controller, note: 'Inrush and over-current protection on an input or output rail, with or without telemetry; power_loss_protection stays the eFuse + hold-up combination'}
+  relay_driver: {category: power, label: Relay / solenoid driver (low-side), note: 'Coil drivers for relays, contactors, valves and solenoids (e.g. Darlington arrays, PWM solenoid drivers)'}
+  motor_driver_brushed: {category: power, label: Brushed DC / stepper motor driver, note: 'Integrated H-bridge or stepper driver for small motors: locks, valves, levelling, lens focus, pumps, fans'}
+  usb_pd_controller: {category: interface, label: USB Type-C / PD controller, note: CC negotiation and power-path control for USB-C sources and sinks}
+  battery_protector: {category: power, label: Battery protector (cell OVP / UVP / OCP), note: Protector IC driving charge / discharge FETs; battery_monitor stays the fuel gauge / monitor}
+  wireless_power: {category: power, label: Wireless power transmitter / receiver (Qi), note: Inductive charging TX or RX}
+  dac: {category: sensing, label: DAC, note: 'Precision or high-speed DAC (bias, control loops, RF DAC)'}
+  touch_controller: {category: audio, label: Touch / capacitive / inductive sensing controller, note: 'Touch-screen controllers, capacitive buttons and sliders, inductive (metal) touch'}
+  display_driver: {category: audio, label: 'Display driver / bias power (LCD, OLED)', note: 'Display bias PMIC, LCD driver or display interface; led_driver stays the backlight', source: external}
+  haptics_driver: {category: audio, label: Haptics / piezo driver, note: ERM / LRA / piezo actuator and buzzer drivers}
+  env_sensor: {category: sensors, label: 'Environmental sensor (humidity, light, pressure)', note: 'Humidity, ambient-light and similar environmental sensor ICs (temperature_sensor stays separate)'}
+  hall_switch: {category: sensing, label: Hall-effect switch / latch, note: 'Digital Hall switches for lid, tamper, wake-up and BLDC commutation; position_sensor stays the angle / linear sensor'}
+  ultrasonic_afe: {category: sensing, label: Ultrasonic sensor AFE (transducer driver + echo receiver), note: 'Single-channel time-of-flight AFE: park assist, level, flow meters'}
+  ecg_afe: {category: sensing, label: ECG / biopotential AFE, note: 'Multi-channel biopotential ADC with lead-off, pace and respiration functions'}
+  ppg_afe: {category: sensing, label: Optical biosensing AFE (PPG / SpO2), note: LED driver + TIA + ADC for heart-rate and SpO2}
+  ultrasound_afe: {category: sensing, label: Medical ultrasound receive AFE, note: Multi-channel LNA + VGA + PGA + ADC (+ CW mixer) for imaging probes}
+  hv_pulser: {category: sensing, label: Ultrasound HV transmit pulser / T/R switch, note: Multi-level high-voltage pulsers with integrated transmit / receive switches}
+  # added by tools/import_diagrams.py from research files
+  lin_transceiver: {category: networking, label: LIN transceiver, note: 'Body / chassis LIN bus physical layer (often also inside a CAN/LIN SBC). Used in zone controller, airbag, HVAC, gateway, cluster, TPMS receiver.'}
+  switch_detection_interface: {category: interface, label: Multi-switch detection interface (MSDI), note: 'SPI switch-input monitor with wetting current and AMUX (e.g. 22-channel). Used in zone controller, EPS, HVAC, cluster, PLC inputs.'}
+  smartcard_interface: {category: interface, label: Contact smart card interface (ISO 7816), note: 'Contact reader analog interface for EMV cards and SAMs (payment terminals, POS).'}
+  # added by tools/import_diagrams.py from research files
+  acoustic_transducer: {category: audio, label: Microphone / speaker, note: DMIC / ECM / analog mic and speaker / receiver; external customer part, source: external}
+  usb_typec_hub: {category: interface, label: USB hub / Type-C port, note: USB 3.x hub and USB-C ports (alt-mode DP) on development / robotics boards, source: external}

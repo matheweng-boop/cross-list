@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 MIN_FUNCTIONS, MIN_SHARE = 3, 0.3
 SYNONYMS = {"application_processor": "soc", "dram": "ddr_flash", "nor_flash": "flash", "nand_flash": "flash",
-            "ufs_storage": "flash"}  # fmt: skip
+            "ufs_storage": "flash", "haptic_driver": "haptics_driver", "mems_sensor": "env_sensor"}  # fmt: skip
 FUNCTIONS = ROOT / "data/blocks/functions.yaml"
 LIBRARY = ROOT / "data/blocks/templates.yaml"
 BACKGROUND = ROOT / "data/blocks/background_templates.yaml"

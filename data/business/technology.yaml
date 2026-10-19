@@ -723,3 +723,84 @@ wireless_soc:
   tech: [RF CMOS SoC, UWB]
   reasoning: >-
     Qorvo QPG Matter/Thread/Zigbee SoCs and UWB SoCs are in production.
+# added for function ids from the TI / NXP / Qualcomm diagram research
+acdc_controller:
+  proximity: 1
+  tech: [PMIC control loops]
+  reasoning: >-
+    Offline AC/DC (PFC, flyback, LLC) controllers need high-voltage start-up and mains-side know-how; Qorvo PMIC control loops are only a partial base.
+efuse_hotswap:
+  proximity: 2
+  tech: [PMIC / power-path]
+  reasoning: >-
+    Qorvo ACT4910-type power-loss protection with eFuse is in production; standalone eFuse / hot-swap controllers are an adjacent extension.
+relay_driver:
+  proximity: 2
+  tech: [Isolated switch drivers, PMIC]
+  reasoning: >-
+    Skyworks isolated switch drivers and Qorvo power drivers share the low-side drive blocks; a relay / solenoid driver line is a new variant.
+battery_protector:
+  proximity: 2
+  tech: [Battery management SoC]
+  reasoning: >-
+    Qorvo PAC battery-management SoCs and chargers measure and protect cells; a small cell protector IC reuses those blocks.
+wireless_power:
+  proximity: 1
+  tech: [PMIC, RF power]
+  reasoning: >-
+    Qi transmitters / receivers combine power stages with in-band communication; RF and PMIC know-how help, but the product line would be new.
+dac:
+  proximity: 1
+  tech: [Mixed-signal CMOS]
+  reasoning: >-
+    Data converters exist only as blocks inside SoCs and broadcast audio chips; standalone precision or high-speed DACs would be a new line.
+haptics_driver:
+  proximity: 2
+  tech: [Class-D audio, MEMS force sensing]
+  reasoning: >-
+    Skyworks class-D audio amplifiers and Qorvo MEMS force-sensing (NextInput heritage) are close to LRA / piezo haptic drivers.
+env_sensor:
+  proximity: 1
+  tech: [MEMS force sensing]
+  reasoning: >-
+    Qorvo MEMS force sensing is the only sensor base; humidity, pressure, light or IMU sensors need different MEMS and calibration.
+ppg_afe:
+  proximity: 1
+  tech: [Low-noise analog]
+  reasoning: >-
+    Optical biosensing AFEs need precision photodiode front ends and LED drivers; low-noise analog know-how only partly applies.
+ultrasound_afe:
+  proximity: 1
+  tech: [LNA / VGA design]
+  reasoning: >-
+    Medical ultrasound receive AFEs use LNA / VGA / ADC chains; RF LNA know-how helps, but multi-channel low-power ADC integration is new.
+hv_pulser:
+  proximity: 1
+  tech: [High-voltage drivers]
+  reasoning: >-
+    Ultrasound HV pulsers and T/R switches need 100 V+ processes; gate-driver and switch know-how is only partly reusable.
+lin_transceiver:
+  proximity: 1
+  tech: [Isolated transceivers]
+  reasoning: >-
+    No automotive LIN PHY today; isolated RS-485 transceivers are related, but LIN needs automotive bus-PHY qualification.
+switch_detection_interface:
+  proximity: 1
+  tech: [Mixed-signal CMOS]
+  reasoning: >-
+    Multi-switch detection ICs for body electronics are new; isolated digital input know-how is a partial base.
+smartcard_interface:
+  proximity: 1
+  tech: [Mixed-signal CMOS]
+  reasoning: >-
+    Contact smart-card interfaces (ISO 7816) are a niche mixed-signal product; no existing line.
+usb_typec_hub:
+  proximity: 0
+  tech: [Digital interface]
+  reasoning: >-
+    USB hubs are digital interface silicon outside both portfolios.
+acoustic_transducer:
+  proximity: 0
+  tech: [MEMS microphones]
+  reasoning: >-
+    Microphones and speakers are transducers from audio specialists; Qorvo MEMS force sensing does not cover acoustics.

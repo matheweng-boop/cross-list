@@ -2,22 +2,35 @@
 # Leaders = suppliers whose public product pages show the strongest technical position; not market share.
 # Supplier names follow data/business/competition.yaml where an entry exists; notes say when a function has no entry there.
 # entry_position is for Skyworks / Qorvo given their current technology (see data/business/technology.yaml).
+# Verified 2026-10-19 against public pages: each entry has a check block (status/date/evidence/note); evidence lists only pages actually opened.
+# analog.com, st.com, nxp.com, microchip.com, onsemi.com, nordicsemi.com, silabs.com, qorvo.com and some others block automated fetches; their products are
+# shown through LCSC distributor product pages, trade press or vendor press releases. 'unconfirmed' means a named leader or claim could not be checked, not that it is wrong.
 pol_ldo:
   leaders: [Texas Instruments, Analog Devices]
-  lead_tech: "Ultra-low-noise (sub-1 uV rms) and high-PSRR LDOs (e.g. TI TPS7A9x, ADI LT304x) on mature bipolar/BiCMOS processes, plus very broad catalogue breadth"
+  lead_tech: "Ultra-low-noise (sub-1 uV rms) and high-PSRR LDOs (e.g. TI TPS7A94 at 0.46 uVrms, ADI LT3042/LT3045) plus very broad catalogue breadth"
   differentiators: ["RF-optimised PSRR at 1-6 GHz for PA/LNA/PLL rails", "tiny WLCSP LDOs co-packaged or paired with RF front ends", "multi-output LDOs tuned for RF reference designs"]
   entry_position: fast_follower
   note: "Commodity category where Qorvo PMIC LDO blocks give a base; only an RF-rail niche offers a reason to choose."
   confidence: high
-  sources: ["public product pages of Texas Instruments (ti.com linear regulators) and Analog Devices (analog.com LDO linear regulators)"]
+  sources: ["https://www.ti.com/product/TPS7A94", "https://www.lcsc.com/product-detail/voltage-regulators-linear-low-drop-out-ldo-regulators_analog-devices-lt3045edd-trpbf_C514420.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TPS7A94 - TI 1-A ultra-low-noise, ultra-high-PSRR 'RF voltage regulator'; 0.46 uVrms noise, 78 dB PSRR at 100 kHz", "https://www.lcsc.com/product-detail/voltage-regulators-linear-low-drop-out-ldo-regulators_analog-devices-lt3045edd-trpbf_C514420.html - distributor page: ADI LT3045 20 V 500 mA ultralow-noise, ultrahigh-PSRR LDO"]
+    note: "Both leaders and the sub-1 uVrms / high-PSRR claim confirmed; example parts changed to the ones opened (TPS7A94, LT3045) and the unverified 'bipolar/BiCMOS process' remark removed. analog.com blocks automated fetches, so ADI is shown through a distributor page."
 temperature_sensor:
   leaders: [Texas Instruments, Analog Devices, Sensirion]
-  lead_tech: "High-accuracy digital sensors (around +/-0.1 C, e.g. TI TMP117, ADI ADT7422) and low-power I2C/SMBus parts with broad package choice"
+  lead_tech: "High-accuracy digital sensors (TI TMP117 at +/-0.1 C; ADI ADT7420 and Sensirion STS4x at about +/-0.2 C) and ultra-low-power I2C parts with broad package choice"
   differentiators: ["temperature sensing integrated across an isolation barrier", "sensors bundled into RF/thermal-management modules", "remote-diode sensing for PA thermal control"]
   entry_position: fast_follower
   note: "Crowded, price-driven category; Skyworks isolated sensing is adjacent but not a standalone-sensor advantage."
   confidence: high
-  sources: ["public product pages of Texas Instruments, Analog Devices, Sensirion temperature sensors"]
+  sources: ["https://www.ti.com/product/TMP117", "https://www.lcsc.com/product-detail/C89843.html", "https://sensirion.com/media/documents/D2D0B4A9/67AA0F30/HT_DS_Datasheet_STS4x.pdf"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TMP117 - TI 0.1 C digital temperature sensor, RTD replacement", "https://www.lcsc.com/product-detail/C89843.html - distributor page: ADI ADT7420 16-bit I2C digital temperature sensor, +/-0.2 C tolerance listed", "https://sensirion.com/media/documents/D2D0B4A9/67AA0F30/HT_DS_Datasheet_STS4x.pdf - Sensirion STS4x datasheet: up to +/-0.2 C, 0.4 uA average, 80 nA idle"]
+    note: "ADI example changed from ADT7422 (no page reachable) to ADT7420, which a distributor page shows. TI TMP117 (+/-0.1 C) and Sensirion STS4x confirmed."
 ble_soc:
   leaders: [Nordic Semiconductor, Silicon Labs, Texas Instruments]
   lead_tech: "Low-power BLE/802.15.4 SoCs (Nordic nRF52/nRF54, Silicon Labs EFR32/xG2x, TI CC26xx/CC23xx) with mature SDKs, Matter/Thread stacks and large developer ecosystems"
@@ -25,15 +38,25 @@ ble_soc:
   entry_position: fast_follower
   note: "Qorvo QPG BLE/Zigbee/Thread SoCs are in production but the software ecosystem leaders set the pace."
   confidence: high
-  sources: ["public product pages of Nordic Semiconductor, Silicon Labs, Texas Instruments wireless connectivity"]
+  sources: ["https://www.ti.com/product/CC2340R5", "https://www.lcsc.com/product-detail/C3606889.html", "https://www.lcsc.com/blog/nordic-nrf54-series-vs-nrf53-what-has-actually-changed-in-next-gen-bluetooth-le/", "https://www.lcsc.com/product-detail/C6131559.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/CC2340R5 - TI Bluetooth LE, Zigbee and Thread wireless MCU", "https://www.lcsc.com/product-detail/C3606889.html - distributor page: Nordic nRF52840 RF transceiver SoC", "https://www.lcsc.com/blog/nordic-nrf54-series-vs-nrf53-what-has-actually-changed-in-next-gen-bluetooth-le/ - distributor article: Nordic nRF54L15 on 22 nm, about 40 % lower BLE current than nRF5340, Channel Sounding", "https://www.lcsc.com/product-detail/C6131559.html - distributor page: Silicon Labs BGM240 module built on EFR32BG24"]
+    note: "All three leaders are shown selling BLE/802.15.4 SoCs. nordicsemi.com and silabs.com block automated fetches, so they are shown through distributor pages. The SDK/ecosystem point and Qorvo's QPG line were not re-checked."
 supervisor:
   leaders: [Texas Instruments, Analog Devices]
-  lead_tech: "Nanopower, high-accuracy (sub-1 %) voltage supervisors and multi-rail monitors in tiny packages with industry-standard pinouts"
+  lead_tech: "Nanopower voltage supervisors (e.g. TI TPS3840) and multi-function reset/watchdog supervisors (e.g. ADI ADM63xx) in tiny packages with industry-standard pinouts"
   differentiators: ["supervisors combined with sequencing/watchdog in one small part", "functional-safety (ASIL) rail monitoring bundled into PMICs"]
   entry_position: fast_follower
   note: "Simple, pin-compatible commodity category; entry is easy but differentiation is limited."
   confidence: high
-  sources: ["public product pages of Texas Instruments and Analog Devices supervisors and reset ICs"]
+  sources: ["https://www.ti.com/product/TPS3840", "https://www.lcsc.com/product-detail/C143917.html", "https://www.lcsc.com/product-detail/C128613.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TPS3840 - TI nanopower high-input-voltage supervisor with manual reset", "https://www.lcsc.com/product-detail/C143917.html - distributor page: ADI ADM6320 supervisor (SOT-23-5) monitoring supply and code execution", "https://www.lcsc.com/product-detail/C128613.html - distributor page: ADI/Maxim MAX6369 pin-selectable watchdog timers (supervision family)"]
+    note: "Both leaders confirmed. The 'sub-1 % accuracy' figure was not shown on the opened pages and was removed."
 adc:
   leaders: [Analog Devices, Texas Instruments]
   lead_tech: "Precision SAR and delta-sigma ADCs (24-32 bit, low drift) and GSPS RF-sampling ADCs on proprietary mixed-signal processes with deep application support"
@@ -41,7 +64,12 @@ adc:
   entry_position: hard
   note: "Precision and high-speed segments carry high design-in barriers; Skyworks isolated modulators only cover a niche."
   confidence: high
-  sources: ["public product pages of Analog Devices and Texas Instruments data converters"]
+  sources: ["https://www.ti.com/product/ADS1263", "https://www.ti.com/product/ADC12DJ5200RF", "https://www.lcsc.com/product-detail/C395107.html", "https://www.microwavejournal.com/articles/35810-analog-devices-announces-16-channel-mixed-signal-front-end-digitizer-for-reference-design-integration"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/ADS1263 - TI 32-bit delta-sigma ADC with PGA and reference", "https://www.ti.com/product/ADC12DJ5200RF - TI RF-sampling 12-bit ADC, 5.2/10.4 GSPS", "https://www.lcsc.com/product-detail/C395107.html - distributor page: ADI AD7177-2 32-bit low-noise delta-sigma ADC", "https://www.microwavejournal.com/articles/35810-analog-devices-announces-16-channel-mixed-signal-front-end-digitizer-for-reference-design-integration - trade press: ADI digitiser built on AD9081/AD9082 direct RF-sampling MxFE transceivers"]
+    note: "Precision delta-sigma and GSPS RF-sampling ADCs confirmed for both leaders. 'Proprietary process' and the isolated-modulator differentiator were not checked."
 amplifier:
   leaders: [Texas Instruments, Analog Devices]
   lead_tech: "Zero-drift, low-noise and high-speed op-amps and instrumentation amplifiers across thousands of catalogue SKUs and pin-compatible footprints"
@@ -49,7 +77,12 @@ amplifier:
   entry_position: fast_follower
   note: "Mature catalogue category; Skyworks isolated amplifiers and Qorvo current-sense blocks are a base for a follower line."
   confidence: high
-  sources: ["public product pages of Texas Instruments and Analog Devices amplifiers"]
+  sources: ["https://www.ti.com/product/OPA388", "https://www.ti.com/product/OPA2210", "https://www.lcsc.com/product-detail/C4371139.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/OPA388 - TI 10-MHz zero-drift, zero-crossover precision op amp", "https://www.ti.com/product/OPA2210 - TI ultra-low-noise 2.2 nV/rtHz precision op amp", "https://www.lcsc.com/product-detail/C4371139.html - distributor page: ADI ADA4523-1 36 V low-noise zero-drift op amp"]
+    note: "Zero-drift and low-noise precision op amps confirmed for both leaders."
 mcu:
   leaders: [STMicroelectronics, NXP Semiconductors, Renesas Electronics, Microchip Technology, Infineon Technologies]
   lead_tech: "Broad Arm Cortex-M families (e.g. STM32, NXP MCX/S32K, Renesas RA, Microchip PIC/SAM, Infineon PSoC/AURIX) with embedded flash, toolchains and long-term supply"
@@ -57,23 +90,38 @@ mcu:
   entry_position: hard
   note: "General-purpose MCUs depend on ecosystem and embedded-flash process access that neither company has at scale."
   confidence: high
-  sources: ["public product pages of STMicroelectronics, NXP, Renesas, Microchip, Infineon microcontrollers"]
+  sources: ["https://www.lcsc.com/product-detail/C5271042.html", "https://www.lcsc.com/product-detail/C22386957.html", "https://www.renesas.com/en/products/microcontrollers-microprocessors/ra-cortex-m-mcus", "https://www.lcsc.com/product-detail/C618716.html", "https://www.infineon.com/cms/en/product/microcontroller/32-bit-psoc-arm-cortex-microcontroller/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C5271042.html - distributor page: ST STM32U585 Cortex-M33 MCU with TrustZone, 2 MB flash", "https://www.lcsc.com/product-detail/C22386957.html - distributor page: NXP MCXN947 Cortex-M33 150 MHz MCU", "https://www.renesas.com/en/products/microcontrollers-microprocessors/ra-cortex-m-mcus - Renesas RA family 32-bit Arm Cortex-M MCUs", "https://www.lcsc.com/product-detail/C618716.html - distributor page: Microchip ATSAME54 Cortex-M4F MCU", "https://www.infineon.com/cms/en/product/microcontroller/32-bit-psoc-arm-cortex-microcontroller/ - Infineon 32-bit PSOC Arm Cortex MCUs"]
+    note: "All five leaders shown selling broad Arm Cortex-M families. st.com, nxp.com and microchip.com block automated fetches, so distributor pages are used. NXP S32K, Microchip PIC and Infineon AURIX were not checked individually."
 isolated_dcdc:
   leaders: [Murata Power Solutions, RECOM, Texas Instruments, Analog Devices]
   lead_tech: "Module makers lead on power range and footprint breadth; IC leaders integrate transformers in-package (TI UCC14xxx, ADI isoPower) for isolated bias supplies"
   differentiators: ["isolator + integrated isolated DC-DC in one package", "isolated gate-driver bias supplies for SiC/GaN", "low-EMI integrated-transformer designs"]
   entry_position: differentiate
   note: "Skyworks Si88xx isolators with integrated DC-DC already compete in the IC segment."
-  confidence: medium
-  sources: ["public product pages of Murata Power Solutions, RECOM, Texas Instruments isolated power, Analog Devices isoPower"]
+  confidence: high
+  sources: ["https://www.murata.com/en-global/products/power/isolated-dc-dc-converter", "https://www.murata.com/en-global/products/power/isolated-gate-drive-power", "https://recom-power.com/en/products/dc-dc-converters/rec-c-dc-dc-converters.html", "https://recom-power.com/en/applications/gate-drivers.html", "https://www.ti.com/product/UCC14240-Q1", "https://www.lcsc.com/product-detail/C398339.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.murata.com/en-global/products/power/isolated-dc-dc-converter - Murata isolated DC-DC converter modules (Murata Power Solutions line)", "https://www.murata.com/en-global/products/power/isolated-gate-drive-power - Murata isolated gate-drive power modules", "https://recom-power.com/en/products/dc-dc-converters/rec-c-dc-dc-converters.html - RECOM isolated DC/DC converter range", "https://recom-power.com/en/applications/gate-drivers.html - RECOM high-isolation DC/DC converters for gate drivers", "https://www.ti.com/product/UCC14240-Q1 - TI 2-W >3 kVrms isolated DC/DC module, listed under 'isolated power modules (integrated transformer)'", "https://www.lcsc.com/product-detail/C398339.html - distributor page: ADI ADuM5020 isoPower integrated isolated DC-DC (iCoupler)"]
+    note: "Module makers and the in-package-transformer IC approach (TI UCC14xxx, ADI isoPower) confirmed. Skyworks Si88xx claim not re-checked."
 voltage_reference:
   leaders: [Analog Devices, Texas Instruments]
-  lead_tech: "Low-drift (single-digit ppm/C or better), low-noise series references (e.g. ADI LTC6655/ADR45xx, TI REF70) with long-term stability data"
+  lead_tech: "Low-drift (about 2 ppm/C or better), low-noise series references (e.g. ADI LTC6655, TI REF70) with long-term stability data"
   differentiators: ["references integrated into isolated measurement chains", "small-package references for RF/PLL bias"]
   entry_position: fast_follower
   note: "Shunt references are commodity; top-end precision references need years of process know-how."
   confidence: high
-  sources: ["public product pages of Analog Devices and Texas Instruments voltage references"]
+  sources: ["https://www.lcsc.com/product-detail/C689441.html", "https://www.ti.com/product/REF70"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C689441.html - distributor page: ADI LTC6655 reference, 2 ppm/C max drift, +/-0.025 %, 0.25 ppm p-p noise", "https://www.ti.com/product/REF70 - TI ultra-high-precision, low-noise, low-drift voltage reference"]
+    note: "Both leaders confirmed; the unchecked ADR45xx example was removed."
 wifi_soc:
   leaders: [Qualcomm, Broadcom, MediaTek, Espressif Systems, Infineon Technologies]
   lead_tech: "Wi-Fi 6/6E/7 combo SoCs with integrated Bluetooth, leading-edge CMOS digital, certified driver/firmware stacks; Espressif leads low-cost IoT with a large developer base"
@@ -81,7 +129,12 @@ wifi_soc:
   entry_position: hard
   note: "Combo SoCs need leading-edge digital and software stacks; Skyworks/Qorvo are front-end suppliers to these leaders."
   confidence: high
-  sources: ["public product pages of Qualcomm, Broadcom, MediaTek, Espressif, Infineon AIROC Wi-Fi"]
+  sources: ["https://docs.qualcomm.com/bundle/publicresource/87-73970-1_REV_C_Qualcomm_FastConnect_7900_Mobile_Connectivity_System_Product_Brief.pdf", "https://www.broadcom.com/products/wireless/wireless-lan-bluetooth/bcm4398", "https://www.mediatek.com/products/networking-and-connectivity/wifi-7", "https://www.espressif.com/en/products/socs/esp32-c6", "https://www.infineon.com/part/CYW55573"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://docs.qualcomm.com/bundle/publicresource/87-73970-1_REV_C_Qualcomm_FastConnect_7900_Mobile_Connectivity_System_Product_Brief.pdf - Qualcomm FastConnect 7900 brief: Wi-Fi 7 + Bluetooth + UWB on 6 nm", "https://www.broadcom.com/products/wireless/wireless-lan-bluetooth/bcm4398 - Broadcom BCM4398 Wi-Fi 7 + Bluetooth combo", "https://www.mediatek.com/products/networking-and-connectivity/wifi-7 - MediaTek Filogic Wi-Fi 7 family", "https://www.espressif.com/en/products/socs/esp32-c6 - Espressif ESP32-C6 Wi-Fi 6 + BLE + 802.15.4 low-cost SoC", "https://www.infineon.com/part/CYW55573 - Infineon AIROC CYW55573 Wi-Fi 6/6E + Bluetooth combo"]
+    note: "All five leaders confirmed with Wi-Fi 6/6E/7 combo products."
 tvs_esd:
   leaders: [Littelfuse, Nexperia, Semtech, onsemi]
   lead_tech: "Very low-capacitance (sub-pF) ESD arrays for high-speed lines, high-surge TVS and DFN/SOD packaging at very low cost"
@@ -89,15 +142,25 @@ tvs_esd:
   entry_position: hard
   note: "Discrete protection is a cost/fab-volume game; integrated ESD in RF modules is the only natural angle."
   confidence: high
-  sources: ["public product pages of Littelfuse, Nexperia, Semtech, onsemi ESD and TVS protection"]
+  sources: ["https://www.lcsc.com/product-detail/C1976555.html", "https://www.lcsc.com/product-detail/C151304.html", "https://www.lcsc.com/product-detail/C477989.html", "https://www.semtech.com/products/circuit-protection/low-capacitance/rclamp1011zc", "https://www.lcsc.com/product-detail/C328026.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C1976555.html - distributor page: Littelfuse SP3522 ultra-low-capacitance avalanche diode", "https://www.lcsc.com/product-detail/C151304.html - distributor page: Littelfuse SP3012 ultra-low-capacitance multi-channel array", "https://www.lcsc.com/product-detail/C477989.html - distributor page: Nexperia PESD5V0H1BSF ultra-low-capacitance ESD diode in DSN0603-2", "https://www.semtech.com/products/circuit-protection/low-capacitance/rclamp1011zc - Semtech RClamp1011ZC 200 fF 1-line ESD protection", "https://www.lcsc.com/product-detail/C328026.html - distributor page: onsemi ESD7104 ultra-low-capacitance ESD for high-speed lines"]
+    note: "All four leaders shown selling sub-pF ESD arrays in tiny packages. Littelfuse, Nexperia and onsemi sites block automated fetches, so distributor pages are used. The 'very low cost' point was not checked."
 half_bridge_driver:
   leaders: [Infineon Technologies, Texas Instruments, STMicroelectronics]
-  lead_tech: "High-voltage (600-1200 V) level-shift drivers (Infineon EiceDRIVER on SOI, TI UCC2xxxx) and fast GaN-optimised drivers"
+  lead_tech: "High-voltage (600-700 V class) level-shift half-bridge drivers (Infineon EiceDRIVER incl. SOI, TI UCC27712, ST L638x) and fast GaN-optimised drivers (TI LMG1210)"
   differentiators: ["drivers integrated with MCU and power management (PAC-style)", "GaN-optimised timing"]
   entry_position: fast_follower
   note: "Qorvo PAC5xxx integrate high/low-side drivers, so a standalone driver is a straightforward variant in a crowded market."
   confidence: high
-  sources: ["public product pages of Infineon EiceDRIVER, Texas Instruments gate drivers, STMicroelectronics gate drivers"]
+  sources: ["https://www.infineon.com/part/2ED2182S06F", "https://www.ti.com/product/UCC27712", "https://www.ti.com/product/LMG1210", "https://www.lcsc.com/product-detail/C23921.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/2ED2182S06F - Infineon 650 V half-bridge gate driver (EiceDRIVER; Infineon lists SOI level-shift drivers)", "https://www.ti.com/product/UCC27712 - TI 700 V half-bridge gate driver", "https://www.ti.com/product/LMG1210 - TI 200 V half-bridge driver for GaN FETs", "https://www.lcsc.com/product-detail/C23921.html - distributor page: ST L6388E high-voltage high/low-side driver"]
+    note: "Leaders and high-voltage / GaN driver technology confirmed. The '1200 V' upper end was not shown on the opened pages and was dropped."
 three_phase_gate_driver:
   leaders: [Texas Instruments, Infineon Technologies, Allegro MicroSystems]
   lead_tech: "Smart gate drivers with adjustable slew control, integrated current-sense amplifiers and diagnostics (TI DRV83xx, Infineon MOTIX, Allegro) including ASIL automotive variants"
@@ -105,39 +168,64 @@ three_phase_gate_driver:
   entry_position: fast_follower
   note: "Qorvo PAC motor SoCs reuse these blocks; competitors also offer integrated motor-control parts."
   confidence: high
-  sources: ["public product pages of Texas Instruments motor drivers, Infineon MOTIX, Allegro MicroSystems gate drivers"]
+  sources: ["https://www.ti.com/product/DRV8353", "https://www.infineon.com/part/6EDL7141", "https://www.infineon.com/part/TLE9180D-31QK", "https://www.allegromicro.com/en/products/motor-drivers/brushless-dc-drivers/integrated-control-bldc-drivers/a4964"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/DRV8353 - TI 102 V three-phase smart gate driver with current-shunt amplifiers", "https://www.infineon.com/part/6EDL7141 - Infineon MOTIX three-phase BLDC gate driver", "https://www.infineon.com/part/TLE9180D-31QK - Infineon automotive 3-phase driver, ISO 26262 compliant, with current sensing", "https://www.allegromicro.com/en/products/motor-drivers/brushless-dc-drivers/integrated-control-bldc-drivers/a4964 - Allegro A4964 automotive sensorless three-phase gate controller with diagnostics"]
+    note: "All three leaders, integrated current sensing and automotive functional-safety variants confirmed."
 sequencer:
   leaders: [Analog Devices, Texas Instruments]
   lead_tech: "PMBus power-system managers with multi-rail sequencing, margining and non-volatile fault logging (ADI LTC297x, TI UCD90xxx)"
   differentiators: ["sequencing combined with supervision in small, configuration-free parts"]
   entry_position: fast_follower
   note: "Few dedicated suppliers and often absorbed by PMICs or FPGAs; Qorvo PMIC sequencing blocks are a base."
-  confidence: medium
-  sources: ["public product pages of Analog Devices power system management and Texas Instruments sequencers"]
+  confidence: high
+  sources: ["https://www.lcsc.com/product-detail/C683910.html", "https://www.ti.com/product/UCD90320"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C683910.html - distributor page: ADI LTC2977 8-channel PMBus power system manager with sequencing, margining and fault logs", "https://www.ti.com/product/UCD90320 - TI 32-rail PMBus power sequencer and system manager"]
+    note: "Both leaders and the PMBus sequencing / fault-logging claim confirmed."
 audio_codec:
   leaders: [Cirrus Logic, Texas Instruments, Analog Devices, Asahi Kasei Microdevices]
-  lead_tech: "High-dynamic-range converters with integrated low-power DSP (Cirrus SmartCodec, ADI SigmaDSP, AKM Velvet Sound) and mature tuning software"
+  lead_tech: "High-dynamic-range codecs (e.g. TI TAC5212 at 119/120 dB), codecs with integrated DSP (ADI SigmaDSP ADAU1761), PC/mobile codecs (Cirrus CS42L43) and automotive codecs (AKM AK4619VN) with mature tuning software"
   differentiators: ["codecs integrated with wireless audio SoCs", "audio + RF combination for hearables"]
   entry_position: hard
   note: "Performance codecs need new converter IP; Skyworks audio SoCs are a niche base only."
   confidence: high
-  sources: ["public product pages of Cirrus Logic, Texas Instruments audio, Analog Devices audio, AKM audio"]
+  sources: ["https://statics.cirrus.com/pubs/proBulletin/CS42L43_PB1018R5.pdf", "https://www.ti.com/product/TAC5212", "https://www.lcsc.com/product-detail/C389591.html", "https://www.akm.com/us/en/products/audio/audio-codec/ak4619vn/", "https://www.akm.com/us/en/products/audio/audio-dac/"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://statics.cirrus.com/pubs/proBulletin/CS42L43_PB1018R5.pdf - Cirrus Logic CS42L43 PC codec with headphone, mic and Class-D drivers", "https://www.ti.com/product/TAC5212 - TI stereo codec, 119 dB ADC / 120 dB DAC dynamic range", "https://www.lcsc.com/product-detail/C389591.html - distributor page: ADI ADAU1761 SigmaDSP stereo codec", "https://www.akm.com/us/en/products/audio/audio-codec/ak4619vn/ - AKM AK4619VN four-channel automotive audio codec", "https://www.akm.com/us/en/products/audio/audio-dac/ - AKM page: VELVET SOUND branding is used for its DACs (AK4497S, AK4498EX/AK4191)"]
+    note: "All four leaders sell codecs. Corrected the brand references: AKM's opened pages use VELVET SOUND for DACs, not codecs, and the 'SmartCodec' name was not shown on the Cirrus page opened."
 efuse_hotswap:
   leaders: [Texas Instruments, Analog Devices, Infineon Technologies]
-  lead_tech: "Integrated-FET eFuses with accurate current limit and PMBus telemetry (TI TPS25xx/TPS1663), hot-swap controllers with SOA protection (ADI LTC42xx)"
+  lead_tech: "Integrated-FET eFuses with accurate current monitoring (TI TPS25985, TPS1663) and hot-swap controllers with PMBus monitoring and digital SOA control (ADI ADM1272, Infineon XDP710)"
   differentiators: ["eFuse plus power-loss protection in storage PMICs", "higher integration with energy-storage control"]
   entry_position: fast_follower
   note: "Qorvo power-loss-protection products with eFuse are adjacent; leaders are entrenched in server and industrial."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments eFuses, Analog Devices hot swap controllers, Infineon"]
+  confidence: high
+  sources: ["https://www.ti.com/product/TPS25985", "https://www.ti.com/product/TPS1663", "https://www.lcsc.com/product-detail/C579182.html", "https://www.infineon.com/part/XDP710-001", "https://www.infineon.com/product-table/efuses"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TPS25985 - TI 80 A stackable eFuse with accurate, fast current monitor", "https://www.ti.com/product/TPS1663 - TI 60 V eFuse with output power limiting", "https://www.lcsc.com/product-detail/C579182.html - distributor page: ADI ADM1272 hot-swap controller with PMBus power monitor", "https://www.infineon.com/part/XDP710-001 - Infineon XDP710 wide-range hot-swap controller with programmable digital SOA control", "https://www.infineon.com/product-table/efuses - Infineon automotive eFuse portfolio"]
+    note: "All three leaders confirmed. Example parts changed to the ones opened (ADM1272 instead of LTC42xx, whose page was not reachable), and 'PMBus telemetry' moved to the hot-swap controllers where the pages show it."
 gnss_lna:
-  leaders: [Infineon Technologies, NXP Semiconductors, Maxscend]
+  leaders: [Infineon Technologies, Nexperia, Maxscend]
   lead_tech: "Low noise figure (sub-1 dB) SiGe LNAs in tiny packages with high out-of-band rejection for L1/L5"
   differentiators: ["integrated LNA + SAW/BAW filter modules for dual-band L1/L5", "high jamming/blocker tolerance for automotive and cellular coexistence"]
   entry_position: differentiate
   note: "Skyworks and Qorvo already ship GNSS LNAs and LNA-filter modules, so filter integration is a real lever."
-  confidence: high
-  sources: ["public product pages of Infineon RF LNAs, NXP GNSS LNAs, Maxscend"]
+  confidence: medium
+  sources: ["https://www.infineon.com/part/BGA524N6", "https://www.infineon.com/part/BGA855N6", "https://www.lcsc.com/product-detail/C126374.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/BGA524N6 - Infineon SiGe GNSS LNA, 0.55 dB noise figure", "https://www.infineon.com/part/BGA855N6 - Infineon GNSS LNA for L2/L5, 0.6 dB NF", "https://www.lcsc.com/product-detail/C126374.html - distributor page: GNSS LNA BGU8009 (SiGe:C) is sold under the Nexperia name"]
+    note: "NXP replaced by Nexperia: the BGU800x GNSS LNA line is now listed under Nexperia. Maxscend could not be checked (its site is script-only), so it stays as an unverified leader. Sub-1 dB SiGe LNAs and L1/L5 coverage confirmed for Infineon."
 ethernet_phy:
   leaders: [Marvell, Broadcom, Realtek, Texas Instruments, Microchip Technology]
   lead_tech: "DSP-heavy PHY cores from 10BASE-T1S/T1L to multi-gig, automotive Ethernet PHYs and switches with TSN, interoperability-tested firmware"
@@ -145,23 +233,38 @@ ethernet_phy:
   entry_position: hard
   note: "Mixed-signal DSP and interoperability know-how are far from current portfolios."
   confidence: high
-  sources: ["public product pages of Marvell, Broadcom, Realtek, Texas Instruments, Microchip Ethernet PHYs"]
+  sources: ["https://www.marvell.com/company/newsroom/marvell-industry-first-8021ae-macsec-integrated-dual-1000bt1-100bt1-phy-automotive-solution.html", "https://www.broadcom.com/company/news/product-releases/world-first-automotive-ieee-802-3ch-multigigabit-phys-and-multilayer-switches", "https://www.realtek.com/en/products/product-hits/item/macsec-eee-embedded-automotive-ethernet-phy-rtl9010b-rtl9000c-series", "https://www.ti.com/product/DP83TD510E", "https://www.ti.com/product/DP83TG720S-Q1", "https://www.lcsc.com/product-detail/C20901523.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.marvell.com/company/newsroom/marvell-industry-first-8021ae-macsec-integrated-dual-1000bt1-100bt1-phy-automotive-solution.html - Marvell 100/1000BASE-T1 automotive PHY with MACsec", "https://www.broadcom.com/company/news/product-releases/world-first-automotive-ieee-802-3ch-multigigabit-phys-and-multilayer-switches - Broadcom 802.3ch multi-gig automotive PHYs and switches", "https://www.realtek.com/en/products/product-hits/item/macsec-eee-embedded-automotive-ethernet-phy-rtl9010b-rtl9000c-series - Realtek RTL9010B/RTL9000C automotive Ethernet PHYs with MACsec", "https://www.ti.com/product/DP83TD510E - TI 10BASE-T1L PHY", "https://www.ti.com/product/DP83TG720S-Q1 - TI 1000BASE-T1 automotive PHY", "https://www.lcsc.com/product-detail/C20901523.html - distributor page: Microchip LAN8670 10BASE-T1S PHY"]
+    note: "All five leaders and the 10BASE-T1S/T1L to multi-gig automotive range confirmed. TSN on switches was not checked."
 rtc:
   leaders: [Micro Crystal, Seiko Epson, NXP Semiconductors, Analog Devices]
   lead_tech: "RTC modules with integrated crystal or TCXO (ADI DS3231, Epson, Micro Crystal) and nanoampere-level timekeeping current"
   differentiators: ["RTC with integrated temperature-compensated resonator from in-house timing know-how", "combined RTC + supervisor"]
   entry_position: fast_follower
   note: "Mature, low-price category; Skyworks timing know-how helps but a new simple product line is needed."
-  confidence: medium
-  sources: ["public product pages of Micro Crystal, Seiko Epson, NXP, Analog Devices real-time clocks"]
+  confidence: high
+  sources: ["https://www.lcsc.com/product-detail/C3019759.html", "https://www5.epsondevice.com/en/products/rtc/rx8901ce.html", "https://www.lcsc.com/product-detail/C47508.html", "https://www.lcsc.com/product-detail/C9866.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C3019759.html - distributor page: Micro Crystal RV-3028-C7 RTC module with integrated crystal, 45 nA", "https://www5.epsondevice.com/en/products/rtc/rx8901ce.html - Epson RX8901CE RTC module with DTCXO", "https://www.lcsc.com/product-detail/C47508.html - distributor page: NXP PCF2129 accurate RTC with integrated quartz", "https://www.lcsc.com/product-detail/C9866.html - distributor page: ADI/Maxim DS3231 RTC with integrated TCXO and crystal"]
+    note: "All four leaders and the integrated-crystal/TCXO, nanoamp-current claims confirmed."
 can_transceiver:
   leaders: [NXP Semiconductors, Texas Instruments, Infineon Technologies]
-  lead_tech: "CAN FD and CAN SIC/XL transceivers with robust automotive EMC, low-power wake and partial networking (NXP TJA1xxx, TI TCAN, Infineon TLE9xxx)"
+  lead_tech: "CAN FD and CAN SIC transceivers with robust automotive EMC and low-power standby (NXP TJA146x, TI TCAN1462, Infineon TLE937x)"
   differentiators: ["CAN integrated into system-basis chips"]
   entry_position: hard
   note: "Commodity but qualification-heavy automotive interface with no existing PHY base."
   confidence: high
-  sources: ["public product pages of NXP, Texas Instruments, Infineon CAN transceivers"]
+  sources: ["https://www.lcsc.com/product-detail/C3234095.html", "https://www.ti.com/product/TCAN1462-Q1", "https://www.infineon.com/part/TLE9371VSJ", "https://www.infineon.com/part/TLE9461ES"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C3234095.html - distributor page: NXP TJA1462 CAN FD signal-improvement (SIC) transceiver", "https://www.ti.com/product/TCAN1462-Q1 - TI automotive CAN SIC transceiver", "https://www.infineon.com/part/TLE9371VSJ - Infineon CAN FD SIC transceiver, 8 Mbit/s", "https://www.infineon.com/part/TLE9461ES - Infineon system-basis chip with CAN FD transceiver"]
+    note: "All three leaders and CAN FD/SIC confirmed; 'CAN XL' was not shown on any opened page and was removed."
 watchdog:
   leaders: [Texas Instruments, Analog Devices]
   lead_tech: "Windowed and programmable watchdog timers for functional safety, often combined with supervisors"
@@ -169,39 +272,64 @@ watchdog:
   entry_position: fast_follower
   note: "Mature, small category with many alternatives."
   confidence: high
-  sources: ["public product pages of Texas Instruments and Analog Devices watchdog timers"]
+  sources: ["https://www.ti.com/product/TPS3431", "https://www.ti.com/product/TPS3850", "https://www.lcsc.com/product-detail/C128613.html", "https://www.lcsc.com/product-detail/C143917.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TPS3431 - TI programmable watchdog timer", "https://www.ti.com/product/TPS3850 - TI window supervisor with window watchdog", "https://www.lcsc.com/product-detail/C128613.html - distributor page: ADI/Maxim MAX6369 pin-selectable watchdog timers", "https://www.lcsc.com/product-detail/C143917.html - distributor page: ADI ADM6320 supervisor with watchdog"]
+    note: "Both leaders and window/programmable watchdogs combined with supervisors confirmed."
 termination_ldo:
   leaders: [Texas Instruments, Richtek]
   lead_tech: "DDR VTT sink/source LDOs (TI TPS51200 class) with reference outputs; low-cost Asian second sources"
   differentiators: ["integration into memory-rail PMICs"]
   entry_position: fast_follower
   note: "Standard function with low-cost alternatives; only worth doing inside a PMIC."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments and Richtek DDR termination regulators"]
+  confidence: high
+  sources: ["https://www.ti.com/product/TPS51200", "https://www.richtek.com/assets/product_file/RT9088/DS9088-05.pdf", "https://www.richtek.com/m/Products/memory-power-solutions/RT9199?sc_lang=en"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TPS51200 - TI 3 A sink/source DDR termination regulator with VTTREF", "https://www.richtek.com/assets/product_file/RT9088/DS9088-05.pdf - Richtek RT9088 sink/source DDR termination regulator datasheet", "https://www.richtek.com/m/Products/memory-power-solutions/RT9199?sc_lang=en - Richtek RT9199 2 A sink/source bus termination regulator page"]
+    note: "Both leaders confirmed. Richtek's RT9199 is marked end-of-life, so newer parts such as the RT9088 are the relevant ones."
 reverse_polarity:
   leaders: [Texas Instruments, Analog Devices, Infineon Technologies]
-  lead_tech: "Automotive ideal-diode and reverse-battery controllers with low quiescent current and fast reverse recovery (TI LM747xx, ADI LTC4359)"
+  lead_tech: "Automotive ideal-diode and reverse-battery controllers with low quiescent current (TI LM747xx, ADI LTC4359); Infineon offers smart high-side MOSFET drivers for the same back-to-back FET protection"
   differentiators: ["integrated back-to-back FET protection modules"]
   entry_position: fast_follower
   note: "Well-served automotive niche; simple controllers but qualification required."
   confidence: medium
-  sources: ["public product pages of Texas Instruments ideal diode controllers, Analog Devices, Infineon"]
+  sources: ["https://www.ti.com/product/LM74700-Q1", "https://www.lcsc.com/product-detail/C580869.html", "https://www.infineon.com/part/2ED4820-EM"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/LM74700-Q1 - TI low-IQ automotive reverse-battery protection ideal-diode controller", "https://www.lcsc.com/product-detail/C580869.html - distributor page: ADI LTC4359 ideal-diode controller with reverse input protection", "https://www.infineon.com/part/2ED4820-EM - Infineon automotive smart high-side MOSFET gate driver (20-70 V, SPI, current sensing)"]
+    note: "TI and ADI ideal-diode controllers confirmed. The opened Infineon page shows a high-side MOSFET driver for back-to-back switches; reverse-polarity use is not stated on it, so the lead_tech names only TI and ADI parts."
 motor_driver_brushed:
   leaders: [Texas Instruments, STMicroelectronics, Toshiba, Allegro MicroSystems]
   lead_tech: "Integrated H-bridge and stepper drivers with low RDS(on) on-chip FETs, current regulation and stall detection (TI DRV88xx, ST, Toshiba, Allegro)"
   differentiators: ["driver + MCU integration for smart actuators"]
   entry_position: fast_follower
   note: "Large catalogue category; Qorvo PAC blocks help but a new integrated power stage is needed. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments, STMicroelectronics, Toshiba, Allegro motor drivers"]
+  confidence: high
+  sources: ["https://www.ti.com/product/DRV8874", "https://www.ti.com/product/DRV8889-Q1", "https://www.lcsc.com/product-detail/C503078.html", "https://www.lcsc.com/product-detail/C155561.html", "https://www.lcsc.com/product-detail/C545417.html", "https://www.allegromicro.com/en/products/motor-drivers/brush-dc-motor-drivers/a4956"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/DRV8874 - TI 40 V 6 A H-bridge with integrated current sensing", "https://www.ti.com/product/DRV8889-Q1 - TI automotive stepper driver with stall detection", "https://www.lcsc.com/product-detail/C503078.html - distributor page: ST VNH7100 automotive fully integrated H-bridge", "https://www.lcsc.com/product-detail/C155561.html - distributor page: ST STSPIN250 brushed DC driver with integrated power stage", "https://www.lcsc.com/product-detail/C545417.html - distributor page: Toshiba TB67H450 PWM chopper brushed DC driver", "https://www.allegromicro.com/en/products/motor-drivers/brush-dc-motor-drivers/a4956 - Allegro A4956 full-bridge PWM gate driver for brushed DC motors"]
+    note: "All four leaders sell brushed/stepper drivers. Allegro's opened page is a gate driver for external FETs rather than an integrated H-bridge."
 diversity_rx_module:
   leaders: [Qualcomm, Murata, Maxscend]
   lead_tech: "Highly integrated DRx modules (LNA + switches + filters) tied to modem platform reference designs"
   differentiators: ["in-house BAW/SAW filters with SOI LNAs", "multi-band integration for 5G carrier aggregation"]
   entry_position: differentiate
   note: "Skyworks and Qorvo already ship DRx modules; differentiation is on filter technology and integration."
-  confidence: high
-  sources: ["public product pages of Qualcomm RF front end, Murata, Maxscend"]
+  confidence: low
+  sources: ["https://docs.qualcomm.com/doc/87-73875-1/87-73875-1_REV_C_Snapdragon_X80_5G_Modem-RF_System_Product_Brief.pdf"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://docs.qualcomm.com/doc/87-73875-1/87-73875-1_REV_C_Snapdragon_X80_5G_Modem-RF_System_Product_Brief.pdf - Qualcomm X80 modem-RF brief lists Qualcomm RFFE parts and 6xRx downlink"]
+    note: "Only Qualcomm's RF front-end role could be shown, and not a specific DRx module. No public Murata or Maxscend DRx module page could be opened (Maxscend's site is script-only)."
 io_expander:
   leaders: [Texas Instruments, NXP Semiconductors]
   lead_tech: "Low-cost I2C/SPI GPIO expanders with industry-standard pinouts (TI TCA/NXP PCA families)"
@@ -209,31 +337,51 @@ io_expander:
   entry_position: fast_follower
   note: "Commodity logic with standard pinouts; easy to follow, hard to differentiate."
   confidence: high
-  sources: ["public product pages of Texas Instruments and NXP I/O expanders"]
+  sources: ["https://www.ti.com/product/TCA9555", "https://www.lcsc.com/product-detail/C2652299.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TCA9555 - TI 16-bit I2C/SMBus I/O expander", "https://www.lcsc.com/product-detail/C2652299.html - distributor page: NXP PCAL6416A 16-bit I2C/SMBus I/O expander"]
+    note: "Both leaders confirmed (TI TCA and NXP PCA/PCAL families)."
 rf_transceiver:
   leaders: [Analog Devices, NXP Semiconductors, Texas Instruments]
-  lead_tech: "ADI wideband agile transceivers (ADRV9xxx/AD936x), NXP and Qorvo UWB transceivers, TI sub-GHz transceivers"
+  lead_tech: "ADI wideband agile transceivers (AD936x family), NXP and Qorvo UWB transceivers with secure ranging and radar, TI sub-GHz transceivers"
   differentiators: ["UWB with secure ranging and radar", "mmWave IF transceivers for FWA and satcom"]
   entry_position: differentiate
   note: "Qorvo UWB (QM33) and Anokiwave IF transceivers are already competitive; broad cellular RFICs would be hard."
   confidence: medium
-  sources: ["public product pages of Analog Devices RF transceivers, Qorvo UWB, NXP UWB, Texas Instruments sub-1 GHz"]
+  sources: ["https://www.lcsc.com/product-detail/C578993.html", "https://www.eenewseurope.com/en/nxp-combines-uwb-and-radar-for-iot/", "https://www.ti.com/product/CC1200"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C578993.html - distributor page: ADI AD-FMCOMMS3 board for the AD9361 integrated RF transceiver", "https://www.eenewseurope.com/en/nxp-combines-uwb-and-radar-for-iot/ - trade press: NXP Trimension SR250 UWB with secure ranging and radar", "https://www.ti.com/product/CC1200 - TI low-power high-performance sub-GHz transceiver"]
+    note: "All three leaders confirmed. ADRV9xxx was not checked, so only AD936x is named. Qorvo's UWB (QM33) and Anokiwave claims could not be re-checked because qorvo.com blocks automated fetches."
 pre_regulator:
   leaders: [Texas Instruments, Analog Devices, Infineon Technologies]
   lead_tech: "Wide-VIN automotive buck/boost/buck-boost controllers with low EMI (ADI Silent Switcher, spread spectrum) and low quiescent current"
   differentiators: ["low-EMI designs aimed at RF-sensitive systems"]
   entry_position: fast_follower
   note: "Well-served category with similar topologies; Qorvo power know-how supports a follower position."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments, Analog Devices, Infineon DC/DC controllers"]
+  confidence: high
+  sources: ["https://www.ti.com/product/LM25149-Q1", "https://www.lcsc.com/product-detail/C514430.html", "https://www.infineon.com/part/TLF51801ELV", "https://www.infineon.com/part/TLS4120D0EPV"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/LM25149-Q1 - TI 42 V automotive buck controller with ultra-low IQ and integrated active EMI filter", "https://www.lcsc.com/product-detail/C514430.html - distributor page: ADI LT8645S 65 V Silent Switcher 2 buck", "https://www.infineon.com/part/TLF51801ELV - Infineon automotive 4.75-45 V buck controller", "https://www.infineon.com/part/TLS4120D0EPV - Infineon automotive 3.7-35 V step-down regulator"]
+    note: "All three leaders, low-EMI architectures and low-IQ wide-VIN automotive bucks confirmed."
 nfc_frontend:
-  leaders: [NXP Semiconductors, STMicroelectronics, Infineon Technologies]
-  lead_tech: "NFC controllers and readers with active load modulation, EMVCo/NFC Forum certification and software stacks (NXP PN7xxx, ST ST25R)"
+  leaders: [NXP Semiconductors, STMicroelectronics, Renesas Electronics]
+  lead_tech: "NFC controllers and readers with active wave shaping / high output power, NFC Forum compliance and software stacks (NXP PN7xxx, ST ST25R, Renesas)"
   differentiators: ["NFC combined with UWB for secure access"]
   entry_position: hard
   note: "Certification-heavy, ecosystem-led market. Not in competition.yaml supplier lists."
   confidence: medium
-  sources: ["public product pages of NXP NFC, STMicroelectronics ST25, Infineon"]
+  sources: ["https://www.lcsc.com/product-detail/C3303790.html", "https://www.lcsc.com/product-detail/C5267441.html", "https://www.infineon.com/product-table/nfc-tag-side-controllers", "https://www.renesas.com/en/products/wireless-connectivity"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C3303790.html - distributor page: NXP PN7160 NFC controller (NFC Forum, NCI)", "https://www.lcsc.com/product-detail/C5267441.html - distributor page: ST ST25R3916 NFC reader with dynamic power output and active wave shaping", "https://www.infineon.com/product-table/nfc-tag-side-controllers - Infineon NFC portfolio is tag-side controllers, not reader front ends", "https://www.renesas.com/en/products/wireless-connectivity - Renesas wireless page: NFC with high sensitivity and high output power"]
+    note: "Infineon replaced by Renesas: Infineon's NFC pages show tag-side controllers, while Renesas markets high-output-power NFC reader ICs. NXP and ST confirmed."
 voltage_translator:
   leaders: [Texas Instruments, Nexperia]
   lead_tech: "Broad auto-direction and direction-controlled level translators in tiny packages at very low cost"
@@ -241,31 +389,51 @@ voltage_translator:
   entry_position: fast_follower
   note: "Commodity logic; follower at best."
   confidence: high
-  sources: ["public product pages of Texas Instruments and Nexperia voltage level translators"]
+  sources: ["https://www.ti.com/product/TXB0104", "https://www.ti.com/product/TXS0108E", "https://www.lcsc.com/product-detail/C4363921.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TXB0104 - TI auto-direction-sensing level shifter", "https://www.ti.com/product/TXS0108E - TI 8-bit bidirectional level shifter", "https://www.lcsc.com/product-detail/C4363921.html - distributor page: Nexperia NXB0108 auto-direction translating transceiver"]
+    note: "Both leaders confirmed. Low cost was not checked."
 haptics_driver:
   leaders: [Cirrus Logic, Texas Instruments, Awinic]
-  lead_tech: "Closed-loop LRA drivers with boost and real-time waveform control (Cirrus CS40Lxx, TI DRV26xx, Awinic), piezo drivers for high-voltage actuators"
+  lead_tech: "Closed-loop LRA drivers with boost and real-time waveform control (Cirrus CS40L2x, TI DRV26xx, Awinic AW869xx)"
   differentiators: ["haptics + force sensing (Qorvo MEMS heritage) for virtual buttons", "class-D derived high-efficiency drive"]
   entry_position: differentiate
   note: "Skyworks class-D and Qorvo force-sensing together give a combined sense-and-feedback angle. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Cirrus Logic haptics, Texas Instruments haptic drivers, Awinic"]
+  confidence: high
+  sources: ["https://www.cirrus.com/products/cs40l26-26b", "https://www.ti.com/product/DRV2605L", "https://www.ti.com/product/DRV2625", "https://www.awinic.com/en/productDetail/AW86927AFCR"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.cirrus.com/products/cs40l26-26b - Cirrus Logic CS40L26 smart haptic driver", "https://www.ti.com/product/DRV2605L - TI ERM/LRA haptic driver with auto-resonance tracking", "https://www.ti.com/product/DRV2625 - TI ERM/LRA haptic driver with waveform library", "https://www.awinic.com/en/productDetail/AW86927AFCR - Awinic AW86927 boost haptic driver"]
+    note: "All three leaders confirmed. The piezo-driver clause was not checked on any opened page and was removed."
 acdc_controller:
   leaders: [Power Integrations, Infineon Technologies, onsemi, STMicroelectronics]
   lead_tech: "Highly integrated offline switchers with isolated feedback (Power Integrations InnoSwitch), PFC/LLC combo controllers and GaN integration"
   differentiators: ["GaN-integrated stages", "digital control"]
   entry_position: hard
   note: "Distant power technology with entrenched specialists. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Power Integrations, Infineon, onsemi, STMicroelectronics AC-DC"]
+  confidence: high
+  sources: ["https://www.power.com/products/innoswitch?segment=ac-dc-conversion", "https://www.infineon.com/part/XDPS2201", "https://www.infineon.com/part/IGI60F1414A1L", "https://www.lcsc.com/product-detail/C462899.html", "https://www.lcsc.com/product-detail/C2961100.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.power.com/products/innoswitch?segment=ac-dc-conversion - Power Integrations InnoSwitch: primary, secondary and feedback in one off-line flyback IC", "https://www.infineon.com/part/XDPS2201 - Infineon hybrid-flyback controller", "https://www.infineon.com/part/IGI60F1414A1L - Infineon 600 V GaN half-bridge with integrated drive, for AC-DC chargers", "https://www.lcsc.com/product-detail/C462899.html - distributor page: onsemi NCP1342 quasi-resonant flyback controller", "https://www.lcsc.com/product-detail/C2961100.html - distributor page: ST VIPer26 800 V integrated off-line converter"]
+    note: "All four leaders, integrated offline switchers and GaN integration confirmed."
 secure_element:
   leaders: [NXP Semiconductors, Infineon Technologies, STMicroelectronics, Microchip Technology]
-  lead_tech: "Common Criteria EAL6+ certified secure elements with turnkey IoT provisioning (NXP EdgeLock, Infineon OPTIGA, ST STSAFE, Microchip CryptoAuthentication)"
+  lead_tech: "Certified secure elements with turnkey IoT provisioning (NXP EdgeLock SE050, Infineon OPTIGA Trust, ST STSAFE, Microchip CryptoAuthentication)"
   differentiators: ["secure ranging tied to UWB"]
   entry_position: hard
   note: "Security certification and provisioning infrastructure are a multi-year barrier. Not in competition.yaml supplier lists."
   confidence: high
-  sources: ["public product pages of NXP EdgeLock, Infineon OPTIGA, STMicroelectronics STSAFE, Microchip secure elements"]
+  sources: ["https://www.lcsc.com/product-detail/C2659345.html", "https://www.infineon.com/product-table/optiga-trust", "https://www.lcsc.com/product-detail/C5267555.html", "https://www.lcsc.com/product-detail/C1518769.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C2659345.html - distributor page: NXP SE050 Plug&Trust secure element", "https://www.infineon.com/product-table/optiga-trust - Infineon OPTIGA Trust product family", "https://www.lcsc.com/product-detail/C5267555.html - distributor page: ST STSAFE-A110 secure element", "https://www.lcsc.com/product-detail/C1518769.html - distributor page: Microchip ATECC608B CryptoAuthentication device"]
+    note: "All four leaders sell secure elements. 'EAL6+' was not shown on the pages opened and is no longer stated as common to all of them."
 power_fets:
   leaders: [Infineon Technologies, onsemi, STMicroelectronics, Vishay]
   lead_tech: "Silicon superjunction and trench MOSFETs, SiC and GaN power devices with large package portfolios (Infineon CoolMOS/OptiMOS/CoolGaN, onsemi, ST)"
@@ -273,7 +441,12 @@ power_fets:
   entry_position: hard
   note: "Volume power-discrete business; Qorvo SiC was sold to onsemi. Not in competition.yaml supplier lists."
   confidence: high
-  sources: ["public product pages of Infineon, onsemi, STMicroelectronics, Vishay power MOSFETs"]
+  sources: ["https://www.infineon.com/part/IPW60R017C7", "https://www.infineon.com/part/IPT015N10N5", "https://www.infineon.com/part/IMW120R014M1H", "https://www.infineon.com/part/IGT60R070D1", "https://www.lcsc.com/product-detail/C5209029.html", "https://www.lcsc.com/product-detail/C5268810.html", "https://www.vishay.com/en/product/63033/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/IPW60R017C7 - Infineon CoolMOS C7 600 V superjunction MOSFET", "https://www.infineon.com/part/IPT015N10N5 - Infineon OptiMOS 5 100 V MOSFET", "https://www.infineon.com/part/IMW120R014M1H - Infineon CoolSiC 1200 V MOSFET", "https://www.infineon.com/part/IGT60R070D1 - Infineon GaN HEMT", "https://www.lcsc.com/product-detail/C5209029.html - distributor page: onsemi NTBG014N120M3P 1200 V SiC MOSFET", "https://www.lcsc.com/product-detail/C5268810.html - distributor page: ST 3rd-generation SiC MOSFET SCT055HU65G3AG", "https://www.vishay.com/en/product/63033/ - Vishay SiR572DP 150 V TrenchFET MOSFET"]
+    note: "All four leaders and the Si/SiC/GaN breadth confirmed. The Qorvo SiC sale to onsemi was not re-checked."
 soc:
   leaders: [Qualcomm, MediaTek, NXP Semiconductors, Texas Instruments]
   lead_tech: "Leading-edge CMOS application processors with CPU/GPU/NPU and full software stacks"
@@ -281,55 +454,90 @@ soc:
   entry_position: hard
   note: "Unrelated core technology."
   confidence: high
-  sources: ["public product pages of Qualcomm, MediaTek, NXP i.MX, Texas Instruments processors"]
+  sources: ["https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-8-Elite-Gen-5-product-brief.pdf", "https://www.mediatek.com/products/smartphones/mediatek-dimensity-9400", "https://www.lcsc.com/product-detail/C3227873.html", "https://www.ti.com/product/AM625"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-8-Elite-Gen-5-product-brief.pdf - Qualcomm Snapdragon 8 Elite Gen 5 mobile platform brief", "https://www.mediatek.com/products/smartphones/mediatek-dimensity-9400 - MediaTek Dimensity 9400 flagship 5G chipset", "https://www.lcsc.com/product-detail/C3227873.html - distributor page: NXP i.MX 8M Plus (MIMX8ML8) application processor", "https://www.ti.com/product/AM625 - TI AM625 Cortex-A53 SoC with edge AI"]
+    note: "All four leaders confirmed."
 env_sensor:
   leaders: [Bosch Sensortec, Sensirion, TDK, ams OSRAM]
-  lead_tech: "MEMS humidity/pressure/gas sensors with factory calibration and AI gas classification (Bosch BME68x), humidity (Sensirion SHT4x), pressure (TDK), light (ams OSRAM)"
+  lead_tech: "MEMS humidity/pressure/gas sensors with factory calibration and AI gas classification (Bosch BME68x/BME690), humidity (Sensirion SHT4x), pressure (TDK), light (ams OSRAM)"
   differentiators: ["force sensing as a niche sensor"]
   entry_position: hard
   note: "Different MEMS processes and calibration infrastructure. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Bosch Sensortec, Sensirion, TDK InvenSense, ams OSRAM"]
+  confidence: high
+  sources: ["https://www.bosch-sensortec.com/en/products/environmental-sensors/gas-sensors/bme690/", "https://sensirion.com/resource/datasheet/sht4x", "https://invensense.tdk.com/en-us/pressure", "https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.bosch-sensortec.com/en/products/environmental-sensors/gas-sensors/bme690/ - Bosch Sensortec BME690 4-in-1 gas/humidity/pressure/temperature sensor", "https://sensirion.com/resource/datasheet/sht4x - Sensirion SHT4x datasheet: +/-1.0 %RH, +/-0.1 C", "https://invensense.tdk.com/en-us/pressure - TDK InvenSense pressure sensors", "https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors - ams OSRAM ambient-light, colour and proximity sensors"]
+    note: "All four leaders confirmed. Bosch's current gas sensor is the BME690, so the example is updated from BME68x only."
 relay_driver:
   leaders: [Infineon Technologies, STMicroelectronics, Texas Instruments, onsemi]
-  lead_tech: "Multi-channel low-side drivers with SPI diagnostics and inductive clamp (Infineon, ST, TI, onsemi NCV72xx)"
+  lead_tech: "Multi-channel low-side drivers with SPI diagnostics and inductive clamp (Infineon TLE8108, TI DRV8860, onsemi NCV7751/NCV7240, ST)"
   differentiators: ["isolated relay/solenoid drive"]
   entry_position: fast_follower
   note: "Simple variant on existing drive blocks; automotive qualification is the gating item. Not in competition.yaml supplier lists."
   confidence: medium
-  sources: ["public product pages of Infineon, STMicroelectronics, Texas Instruments, onsemi low-side drivers"]
+  sources: ["https://www.infineon.com/part/TLE8108EM", "https://www.ti.com/product/TPL7407L", "https://www.ti.com/product/DRV8860", "https://www.lcsc.com/product-detail/C604006.html"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/TLE8108EM - Infineon multichannel SPI low-side switch with protection", "https://www.ti.com/product/TPL7407L - TI 7-channel low-side driver", "https://www.ti.com/product/DRV8860 - TI 8-channel low-side driver with open-load detection", "https://www.lcsc.com/product-detail/C604006.html - distributor page: onsemi NCV7751 12-channel SPI low-side driver (NCV7240-compatible)"]
+    note: "Infineon, TI and onsemi confirmed. No ST relay/low-side driver page could be opened (st.com blocks automated fetches), so ST is unverified. onsemi example changed to the NCV7751 that was opened."
 isolated_can:
   leaders: [Texas Instruments, Analog Devices]
   lead_tech: "Isolated CAN FD transceivers, including versions with integrated isolated power (ADI isoPower, TI ISO1042)"
   differentiators: ["capacitive isolation + integrated isolated DC-DC + CAN PHY in one package"]
   entry_position: fast_follower
   note: "Skyworks isolation is strong but a CAN PHY block and automotive EMC need to be added."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments isolated CAN, Analog Devices isolated CAN, Novosense, Chipanalog"]
+  confidence: high
+  sources: ["https://www.ti.com/product/ISO1042", "https://www.ti.com/product/ISOW1044", "https://www.lcsc.com/product-detail/C658105.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/ISO1042 - TI isolated CAN FD transceiver", "https://www.ti.com/product/ISOW1044 - TI 5 kVrms isolated CAN FD transceiver with integrated DC/DC", "https://www.lcsc.com/product-detail/C658105.html - distributor page: ADI ADM3055E isolated CAN FD with integrated isolated DC-DC"]
+    note: "Both leaders and the integrated-isolated-power variants confirmed. Novosense and Chipanalog were not checked (only cited as sources)."
 touch_controller:
   leaders: [Microchip Technology, Infineon Technologies, Synaptics, Azoteq]
-  lead_tech: "Capacitive sensing with noise-immune firmware and tuning tools (Infineon CAPSENSE, Microchip), display touch (Synaptics), inductive sensing (TI LDC)"
+  lead_tech: "Capacitive sensing with noise-immune firmware and tuning tools (Infineon CAPSENSE, Microchip), display touch (Synaptics), multi-mode capacitive/inductive sensing (Azoteq)"
   differentiators: ["force + touch combination from Qorvo MEMS heritage"]
   entry_position: hard
   note: "Firmware- and tooling-led market. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Microchip touch, Infineon CAPSENSE, Synaptics, Azoteq"]
+  confidence: high
+  sources: ["https://www.lcsc.com/product-detail/C74512.html", "https://www.infineon.com/part/CY8C4046LQI-T452", "https://www.synaptics.com/products", "https://www.azoteq.com/images/stories/pdf/iqs7222a_datasheet.pdf"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C74512.html - distributor page: Microchip AT42QT1010 touch/proximity sensor", "https://www.infineon.com/part/CY8C4046LQI-T452 - Infineon PSOC 4000T MCU for touch HMI (CAPSENSE)", "https://www.synaptics.com/products - Synaptics touch controller ICs and integrated touch-and-display ICs", "https://www.azoteq.com/images/stories/pdf/iqs7222a_datasheet.pdf - Azoteq IQS7222A capacitive/inductive/Hall sensing controller"]
+    note: "All four leaders confirmed. The TI LDC inductive-sensing mention was not checked (TI is not a listed leader) and was removed."
 battery_protector:
   leaders: [Texas Instruments, ABLIC, Nisshinbo Micro Devices]
   lead_tech: "Low-cost single/multi-cell protectors with accurate OVP/UVP thresholds and low current consumption"
   differentiators: ["protector integrated with charger or BMS SoC"]
   entry_position: fast_follower
   note: "Qorvo PAC BMS blocks are reusable but the market is price-driven. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments battery protectors, ABLIC, Nisshinbo"]
+  confidence: high
+  sources: ["https://www.ti.com/product/BQ2970", "https://www.ti.com/product/BQ7718", "https://www.ablic.com/en/semicon/products/power-management-ic/lithium-ion-battery-protection-ic/", "https://www.nisshinbo-microdevices.co.jp/en/products/lithium-ion-battery-protection/introduction/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/BQ2970 - TI single-cell Li-ion protector", "https://www.ti.com/product/BQ7718 - TI 2-5S overvoltage protector", "https://www.ablic.com/en/semicon/products/power-management-ic/lithium-ion-battery-protection-ic/ - ABLIC lithium-ion battery protection ICs", "https://www.nisshinbo-microdevices.co.jp/en/products/lithium-ion-battery-protection/introduction/ - Nisshinbo Li-ion battery protection ICs"]
+    note: "All three leaders confirmed. Accuracy figures were not compared."
 redriver:
   leaders: [Texas Instruments, Parade Technologies, Diodes Incorporated]
-  lead_tech: "Linear and limiting redrivers for USB4, PCIe 5/6 and DisplayPort with interoperability testing"
+  lead_tech: "Linear redrivers for PCIe 5/6 and DisplayPort 2.1 (TI DS320PR810/TDP2004, Parade PS8592/PS8353) plus USB/PCIe redrivers (Diodes PI3EQX), with interoperability testing"
   differentiators: ["none clear"]
   entry_position: hard
   note: "Standards-driven high-speed analog outside current portfolios."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments, Parade, Diodes redrivers"]
+  confidence: high
+  sources: ["https://www.ti.com/product/DS320PR810", "https://www.ti.com/product/TDP2004", "https://www.paradetech.com/products/ps8592-64gbps-pcie-gen-6-8-channel-redriver/", "https://www.paradetech.com/products/ps8353-dp2-1a-uhbr20-linear-redriver/", "https://www.lcsc.com/product-detail/C2675236.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/DS320PR810 - TI PCIe 5.0 32 Gbps 8-channel linear redriver", "https://www.ti.com/product/TDP2004 - TI DisplayPort 2.1 redriver", "https://www.paradetech.com/products/ps8592-64gbps-pcie-gen-6-8-channel-redriver/ - Parade PS8592 64 Gbps PCIe Gen 6 redriver", "https://www.paradetech.com/products/ps8353-dp2-1a-uhbr20-linear-redriver/ - Parade PS8353 DP 2.1a UHBR20 linear redriver", "https://www.lcsc.com/product-detail/C2675236.html - distributor page: Diodes PI3EQX16904G 16 Gbps 4-channel linear redriver"]
+    note: "All three leaders confirmed. USB4 redrivers were not shown on the opened pages, so the lead_tech now names PCIe 5/6 and DisplayPort 2.1."
 hv_flyback:
   leaders: [Power Integrations, Infineon Technologies, onsemi]
   lead_tech: "Integrated high-voltage switchers with isolated feedback for 400-800 V auxiliary supplies (Power Integrations InnoSwitch automotive variants)"
@@ -337,7 +545,12 @@ hv_flyback:
   entry_position: fast_follower
   note: "Adjacent to Qorvo CC regulators and Skyworks isolation, but leaders are well entrenched."
   confidence: medium
-  sources: ["public product pages of Power Integrations, Infineon, onsemi flyback controllers"]
+  sources: ["https://www.power.com/products/innoswitch?segment=ac-dc-conversion", "https://www.power.com/applications/automotive-solutions/main-dc-dc-converters", "https://www.infineon.com/part/ICE5AR4780BZS", "https://www.lcsc.com/product-detail/C462899.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.power.com/products/innoswitch?segment=ac-dc-conversion - Power Integrations InnoSwitch single-IC flyback with integrated feedback", "https://www.power.com/applications/automotive-solutions/main-dc-dc-converters - Power Integrations automotive HV DC-DC solutions", "https://www.infineon.com/part/ICE5AR4780BZS - Infineon CoolSET 800 V integrated flyback switch", "https://www.lcsc.com/product-detail/C462899.html - distributor page: onsemi NCP1342 quasi-resonant flyback controller"]
+    note: "All three leaders sell HV flyback ICs. The InnoSwitch3-AQ product page itself returned an error, but PI's automotive and InnoSwitch family pages were opened."
 hall_switch:
   leaders: [Allegro MicroSystems, Melexis, Infineon Technologies]
   lead_tech: "Low-power, chopper-stabilised Hall switches and latches with automotive qualification"
@@ -345,7 +558,12 @@ hall_switch:
   entry_position: hard
   note: "Magnetic sensing technology is not in either portfolio. Not in competition.yaml supplier lists."
   confidence: high
-  sources: ["public product pages of Allegro, Melexis, Infineon Hall switches"]
+  sources: ["https://www.allegromicro.com/en/applications/industrial/building-and-factory/robotics-and-manufacturing-automation/motor-control", "https://www.lcsc.com/product-detail/C2152482.html", "https://www.infineon.com/part/TLE4964-1M", "https://www.infineon.com/part/TLE4961-1K"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.allegromicro.com/en/applications/industrial/building-and-factory/robotics-and-manufacturing-automation/motor-control - Allegro page listing APS11500 / APS11900 Hall-effect switches with diagnostics", "https://www.lcsc.com/product-detail/C2152482.html - distributor page: Melexis MLX92231 Hall switch", "https://www.infineon.com/part/TLE4964-1M - Infineon Hall switch (3-32 V)", "https://www.infineon.com/part/TLE4961-1K - Infineon automotive Hall latch"]
+    note: "All three leaders sell automotive Hall switches/latches. 'Chopper-stabilised' was not checked."
 serdes:
   leaders: [Texas Instruments, Analog Devices]
   lead_tech: "Proprietary automotive camera/display link ecosystems (TI FPD-Link, ADI GMSL) with established partner ecosystems; MIPI A-PHY (Valens) emerging"
@@ -353,15 +571,25 @@ serdes:
   entry_position: hard
   note: "Ecosystem lock-in and high-speed CMOS know-how make entry hard."
   confidence: high
-  sources: ["public product pages of Texas Instruments FPD-Link, Analog Devices GMSL, Valens"]
+  sources: ["https://www.ti.com/product/DS90UB953-Q1", "https://www.lcsc.com/product-detail/C2998684.html", "https://www.valens.com/product-va7000/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/DS90UB953-Q1 - TI FPD-Link III serializer for cameras and radar", "https://www.lcsc.com/product-detail/C2998684.html - distributor page: ADI MAX96717F GMSL2 serializer", "https://www.valens.com/product-va7000/ - Valens VA7000, first MIPI A-PHY chip"]
+    note: "TI FPD-Link, ADI GMSL and Valens MIPI A-PHY all confirmed."
 ddr_flash:
   leaders: [Samsung, SK hynix, Micron]
   lead_tech: "Memory process leadership (DRAM and NAND scaling)"
   differentiators: ["none realistic"]
   entry_position: hard
   note: "Unrelated core technology. Not in competition.yaml supplier lists."
-  confidence: high
-  sources: ["public product pages of Samsung, SK hynix, Micron"]
+  confidence: medium
+  sources: ["https://semiconductor.samsung.com/dram/lpddr/", "https://www.micron.com/products/memory/dram-components"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://semiconductor.samsung.com/dram/lpddr/ - Samsung LPDDR DRAM", "https://www.micron.com/products/memory/dram-components - Micron DRAM components"]
+    note: "Samsung and Micron confirmed. SK hynix's product site is script-only or returned 404, so it is unverified."
 position_sensor:
   leaders: [Allegro MicroSystems, Melexis, Infineon Technologies]
   lead_tech: "3D Hall, TMR/GMR and inductive position sensors with stray-field immunity and ASIL-rated redundant dies"
@@ -369,7 +597,12 @@ position_sensor:
   entry_position: hard
   note: "Magnetic sensing and automotive qualification are the main barriers."
   confidence: high
-  sources: ["public product pages of Allegro, Melexis, Infineon XENSIV angle sensors"]
+  sources: ["https://www.allegromicro.com/en/products/sense/linear-and-angular-position/motor-position-sensors-2d/a1333", "https://www.lcsc.com/product-detail/C3716085.html", "https://www.infineon.com/part/TLE5501-E0001"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.allegromicro.com/en/products/sense/linear-and-angular-position/motor-position-sensors-2d/a1333 - Allegro A1333 safety-critical 360-degree angle sensor", "https://www.lcsc.com/product-detail/C3716085.html - distributor page: Melexis MLX90395 Triaxis magnetometer", "https://www.infineon.com/part/TLE5501-E0001 - Infineon TLE5501 TMR angle sensor"]
+    note: "All three leaders and the 3D Hall / TMR position sensing confirmed. Stray-field immunity and dual-die variants were not checked individually."
 dac:
   leaders: [Analog Devices, Texas Instruments]
   lead_tech: "Precision DACs (16-20 bit, low drift) and GSPS RF DACs for direct synthesis"
@@ -377,15 +610,25 @@ dac:
   entry_position: hard
   note: "New converter IP needed against two deep incumbents. Not in competition.yaml supplier lists."
   confidence: high
-  sources: ["public product pages of Analog Devices and Texas Instruments DACs"]
+  sources: ["https://www.ti.com/product/DAC11001A", "https://www.ti.com/product/DAC39RF10", "https://www.electronicsweekly.com/news/products/analog/most-accurate-dac-aims-for-mri-scanners-2010-03/", "https://www.microwavejournal.com/articles/35810-analog-devices-announces-16-channel-mixed-signal-front-end-digitizer-for-reference-design-integration"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/DAC11001A - TI 20-bit low-noise precision DAC", "https://www.ti.com/product/DAC39RF10 - TI 20.48 GSPS RF DAC", "https://www.electronicsweekly.com/news/products/analog/most-accurate-dac-aims-for-mri-scanners-2010-03/ - trade press: ADI AD5791 20-bit 1 ppm DAC", "https://www.microwavejournal.com/articles/35810-analog-devices-announces-16-channel-mixed-signal-front-end-digitizer-for-reference-design-integration - trade press: ADI AD9081/AD9082 MxFE direct-RF transceivers with RF DACs"]
+    note: "Both leaders confirmed for 20-bit precision and GSPS RF DACs."
 usb_pd_controller:
   leaders: [Infineon Technologies, Texas Instruments, STMicroelectronics, Renesas Electronics]
   lead_tech: "Certified USB PD 3.x controllers with integrated power paths and programmable firmware (Infineon EZ-PD, TI TPS65xxx, ST STUSB)"
   differentiators: ["PD controller integrated with charger PMIC"]
   entry_position: hard
   note: "Firmware, certification and interoperability make this hard despite power know-how. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Infineon EZ-PD, Texas Instruments USB Type-C, STMicroelectronics STUSB, Renesas"]
+  confidence: high
+  sources: ["https://www.infineon.com/part/CYPD7291-68LDXS", "https://www.ti.com/product/TPS25750", "https://www.ti.com/product/TPS65987D", "https://www.lcsc.com/product-detail/C2971443.html", "https://www.renesas.com/en/products/power-management/usb-c-power"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/CYPD7291-68LDXS - Infineon EZ-PD CCG7D automotive dual-port USB-C PD + DC-DC", "https://www.ti.com/product/TPS25750 - TI integrated USB Type-C PD controller", "https://www.ti.com/product/TPS65987D - TI USB-C PD controller with integrated power switches", "https://www.lcsc.com/product-detail/C2971443.html - distributor page: ST STUSB4761 standalone USB PD controller", "https://www.renesas.com/en/products/power-management/usb-c-power - Renesas USB-C and Power Delivery solutions"]
+    note: "All four leaders sell USB PD controllers. Certification status was not checked."
 modem:
   leaders: [Qualcomm, MediaTek, Samsung]
   lead_tech: "Leading-edge baseband with 3GPP software and operator certification; Nordic and Sony Altair lead low-power IoT"
@@ -393,7 +636,12 @@ modem:
   entry_position: hard
   note: "Unrelated core technology; Skyworks/Qorvo supply the RF front end around these modems."
   confidence: high
-  sources: ["public product pages of Qualcomm, MediaTek, Samsung Exynos modems"]
+  sources: ["https://docs.qualcomm.com/doc/87-73875-1/87-73875-1_REV_C_Snapdragon_X80_5G_Modem-RF_System_Product_Brief.pdf", "https://www.mediatek.com/products/smartphones/mediatek-dimensity-9400", "https://semiconductor.samsung.com/processor/modem/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://docs.qualcomm.com/doc/87-73875-1/87-73875-1_REV_C_Snapdragon_X80_5G_Modem-RF_System_Product_Brief.pdf - Qualcomm Snapdragon X80 5G modem-RF system", "https://www.mediatek.com/products/smartphones/mediatek-dimensity-9400 - MediaTek Dimensity 9400 5G chipset with integrated modem", "https://semiconductor.samsung.com/processor/modem/ - Samsung Exynos Modem"]
+    note: "All three leaders confirmed. The Nordic / Sony Altair IoT remark was not checked."
 flash:
   leaders: [Winbond, Macronix, Micron, GigaDevice]
   lead_tech: "NOR/NAND process leadership with broad density and package range"
@@ -401,15 +649,25 @@ flash:
   entry_position: hard
   note: "Unrelated core technology."
   confidence: high
-  sources: ["public product pages of Winbond, Macronix, Micron, GigaDevice"]
+  sources: ["https://www.winbond.com/hq/product/code-storage-flash-memory/serial-nor-flash/?__locale=en", "https://www.macronix.com/en-us/products/NOR-Flash", "https://www.micron.com/products/storage/nor-flash", "https://www.gigadevice.com/product/flash/spi-nor-flash"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.winbond.com/hq/product/code-storage-flash-memory/serial-nor-flash/?__locale=en - Winbond QSPI NOR code-storage flash", "https://www.macronix.com/en-us/products/NOR-Flash - Macronix NOR flash", "https://www.micron.com/products/storage/nor-flash - Micron NOR flash", "https://www.gigadevice.com/product/flash/spi-nor-flash - GigaDevice GD25/GD55 SPI NOR, 512 Kb to 2 Gb"]
+    note: "All four leaders confirmed."
 radar_transceiver:
   leaders: [Texas Instruments, NXP Semiconductors, Infineon Technologies]
   lead_tech: "Single-chip 60/77 GHz CMOS radar SoCs with integrated DSP/MCU (TI AWR/IWR, NXP RFCMOS, Infineon XENSIV 60 GHz)"
   differentiators: ["UWB radar for in-cabin presence", "mmWave beamforming know-how"]
   entry_position: hard
   note: "77 GHz radar SoCs need DSP, chirp generation and automotive software; only UWB radar is close."
-  confidence: medium
-  sources: ["public product pages of Texas Instruments mmWave radar, NXP radar, Infineon XENSIV radar"]
+  confidence: high
+  sources: ["https://www.ti.com/product/AWR2944", "https://www.ti.com/product/IWR6843", "https://www.eenewseurope.com/en/nxp-launches-single-chip-28nm-rfcmos-radar-signs-hella/", "https://www.infineon.com/part/BGT60TR13C", "https://www.infineon.com/product-table/77-79-GHz-automotive-radar-sensor-ics"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/AWR2944 - TI 76-81 GHz automotive radar SoC", "https://www.ti.com/product/IWR6843 - TI 60-64 GHz mmWave sensor with processing", "https://www.eenewseurope.com/en/nxp-launches-single-chip-28nm-rfcmos-radar-signs-hella/ - trade press: NXP single-chip 28 nm RFCMOS radar", "https://www.infineon.com/part/BGT60TR13C - Infineon XENSIV 60 GHz radar with antenna-in-package", "https://www.infineon.com/product-table/77-79-GHz-automotive-radar-sensor-ics - Infineon 77/79 GHz automotive radar ICs"]
+    note: "All three leaders and the single-chip CMOS radar claim confirmed."
 vehicle_sensors:
   leaders: [Infineon Technologies, Allegro MicroSystems, Bosch, NXP Semiconductors]
   lead_tech: "Wheel-speed, steering-angle and pressure sensors with ASIL qualification and magnetic sensing"
@@ -417,15 +675,25 @@ vehicle_sensors:
   entry_position: hard
   note: "Different sensing technology and long automotive qualification. Not in competition.yaml supplier lists."
   confidence: medium
-  sources: ["public product pages of Infineon, Allegro, Bosch, NXP automotive sensors"]
+  sources: ["https://www.infineon.com/product-table/wheel-speed-sensors", "https://www.allegromicro.com/en/products/sense/linear-and-angular-position/motor-position-sensors-2d/a1333", "https://www.bosch-semiconductors.com/products/mems-sensors/"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/product-table/wheel-speed-sensors - Infineon wheel-speed sensor portfolio", "https://www.allegromicro.com/en/products/sense/linear-and-angular-position/motor-position-sensors-2d/a1333 - Allegro A1333 angle sensor for safety-critical uses", "https://www.bosch-semiconductors.com/products/mems-sensors/ - Bosch automotive MEMS sensors (airbag, vehicle dynamics, TPMS, pressure)"]
+    note: "Infineon, Allegro and Bosch confirmed. No NXP automotive sensor page could be opened (nxp.com blocks automated fetches), so NXP is unverified."
 ldo_tracker:
   leaders: [Infineon Technologies, Texas Instruments]
   lead_tech: "Automotive sensor-supply trackers with high tracking accuracy and short-circuit-to-battery protection"
   differentiators: ["trackers integrated into sensor-supply PMICs"]
   entry_position: fast_follower
   note: "Small automotive niche with few suppliers; follower with an automotive-qualified LDO."
-  confidence: medium
-  sources: ["public product pages of Infineon and Texas Instruments LDO trackers"]
+  confidence: high
+  sources: ["https://www.infineon.com/part/TLE4254GA", "https://www.infineon.com/product-table/voltage-trackers", "https://www.ti.com/product/TPS7B4253-Q1"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/TLE4254GA - Infineon automotive sensor-supply tracker LDO", "https://www.infineon.com/product-table/voltage-trackers - Infineon OPTIREG voltage trackers", "https://www.ti.com/product/TPS7B4253-Q1 - TI automotive voltage-tracking LDO"]
+    note: "Both leaders confirmed. Tracking-accuracy figures were not compared."
 multiphase:
   leaders: [Infineon Technologies, Renesas Electronics, Monolithic Power Systems]
   lead_tech: "Digital multiphase controllers with smart power stages and processor-vendor qualified VR specifications"
@@ -433,15 +701,25 @@ multiphase:
   entry_position: hard
   note: "Tied to CPU/GPU vendor qualification and digital control know-how."
   confidence: medium
-  sources: ["public product pages of Infineon XDP, Renesas, Monolithic Power Systems multiphase"]
+  sources: ["https://www.infineon.com/part/XDPE192C3B-0000", "https://www.renesas.com/en/products/power-management/multi-phase-power"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/XDPE192C3B-0000 - Infineon XDP digital multiphase controller, 12 phases", "https://www.renesas.com/en/products/power-management/multi-phase-power - Renesas digital multiphase controllers and smart power stages, Intel VR14 / AMD SVI3"]
+    note: "Infineon and Renesas confirmed. monolithicpower.com blocks automated fetches and no distributor or press page was found, so Monolithic Power Systems is unverified."
 lin_transceiver:
   leaders: [NXP Semiconductors, Texas Instruments, Infineon Technologies]
   lead_tech: "Low-cost LIN transceivers with robust EMC and integration into system-basis chips"
   differentiators: ["none clear"]
   entry_position: hard
   note: "Commodity automotive PHY needing qualification; no existing LIN base. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of NXP, Texas Instruments, Infineon LIN transceivers"]
+  confidence: high
+  sources: ["https://www.lcsc.com/product-detail/C182937.html", "https://www.ti.com/product/TLIN1029-Q1", "https://www.infineon.com/part/TLE7259-3GE", "https://www.infineon.com/part/TLE9461ES"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C182937.html - distributor page: NXP TJA1021 LIN transceiver", "https://www.ti.com/product/TLIN1029-Q1 - TI LIN transceiver", "https://www.infineon.com/part/TLE7259-3GE - Infineon LIN transceiver", "https://www.infineon.com/part/TLE9461ES - Infineon system-basis chip (LIN/CAN integration family)"]
+    note: "All three leaders confirmed."
 switch_detection_interface:
   leaders: [NXP Semiconductors, Texas Instruments]
   lead_tech: "Multi-switch detection interfaces with wetting current control and low sleep current (NXP MC33978, TI TIC12400-Q1)"
@@ -449,7 +727,12 @@ switch_detection_interface:
   entry_position: fast_follower
   note: "Niche automotive mixed-signal function with few suppliers. Not in competition.yaml supplier lists."
   confidence: low
-  sources: ["public product pages of NXP and Texas Instruments switch detection interfaces"]
+  sources: ["https://www.ti.com/product/TIC12400-Q1"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/TIC12400-Q1 - TI automotive 35 V multi-switch detection interface with SPI and ADC"]
+    note: "TI confirmed. No NXP MC33978 page could be opened (nxp.com blocks automated fetches and no distributor listing was found), so NXP is unverified."
 mmwave_antenna_module:
   leaders: [Qualcomm, Murata, Analog Devices]
   lead_tech: "Handset mmWave antenna modules with platform integration (Qualcomm QTM); infrastructure beamformers (ADI, Renesas, Sivers)"
@@ -457,15 +740,25 @@ mmwave_antenna_module:
   entry_position: differentiate
   note: "Anokiwave beamformers give Qorvo a credible base; handset modules are platform-locked."
   confidence: medium
-  sources: ["public product pages of Qualcomm, Murata, Analog Devices beamformers"]
+  sources: ["https://www.qualcomm.com/modems/rf/products/qtm565", "https://www.electronicspecifier.com/products/communications/antenna-chip-simplifies-phased-array-radar-for-avionic-designers/"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.qualcomm.com/modems/rf/products/qtm565 - Qualcomm QTM565 5th-gen 5G mmWave antenna module", "https://www.electronicspecifier.com/products/communications/antenna-chip-simplifies-phased-array-radar-for-avionic-designers/ - trade press: ADI integrated active-antenna beamforming IC"]
+    note: "Qualcomm and ADI confirmed. No Murata mmWave module page could be opened, and the Renesas/Sivers beamformer and Anokiwave claims were not checked."
 rf_predriver:
   leaders: [NXP Semiconductors, Analog Devices, MACOM]
   lead_tech: "Broadband, high-linearity gain blocks and driver amplifiers in catalogue form"
   differentiators: ["GaAs HBT/SiGe linearity", "integration with PA modules"]
   entry_position: differentiate
   note: "Skyworks and Qorvo already sell base-station driver amplifiers."
-  confidence: high
-  sources: ["public product pages of NXP, Analog Devices, MACOM, Mini-Circuits, Guerrilla RF amplifiers"]
+  confidence: medium
+  sources: ["https://www.lcsc.com/product-detail/C208262.html", "https://www.macom.com/products/rf-microwave-mmwave/amplifiers/amplifier-gain-blocks"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C208262.html - distributor page: ADI ADL5611 30 MHz-6 GHz RF/IF gain block", "https://www.macom.com/products/rf-microwave-mmwave/amplifiers/amplifier-gain-blocks - MACOM amplifier gain blocks"]
+    note: "ADI and MACOM confirmed. No NXP gain block or driver amplifier page could be opened (nxp.com blocked), so NXP is unverified."
 position_interface:
   leaders: [Analog Devices, Texas Instruments, Renesas Electronics]
   lead_tech: "Resolver-to-digital converters (ADI AD2S12xx), resolver sensor interfaces (TI PGA411-Q1), inductive position interfaces (Renesas)"
@@ -473,23 +766,38 @@ position_interface:
   entry_position: fast_follower
   note: "Niche with few specialists; precision analog would need building out."
   confidence: low
-  sources: ["public product pages of Analog Devices, Texas Instruments, Renesas resolver interfaces"]
+  sources: ["https://www.lcsc.com/product-detail/C408404.html", "https://www.ti.com/product/PGA411-Q1"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C408404.html - distributor page: ADI AD2S1210 resolver-to-digital converter with excitation oscillator", "https://www.ti.com/product/PGA411-Q1 - TI automotive resolver interface"]
+    note: "ADI and TI confirmed. The Renesas inductive position interface was not shown on any opened page."
 ppg_afe:
   leaders: [Analog Devices, Texas Instruments, ams OSRAM]
   lead_tech: "Low-power optical AFEs with high ambient-light rejection and multi-LED drivers (ADI MAX86xxx/ADPD, TI AFE44xx, ams OSRAM)"
   differentiators: ["integration with BLE SoCs for wearables"]
   entry_position: hard
   note: "Wearable sensing requires new low-noise optical AFE IP. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Analog Devices health sensors, Texas Instruments optical AFEs, ams OSRAM"]
+  confidence: high
+  sources: ["https://www.lcsc.com/product-detail/C5328762.html", "https://www.ti.com/product/AFE4404", "https://ams-osram.com/products/sensor-solutions/analog-frontend/ams-as7058-high-performance-vital-sign-analog-frontend"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C5328762.html - distributor page: ADI/Maxim MAX86141 optical pulse-oximetry / heart-rate AFE", "https://www.ti.com/product/AFE4404 - TI AFE for optical heart-rate monitoring", "https://ams-osram.com/products/sensor-solutions/analog-frontend/ams-as7058-high-performance-vital-sign-analog-frontend - ams OSRAM AS7058 vital-sign AFE"]
+    note: "All three leaders confirmed (ADPD parts not checked)."
 active_antenna_amp:
   leaders: [NXP Semiconductors, Infineon Technologies]
   lead_tech: "Discrete RF transistors and simple amplifiers used in AM/FM in-antenna amplifiers"
   differentiators: ["integrated, high-linearity AM/FM antenna amplifier ICs", "combined with tuner know-how"]
   entry_position: differentiate
   note: "Few dedicated IC suppliers; pHEMT/SiGe and Skyworks tuner know-how can lead."
-  confidence: medium
-  sources: ["public product pages of NXP, Infineon, Nexperia RF transistors"]
+  confidence: low
+  sources: ["https://www.infineon.com/product-table/highlinearity-rf-transistors", "https://www.infineon.com/part/BFP842ESD"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/product-table/highlinearity-rf-transistors - Infineon high-linearity RF transistors", "https://www.infineon.com/part/BFP842ESD - Infineon low-noise RF transistor"]
+    note: "Infineon confirmed for discrete RF transistors. No NXP page could be opened (nxp.com blocked), and use in AM/FM antenna amplifiers was not shown on any opened page."
 circulator_isolator:
   leaders: [Smiths Interconnect, JQL Technologies]
   lead_tech: "Custom ferrite circulators and isolators per band, drop-in and SMT formats"
@@ -497,39 +805,64 @@ circulator_isolator:
   entry_position: differentiate
   note: "Fragmented market where Skyworks materials know-how is a real asset."
   confidence: low
-  sources: ["public product pages of Smiths Interconnect, JQL Technologies, UIY Technology, Ditom Microwave"]
+  sources: []
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: []
+    note: "Not verified: smithsinterconnect.com blocks automated fetches and the JQL site only renders with scripts, so no product page could be opened. The Skyworks Trans-Tech ferrite claim was not re-checked."
 smartcard_interface:
   leaders: [NXP Semiconductors, STMicroelectronics]
   lead_tech: "ISO 7816 card interfaces with EMVCo-compliant protection and DC-DC (NXP TDA803x, ST ST8034)"
   differentiators: ["none clear"]
   entry_position: fast_follower
   note: "Small mature niche; simple follower product. Not in competition.yaml supplier lists."
-  confidence: low
-  sources: ["public product pages of NXP and STMicroelectronics smart card interfaces"]
+  confidence: medium
+  sources: ["https://www.lcsc.com/product-detail/C156366.html", "https://www.lcsc.com/product-detail/C2674060.html"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C156366.html - distributor page: NXP TDA8035 smart card interface", "https://www.lcsc.com/product-detail/C2674060.html - distributor page: ST ST8034 smart card interface"]
+    note: "Both leaders sell ISO 7816 card interfaces. EMVCo details were not checked."
 ecg_afe:
   leaders: [Analog Devices, Texas Instruments]
-  lead_tech: "Multi-channel biopotential AFEs with low noise and lead-off detection (TI ADS129x, ADI ADAS1000/MAX3000x)"
+  lead_tech: "Multi-channel biopotential AFEs with low noise and lead-off detection (TI ADS129x, ADI ADAS1000)"
   differentiators: ["wearable integration with BLE"]
   entry_position: hard
   note: "Medical-grade precision analog not in portfolio. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Analog Devices and Texas Instruments ECG AFEs"]
+  confidence: high
+  sources: ["https://www.ti.com/product/ADS1298", "https://www.lcsc.com/product-detail/C654371.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/ADS1298 - TI 8-channel 24-bit ADC with integrated ECG front end", "https://www.lcsc.com/product-detail/C654371.html - distributor page: ADI ADAS1000-4 ECG AFE with lead-on/off detection"]
+    note: "Both leaders confirmed. The unchecked MAX3000x example was removed."
 ultrasonic_afe:
   leaders: [Elmos Semiconductor, Texas Instruments]
   lead_tech: "Automotive parking-sensor transducer driver + echo receiver ICs with signal processing (Elmos, TI PGA460)"
   differentiators: ["none clear"]
   entry_position: hard
   note: "Niche automotive AFE with entrenched specialists. Not in competition.yaml supplier lists."
-  confidence: low
-  sources: ["public product pages of Elmos Semiconductor and Texas Instruments ultrasonic sensors"]
+  confidence: medium
+  sources: ["https://www.elmos.com/produkte/sensor-ics/ultrasonic-distance-ic.html", "https://www.ti.com/product/PGA460"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.elmos.com/produkte/sensor-ics/ultrasonic-distance-ic.html - Elmos ultrasonic distance ICs for automotive (DSI3/LIN interfaces)", "https://www.ti.com/product/PGA460 - TI ultrasonic signal processor and transducer driver"]
+    note: "Both leaders confirmed."
 v2x_transceiver:
   leaders: [Qualcomm, NXP Semiconductors]
   lead_tech: "C-V2X and 802.11p modems/transceivers with security stacks (Qualcomm, including Autotalks; NXP RoadLINK)"
   differentiators: ["V2X front-end modules (PA/LNA) rather than the modem"]
   entry_position: hard
   note: "Modem and software stack are digital; Skyworks/Qorvo play in the front end. Not in competition.yaml supplier lists."
-  confidence: medium
-  sources: ["public product pages of Qualcomm automotive, NXP V2X"]
+  confidence: low
+  sources: ["https://www.qualcomm.com/news/releases/2025/06/qualcomm-acquires-autotalks-to-boost-v2x-deployments--enhance-ro"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.qualcomm.com/news/releases/2025/06/qualcomm-acquires-autotalks-to-boost-v2x-deployments--enhance-ro - Qualcomm press release: acquisition of V2X chipmaker Autotalks"]
+    note: "Qualcomm (with Autotalks) confirmed. No NXP RoadLINK page could be opened (nxp.com blocked)."
 wireless_power:
   leaders: [Renesas Electronics, NXP Semiconductors, STMicroelectronics, Infineon Technologies]
   lead_tech: "Qi/Qi2 transmitter and receiver ICs with integrated power stages and certified firmware"
@@ -537,7 +870,12 @@ wireless_power:
   entry_position: fast_follower
   note: "RF and PMIC know-how help but Qi certification and firmware are new. Not in competition.yaml supplier lists."
   confidence: low
-  sources: ["public product pages of Renesas, NXP, STMicroelectronics, Infineon wireless charging"]
+  sources: ["https://www.infineon.com/part/WLC1115-68LQXQ", "https://www.infineon.com/product-table/wireless-charging-ics", "https://www.renesas.com/en/products/wireless-connectivity"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.infineon.com/part/WLC1115-68LQXQ - Infineon Qi2-compliant 15 W wireless charging IC", "https://www.infineon.com/product-table/wireless-charging-ics - Infineon wireless charging IC portfolio", "https://www.renesas.com/en/products/wireless-connectivity - Renesas wireless page: NFC technology for wireless charging"]
+    note: "Only Infineon was confirmed for Qi/Qi2. Renesas's opened page shows NFC wireless charging, not Qi. No NXP or ST wireless-charging page could be opened (both sites block automated fetches)."
 ultrasound_afe:
   leaders: [Texas Instruments, Analog Devices]
   lead_tech: "Multi-channel (8-16+) LNA/VGA/ADC receive AFEs with low noise and low power per channel (TI AFE58xx, ADI)"
@@ -545,12 +883,22 @@ ultrasound_afe:
   entry_position: fast_follower
   note: "LNA/VGA know-how is relevant but integrated ADC channels are new. Not in competition.yaml supplier lists."
   confidence: low
-  sources: ["public product pages of Texas Instruments and Analog Devices ultrasound AFEs"]
+  sources: ["https://www.ti.com/product/AFE5832"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: ["https://www.ti.com/product/AFE5832 - TI 32-channel ultrasound AFE, 42 mW/ch"]
+    note: "TI confirmed. No ADI ultrasound receive-AFE page could be opened (analog.com blocked)."
 hv_pulser:
   leaders: [Microchip Technology, Texas Instruments, Analog Devices]
-  lead_tech: "High-voltage multi-level pulsers with integrated T/R switches (Microchip Supertex heritage, TI TX7xxx, ADI MAX148xx)"
+  lead_tech: "High-voltage multi-level pulsers (ADI MAX148xx with integrated T/R switches, TI TX7332 with integrated transmit beamformer) and Microchip (Supertex heritage) HV MOSFET drivers and T/R switches"
   differentiators: ["none clear"]
   entry_position: hard
   note: "High-voltage driver processes are outside current portfolios. Not in competition.yaml supplier lists."
-  confidence: low
-  sources: ["public product pages of Microchip, Texas Instruments, Analog Devices ultrasound pulsers"]
+  confidence: medium
+  sources: ["https://www.lcsc.com/product-detail/C621433.html", "https://www.lcsc.com/product-detail/C629131.html", "https://www.ti.com/product/TX7332", "https://www.lcsc.com/product-detail/C1519350.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.lcsc.com/product-detail/C621433.html - distributor page: Microchip MD1210 high-voltage MOSFET driver for ultrasound transmit", "https://www.lcsc.com/product-detail/C629131.html - distributor page: Microchip MD0100 high-voltage T/R protection switch", "https://www.ti.com/product/TX7332 - TI 32-channel 3-level transmitter with integrated transmit beamformer", "https://www.lcsc.com/product-detail/C1519350.html - distributor page: ADI/Maxim MAX14808 3/5-level +/-105 V pulser with integrated T/R switches"]
+    note: "All three leaders confirmed. Corrected what is integrated: T/R switches are shown for ADI MAX14808 and as a separate Microchip MD0100 device; TI TX7332 integrates a transmit beamformer."

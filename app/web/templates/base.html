@@ -9,22 +9,22 @@
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
 <body>
-<header class="container">
+{% set path = request.url.path %}{% set active = section_of(path) %}
+<header class="container site-header">
   <nav>
     <ul><li><a href="/" class="brand contrast">Cross List</a></li></ul>
-    <ul>
-      <li><a href="/">Find</a></li>
-      <li><a href="/parts">Parts</a></li>
-      <li><a href="/compare">Compare</a></li>
-      <li><a href="/lifecycle">Lifecycle</a></li>
-      <li><a href="/rules">Rules</a></li>
-      <li><a href="/engineering">Notes</a></li>
-      <li><a href="/notes">Search notes</a></li>
-      {% if site_locked() %}<li><a href="/logout" class="secondary">Sign out</a></li>{% endif %}
-    </ul>
+    <ul>{% if site_locked() %}<li><a href="/logout" class="secondary">Sign out</a></li>{% endif %}</ul>
   </nav>
+  <nav class="sections" aria-label="Sections">
+    {% for key, label, href, subs in sections %}<a href="{{ href }}" class="section-tab{{ ' on' if key == active }}"{% if key == active %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  {% for key, label, href, subs in sections if key == active %}
+  <nav class="subnav" aria-label="{{ label }}">
+    {% for sub, shref in subs %}<a href="{{ shref }}" class="{{ 'on' if sub_active(path, shref, subs) }}"{% if sub_active(path, shref, subs) %} aria-current="page"{% endif %}>{{ sub }}</a>{% endfor %}
+  </nav>
+  {% endfor %}
 </header>
-{% if not hide_header_search %}
+{% if not hide_header_search and active == 'crosses' %}
 <div class="container search-bar">
   <form action="/find" method="get" role="search">
     <input type="search" name="q" id="global-search" placeholder="Part number, or part of one (e.g. 8641, ISO77, nsi824)"

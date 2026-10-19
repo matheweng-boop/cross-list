@@ -1,5 +1,6 @@
 """HTML pages."""
 
+import urllib.parse
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
@@ -52,6 +53,35 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
+
+# Site sections: header -> sub-headers (label, path). A page belongs to the section whose
+# prefixes match its path; the part pages, overlays and downloads all sit under Crosses.
+SECTIONS = (
+    ("crosses", "Crosses", "/", [("Find", "/"), ("Parts", "/parts"), ("Compare", "/compare"),
+                                 ("Lifecycle", "/lifecycle"), ("Rules", "/rules")]),
+    ("technical", "Technical discussions", "/technical", [("Technical", "/technical"),
+                                                         ("Engineering notes", "/engineering")]),
+    ("broadcast", "Broadcast", "/broadcast", [("Overview", "/broadcast"),
+                                              ("Configurations", "/broadcast/configurations")]),
+)  # fmt: skip
+SECTION_PREFIXES = {"technical": ("/technical", "/engineering", "/impact"), "broadcast": ("/broadcast",)}
+
+
+def section_of(path: str) -> str:
+    return next((k for k, prefixes in SECTION_PREFIXES.items() if path.startswith(prefixes)), "crosses")
+
+
+def _sub_active(path: str, href: str, subs: list) -> bool:
+    """The longest sub-header path that prefixes the page path (Find only on / and /find)."""
+    if href == "/":
+        return path in ("/", "/find")
+    best = max((h for _, h in subs if h != "/" and path.startswith(h)), key=len, default=None)
+    return href == best
+
+
+templates.env.globals["sections"] = SECTIONS
+templates.env.globals["section_of"] = section_of
+templates.env.globals["sub_active"] = _sub_active
 
 GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
 
@@ -342,7 +372,22 @@ def impact_page(ids: str = ""):
     return RedirectResponse(f"/engineering/cmti_kv_us?ids={ids}", status_code=307)
 
 
-@router.get("/notes", response_class=HTMLResponse)
+@router.get("/notes", include_in_schema=False)
+def notes_moved(q: str = ""):
+    return RedirectResponse("/technical" + (f"?q={urllib.parse.quote(q)}" if q else ""), status_code=307)
+
+
+@router.get("/broadcast", response_class=HTMLResponse)
+def broadcast(request: Request):
+    return templates.TemplateResponse(request, "broadcast/index.html", {})
+
+
+@router.get("/broadcast/configurations", response_class=HTMLResponse)
+def broadcast_configurations(request: Request):
+    return templates.TemplateResponse(request, "broadcast/configurations.html", {})
+
+
+@router.get("/technical", response_class=HTMLResponse)
 def notes_search_page(request: Request, q: str = ""):
     """Keyword search over the Skyworks application notes and the engineering notes (local only)."""
     hits = notes_search.search(q[:200], limit=60)

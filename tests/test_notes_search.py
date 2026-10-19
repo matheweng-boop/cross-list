@@ -25,6 +25,7 @@ def test_snippet_is_escaped():
 
 
 def test_notes_page(client):
-    html = client.get("/notes?q=creepage").text
+    html = client.get("/technical?q=creepage").text
     assert "AN1456" in html or "AN583" in html
-    assert "Search notes" in client.get("/notes").text
+    assert "<h1>Technical</h1>" in client.get("/technical").text
+    assert client.get("/notes?q=x", follow_redirects=False).headers["location"] == "/technical?q=x"

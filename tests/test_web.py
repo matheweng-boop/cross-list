@@ -278,3 +278,16 @@ def test_automotive_reference_banner(client):
     (ref,) = ids(client, "SD8641A")
     html = client.get(f"/parts/{ref}").text
     assert "Automotive reference" in html and "Filter by grade" not in html
+
+
+def test_sections_and_subheaders(client):
+    for url, section, sub in [("/", "Crosses", "Find"), ("/parts", "Crosses", "Parts"),
+                              ("/technical", "Technical discussions", "Technical"),
+                              ("/engineering/cmti_kv_us", "Technical discussions", "Engineering notes"),
+                              ("/broadcast", "Broadcast", "Overview"),
+                              ("/broadcast/configurations", "Broadcast", "Configurations")]:  # fmt: skip
+        html = client.get(url).text
+        assert f'class="section-tab on" aria-current="true">{section}<' in html, url
+        assert f'aria-current="page">{sub}<' in html, url
+    assert 'id="global-search"' in client.get("/parts").text
+    assert 'id="global-search"' not in client.get("/broadcast").text

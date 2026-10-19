@@ -1,0 +1,7 @@
+# Notes for coding sessions
+
+- `main` deploys to Render automatically. Merge into it only with the owner's go-ahead.
+- Never commit anything local to one machine: `.venv`, `var/`, caches, or symbolic links. `tests/test_repo.py` fails
+  if one is tracked; run the full test suite before every merge.
+- A second checkout (git worktree) gets its own environment with `uv sync`, never a symlink to another checkout's
+  `.venv`: a committed link replaces the real folder on merge.

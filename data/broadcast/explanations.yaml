@@ -273,3 +273,19 @@ flash_on: >-
   the others receive the boot image securely through the IC link. Do not wire the flash to any other tuner. The demod
   keeps its own flash (parallel / quad connection recommended). Chip select: 10 kOhm pull-up to VCC only; no
   pull-ups on MISO, MOSI or CLK.
+"job:dab2": >-
+  DAB ensemble 2 on the second tuner of the DAB IC, ready to switch: the receiver can change ensemble (or link
+  DAB to DAB) without a gap. Trade-off: that tuner is not free for the background scan.
+"job:fm_pd_ts": >-
+  Time-sharing: this tuner normally adds FM phase diversity, but briefly drops out to do the FM / DAB background
+  scan and then drops back in. Tuner 0 keeps the FM audio of the same station. Saves a tuner (4 instead of 5).
+"djob:dab_audio2": >-
+  Decodes DAB ensemble 2 so the receiver is ready to switch to it at once. Example: the same service is on two
+  ensembles; if ensemble 1 fades, audio continues from ensemble 2.
+"djob:dab_link": >-
+  DAB-DAB linking: decodes ensemble 2 and links with DMOD0 (ensemble 1), so listening continues seamlessly when
+  the receiver moves from one ensemble to the other.
+"djob:dab_scan": >-
+  DAB background scan and station (service) list, fed by a tuner doing the FM / DAB background scan.
+"djob:hd_scan": >-
+  FM HD background scan: keeps the HD station list current while the foreground plays AM.

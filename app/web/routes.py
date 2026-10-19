@@ -51,7 +51,7 @@ templates.env.globals.update(
 
 
 def family_support(session: Session) -> dict[str, dict]:
-    """Every product family with matching rules, and how many parts Cross List holds for it: one list for Parts
+    """Every product family with matching rules, and how many parts BizDev holds for it: one list for Parts
     and Compare. A family with rules but no parts cannot be compared or crossed yet."""
     from sqlalchemy import func
 
@@ -170,12 +170,12 @@ def index(
     lifecycle_status: str = Query("", alias="lifecycle"),
     session: Session = Depends(get_session),
 ):
-    """Browse products through one functional taxonomy (catalogue records and Cross List parts together), with
+    """Browse products through one functional taxonomy (catalogue records and BizDev parts together), with
     capability badges that say what each record supports. Old links (family=, catalog=, lifecycle=) still work."""
     from app.services import products
 
     tax = products.taxonomy()
-    if family and not sub:  # old Cross List family link
+    if family and not sub:  # old BizDev family link
         sub = tax["families"].get(family, "")
     if catalog and not cat:  # old catalogue category link: its first functional category
         cat = next((cid for c, _rx, cid, _sid in tax["rules"] if c == catalog), "")

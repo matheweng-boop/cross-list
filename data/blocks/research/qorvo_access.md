@@ -1,6 +1,6 @@
 # Qorvo product data: what is reachable (checked 2026-10-19)
 
-Question: can Cross List get public data for Qorvo PMICs, PAC motor controllers, SiC FETs and RF switches,
+Question: can BizDev get public data for Qorvo PMICs, PAC motor controllers, SiC FETs and RF switches,
 to show them next to Skyworks parts in block diagrams?
 
 **Short answer:** yes for PMICs, bucks, PAC motor controllers and RF switches, through Qorvo's own store
@@ -69,7 +69,7 @@ All requests used `curl -sS -A "Mozilla/5.0"` with no other headers. Nothing was
    lifecycle status. The import is a one-off; a refresh means re-running it.
 2. **The user supplies a selector export or datasheets.** For datasheet-grade specs and the newest or
    automotive parts, the user saves the parametric tables from qorvo.com in a normal browser (whether the selector
-   has a CSV export could not be checked, because the site is blocked here) or downloads the datasheet PDFs. Cross List then imports those files.
+   has a CSV export could not be checked, because the site is blocked here) or downloads the datasheet PDFs. BizDev then imports those files.
 3. **Distributor APIs with keys (DigiKey Product Information API v4, Mouser Search API).** These are the
    most complete and are kept up to date, including the onsemi SiC parts. They need the user to register for
    keys, and none were used here.

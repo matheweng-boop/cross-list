@@ -1,16 +1,16 @@
-# Functions for the block-diagram generator. Each function says which parts in Cross List can fill it.
+# Functions for the block-diagram generator. Each function says which parts in BizDev can fill it.
 #
-# source:  {family: <rules family>}        Skyworks parts of that Cross List family
+# source:  {family: <rules family>}        Skyworks parts of that BizDev family
 #          {broadcast: tuner|coprocessor|receiver}  Skyworks broadcast parts of that role
 #          external                         the customer's own part (processor, memory, sensors): not counted
-#          (omitted)                        no Skyworks part in Cross List yet: shown as an opportunity
+#          (omitted)                        no Skyworks part in BizDev yet: shown as an opportunity
 # Qorvo catalogue parts (data/blocks/research/qorvo_parts.yaml, store.qorvo.com) are added to the function named
 # in that file, so a block can show the best two Skyworks and the best two Qorvo parts.
 # companions: functions usually designed in next to this one (suggested when the block is added)
 # requirements: optional questions that narrow the parts that fit (nothing is assumed; unanswered = no filter)
 #   {id, label, param, op: contains | eq | gte | in, value} for yes/no; {id, label, param, op, choices: [...] | auto} for a choice
 #   param "feature" checks the broadcast feature set (data/broadcast/tuner_features.yaml)
-# Note: "opportunity" only means Cross List has no Skyworks part for it yet. The full Skyworks portfolio is not
+# Note: "opportunity" only means BizDev has no Skyworks part for it yet. The full Skyworks portfolio is not
 # imported (backlog), so some opportunities are covered by Skyworks products that are simply not loaded.
 
 categories:
@@ -216,11 +216,11 @@ functions:
   vehicle_sensors: {label: "Vehicle sensors (wheel speed, steering, brake...)", category: sensors, source: external}
   external_block: {label: External / system block, category: sensors, source: external, note: A part of the system outside the Skyworks / Qorvo scope (label says what)}
   battery_pack: {label: Battery pack, category: sensors, source: external}
-  power_fets: {label: MOSFETs / GaN FETs, category: sensors, source: external, note: Inverter switches; not a Cross List part}
+  power_fets: {label: MOSFETs / GaN FETs, category: sensors, source: external, note: Inverter switches; not a BizDev part}
   display: {label: Display, category: sensors, source: external}
   hv_battery: {label: HV battery (400 / 800 V), category: sensors, source: external}
   dc_link_cap: {label: DC-link capacitor, category: sensors, source: external}
-  power_module: {label: IGBT / SiC power switch, category: sensors, source: external, note: Power module or discrete switches; not a Cross List part}
+  power_module: {label: IGBT / SiC power switch, category: sensors, source: external, note: Power module or discrete switches; not a BizDev part}
   motor: {label: Traction motor, category: sensors, source: external}
   camera_radar: {label: Camera / lidar / radar modules, category: sensors, source: external}
   # added by tools/import_diagrams.py from research files

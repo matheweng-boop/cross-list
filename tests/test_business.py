@@ -50,7 +50,7 @@ def test_technology_fit_and_cases(client):
         assert client.get(f"/business/technology?view={v}").status_code == 200
     assert "Not our product type" in client.get("/business/applications/1").text
     page = client.get("/business/cases/new?fn=pol_ldo").text
-    assert "What Cross List knows" in page and "PoL LDO" in page
+    assert "What BizDev knows" in page and "PoL LDO" in page
     r = client.post("/business/cases", data={"title": "Automotive PoL LDO", "fn": "pol_ldo", "question": "Develop it?",
                                               "features": "3 A – fewer parts"})  # fmt: skip
     assert r.status_code in (200, 303)

@@ -1,5 +1,5 @@
 // Block-diagram generator. A diagram is groups (dotted frames on a grid) holding blocks; each block is a
-// system function that a Skyworks part in Cross List may fill. State (saved as JSON):
+// system function that a Skyworks part in BizDev may fill. State (saved as JSON):
 //   groups: [{id, label, col, row, w, blocks: [{id, fn, label, qty, part}]}]
 //   links:  [[fromGroup, toGroup, label]]
 (() => {
@@ -41,7 +41,7 @@
     const n = COUNTS[b.fn];
     return n === null ? "ext" : n ? "have" : "opp";
   }
-  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Opportunity: no Skyworks or Qorvo part in Cross List yet", ext: "Customer part"};
+  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Opportunity: no Skyworks or Qorvo part in BizDev yet", ext: "Customer part"};
 
   // ---- layout
   const CELL = 250, GAP_X = 56, GAP_Y = 52, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
@@ -244,7 +244,7 @@
         <div class="tile"><b>${by.part}</b>parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks / Qorvo can fill</div>
         <div class="tile"><b>${by.opp}</b>opportunities</div><div class="tile"><b>${by.ext}</b>customer parts</div></div>` +
       (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
-      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
+      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in BizDev yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
   }
 
   // ---- legend: one button per status; a pressed button is highlighted, the others are greyed out
@@ -261,7 +261,7 @@
   const chipKind = t => /NRND|obsolete|discontinued|no new designs/i.test(t) ? "risk" : /automotive|AEC/i.test(t) ? "auto"
     : /^(QFN|DFN|SOIC|SSOP|QSOP|LGA|BGA|MLPD|SOT|TSSOP|WLCSP|CSP|SC-?70|SSO|[A-Z]+-\d+)/i.test(t) || /\d+(\.\d+)?\s*[x×]\s*\d/.test(t) ? "pkg"
     : /(kVrms|GHz|MHz|\bA\b|\bV\b|Mbps|dB|ch\b|kV)/i.test(t) ? "spec" : /^(SP\dT|DPDT|\dP\dT|\d+\/\d+|S\dP\dT)/i.test(t) ? "cfg" : "other";
-  const partRow = (p, pick, chosen) => `<li class="pt-row${chosen ? " pt-chosen" : ""}"><div class="pt-main"><a class="pt-mpn" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.pins ? `<span class="pt-chip k-sch" title="Pin list in Cross List: can be drawn as a schematic">schematic</span>` : ""}${pick ? (chosen ? `<span class="pt-picked">✓ chosen</span>` : `<button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button>`) : ""}</div>
+  const partRow = (p, pick, chosen) => `<li class="pt-row${chosen ? " pt-chosen" : ""}"><div class="pt-main"><a class="pt-mpn" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.pins ? `<span class="pt-chip k-sch" title="Pin list in BizDev: can be drawn as a schematic">schematic</span>` : ""}${pick ? (chosen ? `<span class="pt-picked">✓ chosen</span>` : `<button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button>`) : ""}</div>
     ${(() => {
       const bits = String(p.detail || "").split(" · ").filter(Boolean).flatMap(t => (/^[A-Z0-9_]+( [A-Z0-9_]+)+$/.test(t) ? t.split(" ") : [t])), long = bits.filter(t => t.length > 40), short = bits.filter(t => t.length <= 40);
       return `<div class="pt-chips">${short.map(t => `<span class="pt-chip k-${chipKind(t)}">${esc(t)}</span>`).join("")}${p.risk ? '<span class="pt-chip k-risk">NRND / obsolete</span>' : ""}</div>` +
@@ -277,7 +277,7 @@
     const box = below();
     if (!box) return;
     const fns = [...new Set(S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have" || status(b) === "part").map(b => b.fn))];
-    if (!fns.length) { box.innerHTML = `<h3>Suggested parts</h3><p class="small muted">No block in this diagram has Skyworks or Qorvo parts in Cross List yet.</p>`; return; }
+    if (!fns.length) { box.innerHTML = `<h3>Suggested parts</h3><p class="small muted">No block in this diagram has Skyworks or Qorvo parts in BizDev yet.</p>`; return; }
     const open = renderBelow.open || (renderBelow.open = new Set());
     const unpicked = S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have").length;
     box.innerHTML = `<h3>Suggested parts <span class="small muted">· open a block for its most likely parts per manufacturer; “use” puts the part in the diagram</span></h3>
@@ -463,7 +463,7 @@
       };
       draw("");
     } else if (st === "opp") {
-      panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in Cross List. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
+      panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in BizDev. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
         <a href="/requests">Add a request</a> if a specific part should be crossed.</p>`;
     }
     bindReq(panel, () => showBlock(g, b));
@@ -509,7 +509,7 @@
     if (!qs.length) return "";
     const n = Object.keys(S.qa).length;
     return `<details class="req-box" open><summary class="small"><b>Design questions</b> <span class="muted">· ${n} of ${qs.length} answered</span></summary>
-      <p class="small muted">From the reference documents below. <span class="lg lg-have">narrows</span> = the answer filters parts; <span class="lg lg-ext">recorded</span> = kept with the design (no matching parameter in Cross List yet).</p>
+      <p class="small muted">From the reference documents below. <span class="lg lg-have">narrows</span> = the answer filters parts; <span class="lg lg-ext">recorded</span> = kept with the design (no matching parameter in BizDev yet).</p>
       ${qs.map(q => {
         const fl = filterLabel(q);
         return `<label class="small req-row" title="${esc(q.source || "")}">${esc(q.question)}
@@ -549,7 +549,7 @@
     panel.innerHTML = `<h3>Requirements</h3><p class="small muted">Answer only what the design needs; unanswered questions do not filter. Each answer narrows the parts for every block of that function.</p>` +
       questionControls() + (fns.length ? `<p class="small"><b>Per function</b></p>` : "") +
       (fns.length ? fns.map(fn => `<details class="req-box"${Object.keys(S.req[fn] || {}).length ? " open" : ""}><summary class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} parts fit</span></summary>${reqControls(fn)}</details>`).join("")
-        : `<p class="small muted">No block in this diagram has requirement questions yet (they come with functions that have parts in Cross List).</p>`);
+        : `<p class="small muted">No block in this diagram has requirement questions yet (they come with functions that have parts in BizDev).</p>`);
     bindReq(panel, showRequirements);
     bindQuestions(panel, showRequirements);
   }
@@ -880,7 +880,7 @@
     const cur = (sel && sel.block ? list.find(x => x.block === sel.block) : sel ? list.find(x => x.kind === "group" && x.group === sel.group) : null) || list[0];
     SCH.innerHTML = `<h2>Convert to schematic</h2>
       <p class="small muted">Choose what to convert: the whole diagram, one frame (a functional block with the blocks inside it) or a single block.
-        Cross List first checks the design rules and asks what it cannot decide; nothing is drawn until you click <b>Draw schematic</b>.</p>
+        BizDev first checks the design rules and asks what it cannot decide; nothing is drawn until you click <b>Draw schematic</b>.</p>
       <div class="row"><label class="small">Convert <select id="sch-scope" class="small-sel">${list.map((x, i) => `<option value="${i}"${x === cur ? " selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>
         <label class="small"><input type="checkbox" id="sch-drawable"${drawable ? " checked" : ""}> only blocks we can draw (a chosen part with a pin list)</label>
         <button type="button" id="sch-check" class="small-btn">Check design rules</button>

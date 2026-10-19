@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.models import BlockFeedback, CrossFeedback, CrossRequest, DataReview, PartMapping, TechFeedback
 
 ISSUE_TYPES = {
-    "missing_product": ("Missing product", "A part to add or cross that Cross List does not cover yet."),
+    "missing_product": ("Missing product", "A part to add or cross that BizDev does not cover yet."),
     "specification": ("Incorrect specification or cross", "A cross verdict or parameter that looks wrong."),
     "mapping": ("Product-to-function mapping", "Whether a catalogue part fills a function, or the path to a product."),
     "qualification": ("Qualification uncertainty", "Automotive grade not stated or in doubt."),

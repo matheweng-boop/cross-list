@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import pct, usd, company_switch, status_chip, term %}
-{% block title %}{{ app.name }} – Business opportunity – Cross List{% endblock %}
+{% block title %}{{ app.name }} – Business opportunity – BizDev{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/applications?co={{ co }}">← All applications</a></p>
 <h1>{{ app.name }}</h1>
@@ -22,7 +22,7 @@
     {% for p in app.positions if p.group == g %}
       <div class="bo-pos" data-fn="{{ p.fn }}" data-g="{{ loop.index0 }}" data-gi="{{ loop.index0 }}">
         <div class="bo-pos-name"><b>{{ p.label }}</b>
-          <small class="muted">{% for mname, n in p.makers|dictsort if n %}{{ mname }} {{ n }}{{ ' · ' if not loop.last }}{% else %}no parts in Cross List{% endfor %}</small></div>
+          <small class="muted">{% for mname, n in p.makers|dictsort if n %}{{ mname }} {{ n }}{{ ' · ' if not loop.last }}{% else %}no parts in BizDev{% endfor %}</small></div>
         <select class="bo-status" aria-label="Status of {{ p.label }}">
           {% for s in ['supported', 'gap', 'competitor', 'na'] %}<option value="{{ s }}"{{ ' selected' if p.status == s }}>{{ status_label[s] }}</option>{% endfor %}
         </select>
@@ -35,7 +35,7 @@
   </section>
   {% endfor %}
   <p><button type="button" id="bo-save-asp" class="small-btn">Save ASPs for all applications</button> <button type="button" id="bo-reset" class="outline secondary small-btn">Reset</button> <span id="bo-saved" class="small muted"></span></p>
-  <p class="small muted">Statuses come from Cross List parts for {{ co_label }}; “Portfolio” means a candidate part exists, not yet verified against this
+  <p class="small muted">Statuses come from BizDev parts for {{ co_label }}; “Portfolio” means a candidate part exists, not yet verified against this
     application's electrical requirements. Quantities and ASPs are inputs, not market data. The content percentage is a screening metric,
     not market share or revenue.</p>
 </div>

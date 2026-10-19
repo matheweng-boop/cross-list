@@ -71,7 +71,7 @@ def requests_text(session: Session = Depends(get_session)):
     rows = session.scalars(
         select(CrossRequest).where(CrossRequest.status.in_(["open", "in_progress"])).order_by(CrossRequest.created_at)
     ).all()
-    lines = ["Please add these parts to Cross List and program their crosses:"]
+    lines = ["Please add these parts to BizDev and program their crosses:"]
     for r in rows:
         extra = "; ".join(x for x in (r.manufacturer, r.note) if x)
         lines.append(f"- {r.mpn}{f' ({extra})' if extra else ''}")

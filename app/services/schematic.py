@@ -202,9 +202,9 @@ def resolve(session: Session, data: dict, scope: dict, skipped: list | None = No
             d.why = (
                 "no part chosen"
                 if not mpn
-                else "part not in Cross List with parameters"
+                else "part not in BizDev with parameters"
                 if part is None
-                else "pin list not in Cross List"
+                else "pin list not in BizDev"
             )
         if d.placeholder and (scope or {}).get("drawable"):
             if skipped is not None:
@@ -435,7 +435,7 @@ def questions(data: dict, devs: list[Device]) -> list[dict]:
                     d.ref,
                     "Operating range " + " or ".join(f"{lo:g}–{hi:g} V" for lo, hi in rngs)
                     if rngs
-                    else "Operating range not in Cross List data",
+                    else "Operating range not in BizDev data",
                     group="Supplies",
                 )
             )

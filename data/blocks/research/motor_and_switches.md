@@ -1,6 +1,6 @@
 # Motor drives (48 V to 72 V+) and where RF switches sit: research notes
 
-Structured data: `motor_and_switches.yaml` (same folder). Everything below comes from a page or document I read. Each item cites its URL and page or figure. Vendor part numbers are listed only as references to what the source draws. They are not Cross List recommendations.
+Structured data: `motor_and_switches.yaml` (same folder). Everything below comes from a page or document I read. Each item cites its URL and page or figure. Vendor part numbers are listed only as references to what the source draws. They are not BizDev recommendations.
 
 ---
 

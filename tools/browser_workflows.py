@@ -94,7 +94,7 @@ async def main():
             await pg.goto(B + f"/business/data?focus=asp:{fn}")
             await expect(pg.locator(".ci-focus")).to_have_count(1)
             await pg.goto(B + f"/business/cases/new?fn={fn}")
-            await expect(pg.locator("text=What Cross List knows")).to_be_visible()
+            await expect(pg.locator("text=What BizDev knows")).to_be_visible()
 
         await step("4 product opportunity: explorer → evidence → commercial input in context → business case", w4())
 

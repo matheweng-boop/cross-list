@@ -1,5 +1,5 @@
 """Keyword search over Skyworks application notes, TI application notes (title + summary, data/catalog/ti_appnotes.yaml)
-and the Cross List engineering notes.
+and the BizDev engineering notes.
 
 Everything runs locally: an in-memory SQLite FTS5 index built once from data/appnotes.jsonl
 and the engineering-note templates. Nothing is sent to an outside service.
@@ -21,7 +21,7 @@ TI_NOTES_FILE = PROJECT_ROOT / "data" / "catalog" / "ti_appnotes.yaml"
 
 @dataclass
 class Hit:
-    source: str  # "Skyworks app note", "TI app note" or "Cross List note"
+    source: str  # "Skyworks app note", "TI app note" or "BizDev note"
     ref: str  # AN number or note key
     title: str
     url: str
@@ -57,7 +57,7 @@ def _index() -> sqlite3.Connection:
             rows.append((n["title"], text, "TI app note", n["doc"], n["url"], None))
     for key, (title, summary) in NOTES.items():
         body = (NOTES_DIR / f"{key}.html").read_text() if (NOTES_DIR / f"{key}.html").exists() else ""
-        rows.append((title, f"{summary} {_strip_html(body)}", "Cross List note", key, f"/engineering/{key}", None))
+        rows.append((title, f"{summary} {_strip_html(body)}", "BizDev note", key, f"/engineering/{key}", None))
     db.executemany("INSERT INTO docs VALUES (?, ?, ?, ?, ?, ?)", rows)
     return db
 

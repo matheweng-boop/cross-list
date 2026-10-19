@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch, crowd, about, term, push with context %}
-{% block title %}Cross-sell – Cross List{% endblock %}
+{% block title %}Cross-sell – BizDev{% endblock %}
 {% macro partlinks(ps) %}{% for p in ps %}<a class="offer" href="{{ p.url }}"{% if not p.url.startswith('/') %} target="_blank" rel="noopener"{% endif %} title="{{ p.manufacturer }}">{{ p.mpn }}</a>{% else %}<span class="muted small">no part listed</span>{% endfor %}{% endmacro %}
 {% block content %}
 <h1>Cross-sell</h1>
@@ -49,7 +49,7 @@
   <tbody>{% for e in new %}<tr>
     <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td>
     <td><span class="bo-bar gap"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
-    <td class="small">{{ 'Nobody in Cross List has it' if e.status == 'gap' else 'Only competitors' }}</td>
+    <td class="small">{{ 'Nobody in BizDev has it' if e.status == 'gap' else 'Only competitors' }}</td>
     <td>{{ push('crosssell', fn ~ '+' ~ e.fn, e.label ~ ' (next to ' ~ fns[fn].label ~ ')', 'New product: in ' ~ e.apps ~ ' of ' ~ n ~ ' architectures with ' ~ fns[fn].label, e.fn, (fn ~ '+' ~ e.fn) in shortlisted) }}</td>
   </tr>{% else %}<tr><td colspan="4" class="muted">Every function next to it is covered.</td></tr>{% endfor %}</tbody>
 </table></div>

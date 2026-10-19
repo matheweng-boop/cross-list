@@ -1,6 +1,6 @@
-"""Block-diagram generator: system functions, templates, and the Skyworks parts in Cross List that fill them.
+"""Block-diagram generator: system functions, templates, and the Skyworks parts in BizDev that fill them.
 
-data/blocks/functions.yaml maps each function to a source (a Cross List family, a broadcast role, an external
+data/blocks/functions.yaml maps each function to a source (a BizDev family, a broadcast role, an external
 customer part, or nothing yet = opportunity); data/blocks/templates.yaml holds starting diagrams.
 """
 
@@ -129,9 +129,9 @@ VARIANT_KEYS = (
 
 
 def source_of(t: dict) -> str:
-    """Who published the reference architecture (from the name or the note), or Cross List when drawn here."""
+    """Who published the reference architecture (from the name or the note), or BizDev when drawn here."""
     m = _SOURCE_VENDOR.search(f"{t.get('name', '')} {t.get('note', '')}")
-    return m.group(1) if m else "Cross List"
+    return m.group(1) if m else "BizDev"
 
 
 def variant_key(t: dict) -> str | None:
@@ -152,7 +152,7 @@ def variant_groups() -> dict[str, list[int]]:
 
 def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
     """Applications by category for the generator page: display name, block count and the Skyworks / Qorvo
-    categories involved (have = parts in Cross List, else opportunity)."""
+    categories involved (have = parts in BizDev, else opportunity)."""
     cat, n = catalogue(), counts(session)
     out: dict[str, list] = {}
     for i, t in enumerate(templates()):
@@ -196,8 +196,8 @@ def template_groups() -> list[tuple[str, list[tuple[int, dict]]]]:
 
 # Catalogue parts (data/catalog/<manufacturer>_parts.yaml, collected from the public product pages): every
 # Skyworks and Qorvo part with its category, package, a few key specs and lifecycle, mapped to a function. They
-# carry no Cross List parameters except the automotive grade, so an answered requirement other than automotive
-# leaves them out (unknown is not assumed). Parts already in Cross List with full parameters win over the
+# carry no BizDev parameters except the automotive grade, so an answered requirement other than automotive
+# leaves them out (unknown is not assumed). Parts already in BizDev with full parameters win over the
 # catalogue entry; tuners and demods come from the broadcast data.
 CATALOG_DIR = BLOCKS_DIR.parent / "catalog"
 QORVO_FALLBACK = "research/qorvo_parts.yaml"  # the first 82 verified Qorvo parts, until the full catalogue exists
@@ -439,7 +439,7 @@ def _filter(cands: list[dict], key: str, answers: dict) -> list[dict]:
 
 
 def requirements(session: Session) -> dict[str, list[dict]]:
-    """Requirement questions per function, with 'auto' choices resolved from the parts in Cross List."""
+    """Requirement questions per function, with 'auto' choices resolved from the parts in BizDev."""
     out = {}
     for key, f in catalogue()["functions"].items():
         reqs = f.get("requirements") or []
@@ -474,7 +474,7 @@ def counts(session: Session, answers: dict | None = None) -> dict[str, int | Non
 
 
 def _rank(c: dict, answers: dict) -> tuple:
-    """Best first: active before NRND / obsolete, production before preview, full Cross List parameters before
+    """Best first: active before NRND / obsolete, production before preview, full BizDev parameters before
     catalogue-only data, automotive first when automotive is asked for, then part number."""
     auto_wanted = bool((answers or {}).get("automotive"))
     is_auto = (c.get("values") or {}).get("qualification") == "automotive"
@@ -498,7 +498,7 @@ def _why(c: dict, rank: int, key: str, answers: dict, n: int) -> str:
         bits.append("preview, not yet in production" if c.get("preview") else "active")
     if (c.get("values") or {}).get("qualification") == "automotive":
         bits.append("AEC-Q100")
-    bits.append("full Cross List parameters" if c.get("full") else "catalogue data only (package, key specs)")
+    bits.append("full BizDev parameters" if c.get("full") else "catalogue data only (package, key specs)")
     bits.append(f"{n} fit in total")
     return "; ".join(bits)
 

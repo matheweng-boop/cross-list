@@ -2,7 +2,7 @@
 
 Structured data: `data/blocks/research/ti_more_block_diagrams.yaml`, 48 applications in the schema of `ti_block_diagrams.yaml`, plus a `category:` per application and a `new_functions:` map. None of the 48 is already in `data/blocks/templates.yaml`.
 
-Everything comes from public `ti.com/solution/<app>` pages, read in October 2026. There was no login and nothing was posted. TI is a competitor, so the TI part numbers only show what TI draws in each block. They are not Cross List recommendations.
+Everything comes from public `ti.com/solution/<app>` pages, read in October 2026. There was no login and nothing was posted. TI is a competitor, so the TI part numbers only show what TI draws in each block. They are not BizDev recommendations.
 
 ## Method
 

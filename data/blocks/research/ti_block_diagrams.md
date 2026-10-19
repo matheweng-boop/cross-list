@@ -2,9 +2,9 @@
 
 Structured data:
 - `data/blocks/research/ti_block_diagrams.yaml`: 16 application block diagrams. Same schema as `ti_power.yaml`.
-- `data/catalog/ti_appnotes.yaml`: 309 TI application notes, white papers, application briefs, Analog Design Journal articles and e-books, each tagged with an area and Cross List function ids.
+- `data/catalog/ti_appnotes.yaml`: 309 TI application notes, white papers, application briefs, Analog Design Journal articles and e-books, each tagged with an area and BizDev function ids.
 
-Everything comes from public ti.com pages and PDFs, read in October 2026. TI is a competitor, so TI part numbers are recorded only to show what TI draws in each block. They are not Cross List recommendations. This work does not repeat `ti_power.yaml` (traction inverter, gate driver subsystem, isolated bias power) or `motor_and_switches.yaml` (LEV and 48 V drives, RF switch placements from other vendors).
+Everything comes from public ti.com pages and PDFs, read in October 2026. TI is a competitor, so TI part numbers are recorded only to show what TI draws in each block. They are not BizDev recommendations. This work does not repeat `ti_power.yaml` (traction inverter, gate driver subsystem, isolated bias power) or `motor_and_switches.yaml` (LEV and 48 V drives, RF switch placements from other vendors).
 
 ---
 
@@ -123,7 +123,7 @@ Most useful for Skyworks/Qorvo specifically:
 - **PMIC and DC-DC:** every diagram. Examples are the ADAS processor PMIC with multiphase core supply, the AAS POL with sequencer, and the TCU system power, which includes buck-boost and a 3.8–4.2 V modem rail.
 
 ### Features (design questions)
-Each application has 4 to 10 features. They cover choices such as topology, voltage class, switch technology, bias architecture, sensing method, duplex mode, MIMO order, broadcast standards, tuner count, Wi-Fi generation and FEM type, ranging technology and ASIL. The choices are options, not answers. `filters` names existing Cross List parameters where one fits; otherwise the attribute is marked "(new)".
+Each application has 4 to 10 features. They cover choices such as topology, voltage class, switch technology, bias architecture, sensing method, duplex mode, MIMO order, broadcast standards, tuner count, Wi-Fi generation and FEM type, ranging technology and ASIL. The choices are options, not answers. `filters` names existing BizDev parameters where one fits; otherwise the attribute is marked "(new)".
 
 ## 4. Function ids
 All `fn_hint` and `skyworks_qorvo_functions` values use existing ids, and I checked them against the list I was given. Proposed new ids, in case finer tagging becomes useful:

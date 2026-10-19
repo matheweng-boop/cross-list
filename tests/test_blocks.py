@@ -109,7 +109,7 @@ def test_catalogue_parts_fill_functions(client):
     lna = client.get("/api/blocks/parts?fn=lna").json()
     mfrs = {m["manufacturer"] for m in lna["manufacturers"]}
     assert lna["total"] > 20 and "Skyworks" in mfrs
-    # Si86 parts already in Cross List are not listed twice from the catalogue
+    # Si86 parts already in BizDev are not listed twice from the catalogue
     iso = client.get("/api/blocks/parts?fn=digital_isolator").json()
     names = [p["mpn"].upper() for m in iso["manufacturers"] for p in m["all"]]
     assert len(names) == len(set(names))

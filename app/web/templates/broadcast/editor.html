@@ -7,12 +7,17 @@
     <button id="bc-save" type="button" class="small-btn">Save</button>
     <span id="bc-status" class="muted small" role="status"></span>
   </div>
-  <div class="bc-step"><span class="bc-step-n">1</span><span class="bc-step-label">System</span>
-    <span class="bc-chips" role="group" aria-label="System type">
-      {% for key, label in [('AM/FM', 'AM/FM only'), ('HD', 'HD Radio'), ('DAB', 'DAB / DAB+'), ('DRM', 'DRM')] %}<button type="button" class="bc-chip" data-system="{{ key }}" data-explain="system:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+  <div class="bc-step"><span class="bc-step-n">1</span><span class="bc-step-label">Region</span>
+    <span class="bc-chips" role="group" aria-label="Region">
+      {% for r in presets.regions %}<button type="button" class="bc-chip" data-region="{{ r }}" data-explain="region:{{ r }}" aria-pressed="false">{{ r }}</button>{% endfor %}
     </span></div>
-  <div class="bc-step"><span class="bc-step-n">2</span><span class="bc-step-label">Start from</span>
-    <span id="bc-preset-cards" class="bc-chips"><span class="muted small">pick a system first</span></span></div>
+  <div class="bc-step"><span class="bc-step-n">2</span><span class="bc-step-label">Hardware</span>
+    <span class="bc-chips" role="group" aria-label="Number of tuners"><span class="small muted">Tuners</span>
+      {% for n in (1, 2, 3, 4, 5) %}<button type="button" class="bc-chip bc-chip-n" data-tuners="{{ n }}" data-explain="tuners" aria-pressed="false">{{ n }}</button>{% endfor %}
+    </span>
+    <span id="bc-hw-cards" class="bc-chips"><span class="muted small">pick a region first</span></span></div>
+  <div class="bc-step"><span class="bc-step-n">3</span><span class="bc-step-label">Software</span>
+    <span id="bc-sw-cards" class="bc-chips"><span class="muted small">pick a hardware configuration first</span></span></div>
   <div class="bc-work">
     <div id="bc-usecase" class="bc-usecase"></div>
     <aside id="bc-explain" class="bc-explain" aria-live="polite"><b>Explanation</b><p class="small muted">Point at or choose anything to see what it means, with an example or the trade-off.</p></aside>

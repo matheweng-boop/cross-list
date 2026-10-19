@@ -53,26 +53,29 @@ def test_signal_only_devices_get_unnumbered_pins():
     assert not si4689["numbered"] and si4689["pins"] and all(p["num"] == "" for p in si4689["pins"])
 
 
-def test_use_case_presets_reference_known_parts_and_jobs():
+def test_configuration_presets_reference_known_parts_pins_and_jobs():
+    conf = broadcast.configurations()
     parts = {d["mpn"]: d for d in broadcast.catalog()}
-    for uc in broadcast.use_cases():
-        ants = {a["id"] for a in uc["antennas"]}
-        assert uc["system"] in {"AM/FM", "HD", "DAB", "DRM"}
-        for slot, ic in uc["ics"].items():
-            assert ic["mpn"] is None or ic["mpn"] in parts, (uc["name"], slot)
-            for t in ic.get("tuners") or []:
-                assert t["job"] in TUNER_JOBS
-            for c in ic.get("channels") or []:
-                assert c["job"] in DEMOD_JOBS
-        for slot, pins in (uc.get("rf") or {}).items():
-            names = {p["name"] for p in parts[uc["ics"][slot]["mpn"]]["pins"]}
+    for hw in conf["hardware"]:
+        assert set(hw["regions"]) <= set(conf["regions"])
+        ants = {a["id"] for a in hw["antennas"]}
+        for slot, mpn in hw["ics"].items():
+            assert mpn is None or mpn in parts, (hw["name"], slot)
+        for slot, pins in (hw.get("rf") or {}).items():
+            names = {p["name"] for p in parts[hw["ics"][slot]]["pins"]}
             for pin, feed in pins.items():
-                assert pin in names, (uc["name"], slot, pin)
+                assert pin in names, (hw["name"], slot, pin)
                 if feed.startswith("loop:"):
                     src, out = feed[5:].split(".")
-                    assert out in {p["name"] for p in parts[uc["ics"][src]["mpn"]]["pins"]}
+                    assert out in {p["name"] for p in parts[hw["ics"][src]]["pins"]}
                 else:
                     assert feed in ants
+    for sw in conf["software"]:
+        assert sw["region"] in conf["regions"]
+        for jobs in sw["tuners"].values():
+            assert set(jobs) <= TUNER_JOBS, sw["name"]
+        for c in sw.get("channels") or []:
+            assert c["job"] in DEMOD_JOBS
 
 
 def test_explanations_cover_every_job():
@@ -81,12 +84,14 @@ def test_explanations_cover_every_job():
         assert f"job:{key}" in ex
     for key in DEMOD_JOBS:
         assert f"djob:{key}" in ex
+    for region in broadcast.configurations()["regions"]:
+        assert f"region:{region}" in ex
 
 
 def test_pages_and_config_api(client):
     assert "Si47962" in client.get("/broadcast").text
     html = client.get("/broadcast/configurations/new").text
-    assert 'id="bc-catalog"' in html and "North America HD" in html
+    assert 'id="bc-catalog"' in html and "Superset" in html and 'data-region="Europe"' in html
     created = client.post(
         "/api/broadcast/configs", json={"name": "Test", "data": {"devices": [{"id": "d1", "mpn": "Si47962"}]}}
     ).json()

@@ -163,3 +163,44 @@ antenna_block: >-
   One block per physical antenna. It wires to every RF input it feeds (e.g. AMI and FMA) and lists the front-end
   parts on those inputs inside it: FM intrusion filter, ESD protection, L10 + 18 pF for the AM input (application
   guidance). Click it for the values and why each part is there.
+
+"region:North America": >-
+  North America: AM/FM with HD Radio. Typical: one dual tuner plus an HD demod; tuner 0 plays, tuner 1 builds the
+  station list, DMOD channels decode HD audio and HD data.
+"region:Europe": >-
+  Europe: AM/FM with DAB/DAB+. Typical: a primary AM/FM tuner IC (phase diversity) plus a companion DAB tuner IC
+  and a DAB demod, with seamless linking FM <-> DAB.
+"region:Rest of world": >-
+  Rest of world: analog AM/FM, sometimes DRM. Usually no demod; a dual tuner adds the background station list.
+tuners: >-
+  First question for a variant: how many tuners? 1 = entry radio, no background scan. 2 (one dual tuner) = listen +
+  background scan, or FM phase diversity, or HD MRC. 4 (two dual tuners) = phase diversity and DAB / linking at the
+  same time. 5 = superset. Trade-off: each extra tuner IC costs BOM, power and a loop-through or antenna feed.
+generate: >-
+  Builds a sensible design for this many tuners in this region: dual tuners first, a single-tuner IC for an odd
+  count, a demod sized to the tuners (HD in North America, DAB in Europe), two antennas when phase diversity is
+  possible, and loop-through feeds to the further ICs. Edit anything afterwards.
+hardware: >-
+  Hardware: what is populated and how every pin is wired (antennas, splitters, loop-throughs, clock, supplies,
+  control SPI, I/Q and I2S). One hardware design can run several listening modes.
+software: >-
+  Software: one listening mode, i.e. what each tuner and demod channel does at that moment. Example (North America
+  HD, AM listening): IC0 T0 AM audio, IC0 T1 FM background scan, DMOD0 AM HD audio, DMOD1 FM HD data / station
+  list. Add a mode for each case the radio must handle; each is checked against the hardware.
+splitter: >-
+  Band splitter: lets one AM/FM/DAB antenna feed several inputs or ICs (e.g. FMB and AMI of IC0 and B3A of IC1).
+  Without it, feed further ICs from the loop-through outputs instead.
+"control:demod": >-
+  The SoC talks SPI to the demod (IC3 host port); the demod controls the tuners over its own tuner SPI, with a
+  select and reset line per tuner. Fewer SoC pins; the demod sequences the tuners.
+"control:soc": The SoC controls every IC directly over SPI / I2C. Needed when there is no demod.
+"route:direct": >-
+  IC0 sends its I2S audio straight to the SoC; with a demod, IC0's second I2S port feeds the demod for blending /
+  linking and the demod's I2S goes to the SoC as well.
+"route:via_demod": Every tuner sends its I2S audio into the demod, which outputs one I2S stream to the SoC.
+iq_map: >-
+  Which demod ZIF port each tuner's I/Q pair is wired to. A dual tuner shares ZIFCLK / ZIFFS between its two pairs,
+  so it loads two ports (keep CLK / FS under 50 pF). A DMOD channel can only decode a tuner that is wired here.
+licences: >-
+  Software licences the demod needs: the most any listening mode uses at once. Application guidance: one HD I/Q
+  licence per HD channel, one more for HD MRC.

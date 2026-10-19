@@ -73,11 +73,12 @@ def pins_of(doc: dict) -> list[dict]:
 
 
 @lru_cache
-def use_cases() -> list[dict]:
-    """Use-case presets (data/broadcast/use_cases.yaml): which IC slot holds which part and what
-    each tuner and demodulator channel does."""
-    path = DEVICES_DIR.parent / "use_cases.yaml"
-    return yaml.safe_load(path.read_text()) if path.exists() else []
+def configurations() -> dict:
+    """Configurator presets (data/broadcast/configurations.yaml): regions, hardware configurations
+    (what is populated and how it is wired) and software listening modes (what each tuner and
+    demodulator channel does)."""
+    path = DEVICES_DIR.parent / "configurations.yaml"
+    return yaml.safe_load(path.read_text()) if path.exists() else {"regions": [], "hardware": [], "software": []}
 
 
 @lru_cache

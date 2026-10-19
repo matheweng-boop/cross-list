@@ -51,7 +51,7 @@ def _editor(request: Request, config: BroadcastConfig | None):
         {
             "config": config,
             "catalog": broadcast.catalog(),
-            "presets": broadcast.use_cases(),
+            "presets": broadcast.configurations(),
             "guidance": broadcast.guidance(),
             "explanations": broadcast.explanations(),
         },

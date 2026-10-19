@@ -698,7 +698,7 @@
   //   memory: {IC0: "4 MB"}, modes: [{name, linking, notes, tuners: {IC0: [job, job]}, channels: [{job, source}]}], mode}
   const TUNER_SLOTS = ["IC0", "IC1", "IC2"], DEMOD_SLOT = "IC3", ALL_SLOTS = [...TUNER_SLOTS, DEMOD_SLOT];
   const TUNER_JOBS = {
-    off: {label: "Not used"},
+    off: {label: "Idle / not used"},
     amfm_audio: {label: "AM or FM audio (foreground)", fg: true, analog: ["AM", "FM"], band: ["AM", "FM"]},
     fm_audio: {label: "FM audio (foreground)", fg: true, analog: ["FM"], band: ["FM"]},
     am_audio: {label: "AM audio (foreground)", fg: true, analog: ["AM"], band: ["AM"]},
@@ -706,22 +706,28 @@
     fm_mrc: {label: "FM, second branch for HD MRC", analog: ["FM"], iq: ["HD"], band: ["FM"]},
     fm_scan: {label: "FM background scan / station list", analog: ["FM"], band: ["FM"]},
     am_scan: {label: "AM background scan", analog: ["AM"], band: ["AM"]},
-    dab: {label: "DAB (I/Q to demod)", iq: ["DAB"], band: ["DAB"]},
+    dab: {label: "DAB audio ensemble (I/Q to demod)", iq: ["DAB"], band: ["DAB"]},
+    dab2: {label: "DAB ensemble 2, ready to switch", iq: ["DAB"], band: ["DAB"]},
+    fm_pd_ts: {label: "FM PD, time-shared with FM / DAB background scan", pd: true, analog: ["FM"], iq: ["DAB"], band: ["FM", "DAB"]},
     fm_dab_scan: {label: "FM / DAB background scan", analog: ["FM"], iq: ["DAB"], band: ["FM", "DAB"]},
     drm: {label: "DRM (I/Q to demod)", iq: ["DRM"], band: ["AM", "FM"]},
   };
   const DEMOD_JOBS = {
-    unused: {label: "Not used"},
+    unused: {label: "Idle / not used"},
     hd_audio: {label: "HD audio", std: "HD", audio: true},
     hd_data: {label: "HD data / station list (background)", std: "HD"},
+    hd_scan: {label: "FM HD background scan", std: "HD"},
     hd_mrc: {label: "HD MRC (second branch)", std: "HD", mrc: true},
-    dab_audio: {label: "DAB audio", std: "DAB", audio: true},
+    dab_audio: {label: "DAB audio (ensemble 1)", std: "DAB", audio: true},
+    dab_audio2: {label: "DAB audio ensemble 2, ready to switch", std: "DAB"},
+    dab_link: {label: "DAB ensemble 2, linking with DMOD0", std: "DAB"},
+    dab_scan: {label: "DAB background scan / station list", std: "DAB"},
     dab_scanless: {label: "DAB scanless / service list", std: "DAB"},
     dab_mrc: {label: "DAB MRC (second branch)", std: "DAB", mrc: true},
     drm_audio: {label: "DRM audio", std: "DRM", audio: true},
     cdr_audio: {label: "CDR audio", std: "CDR", audio: true},
   };
-  const FEEDS_STD = {HD: ["amfm_audio", "fm_audio", "am_audio", "fm_pd", "fm_mrc", "fm_scan", "am_scan"], DAB: ["dab", "fm_dab_scan"], DRM: ["drm"], CDR: ["fm_audio", "fm_scan", "amfm_audio"]};
+  const FEEDS_STD = {HD: ["amfm_audio", "fm_audio", "am_audio", "fm_pd", "fm_mrc", "fm_scan", "am_scan"], DAB: ["dab", "dab2", "fm_dab_scan", "fm_pd_ts"], DRM: ["drm"], CDR: ["fm_audio", "fm_scan", "amfm_audio"]};
   const LOOP_OUT = /^(LT[AB]|FMO|B3O|AMO|LBO)$/; // loop-through (buffer) outputs
   const PIN_PF = (GUIDE.clock && GUIDE.clock.input_pf) || [4.5, 5];
   const MAX_PF = (GUIDE.clock && GUIDE.clock.clko_max_load_pf) || 50;
@@ -1060,7 +1066,7 @@
         if (J.fg) audio++;
         for (const band of J.band || []) if (!fed(i, band)) out.push(["error", `${slot} T${i} (${J.label}) has no ${band} antenna or loop-through on its ${band} input.`]);
       });
-      const pd = ts.map((j, i) => [j, i]).filter(([j]) => j === "fm_pd");
+      const pd = ts.map((j, i) => [j, i]).filter(([j]) => j === "fm_pd" || j === "fm_pd_ts");
       if (pd.length === 1) out.push(["error", `${slot}: FM phase diversity needs both tuners of the IC.`]);
       if (pd.length === 2) {
         audio--;
@@ -1140,9 +1146,9 @@
   }
 
   // ---- presets
-  const compatible = m => Object.entries(m.tuners || {}).every(([slot, jobs]) => jobs.every(j => j === "off") || tunerCount(slotDev(slot)) >= jobs.length)
+  const compatible = m => (m.digital === false ? !slotDev(DEMOD_SLOT) : true) && ((m.channels || []).every(c => c.job === "unused") || !!slotDev(DEMOD_SLOT)) && Object.entries(m.tuners || {}).every(([slot, jobs]) => jobs.every(j => j === "off") || tunerCount(slotDev(slot)) >= jobs.length)
     && (!(m.channels || []).some(c => c.job !== "unused") || !!slotDev(DEMOD_SLOT));
-  const modeFromPreset = sw => ({name: sw.name, linking: !!sw.linking, notes: sw.notes || "", tuners: JSON.parse(JSON.stringify(sw.tuners || {})), channels: JSON.parse(JSON.stringify(sw.channels || []))});
+  const modeFromPreset = sw => ({name: sw.name, linking: !!sw.linking, ...(sw.digital === false ? {digital: false} : {}), notes: sw.notes || "", tuners: JSON.parse(JSON.stringify(sw.tuners || {})), channels: JSON.parse(JSON.stringify(sw.channels || []))});
   // ---- on-chip audio (audio DSP + audio ADC inputs): the question that decides IC0
   const hasAudio = mpn => { const c = BY_MPN[mpn]; return !!c && (FEATS(c).includes("AUDIO") || c.options.some(o => /audio dsp/i.test(o))); };
   // ---- feature sets (data/broadcast/tuner_features.yaml): required features and the audio choice decide IC0

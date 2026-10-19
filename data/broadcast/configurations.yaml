@@ -128,7 +128,8 @@ software:
     tuners: {IC0: [am_audio, fm_scan]}
     channels:
       - {job: hd_audio, source: IC0.T0}
-      - {job: hd_data, source: IC0.T1}
+      - {job: hd_scan, source: IC0.T1}
+      - {job: unused}
     notes: >-
       IC0 tuner 0 plays AM audio, tuner 1 does the FM background scan. DMOD0 decodes AM HD audio, DMOD1 the FM HD
       data / station list.
@@ -138,7 +139,8 @@ software:
     channels:
       - {job: hd_audio, source: IC0.T0}
       - {job: hd_data, source: IC0.T1}
-    notes: FM audio with HD blending on tuner 0; tuner 1 keeps the FM / HD station list current.
+      - {job: unused}
+    notes: FM audio with HD on tuner 0 (DMOD0 FM HD audio); tuner 1 FM background scan, DMOD1 FM HD data / station list.
   - name: FM listening, HD MRC
     region: North America
     tuners: {IC0: [fm_audio, fm_mrc]}
@@ -148,10 +150,12 @@ software:
     notes: Both tuners on the same HD station from two antennas; costs the background scan and an HD MRC licence.
   - name: AM listening
     region: North America
+    digital: false
     tuners: {IC0: [am_audio, fm_scan]}
     notes: AM in the foreground, FM background scan, no HD.
   - name: FM listening
     region: North America
+    digital: false
     tuners: {IC0: [fm_audio, fm_scan]}
     notes: FM in the foreground with a background scan, no HD.
 
@@ -164,34 +168,96 @@ software:
     notes: One tuner plays AM or FM with HD blending; no background scan, so the station list is built by a foreground seek.
   - name: AM/FM listening, single tuner
     region: North America
+    digital: false
     tuners: {IC0: [amfm_audio]}
     notes: Entry variant, one tuner, analog AM/FM, no HD.
+  - name: AM listening, single tuner (no HD)
+    region: North America
+    digital: false
+    tuners: {IC0: [am_audio]}
+    notes: Single-tuner variant without HD; IC1, IC2 and IC3 not populated.
 
-  # Europe
-  - name: FM listening, phase diversity, DAB in the background
+  # Europe (application guidance, user 2026-10-19). IC0 = AM/FM (phase diversity), IC1 = DAB tuner, IC2 = fifth
+  # tuner for the background scan; IC3 DMOD0..2. The 4-tuner versions time-share IC0 tuner 1.
+  - name: AM listening
     region: Europe
-    linking: true
-    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, dab]}
+    tuners: {IC0: [am_audio, fm_scan], IC1: ["off", fm_dab_scan]}
     channels:
-      - {job: dab_scanless, source: IC1.T0}
       - {job: unused}
-    notes: >-
-      IC0 plays FM with phase diversity on two antennas; IC1 keeps DAB ready (both tuners on Band III) so seamless
-      linking FM <-> DAB can switch without leaving phase diversity.
-  - name: DAB listening, MRC
+      - {job: dab_scan, source: IC1.T1}
+      - {job: unused}
+    notes: IC0 plays AM, tuner 1 scans FM; IC1 tuner 1 does the DAB background scan (DMOD1); IC1 tuner 0 and IC2 idle.
+  - name: FM phase diversity listening
     region: Europe
     linking: true
-    tuners: {IC0: [fm_scan, "off"], IC1: [dab, dab]}
+    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, fm_dab_scan]}
     channels:
       - {job: dab_audio, source: IC1.T0}
-      - {job: dab_mrc, source: IC1.T1}
-    notes: DAB audio with MRC on IC1; IC0 tuner 0 follows the FM equivalent for linking.
+      - {job: dab_scan, source: IC1.T1}
+      - {job: unused}
+    notes: >-
+      Both IC0 tuners do FM phase diversity audio. IC1 tuner 0 receives the DAB audio ensemble (DMOD0) for linking,
+      tuner 1 the FM / DAB background scan and station list (DMOD1). IC2 idle.
+  - name: DAB listening (5 tuners)
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, dab2], IC2: [fm_dab_scan]}
+    channels:
+      - {job: dab_audio, source: IC1.T0}
+      - {job: dab_audio2, source: IC1.T1}
+      - {job: dab_scan, source: IC2.T0}
+    notes: >-
+      DAB ensemble 1 plays (DMOD0) while ensemble 2 is ready to switch (DMOD1). IC0 keeps FM phase diversity audio
+      ready and takes over if both DAB ensembles fail. IC2 does the FM / DAB background scan (DMOD2).
+  - name: DAB listening, time-sharing (4 tuners)
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_pd, fm_pd_ts], IC1: [dab, dab2]}
+    channels:
+      - {job: dab_audio, source: IC1.T0}
+      - {job: dab_audio2, source: IC1.T1}
+      - {job: dab_scan, source: IC0.T1}
+    notes: >-
+      As the 5-tuner version without IC2: IC0 tuner 1 drops out of phase diversity for the FM / DAB background scan
+      (tuner 0 keeps the FM audio of the same station) and drops back into phase diversity afterwards.
+  - name: DAB-DAB linking (5 tuners)
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, dab2], IC2: [fm_dab_scan]}
+    channels:
+      - {job: dab_audio, source: IC1.T0}
+      - {job: dab_link, source: IC1.T1}
+      - {job: dab_scan, source: IC2.T0}
+    notes: >-
+      Listening to DAB ensemble 1 (DMOD0) while linking to ensemble 2 (DMOD1); DMOD0 and DMOD1 link with each other.
+      IC0 keeps FM phase diversity audio ready; IC2 does the FM / DAB background scan (DMOD2).
+  - name: DAB-DAB linking, time-sharing (4 tuners)
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_pd, fm_pd_ts], IC1: [dab, dab2]}
+    channels:
+      - {job: dab_audio, source: IC1.T0}
+      - {job: dab_link, source: IC1.T1}
+      - {job: dab_scan, source: IC0.T1}
+    notes: >-
+      Without IC2: IC0 tuner 1 leaves phase diversity for the FM / DAB background scan while tuner 0 keeps the FM
+      audio of the same station, then drops back into phase diversity.
+  - name: Single FM to the linker, AM / FM / DAB background scan
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_audio, am_scan], IC1: [dab, fm_dab_scan]}
+    channels:
+      - {job: dab_audio, source: IC1.T0}
+      - {job: dab_scan, source: IC1.T1}
+      - {job: unused}
+    notes: One FM channel (no phase diversity) feeds the linker; the other tuners scan AM, FM and DAB in the background.
+  # one dual tuner
   - name: FM listening, one dual tuner
     region: Europe
     linking: true
     tuners: {IC0: [fm_audio, dab]}
     channels:
-      - {job: dab_scanless, source: IC0.T1}
+      - {job: dab_scan, source: IC0.T1}
       - {job: unused}
     notes: Tuner 0 plays FM, tuner 1 receives DAB for linking. Switching to phase diversity would leave no tuner for linking.
   - name: DAB listening, one dual tuner
@@ -202,44 +268,6 @@ software:
       - {job: dab_audio, source: IC0.T1}
       - {job: unused}
     notes: Tuner 1 plays DAB; tuner 0 follows the FM equivalent for linking.
-  - name: AM listening, DAB in the background
-    region: Europe
-    tuners: {IC0: [am_audio, fm_scan], IC1: [dab, "off"]}
-    channels:
-      - {job: dab_scanless, source: IC1.T0}
-      - {job: unused}
-    notes: AM in the foreground on IC0; IC1 keeps the DAB service list current.
-
-  # linker set-ups for two dual tuners (application guidance, user 2026-10-19)
-  - name: FM phase diversity to the linker, DAB in the background
-    region: Europe
-    linking: true
-    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, fm_dab_scan]}
-    channels:
-      - {job: dab_scanless, source: IC1.T0}
-      - {job: unused}
-    notes: >-
-      FM with phase diversity on IC0 goes to the linker; IC1 keeps DAB (and the FM / DAB station lists) ready so
-      the linker can follow the same programme.
-  - name: Single FM to the linker, AM / FM / DAB background scan
-    region: Europe
-    linking: true
-    tuners: {IC0: [fm_audio, am_scan], IC1: [dab, fm_dab_scan]}
-    channels:
-      - {job: dab_scanless, source: IC1.T0}
-      - {job: unused}
-    notes: >-
-      One FM channel (no phase diversity) feeds the linker; the free tuners scan AM, FM and DAB in the background.
-  - name: Secondary DAB to the linker, AM / FM background scan
-    region: Europe
-    linking: true
-    tuners: {IC0: [fm_scan, am_scan], IC1: [dab, dab]}
-    channels:
-      - {job: dab_audio, source: IC1.T0}
-      - {job: dab_mrc, source: IC1.T1}
-    notes: >-
-      DAB plays from the secondary tuner IC (IC1, with MRC on its second tuner) and feeds the linker; IC0 scans AM
-      and FM in the background and follows the FM equivalent.
 
   # Rest of world
   - name: AM listening, FM background scan

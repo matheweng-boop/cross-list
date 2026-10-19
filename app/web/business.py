@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import Case, CaseNote, DataReview, PartMapping, TechFeedback
+from app.models import BusinessAssumption, Case, CaseNote, DataReview, PartMapping, TechFeedback
 from app.services import blocks, cases, quality
 from app.services import opportunity as op
 from app.web.routes import templates
@@ -224,10 +224,13 @@ def method(request: Request, co: str = "combined", session: Session = Depends(ge
 
 
 @router.get("/business/data", response_class=HTMLResponse)
-def data(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+def data(request: Request, co: str = "combined", focus: str = "", session: Session = Depends(get_session)):
     c = _ctx(session, co)
-    in_scope = {p.fn for a in c["apps"] for p in a.positions if p.status in op.IN_SCOPE}
-    c["asp_fns"] = sorted(in_scope, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    uses = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
+    c["asp_fns"] = sorted(uses, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    c["uses"] = uses
+    c["meta"] = {(m.kind, m.key): m for m in session.scalars(select(BusinessAssumption))}
+    c["focus"] = focus
     return templates.TemplateResponse(request, "business/data.html", c)
 
 
@@ -242,11 +245,28 @@ def _num(v: str) -> float | None:
 @router.post("/business/data")
 async def save_data(request: Request, co: str = Form("combined"), session: Session = Depends(get_session)):
     form = await request.form()
+    meta: dict[tuple[str, str], dict] = {}
     for k, v in form.items():
         if k.startswith("asp:"):
             op.set_input(session, "asp", k[4:], _num(str(v)))
         elif k.startswith("vol:"):
             op.set_input(session, "volume", k[4:], _num(str(v)))
+        elif k.startswith("meta:"):  # meta:<asp|volume>:<field>:<key>
+            _, kind, fld, key = k.split(":", 3)
+            if fld in ("source", "year", "geography", "currency", "scenario", "confidence"):
+                meta.setdefault((kind, key), {})[fld] = str(v).strip()
+    for (kind, key), fields in meta.items():
+        row = session.scalar(
+            select(BusinessAssumption).where(BusinessAssumption.kind == kind, BusinessAssumption.key == key)
+        )
+        if not any(fields.values()) and not row:
+            continue
+        row = row or BusinessAssumption(kind=kind, key=key)
+        year = fields.get("year", "")
+        row.source, row.year = fields.get("source") or None, int(year) if year.isdigit() else None
+        row.geography, row.currency = fields.get("geography") or None, fields.get("currency") or None
+        row.scenario, row.confidence = fields.get("scenario") or None, fields.get("confidence") or None
+        session.add(row)
     session.commit()
     return RedirectResponse(f"/business/data?co={co}&saved=1", status_code=303)
 
@@ -498,3 +518,22 @@ def explore(request: Request, fit: str = "", co: str = "combined", session: Sess
     techs.sort(key=lambda x: min(op.FIT_ORDER.get(i.get("fit"), 3) for i in x[2]))
     c.update(techs=techs, fit=fit, rev=_rev(session), plats=op.capabilities())
     return templates.TemplateResponse(request, "business/explore.html", c)
+
+
+@router.get("/manage/reviews", response_class=HTMLResponse)
+def reviews_queue(request: Request, type: str = "", status: str = "", session: Session = Depends(get_session)):
+    from app.services import maintenance
+
+    rows = maintenance.items(session)
+    counts = Counter(i["type"] for i in rows)
+    if type in maintenance.ISSUE_TYPES:
+        rows = [i for i in rows if i["type"] == type]
+    else:
+        type = ""
+    done = {"done", "confirmed", "rejected", "cannot", "agreed"}
+    if status == "open":
+        rows = [i for i in rows if i["status"] not in done]
+    elif status == "done":
+        rows = [i for i in rows if i["status"] in done]
+    ctx = {"rows": rows, "counts": counts, "types": maintenance.ISSUE_TYPES, "type": type, "status": status}
+    return templates.TemplateResponse(request, "manage/reviews.html", ctx)

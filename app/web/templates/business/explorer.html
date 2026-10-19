@@ -54,7 +54,7 @@
       <td>{{ path_chip(e.path, path_label) }}{% if not e.path and e.proximity is not none %} <span class="bo-prox px-{{ e.proximity }}">{{ prox_label[e.proximity] }}</span>{% endif %}</td>
       <td>{{ crowd(e.competition, crowding_label) }}</td>
       <td>{% if e.score is not none %}<span title="{% for n, w, why in e.factors %}{{ n }} {{ '%.2f'|format(w) }} ({{ why }}){{ ' × ' if not loop.last }}{% endfor %}">{{ '%.3f'|format(e.score) }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
-      <td>{% if e.tam_apps %}{{ usd(e.tam) }} <small class="muted">({{ e.tam_apps }}/{{ e.reach }})</small>{% else %}<span class="muted" title="No ASP and volume entered: unknown, not zero">unknown</span>{% endif %}</td>
+      <td>{% if e.tam_apps %}{{ usd(e.tam) }} <small class="muted">({{ e.tam_apps }}/{{ e.reach }})</small>{% else %}<a class="muted" href="/business/data?focus=asp:{{ e.fn }}#asp-{{ e.fn }}" title="No ASP and volume entered: unknown, not zero. Add an ASP">unknown</a>{% endif %}</td>
       <td>{{ e.checked }} / {{ e.items }}{% if e.disputed %} <span class="rv-st rv-disputed">{{ e.disputed }} disputed</span>{% endif %}</td>
     </tr>{% endfor %}
   </tbody>

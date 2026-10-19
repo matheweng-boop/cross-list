@@ -149,3 +149,43 @@ def test_gap_types_and_qualification_states():
     assert q({"values": {"qualification": "automotive"}}) == "automotive"
     assert q({"values": {"qualification": "industrial"}}) == "not_automotive"
     assert q({"values": {"qualification": None}}) == "unknown"
+
+
+def test_reviews_queue_types_and_resolution(client):
+    client.post("/business/evidence/pol_ldo/mapping", data={"mpn": "TESTX1", "manufacturer": "Qorvo", "verdict": "yes"})
+    client.post(
+        "/api/business/review", json={"dataset": "competition", "key": "pol_ldo", "verdict": "wrong", "comment": "x"}
+    )
+    html = client.get("/manage/reviews").text
+    assert "Product-to-function mapping" in html and "Applied immediately" in html
+    assert "the vote changes no result" in html  # a review flag is never presented as a correction
+    empty = client.get("/manage/reviews?type=commercial").text
+    assert "empty-state" in empty and "Commercial inputs" in empty
+
+
+def test_commercial_inputs_keep_unknowns_and_metadata(client, session):
+    from app.models import BusinessAssumption
+
+    form = {"co": "combined", "asp:pol_ldo": "0.12", "asp:supervisor": "", "meta:asp:source:pol_ldo": "distributor",
+            "meta:asp:year:pol_ldo": "2026", "meta:asp:confidence:pol_ldo": "low"}  # fmt: skip
+    r = client.post("/business/data", data=form)
+    assert r.status_code in (200, 303)
+    asp, _ = op.inputs(session)
+    assert asp.get("pol_ldo") == 0.12 and "supervisor" not in asp  # empty = unknown, never zero
+    m = session.query(BusinessAssumption).filter_by(kind="asp", key="pol_ldo").one()
+    assert m.source == "distributor" and m.year == 2026 and m.confidence == "low"
+    assert 'placeholder="unknown"' in client.get("/business/data").text
+
+
+def test_error_page_keeps_the_address(client):
+    from fastapi.testclient import TestClient
+
+    app = client.app
+
+    @app.get("/boom")
+    def boom():
+        raise RuntimeError("calculation failed")
+
+    c = TestClient(app, raise_server_exceptions=False)
+    r = c.get("/boom?q=ISO7741")
+    assert r.status_code == 500 and "could not be calculated" in r.text and "q=ISO7741" in r.text

@@ -1,0 +1,132 @@
+"""Requests & reviews: one queue over the existing records (cross requests, cross verdicts, diagram feedback, part
+mappings, data reviews, technology feedback), grouped by issue type. Read-only: every record stays in its own table,
+nothing is copied or migrated. Each item says how it is resolved and which analyses it affects, so a vote is never
+mistaken for a correction of the underlying fact."""
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.models import BlockFeedback, CrossFeedback, CrossRequest, DataReview, PartMapping, TechFeedback
+
+ISSUE_TYPES = {
+    "missing_product": ("Missing product", "A part to add or cross that Cross List does not cover yet."),
+    "specification": ("Incorrect specification or cross", "A cross verdict or parameter that looks wrong."),
+    "mapping": ("Product-to-function mapping", "Whether a catalogue part fills a function, or the path to a product."),
+    "qualification": ("Qualification uncertainty", "Automotive grade not stated or in doubt."),
+    "architecture": ("Application architecture", "Feedback on a block diagram, a block or a template."),
+    "evidence": (
+        "Technology or market evidence",
+        "Ratings, competitors, customers, trends, platforms, patents, foundry.",
+    ),
+    "commercial": ("Commercial assumptions", "ASPs and volumes behind revenue figures."),
+}
+
+# what a data review affects, per dataset
+AFFECTS = {
+    "technology": "Opportunity explorer fit score (where no path is assessed)",
+    "competition": "Opportunity explorer fit score and competition column",
+    "path": "Gap type and fit score in the Opportunity explorer",
+    "trends": "Opportunity explorer fit score",
+    "customers": "Customers page and business-case briefs",
+    "capabilities": "Technology platforms page",
+    "patents": "Evidence page only (not scored)",
+    "foundry": "Evidence page only (not scored)",
+    "competitor_tech": "Evidence page only (not scored)",
+    "new_markets": "Ideas page only (not scored)",
+}
+FILE_UPDATE = (
+    "Flag only: the data file must be corrected in the repository (Data quality → to-do); the vote changes no result."
+)
+
+
+def items(session: Session) -> list[dict]:
+    out = []
+    for r in session.scalars(select(CrossRequest)):
+        out.append(
+            {
+                "type": "missing_product",
+                "title": f"{r.mpn}" + (f" ({r.manufacturer})" if r.manufacturer else ""),
+                "detail": r.note or "",
+                "author": None,
+                "date": r.created_at,
+                "status": r.status,
+                "link": "/requests",
+                "resolution": "Needs a part import (repository update).",
+                "affects": "Search & replacements, Browse products",
+            }
+        )
+    for f in session.scalars(select(CrossFeedback)):
+        out.append(
+            {
+                "type": "specification",
+                "title": f"Cross verdict: part {f.reference_id} → {f.candidate_id}",
+                "detail": f.note or "",
+                "author": f.user.display_name if f.user else None,
+                "date": f.created_at,
+                "status": str(f.verdict.value if hasattr(f.verdict, "value") else f.verdict),
+                "link": f"/parts/{f.reference_id}#row-{f.candidate_id}",
+                "resolution": "Applied immediately: a rejected drop-in is shown as a package equivalent.",
+                "affects": "Cross results for that reference",
+            }
+        )
+    for m in session.scalars(select(PartMapping)):
+        out.append(
+            {
+                "type": "mapping",
+                "title": f"{m.mpn} ({m.manufacturer}) fills {m.fn}?",
+                "detail": "",
+                "author": m.author,
+                "date": m.created_at,
+                "status": "confirmed" if m.verdict == "yes" else "rejected",
+                "link": f"/business/evidence/{m.fn}#existing",
+                "resolution": "Applied immediately: a confirmed part counts as a portfolio part.",
+                "affects": "Candidate coverage, gap lists, Opportunity explorer, Markets",
+            }
+        )
+    for r in session.scalars(select(DataReview)):
+        kind = "mapping" if r.dataset == "path" else "evidence"
+        if r.comment and any(w in r.comment.lower() for w in ("aec", "automotive", "qualif")):
+            kind = "qualification"
+        out.append(
+            {
+                "type": kind,
+                "title": f"{r.dataset}: {r.key} marked {r.verdict}",
+                "detail": r.comment or "",
+                "author": r.author,
+                "date": r.created_at,
+                "status": "confirmed" if r.verdict == "correct" else "open",
+                "link": f"/business/evidence/{r.key}",
+                "resolution": FILE_UPDATE,
+                "affects": AFFECTS.get(r.dataset, ""),
+            }
+        )
+    for f in session.scalars(select(TechFeedback)):
+        out.append(
+            {
+                "type": "evidence",
+                "title": f"{f.kind}: {f.topic or 'technology'}",
+                "detail": f.text,
+                "author": f.author,
+                "date": f.created_at,
+                "status": f.status,
+                "link": "/business/capabilities#feedback",
+                "resolution": FILE_UPDATE,
+                "affects": "Technology platforms, technology ratings",
+            }
+        )
+    for b in session.scalars(select(BlockFeedback)):
+        out.append(
+            {
+                "type": "architecture",
+                "title": b.target or b.diagram_name or "Block diagram",
+                "detail": b.message,
+                "author": None,
+                "date": b.created_at,
+                "status": b.status,
+                "link": "/blocks/feedback",
+                "resolution": "Needs a template update in the repository.",
+                "affects": "Application library and every analysis using that architecture",
+            }
+        )
+    out.sort(key=lambda i: i["date"], reverse=True)
+    return out

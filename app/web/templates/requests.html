@@ -34,7 +34,7 @@
   {% endfor %}
   </tbody>
 </table></div>
-{% else %}<p class="muted">No requests yet.</p>{% endif %}
+{% else %}<div class="empty-state"><p><b>No part requests yet.</b></p><p class="small">A request is a competitor part Cross List cannot cross yet. Enter its part number (and manufacturer) above; it is added in the next data import.</p></div>{% endif %}
 <script>
   document.getElementById("copy-requests")?.addEventListener("click", async () => {
     const text = await (await fetch("/requests.txt")).text();

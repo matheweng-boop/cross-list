@@ -5,11 +5,12 @@ customer part, or nothing yet = opportunity); data/blocks/templates.yaml holds s
 """
 
 import re
+import time
 from functools import lru_cache
 from pathlib import Path
 
 import yaml
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import PROJECT_ROOT
@@ -324,7 +325,35 @@ def _series(mpn: str) -> str:
     return m.group(0) if m else mpn.upper()
 
 
+_CAND_CACHE: dict[tuple, list[dict] | None] = {}
+_VERSION: dict[str, tuple[float, tuple]] = {}
+
+
+def _data_version(session: Session) -> tuple:
+    """Changes when parts are added or removed; checked at most every 30 s per database."""
+    url = str(session.get_bind().url)
+    now = time.monotonic()
+    hit = _VERSION.get(url)
+    if hit and now - hit[0] < 30:
+        return hit[1]
+    n, top = session.execute(select(func.count(Part.id), func.max(Part.id))).one()
+    v = (url, n, top)
+    _VERSION[url] = (now, v)
+    return v
+
+
 def _candidates(session: Session, key: str) -> list[dict] | None:
+    """Candidates per function, cached until the parts change: the business pages ask for all ~160 functions on
+    every request, which used to repeat the same queries each time."""
+    k = (key, _data_version(session))
+    if k not in _CAND_CACHE:
+        if len(_CAND_CACHE) > 2000:
+            _CAND_CACHE.clear()
+        _CAND_CACHE[k] = _candidates_uncached(session, key)
+    return _CAND_CACHE[k]
+
+
+def _candidates_uncached(session: Session, key: str) -> list[dict] | None:
     """Every part that can fill a function, with the values the requirements look at; None for customer parts."""
     f = catalogue()["functions"].get(key) or {}
     src = f.get("source")

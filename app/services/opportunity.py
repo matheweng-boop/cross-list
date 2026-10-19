@@ -416,3 +416,53 @@ def technology_fit(apps: list[Application]) -> list[dict]:
         w = PROXIMITY_WEIGHT.get(prox, 0.05) * CROWDING_WEIGHT.get(c.get("crowding"), 0.85)
         e["score"] = e["share"] * w
     return sorted(rows.values(), key=lambda e: (-e["score"], -e["reach"], e["label"]))
+
+
+# ---- where to hunt: companies that build the applications (public, indicative) ------------------------------
+@lru_cache
+def customers() -> dict[str, dict]:
+    """Application segments with the companies that build them: {segment: {label, match, customers, source}}."""
+    path = _COMPETITION.parent / "customers.yaml"
+    return ((yaml.safe_load(path.read_text()) if path.exists() else None) or {}).get("segments") or {}
+
+
+def segments_of(name: str) -> list[str]:
+    low = name.lower()
+    return [k for k, s in customers().items() if any(str(m).lower() in low for m in s.get("match") or [])]
+
+
+def hunt_by_segment(apps: list[Application]) -> list[dict]:
+    out = []
+    for k, s in customers().items():
+        matched = [a for a in apps if k in segments_of(a.name)]
+        out.append({"id": k, "label": s.get("label", k), "apps": matched, "customers": s.get("customers") or [],
+                    "source": s.get("source", "")})  # fmt: skip
+    return sorted(out, key=lambda e: (-len(e["apps"]), e["label"]))
+
+
+def hunt_for_function(apps: list[Application], fn: str) -> list[dict]:
+    """Companies that build systems needing the function, ranked by how many of those applications they cover."""
+    by: dict[str, dict] = {}
+    for a in apps:
+        if not any(p.fn == fn for p in a.positions):
+            continue
+        for k in segments_of(a.name):
+            for c in customers()[k].get("customers") or []:
+                e = by.setdefault(c["name"], {**c, "apps": [], "segments": []})
+                if a.name not in e["apps"]:
+                    e["apps"].append(a.name)
+                label = customers()[k].get("label", k)
+                if label not in e["segments"]:
+                    e["segments"].append(label)
+    return sorted(by.values(), key=lambda e: (-len(e["apps"]), e["name"]))
+
+
+# ---- technology base: public platforms of Skyworks and Qorvo ----------------------------------------------------
+@lru_cache
+def capabilities() -> dict[str, dict]:
+    path = _COMPETITION.parent / "capabilities.yaml"
+    return ((yaml.safe_load(path.read_text()) if path.exists() else None) or {}).get("platforms") or {}
+
+
+def platforms_for(fn: str) -> list[tuple[str, dict]]:
+    return [(k, p) for k, p in capabilities().items() if fn in (p.get("functions") or [])]

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import about %}
+{% block title %}Technology base – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Technology base</h1>
+<p class="subtitle muted">The publicly known technology platforms of Skyworks and Qorvo (processes, filters, packaging, design IP), what they serve
+  today and what else they could serve. Technology fit ratings point here. Send corrections or missing technologies with the form at the bottom.</p>
+{{ about('capabilities') }}
+<nav class="bo-toc small">{% for kind in kinds %}<a href="#k-{{ kind|replace(' ', '-') }}">{{ kind|capitalize }}</a>{{ ' · ' if not loop.last }}{% endfor %} · <a href="#feedback">Feedback</a></nav>
+{% for kind, items in kinds.items() %}
+<h2 id="k-{{ kind|replace(' ', '-') }}">{{ kind|capitalize }}</h2>
+<div class="bo-plat-grid">
+  {% for k, p in items %}
+  <article class="bo-plat" id="p-{{ k }}">
+    <header><b>{{ p.name }}</b> {% for o in p.owner or [] %}<span class="bo-owner ow-{{ o|lower }}">{{ o }}</span>{% endfor %}</header>
+    <p class="small">{{ p.details }}</p>
+    {% if p.functions %}<p class="small"><b>Serves:</b> {% for f in p.functions %}<a class="bo-ours" href="/business/technology?co={{ co }}#fn-{{ f }}" title="{{ prox_label[tech[f].proximity] if f in tech else '' }}">{{ fns[f].label if f in fns else f }}</a>{% endfor %}</p>{% endif %}
+    {% if p.could_also %}<p class="small bo-could"><b>Could also:</b> {{ p.could_also }}</p>{% endif %}
+    {% if p.source %}<p class="small muted bo-src">Source: {% for u in (p.source|string).split(' ') if u.startswith('http') %}<a href="{{ u.rstrip(',;') }}" target="_blank" rel="noopener">{{ u.split('/')[2] }}</a>{{ ' ' }}{% else %}{{ p.source }}{% endfor %}</p>{% endif %}
+  </article>
+  {% endfor %}
+</div>
+{% else %}<p class="muted">The technology list is being collected.</p>
+{% endfor %}
+
+<h2 id="feedback">Feedback: technologies, corrections, ideas</h2>
+<p class="small muted">Know a public technology that is missing (a process node, a filter type, a packaging option) or a rating that looks wrong?
+  Add it here. Open items are collected as a to-do for the next data update (<a href="/business/capabilities/feedback.txt">open items as text</a>).</p>
+<form method="post" action="/business/capabilities/feedback" class="case-addnote bo-fb">
+  <select name="kind" aria-label="Kind"><option value="missing">Missing technology</option><option value="correction">Correction</option><option value="idea">Idea</option></select>
+  <input name="topic" list="bo-topics" placeholder="Topic, e.g. BAW filters or 55 nm CMOS">
+  <input name="text" required placeholder="What should change and the public source if you have one">
+  <input name="author" placeholder="Your name (optional)">
+  <button type="submit" class="small-btn">Add</button>
+  <datalist id="bo-topics">{% for k, p in topics %}<option value="{{ p.name }}">{% endfor %}</datalist>
+</form>
+<div class="table-wrap"><table class="striped small">
+  <thead><tr><th>Kind</th><th>Topic</th><th>Feedback</th><th>From</th><th>Status</th></tr></thead>
+  <tbody>{% for f in feedback %}<tr><td>{{ {'missing': 'Missing technology', 'correction': 'Correction', 'idea': 'Idea'}[f.kind] }}</td><td>{{ f.topic or '–' }}</td><td>{{ f.text }}</td>
+    <td>{{ f.author or 'anonymous' }}<br><span class="muted">{{ f.created_at.strftime('%Y-%m-%d') }}</span></td>
+    <td><form method="post" action="/business/capabilities/feedback"><input type="hidden" name="act" value="status"><input type="hidden" name="id" value="{{ f.id }}">
+      <select name="status" onchange="this.form.submit()" class="small-sel">{% for s in ['open', 'done', 'rejected'] %}<option{{ ' selected' if f.status == s }}>{{ s }}</option>{% endfor %}</select></form></td></tr>
+  {% else %}<tr><td colspan="5" class="muted">No feedback yet.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

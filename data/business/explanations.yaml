@@ -90,6 +90,14 @@ terms:
       A function automotive applications need, where we have parts but none is marked automotive (AEC-Q100) in the
       public catalogue: an existing industrial / commercial part might be qualified instead of designing a new one.
       Qorvo's website rarely states the grade, so check Qorvo entries before acting.
+  customer_type:
+    term: Customer type
+    short: OEM (brand owner), Tier-1 (system supplier), module maker, ODM/EMS (contract designer / manufacturer), operator.
+    long: >-
+      OEM = the brand owner (a carmaker, a phone brand); Tier-1 = the system supplier that designs the electronics for
+      OEMs (e.g. an on-board charger supplier); module maker = builds sub-modules (Wi-Fi modules, power modules); ODM/EMS
+      = designs and / or manufactures for brands; operator / infrastructure = network or utility buyers. The design-in
+      decision usually sits with whoever designs the board.
   asp_tam:
     term: ASP and TAM
     short: Entered by you; never estimated. TAM = volume × sockets × ASP.
@@ -169,6 +177,26 @@ pages:
       - The brief adds what Cross List knows about the function (occurrence, door openers, competition, technology fit).
     limits:
       - Cross List sends nothing to outside services; the AI's answer is only as good as its cited sources.
+  customers:
+    question: Which companies design the systems that need a function, i.e. where should sales go hunt?
+    read:
+      - Pick a function to list the companies that build systems needing it, ranked by how many of those applications they cover.
+      - Below, every application segment with its companies; colours show the type (OEM, Tier-1, module maker, ODM/EMS, operator).
+    data:
+      - data/business/customers.yaml, from public company pages and press releases (company names only). Segments are matched to application names by keywords.
+    limits:
+      - Indicative, not a customer list or account plan; who designs in-house versus buys modules varies by project.
+      - An application without a matching segment shows no companies (listed at the bottom).
+  capabilities:
+    question: Which technologies do Skyworks and Qorvo have that a new product could build on?
+    read:
+      - One card per public technology platform, grouped by kind (process, filter, packaging, design IP, manufacturing).
+      - '"Serves" links to the functions it supports today; "Could also" names adjacent products it could serve.'
+      - Use the feedback form for a missing technology, a correction or an idea; open items become a to-do.
+    data:
+      - data/business/capabilities.yaml, from public company and press pages (sources on each card).
+    limits:
+      - Only what is public; process nodes and capacities are often not disclosed and are marked so.
   data:
     question: What commercial inputs are known?
     read:

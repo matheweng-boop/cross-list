@@ -296,7 +296,8 @@ def test_sections_and_subheaders(client):
                               ("/technical", "Technical discussions", "Technical"),
                               ("/engineering/cmti_kv_us", "Technical discussions", "Engineering notes"),
                               ("/broadcast", "Technical discussions", "Broadcast"),
-                              ("/broadcast/configurations", "Technical discussions", "Broadcast configurations")]:  # fmt: skip
+                              ("/broadcast/configurations", "Technical discussions",
+                               "Broadcast configurations")]:  # fmt: skip
         html = client.get(url).text
         assert f'class="section-tab on" aria-current="true">{section}<' in html, url
         assert f'aria-current="page">{sub}<' in html, url

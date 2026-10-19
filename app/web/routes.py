@@ -73,6 +73,8 @@ SECTIONS = (
                                                        ("Attach", "/business/attach"),
                                                        ("Gaps & ranking", "/business/gaps"),
                                                        ("Technology fit", "/business/technology"),
+                                                       ("Technology base", "/business/capabilities"),
+                                                       ("Where to hunt", "/business/customers"),
                                                        ("Case analysis", "/business/cases"),
                                                        ("TAM data", "/business/data"),
                                                        ("How it works", "/business/method")]),

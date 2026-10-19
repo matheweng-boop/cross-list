@@ -38,6 +38,8 @@
       {% if ctx.competition and ctx.competition.vendors %}<br><span class="muted">{{ ctx.competition.vendors|join(', ') }}</span>{% endif %}</li>
     {% if ctx.technology %}<li>Technology: <span class="bo-prox px-{{ ctx.technology.proximity }}">{{ {3: 'Same technology', 2: 'Adjacent', 1: 'Distant', 0: 'Unrelated'}[ctx.technology.proximity] }}</span>
       {{ ctx.technology.reasoning }}</li>{% endif %}
+    {% if ctx.platforms %}<li>Built on: {% for k, pl in ctx.platforms %}<a href="/business/capabilities#p-{{ k }}">{{ pl.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</li>{% endif %}
+    {% if ctx.hunt %}<li>Where to hunt: {% for c in ctx.hunt %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}" title="{{ c.type }}">{{ c.name }}</span>{% endfor %}</li>{% endif %}
   </ul>
   {% else %}<p class="small muted">Pick a function to pull in occurrence, door openers, competition and technology fit.</p>{% endif %}
 </aside>

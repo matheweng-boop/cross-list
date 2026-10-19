@@ -338,3 +338,18 @@ class CaseNote(Base):
     text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     case: Mapped[Case] = relationship(back_populates="notes")
+
+
+class TechFeedback(Base):
+    """Feedback on the technology base and technology-fit ratings: a missing technology, a correction or an idea.
+    Open items are a to-do for the next data update."""
+
+    __tablename__ = "tech_feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    topic: Mapped[str | None] = mapped_column(String(120))  # platform id, function id or free text
+    kind: Mapped[str] = mapped_column(String(20), default="idea")  # missing | correction | idea
+    text: Mapped[str] = mapped_column(Text)
+    author: Mapped[str | None] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(20), default="open")  # open | done | rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

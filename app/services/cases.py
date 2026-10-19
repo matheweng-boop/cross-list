@@ -53,6 +53,8 @@ def context(session: Session, fn: str | None, co: str = "combined") -> dict | No
         "nearby": sorted(((cat.get(f, {}).get("label", f), n) for f, n in nearby.items()), key=lambda x: -x[1])[:8],
         "competition": op.competition().get(fn),
         "technology": op.technology().get(fn),
+        "hunt": op.hunt_for_function(apps, fn)[:12],
+        "platforms": op.platforms_for(fn),
     }
 
 
@@ -100,6 +102,13 @@ def brief(case, ctx: dict | None) -> str:
         if t:
             lines.append(f"- Technology proximity: {op.PROXIMITY_LABEL.get(t.get('proximity'), '?')} "
                          f"({', '.join(t.get('tech') or [])}). {t.get('reasoning', '')}")  # fmt: skip
+        if ctx["platforms"]:
+            lines.append(
+                "- Our technology platforms that serve it: " + ", ".join(p["name"] for _, p in ctx["platforms"])
+            )
+        if ctx["hunt"]:
+            lines.append("- Companies building these systems (public, indicative): "
+                         + ", ".join(f"{c['name']} ({c.get('type', '')})" for c in ctx["hunt"]))  # fmt: skip
         lines.append("- Applications: " + "; ".join(sorted({a.name for a in ctx["apps"]})[:25]))
         lines.append("")
     lines += [

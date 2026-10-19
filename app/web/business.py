@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import Case, CaseNote
+from app.models import Case, CaseNote, TechFeedback
 from app.services import blocks, cases
 from app.services import opportunity as op
 from app.web.routes import templates
@@ -79,6 +79,8 @@ def gaps(request: Request, co: str = "combined", sort: str = "reach", session: S
     }
     c["sort"] = sort if sort in keys else "reach"
     c["rows"] = sorted(rows, key=keys[c["sort"]])
+    for e in c["rows"]:
+        e["hunt"] = op.hunt_for_function(c["apps"], e["fn"])[:8]
     c["portfolio"] = op.reach_of_portfolio(c["apps"])[:15]
     return templates.TemplateResponse(request, "business/gaps.html", c)
 
@@ -116,6 +118,9 @@ def technology(request: Request, co: str = "combined", view: str = "all", sessio
     c["view"] = view if view in views else "all"
     c["counts"] = {k: sum(map(f, rows)) for k, f in views.items()}
     c["rows"] = [e for e in rows if views[c["view"]](e)]
+    for e in c["rows"]:
+        e["hunt"] = op.hunt_for_function(c["apps"], e["fn"])[:8]
+        e["platforms"] = op.platforms_for(e["fn"])
     c.update(prox_label=op.PROXIMITY_LABEL, prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT,
              n_background=sum(a.background for a in c["apps"]))  # fmt: skip
     return templates.TemplateResponse(request, "business/technology.html", c)
@@ -259,3 +264,54 @@ async def case_update(case_id: int, request: Request, session: Session = Depends
         return RedirectResponse("/business/cases", status_code=303)
     session.commit()
     return RedirectResponse(f"/business/cases/{case.id}#{act}", status_code=303)
+
+
+# ---- where to hunt / technology base ------------------------------------------------------------------------
+@router.get("/business/customers", response_class=HTMLResponse)
+def hunt(request: Request, fn: str = "", co: str = "combined", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    c["segments"] = op.hunt_by_segment(c["apps"])
+    used = Counter(f for a in c["apps"] for f in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
+    c["fn_choices"] = sorted(used.items(), key=lambda kv: c["fns"].get(kv[0], {}).get("label", kv[0]).lower())
+    c["fn"] = fn if fn in used else ""
+    c["by_fn"] = op.hunt_for_function(c["apps"], fn) if c["fn"] else None
+    c["unmatched"] = [a for a in c["apps"] if not a.background and not op.segments_of(a.name)]
+    return templates.TemplateResponse(request, "business/customers.html", c)
+
+
+@router.get("/business/capabilities", response_class=HTMLResponse)
+def capabilities(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    plats = op.capabilities()
+    kinds: dict[str, list] = {}
+    for k, p in plats.items():
+        kinds.setdefault(p.get("kind") or "other", []).append((k, p))
+    c.update(kinds=kinds, tech=op.technology(), prox_label=op.PROXIMITY_LABEL,
+             feedback=session.scalars(select(TechFeedback).order_by(TechFeedback.created_at.desc())).all(),
+             topics=sorted(plats.items(), key=lambda kv: kv[1].get("name", kv[0])))  # fmt: skip
+    return templates.TemplateResponse(request, "business/capabilities.html", c)
+
+
+@router.post("/business/capabilities/feedback")
+async def tech_feedback(request: Request, session: Session = Depends(get_session)):
+    form = await request.form()
+    if form.get("act") == "status":
+        fb = session.get(TechFeedback, int(form.get("id") or 0))
+        if fb and form.get("status") in ("open", "done", "rejected"):
+            fb.status = str(form.get("status"))
+    elif str(form.get("text") or "").strip():
+        kind = str(form.get("kind") or "idea")
+        topic = str(form.get("topic") or "").strip()[:120] or None
+        author = str(form.get("author") or "").strip()[:100] or None
+        kind = kind if kind in ("missing", "correction", "idea") else "idea"
+        session.add(TechFeedback(topic=topic, kind=kind, text=str(form.get("text")).strip(), author=author))
+    session.commit()
+    return RedirectResponse("/business/capabilities#feedback", status_code=303)
+
+
+@router.get("/business/capabilities/feedback.txt", response_class=PlainTextResponse)
+def tech_feedback_txt(session: Session = Depends(get_session)):
+    rows = session.scalars(select(TechFeedback).where(TechFeedback.status == "open")).all()
+    return "\n".join(
+        f"- [{r.kind}] {r.topic or '-'}: {r.text} ({r.author or 'anonymous'}, {r.created_at:%Y-%m-%d})" for r in rows
+    )

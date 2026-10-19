@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import company_switch, about %}
+{% block title %}Where to hunt – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Where to hunt</h1>
+<p class="subtitle muted">Which companies build the systems in our applications: the design teams to approach. Pick a function to see who designs
+  systems that need it, or browse by application segment below.</p>
+{{ about('customers') }}
+<form method="get" action="/business/customers" class="bo-anchor">
+  <input type="hidden" name="co" value="{{ co }}">
+  <label>Who needs <select name="fn" onchange="this.form.submit()"><option value="">choose a function…</option>
+    {% for f, k in fn_choices %}<option value="{{ f }}"{{ ' selected' if f == fn }}>{{ fns[f].label if f in fns else f }} · in {{ k }} application{{ 's' if k != 1 }}</option>{% endfor %}</select></label>
+</form>
+{% if by_fn is not none %}
+<h2>Companies building systems that need {{ fns[fn].label }} <span class="small muted">· {{ by_fn|length }}</span></h2>
+{% if by_fn %}
+<div class="table-wrap"><table class="striped bo-hunt">
+  <thead><tr><th>Company</th><th>Type</th><th>Region</th><th>Relevant applications</th><th>Segments</th></tr></thead>
+  <tbody>{% for c in by_fn %}<tr><td><b>{{ c.name }}</b>{% if c.note %}<br><small class="muted">{{ c.note }}</small>{% endif %}</td>
+    <td><span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}">{{ c.type }}</span></td><td class="small">{{ c.region }}</td>
+    <td>{{ c.apps|length }}<br><small class="muted" title="{{ c.apps|join(', ') }}">{{ c.apps[:2]|join('; ') }}{{ ' …' if c.apps|length > 2 }}</small></td>
+    <td class="small">{{ c.segments|join(', ') }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">No segment with known companies matches the applications that need this function yet.</p>{% endif %}
+{% endif %}
+
+<h2>By application segment</h2>
+<div class="bo-seg-list">
+{% for s in segments %}
+  <details class="bo-gap"{{ ' open' if loop.index <= 0 }}>
+    <summary class="bo-seg"><span><b>{{ s.label }}</b></span><span class="small muted">{{ s.apps|length }} application{{ 's' if s.apps|length != 1 }}</span>
+      <span>{% for c in s.customers[:6] %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}">{{ c.name }}</span>{% endfor %}{% if s.customers|length > 6 %}<small class="muted"> +{{ s.customers|length - 6 }}</small>{% endif %}</span></summary>
+    <div class="bo-gap-body small">
+      <table class="bo-mini"><thead><tr><th>Company</th><th>Type</th><th>Region</th><th>Note</th></tr></thead><tbody>
+        {% for c in s.customers %}<tr><td><b>{{ c.name }}</b></td><td>{{ c.type }}</td><td>{{ c.region }}</td><td class="muted">{{ c.note }}</td></tr>{% endfor %}</tbody></table>
+      <p><b>Applications:</b> {% for a in s.apps %}{% if a.background %}<span class="bo-ours bo-bg">{{ a.name }}</span>{% else %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endif %}{% else %}<span class="muted">none in the diagrams yet</span>{% endfor %}</p>
+      {% if s.source %}<p class="muted">Sources: {{ s.source }}</p>{% endif %}
+    </div>
+  </details>
+{% else %}<p class="muted">The company list is being collected.</p>{% endfor %}
+</div>
+{% if unmatched %}<p class="small muted">Library applications without a segment yet: {{ unmatched|map(attribute='name')|join('; ') }}</p>{% endif %}
+{% endblock %}

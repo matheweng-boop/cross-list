@@ -367,3 +367,11 @@ def test_part_page_loads_heavy_sections_on_demand(client):
     grouped = client.get(f"/parts/{ref}/grouped").text
     assert "Top 5 differences" in grouped
     assert client.get(f"/parts/{ref}/detail/999999").status_code == 404
+
+
+def test_search_covers_the_manufacturer_catalogues(client):
+    """Catalogue-only parts (no parameters or crosses yet) are found by the part-number search and suggestions."""
+    html = client.get("/find?q=SKY5A3200").text
+    assert "Skyworks &amp; Qorvo catalogue" in html and "<b>SKY5A3200</b>" in html and "Front-end Modules" in html
+    assert "SKY5A3200" in client.get("/suggest?q=sky5a32").text and "sg-cat" in client.get("/suggest?q=sky5a32").text
+    assert "in the Skyworks and Qorvo catalogues" in client.get("/find?q=zzzzqqq").text

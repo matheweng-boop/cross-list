@@ -21,8 +21,23 @@
   {% endfor %}
 </table></div>
 {% endif %}
-{% if not competitors and not references %}
-<p>No part numbers contain “{{ q }}”. ADI, Diodes and other manufacturers are not in the database yet.</p>
+{% if catalogue %}
+<h2>Skyworks &amp; Qorvo catalogue <small class="muted">· {{ catalogue|length }}{{ '+' if catalogue|length == 200 }}</small></h2>
+<p class="small muted">From the manufacturers' public product catalogues. These parts have no parameters or crosses in BizDev yet: the catalogue data is shown here and the part number links to the manufacturer's page.</p>
+<div class="table-wrap"><table class="striped cat-hits">
+  <thead><tr><th>Part</th><th>Manufacturer</th><th>Description</th><th>Category</th><th>Package</th><th>Lifecycle</th><th>Qualification</th><th></th></tr></thead>
+  {% for r in catalogue %}
+  <tr><td>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}</td>
+    <td class="small">{{ r.manufacturer }}</td><td class="small">{{ r.description }}</td>
+    <td class="small">{{ r.source_category }}{{ ' › ' ~ r.source_sub.split(' > ')[-1] if r.source_sub }}</td><td class="small">{{ r.package }}</td>
+    <td class="small"><span class="life life-{{ r.lifecycle }}">{{ life_label[r.lifecycle] }}</span></td>
+    <td class="small"><span class="qual q-{{ r.qualification }}">{{ qual_label[r.qualification] }}</span></td>
+    <td class="small">{% if r.datasheet %}<a href="{{ r.datasheet }}" target="_blank" rel="noopener">datasheet ↗</a>{% endif %}</td></tr>
+  {% endfor %}
+</table></div>
+{% endif %}
+{% if not competitors and not references and not catalogue %}
+<p>No part numbers contain “{{ q }}”, in the parts with full data or in the Skyworks and Qorvo catalogues. ADI, Diodes and other manufacturers are not in the database yet.</p>
 <form method="post" action="/requests" class="request-inline">
   <input type="hidden" name="mpns" value="{{ q }}"><input type="hidden" name="back" value="/requests">
   <input name="note" placeholder="Note (optional): customer, application…" aria-label="Note">

@@ -1,0 +1,64 @@
+# Tuner feature sets and layouts: application guidance from the user (2026-10-19), used to select tuners.
+# Where this and a data short disagree, this file decides the feature set; the data short still gives the pins.
+#
+# features: AM, FM, WB (weather band), HD (HD Radio), HD_MRC, DAB, DAB_MRC, DAB_NC (DAB noise canceller),
+#           DRM, PD (FM phase diversity), AMIC (AM interference canceller), DAGC (digital AGC), AUDIO (on-chip audio)
+# layout:   parts with the same layout share a PCB footprint; a single tuner on a dual-tuner layout can be swapped
+#           for a dual tuner of that layout (and back) on the same board.
+# pins_from: data short whose pinout is borrowed for a part that has none in the database (same family or layout;
+#            unconfirmed until its own datasheet is added).
+
+features:
+  AM: AM
+  FM: FM
+  WB: Weather band
+  HD: HD Radio
+  HD_MRC: HD MRC
+  DAB: DAB
+  DAB_MRC: DAB MRC
+  DAB_NC: DAB noise canceller
+  DRM: DRM
+  PD: FM phase diversity
+  AMIC: AM interference canceller
+  DAGC: Digital AGC
+  AUDIO: On-chip audio
+
+layouts:
+  QFN56-dual: {label: "QFN-56 dual-tuner layout", note: "Si4795x single tuners and Si4796x dual tuners share this layout"}
+  QFN88-dual: {label: "QFN-88 dual-tuner layout (audio)", note: "Si4798x single tuners and Si4797x dual tuners share this layout"}
+  QFN48-single: {label: "QFN-48 single-tuner layout", note: "Si4790x; does not fit a dual-tuner layout"}
+  QFN84-single: {label: "QFN-84 single-tuner layout (audio)", note: "Si4791x / Si4792x; does not fit a dual-tuner layout"}
+  Si47992: {label: "Si47992 layout", note: "single tuner; does not fit a dual-tuner layout"}
+  Si47942: {label: "Si47942 layout", note: "RF-to-I/Q dual tuner; layout sharing not stated"}
+
+tuners:
+  # single tuners, own single-tuner layout
+  - {mpn: Si47901, tuners: 1, layout: QFN48-single, features: [AM, FM, HD, WB]}
+  - {mpn: Si47902, tuners: 1, layout: QFN48-single, features: [AM, FM, DAB, HD, DRM, DAGC, WB]}
+  - {mpn: Si47907, tuners: 1, layout: QFN48-single, features: [AM, FM, DRM]}
+  - {mpn: Si47911, tuners: 1, layout: QFN84-single, features: [AM, FM, HD, WB, AUDIO]}
+  - {mpn: Si47912, tuners: 1, layout: QFN84-single, features: [AM, FM, DAB, HD, DRM, WB, AUDIO]}
+  - {mpn: Si47920, tuners: 1, layout: QFN84-single, features: [AM, FM, AUDIO]}
+  - {mpn: Si47921, tuners: 1, layout: QFN84-single, features: [AM, FM, HD, AUDIO]}
+  - {mpn: Si47923, tuners: 1, layout: QFN84-single, features: [AM, FM, WB, AUDIO], pins_from: Si47920-21-short}
+  - {mpn: Si47925, tuners: 1, layout: QFN84-single, features: [AM, FM, HD, DRM, WB, AUDIO], pins_from: Si47920-21-short}
+  # single tuners that fit a dual-tuner layout
+  - {mpn: Si47951, tuners: 1, layout: QFN56-dual, features: [AM, FM, HD, WB]}
+  - {mpn: Si47952, tuners: 1, layout: QFN56-dual, features: [AM, FM, DAB, HD, DRM, DAGC, WB]}
+  - {mpn: Si47957, tuners: 1, layout: QFN56-dual, features: [AM, FM, DRM]}
+  - {mpn: Si47981, tuners: 1, layout: QFN88-dual, features: [AM, FM, AMIC, HD, WB, AUDIO], pins_from: Si47971-72-short}
+  - {mpn: Si47982, tuners: 1, layout: QFN88-dual, features: [AM, FM, DAB, AMIC, HD, DRM, WB, AUDIO], pins_from: Si47971-72-short}
+  - {mpn: Si47985, tuners: 1, layout: QFN88-dual, features: [AM, FM, DAB, AMIC, HD, DRM, WB, AUDIO], pins_from: Si47971-72-short}
+  - {mpn: Si47987, tuners: 1, layout: QFN88-dual, features: [AM, FM, AMIC, DRM, AUDIO], pins_from: Si47971-72-short}
+  # single tuner, own layout
+  - {mpn: Si47992, tuners: 1, layout: Si47992, features: [AM, FM, DAB, AMIC, HD, DRM, DAB_NC, DAGC, WB]}
+  # dual tuners
+  - {mpn: Si47961, tuners: 2, layout: QFN56-dual, features: [AM, FM, PD, AMIC, HD, HD_MRC, WB]}
+  - {mpn: Si47962, tuners: 2, layout: QFN56-dual, features: [AM, FM, DAB, PD, AMIC, HD, HD_MRC, DRM, DAB_MRC, DAB_NC, DAGC, WB]}
+  - {mpn: Si47967, tuners: 2, layout: QFN56-dual, features: [AM, FM, PD, AMIC, DRM], pins_from: Si47961-62-short}
+  - {mpn: Si47971, tuners: 2, layout: QFN88-dual, features: [AM, FM, PD, AMIC, HD, WB, AUDIO]}
+  - {mpn: Si47972, tuners: 2, layout: QFN88-dual, features: [AM, FM, DAB, PD, AMIC, HD, DRM, WB, AUDIO]}
+  - {mpn: Si47975, tuners: 2, layout: QFN88-dual, features: [AM, FM, PD, AMIC, HD, DRM, WB, AUDIO], pins_from: Si47971-72-short}
+  - {mpn: Si47977, tuners: 2, layout: QFN88-dual, features: [AM, FM, PD, AMIC, DRM, AUDIO], pins_from: Si47971-72-short}
+  # RF to I/Q only
+  - {mpn: Si47942, tuners: 2, layout: Si47942, features: [DAB, DAB_MRC, DAB_NC, DAGC], note: RF-to-I/Q only}

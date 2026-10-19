@@ -59,7 +59,74 @@ def catalog() -> list[dict]:
                 "pins": pins_of(doc),
                 "numbered": bool(doc.get("pins")),
             })  # fmt: skip
+    _apply_tuner_features(out)
     return sorted(out, key=lambda d: (list(ROLES).index(d["role"]) if d["role"] in ROLES else 9, d["mpn"]))
+
+
+@lru_cache
+def tuner_features() -> dict:
+    """Tuner feature sets and layouts (data/broadcast/tuner_features.yaml, application guidance)."""
+    path = DEVICES_DIR.parent / "tuner_features.yaml"
+    return yaml.safe_load(path.read_text()) if path.exists() else {"features": {}, "layouts": {}, "tuners": []}
+
+
+def _apply_tuner_features(out: list[dict]) -> None:
+    """Give every tuner its feature set and layout. A tuner without a data short in the database is added;
+    one without a pinout borrows the pinout of the data short named in ``pins_from`` (flagged as borrowed)."""
+    conf = tuner_features()
+    by_mpn = {d["mpn"]: d for d in out}
+    by_doc = {}
+    for d in out:
+        by_doc.setdefault(d["doc"], d)
+    for t in conf.get("tuners") or []:
+        entry = by_mpn.get(t["mpn"])
+        donor = by_doc.get(t.get("pins_from")) if t.get("pins_from") else None
+        if entry is None:
+            base = donor or {}
+            entry = dict(
+                mpn=t["mpn"],
+                family=base.get("family"),
+                description=t.get("note") or "",
+                doc=base.get("doc", ""),
+                source={},
+                package=base.get("package", {}),
+                aec_q100=base.get("aec_q100"),
+                supplies=base.get("supplies", []),
+                features=[],
+                channels=None,
+                analog=[],
+                digital_decode=[],
+                digital_iq=[],
+                options=[],
+                note=None,
+                pins=base.get("pins", []),
+                numbered=base.get("numbered", False),
+            )
+            out.append(entry)
+            by_mpn[t["mpn"]] = entry
+        if donor and not entry.get("pins"):
+            entry.update(
+                pins=donor["pins"], numbered=donor["numbered"], package=donor["package"], supplies=donor["supplies"]
+            )
+        if donor and entry["pins"] is donor["pins"]:
+            entry["borrowed_pins"] = donor["mpn"]
+            entry["note"] = (
+                f"No data short in the database: pinout borrowed from {donor['mpn']} "
+                "(same family / layout); unconfirmed."
+            )
+        feats = list(t.get("features") or [])
+        entry["features"] = feats
+        entry["layout"] = t.get("layout")
+        entry["tuners"] = t.get("tuners") or entry.get("tuners")
+        entry["role"] = "tuner"
+        keep = [x for x in entry.get("analog") or [] if x in ("LW", "SW", "RDS")]
+        entry["analog"] = [x for x in ("AM", "FM", "WB") if x in feats] + keep
+        entry["digital_iq"] = [x for x in ("HD", "DAB", "DRM") if x in feats] + (
+            ["DMB"] if "DMB" in (entry.get("digital_iq") or []) else []
+        )
+        entry["digital_decode"] = []
+        opts = [o for o in entry.get("options") or [] if "audio dsp" not in o.lower()]
+        entry["options"] = (["Audio DSP (on-chip audio)"] if "AUDIO" in feats else []) + opts
 
 
 def pins_of(doc: dict) -> list[dict]:

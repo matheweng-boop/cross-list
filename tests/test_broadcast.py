@@ -111,3 +111,21 @@ def test_audio_twins_exist_and_carry_audio():
         assert not any("audio dsp" in o.lower() for o in parts[plain]["options"])
         assert any("audio dsp" in o.lower() for o in parts[audio]["options"]), audio
         assert set(parts[plain]["digital_iq"]) <= set(parts[audio]["digital_iq"]) | {"DRM"}, (plain, audio)
+
+
+def test_feature_matrix_covers_tuners_and_layouts():
+    tf = broadcast.tuner_features()
+    cat = {d["mpn"]: d for d in broadcast.catalog()}
+    for t in tf["tuners"]:
+        assert set(t["features"]) <= set(tf["features"]), t["mpn"]
+        assert t["layout"] in tf["layouts"]
+        assert t["mpn"] in cat and cat[t["mpn"]]["role"] == "tuner"
+    # single tuners that fit the dual-tuner layout
+    assert cat["Si47951"]["layout"] == cat["Si47961"]["layout"]
+    assert cat["Si47982"]["layout"] == cat["Si47972"]["layout"] and cat["Si47982"]["borrowed_pins"] == "Si47971"
+    assert cat["Si47901"]["layout"] != cat["Si47961"]["layout"]
+
+
+def test_overview_has_feature_matrix(client):
+    html = client.get("/broadcast").text
+    assert "Tuner selection by feature" in html and "Si47992" in html and "data-feat-filter" in html

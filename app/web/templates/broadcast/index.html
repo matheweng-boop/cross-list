@@ -5,6 +5,31 @@
 <p class="subtitle muted">Skyworks Si46xx / Si47xx radio ICs, transcribed from their public data shorts and product summaries.
   Build a system from them under <a href="/broadcast/configurations">Configurations</a>.</p>
 {% if not documents %}<p class="banner">No device data loaded yet.</p>{% endif %}
+<h2>Tuner selection by feature</h2>
+<p class="small muted">Feature sets and layouts from application guidance. Tick features to keep only the tuners that have all of them.
+  Parts on the same layout share a footprint: a single tuner on a dual-tuner layout can be swapped for a dual tuner on the same board.</p>
+<div class="feat-filter" role="group" aria-label="Required features">
+  {% for key, label in tf.features.items() %}<label><input type="checkbox" value="{{ key }}" data-feat-filter> {{ label }}</label>{% endfor %}
+</div>
+<div class="table-wrap"><table class="feat-matrix">
+  <thead><tr><th>Part</th><th>Tuners</th><th>Layout</th>{% for key, label in tf.features.items() %}<th title="{{ label }}"><span>{{ key|replace('_', ' ') }}</span></th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for t in tf.tuners %}{% set d = by_mpn.get(t.mpn) %}
+    <tr data-feats="{{ t.features|join(' ') }}">
+      <td><b>{{ t.mpn }}</b>{% if d and d.borrowed_pins %}<br><small class="muted">pinout borrowed from {{ d.borrowed_pins }}</small>{% elif not d or not d.pins %}<br><small class="muted">no pinout yet</small>{% endif %}{% if t.note %}<br><small>{{ t.note }}</small>{% endif %}</td>
+      <td>{{ t.tuners }}</td>
+      <td><small>{{ tf.layouts[t.layout].label if t.layout in tf.layouts else t.layout }}</small></td>
+      {% for key in tf.features %}<td class="fm-cell">{{ '✓' if key in t.features }}</td>{% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+<script>
+  document.querySelectorAll("[data-feat-filter]").forEach(cb => cb.addEventListener("change", () => {
+    const need = [...document.querySelectorAll("[data-feat-filter]:checked")].map(x => x.value);
+    document.querySelectorAll(".feat-matrix tbody tr").forEach(tr => { const f = tr.dataset.feats.split(" "); tr.hidden = !need.every(n => f.includes(n)); });
+  }));
+</script>
 {% for role, label in roles.items() if by_role[role] %}
 <h2>{{ label }}</h2>
 <div class="table-wrap"><table class="bc-devices">

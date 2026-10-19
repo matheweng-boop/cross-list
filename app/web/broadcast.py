@@ -21,7 +21,8 @@ def overview(request: Request):
         request,
         "broadcast/index.html",
         {"by_role": by_role, "roles": broadcast.ROLES, "standards_of": broadcast.standards_of,
-         "documents": broadcast.documents()},
+         "documents": broadcast.documents(), "tf": broadcast.tuner_features(),
+         "by_mpn": {d["mpn"]: d for d in devices}},
     )  # fmt: skip
 
 
@@ -54,6 +55,7 @@ def _editor(request: Request, config: BroadcastConfig | None):
             "presets": broadcast.configurations(),
             "guidance": broadcast.guidance(),
             "explanations": broadcast.explanations(),
+            "features": broadcast.tuner_features(),
         },
     )
 

@@ -193,11 +193,13 @@ splitter: >-
 "control:demod": >-
   The SoC talks SPI to the demod (IC3 host port); the demod controls the tuners over its own tuner SPI, with a
   select and reset line per tuner. Fewer SoC pins; the demod sequences the tuners.
-"control:soc": The SoC controls every IC directly over SPI / I2C. Needed when there is no demod.
+"control:soc": >-
+  The SoC controls every IC directly over SPI / I2C. Needed when there is no demod.
 "route:direct": >-
   IC0 sends its I2S audio straight to the SoC; with a demod, IC0's second I2S port feeds the demod for blending /
   linking and the demod's I2S goes to the SoC as well.
-"route:via_demod": Every tuner sends its I2S audio into the demod, which outputs one I2S stream to the SoC.
+"route:via_demod": >-
+  Every tuner sends its I2S audio into the demod, which outputs one I2S stream to the SoC.
 iq_map: >-
   Which demod ZIF port each tuner's I/Q pair is wired to. A dual tuner shares ZIFCLK / ZIFFS between its two pairs,
   so it loads two ports (keep CLK / FS under 50 pF). A DMOD channel can only decode a tuner that is wired here.
@@ -216,3 +218,40 @@ audio_dsp: >-
 show_all: >-
   The part lists follow your choices (region, on-chip audio, IC0 vs companion tuner). Tick this to see every part,
   e.g. to try an unusual combination.
+"feature:WB": >-
+  Weather band (NOAA). North America safety feature; needs a tuner with WB.
+"feature:HD": >-
+  HD Radio. The tuner passes HD I/Q to an HD demod.
+"feature:HD_MRC": >-
+  HD MRC: two tuners receive the same HD station on two antennas and the demod combines them. Needs a dual tuner
+  with HD MRC, two antennas and an HD MRC licence.
+"feature:DAB": >-
+  DAB / DAB+. The tuner passes Band III I/Q to a DAB demod.
+"feature:DAB_MRC": >-
+  DAB MRC: two tuners on Band III from two antennas, combined in the demod. Needs a dual tuner with DAB MRC.
+"feature:DAB_NC": >-
+  DAB noise canceller in the tuner; improves DAB reception in noisy cars.
+"feature:DRM": >-
+  DRM30 / DRM+. The tuner passes I/Q to a DRM demod.
+"feature:PD": >-
+  FM phase diversity: both tuners of a dual tuner combine two antennas against multipath. Only dual tuners have it,
+  and it needs two antennas.
+"feature:AMIC": >-
+  AM interference canceller: suppresses interference in the AM band (e.g. from switching supplies).
+"feature:DAGC": >-
+  Digital AGC in the tuner.
+layout: >-
+  Parts with the same layout share a footprint. A single tuner on a dual-tuner layout (Si4795x on the Si4796x
+  layout, Si4798x on the Si4797x layout) can be swapped for a dual tuner on the same board, and back: one PCB,
+  a lower and a higher variant. Si4790x, Si4791x / Si4792x and Si47992 have their own single-tuner layouts.
+digital: >-
+  Digital radio for the region: North America with or without HD Radio, Europe with or without DAB, rest of world
+  with or without DRM. With: a demod is part of the design and the part lists keep only tuners and demods for that
+  standard. Without: no demod, analog AM/FM only, cheaper.
+"digital:North America": >-
+  HD Radio or not. With HD: IC0 must have HD (I/Q to an HD demod), demods are HD-licensed. Without: analog AM/FM, no
+  demod.
+"digital:Europe": >-
+  DAB or not. With DAB: a DAB demod, companion tuners must have DAB. Without: analog AM/FM, no demod.
+"digital:Rest of world": >-
+  DRM or not. With DRM: a DRM-capable tuner and a DRM demod. Without: analog AM/FM, no demod.

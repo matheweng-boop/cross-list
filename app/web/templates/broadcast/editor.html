@@ -10,14 +10,21 @@
   <div class="bc-step"><span class="bc-step-n">1</span><span class="bc-step-label">Region</span>
     <span class="bc-chips" role="group" aria-label="Region">
       {% for r in presets.regions %}<button type="button" class="bc-chip" data-region="{{ r }}" data-explain="region:{{ r }}" aria-pressed="false">{{ r }}</button>{% endfor %}
+    </span>
+    <span class="bc-chips" id="bc-digital" role="group" aria-label="Digital radio" hidden>
+      <button type="button" class="bc-chip" data-digital="true" data-explain="digital" aria-pressed="false">with <span data-digital-label>digital</span></button><button type="button" class="bc-chip" data-digital="false" data-explain="digital" aria-pressed="false">without <span data-digital-label>digital</span></button>
     </span></div>
   <div class="bc-step"><span class="bc-step-n">2</span><span class="bc-step-label">Hardware</span>
     <span class="bc-chips" role="group" aria-label="On-chip audio"><span class="small muted">On-chip audio</span>
       <button type="button" class="bc-chip" data-audio="true" data-explain="audio_dsp" aria-pressed="false">required</button><button type="button" class="bc-chip" data-audio="false" data-explain="audio_dsp" aria-pressed="false">not required</button>
     </span>
+    <span class="bc-chips" role="group" aria-label="Required features"><span class="small muted">Features</span>
+      {% for key, label in features.features.items() if key not in ('AM', 'FM', 'AUDIO') %}<button type="button" class="bc-chip bc-chip-sm" data-feat="{{ key }}" data-explain="feature:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </span>
     <span class="bc-chips" role="group" aria-label="Number of tuners"><span class="small muted">Tuners</span>
       {% for n in (1, 2, 3, 4, 5) %}<button type="button" class="bc-chip bc-chip-n" data-tuners="{{ n }}" data-explain="tuners" aria-pressed="false">{{ n }}</button>{% endfor %}
     </span>
+    <span id="bc-feat-match" class="small bc-feat-match"></span>
     <span id="bc-hw-cards" class="bc-chips"><span class="muted small">pick a region first</span></span></div>
   <div class="bc-step"><span class="bc-step-n">3</span><span class="bc-step-label">Software</span>
     <span id="bc-sw-cards" class="bc-chips"><span class="muted small">pick a hardware configuration first</span></span></div>
@@ -103,6 +110,7 @@
 #bc-svg .empty { font-size: 14px; fill: #7a828c; }
 </style>
 <script type="application/json" id="bc-explanations">{{ explanations|tojson }}</script>
+<script type="application/json" id="bc-features">{{ features|tojson }}</script>
 <script type="application/json" id="bc-guidance">{{ guidance|tojson }}</script>
 <script type="application/json" id="bc-presets">{{ presets|tojson }}</script>
 <script type="application/json" id="bc-catalog">{{ catalog|tojson }}</script>

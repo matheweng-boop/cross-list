@@ -40,7 +40,15 @@ IN_SCOPE = ("supported", "gap", "competitor")
 CROWDING_LABEL = {"low": "Few suppliers", "medium": "Several suppliers", "high": "Crowded"}
 _COMPETITION = Path(__file__).resolve().parents[2] / "data" / "business" / "competition.yaml"
 STATUS_LABEL = {"supported": "Portfolio", "gap": "Gap (opportunity)", "competitor": "Competitor only",
-                "na": "Outside scope", "unknown": "Unknown"}  # fmt: skip
+                "na": "Not our product type", "unknown": "Unknown"}  # fmt: skip
+STATUS_HELP = {
+    "supported": "A Skyworks or Qorvo part exists for this function (a candidate, not yet checked against the specs).",
+    "gap": "Needed here, but no company in Cross List has a part for it yet.",
+    "competitor": "Only other companies have parts for it in Cross List.",
+    "na": "Chips the customer picks from other kinds of suppliers: processors, MCUs, memory, sensors, antennas, "
+    "connectors. Left out of coverage; the Technology fit page still counts how often they appear.",
+    "unknown": "The function is not in the catalogue yet.",
+}
 
 
 def company(key: str) -> tuple[str, str, frozenset]:
@@ -107,6 +115,7 @@ class Application:
     category: str
     positions: list[Position]
     market: str = ""  # end market: Automotive when the application is a vehicle system, else its category
+    background: bool = False  # diagram outside the library (used for statistics only)
 
 
 _AUTO_APP = re.compile(
@@ -125,7 +134,8 @@ def market_of(name: str, category: str) -> str:
 def applications() -> list[Application]:
     cat = blocks.catalogue()["functions"]
     out = []
-    for i, t in enumerate(blocks.templates()):
+    lib = blocks.templates()
+    for i, t in enumerate([*lib, *blocks.background_templates()]):
         pos = []
         for g in t.get("groups") or []:
             for b in g.get("blocks") or []:
@@ -137,7 +147,8 @@ def applications() -> list[Application]:
                 fn = fn.strip()
                 pos.append(Position(fn, label or (cat.get(fn) or {}).get("label", fn), g.get("label", ""), qty))
         category = t.get("category") or "Other"
-        out.append(Application(i, blocks.display_name(t), category, pos, market_of(t.get("name", ""), category)))
+        market = market_of(t.get("name", ""), category)
+        out.append(Application(i, blocks.display_name(t), category, pos, market, background=i >= len(lib)))
     return out
 
 
@@ -323,3 +334,60 @@ def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:
         e["by_market"] = dict(e["by_market"])
     out = sorted(rows.values(), key=lambda e: (-e["n_markets"], -e["n_apps"], e["label"]))
     return {"markets": names, "rows": out, "apps_per_market": Counter(a.market for a in apps)}
+
+
+# ---- technology fit: frequent functions ranked by closeness to the portfolio's technology ---------------
+_TECHNOLOGY = _COMPETITION.parent / "technology.yaml"
+PROXIMITY_LABEL = {3: "Same technology", 2: "Adjacent", 1: "Distant", 0: "Unrelated"}
+PROXIMITY_WEIGHT = {3: 1.0, 2: 0.6, 1: 0.3, 0: 0.1}
+CROWDING_WEIGHT = {"low": 1.0, "medium": 0.9, "high": 0.75}
+# system parts in the diagrams that are not semiconductor development targets
+_NOT_CHIPS = {
+    "external_block",
+    "antenna",
+    "battery_pack",
+    "display",
+    "hv_battery",
+    "dc_link_cap",
+    "motor",
+    "camera_radar",
+}
+
+
+@lru_cache
+def technology() -> dict[str, dict]:
+    """Per function: proximity 0-3 to Skyworks / Qorvo technology, technologies and reasoning (public knowledge)."""
+    return (yaml.safe_load(_TECHNOLOGY.read_text()) if _TECHNOLOGY.exists() else None) or {}
+
+
+def technology_fit(apps: list[Application]) -> list[dict]:
+    """Functions the portfolio does not cover (gap, competitor-only or not our product type) by how often they
+    occur in all diagrams (library + background), weighted by technology proximity and competition.
+    score = share of applications x proximity weight x crowding weight. Door-opener share is shown, not scored:
+    this list is about frequency, not attach."""
+    cat = blocks.catalogue()["functions"]
+    tech, comp, n = technology(), competition(), len(apps) or 1
+    rows: dict[str, dict] = {}
+    for a in apps:
+        anchor = any(p.status == "supported" for p in a.positions)
+        for fn in {p.fn for p in a.positions if p.status in ("gap", "competitor", "na")}:
+            if fn in _NOT_CHIPS:
+                continue
+            ps = [p for p in a.positions if p.fn == fn]
+            label = (cat.get(fn) or {}).get("label", fn)
+            e = rows.setdefault(fn, {"fn": fn, "label": label, "status": ps[0].status, "reach": 0, "positions": 0,
+                                     "adjacent": 0, "background": 0, "apps": []})  # fmt: skip
+            e["reach"] += 1
+            e["positions"] += sum(p.qty for p in ps)
+            e["adjacent"] += anchor
+            e["background"] += a.background
+            e["apps"].append(a)
+    for fn, e in rows.items():
+        t = tech.get(fn) or {}
+        prox = t.get("proximity")
+        c = comp.get(fn) or {}
+        e.update(proximity=prox, tech=t.get("tech") or [], reasoning=t.get("reasoning", ""), competition=c or None,
+                 share=e["reach"] / n, adjacency=e["adjacent"] / e["reach"])  # fmt: skip
+        w = PROXIMITY_WEIGHT.get(prox, 0.05) * CROWDING_WEIGHT.get(c.get("crowding"), 0.85)
+        e["score"] = e["share"] * w
+    return sorted(rows.values(), key=lambda e: (-e["score"], -e["reach"], e["label"]))

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct, company_switch, status_chip, crowd %}
+{% block title %}Technology fit – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Technology fit</h1>
+<p class="subtitle muted">Functions {{ co_label }} has no part for, ranked by <b>how often they appear</b> in block diagrams and <b>how close they are to
+  technology we already have</b>. Unlike Gaps &amp; ranking, door openers do not count here: a function that shows up everywhere is
+  interesting even where we sell nothing yet. A new filter type on existing BAW / SAW technology ranks above a frequent SoC we have no base for.</p>
+{{ company_switch('/business/technology', co, companies, '&view=' ~ view) }}
+<div class="chip-row"><span class="chip-lbl">Show</span>
+  {% for k, label in [('all', 'All'), ('develop', 'Developable (same or adjacent technology)'), ('low_attach', 'Low attach (door opener < 50%)'), ('chips', 'Not our product type (SoCs, MCUs, memory…)')] %}
+  <a class="fchip{{ ' on' if view == k }}" href="/business/technology?co={{ co }}&view={{ k }}">{{ label }} <small>{{ counts[k] }}</small></a>{% endfor %}
+</div>
+<details class="bo-help"><summary class="small"><b>How the ranking works</b></summary>
+  <p class="small">Score = share of applications that use the function × technology weight × competition weight.
+    Applications: all {{ apps|length }} diagrams, of which {{ n_background }} are background diagrams (from TI, NXP and Qualcomm material that
+    does not fit the portfolio well enough to show in the library; used here for statistics only).</p>
+  <ul class="small">{% for p in [3, 2, 1, 0] %}<li><b>{{ prox_label[p] }}</b> ({{ p }}) weight {{ prox_weight[p] }}{{ {3: ': a new variant of a product line already in production', 2: ': shared process or design know-how, new blocks needed', 1: ': some shared capability, mostly new', 0: ': a different core technology (leading-edge digital, memory, image sensors)'}[p] }}</li>{% endfor %}
+    <li>Competition weight: {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}.</li></ul>
+  <p class="small muted">Proximity and reasoning are an indicative reading of the public Skyworks and Qorvo portfolios, for discussion, not a roadmap.</p>
+</details>
+<div class="bo-gap-list">
+  <div class="bo-gap-head bo-tech small"><span>Function</span><span>Appears in</span><span>Sockets</span><span>Technology</span><span>Competition</span><span>Score</span></div>
+  {% for e in rows %}
+  <details class="bo-gap" id="fn-{{ e.fn }}">
+    <summary class="bo-tech"><span><b>{{ loop.index }}. {{ e.label }}</b> {{ status_chip(e.status, status_label) }}<br><small class="muted">{{ e.reasoning }}</small></span>
+      <span>{{ e.reach }} of {{ apps|length }}<br><small class="muted">{{ pct(e.adjacency) }} door openers</small></span>
+      <span>{{ e.positions }}</span>
+      <span>{% if e.proximity is not none %}<span class="bo-prox px-{{ e.proximity }}">{{ prox_label[e.proximity] }}</span><br><small class="muted">{{ e.tech|join(', ') }}</small>{% else %}<span class="muted small">not assessed</span>{% endif %}</span>
+      <span>{{ crowd(e.competition, crowding_label) }}</span>
+      <span><span class="bo-bar"><span style="width:{{ (100 * e.score / rows[0].score if rows and rows[0].score else 0)|round }}%"></span></span></span></summary>
+    <div class="bo-gap-body small">
+      {% if e.proximity == 3 and e.status != 'na' %}<p class="bo-requal">Same technology as products we already sell: some may already exist but are not mapped to this function in Cross List yet. Check the catalogue before treating it as a new product.</p>{% endif %}
+      {% if e.competition and e.competition.vendors %}<p><b>Who sells it:</b> {{ e.competition.vendors|join(', ') }}</p>{% endif %}
+      <p><b>Appears in:</b> {% for a in e.apps|sort(attribute='name') %}{% if a.background %}<span class="bo-ours bo-bg" title="background diagram, not in the library">{{ a.name }}</span>{% else %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endif %}{% endfor %}</p>
+      <p><a href="/business/cases/new?fn={{ e.fn }}">Start a case analysis for {{ e.label }} →</a></p>
+    </div>
+  </details>
+  {% else %}<p class="muted">Nothing to show.</p>{% endfor %}
+</div>
+{% endblock %}

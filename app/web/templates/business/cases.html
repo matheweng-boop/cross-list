@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Case analysis – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Case analysis</h1>
+<p class="subtitle muted">One case per product idea: collect the inputs and features, hand the generated brief to an AI assistant for a market analysis
+  (where the market is heading, what a new part could gain), paste the result back and discuss the upsides and risks here.</p>
+<form method="get" action="/business/cases/new" class="bo-anchor">
+  <label>New case for <select name="fn"><option value="">a free topic (no function)</option>
+    {% for k, flabel in fn_choices %}<option value="{{ k }}">{{ flabel }}</option>{% endfor %}</select></label>
+  <button type="submit" class="small-btn">Start</button>
+</form>
+<p class="small muted">Tip: start from <a href="/business/technology">Technology fit</a> or <a href="/business/gaps">Gaps &amp; ranking</a>, where each function links here.</p>
+<div class="table-wrap"><table class="striped">
+  <thead><tr><th>Case</th><th>Function</th><th>Status</th><th>Discussion</th><th>Updated</th></tr></thead>
+  <tbody>{% for c in cases %}<tr><td><a href="/business/cases/{{ c.id }}"><b>{{ c.title }}</b></a></td><td class="small">{{ fns[c.fn].label if c.fn in fns else '–' }}</td>
+    <td><span class="case-st cs-{{ c.status }}">{{ statuses[c.status] }}</span></td><td class="small">{{ c.notes|length }} point{{ 's' if c.notes|length != 1 }}</td>
+    <td class="small">{{ c.updated_at.strftime('%Y-%m-%d') }}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">No cases yet.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

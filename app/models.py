@@ -305,3 +305,36 @@ class BusinessInput(Base):
     value: Mapped[float] = mapped_column(Float)
     note: Mapped[str | None] = mapped_column(String(300))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Case(Base):
+    """Case analysis: inputs gathered for a possible new product, an analysis brief for an AI market analysis, the
+    pasted result and the discussion. Nothing is sent anywhere by the app."""
+
+    __tablename__ = "cases"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    fn: Mapped[str | None] = mapped_column(String(80))  # function id from the block catalogue
+    # collecting | analysing | discussing | decided
+    status: Mapped[str] = mapped_column(String(20), default="collecting")
+    inputs: Mapped[dict] = mapped_column(JSON, default=dict)
+    analysis: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    notes: Mapped[list["CaseNote"]] = relationship(back_populates="case", cascade="all, delete-orphan",
+                                                   order_by="CaseNote.created_at")  # fmt: skip
+
+
+class CaseNote(Base):
+    """One point in a case discussion: an upside, a risk, a feature idea or a comment."""
+
+    __tablename__ = "case_notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    case_id: Mapped[int] = mapped_column(ForeignKey("cases.id"))
+    kind: Mapped[str] = mapped_column(String(20), default="comment")  # upside | risk | feature | comment
+    author: Mapped[str | None] = mapped_column(String(100))
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    case: Mapped[Case] = relationship(back_populates="notes")

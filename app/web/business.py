@@ -4,15 +4,18 @@ TAM data."""
 from collections import Counter
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.services import blocks
+from app.models import Case, CaseNote
+from app.services import blocks, cases
 from app.services import opportunity as op
 from app.web.routes import templates
 
 router = APIRouter()
+templates.env.globals["bo_status_help"] = op.STATUS_HELP
 _CROWD = {"low": 0, "medium": 1, "high": 2}
 
 
@@ -99,6 +102,24 @@ def markets(request: Request, co: str = "combined", view: str = "all", session: 
     return templates.TemplateResponse(request, "business/markets.html", c)
 
 
+@router.get("/business/technology", response_class=HTMLResponse)
+def technology(request: Request, co: str = "combined", view: str = "all", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    rows = op.technology_fit(c["apps"])
+    views = {
+        "all": lambda e: True,
+        "develop": lambda e: (e["proximity"] or 0) >= 2,
+        "low_attach": lambda e: e["adjacency"] < 0.5,
+        "chips": lambda e: e["status"] == "na",
+    }
+    c["view"] = view if view in views else "all"
+    c["counts"] = {k: sum(map(f, rows)) for k, f in views.items()}
+    c["rows"] = [e for e in rows if views[c["view"]](e)]
+    c.update(prox_label=op.PROXIMITY_LABEL, prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT,
+             n_background=sum(a.background for a in c["apps"]))  # fmt: skip
+    return templates.TemplateResponse(request, "business/technology.html", c)
+
+
 @router.get("/business/data", response_class=HTMLResponse)
 def data(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
@@ -135,3 +156,97 @@ def save_asp(payload: dict = Body(...), session: Session = Depends(get_session))
             op.set_input(session, "asp", fn, _num(str(v)) if v not in (None, "") else None)
     session.commit()
     return {"ok": True}
+
+
+# ---- case analysis -----------------------------------------------------------------------------------------
+def _case_ctx(session: Session, co: str) -> dict:
+    key, label, _ = op.company(co)
+    return {"co": key, "co_label": label, "companies": op.COMPANIES, "statuses": cases.STATUSES,
+            "kinds": cases.NOTE_KINDS, "fields": cases.FIELDS, "fns": blocks.catalogue()["functions"],
+            "fn_choices": sorted(((k, f.get("label", k)) for k, f in blocks.catalogue()["functions"].items()),
+                                 key=lambda kv: kv[1].lower())}  # fmt: skip
+
+
+@router.get("/business/cases", response_class=HTMLResponse)
+def case_list(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    c = _case_ctx(session, co)
+    c["cases"] = session.scalars(select(Case).order_by(Case.updated_at.desc())).all()
+    return templates.TemplateResponse(request, "business/cases.html", c)
+
+
+@router.get("/business/cases/new", response_class=HTMLResponse)
+def case_new(request: Request, fn: str = "", co: str = "combined", session: Session = Depends(get_session)):
+    c = _case_ctx(session, co)
+    ctx = cases.context(session, fn, co)
+    c.update(case=None, fn=fn if ctx else "", ctx=ctx, values=cases.prefill(ctx),
+             title=f"New {ctx['label']}" if ctx else "")  # fmt: skip
+    return templates.TemplateResponse(request, "business/case.html", c)
+
+
+def _inputs(form) -> dict:
+    return {k: str(form.get(k) or "").strip() for k, *_ in cases.FIELDS if str(form.get(k) or "").strip()}
+
+
+@router.post("/business/cases")
+async def case_create(request: Request, session: Session = Depends(get_session)):
+    form = await request.form()
+    fn = str(form.get("fn") or "") or None
+    case = Case(title=str(form.get("title") or "").strip()[:200] or "Untitled case",
+                fn=fn if fn in blocks.catalogue()["functions"] else None, inputs=_inputs(form))  # fmt: skip
+    session.add(case)
+    session.commit()
+    return RedirectResponse(f"/business/cases/{case.id}", status_code=303)
+
+
+def _case(session: Session, case_id: int) -> Case:
+    case = session.get(Case, case_id)
+    if case is None:
+        raise HTTPException(404, "Case not found")
+    return case
+
+
+@router.get("/business/cases/{case_id:int}", response_class=HTMLResponse)
+def case_detail(request: Request, case_id: int, co: str = "combined", session: Session = Depends(get_session)):
+    c = _case_ctx(session, co)
+    case = _case(session, case_id)
+    ctx = cases.context(session, case.fn, co)
+    c.update(case=case, fn=case.fn or "", ctx=ctx, values=case.inputs or {}, title=case.title,
+             brief=cases.brief(case, ctx))  # fmt: skip
+    return templates.TemplateResponse(request, "business/case.html", c)
+
+
+@router.get("/business/cases/{case_id:int}/brief.md", response_class=PlainTextResponse)
+def case_brief(case_id: int, co: str = "combined", session: Session = Depends(get_session)):
+    case = _case(session, case_id)
+    return PlainTextResponse(cases.brief(case, cases.context(session, case.fn, co)), media_type="text/markdown")
+
+
+@router.post("/business/cases/{case_id:int}")
+async def case_update(case_id: int, request: Request, session: Session = Depends(get_session)):
+    form = await request.form()
+    case = _case(session, case_id)
+    act = form.get("act")
+    if act == "inputs":
+        case.title = str(form.get("title") or case.title).strip()[:200]
+        fn = str(form.get("fn") or "")
+        case.fn = fn if fn in blocks.catalogue()["functions"] else None
+        case.inputs = _inputs(form)
+    elif act == "analysis":
+        case.analysis = str(form.get("analysis") or "")
+        if case.analysis.strip() and case.status in ("collecting", "analysing"):
+            case.status = "discussing"
+    elif act == "status" and form.get("status") in cases.STATUSES:
+        case.status = str(form.get("status"))
+    elif act == "note" and str(form.get("text") or "").strip():
+        kind = str(form.get("kind") or "comment")
+        case.notes.append(CaseNote(kind=kind if kind in cases.NOTE_KINDS else "comment",
+                                   author=str(form.get("author") or "").strip()[:100] or None,
+                                   text=str(form.get("text")).strip()))  # fmt: skip
+    elif act == "delnote":
+        case.notes = [n for n in case.notes if str(n.id) != str(form.get("note"))]
+    elif act == "delete":
+        session.delete(case)
+        session.commit()
+        return RedirectResponse("/business/cases", status_code=303)
+    session.commit()
+    return RedirectResponse(f"/business/cases/{case.id}#{act}", status_code=303)

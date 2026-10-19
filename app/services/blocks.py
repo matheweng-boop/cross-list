@@ -35,6 +35,13 @@ def templates() -> list[dict]:
 
 
 @lru_cache
+def background_templates() -> list[dict]:
+    """Diagrams that do not fit the Skyworks / Qorvo portfolio: not shown in the library, used only for occurrence
+    and attach statistics on the Business opportunity pages."""
+    return _yaml("background_templates.yaml") or []
+
+
+@lru_cache
 def question_help() -> dict[str, str]:
     """One or two sentences per design-question id: what the decision implies."""
     return _yaml("question_help.yaml") or {}

@@ -1,0 +1,725 @@
+# Technology proximity of each function to the combined Skyworks + Qorvo portfolio (public knowledge, indicative).
+# proximity: 3 = same technology already in production (a new variant / new spec), 2 = adjacent (shared process or
+# design know-how, new IP blocks needed), 1 = distant (some shared capability, mostly new), 0 = unrelated (different
+# core technology, e.g. leading-edge digital, memory, image sensors).
+# Qorvo's SiC (UnitedSiC) business was sold to onsemi (closed Jan 2025) and is not counted as current technology.
+active_antenna_amp:
+  proximity: 2
+  tech: [GaAs pHEMT, SiGe]
+  reasoning: >-
+    Existing LNAs and gain blocks cover the RF part; AM/FM in-antenna amplifiers need low-frequency, high-linearity automotive specs not in current lines.
+adas_processor:
+  proximity: 0
+  tech: [Leading-edge digital]
+  reasoning: >-
+    ADAS processors need AI accelerators and leading-edge digital; no base.
+adc:
+  proximity: 2
+  tech: [Delta-sigma, Mixed-signal CMOS]
+  reasoning: >-
+    Skyworks Si894x isolated delta-sigma modulators and ADCs inside PAC/QPG SoCs are a base; standalone precision or high-speed ADCs would be new.
+am_fm_tuner:
+  proximity: 3
+  tech: [RF CMOS]
+  reasoning: >-
+    Skyworks Si479xx automotive tuners are in production.
+amplifier:
+  proximity: 2
+  tech: [Precision analog]
+  reasoning: >-
+    Op-amp and instrumentation blocks exist in Skyworks isolated amplifiers and Qorvo PAC current-sense amplifiers; a catalogue op-amp family is adjacent but new.
+antenna:
+  proximity: 2
+  tech: [Ceramics, RF modules]
+  reasoning: >-
+    Skyworks Trans-Tech ceramics and both companies' module/AiP packaging are adjacent; neither sells discrete antennas, so antenna design and tuning would be new.
+antenna_switch:
+  proximity: 3
+  tech: [SOI]
+  reasoning: >-
+    Skyworks and Qorvo SOI antenna switches and switch modules are high-volume production lines.
+antenna_tuner:
+  proximity: 3
+  tech: [SOI, DTC]
+  reasoning: >-
+    Skyworks and Qorvo SOI aperture tuners and digitally tunable capacitors are in production.
+application_processor:
+  proximity: 0
+  tech: [Leading-edge digital]
+  reasoning: >-
+    Application processors need leading-edge digital process, CPU/GPU IP and software; no base.
+audio_amp:
+  proximity: 3
+  tech: [Mixed-signal CMOS]
+  reasoning: >-
+    Skyworks SKY76206 multi-level class-D audio amplifiers are in production; higher-power automotive amps would be new specs.
+audio_codec:
+  proximity: 2
+  tech: [Mixed-signal CMOS, DSP]
+  reasoning: >-
+    Skyworks SKY76280 audio processing SoC and Si47xx audio DACs give a base; high-performance codecs and DSPs need new converters.
+audio_soc:
+  proximity: 2
+  tech: [RF CMOS SoC, DSP]
+  reasoning: >-
+    Skyworks wireless audio SoCs and SKY76280 audio processing SoC give a base; a general-purpose audio DSP SoC needs new cores and software.
+battery_charger:
+  proximity: 3
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo (Active-Semi) battery chargers and charger-integrated PMICs (ACT81460) are in production.
+battery_gauge:
+  proximity: 2
+  tech: [Precision analog, Arm MCU]
+  reasoning: >-
+    Qorvo PAC22140/PAC25140 BMS SoCs include cell measurement and coulomb counting; single-cell handset fuel-gauge algorithms and low-power AFEs are new.
+battery_monitor:
+  proximity: 3
+  tech: [HV BCD, Arm MCU]
+  reasoning: >-
+    Qorvo PAC22140 / PAC25140 10s-20s battery management SoCs are in production; automotive multi-cell AFEs would need new safety qualification.
+battery_pack:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    Battery cells and pack assembly; outside semiconductor technology.
+beamformer_ic:
+  proximity: 3
+  tech: [SiGe BiCMOS, RF CMOS]
+  reasoning: >-
+    Qorvo (Anokiwave heritage) mmWave beamformer ICs are in production.
+ble_soc:
+  proximity: 3
+  tech: [RF CMOS SoC]
+  reasoning: >-
+    Qorvo QPG6xxx BLE / Zigbee / Thread SoCs are in production.
+bt_fem:
+  proximity: 3
+  tech: [SOI, GaAs HBT]
+  reasoning: >-
+    Skyworks SKY66xxx and Qorvo 2.4 GHz FEMs for BLE/802.15.4 are in production.
+buck_boost:
+  proximity: 3
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo ACT5101/ACT5102 buck-boost converters and Skyworks AAT-heritage buck-boost parts exist; new specs are variants of these.
+camera_radar:
+  proximity: 0
+  tech: [Module integration]
+  reasoning: >-
+    Camera, lidar and radar modules are system products; only RF components could be supplied into them.
+camera_sensor:
+  proximity: 0
+  tech: [Image sensor]
+  reasoning: >-
+    Image sensors use dedicated CIS processes; unrelated.
+can_transceiver:
+  proximity: 1
+  tech: [Interface PHY, HV BiCMOS]
+  reasoning: >-
+    No CAN PHY today; isolated RS-485 transceivers and isolation know-how are related, but automotive CAN-FD/SIC EMC qualification is new.
+cc_regulator:
+  proximity: 3
+  tech: [HV BCD, LED driver]
+  reasoning: >-
+    Qorvo ACT43950 400 V constant-current regulator and Skyworks LED drivers are in production; new current/voltage ranges are variants.
+circulator_isolator:
+  proximity: 2
+  tech: [Ferrite ceramics]
+  reasoning: >-
+    Skyworks Trans-Tech ferrite and microwave ceramics are the base; standalone circulator/isolator products are a limited, adjacent line rather than core.
+clock_buffer:
+  proximity: 3
+  tech: [Timing]
+  reasoning: >-
+    Skyworks Si53xxx clock buffers are in production.
+clock_generator:
+  proximity: 3
+  tech: [Timing]
+  reasoning: >-
+    Skyworks Si5332/Si534x clock generators are in production.
+crystal_oscillator:
+  proximity: 3
+  tech: [Timing, MEMS/XO]
+  reasoning: >-
+    Skyworks Si5xx XO/VCXO oscillators (Silicon Labs heritage) are in production.
+current_sensor:
+  proximity: 3
+  tech: [Digital isolation, Precision analog]
+  reasoning: >-
+    Skyworks isolated current sensors and Si8540 high-side sensor exist; isolated amplifiers/modulators cover shunt-based sensing.
+dc_link_cap:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    Film capacitors; outside the semiconductor portfolio.
+ddr_flash:
+  proximity: 0
+  tech: [Memory]
+  reasoning: >-
+    Memory process technology; unrelated.
+digital_isolator:
+  proximity: 3
+  tech: [Digital isolation (CMOS)]
+  reasoning: >-
+    Skyworks Si86xx/Si87xx/Si88xx digital isolators (Silicon Labs I&A heritage) are a large production line.
+digital_radio_demod:
+  proximity: 3
+  tech: [DSP CMOS]
+  reasoning: >-
+    Skyworks Si46xx HD Radio/DAB/DRM coprocessors and receivers are in production.
+diplexer:
+  proximity: 3
+  tech: [BAW, SAW, IPD]
+  reasoning: >-
+    Skyworks and Qorvo diplexers, duplexers and multiplexers are in production.
+display:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    Display panels are a different industry.
+display_driver:
+  proximity: 0
+  tech: [High-voltage display CMOS]
+  reasoning: >-
+    Display driver ICs use specialty HV CMOS and panel-specific digital design; no base.
+diversity_rx_module:
+  proximity: 3
+  tech: [SOI, BAW/SAW]
+  reasoning: >-
+    Skyworks and Qorvo diversity-receive (DRx) and LNA-filter modules are in production.
+dram:
+  proximity: 0
+  tech: [Memory]
+  reasoning: >-
+    DRAM is a memory-fab business; unrelated.
+ecg_afe:
+  proximity: 1
+  tech: [Precision analog]
+  reasoning: >-
+    Low-noise analog and isolated amplifiers are related, but biopotential AFEs with lead-off detection and medical qualification are new.
+ethernet_phy:
+  proximity: 1
+  tech: [Mixed-signal DSP]
+  reasoning: >-
+    Timing and PoE are related, but Ethernet PHY DSP and switch silicon would be new.
+external_block:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    Placeholder for blocks outside the Skyworks / Qorvo scope; not a semiconductor development target.
+filter_saw_baw:
+  proximity: 3
+  tech: [BAW, TC-SAW, LTCC]
+  reasoning: >-
+    Qorvo BAW and SAW and Skyworks TC-SAW/BAW filters are in production; LTCC-style filters are a minor extension.
+flash:
+  proximity: 0
+  tech: [Memory]
+  reasoning: >-
+    Memory process technology; unrelated.
+frequency_multiplier:
+  proximity: 3
+  tech: [GaAs]
+  reasoning: >-
+    Qorvo (Custom MMIC heritage) GaAs frequency doublers are in production, though many are discontinued or no-new-design.
+gate_driver:
+  proximity: 3
+  tech: [Digital isolation (CMOS)]
+  reasoning: >-
+    Skyworks Si823x/Si827x/Si828x isolated gate drivers are in production; new drive strengths or protection features are variants.
+gnss_lna:
+  proximity: 3
+  tech: [SiGe, SOI, SAW]
+  reasoning: >-
+    Skyworks and Qorvo GNSS LNAs and LNA-filter modules (L1/L5) are in production.
+half_bridge_driver:
+  proximity: 3
+  tech: [HV BCD, Gate driver]
+  reasoning: >-
+    Qorvo PAC5xxx integrate low/high-side drivers (up to 600 V variants); a standalone non-isolated half-bridge driver is a variant.
+hall_switch:
+  proximity: 1
+  tech: [Magnetic sensing]
+  reasoning: >-
+    No Hall sensor process or product line (Si72xx stayed with Silicon Labs); only basic mixed-signal know-how applies.
+hv_battery:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    Traction battery packs; outside semiconductor technology.
+hv_flyback:
+  proximity: 2
+  tech: [HV BCD, Isolated power]
+  reasoning: >-
+    Active-Semi had AC-DC flyback controllers and Qorvo ships a 400 V CC regulator (ACT43950); 800 V automotive flyback control is adjacent but new.
+io_expander:
+  proximity: 1
+  tech: [Logic CMOS]
+  reasoning: >-
+    A standard-logic catalogue part; I2C/SPI interface blocks exist in SoCs and timing parts, but no product line.
+isolated_amplifier:
+  proximity: 3
+  tech: [Digital isolation, Precision analog]
+  reasoning: >-
+    Skyworks Si892x isolated amplifiers and Si894x delta-sigma modulators are in production.
+isolated_can:
+  proximity: 2
+  tech: [Digital isolation, Interface PHY]
+  reasoning: >-
+    Skyworks has isolators and isolated RS-485 transceivers; adding a CAN/CAN-FD PHY behind the barrier needs a new transceiver block and automotive EMC qualification.
+isolated_dcdc:
+  proximity: 3
+  tech: [Digital isolation, Isolated power]
+  reasoning: >-
+    Skyworks Si88xx isolators with integrated DC-DC and isolated bias supplies are in production; higher-power isolated converters are new variants.
+isolated_digital_input:
+  proximity: 3
+  tech: [Digital isolation]
+  reasoning: >-
+    Skyworks Si838x isolated 24 V digital inputs are in production.
+isolated_smart_switch:
+  proximity: 3
+  tech: [Digital isolation, Power switch]
+  reasoning: >-
+    Skyworks Si830x/Si834x isolated smart switches are in production.
+isolated_switch_driver:
+  proximity: 3
+  tech: [Digital isolation, Optocoupler]
+  reasoning: >-
+    Skyworks photovoltaic/MOSFET-driver optocouplers and isolated drivers are in production; self-biased isolated switch drivers are variants.
+jitter_attenuator:
+  proximity: 3
+  tech: [Timing]
+  reasoning: >-
+    Skyworks Si539x/Si534x jitter attenuators and network synchronizers are in production.
+ldo_tracker:
+  proximity: 2
+  tech: [Power BCD]
+  reasoning: >-
+    LDO and tracking blocks exist in Qorvo PMICs; automotive tracking-LDO specs (40 V, AEC-Q100, short-to-battery) are new.
+led_driver:
+  proximity: 3
+  tech: [Power BCD, Charge pump]
+  reasoning: >-
+    Skyworks (AAT heritage) white-LED, flash and backlight drivers are in production.
+lna:
+  proximity: 3
+  tech: [SOI, SiGe, GaAs pHEMT]
+  reasoning: >-
+    Skyworks and Qorvo LNAs (SOI, GaAs pHEMT, GaN) are in production across bands.
+load_switch:
+  proximity: 2
+  tech: [Power BCD]
+  reasoning: >-
+    Skyworks lists OVP/load-protection parts and Qorvo PMICs include load bypass switches; a broad standalone load-switch family would be adjacent but new.
+mcu:
+  proximity: 1
+  tech: [Arm Cortex-M SoC]
+  reasoning: >-
+    Qorvo PAC and QPG SoCs embed Arm MCUs; a general-purpose MCU line needs a broad peripheral portfolio, software ecosystem and flash process scale.
+mmwave_antenna_module:
+  proximity: 2
+  tech: [SiGe beamformer, AiP]
+  reasoning: >-
+    Anokiwave beamformers and Qorvo up/down converters cover the RF chain; antenna-in-package design and platform-vendor transceiver integration are new.
+modem:
+  proximity: 0
+  tech: [Leading-edge digital]
+  reasoning: >-
+    Cellular baseband modems need leading-edge digital, protocol stacks and carrier certification; neither company has a base.
+modem_daa:
+  proximity: 3
+  tech: [Mixed-signal CMOS, Isolation]
+  reasoning: >-
+    Skyworks voice DAAs and modems (Silicon Labs heritage) are in production.
+motor:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    Electric machines; outside semiconductor technology.
+motor_controller:
+  proximity: 3
+  tech: [HV BCD, Arm MCU]
+  reasoning: >-
+    Qorvo PAC52xx/PAC55xx motor-control SoCs are in production.
+motor_driver_brushed:
+  proximity: 2
+  tech: [HV BCD, Gate driver]
+  reasoning: >-
+    Qorvo PAC5xxx gate drivers and power stages support DC motors; an integrated H-bridge with on-chip FETs is a new power-stage variant.
+multiphase:
+  proximity: 1
+  tech: [Power BCD, Digital control]
+  reasoning: >-
+    Qorvo PMICs are low-current multi-rail; high-current multiphase controllers with smart power stages and PMBus/AVS telemetry are mostly new.
+nand_flash:
+  proximity: 0
+  tech: [Memory]
+  reasoning: >-
+    NAND is a memory-fab business; unrelated.
+nfc_frontend:
+  proximity: 1
+  tech: [RF CMOS]
+  reasoning: >-
+    Short-range RF and UWB/BLE SoC know-how apply, but NFC analog front ends, protocol stacks and certification would be new.
+nfc_reader:
+  proximity: 1
+  tech: [RF CMOS]
+  reasoning: >-
+    RF front-end and SoC know-how apply, but NFC reader analog front ends, protocol stacks and EMVCo/NFC Forum certification would be new.
+nor_flash:
+  proximity: 0
+  tech: [Memory]
+  reasoning: >-
+    NOR flash is a memory process; unrelated (QPG/PAC SoCs use foundry embedded flash).
+optical_driver:
+  proximity: 3
+  tech: [GaAs, SiGe]
+  reasoning: >-
+    Qorvo (TriQuint heritage) optical modulator and EML drivers exist, though mostly legacy speeds; 100G+/lane drivers would need new design.
+optical_tia:
+  proximity: 2
+  tech: [GaAs, SiGe]
+  reasoning: >-
+    Qorvo has a couple of TIAs (one discontinued); competitive high-speed TIAs for 400G/800G optics would be largely new.
+optocoupler:
+  proximity: 3
+  tech: [Optoelectronics]
+  reasoning: >-
+    Skyworks (Isolink heritage) optocoupler line is in production; new variants are straightforward.
+pa_module:
+  proximity: 3
+  tech: [GaAs HBT, SOI, BAW/SAW]
+  reasoning: >-
+    Skyworks and Qorvo PAMiD/PA modules are core cellular products.
+pcie_buffer:
+  proximity: 3
+  tech: [Timing]
+  reasoning: >-
+    Skyworks PCIe clock buffers and generators (Si5332, Si53xxx) are in production.
+pcie_switch:
+  proximity: 0
+  tech: [Leading-edge digital]
+  reasoning: >-
+    PCIe packet switching is a large digital design; only the PCIe clocking (Skyworks buffers) is shared.
+pin_diode:
+  proximity: 3
+  tech: [Discrete diode]
+  reasoning: >-
+    Skyworks PIN diode line is in production.
+pmic:
+  proximity: 3
+  tech: [Power BCD, PMIC]
+  reasoning: >-
+    Qorvo ACT88xxx / ACT86xxx ActivePMU PMICs (SSD, processors) and Skyworks RF PMICs are in production; a new rail mix or OTP configuration is a variant.
+poe_pd:
+  proximity: 3
+  tech: [HV BCD]
+  reasoning: >-
+    Skyworks Si340x PoE powered-device controllers are in production.
+poe_pse:
+  proximity: 3
+  tech: [HV BCD]
+  reasoning: >-
+    Skyworks Si345x PoE PSE controllers are in production.
+pol_buck:
+  proximity: 3
+  tech: [Power BCD]
+  reasoning: >-
+    Skyworks SKY872xx step-down converters and buck rails inside Qorvo ACT PMICs; a standalone point-of-load buck is a new spec of existing designs.
+pol_ldo:
+  proximity: 2
+  tech: [Power BCD]
+  reasoning: >-
+    LDOs exist only as blocks inside Qorvo ACT PMICs; standalone low-noise or high-PSRR LDO families would need new product definition and test.
+position_interface:
+  proximity: 1
+  tech: [Precision analog]
+  reasoning: >-
+    Qorvo PAC motor SoCs provide motor-control analog and Skyworks isolated modulators sense signals, but resolver excitation/RDC interfaces would be mostly new.
+position_sensor:
+  proximity: 1
+  tech: [Magnetic sensing]
+  reasoning: >-
+    No Hall/inductive/AMR sensor line (Si72xx Hall sensors stayed with Silicon Labs); only the PAC motor-control signal chain is shared.
+power_amplifier:
+  proximity: 3
+  tech: [GaAs HBT, GaN]
+  reasoning: >-
+    Skyworks GaAs HBT PAs and Qorvo GaAs/GaN PAs, including massive-MIMO drivers, are core products.
+power_fets:
+  proximity: 1
+  tech: [GaN-on-SiC (RF)]
+  reasoning: >-
+    Qorvo GaN is optimized for RF, not power switching, and the SiC FET business was sold to onsemi (Jan 2025); power FETs would be largely new.
+power_loss_protection:
+  proximity: 3
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo ACT4910 power-loss-protection ICs for SSDs are in production; new hold-up/eFuse specs are variants.
+power_module:
+  proximity: 0
+  tech: [n/a]
+  reasoning: >-
+    IGBT/SiC power modules; Qorvo's SiC business was sold to onsemi, so no current base.
+pre_regulator:
+  proximity: 2
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo buck and buck-boost converters cover the topology; automotive SEPIC/boost pre-regulators with AEC-Q100 and EMC specs are new specs.
+radar_transceiver:
+  proximity: 1
+  tech: [SiGe/CMOS mmWave, UWB]
+  reasoning: >-
+    Anokiwave mmWave and Qorvo UWB radar sensing give a base, but 60/77 GHz radar SoCs with DSP and chirp generation are mostly new.
+redriver:
+  proximity: 1
+  tech: [High-speed analog]
+  reasoning: >-
+    Linear equalization is related to broadband RF/optical amplifiers, but protocol-aware USB/PCIe redrivers are a new product type.
+reverse_polarity:
+  proximity: 1
+  tech: [Power BCD]
+  reasoning: >-
+    Ideal-diode controllers share charge-pump and gate-drive blocks with PMIC/eFuse work, but neither company has a product line in this area.
+rf_attenuator:
+  proximity: 3
+  tech: [GaAs pHEMT, SOI, PIN diode]
+  reasoning: >-
+    Qorvo and Skyworks digital, voltage-variable and fixed attenuators are in production.
+rf_frontend:
+  proximity: 3
+  tech: [GaAs HBT, SOI, BAW/SAW]
+  reasoning: >-
+    Skyworks and Qorvo front-end modules (FEMs, DRx, PAMiD) are core products.
+rf_gain_block:
+  proximity: 3
+  tech: [GaAs HBT, GaN]
+  reasoning: >-
+    Qorvo and Skyworks gain blocks, VGAs and CATV/broadband amplifiers are in production.
+rf_limiter:
+  proximity: 3
+  tech: [PIN diode, GaN]
+  reasoning: >-
+    Skyworks limiter diodes/modules and Qorvo RF power limiters are in production.
+rf_mixer:
+  proximity: 3
+  tech: [GaAs, SiGe]
+  reasoning: >-
+    Qorvo and Skyworks mixers, modulators and demodulators are in production.
+rf_pa_bias:
+  proximity: 3
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo ACT43750 GaN/GaAs drain-switch driver / gate-bias regulator is in production; new channel counts or voltages are variants.
+rf_passive:
+  proximity: 3
+  tech: [IPD, Silicon capacitors, Ceramics]
+  reasoning: >-
+    Skyworks MIS silicon capacitors, power splitters and Trans-Tech ceramics plus Qorvo gain equalizers are in production.
+rf_phase_shifter:
+  proximity: 3
+  tech: [GaAs pHEMT, SOI]
+  reasoning: >-
+    Qorvo digital phase shifters (and Skyworks phase shifters) are in production.
+rf_predriver:
+  proximity: 3
+  tech: [GaAs HBT, SiGe]
+  reasoning: >-
+    Skyworks and Qorvo driver amplifiers for macro and small-cell base stations are in production.
+rf_switch:
+  proximity: 3
+  tech: [SOI, GaAs pHEMT, GaN]
+  reasoning: >-
+    Skyworks and Qorvo SOI, GaAs and GaN RF switches are in production.
+rf_synthesizer:
+  proximity: 3
+  tech: [SiGe, RF CMOS]
+  reasoning: >-
+    Qorvo RFFC50xx synthesizers / VCOs and Skyworks SKY72310 / Si4133 synthesizers exist; Skyworks timing PLL know-how supports new parts.
+rf_transceiver:
+  proximity: 3
+  tech: [UWB CMOS, SiGe]
+  reasoning: >-
+    Qorvo ships UWB transceivers (QM33110) and Anokiwave 24-30 GHz IF transceivers; cellular RFICs would be distant (1).
+rs485_transceiver:
+  proximity: 3
+  tech: [Digital isolation, Interface PHY]
+  reasoning: >-
+    Skyworks isolated RS-485 transceivers are in production; a non-isolated variant reuses the PHY.
+rtc:
+  proximity: 2
+  tech: [Timing, Low-power CMOS]
+  reasoning: >-
+    Skyworks timing know-how covers oscillators and frequency control; an ultra-low-power 32 kHz RTC with backup switchover is a new, simple product.
+schottky_diode:
+  proximity: 3
+  tech: [Discrete diode]
+  reasoning: >-
+    Skyworks Schottky, detector and mixer diode lines are in production.
+secure_element:
+  proximity: 1
+  tech: [Secure digital CMOS]
+  reasoning: >-
+    Qorvo UWB/BLE SoCs carry security blocks, but certified secure elements (CC EAL5+, applets) are a different business.
+sequencer:
+  proximity: 2
+  tech: [Power BCD, PMIC]
+  reasoning: >-
+    Power sequencing is built into Qorvo ACT PMICs; a standalone multi-rail sequencer/monitor is a new product on known blocks.
+serdes:
+  proximity: 1
+  tech: [High-speed CMOS]
+  reasoning: >-
+    Skyworks timing jitter know-how and Qorvo optical drivers help, but multi-Gb/s SerDes / video link chips are mostly new.
+single_chip_radio:
+  proximity: 3
+  tech: [RF CMOS]
+  reasoning: >-
+    Skyworks Si47xx consumer AM/FM and multiband radios are in production.
+slic:
+  proximity: 3
+  tech: [HV BiCMOS]
+  reasoning: >-
+    Skyworks ProSLIC subscriber line interfaces are in production.
+soc:
+  proximity: 0
+  tech: [Leading-edge digital]
+  reasoning: >-
+    Application processors need leading-edge digital process, CPU/GPU IP and software; no base.
+supervisor:
+  proximity: 2
+  tech: [Power BCD]
+  reasoning: >-
+    Reset/monitoring blocks exist inside Qorvo PMICs and PAC motor/BMS SoCs; standalone voltage supervisors would be a new, simple product line.
+temperature_sensor:
+  proximity: 2
+  tech: [Precision analog, Digital isolation]
+  reasoning: >-
+    Skyworks isolated amplifiers/modulators already measure NTC/diode signals across the barrier; standalone digital temperature sensors would be adjacent but new.
+termination_ldo:
+  proximity: 2
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo PMICs for SSDs and processors power DDR rails; a source/sink VTT termination regulator is a new block on the same process.
+three_phase_gate_driver:
+  proximity: 3
+  tech: [HV BCD, Gate driver]
+  reasoning: >-
+    Qorvo PAC5xxx motor SoCs integrate 3-phase gate drivers and current-sense amplifiers; a standalone smart gate driver reuses these blocks.
+touch_controller:
+  proximity: 1
+  tech: [Mixed-signal sensing]
+  reasoning: >-
+    Qorvo MEMS force-sensing (NextInput heritage) is related, but capacitive touch-panel controllers with large AFE arrays and firmware are mostly new.
+tv_demodulator:
+  proximity: 3
+  tech: [Mixed-signal CMOS, DSP]
+  reasoning: >-
+    Skyworks Si216x/Si218x DVB and ISDB-T demodulators are in production.
+tv_tuner:
+  proximity: 3
+  tech: [RF CMOS]
+  reasoning: >-
+    Skyworks Si21xx TV/STB tuners (Silicon Labs heritage) are in production.
+tvs_esd:
+  proximity: 1
+  tech: [Discrete diode]
+  reasoning: >-
+    Skyworks makes RF diodes and limiters, but high-volume TVS/ESD arrays are a commodity discrete business with different process and cost structure.
+ufs_storage:
+  proximity: 0
+  tech: [Memory, Digital controller]
+  reasoning: >-
+    Managed NAND storage needs NAND and controller firmware; unrelated (Qorvo only powers SSDs with PMICs).
+ultrasonic_afe:
+  proximity: 1
+  tech: [Analog front end]
+  reasoning: >-
+    Qorvo UWB and RF know-how and BAW piezo experience help, but multi-channel ultrasound/ultrasonic AFEs with high-voltage pulsers are mostly new.
+usb_pd_controller:
+  proximity: 1
+  tech: [Power BCD, Digital protocol]
+  reasoning: >-
+    Qorvo chargers and PMICs with OVP cover the power path, but USB-PD protocol, certification and firmware would be new.
+uwb_fem:
+  proximity: 3
+  tech: [SOI, GaAs]
+  reasoning: >-
+    Qorvo UWB front ends and both companies' SOI switches/LNAs cover this; new AoA antenna-switching configurations are variants.
+uwb_soc:
+  proximity: 3
+  tech: [UWB CMOS]
+  reasoning: >-
+    Qorvo (Decawave heritage) DW3000 / QM33 UWB transceivers and modules are in production.
+v2x_fem:
+  proximity: 3
+  tech: [SOI, GaAs HBT]
+  reasoning: >-
+    Skyworks and Qorvo 5.9 GHz V2X front ends / compensators are in production.
+v2x_transceiver:
+  proximity: 1
+  tech: [RF CMOS, Digital modem]
+  reasoning: >-
+    V2X FEMs exist, but DSRC/C-V2X modems need baseband and protocol stacks that neither company has.
+varactor_diode:
+  proximity: 3
+  tech: [Discrete diode]
+  reasoning: >-
+    Skyworks abrupt and hyperabrupt varactor line is in production.
+vehicle_sensors:
+  proximity: 1
+  tech: [Sensing]
+  reasoning: >-
+    Wheel-speed and similar sensors need magnetic sensing; only UWB/radar and motor-control know-how is shared.
+voltage_reference:
+  proximity: 2
+  tech: [Precision analog]
+  reasoning: >-
+    Bandgap references exist inside PMICs and Skyworks isolated amplifiers; precision standalone references (trim, drift, packaging stress) are a new specialty.
+voltage_translator:
+  proximity: 1
+  tech: [Logic CMOS]
+  reasoning: >-
+    Simple logic-level translation; isolator I/O cells are related, but neither company has a standard-logic line.
+watchdog:
+  proximity: 2
+  tech: [Mixed-signal CMOS]
+  reasoning: >-
+    Watchdog/reset logic exists inside Qorvo PMICs and PAC SoCs; a standalone (window) watchdog is a new but simple product.
+wide_vin_buck:
+  proximity: 3
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo (Active-Semi) ACT4xxx / ACT41000 non-sync and sync wide-Vin bucks are in production; higher voltage or current ratings are new variants.
+wifi_fem:
+  proximity: 3
+  tech: [GaAs HBT, SOI, BAW]
+  reasoning: >-
+    Skyworks and Qorvo Wi-Fi 6/7 FEMs are a large production line.
+wifi_soc:
+  proximity: 1
+  tech: [RF CMOS, Digital SoC]
+  reasoning: >-
+    Qorvo QPG 2.4 GHz SoCs and Wi-Fi FEM know-how help, but a Wi-Fi 6/7 baseband/MAC SoC is mostly new.
+wireless_audio_soc:
+  proximity: 3
+  tech: [RF CMOS SoC, DSP]
+  reasoning: >-
+    Skyworks SKY76303 / SKY7636x wireless audio and gaming SoCs are in production.
+wireless_charging_rx:
+  proximity: 1
+  tech: [Power BCD]
+  reasoning: >-
+    Qorvo charger/PMIC rectification and regulation are related, but Qi receiver rectifiers and protocol are new.
+wireless_charging_tx:
+  proximity: 1
+  tech: [Power BCD, Digital control]
+  reasoning: >-
+    Power conversion and gate-drive blocks exist (PAC, ACT), but Qi transmitter control, FOD and certification would be new.
+wireless_soc:
+  proximity: 3
+  tech: [RF CMOS SoC, UWB]
+  reasoning: >-
+    Qorvo QPG Matter/Thread/Zigbee SoCs and UWB SoCs are in production.

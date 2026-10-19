@@ -42,3 +42,28 @@ def test_markets_competition_and_gap_rows(client):
                  "/business/gaps?sort=crowding"):  # fmt: skip
         assert client.get(path).status_code == 200, path
     assert "How to read this" in client.get("/business").text
+
+
+def test_technology_fit_and_cases(client):
+    assert "Technology fit" in client.get("/business/technology").text
+    for v in ("develop", "low_attach", "chips"):
+        assert client.get(f"/business/technology?view={v}").status_code == 200
+    assert "Not our product type" in client.get("/business/applications/1").text
+    page = client.get("/business/cases/new?fn=pol_ldo").text
+    assert "What Cross List knows" in page and "PoL LDO" in page
+    r = client.post("/business/cases", data={"title": "Automotive PoL LDO", "fn": "pol_ldo", "question": "Develop it?",
+                                              "features": "3 A – fewer parts"})  # fmt: skip
+    assert r.status_code in (200, 303)
+    lst = client.get("/business/cases").text
+    assert "Automotive PoL LDO" in lst
+    import re
+
+    cid = int(re.search(r"/business/cases/(\d+)", lst).group(1))
+    brief = client.get(f"/business/cases/{cid}/brief.md").text
+    assert "Market analysis task: Automotive PoL LDO" in brief and "Develop it?" in brief and "door openers" in brief
+    client.post(f"/business/cases/{cid}", data={"act": "note", "kind": "upside", "text": "Reuses PMIC LDO IP"})
+    client.post(f"/business/cases/{cid}", data={"act": "analysis", "analysis": "Market grows."})
+    page = client.get(f"/business/cases/{cid}").text
+    assert "Reuses PMIC LDO IP" in page and "Market grows." in page
+    client.post(f"/business/cases/{cid}", data={"act": "delete"})
+    assert client.get(f"/business/cases/{cid}").status_code == 404

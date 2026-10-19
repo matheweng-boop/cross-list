@@ -72,6 +72,8 @@ SECTIONS = (
                                                        ("Markets", "/business/markets"),
                                                        ("Attach", "/business/attach"),
                                                        ("Gaps & ranking", "/business/gaps"),
+                                                       ("Technology fit", "/business/technology"),
+                                                       ("Case analysis", "/business/cases"),
                                                        ("TAM data", "/business/data")]),
 )  # fmt: skip
 SECTION_PREFIXES = {

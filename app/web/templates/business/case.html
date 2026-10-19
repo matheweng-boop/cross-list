@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import crowd %}
+{% block title %}{{ title or 'New case' }} – Case analysis – Cross List{% endblock %}
+{% block content %}
+<p class="small"><a href="/business/cases">← All cases</a></p>
+<h1>{{ title or 'New case' }}</h1>
+{% if case %}<form method="post" action="/business/cases/{{ case.id }}" class="case-status">
+  <input type="hidden" name="act" value="status">
+  {% for k, label in statuses.items() %}<button type="submit" name="status" value="{{ k }}" class="fchip case-st cs-{{ k }}{{ ' on' if case.status == k }}">{{ loop.index }} · {{ label }}</button>{% endfor %}
+</form>{% endif %}
+
+<div class="case-grid">
+<section>
+  <h2 id="inputs">1 · Inputs and features</h2>
+  <form method="post" action="{{ '/business/cases/' ~ case.id if case else '/business/cases' }}" class="case-form">
+    <input type="hidden" name="act" value="inputs">
+    <label>Title <input name="title" value="{{ title }}" required placeholder="e.g. Automotive 3 A PoL LDO"></label>
+    <label>Function <select name="fn"><option value="">none (free topic)</option>
+      {% for k, flabel in fn_choices %}<option value="{{ k }}"{{ ' selected' if k == fn }}>{{ flabel }}</option>{% endfor %}</select></label>
+    {% for key, label, help, rows in fields %}
+    <label>{{ label }} <small class="muted">{{ help }}</small>
+      {% if rows > 1 %}<textarea name="{{ key }}" rows="{{ rows }}">{{ values.get(key, '') }}</textarea>{% else %}<input name="{{ key }}" value="{{ values.get(key, '') }}">{% endif %}</label>
+    {% endfor %}
+    <button type="submit">{{ 'Save inputs' if case else 'Create case' }}</button>
+  </form>
+</section>
+
+<aside>
+  <h2>What Cross List knows</h2>
+  {% if ctx %}
+  <ul class="small case-facts">
+    <li><b>{{ ctx.label }}</b> · {{ ctx.portfolio }}: {{ bo_status_help[ctx.status] }}</li>
+    <li>Appears in <b>{{ ctx.apps|length }}</b> of {{ ctx.n_apps }} application diagrams, <b>{{ ctx.sockets }}</b> sockets.</li>
+    <li><b>{{ ctx.door }}</b> of those already use another of our parts (door openers).</li>
+    <li>Markets: {{ ctx.markets|join(', ') or '–' }}</li>
+    {% if ctx.nearby %}<li>Our products next to it: {% for n, k in ctx.nearby %}{{ n }} ({{ k }}){{ ', ' if not loop.last }}{% endfor %}</li>{% endif %}
+    <li>Competition: {{ crowd(ctx.competition, {'low': 'Few suppliers', 'medium': 'Several suppliers', 'high': 'Crowded'}) }}
+      {% if ctx.competition and ctx.competition.vendors %}<br><span class="muted">{{ ctx.competition.vendors|join(', ') }}</span>{% endif %}</li>
+    {% if ctx.technology %}<li>Technology: <span class="bo-prox px-{{ ctx.technology.proximity }}">{{ {3: 'Same technology', 2: 'Adjacent', 1: 'Distant', 0: 'Unrelated'}[ctx.technology.proximity] }}</span>
+      {{ ctx.technology.reasoning }}</li>{% endif %}
+  </ul>
+  {% else %}<p class="small muted">Pick a function to pull in occurrence, door openers, competition and technology fit.</p>{% endif %}
+</aside>
+</div>
+
+{% if case %}
+<h2 id="brief">2 · Analysis brief for the AI</h2>
+<p class="small muted">The brief combines your inputs with the Cross List facts. Copy it into Claude (or another assistant with web research) and paste the
+  answer below. Cross List itself sends nothing to any outside service.</p>
+<div class="case-brief-tools"><button type="button" class="small-btn" id="case-copy">Copy brief</button>
+  <a class="small" href="/business/cases/{{ case.id }}/brief.md" download="case-{{ case.id }}-brief.md">Download .md</a> <span id="case-copied" class="small muted"></span></div>
+<pre class="case-brief" id="case-brief">{{ brief }}</pre>
+
+<h2 id="analysis">3 · Analysis result</h2>
+<form method="post" action="/business/cases/{{ case.id }}">
+  <input type="hidden" name="act" value="analysis">
+  <textarea name="analysis" rows="{{ 14 if case.analysis else 6 }}" placeholder="Paste the AI's market analysis here">{{ case.analysis }}</textarea>
+  <button type="submit" class="small-btn">Save analysis</button>
+</form>
+
+<h2 id="note">4 · Discussion: upsides, risks, features</h2>
+<div class="case-notes">
+  {% for k, label in kinds.items() %}
+  <section class="case-col"><h3>{{ label }}s <small class="muted">{{ case.notes|selectattr('kind', 'eq', k)|list|length }}</small></h3>
+    {% for n in case.notes if n.kind == k %}<div class="case-note nk-{{ k }}">{{ n.text }}<small class="muted">{{ n.author or 'anonymous' }} · {{ n.created_at.strftime('%Y-%m-%d') }}
+      <form method="post" action="/business/cases/{{ case.id }}" class="inline"><input type="hidden" name="act" value="delnote"><input type="hidden" name="note" value="{{ n.id }}"><button type="submit" class="link-btn" title="Remove">×</button></form></small></div>
+    {% else %}<p class="small muted">none yet</p>{% endfor %}
+  </section>{% endfor %}
+</div>
+<form method="post" action="/business/cases/{{ case.id }}" class="case-addnote">
+  <input type="hidden" name="act" value="note">
+  <select name="kind" aria-label="Kind">{% for k, label in kinds.items() %}<option value="{{ k }}">{{ label }}</option>{% endfor %}</select>
+  <input name="text" required placeholder="Add a point, e.g. 'Reuses our 2.5 kV isolation process'">
+  <input name="author" placeholder="Your name (optional)" class="case-author">
+  <button type="submit" class="small-btn">Add</button>
+</form>
+<form method="post" action="/business/cases/{{ case.id }}" onsubmit="return confirm('Delete this case?')"><input type="hidden" name="act" value="delete"><button type="submit" class="outline secondary small-btn">Delete case</button></form>
+<script>
+document.getElementById("case-copy").onclick = async () => {
+  const t = document.getElementById("case-brief").textContent, out = document.getElementById("case-copied");
+  try { await navigator.clipboard.writeText(t); out.textContent = "Copied"; } catch (e) { out.textContent = "Select the text and copy it manually"; }
+};
+</script>
+{% endif %}
+{% endblock %}

@@ -117,7 +117,7 @@ No JavaScript errors on any page visited.
 
 ## 6. Migration and deployment (not executed)
 
-- No destructive migration. Two new tables (`business_assumptions`, already-existing review tables) are created by
+- No destructive migration. One new table (`business_assumptions`) is created by
   `create_all` at start-up; existing records and review history are untouched.
 - Merge `redesign` into `main` when reviewed; Render redeploys from `main` automatically.
 - Optional infrastructure, needs Render access: if 502s continue after this release, look at the Render logs for

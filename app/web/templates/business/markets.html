@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import company_switch, status_chip %}
+{% block title %}Markets – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>One product, several markets</h1>
+<p class="subtitle muted">Each function and the end markets whose applications need it. A product that already sells in one market can be
+  offered in the others; an industrial or commercial part that automotive applications also need is a qualification opportunity
+  (AEC-Q100 instead of a new design).</p>
+{{ company_switch('/business/markets', co, companies, '&view=' ~ view) }}
+<div class="chip-row"><span class="chip-lbl">Show</span>
+  <a class="fchip{{ ' on' if view == 'all' }}" href="/business/markets?co={{ co }}&view=all">All functions</a>
+  <a class="fchip{{ ' on' if view == 'multi' }}" href="/business/markets?co={{ co }}&view=multi">Needed in 2+ markets <small>{{ n_multi }}</small></a>
+  <a class="fchip{{ ' on' if view == 'requalify' }}" href="/business/markets?co={{ co }}&view=requalify">Qualify for automotive <small>{{ n_requalify }}</small></a>
+</div>
+<div class="table-wrap"><table class="striped bo-markets">
+  <thead><tr><th>Function</th><th>Our position</th><th>Our parts<br><small class="muted">of them automotive</small></th>
+    {% for m in markets %}<th class="bo-mk">{{ m }}<br><small class="muted">{{ per_market[m] }} apps</small></th>{% endfor %}</tr></thead>
+  <tbody>{% for e in rows %}<tr>
+    <td><b>{{ e.label }}</b>{% if e.requalify %}<br><span class="bo-requal">industrial part → qualify for automotive</span>{% endif %}</td>
+    <td>{{ status_chip(e.status, status_label) }}</td>
+    <td>{% if e.parts %}{{ e.parts }} <span class="muted">/ {{ e.auto_parts }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
+    {% for m in markets %}{% set a = e.by_market.get(m, []) %}<td class="bo-mk">{% if a %}<details><summary><span class="bo-dot{{ ' auto' if m == 'Automotive' }}">{{ a|length }}</span></summary>
+      <div class="bo-mk-apps">{% for x in a %}<a href="/business/applications/{{ x.i }}?co={{ co }}">{{ x.name }}</a>{% endfor %}</div></details>{% endif %}</td>{% endfor %}
+  </tr>{% else %}<tr><td colspan="{{ 3 + markets|length }}">Nothing to show.</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Numbers in the market columns = applications in that market that need the function; click one to list them. Automotive =
+  vehicle systems (by application name), whatever their library category. Automotive grade comes from the public catalogue: Skyworks states
+  it for most parts, Qorvo's site rarely does, so a Qorvo part shown without it may still be qualified.</p>
+{% endblock %}

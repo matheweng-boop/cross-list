@@ -1,25 +1,34 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch, status_chip %}
+{% from "business/_common.html" import company_switch, status_chip, crowd %}
 {% block title %}Attach – Business opportunity – Cross List{% endblock %}
 {% block content %}
-<h1>Attach view</h1>
-<p class="subtitle muted">Pick an anchor: a function where {{ co_label }} already has a design-in. See the applications it sits in, which neighbouring
-  positions the portfolio can already sell into (cross-sell) and which need a new product (attach opportunity). Modeled from the
-  application diagrams, not an observed sales attach rate.</p>
+<h1>What sells next to it</h1>
+<p class="subtitle muted">Pick one of our products (a function where {{ co_label }} already has parts). The list shows the other functions that sit in
+  the same applications, and whether we can sell an existing part there or would need a new one. Modeled from the application diagrams,
+  not observed sales.</p>
 {{ company_switch('/business/attach', co, companies, '&fn=' ~ fn) }}
 <form method="get" action="/business/attach" class="bo-anchor">
   <input type="hidden" name="co" value="{{ co }}">
-  <label>Anchor function <select name="fn" onchange="this.form.submit()"><option value="">choose…</option>
-    {% for f in anchors %}<option value="{{ f }}"{{ ' selected' if f == fn }}>{{ fns[f].label }}</option>{% endfor %}</select></label>
+  <label>Our product <select name="fn" onchange="this.form.submit()"><option value="">choose…</option>
+    {% for f, k in anchors %}<option value="{{ f }}"{{ ' selected' if f == fn }}>{{ fns[f].label }} · in {{ k }} application{{ 's' if k != 1 }}</option>{% endfor %}</select></label>
 </form>
 {% if result %}
-<p><b>{{ result.apps|length }}</b> application{{ 's' if result.apps|length != 1 }} contain {{ fns[fn].label }}:
-  {% for a in result.apps %}<a href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>
-<div class="bo-two">
-  <section><h2>Cross-sell <span class="small muted">· portfolio products for the neighbouring positions</span></h2>
-    <ul class="bo-attach">{% for e in result.cross_sell %}<li><span>{{ e.label }}</span><span class="bo-bar"><span style="width:{{ (100 * e.apps / result.apps|length)|round }}%"></span></span><small>{{ e.apps }}/{{ result.apps|length }} apps · {{ e.positions }} positions</small></li>{% else %}<li class="muted">none</li>{% endfor %}</ul></section>
-  <section><h2>New-product attach <span class="small muted">· gaps and competitor-only positions next to the anchor</span></h2>
-    <ul class="bo-attach">{% for e in result.new %}<li><span>{{ e.label }} {{ status_chip(e.status, status_label) }}</span><span class="bo-bar gap"><span style="width:{{ (100 * e.apps / result.apps|length)|round }}%"></span></span><small>{{ e.apps }}/{{ result.apps|length }} apps · {{ e.positions }} positions</small></li>{% else %}<li class="muted">none</li>{% endfor %}</ul></section>
-</div>
+{% set n = result.apps|length %}
+<p>{{ fns[fn].label }} is in <b>{{ n }}</b> application{{ 's' if n != 1 }}.
+  <details class="small bo-inline"><summary>show them</summary>{% for a in result.apps %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endfor %}</details></p>
+{% set common = result.rows|selectattr('apps', 'ge', 2 if n > 3 else 1)|list %}
+{% set rare = result.rows|selectattr('apps', 'lt', 2 if n > 3 else 1)|list %}
+<div class="table-wrap"><table class="striped bo-attach-t">
+  <thead><tr><th>Also in those applications</th><th>How often</th><th>Our position</th><th>What it means</th></tr></thead>
+  <tbody>{% for e in common %}<tr>
+    <td>{{ e.label }}</td>
+    <td><span class="bo-bar{{ ' gap' if e.status != 'supported' }}"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
+    <td>{{ status_chip(e.status, status_label) }}</td>
+    <td class="small">{% if e.status == 'supported' %}Cross-sell: offer our existing part with it{% elif e.status == 'gap' %}New product: nobody in Cross List has it yet{% else %}New product: only competitors have it today{% endif %}</td>
+  </tr>{% else %}<tr><td colspan="4" class="muted">No function appears in more than one of these applications.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if rare %}<details class="small"><summary>{{ rare|length }} more that appear in only one application</summary>
+  <p>{% for e in rare %}<span class="bo-ours{{ ' bo-ours-gap' if e.status != 'supported' }}" title="{{ status_label[e.status] }}">{{ e.label }}</span>{% endfor %}</p></details>{% endif %}
+<p class="small muted">Blue = we have a part; amber = new product needed. Sorted by how often the function appears with {{ fns[fn].label }}.</p>
 {% endif %}
 {% endblock %}

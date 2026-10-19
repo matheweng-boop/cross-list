@@ -69,6 +69,7 @@ SECTIONS = (
                                               ("Configurations", "/broadcast/configurations")]),
     ("business", "Business opportunity", "/business", [("Overview", "/business"),
                                                        ("Applications", "/business/applications"),
+                                                       ("Markets", "/business/markets"),
                                                        ("Attach", "/business/attach"),
                                                        ("Gaps & ranking", "/business/gaps"),
                                                        ("TAM data", "/business/data")]),

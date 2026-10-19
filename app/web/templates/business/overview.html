@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, company_switch %}
+{% from "business/_common.html" import pct, company_switch, crowd, glossary %}
 {% block title %}Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Business opportunity</h1>
@@ -23,10 +23,14 @@
   <li class="part"><b>5 · Rank product concepts</b><span>Ranked by application reach, design-in positions and adjacency to existing portfolio positions; TAM joins as ASPs and volumes are entered.</span><a href="/business/data?co={{ co }}">TAM data</a></li>
 </ol>
 
-<h2>Top gaps <span class="small muted">· by application reach</span></h2>
+<h2>Top gaps <span class="small muted">· missing functions needed by the most applications</span></h2>
+{{ glossary(co_label) }}
 <div class="table-wrap"><table class="striped">
-  <thead><tr><th>Function</th><th>Applications</th><th>With an existing portfolio anchor</th><th>Design-in positions</th></tr></thead>
-  <tbody>{% for e in top_gaps %}<tr><td><a href="/business/gaps?co={{ co }}#fn-{{ e.fn }}">{{ e.label }}</a></td><td>{{ e.reach }}/{{ ov.apps }}</td><td>{{ e.adjacent }}/{{ e.reach }}</td><td>{{ e.positions }}</td></tr>{% endfor %}</tbody>
+  <thead><tr><th>Missing function</th><th>Needed in</th><th>Door opener<br><small class="muted">already use one of our parts</small></th><th>Sockets</th><th>Competition</th></tr></thead>
+  <tbody>{% for e in top_gaps %}<tr><td><a href="/business/gaps?co={{ co }}#fn-{{ e.fn }}">{{ e.label }}</a></td>
+    <td>{{ e.reach }} of {{ ov.apps }} applications</td><td>{{ e.adjacent }} of those {{ e.reach }}</td><td>{{ e.positions }}</td>
+    <td>{{ crowd(e.competition, crowding_label) }}</td></tr>{% endfor %}</tbody>
 </table></div>
+<p class="small">Open <a href="/business/gaps?co={{ co }}">Gaps &amp; ranking</a> for the applications behind each number.</p>
 <p class="small muted">Modeled from the application diagrams; not observed sales attach rates or verified market share.</p>
 {% endblock %}

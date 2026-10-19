@@ -18,9 +18,13 @@ Commercial data (ASP per function, annual volume per application) is optional. C
 needs it; revenue-weighted figures use only the priced positions and always come with their completeness.
 """
 
+import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
 
+import yaml
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -33,6 +37,8 @@ COMPANIES = {
     "qorvo": ("Qorvo", frozenset({"Qorvo"})),
 }
 IN_SCOPE = ("supported", "gap", "competitor")
+CROWDING_LABEL = {"low": "Few suppliers", "medium": "Several suppliers", "high": "Crowded"}
+_COMPETITION = Path(__file__).resolve().parents[2] / "data" / "business" / "competition.yaml"
 STATUS_LABEL = {"supported": "Portfolio", "gap": "Gap (opportunity)", "competitor": "Competitor only",
                 "na": "Outside scope", "unknown": "Unknown"}  # fmt: skip
 
@@ -100,6 +106,20 @@ class Application:
     name: str
     category: str
     positions: list[Position]
+    market: str = ""  # end market: Automotive when the application is a vehicle system, else its category
+
+
+_AUTO_APP = re.compile(
+    r"automotive|vehicle|\bcar\b|HEV|\bEV\b|ADAS|V2X|infotainment|telematics|cockpit|radar|phone-as-a-key", re.I
+)
+
+
+def market_of(name: str, category: str) -> str:
+    """Vehicle systems by name (parentheticals ignored: "client / IoT / automotive module" is not one; light EVs are
+    e-bikes and scooters)."""
+    core = re.sub(r"\([^()]*\)", "", name)
+    auto = category.startswith("Automotive") or (_AUTO_APP.search(core) and "Light EV" not in core)
+    return "Automotive" if auto else category
 
 
 def applications() -> list[Application]:
@@ -116,7 +136,8 @@ def applications() -> list[Application]:
                     qty, label = int(rest[0]) if rest else 1, ""
                 fn = fn.strip()
                 pos.append(Position(fn, label or (cat.get(fn) or {}).get("label", fn), g.get("label", ""), qty))
-        out.append(Application(i, blocks.display_name(t), t.get("category") or "Other", pos))
+        category = t.get("category") or "Other"
+        out.append(Application(i, blocks.display_name(t), category, pos, market_of(t.get("name", ""), category)))
     return out
 
 
@@ -195,7 +216,9 @@ def attach(apps: list[Application], anchor: str) -> dict:
             e["positions"] += sum(x.qty for x in a.positions if x.fn == fn)
             e["names"].append(a.name)
     rows = sorted(seen.values(), key=lambda e: (-e["apps"], e["label"]))
-    return {"apps": with_anchor, "cross_sell": [e for e in rows if e["status"] == "supported"],
+    for e in rows:
+        e["share"] = e["apps"] / len(with_anchor)
+    return {"apps": with_anchor, "rows": rows, "cross_sell": [e for e in rows if e["status"] == "supported"],
             "new": [e for e in rows if e["status"] != "supported"]}  # fmt: skip
 
 
@@ -212,11 +235,15 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
             ps = [p for p in a.positions if p.fn == fn]
             e = out.setdefault(fn, {"fn": fn, "label": (cat.get(fn) or {}).get("label", fn), "status": ps[0].status,
                                     "category": (cat.get(fn) or {}).get("category", ""), "reach": 0, "positions": 0,
-                                    "adjacent": 0, "tam": 0.0, "tam_apps": 0, "apps": []})  # fmt: skip
+                                    "adjacent": 0, "tam": 0.0, "tam_apps": 0, "apps": [], "rows": [],
+                                    "competition": competition().get(fn)})  # fmt: skip
             e["reach"] += 1
             e["positions"] += sum(p.qty for p in ps)
             e["adjacent"] += 1 if anchor else 0
             e["apps"].append(a.name)
+            ours = sorted({(cat.get(p.fn) or {}).get("label", p.fn) for p in a.positions if p.status == "supported"})
+            qty = sum(p.qty for p in ps)
+            e["rows"].append({"i": a.i, "name": a.name, "market": a.market, "qty": qty, "ours": ours})
             if fn in asp and a.name in vol:
                 e["tam"] += vol[a.name] * sum(p.qty for p in ps) * asp[fn]
                 e["tam_apps"] += 1
@@ -256,3 +283,43 @@ def overview(apps: list[Application], asp: dict, vol: dict) -> dict:
         "asp_needed": len(in_scope_fns),
         "vol_known": sum(1 for a in apps if a.name in vol),
     }
+
+
+# ---- competition (indicative, public catalogues) ---------------------------------------------------------
+@lru_cache
+def competition() -> dict[str, dict]:
+    """Established suppliers per function from public catalogues: {fn: {crowding, vendors, note}}. Not market share."""
+    return (yaml.safe_load(_COMPETITION.read_text()) if _COMPETITION.exists() else None) or {}
+
+
+# ---- markets: one function across end markets ------------------------------------------------------------
+def is_auto_part(c: dict) -> bool:
+    return (c.get("values") or {}).get("qualification") == "automotive"
+
+
+def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:
+    """Per function: the end markets (and applications) that need it, how many portfolio parts exist and how many
+    are automotive qualified. Qualification opportunity = automotive applications need it, the portfolio has parts,
+    but none is automotive qualified (an industrial / commercial part that could be requalified)."""
+    cat = blocks.catalogue()["functions"]
+    names = sorted({a.market for a in apps}, key=lambda m: (m != "Automotive", m))
+    rows: dict[str, dict] = {}
+    for a in apps:
+        for p in a.positions:
+            if p.status not in IN_SCOPE:
+                continue
+            label = (cat.get(p.fn) or {}).get("label", p.fn)
+            e = rows.setdefault(p.fn, {"fn": p.fn, "label": label, "status": p.status, "by_market": defaultdict(list)})
+            if a not in e["by_market"][a.market]:
+                e["by_market"][a.market].append(a)
+    for fn, e in rows.items():
+        cands = [c for c in (blocks._candidates(session, fn) or []) if c["manufacturer"] in mine]
+        e["parts"] = len(cands)
+        e["auto_parts"] = sum(is_auto_part(c) for c in cands)
+        e["n_markets"] = len(e["by_market"])
+        e["n_apps"] = sum(len(v) for v in e["by_market"].values())
+        auto_need = bool(e["by_market"].get("Automotive"))
+        e["requalify"] = auto_need and e["parts"] > 0 and e["auto_parts"] == 0
+        e["by_market"] = dict(e["by_market"])
+    out = sorted(rows.values(), key=lambda e: (-e["n_markets"], -e["n_apps"], e["label"]))
+    return {"markets": names, "rows": out, "apps_per_market": Counter(a.market for a in apps)}

@@ -29,3 +29,16 @@ def test_pages_and_inputs(client):
     assert 'value="2.8"' not in client.get("/business/data").text
     attach = client.get("/business/attach?fn=gate_driver").text
     assert "Cross-sell" in attach or "choose" in attach
+
+
+def test_markets_competition_and_gap_rows(client):
+    assert op.market_of("HEV/EV on-board charger", "Power & isolation") == "Automotive"
+    assert op.market_of("Wi-Fi 6 combo (client / IoT / automotive module)", "RF & connectivity") == "RF & connectivity"
+    assert op.market_of("Light EV BLDC drive, 48 V", "Motor drives") == "Motor drives"
+    comp = op.competition()
+    assert comp and all(e["crowding"] in op.CROWDING_LABEL for e in comp.values())
+    assert not any(v in ("Skyworks", "Qorvo") for e in comp.values() for v in e["vendors"])
+    for path in ("/business/markets", "/business/markets?view=requalify", "/business/markets?view=multi",
+                 "/business/gaps?sort=crowding"):  # fmt: skip
+        assert client.get(path).status_code == 200, path
+    assert "How to read this" in client.get("/business").text

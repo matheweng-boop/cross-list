@@ -1,33 +1,44 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, usd, company_switch, status_chip %}
+{% from "business/_common.html" import pct, usd, company_switch, status_chip, crowd, glossary %}
 {% block title %}Gaps & ranking – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Gaps &amp; ranking</h1>
-<p class="subtitle muted">Every function that is a gap or competitor-only for {{ co_label }} in at least one application, ranked. Application reach =
-  applications that need it; with anchor = of those, how many already have a {{ co_label }} position (attach-addressable);
-  TAM only where ASP and application volumes are known.</p>
+<p class="subtitle muted">Functions {{ co_label }} has no part for, in at least one application. Click a row to see the applications, how many
+  sockets each has and which of our parts it already uses.</p>
 {{ company_switch('/business/gaps', co, companies, '&sort=' ~ sort) }}
+{{ glossary(co_label) }}
 <div class="chip-row"><span class="chip-lbl">Sort by</span>
-  {% for k, label in [('reach', 'Application reach'), ('adjacency', 'Existing anchor share'), ('positions', 'Design-in positions'), ('tam', 'TAM')] %}
+  {% for k, label in [('reach', 'Needed in most applications'), ('adjacency', 'Most door openers'), ('positions', 'Most sockets'), ('crowding', 'Least crowded'), ('tam', 'TAM')] %}
   <a class="fchip{{ ' on' if sort == k }}" href="/business/gaps?co={{ co }}&sort={{ k }}">{{ label }}</a>{% endfor %}
 </div>
-<div class="table-wrap"><table class="striped bo-gaps">
-  <thead><tr><th>Function</th><th>Status</th><th>Application reach</th><th>With portfolio anchor</th><th>Design-in positions</th><th>TAM / year</th></tr></thead>
-  <tbody>{% for e in rows %}
-    <tr id="fn-{{ e.fn }}"><td><b>{{ e.label }}</b><details class="small"><summary>applications</summary>{{ e.apps|join(', ') }}</details></td>
-      <td>{{ status_chip(e.status, status_label) }}</td>
-      <td>{{ e.reach }}/{{ apps|length }}</td>
-      <td><div class="bo-bar"><span style="width:{{ (e.adjacency * 100)|round }}%"></span></div> {{ e.adjacent }}/{{ e.reach }}</td>
-      <td>{{ e.positions }}</td>
-      <td class="small">{% if e.tam_apps %}{{ usd(e.tam) }} <span class="muted">({{ e.tam_apps }}/{{ e.reach }} apps with data)</span>{% else %}<span class="muted">insufficient data</span>{% endif %}</td></tr>
-  {% endfor %}</tbody>
-</table></div>
+<div class="bo-gap-list">
+  <div class="bo-gap-head small"><span>Missing function</span><span>Needed in</span><span>Door opener</span><span>Sockets</span><span>Competition</span><span>TAM / year</span></div>
+  {% for e in rows %}
+  <details class="bo-gap" id="fn-{{ e.fn }}">
+    <summary><span><b>{{ e.label }}</b> {{ status_chip(e.status, status_label) }}</span>
+      <span>{{ e.reach }} of {{ apps|length }}</span>
+      <span><span class="bo-bar"><span style="width:{{ (e.adjacency * 100)|round }}%"></span></span> {{ e.adjacent }}/{{ e.reach }}</span>
+      <span>{{ e.positions }}</span>
+      <span>{{ crowd(e.competition, crowding_label) }}</span>
+      <span class="small">{% if e.tam_apps %}{{ usd(e.tam) }}{% else %}<span class="muted">no data</span>{% endif %}</span></summary>
+    <div class="bo-gap-body">
+      {% if e.competition %}<p class="small"><b>Who sells it:</b> {{ e.competition.vendors|join(', ') }}{% if e.competition.note %}<br><span class="muted">{{ e.competition.note }}</span>{% endif %}</p>{% endif %}
+      <table class="bo-mini"><thead><tr><th>Application</th><th>Market</th><th>Sockets</th><th>Already uses our</th></tr></thead><tbody>
+      {% for r in e.rows|sort(attribute='name') %}<tr><td><a href="/business/applications/{{ r.i }}?co={{ co }}">{{ r.name }}</a></td><td>{{ r.market }}</td><td>{{ r.qty }}</td>
+        <td>{% if r.ours %}<b>{{ r.ours|length }}</b> of our functions: {% for o in r.ours[:4] %}<span class="bo-ours">{{ o }}</span>{% endfor %}{% if r.ours|length > 4 %}<span class="muted small" title="{{ r.ours[4:]|join(', ') }}">+{{ r.ours|length - 4 }} more</span>{% endif %}{% else %}<span class="muted">none yet (no door opener)</span>{% endif %}</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+  </details>
+  {% endfor %}
+</div>
 <h2>Existing products with wide reach <span class="small muted">· push before you build</span></h2>
 <p class="small muted">Functions {{ co_label }} already covers, by how many applications need them: candidates for application engineering and
   marketing rather than a new product.</p>
 <div class="table-wrap"><table class="striped">
-  <thead><tr><th>Function</th><th>Applications</th><th>Design-in positions</th><th></th></tr></thead>
-  <tbody>{% for e in portfolio %}<tr><td>{{ e.label }}</td><td>{{ e.reach }}/{{ apps|length }}</td><td>{{ e.positions }}</td><td><a href="/business/attach?co={{ co }}&fn={{ e.fn }}">attach view</a></td></tr>{% endfor %}</tbody>
+  <thead><tr><th>Function</th><th>Needed in</th><th>Sockets</th><th></th></tr></thead>
+  <tbody>{% for e in portfolio %}<tr><td>{{ e.label }}</td><td>{{ e.reach }} of {{ apps|length }}</td><td>{{ e.positions }}</td><td><a href="/business/attach?co={{ co }}&fn={{ e.fn }}">what sells next to it</a></td></tr>{% endfor %}</tbody>
 </table></div>
-<p class="small muted">Clustering by electrical requirements (stage 4) is not applied yet: one row = one function, which may need several product variants.</p>
+<p class="small muted">One row = one function, which may need several product variants (electrical clustering is not applied yet). Competition is an
+  indicative supplier count from public catalogues, not market share; with no ASPs entered, a low-price commodity looks the same as a
+  high-value part, so keep that in mind when ranking.</p>
 {% endblock %}

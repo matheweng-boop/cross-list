@@ -1,6 +1,8 @@
 """Business opportunity pages: overview (pipeline), applications (coverage + simulator), attach, gaps & ranking,
 TAM data."""
 
+from collections import Counter
+
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -11,6 +13,7 @@ from app.services import opportunity as op
 from app.web.routes import templates
 
 router = APIRouter()
+_CROWD = {"low": 0, "medium": 1, "high": 2}
 
 
 def _ctx(session: Session, co: str) -> dict:
@@ -19,7 +22,8 @@ def _ctx(session: Session, co: str) -> dict:
     apps = op.with_status(op.applications(), mk, mine)
     asp, vol = op.inputs(session)
     return {"co": key, "co_label": label, "companies": op.COMPANIES, "apps": apps, "asp": asp, "vol": vol, "mk": mk,
-            "status_label": op.STATUS_LABEL, "fns": blocks.catalogue()["functions"]}  # fmt: skip
+            "status_label": op.STATUS_LABEL, "fns": blocks.catalogue()["functions"],
+            "crowding_label": op.CROWDING_LABEL}  # fmt: skip
 
 
 @router.get("/business", response_class=HTMLResponse)
@@ -51,8 +55,8 @@ def application(request: Request, i: int, co: str = "combined", session: Session
 @router.get("/business/attach", response_class=HTMLResponse)
 def attach(request: Request, fn: str = "", co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
-    used = {p.fn for a in c["apps"] for p in a.positions if p.status == "supported"}
-    c["anchors"] = sorted(used, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
+    c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], c["fns"].get(kv[0], {}).get("label", kv[0])))
     c["fn"] = fn if fn in used else ""
     c["result"] = op.attach(c["apps"], fn) if c["fn"] else None
     return templates.TemplateResponse(request, "business/attach.html", c)
@@ -67,11 +71,32 @@ def gaps(request: Request, co: str = "combined", sort: str = "reach", session: S
         "adjacency": lambda e: (-e["adjacency"], -e["reach"]),
         "positions": lambda e: (-e["positions"], -e["reach"]),
         "tam": lambda e: (-e["tam"], -e["reach"]),
+        "crowding": lambda e: (_CROWD.get((e["competition"] or {}).get("crowding"), 3), -e["reach"]),
     }
     c["sort"] = sort if sort in keys else "reach"
     c["rows"] = sorted(rows, key=keys[c["sort"]])
     c["portfolio"] = op.reach_of_portfolio(c["apps"])[:15]
     return templates.TemplateResponse(request, "business/gaps.html", c)
+
+
+@router.get("/business/markets", response_class=HTMLResponse)
+def markets(request: Request, co: str = "combined", view: str = "all", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    m = op.markets(session, c["apps"], op.company(co)[2])
+    c["view"] = view if view in ("all", "requalify", "multi") else "all"
+    rows = m["rows"]
+    if c["view"] == "requalify":
+        rows = [e for e in rows if e["requalify"]]
+    elif c["view"] == "multi":
+        rows = [e for e in rows if e["n_markets"] > 1]
+    c.update(
+        markets=m["markets"],
+        per_market=m["apps_per_market"],
+        rows=rows,
+        n_requalify=sum(e["requalify"] for e in m["rows"]),
+        n_multi=sum(e["n_markets"] > 1 for e in m["rows"]),
+    )
+    return templates.TemplateResponse(request, "business/markets.html", c)
 
 
 @router.get("/business/data", response_class=HTMLResponse)

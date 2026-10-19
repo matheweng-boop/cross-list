@@ -1,0 +1,1053 @@
+# Application block diagrams from public NXP application pages (vendor reference), for the block-diagram generator.
+# Complements rf_platforms.yaml (NXP connected radio, V2X, smart car access, Wi-Fi AP, Wi-Fi 6 combo, 5G mMIMO, O-RAN RU,
+# small cell, 77 GHz radar, smartphone). Nothing here repeats those entries or the applications in templates.yaml.
+# See nxp_more_block_diagrams.md for sources read, method and gaps. Read 2026-10-19.
+#
+# How these were read: each nxp.com/applications/<APP> page embeds its block diagram(s) as SVG with a text layer, plus an
+# interactive "Functional Blocks" panel that lists NXP products per block. The SVG was rendered locally (headless browser,
+# no network) and read; groups below are the boxes the figure draws, in the page's own words. "pages" for a source = SVG
+# file name + Functional Blocks list. One application (refrigerator compressor) is a JPG with no product list.
+# vendor_parts are the NXP products the page's Functional Blocks panel attaches to that block, written exactly as NXP
+# lists them (some are family names such as TJA144x, KM3x, MCX-A13X-A14X-A15X). Reference only, not recommendations.
+# Blocks NXP draws grey ("Non NXP Technology") have empty vendor_parts; they are often the open sockets.
+#
+# Field notes (same conventions as ti_block_diagrams.yaml, with vendor_parts instead of ti_parts):
+#   category           one of the Cross List application categories
+#   groups[].fn_hint   Cross List function ids (data/blocks/functions.yaml); ids not yet there are defined under new_functions
+#                      at the end of this file. Empty when no function fits (e.g. squib driver, PSI5 / DSI3 transceiver).
+#   links              [from, to, label] = arrows / buses drawn in the figure (label "" when unlabelled). Direction follows
+#                      the arrow where the figure has one; most NXP figures draw double-headed arrows (written MCU-first).
+#   features[]         high-level design questions a user would answer for this application; choices are options, not answers
+
+docs:
+  NXP_ZONE: {title: "NXP Automotive Zone Controller application page", url: "https://www.nxp.com/applications/AUTOMOTIVE-ZONE-CONTROLLER", figure: "/assets/images/en/block-diagrams/AUTOMOTIVE-ZONE-CONTROLLER-BD3.svg; AUTOMOTIVE-ZONE-CONTROLLER-BD-ASP-NEW1.svg (system view)"}
+  NXP_BMS: {title: "NXP Battery Management System (BMS) application page", url: "https://www.nxp.com/applications/BATTERY-MANAGEMENT-SYSTEM", figure: "/assets/images/en/block-diagrams/BMS-HIGH-VOLTAGE-BD1NEW3.svg (also BMS-LOW-VOLTAGE-BD2, BMS-WIRELESS-BD, BMS-EIS-BD-APS, BMS-SECURE-BD1)", pdf: "/assets/block-diagram/en/BATTERY-MANAGEMENT-SYSTEM_BMS-HIGH-VOLTAGE-BD1NEW3.pdf (recommendation tables)"}
+  NXP_EPS: {title: "NXP Electric Power Steering (EPS) application page", url: "https://www.nxp.com/applications/ELECTRIC-POWER-STEERING", figure: "/assets/images/en/block-diagrams/ELECTRIC-POWER-STEERING-BD-ASP-NEW.svg"}
+  NXP_LIGHTING: {title: "NXP Automotive Advanced Exterior Lighting application page", url: "https://www.nxp.com/applications/AUTOMOTIVE-SMART-LIGHTING", figure: "/assets/images/en/block-diagrams/AUTOMOTIVE-LIGHTING-BD.svg"}
+  NXP_TPMS: {title: "NXP Tire Pressure Monitoring Systems (TPMS) application page", url: "https://www.nxp.com/applications/TIRE-PRESSURE-MONITORING-SYSTEM-TPMS", figure: "/assets/images/en/block-diagrams/TPMS-BD-DSP-NEW.svg"}
+  NXP_AIRBAG: {title: "NXP Airbag and Crash Detection application page", url: "https://www.nxp.com/applications/AIRBAG", figure: "/assets/images/en/block-diagrams/AIRBAG-BD1-ASP2.svg (PSI5), AIRBAG-BD2-ASP2.svg (DSI3)", pdf: "/assets/block-diagram/en/AIRBAG_AIRBAG-BD1-ASP2.pdf"}
+  NXP_CLUSTER: {title: "NXP Instrument Cluster application page", url: "https://www.nxp.com/applications/INSTRUMENT-CLUSTER", figure: "/assets/images/en/block-diagrams/HYBRID-2D-INSTRUMENT-CLUSTER-BD-ASP3.svg (also ENTRY- and HYBRID-3D-)"}
+  NXP_BRAKING: {title: "NXP Braking and Stability Control application page", url: "https://www.nxp.com/applications/BRAKING-STABILITY-CONTROL", figure: "/assets/images/en/block-diagrams/BRAKING-STABILITY-BD-ASP-NEW.svg"}
+  NXP_GATEWAY: {title: "NXP Gateway (automotive) application page", url: "https://www.nxp.com/applications/GATEWAY", figure: "/assets/images/en/block-diagrams/GATEWAY-BD-NEW1.svg"}
+  NXP_HVAC: {title: "NXP Heating, Ventilation and Air Conditioning (automotive HVAC) application page", url: "https://www.nxp.com/applications/HEATING-VENTILATION-AIR-CONDITIONING", figure: "/assets/images/en/block-diagrams/HVAC-BD-ASP-BD-2.svg"}
+  NXP_EMETER: {title: "NXP Electricity Meter application page", url: "https://www.nxp.com/applications/ELECTRICITY-METER", figure: "/assets/images/en/block-diagrams/ELECTRICITY-METERING-BD-01.svg (BD-02 = advanced energy management)"}
+  NXP_PLC: {title: "NXP PLC and Remote I/O application page", url: "https://www.nxp.com/applications/PLC-REMOTE-IOS", figure: "/assets/images/en/block-diagrams/PROGRAMMABLE-LOGIC-PLC-BD1.svg (also REMOTE-IO-BD.svg)"}
+  NXP_PMSM: {title: "NXP Permanent Magnet Synchronous Motors (PMSM) application page", url: "https://www.nxp.com/applications/PMSM-MOTORS", figure: "/assets/images/en/block-diagrams/PMSM-MOTORS-BD-NEW4.svg"}
+  NXP_BLDC: {title: "NXP Brushless DC Motors application page", url: "https://www.nxp.com/applications/BRUSHLESS-DC-MOTORS", figure: "/assets/images/en/block-diagrams/BRUSHELESS-DC-MOTOR-BD-ASP-NEW3.svg"}
+  NXP_EVSE: {title: "NXP EV Charging Station application page", url: "https://www.nxp.com/applications/EV-CHARGER-STATION", figure: "/assets/images/en/block-diagrams/AC_RESIDENTIAL_CHARGING_STATION_L123_BD.svg (also DC_CHARGING_STATION_FAST_BD.svg, EasyEVSE image)"}
+  NXP_ADAPTER: {title: "NXP Power Adapters and Chargers application page", url: "https://www.nxp.com/applications/POWER-ADAPTERS-CHARGERS", figure: "/assets/images/en/block-diagrams/POWER-ADAPTERS-CHARGER-BD1-NEW4.svg (wall charger), POWER-ADAPTER-CHARGER-BD2-ASP-NEW.svg (shared power bank)"}
+  NXP_FLOW: {title: "NXP Flow Metering (water, gas, heat) application page", url: "https://www.nxp.com/applications/FLOW-METERING", figure: "/assets/images/en/block-diagrams/FLOW-METER-WATER-GAS-HEAT-BD.svg"}
+  NXP_SMARTPLUG: {title: "NXP Smart Power Socket and Light application page", url: "https://www.nxp.com/applications/SMART-POWER-SOCKET-LIGHT", figure: "/assets/images/en/block-diagrams/SMART-POWER-BD-ASP-NEW.svg"}
+  NXP_ACCESS: {title: "NXP Access Management application page (physical and logical access)", url: "https://www.nxp.com/applications/ACCESS-MANAGEMENT-ASP", figure: "/assets/images/en/block-diagrams/GOVERNMENT-ACCESS-BD2-ASP-NEW.svg (physical), GOVERNMENT-ACCESS-BD1-ASP-NEW.svg (logical)"}
+  NXP_HOMEPANEL: {title: "NXP Home Control Panel application page", url: "https://www.nxp.com/applications/HOME-CONTROL-PANEL", figure: "/assets/images/en/block-diagrams/HOME-CONTROL-PANEL-BD-ASP2.svg"}
+  NXP_SMARTLOCK: {title: "NXP Smart Lock application page", url: "https://www.nxp.com/applications/SMART-LOCK", figure: "/assets/images/en/block-diagrams/SMART-LOCK-BD1-ASP-NEW4.svg (also SMART-LOCK-BD2-ASP-NEW3, SmartLock-Block-Diagram, E-LOCK-BD, E-LOCK-BD2)"}
+  NXP_SMARTWATCH: {title: "NXP Smartwatch application page", url: "https://www.nxp.com/applications/SMARTWATCH", figure: "/assets/images/en/block-diagrams/SMARTWATCH-BD-ASP-NEW-UPD.svg (also SmartWatch-Block-Diagram.svg (UWB), WRISTBAND-BD-ASP-NEW-V2.svg)"}
+  NXP_MPOS: {title: "NXP Smart Mobile POS application page", url: "https://www.nxp.com/applications/SMART-MOBILE-POS", figure: "/assets/images/en/block-diagrams/SMART-MOBILE-POS-BD-ASP-NEW.svg"}
+  NXP_PAYMENT: {title: "NXP Open and Closed-Loop Payment application page", url: "https://www.nxp.com/applications/OPEN-CLOSE-LOOP-PAYMENT", figure: "/assets/images/en/block-diagrams/OPEN-CLOSE-LOOP-PAYMENT-BD1-ASP-2.svg (open), LOOP-PAYMENT-BD2-ASP.svg (closed loop)"}
+  NXP_SPEAKER: {title: "NXP Smart Speaker application page", url: "https://www.nxp.com/applications/SMART-SPEAKER", figure: "/assets/images/en/block-diagrams/SMART-SPEAKER-BD-ASP.svg"}
+  NXP_MAJOR_APPLIANCE: {title: "NXP Major Home Appliance application page", url: "https://www.nxp.com/applications/MAJOR-HOME-APPLIANCE", figure: "/assets/images/en/block-diagrams/REFRIGERATOR-COMPRESSOR-BD-NEW.jpg", note: "image only; page has no Functional Blocks product list"}
+  NXP_CGM: {title: "NXP Continuous Glucose Monitoring application page", url: "https://www.nxp.com/applications/CONTINUOUS-GLUCOSE-MONITORING", figure: "/assets/images/en/block-diagrams/DISPOSABLE-CONTINUOUS-GLUCOSE-METER-BD.svg, DURABLE-CONTINUOUS-GLUCOSE-METER-BD.svg"}
+  NXP_PATIENT_MONITOR: {title: "NXP Multiparameter Patient Monitor application page", url: "https://www.nxp.com/applications/MULTIPARAMETER-PATIENT-MONITOR", figure: "/assets/images/en/block-diagrams/MAINSTREAM-PATIENT-MONITOR-MPU.svg (plus 9 other diagrams: entry, MCU-based, high-end AI, ECG, NIBP, pulse oximetry, temperature, wireless variants)"}
+  NXP_5G_FWA: {title: "NXP 5G Fixed Wireless Access application page", url: "https://www.nxp.com/applications/5G-FIXED-WIRELESS-ACCESS", figure: "/assets/images/en/block-diagrams/5G-FIXED-WIRELESS-ACCESS-NEW2.svg", note: "fetched for rf_platforms research but not turned into an application there"}
+
+applications:
+  # =========================================================================================================
+  # Automotive systems
+  # =========================================================================================================
+  - id: nxp_zone_controller
+    name: "Automotive zone controller (body / zonal I/O, CAN/LIN, Ethernet switch, smart high-side switches)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_ZONE, url: "https://www.nxp.com/applications/AUTOMOTIVE-ZONE-CONTROLLER", pages: "SVG AUTOMOTIVE-ZONE-CONTROLLER-BD3 ('Zone Controller Solutions'); system view AUTOMOTIVE-ZONE-CONTROLLER-BD-ASP-NEW1; Functional Blocks lists"}
+    groups:
+      - {id: vbat, label: "VBAT1 / VBAT2 with reverse diodes", blocks: [VBAT1, VBAT2, diode OR-ing to 12 V], source: "ZONE BD3 (VBAT1/VBAT2 grey blocks, diodes, 12V)", fn_hint: [reverse_polarity], vendor_parts: []}
+      - {id: pmic, label: "PMIC (x2: MCU/CAN supply, Ethernet supply)", blocks: [PMIC 12 V -> 3.3 V / 5 V (Supply_MCU_CAN), PMIC (VSUP -> Supply_ETH)], source: "ZONE BD3 (two 'PMIC' blocks); Functional Blocks 'PMIC: FS26'", fn_hint: [pmic], vendor_parts: [FS26]}
+      - {id: mcu, label: "Zone MCU", blocks: [MCU], source: "ZONE BD3 ('MCU'); Functional Blocks 'MCU: S32K5, S32K3'", fn_hint: [mcu], vendor_parts: [S32K5, S32K3]}
+      - {id: can, label: "CAN transceivers (8x)", blocks: [8x CAN (SIG) transceivers], source: "ZONE BD3 ('CAN (8x)', 'CAN Tx/Rx'); Functional Blocks 'CAN: TJA1463'", fn_hint: [can_transceiver], vendor_parts: [TJA1463]}
+      - {id: lin, label: "LIN transceivers (2x 4-channel)", blocks: [LIN (UART Tx/Rx), LIN (SPI)], source: "ZONE BD3 (two 'LIN' blocks, 4x LIN each); Functional Blocks 'LIN: TJA1124'", fn_hint: [lin_transceiver], vendor_parts: [TJA1124]}
+      - {id: hs_switch, label: "Quad high-side switches (loads)", blocks: [Quad HS-Switch x2 (3.3 V / 5 V / 12 V, SPI)], source: "ZONE BD3 ('Quad HS-Switch' x2); Functional Blocks 'Quad HS-Switch: XS2410'", fn_hint: [load_switch], vendor_parts: [XS2410]}
+      - {id: msdi, label: "22-ch multi-switch detection interface", blocks: [22-ch MSDI (SPI + AMUX to MCU)], source: "ZONE BD3 ('22-ch Multi Switch Detection Interface'); Functional Blocks '22Ch MSDI: MC33978'", fn_hint: [switch_detection_interface], vendor_parts: [MC33978]}
+      - {id: eth_switch, label: "Ethernet switch", blocks: [Ethernet switch (SGMII to PHYs, 3x 100BASE-T1, RGMII to MCU)], source: "ZONE BD3 ('Ethernet Switch'); Functional Blocks 'Ethernet Switch: SJA1110'", fn_hint: [ethernet_phy], vendor_parts: [SJA1110]}
+      - {id: eth_phy, label: "1000BASE-T1 PHYs (x2)", blocks: [1000BASE-T1 PHY x2 (SGMII)], source: "ZONE BD3 ('1000BASE-T1' x2); Functional Blocks '1Giga Ethernet Phy: TJA1121'", fn_hint: [ethernet_phy], vendor_parts: [TJA1121]}
+      - {id: qflash, label: "QSPI flash", blocks: [QFLASH], source: "ZONE BD3 ('QFLASH', QSPI to Ethernet switch)", fn_hint: [flash], vendor_parts: []}
+      - {id: io, label: "Loads, switch inputs and vehicle I/O", blocks: [I/O (loads and switches)], source: "ZONE BD3 ('I/O' grey block)", fn_hint: [external_block], vendor_parts: []}
+      - {id: central, label: "Central computer / ECU nodes (system view)", blocks: [central computer, zone controllers, ECU nodes], source: "ZONE BD-ASP-NEW1; Functional Blocks 'Central Computer: S32G3, S32N5, SJA1110, VR5510'", fn_hint: [soc], vendor_parts: [S32G3, S32N5, VR5510]}
+    links:
+      - [vbat, pmic, "12 V"]
+      - [pmic, mcu, "Supply_MCU_CAN 3.3 V / 5 V"]
+      - [pmic, eth_switch, "Supply_ETH"]
+      - [can, mcu, "CAN Tx/Rx"]
+      - [lin, mcu, "UART Tx/Rx / SPI"]
+      - [mcu, hs_switch, "SPI"]
+      - [msdi, mcu, "SPI / AMUX"]
+      - [hs_switch, io, ""]
+      - [io, msdi, "switch inputs"]
+      - [mcu, eth_switch, "RGMII / SPI"]
+      - [eth_switch, eth_phy, "SGMII"]
+      - [qflash, eth_switch, "QSPI"]
+      - [eth_switch, central, "100BASE-T1 / 1000BASE-T1 Ethernet"]
+    features:
+      - {id: zone_role, question: "Zone controller role", choices: ["zone I/O aggregator (MCU)", "zone + local compute (S32G / S32N class)"], source: "ZONE Functional Blocks (Zone Controller lists S32K3/K5 and S32G2/G3, S32Z2, S32E2)"}
+      - {id: backbone, question: "Backbone link to the central computer", choices: ["100BASE-T1", "1000BASE-T1", "multi-gig"], source: "ZONE BD3 (100BASE-T1 and 1000BASE-T1 ports)"}
+      - {id: can_count, question: "Number of CAN (FD / SIC) channels", choices: ["1-4", "5-8", ">8"], source: "ZONE BD3 ('8x CAN (SIG)')"}
+      - {id: load_switching, question: "Load switching", choices: ["smart high-side switches (eFuse)", "relays", "mixed"], source: "ZONE BD3 ('Quad HS-Switch')"}
+      - {id: supply_redundancy, question: "Redundant battery feed", choices: ["single VBAT", "dual VBAT (VBAT1/VBAT2)"], source: "ZONE BD3 (VBAT1, VBAT2 with diodes)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_hv_bms
+    name: "EV high-voltage battery management system (BMU + cell monitoring unit + battery junction box)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_BMS, url: "https://www.nxp.com/applications/BATTERY-MANAGEMENT-SYSTEM", pages: "SVG BMS-HIGH-VOLTAGE-BD1NEW3 ('Automotive Battery Management Systems'); Functional Blocks lists (also LV, wireless, EIS, secure BMS diagrams on the page)"}
+    groups:
+      - {id: mcu, label: "BMU MCU", blocks: [MCU], source: "BMS-HV SVG (Battery Management Unit (BMU) -> 'MCU'); Functional Blocks 'MCU: S32K3'", fn_hint: [mcu], vendor_parts: [S32K3]}
+      - {id: sbc, label: "System basis chip (SBC)", blocks: [SBC], source: "BMS-HV SVG ('System Basis Chip (SBC)'); Functional Blocks 'System Basis Chip: FS26, FS25, VR249X'", fn_hint: [pmic], vendor_parts: [FS26, FS25, VR249X]}
+      - {id: contactor, label: "Contactor driver", blocks: [contactor driver], source: "BMS-HV SVG ('Contactor Driver'); Functional Blocks 'Contactor Driver: HB2000'", fn_hint: [motor_driver_brushed], vendor_parts: [HB2000]}
+      - {id: can_phy, label: "CAN physical layer", blocks: [CAN transceiver], source: "BMS-HV SVG ('CAN Physical Layer'); Functional Blocks 'CAN Physical Layer: TJA1057, TJA144x, TJA1145A'", fn_hint: [can_transceiver], vendor_parts: [TJA1057, TJA144x, TJA1145A]}
+      - {id: rtc, label: "Real time clock (RTC)", blocks: [RTC], source: "BMS-HV SVG ('Real Time Clock (RTC)'); Functional Blocks 'RTC: PCA2131'", fn_hint: [rtc], vendor_parts: [PCA2131]}
+      - {id: pressure, label: "Pressure sensor (pack venting)", blocks: [pressure sensor], source: "BMS-HV SVG ('Pressure Sensor')", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: load_driver, label: "Load driver", blocks: [high-side load driver], source: "BMS-HV SVG ('Load Driver'); Functional Blocks 'Load Driver: MC12XS6'", fn_hint: [load_switch], vendor_parts: [MC12XS6]}
+      - {id: gateway, label: "Battery gateway (TPL / CAN FD)", blocks: [battery communication gateway], source: "BMS-HV SVG ('Battery Gateway'); Functional Blocks 'Battery Gateway: TJA1057, TJA144x, BMX6X02, MC33665A'", fn_hint: [can_transceiver], vendor_parts: [MC33665A, BMX6X02, TJA144x]}
+      - {id: bcc, label: "Battery cell controller (CMU)", blocks: [battery cell controller (voltage and temperature measurement), stacked per module], source: "BMS-HV SVG (Cell Monitoring Unit (CMU) -> 'Battery Cell Controller'); Functional Blocks 'Battery Cell Controller'", fn_hint: [battery_monitor], vendor_parts: [MC33774, BMA7118, BMA742X, BMA7418, MC33771C, BMA7318-BMI7318-BMA7518, BMA712X]}
+      - {id: pack_monitor, label: "Battery junction box: battery pack monitor", blocks: [battery pack monitor (current, temperature and isolation measurement)], source: "BMS-HV SVG (Battery Junction Box (BJB) -> 'Battery Pack Monitor'); Functional Blocks 'Battery Pack Monitor: MC33772C, BMA8420, TAA3033, MC33777'", fn_hint: [battery_monitor, current_sensor], vendor_parts: [MC33772C, BMA8420, TAA3033, MC33777]}
+      - {id: battery, label: "High-voltage Li-ion battery", blocks: [HV Li-ion battery], source: "BMS-HV SVG ('High Voltage Li-Ion Battery', grey)", fn_hint: [hv_battery], vendor_parts: []}
+    links:
+      - [contactor, mcu, ""]
+      - [can_phy, mcu, ""]
+      - [rtc, mcu, ""]
+      - [sbc, mcu, ""]
+      - [mcu, pressure, ""]
+      - [mcu, load_driver, ""]
+      - [mcu, gateway, ""]
+      - [gateway, bcc, "daisy chain"]
+      - [gateway, pack_monitor, ""]
+      - [bcc, battery, "cell voltage / temperature"]
+      - [battery, pack_monitor, "pack current / isolation"]
+    features:
+      - {id: bms_comm, question: "Cell-monitor communication", choices: ["wired daisy chain (TPL)", "wireless BMS"], source: "BMS page diagrams (High Voltage BMS, Wireless BMS)"}
+      - {id: cells_per_bcc, question: "Cells per cell controller", choices: ["6", "14", "18", "24-26"], source: "BMS-HV PDF recommendations (MC33772C 6-ch, MC33771C 14-ch, BMA7118 18-ch, BMA712X 24/26-ch)"}
+      - {id: eis, question: "Electrochemical impedance spectroscopy (EIS)", choices: ["yes", "no"], source: "BMS page 'BMS-EIS' diagram; BMA8420 / BMA742X 'with EIS'"}
+      - {id: asil, question: "Functional safety target", choices: ["ASIL C", "ASIL D"], source: "BMS page text (ISO 26262 up to ASIL D)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_eps
+    name: "Electric power steering (EPS) ECU (MCU + 3-phase MOSFET pre-driver + safety SBC)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_EPS, url: "https://www.nxp.com/applications/ELECTRIC-POWER-STEERING", pages: "SVG ELECTRIC-POWER-STEERING-BD-ASP-NEW; Functional Blocks list"}
+    groups:
+      - {id: sbc, label: "Safety SBC", blocks: [safety SBC (power, CAN, fail-safe monitor)], source: "EPS SVG ('Safety SBC', VBAT, CAN, 'Fail Safe Signal'); Functional Blocks 'Safety SBC: FS26, FS86, VR5510, PF5030, TJA144x, TJA1462'", fn_hint: [pmic, can_transceiver, watchdog], vendor_parts: [FS26, FS86, VR5510, PF5030, TJA144x, TJA1462]}
+      - {id: mcu, label: "MCU", blocks: [MCU], source: "EPS SVG ('MCU'); Functional Blocks 'Microcontrollers: S32K39-37-36, S32E2'", fn_hint: [mcu], vendor_parts: [S32K39-37-36, S32E2]}
+      - {id: predriver, label: "MOSFET pre-driver", blocks: [3-phase MOSFET pre-driver (SPI, 6 PWM in, 6 gate out)], source: "EPS SVG ('MOSFET PreDriver'); Functional Blocks 'MOSFET Pre-Driver: MC33937, GD3000'", fn_hint: [three_phase_gate_driver], vendor_parts: [MC33937, GD3000]}
+      - {id: inverter, label: "Power inverter module", blocks: [power inverter module (MOSFETs)], source: "EPS SVG ('Power Inverter Module', grey)", fn_hint: [power_fets], vendor_parts: []}
+      - {id: power_switch, label: "Power switch + fail-safe switch", blocks: [power switch (VBAT -> Vlink), fail-safe switch (grey)], source: "EPS SVG ('Power Switch', 'Fail Safe Switch')", fn_hint: [load_switch, reverse_polarity], vendor_parts: []}
+      - {id: current_sense, label: "Current sensing", blocks: [phase / link current sensing (shunt)], source: "EPS SVG ('Current Sensing', grey)", fn_hint: [amplifier], vendor_parts: []}
+      - {id: signal_cond, label: "Signal conditioning", blocks: [signal conditioning / multi-switch detection], source: "EPS SVG ('Signal Conditioning'); Functional Blocks 'Signal Conditioning: MC33972, CD1020'", fn_hint: [switch_detection_interface], vendor_parts: [MC33972, CD1020]}
+      - {id: rotor_pos, label: "Motor position sensor", blocks: [position sensor], source: "EPS SVG ('Position Sensor')", fn_hint: [position_sensor], vendor_parts: []}
+      - {id: steering_sensors, label: "Steering wheel position + steering torque sensors", blocks: [steering wheel position sensor, steering torque sensor], source: "EPS SVG (inputs to MCU)", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: motor, label: "Steering motor", blocks: [3-phase motor], source: "EPS SVG ('M')", fn_hint: [motor], vendor_parts: []}
+    links:
+      - [sbc, power_switch, "enable"]
+      - [sbc, mcu, "fail-safe monitor / communication"]
+      - [mcu, predriver, "SPI + 6 PWM"]
+      - [predriver, inverter, "6 gate drives"]
+      - [power_switch, inverter, "Vlink"]
+      - [inverter, motor, "3 phases"]
+      - [inverter, current_sense, ""]
+      - [current_sense, signal_cond, ""]
+      - [signal_cond, mcu, ""]
+      - [rotor_pos, mcu, ""]
+      - [steering_sensors, mcu, ""]
+    features:
+      - {id: redundancy, question: "Architecture", choices: ["single channel", "dual / redundant (fail-operational)"], source: "EPS SVG (fail-safe switch, fail-safe monitor); NXP S32K376 EPS POC image on page"}
+      - {id: motor_type, question: "Motor type", choices: ["3-phase BLDC / PMSM", "brushed DC"], source: "EPS SVG (6 gate drives, 3 phases)"}
+      - {id: position_sensing, question: "Rotor position sensing", choices: ["magnetic angle sensor (GMR/TMR/AMR)", "resolver", "sensorless"], source: "EPS SVG ('Position Sensor')"}
+      - {id: asil, question: "Functional safety target", choices: ["ASIL B", "ASIL C", "ASIL D"], source: "EPS SVG ('Safety SBC', 'Fail Safe Monitor')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_exterior_lighting
+    name: "Automotive advanced exterior lighting (LED driver module + matrix module)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_LIGHTING, url: "https://www.nxp.com/applications/AUTOMOTIVE-SMART-LIGHTING", pages: "SVG AUTOMOTIVE-LIGHTING-BD ('Total NXP Solution'); Functional Blocks list"}
+    groups:
+      - {id: compute, label: "Automotive compute + ADAS sensors", blocks: [automotive compute, sensors, camera, lidar, GPS], source: "LIGHTING SVG ('Automotive Compute'; 'Sensors', 'Camera', 'Lidar', 'GPS' grey)", fn_hint: [soc, camera_radar], vendor_parts: []}
+      - {id: bcm, label: "Body controller module", blocks: [body controller module], source: "LIGHTING SVG ('Body Controller Module'); Functional Blocks 'Body Controller Module: S32K1'", fn_hint: [mcu], vendor_parts: [S32K1]}
+      - {id: battery, label: "Battery management system (supply input)", blocks: [battery management system], source: "LIGHTING SVG ('Battery Management System')", fn_hint: [external_block], vendor_parts: []}
+      - {id: sbc, label: "SBC (LED driver module and matrix module)", blocks: [mini SBC x2], source: "LIGHTING SVG ('SBC' in LED Driver Module and in Matrix Module); Functional Blocks 'Mini SBC: UJA1161ATK, FS26, FS24, FS23, TJA1128'", fn_hint: [pmic, can_transceiver], vendor_parts: [UJA1161ATK, FS26, FS24, FS23, TJA1128]}
+      - {id: mcu, label: "LED driver module MCU", blocks: [MCU], source: "LIGHTING SVG ('MCU'); Functional Blocks 'Microcontrollers: S32K3, S32K1, S32M2'", fn_hint: [mcu], vendor_parts: [S32K3, S32K1, S32M2]}
+      - {id: boost, label: "Multi-phase boost IC", blocks: [multi-phase boost (LED supply)], source: "LIGHTING SVG ('Multi-Phase BOOST IC'); Functional Blocks 'Multi-Phase Boost IC: ASL150ySHN, ASL4500SHN, ASL250ySHN'", fn_hint: [pre_regulator, led_driver], vendor_parts: [ASL150ySHN, ASL4500SHN, ASL250ySHN]}
+      - {id: buck, label: "Multi-channel buck IC (LED current)", blocks: [multi-channel buck x2], source: "LIGHTING SVG ('Multi Channel BUCK IC' x2); Functional Blocks 'Multi Channel Buck IC: ASL341ySHN, ASL241ySHN'", fn_hint: [led_driver], vendor_parts: [ASL341ySHN, ASL241ySHN]}
+      - {id: can, label: "CAN-HS transceiver", blocks: [CAN-HS transceiver (LED driver module to matrix module)], source: "LIGHTING SVG ('CAN-HS Transceiver'); Functional Blocks 'CAN-HS-Transceiver: TJA144x, TJA1057'", fn_hint: [can_transceiver], vendor_parts: [TJA144x, TJA1057]}
+      - {id: matrix, label: "Matrix LED controller (x2)", blocks: [matrix LED controller x2], source: "LIGHTING SVG ('Matrix Led Controller' x2); Functional Blocks 'Matrix LED Controller: ASL61XXYHZ, ASL5XXXYHZ'", fn_hint: [led_driver], vendor_parts: [ASL61XXYHZ, ASL5XXXYHZ]}
+      - {id: lamps, label: "Lamps", blocks: [low beam, high beam, turn indicator, daytime running lamp, position light], source: "LIGHTING SVG (grey lamp blocks)", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [compute, bcm, ""]
+      - [compute, battery, ""]
+      - [bcm, sbc, ""]
+      - [battery, boost, "supply"]
+      - [sbc, mcu, ""]
+      - [mcu, boost, ""]
+      - [boost, buck, "boosted LED supply"]
+      - [mcu, buck, ""]
+      - [buck, lamps, "LED strings"]
+      - [mcu, can, ""]
+      - [can, sbc, "to matrix module SBC"]
+      - [sbc, matrix, ""]
+      - [matrix, lamps, "pixel control"]
+    features:
+      - {id: function, question: "Lighting function", choices: ["low / high beam", "adaptive driving beam (matrix / pixel)", "signal lamps (turn, DRL, position)", "rear lighting"], source: "LIGHTING SVG (lamp list); page text (Glare Free High Beam, Adaptive Driving Beam, Dynamic Signaling)"}
+      - {id: led_topology, question: "LED supply topology", choices: ["boost + multi-channel buck", "single-stage linear", "buck only"], source: "LIGHTING SVG (Multi-Phase BOOST -> Multi Channel BUCK)"}
+      - {id: matrix_link, question: "Matrix module control link", choices: ["CAN-HS", "CAN FD", "LIN"], source: "LIGHTING SVG ('CAN-HS Transceiver')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_tpms
+    name: "Tire pressure monitoring system (TPMS sensor SiP + RKE receiver / BCM)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_TPMS, url: "https://www.nxp.com/applications/TIRE-PRESSURE-MONITORING-SYSTEM-TPMS", pages: "SVG TPMS-BD-DSP-NEW; Functional Blocks list"}
+    groups:
+      - {id: sensor_cells, label: "Pressure / temperature / acceleration cells", blocks: [P-cell, T-cell, G-cell (radial + tangential acceleration)], source: "TPMS SVG (inside 'TPMS Sensor')", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: sensor_mcu, label: "Sensor pre-processing + 8-bit MCU", blocks: [sensors pre-processing, 8-bit MCU], source: "TPMS SVG (inside 'TPMS Sensor')", fn_hint: [mcu], vendor_parts: []}
+      - {id: rf_tx, label: "RF transmitter 315 / 434 MHz + antenna", blocks: [RF transmitter, RF antenna], source: "TPMS SVG ('RF Trasmiter', 'RF Antenna', '315/434 MHz')", fn_hint: [rf_transceiver, antenna], vendor_parts: []}
+      - {id: lf_input, label: "125 kHz LF input", blocks: [LF input (125 kHz signal)], source: "TPMS SVG ('LF Input', '125 kHz Signal')", fn_hint: [], vendor_parts: []}
+      - {id: sensor_pmic, label: "Power management IC + 3 V battery", blocks: [power management, 3 V battery], source: "TPMS SVG ('Power Management IC', '3 V Battery')", fn_hint: [pmic, battery_pack], vendor_parts: []}
+      - {id: rx_antenna, label: "Receiver RF antenna", blocks: [RF antenna], source: "TPMS SVG (TPMS (RKE) Receiver or BCM -> 'RF Antenna', grey)", fn_hint: [antenna], vendor_parts: []}
+      - {id: rx_mcu, label: "Receiver / BCM MCU", blocks: [MCU], source: "TPMS SVG ('MCU'); Functional Blocks 'MCU: S12XE, KEA'", fn_hint: [mcu], vendor_parts: [S12XE, KEA]}
+      - {id: rx_phy, label: "Physical interface (CAN / LIN)", blocks: [CAN / LIN transceiver], source: "TPMS SVG ('Physical Interface', 'Serial Data (CAN/LIN) or Display'); Functional Blocks 'Physical I/F: TJA1044, TJA1462, MC33897'", fn_hint: [can_transceiver, lin_transceiver], vendor_parts: [TJA1044, TJA1462, MC33897]}
+    links:
+      - [sensor_cells, sensor_mcu, "pressure / temperature / acceleration"]
+      - [lf_input, sensor_mcu, "125 kHz wake-up / configuration"]
+      - [sensor_mcu, rf_tx, ""]
+      - [sensor_pmic, sensor_mcu, "3 V battery"]
+      - [rf_tx, rx_antenna, "315 / 434 MHz"]
+      - [rx_antenna, rx_mcu, ""]
+      - [rx_mcu, rx_phy, ""]
+    features:
+      - {id: rf_band, question: "RF band", choices: ["315 MHz", "434 MHz"], source: "TPMS SVG ('315/434 MHz')"}
+      - {id: accel_axes, question: "Accelerometer", choices: ["single axis (radial)", "dual axis (radial + tangential)"], source: "TPMS SVG (Radial / Tangential Acceleration); page text"}
+      - {id: receiver, question: "Receiver location", choices: ["dedicated TPMS receiver", "shared RKE receiver / BCM"], source: "TPMS SVG ('TPMS (RKE) Receiver or BCM')"}
+      - {id: output, question: "Receiver output", choices: [CAN, LIN, "direct display"], source: "TPMS SVG ('Serial Data (CAN/LIN) or Display')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_airbag
+    name: "Airbag and crash detection ECU (PSI5 / DSI3 satellite sensors, squib drivers)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_AIRBAG, url: "https://www.nxp.com/applications/AIRBAG", pages: "SVG AIRBAG-BD1-ASP2 (PSI5) and AIRBAG-BD2-ASP2 (DSI3); Functional Blocks lists; diagram PDF AIRBAG_AIRBAG-BD1-ASP2.pdf"}
+    groups:
+      - {id: power, label: "Power supply (buck-boost)", blocks: [buck-boost supply (VBuck, VBoost, VLogic) from 12 V battery], source: "AIRBAG SVG ('Power Supply Buck Boost'); Functional Blocks (DSI3) 'Power Supply: MC33789'", fn_hint: [pmic, buck_boost], vendor_parts: [MC33789]}
+      - {id: sat_if, label: "PSI5 / DSI3 transceiver", blocks: [PSI5 transceiver (BD1) or DSI3 transceiver (BD2)], source: "AIRBAG SVG ('PSI5 Transceiver' / 'DSI3 Transceiver'); Functional Blocks 'PSI5 Transceiver: MC33789', 'DSI3 Tranceiver: SA0528'", fn_hint: [], vendor_parts: [MC33789, SA0528]}
+      - {id: sat_sensors, label: "Satellite sensors", blocks: [satellite sensors (stacked)], source: "AIRBAG SVG ('Satellite Sensor', PSI5 / DSI3 safety bus)", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: central_sensors, label: "Central + rollover sensors", blocks: [central sensor, rollover sensor], source: "AIRBAG SVG ('Central Sensor', 'Rollover Sensor', on SPI bus)", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: mcu, label: "Main MCU", blocks: [main MCU], source: "AIRBAG SVG ('Main MCU'); Functional Blocks 'Main MCU: S32K1'", fn_hint: [mcu], vendor_parts: [S32K1]}
+      - {id: squib_driver, label: "Squib driver", blocks: [squib driver (SPI)], source: "AIRBAG SVG ('Squib Driver'); Functional Blocks 'Squib Driver: MC33797'", fn_hint: [], vendor_parts: [MC33797]}
+      - {id: squibs, label: "Squibs", blocks: [squibs (stacked)], source: "AIRBAG SVG ('Squib', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: lin, label: "LIN transceiver (passenger detection)", blocks: [LIN transceiver], source: "AIRBAG SVG ('LIN Tranceiver' -> 'Passenger Detection'); Functional Blocks 'LIN Transceiver: TJA1029'", fn_hint: [lin_transceiver], vendor_parts: [TJA1029]}
+      - {id: can, label: "CAN transceiver (vehicle network)", blocks: [CAN transceiver], source: "AIRBAG SVG ('CAN Tranceiver' -> 'Vehicle Network'); Functional Blocks 'CAN Transceiver: TJA1042'", fn_hint: [can_transceiver], vendor_parts: [TJA1042]}
+      - {id: hmi_io, label: "Buckle switch, warning lamp, airbag-off", blocks: [buckle switch, warning lamp, airbag off], source: "AIRBAG SVG (grey blocks)", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [power, mcu, "VBuck / VBoost / VLogic"]
+      - [sat_sensors, sat_if, "PSI5 / DSI3 safety bus"]
+      - [sat_if, mcu, "SPI bus"]
+      - [central_sensors, mcu, "SPI bus"]
+      - [mcu, squib_driver, "SPI bus"]
+      - [squib_driver, squibs, "firing loops"]
+      - [mcu, lin, ""]
+      - [mcu, can, ""]
+    features:
+      - {id: sat_bus, question: "Satellite sensor bus", choices: [PSI5, DSI3], source: "AIRBAG BD1 (PSI5) / BD2 (DSI3)"}
+      - {id: squib_count, question: "Number of firing loops", choices: ["4-8", "12-16", ">16"], source: "AIRBAG SVG (stacked 'Squib' blocks)"}
+      - {id: energy_reserve, question: "Energy reserve / boost supply", choices: ["integrated buck-boost (system IC)", "discrete boost + buck"], source: "AIRBAG SVG ('Power Supply Buck Boost': VBuck, VBoost, VLogic)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_instrument_cluster
+    name: "Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_CLUSTER, url: "https://www.nxp.com/applications/INSTRUMENT-CLUSTER", pages: "SVG HYBRID-2D-INSTRUMENT-CLUSTER-BD-ASP3 (also ENTRY- and HYBRID-3D- variants); Functional Blocks lists"}
+    groups:
+      - {id: mcu, label: "MCU / MPU", blocks: [MCU / MPU], source: "CLUSTER SVG ('MCU / MPU'); Functional Blocks 'MCU: MPC564xS, MPC560xS, i.MX-RT1170, i.MX93'", fn_hint: [mcu, soc], vendor_parts: [MPC564xS, MPC560xS, i.MX-RT1170, i.MX93]}
+      - {id: memory, label: "External memory (optional)", blocks: [external memory], source: "CLUSTER SVG ('External Memory', dashed)", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: eth, label: "Ethernet PHY", blocks: [automotive Ethernet PHY], source: "CLUSTER SVG ('Ethernet PHY'); Functional Blocks 'Automotive Ethernet: TJA1103, TJA1101, TJA1120'", fn_hint: [ethernet_phy], vendor_parts: [TJA1103, TJA1101, TJA1120]}
+      - {id: can_lin, label: "CAN / LIN transceiver", blocks: [CAN/LIN transceiver], source: "CLUSTER SVG ('CAN/LIN Tranceiver'); Functional Blocks 'CAN Transceiver: TJA144x'", fn_hint: [can_transceiver, lin_transceiver], vendor_parts: [TJA144x]}
+      - {id: gpio, label: "GPIO expander", blocks: [GPIO (LED indication / keypad inputs)], source: "CLUSTER SVG ('GPIO'); Functional Blocks 'GPIO: PCAL9714, PCAL9722'", fn_hint: [io_expander], vendor_parts: [PCAL9714, PCAL9722]}
+      - {id: sbc, label: "Safety SBC", blocks: [safety SBC / PMIC], source: "CLUSTER SVG ('Safety SBC'); Functional Blocks 'Safety SBC: PF7100, PF5024, PF5020, VR5500, VR5510, FS4500, FS24, FS23, FS5600, FS6500, MMPF0100'", fn_hint: [pmic], vendor_parts: [VR5510, FS24, FS23, PF5020, FS6500]}
+      - {id: io_prot, label: "I/O protection", blocks: [I/O protection], source: "CLUSTER SVG ('I/O Protection')", fn_hint: [tvs_esd], vendor_parts: []}
+      - {id: signal_cond, label: "Signal conditioning + sensors", blocks: [signal conditioning (switch detection), sensors], source: "CLUSTER SVG ('Signal Conditioning', 'Sensors'); Functional Blocks 'Signal Conditioning: CD1020'", fn_hint: [switch_detection_interface, vehicle_sensors], vendor_parts: [CD1020]}
+      - {id: audio, label: "Audio amplifier + buzzer", blocks: [audio amplifier, buzzer], source: "CLUSTER SVG ('Audio Amplifier', grey; 'Buzzer')", fn_hint: [audio_amp], vendor_parts: []}
+      - {id: displays, label: "Gauges, segment LCD, color TFT LCDs", blocks: [gauges (stepper motors), segment LCD, color TFT LCDs], source: "CLUSTER SVG (grey 'Gauges', 'Segment LCD', 'Color TFT LCDs')", fn_hint: [display, display_driver], vendor_parts: []}
+      - {id: led, label: "LED driver + LED backlight driver", blocks: [LED driver (telltales), LED backlight driver], source: "CLUSTER SVG ('LED Driver', 'LED Backlight Driver'); Functional Blocks 'LED Driver: PCA9958HN', 'LED Backlight Driver: MC33996'", fn_hint: [led_driver], vendor_parts: [PCA9958HN, MC33996]}
+    links:
+      - [memory, mcu, ""]
+      - [eth, mcu, ""]
+      - [gpio, mcu, ""]
+      - [can_lin, mcu, ""]
+      - [sbc, mcu, "supply"]
+      - [io_prot, mcu, ""]
+      - [signal_cond, mcu, ""]
+      - [mcu, audio, ""]
+      - [mcu, displays, "gauges / segment LCD / TFT"]
+      - [mcu, led, ""]
+    features:
+      - {id: cluster_class, question: "Cluster class", choices: ["entry (MCU, segment LCD + gauges)", "hybrid 2D (gauges + TFT)", "hybrid 3D / full digital (MPU + GPU)"], source: "CLUSTER page diagrams (Entry, Hybrid 2D, Hybrid 3D)"}
+      - {id: display_type, question: "Display", choices: ["segment LCD", "color TFT", "both"], source: "CLUSTER SVG"}
+      - {id: vehicle_link, question: "Vehicle network", choices: ["CAN / LIN only", "CAN + automotive Ethernet"], source: "CLUSTER SVG ('Ethernet PHY', 'CAN/LIN Tranceiver')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_braking
+    name: "Braking and stability control (ABS / ESC) ECU (valve drivers, pump motor, sensor cluster)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_BRAKING, url: "https://www.nxp.com/applications/BRAKING-STABILITY-CONTROL", pages: "SVG BRAKING-STABILITY-BD-ASP-NEW; Functional Blocks list"}
+    groups:
+      - {id: power_if, label: "Power supply and physical I/F (SBC)", blocks: [power supply + CAN physical interface], source: "BRAKING SVG ('Power Supply and Physical I/F', VBAT); Functional Blocks 'Power Supply and Physical Interface: MC33904, FS26, FS86, FS4500, FS85, FS84, FS6500, SB0400'", fn_hint: [pmic, can_transceiver], vendor_parts: [MC33904, FS26, FS86, FS4500, FS85, FS84, FS6500, SB0400]}
+      - {id: mcu, label: "MCU", blocks: [MCU], source: "BRAKING SVG ('MCU'); Functional Blocks 'Microcontrollers: MPC5775B-E, S32K3, S32K39-37-36, S32Z2'", fn_hint: [mcu], vendor_parts: [MPC5775B-E, S32K3, S32K39-37-36, S32Z2]}
+      - {id: sensor_cond, label: "Sensor signal conditioning", blocks: [sensor signal conditioning circuit (wheel speed x4, oil pressure, pedal, steering)], source: "BRAKING SVG ('Sensor Signal Conditioning Circuit')", fn_hint: [amplifier], vendor_parts: []}
+      - {id: wheel_sensors, label: "Wheel speed / pressure / pedal / steering sensors", blocks: [rotational speed sensor, LF/RF/LR/RR wheel, oil pressure, pedal sensor, steering sensor], source: "BRAKING SVG (grey 'Rotational Speed Sensor' and inputs)", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: sensor_cluster, label: "Sensor cluster (yaw rate + accelerometer)", blocks: [yaw rate sensor, accelerometer sensor], source: "BRAKING SVG ('Sensor Cluster')", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: watchdog, label: "Watchdog microcontroller", blocks: [watchdog MCU], source: "BRAKING SVG ('Watchdog Microcontrollers'); Functional Blocks 'Watchdog Microcontrollers: S32K1'", fn_hint: [watchdog, mcu], vendor_parts: [S32K1]}
+      - {id: failsafe_switch, label: "Fail-safe high-side switch", blocks: [fail-safe HS switch (valve supply)], source: "BRAKING SVG ('Fail Safe HS Switch'); Functional Blocks 'FailSafe HS Switch: MC12XS2'", fn_hint: [load_switch], vendor_parts: [MC12XS2]}
+      - {id: valve_drivers, label: "Valve 2/3-channel low-side switches (up to 12 valves)", blocks: [valve low-side switch x N], source: "BRAKING SVG ('Valve 2/3 Channel LS Switch', 'Up to 12 Valves'); Functional Blocks 'Valve 2/3 Channel LS/Switch: MC33810, MC33882'", fn_hint: [load_switch], vendor_parts: [MC33810, MC33882]}
+      - {id: motor_driver, label: "Pump motor driver", blocks: [motor driver], source: "BRAKING SVG ('Motor Driver', 'M'); Functional Blocks 'Motor Driver: HB2001, MC33937, HB2002, GD3000, MC33926, HB2000, MC33931'", fn_hint: [motor_driver_brushed, three_phase_gate_driver], vendor_parts: [HB2001, HB2002, HB2000, MC33926, MC33931, MC33937, GD3000]}
+      - {id: flexray, label: "FlexRay interface (optional)", blocks: [FlexRay interface], source: "BRAKING SVG ('Flex Ray Interface', dashed)", fn_hint: [], vendor_parts: []}
+    links:
+      - [power_if, mcu, ""]
+      - [wheel_sensors, sensor_cond, ""]
+      - [sensor_cond, mcu, ""]
+      - [mcu, sensor_cluster, ""]
+      - [mcu, watchdog, ""]
+      - [mcu, flexray, ""]
+      - [mcu, failsafe_switch, ""]
+      - [mcu, valve_drivers, ""]
+      - [failsafe_switch, valve_drivers, "valve supply"]
+      - [mcu, motor_driver, ""]
+    features:
+      - {id: system, question: "System", choices: [ABS, "ESC (ABS + stability)", "integrated brake / brake-by-wire"], source: "BRAKING page (Braking and Stability Control)"}
+      - {id: valve_count, question: "Number of solenoid valves", choices: ["<=8", "12", ">12"], source: "BRAKING SVG ('Up to 12 Valves')"}
+      - {id: pump_motor, question: "Pump motor", choices: ["brushed DC (H-bridge)", "BLDC (3-phase pre-driver)"], source: "BRAKING Functional Blocks (HB200x H-bridges and MC33937 / GD3000 pre-drivers)"}
+      - {id: network, question: "Vehicle network", choices: ["CAN", "CAN + FlexRay"], source: "BRAKING SVG ('Flex Ray Interface' optional)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_vehicle_gateway
+    name: "Automotive central gateway (CAN / LIN / FlexRay / Ethernet, secure element)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_GATEWAY, url: "https://www.nxp.com/applications/GATEWAY", pages: "SVG GATEWAY-BD-NEW1; Functional Blocks list"}
+    groups:
+      - {id: processor, label: "Gateway processor", blocks: [processor], source: "GATEWAY SVG ('Proccesor'); Functional Blocks 'Processor: S32G3, S32G2'", fn_hint: [soc], vendor_parts: [S32G3, S32G2]}
+      - {id: pmic_sbc, label: "PMIC and CAN/LIN SBC", blocks: [PMIC + CAN/LIN SBC (VBAT, CAN, LIN)], source: "GATEWAY SVG ('PMIC and CAN/LIN SBC'); Functional Blocks 'PMIC and CAN/LIN SBC: VR5510, TJA1128'", fn_hint: [pmic, can_transceiver, lin_transceiver], vendor_parts: [VR5510, TJA1128]}
+      - {id: can_if, label: "CAN interface (multi-channel)", blocks: [CAN transceivers (stacked, 6 networks drawn)], source: "GATEWAY SVG ('CAN Interface', 'CAN Networks'); Functional Blocks 'CAN Transceiver: TJA1464, TJA1468, TJA1467'", fn_hint: [can_transceiver], vendor_parts: [TJA1464, TJA1468, TJA1467]}
+      - {id: lin_if, label: "LIN interface (multi-channel)", blocks: [LIN transceivers (stacked)], source: "GATEWAY SVG ('LIN Interface', 'LIN Networks')", fn_hint: [lin_transceiver], vendor_parts: []}
+      - {id: flexray_sbc, label: "System basis chip (FlexRay)", blocks: [SBC with FlexRay transceiver], source: "GATEWAY SVG ('System Basis Chip (SBC)' -> 'FlexRay Network'); Functional Blocks 'FlexRay Transceivers: UJA113xA'", fn_hint: [pmic], vendor_parts: [UJA113xA]}
+      - {id: eth_phy, label: "Ethernet PHY", blocks: [Ethernet PHY], source: "GATEWAY SVG ('Ethernet PHY' -> 'Ethernet Network(s)'); Functional Blocks 'Ethernet PHY: TJA1103, TJA1120'", fn_hint: [ethernet_phy], vendor_parts: [TJA1103, TJA1120]}
+      - {id: eth_switch, label: "Ethernet switch", blocks: [Ethernet switch], source: "GATEWAY SVG ('Ethernet Switch'); Functional Blocks 'Ethernet Switch: SJA1110, SJA1105TEL, SJA1105EL, SJA1105PQRS'", fn_hint: [ethernet_phy], vendor_parts: [SJA1110, SJA1105TEL, SJA1105EL, SJA1105PQRS]}
+      - {id: se, label: "Secure element", blocks: [secure element], source: "GATEWAY SVG ('Secure Element'); Functional Blocks 'Secure Elements: NCJ37x, NCJ38A'", fn_hint: [secure_element], vendor_parts: [NCJ37x, NCJ38A]}
+    links:
+      - [pmic_sbc, processor, ""]
+      - [can_if, processor, "CAN networks"]
+      - [lin_if, processor, "LIN networks"]
+      - [flexray_sbc, processor, "FlexRay network"]
+      - [processor, eth_phy, "Ethernet network(s)"]
+      - [processor, eth_switch, ""]
+      - [processor, se, ""]
+    features:
+      - {id: networks, question: "Vehicle networks bridged", choices: ["CAN / LIN only", "CAN / LIN + FlexRay", "CAN / LIN + Ethernet"], source: "GATEWAY SVG"}
+      - {id: can_channels, question: "Number of CAN channels", choices: ["<=4", "6-8", ">8"], source: "GATEWAY SVG (stacked CAN Interface, 6 CAN networks drawn)"}
+      - {id: security, question: "Secure element / HSM for secure gateway", choices: ["external secure element", "processor HSM only"], source: "GATEWAY SVG ('Secure Element')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_auto_hvac
+    name: "Automotive HVAC control module (blower motor, shutters, cabin sensors, CAN/LIN)"
+    category: Automotive systems
+    sources:
+      - {doc: NXP_HVAC, url: "https://www.nxp.com/applications/HEATING-VENTILATION-AIR-CONDITIONING", pages: "SVG HVAC-BD-ASP-BD-2; Functional Blocks list"}
+    groups:
+      - {id: sbc, label: "CAN/LIN SBCs", blocks: [CAN/LIN SBC (VBAT, LIN, CAN)], source: "HVAC SVG ('CAN/LIN SBCs'); Functional Blocks 'CAN/LIN SBC: MC33904, FS26, FS24, FS23, MC33910, MC33911, TJA1128, MC33905, MC33912, MC33742'", fn_hint: [pmic, can_transceiver, lin_transceiver], vendor_parts: [MC33904, FS26, FS24, FS23, MC33910, MC33911, TJA1128, MC33905, MC33912]}
+      - {id: mcu, label: "MCU", blocks: [MCU], source: "HVAC SVG ('MCU'); Functional Blocks 'Microcontrollers: S32K3, S32K1, S32M2'", fn_hint: [mcu], vendor_parts: [S32K3, S32K1, S32M2]}
+      - {id: can_if, label: "CAN interface (CAN slaves)", blocks: [CAN transceiver], source: "HVAC SVG ('CAN Interface'); Functional Blocks 'CAN Interface: TJA144x, TJA1044'", fn_hint: [can_transceiver], vendor_parts: [TJA144x, TJA1044]}
+      - {id: lin_if, label: "LIN interface (LIN slaves)", blocks: [LIN transceiver], source: "HVAC SVG ('LIN Interface'); Functional Blocks 'LIN Interface: MM908E624, TJA1128, TJA1029, MC33662'", fn_hint: [lin_transceiver], vendor_parts: [MM908E624, TJA1029, MC33662]}
+      - {id: switch_mon, label: "Switch monitoring", blocks: [switch inputs monitoring], source: "HVAC SVG ('Switch Monitoring'); Functional Blocks 'Switch Monitoring: MC33975, MC33972'", fn_hint: [switch_detection_interface], vendor_parts: [MC33975, MC33972]}
+      - {id: pressure, label: "Pressure sensors (blower output, air distribution, external, cabin)", blocks: [blower output pressure sensor, air distribution pressure sensor, external pressure sensor, cabin pressure sensor], source: "HVAC SVG (four pressure-sensor blocks); Functional Blocks 'Sensors'", fn_hint: [vehicle_sensors], vendor_parts: []}
+      - {id: env_sensors, label: "Humidity / temperature / sunlight sensors", blocks: [humidity, internal temp, external temp, sunlight], source: "HVAC SVG (inputs to MCU)", fn_hint: [vehicle_sensors, temperature_sensor], vendor_parts: []}
+      - {id: motor_ctrl, label: "Motor control (BLDC blower fan)", blocks: [BLDC blower motor control], source: "HVAC SVG ('Motor Control' -> 'BLDC Blower Fan'); Functional Blocks 'Motor Control: MC33932, MC33937, S12ZVM'", fn_hint: [three_phase_gate_driver, motor_controller], vendor_parts: [MC33937, S12ZVM, MC33932]}
+      - {id: hs_switch, label: "High-side switches (DC blower, bypass valves)", blocks: [high-side switches], source: "HVAC SVG ('High Side Switches' -> DC Blower Fan, Bypass Valves); Functional Blocks 'High Side Switches: MC33932, MC33937'", fn_hint: [load_switch, motor_driver_brushed], vendor_parts: []}
+      - {id: shutters, label: "Shutter / flap control x5", blocks: [shutter control (defroster, left / right temperature, floor and ventilation, recirculation)], source: "HVAC SVG ('Shutter Control x5', grey)", fn_hint: [motor_driver_brushed], vendor_parts: []}
+      - {id: gpio, label: "GPIO expander", blocks: [GPIO (LED indication, sensor inputs)], source: "HVAC SVG ('GPIO'); Functional Blocks 'GPIO: PCAL9714, PCAL9722'", fn_hint: [io_expander], vendor_parts: [PCAL9714, PCAL9722]}
+    links:
+      - [sbc, mcu, ""]
+      - [can_if, mcu, ""]
+      - [lin_if, mcu, ""]
+      - [switch_mon, mcu, ""]
+      - [pressure, mcu, ""]
+      - [env_sensors, mcu, ""]
+      - [mcu, motor_ctrl, ""]
+      - [mcu, hs_switch, ""]
+      - [mcu, shutters, ""]
+      - [mcu, gpio, ""]
+    features:
+      - {id: blower, question: "Blower motor", choices: ["BLDC (3-phase)", "brushed DC (high-side switch / PWM)"], source: "HVAC SVG ('Motor Control' -> BLDC Blower Fan; 'High Side Switches' -> DC Blower Fan)"}
+      - {id: flap_actuators, question: "Flap / shutter actuators", choices: ["DC motors driven from the module", "LIN smart actuators"], source: "HVAC SVG ('Shutter Control x5', 'LIN Slaves')"}
+      - {id: zones, question: "Climate zones", choices: ["single zone", "dual zone", "multi-zone"], source: "HVAC SVG (Right / Left Temperature shutters)"}
+  # =========================================================================================================
+  # Industrial, motor drives, power, building
+  # =========================================================================================================
+  - id: nxp_electricity_meter
+    name: "Smart electricity meter (metrology AFE + controller, PLC / wireless, LCD, secure element)"
+    category: Industrial
+    sources:
+      - {doc: NXP_EMETER, url: "https://www.nxp.com/applications/ELECTRICITY-METER", pages: "SVG ELECTRICITY-METERING-BD-01 ('Electricity Metering Solutions'; BD-02 = advanced energy management variant); Functional Blocks lists"}
+    groups:
+      - {id: acdc, label: "Power management: AC/DC + PMIC (optional)", blocks: [AC/DC, power management IC (optional)], source: "EMETER SVG (Power Management -> 'AC / DC', 'Power Management IC' dashed); Functional Blocks 'AC/DC: TEA1723DT', 'Power Management IC: PCA9420-PCA9421'", fn_hint: [acdc_controller, pmic], vendor_parts: [TEA1723DT, PCA9420-PCA9421]}
+      - {id: afe, label: "Metrology analog front end", blocks: [analog front end (voltage / current sensing from mains)], source: "EMETER SVG (Metrology -> 'Analog Front End', SPI); Functional Blocks 'Analog Front End: KM3x, KM1x'", fn_hint: [adc], vendor_parts: [KM3x, KM1x]}
+      - {id: controller, label: "Controller with secure enclave", blocks: [controller MCU, secure enclave (optional)], source: "EMETER SVG ('Controller', 'Secure Enclave' dashed); Functional Blocks 'Controller: MCX-A13X-A14X-A15X, MCX-C14x, MCX-N23X, MCX-N94x, KM3x, KM1x'", fn_hint: [mcu], vendor_parts: [MCX-A13X-A14X-A15X, MCX-C14x-24x-44x, MCX-N23X, MCX-N94-N54-N53-N52-N24, KM3x]}
+      - {id: plc, label: "Wired communication: powerline (PLC) + line drivers", blocks: [powerline communication (optional), PLC line drivers (non-NXP)], source: "EMETER SVG (Wired Communication -> 'Powerline Communication (PLC)' dashed, 'PLC Line Drivers' grey); Functional Blocks 'Powerline Communication (PLC): MCX-N94-N54-N53-N52-N24'", fn_hint: [mcu, amplifier], vendor_parts: [MCX-N94-N54-N53-N52-N24]}
+      - {id: hmi, label: "HMI: LCD / dot matrix, LED driver, segment LCD driver", blocks: [LCD display / dot matrix (non-NXP), LED driver, segment LCD driver], source: "EMETER SVG (HMI, I2C / SPI); Functional Blocks 'LED Driver: PCA9552', 'Segment LCD Driver: PCF8531U, PCF8553DTT'", fn_hint: [display_driver, led_driver, display], vendor_parts: [PCA9552, PCF8531U, PCF8553DTT]}
+      - {id: wireless, label: "Wireless: Wi-Fi / BT / 802.15.4, sub-GHz, NFC, NB-IoT, cellular", blocks: [Wi-Fi / Bluetooth / IEEE 802.15.4 (optional), sub-GHz, near field communication, NB-IoT (non-NXP), cellular (non-NXP)], source: "EMETER SVG (Wireless communication, UART / I2C / SPI); Functional Blocks 'Wi-Fi, Bluetooth, IEEE 802.15.4: MCX-W72, MCX-W71, IW610, IW612, RW610, RW612', 'Sub-GHz: UBX100', 'Near Field Communication: NTAG5-LINK'", fn_hint: [wireless_soc, wifi_soc, nfc_frontend, modem], vendor_parts: [MCX-W72, MCX-W71, IW610, IW612, RW612, UBX100, NTAG5-LINK]}
+      - {id: optical, label: "Optical port LED driver", blocks: [optical port LED driver], source: "EMETER SVG (Optical Port -> 'LED Driver', I2C / SPI)", fn_hint: [led_driver], vendor_parts: []}
+      - {id: security, label: "Security: secure element + tamper sensors", blocks: [secure element (optional), tamper sensors], source: "EMETER SVG (Security, I2C); Functional Blocks 'Secure Element: SE050, SE051, EDGELOCK-A5000, SE052F'", fn_hint: [secure_element, external_block], vendor_parts: [SE050, SE051, EDGELOCK-A5000, SE052F]}
+      - {id: rtc, label: "Real time clock (optional)", blocks: [RTC], source: "EMETER SVG ('Real Time Clock' dashed); Functional Blocks 'Real-Time Clock: PCF2131, PCF85263A'", fn_hint: [rtc], vendor_parts: [PCF2131, PCF85263A]}
+      - {id: flash, label: "Memory: flash", blocks: [flash (non-NXP)], source: "EMETER SVG (Memory -> 'Flash' grey)", fn_hint: [flash], vendor_parts: []}
+    links:
+      - [acdc, controller, "supply"]
+      - [afe, controller, "SPI"]
+      - [plc, controller, ""]
+      - [hmi, controller, "I2C / SPI"]
+      - [controller, wireless, "UART / I2C / SPI"]
+      - [controller, optical, "I2C / SPI"]
+      - [controller, security, "I2C"]
+      - [controller, rtc, ""]
+      - [controller, flash, ""]
+    features:
+      - {id: phases, question: "Meter type", choices: ["single-phase", "two-phase", "three-phase"], source: "EMETER Functional Blocks reference designs (single / two / three-phase)"}
+      - {id: comms, question: "AMI communication", choices: ["powerline (PLC)", "sub-GHz RF mesh", "Wi-Fi / Thread / Zigbee", "NB-IoT / cellular"], source: "EMETER SVG (Wired / Wireless communication)"}
+      - {id: metrology_arch, question: "Metrology architecture", choices: ["metrology MCU with integrated AFE", "separate AFE + application MCU"], source: "EMETER SVG ('Analog Front End' + 'Controller'; KM3x listed for both)"}
+      - {id: display, question: "Display", choices: ["segment LCD", "dot matrix LCD"], source: "EMETER SVG (HMI)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_plc_controller
+    name: "Programmable logic controller (PLC) control module with input / output modules"
+    category: Industrial
+    sources:
+      - {doc: NXP_PLC, url: "https://www.nxp.com/applications/PLC-REMOTE-IOS", pages: "SVG PROGRAMMABLE-LOGIC-PLC-BD1 (Remote I/O diagram REMOTE-IO-BD also on page); Functional Blocks lists"}
+    groups:
+      - {id: power, label: "AC/DC + power management (multiple Vout)", blocks: [AC/DC, power management (multiple Vout)], source: "PLC SVG ('AC/DC', 'Power Management', 'Multiple Vout'); Functional Blocks 'Power Management: MC34VR500, PF3000', 'AC/DC'", fn_hint: [acdc_controller, pmic], vendor_parts: [MC34VR500, PF3000]}
+      - {id: mpu, label: "MPU / MCU (control module)", blocks: [MPU / MCU with serial, GPIO, USB, TFT ctrl, SPI, Ethernet, CAN, A/D, EMC, SD, temperature sensor], source: "PLC SVG (Control Module -> 'MPU' / 'MCU'); Functional Blocks 'MCU/MPU: MCX-A, i.MX RT, Layerscape (QorIQ), i.MX, MCX-N'", fn_hint: [soc, mcu], vendor_parts: [i.MX-RT1180, LS1028A, MCX-N94-N54-N53-N52-N24]}
+      - {id: memory, label: "RAM DDR, flash, SD card, EEPROM", blocks: [RAM DDR, flash, SD card (non-NXP), EEPROM], source: "PLC SVG (memories under the control module)", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: nfc, label: "NFC controller (optional)", blocks: [NFC controller], source: "PLC SVG ('NFC Controller' dashed, Input Module 'NFC'); Functional Blocks 'NFC: PN7160'", fn_hint: [nfc_frontend], vendor_parts: [PN7160]}
+      - {id: rs485, label: "RS-485 (serial)", blocks: [RS485 (non-NXP)], source: "PLC SVG ('RS485' grey)", fn_hint: [rs485_transceiver], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet", blocks: [Ethernet PHY / switch], source: "PLC SVG ('Ethernet'); Functional Blocks 'Ethernet: SJA1110, i.MX-RT1180'", fn_hint: [ethernet_phy], vendor_parts: [SJA1110]}
+      - {id: interfaces, label: "Interfaces + voltage level translator", blocks: [interface devices (I2C / SPI / I3C), voltage level translator (digital inputs)], source: "PLC SVG ('Interfaces', 'Voltage Level Translator'); Functional Blocks 'Interfaces: TJA1052IT, CD1030'", fn_hint: [voltage_translator, isolated_can, switch_detection_interface], vendor_parts: [TJA1052IT, CD1030]}
+      - {id: usb, label: "USB Type-C, load switch, USB protection, USB switch (optional)", blocks: [USB Type-C controller, load switch, USB protection, USB switch], source: "PLC SVG (dashed USB blocks); Functional Blocks 'USB Type-C: PTN5150, PTN5110', 'Load Switch: NX5P3090UK', 'USB Protection: NX20P0477', 'USB Switch: CBTL02043A'", fn_hint: [usb_pd_controller, load_switch, tvs_esd], vendor_parts: [PTN5150, PTN5110, NX5P3090UK, NX20P0477, CBTL02043A]}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "PLC SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'Non-Voltaire Storage: NXH5104UK, SE050'", fn_hint: [secure_element], vendor_parts: [SE050, NXH5104UK]}
+      - {id: smart_switch, label: "Smart switches and drivers (high-voltage outputs)", blocks: [smart high-side / low-side switches, pre-drivers], source: "PLC SVG ('Smart Switched and Drivers' -> Output Module 'High Voltage')", fn_hint: [load_switch, isolated_smart_switch], vendor_parts: []}
+      - {id: can, label: "CAN transceiver", blocks: [CAN transceiver], source: "PLC SVG ('CAN Transceiver' -> Output Module 'CAN'); Functional Blocks 'Interfaces: TJA1052IT'", fn_hint: [can_transceiver, isolated_can], vendor_parts: [TJA1052IT]}
+      - {id: rtc, label: "RTC", blocks: [RTC], source: "PLC SVG ('RTC'); Functional Blocks 'RTC: PCF85053A'", fn_hint: [rtc], vendor_parts: [PCF85053A]}
+      - {id: afe, label: "AFE analog input / output", blocks: [universal analog input / output AFE], source: "PLC SVG ('AFE Analog Input / Output'); Functional Blocks 'AFE Analog Input/Output: NAFEx3352, NAFEx3388, NAFEx1388'", fn_hint: [adc], vendor_parts: [NAFEx3388, NAFEx3352, NAFEx1388]}
+      - {id: gpio, label: "GPIO expander", blocks: [GPIO (LED indication, keypad / sensor inputs)], source: "PLC SVG ('GPIO'); Functional Blocks 'GPIO: PCAL9714, PCAL6416A, PCAL9722'", fn_hint: [io_expander], vendor_parts: [PCAL9714, PCAL6416A, PCAL9722]}
+    links:
+      - [power, mpu, "multiple Vout"]
+      - [mpu, memory, ""]
+      - [nfc, mpu, ""]
+      - [rs485, mpu, "serial"]
+      - [ethernet, mpu, ""]
+      - [interfaces, mpu, ""]
+      - [usb, mpu, ""]
+      - [mpu, security, ""]
+      - [mpu, smart_switch, ""]
+      - [mpu, can, ""]
+      - [mpu, rtc, ""]
+      - [mpu, afe, ""]
+      - [mpu, gpio, ""]
+    features:
+      - {id: processor_class, question: "Controller class", choices: ["MCU (compact PLC / remote I/O)", "MPU with DDR (modular PLC)"], source: "PLC SVG ('MPU' / 'MCU' block); Functional Blocks MCU/MPU list"}
+      - {id: fieldbus, question: "Fieldbus / network", choices: ["Ethernet (TSN / industrial Ethernet)", "RS-485", "CAN"], source: "PLC SVG ('Ethernet', 'RS485', 'CAN Transceiver')"}
+      - {id: analog_io, question: "Analog I/O", choices: ["universal AFE (V / mA / RTD / TC)", "digital I/O only"], source: "PLC SVG ('AFE Analog Input / Output')"}
+      - {id: outputs, question: "Output type", choices: ["smart high-side switches (24 V)", "relays", "high-voltage drivers"], source: "PLC SVG ('Smart Switched and Drivers' -> High Voltage)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_pmsm_drive
+    name: "3-phase PMSM motor drive with sensorless FOC (AC-fed inverter, MCU / DSC)"
+    category: Motor drives
+    sources:
+      - {doc: NXP_PMSM, url: "https://www.nxp.com/applications/PMSM-MOTORS", pages: "SVG PMSM-MOTORS-BD-NEW4 ('3 Phase PMSM'); Functional Blocks list"}
+    groups:
+      - {id: rectifier, label: "AC/DC rectifier + DC bus (brake chopper)", blocks: [AC/DC rectifier, brake transistor, DC-bus capacitor], source: "PMSM SVG ('AC / DC', U_Dc bus, brake switch)", fn_hint: [dc_link_cap], vendor_parts: []}
+      - {id: inverter, label: "3-phase inverter + shunts", blocks: [6-switch IGBT / MOSFET inverter, phase current shunts], source: "PMSM SVG (inverter bridge, isa / isb / isc)", fn_hint: [power_fets], vendor_parts: []}
+      - {id: driver, label: "Power stage driver", blocks: [3-phase power stage driver (PWM in, temperature out)], source: "PMSM SVG ('Power Stage Driver'); Functional Blocks 'Power stage driver: MC33937'", fn_hint: [three_phase_gate_driver], vendor_parts: [MC33937]}
+      - {id: regulator, label: "Voltage regulator (VPWR -> VDD)", blocks: [voltage regulator], source: "PMSM SVG ('Voltage Regulator'); Functional Blocks 'Voltage regulator: PCA9410, MC33904, MC33905, MC33903'", fn_hint: [pol_buck, pmic], vendor_parts: [PCA9410, MC33904, MC33905, MC33903]}
+      - {id: mcu, label: "MCU / DSC (FOC: PWM, ADC, quad timer, fault protection)", blocks: [PWM, ADC, quad timer, fault protection, brake control, FOC loops], source: "PMSM SVG ('MCU/DSC'); Functional Blocks 'MCU: Kinetis V / E, MCX-A, S32K3, S32K1, S32M2, MCX-N'", fn_hint: [mcu], vendor_parts: [S32K3, S32K1, S32M2, MCX-A13X-A14X-A15X, MCX-N94-N54-N53-N52-N24]}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "PMSM SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'SE050'", fn_hint: [secure_element], vendor_parts: [SE050]}
+      - {id: software, label: "Motor control software", blocks: [motor control software (FreeMASTER / MCAT)], source: "PMSM SVG ('Motor Control Software')", fn_hint: [], vendor_parts: []}
+      - {id: motor, label: "PMSM motor (load)", blocks: [PMSM], source: "PMSM SVG ('PMSM', 'Load')", fn_hint: [motor], vendor_parts: []}
+    links:
+      - [rectifier, inverter, "U_DC bus"]
+      - [inverter, motor, "3 phases"]
+      - [mcu, driver, "PWM"]
+      - [driver, inverter, "gate drives"]
+      - [driver, mcu, "faults / temperature"]
+      - [inverter, mcu, "phase currents isa / isb / isc, DC-bus voltage (ADC)"]
+      - [regulator, mcu, "VDD"]
+      - [mcu, rectifier, "brake control (GPIO)"]
+      - [mcu, security, ""]
+      - [software, mcu, ""]
+    features:
+      - {id: control, question: "Control method", choices: ["sensorless FOC", "FOC with encoder / resolver", "six-step"], source: "PMSM SVG (FOC loop, position / speed evaluation)"}
+      - {id: supply, question: "Supply", choices: ["AC mains (rectified DC bus)", "low-voltage DC (12-48 V)"], source: "PMSM SVG ('AC / DC', VPWR)"}
+      - {id: current_sense, question: "Current sensing", choices: ["3 shunts", "single DC-link shunt", "isolated sensors"], source: "PMSM SVG (3 shunts, isa / isb / isc)"}
+      - {id: switches, question: "Inverter switches", choices: [IGBT, Si MOSFET, SiC / GaN], source: "PMSM SVG (IGBT symbols)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_bldc_drive
+    name: "Brushless DC (BLDC) motor control with Hall sensors (1-3 phase AC input, MCU / DSC)"
+    category: Motor drives
+    sources:
+      - {doc: NXP_BLDC, url: "https://www.nxp.com/applications/BRUSHLESS-DC-MOTORS", pages: "SVG BRUSHELESS-DC-MOTOR-BD-ASP-NEW3; Functional Blocks list"}
+    groups:
+      - {id: rectifier, label: "1-3 phase AC rectifier + DC bus", blocks: [bridge rectifier, bulk capacitor, DC-bus shunt / divider], source: "BLDC SVG ('1-3ph AC', rectifier)", fn_hint: [dc_link_cap], vendor_parts: []}
+      - {id: inverter, label: "3-phase inverter", blocks: [6-switch inverter, phase shunts], source: "BLDC SVG (inverter bridge)", fn_hint: [power_fets], vendor_parts: []}
+      - {id: driver, label: "Power stage driver", blocks: [3-phase power stage driver], source: "BLDC SVG ('Power Stage Driver'); Functional Blocks 'Power Stage Driver: MC33937, GD3000'", fn_hint: [three_phase_gate_driver], vendor_parts: [MC33937, GD3000]}
+      - {id: regulator, label: "Voltage regulator", blocks: [voltage regulator (VPWR -> VDD)], source: "BLDC SVG ('Voltage Regulator')", fn_hint: [pol_buck, pol_ldo], vendor_parts: []}
+      - {id: mcu, label: "MCU / DSC (ADC, PWM, decoder, serial)", blocks: [ADC, PWM, Hall decoder, GPIO and serial interface, serial comm], source: "BLDC SVG ('MCU/DSC'); Functional Blocks 'MCU/DSC: Kinetis V / E, MCX, LPC5500, S32M2, DSC, S32K'", fn_hint: [mcu], vendor_parts: [S32M2, MCX-A13X-A14X-A15X]}
+      - {id: hall, label: "Hall sensors (optional)", blocks: [Hall sensors], source: "BLDC SVG ('Hall Sensors' dashed)", fn_hint: [position_sensor], vendor_parts: []}
+      - {id: transceiver, label: "Transceiver (optional)", blocks: [CAN / serial transceiver], source: "BLDC SVG ('Transceiver' dashed); Functional Blocks 'Transceiver: CAN-FD, secure CAN'", fn_hint: [can_transceiver], vendor_parts: []}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "BLDC SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'SE050'", fn_hint: [secure_element], vendor_parts: [SE050]}
+      - {id: motor, label: "BLDC motor", blocks: [BLDC motor], source: "BLDC SVG ('BLDC')", fn_hint: [motor], vendor_parts: []}
+    links:
+      - [rectifier, inverter, "DC bus"]
+      - [mcu, driver, "PWM"]
+      - [driver, inverter, "gate drives"]
+      - [inverter, motor, "3 phases"]
+      - [hall, mcu, "Hall decoder"]
+      - [inverter, mcu, "phase / DC-bus sense (ADC)"]
+      - [regulator, mcu, "VDD"]
+      - [mcu, transceiver, "serial comm"]
+      - [mcu, security, ""]
+    features:
+      - {id: commutation, question: "Commutation", choices: ["six-step with Hall sensors", "sensorless six-step (BEMF)", "sinusoidal / FOC"], source: "BLDC SVG ('Hall Sensors' optional, 'Decoder')"}
+      - {id: supply, question: "Supply", choices: ["1-phase AC", "3-phase AC", "low-voltage DC"], source: "BLDC SVG ('1-3ph AC')"}
+      - {id: comms, question: "Host interface", choices: [CAN / CAN FD, "UART / LIN", "none"], source: "BLDC SVG ('Transceiver' optional)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_ac_ev_charger
+    name: "AC EV charging station (wallbox, level 1-3; metrology MCU + host controller, ISO 15118 PLC)"
+    category: Industrial
+    sources:
+      - {doc: NXP_EVSE, url: "https://www.nxp.com/applications/EV-CHARGER-STATION", pages: "SVG AC_RESIDENTIAL_CHARGING_STATION_L123_BD ('AC Charging Station Solutions'); DC fast-charger diagram DC_CHARGING_STATION_FAST_BD also on page; Functional Blocks lists"}
+    groups:
+      - {id: signal_cond, label: "Signal conditioning (voltage, live / neutral current)", blocks: [signal conditioning from 1, 2 or 3 phases + neutral], source: "EVSE SVG ('Signal Conditioning', grey)", fn_hint: [amplifier], vendor_parts: []}
+      - {id: metrology_mcu, label: "Metrology MCU", blocks: [metrology MCU (voltage, live current, neutral current; PWM for pilot)], source: "EVSE SVG ('Metrology MCU'); Functional Blocks list KM3x / KM1x / MCX-A / MCX-N under SmartCard IC entry", fn_hint: [mcu, adc], vendor_parts: [KM3x, KM1x]}
+      - {id: pilot, label: "Pilot signal interface (CP / PP)", blocks: [control pilot / proximity pilot interface], source: "EVSE SVG ('Pilot Signal Interface', grey; connector CP / PP)", fn_hint: [amplifier], vendor_parts: []}
+      - {id: meter_periph, label: "Metrology-side peripherals", blocks: [NTAG I2C bridge (optional), temperature sensor, magnetic (tamper) sensor, tamper (non-NXP), segment LCD (non-NXP)], source: "EVSE SVG ('NTAG I2C Bridge', 'Temp Sensor', 'Magnetic Sensor', 'Tamper', 'Segment LCD'); Functional Blocks 'NTAG I2C', 'Temperature Sensor: P3T1750DP, P3T2030xUK, P3T1035xUK, PCT2075, P3T1755DP'", fn_hint: [nfc_frontend, temperature_sensor, display], vendor_parts: [NTAG_I2C, P3T1750DP, PCT2075, P3T1755DP]}
+      - {id: acdc, label: "AC/DC supplies (x2, metrology side and host side)", blocks: [AC/DC, AC/DC], source: "EVSE SVG (two 'AC/DC' blocks); Functional Blocks 'AC/DC: TEA2017, TEA1723DT, TEA1721AT'", fn_hint: [acdc_controller], vendor_parts: [TEA2017, TEA1723DT, TEA1721AT]}
+      - {id: isolation, label: "Isolation (metrology to host UART, pilot to PLC)", blocks: [isolation barrier on UART and on pilot line], source: "EVSE SVG ('Isolation' wavy barrier)", fn_hint: [digital_isolator], vendor_parts: []}
+      - {id: host, label: "Host controller", blocks: [host controller], source: "EVSE SVG ('Host Controller'); Functional Blocks 'Host Controller: i.MX RT, i.MX 95 / 93 / 94 / 91, i.MX 8M Nano / Mini, i.MX 8XLite, RW610, RW612'", fn_hint: [soc, mcu], vendor_parts: [i.MX93, i.MX95, i.MX8MMINI, RW612]}
+      - {id: pmic, label: "PMIC (optional)", blocks: [PMIC], source: "EVSE SVG ('PMIC' dashed)", fn_hint: [pmic], vendor_parts: []}
+      - {id: plc, label: "ISO 15118 PLC modem", blocks: [HomePlug Green PHY modem (non-NXP)], source: "EVSE SVG ('ISO 15118 PLC', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: host_periph, label: "Host peripherals: HMI, flash, LED controller, RTC, UART-to-I2C/SPI bridge", blocks: [HMI (non-NXP), flash (non-NXP), LED controller, RTC, UART to I2C/SPI bridge], source: "EVSE SVG", fn_hint: [display, flash, led_driver, rtc], vendor_parts: []}
+      - {id: access, label: "Contactless reader + smartcard IC", blocks: [contactless reader (SPI), smartcard IC], source: "EVSE SVG ('Contactless Reader', 'Smartcard IC'); Functional Blocks 'Contactless Reader: PN5190, CLRC66303HN, PN7160, PN7220, PN7462, PN5180, PN7642', 'SmartCard IC: MIFARE DUOX'", fn_hint: [nfc_frontend, secure_element], vendor_parts: [PN5190, CLRC66303HN, PN7160, PN7220, PN5180, MIFARE-DUOX]}
+      - {id: wireless, label: "Wireless platform", blocks: [Wi-Fi / BT / 802.15.4 / sub-GHz platform (UART / SDIO)], source: "EVSE SVG ('Wireless Platform'); Functional Blocks 'Wireless Platform: K32W061, UBX100, IW610, IW620, IW612, IW611, IW416, RW610'", fn_hint: [wifi_soc, wireless_soc], vendor_parts: [IW612, IW610, IW416, K32W061_41, UBX100]}
+      - {id: se, label: "Secure element", blocks: [secure element (I2C)], source: "EVSE SVG ('Secure Element'); Functional Blocks 'Secure Element: SE050'", fn_hint: [secure_element], vendor_parts: [SE050]}
+      - {id: usb_sys, label: "USB (CC logic, load and signal switch) + system management (EEPROM, GPIO expander, VLT)", blocks: [USB CC logic, load switch, signal switch, I2C EEPROM, GPIO expander, voltage level translator], source: "EVSE SVG (dashed 'USB (CC Logic, Load and Signal Switch)', 'System Management (I2C EEPROM DIP, GPIO Expander, VLT)')", fn_hint: [usb_pd_controller, load_switch, io_expander, voltage_translator], vendor_parts: []}
+      - {id: connector, label: "Vehicle connector (CP, PP, N, L1, PE)", blocks: [type 1 / type 2 connector], source: "EVSE SVG (connector pins)", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [connector, signal_cond, "1, 2 or 3 phases + neutral"]
+      - [signal_cond, metrology_mcu, "voltage / live current / neutral current"]
+      - [metrology_mcu, pilot, "PWM"]
+      - [pilot, connector, "CP"]
+      - [metrology_mcu, meter_periph, "I2C"]
+      - [acdc, metrology_mcu, "Vcc"]
+      - [metrology_mcu, isolation, "UART"]
+      - [isolation, host, "UART"]
+      - [pilot, plc, "isolated pilot line"]
+      - [plc, host, ""]
+      - [pmic, host, "VCC"]
+      - [host_periph, host, ""]
+      - [host, access, "SPI"]
+      - [host, wireless, "UART / SDIO"]
+      - [host, se, "I2C"]
+    features:
+      - {id: phases, question: "Grid connection", choices: ["1-phase", "2-phase", "3-phase"], source: "EVSE SVG ('1,2 or 3 Phases')"}
+      - {id: iso15118, question: "ISO 15118 (plug and charge) PLC", choices: ["yes", "no (IEC 61851 PWM pilot only)"], source: "EVSE SVG ('ISO 15118 PLC')"}
+      - {id: billing_meter, question: "Billing-grade metrology", choices: ["integrated metrology MCU", "external MID meter"], source: "EVSE SVG ('Metrology MCU')"}
+      - {id: user_auth, question: "User authentication", choices: ["RFID / NFC card", "app (Wi-Fi / BLE)", "plug and charge", "none"], source: "EVSE SVG ('Contactless Reader', 'Wireless Platform', 'Secure Element')"}
+      - {id: charger_type, question: "Charger type", choices: ["AC wallbox", "DC fast charger"], source: "EVSE page diagrams (AC residential L1-3, DC fast)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_usb_pd_adapter
+    name: "USB Type-C PD wall charger / power adapter (AC/DC + PD PHY + PD policy MCU)"
+    category: Power & isolation
+    sources:
+      - {doc: NXP_ADAPTER, url: "https://www.nxp.com/applications/POWER-ADAPTERS-CHARGERS", pages: "SVG POWER-ADAPTERS-CHARGER-BD1-NEW4 (wall charger; BD2 = shared power bank); Functional Blocks lists"}
+    groups:
+      - {id: primary, label: "AC/DC primary controller", blocks: [primary-side controller], source: "ADAPTER SVG (AC/DC -> Primary -> 'Controller'); Functional Blocks 'AC/DC: TEA2376, TEA1721AT, TEA2093'", fn_hint: [acdc_controller], vendor_parts: [TEA2376, TEA1721AT]}
+      - {id: secondary, label: "AC/DC secondary controller + MOSFETs", blocks: [secondary-side (synchronous rectifier) controller, MOSFETs], source: "ADAPTER SVG (AC/DC -> Secondary -> 'Controller', 'Mosfets'); Functional Blocks 'AC/DC: TEA2093'", fn_hint: [acdc_controller, power_fets], vendor_parts: [TEA2093]}
+      - {id: load_switch, label: "Load switches (VBUS)", blocks: [VBUS load switches], source: "ADAPTER SVG ('Load Switches'); Functional Blocks 'Load Switches: NX20P0407, NX20P0477, NX5P3090UK, NX20P5090UK, NX5P3290UK'", fn_hint: [load_switch], vendor_parts: [NX20P0407, NX20P0477, NX5P3090UK, NX20P5090UK, NX5P3290UK]}
+      - {id: pd_phy, label: "USB PD PHY", blocks: [USB PD PHY / port controller (CC)], source: "ADAPTER SVG ('USB PD PHY'); Functional Blocks 'USB PD PHY: PTN5150, PTN5110'", fn_hint: [usb_pd_controller], vendor_parts: [PTN5110, PTN5150]}
+      - {id: mcu, label: "LPC MCU (PD policy)", blocks: [MCU running PD policy engine], source: "ADAPTER SVG ('LPC MCU (PD Policy)'); Functional Blocks 'MCU: MCX-A, MCX-N, LPC11U00'", fn_hint: [mcu], vendor_parts: [LPC11U00, MCX-A13X-A14X-A15X]}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element (charger authentication)], source: "ADAPTER SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'SE050, EDGELOCK-A5000'", fn_hint: [secure_element], vendor_parts: [SE050, EDGELOCK-A5000]}
+      - {id: protection, label: "I/F protection", blocks: [interface protection (non-NXP)], source: "ADAPTER SVG ('I/F Protection', grey)", fn_hint: [tvs_esd], vendor_parts: []}
+      - {id: connector, label: "USB Type-C receptacle", blocks: [VBUS, VCONN, CC, USB 3.x, USB 2.x, SBU], source: "ADAPTER SVG ('USB Type-C')", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [primary, secondary, "isolated flyback"]
+      - [secondary, load_switch, "VBUS"]
+      - [load_switch, protection, "VBUS"]
+      - [pd_phy, protection, "CC"]
+      - [protection, connector, ""]
+      - [mcu, pd_phy, ""]
+      - [mcu, secondary, "voltage request"]
+      - [mcu, security, ""]
+    features:
+      - {id: power, question: "Output power class", choices: ["<=30 W", "45-65 W", "100 W", "140-240 W (EPR)"], source: "ADAPTER page (wall charger); TEA2376 / TEA2093 listed"}
+      - {id: ports, question: "Number of Type-C ports", choices: ["1", "2-3"], source: "ADAPTER SVG (single Type-C drawn)"}
+      - {id: pps, question: "PD programmable power supply (PPS)", choices: ["yes", "no"], source: "ADAPTER SVG ('USB PD PHY', 'PD Policy')"}
+      - {id: auth, question: "Charger authentication (secure element)", choices: ["yes", "no"], source: "ADAPTER SVG ('Security (EdgeLock Discrete)')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_flow_meter
+    name: "Battery-powered flow meter (water / gas / heat) with wireless AMR"
+    category: Industrial
+    sources:
+      - {doc: NXP_FLOW, url: "https://www.nxp.com/applications/FLOW-METERING", pages: "SVG FLOW-METER-WATER-GAS-HEAT-BD ('Flow Metering Solutions'); Functional Blocks list"}
+    groups:
+      - {id: power, label: "Power management: battery + DC-DC (optional)", blocks: [battery (3rd party), DC-DC], source: "FLOW SVG (Power Management -> 'Battery', 'DC-DC' dashed); Functional Blocks 'DC-DC: PCA9420-PCA9421'", fn_hint: [battery_pack, pol_buck], vendor_parts: [PCA9420-PCA9421]}
+      - {id: metrology, label: "Metrology sensor: ultrasonic / inductive / electromagnetic", blocks: [ultrasonic, inductive, electromagnetic flow sensing (3rd party)], source: "FLOW SVG (Metrology, GPIO / I2C / UART / SPI)", fn_hint: [external_block], vendor_parts: []}
+      - {id: sensors, label: "Pressure sensor (optional) + temperature sensor", blocks: [pressure sensor, temperature sensor], source: "FLOW SVG (Sensors, I2C / UART); Functional Blocks 'Temperature Sensor: P3T2030xUK, P3T1035xUK'", fn_hint: [temperature_sensor, external_block], vendor_parts: [P3T2030xUK, P3T1035xUK]}
+      - {id: controller, label: "Controller (low-power MCU with LCD)", blocks: [controller], source: "FLOW SVG ('Controller'); Functional Blocks 'Controller: MCX-L25, MCX-L14'", fn_hint: [mcu], vendor_parts: [MCX-L25, MCX-L14]}
+      - {id: hmi, label: "HMI: display + display driver (optional)", blocks: [display (3rd party), display driver], source: "FLOW SVG (HMI, I2C / SPI / SLCD); Functional Blocks 'Display Driver: PCF8531U, PCF2119X'", fn_hint: [display, display_driver], vendor_parts: [PCF8531U, PCF2119X]}
+      - {id: wireless, label: "Wireless: Wi-Fi / BT / 802.15.4, sub-GHz, NFC, NB-IoT, LoRa", blocks: [Wi-Fi / Bluetooth / IEEE 802.15.4, sub-GHz, near field communication, NB-IoT (3rd party), LoRa (3rd party)], source: "FLOW SVG (Wireless Communication, UART / I2C / SPI); Functional Blocks 'Sub-GHz: UBX100', 'Near Field Communication: NTAG5-LINK', 'MCX-W23, IW610, IW612'", fn_hint: [wireless_soc, nfc_frontend, modem], vendor_parts: [UBX100, NTAG5-LINK, MCX-W23, IW610, IW612]}
+      - {id: security, label: "Secure element (optional)", blocks: [secure element], source: "FLOW SVG (Security -> 'Secure Element' dashed, I2C); Functional Blocks 'Secure Element: SE051, SE052F'", fn_hint: [secure_element], vendor_parts: [SE051, SE052F]}
+      - {id: flash, label: "External flash", blocks: [external flash (3rd party)], source: "FLOW SVG (Memory, SPI)", fn_hint: [flash], vendor_parts: []}
+      - {id: rtc, label: "Real time clock (optional)", blocks: [RTC], source: "FLOW SVG ('Real Time Clock' dashed, I2C); Functional Blocks 'Real Time Clock: PCF2131, PCA2131'", fn_hint: [rtc], vendor_parts: [PCF2131, PCA2131]}
+    links:
+      - [power, controller, ""]
+      - [metrology, controller, "GPIO / I2C / UART / SPI"]
+      - [sensors, controller, "I2C / UART"]
+      - [hmi, controller, "I2C / SPI / SLCD"]
+      - [controller, wireless, "UART / I2C / SPI"]
+      - [controller, security, "I2C"]
+      - [controller, flash, "SPI"]
+      - [controller, rtc, "I2C"]
+    features:
+      - {id: medium, question: "Metered medium", choices: [water, gas, heat], source: "FLOW page title (water, gas, heat)"}
+      - {id: sensing, question: "Flow sensing principle", choices: [ultrasonic, inductive, electromagnetic], source: "FLOW SVG (Metrology)"}
+      - {id: radio, question: "AMR / AMI radio", choices: ["sub-GHz (wM-Bus)", "NB-IoT / LTE-M", "LoRa", "BLE / 802.15.4"], source: "FLOW SVG (Wireless Communication)"}
+      - {id: battery_life, question: "Battery life target", choices: ["<10 years", ">=10 years"], source: "FLOW SVG (Battery + optional DC-DC)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_smart_plug
+    name: "Smart plug / power socket with energy metering and Zigbee"
+    category: Appliances & building
+    sources:
+      - {doc: NXP_SMARTPLUG, url: "https://www.nxp.com/applications/SMART-POWER-SOCKET-LIGHT", pages: "SVG SMART-POWER-BD-ASP-NEW ('Smart Plug'); Functional Blocks list"}
+    groups:
+      - {id: psu, label: "10 W PSU", blocks: [10 W offline PSU], source: "SMARTPLUG SVG ('10 W PSU'); Functional Blocks 'Power Management: TEA1721DT'", fn_hint: [acdc_controller], vendor_parts: [TEA1721DT]}
+      - {id: boost, label: "DC-DC boost converter", blocks: [DC-DC boost], source: "SMARTPLUG SVG ('DC-DC Boost Converter'); Functional Blocks 'Power Management: PCA9410'", fn_hint: [pol_buck], vendor_parts: [PCA9410]}
+      - {id: mcu, label: "MCU (metrology)", blocks: [MCU], source: "SMARTPLUG SVG ('MCU'); Functional Blocks 'MCU: KM1x'", fn_hint: [mcu, adc], vendor_parts: [KM1x]}
+      - {id: signal_cond, label: "Signal conditioning (live current, neutral current, voltage)", blocks: [signal conditioning], source: "SMARTPLUG SVG ('Signal Conditioning', grey)", fn_hint: [amplifier], vendor_parts: []}
+      - {id: relays, label: "Main relays", blocks: [main relays (control line)], source: "SMARTPLUG SVG ('Main Relays', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "SMARTPLUG SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'SE050, SE051'", fn_hint: [secure_element], vendor_parts: [SE050, SE051]}
+      - {id: radio, label: "HAN: Zigbee / 802.15.4", blocks: [Zigbee / 802.15.4 radio (UART)], source: "SMARTPLUG SVG ('HAN: Zigbee and 802.15.14'); Functional Blocks 'Wireless: JN5169'", fn_hint: [wireless_soc], vendor_parts: [JN5169]}
+      - {id: rtc, label: "RTC", blocks: [RTC (I2C)], source: "SMARTPLUG SVG ('RTC'); Functional Blocks 'Peripherals: PCA2131'", fn_hint: [rtc], vendor_parts: [PCA2131]}
+      - {id: led, label: "LED driver + LEDs", blocks: [LED driver (I2C), LEDs], source: "SMARTPLUG SVG ('Led Driver', 'LEDs'); Functional Blocks 'Peripherals: PCA9955BTW'", fn_hint: [led_driver], vendor_parts: [PCA9955BTW]}
+    links:
+      - [psu, boost, "VCC"]
+      - [boost, mcu, "VCC"]
+      - [signal_cond, mcu, "live current / neutral current / voltage"]
+      - [mcu, relays, "control line"]
+      - [mcu, security, ""]
+      - [mcu, radio, "UART"]
+      - [mcu, rtc, "I2C"]
+      - [mcu, led, "I2C"]
+    features:
+      - {id: metering, question: "Energy metering", choices: ["yes", "no"], source: "SMARTPLUG SVG (Signal Conditioning: live / neutral current, voltage)"}
+      - {id: radio, question: "Home-network radio", choices: ["Zigbee / 802.15.4", "Thread / Matter", "Wi-Fi", "BLE"], source: "SMARTPLUG SVG ('HAN: Zigbee and 802.15.14')"}
+      - {id: load_rating, question: "Switched load rating", choices: ["10 A", "16 A", ">16 A"], source: "SMARTPLUG SVG ('Main Relays')"}
+  # =========================================================================================================
+  # Building, consumer, payment, medical, communications
+  # =========================================================================================================
+  - id: nxp_access_reader
+    name: "Physical access control reader (smart card reader + MCU, door lock output)"
+    category: Appliances & building
+    sources:
+      - {doc: NXP_ACCESS, url: "https://www.nxp.com/applications/ACCESS-MANAGEMENT-ASP", pages: "SVG GOVERNMENT-ACCESS-BD2-ASP-NEW ('Physical Access'; BD1 = logical access); Functional Blocks lists"}
+    groups:
+      - {id: mcu, label: "MCU / MPU", blocks: [MCU / MPU], source: "ACCESS BD2 SVG ('MCU/MPU'); Functional Blocks 'MCU/MPU: MCX-A, i.MX RT, K8x secure MCU, MCX-N, i.MX6UL'", fn_hint: [mcu], vendor_parts: [MCX-A13X-A14X-A15X, MCX-N94-N54-N53-N52-N24, i.MX6UL]}
+      - {id: reader, label: "Reader (NFC / contactless front end)", blocks: [contactless reader IC], source: "ACCESS BD2 SVG ('Reader'); Functional Blocks 'Reader: CLRC66303HN, PN7462'", fn_hint: [nfc_frontend], vendor_parts: [CLRC66303HN, PN7462]}
+      - {id: card, label: "Smart card (credential)", blocks: [smart card], source: "ACCESS BD2 SVG ('Smart Card'); Functional Blocks 'Smart Card: SMARTMX3-P71D321, SMARTMX2-P60'", fn_hint: [secure_element], vendor_parts: [SMARTMX3-P71D321, SMARTMX2-P60]}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "ACCESS BD2 SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'Security: SE050, SE051, EDGELOCK-A5000'", fn_hint: [secure_element], vendor_parts: [SE050, SE051, EDGELOCK-A5000]}
+      - {id: power, label: "Power management", blocks: [PMIC], source: "ACCESS BD2 SVG ('Power Management'); Functional Blocks 'Power Management: PF1550'", fn_hint: [pmic], vendor_parts: [PF1550]}
+      - {id: load_switch, label: "Load switch (door lock drive)", blocks: [load switch], source: "ACCESS BD2 SVG ('Load Switch' -> 'Door lock')", fn_hint: [load_switch], vendor_parts: []}
+      - {id: rtc, label: "RTC", blocks: [RTC], source: "ACCESS BD2 SVG ('RTC'); Functional Blocks 'RTC: PCF8563'", fn_hint: [rtc], vendor_parts: [PCF8563]}
+      - {id: door_lock, label: "Door lock (optional)", blocks: [door lock / strike], source: "ACCESS BD2 SVG ('Door lock', dashed)", fn_hint: [external_block], vendor_parts: []}
+      - {id: backend, label: "Verification + local database", blocks: [verification, local database], source: "ACCESS BD2 SVG (grey 'Verification', 'Local Database')", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [card, reader, "13.56 MHz"]
+      - [reader, mcu, ""]
+      - [security, mcu, ""]
+      - [power, mcu, ""]
+      - [rtc, mcu, ""]
+      - [mcu, load_switch, ""]
+      - [load_switch, door_lock, ""]
+      - [mcu, backend, ""]
+    features:
+      - {id: credential, question: "Credential technology", choices: ["MIFARE / ISO 14443 card", "mobile credential (NFC / BLE)", "PIV / government ID"], source: "ACCESS page (physical and logical access; SmartMX listed)"}
+      - {id: decision, question: "Access decision", choices: ["local database in reader", "online verification (controller / cloud)"], source: "ACCESS BD2 SVG ('Verification', 'Local Database')"}
+      - {id: lock_drive, question: "Lock drive", choices: ["load switch / relay output", "networked lock (separate controller)"], source: "ACCESS BD2 SVG ('Load Switch' -> 'Door lock')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_home_control_panel
+    name: "Smart home control panel / hub (MPU, touch display, Wi-Fi + Zigbee / BLE, NFC; Matter-style appliance control)"
+    category: Appliances & building
+    sources:
+      - {doc: NXP_HOMEPANEL, url: "https://www.nxp.com/applications/HOME-CONTROL-PANEL", pages: "SVG HOME-CONTROL-PANEL-BD-ASP2; Functional Blocks list"}
+    groups:
+      - {id: mpu, label: "MPU", blocks: [MPU], source: "HOMEPANEL SVG ('MPU'); Functional Blocks 'MPU: i.MX8MMINI'", fn_hint: [soc], vendor_parts: [i.MX8MMINI]}
+      - {id: pmic, label: "PMIC", blocks: [PMIC], source: "HOMEPANEL SVG ('PMIC'); Functional Blocks 'PMIC: PCA9450'", fn_hint: [pmic], vendor_parts: [PCA9450]}
+      - {id: battery_mgmt, label: "Battery management + battery", blocks: [battery management (charger), battery (non-NXP)], source: "HOMEPANEL SVG ('Battery Management', 'Battery')", fn_hint: [battery_charger, battery_pack], vendor_parts: []}
+      - {id: nfc, label: "NFC reader", blocks: [NFC reader], source: "HOMEPANEL SVG ('NFC Reader'); Functional Blocks 'NFC Reader: PN7160'", fn_hint: [nfc_frontend], vendor_parts: [PN7160]}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "HOMEPANEL SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'SE050, EDGELOCK-A5000'", fn_hint: [secure_element], vendor_parts: [SE050, EDGELOCK-A5000]}
+      - {id: bt_zigbee, label: "Bluetooth / Zigbee", blocks: [BLE / 802.15.4 radio], source: "HOMEPANEL SVG ('Bluetooth/ Zigbee'); Functional Blocks 'Bluetooth Zigbee: K32W061_41, MCX-W23, MCX-W72'", fn_hint: [ble_soc, wireless_soc], vendor_parts: [K32W061_41, MCX-W23, MCX-W72]}
+      - {id: wifi, label: "Wi-Fi", blocks: [Wi-Fi radio], source: "HOMEPANEL SVG ('Wi-Fi'); Functional Blocks 'Wi-Fi: IW610, IW612, IW611, RW610, RW612, IW693, IW623'", fn_hint: [wifi_soc], vendor_parts: [IW610, IW612, IW611, RW612, IW693, IW623]}
+      - {id: display, label: "Touch display", blocks: [touch display (non-NXP)], source: "HOMEPANEL SVG ('Touch Display', grey)", fn_hint: [display], vendor_parts: []}
+      - {id: mic, label: "Microphone", blocks: [MIC (non-NXP)], source: "HOMEPANEL SVG ('MIC', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: gpio, label: "GPIO expander", blocks: [GPIO (LED indication, sensor inputs)], source: "HOMEPANEL SVG ('GPIO'); Functional Blocks 'GPIO: PCAL9714, PCAL6416A, PCAL9722'", fn_hint: [io_expander], vendor_parts: [PCAL9714, PCAL6416A, PCAL9722]}
+      - {id: endpoints, label: "Controlled devices", blocks: [major / medium / small home appliance, robotic appliance, power socket, heat metering, air conditioning], source: "HOMEPANEL SVG (right-hand column, wireless symbol)", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [pmic, battery_mgmt, ""]
+      - [battery_mgmt, mpu, ""]
+      - [nfc, mpu, ""]
+      - [security, mpu, ""]
+      - [mpu, bt_zigbee, ""]
+      - [mpu, wifi, ""]
+      - [mpu, display, ""]
+      - [mic, mpu, ""]
+      - [mpu, gpio, ""]
+      - [wifi, endpoints, "wireless"]
+    features:
+      - {id: protocol, question: "Home-network protocols", choices: ["Wi-Fi + Thread / Matter", "Wi-Fi + Zigbee", "Wi-Fi + BLE only"], source: "HOMEPANEL SVG ('Bluetooth/ Zigbee', 'Wi-Fi'); IW612 / RW612 (tri-radio) listed"}
+      - {id: voice, question: "Voice control (microphone)", choices: ["yes", "no"], source: "HOMEPANEL SVG ('MIC')"}
+      - {id: battery_backup, question: "Battery backup", choices: ["yes", "no (mains only)"], source: "HOMEPANEL SVG ('Battery Management', 'Battery')"}
+      - {id: processor, question: "Processor class", choices: ["MPU with Linux (rich GUI)", "crossover MCU (RTOS GUI)"], source: "HOMEPANEL SVG ('MPU'; i.MX 8M Mini listed)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_smart_lock
+    name: "Smart door lock (NFC controller, MIFARE credentials, BLE / Wi-Fi, motor driver)"
+    category: Appliances & building
+    sources:
+      - {doc: NXP_SMARTLOCK, url: "https://www.nxp.com/applications/SMART-LOCK", pages: "SVG SMART-LOCK-BD1-ASP-NEW4 ('Smart Lock PN7362'; also CLRC663, UWB and e-lock diagrams on page); Functional Blocks lists"}
+    groups:
+      - {id: nfc_ctrl, label: "NFC controller (with MCU)", blocks: [NFC controller], source: "SMARTLOCK BD1 SVG ('NFC Controller'); Functional Blocks 'NFC Controller: PN5190, CLRC66303HN, PN736X, MCX-W23'", fn_hint: [nfc_frontend, mcu], vendor_parts: [PN736X, PN5190, CLRC66303HN]}
+      - {id: dcdc, label: "DC/DC", blocks: [DC/DC], source: "SMARTLOCK BD1 SVG ('DC/DC'); Functional Blocks 'DC-DC: PCA9410'", fn_hint: [pol_buck], vendor_parts: [PCA9410]}
+      - {id: rtc, label: "RTC", blocks: [RTC], source: "SMARTLOCK BD1 SVG ('RTC'); Functional Blocks 'RTC: PCF8523'", fn_hint: [rtc], vendor_parts: [PCF8523]}
+      - {id: motor_driver, label: "Motor driver + lock motor", blocks: [motor driver, motor (non-NXP)], source: "SMARTLOCK BD1 SVG ('Motor Driver' -> 'Motor'); Functional Blocks list 'MC33926'", fn_hint: [motor_driver_brushed, motor], vendor_parts: [MC33926]}
+      - {id: tamper, label: "Door handle / tamper detect", blocks: [door handle / tamper detect (non-NXP)], source: "SMARTLOCK BD1 SVG (grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: security, label: "Security (EdgeLock discrete)", blocks: [secure element], source: "SMARTLOCK BD1 SVG ('Security (EdgeLock Discrete)'); Functional Blocks 'SE050, SE051'", fn_hint: [secure_element], vendor_parts: [SE050, SE051]}
+      - {id: led, label: "LED controller + LEDs", blocks: [LED controller, LEDs], source: "SMARTLOCK BD1 SVG ('LED Controller'); Functional Blocks 'LED Controller: PCA9956BTW'", fn_hint: [led_driver], vendor_parts: [PCA9956BTW]}
+      - {id: wifi, label: "Wi-Fi module", blocks: [Wi-Fi module], source: "SMARTLOCK BD1 SVG ('Wi-Fi Module'); Functional Blocks 'Wi-Fi: IW610, IW416, RW610, RW612'", fn_hint: [wifi_soc], vendor_parts: [IW610, IW416, RW610, RW612]}
+      - {id: ble, label: "Wireless connectivity MCU (BLE)", blocks: [wireless connectivity MCU], source: "SMARTLOCK BD1 SVG ('Wireless Connectivity MCU'); Functional Blocks 'Wireless Connectivity MCU: KW31Z, MCX-W23, MCX-W72'", fn_hint: [ble_soc, wireless_soc], vendor_parts: [KW31Z, MCX-W23, MCX-W72]}
+      - {id: credential, label: "MIFARE DESFire EV3 credential", blocks: [contactless card / tag], source: "SMARTLOCK BD1 SVG ('MIFARE DESFire EV3'); Functional Blocks 'MF3DHx3'", fn_hint: [external_block], vendor_parts: [MF3DHx3]}
+      - {id: sam, label: "MIFARE SAM AV3", blocks: [secure access module], source: "SMARTLOCK BD1 SVG ('MIFARE SAM AV3'); Functional Blocks 'Secure Element: SE050, MIFSAMAV3'", fn_hint: [secure_element], vendor_parts: [MIFSAMAV3]}
+    links:
+      - [dcdc, nfc_ctrl, ""]
+      - [rtc, nfc_ctrl, ""]
+      - [nfc_ctrl, motor_driver, ""]
+      - [tamper, nfc_ctrl, ""]
+      - [security, nfc_ctrl, ""]
+      - [nfc_ctrl, led, ""]
+      - [nfc_ctrl, wifi, ""]
+      - [credential, nfc_ctrl, "NFC"]
+      - [nfc_ctrl, ble, ""]
+      - [nfc_ctrl, sam, ""]
+    features:
+      - {id: credentials, question: "Credentials supported", choices: ["NFC card / tag (MIFARE)", "phone (BLE / NFC)", "UWB hands-free", "PIN / fingerprint"], source: "SMARTLOCK page diagrams (PN7362, CLRC663, UWB variants)"}
+      - {id: connectivity, question: "Remote connectivity", choices: ["BLE only", "Wi-Fi", "Thread / Matter (802.15.4)"], source: "SMARTLOCK BD1 SVG ('Wi-Fi Module', 'Wireless Connectivity MCU')"}
+      - {id: power, question: "Power source", choices: ["AA / Li battery", "mains"], source: "SMARTLOCK BD1 SVG ('DC/DC')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_smartwatch
+    name: "Smartwatch (MCU, PMIC, BLE / Wi-Fi, NFC, sensors, audio codec, eMMC)"
+    category: Consumer & personal electronics
+    sources:
+      - {doc: NXP_SMARTWATCH, url: "https://www.nxp.com/applications/SMARTWATCH", pages: "SVG SMARTWATCH-BD-ASP-NEW-UPD ('Smartwatch'; 'Smart Watch UWB' and 'Wristband' diagrams also on page); Functional Blocks lists"}
+    groups:
+      - {id: mcu, label: "MCU", blocks: [MCU], source: "SMARTWATCH SVG ('MCU'); Functional Blocks (Smartwatch) 'MCU: MCX-A, i.MX7ULP, i.MX6ULL, MCX-N'", fn_hint: [mcu, soc], vendor_parts: [i.MX7ULP, i.MX6ULL, i.MX-RT500]}
+      - {id: pmic, label: "Power management", blocks: [PMIC (charger, rails)], source: "SMARTWATCH SVG ('Power Management'); Functional Blocks 'Power Management: PF3000, PCA9460, PF1550, PF1510'", fn_hint: [pmic, battery_charger], vendor_parts: [PF3000, PCA9460, PF1550, PF1510]}
+      - {id: wireless, label: "Wireless communication", blocks: [BLE / Wi-Fi radio], source: "SMARTWATCH SVG ('Wireless Communication'); Functional Blocks 'Wireless Communication: KW31Z, IW416'", fn_hint: [ble_soc, wifi_soc], vendor_parts: [KW31Z, IW416]}
+      - {id: nfc, label: "NFC", blocks: [NFC tag / controller], source: "SMARTWATCH SVG ('NFC'); Functional Blocks 'NFC: NTAG_I2C'", fn_hint: [nfc_frontend], vendor_parts: [NTAG_I2C]}
+      - {id: sensors, label: "Sensors", blocks: [motion / environmental sensors], source: "SMARTWATCH SVG ('Sensors'); Wristband list 'Magnetometer: FXOS8700CQ'", fn_hint: [external_block], vendor_parts: [FXOS8700CQ]}
+      - {id: audio, label: "Audio codec", blocks: [audio codec], source: "SMARTWATCH SVG ('Audio Codec'); Functional Blocks 'Audio Codec: SGTL5000'", fn_hint: [audio_codec], vendor_parts: [SGTL5000]}
+      - {id: storage, label: "Storage eMMC", blocks: [eMMC (non-NXP)], source: "SMARTWATCH SVG ('Storage eMMC', grey)", fn_hint: [flash], vendor_parts: []}
+      - {id: display, label: "Display", blocks: [display (non-NXP)], source: "SMARTWATCH SVG ('Display', grey)", fn_hint: [display], vendor_parts: []}
+      - {id: ui, label: "UI buttons", blocks: [buttons (non-NXP)], source: "SMARTWATCH SVG ('UI Buttons', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: usb, label: "I/O micro USB", blocks: [micro USB (non-NXP)], source: "SMARTWATCH SVG ('I/O Micro USB', grey)", fn_hint: [tvs_esd, load_switch], vendor_parts: []}
+    links:
+      - [pmic, mcu, ""]
+      - [mcu, wireless, ""]
+      - [nfc, mcu, ""]
+      - [sensors, mcu, ""]
+      - [mcu, audio, ""]
+      - [mcu, storage, ""]
+      - [mcu, display, ""]
+      - [ui, mcu, ""]
+      - [mcu, usb, ""]
+    features:
+      - {id: wearable_class, question: "Device class", choices: ["smartwatch (display, apps)", "fitness wristband"], source: "SMARTWATCH page diagrams (Smartwatch, Wristband)"}
+      - {id: radios, question: "Radios", choices: ["BLE only", "BLE + Wi-Fi", "BLE + UWB"], source: "SMARTWATCH page diagrams ('Smart Watch UWB' lists SR150)"}
+      - {id: nfc_payment, question: "NFC (payment / pairing)", choices: ["yes", "no"], source: "SMARTWATCH SVG ('NFC')"}
+      - {id: charging, question: "Charging", choices: ["USB (wired)", "wireless / pogo"], source: "SMARTWATCH SVG ('I/O Micro USB')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_mpos
+    name: "Smart mobile POS terminal (EMV contact + contactless, magstripe, Wi-Fi/BT + cellular, battery)"
+    category: Consumer & personal electronics
+    sources:
+      - {doc: NXP_MPOS, url: "https://www.nxp.com/applications/SMART-MOBILE-POS", pages: "SVG SMART-MOBILE-POS-BD-ASP-NEW ('POS Terminal'); Functional Blocks list"}
+    groups:
+      - {id: mcu, label: "Secure MCU", blocks: [MCU (tamper pins)], source: "MPOS SVG ('MCU'); Functional Blocks 'MCU: MCX-A, K81_150, i.MX-RT1170, MCX-N'", fn_hint: [mcu], vendor_parts: [K81_150, i.MX-RT1170]}
+      - {id: power_in, label: "USB Type-C power delivery + wireless charging receiver", blocks: [USB Type-C PD, wireless charging receiver], source: "MPOS SVG ('USB Type-C Power Delivery', 'Wireless Charging Receiver'); Functional Blocks 'USB Type C Delivery: PTN5100', 'Wireless Charging receiver: MWPR1516'", fn_hint: [usb_pd_controller, battery_charger], vendor_parts: [PTN5100, MWPR1516]}
+      - {id: pmu, label: "Battery PMU (discrete) + button cell", blocks: [battery PMU (discrete, non-NXP), button cell (non-NXP)], source: "MPOS SVG ('Battery PMU (Discrete)', 'Button Cell', grey)", fn_hint: [battery_charger, pmic, battery_pack], vendor_parts: []}
+      - {id: usb_sw, label: "Serial USB / USB load switch", blocks: [USB load switch], source: "MPOS SVG ('Serial USB USB Load SW'); Functional Blocks 'Serial USB Load SW: NX5P3290UK'", fn_hint: [load_switch], vendor_parts: [NX5P3290UK]}
+      - {id: wireless, label: "Wi-Fi / Bluetooth (optional) + GPRS / cellular", blocks: [Wi-Fi / Bluetooth (UART), GPRS / cellular 4 Mbit/s (UART, non-NXP)], source: "MPOS SVG (Wi-Fi/Bluetooth dashed; 'GPRS/Celular 4M bit/s' grey); Functional Blocks 'Wi-Fi + Bluetooth: QN9080, 88W8987, IW416, RW610'", fn_hint: [wifi_soc, ble_soc, modem], vendor_parts: [QN9080, 88W8987, IW416, RW610]}
+      - {id: level_tr, label: "Level translator", blocks: [I2C level translator], source: "MPOS SVG ('Level Translator'); Functional Blocks 'Level Translator: PCA9306, P3A9606'", fn_hint: [voltage_translator], vendor_parts: [PCA9306, P3A9606]}
+      - {id: security, label: "Security (EdgeLock discrete, optional)", blocks: [secure element], source: "MPOS SVG ('Security (EdgeLock Discrete)' dashed); Functional Blocks 'SE050, SE051'", fn_hint: [secure_element], vendor_parts: [SE050, SE051]}
+      - {id: contact, label: "Contact reader (ISO 7816-3)", blocks: [contact smart card interface], source: "MPOS SVG ('Contact Reader', ISO7816-3); Functional Blocks 'Contact Reader: TDA8026ET, TDA8035HN'", fn_hint: [smartcard_interface], vendor_parts: [TDA8026ET, TDA8035HN]}
+      - {id: contactless, label: "Contactless reader (SPI)", blocks: [contactless (EMVCo) reader], source: "MPOS SVG ('Contactless Reader', SPI); Functional Blocks 'Contactless Reader: PN5190'", fn_hint: [nfc_frontend], vendor_parts: [PN5190]}
+      - {id: magstripe, label: "Magstripe card reader", blocks: [magstripe reader (ADC, non-NXP)], source: "MPOS SVG ('Magstripe Card Reader', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: io, label: "I2C expanders + matrix keyboard", blocks: [I2C expanders, matrix keyboard (non-NXP)], source: "MPOS SVG ('I2C Expanders', 'Matrix Keyboard'); Functional Blocks 'I2C Expander: PCAL6408A, PCAL6416A'", fn_hint: [io_expander], vendor_parts: [PCAL6408A, PCAL6416A]}
+      - {id: rtc, label: "RTC (tamper)", blocks: [RTC with tamper pins], source: "MPOS SVG ('RTC', 'Tamper Pins'); Functional Blocks 'RTC: PCF2131, PCF85053A, PCA2131'", fn_hint: [rtc], vendor_parts: [PCF2131, PCF85053A, PCA2131]}
+      - {id: led, label: "LED driver + LEDs", blocks: [LED driver, LEDs], source: "MPOS SVG ('LED Driver' -> 'LEDs'); Functional Blocks 'LED Driver: PCA9632'", fn_hint: [led_driver], vendor_parts: [PCA9632]}
+      - {id: peripherals, label: "Display, thermal printer, buzzer, proximity sensor, external memory", blocks: [display, thermal printer, buzzer, proximity sensor, external memory (NOR, NAND, XIP, DDRx)], source: "MPOS SVG (grey blocks)", fn_hint: [display, ddr_flash, external_block], vendor_parts: []}
+    links:
+      - [power_in, pmu, "VCC"]
+      - [pmu, mcu, "VCC"]
+      - [usb_sw, mcu, "USB"]
+      - [mcu, wireless, "UART"]
+      - [mcu, level_tr, "I2C"]
+      - [level_tr, security, ""]
+      - [mcu, contact, "ISO 7816-3"]
+      - [mcu, contactless, "SPI"]
+      - [magstripe, mcu, "ADC"]
+      - [mcu, io, "I2C / analog"]
+      - [mcu, rtc, "I2C / tamper pins"]
+      - [mcu, led, "I2C"]
+      - [mcu, peripherals, "I2C / PWM / bus"]
+    features:
+      - {id: payment_methods, question: "Payment methods", choices: ["EMV contact", "EMV contactless / NFC", "magstripe", "QR"], source: "MPOS SVG (Contact Reader, Contactless Reader, Magstripe)"}
+      - {id: backhaul, question: "Backhaul", choices: ["Wi-Fi / BT to phone", "cellular", "both"], source: "MPOS SVG (Wi-Fi/Bluetooth, GPRS/Cellular)"}
+      - {id: charging, question: "Charging", choices: ["USB Type-C PD", "wireless (Qi)", "both"], source: "MPOS SVG"}
+      - {id: pci, question: "PCI PTS tamper protection", choices: ["secure MCU with tamper pins", "secure MCU + external secure element"], source: "MPOS SVG ('Tamper Pins', 'Security (EdgeLock Discrete)')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_payment_terminal
+    name: "Open / closed-loop contactless payment terminal (EMVCo contact + contactless, SAMs, transit / QR)"
+    category: Consumer & personal electronics
+    sources:
+      - {doc: NXP_PAYMENT, url: "https://www.nxp.com/applications/OPEN-CLOSE-LOOP-PAYMENT", pages: "SVG OPEN-CLOSE-LOOP-PAYMENT-BD1-ASP-2 (open architecture; LOOP-PAYMENT-BD2-ASP = closed loop reader module); Functional Blocks lists"}
+    groups:
+      - {id: mcu, label: "Secure MCU (crypto engine, tamper module)", blocks: [MCU with CAAM crypto engine, TRNG, tamper module, USB OTG, SDIO / UART / Flex IO], source: "PAYMENT SVG ('MCU', 'Crypto Engine', 'Tamper Module'); Functional Blocks 'Secure Microcontroller: K81_150, LPC1100, LPC546XX'", fn_hint: [mcu], vendor_parts: [K81_150, LPC1100, LPC546XX]}
+      - {id: pmic, label: "PMIC & integrated battery charger", blocks: [PMIC with battery charger], source: "PAYMENT SVG ('PMIC & Int. Battery Charger'); Functional Blocks 'PMIC and Integrated Battery Charger: MMPF0100, PF3000, PF1550'", fn_hint: [pmic, battery_charger], vendor_parts: [MMPF0100, PF3000, PF1550]}
+      - {id: memory, label: "External memory", blocks: [NOR, NAND, XIP memory, DDRx (non-NXP)], source: "PAYMENT SVG ('External Memory', grey)", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: rtc, label: "RTC", blocks: [RTC], source: "PAYMENT SVG ('RTC'); Functional Blocks 'RTC: PCF85053A'", fn_hint: [rtc], vendor_parts: [PCF85053A]}
+      - {id: wired, label: "Wired interfaces", blocks: [wired interfaces (USB OTG, non-NXP)], source: "PAYMENT SVG (Standard Connectivity -> 'Wired Interfaces', grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: wireless, label: "Wi-Fi / Bluetooth + GPRS / 3G / 4G / LTE", blocks: [Wi-Fi / Bluetooth (CTS/RTS UART), cellular (non-NXP)], source: "PAYMENT SVG (Wireless Connectivity); Functional Blocks 'Wi-Fi + BlueTooth: QN9080, IW416'", fn_hint: [wifi_soc, ble_soc, modem], vendor_parts: [QN9080, IW416]}
+      - {id: contact, label: "Contact reader interface", blocks: [contact (ISO 7816) reader interface], source: "PAYMENT SVG ('Contact Reader Interface', EMVco Payment); Functional Blocks 'Contact Reader Interface: TDA8026ET, TDA8035HN'", fn_hint: [smartcard_interface], vendor_parts: [TDA8026ET, TDA8035HN]}
+      - {id: contactless, label: "Contactless reader interface + antenna matching", blocks: [contactless reader, antenna matching network], source: "PAYMENT SVG ('Contactless Reader Interface' with matching components); Functional Blocks 'Contactless Reader Interface: PN5190'", fn_hint: [nfc_frontend], vendor_parts: [PN5190]}
+      - {id: sams, label: "SAMs (up to 5)", blocks: [secure access modules], source: "PAYMENT SVG ('SAMs (Up to 5)'); Functional Blocks (closed loop) 'SAM: MIFSAMAV3'", fn_hint: [secure_element], vendor_parts: [MIFSAMAV3]}
+      - {id: cards, label: "Contact / dual-interface and contactless smart cards", blocks: [contact / dual interface smart card, contactless smart card], source: "PAYMENT SVG; Functional Blocks 'JCOP-PAY, JCOP-ID-1, JCOP-ID-2, NTAG424DNA, MFPEV2'", fn_hint: [external_block], vendor_parts: [JCOP-PAY, NTAG424DNA, MFPEV2]}
+      - {id: legacy, label: "Magstripe, fingerprint sensor, camera (QR)", blocks: [magstripe card reader, fingerprint sensor, camera for QR code payment], source: "PAYMENT SVG (Legacy / Biometric / QR Code Payment, grey)", fn_hint: [external_block], vendor_parts: []}
+      - {id: ui, label: "LCD driver (optional), display, LEDs, keypad", blocks: [LCD driver, display, LEDs, PIN pad], source: "PAYMENT SVG (User Interface / Pin Entry; 'LCD Driver' dashed); Functional Blocks 'LCD Driver: PCF8531U'", fn_hint: [display_driver, display], vendor_parts: [PCF8531U]}
+      - {id: gpio, label: "GPIO expander", blocks: [GPIO], source: "PAYMENT SVG ('GPIO'); Functional Blocks 'GPIO: PCAL9714, PCAL6416A, PCAL9722'", fn_hint: [io_expander], vendor_parts: [PCAL9714, PCAL6416A, PCAL9722]}
+      - {id: tamper_sensors, label: "Sensors (tamper resistance)", blocks: [tamper sensors (non-NXP)], source: "PAYMENT SVG ('Sensors (For Tamper Resitance)')", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [pmic, mcu, ""]
+      - [memory, mcu, ""]
+      - [rtc, mcu, ""]
+      - [wired, mcu, "USB OTG"]
+      - [wireless, mcu, "SDIO / UART (CTS/RTS)"]
+      - [mcu, contact, ""]
+      - [mcu, contactless, ""]
+      - [contact, sams, ""]
+      - [contact, cards, ""]
+      - [contactless, cards, "13.56 MHz"]
+      - [mcu, legacy, ""]
+      - [mcu, ui, ""]
+      - [mcu, gpio, ""]
+      - [tamper_sensors, mcu, ""]
+    features:
+      - {id: architecture, question: "Payment architecture", choices: ["open loop (EMVCo bank cards)", "closed loop (transit / campus, MIFARE + SAM)"], source: "PAYMENT page diagrams (Open Architecture, Closed Architecture)"}
+      - {id: sam_count, question: "Number of SAM slots", choices: ["0", "1-2", "up to 5"], source: "PAYMENT SVG ('SAMs (Up to 5)')"}
+      - {id: alt_payment, question: "Additional payment methods", choices: ["QR code (camera)", "magstripe", "biometric (fingerprint)", "none"], source: "PAYMENT SVG"}
+      - {id: backhaul, question: "Backhaul", choices: ["wired", "Wi-Fi / BT", "cellular"], source: "PAYMENT SVG (Standard / Wireless Connectivity)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_smart_speaker
+    name: "Smart speaker (applications processor, Wi-Fi + BLE with external FEMs, audio amplifier, AC/DC)"
+    category: Consumer & personal electronics
+    sources:
+      - {doc: NXP_SPEAKER, url: "https://www.nxp.com/applications/SMART-SPEAKER", pages: "SVG SMART-SPEAKER-BD-ASP; Functional Blocks list"}
+    groups:
+      - {id: mcu, label: "Applications processor", blocks: [MCU / applications processor], source: "SPEAKER SVG ('MCU'); Functional Blocks 'MCU: i.MX8M'", fn_hint: [soc], vendor_parts: [i.MX8M]}
+      - {id: pmic, label: "PMIC", blocks: [PMIC], source: "SPEAKER SVG ('PMIC'); Functional Blocks 'Power Management: PCA9450'", fn_hint: [pmic], vendor_parts: [PCA9450]}
+      - {id: acdc, label: "AC/DC flyback", blocks: [AC/DC flyback], source: "SPEAKER SVG ('AC/DC Flyback'); Functional Blocks 'AC/DC Flyback: TEA1833LTS'", fn_hint: [acdc_controller], vendor_parts: [TEA1833LTS]}
+      - {id: wifi, label: "Wi-Fi (PCIe x2)", blocks: [Wi-Fi radio + antenna], source: "SPEAKER SVG ('Wi-Fi', PCIe x2); Functional Blocks 'Wi-Fi: IW610, 88W8987, IW612, IW611, 88W8997, IW416'", fn_hint: [wifi_soc, antenna], vendor_parts: [88W8997, 88W8987, IW612, IW611, IW416]}
+      - {id: fem, label: "RF FEM x4", blocks: [Wi-Fi front-end modules x4], source: "SPEAKER SVG ('RF FEM x4'); Functional Blocks 'RF FEM x4: BGS8324'", fn_hint: [wifi_fem], vendor_parts: [BGS8324]}
+      - {id: ble, label: "BLE", blocks: [BLE radio + antenna (I2C)], source: "SPEAKER SVG ('BLE'); Functional Blocks 'Bluetooth low energy: QN9090-30'", fn_hint: [ble_soc, antenna], vendor_parts: [QN9090-30]}
+      - {id: nfc, label: "NTAG I2C plus (pairing)", blocks: [NFC tag with antenna], source: "SPEAKER SVG ('NTAG I2C Plus'); Functional Blocks 'NTAG_I2C'", fn_hint: [nfc_frontend], vendor_parts: [NTAG_I2C]}
+      - {id: temp, label: "Temperature sensor", blocks: [temperature sensor (I2C)], source: "SPEAKER SVG ('Temperature Sensor'); Functional Blocks 'Temperature Sensor: PCT2075'", fn_hint: [temperature_sensor], vendor_parts: [PCT2075]}
+      - {id: led, label: "LED controller", blocks: [LED controller (I2C)], source: "SPEAKER SVG ('LED Controller'); Functional Blocks 'LED Controller: PCA9955BTW'", fn_hint: [led_driver], vendor_parts: [PCA9955BTW]}
+      - {id: audio_amp, label: "Audio amplifier + speaker", blocks: [audio amplifier (I2S in, analog out), speaker], source: "SPEAKER SVG ('Audio Amplifier', grey)", fn_hint: [audio_amp], vendor_parts: []}
+      - {id: memory, label: "DDR3 + NAND flash", blocks: [DDR3, NAND flash (QSPI)], source: "SPEAKER SVG ('DDR3', 'NAND Flash', grey)", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: others, label: "Capacitive sensor, Apple Auth 3.0, FPGA (HDMI)", blocks: [capacitive touch sensor, Apple authentication coprocessor, FPGA], source: "SPEAKER SVG (grey blocks)", fn_hint: [external_block, secure_element], vendor_parts: []}
+    links:
+      - [acdc, pmic, "VCC"]
+      - [pmic, mcu, "VCC"]
+      - [mcu, wifi, "PCIe x2"]
+      - [wifi, fem, "PCIe (as drawn)"]
+      - [mcu, ble, "I2C (as drawn)"]
+      - [nfc, mcu, "I2C"]
+      - [temp, mcu, "I2C"]
+      - [mcu, led, "I2C"]
+      - [mcu, audio_amp, "I2S"]
+      - [mcu, memory, "DDR / QSPI"]
+      - [others, mcu, "I2C / HDMI"]
+    features:
+      - {id: wifi_chains, question: "Wi-Fi configuration", choices: ["1x1", "2x2 (4 FEMs, dual band)"], source: "SPEAKER SVG ('RF FEM x4')"}
+      - {id: voice, question: "Voice assistant (far-field mics)", choices: ["yes", "no"], source: "SPEAKER page (smart speaker); 'Capacitive Sensor'"}
+      - {id: ecosystem, question: "Ecosystem features", choices: ["AirPlay (Apple auth)", "Matter / Thread", "none"], source: "SPEAKER SVG ('Apple Auth 3.0')"}
+      - {id: power, question: "Power", choices: ["mains (AC/DC flyback)", "battery (portable)"], source: "SPEAKER SVG ('AC/DC Flyback')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_fridge_compressor
+    name: "Refrigerator inverter compressor + system control (sensorless vector control, 220 VAC)"
+    category: Appliances & building
+    sources:
+      - {doc: NXP_MAJOR_APPLIANCE, url: "https://www.nxp.com/applications/MAJOR-HOME-APPLIANCE", pages: "image REFRIGERATOR-COMPRESSOR-BD-NEW.jpg (no Functional Blocks product list on the page)"}
+    groups:
+      - {id: rectifier, label: "220 VAC rectifier + DC bus", blocks: [bridge rectifier, DC-bus capacitors, DC-bus voltage divider], source: "FRIDGE image (220VAC, bridge, 'DC bus voltage')", fn_hint: [dc_link_cap], vendor_parts: []}
+      - {id: inverter, label: "3-phase inverter + shunts", blocks: [6 IGBTs / MOSFETs, 3 phase shunts], source: "FRIDGE image", fn_hint: [power_fets], vendor_parts: []}
+      - {id: gate_driver, label: "Gate driver", blocks: [gate driver (8 PWM in, fault signal out)], source: "FRIDGE image ('Gate Driver', NXP green)", fn_hint: [three_phase_gate_driver], vendor_parts: []}
+      - {id: dcdc, label: "DC/DC (15 V -> 3.3 V)", blocks: [DC/DC], source: "FRIDGE image ('DC/DC', NXP green)", fn_hint: [wide_vin_buck], vendor_parts: []}
+      - {id: diff_amp, label: "Differential amplifier (phase currents)", blocks: [differential amplifier Ia / Ib / Ic], source: "FRIDGE image ('Differential Amplifier', non-NXP)", fn_hint: [amplifier], vendor_parts: []}
+      - {id: comp_mcu, label: "Compressor control MCU", blocks: [ADC, PWM, timer / capture, SCI, vector control algorithm], source: "FRIDGE image ('Compressor Control', NXP green)", fn_hint: [mcu], vendor_parts: []}
+      - {id: opto, label: "Optocoupler (speed command)", blocks: [optocoupler], source: "FRIDGE image ('Optocoupler', non-NXP)", fn_hint: [optocoupler], vendor_parts: []}
+      - {id: sys_mcu, label: "System control MCU", blocks: [system control strategy, speed command], source: "FRIDGE image ('System Control', NXP green)", fn_hint: [mcu], vendor_parts: []}
+      - {id: sys_io, label: "Temperature sensors, fans, defrost heater", blocks: [temp sensor 1..n, fans, defrost heater], source: "FRIDGE image", fn_hint: [temperature_sensor, external_block], vendor_parts: []}
+      - {id: hmi, label: "Display panel HMI + USB converter", blocks: [display panel HMI, USB converter (debug via SCI)], source: "FRIDGE image (non-NXP)", fn_hint: [display, external_block], vendor_parts: []}
+      - {id: motor, label: "Compressor motor", blocks: [motor], source: "FRIDGE image ('Motor')", fn_hint: [motor], vendor_parts: []}
+    links:
+      - [rectifier, inverter, "DC bus"]
+      - [inverter, motor, "3 phases"]
+      - [comp_mcu, gate_driver, "8 PWM signals"]
+      - [gate_driver, comp_mcu, "fault signal"]
+      - [gate_driver, inverter, "gate drives"]
+      - [rectifier, dcdc, "15 V"]
+      - [dcdc, comp_mcu, "3.3 V"]
+      - [inverter, diff_amp, "shunt voltages"]
+      - [diff_amp, comp_mcu, "Ia / Ib / Ic (ADC)"]
+      - [rectifier, comp_mcu, "Vdc (ADC)"]
+      - [sys_mcu, opto, "speed command"]
+      - [opto, comp_mcu, "timer / capture"]
+      - [sys_io, sys_mcu, ""]
+      - [sys_mcu, hmi, ""]
+    features:
+      - {id: compressor_drive, question: "Compressor drive", choices: ["variable-speed inverter (FOC)", "fixed-speed (relay)"], source: "FRIDGE image ('Vector Control Algorithm')"}
+      - {id: partition, question: "Controller partition", choices: ["separate compressor MCU + system MCU (opto link)", "single MCU"], source: "FRIDGE image (Compressor Control / System Control / Optocoupler)"}
+      - {id: safety, question: "Household safety class (IEC 60730)", choices: ["Class B", "not required"], source: "NXP IEC 60730 page (sitemap APIEC60730); not drawn"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_cgm
+    name: "Continuous glucose monitor, disposable sensor patch (electrochemical AFE + BLE MCU, NFC)"
+    category: Medical
+    sources:
+      - {doc: NXP_CGM, url: "https://www.nxp.com/applications/CONTINUOUS-GLUCOSE-MONITORING", pages: "SVG DISPOSABLE-CONTINUOUS-GLUCOSE-METER-BD (DURABLE- variant adds NFC wireless charging); Functional Blocks lists"}
+    groups:
+      - {id: bio_sensor, label: "Electrochemical bio sensor", blocks: [electrochemical glucose sensor (3rd party)], source: "CGM SVG ('Electrochemical Bio Sensor', 3rd party)", fn_hint: [external_block], vendor_parts: []}
+      - {id: afe, label: "Electrochemical AFE sensor (with temperature, NFC)", blocks: [electrochemical AFE, temperature sensor, NFC interface], source: "CGM SVG (Analog Interface -> 'Electrochemical AFE Sensor' with 'oC', 'NFC'); Functional Blocks 'Electrochemical AFE Sensor: NHS2634'", fn_hint: [adc, temperature_sensor, nfc_frontend], vendor_parts: [NHS2634]}
+      - {id: mcu, label: "BLE MCU (processing)", blocks: [MCU with Bluetooth LE radio + antenna], source: "CGM SVG (Processing -> 'MCU', Bluetooth logo, antenna); Functional Blocks 'MCU: MCX-W23'", fn_hint: [ble_soc, mcu], vendor_parts: [MCX-W23]}
+      - {id: battery, label: "Battery", blocks: [battery (3rd party)], source: "CGM SVG ('Battery')", fn_hint: [battery_pack], vendor_parts: []}
+      - {id: activation, label: "Magnetic switch activation (optional)", blocks: [magnetic switch], source: "CGM SVG ('Magnetic Switch Activation (optional)')", fn_hint: [external_block], vendor_parts: []}
+      - {id: nfc_antenna, label: "NFC antenna (optional)", blocks: [NFC coil antenna], source: "CGM SVG ('NFC Antenna (Optional)')", fn_hint: [antenna], vendor_parts: []}
+    links:
+      - [bio_sensor, afe, "electrodes"]
+      - [battery, afe, ""]
+      - [activation, afe, ""]
+      - [nfc_antenna, afe, "NFC"]
+      - [afe, mcu, "SPI + interrupt"]
+    features:
+      - {id: form, question: "Device form", choices: ["disposable patch (primary battery)", "durable transmitter (rechargeable, NFC wireless charging)"], source: "CGM page diagrams (Disposable / Durable)"}
+      - {id: activation, question: "Activation", choices: ["NFC tap", "magnetic switch", "always on"], source: "CGM SVG (optional NFC antenna / magnetic switch)"}
+      - {id: link, question: "Data link to reader / phone", choices: ["BLE", "NFC only"], source: "CGM SVG (Bluetooth MCU, NFC); page also lists a CGM reader application"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_patient_monitor
+    name: "Multiparameter patient monitor, mainstream MPU-based (measurement modules, Wi-Fi / BLE / UWB / NFC)"
+    category: Medical
+    sources:
+      - {doc: NXP_PATIENT_MONITOR, url: "https://www.nxp.com/applications/MULTIPARAMETER-PATIENT-MONITOR", pages: "SVG MAINSTREAM-PATIENT-MONITOR-MPU (also entry-level, MCU-based, AI-powered, ECG, NIBP, SpO2, temperature module diagrams on page); Functional Blocks lists"}
+    groups:
+      - {id: mpu, label: "Processing: MPU", blocks: [MPU], source: "PATMON SVG (Processing -> 'MPU'); Functional Blocks (MPU-based) 'MPU: i.MX93'", fn_hint: [soc], vendor_parts: [i.MX93]}
+      - {id: memory, label: "Memory", blocks: [memory (non-NXP)], source: "PATMON SVG ('Memory', grey)", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: power, label: "Power management: PMIC, load switch, battery", blocks: [PMIC, load switch, battery (non-NXP), power outlet], source: "PATMON SVG (Power Management); Functional Blocks 'PMIC: PF9453', 'Load Switch: NX3P2902BUK, NX3P1108UK'", fn_hint: [pmic, load_switch, battery_pack], vendor_parts: [PF9453, NX3P2902BUK, NX3P1108UK]}
+      - {id: security, label: "Security and authentication: secure element", blocks: [secure element], source: "PATMON SVG ('Secure Element'); Functional Blocks 'Secure Element: SE052F'", fn_hint: [secure_element], vendor_parts: [SE052F]}
+      - {id: ui, label: "User interface: display, buttons, speakers", blocks: [display, buttons, speakers (non-NXP)], source: "PATMON SVG (User Interface, grey)", fn_hint: [display, audio_amp], vendor_parts: []}
+      - {id: wifi_ble, label: "Wi-Fi + BLE (optional)", blocks: [Wi-Fi, BLE], source: "PATMON SVG (Connectivity -> 'Wi-Fi', 'BLE' dashed); Functional Blocks 'Wi-Fi: IW611, IW623', 'BLE: MCX-W23, IW611, IW623'", fn_hint: [wifi_soc, ble_soc], vendor_parts: [IW611, IW623, MCX-W23]}
+      - {id: uwb, label: "UWB (optional)", blocks: [UWB], source: "PATMON SVG ('UWB' dashed); Functional Blocks 'UWB: SR250'", fn_hint: [uwb_soc], vendor_parts: [SR250]}
+      - {id: nfc, label: "NFC reader (optional)", blocks: [NFC reader], source: "PATMON SVG ('NFC Reader' dashed); Functional Blocks 'NFC Reader: PN7160'", fn_hint: [nfc_frontend], vendor_parts: [PN7160]}
+      - {id: ethernet, label: "Ethernet (optional)", blocks: [Ethernet (non-NXP)], source: "PATMON SVG ('Ethernet' dashed grey)", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: tags, label: "Tags: NFC tag, UWB tag", blocks: [NFC tag, UWB tag], source: "PATMON SVG (Tags); Functional Blocks 'UWB Tag: SR040', 'NFC Tag: MF3DHx3 / MIFARE DUOX'", fn_hint: [external_block], vendor_parts: [SR040, MF3DHx3]}
+      - {id: measurement, label: "Measurement subsystem (ECG, NIBP, SpO2, temperature)", blocks: [integrated modules (optional), external modules (optional)], source: "PATMON SVG (Measurement Subsystem); separate ECG / NIBP / pulse oximetry / temperature module diagrams on page", fn_hint: [adc, amplifier], vendor_parts: []}
+      - {id: hospital, label: "EMR + remote alarm system", blocks: [electronic medical record, remote alarm system], source: "PATMON SVG (grey)", fn_hint: [external_block], vendor_parts: []}
+    links:
+      - [power, mpu, ""]
+      - [mpu, memory, ""]
+      - [security, mpu, ""]
+      - [ui, mpu, ""]
+      - [mpu, wifi_ble, ""]
+      - [mpu, measurement, ""]
+      - [wifi_ble, measurement, "BLE to external modules"]
+      - [nfc, tags, ""]
+      - [uwb, tags, ""]
+      - [wifi_ble, hospital, ""]
+    features:
+      - {id: tier, question: "Monitor tier", choices: ["entry level", "mainstream MCU-based", "mainstream MPU-based", "high-end / AI-powered"], source: "PATMON page diagrams"}
+      - {id: parameters, question: "Parameters measured", choices: [ECG, NIBP, SpO2, temperature], source: "PATMON SVG ('ECG, NIBP, SPO2, Temp')"}
+      - {id: module_link, question: "Measurement module connection", choices: ["integrated modules", "external wired modules", "wireless (BLE) modules"], source: "PATMON SVG (Integrated / External Modules; BLE link)"}
+      - {id: tracking, question: "Asset / patient tracking", choices: ["NFC tags", "UWB tags", "none"], source: "PATMON SVG (Tags)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: nxp_5g_fwa_cpe
+    name: "5G mmWave fixed-wireless-access CPE (SoC + programmable baseband + analog beamformers)"
+    category: Communications equipment
+    sources:
+      - {doc: NXP_5G_FWA, url: "https://www.nxp.com/applications/5G-FIXED-WIRELESS-ACCESS", pages: "SVG 5G-FIXED-WIRELESS-ACCESS-NEW2 ('5G CPE (mmWave)'); Functional Blocks list"}
+    groups:
+      - {id: soc, label: "SoC (5G/NR L2, RRC, edge compute)", blocks: [SoC], source: "FWA SVG ('SoC', '5G/NR L2 RRC EDGE Compute'); Functional Blocks 'SoC: LS1046A'", fn_hint: [soc], vendor_parts: [LS1046A]}
+      - {id: baseband, label: "Programmable baseband (5G/NR L1)", blocks: [programmable baseband], source: "FWA SVG ('Programmable Baseband', '5G/NR L1', PCIe Gen 3 x2); Functional Blocks 'Programmable Baseband: LA12xx, LS1043A'", fn_hint: [modem], vendor_parts: [LA12xx]}
+      - {id: abf, label: "Analog beamformers (up to 4)", blocks: [ABF x <=4], source: "FWA SVG ('ABF', '<= 4x'; second ABF dashed)", fn_hint: [beamformer_ic], vendor_parts: []}
+      - {id: ddr, label: "DDR (32 / 64 bit)", blocks: [DDR], source: "FWA SVG ('DDR', 32/64b, grey)", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: flash, label: "Flash", blocks: [flash], source: "FWA SVG ('Flash', grey)", fn_hint: [flash], vendor_parts: []}
+      - {id: phy, label: "Ethernet PHY + RJ45 (1 / 2.5 / 10 GbE)", blocks: [Ethernet PHY, RJ45], source: "FWA SVG ('PHY', 'RJ45', 1GbE / 2.5GbE / 10GbE, grey)", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: poe, label: "PoE / PoE+", blocks: [PoE / PoE+ powered device], source: "FWA SVG ('PoE/ PoE+', grey)", fn_hint: [poe_pd], vendor_parts: []}
+    links:
+      - [soc, baseband, "PCIe Gen 3 x2"]
+      - [baseband, abf, "IF / control"]
+      - [ddr, soc, "32 / 64 bit"]
+      - [soc, flash, ""]
+      - [soc, phy, ""]
+      - [phy, poe, ""]
+    features:
+      - {id: band, question: "Radio band", choices: ["mmWave (FR2)", "sub-6 GHz (FR1)"], source: "FWA page ('5G CPE (mmWave)')"}
+      - {id: beamformers, question: "Number of beamformer ICs / panels", choices: ["1", "2", "4"], source: "FWA SVG ('ABF' <= 4x)"}
+      - {id: lan, question: "LAN port speed", choices: ["1 GbE", "2.5 GbE", "10 GbE"], source: "FWA SVG"}
+      - {id: install, question: "Installation", choices: ["outdoor unit (PoE powered)", "indoor unit"], source: "FWA SVG ('PoE/ PoE+')"}
+
+# Function ids used above that are not yet in data/blocks/functions.yaml (proposals; category = a key of `categories`).
+new_functions:
+  lin_transceiver: {label: LIN transceiver, category: networking, note: "Body / chassis LIN bus physical layer (often also inside a CAN/LIN SBC). Used in zone controller, airbag, HVAC, gateway, cluster, TPMS receiver."}
+  switch_detection_interface: {label: Multi-switch detection interface (MSDI), category: interface, note: "SPI switch-input monitor with wetting current and AMUX (e.g. 22-channel). Used in zone controller, EPS, HVAC, cluster, PLC inputs."}
+  motor_driver_brushed: {label: Brushed DC motor driver / H-bridge, category: power, note: "Integrated H-bridge or half-bridge for DC motors, pumps, flaps, locks and contactors."}
+  display_driver: {label: Display driver (segment LCD / character LCD), category: audio, note: "Segment or dot-matrix LCD driver on I2C / SPI; meters, payment terminals, clusters."}
+  acdc_controller: {label: Offline AC/DC controller (flyback / PFC / SR), category: power, note: "Mains-input flyback, resonant or PFC controller and secondary synchronous-rectifier controller for adapters and auxiliary supplies."}
+  usb_pd_controller: {label: USB Type-C / PD port controller (PHY), category: interface, companions: [load_switch, tvs_esd], note: "CC logic / USB PD PHY with VBUS load switch; chargers, POS, PLC, EV charger service ports."}
+  smartcard_interface: {label: Contact smart card interface (ISO 7816), category: interface, note: "Contact reader analog interface for EMV cards and SAMs (payment terminals, POS)."}

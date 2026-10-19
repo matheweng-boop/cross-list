@@ -8822,3 +8822,32 @@
     question: Smart-home radio (Zigbee / Thread / BLE)
     choices: ['yes', 'no']
     source: QC-PB-NPRO-A7 'Platform Extensions'
+
+- name: Isolated flyback DC/DC with digital isolation (Skyworks AN901, Si886xx)
+  category: Power & isolation
+  note: "After Skyworks AN901 Figure 1.1 and Design Example 1 (24 V in, 5 V / 1 A isolated out, 500 kHz). The Si886xx (U1) holds the
+    isolated dc-dc controller and two digital isolator channels; the flyback switch, transformer, rectifier and feedback divider
+    are external. Si8282/84 is the gate-driver variant with a dual (+/-) output rail."
+  sources:
+    - {doc: AN901, title: "AN901: Design Guide for Isolated DC/DC Using the Si884xx, Si886xx, or Si8282/84 (Rev. 0.5)", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an901-Si884xx-Si886xx-design-guide.pdf"}
+    - {doc: "Schematic", title: "AN901 Figure 1.1 redrawn with the Design Example 1 values (BizDev)", url: "/static/schematics/an901-si886xx-isolated-flyback.svg"}
+  groups:
+    - {id: input, label: "Input 24 V", col: 0, row: 0, blocks: [{fn: external_block, label: "VIN + input cap C2"}, {fn: external_block, label: "VDDA regulator Q2 (opt.)"}]}
+    - {id: host, label: "Host (primary side)", col: 0, row: 1, blocks: [mcu, {fn: external_block, label: "SHDN / frequency control"}]}
+    - {id: switch, label: "Flyback power stage", col: 1, row: 0, blocks: [{fn: power_fets, label: "Switch Q1 + sense R12"}, {fn: external_block, label: "Turn-off Q3 / D8 / R17"}, {fn: external_block, label: "Primary snubber (opt.)"}]}
+    - {id: iso, label: "Isolation: U1 + T1", col: 2, row: 0, w: 1, blocks: [{fn: isolated_dcdc, label: "Isolated dc-dc controller (U1)"}, {fn: digital_isolator, label: "2 digital channels (U1)"}, {fn: external_block, label: "Flyback transformer 3:1"}]}
+    - {id: secondary, label: "Rectifier + output", col: 3, row: 0, blocks: [{fn: external_block, label: "Rectifier D1 + output cap C10"}, {fn: external_block, label: "Secondary snubber (opt.)"}]}
+    - {id: feedback, label: "Feedback + compensation", col: 2, row: 1, blocks: [{fn: external_block, label: "Divider R5 / R6 (VSNS)"}, {fn: external_block, label: "Compensation R7 / C11"}]}
+    - {id: load, label: "Load 5 V / 1 A", col: 3, row: 1, blocks: [{fn: external_block, label: "Isolated circuitry"}, pol_ldo]}
+  links:
+    - [input, switch, "VIN 24 V"]
+    - [switch, iso, "ESW / RSNS"]
+    - [host, iso, "digital channels, SHDN / FC"]
+    - [iso, secondary, "transformer secondary"]
+    - [secondary, load, "VOUT 5 V"]
+    - [secondary, feedback, "VOUT"]
+    - [feedback, iso, "VSNS / COMP"]
+  questions:
+    - {id: an901_variant, question: "Which device family", choices: ["Si884xx (internal frequency)", "Si886xx (external frequency and soft start)", "Si8282/84 (isolated gate driver + dc-dc, dual rail)"], source: "AN901 p.1-3"}
+    - {id: an901_vin, question: "Input voltage", choices: ["< 5.5 V (no flyback needed)", "5.5 - 24 V", "24 - 36 V"], source: "AN901 p.1: flyback for VIN > 5.5 V or > 2 W"}
+    - {id: an901_power, question: "Output power", choices: ["<= 2 W", "2 - 5 W", "> 5 W"], source: "AN901 p.1, Design Example 1 (5 W)"}

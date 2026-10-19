@@ -135,12 +135,12 @@ def queue(session: Session, apps: list[op.Application], limit: int = 30) -> list
     for rank, e in enumerate(op.technology_fit(apps)[:25], 1):
         for name in ("path", "technology", "competition", "trends"):
             if e["fn"] in ds[name][1] and state(rev.get((name, e["fn"]))) == "unverified":
-                conf = (
-                    (ds[name][1][e["fn"]] or {}).get("confidence") if isinstance(ds[name][1][e["fn"]], dict) else None
-                )
+                ent = ds[name][1][e["fn"]]
+                conf = ent.get("confidence") if isinstance(ent, dict) else None
+                chk = (ent.get("check") or {}) if isinstance(ent, dict) else {}
                 in_score = name in ("path", "technology", "competition", "trends")
                 out.append({"fn": e["fn"], "label": e["label"], "rank": rank, "dataset": name, "ds_label": ds[name][0],
-                            "confidence": conf, "in_score": in_score})  # fmt: skip
+                            "confidence": conf, "in_score": in_score, "check": chk or None})  # fmt: skip
     order = {"low": 0, None: 1, "medium": 2, "high": 3}
     out.sort(key=lambda q: (q["rank"], order.get(q["confidence"], 1)))
     return out[:limit]
@@ -151,9 +151,13 @@ def stats(session: Session) -> list[dict]:
     out = []
     for name, (label, items) in datasets().items():
         st = Counter(state(rev.get((name, k))) for k in items)
-        conf = Counter((e or {}).get("confidence") for e in items.values() if isinstance(e, dict))
-        out.append({"name": name, "label": label, "n_items": len(items), **{k: st.get(k, 0) for k in
-                    ("verified", "disputed", "unverified")}, "low": conf.get("low", 0)})  # fmt: skip
+        dicts = [e for e in items.values() if isinstance(e, dict)]
+        conf = Counter(e.get("confidence") for e in dicts)
+        chk = Counter((e.get("check") or {}).get("status") for e in dicts)
+        row = {"name": name, "label": label, "n_items": len(items), "low": conf.get("low", 0)}
+        row.update({k: st.get(k, 0) for k in ("verified", "disputed", "unverified")})
+        row.update(src_ok=chk["confirmed"] + chk["corrected"], src_corr=chk["corrected"], src_no=chk["unconfirmed"])
+        out.append(row)
     return out
 
 

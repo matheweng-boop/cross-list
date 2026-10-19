@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch, about %}
+{% from "business/_common.html" import company_switch, about, srccheck %}
 {% block title %}Where to hunt – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Where to hunt</h1>
@@ -32,9 +32,10 @@
       <span>{% for c in s.customers[:6] %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}">{{ c.name }}</span>{% endfor %}{% if s.customers|length > 6 %}<small class="muted"> +{{ s.customers|length - 6 }}</small>{% endif %}</span></summary>
     <div class="bo-gap-body small">
       <table class="bo-mini"><thead><tr><th>Company</th><th>Type</th><th>Region</th><th>Note</th></tr></thead><tbody>
-        {% for c in s.customers %}<tr><td><b>{{ c.name }}</b></td><td>{{ c.type }}</td><td>{{ c.region }}</td><td class="muted">{{ c.note }}</td></tr>{% endfor %}</tbody></table>
+        {% for c in s.customers %}<tr><td><b>{{ c.name }}</b>{% if c.check == 'confirmed' and c.evidence %} <a class="sc sc-confirmed" href="{{ c.evidence }}" target="_blank" rel="noopener" title="Source checked: opens the page that shows it">source ✓</a>{% elif c.check == 'unconfirmed' %} <span class="sc sc-unconfirmed" title="Not confirmed by a public source yet">source ?</span>{% endif %}</td><td>{{ c.type }}</td><td>{{ c.region }}</td><td class="muted">{{ c.note }}</td></tr>{% endfor %}</tbody></table>
       <p><b>Applications:</b> {% for a in s.apps %}{% if a.background %}<span class="bo-ours bo-bg">{{ a.name }}</span>{% else %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endif %}{% else %}<span class="muted">none in the diagrams yet</span>{% endfor %}</p>
       {% if s.source %}<p class="muted">Sources: {{ s.source }}</p>{% endif %}
+      {% if s.check %}<p class="muted">{{ srccheck(s.check) }} {{ s.check.note }}</p>{% endif %}
     </div>
   </details>
 {% else %}<p class="muted">The company list is being collected.</p>{% endfor %}

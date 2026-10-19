@@ -10,10 +10,10 @@
 
 <h2>Review status per dataset</h2>
 <div class="table-wrap"><table class="striped small">
-  <thead><tr><th>Dataset</th><th>Items</th><th>Verified</th><th>Disputed</th><th>Not reviewed</th><th>Low source confidence</th></tr></thead>
+  <thead><tr><th>Dataset</th><th>Items</th><th>Verified</th><th>Disputed</th><th>Not reviewed</th><th>Source-checked</th><th>Source not found</th><th>Low source confidence</th></tr></thead>
   <tbody>{% for s in stats %}<tr><td><b>{{ s.label }}</b></td><td>{{ s.n_items }}</td>
     <td>{{ s.verified }} <span class="bo-bar"><span style="width:{{ (100 * s.verified / s.n_items if s.n_items else 0)|round }}%"></span></span></td>
-    <td>{% if s.disputed %}<b class="q-error">{{ s.disputed }}</b>{% else %}0{% endif %}</td><td>{{ s.unverified }}</td><td>{{ s.low }}</td></tr>{% endfor %}</tbody>
+    <td>{% if s.disputed %}<b class="q-error">{{ s.disputed }}</b>{% else %}0{% endif %}</td><td>{{ s.unverified }}</td><td>{{ s.src_ok }}{% if s.src_corr %} <small class="muted">({{ s.src_corr }} corrected)</small>{% endif %}</td><td>{{ s.src_no }}</td><td>{{ s.low }}</td></tr>{% endfor %}</tbody>
 </table></div>
 
 <h2>Review queue <span class="small muted">· unreviewed items behind the top-ranked functions, most influential first</span></h2>
@@ -23,7 +23,7 @@
 <div class="table-wrap"><table class="striped small">
   <thead><tr><th>Rank</th><th>Function</th><th>Item</th><th>Source confidence</th><th>Review</th></tr></thead>
   <tbody>{% for q in queue %}<tr><td>{{ q.rank }}</td><td><a href="/business/evidence/{{ q.fn }}?co={{ co }}">{{ q.label }}</a></td><td>{{ q.ds_label }}</td>
-    <td>{{ q.confidence or '–' }}</td><td>{{ review(q.dataset, q.fn, rev, q.confidence) }}</td></tr>{% endfor %}</tbody>
+    <td>{{ q.confidence or '–' }}</td><td>{{ review(q.dataset, q.fn, rev, q.confidence, q.check) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small q-ok">Everything behind the top-ranked functions has been reviewed.</p>{% endif %}
 

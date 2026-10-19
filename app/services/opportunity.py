@@ -477,7 +477,7 @@ def hunt_by_segment(apps: list[Application]) -> list[dict]:
     for k, s in customers().items():
         matched = [a for a in apps if k in segments_of(a.name)]
         out.append({"id": k, "label": s.get("label", k), "apps": matched, "customers": s.get("customers") or [],
-                    "source": s.get("source", "")})  # fmt: skip
+                    "source": s.get("source", ""), "check": s.get("check")})  # fmt: skip
     return sorted(out, key=lambda e: (-len(e["apps"]), e["label"]))
 
 

@@ -37,11 +37,13 @@ terms:
       companies have parts in Cross List. Not our product type = processors, MCUs, memory, sensors, antennas and other
       chips Skyworks / Qorvo do not make; left out of coverage.
   coverage:
-    term: Coverage
-    short: Sockets with one of our parts ÷ all sockets except "Not our product type".
+    term: Candidate coverage
+    short: Sockets where a Skyworks / Qorvo candidate exists ÷ in-scope sockets. A candidate is not checked against the application's electrical requirements.
     long: >-
-      Sockets with a Skyworks / Qorvo part divided by the in-scope sockets (Portfolio + Gap + Competitor only).
-      "Not our product type" is excluded so that processors and memory do not pull the number down.
+      Sockets with a Skyworks / Qorvo candidate part divided by the in-scope sockets (Portfolio + Gap + Competitor
+      only). "Not our product type" is excluded so that processors and memory do not pull the number down. A candidate
+      means a part exists for the function; whether it meets the application's voltage, current, band or qualification
+      is not validated, so this is not a suitability figure.
   door_opener:
     term: Door opener (portfolio anchor)
     short: An application that already contains at least one of our parts, so we already talk to its designers.
@@ -87,11 +89,12 @@ terms:
       telematics, radar…) count as Automotive. Used by the Markets page.
   requalify:
     term: Qualify for automotive
-    short: Automotive applications need it, we have parts, but none is automotive grade.
+    short: Automotive applications need it, no part of ours is stated AEC-Q100, and at least one is stated industrial / commercial.
     long: >-
-      A function automotive applications need, where we have parts but none is marked automotive (AEC-Q100) in the
-      public catalogue: an existing industrial / commercial part might be qualified instead of designing a new one.
-      Qorvo's website rarely states the grade, so check Qorvo entries before acting.
+      A function automotive applications need, where none of our parts is stated automotive (AEC-Q100) and at least one
+      is stated industrial / commercial: that part might be qualified instead of designing a new one. Parts whose grade
+      is not stated (common on Qorvo's site) are counted separately as "grade not stated" and are not treated as
+      non-automotive.
   path:
     term: Path to product
     short: How we would get a product - exists already, spec variant, new design on our technology, or new technology (partner / acquire).
@@ -115,6 +118,15 @@ terms:
       correct marks; disputed = as many or more wrong marks than correct ones; unverified = not checked yet (the source
       confidence of the research, high / medium / low, is shown next to it). Disputed and unsure items with their
       comments go into the data to-do; reviews do not change a score until the data is corrected.
+  gap_type:
+    term: Gap type
+    short: True gap, probably sold already (mapping missing), competitor only, no evidence yet, or not our product type.
+    long: >-
+      True portfolio gap = no part of ours, and the path to product says a new variant, design or technology is
+      needed. Probably sold already = the path evidence names catalogue parts that may fill it; confirm or reject them
+      on the evidence page. Competitor only = only other companies have parts in Cross List. No evidence yet = a gap
+      nobody has assessed. Not our product type = processors, memory and other chips we do not make. A candidate
+      (one of our parts exists) is a separate state: its electrical fit to the application is not validated.
   customer_type:
     term: Customer type
     short: OEM (brand owner), Tier-1 (system supplier), module maker, ODM/EMS (contract designer / manufacturer), operator.
@@ -136,7 +148,7 @@ pages:
     read:
       - Tiles are totals over all applications (library + background) for the portfolio chosen above.
       - The pipeline shows which analysis steps are done and which still need data.
-      - Top gaps = missing functions needed by the most applications; open Gaps & ranking for the applications behind each number.
+      - Top gaps = missing functions needed by the most applications; open the Opportunity explorer for all of them and the evidence behind each number.
     data:
       - Applications and sockets come from the block-diagram files (public reference designs).
       - Our parts come from Cross List (catalogue of Skyworks / Qorvo public product pages + parts with full parameters).
@@ -172,28 +184,6 @@ pages:
       - All diagrams, library and background.
     limits:
       - Modeled co-occurrence from diagrams, not observed sales attach rates.
-  gaps:
-    question: Which missing functions would open the most opportunity, and how hard is the market?
-    read:
-      - Needed in = applications whose diagram contains the function.
-      - Door opener = of those, how many already contain one of our parts.
-      - Sockets = places on the board, quantities summed.
-      - Competition = established suppliers (hover for names). Click a row for the applications and who sells it.
-    data:
-      - All diagrams (library + background); competition from data/business/competition.yaml (public knowledge).
-    limits:
-      - No market share or prices in the ranking unless you enter ASPs and volumes.
-      - One row = one function; a function may need several product variants.
-  technology:
-    question: Which frequent functions could we develop most easily with technology we already have?
-    read:
-      - Ranked by score = share of applications × technology weight × competition weight; each row shows the calculation.
-      - The grey line under a function is the reasoning for its technology rating.
-      - Filters show only developable functions, low-attach functions, or chips we do not make (SoCs, MCUs, memory).
-    data:
-      - All diagrams (library + background); technology ratings from data/business/technology.yaml (public knowledge).
-    limits:
-      - Technology ratings are indicative and for discussion; "Same technology" gaps may be catalogue mapping gaps.
   cases:
     question: Is a specific new part worth designing?
     read:
@@ -202,6 +192,18 @@ pages:
       - The brief adds what Cross List knows about the function (occurrence, door openers, competition, technology fit).
     limits:
       - Cross List sends nothing to outside services; the AI's answer is only as good as its cited sources.
+  explorer:
+    question: Which missing functions are worth pursuing, ranked the way you choose?
+    read:
+      - One row per missing function; the view decides the ranking (the highlighted column).
+      - Scope switches between library architectures only and all architectures including background references.
+      - Gap type separates true gaps from missing catalogue mappings and from functions nobody has assessed.
+      - Open a function for its evidence page (scoring factors, path, sources, reviews).
+    data:
+      - Reference architectures (block diagrams) for reach, door openers and sockets; evidence files for path, competition, trend; your inputs for TAM.
+    limits:
+      - Counts are reference architectures as drawn; related variants are not merged, so they are not unique applications or market volume.
+      - The formulas are the same as on the former Gaps & ranking and Technology fit pages.
   customers:
     question: Which companies design the systems that need a function, i.e. where should sales go hunt?
     read:

@@ -50,10 +50,10 @@
         <a href="/parts" class="small">Reset all</a></div>{% endif %}
     </div>
     {% if rows %}
-    <div class="table-wrap"><table class="striped parts-table sticky-head">
+    <div class="table-wrap"><table class="striped parts-table browse-table">
       <thead><tr><th scope="col">Part</th><th scope="col">Description</th><th scope="col">Manufacturer</th><th scope="col">Package</th><th scope="col">Lifecycle</th><th scope="col">Qualification</th><th scope="col">Data available</th></tr></thead>
       <tbody>{% for r in rows %}
-        <tr><td>{% if r.part_id %}<a href="/parts/{{ r.part_id }}"><b>{{ r.mpn }}</b></a>{% elif r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}
+        <tr><td>{% if r.part_id %}<a href="/parts/{{ r.part_id }}?from={{ (request.url.path ~ '?' ~ request.url.query)|urlencode }}"><b>{{ r.mpn }}</b></a>{% elif r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}
             <br><small class="muted" title="Source category">{{ r.source_category }}{{ ' › ' ~ r.source_sub.split(' > ')[-1] if r.source_sub }}</small></td>
           <td class="small">{{ (r.description or '')[:160] }}</td><td class="small">{{ r.manufacturer }}</td><td class="small">{{ r.package }}</td>
           <td class="small"><span class="life life-{{ r.lifecycle }}">{{ life_label[r.lifecycle] }}</span></td>

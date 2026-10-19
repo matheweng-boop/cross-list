@@ -333,14 +333,28 @@ def sources(apps: list[Application]) -> dict:
 
 
 # ---- markets: one function across end markets ------------------------------------------------------------
+def qual_state(c: dict) -> str:
+    """automotive (AEC-Q100 stated), not_automotive (industrial / commercial or "no" stated), unknown (not stated)."""
+    q = (c.get("values") or {}).get("qualification")
+    return (
+        "automotive"
+        if q == "automotive"
+        else "not_automotive"
+        if q in ("industrial", "commercial", "not_automotive")
+        else "unknown"
+    )
+
+
 def is_auto_part(c: dict) -> bool:
-    return (c.get("values") or {}).get("qualification") == "automotive"
+    return qual_state(c) == "automotive"
 
 
 def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:
-    """Per function: the end markets (and applications) that need it, how many portfolio parts exist and how many
-    are automotive qualified. Qualification opportunity = automotive applications need it, the portfolio has parts,
-    but none is automotive qualified (an industrial / commercial part that could be requalified)."""
+    """Per function: the end markets (and applications) that need it, how many portfolio parts exist and their
+    qualification in three states (automotive / stated not automotive / not stated).
+    requalify = automotive applications need it and no part is stated automotive, but at least one is stated not
+    automotive (an industrial part that could be qualified). qual_unknown = no part is stated automotive and the
+    others do not state a grade: a data gap to check, not an opportunity."""
     cat = blocks.catalogue()["functions"]
     names = sorted({a.market for a in apps}, key=lambda m: (m != "Automotive", m))
     rows: dict[str, dict] = {}
@@ -355,11 +369,13 @@ def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:
     for fn, e in rows.items():
         cands = [c for c in (blocks._candidates(session, fn) or []) if c["manufacturer"] in mine]
         e["parts"] = len(cands)
-        e["auto_parts"] = sum(is_auto_part(c) for c in cands)
+        qs = Counter(qual_state(c) for c in cands)
+        e["auto_parts"], e["not_auto_parts"], e["unknown_parts"] = qs["automotive"], qs["not_automotive"], qs["unknown"]
         e["n_markets"] = len(e["by_market"])
         e["n_apps"] = sum(len(v) for v in e["by_market"].values())
         auto_need = bool(e["by_market"].get("Automotive"))
-        e["requalify"] = auto_need and e["parts"] > 0 and e["auto_parts"] == 0
+        e["requalify"] = auto_need and e["auto_parts"] == 0 and e["not_auto_parts"] > 0
+        e["qual_unknown"] = auto_need and e["auto_parts"] == 0 and e["not_auto_parts"] == 0 and e["unknown_parts"] > 0
         e["by_market"] = dict(e["by_market"])
     out = sorted(rows.values(), key=lambda e: (-e["n_markets"], -e["n_apps"], e["label"]))
     return {"markets": names, "rows": out, "apps_per_market": Counter(a.market for a in apps)}
@@ -507,3 +523,59 @@ def capabilities() -> dict[str, dict]:
 
 def platforms_for(fn: str) -> list[tuple[str, dict]]:
     return [(k, p) for k, p in capabilities().items() if fn in (p.get("functions") or [])]
+
+
+# ---- opportunity explorer: one row per function, several views; formulas unchanged ---------------------------
+GAP_TYPE_LABEL = {
+    "candidate": "Candidate exists – requirements not validated",
+    "mapping": "Probably sold already – catalogue mapping missing",
+    "true_gap": "True portfolio gap",
+    "competitor_only": "Competitor only",
+    "unknown_evidence": "Gap – no evidence assessed yet",
+    "not_ours": "Not our product type",
+}
+SCOPES = {"all": "All reference architectures (library + background)", "library": "Library architectures only"}
+
+
+def gap_type(status: str, path: dict | None) -> str:
+    """Separates a real gap from a missing catalogue mapping and from missing evidence. A confirmed electrical
+    mismatch needs application requirements per socket, which the data does not hold yet, so it is never inferred."""
+    p = (path or {}).get("path")
+    if status == "supported":
+        return "candidate"
+    if status == "na" or p == "not_pursue":
+        return "not_ours"
+    if p == "exists":
+        return "mapping"
+    if status == "competitor":
+        return "competitor_only"
+    return "true_gap" if p in ("variant", "new_design", "new_capability") else "unknown_evidence"
+
+
+def in_scope(apps: list[Application], scope: str) -> list[Application]:
+    return [a for a in apps if not a.background] if scope == "library" else apps
+
+
+def explorer(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
+    """Union of the gap ranking (reach, door openers, sockets, TAM) and the technology-fit ranking (path / technology,
+    competition, trend, score) per function, with its gap type. Both formulas are the existing ones."""
+    gap = {e["fn"]: e for e in gaps(apps, asp, vol)}
+    fit = {e["fn"]: e for e in technology_fit(apps)}
+    paths = evidence("path")
+    out = []
+    for fn in {*gap, *fit}:
+        g, f = gap.get(fn) or {}, fit.get(fn) or {}
+        base = g or f
+        reach = base["reach"]
+        row = {
+            "fn": fn, "label": base["label"], "status": base["status"],
+            "gap_type": gap_type(base["status"], paths.get(fn)),
+            "reach": reach, "positions": base["positions"], "adjacent": base.get("adjacent", 0),
+            "adjacency": (base.get("adjacent", 0) / reach) if reach else 0,
+            "tam": g.get("tam", 0.0), "tam_apps": g.get("tam_apps", 0),
+            "competition": competition().get(fn), "path": paths.get(fn), "proximity": f.get("proximity"),
+            "trend": evidence("trends").get(fn), "score": f.get("score"), "factors": f.get("factors") or [],
+            "background": f.get("background", sum(a.background for a in apps if any(p.fn == fn for p in a.positions))),
+        }  # fmt: skip
+        out.append(row)
+    return out

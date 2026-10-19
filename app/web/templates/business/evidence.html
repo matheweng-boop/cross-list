@@ -2,7 +2,7 @@
 {% from "business/_common.html" import status_chip, crowd, review, path_chip, about, checked %}
 {% block title %}{{ label }} – Evidence – Cross List{% endblock %}
 {% block content %}
-<p class="small"><a href="/business/technology?co={{ co }}#fn-{{ fn }}">← Technology fit</a> · <a href="/business/gaps?co={{ co }}#fn-{{ fn }}">Gaps &amp; ranking</a></p>
+<p class="small"><a href="/business/explorer?co={{ co }}">← Opportunity explorer</a></p>
 <h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
 <p class="subtitle muted">Everything Cross List knows about this function: how it is scored, the path to a product, and the background evidence
   (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
@@ -74,6 +74,12 @@
       {% if ct.differentiators %}<p><b>Room to differ:</b></p><ul>{% for d in ct.differentiators %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}{{ checked(ct) }}</article>
 </div>
 
+{% if need %}<h2 id="architectures">Architectures that need it <span class="small muted">· {{ need.reach }} of {{ apps|length }}, {{ need.positions }} sockets, {{ need.adjacent }} with a door opener</span></h2>
+<details><summary class="small">Show the {{ need.rows|length }} architectures and which of our parts each already uses</summary>
+<div class="table-wrap"><table class="bo-mini striped"><thead><tr><th>Architecture</th><th>Market</th><th>Sockets</th><th>Already uses our</th></tr></thead><tbody>
+  {% for r in need.rows|sort(attribute='name') %}<tr><td>{{ r.name }}</td><td>{{ r.market }}</td><td>{{ r.qty }}</td>
+    <td>{% if r.ours %}{{ r.ours|length }}: {{ r.ours[:4]|join(', ') }}{{ ' …' if r.ours|length > 4 }}{% else %}<span class="muted">none (no door opener)</span>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div></details>{% endif %}
 {% if hunt %}<h2>Where to hunt</h2>
 <p>{% for c in hunt %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}" title="{{ c.type }} · {{ c.apps|join(', ') }}">{{ c.name }}</span>{% endfor %}
   <a class="small" href="/business/customers?co={{ co }}&fn={{ fn }}">all →</a></p>{% endif %}

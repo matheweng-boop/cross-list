@@ -3,13 +3,13 @@
 {% block title %}Applications – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Application view</h1>
-<p class="subtitle muted">Functional coverage per application: in-scope design-in positions with a {{ co_label }} part. Click an application for its
+<p class="subtitle muted">Candidate coverage per reference architecture: in-scope sockets where a {{ co_label }} part exists (electrical requirements not validated). Click one for its
   functional blocks, positions and the coverage simulator.</p>
 {{ company_switch('/business/applications', co, companies) }}
 {{ about('applications') }}
 {% set ns = namespace(cat='') %}
 <div class="table-wrap"><table class="striped bo-apps">
-  <thead><tr><th>{{ term('application', 'Application') }}</th><th>{{ term('coverage', 'Coverage') }}</th><th><span class="bo-term" title="sockets with our part / in-scope sockets">Ours / sockets</span></th><th><span class="bo-term" title="sockets no company in Cross List has a part for">Gaps</span></th><th><span class="bo-term" title="sockets only other companies have parts for">Competitor only</span></th><th>{{ term('asp_tam', 'Content (priced)') }}</th></tr></thead>
+  <thead><tr><th>{{ term('application', 'Application') }}</th><th>{{ term('coverage', 'Candidate coverage') }}</th><th><span class="bo-term" title="sockets with our part / in-scope sockets">Ours / sockets</span></th><th><span class="bo-term" title="sockets no company in Cross List has a part for">Gaps</span></th><th><span class="bo-term" title="sockets only other companies have parts for">Competitor only</span></th><th>{{ term('asp_tam', 'Content (priced)') }}</th></tr></thead>
   <tbody>
   {% for a, m in rows if not a.background %}
     {% if a.category != ns.cat %}{% set ns.cat = a.category %}<tr class="bo-cat"><td colspan="6">{{ a.category }}</td></tr>{% endif %}

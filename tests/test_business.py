@@ -14,10 +14,10 @@ def test_coverage_counts_positions_not_skus():
 
 
 def test_pages_and_inputs(client):
-    for path in ("/business", "/business/applications", "/business/attach", "/business/gaps", "/business/data"):
+    for path in ("/business", "/business/applications", "/business/attach", "/business/explorer", "/business/data"):
         r = client.get(path)
         assert r.status_code == 200, path
-        assert "Business opportunity" in r.text
+        assert 'class="crumbs-bar' in r.text
     assert client.get("/business/applications/1?co=skyworks").status_code == 200
     r = client.post(
         "/business/data", data={"co": "combined", "asp:gate_driver": "2.80", "vol:Car radio tuner system": "1000"}
@@ -71,10 +71,10 @@ def test_technology_fit_and_cases(client):
 
 def test_explanations_everywhere(client):
     help_ = op.explanations()
-    for page in ("overview", "applications", "markets", "attach", "gaps", "technology", "cases", "data"):
+    for page in ("overview", "applications", "markets", "attach", "explorer", "cases", "data"):
         assert page in help_["pages"]
     for path in ("/business", "/business/applications", "/business/markets", "/business/attach", "/business/gaps",
-                 "/business/technology", "/business/cases", "/business/data"):  # fmt: skip
+                 "/business/technology", "/business/explorer", "/business/cases", "/business/data"):  # fmt: skip
         assert "About this page" in client.get(path).text, path
     method = client.get("/business/method").text
     assert "Formulas" in method and "Door opener" in method and "Data sources" in method
@@ -122,3 +122,30 @@ def test_explore_page(client):
     for path in ("/business/explore", "/business/explore?fit=high"):
         r = client.get(path)
         assert r.status_code == 200 and "New markets" in r.text, path
+
+
+def test_explorer_views_scope_and_old_links(client):
+    for view in ("reach", "crosssell", "feasibility", "competition", "commercial", "evidence"):
+        r = client.get(f"/business/explorer?view={view}")
+        assert r.status_code == 200 and "Denominator" in r.text, view
+    lib = client.get("/business/explorer?scope=library").text
+    assert "Library architectures only" in lib and "reference architectures" in lib
+    # old pages land on the matching view
+    r = client.get("/business/gaps?sort=tam", follow_redirects=False)
+    assert r.status_code == 307 and "view=commercial" in r.headers["location"]
+    r = client.get("/business/technology?view=short", follow_redirects=False)
+    assert "view=feasibility" in r.headers["location"] and "f=short" in r.headers["location"]
+    # unknown TAM is shown as unknown, never as zero
+    assert "unknown" in client.get("/business/explorer?view=commercial").text
+
+
+def test_gap_types_and_qualification_states():
+    assert op.gap_type("supported", None) == "candidate"
+    assert op.gap_type("gap", {"path": "exists"}) == "mapping"
+    assert op.gap_type("gap", {"path": "new_design"}) == "true_gap"
+    assert op.gap_type("gap", None) == "unknown_evidence"
+    assert op.gap_type("na", None) == "not_ours"
+    q = op.qual_state
+    assert q({"values": {"qualification": "automotive"}}) == "automotive"
+    assert q({"values": {"qualification": "industrial"}}) == "not_automotive"
+    assert q({"values": {"qualification": None}}) == "unknown"

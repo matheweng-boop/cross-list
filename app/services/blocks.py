@@ -111,6 +111,44 @@ def template_functions(t: dict) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+_SOURCE_VENDOR = re.compile(r"\b(TI|NXP|Qualcomm|MediaTek|Skyworks|Microchip|Infineon)\b")
+# Applications that several reference architectures describe: a title containing one of these keys puts the
+# architecture in a "possible variant" group. Groups are flags for review; architectures are never merged.
+VARIANT_KEYS = (
+    "traction inverter", "on-board charger", "adas domain controller", "telematics", "v2x", "infotainment", "radar",
+    "car radio", "connected radio", "smart car access", "phone-as-a-key", "battery", "bms", "ev charging", "wallbox",
+    "dc fast charg", "smart meter", "electricity meter", "plc", "servo", "bldc", "motor drive", "smartwatch",
+    "earbuds", "smart speaker", "patient monitor", "pulse oximeter", "glucose", "wi-fi access point", "router",
+    "gateway", "small cell", "massive mimo", "radio unit", "fixed-wireless", "fwa", "smartphone", "tracker",
+    "ip camera", "security camera", "video doorbell", "thermostat", "smart home", "robot", "drone", "laptop",
+    "notebook", "tablet", "xr", "glasses", "headset", "zone control", "zonal", "body control", "power steering",
+    "eps", "lighting", "headlamp", "headlight", "usb-c", "power bank", "gate driver", "isolated bias", "ups",
+    "solar", "server", "psu", "power supply", "optical", "ethernet switch", "refrigerator", "washer", "cooktop",
+)  # fmt: skip
+
+
+def source_of(t: dict) -> str:
+    """Who published the reference architecture (from the name or the note), or Cross List when drawn here."""
+    m = _SOURCE_VENDOR.search(f"{t.get('name', '')} {t.get('note', '')}")
+    return m.group(1) if m else "Cross List"
+
+
+def variant_key(t: dict) -> str | None:
+    name = re.sub(r"\([^()]*\)", "", t.get("name", "")).lower()
+    return next((k for k in VARIANT_KEYS if re.search(r"(?<![a-z])" + re.escape(k), name)), None)
+
+
+@lru_cache
+def variant_groups() -> dict[str, list[int]]:
+    """Possible variant groups among the library architectures (two or more sharing a key)."""
+    groups: dict[str, list[int]] = {}
+    for i, t in enumerate(templates()):
+        k = variant_key(t)
+        if k:
+            groups.setdefault(k, []).append(i)
+    return {k: v for k, v in groups.items() if len(v) > 1}
+
+
 def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
     """Applications by category for the generator page: display name, block count and the Skyworks / Qorvo
     categories involved (have = parts in Cross List, else opportunity)."""
@@ -126,8 +164,14 @@ def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
             chips[label] = chips.get(label, False) or bool(n[fn])
         blocks_n = sum(len(g.get("blocks") or []) for g in t.get("groups") or [])
         title, sub = title_parts(t)
+        from app.services.opportunity import market_of
+
+        key = variant_key(t)
+        peers = [display_name(templates()[j]) for j in variant_groups().get(key, []) if j != i]
         card = {"i": i, "name": title, "sub": sub, "blocks": blocks_n, "questions": len(t.get("questions") or []),
-                "chips": sorted(chips.items(), key=lambda c: (not c[1], c[0]))}  # fmt: skip
+                "chips": sorted(chips.items(), key=lambda c: (not c[1], c[0])), "source": source_of(t),
+                "market": market_of(t.get("name", ""), t.get("category") or "Other"), "variant": key if peers else None,
+                "peers": peers}  # fmt: skip
         out.setdefault(t.get("category") or "Other", []).append(card)
     return list(out.items())
 
@@ -212,7 +256,8 @@ def catalog_parts() -> dict[str, list[dict]]:
                     "mpn": p["mpn"],
                     "manufacturer": mfr,
                     "url": p.get("product_url") or p.get("source") or "",
-                    "values": {"qualification": "automotive" if auto else None},
+                    # three states: automotive (stated), not_automotive (stated no), None (not stated)
+                    "values": {"qualification": "automotive" if auto else "not_automotive" if auto is False else None},
                     "detail": " · ".join(
                         b for b in [*bits, status if status and status not in ("Active", "Standard") else ""] if b
                     ),
@@ -304,7 +349,9 @@ def _candidates(session: Session, key: str) -> list[dict] | None:
                 continue
             feats = d.get("features") or [*d["analog"], *d["digital_iq"], *d["digital_decode"]]
             size = f"{d['tuners']}T" if d.get("tuners") else f"{d['channels']} ch" if d.get("channels") else ""
+            aec = d.get("aec_q100")
             values = {
+                "qualification": "automotive" if aec is True else "not_automotive" if aec is False else None,
                 "tuners": d.get("tuners"),
                 "channels": d.get("channels"),
                 "feature": feats,

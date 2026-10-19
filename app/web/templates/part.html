@@ -2,6 +2,7 @@
 {% from "_macros.html" import part_badges, diff_table %}
 {% block title %}{{ part.mpn }} – Cross List{% endblock %}
 {% block content %}
+{% set back = request.query_params.get('from', '') %}{% if back.startswith('/parts?') or back == '/parts' %}<p class="small"><a href="{{ back }}">← Back to results</a></p>{% endif %}
 <h1>{{ part.mpn }}</h1>
 <dl class="ref-summary">
   <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>

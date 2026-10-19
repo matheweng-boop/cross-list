@@ -27,7 +27,7 @@
   <tr><th>Door opener share</th><td>applications needing the function that already contain one of our parts ÷ applications needing it</td><td class="muted"></td></tr>
   <tr><th>Sockets</th><td>Σ quantity of the function over the applications</td><td class="muted">2 LDOs in one diagram = 2</td></tr>
   <tr><th>Attach "how often"</th><td>applications containing both our product and the function ÷ applications containing our product</td><td class="muted">co-occurrence, not sales</td></tr>
-  <tr><th>Technology fit score</th><td>(applications using it ÷ all applications) × technology weight × competition weight</td>
+  <tr><th>Technology fit score</th><td>(architectures using it ÷ all architectures in scope) × path weight (or technology weight where no path is assessed) × competition weight × trend weight</td>
     <td class="muted">technology {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}; competition {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
   <tr><th>Content per system</th><td>Σ quantity × ASP over priced sockets; our share = priced sockets with our part ÷ all priced sockets</td><td class="muted">only where ASPs are entered</td></tr>
   <tr><th>TAM per year</th><td>Σ over applications of annual volume × sockets × ASP</td><td class="muted">only where both are entered</td></tr>
@@ -43,7 +43,7 @@
   <tr><th>Confirmed part mapping</th><td>reviewers on the evidence page</td><td>changes the status: the function becomes Portfolio and leaves the gap lists</td></tr>
   <tr><th>Patents, foundry route, competitor technology</th><td>evidence/*.yaml</td><td><b>not in the score</b>: shown on the evidence page for judgement</td></tr>
   <tr><th>Reviews (✓ ✗ ?)</th><td>people using the site</td><td><b>not in the score</b>: flag items as verified or disputed and feed the data to-do</td></tr>
-  <tr><th>Door openers, customers, ASPs</th><td>diagrams, customers.yaml, TAM data</td><td>not in the Technology fit score (door openers rank Gaps &amp; ranking; ASPs feed TAM)</td></tr>
+  <tr><th>Door openers, customers, ASPs</th><td>diagrams, customers.yaml, TAM data</td><td>not in the Technology fit score (door openers rank the cross-sell view; ASPs feed TAM)</td></tr>
 </tbody></table>
 
 <h2 id="sources">Data sources (live)</h2>
@@ -54,12 +54,12 @@
   <tr><th>Our parts</th><td>{% for m, n in src.catalogue|dictsort %}{{ m }} {{ '{:,}'.format(n) }} catalogue parts{{ ', ' if not loop.last }}{% endfor %}, plus Cross List families with full parameters</td>
     <td class="muted">public product pages (data/catalog/); automotive grade as stated there</td></tr>
   <tr><th>Competition</th><td>{{ src.competition }} functions assessed</td><td class="muted">data/business/competition.yaml · public catalogue knowledge, indicative</td></tr>
-  <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">data/business/technology.yaml · public portfolio knowledge, indicative</td></tr>
+  <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">data/business/explorer?view=feasibility.yaml · public portfolio knowledge, indicative</td></tr>
   <tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered</td><td class="muted"><a href="/business/data">TAM data</a> · your inputs only</td></tr>
 </tbody></table></div>
 
 <h2 id="pages">What each page answers</h2>
-<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'gaps': 'Gaps & ranking', 'technology': 'Technology fit', 'cases': 'Case analysis', 'data': 'TAM data'}[k] }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
+<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'explorer': 'Opportunity explorer', 'cases': 'Business cases', 'data': 'Commercial inputs'}.get(k, k|replace('_', ' ')|capitalize) }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
 
 <h2 id="limits">What the analysis cannot tell you</h2>
 <ul class="small">

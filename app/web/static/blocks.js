@@ -525,7 +525,7 @@
           <select data-q="${esc(q.id)}"><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${S.qa[q.id] === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
           <span class="lg ${fl.length ? "lg-have" : "lg-ext"}" title="${esc(fl.length ? "Narrows: " + fl.join(", ") : "Recorded only")}">${fl.length ? "narrows" : "recorded"}</span></label>`;
       }).join("")}
-      ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")} (TI, public)</p>` : ""}
+      ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")} (public)</p>` : ""}
     </details>`;
   }
   function applyQuestion(q, choice) {

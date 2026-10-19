@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% macro url() -%}
+  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else ''} -%}{%- set _ = base.update(kwargs) -%}
+  /reference-designs?{{ base|dictsort|selectattr('1')|list|urlencode }}
+{%- endmacro %}
+{% macro fchip(f) %}<a class="lg rd-fn {{ {'supported': 'lg-have', 'gap': 'lg-opp', 'competitor': 'lg-opp'}.get(status.get(f), 'lg-ext') }}" href="{{ url(fn=f) }}" title="{{ bo_status_help.get(status.get(f), '') }}">{{ label[f] }}</a>{% endmacro %}
+{% block title %}Reference designs – BizDev{% endblock %}
+{% block content %}
+<h1>Reference designs</h1>
+<p class="subtitle muted">{{ '{:,}'.format(n_all) }} public reference designs from manufacturers' sites, with links to their design guides, schematics and BOMs.
+  Functions are marked <span class="lg lg-have">we have a part</span> or <span class="lg lg-opp">no part of ours</span>; customer parts are grey.</p>
+
+<form method="get" action="/reference-designs" class="rd-search" role="search">
+  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else ''}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  <input type="search" name="q" value="{{ q }}" placeholder="Search title, part number or application, e.g. traction inverter, UCC21750" aria-label="Search reference designs">
+  <button type="submit">Search</button>
+</form>
+
+<div class="scope-bar small filter-cols">
+  <div class="chip-row"><span class="chip-lbl">Manufacturer</span><a class="fchip{{ ' on' if not vendor }}" href="{{ url(vendor='') }}">All</a>{% for k, c in facets.vendor %}<a class="fchip{{ ' on' if vendor == k }}" href="{{ url(vendor=k) }}">{{ k }} <small>{{ c }}</small></a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">End market</span><a class="fchip{{ ' on' if not market }}" href="{{ url(market='') }}">All</a>{% for k, c in facets.market[:10] %}<a class="fchip{{ ' on' if market == k }}" href="{{ url(market=k) }}">{{ k }} <small>{{ c }}</small></a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">Show only</span>
+    <a class="fchip{{ ' on' if iso }}" href="{{ url(iso=('' if iso else 1)) }}">Isolated designs</a>
+    <a class="fchip{{ ' on' if docs }}" href="{{ url(docs=('' if docs else 1)) }}">With document links</a>
+    {% if fn %}<a class="fchip on" href="{{ url(fn='') }}">{{ label.get(fn, fn) }} ✕</a>{% endif %}</div>
+</div>
+<details class="rd-fns small"><summary>Filter by function ({{ facets.function|length }})</summary>
+  <div class="rd-fn-grid">{% for k, c in facets.function %}<a class="fchip{{ ' on' if fn == k }}" href="{{ url(fn=k) }}">{{ label[k] }} <small>{{ c }}</small></a>{% endfor %}</div>
+</details>
+
+<p class="small muted">{{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>
+{% for d in rows %}
+<article class="rd-card">
+  <header><a href="{{ d.url }}" target="_blank" rel="noopener"><b>{{ d.id }}</b> {{ d.title }} ↗</a>
+    <span class="small muted">· {{ d.vendor }}{% if d.markets %} · {{ d.markets|join(', ') }}{% endif %}{% if d.isolation %} · <span class="badge">isolated</span>{% endif %}</span></header>
+  {% if d.summary %}<p class="small">{{ d.summary }}</p>{% endif %}
+  {% if d.applications %}<p class="small muted">Applications: {{ d.applications[:6]|join(' · ') }}</p>{% endif %}
+  {% if d.functions %}<p class="rd-fnrow">{% for f in d.functions %}{{ fchip(f) }}{% endfor %}</p>{% endif %}
+  {% if d.parts %}<p class="small">Parts: {{ d.parts[:12]|join(', ') }}{% if d.parts|length > 12 %} …{% endif %}</p>{% endif %}
+  {% if d.documents %}<p class="small rd-docs">{% for k, v in d.documents.items() if k != 'other' and v %}<a href="{{ v }}" target="_blank" rel="noopener">{{ doc_labels.get(k, k) }} ↗</a>{% endfor %}{% for v in d.documents.other or [] %}<a href="{{ v }}" target="_blank" rel="noopener">Other document ↗</a>{% endfor %}</p>{% endif %}
+</article>
+{% else %}<p class="muted">No design matches. <a href="/reference-designs">Clear the filters</a>.</p>{% endfor %}
+{% if pages > 1 %}<nav class="rd-pager small" aria-label="Pages">{% if page > 1 %}<a href="{{ url(page=page - 1) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url(page=page + 1) }}">Next →</a>{% endif %}</nav>{% endif %}
+
+<p class="small muted rd-sources">Sources: {% for s in sources %}{{ s.vendor }} ({{ '{:,}'.format(s.n) }}{% if s.collected %}, collected {{ s.collected }}{% endif %}){{ ', ' if not loop.last }}{% endfor %}.
+  Collected from public pages only; design files are linked, not copied. Analog Devices, ST, NXP, onsemi, Microchip, Toshiba, Nexperia and Qorvo block automated access and are not included.</p>
+{% endblock %}

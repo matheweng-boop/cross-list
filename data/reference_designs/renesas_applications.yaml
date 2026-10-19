@@ -1,0 +1,530 @@
+# Application block diagrams from public Renesas "Winning Combination" pages (competitor reference), for the
+# block-diagram generator. Same format as data/blocks/research/ti_block_diagrams.yaml, with `vendor_parts` in place of
+# `ti_parts`.
+#
+# How these were read: each renesas.com/en/applications/<market>/<segment>/<slug> page embeds its system block diagram
+# as an inline (Visio) SVG; blocks drawn in blue are clickable and jump to a product list for that block (block name,
+# optional one-line description, Renesas parts). The SVG was rendered locally and read; groups below follow the figure's
+# own boxes / labels, links are the arrows and buses drawn. White (non-Renesas) blocks are kept with empty vendor_parts.
+# "pages" for a REN-WC source = the diagram number printed on the figure (e.g. WS199) + the linked product lists.
+# vendor_parts = the Renesas parts the page attaches to that block (competitor reference only, not recommendations).
+# Collected 2026-10-19 (robots.txt allows; one request at a time, >= 1 s apart).
+#
+# Field notes (same conventions as ti_block_diagrams.yaml):
+#   groups[].side      lv | hv | barrier | field | backplane | rf (where the figure draws it); omitted when not meaningful
+#   groups[].fn_hint   BizDev function ids (data/blocks/functions.yaml) for the blocks
+#   links              [from, to, label] = arrows / buses drawn in the figure (label "" when unlabelled)
+#   features[]         high-level design questions a user would answer for this application; choices are options, not answers
+#   features[].filters existing BizDev parameter names where one fits; otherwise a plain-words attribute marked "(new)"
+
+docs:
+  REN-WC-OBC66: {title: "6.6kW Single-Stage Onboard Charger (OBC) - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/6-6kw-single-stage-onboard-charger", note: "diagram WS199"}
+  REN-WC-OBC33: {title: "3.3kW Integrated OBC and DC/DC - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/3-3kw-integrated-obc-and-dcdc", note: "diagram WS303"}
+  REN-WC-WALLBOX: {title: "Mode 3 AC EV Charger Wallbox - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/mode-3-ac-ev-charger-wallbox", note: "diagram WS188-2"}
+  REN-WC-EVBMS: {title: "Standard EV Battery Management System - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/standard-ev-battery-management-system", note: "diagram AS201"}
+  REN-WC-BIDCDC: {title: "Bidirectional DC/DC Converter for 12V/48V EV/HEV Systems - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/bi-directional-dcdc-converter-12v-48v-ev-hev-systems", note: "diagram AS218"}
+  REN-WC-TTYPE: {title: "Three-Level T-Type Traction Motor Inverter - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/three-level-t-type-traction-motor-inverter", note: "diagram WS200"}
+  REN-WC-XEVIPS: {title: "xEV Inverter with Inductive Position Sensor (IPS) - Winning Combination", url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/xev-inverter-inductive-position-sensor-ips", note: "diagrams AS229-1 (IPS), AS229-2 (resolver)"}
+  REN-WC-DCFC: {title: "DC Fast Charging Station for Electric Vehicles - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/dc-fast-charging-station-electric-vehicles", note: "diagram AS254"}
+  REN-WC-PLC: {title: "Industrial Programmable Logic Controller (PLC) - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/industrial-automation/industrial-programmable-logic-controller-plc", note: "diagrams EU115-1, EU115-2"}
+  REN-WC-HYBINV: {title: "Hybrid Inverter - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/hybrid-inverter", note: "diagram WS163-1 (page has 3 variants)"}
+  REN-WC-ACSERVO: {title: "AC Servo - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/motor-drive-systems/ac-servo", note: "diagram CN032 (board CN032-ACSERVO)"}
+  REN-WC-UPS3K: {title: "Bidirectional 3000W UPS Power - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/bidirectional-3000w-ups-power", note: "diagram CN048"}
+  REN-WC-PFCINV20K: {title: "20kW 3-phase PFC Inverter - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/20kw-3-phase-pfc-inverter", note: "diagram CN078"}
+  REN-WC-ISOMOTOR: {title: "Isolated Motor Drive Power Stage - Winning Combination", url: "https://www.renesas.com/en/applications/industrial/motor-drive-systems/isolated-motor-drive-power-stage", note: "diagram WS223-1"}
+  REN-WC-ECPRIRRU: {title: "eCPRI Mass MIMO for RRU - Winning Combination", url: "https://www.renesas.com/en/applications/communications-infrastructure/wireless-infrastructure/ecpri-mass-mimo-rru", note: "diagram CN340"}
+
+applications:
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_obc_single_stage_6k6
+    name: 6.6 kW single-stage bidirectional on-board charger (GaN, DAB)
+    sources:
+      - {doc: REN-WC-OBC66, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/6-6kw-single-stage-onboard-charger", pages: "interactive block diagram WS199 + 9 linked block product lists"}
+    groups:
+      - {id: ac_input, label: "AC input + EMI filter (Vac)", side: hv, blocks: [AC source, common-mode choke, X/Y capacitors], source: "WS199 (left, unlabelled filter)", fn_hint: [], vendor_parts: []}
+      - {id: bds_stage, label: "GaN BDS single-stage AC bridge (G1-G8)", side: hv, blocks: [GaN bidirectional switches x4 (G1-G8)], source: "WS199 'GaN BDS'", fn_hint: [power_fets], vendor_parts: [TP65B110HRU]}
+      - {id: transformer, label: "Resonant tank + isolation transformer (Lrp, C2/C3, CT)", side: barrier, blocks: [resonant inductor Lrp, current transformer CT, main transformer], source: "WS199", fn_hint: [], vendor_parts: []}
+      - {id: hv_bridge, label: "GaN FET full bridge, HV battery side (G9-G12)", side: hv, blocks: [GaN FET full bridge, output filter, HV battery], source: "WS199 'GaN FET' (top right)", fn_hint: [power_fets, hv_battery], vendor_parts: [TP65H015G5WS]}
+      - {id: lv_dcdc_hv, label: "HV-to-LV DC/DC, HV-side GaN bridge (G13-G16)", side: hv, blocks: [GaN FET full bridge], source: "WS199 'GaN FET' (bottom right)", fn_hint: [power_fets], vendor_parts: [TP65H015G5WS]}
+      - {id: lv_dcdc_lv, label: "HV-to-LV DC/DC, LV-side MOSFET bridge (G17-G20) + 12 V battery", side: lv, blocks: [80 V MOSFET full bridge, transformer, LC filter, 12 V LV battery], source: "WS199 'MOSFET'", fn_hint: [power_fets], vendor_parts: [RBA013N08R1SBPW]}
+      - {id: gate_drive, label: "Isolated gate drives (G1-G8, G9-G16) + gate drive (G17-G20)", side: barrier, blocks: [isolated gate driver x2 groups, non-isolated gate driver], source: "WS199 (white blocks, no Renesas part linked)", fn_hint: [gate_driver], vendor_parts: []}
+      - {id: sensing, label: "Current / voltage sensing", side: lv, blocks: [op amps on ADC inputs (CT, ILVBAT/VLVBAT), isolated op amp (Vac, VHVBAT, IHVBAT), Hall IC (AC current)], source: "WS199 'Op Amp', 'Isolated Op Amp', 'HALL IC'", fn_hint: [amplifier, isolated_amplifier, current_sensor], vendor_parts: [ISL28134]}
+      - {id: mcu, label: "MCU (ADC, PWM, CAN, GPIO)", side: lv, blocks: [automotive MCU], source: "WS199 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/U2B"]}
+      - {id: power, label: "Housekeeping supply: isolated flyback, LDO, PMIC", side: lv, blocks: [isolated flyback from VHVBatt, LDO, ASIL-D PMIC], source: "WS199 'Isolated Flyback', 'LDO', 'PMIC'", fn_hint: [hv_flyback, pol_ldo, pmic], vendor_parts: [RRW22111, RAA214220, RAA271084]}
+      - {id: glue, label: "GreenPAK glue logic / IO extension", side: lv, blocks: [programmable mixed-signal IC, IO_Ext], source: "WS199 'GreenPAK'", fn_hint: [io_expander], vendor_parts: [SLG46538-A]}
+      - {id: can, label: "CAN transceiver", side: lv, blocks: [CAN transceiver], source: "WS199 (white block)", fn_hint: [can_transceiver], vendor_parts: []}
+    links:
+      - [ac_input, bds_stage, "Vac"]
+      - [bds_stage, transformer, "Ilrp"]
+      - [transformer, hv_bridge, ""]
+      - [hv_bridge, lv_dcdc_hv, "HV_BAT+/-"]
+      - [lv_dcdc_hv, lv_dcdc_lv, "transformer"]
+      - [sensing, mcu, "ADC"]
+      - [mcu, gate_drive, "PWM (8 + 8 + 4)"]
+      - [gate_drive, bds_stage, "G1-G8"]
+      - [gate_drive, hv_bridge, "G9-G12"]
+      - [gate_drive, lv_dcdc_hv, "G13-G16"]
+      - [gate_drive, lv_dcdc_lv, "G17-G20"]
+      - [power, mcu, "POWER"]
+      - [glue, mcu, "GPIO"]
+      - [can, mcu, "CAN"]
+    features:
+      - {id: topology, question: "OBC topology", choices: ["single-stage AC/DC + DAB (electrolytic-free)", "two-stage PFC + isolated DC/DC"], filters: "number of bidirectional switches (new)", source: "page description"}
+      - {id: switch_tech, question: "Power switch technology", choices: [GaN bidirectional switch, GaN FET, Si MOSFET], filters: "vds_v, rds_on_mohm", source: "WS199"}
+      - {id: integrated_ldc, question: "Integrated HV-to-LV (12 V) DC/DC", choices: [yes, no], filters: "80-100 V MOSFET count (new)", source: "WS199 bottom half"}
+      - {id: current_sense, question: "Current sensing", choices: [current transformer + op amp, Hall IC, isolated op amp], filters: "isolated amplifier vs Hall (new)", source: "WS199"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_obc_dcdc_3k3
+    name: 3.3 kW integrated OBC + HV-to-LV DC/DC (shared transformer, GaN)
+    sources:
+      - {doc: REN-WC-OBC33, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/3-3kw-integrated-obc-and-dcdc", pages: "interactive block diagram WS303 + 10 linked block product lists"}
+    groups:
+      - {id: ac_input, label: "AC input relays + EMI filter", side: hv, blocks: [input relays, EMI filter, V/I sensing], source: "WS303 'AC Mains Domain'", fn_hint: [], vendor_parts: []}
+      - {id: pfc, label: "GaN totem-pole PFC", side: hv, blocks: [GaN FET half bridges, boost inductor, gate drivers], source: "WS303 'GaN FET' (1st) + 'Gate Driver'", fn_hint: [power_fets, gate_driver], vendor_parts: [TP65H030G4PRS]}
+      - {id: dcdc_primary, label: "GaN full bridge (DC/DC primary)", side: hv, blocks: [GaN FET full bridge, gate drivers], source: "WS303 'GaN FET' (2nd)", fn_hint: [power_fets, gate_driver], vendor_parts: [TP65H030G4PRS]}
+      - {id: transformer, label: "Shared three-winding transformer", side: barrier, blocks: [transformer (HV + LV secondaries)], source: "WS303", fn_hint: [], vendor_parts: []}
+      - {id: hv_secondary, label: "Main battery side GaN bridge + output relays", side: hv, blocks: [GaN FET full bridge, gate driver, output filter, relays, V/I sensing, main battery], source: "WS303 'Main Battery Domain'", fn_hint: [power_fets, gate_driver, hv_battery], vendor_parts: [TP65H030G4PRS]}
+      - {id: lv_rectifier, label: "Auxiliary (12 V) synchronous rectifier + buck + reverse protection", side: lv, blocks: [100 V MOSFET (SR), MOSFET buck half bridge, back-to-back MOSFET switch, gate drivers, V/I sensing, 12 V battery], source: "WS303 'Auxiliary Battery Domain' ('MOSFET' x3, 'MOSFET Driver', 'Gate Driver')", fn_hint: [power_fets, half_bridge_driver, gate_driver], vendor_parts: [RBA012N10R1SBPW, RBE020N04R0SZN6, ISL89165, ISL78434]}
+      - {id: contactor, label: "Contactor drive MOSFET", side: lv, blocks: [MOSFET low-side switch -> mechanical contactors], source: "WS303 'MOSFET' (GPIO)", fn_hint: [relay_driver, power_fets], vendor_parts: [RJF0412JSP]}
+      - {id: mcu, label: "MCU (ADC, PWM, INTR, CAN, GPIO)", side: lv, blocks: [automotive MCU], source: "WS303 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/U2B"]}
+      - {id: glue, label: "GreenPAK (protection / interrupt logic)", side: lv, blocks: [programmable mixed-signal IC], source: "WS303 'GreenPAK'", fn_hint: [], vendor_parts: [SLG46625-A]}
+      - {id: power, label: "Bias power: flyback (+12V_P/+12V_A), PMIC (1.9/3.3/5 V), isolated DC/DC (+12V_S)", side: barrier, blocks: [flyback converter, PMIC, isolated DC/DC, OR-ing diodes], source: "WS303 'Flyback Converter', 'PMIC', 'Isolated DC/DC'", fn_hint: [hv_flyback, pmic, isolated_dcdc], vendor_parts: [RRW21112, RAA271084]}
+      - {id: can, label: "CAN", side: lv, blocks: [CAN transceiver], source: "WS303 (white block)", fn_hint: [can_transceiver], vendor_parts: []}
+    links:
+      - [ac_input, pfc, ""]
+      - [pfc, dcdc_primary, "PFC bus"]
+      - [dcdc_primary, transformer, ""]
+      - [transformer, hv_secondary, "main battery"]
+      - [transformer, lv_rectifier, "12 V battery"]
+      - [mcu, pfc, "PWM -> gate drivers"]
+      - [mcu, dcdc_primary, "PWM -> gate drivers"]
+      - [mcu, lv_rectifier, "PWM -> MOSFET driver"]
+      - [mcu, contactor, "GPIO"]
+      - [ac_input, mcu, "V, I sensing (ADC)"]
+      - [glue, mcu, "INTR"]
+      - [power, mcu, "1.9 V / 3.3 V / 5 V"]
+      - [mcu, can, "CAN"]
+    features:
+      - {id: integration, question: "OBC and DC/DC integration", choices: ["shared transformer (simultaneous HV + LV charging)", "separate OBC and LDC"], filters: "transformer winding count (new)", source: "page description"}
+      - {id: switch_tech, question: "HV switch technology", choices: [GaN FET, SiC MOSFET, Si superjunction], filters: "vds_v, rds_on_mohm", source: "WS303"}
+      - {id: lv_rectification, question: "12 V output rectification", choices: [synchronous MOSFET, diode], filters: "vds_v (new)", source: "WS303"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_ac_wallbox
+    name: Mode 3 AC EV charger wallbox (single/three-phase, metering + PLC)
+    sources:
+      - {doc: REN-WC-WALLBOX, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/mode-3-ac-ev-charger-wallbox", pages: "interactive block diagram WS188-2 + 15 linked block product lists"}
+    groups:
+      - {id: metering_sense, label: "AC metering current sense (per phase)", side: hv, blocks: [current sense amplifier x3 (Rogowski)], source: "WS188-2 'AC Metering'", fn_hint: [current_sensor], vendor_parts: [RAA788000]}
+      - {id: metrology, label: "Metrology MCU (24-bit ADC) + segment display", side: hv, blocks: [metrology MCU, segment LCD], source: "WS188-2 'Metrology MCU'", fn_hint: [mcu, adc], vendor_parts: [RA2A2]}
+      - {id: metering_power, label: "Metering supply: isolated AC/DC + buck", side: hv, blocks: [isolated AC/DC, buck regulator], source: "WS188-2", fn_hint: [acdc_controller, wide_vin_buck], vendor_parts: [iW1821, RAA211412]}
+      - {id: rs485_link, label: "RS-485 link via digital isolator", side: barrier, blocks: [RS-485/RS-422 x2, digital isolator], source: "WS188-2", fn_hint: [rs485_transceiver, digital_isolator], vendor_parts: [ISL3172E]}
+      - {id: safety, label: "RDC-DD residual DC detection + interlock", side: hv, blocks: [residual direct current detecting device, DC residual detection logic, interlock], source: "WS188-2 (white blocks)", fn_hint: [], vendor_parts: []}
+      - {id: relay, label: "Relay / contactor drive (HVPAK) + weld check", side: hv, blocks: [HVPAK relay driver, contactors, weld check], source: "WS188-2 'Relay Drive: HVPAK', 'Weld Check'", fn_hint: [relay_driver], vendor_parts: [SLG47105]}
+      - {id: pilot, label: "Control pilot / proximity pilot circuit", side: lv, blocks: [CP/PP circuit (PWM, ADC)], source: "WS188-2", fn_hint: [], vendor_parts: []}
+      - {id: iso_amp, label: "Isolation amplifier (weld check sense)", side: barrier, blocks: [optically coupled isolation amplifier], source: "WS188-2 'Isolation Amplifier'", fn_hint: [isolated_amplifier, optocoupler], vendor_parts: [PS8352AL2]}
+      - {id: controller, label: "System controller (MPU: Linux, HMI, Ethernet)", side: lv, blocks: [MPU, LPDDR4, eMMC, TFT-LCD (MIPI DSI), light indicators], source: "WS188-2 'System Controller'", fn_hint: [soc, ddr_flash, display], vendor_parts: ["RZ/G3L"]}
+      - {id: controller_power, label: "Controller supply: isolated AC/DC + PMIC", side: lv, blocks: [isolated AC/DC, PMIC (3.3/1.8/1.2/1.1/1.0 V)], source: "WS188-2", fn_hint: [acdc_controller, pmic], vendor_parts: [iW1822, RAA215300]}
+      - {id: sensors, label: "PE / temperature measurement (AnalogPAK)", side: lv, blocks: [AnalogPAK sensor interface, PE measurement, temperature measurement xN, active discharge], source: "WS188-2 'Sensor Interface: AnalogPAK'", fn_hint: [adc, temperature_sensor], vendor_parts: [SLG47011]}
+      - {id: comms, label: "GreenPHY PLC, Ethernet PHY, NFC, LTE", side: lv, blocks: [GreenPHY PLC PHY, Ethernet PHY, NFC reader + coil, LTE modem (optional)], source: "WS188-2", fn_hint: [ethernet_phy, nfc_frontend, modem], vendor_parts: [PTX205R]}
+      - {id: wlan, label: "WLAN / Bluetooth LE module", side: rf, blocks: [Wi-Fi/Bluetooth LE MCU, QSPI flash, 2.4/5 GHz filtering, diplexer, antenna, isolated AC/DC + buck], source: "WS188-2 'WLAN/Bluetooth LE' (dashed box)", fn_hint: [wifi_soc, ble_soc, flash, diplexer, antenna, pol_buck], vendor_parts: [RA6W1, RA6W2, AT25SL0641C, RAA211320]}
+    links:
+      - [metering_sense, metrology, "24-bit ADC"]
+      - [metering_power, metrology, "VDD"]
+      - [metrology, rs485_link, "UART"]
+      - [rs485_link, controller, "UART"]
+      - [safety, relay, "interlock"]
+      - [controller, safety, "GPIO"]
+      - [relay, iso_amp, "weld check"]
+      - [iso_amp, controller, "ADC"]
+      - [pilot, controller, "ADC / PWM"]
+      - [controller_power, controller, "I2C + rails"]
+      - [sensors, controller, "I2C"]
+      - [comms, controller, "SPI / Ethernet / UART"]
+      - [wlan, controller, "SPI"]
+    features:
+      - {id: phases, question: "AC input", choices: [single-phase, three-phase], filters: "metering channel count (new)", source: "page description"}
+      - {id: communication, question: "EV communication", choices: ["PWM (IEC 61851 CP) only", "high-level communication (HomePlug GreenPHY PLC, ISO 15118)"], filters: "PLC PHY (new)", source: "page description"}
+      - {id: connectivity, question: "Backend connectivity", choices: [Ethernet, Wi-Fi/BLE, LTE, NFC authentication], filters: "", source: "WS188-2"}
+      - {id: metering, question: "Billing-grade metering", choices: [yes (metrology MCU), no], filters: "ADC resolution (new)", source: "WS188-2 'AC Metering'"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_ev_bms
+    name: EV battery management system (daisy-chained battery front ends, ASIL-D)
+    sources:
+      - {doc: REN-WC-EVBMS, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/standard-ev-battery-management-system", pages: "interactive block diagram AS201 + 10 linked block product lists"}
+    groups:
+      - {id: cells, label: "Battery modules (cells + NTC temperature sensors)", side: hv, blocks: [cell stacks, thermistors], source: "AS201 (left)", fn_hint: [hv_battery, temperature_sensor], vendor_parts: []}
+      - {id: bfe, label: "Battery management (cell monitor / balancing) ICs, daisy chained", side: hv, blocks: [battery front end per module (x3 shown)], source: "AS201 'Battery Management' x3", fn_hint: [battery_monitor], vendor_parts: [ISL78714]}
+      - {id: pack_current, label: "Pack current shunt + current amplifier", side: hv, blocks: [shunt resistor, current amplifier], source: "AS201 'Current Amplifier' (white block)", fn_hint: [current_sensor, amplifier], vendor_parts: []}
+      - {id: isolation, label: "Isolation barrier: transformer-coupled daisy chain + photocouplers (EN / fault)", side: barrier, blocks: [pulse transformers, photocouplers], source: "AS201 'Photocouplers', transformer symbol", fn_hint: [optocoupler], vendor_parts: [RV1S2752Q]}
+      - {id: bfe_master, label: "Battery management (LV-side master / communication interface)", side: lv, blocks: [battery management IC (daisy-chain master)], source: "AS201 'Battery Management' (right of barrier)", fn_hint: [battery_monitor], vendor_parts: [ISL78714]}
+      - {id: mcu, label: "BMS MCU (CAN, LIN)", side: lv, blocks: [automotive MCU], source: "AS201 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/P1M"]}
+      - {id: pmic, label: "PMIC from 12 V battery", side: lv, blocks: [PMIC], source: "AS201 'PMIC'", fn_hint: [pmic], vendor_parts: [RAA270005KFP]}
+      - {id: ipd, label: "Intelligent power devices: fan, pump, relay", side: lv, blocks: [high-side IPD x3], source: "AS201 'Intelligent Power Device' x3", fn_hint: [load_switch, relay_driver], vendor_parts: [UPD166031AT1U, RAJ2800024H12HPF]}
+      - {id: vehicle_net, label: "Vehicle network: CAN, LIN, RS-232", side: lv, blocks: [CAN transceiver, LIN transceiver, RS-232], source: "AS201 (white blocks)", fn_hint: [can_transceiver, lin_transceiver, rs485_transceiver], vendor_parts: []}
+    links:
+      - [cells, bfe, "cell voltage / temperature"]
+      - [bfe, pack_current, ""]
+      - [bfe, isolation, "daisy chain / EN"]
+      - [isolation, bfe_master, "daisy chain"]
+      - [isolation, mcu, "photocoupler outputs"]
+      - [bfe_master, mcu, ""]
+      - [pmic, mcu, ""]
+      - [pmic, vehicle_net, ""]
+      - [mcu, ipd, "fan / pump / relay"]
+      - [mcu, vehicle_net, "CAN / LIN / RS-232"]
+    features:
+      - {id: bms_comm, question: "Module-to-controller communication", choices: [wired isolated daisy chain, wireless BMS], filters: "isolation component (transformer vs RF) (new)", source: "Renesas lists both 'Standard' and 'Wireless' EV BMS"}
+      - {id: cells_per_module, question: "Cells per battery front end", choices: ["up to 14 (ISL78714)", other], filters: "cell channel count (new)", source: "ISL78714 product line"}
+      - {id: safety, question: "Functional safety target", choices: [ASIL-D, ASIL-C, QM], filters: "", source: "page description 'ASIL-D ready'"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_bidir_dcdc_48v_12v
+    name: Bidirectional 48 V / 12 V DC/DC converter (6-phase, EV/HEV)
+    sources:
+      - {doc: REN-WC-BIDCDC, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/bi-directional-dcdc-converter-12v-48v-ev-hev-systems", pages: "interactive block diagram AS218 + 3 linked block product lists"}
+    groups:
+      - {id: bat48, label: "48 V battery", side: lv, blocks: [48 V battery], source: "AS218", fn_hint: [battery_pack], vendor_parts: []}
+      - {id: power_stage, label: "Phase power stage x6 (buck/boost half bridge)", side: lv, blocks: [high-side N-channel MOSFET, low-side N-channel MOSFET, inductor], source: "AS218 'N-Channel MOSFET' x2 per phase, Phase 1-6", fn_hint: [power_fets], vendor_parts: [RBA250N10CHPF-4UA02, RBA300N10EHPF-5UA02, RBA160N10EANS-4UA03]}
+      - {id: hb_driver, label: "Half-bridge driver per phase", side: lv, blocks: [100 V half-bridge driver], source: "AS218 'Half-Bridge Driver'", fn_hint: [half_bridge_driver], vendor_parts: [ISL78420, ISL78424, ISL78444]}
+      - {id: controller, label: "Bidirectional PWM controller", side: lv, blocks: [6-phase bidirectional buck/boost controller], source: "AS218 'Bi-Directional PWM' (white block)", fn_hint: [multiphase], vendor_parts: []}
+      - {id: bat12, label: "12 V battery + regulator", side: lv, blocks: [12 V battery, regulator], source: "AS218", fn_hint: [battery_pack, pol_ldo], vendor_parts: []}
+      - {id: mcu, label: "Supervisory MCU (starter kit)", side: lv, blocks: [automotive MCU], source: "AS218 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/F1KM-S1", "RL78/F13", "RL78/F14"]}
+      - {id: can, label: "CAN", side: lv, blocks: [CAN transceiver], source: "AS218 (white block)", fn_hint: [can_transceiver], vendor_parts: []}
+    links:
+      - [bat48, power_stage, ""]
+      - [power_stage, bat12, "12 V bus"]
+      - [controller, hb_driver, "PWM"]
+      - [hb_driver, power_stage, ""]
+      - [mcu, controller, "I2C/PMBus"]
+      - [bat12, mcu, "via regulator"]
+      - [mcu, can, ""]
+    features:
+      - {id: phases, question: "Number of interleaved phases", choices: ["1-6 (scalable)"], filters: "controller phase count (new)", source: "AS218 Phase 1-6"}
+      - {id: direction, question: "Power flow", choices: ["bidirectional (buck 48->12 V / boost 12->48 V)", unidirectional], filters: "", source: "page title"}
+      - {id: fet_rdson, question: "MOSFET class", choices: ["100 V, 1.3-5 mOhm range"], filters: "vds_v, rds_on_mohm", source: "linked MOSFET list"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_ttype_traction_inverter
+    name: Three-level T-type traction inverter (SiC + GaN bidirectional switches, 800 V)
+    sources:
+      - {doc: REN-WC-TTYPE, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/three-level-t-type-traction-motor-inverter", pages: "interactive block diagram WS200 + 7 linked block product lists"}
+    groups:
+      - {id: hv_bus, label: "450-800 V DC link (split capacitors)", side: hv, blocks: [HV battery input, split DC-link capacitors], source: "WS200", fn_hint: [hv_battery, dc_link_cap], vendor_parts: []}
+      - {id: sic_bridge, label: "SiC three-phase bridge (outer switches)", side: hv, blocks: [SiC MOSFET x6], source: "WS200 'SiC' (white)", fn_hint: [power_fets], vendor_parts: []}
+      - {id: bds, label: "GaN bidirectional switches (neutral-point clamp)", side: hv, blocks: [GaN BDS x3], source: "WS200 'GaN BDS'", fn_hint: [power_fets], vendor_parts: [TP65B110HRU]}
+      - {id: gate_drivers, label: "Isolated gate drivers (6 SiC + 3 BDS)", side: barrier, blocks: [isolated gate driver x6, isolated gate driver for BDS x3], source: "WS200 'Isolated Gate Driver', 'Isolated Gate Driver for BDS'", fn_hint: [gate_driver], vendor_parts: [RAJ2930004AGM]}
+      - {id: motor, label: "PMSM motor", side: hv, blocks: [PMSM], source: "WS200", fn_hint: [motor], vendor_parts: []}
+      - {id: sensing, label: "Phase current sense + position sensor", side: lv, blocks: [current sense (3 phases), inductive position sensor], source: "WS200 'Current Sense' (white), 'Position Sensor'", fn_hint: [current_sensor, position_sensor], vendor_parts: [IPS2550]}
+      - {id: mcu, label: "Motor control MCU (PWM, ADC, CAN, I2C)", side: lv, blocks: [automotive MCU], source: "WS200 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/U2B"]}
+      - {id: power, label: "800-12 V isolated buck + PMIC", side: barrier, blocks: [isolated buck from HV bus, +12 V input OR-ing, PMIC], source: "WS200 '800-12V Isolated Buck', 'PMIC'", fn_hint: [isolated_dcdc, pmic], vendor_parts: [RAA271084]}
+      - {id: io, label: "CAN transceiver, I/O, GreenPAK monitor", side: lv, blocks: [CAN transceiver, I/O, GreenPAK (fault monitoring)], source: "WS200", fn_hint: [can_transceiver], vendor_parts: [SLG46538-A]}
+    links:
+      - [hv_bus, sic_bridge, "450-800 V"]
+      - [hv_bus, bds, "neutral point"]
+      - [sic_bridge, motor, "3 phases"]
+      - [bds, motor, ""]
+      - [mcu, gate_drivers, "PWM (6 + 3)"]
+      - [gate_drivers, sic_bridge, ""]
+      - [gate_drivers, bds, ""]
+      - [sensing, mcu, "ADC"]
+      - [hv_bus, power, ""]
+      - [power, mcu, ""]
+      - [io, mcu, "CAN / GPIO / I2C"]
+    features:
+      - {id: levels, question: "Inverter topology", choices: ["three-level T-type (NPC with bidirectional switch)", "two-level six-switch"], filters: "gate driver count (new)", source: "page title"}
+      - {id: bus_voltage, question: "DC bus voltage", choices: ["400 V", "800 V+"], filters: "isolation_rating_kvrms", source: "WS200 '450-800V'"}
+      - {id: position, question: "Rotor position sensing", choices: [inductive position sensor, resolver], filters: "", source: "WS200 'Position Sensor'"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_xev_inverter_ips
+    name: xEV traction inverter with inductive position sensor (IPS) or resolver
+    sources:
+      - {doc: REN-WC-XEVIPS, url: "https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/xev-inverter-inductive-position-sensor-ips", pages: "interactive block diagrams AS229-1 (IPS) and AS229-2 (resolver)"}
+    groups:
+      - {id: ext_if, label: "External interface via photocoupler", side: barrier, blocks: [external I/F, photocoupler], source: "AS229-1/-2 'Photocoupler'", fn_hint: [optocoupler], vendor_parts: [RV1S2752Q]}
+      - {id: power, label: "PMIC + 5 V LDO from 12 V battery", side: lv, blocks: [PMIC, 5 V LDO (sensor supply)], source: "AS229-1 'PMIC', '5V LDO'", fn_hint: [pmic, pol_ldo], vendor_parts: [RAA270000KFT, ISL78301]}
+      - {id: mcu, label: "Motor control MCU (RDC or ADC, resolver I/F)", side: lv, blocks: [automotive motor-control MCU with R/D converter], source: "AS229 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/C1M-Ax"]}
+      - {id: gate_drivers, label: "Isolated gate drivers x6", side: barrier, blocks: [isolated IGBT gate driver x6], source: "AS229 'Gate Driver'", fn_hint: [gate_driver], vendor_parts: [RAJ2930004AGM]}
+      - {id: power_stage, label: "IGBT/FRD power stage", side: hv, blocks: [IGBT/FRD x6], source: "AS229 (white blocks)", fn_hint: [power_fets, power_module], vendor_parts: []}
+      - {id: motor, label: "Motor", side: hv, blocks: [traction motor, IPS target], source: "AS229-1", fn_hint: [motor], vendor_parts: []}
+      - {id: ips, label: "IPS board: IPS sensor + Tx/Rx coils (or resolver)", side: field, blocks: [inductive position sensor IC, Tx/Rx PCB coils, resolver (variant 2)], source: "AS229-1 'IPS Sensor'; AS229-2 'Resolver'", fn_hint: [position_sensor], vendor_parts: [IPS2550]}
+    links:
+      - [ext_if, mcu, ""]
+      - [power, mcu, "Vcc"]
+      - [mcu, gate_drivers, ""]
+      - [gate_drivers, power_stage, ""]
+      - [power_stage, motor, ""]
+      - [ips, mcu, "analog differential sin/cos"]
+      - [power, ips, "5 V power"]
+    features:
+      - {id: position_sensor, question: "Rotor position sensor", choices: [inductive position sensor (IPS), resolver], filters: "MCU with RDC vs ADC input (new)", source: "AS229-1 vs AS229-2"}
+      - {id: switch_tech, question: "Power switch", choices: [IGBT/FRD, SiC MOSFET], filters: "vds_v", source: "AS229"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_dc_fast_charger
+    name: DC fast charging station power module (3-phase PFC + isolated DC/DC, 400-800 V out)
+    sources:
+      - {doc: REN-WC-DCFC, url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/dc-fast-charging-station-electric-vehicles", pages: "interactive block diagram AS254 + 5 linked block product lists"}
+    groups:
+      - {id: ac_input, label: "3-phase AC input 200-400 V (x3)", side: hv, blocks: [3-phase AC grid], source: "AS254", fn_hint: [], vendor_parts: []}
+      - {id: pfc, label: "Three-phase IGBT PFC (six-switch, boost inductors)", side: hv, blocks: [IGBT x6, boost inductors, DC-link capacitor], source: "AS254 'PFC' (white)", fn_hint: [power_fets, dc_link_cap], vendor_parts: []}
+      - {id: dcdc, label: "Isolated DC/DC (full-bridge CLLC, IGBT)", side: hv, blocks: [primary IGBT full bridge, resonant tank + transformer, secondary IGBT full bridge, output capacitor], source: "AS254 'DC/DC' (white)", fn_hint: [power_fets], vendor_parts: []}
+      - {id: gd_pfc, label: "Isolated gate driver (PFC)", side: barrier, blocks: [isolated gate driver], source: "AS254 'Isolated Gate Driver'", fn_hint: [gate_driver], vendor_parts: [RAJ2930004AGM]}
+      - {id: gd_dcdc, label: "Isolated gate driver (DC/DC)", side: barrier, blocks: [isolated gate driver], source: "AS254 'Isolated Gate Driver'", fn_hint: [gate_driver], vendor_parts: [RAJ2930004AGM]}
+      - {id: sense_in, label: "Input voltage & current sensing", side: hv, blocks: [V/I sensing], source: "AS254 (white)", fn_hint: [current_sensor, isolated_amplifier], vendor_parts: []}
+      - {id: sense_out, label: "Output voltage & current sensing", side: hv, blocks: [V/I sensing], source: "AS254 (white)", fn_hint: [current_sensor, isolated_amplifier], vendor_parts: []}
+      - {id: mcu, label: "Control MCU (PWM x2, ADC x2, CAN)", side: lv, blocks: [MCU], source: "AS254 'MCU'", fn_hint: [mcu], vendor_parts: ["RH850/F1KM-S2"]}
+      - {id: pmic, label: "PMIC", side: lv, blocks: [PMIC], source: "AS254 'PMIC'", fn_hint: [pmic], vendor_parts: [RAA271082]}
+      - {id: comms, label: "Photocoupler, CAN transceiver / PLC modem, NFC / Ethernet", side: lv, blocks: [photocoupler, CAN transceiver, PLC modem, NFC, Ethernet], source: "AS254 'Photocoupler', white blocks", fn_hint: [optocoupler, can_transceiver, ethernet_phy, nfc_frontend], vendor_parts: [RV1S2752Q]}
+    links:
+      - [ac_input, pfc, "3-phase AC 200-400 V"]
+      - [pfc, dcdc, "DC link"]
+      - [dcdc, sense_out, "DC 400-800 V out"]
+      - [ac_input, sense_in, ""]
+      - [sense_in, mcu, "ADC"]
+      - [sense_out, mcu, "ADC"]
+      - [mcu, gd_pfc, "PWM"]
+      - [gd_pfc, pfc, ""]
+      - [mcu, gd_dcdc, "PWM"]
+      - [gd_dcdc, dcdc, ""]
+      - [pmic, mcu, "VCC"]
+      - [mcu, comms, "CAN / PLC / NFC / Ethernet"]
+    features:
+      - {id: output_voltage, question: "Output voltage range", choices: ["400-800 V", "200-500 V"], filters: "isolation_rating_kvrms", source: "AS254"}
+      - {id: switch_tech, question: "Power switch", choices: [IGBT, SiC MOSFET], filters: "vds_v", source: "AS254 (IGBT symbols)"}
+      - {id: vehicle_comm, question: "Vehicle communication", choices: [CAN (CHAdeMO / GB/T), PLC (CCS / ISO 15118)], filters: "", source: "AS254 'CAN Transceiver, PLC Modem'"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_industrial_plc
+    name: Industrial PLC with analog/digital I/O, fieldbus PHYs and optional functional-safety add-on
+    sources:
+      - {doc: REN-WC-PLC, url: "https://www.renesas.com/en/applications/industrial/industrial-automation/industrial-programmable-logic-controller-plc", pages: "interactive block diagrams EU115-1 and EU115-2 (with functional-safety add-on)"}
+    groups:
+      - {id: power_in, label: "24 V inputs (redundant) + protection + DC/DC + buck", side: field, blocks: [input protect / clamp, DC/DC 3.3 V, DC/DC 3.3 V FuSa, buck 5 V], source: "EU115-2 'DC/DC', 'Buck Regulator'", fn_hint: [wide_vin_buck, reverse_polarity, tvs_esd], vendor_parts: [ISL85403, ISL85413, RAA211605]}
+      - {id: analog_in, label: "Analog inputs xN (0-10 V / 4-20 mA)", side: field, blocks: [input protect / clamp, op amp buffer], source: "EU115-2 'Op Amp'", fn_hint: [amplifier, tvs_esd], vendor_parts: [ISL28134, ISL28110]}
+      - {id: digital_in, label: "Digital inputs xN", side: field, blocks: [input protect / clamp], source: "EU115-2", fn_hint: [isolated_digital_input, tvs_esd], vendor_parts: []}
+      - {id: sensors, label: "Sensor signal conditioners (bridge / temperature)", side: field, blocks: [sensor signal conditioner x2], source: "EU115-2 'Sensor Signal Conditioner'", fn_hint: [adc, amplifier], vendor_parts: [ZSSC3230]}
+      - {id: serial, label: "RS-485 FD, RS-232 / 0-20 mA via optocoupler, USB", side: field, blocks: [RS-485 full-duplex transceiver, optocoupler, USB protection], source: "EU115-2 'RS-485 FD', 'Optocoupler'", fn_hint: [rs485_transceiver, optocoupler, tvs_esd], vendor_parts: [ISL3176E, RV1S9960A]}
+      - {id: fieldbus, label: "IO-Link master PHY xN, ASi-5 PHY", side: field, blocks: [IO-Link PHY, ASi-5 PHY], source: "EU115-2 'IO-Link PHY', 'Asi-5 PHY'", fn_hint: [rs485_transceiver], vendor_parts: [RH4Z2501, ZIOL2401, ASI4U, ASI4U-V5, SAP5]}
+      - {id: mcu, label: "PLC operation MCU (ADC, DAC, UART, SPI, Ethernet, LCD)", side: lv, blocks: [MCU], source: "EU115-2 'PLC Operation'", fn_hint: [mcu], vendor_parts: [RA6M3, RA6M4, RA6M5, RA8P1, RA8D1, RA8D2, RX65N]}
+      - {id: outputs, label: "Analog out x2 (op amp) + digital out xN (MOSFET high-side)", side: field, blocks: [op amp output stage, transistor/MOSFET digital outputs], source: "EU115-2 'Op Amp' (analog out)", fn_hint: [amplifier, load_switch, power_fets], vendor_parts: [ISL28134]}
+      - {id: network, label: "Ethernet PHY 100 Mb/s, industrial Gigabit Ethernet module", side: lv, blocks: [Ethernet PHY, Gbit Ethernet module], source: "EU115-2", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: wireless, label: "Wi-Fi, Bluetooth LE, LTE-M module", side: rf, blocks: [Wi-Fi MCU, Bluetooth LE SoC, LTE-M module, 32/40 MHz crystals], source: "EU115-2 'Wi-Fi', 'Bluetooth'", fn_hint: [wifi_soc, ble_soc, modem, crystal_oscillator], vendor_parts: [RA6W1, DA14535]}
+      - {id: hmi, label: "TFT-LCD, keys / cap-touch, SD card", side: lv, blocks: [TFT-LCD, keypad, SD card], source: "EU115-2", fn_hint: [display, touch_controller], vendor_parts: []}
+      - {id: fusa, label: "Optional functional-safety controller with redundant RS-485 / RS-232 and digital inputs", side: lv, blocks: [functional safety MCU, RS-485 FD, optocoupler, input protect], source: "EU115-2 'Add-on for Optional Functional Safety System'", fn_hint: [mcu, rs485_transceiver, optocoupler], vendor_parts: [RA2E1, RA4M2, RA6M3, ISL3176E, RV1S9960A]}
+    links:
+      - [power_in, mcu, "3.3 V / 5 V"]
+      - [analog_in, mcu, "ADC"]
+      - [digital_in, mcu, "GPIO"]
+      - [sensors, mcu, "I2C"]
+      - [serial, mcu, "UART / USB"]
+      - [fieldbus, mcu, "UART / SPI"]
+      - [mcu, outputs, "DAC / GPIO"]
+      - [network, mcu, "Ethernet / SPI"]
+      - [wireless, mcu, "UART / SCI"]
+      - [hmi, mcu, "LCD / DAC / SDHI"]
+      - [mcu, fusa, "SPI cross-check"]
+      - [power_in, fusa, "3.3 V FuSa"]
+    features:
+      - {id: io_mix, question: "I/O mix", choices: [analog in, digital in, analog out, digital out, RTD / bridge sensors], filters: "channel counts (new)", source: "EU115-2"}
+      - {id: fieldbus, question: "Field communication", choices: [IO-Link master, ASi-5, RS-485, industrial Ethernet], filters: "", source: "EU115-2"}
+      - {id: safety, question: "Functional safety add-on", choices: [yes (redundant MCU), no], filters: "", source: "EU115-1 vs EU115-2"}
+      - {id: wireless, question: "Wireless / IoT", choices: [Wi-Fi, Bluetooth LE, LTE-M, none], filters: "", source: "EU115-2"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_hybrid_solar_inverter
+    name: Hybrid solar inverter (GaN grid inverter + bidirectional LLC + 4x MPPT + 48 V battery)
+    sources:
+      - {doc: REN-WC-HYBINV, url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/hybrid-inverter", pages: "interactive block diagrams WS163-1 (shown; two further variants on the page)"}
+    groups:
+      - {id: grid, label: "AC grid + interface filter + Vgrid sense", side: hv, blocks: [AC grid, EMI / interface filter, grid voltage divider], source: "WS163-1", fn_hint: [], vendor_parts: []}
+      - {id: grid_inverter, label: "Grid inverter: GaN full bridge (inversion / rectification, 380-420 V bus)", side: hv, blocks: [GaN FET x4, DC-link capacitor], source: "WS163-1 'Grid Inverter'", fn_hint: [power_fets, dc_link_cap], vendor_parts: [TP65H030G4PQS]}
+      - {id: llc, label: "Bidirectional LLC converter (GaN half bridge primary, MOSFET full bridge secondary)", side: barrier, blocks: [GaN FET half bridge, isolation transformer, 100 V MOSFET full bridge], source: "WS163-1 'Bi-directional LLC Converter'", fn_hint: [power_fets], vendor_parts: [TP65H030G4PQS, RBA300N10EANS-3UA02]}
+      - {id: mppt, label: "550 W MPPT converter x4 (65-75 V bus) + PV modules", side: lv, blocks: [MOSFET half-bridge boost/buck, PV module], source: "WS163-1 '550W MPPT Converter x4'", fn_hint: [power_fets], vendor_parts: [RBA300N10EANS-3UA02]}
+      - {id: battery_conv, label: "Bidirectional charge/discharge converter + 48 V battery pack", side: lv, blocks: [MOSFET half bridge, inductor, 48 V battery], source: "WS163-1 'Bi-directional Charge/Discharge Converter'", fn_hint: [power_fets, battery_pack], vendor_parts: [RBA300N10EANS-3UA02]}
+      - {id: drivers_hv, label: "Gate drivers, HV side (MOSFET driver, GaN drivers)", side: hv, blocks: [half-bridge MOSFET driver, GaN driver x2], source: "WS163-1 'MOSFET Driver', 'GaN Driver' (white)", fn_hint: [half_bridge_driver, gate_driver], vendor_parts: [HIP2211]}
+      - {id: drivers_lv, label: "MOSFET drivers, LV side (x1 + x4)", side: lv, blocks: [half-bridge MOSFET driver x5], source: "WS163-1 'MOSFET Driver', 'MOSFET Driver x4'", fn_hint: [half_bridge_driver], vendor_parts: [HIP2211]}
+      - {id: sense, label: "Op amps (4 + 14 channels) + comparator (protection)", side: lv, blocks: [op amps, comparator], source: "WS163-1 'Op Amp' x2, 'Comparator'", fn_hint: [amplifier, current_sensor], vendor_parts: [ISL28214, UPC277]}
+      - {id: mcu_grid, label: "MCU, grid side (PWM, ADC, CAN, UART)", side: hv, blocks: [motor/power-control MCU], source: "WS163-1 'MCU' (left)", fn_hint: [mcu], vendor_parts: [RA6T2]}
+      - {id: mcu_dc, label: "MCU, DC side (PWM, ADC, CAN, UART)", side: lv, blocks: [motor/power-control MCU], source: "WS163-1 'MCU' (right)", fn_hint: [mcu], vendor_parts: [RA6T2]}
+      - {id: bias, label: "Auxiliary bias supply: flyback + buck + LDOs (3.3 V / 5 V per side)", side: barrier, blocks: [flyback controller, flyback converter, buck regulator x2, LDO x4], source: "WS163-1 'Auxiliary Bias Supply'", fn_hint: [hv_flyback, acdc_controller, wide_vin_buck, pol_ldo], vendor_parts: [iW1760B, RAA211250, RAA214250]}
+    links:
+      - [grid, grid_inverter, "AC grid"]
+      - [grid_inverter, llc, "380-420 V DC bus"]
+      - [llc, mppt, "65-75 V bus"]
+      - [llc, battery_conv, "65-75 V bus"]
+      - [mcu_grid, drivers_hv, "PWM"]
+      - [drivers_hv, grid_inverter, ""]
+      - [drivers_hv, llc, ""]
+      - [mcu_dc, drivers_lv, "PWM (2 + 8)"]
+      - [drivers_lv, mppt, ""]
+      - [drivers_lv, battery_conv, ""]
+      - [sense, mcu_grid, "ADC (4)"]
+      - [sense, mcu_dc, "ADC (14) + comparator"]
+      - [mcu_grid, mcu_dc, "UART"]
+      - [bias, mcu_grid, "3.3 V"]
+      - [bias, mcu_dc, "3.3 V"]
+    features:
+      - {id: storage, question: "Energy storage", choices: ["48 V battery (low-voltage)", "HV battery", none], filters: "", source: "WS163-1"}
+      - {id: mppt_count, question: "Number of MPPT inputs", choices: ["4 x 550 W microinverter-style", "1-2 string MPPT"], filters: "", source: "WS163-1"}
+      - {id: switch_tech, question: "Grid-side switches", choices: [GaN FET, SiC MOSFET, IGBT], filters: "vds_v, rds_on_mohm", source: "WS163-1"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_ac_servo
+    name: AC servo drive with EtherCAT (MPU, IPM, delta-sigma current sense, encoder)
+    sources:
+      - {doc: REN-WC-ACSERVO, url: "https://www.renesas.com/en/applications/industrial/motor-drive-systems/ac-servo", pages: "interactive block diagram CN032 + 14 linked block product lists"}
+    groups:
+      - {id: ac_line, label: "AC line rectifier + IPM / inverter (U, V, W)", side: hv, blocks: [diode bridge, DC link, IGBT inverter / IPM], source: "CN032 'Invert Board'", fn_hint: [power_module, dc_link_cap], vendor_parts: []}
+      - {id: aux_psu, label: "Auxiliary flyback (+24 V iso, +19 V, +5 V) with synchronous rectifier", side: barrier, blocks: [PWM flyback controller, HV MOSFET, transformer, sync rectifier, diode], source: "CN032 'Sync Rectifier', 'PWM', 'HV MOS'", fn_hint: [hv_flyback, acdc_controller], vendor_parts: [iW673]}
+      - {id: ipm_drive, label: "IPM drivers x6 (photocoupler gate drive)", side: barrier, blocks: [IPM driver photocoupler x6], source: "CN032 'IPM Driver x6'", fn_hint: [gate_driver, optocoupler], vendor_parts: [RV1S9061A]}
+      - {id: current_sense, label: "Delta-sigma modulators (3-channel phase current) + clock buffer", side: barrier, blocks: [isolated delta-sigma modulator, 1-to-4 clock buffer (option)], source: "CN032 'DS Modulator', '1 to 4 Clock Buffer'", fn_hint: [isolated_amplifier, clock_buffer], vendor_parts: [RV1S9353A]}
+      - {id: io_iso, label: "Photocouplers: inverter-board I/O (D0/D1, fault) and external control (pulse, CCW/CW)", side: barrier, blocks: [photocouplers], source: "CN032 'Photocoupler' x2", fn_hint: [optocoupler], vendor_parts: [RV1S9213A, PS2733-1, PS8101, PS2761B-1, PS2561DL-1]}
+      - {id: pwm_buffer, label: "Octal bidirectional transceiver (PWM to IPM)", side: lv, blocks: [octal buffer], source: "CN032 'Octal Bi-Directional Transceiver'", fn_hint: [voltage_translator], vendor_parts: [74FCT245T]}
+      - {id: mpu, label: "Servo MPU (PWM, DSMIF, encoder IF, EtherCAT slave)", side: lv, blocks: [MPU with EtherCAT slave controller, HypRAM, QSPI flash, 25 MHz crystal], source: "CN032 'MPU', 'QSPI Flash'", fn_hint: [soc, flash, crystal_oscillator], vendor_parts: ["RZ/T2M", "RZ/T2L", "RZ/N2L", "RZ/T2ME", AT25SF128A]}
+      - {id: power, label: "PMIC (3.3/1.8/1.1 V, 1.2 V to PHY) + buck (24 V plug-in)", side: lv, blocks: [PMIC, buck], source: "CN032 'PMIC', 'Buck'", fn_hint: [pmic, wide_vin_buck], vendor_parts: [DA9061, RAA211650]}
+      - {id: encoder, label: "Encoder interfaces: RS-422, RS-485/422 (ABZ / ABS)", side: field, blocks: [RS-422 transceiver, RS-485/422 transceivers x2, encoder], source: "CN032 'RS-422', 'RS-485/422' x2", fn_hint: [rs485_transceiver, position_sensor], vendor_parts: [ISL32179E, ISL32177E]}
+      - {id: comms, label: "EtherCAT PHY x2, RS-485, CAN, USB (TVS)", side: lv, blocks: [Ethernet PHY x2, RS-485 transceiver, CAN transceiver, TVS], source: "CN032 'RS-485', 'PHY x2', 'CAN Transceiver'", fn_hint: [ethernet_phy, rs485_transceiver, can_transceiver, tvs_esd], vendor_parts: [ISL3172E]}
+      - {id: hmi, label: "OLED + LED driver, EEPROM", side: lv, blocks: [LED driver, OLED, EEPROM], source: "CN032 (white blocks)", fn_hint: [led_driver, flash], vendor_parts: []}
+      - {id: motor, label: "Servo motor + encoder", side: field, blocks: [motor, encoder], source: "CN032 'Motor & Encoder'", fn_hint: [motor], vendor_parts: []}
+    links:
+      - [ac_line, motor, "U, V, W"]
+      - [ac_line, aux_psu, ""]
+      - [aux_psu, power, "+5 V"]
+      - [power, mpu, "3.3 / 1.8 / 1.1 V"]
+      - [mpu, pwm_buffer, "PWM"]
+      - [pwm_buffer, ipm_drive, "to IPM"]
+      - [ipm_drive, ac_line, ""]
+      - [current_sense, mpu, "DSMIF"]
+      - [ac_line, current_sense, "phase current"]
+      - [io_iso, mpu, "GPIO / INT / timer"]
+      - [motor, encoder, ""]
+      - [encoder, mpu, "encoder IF / timer capture"]
+      - [comms, mpu, "EtherCAT / UART / CAN / USB"]
+      - [hmi, mpu, "I2C"]
+    features:
+      - {id: network, question: "Industrial network", choices: [EtherCAT, PROFINET, EtherNet/IP, none], filters: "", source: "CN032 'EtherCAT Slave Controller'"}
+      - {id: current_sensing, question: "Phase current sensing", choices: [isolated delta-sigma modulator, shunt + isolated amplifier, Hall sensor], filters: "isolated amplifier vs modulator (new)", source: "CN032 'DS Modulator'"}
+      - {id: encoder, question: "Encoder type", choices: ["incremental ABZ", "absolute serial (RS-485)"], filters: "", source: "CN032 'ABZ/ABS'"}
+      - {id: power_stage, question: "Power stage", choices: [IPM, discrete IGBT + gate drivers], filters: "", source: "CN032 'IPM Driver x6'"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_bidir_ups_48v
+    name: Bidirectional 3 kW telecom UPS power (-48 V bus <-> battery, 3-phase 4-switch buck-boost)
+    sources:
+      - {doc: REN-WC-UPS3K, url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/bidirectional-3000w-ups-power", pages: "interactive block diagram CN048 + 20 linked block product lists"}
+    groups:
+      - {id: bus, label: "-48 V telecom bus + bus current shunt (R1) + amp (IBUS)", side: lv, blocks: [-48 V bus, shunt R1, current amplifier], source: "CN048 'Amp' (IBUS)", fn_hint: [current_sensor, amplifier], vendor_parts: [ISL28217]}
+      - {id: phase1, label: "Phase 1: 4-switch buck-boost (Q1-Q4, L1) + controller", side: lv, blocks: [100 V MOSFET x4, inductor, bidirectional buck-boost controller], source: "CN048 'Q1'-'Q4', 'Controller'", fn_hint: [power_fets, buck_boost], vendor_parts: [RBA250N10CHPF-4UA02, ISL81801]}
+      - {id: phase2, label: "Phase 2: 4-switch buck-boost (Q5-Q8, L2) + controller", side: lv, blocks: [100 V MOSFET x4, inductor, controller], source: "CN048", fn_hint: [power_fets, buck_boost], vendor_parts: [RBA250N10CHPF-4UA02, ISL81801]}
+      - {id: phase3, label: "Phase 3: 4-switch buck-boost (Q9-Q12, L3) + controller", side: lv, blocks: [100 V MOSFET x4, inductor, controller], source: "CN048", fn_hint: [power_fets, buck_boost], vendor_parts: [RBA250N10CHPF-4UA02, ISL81801]}
+      - {id: battery, label: "Battery side: shunt (R2) + amp (IBAT), VBAT", side: lv, blocks: [shunt R2, current amplifier, battery], source: "CN048 'Amp' (IBAT)", fn_hint: [current_sensor, amplifier, battery_pack], vendor_parts: [ISL28217]}
+      - {id: aux, label: "Aux bucks: 12 V (fan, controller bias), 5 V (MCU)", side: lv, blocks: [buck regulator x2], source: "CN048 'Buck' x2", fn_hint: [wide_vin_buck], vendor_parts: [RAA211820, RAA211230]}
+      - {id: mcu, label: "MCU (ADC VBus/IBus/VBat/IBat, PWM CC/CV droop, GPIO on/off, CAN)", side: lv, blocks: [MCU, temperature monitor, fan control], source: "CN048 'MCU'", fn_hint: [mcu, temperature_sensor], vendor_parts: [RA2L1]}
+      - {id: comms, label: "Isolated CAN & RS-485", side: barrier, blocks: [isolated CAN, isolated RS-485], source: "CN048 (dashed arrow)", fn_hint: [isolated_can, rs485_transceiver], vendor_parts: []}
+    links:
+      - [bus, phase1, ""]
+      - [bus, phase2, ""]
+      - [bus, phase3, ""]
+      - [phase1, battery, "VBAT"]
+      - [phase2, battery, ""]
+      - [phase3, battery, ""]
+      - [battery, aux, ""]
+      - [aux, mcu, "5 V"]
+      - [bus, mcu, "IBUS / VBUS"]
+      - [battery, mcu, "IBAT / VBAT"]
+      - [mcu, phase1, "CC/CV droop control (PWM), on/off"]
+      - [mcu, comms, "CAN"]
+    features:
+      - {id: phases, question: "Interleaved phases", choices: ["3 x 1 kW", "1-2 phases"], filters: "controller count (new)", source: "CN048"}
+      - {id: topology, question: "Converter topology", choices: ["4-switch buck-boost (bidirectional)", "buck + boost"], filters: "", source: "CN048"}
+      - {id: interface, question: "System interface", choices: ["isolated CAN", "isolated RS-485"], filters: "", source: "CN048"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_pfc_inverter_20kw
+    name: 20 kW bidirectional three-phase PFC / inverter (T-type IGBT, ESS / grid)
+    sources:
+      - {doc: REN-WC-PFCINV20K, url: "https://www.renesas.com/en/applications/industrial/renewable-energy-grid/20kw-3-phase-pfc-inverter", pages: "interactive block diagram CN078 + 11 linked block product lists"}
+    groups:
+      - {id: grid, label: "Three-phase grid + boost inductors", side: hv, blocks: [3-phase AC, line inductors], source: "CN078", fn_hint: [], vendor_parts: []}
+      - {id: bridge, label: "Power IGBT x6 (half bridges) + power IGBT x6 (bidirectional neutral clamp), split DC bus", side: hv, blocks: [IGBT x12 (T-type), split DC-link capacitors, HV DC bus], source: "CN078 'Power IGBT x6' x2 (white)", fn_hint: [power_fets, dc_link_cap], vendor_parts: []}
+      - {id: gate_drivers, label: "Photocoupler gate drivers x12 (15 V)", side: barrier, blocks: [photocoupler IGBT gate driver x12], source: "CN078 'Gate Driver x12'", fn_hint: [gate_driver, optocoupler], vendor_parts: [RV1S9231A]}
+      - {id: iso_sense, label: "Photocoupler isolation amplifiers x8 (Va, Vb, Vc, Ia, Ib, Ic, VDCH, VDCL) + op amps x4", side: barrier, blocks: [isolation amplifier x8, op amp x4], source: "CN078 'Photocoupler Isolation Amplifier x8', 'Op Amp x4'", fn_hint: [isolated_amplifier, amplifier], vendor_parts: [PS8352AL2, READ2304G]}
+      - {id: aux_power, label: "Auxiliary AC/DC (15 V) + LDO 5 V + buck 3.3 V", side: barrier, blocks: [AC/DC flyback from DC bus, LDO, buck regulator], source: "CN078 'AC/DC' (white), 'LDO', 'Buck Regulator'", fn_hint: [acdc_controller, pol_ldo, wide_vin_buck], vendor_parts: [RAA214250, RAA211250]}
+      - {id: control_mcu, label: "Power-board control MCU (12-bit ADC, 12 PWM, CAN)", side: lv, blocks: [motor/power-control MCU], source: "CN078 'MCU' (power board)", fn_hint: [mcu], vendor_parts: [RA8T1]}
+      - {id: can_link, label: "CAN transceivers (power board <-> communication board)", side: lv, blocks: [CAN transceiver x2], source: "CN078 (white)", fn_hint: [can_transceiver], vendor_parts: []}
+      - {id: comm_mcu, label: "Communication-board MCU (RMII Ethernet, UART, SDHI)", side: lv, blocks: [MCU, RJ45 interface, SD card], source: "CN078 'MCU' (communication board)", fn_hint: [mcu, ethernet_phy], vendor_parts: [RA6M3]}
+      - {id: comm_periph, label: "RTC, reset IC, SPI flash, EEPROM, RS-485, 3.3 V buck", side: lv, blocks: [RTC, reset IC, flash, EEPROM, RS-485 transceiver, buck regulator], source: "CN078 'RTC', 'Flash', 'RS-485', 'Buck Regulator'", fn_hint: [rtc, supervisor, flash, rs485_transceiver, pol_buck], vendor_parts: [ISL1208, AT25QL1281C, ISL83078E, RAA211250]}
+    links:
+      - [grid, bridge, "3-phase AC"]
+      - [bridge, aux_power, "HV DC bus"]
+      - [control_mcu, gate_drivers, "PWM (12)"]
+      - [gate_drivers, bridge, "Q1-Q12"]
+      - [bridge, iso_sense, "Va/Vb/Vc, Ia/Ib/Ic, VDCH/VDCL"]
+      - [iso_sense, control_mcu, "12-bit ADC (8)"]
+      - [aux_power, control_mcu, "3.3 V"]
+      - [control_mcu, can_link, "CAN"]
+      - [can_link, comm_mcu, "CAN"]
+      - [comm_periph, comm_mcu, "I2C / SPI / UART"]
+    features:
+      - {id: direction, question: "Power flow", choices: ["bidirectional (PFC rectifier / grid inverter)", unidirectional], filters: "", source: "CN078 'Bidirectional'"}
+      - {id: topology, question: "Bridge topology", choices: ["three-level T-type (12 IGBT)", "two-level six-pack"], filters: "gate driver count (new)", source: "CN078"}
+      - {id: isolation_sensing, question: "Isolated sensing method", choices: [optically coupled isolation amplifier, Hall sensor, isolated delta-sigma], filters: "isolated amplifier (new)", source: "CN078"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_isolated_motor_power_stage
+    name: Isolated GaN three-phase motor drive power stage (400 V DC, up to 3 kW)
+    sources:
+      - {doc: REN-WC-ISOMOTOR, url: "https://www.renesas.com/en/applications/industrial/motor-drive-systems/isolated-motor-drive-power-stage", pages: "interactive block diagram WS223-1 + 11 linked block product lists"}
+    groups:
+      - {id: dc_link, label: "400 V DC input + DC link", side: hv, blocks: [400 V DC input, DC-link capacitor], source: "WS223-1 'DC Link' (white)", fn_hint: [dc_link_cap], vendor_parts: []}
+      - {id: inverter, label: "GaN FET three-phase bridge", side: hv, blocks: [GaN FET x6], source: "WS223-1 'GaN FETs'", fn_hint: [power_fets], vendor_parts: [TP65H030G4PRS]}
+      - {id: gate_drive, label: "Half-bridge GaN gate drivers x3 + photocouplers x6 (PWM isolation)", side: barrier, blocks: [half-bridge gate driver x3, high-speed photocoupler x6], source: "WS223-1 'Half-Bridge Gate Driver', 'Photocoupler x6'", fn_hint: [half_bridge_driver, optocoupler], vendor_parts: [RRW40120, RV1S9160A]}
+      - {id: protection, label: "Protection logic (GreenPAK): fault / shoot-through / OCP", side: hv, blocks: [programmable mixed-signal protection logic], source: "WS223-1 'Protection Logic: GreenPAK'", fn_hint: [], vendor_parts: [SLG46826]}
+      - {id: v_sense, label: "Phase voltage & VDC sensing -> isolation amplifiers x4", side: barrier, blocks: [resistor dividers, isolation amplifier x4], source: "WS223-1 'Isolation Amplifier'", fn_hint: [isolated_amplifier], vendor_parts: [PS8352AL2]}
+      - {id: i_sense, label: "Low-side shunt current sensing -> current sense amplifiers x3 -> isolation amplifiers x3", side: barrier, blocks: [low-side shunts, current sense amplifier x3, isolation amplifier x3], source: "WS223-1 'Current Sense Amplifier', 'Isolation Amplifier'", fn_hint: [current_sensor, isolated_amplifier], vendor_parts: [ISL28191, PS8352AL2]}
+      - {id: position, label: "Inductive position sensor (alt. Hall / encoder / resolver) via photocouplers", side: field, blocks: [inductive position sensor, photocoupler x4], source: "WS223-1 'Inductive Position Sensor', 'Photocoupler'", fn_hint: [position_sensor, optocoupler], vendor_parts: [IPS2550, RAA2P4524, RAA2P3500, PS8501]}
+      - {id: temperature, label: "Temperature sensor via photocouplers x3", side: field, blocks: [temperature sensor, photocoupler x3], source: "WS223-1 'Temperature Sensor' (white), 'Photocoupler'", fn_hint: [temperature_sensor, optocoupler], vendor_parts: [PS8501]}
+      - {id: aux_power, label: "Isolated AC/DC from 400 V (8 V / 15 V) + buck converters (5 V, 3.3 V iso, 3.3 V non-iso)", side: barrier, blocks: [isolated AC/DC (PSR flyback), buck converter x3], source: "WS223-1 'Isolated AC/DC', 'Buck Converter' x3", fn_hint: [hv_flyback, acdc_controller, pol_buck], vendor_parts: [iW1819, RAA211405]}
+      - {id: mcu, label: "Motor control processor (PWM, ADC, SCI) via connector", side: lv, blocks: [motor-control MCU], source: "WS223-1 'Motor Control Processor'", fn_hint: [mcu], vendor_parts: [RA6T2]}
+      - {id: motor, label: "Three-phase motor", side: field, blocks: [PMSM / BLDC motor], source: "WS223-1", fn_hint: [motor], vendor_parts: []}
+    links:
+      - [dc_link, inverter, "400 VDC"]
+      - [inverter, motor, "3 phases"]
+      - [mcu, gate_drive, "PWM (6)"]
+      - [gate_drive, inverter, ""]
+      - [protection, gate_drive, "disable (3)"]
+      - [i_sense, protection, "OC (3)"]
+      - [inverter, v_sense, ""]
+      - [v_sense, mcu, "ADC (4)"]
+      - [i_sense, mcu, "ADC (3)"]
+      - [position, mcu, "4"]
+      - [temperature, mcu, "3"]
+      - [dc_link, aux_power, "400 VDC"]
+      - [aux_power, mcu, "3.3 V iso"]
+    features:
+      - {id: isolation_location, question: "Where is the isolation barrier", choices: ["between power stage and controller (isolated signals)", "in the gate drivers"], filters: "", source: "WS223-1 'Isolation Boundary'"}
+      - {id: switch_tech, question: "Inverter switches", choices: [GaN FET, SiC MOSFET, IGBT], filters: "vds_v, rds_on_mohm", source: "WS223-1"}
+      - {id: position_sensor, question: "Position sensor", choices: [inductive position sensor, Hall, encoder, resolver, sensorless], filters: "", source: "WS223-1 'Alternative Position Sensor'"}
+      - {id: current_sense, question: "Current sensing", choices: ["low-side shunt + CSA + isolation amplifier", "isolated delta-sigma"], filters: "", source: "WS223-1"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: renesas_ecpri_mimo_rru_timing
+    name: eCPRI massive-MIMO radio unit - timing / clock tree (system synchronizer, fanout, RF synthesizers)
+    sources:
+      - {doc: REN-WC-ECPRIRRU, url: "https://www.renesas.com/en/applications/communications-infrastructure/wireless-infrastructure/ecpri-mass-mimo-rru", pages: "interactive block diagram CN340 + 9 linked block product lists"}
+    groups:
+      - {id: bbu, label: "Baseband unit (network <-> CPRI / eCPRI)", side: backplane, blocks: [baseband unit], source: "CN340 (white)", fn_hint: [external_block], vendor_parts: []}
+      - {id: dfe, label: "Digital front end (DFE)", side: lv, blocks: [DFE (FPGA / ASIC)], source: "CN340 (white)", fn_hint: [soc], vendor_parts: []}
+      - {id: transceiver, label: "Transceiver: ADC / DAC + down / up converters", side: rf, blocks: [ADC, DAC, down-converter, up-converter], source: "CN340 'Transceiver' (white)", fn_hint: [rf_transceiver, adc, dac, rf_mixer], vendor_parts: []}
+      - {id: rf_frontend, label: "RF conditioning / amplification + antenna array", side: rf, blocks: [PA / LNA / filters, antenna array], source: "CN340 'RF Conditioning/Amplification' (white)", fn_hint: [rf_frontend, power_amplifier, lna, antenna], vendor_parts: []}
+      - {id: synchronizer, label: "System synchronizer (DPLL, ultra-low phase noise APLL, DCO; recovered clock from DFE)", side: lv, blocks: [network synchronizer / jitter attenuator], source: "CN340 'System Synchronizer'", fn_hint: [jitter_attenuator, clock_generator], vendor_parts: [RC38612]}
+      - {id: fanout, label: "Clock fanout buffers x2 (122.88 / 491.52 MHz + SYSREF, <80 fs RMS)", side: lv, blocks: [LVPECL/LVDS fanout buffer x2], source: "CN340 'Fanout' x2", fn_hint: [clock_buffer], vendor_parts: [8SLVP2108I]}
+      - {id: rf_synth, label: "RF synthesizers x8 (LO for up/down converters, 245.76 MHz reference)", side: rf, blocks: [wideband RF synthesizer x8], source: "CN340 'RF Synthesizer x8'", fn_hint: [rf_synthesizer], vendor_parts: [8V97003]}
+      - {id: ldos, label: "Low-noise LDOs: x8 (3.3 V synthesizers), x2 (fanouts), x3 (synchronizer 1.2/1.8/3.3 V) from 5 V", side: lv, blocks: [low-noise LDO x13], source: "CN340 'LDO x8', 'LDO x2', 'LDO' x3", fn_hint: [pol_ldo], vendor_parts: [RAA214020]}
+    links:
+      - [bbu, dfe, "CPRI / eCPRI"]
+      - [dfe, transceiver, "data"]
+      - [transceiver, rf_frontend, "Tx / Rx RF"]
+      - [dfe, synchronizer, "recovered timing"]
+      - [synchronizer, fanout, "122.88 MHz / 491.52 MHz + SYSREF"]
+      - [fanout, transceiver, "device clock + SYSREF (ADC / DAC)"]
+      - [synchronizer, rf_synth, "245.76 MHz"]
+      - [rf_synth, transceiver, "LO"]
+      - [ldos, rf_synth, "3.3 V"]
+      - [ldos, fanout, "3.3 V"]
+      - [ldos, synchronizer, "1.2 / 1.8 / 3.3 V"]
+    features:
+      - {id: fronthaul, question: "Fronthaul", choices: [eCPRI, CPRI], filters: "", source: "CN340"}
+      - {id: sync_standard, question: "Timing standard", choices: ["IEEE 1588 PTP + SyncE (ITU-T G.8275)", free-running], filters: "jitter attenuator DPLL count (new)", source: "page description 'high timing precision'"}
+      - {id: lo_count, question: "Number of RF synthesizers / LOs", choices: ["8 (one per transceiver pair)", "integrated in transceiver"], filters: "", source: "CN340 'RF Synthesizer x8'"}
+      - {id: jitter, question: "Clock jitter target", choices: ["<80 fs RMS", "<150 fs RMS"], filters: "rms_jitter_fs (new)", source: "CN340 '<80fs RMS'"}

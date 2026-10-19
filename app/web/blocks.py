@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import BlockDiagram, BlockFeedback
-from app.services import blocks, schematic
+from app.services import blocks, refdesigns, schematic
+from app.services import opportunity as op
 from app.web.routes import templates
 
 router = APIRouter()
@@ -207,3 +208,25 @@ def feedback_text(session: Session = Depends(get_session)):
         where = " / ".join(x for x in (f.diagram_name, f.target) if x)
         lines.append(f"- [{FEEDBACK_STATUS.get(f.status, f.status)}] {where + ': ' if where else ''}{f.message}")
     return "\n".join(lines) + "\n"
+
+
+@router.get("/reference-designs", response_class=HTMLResponse)
+def reference_designs(request: Request, q: str = "", vendor: str = "", market: str = "", fn: str = "",
+                      iso: bool = False, docs: bool = False, page: int = 1,
+                      session: Session = Depends(get_session)):  # fmt: skip
+    """Manufacturers' public reference designs, searchable; each function is marked portfolio / gap for us."""
+    rows = refdesigns.search(q, vendor, market, fn, iso, docs)
+    per = 50
+    pages = max(1, -(-len(rows) // per))
+    page = min(max(page, 1), pages)
+    mk = op.makers(session)
+    mine = op.company("combined")[2]
+    fns = {f for d in rows[(page - 1) * per : page * per] for f in d.get("functions") or []}
+    facets = refdesigns.facets(rows)
+    fns |= {f for f, _ in facets["function"]}
+    ctx = {"rows": rows[(page - 1) * per : page * per], "n": len(rows), "n_all": len(refdesigns.designs()),
+           "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
+           "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
+           "status": {f: op.status_of(f, mk, mine) for f in fns},
+           "label": {f: refdesigns.function_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
+    return templates.TemplateResponse(request, "blocks/reference_designs.html", ctx)

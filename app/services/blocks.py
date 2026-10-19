@@ -242,6 +242,7 @@ def catalog_parts() -> dict[str, list[dict]]:
             fn = FUNCTION_ALIAS.get(p.get("function"), p.get("function"))
             if not fn:
                 continue
+            fns = [fn, *(FUNCTION_ALIAS.get(x, x) for x in p.get("also") or [])]  # a part can fill several functions
             mfr = p.get("manufacturer") or ("Qorvo" if "qorvo" in path.name else "Skyworks")
             specs = p.get("key_specs") or {}
             text = " ".join([p.get("summary") or p.get("description") or "", *map(str, specs.values())])
@@ -252,22 +253,22 @@ def catalog_parts() -> dict[str, list[dict]]:
             bits = [p.get("package") or "", *[f"{k} {specs[k]}" for k in pref], "automotive" if auto else ""]
             desc = p.get("summary") or p.get("description") or ""
             status = str(p.get("status") or "")
-            out.setdefault(fn, []).append(
-                {
-                    "mpn": p["mpn"],
-                    "manufacturer": mfr,
-                    "url": p.get("product_url") or p.get("source") or "",
-                    # three states: automotive (stated), not_automotive (stated no), None (not stated)
-                    "values": {"qualification": "automotive" if auto else "not_automotive" if auto is False else None},
-                    "detail": " · ".join(
-                        b for b in [*bits, status if status and status not in ("Active", "Standard") else ""] if b
-                    ),
-                    "description": desc[:240],
-                    "full": False,
-                    "preview": "preview" in status.lower(),
-                    "risk": bool(_RISK.search(status)),
-                }  # fmt: skip
-            )
+            entry = {
+                "mpn": p["mpn"],
+                "manufacturer": mfr,
+                "url": p.get("product_url") or p.get("source") or "",
+                # three states: automotive (stated), not_automotive (stated no), None (not stated)
+                "values": {"qualification": "automotive" if auto else "not_automotive" if auto is False else None},
+                "detail": " · ".join(
+                    b for b in [*bits, status if status and status not in ("Active", "Standard") else ""] if b
+                ),
+                "description": desc[:240],
+                "full": False,
+                "preview": "preview" in status.lower(),
+                "risk": bool(_RISK.search(status)),
+            }  # fmt: skip
+            for f in dict.fromkeys(fns):
+                out.setdefault(f, []).append(entry)
     return out
 
 

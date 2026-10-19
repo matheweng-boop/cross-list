@@ -14,6 +14,7 @@ NAV = (
     ("systems", "Systems & applications", (
         ("Application library", "/blocks", "Reference architectures and their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
+        ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
         ("Radio configurations", "/broadcast/configurations", "Saved car-radio tuner configurations"),
     )),
     ("opportunities", "Opportunities", (
@@ -55,6 +56,7 @@ PLACES = {
     "/blocks/new": ("systems", "/blocks/new"),
     "/blocks/": ("systems", "/blocks/new"),
     "/blocks": ("systems", "/blocks"),
+    "/reference-designs": ("systems", "/reference-designs"),
     "/business/applications": ("systems", "/blocks"),
     "/business/explorer": ("opportunities", "/business/explorer"),
     "/business/gaps": ("opportunities", "/business/explorer"),

@@ -184,6 +184,17 @@
     render();
   }));
 
+  // a part as its full number and its features as coloured chips
+  const chipKind = t => /NRND|obsolete|discontinued|no new designs/i.test(t) ? "risk" : /automotive|AEC/i.test(t) ? "auto"
+    : /^(QFN|DFN|SOIC|SSOP|QSOP|LGA|BGA|MLPD|SOT|TSSOP|WLCSP|CSP|SC-?70|SSO|[A-Z]+-\d+)/i.test(t) || /\d+(\.\d+)?\s*[x×]\s*\d/.test(t) ? "pkg"
+    : /(kVrms|GHz|MHz|\bA\b|\bV\b|Mbps|dB|ch\b|kV)/i.test(t) ? "spec" : /^(SP\dT|DPDT|\dP\dT|\d+\/\d+|S\dP\dT)/i.test(t) ? "cfg" : "other";
+  const partRow = (p, pick) => `<li class="pt-row"><div class="pt-main"><a class="pt-mpn" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${pick ? `<button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button>` : ""}</div>
+    ${(() => {
+      const bits = String(p.detail || "").split(" · ").filter(Boolean).flatMap(t => (/^[A-Z0-9_]+( [A-Z0-9_]+)+$/.test(t) ? t.split(" ") : [t])), long = bits.filter(t => t.length > 40), short = bits.filter(t => t.length <= 40);
+      return `<div class="pt-chips">${short.map(t => `<span class="pt-chip k-${chipKind(t)}">${esc(t)}</span>`).join("")}${p.risk ? '<span class="pt-chip k-risk">NRND / obsolete</span>' : ""}</div>` +
+        long.map(t => `<div class="pt-desc small muted" title="${esc(t)}">${esc(t.length > 140 ? t.slice(0, 137) + "…" : t)}</div>`).join("");
+    })()}</li>`;
+
   // ---- below the diagram: the most likely parts per block (overview), or the clicked block in full
   const below = () => $("#bk-below");
   async function renderBelow() {
@@ -194,8 +205,8 @@
     const token = (renderBelow.token = (renderBelow.token || 0) + 1);
     const results = await Promise.all(fns.map(fn => parts(fn).then(r => [fn, r])));
     if (token !== renderBelow.token || (sel && sel.block)) return;
-    const li = p => `<li><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.risk ? ' <small class="worse">NRND / obsolete</small>' : ""} <small class="muted">${esc(p.detail)}</small></li>`;
-    box.innerHTML = `<h3>Suggested parts <span class="small muted">· the two most likely per manufacturer for each block; click a block for its full list and requirements</span></h3>
+    const li = p => partRow(p, false);
+    box.innerHTML = `<h3>Suggested parts <span class="small muted">· the two most likely per manufacturer for each block; click a block to focus on it</span></h3>
       <div class="bk-sugg">${results.map(([fn, r]) => `<div class="bk-sugg-fn"><p class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${r.total} fit${Object.keys(S.req[fn] || {}).length ? " the requirements" : ""}</span></p>
         ${r.manufacturers.map(m => `<p class="small bk-mfr">${esc(m.manufacturer)}</p><ul class="bk-parts">${m.best.map(li).join("")}</ul>
           ${m.total > m.best.length ? `<details><summary class="small">More ${esc(m.manufacturer)} (${m.total - m.best.length})</summary><ul class="bk-parts">${m.all.slice(m.best.length, 60).map(li).join("")}</ul></details>` : ""}`).join("") || `<p class="small uc-error">None meets the requirements.</p>`}
@@ -242,9 +253,10 @@
   function showBlock(g, b) {
     root.classList.remove("panel-open");
     const box = below();
-    box.innerHTML = `<div class="bk-below-head"><button type="button" class="outline secondary small-btn" data-act="overview">← All suggested parts</button></div><div class="bk-below-body"></div>`;
+    box.innerHTML = `<div class="bk-below-head"><button type="button" class="outline secondary small-btn" data-act="overview">← All blocks (deselect)</button></div><div class="bk-below-body"></div>`;
     box.querySelector('[data-act="overview"]').onclick = () => { sel = null; render(); };
     const panel = box.querySelector(".bk-below-body");
+    renderReqs();
     box.scrollIntoView({behavior: "smooth", block: "nearest"});
     const f = fnOf(b), st = status(b);
     const comp = (f.companions || []).filter(c => FN[c]);
@@ -254,7 +266,6 @@
       ${b.part ? `<p>Chosen: <b>${esc(b.part)}</b> <button type="button" class="outline secondary small-btn" data-act="unpick">clear</button></p>` : ""}
       <div class="row"><label class="small">Label <input data-f="label" value="${esc(b.label || "")}" placeholder="${esc(f.label)}"></label>
         <label class="small">Qty <input data-f="qty" type="number" min="1" max="99" value="${b.qty || 1}" style="width:4rem"></label></div>
-      ${(REQ[b.fn] || []).length ? `<details class="req-box"${Object.keys(S.req[b.fn] || {}).length ? " open" : ""}><summary class="small"><b>Requirements</b> (narrow the parts; nothing is assumed)</summary>${reqControls(b.fn)}</details>` : ""}
       <div id="bk-parts"></div>
       ${comp.length ? `<p class="small"><b>Usually designed in with it</b></p><div class="row">${comp.map(c => `<button type="button" class="bc-chip bc-chip-sm" data-add="${c}" title="${esc(STATUS_TEXT[COUNTS[c] === null ? "ext" : COUNTS[c] ? "have" : "opp"])}">+ ${esc(FN[c].label)}</button>`).join("")}</div>` : ""}
       <div class="row"><button type="button" class="outline secondary small-btn" data-act="remove">Remove block</button>
@@ -263,7 +274,7 @@
       const box = panel.querySelector("#bk-parts");
       const draw = async q => {
         const r = await parts(b.fn, q);
-        const li = p => `<li><span><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.risk ? ' <small class="worse">NRND / obsolete</small>' : ""}<br><small class="muted">${esc(p.detail)}</small></span><button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button></li>`;
+        const li = p => partRow(p, true);
         box.innerHTML = `<p class="small"><b>Parts that fit</b> (${r.total}${Object.keys(S.req[b.fn] || {}).length ? " meeting the requirements" : ""})</p>
           <input type="search" placeholder="Filter parts" value="${esc(q)}" aria-label="Filter parts" data-q>` +
           (r.manufacturers.length ? r.manufacturers.map(m => `<p class="small bk-mfr"><b>${esc(m.manufacturer)}</b> · best ${m.best.length} of ${m.total}</p>
@@ -382,7 +393,9 @@
     if (!qs.length && !fnsReq.length) { box.innerHTML = ""; return; }
     const qByFn = {}, recorded = [];
     for (const q of qs) (q.sets && q.sets.length ? (qByFn[q.sets[0].fn] ||= []) : recorded).push(q);
-    const groupFns = [...new Set([...Object.keys(qByFn), ...fnsReq])];
+    const selB = sel && sel.block && blockOf(group(sel.group), sel.block);
+    let groupFns = [...new Set([...Object.keys(qByFn), ...fnsReq])];
+    if (selB) groupFns = groupFns.filter(fn => fn === selB.fn);
     const nQ = Object.keys(S.qa).length, nR = Object.values(S.req).reduce((k, a) => k + Object.keys(a).length, 0);
     if (reqOpen === null) reqOpen = !nQ && !nR;
     const qRow = q => {
@@ -399,8 +412,8 @@
       return `<li class="rq-item${v ? " rq-on" : ""}"><span class="rq-label">${esc(r.label)}${others.length ? ` <button type="button" class="link-btn" data-apply="${fn}|${r.id}" title="${esc(others.map(f => FN[f].label).join(", "))}">also for ${others.length} other block${others.length > 1 ? "s" : ""}</button>` : ""}</span>${ctl}</li>`;
     };
     const related = fn => (FN[fn].companions || []).filter(c => inDiagram.has(c) && (REQ[c] || []).length && c !== fn);
-    const group = (key, title, sub, rows, answered, extra = "") => {
-      const open = openGroups.has(key) || (!openGroups.size && answered);
+    const grp = (key, title, sub, rows, answered, extra = "") => {
+      const open = !!selB || openGroups.has(key) || (!openGroups.size && answered);
       return `<details class="rq-group" data-g="${esc(key)}"${open ? " open" : ""}><summary><b>${esc(title)}</b> <span class="small muted">${sub}${answered ? ` · <span class="rq-count">${answered} set</span>` : ""}</span>${extra}</summary><ul class="rq-list">${rows}</ul></details>`;
     };
     const fnGroups = groupFns.map(fn => {
@@ -408,19 +421,21 @@
       const answered = qsF.filter(q => S.qa[q.id]).length + Object.keys(S.req[fn] || {}).length;
       const rel = answered ? related(fn) : [];
       const extra = rel.length ? ` <span class="small rq-rel">→ check also: ${rel.map(c => `<a href="#" data-goto="${c}">${esc(FN[c].label)}</a>`).join(", ")}</span>` : "";
-      return group(fn, FN[fn] ? FN[fn].label : fn, `${COUNTS[fn] ?? "–"} parts fit${inDiagram.has(fn) ? "" : " · not in this diagram"}`,
+      return grp(fn, FN[fn] ? FN[fn].label : fn, `${COUNTS[fn] ?? "–"} parts fit${inDiagram.has(fn) ? "" : " · not in this diagram"}`,
         (qsF.length ? qsF.map(qRow).join("") : "") + (rs.length ? `<li class="rq-sub small muted">Part filters</li>` + rs.map(r => rRow(fn, r)).join("") : ""), answered, extra);
     }).join("");
-    const recGroup = recorded.length ? group("_recorded", "System decisions", "recorded with the design, no part filter", recorded.map(qRow).join(""), recorded.filter(q => S.qa[q.id]).length) : "";
-    box.innerHTML = `<details class="bk-reqs-box"${reqOpen ? " open" : ""}><summary><b>Requirements</b> <span class="small muted">· ${qs.length ? `${nQ} of ${qs.length} design questions answered · ` : ""}${nR} part filter${nR === 1 ? "" : "s"} set · unanswered = no filter, nothing is assumed</span></summary><div class="bk-reqs-body">
-      <div class="rq-tools small"><button type="button" class="link-btn" data-all="open">expand all</button> · <button type="button" class="link-btn" data-all="close">collapse all</button></div>
-      ${fnGroups}${recGroup}
-      ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")}</p>` : ""}
-    </div></details>`;
+    const recGroup = recorded.length && !selB ? grp("_recorded", "System decisions", "recorded with the design, no part filter", recorded.map(qRow).join(""), recorded.filter(q => S.qa[q.id]).length) : "";
+    const head = selB
+      ? `<h3>Requirements for ${esc(selB.label || fnOf(selB).label)}</h3><p class="small muted">Each answer narrows the parts listed next to it (${COUNTS[selB.fn] ?? "–"} fit now). <button type="button" class="link-btn" data-act="allreq">All requirements</button></p>`
+      : `<h3>Requirements</h3><p class="small muted">Answer only what the design needs; unanswered = no filter, nothing is assumed. Each group filters the parts of one block (count = parts that fit now); click a block in the diagram to focus on it.${qs.length ? ` ${nQ} of ${qs.length} design questions answered.` : ""} ${nR} part filter${nR === 1 ? "" : "s"} set.</p>`;
+    box.innerHTML = `<div class="bk-reqs-box">${head}<div class="bk-reqs-body">
+      ${selB || groupFns.length + (recorded.length ? 1 : 0) < 2 ? "" : `<div class="rq-tools small"><button type="button" class="link-btn" data-all="open">expand all</button> · <button type="button" class="link-btn" data-all="close">collapse all</button></div>`}
+      ${fnGroups || (selB ? `<p class="small muted">This block has no requirement questions.</p>` : "")}${recGroup}
+      ${(S.sources || []).length && !selB ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")}</p>` : ""}
+    </div></div>`;
+    box.querySelector('[data-act="allreq"]')?.addEventListener("click", () => { sel = null; render(); });
     const body = box.querySelector(".bk-reqs-body");
     if (body) { body.scrollTop = renderReqs.scroll || 0; body.onscroll = () => (renderReqs.scroll = body.scrollTop); }
-    const top = box.querySelector(".bk-reqs-box");
-    top.ontoggle = () => (reqOpen = top.open);
     box.querySelectorAll(".rq-group").forEach(d => (d.ontoggle = () => (d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g))));
     box.querySelectorAll("[data-all]").forEach(btn => (btn.onclick = () => {
       box.querySelectorAll(".rq-group").forEach(d => { d.open = btn.dataset.all === "open"; d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g); });
@@ -435,15 +450,13 @@
       for (const f of fnsReq) if (f !== fn && (REQ[f] || []).some(x => x.id === rid)) { (S.req[f] ||= {})[rid] = v; openGroups.add(f); }
       dirty = true; $("#bk-status").textContent = "Unsaved changes";
       await refreshCounts();
+      if (sel && sel.block) { const g = group(sel.group), b = blockOf(g, sel.block); if (b) showBlock(g, b); }
     }));
-    bindReq(box, null);
-    bindQuestions(box, null);
+    const again = () => { if (sel && sel.block) { const g = group(sel.group), b = blockOf(g, sel.block); if (b) showBlock(g, b); } };
+    bindReq(box, again);
+    bindQuestions(box, again);
   }
-  $("#bk-req").onclick = () => {
-    reqOpen = true;
-    renderReqs();
-    $("#bk-reqs").scrollIntoView({behavior: "smooth", block: "start"});
-  };
+  $("#bk-req").onclick = () => $("#bk-reqs").scrollIntoView({behavior: "smooth", block: "start"});
 
   // feedback on the diagram or the selected block / group, kept for discussion
   async function showFeedback() {
@@ -510,8 +523,9 @@
   // ---- events
   $("#bk-svg").addEventListener("click", e => {
     const t = e.target.closest("[data-block], [data-group]");
-    if (!t) return;
+    if (!t) { if (sel) { sel = null; root.classList.remove("panel-open"); render(); } return; }
     const g = group(t.dataset.group);
+    if (t.dataset.block && sel && sel.block === t.dataset.block) { sel = null; render(); return; } // click again: deselect
     if (t.dataset.block) { const b = blockOf(g, t.dataset.block); sel = {group: g.id, block: b.id}; render(); showBlock(g, b); }
     else { sel = {group: g.id}; render(); showGroup(g); }
   });

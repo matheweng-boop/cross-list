@@ -14,19 +14,20 @@
     <span class="bc-chips" id="bc-digital" role="group" aria-label="Digital radio" hidden>
       <button type="button" class="bc-chip" data-digital="true" data-explain="digital" aria-pressed="false">with <span data-digital-label>digital</span></button><button type="button" class="bc-chip" data-digital="false" data-explain="digital" aria-pressed="false">without <span data-digital-label>digital</span></button>
     </span></div>
-  <div class="bc-step"><span class="bc-step-n">2</span><span class="bc-step-label">Hardware</span>
+  <div class="bc-step" id="st-hw" hidden><span class="bc-step-n">2</span><span class="bc-step-label">Hardware</span>
     <span class="bc-chips" role="group" aria-label="On-chip audio"><span class="small muted">On-chip audio</span>
-      <button type="button" class="bc-chip" data-audio="true" data-explain="audio_dsp" aria-pressed="false">required</button><button type="button" class="bc-chip" data-audio="false" data-explain="audio_dsp" aria-pressed="false">not required</button>
+      <button type="button" class="bc-chip" data-audio="true" data-explain="audio_dsp" aria-pressed="false">required</button><button type="button" class="bc-chip" data-audio="false" data-explain="audio_dsp" aria-pressed="false">not required</button><button type="button" class="bc-chip" data-audio="any" data-explain="audio_dsp" aria-pressed="false">either</button>
     </span>
-    <span class="bc-chips" role="group" aria-label="Required features"><span class="small muted">Features</span>
+    <span class="bc-chips" id="st-tuners" role="group" aria-label="Number of tuners" hidden><span class="small muted">Tuners</span>
+      {% for n in (1, 2, 3, 4, 5, 6) %}<button type="button" class="bc-chip bc-chip-n" data-tuners="{{ n }}" data-explain="tuners" aria-pressed="false">{{ n }}</button>{% endfor %}
+    </span>
+    <span class="bc-chips" id="st-feats" role="group" aria-label="Required features" hidden><span class="small muted">Features</span>
       {% for key, label in features.features.items() if key not in ('AM', 'FM', 'AUDIO') %}<button type="button" class="bc-chip bc-chip-sm" data-feat="{{ key }}" data-explain="feature:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
     </span>
-    <span class="bc-chips" role="group" aria-label="Number of tuners"><span class="small muted">Tuners</span>
-      {% for n in (1, 2, 3, 4, 5) %}<button type="button" class="bc-chip bc-chip-n" data-tuners="{{ n }}" data-explain="tuners" aria-pressed="false">{{ n }}</button>{% endfor %}
-    </span>
+    <div id="bc-cands" class="bc-cands" hidden></div>
     <span id="bc-feat-match" class="small bc-feat-match"></span>
-    <span id="bc-hw-cards" class="bc-chips"><span class="muted small">pick a region first</span></span></div>
-  <div class="bc-step"><span class="bc-step-n">3</span><span class="bc-step-label">Software</span>
+    <span id="bc-hw-cards" class="bc-chips" hidden></span></div>
+  <div class="bc-step" id="st-sw" hidden><span class="bc-step-n">3</span><span class="bc-step-label">Software</span>
     <span id="bc-sw-cards" class="bc-chips"><span class="muted small">pick a hardware configuration first</span></span></div>
   <div class="bc-work">
     <div id="bc-usecase" class="bc-usecase"></div>

@@ -1,0 +1,326 @@
+# Research extract from public TI documents (competitor reference), for the block-diagram generator.
+# Every group, link and feature below cites the TI document page / figure it comes from.
+# Nothing here is a Cross List rule yet; see ti_power.md for prose, discrepancies and the full part lists.
+#
+# Field notes (extras beyond the requested schema):
+#   groups[].side    lv | hv | barrier  (which side of the LV/HV isolation barrier the figure draws it on;
+#                    "barrier" = a block drawn straddling the barrier, e.g. isolated gate driver, isolated DC/DC)
+#   groups[].source  where the group is drawn
+#   groups[].ti_parts TI part numbers the documents name for that group (competitor parts, for reference only)
+#   features[].filters  existing Cross List parameter names where one fits (protection, uvlo_v, peak_sink_a,
+#                    peak_source_a, isolation_class, isolation_rating_kvrms, cmti_kv_us, channel_config, deadtime,
+#                    qualification); otherwise a plain-words attribute marked "(new)".
+
+docs:
+  SLUA963B: {title: "HEV/EV Traction Inverter Design Guide Using Isolated IGBT and SiC Gate Drivers", url: "https://www.ti.com/lit/an/slua963b/slua963b.pdf", date: "Oct 2022"}
+  SLUAAS4: {title: "Isolated Bias Power Supply Architecture for HEV and EV Traction Inverters", url: "https://www.ti.com/lit/pdf/sluaas4", date: "Jan 2024"}
+  TIDUF23A: {title: "TIDM-02014 Automotive, High-Power, High-Performance SiC Traction Inverter Reference Design", url: "https://www.ti.com/lit/ug/tiduf23a/tiduf23a.pdf", date: "May 2025"}
+  SLUAAH0: {title: "UCC14240-Q1 Simplifies HEV, EV, Bias Supply Design for Isolated Gate Drivers", url: "https://www.ti.com/lit/an/sluaah0/sluaah0.pdf", date: "Feb 2022"}
+  SPRAD58B: {title: "Design Priorities in EV Traction Inverters", url: "https://www.ti.com/lit/wp/sprad58b/sprad58b.pdf", date: "Feb 2026"}
+  SLYY169: {title: "IGBT & SiC Gate Driver Fundamentals", url: "https://www.ti.com/lit/eb/slyy169/slyy169.pdf", date: "2019/2021"}
+
+applications:
+  # ---------------------------------------------------------------------------------------------------------
+  - id: traction_inverter
+    name: HEV/EV traction inverter
+    sources:
+      - {doc: SLUA963B, url: "https://www.ti.com/lit/an/slua963b/slua963b.pdf", pages: "4-6 (Fig 2-3, 2-4, 2-5), 8 (Table 2-2), 31-32"}
+      - {doc: SLUAAS4, url: "https://www.ti.com/lit/pdf/sluaas4", pages: "2 (Fig 1-1)"}
+      - {doc: SPRAD58B, url: "https://www.ti.com/lit/wp/sprad58b/sprad58b.pdf", pages: "3-9 (Fig 3-1), 10-21"}
+      - {doc: TIDUF23A, url: "https://www.ti.com/lit/ug/tiduf23a/tiduf23a.pdf", pages: "1, 4 (Fig 2-1), 5-7, 11-13 (Fig 2-5)"}
+      - {doc: SLUAAH0, url: "https://www.ti.com/lit/an/sluaah0/sluaah0.pdf", pages: "5 (Fig 2-1)"}
+      - {doc: SLYY169, url: "https://www.ti.com/lit/eb/slyy169/slyy169.pdf", pages: "9 (Table 5 block diagram), 21 (Fig 29)"}
+    groups:
+      - id: lv_input
+        label: LV battery input & protection
+        side: lv
+        blocks: [12 V battery, reverse polarity protection, ideal diode / load switch with OV and short-circuit protection]
+        source: "SLUAAS4 p.2 Fig 1-1; SLUAAH0 p.5 Fig 2-1; TIDUF23A p.7, p.12 (LM74202-Q1)"
+        ti_parts: [LM74202-Q1]
+      - id: lv_power
+        label: LV power / PMIC
+        side: lv
+        blocks: [DC/DC power supply, PMIC / system basis chip, MCU watchdog and voltage monitors, LDOs, 3.3 V supply]
+        source: "SLUA963B p.5 Fig 2-4 (PMIC); SLUAAS4 p.2 Fig 1-1 (PMIC & SBC, DC/DC power supply, 3P3V); SPRAD58B p.10-11 Fig 4-2; TIDUF23A p.4 Fig 2-1 (PMIC with SPI, WD), p.11-12 Fig 2-5"
+        ti_parts: [TPS653860-Q1, TPS653861-Q1, TPS7B6933-Q1, TLV733P-Q1, LM63635-Q1]
+      - id: control
+        label: Control
+        side: lv
+        blocks: [real-time MCU (PWM, ADC, SPI, ASC, CAN, HSM), safety / glue logic, shoot-through protection and reset control]
+        source: "SLUA963B p.5 Fig 2-4; SLUAAS4 p.2 Fig 1-1 (MCU, Safety logic); SLUAAH0 p.5 Fig 2-1 (Safety & Glue Logic); TIDUF23A p.4 Fig 2-1 (Safety MCU: CAN, HSM, PWM, CLB, SPI, CMPSS, ADC)"
+        ti_parts: [F29H859TU-Q1, TMS320F28069M]
+      - id: comms
+        label: Vehicle network
+        side: lv
+        blocks: [CAN transceiver, isolated CAN transceiver, ESD protection on CAN]
+        source: "SLUA963B p.5 Fig 2-4 (CAN bus); SLUAAS4 p.2 Fig 1-1 (ISO-CAN, CAN, ESD CAN); TIDUF23A p.1, p.6-7"
+        ti_parts: [TCAN1043-Q1, ISO1042-Q1]
+      - id: bias
+        label: Isolated bias supply (gate supply)
+        side: barrier
+        blocks: [pre-regulator, isolated DC/DC bias supply high side, isolated DC/DC bias supply low side, supply diagnostics / monitoring]
+        source: "SLUA963B p.5 Fig 2-4 (Isolated Bias Supply(s)); SLUAAS4 p.2 Fig 1-1 (DC/DC (Bias supply)); TIDUF23A p.4 Fig 2-1 (Bias Supply High Side / Low Side, Supply Diagnostics / Monitoring)"
+        ti_parts: [UCC14240-Q1, UCC14241-Q1, LM5158-Q1]
+      - id: redundant_supply
+        label: Redundant HV-to-LV supply
+        side: barrier
+        blocks: [isolated HV-to-LV DC/DC (redundant power supply), diode-OR into LV rail]
+        source: "SLUAAS4 p.2 Fig 1-1 (DC/DC Redundant power supply); SLUAAH0 p.5 Fig 2-1 (Redundant Power Supply (Backup)); SPRAD58B p.8, p.16"
+        ti_parts: [UCC28C5x-Q1, UCC28700-Q1, UCC28730-Q1, UCC28740-Q1, UCC28781-Q1]
+      - id: gate_drive
+        label: Isolated gate drivers (6x, HS and LS)
+        side: barrier
+        blocks: [isolated gate driver x6]
+        source: "SLUA963B p.5 Fig 2-4 (Isolated HS Driver / Isolated LS Driver), p.6 Fig 2-5; SLUAAS4 p.2 Fig 1-1 (Gate driver, 6x PWM in, 6x out); TIDUF23A p.4 Fig 2-1"
+        ti_parts: [UCC21732-Q1, UCC21750-Q1, UCC21710-Q1, UCC5870-Q1, UCC5880-Q1, UCC5881-Q1, UCC2182xx-Q1]
+      - id: signal_iso
+        label: Signal isolation
+        side: barrier
+        blocks: [digital isolator, isolated ADC path for temperature]
+        source: "SLUA963B p.5 Fig 2-4 (Signal Isolation, two blocks); SLUAAS4 p.2 Fig 1-1 (Digital Isolator + ADC for Temp sense); SPRAD58B p.8 Fig 3-1 (Digital isolator / Opto-emulator)"
+        ti_parts: []
+      - id: sensing
+        label: Isolated voltage & current sensing
+        side: barrier
+        blocks: [DC-link (HV bus) voltage sensing, phase current sensing, isolated amplifier, isolated modulator, isolated comparator, VCE monitoring]
+        source: "SLUA963B p.5 Fig 2-4 (DC Bus Voltage Sensing, VCE Monitoring, Current Sensing, Voltage Sensing); SLUAAS4 p.2 Fig 1-1 (Current sense, HV Voltage sense); TIDUF23A p.4 Fig 2-1 (Isolated Amplifier, Isolated Comparator, DC Bus Sensing, Phase Current Sensing); SPRAD58B p.19-21"
+        ti_parts: [AMC0386-Q1, AMC0381D-Q1, AMC0380D-Q1, AMC3330-Q1, AMC1311, RES60A-Q1, TMCS2100-Q1, TMCS1123-Q1, TMCS1126-Q1]
+      - id: power_stage
+        label: Power stage
+        side: hv
+        blocks: [HV battery, DC-link capacitor, IGBT or SiC power modules (3 half-bridges), power-module temperature sensor (NTC / diode)]
+        source: "SLUA963B p.5 Fig 2-4, p.6 Fig 2-5; SLUAAS4 p.2 Fig 1-1; TIDUF23A p.4 Fig 2-1 (800 V bus, DC Link Cap, SiC Power Modules, NTC Temp)"
+        ti_parts: []
+      - id: discharge
+        label: DC-link active discharge
+        side: hv
+        blocks: [active discharge switch / resistor, isolated switch driver, discharge controller]
+        source: "SLUAAS4 p.2 Fig 1-1 (Active Discharge); TIDUF23A p.4 Fig 2-1 (Discharge), p.22; SPRAD58B p.16-17"
+        ti_parts: [TPSI3100-Q1, AFE539F1-Q1]
+      - id: motor
+        label: Motor & position
+        side: hv
+        blocks: [traction motor, rotor position sensor (resolver / inductive / Hall), resolver excitation amplifier, resolver / position sensor interface]
+        source: "SLUA963B p.5 Fig 2-4 (M, Pos., Position Sensing); SLUAAS4 p.2 Fig 1-1 (Position sensing, Position sensor interface); TIDUF23A p.4 Fig 2-1 (Resolver AFE: Excitation, Signal Conditioning); SPRAD58B p.18-19"
+        ti_parts: [ALM2403-Q1, INA1650-Q1, LDC5072-Q1]
+    links:
+      - [lv_input, lv_power, "12 V"]
+      - [lv_input, bias, "12 V (via pre-regulator)"]
+      - [lv_power, control, "supply, watchdog / reset"]
+      - [control, comms, CAN]
+      - [control, gate_drive, "PWM 6x, SPI, ASC"]
+      - [bias, gate_drive, "gate supply (VCC2 / VEE2)"]
+      - [redundant_supply, lv_input, "backup LV rail from HV"]
+      - [power_stage, redundant_supply, "HV battery"]
+      - [gate_drive, power_stage, "gate drive OUT (6x)"]
+      - [power_stage, gate_drive, "NTC temp, DESAT / OC"]
+      - [gate_drive, control, "fault / SPI / sensing diagnostics"]
+      - [power_stage, sensing, "DC-link voltage, phase current"]
+      - [sensing, control, "isolated feedback to ADC / comparator"]
+      - [power_stage, signal_iso, "temperature"]
+      - [signal_iso, control, ""]
+      - [power_stage, discharge, "DC link"]
+      - [motor, control, "position feedback"]
+      - [control, motor, "resolver excitation"]
+      - [power_stage, motor, "3 phases"]
+    features:
+      - {id: switch_tech, question: "Power switch technology", choices: [SiC MOSFET, IGBT], block: power modules / isolated gate driver, filters: "gate driver: short-circuit method (desaturation vs overcurrent), uvlo_v; bias: output voltages", source: "SLUA963B p.5; SLUAAH0 p.8 Table 3-1; SLYY169 p.6 Table 2, p.32"}
+      - {id: inverter_levels, question: "Inverter topology", choices: [two-level, three-level T-type], block: power stage, filters: "number of switches / gate drivers (new)", source: "SPRAD58B p.4 Fig 2-1"}
+      - {id: bus_voltage, question: "DC bus voltage class", choices: ["400 V", "800 V"], block: power stage, filters: "gate driver isolation_class / working voltage; voltage sensor input range (new); HV bias Vin range (new)", source: "SLUAAS4 p.3; SPRAD58B p.3, p.6, p.16; TIDUF23A p.3"}
+      - {id: asil, question: "Functional safety target (ISO 26262)", choices: [QM, ASIL C, ASIL D], block: whole inverter (MCU, PMIC, gate driver), filters: "functional safety category (new): Functional Safety-Compliant / Quality-Managed", source: "SPRAD58B p.3, p.6, p.13; SLUA963B p.2, p.19; TIDUF23A p.1, p.5"}
+      - {id: asc, question: "Active short circuit (ASC) safe-state path", choices: [none, primary side, secondary side, both], block: isolated gate driver, filters: "protection contains active short circuit (new value)", source: "SLUA963B p.19, p.26-27 Fig 3-24; SPRAD58B p.8, p.11, p.13; TIDUF23A p.4 Fig 2-1"}
+      - {id: redundant_hv_supply, question: "Redundant supply from the HV battery", choices: [yes, no], block: redundant HV-to-LV DC/DC, filters: "Vin up to 1 kV, start-up from about 30 V (new)", source: "SLUAAS4 p.2, p.8-10; SPRAD58B p.8, p.16"}
+      - {id: active_discharge, question: "DC-link active discharge method", choices: [switched resistor on/off, PWM-controlled resistor, through motor windings, through power stages, passive bleed resistor], block: DC-link active discharge, filters: "isolated switch driver with integrated secondary bias (new)", source: "SPRAD58B p.16-17; TIDUF23A p.22"}
+      - {id: dc_link_sensing, question: "DC-link voltage sensing", choices: [isolated amplifier (analog out), isolated delta-sigma modulator, gate-driver isolated ADC / APWM channel], block: isolated voltage sensing, filters: "isolated_amplifier output type; integrated HV resistor divider (new); input range ±600 / ±1000 V (new)", source: "SLUA963B p.5, p.18, p.28; TIDUF23A p.6, p.17; SPRAD58B p.20-21"}
+      - {id: phase_current_sensing, question: "Phase current sensing method", choices: [Hall with C-core, Hall with U-shield, differential coreless Hall, multi-sensor coreless Hall, shunt + isolated amplifier, isolated amplifier on external transducer], block: phase current sensing, filters: "current_sensor technology (new); overcurrent detection (new)", source: "SPRAD58B p.6, p.19-20 Table 10-1; SLYY169 p.21; TIDUF23A p.4 Fig 2-1, p.3"}
+      - {id: phases_sensed, question: "Number of phase currents sensed", choices: ["3", "2 (third calculated)"], block: phase current sensing, filters: "channel count (new)", source: "SPRAD58B p.20; SLUA963B p.5-6"}
+      - {id: position_sensing, question: "Rotor position sensor", choices: [resolver, inductive, Hall], block: position sensing, filters: "sensor type (new)", source: "SPRAD58B p.6, p.18-19; TIDUF23A p.4 Fig 2-1"}
+      - {id: module_temp, question: "Isolated power-module temperature sensing", choices: [NTC thermistor, thermal diode, none], block: power module temperature sensing, filters: "gate driver: temperature input / bias current source (new)", source: "SLUA963B p.5, p.18, p.28; TIDUF23A p.19-20; SLYY169 p.19"}
+      - {id: isolated_can, question: "Isolated CAN interface", choices: [yes, no], block: CAN transceiver, filters: "isolation_class (isolated CAN)", source: "SLUAAS4 p.2 Fig 1-1; TIDUF23A p.7"}
+      - {id: pmic_watchdog, question: "PMIC with MCU watchdog / error-signal monitoring", choices: [yes, no], block: PMIC, filters: "watchdog type Q&A / trigger (new)", source: "SLUA963B p.8 Table 2-2; SPRAD58B p.10"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: gate_driver_subsystem
+    name: Isolated gate driver subsystem (one switch position)
+    sources:
+      - {doc: SLUA963B, url: "https://www.ti.com/lit/an/slua963b/slua963b.pdf", pages: "9 (Fig 3-1), 10-19, 20-30 (Fig 3-15, 3-16)"}
+      - {doc: SLYY169, url: "https://www.ti.com/lit/eb/slyy169/slyy169.pdf", pages: "7-33"}
+      - {doc: SPRAD58B, url: "https://www.ti.com/lit/wp/sprad58b/sprad58b.pdf", pages: "11-14"}
+      - {doc: TIDUF23A, url: "https://www.ti.com/lit/ug/tiduf23a/tiduf23a.pdf", pages: "4 (Fig 2-1), 5, 9, 17, 19-20, 23-26"}
+      - {doc: SLUAAH0, url: "https://www.ti.com/lit/an/sluaah0/sluaah0.pdf", pages: "27-28 (Fig 13-1 to 13-4)"}
+    groups:
+      - id: primary_ctrl
+        label: Primary-side control
+        side: lv
+        blocks: [MCU (PWM+, PWM-, SPI, nFLT, RDY, nRST/EN, APWM / DOUT in), PMIC (VCC1 / V_IO supply)]
+        source: "SLUA963B p.9 Fig 3-1, p.11 Fig 3-2, p.20 Fig 3-15, p.21 Fig 3-16"
+        ti_parts: [F29H859TU-Q1, TPS653860-Q1]
+      - id: driver_primary
+        label: Gate driver primary side
+        side: lv
+        blocks: [PWM input with deglitch, shoot-through / interlock protection, VCC UVLO, primary logic / digital core, fault decode, SPI interface, primary-side ASC input]
+        source: "SLUA963B p.9 Fig 3-1 (UCC21732-Q1 internals), p.20 Fig 3-15 (UCC5870-Q1 internals), p.26-27 Fig 3-24"
+        ti_parts: [UCC21732-Q1, UCC5870-Q1]
+      - id: driver_barrier
+        label: Isolation barrier inside driver
+        side: barrier
+        blocks: [capacitive (SiO2) isolation, die-to-die communication, PWM and APWM modulator / demodulator]
+        source: "SLUA963B p.9 Fig 3-1 (MOD / DEMOD), p.9, p.19, p.21 Fig 3-16 (Die to Die Comm); SLYY169 p.8-9"
+        ti_parts: []
+      - id: driver_secondary
+        label: Gate driver secondary side
+        side: hv
+        blocks: [output stage (split OUTH / OUTL, adjustable strength), VDD / VCC2 / VEE2 UVLO and OVLO, DESAT / OC (shunt) detection, 2-level / soft turn-off, active Miller clamp (internal or external FET driver), short-circuit clamping, active pulldown, gate voltage monitor, gate threshold monitor, VCE active clamp, isolated ADC / analog-to-PWM channel, secondary-side ASC, thermal warning / shutdown, BIST / CRC / clock monitor]
+        source: "SLUA963B p.9 Fig 3-1, p.11-19, p.20 Fig 3-15, p.21-30; SPRAD58B p.11-13; TIDUF23A p.4 Fig 2-1 (DESAT, Adj. Gate drive, BIST, A to D, ASC)"
+        ti_parts: [UCC21732-Q1, UCC21750-Q1, UCC21710-Q1, UCC5870-Q1, UCC5880-Q1, UCC5881-Q1, UCC2182xx-Q1]
+      - id: aux_selftest
+        label: External self-test & monitor circuits (UCC217xx case)
+        side: barrier
+        blocks: [digital isolators for test / monitor signals, external OVLO comparator, external VGE monitor comparator, DESAT / OC self-test switch]
+        source: "SLUA963B p.9 Fig 3-1, p.12 Fig 3-3, p.14 Fig 3-6, p.16 Fig 3-9"
+        ti_parts: []
+      - id: bias
+        label: Isolated bias supply for this driver
+        side: barrier
+        blocks: [pre-regulator (SEPIC), isolated DC/DC module (VCC2 / VEE2), enable and power-good to host]
+        source: "SLUA963B p.9 Fig 3-1 (Isolated Bias Supply); SLUAAH0 p.27 Fig 13-1, 13-2, 13-3; TIDUF23A p.9"
+        ti_parts: [UCC14240-Q1, LM5156-Q1]
+      - id: switch
+        label: Power switch
+        side: hv
+        blocks: [IGBT / SiC MOSFET (module or discrete), sense-FET current mirror / shunt, NTC or thermal diode, DESAT HV diode network, external Miller clamp FET, TVS clamp]
+        source: "SLUA963B p.12-13 Fig 3-4, 3-5, p.17 Fig 3-11, p.18 Fig 3-12, p.24 Fig 3-19, p.28 Fig 3-27/3-28; TIDUF23A p.19"
+        ti_parts: []
+    links:
+      - [primary_ctrl, driver_primary, "PWM+/PWM-, SPI, nRST/EN, ASC"]
+      - [driver_primary, primary_ctrl, "nFLT, RDY, APWM / DOUT"]
+      - [driver_primary, driver_barrier, ""]
+      - [driver_barrier, driver_secondary, ""]
+      - [bias, driver_secondary, "VDD / VCC2, VEE2"]
+      - [primary_ctrl, bias, "enable"]
+      - [bias, primary_ctrl, "power good"]
+      - [driver_secondary, switch, "OUTH / OUTL, CLAMP"]
+      - [switch, driver_secondary, "DESAT / OC, AIN / AIx temperature, VCE clamp sense"]
+      - [aux_selftest, primary_ctrl, "OVLO / VGE monitor / test signals"]
+      - [driver_secondary, aux_selftest, ""]
+    features:
+      - {id: sc_detect, question: "Short-circuit detection method", choices: [DESAT (VCE / VDS sensing), shunt / sense-FET overcurrent, both], block: isolated gate driver, filters: "protection contains desaturation / overcurrent", source: "SLUA963B p.12-13, p.22; SLYY169 p.27 Table 4, p.29-33; SPRAD58B p.11, p.13"}
+      - {id: fault_turnoff, question: "Turn-off behaviour on a fault", choices: [normal, soft turn-off, two-level turn-off, selectable], block: isolated gate driver, filters: "protection contains soft shutdown / 2-level turn-off (new value)", source: "SLUA963B p.14-15 Fig 3-7, 3-8, p.23; SPRAD58B p.11"}
+      - {id: miller_clamp, question: "Active Miller clamp", choices: [none, internal, external FET driver, configurable], block: isolated gate driver, filters: "protection contains Miller clamp; clamp type (new)", source: "SLUA963B p.17 Fig 3-11, p.27; SLYY169 p.23-25; SPRAD58B p.13"}
+      - {id: split_outputs, question: "Split outputs (separate OUTH / OUTL)", choices: [yes, no], block: isolated gate driver, filters: "output_type (split)", source: "SLYY169 p.11 Fig 8, 9; SPRAD58B p.13; SLUA963B p.9 Fig 3-1"}
+      - {id: drive_strength, question: "Peak gate drive current", choices: ["±10 A", "15 A", "20 A", "30 A"], block: isolated gate driver, filters: "peak_sink_a, peak_source_a (gte)", source: "SLUA963B p.9 (UCC21732-Q1 ±10 A), p.19 (UCC5870-Q1 15 A); TIDUF23A p.5 (UCC5880-Q1 20 A); SPRAD58B p.11 (UCC2182xx-Q1 15 A); SLUAAH0 p.27 (UCC5870-Q1 30 A); SLYY169 p.10, p.12"}
+      - {id: variable_strength, question: "Real-time adjustable (variable) gate drive strength", choices: [yes, no], block: isolated gate driver, filters: "adjustable drive strength via SPI / GPIO (new)", source: "SPRAD58B p.6, p.11-13; TIDUF23A p.1, p.5, p.23-26"}
+      - {id: uvlo, question: "Secondary UVLO threshold", choices: ["12 V", "15 V", "17 V"], block: isolated gate driver, filters: "uvlo_v", source: "SPRAD58B p.11; SLUA963B p.11; SLYY169 p.16"}
+      - {id: ovlo, question: "Supply overvoltage lockout (OVLO)", choices: [integrated, external circuit, none], block: isolated gate driver, filters: "protection contains OVLO (new value)", source: "SLUA963B p.11 Fig 3-3, p.21; SPRAD58B p.13"}
+      - {id: negative_rail, question: "Bipolar gate supply (negative VEE for turn-off)", choices: [yes, no], block: isolated gate driver / bias supply, filters: "VEE pin / dual-supply support (new)", source: "SLUAAH0 p.10-11; SLYY169 p.16; SLUA963B p.21"}
+      - {id: interlock, question: "Interlock / shoot-through protection with dead time", choices: [none, fixed interlock, programmable dead time], block: isolated gate driver, filters: "deadtime; protection contains interlock", source: "SLUA963B p.16-17 Fig 3-10, p.26; SLYY169 p.13, p.18; SPRAD58B p.13"}
+      - {id: deglitch, question: "Input deglitch / minimum pulse rejection", choices: [yes, no], block: isolated gate driver, filters: "protection contains input glitch filter", source: "SLYY169 p.17; SPRAD58B p.13; SLUA963B p.26"}
+      - {id: gate_monitor, question: "Gate voltage (VGE / VGS) monitoring vs PWM", choices: [integrated, external comparator, none], block: isolated gate driver, filters: "gate monitor (new)", source: "SLUA963B p.15-16 Fig 3-9, p.24"}
+      - {id: vth_monitor, question: "Gate threshold voltage / health monitoring", choices: [yes, no], block: isolated gate driver, filters: "threshold monitor (new)", source: "SLUA963B p.25; SPRAD58B p.13"}
+      - {id: active_hv_clamp, question: "Active high-voltage (VCE / VDS) clamp", choices: [yes, no], block: isolated gate driver, filters: "protection contains VCE clamp (new value)", source: "SLUA963B p.19, p.23-24"}
+      - {id: isolated_sense_channel, question: "Isolated analog sensing channel in the driver", choices: [none, analog-to-PWM output, multi-channel ADC over SPI], block: isolated gate driver, filters: "isolated ADC / APWM channel (new)", source: "SLUA963B p.18 Fig 3-12, p.19, p.28 Fig 3-27"}
+      - {id: temp_input, question: "Power-module temperature input on the driver", choices: [NTC / PTC, thermal diode, none], block: isolated gate driver, filters: "temperature sensor bias current (new)", source: "SLUA963B p.18, p.28; SPRAD58B p.13; TIDUF23A p.19"}
+      - {id: asc_driver, question: "ASC inputs on the driver", choices: [none, primary only, primary and secondary], block: isolated gate driver, filters: "protection contains active short circuit (new value)", source: "SLUA963B p.26-27 Fig 3-24; SPRAD58B p.11, p.13"}
+      - {id: config_interface, question: "Configuration and diagnostics interface", choices: [pins only (nFLT / RDY), SPI programmable], block: isolated gate driver, filters: "SPI interface (new); SPI daisy-chain / addressing (new)", source: "SLUA963B p.9, p.19, p.30; SPRAD58B p.11, p.13"}
+      - {id: self_test, question: "Built-in self-test / CRC / clock monitor (latent-fault diagnostics)", choices: [integrated, external self-test circuits, none], block: isolated gate driver, filters: "BIST (new)", source: "SLUA963B p.13-14 Fig 3-6, p.22, p.29-30; SPRAD58B p.11; TIDUF23A p.4"}
+      - {id: driver_tsd, question: "Driver thermal warning / shutdown", choices: [yes, no], block: isolated gate driver, filters: "protection contains thermal shutdown", source: "SLUA963B p.29"}
+      - {id: isolation_class, question: "Isolation class", choices: [basic, reinforced], block: isolated gate driver, filters: "isolation_class; isolation_rating_kvrms (up to 5.7)", source: "SLUA963B p.2, p.9, p.19; SPRAD58B p.11; SLYY169 p.9"}
+      - {id: cmti, question: "CMTI at least", choices: ["100 V/ns", "150 V/ns"], block: isolated gate driver, filters: "cmti_kv_us (gte)", source: "SLUA963B p.9, p.19; SLYY169 p.20"}
+      - {id: prop_delay, question: "Low propagation delay and tight part-to-part skew", choices: [yes, no], block: isolated gate driver, filters: "propagation delay / skew (new)", source: "SLYY169 p.13-15; SLUA963B p.9"}
+      - {id: channels, question: "Channels per driver", choices: [single, dual with internal interlock], block: isolated gate driver, filters: "channel_config", source: "SLYY169 p.15, p.18; SLUA963B p.9"}
+      - {id: fusa_driver, question: "Driver functional safety category", choices: [Functional Safety-Compliant, Functional Safety Quality-Managed], block: isolated gate driver, filters: "functional safety category (new)", source: "SLUA963B p.2, p.19; TIDUF23A p.1; SPRAD58B p.13"}
+      - {id: automotive, question: "Automotive qualified, -40 °C to +125 °C", choices: [yes, no], block: isolated gate driver, filters: "qualification", source: "SPRAD58B p.13"}
+  # ---------------------------------------------------------------------------------------------------------
+  - id: isolated_bias_power
+    name: Isolated bias power for gate drivers
+    sources:
+      - {doc: SLUAAS4, url: "https://www.ti.com/lit/pdf/sluaas4", pages: "2-10 (Fig 2-1 to 6-4, Tables 1-1, 1-2, 2-1, 3-1)"}
+      - {doc: SLUAAH0, url: "https://www.ti.com/lit/an/sluaah0/sluaah0.pdf", pages: "3-12, 24, 27-29 (Fig 3-1, 13-1)"}
+      - {doc: SLUA963B, url: "https://www.ti.com/lit/an/slua963b/slua963b.pdf", pages: "31-32 (Fig 4-1 to 4-3)"}
+      - {doc: SPRAD58B, url: "https://www.ti.com/lit/wp/sprad58b/sprad58b.pdf", pages: "14-16 (Fig 6-1 to 6-3, Table 7-1)"}
+      - {doc: TIDUF23A, url: "https://www.ti.com/lit/ug/tiduf23a/tiduf23a.pdf", pages: "9, 11-13 (Fig 2-5, Tables 2-1, 2-2)"}
+    groups:
+      - id: lv_source
+        label: LV battery source
+        side: lv
+        blocks: [12 V battery (or 48 V), ideal diode / protection]
+        source: "SLUAAS4 p.3-4 Fig 2-1; SLUAAH0 p.9; TIDUF23A p.11-12"
+        ti_parts: [LM74202-Q1]
+      - id: pre_reg
+        label: Pre-regulator
+        side: lv
+        blocks: [pre-regulator (SEPIC / buck-boost / boost / flyback / push-pull), separate HS and LS pre-regulators]
+        source: "SLUAAS4 p.4-5 Fig 2-1, 2-2, Table 2-1; SLUAAH0 p.9, p.27 Fig 13-2; TIDUF23A p.12-13 Table 2-2"
+        ti_parts: [LM5155x-Q1, LM5156x-Q1, LM5157x-Q1, LM5158x-Q1, LM5156-Q1, LM5158-Q1, UCC280x-Q1]
+      - id: iso_hs
+        label: Isolated bias supplies, high side
+        side: barrier
+        blocks: [isolated DC/DC for HS_1, isolated DC/DC for HS_2, isolated DC/DC for HS_3]
+        source: "SLUAAS4 p.6 Fig 3-1, p.7 Fig 4-1; SLUA963B p.31-32; SPRAD58B p.14 Fig 6-1"
+        ti_parts: [UCC14240-Q1, UCC14241-Q1, UCC14140-Q1, UCC14141-Q1, UCC14340-Q1, UCC14341-Q1, UCC14130-Q1, UCC14131-Q1, UCC15240-Q1, UCC15241-Q1]
+      - id: iso_ls
+        label: Isolated bias supply, low side (individual or shared 1:3)
+        side: barrier
+        blocks: [isolated DC/DC for LS_1..LS_3, or one multi-winding supply for all LS]
+        source: "SLUAAS4 p.6-7 Fig 3-1, 4-1, 4-2; SLUAAH0 p.7-8; SPRAD58B p.14"
+        ti_parts: [UCC25800-Q1, SN6501-Q1, SN6505-Q1, SN6507-Q1, LM518x-Q1, LM2518x-Q1, LM515x-Q1, LM34xxx-Q1]
+      - id: hv_source
+        label: HV battery flyback (redundant or pre-regulator)
+        side: hv
+        blocks: [HV battery (400 V / 800 V), HV flyback converter]
+        source: "SLUAAS4 p.3 Table 1-2, p.5 Fig 2-3, p.8-10 Fig 6-1 to 6-4; SPRAD58B p.16 Table 7-1"
+        ti_parts: [UCC28C5x-Q1, UCC28700-Q1, UCC28730-Q1, UCC28740-Q1, UCC28781-Q1]
+      - id: post_reg
+        label: Post-regulation (optional)
+        side: hv
+        blocks: [LDO post-regulator]
+        source: "SLUAAS4 p.8 Fig 6-1 (LDO per LS driver); SLUAAH0 p.10"
+        ti_parts: []
+      - id: drivers
+        label: Gate drivers (secondary side)
+        side: hv
+        blocks: [gate driver HS_1..HS_3, gate driver LS_1..LS_3]
+        source: "SLUAAS4 p.4-10 (all architecture figures); SLUAAH0 p.7 Fig 3-1"
+        ti_parts: [UCC5880-Q1, UCC5870-Q1, UCC21732-Q1]
+      - id: host
+        label: Host / supply monitoring
+        side: lv
+        blocks: [MCU enable and power-good handshake, supply diagnostics / monitoring, gate-driver primary LDO]
+        source: "SLUAAH0 p.24; TIDUF23A p.4 Fig 2-1, p.9, p.12"
+        ti_parts: [TPS7B6933-Q1]
+      - id: other_iso_rails
+        label: Other isolated rails
+        side: barrier
+        blocks: [isolated 5 V / 3.3 V DC/DC module for isolated CAN and isolated voltage sensing]
+        source: "TIDUF23A p.6, p.11-13 Table 2-1"
+        ti_parts: [UCC33421-Q1]
+    links:
+      - [lv_source, pre_reg, "12 V (8-16 V)"]
+      - [pre_reg, iso_hs, "24 V (or 12 / 15 V)"]
+      - [pre_reg, iso_ls, "24 V (or 12 / 15 V)"]
+      - [hv_source, iso_hs, "redundant input (HS)"]
+      - [hv_source, iso_ls, "redundant input (LS)"]
+      - [hv_source, pre_reg, "HV flyback as pre-regulator"]
+      - [iso_hs, drivers, "VCC2 / VEE2 (e.g. +15 / -4 V)"]
+      - [iso_ls, drivers, "VCC2 / VEE2"]
+      - [iso_ls, post_reg, ""]
+      - [post_reg, drivers, ""]
+      - [host, iso_hs, "enable"]
+      - [iso_hs, host, "power good"]
+      - [lv_source, other_iso_rails, "5 V"]
+    features:
+      - {id: architecture, question: "Bias supply architecture", choices: [centralized, semi-distributed (LS shared), semi-distributed (HS shared + LS shared), fully distributed], block: isolated DC/DC, filters: "number of isolated outputs (new); output power per device (new)", source: "SLUA963B p.31-32 Fig 4-1 to 4-3; SLUAAS4 p.6-8 Fig 3-1, 4-1, 4-2, 5-1; SLUAAH0 p.7-8 Fig 3-1; SPRAD58B p.14 Fig 6-1"}
+      - {id: topology, question: "Isolated bias topology", choices: [integrated transformer module, PSR flyback, open-loop push-pull, open-loop LLC], block: isolated DC/DC, filters: "integrated transformer (new); topology (new)", source: "SLUAAS4 p.2-3 Table 1-1, p.6; SPRAD58B p.14-16 Fig 6-2"}
+      - {id: input_source, question: "Input source", choices: ["12 V LV battery", "48 V LV battery", "HV battery (400 / 800 V)", "LV + HV"], block: isolated DC/DC, filters: "Vin min / max (new)", source: "SLUAAS4 p.2-3; SPRAD58B p.14, p.16; SLUAAH0 p.3"}
+      - {id: pre_regulator, question: "Pre-regulator", choices: [none (wide-Vin device), single shared, separate HS and LS], block: pre-regulator, filters: "pre-reg Vin range 3.5-60 V; output current (new)", source: "SLUAAS4 p.4-5 Fig 2-1, 2-2, Table 2-1; SLUAAH0 p.9; TIDUF23A p.12-13"}
+      - {id: redundancy, question: "Redundant supply from the HV battery", choices: [none, all drivers, low side only, high side only], block: HV flyback, filters: "HV flyback Vin (240-450 V / 550-950 V, up to 1 kV) (new)", source: "SLUAAS4 p.3, p.8-10 Fig 6-1 to 6-4; SPRAD58B p.16"}
+      - {id: hv_flyback_control, question: "HV flyback control / regulation", choices: [hard-switched, valley switching, ZVS], block: HV flyback, filters: "switching type; feedback: primary-side vs secondary (optocoupler); power level (new)", source: "SLUAAS4 p.3 Table 1-2; SPRAD58B p.16 Table 7-1"}
+      - {id: output_config, question: "Output rails", choices: [single positive, dual positive / negative, dual positive], block: isolated DC/DC, filters: "dual output (new); VOUT range 15-25 V (new)", source: "SLUAAH0 p.3, p.10-12 Fig 4-1, 5-1, 6-1; SLUAAS4 p.6 Table 3-1"}
+      - {id: gate_voltages, question: "Gate-drive voltages", choices: ["+15 / -4 V (SiC, TIDM-02014)", "+15 / -5 V", "+15 / -8 V (IGBT)", "+20 V single"], block: isolated DC/DC, filters: "VCC2 / VEE2 set points (new)", source: "TIDUF23A p.9, p.12; SLUAAH0 p.8 Table 3-1, p.11-12, p.28; SLYY169 p.6 Table 2"}
+      - {id: regulation, question: "Output regulation accuracy", choices: [unregulated / open loop, about 5%, 1.5% or better], block: isolated DC/DC, filters: "output accuracy (new)", source: "SLUAAH0 p.10; SLUAAS4 p.3 Table 1-1; SPRAD58B p.15-16; TIDUF23A p.9"}
+      - {id: power_per_driver, question: "Bias power per gate driver at least", choices: ["1.0 W", "1.5 W", "2.0 W", "2.5 W"], block: isolated DC/DC, filters: "output power (new); computed from QG x ΔV x fsw + ΔV x IQ", source: "SLUAAH0 p.8-9 Eq 1-5; SLUAAS4 p.6 Table 3-1; TIDUF23A p.12"}
+      - {id: bias_isolation, question: "Bias supply isolation", choices: ["basic 3 kVrms", "reinforced 5 kVrms"], block: isolated DC/DC, filters: "isolation_class; isolation_rating_kvrms", source: "SLUAAS4 p.3, p.6 Table 3-1; TIDUF23A p.6"}
+      - {id: enable_pg, question: "Enable input and power-good output", choices: [yes, no], block: isolated DC/DC, filters: "enable / power-good pins (new)", source: "SLUAAH0 p.4, p.24-25; TIDUF23A p.9"}
+      - {id: bias_protection, question: "Bias supply protections (UVLO, OVP, overcurrent, thermal shutdown)", choices: [yes, no], block: isolated DC/DC, filters: "protection (new values)", source: "SLUAAH0 p.4 (/PG conditions); SPRAD58B p.15 (UCC25800-Q1)"}
+      - {id: low_emi, question: "Low-EMI features (spread spectrum, low primary-secondary capacitance)", choices: [yes, no], block: isolated DC/DC / pre-regulator, filters: "spread spectrum (new)", source: "SPRAD58B p.15-16; TIDUF23A p.7, p.12; SLUAAH0 p.1"}
+      - {id: low_profile, question: "Low-profile integrated module (height under 4 mm)", choices: [yes, no], block: isolated DC/DC, filters: "package height (new)", source: "SLUAAH0 p.8 (3.55 mm); TIDUF23A p.2 (<4 mm); SLUAAS4 p.6"}
+      - {id: aux_iso_rails, question: "Separate isolated 5 V / 3.3 V rail for isolated CAN and sensing", choices: [yes, no, sensor with integrated isolated DC/DC], block: isolated DC/DC (aux), filters: "regulated 5 V / 3.3 V output (new)", source: "TIDUF23A p.6, p.13; SPRAD58B p.20 (AMC33xx-Q1)"}

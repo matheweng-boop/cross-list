@@ -5,6 +5,9 @@
 #          external                         the customer's own part (processor, memory, sensors): not counted
 #          (omitted)                        no Skyworks part in Cross List yet: shown as an opportunity
 # companions: functions usually designed in next to this one (suggested when the block is added)
+# requirements: optional questions that narrow the parts that fit (nothing is assumed; unanswered = no filter)
+#   {id, label, param, op: contains | eq | gte | in, value} for yes/no; {id, label, param, op, choices: [...] | auto} for a choice
+#   param "feature" checks the broadcast feature set (data/broadcast/tuner_features.yaml)
 # Note: "opportunity" only means Cross List has no Skyworks part for it yet. The full Skyworks portfolio is not
 # imported (backlog), so some opportunities are covered by Skyworks products that are simply not loaded.
 
@@ -42,8 +45,32 @@ functions:
   tvs_esd: {label: TVS / ESD protection, category: protection}
   reverse_polarity: {label: Reverse-polarity / ideal-diode controller, category: protection}
   # isolation
-  digital_isolator: {label: Digital isolator, category: isolation, source: {family: digital_isolator}, companions: [isolated_dcdc, pol_ldo, tvs_esd]}
-  gate_driver: {label: Isolated gate driver, category: isolation, source: {family: gate_driver}, companions: [digital_isolator, isolated_dcdc, current_sensor, isolated_amplifier, mcu, tvs_esd]}
+  digital_isolator:
+    label: Digital isolator
+    category: isolation
+    source: {family: digital_isolator}
+    companions: [isolated_dcdc, pol_ldo, tvs_esd]
+    requirements:
+      - {id: reinforced, label: Reinforced isolation, param: isolation_class, op: eq, value: reinforced}
+      - {id: rating, label: Isolation rating at least, param: isolation_rating_kvrms, op: gte, choices: [2.5, 3.75, 5]}
+      - {id: channels, label: Channel configuration, param: channel_config, op: eq, choices: auto}
+      - {id: default_output, label: Output state when unpowered, param: default_output, op: eq, choices: auto}
+      - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
+  gate_driver:
+    label: Isolated gate driver
+    category: isolation
+    source: {family: gate_driver}
+    companions: [digital_isolator, isolated_dcdc, current_sensor, isolated_amplifier, temperature_sensor, mcu, tvs_esd]
+    requirements:
+      - {id: desat, label: DESAT / overcurrent detection, param: protection, op: contains, value: desaturation}
+      - {id: miller, label: Active Miller clamp, param: protection, op: contains, value: Miller clamp}
+      - {id: soft_off, label: Soft turn-off, param: protection, op: contains, value: soft shutdown}
+      - {id: deadtime, label: Programmable dead time, param: deadtime, op: eq, value: programmable}
+      - {id: input, label: Input type, param: input_type, op: eq, choices: auto}
+      - {id: channels, label: Channels, param: channel_config, op: eq, choices: auto}
+      - {id: uvlo, label: Output UVLO, param: uvlo_v, op: eq, choices: auto}
+      - {id: peak, label: Peak sink current at least (A), param: peak_sink_a, op: gte, choices: [2, 4, 6, 10]}
+      - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
   isolated_amplifier: {label: Isolated amplifier / modulator, category: isolation, source: {family: isolated_amplifier}, companions: [isolated_dcdc, adc]}
   current_sensor: {label: Isolated current sensor, category: isolation, source: {family: current_sensor}, companions: [adc, mcu]}
   # timing
@@ -55,17 +82,45 @@ functions:
   watchdog: {label: Watchdog, category: timing}
   # RF
   antenna: {label: Antenna, category: rf, source: external, companions: [antenna_switch, lna, tvs_esd]}
-  antenna_switch: {label: Antenna / RF switch, category: rf, source: {family: rf_switch}, companions: [lna, tvs_esd]}
-  rf_switch: {label: RF switch, category: rf, source: {family: rf_switch}}
+  antenna_switch:
+    label: Antenna / RF switch
+    category: rf
+    source: {family: rf_switch}
+    companions: [lna, tvs_esd]
+    requirements: &switch_req
+      - {id: config, label: Configuration, param: configuration, op: eq, choices: auto}
+      - {id: control, label: Control interface, param: control_interface, op: eq, choices: auto}
+      - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
+  rf_switch: {label: RF switch, category: rf, source: {family: rf_switch}, requirements: *switch_req}
   lna: {label: LNA, category: rf, companions: [antenna_switch]}
   rf_frontend: {label: RF front-end module, category: rf}
   # broadcast radio
-  am_fm_tuner: {label: AM/FM / digital radio tuner, category: radio, source: {broadcast: tuner}, companions: [digital_radio_demod, antenna_switch, lna, pmic, pol_ldo, crystal_oscillator, clock_buffer, tvs_esd, audio_amp, soc, flash]}
-  digital_radio_demod: {label: Digital radio demodulator (HD / DAB / DRM), category: radio, source: {broadcast: coprocessor}, companions: [flash, soc, pol_ldo]}
+  am_fm_tuner:
+    label: AM/FM / digital radio tuner
+    category: radio
+    source: {broadcast: tuner}
+    companions: [digital_radio_demod, antenna_switch, lna, pmic, pol_ldo, crystal_oscillator, clock_buffer, tvs_esd, audio_amp, soc, flash]
+    requirements:
+      - {id: tuners, label: Tuners per IC, param: tuners, op: eq, choices: [1, 2]}
+      - {id: hd, label: HD Radio, param: feature, op: contains, value: HD}
+      - {id: dab, label: DAB, param: feature, op: contains, value: DAB}
+      - {id: drm, label: DRM, param: feature, op: contains, value: DRM}
+      - {id: wb, label: Weather band, param: feature, op: contains, value: WB}
+      - {id: pd, label: FM phase diversity, param: feature, op: contains, value: PD}
+      - {id: amic, label: AM interference canceller, param: feature, op: contains, value: AMIC}
+      - {id: audio, label: On-chip audio, param: feature, op: contains, value: AUDIO}
+  digital_radio_demod:
+    label: Digital radio demodulator (HD / DAB / DRM)
+    category: radio
+    source: {broadcast: coprocessor}
+    companions: [flash, soc, pol_ldo]
+    requirements:
+      - {id: std, label: Standard, param: decode, op: contains, choices: [HD, DAB, DRM, CDR]}
+      - {id: channels, label: Channels at least, param: channels, op: gte, choices: [2, 3, 4]}
   single_chip_radio: {label: Single-chip radio receiver, category: radio, source: {broadcast: receiver}, companions: [crystal_oscillator, pol_ldo, audio_amp]}
   # sensing
   amplifier: {label: Amplifier, category: sensing, companions: [adc]}
-  temperature_sensor: {label: Temperature sensor, category: sensing}
+  temperature_sensor: {label: Temperature sensor, category: sensing, note: e.g. power-module NTC / diode sensing across the isolation barrier}
   adc: {label: ADC, category: sensing}
   # interface
   voltage_translator: {label: Voltage translator, category: interface}

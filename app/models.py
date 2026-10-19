@@ -276,3 +276,17 @@ class BlockDiagram(Base):
     name: Mapped[str] = mapped_column(String(200))
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BlockFeedback(Base):
+    """Feedback on a block diagram, a block or a template, kept for discussion before anything is changed."""
+
+    __tablename__ = "block_feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    diagram_id: Mapped[int | None] = mapped_column(Integer, index=True)
+    diagram_name: Mapped[str | None] = mapped_column(String(200))
+    target: Mapped[str | None] = mapped_column(String(200))  # e.g. "Gate drive / Isolated gate driver"
+    message: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="open")  # open | agreed | rejected | done
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

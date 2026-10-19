@@ -1,12 +1,14 @@
 """Block-diagram generator pages and API."""
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+import json
+
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import BlockDiagram
+from app.models import BlockDiagram, BlockFeedback
 from app.services import blocks
 from app.web.routes import templates
 
@@ -33,7 +35,7 @@ def new(request: Request, template: int | None = None, session: Session = Depend
     return _editor(request, session, None, tpl)
 
 
-@router.get("/blocks/{design_id}", response_class=HTMLResponse)
+@router.get("/blocks/{design_id:int}", response_class=HTMLResponse)
 def edit(request: Request, design_id: int, session: Session = Depends(get_session)):
     d = session.get(BlockDiagram, design_id)
     if d is None:
@@ -53,6 +55,7 @@ def _editor(request, session, design, tpl):
             "template": tpl,
             "catalogue": blocks.catalogue(),
             "counts": blocks.counts(session),
+            "requirements": blocks.requirements(session),
             "templates_": blocks.templates(),
         },
     )
@@ -68,8 +71,17 @@ def delete(design_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/api/blocks/parts")
-def parts(fn: str, q: str = "", session: Session = Depends(get_session)):
-    return blocks.parts_for(session, fn, q)
+def parts(fn: str, q: str = "", req: str = "", session: Session = Depends(get_session)):
+    try:
+        answers = json.loads(req) if req else {}
+    except ValueError:
+        answers = {}
+    return blocks.parts_for(session, fn, q, answers)
+
+
+@router.post("/api/blocks/counts")
+def counts(payload: dict = Body(default={}), session: Session = Depends(get_session)):
+    return blocks.counts(session, payload.get("req") or {})
 
 
 @router.post("/api/blocks/designs")
@@ -92,3 +104,67 @@ def update(design_id: int, payload: dict = Body(...), session: Session = Depends
 
 def _name(payload: dict) -> str:
     return (str(payload.get("name") or "").strip() or "Untitled block diagram")[:200]
+
+
+# --- feedback: kept for discussion before a change is made -------------------------------------------
+FEEDBACK_STATUS = {"open": "Open", "agreed": "Agreed, to do", "rejected": "Not doing", "done": "Done"}
+
+
+@router.post("/api/blocks/feedback")
+def add_feedback(payload: dict = Body(...), session: Session = Depends(get_session)):
+    msg = str(payload.get("message") or "").strip()
+    if not msg:
+        raise HTTPException(400, "Empty feedback")
+    fb = BlockFeedback(
+        diagram_id=payload.get("diagram_id"),
+        diagram_name=(str(payload.get("diagram_name") or "") or None),
+        target=(str(payload.get("target") or "")[:200] or None),
+        message=msg[:4000],
+    )
+    session.add(fb)
+    session.commit()
+    return {"id": fb.id}
+
+
+@router.get("/api/blocks/feedback")
+def list_feedback(diagram_id: int | None = None, session: Session = Depends(get_session)):
+    stmt = select(BlockFeedback).order_by(BlockFeedback.created_at.desc())
+    if diagram_id is not None:
+        stmt = stmt.where(BlockFeedback.diagram_id == diagram_id)
+    return [
+        {"id": f.id, "target": f.target, "message": f.message, "status": f.status, "diagram": f.diagram_name,
+         "created": f.created_at.strftime("%Y-%m-%d") if f.created_at else ""}
+        for f in session.scalars(stmt)
+    ]  # fmt: skip
+
+
+@router.get("/blocks/feedback", response_class=HTMLResponse)
+def feedback_page(request: Request, session: Session = Depends(get_session)):
+    rows = session.scalars(select(BlockFeedback).order_by(BlockFeedback.created_at.desc())).all()
+    order = list(FEEDBACK_STATUS)
+    rows = sorted(rows, key=lambda f: order.index(f.status) if f.status in order else 9)
+    return templates.TemplateResponse(request, "blocks/feedback.html", {"rows": rows, "statuses": FEEDBACK_STATUS})
+
+
+@router.post("/blocks/feedback/{fb_id}")
+def update_feedback(
+    fb_id: int, status: str = Form(""), delete: str = Form(""), session: Session = Depends(get_session)
+):
+    fb = session.get(BlockFeedback, fb_id)
+    if fb is not None:
+        if delete:
+            session.delete(fb)
+        elif status in FEEDBACK_STATUS:
+            fb.status = status
+        session.commit()
+    return RedirectResponse("/blocks/feedback", status_code=303)
+
+
+@router.get("/blocks/feedback.txt", response_class=PlainTextResponse)
+def feedback_text(session: Session = Depends(get_session)):
+    rows = session.scalars(select(BlockFeedback).where(BlockFeedback.status.in_(["open", "agreed"]))).all()
+    lines = ["Block-diagram feedback to discuss (is a change warranted?):"]
+    for f in rows:
+        where = " / ".join(x for x in (f.diagram_name, f.target) if x)
+        lines.append(f"- [{FEEDBACK_STATUS.get(f.status, f.status)}] {where + ': ' if where else ''}{f.message}")
+    return "\n".join(lines) + "\n"

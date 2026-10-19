@@ -63,7 +63,8 @@ SECTIONS = (
                                  ("Requests", "/requests")]),
     ("technical", "Technical discussions", "/technical", [("Technical", "/technical"),
                                                          ("Engineering notes", "/engineering")]),
-    ("blocks", "Block diagrams", "/blocks", [("Generator", "/blocks"), ("Coverage", "/blocks/coverage")]),
+    ("blocks", "Block diagrams", "/blocks", [("Generator", "/blocks"), ("Coverage", "/blocks/coverage"),
+                                             ("Feedback", "/blocks/feedback")]),
     ("broadcast", "Broadcast", "/broadcast", [("Overview", "/broadcast"),
                                               ("Configurations", "/broadcast/configurations")]),
 )  # fmt: skip

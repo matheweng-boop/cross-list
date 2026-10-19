@@ -7,12 +7,14 @@
   if (!root) return;
   const $ = s => root.querySelector(s);
   const J = id => JSON.parse(document.getElementById(id).textContent);
-  const CAT = J("bk-catalogue"), COUNTS = J("bk-counts"), design = J("bk-design"), tpl = J("bk-template");
+  const CAT = J("bk-catalogue"), design = J("bk-design"), tpl = J("bk-template"), REQ = J("bk-reqdata");
+  let COUNTS = J("bk-counts");
   const FN = CAT.functions, CATS = CAT.categories;
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   let seq = 1;
   const uid = p => `${p}${Date.now().toString(36)}${seq++}`;
   let S = design.data || fromTemplate(tpl) || {groups: [], links: []};
+  S.req ||= {}; // requirement answers per function: {fn: {reqId: value}}; unanswered = no filter
   let sel = null; // {group} or {group, block}
   let dirty = false;
   let configId = design.id;
@@ -173,9 +175,35 @@
   const blockOf = (g, id) => g && g.blocks.find(b => b.id === id);
   const partsCache = {};
   async function parts(fn, q = "") {
-    const key = `${fn}|${q}`;
-    if (!partsCache[key]) partsCache[key] = fetch(`/api/blocks/parts?fn=${encodeURIComponent(fn)}&q=${encodeURIComponent(q)}`).then(r => r.json());
+    const req = JSON.stringify(S.req[fn] || {});
+    const key = `${fn}|${q}|${req}`;
+    if (!partsCache[key]) partsCache[key] = fetch(`/api/blocks/parts?fn=${encodeURIComponent(fn)}&q=${encodeURIComponent(q)}&req=${encodeURIComponent(req)}`).then(r => r.json());
     return partsCache[key];
+  }
+  async function refreshCounts() {
+    const res = await fetch("/api/blocks/counts", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({req: S.req})});
+    if (res.ok) COUNTS = await res.json();
+    render();
+  }
+  // requirement questions of a function as form controls; nothing is pre-selected
+  function reqControls(fn) {
+    const ans = S.req[fn] || {};
+    return (REQ[fn] || []).map(r => r.choices
+      ? `<label class="small req-row">${esc(r.label)} <select data-req="${fn}|${r.id}"><option value="">any</option>${r.choices.map(c => `<option value="${esc(c)}"${String(ans[r.id] ?? "") === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></label>`
+      : `<label class="small req-row"><input type="checkbox" data-req="${fn}|${r.id}"${ans[r.id] ? " checked" : ""}> ${esc(r.label)}</label>`).join("");
+  }
+  function bindReq(box, after) {
+    box.querySelectorAll("[data-req]").forEach(el => (el.onchange = async () => {
+      const [fn, rid] = el.dataset.req.split("|");
+      const a = (S.req[fn] ||= {});
+      const v = el.type === "checkbox" ? el.checked : el.value;
+      if (v === "" || v === false) delete a[rid]; else a[rid] = v;
+      if (!Object.keys(a).length) delete S.req[fn];
+      dirty = true;
+      $("#bk-status").textContent = "Unsaved changes";
+      await refreshCounts();
+      if (after) after();
+    }));
   }
 
   function showBlock(g, b) {
@@ -188,6 +216,7 @@
       ${b.part ? `<p>Chosen: <b>${esc(b.part)}</b> <button type="button" class="outline secondary small-btn" data-act="unpick">clear</button></p>` : ""}
       <div class="row"><label class="small">Label <input data-f="label" value="${esc(b.label || "")}" placeholder="${esc(f.label)}"></label>
         <label class="small">Qty <input data-f="qty" type="number" min="1" max="99" value="${b.qty || 1}" style="width:4rem"></label></div>
+      ${(REQ[b.fn] || []).length ? `<details class="req-box"${Object.keys(S.req[b.fn] || {}).length ? " open" : ""}><summary class="small"><b>Requirements</b> (narrow the parts; nothing is assumed)</summary>${reqControls(b.fn)}</details>` : ""}
       <div id="bk-parts"></div>
       ${comp.length ? `<p class="small"><b>Usually designed in with it</b></p><div class="row">${comp.map(c => `<button type="button" class="bc-chip bc-chip-sm" data-add="${c}" title="${esc(STATUS_TEXT[COUNTS[c] === null ? "ext" : COUNTS[c] ? "have" : "opp"])}">+ ${esc(FN[c].label)}</button>`).join("")}</div>` : ""}
       <div class="row"><button type="button" class="outline secondary small-btn" data-act="remove">Remove block</button>
@@ -196,10 +225,13 @@
       const box = panel.querySelector("#bk-parts");
       const draw = async q => {
         const r = await parts(b.fn, q);
-        box.innerHTML = `<p class="small"><b>Skyworks parts in Cross List</b> (${r.total})</p>
-          <input type="search" placeholder="Filter parts" value="${esc(q)}" aria-label="Filter parts" data-q>
-          <ul class="bk-parts">${r.parts.map(p => `<li><span><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a><br><small class="muted">${esc(p.detail)}</small></span><button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button></li>`).join("")}</ul>
-          ${r.total > r.parts.length ? `<p class="small muted">${r.total - r.parts.length} more; filter to narrow.</p>` : ""}`;
+        const li = p => `<li><span><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.risk ? ' <small class="worse">NRND / obsolete</small>' : ""}<br><small class="muted">${esc(p.detail)}</small></span><button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button></li>`;
+        box.innerHTML = `<p class="small"><b>Parts that fit</b> (${r.total}${Object.keys(S.req[b.fn] || {}).length ? " meeting the requirements" : ""})</p>
+          <input type="search" placeholder="Filter parts" value="${esc(q)}" aria-label="Filter parts" data-q>` +
+          (r.manufacturers.length ? r.manufacturers.map(m => `<p class="small bk-mfr"><b>${esc(m.manufacturer)}</b> · best ${m.best.length} of ${m.total}</p>
+            <ul class="bk-parts">${m.best.map(li).join("")}</ul>
+            ${m.total > m.best.length ? `<details><summary class="small">All ${m.total} ${esc(m.manufacturer)} parts</summary><ul class="bk-parts">${m.all.map(li).join("")}</ul></details>` : ""}`).join("")
+            : `<p class="small uc-error">No part meets these requirements. Untick one, or record the gap as feedback.</p>`);
         const inp = box.querySelector("[data-q]");
         inp.oninput = () => { clearTimeout(inp._t); inp._t = setTimeout(() => draw(inp.value), 250); };
         box.querySelectorAll("[data-pick]").forEach(btn => (btn.onclick = () => { b.part = btn.dataset.pick; changed(); showBlock(g, b); }));
@@ -209,6 +241,7 @@
       panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in Cross List. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
         <a href="/requests">Add a request</a> if a specific part should be crossed.</p>`;
     }
+    bindReq(panel, () => showBlock(g, b));
     panel.querySelectorAll("[data-f]").forEach(el => (el.onchange = () => { b[el.dataset.f] = el.dataset.f === "qty" ? Math.max(1, +el.value || 1) : el.value; changed(); }));
     panel.querySelector('[data-act="remove"]').onclick = () => { g.blocks = g.blocks.filter(x => x !== b); sel = {group: g.id}; changed(); showGroup(g); };
     panel.querySelector('[data-act="unpick"]')?.addEventListener("click", () => { b.part = null; changed(); showBlock(g, b); });
@@ -242,6 +275,39 @@
       panel.innerHTML = `<p class="small muted">Group deleted.</p>`;
     };
   }
+
+  // all requirement questions of the functions in the diagram, one place
+  function showRequirements() {
+    openPanel();
+    const fns = [...new Set(S.groups.flatMap(g => g.blocks.map(b => b.fn)))].filter(fn => (REQ[fn] || []).length);
+    panel.innerHTML = `<h3>Requirements</h3><p class="small muted">Answer only what the design needs; unanswered questions do not filter. Each answer narrows the parts for every block of that function.</p>` +
+      (fns.length ? fns.map(fn => `<details class="req-box"${Object.keys(S.req[fn] || {}).length ? " open" : ""}><summary class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} parts fit</span></summary>${reqControls(fn)}</details>`).join("")
+        : `<p class="small muted">No block in this diagram has requirement questions yet (they come with functions that have parts in Cross List).</p>`);
+    bindReq(panel, showRequirements);
+  }
+  $("#bk-req").onclick = showRequirements;
+
+  // feedback on the diagram or the selected block / group, kept for discussion
+  async function showFeedback() {
+    openPanel();
+    const g = sel && group(sel.group), b = g && sel.block && blockOf(g, sel.block);
+    const target = b ? `${g.label} / ${b.label || fnOf(b).label}` : g ? g.label : "";
+    const list = configId ? await (await fetch(`/api/blocks/feedback?diagram_id=${configId}`)).json() : [];
+    panel.innerHTML = `<h3>Feedback</h3><p class="small muted">Saved for discussion; nothing in the diagram or the templates changes until we agree on it. All feedback: <a href="/blocks/feedback">Block diagrams → Feedback</a>.</p>
+      <label class="small">About <input data-fb-target value="${esc(target)}" placeholder="whole diagram"></label>
+      <textarea data-fb-msg rows="4" placeholder="e.g. traction inverter needs an isolated temperature sensing block; Si823x lacks DESAT"></textarea>
+      <div class="row"><button type="button" class="small-btn" data-fb-save>Save feedback</button><span class="small muted" data-fb-st></span></div>
+      ${list.length ? `<p class="small"><b>On this diagram</b></p><ul>${list.map(f => `<li class="small">[${esc(f.status)}] ${f.target ? `<b>${esc(f.target)}</b>: ` : ""}${esc(f.message)} <span class="muted">${esc(f.created)}</span></li>`).join("")}</ul>` : ""}`;
+    panel.querySelector("[data-fb-save]").onclick = async () => {
+      const msg = panel.querySelector("[data-fb-msg]").value.trim();
+      if (!msg) return;
+      const res = await fetch("/api/blocks/feedback", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({diagram_id: configId, diagram_name: $("#bk-name").value || (tpl && tpl.name) || "", target: panel.querySelector("[data-fb-target]").value, message: msg})});
+      panel.querySelector("[data-fb-st]").textContent = res.ok ? "Saved" : `Not saved (${res.status})`;
+      if (res.ok) setTimeout(showFeedback, 400);
+    };
+  }
+  $("#bk-feedback").onclick = showFeedback;
 
   // add a function to a group (the selected one, or a group for its category)
   function addFunction(fn, g) {
@@ -309,5 +375,5 @@
   });
 
   if (!design.data && tpl) dirty = true;
-  render();
+  if (Object.keys(S.req).length) refreshCounts(); else render();
 })();

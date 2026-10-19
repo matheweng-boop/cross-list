@@ -1,4 +1,4 @@
-# Cross List
+# BizDev (formerly Cross List)
 
 Browser-based cross-reference tool for isolation semiconductors. Skyworks power
 isolation parts are the reference; candidates come from Novosense, TI, ADI, Diodes

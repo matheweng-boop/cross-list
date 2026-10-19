@@ -403,3 +403,35 @@ class BusinessAssumption(Base):
     scenario: Mapped[str | None] = mapped_column(String(20))  # base | low | high
     confidence: Mapped[str | None] = mapped_column(String(10))  # high | medium | low
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class OpportunityDecision(Base):
+    """A person's call on a missing function in the Opportunity explorer: keep it under consideration, or set it
+    aside for now (kept in a separate list, with a note, and can be restored). The fit score itself is unchanged."""
+
+    __tablename__ = "opportunity_decisions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fn: Mapped[str] = mapped_column(String(80), unique=True)
+    status: Mapped[str] = mapped_column(String(12))  # keep | set_aside
+    note: Mapped[str | None] = mapped_column(String(500))
+    author: Mapped[str | None] = mapped_column(String(100))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ShortlistItem(Base):
+    """A business-case candidate: pushed from the portfolio pages (explorer, cross-sell, markets, customers) or from
+    New ideas. "Start analysing" opens a business case from it and links the two."""
+
+    __tablename__ = "shortlist_items"
+    __table_args__ = (UniqueConstraint("origin", "key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    origin: Mapped[str] = mapped_column(String(20))  # explorer | crosssell | markets | customers | idea
+    key: Mapped[str] = mapped_column(String(200))  # function id, market / customer id, or the idea text
+    title: Mapped[str] = mapped_column(String(200))
+    detail: Mapped[str | None] = mapped_column(Text)
+    fn: Mapped[str | None] = mapped_column(String(80))
+    note: Mapped[str | None] = mapped_column(Text)
+    case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

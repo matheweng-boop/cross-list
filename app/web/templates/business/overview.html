@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import pct, company_switch, crowd, about, term %}
-{% block title %}Opportunities – Cross List{% endblock %}
+{% block title %}Opportunities – BizDev{% endblock %}
 {% block content %}
 <h1>Opportunities overview</h1>
 <div class="scope-bar small">
@@ -21,19 +21,13 @@
     <small>ASP known for {{ ov.asp_known }} of {{ ov.asp_needed }} functions · volume for {{ ov.vol_known }} of {{ ov.apps }} architectures; missing values stay unknown</small></div>
 </div>
 
-<h2>Top missing functions <span class="small muted">· by architectures that need them</span></h2>
-<div class="table-wrap"><table class="striped">
-  <thead><tr><th scope="col">Missing function</th><th scope="col">Needed in<br><small class="muted">of {{ ov.apps }} architectures</small></th><th scope="col">{{ term('door_opener', 'Door openers') }}<br><small class="muted">already use our parts</small></th><th scope="col">{{ term('socket', 'Sockets') }}</th><th scope="col">{{ term('competition', 'Competition') }}</th></tr></thead>
-  <tbody>{% for e in top_gaps %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td>
-    <td>{{ e.reach }}</td><td>{{ e.adjacent }} of {{ e.reach }}</td><td>{{ e.positions }}</td><td>{{ crowd(e.competition, crowding_label) }}</td></tr>{% endfor %}</tbody>
-</table></div>
-<p class="small"><a href="/business/explorer?co={{ co }}&scope={{ scope }}">All missing functions in the Opportunity explorer →</a></p>
+<p class="small"><a href="/business/explorer?co={{ co }}&scope={{ scope }}">Missing functions: sort and filter them in the Opportunity explorer →</a></p>
 
 {{ about('overview') }}
 <details class="bo-help"><summary class="small"><b>Analysis pipeline and status</b></summary>
 <ol class="bo-pipeline">
   <li class="done"><b>1 · Normalize architectures</b><span>{{ ov.apps }} reference architectures, {{ ov.positions }} sockets on {{ ov.functions }} normalized functions. {{ ov.metrics.unknown }} sockets on unknown functions.</span><a href="/blocks">Application library</a></li>
-  <li class="done"><b>2 · Match existing products</b><span>Each socket checked for {{ co_label }} parts in Cross List (catalogue + full-parameter families). Electrical requirements per application are not applied: “Portfolio” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Portfolio coverage</a></li>
+  <li class="done"><b>2 · Match existing products</b><span>Each socket checked for {{ co_label }} parts in BizDev (catalogue + full-parameter families). Electrical requirements per application are not applied: “Portfolio” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Portfolio coverage</a></li>
   <li class="done"><b>3 · Identify gaps</b><span>{{ ov.metrics.gap }} gap and {{ ov.metrics.competitor }} competitor-only sockets; {{ ov.metrics.na }} sockets are chips we do not make, left out of coverage.</span><a href="/business/explorer?co={{ co }}">Opportunity explorer</a></li>
   <li class="todo"><b>4 · Cluster compatible opportunities</b><span>Needs electrical requirements per socket (voltage, current, qualification…). Today gaps are grouped by function only.</span></li>
   <li class="part"><b>5 · Rank product concepts</b><span>Reach, door openers, path to product, competition and trend; TAM joins as ASPs and volumes are entered.</span><a href="/business/data?co={{ co }}">Commercial inputs</a></li>

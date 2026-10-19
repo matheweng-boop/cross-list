@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch, about, srccheck %}
-{% block title %}Where to hunt – Business opportunity – Cross List{% endblock %}
+{% from "business/_common.html" import company_switch, about, srccheck, push with context %}
+{% block title %}Where to hunt – Business opportunity – BizDev{% endblock %}
 {% block content %}
 <h1>Customers <small class="muted">· where to hunt</small></h1>
 <p class="subtitle muted">Which companies build the systems in our applications: the design teams to approach. Pick a function to see who designs
@@ -15,11 +15,12 @@
 <h2>Companies building systems that need {{ fns[fn].label }} <span class="small muted">· {{ by_fn|length }}</span></h2>
 {% if by_fn %}
 <div class="table-wrap"><table class="striped bo-hunt">
-  <thead><tr><th>Company</th><th>Type</th><th>Region</th><th>Relevant applications</th><th>Segments</th></tr></thead>
+  <thead><tr><th>Company</th><th>Type</th><th>Region</th><th>Relevant applications</th><th>Segments</th><th></th></tr></thead>
   <tbody>{% for c in by_fn %}<tr><td><b>{{ c.name }}</b>{% if c.note %}<br><small class="muted">{{ c.note }}</small>{% endif %}</td>
     <td><span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}">{{ c.type }}</span></td><td class="small">{{ c.region }}</td>
     <td>{{ c.apps|length }}<br><small class="muted" title="{{ c.apps|join(', ') }}">{{ c.apps[:2]|join('; ') }}{{ ' …' if c.apps|length > 2 }}</small></td>
-    <td class="small">{{ c.segments|join(', ') }}</td></tr>{% endfor %}</tbody>
+    <td class="small">{{ c.segments|join(', ') }}</td>
+    <td>{{ push('customers', fn ~ ':' ~ c.name, fns[fn].label ~ ' for ' ~ c.name, c.name ~ ' (' ~ c.type ~ ', ' ~ c.region ~ ') builds ' ~ c.apps|length ~ ' relevant applications', fn, (fn ~ ':' ~ c.name) in shortlisted) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="muted">No segment with known companies matches the applications that need this function yet.</p>{% endif %}
 {% endif %}

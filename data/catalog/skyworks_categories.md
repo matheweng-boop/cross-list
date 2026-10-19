@@ -1,7 +1,7 @@
 # Skyworks category tree (skyworksinc.com, collected 2026-10-19)
 
 Companion to `data/catalog/skyworks_parts.yaml` (4,443 parts). Counts below are parts in that file;
-"Function id(s)" is the Cross List block-diagram function each category maps to (count per id when a
+"Function id(s)" is the BizDev block-diagram function each category maps to (count per id when a
 category splits). See the YAML header for how the data was collected.
 
 ## Summary by top category

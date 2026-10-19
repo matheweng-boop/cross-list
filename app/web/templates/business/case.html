@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import crowd %}
-{% block title %}{{ title or 'New case' }} – Case analysis – Cross List{% endblock %}
+{% block title %}{{ title or 'New case' }} – Case analysis – BizDev{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/cases">← All cases</a></p>
 <h1>{{ title or 'New case' }}</h1>
@@ -14,6 +14,7 @@
   <h2 id="inputs">1 · Inputs and features</h2>
   <form method="post" action="{{ '/business/cases/' ~ case.id if case else '/business/cases' }}" class="case-form">
     <input type="hidden" name="act" value="inputs">
+    {% if shortlist %}<input type="hidden" name="shortlist" value="{{ shortlist }}">{% endif %}
     <label>Title <input name="title" value="{{ title }}" required placeholder="e.g. Automotive 3 A PoL LDO"></label>
     <label>Function <select name="fn"><option value="">none (free topic)</option>
       {% for k, flabel in fn_choices %}<option value="{{ k }}"{{ ' selected' if k == fn }}>{{ flabel }}</option>{% endfor %}</select></label>
@@ -26,7 +27,7 @@
 </section>
 
 <aside>
-  <h2>What Cross List knows</h2>
+  <h2>What BizDev knows</h2>
   {% if ctx %}
   <ul class="small case-facts">
     <li><b>{{ ctx.label }}</b> · {{ ctx.portfolio }}: {{ bo_status_help[ctx.status] }}</li>
@@ -47,8 +48,8 @@
 
 {% if case %}
 <h2 id="brief">2 · Analysis brief for the AI</h2>
-<p class="small muted">The brief combines your inputs with the Cross List facts. Copy it into Claude (or another assistant with web research) and paste the
-  answer below. Cross List itself sends nothing to any outside service.</p>
+<p class="small muted">The brief combines your inputs with the BizDev facts. Copy it into Claude (or another assistant with web research) and paste the
+  answer below. BizDev itself sends nothing to any outside service.</p>
 <div class="case-brief-tools"><button type="button" class="small-btn" id="case-copy">Copy brief</button>
   <a class="small" href="/business/cases/{{ case.id }}/brief.md" download="case-{{ case.id }}-brief.md">Download .md</a> <span id="case-copied" class="small muted"></span></div>
 <pre class="case-brief" id="case-brief">{{ brief }}</pre>

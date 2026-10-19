@@ -1,5 +1,5 @@
 // Block-diagram generator. A diagram is groups (dotted frames on a grid) holding blocks; each block is a
-// system function that a Skyworks part in Cross List may fill. State (saved as JSON):
+// system function that a Skyworks part in BizDev may fill. State (saved as JSON):
 //   groups: [{id, label, col, row, w, blocks: [{id, fn, label, qty, part}]}]
 //   links:  [[fromGroup, toGroup, label]]
 (() => {
@@ -41,10 +41,10 @@
     const n = COUNTS[b.fn];
     return n === null ? "ext" : n ? "have" : "opp";
   }
-  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Opportunity: no Skyworks or Qorvo part in Cross List yet", ext: "Customer part"};
+  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Opportunity: no Skyworks or Qorvo part in BizDev yet", ext: "Customer part"};
 
   // ---- layout
-  const CELL = 250, GAP_X = 40, GAP_Y = 36, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
+  const CELL = 250, GAP_X = 56, GAP_Y = 52, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
   function layout() {
     const rects = {};
     const rowH = {};
@@ -67,30 +67,103 @@
       r.y = rowY[g.row];
       W = Math.max(W, r.x + r.w + 20);
     }
-    return {rects, W, H: Math.max(260, y)};
+    return {rects, W, H: Math.max(260, y), rowY, rowH, rows: rowsSorted};
   }
 
-  // point on the edge of rect a towards rect b
-  function edge(a, b) {
-    const ax = a.x + a.w / 2, ay = a.y + a.h / 2, bx = b.x + b.w / 2, by = b.y + b.h / 2;
-    const dx = bx - ax, dy = by - ay;
-    const s = Math.min(Math.abs((a.w / 2) / (dx || 1e-6)), Math.abs((a.h / 2) / (dy || 1e-6)));
-    return {x: ax + dx * s, y: ay + dy * s};
+  // ---- connections, schematic style: right angles only, never through a frame.
+  //   same row, nothing in between: side to side (straight when the ports line up)
+  //   same row with frames in between: down into the gap below the row, along it, back up
+  //   neighbouring rows: bottom to top through the gap between the rows
+  //   rows further apart: through the gap next to each end and a free column gap between them
+  // Several connections on one side get spread-out ports; connections in the same gap get their own lane.
+  function routes(L) {
+    const R = id => L.rects[id], rowIdx = Object.fromEntries(L.rows.map((r, i) => [r, i]));
+    const gapBelow = r => [L.rowY[r] + L.rowH[r], L.rowY[r] + L.rowH[r] + GAP_Y];
+    const gapAbove = r => [Math.max(2, L.rowY[r] - GAP_Y), L.rowY[r]];
+    const maxCol = Math.max(0, ...S.groups.map(g => g.col + (g.w || 1)));
+    const colGaps = [6, ...Array.from({length: maxCol + 1}, (_, k) => 20 + (k + 1) * (CELL + GAP_X) - GAP_X / 2)];
+    const items = [];
+    S.links.forEach(([a, b, label], i) => {
+      const ga = group(a), gb = group(b), ra = R(a), rb = R(b);
+      if (!ra || !rb || a === b) return;
+      const it = {i, a, b, label, ra, rb};
+      if (ga.row === gb.row) {
+        const [x0, x1] = ra.x < rb.x ? [ra.x + ra.w, rb.x] : [rb.x + rb.w, ra.x];
+        const between = S.groups.some(g => g !== ga && g !== gb && g.row === ga.row && R(g.id).x < x1 && R(g.id).x + R(g.id).w > x0);
+        if (!between) { it.kind = "H"; const right = rb.x > ra.x; it.sa = right ? "r" : "l"; it.sb = right ? "l" : "r"; }
+        else { it.kind = "U"; it.sa = it.sb = "b"; it.gap = gapBelow(ga.row); }
+      } else {
+        const down = gb.row > ga.row;
+        it.sa = down ? "b" : "t"; it.sb = down ? "t" : "b";
+        const ia = rowIdx[ga.row], ib = rowIdx[gb.row];
+        if (Math.abs(ia - ib) === 1) { it.kind = "V"; it.gap = down ? gapBelow(ga.row) : gapAbove(ga.row); }
+        else {
+          it.kind = "V5";
+          it.gapA = down ? gapBelow(ga.row) : gapAbove(ga.row);
+          it.gapB = down ? gapAbove(gb.row) : gapBelow(gb.row);
+          const lo = Math.min(ia, ib), hi = Math.max(ia, ib);
+          const blockers = S.groups.filter(g => rowIdx[g.row] > lo && rowIdx[g.row] < hi).map(g => R(g.id));
+          const free = colGaps.filter(x => !blockers.some(f => x >= f.x - 4 && x <= f.x + f.w + 4));
+          const mid = (ra.x + ra.w / 2 + rb.x + rb.w / 2) / 2;
+          it.gx = free.length ? free.reduce((best, x) => Math.abs(x - mid) < Math.abs(best - mid) ? x : best) : 6;
+        }
+      }
+      items.push(it);
+    });
+    // ports, spread along each side in the order of where the other end is
+    const sides = {};
+    for (const it of items) {
+      (sides[`${it.a}|${it.sa}`] ||= []).push({it, end: "a", other: it.rb});
+      (sides[`${it.b}|${it.sb}`] ||= []).push({it, end: "b", other: it.ra});
+    }
+    for (const [key, list] of Object.entries(sides)) {
+      const side = key.split("|")[1], r = list[0].end === "a" ? list[0].it.ra : list[0].it.rb;
+      const vert = side === "l" || side === "r";
+      list.sort((p, q) => vert ? (p.other.y + p.other.h / 2) - (q.other.y + q.other.h / 2) : (p.other.x + p.other.w / 2) - (q.other.x + q.other.w / 2));
+      list.forEach((p, k) => {
+        const f = (k + 1) / (list.length + 1);
+        p.it[p.end === "a" ? "pa" : "pb"] = vert ? {x: side === "r" ? r.x + r.w : r.x, y: r.y + HEAD + (r.h - HEAD) * f}
+          : {x: r.x + r.w * (0.1 + 0.8 * f), y: side === "b" ? r.y + r.h : r.y};
+      });
+    }
+    // lanes in shared gaps
+    const lanes = {}, lane = (key, it, slot) => (lanes[key] ||= []).push([it, slot]);
+    for (const it of items) {
+      if (it.kind === "H") lane(`h${Math.round(Math.min(it.pa.x, it.pb.x))}`, it, "mx");
+      else if (it.kind === "V" || it.kind === "U") lane(`g${it.gap[0]}`, it, "my");
+      else { lane(`g${it.gapA[0]}`, it, "ya"); lane(`g${it.gapB[0]}`, it, "yb"); lane(`c${it.gx}`, it, "cx"); }
+    }
+    for (const [key, list] of Object.entries(lanes)) list.forEach(([it, slot], k) => {
+      const f = (k + 1) / (list.length + 1);
+      if (slot === "mx") { const x0 = Math.min(it.pa.x, it.pb.x), x1 = Math.max(it.pa.x, it.pb.x); it.mx = x0 + (x1 - x0) * f; }
+      else if (slot === "cx") it.cx = it.gx + (k - (list.length - 1) / 2) * 7;
+      else { const g = slot === "my" ? it.gap : slot === "ya" ? it.gapA : it.gapB; it[slot] = g[0] + (g[1] - g[0]) * f; }
+    });
+    for (const it of items) {
+      const {pa, pb} = it;
+      if (it.kind === "H") {
+        it.d = Math.abs(pa.y - pb.y) < 1 ? `M${pa.x} ${pa.y}H${pb.x}` : `M${pa.x} ${pa.y}H${it.mx}V${pb.y}H${pb.x}`;
+        it.lx = (pa.x + pb.x) / 2; it.ly = Math.min(pa.y, pb.y) - 5;
+      } else if (it.kind === "V" || it.kind === "U") {
+        it.d = Math.abs(pa.x - pb.x) < 1 && it.kind === "V" ? `M${pa.x} ${pa.y}V${pb.y}` : `M${pa.x} ${pa.y}V${it.my}H${pb.x}V${pb.y}`;
+        it.lx = (pa.x + pb.x) / 2; it.ly = it.my - 4;
+      } else {
+        it.d = `M${pa.x} ${pa.y}V${it.ya}H${it.cx}V${it.yb}H${pb.x}V${pb.y}`;
+        it.lx = it.cx + 4; it.ly = (it.ya + it.yb) / 2; it.lanchor = "start";
+      }
+    }
+    return items;
   }
 
   function render() {
     const L = layout(), parts = [];
     parts.push(`<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3a3f47"/></marker></defs>`);
-    for (const [a, b, label] of S.links) {
-      const ra = L.rects[a], rb = L.rects[b];
-      if (!ra || !rb) continue;
-      const p = edge(ra, rb), q = edge(rb, ra);
-      parts.push(`<line class="link" x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}"/>`);
-      if (label) parts.push(`<text class="link-label" x="${(p.x + q.x) / 2}" y="${(p.y + q.y) / 2 - 4}" text-anchor="middle">${esc(label)}</text>`);
-    }
+    const R = routes(L);
+    for (const it of R) parts.push(`<path class="link" d="${it.d}"/>`);
+    for (const it of R) if (it.label) parts.push(`<text class="link-label" x="${it.lx}" y="${it.ly}" text-anchor="${it.lanchor || "middle"}">${esc(it.label)}</text>`);
     for (const g of S.groups) {
       const r = L.rects[g.id];
-      parts.push(`<g class="grp${sel && sel.group === g.id && !sel.block ? " sel" : ""}"><rect class="frame" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"/>` +
+      parts.push(`<g class="grp${sel && sel.group === g.id && !sel.block ? " sel" : ""}" data-gid="${g.id}"><rect class="frame" data-drag-group="${g.id}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"><title>Drag to move this frame</title></rect>` +
         `<text class="grp-title" data-group="${g.id}" x="${r.x + 8}" y="${r.y + 17}" tabindex="0" role="button">${esc(g.label)}</text>`);
       g.blocks.forEach((b, i) => {
         const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + HEAD + Math.floor(i / r.cols) * (BH + BG);
@@ -149,7 +222,7 @@
     const svg = $("#bk-svg");
     let drag = null;
     svg.addEventListener("pointerdown", e => {
-      if (!view || e.target.closest("[data-block], [data-group]")) return;
+      if (!view || e.target.closest("[data-block], [data-group], [data-drag-group]")) return;
       drag = {x: e.clientX, y: e.clientY, v: {...view}, s: view.w / svg.clientWidth};
       svg.setPointerCapture(e.pointerId);
     });
@@ -171,7 +244,7 @@
         <div class="tile"><b>${by.part}</b>parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks / Qorvo can fill</div>
         <div class="tile"><b>${by.opp}</b>opportunities</div><div class="tile"><b>${by.ext}</b>customer parts</div></div>` +
       (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
-      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
+      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in BizDev yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
   }
 
   // ---- legend: one button per status; a pressed button is highlighted, the others are greyed out
@@ -188,7 +261,7 @@
   const chipKind = t => /NRND|obsolete|discontinued|no new designs/i.test(t) ? "risk" : /automotive|AEC/i.test(t) ? "auto"
     : /^(QFN|DFN|SOIC|SSOP|QSOP|LGA|BGA|MLPD|SOT|TSSOP|WLCSP|CSP|SC-?70|SSO|[A-Z]+-\d+)/i.test(t) || /\d+(\.\d+)?\s*[x×]\s*\d/.test(t) ? "pkg"
     : /(kVrms|GHz|MHz|\bA\b|\bV\b|Mbps|dB|ch\b|kV)/i.test(t) ? "spec" : /^(SP\dT|DPDT|\dP\dT|\d+\/\d+|S\dP\dT)/i.test(t) ? "cfg" : "other";
-  const partRow = (p, pick) => `<li class="pt-row"><div class="pt-main"><a class="pt-mpn" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${pick ? `<button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button>` : ""}</div>
+  const partRow = (p, pick, chosen) => `<li class="pt-row${chosen ? " pt-chosen" : ""}"><div class="pt-main"><a class="pt-mpn" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a>${p.pins ? `<span class="pt-chip k-sch" title="Pin list in BizDev: can be drawn as a schematic">schematic</span>` : ""}${pick ? (chosen ? `<span class="pt-picked">✓ chosen</span>` : `<button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button>`) : ""}</div>
     ${(() => {
       const bits = String(p.detail || "").split(" · ").filter(Boolean).flatMap(t => (/^[A-Z0-9_]+( [A-Z0-9_]+)+$/.test(t) ? t.split(" ") : [t])), long = bits.filter(t => t.length > 40), short = bits.filter(t => t.length <= 40);
       return `<div class="pt-chips">${short.map(t => `<span class="pt-chip k-${chipKind(t)}">${esc(t)}</span>`).join("")}${p.risk ? '<span class="pt-chip k-risk">NRND / obsolete</span>' : ""}</div>` +
@@ -204,11 +277,26 @@
     const box = below();
     if (!box) return;
     const fns = [...new Set(S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have" || status(b) === "part").map(b => b.fn))];
-    if (!fns.length) { box.innerHTML = `<h3>Suggested parts</h3><p class="small muted">No block in this diagram has Skyworks or Qorvo parts in Cross List yet.</p>`; return; }
+    if (!fns.length) { box.innerHTML = `<h3>Suggested parts</h3><p class="small muted">No block in this diagram has Skyworks or Qorvo parts in BizDev yet.</p>`; return; }
     const open = renderBelow.open || (renderBelow.open = new Set());
-    box.innerHTML = `<h3>Suggested parts <span class="small muted">· open a block for its most likely parts per manufacturer, or click it in the diagram</span></h3>
+    const unpicked = S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have").length;
+    box.innerHTML = `<h3>Suggested parts <span class="small muted">· open a block for its most likely parts per manufacturer; “use” puts the part in the diagram</span></h3>
+      <div class="row bk-pick-bar"><button type="button" class="small-btn" id="bk-pick-all"${unpicked ? "" : " disabled"}>Pick the best match for ${unpicked ? `${unpicked} block${unpicked === 1 ? "" : "s"}` : "every block"}</button>
+        <label class="small"><input type="checkbox" id="bk-pick-pins"${renderBelow.pins === false ? "" : " checked"}> prefer parts that can be drawn as a schematic</label>
+        <button type="button" class="outline secondary small-btn" id="bk-pick-clear"${S.groups.some(g => g.blocks.some(b => b.part)) ? "" : " disabled"}>Clear all picks</button></div>
+      ${renderBelow.note ? `<p class="small pt-applied">${renderBelow.note}</p>` : ""}
       <div class="bk-sugg">${fns.map(fn => `<details class="bk-sugg-fn" data-fn="${fn}"${open.has(fn) ? " open" : ""}><summary class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} fit${Object.keys(S.req[fn] || {}).length ? " the requirements" : ""}</span></summary><div class="bk-sugg-body"></div></details>`).join("")}</div>`;
     box.querySelectorAll(".bk-sugg-fn").forEach(d => {
+      // "use": the part goes into every block of this function
+      const bindPicks = (el, r) => el.querySelectorAll("[data-pick]").forEach(btn => (btn.onclick = async () => {
+        const p = r.manufacturers.flatMap(m => [...m.best, ...m.all]).find(x => x.mpn === btn.dataset.pick);
+        S.groups.flatMap(g => g.blocks).filter(b => b.fn === d.dataset.fn).forEach(b => (b.part = btn.dataset.pick));
+        const notes = applyPick(d.dataset.fn, p && p.implies);
+        renderBelow.note = `${esc(btn.dataset.pick)} → ${esc(FN[d.dataset.fn].label)}${notes.length ? ` · applied: ${notes.map(esc).join(" · ")}` : ""}`;
+        d.querySelector(".bk-sugg-body").dataset.loaded = "";
+        changed();
+        if (notes.length) await refreshCounts();
+      }));
       const load = async () => {
         const body = d.querySelector(".bk-sugg-body");
         if (body.dataset.loaded === JSON.stringify(S.req[d.dataset.fn] || {})) return;
@@ -216,7 +304,8 @@
         let r;
         try { r = await parts(d.dataset.fn, "", true); } catch (e) { body.innerHTML = `<p class="small uc-error">Could not load the parts. <button type="button" class="link-btn" data-retry>Try again</button></p>`; body.querySelector("[data-retry]").onclick = () => { body.dataset.loaded = ""; load(); }; return; }
         body.dataset.loaded = JSON.stringify(S.req[d.dataset.fn] || {});
-        const li = p => partRow(p, false);
+        const fnBlocks = S.groups.flatMap(g => g.blocks).filter(b => b.fn === d.dataset.fn);
+        const li = p => partRow(p, true, fnBlocks.length && fnBlocks.every(b => b.part === p.mpn));
         body.innerHTML = r.manufacturers.map(m => `<p class="small bk-mfr">${esc(m.manufacturer)}</p><ul class="bk-parts">${m.best.map(li).join("")}</ul>
           ${m.total > m.best.length ? `<details class="bk-more"><summary class="small">More ${esc(m.manufacturer)} (${m.total - m.best.length})</summary><ul class="bk-parts"><li class="small muted">Loading…</li></ul></details>` : ""}`).join("") || `<p class="small uc-error">None meets the requirements.</p>`;
         body.querySelectorAll(".bk-more").forEach((more, i) => more.addEventListener("toggle", async () => {
@@ -224,11 +313,46 @@
           more.dataset.loaded = "1";
           const full = await parts(d.dataset.fn), m = full.manufacturers[i];
           more.querySelector("ul").innerHTML = m ? m.all.slice(m.best.length, 60).map(li).join("") : "";
+          bindPicks(more, full);
         }));
+        bindPicks(body, r);
       };
       d.addEventListener("toggle", () => { d.open ? (open.add(d.dataset.fn), load()) : open.delete(d.dataset.fn); });
       if (d.open) load();
     });
+    box.querySelector("#bk-pick-pins").onchange = e => { renderBelow.pins = e.target.checked; };
+    box.querySelector("#bk-pick-all").onclick = pickAll;
+    box.querySelector("#bk-pick-clear").onclick = () => {
+      if (!confirm("Remove the chosen part from every block?")) return;
+      S.groups.forEach(g => g.blocks.forEach(b => (b.part = null)));
+      renderBelow.note = "All picks cleared.";
+      changed();
+    };
+  }
+  // quick run-down: the best-ranked part for every block that has candidates and no part yet
+  async function pickAll() {
+    const btn = $("#bk-pick-all");
+    btn.disabled = true; btn.textContent = "Picking…";
+    const pins = renderBelow.pins !== false;
+    const todo = S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have");
+    const fns = [...new Set(todo.map(b => b.fn))];
+    const picked = [], none = [];
+    let applied = [];
+    for (const fn of fns) {
+      let r;
+      try { r = await parts(fn, "", true); } catch (e) { none.push(FN[fn].label); continue; }
+      const ranked = r.manufacturers.flatMap(m => m.best);
+      const best = (pins && ranked.find(p => p.pins)) || r.manufacturers[0]?.best[0];
+      if (!best) { none.push(FN[fn].label); continue; }
+      todo.filter(b => b.fn === fn).forEach(b => (b.part = best.mpn));
+      applied = applied.concat(applyPick(fn, best.implies));
+      picked.push(`${FN[fn].label}: ${best.mpn}${best.pins ? "" : " (no pin list)"}`);
+    }
+    renderBelow.note = `Picked ${picked.length} part${picked.length === 1 ? "" : "s"}: ${picked.map(esc).join(" · ")}` +
+      (none.length ? `<br>No part meets the requirements: ${none.map(esc).join(", ")}` : "") +
+      (applied.length ? `<br>Applied: ${applied.map(esc).join(" · ")}` : "") + `<br><span class="muted">Change any pick by opening its block below or clicking it in the diagram.</span>`;
+    changed();
+    if (applied.length) await refreshCounts();
   }
 
   // ---- side panel
@@ -339,7 +463,7 @@
       };
       draw("");
     } else if (st === "opp") {
-      panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in Cross List. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
+      panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in BizDev. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
         <a href="/requests">Add a request</a> if a specific part should be crossed.</p>`;
     }
     bindReq(panel, () => showBlock(g, b));
@@ -385,7 +509,7 @@
     if (!qs.length) return "";
     const n = Object.keys(S.qa).length;
     return `<details class="req-box" open><summary class="small"><b>Design questions</b> <span class="muted">· ${n} of ${qs.length} answered</span></summary>
-      <p class="small muted">From the reference documents below. <span class="lg lg-have">narrows</span> = the answer filters parts; <span class="lg lg-ext">recorded</span> = kept with the design (no matching parameter in Cross List yet).</p>
+      <p class="small muted">From the reference documents below. <span class="lg lg-have">narrows</span> = the answer filters parts; <span class="lg lg-ext">recorded</span> = kept with the design (no matching parameter in BizDev yet).</p>
       ${qs.map(q => {
         const fl = filterLabel(q);
         return `<label class="small req-row" title="${esc(q.source || "")}">${esc(q.question)}
@@ -425,7 +549,7 @@
     panel.innerHTML = `<h3>Requirements</h3><p class="small muted">Answer only what the design needs; unanswered questions do not filter. Each answer narrows the parts for every block of that function.</p>` +
       questionControls() + (fns.length ? `<p class="small"><b>Per function</b></p>` : "") +
       (fns.length ? fns.map(fn => `<details class="req-box"${Object.keys(S.req[fn] || {}).length ? " open" : ""}><summary class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} parts fit</span></summary>${reqControls(fn)}</details>`).join("")
-        : `<p class="small muted">No block in this diagram has requirement questions yet (they come with functions that have parts in Cross List).</p>`);
+        : `<p class="small muted">No block in this diagram has requirement questions yet (they come with functions that have parts in BizDev).</p>`);
     bindReq(panel, showRequirements);
     bindQuestions(panel, showRequirements);
   }
@@ -574,8 +698,117 @@
     showBlock(g, b);
   }
 
+  // ---- drag and drop: frames snap to the grid (others in that row move aside); blocks move to the frame they are
+  // dropped on, at the drop position. A press without movement stays a click (select).
+  let dnd = null, dragged = false;
+  const svgPt = e => { const svg = $("#bk-svg"), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+  const frameAt = (pt, skip) => S.groups.find(g => { const r = lastL.rects[g.id]; return g.id !== skip && r && pt.x >= r.x && pt.x <= r.x + r.w && pt.y >= r.y && pt.y <= r.y + r.h; });
+  let undoLayout = null;
+  const snapshot = () => JSON.stringify(S.groups.map(g => ({id: g.id, col: g.col, row: g.row, w: g.w, blocks: g.blocks.map(b => b.id)})));
+  function restore(snap) {
+    const all = Object.fromEntries(S.groups.flatMap(g => g.blocks).map(b => [b.id, b]));
+    for (const x of JSON.parse(snap)) { const g = group(x.id); if (!g) continue; Object.assign(g, {col: x.col, row: x.row, w: x.w}); g.blocks = x.blocks.map(id => all[id]).filter(Boolean); }
+  }
+  const svgEl = $("#bk-svg");
+  svgEl.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || !lastL) return;
+    const blk = e.target.closest("[data-block]");
+    const frm = !blk && e.target.closest("[data-drag-group], .grp-title");
+    if (!blk && !frm) return;
+    const gid = blk ? blk.dataset.group : (frm.dataset.dragGroup || frm.dataset.group);
+    const el = blk || svgEl.querySelector(`g.grp[data-gid="${CSS.escape(gid)}"]`);
+    dnd = {kind: blk ? "block" : "group", gid, bid: blk && blk.dataset.block, start: svgPt(e), el, moved: false, id: e.pointerId};
+  });
+  svgEl.addEventListener("pointermove", e => {
+    if (!dnd) return;
+    const p = svgPt(e), dx = p.x - dnd.start.x, dy = p.y - dnd.start.y;
+    if (!dnd.moved && Math.hypot(dx, dy) < 6) return;
+    if (!dnd.moved) { dnd.moved = true; svgEl.setPointerCapture(dnd.id); dnd.el.classList.add("dragging"); dnd.before = snapshot(); }
+    dnd.el.setAttribute("transform", `translate(${dx},${dy})`);
+    svgEl.querySelectorAll(".grp.drop").forEach(x => x.classList.remove("drop"));
+    if (dnd.kind === "block") { const t = frameAt(p); if (t) svgEl.querySelector(`g.grp[data-gid="${CSS.escape(t.id)}"]`)?.classList.add("drop"); }
+  });
+  svgEl.addEventListener("pointerup", e => {
+    if (!dnd) return;
+    const d = dnd; dnd = null;
+    if (!d.moved) return;
+    dragged = true; // the click that follows a drag does not select
+    const p = svgPt(e), L = lastL;
+    if (d.kind === "group") {
+      const g = group(d.gid), r = L.rects[g.id];
+      const x = r.x + (p.x - d.start.x), y = r.y + (p.y - d.start.y);
+      const col = Math.max(0, Math.round((x - 20) / (CELL + GAP_X)));
+      let row = L.rows.reduce((best, k) => Math.abs(L.rowY[k] - y) < Math.abs(L.rowY[best] - y) ? k : best, L.rows[0] ?? 0);
+      const last = L.rows[L.rows.length - 1];
+      if (last !== undefined && y > L.rowY[last] + L.rowH[last]) row = last + 1;
+      if (y < 0 && L.rows.length) row = L.rows[0] - 1;
+      const w = g.w || 1;
+      // make room: frames in the target row that overlap the new place move right
+      const others = S.groups.filter(o => o !== g && o.row === row).sort((a, b) => a.col - b.col);
+      let edgeCol = col + w;
+      for (const o of others) if (o.col + (o.w || 1) > col && o.col < edgeCol) { o.col = edgeCol; edgeCol = o.col + (o.w || 1); }
+      Object.assign(g, {col, row});
+      if (Math.min(...S.groups.map(o => o.row)) < 0) S.groups.forEach(o => (o.row += 1));
+    } else {
+      const from = group(d.gid), b = blockOf(from, d.bid), to = frameAt(p) || from;
+      const r = L.rects[to.id];
+      const c = Math.max(0, Math.min(r.cols - 1, Math.floor((p.x - r.x - PAD) / (BW + BG))));
+      const rr = Math.max(0, Math.floor((p.y - r.y - HEAD) / (BH + BG)));
+      from.blocks = from.blocks.filter(x => x !== b);
+      const idx = Math.min(to.blocks.length, rr * r.cols + c);
+      to.blocks.splice(idx, 0, b);
+      if (sel && sel.block === b.id) sel = {group: to.id, block: b.id};
+    }
+    undoLayout = d.before;
+    changed();
+    updateUndo();
+  });
+  const updateUndo = () => { const u = $("#bk-undo"); if (u) u.disabled = !undoLayout; };
+  // arrange: frames top to bottom in signal order (each frame one row below the frames that feed it), side by side
+  // within a row in the order of what feeds them; frames without connections go to the last row
+  function arrange() {
+    const before = snapshot();
+    const ids = S.groups.map(g => g.id), into = Object.fromEntries(ids.map(id => [id, []]));
+    for (const [a, b] of S.links) if (into[b] && into[a] && a !== b) into[b].push(a);
+    const linked = new Set(S.links.flatMap(([a, b]) => [a, b]));
+    const rank = {}, visiting = new Set();
+    const rk = id => {
+      if (rank[id] !== undefined) return rank[id];
+      if (visiting.has(id)) return 0; // a loop: break it here
+      visiting.add(id);
+      const r = into[id].length ? 1 + Math.max(...into[id].map(rk)) : 0;
+      visiting.delete(id);
+      return (rank[id] = r);
+    };
+    ids.forEach(rk);
+    const MAXW = 4; // columns per row before wrapping
+    const rows = [];
+    const byRank = {};
+    for (const g of S.groups) (byRank[linked.has(g.id) ? rank[g.id] : 1e6] ||= []).push(g);
+    const pos = {};
+    for (const k of Object.keys(byRank).map(Number).sort((a, b) => a - b)) {
+      const list = byRank[k].sort((a, b) => {
+        const bc = g => { const f = into[g.id].map(id => pos[id]).filter(v => v !== undefined); return f.length ? f.reduce((s, v) => s + v, 0) / f.length : 1e3; };
+        return bc(a) - bc(b) || a.col - b.col;
+      });
+      let row = [], width = 0;
+      for (const g of list) {
+        const w = Math.min(g.w || 1, MAXW);
+        if (width + w > MAXW && row.length) { rows.push(row); row = []; width = 0; }
+        row.push(g); width += w;
+      }
+      if (row.length) rows.push(row);
+    }
+    rows.forEach((row, r) => { let c = 0; for (const g of row) { g.row = r; g.col = c; pos[g.id] = c + (g.w || 1) / 2; c += g.w || 1; } });
+    undoLayout = before;
+    view = null;
+    changed();
+    updateUndo();
+  }
+
   // ---- events
   $("#bk-svg").addEventListener("click", e => {
+    if (dragged) { dragged = false; return; }
     const t = e.target.closest("[data-block], [data-group]");
     if (!t) { if (sel) { sel = null; root.classList.remove("panel-open"); render(); } return; }
     const g = group(t.dataset.group);
@@ -622,13 +855,17 @@
   // ---- convert to schematic: pick what to convert, check the design rules and answer the questions, then draw
   const SCH = $("#bk-schem");
   const schem = {scope: null, check: null, out: null};
-  const scopeKey = sc => sc.kind === "all" ? "all" : `${sc.kind}:${sc.group}:${sc.block || ""}`;
+  const scopeKey = sc => (sc.kind === "all" ? "all" : `${sc.kind}:${sc.group}:${sc.block || ""}`) + (sc.drawable ? ":d" : "");
   const answersFor = sc => ((S.schem ||= {})[scopeKey(sc)] ||= {});
-  function scopes() {
-    const out = [{kind: "all", label: `Whole diagram (${S.groups.reduce((n, g) => n + g.blocks.length, 0)} blocks)`}];
-    for (const g of S.groups) out.push({kind: "group", group: g.id, label: `Frame: ${g.label} (${g.blocks.length} block${g.blocks.length === 1 ? "" : "s"})`});
-    for (const g of S.groups) for (const b of g.blocks) out.push({kind: "block", group: g.id, block: b.id, label: `Block: ${b.label || fnOf(b).label}${b.part ? " · " + b.part : ""} (in ${g.label})`});
-    return out;
+  // with "only blocks we can draw", blocks without a chosen part are not offered (the server also leaves out parts
+  // without a pin list and names them)
+  function scopes(drawable) {
+    const has = b => !drawable || b.part;
+    const n = S.groups.reduce((k, g) => k + g.blocks.filter(has).length, 0);
+    const out = [{kind: "all", label: drawable ? `Every block with a chosen part (${n})` : `Whole diagram (${n} blocks)`}];
+    for (const g of S.groups) { const k = g.blocks.filter(has).length; if (k) out.push({kind: "group", group: g.id, label: `Frame: ${g.label} (${k} block${k === 1 ? "" : "s"})`}); }
+    for (const g of S.groups) for (const b of g.blocks.filter(has)) out.push({kind: "block", group: g.id, block: b.id, label: `Block: ${b.label || fnOf(b).label}${b.part ? " · " + b.part : ""} (in ${g.label})`});
+    return out.map(x => ({...x, drawable}));
   }
   async function schemCall(drawIt) {
     const res = await fetch("/api/blocks/schematic", {method: "POST", headers: {"Content-Type": "application/json"},
@@ -638,16 +875,19 @@
   }
   function openSchem() {
     SCH.hidden = false;
-    const list = scopes();
-    const cur = sel && sel.block ? list.find(x => x.block === sel.block) : sel ? list.find(x => x.kind === "group" && x.group === sel.group) : list[0];
+    const drawable = openSchem.drawable !== false;
+    const list = scopes(drawable);
+    const cur = (sel && sel.block ? list.find(x => x.block === sel.block) : sel ? list.find(x => x.kind === "group" && x.group === sel.group) : null) || list[0];
     SCH.innerHTML = `<h2>Convert to schematic</h2>
       <p class="small muted">Choose what to convert: the whole diagram, one frame (a functional block with the blocks inside it) or a single block.
-        Cross List first checks the design rules and asks what it cannot decide; nothing is drawn until you click <b>Draw schematic</b>.</p>
+        BizDev first checks the design rules and asks what it cannot decide; nothing is drawn until you click <b>Draw schematic</b>.</p>
       <div class="row"><label class="small">Convert <select id="sch-scope" class="small-sel">${list.map((x, i) => `<option value="${i}"${x === cur ? " selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>
+        <label class="small"><input type="checkbox" id="sch-drawable"${drawable ? " checked" : ""}> only blocks we can draw (a chosen part with a pin list)</label>
         <button type="button" id="sch-check" class="small-btn">Check design rules</button>
         <button type="button" id="sch-close" class="outline secondary small-btn">Close</button></div>
       <div id="sch-body"></div>`;
     SCH.querySelector("#sch-close").onclick = () => { SCH.hidden = true; };
+    SCH.querySelector("#sch-drawable").onchange = e => { openSchem.drawable = e.target.checked; openSchem(); };
     SCH.querySelector("#sch-check").onclick = () => { schem.scope = list[+SCH.querySelector("#sch-scope").value]; runCheck(); };
     SCH.scrollIntoView({behavior: "smooth", block: "start"});
   }
@@ -674,6 +914,7 @@
       : `<select data-sq="${esc(q.id)}" class="small-sel">${q.choices.map(ch => `<option${String(val(q)) === String(ch) ? " selected" : ""}>${esc(ch)}</option>`).join("")}</select>`;
     body.innerHTML = `<h3>1 · Design-rule check</h3>
       <p class="small muted">${c.devices.length} device${c.devices.length === 1 ? "" : "s"}: ${c.devices.map(d => `${esc(d.ref)} ${esc(d.mpn || d.label)}${d.placeholder ? " (placeholder)" : ""}`).join(" · ")}</p>
+      ${(c.skipped || []).length ? `<details class="small"><summary>Left out: ${c.skipped.length} block${c.skipped.length === 1 ? "" : "s"} without a part we can draw</summary><p class="muted">${c.skipped.map(esc).join(" · ")}</p></details>` : ""}
       <div id="sch-issues">${issuesHtml(c.issues)}</div>
       <h3>2 · Questions</h3>
       ${c.questions.length ? sections.map(sec => `<details class="req-box" open><summary class="small"><b>${esc(sec)}</b></summary>${c.questions.filter(q => q.section === sec && !q.parent).map(q => `
@@ -713,6 +954,8 @@
     }));
   }
   $("#bk-schem-open").addEventListener("click", openSchem);
+  $("#bk-arrange").addEventListener("click", arrange);
+  $("#bk-undo").addEventListener("click", () => { if (!undoLayout) return; restore(undoLayout); undoLayout = null; changed(); updateUndo(); });
 
   if (!design.data && tpl) dirty = true;
   if (Object.keys(S.req).length) refreshCounts(); else render();

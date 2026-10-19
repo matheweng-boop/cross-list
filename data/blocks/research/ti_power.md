@@ -326,7 +326,7 @@ switching starts only after /PG); separate isolated 5 V modules for isolated CAN
 - **Redundant supply naming**: "redundant power supply (HV to LV)" in the system figures (SLUAAS4 p.2, SLUAAH0
   p.5) is the same concept as the HV flyback redundancy in SLUAAS4 Section 6. In the system figures it feeds the
   LV rail; in the bias figures it feeds the isolated bias supplies directly.
-- The "filters" column names an existing Cross List parameter where one fits (protection, uvlo_v, peak_sink_a,
+- The "filters" column names an existing BizDev parameter where one fits (protection, uvlo_v, peak_sink_a,
   peak_source_a, isolation_class, isolation_rating_kvrms, cmti_kv_us, channel_config, deadtime, qualification).
-  Everything marked "(new)" in the YAML is a parameter Cross List parts do not carry yet. The parameter mapping
-  is my suggestion; the TI documents give the feature, not a Cross List parameter name.
+  Everything marked "(new)" in the YAML is a parameter BizDev parts do not carry yet. The parameter mapping
+  is my suggestion; the TI documents give the feature, not a BizDev parameter name.

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ design.name or 'Block diagram' }} – Cross List{% endblock %}
+{% block title %}{{ design.name or 'Block diagram' }} – BizDev{% endblock %}
 {% block content %}
 <div id="bk" class="bk">
   <div class="bc-bar">
@@ -18,6 +18,8 @@
     <button id="bk-req" type="button" class="secondary small-btn">Requirements</button>
     <button id="bk-feedback" type="button" class="outline secondary small-btn">Feedback</button>
     <button id="bk-schem-open" type="button" class="secondary small-btn" aria-controls="bk-schem">Convert to schematic</button>
+    <button id="bk-arrange" type="button" class="outline small-btn" title="Order the frames by signal flow, top to bottom">Arrange</button>
+    <button id="bk-undo" type="button" class="outline secondary small-btn" disabled title="Undo the last move or arrange">Undo</button>
     <span class="bk-legend" role="group" aria-label="Highlight in the diagram"><button type="button" class="lg lg-part" data-st="part">part chosen</button><button type="button" class="lg lg-have" data-st="have">Skyworks / Qorvo parts</button><button type="button" class="lg lg-opp" data-st="opp">opportunity</button><button type="button" class="lg lg-ext" data-st="ext">customer part</button></span>
     <span class="bc-tools-right"><span aria-hidden="true">🔍</span><button id="bk-zoom-all" type="button" class="outline small-btn">All</button><button id="bk-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bk-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button>
       <button id="bk-svg-dl" type="button" class="outline small-btn">SVG</button></span>
@@ -26,7 +28,7 @@
     <div class="bc-canvas"><svg id="bk-svg" role="application" aria-label="Block diagram"></svg></div>
     <aside id="bk-panel" class="bk-panel" aria-live="polite"><button type="button" id="bk-close" class="outline secondary small-btn bk-close" aria-label="Close panel">×</button><div id="bk-panel-body"></div></aside>
   </div>
-  <p class="small muted">Click a block to focus the requirements and parts below on it; click it again (or the background) to deselect. The legend buttons highlight or grey out each kind of block. Click a group title to rename, move or connect it.</p>
+  <p class="small muted">Drag a frame to move it, or drag a block into another frame. <b>Arrange</b> orders the frames by signal flow. Click a block to focus the requirements and parts below on it; click it again (or the background) to deselect. The legend buttons highlight or grey out each kind of block. Click a group title to rename, move or connect it.</p>
   <div class="bk-bottom">
     <section id="bk-reqs" class="bk-reqs" aria-label="Requirements"></section>
     <section id="bk-below" class="bk-below" aria-live="polite"></section>
@@ -49,7 +51,11 @@
 #bk-svg .blk.dim { opacity: .28; filter: grayscale(1); }
 #bk-svg .b-label { font-size: 12px; font-weight: 600; }
 #bk-svg .b-sub { font-size: 10px; }
-#bk-svg .link { stroke: #3a3f47; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+#bk-svg .link { stroke: #3a3f47; stroke-width: 1.4; fill: none; marker-end: url(#arrow); stroke-linejoin: round; }
+#bk-svg .grp rect.frame { cursor: move; }
+#bk-svg .blk { cursor: grab; }
+#bk-svg .dragging { opacity: .75; cursor: grabbing; }
+#bk-svg .grp.drop rect.frame { stroke: #eb6834; stroke-width: 2.4; fill: #fff7f2; }
 #bk-svg .link-label { font-size: 10px; fill: #1d2228; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
 </style>
 <script type="application/json" id="bk-catalogue">{{ catalogue|tojson }}</script>

@@ -9,7 +9,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import BusinessAssumption, Case, CaseNote, DataReview, PartMapping, TechFeedback
+from app.models import (
+    BusinessAssumption,
+    Case,
+    CaseNote,
+    DataReview,
+    OpportunityDecision,
+    PartMapping,
+    ShortlistItem,
+    TechFeedback,
+)
 from app.services import blocks, cases, quality
 from app.services import opportunity as op
 from app.web.routes import templates
@@ -48,7 +57,6 @@ def _ctx(session: Session, co: str, scope: str = "all") -> dict:
 def overview(request: Request, co: str = "combined", scope: str = "all", session: Session = Depends(get_session)):
     c = _ctx(session, co, scope)
     c["ov"] = op.overview(c["apps"], c["asp"], c["vol"])
-    c["top_gaps"] = op.gaps(c["apps"], c["asp"], c["vol"])[:5]
     return templates.TemplateResponse(request, "business/overview.html", c)
 
 
@@ -77,6 +85,24 @@ def attach(request: Request, fn: str = "", co: str = "combined", session: Sessio
     c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], c["fns"].get(kv[0], {}).get("label", kv[0])))
     c["fn"] = fn if fn in used else ""
     c["result"] = op.attach(c["apps"], fn) if c["fn"] else None
+    c["pairs"] = op.cross_sell_pairs(c["apps"]) if not c["fn"] else []
+    mfrs = op.company(co)[2]
+
+    def offer(f: str) -> list[dict]:
+        """Our best parts for a function (two per manufacturer), named, so a cross-sell has something to offer."""
+        out = []
+        for m in blocks.parts_for(session, f)["manufacturers"]:
+            if m["manufacturer"] in mfrs:
+                out += [{"mpn": p["mpn"], "url": p["url"], "manufacturer": m["manufacturer"]} for p in m["best"]]
+        return out[:4]
+
+    if c["result"]:
+        c["anchor_parts"] = offer(c["fn"])
+        for e in c["result"]["rows"]:
+            e["offer"] = offer(e["fn"]) if e["status"] == "supported" else []
+    c["shortlisted"] = {
+        i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "crosssell"))
+    }
     return templates.TemplateResponse(request, "business/attach.html", c)
 
 
@@ -90,22 +116,38 @@ def gaps_moved(co: str = "combined", sort: str = "reach"):
 
 
 @router.get("/business/markets", response_class=HTMLResponse)
-def markets(request: Request, co: str = "combined", view: str = "all", session: Session = Depends(get_session)):
+def markets(request: Request, co: str = "combined", view: str = "all", m: str = "", g: str = "",
+            session: Session = Depends(get_session)):  # fmt: skip
+    """Functions by end market, in three groups (existing portfolio, portfolio gap, new technology); market chips
+    choose which markets count."""
     c = _ctx(session, co)
-    m = op.markets(session, c["apps"], op.company(co)[2])
+    data = op.markets(session, c["apps"], op.company(co)[2])
+    chosen = [x for x in m.split(",") if x in data["markets"]] if m else []
+    shown = chosen or data["markets"]
     c["view"] = view if view in ("all", "requalify", "qual_unknown", "multi") else "all"
-    rows = m["rows"]
+    rows = []
+    for e in data["rows"]:
+        by = {k: v for k, v in e["by_market"].items() if k in shown}
+        if not by:
+            continue
+        rows.append({**e, "by_market": by, "n_markets": len(by), "n_apps": sum(len(v) for v in by.values())})
     if c["view"] in ("requalify", "qual_unknown"):
         rows = [e for e in rows if e[c["view"]]]
     elif c["view"] == "multi":
         rows = [e for e in rows if e["n_markets"] > 1]
+    rows.sort(key=lambda e: (-e["n_markets"], -e["n_apps"], e["label"]))
     c.update(
-        markets=m["markets"],
-        per_market=m["apps_per_market"],
-        rows=rows,
-        n_requalify=sum(e["requalify"] for e in m["rows"]),
-        n_qual_unknown=sum(e["qual_unknown"] for e in m["rows"]),
-        n_multi=sum(e["n_markets"] > 1 for e in m["rows"]),
+        markets=data["markets"],
+        chosen=chosen,
+        path_label=op.PATH_LABEL,
+        shown=shown,
+        per_market=data["apps_per_market"],
+        groups=op.MARKET_GROUPS,
+        g=g if g in op.MARKET_GROUPS else "",
+        by_group={k: [e for e in rows if e["group"] == k] for k in op.MARKET_GROUPS},
+        n_requalify=sum(e["requalify"] for e in data["rows"]),
+        n_qual_unknown=sum(e["qual_unknown"] for e in data["rows"]),
+        shortlisted={i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "markets"))},
     )
     return templates.TemplateResponse(request, "business/markets.html", c)
 
@@ -117,48 +159,26 @@ def technology_moved(co: str = "combined", view: str = "all"):
     return RedirectResponse(f"/business/explorer?co={co}&view=feasibility" + (f"&f={f}" if f else ""), status_code=307)
 
 
-EXPLORER_VIEWS = {
-    "reach": (
-        "Application reach",
-        "Missing functions needed by the most reference architectures.",
-        lambda e: (-e["reach"], -e["adjacent"], e["label"]),
-    ),
-    "crosssell": (
-        "Cross-sell adjacency",
-        "Architectures needing it already contain one of our parts (door openers).",
-        lambda e: (-e["adjacency"], -e["reach"], e["label"]),
-    ),
-    "feasibility": (
-        "Technical feasibility",
-        "Technology fit: share of architectures × path or technology × competition × trend.",
-        lambda e: (-(e["score"] or 0), -e["reach"], e["label"]),
-    ),
-    "competition": (
-        "Competition",
-        "Least crowded markets first (established suppliers from public catalogues).",
-        lambda e: (
-            {"low": 0, "medium": 1, "high": 2}.get((e["competition"] or {}).get("crowding"), 3),
-            -e["reach"],
-            e["label"],
-        ),
-    ),
-    "commercial": (
-        "Commercial potential",
-        "TAM per year where ASPs and volumes are entered; unknown stays unknown.",
-        lambda e: (-e["tam"], -e["reach"], e["label"]),
-    ),
-    "evidence": (
-        "Evidence quality",
-        "Least-checked evidence first: where a review helps most.",
-        lambda e: (e["checked"] / e["items"] if e["items"] else 0, -e["reach"], e["label"]),
-    ),
-}
+# Opportunity explorer columns that sort: key -> (label, default direction, sort key). Old `view` links map onto them.
+PATH_ORDER = {"exists": 0, "variant": 1, "new_design": 2, "new_capability": 3, "not_pursue": 4}
+CROWD_ORDER = {"low": 0, "medium": 1, "high": 2}
+EXPLORER_SORTS = {
+    "label": ("Function", "asc", lambda e: e["label"].lower()),
+    "path": ("Gap type · path", "asc", lambda e: (PATH_ORDER.get((e["path"] or {}).get("path"), 5), -e["reach"])),
+    "reach": ("Needed in", "desc", lambda e: (e["reach"], e["adjacent"])),
+    "competition": ("Competition", "asc",
+                    lambda e: (CROWD_ORDER.get((e["competition"] or {}).get("crowding"), 3), -e["reach"])),
+    "score": ("Fit score", "desc", lambda e: (e["score"] if e["score"] is not None else -1, e["reach"])),
+    "tam": ("TAM / year", "desc", lambda e: (e["tam"], e["reach"])),
+}  # fmt: skip
+VIEW_TO_SORT = {"reach": "reach", "crosssell": "reach", "feasibility": "score", "competition": "competition",
+                "commercial": "tam", "evidence": "reach"}  # fmt: skip
 EXPLORER_FILTERS = {
     "develop": ("Same or adjacent technology", lambda e: (e["proximity"] or 0) >= 2),
-    "low_attach": ("Low attach (door openers < 50%)", lambda e: e["adjacency"] < 0.5),
     "short": ("Exists or spec variant", lambda e: (e["path"] or {}).get("path") in ("exists", "variant")),
     "build": ("New design", lambda e: (e["path"] or {}).get("path") == "new_design"),
     "acquire": ("New technology: partner / acquire", lambda e: (e["path"] or {}).get("path") == "new_capability"),
+    "kept": ("Kept for consideration", lambda e: (e["decision"] or {}).get("status") == "keep"),
     "chips": ("Not our product type", lambda e: e["gap_type"] == "not_ours"),
 }
 
@@ -168,51 +188,118 @@ def opportunity_explorer(
     request: Request,
     co: str = "combined",
     scope: str = "all",
-    view: str = "reach",
+    view: str = "",
+    sort: str = "",
+    dir: str = "",
     f: str = "",
     t: str = "",
     session: Session = Depends(get_session),
 ):
-    """One table of missing functions with six views (presets); the formulas behind each column are unchanged."""
+    """One table of missing functions; any column sorts. Functions set aside are listed separately below."""
     c = _ctx(session, co, scope)
     rows = op.explorer(c["apps"], c["asp"], c["vol"])
-    rev = quality.summary(session)
-    for e in rows:  # evidence quality: how many of the function's evidence items a source check or a person confirmed
-        items = [
-            (ds, data[e["fn"]])
-            for ds, (_, data) in quality.datasets().items()
-            if e["fn"] in data and isinstance(data[e["fn"]], dict)
-        ]
-        e["items"] = len(items)
-        e["checked"] = sum(
-            1
-            for ds, it in items
-            if (it.get("check") or {}).get("status") in ("confirmed", "corrected")
-            or quality.state(rev.get((ds, e["fn"]))) == "verified"
-        )
-        e["disputed"] = sum(1 for ds, _ in items if quality.state(rev.get((ds, e["fn"]))) == "disputed")
-    view = view if view in EXPLORER_VIEWS else "reach"
+    decisions = {d.fn: d for d in session.scalars(select(OpportunityDecision))}
+    for e in rows:
+        d = decisions.get(e["fn"])
+        e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at} if d else None
+    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "reach")
+    dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
     c["type_counts"] = Counter(e["gap_type"] for e in rows)
     if t in op.GAP_TYPE_LABEL:
         rows = [e for e in rows if e["gap_type"] == t]
-    elif view != "feasibility":  # chips we do not make only appear in the feasibility view (as in Technology fit)
+    elif f != "chips":  # chips we do not make only on request
         rows = [e for e in rows if e["gap_type"] != "not_ours"]
     if f in EXPLORER_FILTERS:
         rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
-    rows.sort(key=EXPLORER_VIEWS[view][2])
+    rows.sort(key=EXPLORER_SORTS[sort][2], reverse=dir == "desc")
+    shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
     c.update(
-        rows=rows,
-        view=view,
-        views=EXPLORER_VIEWS,
+        rows=[e for e in rows if (e["decision"] or {}).get("status") != "set_aside"],
+        aside=[e for e in rows if (e["decision"] or {}).get("status") == "set_aside"],
+        sort=sort,
+        dir=dir,
+        sorts=EXPLORER_SORTS,
         f=f,
         filters=EXPLORER_FILTERS,
         t=t,
+        shortlisted=shortlisted,
         gap_labels=op.GAP_TYPE_LABEL,
         path_label=op.PATH_LABEL,
         prox_label=op.PROXIMITY_LABEL,
         max_score=max((e["score"] or 0 for e in rows), default=0),
     )
     return templates.TemplateResponse(request, "business/explorer.html", c)
+
+
+def _back(request: Request, form, default: str) -> str:
+    """Where to return after a form post: a local path from the form, else the default."""
+    back = str(form.get("back") or "")
+    return back if back.startswith("/") and not back.startswith("//") else default
+
+
+@router.post("/business/decision")
+async def decide(request: Request, session: Session = Depends(get_session)):
+    """Keep a missing function under consideration, set it aside (with a note), or clear the decision."""
+    form = await request.form()
+    fn, status = str(form.get("fn") or ""), str(form.get("status") or "")
+    if fn not in blocks.catalogue()["functions"] or status not in ("keep", "set_aside", "clear"):
+        raise HTTPException(400, "Unknown function or decision")
+    d = session.scalar(select(OpportunityDecision).where(OpportunityDecision.fn == fn))
+    if status == "clear":
+        if d is not None:
+            session.delete(d)
+    else:
+        if d is None:
+            d = OpportunityDecision(fn=fn, status=status)
+            session.add(d)
+        d.status = status
+        d.note = str(form.get("note") or "").strip()[:500] or d.note
+    session.commit()
+    return RedirectResponse(_back(request, form, "/business/explorer"), status_code=303)
+
+
+SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
+                     "customers": "Customers", "idea": "New ideas"}  # fmt: skip
+
+
+@router.post("/business/shortlist")
+async def shortlist_add(request: Request, session: Session = Depends(get_session)):
+    """Push an item into the business-case candidates (once; pushing again keeps the first)."""
+    form = await request.form()
+    origin, key = str(form.get("origin") or ""), str(form.get("key") or "").strip()[:200]
+    if origin not in SHORTLIST_ORIGINS or not key:
+        raise HTTPException(400, "Unknown origin or empty item")
+    if session.scalar(select(ShortlistItem).where(ShortlistItem.origin == origin, ShortlistItem.key == key)) is None:
+        fn = str(form.get("fn") or "")
+        session.add(ShortlistItem(origin=origin, key=key, title=str(form.get("title") or key).strip()[:200],
+                                  detail=str(form.get("detail") or "").strip()[:2000] or None,
+                                  fn=fn if fn in blocks.catalogue()["functions"] else None))  # fmt: skip
+        session.commit()
+    return RedirectResponse(_back(request, form, "/business/shortlist"), status_code=303)
+
+
+@router.post("/business/shortlist/{item_id:int}")
+async def shortlist_update(request: Request, item_id: int, session: Session = Depends(get_session)):
+    form = await request.form()
+    item = session.get(ShortlistItem, item_id)
+    if item is None:
+        raise HTTPException(404, "Item not found")
+    if form.get("remove"):
+        session.delete(item)
+    else:
+        item.note = str(form.get("note") or "").strip()[:2000] or None
+    session.commit()
+    return RedirectResponse("/business/shortlist", status_code=303)
+
+
+@router.get("/business/shortlist", response_class=HTMLResponse)
+def shortlist(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    """Business-case candidates, from the portfolio pages and from new ideas; each can start a business case."""
+    c = _case_ctx(session, co)
+    items = list(session.scalars(select(ShortlistItem).order_by(ShortlistItem.created_at.desc())))
+    c.update(portfolio=[i for i in items if i.origin != "idea"], ideas=[i for i in items if i.origin == "idea"],
+             origins=SHORTLIST_ORIGINS, case_titles={x.id: x.title for x in session.scalars(select(Case))})  # fmt: skip
+    return templates.TemplateResponse(request, "business/shortlist.html", c)
 
 
 @router.get("/business/method", response_class=HTMLResponse)
@@ -299,7 +386,7 @@ def case_list(request: Request, co: str = "combined", session: Session = Depends
 
 @router.get("/business/cases/new", response_class=HTMLResponse)
 def case_new(request: Request, fn: str = "", co: str = "combined", title: str = "", idea: str = "",
-             session: Session = Depends(get_session)):  # fmt: skip
+             shortlist: int | None = None, session: Session = Depends(get_session)):  # fmt: skip
     """New case, optionally from a function (Opportunity explorer) or an idea (Ideas page): nothing is saved until
     the user creates it."""
     c = _case_ctx(session, co)
@@ -307,8 +394,13 @@ def case_new(request: Request, fn: str = "", co: str = "combined", title: str = 
     values = cases.prefill(ctx)
     if idea:
         values["notes"] = (f"Started from the idea: {idea}\n" + values.get("notes", "")).strip()
-    c.update(case=None, fn=fn if ctx else "", ctx=ctx, values=values,
-             title=title[:200] or (f"New {ctx['label']}" if ctx else ""))  # fmt: skip
+    item = session.get(ShortlistItem, shortlist) if shortlist else None
+    if item is not None:  # started from a business-case candidate
+        start = f"From {SHORTLIST_ORIGINS[item.origin]}: {item.detail or item.title}\n"
+        note = f"Note: {item.note}\n" if item.note else ""
+        values["notes"] = (start + note + values.get("notes", "")).strip()
+    c.update(case=None, fn=fn if ctx else "", ctx=ctx, values=values, shortlist=item.id if item else None,
+             title=title[:200] or (item.title if item else "") or (f"New {ctx['label']}" if ctx else ""))  # fmt: skip
     return templates.TemplateResponse(request, "business/case.html", c)
 
 
@@ -323,6 +415,12 @@ async def case_create(request: Request, session: Session = Depends(get_session))
     case = Case(title=str(form.get("title") or "").strip()[:200] or "Untitled case",
                 fn=fn if fn in blocks.catalogue()["functions"] else None, inputs=_inputs(form))  # fmt: skip
     session.add(case)
+    session.flush()
+    item = (
+        session.get(ShortlistItem, int(form.get("shortlist"))) if str(form.get("shortlist") or "").isdigit() else None
+    )
+    if item is not None:
+        item.case_id = case.id
     session.commit()
     return RedirectResponse(f"/business/cases/{case.id}", status_code=303)
 
@@ -391,6 +489,9 @@ def hunt(request: Request, fn: str = "", co: str = "combined", session: Session 
     c["fn"] = fn if fn in used else ""
     c["by_fn"] = op.hunt_for_function(c["apps"], fn) if c["fn"] else None
     c["unmatched"] = [a for a in c["apps"] if not a.background and not op.segments_of(a.name)]
+    c["shortlisted"] = {
+        i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "customers"))
+    }
     return templates.TemplateResponse(request, "business/customers.html", c)
 
 
@@ -516,7 +617,8 @@ def explore(request: Request, fit: str = "", co: str = "combined", session: Sess
         if ideas:
             techs.append((k, t, ideas))
     techs.sort(key=lambda x: min(op.FIT_ORDER.get(i.get("fit"), 3) for i in x[2]))
-    c.update(techs=techs, fit=fit, rev=_rev(session), plats=op.capabilities())
+    shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "idea"))}
+    c.update(techs=techs, fit=fit, rev=_rev(session), plats=op.capabilities(), shortlisted=shortlisted)
     return templates.TemplateResponse(request, "business/explore.html", c)
 
 

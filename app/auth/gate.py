@@ -48,10 +48,10 @@ def _safe_next(next_url: str) -> str:
 
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign in – Cross List</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign in – BizDev</title>
 <link rel="stylesheet" href="/static/vendor/pico.min.css"><link rel="stylesheet" href="/static/app.css"></head>
 <body><main class="container" style="max-width:24rem;padding-top:15vh">
-<h1>Cross List</h1>{error}
+<h1>BizDev</h1>{error}
 <form method="post" action="/login"><input type="hidden" name="next" value="{next}">
 <input type="password" name="password" placeholder="Password" autocomplete="current-password" required autofocus>
 <button type="submit">Sign in</button></form></main></body></html>"""

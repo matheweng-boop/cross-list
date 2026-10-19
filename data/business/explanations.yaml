@@ -32,9 +32,9 @@ terms:
     term: Status of a socket
     short: Portfolio, Gap, Competitor only, or Not our product type.
     long: >-
-      Portfolio = a Skyworks or Qorvo part exists for the function in Cross List (a candidate, not yet checked against
-      the application's specs). Gap = needed, but no company in Cross List has a part. Competitor only = only other
-      companies have parts in Cross List. Not our product type = processors, MCUs, memory, sensors, antennas and other
+      Portfolio = a Skyworks or Qorvo part exists for the function in BizDev (a candidate, not yet checked against
+      the application's specs). Gap = needed, but no company in BizDev has a part. Competitor only = only other
+      companies have parts in BizDev. Not our product type = processors, MCUs, memory, sensors, antennas and other
       chips Skyworks / Qorvo do not make; left out of coverage.
   coverage:
     term: Candidate coverage
@@ -124,7 +124,7 @@ terms:
     long: >-
       True portfolio gap = no part of ours, and the path to product says a new variant, design or technology is
       needed. Probably sold already = the path evidence names catalogue parts that may fill it; confirm or reject them
-      on the evidence page. Competitor only = only other companies have parts in Cross List. No evidence yet = a gap
+      on the evidence page. Competitor only = only other companies have parts in BizDev. No evidence yet = a gap
       nobody has assessed. Not our product type = processors, memory and other chips we do not make. A candidate
       (one of our parts exists) is a separate state: its electrical fit to the application is not validated.
   customer_type:
@@ -151,7 +151,7 @@ pages:
       - Top gaps = missing functions needed by the most applications; open the Opportunity explorer for all of them and the evidence behind each number.
     data:
       - Applications and sockets come from the block-diagram files (public reference designs).
-      - Our parts come from Cross List (catalogue of Skyworks / Qorvo public product pages + parts with full parameters).
+      - Our parts come from BizDev (catalogue of Skyworks / Qorvo public product pages + parts with full parameters).
     limits:
       - A "Portfolio" socket means a candidate part exists, not that it meets the application's specs.
       - Without ASPs and volumes every socket weighs the same; a cheap commodity looks as big as a high-value part.
@@ -189,9 +189,9 @@ pages:
     read:
       - One case per product idea. Fill in the inputs, copy the brief into an AI assistant, paste its answer back and discuss.
     data:
-      - The brief adds what Cross List knows about the function (occurrence, door openers, competition, technology fit).
+      - The brief adds what BizDev knows about the function (occurrence, door openers, competition, technology fit).
     limits:
-      - Cross List sends nothing to outside services; the AI's answer is only as good as its cited sources.
+      - BizDev sends nothing to outside services; the AI's answer is only as good as its cited sources.
   explorer:
     question: Which missing functions are worth pursuing, ranked the way you choose?
     read:
@@ -252,7 +252,7 @@ pages:
       - The review queue lists unchecked ratings behind the top-ranked functions, most influential first.
       - Automated checks flag missing entries, inconsistent ratings, unknown ids and unsourced items.
     data:
-      - Reviews and part-mapping decisions are stored in the Cross List database; the to-do export collects disputed and unsure items.
+      - Reviews and part-mapping decisions are stored in the BizDev database; the to-do export collects disputed and unsure items.
     limits:
       - A review flags an item; the data file still has to be corrected (that is what the to-do is for).
   data:
@@ -260,6 +260,6 @@ pages:
     read:
       - Enter an ASP per function and a yearly volume per application; leave unknown values empty.
     data:
-      - Your inputs only; stored in the Cross List database.
+      - Your inputs only; stored in the BizDev database.
     limits:
       - Missing values are never estimated, so TAM covers only what is entered.

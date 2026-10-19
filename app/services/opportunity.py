@@ -9,7 +9,7 @@ Alternative parts for one position count once: coverage is counted per position,
 Position status for a chosen company (or the combined Skyworks + Qorvo portfolio):
   supported   a part of the company exists for the function (candidate, not yet checked against the
               application's electrical requirements)
-  gap         the function is in scope but no company part exists in Cross List
+  gap         the function is in scope but no company part exists in BizDev
   competitor  only other companies have parts
   na          customer / platform part or outside the semiconductor scope (excluded)
   unknown     the function is not in the catalogue (excluded from the confirmed score, shown separately)
@@ -43,8 +43,8 @@ STATUS_LABEL = {"supported": "Portfolio", "gap": "Gap (opportunity)", "competito
                 "na": "Not our product type", "unknown": "Unknown"}  # fmt: skip
 STATUS_HELP = {
     "supported": "A Skyworks or Qorvo part exists for this function (a candidate, not yet checked against the specs).",
-    "gap": "Needed here, but no company in Cross List has a part for it yet.",
-    "competitor": "Only other companies have parts for it in Cross List.",
+    "gap": "Needed here, but no company in BizDev has a part for it yet.",
+    "competitor": "Only other companies have parts for it in BizDev.",
     "na": "Chips the customer picks from other kinds of suppliers: processors, MCUs, memory, sensors, antennas, "
     "connectors. Left out of coverage; the Technology fit page still counts how often they appear.",
     "unknown": "The function is not in the catalogue yet.",
@@ -59,7 +59,7 @@ def company(key: str) -> tuple[str, str, frozenset]:
 # ---- products per function -------------------------------------------------------------------------------
 def makers(session: Session) -> dict[str, dict[str, int] | None]:
     """Parts per manufacturer for every function; None for customer / external functions. Competitors come from
-    the Cross List families (e.g. TI and Novosense isolators)."""
+    the BizDev families (e.g. TI and Novosense isolators)."""
     cat = blocks.catalogue()["functions"]
     fam_competitors: dict[str, Counter] = defaultdict(Counter)
     rows = session.execute(
@@ -237,6 +237,22 @@ def attach(apps: list[Application], anchor: str) -> dict:
             "new": [e for e in rows if e["status"] != "supported"]}  # fmt: skip
 
 
+def cross_sell_pairs(apps: list[Application], limit: int = 15) -> list[dict]:
+    """Pairs of functions we both have parts for that appear together most often: a bundle to offer. Modeled from the
+    reference architectures, not observed sales."""
+    pairs: Counter = Counter()
+    cat = blocks.catalogue()["functions"]
+    for a in apps:
+        ours = sorted({p.fn for p in a.positions if p.status == "supported"})
+        for i, x in enumerate(ours):
+            for y in ours[i + 1 :]:
+                pairs[(x, y)] += 1
+    label = lambda f: (cat.get(f) or {}).get("label", f)  # noqa: E731
+    return [
+        {"a": x, "b": y, "a_label": label(x), "b_label": label(y), "apps": n} for (x, y), n in pairs.most_common(limit)
+    ]
+
+
 # ---- gaps and ranking across applications ----------------------------------------------------------------
 def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
     """Every function that is a gap or competitor-only somewhere, ranked. Reach = applications that need it;
@@ -319,7 +335,7 @@ def sources(apps: list[Application]) -> dict:
     vendors: Counter = Counter()
     for t in [*blocks.templates(), *blocks.background_templates()]:
         m = re.search(r"\((?:[^()]*\b)?(TI|NXP|Qualcomm|MediaTek|Skyworks|Microchip)\b[^()]*\)\s*$", t.get("name", ""))
-        vendors[m.group(1) if m else "Cross List"] += 1
+        vendors[m.group(1) if m else "BizDev"] += 1
     rows = blocks.catalog_rows()
     return {
         "library": sum(not a.background for a in apps),
@@ -377,8 +393,25 @@ def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:
         e["requalify"] = auto_need and e["auto_parts"] == 0 and e["not_auto_parts"] > 0
         e["qual_unknown"] = auto_need and e["auto_parts"] == 0 and e["not_auto_parts"] == 0 and e["unknown_parts"] > 0
         e["by_market"] = dict(e["by_market"])
+    paths = evidence("path")
+    for e in rows.values():  # which leap: sell what we have, build on our technology, or new technology
+        pa = (paths.get(e["fn"]) or {}).get("path")
+        e["path"] = pa
+        e["group"] = (
+            "portfolio" if e["status"] == "supported"
+            else "new_tech" if pa in ("new_capability", "not_pursue")
+            else "gap"
+        )  # fmt: skip
     out = sorted(rows.values(), key=lambda e: (-e["n_markets"], -e["n_apps"], e["label"]))
     return {"markets": names, "rows": out, "apps_per_market": Counter(a.market for a in apps)}
+
+
+MARKET_GROUPS = {
+    "portfolio": ("Existing portfolio", "We have parts: sell them into more markets (or qualify them for automotive)."),
+    "gap": ("Portfolio gap", "No part of ours yet; it exists elsewhere in the portfolio, is a spec variant or a new "
+                             "design on our technology, or the path is not assessed yet."),
+    "new_tech": ("New technology", "Needs a technology we do not have: partner or acquire, or not ours to build."),
+}  # fmt: skip
 
 
 # ---- technology fit: frequent functions ranked by closeness to the portfolio's technology ---------------

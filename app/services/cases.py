@@ -1,4 +1,4 @@
-"""Case analysis: what Cross List knows about a function (occurrence, door openers, competition, technology
+"""Case analysis: what BizDev knows about a function (occurrence, door openers, competition, technology
 proximity, portfolio parts) and a market-analysis brief an AI assistant can run. The app sends nothing anywhere: the
 brief is copied by the user, and the result is pasted back."""
 
@@ -25,7 +25,7 @@ FIELDS = [  # (key, label, help, rows)
 
 
 def context(session: Session, fn: str | None, co: str = "combined") -> dict | None:
-    """Cross List facts for a function across all diagrams (library and background)."""
+    """BizDev facts for a function across all diagrams (library and background)."""
     if not fn or fn not in blocks.catalogue()["functions"]:
         return None
     _, label, mine = op.company(co)
@@ -89,7 +89,7 @@ def brief(case, ctx: dict | None) -> str:
     if ctx:
         t, c = ctx["technology"] or {}, ctx["competition"] or {}
         lines += [
-            "## What Cross List knows (block-diagram library, public sources)",
+            "## What BizDev knows (block-diagram library, public sources)",
             f"- Function: {ctx['label']} · portfolio status for {ctx['portfolio']}: {op.STATUS_LABEL[ctx['status']]}",
             f"- Appears in {len(ctx['apps'])} of {ctx['n_apps']} application diagrams ({ctx['sockets']} sockets), "
             f"markets: {', '.join(ctx['markets']) or 'n/a'}",

@@ -1,11 +1,11 @@
-"""One product index for Products > Browse: the manufacturer catalogues (public product pages) and the Cross List
+"""One product index for Products > Browse: the manufacturer catalogues (public product pages) and the BizDev
 families (parts with full parameters and crosses), classified by one functional taxonomy (data/taxonomy.yaml).
 
 A part has one canonical identity (manufacturer + normalised part number). When it exists in both sources it is
-shown once, with the capabilities of both. Capabilities say what Cross List can do with a record, so a catalogue-only
+shown once, with the capabilities of both. Capabilities say what BizDev can do with a record, so a catalogue-only
 record is never presented as if it supported a validated comparison:
   catalogue   listed in the manufacturer's public catalogue
-  detailed    full parameters in Cross List
+  detailed    full parameters in BizDev
   crosses     cross-reference supported (a matching-rules family)
   pinout      pin functions available
   source      a product page or datasheet link
@@ -102,7 +102,7 @@ def _catalogue_index() -> dict[tuple[str, str], dict]:
 
 
 def index(session: Session) -> list[dict]:
-    """Every product once: catalogue records, merged with Cross List parts of the same identity."""
+    """Every product once: catalogue records, merged with BizDev parts of the same identity."""
     rows = {k: {**v, "caps": set(v["caps"])} for k, v in _catalogue_index().items()}
     rules = load_all_rules()
     fam_sub = taxonomy()["families"]
@@ -121,10 +121,10 @@ def index(session: Session) -> list[dict]:
             *(["source"] if p.datasheet_url or p.product_url else []),
         }
         e = rows.get(key)
-        if e:  # same part in the catalogue: one identity, Cross List detail page, catalogue metadata kept
+        if e:  # same part in the catalogue: one identity, BizDev detail page, catalogue metadata kept
             e.update(part_id=p.id, caps=e["caps"] | caps, role=p.manufacturer.role.value)
             # the datasheet value is per orderable part number; the catalogue's flag is often per series, so the
-            # Cross List value wins whenever it is stated (e.g. SI8600AB-IS is industrial in an AEC-Q100 series)
+            # BizDev value wins whenever it is stated (e.g. SI8600AB-IS is industrial in an AEC-Q100 series)
             if qual != "unknown":
                 e["catalogue_qualification"] = e["qualification"]
                 e["qualification"] = qual
@@ -138,7 +138,7 @@ def index(session: Session) -> list[dict]:
                 "package": p.package.code if p.package else "",
                 "category": cid,
                 "sub": sid or UNCLASSIFIED[1],
-                "source_category": "Cross List family",
+                "source_category": "BizDev family",
                 "source_sub": rules[p.family].title if p.family in rules else p.family,
                 "lifecycle": {"last_time_buy": "nrnd"}.get(p.lifecycle_status.value, p.lifecycle_status.value),
                 "status_text": p.lifecycle_status.value,

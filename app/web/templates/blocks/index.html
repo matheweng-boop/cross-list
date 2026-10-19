@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Application library – Cross List{% endblock %}
+{% block title %}Application library – BizDev{% endblock %}
 {% block content %}
 {% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else ''} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
 <h1>Application library</h1>
 <p class="subtitle muted">Reference architectures from public material. Open one to see its blocks, candidate parts and unmet requirements.
-  On each card: <span class="tpl-chip have">solid</span> = a Skyworks / Qorvo candidate exists in Cross List, <span class="tpl-chip">dashed</span> = no candidate yet.</p>
+  On each card: <span class="tpl-chip have">solid</span> = a Skyworks / Qorvo candidate exists in BizDev, <span class="tpl-chip">dashed</span> = no candidate yet.</p>
 <div class="lib-facets small">
   <div class="chip-row"><span class="chip-lbl">End market</span><a class="fchip{{ ' on' if not market }}" href="{{ url(market='') }}">All</a>
     {% for m, n in markets %}<a class="fchip{{ ' on' if market == m }}" href="{{ url(market=m) }}">{{ m }} <small>{{ n }}</small></a>{% endfor %}</div>
@@ -21,7 +21,7 @@
     {% if t.sub %}<small class="tpl-sub">{{ t.sub }}</small>{% endif %}
     <small class="muted">{{ t.market }} · source {{ t.source }} · {{ t.blocks }} blocks{% if t.questions %} · {{ t.questions }} design questions{% endif %}</small>
     {% if t.variant %}<small class="tpl-variant" title="{{ t.peers|join('; ') }}">Possible variant of {{ t.peers|length }} other{{ 's' if t.peers|length != 1 }} ({{ t.variant }})</small>{% endif %}
-    {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in Cross List' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
+    {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in BizDev' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
   {% endfor %}
 </div>
 {% else %}<div class="empty-state"><p><b>No architecture matches these filters.</b></p><p class="small"><a href="/blocks">Show all</a>.</p></div>

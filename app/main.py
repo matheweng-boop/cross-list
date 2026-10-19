@@ -83,7 +83,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
         yield
 
     bootstrap(engine, seed)
-    app = FastAPI(title="Cross List", lifespan=lifespan)
+    app = FastAPI(title="BizDev", lifespan=lifespan)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "web" / "static"), name="static")
 
     from app.api.routes import router as api_router

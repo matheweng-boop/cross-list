@@ -1,6 +1,6 @@
 """Full data scan: what can be confirmed automatically, and where a person has to look.
 
-Each area runs checks over the data Cross List holds (parts with parameters, the manufacturer catalogues, the block
+Each area runs checks over the data BizDev holds (parts with parameters, the manufacturer catalogues, the block
 diagrams, the radio data, the function mapping, the business evidence, commercial inputs). A check either passes
 (confirmed automatically, with the rule used), is resolved by a stated rule, or produces items for human validation.
 Human items carry a priority from their impact on results (what changes if the item is wrong), the reason a script
@@ -145,7 +145,7 @@ def scan(session: Session) -> dict:
         )
     areas["Parts with full parameters"] = {"records": len(parts), "checks": checks}
 
-    # ---- catalogue vs Cross List ----------------------------------------------------------------------------
+    # ---- catalogue vs BizDev ----------------------------------------------------------------------------
     cat = products._catalogue_index()
     checks = []
     both, qconf, lconf = 0, [], []

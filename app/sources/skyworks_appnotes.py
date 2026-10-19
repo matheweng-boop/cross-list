@@ -1,4 +1,4 @@
-"""Skyworks application notes for the families Cross List covers (isolation and RF switches).
+"""Skyworks application notes for the families BizDev covers (isolation and RF switches).
 
 fetch()  lists every document from the site search, keeps the relevant application notes and
          downloads their PDFs to var/appnotes/ (resumable)

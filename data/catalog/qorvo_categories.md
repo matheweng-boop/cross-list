@@ -189,7 +189,7 @@ Most RF ids Qorvo needs **already exist** in the working-tree `data/blocks/funct
 Notes on existing ids:
 
 * `uwb_soc` is marked `source: external` in functions.yaml. Now that Qorvo is part of the combined company, the
-  Qorvo DW3xxx / QM3xxxx UWB ICs and modules could make it a Cross List part.
+  Qorvo DW3xxx / QM3xxxx UWB ICs and modules could make it a BizDev part.
 * `amplifier` is the sensing (op-amp) block, so no Qorvo RF amplifier uses it.
 * `rf_gain_block` also takes the VGAs and DVGAs (its label says "gain block / driver / VGA").
 * `rf_synthesizer` also takes the VCOs.
@@ -277,5 +277,5 @@ and rf_pa_bias were proposed in the earlier research file and are now in functio
   load_switch (except inside PMICs), isolated_dcdc, tvs_esd, digital_isolator, gate_driver, three_phase_gate_driver and
   half_bridge_driver (except inside PAC motor controllers), current_sensor, crystal_oscillator, clock_generator, clock_buffer,
   led_driver, audio_amp, multiphase, pol_ldo, ldo_tracker. Qorvo's catalogue has no standalone parts for these blocks; for
-  Cross List the Skyworks side covers them.
+  BizDev the Skyworks side covers them.
 * **SiC:** UnitedSiC FETs, JFETs, diodes and modules belong to onsemi (Jan 2025) and are omitted.

@@ -4,6 +4,8 @@ from app.services import broadcast
 
 TUNER_JOBS = {
     "off",
+    "dab2",
+    "fm_pd_ts",
     "amfm_audio",
     "fm_audio",
     "am_audio",
@@ -17,6 +19,10 @@ TUNER_JOBS = {
 }
 DEMOD_JOBS = {
     "unused",
+    "dab_audio2",
+    "dab_link",
+    "dab_scan",
+    "hd_scan",
     "hd_audio",
     "hd_data",
     "hd_mrc",

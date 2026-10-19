@@ -2,40 +2,42 @@
 {% block title %}Compare – Cross List{% endblock %}
 {% block content %}
 <h1>Compare parts</h1>
-<p class="subtitle muted">Select parts to compare on priority 1 &amp; 2 parameters. Colours are relative to the baseline part; bold marks the best value in a row.</p>
+<p class="subtitle muted">Type part numbers or a series (e.g. <code>Si8641BD-IS, ISO7741</code> or <code>Si864</code>), or pick from the series list below.
+  Colours are relative to the baseline part; bold marks the best value in a row.</p>
 
-<form method="get" class="grid-form" style="margin-bottom:1rem">
-  <select name="family" onchange="this.form.submit()" aria-label="Family">
-    {% for key, title in family_titles().items() %}<option value="{{ key }}" {{ 'selected' if family == key }}>{{ title }}</option>{% endfor %}
-  </select>
-  <noscript><button type="submit">Change family</button></noscript>
-</form>
-
-<form method="get">
+<form method="get" class="compare-add" id="compare-form">
   <input type="hidden" name="family" value="{{ family }}">
-  <div class="picklist">
-    {% set chosen = selected|map(attribute='id')|list %}
-    {% for p in available %}
-    <label><input type="checkbox" name="pick" value="{{ p.id }}" {{ 'checked' if p.id in chosen }}> {{ p.mpn }} <span class="muted">{{ p.manufacturer.name }} · {{ p.package.code }}</span></label>
-    {% endfor %}
-  </div>
-  {% if selected %}
-  <label>Baseline
-    <select name="baseline">
-      {% for p in selected %}<option value="{{ p.id }}" {{ 'selected' if comparison and p.id == comparison.baseline.id }}>{{ p.label }}</option>{% endfor %}
-    </select>
-  </label>
-  {% endif %}
-  <div class="sticky-actions"><button type="submit">Compare</button></div>
+  {% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
+  <input type="search" name="add" value="" placeholder="Add part numbers or a series, separated by commas" aria-label="Part numbers to compare" autofocus>
+  <button type="submit">Add</button>
+  <label class="compare-alt"><input type="checkbox" name="alt" value="1" {{ 'checked' if alt }} onchange="this.form.submit()"> Si86 ↔ Si86S alternates</label>
+  {% if selected %}<a href="/compare?family={{ family }}" class="secondary small">Clear</a>{% endif %}
 </form>
+{% if not_found %}<p class="banner">Not found: {{ not_found|join(', ') }}</p>{% endif %}
+{% if matches %}
+<form method="get" class="compare-matches">
+  <input type="hidden" name="family" value="{{ family }}"><input type="hidden" name="alt" value="{{ alt }}">{% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
+  <p class="small"><b>Several parts start with {% for t in ambiguous %}“{{ t }}”{{ ', ' if not loop.last }}{% endfor %}</b> – tick the ones to compare:</p>
+  <div class="picklist">{% for p in matches %}<label><input type="checkbox" name="pick" value="{{ p.id }}"> {{ p.mpn }} <span class="muted">{{ p.manufacturer.name }} · {{ p.package.code }}</span></label>{% endfor %}</div>
+  <button type="submit" class="small-btn">Compare selected</button>
+</form>
+{% endif %}
 
 {% if comparison %}
   {% if comparison.mixed_families %}<p class="banner">Selected parts are from different families; parameters of the baseline family are shown.</p>{% endif %}
-  <h2>Result</h2>
+  <form method="get" class="compare-baseline">
+    <input type="hidden" name="ids" value="{{ ids }}"><input type="hidden" name="alt" value="{{ alt }}">
+    <label>Baseline
+      <select name="baseline" onchange="this.form.submit()">
+        {% for p in selected %}<option value="{{ p.id }}" {{ 'selected' if p.id == comparison.baseline.id }}>{{ p.mpn }}</option>{% endfor %}
+      </select></label>
+  </form>
   <div class="table-wrap">
-  <table>
+  <table class="compare-table">
     <thead><tr><th>Parameter</th><th>P</th>
-      {% for p in comparison.parts %}<th><a href="/parts/{{ p.id }}">{{ p.mpn }}</a><br><span class="muted">{{ p.manufacturer.name }}{% if p.id == comparison.baseline.id %} · baseline{% endif %}</span></th>{% endfor %}
+      {% for p in comparison.parts %}<th><a href="/parts/{{ p.id }}">{{ p.mpn }}</a><br><span class="muted">{{ p.manufacturer.name }}{% if p.id == comparison.baseline.id %} · baseline{% endif %}</span>
+        {% if p.id in alt_of %}<br><span class="badge alt-badge" title="{{ alt_of[p.id][1].family_label }} alternate of {{ alt_of[p.id][0] }}">{{ alt_of[p.id][1].family_label }} alternate of {{ alt_of[p.id][0] }}</span><br><small class="muted">{{ alt_of[p.id][1].label }}</small>{% endif %}
+        {% if p.id|string in ids.split(',') %}<br><a class="small" href="/compare?ids={{ ids.split(',')|reject('equalto', p.id|string)|join(',') }}&alt={{ alt }}" aria-label="Remove {{ p.mpn }}">remove</a>{% endif %}</th>{% endfor %}
     </tr></thead>
     <tbody>
     <tr><td>Package</td><td>1</td>{% for p in comparison.parts %}<td>{{ p.package.code }}</td>{% endfor %}</tr>
@@ -49,9 +51,39 @@
   </table>
   </div>
   <div class="downloads">
-    <a role="button" class="outline" href="/compare.xlsx?ids={{ ids }}&baseline={{ comparison.baseline.id }}">Download Excel</a>
-    <a role="button" class="outline secondary" href="/compare.csv?ids={{ ids }}&baseline={{ comparison.baseline.id }}">CSV</a>
+    <a role="button" class="outline" href="/compare.xlsx?ids={{ comparison.parts|map(attribute='id')|join(',') }}&baseline={{ comparison.baseline.id }}">Download Excel</a>
+    <a role="button" class="outline secondary" href="/compare.csv?ids={{ comparison.parts|map(attribute='id')|join(',') }}&baseline={{ comparison.baseline.id }}">CSV</a>
     <a role="button" class="outline" href="/engineering/cmti_kv_us?ids={{ comparison.baseline.id }}{% for p in comparison.parts if p.id != comparison.baseline.id %},{{ p.id }}{% endfor %}">CMTI explorer</a>
   </div>
 {% endif %}
+
+<h2 class="compare-list-h">Pick from the list</h2>
+<form method="get" class="grid-form">
+  <select name="family" onchange="this.form.submit()" aria-label="Family">
+    {% for key, title in family_titles().items() %}<option value="{{ key }}" {{ 'selected' if family == key }}>{{ title }}</option>{% endfor %}
+  </select>
+  {% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
+</form>
+<form method="get">
+  <input type="hidden" name="family" value="{{ family }}"><input type="hidden" name="alt" value="{{ alt }}">
+  {% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
+  <input type="search" class="series-filter" placeholder="Filter series (e.g. 864, ISO77)" aria-label="Filter series" data-series-filter>
+  {% set chosen = selected|map(attribute='id')|list %}
+  <div class="series-list">
+  {% for name, parts in series.items() %}
+    <details class="series" data-series="{{ name }}">
+      <summary><b>{{ name }}</b> <span class="muted">{{ parts|length }} part{{ 's' if parts|length != 1 }} · {{ parts[0].manufacturer.name }}</span></summary>
+      <div class="picklist">{% for p in parts %}<label><input type="checkbox" name="pick" value="{{ p.id }}" {{ 'checked' if p.id in chosen }}> {{ p.mpn }} <span class="muted">{{ p.package.code }}</span></label>{% endfor %}</div>
+    </details>
+  {% endfor %}
+  </div>
+  <div class="sticky-actions"><button type="submit">Compare</button></div>
+</form>
+<script>
+  // Filter the series list as you type
+  document.querySelectorAll("[data-series-filter]").forEach(inp => inp.addEventListener("input", () => {
+    const q = inp.value.trim().toUpperCase().replace(/[-\s]/g, "");
+    document.querySelectorAll(".series").forEach(d => { d.hidden = q && !d.dataset.series.replace(/[-\s]/g, "").includes(q); });
+  }));
+</script>
 {% endblock %}

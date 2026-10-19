@@ -499,12 +499,12 @@
     }
     if (!S.devices.length) parts.push(`<text class="empty" x="40" y="160">Add a device, or start from the standards you need.</text>`);
     const svg = $("#bc-svg");
-    svg.setAttribute("viewBox", `0 0 ${Lay.W} ${Lay.H}`);
-    svg.setAttribute("width", Lay.W * zoom);
-    svg.setAttribute("height", Lay.H * zoom);
+    lastLay = Lay;
     svg.innerHTML = parts.join("");
+    applyView();
     renderSummary();
     renderUseCase();
+    renderFocusButtons();
   }
 
   function renderSummary() {
@@ -564,6 +564,7 @@
       const d = t.dataset.dev, o = dev(d), I = info(o);
       const same = CATALOG.filter(c => c.role === I.role && c.mpn !== o.mpn);
       return openMenu(ev, `<b>${esc(o.mpn)}</b> · ${esc(I.description || "")}`, [
+        {label: "Zoom to this chip and its connections", fn: () => { focusId = d; }},
         {label: "Fill in surroundings (supplies, crystal, antennas, host…)", fn: autoComplete},
         ...same.map(c => ({label: `Replace with ${c.mpn}`, hint: [...c.analog, ...c.digital_decode, ...c.digital_iq.map(s => s + " I/Q")].join(" "), fn: () => replaceDevice(d, c.mpn)})),
         ...(I.source && I.source.url ? [{label: "Open data short", fn: () => window.open(I.source.url, "_blank", "noopener")}] : []),
@@ -1206,7 +1207,79 @@
   });
 
   // ---------------------------------------------------------------- toolbar
-  let zoom = 1;
+  // ---- magnifier: the diagram always fits the window; zoom to everything, to one chip, or in / out
+  let lastLay = null, view = null, focusId = null; // view = {x, y, w, h} in diagram units, null = all
+  function applyView() {
+    const svg = $("#bc-svg"), L = lastLay;
+    if (!L) return;
+    if (focusId && !dev(focusId)) { focusId = null; view = null; }
+    if (focusId) view = focusBox(focusId);
+    const v = view || {x: 0, y: 0, w: L.W, h: L.H};
+    svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
+    const cw = $(".bc-canvas").clientWidth || 900, maxH = Math.max(320, window.innerHeight * 0.78);
+    svg.setAttribute("width", cw);
+    svg.setAttribute("height", Math.min(maxH, cw * v.h / v.w));
+    svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
+    root.querySelectorAll("[data-focus]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.focus === (focusId || "all"))));
+  }
+  // a chip plus every block and chip pin wired to it
+  function focusBox(id) {
+    const L = lastLay, P = L.pos[id];
+    if (!P) return null;
+    let x0 = P.x - 20, y0 = P.y - 10, x1 = P.x + P.w + 20, y1 = P.y + P.h + 10;
+    const grow = (x, y, w = 0, h = 0) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + w); y1 = Math.max(y1, y + h); };
+    for (const l of S.links.filter(l => l.a.d === id || l.b.d === id)) {
+      if (NET.includes(l.kind)) continue;
+      const other = l.a.d === id ? l.b : l.a;
+      if (other.blk && L.blocks[other.blk]) { const r = L.blocks[other.blk]; grow(r.x, r.y, r.w, r.h); }
+      if (other.d && other.d !== id) for (const n of other.pins || []) { const q = L.pinXY(other.d, n); if (q) grow(q.x - 60, q.y - 10, 120, 20); }
+    }
+    const pad = 30;
+    return {x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad};
+  }
+  function zoomBy(f) {
+    const L = lastLay;
+    if (!L) return;
+    const v = view || {x: 0, y: 0, w: L.W, h: L.H};
+    const w = Math.min(L.W * 1.2, Math.max(200, v.w * f)), h = v.h * (w / v.w);
+    view = {x: v.x + (v.w - w) / 2, y: v.y + (v.h - h) / 2, w, h};
+    focusId = null;
+    applyView();
+  }
+  function renderFocusButtons() {
+    const box = $("#bc-focus");
+    if (!box) return;
+    box.innerHTML = `<button type="button" class="bc-chip" data-focus="all">All chips</button>` +
+      S.devices.map(o => `<button type="button" class="bc-chip" data-focus="${o.id}">${esc(o.slot ? `${o.slot} · ${o.mpn}` : o.mpn)}</button>`).join("");
+    applyView();
+  }
+  root.addEventListener("click", e => {
+    const f = e.target.closest("[data-focus]");
+    if (!f) return;
+    focusId = f.dataset.focus === "all" ? null : f.dataset.focus;
+    if (!focusId) view = null;
+    applyView();
+    explain("magnifier", f.textContent);
+  });
+  window.addEventListener("resize", applyView);
+  // drag to pan when zoomed in
+  (() => {
+    const svg = $("#bc-svg");
+    let drag = null;
+    svg.addEventListener("pointerdown", e => {
+      if (!view || e.target.closest(".pin, .dev-head, .blk")) return;
+      const v = view, s = v.w / svg.clientWidth;
+      drag = {x: e.clientX, y: e.clientY, v: {...v}, s};
+      svg.setPointerCapture(e.pointerId);
+    });
+    svg.addEventListener("pointermove", e => {
+      if (!drag) return;
+      focusId = null;
+      view = {...drag.v, x: drag.v.x - (e.clientX - drag.x) * drag.s, y: drag.v.y - (e.clientY - drag.y) * drag.s};
+      applyView();
+    });
+    svg.addEventListener("pointerup", () => (drag = null));
+  })();
   function changed() { dirty = true; $("#bc-status").textContent = "Unsaved changes"; render(); }
   $("#bc-add").addEventListener("change", e => { if (e.target.value) { addDevice(e.target.value); e.target.value = ""; changed(); } });
   $("#bc-auto").addEventListener("click", () => { autoComplete(); changed(); });
@@ -1219,8 +1292,8 @@
   }));
   $("#bc-compact").checked = S.compact;
   $("#bc-compact").addEventListener("change", e => { S.compact = e.target.checked; render(); });
-  $("#bc-zoom-in").addEventListener("click", () => { zoom = Math.min(2, zoom + 0.15); render(); });
-  $("#bc-zoom-out").addEventListener("click", () => { zoom = Math.max(0.4, zoom - 0.15); render(); });
+  $("#bc-zoom-in").addEventListener("click", () => zoomBy(0.7));
+  $("#bc-zoom-out").addEventListener("click", () => zoomBy(1.4));
   $("#bc-clear").addEventListener("click", () => { if (confirm("Remove everything from the diagram?")) { S.devices = []; S.blocks = []; S.links = []; changed(); } });
   $("#bc-name").value = initial.name || "";
   $("#bc-name").addEventListener("input", () => { dirty = true; $("#bc-status").textContent = "Unsaved changes"; });

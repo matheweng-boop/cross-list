@@ -299,3 +299,19 @@ def test_best_and_next_best_options_are_flagged(client):
     assert html.count("Best option</span>") == 1 and html.count("Next best option</span>") == 1
     assert "Other options (" in html
     assert html.index("Best option</span>") < html.index("Next best option</span>") < html.index("Other options (")
+
+
+def test_compare_page_layout_and_typed_parts(client):
+    html = client.get("/compare?add=SR8641,SA7741").text
+    assert html.index('name="add"') < html.index("compare-table") < html.index("Pick from the list")
+    assert "SR864x" in html  # parts grouped by series
+    assert "Not found" in client.get("/compare?add=NOSUCHPART").text
+
+
+def test_series_and_sister_family_prefixes():
+    from app.services.alternates import sister_prefix
+    from app.web.routes import series_of
+
+    assert series_of("SI86S641BE-IS2") == "SI86S64x" and series_of("NSI8241W1-DSWR") == "NSI824x"
+    assert sister_prefix("SI8641BD-IS")[0] == "SI86S641" and sister_prefix("SI86S641BE-IS2")[0] == "SI8641"
+    assert sister_prefix("SI8234AB-AM") is None

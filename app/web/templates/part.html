@@ -6,6 +6,9 @@
 <p class="subtitle">{{ part.manufacturer.name }} · {{ part.package.code }} · {{ part_badges(part) }}
   {% if part.is_reference %}<span class="badge cat">Reference</span>{% endif %}</p>
 <p class="muted">{{ part.description }}</p>
+{% if alternates %}<p class="alt-line"><b>{{ alternates[0].family_label }} alternate{{ 's' if alternates|length > 1 }}:</b>
+  {% for a in alternates %}<a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> <small class="muted">({{ a.label }})</small>{{ ' · ' if not loop.last }}{% endfor %}
+  · <a href="/compare?ids={{ part.id }}">compare</a></p>{% endif %}
 {% if part.notes %}<p class="banner">{{ part.notes }}</p>{% endif %}
 {% if part.datasheet_url or part.product_url %}<p class="downloads">
   {% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}
@@ -103,7 +106,8 @@
         {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best option' if rank == 0 else 'Next best option' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
         <br>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span> {% endif %}<small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small>
-        {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}</td>
+        {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
+        {% for a in alts_for(c) %}<br><small class="alt-line">{{ a.family_label }} alternate: <a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> ({{ a.label }})</small>{% endfor %}</td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>
         {% if r.fff_status == 'rejected' %}<br><small class="muted">FFF rejected in review</small>{% endif %}</td>
       <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay">{% if v.p2p %}<span class="p2p yes">Yes</span>{% else %}<span class="p2p no">No</span><br><small class="muted">{{ 'same pkg' if r.fit.same_package else r.fit.package_relation ~ ' pkg' }}</small>{% endif %}</a></td>

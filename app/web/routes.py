@@ -1,5 +1,6 @@
 """HTML pages."""
 
+import re
 import urllib.parse
 from pathlib import Path
 
@@ -23,7 +24,7 @@ from app.matching.engine import (
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
+from app.services import alternates, cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -291,6 +292,8 @@ def part_detail(
             "type_counts": type_counts,
             "dev": dev,
             "ranked": ranked,
+            "alternates": alternates.alternates(session, part),
+            "alts_for": lambda p: alternates.alternates(session, p, limit=1),
             "rank_reason": rank_reason,
             "cross_notes": cross_notes.notes_for,
             "position_note": cross_notes.position_note,
@@ -454,21 +457,55 @@ def engineering_note(
     )
 
 
+def series_of(mpn: str) -> str:
+    """Product series for grouping: the part number up to its last base digit, with that digit as x
+    (SI8641BD-IS -> SI864x, SI86S641BE-IS2 -> SI86S64x, ISO7741DWR -> ISO774x)."""
+    m = re.match(r"[A-Z]+\d+(?:[A-Z]\d{2,})?", re.split(r"[-.]", mpn.upper())[0])
+    return f"{m.group(0)[:-1]}x" if m and m.group(0)[-1].isdigit() else mpn.upper()
+
+
+def _norm_mpn(s: str) -> str:
+    return re.sub(r"[\s\-–]", "", s or "").upper()
+
+
 @router.get("/compare", response_class=HTMLResponse)
 def compare_page(
     request: Request,
     ids: str = "",
     baseline: int | None = None,
     family: str = "",
+    add: str = "",
+    alt: int = 1,
     pick: list[int] = Query(default=[]),
     session: Session = Depends(get_session),
 ):
     wanted = _parse_ids(ids)
     wanted += [i for i in pick if i not in wanted]
+    # typed part numbers: exact matches are added, a prefix with several matches is offered to pick from
+    matches, not_found, ambiguous = [], [], []
+    for token in [t for t in re.split(r"[,;\s]+", add) if t][:20]:
+        key = _norm_mpn(token)
+        hits = [p for p in search_parts(session, token) if _norm_mpn(p.mpn).startswith(key)]
+        exact = [p for p in hits if _norm_mpn(p.mpn) == key]
+        if exact or len(hits) == 1:
+            wanted += [p.id for p in (exact or hits) if p.id not in wanted]
+        elif hits:
+            matches += [p for p in hits if p not in matches]
+            ambiguous.append(token)
+        else:
+            not_found.append(token)
     selected = parts_by_ids(session, wanted)
+    # Si86 / Si86S: add the best alternate of each selected part
+    alt_of = {}
+    if alt:
+        for p in list(selected):
+            for a in alternates.alternates(session, p, limit=1):
+                if a.part.id not in [x.id for x in selected]:
+                    selected.append(a.part)
+                    alt_of[a.part.id] = (p.mpn, a)
     comparison = None
     if selected:
-        family = family or selected[0].family
+        family = selected[0].family if add or not family else family
         base = next((p for p in selected if p.id == baseline), selected[0])
         comparison = compare_parts(selected, base, get_rules(base.family))
         if pricing.enabled():
@@ -477,17 +514,28 @@ def compare_page(
                 session.commit()
             except pricing.DigiKeyError:
                 session.rollback()
+    if matches and add:
+        family = matches[0].family
     family = family or next(iter(load_all_rules()))
     available = list(session.scalars(select(Part).where(Part.family == family).order_by(Part.mpn)).unique())
+    series: dict[str, list[Part]] = {}
+    for p in available:
+        series.setdefault(series_of(p.mpn), []).append(p)
     return templates.TemplateResponse(
         request,
         "compare.html",
         {
             "comparison": comparison,
             "selected": selected,
-            "available": available,
+            "series": series,
             "family": family,
-            "ids": ",".join(str(p.id) for p in selected),
+            "ids": ",".join(str(p.id) for p in selected if p.id not in alt_of),
+            "add": add,
+            "matches": matches,
+            "ambiguous": ambiguous,
+            "not_found": not_found,
+            "alt": alt,
+            "alt_of": alt_of,
         },
     )
 

@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import Case, CaseNote, DataReview, PartMapping, TechFeedback
+from app.models import BusinessAssumption, Case, CaseNote, DataReview, PartMapping, TechFeedback
 from app.services import blocks, cases, quality
 from app.services import opportunity as op
 from app.web.routes import templates
@@ -20,19 +20,33 @@ templates.env.globals["bo_help"] = op.explanations
 _CROWD = {"low": 0, "medium": 1, "high": 2}
 
 
-def _ctx(session: Session, co: str) -> dict:
+def _ctx(session: Session, co: str, scope: str = "all") -> dict:
     key, label, mine = op.company(co)
     mk = op.makers(session)
-    apps = op.with_status(op.applications(), mk, mine)
+    scope = scope if scope in op.SCOPES else "all"
+    apps = op.in_scope(op.with_status(op.applications(), mk, mine), scope)
     asp, vol = op.inputs(session)
-    return {"co": key, "co_label": label, "companies": op.COMPANIES, "apps": apps, "asp": asp, "vol": vol, "mk": mk,
-            "status_label": op.STATUS_LABEL, "fns": blocks.catalogue()["functions"],
-            "crowding_label": op.CROWDING_LABEL}  # fmt: skip
+    return {
+        "co": key,
+        "co_label": label,
+        "companies": op.COMPANIES,
+        "apps": apps,
+        "asp": asp,
+        "vol": vol,
+        "mk": mk,
+        "status_label": op.STATUS_LABEL,
+        "fns": blocks.catalogue()["functions"],
+        "crowding_label": op.CROWDING_LABEL,
+        "scope": scope,
+        "scopes": op.SCOPES,
+        "n_library": sum(not a.background for a in apps),
+        "n_background": sum(a.background for a in apps),
+    }
 
 
 @router.get("/business", response_class=HTMLResponse)
-def overview(request: Request, co: str = "combined", session: Session = Depends(get_session)):
-    c = _ctx(session, co)
+def overview(request: Request, co: str = "combined", scope: str = "all", session: Session = Depends(get_session)):
+    c = _ctx(session, co, scope)
     c["ov"] = op.overview(c["apps"], c["asp"], c["vol"])
     c["top_gaps"] = op.gaps(c["apps"], c["asp"], c["vol"])[:5]
     return templates.TemplateResponse(request, "business/overview.html", c)
@@ -66,35 +80,23 @@ def attach(request: Request, fn: str = "", co: str = "combined", session: Sessio
     return templates.TemplateResponse(request, "business/attach.html", c)
 
 
-@router.get("/business/gaps", response_class=HTMLResponse)
-def gaps(request: Request, co: str = "combined", sort: str = "reach", session: Session = Depends(get_session)):
-    c = _ctx(session, co)
-    rows = op.gaps(c["apps"], c["asp"], c["vol"])
-    keys = {
-        "reach": lambda e: (-e["reach"], -e["adjacent"]),
-        "adjacency": lambda e: (-e["adjacency"], -e["reach"]),
-        "positions": lambda e: (-e["positions"], -e["reach"]),
-        "tam": lambda e: (-e["tam"], -e["reach"]),
-        "crowding": lambda e: (_CROWD.get((e["competition"] or {}).get("crowding"), 3), -e["reach"]),
-    }
-    c["sort"] = sort if sort in keys else "reach"
-    c["rows"] = sorted(rows, key=keys[c["sort"]])
-    for e in c["rows"]:
-        e["hunt"] = op.hunt_for_function(c["apps"], e["fn"])[:8]
-        e["path"] = op.evidence("path").get(e["fn"])
-    c["portfolio"] = op.reach_of_portfolio(c["apps"])[:15]
-    c["path_label"] = op.PATH_LABEL
-    return templates.TemplateResponse(request, "business/gaps.html", c)
+@router.get("/business/gaps")
+def gaps_moved(co: str = "combined", sort: str = "reach"):
+    """Old Gaps & ranking page: now the reach / cross-sell / competition / commercial views of the explorer."""
+    view = {"adjacency": "crosssell", "positions": "reach", "tam": "commercial", "crowding": "competition"}.get(
+        sort, "reach"
+    )
+    return RedirectResponse(f"/business/explorer?co={co}&view={view}", status_code=307)
 
 
 @router.get("/business/markets", response_class=HTMLResponse)
 def markets(request: Request, co: str = "combined", view: str = "all", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     m = op.markets(session, c["apps"], op.company(co)[2])
-    c["view"] = view if view in ("all", "requalify", "multi") else "all"
+    c["view"] = view if view in ("all", "requalify", "qual_unknown", "multi") else "all"
     rows = m["rows"]
-    if c["view"] == "requalify":
-        rows = [e for e in rows if e["requalify"]]
+    if c["view"] in ("requalify", "qual_unknown"):
+        rows = [e for e in rows if e[c["view"]]]
     elif c["view"] == "multi":
         rows = [e for e in rows if e["n_markets"] > 1]
     c.update(
@@ -102,35 +104,115 @@ def markets(request: Request, co: str = "combined", view: str = "all", session: 
         per_market=m["apps_per_market"],
         rows=rows,
         n_requalify=sum(e["requalify"] for e in m["rows"]),
+        n_qual_unknown=sum(e["qual_unknown"] for e in m["rows"]),
         n_multi=sum(e["n_markets"] > 1 for e in m["rows"]),
     )
     return templates.TemplateResponse(request, "business/markets.html", c)
 
 
-@router.get("/business/technology", response_class=HTMLResponse)
-def technology(request: Request, co: str = "combined", view: str = "all", session: Session = Depends(get_session)):
-    c = _ctx(session, co)
-    rows = op.technology_fit(c["apps"])
-    views = {
-        "all": lambda e: True,
-        "develop": lambda e: (e["proximity"] or 0) >= 2,
-        "low_attach": lambda e: e["adjacency"] < 0.5,
-        "chips": lambda e: e["status"] == "na",
-        "short": lambda e: (e["path"] or {}).get("path") in ("exists", "variant"),
-        "build": lambda e: (e["path"] or {}).get("path") == "new_design",
-        "acquire": lambda e: (e["path"] or {}).get("path") == "new_capability",
-    }
-    c["view"] = view if view in views else "all"
-    c["counts"] = {k: sum(map(f, rows)) for k, f in views.items()}
-    c["rows"] = [e for e in rows if views[c["view"]](e)]
-    for e in c["rows"]:
-        e["hunt"] = op.hunt_for_function(c["apps"], e["fn"])[:8]
-        e["platforms"] = op.platforms_for(e["fn"])
-        e["ev"] = {t: op.evidence(t).get(e["fn"]) for t in ("patents", "foundry", "competitor_tech")}
-    c["path_label"] = op.PATH_LABEL
-    c.update(prox_label=op.PROXIMITY_LABEL, prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT,
-             n_background=sum(a.background for a in c["apps"]))  # fmt: skip
-    return templates.TemplateResponse(request, "business/technology.html", c)
+@router.get("/business/technology")
+def technology_moved(co: str = "combined", view: str = "all"):
+    """Old Technology fit page: now the feasibility view of the explorer (its filters map onto explorer filters)."""
+    f = view if view in EXPLORER_FILTERS else ""
+    return RedirectResponse(f"/business/explorer?co={co}&view=feasibility" + (f"&f={f}" if f else ""), status_code=307)
+
+
+EXPLORER_VIEWS = {
+    "reach": (
+        "Application reach",
+        "Missing functions needed by the most reference architectures.",
+        lambda e: (-e["reach"], -e["adjacent"], e["label"]),
+    ),
+    "crosssell": (
+        "Cross-sell adjacency",
+        "Architectures needing it already contain one of our parts (door openers).",
+        lambda e: (-e["adjacency"], -e["reach"], e["label"]),
+    ),
+    "feasibility": (
+        "Technical feasibility",
+        "Technology fit: share of architectures × path or technology × competition × trend.",
+        lambda e: (-(e["score"] or 0), -e["reach"], e["label"]),
+    ),
+    "competition": (
+        "Competition",
+        "Least crowded markets first (established suppliers from public catalogues).",
+        lambda e: (
+            {"low": 0, "medium": 1, "high": 2}.get((e["competition"] or {}).get("crowding"), 3),
+            -e["reach"],
+            e["label"],
+        ),
+    ),
+    "commercial": (
+        "Commercial potential",
+        "TAM per year where ASPs and volumes are entered; unknown stays unknown.",
+        lambda e: (-e["tam"], -e["reach"], e["label"]),
+    ),
+    "evidence": (
+        "Evidence quality",
+        "Least-checked evidence first: where a review helps most.",
+        lambda e: (e["checked"] / e["items"] if e["items"] else 0, -e["reach"], e["label"]),
+    ),
+}
+EXPLORER_FILTERS = {
+    "develop": ("Same or adjacent technology", lambda e: (e["proximity"] or 0) >= 2),
+    "low_attach": ("Low attach (door openers < 50%)", lambda e: e["adjacency"] < 0.5),
+    "short": ("Exists or spec variant", lambda e: (e["path"] or {}).get("path") in ("exists", "variant")),
+    "build": ("New design", lambda e: (e["path"] or {}).get("path") == "new_design"),
+    "acquire": ("New technology: partner / acquire", lambda e: (e["path"] or {}).get("path") == "new_capability"),
+    "chips": ("Not our product type", lambda e: e["gap_type"] == "not_ours"),
+}
+
+
+@router.get("/business/explorer", response_class=HTMLResponse)
+def opportunity_explorer(
+    request: Request,
+    co: str = "combined",
+    scope: str = "all",
+    view: str = "reach",
+    f: str = "",
+    t: str = "",
+    session: Session = Depends(get_session),
+):
+    """One table of missing functions with six views (presets); the formulas behind each column are unchanged."""
+    c = _ctx(session, co, scope)
+    rows = op.explorer(c["apps"], c["asp"], c["vol"])
+    rev = quality.summary(session)
+    for e in rows:  # evidence quality: how many of the function's evidence items a source check or a person confirmed
+        items = [
+            (ds, data[e["fn"]])
+            for ds, (_, data) in quality.datasets().items()
+            if e["fn"] in data and isinstance(data[e["fn"]], dict)
+        ]
+        e["items"] = len(items)
+        e["checked"] = sum(
+            1
+            for ds, it in items
+            if (it.get("check") or {}).get("status") in ("confirmed", "corrected")
+            or quality.state(rev.get((ds, e["fn"]))) == "verified"
+        )
+        e["disputed"] = sum(1 for ds, _ in items if quality.state(rev.get((ds, e["fn"]))) == "disputed")
+    view = view if view in EXPLORER_VIEWS else "reach"
+    c["type_counts"] = Counter(e["gap_type"] for e in rows)
+    if t in op.GAP_TYPE_LABEL:
+        rows = [e for e in rows if e["gap_type"] == t]
+    elif view != "feasibility":  # chips we do not make only appear in the feasibility view (as in Technology fit)
+        rows = [e for e in rows if e["gap_type"] != "not_ours"]
+    if f in EXPLORER_FILTERS:
+        rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
+    rows.sort(key=EXPLORER_VIEWS[view][2])
+    c.update(
+        rows=rows,
+        view=view,
+        views=EXPLORER_VIEWS,
+        f=f,
+        filters=EXPLORER_FILTERS,
+        t=t,
+        gap_labels=op.GAP_TYPE_LABEL,
+        path_label=op.PATH_LABEL,
+        prox_label=op.PROXIMITY_LABEL,
+        max_score=max((e["score"] or 0 for e in rows), default=0),
+    )
+    return templates.TemplateResponse(request, "business/explorer.html", c)
 
 
 @router.get("/business/method", response_class=HTMLResponse)
@@ -142,10 +224,13 @@ def method(request: Request, co: str = "combined", session: Session = Depends(ge
 
 
 @router.get("/business/data", response_class=HTMLResponse)
-def data(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+def data(request: Request, co: str = "combined", focus: str = "", session: Session = Depends(get_session)):
     c = _ctx(session, co)
-    in_scope = {p.fn for a in c["apps"] for p in a.positions if p.status in op.IN_SCOPE}
-    c["asp_fns"] = sorted(in_scope, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    uses = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
+    c["asp_fns"] = sorted(uses, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    c["uses"] = uses
+    c["meta"] = {(m.kind, m.key): m for m in session.scalars(select(BusinessAssumption))}
+    c["focus"] = focus
     return templates.TemplateResponse(request, "business/data.html", c)
 
 
@@ -160,11 +245,28 @@ def _num(v: str) -> float | None:
 @router.post("/business/data")
 async def save_data(request: Request, co: str = Form("combined"), session: Session = Depends(get_session)):
     form = await request.form()
+    meta: dict[tuple[str, str], dict] = {}
     for k, v in form.items():
         if k.startswith("asp:"):
             op.set_input(session, "asp", k[4:], _num(str(v)))
         elif k.startswith("vol:"):
             op.set_input(session, "volume", k[4:], _num(str(v)))
+        elif k.startswith("meta:"):  # meta:<asp|volume>:<field>:<key>
+            _, kind, fld, key = k.split(":", 3)
+            if fld in ("source", "year", "geography", "currency", "scenario", "confidence"):
+                meta.setdefault((kind, key), {})[fld] = str(v).strip()
+    for (kind, key), fields in meta.items():
+        row = session.scalar(
+            select(BusinessAssumption).where(BusinessAssumption.kind == kind, BusinessAssumption.key == key)
+        )
+        if not any(fields.values()) and not row:
+            continue
+        row = row or BusinessAssumption(kind=kind, key=key)
+        year = fields.get("year", "")
+        row.source, row.year = fields.get("source") or None, int(year) if year.isdigit() else None
+        row.geography, row.currency = fields.get("geography") or None, fields.get("currency") or None
+        row.scenario, row.confidence = fields.get("scenario") or None, fields.get("confidence") or None
+        session.add(row)
     session.commit()
     return RedirectResponse(f"/business/data?co={co}&saved=1", status_code=303)
 
@@ -196,11 +298,17 @@ def case_list(request: Request, co: str = "combined", session: Session = Depends
 
 
 @router.get("/business/cases/new", response_class=HTMLResponse)
-def case_new(request: Request, fn: str = "", co: str = "combined", session: Session = Depends(get_session)):
+def case_new(request: Request, fn: str = "", co: str = "combined", title: str = "", idea: str = "",
+             session: Session = Depends(get_session)):  # fmt: skip
+    """New case, optionally from a function (Opportunity explorer) or an idea (Ideas page): nothing is saved until
+    the user creates it."""
     c = _case_ctx(session, co)
     ctx = cases.context(session, fn, co)
-    c.update(case=None, fn=fn if ctx else "", ctx=ctx, values=cases.prefill(ctx),
-             title=f"New {ctx['label']}" if ctx else "")  # fmt: skip
+    values = cases.prefill(ctx)
+    if idea:
+        values["notes"] = (f"Started from the idea: {idea}\n" + values.get("notes", "")).strip()
+    c.update(case=None, fn=fn if ctx else "", ctx=ctx, values=values,
+             title=title[:200] or (f"New {ctx['label']}" if ctx else ""))  # fmt: skip
     return templates.TemplateResponse(request, "business/case.html", c)
 
 
@@ -339,6 +447,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
              ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
              tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
              hunt=op.hunt_for_function(c["apps"], fn)[:15], existing=quality.possible_existing(session, fn),
+             need=next((g for g in op.gaps(c["apps"], c["asp"], c["vol"]) if g["fn"] == fn), None),
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
     return templates.TemplateResponse(request, "business/evidence.html", c)
@@ -409,3 +518,30 @@ def explore(request: Request, fit: str = "", co: str = "combined", session: Sess
     techs.sort(key=lambda x: min(op.FIT_ORDER.get(i.get("fit"), 3) for i in x[2]))
     c.update(techs=techs, fit=fit, rev=_rev(session), plats=op.capabilities())
     return templates.TemplateResponse(request, "business/explore.html", c)
+
+
+@router.get("/manage/reviews", response_class=HTMLResponse)
+def reviews_queue(request: Request, type: str = "", status: str = "", session: Session = Depends(get_session)):
+    from app.services import maintenance
+
+    rows = maintenance.items(session)
+    counts = Counter(i["type"] for i in rows)
+    if type in maintenance.ISSUE_TYPES:
+        rows = [i for i in rows if i["type"] == type]
+    else:
+        type = ""
+    done = {"done", "confirmed", "rejected", "cannot", "agreed"}
+    if status == "open":
+        rows = [i for i in rows if i["status"] not in done]
+    elif status == "done":
+        rows = [i for i in rows if i["status"] in done]
+    ctx = {"rows": rows, "counts": counts, "types": maintenance.ISSUE_TYPES, "type": type, "status": status}
+    return templates.TemplateResponse(request, "manage/reviews.html", ctx)
+
+
+@router.get("/business/validation", response_class=HTMLResponse)
+def human_validation(request: Request, prio: str = "", session: Session = Depends(get_session)):
+    from app.services import validation
+
+    ctx = {"scan": validation.scan(session), "prio": prio if prio in validation.PRIORITY else ""}
+    return templates.TemplateResponse(request, "business/validation.html", ctx)

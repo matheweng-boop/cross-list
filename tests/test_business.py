@@ -14,10 +14,10 @@ def test_coverage_counts_positions_not_skus():
 
 
 def test_pages_and_inputs(client):
-    for path in ("/business", "/business/applications", "/business/attach", "/business/gaps", "/business/data"):
+    for path in ("/business", "/business/applications", "/business/attach", "/business/explorer", "/business/data"):
         r = client.get(path)
         assert r.status_code == 200, path
-        assert "Business opportunity" in r.text
+        assert 'class="crumbs-bar' in r.text
     assert client.get("/business/applications/1?co=skyworks").status_code == 200
     r = client.post(
         "/business/data", data={"co": "combined", "asp:gate_driver": "2.80", "vol:Car radio tuner system": "1000"}
@@ -71,10 +71,10 @@ def test_technology_fit_and_cases(client):
 
 def test_explanations_everywhere(client):
     help_ = op.explanations()
-    for page in ("overview", "applications", "markets", "attach", "gaps", "technology", "cases", "data"):
+    for page in ("overview", "applications", "markets", "attach", "explorer", "cases", "data"):
         assert page in help_["pages"]
     for path in ("/business", "/business/applications", "/business/markets", "/business/attach", "/business/gaps",
-                 "/business/technology", "/business/cases", "/business/data"):  # fmt: skip
+                 "/business/technology", "/business/explorer", "/business/cases", "/business/data"):  # fmt: skip
         assert "About this page" in client.get(path).text, path
     method = client.get("/business/method").text
     assert "Formulas" in method and "Door opener" in method and "Data sources" in method
@@ -122,3 +122,81 @@ def test_explore_page(client):
     for path in ("/business/explore", "/business/explore?fit=high"):
         r = client.get(path)
         assert r.status_code == 200 and "New markets" in r.text, path
+
+
+def test_explorer_views_scope_and_old_links(client):
+    for view in ("reach", "crosssell", "feasibility", "competition", "commercial", "evidence"):
+        r = client.get(f"/business/explorer?view={view}")
+        assert r.status_code == 200 and "Denominator" in r.text, view
+    lib = client.get("/business/explorer?scope=library").text
+    assert "Library architectures only" in lib and "reference architectures" in lib
+    # old pages land on the matching view
+    r = client.get("/business/gaps?sort=tam", follow_redirects=False)
+    assert r.status_code == 307 and "view=commercial" in r.headers["location"]
+    r = client.get("/business/technology?view=short", follow_redirects=False)
+    assert "view=feasibility" in r.headers["location"] and "f=short" in r.headers["location"]
+    # unknown TAM is shown as unknown, never as zero
+    assert "unknown" in client.get("/business/explorer?view=commercial").text
+
+
+def test_gap_types_and_qualification_states():
+    assert op.gap_type("supported", None) == "candidate"
+    assert op.gap_type("gap", {"path": "exists"}) == "mapping"
+    assert op.gap_type("gap", {"path": "new_design"}) == "true_gap"
+    assert op.gap_type("gap", None) == "unknown_evidence"
+    assert op.gap_type("na", None) == "not_ours"
+    q = op.qual_state
+    assert q({"values": {"qualification": "automotive"}}) == "automotive"
+    assert q({"values": {"qualification": "industrial"}}) == "not_automotive"
+    assert q({"values": {"qualification": None}}) == "unknown"
+
+
+def test_reviews_queue_types_and_resolution(client):
+    client.post("/business/evidence/pol_ldo/mapping", data={"mpn": "TESTX1", "manufacturer": "Qorvo", "verdict": "yes"})
+    client.post(
+        "/api/business/review", json={"dataset": "competition", "key": "pol_ldo", "verdict": "wrong", "comment": "x"}
+    )
+    html = client.get("/manage/reviews").text
+    assert "Product-to-function mapping" in html and "Applied immediately" in html
+    assert "the vote changes no result" in html  # a review flag is never presented as a correction
+    empty = client.get("/manage/reviews?type=commercial").text
+    assert "empty-state" in empty and "Commercial inputs" in empty
+
+
+def test_commercial_inputs_keep_unknowns_and_metadata(client, session):
+    from app.models import BusinessAssumption
+
+    form = {"co": "combined", "asp:pol_ldo": "0.12", "asp:supervisor": "", "meta:asp:source:pol_ldo": "distributor",
+            "meta:asp:year:pol_ldo": "2026", "meta:asp:confidence:pol_ldo": "low"}  # fmt: skip
+    r = client.post("/business/data", data=form)
+    assert r.status_code in (200, 303)
+    asp, _ = op.inputs(session)
+    assert asp.get("pol_ldo") == 0.12 and "supervisor" not in asp  # empty = unknown, never zero
+    m = session.query(BusinessAssumption).filter_by(kind="asp", key="pol_ldo").one()
+    assert m.source == "distributor" and m.year == 2026 and m.confidence == "low"
+    assert 'placeholder="unknown"' in client.get("/business/data").text
+
+
+def test_error_page_keeps_the_address(client):
+    from fastapi.testclient import TestClient
+
+    app = client.app
+
+    @app.get("/boom")
+    def boom():
+        raise RuntimeError("calculation failed")
+
+    c = TestClient(app, raise_server_exceptions=False)
+    r = c.get("/boom?q=ISO7741")
+    assert r.status_code == 500 and "could not be calculated" in r.text and "q=ISO7741" in r.text
+
+
+def test_human_validation_page_and_scan(client, session):
+    from app.services import validation
+
+    r = validation.scan(session)
+    assert r["checked"] >= r["passed"] > 0 and r["areas"] and r["items"]
+    assert all(i["priority"] in validation.PRIORITY and i["why"] and i["link"] for i in r["items"])
+    html = client.get("/business/validation").text
+    assert "Human validation" in html and "Needs a person" in html and "Confirmed automatically" in html
+    assert client.get("/business/validation?prio=high").status_code == 200

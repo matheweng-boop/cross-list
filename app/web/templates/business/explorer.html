@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct, usd, company_switch, status_chip, crowd, about, term, path_chip %}
+{% macro url() -%}
+  {%- set base = {'co': co, 'scope': scope, 'view': view, 'f': f, 't': t} -%}{%- set _ = base.update(kwargs) -%}
+  /business/explorer?{{ base|dictsort|selectattr('1')|list|urlencode }}
+{%- endmacro %}
+{% block title %}Opportunity explorer – Cross List{% endblock %}
+{% block content %}
+<h1>Opportunity explorer</h1>
+<p class="subtitle muted">Missing functions for {{ co_label }}, one row each. Pick a view to rank them; open a function for its full evidence.
+  {{ views[view][1] }}</p>
+
+<div class="scope-bar small">
+  {{ company_switch('/business/explorer', co, companies, '&view=' ~ view ~ '&scope=' ~ scope) }}
+  <div class="chip-row"><span class="chip-lbl">Scope</span>{% for k, label in scopes.items() %}<a class="fchip{{ ' on' if scope == k }}" href="{{ url(scope=k) }}">{{ label }}</a>{% endfor %}</div>
+  <p class="denominator">Denominator: <b>{{ apps|length }}</b> reference architectures ({{ n_library }} library{% if n_background %} + {{ n_background }} background{% endif %}).
+    Architectures are counted as drawn: related variants of one application are not merged, so counts are reference designs, not unique applications or market volume.</p>
+</div>
+
+<nav class="page-tabs view-tabs" aria-label="Views">{% for k, (label, _, _) in views.items() %}<a href="{{ url(view=k) }}"{% if view == k %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+
+<div class="chip-row small"><span class="chip-lbl">Gap type</span>
+  <a class="fchip{{ ' on' if not t }}" href="{{ url(t='') }}">All{{ ' (excl. not our product type)' if view != 'feasibility' }}</a>
+  {% for k, label in gap_labels.items() if k != 'candidate' and type_counts.get(k) %}<a class="fchip gt-{{ k }}{{ ' on' if t == k }}" href="{{ url(t=k) }}" title="{{ label }}">{{ label.split(' – ')[0] }} <small>{{ type_counts[k] }}</small></a>{% endfor %}
+</div>
+<div class="chip-row small"><span class="chip-lbl">Filter</span>
+  <a class="fchip{{ ' on' if not f }}" href="{{ url(f='') }}">None</a>
+  {% for k, (label, _) in filters.items() %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=k) }}">{{ label }}</a>{% endfor %}
+</div>
+
+{{ about('explorer') }}
+
+{% if rows %}
+<div class="table-wrap"><table class="striped explorer sticky-cols" data-view="{{ view }}">
+  <thead><tr>
+    <th scope="col">Function</th>
+    <th scope="col">{{ term('gap_type', 'Gap type') }}</th>
+    <th scope="col" class="{{ 'sorted' if view == 'reach' }}">Needed in<br><small class="muted">of {{ apps|length }}</small></th>
+    <th scope="col" class="{{ 'sorted' if view == 'crosssell' }}">{{ term('door_opener', 'Door openers') }}</th>
+    <th scope="col">{{ term('socket', 'Sockets') }}</th>
+    <th scope="col">{{ term('path', 'Path') }}</th>
+    <th scope="col" class="{{ 'sorted' if view == 'competition' }}">{{ term('competition', 'Competition') }}</th>
+    <th scope="col" class="{{ 'sorted' if view == 'feasibility' }}">{{ term('tech_score', 'Fit score') }}</th>
+    <th scope="col" class="{{ 'sorted' if view == 'commercial' }}">{{ term('asp_tam', 'TAM / year') }}</th>
+    <th scope="col" class="{{ 'sorted' if view == 'evidence' }}">Evidence<br><small class="muted">checked / items</small></th>
+  </tr></thead>
+  <tbody>{% for e in rows %}
+    <tr>
+      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a></td>
+      <td><span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span></td>
+      <td>{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
+      <td title="{{ e.adjacent }} of {{ e.reach }}"><span class="bo-bar"><span style="width:{{ (e.adjacency * 100)|round }}%"></span></span> {{ pct(e.adjacency) }}</td>
+      <td>{{ e.positions }}</td>
+      <td>{{ path_chip(e.path, path_label) }}{% if not e.path and e.proximity is not none %} <span class="bo-prox px-{{ e.proximity }}">{{ prox_label[e.proximity] }}</span>{% endif %}</td>
+      <td>{{ crowd(e.competition, crowding_label) }}</td>
+      <td>{% if e.score is not none %}<span title="{% for n, w, why in e.factors %}{{ n }} {{ '%.2f'|format(w) }} ({{ why }}){{ ' × ' if not loop.last }}{% endfor %}">{{ '%.3f'|format(e.score) }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
+      <td>{% if e.tam_apps %}{{ usd(e.tam) }} <small class="muted">({{ e.tam_apps }}/{{ e.reach }})</small>{% else %}<a class="muted" href="/business/data?focus=asp:{{ e.fn }}#asp-{{ e.fn }}" title="No ASP and volume entered: unknown, not zero. Add an ASP">unknown</a>{% endif %}</td>
+      <td>{{ e.checked }} / {{ e.items }}{% if e.disputed %} <span class="rv-st rv-disputed">{{ e.disputed }} disputed</span>{% endif %}</td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+<p class="small muted">Hover a fit score for its factors. Formulas: <a href="/business/method#influence">Methodology → What influences a rating</a>.
+  Gap types: a <b>candidate</b> is never shown here (it exists, requirements unvalidated); <b>probably sold already</b> means catalogue parts may fill it –
+  confirm them on the function's evidence page.</p>
+{% else %}
+<div class="empty-state"><p><b>No function matches these filters.</b></p><p class="small"><a href="{{ url(f='', t='') }}">Clear the filters</a>.</p></div>
+{% endif %}
+{% endblock %}

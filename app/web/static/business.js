@@ -18,7 +18,7 @@
     if (!res.ok) { alert(`Not saved (${res.status})`); return; }
     const r = await res.json(), st = box.querySelector(".rv-st");
     st.className = `rv-st rv-${r.state}`;
-    st.textContent = r.state;
+    st.textContent = {verified: "reviewed ✓", disputed: "disputed", unverified: "not reviewed"}[r.state] || r.state;
     st.title = `Reviewed by people: ${r.correct} correct, ${r.wrong} wrong, ${r.unsure} unsure`;
     box.classList.add("rv-done");
   });

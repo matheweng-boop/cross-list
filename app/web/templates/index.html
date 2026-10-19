@@ -1,103 +1,71 @@
 {% extends "base.html" %}
-{% from "_macros.html" import part_badges %}
 {% macro url() -%}
-  {%- set base = {'q': q, 'family': family, 'role': role, 'company': company, 'catalog': catalog, 'sub': sub, 'lifecycle': lifecycle} -%}
-  {%- set _ = base.update(kwargs) -%}
+  {%- set base = dict(params) -%}{%- set _ = base.update(kwargs) -%}
   /parts?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
+{% block title %}Browse products – Cross List{% endblock %}
 {% block content %}
-<h1>Parts</h1>
-<p class="subtitle muted">Pick a product category, then a company. Cross List families open the crosses of a part; the full Skyworks and
-  Qorvo portfolio (catalogue) links to the product pages. To start from a competitor part, use <a href="/">Find</a>.</p>
-<form method="get" action="/parts" class="parts-search" role="search">
-  <input type="search" name="q" value="{{ q }}" placeholder="Search a part number or description" aria-label="Search">
-  {% if family %}<input type="hidden" name="family" value="{{ family }}">{% endif %}
-</form>
+<h1>Browse products</h1>
+<p class="subtitle muted">Every product once, in functional categories shared across manufacturers. Badges say what Cross List can do with each record:
+  only parts with <b>detailed parameters</b> and <b>cross-reference support</b> can be compared and crossed; catalogue records link to the
+  manufacturer's page. To start from a competitor part, use <a href="/">Search &amp; replacements</a>.</p>
 
-{% if not q and not family and not catalog %}
-  <h2 class="parts-h">Cross List families <span class="small muted">· parts with full parameters and crosses</span></h2>
-  <div class="cat-grid">
-    {% for key, e in families|dictsort %}
-    <a class="cat-tile" href="{{ url(family=key) }}"><b>{{ family_titles()[key] if key in family_titles() else key }}</b>
-      <small class="muted">{{ e.total }} parts · {{ e.companies|length }} companies</small>
-      <span class="cat-companies">{% for name, (n, r) in e.companies|dictsort %}<span class="co-chip {{ r }}">{{ name }} {{ n }}</span>{% endfor %}</span></a>
-    {% endfor %}
-  </div>
-  <h2 class="parts-h">Full portfolio <span class="small muted">· Skyworks and Qorvo catalogue, public product pages</span></h2>
-  <div class="cat-grid">
-    {% for key, e in catalog_cats.items() %}
-    <a class="cat-tile" href="{{ url(catalog=key) }}"><b>{{ key }}</b>
-      <small class="muted">{{ e.total }} parts</small>
-      <span class="cat-companies">{% for name, n in e.companies|dictsort %}<span class="co-chip reference">{{ name }} {{ n }}</span>{% endfor %}</span></a>
-    {% endfor %}
-  </div>
+<div class="browse">
+  <aside class="browse-filters" aria-label="Filters"><details class="filters-toggle" open><summary>Search and filters</summary>
+    <form method="get" action="/parts" class="browse-search">
+      <label for="parts-q">Search products</label>
+      <input type="search" id="parts-q" name="q" value="{{ q }}" placeholder="Part number or description">
+      {% for k, v in params.items() if v and k != 'q' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <button type="submit" class="small-btn">Search</button>
+    </form>
 
-{% elif family or (q and not catalog) %}
-  {% set e = families.get(family) if family else None %}
-  <div class="crumbs small"><a href="/parts">All categories</a>{% if family %} › <b>{{ family_titles()[family] if family in family_titles() else family }}</b>{% endif %}</div>
-  {% if e %}
-  <div class="chip-row"><span class="chip-lbl">Company</span>
-    {% for name, (n, r) in e.companies|dictsort %}<a class="fchip {{ r }}{{ ' on' if company == name }}" href="{{ url(company=name, sub='') }}">{{ name }} <small>{{ n }}</small></a>{% endfor %}
-    <a class="fchip{{ ' on' if company == '*' }}" href="{{ url(company='*', sub='') }}">All companies <small>{{ e.total }}</small></a>
-  </div>
-  {% if company %}
-  <div class="chip-row"><span class="chip-lbl">Parts</span>
-    <a class="fchip{{ ' on' if not role }}" href="{{ url(role='') }}">All</a>
-    <a class="fchip{{ ' on' if role == 'reference' }}" href="{{ url(role='reference') }}">Reference (Skyworks)</a>
-    <a class="fchip{{ ' on' if role == 'competitor' }}" href="{{ url(role='competitor') }}">Competitor</a>
-  </div>
-  {% if series and series|length > 1 %}<div class="chip-row"><span class="chip-lbl">Series</span>
-    <a class="fchip{{ ' on' if not sub }}" href="{{ url(sub='') }}">All</a>
-    {% for k, n in series.items() %}<a class="fchip{{ ' on' if sub == k }}" href="{{ url(sub=k) }}">{{ k }} <small>{{ n }}</small></a>{% endfor %}
-  </div>{% endif %}
-  {% if life_counts %}<div class="chip-row"><span class="chip-lbl">Lifecycle</span>
-    <a class="fchip{{ ' on' if not lifecycle }}" href="{{ url(lifecycle='') }}">Any</a>
-    {% for s, n in life_counts|dictsort %}<a class="fchip life-{{ s }}{{ ' on' if lifecycle == s }}" href="{{ url(lifecycle=s) }}">{{ s }} <small>{{ n }}</small></a>{% endfor %}
-  </div>{% endif %}
-  {% endif %}
-  {% endif %}
-  {% if parts is not none %}
-  <p class="muted small">{{ n_found }} part{{ '' if n_found == 1 else 's' }}{% if n_found > parts|length %} (first {{ parts|length }}; pick a series or lifecycle to narrow it down){% endif %}</p>
-  <div class="table-wrap"><table class="striped parts-table">
-    <thead><tr><th>Part</th><th>Description</th><th>Company</th><th>Package</th><th>Lifecycle</th></tr></thead>
-    <tbody>
-    {% for p in parts %}
-      <tr><td><a href="/parts/{{ p.id }}"><b>{{ p.mpn }}</b></a></td><td class="small">{{ p.description or '' }}</td>
-        <td class="small">{{ p.manufacturer.name }}</td><td class="small">{{ p.package.code }}</td><td>{{ part_badges(p) }}</td></tr>
-    {% else %}<tr><td colspan="5">No parts found.</td></tr>{% endfor %}
-    </tbody>
-  </table></div>
-  {% elif e %}<p class="muted">Pick a company above (or “All companies”).</p>{% endif %}
+    <p class="filt-h">Category</p>
+    <ul class="cat-tree">
+      <li><a href="{{ url(cat='', sub='') }}"{% if not cat %} class="on" aria-current="true"{% endif %}>All categories <small>{{ res.facets.cat.values()|sum }}</small></a></li>
+      {% for cid, c in tax.categories.items() if res.facets.cat.get(cid) %}
+      <li><a href="{{ url(cat=cid, sub='') }}"{% if cat == cid and not sub %} class="on" aria-current="true"{% endif %}>{{ c.label }} <small>{{ res.facets.cat[cid] }}</small></a>
+        {% if cat == cid %}<ul>{% for sid in c.subs if res.facets.sub.get(sid) %}<li><a href="{{ url(sub=sid) }}"{% if sub == sid %} class="on" aria-current="true"{% endif %}>{{ tax.subs[sid].label }} <small>{{ res.facets.sub[sid] }}</small></a></li>{% endfor %}</ul>{% endif %}
+      </li>{% endfor %}
+    </ul>
 
-{% else %}
-  {% set e = catalog_cats.get(catalog) %}
-  <div class="crumbs small"><a href="/parts">All categories</a> › <b>{{ catalog }}</b> <span class="muted">(catalogue)</span></div>
-  {% if e %}
-  <div class="chip-row"><span class="chip-lbl">Company</span>
-    {% for name, n in e.companies|dictsort %}<a class="fchip reference{{ ' on' if company == name }}" href="{{ url(company=name, sub='') }}">{{ name }} <small>{{ n }}</small></a>{% endfor %}
-    <a class="fchip{{ ' on' if company == '*' }}" href="{{ url(company='*', sub='') }}">All <small>{{ e.total }}</small></a>
-  </div>
-  {% if company and subs %}<div class="chip-row"><span class="chip-lbl">Family</span>
-    <a class="fchip{{ ' on' if not sub }}" href="{{ url(sub='') }}">All</a>
-    {% for s in subs %}<a class="fchip{{ ' on' if sub == s }}" href="{{ url(sub=s) }}">{{ s }}</a>{% endfor %}
-  </div>{% endif %}
-  {% if company and cat_life %}<div class="chip-row"><span class="chip-lbl">Lifecycle</span>
-    <a class="fchip{{ ' on' if not lifecycle }}" href="{{ url(lifecycle='') }}">Any</a>
-    {% for s, n in cat_life|dictsort %}<a class="fchip{{ ' on' if lifecycle == s }}" href="{{ url(lifecycle=s) }}">{{ s }} <small>{{ n }}</small></a>{% endfor %}
-  </div>{% endif %}
-  {% endif %}
-  {% if rows is not none %}
-  <p class="muted small">{{ rows|length }} part{{ '' if rows|length == 1 else 's' }}{% if rows|length >= 1000 %} (first 1000){% endif %} · opens the manufacturer's product page</p>
-  <div class="table-wrap"><table class="striped parts-table">
-    <thead><tr><th>Part</th><th>Description</th>{% if company == '*' %}<th>Company</th>{% endif %}<th>Package</th><th>Lifecycle</th></tr></thead>
-    <tbody>
-    {% for r in rows %}
-      <tr><td>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}{% if r.sub and not sub %}<br><small class="muted">{{ r.sub }}</small>{% endif %}</td>
-        <td class="small">{{ r.description[:160] }}</td>{% if company == '*' %}<td class="small">{{ r.manufacturer }}</td>{% endif %}
-        <td class="small">{{ r.package }}</td><td class="small">{{ r.status }}</td></tr>
-    {% else %}<tr><td colspan="5">No parts.</td></tr>{% endfor %}
-    </tbody>
-  </table></div>
-  {% else %}<p class="muted">Pick a company above.</p>{% endif %}
-{% endif %}
+    {% macro facet(name, title, labels, current) %}
+    <p class="filt-h">{{ title }}</p>
+    <ul class="facet">{% for k, n in res.facets[name]|dictsort(by='value', reverse=true) %}
+      <li><a href="{{ url(**{name: ('' if current == k else k)}) }}"{% if current == k %} class="on" aria-current="true"{% endif %}>{{ labels.get(k, k) if labels else k }} <small>{{ n }}</small></a></li>{% endfor %}</ul>
+    {% endmacro %}
+    {{ facet('company', 'Manufacturer', none, company) }}
+    {{ facet('cap', 'Data available', cap_label, cap) }}
+    {{ facet('qual', 'Qualification', qual_label, qual) }}
+    {{ facet('life', 'Lifecycle', life_label, life) }}
+    {{ facet('role', 'Role', {'reference': 'Skyworks / Qorvo', 'competitor': 'Competitor'}, role) }}
+  </details></aside>
+  <script>try { if (matchMedia("(max-width: 900px)").matches) document.querySelector(".filters-toggle").open = false; } catch (e) {}</script>
+
+  <section class="browse-results" aria-live="polite">
+    <div class="browse-head">
+      <p><b>{{ res.total }}</b> product{{ '' if res.total == 1 else 's' }}{% if res.total != res.all %} <span class="muted">of {{ res.all }}</span>{% endif %}</p>
+      {% set active = [] %}{% for k, v in params.items() if v %}{% set _ = active.append((k, v)) %}{% endfor %}
+      {% if active %}<div class="active-filters">{% for k, v in active %}<a class="fchip on" href="{{ url(**{k: ''}) }}" aria-label="Remove filter {{ k }}">
+        {{ {'q': 'Search: ' ~ v, 'cat': tax.categories[v].label if v in tax.categories else v, 'sub': tax.subs[v].label if v in tax.subs else v,
+            'company': v, 'qual': qual_label.get(v, v), 'life': life_label.get(v, v), 'cap': cap_label.get(v, v), 'role': v}[k] }} ×</a>{% endfor %}
+        <a href="/parts" class="small">Reset all</a></div>{% endif %}
+    </div>
+    {% if rows %}
+    <div class="table-wrap"><table class="striped parts-table browse-table">
+      <thead><tr><th scope="col">Part</th><th scope="col">Description</th><th scope="col">Manufacturer</th><th scope="col">Package</th><th scope="col">Lifecycle</th><th scope="col">Qualification</th><th scope="col">Data available</th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr><td>{% if r.part_id %}<a href="/parts/{{ r.part_id }}?from={{ (request.url.path ~ '?' ~ request.url.query)|urlencode }}"><b>{{ r.mpn }}</b></a>{% elif r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}
+            <br><small class="muted" title="Source category">{{ r.source_category }}{{ ' › ' ~ r.source_sub.split(' > ')[-1] if r.source_sub }}</small></td>
+          <td class="small">{{ (r.description or '')[:160] }}</td><td class="small">{{ r.manufacturer }}</td><td class="small">{{ r.package }}</td>
+          <td class="small"><span class="life life-{{ r.lifecycle }}">{{ life_label[r.lifecycle] }}</span></td>
+          <td class="small"><span class="qual q-{{ r.qualification }}">{{ qual_label[r.qualification] }}</span></td>
+          <td class="caps">{% for c in ('detailed', 'crosses', 'pinout', 'catalogue', 'source') if c in r.caps %}<span class="cap cap-{{ c }}" title="{{ cap_label[c] }}">{{ {'detailed': 'Parameters', 'crosses': 'Crosses', 'pinout': 'Pinout', 'catalogue': 'Catalogue', 'source': 'Source'}[c] }}</span>{% endfor %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% if res.total > rows|length %}<p><a href="{{ url(limit=limit + 200) }}">Show {{ [200, res.total - rows|length]|min }} more</a> <span class="small muted">({{ rows|length }} of {{ res.total }} shown)</span></p>{% endif %}
+    {% else %}
+    <div class="empty-state"><p><b>No products match these filters.</b></p><p class="small">Remove a filter above or <a href="/parts">reset all</a>. Missing a part? <a href="/requests">Request it</a>.</p></div>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

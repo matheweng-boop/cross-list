@@ -2,7 +2,7 @@
 {% from "business/_common.html" import company_switch, status_chip, about, term %}
 {% block title %}Markets – Business opportunity – Cross List{% endblock %}
 {% block content %}
-<h1>One product, several markets</h1>
+<h1>Markets <small class="muted">· one product, several markets</small></h1>
 <p class="subtitle muted">Each function and the end markets whose applications need it. A product that already sells in one market can be
   offered in the others; an industrial or commercial part that automotive applications also need is a qualification opportunity
   (AEC-Q100 instead of a new design).</p>
@@ -12,14 +12,15 @@
   <a class="fchip{{ ' on' if view == 'all' }}" href="/business/markets?co={{ co }}&view=all">All functions</a>
   <a class="fchip{{ ' on' if view == 'multi' }}" href="/business/markets?co={{ co }}&view=multi">Needed in 2+ markets <small>{{ n_multi }}</small></a>
   <a class="fchip{{ ' on' if view == 'requalify' }}" href="/business/markets?co={{ co }}&view=requalify">Qualify for automotive <small>{{ n_requalify }}</small></a>
+  <a class="fchip{{ ' on' if view == 'qual_unknown' }}" href="/business/markets?co={{ co }}&view=qual_unknown" title="Automotive needs it, but our parts do not state a grade: check the datasheets before calling it an opportunity">Grade not stated <small>{{ n_qual_unknown }}</small></a>
 </div>
 <div class="table-wrap"><table class="striped bo-markets">
-  <thead><tr><th>{{ term('function', 'Function') }}</th><th>Our position</th><th>Our parts<br><small class="muted">of them automotive</small></th>
+  <thead><tr><th>{{ term('function', 'Function') }}</th><th>Our position</th><th>Our parts<br><small class="muted">automotive · not · not stated</small></th>
     {% for m in markets %}<th class="bo-mk">{{ term('market', m) }}<br><small class="muted">{{ per_market[m] }} apps</small></th>{% endfor %}</tr></thead>
   <tbody>{% for e in rows %}<tr>
-    <td><b>{{ e.label }}</b>{% if e.requalify %}<br><span class="bo-requal bo-term" title="{{ bo_help().terms.requalify.short }}">industrial part → qualify for automotive</span>{% endif %}<br><small class="muted">Needed in {{ e.n_apps }} application{{ 's' if e.n_apps != 1 }} across {{ e.n_markets }} market{{ 's' if e.n_markets != 1 }}{% if e.parts %}; we have {{ e.parts }} part{{ 's' if e.parts != 1 }}, {{ e.auto_parts }} automotive grade{% endif %}.</small></td>
+    <td><b>{{ e.label }}</b> <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}" title="Companies that build systems needing it">customers →</a>{% if e.requalify %}<br><span class="bo-requal bo-term" title="{{ bo_help().terms.requalify.short }}">stated industrial → qualify for automotive</span>{% elif e.qual_unknown %}<br><span class="qual q-unknown" title="No part states a grade: verify before treating it as an opportunity">grade not stated – check datasheets</span>{% endif %}<br><small class="muted">Needed in {{ e.n_apps }} application{{ 's' if e.n_apps != 1 }} across {{ e.n_markets }} market{{ 's' if e.n_markets != 1 }}{% if e.parts %}; we have {{ e.parts }} part{{ 's' if e.parts != 1 }}: {{ e.auto_parts }} automotive, {{ e.not_auto_parts }} stated not automotive, {{ e.unknown_parts }} not stated{% endif %}.</small></td>
     <td>{{ status_chip(e.status, status_label) }}</td>
-    <td>{% if e.parts %}{{ e.parts }} <span class="muted">/ {{ e.auto_parts }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
+    <td>{% if e.parts %}{{ e.parts }}<br><small><span class="q-automotive" title="stated AEC-Q100">{{ e.auto_parts }} auto</span> · <span title="stated not automotive">{{ e.not_auto_parts }} not</span> · <span class="q-unknown" title="grade not stated">{{ e.unknown_parts }} ?</span></small>{% else %}<span class="muted">–</span>{% endif %}</td>
     {% for m in markets %}{% set a = e.by_market.get(m, []) %}<td class="bo-mk">{% if a %}<details><summary><span class="bo-dot{{ ' auto' if m == 'Automotive' }}">{{ a|length }}</span></summary>
       <div class="bo-mk-apps">{% for x in a %}<a href="/business/applications/{{ x.i }}?co={{ co }}">{{ x.name }}</a>{% endfor %}</div></details>{% endif %}</td>{% endfor %}
   </tr>{% else %}<tr><td colspan="{{ 3 + markets|length }}">Nothing to show.</td></tr>{% endfor %}</tbody>

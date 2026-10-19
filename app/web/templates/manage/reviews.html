@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Requests & reviews – Cross List{% endblock %}
+{% block content %}
+<h1>Requests &amp; reviews</h1>
+<p class="subtitle muted">Everything people have flagged, in one queue. Records stay where they were created; each line says how it is resolved and
+  what it affects. Flag items in context: on a part's results, a diagram, an evidence page or Technology platforms.</p>
+<div class="chip-row small"><span class="chip-lbl">Type</span>
+  <a class="fchip{{ ' on' if not type }}" href="/manage/reviews?status={{ status }}">All <small>{{ counts.values()|sum }}</small></a>
+  {% for k, (label, _) in types.items() %}<a class="fchip{{ ' on' if type == k }}" href="/manage/reviews?type={{ k }}&status={{ status }}">{{ label }} <small>{{ counts.get(k, 0) }}</small></a>{% endfor %}
+</div>
+<div class="chip-row small"><span class="chip-lbl">Status</span>
+  {% for k, label in [('', 'Any'), ('open', 'Open'), ('done', 'Resolved')] %}<a class="fchip{{ ' on' if status == k }}" href="/manage/reviews?type={{ type }}&status={{ k }}">{{ label }}</a>{% endfor %}
+</div>
+{% if rows %}
+<div class="table-wrap"><table class="striped small">
+  <thead><tr><th scope="col">Type</th><th scope="col">Item</th><th scope="col">Note</th><th scope="col">From · date</th><th scope="col">Status</th><th scope="col">How it is resolved · affects</th></tr></thead>
+  <tbody>{% for i in rows %}<tr>
+    <td>{{ types[i.type][0] }}</td><td><a href="{{ i.link }}">{{ i.title }}</a></td><td>{{ i.detail }}</td>
+    <td>{{ i.author or 'anonymous' }}<br><span class="muted">{{ i.date.strftime('%Y-%m-%d') }}</span></td><td>{{ i.status }}</td>
+    <td>{{ i.resolution }}<br><span class="muted">{{ i.affects }}</span></td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}
+<div class="empty-state">
+  {% if type %}<p><b>No {{ types[type][0]|lower }} items{{ ' with this status' if status }}.</b></p><p class="small">{{ types[type][1] }}</p>
+  <p class="small">{{ {'missing_product': 'Request a part from its search results or on Part requests.', 'specification': 'Reject a drop-in on a part\'s cross results.',
+     'mapping': 'Confirm or reject catalogue parts on a function\'s evidence page.', 'qualification': 'Mark an evidence item wrong with a note on its automotive grade, or check Markets → Grade not stated.',
+     'architecture': 'Use Feedback in the application workspace.', 'evidence': 'Use ✓ ✗ ? on ratings, or the feedback form on Technology platforms.',
+     'commercial': 'Enter or correct ASPs and volumes on Commercial inputs.'}[type] }}</p>
+  {% else %}<p><b>Nothing flagged yet.</b></p><p class="small">Flags appear here as people review parts, diagrams and evidence.</p>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

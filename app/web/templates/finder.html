@@ -1,29 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Find a Skyworks part – Cross List{% endblock %}
+{% from "_macros.html" import cross_type_definitions %}
+{% block title %}Cross List{% endblock %}
 {% block content %}
-<section class="finder">
-  <h1>Find a Skyworks part</h1>
-  <p class="subtitle muted">Enter a TI, Novosense or other competitor part number – the full number or any part of it – to see suitable Skyworks parts.</p>
+<section class="home-hero">
+  <h1>Find a replacement</h1>
+  <p class="subtitle muted">Enter a competitor part number – the full number or any part of it – to see suitable Skyworks parts.</p>
   <div class="search-bar finder-bar">
-    <form action="/find" method="get" role="search">
+    <search><form action="/find" method="get" class="home-search">
+      <label for="finder-search" class="visually-hidden">Competitor part number</label>
       <input type="search" name="q" id="finder-search" placeholder="e.g. ISO7741DWR, iso77, NSI8241" autocomplete="off" autofocus
-        aria-label="Competitor part number"
         hx-get="/suggest" hx-trigger="input changed delay:250ms, search" hx-target="#suggestions" hx-sync="this:replace">
-      <button type="submit">Find Skyworks parts</button>
-    </form>
+      <button type="submit">Find replacements</button>
+    </form></search>
     <div id="suggestions" aria-live="polite"></div>
   </div>
-  {% if examples %}
-  <p class="muted">Try: {% for p in examples %}<a href="/parts/{{ p.id }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>
-  {% endif %}
+  {% if examples %}<p class="small muted">Try: {% for p in examples %}<a href="/parts/{{ p.id }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
 </section>
-<section class="finder-help">
-  <h2>What you get</h2>
-  <ul>
-    <li><b>FFF</b> – Skyworks parts with the same package and pinout that match on every priority 1 parameter; priority 2 differences are listed for review.</li>
-    <li><b>Upgrade / Downgrade</b> – Skyworks parts that are better or worse than the part you entered.</li>
-    <li><b>Pin-to-pin</b> – same package and pinout, function differences shown.</li>
-  </ul>
-  <p class="muted">Looking from the other side? <a href="/parts">Browse Skyworks parts</a> to see their competitor crosses.</p>
+
+<section class="home-actions" aria-label="Start here">
+  <a class="home-card" href="/parts"><b>Browse products</b><span>By product family, company, qualification and lifecycle – including parts without a competitor to start from.</span></a>
+  <a class="home-card" href="/blocks"><b>Explore an application</b><span>Reference architectures (EV charger, Wi-Fi access point, car radio…): blocks, candidate parts and unmet requirements.</span></a>
+  <a class="home-card" href="/business"><b>Assess an opportunity</b><span>Portfolio coverage, missing functions, cross-sell and markets, with the evidence behind each rating.</span></a>
 </section>
+
+<details class="home-defs">
+  <summary>What the replacement types mean</summary>
+  {{ cross_type_definitions() }}
+  <p class="small"><a href="/rules">Priority groups per product family</a></p>
+</details>
 {% endblock %}

@@ -384,3 +384,22 @@ class PartMapping(Base):
     verdict: Mapped[str] = mapped_column(String(5))  # yes | no
     author: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class BusinessAssumption(Base):
+    """Where a commercial input comes from: kept next to BusinessInput (same kind and key) so the value table and
+    every calculation stay unchanged. All fields are optional; an unknown stays unknown."""
+
+    __tablename__ = "business_assumptions"
+    __table_args__ = (UniqueConstraint("kind", "key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(20))  # asp | volume
+    key: Mapped[str] = mapped_column(String(300))
+    source: Mapped[str | None] = mapped_column(String(300))
+    year: Mapped[int | None] = mapped_column(Integer)
+    geography: Mapped[str | None] = mapped_column(String(60))
+    currency: Mapped[str | None] = mapped_column(String(10))
+    scenario: Mapped[str | None] = mapped_column(String(20))  # base | low | high
+    confidence: Mapped[str | None] = mapped_column(String(10))  # high | medium | low
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

@@ -198,20 +198,37 @@
 
   // ---- below the diagram: the most likely parts per block (overview), or the clicked block in full
   const below = () => $("#bk-below");
-  async function renderBelow() {
+  // Suggested parts load per block when its section is opened (light request: best picks only); nothing is
+  // fetched up front, so large diagrams open fast. "More" fetches the full list for that block.
+  function renderBelow() {
     const box = below();
     if (!box) return;
     const fns = [...new Set(S.groups.flatMap(g => g.blocks).filter(b => status(b) === "have" || status(b) === "part").map(b => b.fn))];
     if (!fns.length) { box.innerHTML = `<h3>Suggested parts</h3><p class="small muted">No block in this diagram has Skyworks or Qorvo parts in Cross List yet.</p>`; return; }
-    const token = (renderBelow.token = (renderBelow.token || 0) + 1);
-    const results = await Promise.all(fns.map(fn => parts(fn).then(r => [fn, r])));
-    if (token !== renderBelow.token || (sel && sel.block)) return;
-    const li = p => partRow(p, false);
-    box.innerHTML = `<h3>Suggested parts <span class="small muted">· the two most likely per manufacturer for each block; click a block to focus on it</span></h3>
-      <div class="bk-sugg">${results.map(([fn, r]) => `<div class="bk-sugg-fn"><p class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${r.total} fit${Object.keys(S.req[fn] || {}).length ? " the requirements" : ""}</span></p>
-        ${r.manufacturers.map(m => `<p class="small bk-mfr">${esc(m.manufacturer)}</p><ul class="bk-parts">${m.best.map(li).join("")}</ul>
-          ${m.total > m.best.length ? `<details><summary class="small">More ${esc(m.manufacturer)} (${m.total - m.best.length})</summary><ul class="bk-parts">${m.all.slice(m.best.length, 60).map(li).join("")}</ul></details>` : ""}`).join("") || `<p class="small uc-error">None meets the requirements.</p>`}
-      </div>`).join("")}</div>`;
+    const open = renderBelow.open || (renderBelow.open = new Set());
+    box.innerHTML = `<h3>Suggested parts <span class="small muted">· open a block for its most likely parts per manufacturer, or click it in the diagram</span></h3>
+      <div class="bk-sugg">${fns.map(fn => `<details class="bk-sugg-fn" data-fn="${fn}"${open.has(fn) ? " open" : ""}><summary class="small"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} fit${Object.keys(S.req[fn] || {}).length ? " the requirements" : ""}</span></summary><div class="bk-sugg-body"></div></details>`).join("")}</div>`;
+    box.querySelectorAll(".bk-sugg-fn").forEach(d => {
+      const load = async () => {
+        const body = d.querySelector(".bk-sugg-body");
+        if (body.dataset.loaded === JSON.stringify(S.req[d.dataset.fn] || {})) return;
+        body.innerHTML = `<p class="small muted" aria-live="polite">Loading…</p>`;
+        let r;
+        try { r = await parts(d.dataset.fn, "", true); } catch (e) { body.innerHTML = `<p class="small uc-error">Could not load the parts. <button type="button" class="link-btn" data-retry>Try again</button></p>`; body.querySelector("[data-retry]").onclick = () => { body.dataset.loaded = ""; load(); }; return; }
+        body.dataset.loaded = JSON.stringify(S.req[d.dataset.fn] || {});
+        const li = p => partRow(p, false);
+        body.innerHTML = r.manufacturers.map(m => `<p class="small bk-mfr">${esc(m.manufacturer)}</p><ul class="bk-parts">${m.best.map(li).join("")}</ul>
+          ${m.total > m.best.length ? `<details class="bk-more"><summary class="small">More ${esc(m.manufacturer)} (${m.total - m.best.length})</summary><ul class="bk-parts"><li class="small muted">Loading…</li></ul></details>` : ""}`).join("") || `<p class="small uc-error">None meets the requirements.</p>`;
+        body.querySelectorAll(".bk-more").forEach((more, i) => more.addEventListener("toggle", async () => {
+          if (!more.open || more.dataset.loaded) return;
+          more.dataset.loaded = "1";
+          const full = await parts(d.dataset.fn), m = full.manufacturers[i];
+          more.querySelector("ul").innerHTML = m ? m.all.slice(m.best.length, 60).map(li).join("") : "";
+        }));
+      };
+      d.addEventListener("toggle", () => { d.open ? (open.add(d.dataset.fn), load()) : open.delete(d.dataset.fn); });
+      if (d.open) load();
+    });
   }
 
   // ---- side panel
@@ -219,10 +236,12 @@
   const group = id => S.groups.find(g => g.id === id);
   const blockOf = (g, id) => g && g.blocks.find(b => b.id === id);
   const partsCache = {};
-  async function parts(fn, q = "") {
+  async function parts(fn, q = "", lite = false) {
     const req = JSON.stringify(S.req[fn] || {});
-    const key = `${fn}|${q}|${req}`;
-    if (!partsCache[key]) partsCache[key] = fetch(`/api/blocks/parts?fn=${encodeURIComponent(fn)}&q=${encodeURIComponent(q)}&req=${encodeURIComponent(req)}`).then(r => r.json());
+    const key = `${fn}|${q}|${req}|${lite ? 1 : 0}`;
+    if (!partsCache[key]) partsCache[key] = fetch(`/api/blocks/parts?fn=${encodeURIComponent(fn)}&q=${encodeURIComponent(q)}&req=${encodeURIComponent(req)}${lite ? "&lite=1" : ""}`)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .catch(e => { delete partsCache[key]; throw e; });
     return partsCache[key];
   }
   async function refreshCounts() {

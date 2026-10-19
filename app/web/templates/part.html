@@ -2,18 +2,21 @@
 {% from "_macros.html" import part_badges, diff_table %}
 {% block title %}{{ part.mpn }} – Cross List{% endblock %}
 {% block content %}
+{% set back = request.query_params.get('from', '') %}{% if back.startswith('/parts?') or back == '/parts' %}<p class="small"><a href="{{ back }}">← Back to results</a></p>{% endif %}
 <h1>{{ part.mpn }}</h1>
-<p class="subtitle">{{ part.manufacturer.name }} · {{ part.package.code }} · {{ part_badges(part) }}
-  {% if part.is_reference %}<span class="badge cat">Reference</span>{% endif %}</p>
-<p class="muted">{{ part.description }}</p>
+<dl class="ref-summary">
+  <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>
+  <div><dt>Function</dt><dd>{{ family_titles()[part.family] if part.family in family_titles() else part.family }}</dd></div>
+  <div><dt>Package</dt><dd>{{ part.package.code }}{% if part.package_locked %} <span class="badge warn" title="{{ part.package_lock_reason }}">locked</span>{% endif %}</dd></div>
+  <div><dt>Qualification</dt><dd>{% set g = grade_of(part) %}<span class="qual q-{{ 'not_automotive' if g == 'industrial' else g }}">{{ {'automotive': 'AEC-Q100', 'industrial': 'Industrial / commercial', 'unknown': 'Not stated'}[g] }}</span></dd></div>
+  <div><dt>Lifecycle</dt><dd>{{ lifecycle_badge(part)[0] }}</dd></div>
+  <div><dt>Source</dt><dd>{% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}{% if part.datasheet_url and part.product_url %} · {% endif %}{% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}{% if not part.datasheet_url and not part.product_url %}<span class="muted">none linked</span>{% endif %}</dd></div>
+</dl>
+<p class="muted small">{{ part.description }}</p>
 {% if alternates %}<p class="alt-line"><b>{{ alternates[0].family_label }} alternate{{ 's' if alternates|length > 1 }}:</b>
   {% for a in alternates %}<a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> <small class="muted">({{ a.label }})</small>{{ ' · ' if not loop.last }}{% endfor %}
   · <a href="/compare?ids={{ part.id }}">compare</a></p>{% endif %}
 {% if part.notes %}<p class="banner">{{ part.notes }}</p>{% endif %}
-{% if part.datasheet_url or part.product_url %}<p class="downloads">
-  {% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}
-  {% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}
-</p>{% endif %}
 
 <details>
 <summary>Part details</summary>
@@ -51,10 +54,10 @@
 </details>
 
 <h2>{{ 'Suitable Skyworks parts' if not part.is_reference and scope == 'auto' else 'Replacements' }}</h2>
-<p class="muted">In order of preference: <b>Drop-in</b> = same package, pin-to-pin, priority 1 equal or better.
-  <b>Functional</b> = different package (or pinout), at most {{ dev }} priority 1 deviation{{ '' if dev == 1 else 's' }}.
-  <b>Package eq.</b> = same package, different technical spec. Priority 2 and 3 are for information.
-  {% if not part.is_reference %}{% if scope == 'auto' %}<a href="?scope=all">Include other competitors</a>{% else %}<a href="?">Skyworks parts only</a>{% endif %}{% endif %}</p>
+<p class="muted small">Drop-in, then functional (up to {{ dev }} priority 1 deviation{{ '' if dev == 1 else 's' }}), then package equivalent.
+  <a href="/rules">How cross types are decided</a>.
+  {% if not part.is_reference %}{% if scope == 'auto' %}<a href="?scope=all">Include other competitors</a>{% else %}<a href="?">Skyworks parts only</a>{% endif %}{% endif %}
+  A better value in one parameter does not establish suitability for an application: check the deviations.</p>
 {% if ref_grade == 'automotive' %}<p class="banner grade-banner"><span class="badge grade-auto">AEC-Q100</span> <b>Automotive reference:</b> AEC-Q100 is a hard requirement, so only automotive-qualified parts are listed. Industrial parts are never offered as a cross for this part.</p>
 {% else %}<p class="banner grade-banner"><span class="badge grade-ind">Industrial</span> <b>Non-automotive reference:</b> automotive (AEC-Q100) parts are also listed, as an upgrade; filter by grade below.</p>{% endif %}
 {% set keep = ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') ~ ('&grade=' ~ grade if grade else '') %}
@@ -76,8 +79,8 @@
 {% if ref_grade != 'automotive' %}
 <nav class="company-filter grade-filter" aria-label="Filter by grade">
   {% set keep3 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') %}
-  <a href="?grade=automotive{{ keep3 }}" class="badge cat{{ ' on' if grade == 'automotive' }}">Automotive AEC-Q100 ({{ grade_counts.automotive }})</a>
-  <a href="?grade=industrial{{ keep3 }}" class="badge cat{{ ' on' if grade == 'industrial' }}">Non-automotive ({{ grade_counts.industrial }})</a>
+  {% for g, glabel in grade_labels.items() if grade_counts[g] or g != 'unknown' %}<a href="?grade={{ g }}{{ keep3 }}" class="badge cat{{ ' on' if grade == g }}"{% if grade == g %} aria-current="true"{% endif %}>{{ glabel }} ({{ grade_counts[g] }})</a>{% endfor %}
+  <span class="small muted" title="Counts include the company and lifecycle filters, before the cross-type filter. Many Skyworks devices exist in both an automotive (-A…) and an industrial (-I…) version, so the two counts are often equal.">counts with current filters</span>
 </nav>
 {% endif %}
 {% if companies|length > 1 or company %}
@@ -92,67 +95,39 @@
 <input type="hidden" name="pick" value="{{ part.id }}">
 {% if rows %}
 {% set badge = {'fff': 'ok', 'functional': 'info', 'package': 'cat'} %}
+{% set ncol = 7 if pricing_enabled() else 6 %}
 <div class="table-wrap"><table class="results">
-  <thead><tr><th>Part</th><th>Cross</th><th title="Pin-to-pin">P2P</th><th title="Priority 1 vs {{ part.mpn }}">P1</th>{% if pricing_enabled() %}<th>DigiKey</th>{% endif %}</tr></thead>
+  <thead><tr><th scope="col">Candidate</th><th scope="col">Compatibility</th><th scope="col">Package</th><th scope="col" title="Same function on every pin position">Pins</th><th scope="col" title="Priority 1 vs {{ part.mpn }}">Critical deviations</th><th scope="col">Qualification · lifecycle</th>{% if pricing_enabled() %}<th scope="col">DigiKey</th>{% endif %}</tr></thead>
   <tbody>
   {% set ns = namespace(cat='', divided=false) %}
   {% for r, v in rows %}{% set c = r.candidate %}{% set rank = ranked.get(c.id) %}{% set notes = cross_notes(part.mpn, c.mpn) %}
     {% if rank is not none and v.category != ns.cat %}{% set ns.cat = v.category %}
-    <tr class="rank-divider cat-head"><td colspan="{{ 5 if pricing_enabled() else 4 }}">{{ category_labels[v.category] }} <span class="muted">· {{ type_counts[v.category] }} found</span></td></tr>
+    <tr class="rank-divider cat-head"><td colspan="{{ ncol }}">{{ category_labels[v.category] }} <span class="muted">· {{ type_counts[v.category] }} found</span></td></tr>
     {% elif rank is none and not ns.divided %}{% set ns.divided = true %}
-    <tr class="rank-divider"><td colspan="{{ 5 if pricing_enabled() else 4 }}">Other options ({{ n_rest }})</td></tr>{% endif %}
+    <tr class="rank-divider"><td colspan="{{ ncol }}">Other options ({{ n_rest }})</td></tr>{% endif %}
     <tr class="result-row cross-{{ v.category }}{{ ' ranked rank-' ~ rank if rank is not none }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
       <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
         <button type="button" class="linklike" aria-expanded="false" aria-controls="d-{{ c.id }}"><b>{{ c.mpn }}</b></button>
         {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
-        <br>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span> {% endif %}<small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small>
+        <br><small class="muted">{{ c.manufacturer.name }}</small>
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
-        {% for a in alts_for(c) %}<br><small class="alt-line">{{ a.family_label }} alternate: <a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> ({{ a.label }})</small>{% endfor %}
-        {% set ov = out_variants(c) %}{% if ov %}<br><small class="alt-line">Default output {{ c.param_map().get('default_output') or '?' }} · other state: {% for o in ov %}<a href="/parts/{{ o.id }}">{{ o.mpn }}</a> ({{ o.param_map().get('default_output') }}){{ ', ' if not loop.last }}{% endfor %}</small>{% endif %}
-        {% set po = pkg_options(c) %}{% if po %}<br><small class="alt-line">Also in: {% for o in po %}<a href="/overlay/{{ part.id }}/{{ o.id }}" title="Package overlay against {{ part.mpn }}">{{ o.package.code }}</a> <a href="/parts/{{ o.id }}" class="muted">{{ o.mpn }}</a>{% set kv = o.param_map().get('isolation_rating_kvrms') %}{% if kv %} ({{ kv }} kVrms){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</small>{% endif %}</td>
+        {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}{% if nvar %}<br><small class="muted">{{ nvar }} variant{{ 's' if nvar != 1 }} (open for details)</small>{% endif %}</td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>
         {% if r.fff_status == 'rejected' %}<br><small class="muted">FFF rejected in review</small>{% endif %}</td>
-      <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay">{% if v.p2p %}<span class="p2p yes">Yes</span>{% else %}<span class="p2p no">No</span><br><small class="muted">{{ 'same pkg' if r.fit.same_package else r.fit.package_relation ~ ' pkg' }}</small>{% endif %}</a></td>
+      <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay against {{ part.mpn }}">{{ c.package.code }}</a><br><small class="muted">{{ 'same package' if r.fit.same_package else r.fit.package_relation ~ ' package' }}</small></td>
+      <td>{% if v.p2p %}<span class="p2p yes">✓ Pin-to-pin</span>{% else %}<span class="p2p no">✗ Different</span>{% endif %}</td>
       <td><span class="spec spec-{{ v.spec }}">{{ v.spec_label }}</span>
-        {% if v.better or v.worse %}<br><small>{% if v.better %}<span class="better">+{{ v.better|length }}</span>{% endif %}{% if v.better and v.worse %} / {% endif %}{% if v.worse %}<span class="worse">−{{ v.worse|length }}</span>{% endif %}</small>{% endif %}</td>
+        {% if v.worse %}<br><small class="worse">−{{ v.worse|length }}: {{ v.worse[:2]|map(attribute='label')|join(', ') }}{{ '…' if v.worse|length > 2 }}</small>{% endif %}
+        {% if v.better %}<br><small class="better">+{{ v.better|length }} better</small>{% endif %}
+        {% if v.exceptions %}<br><small class="exception">exception: {{ v.exceptions|map(attribute='label')|join(', ') }}</small>{% endif %}</td>
+      <td>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span>{% else %}<span class="qual q-unknown">grade not stated</span>{% endif %}<br><small>{{ lifecycle_badge(c)[0] }}</small></td>
       {% if pricing_enabled() %}<td class="pricing" hx-get="/pricing/{{ c.id }}?ref={{ part.id }}&compact=true" hx-trigger="revealed"></td>{% endif %}
     </tr>
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
-      <td colspan="{{ 5 if pricing_enabled() else 4 }}">
-        {% for n in notes %}<div class="cross-note"><b>{{ n.verdict_label }}{% if n.title %} · {{ n.title }}{% endif %}</b><p>{{ n.note }}</p>
-          <small class="muted">{{ n.author or 'engineer note' }}{% if n.date %}, {{ n.date }}{% endif %}</small></div>{% endfor %}
-        <figure class="inline-overlay"><a href="/overlay/{{ part.id }}/{{ c.id }}"><img loading="lazy" src="/overlay/{{ part.id }}/{{ c.id }}.svg" alt="Package overlay {{ part.mpn }} vs {{ c.mpn }}"></a>
-          <figcaption class="small muted">Package overlay: {{ part.mpn }} (blue) vs {{ c.mpn }} (orange) · <a href="/overlay/{{ part.id }}/{{ c.id }}">open</a></figcaption></figure>
-        {% set pnote = position_note(r) %}{% if pnote %}<p class="spec-list p2p-note">{{ pnote }} <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a></p>{% endif %}
-        {% set note = '/engineering/{}?ref=' ~ part.id ~ '&cand=' ~ c.id %}
-        {% if v.better %}<p class="spec-list better">Priority 1 better: {% for d in v.better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if v.exceptions %}<p class="spec-list exception">Exception{{ 's' if v.exceptions|length > 1 }} (listed, not a knock-out): {% for d in v.exceptions %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }}{{ '; ' if not loop.last }}{% endfor %} – check the insulation the application needs.</p>{% endif %}
-        {% if v.info_better or v.info_worse %}<p class="spec-list muted">For information (priority 2/3):
-          {% if v.info_better %}<span class="better">better {% for d in v.info_better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}{% if v.info_better and v.info_worse %}; {% endif %}
-          {% if v.info_worse %}<span class="worse">worse {% for d in v.info_worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}</p>{% endif %}
-        {% if v.worse or v.info_worse %}<p class="small muted">Tap a specification for what the deviation means in your application.</p>{% endif %}
-        {% set top = r.top_differences() %}
-        <b>Top 5 differences</b>
-        {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
-        {% else %}<p>No differences in the compared parameters.</p>{% endif %}
-        {% set notes = r.p3_notes()|reject('in', top)|list %}
-        {% if notes %}<p class="p3-notes">Also note (priority 3):
-          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if r.fff_status %}
-        <div class="review review-actions">
-          {% if r.feedback %}<p class="muted">Rejected as FFF by {{ r.feedback.user.display_name if r.feedback.user else 'unknown' }} on {{ r.feedback.created_at.strftime('%Y-%m-%d') }}{% if r.feedback.note %}: “{{ r.feedback.note }}”{% endif %}</p>{% endif %}
-          {% if r.fff_status == 'auto' %}
-          <input type="text" name="note" form="fb-{{ c.id }}" placeholder="Why not a drop-in? (optional)" aria-label="Reason">
-          <button type="submit" form="fb-{{ c.id }}" name="verdict" value="reject" class="secondary">Reject as FFF</button>
-          {% else %}
-          <button type="submit" form="fb-{{ c.id }}" name="verdict" value="clear" class="secondary outline">Undo rejection</button>
-          {% endif %}
-        </div>
-        {% endif %}
-        <details><summary>All parameters</summary>{{ diff_table(r) }}</details>
-        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a> · <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a>{% if rules.get('cmti_kv_us') %} · <a href="/engineering/cmti_kv_us?ref={{ part.id }}&cand={{ c.id }}">CMTI explorer</a>{% endif %}</p>
+      <td colspan="{{ ncol }}">
+        {% if rank is not none %}{% include "_cross_detail.html" %}
+        {% else %}<div class="detail-lazy" data-src="/parts/{{ part.id }}/detail/{{ c.id }}?{{ request.url.query }}"><p class="small muted">Loading details…</p></div>{% endif %}
       </td>
     </tr>
   {% endfor %}
@@ -173,47 +148,15 @@
 </form>{% endif %}
 {% endif %}
 
-<details class="category-view">
+<details class="category-view" hx-get="/parts/{{ part.id }}/grouped?{{ request.url.query }}" hx-trigger="toggle once" hx-target="find .cv-body">
 <summary>Grouped by cross type</summary>
-<nav class="catnav">
-  {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
-</nav>
-
-{% for c in order %}
-<section id="cat-{{ c }}">
-  <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
-  {% for r in crosses[c] %}
-  <article class="cross" id="{{ c }}-{{ r.candidate.id }}">
-    <header>
-      <b>{{ r.candidate.label }}</b>
-      <span class="muted">{{ r.candidate.package.code }}</span>
-      {{ part_badges(r.candidate) }}
-      {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
-      {% if r.incomplete %}<span class="badge muted">incomplete data</span>{% endif %}
-      {% if r.fit.fits %}<span class="badge cat">pin-to-pin</span>{% endif %}
-      <a href="/parts/{{ r.candidate.id }}" class="muted">details</a>
-    </header>
-    {% if pricing_enabled() %}<div class="pricing" hx-get="/pricing/{{ r.candidate.id }}?ref={{ part.id }}" hx-trigger="revealed"></div>{% endif %}
-    <details>
-      <summary><b>Top 5 differences</b>
-        {% set top = r.top_differences() %}
-        {% if top %}
-        <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
-        {% else %}<br>No differences in the compared parameters.{% endif %}
-        {% set notes = r.p3_notes()|reject('in', top)|list %}
-        {% if notes %}<p class="p3-notes">Also note (priority 3):
-          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-      </summary>
-      {{ diff_table(r) }}
-    </details>
-  </article>
-  {% else %}
-  <p class="muted">No candidates in this category.</p>
-  {% endfor %}
-</section>
-{% endfor %}
+<div class="cv-body"><p class="small muted">Loading…</p></div>
 </details>
-<div class="sticky-actions"><button type="submit">Compare selected with {{ part.mpn }}</button></div>
+<div class="compare-tray" id="compare-tray" role="region" aria-label="Comparison" hidden>
+  <span><b data-tray-count>0</b> selected · reference <b>{{ part.mpn }}</b></span>
+  <button type="button" class="outline secondary small-btn" data-tray-clear>Clear</button>
+  <button type="submit" class="small-btn">Compare</button>
+</div>
 </form>
 {# Feedback forms live outside the compare form; the controls above refer to them with form="…". #}
 {% for r, v in rows if r.fff_status %}
@@ -238,7 +181,18 @@
     const detail = document.getElementById(row.dataset.detail), btn = row.querySelector("[aria-expanded]");
     detail.hidden = !detail.hidden;
     btn.setAttribute("aria-expanded", String(!detail.hidden));
+    const lazy = detail.querySelector(".detail-lazy[data-src]");
+    if (!detail.hidden && lazy && window.htmx) {
+      const src = lazy.dataset.src; lazy.removeAttribute("data-src");
+      htmx.ajax("GET", src, {target: lazy, swap: "innerHTML"}).catch(() => { lazy.innerHTML = '<p class="small uc-error">Could not load the details. Close and open the row to try again.</p>'; lazy.dataset.src = src; });
+    }
   }));
   if (location.hash.startsWith("#row-")) document.querySelector(location.hash + " .linklike")?.click();
+  // Comparison tray: selected count, clear, compare (the reference is always included)
+  const tray = document.getElementById("compare-tray"), picks = () => [...document.querySelectorAll('input[name="pick"][type="checkbox"]')];
+  const sync = () => { const n = picks().filter(i => i.checked).length; tray.hidden = n === 0; tray.querySelector("[data-tray-count]").textContent = n; };
+  picks().forEach(i => i.addEventListener("change", sync));
+  tray.querySelector("[data-tray-clear]").addEventListener("click", () => { picks().forEach(i => (i.checked = false)); sync(); });
+  sync();
 </script>
 {% endblock %}

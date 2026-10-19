@@ -1,37 +1,41 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, company_switch, crowd, glossary, about, term %}
-{% block title %}Business opportunity – Cross List{% endblock %}
+{% from "business/_common.html" import pct, company_switch, crowd, about, term %}
+{% block title %}Opportunities – Cross List{% endblock %}
 {% block content %}
-<h1>Business opportunity</h1>
-<p class="subtitle muted">Application-driven portfolio intelligence: how much of each application the portfolio covers, what else can be
-  sold next to an existing design-in, and which missing functions would open the most opportunity across all applications.
-  Count-based results work today; revenue figures appear as ASPs and volumes are added, always with their completeness.</p>
-{{ company_switch('/business', co, companies) }}
-{{ about('overview') }}
+<h1>Opportunities overview</h1>
+<div class="scope-bar small">
+  {{ company_switch('/business', co, companies, '&scope=' ~ scope) }}
+  <div class="chip-row"><span class="chip-lbl">Scope</span>{% for k, label in scopes.items() %}<a class="fchip{{ ' on' if scope == k }}" href="/business?co={{ co }}&scope={{ k }}">{{ label }}</a>{% endfor %}</div>
+</div>
+<p class="limits small"><b>Read with care:</b> {{ term('coverage', 'candidate coverage') }} means a {{ co_label }} part exists for a function – not that it meets an application's
+  electrical requirements. Counts are reference architectures as drawn (variants are not merged), not market volumes or sales.</p>
+
 <div class="bo-tiles">
-  <div class="bo-tile"><b>{{ pct(ov.metrics.coverage) }}</b><span>{{ term('coverage', 'functional coverage') }}, all sockets</span><small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope sockets have one of our parts</small></div>
-  <div class="bo-tile"><b>{{ pct(ov.avg_coverage) }}</b><span>average coverage per application</span><small>{{ ov.apps }} {{ term('application', 'applications') }}: {{ apps|rejectattr('background')|list|length }} in the library + {{ apps|selectattr('background')|list|length }} {{ term('background', 'background') }}</small></div>
-  <div class="bo-tile"><b>{{ ov.gap_functions }}</b><span>{{ term('function', 'functions') }} with gaps</span><small>no part of ours in at least one application (gap or competitor only)</small></div>
-  <div class="bo-tile"><b>{{ pct(ov.asp_known / ov.asp_needed if ov.asp_needed else none) }}</b><span>pricing completeness</span><small>ASP known for {{ ov.asp_known }} of {{ ov.asp_needed }} functions · volume for {{ ov.vol_known }} of {{ ov.apps }} applications</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.metrics.coverage) }}</b><span>{{ term('coverage', 'Candidate coverage') }}</span>
+    <small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope sockets have a {{ co_label }} candidate · requirements not validated</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.avg_coverage) }}</b><span>Average per architecture</span>
+    <small>mean of {{ ov.apps }} {{ term('application', 'reference architectures') }} ({{ n_library }} library{% if n_background %} + {{ n_background }} {{ term('background', 'background') }}{% endif %})</small></div>
+  <div class="bo-tile"><b>{{ ov.gap_functions }}</b><span>{{ term('function', 'Functions') }} with gaps</span>
+    <small>of {{ ov.functions }} functions in scope: no {{ co_label }} part in at least one architecture</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.asp_known / ov.asp_needed if ov.asp_needed else none) }}</b><span>Pricing completeness</span>
+    <small>ASP known for {{ ov.asp_known }} of {{ ov.asp_needed }} functions · volume for {{ ov.vol_known }} of {{ ov.apps }} architectures; missing values stay unknown</small></div>
 </div>
 
-<h2>Pipeline</h2>
-<ol class="bo-pipeline">
-  <li class="done"><b>1 · Normalize architectures</b><span>{{ ov.apps }} applications, {{ ov.positions }} design-in positions on {{ ov.functions }} normalized functions. {{ ov.metrics.unknown }} positions on unknown functions.</span><a href="/blocks">Applications</a></li>
-  <li class="done"><b>2 · Match existing products</b><span>Each position checked for {{ co_label }} parts in Cross List (catalogue + full-parameter families). Electrical requirements per application are not yet applied: “supported” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Applications</a></li>
-  <li class="done"><b>3 · Identify coverage gaps</b><span>{{ ov.metrics.gap }} gap and {{ ov.metrics.competitor }} competitor-only positions; {{ ov.metrics.na }} positions are chips we do not make (processors, MCUs, memory, sensors, antennas): left out of coverage, but counted on <a href="/business/technology?co={{ co }}">Technology fit</a>.</span><a href="/business/gaps?co={{ co }}">Gaps &amp; ranking</a></li>
-  <li class="todo"><b>4 · Cluster compatible opportunities</b><span>Needs electrical requirements per position (input voltage, current, qualification…). Today gaps are grouped by function only.</span></li>
-  <li class="part"><b>5 · Rank product concepts</b><span>Ranked by application reach, design-in positions and adjacency to existing portfolio positions; TAM joins as ASPs and volumes are entered.</span><a href="/business/data?co={{ co }}">TAM data</a></li>
-</ol>
-
-<h2>Top gaps <span class="small muted">· missing functions needed by the most applications</span></h2>
+<h2>Top missing functions <span class="small muted">· by architectures that need them</span></h2>
 <div class="table-wrap"><table class="striped">
-  <thead><tr><th>Missing function</th><th>Needed in</th><th>{{ term('door_opener', 'Door opener') }}<br><small class="muted">already use one of our parts</small></th><th>{{ term('socket', 'Sockets') }}</th><th>{{ term('competition', 'Competition') }}</th></tr></thead>
-  <tbody>{% for e in top_gaps %}<tr><td><a href="/business/gaps?co={{ co }}#fn-{{ e.fn }}">{{ e.label }}</a></td>
-    <td>{{ e.reach }} of {{ ov.apps }} applications</td><td>{{ e.adjacent }} of those {{ e.reach }}</td><td>{{ e.positions }}</td>
-    <td>{{ crowd(e.competition, crowding_label) }}</td></tr>
-    <tr class="bo-words-row"><td colspan="5" class="bo-words">Read as: {{ e.label }} appears in {{ e.reach }} of {{ ov.apps }} application diagrams ({{ e.positions }} sockets); {{ e.adjacent }} of those {{ e.reach }} already use at least one of our parts{% if e.competition %}; {{ e.competition.vendors|length }} established suppliers sell it{% endif %}.</td></tr>{% endfor %}</tbody>
+  <thead><tr><th scope="col">Missing function</th><th scope="col">Needed in<br><small class="muted">of {{ ov.apps }} architectures</small></th><th scope="col">{{ term('door_opener', 'Door openers') }}<br><small class="muted">already use our parts</small></th><th scope="col">{{ term('socket', 'Sockets') }}</th><th scope="col">{{ term('competition', 'Competition') }}</th></tr></thead>
+  <tbody>{% for e in top_gaps %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td>
+    <td>{{ e.reach }}</td><td>{{ e.adjacent }} of {{ e.reach }}</td><td>{{ e.positions }}</td><td>{{ crowd(e.competition, crowding_label) }}</td></tr>{% endfor %}</tbody>
 </table></div>
-<p class="small">Open <a href="/business/gaps?co={{ co }}">Gaps &amp; ranking</a> for the applications behind each number.</p>
-<p class="small muted">Modeled from the application diagrams; not observed sales attach rates or verified market share.</p>
+<p class="small"><a href="/business/explorer?co={{ co }}&scope={{ scope }}">All missing functions in the Opportunity explorer →</a></p>
+
+{{ about('overview') }}
+<details class="bo-help"><summary class="small"><b>Analysis pipeline and status</b></summary>
+<ol class="bo-pipeline">
+  <li class="done"><b>1 · Normalize architectures</b><span>{{ ov.apps }} reference architectures, {{ ov.positions }} sockets on {{ ov.functions }} normalized functions. {{ ov.metrics.unknown }} sockets on unknown functions.</span><a href="/blocks">Application library</a></li>
+  <li class="done"><b>2 · Match existing products</b><span>Each socket checked for {{ co_label }} parts in Cross List (catalogue + full-parameter families). Electrical requirements per application are not applied: “Portfolio” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Portfolio coverage</a></li>
+  <li class="done"><b>3 · Identify gaps</b><span>{{ ov.metrics.gap }} gap and {{ ov.metrics.competitor }} competitor-only sockets; {{ ov.metrics.na }} sockets are chips we do not make, left out of coverage.</span><a href="/business/explorer?co={{ co }}">Opportunity explorer</a></li>
+  <li class="todo"><b>4 · Cluster compatible opportunities</b><span>Needs electrical requirements per socket (voltage, current, qualification…). Today gaps are grouped by function only.</span></li>
+  <li class="part"><b>5 · Rank product concepts</b><span>Reach, door openers, path to product, competition and trend; TAM joins as ASPs and volumes are entered.</span><a href="/business/data?co={{ co }}">Commercial inputs</a></li>
+</ol></details>
 {% endblock %}

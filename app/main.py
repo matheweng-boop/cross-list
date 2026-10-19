@@ -1,10 +1,13 @@
 """FastAPI application factory."""
 
 import hashlib
+import logging
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -49,6 +52,25 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
         session.commit()
 
 
+def _warm_caches() -> None:
+    """Parse the catalogues and compute per-function candidates once, after start-up."""
+    try:
+        from app.db import get_session
+        from app.services import blocks, products
+
+        blocks.catalog_rows()
+        blocks.catalog_parts()
+        products._catalogue_index()
+        session = next(get_session())
+        try:
+            blocks.counts(session)
+            blocks.requirements(session)
+        finally:
+            session.close()
+    except Exception:  # a failed warm-up only means the first request does the work
+        logging.getLogger(__name__).exception("cache warm-up failed")
+
+
 def create_app(database_url: str | None = None, seed_synthetic: bool | None = None) -> FastAPI:
     settings = get_settings()
     engine = init_engine(database_url)
@@ -56,6 +78,8 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
+        # warm the large caches in the background so the first visitors do not wait (or time out) on them
+        threading.Thread(target=_warm_caches, daemon=True).start()
         yield
 
     bootstrap(engine, seed)
@@ -73,6 +97,16 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
 
     app.add_middleware(PasswordGate)
     app.include_router(auth_router)
+
+    @app.exception_handler(Exception)
+    async def server_error(request: Request, exc: Exception):
+        """A failed page keeps its URL (search and filters) and says so; API calls get JSON. Nothing is retried."""
+        logging.getLogger(__name__).exception("request failed: %s", request.url.path)
+        if request.url.path.startswith("/api/"):
+            return JSONResponse({"error": "The calculation failed. Nothing was saved; try again."}, status_code=500)
+        from app.web.routes import templates
+
+        return templates.TemplateResponse(request, "error.html", {"url": str(request.url)}, status_code=500)
 
     @app.get("/healthz", include_in_schema=False)
     def healthz():

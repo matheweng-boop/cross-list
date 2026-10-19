@@ -2,7 +2,7 @@
 {% from "business/_common.html" import about, review %}
 {% block title %}New markets – Business opportunity – Cross List{% endblock %}
 {% block content %}
-<h1>New markets</h1>
+<h1>Ideas <small class="muted">· existing technology, new markets</small></h1>
 <p class="subtitle muted">Starting from technology we already sell, where else could it go? Each idea names the market, why our product fits,
   what would have to change, and the public signals (forums, news, standards, products) that suggest demand. Exploratory: for
   discussion and a case analysis, not a forecast.</p>
@@ -24,10 +24,11 @@
         {% set sg = sg|string %}{% set i_http = sg.find('http') %}{% set url = sg[i_http:].split(' ')[0].rstrip(').,;') if i_http >= 0 else '' %}
         <li>{{ sg[:i_http].rstrip(' -–(') if url else sg }}{% if url %} <a href="{{ url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}</ul></details>
       {% else %}<p class="small muted">No public signal found yet.</p>{% endif %}
+      <p class="small"><a href="/business/cases/new?title={{ (t.technology ~ ' for ' ~ i.market)|urlencode }}&idea={{ (i.application ~ ' – ' ~ i.why_fit)|urlencode }}">Develop into a business case →</a></p>
     </article>
   {% endfor %}
   </div>
 </section>
-{% else %}<p class="muted">The idea list is being collected.</p>{% endfor %}
+{% else %}<div class="empty-state"><p><b>No ideas{{ ' with this fit' if fit }}.</b></p><p class="small">Ideas come from <code>data/business/evidence/new_markets.yaml</code> (existing technology → new markets, with public signals). {% if fit %}<a href="/business/explore">Show all fits</a>{% else %}Add ideas there, or start a <a href="/business/cases/new">business case</a> directly.{% endif %}</p></div>{% endfor %}
 <script src="/static/business.js" defer></script>
 {% endblock %}

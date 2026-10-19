@@ -1,6 +1,7 @@
 """Block-diagram generator pages and API."""
 
 import json
+from collections import Counter
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
@@ -16,11 +17,31 @@ router = APIRouter()
 
 
 @router.get("/blocks", response_class=HTMLResponse)
-def index(request: Request, session: Session = Depends(get_session)):
+def index(request: Request, market: str = "", source: str = "", variants: bool = False,
+          session: Session = Depends(get_session)):  # fmt: skip
+    """Application library: reference architectures with facets for end market and source; architectures that may
+    describe the same application are flagged as possible variants (never merged)."""
     designs = session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc())).all()
-    return templates.TemplateResponse(
-        request, "blocks/index.html", {"designs": designs, "cards": blocks.template_cards(session)}
-    )
+    groups = blocks.template_cards(session)
+    allcards = [c for _, items in groups for c in items]
+
+    def keep(c):
+        return (
+            (not market or c["market"] == market)
+            and (not source or c["source"] == source)
+            and (not variants or bool(c["variant"]))
+        )
+
+    cards = [(cat, [c for c in items if keep(c)]) for cat, items in groups]
+
+    def facet(key):
+        return sorted(Counter(c[key] for c in allcards).items(), key=lambda kv: (-kv[1], kv[0]))
+
+    ctx = {"designs": designs, "cards": [(k, v) for k, v in cards if v], "n_all": len(allcards),
+           "n_shown": sum(len(v) for _, v in cards), "markets": facet("market"), "sources": facet("source"),
+           "market": market, "source": source, "variants": variants,
+           "n_variant": sum(1 for c in allcards if c["variant"]), "n_groups": len(blocks.variant_groups())}  # fmt: skip
+    return templates.TemplateResponse(request, "blocks/index.html", ctx)
 
 
 @router.get("/blocks/coverage", response_class=HTMLResponse)
@@ -74,12 +95,17 @@ def delete(design_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/api/blocks/parts")
-def parts(fn: str, q: str = "", req: str = "", session: Session = Depends(get_session)):
+def parts(fn: str, q: str = "", req: str = "", lite: bool = False, session: Session = Depends(get_session)):
+    """Parts for one function. lite=1 returns only the best picks per manufacturer (the overview list loads these
+    when a block is opened); the full list comes with the clicked block."""
     try:
         answers = json.loads(req) if req else {}
     except ValueError:
         answers = {}
-    return blocks.parts_for(session, fn, q, answers)
+    out = blocks.parts_for(session, fn, q, answers)
+    if lite:
+        out = {**out, "manufacturers": [{**m, "all": []} for m in out["manufacturers"]]}
+    return out
 
 
 @router.post("/api/blocks/counts")

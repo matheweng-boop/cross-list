@@ -93,7 +93,13 @@ def test_applications_without_vendor_names_and_coverage_uses(client):
     assert b.display_name({"name": "Light EV BLDC drive, 48 V (TI)"}) == "Light EV BLDC drive, 48 V"
     assert b.display_name({"name": "E-mobility drive up to 85 V (Microchip AN5324)"}) == "E-mobility drive up to 85 V"
     page = client.get("/blocks").text
-    assert "Applications" in page and "(TI)" not in page and "(NXP)" not in page and "tpl-chip" in page
+    assert (
+        "Application library" in page
+        and "Possible variants" in page
+        and "(TI)" not in page
+        and "(NXP)" not in page
+        and "tpl-chip" in page
+    )
     uses = b.function_uses()
     assert any("radio" in a["name"].lower() for a in uses["am_fm_tuner"])
     assert 'data-fn="pmic"' in client.get("/blocks/coverage").text

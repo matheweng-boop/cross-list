@@ -1,21 +1,62 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch, about %}
-{% block title %}TAM data – Business opportunity – Cross List{% endblock %}
+{% macro meta_cells(kind, key) %}{% set m = meta.get((kind, key)) %}
+  <td><input name="meta:{{ kind }}:source:{{ key }}" value="{{ m.source or '' if m }}" placeholder="source" aria-label="Source for {{ key }}"></td>
+  <td><input name="meta:{{ kind }}:year:{{ key }}" value="{{ m.year or '' if m }}" inputmode="numeric" placeholder="year" class="w-year" aria-label="Reference year"></td>
+  <td><input name="meta:{{ kind }}:geography:{{ key }}" value="{{ m.geography or '' if m }}" placeholder="region" class="w-geo" aria-label="Geography"></td>
+  {% if kind == 'asp' %}<td><input name="meta:{{ kind }}:currency:{{ key }}" value="{{ m.currency or '' if m }}" placeholder="USD" class="w-cur" aria-label="Currency"></td>{% endif %}
+  <td><select name="meta:{{ kind }}:scenario:{{ key }}" aria-label="Scenario">{% for o in ['', 'base', 'low', 'high'] %}<option value="{{ o }}"{{ ' selected' if m and m.scenario == o }}>{{ o or '–' }}</option>{% endfor %}</select></td>
+  <td><select name="meta:{{ kind }}:confidence:{{ key }}" aria-label="Confidence">{% for o in ['', 'high', 'medium', 'low'] %}<option value="{{ o }}"{{ ' selected' if m and m.confidence == o }}>{{ o or '–' }}</option>{% endfor %}</select></td>
+{% endmacro %}
+{% block title %}Commercial inputs – Cross List{% endblock %}
 {% block content %}
-<h1>TAM data</h1>
-<p class="subtitle muted">Commercial inputs. Leave a field empty when the value is unknown: missing values are never estimated, and every
-  revenue figure says how much of it is priced. TAM per function = Σ over applications of annual volume × quantity per system × ASP
-  (alternative parts for one position count once).</p>
+<h1>Commercial inputs</h1>
+<p class="subtitle muted">ASPs per function and yearly volumes per architecture: the only inputs behind revenue figures. Leave a value empty when it is
+  unknown – it stays unknown (never zero) and every revenue figure says how much of it is priced. TAM per function = Σ volume × sockets × ASP.</p>
 {{ about('data') }}
-{% if request.query_params.get('saved') %}<p class="uc-ok">Saved.</p>{% endif %}
-<form method="post" action="/business/data">
+{% if request.query_params.get('saved') %}<p class="uc-ok" role="status">Saved.</p>{% endif %}
+<form method="post" action="/business/data" id="ci-form">
   <input type="hidden" name="co" value="{{ co }}">
-  <div class="bo-two">
-    <section><h2>ASP per function <span class="small muted">· USD per device · {{ asp|length }} of {{ asp_fns|length }} known</span></h2>
-      <div class="bo-inputs">{% for f in asp_fns %}<label><span>{{ fns[f].label }}</span><input name="asp:{{ f }}" type="text" inputmode="decimal" value="{{ asp.get(f, '') }}" placeholder="unknown"></label>{% endfor %}</div></section>
-    <section><h2>Annual volume per application <span class="small muted">· systems per year · {{ vol|length }} of {{ apps|length }} known</span></h2>
-      <div class="bo-inputs">{% for a in apps %}<label><span>{{ a.name }}</span><input name="vol:{{ a.name }}" type="text" inputmode="numeric" value="{{ '%d'|format(vol[a.name]) if a.name in vol else '' }}" placeholder="unknown"></label>{% endfor %}</div></section>
-  </div>
-  <button type="submit">Save</button>
+  <section class="ci-sec">
+    <h2>ASP per function <span class="small muted">· {{ asp|length }} of {{ asp_fns|length }} known ({{ ((100 * asp|length / asp_fns|length) if asp_fns else 0)|round|int }}%)</span></h2>
+    <div class="ci-tools"><input type="search" placeholder="Filter functions" data-filter="asp" aria-label="Filter functions">
+      <label class="small"><input type="radio" name="_show_asp" value="all" checked data-show="asp"> all</label>
+      <label class="small"><input type="radio" name="_show_asp" value="unknown" data-show="asp"> unknown only</label>
+      <label class="small"><input type="radio" name="_show_asp" value="known" data-show="asp"> known only</label></div>
+    <div class="table-wrap ci-wrap"><table class="striped ci-table" data-table="asp">
+      <thead><tr><th scope="col">Function</th><th scope="col">Used in</th><th scope="col">ASP (per device)</th><th scope="col">Source</th><th scope="col">Year</th><th scope="col">Geography</th><th scope="col">Currency</th><th scope="col">Scenario</th><th scope="col">Confidence</th></tr></thead>
+      <tbody>{% for f in asp_fns %}<tr id="asp-{{ f }}" data-name="{{ (fns[f].label if f in fns else f)|lower }}" data-known="{{ 'y' if f in asp else 'n' }}"{% if focus == 'asp:' ~ f %} class="ci-focus"{% endif %}>
+        <th scope="row">{{ fns[f].label if f in fns else f }}</th><td>{{ uses[f] }}</td>
+        <td><input name="asp:{{ f }}" type="text" inputmode="decimal" value="{{ asp.get(f, '') }}" placeholder="unknown" class="w-val" aria-label="ASP for {{ fns[f].label if f in fns else f }}"></td>
+        {{ meta_cells('asp', f) }}</tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+  <section class="ci-sec">
+    <h2>Yearly volume per architecture <span class="small muted">· {{ vol|length }} of {{ apps|length }} known</span></h2>
+    <div class="ci-tools"><input type="search" placeholder="Filter architectures" data-filter="vol" aria-label="Filter architectures"></div>
+    <div class="table-wrap ci-wrap"><table class="striped ci-table" data-table="vol">
+      <thead><tr><th scope="col">Architecture</th><th scope="col">Systems per year</th><th scope="col">Source</th><th scope="col">Year</th><th scope="col">Geography</th><th scope="col">Scenario</th><th scope="col">Confidence</th></tr></thead>
+      <tbody>{% for a in apps %}<tr data-name="{{ a.name|lower }}" data-known="{{ 'y' if a.name in vol else 'n' }}"{% if focus == 'vol:' ~ a.name %} class="ci-focus"{% endif %}>
+        <th scope="row">{{ a.name }}{% if a.background %} <small class="muted">(background)</small>{% endif %}</th>
+        <td><input name="vol:{{ a.name }}" type="text" inputmode="numeric" value="{{ '%d'|format(vol[a.name]) if a.name in vol else '' }}" placeholder="unknown" class="w-val" aria-label="Volume for {{ a.name }}"></td>
+        {{ meta_cells('volume', a.name) }}</tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+  <div class="compare-tray ci-save"><span class="small muted">Empty value = unknown. Changes apply to every analysis.</span><button type="submit" class="small-btn">Save inputs</button></div>
 </form>
+<script>
+(() => {
+  // filter rows by name and by known / unknown, without losing any input values
+  const apply = t => {
+    const q = (document.querySelector(`[data-filter="${t}"]`).value || "").toLowerCase();
+    const show = (document.querySelector(`[data-show="${t}"]:checked`) || {}).value || "all";
+    document.querySelectorAll(`[data-table="${t}"] tbody tr`).forEach(r => {
+      r.hidden = (q && !r.dataset.name.includes(q)) || (show === "unknown" && r.dataset.known === "y") || (show === "known" && r.dataset.known === "n");
+    });
+  };
+  document.querySelectorAll("[data-filter]").forEach(i => i.addEventListener("input", () => apply(i.dataset.filter)));
+  document.querySelectorAll("[data-show]").forEach(i => i.addEventListener("change", () => apply(i.dataset.show)));
+  document.querySelector(".ci-focus")?.scrollIntoView({block: "center"});
+})();
+</script>
 {% endblock %}

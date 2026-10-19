@@ -17,7 +17,7 @@ def test_pages_and_inputs(client):
     for path in ("/business", "/business/applications", "/business/attach", "/business/explorer", "/business/data"):
         r = client.get(path)
         assert r.status_code == 200, path
-        assert 'class="crumbs-bar' in r.text
+        assert 'class="sub-nav"' in r.text
     assert client.get("/business/applications/1?co=skyworks").status_code == 200
     r = client.post(
         "/business/data", data={"co": "combined", "asp:gate_driver": "2.80", "vol:Car radio tuner system": "1000"}

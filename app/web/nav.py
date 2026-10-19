@@ -1,8 +1,9 @@
-"""Navigation model: task-based sections in a sidebar, a separate Data management utility group, in-page tabs for
-closely related views, and breadcrumbs. Every existing URL keeps working; this module only decides where a page sits.
+"""Navigation model: task-based sections in a row at the top, the pages of the current section in a second row, a
+separate Data management utility section, and in-page tabs for closely related views. Every existing URL keeps
+working; this module only decides where a page sits.
 """
 
-# Primary sections (sidebar): key, label, items (label, href, description)
+# Primary sections (top row): key, label, items (label, href, description); the first item is the section's start page
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),

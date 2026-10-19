@@ -307,7 +307,7 @@ def test_automotive_reference_banner(client):
 
 
 def test_navigation_sections_and_old_urls(client):
-    """Task-based sidebar: every old URL still answers and lands in the right section and item."""
+    """Sections in the top row, the section's pages in the second: every old URL lands in the right section and item."""
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
                                ("/parts", "Products", "Browse products"),
                                ("/compare", "Products", "Compare"), ("/broadcast", "Products", "Radio &amp; audio"),
@@ -323,7 +323,11 @@ def test_navigation_sections_and_old_urls(client):
         r = client.get(url)
         assert r.status_code == 200, url
         assert f'aria-current="page" class="on">{item}<' in r.text, url
-        assert section in r.text.split('class="crumbs-bar')[1][:400] if url != "/" else True, url
+        assert (
+            f'aria-current="true" class="on">{section}<' in r.text
+            or f'class="utility on" aria-current="true">{section}<' in r.text
+        ), url
+        assert 'class="sub-nav"' in r.text and 'id="sidebar"' not in r.text, url
     # in-page tabs connect related views instead of a long row of sibling tabs
     html = client.get("/blocks/coverage").text
     assert 'href="/business/applications"' in html and 'aria-current="page" class="on">Technical coverage<' in html

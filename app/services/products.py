@@ -123,7 +123,10 @@ def index(session: Session) -> list[dict]:
         e = rows.get(key)
         if e:  # same part in the catalogue: one identity, Cross List detail page, catalogue metadata kept
             e.update(part_id=p.id, caps=e["caps"] | caps, role=p.manufacturer.role.value)
-            if e["qualification"] == "unknown":
+            # the datasheet value is per orderable part number; the catalogue's flag is often per series, so the
+            # Cross List value wins whenever it is stated (e.g. SI8600AB-IS is industrial in an AEC-Q100 series)
+            if qual != "unknown":
+                e["catalogue_qualification"] = e["qualification"]
                 e["qualification"] = qual
             if e["category"] == UNCLASSIFIED[0] and sid:
                 e.update(category=cid, sub=sid)

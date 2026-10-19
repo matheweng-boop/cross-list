@@ -189,3 +189,14 @@ def test_error_page_keeps_the_address(client):
     c = TestClient(app, raise_server_exceptions=False)
     r = c.get("/boom?q=ISO7741")
     assert r.status_code == 500 and "could not be calculated" in r.text and "q=ISO7741" in r.text
+
+
+def test_human_validation_page_and_scan(client, session):
+    from app.services import validation
+
+    r = validation.scan(session)
+    assert r["checked"] >= r["passed"] > 0 and r["areas"] and r["items"]
+    assert all(i["priority"] in validation.PRIORITY and i["why"] and i["link"] for i in r["items"])
+    html = client.get("/business/validation").text
+    assert "Human validation" in html and "Needs a person" in html and "Confirmed automatically" in html
+    assert client.get("/business/validation?prio=high").status_code == 200

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Human validation – Cross List{% endblock %}
+{% block content %}
+<h1>Human validation</h1>
+<p class="subtitle muted">A full scan of the data Cross List holds. Everything a rule or an opened source can confirm is checked automatically; this page
+  lists what needs a person, most influential first, with why a script cannot decide it and where to resolve it. The scan never changes data.</p>
+
+<div class="bo-tiles">
+  <div class="bo-tile"><b>{{ '{:,}'.format(scan.passed) }}</b><span>checks passed automatically</span><small>of {{ '{:,}'.format(scan.checked) }} checks across {{ scan.areas|length }} areas</small></div>
+  <div class="bo-tile"><b>{{ scan.totals.get('high', 0) }}</b><span>high priority for a person</span><small>change rankings, gap status or crosses if wrong</small></div>
+  <div class="bo-tile"><b>{{ scan.totals.get('medium', 0) }}</b><span>medium priority</span><small>change a label, a filter or an estimate</small></div>
+  <div class="bo-tile"><b>{{ scan.totals.get('low', 0) }}</b><span>low priority</span><small>completeness and spot checks</small></div>
+</div>
+
+<h2>Needs a person</h2>
+<div class="chip-row small"><span class="chip-lbl">Priority</span>
+  {% for k in ['', 'high', 'medium', 'low'] %}<a class="fchip{{ ' on' if prio == k }}" href="/business/validation?prio={{ k }}">{{ k|capitalize or 'All' }}</a>{% endfor %}</div>
+{% set shown = scan['items']|selectattr('priority', 'equalto', prio)|list if prio else scan['items'] %}
+{% if shown %}
+<div class="table-wrap"><table class="striped small hv-table">
+  <thead><tr><th scope="col">Priority</th><th scope="col">What to check</th><th scope="col">Why a person</th><th scope="col">Impact if wrong</th><th scope="col">Resolve</th></tr></thead>
+  <tbody>{% for i in shown %}<tr>
+    <td><span class="hv-p hv-{{ i.priority }}">{{ i.priority }}</span><br><span class="muted">{{ i.area }}</span></td>
+    <td><b>{{ i.title }}</b>{% if i.examples %}<br><span class="muted">e.g. {{ i.examples[:4]|join(', ') }}{{ ' …' if i.count > 4 }}</span>{% endif %}</td>
+    <td>{{ i.why }}</td><td>{{ i.impact }}</td><td><a href="{{ i.link }}">Open →</a></td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<div class="empty-state"><p><b>Nothing at this priority.</b></p></div>{% endif %}
+
+<h2>Confirmed automatically</h2>
+{% for area, a in scan.areas.items() %}
+<details class="hv-area"{{ ' open' if loop.first }}><summary><b>{{ area }}</b> <span class="small muted">· {{ '{:,}'.format(a.records) }} records</span></summary>
+  <table class="small"><tbody>{% for c in a.checks %}<tr><td>{% if c.total and c.passed == c.total %}<span class="q-ok">✓</span>{% elif c.total %}<span class="q-warn">!</span>{% else %}–{% endif %}</td>
+    <td>{{ c.name }}</td><td>{{ '{:,}'.format(c.passed) }} / {{ '{:,}'.format(c.total) }}</td><td class="muted">{{ c.rule }}</td></tr>{% endfor %}</tbody></table>
+</details>
+{% endfor %}
+<p class="small muted">The same scan as text: <code>uv run python tools/data_scan.py</code> writes <code>docs/data_scan.md</code>.</p>
+{% endblock %}

@@ -537,3 +537,11 @@ def reviews_queue(request: Request, type: str = "", status: str = "", session: S
         rows = [i for i in rows if i["status"] in done]
     ctx = {"rows": rows, "counts": counts, "types": maintenance.ISSUE_TYPES, "type": type, "status": status}
     return templates.TemplateResponse(request, "manage/reviews.html", ctx)
+
+
+@router.get("/business/validation", response_class=HTMLResponse)
+def human_validation(request: Request, prio: str = "", session: Session = Depends(get_session)):
+    from app.services import validation
+
+    ctx = {"scan": validation.scan(session), "prio": prio if prio in validation.PRIORITY else ""}
+    return templates.TemplateResponse(request, "business/validation.html", ctx)

@@ -1,0 +1,39 @@
+{# "Grouped by cross type": loaded when the section is opened (route /parts/{id}/grouped). #}
+{% from "_macros.html" import part_badges, diff_table %}
+<nav class="catnav">
+  {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
+</nav>
+
+{% for c in order %}
+<section id="cat-{{ c }}">
+  <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
+  {% for r in crosses[c] %}
+  <article class="cross" id="{{ c }}-{{ r.candidate.id }}">
+    <header>
+      <b>{{ r.candidate.label }}</b>
+      <span class="muted">{{ r.candidate.package.code }}</span>
+      {{ part_badges(r.candidate) }}
+      {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
+      {% if r.incomplete %}<span class="badge muted">incomplete data</span>{% endif %}
+      {% if r.fit.fits %}<span class="badge cat">pin-to-pin</span>{% endif %}
+      <a href="/parts/{{ r.candidate.id }}" class="muted">details</a>
+    </header>
+    {% if pricing_enabled() %}<div class="pricing" hx-get="/pricing/{{ r.candidate.id }}?ref={{ part.id }}" hx-trigger="revealed"></div>{% endif %}
+    <details>
+      <summary><b>Top 5 differences</b>
+        {% set top = r.top_differences() %}
+        {% if top %}
+        <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
+        {% else %}<br>No differences in the compared parameters.{% endif %}
+        {% set notes = r.p3_notes()|reject('in', top)|list %}
+        {% if notes %}<p class="p3-notes">Also note (priority 3):
+          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+      </summary>
+      {{ diff_table(r) }}
+    </details>
+  </article>
+  {% else %}
+  <p class="muted">No candidates in this category.</p>
+  {% endfor %}
+</section>
+{% endfor %}

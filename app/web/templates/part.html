@@ -126,45 +126,8 @@
     </tr>
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
       <td colspan="{{ ncol }}">
-        {% set ov = out_variants(c) %}{% set po = pkg_options(c) %}{% set al = alts_for(c) %}
-        {% if ov or po or al %}<div class="variants small"><b>Variants of {{ c.mpn }}</b><ul>
-          {% for a in al %}<li>{{ a.family_label }} alternate: <a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> ({{ a.label }})</li>{% endfor %}
-          {% if ov %}<li>Default output {{ c.param_map().get('default_output') or '?' }}; other state: {% for o in ov %}<a href="/parts/{{ o.id }}">{{ o.mpn }}</a> ({{ o.param_map().get('default_output') }}){{ ', ' if not loop.last }}{% endfor %}</li>{% endif %}
-          {% if po %}<li>Other packages: {% for o in po %}<a href="/overlay/{{ part.id }}/{{ o.id }}" title="Package overlay against {{ part.mpn }}">{{ o.package.code }}</a> <a href="/parts/{{ o.id }}" class="muted">{{ o.mpn }}</a>{% set kv = o.param_map().get('isolation_rating_kvrms') %}{% if kv %} ({{ kv }} kVrms){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</li>{% endif %}
-        </ul></div>{% endif %}
-        {% for n in notes %}<div class="cross-note"><b>{{ n.verdict_label }}{% if n.title %} · {{ n.title }}{% endif %}</b><p>{{ n.note }}</p>
-          <small class="muted">{{ n.author or 'engineer note' }}{% if n.date %}, {{ n.date }}{% endif %}</small></div>{% endfor %}
-        <figure class="inline-overlay"><a href="/overlay/{{ part.id }}/{{ c.id }}"><img loading="lazy" src="/overlay/{{ part.id }}/{{ c.id }}.svg" alt="Package overlay {{ part.mpn }} vs {{ c.mpn }}"></a>
-          <figcaption class="small muted">Package overlay: {{ part.mpn }} (blue) vs {{ c.mpn }} (orange) · <a href="/overlay/{{ part.id }}/{{ c.id }}">open</a></figcaption></figure>
-        {% set pnote = position_note(r) %}{% if pnote %}<p class="spec-list p2p-note">{{ pnote }} <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a></p>{% endif %}
-        {% set note = '/engineering/{}?ref=' ~ part.id ~ '&cand=' ~ c.id %}
-        {% if v.better %}<p class="spec-list better">Priority 1 better: {% for d in v.better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if v.exceptions %}<p class="spec-list exception">Exception{{ 's' if v.exceptions|length > 1 }} (listed, not a knock-out): {% for d in v.exceptions %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }}{{ '; ' if not loop.last }}{% endfor %} – check the insulation the application needs.</p>{% endif %}
-        {% if v.info_better or v.info_worse %}<p class="spec-list muted">For information (priority 2/3):
-          {% if v.info_better %}<span class="better">better {% for d in v.info_better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}{% if v.info_better and v.info_worse %}; {% endif %}
-          {% if v.info_worse %}<span class="worse">worse {% for d in v.info_worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}</p>{% endif %}
-        {% if v.worse or v.info_worse %}<p class="small muted">Tap a specification for what the deviation means in your application.</p>{% endif %}
-        {% set top = r.top_differences() %}
-        <b>Top 5 differences</b>
-        {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
-        {% else %}<p>No differences in the compared parameters.</p>{% endif %}
-        {% set notes = r.p3_notes()|reject('in', top)|list %}
-        {% if notes %}<p class="p3-notes">Also note (priority 3):
-          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if r.fff_status %}
-        <div class="review review-actions">
-          {% if r.feedback %}<p class="muted">Rejected as FFF by {{ r.feedback.user.display_name if r.feedback.user else 'unknown' }} on {{ r.feedback.created_at.strftime('%Y-%m-%d') }}{% if r.feedback.note %}: “{{ r.feedback.note }}”{% endif %}</p>{% endif %}
-          {% if r.fff_status == 'auto' %}
-          <input type="text" name="note" form="fb-{{ c.id }}" placeholder="Why not a drop-in? (optional)" aria-label="Reason">
-          <button type="submit" form="fb-{{ c.id }}" name="verdict" value="reject" class="secondary">Reject as FFF</button>
-          {% else %}
-          <button type="submit" form="fb-{{ c.id }}" name="verdict" value="clear" class="secondary outline">Undo rejection</button>
-          {% endif %}
-        </div>
-        {% endif %}
-        <details><summary>All parameters</summary>{{ diff_table(r) }}</details>
-        <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a> · <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a>{% if rules.get('cmti_kv_us') %} · <a href="/engineering/cmti_kv_us?ref={{ part.id }}&cand={{ c.id }}">CMTI explorer</a>{% endif %}</p>
+        {% if rank is not none %}{% include "_cross_detail.html" %}
+        {% else %}<div class="detail-lazy" data-src="/parts/{{ part.id }}/detail/{{ c.id }}?{{ request.url.query }}"><p class="small muted">Loading details…</p></div>{% endif %}
       </td>
     </tr>
   {% endfor %}
@@ -185,45 +148,9 @@
 </form>{% endif %}
 {% endif %}
 
-<details class="category-view">
+<details class="category-view" hx-get="/parts/{{ part.id }}/grouped?{{ request.url.query }}" hx-trigger="toggle once" hx-target="find .cv-body">
 <summary>Grouped by cross type</summary>
-<nav class="catnav">
-  {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
-</nav>
-
-{% for c in order %}
-<section id="cat-{{ c }}">
-  <h3>{{ category_labels[c] }} <small class="muted">({{ crosses[c]|length }})</small></h3>
-  {% for r in crosses[c] %}
-  <article class="cross" id="{{ c }}-{{ r.candidate.id }}">
-    <header>
-      <b>{{ r.candidate.label }}</b>
-      <span class="muted">{{ r.candidate.package.code }}</span>
-      {{ part_badges(r.candidate) }}
-      {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
-      {% if r.incomplete %}<span class="badge muted">incomplete data</span>{% endif %}
-      {% if r.fit.fits %}<span class="badge cat">pin-to-pin</span>{% endif %}
-      <a href="/parts/{{ r.candidate.id }}" class="muted">details</a>
-    </header>
-    {% if pricing_enabled() %}<div class="pricing" hx-get="/pricing/{{ r.candidate.id }}?ref={{ part.id }}" hx-trigger="revealed"></div>{% endif %}
-    <details>
-      <summary><b>Top 5 differences</b>
-        {% set top = r.top_differences() %}
-        {% if top %}
-        <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
-        {% else %}<br>No differences in the compared parameters.{% endif %}
-        {% set notes = r.p3_notes()|reject('in', top)|list %}
-        {% if notes %}<p class="p3-notes">Also note (priority 3):
-          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-      </summary>
-      {{ diff_table(r) }}
-    </details>
-  </article>
-  {% else %}
-  <p class="muted">No candidates in this category.</p>
-  {% endfor %}
-</section>
-{% endfor %}
+<div class="cv-body"><p class="small muted">Loading…</p></div>
 </details>
 <div class="compare-tray" id="compare-tray" role="region" aria-label="Comparison" hidden>
   <span><b data-tray-count>0</b> selected · reference <b>{{ part.mpn }}</b></span>
@@ -254,6 +181,11 @@
     const detail = document.getElementById(row.dataset.detail), btn = row.querySelector("[aria-expanded]");
     detail.hidden = !detail.hidden;
     btn.setAttribute("aria-expanded", String(!detail.hidden));
+    const lazy = detail.querySelector(".detail-lazy[data-src]");
+    if (!detail.hidden && lazy && window.htmx) {
+      const src = lazy.dataset.src; lazy.removeAttribute("data-src");
+      htmx.ajax("GET", src, {target: lazy, swap: "innerHTML"}).catch(() => { lazy.innerHTML = '<p class="small uc-error">Could not load the details. Close and open the row to try again.</p>'; lazy.dataset.src = src; });
+    }
   }));
   if (location.hash.startsWith("#row-")) document.querySelector(location.hash + " .linklike")?.click();
   // Comparison tray: selected count, clear, compare (the reference is always included)

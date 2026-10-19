@@ -277,22 +277,10 @@ def companies_of(rows: list) -> list[tuple[str, int]]:
     return sorted(counts.items())
 
 
-@router.get("/parts/{part_id}", response_class=HTMLResponse)
-def part_detail(
-    request: Request,
-    part_id: int,
-    hide_eol: bool = False,
-    company: str = "",
-    scope: str = "auto",
-    type: str = "",
-    dev: int = DEFAULT_MAX_DEVIATIONS,
-    grade: str = "",
-    all: bool = False,
-    session: Session = Depends(get_session),
-):
-    part = session.get(Part, part_id)
-    if part is None:
-        raise HTTPException(404, "Part not found")
+def _part_context(
+    session: Session, part: Part, hide_eol: bool, company: str, scope: str, type: str, dev: int, grade: str, all: bool
+) -> dict:
+    """Everything the part page shows; also used by the fragments that load on demand (grouped view, row detail)."""
     rules = get_rules(part.family)
     # grade is always one of the two: an automotive part only takes automotive crosses (AEC-Q100 is a hard
     # requirement); a non-automotive part shows non-automotive crosses unless automotive is chosen
@@ -336,41 +324,87 @@ def part_detail(
         prio: [(p, format_value(p, values.get(p.key)), sources.get(p.key)) for p in rules.by_priority(prio)]
         for prio in (1, 2, 3)
     }
-    return templates.TemplateResponse(
-        request,
-        "part.html",
-        {
-            "part": part,
-            "pinout_source": part.pinout_source,
-            "rules": rules,
-            "groups": groups,
-            "crosses": crosses,
-            "order": CATEGORY_ORDER,
-            "hide_eol": hide_eol,
-            "rejected": rejected,
-            "companies": companies,
-            "company": company,
-            "scope": scope,
-            "rows": rows,
-            "type": type,
-            "type_counts": type_counts,
-            "dev": dev,
-            "ranked": ranked,
-            "n_top": len(top),
-            "n_rest": len(rest),
-            "show_all": all,
-            "alternates": alternates.alternates(session, part),
-            "alts_for": lambda p: alternates.alternates(session, p, limit=1),
-            "pkg_options": lambda p: alternates.package_options(session, p),
-            "out_variants": lambda p: alternates.output_variants(session, p),
-            "rank_reason": rank_reason,
-            "cross_notes": cross_notes.notes_for,
-            "position_note": cross_notes.position_note,
-            "grade": grade,
-            "grade_counts": grade_counts,
-            "ref_grade": grade_of(part),
-        },
-    )
+    return {
+        "part": part,
+        "pinout_source": part.pinout_source,
+        "rules": rules,
+        "groups": groups,
+        "crosses": crosses,
+        "order": CATEGORY_ORDER,
+        "hide_eol": hide_eol,
+        "rejected": rejected,
+        "companies": companies,
+        "company": company,
+        "scope": scope,
+        "rows": rows,
+        "type": type,
+        "type_counts": type_counts,
+        "dev": dev,
+        "ranked": ranked,
+        "n_top": len(top),
+        "n_rest": len(rest),
+        "show_all": all,
+        "alternates": alternates.alternates(session, part),
+        "alts_for": lambda p: alternates.alternates(session, p, limit=1),
+        "pkg_options": lambda p: alternates.package_options(session, p),
+        "out_variants": lambda p: alternates.output_variants(session, p),
+        "rank_reason": rank_reason,
+        "cross_notes": cross_notes.notes_for,
+        "position_note": cross_notes.position_note,
+        "grade": grade,
+        "grade_counts": grade_counts,
+        "ref_grade": grade_of(part),
+    }
+
+
+def _part_or_404(session: Session, part_id: int) -> Part:
+    part = session.get(Part, part_id)
+    if part is None:
+        raise HTTPException(404, "Part not found")
+    return part
+
+
+@router.get("/parts/{part_id}", response_class=HTMLResponse)
+def part_detail(
+    request: Request,
+    part_id: int,
+    hide_eol: bool = False,
+    company: str = "",
+    scope: str = "auto",
+    type: str = "",
+    dev: int = DEFAULT_MAX_DEVIATIONS,
+    grade: str = "",
+    all: bool = False,
+    session: Session = Depends(get_session),
+):
+    part = _part_or_404(session, part_id)
+    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, all)
+    return templates.TemplateResponse(request, "part.html", ctx)
+
+
+@router.get("/parts/{part_id}/grouped", response_class=HTMLResponse)
+def part_grouped(request: Request, part_id: int, hide_eol: bool = False, company: str = "", scope: str = "auto",
+                 type: str = "", dev: int = DEFAULT_MAX_DEVIATIONS, grade: str = "",
+                 session: Session = Depends(get_session)):  # fmt: skip
+    """The 'grouped by cross type' view, loaded when it is opened (it repeats every table)."""
+    part = _part_or_404(session, part_id)
+    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, True)
+    return templates.TemplateResponse(request, "_grouped.html", ctx)
+
+
+@router.get("/parts/{part_id}/detail/{cand_id}", response_class=HTMLResponse)
+def part_cross_detail(request: Request, part_id: int, cand_id: int, hide_eol: bool = False, company: str = "",
+                      scope: str = "auto", type: str = "", dev: int = DEFAULT_MAX_DEVIATIONS, grade: str = "",
+                      session: Session = Depends(get_session)):  # fmt: skip
+    """One result row's details (differences, overlay, variants), loaded when the row is opened."""
+    part = _part_or_404(session, part_id)
+    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, True)
+    hit = next(((r, v) for r, v in ctx["rows"] if r.candidate.id == cand_id), None)
+    if hit is None:
+        raise HTTPException(404, "Not a cross of this part with these filters")
+    r, v = hit
+    ctx.update(r=r, v=v, c=r.candidate, notes=cross_notes.notes_for(part.mpn, r.candidate.mpn))
+    return templates.TemplateResponse(request, "_cross_detail.html", ctx)
 
 
 @router.get("/parts/{part_id}/replacements.{fmt}")

@@ -64,6 +64,7 @@ def _warm_caches() -> None:
         session = next(get_session())
         try:
             blocks.counts(session)
+            blocks.requirements(session)
         finally:
             session.close()
     except Exception:  # a failed warm-up only means the first request does the work

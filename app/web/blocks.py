@@ -95,12 +95,17 @@ def delete(design_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/api/blocks/parts")
-def parts(fn: str, q: str = "", req: str = "", session: Session = Depends(get_session)):
+def parts(fn: str, q: str = "", req: str = "", lite: bool = False, session: Session = Depends(get_session)):
+    """Parts for one function. lite=1 returns only the best picks per manufacturer (the overview list loads these
+    when a block is opened); the full list comes with the clicked block."""
     try:
         answers = json.loads(req) if req else {}
     except ValueError:
         answers = {}
-    return blocks.parts_for(session, fn, q, answers)
+    out = blocks.parts_for(session, fn, q, answers)
+    if lite:
+        out = {**out, "manufacturers": [{**m, "all": []} for m in out["manufacturers"]]}
+    return out
 
 
 @router.post("/api/blocks/counts")

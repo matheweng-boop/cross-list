@@ -280,8 +280,10 @@ def test_engineering_notes(client):
 def test_deviation_links_open_the_note_with_both_parts(client):
     ref, cand = ids(client, "SR8640N", "SB8441")  # default output deviates
     page = client.get(f"/parts/{ref}?all=true").text
+    # lower-ranked rows load their details when opened: the page links the fragment, the fragment has the links
+    detail = page if f"cand={cand}" in page else client.get(f"/parts/{ref}/detail/{cand}?all=true").text
     link = f"/engineering/default_output?ref={ref}&amp;cand={cand}"
-    assert link in page
+    assert link in detail
     note = client.get(link.replace("&amp;", "&")).text
     assert "Your comparison" in note and "SR8640N" in note and "SB8441" in note and "different" in note
 
@@ -354,3 +356,12 @@ def test_series_and_sister_family_prefixes():
     assert series_of("SI86S641BE-IS2") == "SI86S64x" and series_of("NSI8241W1-DSWR") == "NSI824x"
     assert sister_prefix("SI8641BD-IS")[0] == "SI86S641" and sister_prefix("SI86S641BE-IS2")[0] == "SI8641"
     assert sister_prefix("SI8234AB-AM") is None
+
+
+def test_part_page_loads_heavy_sections_on_demand(client):
+    ref, cand = ids(client, "SR8640N", "SB8441")
+    page = client.get(f"/parts/{ref}?all=true").text
+    assert f'hx-get="/parts/{ref}/grouped' in page and "data-src=" in page  # loaded when opened
+    grouped = client.get(f"/parts/{ref}/grouped").text
+    assert "Top 5 differences" in grouped
+    assert client.get(f"/parts/{ref}/detail/999999").status_code == 404

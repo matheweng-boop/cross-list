@@ -50,6 +50,13 @@
     </tbody>
   </table>
   </div>
+  <h2 class="compare-list-h">Package overlay</h2>
+  <div class="overlay-grid">
+    {% for p in comparison.parts if p.id != comparison.baseline.id %}
+    <figure><a href="/overlay/{{ comparison.baseline.id }}/{{ p.id }}"><img loading="lazy" src="/overlay/{{ comparison.baseline.id }}/{{ p.id }}.svg" alt="Package overlay {{ comparison.baseline.mpn }} vs {{ p.mpn }}"></a>
+      <figcaption class="small"><b>{{ comparison.baseline.mpn }}</b> {{ comparison.baseline.package.code }} vs <b>{{ p.mpn }}</b> {{ p.package.code }} · <a href="/overlay/{{ comparison.baseline.id }}/{{ p.id }}">open</a></figcaption></figure>
+    {% endfor %}
+  </div>
   <div class="downloads">
     <a role="button" class="outline" href="/compare.xlsx?ids={{ comparison.parts|map(attribute='id')|join(',') }}&baseline={{ comparison.baseline.id }}">Download Excel</a>
     <a role="button" class="outline secondary" href="/compare.csv?ids={{ comparison.parts|map(attribute='id')|join(',') }}&baseline={{ comparison.baseline.id }}">CSV</a>

@@ -28,8 +28,8 @@ def test_part_page_shows_cross_types_and_top5(client):
 
 def test_hide_eol_filter(client):
     (ref,) = ids(client, "SR8641")
-    assert "SA7741X" in client.get(f"/parts/{ref}").text
-    assert "SA7741X" not in client.get(f"/parts/{ref}?hide_eol=true").text
+    assert "SA7741X" in client.get(f"/parts/{ref}?all=true").text
+    assert "SA7741X" not in client.get(f"/parts/{ref}?hide_eol=true&all=true").text
 
 
 def test_missing_part_404(client):
@@ -153,30 +153,32 @@ def test_result_table_cross_types(client):
     ref, exact, better, info_worse, other_out, other_pins = ids(
         client, "SR8641", "SA7741X", "SD8641A", "SC141", "SB8441", "SB8641N"
     )
-    html = client.get(f"/parts/{ref}").text
-    table = html.split('<table class="results">')[1].split('<details class="category-view">')[0]
+    def table(query):
+        html = client.get(f"/parts/{ref}?all=true{query}").text
+        return html, html.split('<table class="results">')[1].split('<details class="category-view">')[0]
 
-    def row(pid):
-        return table.split(f'id="row-{pid}"')[1].split("</tr>")[0]
+    _, t = table("")  # non-automotive crosses of a non-automotive reference
+
+    def row(pid, t=t):
+        return t.split(f'id="row-{pid}"')[1].split("</tr>")[0]
 
     assert "Drop-in" in row(exact) and "spec-exact" in row(exact) and "p2p yes" in row(exact)
-    assert "Drop-in" in row(better) and "spec-over" in row(better)
     assert "Drop-in" in row(info_worse) and "spec-exact" in row(info_worse)  # only priority 2 worse
     assert "Package eq." in row(other_out) and "p2p yes" in row(other_out)
     assert "Functional" in row(other_pins) and "p2p no" in row(other_pins)
-    assert (
-        table.index(f'id="row-{better}"') < table.index(f'id="row-{other_pins}"') < table.index(f'id="row-{other_out}"')
-    )
+    assert t.index(f'id="row-{info_worse}"') < t.index(f'id="row-{other_pins}"') < t.index(f'id="row-{other_out}"')
+    _, auto = table("&grade=automotive")
+    assert "Drop-in" in row(better, auto) and "spec-over" in row(better, auto)
     page = client.get(f"/parts/{ref}?type=functional").text
     only = page.split('<table class="results">')[1].split('<details class="category-view">')[0]
     assert f'id="row-{other_pins}"' in only and f'id="row-{other_out}"' not in only and f'id="row-{exact}"' not in only
-    assert "Functional (1)" in page and "Drop-in (4)" in page
+    assert "Functional (1)" in page and "Drop-in (3)" in page
 
 
 def test_deviation_setting(client):
     ref, cand = ids(client, "SR8640N", "SB8441")  # other package, one priority 1 deviation
-    assert f'id="row-{cand}"' in client.get(f"/parts/{ref}").text
-    assert f'id="row-{cand}"' not in client.get(f"/parts/{ref}?dev=0").text
+    assert f'id="row-{cand}"' in client.get(f"/parts/{ref}?all=true").text
+    assert f'id="row-{cand}"' not in client.get(f"/parts/{ref}?dev=0&all=true").text
     assert "SB8441" not in client.get(f"/parts/{ref}/replacements.csv?dev=0").text
 
 
@@ -257,7 +259,7 @@ def test_engineering_notes(client):
 
 def test_deviation_links_open_the_note_with_both_parts(client):
     ref, cand = ids(client, "SR8640N", "SB8441")  # default output deviates
-    page = client.get(f"/parts/{ref}").text
+    page = client.get(f"/parts/{ref}?all=true").text
     link = f"/engineering/default_output?ref={ref}&amp;cand={cand}"
     assert link in page
     note = client.get(link.replace("&amp;", "&")).text
@@ -267,8 +269,10 @@ def test_deviation_links_open_the_note_with_both_parts(client):
 def test_grade_badges_and_filter(client):
     (ref,) = ids(client, "SR8641")
     html = client.get(f"/parts/{ref}").text
-    assert "Non-automotive reference" in html and 'class="badge grade-auto"' in html
+    assert "Non-automotive reference" in html and "All grades" not in html
+    assert "SD8641A" not in html.split('<details class="category-view">')[0]  # non-automotive by default
     auto = client.get(f"/parts/{ref}?grade=automotive").text
+    assert 'class="badge grade-auto"' in auto
     assert "SD8641A" in auto and "SC141" not in auto.split('<details class="category-view">')[0]
     ind = client.get(f"/parts/{ref}?grade=industrial").text
     assert "SD8641A" not in ind.split('<details class="category-view">')[0]
@@ -296,9 +300,11 @@ def test_sections_and_subheaders(client):
 def test_best_and_next_best_options_are_flagged(client):
     (ref,) = ids(client, "SR8641")
     html = client.get(f"/parts/{ref}").text.split('<details class="category-view">')[0]
-    assert html.count("Best option</span>") == 1 and html.count("Next best option</span>") == 1
-    assert "Other options (" in html
-    assert html.index("Best option</span>") < html.index("Next best option</span>") < html.index("Other options (")
+    # best and next best per cross type, nothing else until "show all"
+    assert html.count("Best drop-in</span>") == 1 and html.count("Next best drop-in</span>") == 1
+    assert html.count('class="result-row') <= 6 and "Show all results (" in html and "Other options (" not in html
+    full = client.get(f"/parts/{ref}?all=true").text.split('<details class="category-view">')[0]
+    assert "Other options (" in full and full.count('class="result-row') > html.count('class="result-row')
 
 
 def test_compare_page_layout_and_typed_parts(client):

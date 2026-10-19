@@ -239,34 +239,42 @@ def part_detail(
     type: str = "",
     dev: int = DEFAULT_MAX_DEVIATIONS,
     grade: str = "",
+    all: bool = False,
     session: Session = Depends(get_session),
 ):
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Part not found")
     rules = get_rules(part.family)
+    # grade is always one of the two: an automotive part only takes automotive crosses (AEC-Q100 is a hard
+    # requirement); a non-automotive part shows non-automotive crosses unless automotive is chosen
+    grade = "automotive" if grade_of(part) == "automotive" else (grade if grade in ("automotive", "industrial") else "industrial")
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
     crosses = crosses_for(session, part, scope, dev)
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
-    grade = grade if grade in ("automotive", "industrial") else ""
     grade_counts = {
         g: sum(grade_of(r.candidate) == g for r, _ in result_rows(crosses)) for g in ("automotive", "industrial")
     }
-    if grade:
-        crosses = {c: [r for r in rs if grade_of(r.candidate) == grade] for c, rs in crosses.items()}
+    crosses = {c: [r for r in rs if grade_of(r.candidate) == grade] for c, rs in crosses.items()}
     companies = companies_of(result_rows(crosses))
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     rows = result_rows(crosses)
-    # best and next best option among the parts that pass the filters (before the cross-type filter)
-    ranked = {r.candidate.id: i for i, (r, _) in enumerate(rows[:2])}
     type_counts = {c: sum(v.category == c for _, v in rows) for c in CATEGORY_ORDER}
     type = type if type in CATEGORY_ORDER else ""
     if type:
         rows = [(r, v) for r, v in rows if v.category == type]
+    # best and next best option per cross type; the rest only on request
+    ranked, top = {}, []
+    for cat in CATEGORY_ORDER:
+        for i, rv in enumerate([rv for rv in rows if rv[1].category == cat][:2]):
+            ranked[rv[0].candidate.id] = i
+            top.append(rv)
+    rest = [rv for rv in rows if rv[0].candidate.id not in ranked]
+    rows = top + (rest if all else [])
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
     groups = {
@@ -293,6 +301,9 @@ def part_detail(
             "type_counts": type_counts,
             "dev": dev,
             "ranked": ranked,
+            "n_top": len(top),
+            "n_rest": len(rest),
+            "show_all": all,
             "alternates": alternates.alternates(session, part),
             "alts_for": lambda p: alternates.alternates(session, p, limit=1),
             "rank_reason": rank_reason,

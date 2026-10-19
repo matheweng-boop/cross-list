@@ -76,7 +76,6 @@
 {% if ref_grade != 'automotive' %}
 <nav class="company-filter grade-filter" aria-label="Filter by grade">
   {% set keep3 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') %}
-  <a href="?{{ keep3[1:] }}" class="badge cat{{ ' on' if not grade }}">All grades</a>
   <a href="?grade=automotive{{ keep3 }}" class="badge cat{{ ' on' if grade == 'automotive' }}">Automotive AEC-Q100 ({{ grade_counts.automotive }})</a>
   <a href="?grade=industrial{{ keep3 }}" class="badge cat{{ ' on' if grade == 'industrial' }}">Non-automotive ({{ grade_counts.industrial }})</a>
 </nav>
@@ -96,14 +95,16 @@
 <div class="table-wrap"><table class="results">
   <thead><tr><th>Part</th><th>Cross</th><th title="Pin-to-pin">P2P</th><th title="Priority 1 vs {{ part.mpn }}">P1</th>{% if pricing_enabled() %}<th>DigiKey</th>{% endif %}</tr></thead>
   <tbody>
-  {% set ns = namespace(top=false, divided=false) %}
+  {% set ns = namespace(cat='', divided=false) %}
   {% for r, v in rows %}{% set c = r.candidate %}{% set rank = ranked.get(c.id) %}{% set notes = cross_notes(part.mpn, c.mpn) %}
-    {% if rank is not none %}{% set ns.top = true %}{% elif ns.top and not ns.divided %}{% set ns.divided = true %}
-    <tr class="rank-divider"><td colspan="{{ 5 if pricing_enabled() else 4 }}">Other options ({{ rows|length - loop.index0 }})</td></tr>{% endif %}
+    {% if rank is not none and v.category != ns.cat %}{% set ns.cat = v.category %}
+    <tr class="rank-divider cat-head"><td colspan="{{ 5 if pricing_enabled() else 4 }}">{{ category_labels[v.category] }} <span class="muted">· {{ type_counts[v.category] }} found</span></td></tr>
+    {% elif rank is none and not ns.divided %}{% set ns.divided = true %}
+    <tr class="rank-divider"><td colspan="{{ 5 if pricing_enabled() else 4 }}">Other options ({{ n_rest }})</td></tr>{% endif %}
     <tr class="result-row cross-{{ v.category }}{{ ' ranked rank-' ~ rank if rank is not none }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
       <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
         <button type="button" class="linklike" aria-expanded="false" aria-controls="d-{{ c.id }}"><b>{{ c.mpn }}</b></button>
-        {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best option' if rank == 0 else 'Next best option' }}</span>{% endif %}
+        {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
         <br>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span> {% endif %}<small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small>
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
@@ -119,6 +120,8 @@
       <td colspan="{{ 5 if pricing_enabled() else 4 }}">
         {% for n in notes %}<div class="cross-note"><b>{{ n.verdict_label }}{% if n.title %} · {{ n.title }}{% endif %}</b><p>{{ n.note }}</p>
           <small class="muted">{{ n.author or 'engineer note' }}{% if n.date %}, {{ n.date }}{% endif %}</small></div>{% endfor %}
+        <figure class="inline-overlay"><a href="/overlay/{{ part.id }}/{{ c.id }}"><img loading="lazy" src="/overlay/{{ part.id }}/{{ c.id }}.svg" alt="Package overlay {{ part.mpn }} vs {{ c.mpn }}"></a>
+          <figcaption class="small muted">Package overlay: {{ part.mpn }} (blue) vs {{ c.mpn }} (orange) · <a href="/overlay/{{ part.id }}/{{ c.id }}">open</a></figcaption></figure>
         {% set pnote = position_note(r) %}{% if pnote %}<p class="spec-list p2p-note">{{ pnote }} <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a></p>{% endif %}
         {% set note = '/engineering/{}?ref=' ~ part.id ~ '&cand=' ~ c.id %}
         {% if v.better %}<p class="spec-list better">Priority 1 better: {% for d in v.better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
@@ -152,6 +155,8 @@
   {% endfor %}
   </tbody>
 </table></div>
+{% if n_rest and not show_all %}<p><a href="?all=true{{ keep }}{{ '&type=' ~ type if type }}" role="button" class="outline secondary small-btn">Show all results ({{ n_rest }} more)</a></p>
+{% elif show_all and n_rest %}<p><a href="?{{ keep[1:] }}{{ '&type=' ~ type if type }}" class="small">Show best and next best only</a></p>{% endif %}
 {% set q = '?dev=' ~ dev ~ ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&type=' ~ type if type else '') ~ ('&grade=' ~ grade if grade else '') %}
 <p class="downloads"><a href="/parts/{{ part.id }}/replacements.xlsx{{ q }}" role="button" class="outline">Download table (Excel)</a>
   <a href="/parts/{{ part.id }}/replacements.csv{{ q }}" role="button" class="outline secondary">CSV</a>

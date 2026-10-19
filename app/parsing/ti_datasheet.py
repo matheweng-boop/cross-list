@@ -249,14 +249,55 @@ def certified_classes(pdf_path, pages: list[str]) -> dict[str, str]:
         header = [re.sub(r"\s+", "", str(c or "")).upper() for c in table[0]]
         if "VDE" not in header:
             continue
-        col = header.index("VDE")
-        cell = " ".join(str(row[col] or "") for row in table[1:] if col < len(row)).replace("\n", " ")
-        found = classes_from_text(cell)
-        if found:
-            return found
+
+        def cell_of(name: str, table=table, header=header) -> str:
+            col = header.index(name)
+            return " ".join(str(row[col] or "") for row in table[1:] if col < len(row)).replace("\n", " ")
+
+        found = classes_from_text(cell_of("VDE"))
+        # VDE may give a package only a voltage ("566 VPK (DBQ-16)"); CSA (IEC 62368-1) and TUV (EN 61010-1)
+        # then state "Reinforced insulation ... 370 VRMS (DBQ-16)". CQC (GB 4943.1) is not used: it can rate a
+        # package basic that the IEC / EN standards rate reinforced.
+        # CSA decides before TUV: they can disagree (ISO7720 D-8: CSA basic, TUV reinforced).
+        for agency in ("CSA", "TUV"):
+            if agency in header:
+                for pkg, cls in _sentence_classes(cell_of(agency)).items():
+                    found.setdefault(pkg, cls)
+        # a table was found: its cells are the answer, even when empty. The page text below would mix the
+        # columns ("Basic certificate" of one agency next to a package of another).
+        return found
     # No table found: "Reinforced certificate: … (DW-16) … Basic certificate: … (DBQ-16)"
     m = heading.search(pages[page_idx])
     return classes_from_text(pages[page_idx][m.end() : m.end() + 1500])
+
+
+def _sentence_classes(text: str) -> dict[str, str]:
+    """Insulation class per package in agency statements. A sentence that opens with the class
+    ("Reinforced insulation per ... (DW-16) and 370 V (DBQ-16)") gives it to every package; otherwise each
+    package takes the next class word after it ("600 V (DW-16) reinforced insulation and 400 V (D-8) basic")."""
+    out: dict[str, str] = {}
+    for sentence in text.split(";"):
+        toks = [
+            (m.group(1).lower(), None) if m.group(1) else (None, m.group(2))
+            for m in re.finditer(r"\b(Reinforced|Basic)\b|\b([A-Z]{1,4})-\d{1,2}\b", sentence, re.I)
+            if m.group(1) or m.group(2).isupper()
+        ]
+        if not toks or not any(c for c, _ in toks):
+            continue
+        if toks[0][0]:
+            for _, pkg in toks:
+                if pkg:
+                    out.setdefault(pkg, toks[0][0])
+            continue
+        pending: list[str] = []
+        for cls, pkg in toks:
+            if pkg:
+                pending.append(pkg)
+            else:
+                for x in pending:
+                    out.setdefault(x, cls)
+                pending = []
+    return out
 
 
 def classes_from_text(text: str) -> dict[str, str]:

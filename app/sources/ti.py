@@ -290,8 +290,16 @@ def build(family: str = "digital_isolator", log=print) -> dict:
                     "TI product table",
                 )
             cls = p.get("Isolation rating") or []
+            # same device in the commercial / automotive (-Q1) datasheet: its certification table can state
+            # the class per package where this one only lists certificate numbers
+            sister_pdf = DATASHEET_DIR / (
+                f"{gpn.lower()[:-3]}.pdf" if gpn.upper().endswith("-Q1") else f"{gpn.lower()}-q1.pdf"
+            )
+            sister = sheets.setdefault(sister_pdf.name, DatasheetInfo(sister_pdf)) if sister_pdf.exists() else None
             if sheet and pkg_name in sheet.classes:
                 put("isolation_class", sheet.classes[pkg_name], f"{sheet.name} safety certifications")
+            elif sister and pkg_name in sister.classes:
+                put("isolation_class", sister.classes[pkg_name], f"{sister.name} safety certifications (same device)")
             elif len(cls) == 1:
                 put("isolation_class", cls[0].lower(), "TI product table")
             elif (

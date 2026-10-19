@@ -57,6 +57,7 @@ class Diff:
     severity: float = 0.0
     hard: bool = False
     must_meet: bool = False
+    exception: bool = False  # worse = an exception to list, not a deviation
 
     @property
     def score(self) -> float:
@@ -103,6 +104,7 @@ class Verdict:
     worse: list[Diff]
     info_better: list[Diff]
     info_worse: list[Diff]
+    exceptions: list[Diff] = field(default_factory=list)  # e.g. basic for a reinforced reference
 
     @property
     def label(self) -> str:
@@ -148,8 +150,13 @@ class CrossResult:
 
     @property
     def deviations(self) -> list[Diff]:
-        """Priority 1 parameters that are worse, different or unknown."""
-        return [d for d in self.diffs if d.priority == 1 and (d.is_negative or d.status == UNKNOWN)]
+        """Priority 1 parameters that are worse, different or unknown (exceptions excluded)."""
+        return _deviations(self.diffs)
+
+    @property
+    def exceptions(self) -> list[Diff]:
+        """Parameters marked ``exception`` where the candidate is worse: listed, never blocking."""
+        return [d for d in self.diffs if d.exception and d.is_negative]
 
     @property
     def category(self) -> str | None:
@@ -169,6 +176,7 @@ class CrossResult:
             worse,
             [d for d in info if d.status == BETTER],
             [d for d in info if d.is_negative],
+            self.exceptions,
         )
 
     def p3_notes(self) -> list[Diff]:
@@ -408,6 +416,12 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 # ---------------------------------------------------------------- classify
 
 
+def _deviations(diffs: list[Diff]) -> list[Diff]:
+    """Priority 1 parameters that are worse, different or unknown; an ``exception`` parameter that is worse is
+    listed separately and does not count (an unknown value still does: it cannot be checked)."""
+    return [d for d in diffs if d.priority == 1 and ((d.is_negative and not d.exception) or d.status == UNKNOWN)]
+
+
 def cross(
     ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS
 ) -> CrossResult:
@@ -427,6 +441,7 @@ def cross(
                 sev,
                 p.hard,
                 p.must_meet,
+                p.exception,
             )
         )
 
@@ -439,7 +454,7 @@ def cross(
         for d in diffs
     )
     incomplete = any(d.status == UNKNOWN for d in diffs if d.priority in (1, 2))
-    deviations = [d for d in diffs if d.priority == 1 and (d.is_negative or d.status == UNKNOWN)]
+    deviations = _deviations(diffs)
     rejected = feedback is not None and feedback.verdict == FeedbackVerdict.reject
 
     fff_status = None
@@ -467,11 +482,11 @@ def sort_key(category: str):
 
     def key(r: CrossResult):
         if category == "functional":
-            main = (len(r.deviations), r.closeness)  # fewest deviations first
+            main = (len(r.deviations), len(r.exceptions), r.closeness)  # fewest deviations first
         elif category == "package":
-            main = (not r.fit.same_pinout, r.closeness)  # pin-to-pin first
+            main = (not r.fit.same_pinout, len(r.deviations), len(r.exceptions), r.closeness)  # pin-to-pin first
         else:
-            main = r.closeness
+            main = (len(r.exceptions), r.closeness)
         return (r.lifecycle_risk, main, r.candidate.label)
 
     return key

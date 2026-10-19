@@ -21,7 +21,8 @@ EXPECTED = {  # with the default of 2 accepted priority 1 deviations
     "SR8641": {
         # SC141 is only worse in priority 2, SD8641A is automotive (P1 better): both drop-ins
         "fff": ["SC141", "SD8641A", "SA7741", "SA7741X"],
-        "functional": ["SB8641N"],  # same package, other pinout
+        # same package, other pinout; then basic-insulation parts (an exception, not a knock-out)
+        "functional": ["SB8641N", "SD4100", "SA7740N", "SC140N", "SB8140Q"],
         "package": ["SB8441"],  # pin-to-pin, other default output (SC142: other channels, not listed)
     },
     "SR8640N": {
@@ -30,7 +31,7 @@ EXPECTED = {  # with the default of 2 accepted priority 1 deviations
         "functional": ["SD4100", "SB8140Q", "SC141", "SD8641A", "SA7741", "SB8641N", "SB8441", "SA7741X"],
         "package": ["SC140N", "SD140N"],
     },
-    "SR8233": {"fff": ["SA21520", "SA21521"], "functional": ["SC4223"], "package": ["SB6602"]},
+    "SR8233": {"fff": ["SA21520", "SA21521"], "functional": ["SC4223", "SD6602N"], "package": ["SB6602"]},
     "SR8286": {"fff": ["SC4135", "SA5870"]},  # package-locked: SB6601 (smaller package) not listed
     "SR8920": {"fff": ["SA1300", "SB1300", "SA1301"]},  # gain is priority 3 (sensitivity)
     "SR8501": {"fff": ["SA1100", "SB2011"], "functional": ["SC712"]},
@@ -154,10 +155,13 @@ def test_package_lock_rejects_other_packages(part):
     assert r.fit.package_relation == "smaller" and r.categories == []
 
 
-def test_other_packages_with_worse_priority_1_are_not_listed(session, part):
+def test_basic_for_reinforced_is_an_exception_not_a_knockout(session, part):
     got = crosses(session, part, "SR8233")
-    listed = {r.candidate.mpn for rs in got.values() for r in rs}
-    assert "SD6602N" not in listed  # narrow body and worse
+    r = next(r for r in got["functional"] if r.candidate.mpn == "SD6602N")  # narrow body, basic insulation
+    assert [d.key for d in r.exceptions] == ["isolation_class"] and "isolation_class" not in {
+        d.key for d in r.deviations
+    }
+    assert got["functional"][-1] is r  # exceptions rank after the parts without one
 
 
 def test_lifecycle_risk_parts_sorted_last(session, part):

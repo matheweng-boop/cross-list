@@ -69,3 +69,36 @@ def alternates(session: Session, part: Part, limit: int = 3) -> list[Alternate]:
         key=lambda x: (not x[1].pin_to_pin, rank[x[1].relation], len(x[1].lower), x[0].lifecycle_risk, x[0].closeness)
     )
     return [a for _, a in out[:limit]]
+
+
+# Si86 / Si86S ordering codes: <device><isolation-rating letter>-<grade><package code>, e.g. SI86S641EC-IS1:
+# device SI86S641E, rating C (3.75 kVrms, NB SOIC-16), I = industrial, S1 = package. The same device comes in
+# other packages under other rating letters (EB-IU = QSOP-16, EE-IS2 = WB SOIC-16).
+_ORDER_CODE = re.compile(r"^(SI86\w*?\d{2,3}[A-Z])([A-Z])-([AI])([A-Z]+\d?)$")
+
+
+def package_options(session: Session, part: Part) -> list[Part]:
+    """The same Skyworks device in its other packages (same grade), smallest body first."""
+    m = _ORDER_CODE.match((part.mpn or "").upper())
+    if not m:
+        return []
+    device, _, grade, _ = m.groups()
+    out = []
+    for c in session.scalars(
+        select(Part).where(Part.family == part.family, Part.mpn.like(f"{device}_-{grade}%"))
+    ).unique():
+        cm = _ORDER_CODE.match(c.mpn.upper())
+        if (
+            c.id != part.id
+            and cm
+            and cm.group(1) == device
+            and cm.group(3) == grade
+            and c.package_id != part.package_id
+        ):
+            out.append(c)
+    seen, unique = set(), []
+    for c in sorted(out, key=lambda c: ((c.package.body_length_mm or 99) * (c.package.span_mm or 99), c.mpn)):
+        if c.package_id not in seen:
+            seen.add(c.package_id)
+            unique.append(c)
+    return unique

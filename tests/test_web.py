@@ -173,7 +173,8 @@ def test_result_table_cross_types(client):
     page = client.get(f"/parts/{ref}?type=functional").text
     only = page.split('<table class="results">')[1].split('<details class="category-view">')[0]
     assert f'id="row-{other_pins}"' in only and f'id="row-{other_out}"' not in only and f'id="row-{exact}"' not in only
-    assert "Functional (1)" in page and "Drop-in (3)" in page
+    assert "Functional (5)" in page and "Drop-in (3)" in page
+    assert "Exception (listed, not a knock-out)" in client.get(f"/parts/{ref}?all=true").text
 
 
 def test_deviation_setting(client):

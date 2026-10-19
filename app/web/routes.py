@@ -201,8 +201,24 @@ def result_rows(crosses: dict) -> list:
 
     def key(rv):
         r, v = rv
-        devs = len(r.deviations) if v.category == "functional" else 0
-        return (r.lifecycle_risk, CATEGORY_RANK[v.category], devs, not v.p2p, r.closeness)
+        # fewest priority 1 deviations first (pin-to-pin first among package equivalents), then exceptions
+        if v.category == "package":
+            return (
+                r.lifecycle_risk,
+                CATEGORY_RANK[v.category],
+                not v.p2p,
+                len(r.deviations),
+                len(r.exceptions),
+                r.closeness,
+            )
+        return (
+            r.lifecycle_risk,
+            CATEGORY_RANK[v.category],
+            len(r.deviations),
+            len(r.exceptions),
+            not v.p2p,
+            r.closeness,
+        )
 
     rows.sort(key=key)
     return rows
@@ -219,6 +235,8 @@ def rank_reason(r, v) -> str:
         bits.append("priority 1 equal or better")
     else:
         bits.append("priority 1 equal")
+    if v.exceptions:
+        bits.append("exception: " + ", ".join(f"{d.label} {d.cand_display} vs {d.ref_display}" for d in v.exceptions))
     if r.lifecycle_risk:
         bits.append("lifecycle risk")
     return "; ".join(bits)
@@ -316,6 +334,7 @@ def part_detail(
             "show_all": all,
             "alternates": alternates.alternates(session, part),
             "alts_for": lambda p: alternates.alternates(session, p, limit=1),
+            "pkg_options": lambda p: alternates.package_options(session, p),
             "rank_reason": rank_reason,
             "cross_notes": cross_notes.notes_for,
             "position_note": cross_notes.position_note,

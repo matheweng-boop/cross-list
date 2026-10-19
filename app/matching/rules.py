@@ -23,6 +23,7 @@ class ParamDef:
     tolerance: float = 0.02
     hard: bool = False  # defines the function: any mismatch means a different part
     must_meet: bool = False  # the candidate must reach the reference's level (worse = not listed)
+    exception: bool = False  # worse is listed as an exception, never a deviation that blocks a cross
     exclude: tuple[str, ...] = ()  # set items ignored when comparing (shown, not judged)
     derived_from: str | None = None  # bool derived from another set parameter …
     contains: str | None = None  # … being true when that set contains this item
@@ -64,6 +65,7 @@ def parse_rules(data: dict) -> FamilyRules:
             tolerance=float(raw.get("tolerance", 0.02)),
             hard=bool(raw.get("hard", False)),
             must_meet=bool(raw.get("must_meet", False)),
+            exception=bool(raw.get("exception", False)),
             exclude=tuple(raw.get("exclude", ())),
             derived_from=(raw.get("from") or {}).get("param"),
             contains=(raw.get("from") or {}).get("contains"),

@@ -210,6 +210,37 @@ software:
       - {job: unused}
     notes: AM in the foreground on IC0; IC1 keeps the DAB service list current.
 
+  # linker set-ups for two dual tuners (application guidance, user 2026-10-19)
+  - name: FM phase diversity to the linker, DAB in the background
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, fm_dab_scan]}
+    channels:
+      - {job: dab_scanless, source: IC1.T0}
+      - {job: unused}
+    notes: >-
+      FM with phase diversity on IC0 goes to the linker; IC1 keeps DAB (and the FM / DAB station lists) ready so
+      the linker can follow the same programme.
+  - name: Single FM to the linker, AM / FM / DAB background scan
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_audio, am_scan], IC1: [dab, fm_dab_scan]}
+    channels:
+      - {job: dab_scanless, source: IC1.T0}
+      - {job: unused}
+    notes: >-
+      One FM channel (no phase diversity) feeds the linker; the free tuners scan AM, FM and DAB in the background.
+  - name: Secondary DAB to the linker, AM / FM background scan
+    region: Europe
+    linking: true
+    tuners: {IC0: [fm_scan, am_scan], IC1: [dab, dab]}
+    channels:
+      - {job: dab_audio, source: IC1.T0}
+      - {job: dab_mrc, source: IC1.T1}
+    notes: >-
+      DAB plays from the secondary tuner IC (IC1, with MRC on its second tuner) and feeds the linker; IC0 scans AM
+      and FM in the background and follows the FM equivalent.
+
   # Rest of world
   - name: AM listening, FM background scan
     region: Rest of world

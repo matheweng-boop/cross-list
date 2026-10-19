@@ -7,16 +7,28 @@ clock:
   crystal: "36.864 MHz"          # on IC0, the system reference for all tuners and demods
   master: IC0
   distribution: star             # CLKO of IC0 to every other IC; daisy-chaining CLKO degrades phase noise
-  clko_max_load_pf: 50           # total capacitive load on CLKO, traces included
-  input_pf: [4.5, 5.0]           # clock input capacitance per pin of the tuner / demod families
+  clko_max_load_pf: 50           # total capacitive load on CLKO: PCB, microstrip lines and connectors included
+  input_pf: [4, 4]               # clock input capacitance per Skyworks tuner / demod (user, 2026-10-19: ~4 pF)
+  clko_filter: "ferrite bead + capacitor as close to CLKO as possible (bottom side of the PCB)"
+  xtali_network: "series R, shunt C, series R into XTALI on every IC that takes the reference clock (values to confirm)"
 
 zif:
-  clk_fs_max_load_pf: 50         # ZIFCLK / ZIFFS maximum load: keep traces short
-  input_pf: [4.5, 5.0]
+  max_load_pf: 30                # maximum capacitive load on each ZIF output (user, 2026-10-19), traces included
+  pin_pf: 4                      # per pin on the net (demod input or tied tuner output)
+  input_pf: [4, 4]
   note: >-
     Each tuner drives an I/Q pair (ZIFI/ZIFQ) with frame sync ZIFFS and clock ZIFCLK as master.
     Tuner 0 I/Q carries the main HD channel, tuner 1 I/Q the background scan or alternate tuner.
     With several I/Q connections into the demod, share ZIFCLK / ZIFFS.
+
+pcb:
+  trace_pf_per_cm: 1.1           # rough 50-ohm microstrip on FR4, used only to turn a pF budget into a trace length
+
+flash:
+  note: >-
+    Tuners: only the tuner IC at the end of the IC-link chain connects to the flash (NVxxx pins); the others receive
+    the boot image through the IC link. Do not connect the flash to any other tuner. Demods: own flash, parallel
+    (quad) connection recommended.
 
 i2s:
   sample_rates_khz: [32, 44.1, 48, 96, 192]
@@ -57,3 +69,10 @@ pins:
     - {kind: cap, label: Capacitors, detail: "1 uF + 2200 pF + 18 pF"}
   VA2:
     - {kind: cap, label: Capacitors, detail: "1 uF + 2200 pF + 18 pF"}
+  "^AOUT\\d$":
+    - {kind: cap, label: AC coupling, detail: "10 uF (very low cut-off)", when: linked, note: "Audio DAC outputs must be AC coupled."}
+  NVSSB:
+    - kind: guide
+      label: 10 kOhm pull-up
+      detail: "chip select to VCC only; no pull-ups on NVMISO / NVMOSI / NVSCLK"
+      when: linked

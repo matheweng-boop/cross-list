@@ -250,7 +250,7 @@
   // Application guidance (data/broadcast/guidance.yaml): extra parts on named pins of matching families
   function guidanceFor(o, p) {
     if (!GUIDE || !GUIDE.pins || !new RegExp(GUIDE.applies_to || ".").test(o.mpn)) return [];
-    return GUIDE.pins[p.name] || [];
+    return GUIDE.pins[p.name] || Object.entries(GUIDE.pins).filter(([k]) => k.startsWith("^") && new RegExp(k).test(p.name)).flatMap(([, g]) => g);
   }
   const hasGuidance = (o, p, g) => linksAt(o.id, p.n).some(l => { const b = block(l.b.blk); return b && b.label === g.label && b.detail === g.detail; });
   function addGuidance(o, p, g) {
@@ -307,6 +307,13 @@
 
   // Fill in the obvious surroundings of every device (supplies, ground, crystal, antennas, host,
   // flash, I/Q and audio paths). Pins already connected are left alone.
+  // Tuners boot from one flash on the tuner at the end of the IC-link chain (U().flashOn); the others get the
+  // image through the IC link. The demod keeps its own flash.
+  const flashHere = o => !S.usecase || !o.slot || o.slot === DEMOD_SLOT || o.slot === flashTuner();
+  function flashTuner() {
+    const u = U(), tuners = TUNER_SLOTS.filter(slotDev);
+    return u && u.flashOn && tuners.includes(u.flashOn) ? u.flashOn : tuners[tuners.length - 1];
+  }
   function autoComplete() {
     const copros = S.devices.filter(o => info(o).role === "coprocessor");
     for (const o of S.devices) {
@@ -318,10 +325,11 @@
         else if (p.fn === "ground") attachGround(o.id, p);
         else if (p.fn === "rf_in" && !S.usecase) attachAntenna(o.id, p);
         else if (!S.usecase && ["host", "interrupt", "reset"].includes(p.fn) && !(p.bus && seenBus.has(p.bus))) { attachHost(o.id, p); if (p.bus) seenBus.add(p.bus); }
-        else if (p.fn === "flash" && !seenBus.has("flash")) { link(endOf(o.id, p), {blk: addBlock("flash", "SPI flash", "firmware / NVM").id}, "flash", p.bus); seenBus.add("flash"); }
+        else if (p.fn === "flash" && !seenBus.has("flash") && flashHere(o)) { link(endOf(o.id, p), {blk: addBlock("flash", "SPI flash", "firmware / NVM").id}, "flash", p.bus); seenBus.add("flash"); }
       }
       if (!S.usecase && pinsOf(o).some(p => p.fn === "xtal" && free(p))) attachCrystal(o.id);
-      for (const p of pinsOf(o).filter(p => p.fn !== "rf_in")) for (const g of guidanceFor(o, p)) if (!hasGuidance(o, p, g)) addGuidance(o, p, g);
+      for (const p of pinsOf(o).filter(p => p.fn !== "rf_in"))
+        for (const g of guidanceFor(o, p)) if (!hasGuidance(o, p, g) && (g.when !== "linked" || linksAt(o.id, p.n).some(l => !["cap", "guide"].includes(l.kind)))) addGuidance(o, p, g);
     }
     // tuner I/Q -> free coprocessor I/Q inputs, in order (a use case wires these itself)
     for (const t of S.usecase ? [] : S.devices.filter(o => info(o).role === "tuner")) {
@@ -637,7 +645,11 @@
   const LOOP_OUT = /^(LT[AB]|FMO|B3O|AMO|LBO)$/; // loop-through (buffer) outputs
   const PIN_PF = (GUIDE.clock && GUIDE.clock.input_pf) || [4.5, 5];
   const MAX_PF = (GUIDE.clock && GUIDE.clock.clko_max_load_pf) || 50;
-  const ZIF_MAX_PF = (GUIDE.zif && GUIDE.zif.clk_fs_max_load_pf) || 50;
+  const ZIF_MAX_PF = (GUIDE.zif && (GUIDE.zif.max_load_pf || GUIDE.zif.clk_fs_max_load_pf)) || 30;
+  const ZIF_PIN_PF = (GUIDE.zif && GUIDE.zif.pin_pf) || 4;
+  const TRACE_PF_CM = (GUIDE.pcb && GUIDE.pcb.trace_pf_per_cm) || 1.1;
+  const pfRange = n => (PIN_PF[0] === PIN_PF[1] ? `${(n * PIN_PF[0]).toFixed(0)} pF` : `${(n * PIN_PF[0]).toFixed(1)}–${(n * PIN_PF[1]).toFixed(1)} pF`);
+  const traceLeft = left => (left > 0 ? `≈${left.toFixed(0)} pF left for traces (≈${(left / TRACE_PF_CM).toFixed(0)} cm at ${TRACE_PF_CM} pF/cm)` : "no budget left for traces");
 
   const slotDev = slot => S.devices.find(o => o.slot === slot);
   const tunerCount = o => (o ? info(o).tuners || 1 : 0);
@@ -687,7 +699,7 @@
     u.rf ||= {}; u.antennas ||= []; u.iq ||= {}; u.memory ||= {}; u.modes ||= []; u.mode ||= 0;
     u.ics ||= {};
     for (const s of ALL_SLOTS) u.ics[s] = typeof u.ics[s] === "string" ? {mpn: u.ics[s]} : u.ics[s] || {mpn: null};
-    u.control ||= "demod"; u.route ||= "direct";
+    u.control ||= "demod"; u.route ||= "direct"; u.flashOn ||= "";
     u.clock = Object.assign({master: "IC0", crystal: (GUIDE.clock && GUIDE.clock.crystal) || "", feed: {}}, u.clock || {});
     u.audio = Object.assign({fs: 48, bits: 32, slots: 2, format: "I2S"}, u.audio || {});
     return u;
@@ -751,7 +763,7 @@
     }
     Object.values(antBlock).forEach(b => { frontEnd(b); if (b.splitter) b.items.unshift({label: "Band splitter", detail: "AM/FM and Band III to separate inputs", note: "", pin: "all"}); });
     // reference clock
-    const master = slotDev(u.clock.master);
+    const master = slotDev(u.clock.master), clkoBead = {};
     if (master) {
       const x = pinsOf(master).filter(p => p.fn === "xtal");
       if (x.length) ucLink({d: master.id, pins: x.map(p => p.n)}, {blk: ucBlock("crystal", "Crystal", `${u.clock.crystal || "frequency: see datasheet"} · system reference`).id}, "xtal");
@@ -766,7 +778,11 @@
         } else {
           const src = md.startsWith("chain:") ? slotDev(md.slice(6)) : master;
           const out = src && pinsOf(src).find(p => p.fn === "clock_out" && /CLKO/.test(p.name));
-          if (out) ucLink({d: src.id, pins: [out.n]}, {d: o.id, pins: [inp.n]}, "clock", `${u.clock.crystal || "ref clock"}${md.startsWith("chain:") ? " (daisy chain)" : ""}`);
+          if (out) {
+            ucLink({d: src.id, pins: [out.n]}, {d: o.id, pins: [inp.n]}, "clock", `${u.clock.crystal || "ref clock"}${md.startsWith("chain:") ? " (daisy chain)" : ""}`);
+            clkoBead[src.id] ||= (ucLink({d: src.id, pins: [out.n]}, {blk: ucBlock("guide", "Ferrite bead + capacitor", "at CLKO, as close to the pin as possible (bottom side)").id}, "guide"), true);
+            ucLink({d: o.id, pins: [inp.n]}, {blk: Object.assign(ucBlock("guide", "R–C–R network", "series R, shunt C, series R into XTALI (values: datasheet)"), {note: "The second resistor is in series with the first, not with the capacitor; the capacitor sits between them to ground."}).id}, "guide");
+          }
         }
       }
     }
@@ -792,6 +808,14 @@
           for (const [p, q] of pairs) ucLink({d: o.id, pins: [p.n]}, {d: demod.id, pins: [q.n]}, "iq", `${slot} ${t} ${sigOf(p) === "CLK" || sigOf(p) === "FS" ? "ZIF" + sigOf(p) : sigOf(p)} → ${q.name}`);
         } else ucLink({d: o.id, pins: [...shared, ...data].map(p => p.n), bus: `${port} from ${t}`}, endOf(demod.id, portPin), "iq", `${slot} ${t} I/Q → ${port.replace("ZIF I/Q ", "ZIF")}`);
       }
+    }
+    // IC link between neighbouring tuner ICs (ICP/ICN and ISFSP/ISFSN): carries the boot image from the flash
+    // tuner and connects the tuners together
+    const tunersPop = TUNER_SLOTS.filter(slotDev);
+    for (let k = 1; k < tunersPop.length; k++) {
+      const a = slotDev(tunersPop[k - 1]), b = slotDev(tunersPop[k]);
+      const pa = pinsOf(a).filter(p => /^(ICP|ICN|ISFSP|ISFSN)$/.test(p.name)), pb = pinsOf(b).filter(p => /^(ICP|ICN|ISFSP|ISFSN)$/.test(p.name));
+      if (pa.length && pb.length) ucLink({d: a.id, pins: pa.map(p => p.n), bus: "IC link"}, {d: b.id, pins: pb.map(p => p.n), bus: "IC link"}, "spi", `IC link ${tunersPop[k - 1]} – ${tunersPop[k]}`);
     }
     // control: SoC -> demod -> tuners (tuner SPI + per-tuner select / reset), or SoC -> every IC
     const soc = ucBlock("host", "SoC", u.control === "demod" && demod ? "SPI to IC3" : "SPI / I2C to every IC");
@@ -846,6 +870,37 @@
     pruneBlocks();
   }
 
+  // ZIF nets: tuner outputs tied to a demod port (IC0 ZIF0 + IC1 ZIF1 on one port, IC0 ZIF1 + IC1 ZIF0 on the next)
+  // share a net; every pin on the net loads every output on it
+  function zifChecks() {
+    const u = U(), out = [], nets = {};
+    for (const [pair, port] of Object.entries(u.iq)) {
+      if (!port || !slotDev(pair.split(".")[0])) continue;
+      const [slot, t] = pair.split(".");
+      for (const sig of ["CLK", "FS"]) (nets[`${sig}|${port}`] ||= new Set()).add(`${slot} ZIF${sig}`);
+      for (const sig of ["I", "Q"]) (nets[`${sig}|${port}`] ||= new Set()).add(`${slot} ZIF${sig}${t.slice(1)}`);
+    }
+    // a tuner IC's ZIFCLK / ZIFFS on two ports joins those nets
+    const merged = [];
+    for (const [k, pins] of Object.entries(nets)) {
+      const [sig, port] = k.split("|");
+      const net = {sig, ports: new Set([port]), pins: new Set(pins)};
+      const hit = ["CLK", "FS"].includes(sig) && merged.find(m => m.sig === sig && [...pins].some(p => m.pins.has(p)));
+      if (hit) { pins.forEach(p => hit.pins.add(p)); hit.ports.add(port); } else merged.push(net);
+    }
+    const shared = new Set(Object.values(u.iq).filter(Boolean).filter((p, i, a) => a.indexOf(p) !== i));
+    if (shared.size) out.push(["info", `Tied ZIF ports: ${[...shared].map(p => p.replace("ZIF I/Q ", "ZIF")).join(", ")} take I/Q from two tuners (only one drives at a time), so each demod channel can take the stream it needs and MRC can be switched on and off.`]);
+    const worst = {};
+    for (const n of merged) {
+      const pins = n.pins.size + n.ports.size; // tuner outputs + demod inputs on the net
+      const pf = (pins - 1) * ZIF_PIN_PF, key = ["CLK", "FS"].includes(n.sig) ? "ZIFCLK / ZIFFS" : "ZIFI / ZIFQ";
+      if (!worst[key] || pf > worst[key].pf) worst[key] = {pf, pins, n};
+    }
+    for (const [key, w] of Object.entries(worst))
+      out.push([w.pf > ZIF_MAX_PF ? "error" : "info", `${key}: largest net has ${w.pins} pins (${[...w.n.pins].join(", ")} + demod) → ${w.pf.toFixed(0)} pF of the ${ZIF_MAX_PF} pF limit per output; ${traceLeft(ZIF_MAX_PF - w.pf)}. Wider traces add capacitance.`]);
+    return out;
+  }
+
   // ---- checks: [level, text]; level ok / info / warn / error
   function hardwareChecks() {
     const u = U(), out = [];
@@ -872,14 +927,7 @@
     }
     const demod = slotDev(DEMOD_SLOT);
     if (demod) {
-      const perIc = {};
-      for (const [pair, port] of Object.entries(u.iq)) if (port && slotDev(pair.split(".")[0])) perIc[pair.split(".")[0]] = (perIc[pair.split(".")[0]] || 0) + 1;
-      for (const [slot, n] of Object.entries(perIc)) {
-        const pf = n * PIN_PF[1];
-        out.push([pf > ZIF_MAX_PF ? "error" : "info", `${slot} ZIFCLK / ZIFFS drive ${n} demod port${n > 1 ? "s" : ""}: ${(n * PIN_PF[0]).toFixed(1)}–${pf.toFixed(1)} pF of the ${ZIF_MAX_PF} pF limit, ≈${Math.max(0, ZIF_MAX_PF - pf).toFixed(0)} pF left for traces.`]);
-      }
-      const ports = Object.values(u.iq).filter(Boolean);
-      if (new Set(ports).size < ports.length) out.push(["error", "Two tuners are wired to the same demod I/Q port."]);
+      out.push(...zifChecks());
       const nT = TUNER_SLOTS.filter(slotDev).length;
       if (u.control === "demod" && !pinsOf(demod).some(p => p.bus === "Tuner SPI 0")) out.push(["warn", `${demod.mpn}: no tuner SPI found in its data short; let the SoC control the tuners.`]);
       if (u.control === "demod" && nT > 5) out.push(["error", "The demod controls at most five tuner ICs."]);
@@ -901,9 +949,11 @@
       }
       for (const [src, n] of Object.entries(loads)) {
         const pf = n * PIN_PF[1];
-        out.push([pf > MAX_PF ? "error" : "info", `${src} CLKO drives ${n} clock input${n > 1 ? "s" : ""}: ${(n * PIN_PF[0]).toFixed(1)}–${pf.toFixed(1)} pF of the ${MAX_PF} pF limit, ≈${Math.max(0, MAX_PF - pf).toFixed(0)} pF left for traces.`]);
+        out.push([pf > MAX_PF ? "error" : "info", `${src} CLKO drives ${n} clock input${n > 1 ? "s" : ""}: ${pfRange(n)} of the ${MAX_PF} pF limit (PCB, microstrip and connectors included); ${traceLeft(MAX_PF - pf)}.`]);
       }
     }
+    const ft = flashTuner();
+    if (ft && TUNER_SLOTS.filter(slotDev).length > 1) out.push(["info", `Tuner flash on ${ft} (end of the IC link chain); the other tuners boot through the IC link. Chip select: 10 kΩ pull-up only, no pull-ups on MISO / MOSI / CLK.`]);
     const a = u.audio;
     out.push(["info", `Audio ${a.format}: ${a.fs} kHz × ${a.bits} bit × ${a.slots} slots → bit clock ${(a.fs * a.bits * a.slots / 1000).toFixed(3)} MHz.`]);
     return out;
@@ -1089,6 +1139,12 @@
   const hwTuners = h => TUNER_SLOTS.reduce((n, s) => n + (h.ics && h.ics[s] ? (BY_MPN[h.ics[s]] || {}).tuners || 1 : 0), 0);
   // A sensible N-tuner design for a region: dual tuners first, the odd tuner as a single-tuner IC,
   // the demod sized to the tuners, two antennas when phase diversity is possible, loop-through to the next ICs.
+  // which antennas exist and where DAB goes (step 2); unset = the default for the region and tuner count
+  function antennaPlan(region, n) {
+    const dabRegion = region === "Europe" && S.digital !== false;
+    const d = {amfm: true, fm2: n >= 2, dab: dabRegion, dab2: dabRegion && n >= 4, dabIc: "auto"};
+    return Object.assign(d, S.ant || {});
+  }
   function generateHardware(region, n) {
     const eu = region === "Europe", na = region === "North America";
     const dual = eu ? "Si47962" : "Si47961", single = eu ? "Si47952" : "Si47951";
@@ -1102,27 +1158,56 @@
     if (eu && S.digital !== false) ics.IC3 = n >= 5 ? "Si46942A1GE1AM" : n >= 4 ? "Si46932A1GE1AM" : "Si46922A1GE1AM";
     if (region === "Rest of world" && S.digital === true) ics.IC3 = n >= 3 ? "Si46934A1GE1AM" : "Si46924A1GE1AM";
     if (S.pick && S.pick.IC3 && ics.IC3) ics.IC3 = S.pick.IC3;
-    const two = n >= 2;
-    const antennas = [{id: "ANT1", label: eu ? "AM/FM/DAB" : "AM/FM", bands: eu ? ["AM", "FM", "DAB"] : ["AM", "FM"]}];
-    if (two) antennas.push({id: "ANT2", label: eu ? "FM/DAB" : "FM", bands: eu ? ["FM", "DAB"] : ["FM"]});
-    const rf0 = plainIc0 === dual ? {AMI: "ANT1", FMA: "ANT1", FMB: two ? "ANT2" : "ANT1"} : {AMI: "ANT1", FMB: "ANT1"};
-    if (eu) Object.assign(rf0, plainIc0 === dual ? {"B3A/WXI": "ANT1", B3B: "ANT2"} : {"B3A/WXI": "ANT1"});
-    const rf = {IC0: {}};
-    for (const [pin, feed] of Object.entries(rf0)) { const np = mapPin(chips[0], pin); if (np && !rf.IC0[np]) rf.IC0[np] = feed; }
-    // one loop-through output feeds one input: LTB carries FM to the next IC, LTA Band III (as in the superset design)
-    // Europe: the companion IC is the DAB tuner, Band III on both inputs; elsewhere it carries FM
-    const carry = (mpn, pins) => Object.fromEntries(Object.entries(pins).map(([p, f]) => [mapPin(mpn, p), f]).filter(([p]) => p));
-    if (chips[1]) rf.IC1 = carry(chips[1], eu ? {"B3A/WXI": "loop:IC0.LTA", ...((BY_MPN[chips[1]] || {}).tuners === 2 ? {B3B: "loop:IC0.LTB"} : {})} : {FMB: "loop:IC0.LTB"});
-    if (chips[2]) rf.IC2 = carry(chips[2], eu ? {"B3A/WXI": "loop:IC1.LTA"} : {FMB: "loop:IC1.LTB"});
-    return {name: `${n} tuner${n > 1 ? "s" : ""}, IC0 ${chips[0]}, generated`, regions: [region], antennas, ics, rf, control: ics.IC3 ? "demod" : "soc", audio: "direct",
-      notes: `Generated for ${region}: ${chips.join(" + ")}${ics.IC3 ? ` + ${ics.IC3}` : ""}. ${two ? "Two antennas on IC0 (phase diversity possible)" : "One antenna (no phase diversity)"}${chips.length > 1 ? "; further ICs fed from the loop-through outputs" : ""}. Check the loop-through bands against the full datasheet.`};
+    // antennas (application guidance): primary AM/FM -> IC0 AMI + FMB, secondary FM -> IC0 FMA; primary / secondary
+    // DAB -> B3A / B3B of the DAB tuner IC (best the secondary tuner IC). Loop-throughs between IC0 and the DAB IC:
+    // IC0 LTA -> FMA, IC0 LTB -> FMB of the DAB IC; DAB IC LTA -> IC0 B3A, LTB -> IC0 B3B.
+    const A = antennaPlan(region, n), slots = TUNER_SLOTS.filter((sl, k) => chips[k]);
+    const antennas = [];
+    if (A.amfm) antennas.push({id: "ANT1", label: "AM/FM primary", bands: ["AM", "FM"]});
+    if (A.fm2) antennas.push({id: "ANT2", label: "FM secondary", bands: ["FM"]});
+    if (A.dab) antennas.push({id: "ANT3", label: "DAB primary", bands: ["DAB"]});
+    if (A.dab && A.dab2) antennas.push({id: "ANT4", label: "DAB secondary", bands: ["DAB"]});
+    const dabIc = slots.includes(A.dabIc) ? A.dabIc : slots[1] || "IC0";
+    const rf = Object.fromEntries(slots.map(sl => [sl, {}]));
+    const chipOf = sl => chips[TUNER_SLOTS.indexOf(sl)];
+    const set = (sl, pin, feed) => { const np = feed && mapPin(chipOf(sl), pin); if (np && !rf[sl][np]) rf[sl][np] = feed; };
+    set("IC0", "AMI", A.amfm && "ANT1");
+    set("IC0", "FMB", A.amfm && "ANT1");
+    set("IC0", "FMA", A.fm2 ? "ANT2" : A.amfm && "ANT1");
+    if (A.dab) { set(dabIc, "B3A/WXI", "ANT3"); set(dabIc, "B3B", A.dab2 ? "ANT4" : null); }
+    if (dabIc !== "IC0") {
+      set(dabIc, "FMA", "loop:IC0.LTA"); set(dabIc, "FMB", "loop:IC0.LTB");
+      if (A.dab) { set("IC0", "B3A/WXI", `loop:${dabIc}.LTA`); set("IC0", "B3B", `loop:${dabIc}.LTB`); }
+    }
+    // a further companion IC has no free loop-through: it shares the antennas through a band splitter
+    for (const sl of slots.filter(sl => sl !== "IC0" && sl !== dabIc)) {
+      set(sl, "FMB", A.amfm && "ANT1"); set(sl, "AMI", A.amfm && "ANT1");
+      if (A.dab) set(sl, "B3A/WXI", "ANT3");
+    }
+    const used = {};
+    for (const pins of Object.values(rf)) for (const f of Object.values(pins)) if (!f.startsWith("loop:")) used[f] = (used[f] || 0) + 1;
+    for (const ant of antennas) if (Object.keys(rf).filter(sl => Object.values(rf[sl]).includes(ant.id)).length > 1) ant.splitter = true;
+    // I/Q: ZIF ports tied across IC0 and the next dual IC (IC0 T0 + IC1 T1 -> port 0, IC0 T1 + IC1 T0 -> port 1),
+    // further tuners on the next free ports
+    const iq = {}, port = k => `ZIF I/Q ${k}`;
+    if (ics.IC3) {
+      const duals = slots.filter(sl => (BY_MPN[chipOf(sl)] || {}).tuners === 2);
+      if (duals.includes("IC0") && slots[1] && duals.includes(slots[1])) {
+        Object.assign(iq, {"IC0.T0": port(0), "IC0.T1": port(1), [`${slots[1]}.T0`]: port(1), [`${slots[1]}.T1`]: port(0)});
+        let k = 2;
+        for (const sl of slots.slice(2)) for (let t = 0; t < ((BY_MPN[chipOf(sl)] || {}).tuners || 1); t++) iq[`${sl}.T${t}`] = port(k++);
+      }
+    }
+    const two = !!A.fm2;
+    return {name: `${n} tuner${n > 1 ? "s" : ""}, IC0 ${chips[0]}, generated`, regions: [region], antennas, ics, rf, iq, control: ics.IC3 ? "demod" : "soc", audio: "direct",
+      notes: `Generated for ${region}: ${chips.join(" + ")}${ics.IC3 ? ` + ${ics.IC3}` : ""}. ${two ? "Primary AM/FM and secondary FM antenna on IC0 (phase diversity possible)" : "One AM/FM antenna (no phase diversity)"}${A.dab ? `; DAB antenna${A.dab2 ? "s" : ""} on ${dabIc}` : ""}${dabIc !== "IC0" ? `; IC0 ⇄ ${dabIc} loop-throughs (LTA/LTB)` : ""}. Check against the full datasheet.`};
   }
 
   function applyHardware(i) {
     const hw = JSON.parse(JSON.stringify(typeof i === "object" ? i : presetVariant(CONF.hardware[i]) || CONF.hardware[i]));
     S.devices = []; S.blocks = []; S.links = [];
     S.usecase = normalise({region: S.region, digital: S.digital, audioDsp: S.audio, features: [...S.features], hardware: hw.name, notes: hw.notes || "", ics: hw.ics, antennas: hw.antennas, rf: hw.rf,
-      control: hw.control, route: hw.audio, clock: hw.clock, memory: {}, modes: [], mode: 0});
+      control: hw.control, route: hw.audio, clock: hw.clock, iq: hw.iq || {}, memory: {}, modes: [], mode: 0});
     syncUseCase();
     S.usecase.modes = CONF.software.filter(sw => sw.region === S.region).map(modeFromPreset).filter(compatible);
     if (!S.usecase.modes.length) S.usecase.modes.push(blankMode("Listening mode 1"));
@@ -1187,7 +1272,8 @@
       ["AM", "FM", "DAB"].map(b => `<label><input type="checkbox" data-aband="${i}" value="${b}"${(a.bands || []).includes(b) ? " checked" : ""}> ${b}</label>`).join("") +
       `<label data-explain="splitter"><input type="checkbox" data-asplit="${i}"${a.splitter ? " checked" : ""}> splitter</label>` +
       `<button type="button" class="outline secondary small-btn" data-adel="${i}" aria-label="Remove ${esc(a.id)}">×</button></span>`).join("");
-    const memSlots = ALL_SLOTS.filter(s => slotDev(s) && pinsOf(slotDev(s)).some(p => p.fn === "flash" || p.fn === "memory"));
+    const memSlots = ALL_SLOTS.filter(s => slotDev(s) && flashHere(slotDev(s)) && pinsOf(slotDev(s)).some(p => p.fn === "flash" || p.fn === "memory"));
+    const tunersPop = TUNER_SLOTS.filter(slotDev);
     const hc = hardwareChecks(), mc = modeChecks(), a = u.audio, lic = licenceSummary();
     const problems = [...hc, ...mc].filter(([l]) => l === "warn" || l === "error");
     const infos = [...hc, ...mc].filter(([l]) => l === "info");
@@ -1205,6 +1291,7 @@
           <select id="uc-fs">${((GUIDE.i2s && GUIDE.i2s.sample_rates_khz) || [48]).map(f => opt(String(f), `${f} kHz`, String(a.fs))).join("")}</select>
           <select id="uc-bits">${[16, 24, 32].map(b => opt(String(b), `${b} bit`, String(a.bits))).join("")}</select>
           <select id="uc-slots">${[2, 4, 8].map(n => opt(String(n), `${n} slots`, String(a.slots))).join("")}</select></label>
+        ${tunersPop.length > 1 ? `<label data-explain="flash_on">Tuner flash on <select data-flashon>${tunersPop.map(t => opt(t, t + (t === tunersPop[tunersPop.length - 1] ? " (end of IC link chain)" : ""), flashTuner())).join("")}</select></label>` : ""}
         ${memSlots.map(s => `<label data-explain="memory">${s} flash <input data-mem="${s}" value="${esc(u.memory[s] || "")}" placeholder="size"></label>`).join("")}
       </div>
       ${lic ? `<p class="small" data-explain="licences">Licences: ${esc(lic)}</p>` : ""}</section>
@@ -1238,6 +1325,10 @@
       for (const s of TUNER_SLOTS) for (const n of Object.keys(u.rf[s] || {})) if (u.rf[s][n] === id) u.rf[s][n] = null;
     })));
     box.querySelectorAll("[data-mem]").forEach(el => (el.onchange = upd(t => (u.memory[t.dataset.mem] = t.value))));
+    box.querySelectorAll("[data-flashon]").forEach(el => (el.onchange = () => {
+      u.flashOn = el.value;
+      S.links = S.links.filter(l => l.kind !== "flash"); pruneBlocks(); autoComplete(); changed();
+    }));
     $("#uc-addant").onclick = upd(() => {
       let k = u.antennas.length + 1;
       while (u.antennas.some(x => x.id === `ANT${k}`)) k++;
@@ -1321,6 +1412,15 @@
     $("#st-tuners").hidden = !S.audioAsked;
     $("#st-feats").hidden = !S.tuners;
     $("#bc-cands").hidden = !S.tuners;
+    $("#st-ant").hidden = !S.tuners;
+    if (S.tuners) {
+      const A = antennaPlan(S.region, S.tuners), dabOk = S.region === "Europe" && S.digital !== false;
+      root.querySelectorAll("[data-ant]").forEach(b => { b.setAttribute("aria-pressed", String(!!A[b.dataset.ant])); b.hidden = /dab/.test(b.dataset.ant) && !dabOk; });
+      const sel = $("#bc-dab-ic");
+      sel.closest("label").hidden = !dabOk || !A.dab;
+      sel.value = A.dabIc || "auto";
+      [...sel.options].forEach(o => (o.disabled = o.value !== "auto" && !TUNER_SLOTS.slice(0, [1, 1, 2, 2, 3, 3][S.tuners - 1] || 1).includes(o.value)));
+    }
     $("#bc-hw-cards").hidden = !S.tuners;
     $("#st-sw").hidden = !u;
     $("#st-sw").classList.toggle("closed", !!S.swClosed);
@@ -1345,11 +1445,22 @@
       CONF.software.map((sw, i) => [sw, i]).filter(([sw]) => sw.region === S.region).map(([sw, i]) => `<option value="${i}">${esc(sw.name)}</option>`).join("") + `</select>` +
       (u.modes.length > 1 ? `<button type="button" class="outline secondary small-btn" id="bc-del-mode">Remove mode</button>` : "");
   }
+  root.addEventListener("change", e => {
+    if (e.target.id === "bc-dab-ic") { S.ant = {...(S.ant || {}), dabIc: e.target.value}; render(); explain("ant_dab", "DAB into"); }
+  });
   root.addEventListener("click", e => {
     const r = e.target.closest("[data-region]"), h = e.target.closest("[data-hw]"), md = e.target.closest("[data-mode]");
     const tn = e.target.closest("[data-tuners]"), gen = e.target.closest("[data-gen]"), au = e.target.closest("[data-audio]");
     const dg = e.target.closest("[data-digital]");
     if (e.target.closest("#bc-sw-toggle")) { S.swClosed = !S.swClosed; render(); return; }
+    const an = e.target.closest("[data-ant]");
+    if (an) {
+      const A = antennaPlan(S.region, S.tuners);
+      S.ant = {...(S.ant || {}), [an.dataset.ant]: !A[an.dataset.ant]};
+      render();
+      explain(an.dataset.explain, an.textContent);
+      return;
+    }
     if (dg) {
       const v = dg.dataset.digital === "true";
       S.digital = S.digital === v ? null : v;

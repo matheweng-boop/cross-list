@@ -201,8 +201,21 @@ splitter: >-
 "route:via_demod": >-
   Every tuner sends its I2S audio into the demod, which outputs one I2S stream to the SoC.
 iq_map: >-
-  Which demod ZIF port each tuner's I/Q pair is wired to. A dual tuner shares ZIFCLK / ZIFFS between its two pairs,
-  so it loads two ports (keep CLK / FS under 50 pF). A DMOD channel can only decode a tuner that is wired here.
+  Which demod ZIF port each tuner's I/Q pair is wired to. Ports can be tied: IC0 ZIF0 + IC1 ZIF1 on one port, IC0 ZIF1
+  + IC1 ZIF0 on the next, so every DMOD channel can take the stream it needs and MRC can be switched on and off.
+  Every pin on a net loads each output: keep each output under 30 pF, traces included. A DMOD channel can only
+  decode a tuner that is wired here.
+ant_amfm: >-
+  Primary AM/FM antenna into IC0 AMI and FMB. IC0 passes FM on to the DAB tuner IC through its loop-throughs
+  (LTA -> FMA, LTB -> FMB). Example: one roof antenna for AM/FM. Trade-off: without a second FM antenna there is no
+  FM phase diversity.
+ant_fm2: >-
+  Secondary FM antenna into IC0 FMA: enables FM phase diversity on IC0 (the PD audio can go to the linker). Without
+  it, FMA takes the primary AM/FM antenna as well.
+ant_dab: >-
+  Primary DAB antenna into B3A, secondary into B3B of the DAB tuner IC, best the secondary tuner (IC1, or IC2 in
+  larger systems). That IC passes Band III back to IC0 (LTA -> B3A, LTB -> B3B). Choose IC0 when there is only one
+  tuner IC. Trade-off: a secondary DAB antenna enables DAB MRC.
 licences: >-
   Software licences the demod needs: the most any listening mode uses at once. Application guidance: one HD I/Q
   licence per HD channel, one more for HD MRC.
@@ -255,3 +268,8 @@ digital: >-
   DAB or not. With DAB: a DAB demod, companion tuners must have DAB. Without: analog AM/FM, no demod.
 "digital:Rest of world": >-
   DRM or not. With DRM: a DRM-capable tuner and a DRM demod. Without: analog AM/FM, no demod.
+flash_on: >-
+  The tuner IC wired to the flash (NVxxx pins). Only the tuner at the end of the IC-link chain connects to the flash;
+  the others receive the boot image securely through the IC link. Do not wire the flash to any other tuner. The demod
+  keeps its own flash (parallel / quad connection recommended). Chip select: 10 kOhm pull-up to VCC only; no
+  pull-ups on MISO, MOSI or CLK.

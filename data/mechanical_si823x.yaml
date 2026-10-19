@@ -1,0 +1,24 @@
+# Lead and PCB land pattern (solder pad) data for the Skyworks Si823x packages, read from si823x-datasheet.pdf
+# rev 206326B. Format as data/mechanical.yaml (see its header).
+#
+# SOIC-16N and SOIC-16W are not repeated here: the Si823x outline and land-pattern tables (p.37/42 and p.40/44:
+# b 0.31-0.51, L 0.40-1.27; NB pads 1.55 x 0.60 at 5.40, WB pads 1.90 x 0.60 at 9.40) are identical to the
+# Skyworks SOIC-16N / SOIC-16W entries in data/mechanical.yaml, and a repeated key here would replace those
+# entries (including the -IS2 extended-creepage pattern).
+Skyworks:
+  SOIC-14W (IS3):
+    lead_width_mm: [0.31, 0.51]
+    lead_length_mm: [0.40, 1.27]
+    sides: 2
+    source: si823x-datasheet.pdf p39 (Table 22)
+    note: "16-position MS-013 body with positions 12 and 13 unpopulated (leads numbered 1-14, p38/p43)"
+    land_patterns:
+      - {name: Recommended, pad_length_mm: 1.60, pad_width_mm: 0.60, row_spacing_mm: 9.70, source: si823x-datasheet.pdf p43 (Table 26), note: "no pads at positions 12 and 13 of the 16-pad grid"}
+  LGA-14 (5x5):
+    lead_width_mm: [0.25, 0.35]
+    lead_length_mm: [0.70, 0.80]
+    sides: 2
+    source: si823x-datasheet.pdf p41 (Table 24)
+    note: "b = pad width, L = pad length; pads pulled back L1 0.05-0.15 from the body edge; no exposed pad"
+    land_patterns:
+      - {name: Recommended, pad_length_mm: 0.80, pad_width_mm: 0.40, row_spacing_mm: 4.20, source: si823x-datasheet.pdf p45 (Table 28), note: "Table 28 X1 0.80 is the pad dimension along the lead and Y1 0.40 across it (Figure 52), the reverse of the SOIC tables; NSMD pads"}

@@ -1,0 +1,241 @@
+source: TI datasheets ucc20225a-q1.pdf (SLUSDC2C) and ucc20225.pdf (SLUSCV8A), incl. package option addendum
+manufacturers:
+- name: TI
+  role: competitor
+  website: https://www.ti.com
+packages:
+# NPL0013A VLGA, 13 pins on a 2 x 7 grid of 0.65 mm pitch (14 positions). The empty position is
+# grid position 11: the centre of the right-hand column (top view), opposite pin 4 (VCCI), between
+# pin 10 (VDDB) and pin 11 (VSSA). Pin diagram ucc20225a-q1.pdf p3 (top view); package outline
+# p46 (bottom view: right column has pads 8, 9, 10, an empty centre slot on the SYMM line, then
+# 11, 12, 13); land pattern p47 (6 pads on the right with a gap at the centre). Same drawing
+# (4222800/C 08/2024) in ucc20225.pdf p45-46.
+# Body 4.9-5.1 x 4.9-5.1 mm, 1 mm max height, pad rows 4.15 mm centre to centre.
+- code: LGA-13 NPL (5x5)
+  name: TI NPL0013A 13-pin VLGA (5 x 5 mm, 14-position grid, position 11 empty)
+  pin_count: 13
+  pitch_mm: 0.65
+  body_length_mm: 5.0
+  body_width_mm: 5.0
+  span_mm: 5.0
+  height_mm: 1.0
+  exposed_pad: false
+  positions_total: 14
+  pin_positions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14]
+datasheets:
+- file: ucc20225a-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc20225a-q1.pdf
+  sha256: f5ba065857c49fc3300d4e5b2d4a07755ad5cc4993c0ede4335375fbe583186e
+  revision: C
+  revision_date: 2019-09-01
+- file: ucc20225.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc20225.pdf
+  sha256: f070f5ed249a88db083fb8ff73a09e148bc863ae45cee2e558bd99b6a2a8e3fe
+  revision: A
+  revision_date: 2018-02-01
+pinouts:
+  ucc20225_npl: [GND, PWM, NC, VCCI, DISABLE, DT, VCCI, VSSB, OUTB, VDDB, VSSA, OUTA, VDDA]
+parts:
+- mpn: UCC20225AQNPLRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC20225A-Q1: Automotive 2.5-kVrms isolated dual-channel gate driver, single PWM input, programmable dead time, 4-A/6-A, 5-V UVLO, LGA-13 5x5 mm'
+  package: LGA-13 NPL (5x5)
+  pinout: ucc20225_npl
+  datasheet: ucc20225a-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc20225a-q1.pdf
+  product_url: https://www.ti.com/product/UCC20225A-Q1
+  notes: >-
+    13-pin LGA on a 14-position grid: position 11 (right column centre, opposite pin 4) is empty
+    (ucc20225a-q1.pdf p3, p46, p47). Pins 4 and 7 (VCCI) are shorted internally.
+    5-V UVLO option per the Device Information table; VDD UVLO rising threshold 5.7/6.0/6.3 V min/typ/max (p8).
+    Reel of 3000 (R); the 250-piece T variant UCC20225AQNPLTQ1 is obsolete.
+  lifecycle:
+    status: active
+    release_date: 2019-09-01
+    revision: C
+    revision_date: 2019-09-01
+    source: 'TI package option addendum (6-Feb-2026): Active; release = Rev C (Sep 2019) changed UCC20225A-Q1 from Advance Information to initial release'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: basic
+    creepage_mm: 3.5
+    qualification: automotive
+    cmti_kv_us: 100.0
+    channel_config: dual
+    input_type: PWM input
+    peak_source_a: 4.0
+    peak_sink_a: 6.0
+    uvlo_v: 5
+    output_supply_v: [6.5, 25.0]
+    prop_delay_ns: 30.0
+    protection: [UVLO, disable, programmable dead time, input glitch filter]
+    temp_range_c: [-40.0, 125.0]
+    deadtime: programmable
+    theta_ja_c_w: 98.0
+    iq_ma: 1.5
+    rise_time_ns: 6.0
+    fall_time_ns: 7.0
+    pwd_ns: 6.0
+  param_sources:
+    isolation_rating_kvrms: ucc20225a-q1.pdf p6 (VISO 2500 Vrms, UL1577)
+    isolation_class: ucc20225a-q1.pdf p6-7 (basic insulation, VDE V 0884-11)
+    creepage_mm: ucc20225a-q1.pdf p6 (CPG external creepage)
+    qualification: ucc20225a-q1.pdf p1 (AEC-Q100 qualified, grade 1)
+    cmti_kv_us: ucc20225a-q1.pdf p9 (|CMH|, |CML| min 100 V/ns)
+    channel_config: ucc20225a-q1.pdf p1
+    input_type: ucc20225a-q1.pdf p1, p3 (single PWM input, dual output)
+    peak_source_a: ucc20225a-q1.pdf p8 (typ, bench measurement)
+    peak_sink_a: ucc20225a-q1.pdf p8 (typ, bench measurement)
+    uvlo_v: ucc20225a-q1.pdf p1 (Device Information, 5 V option), p8
+    output_supply_v: ucc20225a-q1.pdf p4 (recommended VDDA/VDDB)
+    prop_delay_ns: ucc20225a-q1.pdf p9 (tPDHL/tPDLH max)
+    protection: ucc20225a-q1.pdf p1, p3 (UVLO all supplies, DISABLE pin, DT pin, rejects input transients < 5 ns)
+    temp_range_c: ucc20225a-q1.pdf p4 (ambient)
+    deadtime: ucc20225a-q1.pdf p3, p22-23 (DT resistor, DT ns = 10 x RDT kOhm)
+    theta_ja_c_w: ucc20225a-q1.pdf p5
+    iq_ma: ucc20225a-q1.pdf p8 (VCCI quiescent, typ; max 2.0)
+    rise_time_ns: ucc20225a-q1.pdf p9 (typ, 1.8 nF; max 16)
+    fall_time_ns: ucc20225a-q1.pdf p9 (typ, 1.8 nF; max 12)
+    pwd_ns: ucc20225a-q1.pdf p9 (max)
+    pinout: ucc20225a-q1.pdf p3
+- like: UCC20225AQNPLRQ1
+  mpn: UCC20225AQNPLTQ1
+  notes: >-
+    Small-reel (T) ordering code of UCC20225A-Q1, listed Obsolete in the package option addendum.
+    13-pin LGA on a 14-position grid: position 11 (right column centre, opposite pin 4) is empty
+    (ucc20225a-q1.pdf p3, p46, p47).
+  lifecycle:
+    status: obsolete
+    release_date: 2019-09-01
+    revision: C
+    revision_date: 2019-09-01
+    source: 'TI package option addendum (6-Feb-2026): Obsolete'
+- like: UCC20225AQNPLRQ1
+  mpn: UCC20225QNPLRQ1
+  description: 'UCC20225-Q1: Automotive 2.5-kVrms isolated dual-channel gate driver, single PWM input, programmable dead time, 4-A/6-A, 8-V UVLO, LGA-13 5x5 mm'
+  product_url: https://www.ti.com/product/UCC20225-Q1
+  notes: >-
+    13-pin LGA on a 14-position grid: position 11 (right column centre, opposite pin 4) is empty
+    (ucc20225a-q1.pdf p3, p46, p47). Pins 4 and 7 (VCCI) are shorted internally.
+    8-V UVLO option per the Device Information table; VDD UVLO rising threshold 8.3/8.7/9.2 V min/typ/max (p8).
+    Reel of 3000 (R); the T variant UCC20225QNPLTQ1 is obsolete.
+  lifecycle:
+    status: active
+    release_date: 2019-04-01
+    revision: C
+    revision_date: 2019-09-01
+    source: 'TI package option addendum (6-Feb-2026): Active; release = Rev A (Apr 2019) changed UCC20225-Q1 from Advance Information to initial release'
+  params:
+    uvlo_v: 8
+    output_supply_v: [9.2, 25.0]
+  param_sources:
+    isolation_rating_kvrms: ucc20225a-q1.pdf p6 (VISO 2500 Vrms, UL1577)
+    isolation_class: ucc20225a-q1.pdf p6-7 (basic insulation, VDE V 0884-11)
+    creepage_mm: ucc20225a-q1.pdf p6 (CPG external creepage)
+    qualification: ucc20225a-q1.pdf p1 (AEC-Q100 qualified, grade 1)
+    cmti_kv_us: ucc20225a-q1.pdf p9 (|CMH|, |CML| min 100 V/ns)
+    channel_config: ucc20225a-q1.pdf p1
+    input_type: ucc20225a-q1.pdf p1, p3 (single PWM input, dual output)
+    peak_source_a: ucc20225a-q1.pdf p8 (typ, bench measurement)
+    peak_sink_a: ucc20225a-q1.pdf p8 (typ, bench measurement)
+    uvlo_v: ucc20225a-q1.pdf p1 (Device Information, 8 V option), p8
+    output_supply_v: ucc20225a-q1.pdf p4 (recommended VDDA/VDDB)
+    prop_delay_ns: ucc20225a-q1.pdf p9 (tPDHL/tPDLH max)
+    protection: ucc20225a-q1.pdf p1, p3 (UVLO all supplies, DISABLE pin, DT pin, rejects input transients < 5 ns)
+    temp_range_c: ucc20225a-q1.pdf p4 (ambient)
+    deadtime: ucc20225a-q1.pdf p3, p22-23 (DT resistor, DT ns = 10 x RDT kOhm)
+    theta_ja_c_w: ucc20225a-q1.pdf p5
+    iq_ma: ucc20225a-q1.pdf p8 (VCCI quiescent, typ; max 2.0)
+    rise_time_ns: ucc20225a-q1.pdf p9 (typ, 1.8 nF; max 16)
+    fall_time_ns: ucc20225a-q1.pdf p9 (typ, 1.8 nF; max 12)
+    pwd_ns: ucc20225a-q1.pdf p9 (max)
+    pinout: ucc20225a-q1.pdf p3
+- like: UCC20225QNPLRQ1
+  mpn: UCC20225QNPLTQ1
+  notes: >-
+    Small-reel (T) ordering code of UCC20225-Q1, listed Obsolete in the package option addendum.
+    13-pin LGA on a 14-position grid: position 11 (right column centre, opposite pin 4) is empty
+    (ucc20225a-q1.pdf p3, p46, p47).
+  lifecycle:
+    status: obsolete
+    release_date: 2019-04-01
+    revision: C
+    revision_date: 2019-09-01
+    source: 'TI package option addendum (6-Feb-2026): Obsolete'
+- mpn: UCC20225NPLR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC20225: 2.5-kVrms isolated dual-channel gate driver, single PWM input, programmable dead time, 4-A/6-A, 8-V UVLO, LGA-13 5x5 mm'
+  package: LGA-13 NPL (5x5)
+  pinout: ucc20225_npl
+  datasheet: ucc20225.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc20225.pdf
+  product_url: https://www.ti.com/product/UCC20225
+  notes: >-
+    13-pin LGA on a 14-position grid: position 11 (right column centre, opposite pin 4) is empty
+    (ucc20225.pdf p3, p45, p46). Pins 4 and 7 (VCCI) are shorted internally.
+    8-V UVLO (p1); VDD UVLO rising threshold 8.3/8.7/9.2 V min/typ/max (p8). Not AEC-Q100
+    (automotive version: UCC20225-Q1).
+  lifecycle:
+    status: active
+    release_date: 2017-04-01
+    revision: A
+    revision_date: 2018-02-01
+    source: 'TI package option addendum (6-Feb-2026): Active; release date = first datasheet issue (Apr 2017)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: basic
+    creepage_mm: 3.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: dual
+    input_type: PWM input
+    peak_source_a: 4.0
+    peak_sink_a: 6.0
+    uvlo_v: 8
+    output_supply_v: [9.2, 25.0]
+    prop_delay_ns: 30.0
+    protection: [UVLO, disable, programmable dead time, input glitch filter]
+    temp_range_c: [-40.0, 125.0]
+    deadtime: programmable
+    theta_ja_c_w: 98.0
+    iq_ma: 1.5
+    rise_time_ns: 6.0
+    fall_time_ns: 7.0
+    pwd_ns: 6.0
+  param_sources:
+    isolation_rating_kvrms: ucc20225.pdf p6 (VISO 2500 Vrms, UL1577)
+    isolation_class: ucc20225.pdf p6-7 (basic insulation, VDE V 0884-11)
+    creepage_mm: ucc20225.pdf p6 (CPG external creepage)
+    qualification: ucc20225.pdf p1 (industrial applications; no AEC-Q100; addendum p40 lists UCC20225-Q1 as the automotive version)
+    cmti_kv_us: ucc20225.pdf p9 (|CMH|, |CML| min 100 V/ns)
+    channel_config: ucc20225.pdf p1
+    input_type: ucc20225.pdf p1, p3 (single input, dual output)
+    peak_source_a: ucc20225.pdf p8 (typ, bench measurement)
+    peak_sink_a: ucc20225.pdf p8 (typ, bench measurement)
+    uvlo_v: ucc20225.pdf p1 (8-V UVLO), p8
+    output_supply_v: ucc20225.pdf p4 (recommended VDDA/VDDB)
+    prop_delay_ns: ucc20225.pdf p9 (tPDHL/tPDLH max)
+    protection: ucc20225.pdf p1, p3 (UVLO all supplies, DISABLE pin, DT pin, rejects input transients < 5 ns)
+    temp_range_c: ucc20225.pdf p4 (ambient)
+    deadtime: ucc20225.pdf p3 (DT resistor, DT ns = 10 x RDT kOhm)
+    theta_ja_c_w: ucc20225.pdf p5
+    iq_ma: ucc20225.pdf p8 (VCCI quiescent, typ; max 2.0)
+    rise_time_ns: ucc20225.pdf p9 (typ, 1.8 nF; max 16)
+    fall_time_ns: ucc20225.pdf p9 (typ, 1.8 nF; max 12)
+    pwd_ns: ucc20225.pdf p9 (max)
+    pinout: ucc20225.pdf p3
+- like: UCC20225NPLR
+  mpn: UCC20225NPLR.A
+  notes: >-
+    Listed as a separate orderable part number in the package option addendum (ucc20225.pdf p40),
+    same package, carrier (3000, large T&R) and marking as UCC20225NPLR.
+    13-pin LGA on a 14-position grid: position 11 (right column centre, opposite pin 4) is empty
+    (ucc20225.pdf p3, p45, p46).
+  lifecycle:
+    status: active
+    release_date: 2017-04-01
+    revision: A
+    revision_date: 2018-02-01
+    source: 'TI package option addendum (6-Feb-2026): Active'

@@ -1,0 +1,25 @@
+# Lead and PCB land pattern (solder pad) data per package, read from the datasheets.
+#
+# lead_width_mm:  b, [min, max] from the package outline table
+# lead_length_mm: L, foot length in contact with the board, [min, max]
+# land_patterns:  recommended pads, first one = default for drawings
+#   pad_length_mm  along the lead (Skyworks Y1, TI/Novosense "16X (2)")
+#   pad_width_mm   across the lead (Skyworks X1, TI/Novosense "16X (0.6)")
+#   row_spacing_mm pad centre to pad centre across the body (Skyworks C1, TI "(9.3)")
+# A package without land_patterns has none published; drawings then show the leads only.
+# `source` is file and page; `note` records anything read with judgement.
+
+TI:
+  LGA-13 NPL (5x5):
+    lead_width_mm: [0.25, 0.35]
+    lead_length_mm: [0.6, 0.7]
+    sides: 2
+    source: ucc20225a-q1.pdf p46 (NPL0013A, 4222800/C 08/2024; same drawing ucc20225.pdf p45)
+    note: >-
+      Solder pads 13X 0.6-0.7 (across the body) x 0.25-0.35 (along the row), the land pattern is 1:1 with them.
+      Each pad sits in a larger terminal outline 13X 0.75-0.85 x 0.35-0.45 that reaches the body edge;
+      the solder pad's outer edge is (0.1) mm inside the body edge (pad centres 2.075 mm from the centre line,
+      rows 4.15 mm apart). Pitch 0.65 mm, pins 1-7 span 3.9 mm. 14 positions, 13 pads: position 11
+      (right column centre, opposite pin 4) has no pad.
+    land_patterns:
+      - {name: Recommended (NSMD), pad_length_mm: 0.65, pad_width_mm: 0.3, row_spacing_mm: 4.15, source: ucc20225a-q1.pdf p47, note: "1:1 with package solder pads; non solder mask defined preferred, 0.07 mm mask clearance; stencil p48 same apertures (0.125 mm stencil)"}

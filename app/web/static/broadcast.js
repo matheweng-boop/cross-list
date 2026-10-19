@@ -74,14 +74,54 @@
   }
   function pruneBlocks() {
     const used = new Set(S.links.flatMap(l => [l.a.blk, l.b.blk]).filter(Boolean));
-    S.blocks = S.blocks.filter(b => used.has(b.id) || b.kind === "note" && b.free);
+    S.blocks = S.blocks.filter(b => used.has(b.id) || (b.kind === "note" && b.free) || (b.kind === "supply" && b.volts));
   }
 
   // ---------------------------------------------------------------- actions on a pin
+  // Supply rails: one block per voltage. A pin that accepts several voltages ("1.8 or 3.3") goes on
+  // the rail chosen for I/O (S.vio), or on whichever of its rails already exists.
+  const voltOptions = (o, p) => (volts(o, p) || "").split(/\s*(?:or|\/)\s*/).map(v => v.replace(/\s*V$/, "").trim()).filter(Boolean);
+  const railOf = v => S.blocks.find(b => b.kind === "supply" && b.volts === v);
+  function rail(v) {
+    return railOf(v) || Object.assign(addBlock("supply", `${v} V`, ""), {volts: v});
+  }
+  const powerLink = (d, n) => S.links.find(l => l.kind === "power" && endHas(l.a, d, n));
   function attachSupply(d, p) {
-    const v = volts(dev(d), p);
-    const rail = sharedBlock("supply", v ? `${v} V` : `${p.name} supply`, v ? "" : "voltage not in data short");
-    link(endOf(d, p), {blk: rail.id}, "power");
+    const opts = voltOptions(dev(d), p);
+    if (!opts.length) {
+      link({d, pins: [p.n]}, {blk: sharedBlock("supply", "Supply, voltage unknown", "voltage not in data short").id}, "power");
+      return;
+    }
+    const v = opts.length === 1 ? opts[0] : opts.includes(S.vio || "3.3") ? S.vio || "3.3" : opts.find(railOf) || opts[opts.length - 1];
+    const old = powerLink(d, p.n);
+    if (old) S.links = S.links.filter(l => l !== old);
+    link({d, pins: [p.n]}, {blk: rail(v).id}, "power");
+  }
+  // Connect every supply pin of every chip that accepts v; pins that also accept another voltage move to v.
+  function connectRail(v) {
+    let n = 0;
+    for (const o of S.devices)
+      for (const p of pinsOf(o).filter(p => p.fn === "power")) {
+        const opts = voltOptions(o, p);
+        if (!opts.includes(v)) continue;
+        const cur = powerLink(o.id, p.n), curB = cur && block(cur.b.blk);
+        if (curB && curB.volts === v) { n++; continue; }
+        if (cur) S.links = S.links.filter(l => l !== cur);
+        link({d: o.id, pins: [p.n]}, {blk: rail(v).id}, "power");
+        n++;
+      }
+    if (S.devices.some(o => pinsOf(o).some(p => p.fn === "power" && voltOptions(o, p).length > 1 && voltOptions(o, p).includes(v)))) S.vio = v;
+    rail(v);
+    pruneBlocks();
+    return n;
+  }
+  function updateRails() {
+    for (const b of S.blocks.filter(b => b.kind === "supply")) {
+      const ls = S.links.filter(l => l.b.blk === b.id && l.a.d);
+      const chips = [...new Set(ls.map(l => { const o = dev(l.a.d); return o ? o.slot || o.mpn : ""; }))].filter(Boolean);
+      const n = ls.reduce((k, l) => k + l.a.pins.length, 0);
+      if (b.volts) b.detail = n ? `${n} pin${n > 1 ? "s" : ""} · ${chips.join(", ")}` : "not connected";
+    }
   }
   function attachGround(d, p) {
     link({d, pins: [p.n]}, {blk: sharedBlock("ground", "GND").id}, "ground");
@@ -97,9 +137,29 @@
   function attachSpeaker(d, p) {
     link(endOf(d, p), {blk: addBlock("speaker", "Amplifier + speaker", p.fn === "audio_out" ? "analog in" : "I2S in").id}, "audio", p.bus || p.name);
   }
+  // Front-end parts on the RF pins an antenna feeds (application guidance), shown inside the antenna block
+  function frontEnd(b) {
+    const items = [], seen = new Set();
+    for (const l of S.links.filter(l => l.b.blk === b.id && l.a.d)) {
+      const o = dev(l.a.d);
+      for (const n of l.a.pins) {
+        const p = o && pin(o, n);
+        for (const g of p ? guidanceFor(o, p) : []) {
+          const key = g.label + g.detail;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          items.push({label: g.label, detail: g.detail, note: g.note || "", pin: p.name});
+        }
+      }
+    }
+    b.items = items;
+  }
+
   function attachAntenna(d, p) {
     const band = p.band || (/AM/.test(p.name) ? "AM" : /FM/.test(p.name) ? "FM" : /B3|DAB/.test(p.name) ? "DAB Band III" : "");
-    link({d, pins: [p.n]}, {blk: addBlock("antenna", `${band || "RF"} antenna`, p.name).id}, "rf");
+    const b = addBlock("antenna", `${band || "RF"} antenna`, p.name);
+    link({d, pins: [p.n]}, {blk: b.id}, "rf");
+    frontEnd(b);
   }
 
   // Bus endpoints of other devices a pin can be wired to: I/Q out -> I/Q in, I2S out -> I2S in, clock out -> refclk.
@@ -132,7 +192,18 @@
     const conn = linksAt(d, p.n);
     const add = (label, fn, hint = "") => items.push({label, fn, hint});
     switch (p.fn) {
-      case "power": add(`Add power supply${volts(D, p) ? ` (${volts(D, p)} V)` : ""}`, () => attachSupply(d, p)); break;
+      case "power": {
+        const opts = voltOptions(D, p);
+        if (!opts.length) {
+          add("Add to the 'voltage unknown' supply", () => attachSupply(d, p), "voltage not in the data short");
+          for (const r of S.blocks.filter(b => b.kind === "supply" && b.volts))
+            add(`Connect to the ${r.volts} V rail`, () => { const old = powerLink(d, p.n); if (old) S.links = S.links.filter(l => l !== old); link({d, pins: [p.n]}, {blk: r.id}, "power"); }, "check the datasheet first");
+        }
+        for (const v of opts) add(`Connect to the ${v} V rail`, () => { const old = powerLink(d, p.n); if (old) S.links = S.links.filter(l => l !== old); link({d, pins: [p.n]}, {blk: rail(v).id}, "power"); },
+          opts.length > 1 ? "this pin accepts " + opts.join(" or ") + " V" : "");
+        for (const v of opts) add(`Connect ${v} V to every chip that accepts it`, () => connectRail(v));
+        break;
+      }
       case "ground": add("Connect to ground", () => attachGround(d, p)); break;
       case "bypass": add("Add decoupling capacitor", () => link({d, pins: [p.n]}, {blk: addBlock("cap", "Capacitor", `${p.name}: value see datasheet`).id}, "cap")); break;
       case "xtal": add("Add crystal (XTALI / XTALO)", () => attachCrystal(d)); break;
@@ -165,7 +236,7 @@
       const copro = S.devices.some(o => info(o).role === "coprocessor");
       add(copro ? "Send to amplifier + speaker instead" : "Add amplifier + speaker (no coprocessor)", () => attachSpeaker(d, p));
     }
-    for (const g of guidanceFor(D, p)) add(`Add ${g.label}: ${g.detail}`, () => addGuidance(D, p, g), hasGuidance(D, p, g) ? "already added" : "application guidance");
+    for (const g of p.fn === "rf_in" ? [] : guidanceFor(D, p)) add(`Add ${g.label}: ${g.detail}`, () => addGuidance(D, p, g), hasGuidance(D, p, g) ? "already added" : "application guidance");
     add("Add note…", () => noteOn(d, p));
     if (conn.length) add(`Disconnect (${conn.length})`, () => removeLinks(l => conn.includes(l)));
     return items;
@@ -245,7 +316,7 @@
         else if (p.fn === "flash" && !seenBus.has("flash")) { link(endOf(o.id, p), {blk: addBlock("flash", "SPI flash", "firmware / NVM").id}, "flash", p.bus); seenBus.add("flash"); }
       }
       if (!S.usecase && pinsOf(o).some(p => p.fn === "xtal" && free(p))) attachCrystal(o.id);
-      for (const p of pinsOf(o)) for (const g of guidanceFor(o, p)) if (!hasGuidance(o, p, g)) addGuidance(o, p, g);
+      for (const p of pinsOf(o).filter(p => p.fn !== "rf_in")) for (const g of guidanceFor(o, p)) if (!hasGuidance(o, p, g)) addGuidance(o, p, g);
     }
     // tuner I/Q -> free coprocessor I/Q inputs, in order (a use case wires these itself)
     for (const t of S.usecase ? [] : S.devices.filter(o => info(o).role === "tuner")) {
@@ -277,7 +348,7 @@
   };
 
   // ---------------------------------------------------------------- layout + drawing
-  const ROW = 17, HEAD = 46, DEV_W = 230, BLK_W = 140, BLK_H = 34, GAP = 70;
+  const ROW = 17, HEAD = 46, DEV_W = 230, BLK_W = 140, BLK_H = 34, GAP = 50;
   const NET = ["power", "ground", "host"]; // shown as net labels at the pin, not as wires
 
   function visiblePins(o) {
@@ -294,18 +365,37 @@
     return {L, R};
   }
 
+  // Block sizes: antennas carry their front-end parts as sub-rows, supply rails list their pins.
+  const ANT_W = 210, LANE_GAP = 120, COL_GAP = 50;
+  function blockSize(b) {
+    if (b.kind === "antenna") return {w: ANT_W, h: BLK_H + (b.items || []).length * 14};
+    if (b.kind === "supply") return {w: 150, h: BLK_H};
+    return {w: BLK_W, h: BLK_H};
+  }
+
   function layout() {
     const cols = [S.devices.filter(o => info(o).role !== "coprocessor"), S.devices.filter(o => info(o).role === "coprocessor")].filter(c => c.length);
     const X = {ant: 20};
-    let x = X.ant + BLK_W + 40;
+    // add-on blocks sit LANE_GAP away from the chip so pin names, numbers and net labels stay visible
+    let x = X.ant + ANT_W + 40;
     const colX = cols.map(() => {
-      const c = {laneL: x, dev: x + BLK_W + 30};
-      c.laneR = c.dev + DEV_W + 30;
-      x = c.laneR + BLK_W + 90;
+      const c = {laneL: x, dev: x + BLK_W + LANE_GAP};
+      c.laneR = c.dev + DEV_W + LANE_GAP;
+      x = c.laneR + BLK_W + COL_GAP;
       return c;
     });
-    X.spk = x - 50;
-    const pos = {}, top = 110;
+    X.spk = x;
+    // top band: supply rails, ground, host
+    const out = {};
+    let tx = X.ant, topH = 0;
+    for (const b of S.blocks.filter(b => ["supply", "ground", "host"].includes(b.kind))) {
+      if (!S.links.some(l => l.b.blk === b.id || l.a.blk === b.id) && b.kind !== "supply") continue;
+      const sz = blockSize(b);
+      out[b.id] = {x: tx, y: 20, ...sz};
+      tx += sz.w + 14;
+      topH = Math.max(topH, sz.h);
+    }
+    const pos = {}, top = 20 + topH + 60;
     cols.forEach((col, ci) => {
       let y = top;
       for (const o of col) {
@@ -323,32 +413,27 @@
       const P = pos[d], e = P && P.pinY[n];
       return e ? {x: e.side === "L" ? P.x - 14 : P.x + P.w + 14, y: e.y, side: e.side} : null;
     };
-    // place blocks: antennas far left, speakers far right, shared nets in the top band,
-    // everything else in the lane beside the pin it hangs on
+    // antennas far left, speakers far right, everything else in the lane beside the pin it hangs on
     const lanes = {};
-    const want = [];
     for (const b of S.blocks) {
+      if (out[b.id]) continue;
       const ls = S.links.filter(l => l.b.blk === b.id || l.a.blk === b.id);
       if (!ls.length) continue;
       const e = ls[0].a.d ? ls[0].a : ls[0].b;
       const p = pinXY(e.d, e.pins[0]);
       if (!p) continue;
       const ys = ls.map(l => (l.a.d ? l.a : l.b)).flatMap(e => e.pins.map(n => pinXY(e.d, n))).filter(Boolean).map(q => q.y);
-      const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+      const cy = (Math.min(...ys) + Math.max(...ys)) / 2, sz = blockSize(b);
       let lane, bx;
-      if (["supply", "ground", "host"].includes(b.kind)) { lane = "top"; }
-      else if (b.kind === "antenna") { lane = "ant"; bx = X.ant; }
+      if (b.kind === "antenna") { lane = "ant"; bx = X.ant; }
       else if (b.kind === "speaker") { lane = "spk"; bx = X.spk; }
       else { const c = colX[pos[e.d].col]; lane = `${pos[e.d].col}${p.side}`; bx = p.side === "L" ? c.laneL : c.laneR; }
-      want.push({b, lane, x: bx, y: cy - BLK_H / 2});
+      (lanes[lane] ||= []).push({b, x: bx, y: cy - sz.h / 2, ...sz});
     }
-    const out = {};
-    for (const w of want) (lanes[w.lane] ||= []).push(w);
-    for (const [lane, ws] of Object.entries(lanes)) {
-      if (lane === "top") { ws.forEach((w, i) => (out[w.b.id] = {x: X.ant + i * (BLK_W + 16), y: 20, w: BLK_W, h: BLK_H})); continue; }
+    for (const ws of Object.values(lanes)) {
       ws.sort((a, b) => a.y - b.y);
       let floor = -1e9;
-      for (const w of ws) { const y = Math.max(w.y, floor); out[w.b.id] = {x: w.x, y, w: BLK_W, h: BLK_H}; floor = y + BLK_H + 8; }
+      for (const w of ws) { const y = Math.max(w.y, floor); out[w.b.id] = {x: w.x, y, w: w.w, h: w.h}; floor = y + w.h + 10; }
     }
     const W = Math.max(X.spk + BLK_W + 20, ...Object.values(out).map(r => r.x + r.w + 20), 600);
     const H = Math.max(...Object.values(pos).map(p => p.y + p.h + 40), ...Object.values(out).map(r => r.y + r.h + 40), 300);
@@ -358,6 +443,7 @@
   const curve = (a, b, da, db) => `M${a.x},${a.y} C${a.x + da},${a.y} ${b.x + db},${b.y} ${b.x},${b.y}`;
 
   function render() {
+    updateRails();
     const Lay = layout();
     const parts = [];
     // links
@@ -406,7 +492,9 @@
       if (!r) continue;
       parts.push(`<g class="blk k-${b.kind}" data-blk="${b.id}" tabindex="0" role="button" aria-label="${esc(b.label)}"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="5"/>` +
         `<text class="blk-label" x="${r.x + 8}" y="${r.y + 14}">${esc(b.label.length > 22 ? b.label.slice(0, 21) + "…" : b.label)}</text>` +
-        `<text class="blk-detail" x="${r.x + 8}" y="${r.y + 27}">${esc(b.detail.length > 26 ? b.detail.slice(0, 25) + "…" : b.detail)}</text></g>`);
+        `<text class="blk-detail" x="${r.x + 8}" y="${r.y + 27}">${esc(b.detail.length > 30 ? b.detail.slice(0, 29) + "…" : b.detail)}</text>` +
+        (b.items || []).map((it, i) => `<line class="blk-sep" x1="${r.x + 6}" x2="${r.x + r.w - 6}" y1="${r.y + BLK_H + i * 14 - 2}" y2="${r.y + BLK_H + i * 14 - 2}"/>` +
+          `<text class="blk-item" x="${r.x + 10}" y="${r.y + BLK_H + i * 14 + 9}">▸ ${esc((it.label + (it.detail ? ` · ${it.detail}` : "")).slice(0, 38))}</text>`).join("") + `</g>`);
     }
     if (!S.devices.length) parts.push(`<text class="empty" x="40" y="160">Add a device, or start from the standards you need.</text>`);
     const svg = $("#bc-svg");
@@ -482,6 +570,18 @@
       ]);
     }
     const b = block(t.dataset.blk);
+    if (b.kind === "antenna") explain("antenna_block", b.label);
+    if (b.kind === "supply") explain("supply", b.label);
+    if (b.kind === "supply" && b.volts) return openMenu(ev, `<b>${esc(b.label)} rail</b><br><small>${esc(b.detail)}</small>`, [
+      {label: `Connect every supply pin that accepts ${b.volts} V`, fn: () => connectRail(b.volts)},
+      {label: "Disconnect all pins from this rail", fn: () => removeLinks(l => l.b.blk === b.id)},
+      {label: "Remove rail", fn: () => { removeLinks(l => l.b.blk === b.id); S.blocks = S.blocks.filter(x => x !== b); }},
+    ], EXPLAIN.supply || "");
+    if (b.kind === "antenna" && (b.items || []).length) return openMenu(ev, `<b>${esc(b.label)}</b><br><small>${esc(b.detail)}</small>` +
+      b.items.map(it => `<br><small><b>${esc(it.label)}</b> (${esc(it.pin)}): ${esc(it.detail)}${it.note ? ` — ${esc(it.note)}` : ""}</small>`).join(""), [
+      {label: "Rename…", fn: () => { const v = prompt("Label", b.label); if (v) b.label = v; }},
+      ...(b.uc ? [] : [{label: "Remove", fn: () => removeLinks(l => l.a.blk === b.id || l.b.blk === b.id)}]),
+    ], EXPLAIN.antenna_block || "");
     openMenu(ev, `<b>${esc(b.label)}</b>${b.detail ? `<br><small>${esc(b.detail)}</small>` : ""}${b.note ? `<br><small class="muted">${esc(b.note)}</small>` : ""}${b.kind === "guide" ? `<br><small class="muted">${esc(GUIDE.source || "")}</small>` : ""}`, [
       {label: "Rename…", fn: () => { const v = prompt("Label", b.label); if (v) b.label = v; }},
       {label: "Edit detail…", fn: () => { const v = prompt("Detail (value, part number…)", b.detail); if (v !== null) b.detail = v; }},
@@ -600,6 +700,7 @@
       }
       for (const [ant, pins] of Object.entries(byAnt)) link({d: o.id, pins}, {blk: antBlock[ant].id}, "rf", "", "uc");
     }
+    Object.values(antBlock).forEach(frontEnd);
     // reference clock: crystal on the master, CLKO of the master to every other IC (star)
     const master = slotDev(u.clock.master);
     if (master) {
@@ -893,6 +994,13 @@
   function changed() { dirty = true; $("#bc-status").textContent = "Unsaved changes"; render(); }
   $("#bc-add").addEventListener("change", e => { if (e.target.value) { addDevice(e.target.value); e.target.value = ""; changed(); } });
   $("#bc-auto").addEventListener("click", () => { autoComplete(); changed(); });
+  root.querySelectorAll("[data-rail]").forEach(b => (b.onclick = () => {
+    let v = b.dataset.rail;
+    if (v === "other") { v = (prompt("Rail voltage in V (e.g. 5, 2.5)") || "").replace(/\s*V$/i, "").trim(); if (!v) return; }
+    const n = connectRail(v);
+    changed();
+    explain("supply", `${v} V rail · ${n} pin${n === 1 ? "" : "s"} connected`);
+  }));
   $("#bc-compact").checked = S.compact;
   $("#bc-compact").addEventListener("change", e => { S.compact = e.target.checked; render(); });
   $("#bc-zoom-in").addEventListener("click", () => { zoom = Math.min(2, zoom + 0.15); render(); });

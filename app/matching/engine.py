@@ -22,6 +22,7 @@ the part does: they never count as a deviation, a mismatch is not listed at all.
 An engineer can reject a drop-in; it is then listed as a package equivalent.
 """
 
+import re
 from dataclasses import dataclass, field
 
 from app.matching.rules import FamilyRules, ParamDef
@@ -282,11 +283,26 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
 # ---------------------------------------------------------------- fit
 
 
+# Vendors name the same pin differently: VCCI / VDDI (input supply), VSSA / GNDA (output ground),
+# OUTA / VOA (driver output). Pin names are mapped to one spelling before comparing.
+_PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vo([a-z0-9]+)$", r"out\1"))
+
+
+def pin_name(name: str) -> str:
+    n = _norm(name)
+    for pattern, repl in _PIN_ALIASES:
+        n = re.sub(pattern, repl, n)
+    return n
+
+
 def pins_compatible(ref: str, cand: str) -> bool:
-    """Pins match when equal, or when a datasheet allows alternatives ("VDD1/NC")
-    and the other part's function is one of them."""
-    r, c = {_norm(x) for x in ref.split("/")}, {_norm(x) for x in cand.split("/")}
-    return bool(r & c)
+    """Pins match when equal (after vendor aliases), or when a datasheet allows alternatives
+    ("VDD1/NC") and the other part's function is one of them. A plain "GND" matches a ground with a
+    side suffix (GNDI, GND1): the position already fixes which side it is on."""
+    r, c = {pin_name(x) for x in ref.split("/")}, {pin_name(x) for x in cand.split("/")}
+    if r & c:
+        return True
+    return ("gnd" in r and any(x.startswith("gnd") for x in c)) or ("gnd" in c and any(x.startswith("gnd") for x in r))
 
 
 def same_package(a: Package, b: Package) -> bool:

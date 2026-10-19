@@ -16,7 +16,7 @@ NOTES_FILE = PROJECT_ROOT / "data" / "cross_notes.yaml"
 VERDICTS = {
     "best": "Best option",
     "next_best": "Next best option",
-    "acceptable": "Acceptable",
+    "acceptable": "Acceptable (closest available)",
     "not_recommended": "Not recommended",
 }
 

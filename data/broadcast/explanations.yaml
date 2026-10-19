@@ -153,3 +153,13 @@ memory: >-
 crystal: >-
   One crystal on IC0 is the system reference (application guidance: 36.864 MHz); CLKO distributes it to all other
   tuners and demods.
+
+supply: >-
+  Supply rail. Clicking 3.3 V or 1.8 V connects every supply pin of every chip that accepts that voltage: VA pins
+  (3.3 V only) or VD (1.8 V only), and the VIO pins that accept 1.8 or 3.3 V move to the rail you click. Example:
+  click 1.8 V to run all digital I/O at 1.8 V; click 3.3 V to move it back. Pins whose voltage the data short does
+  not give stay on their own "supply" block.
+antenna_block: >-
+  One block per physical antenna. It wires to every RF input it feeds (e.g. AMI and FMA) and lists the front-end
+  parts on those inputs inside it: FM intrusion filter, ESD protection, L10 + 18 pF for the AM input (application
+  guidance). Click it for the values and why each part is there.

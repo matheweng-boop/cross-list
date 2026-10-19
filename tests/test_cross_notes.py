@@ -14,3 +14,10 @@ def test_vendor_pin_names_are_aliases():
     assert pins_compatible("VCCI", "VDDI") and pins_compatible("VSSA", "GNDA") and pins_compatible("OUTB", "VOB")
     assert pins_compatible("GND", "GNDI")
     assert not pins_compatible("VSSA", "VDDA") and not pins_compatible("OUTA", "OUTB")
+
+
+def test_output_variants_and_distinct_next_best():
+    from app.services.alternates import device_of
+
+    assert device_of("SI86S641EB-IU") == device_of("SI86S641BC-AS1") == "SI86S641"
+    assert device_of("ISO7741DBQR") == "ISO7741DBQR"

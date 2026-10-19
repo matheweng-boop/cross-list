@@ -109,6 +109,7 @@
         <br>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span> {% endif %}<small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small>
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
         {% for a in alts_for(c) %}<br><small class="alt-line">{{ a.family_label }} alternate: <a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> ({{ a.label }})</small>{% endfor %}
+        {% set ov = out_variants(c) %}{% if ov %}<br><small class="alt-line">Default output {{ c.param_map().get('default_output') or '?' }} · other state: {% for o in ov %}<a href="/parts/{{ o.id }}">{{ o.mpn }}</a> ({{ o.param_map().get('default_output') }}){{ ', ' if not loop.last }}{% endfor %}</small>{% endif %}
         {% set po = pkg_options(c) %}{% if po %}<br><small class="alt-line">Also in: {% for o in po %}<a href="/overlay/{{ part.id }}/{{ o.id }}" title="Package overlay against {{ part.mpn }}">{{ o.package.code }}</a> <a href="/parts/{{ o.id }}" class="muted">{{ o.mpn }}</a>{% set kv = o.param_map().get('isolation_rating_kvrms') %}{% if kv %} ({{ kv }} kVrms){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</small>{% endif %}</td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>
         {% if r.fff_status == 'rejected' %}<br><small class="muted">FFF rejected in review</small>{% endif %}</td>

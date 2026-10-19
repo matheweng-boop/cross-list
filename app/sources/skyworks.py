@@ -302,7 +302,7 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
         sheet = sheets[ds_name]
         guide = sheet.ordering_line(opn)
         table_pkg = alias.get((f.get("Package Type") or "").upper())
-        guide_pkg = guide_iso = None
+        guide_pkg = guide_iso = guide_default = None
         if guide:
             line = guide[0]
             hits = sorted(
@@ -313,6 +313,8 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
             iso = re.search(r"\b(?:Low|High)\s+(\d+(?:\.\d+)?)\b", line)
             before_pkg = re.findall(r"(\d+(?:\.\d+)?)\s", line[: hits[0][0]]) if hits else []
             guide_iso = float(iso.group(1)) if iso else float(before_pkg[-1]) if before_pkg else None
+            default = re.search(r"\b(Low|High)\b", line)
+            guide_default = default.group(1).lower() if default else None
         # The datasheet ordering guide is authoritative; the web table has errors.
         if table_pkg and guide_pkg and table_pkg != guide_pkg:
             mismatches.append(f"{opn}: table says {table_pkg}, datasheet ordering guide says {guide_pkg}")
@@ -377,6 +379,14 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
                 continue
             params[key] = value
             sources[key] = f"{ds_name} p.{sheet.find(fact['evidence'])}"
+        # default output state: the ordering guide decides (it is authoritative), the web table fills gaps
+        if guide_default and params.get("default_output") != guide_default:
+            if params.get("default_output"):
+                mismatches.append(
+                    f"{opn}: table says default {params['default_output']}, ordering guide says {guide_default}"
+                )
+            params["default_output"] = guide_default
+            sources["default_output"] = f"{ds_name} p.{guide[1]} (ordering guide)"
         if params.get("isolation_rating_kvrms") is None and guide_iso:
             params["isolation_rating_kvrms"] = guide_iso
             sources["isolation_rating_kvrms"] = f"{ds_name} p.{guide[1]} (ordering guide)"

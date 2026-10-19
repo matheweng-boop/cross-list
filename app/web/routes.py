@@ -297,10 +297,18 @@ def part_detail(
         rows = [(r, v) for r, v in rows if v.category == type]
     # best and next best option per cross type; the rest only on request
     ranked, top = {}, []
+    # (two different devices: an output-state or rating variant of the best part is not the next best)
     for cat in CATEGORY_ORDER:
-        for i, rv in enumerate([rv for rv in rows if rv[1].category == cat][:2]):
-            ranked[rv[0].candidate.id] = i
+        devices: set[str] = set()
+        for rv in [rv for rv in rows if rv[1].category == cat]:
+            dev_key = alternates.device_of(rv[0].candidate.mpn)
+            if dev_key in devices:
+                continue
+            devices.add(dev_key)
+            ranked[rv[0].candidate.id] = len(devices) - 1
             top.append(rv)
+            if len(devices) == 2:
+                break
     rest = [rv for rv in rows if rv[0].candidate.id not in ranked]
     rows = top + (rest if all else [])
     values = rules.values(part)
@@ -335,6 +343,7 @@ def part_detail(
             "alternates": alternates.alternates(session, part),
             "alts_for": lambda p: alternates.alternates(session, p, limit=1),
             "pkg_options": lambda p: alternates.package_options(session, p),
+            "out_variants": lambda p: alternates.output_variants(session, p),
             "rank_reason": rank_reason,
             "cross_notes": cross_notes.notes_for,
             "position_note": cross_notes.position_note,

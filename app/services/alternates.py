@@ -102,3 +102,32 @@ def package_options(session: Session, part: Part) -> list[Part]:
             seen.add(c.package_id)
             unique.append(c)
     return unique
+
+
+def device_of(mpn: str) -> str:
+    """The device behind an ordering code, without output-state, rating, grade and package letters
+    (SI86S641EB-IU and SI86S641BC-AS1 -> SI86S641); other part numbers are their own device."""
+    m = _ORDER_CODE.match((mpn or "").upper())
+    return m.group(1)[:-1] if m else (mpn or "").upper()
+
+
+def output_variants(session: Session, part: Part) -> list[Part]:
+    """The same device, rating, grade and package with the other default output state (Si86 B <-> E, A <-> E,
+    F <-> H): e.g. SI86S641EB-IU (high) <-> SI86S641BB-IU (low)."""
+    m = _ORDER_CODE.match((part.mpn or "").upper())
+    if not m:
+        return []
+    device, rating, grade, pkg = m.groups()
+    mine = part.param_map().get("default_output")
+    out = []
+    for c in session.scalars(select(Part).where(Part.family == part.family, Part.mpn.like(f"{device[:-1]}%"))).unique():
+        cm = _ORDER_CODE.match(c.mpn.upper())
+        if (
+            cm
+            and c.id != part.id
+            and cm.group(1)[:-1] == device[:-1]
+            and cm.groups()[1:] == (rating, grade, pkg)
+            and c.param_map().get("default_output") not in (None, mine)
+        ):
+            out.append(c)
+    return sorted(out, key=lambda c: c.mpn)

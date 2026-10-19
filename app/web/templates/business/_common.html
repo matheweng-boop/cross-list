@@ -25,7 +25,7 @@
 {% endmacro %}
 {% macro term(key, text=none) %}{% set t = bo_help().terms.get(key) %}<span class="bo-term" tabindex="0" title="{{ t.short if t else '' }}">{{ text or (t.term if t else key) }}</span>{% endmacro %}
 {% macro about(page) %}{% set p = bo_help().pages.get(page) %}{% if p %}
-<details class="bo-about" data-about="{{ page }}" open>
+<details class="bo-about" data-about="{{ page }}">
   <summary><b>About this page</b> <span class="muted">· {{ p.question }}</span></summary>
   <div class="bo-about-body small">
     <div><b>How to read it</b><ul>{% for x in p.read %}<li>{{ x }}</li>{% endfor %}</ul></div>
@@ -35,7 +35,7 @@
   <p class="small muted bo-about-foot">All definitions, formulas and data sources: <a href="/business/method">How it works</a>.</p>
 </details>
 <script>(() => { const d = document.querySelector('[data-about="{{ page }}"]'), k = "bo-about-{{ page }}";
-  try { if (localStorage.getItem(k) === "closed") d.open = false; d.addEventListener("toggle", () => { try { localStorage.setItem(k, d.open ? "open" : "closed"); } catch (e) {} }); } catch (e) {} })();</script>
+  try { if (localStorage.getItem(k) === "open") d.open = true; d.addEventListener("toggle", () => { try { localStorage.setItem(k, d.open ? "open" : "closed"); } catch (e) {} }); } catch (e) {} })();</script>
 {% endif %}{% endmacro %}
 {% macro srccheck(chk) %}{% if chk and chk.status %}<span class="sc sc-{{ chk.status }}" title="Source check {{ chk.date }}: {{ chk.status }}{{ ' – ' ~ chk.note if chk.note }}{{ ' · ' ~ chk.evidence|length ~ ' source(s) opened' if chk.evidence }}">{{ {'confirmed': 'source ✓', 'corrected': 'source ✓ corrected', 'unconfirmed': 'source ?'}.get(chk.status, chk.status) }}</span>{% endif %}{% endmacro %}
 {% macro review(ds, key, rev, conf=none, chk=none) %}{% set s = rev.get(ds ~ '|' ~ key) %}{% set st = s.state if s else 'unverified' %}

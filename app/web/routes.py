@@ -23,7 +23,7 @@ from app.matching.engine import (
     format_value,
 )
 from app.matching.rules import get_rules, load_all_rules
-from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
+from app.models import ChangeEvent, Package, Part, User
 from app.services import alternates, cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
@@ -34,6 +34,7 @@ from app.services.queries import (
     search_parts,
     single_cross,
 )
+from app.web import nav
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -49,74 +50,46 @@ templates.env.globals.update(
 )
 
 
+def family_support(session: Session) -> dict[str, dict]:
+    """Every product family with matching rules, and how many parts Cross List holds for it: one list for Parts
+    and Compare. A family with rules but no parts cannot be compared or crossed yet."""
+    from sqlalchemy import func
+
+    from app.models import Manufacturer
+
+    rows = session.execute(
+        select(Part.family, Manufacturer.role, func.count(Part.id))
+        .join(Part.manufacturer)
+        .group_by(Part.family, Manufacturer.role)
+    ).all()
+    out = {k: {"title": r.title, "parts": 0, "reference": 0, "competitor": 0} for k, r in load_all_rules().items()}
+    for fam, role, n in rows:
+        e = out.setdefault(fam, {"title": fam, "parts": 0, "reference": 0, "competitor": 0})
+        e["parts"] += n
+        e[role.value] = e.get(role.value, 0) + n
+    return out
+
+
 def _is_new(part: Part) -> bool:
     return lifecycle.is_new(part, get_settings().new_part_days)
 
 
 templates.env.globals["is_new"] = _is_new
 
-# Site sections: header -> sub-headers (label, path). A page belongs to the section whose
-# prefixes match its path; the part pages, overlays and downloads all sit under Crosses.
-SECTIONS = (
-    ("crosses", "Crosses", "/", [("Find", "/"), ("Parts", "/parts"), ("Compare", "/compare"),
-                                 ("Lifecycle", "/lifecycle"), ("Rules", "/rules"),
-                                 ("Requests", "/requests")]),
-    ("technical", "Technical discussions", "/technical", [("Technical", "/technical"),
-                                                         ("Engineering notes", "/engineering"),
-                                                         ("Broadcast", "/broadcast"),
-                                                         ("Broadcast configurations", "/broadcast/configurations")]),
-    ("blocks", "Block diagrams", "/blocks", [("Generator", "/blocks"), ("Coverage", "/blocks/coverage"),
-                                             ("Feedback", "/blocks/feedback")]),
-    ("business", "Business opportunity", "/business", [("Overview", "/business"),
-                                                       ("Applications", "/business/applications"),
-                                                       ("Markets", "/business/markets"),
-                                                       ("Attach", "/business/attach"),
-                                                       ("Gaps & ranking", "/business/gaps"),
-                                                       ("Technology fit", "/business/technology"),
-                                                       ("Technology base", "/business/capabilities"),
-                                                       ("Where to hunt", "/business/customers"),
-                                                       ("New markets", "/business/explore"),
-                                                       ("Case analysis", "/business/cases"),
-                                                       ("TAM data", "/business/data"),
-                                                       ("Data quality", "/business/quality"),
-                                                       ("How it works", "/business/method")]),
-)  # fmt: skip
-SECTION_PREFIXES = {
-    "technical": ("/technical", "/engineering", "/impact", "/broadcast"),
-    "blocks": ("/blocks",),
-    "business": ("/business",),
-}
-
-
-SUB_ALIAS = {"/business/evidence": "/business/technology"}  # pages without their own sub-header
-
-
-def section_of(path: str) -> str:
-    return next((k for k, prefixes in SECTION_PREFIXES.items() if path.startswith(prefixes)), "crosses")
-
-
-def _sub_active(path: str, href: str, subs: list) -> bool:
-    """The longest sub-header path that prefixes the page path (Find only on / and /find)."""
-    if href == "/":
-        return path in ("/", "/find")
-    for prefix, target in SUB_ALIAS.items():
-        if path.startswith(prefix):
-            path = target
-    best = max((h for _, h in subs if h != "/" and path.startswith(h)), key=len, default=None)
-    return href == best
-
-
-templates.env.globals["sections"] = SECTIONS
-templates.env.globals["section_of"] = section_of
-templates.env.globals["sub_active"] = _sub_active
+# Navigation: task-based sections (app/web/nav.py); every existing URL keeps working
+templates.env.globals.update(nav_state=nav.state, nav_sections=nav.NAV, nav_utility=nav.UTILITY)
 
 GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
 
 
+GRADE_LABELS = {"automotive": "Automotive AEC-Q100", "industrial": "Non-automotive", "unknown": "Grade not stated"}
+
+
 def grade_of(part: Part) -> str:
-    """'automotive' for AEC-Q100 parts, 'industrial' for everything else (grade unknown included)."""
+    """'automotive' (AEC-Q100 stated), 'industrial' (industrial / commercial stated) or 'unknown' (not stated):
+    a missing qualification is never treated as a confirmed non-automotive grade."""
     q = next((pv.value for pv in part.params if pv.key == "qualification"), None)
-    return "automotive" if q == "automotive" else "industrial"
+    return "automotive" if q == "automotive" else "industrial" if q in ("industrial", "commercial") else "unknown"
 
 
 def _grade_badge(part: Part) -> tuple[str, str] | None:
@@ -126,6 +99,7 @@ def _grade_badge(part: Part) -> tuple[str, str] | None:
 
 templates.env.globals["grade_badge"] = _grade_badge
 templates.env.globals["grade_of"] = grade_of
+templates.env.globals["grade_labels"] = GRADE_LABELS
 
 
 def _has_synthetic() -> bool:
@@ -183,71 +157,41 @@ def find(request: Request, q: str = "", session: Session = Depends(get_session))
 def index(
     request: Request,
     q: str = "",
-    family: str = "",
-    role: str = "",
-    company: str = "",
-    catalog: str = "",
+    cat: str = "",
     sub: str = "",
+    company: str = "",
+    qual: str = "",
+    life: str = "",
+    cap: str = "",
+    role: str = "",
+    limit: int = 200,
+    family: str = "",
+    catalog: str = "",
     lifecycle_status: str = Query("", alias="lifecycle"),
     session: Session = Depends(get_session),
 ):
-    """Browse without listing everything: pick a product category, then a company; chips filter by role and
-    lifecycle. A search lists matches directly. Catalogue categories (full Skyworks / Qorvo portfolio) browse the
-    product pages; Cross List families open the crosses."""
-    from sqlalchemy import func
+    """Browse products through one functional taxonomy (catalogue records and Cross List parts together), with
+    capability badges that say what each record supports. Old links (family=, catalog=, lifecycle=) still work."""
+    from app.services import products
 
-    from app.models import Manufacturer
-    from app.services import blocks
-
-    ctx = {"q": q, "family": family, "role": role, "company": company, "catalog": catalog, "sub": sub,
-           "lifecycle": lifecycle_status, "statuses": list(LifecycleStatus), "parts": None, "rows": None}  # fmt: skip
-    # tiles: Cross List families with counts per company, catalogue categories per manufacturer
-    counts = session.execute(
-        select(Part.family, Manufacturer.name, Manufacturer.role, func.count(Part.id))
-        .join(Part.manufacturer)
-        .group_by(Part.family, Manufacturer.name, Manufacturer.role)
-    ).all()
-    fam: dict[str, dict] = {}
-    for f, mname, mrole, n in counts:
-        e = fam.setdefault(f, {"total": 0, "companies": {}, "reference": 0})
-        e["total"] += n
-        e["companies"][mname] = (n, mrole.value)
-        e["reference"] += n if mrole.value == "reference" else 0
-    cat: dict[str, dict] = {}
-    for r in blocks.catalog_rows():
-        e = cat.setdefault(r["category"], {"total": 0, "companies": {}})
-        e["total"] += 1
-        e["companies"][r["manufacturer"]] = e["companies"].get(r["manufacturer"], 0) + 1
-    ctx.update(families=fam, catalog_cats=dict(sorted(cat.items(), key=lambda kv: -kv[1]["total"])))
-    if q.strip() or (family and company):
-        who = company if company and company != "*" else ""
-        found = search_parts(session, q, family, role, lifecycle_status, limit=10000, company=who)
-        if family and not q.strip():
-            everything = search_parts(session, "", family, role, "", limit=10000, company=who)
-            ctx["life_counts"] = _life_counts(everything, "")
-            ctx["series"] = {}
-            for p in everything:
-                ctx["series"][_series_of(p.mpn)] = ctx["series"].get(_series_of(p.mpn), 0) + 1
-            ctx["series"] = dict(sorted(ctx["series"].items()))
-        if sub:
-            found = [p for p in found if _series_of(p.mpn) == sub]
-        ctx["parts"] = found[:1000]
-        ctx["n_found"] = len(found)
-    if catalog:
-        rows = [r for r in blocks.catalog_rows() if r["category"] == catalog]
-        ctx["subs"] = sorted({r["sub"] for r in rows if r["sub"] and (not company or r["manufacturer"] == company)})
-        ctx["cat_life"] = {}
-        for r in rows:
-            if (not company or r["manufacturer"] == company) and (not sub or r["sub"] == sub):
-                ctx["cat_life"][r["status"]] = ctx["cat_life"].get(r["status"], 0) + 1
-        if company:
-            rows = [r for r in rows if company == "*" or r["manufacturer"] == company]
-            rows = [
-                r
-                for r in rows
-                if (not sub or r["sub"] == sub) and (not lifecycle_status or r["status"] == lifecycle_status)
-            ]
-            ctx["rows"] = sorted(rows, key=lambda r: (r["sub"], r["mpn"]))[:1000]
+    tax = products.taxonomy()
+    if family and not sub:  # old Cross List family link
+        sub = tax["families"].get(family, "")
+    if catalog and not cat:  # old catalogue category link: its first functional category
+        cat = next((cid for c, _rx, cid, _sid in tax["rules"] if c == catalog), "")
+    if lifecycle_status and not life:
+        life = {"last_time_buy": "nrnd"}.get(lifecycle_status, lifecycle_status)
+    if sub in tax["subs"] and not cat:
+        cat = tax["subs"][sub]["category"]
+    if company == "*":
+        company = ""
+    res = products.browse(session, q=q, cat=cat, sub=sub, company=company, qual=qual, life=life, cap=cap, role=role)
+    limit = max(50, min(limit, 5000))
+    params = {"q": q, "cat": cat, "sub": sub, "company": company, "qual": qual, "life": life, "cap": cap, "role": role}
+    ctx = {**params, "params": params, "res": res, "rows": res["rows"][:limit], "limit": limit, "tax": tax,
+           "qual_label": products.QUAL_LABEL, "cap_label": products.CAPABILITIES,
+           "life_label": {"active": "Active", "preview": "Preview / sampling", "nrnd": "NRND / last time buy",
+                          "obsolete": "Obsolete", "unknown": "Not stated"}}  # fmt: skip
     return templates.TemplateResponse(request, "index.html", ctx)
 
 
@@ -352,24 +296,19 @@ def part_detail(
     rules = get_rules(part.family)
     # grade is always one of the two: an automotive part only takes automotive crosses (AEC-Q100 is a hard
     # requirement); a non-automotive part shows non-automotive crosses unless automotive is chosen
-    grade = (
-        "automotive"
-        if grade_of(part) == "automotive"
-        else (grade if grade in ("automotive", "industrial") else "industrial")
-    )
+    grade = "automotive" if grade_of(part) == "automotive" else (grade if grade in GRADE_LABELS else "industrial")
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
     crosses = crosses_for(session, part, scope, dev)
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
-    grade_counts = {
-        g: sum(grade_of(r.candidate) == g for r, _ in result_rows(crosses)) for g in ("automotive", "industrial")
-    }
-    crosses = {c: [r for r in rs if grade_of(r.candidate) == grade] for c, rs in crosses.items()}
-    companies = companies_of(result_rows(crosses))
+    companies = companies_of([(r, v) for r, v in result_rows(crosses) if grade_of(r.candidate) == grade])
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
+    # facet counts: crosses per grade with every other active filter applied (lifecycle, company), before type
+    grade_counts = {g: sum(grade_of(r.candidate) == g for r, _ in result_rows(crosses)) for g in GRADE_LABELS}
+    crosses = {c: [r for r in rs if grade_of(r.candidate) == grade] for c, rs in crosses.items()}
     rows = result_rows(crosses)
     type_counts = {c: sum(v.category == c for _, v in rows) for c in CATEGORY_ORDER}
     type = type if type in CATEGORY_ORDER else ""
@@ -446,7 +385,7 @@ def results_download(
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     rows = [(r, v) for r, v in result_rows(crosses) if not type or v.category == type]
-    if grade in ("automotive", "industrial"):
+    if grade in GRADE_LABELS:
         rows = [(r, v) for r, v in rows if grade_of(r.candidate) == grade]
     if fmt == "xlsx":
         return _download(export.results_xlsx(part, rows), f"replacements_{part.mpn}.xlsx", XLSX)
@@ -648,7 +587,8 @@ def compare_page(
                 session.rollback()
     if matches and add:
         family = matches[0].family
-    family = family or next(iter(load_all_rules()))
+    support = family_support(session)
+    family = family or next((k for k, e in support.items() if e["parts"]), next(iter(support)))
     available = list(session.scalars(select(Part).where(Part.family == family).order_by(Part.mpn)).unique())
     series: dict[str, list[Part]] = {}
     for p in available:
@@ -668,6 +608,7 @@ def compare_page(
             "not_found": not_found,
             "alt": alt,
             "alt_of": alt_of,
+            "support": support,
         },
     )
 

@@ -29,3 +29,13 @@
   <a href="/overlay/{{ r.reference.id }}/{{ r.candidate.id }}" role="button" class="outline">Package overlay</a>
 </div>
 {%- endmacro %}
+
+{# One definition of the cross types, used on the home page and the rules page #}
+{% macro cross_type_definitions() -%}
+<ul class="cross-defs">
+  <li><b>Drop-in (FFF)</b> – same package and pin-to-pin, and every priority 1 parameter equal or better (better ones are marked). Priority 2 and 3 differences are listed for review.</li>
+  <li><b>Functional equivalent</b> – different package or pinout; priority 1 equal or better apart from at most 2 deviations (adjustable 0–3 on the part page).</li>
+  <li><b>Package equivalent</b> – same package and basic function, different technical specification; marked pin-to-pin or not.</li>
+</ul>
+<p class="small muted">A better value in one parameter does not by itself make a part suitable for an application: check the listed deviations against the design.</p>
+{%- endmacro %}

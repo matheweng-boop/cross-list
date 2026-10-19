@@ -180,11 +180,19 @@ def _catalog_files() -> list[Path]:
     return files
 
 
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # libyaml when available: the catalogues are several MB
+
+
+@lru_cache
+def _catalog_docs() -> tuple[tuple[Path, dict], ...]:
+    """Each catalogue file parsed once per process."""
+    return tuple((path, yaml.load(path.read_text(), Loader=_Loader) or {}) for path in _catalog_files())
+
+
 @lru_cache
 def catalog_parts() -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
-    for path in _catalog_files():
-        data = yaml.safe_load(path.read_text()) or {}
+    for path, data in _catalog_docs():
         for p in data.get("parts") or []:
             fn = FUNCTION_ALIAS.get(p.get("function"), p.get("function"))
             if not fn:
@@ -222,8 +230,7 @@ def catalog_rows() -> list[dict]:
     """Every catalogue part as a browse row (Parts page): manufacturer, top category, sub-category, part number,
     description, package, lifecycle, product page."""
     rows = []
-    for path in _catalog_files():
-        data = yaml.safe_load(path.read_text()) or {}
+    for path, data in _catalog_docs():
         for p in data.get("parts") or []:
             mfr = p.get("manufacturer") or ("Qorvo" if "qorvo" in path.name else "Skyworks")
             cat = [c.strip() for c in str(p.get("category") or "Other").split(">")]
@@ -239,6 +246,8 @@ def catalog_rows() -> list[dict]:
                     "package": p.get("package") or "",
                     "status": str(p.get("status") or "unknown"),
                     "url": url,
+                    "automotive": p.get("automotive"),  # True / False as stated by the source, None = not stated
+                    "datasheet": p.get("datasheet_url") or "",
                 }  # fmt: skip
             )
     return rows

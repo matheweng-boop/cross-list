@@ -22,8 +22,18 @@ def test_pages_render(client):
 def test_part_page_shows_cross_types_and_top5(client):
     (ref,) = ids(client, "SR8641")
     html = client.get(f"/parts/{ref}").text
-    for label in ["Drop-in", "Functional", "Package eq.", "P2P", "Top 5 differences", "Download Excel"]:
-        assert label in html
+    for label in [
+        "Drop-in",
+        "Functional",
+        "Package eq.",
+        "Pin-to-pin",
+        "Critical deviations",
+        "Top 5 differences",
+        "Download table (Excel)",
+        "compare-tray",
+        "Qualification",
+    ]:
+        assert label in html, label
 
 
 def test_hide_eol_filter(client):
@@ -127,12 +137,12 @@ def test_partial_part_numbers(client):
 def test_search_page_covers_all_companies(client):
     html = client.get("/parts?q=7741").text
     assert "SA7741" in html  # competitor part found without changing the filter
-    start = client.get("/parts").text  # categories first, no part list
-    assert "cat-tile" in start and "SR8641" not in start
-    fam = client.get("/parts?family=digital_isolator").text
-    assert "SynRef" in fam and "Pick a company" in fam
+    start = client.get("/parts").text  # one taxonomy: category tree, facets, capability badges
+    assert 'class="cat-tree"' in start and "Data available" in start and "Isolation" in start
+    fam = client.get("/parts?family=digital_isolator").text  # old family link still lands on the subfamily
+    assert "SynRef" in fam and "Digital isolators" in fam
     one = client.get("/parts?family=digital_isolator&company=SynRef").text
-    assert "SR8641" in one and "SA7741X" not in one and "Lifecycle" in one
+    assert "SR8641" in one and "SA7741X" not in one and "Crosses" in one and "Reset all" in one
 
 
 def test_suggestions_fragment(client):
@@ -215,7 +225,10 @@ def test_suggestions_mark_competitor_parts(client):
 
 def test_finder_start_page(client):
     html = client.get("/").text
-    assert "Find a Skyworks part" in html and 'action="/find"' in html
+    assert "Find a replacement" in html and 'action="/find"' in html
+    # three starting actions and one definition of the cross types
+    assert all(x in html for x in ('href="/parts"', 'href="/blocks"', 'href="/business"'))
+    assert "every priority 1 parameter equal or better" in html
 
 
 def test_find_full_part_number_opens_its_page(client):
@@ -291,18 +304,30 @@ def test_automotive_reference_banner(client):
     assert "Automotive reference" in html and "Filter by grade" not in html
 
 
-def test_sections_and_subheaders(client):
-    for url, section, sub in [("/", "Crosses", "Find"), ("/parts", "Crosses", "Parts"),
-                              ("/technical", "Technical discussions", "Technical"),
-                              ("/engineering/cmti_kv_us", "Technical discussions", "Engineering notes"),
-                              ("/broadcast", "Technical discussions", "Broadcast"),
-                              ("/broadcast/configurations", "Technical discussions",
-                               "Broadcast configurations")]:  # fmt: skip
-        html = client.get(url).text
-        assert f'class="section-tab on" aria-current="true">{section}<' in html, url
-        assert f'aria-current="page">{sub}<' in html, url
-    assert 'id="global-search"' in client.get("/parts").text
-    assert 'id="global-search"' not in client.get("/broadcast").text
+def test_navigation_sections_and_old_urls(client):
+    """Task-based sidebar: every old URL still answers and lands in the right section and item."""
+    for url, section, item in [("/", "Products", "Search &amp; replacements"),
+                               ("/parts", "Products", "Browse products"),
+                               ("/compare", "Products", "Compare"), ("/broadcast", "Products", "Radio &amp; audio"),
+                               ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
+                               ("/blocks", "Systems &amp; applications", "Application library"),
+                               ("/blocks/coverage", "Systems &amp; applications", "Application library"),
+                               ("/business", "Opportunities", "Overview"),
+                               ("/business/markets", "Opportunities", "Markets &amp; customers"),
+                               ("/technical", "Engineering knowledge", "Knowledge search"),
+                               ("/engineering/cmti_kv_us", "Engineering knowledge", "Specification guides"),
+                               ("/rules", "Data management", "Methodology"),
+                               ("/requests", "Data management", "Requests &amp; reviews")]:  # fmt: skip
+        r = client.get(url)
+        assert r.status_code == 200, url
+        assert f'aria-current="page" class="on">{item}<' in r.text, url
+        assert section in r.text.split('class="crumbs-bar')[1][:400] if url != "/" else True, url
+    # in-page tabs connect related views instead of a long row of sibling tabs
+    html = client.get("/blocks/coverage").text
+    assert 'href="/business/applications"' in html and 'aria-current="page" class="on">Technical coverage<' in html
+    assert (
+        'id="global-search"' in client.get("/broadcast").text and 'id="global-search"' not in client.get("/parts").text
+    )
 
 
 def test_best_and_next_best_options_are_flagged(client):

@@ -8,41 +8,59 @@
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
-<body>
-{% set path = request.url.path %}{% set active = section_of(path) %}
-<header class="container site-header">
-  <nav>
-    <ul><li><a href="/" class="brand contrast">Cross List</a></li></ul>
-    <ul>{% if site_locked() %}<li><a href="/logout" class="secondary">Sign out</a></li>{% endif %}</ul>
-  </nav>
-  <nav class="sections" aria-label="Sections">
-    {% for key, label, href, subs in sections %}<a href="{{ href }}" class="section-tab{{ ' on' if key == active }}"{% if key == active %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
-  </nav>
-  {% for key, label, href, subs in sections if key == active %}
-  <nav class="subnav" aria-label="{{ label }}">
-    {% for sub, shref in subs %}<a href="{{ shref }}" class="{{ 'on' if sub_active(path, shref, subs) }}"{% if sub_active(path, shref, subs) %} aria-current="page"{% endif %}>{{ sub }}</a>{% endfor %}
-  </nav>
-  {% endfor %}
-</header>
-{% if not hide_header_search and active == 'crosses' %}
-<div class="container search-bar">
-  <form action="/find" method="get" role="search">
-    <input type="search" name="q" id="global-search" placeholder="Part number, or part of one (e.g. 8641, ISO77, nsi824)"
-      autocomplete="off" aria-label="Search part numbers"
+<body class="shell">
+{% set path = request.url.path %}{% set ns = nav_state(path) %}
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+  <button type="button" class="nav-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button>
+  <a href="/" class="brand">Cross List</a>
+  {% if not hide_header_search and path not in ('/', '/parts') %}
+  <search class="top-search"><form action="/find" method="get">
+    <input type="search" name="q" id="global-search" placeholder="Find a part number" autocomplete="off" aria-label="Find a part number"
       hx-get="/suggest" hx-trigger="input changed delay:250ms, search" hx-target="#suggestions" hx-sync="this:replace">
-  </form>
-  <div id="suggestions" aria-live="polite"></div>
+    </form><div id="suggestions" aria-live="polite"></div>
+  </search>
+  {% endif %}
+  <nav class="top-utility" aria-label="Data management">
+    <a href="/manage/reviews"{% if ns.section == 'manage' %} aria-current="true" class="on"{% endif %}>Data management</a>
+    {% if site_locked() %}<a href="/logout">Sign out</a>{% endif %}
+  </nav>
+</header>
+<div class="layout">
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+    {% for key, label, items in nav_sections %}
+    <nav class="nav-group{{ ' on' if ns.section == key }}" aria-labelledby="nav-{{ key }}">
+      <p class="nav-title" id="nav-{{ key }}">{{ label }}</p>
+      <ul>{% for ilabel, href, desc in items %}<li><a href="{{ href }}" title="{{ desc }}"{% if ns.item == href and ns.section == key %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a></li>{% endfor %}</ul>
+    </nav>
+    {% endfor %}
+    {% set ukey, ulabel, uitems = nav_utility %}
+    <nav class="nav-group nav-utility{{ ' on' if ns.section == ukey }}" aria-labelledby="nav-manage">
+      <p class="nav-title" id="nav-manage">{{ ulabel }}</p>
+      <ul>{% for ilabel, href, desc in uitems %}<li><a href="{{ href }}" title="{{ desc }}"{% if ns.item == href and ns.section == ukey %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a></li>{% endfor %}</ul>
+    </nav>
+  </aside>
+  <div class="nav-scrim" hidden></div>
+  <main id="main" class="content" tabindex="-1">
+    {% if path != '/' %}<nav class="crumbs-bar small" aria-label="Breadcrumb"><ol>{% for label, href in ns.crumbs %}<li>{% if loop.last and not crumb_extra is defined %}<span aria-current="page">{{ label }}</span>{% else %}<a href="{{ href }}">{{ label }}</a>{% endif %}</li>{% endfor %}{% if crumb_extra is defined %}<li><span aria-current="page">{{ crumb_extra }}</span></li>{% endif %}</ol></nav>{% endif %}
+    {% if ns.tabs %}<nav class="page-tabs" aria-label="Views">{% for label, href in ns.tabs %}<a href="{{ href }}"{% if ns.active_tab == href %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
+    {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
 </div>
-{% endif %}
-<main class="container">
-  {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}
-  {% block content %}{% endblock %}
-</main>
 <script>
-  // Close the suggestion list on Escape or a tap outside the search bar.
+  // Suggestion list: close on Escape or a click outside the search. Navigation drawer on narrow screens.
   const clear = () => document.querySelectorAll("#suggestions").forEach(el => (el.innerHTML = ""));
-  document.addEventListener("keydown", e => { if (e.key === "Escape") clear(); });
-  document.addEventListener("click", e => { if (!e.target.closest(".search-bar")) clear(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { clear(); closeNav(); } });
+  document.addEventListener("click", e => { if (!e.target.closest(".top-search, .search-bar")) clear(); });
+  const toggle = document.querySelector(".nav-toggle"), scrim = document.querySelector(".nav-scrim");
+  function closeNav() { document.body.classList.remove("nav-open"); toggle.setAttribute("aria-expanded", "false"); scrim.hidden = true; }
+  toggle.addEventListener("click", () => {
+    const open = !document.body.classList.contains("nav-open");
+    document.body.classList.toggle("nav-open", open); toggle.setAttribute("aria-expanded", String(open)); scrim.hidden = !open;
+    if (open) document.querySelector("#sidebar a").focus();
+  });
+  scrim.addEventListener("click", closeNav);
 </script>
 </body>
 </html>

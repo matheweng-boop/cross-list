@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import cross_type_definitions %}
 {% block title %}Rules – Cross List{% endblock %}
 {% block content %}
 <h1>Matching rules</h1>
@@ -7,11 +8,9 @@
 <details open><summary>How a cross type is decided</summary>
 <ul>
   <li><b>Same package</b> – same body length, body width, lead span and pitch. The pin count may differ: a position without a pin counts as a no-connect. <b>Pin-to-pin</b> – same package and the same function on every pin.</li>
-  <li><b>Drop-in (FFF)</b> – pin-to-pin and every priority 1 parameter equal or better (better ones are marked).</li>
-  <li><b>Functional equivalent</b> – different package or pinout; priority 1 equal or better apart from at most 2 deviations (adjustable on the part page: 0–3). A package-locked reference only accepts its own package.</li>
-  <li><b>Package equivalent</b> – same package and basic function, different technical spec; marked pin-to-pin or not.</li>
-  <li>Preference: drop-in, then functional, then package equivalent. Anything else is not listed. Obsolete / NRND / last-time-buy candidates are always listed last.</li>
 </ul>
+{{ cross_type_definitions() }}
+<p class="small">Preference: drop-in, then functional, then package equivalent. Anything else is not listed. Obsolete / NRND / last-time-buy candidates are always listed last.</p>
 </details>
 {% for fam, rules in all_rules.items() %}
 <h2>{{ rules.title }}</h2>

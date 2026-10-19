@@ -109,6 +109,7 @@
     svg.innerHTML = parts.join("");
     applyView();
     renderSummary();
+    renderReqs();
   }
   const wrap = (s, n) => {
     const out = [];
@@ -329,7 +330,40 @@
     bindReq(panel, showRequirements);
     bindQuestions(panel, showRequirements);
   }
-  $("#bk-req").onclick = showRequirements;
+  // Requirements above the diagram: design questions and part filters in a readable grid, collapsible so the
+  // diagram stays in view. Open by default while nothing is answered yet.
+  let reqOpen = null;
+  function renderReqs() {
+    const box = $("#bk-reqs");
+    if (!box) return;
+    const fns = [...new Set(S.groups.flatMap(g => g.blocks.map(b => b.fn)))].filter(fn => (REQ[fn] || []).length);
+    const qs = S.questions || [];
+    if (!qs.length && !fns.length) { box.innerHTML = ""; return; }
+    const nQ = Object.keys(S.qa).length, nR = Object.values(S.req).reduce((k, a) => k + Object.keys(a).length, 0);
+    if (reqOpen === null) reqOpen = !nQ && !nR;
+    const card = q => {
+      const fl = filterLabel(q);
+      return `<label class="rq-card" title="${esc(q.source || "")}"><span class="rq-q">${esc(q.question)} <span class="lg ${fl.length ? "lg-have" : "lg-ext"}" title="${esc(fl.length ? "Narrows: " + fl.join(", ") : "Recorded with the design")}">${fl.length ? "narrows" : "recorded"}</span></span>
+        <select data-q="${esc(q.id)}"${S.qa[q.id] ? ' class="rq-set"' : ""}><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${S.qa[q.id] === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></label>`;
+    };
+    box.innerHTML = `<details class="bk-reqs-box"${reqOpen ? " open" : ""}><summary><b>Requirements</b> <span class="small muted">· ${qs.length ? `${nQ} of ${qs.length} design questions answered · ` : ""}${nR} part filter${nR === 1 ? "" : "s"} set · unanswered = no filter, nothing is assumed</span></summary><div class="bk-reqs-body">
+      ${qs.length ? `<p class="small muted bk-reqs-legend"><span class="lg lg-have">narrows</span> the answer filters the parts · <span class="lg lg-ext">recorded</span> kept with the design (no matching parameter in Cross List yet)</p>
+        <div class="bk-reqs-grid">${qs.map(card).join("")}</div>` : ""}
+      ${fns.length ? `<details class="bk-reqs-fns"${nR ? " open" : ""}><summary class="small"><b>Part filters per function</b> <span class="muted">· ${fns.map(fn => `${esc(FN[fn].label)} ${COUNTS[fn] ?? "–"}`).join(" · ")} parts fit${nR ? ` · ${nR} set` : ""}</span></summary>
+        <div class="bk-reqs-grid">${fns.map(fn => `<div class="rq-card rq-fn"><span class="rq-q"><b>${esc(FN[fn].label)}</b> <span class="muted">· ${COUNTS[fn] ?? "–"} parts fit</span></span><div class="rq-fn-rows">${reqControls(fn)}</div></div>`).join("")}</div></details>` : ""}
+      ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")}</p>` : ""}
+    </div></details>`;
+    const body = box.querySelector(".bk-reqs-body"), keep = renderReqs.scroll || 0;
+    if (body) { body.scrollTop = keep; body.onscroll = () => (renderReqs.scroll = body.scrollTop); }
+    box.querySelector("details").ontoggle = e => { if (e.target === box.querySelector("details")) reqOpen = e.target.open; };
+    bindReq(box, null);
+    bindQuestions(box, null);
+  }
+  $("#bk-req").onclick = () => {
+    reqOpen = true;
+    renderReqs();
+    $("#bk-reqs").scrollIntoView({behavior: "smooth", block: "start"});
+  };
 
   // feedback on the diagram or the selected block / group, kept for discussion
   async function showFeedback() {
@@ -420,5 +454,5 @@
 
   if (!design.data && tpl) dirty = true;
   if (Object.keys(S.req).length) refreshCounts(); else render();
-  if (!design.data && (S.questions || []).length) showRequirements(); // a new diagram from a template opens on its questions
+  // requirements live above the diagram (renderReqs); the drawer is only for a clicked block or group
 })();

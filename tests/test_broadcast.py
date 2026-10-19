@@ -102,3 +102,12 @@ def test_pages_and_config_api(client):
     assert client.get(f"/broadcast/configurations/{created['id']}").status_code == 200
     client.post(f"/broadcast/configurations/{created['id']}/delete")
     assert client.get(f"/broadcast/configurations/{created['id']}").status_code == 404
+
+
+def test_audio_twins_exist_and_carry_audio():
+    parts = {d["mpn"]: d for d in broadcast.catalog()}
+    twins = {"Si47961": "Si47971", "Si47962": "Si47972", "Si47951": "Si47921", "Si47952": "Si47912"}
+    for plain, audio in twins.items():
+        assert not any("audio dsp" in o.lower() for o in parts[plain]["options"])
+        assert any("audio dsp" in o.lower() for o in parts[audio]["options"]), audio
+        assert set(parts[plain]["digital_iq"]) <= set(parts[audio]["digital_iq"]) | {"DRM"}, (plain, audio)

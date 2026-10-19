@@ -159,13 +159,13 @@ software:
   - name: FM listening, phase diversity, DAB in the background
     region: Europe
     linking: true
-    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, fm_dab_scan]}
+    tuners: {IC0: [fm_pd, fm_pd], IC1: [dab, dab]}
     channels:
       - {job: dab_scanless, source: IC1.T0}
       - {job: unused}
     notes: >-
-      IC0 plays FM with phase diversity on two antennas; IC1 keeps DAB ready so seamless linking FM <-> DAB can
-      switch without leaving phase diversity.
+      IC0 plays FM with phase diversity on two antennas; IC1 keeps DAB ready (both tuners on Band III) so seamless
+      linking FM <-> DAB can switch without leaving phase diversity.
   - name: DAB listening, MRC
     region: Europe
     linking: true
@@ -192,7 +192,7 @@ software:
     notes: Tuner 1 plays DAB; tuner 0 follows the FM equivalent for linking.
   - name: AM listening, DAB in the background
     region: Europe
-    tuners: {IC0: [am_audio, fm_scan], IC1: [dab, fm_dab_scan]}
+    tuners: {IC0: [am_audio, fm_scan], IC1: [dab, "off"]}
     channels:
       - {job: dab_scanless, source: IC1.T0}
       - {job: unused}

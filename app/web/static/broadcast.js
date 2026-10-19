@@ -638,7 +638,8 @@
   const tunerCount = o => (o ? info(o).tuners || 1 : 0);
   const demodChannels = o => (o ? info(o).channels || 4 : 0);
   const U = () => S.usecase;
-  const pinByName = (o, name) => pinsOf(o).find(p => p.name === name);
+  const baseName = n => String(n).split("/")[0];
+  const pinByName = (o, name) => pinsOf(o).find(p => p.name === name) || pinsOf(o).find(p => baseName(p.name) === baseName(name));
   const bandsOf = p => String(p.band || "").toUpperCase().split("/").map(b => (b.includes("DAB") ? "DAB" : b.trim())).filter(Boolean);
   const tunerOfPin = (o, p) => {
     if (tunerCount(o) < 2) return 0;
@@ -998,6 +999,54 @@
   const compatible = m => Object.entries(m.tuners || {}).every(([slot, jobs]) => jobs.every(j => j === "off") || tunerCount(slotDev(slot)) >= jobs.length)
     && (!(m.channels || []).some(c => c.job !== "unused") || !!slotDev(DEMOD_SLOT));
   const modeFromPreset = sw => ({name: sw.name, linking: !!sw.linking, notes: sw.notes || "", tuners: JSON.parse(JSON.stringify(sw.tuners || {})), channels: JSON.parse(JSON.stringify(sw.channels || []))});
+  // ---- on-chip audio (audio DSP + audio ADC inputs): the question that decides IC0
+  const hasAudio = mpn => { const c = BY_MPN[mpn]; return !!c && (c.options.some(o => /audio dsp/i.test(o)) || c.pins.some(p => p.fn === "audio_in")); };
+  // the same tuner function with on-chip audio, per region where it matters
+  const AUDIO_TWIN = {Si47961: "Si47971", Si47962: "Si47972", Si47951: "Si47921", Si47952: "Si47912"};
+  const RF_EQUIV = {FMB: ["FMI"], FMA: ["FMI"], "B3A/WXI": ["B3A", "B3I/WXI"], B3A: ["B3A/WXI"]};
+  // carry an RF assignment over to another part: same name, same base name, or the equivalent input
+  function mapPin(mpn, name) {
+    const pins = (BY_MPN[mpn] || {}).pins || [];
+    const hit = pins.find(p => p.name === name) || pins.find(p => baseName(p.name) === baseName(name)) ||
+      pins.find(p => (RF_EQUIV[name] || []).includes(p.name));
+    return hit ? hit.name : null;
+  }
+  // a hardware preset as it looks with or without on-chip audio on IC0 (null: no such variant)
+  function presetVariant(h) {
+    if (S.audio == null) return h;
+    const ic0 = h.ics && h.ics.IC0;
+    if (!ic0) return null;
+    if (hasAudio(ic0) === S.audio) return h;
+    const twin = S.audio ? AUDIO_TWIN[ic0] : Object.keys(AUDIO_TWIN).find(k => AUDIO_TWIN[k] === ic0);
+    if (!twin || !BY_MPN[twin]) return null;
+    const v = JSON.parse(JSON.stringify(h));
+    v.ics.IC0 = twin;
+    v.name = `${h.name}, ${S.audio ? "with" : "without"} on-chip audio (${twin})`;
+    const rf0 = {};
+    for (const [pin, feed] of Object.entries((h.rf || {}).IC0 || {})) { const np = mapPin(twin, pin); if (np && !rf0[np]) rf0[np] = feed; }
+    v.rf = {...h.rf, IC0: rf0};
+    for (const [slot, pins] of Object.entries(v.rf)) for (const [pin, feed] of Object.entries(pins))
+      if (feed && feed.startsWith("loop:IC0.") && !mapPin(twin, feed.slice(9))) delete pins[pin];
+    v.notes = `${h.notes || ""} IC0 replaced by ${twin} (${S.audio ? "audio DSP and audio ADC inputs on chip" : "no on-chip audio"}); RF inputs carried over by name.`;
+    return v;
+  }
+  // part lists narrow as the choices are made: region, on-chip audio for IC0, plain tuners for IC1/IC2
+  function partAllowed(c, slot) {
+    if (S.showAll) return true;
+    const std = [...c.analog, ...c.digital_iq, ...c.digital_decode];
+    if (slot === DEMOD_SLOT) {
+      if (S.region === "North America") return c.digital_decode.includes("HD") || c.digital_decode.length > 2;
+      if (S.region === "Europe") return c.digital_decode.includes("DAB");
+      return true;
+    }
+    if (c.role === "coprocessor") return false;
+    if (S.region === "North America" && !(std.includes("AM") && std.includes("FM"))) return false;
+    if (S.region === "Europe" && !std.includes("DAB")) return false;
+    if (slot === "IC0" && S.audio != null) return hasAudio(c.mpn) === S.audio;
+    if (slot !== "IC0") return c.role === "tuner" && !hasAudio(c.mpn); // companions: plain tuners
+    return true;
+  }
+
   const hwTuners = h => TUNER_SLOTS.reduce((n, s) => n + (h.ics && h.ics[s] ? (BY_MPN[h.ics[s]] || {}).tuners || 1 : 0), 0);
   // A sensible N-tuner design for a region: dual tuners first, the odd tuner as a single-tuner IC,
   // the demod sized to the tuners, two antennas when phase diversity is possible, loop-through to the next ICs.
@@ -1005,26 +1054,30 @@
     const eu = region === "Europe", na = region === "North America";
     const dual = eu ? "Si47962" : "Si47961", single = eu ? "Si47952" : "Si47951";
     const chips = n === 1 ? [single] : [dual, ...(n >= 4 ? [dual] : []), ...(n === 3 || n === 5 ? [single] : [])];
+    const plainIc0 = chips[0];
+    if (S.audio && AUDIO_TWIN[chips[0]]) chips[0] = region === "Rest of world" && chips[0] === single ? "Si47920" : AUDIO_TWIN[chips[0]];
     const ics = {IC0: chips[0] || null, IC1: chips[1] || null, IC2: chips[2] || null, IC3: null};
     if (na) ics.IC3 = n >= 2 ? "Si46931A1GE1AM" : "Si46921A1GE1AM";
     if (eu) ics.IC3 = n >= 5 ? "Si46942A1GE1AM" : n >= 4 ? "Si46932A1GE1AM" : "Si46922A1GE1AM";
     const two = n >= 2;
     const antennas = [{id: "ANT1", label: eu ? "AM/FM/DAB" : "AM/FM", bands: eu ? ["AM", "FM", "DAB"] : ["AM", "FM"]}];
     if (two) antennas.push({id: "ANT2", label: eu ? "FM/DAB" : "FM", bands: eu ? ["FM", "DAB"] : ["FM"]});
-    const rf = {IC0: chips[0] === dual ? {AMI: "ANT1", FMA: "ANT1", FMB: two ? "ANT2" : "ANT1"} : {AMI: "ANT1", FMB: "ANT1"}};
-    if (eu) Object.assign(rf.IC0, chips[0] === dual ? {"B3A/WXI": "ANT1", B3B: "ANT2"} : {"B3A/WXI": "ANT1"});
+    const rf0 = plainIc0 === dual ? {AMI: "ANT1", FMA: "ANT1", FMB: two ? "ANT2" : "ANT1"} : {AMI: "ANT1", FMB: "ANT1"};
+    if (eu) Object.assign(rf0, plainIc0 === dual ? {"B3A/WXI": "ANT1", B3B: "ANT2"} : {"B3A/WXI": "ANT1"});
+    const rf = {IC0: {}};
+    for (const [pin, feed] of Object.entries(rf0)) { const np = mapPin(chips[0], pin); if (np && !rf.IC0[np]) rf.IC0[np] = feed; }
     // one loop-through output feeds one input: LTB carries FM to the next IC, LTA Band III (as in the superset design)
     // Europe: the companion IC is the DAB tuner, Band III on both inputs; elsewhere it carries FM
     if (chips[1]) rf.IC1 = eu ? {"B3A/WXI": "loop:IC0.LTA", ...(chips[1] === dual ? {B3B: "loop:IC0.LTB"} : {})} : {FMB: "loop:IC0.LTB"};
     if (chips[2]) rf.IC2 = eu ? {"B3A/WXI": "loop:IC1.LTA"} : {FMB: "loop:IC1.LTB"};
-    return {name: `${n} tuner${n > 1 ? "s" : ""}, generated`, regions: [region], antennas, ics, rf, control: ics.IC3 ? "demod" : "soc", audio: "direct",
+    return {name: `${n} tuner${n > 1 ? "s" : ""}${S.audio ? " with on-chip audio" : ""}, generated`, regions: [region], antennas, ics, rf, control: ics.IC3 ? "demod" : "soc", audio: "direct",
       notes: `Generated for ${region}: ${chips.join(" + ")}${ics.IC3 ? ` + ${ics.IC3}` : ""}. ${two ? "Two antennas on IC0 (phase diversity possible)" : "One antenna (no phase diversity)"}${chips.length > 1 ? "; further ICs fed from the loop-through outputs" : ""}. Check the loop-through bands against the full datasheet.`};
   }
 
   function applyHardware(i) {
-    const hw = JSON.parse(JSON.stringify(typeof i === "object" ? i : CONF.hardware[i]));
+    const hw = JSON.parse(JSON.stringify(typeof i === "object" ? i : presetVariant(CONF.hardware[i]) || CONF.hardware[i]));
     S.devices = []; S.blocks = []; S.links = [];
-    S.usecase = normalise({region: S.region, hardware: hw.name, notes: hw.notes || "", ics: hw.ics, antennas: hw.antennas, rf: hw.rf,
+    S.usecase = normalise({region: S.region, audioDsp: S.audio, hardware: hw.name, notes: hw.notes || "", ics: hw.ics, antennas: hw.antennas, rf: hw.rf,
       control: hw.control, route: hw.audio, clock: hw.clock, memory: {}, modes: [], mode: 0});
     syncUseCase();
     S.usecase.modes = CONF.software.filter(sw => sw.region === S.region).map(modeFromPreset).filter(compatible);
@@ -1050,7 +1103,8 @@
       return;
     }
     const m = mode();
-    const tunersCat = CATALOG.filter(c => c.role !== "coprocessor"), demodsCat = CATALOG.filter(c => c.role === "coprocessor");
+    const catFor = slot => CATALOG.filter(c => (slot === DEMOD_SLOT ? c.role === "coprocessor" : c.role !== "coprocessor") && (partAllowed(c, slot) || c.mpn === u.ics[slot].mpn));
+    const demodsCat = catFor(DEMOD_SLOT);
     const feedOpts = (slot, sel) => opt("", "—", sel || "") + u.antennas.map(a => opt(a.id, a.id, sel)).join("") +
       TUNER_SLOTS.filter(s => s !== slot && slotDev(s)).flatMap(s => pinsOf(slotDev(s)).filter(q => LOOP_OUT.test(q.name)).map(q => opt(`loop:${s}.${q.name}`, `loop ${s} ${q.name}`, sel))).join("");
     const clockOpts = (slot, sel) => opt("star", `${u.clock.master} CLKO (star)`, sel) + opt("own", "own crystal", sel) +
@@ -1061,7 +1115,7 @@
     for (const slot of TUNER_SLOTS) {
       const ic = u.ics[slot], o = slotDev(slot);
       const rfPins = o ? pinsOf(o).filter(p => p.fn === "rf_in") : [];
-      hw += `<tr><th>${slot}</th><td><select data-slot="${slot}" aria-label="${slot} part">${opt("", "Not populated", ic.mpn || "")}${tunersCat.map(c => opt(c.mpn, `${c.mpn} · ${c.tuners || 1} tuner${(c.tuners || 1) > 1 ? "s" : ""} · ${[...c.analog, ...c.digital_iq.map(s => s + " I/Q"), ...c.digital_decode].join(" ")}`, ic.mpn || "")).join("")}</select>` +
+      hw += `<tr><th>${slot}</th><td><select data-slot="${slot}" aria-label="${slot} part">${opt("", "Not populated", ic.mpn || "")}${catFor(slot).map(c => opt(c.mpn, `${c.mpn} · ${c.tuners || 1} tuner${(c.tuners || 1) > 1 ? "s" : ""} · ${[...c.analog, ...c.digital_iq.map(s => s + " I/Q"), ...c.digital_decode].join(" ")}`, ic.mpn || "")).join("")}</select>` +
         (o ? `<div class="uc-rf">${rfPins.map(p => `<label>${esc(p.name)}<select data-rf="${slot}|${esc(p.name)}" data-xp="feed:" aria-label="${slot} ${esc(p.name)} antenna">${feedOpts(slot, (u.rf[slot] || {})[p.name])}</select></label>`).join("")}</div>` : "") +
         `</td><td>` + (o ? (slot !== u.clock.master ? `<label class="uc-clock">Clock <select data-clock="${slot}" data-xp="clock:">${clockOpts(slot, u.clock.feed[slot] || "star")}</select></label>` : `<p class="small muted uc-clock">Crystal ${esc(u.clock.crystal)} · system reference</p>`) +
           (demod && pinsOf(o).some(p => p.fn === "iq_out") ? `<div class="uc-rf">${Array.from({length: tunerCount(o)}, (_, t) => `<label>T${t} I/Q<select data-iq="${slot}.T${t}" data-explain="iq_map">${opt("", "—", u.iq[`${slot}.T${t}`] || "")}${ports.map(p => opt(p, p.replace("ZIF I/Q ", "ZIF"), u.iq[`${slot}.T${t}`] || "")).join("")}</select></label>`).join("")}</div>` : "") : "") + `</td></tr>`;
@@ -1092,6 +1146,7 @@
       <section class="uc-sec"><h3 class="uc-h" data-explain="hardware">Hardware <span class="muted">· ${esc(u.hardware || "custom")}</span></h3>
       ${u.notes ? `<p class="small muted">${esc(u.notes)}</p>` : ""}
       <div class="uc-ants" data-explain="antennas">Antennas (${u.antennas.length}): ${ants} <button type="button" class="outline small-btn" id="uc-addant">+ antenna</button></div>
+      <label class="bc-check uc-showall" data-explain="show_all"><input type="checkbox" id="uc-showall"${S.showAll ? " checked" : ""}> Show all parts in the part lists</label>
       <div class="table-wrap"><table class="uc-table"><thead><tr><th></th><th>Part · RF inputs</th><th>Clock · I/Q to demod</th></tr></thead><tbody>${hw}</tbody></table></div>
       <div class="uc-misc">
         <label data-xp="control:" data-explain="control:${u.control}">Control <select id="uc-control">${opt("demod", "SoC → IC3 → tuners (tuner SPI)", u.control)}${opt("soc", "SoC → every IC", u.control)}</select></label>
@@ -1142,6 +1197,7 @@
     $("#uc-linking").onchange = upd(t => (m.linking = t.checked));
     $("#uc-mode-name").onchange = upd(t => (m.name = t.value || m.name));
     $("#uc-control").onchange = upd(t => (u.control = t.value));
+    $("#uc-showall").onchange = e => { S.showAll = e.target.checked; render(); };
     $("#uc-route").onchange = upd(t => (u.route = t.value));
     $("#uc-xtal").onchange = upd(t => (u.clock.crystal = t.value));
     $("#uc-format").onchange = upd(t => (a.format = t.value));
@@ -1158,7 +1214,8 @@
     const hwBox = $("#bc-hw-cards"), swBox = $("#bc-sw-cards");
     if (!S.region) { hwBox.innerHTML = `<span class="muted small">pick a region first</span>`; swBox.innerHTML = ""; return; }
     root.querySelectorAll("[data-tuners]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.tuners === S.tuners)));
-    const list = CONF.hardware.map((h, i) => [h, i]).filter(([h]) => (h.regions || []).includes(S.region) && (!S.tuners || hwTuners(h) === S.tuners));
+    root.querySelectorAll("[data-audio]").forEach(b => b.setAttribute("aria-pressed", String(S.audio != null && String(S.audio) === b.dataset.audio)));
+    const list = CONF.hardware.map((h, i) => [presetVariant(h), i]).filter(([h]) => h && (h.regions || []).includes(S.region) && (!S.tuners || hwTuners(h) === S.tuners));
     hwBox.innerHTML = list.map(([h, i]) => `<button type="button" class="bc-chip" data-hw="${i}" aria-pressed="${String(!!u && u.hardware === h.name)}">${esc(h.name)} <span class="muted">· ${hwTuners(h)}T</span></button>`).join("") +
       (S.tuners ? `<button type="button" class="bc-chip bc-chip-gen" data-gen="${S.tuners}" data-explain="generate">Generate ${S.tuners}-tuner hardware</button>` : list.length ? "" : `<span class="muted small">no preset for this region</span>`);
     if (!u) { swBox.innerHTML = `<span class="muted small">pick a hardware configuration first</span>`; return; }
@@ -1170,7 +1227,14 @@
   }
   root.addEventListener("click", e => {
     const r = e.target.closest("[data-region]"), h = e.target.closest("[data-hw]"), md = e.target.closest("[data-mode]");
-    const tn = e.target.closest("[data-tuners]"), gen = e.target.closest("[data-gen]");
+    const tn = e.target.closest("[data-tuners]"), gen = e.target.closest("[data-gen]"), au = e.target.closest("[data-audio]");
+    if (au) {
+      const v = au.dataset.audio === "true";
+      S.audio = S.audio === v ? null : v;
+      render();
+      explain("audio_dsp", S.audio == null ? "On-chip audio: either" : S.audio ? "On-chip audio required" : "No on-chip audio");
+      return;
+    }
     if (tn) { S.tuners = S.tuners === +tn.dataset.tuners ? null : +tn.dataset.tuners; renderSteps(); explain("tuners", `${tn.dataset.tuners} tuner${tn.dataset.tuners > 1 ? "s" : ""}`); return; }
     if (gen) {
       if (!S.region) return;
@@ -1397,6 +1461,6 @@
       const k = keyOf(el);
       if (k) explain(k, titleOf(el));
     });
-  if (S.usecase) { normalise(S.usecase); S.region ||= S.usecase.region; }
+  if (S.usecase) { normalise(S.usecase); S.region ||= S.usecase.region; if (S.audio == null && S.usecase.audioDsp != null) S.audio = S.usecase.audioDsp; }
   render();
 })();

@@ -29,6 +29,7 @@ def search_parts(
     role: str = "",
     lifecycle: str = "",
     limit: int = 200,
+    company: str = "",
 ) -> list[Part]:
     stmt = select(Part).join(Part.manufacturer)
     order = []
@@ -45,6 +46,8 @@ def search_parts(
         stmt = stmt.where(Manufacturer.role == ManufacturerRole(role))
     if lifecycle:
         stmt = stmt.where(Part.lifecycle_status == LifecycleStatus(lifecycle))
+    if company:
+        stmt = stmt.where(Manufacturer.name == company)
     stmt = stmt.order_by(*order, Manufacturer.role, Part.family, Part.mpn).limit(limit)
     return list(session.scalars(stmt).unique())
 

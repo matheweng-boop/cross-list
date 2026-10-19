@@ -165,25 +165,86 @@ def index(
     request: Request,
     q: str = "",
     family: str = "",
-    role: str | None = None,
+    role: str = "",
+    company: str = "",
+    catalog: str = "",
+    sub: str = "",
     lifecycle_status: str = Query("", alias="lifecycle"),
     session: Session = Depends(get_session),
 ):
-    # Without a search the list shows the reference parts; a search covers every company.
-    role = role if role is not None else ("" if q.strip() else "reference")
-    parts = search_parts(session, q, family, role, lifecycle_status)
-    return templates.TemplateResponse(
-        request,
-        "index.html",
-        {
-            "parts": parts,
-            "q": q,
-            "family": family,
-            "role": role,
-            "lifecycle": lifecycle_status,
-            "statuses": list(LifecycleStatus),
-        },
-    )
+    """Browse without listing everything: pick a product category, then a company; chips filter by role and
+    lifecycle. A search lists matches directly. Catalogue categories (full Skyworks / Qorvo portfolio) browse the
+    product pages; Cross List families open the crosses."""
+    from sqlalchemy import func
+
+    from app.models import Manufacturer
+    from app.services import blocks
+
+    ctx = {"q": q, "family": family, "role": role, "company": company, "catalog": catalog, "sub": sub,
+           "lifecycle": lifecycle_status, "statuses": list(LifecycleStatus), "parts": None, "rows": None}  # fmt: skip
+    # tiles: Cross List families with counts per company, catalogue categories per manufacturer
+    counts = session.execute(
+        select(Part.family, Manufacturer.name, Manufacturer.role, func.count(Part.id))
+        .join(Part.manufacturer)
+        .group_by(Part.family, Manufacturer.name, Manufacturer.role)
+    ).all()
+    fam: dict[str, dict] = {}
+    for f, mname, mrole, n in counts:
+        e = fam.setdefault(f, {"total": 0, "companies": {}, "reference": 0})
+        e["total"] += n
+        e["companies"][mname] = (n, mrole.value)
+        e["reference"] += n if mrole.value == "reference" else 0
+    cat: dict[str, dict] = {}
+    for r in blocks.catalog_rows():
+        e = cat.setdefault(r["category"], {"total": 0, "companies": {}})
+        e["total"] += 1
+        e["companies"][r["manufacturer"]] = e["companies"].get(r["manufacturer"], 0) + 1
+    ctx.update(families=fam, catalog_cats=dict(sorted(cat.items(), key=lambda kv: -kv[1]["total"])))
+    if q.strip() or (family and company):
+        who = company if company and company != "*" else ""
+        found = search_parts(session, q, family, role, lifecycle_status, limit=10000, company=who)
+        if family and not q.strip():
+            everything = search_parts(session, "", family, role, "", limit=10000, company=who)
+            ctx["life_counts"] = _life_counts(everything, "")
+            ctx["series"] = {}
+            for p in everything:
+                ctx["series"][_series_of(p.mpn)] = ctx["series"].get(_series_of(p.mpn), 0) + 1
+            ctx["series"] = dict(sorted(ctx["series"].items()))
+        if sub:
+            found = [p for p in found if _series_of(p.mpn) == sub]
+        ctx["parts"] = found[:1000]
+        ctx["n_found"] = len(found)
+    if catalog:
+        rows = [r for r in blocks.catalog_rows() if r["category"] == catalog]
+        ctx["subs"] = sorted({r["sub"] for r in rows if r["sub"] and (not company or r["manufacturer"] == company)})
+        ctx["cat_life"] = {}
+        for r in rows:
+            if (not company or r["manufacturer"] == company) and (not sub or r["sub"] == sub):
+                ctx["cat_life"][r["status"]] = ctx["cat_life"].get(r["status"], 0) + 1
+        if company:
+            rows = [r for r in rows if company == "*" or r["manufacturer"] == company]
+            rows = [
+                r
+                for r in rows
+                if (not sub or r["sub"] == sub) and (not lifecycle_status or r["status"] == lifecycle_status)
+            ]
+            ctx["rows"] = sorted(rows, key=lambda r: (r["sub"], r["mpn"]))[:1000]
+    return templates.TemplateResponse(request, "index.html", ctx)
+
+
+def _series_of(mpn: str) -> str:
+    """Product series for browsing: SI8641BD-IS -> SI86, SI86S641EC-IS1 -> SI86S, ISO7741DBQR -> ISO77."""
+    m = re.match(r"[A-Z]+\d{2}(?:S(?=\d))?", (mpn or "").upper())
+    return m.group(0) if m else (mpn or "")[:4].upper()
+
+
+def _life_counts(parts: list, company: str) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for p in parts:
+        if company and company != "*" and p.manufacturer.name != company:
+            continue
+        out[p.lifecycle_status.value] = out.get(p.lifecycle_status.value, 0) + 1
+    return out
 
 
 CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}

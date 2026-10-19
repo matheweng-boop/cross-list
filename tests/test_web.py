@@ -127,7 +127,12 @@ def test_partial_part_numbers(client):
 def test_search_page_covers_all_companies(client):
     html = client.get("/parts?q=7741").text
     assert "SA7741" in html  # competitor part found without changing the filter
-    assert "SR8641" in client.get("/parts").text and "SA7741X" not in client.get("/parts").text
+    start = client.get("/parts").text  # categories first, no part list
+    assert "cat-tile" in start and "SR8641" not in start
+    fam = client.get("/parts?family=digital_isolator").text
+    assert "SynRef" in fam and "Pick a company" in fam
+    one = client.get("/parts?family=digital_isolator&company=SynRef").text
+    assert "SR8641" in one and "SA7741X" not in one and "Lifecycle" in one
 
 
 def test_suggestions_fragment(client):

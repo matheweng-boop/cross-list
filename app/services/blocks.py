@@ -162,6 +162,33 @@ def catalog_parts() -> dict[str, list[dict]]:
     return out
 
 
+@lru_cache
+def catalog_rows() -> list[dict]:
+    """Every catalogue part as a browse row (Parts page): manufacturer, top category, sub-category, part number,
+    description, package, lifecycle, product page."""
+    rows = []
+    for path in _catalog_files():
+        data = yaml.safe_load(path.read_text()) or {}
+        for p in data.get("parts") or []:
+            mfr = p.get("manufacturer") or ("Qorvo" if "qorvo" in path.name else "Skyworks")
+            cat = [c.strip() for c in str(p.get("category") or "Other").split(">")]
+            desc = p.get("description") or p.get("summary") or ""
+            url = p.get("product_url") or p.get("source") or ""
+            rows.append(
+                {
+                    "manufacturer": mfr,
+                    "category": cat[0],
+                    "sub": " > ".join(cat[1:]),
+                    "mpn": p["mpn"],
+                    "description": desc,
+                    "package": p.get("package") or "",
+                    "status": str(p.get("status") or "unknown"),
+                    "url": url,
+                }  # fmt: skip
+            )
+    return rows
+
+
 def qorvo_parts() -> dict[str, list[dict]]:
     """Qorvo catalogue parts by function (kept for callers that only want Qorvo)."""
     return {k: [c for c in v if c["manufacturer"] == "Qorvo"] for k, v in catalog_parts().items()}

@@ -390,9 +390,15 @@
   function layout() {
     const cols = [S.devices.filter(o => info(o).role !== "coprocessor"), S.devices.filter(o => info(o).role === "coprocessor")].filter(c => c.length);
     const X = {ant: 20};
+    // a routing channel between the chip columns, one vertical track per chip-to-chip wire
+    const colOf = {};
+    cols.forEach((c, ci) => c.forEach(o => (colOf[o.id] = ci)));
+    const nCross = S.links.filter(l => !NET.includes(l.kind) && l.a.d && l.b.d && colOf[l.a.d] !== undefined && colOf[l.b.d] !== undefined && colOf[l.a.d] !== colOf[l.b.d]).length;
+    const CH = Math.max(40, nCross * TRACK + 40), chan = [];
     // add-on blocks sit LANE_GAP away from the chip so pin names, numbers and net labels stay visible
     let x = X.ant + ANT_W + 40;
-    const colX = cols.map(() => {
+    const colX = cols.map((_, ci) => {
+      if (ci > 0) { chan.push({x0: x - COL_GAP / 2, x1: x + CH}); x += CH; }
       const c = {laneL: x, dev: x + BLK_W + LANE_GAP};
       c.laneR = c.dev + DEV_W + LANE_GAP;
       x = c.laneR + BLK_W + COL_GAP;
@@ -451,27 +457,101 @@
     }
     const W = Math.max(X.spk + BLK_W + 20, ...Object.values(out).map(r => r.x + r.w + 20), 600);
     const H = Math.max(...Object.values(pos).map(p => p.y + p.h + 40), ...Object.values(out).map(r => r.y + r.h + 40), 300);
-    return {pos, blocks: out, pinXY, W, H};
+    return {pos, blocks: out, pinXY, W, H, chan, colOf};
   }
 
-  const curve = (a, b, da, db) => `M${a.x},${a.y} C${a.x + da},${a.y} ${b.x + db},${b.y} ${b.x},${b.y}`;
+  // ---- wires: orthogonal, each on its own track
+  //   chip -> chip in other columns: out of the pin, along a vertical track in the channel between the columns,
+  //     into the other pin (pins that face away go round above the chips);
+  //   chip -> chip in one column: a track beside the column (both pins on one side) or through the gap between them;
+  //   chip -> block: a right-angle step.
+  const TRACK = 7;
+  const poly = pts => "M" + pts.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(" L");
+  function wires(Lay) {
+    const out = [], cross = [], same = {};
+    for (const l of S.links) {
+      if (NET.includes(l.kind)) continue;
+      const ea = l.a.d ? l.a : null, eb = l.b.d ? l.b : null;
+      const A = ea && Lay.pinXY(ea.d, ea.pins[0]);
+      if (!A) continue;
+      if (eb) {
+        const B = Lay.pinXY(eb.d, eb.pins[0]);
+        if (!B) continue;
+        const ca = Lay.colOf[ea.d], cb = Lay.colOf[eb.d];
+        if (ca !== cb) cross.push({l, A, B, ca, cb, da: ea.d, db: eb.d});
+        else (same[`${ca}`] ||= []).push({l, A, B, da: ea.d, db: eb.d});
+      } else {
+        const r = Lay.blocks[l.b.blk];
+        if (!r) continue;
+        const left = r.x + r.w / 2 < A.x, B = {x: left ? r.x + r.w : r.x, y: r.y + r.h / 2};
+        const mx = Math.abs(B.y - A.y) < 2 ? B.x : A.x + (B.x - A.x) * 0.5;
+        out.push({l, d: poly([A, {x: mx, y: A.y}, {x: mx, y: B.y}, B])});
+      }
+    }
+    const top = col => Math.min(...Object.values(Lay.pos).filter(P => P.col === col).map(P => P.y));
+    // cross-column: tracks ordered by height so neighbouring wires stay side by side
+    const ch = Lay.chan[0];
+    cross.sort((a, b) => Math.min(a.A.y, a.B.y) - Math.min(b.A.y, b.B.y) || a.A.y - b.A.y);
+    let detour = 0;
+    cross.forEach((w, i) => {
+      const [L, R] = w.ca < w.cb ? [w.A, w.B] : [w.B, w.A];
+      const tx = ch ? ch.x0 + 20 + i * TRACK : (L.x + R.x) / 2;
+      const yTop = Math.min(top(0), top(1)) - 18 - (detour++) * 5;
+      const pts = [L];
+      if (L.side === "L") pts.push({x: L.x - 10 - i % 6 * 4, y: L.y}, {x: L.x - 10 - i % 6 * 4, y: yTop}, {x: tx, y: yTop});
+      else pts.push({x: tx, y: L.y});
+      if (R.side === "R") pts.push({x: tx, y: yTop}, {x: R.x + 10 + i % 6 * 4, y: yTop}, {x: R.x + 10 + i % 6 * 4, y: R.y});
+      else pts.push({x: tx, y: R.y});
+      pts.push(R);
+      out.push({l: w.l, d: poly(pts), label: {x: (tx + R.x) / 2, y: R.y - 3, side: R.side}, tx});
+    });
+    // same column
+    for (const ws of Object.values(same)) {
+      let kL = 0, kR = 0, kM = 0;
+      ws.sort((a, b) => Math.min(a.A.y, a.B.y) - Math.min(b.A.y, b.B.y));
+      for (const w of ws) {
+        const {A, B} = w, PA = Lay.pos[w.da], PB = Lay.pos[w.db];
+        const offL = P => P.x - 14 - 22 - kL * TRACK, offR = P => P.x + P.w + 14 + 22 + kR * TRACK;
+        let pts;
+        if (A.side === B.side) {
+          const tx = A.side === "L" ? offL(PA) : offR(PA);
+          A.side === "L" ? kL++ : kR++;
+          pts = [A, {x: tx, y: A.y}, {x: tx, y: B.y}, B];
+        } else {
+          const [up, dn] = PA.y < PB.y ? [PA, PB] : [PB, PA];
+          const yMid = up.y + up.h + 12 + kM++ * 5;
+          const txA = A.side === "L" ? offL(PA) : offR(PA), txB = B.side === "L" ? offL(PB) : offR(PB);
+          A.side === "L" ? kL++ : kR++;
+          pts = [A, {x: txA, y: A.y}, {x: txA, y: yMid}, {x: txB, y: yMid}, {x: txB, y: B.y}, B];
+          void dn;
+        }
+        out.push({l: w.l, d: poly(pts), label: {x: (pts[pts.length - 2].x + B.x) / 2, y: B.y - 3, side: B.side}});
+      }
+    }
+    return out;
+  }
 
   function render() {
     updateRails();
     const Lay = layout();
     const parts = [];
     // links
-    for (const l of S.links) {
-      if (NET.includes(l.kind)) continue;
-      const ea = l.a.d ? l.a : null, eb = l.b.d ? l.b : null;
-      const A = ea && Lay.pinXY(ea.d, ea.pins[0]);
-      if (!A) continue;
-      let B, db;
-      if (eb) { B = Lay.pinXY(eb.d, eb.pins[0]); if (!B) continue; db = B.side === "L" ? -80 : 80; }
-      else { const r = Lay.blocks[l.b.blk]; if (!r) continue; const left = r.x + r.w / 2 < A.x; B = {x: left ? r.x + r.w : r.x, y: r.y + r.h / 2}; db = left ? 40 : -40; }
-      const da = A.side === "L" ? -60 : 60;
-      parts.push(`<path class="wire w-${l.kind}${l.a.bus ? " bus" : ""}" d="${curve(A, B, da, db)}"/>`);
-      if (eb && l.label) parts.push(`<text class="wire-label" x="${(A.x + B.x) / 2}" y="${(A.y + B.y) / 2 - 6}" text-anchor="middle">${esc(l.label)}</text>`);
+    // one label per pin row: wires tied onto the same pin share it ("IC0 T0 I / IC1 T1 I")
+    const labels = new Map();
+    for (const w of wires(Lay)) {
+      const l = w.l;
+      parts.push(`<path class="wire w-${l.kind}${l.a.bus ? " bus" : ""}" d="${w.d}"/>`);
+      if (w.label && l.label) {
+        const key = `${Math.round(w.label.y)}|${w.label.side}`, text = l.kind === "iq" ? l.label.split(" →")[0] : l.label;
+        const e = labels.get(key) || {x: w.label.x, y: w.label.y, texts: []};
+        if (!e.texts.includes(text)) e.texts.push(text);
+        e.x = Math.max(e.x, w.label.x);
+        labels.set(key, e);
+      }
+    }
+    for (const e of labels.values()) {
+      const text = e.texts.join(" / ");
+      parts.push(`<text class="wire-label" x="${e.x}" y="${e.y}" text-anchor="middle">${esc(text.length > 34 ? text.slice(0, 33) + "…" : text)}</text>`);
     }
     // devices
     for (const o of S.devices) {

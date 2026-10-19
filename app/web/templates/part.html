@@ -93,11 +93,17 @@
 <div class="table-wrap"><table class="results">
   <thead><tr><th>Part</th><th>Cross</th><th title="Pin-to-pin">P2P</th><th title="Priority 1 vs {{ part.mpn }}">P1</th>{% if pricing_enabled() %}<th>DigiKey</th>{% endif %}</tr></thead>
   <tbody>
-  {% for r, v in rows %}{% set c = r.candidate %}
-    <tr class="result-row cross-{{ v.category }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
+  {% set ns = namespace(top=false, divided=false) %}
+  {% for r, v in rows %}{% set c = r.candidate %}{% set rank = ranked.get(c.id) %}{% set notes = cross_notes(part.mpn, c.mpn) %}
+    {% if rank is not none %}{% set ns.top = true %}{% elif ns.top and not ns.divided %}{% set ns.divided = true %}
+    <tr class="rank-divider"><td colspan="{{ 5 if pricing_enabled() else 4 }}">Other options ({{ rows|length - loop.index0 }})</td></tr>{% endif %}
+    <tr class="result-row cross-{{ v.category }}{{ ' ranked rank-' ~ rank if rank is not none }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
       <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
         <button type="button" class="linklike" aria-expanded="false" aria-controls="d-{{ c.id }}"><b>{{ c.mpn }}</b></button>
-        <br>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span> {% endif %}<small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small></td>
+        {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best option' if rank == 0 else 'Next best option' }}</span>{% endif %}
+        {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
+        <br>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span> {% endif %}<small class="muted">{{ c.manufacturer.name }} · {{ c.package.code }}{% if r.lifecycle_risk or lifecycle_badge(c)[1] != 'ok' %} · {{ lifecycle_badge(c)[0] }}{% endif %}</small>
+        {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}</td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>
         {% if r.fff_status == 'rejected' %}<br><small class="muted">FFF rejected in review</small>{% endif %}</td>
       <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay">{% if v.p2p %}<span class="p2p yes">Yes</span>{% else %}<span class="p2p no">No</span><br><small class="muted">{{ 'same pkg' if r.fit.same_package else r.fit.package_relation ~ ' pkg' }}</small>{% endif %}</a></td>
@@ -107,6 +113,9 @@
     </tr>
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
       <td colspan="{{ 5 if pricing_enabled() else 4 }}">
+        {% for n in notes %}<div class="cross-note"><b>{{ n.verdict_label }}{% if n.title %} · {{ n.title }}{% endif %}</b><p>{{ n.note }}</p>
+          <small class="muted">{{ n.author or 'engineer note' }}{% if n.date %}, {{ n.date }}{% endif %}</small></div>{% endfor %}
+        {% set pnote = position_note(r) %}{% if pnote %}<p class="spec-list p2p-note">{{ pnote }} <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a></p>{% endif %}
         {% set note = '/engineering/{}?ref=' ~ part.id ~ '&cand=' ~ c.id %}
         {% if v.better %}<p class="spec-list better">Priority 1 better: {% for d in v.better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
         {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}

@@ -23,7 +23,7 @@ from app.matching.engine import (
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import engineering, export, lifecycle, mechanical, notes_search, pricing
+from app.services import cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -200,6 +200,22 @@ def result_rows(crosses: dict) -> list:
     return rows
 
 
+def rank_reason(r, v) -> str:
+    """One line on why a result ranks where it does."""
+    bits = [v.label]
+    bits.append("pin-to-pin" if v.p2p else "not pin-to-pin")
+    if v.worse:
+        n, labels = len(v.worse), ", ".join(d.label for d in v.worse)
+        bits.append(f"{n} priority 1 deviation{'s' if n > 1 else ''} ({labels})")
+    elif v.better:
+        bits.append("priority 1 equal or better")
+    else:
+        bits.append("priority 1 equal")
+    if r.lifecycle_risk:
+        bits.append("lifecycle risk")
+    return "; ".join(bits)
+
+
 def _deviations(dev: int) -> int:
     return min(max(dev, 0), 3)
 
@@ -243,6 +259,8 @@ def part_detail(
     if company:
         crosses = {c: [r for r in rs if r.candidate.manufacturer.name == company] for c, rs in crosses.items()}
     rows = result_rows(crosses)
+    # best and next best option among the parts that pass the filters (before the cross-type filter)
+    ranked = {r.candidate.id: i for i, (r, _) in enumerate(rows[:2])}
     type_counts = {c: sum(v.category == c for _, v in rows) for c in CATEGORY_ORDER}
     type = type if type in CATEGORY_ORDER else ""
     if type:
@@ -272,6 +290,10 @@ def part_detail(
             "type": type,
             "type_counts": type_counts,
             "dev": dev,
+            "ranked": ranked,
+            "rank_reason": rank_reason,
+            "cross_notes": cross_notes.notes_for,
+            "position_note": cross_notes.position_note,
             "grade": grade,
             "grade_counts": grade_counts,
             "ref_grade": grade_of(part),

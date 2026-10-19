@@ -291,3 +291,11 @@ def test_sections_and_subheaders(client):
         assert f'aria-current="page">{sub}<' in html, url
     assert 'id="global-search"' in client.get("/parts").text
     assert 'id="global-search"' not in client.get("/broadcast").text
+
+
+def test_best_and_next_best_options_are_flagged(client):
+    (ref,) = ids(client, "SR8641")
+    html = client.get(f"/parts/{ref}").text.split('<details class="category-view">')[0]
+    assert html.count("Best option</span>") == 1 and html.count("Next best option</span>") == 1
+    assert "Other options (" in html
+    assert html.index("Best option</span>") < html.index("Next best option</span>") < html.index("Other options (")

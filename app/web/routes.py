@@ -75,6 +75,7 @@ SECTIONS = (
                                                        ("Technology fit", "/business/technology"),
                                                        ("Technology base", "/business/capabilities"),
                                                        ("Where to hunt", "/business/customers"),
+                                                       ("New markets", "/business/explore"),
                                                        ("Case analysis", "/business/cases"),
                                                        ("TAM data", "/business/data"),
                                                        ("Data quality", "/business/quality"),

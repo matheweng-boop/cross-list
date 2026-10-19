@@ -24,6 +24,7 @@ def datasets() -> dict[str, tuple[str, dict]]:
     }
     for topic, label in op.EVIDENCE_TOPICS.items():
         out[topic] = (label, op.evidence(topic))
+    out["new_markets"] = ("New-market idea", op.evidence("new_markets"))
     return out
 
 

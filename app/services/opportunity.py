@@ -380,6 +380,7 @@ PATH_WEIGHT = {"exists": 1.0, "variant": 1.0, "new_design": 0.6, "new_capability
 TREND_WEIGHT = {"growing": 1.15, "stable": 1.0, "declining": 0.85}
 EVIDENCE_TOPICS = {"path": "Path to product", "patents": "Patents", "foundry": "Foundry route",
                    "competitor_tech": "Competitor technology", "trends": "Market trend"}  # fmt: skip
+FIT_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 
 @lru_cache

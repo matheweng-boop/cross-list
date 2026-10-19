@@ -391,3 +391,21 @@ def data_quality(request: Request, co: str = "combined", session: Session = Depe
 @router.get("/business/quality/todo.txt", response_class=PlainTextResponse)
 def quality_todo(session: Session = Depends(get_session)):
     return quality.todo(session)
+
+
+@router.get("/business/explore", response_class=HTMLResponse)
+def explore(request: Request, fit: str = "", co: str = "combined", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    techs = []
+    for k, t in op.evidence("new_markets").items():
+        ideas = sorted(
+            t.get("ideas") or [],
+            key=lambda i: (op.FIT_ORDER.get(i.get("fit"), 3), op.FIT_ORDER.get(i.get("confidence"), 3)),
+        )
+        if fit in op.FIT_ORDER:
+            ideas = [i for i in ideas if i.get("fit") == fit]
+        if ideas:
+            techs.append((k, t, ideas))
+    techs.sort(key=lambda x: min(op.FIT_ORDER.get(i.get("fit"), 3) for i in x[2]))
+    c.update(techs=techs, fit=fit, rev=_rev(session), plats=op.capabilities())
+    return templates.TemplateResponse(request, "business/explore.html", c)

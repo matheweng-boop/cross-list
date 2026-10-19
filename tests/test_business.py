@@ -116,3 +116,9 @@ def test_evidence_reviews_and_mappings(client, session):
     session.expire_all()
     assert op.status_of("pol_ldo", op.makers(session), mine) != "supported"
     assert any(c["level"] in ("ok", "warn", "error") for c in quality.checks(op.applications()))
+
+
+def test_explore_page(client):
+    for path in ("/business/explore", "/business/explore?fit=high"):
+        r = client.get(path)
+        assert r.status_code == 200 and "New markets" in r.text, path

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import about, review %}
+{% block title %}New markets – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>New markets</h1>
+<p class="subtitle muted">Starting from technology we already sell, where else could it go? Each idea names the market, why our product fits,
+  what would have to change, and the public signals (forums, news, standards, products) that suggest demand. Exploratory: for
+  discussion and a case analysis, not a forecast.</p>
+{{ about('explore') }}
+<div class="chip-row"><span class="chip-lbl">Fit</span>
+  {% for k, label in [('', 'All'), ('high', 'High'), ('medium', 'Medium'), ('low', 'Low')] %}<a class="fchip{{ ' on' if fit == k }}" href="/business/explore?co={{ co }}&fit={{ k }}">{{ label }}</a>{% endfor %}
+</div>
+{% for k, t, ideas in techs %}
+<section class="bo-nm" id="t-{{ k }}">
+  <h2>{{ t.technology }} {% for o in t.owner or [] %}<span class="bo-owner ow-{{ o|lower }}">{{ o }}</span>{% endfor %} {{ review('new_markets', k, rev) }}</h2>
+  <p class="small muted">{% if t.products %}Products: {{ t.products|join(', ') }}{% endif %}{% if t.platform and t.platform in plats %} · platform: <a href="/business/capabilities#p-{{ t.platform }}">{{ plats[t.platform].name }}</a>{% endif %}</p>
+  <div class="bo-ev-grid">
+  {% for i in ideas %}
+    <article class="bo-ev"><header><span><b>{{ i.market }}</b>: {{ i.application }}</span><span><span class="bo-fit ft-{{ i.fit }}">fit {{ i.fit }}</span> <span class="rv-st" title="source confidence">{{ i.confidence }}</span></span></header>
+      <p>{{ i.why_fit }}</p>
+      {% if i.needed %}<p><b>Would need:</b> {{ i.needed|join('; ') }}</p>{% endif %}
+      {% if i.incumbents %}<p><b>Serving it today:</b> {{ i.incumbents|join(', ') }}</p>{% endif %}
+      {% if i.signals %}<details><summary class="small">{{ i.signals|length }} public signal{{ 's' if i.signals|length != 1 }}</summary><ul class="small">{% for sg in i.signals %}
+        {% set url = (sg|string).split('(')[-1].rstrip(')') if 'http' in sg else '' %}<li>{{ sg.split(' (http')[0] if url else sg }}{% if url.startswith('http') %} <a href="{{ url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}</ul></details>
+      {% else %}<p class="small muted">No public signal found yet.</p>{% endif %}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% else %}<p class="muted">The idea list is being collected.</p>{% endfor %}
+<script src="/static/business.js" defer></script>
+{% endblock %}

@@ -1,0 +1,718 @@
+# More application block diagrams from public Qualcomm documents (platform vendor reference), for the
+# block-diagram generator. Complements rf_platforms.yaml (Qualcomm entries: X80/X85 modem-RF phone, FastConnect 7900,
+# NPro A8 Elite AP, FWA CPE, QCC711/QCS6490 IoT, Snapdragon Auto telematics). Nothing here repeats those entries.
+# See qualcomm_more_block_diagrams.md for the sources read, what was not reachable, and the gaps.
+#
+# How these were read (2026-10-19): public PDFs on docs.qualcomm.com (listed in its public sitemap.xml, no login),
+# two PDFs linked from public qualcomm.com product pages (content/dam), and qualcomm.com ".md" product pages listed in
+# qualcomm.com/en-us/*/llms.txt. Diagrams were rendered locally from the PDFs and read as images; text was taken with
+# pdftotext. Where a brief draws a block diagram, groups are the boxes as drawn; where it has only a spec table or a
+# parts list, groups are the listed items, and the source string says so ("spec table", "parts list", "text").
+# Qualcomm product briefs mostly draw the inside of the chip; external sockets come from the spec tables, the
+# "contributing chipsets" / parts lists of the reference designs, and two public reference schematics (QCC730, QCC74x).
+#
+# Field notes (same conventions as ti_block_diagrams.yaml):
+#   category           application category (Cross List category names)
+#   groups[].side      rf where the group is in the antenna path; omitted otherwise
+#   groups[].fn_hint   Cross List function ids (functions.yaml) for the blocks; ids proposed here are under new_functions
+#   groups[].vendor_parts  part numbers the Qualcomm document itself names for that group (Qualcomm or third party;
+#                      reference only, not recommendations). Empty when the document names none.
+#   links              [from, to, label] = arrows / buses drawn in the figure (label "" when unlabelled); for spec-table
+#                      applications the links are the interfaces the table names (source string on the application)
+#   features[]         high-level design questions a user would answer; choices are options, not answers
+#   features[].filters existing Cross List parameter names where one fits; otherwise a plain-words attribute marked "(new)"
+
+new_functions:
+  mems_sensor: {label: "Sensor: IMU / pressure / humidity / light / proximity", category: sensors, note: "MEMS and environmental sensors around a processor or sensing hub (accel + gyro, magnetometer, barometer, humidity, ALS, proximity, PPG, bone-conduction voice)"}
+  haptic_driver: {label: Haptic (LRA / ERM) driver, category: audio, note: "Vibration motor driver; may be inside a wearable PMIC (Snapdragon W5 PMW5100)"}
+  acoustic_transducer: {label: Microphone / speaker, category: audio, note: "DMIC / ECM / analog mic and speaker / receiver; external customer part"}
+  usb_typec_hub: {label: USB hub / Type-C port, category: interface, note: "USB 3.x hub and USB-C ports (alt-mode DP) on development / robotics boards"}
+
+docs:
+  QC-PB-XR2G2: {title: "Snapdragon XR2 Gen 2 Platform product brief (87-73689-1 rev A)", url: "https://docs.qualcomm.com/doc/87-73689-1/87-73689-1_REV_A_Snapdragon_XR2_Gen_2_Platform_Product_Brief.pdf", date: "Feb 2024"}
+  QC-PB-XR2G2-RD: {title: "Snapdragon XR2 Gen 2 Reference Design (QXR2230P) product brief (87-61723-1 rev B)", url: "https://docs.qualcomm.com/doc/87-61723-1/87-61723-1_REV_B_Snapdragon_XR2_Gen_2_Reference_Design_Product_Brief.pdf", date: "Mar 2024", note: "parts list ('Snapdragon Platform') without a drawn diagram"}
+  QC-PB-REALITY: {title: "Snapdragon Reality Elite Platform product brief (87-A1008-1 rev B)", url: "https://docs.qualcomm.com/doc/87-A1008-1/87-A1008-1_REV_B_Snapdragon_Reality_Elite_Platform_Product_Brief.pdf", date: "Jun 2026"}
+  QC-PB-AR2-SV: {title: "Snapdragon AR2 Gen 1 Smart Viewer Development Kit (QAR2130P) product brief (87-61722-1 rev C)", url: "https://docs.qualcomm.com/doc/87-61722-1/87-61722-1_REV_C_Snapdragon_AR2_GEN_1_Smart_Viewer_Development_Kit_Product_Brief.pdf", date: "Apr 2024"}
+  QC-PB-AR1: {title: "Snapdragon AR1 Gen 1 Platform product brief (87-86507-1 rev B)", url: "https://docs.qualcomm.com/doc/87-86507-1/87-86507-1_REV_B_Snapdragon_AR1_Gen_1_Platform_Product_Brief.pdf", date: "Jun 2025"}
+  QC-PB-W5: {title: "Snapdragon W5+ and W5 Gen 1 Wearable Platforms product brief (87-43671-1 rev C)", url: "https://docs.qualcomm.com/doc/87-43671-1/87-43671-1_REV_C_Snapdragon_W5__and_Snapdragon_W5_Gen_1_Wearable_Platforms_Product_Brief.pdf", date: "Jul 2024", note: "p.2 'Snapdragon W5+ Gen 1 Block Diagram' (drawn, with external RF / PMIC parts)"}
+  QC-PB-WEAR-ELITE: {title: "Snapdragon Wear Elite Platform product brief (87-97359-1 rev C)", url: "https://docs.qualcomm.com/doc/87-97359-1/87-97359-1_REV_C_Snapdragon_Wear_Elite_Platform_Product_Brief.pdf", date: "Feb 2026"}
+  QC-PB-S5G1: {title: "Snapdragon S5 Gen 1 Sound Platform product brief (87-75475-1 rev D)", url: "https://docs.qualcomm.com/doc/87-75475-1/87-75475-1_REV_D_Snapdragon_S5_Gen_1_Sound_Platform.pdf", date: "Aug 2026", note: "p.2 block diagram (inside the QCC5229 SoC)"}
+  QC-PB-QCC3020-RD: {title: "QCC3020 Low-cost Occluded Earbud Reference Design product brief (87-CG935-1 rev A)", url: "https://docs.qualcomm.com/doc/87-CG935-1/87-CG935-1_REV_A_QCC3020_Low_Cost_Occluded_Earbud_Ref_Design_Product_Brief.pdf", date: "Jun 2020", note: "p.2 'Block Diagram - Per Earbud' (drawn)"}
+  QC-PB-QCC5141-RD: {title: "QCC5141 Occluded Earbud Reference Design product brief (87-CG936-1 rev B)", url: "https://docs.qualcomm.com/doc/87-CG936-1/87-CG936-1_REV_B_Qualcomm_QCC5141_-_Occluded_Earbud_Reference_Design_Product_Brief.pdf", date: "Oct 2020"}
+  QC-PB-QCC5171-RD: {title: "QCC5171 Earbud Reference Design product brief (87-CG939-1 rev A)", url: "https://docs.qualcomm.com/doc/87-CG939-1/87-CG939-1_REV_A_Qualcomm_QCC5171_Earbud_Reference_Design_Product_Brief.pdf", date: "Oct 2022"}
+  QC-PB-MAPX: {title: "MAPX Soundbar Platform product brief (87-CF480-1 rev B)", url: "https://docs.qualcomm.com/doc/87-CF480-1/87-CF480-1_REV_B_MAPX_Soundbar_Platform_Product_Brief.pdf", date: "Mar 2018", note: "p.2 'MAPX Soundbar Principle Block Diagram' (drawn)"}
+  QC-PB-XELITE: {title: "Snapdragon X Elite product brief (87-71417-1 rev F)", url: "https://docs.qualcomm.com/doc/87-71417-1/87-71417-1_REV_F_Snapdragon_X_Elite_Product_Brief.pdf", date: "May 2024", note: "spec table only"}
+  QC-PB-X2ELITE: {title: "Snapdragon X2 Elite product brief", url: "https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-X2-Elite-Product-Brief.pdf", date: "Jan 2026", note: "linked from qualcomm.com/laptops/products/snapdragon-x2-elite.md; spec table only"}
+  QC-PB-9205S: {title: "Qualcomm 9205S Modem product brief (87-64336-1 rev D)", url: "https://docs.qualcomm.com/doc/87-64336-1/87-64336-1_REV_D_Qualcomm_9205s_Modem_Product_Brief.pdf", date: "Sep 2025", note: "p.2 block diagram (drawn) + 'Contributing Chipsets'"}
+  QC-PB-QTS110: {title: "Qualcomm QTS110 Tracker product brief (87-43678-1 rev J)", url: "https://docs.qualcomm.com/doc/87-43678-1/87-43678-1_REV_J_Qualcomm_QTS110_Tracker_Product_Brief.pdf", date: "Dec 2023"}
+  QC-MD-QTS110: {title: "QTS110 Tracker page (markdown, listed in qualcomm.com/en-us/internet-of-things/llms.txt)", url: "https://www.qualcomm.com/internet-of-things/solutions/aware/qts110-tracker.md"}
+  QC-PB-QCX216: {title: "Qualcomm 216 LTE IoT Modem (QCX216) product brief (87-PW324-1 rev C)", url: "https://docs.qualcomm.com/doc/87-PW324-1/87-PW324-1_REV_C_Qualcomm_QCX216_LTE_IOT_Modem_Product_Brief.pdf", date: "Mar 2024", note: "p.2 block diagram (drawn, external RFFE)"}
+  QC-PB-QTS112: {title: "Qualcomm QTS112 Thin Tracker product brief (87-43684-1 rev G)", url: "https://docs.qualcomm.com/doc/87-43684-1/87-43684-1_REV_G_Qualcomm_QTS112_Thin_Tracker_Product_Brief.pdf", date: "Apr 2025"}
+  QC-PB-QCC730M: {title: "Qualcomm QCC730M micro-power dual-band Wi-Fi module product brief (87-84453-1 rev D)", url: "https://docs.qualcomm.com/doc/87-84453-1/87-84453-1_REV_D_Qualcomm_QCC730M_micro-power_dual-band_Wi-Fi_module_Product_Brief.pdf", date: "Sep 2025", note: "p.2 'QCC730M iPA / xPA Module Block Diagram' (drawn)"}
+  QC-SCH-QCC730-XPA: {title: "QCC730 xPA Hostless Design Sample Reference Schematic (80-WL730-41 rev AG)", url: "https://docs.qualcomm.com/doc/80-WL730-41/80-WL730-41_REV_AG_QCC730_xPA_Hostless_Design_Sample_Reference_Schematic.pdf", date: "May 2025", note: "sheet 2 'Block Diagram' + parts list (pp.18-21)"}
+  QC-PB-QCC74X: {title: "Qualcomm QCC74x Tri-radio SoC product brief (87-75957-1 rev H)", url: "https://docs.qualcomm.com/doc/87-75957-1/87-75957-1_REV_H_Qualcomm_QCC74x_Tri-radio_SoC_Product_Brief.pdf", date: "Nov 2025", note: "p.2 block diagram (inside the SoC) + interface list"}
+  QC-SCH-QCC74X: {title: "QCC74x Reference Schematic (80-WL740-41 rev AE)", url: "https://docs.qualcomm.com/doc/80-WL740-41/80-WL740-41_REV_AE_QCC74x_Reference_Schematic.pdf", date: "Nov 2025", note: "schematic + parts list (40 MHz crystal, U.FL, pi match, on-chip DC-DC inductor)"}
+  QC-PB-QCS610: {title: "Qualcomm QCS410 / QCS610 product brief (87-PN006-1 rev F)", url: "https://docs.qualcomm.com/doc/87-PN006-1/87-PN006-1_REV_F_Qualcomm_R__QCS410_QCS610_Product_Brief.pdf", date: "Feb 2024", note: "p.2 block diagram (inside the SoC) + spec table naming PMIC, codec, amplifier, connectivity parts"}
+  QC-PB-RB2: {title: "Qualcomm Robotics RB2 Platform (QRB4210) product brief (87-61721-1 rev B)", url: "https://docs.qualcomm.com/doc/87-61721-1/87-61721-1_REV_B_Qualcomm_Robotics_RB2_Platform__Qualcomm_QRB4210__Product_Brief.pdf", date: "Feb 2024", note: "p.2 board-level block diagram (SoM, mainboard, vision and 5G mezzanines)"}
+  QC-PB-RB3G2: {title: "Qualcomm RB3 Gen 2 Development Kit product brief (87-74789-1 rev A)", url: "https://docs.qualcomm.com/doc/87-74789-1/87-74789-1_REV_A_Qualcomm_RB3_Gen_2_Development_Kit_Product_Brief.pdf", date: "Apr 2024", note: "p.2 board-level block diagram (QCS6490 SoM, RBx mainboard, vision mezzanine)"}
+  QC-PB-QRB5165: {title: "Qualcomm Dragonwing QRB5165 Processor product brief (87-28730-1 rev D)", url: "https://docs.qualcomm.com/doc/87-28730-1/87-28730-1_REV_D_Qualcomm_Dragonwing_QRB5165_Processor_Product_Brief.pdf", date: "Feb 2025", note: "p.2 block diagram (SoC + companion modules)"}
+  QC-PB-FLIGHT-RB5: {title: "Qualcomm Flight RB5 5G Platform product brief (87-28734-1 rev A)", url: "https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/qualcomm_flight-rb5-5g-platform-product-brief_87-28734-1.pdf", date: "Aug 2021", note: "linked from qualcomm.com/internet-of-things/products/flight-rb5-platform.md; reference design is a photo, specs in a table"}
+  QC-MD-FLIGHT-RB5: {title: "Flight RB5 5G Platform page (markdown)", url: "https://www.qualcomm.com/internet-of-things/products/flight-rb5-platform.md"}
+  QC-PB-IQ10-RRD: {title: "Qualcomm Dragonwing IQ10 Robotics Reference Design product brief (87-A0789-1 rev A)", url: "https://docs.qualcomm.com/doc/87-A0789-1/87-A0789-1_REV_A_Qualcomm_Dragonwing_IQ10_Robotics_Reference_Design_Product_Brief.pdf", date: "May 2026", note: "spec table only"}
+  QC-PB-IQ10: {title: "Qualcomm Dragonwing IQ10 Series Platform product brief (87-A2811-1 rev A)", url: "https://docs.qualcomm.com/doc/87-A2811-1/87-A2811-1_REV_A_Qualcomm_Dragonwing_IQ10_Series_Platform_Product_Brief.pdf", date: "Aug 2026", note: "p.2 block diagram with 'Companion Parts'"}
+  QC-DS-QCS9100: {title: "QCS9100 Data Sheet (80-73415-1 rev AD)", url: "https://docs.qualcomm.com/doc/80-73415-1/80-73415-1_REV_AD_QCS9100_Data_Sheet.pdf", date: "Jan 2025", note: "p.8 Figure 1-1 'QCS9100 functional block diagram and example application' (board level)"}
+  QC-PB-IQ9075: {title: "Qualcomm Dragonwing IQ-9075 Module product brief (87-97354-1 rev C)", url: "https://docs.qualcomm.com/doc/87-97354-1/87-97354-1_REV_C_Qualcomm_Dragonwing_IQ-9075_Module_Product_Brief.pdf", date: "May 2026", note: "p.1 module block diagram (SoC, 3x LPDDR5, 4x PMM8650)"}
+  QC-PB-IQ9: {title: "Qualcomm Dragonwing IQ9 Series Platform product brief (87-83840-1 rev G)", url: "https://docs.qualcomm.com/doc/87-83840-1/87-83840-1_REV_G_Qualcomm_Dragonwing_IQ9_Series_Platform_Product_Brief.pdf", date: "Jul 2026"}
+  QC-PB-FIBERPRO-A8: {title: "Qualcomm Dragonwing FiberPro A8 Elite Platform product brief (87-96768-1 rev A)", url: "https://docs.qualcomm.com/doc/87-96768-1/87-96768-1_REV_A_Qualcomm_Dragonwing_FiberPro_A8_Elite_Platform_Product_Brief.pdf", date: "Feb 2026", note: "spec table only"}
+  QC-PB-NPRO-A7: {title: "Qualcomm Dragonwing NPro A7 Elite Platform product brief (87-82994-1 rev C)", url: "https://docs.qualcomm.com/doc/87-82994-1/87-82994-1_REV_C_Qualcomm_Dragonwing_NPro_A7_Elite_Platform_Product_Brief.pdf", date: "Feb 2025", note: "spec table only"}
+
+applications:
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_xr_headset
+    name: Standalone VR / MR headset (Snapdragon XR2 Gen 2 reference design QXR2230P)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-XR2G2-RD, url: "https://docs.qualcomm.com/doc/87-61723-1/87-61723-1_REV_B_Snapdragon_XR2_Gen_2_Reference_Design_Product_Brief.pdf", pages: "1 (specifications and features, 'Snapdragon Platform' parts list)"}
+      - {doc: QC-PB-XR2G2, url: "https://docs.qualcomm.com/doc/87-73689-1/87-73689-1_REV_A_Snapdragon_XR2_Gen_2_Platform_Product_Brief.pdf", pages: "2 (specifications)"}
+      - {doc: QC-PB-REALITY, url: "https://docs.qualcomm.com/doc/87-A1008-1/87-A1008-1_REV_B_Snapdragon_Reality_Elite_Platform_Product_Brief.pdf", pages: "3 (specs; successor platform)"}
+    groups:
+      - {id: soc, label: "XR platform SoC (XR2 Gen 2; Reality Elite successor)", blocks: [Kryo CPU, Adreno GPU, Hexagon NPU, Spectra ISP, Engine for Visual Analytics], source: "QC-PB-XR2G2-RD parts list ('Snapdragon XR2 Gen 2'); QC-PB-XR2G2 / QC-PB-REALITY spec tables", fn_hint: [soc], vendor_parts: [Snapdragon XR2 Gen 2, Snapdragon Reality Elite]}
+      - {id: wifi_bt, label: "Wi-Fi + Bluetooth (2x2 Wi-Fi, BT 5.3; FastConnect 7800 Wi-Fi 7 on the platform)", side: rf, blocks: ["2x2 Wi-Fi 802.11a/b/g/n/ac/ax", Bluetooth 5.3 + LE, "Wi-Fi 7 HBS multi-link (platform)"], source: "QC-PB-XR2G2-RD 'Connectivity'; QC-PB-XR2G2 'Wi-Fi and Bluetooth: FastConnect 7800'", fn_hint: [wifi_soc], vendor_parts: [WCN7851, FastConnect 7800]}
+      - {id: pmic, label: "Power management (PMICs listed for the platform)", blocks: [PMK2230, PMXR2230, PMXR2230VS, PMXR2230VE, PM8010], source: "QC-PB-XR2G2-RD parts list (roles not stated; grouped as PMICs by the PM* prefix)", fn_hint: [pmic], vendor_parts: [PMK2230, PMXR2230, PMXR2230VS, PMXR2230VE, PM8010]}
+      - {id: charging, label: "Battery and charging (USB-C, 6000 mAh)", blocks: [USB Type-C 3.1 Gen 2, 6000 mAh battery, charger], source: "QC-PB-XR2G2-RD 'Battery and Charging'; parts list SMB1393", fn_hint: [battery_charger, battery_pack], vendor_parts: [SMB1393]}
+      - {id: audio, label: "Audio (codec, speaker amplifier, 4 speakers, 6 DMICs)", blocks: [audio codec, smart speaker amplifier, 2x woofer + 2x tweeter, 6x DMic], source: "QC-PB-XR2G2-RD 'Audio' + parts list", fn_hint: [audio_codec, audio_amp, acoustic_transducer], vendor_parts: [WCD9385, WSA8835]}
+      - {id: cameras, label: "Tracking, passthrough and eye-tracking cameras", blocks: [4x 6DoF tracking camera, 2x RGB camera (video see-through), 2x eye-tracking camera], source: "QC-PB-XR2G2-RD 'Image and Context Sensors'; QC-PB-XR2G2 'Support for 10 concurrent cameras'", fn_hint: [camera_radar], vendor_parts: [OV7251, S5KJD1SP13, OC0TA1B]}
+      - {id: sensors, label: "Context sensors", blocks: [accelerometer + gyro, magnetometer, proximity sensor, PPG sensor], source: "QC-PB-XR2G2-RD 'Image and Context Sensors'", fn_hint: [mems_sensor], vendor_parts: []}
+      - {id: display, label: "Dual micro-OLED displays + pancake optics", blocks: ["dual 1.03 in uOLED 2560 x 2560", "4x DSI / 2x eDP / DP1.4 over USB (platform)"], source: "QC-PB-XR2G2-RD 'Display and Optics'; QC-PB-XR2G2 'Display'", fn_hint: [display], vendor_parts: []}
+      - {id: memory, label: "Memory and storage", blocks: ["4x16 LPDDR5", "UFS 3.1 (UFS 4.0 on Reality Elite)", SD 3.0 / SD Express], source: "QC-PB-XR2G2 / QC-PB-REALITY spec tables", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: controllers, label: "6DoF controllers", blocks: [6DoF hand controllers], source: "QC-PB-XR2G2-RD 'Key Features'", fn_hint: [], vendor_parts: []}
+    links:
+      - [cameras, soc, "MIPI CSI (10 concurrent)"]
+      - [soc, display, "DSI"]
+      - [soc, wifi_bt, "PCIe"]
+      - [wifi_bt, controllers, "Bluetooth"]
+      - [soc, audio, ""]
+      - [sensors, soc, "sensor hub"]
+      - [memory, soc, "LPDDR5 / UFS"]
+      - [pmic, soc, "rails"]
+      - [charging, pmic, "USB-C power"]
+    features:
+      - {id: architecture, question: "Headset architecture", choices: [standalone all-in-one, tethered to phone / PC, split rendering], filters: "(new) platform configuration", source: "QC-PB-REALITY 'Support for all-in-one and tethered configurations'; QC-PB-XR2G2-RD 'Split Rendering'"}
+      - {id: see_through, question: "Mixed reality method", choices: [video see-through (RGB passthrough cameras), optical see-through, VR only], filters: "camera count (new)", source: "QC-PB-REALITY 'optical-see-through and video-see-through'"}
+      - {id: eye_tracking, question: "Eye tracking", choices: [yes, no], filters: "camera count (new)", source: "QC-PB-XR2G2-RD 'Eye tracking'"}
+      - {id: wifi_gen, question: "Wi-Fi generation", choices: [Wi-Fi 6 / 6E, Wi-Fi 7 HBS], filters: "wifi_fem band coverage (new)", source: "QC-PB-XR2G2-RD (802.11ax) vs QC-PB-XR2G2 (FastConnect 7800 Wi-Fi 7)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_ar_smart_viewer
+    name: Wireless-tethered AR smart viewer glasses (Snapdragon AR2 Gen 1 development kit QAR2130P)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-AR2-SV, url: "https://docs.qualcomm.com/doc/87-61722-1/87-61722-1_REV_C_Snapdragon_AR2_GEN_1_Smart_Viewer_Development_Kit_Product_Brief.pdf", pages: "1 (specifications and features, 'Snapdragon Platform' parts list)"}
+    groups:
+      - {id: soc, label: "AR2 Gen 1 platform", blocks: [Snapdragon AR2 Gen 1, XRC130 (role not stated)], source: "QC-PB-AR2-SV 'Snapdragon Platform: Snapdragon AR2 Gen 1, ... XRC130, and more'", fn_hint: [soc], vendor_parts: [Snapdragon AR2 Gen 1, XRC130]}
+      - {id: wifi_bt, label: "Wi-Fi + Bluetooth link to the phone / host", side: rf, blocks: ["2x2 Wi-Fi 802.11a/b/g/n/ac/ax", Bluetooth 5.3], source: "QC-PB-AR2-SV 'Connectivity'; parts list WCN7850", fn_hint: [wifi_soc], vendor_parts: [WCN7850]}
+      - {id: pmic, label: "Power management", blocks: [PMAR2130, PMXR130, PM8008], source: "QC-PB-AR2-SV parts list (roles not stated; grouped as PMICs by the PM* prefix)", fn_hint: [pmic], vendor_parts: [PMAR2130, PMXR130, PM8008]}
+      - {id: battery, label: "Battery and charging", blocks: [USB Type-C 3.1 Gen 2, 600 mAh battery], source: "QC-PB-AR2-SV 'Battery and Charging'", fn_hint: [battery_charger, battery_pack], vendor_parts: []}
+      - {id: audio, label: "Audio (2 speakers, 4 DMICs)", blocks: [speaker amplifier, 2 speakers, 4x DMic], source: "QC-PB-AR2-SV 'Audio'; parts list WSA8835", fn_hint: [audio_amp, acoustic_transducer], vendor_parts: [WSA8835]}
+      - {id: cameras, label: "Tracking, RGB and eye-tracking cameras", blocks: [2x 6DoF tracking camera, 1x RGB camera, 2x eye-tracking camera], source: "QC-PB-AR2-SV 'Image and Context Sensors'", fn_hint: [camera_radar], vendor_parts: [OG01A1B, OV8856, OC0TA1B]}
+      - {id: sensors, label: "Context sensors", blocks: [accelerometer + gyro, magnetometer, proximity sensor, ambient light sensor], source: "QC-PB-AR2-SV 'Image and Context Sensors'", fn_hint: [mems_sensor], vendor_parts: []}
+      - {id: display, label: "Dual LCoS displays with waveguide", blocks: ["dual 0.37 in LCoS panel", "waveguide, 43 deg DFOV"], source: "QC-PB-AR2-SV 'Display and Optics'", fn_hint: [display], vendor_parts: []}
+    links:
+      - [cameras, soc, ""]
+      - [sensors, soc, ""]
+      - [soc, display, ""]
+      - [soc, wifi_bt, ""]
+      - [soc, audio, ""]
+      - [pmic, soc, ""]
+      - [battery, pmic, ""]
+    features:
+      - {id: tethering, question: "Compute split", choices: [wireless tethered to phone, standalone], filters: "Wi-Fi throughput / latency (new)", source: "QC-PB-AR2-SV 'Wireless tethered smart viewer'"}
+      - {id: tracking, question: "Tracking features", choices: [6DoF head tracking only, "6DoF + hand tracking", "6DoF + hand + eye tracking"], filters: "camera count (new)", source: "QC-PB-AR2-SV 'Key Features'"}
+      - {id: battery_size, question: "Battery capacity class", choices: ["< 300 mAh", "300-700 mAh", "> 700 mAh"], filters: "battery charger current (new)", source: "QC-PB-AR2-SV '600mAh'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_ai_smart_glasses
+    name: Camera / AI smart glasses (Snapdragon AR1 Gen 1)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-AR1, url: "https://docs.qualcomm.com/doc/87-86507-1/87-86507-1_REV_B_Snapdragon_AR1_Gen_1_Platform_Product_Brief.pdf", pages: "1-2 (text + specifications and features table)"}
+    groups:
+      - {id: soc, label: "AR1 Gen 1 SoC (Kryo 4x 1.9 GHz, Hexagon NPU, sensing hub, dual 14-bit ISP)", blocks: [Kryo CPU, Adreno GPU, Hexagon NPU, Qualcomm Sensing Hub (micro NPU), dual ISP], source: "QC-PB-AR1 spec table", fn_hint: [soc], vendor_parts: [Snapdragon AR1 Gen 1]}
+      - {id: wifi_bt, label: "Wi-Fi 7 + Bluetooth 5.4 (FastConnect 7800)", side: rf, blocks: [Wi-Fi 7 / Wi-Fi 6, Bluetooth Core 5.4 (A2DP / HFP)], source: "QC-PB-AR1 'Wi-Fi & Bluetooth technology: FastConnect 7800'", fn_hint: [wifi_soc], vendor_parts: [FastConnect 7800]}
+      - {id: camera, label: "Camera (12 MP photo, 6 MP video)", blocks: [image sensor, EIS], source: "QC-PB-AR1 'Camera'", fn_hint: [camera_radar], vendor_parts: []}
+      - {id: display, label: "Single or binocular display (1280 x 1280 per eye, 60 Hz)", blocks: [single or dual lens display], source: "QC-PB-AR1 'Support for binocular displays'; 'Display'", fn_hint: [display], vendor_parts: []}
+      - {id: audio, label: "Audio (stereo speakers with protection, up to 8 mics)", blocks: [stereo speakers, speaker protection (Aqstic Speaker Max), up to eight microphones], source: "QC-PB-AR1 'Audio'", fn_hint: [audio_amp, acoustic_transducer], vendor_parts: []}
+      - {id: memory, label: "Memory", blocks: ["LPDDR4x up to 2100 MHz"], source: "QC-PB-AR1 'Memory'", fn_hint: [ddr_flash], vendor_parts: []}
+    links:
+      - [camera, soc, ""]
+      - [soc, display, "RGB display output"]
+      - [soc, wifi_bt, ""]
+      - [soc, audio, ""]
+      - [memory, soc, ""]
+    features:
+      - {id: display_cfg, question: "Display configuration", choices: [no display, single-lens display, binocular display], filters: "display driver (new)", source: "QC-PB-AR1 'single or double lens displays'"}
+      - {id: mics, question: "Microphone count", choices: ["2", "4", "up to 8"], filters: "(new)", source: "QC-PB-AR1 'Up to eight microphones'"}
+      - {id: streaming, question: "Livestream directly from the glasses over Wi-Fi", choices: [yes (Wi-Fi 7 / 6E), no (Bluetooth to phone only)], filters: "Wi-Fi front end (new)", source: "QC-PB-AR1 'Seamless sharing and streaming'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_smartwatch_4g
+    name: 4G LTE smartwatch with always-on co-processor (Snapdragon W5+ Gen 1)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-W5, url: "https://docs.qualcomm.com/doc/87-43671-1/87-43671-1_REV_C_Snapdragon_W5__and_Snapdragon_W5_Gen_1_Wearable_Platforms_Product_Brief.pdf", pages: "2 ('Snapdragon W5+ Gen 1 Block Diagram' + specifications)"}
+    groups:
+      - {id: soc, label: "4 nm SoC (SW5100 / SW5100P)", blocks: [quad-core A53 CPU, memory, GPU, camera, video, modem, GNSS, Wi-Fi, audio, hybrid management], source: "QC-PB-W5 block diagram ('4nm System-on-Chip (SW5100)')", fn_hint: [soc, modem], vendor_parts: [SW5100, SW5100P]}
+      - {id: aon_coprocessor, label: "22 nm always-on co-processor (QCC5100)", blocks: [Cortex M55, memory, GPU, display, audio, Bluetooth 5.3, "Wi-Fi (802.11n RF)", ML core], source: "QC-PB-W5 block diagram ('22nm AON Co-Processor (QCC5100)')", fn_hint: [mcu, ble_soc], vendor_parts: [QCC5100]}
+      - {id: rf, label: "Modem / GNSS RF and RFFE", side: rf, blocks: [RF transceiver (WTR3925), PA (QPA5590), front-end module (QFM5518)], source: "QC-PB-W5 block diagram ('WTR3925 + QPA5590 + QFM5518  Modem/GNSS RF RFFE'); spec 'RF Front End'", fn_hint: [rf_transceiver, pa_module, rf_frontend], vendor_parts: [WTR3925, QPA5590, QFM5518]}
+      - {id: gnss, label: "GNSS (L1 with WTR2965, or L1 + L5 with WTR3925)", side: rf, blocks: [GNSS L1 / L5 receive path], source: "QC-PB-W5 spec 'Location' (external GNSS LNA not drawn)", fn_hint: [gnss_lna], vendor_parts: [WTR2965, WTR3925]}
+      - {id: wifi_bt, label: "Wi-Fi 802.11n (2.4 / 5 GHz) + Bluetooth, integrated PA and LNA", side: rf, blocks: ["802.11n 2.4 / 5 GHz", Bluetooth 5.3, integrated PA and LNA, "coex BT / Wi-Fi / LTE"], source: "QC-PB-W5 spec 'Connectivity'", fn_hint: [antenna], vendor_parts: []}
+      - {id: pmic, label: "Wearable PMIC (PMW5100): output power management", blocks: [fuel gauge, haptics driver, fast charge, integrated speaker PA], source: "QC-PB-W5 block diagram ('Output Power Management', 'Power Management IC (PMW5100)')", fn_hint: [pmic, battery_monitor, battery_charger, haptic_driver, audio_amp], vendor_parts: [PMW5100]}
+      - {id: display, label: "OLED display (640 x 640 @ 60 Hz)", blocks: [OLED display], source: "QC-PB-W5 block diagram ('OLED Display', MIPI-DSI from SoC, QSPI w/DDR from co-processor)", fn_hint: [display], vendor_parts: []}
+      - {id: memory, label: "Memory (1x16 LPDDR4 2133 MHz)", blocks: [LPDDR4], source: "QC-PB-W5 spec 'Memory'", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: camera, label: "Camera (dual ISP 16 MP + 16 MP, 2x CSI)", blocks: [camera sensor], source: "QC-PB-W5 spec 'Camera'", fn_hint: [camera_radar], vendor_parts: []}
+      - {id: nfc, label: "NFC (third party)", blocks: [NFC controller], source: "QC-PB-W5 spec 'NFC supported via third party'", fn_hint: [nfc_frontend], vendor_parts: []}
+    links:
+      - [soc, display, "MIPI-DSI"]
+      - [aon_coprocessor, display, "QSPI w/DDR"]
+      - [soc, rf, ""]
+      - [rf, pmic, ""]
+      - [pmic, aon_coprocessor, ""]
+      - [soc, aon_coprocessor, ""]
+      - [rf, gnss, ""]
+      - [soc, wifi_bt, ""]
+      - [memory, soc, ""]
+      - [camera, soc, "CSI"]
+      - [nfc, soc, ""]
+    features:
+      - {id: cellular, question: "Cellular", choices: ["4G LTE (SW5100)", "no cellular, Bluetooth only (SW5100P)"], filters: "pa_module bands (new)", source: "QC-PB-W5 ordering information"}
+      - {id: coprocessor, question: "Always-on co-processor", choices: ["yes (W5+, QCC5100)", "no (W5)"], filters: "(new)", source: "QC-PB-W5 p.1"}
+      - {id: gnss_bands, question: "GNSS bands", choices: [L1, "L1 + L5"], filters: "gnss_lna band (new)", source: "QC-PB-W5 'GNSS L1 (WTR2965) or L1 + L5 (WTR3925)'"}
+      - {id: payments, question: "NFC payments", choices: [yes, no], filters: "(new)", source: "QC-PB-W5 'NFC supported via third party'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_smartwatch_redcap_ntn
+    name: 5G RedCap smartwatch with satellite NB-NTN, UWB and dual-band GNSS (Snapdragon Wear Elite)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-WEAR-ELITE, url: "https://docs.qualcomm.com/doc/87-97359-1/87-97359-1_REV_C_Snapdragon_Wear_Elite_Platform_Product_Brief.pdf", pages: "2-3 (hexa-connectivity text + specs and features table)"}
+    groups:
+      - {id: soc, label: "Wear Elite SoC (3 nm, Hexagon NPU, co-processor, sensing hub)", blocks: [CPU up to 2.1 GHz, Adreno A622 GPU, Hexagon NPU, co-processor up to 500 MHz, Qualcomm Sensing Hub], source: "QC-PB-WEAR-ELITE spec table", fn_hint: [soc], vendor_parts: [Snapdragon Wear Elite]}
+      - {id: cellular, label: "Cellular modem-RF (5G RedCap Rel-17, LTE) + satellite NB-NTN + Qualcomm RFFE", side: rf, blocks: [5G RedCap / LTE FDD / TDD modem, NB-NTN satellite messaging, RF front end], source: "QC-PB-WEAR-ELITE 'Cellular modem-RF', 'RF Front-End (RFFE) Features: Qualcomm RF Front-End (RFFE) solution', 'satellite NB-NTN'", fn_hint: [modem, rf_frontend], vendor_parts: []}
+      - {id: gnss, label: "GNSS dual-band (L1 / L5)", side: rf, blocks: [GNSS L1 / L5], source: "QC-PB-WEAR-ELITE 'Location: Frequency Support Dual (L1/L5)' (LNA not stated)", fn_hint: [gnss_lna], vendor_parts: []}
+      - {id: wifi_bt, label: "Micro-power Wi-Fi 6 1x1 (2.4 / 5 / 6 GHz) + Bluetooth 6.0", side: rf, blocks: ["Wi-Fi 6 1x1", Bluetooth 6.0], source: "QC-PB-WEAR-ELITE 'Wi-Fi', 'Bluetooth'", fn_hint: [wifi_soc], vendor_parts: []}
+      - {id: uwb, label: "UWB (digital keys, proximity)", side: rf, blocks: [UWB], source: "QC-PB-WEAR-ELITE 'hexa-connectivity' ('Safer, short-range UWB communication')", fn_hint: [uwb_soc], vendor_parts: []}
+      - {id: nfc, label: "NFC (third party)", blocks: [NFC controller], source: "QC-PB-WEAR-ELITE 'Near Field Communications: Supported via third party'", fn_hint: [nfc_frontend], vendor_parts: []}
+      - {id: memory, label: "Memory and storage", blocks: ["LPDDR5 16-bit 4.2 GHz", eMMC 64 GB], source: "QC-PB-WEAR-ELITE 'Memory', 'Storage'", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: camera, label: "Camera (2x CSI 4-lane)", blocks: [camera sensor], source: "QC-PB-WEAR-ELITE 'Camera'", fn_hint: [camera_radar], vendor_parts: []}
+      - {id: sensors, label: "Health and context sensors (over 50 sensors via the sensing hub)", blocks: [heart rate, activity / IMU, environmental sensors], source: "QC-PB-WEAR-ELITE 'Advanced health and fitness tracking'", fn_hint: [mems_sensor], vendor_parts: []}
+      - {id: charging, label: "Fast charging (50 % in 10 min)", blocks: [battery charger, battery], source: "QC-PB-WEAR-ELITE 'Power for days, recharge in minutes'", fn_hint: [battery_charger, battery_pack], vendor_parts: []}
+    links:
+      - [soc, cellular, ""]
+      - [soc, gnss, ""]
+      - [soc, wifi_bt, ""]
+      - [soc, uwb, ""]
+      - [nfc, soc, ""]
+      - [memory, soc, ""]
+      - [camera, soc, "CSI"]
+      - [sensors, soc, "sensing hub"]
+      - [charging, soc, ""]
+    features:
+      - {id: cellular, question: "Cellular", choices: [none, LTE, 5G RedCap], filters: "pa_module bands (new)", source: "QC-PB-WEAR-ELITE 'Cellular Technology'"}
+      - {id: ntn, question: "Satellite emergency messaging (NB-NTN)", choices: [yes, no], filters: "L / S-band satellite PA path (new)", source: "QC-PB-WEAR-ELITE 'satellite NB-NTN'"}
+      - {id: uwb, question: "UWB", choices: [yes, no], filters: "uwb_fem (new)", source: "QC-PB-WEAR-ELITE hexa-connectivity"}
+      - {id: gnss_bands, question: "GNSS bands", choices: [L1, "L1 + L5"], filters: "gnss_lna band (new)", source: "QC-PB-WEAR-ELITE 'Dual (L1/L5)'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_tws_earbuds
+    name: True-wireless (TWS) earbuds with charging case (QCC3020 / QCC5141 / QCC5171 reference designs, S5 Gen 1)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-QCC3020-RD, url: "https://docs.qualcomm.com/doc/87-CG935-1/87-CG935-1_REV_A_QCC3020_Low_Cost_Occluded_Earbud_Ref_Design_Product_Brief.pdf", pages: "2 ('Block Diagram - Per Earbud')"}
+      - {doc: QC-PB-QCC5141-RD, url: "https://docs.qualcomm.com/doc/87-CG936-1/87-CG936-1_REV_B_Qualcomm_QCC5141_-_Occluded_Earbud_Reference_Design_Product_Brief.pdf", pages: "1-2 (features, specifications)"}
+      - {doc: QC-PB-QCC5171-RD, url: "https://docs.qualcomm.com/doc/87-CG939-1/87-CG939-1_REV_A_Qualcomm_QCC5171_Earbud_Reference_Design_Product_Brief.pdf", pages: "1-2 (features, specifications)"}
+      - {doc: QC-PB-S5G1, url: "https://docs.qualcomm.com/doc/87-75475-1/87-75475-1_REV_D_Snapdragon_S5_Gen_1_Sound_Platform.pdf", pages: "2 (block diagram, features)"}
+    groups:
+      - {id: audio_soc, label: "Bluetooth audio SoC (radio, DSP, app processor, PMU, charger)", blocks: [Bluetooth dual-mode radio, audio DSP, application processor, ANC, integrated power management and battery charger], source: "QC-PB-QCC3020-RD block diagram ('Qualcomm QCC3020'); QC-PB-S5G1 block diagram ('Integrated Power Management & Battery Charger')", fn_hint: [wireless_audio_soc], vendor_parts: [QCC3020, QCC5141, QCC5171, QCC5229]}
+      - {id: flash, label: "Serial flash (32 Mb, QSPI)", blocks: [QSPI flash], source: "QC-PB-QCC3020-RD block diagram ('Flash 32Mb', QSPI); QC-PB-S5G1 ('Storage: 16 MB Flash' integrated on QCC5229)", fn_hint: [flash], vendor_parts: []}
+      - {id: rf_filter, label: "RF filter + antenna", side: rf, blocks: [filter, chip / PCB antenna], source: "QC-PB-QCC3020-RD block diagram ('Filter' to antenna)", fn_hint: [filter_saw_baw, antenna], vendor_parts: []}
+      - {id: speaker, label: "Speaker (6 mm; 10 mm 32 ohm)", blocks: [dynamic speaker], source: "QC-PB-QCC3020-RD block diagram + features; QC-PB-QCC5171-RD '10mm, 32 ohm speaker'", fn_hint: [acoustic_transducer], vendor_parts: []}
+      - {id: mics, label: "Microphones and voice sensor (1 to 3 mics, bone-conduction sensor)", blocks: [analog mic, ECM mics, DMIC, bone-conducted voice sensor], source: "QC-PB-QCC3020-RD block diagram (mic); QC-PB-QCC5171-RD 'One analog and two ECM microphones', 'Bone Conducted Voice Sensor'; QC-PB-S5G1 'DMIC, I2S, TDM, Soundwire'", fn_hint: [acoustic_transducer, mems_sensor], vendor_parts: []}
+      - {id: sensors, label: "In-ear detection and touch sensors", blocks: [infrared proximity sensor (in / out of ear), touch sensor button], source: "QC-PB-QCC5141-RD / QC-PB-QCC5171-RD features; QC-PB-S5G1 'Sensor Fusion'", fn_hint: [mems_sensor], vendor_parts: []}
+      - {id: ui, label: "Button + LED user interface", blocks: [single button (PIO), 1 LED], source: "QC-PB-QCC3020-RD block diagram ('Single Button', 'PIO', '1 LED')", fn_hint: [], vendor_parts: []}
+      - {id: battery, label: "Earbud battery (40 / 85 mAh)", blocks: [Li-ion battery], source: "QC-PB-QCC3020-RD block diagram ('Battery 40mAh'); QC-PB-QCC5141-RD / QC-PB-QCC5171-RD '85mAh'", fn_hint: [battery_pack], vendor_parts: []}
+      - {id: case, label: "Charging case (280-590 mAh) with 2-wire comms to the earbuds", blocks: [case battery, case charger, "2-wire comms over +5 V and GND pins"], source: "QC-PB-QCC5171-RD 'Fast 2-wire Comms between Earbuds and Charger Case via +5V and ground Pins', '590mAh'; QC-PB-S5G1 'Charging Case Comms'", fn_hint: [battery_charger, battery_pack], vendor_parts: []}
+    links:
+      - [audio_soc, flash, "QSPI"]
+      - [audio_soc, rf_filter, "RF"]
+      - [audio_soc, speaker, ""]
+      - [mics, audio_soc, ""]
+      - [sensors, audio_soc, ""]
+      - [ui, audio_soc, "PIO / LED"]
+      - [battery, audio_soc, ""]
+      - [case, audio_soc, "+5 V / GND comms"]
+    features:
+      - {id: anc, question: "Active noise cancellation", choices: [none, hybrid ANC, adaptive hybrid ANC], filters: "mic count (new)", source: "QC-PB-QCC5141-RD 'Hybrid ANC'; QC-PB-QCC5171-RD '3rd Gen AANC'; QC-PB-S5G1 '4th Gen Adaptive ANC'"}
+      - {id: voice_mics, question: "Voice pickup (cVc)", choices: ["1 mic", "2 mics", "3 mics + bone-conduction sensor"], filters: "(new)", source: "QC-PB-QCC3020-RD / QCC5141-RD / QCC5171-RD"}
+      - {id: le_audio, question: "Bluetooth LE Audio / Auracast", choices: [yes, no], filters: "(new)", source: "QC-PB-QCC5171-RD 'Support for LE Audio'; QC-PB-S5G1 'Bluetooth 6.2 ... Auracast'"}
+      - {id: tx_power, question: "Bluetooth max conducted Tx power", choices: ["~8 dBm", "~12 dBm", "~15 dBm"], filters: "bt_fem need (new)", source: "QC-PB-QCC3020-RD / QCC5141-RD / QCC5171-RD specifications"}
+      - {id: in_ear, question: "In-ear detection", choices: [infrared proximity sensor, none], filters: "(new)", source: "QC-PB-QCC5171-RD 'Infrared proximity sensor'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_soundbar
+    name: Soundbar with wireless subwoofer (MAPX audio processor + Bluetooth audio SoC + DDFA power stage)
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-MAPX, url: "https://docs.qualcomm.com/doc/87-CF480-1/87-CF480-1_REV_B_MAPX_Soundbar_Platform_Product_Brief.pdf", pages: "2 ('MAPX Soundbar Principle Block Diagram', features)"}
+    groups:
+      - {id: mapx, label: "MAPX audio processor (MAPX-6 / -7 / -8)", blocks: [32-bit floating-point audio DSP, embedded ADCs and DACs, decoders and post-processing], source: "QC-PB-MAPX block diagram ('Choice of MAPX Processor', note 1 'MAPX-6, MAPX-7 or MAPX-8 series')", fn_hint: [audio_codec], vendor_parts: [MAPX-6, MAPX-7, MAPX-8]}
+      - {id: bt_processor, label: "Bluetooth processor", side: rf, blocks: [Bluetooth audio SoC (A2DP, AVRCP, GAIA over BLE, SWAT)], source: "QC-PB-MAPX block diagram ('Choice of Bluetooth Processor', note 2 'CSRA65600, CSRA65610 or CSR8670')", fn_hint: [wireless_audio_soc], vendor_parts: [CSRA65600, CSRA65610, CSR8670]}
+      - {id: inputs, label: "Audio inputs (SPDIF, analog, USB host)", blocks: [coaxial / optical SPDIF, analog input, USB host], source: "QC-PB-MAPX block diagram (SPDIF, Analog, USB host)", fn_hint: [], vendor_parts: []}
+      - {id: hdmi, label: "HDMI in / out with CEC / ARC (optional)", blocks: [HDMI receiver / transmitter], source: "QC-PB-MAPX block diagram ('HDMI (optional)', 'HDMI In/Out')", fn_hint: [], vendor_parts: []}
+      - {id: power_stage, label: "Soundbar power stage (DDFA amplifier)", blocks: [class-D power stage, DDFA amplifier chipset], source: "QC-PB-MAPX block diagram ('Power Stage', note 3 'Qualcomm DDFA amplifier chipsets')", fn_hint: [audio_amp], vendor_parts: []}
+      - {id: speakers, label: "Speakers", blocks: [soundbar speakers], source: "QC-PB-MAPX block diagram", fn_hint: [acoustic_transducer], vendor_parts: []}
+      - {id: subwoofer, label: "Wireless subwoofer PCB (optional)", blocks: [Bluetooth audio SoC (SWAT receiver), subwoofer power stage, subwoofer speaker], source: "QC-PB-MAPX block diagram ('Subwoofer PCB (optional)', 'SWAT via Bluetooth')", fn_hint: [wireless_audio_soc, audio_amp], vendor_parts: [CSRA65700]}
+      - {id: remote, label: "IR and / or Bluetooth LE remote control", blocks: [IR receiver, BLE remote], source: "QC-PB-MAPX block diagram ('IR and/or Bluetooth low energy')", fn_hint: [], vendor_parts: []}
+      - {id: ui, label: "LCD / VFD display, LEDs, NFC pairing", blocks: [LCD or VFD display, LEDs, NFC tag / reader], source: "QC-PB-MAPX features ('LCD or VFD display & LED', 'NFC initiated Bluetooth pairing')", fn_hint: [display, led_driver, nfc_frontend], vendor_parts: []}
+    links:
+      - [inputs, mapx, "SPDIF / analog / USB"]
+      - [hdmi, mapx, ""]
+      - [bt_processor, mapx, "SPDIF / UART"]
+      - [mapx, power_stage, ""]
+      - [power_stage, speakers, ""]
+      - [bt_processor, subwoofer, "SWAT via Bluetooth"]
+      - [remote, bt_processor, ""]
+      - [ui, mapx, ""]
+    features:
+      - {id: hdmi, question: "HDMI ARC / eARC input", choices: [yes, no], filters: "(new)", source: "QC-PB-MAPX 'HDMI (optional)'"}
+      - {id: subwoofer, question: "Subwoofer", choices: [wireless (Bluetooth SWAT), wired, none], filters: "(new)", source: "QC-PB-MAPX 'Subwoofer PCB (optional)'"}
+      - {id: channels, question: "Speaker channels", choices: ["2.0 / 2.1", "3.1 / 5.1", "virtual surround (DTS Virtual:X)"], filters: "amplifier channel count (new)", source: "QC-PB-MAPX features ('Multichannel', 'DTS Virtual:X')"}
+      - {id: streaming, question: "Streaming beyond Bluetooth", choices: [Bluetooth only, Wi-Fi multiroom (AllPlay)], filters: "Wi-Fi front end (new)", source: "QC-PB-MAPX 'AllPlay smart media platform extension'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_windows_laptop
+    name: Windows on Arm laptop (Snapdragon X Elite / X2 Elite) - 5G WWAN and Wi-Fi 7 M.2 cards, memory, display
+    category: "Consumer & personal electronics"
+    sources:
+      - {doc: QC-PB-XELITE, url: "https://docs.qualcomm.com/doc/87-71417-1/87-71417-1_REV_F_Snapdragon_X_Elite_Product_Brief.pdf", pages: "2 (specifications)"}
+      - {doc: QC-PB-X2ELITE, url: "https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-X2-Elite-Product-Brief.pdf", pages: "specifications table"}
+    groups:
+      - {id: soc, label: "Compute SoC (Oryon CPU, Adreno GPU, Hexagon NPU, sensing hub)", blocks: [Oryon CPU, Adreno GPU, Hexagon NPU, Qualcomm Sensing Hub (micro NPU), Spectra ISP], source: "QC-PB-XELITE / QC-PB-X2ELITE spec tables", fn_hint: [soc], vendor_parts: [X1E-84-100, X1E-80-100, X1E-78-100, X2E-96-100, X2E-88-100, X2E-80-100]}
+      - {id: wwan, label: "5G modem-RF M.2 card (PCIe Gen 3)", side: rf, blocks: [5G modem-RF (sub-6 + mmWave), Smart Transmit, wideband envelope tracking, AI-enhanced adaptive antenna tuning], source: "QC-PB-XELITE 'Cellular Modem-RF: Snapdragon X65 ... M.2 Interface: 5G M.2 card over PCIe Gen 3', performance enhancement technologies; QC-PB-X2ELITE 'Snapdragon X75 5G Modem-RF, M.2 PCIe 3.0'", fn_hint: [modem, rf_pa_bias, antenna_tuner], vendor_parts: [Snapdragon X65, Snapdragon X75]}
+      - {id: wifi_bt, label: "Wi-Fi 7 + Bluetooth 5.4 M.2 card (FastConnect 7800, PCIe Gen 3)", side: rf, blocks: ["Wi-Fi 7 2.4 / 5 / 6 GHz, up to 4 spatial streams, HBS", Bluetooth 5.4], source: "QC-PB-XELITE 'Wi-Fi/Bluetooth System: FastConnect 7800 ... M.2 Interface: WiFi M.2 card over PCIe Gen 3'; QC-PB-X2ELITE", fn_hint: [wifi_soc], vendor_parts: [FastConnect 7800]}
+      - {id: memory, label: "Memory (LPDDR5x, 8 channels)", blocks: ["LPDDR5x up to 64 GB"], source: "QC-PB-XELITE 'Memory'", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: storage, label: "Storage (NVMe SSD over PCIe Gen 4 / dual PCIe 5.0, UFS 4.0, SD)", blocks: [NVMe SSD, UFS 4.0, SD card], source: "QC-PB-XELITE 'Storage'; QC-PB-X2ELITE 'NVMe Supported via Dual PCIe 5.0'", fn_hint: [flash], vendor_parts: []}
+      - {id: display, label: "Displays (internal eDP; up to 3 external DP)", blocks: ["eDP 1.4b / 1.5 panel", "DP 1.4 external displays"], source: "QC-PB-XELITE 'Display'; QC-PB-X2ELITE 'Display'", fn_hint: [display], vendor_parts: []}
+      - {id: usb, label: "USB4 / USB 3.2 Type-C ports", blocks: [3x USB4 Type-C, 2x USB 3.2 Gen 2, eUSB2], source: "QC-PB-XELITE 'USB'", fn_hint: [], vendor_parts: []}
+      - {id: camera, label: "MIPI cameras (dual 18-bit ISP, always-sensing)", blocks: [user-facing camera, always-sensing camera], source: "QC-PB-XELITE 'Camera'", fn_hint: [camera_radar], vendor_parts: []}
+      - {id: audio, label: "Audio codec (Aqstic)", blocks: [audio codec, speakers, mics], source: "QC-PB-XELITE 'Audio Technology: Qualcomm Aqstic Audio'; QC-PB-X2ELITE 'Qualcomm Aqstic Audio Codec'", fn_hint: [audio_codec], vendor_parts: []}
+    links:
+      - [soc, wwan, "PCIe Gen 3 (M.2)"]
+      - [soc, wifi_bt, "PCIe Gen 3 (M.2)"]
+      - [memory, soc, "LPDDR5x"]
+      - [soc, storage, "PCIe / UFS"]
+      - [soc, display, "eDP / DP"]
+      - [soc, usb, "USB4"]
+      - [camera, soc, "MIPI CSI"]
+      - [soc, audio, ""]
+    features:
+      - {id: wwan, question: "Cellular WWAN", choices: [none, 5G sub-6, 5G sub-6 + mmWave], filters: "antenna_tuner, pa_module (new)", source: "QC-PB-XELITE 'Snapdragon X65 ... mmWave, sub-6 GHz'"}
+      - {id: storage, question: "Primary storage", choices: [NVMe SSD (M.2), UFS 4.0], filters: "(new)", source: "QC-PB-XELITE 'Storage'"}
+      - {id: external_displays, question: "External displays", choices: ["1", "2", "3"], filters: "(new)", source: "QC-PB-XELITE 'DP v1.4 - 3 displays'"}
+      - {id: wifi, question: "Wi-Fi", choices: ["Wi-Fi 7 HBS (FastConnect 7800)", Wi-Fi 6E], filters: "wifi_fem bands (new)", source: "QC-PB-XELITE 'Generations: Wi-Fi 7, Wi-Fi 6E, Wi-Fi 6'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_ntn_asset_tracker
+    name: Global asset tracker - LTE-M / NB-IoT / EGPRS with GEO satellite NTN (9205S modem, QTS110 tracker)
+    category: "RF & connectivity"
+    sources:
+      - {doc: QC-PB-9205S, url: "https://docs.qualcomm.com/doc/87-64336-1/87-64336-1_REV_D_Qualcomm_9205s_Modem_Product_Brief.pdf", pages: "2 (block diagram, specifications, contributing chipsets)"}
+      - {doc: QC-PB-QTS110, url: "https://docs.qualcomm.com/doc/87-43678-1/87-43678-1_REV_J_Qualcomm_QTS110_Tracker_Product_Brief.pdf", pages: "1-2 (features, specifications)"}
+      - {doc: QC-MD-QTS110, url: "https://www.qualcomm.com/internet-of-things/solutions/aware/qts110-tracker.md", pages: "specs"}
+    groups:
+      - {id: modem, label: "9205S modem (processor, LTE Cat-M1 / NB2 / EGPRS / NTN modem, GNSS)", blocks: [chipset and RFFE interface, processor, modem (Cat M-1, Cat NB2, EGPRS, location Gen 9), connectivity, power and clock management, JTAG and security], source: "QC-PB-9205S block diagram ('9205S'); QC-PB-QTS110 'built using proven Qualcomm MDM9205 LTE Modem'", fn_hint: [modem], vendor_parts: [MDM9205S, MDM9205]}
+      - {id: rf, label: "RF transceiver and front end with integrated PA (SDR105)", side: rf, blocks: [RFFE with integrated power amplifier], source: "QC-PB-9205S block diagram ('SDR 105 RFFE with integrated Power Amplifier'); 'Radio Transceiver and Front-End: SDR105'", fn_hint: [rf_transceiver, pa_module], vendor_parts: [SDR105]}
+      - {id: antenna, label: "GNSS + LTE antenna", side: rf, blocks: [GNSS + LTE antenna], source: "QC-PB-9205S block diagram ('GNSS + LTE')", fn_hint: [antenna], vendor_parts: []}
+      - {id: memory, label: "Stacked DRAM + flash", blocks: [stacked DRAM, stacked flash], source: "QC-PB-9205S block diagram ('Memory')", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: power, label: "PMIC, battery charger and clocks", blocks: [PMIC, battery charger, PMIC clocks], source: "QC-PB-9205S block diagram ('PMIC Clocks'); contributing chipsets ('Power Management IC (PMIC): PME9205', 'Battery Charger: SMB231')", fn_hint: [pmic, battery_charger, crystal_oscillator], vendor_parts: [PME9205, SMB231]}
+      - {id: codec, label: "Audio codec (optional, I2S)", blocks: [audio codec, speaker], source: "QC-PB-9205S block diagram ('Qualcomm WCD9306 Codec', I2S); 'Audio Codec: WCD9306 (optional)'", fn_hint: [audio_codec], vendor_parts: [WCD9306]}
+      - {id: sim, label: "SIM / eSIM (UIM)", blocks: [UIM, TEE-SIM or eSIM], source: "QC-PB-9205S block diagram ('UIM'); QC-PB-QTS110 'Pre-provisioned ... TEE-SIM or eSIM'", fn_hint: [secure_element], vendor_parts: []}
+      - {id: host_if, label: "Host / peripheral interfaces (I2C, SPI, UART, MIPI DBI display, HS USB 2.0)", blocks: [host MCU (optional), display], source: "QC-PB-9205S block diagram; features ('Can be attached to any host (MCU) as a peripheral')", fn_hint: [mcu], vendor_parts: []}
+      - {id: sensors, label: "Condition sensors (tracker)", blocks: [temperature, humidity, pressure, ambient light, IMU], source: "QC-PB-QTS110 'Supports five sensors'; QC-MD-QTS110 'Development Board Sensors'", fn_hint: [mems_sensor, temperature_sensor], vendor_parts: []}
+      - {id: wifi_scan, label: "Wi-Fi 2.4 GHz scan receiver (Rx only, positioning)", side: rf, blocks: [Wi-Fi 2.4 GHz receive], source: "QC-PB-QTS110 'Integrated Wi-Fi 2.4 GHz for access point measurements'; QC-MD-QTS110 footnote 'Rx only'", fn_hint: [wifi_soc], vendor_parts: []}
+      - {id: battery, label: "Battery (2600 mAh Li-ion, charging cradle) and LEDs", blocks: [rechargeable Li-ion battery, charging cradle, status LEDs], source: "QC-PB-QTS110 'Battery', 'Charging', 'LED'", fn_hint: [battery_pack], vendor_parts: []}
+    links:
+      - [modem, rf, "RFFE interface"]
+      - [rf, antenna, ""]
+      - [memory, modem, ""]
+      - [power, modem, "PMIC / clocks"]
+      - [modem, codec, "I2S"]
+      - [sim, modem, "UIM"]
+      - [modem, host_if, "I2C / SPI / UART / USB"]
+      - [sensors, host_if, ""]
+      - [wifi_scan, modem, ""]
+      - [battery, power, ""]
+    features:
+      - {id: ntn, question: "Satellite (3GPP Rel-17 IoT-NTN, GEO)", choices: ["yes (9205S)", "no (9205)"], filters: "satellite band PA (new)", source: "QC-PB-9205S features"}
+      - {id: rat, question: "Terrestrial radio", choices: [LTE Cat-M1, LTE Cat-NB2, "Cat-M1 + NB2 + EGPRS fallback"], filters: "pa_module bands (new)", source: "QC-PB-9205S 'Cellular Technology'"}
+      - {id: positioning, question: "Positioning", choices: [GNSS only, "GNSS + cellular scan", "GNSS + cellular + Wi-Fi scan"], filters: "gnss_lna (new)", source: "QC-PB-QTS110 'Multi-technology positioning'"}
+      - {id: hosted, question: "Application processing", choices: [on the modem (hostless), external host MCU], filters: "(new)", source: "QC-PB-9205S 'Can be attached to any host (MCU)'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_thin_tracker_cat1bis
+    name: Thin LTE Cat 1bis tracker / IoT device with external RF front end (Qualcomm 216 modem QCX216, QTS112)
+    category: "RF & connectivity"
+    sources:
+      - {doc: QC-PB-QCX216, url: "https://docs.qualcomm.com/doc/87-PW324-1/87-PW324-1_REV_C_Qualcomm_QCX216_LTE_IOT_Modem_Product_Brief.pdf", pages: "2 (block diagram, features, specifications)"}
+      - {doc: QC-PB-QTS112, url: "https://docs.qualcomm.com/doc/87-43684-1/87-43684-1_REV_G_Qualcomm_QTS112_Thin_Tracker_Product_Brief.pdf", pages: "1-2 (features, specifications)"}
+    groups:
+      - {id: modem, label: "QCX216 (Cortex-M3, LTE Cat 1bis modem, LTE transceiver, Wi-Fi 2.4 GHz Rx scanner)", blocks: [RF transceiver (Wi-Fi 2.4 GHz Rx, LTE), processor (Cortex-M3), modem (LTE Category 1bis, Wi-Fi scanner), connectivity, internal functions, power and clock management], source: "QC-PB-QCX216 block diagram", fn_hint: [modem], vendor_parts: [QCX216]}
+      - {id: rffe, label: "External RF front end (multiband PA)", side: rf, blocks: [RFFE, multiband PA], source: "QC-PB-QCX216 block diagram ('RFFE', antenna 'LTE, Wi-Fi'); features 'Support for external RF front end like Qualcomm QPA8675 multiband PA'", fn_hint: [pa_module], vendor_parts: [QPA8675]}
+      - {id: antenna, label: "Shared LTE / Wi-Fi antenna", side: rf, blocks: [LTE + Wi-Fi antenna (shared Rx with LTE)], source: "QC-PB-QCX216 block diagram ('LTE, Wi-Fi'); features 'shared RX with LTE'", fn_hint: [antenna], vendor_parts: []}
+      - {id: memory, label: "SRAM + stacked flash", blocks: [SRAM, stacked flash], source: "QC-PB-QCX216 block diagram ('Memory support')", fn_hint: [flash], vendor_parts: []}
+      - {id: clocks, label: "Crystals (clock management)", blocks: [reference crystal, sleep crystal], source: "QC-PB-QCX216 block diagram (crystal symbols at 'Clock management'; count and frequencies not stated)", fn_hint: [crystal_oscillator], vendor_parts: []}
+      - {id: sim, label: "Dual SIM / eSIM", blocks: [UIM1, UIM2], source: "QC-PB-QCX216 block diagram ('UIM1', 'UIM2'); 'SIM: 2x SIM or eSIM'", fn_hint: [secure_element], vendor_parts: []}
+      - {id: peripherals, label: "Peripherals (I2C, 1-wire, USB, GPIO, UART, ADC, SPI): sensors, LED", blocks: [ambient light sensor (QTS112 GL model), status LED], source: "QC-PB-QCX216 block diagram ('Connectivity'); QC-PB-QTS112 'Ambient Light Sensor', 'LED'", fn_hint: [mems_sensor], vendor_parts: []}
+      - {id: battery, label: "Battery (200 mAh Li-ion polymer, 3.1-4.5 V supply)", blocks: [Li-ion polymer battery, charging cradle, battery voltage monitoring], source: "QC-PB-QTS112 'Battery', 'Charging'; QC-PB-QCX216 'Supply Voltage Range: 3.1 V to 4.5 V', 'Battery voltage monitoring'", fn_hint: [battery_pack], vendor_parts: []}
+    links:
+      - [modem, rffe, ""]
+      - [rffe, antenna, ""]
+      - [memory, modem, ""]
+      - [clocks, modem, ""]
+      - [sim, modem, "UIM"]
+      - [peripherals, modem, "I2C / SPI / UART / ADC"]
+      - [battery, modem, "Input power management"]
+    features:
+      - {id: region, question: "LTE band set", choices: [regional (EU bands 1/3/5/7/8/20/28), global (700 MHz-2.6 GHz)], filters: "pa_module bands (new)", source: "QC-PB-QTS112 'RF Bands - LTE FDD'; QC-PB-QCX216 'RF'"}
+      - {id: wifi_positioning, question: "Wi-Fi scan positioning", choices: [yes, no], filters: "(new)", source: "QC-PB-QCX216 'Wi-Fi receiver for indoor positioning'"}
+      - {id: sim, question: "SIM", choices: [eSIM, plastic SIM, dual SIM], filters: "(new)", source: "QC-PB-QCX216 '2x SIM or eSIM'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_micropower_wifi_node
+    name: Battery-powered Wi-Fi IoT node with external PA (QCC730 xPA, dual-band 802.11n micro-power Wi-Fi)
+    category: "RF & connectivity"
+    sources:
+      - {doc: QC-PB-QCC730M, url: "https://docs.qualcomm.com/doc/87-84453-1/87-84453-1_REV_D_Qualcomm_QCC730M_micro-power_dual-band_Wi-Fi_module_Product_Brief.pdf", pages: "2 ('QCC730M iPA Module Block Diagram', 'QCC730M xPA Module Block Diagram')"}
+      - {doc: QC-SCH-QCC730-XPA, url: "https://docs.qualcomm.com/doc/80-WL730-41/80-WL730-41_REV_AG_QCC730_xPA_Hostless_Design_Sample_Reference_Schematic.pdf", pages: "sheet 2 'Block Diagram'; parts list pp.18-21"}
+    groups:
+      - {id: soc, label: "QCC730 Wi-Fi SoC (WLCSP-90, FreeRTOS, 60 MHz app processor, RRAM)", blocks: [dual-band 1x1 802.11a/b/g/n, applications processor, RRAM, crypto], source: "QC-PB-QCC730M block diagrams ('QCC730 (WLCSP-90)')", fn_hint: [wifi_soc], vendor_parts: [QCC730]}
+      - {id: xpa_2g, label: "2.4 GHz external PA (FEM)", side: rf, blocks: [2.4G xPA / FEM], source: "QC-PB-QCC730M xPA diagram ('2.4G xPA'); QC-SCH-QCC730-XPA ('2G FEM', U3 'IC,RF FRONT END MODULE 802.11N WIFI 2.4GHZ')", fn_hint: [wifi_fem], vendor_parts: [SGM22001AYTLAF18G]}
+      - {id: xpa_5g, label: "5 GHz external PA (FEM)", side: rf, blocks: [5G xPA / FEM], source: "QC-PB-QCC730M xPA diagram ('5G xPA'); QC-SCH-QCC730-XPA ('5G FEM', U5 'IC,RF FRONT END MODULE 802.11N WIFI 5.8GHZ')", fn_hint: [wifi_fem], vendor_parts: [SGM23001AYTLAG16G]}
+      - {id: bpf, label: "2.4 GHz and 5 GHz band-pass filters", side: rf, blocks: [2.4G BPF, 5G BPF], source: "QC-PB-QCC730M iPA and xPA diagrams ('2.4G BPF', '5G BPF')", fn_hint: [filter_saw_baw], vendor_parts: []}
+      - {id: diplexer, label: "Diplexer (2.4 / 5-7 GHz)", side: rf, blocks: [diplexer], source: "QC-PB-QCC730M diagrams ('Diplexer'); QC-SCH-QCC730-XPA FL2 'FILTER,DIPLEXER 2400-2500/5150-6000/6000-7125MHZ'", fn_hint: [diplexer], vendor_parts: [DP1608-R2461MFB]}
+      - {id: antenna, label: "Wi-Fi antenna (PCB antenna or RF connector)", side: rf, blocks: [PCB antenna, micro-coax RF connector], source: "QC-PB-QCC730M diagrams ('Wi-Fi Antenna'); package variants 'PCB Antenna' / 'RF Connector'; QC-SCH-QCC730-XPA J1-J2 'CONN,RF COAX MICRO RCPT'", fn_hint: [antenna], vendor_parts: [20579-001E]}
+      - {id: flash, label: "4 MB NOR flash (QSPI)", blocks: [QSPI NOR flash], source: "QC-PB-QCC730M diagrams ('4 MB NOR Flash', QSPI); QC-SCH-QCC730-XPA U2 '32MBIT SPI'", fn_hint: [flash], vendor_parts: [GD25WQ32EEEG]}
+      - {id: xtal, label: "38.4 MHz crystal", blocks: [38.4 MHz crystal], source: "QC-PB-QCC730M diagrams ('38.4MHz'); QC-SCH-QCC730-XPA Y2 'CRYSTAL,QUARTZ 38.4000MHZ 10PPM'", fn_hint: [crystal_oscillator], vendor_parts: [XTL901-Q23-065]}
+      - {id: osc32k, label: "32.768 kHz oscillator (optional)", blocks: [32.768 kHz oscillator], source: "QC-PB-QCC730M diagrams ('32.768kHz Oscillator (Optional)', GPIO8)", fn_hint: [crystal_oscillator], vendor_parts: []}
+      - {id: bt_coex, label: "Bluetooth coexistence (to an external BT device)", blocks: [BT_PRIORITY, BT_ACTIVE, WL_ACTIVE], source: "QC-SCH-QCC730-XPA block diagram ('BT COEX')", fn_hint: [ble_soc], vendor_parts: []}
+      - {id: host_io, label: "Host / IO (SPI slave, UART, I2C, JTAG, GPIO, wake-up, chip enable)", blocks: [host MCU (hosted mode) or none (hostless), sensors / IO], source: "QC-PB-QCC730M diagrams (JTAG, GPIO, EXT_WAKEUP_INTR_N, CHIP_ON); specifications 'SPI (slave), QSPI (master), I2C (master), UART'", fn_hint: [mcu], vendor_parts: []}
+      - {id: power, label: "Battery supply (VBATT) and on-chip regulator inductors", blocks: [VBATT battery input, "2.2 uH power inductors"], source: "QC-SCH-QCC730-XPA ('Vbatt', L1-L2 'INDUCTOR,POWER-CHOKE 2.2UH')", fn_hint: [battery_pack], vendor_parts: [DFE21CCN2R2MELL]}
+    links:
+      - [soc, xpa_2g, "WL_RFIO_2G"]
+      - [soc, xpa_5g, "WL_RFIO_5G"]
+      - [xpa_2g, bpf, ""]
+      - [xpa_5g, bpf, ""]
+      - [bpf, diplexer, ""]
+      - [diplexer, antenna, ""]
+      - [soc, flash, "QSPI"]
+      - [xtal, soc, "38.4 MHz"]
+      - [osc32k, soc, "GPIO8"]
+      - [soc, bt_coex, "COEX"]
+      - [host_io, soc, "SPI / UART / I2C"]
+      - [power, soc, "VBATT"]
+    features:
+      - {id: pa, question: "Transmit path", choices: ["integrated PA (iPA)", "external PA / FEM per band (xPA)"], filters: "wifi_fem output power (new)", source: "QC-PB-QCC730M iPA vs xPA block diagrams"}
+      - {id: bands, question: "Wi-Fi bands", choices: [2.4 GHz only, "2.4 + 5 GHz"], filters: "diplexer / filter_saw_baw band (new)", source: "QC-PB-QCC730M 'Dual-band 1x1 802.11a/b/g/n'"}
+      - {id: antenna, question: "Antenna", choices: [PCB antenna, RF connector (external antenna)], filters: "(new)", source: "QC-PB-QCC730M package variants"}
+      - {id: host, question: "Host", choices: [hostless (app on QCC730), hosted (external MCU over SPI)], filters: "(new)", source: "QC-SCH-QCC730-XPA title 'Hostless Design Sample'"}
+      - {id: sleep_clock, question: "External 32.768 kHz oscillator", choices: [yes, no (internal)], filters: "crystal_oscillator frequency (new)", source: "QC-PB-QCC730M '(Optional)'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_triradio_smart_home
+    name: Matter smart-home / appliance device (QCC74x Wi-Fi 6 + Bluetooth LE + 802.15.4 Thread tri-radio SoC)
+    category: "Appliances & building"
+    sources:
+      - {doc: QC-PB-QCC74X, url: "https://docs.qualcomm.com/doc/87-75957-1/87-75957-1_REV_H_Qualcomm_QCC74x_Tri-radio_SoC_Product_Brief.pdf", pages: "2 (block diagram, target applications, ordering)"}
+      - {doc: QC-SCH-QCC74X, url: "https://docs.qualcomm.com/doc/80-WL740-41/80-WL740-41_REV_AE_QCC74x_Reference_Schematic.pdf", pages: "schematic sheets + parts list"}
+    groups:
+      - {id: soc, label: "QCC743 / 744 / 748 tri-radio SoC (RISC-V MCU, Wi-Fi 6 1x1, BT 5.4, 802.15.4, radio front amplifier with LNA / balun / PA)", blocks: [Wi-Fi 6 1x1 2.4 GHz, Bluetooth LE, "IEEE 802.15.4 (Thread / Zigbee)", "radio front amplifier (LNA, balun, PA)", 32-bit RISC-V MCU, security], source: "QC-PB-QCC74X block diagram", fn_hint: [wireless_soc, wifi_soc], vendor_parts: [QCC743, QCC744, QCC748]}
+      - {id: antenna, label: "2.4 GHz antenna (pi match, U.FL)", side: rf, blocks: [matching network, U.FL connector / antenna], source: "QC-PB-QCC74X block diagram ('2.4GHz Antenna'); QC-SCH-QCC74X (ANT, 3.0 nH / 1.2 pF match, J1 'U.FL-R-SMT-1')", fn_hint: [antenna], vendor_parts: [U.FL-R-SMT-1(80)]}
+      - {id: xtal, label: "40 MHz crystal + optional 32.768 kHz crystal", blocks: [40 MHz crystal, 32.768 kHz crystal (not mounted by default)], source: "QC-SCH-QCC74X (Y1 '40MHz +/-10ppm 3225 12pF'; XTAL32K pins, 32.768KHz 'NM')", fn_hint: [crystal_oscillator], vendor_parts: [E3SB40E00001NE]}
+      - {id: memory, label: "Memory (SiP pSRAM / flash option, external serial flash)", blocks: [stacked pSRAM or flash (SiP), serial flash / QSPI XiP], source: "QC-PB-QCC74X block diagram ('pSRAM 4/8/16 MB (SiP option)', 'Flash 8 MB (SiP option)', interfaces 'Serial Flash', 'QSPI'); ordering 'SiP Memory'", fn_hint: [flash], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet (RMII 10/100) PHY", blocks: [Ethernet PHY], source: "QC-PB-QCC74X interface list ('RMII (10/100M)')", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: can, label: "CAN (ISO 11898)", blocks: [CAN transceiver], source: "QC-PB-QCC74X interface list ('CAN (ISO11898)')", fn_hint: [can_transceiver], vendor_parts: []}
+      - {id: audio, label: "Audio (mic ADC, speaker DAC, I2S)", blocks: [microphone, speaker], source: "QC-PB-QCC74X block diagram 'Audio' (ADC MIC, DAC SPK)", fn_hint: [acoustic_transducer], vendor_parts: []}
+      - {id: video, label: "Camera (DVP) and display (DBI)", blocks: [DVP camera, DBI display], source: "QC-PB-QCC74X block diagram 'Video' (Camera Interface (DVP), Display Interface (DBI))", fn_hint: [camera_radar, display], vendor_parts: []}
+      - {id: power, label: "3.3 V supply, on-chip DC-DC (2.2 uH inductor)", blocks: [3.3 V supply, DC-DC inductor], source: "QC-SCH-QCC74X (PVDD33_DCDC, SW_DCDC, L1 2.2uH)", fn_hint: [], vendor_parts: []}
+    links:
+      - [soc, antenna, "RF"]
+      - [xtal, soc, "XTAL_IN / XTAL_OUT"]
+      - [memory, soc, "QSPI"]
+      - [soc, ethernet, "RMII"]
+      - [soc, can, ""]
+      - [soc, audio, "ADC / DAC / I2S"]
+      - [video, soc, "DVP / DBI"]
+      - [power, soc, ""]
+    features:
+      - {id: radios, question: "Radios used", choices: ["Wi-Fi + BLE", "Wi-Fi + BLE + Thread (Matter over Thread border router)", "BLE + Thread only"], filters: "(new)", source: "QC-PB-QCC74X block diagram"}
+      - {id: mode, question: "Operating mode", choices: [hostless, "hosted (RCP / NCP)"], filters: "(new)", source: "QC-PB-QCC74X 'Support hostless and hosted (RCP and NCP) operation modes'"}
+      - {id: wired, question: "Wired interface", choices: [none, Ethernet, CAN], filters: "(new)", source: "QC-PB-QCC74X interface list"}
+      - {id: range, question: "Range extension front end", choices: ["none (integrated PA / LNA)", external 2.4 GHz FEM], filters: "bt_fem / wifi_fem (new)", source: "QC-PB-QCC74X 'Radio Front Amplifier (RFA)' integrated; external FEM not shown"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_smart_camera
+    name: Smart IP / security camera (QCS410 / QCS610 with PM6150 PMIC and WCN3980 Wi-Fi/BT)
+    category: "Appliances & building"
+    sources:
+      - {doc: QC-PB-QCS610, url: "https://docs.qualcomm.com/doc/87-PN006-1/87-PN006-1_REV_F_Qualcomm_R__QCS410_QCS610_Product_Brief.pdf", pages: "2 (block diagram, specifications, ordering information)"}
+    groups:
+      - {id: soc, label: "QCS410 / QCS610 SoC (Kryo 460, Adreno 612, dual ISP, Hexagon DSP, video)", blocks: [Kryo 460 CPU, dual ISP camera system, Adreno 612 GPU, video processor, AI engine (Hexagon DSP), display], source: "QC-PB-QCS610 block diagram", fn_hint: [soc], vendor_parts: [QCS410, QCS610]}
+      - {id: pmic, label: "PMIC", blocks: [PMIC pair], source: "QC-PB-QCS610 'PMIC: Qualcomm PM6150 + Qualcomm PM6150L'", fn_hint: [pmic], vendor_parts: [PM6150, PM6150L]}
+      - {id: wifi_bt, label: "Wi-Fi 1x1 802.11ac + Bluetooth 5.0 + FM", side: rf, blocks: [Wi-Fi 802.11a/b/g/n/ac 1x1, Bluetooth 5.0, FM], source: "QC-PB-QCS610 'Wired/Wireless Connectivity'; ordering 'Connectivity: WCN-3980'", fn_hint: [wifi_soc], vendor_parts: [WCN3980]}
+      - {id: ethernet, label: "Ethernet (RGMII)", blocks: [Ethernet PHY], source: "QC-PB-QCS610 'Ethernet RGMII'", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: gnss, label: "GNSS (GPS / GLONASS / BeiDou / Galileo)", side: rf, blocks: [GNSS receive path], source: "QC-PB-QCS610 'Location' (LNA not stated)", fn_hint: [gnss_lna], vendor_parts: []}
+      - {id: cameras, label: "Image sensors (up to 2, 16 MP each; CSI 4+4+4)", blocks: [image sensor(s)], source: "QC-PB-QCS610 'Camera'", fn_hint: [camera_radar], vendor_parts: []}
+      - {id: memory, label: "Memory and storage", blocks: ["2x 16-bit LPDDR4x @ 1804 MHz", "eMMC 5.1 / UFS 2.1", SD 3.0], source: "QC-PB-QCS610 block diagram + 'Storage'", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: audio, label: "Audio codec + speaker amplifier", blocks: [audio codec, speaker amplifier], source: "QC-PB-QCS610 'Audio: Integrated WCD9370 / WCD9341 codec + WSA8810 / WSA8815 speaker amplifier'", fn_hint: [audio_codec, audio_amp], vendor_parts: [WCD9370, WCD9341, WSA8810, WSA8815]}
+      - {id: display, label: "Display (DSI; DP over USB-C)", blocks: [MIPI DSI panel, DisplayPort over USB-C], source: "QC-PB-QCS610 'Display'", fn_hint: [display], vendor_parts: []}
+    links:
+      - [cameras, soc, "MIPI CSI"]
+      - [pmic, soc, ""]
+      - [soc, wifi_bt, ""]
+      - [soc, ethernet, "RGMII"]
+      - [gnss, soc, ""]
+      - [memory, soc, "LPDDR4x"]
+      - [soc, audio, ""]
+      - [soc, display, "DSI / DP"]
+    features:
+      - {id: sensors, question: "Image sensors", choices: ["1", "2 (dual ISP)"], filters: "(new)", source: "QC-PB-QCS610 'Dual 14-bit ISP ... up to dual sensors'"}
+      - {id: backhaul, question: "Network backhaul", choices: [Wi-Fi, Ethernet, Wi-Fi + Ethernet], filters: "wifi_fem need (new)", source: "QC-PB-QCS610 'Ethernet RGMII, Integrated 1x1 802.11a/b/g/n/ac'"}
+      - {id: two_way_audio, question: "Two-way audio (speaker)", choices: [yes, microphone only], filters: "audio_amp power (new)", source: "QC-PB-QCS610 'Audio'"}
+      - {id: tier, question: "SoC tier", choices: ["QCS410 (4 cores, 1080p)", "QCS610 (8 cores, 4K30)"], filters: "(new)", source: "QC-PB-QCS610 specifications"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_robot_vacuum
+    name: Robot vacuum / home service robot board (Robotics RB2, QRB4210 SoM + mainboard + vision and 5G mezzanines)
+    category: "Appliances & building"
+    sources:
+      - {doc: QC-PB-RB2, url: "https://docs.qualcomm.com/doc/87-61721-1/87-61721-1_REV_B_Qualcomm_Robotics_RB2_Platform__Qualcomm_QRB4210__Product_Brief.pdf", pages: "2 (block diagram, target applications, specifications)"}
+    groups:
+      - {id: soc, label: "QRB4210 SoC (Kryo 260, Adreno 610, Hexagon DSP, 3x ISP)", blocks: [QRB4210], source: "QC-PB-RB2 block diagram ('QRB4210 SoM')", fn_hint: [soc], vendor_parts: [QRB4210]}
+      - {id: pmic, label: "PMIC (on SoM)", blocks: [PMIC], source: "QC-PB-RB2 block diagram ('PMIC')", fn_hint: [pmic], vendor_parts: []}
+      - {id: memory, label: "RAM 2 GB + eMMC 16 GB (on SoM)", blocks: [LPDDR4X, eMMC], source: "QC-PB-RB2 block diagram ('RAM 2GB', 'eMMC 16GB')", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: wifi_bt, label: "Wi-Fi / BT RF (FastConnect 6100, 1x1 11ac + BT 5.0) + antenna", side: rf, blocks: [Wi-Fi / BT RF, Wi-Fi / BT antenna], source: "QC-PB-RB2 block diagram ('Wi-Fi / BT RF' on SoM, 'Wi-Fi/BT Antenna' on mainboard); features 'FastConnect 6100'", fn_hint: [wifi_soc, antenna], vendor_parts: [FastConnect 6100]}
+      - {id: can, label: "Automotive CAN bus", blocks: [CAN transceiver], source: "QC-PB-RB2 block diagram ('Automotive CAN Bus')", fn_hint: [can_transceiver], vendor_parts: []}
+      - {id: ethernet, label: "Gigabit Ethernet", blocks: [Gbit Ethernet], source: "QC-PB-RB2 block diagram ('Gbit Ethernet')", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: usb, label: "USB 3.1 hub, USB-C, 2x USB-A, debug USB", blocks: [USB 3.1 hub, USB-C, 2x USB-A, debug USB], source: "QC-PB-RB2 block diagram", fn_hint: [usb_typec_hub], vendor_parts: []}
+      - {id: imu_audio, label: "IMU and audio (mic / amp)", blocks: [IMU, microphone, audio amplifier], source: "QC-PB-RB2 block diagram ('IMU & Audio Mic/Amp')", fn_hint: [mems_sensor, audio_amp, acoustic_transducer], vendor_parts: []}
+      - {id: display, label: "4K display HDMI, DSI / CSI expansion", blocks: [HDMI display output, DSI / CSI expansion], source: "QC-PB-RB2 block diagram ('4K Display HDMI', 'DSI/CSI Expansion')", fn_hint: [display], vendor_parts: []}
+      - {id: vision, label: "Vision mezzanine (cameras 3x CSI, sensors, audio IO)", blocks: [main camera, tracking camera, ToF camera, sensors, audio IO], source: "QC-PB-RB2 block diagram ('Qualcomm Robotics RB2 Vision Mezzanine'); text 'high-fidelity sensors from TDK'", fn_hint: [camera_radar, mems_sensor], vendor_parts: []}
+      - {id: wwan, label: "5G communication mezzanine (4G / 5G WWAN, GPS, 2x USIM)", side: rf, blocks: [4G / 5G WWAN module, GPS, USIM1 x2], source: "QC-PB-RB2 block diagram ('Qualcomm Robotics 5G Communication Mezzanine')", fn_hint: [modem, gnss_lna, secure_element], vendor_parts: []}
+    links:
+      - [pmic, soc, ""]
+      - [memory, soc, ""]
+      - [soc, wifi_bt, ""]
+      - [soc, can, "B2B"]
+      - [soc, ethernet, "B2B"]
+      - [soc, usb, "B2B"]
+      - [imu_audio, soc, "B2B"]
+      - [soc, display, "B2B"]
+      - [vision, soc, "high-speed / low-speed expansion"]
+      - [soc, wwan, "high-speed / low-speed expansion"]
+    features:
+      - {id: cameras, question: "Cameras", choices: ["1", "2", "3 (3x ISP)"], filters: "(new)", source: "QC-PB-RB2 'Triple ISPs enable support for up to 3 cameras'"}
+      - {id: depth, question: "Navigation / depth sensing", choices: [camera vSLAM, "ToF camera", "camera + IMU fusion"], filters: "(new)", source: "QC-PB-RB2 block diagram (Vision Mezzanine: ToF, tracking camera, sensors)"}
+      - {id: cellular, question: "Cellular", choices: [none, 4G, 5G], filters: "pa_module (new)", source: "QC-PB-RB2 '5G Communication Mezzanine (4G/5G WWAN)'"}
+      - {id: drive_bus, question: "Motor / base controller link", choices: [CAN, UART, USB], filters: "can_transceiver (new)", source: "QC-PB-RB2 block diagram ('Automotive CAN Bus', 'GPIO/I2C/UART/SPI')"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_robotics_vision_kit
+    name: Robotics / machine-vision development platform (RB3 Gen 2 Vision Kit, QCS6490 SoM + RBx mainboard + vision mezzanine)
+    category: "Industrial"
+    sources:
+      - {doc: QC-PB-RB3G2, url: "https://docs.qualcomm.com/doc/87-74789-1/87-74789-1_REV_A_Qualcomm_RB3_Gen_2_Development_Kit_Product_Brief.pdf", pages: "2 (block diagram, specifications)"}
+    groups:
+      - {id: soc, label: "QCS6490 SoC (on SoM + interposer)", blocks: [QCS6490], source: "QC-PB-RB3G2 block diagram ('QCS6490 SoM + Interposer')", fn_hint: [soc], vendor_parts: [QCS6490]}
+      - {id: pmic, label: "PMICs (on SoM)", blocks: [PMICs], source: "QC-PB-RB3G2 block diagram ('PMICs')", fn_hint: [pmic], vendor_parts: []}
+      - {id: memory, label: "RAM 6 GB + flash 128 GB (uMCP)", blocks: [LPDDR4x, UFS flash], source: "QC-PB-RB3G2 block diagram ('RAM 6GB', 'Flash 128 GB'); 'uMCP package'", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: wifi_bt, label: "Wi-Fi 6E / BT 5.2 with onboard printed antennas and RF expansion connectors", side: rf, blocks: [Wi-Fi / BT, 2x Wi-Fi / BT antennas, RF expansion connectors], source: "QC-PB-RB3G2 block diagram ('Wi-Fi/BT', '2x Wi-Fi/BT Antennas'); 'WLAN/Bluetooth: 802.11ax with DBS, Bluetooth 5.2, two onboard printed antennas, RF expansion connectors'", fn_hint: [wifi_soc, antenna], vendor_parts: []}
+      - {id: gnss, label: "GNSS receiver with external antenna", side: rf, blocks: [GNSS Rx, external antenna], source: "QC-PB-RB3G2 block diagram ('GNSS Rx', 'External Antenna')", fn_hint: [gnss_lna, antenna], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet (2.5 GbE, 10 GbE, Gigabit RJ45)", blocks: [2.5 GbE, 10 GbE (networking IX connectors), Gigabit Ethernet RJ45], source: "QC-PB-RB3G2 block diagram ('2.5 GB Ethernet', '10 GB Ethernet', 'Gigabit Ethernet', 'Networking RJ45 Connector')", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: can, label: "Automotive CAN bus", blocks: [CAN transceiver], source: "QC-PB-RB3G2 block diagram ('Automotive CAN Bus')", fn_hint: [can_transceiver], vendor_parts: []}
+      - {id: usb, label: "USB 3.1 hub (2 ports), USB-C with alt mode, USB 2.0", blocks: [USB 3.1 hub, USB-C w/ alt mode], source: "QC-PB-RB3G2 block diagram", fn_hint: [usb_typec_hub], vendor_parts: []}
+      - {id: audio, label: "Audio amplifiers (x2) to speakers, DMICs", blocks: [2x digital audio amplifier, speakers, 4x DMIC (vision kit)], source: "QC-PB-RB3G2 block diagram ('Audio amps' x2, speakers); 'Audio'", fn_hint: [audio_amp, acoustic_transducer], vendor_parts: []}
+      - {id: display, label: "Displays (HDMI, mini-DP / DP, DSI)", blocks: [HDMI 4K display, DP display, DSI expansion], source: "QC-PB-RB3G2 block diagram ('4K Display HDMI', 'Mini-DP', 'DSI/CSI Expansion')", fn_hint: [display], vendor_parts: []}
+      - {id: sensors, label: "Sensors (IMU, pressure, magnetometer)", blocks: [IMU, pressure sensor, magnetometer], source: "QC-PB-RB3G2 'Sensor: IMU (ICM-42688), Pressure sensor (ICP-10111), Mag sensor/compass (AK09915)'", fn_hint: [mems_sensor], vendor_parts: [ICM-42688, ICP-10111, AK09915]}
+      - {id: cameras, label: "Cameras (main 12 MP, tracking 1 MP, GMSL2, ToF, depth)", blocks: [high-resolution main camera, low-resolution tracking camera, GMSL2 cameras, ToF camera, depth camera], source: "QC-PB-RB3G2 block diagram (vision kit + optional accessories); 'Camera: 1x IMX577 ... 1x OV9282 ... GMSL-capable expansion ports'", fn_hint: [camera_radar, serdes], vendor_parts: [IMX577, OV9282]}
+    links:
+      - [pmic, soc, ""]
+      - [memory, soc, ""]
+      - [soc, wifi_bt, ""]
+      - [gnss, soc, ""]
+      - [soc, ethernet, "networking IX connector"]
+      - [soc, can, "board-to-board"]
+      - [soc, usb, "USB 2.0 / 3.1"]
+      - [soc, audio, ""]
+      - [soc, display, "HDMI / DP"]
+      - [sensors, soc, "low-speed expansion"]
+      - [cameras, soc, "5x CSI (4L) D-PHY"]
+    features:
+      - {id: cameras, question: "Camera set", choices: [single main camera, "main + tracking (vSLAM)", "GMSL2 multi-camera", "ToF / depth"], filters: "serdes (new)", source: "QC-PB-RB3G2 block diagram (optional accessories)"}
+      - {id: network, question: "Wired network", choices: [Gigabit, 2.5 GbE, 10 GbE], filters: "ethernet_phy speed (new)", source: "QC-PB-RB3G2 block diagram"}
+      - {id: gnss, question: "GNSS", choices: [yes (external antenna), no], filters: "gnss_lna (new)", source: "QC-PB-RB3G2 block diagram ('GNSS Rx', 'External Antenna')"}
+      - {id: wifi_antenna, question: "Wi-Fi antennas", choices: [onboard printed antennas, external antennas via RF connectors], filters: "(new)", source: "QC-PB-RB3G2 'WLAN/Bluetooth'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_drone
+    name: 5G / Wi-Fi 6 drone flight computer (Flight RB5 reference design, QRB5165)
+    category: "Industrial"
+    sources:
+      - {doc: QC-PB-QRB5165, url: "https://docs.qualcomm.com/doc/87-28730-1/87-28730-1_REV_D_Qualcomm_Dragonwing_QRB5165_Processor_Product_Brief.pdf", pages: "2 (block diagram, specifications)"}
+      - {doc: QC-PB-FLIGHT-RB5, url: "https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/qualcomm_flight-rb5-5g-platform-product-brief_87-28734-1.pdf", pages: "1-2 (highlights, platform specifications)"}
+      - {doc: QC-MD-FLIGHT-RB5, url: "https://www.qualcomm.com/internet-of-things/products/flight-rb5-platform.md", pages: "benefits, specifications"}
+    groups:
+      - {id: soc, label: "QRB5165 (Kryo 585, Adreno 650, Spectra 480, Hexagon 698 + tensor accelerator, SPU)", blocks: [Kryo 585 CPU, Adreno 650 GPU, video processor, Spectra 480 ISP, AI engine, Aqstic audio, secure processing unit, NPU], source: "QC-PB-QRB5165 block diagram", fn_hint: [soc], vendor_parts: [QRB5165]}
+      - {id: wifi_bt, label: "Wi-Fi 6 + 802.11ad/ay + Bluetooth 5.1 (companion module, FastConnect 6800)", side: rf, blocks: ["2x2 802.11ax with DBS", 802.11ad / ay, Bluetooth 5.1], source: "QC-PB-QRB5165 block diagram ('Wi-Fi 6* Bluetooth 5.1*', '*Supported with a companion module'); QC-PB-FLIGHT-RB5 'FastConnect 6800'", fn_hint: [wifi_soc], vendor_parts: [FastConnect 6800]}
+      - {id: cellular, label: "4G / 5G module (optional; sub-6 + mmWave, LTE, CBRS)", side: rf, blocks: [5G modem module (mmWave and sub-6 GHz, Rel. 15), LTE, CBRS], source: "QC-PB-QRB5165 block diagram ('4G/5G Module*'); QC-PB-FLIGHT-RB5 'Modem (optional)'", fn_hint: [modem], vendor_parts: []}
+      - {id: memory, label: "LPDDR5 / LPDDR4x memory (up to 16 GB)", blocks: [LPDDR5 / LPDDR4x PoP], source: "QC-PB-QRB5165 block diagram ('LPDDR5/LPDDR4x Memory'); 'Memory'", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: cameras, label: "Cameras (up to 7 concurrent; tracking, stereo, high-resolution)", blocks: [navigation / VIO cameras, high-resolution camera], source: "QC-PB-FLIGHT-RB5 'Camera' ('7 concurrent'); 'computer vision apps, VIO, vSLAM and DFS'", fn_hint: [camera_radar], vendor_parts: []}
+    links:
+      - [soc, wifi_bt, ""]
+      - [soc, cellular, ""]
+      - [memory, soc, ""]
+      - [cameras, soc, "MIPI CSI"]
+    features:
+      - {id: cellular, question: "Cellular link (BVLOS)", choices: [none, LTE, 5G sub-6, "5G sub-6 + mmWave", CBRS], filters: "pa_module bands (new)", source: "QC-PB-FLIGHT-RB5 'Optional 5G, LTE, CBRS'"}
+      - {id: swarm, question: "Drone-to-drone link", choices: [Wi-Fi 6, none], filters: "wifi_fem output power (new)", source: "QC-PB-FLIGHT-RB5 'Wi-Fi 6 for drone-to-drone / swarm support'"}
+      - {id: cameras, question: "Concurrent cameras", choices: ["1-2", "3-4", "5-7"], filters: "(new)", source: "QC-PB-FLIGHT-RB5 '7 concurrent'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_humanoid_amr
+    name: Humanoid / autonomous mobile manipulator robot controller (Dragonwing IQ10 Robotics Reference Design)
+    category: "Industrial"
+    sources:
+      - {doc: QC-PB-IQ10-RRD, url: "https://docs.qualcomm.com/doc/87-A0789-1/87-A0789-1_REV_A_Qualcomm_Dragonwing_IQ10_Robotics_Reference_Design_Product_Brief.pdf", pages: "1-2 (highlights, features, specifications)"}
+      - {doc: QC-PB-IQ10, url: "https://docs.qualcomm.com/doc/87-A2811-1/87-A2811-1_REV_A_Qualcomm_Dragonwing_IQ10_Series_Platform_Product_Brief.pdf", pages: "2 (block diagram with companion parts, specifications)"}
+    groups:
+      - {id: soc, label: "IQ10 processor (18-core Oryon, Hexagon NPU 700 TOPS, dual Adreno GPU, MCU-like safety subsystem)", blocks: [Oryon CPU, Hexagon NPU, MCU-like subsystem (6 cores), Adreno GPUs, Spectra ISP], source: "QC-PB-IQ10 block diagram ('Dragonwing IQ10 Series')", fn_hint: [soc], vendor_parts: [IQ-10800MD-AA, IQ-10800MD-AD]}
+      - {id: pmic, label: "Companion PMICs (8x PMAU0102, 1x PMAU0101)", blocks: [8x PMIC, 1x PMIC], source: "QC-PB-IQ10 block diagram ('Companion Parts: 8x PMAU0102, 1x PMAU0101')", fn_hint: [pmic], vendor_parts: [PMAU0102, PMAU0101]}
+      - {id: power_in, label: "12 V / 24 V input with input protection (26 V)", blocks: [12 V / 24 V input, input protection], source: "QC-PB-IQ10-RRD 'Input Voltage 12V/24V nominal (input protection at 26V)'", fn_hint: [tvs_esd], vendor_parts: []}
+      - {id: memory, label: "Memory and storage (64 GB LPDDR5x ECC, 512 GB UFS 4.0, PCIe Gen5 NVMe)", blocks: [LPDDR5x with ECC, UFS 4.0, PCIe Gen5 NVMe SSD], source: "QC-PB-IQ10-RRD 'Compute, Memory, and Storage'; QC-PB-IQ10 'Memory'", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: cameras, label: "Up to 12 GMSL2 cameras (deserializer to CSI)", blocks: [GMSL2 cameras, GMSL2 deserializers], source: "QC-PB-IQ10-RRD 'Supports 12x GMSL2 cameras with native deserializer-to-CSI mapping'", fn_hint: [serdes, camera_radar], vendor_parts: []}
+      - {id: sensors, label: "LiDAR, IMU, ToF sensors", blocks: [LiDAR, IMU, ToF sensor], source: "QC-PB-IQ10-RRD 'alongside LiDAR, IMU, ToF sensors'", fn_hint: [camera_radar, mems_sensor], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet: 2x 10GBase-T (main), 1x 2.5GBase-T (safety island), 4x 1G EtherCAT", blocks: [10GBase-T PHY, 2.5GBase-T PHY, EtherCAT ports (TSN)], source: "QC-PB-IQ10-RRD 'Networking and Connectivity'", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: can, label: "8x CAN-FD (4 native + 4 external via SPI)", blocks: [CAN-FD transceivers, SPI CAN controllers], source: "QC-PB-IQ10-RRD 'CAN Interfaces'", fn_hint: [can_transceiver], vendor_parts: []}
+      - {id: wireless, label: "Wi-Fi 7 + Bluetooth; optional 5G add-on", side: rf, blocks: [Wi-Fi 7 + Bluetooth, 5G modem (optional)], source: "QC-PB-IQ10-RRD 'Wireless', 'Cellular'", fn_hint: [wifi_soc, modem], vendor_parts: []}
+      - {id: usb, label: "USB (4x USB-C via hub + native USB 3.2 Gen 2)", blocks: [USB 3.2 hub, USB Type-C ports], source: "QC-PB-IQ10-RRD 'USB Ports'", fn_hint: [usb_typec_hub], vendor_parts: []}
+      - {id: display, label: "2x DisplayPort 2.1 (MST)", blocks: [DisplayPort outputs], source: "QC-PB-IQ10-RRD 'Display Output'", fn_hint: [display], vendor_parts: []}
+    links:
+      - [power_in, pmic, "12 V / 24 V"]
+      - [pmic, soc, ""]
+      - [memory, soc, ""]
+      - [cameras, soc, "CSI"]
+      - [sensors, soc, ""]
+      - [soc, ethernet, "USXGMII / TSN"]
+      - [soc, can, "CAN-FD / SPI"]
+      - [soc, wireless, "PCIe"]
+      - [soc, usb, ""]
+      - [soc, display, "DP"]
+    features:
+      - {id: cameras, question: "Camera count", choices: ["up to 4", "5-8", "9-12 (GMSL2)"], filters: "serdes channel count (new)", source: "QC-PB-IQ10-RRD"}
+      - {id: motion_bus, question: "Motion-control network", choices: [EtherCAT, CAN-FD, "TSN Ethernet"], filters: "ethernet_phy / can_transceiver (new)", source: "QC-PB-IQ10-RRD 'Deterministic I/O'"}
+      - {id: cellular, question: "Cellular", choices: [none, 5G add-on], filters: "(new)", source: "QC-PB-IQ10-RRD 'Cellular 5G modem (optional, can be an add-on)'"}
+      - {id: safety, question: "Functional safety target", choices: [none, SIL 2, SIL 3], filters: "functional safety category (new)", source: "QC-PB-IQ10 'planned SIL compliance up to SIL3'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_edge_ai_box
+    name: Industrial edge-AI / machine-vision computer (QCS9100 / Dragonwing IQ9, IQ-9075 module) with PMICs, SerDes, Ethernet switch
+    category: "Industrial"
+    sources:
+      - {doc: QC-DS-QCS9100, url: "https://docs.qualcomm.com/doc/80-73415-1/80-73415-1_REV_AD_QCS9100_Data_Sheet.pdf", pages: "8 (Figure 1-1 functional block diagram and example application)"}
+      - {doc: QC-PB-IQ9075, url: "https://docs.qualcomm.com/doc/87-97354-1/87-97354-1_REV_C_Qualcomm_Dragonwing_IQ-9075_Module_Product_Brief.pdf", pages: "1 (block diagram)"}
+      - {doc: QC-PB-IQ9, url: "https://docs.qualcomm.com/doc/87-83840-1/87-83840-1_REV_G_Qualcomm_Dragonwing_IQ9_Series_Platform_Product_Brief.pdf", pages: "1 (block diagram, highlights)"}
+    groups:
+      - {id: soc, label: "QCS9100 / IQ-9075 (Kryo, dual Hexagon tensor processor, Spectra 690, safety island SAIL)", blocks: [processors, multimedia, memory support, connectivity, safety island (SAIL) subsystem, internal functions], source: "QC-DS-QCS9100 Fig 1-1 ('QCS9100'); QC-PB-IQ9075 ('Dragonwing IQ-9075')", fn_hint: [soc], vendor_parts: [QCS9100, IQ-9075]}
+      - {id: dram, label: "LPDDR5 (3 devices; 3x 12 GB on the module, ECC)", blocks: [LPDDR5 x3], source: "QC-DS-QCS9100 Fig 1-1 ('LPDDR5' x3); QC-PB-IQ9075 ('LPDDR5 12 GB' x3)", fn_hint: [ddr_flash], vendor_parts: []}
+      - {id: storage, label: "UFS 3.1 + octal-SPI NOR flash", blocks: [UFS, NOR flash], source: "QC-DS-QCS9100 Fig 1-1 ('UFS', 'NOR Flash' over Octal-SPI)", fn_hint: [flash], vendor_parts: []}
+      - {id: pmics, label: "PMICs (4x PMM8650AU + SIL-3 PMIC)", blocks: [4x PMIC (input / output power management, IC-level interface, housekeeping), SIL-3 safety PMIC], source: "QC-DS-QCS9100 Fig 1-1 ('PMM8650AU-4', 'PMM8650AU-0' x3, 'SIL-3 PMIC', 'External 3.3 V source'); QC-PB-IQ9075 ('PMIC PMM8650' x4)", fn_hint: [pmic, supervisor], vendor_parts: [PMM8650AU, PMM8650]}
+      - {id: clocks, label: "Crystal oscillators and clocks (to the PMICs)", blocks: [XOs and clocks], source: "QC-DS-QCS9100 Fig 1-1 ('XOs and clocks'; SAILSS_CXO crystal symbol)", fn_hint: [crystal_oscillator], vendor_parts: []}
+      - {id: wlan_bt, label: "Wireless LAN / Bluetooth (PCIe, UART, PCM)", side: rf, blocks: [Wi-Fi / Bluetooth device], source: "QC-DS-QCS9100 Fig 1-1 ('Wireless LAN Bluetooth' via GPIO / PCM / UART / PCIe); QC-PB-IQ9 'enterprise-grade Wi-Fi 6E attach'", fn_hint: [wifi_soc], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet switch / transceiver (SGMII x2, PCIe)", blocks: [Ethernet switch, Ethernet PHY], source: "QC-DS-QCS9100 Fig 1-1 ('Ethernet switch/ transceiver')", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: display_serdes, label: "Display SerDes to remote displays (eDP / DP / DSI)", blocks: [display serializer, displays (I2C / SPI touch)], source: "QC-DS-QCS9100 Fig 1-1 ('SerDes', 'Display(s)')", fn_hint: [serdes, display], vendor_parts: []}
+      - {id: camera_serdes, label: "Camera SerDes (4x 4-lane CSI) to cameras", blocks: [camera deserializer, cameras], source: "QC-DS-QCS9100 Fig 1-1 ('SerDes' to camera icons, 4-lane CSI x4)", fn_hint: [serdes, camera_radar], vendor_parts: []}
+      - {id: audio, label: "Audio codec (DACs, ADCs, DMICs; I2S / TDM)", blocks: [audio codec, speaker / mic], source: "QC-DS-QCS9100 Fig 1-1 ('Audio codec')", fn_hint: [audio_codec], vendor_parts: []}
+      - {id: sdr, label: "Software-defined radio (HS-I2S)", blocks: [software defined radio tuner], source: "QC-DS-QCS9100 Fig 1-1 ('Software defined radio' on HS-I2S)", fn_hint: [], vendor_parts: []}
+      - {id: sail_io, label: "Safety-island IO (QUPs, RGMII, CAN)", blocks: [CAN-FD transceiver, RGMII Ethernet], source: "QC-DS-QCS9100 Fig 1-1 ('QUPs, RGMII, CAN, etc' on SAIL_IO); QC-PB-IQ9 'Ethernet, and CAN-FD'", fn_hint: [can_transceiver, ethernet_phy], vendor_parts: []}
+    links:
+      - [dram, soc, "EBI0 to EBI5"]
+      - [soc, storage, "UFS 3.1 gear 4 / Octal-SPI"]
+      - [pmics, soc, "supply voltages / SPMI"]
+      - [clocks, pmics, ""]
+      - [wlan_bt, soc, "PCIe / UART / PCM"]
+      - [ethernet, soc, "SGMII (x2) / PCIe"]
+      - [soc, display_serdes, "eDP / DP / DSI"]
+      - [camera_serdes, soc, "4-lane CSI"]
+      - [audio, soc, "I2S / TDM"]
+      - [sdr, soc, "HS-I2S"]
+      - [sail_io, soc, "SAIL_IO"]
+    features:
+      - {id: build, question: "Build", choices: [chip-down SoC + PMICs, "SoM / module (IQ-9075: SoC + PMICs + LPDDR5)"], filters: "(new)", source: "QC-PB-IQ9075 'this module integrates SoC, PMICs, and LPDDR5 memory'"}
+      - {id: cameras, question: "Camera link", choices: [direct MIPI CSI, "SerDes (long-reach coax)"], filters: "serdes (new)", source: "QC-DS-QCS9100 Fig 1-1"}
+      - {id: safety, question: "Functional safety", choices: [none, "SIL-3 PMIC + safety island"], filters: "functional safety category (new)", source: "QC-DS-QCS9100 Fig 1-1 ('SIL-3 PMIC', 'Safety Island (SAIL)')"}
+      - {id: wireless, question: "Wireless attach", choices: [none, Wi-Fi 6E + Bluetooth, "Wi-Fi + 5G"], filters: "wifi_fem (new)", source: "QC-PB-IQ9 'Wi-Fi 6E attach'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_fiber_gateway
+    name: Fiber broadband gateway (XGS-PON + Wi-Fi 8, Dragonwing FiberPro A8 Elite IPQ96)
+    category: "Communications equipment"
+    sources:
+      - {doc: QC-PB-FIBERPRO-A8, url: "https://docs.qualcomm.com/doc/87-96768-1/87-96768-1_REV_A_Qualcomm_Dragonwing_FiberPro_A8_Elite_Platform_Product_Brief.pdf", pages: "1-2 (highlights, features, specifications)"}
+    groups:
+      - {id: soc, label: "FiberPro A8 Elite network SoC (penta-core CPU, Hexagon NPU, packet processing engine)", blocks: [penta-core CPU, Hexagon NPU, Network AI Engine, packet processing engine, crypto], source: "QC-PB-FIBERPRO-A8 specifications", fn_hint: [soc], vendor_parts: [IPQ96]}
+      - {id: pon, label: "PON optical interface (GPON / XG-PON / XGS-PON, 10G)", blocks: [PON optics (laser driver / TIA)], source: "QC-PB-FIBERPRO-A8 'Passive Optical Network' ('from the optical interface through Wi-Fi')", fn_hint: [optical_driver, optical_tia], vendor_parts: []}
+      - {id: wifi, label: "Wi-Fi 8 radios (penta-band, 5x5 or 2x2 + 3x3, scan radio, up to 20 antennas)", side: rf, blocks: [Wi-Fi 8 radios, dedicated scan radio], source: "QC-PB-FIBERPRO-A8 'Wi-Fi 8' features + spec", fn_hint: [wifi_soc], vendor_parts: []}
+      - {id: rffe, label: "RF front end (platform-supplied) per chain (2.4 / 4.9 / 5 / 6 GHz)", side: rf, blocks: [Wi-Fi FEMs, filters], source: "QC-PB-FIBERPRO-A8 'combining networking, compute, edge AI, Wi-Fi 8 radios, and RF Front End'; 'Spectral Bands: 6GHz, 5GHz, 2.4GHz, 4.9GHz'", fn_hint: [wifi_fem, filter_saw_baw], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet (2x 25GE, 4x 2.5GE; USXGMII)", blocks: [25GE ports, 2.5GE PHYs], source: "QC-PB-FIBERPRO-A8 'Ethernet', 'Ethernet SerDes'", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: voice, label: "Voice (SLIC over PCM)", blocks: [SLIC], source: "QC-PB-FIBERPRO-A8 'Voice: SLIC PCM'", fn_hint: [slic], vendor_parts: []}
+      - {id: memory, label: "Memory (DDR4 / DDR5 32-bit) and flash (eMMC / NAND / NOR)", blocks: [DDR4 / DDR5, eMMC / NAND / NOR], source: "QC-PB-FIBERPRO-A8 'Memory', 'Flash'", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: extensions, label: "Platform extensions (4G / 5G FWA, 802.15.4 Zigbee / Thread, Bluetooth)", side: rf, blocks: [4G / 5G FWA modem, 802.15.4 radio, Bluetooth radio], source: "QC-PB-FIBERPRO-A8 'Platform Extensions'", fn_hint: [modem, wireless_soc], vendor_parts: []}
+    links:
+      - [pon, soc, "XGS-PON WAN"]
+      - [soc, wifi, ""]
+      - [wifi, rffe, "per chain"]
+      - [soc, ethernet, "USXGMII"]
+      - [soc, voice, "PCM"]
+      - [memory, soc, ""]
+      - [soc, extensions, "PCIe / USB / coex"]
+    features:
+      - {id: pon, question: "PON standard", choices: [GPON, XG-PON, XGS-PON], filters: "optical_driver data rate (new)", source: "QC-PB-FIBERPRO-A8 'Passive Optical Network'"}
+      - {id: radio_cfg, question: "Wi-Fi radio configuration", choices: ["5x5", "2x2 + 3x3 dual-band simultaneous"], filters: "wifi_fem count (new)", source: "QC-PB-FIBERPRO-A8 'Flexible radio configuration'"}
+      - {id: public_safety, question: "4.9 GHz public-safety band", choices: [yes, no], filters: "wifi_fem band (new)", source: "QC-PB-FIBERPRO-A8 'Spectral Bands'"}
+      - {id: voice, question: "Telephony port (SLIC)", choices: [yes, no], filters: "slic (new)", source: "QC-PB-FIBERPRO-A8 'Voice: SLIC PCM'"}
+      - {id: fwa_backup, question: "4G / 5G FWA backup", choices: [yes, no], filters: "modem (new)", source: "QC-PB-FIBERPRO-A8 'Platform Extensions'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: qc_wifi7_router
+    name: Wi-Fi 7 home router / broadband gateway with AI coprocessor and 10G PON (Dragonwing NPro A7 Elite IPQ5424)
+    category: "Communications equipment"
+    sources:
+      - {doc: QC-PB-NPRO-A7, url: "https://docs.qualcomm.com/doc/87-82994-1/87-82994-1_REV_C_Qualcomm_Dragonwing_NPro_A7_Elite_Platform_Product_Brief.pdf", pages: "1-2 (highlights, features, specifications)"}
+    groups:
+      - {id: soc, label: "NPro A7 Elite network SoC (quad-core) + AI coprocessor (Hexagon NPU, 40 TOPS)", blocks: [quad-core CPU, Networking AI Engine, AI coprocessor (Hexagon NPU)], source: "QC-PB-NPRO-A7 'GROUNDBREAKING AI INNOVATION', specifications", fn_hint: [soc], vendor_parts: [IPQ5424]}
+      - {id: wifi, label: "Wi-Fi 7 radios (up to quad-band, 16 streams, 320 MHz)", side: rf, blocks: [Wi-Fi 7 radios 2.4 / 5 / 6 GHz], source: "QC-PB-NPRO-A7 'Wi-Fi 7' features + spec", fn_hint: [wifi_soc], vendor_parts: []}
+      - {id: rffe, label: "Front-end modules and filters (platform-supplied)", side: rf, blocks: [Wi-Fi FEMs, filters], source: "QC-PB-NPRO-A7 'COMPREHENSIVE BROADBAND-TO-ANTENNA PLATFORM ... including 10G Fiber (XGS-PON), Ethernet, front-end modules, and filters'", fn_hint: [wifi_fem, filter_saw_baw], vendor_parts: []}
+      - {id: pon, label: "10G XGS-PON (residential gateway / SFU ONU)", blocks: [PON optics (laser driver / TIA)], source: "QC-PB-NPRO-A7 'Passive Optical Network' (XGS-PON, 10 Gbps up / down)", fn_hint: [optical_driver, optical_tia], vendor_parts: []}
+      - {id: ethernet, label: "Ethernet (3 ports 10 / 2.5 GE; 3x USXGMII / SGMII+)", blocks: [10G / 2.5G Ethernet PHYs], source: "QC-PB-NPRO-A7 'Ethernet', 'Supported Interfaces'", fn_hint: [ethernet_phy], vendor_parts: []}
+      - {id: memory, label: "Memory (DDR3L / DDR4) and flash (NOR / NAND / eMMC)", blocks: [DDR3L / DDR4, NOR / NAND / eMMC], source: "QC-PB-NPRO-A7 'Memory', 'Flash'", fn_hint: [ddr_flash, flash], vendor_parts: []}
+      - {id: extensions, label: "Platform extensions (4G / 5G FWA, 802.15.4, Bluetooth; PTA coex)", side: rf, blocks: [4G / 5G FWA modem, Zigbee / Thread radio, Bluetooth radio], source: "QC-PB-NPRO-A7 'Platform Extensions', interfaces 'PTA Coex'", fn_hint: [modem, wireless_soc], vendor_parts: []}
+    links:
+      - [pon, soc, "XGS-PON WAN"]
+      - [soc, wifi, ""]
+      - [wifi, rffe, "per chain"]
+      - [soc, ethernet, "USXGMII / SGMII+"]
+      - [memory, soc, ""]
+      - [soc, extensions, "PCIe / USB / PTA coex"]
+    features:
+      - {id: bands, question: "Wi-Fi bands", choices: [dual-band, tri-band, quad-band], filters: "wifi_fem count (new)", source: "QC-PB-NPRO-A7 'Maximum Band Configuration: Quad-band'"}
+      - {id: wan, question: "WAN", choices: [XGS-PON (gateway / ONT), Ethernet WAN (router / mesh node), 4G / 5G FWA], filters: "(new)", source: "QC-PB-NPRO-A7 'Deployment Types'; 'Platform Extensions'"}
+      - {id: afc, question: "6 GHz standard power (AFC)", choices: [yes, "no (low power indoor)"], filters: "wifi_fem output power (new)", source: "QC-PB-NPRO-A7 'Dragonwing Automated Frequency Coordination (AFC) Suite'"}
+      - {id: smart_home, question: "Smart-home radio (Zigbee / Thread / BLE)", choices: [yes, no], filters: "bt_fem (new)", source: "QC-PB-NPRO-A7 'Platform Extensions'"}

@@ -62,11 +62,11 @@ SECTIONS = (
                                  ("Lifecycle", "/lifecycle"), ("Rules", "/rules"),
                                  ("Requests", "/requests")]),
     ("technical", "Technical discussions", "/technical", [("Technical", "/technical"),
-                                                         ("Engineering notes", "/engineering")]),
+                                                         ("Engineering notes", "/engineering"),
+                                                         ("Broadcast", "/broadcast"),
+                                                         ("Broadcast configurations", "/broadcast/configurations")]),
     ("blocks", "Block diagrams", "/blocks", [("Generator", "/blocks"), ("Coverage", "/blocks/coverage"),
                                              ("Feedback", "/blocks/feedback")]),
-    ("broadcast", "Broadcast", "/broadcast", [("Overview", "/broadcast"),
-                                              ("Configurations", "/broadcast/configurations")]),
     ("business", "Business opportunity", "/business", [("Overview", "/business"),
                                                        ("Applications", "/business/applications"),
                                                        ("Markets", "/business/markets"),
@@ -78,8 +78,7 @@ SECTIONS = (
                                                        ("How it works", "/business/method")]),
 )  # fmt: skip
 SECTION_PREFIXES = {
-    "technical": ("/technical", "/engineering", "/impact"),
-    "broadcast": ("/broadcast",),
+    "technical": ("/technical", "/engineering", "/impact", "/broadcast"),
     "blocks": ("/blocks",),
     "business": ("/business",),
 }

@@ -19,7 +19,7 @@ router = APIRouter()
 def index(request: Request, session: Session = Depends(get_session)):
     designs = session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc())).all()
     return templates.TemplateResponse(
-        request, "blocks/index.html", {"designs": designs, "templates_": blocks.templates()}
+        request, "blocks/index.html", {"designs": designs, "template_groups": blocks.template_groups()}
     )
 
 

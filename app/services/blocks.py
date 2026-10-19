@@ -34,6 +34,14 @@ def templates() -> list[dict]:
     return _yaml("templates.yaml") or []
 
 
+def template_groups() -> list[tuple[str, list[tuple[int, dict]]]]:
+    """Templates by category, in file order: [(category, [(index, template)])]."""
+    out: dict[str, list] = {}
+    for i, t in enumerate(templates()):
+        out.setdefault(t.get("category") or "Other", []).append((i, t))
+    return list(out.items())
+
+
 # Qorvo (combined with Skyworks): public catalogue parts read from store.qorvo.com, not datasheet-verified and
 # without Cross List parameters, so an answered requirement leaves them out (unknown is not assumed).
 QORVO_FILE = "research/qorvo_parts.yaml"

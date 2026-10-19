@@ -74,3 +74,14 @@ def test_inverter_template_questions(client):
     req = json.dumps({"desat": True})
     assert client.get("/api/blocks/parts?fn=gate_driver").json()["total"] > 0
     assert client.get(f"/api/blocks/parts?fn=gate_driver&req={req}").json()["total"] == 0
+
+
+def test_motor_and_rf_templates(client):
+    page = client.get("/blocks").text
+    assert "Motor drives" in page and "RF &amp; connectivity" in page and "72 V" in page
+    names = [t["name"] for t in blocks.templates()]
+    i = next(n for n, x in enumerate(names) if x.startswith("Wi-Fi front end"))
+    t = blocks.templates()[i]
+    q = next(q for q in t["questions"] if q["id"] == "antenna_diversity_switch")
+    assert q["sets"][0]["fn"] == "rf_switch"
+    assert client.get(f"/blocks/new?template={i}").status_code == 200

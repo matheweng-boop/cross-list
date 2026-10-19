@@ -25,7 +25,7 @@ categories:
   networking: Networking
   processing: Processing
   memory: Memory
-  audio: Audio
+  audio: Audio & user interface
   sensors: Sensors & external parts
 
 functions:
@@ -80,6 +80,8 @@ functions:
       - {id: reinforced, label: Reinforced isolation, param: isolation_class, op: eq, value: reinforced}
       - {id: cmti, label: CMTI at least (kV/µs), param: cmti_kv_us, op: gte, choices: [50, 100, 150]}
       - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
+  three_phase_gate_driver: {label: 3-phase gate driver (non-isolated), category: power, companions: [amplifier, wide_vin_buck, mcu], note: Smart BLDC gate driver for 12-100 V buses; often with current-sense amplifiers and a buck}
+  half_bridge_driver: {label: Half-bridge gate driver (non-isolated), category: power, companions: [amplifier, mcu]}
   isolated_amplifier: {label: Isolated amplifier / modulator, category: isolation, source: {family: isolated_amplifier}, companions: [isolated_dcdc, adc]}
   isolated_can: {label: Isolated CAN transceiver, category: networking, companions: [isolated_dcdc, tvs_esd]}
   current_sensor: {label: Isolated current sensor, category: isolation, source: {family: current_sensor}, companions: [adc, mcu]}
@@ -131,6 +133,7 @@ functions:
   single_chip_radio: {label: Single-chip radio receiver, category: radio, source: {broadcast: receiver}, companions: [crystal_oscillator, pol_ldo, audio_amp]}
   # sensing
   amplifier: {label: Amplifier, category: sensing, companions: [adc]}
+  position_sensor: {label: Rotor position sensor (Hall / inductive / AMR), category: sensing}
   position_interface: {label: Resolver / position sensor interface, category: sensing, note: Excitation amplifier and signal conditioning for a resolver, inductive or Hall position sensor}
   temperature_sensor: {label: Temperature sensor, category: sensing, note: e.g. power-module NTC / diode sensing across the isolation barrier}
   adc: {label: ADC, category: sensing}
@@ -153,10 +156,14 @@ functions:
   ddr_flash: {label: Memory DDR / flash, category: memory, source: external}
   flash: {label: Flash, category: memory, source: external}
   # audio
+  led_driver: {label: LED driver, category: audio, note: Lights and display backlight}
   audio_amp: {label: Audio amplifier, category: audio}
   audio_codec: {label: Audio codec / DSP, category: audio}
   # sensors (external inputs)
   vehicle_sensors: {label: Vehicle sensors (wheel speed, steering, brake...), category: sensors, source: external}
+  battery_pack: {label: Battery pack, category: sensors, source: external}
+  power_fets: {label: MOSFETs / GaN FETs, category: sensors, source: external, note: Inverter switches; not a Cross List part}
+  display: {label: Display, category: sensors, source: external}
   hv_battery: {label: HV battery (400 / 800 V), category: sensors, source: external}
   dc_link_cap: {label: DC-link capacitor, category: sensors, source: external}
   power_module: {label: IGBT / SiC power switch, category: sensors, source: external, note: Power module or discrete switches; not a Cross List part}

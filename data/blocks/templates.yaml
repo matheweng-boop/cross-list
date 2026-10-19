@@ -4,9 +4,11 @@
 # questions (optional): high-level design questions, unanswered by default. Nothing is assumed:
 #   sets: [{fn, req, map: {choice: value}}]  an answer in `map` sets that function requirement (narrows the parts);
 #   no `sets` (or a choice not in `map`)     the answer is recorded with the design only (no parameter in Cross List yet).
+# category: heading the template is listed under on the generator page.
 # sources: documents the template and the questions come from (data/blocks/research/).
 
 - name: ADAS domain controller
+  category: Automotive systems
   note: Layout after a reference ADAS block diagram the user shared; every block is a function to fill.
   groups:
     - {id: protection, label: Protection, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd]}
@@ -33,6 +35,7 @@
     - [vdi, ext, ""]
 
 - name: Car radio tuner system
+  category: Automotive systems
   note: Antenna to audio, with the tuners and demodulator from the Broadcast section.
   groups:
     - {id: ant, label: Antenna & RF, col: 0, row: 0, blocks: [antenna, antenna_switch, lna, tvs_esd]}
@@ -52,6 +55,7 @@
     - [timing, tuners, 36.864 MHz]
 
 - name: EV traction inverter
+  category: Power & isolation
   note: Three half-bridges with isolated gate drivers, phase-current sensing and isolated power.
   groups:
     - {id: ctrl, label: Control, col: 0, row: 0, blocks: [mcu, crystal_oscillator, supervisor]}
@@ -68,6 +72,7 @@
     - [ctrl, net, CAN]
 
 - name: Industrial isolated I/O
+  category: Power & isolation
   note: Isolated fieldbus and digital I/O for a PLC or drive.
   groups:
     - {id: ctrl, label: Controller, col: 0, row: 0, blocks: [mcu, crystal_oscillator]}
@@ -80,6 +85,7 @@
     - [power, ctrl, ""]
 
 - name: HEV/EV traction inverter (TI reference)
+  category: Power & isolation
   note: After TI SLUA963B Fig 2-4, SLUAAS4 Fig 1-1 and TIDM-02014 Fig 2-1; groups from LV side (left) over the barrier to HV (right).
   sources: &ti_inv
     - {doc: SLUA963B, title: HEV/EV Traction Inverter Design Guide Using Isolated IGBT and SiC Gate Drivers, url: "https://www.ti.com/lit/an/slua963b/slua963b.pdf"}
@@ -178,6 +184,7 @@
     - {id: isolated_can, question: Isolated CAN interface, choices: ["yes", "no"], source: "SLUAAS4 p.2 Fig 1-1; TIDUF23A p.7"}
 
 - name: Isolated gate driver subsystem
+  category: Power & isolation
   note: One switch position after TI SLUA963B Fig 3-1 / 3-15 - primary control, the driver across the barrier, its bias supply and the power switch.
   sources: *ti_inv
   groups:
@@ -255,6 +262,7 @@
     - {id: fusa_driver, question: Driver functional safety category, choices: [Functional Safety-Compliant, Functional Safety Quality-Managed], source: "SLUA963B p.19; TIDUF23A p.1"}
 
 - name: Isolated bias power for gate drivers
+  category: Power & isolation
   note: After TI SLUAAS4 Fig 2-1 to 6-4 - LV source, pre-regulator, isolated supplies per driver and an optional HV flyback.
   sources: *ti_inv
   groups:
@@ -296,3 +304,818 @@
       choices: ["yes", "no"]
       sets: [{fn: gate_driver, req: automotive, map: {"yes": true}}]
       source: SPRAD58B p.13
+
+# ---- converted from data/blocks/research/motor_and_switches.yaml (motor drives, RF switch placement)
+- name: Light EV BLDC drive, 48 V (TI)
+  category: Motor drives
+  note: 'SLVA642B p.9: rated 48 VDC Li-ion, 500 W; p.11: 24, 36 or 48 V nominal battery. Fig 4-2 input is labelled ''DC input (<100V)''. TI LEV page diagram itself carries no voltage.'
+  sources:
+  - {doc: TI_LEV_PAGE, title: Light electric vehicle traction drive (block diagram + subsystem list), url: 'https://www.ti.com/solution/e_bike'}
+  - {doc: SLVA642B, title: Hardware Design Considerations for an Electric Bicycle Using a BLDC Motor, url: 'https://www.ti.com/lit/pdf/slva642'}
+  - {doc: SSZTDA3, title: Taking e-bike safety to the next gear with active short circuit technology, url: 'https://www.ti.com/lit/pdf/ssztda3'}
+  groups:
+  - id: battery
+    label: Battery
+    blocks: [battery_pack]
+    col: 0
+    row: 0
+  - id: input_protection
+    label: Input power protection
+    blocks: [reverse_polarity, load_switch, tvs_esd]
+    col: 1
+    row: 0
+  - id: power
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pol_ldo, sequencer]
+    col: 2
+    row: 0
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [temperature_sensor, supervisor, watchdog]
+    col: 3
+    row: 0
+  - id: wired_interface
+    label: Wired interface
+    blocks: [can_transceiver, rs485_transceiver, digital_isolator, tvs_esd]
+    col: 0
+    row: 1
+  - id: sensor_input
+    label: Sensor input interface (rider inputs)
+    blocks: [tvs_esd, amplifier, adc]
+    col: 1
+    row: 1
+  - id: output_ui
+    label: Output user interface
+    blocks: [led_driver, audio_amp]
+    col: 2
+    row: 1
+  - id: processing
+    label: Digital processing
+    blocks: [mcu, {fn: motor_controller, label: or integrated motor controller SoC}, voltage_translator]
+    col: 3
+    row: 1
+  - id: current_voltage_sense
+    label: Current and voltage sense
+    blocks: [amplifier, adc, voltage_reference]
+    col: 0
+    row: 2
+  - id: power_stage
+    label: Power stage
+    blocks: [three_phase_gate_driver, power_fets]
+    col: 1
+    row: 2
+  - id: angle_sensor
+    label: Angle / position sensor
+    blocks: [position_sensor]
+    col: 2
+    row: 2
+  - id: angle_interface
+    label: Sensor front end / angle feedback interface
+    blocks: [voltage_translator, load_switch, tvs_esd]
+    col: 3
+    row: 2
+  - id: motor
+    label: BLDC motor
+    blocks: [motor]
+    col: 0
+    row: 3
+  links:
+  - [battery, input_protection, DC link]
+  - [input_protection, power, '']
+  - [battery, power_stage, DC link]
+  - [processing, power_stage, PWM]
+  - [power_stage, motor, 3 phases]
+  - [power_stage, current_voltage_sense, shunt / phase signals]
+  - [current_voltage_sense, processing, current and voltage]
+  - [sensor_input, processing, rider inputs]
+  - [processing, output_ui, '']
+  - [processing, wired_interface, CAN / RS-485]
+  - [motor, angle_sensor, '']
+  - [angle_sensor, angle_interface, Hall / angle]
+  - [angle_interface, processing, angle feedback]
+  - [diagnostics, processing, '']
+  questions:
+  - id: position_sensing
+    question: How is rotor position sensed
+    choices: [Hall sensors, sensorless (back-EMF), inductive / AMR angle sensor]
+    source: SLVA642B p.10 table 'Sensing Mechanisms' (Hall vs sensorless back-EMF); p.9 Fig 4-2 (Hall interface optional for sensorless); TI LEV page SVG (Hall or Inductive
+  - id: current_sensing
+    question: Where is phase current measured
+    choices: [low-side shunts + amplifier inside the gate driver, low-side shunt + discrete op amp / current-sense amplifier, isolated amplifier]
+    source: SLVA642B p.9 Fig 4-2 ('Gate drivers w/ optional low-side sense amp'), p.13 (LM358 discrete); SSZTDA3 p.2 Fig 1 (CSA from motor driver to MCU); TI LEV page subsy
+  - id: active_short_circuit
+    question: Active short circuit (brake mode) on supply over-voltage or fault
+    choices: [none, discrete comparators + MCU, integrated in gate driver (pin / SPI / automatic on over-voltage)]
+    source: 'SSZTDA3 p.1-4: ASCIN pin, SPI trigger, automatic on over-voltage, high- or low-side braking selectable, HS/LS VDS check to avoid shoot-through; discrete solutio'
+  - id: gate_driver_type
+    question: Gate driver architecture
+    choices: [3-phase smart gate driver, 3 x half-bridge drivers, isolated gate drivers]
+    source: SLVA642B p.18 Fig 8-1 (DRV8320S 3-phase); TI LEV page 'Power stage' lists BLDC drivers, half-bridge drivers and isolated gate drivers
+  - id: driver_integrated_regulator
+    question: Gate driver with integrated buck regulator (to make one of the low-voltage rails)
+    choices: ['yes', 'no']
+    source: SLVA642B p.11 (DRV8323R / DRV8353R internal buck can generate one of the two lesser rails)
+  - id: wired_bus
+    question: Which wired interface to the vehicle / display
+    choices: [CAN, RS-485, USB, none]
+    source: TI LEV page SVG (RS-485, CAN, Isolation); SLVA642B p.9 Fig 4-2 (USB, CAN, RS485)
+  - id: interface_isolation
+    question: Isolate the wired interface
+    choices: ['yes', 'no']
+    source: TI LEV page SVG ('Isolation' in wired interface); SLVA642B p.10 Fig 5-1 ('Isolators')
+  - id: redundant_mcu
+    question: Redundant (second) MCU
+    choices: ['yes', 'no']
+    source: TI LEV page SVG and SLVA642B p.10 Fig 5-1 ('Redundant MCU'). No functional-safety standard is named in these sources.
+  - id: input_protection_type
+    question: Input power protection
+    choices: [e-fuse, hot-swap controller, ideal diode, load switch, reverse-polarity diode]
+    source: SLVA642B p.9 Fig 4-2, p.10 Fig 5-1, p.12 (diode D5 reverse polarity); TI LEV page SVG
+  - id: switch_type
+    question: Power switch technology
+    choices: [Si MOSFET, GaN FET]
+    source: TI LEV page SVG ('GaN/FETs')
+- name: 2/3-wheeler traction inverter, 48 V 5 kW (TI TIDM-02017)
+  category: Motor drives
+  note: 'TIDUF56 Table 1-1: 48 V DC bus recommended, 60 V max MOSFET VDS, 105 A DC, 150 A RMS; p.3: 90 V DC bus transient capability of DRV3255'
+  sources:
+  - {doc: TIDUF56, title: TIDM-02017 Two- and Three-Wheeler Traction Inverter Reference Design, url: 'https://www.ti.com/lit/pdf/tiduf56'}
+  groups:
+  - id: lv_supply
+    label: Isolated bias supply from 12 V LV battery
+    blocks: [isolated_dcdc, wide_vin_buck, pol_ldo]
+    col: 0
+    row: 0
+  - id: mcu
+    label: Real-time MCU
+    blocks: [mcu, {fn: motor_controller, label: or integrated motor controller SoC}]
+    col: 1
+    row: 0
+  - id: gate_driver
+    label: Three-phase gate driver
+    blocks: [three_phase_gate_driver]
+    col: 2
+    row: 0
+  - id: inverter
+    label: Inverter
+    blocks: [power_fets]
+    col: 3
+    row: 0
+  - id: position
+    label: Position sensing
+    blocks: [voltage_translator, position_sensor]
+    col: 0
+    row: 1
+  - id: signal_conditioning
+    label: Signal conditioning
+    blocks: [amplifier, adc]
+    col: 1
+    row: 1
+  - id: can
+    label: CAN
+    blocks: [can_transceiver, digital_isolator]
+    col: 2
+    row: 1
+  - id: battery
+    label: 48 V battery
+    blocks: [battery_pack]
+    col: 3
+    row: 1
+  - id: motor
+    label: Motor
+    blocks: [motor]
+    col: 0
+    row: 2
+  links:
+  - [lv_supply, mcu, +3.3 V]
+  - [lv_supply, gate_driver, +12 V isolated]
+  - [mcu, gate_driver, PWM / SPI / fault]
+  - [gate_driver, inverter, gate drive]
+  - [battery, inverter, 48 V]
+  - [inverter, motor, 3 phases]
+  - [motor, position, '']
+  - [position, mcu, ABI / PWM]
+  - [signal_conditioning, mcu, 'Ia,b,c / Vbus / Vthrottle']
+  - [mcu, can, MCAN]
+  questions:
+  - id: asc
+    question: Active short circuit integrated in gate driver
+    choices: ['yes', 'no']
+    source: TIDUF56 p.4 2.3.2 (DRV3255-Q1 configurable ASC)
+  - id: phase_current_sensor
+    question: Phase current sensing method
+    choices: [in-phase Hall-effect current sensor, shunt]
+    source: TIDUF56 p.2 (ACS772 in-phase current sensors)
+  - id: position_interface
+    question: Position sensor output
+    choices: [ABI (quadrature encoder, eQEP), PWM (eCAP)]
+    source: TIDUF56 p.3 Fig 2-1
+  - id: bias_from_lv_battery
+    question: Bias supply from the 12 V battery through an isolated flyback
+    choices: ['yes', no (from traction battery)]
+    source: TIDUF56 p.3 Fig 2-1, p.4 2.3.3 (LM25184-Q1 PSR flyback, 4.5-42 V in)
+  - id: isolated_can
+    question: Isolated CAN
+    choices: ['yes', 'no']
+    source: TIDUF56 p.3 Fig 2-1 (ISO6731-Q1 digital isolator before CAN)
+  - id: parallel_fets
+    question: MOSFETs in parallel per switch
+    choices: ['1', '4']
+    source: TIDUF56 p.3 2.2 (four in parallel)
+  - id: gate_drive_strength
+    question: Gate drive peak current
+    choices: [3.5 A source / 4.5 A sink]
+    source: TIDUF56 p.4 2.3.2
+- name: E-mobility BLDC drive, 72 V class up to 85 V (Microchip AN5324)
+  category: Motor drives
+  note: 'Microchip AN5324 p.1: 18-85 V VBUS, battery strings up to 20S Li-ion, 10 kW peak, 150 A continuous / 300 A peak. p.10 test setup: 20S battery and a 72V/10000W 3-phase BLDC motor with Hall sensors.
+    This is the ONLY 72 V-c'
+  sources:
+  - {doc: AN5324, title: 'Microchip AN5324 High-Power BLDC Motor Driver Reference Design (18-85 V, up to 20S)', url: 'https://ww1.microchip.com/downloads/aemDocuments/documents/APID/ApplicationNotes/ApplicationNotes/High-Power-BLDC-Motor-Driver-Reference-Design-DS00005324.pdf'}
+  groups:
+  - id: battery
+    label: Battery
+    blocks: [battery_pack]
+    col: 0
+    row: 0
+  - id: power
+    label: Bias supplies
+    blocks: [wide_vin_buck, pol_ldo]
+    col: 1
+    row: 0
+  - id: controller
+    label: Digital signal controller
+    blocks: [mcu, {fn: motor_controller, label: or integrated motor controller SoC}]
+    col: 2
+    row: 0
+  - id: gate_drivers
+    label: Gate drivers
+    blocks: [half_bridge_driver]
+    col: 3
+    row: 0
+  - id: inverter
+    label: Three-phase inverter
+    blocks: [power_fets]
+    col: 0
+    row: 1
+  - id: temperature
+    label: Temperature sensor
+    blocks: [temperature_sensor]
+    col: 1
+    row: 1
+  - id: can
+    label: CAN transceiver
+    blocks: [can_transceiver]
+    col: 2
+    row: 1
+  - id: motor
+    label: BLDC motor with Hall sensors
+    blocks: [motor]
+    col: 3
+    row: 1
+  links:
+  - [battery, power, VBUS]
+  - [battery, inverter, VBUS]
+  - [power, controller, +3.3 V]
+  - [power, gate_drivers, +12 V]
+  - [controller, gate_drivers, 'PWM1H/L, PWM2H/L, PWM3H/L']
+  - [gate_drivers, inverter, '']
+  - [inverter, motor, 3 phases]
+  - [inverter, controller, shunt current sense]
+  - [motor, controller, Hall]
+  - [temperature, controller, '']
+  - [can, controller, '']
+  questions:
+  - id: current_sensing
+    question: Phase current sensing
+    choices: [low-side shunts + MCU internal op amps, external current-sense amplifiers]
+    source: AN5324 p.1 (dsPIC internal op amps; six low-side 250 uOhm shunts, two in parallel per leg), p.2 Fig 1
+  - id: position_sensing
+    question: Position sensing
+    choices: [Hall sensors]
+    source: AN5324 p.1 (Hall sensor control algorithms), p.2 Fig 1
+  - id: pre_regulator
+    question: Bias supply straight from the 85 V bus (needs a pre-regulator to a buck-rated input)
+    choices: [pre-regulator + buck, wide-input buck]
+    source: AN5324 p.1 (pre-regulator from 85 V to 43 V for MCP16331)
+  - id: device_voltage_class
+    question: Device voltage class for the bus
+    choices: [100 V MOSFETs and 100 V half-bridge drivers]
+    source: AN5324 p.3 (AOTL66912 100 V MOSFETs; MIC4104 100 V half-bridge drivers)
+  - id: can
+    question: CAN interface
+    choices: ['yes', 'no']
+    source: AN5324 p.1, p.2 Fig 1 (ATA6561)
+  - id: rider_inputs
+    question: Rider inputs
+    choices: [throttle, brake (e-brake), PAS]
+    source: AN5324 p.2 Fig 1
+- name: Automotive 48 V BLDC drive, 1 kW (TI TIDA-00281)
+  category: Motor drives
+  note: 'TIDUAY9 p.1: 48 V automotive, 1 kW, 30 A; motor powered from 48 V only; everything else from the 12 V battery, isolated from the 48 V side (p.6). Not a light-EV traction design.'
+  sources:
+  - {doc: TIDUAY9, title: TIDA-00281 Automotive 1-kW 48-V BLDC Motor Drive Reference Design, url: 'https://www.ti.com/lit/pdf/tiduay9'}
+  groups:
+  - id: lv_side
+    label: 12 V side
+    blocks: [reverse_polarity, isolated_dcdc]
+    col: 0
+    row: 0
+  - id: can
+    label: CAN through isolator
+    blocks: [can_transceiver, digital_isolator]
+    col: 1
+    row: 0
+  - id: hv48_protection
+    label: 48 V protection and switching
+    blocks: [load_switch]
+    col: 2
+    row: 0
+  - id: buck
+    label: Buck regulator (48 V side logic supply from flyback)
+    blocks: [pol_buck]
+    col: 3
+    row: 0
+  - id: controller
+    label: Controller
+    blocks: [mcu, {fn: motor_controller, label: or integrated motor controller SoC}]
+    col: 0
+    row: 1
+  - id: gate_drivers
+    label: Gate drivers
+    blocks: [half_bridge_driver]
+    col: 1
+    row: 1
+  - id: fets
+    label: FET drive stages
+    blocks: [power_fets]
+    col: 2
+    row: 1
+  - id: current_sense
+    label: Current sense
+    blocks: [amplifier]
+    col: 3
+    row: 1
+  - id: temp_sense
+    label: Temperature sense
+    blocks: [temperature_sensor]
+    col: 0
+    row: 2
+  - id: motor
+    label: 48 V motor
+    blocks: [motor]
+    col: 1
+    row: 2
+  links:
+  - [lv_side, buck, isolated supply (transformer)]
+  - [buck, controller, '']
+  - [controller, can, '']
+  - [hv48_protection, fets, 48 V]
+  - [controller, gate_drivers, PWM]
+  - [gate_drivers, fets, '']
+  - [fets, motor, 3 phases]
+  - [fets, current_sense, '']
+  - [current_sense, controller, '']
+  - [temp_sense, controller, '']
+  questions:
+  - id: sensorless
+    question: Sensorless or Hall
+    choices: [sensorless, Hall sensors]
+    source: TIDUAY9 p.1 (no position sensors needed), p.7 Fig 2 (Hall inputs available)
+  - id: isolated_12v_48v
+    question: Control electronics on 12 V side, isolated from 48 V
+    choices: ['yes', 'no']
+    source: TIDUAY9 p.6
+  - id: can
+    question: CAN interface
+    choices: [isolated CAN, none]
+    source: TIDUAY9 p.1 ('Isolated CAN Interface'), p.7 Fig 2
+- name: Forklift traction inverter, 48 V 5 kW (TI TIDA-00364)
+  category: Motor drives
+  note: 'TIDUCB6 p.1: 48 VDC lead-acid battery, 130 A RMS continuous; p.2: typical forklift batteries 24, 36, 48 V, inverters up to 8 kW'
+  sources:
+  - {doc: TIDUCB6, title: TIDA-00364 48-VDC Battery Powered Inverter Power Stage Reference Design for 5-kW Forklift AC Traction Motor, url: 'https://www.ti.com/lit/ug/tiducb6/tiducb6.pdf'}
+  groups:
+  - id: controller
+    label: Controller
+    blocks: [mcu, {fn: motor_controller, label: or integrated motor controller SoC}, digital_isolator]
+    col: 0
+    row: 0
+  - id: gate_driver
+    label: Gate driver
+    blocks: [half_bridge_driver]
+    col: 1
+    row: 0
+  - id: inverter
+    label: Three-phase inverter
+    blocks: [power_fets]
+    col: 2
+    row: 0
+  - id: dc_link
+    label: DC bus link capacitors
+    blocks: [dc_link_cap]
+    col: 0
+    row: 1
+  - id: battery
+    label: 48 V battery
+    blocks: [battery_pack]
+    col: 1
+    row: 1
+  - id: motor
+    label: AC induction motor
+    blocks: [motor]
+    col: 2
+    row: 1
+  links:
+  - [controller, gate_driver, PWM_HS x3 / PWM_LS x3]
+  - [gate_driver, inverter, GateDrive_HS x3 / GateDrive_LS x3]
+  - [battery, dc_link, 48 VDC]
+  - [dc_link, inverter, DC bus]
+  - [inverter, motor, 3 phases]
+  questions:
+  - id: motor_type
+    question: Traction motor type
+    choices: [AC induction motor, DC motor]
+    source: TIDUCB6 p.2 (traction motor can be DC or ACIM; ACIM share increasing)
+  - id: parallel_fets
+    question: MOSFETs in parallel per switch
+    choices: ['1', '5']
+    source: TIDUCB6 p.1, p.4
+  - id: controller_isolation
+    question: Isolate the controller / PC interface from the power stage
+    choices: ['yes', 'no']
+    source: TIDUCB6 p.4 Fig 2 (isolation line at LaunchPad), text (isolated USB)
+- name: Macro base station radio unit, TDD (Skyworks)
+  category: RF & connectivity
+  note: Macro base station radio unit (TDD)
+  sources:
+  - {doc: SKY_MACRO, title: Skyworks Infrastructure - Macro Radio Unit application page, url: 'https://www.skyworksinc.com/en/Application-Pages/Infrastructure-Macro-Radio-Unit'}
+  groups:
+  - id: timing
+    label: Timing / synchronization
+    blocks: [jitter_attenuator, clock_generator]
+    col: 0
+    row: 0
+  - id: baseband
+    label: Baseband processor
+    blocks: [soc]
+    col: 1
+    row: 0
+  - id: transceiver
+    label: Transceiver SoC / FPGA
+    blocks: [soc]
+    col: 2
+    row: 0
+  - id: tx_chain
+    label: Transmit chain
+    blocks: [rf_frontend]
+    col: 3
+    row: 0
+  - id: antenna_path
+    label: Antenna path
+    blocks: [antenna]
+    col: 0
+    row: 1
+  - id: hp_switch
+    label: High-power switch
+    blocks: [rf_switch]
+    col: 1
+    row: 1
+  - id: rx_chain
+    label: Receive chain
+    blocks: [lna]
+    col: 2
+    row: 1
+  - id: power
+    label: Power management
+    blocks: [pmic]
+    col: 3
+    row: 1
+  links:
+  - [timing, baseband, 1PPS / SPI]
+  - [timing, transceiver, D CLK / Sysref]
+  - [baseband, transceiver, '']
+  - [transceiver, tx_chain, Tx]
+  - [tx_chain, antenna_path, '']
+  - [tx_chain, transceiver, ORx (coupler)]
+  - [antenna_path, hp_switch, Rx]
+  - [hp_switch, rx_chain, '']
+  - [rx_chain, transceiver, Rx]
+  questions:
+  - id: tdd_failsafe
+    question: High-power fail-safe Rx protection switch (TDD)
+    choices: ['yes', 'no']
+    source: SKY_MACRO page text and product list
+    sets:
+    - fn: rf_switch
+      req: config
+      map: {'yes': SPDT}
+  - id: lna_bypass
+    question: LNA with bypass
+    choices: ['yes', 'no']
+    source: SKY_MACRO diagram ('LNA with Bypass')
+  - id: limiter
+    question: Limiter diodes before the LNA
+    choices: ['yes', 'no']
+    source: SKY_MACRO diagram ('Limiters')
+- name: Small cell base station (Skyworks)
+  category: RF & connectivity
+  note: Small cell base station
+  sources:
+  - {doc: SKY_SMALLCELL, title: Skyworks Small Cell application page, url: 'https://www.skyworksinc.com/en/Application-Pages/Small-Cell'}
+  - {doc: SKY_BD_SMALLCELL, title: 'Skyworks block diagram: Small Cell Base Station', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/BlockDiagrams/Small_Cell_Basestation.pdf'}
+  groups:
+  - id: timing
+    label: Timing / synchronization
+    blocks: [jitter_attenuator, clock_generator]
+    col: 0
+    row: 0
+  - id: baseband
+    label: Baseband processor
+    blocks: [soc]
+    col: 1
+    row: 0
+  - id: transceiver
+    label: Transceiver SoC / FPGA
+    blocks: [soc]
+    col: 2
+    row: 0
+  - id: tx_chain
+    label: Transmit chain
+    blocks: [rf_frontend]
+    col: 3
+    row: 0
+  - id: antenna_path
+    label: Antenna path
+    blocks: [antenna]
+    col: 0
+    row: 1
+  - id: rx_switch
+    label: Switch
+    blocks: [antenna_switch, rf_switch]
+    col: 1
+    row: 1
+  - id: rx_chain
+    label: Receive chain
+    blocks: [lna]
+    col: 2
+    row: 1
+  - id: power
+    label: Power
+    blocks: [pmic]
+    col: 3
+    row: 1
+  links:
+  - [timing, baseband, 1PPS / SPI]
+  - [timing, transceiver, D CLK / Sysref]
+  - [transceiver, tx_chain, Tx]
+  - [tx_chain, antenna_path, '']
+  - [antenna_path, rx_switch, Rx]
+  - [rx_switch, rx_chain, '']
+  - [rx_chain, transceiver, Rx]
+  - [power, timing, '']
+  questions:
+  - id: rx_protect_switch
+    question: Rx protection / T/R switch
+    choices: [SPDT discrete, LNA + switch module]
+    source: SKY_SMALLCELL product list; SKY_BD_SMALLCELL ('Low Noise Amplifier + Switch')
+    sets:
+    - fn: rf_switch
+      req: config
+      map: {SPDT discrete: SPDT}
+  - id: poe
+    question: PoE powered
+    choices: ['yes', 'no']
+    source: SKY_SMALLCELL diagram (PoE PD)
+- name: Massive MIMO radio (Skyworks)
+  category: RF & connectivity
+  note: Massive MIMO radio (5G infrastructure)
+  sources:
+  - {doc: SKY_MMIMO, title: Skyworks Massive MIMO application page, url: 'https://www.skyworksinc.com/en/Application-Pages/Massive-MIMO'}
+  groups:
+  - id: timing
+    label: Timing / synchronization
+    blocks: [jitter_attenuator, clock_generator, ethernet_phy]
+    col: 0
+    row: 0
+  - id: baseband
+    label: Baseband processor
+    blocks: [soc]
+    col: 1
+    row: 0
+  - id: transceiver
+    label: Transceiver SoC / FPGA
+    blocks: [soc]
+    col: 2
+    row: 0
+  - id: tx_chain
+    label: Transmit chain
+    blocks: [rf_frontend]
+    col: 3
+    row: 0
+  - id: orx_switch
+    label: Observational receive switch
+    blocks: [rf_switch]
+    col: 0
+    row: 1
+  - id: dual_rx
+    label: Dual RX module
+    blocks: [lna, rf_switch]
+    col: 1
+    row: 1
+  - id: antenna_path
+    label: Antenna path
+    blocks: [antenna]
+    col: 2
+    row: 1
+  - id: power
+    label: Power management
+    blocks: [pmic]
+    col: 3
+    row: 1
+  links:
+  - [timing, baseband, 1PPS / SPI]
+  - [timing, transceiver, D CLK / Sysref]
+  - [baseband, transceiver, '']
+  - [transceiver, tx_chain, Tx]
+  - [tx_chain, antenna_path, '']
+  - [tx_chain, orx_switch, coupled feedback]
+  - [orx_switch, transceiver, ORx]
+  - [antenna_path, dual_rx, Rx from circulator]
+  - [dual_rx, transceiver, Rx]
+  questions:
+  - id: orx_switch
+    question: Observation-receiver (DPD feedback) switch
+    choices: ['yes', 'no']
+    source: SKY_MMIMO diagram + product list (SP4T RF switches; SPST 50 Ohm terminated)
+  - id: rx_failsafe_switch
+    question: Fail-safe switch integrated in the Rx LNA module
+    choices: [integrated, discrete]
+    source: SKY_MMIMO page product list ('Dual Wideband LNA with Fail-Safe Switch')
+- name: Automotive telematics & infotainment RF (Skyworks)
+  category: RF & connectivity
+  note: Automotive telematics and infotainment (cellular, GPS, SDARS, WLAN)
+  sources:
+  - {doc: SKY_BD_TELEMATICS, title: 'Skyworks block diagram: Telematics and Infotainment', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/BlockDiagrams/Telematics_and_Infotainment.pdf'}
+  groups:
+  - id: core
+    label: Telematics and infotainment core
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: display
+    label: Display
+    blocks: [display]
+    col: 1
+    row: 0
+  - id: cellular
+    label: Cellular main transceiver
+    blocks: [soc]
+    col: 2
+    row: 0
+  - id: cell_fe
+    label: Cellular front end
+    blocks: [antenna_switch, lna, rf_frontend]
+    col: 3
+    row: 0
+  - id: gps
+    label: GPS
+    blocks: [lna]
+    col: 0
+    row: 1
+  - id: sdars
+    label: SDARS
+    blocks: [lna]
+    col: 1
+    row: 1
+  - id: wlan
+    label: WLAN
+    blocks: [rf_frontend]
+    col: 2
+    row: 1
+  - id: antennas
+    label: Antennas
+    blocks: [antenna]
+    col: 3
+    row: 1
+  links:
+  - [core, cellular, '']
+  - [cellular, cell_fe, '']
+  - [cell_fe, antennas, cellular]
+  - [antennas, gps, GPS]
+  - [gps, core, '']
+  - [antennas, sdars, SDARS]
+  - [sdars, core, '']
+  - [core, wlan, '']
+  - [wlan, antennas, WLAN]
+  - [core, display, '']
+  questions:
+  - id: cell_switch
+    question: Discrete antenna switch in the cellular front end, or integrated FEM
+    choices: [discrete switch + LNA + PA, front-end module]
+    source: SKY_BD_TELEMATICS part lists (Switches vs Front-end Modules)
+- name: Wi-Fi front end (Skyworks)
+  category: RF & connectivity
+  note: Wi-Fi front end (access point / router / networking; connected-home devices)
+  sources:
+  - {doc: SKY_BD_WIFI_NET, title: 'Skyworks block diagram: 802.11a/b/g/n/ac Single-band WiFi Front-end Components - Networking', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/BlockDiagrams/SB_FEM_Solutions_Networking.pdf'}
+  - {doc: SKY_HOME, title: Skyworks IoT - Connected Home application page (product tables per device), url: 'https://www.skyworksinc.com/en/Application-Pages/IoT-Connected-Home'}
+  - {doc: SKY_BD_STB, title: 'Skyworks block diagram: Set-top Box / Media Gateway', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/BlockDiagrams/Set_Top_Box_Media_Gateway.pdf'}
+  groups:
+  - id: mac
+    label: MAC / baseband processor
+    blocks: [soc, pol_buck]
+    col: 0
+    row: 0
+  - id: fe_2g
+    label: 2.4 GHz front end
+    blocks: [rf_frontend, lna, rf_switch]
+    col: 1
+    row: 0
+  - id: fe_5g
+    label: 5 GHz front end
+    blocks: [rf_frontend, lna, rf_switch]
+    col: 2
+    row: 0
+  - id: diplexer
+    label: Diplexer and antenna
+    blocks: [antenna]
+    col: 0
+    row: 1
+  links:
+  - [mac, fe_2g, 2.4 GHz Tx / Rx]
+  - [mac, fe_5g, 5 GHz Tx / Rx]
+  - [fe_2g, diplexer, '']
+  - [fe_5g, diplexer, '']
+  questions:
+  - id: tr_switch
+    question: T/R switch discrete or inside FEM
+    choices: [discrete switch + PA + LNA, front-end module (PA, LNA w/ bypass, T/R switch)]
+    source: SKY_BD_WIFI_NET part lists (Switches vs Front-end Modules); SKY_HOME Router & Wi-Fi FEM descriptions ('PA, LNA w/bypass, T/R Switch')
+  - id: switch_lna
+    question: Switch + LNA combo
+    choices: ['yes', 'no']
+    source: SKY_HOME Home Theater & Smart Speakers ('2.4 GHz Wi-Fi Switch + LNA' SKY85207, '5.0 GHz Wi-Fi Switch + LNA' SKY85608)
+  - id: antenna_diversity_switch
+    question: Antenna / diversity switch per device
+    choices: [SPDT, SP3T, DPDT]
+    source: 'SKY_HOME: Home Theater (SPDT SKY13585, DPDT SKY13438 ''High Power DPDT Switch for WLAN''), Smart Lighting (SP2T SKY13587, SP3T SKY13588 ''operation to 105 C''), Set'
+    sets:
+    - fn: rf_switch
+      req: config
+      map: {SPDT: SPDT, SP3T: SP3T, DPDT: DPDT}
+- name: Smartphone antenna switching (Skyworks)
+  category: RF & connectivity
+  note: Smartphone front end with discrete switches or antenna switch modules
+  sources:
+  - {doc: SKY_BD_PHONE_ASM, title: 'Skyworks block diagram: Smartphone Using Discrete Switches or Antenna Switch Modules (ASMs)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/BlockDiagrams/Smartphone_Using_Discrete_Switches_or_ASMs.pdf'}
+  groups:
+  - id: tx
+    label: Transmit
+    blocks: [rf_frontend]
+    col: 0
+    row: 0
+  - id: mode_switch
+    label: Mode / band switches
+    blocks: [rf_switch]
+    col: 1
+    row: 0
+  - id: rx_diff_switch
+    label: Rx differential switches
+    blocks: [rf_switch]
+    col: 2
+    row: 0
+  - id: primary_switch
+    label: Primary antenna switch
+    blocks: [antenna_switch]
+    col: 0
+    row: 1
+  - id: diversity_switch
+    label: Diversity antenna switch (optional)
+    blocks: [antenna_switch]
+    col: 1
+    row: 1
+  - id: antennas
+    label: Antennas
+    blocks: [antenna]
+    col: 2
+    row: 1
+  links:
+  - [tx, mode_switch, WCDMA Tx]
+  - [mode_switch, primary_switch, via duplexers]
+  - [rx_diff_switch, primary_switch, WCDMA Rx]
+  - [primary_switch, antennas, primary]
+  - [diversity_switch, antennas, diversity]
+  questions:
+  - id: primary_throws
+    question: Primary antenna switch size
+    choices: [SP8T, SP16T]
+    source: SKY_BD_PHONE_ASM
+    sets:
+    - fn: antenna_switch
+      req: config
+      map: {SP8T: SP8T, SP16T: SP16T}
+  - id: diversity
+    question: Diversity receive path with its own switch
+    choices: [yes (SP4T), 'no']
+    source: SKY_BD_PHONE_ASM

@@ -167,7 +167,7 @@
         <div class="tile"><b>${by.part}</b>parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks / Qorvo can fill</div>
         <div class="tile"><b>${by.opp}</b>opportunities</div><div class="tile"><b>${by.ext}</b>customer parts</div></div>` +
       (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
-      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
+      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
   }
 
   // ---- side panel

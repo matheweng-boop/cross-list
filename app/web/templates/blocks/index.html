@@ -5,11 +5,16 @@
 <p class="subtitle muted">Build a system block diagram from functions. Each block shows whether a Skyworks part in Cross List fills it,
   or whether it is an <b>opportunity</b> (no Skyworks part in Cross List yet). Adding a block suggests what usually goes with it.</p>
 <h2>Start from a template</h2>
+{% for cat, items in template_groups %}
+<h3 class="tpl-cat">{{ cat }}</h3>
 <div class="tpl-grid">
-  {% for t in templates_ %}
-  <a class="tpl-card" href="/blocks/new?template={{ loop.index0 }}"><b>{{ t.name }}</b><br><small class="muted">{{ t.note }}</small>
+  {% for i, t in items %}
+  <a class="tpl-card" href="/blocks/new?template={{ i }}"><b>{{ t.name }}</b><br><small class="muted">{{ t.note }}</small>
     <br><small>{{ t.groups|length }} groups · {{ t.groups|map(attribute='blocks')|map('length')|sum }} blocks{% if t.questions %} · {{ t.questions|length }} design questions{% endif %}</small></a>
   {% endfor %}
+</div>
+{% endfor %}
+<div class="tpl-grid">
   <a class="tpl-card tpl-empty" href="/blocks/new"><b>Empty diagram</b><br><small class="muted">Add groups and functions yourself.</small></a>
 </div>
 <h2>Saved block diagrams</h2>

@@ -69,7 +69,7 @@ def prefill(ctx: dict | None) -> dict:
     }
 
 
-def brief(case, ctx: dict | None) -> str:
+def brief(case, ctx: dict | None, parts: list | None = None) -> str:
     """A self-contained market-analysis task for an AI assistant (Markdown)."""
     i = case.inputs or {}
     lines = [
@@ -86,6 +86,15 @@ def brief(case, ctx: dict | None) -> str:
         v = str(i.get(key) or "").strip()
         if v:
             lines += [f"**{label}:**", v, ""]
+    if parts:  # part lines from the guided path; volumes and prices are the team's assumptions
+        lines += ["## Parts in this business case (volumes and prices are assumptions)"]
+        for ln in parts:
+            lines.append(f"- {ln.label}: {ln.our_mpn or 'no Skyworks / Qorvo part yet'}"
+                         + (f" vs {ln.competitor_mpn}" if ln.competitor_mpn else "")
+                         + (f", {ln.qty} per system" if ln.qty and ln.qty > 1 else "")
+                         + (f", {ln.volume:,} systems/year" if ln.volume else "")
+                         + (f", target ${ln.price:.2f}" if ln.price is not None else ""))  # fmt: skip
+        lines.append("")
     if ctx:
         t, c = ctx["technology"] or {}, ctx["competition"] or {}
         lines += [

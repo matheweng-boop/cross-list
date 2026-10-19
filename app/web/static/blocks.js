@@ -164,7 +164,9 @@
     for (const g of S.groups) {
       const r = L.rects[g.id];
       parts.push(`<g class="grp${sel && sel.group === g.id && !sel.block ? " sel" : ""}" data-gid="${g.id}"><rect class="frame" data-drag-group="${g.id}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"><title>Drag to move this frame</title></rect>` +
-        `<text class="grp-title" data-group="${g.id}" x="${r.x + 8}" y="${r.y + 17}" tabindex="0" role="button">${esc(g.label)}</text>`);
+        `<text class="grp-title" data-group="${g.id}" x="${r.x + 8}" y="${r.y + 17}" tabindex="0" role="button">${esc(g.label)}</text>` +
+        `<g class="grp-add" data-add-to="${g.id}" tabindex="0" role="button" aria-label="Add a block to ${esc(g.label)}"><title>Add a block to this frame</title>` +
+        `<rect x="${r.x + r.w - 26}" y="${r.y + 4}" width="20" height="18" rx="4"/><text x="${r.x + r.w - 16}" y="${r.y + 17.5}" text-anchor="middle">+</text></g>`);
       g.blocks.forEach((b, i) => {
         const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + HEAD + Math.floor(i / r.cols) * (BH + BG);
         const st = status(b), f = fnOf(b);
@@ -222,7 +224,7 @@
     const svg = $("#bk-svg");
     let drag = null;
     svg.addEventListener("pointerdown", e => {
-      if (!view || e.target.closest("[data-block], [data-group], [data-drag-group]")) return;
+      if (!view || e.target.closest("[data-block], [data-group], [data-drag-group], [data-add-to]")) return;
       drag = {x: e.clientX, y: e.clientY, v: {...view}, s: view.w / svg.clientWidth};
       svg.setPointerCapture(e.pointerId);
     });
@@ -474,11 +476,16 @@
     panel.querySelectorAll("[data-add]").forEach(btn => (btn.onclick = () => addFunction(btn.dataset.add, g)));
   }
 
-  function showGroup(g) {
+  // the functions of the catalogue as grouped options (the same list as the toolbar picker)
+  const fnOptions = () => Object.entries(CATS).map(([ck, cl]) => `<optgroup label="${esc(cl)}">${Object.entries(FN).filter(([, f]) => f.category === ck)
+    .map(([k, f]) => `<option value="${k}">${esc(f.label)}${COUNTS[k] === null ? " (customer)" : COUNTS[k] ? ` · ${COUNTS[k]} parts` : " · opportunity"}</option>`).join("")}</optgroup>`).join("");
+  function showGroup(g, focusAdd) {
     openPanel();
     const others = S.groups.filter(x => x !== g);
     const links = S.links.map((l, i) => [l, i]).filter(([l]) => l[0] === g.id || l[1] === g.id);
     panel.innerHTML = `<h3>${esc(g.label)}</h3>
+      <label class="small bk-addfn">Add a block to this frame <select data-addfn class="small-sel"><option value="">choose a function…</option>${fnOptions()}</select></label>
+      <p class="small muted">${g.blocks.length} block${g.blocks.length === 1 ? "" : "s"} in this frame · drag a block here from another frame to move it.</p>
       <div class="row"><label class="small">Name <input data-g="label" value="${esc(g.label)}"></label></div>
       <div class="row small">Move <button type="button" class="outline small-btn" data-mv="-1,0" aria-label="Left">←</button><button type="button" class="outline small-btn" data-mv="1,0" aria-label="Right">→</button>
         <button type="button" class="outline small-btn" data-mv="0,-1" aria-label="Up">↑</button><button type="button" class="outline small-btn" data-mv="0,1" aria-label="Down">↓</button>
@@ -487,9 +494,11 @@
       <ul>${links.map(([l, i]) => `<li class="small">${esc(group(l[0])?.label)} → ${esc(group(l[1])?.label)} ${l[2] ? `(${esc(l[2])})` : ""} <button type="button" class="outline secondary small-btn" data-unlink="${i}">×</button></li>`).join("") || `<li class="small muted">none</li>`}</ul>
       <div class="row"><select data-link class="small-sel" aria-label="Connect to group"><option value="">Connect to…</option>${others.map(x => `<option value="${x.id}">${esc(x.label)}</option>`).join("")}</select>
         <input data-link-label placeholder="label, e.g. SPI" style="width:8rem"></div>
-      <p class="small">Add a function to this group with “+ Function” above while the group is selected.</p>
       <div class="row"><button type="button" class="outline secondary small-btn" data-act="delgroup">Delete group</button></div>`;
     panel.querySelector('[data-g="label"]').onchange = e => { g.label = e.target.value || g.label; changed(); };
+    const addSel = panel.querySelector("[data-addfn]");
+    addSel.onchange = () => { if (addSel.value) addFunction(addSel.value, g); };
+    if (focusAdd) addSel.focus();
     panel.querySelectorAll("[data-mv]").forEach(btn => (btn.onclick = () => { const [dx, dy] = btn.dataset.mv.split(",").map(Number); g.col = Math.max(0, g.col + dx); g.row = Math.max(0, g.row + dy); changed(); }));
     panel.querySelectorAll("[data-w]").forEach(btn => (btn.onclick = () => { g.w = Math.min(4, Math.max(1, (g.w || 1) + +btn.dataset.w)); changed(); }));
     panel.querySelectorAll("[data-unlink]").forEach(btn => (btn.onclick = () => { S.links.splice(+btn.dataset.unlink, 1); changed(); showGroup(g); }));
@@ -809,6 +818,8 @@
   // ---- events
   $("#bk-svg").addEventListener("click", e => {
     if (dragged) { dragged = false; return; }
+    const add = e.target.closest("[data-add-to]");
+    if (add) { const g = group(add.dataset.addTo); sel = {group: g.id}; render(); showGroup(g, true); return; }
     const t = e.target.closest("[data-block], [data-group]");
     if (!t) { if (sel) { sel = null; root.classList.remove("panel-open"); render(); } return; }
     const g = group(t.dataset.group);
@@ -819,7 +830,7 @@
   $("#bk-svg").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.target.dispatchEvent(new MouseEvent("click", {bubbles: true})); } });
   $("#bk-add").addEventListener("change", e => { if (e.target.value) { addFunction(e.target.value); e.target.value = ""; } });
   $("#bk-add-group").addEventListener("click", () => {
-    const name = prompt("Group name (e.g. Power rail, Timing, Networking)");
+    const name = prompt("Frame name (e.g. Power rail, Timing, Networking)");
     if (!name) return;
     const maxRow = Math.max(0, ...S.groups.map(x => x.row));
     const col = Math.max(-1, ...S.groups.filter(x => x.row === maxRow).map(x => x.col + (x.w || 1) - 1)) + 1;

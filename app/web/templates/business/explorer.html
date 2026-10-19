@@ -13,11 +13,12 @@
 <h1>Opportunity explorer</h1>
 <p class="subtitle muted">Functions {{ co_label }} does not cover yet, one row each. Click a column title to sort; open a function for its evidence.</p>
 
-<div class="scope-bar small">
+<div class="scope-bar small filter-cols">
   {{ company_switch('/business/explorer', co, companies, '&sort=' ~ sort ~ '&scope=' ~ scope) }}
   <div class="chip-row"><span class="chip-lbl">Scope</span>{% for k, label in scopes.items() %}<a class="fchip{{ ' on' if scope == k }}" href="{{ url(scope=k) }}">{{ label }}</a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">Gap type</span><a class="fchip{{ ' on' if not t }}" href="{{ url(t='') }}">All</a>{% for k, label in gap_labels.items() if k not in ('candidate', 'not_ours') and type_counts.get(k) %}<a class="fchip gt-{{ k }}{{ ' on' if t == k }}" href="{{ url(t=k) }}" title="{{ label }}">{{ label.split(' – ')[0] }} <small>{{ type_counts[k] }}</small></a>{% endfor %}</div>
-  <div class="chip-row"><span class="chip-lbl">Show</span><a class="fchip{{ ' on' if not f }}" href="{{ url(f='') }}">All</a>{% for k, (label, _) in filters.items() %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=k) }}">{{ label }}</a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">Path to product</span><a class="fchip{{ ' on' if not f }}" href="{{ url(f='') }}">All</a>{% for k, (label, _) in filters.items() if k in ('short', 'develop', 'build', 'acquire') %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=k) }}">{{ label }}</a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">Decision · type</span>{% for k, (label, _) in filters.items() if k in ('kept', 'chips') %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=('' if f == k else k)) }}">{{ label }}</a>{% endfor %}</div>
 </div>
 
 <p class="fit-help small"><b>Fit score</b> (technology fit, 0–1, <b>higher is better</b>): how well a function suits {{ co_label }} =

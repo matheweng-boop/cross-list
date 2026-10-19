@@ -13,6 +13,11 @@
   <div><dt>Source</dt><dd>{% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}{% if part.datasheet_url and part.product_url %} · {% endif %}{% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}{% if not part.datasheet_url and not part.product_url %}<span class="muted">none linked</span>{% endif %}</dd></div>
 </dl>
 <p class="muted small">{{ part.description }}</p>
+{% set top = (ranked|dictsort(by='value')|first) if ranked else none %}
+<p class="pl-start">{% if part.is_reference %}<a role="button" class="small-btn" href="/pipeline/new?part={{ part.id }}">Start a business case with {{ part.mpn }}</a>
+  <span class="small muted">place it in an application, add the other parts in the design, volume and price</span>
+  {% else %}<a role="button" class="small-btn" href="/pipeline/new?part={{ part.id }}{{ '&our=' ~ top[0] if top and top[1] == 0 else '' }}">Start a business case</a>
+  <span class="small muted">{{ 'with the best cross below' if top else 'no Skyworks cross found: it becomes a portfolio gap' }} · then application, the other parts in the design, volume and price</span>{% endif %}</p>
 {% if alternates %}<p class="alt-line"><b>{{ alternates[0].family_label }} alternate{{ 's' if alternates|length > 1 }}:</b>
   {% for a in alternates %}<a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> <small class="muted">({{ a.label }})</small>{{ ' · ' if not loop.last }}{% endfor %}
   · <a href="/compare?ids={{ part.id }}">compare</a></p>{% endif %}
@@ -61,10 +66,27 @@
 {% if ref_grade == 'automotive' %}<p class="banner grade-banner"><span class="badge grade-auto">AEC-Q100</span> <b>Automotive reference:</b> AEC-Q100 is a hard requirement, so only automotive-qualified parts are listed. Industrial parts are never offered as a cross for this part.</p>
 {% else %}<p class="banner grade-banner"><span class="badge grade-ind">Industrial</span> <b>Non-automotive reference:</b> automotive (AEC-Q100) parts are also listed, as an upgrade; filter by grade below.</p>{% endif %}
 {% set keep = ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') ~ ('&grade=' ~ grade if grade else '') %}
-<nav class="company-filter type-filter" aria-label="Filter by cross type">
+<div class="filter-cols small">
+<nav class="company-filter type-filter" aria-label="Filter by cross type"><span class="chip-lbl">Cross type</span>
   <a href="?{{ keep[1:] }}" class="badge cat{{ ' on' if not type }}">All ({{ type_counts.values()|sum }})</a>
   {% for c in order %}<a href="?type={{ c }}{{ keep }}" class="badge cat{{ ' on' if type == c }}">{{ category_short[c] }} ({{ type_counts[c] }})</a>{% endfor %}
 </nav>
+
+{% if ref_grade != 'automotive' %}
+<nav class="company-filter grade-filter" aria-label="Filter by grade"><span class="chip-lbl">Grade</span>
+  {% set keep3 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') %}
+  {% for g, glabel in grade_labels.items() if grade_counts[g] or g != 'unknown' %}<a href="?grade={{ g }}{{ keep3 }}" class="badge cat{{ ' on' if grade == g }}"{% if grade == g %} aria-current="true"{% endif %}>{{ glabel }} ({{ grade_counts[g] }})</a>{% endfor %}
+  <span class="small muted" title="Counts include the company and lifecycle filters, before the cross-type filter. Many Skyworks devices exist in both an automotive (-A…) and an industrial (-I…) version, so the two counts are often equal.">counts with current filters</span>
+</nav>
+{% endif %}
+{% if companies|length > 1 or company %}
+<nav class="company-filter" aria-label="Filter by company"><span class="chip-lbl">Company</span>
+  {% set keep2 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') ~ ('&grade=' ~ grade if grade else '') %}
+  <a href="?{{ keep2[1:] }}" class="badge cat{{ ' on' if not company }}">All companies</a>
+  {% for name, count in companies %}<a href="?company={{ name|urlencode }}{{ keep2 }}" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ count }})</a>{% endfor %}
+</nav>
+{% endif %}
+</div>
 <form method="get" class="result-filters">
   {% if scope != 'auto' %}<input type="hidden" name="scope" value="{{ scope }}">{% endif %}
   {% if company %}<input type="hidden" name="company" value="{{ company }}">{% endif %}
@@ -76,20 +98,6 @@
     </select> P1 deviation{{ '' if dev == 1 else 's' }}</label>
   <label><input type="checkbox" name="hide_eol" value="true" onchange="this.form.submit()" {{ 'checked' if hide_eol }}> Hide NRND / obsolete</label>
 </form>
-{% if ref_grade != 'automotive' %}
-<nav class="company-filter grade-filter" aria-label="Filter by grade">
-  {% set keep3 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') %}
-  {% for g, glabel in grade_labels.items() if grade_counts[g] or g != 'unknown' %}<a href="?grade={{ g }}{{ keep3 }}" class="badge cat{{ ' on' if grade == g }}"{% if grade == g %} aria-current="true"{% endif %}>{{ glabel }} ({{ grade_counts[g] }})</a>{% endfor %}
-  <span class="small muted" title="Counts include the company and lifecycle filters, before the cross-type filter. Many Skyworks devices exist in both an automotive (-A…) and an industrial (-I…) version, so the two counts are often equal.">counts with current filters</span>
-</nav>
-{% endif %}
-{% if companies|length > 1 or company %}
-<nav class="company-filter" aria-label="Filter by company">
-  {% set keep2 = ('&scope=all' if scope == 'all' else '') ~ ('&type=' ~ type if type else '') ~ ('&hide_eol=true' if hide_eol else '') ~ ('&dev=' ~ dev if dev != 2 else '') ~ ('&grade=' ~ grade if grade else '') %}
-  <a href="?{{ keep2[1:] }}" class="badge cat{{ ' on' if not company }}">All companies</a>
-  {% for name, count in companies %}<a href="?company={{ name|urlencode }}{{ keep2 }}" class="badge cat{{ ' on' if company == name }}">{{ name }} ({{ count }})</a>{% endfor %}
-</nav>
-{% endif %}
 
 <form method="get" action="/compare">
 <input type="hidden" name="pick" value="{{ part.id }}">

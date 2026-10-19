@@ -76,8 +76,21 @@ def _is_new(part: Part) -> bool:
 
 templates.env.globals["is_new"] = _is_new
 
+
 # Navigation: task-based sections (app/web/nav.py); every existing URL keeps working
-templates.env.globals.update(nav_state=nav.state, nav_sections=nav.NAV, nav_utility=nav.UTILITY, nav_icons=nav.ICONS)
+def _market_groups(names):
+    from app.services.opportunity import market_subgroups
+
+    return market_subgroups(names)
+
+
+templates.env.globals.update(
+    market_groups=_market_groups,
+    nav_state=nav.state,
+    nav_sections=nav.NAV,
+    nav_utility=nav.UTILITY,
+    nav_icons=nav.ICONS,
+)
 
 GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
 
@@ -142,14 +155,28 @@ def find(request: Request, q: str = "", session: Session = Depends(get_session))
     q = q.strip()
     if not q:
         return RedirectResponse("/", status_code=303)
+    from app.services import products
+
     matches = search_parts(session, q, limit=500)
+    # the manufacturer catalogues (all public Skyworks and Qorvo parts) are searched too: most of them have no
+    # parameters or crosses here, so they are listed with their catalogue data and a link to the manufacturer page
+    catalogue = products.search_catalogue(q, {products._pn(p.mpn) for p in matches})
     exact = [p for p in matches if normalize_pn(p.mpn) == normalize_pn(q)]
-    if len(exact) == 1 or len(matches) == 1:
+    if len(exact) == 1 or (len(matches) == 1 and not catalogue):
         return RedirectResponse(f"/parts/{(exact or matches)[0].id}", status_code=303)
     competitors = [p for p in matches if not p.is_reference]
     references = [p for p in matches if p.is_reference]
     return templates.TemplateResponse(
-        request, "find_results.html", {"q": q, "competitors": competitors, "references": references}
+        request,
+        "find_results.html",
+        {
+            "q": q,
+            "competitors": competitors,
+            "references": references,
+            "catalogue": catalogue,
+            "life_label": products.LIFE_LABEL,
+            "qual_label": products.QUAL_LABEL,
+        },  # fmt: skip
     )
 
 
@@ -190,8 +217,7 @@ def index(
     params = {"q": q, "cat": cat, "sub": sub, "company": company, "qual": qual, "life": life, "cap": cap, "role": role}
     ctx = {**params, "params": params, "res": res, "rows": res["rows"][:limit], "limit": limit, "tax": tax,
            "qual_label": products.QUAL_LABEL, "cap_label": products.CAPABILITIES,
-           "life_label": {"active": "Active", "preview": "Preview / sampling", "nrnd": "NRND / last time buy",
-                          "obsolete": "Obsolete", "unknown": "Not stated"}}  # fmt: skip
+           "life_label": products.LIFE_LABEL}  # fmt: skip
     return templates.TemplateResponse(request, "index.html", ctx)
 
 
@@ -751,5 +777,8 @@ def pricing_line(
 @router.get("/suggest", response_class=HTMLResponse)
 def suggest(request: Request, q: str = "", session: Session = Depends(get_session)):
     """Live part-number suggestions (HTML fragment for the header search box)."""
+    from app.services import products
+
     parts = search_parts(session, q, limit=60) if len(normalize_pn(q).replace("*", "")) >= 2 else []
-    return templates.TemplateResponse(request, "_suggest.html", {"parts": parts, "q": q})
+    catalogue = products.search_catalogue(q, {products._pn(p.mpn) for p in parts}, limit=max(0, 60 - len(parts)))
+    return templates.TemplateResponse(request, "_suggest.html", {"parts": parts, "catalogue": catalogue, "q": q})

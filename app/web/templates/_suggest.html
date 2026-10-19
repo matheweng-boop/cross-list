@@ -1,5 +1,5 @@
 {% from "_macros.html" import part_badges %}
-{% if parts %}
+{% if parts or catalogue %}
 <ul class="suggest-list" role="listbox">
   {% for p in parts %}
   <li role="option"><a href="/parts/{{ p.id }}">
@@ -9,7 +9,14 @@
     {{ part_badges(p) }}
   </a></li>
   {% endfor %}
-  {% if parts|length == 60 %}<li class="muted sg-more"><a href="/find?q={{ q|urlencode }}">Showing the first 60 – see all results</a></li>{% endif %}
+  {% for r in catalogue %}
+  <li role="option"><a href="/find?q={{ r.mpn|urlencode }}">
+    <span class="sg-mpn">{{ r.mpn }}</span>
+    <span class="sg-meta">{{ r.manufacturer }} · {{ r.source_category }}</span>
+    <span class="badge sg-cat" title="Catalogue record: no parameters or crosses in BizDev yet">catalogue</span>
+  </a></li>
+  {% endfor %}
+  {% if parts|length + catalogue|length >= 60 %}<li class="muted sg-more"><a href="/find?q={{ q|urlencode }}">Showing the first 60 – see all results</a></li>{% endif %}
 </ul>
 {% elif q|length >= 2 %}
 <p class="suggest-list muted sg-empty">No part numbers contain “{{ q }}”.</p>

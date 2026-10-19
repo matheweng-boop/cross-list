@@ -435,3 +435,37 @@ class ShortlistItem(Base):
     note: Mapped[str | None] = mapped_column(Text)
     case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CaseLine(Base):
+    """One part in a business case: a competitor part and our part for one function (a cross, a part of ours found
+    in the same design, or a gap), with the volume and target price assumed for it. A case can hold many lines."""
+
+    __tablename__ = "case_lines"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    case_id: Mapped[int] = mapped_column(ForeignKey("cases.id"))
+    role: Mapped[str] = mapped_column(String(10))  # cross | design | gap
+    fn: Mapped[str | None] = mapped_column(String(80))
+    label: Mapped[str] = mapped_column(String(200))
+    competitor_mpn: Mapped[str | None] = mapped_column(String(80))
+    our_mpn: Mapped[str | None] = mapped_column(String(80))
+    qty: Mapped[int] = mapped_column(Integer, default=1)  # per system
+    volume: Mapped[int | None] = mapped_column(Integer)  # systems per year (assumed)
+    price: Mapped[float | None] = mapped_column(Float)  # target price per part, USD (assumed)
+    price_source: Mapped[str | None] = mapped_column(String(200))
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PipelineDraft(Base):
+    """The guided path from a part to a business case, saved after every step so it can be resumed: the part and its
+    cross, the block diagram, the parts in the design, the numbers, then the case it created or joined."""
+
+    __tablename__ = "pipeline_drafts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    state: Mapped[dict] = mapped_column(JSON, default=dict)
+    case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

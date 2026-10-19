@@ -27,6 +27,8 @@ from app.services import blocks
 
 TAXONOMY = Path(__file__).resolve().parents[2] / "data" / "taxonomy.yaml"
 UNCLASSIFIED = ("unclassified", "unclassified")
+LIFE_LABEL = {"active": "Active", "preview": "Preview / sampling", "nrnd": "NRND / last time buy",
+              "obsolete": "Obsolete", "unknown": "Not stated"}  # fmt: skip
 QUAL_LABEL = {"automotive": "Automotive (AEC-Q100)", "not_automotive": "Not automotive", "unknown": "Not stated"}
 CAPABILITIES = {
     "detailed": "Detailed parameters",
@@ -94,11 +96,28 @@ def _catalogue_index() -> dict[tuple[str, str], dict]:
             "status_text": r["status"],
             "qualification": "automotive" if auto is True else "not_automotive" if auto is False else "unknown",
             "url": r["url"],
+            "datasheet": r.get("datasheet") or "",
             "part_id": None,
             "role": "reference",
             "caps": {"catalogue", *(["source"] if r["url"] or r.get("datasheet") else [])},
         }
     return out
+
+
+def _pn(s: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", s.upper())
+
+
+def search_catalogue(q: str, exclude: set[str] | None = None, limit: int = 200) -> list[dict]:
+    """Manufacturer-catalogue records (Skyworks, Qorvo) whose part number contains the query; part numbers that start
+    with it first. `exclude` holds normalised part numbers already found among the parts with full data."""
+    qn = _pn(q)
+    if len(qn) < 2:
+        return []
+    exclude = exclude or set()
+    hits = [r for (_, k), r in _catalogue_index().items() if qn in _pn(r["mpn"]) and _pn(r["mpn"]) not in exclude]
+    hits.sort(key=lambda r: (not _pn(r["mpn"]).startswith(qn), len(r["mpn"]), r["mpn"]))
+    return hits[:limit]
 
 
 def index(session: Session) -> list[dict]:

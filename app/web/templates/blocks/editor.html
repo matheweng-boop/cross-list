@@ -9,12 +9,12 @@
   </div>
   <div class="bc-tools">
     <select id="bk-add" class="small-sel" aria-label="Add a function">
-      <option value="">+ Function…</option>
+      <option value="">+ Block (into the selected frame)…</option>
       {% for ckey, clabel in catalogue.categories.items() %}<optgroup label="{{ clabel }}">
         {% for key, f in catalogue.functions.items() if f.category == ckey %}{% set n = counts[key] %}<option value="{{ key }}">{{ f.label }}{% if n is none %} (customer){% elif n %} · {{ n }} Skyworks{% else %} · opportunity{% endif %}</option>{% endfor %}
       </optgroup>{% endfor %}
     </select>
-    <button id="bk-add-group" type="button" class="outline small-btn">+ Group</button>
+    <button id="bk-add-group" type="button" class="outline small-btn" title="A new frame (functional block) for blocks">+ Frame</button>
     <button id="bk-req" type="button" class="secondary small-btn">Requirements</button>
     <button id="bk-feedback" type="button" class="outline secondary small-btn">Feedback</button>
     <button id="bk-schem-open" type="button" class="secondary small-btn" aria-controls="bk-schem">Convert to schematic</button>
@@ -28,7 +28,7 @@
     <div class="bc-canvas"><svg id="bk-svg" role="application" aria-label="Block diagram"></svg></div>
     <aside id="bk-panel" class="bk-panel" aria-live="polite"><button type="button" id="bk-close" class="outline secondary small-btn bk-close" aria-label="Close panel">×</button><div id="bk-panel-body"></div></aside>
   </div>
-  <p class="small muted">Drag a frame to move it, or drag a block into another frame. <b>Arrange</b> orders the frames by signal flow. Click a block to focus the requirements and parts below on it; click it again (or the background) to deselect. The legend buttons highlight or grey out each kind of block. Click a group title to rename, move or connect it.</p>
+  <p class="small muted">Drag a frame to move it, or drag a block into another frame. <b>+</b> in a frame's corner adds a block to it. <b>Arrange</b> orders the frames by signal flow. Click a block to focus the requirements and parts below on it; click it again (or the background) to deselect. The legend buttons highlight or grey out each kind of block. Click a group title to rename, move or connect it.</p>
   <div class="bk-bottom">
     <section id="bk-reqs" class="bk-reqs" aria-label="Requirements"></section>
     <section id="bk-below" class="bk-below" aria-live="polite"></section>
@@ -53,6 +53,9 @@
 #bk-svg .b-sub { font-size: 10px; }
 #bk-svg .link { stroke: #3a3f47; stroke-width: 1.4; fill: none; marker-end: url(#arrow); stroke-linejoin: round; }
 #bk-svg .grp rect.frame { cursor: move; }
+#bk-svg .grp-add { cursor: pointer; } #bk-svg .grp-add rect { fill: #e8f6ef; stroke: #1baf7a; stroke-width: 1; }
+#bk-svg .grp-add text { font-size: 15px; font-weight: 700; fill: #128a5f; pointer-events: none; }
+#bk-svg .grp-add:hover rect, #bk-svg .grp-add:focus rect { fill: #1baf7a; } #bk-svg .grp-add:hover text, #bk-svg .grp-add:focus text { fill: #fff; }
 #bk-svg .blk { cursor: grab; }
 #bk-svg .dragging { opacity: .75; cursor: grabbing; }
 #bk-svg .grp.drop rect.frame { stroke: #eb6834; stroke-width: 2.4; fill: #fff7f2; }

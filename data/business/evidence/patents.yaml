@@ -1,0 +1,490 @@
+# Indicative patent depth of Skyworks / Qorvo per function's technology area (public patent searches; not legal advice).
+# depth: strong (many families, active filing) | some | little | none_found
+# Source: USPTO Patent Public Search (ppubs.uspto.gov, anonymous, BRS syntax), US grants + published applications, searched 2026-10-19.
+# count = US patent families matching the query (keywords in title/abstract/claims; Qorvo includes RFMD, TriQuint, Active-Semi,
+# Decawave, GreenPeak, UnitedSiC). Keyword hits include circuits embedded in RF products, so depth was judged from the titles too.
+# Skyworks' ex-Silicon Labs I&A (isolation, timing) patents only count where already assigned to Skyworks. US only; no EP/CN families.
+
+pol_ldo:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"low dropout\" OR \"low-dropout\" OR LDO).ti,ab,clm."
+  count: 76
+  examples: ["US12597890B2 Over temperature protection of LDO controlling the RF power amplifier collector voltage", "US12525924B2 Envelope tracking radio frequency front-end circuit", "US12487619B2 LDO output power-on glitch removal circuit"]
+  note: "LDO circuits mostly inside RF PA / FEM supply paths (e.g. LDO glitch removal, programmable LDOs) (Skyworks 24 / Qorvo group 52 families)"
+  confidence: medium
+temperature_sensor:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"temperature sensor\" OR \"temperature sensing\" OR thermistor).ti,ab,clm."
+  count: 41
+  examples: ["US12744496B2 Thermal droop compensation in power amplifiers", "US12730012B2 Gain compensation for power amplifiers using a temperature sensor circuit", "US12695428B2 Power protection loop for amplifier chain elements"]
+  note: "on-die temperature sensing for PA gain/thermal compensation, not standalone sensor ICs (Skyworks 16 / Qorvo group 25 families)"
+  confidence: medium
+ble_soc:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (bluetooth OR BLE OR \"802.15.4\" OR zigbee).ti,ab,clm."
+  count: 26
+  examples: ["US12609721B2 Isolation provision from multiple antennas to a single antenna", "US12581251B2 Method of providing improved audio processing model", "US12494818B2 Ultra-wideband-enabled devices and systems for facilitating access control"]
+  note: "hits are BLE/Zigbee front ends, antenna sharing and Qorvo UWB/GreenPeak radios rather than SoC design (Skyworks 10 / Qorvo group 16 families)"
+  confidence: low
+supervisor:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"voltage supervisor\" OR \"supervisory circuit\" OR \"power-on reset\" OR \"brown-out\" OR brownout).ti,ab,clm."
+  count: 2
+  examples: ["US10333511B2 Dual-level power-on reset (POR) circuit", "US20110133852A1 MULTIPLEXED SERIAL CONTROL BUS", "US8755398B2 Multiplexed serial control bus"]
+  note: "only power-on-reset circuits inside RF control logic (Skyworks 0 / Qorvo group 2 families)"
+  confidence: medium
+adc:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"analog-to-digital\" OR \"analog to digital\" OR ADC).ti,ab,clm."
+  count: 87
+  examples: ["US12732214B2 Reprogrammable array of selectable antenna elements for frequency adjustment", "US12706592B2 Application-specific integrated circuit with integrated difference filter", "US12674864B2 Analog-to-digital converter for radar sensing"]
+  note: "ADCs embedded in radar, audio and RF calibration loops; no standalone data-converter portfolio (Skyworks 36 / Qorvo group 51 families)"
+  confidence: medium
+amplifier:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"operational amplifier\" OR \"instrumentation amplifier\" OR \"current sense amplifier\" OR \"current sensing amplifier\" OR \"transimpedance amplifier\").ti,ab,clm."
+  count: 78
+  examples: ["US12744496B2 Thermal droop compensation in power amplifiers", "US12744448B2 Systems and methods for improving efficiency in a power management circuit", "US12580534B2 Time-advanced phase correction in a power amplifier circuit"]
+  note: "keyword hits are mostly current-sense/TIA blocks inside PA and envelope-tracking systems, not precision op-amps (Skyworks 31 / Qorvo group 47 families)"
+  confidence: low
+mcu:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (microcontroller OR MCU).ti,ab,clm."
+  count: 15
+  examples: ["US12656886B2 Force-augmented scrolling input device", "US12490661B2 Control method for switches based on dual phase materials", "US12270843B2 Calibration of the external resistance value in the power sourcing equipment of a power over ethernet system"]
+  note: "claims merely mention a microcontroller; no MCU architecture patents (Skyworks 3 / Qorvo group 12 families)"
+  confidence: medium
+isolated_dcdc:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"isolated power\" OR \"isolated DC-DC\" OR \"isolated converter\" OR (\"isolation barrier\" AND (power OR converter))).ti,ab,clm."
+  count: 5
+  examples: ["US11581840B2 Flexible fault detection", "US11575369B2 Management of multiple switching-synchronized measurements using combined prioritized measurement and round-robin sequence measurement", "US11942925B2 Management of multiple switching-synchronized measurements using combined prioritized measurement and round-robin sequence measurement"]
+  note: "handful of Skyworks isolated gate-driver patents (ex-Silicon Labs I&A); many ex-SiLabs isolation patents may still be assigned to Silicon Labs (Skyworks 4 / Qorvo group 1 families)"
+  confidence: low
+voltage_reference:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"voltage reference\" OR \"bandgap reference\" OR bandgap).ti,ab,clm."
+  count: 151
+  examples: ["US12665485B2 Multi-voltage power management integrated circuit", "US12656806B2 Reference startup circuit for audio amplifiers", "US12627265B2 Methods for generating a constant current"]
+  note: "bandgap / reference and bias generation circuits inside RF, PMIC and audio ICs (Skyworks 72 / Qorvo group 79 families)"
+  confidence: medium
+wifi_soc:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"wireless local area network\" OR WLAN OR \"Wi-Fi\" OR WiFi OR \"802.11\").ti,ab,clm."
+  count: 74
+  examples: ["US12763799B2 Circuits for filtering radio-frequency signals", "US12700878B2 Consolidated front-end architecture", "US12609721B2 Isolation provision from multiple antennas to a single antenna"]
+  note: "strong in Wi-Fi front-end modules and filtering, but no Wi-Fi SoC/baseband patents found (Skyworks 52 / Qorvo group 22 families)"
+  confidence: medium
+tvs_esd:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"electrostatic discharge\" OR ESD OR \"transient voltage suppressor\" OR \"surge protection\").ti,ab,clm."
+  count: 48
+  examples: ["US11664829B2 Integrated front-end architecture modules for carrier aggregation", "US12237849B2 Devices and methods related to integrated front-end architecture modules for carrier aggregation", "US11476245B2 ESD protection of MEMS for RF applications"]
+  note: "on-chip ESD clamps and surge protection for RF front ends, not discrete TVS (Skyworks 16 / Qorvo group 32 families)"
+  confidence: medium
+half_bridge_driver:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"gate driver\" OR \"gate drive circuit\" OR \"half-bridge driver\" OR \"half bridge driver\").ti,ab,clm."
+  count: 21
+  examples: ["US12615034B2 FET driver circuit", "US12334917B2 Voltage-source gate drive having shunt capacitors and shunt resistors", "US12155332B2 Updating control parameters of a gate driver during operation"]
+  note: "Skyworks isolated gate drivers plus Qorvo/UnitedSiC FET gate-drive circuits (Skyworks 9 / Qorvo group 12 families)"
+  confidence: medium
+three_phase_gate_driver:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND ((\"gate driver\" OR \"gate drive\") AND (\"three-phase\" OR \"three phase\" OR \"brushless\" OR BLDC OR inverter)).ti,ab,clm."
+  count: 3
+  examples: ["US12334917B2 Voltage-source gate drive having shunt capacitors and shunt resistors", "US11575369B2 Management of multiple switching-synchronized measurements using combined prioritized measurement and round-robin sequence measurement", "US10897246B2 Radio frequency switching circuitry with reduced switching time"]
+  note: "only incidental gate-drive hits; no BLDC/3-phase driver families (Skyworks 1 / Qorvo group 2 families)"
+  confidence: medium
+sequencer:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"power sequencing\" OR \"power sequencer\" OR \"supply sequencing\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no power-sequencing families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+audio_codec:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"audio codec\" OR \"audio signal processing\" OR \"audio amplifier\" OR \"digital signal processor\").ti,ab,clm."
+  count: 32
+  examples: ["US12656806B2 Reference startup circuit for audio amplifiers", "US12640693B2 Pulse-width modulation audio amplifier having feed forward loop", "US12575325B2 Cantilever sensor with modified resonance frequency"]
+  note: "mainly Skyworks class-D audio amplifiers and MEMS microphones, not codecs/DSP (Skyworks 27 / Qorvo group 5 families)"
+  confidence: medium
+efuse_hotswap:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"hot swap\" OR \"hot-swap\" OR \"electronic fuse\" OR eFuse OR \"inrush current\").ti,ab,clm."
+  count: 8
+  examples: ["US12640646B2 Fast-switching power management integrated circuit", "US11711107B2 Systems and methods for antenna impedance matching", "US10756675B2 Broadband power amplifier circuit"]
+  note: "only inrush handling inside Qorvo PMICs/PAs (Skyworks 0 / Qorvo group 8 families)"
+  confidence: medium
+gnss_lna:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (GNSS OR GPS OR \"global positioning\" OR \"satellite navigation\").ti,ab,clm."
+  count: 34
+  examples: ["US12719447B2 Filter module with improved linearity response", "US12683485B2 Ripple reduction for direct current-to-direct current (DC-DC) converters", "US12581251B2 Method of providing improved audio processing model"]
+  note: "GNSS-band filtering and front-end modules; few dedicated GNSS LNA families (Skyworks 14 / Qorvo group 20 families)"
+  confidence: medium
+ethernet_phy:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (Ethernet OR \"physical layer transceiver\").ti,ab,clm."
+  count: 4
+  examples: ["US12681526B2 Timing synchronization system", "US12270843B2 Calibration of the external resistance value in the power sourcing equipment of a power over ethernet system", "US12200097B2 Secondary phase compensation assist for PLL IO delay"]
+  note: "Skyworks timing/synchronization (IEEE 1588 style) patents, no PHY design (Skyworks 4 / Qorvo group 0 families)"
+  confidence: medium
+rtc:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"real-time clock\" OR \"real time clock\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no real-time-clock families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+can_transceiver:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"controller area network\" OR \"CAN bus\" OR \"CAN transceiver\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no CAN physical-layer families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+watchdog:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (watchdog).ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no watchdog families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+termination_ldo:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"termination voltage\" OR \"DDR termination\" OR \"termination regulator\" OR VTT).ti,ab,clm."
+  count: 2
+  examples: ["US7795966B2 Balanced amplifier with protection circuit", "US5159216A Precision tristate output driver circuit having a voltage clamping feature"]
+  note: "two incidental hits, unrelated to DDR termination (Skyworks 1 / Qorvo group 1 families)"
+  confidence: low
+reverse_polarity:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"reverse polarity\" OR \"reverse battery\" OR \"ideal diode\").ti,ab,clm."
+  count: 1
+  examples: ["US20070080674A1 System and method for an adaptive synchronous switch in switching regulators", "US7309977B2 System and method for an adaptive synchronous switch in switching regulators"]
+  note: "one Active-Semi synchronous-switch family; no ideal-diode controllers (Skyworks 0 / Qorvo group 1 families)"
+  confidence: medium
+motor_driver_brushed:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"motor driver\" OR \"H-bridge\" OR \"stepper motor\" OR \"DC motor\").ti,ab,clm."
+  count: 6
+  examples: ["US12640693B2 Pulse-width modulation audio amplifier having feed forward loop", "US12567844B2 Class D amplifier with stabilized PWM control loop", "US12445096B2 Output capacitance distortion correction for audio amplifiers"]
+  note: "H-bridge hits are class-D audio output stages, not motor drivers (Skyworks 5 / Qorvo group 1 families)"
+  confidence: low
+diversity_rx_module:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"diversity receive\" OR \"diversity module\" OR \"diversity antenna\" OR (\"receive module\" AND \"low noise amplifier\")).ti,ab,clm."
+  count: 59
+  examples: ["US12756408B2 Radio frequency module with reduced intermodulation distortion", "US12683632B2 Systems, devices, and methods related to RF front-end architectures for roaming support using filter bandwidth consolidation and reduced filter count", "US12640703B2 Acoustic wave device with dielectric layer for reduced transverse leakage"]
+  note: "core Skyworks RF front-end business: diversity receive modules, carrier aggregation (Skyworks 48 / Qorvo group 11 families)"
+  confidence: medium
+io_expander:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"I/O expander\" OR \"input/output expander\" OR \"GPIO expander\" OR \"port expander\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no I/O expander families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+rf_transceiver:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (transceiver AND (\"radio frequency\" OR RF) AND (mixer OR \"local oscillator\")).ti,ab,clm."
+  count: 23
+  examples: ["US12506517B2 Integrated single-chip beamforming system", "US12388475B2 Polyphase power amplifier architecture for load insensitivity", "US12237858B2 Mobile devices with dual conversion of multiple frequency bands using a shared intermediate frequency"]
+  note: "beamforming ICs and dual-conversion front ends; not full cellular RFICs (Skyworks 16 / Qorvo group 7 families)"
+  confidence: medium
+pre_regulator:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"boost converter\" OR \"buck-boost\" OR \"buck boost\" OR SEPIC OR \"pre-regulator\").ti,ab,clm."
+  count: 74
+  examples: ["US12763656B2 Dynamic current limits for direct current-to-direct current (DC-DC) converters", "US12756316B2 Systems and methods for integrated multi-mode power management for uplink carrier aggregated transmitter", "US12744448B2 Systems and methods for improving efficiency in a power management circuit"]
+  note: "boost/buck-boost converters in PA supply and Qorvo (Active-Semi) PMICs (Skyworks 22 / Qorvo group 52 families)"
+  confidence: medium
+nfc_frontend:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"near field communication\" OR \"near-field communication\" OR NFC OR RFID).ti,ab,clm."
+  count: 5
+  examples: ["US9505632B2 Compositions and materials for electronic applications", "US11088435B2 Modified Ni—Zn ferrites for radiofrequency applications", "US8835339B2 Enhanced high Q material compositions and methods of preparing same"]
+  note: "hits are ferrite material compositions, not NFC front ends (Skyworks 4 / Qorvo group 1 families)"
+  confidence: low
+voltage_translator:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"level shifter\" OR \"level shifting\" OR \"voltage translator\" OR \"voltage level translation\").ti,ab,clm."
+  count: 48
+  examples: ["US12665598B2 Low leakage level shifter", "US12587197B2 Multi-phase clock generator circuit", "US12381474B2 Voltage generator with low clock feedthrough"]
+  note: "level shifters inside RF switch/control circuits, no standalone translators (Skyworks 31 / Qorvo group 17 families)"
+  confidence: medium
+haptics_driver:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (haptic OR \"piezoelectric actuator\" OR \"linear resonant actuator\" OR \"piezo driver\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no haptics/piezo driver families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+acdc_controller:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"power factor correction\" OR \"flyback converter\" OR \"LLC resonant\" OR \"synchronous rectifier\" OR \"AC-DC\" OR \"AC/DC\").ti,ab,clm."
+  count: 23
+  examples: ["US10579128B2 Switching power supply for subus slaves", "US9509162B2 Single-stage AC-to-DC switching converter that directly charges a battery requiring a multi-state charging profile", "US20150138856A1 POWER FACTOR CORRECTION AUTODETECT"]
+  note: "Qorvo (Active-Semi) PFC and flyback controllers; nothing from Skyworks (Skyworks 0 / Qorvo group 23 families)"
+  confidence: medium
+secure_element:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"secure element\" OR \"cryptographic\" OR \"physically unclonable\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no secure-element/crypto families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+power_fets:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"power transistor\" OR \"power MOSFET\" OR \"silicon carbide\" OR \"GaN transistor\" OR \"gallium nitride transistor\" OR JFET OR \"high electron mobility transistor\").ti,ab,clm."
+  count: 170
+  examples: ["US12751034B2 Dual-gate semiconductor structures for power applications", "US12732139B2 Broadband LNA structure using offset active coupled segments", "US12733519B2 Multichip module thermal management through backside metal"]
+  note: "Qorvo GaN HEMTs and UnitedSiC SiC FETs; Skyworks has few (Skyworks 25 / Qorvo group 145 families)"
+  confidence: high
+soc:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"application processor\" OR \"system on chip\" OR \"system-on-chip\" OR baseband).ti,ab,clm."
+  count: 268
+  examples: ["US12744505B2 Multiplexing for filter-banks complexity reduction", "US12738894B2 Progressive envelope tracking with delay compensation", "US12738900B2 Protection circuit for acoustic filter and power amplifier stage"]
+  note: "count inflated by 'baseband' mentions in RF front-end claims; no application-processor design (Skyworks 152 / Qorvo group 116 families)"
+  confidence: low
+env_sensor:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"humidity sensor\" OR \"ambient light sensor\" OR \"pressure sensor\" OR \"gas sensor\" OR \"environmental sensor\").ti,ab,clm."
+  count: 7
+  examples: ["US12658860B2 Analog predistortion (APD) for power amplifier", "US12625156B2 Apparatus incorporating strain sensor for determining relative velocity, flow, or attack angle between a fluid and a body", "US12411049B2 Temperature coefficient of offset compensation for resistance bridge"]
+  note: "a few Qorvo force/strain sensor families; no humidity/light/pressure sensors (Skyworks 2 / Qorvo group 5 families)"
+  confidence: medium
+relay_driver:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"relay driver\" OR \"solenoid driver\" OR \"low-side driver\" OR \"low side switch\" OR \"coil driver\").ti,ab,clm."
+  count: 11
+  examples: ["US12627219B2 Adaptive dead-time control for switching circuitry of a DC converter", "US12476595B2 Power amplifier system with reduced gain variation and push-pull stage neutralization", "US12537487B2 Power amplifier system with reduced gain variation for envelope tracking applications"]
+  note: "incidental switching/driver hits, not relay or solenoid drivers (Skyworks 3 / Qorvo group 8 families)"
+  confidence: low
+isolated_can:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND ((\"controller area network\" OR \"CAN bus\" OR \"CAN transceiver\") AND (isolator OR isolation OR isolated)).ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no isolated CAN families under these assignees (ex-SiLabs isolation IP may sit under Silicon Labs) (Skyworks 0 / Qorvo group 0 families)"
+  confidence: low
+touch_controller:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"capacitive sensing\" OR \"capacitive touch\" OR \"touch sensor\" OR \"touch controller\" OR \"inductive sensing\").ti,ab,clm."
+  count: 2
+  examples: ["US12656886B2 Force-augmented scrolling input device", "US11946817B2 Integrated digital force sensors and related methods of manufacture"]
+  note: "Qorvo force-sensing (NextInput-type) families only (Skyworks 0 / Qorvo group 2 families)"
+  confidence: medium
+battery_protector:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"battery protection\" OR \"cell protection\" OR \"overcharge protection\" OR \"over-discharge\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no battery-protector families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+redriver:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (redriver OR \"re-driver\" OR retimer OR \"linear equalizer\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no redriver/retimer families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+hv_flyback:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (flyback).ti,ab,clm."
+  count: 23
+  examples: ["US11201467B2 Reduced flyback ESD surge protection", "US10931263B2 Filter circuits having a resonator-based filter and a magnetically-coupled filter", "US10579128B2 Switching power supply for subus slaves"]
+  note: "Qorvo/Active-Semi flyback converters, partly unrelated 'flyback' hits; no HV traction flyback (Skyworks 0 / Qorvo group 23 families)"
+  confidence: low
+hall_switch:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"Hall effect\" OR \"Hall-effect\" OR \"Hall sensor\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no Hall-effect families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+serdes:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (serializer OR deserializer OR SERDES OR \"clock and data recovery\").ti,ab,clm."
+  count: 4
+  examples: ["US12323728B2 System, apparatus and method for providing remote tuner options in a vehicle entertainment system", "US12160257B2 Distributed radio frequency communication systems for automotive", "US11500803B2 Programmable slave circuit on a communication bus"]
+  note: "a few RF-over-cable and serial bus hits; no SerDes design (Skyworks 2 / Qorvo group 2 families)"
+  confidence: medium
+ddr_flash:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"dynamic random access memory\" OR DRAM OR \"flash memory\" OR \"memory controller\").ti,ab,clm."
+  count: 2
+  examples: ["US11500803B2 Programmable slave circuit on a communication bus", "US10599601B1 Single-wire bus (SuBUS) slave circuit and related apparatus", "US11106615B2 Single-wire bus (SuBUS) slave circuit and related apparatus"]
+  note: "hits are single-wire control bus patents, not memory (Skyworks 0 / Qorvo group 2 families)"
+  confidence: low
+position_sensor:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"position sensor\" OR \"angle sensor\" OR \"rotary encoder\" OR magnetoresistive OR \"inductive position\").ti,ab,clm."
+  count: 3
+  examples: ["US12715759B2 Mechanically coupled piezoelectric mems microphone", "US11436914B2 Methods for the determination and control of a piece of equipment to be controlled; device, use and system implementing these methods", "US8749309B2 Gate-based output power level control power amplifier"]
+  note: "incidental hits; no position/angle sensor families (Skyworks 1 / Qorvo group 2 families)"
+  confidence: low
+dac:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"digital-to-analog\" OR \"digital to analog\" OR DAC).ti,ab,clm."
+  count: 147
+  examples: ["US12763656B2 Dynamic current limits for direct current-to-direct current (DC-DC) converters", "US12732214B2 Reprogrammable array of selectable antenna elements for frequency adjustment", "US12656806B2 Reference startup circuit for audio amplifiers"]
+  note: "DACs used inside PA bias, envelope tracking and audio loops; no standalone DACs (Skyworks 51 / Qorvo group 96 families)"
+  confidence: medium
+usb_pd_controller:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"universal serial bus\" OR \"USB Type-C\" OR \"USB power delivery\" OR \"USB-C\").ti,ab,clm."
+  count: 4
+  examples: ["US10445281B2 Load detection apparatus and method for USB systems", "US9692246B2 Light load detection and current drain cutoff in a power bank device", "US20150318707A1 Adaptive Power Source For Wireless Power Transmitter"]
+  note: "a few Active-Semi USB power-bank load-detection families; no Type-C/PD controllers (Skyworks 1 / Qorvo group 3 families)"
+  confidence: medium
+modem:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (modem OR \"cellular baseband\" OR \"non-terrestrial network\").ti,ab,clm."
+  count: 13
+  examples: ["US11309927B2 Radio frequency communication systems with discrete time cancellation for coexistence management", "US11283480B2 Discrete time cancellation for providing coexsitence in radio frequency communication systems", "US12063062B2 Discrete time cancellation for providing coexistence in radio frequency applications"]
+  note: "Skyworks coexistence/cancellation and beamforming patents mentioning modems (Skyworks 12 / Qorvo group 1 families)"
+  confidence: medium
+flash:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"flash memory\" OR \"non-volatile memory\" OR NAND OR \"one-time programmable\" OR eFuse).ti,ab,clm."
+  count: 38
+  examples: ["US12525492B2 Semiconductor wafer with probe pads located in saw street", "US12604709B2 Probe card configured to connect to a probe pad located in saw street of a semiconductor wafer", "US12721112B2 Probe card for connecting to contact pads configured to act as probe pads of a semiconductor wafer"]
+  note: "hits are trimming/fuse and wafer-test patents, not memory design (Skyworks 14 / Qorvo group 24 families)"
+  confidence: low
+radar_transceiver:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (radar).ti,ab,clm."
+  count: 21
+  examples: ["US12674864B2 Analog-to-digital converter for radar sensing", "US12407306B2 Radio frequency front end with integrated channel matching calibration", "US12160257B2 Distributed radio frequency communication systems for automotive"]
+  note: "Qorvo radar ADC and UWB/radar sensing; Skyworks automotive RF distribution (Skyworks 2 / Qorvo group 19 families)"
+  confidence: medium
+vehicle_sensors:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (vehicle AND (sensor OR \"wheel speed\" OR steering OR braking)).ti,ab,clm."
+  count: 4
+  examples: ["US12683485B2 Ripple reduction for direct current-to-direct current (DC-DC) converters", "US12640767B2 Systems, devices, and methods related to RF front-end architectures with integrated antenna switch circuitry", "US12625156B2 Apparatus incorporating strain sensor for determining relative velocity, flow, or attack angle between a fluid and a body"]
+  note: "incidental automotive hits only (Skyworks 1 / Qorvo group 3 families)"
+  confidence: low
+ldo_tracker:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND ((\"low dropout\" OR LDO OR regulator) AND (tracking OR tracker)).ti,ab,clm."
+  count: 40
+  examples: ["US12525924B2 Envelope tracking radio frequency front-end circuit", "US12381522B2 Average power tracking systems with fast transient settling", "US12184236B2 Multi-amplifier envelope tracking apparatus"]
+  note: "supply-tracking strength is in PA envelope/average-power tracking, not LDO trackers (Skyworks 7 / Qorvo group 33 families)"
+  confidence: medium
+multiphase:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND ((multiphase OR \"multi-phase\" OR \"multi phase\") AND (converter OR regulator OR buck)).ti,ab,clm."
+  count: 8
+  examples: ["US11942972B2 Radio frequency switch control circuitry", "US11362646B1 Variable current drive for isolated gate drivers", "US11804827B2 Validation of current levels delivered by a gate driver"]
+  note: "hits are multi-phase clocks and gate-driver patents, not multiphase VRM controllers (Skyworks 2 / Qorvo group 6 families)"
+  confidence: low
+lin_transceiver:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"local interconnect network\" OR \"LIN bus\" OR \"LIN transceiver\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no LIN families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+switch_detection_interface:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"switch detection\" OR \"wetting current\" OR \"switch input monitor\").ti,ab,clm."
+  count: 3
+  examples: ["US11165395B2 Apparatus and methods for overload protection of radio frequency amplifiers", "US20150137610A1 Auto Load Switch Detection for Wireless Power Receiver", "US9680309B2 Auto load switch detection for wireless power receiver"]
+  note: "incidental 'switch detection' hits unrelated to MSDI (Skyworks 2 / Qorvo group 1 families)"
+  confidence: low
+mmwave_antenna_module:
+  depth: some
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND ((\"millimeter wave\" OR \"millimeter-wave\" OR mmWave) AND (antenna OR \"phased array\" OR beamforming)).ti,ab,clm."
+  count: 15
+  examples: ["US12489188B2 Tunable cavity waveguide", "US12489208B2 Honeycomb cavity waveguide", "US12407306B2 Radio frequency front end with integrated channel matching calibration"]
+  note: "mmWave front ends, waveguides and beamforming systems (Skyworks 9 / Qorvo group 6 families)"
+  confidence: medium
+rf_predriver:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"driver amplifier\" OR \"pre-driver\" OR predriver OR \"driver stage\").ti,ab,clm."
+  count: 77
+  examples: ["US12738894B2 Progressive envelope tracking with delay compensation", "US12706592B2 Application-specific integrated circuit with integrated difference filter", "US12695428B2 Power protection loop for amplifier chain elements"]
+  note: "core PA chain expertise at both companies (driver stages, predistortion, ET) (Skyworks 31 / Qorvo group 46 families)"
+  confidence: high
+position_interface:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (resolver OR \"resolver-to-digital\" OR \"position sensor interface\" OR \"sensor excitation\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no resolver/sensor-interface families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+ppg_afe:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (photoplethysmography OR photoplethysmogram OR PPG OR \"pulse oximetry\" OR SpO2).ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no optical biosensing families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+active_antenna_amp:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"active antenna\" OR (\"antenna amplifier\" AND (AM OR FM OR broadcast))).ti,ab,clm."
+  count: 2
+  examples: ["US12749821B2 Reducing azimuth-elevation correlation in an antenna array structure", "US11303009B2 Packages for advanced antenna systems"]
+  note: "two antenna-array hits; no AM/FM active antenna amplifier families (Skyworks 0 / Qorvo group 2 families)"
+  confidence: medium
+circulator_isolator:
+  depth: strong
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (circulator OR (isolator AND (ferrite OR garnet OR \"radio frequency\" OR microwave))).ti,ab,clm."
+  count: 43
+  examples: ["US12512232B2 Low loss tangent dielectric based on spinel-structured oxide", "US12500558B2 No spur fast hot switching coupler architecture", "US12261344B2 High saturation magnetization and high dielectric constant ferrites"]
+  note: "Skyworks (Trans-Tech) ferrite/garnet materials and circulator designs (Skyworks 32 / Qorvo group 11 families)"
+  confidence: medium
+smartcard_interface:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"smart card\" OR smartcard OR \"ISO 7816\" OR \"integrated circuit card\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no smart-card interface families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+ecg_afe:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (electrocardiogram OR ECG OR biopotential OR \"bio-potential\").ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no biopotential AFE families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+ultrasonic_afe:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (ultrasonic AND (transducer OR \"time of flight\" OR \"time-of-flight\" OR echo)).ti,ab,clm."
+  count: 1
+  examples: ["US12575325B2 Cantilever sensor with modified resonance frequency", "US12635414B2 Method of manufacturing a cantilever sensor"]
+  note: "Skyworks MEMS cantilever sensor hits only (Skyworks 1 / Qorvo group 0 families)"
+  confidence: medium
+v2x_transceiver:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (V2X OR \"vehicle-to-everything\" OR \"vehicle to everything\" OR DSRC OR \"C-V2X\" OR \"802.11p\").ti,ab,clm."
+  count: 1
+  examples: ["US11722841B2 Vehicle-mounted ranging system"]
+  note: "one Qorvo vehicle ranging family; V2X work is front-end modules, not transceivers (Skyworks 0 / Qorvo group 1 families)"
+  confidence: medium
+wireless_power:
+  depth: little
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (\"wireless power\" OR \"wireless charging\" OR \"inductive charging\" OR \"wireless energy transfer\").ti,ab,clm."
+  count: 12
+  examples: ["US11038267B2 Apparatus and methods for electromagnetic shielding using an outer cobalt layer", "US10566843B2 Wireless charging circuit", "US10559970B2 Method for wireless charging power control"]
+  note: "a few Qorvo/Active-Semi wireless charging families (Skyworks 1 / Qorvo group 11 families)"
+  confidence: medium
+ultrasound_afe:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND (ultrasound AND (imaging OR probe OR \"variable gain amplifier\")).ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no medical ultrasound AFE families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium
+hv_pulser:
+  depth: none_found
+  query: "(skyworks OR qorvo OR \"rf micro devices\" OR triquint OR \"active-semi\" OR decawave OR greenpeak OR \"united silicon carbide\").as. AND ((ultrasound OR ultrasonic) AND (pulser OR \"transmit/receive switch\" OR \"high voltage pulse\")).ti,ab,clm."
+  count: 0
+  examples: []
+  note: "no HV pulser families found (Skyworks 0 / Qorvo group 0 families)"
+  confidence: medium

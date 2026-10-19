@@ -41,8 +41,8 @@ def test_pages_counts_and_parts(client):
 
 def test_feedback_is_saved_for_discussion(client):
     d = client.post("/api/blocks/designs", json={"name": "Inverter", "data": {"groups": [], "links": []}}).json()
-    r = client.post("/api/blocks/feedback", json={"diagram_id": d["id"], "diagram_name": "Inverter", "target": "Gate drive",
-                                                   "message": "Needs DESAT"})  # fmt: skip
+    fb = {"diagram_id": d["id"], "diagram_name": "Inverter", "target": "Gate drive", "message": "Needs DESAT"}
+    r = client.post("/api/blocks/feedback", json=fb)
     assert r.status_code == 200
     assert client.get(f"/api/blocks/feedback?diagram_id={d['id']}").json()[0]["message"] == "Needs DESAT"
     assert "Needs DESAT" in client.get("/blocks/feedback").text

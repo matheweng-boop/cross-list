@@ -1,0 +1,1437 @@
+# Typical-application data for the Skyworks RF switches (see README.md for the format).
+# Source: the local datasheet text in var/text/skyworks_switches/<stem>.txt; quotes are verbatim from it.
+covers: [data/real/skyworks_switches.yaml]
+datasheets:
+  # ---------------------------------------------------------------- GaAs / pHEMT, positive control, no supply pin
+  - datasheet: 200177D.pdf
+    doc: "AS183-92/AS183-92LF: 300 kHz-2.5 GHz pHEMT GaAs SPDT Switch, 200177D"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on all three RF ports (J1/J2/J3, Note 1); 100 pF for >500 MHz, larger values for lower frequency"
+        page: 2
+        quote: "A 100 pF blocking capacitor is required for >500 MHz operation. Use larger value capacitors for lower frequency operation."
+    pin_rules: []
+    notes: "No supply pin (control pins V1/V2 only). The evaluation board schematic (Figure 6) has no component values in the text. Nothing stated about control-line components."
+
+  - datasheet: 200193D.pdf
+    doc: "AS213-92, AS213-92LF: PHEMT GaAs IC SPDT Switch, 200193 Rev. D"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "CBL on J1, J2, J3 for positive-voltage operation; 100 pF for >500 MHz"
+        page: 1
+        quote: "DC blocking capacitors (CBL) must be supplied externally for positive voltage operation. CBL = 100 pF for operation >500 MHz."
+    pin_rules: []
+    notes: "No supply pin. Nothing stated about control-line or ground components."
+
+  - datasheet: 201098D.pdf
+    doc: "SKY13322-375LF: 20 MHz-6.0 GHz GaAs SP4T Switch, 201098D"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF[1-4]|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on J1-J4 and RFC (Note 1); 47 pF for >1 GHz. Evaluation board note: use 10 nF CBL for <50 MHz operation"
+        page: 2
+        quote: "Note 1: A 47 pF blocking capacitor is required for >1 GHz operation. Use larger value capacitors for lower frequency operation."
+    pin_rules: []
+    notes: "No supply pin. Evaluation board (p.5): \"Exposed ground paddle should be grounded for best performance\" (the exposed pad is not in the pin list). N/C pin: no connection, nothing further stated."
+
+  - datasheet: 201341C.pdf
+    doc: "SKY13355-374LF: 0.1-6.0 GHz DPDT Switch, 201341C"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF1|RF2|RFC1|RFC2)$'
+        to: RF
+        series: true
+        required: true
+        note: "value from the evaluation board bill of materials (CBL, DC blocking capacitor); pin table: every RF port 'Must be DC-blocked for proper operation'"
+        page: 5
+        quote: "CBL 47 pF 0402 Murata GRM Series DC blocking capacitor"
+    pin_rules: []
+    notes: "No supply pin. Evaluation board BOM also lists CBYP 10 pF 'Decoupling capacitor' but the text does not say which pin it sits on, so it is omitted. Exposed backside ground pad must be grounded through a low-impedance path (p.2); not in the pin list."
+
+  - datasheet: AS169_200105E.pdf
+    doc: "AS169-73, AS169-73LF: PHEMT GaAs IC SPDT Switch, 200105 Rev. E"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "CBL on J1, J2, J3 for positive-voltage operation; 100 pF for >500 MHz"
+        page: 1
+        quote: "DC blocking capacitors (CBL) must be supplied externally for positive voltage operation. CBL= 100 pF for operation >500 MHz."
+    pin_rules: []
+    notes: "No supply pin. Nothing stated about control-line or ground components."
+
+  - datasheet: AS179-92LF_200176J.pdf
+    doc: "AS179-92LF SPDT switch, 200176J"
+    supplies: []
+    components: []
+    pin_rules: []
+    notes: "The local datasheet text is empty (PDF has no extractable text layer), so nothing can be quoted; no external components recorded."
+
+  # ---------------------------------------------------------------- PIN-diode high-power switches
+  - datasheet: SKY12209-478LF_201905E_discontinued.pdf
+    doc: "SKY12209-478LF: 0.9 to 4.0 GHz 40 W High Power Silicon PIN Diode SPDT Switch, 201905E"
+    supplies: []
+    components:
+      - kind: resistor
+        value: "540 Ω"
+        pins: '^RF1_BIAS$'
+        to: SUPPLY
+        series: true
+        required: true
+        note: "R2: forward bias for the diode between pins 14 and 11 from the RF1_BIAS bias source; nominally 540 Ω for 28 V / ~50 mA, otherwise (Vs - VDIODE)/I; evaluation board uses it off board, rated >1.35 W at 28 V / 50 mA"
+        page: 8
+        quote: "forward bias through R2 to the diode connected between pins 14"
+      - kind: resistor
+        value: "540 Ω"
+        pins: '^RF2_BIAS$'
+        to: SUPPLY
+        series: true
+        required: true
+        note: "R3: forward bias for the diode between pins 7 and 9 from the RF2_BIAS bias source; same sizing as R2"
+        page: 8
+        quote: "forward bias through R3 to the diode connected between pins 7"
+    pin_rules:
+      - pins: '^GND$'
+        rule: "connect to ground with the lowest possible impedance"
+        page: 2
+        quote: "GND Ground. Must be connected to ground using"
+    notes: "Bias-controlled PIN diode switch (5 V on RFC, 28 V / 0 V on the RF and bias ports). The evaluation board BOM (p.11) lists 1000 pF and 1 µF capacitors, 22 nH inductors and R1 = 80 Ω, but the text does not tie them to pins, so they are omitted. No logic supply pin."
+
+  - datasheet: SKY12210-478LF_201634J_discontinued.pdf
+    doc: "SKY12210-478LF: 0.9 to 5.0 GHz, 100 W High-Power Silicon PIN Diode SPDT T/R Switch, 201634J"
+    supplies: []
+    components:
+      - kind: resistor
+        value: "31 Ω"
+        pins: '^RFC$'
+        to: SUPPLY
+        series: true
+        required: true
+        note: "R1 in the ANT bias path: sets 100 mA forward current with 5 V applied to the ANT port bias pin (evaluation board: two 62 Ω in parallel)"
+        page: 8
+        quote: "The value of resistor R1, 31 Ω, is selected to provide 100 mA of"
+      - kind: resistor
+        value: "262 Ω"
+        pins: '^RX_BIAS$'
+        to: SUPPLY
+        series: true
+        required: true
+        note: "R2: forward bias through RX_BIAS to the diode between pins 7 and 9; value for ~100 mA, (Vs - VDIODE)/I; off board on the evaluation board, >2.7 W at 28 V / 100 mA"
+        page: 8
+        quote: "forward bias through R2 to the diode connected between pins 7"
+    pin_rules:
+      - pins: '^GND$'
+        rule: "connect to ground with the lowest possible impedance"
+        page: 2
+        quote: "Ground. Must be connected to ground using"
+    notes: "Bias-controlled PIN diode switch. Evaluation board BOM (p.11) capacitors (1000 pF, 1 µF) and inductors are not tied to pins in the text, so omitted. No logic supply pin."
+
+  - datasheet: SKY12212_478LF_202368E.pdf
+    doc: "SKY12212-478LF: 0.05 to 2.70 GHz, 100 W High Power Silicon PIN Diode SPDT T/R Switch, 202368E"
+    supplies: []
+    components:
+      - kind: resistor
+        value: "31 Ω"
+        pins: '^RFC$'
+        to: SUPPLY
+        series: true
+        required: true
+        note: "R1 in the ANT bias path: 100 mA forward current with 5 V applied to the ANT port bias pin (evaluation board: two 62 Ω in parallel)"
+        page: 9
+        quote: "The value of resistor R1 (31 Ω) is selected to provide 100 mA of"
+      - kind: resistor
+        value: "262 Ω"
+        pins: '^RX_BIAS$'
+        to: SUPPLY
+        series: true
+        required: true
+        note: "R2: forward bias through RX_BIAS (0 V/+28 V DC bias) to the diode between pins 7 and 9; off board on the evaluation board, >2.7 W at 28 V / 100 mA"
+        page: 9
+        quote: "forward bias through R2 to the diode connected between pins 7"
+    pin_rules:
+      - pins: '^GND$'
+        rule: "connect to ground with the lowest possible impedance"
+        page: 2
+        quote: "Ground. Must be connected to ground using"
+      - pins: '^NC$'
+        rule: "not internally connected: leave open or ground"
+        page: 11
+        quote: "The N/C pins (4, 5, 10, 11, 12, and 16) are not internally connected, so they can be left open or grounded."
+    notes: "Bias-controlled PIN diode switch. Evaluation board BOM (p.11) capacitors (1000 pF, 10000 pF, 1 µF) and 820 nH inductors are not tied to specific pins in the text, so omitted."
+
+  - datasheet: SKY12245-492LF_204135P.pdf
+    doc: "SKY12245-492LF: 0.3 to 5.0 GHz, 100 W Compact High-Power SPDT Switch with Integrated Driver, 204135P"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [4.5, 5.5], page: 3, quote: "Module supply voltage VCC 4.5 5 5.5 V"}
+    components: []
+    pin_rules:
+      - pins: '^GND$'
+        rule: "connect to ground with the lowest possible impedance"
+        page: 2
+        quote: "Ground. Must be connected to ground using lowest possible impedance."
+      - pins: '^RFC$'
+        rule: "ANT is two pins (2, 3); the RF line must connect to both"
+        page: 2
+        quote: "RF input line must be connected to both pins."
+    notes: "VDD here is the datasheet's VCC. The evaluation board BOMs (Tables 8-12, per band) list capacitors, inductors, resistors, a D1 Schottky rectifier and an RX shunt PIN diode, but the text does not tie them to pins, so none are recorded. Recommended shutdown order: RF off, VCTRL off, VCC off (not mandatory)."
+
+  # ---------------------------------------------------------------- GaAs SPDT/SP3T/SP4T with DC blocking
+  - datasheet: SKY13270_92LF_200128H.pdf
+    doc: "SKY13270-92LF: 20 MHz-2.7 GHz GaAs SPDT Switch, 200128H"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on J1/J2/J3 (Note 1); 100 pF for >500 MHz, larger for lower frequency"
+        page: 2
+        quote: "Note 1: A 100 pF blocking capacitor is required for >500 MHz operation. Use larger value capacitors for lower frequency operation."
+    pin_rules: []
+    notes: "No supply pin. Nothing stated about control-line components."
+
+  - datasheet: SKY13290_313LF_200488G.pdf
+    doc: "SKY13290-313LF: 20 MHz-2.5 GHz, 10 W pHEMT SPDT Switch, 200488G"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on J1/J2/J3 (Note 1); 47 pF for >500 MHz, larger for lower frequency (typical curves were taken with CBL = 100 pF)"
+        page: 2
+        quote: "Note 1: A 47 pF blocking capacitor is required for >500 MHz operation. Use larger value capacitors for lower frequency operation."
+    pin_rules: []
+    notes: "No supply pin. Nothing stated about control-line components."
+
+  - datasheet: SKY13317-373LF_200914L.pdf
+    doc: "SKY13317-373LF: 20 MHz to 6.0 GHz pHEMT GaAs SP3T Switch, 200914L"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(RFC|RF[1-3])$'
+        to: RF
+        series: true
+        required: true
+        note: "pin table: DC blocking capacitor required on RFC, RF1, RF2, RF3; no value stated in the text"
+        page: 2
+        quote: "1 RFC Antenna. DC blocking capacitor required."
+    pin_rules: []
+    notes: "No supply pin. No DC-blocking value and no other external components stated."
+
+  - datasheet: SKY13319_374LF_201096E.pdf
+    doc: "SKY13319-374LF: 0.1 to 3.0 GHz GaAs SPDT Switch, 201096E"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on J1, J2, RFC (Note 1); 47 pF for >1 GHz, larger for lower frequency"
+        page: 2
+        quote: "A 47 pF blocking capacitor is required for >1 GHz operation. Use larger value capacitors for lower frequency operation."
+    pin_rules:
+      - pins: '^GND$'
+        rule: "exposed ground paddle should be grounded"
+        page: 5
+        quote: "Exposed ground paddle should be grounded for best performance."
+    notes: "No supply pin. Nothing stated about control-line components."
+
+  - datasheet: SKY13323_378LF_201080F.pdf
+    doc: "SKY13323-378LF: 0.1 to 3.0 GHz GaAs SPDT Switch, 201080F"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "evaluation board C1/C3/C5 on OUTPUT1/OUTPUT2/INPUT; pin table: RF ports 'Must be DC blocked'. Use 10 nF for <50 MHz operation"
+        page: 5
+        quote: "C1, C3, and C5 are DC blocking capacitors (100 pF)"
+      - kind: capacitor
+        value: "33 pF"
+        pins: '^(V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board bypass capacitors C4/C6; the schematic labels place C4 by VCTL1 and C6 by VCTL2"
+        page: 5
+        quote: "C4 and C6 are bypass capacitors (33 pF)"
+    pin_rules: []
+    notes: "No supply pin."
+
+  - datasheet: SKY13351_378LF_201132I.pdf
+    doc: "SKY13351-378LF: 20 MHz to 6.0 GHz GaAs SPDT Switch, 201132I"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "evaluation board C1/C3/C5; pin table: RF ports 'Must be DC blocked'. Use 10 nF for <50 MHz operation"
+        page: 6
+        quote: "C1, C3, and C5 are DC blocking capacitors (100 pF)"
+      - kind: capacitor
+        value: "33 pF"
+        pins: '^(V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board bypass capacitors C4/C6 on the control lines"
+        page: 6
+        quote: "C4 and C6 are bypass capacitors (33 pF)"
+    pin_rules: []
+    notes: "No supply pin."
+
+  - datasheet: SKY13354_368LF_201425D.pdf
+    doc: "SKY13354-368LF: 0.1 to 3.0 GHz Dual SPDT Crossed Switch, 201425D"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(RF[1-4]|RFC[12])$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on all RF ports (CBLK on the evaluation board schematic); no value stated in the text"
+        page: 1
+        quote: "DC blocking capacitors are required on all RF ports."
+    pin_rules:
+      - pins: '^NC$'
+        rule: "no connection; may be grounded with no change in performance"
+        page: 2
+        quote: "No connection. May be connected to ground"
+    notes: "No supply pin. Bottom ground paddle must be connected to ground through a low-impedance path (p.2); it is not in the pin list."
+
+  - datasheet: SKY13370_374LF_201408G.pdf
+    doc: "SKY13370-374LF: 0.5 to 6.0 GHz SPDT Switch, 50 Ω Terminated, 201408G"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking capacitors are required on all RF ports (p.2); evaluation board CBL = 47 pF for >1 GHz, larger for lower frequency"
+        page: 5
+        quote: "C BL = 47 pF for >1 GHz operation. Increase value for lower frequency operation."
+    pin_rules:
+      - pins: '^GND$'
+        rule: "exposed ground paddle should be grounded"
+        page: 5
+        quote: "Exposed ground paddle should be grounded for best performance."
+    notes: "No supply pin. Nothing stated about control-line components."
+
+  # ---------------------------------------------------------------- SOI switches with supply, no DC blocking
+  - datasheet: SKY13330_397LF_201407E.pdf
+    doc: "SKY13330-397LF: 0.1 to 6.0 GHz SPDT Switch, 201407E"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.3, 4.8], page: 4, quote: "Supply voltage VBATT 2.3 4.8 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors needed unless a DC voltage is applied externally"
+        page: 1
+        quote: "No external DC blocking capacitors required"
+      - pins: '^EN$'
+        rule: "drive low for shutdown (7 µA typical); high = active"
+        page: 2
+        quote: "Shutdown mode is enabled by connecting the ENABLE pin to logic low."
+      - pins: '^V1$'
+        rule: "control voltage must not exceed VDD"
+        page: 4
+        quote: "control voltage must be ≤VDD at all times"
+      - pins: '^GND$'
+        rule: "exposed pad grounded through a low-impedance path"
+        page: 2
+        quote: "Exposed pad must be properly grounded using a low impedance path."
+    notes: "VDD = datasheet VBATT, EN = ENABLE, V1 = CTRL. No external components stated (no decoupling values)."
+
+  - datasheet: SKY13373_460LF_201264O.pdf
+    doc: "SKY13373-460LF: 0.1 to 8.0 GHz SP3T Switch, 201264O"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 3, quote: "Supply voltage VDD 2.5 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no external components required; no value stated"
+        page: 2
+        quote: "added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors required"
+        page: 1
+        quote: "No external DC blocking capacitors required"
+      - pins: '^V[12]$'
+        rule: "control voltage should not exceed the supply voltage; V1 = V2 = low is shutdown"
+        page: 3
+        quote: "Control voltage should not exceed supply voltage."
+      - pins: '^GND$'
+        rule: "exposed pad must be grounded"
+        page: 2
+        quote: "Exposed pad must be grounded."
+    notes: ""
+
+  - datasheet: SKY13374_397LF_201447L.pdf
+    doc: "SKY13374-397LF: 300 kHz to 6.0 GHz SPDT Switch, 201447L"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 3, quote: "Supply voltage VBATT 2.5 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VBATT (VDD) and control lines; no value stated"
+        page: 2
+        quote: "decoupling capacitors may be added on the VBATT and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors required"
+        page: 1
+        quote: "No external DC blocking capacitors required"
+      - pins: '^GND$'
+        rule: "exposed pad grounded through a low-impedance path"
+        page: 2
+        quote: "Note 1: Exposed pad must be properly grounded using a low impedance path."
+    notes: "VDD = datasheet VBATT. Shutdown when V1 and V2 are both low."
+
+  - datasheet: SKY13405_490LF_201609I.pdf
+    doc: "SKY13405-490LF: 0.1 to 3.0 GHz Ultra High Linearity SPDT Switch, 201609I"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 3, quote: "Supply voltage VBATT 2.5 4.8 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors required"
+        page: 1
+        quote: "No external DC blocking capacitors required"
+      - pins: '^GND$'
+        rule: "exposed pad grounded through a low-impedance path"
+        page: 2
+        quote: "Note: Exposed pad must be properly grounded using a low impedance path."
+    notes: "VDD = datasheet VBATT, V1 = CTRL. No external components (decoupling or otherwise) stated."
+
+  - datasheet: SKY13408_465LF_201652C.pdf
+    doc: "SKY13408-465LF: 1.0 to 6.0 GHz SP3T Switch, 50 Ω Terminated, 201652C"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "22 pF"
+        pins: '^(RF[1-3]|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "value from the evaluation board schematic (CBL = 22 pF); capacitor value sets the low-frequency limit"
+        page: 2
+        quote: "DC blocking capacitors are required on all RF ports of the switch."
+    pin_rules: []
+    notes: "No supply pin. Nothing stated about control-line components."
+
+  - datasheet: SKY13411_374LF_201665C.pdf
+    doc: "SKY13411-374LF: 0.1 to 6.0 GHz DPDT Switch, 201665C"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF1|RF2|RFC1|RFC2)$'
+        to: RF
+        series: true
+        required: true
+        note: "value from the evaluation board bill of materials; pin table: every RF port must be DC-blocked for proper operation"
+        page: 6
+        quote: "CBL 47 pF 0402 Murata GRM Series DC blocking capacitor"
+    pin_rules: []
+    notes: "No supply pin. BOM also lists CBYP 10 pF 'Decoupling capacitor' without saying which pin; omitted. Exposed backside ground pad must be grounded (p.2); not in the pin list."
+
+  - datasheet: SKY13414_485LF_201689J.pdf
+    doc: "SKY13414-485LF: 0.1 to 3.8 GHz SP4T Antenna Switch, 201689J"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.5 3.0 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V[1-3])$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no value stated"
+        page: 2
+        quote: "added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external blocking capacitors unless a DC voltage is applied externally"
+        page: 1
+        quote: "No external blocking capacitors are required on the RF paths unless VDC is externally applied."
+    notes: "Bottom ground paddles must be connected to ground (p.2); the part's pin list has no GND pin, so the paddle is the only ground. N/C pins: not connected, nothing further stated."
+
+  - datasheet: SKY13415_485LF_201704I.pdf
+    doc: "SKY13415-485LF: 0.1 to 3.8 GHz SP5T Antenna Switch, 201704I"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.5 3.0 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V[1-3])$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no value stated"
+        page: 3
+        quote: "added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external blocking capacitors unless a DC voltage is applied externally"
+        page: 1
+        quote: "No external blocking capacitors are required on the RF paths unless VDC is externally applied."
+    notes: "Bottom ground paddles must be connected to ground (p.2); no GND pin in the pin list."
+
+  - datasheet: SKY13416-485LF_201679K.pdf
+    doc: "SKY13416-485LF: 0.1 to 6.0 GHz SP6T Antenna Switch, 201679K"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage V 2.5 3.0 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V[1-3])$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no value stated"
+        page: 3
+        quote: "decoupling capacitors may be added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors required"
+        page: 1
+        quote: "No external DC blocking capacitors required"
+      - pins: '^NC$'
+        rule: "not wire-bonded; cannot be used for grounding (heat slug pin 15 is the only ground)"
+        page: 2
+        quote: "The N/C pins (8, 12, 14) are not wire-bonded internally and cannot be used for grounding."
+    notes: "Heat slug/GND (pin 15) must be connected to ground; it is not in the part's pin list."
+
+  - datasheet: SKY13417_485LF_201661E.pdf
+    doc: "SKY13417-485LF: 0.1-3.0 GHz SP7T Antenna Switch, 201661E"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.5 3.0 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V[1-3])$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no value stated"
+        page: 3
+        quote: "added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external blocking capacitors unless a DC voltage is applied externally"
+        page: 1
+        quote: "generator and decoder that eliminate the need for external DC"
+      - pins: '^VDD$'
+        rule: "startup: VDD first, then V1-V3, then RF; turn off in reverse order"
+        page: 3
+        quote: "1. Apply VDD 2. Apply V1, V2, and V3 voltages 3. Apply RF input The device must be turned off in reverse order."
+    notes: "Bottom ground paddles must be connected to ground (p.2); no GND pin in the pin list."
+
+  - datasheet: SKY13418_485LF_201712F.pdf
+    doc: "SKY13418-485LF: 0.1 to 6.0 GHz SP8T Antenna Switch, 201712F"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.5 3.0 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V[1-3])$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no value stated"
+        page: 3
+        quote: "added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external blocking capacitors unless a DC voltage is applied externally"
+        page: 1
+        quote: "blocking capacitors are required on the RF paths unless VDC is applied externally."
+      - pins: '^VDD$'
+        rule: "startup: VDD first, then V1-V3, then RF; turn off in reverse order"
+        page: 3
+        quote: "1. Apply VDD. 2. Apply V1, V2, and V3 voltages. 3. Apply RF input. The device must be turned off in reverse order."
+    notes: "Bottom ground paddles must be connected to ground (p.2); no GND pin in the pin list."
+
+  - datasheet: SKY13438_374LF_201844B.pdf
+    doc: "SKY13438-374LF: 0.1-6.0 GHz DPDT Switch, 201844B"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RF1|RF2|RFC1|RFC2)$'
+        to: RF
+        series: true
+        required: true
+        note: "value from the evaluation board bill of materials; pin table: every RF port must be DC-blocked for proper operation"
+        page: 6
+        quote: "CBL 47 pF 0402 Murata GRM Series DC blocking capacitor"
+    pin_rules: []
+    notes: "No supply pin. BOM also lists CBYP 10 pF 'Decoupling capacitor' without saying which pin; omitted. Exposed backside ground pad must be grounded (p.2); not in the pin list."
+
+  - datasheet: SKY13453-385LF_202830G.pdf
+    doc: "SKY13453-385LF: 0.01 to 6.0 GHz Single Control SPDT Switch, 202830G"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 3.5], page: 3, quote: "Supply voltage VDD 2.5 3.5 V"}
+    components:
+      - kind: capacitor
+        value: "10 nF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "pin table: RF1, RF2, RFC 'Must be DC blocked'. Evaluation board value 10 nF is for low-frequency applications (<100 MHz); no value given for higher frequencies"
+        page: 6
+        quote: "C1, C2, and C3 = 10 nF for low frequency applications (less than 100 MHz)"
+    pin_rules: []
+    notes: "Evaluation board also has C4 = 10 nF, but the text does not say whether it is on VDD or VCTL; omitted. Power-up sequence (Figure 3): set VDD, then VCTL, then apply RF; power down in reverse."
+
+  # ---------------------------------------------------------------- MIPI / GPIO antenna switch modules
+  - datasheet: SKY13473_569LF_202148F.pdf
+    doc: "SKY13473-569LF: 0.4 to 2.7 GHz SP10T LTE Transmit/Receive Switch with MIPI RFFE Interface, 202148F"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.50 2.85 4.80 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Interface supply VIO 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 9), with two 18 nH inductors; alternative circuit 2: 12 pF with 12 nH"
+        page: 15
+        quote: "4.7 pF To Application To SKY13473-569LF Antenna Antenna (Pin 9) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; the text gives values only, the shunt-to-ground placement is read from the figure"
+        page: 15
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^NC$'
+        rule: "no connection; can be grounded or left floating"
+        page: 2
+        quote: "No connection. Can be grounded or left"
+    notes: "Evaluation board schematic (Figure 7) shows C1 = 33 pF, C2 = 10 nF, C3 = 33 pF, but the text does not tie them to pins; omitted. ANT port: no external DC blocking capacitors are required on the RF paths (p.1)."
+
+  - datasheet: SKY13477_001A_203104B.pdf
+    doc: "SKY13477-001A: 3P4T Transmit/Receive LTE Switch, 203104B"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.45, 3.0], page: 3, quote: "Supply voltage VDD 2.45 2.65 3.00 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C\d|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is on any RF path"
+        page: 1
+        quote: "No external DC blocking capacitors are required as long as no DC voltage is applied on any RF path."
+    notes: "Absolute maximum supply ripple 20 mVpp (p.2). No external components stated."
+
+  - datasheet: SKY13484_202745A.pdf
+    doc: "SKY13484: 0.6-2.7 GHz DP12T (SP7T/SP5T) Receive Diversity Switch, preliminary, 202745A"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 6.0], page: 5, quote: "Supply voltage VDD 2.50 2.85 6.00 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 5, quote: "Interface supply voltage level VIO 1.65 1.80 1.95 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C\d|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied"
+        page: 1
+        quote: "No external DC blocking capacitors are required on the RF paths as long as no DC voltage is applied to those paths."
+      - pins: '^GND$'
+        rule: "bottom ground paddles must be connected to ground"
+        page: 2
+        quote: "Note: Bottom ground paddles must be connected to ground."
+    notes: "No external component values stated in the text."
+
+  - datasheet: SKY13491_31_203750A.pdf
+    doc: "SKY13491-31: 0.7 to 2.7 GHz SP14T MIPI Antenna Switch, 203750A"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 6.0], page: 4, quote: "Supply voltage VDD 2.50 2.85 6.00 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Interface supply voltage VIO 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 1), with two 18 nH inductors; alternative circuit 2: 12 pF with 8.2 nH"
+        page: 18
+        quote: "4.7 pF To Application To SKY13491 Antenna Antenna (Pin 1) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 18
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^MIPI_SELECT$'
+        rule: "grounded = responds to any power-mode trigger; open = RFFE-compliant, individual triggers"
+        page: 1
+        quote: "When this pin is grounded, the switch responds to any of the power mode triggers. When this pin is left open, the switch responds to individual power mode triggers."
+      - pins: '^GND$'
+        rule: "bottom ground paddles must be connected to ground"
+        page: 2
+        quote: "Bottom ground paddles must be connected to ground."
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied"
+        page: 1
+        quote: "No external DC blocking capacitors are required on the RF paths as long as no DC voltage is applied."
+    notes: "Evaluation board component values are not tied to pins in the text."
+
+  - datasheet: SKY13492_21_202826F.pdf
+    doc: "SKY13492-21: 0.7 to 2.7 GHz SP16T MIPI Antenna Switch, 202826F"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 6.0], page: 4, quote: "Supply voltage VDD 2.50 2.85 6.00 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Interface supply voltage VIO 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 1), with two 18 nH inductors; alternative circuit 2: 12 pF with 8.2 nH"
+        page: 19
+        quote: "4.7 pF To Application To SKY13492 Antenna Antenna (Pin 1) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 19
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^MIPI_SELECT$'
+        rule: "grounded = responds to any power-mode trigger; open = RFFE-compliant, individual triggers"
+        page: 2
+        quote: "When this pin is left open, the switch is RFFE MIPI"
+      - pins: '^GND$'
+        rule: "bottom ground paddles must be connected to ground"
+        page: 3
+        quote: "Bottom ground paddles must be connected to ground."
+    notes: "RF paths: no external DC blocking capacitors as long as no DC voltage is applied (p.1). Evaluation board values are not tied to pins in the text."
+
+  - datasheet: SKY13498_21_202807E.pdf
+    doc: "SKY13498-21: 0.7 to 2.7 GHz SP10T MIPI Antenna Switch, 202807E"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 6.0], page: 4, quote: "Supply voltage VDD 2.50 2.85 6.00 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Interface supply voltage VIO 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 1), with two 18 nH inductors; alternative circuit 2: 12 pF with 8.2 nH"
+        page: 16
+        quote: "4.7 pF To Application To SKY13498 Antenna Antenna (Pin 1) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 16
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^MIPI_SELECT$'
+        rule: "grounded = responds to any power-mode trigger; open = individual triggers"
+        page: 1
+        quote: "When this pin is grounded, the switch responds to any of the power mode triggers. When this pin is left open, the switch responds to individual power mode triggers."
+      - pins: '^GND$'
+        rule: "bottom ground paddles must be connected to ground"
+        page: 2
+        quote: "Note: Bottom ground paddles must be connected to ground."
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied"
+        page: 1
+        quote: "No external DC blocking capacitors are required on the RF paths as long as no DC voltage is applied."
+    notes: "N/C pins: nothing stated beyond no connection. Evaluation board values are not tied to pins in the text."
+
+  - datasheet: SKY13498_31_203734A.pdf
+    doc: "SKY13498-31: 0.7 to 2.7 GHz SP10T MIPI Antenna Switch, 203734A"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 6.0], page: 4, quote: "Supply voltage VDD 2.50 2.85 6.00 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Interface supply voltage VIO 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 1), with two 18 nH inductors; alternative circuit 2: 12 pF with 8.2 nH"
+        page: 16
+        quote: "4.7 pF To Application To SKY13498 Antenna Antenna (Pin 1) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 16
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^MIPI_SELECT$'
+        rule: "grounded = responds to any power-mode trigger; open = individual triggers"
+        page: 1
+        quote: "When this pin is grounded, the switch responds to any of the power mode triggers. When this pin is left open, the switch responds to individual power mode triggers."
+      - pins: '^GND$'
+        rule: "bottom ground paddles must be connected to ground"
+        page: 2
+        quote: "Note 1: Bottom ground paddles must be connected to ground."
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied"
+        page: 1
+        quote: "No external DC blocking capacitors are required on the RF paths as long as no DC voltage is applied."
+    notes: "Evaluation board values are not tied to pins in the text."
+
+  - datasheet: SKY13526_485LF_202853G.pdf
+    doc: "SKY13526-485LF: 0.4 to 3.8 GHz SP6T LTE Transmit/Receive Switch with MIPI RFFE Interface, 202853G"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.50 2.85 4.80 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Digital control signal, MIPI select VIO, MS 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "10 nF"
+        pins: '^(VDD|VIO)$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board: 0402 10 nF capacitors on the VDD and VIO lines"
+        page: 14
+        quote: "0402 10 nF capacitors on VDD and VIO lines"
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 13), with two 18 nH inductors; alternative circuit 2: 12 pF with 12 nH"
+        page: 14
+        quote: "4.7 pF To Application To SKY13526-485LF Antenna Antenna (Pin 13) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 14
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^MIPI_SELECT$'
+        rule: "left open = responds to individual power-mode triggers"
+        page: 1
+        quote: "When this pin is left open, the switch responds to individual"
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied"
+        page: 1
+        quote: "No external DC blocking capacitors are required on the RF paths as long as no DC voltage is applied."
+    notes: "Bottom ground paddles must be connected to ground (p.2); no GND pin in the pin list. N/C: not connected."
+
+  - datasheet: SKY13562-670LF_203108B.pdf
+    doc: "SKY13562-670LF: 0.4 to 2.7 GHz SP10T MIPI Diversity Switch, 203108B"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.50 2.85 4.8 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 4, quote: "Interface supply voltage VIO 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 1), with two 18 nH inductors; alternative circuit 2: 12 pF with 8.2 nH"
+        page: 14
+        quote: "4.7 pF To Application To SKY13562-670LF Antenna Antenna (Pin 1) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 14
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^GND$'
+        rule: "bottom ground paddles must be connected to ground"
+        page: 2
+        quote: "Note 1: Bottom ground paddles must be connected to ground."
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied"
+        page: 1
+        quote: "No external DC blocking capacitors are required on the RF paths as long as no DC voltage is applied."
+    notes: "Evaluation board schematic shows C1 = C2 = 33 pF, not tied to pins in the text; omitted."
+
+  - datasheet: SKY13575_639LF_203270D.pdf
+    doc: "SKY13575-639LF: Dual-Band Matched SP4T Wi-Fi Switch, 203270D"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 3.5], page: 3, quote: "Supply voltage VDD T = 25 \uf0b0C 2.5 3.3 3.5 V"}
+    components:
+      - kind: capacitor
+        value: "22 pF"
+        pins: '^(RF[1-4]|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "external DC blocking capacitors are required on the RF paths (p.1); 22 pF is the evaluation board value (C1-C5)"
+        page: 4
+        quote: "C1 = C2 = C3 = C4 = C5 = 22 pF"
+      - kind: capacitor
+        value: "10 nF"
+        pins: '^VDD$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board C6 on the VDD (battery voltage) line"
+        page: 4
+        quote: "VDD Battery C6 = 10 nF"
+      - kind: capacitor
+        value: "1 µF"
+        pins: '^VDD$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board C7 on the VDD (battery voltage) line"
+        page: 4
+        quote: "C6 C7 Voltage C7 = 1 µF"
+    pin_rules:
+      - pins: '^GND$'
+        rule: "exposed pads must be grounded"
+        page: 2
+        quote: "Exposed pads must be grounded"
+    notes: "V1/V2 = VC1/VC2; nothing stated about control-line components."
+
+  - datasheet: SKY13582-676LF_203357G.pdf
+    doc: "SKY13582-676LF: 0.4 to 3.8 GHz SP3T Switch, 203357G"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.45, 4.8], page: 4, quote: "Supply voltage V T = 25 °C 2.45 2.85 4.8 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as there is no DC voltage on the RF line"
+        page: 1
+        quote: "No external dc blocking capacitors are required on the RF paths as long as there is no dc voltage on the RF line."
+      - pins: '^GND$'
+        rule: "exposed pads must be grounded"
+        page: 2
+        quote: "1. Exposed pads must be grounded."
+    notes: "No external components stated."
+
+  - datasheet: SKY13585_679LF_203458G.pdf
+    doc: "SKY13585-679LF: 1.0 to 6.0 GHz SPDT Switch, 203458G"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.7, 5.0], page: 2, quote: "Supply voltage VDD 2.7 3.3 5 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "integrated DC blocking capacitors; no external DC blocking needed"
+        page: 1
+        quote: "no external DC blocking capacitors are required."
+    notes: "Evaluation board: C1, C3, C5 = 0 Ω and C4, C6 = DNP (not placed); the text does not tie them to pins. No other external components stated."
+
+  - datasheet: SKY13586-678LF_203452G.pdf
+    doc: "SKY13586-678LF: 2.4 to 2.5 GHz SP3T Switch, 203452G"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [3.0, 5.0], page: 3, quote: "Supply voltage VDD Normal test conditions 3 3.3 5 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "integrated DC blocking capacitors; no external DC blocking needed"
+        page: 1
+        quote: "external DC blocking capacitors are not required."
+      - pins: '^GND$'
+        rule: "exposed GND pad must be grounded"
+        page: 2
+        quote: "Exposed GND pad must be grounded."
+    notes: "No external components stated."
+
+  - datasheet: SKY13587_378LF_203489D.pdf
+    doc: "SKY13587-378LF: 20 MHz to 6.0 GHz GaAs SPDT Switch, 203489D"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "evaluation board C1/C3/C5; pin table: RF ports must be DC blocked. Use 10 nF for <50 MHz operation"
+        page: 6
+        quote: "C1, C3, and C5 are DC blocking capacitors (100 pF)"
+      - kind: capacitor
+        value: "33 pF"
+        pins: '^(V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board bypass capacitors C4/C6 on the control lines"
+        page: 6
+        quote: "C4 and C6 are bypass capacitors (33 pF)"
+    pin_rules: []
+    notes: "No supply pin."
+
+  - datasheet: SKY13588_460LF_203512D.pdf
+    doc: "SKY13588-460LF: 0.1 to 6.0 GHz SP3T Switch, 203512D"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 3, quote: "Supply voltage VDD 2.5 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no external components required; no value stated"
+        page: 2
+        quote: "added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors required"
+        page: 1
+        quote: "No external DC blocking capacitors required"
+      - pins: '^V[12]$'
+        rule: "control voltage should not exceed the supply voltage"
+        page: 3
+        quote: "Control voltage should not exceed supply voltage."
+      - pins: '^GND$'
+        rule: "exposed pad must be grounded"
+        page: 2
+        quote: "Exposed pad must be grounded."
+    notes: ""
+
+  - datasheet: SKY13592_689LF_203513F.pdf
+    doc: "SKY13592-689LF: 1.0 to 6.0 GHz SPDT Switch, 203513F"
+    supplies: []
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "integrated DC blocking capacitors; no external DC blocking needed"
+        page: 1
+        quote: "no external DC blocking capacitors are required."
+    notes: "No supply pin. Evaluation board: C1, C3, C5 = 0 Ω and C4, C6 = DNP; not tied to pins in the text."
+
+  - datasheet: SKY13593-690LF_203516E.pdf
+    doc: "SKY13593-690LF: 2.4 to 2.5 GHz SP3T Switch, 203516E"
+    supplies: []
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "integrated DC blocking capacitors; CBL = 0 on the evaluation board"
+        page: 4
+        quote: "Note: CBL = 0 (No external DC blocking capacitors are required)."
+    notes: "No supply pin. N/C: no connect. No external components stated."
+
+  - datasheet: SKY13638-700LF_204586F.pdf
+    doc: "SKY13638-700LF: 0.4 to 3.8 GHz SP10T LTE Transmit/Receive Switch, 204586F"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.4, 5.8], page: 5, quote: "Supply voltage V 2.4 2.85 5.8 V"}
+      - {pin: VIO, ground: GND, range_v: [1.65, 1.95], page: 5, quote: "Interface supply V 1.65 1.80 1.95 V"}
+    components:
+      - kind: capacitor
+        value: "4.7 pF"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit 1 between the application antenna and ANT (pin 9), with two 18 nH inductors; alternative circuit 2: 12 pF with 12 nH"
+        page: 14
+        quote: "4.7 pF To Applica(cid:3)on To SKY13638-700LF Antenna Antenna (Pin 9) 18 nH 18 nH ESD Circuit 1"
+      - kind: inductor
+        value: "18 nH"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD circuit 1 shows two 18 nH inductors around the 4.7 pF capacitor; shunt placement read from the figure"
+        page: 14
+        quote: "18 nH 18 nH ESD Circuit 1"
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors on the transmit and receive paths"
+        page: 1
+        quote: "No external dc blocking capacitors are required on the transmit and receive switching paths."
+    notes: "Evaluation board schematic shows C1 = 33 pF, C2 = C3 = 100 nF, not tied to pins in the text; omitted."
+
+  - datasheet: SKY13698-694LF_204057H.pdf
+    doc: "SKY13698-694LF: 0.4 to 5.9 GHz DPDT Low Insertion Loss Switch, 204057H"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.3, 5.8], page: 7, quote: "Supply voltage V 2.3 2.8 5.8 V"}
+    components:
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^VDD$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board C1 on the DC power supply line"
+        page: 7
+        quote: "DC Power GND Supply C1 100 nF"
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^V1$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board C2 on DC control voltage 1 (CTRL1)"
+        page: 7
+        quote: "DC Control GND Voltage 1 C2 100 nF"
+      - kind: capacitor
+        value: "12 pF"
+        pins: '^RFC[12]$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit between the application antenna and PORT1/PORT2, with an 8.2 nH inductor"
+        page: 8
+        quote: "12 pF To Applica(cid:2)on To SKY13698 Antenna Antenna (PORT1 and PORT2) 8.2 nH"
+      - kind: inductor
+        value: "8.2 nH"
+        pins: '^RFC[12]$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD protection circuit inductor; shunt placement read from the figure"
+        page: 8
+        quote: "Antenna Antenna (PORT1 and PORT2) 8.2 nH"
+    pin_rules:
+      - pins: '^RF(C\d|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied externally"
+        page: 1
+        quote: "No dc blocking capacitors required"
+      - pins: '^GND$'
+        rule: "exposed pad grounded through a low-impedance path"
+        page: 2
+        quote: "1. Exposed pad must be properly grounded using a low impedance path."
+    notes: "V1 = CTRL1; RFC1/RFC2 = PORT1/PORT2."
+
+  - datasheet: SKY13699-21_204984D.pdf
+    doc: "SKY13699-21: 0.4 to 6.0 GHz DPDT Low Insertion Loss Switch, 204984D"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.3, 4.8], page: 6, quote: "Supply voltage V 2.3 2.8 4.8 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C\d|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied externally"
+        page: 1
+        quote: "No external dc blocking capacitors are required on the RF path as long as no dc voltage is applied externally."
+    notes: "No external components stated in the text."
+
+  - datasheet: SKY18106-455LF_201162R-discontinued.pdf
+    doc: "SKY18106-455LF: 0.4 to 2.2 GHz SP8T Antenna Switch, 201162R"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.65, 6.0], page: 5, quote: "Supply voltage VDD 2.65 2.75 6.00 V"}
+      - {pin: SPI_VDD, ground: GND, page: 3, quote: "SPI_VDD SPI power supply for all slave devices (1.8 V nominal)."}
+    components: []
+    pin_rules:
+      - pins: '^SPI_VDD$'
+        rule: "raise SPI_VDD at least 2 ms before the first SPI command"
+        page: 3
+        quote: "NOTE: The SPI_VDD signal (pin 25) must be pushed high for 2 ms"
+      - pins: '^RF(C|\d+)$'
+        rule: "no external blocking capacitors required on the RF ports"
+        page: 1
+        quote: "No external blocking capacitors are required on the RF ports."
+    notes: "SPI_VDD is 1.8 V nominal; no range stated. No external components stated."
+
+  # ---------------------------------------------------------------- Sky5 / automotive
+  - datasheet: SKY59608-711LF_206042D.pdf
+    doc: "SKY59608-711LF: Sky5 2.4 to 8.3 GHz SPDT Switch, 206042D"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.7, 5.0], page: 2, quote: "Supply voltage V 2.7 3.3 5 V"}
+    components:
+      - kind: resistor
+        value: "650 kΩ/1 MΩ"
+        pins: '^V1$'
+        to: SIGNAL
+        series: true
+        required: false
+        note: "voltage divider on VCTL recommended when VCTL is above 2.0 V (control high 1.1 to 3.6 V); the text gives the ratio values but not which resistor sits where"
+        page: 3
+        quote: "A voltage divider is recommended if VCTL is above 2.0 V."
+    pin_rules: []
+    notes: "V1 = VCTL. Electrical specs (Table 4 note 2) were measured with a 650 kΩ/1 MΩ divider. Nothing stated about DC blocking or decoupling."
+
+  - datasheet: SKY5A1007_205232H.pdf
+    doc: "SKY5A1007: Sky5 0.4 to 6 GHz DPDT Low Insertion Loss Switch, 205232H"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.3, 5.8], page: 3, quote: "Supply voltage VDD 2.3 2.8 5.8 V"}
+    components:
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^VDD$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board C1 on the DC power supply line"
+        page: 13
+        quote: "DC Power GND Supply C1 100 nF"
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^V1$'
+        to: GND
+        series: false
+        required: false
+        note: "evaluation board C2 on DC control voltage 1 (CTRL1)"
+        page: 13
+        quote: "DC Control GND Voltage 1 C2 100 pF"
+      - kind: capacitor
+        value: "12 pF"
+        pins: '^RFC[12]$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "recommended ESD protection circuit between the application antenna and PORT1/PORT2, with an 8.2 nH inductor"
+        page: 13
+        quote: "12 pF To Application To SKY5A1007 Antenna Antenna (PORT1 and PORT2) 8.2 nH"
+      - kind: inductor
+        value: "8.2 nH"
+        pins: '^RFC[12]$'
+        to: GND
+        series: false
+        required: false
+        note: "ESD protection circuit inductor; shunt placement read from the figure"
+        page: 13
+        quote: "Antenna Antenna (PORT1 and PORT2) 8.2 nH"
+    pin_rules:
+      - pins: '^RF(C\d|\d+)$'
+        rule: "no external DC blocking capacitors as long as no DC voltage is applied externally"
+        page: 1
+        quote: "No external dc blocking capacitors are required on the"
+      - pins: '^GND$'
+        rule: "exposed pad grounded through a low-impedance path"
+        page: 2
+        quote: "1. Exposed pad must be properly grounded using a low impedance path."
+    notes: "V1 = CTRL1; RFC1/RFC2 = PORT1/PORT2. Some bands need external matching (spec notes); no matching values are given in the text."
+
+  - datasheet: SKY5A2108_206432E.pdf
+    doc: "SKY5A2108: Sky5 2.4 to 8.3 GHz SPDT Switch, 206432E"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.7, 5.0], page: 2, quote: "Supply voltage Vdd 2.7 3.3 5 V"}
+    components:
+      - kind: resistor
+        value: "650 kΩ/1 MΩ"
+        pins: '^V1$'
+        to: SIGNAL
+        series: true
+        required: false
+        note: "voltage divider on VCTL, needed only for VCTL_H above 2 V (up to 3.6 V); evaluation board R1 = 650 kΩ plus a 1 MΩ resistor; the text does not say which resistor sits where"
+        page: 2
+        quote: "For VCTL_H maximum of 3.6 V, a voltage divider (650 kΩ/1 MΩ) must be used."
+    pin_rules: []
+    notes: "V1 = VCTL. Evaluation board schematic shows 1 µF capacitors not tied to pins in the text; omitted. Nothing stated about DC blocking."
+
+  - datasheet: SKY5A5109_206521C.pdf
+    doc: "SKY5A5109: 0.8 to 8 GHz SP3T Switch, 206521C"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 4.8], page: 4, quote: "Supply voltage VDD 2.5 2.7 4.8 V"}
+    components:
+      - kind: capacitor
+        value: ""
+        pins: '^(VDD|V1|V2)$'
+        to: GND
+        series: false
+        required: false
+        note: "optional DC decoupling on VDD and control lines; no external components required; no value stated"
+        page: 3
+        quote: "DC decoupling capacitors may be added on the VDD and control lines if necessary."
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors unless a DC voltage is present"
+        page: 3
+        quote: "capacitors on the RF ports, unless a DC voltage is present."
+      - pins: '^V[12]$'
+        rule: "control voltage must not exceed the supply voltage"
+        page: 4
+        quote: "2. Control voltage must not exceed supply voltage."
+      - pins: '^GND$'
+        rule: "exposed pad must be grounded"
+        page: 2
+        quote: "1. Exposed pad must be grounded."
+    notes: ""
+
+  - datasheet: SKY5A5110_206573D.pdf
+    doc: "SKY5A5110: 0.4 to 3.8 GHz SP4T High Power Switch, 206573D"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.45, 4.8], page: 2, quote: "Supply voltage VDD 2.45 2.8 4.8 V"}
+    components:
+      - kind: inductor
+        value: "2.2 nH"
+        pins: '^RFC$'
+        to: ANTENNA
+        series: true
+        required: false
+        note: "optional: IL improves 0.3 to 0.4 dB from 2.7 to 3.8 GHz with a series L and shunt C at RFC; evaluation board L1 = 2.2 nH"
+        page: 9
+        quote: "with a series L and a shunt C at the RFC port."
+      - kind: capacitor
+        value: "0.6 pF"
+        pins: '^RFC$'
+        to: GND
+        series: false
+        required: false
+        note: "optional shunt C at RFC (evaluation board C2 = 0.6 pF), with the series 2.2 nH"
+        page: 9
+        quote: "Note: IL can be improved 0.3 to 0.4 dB from 2.7 GHz to 3.8 GHz"
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors as long as there is no DC voltage on the RF paths"
+        page: 1
+        quote: "No DC blocking capacitors required"
+      - pins: '^V[12]$'
+        rule: "control voltage must not exceed the supply voltage"
+        page: 2
+        quote: "2. Control voltage must not exceed supply voltage."
+      - pins: '^GND$'
+        rule: "exposed pads must be grounded"
+        page: 2
+        quote: "1. Exposed pads must be grounded."
+    notes: "V1/V2 = VC1/VC2. Evaluation board also shows C1 = 10 nF near the VC1/VC2/VDD header; the text does not tie it to one pin, so omitted."
+
+  - datasheet: SKYA21001_202936I.pdf
+    doc: "SKYA21001: 20 MHz to 3.0 GHz SPDT Switch, 202936I"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "100 pF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "DC blocking on J1/J2/J3 (Note 1); 100 pF for >500 MHz, larger for lower frequency; evaluation board: 10 nF for <50 MHz"
+        page: 2
+        quote: "A 100 pF blocking capacitor is required for >500 MHz operation. Use larger value capacitors for lower frequency operation."
+    pin_rules:
+      - pins: '^GND$'
+        rule: "exposed paddle must be grounded"
+        page: 5
+        quote: "Exposed paddle must be grounded."
+    notes: "No supply pin. Nothing stated about control-line components."
+
+  - datasheet: SKYA21002_202937E.pdf
+    doc: "SKYA21002: 0.1 to 3.0 GHz SP3T Switch, 202937E"
+    supplies: []
+    components:
+      - kind: capacitor
+        value: "47 pF"
+        pins: '^(RFC|RF[1-3])$'
+        to: RF
+        series: true
+        required: true
+        note: "pin table: DC blocking capacitor required on RFC, RF1-RF3; evaluation board note: CBL = 47 pF for >500 MHz, 220 pF down to 50 MHz, higher values for lower frequency"
+        page: 2
+        quote: "1 RFC Antenna. DC blocking capacitor required."
+    pin_rules: []
+    notes: "No supply pin. Evaluation board (p.8): exposed paddle must be grounded; the exposed pad is not in the pin list."
+
+  - datasheet: SKYA21003_202938M.pdf
+    doc: "SKYA21003: 0.1 to 8.5 GHz SPDT Switch, 202938M"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.3, 4.8], page: 4, quote: "Supply voltage VBATT 2.3 4.8 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "no external DC blocking capacitors unless a DC voltage is applied externally"
+        page: 3
+        quote: "An internal negative voltage generator and decoder eliminate the need for external DC blocking capacitors on the"
+      - pins: '^EN$'
+        rule: "drive low for shutdown; high = active"
+        page: 3
+        quote: "Shutdown mode is enabled by connecting the ENABLE pin to logic low."
+      - pins: '^(V1|EN)$'
+        rule: "control and enable voltages must not exceed VDD"
+        page: 4
+        quote: "control and enable voltages must be ≤VDD at all times"
+    notes: "VDD = datasheet VBATT, EN = ENABLE, V1 = CTRL. No external components stated."
+
+  - datasheet: SKYA21024_204618C.pdf
+    doc: "SKYA21024: 0.01 to 6.0 GHz Single Control SPDT Switch, 204618C"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [2.5, 3.5], page: 3, quote: "Supply voltage VDD 2.5 3.5 V"}
+    components:
+      - kind: capacitor
+        value: "10 nF"
+        pins: '^(RF1|RF2|RFC)$'
+        to: RF
+        series: true
+        required: true
+        note: "pin table: RF1, RF2, RFC must be DC blocked. Evaluation board value 10 nF is for low-frequency applications (<100 MHz); no value given for higher frequencies"
+        page: 6
+        quote: "C1, C2, and C3 = 10 nF for low frequency applications (less than 100 MHz)"
+    pin_rules: []
+    notes: "Evaluation board also has C4 = 10 nF, not tied to VDD or VCTL in the text; omitted."
+
+  - datasheet: SKYA21038_203525I.pdf
+    doc: "SKYA21038: 0.9 to 6.0 GHz SPDT Switch, 203525I"
+    supplies:
+      - {pin: VDD, ground: GND, range_v: [3.0, 5.0], page: 3, quote: "Supply voltage V 3 3.3 5 V"}
+    components: []
+    pin_rules:
+      - pins: '^RF(C|\d+)$'
+        rule: "integrated DC blocking capacitors; no external DC blocking needed"
+        page: 1
+        quote: "so no external DC blocking capacitors are required."
+    notes: "Evaluation board: C1, C3, C5 = 0 Ω and C4, C6 = DNP; not tied to pins in the text."

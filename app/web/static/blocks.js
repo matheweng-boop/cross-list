@@ -619,6 +619,101 @@
     a.click();
   });
 
+  // ---- convert to schematic: pick what to convert, check the design rules and answer the questions, then draw
+  const SCH = $("#bk-schem");
+  const schem = {scope: null, check: null, out: null};
+  const scopeKey = sc => sc.kind === "all" ? "all" : `${sc.kind}:${sc.group}:${sc.block || ""}`;
+  const answersFor = sc => ((S.schem ||= {})[scopeKey(sc)] ||= {});
+  function scopes() {
+    const out = [{kind: "all", label: `Whole diagram (${S.groups.reduce((n, g) => n + g.blocks.length, 0)} blocks)`}];
+    for (const g of S.groups) out.push({kind: "group", group: g.id, label: `Frame: ${g.label} (${g.blocks.length} block${g.blocks.length === 1 ? "" : "s"})`});
+    for (const g of S.groups) for (const b of g.blocks) out.push({kind: "block", group: g.id, block: b.id, label: `Block: ${b.label || fnOf(b).label}${b.part ? " · " + b.part : ""} (in ${g.label})`});
+    return out;
+  }
+  async function schemCall(drawIt) {
+    const res = await fetch("/api/blocks/schematic", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({data: S, scope: schem.scope, answers: answersFor(schem.scope), draw: drawIt, title: $("#bk-name").value || "Block diagram"})});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+  function openSchem() {
+    SCH.hidden = false;
+    const list = scopes();
+    const cur = sel && sel.block ? list.find(x => x.block === sel.block) : sel ? list.find(x => x.kind === "group" && x.group === sel.group) : list[0];
+    SCH.innerHTML = `<h2>Convert to schematic</h2>
+      <p class="small muted">Choose what to convert: the whole diagram, one frame (a functional block with the blocks inside it) or a single block.
+        Cross List first checks the design rules and asks what it cannot decide; nothing is drawn until you click <b>Draw schematic</b>.</p>
+      <div class="row"><label class="small">Convert <select id="sch-scope" class="small-sel">${list.map((x, i) => `<option value="${i}"${x === cur ? " selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>
+        <button type="button" id="sch-check" class="small-btn">Check design rules</button>
+        <button type="button" id="sch-close" class="outline secondary small-btn">Close</button></div>
+      <div id="sch-body"></div>`;
+    SCH.querySelector("#sch-close").onclick = () => { SCH.hidden = true; };
+    SCH.querySelector("#sch-check").onclick = () => { schem.scope = list[+SCH.querySelector("#sch-scope").value]; runCheck(); };
+    SCH.scrollIntoView({behavior: "smooth", block: "start"});
+  }
+  const LEVEL = {error: "Must fix", warn: "Check", info: "Note"};
+  function issuesHtml(issues) {
+    if (!issues.length) return `<p class="small sch-ok">No design-rule findings.</p>`;
+    return `<ul class="sch-issues">${issues.map(i => `<li class="sch-${i.level}"><b>${LEVEL[i.level]}</b> ${esc(i.text)}</li>`).join("")}</ul>`;
+  }
+  async function runCheck() {
+    const body = SCH.querySelector("#sch-body");
+    body.innerHTML = `<p class="small muted">Checking…</p>`;
+    try { schem.check = await schemCall(false); } catch (e) { body.innerHTML = `<p class="small uc-error">Check failed (${esc(e.message)}). <button type="button" class="outline small-btn" id="sch-retry">Retry</button></p>`; body.querySelector("#sch-retry").onclick = runCheck; return; }
+    const c = schem.check, A = answersFor(schem.scope);
+    const sections = [...new Set(c.questions.map(q => q.section))];
+    const val = q => A[q.id] !== undefined ? A[q.id] : q.default;
+    const ctl = q => q.kind === "text"
+      ? `<input type="text" data-sq="${esc(q.id)}" value="${esc(val(q))}" placeholder="e.g. 100 pF" style="max-width:14rem">`
+      : q.kind === "multi"
+      ? `<div class="sch-multi">${q.choices.map(([v, t]) => {
+          const vq = c.questions.find(x => x.parent === q.id && x.item === v); // a value the datasheet leaves open
+          return `<label class="small"><input type="checkbox" data-sq="${esc(q.id)}" value="${esc(v)}"${val(q).includes(v) ? " checked" : ""}> ${esc(t)}</label>`
+            + (vq ? `<label class="small sch-val">Value <input type="text" data-sq="${esc(vq.id)}" value="${esc(val(vq))}" placeholder="not stated – e.g. 100 pF"></label>` : "");
+        }).join("")}</div>`
+      : `<select data-sq="${esc(q.id)}" class="small-sel">${q.choices.map(ch => `<option${String(val(q)) === String(ch) ? " selected" : ""}>${esc(ch)}</option>`).join("")}</select>`;
+    body.innerHTML = `<h3>1 · Design-rule check</h3>
+      <p class="small muted">${c.devices.length} device${c.devices.length === 1 ? "" : "s"}: ${c.devices.map(d => `${esc(d.ref)} ${esc(d.mpn || d.label)}${d.placeholder ? " (placeholder)" : ""}`).join(" · ")}</p>
+      <div id="sch-issues">${issuesHtml(c.issues)}</div>
+      <h3>2 · Questions</h3>
+      ${c.questions.length ? sections.map(sec => `<details class="req-box" open><summary class="small"><b>${esc(sec)}</b></summary>${c.questions.filter(q => q.section === sec && !q.parent).map(q => `
+        <div class="sch-q"><p class="small"><b>${esc(q.text)}</b>${A[q.id] !== undefined ? "" : ` <span class="lg lg-have">suggested</span>`}</p>${ctl(q)}${q.why ? `<p class="small muted">${esc(q.why)}</p>` : ""}</div>`).join("")}</details>`).join("")
+        : `<p class="small muted">Nothing to decide for this selection.</p>`}
+      <h3>3 · Draw</h3>
+      <div class="row"><button type="button" id="sch-draw" class="small-btn"></button><span class="small muted">Answers are saved with the diagram.</span></div>
+      <div id="sch-out"></div>`;
+    const drawBtn = body.querySelector("#sch-draw");
+    const label = n => { drawBtn.textContent = n ? `Draw anyway (${n} to fix)` : "Draw schematic"; drawBtn.classList.toggle("secondary", !!n); };
+    label(c.errors);
+    body.querySelectorAll("[data-sq]").forEach(el => (el.onchange = async () => {
+      const q = c.questions.find(x => x.id === el.dataset.sq);
+      A[q.id] = q.kind === "multi" ? [...body.querySelectorAll(`[data-sq="${CSS.escape(q.id)}"]:checked`)].map(x => x.value) : el.value;
+      dirty = true; $("#bk-status").textContent = "Unsaved changes";
+      try { const r = await schemCall(false); body.querySelector("#sch-issues").innerHTML = issuesHtml(r.issues); label(r.errors); } catch (e) { /* keep the last findings */ }
+    }));
+    drawBtn.onclick = drawSchem;
+  }
+  async function drawSchem() {
+    const out = SCH.querySelector("#sch-out");
+    out.innerHTML = `<p class="small muted">Drawing…</p>`;
+    try { schem.out = await schemCall(true); } catch (e) { out.innerHTML = `<p class="small uc-error">Drawing failed (${esc(e.message)}).</p>`; return; }
+    const o = schem.out;
+    const fname = t => `${($("#bk-name").value || "schematic").replace(/[^\w.-]+/g, "_")}_${t.replace(/[^\w.-]+/g, "_")}.svg`;
+    out.innerHTML = `${o.errors ? `<p class="small uc-error">Drawn with ${o.errors} open design-rule finding${o.errors === 1 ? "" : "s"} marked “Must fix” above.</p>` : ""}
+      ${o.sheets.map((sh, i) => `<figure class="sch-sheet"><figcaption class="small"><b>Sheet ${i + 1} of ${o.sheets.length}: ${esc(sh.title)}</b>
+        <button type="button" class="outline small-btn" data-dl="${i}">Download SVG</button></figcaption><div class="sch-svg">${sh.svg}</div></figure>`).join("")}
+      <details class="req-box"${o.bom.length ? " open" : ""}><summary class="small"><b>External parts (${o.bom.length})</b> · from the datasheets, with the text each comes from</summary>
+        ${o.bom.length ? `<div class="table-wrap"><table class="striped small"><thead><tr><th>Ref</th><th>Part</th><th>Value</th><th>At</th><th>To</th><th>Source</th></tr></thead><tbody>
+        ${o.bom.map(b => `<tr><td><b>${esc(b.ref)}</b>${b.required ? "" : " <span class='muted'>rec.</span>"}</td><td>${esc(b.kind)}${b.series ? " (series)" : ""}</td><td>${esc(b.value || "per datasheet")}</td>
+          <td>${esc(b.device)} ${esc(b.pin)}</td><td>${esc(b.to)}</td><td>${esc(b.doc || "")}${b.page ? `, p. ${b.page}` : ""}${b.quote ? `<br><span class="muted">“${esc(b.quote)}”</span>` : ""}${b.note ? `<br><span class="muted">${esc(b.note)}</span>` : ""}</td></tr>`).join("")}
+        </tbody></table></div>` : `<p class="small muted">None: no ticked external parts, or no typical-application data for these parts yet.</p>`}</details>`;
+    out.querySelectorAll("[data-dl]").forEach(btn => (btn.onclick = () => {
+      const sh = o.sheets[+btn.dataset.dl];
+      Object.assign(document.createElement("a"), {href: URL.createObjectURL(new Blob([sh.svg], {type: "image/svg+xml"})), download: fname(sh.title)}).click();
+    }));
+  }
+  $("#bk-schem-open").addEventListener("click", openSchem);
+
   if (!design.data && tpl) dirty = true;
   if (Object.keys(S.req).length) refreshCounts(); else render();
   // requirements live above the diagram (renderReqs); the drawer is only for a clicked block or group

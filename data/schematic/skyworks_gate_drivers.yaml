@@ -1,0 +1,149 @@
+# Typical-application data for the Skyworks Si823x isolated gate drivers (format: data/schematic/README.md).
+# Source text: var/text/gate_drivers/si823x-datasheet.txt (page markers "=====PAGE n").
+covers: [data/real/skyworks_si823x.yaml]
+datasheets:
+  - datasheet: si823x-datasheet.pdf
+    doc: "Si823x 0.5 and 4.0 Amp ISOdrivers (2.5 and 5 kV RMS) datasheet, 206326B, December 5, 2024"
+    supplies:
+      - pin: VDDI
+        ground: GNDI
+        range_v: [4.5, 5.5]
+        note: "2.7 to 5.5 V for Si8237/8"
+        page: 19
+        quote: "the input side of the Si823x requires VDD in the range of 4.5 to 5.5 V (2.7 to 5.5 V for Si8237/8)"
+      - pin: VDDA
+        ground: GNDA
+        range_v: [6.5, 24]
+        page: 30
+        quote: "Driver A power supply voltage terminal; connect to a source of 6.5 to 24 V."
+      - pin: VDDB
+        ground: GNDB
+        range_v: [6.5, 24]
+        page: 30
+        quote: "Driver B power supply voltage terminal; connect to a source of 6.5 to 24 V."
+    components:
+      - kind: capacitor
+        value: "0.1 µF"
+        pins: '^VDDI$'
+        to: GND
+        series: false
+        required: false
+        note: "input-side bypass, in parallel with 1 µF (C2 in Figures 33/34); as close to the chip as possible"
+        page: 19
+        quote: "bypass capacitors of 0.1 and 1 µF value be used on the Si823x input side and that they be located as close to the chip as possible."
+      - kind: capacitor
+        value: "1 µF"
+        pins: '^VDDI$'
+        to: GND
+        series: false
+        required: false
+        note: "input-side bypass, in parallel with 0.1 µF (C1 in Figures 33/34)"
+        page: 19
+        quote: "It is recommended that bypass capacitors of 0.1 and 1 µF value be used on the Si823x input side"
+      - kind: capacitor
+        value: "0.1 µF"
+        pins: '^VDD[AB]$'
+        to: GND
+        series: false
+        required: false
+        note: "output-side bypass per driver supply, in parallel with 10 µF; as close to the chip as possible"
+        page: 19
+        quote: "it is recommended that 0.1 and 10 µF bypass capacitors, located as close to the chip as possible, be used on the Si823x output side"
+      - kind: capacitor
+        value: "10 µF"
+        pins: '^VDD[AB]$'
+        to: GND
+        series: false
+        required: false
+        note: "output-side bypass per driver supply, in parallel with 0.1 µF; low-ESR (e.g. tantalum) recommended (p20)"
+        page: 19
+        quote: "it is recommended that 0.1 and 10 µF bypass capacitors, located as close to the chip as possible, be used on the Si823x output side"
+      - kind: capacitor
+        value: ""
+        pins: '^VDDA$'
+        to: GNDA
+        series: false
+        required: false
+        note: >-
+          bootstrap capacitor CB for high-side use of driver A (HS/LS application, Figure 33); value not stated:
+          "The boot-strap start up time will depend on the CB cap chosen", see AN486
+        page: 19
+        quote: "D1 and CB form a conventional bootstrap circuit that allows VOA to operate as a high-side driver"
+      - kind: diode
+        value: ""
+        pins: '^VDDA$'
+        to: VDDB
+        series: false
+        required: false
+        note: >-
+          bootstrap diode D1 from VDD2 to VDDA (Figure 33); "in most cases, VDD2 is the same as VDDB". Diode type and
+          rating not stated
+        page: 19
+        quote: "VOB is connected as a conventional low-side driver, and, in most cases, VDD2 is the same as VDDB."
+      - kind: resistor
+        value: ""
+        pins: '^DT$'
+        to: GND
+        series: false
+        required: false
+        note: >-
+          RDT sets dead time: DT (ns) = 10 x RDT (kΩ) (Equation 1); characterized 70 ns typ at RDT = 6 kΩ and 900 ns typ
+          at RDT = 100 kΩ (p23); largest usable RDT is 220 kΩ (p23 note 3). Place close to the DT pin (p21). Omit RDT
+          (DT tied to VDDI or open) for ~400 ps default
+        page: 17
+        quote: "The amount of dead time delay (DT) is programmed by a single resistor (RDT) connected from the DT input to ground per Equation 1."
+      - kind: capacitor
+        value: "0.1 µF"
+        pins: '^DT$'
+        to: GND
+        series: false
+        required: false
+        note: >-
+          ceramic, in parallel with RDT, as close to the DT pin as possible. Conflict: the pin descriptions (p30-34) say
+          a 10 nF capacitor "may be added" in parallel with RDT instead (see pin_rules)
+        page: 17
+        quote: "To aid in noise immunity, place a 0.1 µF ceramic capacitor in parallel with RDT."
+      - kind: capacitor
+        value: "10 nF"
+        pins: '^(VIA|VIB|PWM|DISABLE)$'
+        to: GNDI
+        series: false
+        required: false
+        note: >-
+          only "if the application requires extremely high common mode transient immunity (CMTI) performance"; the
+          datasheet also includes the input-side NC pins, which this regex cannot separate from output-side NC pins
+        page: 21
+        quote: "it is recommended to add a 10 nF capacitor between each of the logic input pins and the logic input ground (GNDI), including the no connect (NC) pins."
+    pin_rules:
+      - pins: '^DISABLE$'
+        rule: "active high: high drives VOA and VOB low; strongly recommended to connect to an external logic level (do not leave open)"
+        page: 30
+        quote: "It is strongly recommended that this input be connected to external logic level to avoid erroneous operation due to capacitive noise coupling."
+      - pins: '^DT$'
+        rule: "tie to VDDI or leave open for the default ~400 ps dead time; otherwise RDT to ground sets the dead time"
+        page: 30
+        quote: "Defaults to 400 ps dead time when connected to VDDI or left open"
+      - pins: '^DT$'
+        rule: "pin descriptions: optional 10 nF in parallel with RDT for noise immunity (section 2.7 says 0.1 µF instead)"
+        page: 30
+        quote: "If improved noise immunity is desired, a 10 nF capacitor may be added in parallel to the dead time programming resistor (RDT)."
+      - pins: '^NC$'
+        rule: "no connection"
+        page: 30
+        quote: "7 NC No connection."
+      - pins: '^(VDDI|VDDA|VDDB)$'
+        rule: "VDDI, VDDA and VDDB need individual (isolated) supplies; decoupling as close to the VDD and GND pins as possible, low-ESR"
+        page: 20
+        quote: "Isolation requirements mandate individual supplies for VDDI, VDDA, and VDDB."
+      - pins: '^GND[AB]$'
+        rule: "dual drivers (Si8232/5/7/8): GNDA and GNDB may be common or separate, up to 1500 V dc apart"
+        page: 20
+        quote: "the drain voltages of Q1 and Q2 can be referenced to a common ground or to different grounds with as much as 1500 V dc between them."
+    notes: >-
+      Decoupling values (0.1 + 1 µF input side, 0.1 + 10 µF per output side) are from section 3.1.1 (p19) and Figures
+      33/34; p21 also says "usually 0.1 µF || 10 µF" for all supplies. Bootstrap D1/CB apply to HS/LS parts
+      (Si8230/1/3/4) used as a half-bridge; no values or diode type stated (refers to AN486). Two conflicting DT
+      capacitor values are stated (0.1 µF p17, 10 nF p30-34). Not stated: gate resistors in series with VOA/VOB (the
+      text only lists "the gate resistor values" as an input to the power-dissipation estimate, p21), gate-source
+      pull-down resistors, input RC filters (only the optional 10 nF CMTI caps), pull-up/pull-down behaviour or
+      handling of unused VIA/VIB/PWM inputs, and whether the two VDDI pins are connected internally.

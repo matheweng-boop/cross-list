@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import BlockDiagram, BlockFeedback
-from app.services import blocks
+from app.services import blocks, schematic
 from app.web.routes import templates
 
 router = APIRouter()
@@ -111,6 +111,16 @@ def parts(fn: str, q: str = "", req: str = "", lite: bool = False, session: Sess
 @router.post("/api/blocks/counts")
 def counts(payload: dict = Body(default={}), session: Session = Depends(get_session)):
     return blocks.counts(session, payload.get("req") or {})
+
+
+@router.post("/api/blocks/schematic")
+def to_schematic(payload: dict = Body(...), session: Session = Depends(get_session)):
+    """Convert to schematic: {data, scope: {kind: all|group|block, group, block}, answers, draw, title}.
+    Without draw: the design-rule check and questions; with draw: also the sheets and the external parts list."""
+    data, scope, answers = payload.get("data") or {}, payload.get("scope") or {}, payload.get("answers") or {}
+    if payload.get("draw"):
+        return schematic.draw(session, data, scope, answers, str(payload.get("title") or "")[:200])
+    return schematic.check(session, data, scope, answers)
 
 
 @router.post("/api/blocks/designs")

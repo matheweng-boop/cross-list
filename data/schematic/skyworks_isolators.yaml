@@ -1,0 +1,742 @@
+# Typical-application data (see data/schematic/README.md). Quotes are verbatim from the datasheet text.
+covers:
+- data/real/skyworks_si86.yaml
+datasheets:
+- datasheet: si863x-datasheet.pdf
+  doc: Si8630/31/35 Data Sheet, Low-Power Triple-Channel Digital Isolators (206522A, March 14, 2023)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 11
+    quote: Supply Voltage V 2.5 — 5.5 V DD1
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 11
+    quote: V 2.5 — 5.5 V DD2
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package
+    page: 9
+    quote: The Si863x family requires a 0.1 µF bypass capacitor between V and GND1 and V and GND2
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 9
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN[12]$
+    rule: 'active-high output enable, internally pulled up to local VDD: high or floating = outputs enabled, low = outputs high-impedance'
+    page: 8
+    quote: These inputs are internally pulled-up to local VDD allowing them to be connected to an external logic level (high or low) or left floating.
+  - pins: ^EN[12]$
+    rule: if unused, connect to an external logic level (especially in noisy environments); if left floating, do not connect any trace to it
+    page: 8
+    quote: If EN1, EN2 are unused, it is recommended they be connected to an external logic level
+  - pins: ^EN[12]$
+    rule: no traces on a floating EN pin
+    page: 8
+    quote: To minimize noise coupling, do not connect circuit traces to EN1 or EN2 if they are left floating.
+  - pins: ^NC$
+    rule: not internally connected; may be left floating, tied to VDD or tied to GND
+    page: 26
+    quote: These pins are not internally connected. They can be left floating, tied to VDD or tied to GND.
+  - pins: ^GND[12]$
+    rule: 'narrow-body packages: connect every GND pin (pins 2, 8 on side 1; 9, 15 on side 2) to that side''s ground'
+    page: 26
+    quote: Pin 2 and Pin 8 GND must be externally connected to respective ground. Pin 9 and Pin 15 must also be connected to external ground.
+  notes: No bulk capacitor or other external components stated beyond the 0.1 µF bypass caps and the optional 50–300 Ω series resistors. The datasheet does not state whether GND1 and GND2 must stay separate.
+    EN1 is NC on Si8630/35, EN2 is NC on Si8635.
+- datasheet: si864x-datasheet.pdf
+  doc: Si864x Data Sheet, Low-Power Quad-Channel Digital Isolators (206329A, July 26, 2022)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.375
+    - 5.5
+    page: 12
+    quote: V DD1 2.375 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.375
+    - 5.5
+    page: 12
+    quote: V DD2 2.375 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package
+    page: 10
+    quote: The Si864x family requires a 0.1 µF bypass capacitor between V and GND1 and V and GND2
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 10
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN[12]$
+    rule: 'active-high output enable, internally pulled up to local VDD: high or floating = outputs enabled, low = outputs high-impedance'
+    page: 9
+    quote: These inputs are internally pulled-up to local VDD allowing them to be connected to an external logic level (high or low) or left floating.
+  - pins: ^EN[12]$
+    rule: if unused, connect to an external logic level (especially in noisy environments); if left floating, do not connect any trace to it
+    page: 9
+    quote: If EN1, EN2 are unused, it is recommended they be connected to an external logic level
+  - pins: ^EN[12]$
+    rule: no traces on a floating EN pin
+    page: 9
+    quote: To minimize noise coupling, do not connect circuit traces to EN1 or EN2 if they are left floating.
+  - pins: ^NC$
+    rule: not internally connected; may be left floating, tied to VDD or tied to GND
+    page: 8
+    quote: No Connects are not internally connec- ted and can be left floating, tied to VDD, or tied to GND.
+  - pins: ^GND[12]$
+    rule: 'narrow-body packages: connect every GND pin (pins 2, 8 on side 1; 9, 15 on side 2) to that side''s ground'
+    page: 29
+    quote: Pin 2 and Pin 8 GND must be externally connected to respective ground. Pin 9 and Pin 15 must also be connected to external ground.
+  notes: 'Contradiction: Recommended Operating Conditions give VDD1/VDD2 2.375–5.5 V, while the front page says 2.5–5.5 V and the truth table defines Powered as 2.5 V < VDD < 5.5 V. No bulk capacitor stated.
+    Nothing stated about keeping GND1 and GND2 separate.'
+- datasheet: si865x-datasheet.pdf
+  doc: Si8650/51/52/55 Data Sheet, Low Power Five-Channel Digital Isolator (206455A, January 13, 2023)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.375
+    - 5.5
+    page: 12
+    quote: V DD1 2.375 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.375
+    - 5.5
+    page: 12
+    quote: V DD2 2.375 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package
+    page: 9
+    quote: The Si865x family requires a 0.1 μF bypass capacitor between V and GND1 and V and GND2
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 9
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN[12]$
+    rule: 'active-high output enable, internally pulled up to local VDD: high or floating = outputs enabled, low = outputs high-impedance'
+    page: 8
+    quote: pulled-up to local VDD by a 2 μA current source allowing them to be connected to an external logic level (high or low) or left floating.
+  - pins: ^EN[12]$
+    rule: if unused, connect to an external logic level (especially in noisy environments); if left floating, do not connect any trace to it
+    page: 8
+    quote: If EN1, EN2 are unused, it is recommended they be connected to an external logic level
+  - pins: ^EN[12]$
+    rule: no traces on a floating EN pin
+    page: 8
+    quote: To minimize noise coupling, do not connect circuit traces to EN1 or EN2 if they are left floating.
+  - pins: ^NC$
+    rule: not internally connected; may be left floating, tied to VDD or tied to GND
+    page: 7
+    quote: No Connects are not internally connected and can be left floating, tied to VDD, or tied to GND.
+  - pins: ^GND[12]$
+    rule: 'narrow-body packages: connect every GND pin (pins 2, 8 on side 1; 9, 15 on side 2) to that side''s ground'
+    page: 27
+    quote: Pin 2 and Pin 8 GND must be externally connected to respective ground. Pin 9 and Pin 15 must also be connected to external ground.
+  notes: 'Contradiction: Recommended Operating Conditions give VDD1/VDD2 2.375–5.5 V, front page says 2.5–5.5 V. EN pull-up is a 2 µA current source. NB-package GND rule is stated for Si8655. No bulk capacitor
+    stated. Nothing stated about keeping GND1 and GND2 separate.'
+- datasheet: si866x.pdf
+  doc: Si8660/61/62/63 Data Sheet, Low Power Six-Channel Digital Isolator (206330A, July 26, 2022)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.375
+    - 5.5
+    page: 11
+    quote: V DD1 2.375 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.375
+    - 5.5
+    page: 11
+    quote: V DD2 2.375 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package
+    page: 8
+    quote: The Si866x family requires a 0.1 µF bypass capacitor between V and GND1 and V and GND2
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 8
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules: []
+  notes: 'Contradiction: Recommended Operating Conditions give VDD1/VDD2 2.375–5.5 V, front page says 2.5–5.5 V. No enable or NC pins on these parts. No bulk capacitor stated. Nothing stated about keeping
+    GND1 and GND2 separate.'
+- datasheet: si861x-2x-datasheet.pdf
+  doc: Si861x/2x Low-Power, Single- and Dual-Channel Digital Isolators data sheet (206328B, September 28, 2023)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 10
+    quote: VDD1 2.5 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 10
+    quote: VDD2 2.5 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package
+    page: 7
+    quote: The Si861x/2x family requires a 0.1 µF bypass capacitor between V and GND1 and V and GND2
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 7
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^NC$
+    rule: not internally connected; may be left floating, tied to VDD or tied to GND
+    page: 2
+    quote: No Connect. These pins are not internally connected. They can be left floating, tied to VDD, or tied to GND.
+  - pins: ^(VDD1/NC|GND2/NC)$
+    rule: 'SOIC-8 Si861x: pins 1,3 are VDD1/NC and 5,7 are GND2/NC; the NC role is not internally connected and may float or be tied to VDD or GND'
+    page: 2
+    quote: No connect. These pins are not internally connected. They can be left floating, tied to VDD, or tied to GND.
+  notes: No enable pins. No bulk capacitor stated. The SOIC-8 table lists VDD1/NC (pins 1,3) and GND2/NC (pins 5,7) for Si861x without saying which pin is the supply. Nothing stated about keeping GND1 and
+    GND2 separate.
+- datasheet: si86xx-1Mbps-datasheet.pdf
+  doc: Si86xx 1 Mbps Data Sheet, 1 Mbps 2.5 kV Digital Isolators (Rev. 206851A, February 23, 2024)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 9
+    quote: V DD1 2.5 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 9
+    quote: V DD2 2.5 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package
+    page: 8
+    quote: The Si86xx family requires a 0.1 µF bypass capacitor between V DD1 and GND1 and V DD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 8
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN[12]$
+    rule: 'active-high output enable, internally pulled up (2 µA) to local VDD: high or floating = enabled, low = outputs high-impedance'
+    page: 7
+    quote: pulled-up to local VDD by a 2 µA current source allowing them to be connected to an external logic level (high or low) or left floating.
+  - pins: ^EN[12]$
+    rule: if unused, connect to an external logic level (especially in noisy environments)
+    page: 7
+    quote: If EN1, EN2 are unused, it is recommended they be connected to an external logic level
+  - pins: ^EN[12]$
+    rule: no traces on a floating EN pin
+    page: 7
+    quote: To minimize noise coupling, do not connect circuit traces to EN1 or EN2 if they are left floating.
+  - pins: ^NC$
+    rule: not internally connected; may be left floating, tied to VDD or tied to GND
+    page: 6
+    quote: No Connects are not internally connected and can be left floating, tied to VDD, or tied to GND.
+  - pins: ^GND[12]$
+    rule: 'narrow-body packages: connect every GND pin (pins 2, 8 on side 1; 9, 15 on side 2) to that side''s ground'
+    page: 31
+    quote: Pin 2 and Pin 8 GND must be externally connected to respective ground. Pin 9 and Pin 15 must also be connected to external ground.
+  - pins: ^(VDD1/NC|GND2/NC)$
+    rule: 'SOIC-8 Si861x: VDD1/NC (pins 1,3) and GND2/NC (pins 5,7); the NC role is not internally connected and may float or be tied to VDD or GND'
+    page: 30
+    quote: 'Note: No connect. These pins are not internally connected. They can be left floating, tied to VDD, or tied to GND.'
+  notes: No bulk capacitor stated. Nothing stated about keeping GND1 and GND2 separate.
+- datasheet: si860x.pdf
+  doc: Si860x Data Sheet, Bidirectional I2C Isolators with Unidirectional Digital Channels (Rev. 206852A, February 23, 2024)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 3.0
+    - 5.5
+    page: 13
+    quote: AVDD 3.0 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 3.0
+    - 5.5
+    page: 13
+    quote: BVDD 3.0 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: datasheet names AVDD/AGND and BVDD/BGND; as close as possible to the package
+    page: 11
+    quote: The Si860x family requires a 0.1 µF bypass capacitor between AVDD and AGND and BVDD and BGND.
+  - kind: resistor
+    value: 3k
+    pins: ^IO[ABD]$
+    to: VDD
+    series: false
+    required: true
+    note: I2C/SMBus bus pull-up on each side (SDA, SCL); 3k as drawn in the typical application diagrams; bus normally used with 0.5–3 mA pull-up
+    page: 8
+    quote: 3k 3k 0.1 µF 0.1 µF 3k 3k
+  - kind: resistor
+    value: ''
+    pins: ^IO[ABD]$
+    to: VDD
+    series: false
+    required: true
+    note: 'text: no external components except the I2C/SMBus pull-ups'
+    page: 6
+    quote: require no external components except the I2C/SMBus pull-up resistors
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[BC]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 11
+    quote: the user may also include resistors (50–300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^NC$
+    rule: no connection (no further handling stated)
+    page: 24
+    quote: 2 NC No connection.
+  notes: 'Datasheet pin names: AVDD/AGND = VDD1/GND1, BVDD/BGND = VDD2/GND2, ASDA/ASCL/BSDA/BSCL = IO pins. Side A (anti-latch) has special logic levels. Pull-up value appears only in the application figures
+    (3k); the Si8602 figure shows pull-ups on SDA only. No bulk cap stated. Nothing stated about keeping grounds separate.'
+- datasheet: si86s60x-datasheet.pdf
+  doc: Si86S60x data sheet (206551B, August 17, 2023)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 3.0
+    - 5.5
+    page: 2
+    quote: Side A power supply terminal; connect to a source of 3.0 to 5.5 V.
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 3.0
+    - 5.5
+    page: 2
+    quote: Side B power supply terminal; connect to a source of 3.0 to 5.5 V.
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: as close as possible to the respective supply pin
+    page: 6
+    quote: The Si86S60x family requires 0.1 and 10 µF bypass capacitors between AVDD, AGND and BVDD, BGND.
+  - kind: capacitor
+    value: 10 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: in addition to the 0.1 µF
+    page: 6
+    quote: The Si86S60x family requires 0.1 and 10 µF bypass capacitors between AVDD, AGND and BVDD, BGND.
+  - kind: resistor
+    value: 3k
+    pins: ^IO[ABD]$
+    to: VDD
+    series: false
+    required: true
+    note: I2C bus pull-ups as drawn in the typical application diagrams; normally used with a 0.5–3 mA pull-up
+    page: 9
+    quote: 3k 3k 10 µF 0.1 µF 0.1 µF 10 µF 3k 3k
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[BC]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if excessively noisy; adding them changes the default pull-up strength of the bus
+    page: 6
+    quote: the user may also include resistors (50 to 300Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^NC$
+    rule: no connection (no further handling stated)
+    page: 3
+    quote: 2 NC No connection.
+  notes: 'Contradiction: section 3.3.2 says the parts ''require no external components'', yet the application diagrams and the I2C timing text use external pull-up resistors. Recommended Operating Conditions
+    table lists no supply voltage; range taken from the pin descriptions (3.0–5.5 V). Nothing stated about keeping grounds separate.'
+- datasheet: si86s61x_2x_Ox-datasheet.pdf
+  doc: 'Si86S61x/S62x/SOx: Single and Dual Channel Digital Isolators data sheet (206552B, August 17, 2023)'
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.25
+    - 5.5
+    page: 8
+    quote: Supply voltage VDD1, VDD2 2.25 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.25
+    - 5.5
+    page: 8
+    quote: Supply voltage VDD1, VDD2 2.25 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: as close as possible to the package
+    page: 6
+    quote: requires 0.1 and 10 µF bypass capacitors between VDD1 and GND1 and VDD2 and GND2
+  - kind: capacitor
+    value: 10 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: in addition to the 0.1 µF
+    page: 6
+    quote: requires 0.1 and 10 µF bypass capacitors between VDD1 and GND1 and VDD2 and GND2
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[AB]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 6
+    quote: the user may also include resistors (50 to 300 Ω) in series with the inputs and outputs if the system is
+  pin_rules:
+  - pins: ^NC$
+    rule: do not connect
+    page: 2
+    quote: NC No connect Do not connect pin
+  notes: 'NC handling differs from the older Si86xx sheets: here NC is ''Do not connect pin''. No enable pins. Nothing stated about keeping grounds separate.'
+- datasheet: si86s6xx-datasheet.pdf
+  doc: 'Si86S6xx/Lxx/Mxx/Qxx/Sxx: Multi-Channel Digital Isolators data sheet (206553B, August 17, 2023)'
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.25
+    - 5.5
+    page: 18
+    quote: Supply voltage VDD1, VDD2 2.25 — 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.25
+    - 5.5
+    page: 18
+    quote: Supply voltage VDD1, VDD2 2.25 — 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: as close as possible to the package
+    page: 11
+    quote: The Si86Sx family requires 0.1 and 10 µF bypass capacitors between VDD1 and GND1 and VDD2 and GND2.
+  - kind: capacitor
+    value: 10 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: in addition to the 0.1 µF
+    page: 11
+    quote: The Si86Sx family requires 0.1 and 10 µF bypass capacitors between VDD1 and GND1 and VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN[A-F]|OUT[A-F]|IO[A-D])$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy
+    page: 11
+    quote: the user may also include resistors (50 to 300 Ω ) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN[12]$
+    rule: 'active-high output enable for that side: high or open = normal operation, low = outputs high-impedance (sleep-mode options: also low-power)'
+    page: 8
+    quote: L H or open P P L Normal operation
+  - pins: ^SLEEP1$
+    rule: 'SMb, active-low sleep (Si86SMx): high or left unconnected = device enabled, low = sleep mode'
+    page: 12
+    quote: when driven high (or left unconnected) enables the device but when driven low puts the device into sleep mode
+  - pins: ^NC$
+    rule: not connected (no further handling stated)
+    page: 4
+    quote: NC — Not connected
+  notes: Datasheet calls the sleep pin SMb (our SLEEP1). Nothing stated about keeping GND1 and GND2 separate.
+- datasheet: Si86Px-datasheet.pdf
+  doc: 'Si86Px: Dual and Quad Digital Isolators with Integrated Power data sheet (207353A, March 23, 2026)'
+  supplies:
+  - pin: VI
+    ground: GNDI
+    range_v:
+    - 4.75
+    - 5.25
+    note: Si86P5x
+    page: 15
+    quote: Input supply voltage VI 4.750 5.000 5.250 V
+  - pin: VI
+    ground: GNDI
+    range_v:
+    - 3.135
+    - 5.25
+    note: Si86P4x
+    page: 16
+    quote: Input supply voltage VI 3.135 — 5.250 V
+  - pin: VI
+    ground: GNDI
+    range_v:
+    - 3.135
+    - 3.465
+    note: Si86P3x
+    page: 17
+    quote: Input supply voltage VI 3.135 3.300 3.465 V
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 3.3
+    - 5.0
+    note: nominal, ±5% supply variation
+    page: 19
+    quote: VDD1 = VDD2 = 3.3 V – 5.0 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 3.3
+    - 5.0
+    note: nominal, ±5%; powered exclusively by VO
+    page: 19
+    quote: VDD1 = VDD2 = 3.3 V – 5.0 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^(VI|VO)$
+    to: GND
+    series: false
+    required: true
+    note: '''usually 0.1 µF, 1 µF and 4.7 µF''; VI to GNDI, VO to GNDO, close to the pins with thick short traces'
+    page: 39
+    quote: Bypass capacitors (usually 0.1 µF, 1 µF, and 4.7 µF) for the power converter supply pins (VI and GNDI at the input side, VO and GNDO at the output side)
+  - kind: capacitor
+    value: 1 µF
+    pins: ^(VI|VO)$
+    to: GND
+    series: false
+    required: true
+    note: VI to GNDI, VO to GNDO
+    page: 39
+    quote: Bypass capacitors (usually 0.1 µF, 1 µF, and 4.7 µF) for the power converter supply pins (VI and GNDI at the input side, VO and GNDO at the output side)
+  - kind: capacitor
+    value: 4.7 µF
+    pins: ^(VI|VO)$
+    to: GND
+    series: false
+    required: true
+    note: VI to GNDI, VO to GNDO
+    page: 39
+    quote: Bypass capacitors (usually 0.1 µF, 1 µF, and 4.7 µF) for the power converter supply pins (VI and GNDI at the input side, VO and GNDO at the output side)
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: '''usually 0.1 µF and 1 µF'', as close to the pins as possible'
+    page: 39
+    quote: Bypass capacitors (usually 0.1 µF and 1 µF) for the digital isolator supply pins (VDD1 and GND1 at the input side, VDD2 and GND2 at the output side)
+  - kind: capacitor
+    value: 1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: in addition to the 0.1 µF
+    page: 39
+    quote: Bypass capacitors (usually 0.1 µF and 1 µF) for the digital isolator supply pins (VDD1 and GND1 at the input side, VDD2 and GND2 at the output side)
+  - kind: resistor
+    value: 17.2 kΩ (3.3 V) / 31.3 kΩ (5 V)
+    pins: ^CTRL$
+    to: VO
+    series: false
+    required: true
+    note: R1 of the VO→CTRL→ground divider, Vout = Vref·(R1+R2)/R2; with R2 = 10 kΩ (27/41 mV hysteresis) or 63.25 k/36.75 k (3.3 V) and 75.8 k/24.2 k (5 V) for 100 mV hysteresis
+    page: 40
+    quote: By adjusting the ratio of external resistors R1 and R2 in the divider network, V , and by extension the voltage at
+  - kind: resistor
+    value: 10 kΩ
+    pins: ^CTRL$
+    to: GND
+    series: false
+    required: true
+    note: R2, lower leg of the divider; table 18 row values; the ground the divider returns to is not legible in the text (figure)
+    page: 42
+    quote: 17.2 k 10 k 3.3 27.2 m
+  - kind: capacitor
+    value: 1 to 10 µF
+    pins: ^VO$
+    to: GND
+    series: false
+    required: true
+    note: C_load at VO (Table 19 parameter range); return to GNDO
+    page: 42
+    quote: C 1 to 10 µF
+  - kind: capacitor
+    value: 10 µF
+    pins: ^VO$
+    to: GND
+    series: false
+    required: false
+    note: C_ESR, high-ESR capacitor used to slow startup; R_ESR of 1.5 to 2 Ω recommended
+    page: 42
+    quote: Choosing a R of 1.5 to 2 Ω limits the cycle-by-cycle error to f .
+  - kind: capacitor
+    value: 10 nF
+    pins: ^IN[A-D]$
+    to: GNDI
+    series: false
+    required: false
+    note: only if extremely high CMTI is needed; reduces maximum data rate; text names the logic input ground as GNDI
+    page: 39
+    quote: 10 nF capacitor between each of the logic input pins and the logic input ground (GNDI), including the
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-D]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: to enhance robustness in excessively noisy environments
+    page: 39
+    quote: resistors in the range of 50 to 300 Ω should be placed in series with the digital isolator inputs and outputs
+  - kind: inductor
+    value: ''
+    pins: ^VI$
+    to: SUPPLY
+    series: true
+    required: false
+    note: common-mode choke at the input side, for low EMI
+    page: 39
+    quote: Using a common-mode choke at the input side and ferrite beads at the output side helps reduce radiated emissions
+  - kind: ferrite
+    value: ''
+    pins: ^VO$
+    to: LOAD
+    series: true
+    required: false
+    note: ferrite beads at the output side, for low EMI
+    page: 39
+    quote: Using a common-mode choke at the input side and ferrite beads at the output side helps reduce radiated emissions
+  pin_rules:
+  - pins: ^DNC$
+    rule: do not connect
+    page: 4
+    quote: 1 DNC Do not connect
+  - pins: ^VDD2$
+    rule: power only from VO; never from an independent external supply
+    page: 11
+    quote: VDD2 is intended to be powered exclusively by VO and should not be driven by any external supply independent of the Si86Px device.
+  - pins: ^IN[A-D]$
+    rule: do not drive I/Os high while the primary-side supply is off
+    page: 11
+    quote: We recommend that I/Os not be driven high when primary side supply is turned off.
+  - pins: ^CTRL$
+    rule: output voltage control input; set by external R1/R2 divider from VO (usable VO 3.15–5.25 V)
+    page: 4
+    quote: 12 CTRL Output voltage control input
+  notes: 'Integrated isolated DC-DC: VI/GNDI primary power, VO/GNDO isolated output. VI range depends on variant (P5x/P4x/P3x). No recommended-operating-conditions table for VDD1/VDD2; range from the logic-characteristics
+    conditions. Bypass values are given as ''usually''. Divider ground return and the VDD1 source are only in garbled figures. Low-EMI layout needs a 4-layer stack with embedded stitching capacitance. Nothing
+    stated about joining or separating the grounds.'

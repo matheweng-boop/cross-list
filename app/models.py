@@ -251,3 +251,17 @@ class BroadcastConfig(Base):
     name: Mapped[str] = mapped_column(String(200))
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class CrossRequest(Base):
+    """A part someone wants crossed that the database does not cover yet."""
+
+    __tablename__ = "cross_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mpn: Mapped[str] = mapped_column(String(100), index=True)
+    manufacturer: Mapped[str | None] = mapped_column(String(100))
+    note: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="open")  # open | in_progress | done | cannot
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

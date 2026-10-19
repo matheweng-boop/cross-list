@@ -66,6 +66,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.auth.gate import PasswordGate
     from app.auth.gate import router as auth_router
     from app.web.broadcast import router as broadcast_router
+    from app.web.requests import router as requests_router
     from app.web.routes import router as web_router
 
     app.add_middleware(PasswordGate)
@@ -78,4 +79,5 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(api_router, prefix="/api")
     app.include_router(web_router)
     app.include_router(broadcast_router)
+    app.include_router(requests_router)
     return app

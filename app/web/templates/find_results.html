@@ -23,6 +23,11 @@
 {% endif %}
 {% if not competitors and not references %}
 <p>No part numbers contain “{{ q }}”. ADI, Diodes and other manufacturers are not in the database yet.</p>
+<form method="post" action="/requests" class="request-inline">
+  <input type="hidden" name="mpns" value="{{ q }}"><input type="hidden" name="back" value="/requests">
+  <input name="note" placeholder="Note (optional): customer, application…" aria-label="Note">
+  <button type="submit">Request a cross for {{ q }}</button>
+</form>
 {% endif %}
 <p><a href="/">New search</a></p>
 {% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Cross requests – Cross List{% endblock %}
+{% block content %}
+<h1>Cross requests</h1>
+<p class="subtitle muted">Parts that still need to be added and crossed. Paste part numbers here (one per line or comma separated), or use
+  “Request a cross” on any part or search without results. Then copy the open list into a conversation with Claude to have them programmed in.</p>
+<form method="post" action="/requests" class="request-form">
+  <textarea name="mpns" rows="3" placeholder="e.g. ADuM1401ARWZ, ISO7841DWR, NSi8100N" aria-label="Part numbers to cross" required></textarea>
+  <div class="grid">
+    <input name="manufacturer" placeholder="Manufacturer (optional)" aria-label="Manufacturer">
+    <input name="note" placeholder="Note, e.g. customer, application, deadline (optional)" aria-label="Note">
+    <button type="submit">Add requests</button>
+  </div>
+</form>
+{% set open_count = rows|selectattr('status', 'in', ['open', 'in_progress'])|list|length %}
+<p class="downloads">
+  <button type="button" class="outline" id="copy-requests" {{ 'disabled' if not open_count }}>Copy open list for Claude ({{ open_count }})</button>
+  <a href="/requests.txt" class="outline secondary" role="button">View as text</a>
+  <span id="copy-status" class="small muted" role="status"></span>
+</p>
+{% if rows %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Part</th><th>Requested</th><th>In database</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}{% set p = found[r.id] %}
+    <tr class="req-{{ r.status }}">
+      <td><b>{{ r.mpn }}</b>{% if r.manufacturer %}<br><small class="muted">{{ r.manufacturer }}</small>{% endif %}{% if r.note %}<br><small>{{ r.note }}</small>{% endif %}</td>
+      <td><small>{{ r.created_at.strftime('%Y-%m-%d') if r.created_at }}</small></td>
+      <td>{% if p %}<a href="/parts/{{ p.id }}">yes, see crosses</a>{% else %}<span class="muted">not yet</span>{% endif %}</td>
+      <td><form method="post" action="/requests/{{ r.id }}"><select name="status" onchange="this.form.submit()" aria-label="Status of {{ r.mpn }}">
+        {% for k, label in statuses.items() %}<option value="{{ k }}" {{ 'selected' if r.status == k }}>{{ label }}</option>{% endfor %}</select></form></td>
+      <td><form method="post" action="/requests/{{ r.id }}"><button name="delete" value="1" class="secondary outline small-btn" aria-label="Delete request {{ r.mpn }}">×</button></form></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="muted">No requests yet.</p>{% endif %}
+<script>
+  document.getElementById("copy-requests")?.addEventListener("click", async () => {
+    const text = await (await fetch("/requests.txt")).text();
+    const status = document.getElementById("copy-status");
+    try { await navigator.clipboard.writeText(text); status.textContent = "Copied. Paste it into the chat with Claude."; }
+    catch { status.textContent = "Copy failed; open “View as text” and copy from there."; }
+  });
+</script>
+{% endblock %}

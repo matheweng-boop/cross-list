@@ -59,7 +59,8 @@ templates.env.globals["is_new"] = _is_new
 # prefixes match its path; the part pages, overlays and downloads all sit under Crosses.
 SECTIONS = (
     ("crosses", "Crosses", "/", [("Find", "/"), ("Parts", "/parts"), ("Compare", "/compare"),
-                                 ("Lifecycle", "/lifecycle"), ("Rules", "/rules")]),
+                                 ("Lifecycle", "/lifecycle"), ("Rules", "/rules"),
+                                 ("Requests", "/requests")]),
     ("technical", "Technical discussions", "/technical", [("Technical", "/technical"),
                                                          ("Engineering notes", "/engineering")]),
     ("broadcast", "Broadcast", "/broadcast", [("Overview", "/broadcast"),

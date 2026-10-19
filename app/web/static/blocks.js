@@ -7,7 +7,7 @@
   if (!root) return;
   const $ = s => root.querySelector(s);
   const J = id => JSON.parse(document.getElementById(id).textContent);
-  const CAT = J("bk-catalogue"), design = J("bk-design"), tpl = J("bk-template"), REQ = J("bk-reqdata");
+  const CAT = J("bk-catalogue"), design = J("bk-design"), tpl = J("bk-template"), REQ = J("bk-reqdata"), HELP = J("bk-help");
   let COUNTS = J("bk-counts");
   const FN = CAT.functions, CATS = CAT.categories;
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
@@ -193,7 +193,8 @@
       const bits = String(p.detail || "").split(" · ").filter(Boolean).flatMap(t => (/^[A-Z0-9_]+( [A-Z0-9_]+)+$/.test(t) ? t.split(" ") : [t])), long = bits.filter(t => t.length > 40), short = bits.filter(t => t.length <= 40);
       return `<div class="pt-chips">${short.map(t => `<span class="pt-chip k-${chipKind(t)}">${esc(t)}</span>`).join("")}${p.risk ? '<span class="pt-chip k-risk">NRND / obsolete</span>' : ""}</div>` +
         long.map(t => `<div class="pt-desc small muted" title="${esc(t)}">${esc(t.length > 140 ? t.slice(0, 137) + "…" : t)}</div>`).join("");
-    })()}</li>`;
+    })()}${p.description ? `<div class="pt-text small" title="${esc(p.description)}">${esc(p.description.length > 220 ? p.description.slice(0, 217) + "…" : p.description)}</div>` : ""}
+    ${p.why ? `<div class="pt-why small"><b>Why:</b> ${esc(p.why)}</div>` : ""}</li>`;
 
   // ---- below the diagram: the most likely parts per block (overview), or the clicked block in full
   const below = () => $("#bk-below");
@@ -250,6 +251,31 @@
     }));
   }
 
+  // a chosen part constrains other blocks where the property is system-wide: automotive grade, reinforced
+  // isolation, and the digital radio standard between tuner and demodulator. Only unanswered filters are set.
+  function applyPick(fn, imp) {
+    if (!imp) return [];
+    const notes = [], inDiagram = [...new Set(S.groups.flatMap(g => g.blocks.map(x => x.fn)))].filter(f => f !== fn);
+    const set = (f, rid, v, text) => {
+      if (!(REQ[f] || []).some(x => x.id === rid)) return;
+      const a = (S.req[f] ||= {});
+      if (a[rid] !== undefined) { if (!Object.keys(a).length) delete S.req[f]; return; }
+      a[rid] = v; notes.push(`${text} → ${FN[f].label}`);
+    };
+    const byParam = (param, value, text) => inDiagram.forEach(f => (FN[f].requirements || [])
+      .filter(r => r.param === param && r.value === value).forEach(r => set(f, r.id, true, text)));
+    if (imp.qualification === "automotive") byParam("qualification", "automotive", "automotive (AEC-Q100)");
+    if (imp.isolation_class === "reinforced") byParam("isolation_class", "reinforced", "reinforced isolation");
+    const digital = v => [].concat(v || []).filter(x => ["HD", "DAB", "DRM"].includes(x));
+    if (fn === "am_fm_tuner" && inDiagram.includes("digital_radio_demod")) {
+      const d = digital(imp.feature);
+      if (d.length === 1) set("digital_radio_demod", "std", d[0], `${d[0]} demodulation`);
+    }
+    if (fn === "digital_radio_demod" && inDiagram.includes("am_fm_tuner"))
+      digital(imp.decode).forEach(d => set("am_fm_tuner", d.toLowerCase(), true, `${d} tuner`));
+    return notes;
+  }
+
   function showBlock(g, b) {
     root.classList.remove("panel-open");
     const box = below();
@@ -257,7 +283,6 @@
     box.querySelector('[data-act="overview"]').onclick = () => { sel = null; render(); };
     const panel = box.querySelector(".bk-below-body");
     renderReqs();
-    box.scrollIntoView({behavior: "smooth", block: "nearest"});
     const f = fnOf(b), st = status(b);
     const comp = (f.companions || []).filter(c => FN[c]);
     panel.innerHTML = `<h3>${esc(b.label || f.label)}</h3>
@@ -283,7 +308,15 @@
             : `<p class="small uc-error">No part meets these requirements. Untick one, or record the gap as feedback.</p>`);
         const inp = box.querySelector("[data-q]");
         inp.oninput = () => { clearTimeout(inp._t); inp._t = setTimeout(() => draw(inp.value), 250); };
-        box.querySelectorAll("[data-pick]").forEach(btn => (btn.onclick = () => { b.part = btn.dataset.pick; changed(); showBlock(g, b); }));
+        box.querySelectorAll("[data-pick]").forEach(btn => (btn.onclick = async () => {
+          const p = [...r.manufacturers.flatMap(m => [...m.best, ...m.all])].find(x => x.mpn === btn.dataset.pick);
+          b.part = btn.dataset.pick;
+          const notes = applyPick(b.fn, p && p.implies);
+          changed();
+          if (notes.length) await refreshCounts();
+          showBlock(g, b);
+          if (notes.length) below().querySelector(".bk-below-head").insertAdjacentHTML("beforeend", `<p class="small pt-applied">Applied from your choice of <b>${esc(b.part)}</b>: ${notes.map(esc).join(" · ")}</p>`);
+        }));
       };
       draw("");
     } else if (st === "opp") {
@@ -394,14 +427,14 @@
     const qByFn = {}, recorded = [];
     for (const q of qs) (q.sets && q.sets.length ? (qByFn[q.sets[0].fn] ||= []) : recorded).push(q);
     const selB = sel && sel.block && blockOf(group(sel.group), sel.block);
-    let groupFns = [...new Set([...Object.keys(qByFn), ...fnsReq])];
-    if (selB) groupFns = groupFns.filter(fn => fn === selB.fn);
+    const groupFns = [...new Set([...Object.keys(qByFn), ...fnsReq])];
     const nQ = Object.keys(S.qa).length, nR = Object.values(S.req).reduce((k, a) => k + Object.keys(a).length, 0);
     if (reqOpen === null) reqOpen = !nQ && !nR;
     const qRow = q => {
       const fl = filterLabel(q), set = S.qa[q.id];
       return `<li class="rq-item${set ? " rq-on" : ""}" title="${esc(q.source || "")}"><span class="rq-label">${esc(q.question)}${fl.length > 1 ? ` <small class="muted">· also filters ${esc(fl.slice(1).join(", "))}</small>` : ""}</span>
-        <select data-q="${esc(q.id)}"><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${set === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></li>`;
+        <select data-q="${esc(q.id)}"><option value="">not decided</option>${q.choices.map(c => `<option value="${esc(c)}"${set === String(c) ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
+        ${HELP[q.id] ? `<small class="rq-help">${esc(HELP[q.id])}</small>` : ""}</li>`;
     };
     const rRow = (fn, r) => {
       const v = (S.req[fn] || {})[r.id];
@@ -413,7 +446,7 @@
     };
     const related = fn => (FN[fn].companions || []).filter(c => inDiagram.has(c) && (REQ[c] || []).length && c !== fn);
     const grp = (key, title, sub, rows, answered, extra = "") => {
-      const open = !!selB || openGroups.has(key) || (!openGroups.size && answered);
+      const open = (selB && key === selB.fn) || openGroups.has(key) || (!openGroups.size && !selB && answered);
       return `<details class="rq-group" data-g="${esc(key)}"${open ? " open" : ""}><summary><b>${esc(title)}</b> <span class="small muted">${sub}${answered ? ` · <span class="rq-count">${answered} set</span>` : ""}</span>${extra}</summary><ul class="rq-list">${rows}</ul></details>`;
     };
     const fnGroups = groupFns.map(fn => {
@@ -424,16 +457,18 @@
       return grp(fn, FN[fn] ? FN[fn].label : fn, `${COUNTS[fn] ?? "–"} parts fit${inDiagram.has(fn) ? "" : " · not in this diagram"}`,
         (qsF.length ? qsF.map(qRow).join("") : "") + (rs.length ? `<li class="rq-sub small muted">Part filters</li>` + rs.map(r => rRow(fn, r)).join("") : ""), answered, extra);
     }).join("");
-    const recGroup = recorded.length && !selB ? grp("_recorded", "System decisions", "recorded with the design, no part filter", recorded.map(qRow).join(""), recorded.filter(q => S.qa[q.id]).length) : "";
+    const recGroup = recorded.length ? grp("_recorded", "System decisions", "recorded with the design, no part filter", recorded.map(qRow).join(""), recorded.filter(q => S.qa[q.id]).length) : "";
     const head = selB
-      ? `<h3>Requirements for ${esc(selB.label || fnOf(selB).label)}</h3><p class="small muted">Each answer narrows the parts listed next to it (${COUNTS[selB.fn] ?? "–"} fit now). <button type="button" class="link-btn" data-act="allreq">All requirements</button></p>`
+      ? `<h3>Requirements <span class="small muted">· ${esc(selB.label || fnOf(selB).label)} opened; ${COUNTS[selB.fn] ?? "–"} parts fit now (listed below)</span></h3>`
       : `<h3>Requirements</h3><p class="small muted">Answer only what the design needs; unanswered = no filter, nothing is assumed. Each group filters the parts of one block (count = parts that fit now); click a block in the diagram to focus on it.${qs.length ? ` ${nQ} of ${qs.length} design questions answered.` : ""} ${nR} part filter${nR === 1 ? "" : "s"} set.</p>`;
     box.innerHTML = `<div class="bk-reqs-box">${head}<div class="bk-reqs-body">
-      ${selB || groupFns.length + (recorded.length ? 1 : 0) < 2 ? "" : `<div class="rq-tools small"><button type="button" class="link-btn" data-all="open">expand all</button> · <button type="button" class="link-btn" data-all="close">collapse all</button></div>`}
+      ${groupFns.length + (recorded.length ? 1 : 0) < 2 ? "" : `<div class="rq-tools small"><button type="button" class="link-btn" data-all="open">expand all</button> · <button type="button" class="link-btn" data-all="close">collapse all</button></div>`}
       ${fnGroups || (selB ? `<p class="small muted">This block has no requirement questions.</p>` : "")}${recGroup}
-      ${(S.sources || []).length && !selB ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")}</p>` : ""}
+      ${(S.sources || []).length ? `<p class="small muted">Sources: ${S.sources.map(d => `<a href="${esc(d.url)}" target="_blank" rel="noopener" title="${esc(d.title)}">${esc(d.doc)}</a>`).join(", ")}</p>` : ""}
     </div></div>`;
-    box.querySelector('[data-act="allreq"]')?.addEventListener("click", () => { sel = null; render(); });
+    const cur = selB && box.querySelector(`.rq-group[data-g="${selB.fn}"]`);
+    if (cur && renderReqs.focus !== sel.block) { renderReqs.focus = sel.block; cur.scrollIntoView({behavior: "smooth", block: "start"}); }
+    if (!selB) renderReqs.focus = null;
     const body = box.querySelector(".bk-reqs-body");
     if (body) { body.scrollTop = renderReqs.scroll || 0; body.onscroll = () => (renderReqs.scroll = body.scrollTop); }
     box.querySelectorAll(".rq-group").forEach(d => (d.ontoggle = () => (d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g))));

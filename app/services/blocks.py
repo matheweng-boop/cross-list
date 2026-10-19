@@ -34,6 +34,12 @@ def templates() -> list[dict]:
     return _yaml("templates.yaml") or []
 
 
+@lru_cache
+def question_help() -> dict[str, str]:
+    """One or two sentences per design-question id: what the decision implies."""
+    return _yaml("question_help.yaml") or {}
+
+
 # vendor / source in a template name ("(TI)", "(NXP)", "(Microchip AN5324)", "(TI reference)") is kept in the data
 # (sources) but not shown
 _SOURCE_PAREN = re.compile(
@@ -48,6 +54,46 @@ _VENDOR_WORDS = re.compile(r"\s*/\s*Digital Airfast\b|\bAirfast\b\s*", re.I)
 def display_name(t: dict) -> str:
     name = _VENDOR_WORDS.sub(" ", _SOURCE_PAREN.sub("", t.get("name") or ""))
     return re.sub(r"\s{2,}", " ", name).strip()
+
+
+# hand-shortened titles where the split by punctuation does not read well
+_T = (
+    ("Automotive telematics control unit (TCU) / V2X module", "Telematics control unit / V2X", ""),
+    ("Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB)", "Infotainment head unit",
+     "radio tuner AM / FM / HD / DAB"),
+    ("Automotive phone-as-a-key (PaaK) module with BLE satellite modules", "Phone-as-a-key", "BLE satellite modules"),
+    ("IoT edge-AI board with companion PMIC, DCXO and Wi-Fi/BT combo", "IoT edge-AI board",
+     "companion PMIC, DCXO, Wi-Fi / BT combo"),
+    ("IoT Bluetooth LE SoC reference design and IoT processor Wi-Fi companion", "IoT Bluetooth LE and Wi-Fi",
+     "BLE SoC reference design, processor Wi-Fi companion"),
+    ("HEV/EV HV-to-LV DC/DC converter (phase-shifted full bridge, HV battery to 12 V)", "HEV/EV DC/DC converter",
+     "HV battery to 12 V, phase-shifted full bridge"),
+    ("Energy storage system battery (multimodule, daisy chain) - rack BMS", "Energy storage battery",
+     "rack BMS, multimodule daisy chain"),
+    ("Server / telecom AC/DC power supply unit (54 V output, with 12 V standby)", "Server / telecom PSU",
+     "54 V output, 12 V standby"),
+    ("Automotive telematics & infotainment RF", "Telematics & infotainment RF", ""),
+)  # fmt: skip
+TITLE_OVERRIDE = {name: (title, sub) for name, title, sub in _T}
+_COMBO = re.compile(r"^Wi-Fi 6/6E \+ Bluetooth")
+
+
+def title_parts(t: dict) -> tuple[str, str]:
+    """Short title and subtitle: 'HEV/EV on-board charger (two-stage PFC + isolated DC/DC)' ->
+    ('HEV/EV on-board charger', 'two-stage PFC + isolated DC/DC'); the first '(', ' - ' or ', ' splits."""
+    name = display_name(t)
+    if name in TITLE_OVERRIDE:
+        return TITLE_OVERRIDE[name]
+    if _COMBO.match(name):
+        return "Wi-Fi 6/6E + Bluetooth combo", "client / IoT / automotive module, + 802.15.4"
+    m = re.match(r"^(.*?)\s*\((.*)\)\s*(?:-\s*(.*))?$", name)
+    if m:
+        return m.group(1).strip(), " · ".join(x.strip() for x in (m.group(2), m.group(3)) if x)
+    for sep in (" - ", ", "):
+        if sep in name:
+            a, b = name.split(sep, 1)
+            return a.strip(), b.strip()
+    return name, ""
 
 
 def template_functions(t: dict) -> list[str]:
@@ -72,7 +118,8 @@ def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
             label = cat["categories"].get(f.get("category"), f.get("category"))
             chips[label] = chips.get(label, False) or bool(n[fn])
         blocks_n = sum(len(g.get("blocks") or []) for g in t.get("groups") or [])
-        card = {"i": i, "name": display_name(t), "blocks": blocks_n, "questions": len(t.get("questions") or []),
+        title, sub = title_parts(t)
+        card = {"i": i, "name": title, "sub": sub, "blocks": blocks_n, "questions": len(t.get("questions") or []),
                 "chips": sorted(chips.items(), key=lambda c: (not c[1], c[0]))}  # fmt: skip
         out.setdefault(t.get("category") or "Other", []).append(card)
     return list(out.items())
@@ -152,10 +199,11 @@ def catalog_parts() -> dict[str, list[dict]]:
                     "url": p.get("product_url") or p.get("source") or "",
                     "values": {"qualification": "automotive" if auto else None},
                     "detail": " · ".join(
-                        b
-                        for b in [*bits, desc[:200], status if status and status not in ("Active", "Standard") else ""]
-                        if b
+                        b for b in [*bits, status if status and status not in ("Active", "Standard") else ""] if b
                     ),
+                    "description": desc[:240],
+                    "full": False,
+                    "preview": "preview" in status.lower(),
                     "risk": bool(_RISK.search(status)),
                 }  # fmt: skip
             )
@@ -231,7 +279,8 @@ def _candidates(session: Session, key: str) -> list[dict] | None:
                 if v not in (None, "", []):
                     bits.append(f"{'-'.join(map(str, v)) if isinstance(v, list) else v}{unit}")
             out.append({"mpn": p.mpn, "manufacturer": p.manufacturer.name, "url": f"/parts/{p.id}",
-                        "detail": " · ".join(bits), "values": values,
+                        "detail": " · ".join(bits), "values": values, "description": p.description or "",
+                        "full": True, "preview": p.lifecycle_status.value == "preview",
                         "risk": p.lifecycle_status.value not in ("active", "preview")})  # fmt: skip
     elif isinstance(src, dict) and "broadcast" in src:
         for d in broadcast.catalog():
@@ -246,9 +295,10 @@ def _candidates(session: Session, key: str) -> list[dict] | None:
                 "decode": d["digital_decode"],
             }
             detail = " · ".join(x for x in (size, " ".join(feats)) if x)
-            out.append(
-                dict(mpn=d["mpn"], manufacturer="Skyworks", url="/broadcast", values=values, risk=False, detail=detail)
-            )
+            desc = {"tuner": "AM/FM / digital radio tuner", "coprocessor": "digital radio demodulator",
+                    "receiver": "single-chip radio receiver"}.get(d["role"], "")  # fmt: skip
+            out.append(dict(mpn=d["mpn"], manufacturer="Skyworks", url="/broadcast", values=values, risk=False,
+                            detail=detail, description=desc, full=True, preview=False))  # fmt: skip
     have = {_norm_mpn(c["mpn"]) for c in out}
     broadcast_fn = isinstance(src, dict) and "broadcast" in src
     for c in catalog_parts().get(key, []):
@@ -331,6 +381,36 @@ def counts(session: Session, answers: dict | None = None) -> dict[str, int | Non
     return out
 
 
+def _rank(c: dict, answers: dict) -> tuple:
+    """Best first: active before NRND / obsolete, production before preview, full Cross List parameters before
+    catalogue-only data, automotive first when automotive is asked for, then part number."""
+    auto_wanted = bool((answers or {}).get("automotive"))
+    is_auto = (c.get("values") or {}).get("qualification") == "automotive"
+    return (c["risk"], bool(c.get("preview")), not c.get("full"), auto_wanted and not is_auto, c["mpn"])
+
+
+def _why(c: dict, rank: int, key: str, answers: dict, n: int) -> str:
+    """One line on why a part is listed first: rank, requirements met, lifecycle, grade, data depth."""
+    reqs = {r["id"]: r for r in catalogue()["functions"].get(key, {}).get("requirements") or []}
+    met = [
+        reqs[k]["label"] + (f" {v}" if v not in (True, "true") else "")
+        for k, v in (answers or {}).items()
+        if k in reqs and v not in (None, "", False)
+    ]
+    bits = ["best match" if rank == 0 else "next best (a different device)"]
+    if met:
+        bits.append("meets " + ", ".join(met))
+    if c["risk"]:
+        bits.append("lifecycle risk (NRND / obsolete)")
+    else:
+        bits.append("preview, not yet in production" if c.get("preview") else "active")
+    if (c.get("values") or {}).get("qualification") == "automotive":
+        bits.append("AEC-Q100")
+    bits.append("full Cross List parameters" if c.get("full") else "catalogue data only (package, key specs)")
+    bits.append(f"{n} fit in total")
+    return "; ".join(bits)
+
+
 def parts_for(session: Session, key: str, q: str = "", answers: dict | None = None, top: int = 2) -> dict:
     """Matching parts per manufacturer: the best `top` distinct series first (active before NRND /
     obsolete), then all of them."""
@@ -339,7 +419,7 @@ def parts_for(session: Session, key: str, q: str = "", answers: dict | None = No
         qq = q.upper().replace("-", "")
         cands = [c for c in cands if qq in c["mpn"].upper().replace("-", "") or q.lower() in c["detail"].lower()]
     groups = {}
-    for c in sorted(cands, key=lambda c: (c["risk"], c["mpn"])):
+    for c in sorted(cands, key=lambda c: _rank(c, answers or {})):
         groups.setdefault(c["manufacturer"], []).append(c)
     result = []
     for mfr, items in groups.items():
@@ -351,11 +431,17 @@ def parts_for(session: Session, key: str, q: str = "", answers: dict | None = No
                 best.append(c)
             if len(best) == top:
                 break
-        strip = lambda c: {k: c[k] for k in ("mpn", "url", "detail", "risk")}  # noqa: E731
+
+        def strip(c):
+            v = c.get("values") or {}
+            implies = {k: v[k] for k in ("qualification", "isolation_class", "feature", "decode") if v.get(k)}
+            keep = {k: c[k] for k in ("mpn", "url", "detail", "risk")}
+            return {**keep, "description": c.get("description", ""), "implies": implies}
+
         result.append(
             {
                 "manufacturer": mfr,
-                "best": [strip(c) for c in best],
+                "best": [dict(strip(c), why=_why(c, i, key, answers or {}, len(items))) for i, c in enumerate(best)],
                 "all": [strip(c) for c in items[:200]],
                 "total": len(items),
             }

@@ -11,7 +11,8 @@
 <div class="tpl-grid">
   {% for t in items %}
   <a class="tpl-card" href="/blocks/new?template={{ t.i }}"><b>{{ t.name }}</b>
-    <br><small class="muted">{{ t.blocks }} blocks{% if t.questions %} · {{ t.questions }} design questions{% endif %}</small>
+    {% if t.sub %}<small class="tpl-sub">{{ t.sub }}</small>{% endif %}
+    <small class="muted">{{ t.blocks }} blocks{% if t.questions %} · {{ t.questions }} design questions{% endif %}</small>
     {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo parts in Cross List' if have else 'opportunity' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
   {% endfor %}
 </div>

@@ -14,14 +14,16 @@
     {% for key in keys if key in tf.features %}<label><input type="checkbox" value="{{ key }}" data-feat-filter> {{ tf.features[key] }}</label>{% endfor %}
   </fieldset>{% endfor %}
 </div>
+<p class="small muted">* pinout borrowed or missing (hover for details).</p>
 <div class="table-wrap"><table class="feat-matrix">
   <thead><tr><th>Part</th><th>Tuners</th><th>Layout</th>{% for key, label in tf.features.items() %}<th title="{{ label }}"><span>{{ key|replace('_', ' ') }}</span></th>{% endfor %}</tr></thead>
   <tbody>
   {% for t in tf.tuners %}{% set d = by_mpn.get(t.mpn) %}
     <tr data-feats="{{ t.features|join(' ') }}">
-      <td><b>{{ t.mpn }}</b>{% if d and d.borrowed_pins %}<br><small class="muted">pinout borrowed from {{ d.borrowed_pins }}</small>{% elif not d or not d.pins %}<br><small class="muted">no pinout yet</small>{% endif %}{% if t.note %}<br><small>{{ t.note }}</small>{% endif %}</td>
+      {% set tip = ('pinout borrowed from ' ~ d.borrowed_pins) if d and d.borrowed_pins else ('no pinout yet' if not d or not d.pins else '') %}
+      <td class="fm-part"{% if tip or t.note %} title="{{ [tip, t.note or '']|select|join(' · ') }}"{% endif %}><b>{{ t.mpn }}</b>{% if tip %}<sup class="muted">*</sup>{% endif %}</td>
       <td>{{ t.tuners }}</td>
-      <td><small>{{ tf.layouts[t.layout].label if t.layout in tf.layouts else t.layout }}</small></td>
+      <td class="fm-layout" title="{{ tf.layouts[t.layout].label if t.layout in tf.layouts else t.layout }}">{{ t.layout }}</td>
       {% for key in tf.features %}<td class="fm-cell">{{ '✓' if key in t.features }}</td>{% endfor %}
     </tr>
   {% endfor %}

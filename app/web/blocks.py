@@ -58,6 +58,7 @@ def _editor(request, session, design, tpl):
             "catalogue": blocks.catalogue(),
             "counts": blocks.counts(session),
             "requirements": blocks.requirements(session),
+            "help": blocks.question_help(),
             "templates_": blocks.templates(),
         },
     )

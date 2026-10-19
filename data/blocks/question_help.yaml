@@ -1,0 +1,391 @@
+# Plain-language help for the design questions in templates.yaml (key = question id).
+# One explanation per id; it must fit every template that uses the id.
+
+switch_tech: >-
+  Which power transistor the converter or inverter uses. Si MOSFETs suit low voltage and cost; IGBTs suit high voltage at moderate switching speed; SiC and GaN switch faster with lower losses but need faster, higher-CMTI gate drivers and usually a negative or tighter gate voltage.
+bus_voltage: >-
+  The nominal DC bus the inverter runs from. An 800 V bus roughly halves current for the same power but needs 1200 V-class switches, higher isolation ratings and wider creepage than a 400 V bus with 650/750 V parts.
+asil: >-
+  The ISO 26262 safety integrity level the design must reach. QM means no safety requirement; ASIL B to D add diagnostics, redundancy and safety-manual-backed parts, with ASIL D the most demanding (e.g. redundant sensing, monitored supplies, safety MCU).
+automotive: >-
+  Whether the parts must be AEC-Q100 qualified for automotive use. Choosing yes restricts the search to automotive-grade parts (wider temperature, PPAP support); no allows industrial or commercial parts, which are often cheaper and more widely available.
+isolation_class: >-
+  The insulation rating needed across the isolation barrier. Basic isolation gives a single level of protection; reinforced isolation is equivalent to two levels and is required where people could touch the low-voltage side, so it needs parts certified to higher surge and working voltages.
+sc_detect: >-
+  How a short circuit in the power switch is detected. DESAT senses the switch's on-state voltage to catch a short within a few µs and needs a gate driver with a DESAT pin and a high-voltage diode; shunt or sense-FET sensing needs a current-sense path and comparator instead. Both gives redundancy.
+fault_turnoff: >-
+  How the gate driver switches the transistor off after a fault. A normal hard turn-off of a large short-circuit current can cause a dangerous voltage overshoot; soft turn-off or two-level turn-off slows the shutdown to keep the switch within its voltage rating.
+miller_clamp: >-
+  An active Miller clamp holds the gate low while the opposite switch turns on, so dV/dt cannot falsely turn it on. Internal means the gate driver has a clamp pin; an external FET is used when the clamp current must be higher; none relies on a negative gate voltage instead.
+uvlo: >-
+  The gate-supply voltage below which the driver forces the switch off, so it never runs partly on with high losses. Pick a threshold that matches the gate voltage of the switch (lower for MOSFETs on 15 V, higher for SiC driven at 18 to 20 V).
+drive_strength: >-
+  Minimum peak current the gate driver can source and sink. Large power modules have a big gate charge, so higher drive current switches them faster with lower loss; a weaker driver needs an external booster buffer.
+cmti: >-
+  Common-mode transient immunity: how fast a voltage swing across the isolation barrier the driver tolerates without output glitches. Fast SiC and GaN edges need the higher rating; IGBT designs are usually fine with the lower one.
+interlock: >-
+  How the design prevents both switches of a half-bridge from conducting at once (shoot-through). A fixed interlock in the driver blocks overlapping inputs; programmable dead time lets you tune the delay; none leaves it entirely to the controller PWM.
+asc: >-
+  Active short circuit turns on all low-side (or high-side) switches to put the motor into a safe state on a fault. It decides whether the gate driver needs ASC inputs and on which side of the isolation barrier the command enters (primary from the MCU, secondary as an independent backup).
+config_interface: >-
+  How the gate driver is set up and reports faults. Pins only (fault and ready outputs) keeps things simple; an SPI-programmable driver allows thresholds, timing and detailed diagnostics to be set and read back, which helps reach higher ASIL levels but needs SPI wiring and software.
+module_temp: >-
+  How the power module's temperature is measured for derating and protection. An NTC thermistor is common and cheap but slow; a thermal diode on the die reacts faster; both need an isolated measurement path back to the controller. None relies on other protection.
+dc_link_sensing: >-
+  How the high-voltage DC bus is measured across isolation. An isolated amplifier gives an analog output for the MCU ADC; an isolated delta-sigma modulator gives a bitstream that needs a digital filter; some gate drivers include an isolated ADC channel that saves a separate part.
+phase_current_sensing: >-
+  How motor phase currents are measured. Hall sensors with a magnetic core are isolated by nature and lossless; coreless Hall sensors are smaller; a shunt resistor with an isolated amplifier is most accurate but adds loss and needs an isolated supply.
+phases_sensed: >-
+  Whether all three phase currents are measured or two are measured and the third calculated, since they sum to zero. Three sensors cost more but allow plausibility checks for functional safety.
+position_sensing: >-
+  How rotor angle is measured for motor control. A resolver is rugged and common in traction but needs an excitation and decoder circuit; inductive or magnetic angle sensors are cheaper; Hall sensors are coarse; sensorless control estimates position from back-EMF with no sensor.
+redundant_hv_supply: >-
+  Whether the control and gate-drive circuits can also be powered from the high-voltage battery if the 12 V supply is lost. Yes adds a high-voltage-input auxiliary supply so the inverter can still reach a safe state.
+active_discharge: >-
+  How the DC-link capacitor is discharged to a safe voltage after shutdown. A switched or PWM-controlled resistor discharges quickly on command; using the motor windings saves parts but needs control; a passive bleed resistor is simple but slow and always dissipates power.
+isolated_can: >-
+  Whether the CAN interface to the vehicle crosses an isolation barrier. Yes needs an isolated CAN transceiver (or digital isolator plus transceiver) and an isolated supply; no uses a standard transceiver referenced to the same ground.
+channels: >-
+  How many channels the part or block has: one or two per gate driver (dual adds a half-bridge interlock), channels per PLC module or isolation group, or the V2X channel and antenna setup. More channels per part mean fewer parts but shared isolation or resources.
+split_outputs: >-
+  Whether the gate driver has separate source (OUTH) and sink (OUTL) pins. Split outputs let you set turn-on and turn-off speed with separate gate resistors; a single output needs a diode network to do the same.
+negative_rail: >-
+  Whether the gate is driven to a negative voltage when off. A negative off-voltage gives margin against false turn-on, typical for IGBTs and SiC, but needs a bipolar isolated bias supply and a driver rated for it.
+ovlo: >-
+  Overvoltage lockout turns the driver off if its supply rises too high, protecting the gate oxide. Integrated means the driver does it; external circuit adds a comparator or Zener; none relies on the bias supply staying in range.
+gate_monitor: >-
+  Checks that the actual gate voltage follows the command, detecting a failed gate path. Integrated monitoring is built into the driver; an external comparator adds parts; none skips this diagnostic, which may matter for higher ASIL targets.
+active_hv_clamp: >-
+  An active clamp partly turns the switch back on if the collector or drain voltage overshoots during turn-off, keeping it within its rating. Yes needs a driver with a clamp input and TVS diodes; no relies on layout and soft turn-off.
+temp_input: >-
+  Whether the gate driver itself reads the power module's temperature sensor (NTC/PTC or thermal diode) and sends it across the isolation barrier. This saves a separate isolated measurement path; none means temperature is sensed elsewhere or not at all.
+isolated_sense_channel: >-
+  Whether the gate driver includes an isolated analog measurement channel (for temperature or DC-link voltage). Analog-to-PWM sends a duty-cycle-encoded value; a multi-channel ADC over SPI gives digital readings; none means separate isolated sensing parts are needed.
+asc_driver: >-
+  Which side of the gate driver accepts an active-short-circuit command. Primary only lets the MCU request it; primary and secondary adds an independent path on the high-voltage side that still works if the low-voltage side fails.
+self_test: >-
+  Whether the driver checks itself (built-in self-test, register CRC) to catch latent faults. Integrated self-test reduces external diagnostics needed for functional safety; external circuits add parts; none may not meet higher ASIL targets.
+fusa_driver: >-
+  The functional-safety category of the gate driver. Functional Safety-Compliant parts were developed to ISO 26262 and come with full safety documentation for ASIL designs; Quality-Managed parts have safety analysis data but were not developed under the full process.
+architecture: >-
+  How the system is partitioned. For gate-driver bias it is how many isolated supplies feed the drivers, from one central supply to one per driver (more supplies isolate faults better but add parts); for radar it is a transceiver plus MCU, a single-chip SoC, or cascaded transceivers for imaging resolution.
+topology: >-
+  The circuit used to make the isolated gate-driver bias rails. An integrated transformer module is smallest and simplest; a primary-side-regulated flyback is cheap and flexible; push-pull is simple and low-noise but unregulated; LLC is efficient and low-EMI but more complex.
+input_source: >-
+  Which supply feeds the isolated bias power. 12 V or 48 V low-voltage batteries are common; using the high-voltage battery needs a high-voltage-input converter; LV plus HV gives a redundant path for safety.
+pre_regulator: >-
+  Whether a step-down regulator is needed before the bias or buck converter. A wide-input device can run directly from the bus; otherwise a pre-regulator brings the voltage into the range of a lower-voltage buck or bias converter, shared or separate for high and low side.
+redundancy: >-
+  Which gate drivers can also be powered from the high-voltage battery as a backup. Backing up all drivers is most robust; low side only is often enough to reach an active-short-circuit safe state at lower cost.
+output_config: >-
+  Which rails each isolated bias supply produces. Single positive suits MOSFETs; positive/negative supports a negative turn-off voltage for IGBTs or SiC; dual positive feeds two loads or channels from one supply.
+gate_voltages: >-
+  The on and off gate voltages the bias supply must provide. SiC typically uses about +15 to +20 V on with a small negative off; IGBTs use +15 V and a larger negative off; single +20 V has no negative rail.
+regulation: >-
+  How tightly the bias output voltage is held. Open loop is cheapest but drifts with load and input; about 5 % or 1.5 % regulation needs feedback and gives more consistent switching, which matters most for SiC gate voltages.
+power_per_driver: >-
+  Minimum isolated bias power each gate driver needs. It grows with gate charge, switching frequency and gate voltage swing, so large modules or fast switching need the higher ratings.
+bias_isolation: >-
+  The isolation rating of the bias supply's transformer or module. Basic is enough when the low-voltage side is not touchable; reinforced is needed for safety isolation and higher working voltages.
+enable_pg: >-
+  Whether the bias supply has an enable input and power-good output. These let the controller sequence the supplies and confirm they are up before enabling the gate drivers; without them, startup is uncontrolled.
+low_emi: >-
+  Whether the bias supply needs features such as spread-spectrum switching to reduce conducted and radiated emissions. Yes eases meeting automotive EMC limits with less filtering; no may need more external filtering.
+low_profile: >-
+  Whether the bias module must be under about 4 mm tall, for example to fit under a heatsink or on the back of the board. Yes limits the choice to low-profile integrated modules or planar transformers.
+current_sensing: >-
+  Where and how current is measured. Low-side shunts with amplifiers in the gate driver or MCU are cheapest; discrete current-sense amplifiers give more accuracy; isolated amplifiers or modulators on a shunt, Hall or fluxgate sensors, or current transformers are used when the measurement must cross isolation.
+active_short_circuit: >-
+  How the drive shorts the motor windings (brake mode) when the supply overshoots or a fault occurs, to avoid damage from regenerated energy. Discrete comparators with the MCU work with any driver; integrated means the gate driver does it via a pin, SPI or automatically.
+gate_driver_type: >-
+  The gate driver architecture for the three motor phases. A three-phase smart gate driver integrates protection and sometimes current-sense amplifiers; three half-bridge drivers are flexible; isolated gate drivers are used when control and power stage must be isolated.
+driver_integrated_regulator: >-
+  Whether the gate driver includes a buck regulator to make one of the low-voltage rails (for example for the MCU). Yes saves a separate regulator; no needs a standalone buck or LDO.
+wired_bus: >-
+  Which wired interface connects the drive to the vehicle or display. CAN is robust and common in vehicles, RS-485 suits long simple links, USB is for service or PC links; each needs its own transceiver and protection.
+interface_isolation: >-
+  Whether the wired interface is isolated from the power stage ground. Yes adds an isolated transceiver and isolated supply but protects against ground shifts and noise; no is cheaper.
+redundant_mcu: >-
+  Whether a second MCU monitors or backs up the main controller. Yes supports functional safety and a safe-state path at extra cost and board space; no relies on one controller.
+input_protection_type: >-
+  How the input supply is protected. An e-fuse or hot-swap controller limits inrush and overcurrent; an ideal diode blocks reverse current with low loss; a load switch simply disconnects; a reverse-polarity diode is cheapest but wastes power.
+switch_type: >-
+  Which power switch the low-voltage drive uses. Si MOSFETs are mature and cheap; GaN FETs switch faster with lower losses, allowing smaller passives, but need gate drivers and layout suited to fast edges.
+phase_current_sensor: >-
+  How phase current is measured. An in-phase Hall sensor is isolated and lossless and reads the full phase current; a shunt is cheaper and accurate but dissipates power and needs an amplifier.
+position_interface: >-
+  The output format of the rotor position sensor. ABI quadrature signals feed an encoder interface (eQEP) on the MCU; PWM output feeds a capture input (eCAP); the MCU must have the matching peripheral.
+bias_from_lv_battery: >-
+  Whether the gate-drive bias comes from the 12 V battery through an isolated flyback or straight from the traction battery. The 12 V option keeps working when the traction battery is off; the traction-battery option needs a higher-input converter.
+parallel_fets: >-
+  How many MOSFETs share each switch position. More parallel devices handle higher current with lower conduction loss but need more gate drive current and careful layout for even sharing.
+gate_drive_strength: >-
+  The peak source and sink current of the gate driver. It must be enough to switch the (possibly paralleled) MOSFETs quickly; stronger sink current helps keep the switch off during fast transients.
+device_voltage_class: >-
+  The voltage rating of the MOSFETs and gate drivers for the bus. They must withstand the maximum bus voltage plus switching overshoot and regenerative braking, so the rating is chosen well above nominal.
+can: >-
+  Whether the drive has a CAN interface, and whether it is isolated. Yes needs a CAN transceiver (isolated if chosen) and protection; no or none means the drive communicates another way or not at all.
+rider_inputs: >-
+  Which rider controls the drive reads: throttle, brake (e-brake cutoff or regenerative braking) and pedal-assist sensor (PAS). Each needs an MCU input (analog, digital or timer) and input protection.
+sensorless: >-
+  Whether rotor position comes from Hall sensors or is estimated from back-EMF. Sensorless saves the sensors and wiring but struggles at low speed and startup; Hall sensors give reliable startup torque.
+isolated_12v_48v: >-
+  Whether the control electronics sit on the 12 V side, isolated from the 48 V power stage. Yes needs isolated gate drivers, isolated current sensing and an isolated supply; no shares a ground and uses non-isolated parts.
+motor_type: >-
+  Which traction motor the controller drives. An AC induction motor needs a three-phase inverter and field-oriented control; a DC motor needs an H-bridge or chopper with simpler control.
+controller_isolation: >-
+  Whether the controller or PC interface is isolated from the power stage. Yes protects the user and logic side from high-current switching noise and faults using isolators; no is cheaper.
+tdd_failsafe: >-
+  Whether the receiver is protected by a switch that stays in a safe (isolating) state if power or control fails, so the high transmit power in a TDD system cannot reach and destroy the LNA. Yes needs a high-power fail-safe switch.
+lna_bypass: >-
+  Whether the receive LNA can be bypassed. Bypass lets very strong signals through without overloading the receiver and lowers power use; it needs an LNA module with a bypass path or an extra switch.
+limiter: >-
+  Whether limiter (PIN) diodes protect the LNA input from high-power signals, such as transmitter leakage or reflections. Yes adds protection at the cost of a small noise-figure penalty.
+rx_protect_switch: >-
+  How the receiver is protected from transmit power. A discrete SPDT switch is flexible; an LNA plus switch module integrates both, saving board space and matching work.
+poe: >-
+  Whether the unit is powered over Ethernet. Yes needs a PoE powered-device controller, isolated DC/DC and a power budget within the PoE class; no uses a separate supply.
+orx_switch: >-
+  Whether a switch selects which transmitter's output feeds the observation receiver used for digital predistortion (DPD). Yes lets one feedback receiver serve many TX chains; it needs a switch with good isolation and linearity.
+rx_failsafe_switch: >-
+  Whether the receive-protection fail-safe switch is integrated in the LNA module or a separate part. Integrated saves space and matching; discrete allows a higher power rating or more choice.
+cell_switch: >-
+  Whether the cellular front end is built from a discrete antenna switch, LNA and PA or bought as an integrated front-end module. Discrete is flexible across bands; the module is smaller and pre-matched.
+tr_switch: >-
+  Whether the transmit/receive switch is discrete or part of a front-end module that also contains the PA and the LNA with bypass. The module saves space and design effort; discrete parts allow optimizing each function.
+switch_lna: >-
+  Whether a combined switch-plus-LNA part is used in the receive path. Yes saves space and gives a pre-matched low-noise path; no uses a separate switch and LNA.
+antenna_diversity_switch: >-
+  The antenna or diversity switch type per device. SPDT selects between two antennas or paths; SP3T adds one more (for example Bluetooth sharing); DPDT swaps two radios between two antennas.
+primary_throws: >-
+  How many positions the main antenna switch has. More throws (SP16T versus SP8T) connect more bands or paths to one antenna but add insertion loss and need more control lines.
+diversity: >-
+  Whether the phone has a separate diversity receive path with its own switch. Yes improves reception and supports MIMO but adds a second antenna path, switch and filters.
+obc_topology: >-
+  The power conversion structure of the on-board charger. Two-stage (PFC then isolated DC/DC) is proven and easy to control; single-stage matrix or bidirectional designs use fewer parts but need more complex control and switches.
+grid_phases: >-
+  Whether the charger takes single-phase or three-phase AC. Three-phase allows much higher charging power but needs a three-phase PFC stage and more switches and sensing.
+bidirectional: >-
+  Whether power can also flow in reverse: from the car to the grid or loads (V2G/V2L) for a charger, or from low voltage back to high voltage (pre-charge, jump-start) for a DC/DC. Yes needs active switches on both sides and bidirectional control.
+battery_voltage: >-
+  The high-voltage battery class the charger serves. 800 V needs 1200 V-class switches and higher isolation ratings; 400 V uses 650 V-class parts.
+bias_architecture: >-
+  How isolated power for the gate drivers is generated. Centralized uses one supply for all; semi-distributed shares supplies between groups; distributed uses one module per driver for fault isolation; bootstrap feeds the high side from the low-side rail and is cheapest but limits duty cycle.
+evse_link: >-
+  How the charger talks to the charging station. The PWM control pilot is the basic signal; PLC (HomePlug GreenPHY) over the pilot is needed for ISO 15118 and plug-and-charge; CAN and wireless are used in some standards and regions.
+isolated_vehicle_can: >-
+  Whether the vehicle CAN connection is isolated from the converter's control ground. Yes needs an isolated CAN transceiver and supply; no uses a standard transceiver.
+hv_class: >-
+  The HV battery class the DC/DC converter connects to. 800 V needs higher-voltage switches and more isolation margin than 400 V.
+redundant_supply: >-
+  Whether the controller can also be powered from the HV battery if the 12 V supply fails. Yes adds a high-voltage-input auxiliary supply, so the converter can keep running or shut down safely.
+current_sense_method: >-
+  How the primary-side current is measured. A shunt with an isolated amplifier is precise; a Hall sensor is isolated and lossless; a current transformer works only for AC or switching current but is cheap and isolated.
+output_breaker: >-
+  Whether the 12 V output has an electronic breaker made of a smart high-side switch controller driving back-to-back MOSFETs. It disconnects on overcurrent or reverse current; none relies on fuses.
+cell_link: >-
+  How cell-monitoring chips talk to the battery controller. A wired daisy chain with capacitor isolation is cheapest; transformer isolation is more robust for long cables; a wireless BMS removes the wiring harness but needs radios and security.
+pack_voltage: >-
+  The battery pack voltage class. 800 V needs higher-voltage relays, isolation and measurement parts than 400 V.
+current_sense_location: >-
+  How pack current is measured. A shunt read by a dedicated pack monitor in the battery disconnect unit is accurate; an isolated amplifier on a shunt is an alternative; a Hall sensor is isolated and lossless but less precise at low current.
+isolation_monitoring: >-
+  How insulation resistance between the HV system and chassis is checked. Switching known resistors in with solid-state relays and measuring the shift is common; an isolated amplifier on a divider measures continuously.
+safety_disconnect: >-
+  How the pack is disconnected in an emergency or crash. A pyrofuse cuts high current instantly but is one-shot; a contactor is resettable but slower; both gives layered protection and needs driver circuits for each.
+vehicle_bus: >-
+  How the battery system talks to the vehicle. CAN FD is the common choice; LIN is low-cost and slow; automotive Ethernet gives high bandwidth. Each needs its own transceiver or PHY.
+module_link: >-
+  How battery modules report to the rack controller. An isolated daisy chain uses the monitor chips' built-in link; per-module CAN gives each module its own controller and transceiver, more flexible but more parts.
+rack_bus: >-
+  The interface from the battery rack to the power conversion system. CAN and RS-485 are robust and simple; Ethernet gives more bandwidth and networking; each needs its own transceiver or PHY.
+irm_needed: >-
+  Whether the rack controller must measure insulation resistance between the high-voltage battery and earth. Yes adds an insulation-monitoring circuit with isolated measurement and switches.
+aux_input: >-
+  The auxiliary supply voltage that powers the controller. 12 V and 24 V systems need regulators and protection rated for their range and transients.
+afe_arch: >-
+  How the radio transceiver converts between RF and digital. RF sampling converts directly at RF, removing mixers and LOs; IF sampling mixes down to an intermediate frequency first, needing more RF parts but using lower-speed converters.
+duplex: >-
+  Whether transmit and receive share a frequency in time slots (TDD) or use separate frequencies at once (FDD). TDD needs fast T/R switches and receiver protection; FDD needs duplexers or filters to separate the paths.
+trx_count: >-
+  The number of transmit and receive chains in the radio. More chains (massive MIMO) give more beamforming capacity but multiply the PAs, LNAs, switches and filters needed.
+bands: >-
+  How many frequency bands the radio or access point covers at once. Each added band needs its own front end (PAs, LNAs, filters) or wider-band parts, plus more diplexing.
+pa_tech: >-
+  The power amplifier technology. GaN offers high efficiency and bandwidth at high power; LDMOS is mature and cheap at lower frequencies; GaAs or SiGe modules suit lower-power, high-integration designs.
+pa_supply: >-
+  How the PA drain voltage is supplied. A fixed DC/DC is simple; envelope tracking or an adjustable supply follows the signal to improve efficiency but needs a fast, specialized supply.
+dpd: >-
+  Where digital predistortion, which linearizes the PA, runs. In the transceiver it saves FPGA resources and power; in an FPGA or digital front end it is more flexible and can handle more complex PAs.
+sync: >-
+  Where the radio gets its timing. PTP over the fronthaul uses the network; GPS needs a receiver and antenna; a local OCXO keeps time during outages; network listening decodes a nearby cell's broadcast. The choice sets which clock and timing parts are needed.
+power_source: >-
+  How the small cell is powered. PoE needs a powered-device controller and fits a limited power budget; AC mains needs an AC/DC supply; -48 V DC is the telecom standard and needs a wide-input isolated converter.
+mimo: >-
+  The number of transmit and receive chains. 4T4R doubles throughput potential over 2T2R but needs twice the PAs, LNAs, switches and filters.
+indoor_outdoor: >-
+  Whether the unit is deployed indoors or outdoors. Outdoor units need higher transmit power, wider temperature range, surge protection and weatherproofing, which affects PA and protection choices.
+wifi: >-
+  Whether the small cell also has a Wi-Fi radio. Yes adds a Wi-Fi chipset and front-end modules for each chain and band.
+timing: >-
+  Where the small cell gets its timing. GPS needs a receiver and sky view; IEEE 1588 or SyncE over the backhaul uses the network and suits indoor units.
+wifi_gen: >-
+  Which Wi-Fi generation the design supports. Newer generations add bands (6 GHz in 6E and 7) and wider channels with denser modulation, needing more linear front ends and filters for coexistence.
+streams: >-
+  The number of spatial streams per band. More streams increase throughput but need one front end and antenna per chain.
+fem_type: >-
+  Whether each Wi-Fi chain uses an integrated front-end module (PA, LNA and switch in one) or discrete parts. The module is smaller and pre-matched; discrete gives more flexibility in power and performance.
+power_input: >-
+  How the access point is powered. 802.3at PoE limits the power budget; 802.3bt allows more radios or chains; a DC adapter removes the PoE limit but needs a separate supply.
+iot_radio: >-
+  Whether the device has an extra low-power radio such as BLE or Zigbee/Thread. Each needs its own radio and sometimes a front end, plus coexistence filtering with Wi-Fi.
+cellular: >-
+  Which cellular technology the telematics unit uses. 5G NR needs more bands and antennas than LTE; adding C-V2X brings a sidelink radio and front end in the 5.9 GHz band.
+v2x: >-
+  Which vehicle-to-everything radio is fitted. C-V2X (PC5) is cellular-based; DSRC uses 802.11p Wi-Fi; both need a 5.9 GHz front end, and supporting both needs two radios or a dual-mode chip.
+gnss: >-
+  Which satellite navigation bands the receiver uses. Dual-band L1/L5 gives better accuracy and multipath rejection but needs a dual-band antenna, LNA and filters.
+active_antenna: >-
+  Whether the antenna has its own amplifier powered through the coax cable. Yes needs a phantom-power feed with current limiting and diagnostics; no uses a passive antenna and may need an LNA in the receiver.
+ecall_backup: >-
+  Whether the unit has a backup battery so an emergency call can still be made after a crash cuts vehicle power. Yes adds the battery, a charger and power-path switching.
+wlan_bt: >-
+  Which short-range radios the unit has. Bluetooth only is simplest; Wi-Fi plus Bluetooth needs a combo chip, front ends and coexistence filtering.
+broadcast_standards: >-
+  Which radio standards the receiver must decode. AM/FM alone needs only analog tuners; HD Radio, DAB/DAB+ or DRM need digital demodulators and often more tuners; multi-standard covers several regions.
+tuner_count: >-
+  How many tuners the radio has. One tuner is simplest; two allow phase diversity or background station scanning; three or more support digital radio alongside background scanning, with more RF front-end parts.
+radio_partition: >-
+  Where the tuner and DSP sit. In the head unit keeps everything on one board; a remote tuner module near the antenna shortens RF cables and frees head-unit space but needs a digital link.
+amp_location: >-
+  Whether the audio amplifier is a class-D inside the head unit or a separate external amplifier. Integrated is cheaper; external allows more power and channels and moves heat out of the head unit.
+amp_switching: >-
+  Where the class-D amplifier switching frequency sits relative to the AM radio band. Above the band (about 2.1 MHz) keeps harmonics out of AM reception; below the band needs spread spectrum to avoid audible interference.
+connectivity: >-
+  Which wireless links the head unit has. Each added link (Wi-Fi, GNSS, NFC) needs its own radio, antenna path and coexistence filtering.
+sensor_set: >-
+  Which sensors the ADAS controller handles. Adding radar, lidar and ultrasonic sensors increases interfaces, processing and power needs beyond cameras alone.
+camera_link: >-
+  How cameras connect to the controller. FPD-Link or GMSL SerDes over coax carries video, control and power on one cable; automotive Ethernet uses standard networking and needs PHYs on both ends.
+sensor_power_poc: >-
+  Whether sensors are powered over the same coax that carries their data. Yes needs power-over-coax filters and protected supply switches; no needs separate power wiring.
+processors: >-
+  How processing is split. A single SoC is cheaper; dual SoCs plus a safety MCU give redundancy and monitoring for higher safety levels but need more power, memory and interconnect.
+core_current: >-
+  How the SoC core rail is powered. A single-phase buck or PMIC suffices for moderate current; high-current SoCs need a multiphase controller with power stages for current capacity and fast transient response.
+pcie_clock: >-
+  Whether PCIe links the processors or storage, and how its reference clock is shared. A common clock needs a clock buffer to both ends; separate references need spread-spectrum-capable clocks on each side; no means no PCIe clocking.
+input_type: >-
+  The IEC 61131-2 digital input type, which sets the voltage and current thresholds. Type 1 suits mechanical contacts; type 2 draws more current for two-wire proximity sensors; type 3 is a lower-current variant compatible with both.
+sink_source: >-
+  Whether the input sinks current to ground (for PNP sensors) or sources current (for NPN sensors). Bidirectional inputs accept either but need an input circuit that works in both polarities.
+speed: >-
+  How fast the input must respond. Standard inputs use millisecond filtering to reject noise; high-speed inputs for counters or encoders need fast isolation and minimal filtering.
+isolation_impl: >-
+  How the field inputs are isolated from the logic. An isolated digital input IC integrates current limit and isolation; optocouplers are simple but slower and age over time; a digital isolator with discrete current limiting gives flexibility.
+field_power: >-
+  Where the field-side circuits get their power. From the field 24 V avoids an isolated supply; an isolated DC/DC from the backplane works when no field supply is available.
+input_range: >-
+  Which analog signals the module accepts. Voltage and 4-20 mA inputs need different front ends; universal inputs handle both with switchable circuits; RTD and thermocouple inputs need excitation, cold-junction compensation and high-resolution ADCs.
+hart: >-
+  Whether the module supports HART, a digital signal overlaid on the 4-20 mA loop. Yes needs a HART modem and filtering.
+isolation_scheme: >-
+  How channels are isolated. Group isolation isolates all channels together from the backplane at lower cost; channel-to-channel isolation isolates each channel, preventing ground loops but needing an isolated supply and isolator per channel.
+emc_level: >-
+  The immunity level the module must meet. Standard IEC 61000-4-2/4/5 levels need normal TVS and filtering; elevated surge levels need stronger protection parts and more board space.
+phases: >-
+  How the inverter connects to the grid. Single-phase and split-phase suit residential; three-phase suits commercial and larger systems and needs a three-phase bridge and more sensing.
+dcac_topology: >-
+  The inverter bridge topology. A 2-level H-bridge is simplest; T-type and ANPC 3-level topologies lower losses and filter size at higher voltage but need more switches and gate drivers; flying-capacitor designs add capacitors and balancing control.
+pv_voltage: >-
+  The maximum solar string voltage. Higher voltages (1000 V, 1500 V) reduce current and cabling losses but need higher-rated switches, isolation and creepage distances.
+hybrid: >-
+  Whether the inverter has a battery port. A low-voltage battery needs a bidirectional DC/DC with high conversion ratio; a high-voltage battery connects more directly; none is PV only.
+comms: >-
+  Which link reports inverter data for monitoring. Wired options (RS-485, Ethernet, powerline) need transceivers and protection; wireless options (Wi-Fi, Sub-1 GHz, Bluetooth) need radios and antennas.
+auxpower_source: >-
+  Where the inverter's control electronics get power. From PV allows operation without the grid but needs a high-voltage-input isolated converter; from grid uses an AC/DC supply and works at night.
+output_voltage: >-
+  The main output voltage of the power supply. 12 V is traditional for servers; 48 V or 54 V reduces distribution current and suits telecom and newer racks, changing the secondary-side switches and converter design.
+pfc_topology: >-
+  The power-factor-correction stage. Interleaved boost is proven and simple; totem-pole bridgeless removes the input bridge diodes for higher efficiency but needs fast switches (GaN or SiC) and more complex control.
+control_location: >-
+  Which side of isolation the digital controller sits on. Primary side simplifies PFC control; secondary side simplifies output regulation and communication; signals that cross the barrier need isolators.
+pmbus: >-
+  Whether the supply reports telemetry over PMBus, which often has to cross isolation. Yes needs a digital controller with PMBus and an isolated I2C path.
+mains: >-
+  The AC mains voltage the drive connects to. Higher voltage classes need higher-rated switches, gate drivers with more isolation, and larger creepage distances.
+gate_driver_protection: >-
+  Which protection the gate driver provides. DESAT detects short circuits, a Miller clamp prevents false turn-on, soft turn-off limits overshoot on faults; each needs a driver with that feature or external circuits.
+sto: >-
+  Safe torque off removes gate drive so the motor cannot produce torque, as a certified safety function. Yes needs a dedicated, independent path that cuts gate-driver power or signals, usually with diagnostics.
+brake: >-
+  Whether the drive has a brake chopper that dumps regenerated energy into a resistor. Yes needs an extra switch and gate driver; no limits how quickly the motor can be braked.
+gate_supply: >-
+  How the gate drivers are powered. An isolated DC/DC per driver isolates faults and suits high power; a central flyback with multiple windings is cheaper; bootstrap feeds the high-side driver from the low side and is cheapest but limits duty cycle.
+ranging: >-
+  How the car measures the distance to the phone. BLE RSSI is cheap but imprecise; BLE channel sounding improves accuracy; UWB gives secure, precise distance; BLE plus UWB uses BLE for wake-up and UWB for ranging.
+anchors: >-
+  How many antenna anchor modules are placed around the car. More anchors improve location accuracy and coverage, especially inside versus outside, but add modules, cables and cost.
+integration: >-
+  Whether the phone-as-a-key electronics are a standalone module or built into the body control module. Standalone is easier to add; integrated saves a module and wiring.
+backup_key: >-
+  How the car is opened if the phone battery is dead. An NFC card needs an NFC reader; a keyfob needs an LF/UHF receiver and immobilizer support.
+tuners: >-
+  How many tuners and antenna paths the radio needs. One is enough for basic AM/FM; two allow phase diversity or background scanning; three to five support digital radio plus background scanning, with more RF parts.
+digital_radio: >-
+  Which digital radio standards must be received, which depend on the market. Each needs its own demodulator support and the right tuner bands; none means AM/FM only.
+wifi_frontend_type: >-
+  Whether the Wi-Fi radio uses the combo chip's internal PA, LNA and switch or external front-end modules with a diplexer. Internal is cheaper; external gives more range and output power.
+automotive_grade: >-
+  Which automotive qualification the parts need. AEC-Q100 covers chips and AEC-Q200 passives; Grade 1 is rated to a higher temperature than Grade 2; not required allows commercial parts.
+remote_antenna: >-
+  Whether the V2X antenna sits far away with a cable in between. Yes needs a compensator or external PA and LNA near the antenna to make up for cable loss; no keeps the antenna next to the modem.
+uwb_radar: >-
+  Whether the UWB anchors only measure distance or also work as radar to detect people, such as a child left in the car. Radar capability needs a UWB part that supports it and more processing.
+aoa_antennas: >-
+  How many UWB antennas each anchor has. One antenna only measures distance; two give angle of arrival in one plane; three give angle in 3D, each needing more RF paths.
+chains: >-
+  How many transmit and receive chains (and front-end modules) each Wi-Fi band uses. More chains increase throughput and range; an extra receive chain improves reception through combining.
+fem_external: >-
+  Whether the Wi-Fi radio uses its internal PA and LNA or an external front-end module. Internal is lower cost; an external FEM gives higher output power and range.
+antenna_config: >-
+  How antennas are shared between Wi-Fi and Bluetooth. A single shared antenna needs an SPDT switch and diplexer; dual antennas separate the radios for better coexistence; diversity adds switches to pick the better antenna.
+external_fem: >-
+  Whether an external Wi-Fi front-end module is used instead of the chip's internal PA, LNA and switch. Yes increases range and output power at the cost of extra parts.
+band: >-
+  Which frequency band or range the radio covers. It sets the PAs, LNAs, switches and filters needed; mmWave instead of sub-6 GHz needs beamforming parts rather than per-chain PAs and LNAs.
+timing_ref: >-
+  Which reference clock the radio unit uses. A 122.88 MHz reference with a pulse-per-second signal is common in cellular radios; other references need a different clock plan.
+wifi_band: >-
+  Which band the Wi-Fi front-end module covers. 2.4 GHz and 5 GHz FEMs are separate parts; dual-band needs a dual-band FEM or both parts plus a diplexer.
+ul_mimo: >-
+  How many transmit chains the phone uses on the uplink. Single Tx is simpler; 2x2 uplink MIMO or higher power class needs a second transmit path, PA and switching.
+gnss_bands: >-
+  Which satellite bands the phone receives. Adding L5 to L1 improves accuracy but needs a dual-band GNSS LNA and filters.
+wifi_streams: >-
+  How the phone's Wi-Fi radios and chains are arranged. Tri-band with more chains gives higher speed and simultaneous bands but needs more front ends and antennas than dual-band 2x2.
+afc: >-
+  Whether the access point uses Automated Frequency Coordination to transmit at standard (higher) power in the 6 GHz band. Yes needs higher-power 6 GHz front ends and a link to an AFC service.
+ifem: >-
+  Whether the device uses an integrated front-end module (iFEM) inside the Wi-Fi chip or external FEMs. Integrated saves space and cost; external gives more output power and range.
+temp_grade: >-
+  The temperature range the board must operate in. Industrial grade needs parts rated to a wider range than consumer grade.
+rx_count: >-
+  How many cellular receive antennas the device uses. More receive antennas improve speed and reception but need more antenna paths, LNAs and filters.
+ntn: >-
+  Whether the device can connect to satellites (non-terrestrial network). Messaging-only is lower data rate; broadband satellite support needs more capable RF and possibly a dedicated antenna.
+mmwave: >-
+  Whether the device supports mmWave 5G in addition to sub-6 GHz. Yes needs mmWave antenna modules and their power and control, which adds cost and design effort.
+ul_tx: >-
+  How the phone transmits on the uplink. Single Tx is simplest; 2Tx uplink MIMO adds a second transmit chain; switched uplink shares transmitters between FDD and TDD bands with fast switching.
+hbs: >-
+  Whether the device can use the 5 GHz and 6 GHz bands at the same time. Yes needs a high-band-simultaneous module or diplexer with sharp filtering to separate the close bands.
+public_safety: >-
+  Whether the access point supports the 4.9 GHz public-safety band. Yes needs front ends and filters that cover that band.
+antennas: >-
+  How many antennas the access point has. More antennas support more chains and bands but need more front-end modules, switches and board space.
+rx_antennas: >-
+  How many cellular receive antennas the CPE uses. More antennas improve throughput and coverage but need more LNAs, filters and antenna paths.
+rf_filter: >-
+  The network between the radio chip and the antenna. A pi matching network is cheapest and matches impedance; a band-pass filter suppresses harmonics and out-of-band noise better for stricter emissions needs.

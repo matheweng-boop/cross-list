@@ -61,7 +61,7 @@ Mapping notes (existing ids): Timing > Network Synchronizers (IEEE 1588 / SyncE,
 optical clocks) are mapped to `jitter_attenuator` (they are DPLL jitter attenuators; a separate
 `network_synchronizer` id could be added if the app needs it). PCIe clock buffers (by description) use
 `pcie_buffer`; PCIe clock generators stay `clock_generator`. Si88xx isolators with integrated dc-dc are
-`isolated_dcdc` (they also contain isolator channels; see the correction below). Si824x Class-D audio drivers are isolated gate
+`isolated_dcdc` and also `digital_isolator` (see the correction below). Si824x Class-D audio drivers are isolated gate
 drivers -> `gate_driver`. Si894x / Si8935-37 delta-sigma modulators and Si892x / Si8931-32 isolated
 amplifiers -> `isolated_amplifier`; Si8540 (non-isolated high-side current sensor) -> `current_sensor`.
 Power Management: Over Voltage Protection -> `load_switch`; RF PMIC -> `pmic`; Step-Down -> `pol_buck`.
@@ -524,5 +524,6 @@ switches -> `rf_switch`.
   (Audio and Radio > Wireless Gaming).
 
 **Correction (2026-10-19):** the 92 digital isolators with an integrated dc-dc converter (Si88xx, Si884xx, Si886xx) are
-filed under `isolated_dcdc` (their distinguishing function) instead of `digital_isolator`, so isolated DC-DC is no longer
-shown as a Skyworks portfolio gap. They still contain isolator channels (see AN901).
+digital isolators and isolated DC-DC converters in one: each entry has `function: isolated_dcdc` and
+`also: [digital_isolator]`, so the parts are offered for both functions and isolated DC-DC is no longer shown as a
+Skyworks portfolio gap (see AN901).

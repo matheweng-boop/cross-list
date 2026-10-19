@@ -1,0 +1,64 @@
+source:
+  title: "Si4622-A10"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4622-A10-short.pdf"
+  revision: "August 9, 2021"     # no revision number printed; footer date only
+family: Si4622
+description: "High-Performance, Single-Chip FM HD-Radio/RDS/RBDS Data Receiver"
+role: receiver                   # single-chip data receiver; block diagram shows no audio outputs
+package: {type: QFN, pins: 48, body_mm: "7 x 7 x 0.85", pitch_mm: 0.5, epad: true}   # epad from D2/E2 = 5.30 mm in outline table
+aec_q100: true
+supplies:
+  - {pins: [VA], volts: "1.8", note: "analog; 1.71-2.0 V"}
+  - {pins: [VIO], volts: "1.8", note: "interface I/O; 1.62-3.6 V"}
+  - {pins: [VCORE], volts: "1.8", note: "core digital; 1.62-2.0 V"}
+  - {pins: [VMEM], volts: null, note: "shown on block diagram; voltage not given in this document"}
+features:
+  - "Worldwide FM band support (76-108 MHz)"
+  - "Advanced RDS / RBDS decoder"
+  - "FM HD Radio channel decoder"
+  - "Advanced seek functionality"
+  - "Complete on-chip channel decode"
+  - "Station Information Service (SIS) and Program Service Data (PSD) support"
+  - "Advanced Application Services (AAS) Payload for data applications"
+  - "Full range of analog and digital signal quality metrics"
+  - "Fully-integrated VCO/PLL synthesizer"
+  - "Fully-integrated advanced AGC and alignment"
+  - "SPI, I2C control interfaces"
+  - "No external RAM required for channel decoding"
+  - "Flash memory interface for application program load"
+  - "7x7 mm 48-pin QFN package"
+  - "Pb-free/RoHS compliant"
+  - "AEC-Q100 qualified"
+parts:
+  - mpn: Si4622
+    tuners: 1                  # single VHF receive path on the block diagram
+    channels: null
+    analog: [FM, RDS]
+    digital_decode: [HD]       # HD Radio data services (SIS, PSD, AAS)
+    digital_iq: []
+    options: []
+    note: "Data receiver: no audio output pins on the block diagram"
+# No pinout in this document (block diagram and package outline only): pin numbers unknown.
+# `signals` lists the signal names drawn on the page-1 block diagram.
+signals:
+  - {name: RFREF, fn: other, note: "RF reference input of the VHF LNA (drawn as an LNA input)"}
+  - {name: VHFI, fn: rf_in, band: FM}
+  - {name: VHFSW, fn: rf_aux, note: "output from VHF front-end control block"}
+  - {name: XTALI, fn: xtal}
+  - {name: XTALO, fn: xtal}
+  - {name: VIO, fn: power, volts: "1.8", note: "1.62-3.6 V"}
+  - {name: VA, fn: power, volts: "1.8", note: "1.71-2.0 V"}
+  - {name: VCORE, fn: power, volts: "1.8", note: "1.62-2.0 V"}
+  - {name: VMEM, fn: power, volts: null, note: "voltage not given in this document"}
+  - {name: NVSCLK, fn: flash, bus: "Flash"}
+  - {name: NVSSB, fn: flash, bus: "Flash"}
+  - {name: NVMOSI, fn: flash, bus: "Flash"}
+  - {name: NVMISO, fn: flash, bus: "Flash"}
+  - {name: SCLK, fn: host, bus: "Host"}
+  - {name: SSB, fn: host, bus: "Host"}
+  - {name: MISO, fn: host, bus: "Host"}
+  - {name: MOSI, fn: host, bus: "Host"}
+  - {name: INTB, fn: interrupt, bus: "Host"}
+  - {name: RSTB, fn: reset, bus: "Host", note: "shown on the I2C/SPI host interface block"}
+  - {name: GPIOx, fn: gpio, note: "count not stated"}
+pins: []

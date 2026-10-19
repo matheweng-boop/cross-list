@@ -1,0 +1,67 @@
+source:
+  title: "Si4629-A10"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4629-A10-short.pdf"
+  revision: "August 9, 2021"     # no revision number printed; footer date only
+family: Si4629
+description: "High-Performance, Single-Chip AM/FM/HD/DAB/DAB+/RDS/RBDS Data Receiver"
+role: receiver                   # single-chip data receiver; block diagram shows no audio outputs
+package: {type: QFN, pins: 48, body_mm: "7 x 7 x 0.85", pitch_mm: 0.5, epad: true}   # epad from D2/E2 = 5.30 mm in outline table
+aec_q100: true
+supplies:
+  - {pins: [VA], volts: "1.8", note: "analog; 1.71-2.0 V"}
+  - {pins: [VIO], volts: "1.8", note: "interface I/O; 1.62-3.6 V"}
+  - {pins: [VCORE], volts: "1.8", note: "core digital; 1.62-2.0 V"}
+  - {pins: [VMEM], volts: null, note: "shown on block diagram; voltage not given in this document"}
+features:
+  - "Worldwide FM band support (76-108 MHz)"
+  - "Worldwide AM band support (520-1710 kHz)"
+  - "LW band support (144-288 kHz)"
+  - "DAB/DAB+ Band III support (168-240 MHz)"
+  - "Advanced RDS/RBDS decoder"
+  - "AM/FM HD Radio support"
+  - "Integrated HD blend"
+  - "Supports WorldDMB Receiver Profiles I, II, III, and IV"
+  - "Integrated SRAM supporting time and frequency de-interleaving"
+  - "Advanced seek functionality"
+  - "Complete on-chip channel decode"
+  - "Full range of analog and digital signal quality metrics"
+  - "Fully-integrated VCO/PLL/synthesizer"
+  - "Fully-integrated advanced AGC and alignment"
+  - "SPI, I2C control interfaces"
+  - "7x7 mm 48-pin QFN package"
+  - "Pb-free/RoHS compliant"
+  - "AEC-Q100 qualified"
+parts:
+  - mpn: Si4629
+    tuners: 1                  # one AM and one VHF LNA feeding a single mixer/ADC chain on the block diagram
+    channels: null
+    analog: [AM, FM, LW, RDS]
+    digital_decode: [HD, DAB]  # AM/FM HD Radio, DAB/DAB+
+    digital_iq: []
+    options: []
+    note: "Data receiver: no audio output pins on the block diagram"
+# No pinout in this document (block diagram and package outline only): pin numbers unknown.
+# `signals` lists the signal names drawn on the page-1 block diagram.
+signals:
+  - {name: AMI, fn: rf_in, band: AM, note: "input to AM LNA; document does not say whether LW also uses it"}
+  - {name: VHFI, fn: rf_in, band: FM/DAB}
+  - {name: RFREF, fn: other, note: "RF reference input of the VHF LNA (drawn as an LNA input)"}
+  - {name: XTALI, fn: xtal}
+  - {name: XTALO, fn: xtal}
+  - {name: CLKOUT, fn: clock_out}
+  - {name: VIO, fn: power, volts: "1.8", note: "1.62-3.6 V"}
+  - {name: VA, fn: power, volts: "1.8", note: "1.71-2.0 V"}
+  - {name: VCORE, fn: power, volts: "1.8", note: "1.62-2.0 V"}
+  - {name: VMEM, fn: power, volts: null, note: "voltage not given in this document"}
+  - {name: NVSCLK, fn: flash, bus: "Flash"}
+  - {name: NVSSB, fn: flash, bus: "Flash"}
+  - {name: NVMOSI, fn: flash, bus: "Flash"}
+  - {name: NVMISO, fn: flash, bus: "Flash"}
+  - {name: SCLK, fn: host, bus: "Host"}
+  - {name: SSB, fn: host, bus: "Host"}
+  - {name: MISO, fn: host, bus: "Host"}
+  - {name: MOSI, fn: host, bus: "Host"}
+  - {name: INTB, fn: interrupt, bus: "Host"}
+  - {name: RSTB, fn: reset, bus: "Host", note: "shown on the I2C/SPI host interface block"}
+  - {name: GPIOx, fn: gpio, note: "count not stated"}
+pins: []

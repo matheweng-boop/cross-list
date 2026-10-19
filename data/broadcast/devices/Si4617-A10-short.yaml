@@ -1,0 +1,91 @@
+source:
+  title: "Si4617-A10 Data Short"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4617-A10-short.pdf"
+  revision: "Rev. 1.0, December 6, 2021"
+family: Si4617
+description: "Low-Power, High-Performance AM/FM HD Radio Baseband Processor with Seamless Blending"
+role: coprocessor
+# epad: package outline (Figure 2.1 / Table 2.1) gives exposed-pad dimensions D2/E2 = 5.30 mm,
+# but the pinout (Figure 1.1) does not show or name the pad, so no pin entry is added for it.
+package: {type: QFN, pins: 48, body_mm: "7 x 7 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: true
+supplies:                      # document has no electrical table; voltages not stated
+  - {pins: [VA], volts: null, note: "analog (from block diagram / pinout)"}
+  - {pins: [VIO], volts: null, note: "I/O"}
+  - {pins: [VCORE], volts: null, note: "core digital"}
+  - {pins: [VMEM], volts: null, note: "memory"}
+features:
+  - "AM/FM HD Radio channel decoder"
+  - "Complete on-chip HDC audio source decoder"
+  - "FM HD1, HD2, HD3 multicast support"
+  - "Station Information Service (SIS) support"
+  - "Program Service Data (PSD)"
+  - "HD Radio Emergency Alerts"
+  - "Integrated automatic level and time alignment and seamless blending"
+  - "No external RAM required for channel decoding"
+  - "Flash memory interface for application program load"
+  - "Support for Si479xx Zero-IF digital at 744.1875 kS/s"
+  - "On-chip crystal oscillator"
+  - "Reference clock input"
+  - "SPI or I2C control interfaces"
+  - "QFN 48-pin, 7 x 7 x 0.85 mm"
+  - "Pb-free, RoHS-6 compliant"
+  - "AEC-Q100 qualified"
+parts:
+  - mpn: Si4617
+    tuners: null
+    channels: null             # number of decode channels not stated
+    analog: []                 # analog AM/FM audio arrives over the I2S input for blending; not demodulated on chip
+    digital_decode: [HD]
+    digital_iq: []
+    options: []
+    note: "Works with Si479xx AM/FM tuners (ZIF I/Q input at 744.1875 kS/s); AM/FM analog audio from the tuner enters on the I2S input for ALTA blending"
+pins:
+  - {n: 1, name: NVSSB, fn: flash, bus: "Flash"}
+  - {n: 2, name: NVSCLK, fn: flash, bus: "Flash"}
+  - {n: 3, name: INTB, fn: interrupt, bus: "Host"}
+  - {n: 4, name: RSTB, fn: reset, bus: "Host", note: "shown in the I2C/SPI host interface block"}
+  - {n: 5, name: SMODE, fn: mode}
+  - {n: 6, name: GND, fn: ground}
+  - {n: 7, name: GND, fn: ground}
+  - {n: 8, name: GND, fn: ground}
+  - {n: 9, name: GND, fn: ground}
+  - {n: 10, name: GND, fn: ground}
+  - {n: 11, name: GND, fn: ground}
+  - {n: 12, name: VA, fn: power}
+  - {n: 13, name: ABYP, fn: bypass}
+  - {n: 14, name: NC, fn: nc}
+  - {n: 15, name: XTALI/RCLK, fn: xtal, note: "alternate: reference clock input"}
+  - {n: 16, name: XTALO, fn: xtal}
+  - {n: 17, name: NC, fn: nc}
+  - {n: 18, name: NC, fn: nc}
+  - {n: 19, name: NC, fn: nc}
+  - {n: 20, name: ZIFI, fn: iq_in, bus: "ZIF I/Q"}
+  - {n: 21, name: ZIFQ, fn: iq_in, bus: "ZIF I/Q"}
+  - {n: 22, name: ZIFCLK, fn: iq_in, bus: "ZIF I/Q"}
+  - {n: 23, name: ZIFFS, fn: iq_in, bus: "ZIF I/Q"}
+  - {n: 24, name: DICLK, fn: i2s_in, bus: "I2S in"}
+  - {n: 25, name: DIFS, fn: i2s_in, bus: "I2S in"}
+  - {n: 26, name: DIN, fn: i2s_in, bus: "I2S in"}
+  - {n: 27, name: DCLK, fn: i2s_out, bus: "I2S out"}
+  - {n: 28, name: DFS, fn: i2s_out, bus: "I2S out"}
+  - {n: 29, name: SSB/A1, fn: host, bus: "Host"}
+  - {n: 30, name: SCLK/SCL, fn: host, bus: "Host"}
+  - {n: 31, name: MOSI/SDA, fn: host, bus: "Host"}
+  - {n: 32, name: MISO/A0, fn: host, bus: "Host"}
+  - {n: 33, name: DOUT, fn: i2s_out, bus: "I2S out"}
+  - {n: 34, name: VIO, fn: power}
+  - {n: 35, name: VMEM, fn: power}
+  - {n: 36, name: DBYP, fn: bypass}
+  - {n: 37, name: VCORE, fn: power}
+  - {n: 38, name: NC, fn: nc}
+  - {n: 39, name: NC, fn: nc}
+  - {n: 40, name: NC, fn: nc}
+  - {n: 41, name: NC, fn: nc}
+  - {n: 42, name: NC, fn: nc}
+  - {n: 43, name: NC, fn: nc}
+  - {n: 44, name: NC, fn: nc}
+  - {n: 45, name: NC, fn: nc}
+  - {n: 46, name: NC, fn: nc}
+  - {n: 47, name: NVMISO, fn: flash, bus: "Flash"}
+  - {n: 48, name: NVMOSI, fn: flash, bus: "Flash"}

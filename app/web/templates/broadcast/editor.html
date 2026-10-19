@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ config.name if config else 'New configuration' }} – Broadcast – Cross List{% endblock %}
+{% block content %}
+<div id="bc-editor" class="bc-editor">
+  <div class="bc-toolbar">
+    <input id="bc-name" type="text" placeholder="Configuration name" aria-label="Configuration name">
+    <button id="bc-save" type="button">Save</button>
+    <span id="bc-status" class="muted small" role="status"></span>
+  </div>
+  <div class="bc-toolbar">
+    <select id="bc-add" aria-label="Add a device">
+      <option value="">+ Add device…</option>
+      {% for role, label in [('tuner', 'Tuners (I/Q to a coprocessor)'), ('receiver', 'Single-chip receivers'), ('coprocessor', 'Coprocessors (digital demod)')] %}
+      <optgroup label="{{ label }}">
+        {% for d in catalog if d.role == role %}<option value="{{ d.mpn }}">{{ d.mpn }} – {{ (d.analog + d.digital_decode)|join(' ') }}{% if d.digital_iq %} · I/Q: {{ d.digital_iq|join(' ') }}{% endif %}{% if d.channels %} · {{ d.channels }} ch{% endif %}{% if not d.numbered %} · no pinout{% endif %}</option>{% endfor %}
+      </optgroup>
+      {% endfor %}
+    </select>
+    <button id="bc-auto" type="button" class="secondary">Fill in surroundings</button>
+    <label class="bc-check"><input id="bc-compact" type="checkbox"> Compact (group GND / NC)</label>
+    <span class="bc-zoom"><button id="bc-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bc-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button></span>
+  </div>
+
+  <section class="bc-usecase-wrap" aria-label="Use case">
+    <div class="bc-toolbar">
+      <select id="bc-preset" aria-label="Start from a use case">
+        <option value="">Start from a use case…</option>
+        {% for p in presets %}<option value="{{ loop.index0 }}">{{ p.name }}{% if p.region %} ({{ p.region }}){% endif %}</option>{% endfor %}
+      </select>
+    </div>
+    <div id="bc-usecase" class="bc-usecase"></div>
+  </section>
+
+  <details id="bc-start" class="bc-start">
+    <summary>Or: suggest devices for the standards you need</summary>
+    <fieldset class="bc-stds">
+      {% for s in ['FM', 'AM', 'LW', 'SW', 'WB', 'RDS', 'HD', 'DAB', 'DRM', 'CDR'] %}<label><input type="checkbox" name="std" value="{{ s }}"{{ ' checked' if s in ('FM', 'AM') }}> {{ s }}</label>{% endfor %}
+    </fieldset>
+    <label>Receive paths (antenna diversity / background tuner)
+      <select id="bc-paths">{% for n in (1, 2, 3, 4) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select></label>
+    <button id="bc-suggest" type="button" class="outline">Suggest devices</button>
+    <ul id="bc-suggestions" class="bc-suggestions"></ul>
+  </details>
+
+  <p class="small muted">Click any pin to add what belongs on it; click a device name to replace or remove it.
+    Supplies, ground and host lines are shown as labels at the pin. Pin data from the Skyworks data shorts; check values against the full datasheet.</p>
+  <div class="bc-canvas"><svg id="bc-svg" role="application" aria-label="Block diagram"></svg></div>
+  <div id="bc-menu" class="bc-menu" hidden></div>
+  <section id="bc-summary" class="bc-summary"></section>
+  <p class="downloads">
+    <button id="bc-svg-dl" type="button" class="outline">Download SVG</button>
+    <button id="bc-json-dl" type="button" class="outline secondary">Download JSON</button>
+    <label class="outline secondary bc-upload" role="button">Load JSON<input id="bc-json-ul" type="file" accept="application/json" hidden></label>
+    <button id="bc-clear" type="button" class="outline secondary">Clear</button>
+  </p>
+</div>
+<style id="bc-svg-style">
+#bc-svg { background: #fbfaf7; font-family: system-ui, sans-serif; }
+#bc-svg .dev-body { fill: #ffffff; stroke: #3a3f47; stroke-width: 1.4; }
+#bc-svg .dev-headbg { fill: #e9eef5; stroke: none; cursor: pointer; }
+#bc-svg .role-coprocessor .dev-headbg { fill: #e3f3ec; }
+#bc-svg .role-receiver .dev-headbg { fill: #f6efe0; }
+#bc-svg .dev-mpn { font-size: 14px; font-weight: 700; fill: #1d2228; }
+#bc-svg .dev-sub { font-size: 10px; fill: #5b6470; }
+#bc-svg .dev-job { font-size: 9.5px; fill: #1f5fb0; font-weight: 600; }
+#bc-svg .dev-head:focus-visible .dev-headbg, #bc-svg .pin:focus-visible .pin-hit, #bc-svg .blk:focus-visible rect { outline: none; stroke: #2a78d6; stroke-width: 2; }
+#bc-svg .pin { cursor: pointer; }
+#bc-svg .pin-hit { fill: transparent; }
+#bc-svg .pin:hover .pin-hit { fill: #2a78d61a; }
+#bc-svg .pin-stub { stroke: #3a3f47; stroke-width: 1.2; }
+#bc-svg .pin-dot { fill: #ffffff; stroke: #3a3f47; stroke-width: 1; }
+#bc-svg .pin.on .pin-dot { fill: #2a78d6; stroke: #2a78d6; }
+#bc-svg .pin-num { font-size: 8.5px; fill: #7a828c; }
+#bc-svg .pin-name { font-size: 10.5px; fill: #1d2228; font-family: ui-monospace, Menlo, monospace; }
+#bc-svg .fn-power .pin-name { fill: #b23b0e; } #bc-svg .fn-ground .pin-name, #bc-svg .fn-nc .pin-name { fill: #7a828c; }
+#bc-svg .fn-rf_in .pin-name { fill: #6a2fb0; } #bc-svg .fn-iq_out .pin-name, #bc-svg .fn-iq_in .pin-name { fill: #1f5fb0; }
+#bc-svg .fn-i2s_out .pin-name, #bc-svg .fn-i2s_in .pin-name, #bc-svg .fn-audio_out .pin-name { fill: #128a5f; }
+#bc-svg .net-tag { font-size: 9.5px; font-weight: 600; fill: #b23b0e; }
+#bc-svg .wire { fill: none; stroke: #5b6470; stroke-width: 1.3; }
+#bc-svg .wire.bus { stroke-width: 3.2; }
+#bc-svg .w-iq { stroke: #2a78d6; } #bc-svg .w-i2s, #bc-svg .w-audio { stroke: #1baf7a; } #bc-svg .w-rf { stroke: #8a4fd0; }
+#bc-svg .w-clock, #bc-svg .w-xtal { stroke: #c98500; } #bc-svg .w-note { stroke-dasharray: 3 3; }
+#bc-svg .wire-label { font-size: 10px; fill: #1d2228; paint-order: stroke; stroke: #fbfaf7; stroke-width: 3px; }
+#bc-svg .blk { cursor: pointer; }
+#bc-svg .blk rect { fill: #ffffff; stroke: #8a929c; stroke-width: 1.1; }
+#bc-svg .k-supply rect { fill: #fdf0ea; stroke: #eb6834; } #bc-svg .k-antenna rect { fill: #f3ecfb; stroke: #8a4fd0; }
+#bc-svg .k-speaker rect { fill: #e8f7f0; stroke: #1baf7a; } #bc-svg .k-crystal rect, #bc-svg .k-osc rect { fill: #fdf5e3; stroke: #c98500; }
+#bc-svg .k-host rect { fill: #e9eef5; stroke: #2a78d6; } #bc-svg .k-note rect { fill: #fffbe6; stroke-dasharray: 3 3; }
+#bc-svg .blk-label { font-size: 11px; font-weight: 600; fill: #1d2228; }
+#bc-svg .blk-detail { font-size: 9.5px; fill: #5b6470; }
+#bc-svg .empty { font-size: 14px; fill: #7a828c; }
+</style>
+<script type="application/json" id="bc-presets">{{ presets|tojson }}</script>
+<script type="application/json" id="bc-catalog">{{ catalog|tojson }}</script>
+<script type="application/json" id="bc-config">{{ {'id': config.id if config else None, 'name': config.name if config else '', 'data': config.data if config else {}}|tojson }}</script>
+<script src="/static/broadcast.js" defer></script>
+{% endblock %}

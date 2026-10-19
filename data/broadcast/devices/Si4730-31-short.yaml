@@ -1,0 +1,91 @@
+source:
+  title: "Si4730/31-D60 Broadcast AM/FM Radio Receiver"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4730-31-short.pdf"
+  revision: "September 13, 2021 (no revision number printed)"
+family: Si4730/31-D60
+description: "Broadcast AM/FM Radio Receiver"
+role: receiver
+package: {type: QFN, pins: 20, body_mm: "3 x 3", pitch_mm: null, epad: true}
+aec_q100: null
+supplies:
+  - {pins: [VA], volts: "2.7-5.5 (QFN), 2.0-5.5 (SSOP)", note: "as labelled in the block diagram; on the QFN the supply pin is named VDD (no VA pin)"}
+  - {pins: [VD], volts: "1.62-3.6", note: "as labelled in the block diagram (SSOP pin VD); the QFN has no VD pin, its pins are VDD and VIO - mapping of VIO not stated"}
+features:
+  - "Worldwide FM band support (64-108 MHz)"
+  - "Worldwide AM band support (520-1710 kHz)"
+  - "AM/FM digital tuning"
+  - "EN55020 compliant"
+  - "FM multipath detection and mitigation; FM hi-cut control; advanced stereo blend"
+  - "AUXIN stereo ADC (analog auxiliary line-in, digitized on chip)"
+  - "Seven selectable AM channel filters"
+  - "Digital audio output formats: I2S, left-justified, right-justified"
+  - "Integrated LDO regulator"
+  - "Advanced FM RDS/RBDS processor (Si4731)"
+  - "QFN and SSOP Pb-free/RoHS compliant package"
+parts:
+  - mpn: Si4730
+    tuners: 1
+    channels: null
+    analog: [AM, FM]
+    digital_decode: []
+    digital_iq: []
+    options: ["Digital audio output (I2S/left-/right-justified)", "AUXIN stereo analog input"]
+    note: "no RDS. Generic Si473x-D60 block diagram labels the antenna inputs FM/SW and AM/LW, but this document only states FM 64-108 MHz and AM 520-1710 kHz"
+  - mpn: Si4731
+    tuners: 1
+    channels: null
+    analog: [AM, FM, RDS]
+    digital_decode: []
+    digital_iq: []
+    options: ["Digital audio output (I2S/left-/right-justified)", "AUXIN stereo analog input"]
+    note: "RDS/RBDS processor is Si4731 only"
+pins:
+  - {n: 1, name: NC, fn: nc}
+  - {n: 2, name: FMI, fn: rf_in, band: FM}
+  - {n: 3, name: RFGND, fn: ground, note: "RF ground"}
+  - {n: 4, name: AMI, fn: rf_in, band: AM}
+  - {n: 5, name: RST, fn: reset, note: "printed with overbar (active low)"}
+  - {n: 6, name: SEN, fn: host, bus: "Host", note: "printed with overbar (active low); serial enable"}
+  - {n: 7, name: SCLK, fn: host, bus: "Host"}
+  - {n: 8, name: SDIO, fn: host, bus: "Host"}
+  - {n: 9, name: RCLK, fn: refclk}
+  - {n: 10, name: VIO, fn: power, note: "voltage not stated for this pin name (block diagram shows VD 1.62-3.6 V)"}
+  - {n: 11, name: VDD, fn: power, volts: "2.7-5.5", note: "block diagram: VA 2.7-5.5 V (QFN)"}
+  - {n: 12, name: GND, fn: ground}
+  - {n: 13, name: ROUT/DOUT, fn: audio_out, bus: "I2S out 0", note: "alternate: DOUT digital audio data"}
+  - {n: 14, name: LOUT/DFS, fn: audio_out, bus: "I2S out 0", note: "alternate: DFS digital audio frame sync"}
+  - {n: 15, name: DIN, fn: other, note: "printed 'DIN' in the QFN pinout, but the document describes no digital audio input; the SSOP equivalents are DOUT/[RIN] and DFS/[LIN]. Verify against the full datasheet before wiring"}
+  - {n: 16, name: DFS, fn: i2s_out, bus: "I2S out 0"}
+  - {n: 17, name: GPO3/DCLK, fn: gpio, bus: "I2S out 0", note: "alternate: DCLK digital audio bit clock"}
+  - {n: 18, name: GPO2/INT, fn: gpio, note: "alternate: INT interrupt output (INT printed with overbar, active low)"}
+  - {n: 19, name: GPO1, fn: gpio}
+  - {n: 20, name: NC, fn: nc}
+  - {n: 21, name: GND PAD, fn: ground, note: "exposed pad"}
+alt_packages:
+  - type: SSOP
+    pins: 24
+    pin_list:
+      - {n: 1, name: "DOUT/[RIN]", fn: i2s_out, bus: "I2S out 0", note: "alternate: RIN right auxiliary analog input"}
+      - {n: 2, name: "DFS/[LIN]", fn: i2s_out, bus: "I2S out 0", note: "alternate: LIN left auxiliary analog input"}
+      - {n: 3, name: "GPO3/[DCLK]", fn: gpio, bus: "I2S out 0", note: "alternate: DCLK digital audio bit clock"}
+      - {n: 4, name: "GPO2/[INT]", fn: gpio, note: "alternate: INT interrupt output (INT printed with overbar, active low)"}
+      - {n: 5, name: GPO1, fn: gpio}
+      - {n: 6, name: NC, fn: nc}
+      - {n: 7, name: NC, fn: nc}
+      - {n: 8, name: FMI, fn: rf_in, band: FM}
+      - {n: 9, name: RFGND, fn: ground, note: "RF ground"}
+      - {n: 10, name: NC, fn: nc}
+      - {n: 11, name: NC, fn: nc}
+      - {n: 12, name: AMI, fn: rf_in, band: AM}
+      - {n: 13, name: GND, fn: ground}
+      - {n: 14, name: GND, fn: ground}
+      - {n: 15, name: RST, fn: reset, note: "printed with overbar (active low)"}
+      - {n: 16, name: SEN, fn: host, bus: "Host", note: "printed with overbar (active low); serial enable"}
+      - {n: 17, name: SCLK, fn: host, bus: "Host"}
+      - {n: 18, name: SDIO, fn: host, bus: "Host"}
+      - {n: 19, name: RCLK, fn: refclk}
+      - {n: 20, name: VD, fn: power, volts: "1.62-3.6"}
+      - {n: 21, name: VA, fn: power, volts: "2.0-5.5"}
+      - {n: 22, name: DBYP, fn: bypass}
+      - {n: 23, name: "ROUT/[DOUT]", fn: audio_out, bus: "I2S out 0", note: "alternate: DOUT digital audio data"}
+      - {n: 24, name: "LOUT/[DFS]", fn: audio_out, bus: "I2S out 0", note: "alternate: DFS digital audio frame sync"}

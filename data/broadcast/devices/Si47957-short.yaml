@@ -1,0 +1,95 @@
+source:
+  title: "Si47957 Data Short"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si47957-short.pdf"
+  revision: "Rev. 1.0, December 6, 2021"
+family: Si4795x
+description: "High-Performance Automotive AM/FM Radio Receiver and DRM Tuner"
+role: tuner
+package: {type: "QFN", pins: 56, body_mm: "8 x 8 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: true
+supplies:
+  - {pins: ["VA2"], volts: "3.3", note: "analog (pin 55, VA1 on the dual-tuner part, is N/C here)"}
+  - {pins: ["VD"], volts: "1.8", note: "digital"}
+  - {pins: ["VIO1", "VIO2"], volts: "1.8 or 3.3", note: "digital I/O"}
+features:
+  - "Worldwide FM band support (64-108 MHz)"
+  - "Worldwide AM band support (520-1710 kHz)"
+  - "LW band support (144-288 kHz)"
+  - "SW band support (2.3-30 MHz)"
+  - "On-chip soft-decision RDS/RDBS demodulator/decoder"
+  - "Integrated active AM/FM buffers"
+  - "Analog FM phase diversity"
+  - "DRM30/DRM+: digital I/Q interface to DRM processor, DRM detect"
+  - "Two analog audio outputs"
+  - "Two digital audio ports (I2S)"
+  - "Integrated clock oscillator"
+  - "1.8 V or 3.3 V digital IO power supplies; 3.3 V analog and 1.8 V digital power supply"
+  - "QFN 56-pin, 8 x 8 x 0.85 mm; Pb-free/RoHS compliant"
+  - "AEC-Q100 qualified (A-grade parts)"
+parts:
+  - mpn: Si47957
+    tuners: 1
+    channels: null
+    analog: [AM, FM, LW, SW, RDS]
+    digital_decode: []
+    digital_iq: [DRM]
+    options: []
+    note: "DRM30/DRM+ only; no HD Radio, DAB or NOAA weather band listed"
+pins:
+  - {n: 1, name: "XTALO", fn: "xtal"}
+  - {n: 2, name: "XTALI", fn: "xtal"}
+  - {n: 3, name: "DACREF", fn: "bypass", note: "audio DAC reference"}
+  - {n: 4, name: "N/C", fn: "nc"}
+  - {n: 5, name: "N/C", fn: "nc"}
+  - {n: 6, name: "N/C", fn: "nc"}
+  - {n: 7, name: "FMB", fn: "rf_in", band: "FM"}
+  - {n: 8, name: "AMO", fn: "rf_aux", note: "active AM buffer output (block diagram) for background/other tuners"}
+  - {n: 9, name: "AMI", fn: "rf_in", band: "AM", note: "AM antenna input (LW/SW are supported by the device; their input pin is not stated)"}
+  - {n: 10, name: "AMVAG", fn: "bypass", note: "AM input bias/reference (feeds the AM AGC/LNA in the block diagram)"}
+  - {n: 11, name: "LTB", fn: "rf_aux", note: "active RF buffer output of the FMB path (block diagram)"}
+  - {n: 12, name: "N/C", fn: "nc"}
+  - {n: 13, name: "ABYP2", fn: "bypass"}
+  - {n: 14, name: "VA2", fn: "power", volts: "3.3", note: "analog supply"}
+  - {n: 15, name: "RSTB", fn: "reset"}
+  - {n: 16, name: "SMODE", fn: "mode"}
+  - {n: 17, name: "NVMISO", fn: "flash", bus: "Flash"}
+  - {n: 18, name: "NVMOSI", fn: "flash", bus: "Flash"}
+  - {n: 19, name: "NVSSB", fn: "flash", bus: "Flash"}
+  - {n: 20, name: "NVSCLK", fn: "flash", bus: "Flash"}
+  - {n: 21, name: "INTB", fn: "interrupt"}
+  - {n: 22, name: "MISO/A0", fn: "host", bus: "Host", note: "SPI MISO / I2C address bit A0"}
+  - {n: 23, name: "MOSI/SDA", fn: "host", bus: "Host", note: "SPI MOSI / I2C SDA"}
+  - {n: 24, name: "SCLK/SCL", fn: "host", bus: "Host", note: "SPI SCLK / I2C SCL"}
+  - {n: 25, name: "SSB/A1", fn: "host", bus: "Host", note: "SPI SSB / I2C address bit A1"}
+  - {n: 26, name: "VIO1", fn: "power", volts: "1.8 or 3.3", note: "digital I/O supply"}
+  - {n: 27, name: "VD", fn: "power", volts: "1.8", note: "digital supply"}
+  - {n: 28, name: "DBYP", fn: "bypass"}
+  - {n: 29, name: "VIO2", fn: "power", volts: "1.8 or 3.3", note: "digital I/O supply"}
+  - {n: 30, name: "N/C", fn: "nc"}
+  - {n: 31, name: "N/C", fn: "nc"}
+  - {n: 32, name: "ZIFFS", fn: "iq_out", bus: "ZIF I/Q"}
+  - {n: 33, name: "ZIFQOUT", fn: "iq_out", bus: "ZIF I/Q"}
+  - {n: 34, name: "ZIFCLK", fn: "iq_out", bus: "ZIF I/Q"}
+  - {n: 35, name: "ZIFIOUT", fn: "iq_out", bus: "ZIF I/Q"}
+  - {n: 36, name: "ISFSN", fn: "other", note: "function not described in the data short; drawn as a digital I/F pin next to the ZIF I/Q port"}
+  - {n: 37, name: "ISFSP", fn: "other", note: "function not described in the data short; drawn as a digital I/F pin next to the ZIF I/Q port"}
+  - {n: 38, name: "DEBUGN", fn: "debug"}
+  - {n: 39, name: "DEBUGP", fn: "debug"}
+  - {n: 40, name: "N/C", fn: "nc"}
+  - {n: 41, name: "DFS0", fn: "i2s_out", bus: "I2S out 0"}
+  - {n: 42, name: "DCLK0", fn: "i2s_out", bus: "I2S out 0"}
+  - {n: 43, name: "DOUT0", fn: "i2s_out", bus: "I2S out 0"}
+  - {n: 44, name: "DFS/GP1", fn: "gpio", note: "GP1; alternate DFS function not tied to an audio port in this document (output port 0 has dedicated DOUT0/DCLK0/DFS0; DOUT1 pin is N/C)"}
+  - {n: 45, name: "GP2", fn: "gpio"}
+  - {n: 46, name: "DCLK/GP0", fn: "gpio", note: "GP0; alternate DCLK function not tied to an audio port in this document (output port 0 has dedicated DOUT0/DCLK0/DFS0; DOUT1 pin is N/C)"}
+  - {n: 47, name: "DIN0", fn: "i2s_in", bus: "I2S in 0"}
+  - {n: 48, name: "DICLK0", fn: "i2s_in", bus: "I2S in 0"}
+  - {n: 49, name: "DIFS0", fn: "i2s_in", bus: "I2S in 0"}
+  - {n: 50, name: "ICN", fn: "other", note: "function not described in the data short (block diagram routes ICP/ICN to the radio DSP / digital I/F, not to an ADC); not confirmed to be an analog audio input"}
+  - {n: 51, name: "ICP", fn: "other", note: "function not described in the data short (block diagram routes ICP/ICN to the radio DSP / digital I/F, not to an ADC); not confirmed to be an analog audio input"}
+  - {n: 52, name: "AOUT0", fn: "audio_out"}
+  - {n: 53, name: "AOUT1", fn: "audio_out"}
+  - {n: 54, name: "N/C", fn: "nc"}
+  - {n: 55, name: "N/C", fn: "nc"}
+  - {n: 56, name: "CLKO", fn: "clock_out"}
+  - {n: 57, name: "EPAD", fn: "other", note: "exposed die attach pad shown in the package outline (not numbered or named in the pinout); its electrical connection is not stated in this data short"}

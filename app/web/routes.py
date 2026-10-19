@@ -377,16 +377,6 @@ def notes_moved(q: str = ""):
     return RedirectResponse("/technical" + (f"?q={urllib.parse.quote(q)}" if q else ""), status_code=307)
 
 
-@router.get("/broadcast", response_class=HTMLResponse)
-def broadcast(request: Request):
-    return templates.TemplateResponse(request, "broadcast/index.html", {})
-
-
-@router.get("/broadcast/configurations", response_class=HTMLResponse)
-def broadcast_configurations(request: Request):
-    return templates.TemplateResponse(request, "broadcast/configurations.html", {})
-
-
 @router.get("/technical", response_class=HTMLResponse)
 def notes_search_page(request: Request, q: str = ""):
     """Keyword search over the Skyworks application notes and the engineering notes (local only)."""

@@ -2,8 +2,30 @@
 {% block title %}Broadcast – Cross List{% endblock %}
 {% block content %}
 <h1>Broadcast</h1>
-<p class="subtitle muted">This section is new and has no content yet.</p>
-<ul class="note-list">
-  <li><a href="/broadcast/configurations"><b>Configurations</b></a><br><span class="muted">Not filled in yet.</span></li>
-</ul>
+<p class="subtitle muted">Skyworks Si46xx / Si47xx radio ICs, transcribed from their public data shorts and product summaries.
+  Build a system from them under <a href="/broadcast/configurations">Configurations</a>.</p>
+{% if not documents %}<p class="banner">No device data loaded yet.</p>{% endif %}
+{% for role, label in roles.items() if by_role[role] %}
+<h2>{{ label }}</h2>
+<div class="table-wrap"><table class="bc-devices">
+  <thead><tr><th>Part</th><th>Standards</th><th>Paths</th><th>Options / licensing</th><th>Package</th></tr></thead>
+  <tbody>
+  {% for d in by_role[role] %}
+    <tr>
+      <td><b>{{ d.mpn }}</b><br><small class="muted">{{ d.family or '' }}{% if d.aec_q100 %} · <span class="badge grade-auto">AEC-Q100</span>{% endif %}</small></td>
+      <td>{% for s in d.analog %}<span class="std std-analog">{{ s }}</span>{% endfor %}
+        {% for s in d.digital_decode %}<span class="std std-decode" title="Decoded on chip">{{ s }}</span>{% endfor %}
+        {% for s in d.digital_iq %}<span class="std std-iq" title="Tuned on chip, decoded by a coprocessor (I/Q out)">{{ s }} I/Q</span>{% endfor %}</td>
+      <td>{% if d.tuners %}{{ d.tuners }} tuner{{ 's' if d.tuners != 1 }}{% endif %}{% if d.channels %}{{ d.channels }} channel{{ 's' if d.channels != 1 }}{% endif %}</td>
+      <td><small>{{ d.options|join('; ') }}{% if d.note %}{{ '; ' if d.options }}{{ d.note }}{% endif %}</small></td>
+      <td><small>{{ d.package.type or '' }}-{{ d.package.pins or '?' }}{% if d.package.body_mm %}<br>{{ d.package.body_mm }} mm{% endif %}</small>
+        {% if d.source.url %}<br><small><a href="{{ d.source.url }}" target="_blank" rel="noopener">{{ d.source.title or 'Source' }}</a></small>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endfor %}
+<p class="small muted">Legend: <span class="std std-analog">FM</span> demodulated on chip ·
+  <span class="std std-decode">DAB</span> digital standard decoded on chip ·
+  <span class="std std-iq">HD I/Q</span> tuned on chip and passed as digital I/Q to a coprocessor, which decodes it.</p>
 {% endblock %}

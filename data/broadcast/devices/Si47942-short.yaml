@@ -1,0 +1,97 @@
+source:
+  title: "Si47942 Data Short"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si47942-short.pdf"
+  revision: "Rev. 0.1, December 6, 2021"
+family: Si47942
+description: "High-Performance Automotive DAB/DAB+/DMB Tuner"
+role: tuner
+package: {type: QFN, pins: 56, body_mm: "8 x 8 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: true
+note: >-
+  AEC-Q100 qualification is stated for A-grade devices. The document gives no ordering guide; only Si47942 is listed.
+  The exposed pad is drawn in the pinout and package drawing (D2/E2) but its connection is not stated.
+  Functions of ICP/ICN, ISFSP/ISFSN, DIFS0/DICLK0 and GP0-GP2 are not described in this data short.
+supplies:
+  - {pins: [VA1, VA2], volts: "3.3", note: "analog"}
+  - {pins: [VD], volts: "1.8", note: "digital"}
+  - {pins: [VIO1, VIO2], volts: "1.8 or 3.3", note: "digital I/O"}
+features:
+  - "Two global radio receivers (dual DAB/DAB+/DMB tuner)"
+  - "Dual DAB/DAB+/DMB support (168-240 MHz)"
+  - "Digital I/Q interface to DAB/DAB+/DMB processor"
+  - "DAB/DAB+/DMB MRC with two tuners"
+  - "Integrated active Band III buffers for background/data tuners"
+  - "Fast DAB/DAB+/DMB band scan"
+  - "Fully integrated AGCs for Band III inputs"
+  - "Frequency synthesizers with fully integrated PLL-VCOs"
+  - "Integrated clock oscillator"
+  - "1.8 V or 3.3 V digital I/O power supplies; 3.3 V analog and 1.8 V digital power supply"
+  - "QFN 56-pin, 8 x 8 x 0.85 mm; Pb-free/RoHS compliant"
+  - "AEC-Q100 qualified (A-grade devices)"
+parts:
+  - mpn: Si47942
+    tuners: 2
+    channels: null
+    analog: []
+    digital_decode: []
+    digital_iq: [DAB, DMB]
+    options: []
+    note: "DAB/DAB+/DMB only; no AM/FM listed"
+pins:
+  - {n: 1, name: "XTALO", fn: xtal}
+  - {n: 2, name: "XTALI", fn: xtal}
+  - {n: 3, name: "NC", fn: nc}
+  - {n: 4, name: "NC", fn: nc}
+  - {n: 5, name: "B3A", fn: rf_in, band: "DAB", note: "Band III input A"}
+  - {n: 6, name: "B3B", fn: rf_in, band: "DAB", note: "Band III input B"}
+  - {n: 7, name: "NC", fn: nc}
+  - {n: 8, name: "NC", fn: nc}
+  - {n: 9, name: "NC", fn: nc}
+  - {n: 10, name: "NC", fn: nc}
+  - {n: 11, name: "LTB", fn: rf_aux, note: "Active Band III buffer output (block diagram) for background/data tuners"}
+  - {n: 12, name: "LTA", fn: rf_aux, note: "Active Band III buffer output (block diagram) for background/data tuners"}
+  - {n: 13, name: "ABYP2", fn: bypass}
+  - {n: 14, name: "VA2", fn: power, volts: "3.3"}
+  - {n: 15, name: "RSTB", fn: reset}
+  - {n: 16, name: "SMODE", fn: mode, note: "Host interface mode select (SPI/I2C control interface)"}
+  - {n: 17, name: "NVMISO", fn: flash, bus: "Flash"}
+  - {n: 18, name: "NVMOSI", fn: flash, bus: "Flash"}
+  - {n: 19, name: "NVSSB", fn: flash, bus: "Flash"}
+  - {n: 20, name: "NVSCLK", fn: flash, bus: "Flash"}
+  - {n: 21, name: "INTB", fn: interrupt, bus: "Host"}
+  - {n: 22, name: "MISO/A0", fn: host, bus: "Host", note: "SPI MISO / I2C address A0"}
+  - {n: 23, name: "MOSI/SDA", fn: host, bus: "Host", note: "SPI MOSI / I2C SDA"}
+  - {n: 24, name: "SCLK/SCL", fn: host, bus: "Host", note: "SPI SCLK / I2C SCL"}
+  - {n: 25, name: "SSB/A1", fn: host, bus: "Host", note: "SPI SSB / I2C address A1"}
+  - {n: 26, name: "VIO1", fn: power, volts: "1.8 or 3.3"}
+  - {n: 27, name: "VD", fn: power, volts: "1.8"}
+  - {n: 28, name: "DBYP", fn: bypass}
+  - {n: 29, name: "VIO2", fn: power, volts: "1.8 or 3.3"}
+  - {n: 30, name: "ZIFQ1", fn: iq_out, bus: "ZIF I/Q", note: "Q data 1 (second I/Q stream; shares ZIFCLK/ZIFFS)"}
+  - {n: 31, name: "ZIFI1", fn: iq_out, bus: "ZIF I/Q", note: "I data 1 (second I/Q stream; shares ZIFCLK/ZIFFS)"}
+  - {n: 32, name: "ZIFFS", fn: iq_out, bus: "ZIF I/Q", note: "ZIF frame sync, shared by both I/Q streams"}
+  - {n: 33, name: "ZIFQ0", fn: iq_out, bus: "ZIF I/Q", note: "Q data 0"}
+  - {n: 34, name: "ZIFCLK", fn: iq_out, bus: "ZIF I/Q", note: "ZIF clock, shared by both I/Q streams"}
+  - {n: 35, name: "ZIFI0", fn: iq_out, bus: "ZIF I/Q", note: "I data 0"}
+  - {n: 36, name: "ISFSN", fn: other, note: "Shown on the Digital I/F block next to the ZIF pins; function not described"}
+  - {n: 37, name: "ISFSP", fn: other, note: "Shown on the Digital I/F block next to the ZIF pins; function not described"}
+  - {n: 38, name: "DEBUGN", fn: debug}
+  - {n: 39, name: "DEBUGP", fn: debug}
+  - {n: 40, name: "GND", fn: ground}
+  - {n: 41, name: "GND", fn: ground}
+  - {n: 42, name: "GND", fn: ground}
+  - {n: 43, name: "GND", fn: ground}
+  - {n: 44, name: "GP1", fn: gpio}
+  - {n: 45, name: "GP2", fn: gpio}
+  - {n: 46, name: "GP0", fn: gpio}
+  - {n: 47, name: "GND", fn: ground}
+  - {n: 48, name: "DICLK0", fn: i2s_in, bus: "I2S in 0", note: "Function not described; no matching DIN0 pin on this package"}
+  - {n: 49, name: "DIFS0", fn: i2s_in, bus: "I2S in 0", note: "Function not described; no matching DIN0 pin on this package"}
+  - {n: 50, name: "ICN", fn: other, note: "Shown on block diagram (ICP/ICN pair); function not described in this data short"}
+  - {n: 51, name: "ICP", fn: other, note: "Shown on block diagram (ICP/ICN pair); function not described in this data short"}
+  - {n: 52, name: "NC", fn: nc}
+  - {n: 53, name: "NC", fn: nc}
+  - {n: 54, name: "ABYP1", fn: bypass}
+  - {n: 55, name: "VA1", fn: power, volts: "3.3"}
+  - {n: 56, name: "CLKO", fn: clock_out}
+  - {n: 57, name: "EPAD", fn: other, note: "Exposed pad shown in pinout and package drawing (D2/E2 6.40 mm nom); connection not stated in this data short"}

@@ -240,3 +240,14 @@ class PriceQuote(Base):
     # [{"package": "Cut Tape (CT)", "min_qty": 1, "breaks": [[1, 3.21], [10, 2.9], ...]}, ...]
     offers: Mapped[list] = mapped_column(JSON, default=list)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class BroadcastConfig(Base):
+    """A saved broadcast block diagram: devices, add-on blocks and connections (see broadcast.js)."""
+
+    __tablename__ = "broadcast_configs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

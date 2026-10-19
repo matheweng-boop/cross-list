@@ -1,0 +1,139 @@
+source:
+  title: "Si47911/12 Data Short"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si47911-12-short.pdf"
+  revision: "August 22, 2021"
+family: Si47911/12
+description: "High-Performance Automotive AM/FM Radio Receiver and HD Radio/DAB/DAB+/DMB/DRM Tuner with Audio System"
+role: receiver
+package: {type: QFN, pins: 84, body_mm: "12 x 12 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: true
+note: >-
+  The document does have a pin assignment figure (page 2); pins below are transcribed from it. CAUTION: that figure
+  does not match the feature list/block diagram of this same document: the block diagram shows LBI, LBO, B3I/WXI,
+  B3O, AMO, AOUT4, AOUT5 and audio input ports 3/4 (DIN3/DICLK3/DIFS3, DIN4/DICLK4/DIFS4), and the features list
+  six analog outputs and seven I2S ports, yet none of these pins appear in the figure (pins 2, 3, 8, 9, 11, 15, 16,
+  62-67 are NC). The figure is identical to the Si47920/21 figure except that pins 2/3 are NC instead of AOUT4/AOUT5.
+  It probably does not show the Si47912 Band III/L-band inputs; confirm against the full data sheet before routing
+  RF or audio port 3/4. No revision number is printed (date only). Feature list says "AEQ-Q100 qualified" (typo for AEC-Q100).
+  DRM appears in the title only; no DRM feature or variant is given, so it is not assigned to a part.
+supplies:
+  - {pins: [VA], volts: "3.3", note: "analog"}
+  - {pins: [VD], volts: "1.8", note: "digital"}
+  - {pins: [VIO1, VIO2], volts: "1.8 or 3.3", note: "digital I/O"}
+features:
+  - "Worldwide FM (64-108 MHz), AM (520-1710 kHz), LW (144-288 kHz), SW (2.3-30 MHz), NOAA Weather Band"
+  - "DAB/DAB+/DMB support (170-240 MHz, 1452-1492 MHz) (Si47912 only)"
+  - "On-chip soft-decision RDS/RDBS demodulator/decoder"
+  - "Integrated active AM/FM buffers for background/data tuners"
+  - "Analog FM phase diversity with two, three or four tuners"
+  - "HD Radio: digital I/Q interface to HD Radio processor, MRC with two, three or four tuners, AM/FM IBOC blend, fast FM HD band scan"
+  - "DAB/DAB+/DMB (Si47912 only): digital I/Q interface to DAB processor, MRC with two, three or four tuners, Band III/L-band buffers, AGC for Band III and L-band"
+  - "HiFi2-EP Audio DSP with 288 kB program and data memory"
+  - "Seven analog audio inputs, six analog audio outputs, seven digital audio ports (I2S) with TDM support"
+  - "Up to 24 synchronous or asynchronous sample rate converters"
+  - "Integrated clock oscillator; frequency synthesizer with integrated PLL-VCO"
+  - "1.8 V or 3.3 V digital I/O supplies; 3.3 V analog and 1.8 V digital supply"
+  - "QFN 84-pin, 12 x 12 x 0.85 mm; Pb-free/RoHS compliant"
+parts:
+  - mpn: Si47911
+    tuners: 1
+    channels: null
+    analog: [AM, FM, LW, SW, WB, RDS]
+    digital_decode: []
+    digital_iq: [HD]
+    options: ["Audio DSP (HiFi2-EP)", "Analog FM phase diversity"]
+    note: "No DAB/DAB+/DMB (Si47912 only)"
+  - mpn: Si47912
+    tuners: 1
+    channels: null
+    analog: [AM, FM, LW, SW, WB, RDS]
+    digital_decode: []
+    digital_iq: [HD, DAB, DMB]
+    options: ["Audio DSP (HiFi2-EP)", "Analog FM phase diversity"]
+    note: "Adds DAB/DAB+/DMB (Band III 170-240 MHz and L-band 1452-1492 MHz) I/Q output"
+pins:
+  - {n: 1, name: "AOUT3", fn: audio_out}
+  - {n: 2, name: "NC", fn: nc}
+  - {n: 3, name: "NC", fn: nc}
+  - {n: 4, name: "CLKO", fn: clock_out}
+  - {n: 5, name: "XTALO", fn: xtal}
+  - {n: 6, name: "XTALI", fn: xtal}
+  - {n: 7, name: "DACREF", fn: bypass, note: "DAC reference"}
+  - {n: 8, name: "NC", fn: nc}
+  - {n: 9, name: "NC", fn: nc}
+  - {n: 10, name: "FMI", fn: rf_in, band: "FM"}
+  - {n: 11, name: "NC", fn: nc}
+  - {n: 12, name: "AMI", fn: rf_in, band: "AM", note: "Only AM RF input in the pinout; LW/SW bands are listed as features but the document does not name their input pin"}
+  - {n: 13, name: "AMVAG", fn: bypass}
+  - {n: 14, name: "FMO", fn: rf_aux, note: "FM buffer output (block diagram) for background/data tuners"}
+  - {n: 15, name: "NC", fn: nc}
+  - {n: 16, name: "NC", fn: nc}
+  - {n: 17, name: "ABYP", fn: bypass}
+  - {n: 18, name: "VA", fn: power, volts: "3.3"}
+  - {n: 19, name: "AIN0P", fn: audio_in, note: "Analog audio input 0, positive"}
+  - {n: 20, name: "AIN0N", fn: audio_in, note: "Analog audio input 0, negative"}
+  - {n: 21, name: "AIN1P", fn: audio_in, note: "Analog audio input 1, positive"}
+  - {n: 22, name: "AIN1N", fn: audio_in, note: "Analog audio input 1, negative"}
+  - {n: 23, name: "AIN2P", fn: audio_in, note: "Analog audio input 2, positive"}
+  - {n: 24, name: "AIN2N", fn: audio_in, note: "Analog audio input 2, negative"}
+  - {n: 25, name: "AIN3P", fn: audio_in, note: "Analog audio input 3, positive"}
+  - {n: 26, name: "AIN3N", fn: audio_in, note: "Analog audio input 3, negative"}
+  - {n: 27, name: "AIN4P", fn: audio_in, note: "Analog audio input 4, positive"}
+  - {n: 28, name: "AIN4N", fn: audio_in, note: "Analog audio input 4, negative"}
+  - {n: 29, name: "AIN5P", fn: audio_in, note: "Analog audio input 5, positive"}
+  - {n: 30, name: "AIN5N", fn: audio_in, note: "Analog audio input 5, negative"}
+  - {n: 31, name: "AIN6P", fn: audio_in, note: "Analog audio input 6, positive"}
+  - {n: 32, name: "AIN6N", fn: audio_in, note: "Analog audio input 6, negative"}
+  - {n: 33, name: "RSTB", fn: reset}
+  - {n: 34, name: "SMODE", fn: mode, note: "Host interface mode select (SPI/I2C)"}
+  - {n: 35, name: "NVMISO", fn: flash, bus: "Flash"}
+  - {n: 36, name: "NVMOSI", fn: flash, bus: "Flash"}
+  - {n: 37, name: "NVSSB", fn: flash, bus: "Flash"}
+  - {n: 38, name: "NVSCLK", fn: flash, bus: "Flash"}
+  - {n: 39, name: "INTB", fn: interrupt, bus: "Host"}
+  - {n: 40, name: "MISO/A0", fn: host, bus: "Host", note: "SPI MISO / I2C address A0"}
+  - {n: 41, name: "MOSI/SDA", fn: host, bus: "Host", note: "SPI MOSI / I2C SDA"}
+  - {n: 42, name: "SCLK/SCL", fn: host, bus: "Host", note: "SPI SCLK / I2C SCL"}
+  - {n: 43, name: "SSB/A1", fn: host, bus: "Host", note: "SPI SSB / I2C address A1"}
+  - {n: 44, name: "VIO1", fn: power, volts: "1.8 or 3.3"}
+  - {n: 45, name: "VD", fn: power, volts: "1.8"}
+  - {n: 46, name: "DBYP", fn: bypass}
+  - {n: 47, name: "VIO2", fn: power, volts: "1.8 or 3.3"}
+  - {n: 48, name: "ZIFFS", fn: iq_out, bus: "ZIF I/Q", note: "ZIF frame sync"}
+  - {n: 49, name: "ZIFQOUT", fn: iq_out, bus: "ZIF I/Q", note: "ZIF Q data"}
+  - {n: 50, name: "ZIFCLK", fn: iq_out, bus: "ZIF I/Q", note: "ZIF clock"}
+  - {n: 51, name: "ZIFIOUT", fn: iq_out, bus: "ZIF I/Q", note: "ZIF I data"}
+  - {n: 52, name: "ISFSN", fn: other, note: "Shown next to the ZIF pins in the block diagram; function not described"}
+  - {n: 53, name: "ISFSP", fn: other, note: "Shown next to the ZIF pins in the block diagram; function not described"}
+  - {n: 54, name: "DEBUGN", fn: debug}
+  - {n: 55, name: "DEBUGP", fn: debug}
+  - {n: 56, name: "DFS1", fn: i2s_out, bus: "I2S out 1", note: "Audio output port 1 frame sync"}
+  - {n: 57, name: "DCLK1", fn: i2s_out, bus: "I2S out 1", note: "Audio output port 1 bit clock"}
+  - {n: 58, name: "DOUT1", fn: i2s_out, bus: "I2S out 1", note: "Audio output port 1 data"}
+  - {n: 59, name: "DFS0", fn: i2s_out, bus: "I2S out 0", note: "Audio output port 0 frame sync"}
+  - {n: 60, name: "DCLK0", fn: i2s_out, bus: "I2S out 0", note: "Audio output port 0 bit clock"}
+  - {n: 61, name: "DOUT0", fn: i2s_out, bus: "I2S out 0", note: "Audio output port 0 data"}
+  - {n: 62, name: "NC", fn: nc}
+  - {n: 63, name: "NC", fn: nc}
+  - {n: 64, name: "NC", fn: nc}
+  - {n: 65, name: "NC", fn: nc}
+  - {n: 66, name: "NC", fn: nc}
+  - {n: 67, name: "NC", fn: nc}
+  - {n: 68, name: "DIFS2", fn: i2s_in, bus: "I2S in 2", note: "Audio input port 2 frame sync"}
+  - {n: 69, name: "DICLK2", fn: i2s_in, bus: "I2S in 2", note: "Audio input port 2 bit clock"}
+  - {n: 70, name: "DIN2", fn: i2s_in, bus: "I2S in 2", note: "Audio input port 2 data"}
+  - {n: 71, name: "DIFS1", fn: i2s_in, bus: "I2S in 1", note: "Audio input port 1 frame sync"}
+  - {n: 72, name: "DICLK1", fn: i2s_in, bus: "I2S in 1", note: "Audio input port 1 bit clock"}
+  - {n: 73, name: "DIN1", fn: i2s_in, bus: "I2S in 1", note: "Audio input port 1 data"}
+  - {n: 74, name: "GP1", fn: gpio}
+  - {n: 75, name: "GP2", fn: gpio}
+  - {n: 76, name: "GP0", fn: gpio}
+  - {n: 77, name: "DIN0", fn: i2s_in, bus: "I2S in 0", note: "Audio input port 0 data"}
+  - {n: 78, name: "DICLK0", fn: i2s_in, bus: "I2S in 0", note: "Audio input port 0 bit clock"}
+  - {n: 79, name: "DIFS0", fn: i2s_in, bus: "I2S in 0", note: "Audio input port 0 frame sync"}
+  - {n: 80, name: "ICN", fn: other, note: "ICP/ICN pair; function not described in this data short"}
+  - {n: 81, name: "ICP", fn: other, note: "ICP/ICN pair; function not described in this data short"}
+  - {n: 82, name: "AOUT0", fn: audio_out}
+  - {n: 83, name: "AOUT1", fn: audio_out}
+  - {n: 84, name: "AOUT2", fn: audio_out}
+  - {n: 85, name: "EPAD", fn: other, note: "Exposed pad shown in package drawing (D2/E2 5.50 mm nom), not drawn in the pin assignment figure; connection not stated"}

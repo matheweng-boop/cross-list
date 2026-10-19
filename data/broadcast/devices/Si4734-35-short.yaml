@@ -1,0 +1,66 @@
+source:
+  title: "Si4734/35 Broadcast AM/FM/SW/LW Radio Receiver"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4734-35-short.pdf"
+  revision: "September 13, 2021 (no revision number printed)"
+family: Si4734/35
+description: "Broadcast AM/FM/SW/LW Radio Receiver"
+role: receiver
+package: {type: QFN, pins: 20, body_mm: "3 x 3 x 0.55", pitch_mm: 0.5, epad: true}
+aec_q100: null
+supplies:
+  - {pins: [VDD], volts: "2.7-5.5", note: "supply voltage VD, VA (electrical spec); block diagram: 2.7-5.5 V VDD"}
+  - {pins: [VIO], volts: "1.5-3.6", note: "interface supply voltage VIO"}
+features:
+  - "Worldwide FM band support (64-108 MHz) (FM electrical spec table lists 76-108 MHz)"
+  - "Worldwide AM band support (520-1710 kHz)"
+  - "SW band support (2.3-21.85 MHz)"
+  - "LW band support (153-279 kHz)"
+  - "Frequency synthesizer with integrated VCO; AFC; AGC"
+  - "Integrated LDO regulator"
+  - "Digital FM stereo decoder; programmable de-emphasis"
+  - "Programmable reference clock"
+  - "Digital volume control"
+  - "RDS/RBDS processor (Si4735 only)"
+  - "Optional digital audio out (Si4735 only)"
+  - "2-wire and 3-wire control interface (I2C-compatible 2-wire, SPI, Si4700/01-compatible 3-wire)"
+  - "2.7 to 5.5 V supply voltage"
+  - "3 x 3 x 0.55 mm 20-pin QFN package, Pb-free/RoHS compliant"
+parts:
+  - mpn: Si4734
+    tuners: 1
+    channels: null
+    analog: [AM, FM, SW, LW]
+    digital_decode: []
+    digital_iq: []
+    options: []
+    note: "analog audio out (LOUT/ROUT) only; no RDS, no digital audio output"
+  - mpn: Si4735
+    tuners: 1
+    channels: null
+    analog: [AM, FM, SW, LW, RDS]
+    digital_decode: []
+    digital_iq: []
+    options: ["Digital audio output (DOUT/DFS/DCLK)"]
+    note: "RDS/RBDS processor and optional digital audio out are Si4735 only"
+pins:
+  - {n: 1, name: NC, fn: nc}
+  - {n: 2, name: FMI, fn: rf_in, band: FM/SW, note: "block diagram: FM/SW antenna"}
+  - {n: 3, name: RFGND, fn: ground, note: "RF ground"}
+  - {n: 4, name: AMI, fn: rf_in, band: AM/LW, note: "block diagram: AM/LW antenna"}
+  - {n: 5, name: RST, fn: reset, note: "printed with overbar (active low)"}
+  - {n: 6, name: SEN, fn: host, bus: "Host", note: "printed with overbar (active low); serial enable"}
+  - {n: 7, name: SCLK, fn: host, bus: "Host"}
+  - {n: 8, name: SDIO, fn: host, bus: "Host"}
+  - {n: 9, name: RCLK, fn: refclk}
+  - {n: 10, name: VIO, fn: power, volts: "1.5-3.6"}
+  - {n: 11, name: VDD, fn: power, volts: "2.7-5.5"}
+  - {n: 12, name: GND, fn: ground}
+  - {n: 13, name: ROUT, fn: audio_out}
+  - {n: 14, name: LOUT, fn: audio_out}
+  - {n: 15, name: DOUT, fn: i2s_out, bus: "I2S out 0", note: "digital audio output, Si4735 only"}
+  - {n: 16, name: DFS, fn: i2s_out, bus: "I2S out 0", note: "digital audio frame sync, Si4735 only"}
+  - {n: 17, name: GPO3/DCLK, fn: gpio, bus: "I2S out 0", note: "alternate: DCLK digital audio bit clock (Si4735 only)"}
+  - {n: 18, name: GPO2/INT, fn: gpio, note: "alternate: INT interrupt output (INT printed with overbar, active low)"}
+  - {n: 19, name: GPO1, fn: gpio}
+  - {n: 20, name: NC, fn: nc}
+  - {n: 21, name: GND PAD, fn: ground, note: "exposed pad"}

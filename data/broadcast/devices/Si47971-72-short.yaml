@@ -1,0 +1,137 @@
+source:
+  title: "Si47971-72 Data Short"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si47971-72-short.pdf"
+  revision: "Rev. 0.1, July 26, 2021"
+family: Si4797x
+description: "High-Performance Automotive AM/FM Radio Receiver and HD Radio/DAB/DAB+/DMB/DRM Tuner with Audio System"
+role: tuner
+package: {type: QFN, pins: 88, body_mm: "12 x 12 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: true   # "AEC-Q100 qualified (A-grade parts)"
+supplies:
+  - {pins: [VA1, VA2], volts: "3.3", note: "analog power supply"}
+  - {pins: [VD], volts: "1.8", note: "digital power supply"}
+  - {pins: [VIO1, VIO2], volts: "1.8 or 3.3", note: "digital IO power supplies"}
+features:
+  - "Dual worldwide FM band support (64-108 MHz)"
+  - "Dual worldwide AM band support (520-1710 kHz)"
+  - "Dual LW band support (144-288 kHz)"
+  - "Dual SW band support (2.3-30 MHz)"
+  - "Dual DAB/DAB+/DMB support (Si47972 only) (168-240 MHz)"
+  - "NOAA Weather Band support"
+  - "On-chip RDS/RDBS"
+  - "Integrated active AM/FM buffers; analog FM phase diversity"
+  - "HD Radio: digital I/Q interface to HD Radio processor, HD Radio MRC"
+  - "DRM30/DRM+: digital I/Q interface to DRM processor"
+  - "DAB/DAB+/DMB (Si47972 only): digital I/Q interface to DAB processor, DAB MRC, integrated active Band III buffer"
+  - "Audio system: Tensilica HiFi2-EP audio DSP"
+  - "S/PDIF digital audio interface"
+  - "QFN 88-pin, 12 x 12 x 0.85 mm"
+  - "Pb-free/RoHS compliant"
+  - "AEC-Q100 qualified (A-grade parts)"
+parts:
+  - mpn: Si47971
+    tuners: 2
+    channels: null
+    analog: [AM, FM, LW, SW, WB, RDS]
+    digital_decode: []
+    digital_iq: [HD, DRM]
+    options: ["Audio DSP (Tensilica HiFi2-EP audio processing subsystem)"]
+    note: null
+  - mpn: Si47972
+    tuners: 2
+    channels: null
+    analog: [AM, FM, LW, SW, WB, RDS]
+    digital_decode: []
+    digital_iq: [HD, DRM, DAB, DMB]
+    options: ["Audio DSP (Tensilica HiFi2-EP audio processing subsystem)"]
+    note: "DAB/DAB+/DMB (dual, 168-240 MHz, with MRC) is Si47972 only"
+pins:
+  - {n: 1, name: AOUT5, fn: audio_out}
+  - {n: 2, name: ABYP1, fn: bypass}
+  - {n: 3, name: VA1, fn: power, volts: "3.3"}
+  - {n: 4, name: CLKO, fn: clock_out}
+  - {n: 5, name: XTALO, fn: xtal}
+  - {n: 6, name: XTALI, fn: xtal}
+  - {n: 7, name: DACREF, fn: bypass}
+  - {n: 8, name: FMA, fn: rf_in, band: FM}
+  - {n: 9, name: B3A, fn: rf_in, band: DAB, note: "Band III input; DAB on Si47972 only"}
+  - {n: 10, name: B3B, fn: rf_in, band: DAB, note: "Band III input; DAB on Si47972 only"}
+  - {n: 11, name: FMB, fn: rf_in, band: FM}
+  - {n: 12, name: AMO, fn: rf_aux, note: "AM-side buffer/output pin per block diagram; exact use not described in this document"}
+  - {n: 13, name: AMI, fn: rf_in, band: AM}
+  - {n: 14, name: AMVAG, fn: bypass}
+  - {n: 15, name: LTB, fn: rf_aux, note: "output of an integrated active RF buffer per block diagram"}
+  - {n: 16, name: LTA, fn: rf_aux, note: "output of an integrated active RF buffer per block diagram"}
+  - {n: 17, name: ABYP2, fn: bypass}
+  - {n: 18, name: VA2, fn: power, volts: "3.3"}
+  - {n: 19, name: AIN0P, fn: audio_in, note: "analog audio input 0 (+), to audio ADC"}
+  - {n: 20, name: AIN0N, fn: audio_in, note: "analog audio input 0 (-)"}
+  - {n: 21, name: AIN1P, fn: audio_in, note: "analog audio input 1 (+)"}
+  - {n: 22, name: AIN1N, fn: audio_in, note: "analog audio input 1 (-)"}
+  - {n: 23, name: AIN2P, fn: audio_in, note: "analog audio input 2 (+)"}
+  - {n: 24, name: AIN2N, fn: audio_in, note: "analog audio input 2 (-)"}
+  - {n: 25, name: AIN3P, fn: audio_in, note: "analog audio input 3 (+)"}
+  - {n: 26, name: AIN3N, fn: audio_in, note: "analog audio input 3 (-)"}
+  - {n: 27, name: AIN4P, fn: audio_in, note: "analog audio input 4 (+)"}
+  - {n: 28, name: AIN4N, fn: audio_in, note: "analog audio input 4 (-)"}
+  - {n: 29, name: AIN5P, fn: audio_in, note: "analog audio input 5 (+)"}
+  - {n: 30, name: AIN5N, fn: audio_in, note: "analog audio input 5 (-)"}
+  - {n: 31, name: RSTB, fn: reset}
+  - {n: 32, name: SMODE, fn: mode}
+  - {n: 33, name: NVMISO, fn: flash, bus: "Flash"}
+  - {n: 34, name: NVMOSI, fn: flash, bus: "Flash"}
+  - {n: 35, name: NVSSB, fn: flash, bus: "Flash"}
+  - {n: 36, name: NVSCLK, fn: flash, bus: "Flash"}
+  - {n: 37, name: INTB, fn: interrupt}
+  - {n: 38, name: MISO, fn: host, bus: "Host"}
+  - {n: 39, name: MOSI, fn: host, bus: "Host"}
+  - {n: 40, name: SCLK, fn: host, bus: "Host"}
+  - {n: 41, name: SSB, fn: host, bus: "Host"}
+  - {n: 42, name: VIO1, fn: power, volts: "1.8 or 3.3"}
+  - {n: 43, name: VD, fn: power, volts: "1.8"}
+  - {n: 44, name: DBYP, fn: bypass}
+  - {n: 45, name: VIO2, fn: power, volts: "1.8 or 3.3"}
+  - {n: 46, name: ZIFQ1, fn: iq_out, bus: "ZIF I/Q"}
+  - {n: 47, name: ZIFI1, fn: iq_out, bus: "ZIF I/Q"}
+  - {n: 48, name: ZIFFS, fn: iq_out, bus: "ZIF I/Q", note: "block diagram shows ZIFFS0 and ZIFFS1; pinout has a single ZIFFS"}
+  - {n: 49, name: ZIFQ0, fn: iq_out, bus: "ZIF I/Q"}
+  - {n: 50, name: ZIFCLK, fn: iq_out, bus: "ZIF I/Q", note: "block diagram labels it ZIFCLK0"}
+  - {n: 51, name: ZIFI0, fn: iq_out, bus: "ZIF I/Q"}
+  - {n: 52, name: ISFSN, fn: other, note: "function not described in this document (shown on the Digital I/F block)"}
+  - {n: 53, name: ISFSP, fn: other, note: "function not described in this document (shown on the Digital I/F block)"}
+  - {n: 54, name: DEBUGN, fn: debug}
+  - {n: 55, name: DEBUGP, fn: debug}
+  - {n: 56, name: DFS1, fn: i2s_out, bus: "I2S out 1"}
+  - {n: 57, name: DCLK1, fn: i2s_out, bus: "I2S out 1"}
+  - {n: 58, name: DOUT1, fn: i2s_out, bus: "I2S out 1"}
+  - {n: 59, name: DFS0, fn: i2s_out, bus: "I2S out 0"}
+  - {n: 60, name: DCLK0, fn: i2s_out, bus: "I2S out 0"}
+  - {n: 61, name: DOUT0, fn: i2s_out, bus: "I2S out 0"}
+  - {n: 62, name: DIFS4, fn: i2s_in, bus: "I2S in 4"}
+  - {n: 63, name: DICLK4, fn: i2s_in, bus: "I2S in 4"}
+  - {n: 64, name: DIN4, fn: i2s_in, bus: "I2S in 4"}
+  - {n: 65, name: DIFS3, fn: i2s_in, bus: "I2S in 3"}
+  - {n: 66, name: DICLK3, fn: i2s_in, bus: "I2S in 3"}
+  - {n: 67, name: DIN3, fn: i2s_in, bus: "I2S in 3"}
+  - {n: 68, name: DIFS2, fn: i2s_in, bus: "I2S in 2"}
+  - {n: 69, name: DICLK2, fn: i2s_in, bus: "I2S in 2"}
+  - {n: 70, name: DIN2, fn: i2s_in, bus: "I2S in 2"}
+  - {n: 71, name: DIFS1, fn: i2s_in, bus: "I2S in 1"}
+  - {n: 72, name: DICLK1, fn: i2s_in, bus: "I2S in 1"}
+  - {n: 73, name: DIN1, fn: i2s_in, bus: "I2S in 1"}
+  - {n: 74, name: GP1, fn: gpio}
+  - {n: 75, name: GP2, fn: gpio}
+  - {n: 76, name: GP0, fn: gpio}
+  - {n: 77, name: DIN0, fn: i2s_in, bus: "I2S in 0"}
+  - {n: 78, name: DICLKA, fn: i2s_in, bus: "I2S in A", note: "clock/frame-sync pair only (no DINA pin); purpose not described in this document"}
+  - {n: 79, name: DIFSA, fn: i2s_in, bus: "I2S in A", note: "clock/frame-sync pair only (no DINA pin); purpose not described in this document"}
+  - {n: 80, name: DICLK0, fn: i2s_in, bus: "I2S in 0"}
+  - {n: 81, name: DIFS0, fn: i2s_in, bus: "I2S in 0"}
+  - {n: 82, name: ICN, fn: other, note: "function not described in this document; drawn on the Digital I/F block, not on an audio ADC (analog audio inputs are AIN0P-AIN5N)"}
+  - {n: 83, name: ICP, fn: other, note: "function not described in this document; drawn on the Digital I/F block, not on an audio ADC (analog audio inputs are AIN0P-AIN5N)"}
+  - {n: 84, name: AOUT0, fn: audio_out}
+  - {n: 85, name: AOUT1, fn: audio_out}
+  - {n: 86, name: AOUT2, fn: audio_out}
+  - {n: 87, name: AOUT3, fn: audio_out}
+  - {n: 88, name: AOUT4, fn: audio_out}
+  - {n: 89, name: EPAD, fn: other, note: "exposed die attach pad (Figure 2.2 package outline, D2/E2 6.40 mm nom); unlabeled in the pinout, its connection is not stated in this document"}

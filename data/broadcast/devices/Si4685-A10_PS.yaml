@@ -1,0 +1,70 @@
+# Transcribed from Si4685-A10_PS.pdf (206768A, November 30, 2023).
+# This product summary has no pin assignment (Figure 2 is only the mechanical QFN-48 outline), so pins
+# is empty. 'signals' lists the unnumbered signal names from Figure 1, Functional Block Diagram.
+source:
+  title: "Si4685-A10 Single-Chip, AM/FM/DAB/DAB+ Radio Receiver"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/product-summaries/Si4685-A10_PS.pdf"
+  revision: "206768A, November 30, 2023"
+family: Si468x
+description: "Single-Chip, AM/FM/DAB/DAB+ Radio Receiver"
+role: receiver
+package: {type: QFN, pins: 48, body_mm: "7 x 7 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: null
+supplies:
+  - {pins: [VA], volts: "1.71 to 2.0 (1.8 typ)", note: "analog supply"}
+  - {pins: [VIO], volts: "1.62 to 3.6 (1.8 typ)", note: "interface supply"}
+  - {pins: [VCORE], volts: "1.62 to 2.0 (1.8 typ)", note: "core digital supply"}
+  - {pins: [VMEM], volts: "1.62 to 2.0 (1.8 typ)", note: "memory supply"}
+features:
+  - "Worldwide FM band support (76 to 108 MHz)"
+  - "Worldwide AM band support (520 to 1710 kHz)"
+  - "DAB, DAB+ Band III support (168 to 240 MHz)"
+  - "Advanced RDS/RBDS decoder"
+  - "Supports WorldDMB Receiver Profiles 1 and 2"
+  - "Integrated OFDM channel demodulator"
+  - "Integrated de-interleaving SRAM"
+  - "I2S digital audio out with ASRC"
+  - "Integrated 97 dB stereo audio DAC"
+  - "Concurrent I2S/L-R stereo audio out"
+  - "Full range of signal quality metrics"
+  - "Fully-integrated VCO/PLL/synthesizer"
+  - "SPI and I2C host control interfaces"
+  - "ETSI EN 300 401 and ETSI TS 102 563 compliant"
+  - "Ambient temperature -40 to 85 C"
+parts:
+  - mpn: Si4685-A10
+    tuners: 1
+    channels: null
+    analog: [AM, FM, RDS]
+    digital_decode: [DAB]
+    digital_iq: []
+    options: []
+    note: "DAB = DAB (MPEG Audio Layer 2) and DAB+ (HE-AAC v2), Band III 168 to 240 MHz. No HD Radio. No ordering guide / orderable variants in this document."
+signals:
+  - {name: LOOPP, fn: rf_in, band: AM, note: "AM loop antenna input (LNA input, block diagram)"}
+  - {name: LOOPN, fn: rf_in, band: AM, note: "AM loop antenna input (LNA input, block diagram)"}
+  - {name: RFREF, fn: rf_in, band: "FM/DAB", note: "RF reference; second LNA input alongside VHFI in block diagram, function not described"}
+  - {name: VHFI, fn: rf_in, band: "FM/DAB", note: "VHF input"}
+  - {name: VHFSW, fn: rf_aux, note: "output of VHF SW block"}
+  - {name: LOUT, fn: audio_out, note: "left DAC output"}
+  - {name: ROUT, fn: audio_out, note: "right DAC output"}
+  - {name: DCLK, fn: i2s_out, bus: "I2S out", note: "drawn as input to I2S block"}
+  - {name: DFS, fn: i2s_out, bus: "I2S out", note: "drawn as input to I2S block"}
+  - {name: DOUT, fn: i2s_out, bus: "I2S out"}
+  - {name: SCLK, fn: host, bus: "Host"}
+  - {name: SSB, fn: host, bus: "Host"}
+  - {name: MISO, fn: host, bus: "Host"}
+  - {name: MOSI, fn: host, bus: "Host"}
+  - {name: INTB, fn: interrupt}
+  - {name: RSTB, fn: reset}
+  - {name: NVSCLK, fn: flash, bus: "Flash"}
+  - {name: NVSSB, fn: flash, bus: "Flash"}
+  - {name: NVMOSI, fn: flash, bus: "Flash"}
+  - {name: NVMISO, fn: flash, bus: "Flash"}
+  - {name: XTALI, fn: xtal}
+  - {name: XTALO, fn: xtal}
+  - {name: VIO, fn: power, volts: "1.8", note: "interface supply, 1.62 to 3.6 V"}
+  - {name: VA, fn: power, volts: "1.8", note: "analog supply, 1.71 to 2.0 V"}
+  - {name: VCORE, fn: power, volts: "1.8", note: "core digital supply, 1.62 to 2.0 V"}
+  - {name: VMEM, fn: power, volts: "1.8", note: "memory supply, 1.62 to 2.0 V"}
+pins: []

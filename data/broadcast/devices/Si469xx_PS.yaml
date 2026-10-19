@@ -1,0 +1,343 @@
+source:
+  title: "Si469xx/xxC Product Summary (Si46999/Si469x1/Si469x2/Si469x3/Si469x4)"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/product-summaries/Si469xx_PS.pdf"
+  revision: "206592E, December 10, 2025"
+family: Si469xx/xxC
+description: "High-Performance Automotive Digital Radio Coprocessor for HD Radio, DAB/DAB+, DRM, and CDR"
+role: coprocessor
+package: {type: QFN, pins: 88, body_mm: "12 x 12 x 0.85", pitch_mm: 0.5, epad: true}
+aec_q100: true
+note: >-
+  Part numbers follow the ordering guide (Si469abccdddAMe): a = channels (2/3/4, 9 = software defined),
+  b = standard (1 HD Radio, 2 DAB/DAB+, 3 CDR, 4 DRM, 9 software defined), ddd = GE1 (no customer-programmable MCU)
+  or GC1 (with customer-programmable MCU). In this document the "C" (xxC / GC1) designates the customer-programmable
+  ARM Cortex-M3 MCU, not seamless blending: every Si469x1..x4 ordering-guide entry, GE1 and GC1 alike, is described
+  "with Seamless Blending". Append "R" for tape and reel. Pin VIO1/VIO0/VDIG voltages are not stated in the document.
+supplies:
+  - {pins: [VIO1], volts: null, note: "I/O supply for tuner interfaces (ZIF, tuner SPI, tuner audio I2S inputs)"}
+  - {pins: [VIO0a, VIO0b], volts: null, note: "I/O supply for host interfaces (host SPI/I2C, host I2S, flash, UART, debug)"}
+  - {pins: [VDIGa, VDIGb, VDIGc, VDIGd], volts: null, note: "core/digital supply"}
+features:
+  - "Up to four digital radio channels (2-/3-/4-channel coprocessor)"
+  - "HD Radio (Si469x1), DAB/DAB+/DMB (Si469x2), CDR (Si469x3), DRM (Si469x4), multistandard software-defined (Si46999)"
+  - "Four digital I/Q (ZIF) inputs from tuners; tuner control via two tuner SPI ports with up to five tuner select/reset lines"
+  - "Seamless linking/blending of multiple audio streams"
+  - "Digital Data Stream Interface (DDSI) for high-payload non-audio data over I2S"
+  - "Three I2S/TDM audio inputs, two I2S/TDM audio outputs"
+  - "Integrated customer-programmable ARM Cortex-M3 MCU (C parts only)"
+  - "HD Radio, DAB, DRM+ or CDR Maximal Ratio Combining (MRC) for antenna diversity via software package"
+  - "No external RAM needed"
+  - "Serial flash interface (Quad SPI supported) for application load, OTA updates, autonomous self-boot"
+  - "Two SPI/I2C host interfaces"
+  - "UART interface allows control of XM/SDARS"
+  - "Reference clock input"
+  - "Supports 744.1875 kS/s (x1/x1C), 2.048 MS/s (x2/x2C), and 192 kS/s (x4/x4C)"
+  - "88-pin 12 x 12 x 0.85 mm QFN, 0.5 mm pitch"
+  - "AEC-Q100 qualified"
+parts:
+  - mpn: Si46921A1GE1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [HD]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Two-channel HD Radio coprocessor with seamless blending"
+  - mpn: Si46921A1GC1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [HD]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Two-channel HD Radio coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46931A1GE1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [HD]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Three-channel HD Radio coprocessor with seamless blending"
+  - mpn: Si46931A1GC1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [HD]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Three-channel HD Radio coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46941A1GE1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [HD]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Four-channel HD Radio coprocessor with seamless blending"
+  - mpn: Si46941A1GC1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [HD]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Four-channel HD Radio coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46922A1GE1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [DAB, DMB]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Two-channel DAB/DAB+ coprocessor with seamless blending; DMB per the DAB features list (Si469x2/x2C)"
+  - mpn: Si46922A1GC1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [DAB, DMB]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Two-channel DAB/DAB+ coprocessor with seamless blending and customer-programmable MCU; DMB per the DAB features list (Si469x2/x2C)"
+  - mpn: Si46932A1GE1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [DAB, DMB]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Three-channel DAB/DAB+ coprocessor with seamless blending; DMB per the DAB features list (Si469x2/x2C)"
+  - mpn: Si46932A1GC1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [DAB, DMB]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Three-channel DAB/DAB+ coprocessor with seamless blending and customer-programmable MCU; DMB per the DAB features list (Si469x2/x2C)"
+  - mpn: Si46942A1GE1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [DAB, DMB]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Four-channel DAB/DAB+ coprocessor with seamless blending; DMB per the DAB features list (Si469x2/x2C)"
+  - mpn: Si46942A1GC1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [DAB, DMB]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Four-channel DAB/DAB+ coprocessor with seamless blending and customer-programmable MCU; DMB per the DAB features list (Si469x2/x2C)"
+  - mpn: Si46923A1GE1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [CDR]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Two-channel CDR coprocessor with seamless blending"
+  - mpn: Si46923A1GC1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [CDR]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Two-channel CDR coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46933A1GE1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [CDR]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Three-channel CDR coprocessor with seamless blending"
+  - mpn: Si46933A1GC1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [CDR]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Three-channel CDR coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46943A1GE1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [CDR]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Four-channel CDR coprocessor with seamless blending"
+  - mpn: Si46943A1GC1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [CDR]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Four-channel CDR coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46924A1GE1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [DRM]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Two-channel DRM coprocessor with seamless blending"
+  - mpn: Si46924A1GC1AM
+    tuners: null
+    channels: 2
+    analog: []
+    digital_decode: [DRM]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Two-channel DRM coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46934A1GE1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [DRM]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Three-channel DRM coprocessor with seamless blending"
+  - mpn: Si46934A1GC1AM
+    tuners: null
+    channels: 3
+    analog: []
+    digital_decode: [DRM]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Three-channel DRM coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46944A1GE1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [DRM]
+    digital_iq: []
+    options: ["Seamless blending"]
+    note: "Ordering guide: Four-channel DRM coprocessor with seamless blending"
+  - mpn: Si46944A1GC1AM
+    tuners: null
+    channels: 4
+    analog: []
+    digital_decode: [DRM]
+    digital_iq: []
+    options: ["Seamless blending", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: Four-channel DRM coprocessor with seamless blending and customer-programmable MCU"
+  - mpn: Si46999A1GE1AM
+    tuners: null
+    channels: null
+    analog: []
+    digital_decode: [HD, DAB, CDR, DRM]
+    digital_iq: []
+    options: ["Software-defined channel count and standard (license-defined)", "Seamless linking"]
+    note: "Ordering guide: License-Defined Coprocessor. Channels software defined (2, 3 or 4); standards selectable through software packages (HD Radio, DAB/DAB+, CDR and/or DRM). Ordering-guide description does not say 'with Seamless Blending'; seamless linking is in the multistandard features list."
+  - mpn: Si46999A1GC1AM
+    tuners: null
+    channels: null
+    analog: []
+    digital_decode: [HD, DAB, CDR, DRM]
+    digital_iq: []
+    options: ["Software-defined channel count and standard (license-defined)", "Seamless linking", "Customer-programmable MCU (GC1)"]
+    note: "Ordering guide: License-Defined Coprocessor with Customer-Programmable MCU. Channels software defined (2, 3 or 4); standards selectable through software packages."
+  - mpn: Si46999A1AC1AM
+    tuners: null
+    channels: null
+    analog: []
+    digital_decode: []
+    digital_iq: []
+    options: ["Customer-programmable MCU"]
+    note: "Ordering guide: AM/FM-only Coprocessor with Customer-Programmable MCU. Designator AC1 is not explained in the part-number key; channel count not stated; no digital standard."
+pins:
+  - {n: 1, name: "TCITO0", fn: other, bus: "Tuner SPI 0", note: "Tuner SPI 0 data, controller-in/target-out (input). Coprocessor is SPI controller to the tuners"}
+  - {n: 2, name: "TCOTI0", fn: other, bus: "Tuner SPI 0", note: "Tuner SPI 0 data, controller-out/target-in (output)"}
+  - {n: 3, name: "TSCLK0", fn: other, bus: "Tuner SPI 0", note: "Tuner SPI 0 clock (output)"}
+  - {n: 4, name: "TINTB0", fn: other, bus: "Tuner SPI 0", note: "Tuner SPI 0 interrupt input from tuner, active low"}
+  - {n: 5, name: "TTSB1", fn: other, bus: "Tuner 1 control", note: "Tuner 1 SPI target select output, active low (document does not say which tuner SPI port)"}
+  - {n: 6, name: "TRSTB1", fn: other, bus: "Tuner 1 control", note: "Tuner 1 reset output, active low"}
+  - {n: 7, name: "ZIFCLK0", fn: iq_in, bus: "ZIF I/Q 0", note: "ZIF clock input, coprocessor channel 0"}
+  - {n: 8, name: "ZIFFS0", fn: iq_in, bus: "ZIF I/Q 0", note: "ZIF frame input, channel 0"}
+  - {n: 9, name: "ZIFI0", fn: iq_in, bus: "ZIF I/Q 0", note: "ZIF I-data input, channel 0"}
+  - {n: 10, name: "ZIFQ0", fn: iq_in, bus: "ZIF I/Q 0", note: "ZIF Q-data input, channel 0"}
+  - {n: 11, name: "VIO1", fn: power, note: "I/O supply for tuner interfaces"}
+  - {n: 12, name: "ZIFCLK1", fn: iq_in, bus: "ZIF I/Q 1", note: "ZIF clock input, channel 1"}
+  - {n: 13, name: "ZIFFS1", fn: iq_in, bus: "ZIF I/Q 1", note: "ZIF frame input, channel 1"}
+  - {n: 14, name: "ZIFI1", fn: iq_in, bus: "ZIF I/Q 1", note: "ZIF I-data input, channel 1"}
+  - {n: 15, name: "ZIFQ1", fn: iq_in, bus: "ZIF I/Q 1", note: "ZIF Q-data input, channel 1"}
+  - {n: 16, name: "ZIFCLK2", fn: iq_in, bus: "ZIF I/Q 2", note: "ZIF clock input, channel 2"}
+  - {n: 17, name: "ZIFFS2", fn: iq_in, bus: "ZIF I/Q 2", note: "ZIF frame input, channel 2"}
+  - {n: 18, name: "ZIFI2", fn: iq_in, bus: "ZIF I/Q 2", note: "ZIF I-data input, channel 2"}
+  - {n: 19, name: "ZIFQ2", fn: iq_in, bus: "ZIF I/Q 2", note: "ZIF Q-data input, channel 2"}
+  - {n: 20, name: "ZIFCLK3", fn: iq_in, bus: "ZIF I/Q 3", note: "ZIF clock input, channel 3"}
+  - {n: 21, name: "ZIFFS3", fn: iq_in, bus: "ZIF I/Q 3", note: "ZIF frame input, channel 3"}
+  - {n: 22, name: "ZIFI3", fn: iq_in, bus: "ZIF I/Q 3", note: "ZIF I-data input, channel 3"}
+  - {n: 23, name: "ZIFQ3", fn: iq_in, bus: "ZIF I/Q 3", note: "ZIF Q-data input, channel 3"}
+  - {n: 24, name: "TTSB2", fn: other, bus: "Tuner 2 control", note: "Tuner 2 SPI target select output, active low"}
+  - {n: 25, name: "TRSTB2", fn: other, bus: "Tuner 2 control", note: "Tuner 2 reset output, active low"}
+  - {n: 26, name: "TTSB3", fn: other, bus: "Tuner 3 control", note: "Tuner 3 SPI target select output, active low"}
+  - {n: 27, name: "TRSTB3", fn: other, bus: "Tuner 3 control", note: "Tuner 3 reset output, active low"}
+  - {n: 28, name: "TTSB4", fn: other, bus: "Tuner 4 control", note: "Tuner 4 SPI target select output, active low"}
+  - {n: 29, name: "TRSTB4", fn: other, bus: "Tuner 4 control", note: "Tuner 4 reset output, active low"}
+  - {n: 30, name: "TCITO1", fn: other, bus: "Tuner SPI 1", note: "Tuner SPI 1 data, controller-in/target-out (input)"}
+  - {n: 31, name: "TCOTI1", fn: other, bus: "Tuner SPI 1", note: "Tuner SPI 1 data, controller-out/target-in (output)"}
+  - {n: 32, name: "TSCLK1", fn: other, bus: "Tuner SPI 1", note: "Tuner SPI 1 clock (output)"}
+  - {n: 33, name: "TINTB1", fn: other, bus: "Tuner SPI 1", note: "Tuner SPI 1 interrupt input from tuner, active low"}
+  - {n: 34, name: "VDIGc", fn: power, note: "Core/digital supply"}
+  - {n: 35, name: "VDIGd", fn: power, note: "Core/digital supply"}
+  - {n: 36, name: "DCLK0", fn: i2s_out, bus: "I2S out 0", note: "Host I2S 0 clock (I/O)"}
+  - {n: 37, name: "DFS0", fn: i2s_out, bus: "I2S out 0", note: "Host I2S 0 frame sync (I/O)"}
+  - {n: 38, name: "DOUT0", fn: i2s_out, bus: "I2S out 0", note: "Host I2S 0 data output"}
+  - {n: 39, name: "DCLK1", fn: i2s_out, bus: "I2S out 1", note: "Host I2S 1 clock (I/O)"}
+  - {n: 40, name: "DFS1", fn: i2s_out, bus: "I2S out 1", note: "Host I2S 1 frame sync (I/O)"}
+  - {n: 41, name: "DOUT1", fn: i2s_out, bus: "I2S out 1", note: "Host I2S 1 data output"}
+  - {n: 42, name: "MCLK", fn: clock_out, note: "System clock output for external I2S DAC"}
+  - {n: 43, name: "NVSCLK", fn: flash, bus: "Flash", note: "Serial flash SPI clock"}
+  - {n: 44, name: "NVTSB0", fn: flash, bus: "Flash", note: "Serial flash SPI target select 0, active low"}
+  - {n: 45, name: "NVTSB1", fn: flash, bus: "Flash", note: "Serial flash SPI target select 1, active low"}
+  - {n: 46, name: "NVDAT0", fn: flash, bus: "Flash", note: "Serial flash SPI data 0"}
+  - {n: 47, name: "NVDAT1", fn: flash, bus: "Flash", note: "Serial flash SPI data 1"}
+  - {n: 48, name: "NVDAT2", fn: flash, bus: "Flash", note: "Serial flash SPI data 2 (quad SPI)"}
+  - {n: 49, name: "NVDAT3", fn: flash, bus: "Flash", note: "Serial flash SPI data 3 (quad SPI)"}
+  - {n: 50, name: "DEBUG2", fn: debug, note: "Debug port 2"}
+  - {n: 51, name: "DEBUG1", fn: debug, note: "Debug port 1"}
+  - {n: 52, name: "DEBUG0", fn: debug, note: "Debug port 0"}
+  - {n: 53, name: "UARTTX", fn: other, bus: "UART", note: "UART transmit; UART allows control of XM/SDARS"}
+  - {n: 54, name: "UARTRX", fn: other, bus: "UART", note: "UART receive"}
+  - {n: 55, name: "SWDIO", fn: debug, bus: "SWD", note: "Serial wire debug I/O"}
+  - {n: 56, name: "SWCLK", fn: debug, bus: "SWD", note: "Serial wire debug clock"}
+  - {n: 57, name: "VIO0b", fn: power, note: "I/O supply for host interfaces"}
+  - {n: 58, name: "CITO1/A01", fn: host, bus: "Host 1", note: "Secondary host SPI (1) controller-in/target-out / I2C 1 A0 address select"}
+  - {n: 59, name: "COTI1/SDA1", fn: host, bus: "Host 1", note: "Secondary host SPI (1) controller-out/target-in / I2C 1 data"}
+  - {n: 60, name: "TSB1/A11", fn: host, bus: "Host 1", note: "Secondary host SPI (1) target select / I2C 1 A1 address select"}
+  - {n: 61, name: "SCLK1/SCL1", fn: host, bus: "Host 1", note: "Secondary host SPI (1) clock / I2C 1 clock"}
+  - {n: 62, name: "INTB1", fn: interrupt, bus: "Host 1", note: "Host interrupt 1, active low"}
+  - {n: 63, name: "INTB0", fn: interrupt, bus: "Host 0", note: "Host interrupt 0, active low"}
+  - {n: 64, name: "CITO0/A00", fn: host, bus: "Host 0", note: "Primary host SPI (0) controller-in/target-out / I2C 0 A0 address select"}
+  - {n: 65, name: "COTI0/SDA0", fn: host, bus: "Host 0", note: "Primary host SPI (0) controller-out/target-in / I2C 0 data"}
+  - {n: 66, name: "TSB0/A10", fn: host, bus: "Host 0", note: "Primary host SPI (0) target select, active low / I2C 0 A1 address select"}
+  - {n: 67, name: "SCLK0/SCL0", fn: host, bus: "Host 0", note: "Primary host SPI (0) clock / I2C 0 clock"}
+  - {n: 68, name: "SMODE", fn: mode, note: "Selects primary host port mode (0 = SPI, 1 = I2C)"}
+  - {n: 69, name: "MSDA", fn: memory, bus: "EEPROM I2C", note: "Memory data for I2C EEPROM"}
+  - {n: 70, name: "MSCL", fn: memory, bus: "EEPROM I2C", note: "Memory clock for I2C EEPROM"}
+  - {n: 71, name: "BOOT1", fn: mode, note: "Boot control 1"}
+  - {n: 72, name: "BOOT0", fn: mode, note: "Boot control 0"}
+  - {n: 73, name: "VIO0a", fn: power, note: "I/O supply for host interfaces"}
+  - {n: 74, name: "RSTB", fn: reset, note: "Host-controlled reset, active low"}
+  - {n: 75, name: "REFCLK", fn: refclk, note: "Reference clock input"}
+  - {n: 76, name: "VDIGb", fn: power, note: "Core/digital supply"}
+  - {n: 77, name: "VDIGa", fn: power, note: "Core/digital supply"}
+  - {n: 78, name: "DICLK0", fn: i2s_in, bus: "I2S in 0", note: "Tuner audio I2S 0 clock input"}
+  - {n: 79, name: "DIFS0", fn: i2s_in, bus: "I2S in 0", note: "Tuner audio I2S 0 frame sync input"}
+  - {n: 80, name: "DIN0", fn: i2s_in, bus: "I2S in 0", note: "Tuner audio I2S 0 data input"}
+  - {n: 81, name: "DICLK1", fn: i2s_in, bus: "I2S in 1", note: "Tuner audio I2S 1 clock input"}
+  - {n: 82, name: "DIFS1", fn: i2s_in, bus: "I2S in 1", note: "Tuner audio I2S 1 frame sync input"}
+  - {n: 83, name: "DIN1", fn: i2s_in, bus: "I2S in 1", note: "Tuner audio I2S 1 data input"}
+  - {n: 84, name: "DICLK2", fn: i2s_in, bus: "I2S in 2", note: "Tuner audio I2S 2 clock input"}
+  - {n: 85, name: "DIFS2", fn: i2s_in, bus: "I2S in 2", note: "Tuner audio I2S 2 frame sync input"}
+  - {n: 86, name: "DIN2", fn: i2s_in, bus: "I2S in 2", note: "Tuner audio I2S 2 data input"}
+  - {n: 87, name: "TTSB0", fn: other, bus: "Tuner 0 control", note: "Tuner 0 SPI target select output, active low"}
+  - {n: 88, name: "TRSTB0", fn: other, bus: "Tuner 0 control", note: "Tuner 0 reset output, active low"}
+  - {n: 89, name: "EPAD", fn: ground, note: "Exposed pad, not numbered in Figure 1; the land pattern (Figure 3) calls it the center ground pad"}

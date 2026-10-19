@@ -1,0 +1,44 @@
+source:
+  title: "Si47967 Data Short"
+  url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si47967-short.pdf"
+  revision: "Rev. 1.0, December 6, 2021"
+family: Si4796x
+description: "High-Performance Automotive Dual AM/FM Radio Receiver and DRM Tuner"
+role: tuner
+note: >-
+  This data short contains no pinout diagram or pin table (only a block diagram and a key-features
+  list), so `pins` is empty. Pin-capable signal names visible on the block diagram: XTALI, XTALO, CLKO,
+  DACREF, AOUT1, AOUT0, ICP, ICN, DEBUGP, DEBUGN, FMA, FMB, LTB, LTA, AMVAG, AMI, AMO, DOUT0, DCLK0, DFS0,
+  DOUT1, DCLK1, DFS1, DIFS0, DICLK0, DIN0, ZIFCLK, ZIFFS, ZIFI0, ZIFQ0, ISFSN, ISFSP, ZIFI1, ZIFQ1,
+  NVMISO, NVMOSI, NVSSB, NVSCLK, SMODE, INTB, MISO, MOSI, SCLK, SSB, GP0, GP1, GP2 (no pin numbers given,
+  supply/ground pins not shown). Use the full datasheet for pin numbers.
+package: {type: QFN, pins: 56, body_mm: "8 x 8 x 0.85", pitch_mm: null, epad: null}
+aec_q100: true   # "AEC-Q100 qualified (A-grade devices)"
+supplies:
+  - {pins: [], volts: "3.3", note: "analog power supply (pin names not given in this document)"}
+  - {pins: [], volts: "1.8", note: "digital power supply (pin names not given in this document)"}
+  - {pins: [], volts: "1.8 or 3.3", note: "digital IO power supplies (pin names not given in this document)"}
+features:
+  - "Dual worldwide FM band support (64-108 MHz)"
+  - "Dual worldwide AM band support (520-1710 kHz)"
+  - "Dual LW band support (144-288 kHz)"
+  - "Dual SW band support (2.3-30 MHz)"
+  - "On-chip RDS/RDBS"
+  - "Integrated active AM/FM buffers for background/data tuners"
+  - "Analog FM phase diversity with two tuners"
+  - "DRM30/DRM+: digital I/Q interface to DRM processor, fully integrated AGC, DRM detect"
+  - "Two analog audio outputs"
+  - "Three digital audio ports (I2S)"
+  - "QFN 56-pin, 8 x 8 x 0.85 mm"
+  - "Pb-free/RoHS compliant"
+  - "AEC-Q100 qualified (A-grade devices)"
+parts:
+  - mpn: Si47967
+    tuners: 2
+    channels: null
+    analog: [AM, FM, LW, SW, RDS]
+    digital_decode: []
+    digital_iq: [DRM]
+    options: []
+    note: "DRM30/DRM+ via digital I/Q interface to a DRM processor"
+pins: []

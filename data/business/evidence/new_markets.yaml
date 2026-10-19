@@ -1,0 +1,565 @@
+# New-market ideas: existing technologies applied to new markets (public demand signals; indicative, for discussion).
+#
+# Compiled 2026-10-19 from public web pages only (no log-in, no posting). Starting point: platforms and `could_also`
+# notes in data/business/capabilities.yaml and real product families in data/catalog/skyworks_parts.yaml and
+# qorvo_parts.yaml. Each technology lists 2-5 ideas, most promising first.
+# signals: only pages that were actually fetched and read for this file are cited. Many vendor, forum and news pages
+#   could not be read (reddit.com is off-limits to the search tool; gearspace.com, avsforum.com, qorvo.com,
+#   skyworksinc.com, fcc.gov, everythingrf.com and several others refused or timed out), so ideas that rest only on
+#   those pages have signals: [] and confidence: low. Forum posts are summarised, with no usernames or quotes.
+# fit: how closely the existing product already matches the need. confidence: how strong the public evidence is.
+# Many signals are vendor press releases or competitor products. They show that someone is targeting the market,
+#   not how big it is.
+
+wireless_audio:
+  technology: "Low-latency wireless audio SoCs (proprietary 2.4 / 5 GHz digital audio links)"
+  owner: [Skyworks]
+  products: ["SKY76303-21", "SKY76360-22", "SKY76361-32", "SKY76361-52"]
+  platform: null
+  ideas:
+    - market: "Musician and live-performance gear"
+      application: "5 GHz wireless instrument (guitar/bass) links and personal in-ear monitor packs"
+      why_fit: "SKY76303 already provides a complete 5 GHz point-to-multipoint digital audio node, and SKY7636x already gives fixed latency under 10 ms. Instrument and in-ear monitor (IEM) links need exactly this low, fixed latency."
+      needed: ["latency budget nearer 4-5 ms end-to-end", "instrument-level analog front end / ADC in a reference design", "rugged beltpack reference design", "multi-unit channel coordination for stages"]
+      signals:
+        - "Retail 5.8 GHz guitar wireless systems are sold on <5 ms latency, 24-bit audio and ~30 m range, so latency is the selling point - https://www.lamusic.com/products/nux-5-8-ghz-wireless-guitar-system-c-5rc"
+        - "Fender sells its own 5.8 GHz 'Telepath' guitar wireless system marketed on low latency - https://shop.theartsmusicstore.com/products/fender-telepath-guitar-wireless-system-5-8ghz-mystic-ice-blue-receiver-black-transmitter-0239780001"
+        - "Budget 2.4 GHz in-ear monitor sets with one transmitter and two receivers (Xvive U4) are now a retail category - https://www.boullard.ch/en/product/sound/in-ear-systems/complete-in-ear-systems/203229-xvive-u4-in-ear-monitor-wireless-system-set-r2/"
+        - "UHF TV-band spectrum for wireless microphones and IEMs keeps shrinking (US 700 MHz and 600 MHz auctions, UK 800 MHz), which pushes users to other bands and to digital systems - https://en.wikipedia.org/wiki/Wireless_microphone_licensing"
+      incumbents: ["Shure", "Sennheiser", "Xvive", "NUX", "Fender", "Line 6 (Yamaha)", "Boss (Roland)"]
+      fit: high
+      confidence: medium
+    - market: "Assistive listening in venues (churches, lecture halls, theatres, transport)"
+      application: "Low-latency broadcast audio from the venue mixer to hearing aids, earbuds and loaner receivers"
+      why_fit: "The SoCs already stream synchronised audio from one source to many receivers at low latency, which venue assistive listening needs so that lips and the room sound stay in sync."
+      needed: ["Bluetooth LE Audio / Auracast interoperability (hearing aids will not receive a proprietary link)", "transmitter-side product (mixer input, many listeners)", "accessibility-standard compliance"]
+      signals:
+        - "On a hearing-loss forum, churches swapping telecoil loops for Auracast transmitters report about 30 ms latency and some transmitters dropping back to about 250 ms until patched. Low-budget multi-site rollouts and mixed hearing-aid brands are the pain points - https://forum.hearingtracker.com/t/auracast-church-broadcast-setup/111342?page=2"
+        - "Forum staff note that Auracast latency must be low enough for use in public venues and link a measured write-up - https://forum.hearingtracker.com/t/auracast-latency/95224"
+        - "Auracast (Bluetooth LE Audio broadcast) is aimed at hearing aids and public spaces such as airports and lecture halls, and Frankfurt Airport trialled it in 2026 - https://en.wikipedia.org/wiki/Auracast"
+      incumbents: ["Listen Technologies", "Williams AV", "Sennheiser (MobileConnect)", "Avantree", "loop installers (Ampetronic, Contacta)"]
+      fit: medium
+      confidence: medium
+    - market: "Conference and simultaneous-interpretation systems"
+      application: "Delegate/interpreter wireless receivers replacing IR and analog FM tour-guide sets"
+      why_fit: "Multi-channel, synchronised, low-latency point-to-multipoint digital audio is what interpretation receivers need, both indoors and outdoors."
+      needed: ["many selectable language channels", "encryption for confidential meetings", "long battery life in a pocket receiver", "ISO 20109-related system design with partners"]
+      signals:
+        - "An interpretation-service provider describes the setup as a closed wireless system of special microphones, headsets and transmitters, and says it rents such equipment for each event - https://www.trustedtranslations.com/services/onsite-interpretation/equipment"
+      incumbents: ["Bosch (Dicentis/Integrus)", "Shure", "Sennheiser", "Williams AV", "Taiden"]
+      fit: medium
+      confidence: low
+    - market: "Automotive rear-seat / multi-zone audio"
+      application: "Low-latency wireless headphones for rear-seat screens (replacing IR analog headphones)"
+      why_fit: "Fixed low latency keeps lip-sync on rear-seat video, and multipoint links serve several passengers at once."
+      needed: ["AEC-Q100 qualification", "in-cabin coexistence with car Wi-Fi/BT", "OEM infotainment integration"]
+      signals: []
+      incumbents: ["OEM IR headphone suppliers", "Bluetooth headphone makers", "Harman", "Bose"]
+      fit: medium
+      confidence: low
+    - market: "XR / VR headsets"
+      application: "Dedicated low-latency audio link for wireless VR headsets and accessories"
+      why_fit: "Gaming-grade fixed latency matches VR, where audio delay breaks immersion."
+      needed: ["very low power", "co-design with headset SoC vendors", "coexistence with the headset's Wi-Fi video link"]
+      signals: []
+      incumbents: ["Qualcomm (Snapdragon Sound / XR)", "Realtek", "Airoha"]
+      fit: low
+      confidence: low
+
+uwb:
+  technology: "UWB transceivers / SoCs (IEEE 802.15.4z ranging and UWB radar)"
+  owner: [Qorvo]
+  products: ["DW3110", "DW3210", "DW3300Q", "QM33120W", "QM35825", "DWM3000", "QM14068"]
+  platform: uwb_soc
+  ideas:
+    - market: "Automotive in-cabin sensing"
+      application: "Child-presence detection and occupancy radar reusing digital-key UWB anchors"
+      why_fit: "The automotive DW3300Q and QM35 parts already range for digital key. The same anchors in radar mode can detect breathing, so child-presence detection (CPD) needs no extra sensor."
+      needed: ["radar firmware/algorithms certified to Euro NCAP CPD protocol", "AEC-Q100 radar-mode reference design", "Tier-1 partnerships"]
+      signals:
+        - "CEVA extended its UWB IP to radar CPD to Euro NCAP spec. It says Euro NCAP promotes CPD in ratings, CNCAP does the same and the US Hot Cars Act passed, and that reusing digital-key anchors makes CPD cheap - https://www.microwavejournal.com/articles/39768-ceva-introduces-uwb-radar-platform-for-automotive-child-presence-detection-to-meet-emerging-safety-specifications"
+      incumbents: ["NXP (Trimension)", "Infineon / TI (60 GHz radar)", "Vayyar", "CEVA (IP)"]
+      fit: high
+      confidence: medium
+    - market: "Industrial safety and intralogistics"
+      application: "Worker-vehicle proximity warning and AMR/AGV slow-down zones in warehouses and mines"
+      why_fit: "Centimetre-level two-way ranging between tags is already what the DW3000 family does, and safety zones are a ranging problem."
+      needed: ["functional-safety (SIL2) collateral", "rugged/intrinsically-safe modules for mines", "long-battery tags"]
+      signals:
+        - "A Qorvo case study (June 2026) describes a partner's UWB RTLS that lets AMRs/AGVs slow, stop or reroute near workers under SIL2 requirements instead of halting the whole site - https://www.wirelessdesignonline.com/doc/redefining-industrial-safety-and-efficiency-with-ultra-wideband-technology-0001"
+        - "Several large mining companies ran UWB proofs of concept for collision avoidance, contact tracing and asset location. A forklift maker also built a UWB pedestrian-proximity system - https://www.rfidjournal.com/mine-based-ultra-wideband-to-cut-contacts-collisions-and-track-assets"
+      incumbents: ["Redpoint Positioning", "Inpixon", "Zebra", "Sewio", "NXP"]
+      fit: high
+      confidence: medium
+    - market: "Smart home and elder care"
+      application: "Hidden presence, breathing and fall/absence-of-activity sensing"
+      why_fit: "UWB radar mode already detects micro-movement without cameras. This addresses privacy concerns in homes and care settings."
+      needed: ["standalone radar SKU and reference module", "Matter/Thread integration (pairs with QPG SoCs)", "validated fall/vital-sign algorithms"]
+      signals:
+        - "Novelda launched UWB radar modules for smart homes that sense presence through building materials and monitor respiration, aimed at elderly people living alone and at sleep monitoring - https://www.eenewseurope.com/en/uwb-radar-modules-for-smart-homes-monitor-respiration-gestures/"
+      incumbents: ["Novelda", "NXP", "Vayyar", "mmWave radar vendors (TI, Infineon)"]
+      fit: medium
+      confidence: medium
+    - market: "Professional and collegiate sports"
+      application: "Player, ball and equipment tracking tags and stadium anchors"
+      why_fit: "Sub-10 cm, high-update-rate ranging from small tags is the core DW3000 capability."
+      needed: ["high-update-rate tag firmware", "anchor infrastructure partners", "ruggedised tags in balls and pads"]
+      signals:
+        - "The NFL extended its UWB tracking contract with Zebra, which installs 22-24 UWB receivers per stadium with tags in shoulder pads and balls - https://www.rfidjournal.com/?p=198078"
+        - "KINEXON UWB tags tracked players of several teams in the NCAA basketball tournament - https://locationbusinessnews.com/kinexon-tracks-ncaa-basketball-tournament-players"
+      incumbents: ["Zebra", "KINEXON", "Catapult"]
+      fit: medium
+      confidence: medium
+
+matter_thread:
+  technology: "802.15.4 / BLE multi-protocol SoCs (Zigbee, Thread, Matter)"
+  owner: [Qorvo]
+  products: ["QPG6200L", "QPG7015M"]
+  platform: low_power_radio_soc
+  ideas:
+    - market: "Home energy management"
+      application: "Matter/Thread radios inside heat pumps, water heaters, solar inverters, home batteries and EV chargers"
+      why_fit: "QPG SoCs already run Matter over Thread. Matter 1.3/1.4 adds energy device types, so appliances can be scheduled and managed through the same smart-home stack."
+      needed: ["Matter energy-cluster certified reference stacks", "appliance-grade (105 C, long life) qualification", "partnering with appliance/inverter makers"]
+      signals:
+        - "CSA's Matter 1.4 release adds energy management for solar, batteries, heat pumps and water heaters. It cites research naming home energy management as a top reason consumers adopt smart home devices - https://csa-iot.org/newsroom/matter-1-4-enables-more-capable-smart-homes/"
+        - "A technical summary of Matter 1.4 details the new heat-pump, solar, battery and water-heater device types and the EVSE updates - https://www.cnx-software.com/2024/12/03/matter-1-4-specification-released/"
+      incumbents: ["Silicon Labs", "Nordic Semiconductor", "NXP", "Espressif", "Infineon"]
+      fit: high
+      confidence: medium
+    - market: "Home networking equipment"
+      application: "Thread border-router radios in Wi-Fi routers, mesh points and set-top boxes"
+      why_fit: "QPG7015M is already a Zigbee/Thread/BLE controller sold for gateways. Matter 1.4 now certifies home routers and access points as Thread border routers."
+      needed: ["Wi-Fi coexistence reference with Skyworks/Qorvo Wi-Fi FEMs", "operator/ISP router-vendor engagement"]
+      signals:
+        - "Matter 1.4 introduces Matter-certifiable Home Routers and Access Points to make home networks more reliable and interoperable - https://csa-iot.org/newsroom/matter-1-4-enables-more-capable-smart-homes/"
+      incumbents: ["Silicon Labs", "Nordic", "NXP", "MediaTek / Broadcom (router SoCs)"]
+      fit: medium
+      confidence: medium
+    - market: "Commercial buildings and hospitality"
+      application: "Thread/Matter room controls, lighting and sensors in hotels and offices"
+      why_fit: "Low-power mesh with multi-protocol support suits retrofit wireless room controls."
+      needed: ["commercial-scale commissioning tools", "building-management integration (BACnet)", "long product-life commitments"]
+      signals: []
+      incumbents: ["Silicon Labs", "Signify (Interact)", "Legrand", "Honeywell"]
+      fit: medium
+      confidence: low
+
+baw_filters:
+  technology: "BAW filters (high-rejection 1.5-7 GHz)"
+  owner: [Qorvo, Skyworks]
+  products: ["QPQ1903", "QPQ1298", "QPQ1041Q", "885136", "QM23240", "880273"]
+  platform: baw_filter
+  ideas:
+    - market: "Satellite direct-to-device and NTN IoT"
+      application: "L-band (n253-n255) and S-band (n256) filters for NTN-capable phones and IoT modules"
+      why_fit: "Qorvo/Skyworks BAW already rejects adjacent bands for 1.5-2.7 GHz handset bands. NTN bands sit close to terrestrial bands and need the same steep skirts."
+      needed: ["filters for n253-n256 and Skylo/Iridium L-band", "integration into NTN-ready module FEMs"]
+      signals:
+        - "Nokia's BEREC briefing lists 3GPP NTN bands at ~1.6 GHz L-band (n253-n255) and ~2 GHz S-band (n256), with Ka-band under consideration - https://www.berec.europa.eu/system/files/2024-05/2.%20Nokia.pdf"
+        - "Murata's ultra-compact NTN module received Skylo FCC/CE L-band certification for dual-mode cellular + NTN - https://www.electropages.com/2025/01/module-achieves-skylo-fcc-and-ce-l-band-certification"
+      incumbents: ["Murata", "Broadcom (FBAR)", "Akoustis", "Qualcomm RFFE"]
+      fit: high
+      confidence: medium
+    - market: "Wi-Fi 6E / 7 access points and mesh"
+      application: "5 / 6 GHz coexistence filters sold as discretes for tri-band APs and enterprise APs"
+      why_fit: "Qorvo and Skyworks already make 5-6 GHz BAW for their own Wi-Fi FEMs. Selling the filter as a discrete addresses the narrow U-NII-4/U-NII-5 guard band."
+      needed: ["discrete 5.6 / 6.6 GHz coexistence filter SKUs", "power handling for enterprise AP Tx"]
+      signals:
+        - "Akoustis won a tier-1 consumer tri-band Wi-Fi 6E AP using several 5 GHz and 6 GHz BAW coexistence filters, with high-volume orders for a 2024 ramp. This shows OEMs buy discrete coexistence filters - https://www.microwavejournal.com/articles/41247-akoustis-receives-wi-fi-6e-design-win-from-tier-1-consumer-ap-customer"
+      incumbents: ["Akoustis", "Murata", "Broadcom"]
+      fit: high
+      confidence: medium
+    - market: "Drones, robots and robotic mowers (dual-band GNSS)"
+      application: "L1/L5 pre-filters for SAW-LNA-SAW GNSS chains with cellular-interference rejection"
+      why_fit: "Qorvo already sells BAW GPS filters (880273), and dual-band receivers need a sharp L1 filter beside LTE modems."
+      needed: ["L5 (1176 MHz) filter", "tiny CSP packages for modules"]
+      signals:
+        - "u-blox's smallest L1/L5 module uses a SAW-LNA-SAW chain plus an LTE B13 notch for out-of-band jamming immunity, aimed at UAVs and trackers - https://www.cnx-software.com/2025/03/20/u-blox-dan-f10n-the-worlds-smallest-dual-band-l1-l5-gnss-module-with-an-integrated-antenna/"
+      incumbents: ["Murata", "TDK", "Taiyo Yuden"]
+      fit: medium
+      confidence: medium
+    - market: "UWB channel 9 and FR3 (7-15 GHz)"
+      application: "Discrete BAW filters for UWB channel 9 (8 GHz) and FR3 user equipment"
+      why_fit: "The capabilities file lists these as BAW `could_also`. BAW scales in frequency better than SAW."
+      needed: ["BAW resonators above 7 GHz", "co-packaging with QM35 UWB SoC"]
+      signals: []
+      incumbents: ["Murata", "Akoustis"]
+      fit: medium
+      confidence: low
+
+gan_pa:
+  technology: "GaN-on-SiC power amplifiers and transistors"
+  owner: [Qorvo]
+  products: ["QPA0106", "QPA1003P", "QPA1000", "QPA0506", "CMD262"]
+  platform: gan_on_sic
+  ideas:
+    - market: "Counter-drone (C-UAS) and civil protection jammers"
+      application: "Wideband 0.4-6 GHz high-power GaN modules for jammers covering control links and GNSS"
+      why_fit: "Qorvo's wideband GaN MMICs (QPA0106 1-6 GHz, 18 W, and QPA1003P 1-8 GHz, 10 W) are the building block of compact multi-band jammers."
+      needed: ["pallet/module-level products (100 W+)", "export-control handling", "cost-down for high-volume non-defence buyers"]
+      signals:
+        - "RFHIC markets wideband GaN amplifiers (for example 700-2,700 MHz, 100 W) for C-UAS and cites drone use in the Ukraine conflict as the driver - https://rfhic.com/product-demo/technology-gan-wideband-amplifiers-for-counter-drone-applications/"
+      incumbents: ["RFHIC", "MACOM", "Wolfspeed RF (MACOM)", "Empower RF", "local jammer makers"]
+      fit: high
+      confidence: medium
+    - market: "Semiconductor process equipment"
+      application: "Solid-state GaN RF / microwave generators for plasma etch, deposition and cleaning"
+      why_fit: "High-efficiency, stable, fast-control GaN power stages replace tubes and magnetrons in plasma sources."
+      needed: ["kW-class transistors at 2.45 GHz and 13.56/40 MHz drivers", "industrial-grade long-life qualification", "partnerships with generator OEMs"]
+      signals:
+        - "RFHIC promotes GaN solid-state RF/microwave generators for semiconductor plasma processing because they give stable, finely controllable power - https://rfhic.com/product-demo/rf-microwave-generator-driven-plasma-technology-for-semiconductor-processing/"
+      incumbents: ["MKS", "Advanced Energy", "Comet", "RFHIC", "Ampleon", "NXP"]
+      fit: medium
+      confidence: low
+    - market: "Solid-state cooking and industrial RF heating"
+      application: "2.45 GHz multi-feed solid-state ovens, drying and industrial heating"
+      why_fit: "Closed-loop, multi-antenna RF energy needs efficient 2.45 GHz PAs, which GaN provides."
+      needed: ["low-cost plastic-packaged 250-300 W parts", "appliance cost targets"]
+      signals:
+        - "The RF Energy Alliance says solid-state RF could replace magnetrons and give more even, closed-loop cooking. Ampleon and MACOM offer 250-300 W parts - https://www.eenewseurope.com/en/solid-state-rf-energy-set-to-improve-cooking-lighting/"
+      incumbents: ["Ampleon", "NXP", "MACOM"]
+      fit: medium
+      confidence: low
+
+digital_isolators:
+  technology: "Capacitive digital isolators, isolated amplifiers and isolated interfaces"
+  owner: [Skyworks]
+  products: ["Si86xx", "Si88xx", "Si87xx", "Si892x", "Si894x", "Si858x"]
+  platform: digital_isolation_capacitive
+  ideas:
+    - market: "Battery energy storage systems (BESS)"
+      application: "Reinforced isolation in 1500 V rack/BMU daisy-chain and BCU links, isolated current/voltage sensing"
+      why_fit: "Si86xx/Si88xx give reinforced isolation plus isolated power, and Si892x/Si894x measure current and voltage. A 1500 V BESS rack needs all of these."
+      needed: ["1500 V-rated reinforced parts with long creepage", "isolated CAN/daisy-chain reference designs", "battery-monitor AFE partners"]
+      signals:
+        - "TI's 1500 V BESS rack-monitor reference design uses an off-board daisy chain with reinforced isolation, showing the isolator demand per rack - https://ti.com/lit/pdf/tiduf88"
+      incumbents: ["TI", "Analog Devices", "Infineon", "NXP", "Novosense"]
+      fit: high
+      confidence: medium
+    - market: "Space (LEO constellations)"
+      application: "Radiation-tolerant plastic digital isolators replacing optocouplers and pulse transformers"
+      why_fit: "Capacitive isolators beat optocouplers on speed and channel count. Skyworks also owns a space-heritage (Isolink) channel."
+      needed: ["radiation testing (TID/SEE) and space-enhanced plastic flow", "lot traceability"]
+      signals:
+        - "TI's brief says the LEO boom is shifting space designs from ceramic to radiation-tolerant plastic, and that optocouplers have poor radiation tolerance, which it uses to position rad-tolerant isolators - https://ti.com/document-viewer/lit/html/SLLA568"
+      incumbents: ["TI", "Analog Devices", "Renesas"]
+      fit: medium
+      confidence: medium
+    - market: "Heat pumps"
+      application: "Isolation for inverter-compressor and fan drives and communication in heat pumps"
+      why_fit: "Inverter heat pumps share the motor-drive isolation needs that Si86xx/Si82xx already serve in industrial drives."
+      needed: ["appliance-grade cost points", "IEC 60335 / 60730 collateral"]
+      signals:
+        - "EHPA reports 3.02 million heat pumps sold in 21 European countries in 2023 (24 million installed), but growth slowed, so this is a large but cyclical base - https://www.ehpa.org/wp-content/uploads/2024/08/Executive-summary_EHPA-heat-pump-market-and-statistic-report-2024.pdf"
+      incumbents: ["TI", "Infineon", "onsemi", "Novosense", "optocoupler makers"]
+      fit: medium
+      confidence: low
+    - market: "Residential solar and hybrid inverters"
+      application: "Reinforced isolation in microinverters and battery-hybrid inverters"
+      why_fit: "IEC 62109 reinforced insulation at 600-800 V is a standard isolator use case."
+      needed: ["solar-specific certification collateral", "integrated isolated power"]
+      signals: []
+      incumbents: ["TI", "Analog Devices", "Broadcom"]
+      fit: medium
+      confidence: low
+
+isolated_gate_drivers:
+  technology: "Isolated gate drivers (Si82xx) for SiC/GaN/IGBT"
+  owner: [Skyworks]
+  products: ["Si823Hx", "Si829x", "Si828x", "Si827x", "Si82Ex"]
+  platform: digital_isolation_capacitive
+  ideas:
+    - market: "AI data-center 800 VDC power"
+      application: "Gate drivers for 800 V to 50 V rack converters and solid-state transformers feeding 800 VDC"
+      why_fit: "Si823Hx/Si828x already drive SiC and GaN half-bridges with high CMTI. 800 VDC racks use stacked GaN half-bridges and SiC SST stages behind galvanic isolation."
+      needed: ["GaN-optimised drivers (fast, low-skew, negative bias)", "reference designs with GaN/SiC partners", "data-center reliability data"]
+      signals:
+        - "ST's 800 V HVDC boards for NVIDIA-based racks use SiC with isolated controllers, 650 V GaN stacked half-bridges and STGAP galvanically isolated gate drivers - https://blog.st.com/800-v-hvdc-data-center/"
+      incumbents: ["ST", "Infineon", "TI", "Analog Devices", "Navitas"]
+      fit: high
+      confidence: medium
+    - market: "Bidirectional EV charging (V2H / V2G)"
+      application: "Isolated gate drivers for SiC DC wallboxes and bidirectional on-board chargers"
+      why_fit: "Bidirectional DAB/CLLC stages need many isolated SiC gate drivers, and Si829x/Si823Hx are already automotive-qualified for SiC."
+      needed: ["reference designs with charge-controller vendors", "ISO 15118-20 ecosystem partnerships (not silicon)"]
+      signals:
+        - "A home 11 kW bidirectional DC wallbox datasheet (Jan 2026) offers V2G/V2H operation - https://www.ambibox.de/dist/files_src/section_1/ambiCHARGE-11-kW-Home-BiDi-DC-Wallbox.pdf"
+        - "EcoG presented an ISO-compliant bidirectional charging solution following CharIN guidelines and plans a pre-integrated reference design - https://chargedevs.com/newswire/ecog-and-infineon-work-to-ensure-compatibility-of-bidirectional-chargers-and-evs/"
+      incumbents: ["Infineon", "TI", "ST", "onsemi"]
+      fit: high
+      confidence: medium
+    - market: "Heat-pump compressor drives"
+      application: "Gate drivers for variable-speed compressor inverters"
+      why_fit: "Si82xx drivers already serve industrial motor inverters."
+      needed: ["low-cost IGBT/IPM-friendly SKUs"]
+      signals:
+        - "European heat-pump sales were about 3 million units in 2023, but growth slowed - https://www.ehpa.org/wp-content/uploads/2024/08/Executive-summary_EHPA-heat-pump-market-and-statistic-report-2024.pdf"
+      incumbents: ["Infineon", "onsemi", "Mitsubishi (IPMs)", "TI"]
+      fit: medium
+      confidence: low
+    - market: "Electric aviation and eVTOL"
+      application: "High-reliability isolated gate drivers for propulsion inverters"
+      why_fit: "High-CMTI SiC drivers with automotive heritage could serve aerospace inverters."
+      needed: ["DO-254 / aerospace qualification support", "extended temperature"]
+      signals: []
+      incumbents: ["Infineon", "TI", "Analog Devices"]
+      fit: low
+      confidence: low
+
+timing:
+  technology: "Jitter attenuators, network synchronizers and BAW-based clocks (DSPLL / MultiSynth)"
+  owner: [Skyworks]
+  products: ["SKY63101", "SKY63102", "SKY63103", "SKY69001", "SKY69101", "Si5340", "Si5341"]
+  platform: timing_dspll_crystal
+  ideas:
+    - market: "Power-utility substations and grid"
+      application: "IEC 61850-9-3 PTP clocks and holdover for digital substations and synchrophasors"
+      why_fit: "NetSync parts already do IEEE 1588 / SyncE with holdover. The same function makes substation time resilient to GPS loss."
+      needed: ["power-profile (IEC/IEEE 61850-9-3) firmware support", "long holdover (OCXO/BAW)", "partners making substation clocks/switches"]
+      signals:
+        - "A CIGRE US paper notes utilities install a GPS clock per substation (tens to hundreds per utility). It tests GNSS-independent time distribution to survive wide-area GPS loss - https://cigre-usnc.org/wp-content/uploads/2023/10/Paper-1A-4.pdf"
+      incumbents: ["Microchip (Microsemi)", "Renesas", "Meinberg", "Tekron", "SEL"]
+      fit: medium
+      confidence: medium
+    - market: "Broadcast and pro-AV over IP"
+      application: "PTP (SMPTE ST 2059 / ST 2110) grandmasters, boundary clocks and endpoint clocks"
+      why_fit: "Low-jitter PTP-disciplined clocks are what every ST 2110 camera, audio and playout endpoint needs."
+      needed: ["ST 2059-2 profile reference software", "video-rate clock outputs (27/148.5 MHz families)"]
+      signals:
+        - "A broadcast integrator's guide says PTP is the heartbeat of ST 2110 plants and calls for redundant GNSS-locked grandmasters plus boundary clocks - https://www.keycodemedia.com/ptp-done-right-for-st-2110/"
+      incumbents: ["Renesas", "Microchip", "TI", "Meinberg", "Evertz / Telestream (systems)"]
+      fit: medium
+      confidence: medium
+    - market: "Open RAN and private 5G radio units"
+      application: "Class-C radio synchronizers and JESD204 clocking for O-RU / small-cell vendors"
+      why_fit: "SKY69xxx NetSync clocks target 5G/6G radios, and the many new O-RU makers need ready-made timing."
+      needed: ["O-RU reference clock trees", "support for smaller, non-tier-1 radio vendors"]
+      signals:
+        - "Renesas markets an integrated radio synchronizer and 74 fs JESD204B/C jitter attenuators for 4G/5G radios, showing a dedicated O-RU timing segment - https://www.renesas.com/us/en/about/press-room/renesas-expands-communication-timing-portfolio-4g5g-radio"
+        - "Skyworks' BAW-referenced SKY63101/02/03 and SKY69001/02/101 clocks drop external quartz and target 800G-1.6T optics and 5G/6G radios - https://www.electropages.com/2025/11/new-programmable-bulk-acoustic-wave-clocks-5g-6g-and-data-centre-applications"
+      incumbents: ["Renesas", "Microchip", "TI", "Analog Devices"]
+      fit: medium
+      confidence: medium
+
+broadcast_radio:
+  technology: "Broadcast radio and TV receivers (AM/FM/DAB/HD Radio/DRM tuners and demodulators)"
+  owner: [Skyworks]
+  products: ["Si468x", "Si469xx", "Si4792x", "Si4791x", "Si4730/31", "Si2151/41"]
+  platform: broadcast_radio_tv
+  ideas:
+    - market: "India automotive digital radio (DRM)"
+      application: "DRM AM+FM tuners/coprocessors for Indian line-fit car radios and retrofits"
+      why_fit: "Si4791x already supports DRM in its tuner list, and Si469xx coprocessors cover digital radio standards. India's DRM fleet is growing on line-fit radios."
+      needed: ["DRM-in-FM-band support", "cost-down single-chip for entry cars", "Emergency Warning Functionality"]
+      signals:
+        - "The DRM Consortium says about 12 million Indian passenger cars had DRM receivers by July, expected to reach 13 million by year end - https://www.radioworld.com/tech-and-gear/digital-radio/more-than-13m-cars-in-india-will-have-digital-radio-by-end-of-year"
+        - "The DRM Indian automotive group asked the government to extend DRM to the FM band and to require digital radio and emergency warning in all cars, following Europe - https://www.drm.org/?p=17971"
+      incumbents: ["NXP", "STMicroelectronics", "Frontier Silicon", "Analog Devices (legacy)"]
+      fit: high
+      confidence: medium
+    - market: "Emergency alerting and FM in phones (India, disaster-prone regions)"
+      application: "Low-cost FM/RDS receivers in phones, feature phones and public-alert receivers"
+      why_fit: "Si47xx single-chip FM/AM receivers are low-power, small and proven."
+      needed: ["phone-OEM design wins at very low price", "headphone-free (embedded) antenna support"]
+      signals:
+        - "India's MeitY advised phone makers to include and keep enabled FM receivers, citing emergencies and lower-income users - https://www.theregister.com/2023/05/11/india_mobile_phone_fm_radio/"
+      incumbents: ["MediaTek / Qualcomm (integrated FM)", "Beken", "RDA (UNISOC)"]
+      fit: medium
+      confidence: medium
+    - market: "Mobile broadcast TV (ATSC 3.0 / 5G Broadcast)"
+      application: "Tuner/demodulator for phones, tablets and in-vehicle NextGen TV"
+      why_fit: "Si21xx TV tuners and demodulators already exist, and broadcasters keep pushing for receiver chips in mobile devices."
+      needed: ["ATSC 3.0 / 5G Broadcast demodulator", "ultra-low-power mobile tuner"]
+      signals:
+        - "NAB used its 2019 show to call for broadcast receiver chips built into phones. It criticised Apple and others for not enabling them, and the push continued in later coverage - https://www.tvtechnology.com/the-wire-blog/atsc-3-0-has-energized-the-idea-of-tv-receiver-chips-in-mobile-devices"
+      incumbents: ["SiTune", "Saankhya Labs", "Sony", "MaxLinear"]
+      fit: low
+      confidence: low
+
+rf_switches_soi:
+  technology: "RF SOI switches, digital step attenuators and phase shifters"
+  owner: [Skyworks, Qorvo]
+  products: ["SKY13414-485LF", "SKY13489-001", "SKY13594-666LF", "QM11122A", "C2192", "QPC2110", "TGP2105"]
+  platform: rf_soi
+  ideas:
+    - market: "LEO satellite user terminals"
+      application: "SOI switches, attenuators and phase shifters for Ku/Ka flat-panel and fixed-beam IoT terminals"
+      why_fit: "High-volume SOI switch/DSA know-how from handsets transfers to the thousands of RF elements per phased-array terminal."
+      needed: ["Ku/Ka-band SOI phase shifters and DSAs", "tile-level reference designs with Anokiwave beamformers"]
+      signals:
+        - "PatSnap's April 2026 patent review says satellite terminals are splitting into phased-array mobility terminals and cheap fixed-antenna IoT terminals, and cost is the main pressure - https://www.patsnap.com/resources/blog/articles/satellite-internet-terminal-technology-patents-2026/"
+      incumbents: ["pSemi (Murata)", "Analog Devices", "Renesas (IDT)", "SpaceX in-house"]
+      fit: medium
+      confidence: low
+    - market: "Wi-Fi HaLow and sub-GHz industrial IoT"
+      application: "Sub-GHz FEM/switches for 802.11ah HaLow access points and modules"
+      why_fit: "Sub-GHz PAs, switches and LNAs already exist in both catalogues (for example SKY65111 ISM PA), so a HaLow FEM is a re-spin."
+      needed: ["HaLow-specific FEM (PA+LNA+switch, 850-950 MHz)", "reference with Morse Micro/Newracom"]
+      signals:
+        - "A Wi-Fi industry blog summarising an ABI Research keynote (April 2025) says Wi-Fi HaLow is ready for mainstream IoT adoption - https://7signal.com/blog/wi-fi-halow-from-abi-research-at-wi-fi-now-april-2025/"
+      incumbents: ["Morse Micro (integrated PA)", "Skyworks/Qorvo competitors: Murata, pSemi"]
+      fit: medium
+      confidence: medium
+    - market: "Hybrid cellular + satellite IoT modules"
+      application: "Antenna switching between terrestrial LTE-M/NB-IoT and NTN L/S-band paths"
+      why_fit: "Antenna switches and tuners from handsets fit modules that must share one antenna across TN and NTN bands."
+      needed: ["L/S-band NTN-qualified switch paths", "module-maker design-ins"]
+      signals:
+        - "Blues' Notecard for Skylo (2026) combines Wi-Fi, LTE-M/NB-IoT and 5G NTN satellite with pay-as-you-go fallback, an example of multi-path IoT modules - https://www.cnx-software.com/2026/03/11/blues-notecard-for-skylo-iot-module-offers-5g-ntn-satellite-nb-iot-lte-m-cellular-wifi-and-gnss-connectivity/"
+      incumbents: ["pSemi", "Murata", "Infineon"]
+      fit: medium
+      confidence: low
+
+mems_force_sensing:
+  technology: "MEMS force sensing (NextInput)"
+  owner: [Qorvo]
+  products: []
+  platform: mems_force_sensing
+  ideas:
+    - market: "Automotive interiors (solid-surface HMI)"
+      application: "Force-sensed buttons on steering wheels, touch bars, door panels and consoles"
+      why_fit: "MEMS force sensors detect a deliberate press through solid trim and reject accidental capacitive touches. Euro NCAP's 2026 push for tactile controls favours this."
+      needed: ["AEC-Q100 qualification and automotive controller/haptics partner", "decision on the business (Qorvo started a sales process in 2025)"]
+      signals:
+        - "Mobase and UltraSense put a piezo force + haptics + capacitive touch bar into production on a high-volume SUV. Force sensing cuts false triggers, and they cite Euro NCAP 2026 tactile-control rules - https://www.automotiveworld.com/news/mobase-and-ultrasense-launch-touch-bar-system/"
+        - "UltraSense force controllers ship in Genesis GV80/GV70/G80 infotainment and FAW Hongqi steering wheels - https://automotiveinteriorsworld.com/news/hmi/ultrasense-systems-provides-touchpoint-q-controller-for-genesis-and-faw-group-vehicles.html"
+        - "Euro NCAP's 2026 rules score how intuitive controls are and reward physical controls for common functions - https://www.carwow.co.uk/news/9964/euro-ncap-2026-safety-rules"
+      incumbents: ["UltraSense", "Boréas", "Aito", "TDK", "Peratech"]
+      fit: high
+      confidence: medium
+    - market: "Appliances and industrial controls"
+      application: "Sealed, wipe-clean force buttons on appliances, medical and industrial panels"
+      why_fit: "Force-through-metal/glass sensing allows seamless, washable surfaces."
+      needed: ["low-cost single-channel sensor + controller", "industrial temperature"]
+      signals: []
+      incumbents: ["UltraSense", "Microchip (capacitive)", "TE Connectivity"]
+      fit: medium
+      confidence: low
+
+mmwave_beamformers:
+  technology: "Silicon mmWave / X-band beamformer ICs (Anokiwave)"
+  owner: [Qorvo]
+  products: ["AWS-0103", "AWMF-0106", "AWMF-0210", "AWMF-0224"]
+  platform: mmwave_beamformer
+  ideas:
+    - market: "LEO/MEO satellite user terminals (SATCOM-on-the-move)"
+      application: "Ku and K/Ka-band beamformer ICs for flat-panel terminals on vehicles, ships and aircraft"
+      why_fit: "Anokiwave silicon beamformers are already in partner flat panels. Pairing them with Qorvo GaN/LNA front ends gives a full tile."
+      needed: ["higher-integration Ku/Ka tiles with Qorvo FEMs", "cost-down for consumer/enterprise volumes"]
+      signals:
+        - "Anokiwave supplies second-generation Ku and K/Ka silicon ICs for Requtech's RESA-S flat-panel terminals for SATCOM on the move over LEO/MEO/GEO - https://microwavejournal.com/articles/37849-anokiwave-and-requtech-ab-collaborate-on-satcom-on-the-move-user-terminals"
+      incumbents: ["Analog Devices", "Renesas (IDT)", "Sivers", "SpaceX in-house", "Kymeta (metamaterial)"]
+      fit: high
+      confidence: medium
+    - market: "Small-satellite X-band SAR and radar"
+      application: "X-band beamformers for electronically steered SAR panels and ground/airborne radar"
+      why_fit: "AWS-0103 is an 8.5-10.55 GHz X-band beamformer, and small-sat SAR constellations use active phased arrays in that band."
+      needed: ["radiation-tolerant variants", "T/R module partners (with Qorvo GaN)"]
+      signals:
+        - "ICEYE describes its small-satellite SAR phased-array antenna and pulse-by-pulse electronic beam steering - https://www.iceye.com/blog/beyond-the-echo-phased-array-antenna"
+      incumbents: ["in-house T/R modules", "Analog Devices", "Renesas"]
+      fit: medium
+      confidence: medium
+    - market: "mmWave fixed wireless access and repeaters"
+      application: "28/39 GHz CPE and network repeaters for dense venues and multi-dwelling units"
+      why_fit: "AWMF 24-30 GHz parts were built for 5G mmWave FWA."
+      needed: ["operator demand recovery (C-band currently favoured)"]
+      signals: []
+      incumbents: ["Qualcomm", "Analog Devices", "Renesas"]
+      fit: medium
+      confidence: low
+
+motor_control_pmic:
+  technology: "Power Application Controllers (PAC: MCU + gate drivers + power) and configurable PMICs"
+  owner: [Qorvo]
+  products: ["PAC5210QS", "PAC5223QM", "PAC52411QM", "PAC5250QF", "ACT72350", "ACT88320QI103-T"]
+  platform: pmic_configurable_power
+  ideas:
+    - market: "Battery outdoor power equipment"
+      application: "BLDC controllers for battery lawn mowers, blowers, trimmers and chainsaws"
+      why_fit: "PAC52xx already integrates MCU, gate drivers and power for cordless tools at 20-160 V, the same platform outdoor equipment uses."
+      needed: ["higher-current reference designs (40-80 V packs)", "pack-side BMS pairing"]
+      signals:
+        - "California directed CARB to phase out new gas small off-road engines (landscaping equipment), pushing the category to battery - https://www.thedrive.com/news/42744/california-is-banning-small-engines-heres-what-it-means"
+      incumbents: ["TI", "Infineon", "Renesas", "ST", "Allegro"]
+      fit: high
+      confidence: medium
+    - market: "Humanoid and service robots"
+      application: "Compact integrated BLDC drives inside joint actuators"
+      why_fit: "A single-chip MCU + drivers + power fits the tight space inside each joint, and robots need 25-30+ of them."
+      needed: ["FOC with high-resolution encoder interfaces", "functional-safety features (PAC52411 'advanced safety' is a start)", "EtherCAT/CAN-FD interfaces"]
+      signals:
+        - "Interact Analysis says joint actuators are more than 30% of a high-end humanoid's BOM, and more than 50% in basic versions, because each of dozens of degrees of freedom needs one - https://www.robotics247.com/article/report_joint_actuators_play_a_crucial_role_in_humanoid_robot_power_dexterity_and_adoption"
+      incumbents: ["TI", "Infineon", "Trinamic (ADI)", "ST", "in-house drives"]
+      fit: medium
+      confidence: medium
+    - market: "E-bikes and micro-mobility"
+      application: "Hub/mid-drive motor controllers with integrated battery-side power"
+      why_fit: "44-160 V PAC parts cover 36-48 V e-bike packs with integrated drivers."
+      needed: ["EN 15194 / UL 2849 collateral", "sensorless FOC firmware"]
+      signals: []
+      incumbents: ["TI", "Infineon", "NXP", "Chinese controller makers"]
+      fit: medium
+      confidence: low
+
+optocouplers:
+  technology: "Hermetic and radiation-tolerant optocouplers (Isolink)"
+  owner: [Skyworks]
+  products: ["OLH249", "OLS049", "OLH7000", "OLH910", "OLS500"]
+  platform: optocouplers
+  ideas:
+    - market: "NewSpace / LEO satellites"
+      application: "Lower-cost radiation-tolerant isolation for constellation buses and payloads"
+      why_fit: "The OLx radiation-tolerant hermetic line already serves space. A cheaper screened tier could reach high-volume constellations."
+      needed: ["plastic or lower-screening tier", "pairing with capacitive isolators for speed (see digital_isolators)"]
+      signals:
+        - "TI argues LEO constellations are moving from ceramic to radiation-tolerant plastic parts and that optocouplers have weak radiation tolerance, a competitive threat and an opening for a combined offer - https://ti.com/document-viewer/lit/html/SLLA568"
+      incumbents: ["Broadcom", "Micropac", "TT Electronics", "TI (isolators)"]
+      fit: medium
+      confidence: medium
+    - market: "High-temperature power modules and downhole tools"
+      application: "Optocouplers rated above 125 C for oil & gas, geothermal and dense power modules"
+      why_fit: "Hermetic packaging and photovoltaic gate drivers (OLH910) suit harsh, hot environments."
+      needed: ["175-200 C qualification", "CTR-degradation data at temperature"]
+      signals:
+        - "Sandia lists a publication on designing a high-temperature optocoupler for high-density power modules, which shows research interest - https://sandia.gov/research/publications/details/design-and-fabrication-of-high-temperature-optocoupler-for-high-density-pow-2019-09-01"
+      incumbents: ["Micropac", "Broadcom", "TT Electronics"]
+      fit: low
+      confidence: low
+
+lna:
+  technology: "Low-noise amplifiers (GaAs pHEMT / SiGe; GNSS, sub-6 GHz and microwave)"
+  owner: [Skyworks, Qorvo]
+  products: ["SKY67151-396LF", "SKY67159-396LF", "SKY65605-21", "SKY65720-11", "CMD263P3"]
+  platform: gaas_phemt
+  ideas:
+    - market: "Satellite NB-IoT / NTN asset trackers"
+      application: "L-band and S-band LNAs and FEMs for NTN-capable IoT modules and trackers"
+      why_fit: "Low-noise, low-current LNAs from GNSS and cellular lines suit the weak satellite downlink in battery trackers."
+      needed: ["n255/n256 band-tuned LNA+filter FEM", "low quiescent current"]
+      signals:
+        - "Murata's NTN module received Skylo FCC/CE L-band certification - https://www.electropages.com/2025/01/module-achieves-skylo-fcc-and-ce-l-band-certification"
+        - "Blues launched (2026) an IoT module with Skylo 5G NTN satellite fallback beside LTE-M/NB-IoT, Wi-Fi and GNSS - https://www.cnx-software.com/2026/03/11/blues-notecard-for-skylo-iot-module-offers-5g-ntn-satellite-nb-iot-lte-m-cellular-wifi-and-gnss-connectivity/"
+      incumbents: ["Qualcomm RFFE", "Murata", "Infineon", "NXP"]
+      fit: high
+      confidence: medium
+    - market: "Drones, robotic mowers and precision agriculture"
+      application: "Dual-band (L1+L5) GNSS LNA/FEMs with high jamming immunity"
+      why_fit: "SKY65605/SKY657xx GNSS LNAs and pre-filter FEMs already exist for L1. Adding L5 serves high-accuracy robots and drones."
+      needed: ["L1+L5 dual-band FEM", "high out-of-band linearity next to LTE/Wi-Fi"]
+      signals:
+        - "Quectel explains L1+L5 dual-band GNSS is becoming the choice for high-performance uses, giving better accuracy and multipath robustness - https://www.quectel.com/blog/what-is-dual-band-gnss/"
+        - "u-blox's DAN-F10N L1/L5 module (2025) uses a SAW-LNA-SAW front end for jamming immunity, aimed at consumer UAVs and trackers - https://www.cnx-software.com/2025/03/20/u-blox-dan-f10n-the-worlds-smallest-dual-band-l1-l5-gnss-module-with-an-integrated-antenna/"
+      incumbents: ["Infineon", "Murata", "Maxim/ADI", "Taoglas (modules)"]
+      fit: high
+      confidence: medium
+    - market: "Amateur radio astronomy and SDR"
+      application: "Filtered 1420 MHz hydrogen-line LNA modules for hobby telescopes"
+      why_fit: "Sub-1 dB-NF LNAs (SKY67151) are exactly what hobby hydrogen-line front ends use."
+      needed: ["distributor/eval-board channel only (no custom silicon)"]
+      signals:
+        - "A hobbyist project log builds a dish radio telescope around a SAW-filtered 1420 MHz LNA module and an RTL-SDR - https://HackaDay.io/project/195777/log/229223"
+      incumbents: ["Nooelec (modules)", "Mini-Circuits", "Qorvo/Skyworks already via modules"]
+      fit: medium
+      confidence: low

@@ -21,7 +21,8 @@
       {% if i.needed %}<p><b>Would need:</b> {{ i.needed|join('; ') }}</p>{% endif %}
       {% if i.incumbents %}<p><b>Serving it today:</b> {{ i.incumbents|join(', ') }}</p>{% endif %}
       {% if i.signals %}<details><summary class="small">{{ i.signals|length }} public signal{{ 's' if i.signals|length != 1 }}</summary><ul class="small">{% for sg in i.signals %}
-        {% set url = (sg|string).split('(')[-1].rstrip(')') if 'http' in sg else '' %}<li>{{ sg.split(' (http')[0] if url else sg }}{% if url.startswith('http') %} <a href="{{ url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}</ul></details>
+        {% set sg = sg|string %}{% set i_http = sg.find('http') %}{% set url = sg[i_http:].split(' ')[0].rstrip(').,;') if i_http >= 0 else '' %}
+        <li>{{ sg[:i_http].rstrip(' -–(') if url else sg }}{% if url %} <a href="{{ url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}</ul></details>
       {% else %}<p class="small muted">No public signal found yet.</p>{% endif %}
     </article>
   {% endfor %}

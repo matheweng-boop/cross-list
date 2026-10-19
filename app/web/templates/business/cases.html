@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Case analysis – Business opportunity – Cross List{% endblock %}
+{% from "business/_common.html" import about %}
 {% block content %}
 <h1>Case analysis</h1>
 <p class="subtitle muted">One case per product idea: collect the inputs and features, hand the generated brief to an AI assistant for a market analysis
   (where the market is heading, what a new part could gain), paste the result back and discuss the upsides and risks here.</p>
+{{ about('cases') }}
 <form method="get" action="/business/cases/new" class="bo-anchor">
   <label>New case for <select name="fn"><option value="">a free topic (no function)</option>
     {% for k, flabel in fn_choices %}<option value="{{ k }}">{{ flabel }}</option>{% endfor %}</select></label>

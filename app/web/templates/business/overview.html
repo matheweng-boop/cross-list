@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, company_switch, crowd, glossary %}
+{% from "business/_common.html" import pct, company_switch, crowd, glossary, about, term %}
 {% block title %}Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Business opportunity</h1>
@@ -7,10 +7,11 @@
   sold next to an existing design-in, and which missing functions would open the most opportunity across all applications.
   Count-based results work today; revenue figures appear as ASPs and volumes are added, always with their completeness.</p>
 {{ company_switch('/business', co, companies) }}
+{{ about('overview') }}
 <div class="bo-tiles">
-  <div class="bo-tile"><b>{{ pct(ov.metrics.coverage) }}</b><span>functional coverage, all positions</span><small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope design-in positions</small></div>
-  <div class="bo-tile"><b>{{ pct(ov.avg_coverage) }}</b><span>average per application</span><small>{{ ov.apps }} applications</small></div>
-  <div class="bo-tile"><b>{{ ov.gap_functions }}</b><span>functions with gaps</span><small>gap or competitor-only somewhere</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.metrics.coverage) }}</b><span>{{ term('coverage', 'functional coverage') }}, all sockets</span><small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope sockets have one of our parts</small></div>
+  <div class="bo-tile"><b>{{ pct(ov.avg_coverage) }}</b><span>average coverage per application</span><small>{{ ov.apps }} {{ term('application', 'applications') }}: {{ apps|rejectattr('background')|list|length }} in the library + {{ apps|selectattr('background')|list|length }} {{ term('background', 'background') }}</small></div>
+  <div class="bo-tile"><b>{{ ov.gap_functions }}</b><span>{{ term('function', 'functions') }} with gaps</span><small>no part of ours in at least one application (gap or competitor only)</small></div>
   <div class="bo-tile"><b>{{ pct(ov.asp_known / ov.asp_needed if ov.asp_needed else none) }}</b><span>pricing completeness</span><small>ASP known for {{ ov.asp_known }} of {{ ov.asp_needed }} functions · volume for {{ ov.vol_known }} of {{ ov.apps }} applications</small></div>
 </div>
 
@@ -24,12 +25,12 @@
 </ol>
 
 <h2>Top gaps <span class="small muted">· missing functions needed by the most applications</span></h2>
-{{ glossary(co_label) }}
 <div class="table-wrap"><table class="striped">
-  <thead><tr><th>Missing function</th><th>Needed in</th><th>Door opener<br><small class="muted">already use one of our parts</small></th><th>Sockets</th><th>Competition</th></tr></thead>
+  <thead><tr><th>Missing function</th><th>Needed in</th><th>{{ term('door_opener', 'Door opener') }}<br><small class="muted">already use one of our parts</small></th><th>{{ term('socket', 'Sockets') }}</th><th>{{ term('competition', 'Competition') }}</th></tr></thead>
   <tbody>{% for e in top_gaps %}<tr><td><a href="/business/gaps?co={{ co }}#fn-{{ e.fn }}">{{ e.label }}</a></td>
     <td>{{ e.reach }} of {{ ov.apps }} applications</td><td>{{ e.adjacent }} of those {{ e.reach }}</td><td>{{ e.positions }}</td>
-    <td>{{ crowd(e.competition, crowding_label) }}</td></tr>{% endfor %}</tbody>
+    <td>{{ crowd(e.competition, crowding_label) }}</td></tr>
+    <tr class="bo-words-row"><td colspan="5" class="bo-words">Read as: {{ e.label }} appears in {{ e.reach }} of {{ ov.apps }} application diagrams ({{ e.positions }} sockets); {{ e.adjacent }} of those {{ e.reach }} already use at least one of our parts{% if e.competition %}; {{ e.competition.vendors|length }} established suppliers sell it{% endif %}.</td></tr>{% endfor %}</tbody>
 </table></div>
 <p class="small">Open <a href="/business/gaps?co={{ co }}">Gaps &amp; ranking</a> for the applications behind each number.</p>
 <p class="small muted">Modeled from the application diagrams; not observed sales attach rates or verified market share.</p>

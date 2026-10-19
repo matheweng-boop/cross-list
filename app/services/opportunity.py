@@ -303,6 +303,31 @@ def competition() -> dict[str, dict]:
     return (yaml.safe_load(_COMPETITION.read_text()) if _COMPETITION.exists() else None) or {}
 
 
+@lru_cache
+def explanations() -> dict:
+    """Terms and "About this page" texts for the Business opportunity pages (data/business/explanations.yaml)."""
+    path = _COMPETITION.parent / "explanations.yaml"
+    return (yaml.safe_load(path.read_text()) if path.exists() else None) or {"terms": {}, "pages": {}}
+
+
+def sources(apps: list[Application]) -> dict:
+    """Where the numbers come from, counted live: diagrams per source vendor, catalogue sizes, data files."""
+    vendors: Counter = Counter()
+    for t in [*blocks.templates(), *blocks.background_templates()]:
+        m = re.search(r"\((?:[^()]*\b)?(TI|NXP|Qualcomm|MediaTek|Skyworks|Microchip)\b[^()]*\)\s*$", t.get("name", ""))
+        vendors[m.group(1) if m else "Cross List"] += 1
+    rows = blocks.catalog_rows()
+    return {
+        "library": sum(not a.background for a in apps),
+        "background": sum(a.background for a in apps),
+        "vendors": vendors.most_common(),
+        "catalogue": Counter(r["manufacturer"] for r in rows),
+        "functions": len(blocks.catalogue()["functions"]),
+        "competition": len(competition()),
+        "technology": len(technology()),
+    }
+
+
 # ---- markets: one function across end markets ------------------------------------------------------------
 def is_auto_part(c: dict) -> bool:
     return (c.get("values") or {}).get("qualification") == "automotive"

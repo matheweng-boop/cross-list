@@ -1,0 +1,179 @@
+# Explanations for the Business opportunity pages: terms (tooltips + the How it works page) and one "About this page"
+# panel per page. Plain words; every number on the pages should be explainable from here.
+
+terms:
+  application:
+    term: Application
+    short: One end system drawn as a block diagram (e.g. an EV on-board charger, a Wi-Fi access point).
+    long: >-
+      One end system drawn as a block diagram from public reference material (TI, NXP, Qualcomm, MediaTek, Skyworks and
+      others). Each diagram lists the chips (functions) the system needs. Library applications are shown in Block
+      diagrams; background applications are used only for statistics.
+  background:
+    term: Background diagram
+    short: A diagram used only for statistics; not shown in the library because it fits the portfolio poorly.
+    long: >-
+      A block diagram that does not fit the Skyworks / Qorvo portfolio well enough to show in the library (fewer than 3
+      functions with our parts, or under 30% of its positions covered). It still counts in occurrence, attach and
+      Technology fit, so new-product ideas see the whole market, not only systems we already sell into.
+  function:
+    term: Function
+    short: A normalized chip type, e.g. "PoL LDO" or "Wi-Fi front-end module", regardless of vendor or part number.
+    long: >-
+      A normalized chip type such as "PoL LDO", "Digital isolator" or "Wi-Fi front-end module". Different vendors'
+      diagrams use different words; each block is mapped to one function so applications can be compared.
+  socket:
+    term: Socket (design-in position)
+    short: One place on the board a function fills. A diagram with two LDOs has two LDO sockets.
+    long: >-
+      One place on the board that a function fills. Quantities count: a diagram with two LDOs has two LDO sockets. Two
+      alternative parts for the same place count once (we count positions, never part numbers).
+  status:
+    term: Status of a socket
+    short: Portfolio, Gap, Competitor only, or Not our product type.
+    long: >-
+      Portfolio = a Skyworks or Qorvo part exists for the function in Cross List (a candidate, not yet checked against
+      the application's specs). Gap = needed, but no company in Cross List has a part. Competitor only = only other
+      companies have parts in Cross List. Not our product type = processors, MCUs, memory, sensors, antennas and other
+      chips Skyworks / Qorvo do not make; left out of coverage.
+  coverage:
+    term: Coverage
+    short: Sockets with one of our parts ÷ all sockets except "Not our product type".
+    long: >-
+      Sockets with a Skyworks / Qorvo part divided by the in-scope sockets (Portfolio + Gap + Competitor only).
+      "Not our product type" is excluded so that processors and memory do not pull the number down.
+  door_opener:
+    term: Door opener (portfolio anchor)
+    short: An application that already contains at least one of our parts, so we already talk to its designers.
+    long: >-
+      For a missing function: of the applications that need it, how many already contain at least one Skyworks / Qorvo
+      part elsewhere in the diagram. There we already have a design-in conversation, so a new product is easier to
+      place. 29/29 means every application that needs it already has one of our parts.
+  attach:
+    term: Attach
+    short: Which other functions sit in the same applications as a product we sell.
+    long: >-
+      Starting from one of our products, the other functions that appear in the same applications, and how often.
+      Modeled from the diagrams: it says "appears together", not "was bought together" (no sales data is used).
+  competition:
+    term: Competition
+    short: Number of established suppliers from public catalogues (indicative, not market share).
+    long: >-
+      Established suppliers of the function, from general public knowledge of vendor catalogues; Skyworks and Qorvo are
+      not counted. Few suppliers = up to 3, Several = 4-7, Crowded = 8 or more. Indicative only: not market share, and
+      it does not say how big each supplier is.
+  proximity:
+    term: Technology proximity
+    short: How close a function is to technology Skyworks / Qorvo already have (Same, Adjacent, Distant, Unrelated).
+    long: >-
+      Same technology (3) = a new variant of a product line already in production. Adjacent (2) = shared process or
+      design know-how, new blocks needed. Distant (1) = some shared capability, mostly new. Unrelated (0) = a different
+      core technology (leading-edge digital, memory, image sensors). An indicative reading of the public portfolios,
+      for discussion, not a roadmap.
+  tech_score:
+    term: Technology fit score
+    short: Share of applications using it × technology weight × competition weight.
+    long: >-
+      Share of all applications that use the function × technology weight (Same 1.0, Adjacent 0.6, Distant 0.3,
+      Unrelated 0.1) × competition weight (Few 1.0, Several 0.9, Crowded 0.75). Door openers are not in the score: this
+      ranking is about how often something appears and how easy it is for us to build.
+  market:
+    term: Market
+    short: The end market of an application. Automotive = vehicle systems, whatever their library category.
+    long: >-
+      The library category of an application, except that vehicle systems (on-board charger, traction inverter,
+      telematics, radar…) count as Automotive. Used by the Markets page.
+  requalify:
+    term: Qualify for automotive
+    short: Automotive applications need it, we have parts, but none is automotive grade.
+    long: >-
+      A function automotive applications need, where we have parts but none is marked automotive (AEC-Q100) in the
+      public catalogue: an existing industrial / commercial part might be qualified instead of designing a new one.
+      Qorvo's website rarely states the grade, so check Qorvo entries before acting.
+  asp_tam:
+    term: ASP and TAM
+    short: Entered by you; never estimated. TAM = volume × sockets × ASP.
+    long: >-
+      ASP (average selling price per device) and annual volume per application are inputs on the TAM data page. Nothing
+      is estimated: revenue figures use only priced sockets and always show how complete the pricing is.
+
+pages:
+  overview:
+    question: Where do we stand across all applications, and which missing functions matter most?
+    read:
+      - Tiles are totals over all applications (library + background) for the portfolio chosen above.
+      - The pipeline shows which analysis steps are done and which still need data.
+      - Top gaps = missing functions needed by the most applications; open Gaps & ranking for the applications behind each number.
+    data:
+      - Applications and sockets come from the block-diagram files (public reference designs).
+      - Our parts come from Cross List (catalogue of Skyworks / Qorvo public product pages + parts with full parameters).
+    limits:
+      - A "Portfolio" socket means a candidate part exists, not that it meets the application's specs.
+      - Without ASPs and volumes every socket weighs the same; a cheap commodity looks as big as a high-value part.
+  applications:
+    question: How much of each application can we fill today?
+    read:
+      - Coverage bar = sockets with our part ÷ in-scope sockets of that application.
+      - Click an application for its blocks, statuses and a simulator to try other statuses, quantities and ASPs.
+    data:
+      - Library applications only (background diagrams are not listed here).
+    limits:
+      - Coverage counts sockets, not money. Use ASPs on the application page to see content per system.
+  markets:
+    question: Which functions are needed in several end markets, and which industrial parts could move to automotive?
+    read:
+      - A number in a market column = applications in that market that need the function; click it to list them.
+      - '"Our parts / of them automotive" = our parts for the function and how many are automotive grade.'
+      - '"Industrial part → qualify for automotive" = automotive needs it, we have parts, none is automotive grade.'
+    data:
+      - Automotive grade from the public catalogue (Skyworks states it for most parts; Qorvo rarely does).
+    limits:
+      - Qorvo parts shown without automotive grade may still be qualified.
+  attach:
+    question: When we sell product X, what else is needed in the same systems?
+    read:
+      - Pick one of our products; the table lists the other functions in the same applications.
+      - '"How often" = in how many of those applications the function also appears.'
+      - Blue (Portfolio) = cross-sell an existing part; amber (Gap / Competitor only) = a new product would be needed.
+    data:
+      - All diagrams, library and background.
+    limits:
+      - Modeled co-occurrence from diagrams, not observed sales attach rates.
+  gaps:
+    question: Which missing functions would open the most opportunity, and how hard is the market?
+    read:
+      - Needed in = applications whose diagram contains the function.
+      - Door opener = of those, how many already contain one of our parts.
+      - Sockets = places on the board, quantities summed.
+      - Competition = established suppliers (hover for names). Click a row for the applications and who sells it.
+    data:
+      - All diagrams (library + background); competition from data/business/competition.yaml (public knowledge).
+    limits:
+      - No market share or prices in the ranking unless you enter ASPs and volumes.
+      - One row = one function; a function may need several product variants.
+  technology:
+    question: Which frequent functions could we develop most easily with technology we already have?
+    read:
+      - Ranked by score = share of applications × technology weight × competition weight; each row shows the calculation.
+      - The grey line under a function is the reasoning for its technology rating.
+      - Filters show only developable functions, low-attach functions, or chips we do not make (SoCs, MCUs, memory).
+    data:
+      - All diagrams (library + background); technology ratings from data/business/technology.yaml (public knowledge).
+    limits:
+      - Technology ratings are indicative and for discussion; "Same technology" gaps may be catalogue mapping gaps.
+  cases:
+    question: Is a specific new part worth designing?
+    read:
+      - One case per product idea. Fill in the inputs, copy the brief into an AI assistant, paste its answer back and discuss.
+    data:
+      - The brief adds what Cross List knows about the function (occurrence, door openers, competition, technology fit).
+    limits:
+      - Cross List sends nothing to outside services; the AI's answer is only as good as its cited sources.
+  data:
+    question: What commercial inputs are known?
+    read:
+      - Enter an ASP per function and a yearly volume per application; leave unknown values empty.
+    data:
+      - Your inputs only; stored in the Cross List database.
+    limits:
+      - Missing values are never estimated, so TAM covers only what is entered.

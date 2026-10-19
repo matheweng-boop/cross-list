@@ -16,6 +16,7 @@ from app.web.routes import templates
 
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
+templates.env.globals["bo_help"] = op.explanations
 _CROWD = {"low": 0, "medium": 1, "high": 2}
 
 
@@ -118,6 +119,14 @@ def technology(request: Request, co: str = "combined", view: str = "all", sessio
     c.update(prox_label=op.PROXIMITY_LABEL, prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT,
              n_background=sum(a.background for a in c["apps"]))  # fmt: skip
     return templates.TemplateResponse(request, "business/technology.html", c)
+
+
+@router.get("/business/method", response_class=HTMLResponse)
+def method(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    c.update(src=op.sources(c["apps"]), help=op.explanations(), prox_label=op.PROXIMITY_LABEL,
+             prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT)  # fmt: skip
+    return templates.TemplateResponse(request, "business/method.html", c)
 
 
 @router.get("/business/data", response_class=HTMLResponse)

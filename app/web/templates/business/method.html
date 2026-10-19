@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import pct %}
+{% block title %}How it works – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>How the business analysis works</h1>
+<p class="subtitle muted">A reference for every page in Business opportunity: what the words mean, how each number is calculated, where the data comes
+  from and what it cannot tell you. The counts below are live.</p>
+
+<nav class="bo-toc small"><a href="#idea">The idea</a> · <a href="#terms">Definitions</a> · <a href="#formulas">Formulas</a> · <a href="#sources">Data sources</a> · <a href="#pages">Pages</a> · <a href="#limits">Limits</a></nav>
+
+<h2 id="idea">The idea in five steps</h2>
+<ol class="bo-steps">
+  <li><b>Collect systems.</b> Public block diagrams of end systems (applications) from TI, NXP, Qualcomm, MediaTek, Skyworks and others.</li>
+  <li><b>Normalize.</b> Every block becomes a function (a chip type) with a quantity: a socket on the board.</li>
+  <li><b>Match.</b> For each socket: do Skyworks / Qorvo have a part (Portfolio), nobody (Gap), only competitors (Competitor only), or is it a chip we do not make (Not our product type)?</li>
+  <li><b>Count.</b> Coverage per application; how often each missing function appears; whether those applications already use our parts (door openers); how crowded the market is; how close it is to our technology.</li>
+  <li><b>Decide.</b> Rankings point at candidates; a Case analysis collects the facts and an AI market analysis for one candidate.</li>
+</ol>
+
+<h2 id="terms">Definitions</h2>
+<dl class="bo-defs">{% for k, t in help.terms.items() %}<dt id="t-{{ k }}">{{ t.term }}</dt><dd>{{ t.long }}</dd>{% endfor %}</dl>
+
+<h2 id="formulas">Formulas</h2>
+<table class="bo-formulas small"><tbody>
+  <tr><th>Coverage</th><td>sockets with our part ÷ (Portfolio + Gap + Competitor-only sockets)</td><td class="muted">"Not our product type" excluded</td></tr>
+  <tr><th>Needed in</th><td>number of applications whose diagram contains the function</td><td class="muted">each application counts once</td></tr>
+  <tr><th>Door opener share</th><td>applications needing the function that already contain one of our parts ÷ applications needing it</td><td class="muted"></td></tr>
+  <tr><th>Sockets</th><td>Σ quantity of the function over the applications</td><td class="muted">2 LDOs in one diagram = 2</td></tr>
+  <tr><th>Attach "how often"</th><td>applications containing both our product and the function ÷ applications containing our product</td><td class="muted">co-occurrence, not sales</td></tr>
+  <tr><th>Technology fit score</th><td>(applications using it ÷ all applications) × technology weight × competition weight</td>
+    <td class="muted">technology {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}; competition {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
+  <tr><th>Content per system</th><td>Σ quantity × ASP over priced sockets; our share = priced sockets with our part ÷ all priced sockets</td><td class="muted">only where ASPs are entered</td></tr>
+  <tr><th>TAM per year</th><td>Σ over applications of annual volume × sockets × ASP</td><td class="muted">only where both are entered</td></tr>
+</tbody></table>
+
+<h2 id="sources">Data sources (live)</h2>
+<div class="table-wrap"><table class="striped small"><tbody>
+  <tr><th>Applications</th><td><b>{{ src.library }}</b> in the library + <b>{{ src.background }}</b> background diagrams. By source: {% for v, n in src.vendors %}{{ v }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</td>
+    <td class="muted">data/blocks/templates.yaml, background_templates.yaml; research notes in data/blocks/research/</td></tr>
+  <tr><th>Functions</th><td>{{ src.functions }} normalized chip types</td><td class="muted">data/blocks/functions.yaml</td></tr>
+  <tr><th>Our parts</th><td>{% for m, n in src.catalogue|dictsort %}{{ m }} {{ '{:,}'.format(n) }} catalogue parts{{ ', ' if not loop.last }}{% endfor %}, plus Cross List families with full parameters</td>
+    <td class="muted">public product pages (data/catalog/); automotive grade as stated there</td></tr>
+  <tr><th>Competition</th><td>{{ src.competition }} functions assessed</td><td class="muted">data/business/competition.yaml · public catalogue knowledge, indicative</td></tr>
+  <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">data/business/technology.yaml · public portfolio knowledge, indicative</td></tr>
+  <tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered</td><td class="muted"><a href="/business/data">TAM data</a> · your inputs only</td></tr>
+</tbody></table></div>
+
+<h2 id="pages">What each page answers</h2>
+<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'gaps': 'Gaps & ranking', 'technology': 'Technology fit', 'cases': 'Case analysis', 'data': 'TAM data'}[k] }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
+
+<h2 id="limits">What the analysis cannot tell you</h2>
+<ul class="small">
+  <li><b>Specs are not checked.</b> "Portfolio" means a candidate part exists for the function, not that it meets the application's voltage, current, band or qualification.</li>
+  <li><b>No sales data.</b> Attach and door openers are modeled from diagrams; they are not purchase records or market share.</li>
+  <li><b>The sample shapes the result.</b> The numbers describe the diagrams collected, not the whole market; an area with many diagrams (e.g. RF) weighs more.</li>
+  <li><b>Indicative ratings.</b> Competition and technology proximity are readings of public information for discussion, not a roadmap or a market study.</li>
+  <li><b>Catalogue mapping.</b> A part we sell that is not mapped to the right function shows up as a gap; "Same technology" gaps are worth checking first.</li>
+  <li><b>No money without inputs.</b> Every socket weighs the same until ASPs and volumes are entered.</li>
+</ul>
+{% endblock %}

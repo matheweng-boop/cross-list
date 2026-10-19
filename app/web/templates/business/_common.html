@@ -23,3 +23,17 @@
   </dl>
 </details>
 {% endmacro %}
+{% macro term(key, text=none) %}{% set t = bo_help().terms.get(key) %}<span class="bo-term" tabindex="0" title="{{ t.short if t else '' }}">{{ text or (t.term if t else key) }}</span>{% endmacro %}
+{% macro about(page) %}{% set p = bo_help().pages.get(page) %}{% if p %}
+<details class="bo-about" data-about="{{ page }}" open>
+  <summary><b>About this page</b> <span class="muted">· {{ p.question }}</span></summary>
+  <div class="bo-about-body small">
+    <div><b>How to read it</b><ul>{% for x in p.read %}<li>{{ x }}</li>{% endfor %}</ul></div>
+    <div><b>Where the numbers come from</b><ul>{% for x in p.data %}<li>{{ x }}</li>{% endfor %}</ul></div>
+    <div><b>Watch out</b><ul>{% for x in p.limits %}<li>{{ x }}</li>{% endfor %}</ul></div>
+  </div>
+  <p class="small muted bo-about-foot">All definitions, formulas and data sources: <a href="/business/method">How it works</a>.</p>
+</details>
+<script>(() => { const d = document.querySelector('[data-about="{{ page }}"]'), k = "bo-about-{{ page }}";
+  try { if (localStorage.getItem(k) === "closed") d.open = false; d.addEventListener("toggle", () => { try { localStorage.setItem(k, d.open ? "open" : "closed"); } catch (e) {} }); } catch (e) {} })();</script>
+{% endif %}{% endmacro %}

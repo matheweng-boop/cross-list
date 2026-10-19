@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch %}
+{% from "business/_common.html" import company_switch, about %}
 {% block title %}TAM data – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>TAM data</h1>
 <p class="subtitle muted">Commercial inputs. Leave a field empty when the value is unknown: missing values are never estimated, and every
   revenue figure says how much of it is priced. TAM per function = Σ over applications of annual volume × quantity per system × ASP
   (alternative parts for one position count once).</p>
+{{ about('data') }}
 {% if request.query_params.get('saved') %}<p class="uc-ok">Saved.</p>{% endif %}
 <form method="post" action="/business/data">
   <input type="hidden" name="co" value="{{ co }}">

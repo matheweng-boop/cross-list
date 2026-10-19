@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, usd, company_switch, status_chip, crowd, glossary %}
+{% from "business/_common.html" import pct, usd, company_switch, status_chip, crowd, about, term %}
 {% block title %}Gaps & ranking – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Gaps &amp; ranking</h1>
 <p class="subtitle muted">Functions {{ co_label }} has no part for, in at least one application. Click a row to see the applications, how many
   sockets each has and which of our parts it already uses.</p>
 {{ company_switch('/business/gaps', co, companies, '&sort=' ~ sort) }}
-{{ glossary(co_label) }}
+{{ about('gaps') }}
 <div class="chip-row"><span class="chip-lbl">Sort by</span>
   {% for k, label in [('reach', 'Needed in most applications'), ('adjacency', 'Most door openers'), ('positions', 'Most sockets'), ('crowding', 'Least crowded'), ('tam', 'TAM')] %}
   <a class="fchip{{ ' on' if sort == k }}" href="/business/gaps?co={{ co }}&sort={{ k }}">{{ label }}</a>{% endfor %}
 </div>
 <div class="bo-gap-list">
-  <div class="bo-gap-head small"><span>Missing function</span><span>Needed in</span><span>Door opener</span><span>Sockets</span><span>Competition</span><span>TAM / year</span></div>
+  <div class="bo-gap-head small"><span>Missing function</span><span>Needed in</span><span>{{ term('door_opener', 'Door opener') }}</span><span>{{ term('socket', 'Sockets') }}</span><span>{{ term('competition', 'Competition') }}</span><span>{{ term('asp_tam', 'TAM / year') }}</span></div>
   {% for e in rows %}
   <details class="bo-gap" id="fn-{{ e.fn }}">
     <summary><span><b>{{ e.label }}</b> {{ status_chip(e.status, status_label) }}</span>
@@ -22,6 +22,7 @@
       <span>{{ crowd(e.competition, crowding_label) }}</span>
       <span class="small">{% if e.tam_apps %}{{ usd(e.tam) }}{% else %}<span class="muted">no data</span>{% endif %}</span></summary>
     <div class="bo-gap-body">
+      <p class="bo-words">Read as: {{ e.label }} is in {{ e.reach }} of the {{ apps|length }} application diagrams ({{ e.positions }} sockets in total). {{ e.adjacent }} of those {{ e.reach }} already contain one of our parts{% if e.adjacent == e.reach %}, so every one of them is a door opener{% elif e.adjacent == 0 %}, so we have no door opener yet{% endif %}. Status: {{ status_label[e.status] }} – {{ bo_status_help[e.status] }}</p>
       {% if e.competition %}<p class="small"><b>Who sells it:</b> {{ e.competition.vendors|join(', ') }}{% if e.competition.note %}<br><span class="muted">{{ e.competition.note }}</span>{% endif %}</p>{% endif %}
       <table class="bo-mini"><thead><tr><th>Application</th><th>Market</th><th>Sockets</th><th>Already uses our</th></tr></thead><tbody>
       {% for r in e.rows|sort(attribute='name') %}<tr><td><a href="/business/applications/{{ r.i }}?co={{ co }}">{{ r.name }}</a></td><td>{{ r.market }}</td><td>{{ r.qty }}</td>

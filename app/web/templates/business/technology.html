@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, company_switch, status_chip, crowd %}
+{% from "business/_common.html" import pct, company_switch, status_chip, crowd, about, term %}
 {% block title %}Technology fit – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Technology fit</h1>
@@ -7,6 +7,7 @@
   technology we already have</b>. Unlike Gaps &amp; ranking, door openers do not count here: a function that shows up everywhere is
   interesting even where we sell nothing yet. A new filter type on existing BAW / SAW technology ranks above a frequent SoC we have no base for.</p>
 {{ company_switch('/business/technology', co, companies, '&view=' ~ view) }}
+{{ about('technology') }}
 <div class="chip-row"><span class="chip-lbl">Show</span>
   {% for k, label in [('all', 'All'), ('develop', 'Developable (same or adjacent technology)'), ('low_attach', 'Low attach (door opener < 50%)'), ('chips', 'Not our product type (SoCs, MCUs, memory…)')] %}
   <a class="fchip{{ ' on' if view == k }}" href="/business/technology?co={{ co }}&view={{ k }}">{{ label }} <small>{{ counts[k] }}</small></a>{% endfor %}
@@ -20,7 +21,7 @@
   <p class="small muted">Proximity and reasoning are an indicative reading of the public Skyworks and Qorvo portfolios, for discussion, not a roadmap.</p>
 </details>
 <div class="bo-gap-list">
-  <div class="bo-gap-head bo-tech small"><span>Function</span><span>Appears in</span><span>Sockets</span><span>Technology</span><span>Competition</span><span>Score</span></div>
+  <div class="bo-gap-head bo-tech small"><span>Function</span><span>Appears in</span><span>{{ term('socket', 'Sockets') }}</span><span>{{ term('proximity', 'Technology') }}</span><span>{{ term('competition', 'Competition') }}</span><span>{{ term('tech_score', 'Score') }}</span></div>
   {% for e in rows %}
   <details class="bo-gap" id="fn-{{ e.fn }}">
     <summary class="bo-tech"><span><b>{{ loop.index }}. {{ e.label }}</b> {{ status_chip(e.status, status_label) }}<br><small class="muted">{{ e.reasoning }}</small></span>
@@ -30,6 +31,7 @@
       <span>{{ crowd(e.competition, crowding_label) }}</span>
       <span><span class="bo-bar"><span style="width:{{ (100 * e.score / rows[0].score if rows and rows[0].score else 0)|round }}%"></span></span></span></summary>
     <div class="bo-gap-body small">
+      <p class="bo-words"><b>Score {{ '%.3f'|format(e.score) }}</b> = {{ e.reach }}/{{ apps|length }} applications ({{ '%.2f'|format(e.share) }}) × {{ prox_label[e.proximity] if e.proximity is not none else 'not rated' }} {{ prox_weight.get(e.proximity, 0.05) }} × {{ crowding_label[e.competition.crowding] if e.competition else 'competition not assessed' }} {{ crowd_weight.get(e.competition.crowding, 0.85) if e.competition else 0.85 }}. {{ e.background }} of the {{ e.reach }} applications are background diagrams; {{ e.adjacent }} already contain one of our parts.</p>
       {% if e.proximity == 3 and e.status != 'na' %}<p class="bo-requal">Same technology as products we already sell: some may already exist but are not mapped to this function in Cross List yet. Check the catalogue before treating it as a new product.</p>{% endif %}
       {% if e.competition and e.competition.vendors %}<p><b>Who sells it:</b> {{ e.competition.vendors|join(', ') }}</p>{% endif %}
       <p><b>Appears in:</b> {% for a in e.apps|sort(attribute='name') %}{% if a.background %}<span class="bo-ours bo-bg" title="background diagram, not in the library">{{ a.name }}</span>{% else %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endif %}{% endfor %}</p>

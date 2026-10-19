@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import company_switch, status_chip, crowd %}
+{% from "business/_common.html" import company_switch, status_chip, crowd, about, term %}
 {% block title %}Attach – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>What sells next to it</h1>
@@ -7,6 +7,7 @@
   the same applications, and whether we can sell an existing part there or would need a new one. Modeled from the application diagrams,
   not observed sales.</p>
 {{ company_switch('/business/attach', co, companies, '&fn=' ~ fn) }}
+{{ about('attach') }}
 <form method="get" action="/business/attach" class="bo-anchor">
   <input type="hidden" name="co" value="{{ co }}">
   <label>Our product <select name="fn" onchange="this.form.submit()"><option value="">choose…</option>
@@ -21,7 +22,7 @@
 <div class="table-wrap"><table class="striped bo-attach-t">
   <thead><tr><th>Also in those applications</th><th>How often</th><th>Our position</th><th>What it means</th></tr></thead>
   <tbody>{% for e in common %}<tr>
-    <td>{{ e.label }}</td>
+    <td>{{ e.label }}<br><small class="muted">In {{ e.apps }} of the {{ n }} applications with {{ fns[fn].label }}, {{ e.positions }} socket{{ 's' if e.positions != 1 }}</small></td>
     <td><span class="bo-bar{{ ' gap' if e.status != 'supported' }}"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
     <td>{{ status_chip(e.status, status_label) }}</td>
     <td class="small">{% if e.status == 'supported' %}Cross-sell: offer our existing part with it{% elif e.status == 'gap' %}New product: nobody in Cross List has it yet{% else %}New product: only competitors have it today{% endif %}</td>

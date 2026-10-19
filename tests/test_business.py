@@ -41,7 +41,7 @@ def test_markets_competition_and_gap_rows(client):
     for path in ("/business/markets", "/business/markets?view=requalify", "/business/markets?view=multi",
                  "/business/gaps?sort=crowding"):  # fmt: skip
         assert client.get(path).status_code == 200, path
-    assert "How to read this" in client.get("/business").text
+    assert "About this page" in client.get("/business").text
 
 
 def test_technology_fit_and_cases(client):
@@ -67,3 +67,14 @@ def test_technology_fit_and_cases(client):
     assert "Reuses PMIC LDO IP" in page and "Market grows." in page
     client.post(f"/business/cases/{cid}", data={"act": "delete"})
     assert client.get(f"/business/cases/{cid}").status_code == 404
+
+
+def test_explanations_everywhere(client):
+    help_ = op.explanations()
+    for page in ("overview", "applications", "markets", "attach", "gaps", "technology", "cases", "data"):
+        assert page in help_["pages"]
+    for path in ("/business", "/business/applications", "/business/markets", "/business/attach", "/business/gaps",
+                 "/business/technology", "/business/cases", "/business/data"):  # fmt: skip
+        assert "About this page" in client.get(path).text, path
+    method = client.get("/business/method").text
+    assert "Formulas" in method and "Door opener" in method and "Data sources" in method

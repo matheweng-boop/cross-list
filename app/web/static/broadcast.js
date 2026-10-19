@@ -314,7 +314,30 @@
     const u = U(), tuners = TUNER_SLOTS.filter(slotDev);
     return u && u.flashOn && tuners.includes(u.flashOn) ? u.flashOn : tuners[tuners.length - 1];
   }
+  // Pins with nothing on them in a configuration get one dashed "Open" placeholder per chip and pin function,
+  // so it is clear they are still to be defined. Rebuilt whenever the hardware changes.
+  const OPEN_SKIP = new Set(["nc", "ground", "power", "bypass", "xtal"]);
+  function removeOpen() {
+    const ids = new Set(S.blocks.filter(b => b.kind === "open").map(b => b.id));
+    if (!ids.size) return;
+    S.links = S.links.filter(l => !ids.has(l.b.blk));
+    S.blocks = S.blocks.filter(b => !ids.has(b.id));
+  }
+  function addOpen() {
+    removeOpen();
+    if (!S.usecase) return;
+    for (const o of S.devices.filter(o => o.slot)) {
+      const byFn = {};
+      for (const p of pinsOf(o)) if (!OPEN_SKIP.has(p.fn) && !/^EPAD$/i.test(p.name) && !linksAt(o.id, p.n).length) (byFn[p.fn] ||= []).push(p);
+      for (const [fn, ps] of Object.entries(byFn)) {
+        const b = addBlock("open", `Open · ${FN_LABEL[fn] || fn}`, ps.map(p => p.name).join(", "));
+        b.note = "Not connected in this configuration; define what goes here (or leave open per the datasheet).";
+        link({d: o.id, pins: ps.map(p => p.n)}, {blk: b.id}, "open");
+      }
+    }
+  }
   function autoComplete() {
+    removeOpen();
     const copros = S.devices.filter(o => info(o).role === "coprocessor");
     for (const o of S.devices) {
       const free = p => !linksAt(o.id, p.n).length;
@@ -465,7 +488,7 @@
   //     into the other pin (pins that face away go round above the chips);
   //   chip -> chip in one column: a track beside the column (both pins on one side) or through the gap between them;
   //   chip -> block: a right-angle step.
-  const TRACK = 7;
+  const TRACK = 11;
   const poly = pts => "M" + pts.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(" L");
   function wires(Lay) {
     const out = [], cross = [], same = {};
@@ -496,11 +519,11 @@
     cross.forEach((w, i) => {
       const [L, R] = w.ca < w.cb ? [w.A, w.B] : [w.B, w.A];
       const tx = ch ? ch.x0 + 20 + i * TRACK : (L.x + R.x) / 2;
-      const yTop = Math.min(top(0), top(1)) - 18 - (detour++) * 5;
+      const yTop = Math.min(top(0), top(1)) - 20 - (detour++) * 8;
       const pts = [L];
-      if (L.side === "L") pts.push({x: L.x - 10 - i % 6 * 4, y: L.y}, {x: L.x - 10 - i % 6 * 4, y: yTop}, {x: tx, y: yTop});
+      if (L.side === "L") pts.push({x: L.x - 12 - i % 6 * 6, y: L.y}, {x: L.x - 12 - i % 6 * 6, y: yTop}, {x: tx, y: yTop});
       else pts.push({x: tx, y: L.y});
-      if (R.side === "R") pts.push({x: tx, y: yTop}, {x: R.x + 10 + i % 6 * 4, y: yTop}, {x: R.x + 10 + i % 6 * 4, y: R.y});
+      if (R.side === "R") pts.push({x: tx, y: yTop}, {x: R.x + 12 + i % 6 * 6, y: yTop}, {x: R.x + 12 + i % 6 * 6, y: R.y});
       else pts.push({x: tx, y: R.y});
       pts.push(R);
       out.push({l: w.l, d: poly(pts), label: {x: (tx + R.x) / 2, y: R.y - 3, side: R.side}, tx});
@@ -519,7 +542,7 @@
           pts = [A, {x: tx, y: A.y}, {x: tx, y: B.y}, B];
         } else {
           const [up, dn] = PA.y < PB.y ? [PA, PB] : [PB, PA];
-          const yMid = up.y + up.h + 12 + kM++ * 5;
+          const yMid = up.y + up.h + 14 + kM++ * 8;
           const txA = A.side === "L" ? offL(PA) : offR(PA), txB = B.side === "L" ? offL(PB) : offR(PB);
           A.side === "L" ? kL++ : kR++;
           pts = [A, {x: txA, y: A.y}, {x: txA, y: yMid}, {x: txB, y: yMid}, {x: txB, y: B.y}, B];
@@ -825,6 +848,7 @@
       else if (!ic.mpn && o) removeDevice(o.id);
     }
     defaultIq(u);
+    removeOpen();
     S.links = S.links.filter(l => l.auto !== "uc");
     S.blocks = S.blocks.filter(b => !b.uc);
     const ucBlock = (kind, label, detail) => Object.assign(addBlock(kind, label, detail), {uc: true});
@@ -944,6 +968,8 @@
         if (i2sOut(demod)[0]) ucLink(endOf(demod.id, i2sOut(demod)[0]), {blk: socAudio.id}, "audio", "digital audio to SoC");
       }
     }
+    // placeholders for whatever is still unconnected (after the first fill-in)
+    const filledIn = S.links.some(l => l.kind === "power");
     // flash blocks show the size entered for their IC
     for (const slot of ALL_SLOTS) {
       const o = slotDev(slot);
@@ -954,6 +980,7 @@
       }
     }
     pruneBlocks();
+    if (filledIn) addOpen();
   }
 
   // ZIF nets: tuner outputs tied to a demod port (IC0 ZIF0 + IC1 ZIF1 on one port, IC0 ZIF1 + IC1 ZIF0 on the next)
@@ -1291,6 +1318,8 @@
 
   // A listening mode follows the antennas: without a second FM antenna phase diversity becomes FM audio + scan
   // (and HD MRC is dropped); without a second DAB antenna DAB MRC is dropped.
+  // the best-practice set-up a mode starts from, kept next to the user's copy for the side-by-side view
+  const withBase = m => Object.assign(m, {base: JSON.parse(JSON.stringify({tuners: m.tuners, channels: m.channels || [], linking: !!m.linking}))});
   function fitAntennas(m, antennas) {
     const n = band => antennas.filter(a => (a.bands || []).includes(band)).length;
     const fm2 = n("FM") >= 2, dab2 = n("DAB") >= 2;
@@ -1311,13 +1340,14 @@
     }
     return m;
   }
+  function applyHardwareThenOpen(i) { applyHardware(i); addOpen(); }
   function applyHardware(i) {
     const hw = JSON.parse(JSON.stringify(typeof i === "object" ? i : presetVariant(CONF.hardware[i]) || CONF.hardware[i]));
     S.devices = []; S.blocks = []; S.links = [];
     S.usecase = normalise({region: S.region, digital: S.digital, audioDsp: S.audio, features: [...S.features], hardware: hw.name, notes: hw.notes || "", ics: hw.ics, antennas: hw.antennas, rf: hw.rf,
       control: hw.control, route: hw.audio, clock: hw.clock, iq: hw.iq || {}, memory: {}, modes: [], mode: 0});
     syncUseCase();
-    S.usecase.modes = CONF.software.filter(sw => sw.region === S.region).map(modeFromPreset).map(m => fitAntennas(m, hw.antennas || [])).filter(m => m && compatible(m));
+    S.usecase.modes = CONF.software.filter(sw => sw.region === S.region).map(modeFromPreset).map(m => fitAntennas(m, hw.antennas || [])).filter(m => m && compatible(m)).map(withBase);
     if (!S.usecase.modes.length) S.usecase.modes.push(blankMode("Listening mode 1"));
     syncUseCase();
     autoComplete();
@@ -1331,6 +1361,7 @@
   function renderUseCase() {
     renderSteps();
     const box = $("#bc-usecase"), u = U();
+    if (!u) $("#bc-hwdetail").hidden = true;
     if (!u) {
       box.innerHTML = `<p class="small muted">Pick a region and a hardware configuration above, or <button type="button" class="outline small-btn" data-uc="blank">start empty hardware</button>.</p>`;
       box.querySelector("[data-uc=blank]").onclick = () => {
@@ -1364,18 +1395,31 @@
     }
     hw += `<tr><th>${DEMOD_SLOT}</th><td><select data-slot="${DEMOD_SLOT}" aria-label="Demodulator part">${opt("", "Not populated", u.ics[DEMOD_SLOT].mpn || "")}${demodsCat.map(c => opt(c.mpn, `${c.mpn} · ${c.digital_decode.join("/") || "AM/FM"} · ${c.channels || "SW-defined"} ch${c.options.length ? " · " + c.options.join(", ") : ""}`, u.ics[DEMOD_SLOT].mpn || "")).join("")}</select></td><td>` +
       (demod && DEMOD_SLOT !== u.clock.master ? `<label class="uc-clock">Clock <select data-clock="${DEMOD_SLOT}" data-xp="clock:">${clockOpts(DEMOD_SLOT, u.clock.feed[DEMOD_SLOT] || "star")}</select></label>` : "") + `</td></tr>`;
-    // software rows (current mode)
-    let sw = "";
+    // software: best practice (greyed, from the preset) next to the user's set-up; differences highlighted
+    const base = m.base, jl = j => TUNER_JOBS[j]?.label || j, dl = c => `${DEMOD_JOBS[c.job]?.label || c.job}${c.source && c.job !== "unused" ? ` ← ${c.source.replace(".", " ")}` : ""}`;
+    let nDiff = 0, sw = "";
     for (const slot of TUNER_SLOTS) {
       const o = slotDev(slot);
       if (!o) continue;
-      sw += `<tr><th>${slot}</th><td>${tunersOf(slot).map((j, i) => `<div class="uc-row"><b>T${i}</b><select data-job="${slot}.${i}" data-xp="job:" aria-label="${slot} tuner ${i} job">${Object.entries(TUNER_JOBS).map(([k, J]) => opt(k, J.label, j)).join("")}</select></div>`).join("")}</td></tr>`;
+      tunersOf(slot).forEach((j, i) => {
+        const bj = base ? (base.tuners[slot] || [])[i] || "off" : null, diff = base && bj !== j;
+        nDiff += diff ? 1 : 0;
+        sw += `<tr><th>${slot} T${i}</th>${base ? `<td class="uc-bp">${esc(jl(bj))}</td>` : ""}<td class="${diff ? "uc-diff" : ""}"><select data-job="${slot}.${i}" data-xp="job:" aria-label="${slot} tuner ${i} job">${Object.entries(TUNER_JOBS).map(([k, J]) => opt(k, J.label, j)).join("")}</select></td></tr>`;
+      });
     }
     if (demod) {
       const srcOpts = sel => opt("", "— source —", sel || "") + iqPairs().map(p => opt(p, `${p.replace(".", " ")}${u.iq[p] ? "" : " (no I/Q wired)"}`, sel)).join("");
-      sw += `<tr><th>${DEMOD_SLOT}</th><td>${channelsOf().map((c, i) => `<div class="uc-row"><b>DMOD${i}</b><select data-djob="${i}" data-xp="djob:" aria-label="DMOD${i} job">${Object.entries(DEMOD_JOBS).map(([k, J]) => opt(k, J.label, c.job)).join("")}</select>` +
-        `<select data-dsrc="${i}" aria-label="DMOD${i} source">${srcOpts(c.source)}</select></div>`).join("")}</td></tr>`;
+      channelsOf().forEach((c, i) => {
+        const bc = base ? base.channels[i] || {job: "unused"} : null;
+        const diff = base && (bc.job !== c.job || (c.job !== "unused" && (bc.source || "") !== (c.source || "")));
+        nDiff += diff ? 1 : 0;
+        sw += `<tr><th>${DEMOD_SLOT} DMOD${i}</th>${base ? `<td class="uc-bp">${esc(dl(bc))}</td>` : ""}<td class="${diff ? "uc-diff" : ""}"><select data-djob="${i}" data-xp="djob:" aria-label="DMOD${i} job">${Object.entries(DEMOD_JOBS).map(([k, J]) => opt(k, J.label, c.job)).join("")}</select>` +
+          `<select data-dsrc="${i}" aria-label="DMOD${i} source">${srcOpts(c.source)}</select></td></tr>`;
+      });
     }
+    const linkDiff = base && !!base.linking !== !!m.linking;
+    nDiff += linkDiff ? 1 : 0;
+    sw += `<tr><th data-explain="linking">Seamless linking</th>${base ? `<td class="uc-bp">${base.linking ? "on" : "off"}</td>` : ""}<td class="${linkDiff ? "uc-diff" : ""}"><label class="bc-check"><input type="checkbox" id="uc-linking"${m.linking ? " checked" : ""}> on</label></td></tr>`;
     const ants = u.antennas.map((a, i) => `<span class="uc-ant"><b>${esc(a.id)}</b> <input data-alabel="${i}" value="${esc(a.label || "")}" aria-label="${esc(a.id)} label">` +
       ["AM", "FM", "DAB"].map(b => `<label><input type="checkbox" data-aband="${i}" value="${b}"${(a.bands || []).includes(b) ? " checked" : ""}> ${b}</label>`).join("") +
       `<label data-explain="splitter"><input type="checkbox" data-asplit="${i}"${a.splitter ? " checked" : ""}> splitter</label>` +
@@ -1383,14 +1427,14 @@
     const memSlots = ALL_SLOTS.filter(s => slotDev(s) && flashHere(slotDev(s)) && pinsOf(slotDev(s)).some(p => p.fn === "flash" || p.fn === "memory"));
     const tunersPop = TUNER_SLOTS.filter(slotDev);
     const hc = hardwareChecks(), mc = modeChecks(), a = u.audio, lic = licenceSummary();
-    const problems = [...hc, ...mc].filter(([l]) => l === "warn" || l === "error");
-    const infos = [...hc, ...mc].filter(([l]) => l === "info");
-    box.innerHTML = `
-      <section class="uc-sec"><h3 class="uc-h" data-explain="hardware">Hardware <span class="muted">· ${esc(u.hardware || "custom")}</span></h3>
+    const hcP = hc.filter(([l]) => l === "warn" || l === "error"), mcP = mc.filter(([l]) => l === "warn" || l === "error");
+    const hwBox = $("#bc-hwdetail");
+    hwBox.hidden = false;
+    hwBox.innerHTML = `<details class="uc-hwdetail"${S.hwOpen ? " open" : ""}><summary><b>Connections</b> <span class="muted small">· antennas per input, loop-throughs, clock, I/Q, control, audio, flash · ${esc(u.hardware || "custom")}</span>${hcP.length ? ` <span class="uc-error small">${hcP.length} to check</span>` : ""}</summary>
       ${u.notes ? `<p class="small muted">${esc(u.notes)}</p>` : ""}
       <div class="uc-ants" data-explain="antennas">Antennas (${u.antennas.length}): ${ants} <button type="button" class="outline small-btn" id="uc-addant">+ antenna</button></div>
       <label class="bc-check uc-showall" data-explain="show_all"><input type="checkbox" id="uc-showall"${S.showAll ? " checked" : ""}> Show all parts in the part lists</label>
-      <div class="table-wrap"><table class="uc-table"><thead><tr><th></th><th>Part · RF inputs</th><th>Clock · I/Q to demod</th></tr></thead><tbody>${hw}</tbody></table></div>
+      <div class="table-wrap"><table class="uc-table uc-compact"><thead><tr><th></th><th>Part · antenna / loop-through per RF input</th><th>Clock · I/Q to demod</th></tr></thead><tbody>${hw}</tbody></table></div>
       <div class="uc-misc">
         <label data-xp="control:" data-explain="control:${u.control}">Control <select id="uc-control">${opt("demod", "SoC → IC3 → tuners (tuner SPI)", u.control)}${opt("soc", "SoC → every IC", u.control)}</select></label>
         <label data-explain="route:${u.route}">Audio to SoC <select id="uc-route">${opt("direct", "IC0 I2S direct (+ demod I2S)", u.route)}${opt("via_demod", "all tuners via the demod", u.route)}</select></label>
@@ -1402,38 +1446,44 @@
         ${tunersPop.length > 1 ? `<label data-explain="flash_on">Tuner flash on <select data-flashon>${tunersPop.map(t => opt(t, t + (t === tunersPop[tunersPop.length - 1] ? " (end of IC link chain)" : ""), flashTuner())).join("")}</select></label>` : ""}
         ${memSlots.map(s => `<label data-explain="memory">${s} flash <input data-mem="${s}" value="${esc(u.memory[s] || "")}" placeholder="size"></label>`).join("")}
       </div>
-      ${lic ? `<p class="small" data-explain="licences">Licences: ${esc(lic)}</p>` : ""}</section>
-      <section class="uc-sec"><h3 class="uc-h" data-explain="software">Software · <input id="uc-mode-name" value="${esc(m.name)}" aria-label="Listening mode name"></h3>
+      ${lic ? `<p class="small" data-explain="licences">Licences: ${esc(lic)}</p>` : ""}
+      <ul class="uc-checks">${hcP.length ? hcP.map(([l, t]) => `<li class="uc-${l}">${mark(l)} ${esc(t)}</li>`).join("") : `<li class="uc-ok">✓ No conflicts in this hardware.</li>`}</ul>
+      <details class="uc-checks"><summary>Clock, I/Q loading, licences, audio (${hc.filter(([l]) => l === "info").length})</summary><ul>${hc.filter(([l]) => l === "info").map(([, t]) => `<li class="uc-info">ℹ ${esc(t)}</li>`).join("")}</ul></details>
+    </details>`;
+    hwBox.querySelector("details").ontoggle = e => (S.hwOpen = e.target.open);
+    box.innerHTML = `
+      <section class="uc-sec"><h3 class="uc-h" data-explain="software">${esc(m.name)}</h3>
       ${m.notes ? `<p class="small muted">${esc(m.notes)}</p>` : ""}
-      <label class="bc-check" data-explain="linking"><input type="checkbox" id="uc-linking"${m.linking ? " checked" : ""}> Seamless linking</label>
-      <div class="table-wrap"><table class="uc-table"><tbody>${sw || `<tr><td class="muted">Populate a tuner IC first.</td></tr>`}</tbody></table></div></section>
-      <ul class="uc-checks">${problems.length ? problems.map(([l, t]) => `<li class="uc-${l}">${mark(l)} ${esc(t)}</li>`).join("") : `<li class="uc-ok">✓ No conflicts in this hardware and listening mode.</li>`}</ul>
-      <details class="uc-checks"><summary>Clock, I/Q loading, licences, audio (${infos.length})</summary><ul>${infos.map(([, t]) => `<li class="uc-info">ℹ ${esc(t)}</li>`).join("")}</ul></details>`;
+      ${base ? `<p class="small">${nDiff ? `<b>${nDiff}</b> change${nDiff > 1 ? "s" : ""} from best practice (highlighted). <button type="button" class="outline secondary small-btn" id="uc-reset">Reset to best practice</button>` : "Best practice set-up. Change anything on the right to compare."}</p>` : `<p class="small muted">Custom mode (no best-practice preset).</p>`}
+      <div class="table-wrap"><table class="uc-table uc-compare"><thead><tr><th></th>${base ? "<th>Best practice</th>" : ""}<th>Your set-up</th></tr></thead><tbody>${sw || `<tr><td class="muted">Populate a tuner IC first.</td></tr>`}</tbody></table></div></section>
+      <ul class="uc-checks">${mcP.length ? mcP.map(([l, t]) => `<li class="uc-${l}">${mark(l)} ${esc(t)}</li>`).join("") : `<li class="uc-ok">✓ No conflicts in this listening mode.</li>`}</ul>
+      ${mc.some(([l]) => l === "info") ? `<details class="uc-checks"><summary>Licences in this mode</summary><ul>${mc.filter(([l]) => l === "info").map(([, t]) => `<li class="uc-info">ℹ ${esc(t)}</li>`).join("")}</ul></details>` : ""}`;
+    const qa = sel => [...hwBox.querySelectorAll(sel), ...box.querySelectorAll(sel)];
     const upd = fn => e => {
       const k = keyOf(e.target), t = titleOf(e.target);
       fn(e.target); syncUseCase(); changed();
       if (k) explain(k, t);
     };
-    box.querySelectorAll("[data-slot]").forEach(el => (el.onchange = upd(t => (u.ics[t.dataset.slot].mpn = t.value || null))));
-    box.querySelectorAll("[data-job]").forEach(el => (el.onchange = upd(t => { const [s, i] = t.dataset.job.split("."); tunersOf(s)[+i] = t.value; })));
-    box.querySelectorAll("[data-rf]").forEach(el => (el.onchange = upd(t => { const [s, n] = t.dataset.rf.split("|"); (u.rf[s] ||= {})[n] = t.value || null; })));
-    box.querySelectorAll("[data-iq]").forEach(el => (el.onchange = upd(t => (u.iq[t.dataset.iq] = t.value || null))));
-    box.querySelectorAll("[data-clock]").forEach(el => (el.onchange = upd(t => (u.clock.feed[t.dataset.clock] = t.value))));
-    box.querySelectorAll("[data-djob]").forEach(el => (el.onchange = upd(t => (channelsOf()[+t.dataset.djob].job = t.value))));
-    box.querySelectorAll("[data-dsrc]").forEach(el => (el.onchange = upd(t => (channelsOf()[+t.dataset.dsrc].source = t.value || null))));
-    box.querySelectorAll("[data-alabel]").forEach(el => (el.onchange = upd(t => (u.antennas[+t.dataset.alabel].label = t.value))));
-    box.querySelectorAll("[data-asplit]").forEach(el => (el.onchange = upd(t => (u.antennas[+t.dataset.asplit].splitter = t.checked))));
-    box.querySelectorAll("[data-aband]").forEach(el => (el.onchange = upd(t => {
+    qa("[data-slot]").forEach(el => (el.onchange = upd(t => (u.ics[t.dataset.slot].mpn = t.value || null))));
+    qa("[data-job]").forEach(el => (el.onchange = upd(t => { const [s, i] = t.dataset.job.split("."); tunersOf(s)[+i] = t.value; })));
+    qa("[data-rf]").forEach(el => (el.onchange = upd(t => { const [s, n] = t.dataset.rf.split("|"); (u.rf[s] ||= {})[n] = t.value || null; })));
+    qa("[data-iq]").forEach(el => (el.onchange = upd(t => (u.iq[t.dataset.iq] = t.value || null))));
+    qa("[data-clock]").forEach(el => (el.onchange = upd(t => (u.clock.feed[t.dataset.clock] = t.value))));
+    qa("[data-djob]").forEach(el => (el.onchange = upd(t => (channelsOf()[+t.dataset.djob].job = t.value))));
+    qa("[data-dsrc]").forEach(el => (el.onchange = upd(t => (channelsOf()[+t.dataset.dsrc].source = t.value || null))));
+    qa("[data-alabel]").forEach(el => (el.onchange = upd(t => (u.antennas[+t.dataset.alabel].label = t.value))));
+    qa("[data-asplit]").forEach(el => (el.onchange = upd(t => (u.antennas[+t.dataset.asplit].splitter = t.checked))));
+    qa("[data-aband]").forEach(el => (el.onchange = upd(t => {
       const an = u.antennas[+t.dataset.aband];
       an.bands = t.checked ? [...new Set([...(an.bands || []), t.value])] : (an.bands || []).filter(b => b !== t.value);
     })));
-    box.querySelectorAll("[data-adel]").forEach(el => (el.onclick = upd(t => {
+    qa("[data-adel]").forEach(el => (el.onclick = upd(t => {
       const id = u.antennas[+t.dataset.adel].id;
       u.antennas.splice(+t.dataset.adel, 1);
       for (const s of TUNER_SLOTS) for (const n of Object.keys(u.rf[s] || {})) if (u.rf[s][n] === id) u.rf[s][n] = null;
     })));
-    box.querySelectorAll("[data-mem]").forEach(el => (el.onchange = upd(t => (u.memory[t.dataset.mem] = t.value))));
-    box.querySelectorAll("[data-flashon]").forEach(el => (el.onchange = () => {
+    qa("[data-mem]").forEach(el => (el.onchange = upd(t => (u.memory[t.dataset.mem] = t.value))));
+    qa("[data-flashon]").forEach(el => (el.onchange = () => {
       u.flashOn = el.value;
       S.links = S.links.filter(l => l.kind !== "flash"); pruneBlocks(); autoComplete(); changed();
     }));
@@ -1443,10 +1493,11 @@
       u.antennas.push({id: `ANT${k}`, label: "", bands: ["FM"]});
     });
     $("#uc-linking").onchange = upd(t => (m.linking = t.checked));
-    $("#uc-mode-name").onchange = upd(t => (m.name = t.value || m.name));
+    const reset = $("#uc-reset");
+    if (reset) reset.onclick = upd(() => { const c = JSON.parse(JSON.stringify(base)); m.tuners = c.tuners; m.channels = c.channels; m.linking = c.linking; });
     $("#uc-control").onchange = upd(t => (u.control = t.value));
     $("#uc-showall").onchange = e => { S.showAll = e.target.checked; render(); };
-    box.querySelectorAll("[data-swap]").forEach(el => (el.onclick = upd(t => { const [slot, mpn] = t.dataset.swap.split("|"); u.ics[slot].mpn = mpn; })));
+    qa("[data-swap]").forEach(el => (el.onclick = upd(t => { const [slot, mpn] = t.dataset.swap.split("|"); u.ics[slot].mpn = mpn; })));
     $("#uc-route").onchange = upd(t => (u.route = t.value));
     $("#uc-xtal").onchange = upd(t => (u.clock.crystal = t.value));
     $("#uc-format").onchange = upd(t => (a.format = t.value));
@@ -1498,7 +1549,7 @@
     box.querySelector("#bc-create").onclick = () => {
       if (S.devices.length && !confirm("Replace the current hardware and its listening modes?")) return;
       const hw = generateHardware(S.region, S.tuners);
-      applyHardware(hw); changed();
+      applyHardwareThenOpen(hw); changed();
       explainBox.innerHTML = `<b>${esc(hw.name)}</b><p>${esc(hw.notes)}</p>`;
     };
   }
@@ -1608,14 +1659,14 @@
       if (!S.region) return;
       if (S.devices.length && !confirm("Replace the current hardware and its listening modes?")) return;
       const hw = generateHardware(S.region, +gen.dataset.gen);
-      applyHardware(hw); changed();
+      applyHardwareThenOpen(hw); changed();
       explainBox.innerHTML = `<b>${esc(hw.name)}</b><p>${esc(hw.notes)}</p>`;
       return;
     }
     if (r) { S.region = r.dataset.region; if (U()) U().region = S.region; render(); explain(`region:${S.region}`, S.region); }
     else if (h) {
       if (S.devices.length && !confirm("Replace the current hardware and its listening modes?")) return;
-      applyHardware(+h.dataset.hw); changed();
+      applyHardwareThenOpen(+h.dataset.hw); changed();
       const hw = CONF.hardware[+h.dataset.hw];
       explainBox.innerHTML = `<b>${esc(hw.name)}</b><p>${esc(hw.notes || "")}</p>`;
     } else if (md) {
@@ -1631,7 +1682,7 @@
   root.addEventListener("change", e => {
     if (e.target.id !== "bc-add-mode" || !e.target.value) return;
     const u = U(), v = e.target.value;
-    u.modes.push(v === "blank" ? blankMode(`Listening mode ${u.modes.length + 1}`) : modeFromPreset(CONF.software[+v]));
+    u.modes.push(v === "blank" ? blankMode(`Listening mode ${u.modes.length + 1}`) : withBase(fitAntennas(modeFromPreset(CONF.software[+v]), u.antennas) || modeFromPreset(CONF.software[+v])));
     u.mode = u.modes.length - 1;
     changed();
     const m = mode();

@@ -1,0 +1,313 @@
+// Block-diagram generator. A diagram is groups (dotted frames on a grid) holding blocks; each block is a
+// system function that a Skyworks part in Cross List may fill. State (saved as JSON):
+//   groups: [{id, label, col, row, w, blocks: [{id, fn, label, qty, part}]}]
+//   links:  [[fromGroup, toGroup, label]]
+(() => {
+  const root = document.getElementById("bk");
+  if (!root) return;
+  const $ = s => root.querySelector(s);
+  const J = id => JSON.parse(document.getElementById(id).textContent);
+  const CAT = J("bk-catalogue"), COUNTS = J("bk-counts"), design = J("bk-design"), tpl = J("bk-template");
+  const FN = CAT.functions, CATS = CAT.categories;
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  let seq = 1;
+  const uid = p => `${p}${Date.now().toString(36)}${seq++}`;
+  let S = design.data || fromTemplate(tpl) || {groups: [], links: []};
+  let sel = null; // {group} or {group, block}
+  let dirty = false;
+  let configId = design.id;
+
+  function fromTemplate(t) {
+    if (!t) return null;
+    const groups = t.groups.map(g => ({
+      id: g.id, label: g.label, col: g.col || 0, row: g.row || 0, w: g.w || 1,
+      blocks: (g.blocks || []).map(b => {
+        if (typeof b === "object") return {id: uid("b"), fn: b.fn, label: b.label || "", qty: b.qty || 1, part: null};
+        const [fn, q] = b.split(/\s+x/);
+        return {id: uid("b"), fn, label: "", qty: q ? +q : 1, part: null};
+      }),
+    }));
+    return {groups, links: (t.links || []).map(l => [...l])};
+  }
+
+  // ---- block status
+  const fnOf = b => FN[b.fn] || {label: b.fn};
+  function status(b) {
+    if (b.part) return "part";
+    const n = COUNTS[b.fn];
+    return n === null ? "ext" : n ? "have" : "opp";
+  }
+  const STATUS_TEXT = {part: "Skyworks part chosen", have: "Skyworks parts fit", opp: "Opportunity: no Skyworks part in Cross List yet", ext: "Customer part"};
+
+  // ---- layout
+  const CELL = 250, GAP_X = 40, GAP_Y = 36, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
+  function layout() {
+    const rects = {};
+    const rowH = {};
+    for (const g of S.groups) {
+      const w = (g.w || 1) * CELL + ((g.w || 1) - 1) * GAP_X;
+      const cols = Math.max(1, Math.floor((w - 2 * PAD + BG) / (BW + BG)));
+      const rows = Math.max(1, Math.ceil(g.blocks.length / cols));
+      const h = HEAD + rows * (BH + BG) + PAD;
+      rects[g.id] = {w, h, cols};
+      rowH[g.row] = Math.max(rowH[g.row] || 0, h);
+    }
+    const rowsSorted = Object.keys(rowH).map(Number).sort((a, b) => a - b);
+    const rowY = {};
+    let y = 20;
+    for (const r of rowsSorted) { rowY[r] = y; y += rowH[r] + GAP_Y; }
+    let W = 600;
+    for (const g of S.groups) {
+      const r = rects[g.id];
+      r.x = 20 + g.col * (CELL + GAP_X);
+      r.y = rowY[g.row];
+      W = Math.max(W, r.x + r.w + 20);
+    }
+    return {rects, W, H: Math.max(260, y)};
+  }
+
+  // point on the edge of rect a towards rect b
+  function edge(a, b) {
+    const ax = a.x + a.w / 2, ay = a.y + a.h / 2, bx = b.x + b.w / 2, by = b.y + b.h / 2;
+    const dx = bx - ax, dy = by - ay;
+    const s = Math.min(Math.abs((a.w / 2) / (dx || 1e-6)), Math.abs((a.h / 2) / (dy || 1e-6)));
+    return {x: ax + dx * s, y: ay + dy * s};
+  }
+
+  function render() {
+    const L = layout(), parts = [];
+    parts.push(`<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3a3f47"/></marker></defs>`);
+    for (const [a, b, label] of S.links) {
+      const ra = L.rects[a], rb = L.rects[b];
+      if (!ra || !rb) continue;
+      const p = edge(ra, rb), q = edge(rb, ra);
+      parts.push(`<line class="link" x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}"/>`);
+      if (label) parts.push(`<text class="link-label" x="${(p.x + q.x) / 2}" y="${(p.y + q.y) / 2 - 4}" text-anchor="middle">${esc(label)}</text>`);
+    }
+    for (const g of S.groups) {
+      const r = L.rects[g.id];
+      parts.push(`<g class="grp${sel && sel.group === g.id && !sel.block ? " sel" : ""}"><rect class="frame" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"/>` +
+        `<text class="grp-title" data-group="${g.id}" x="${r.x + 8}" y="${r.y + 17}" tabindex="0" role="button">${esc(g.label)}</text>`);
+      g.blocks.forEach((b, i) => {
+        const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + HEAD + Math.floor(i / r.cols) * (BH + BG);
+        const st = status(b), f = fnOf(b);
+        const label = b.label || f.label;
+        const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} Skyworks parts` : st === "opp" ? "opportunity" : st === "ext" ? "customer part" : "");
+        parts.push(`<g class="blk st-${st}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
+          `<rect x="${cx}" y="${cy}" width="${BW}" height="${BH}"/>` +
+          wrap(label, 16).slice(0, 2).map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + 15 + k * 13}" text-anchor="middle">${esc(t)}</text>`).join("") +
+          `<text class="b-sub" x="${cx + BW / 2}" y="${cy + BH - 5}" text-anchor="middle">${esc(sub.slice(0, 19))}${b.qty > 1 ? ` ×${b.qty}` : ""}</text></g>`);
+      });
+      parts.push(`</g>`);
+    }
+    if (!S.groups.length) parts.push(`<text x="40" y="80" fill="#888" font-size="14">Add a group, then add functions to it.</text>`);
+    const svg = $("#bk-svg");
+    lastL = L;
+    svg.innerHTML = parts.join("");
+    applyView();
+    renderSummary();
+  }
+  const wrap = (s, n) => {
+    const out = [];
+    let line = "";
+    for (const w of String(s).split(" ")) {
+      if ((line + " " + w).trim().length > n && line) { out.push(line); line = w; } else line = (line + " " + w).trim();
+    }
+    if (line) out.push(line);
+    return out;
+  };
+
+  // ---- magnifier: fit the window, zoom in / out, drag to pan
+  let lastL = null, view = null;
+  function applyView() {
+    const svg = $("#bk-svg"), L = lastL;
+    if (!L) return;
+    const v = view || {x: 0, y: 0, w: L.W, h: L.H};
+    svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
+    const cw = $(".bc-canvas").clientWidth || 900;
+    svg.setAttribute("width", cw);
+    svg.setAttribute("height", Math.min(window.innerHeight * 0.8, cw * v.h / v.w));
+    svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
+  }
+  function zoomBy(f) {
+    const L = lastL, v = view || {x: 0, y: 0, w: L.W, h: L.H};
+    const w = Math.min(L.W * 1.2, Math.max(260, v.w * f)), h = v.h * (w / v.w);
+    view = {x: v.x + (v.w - w) / 2, y: v.y + (v.h - h) / 2, w, h};
+    applyView();
+  }
+  $("#bk-zoom-in").onclick = () => zoomBy(0.7);
+  $("#bk-zoom-out").onclick = () => zoomBy(1.4);
+  $("#bk-zoom-all").onclick = () => { view = null; applyView(); };
+  (() => {
+    const svg = $("#bk-svg");
+    let drag = null;
+    svg.addEventListener("pointerdown", e => {
+      if (!view || e.target.closest("[data-block], [data-group]")) return;
+      drag = {x: e.clientX, y: e.clientY, v: {...view}, s: view.w / svg.clientWidth};
+      svg.setPointerCapture(e.pointerId);
+    });
+    svg.addEventListener("pointermove", e => { if (drag) { view = {...drag.v, x: drag.v.x - (e.clientX - drag.x) * drag.s, y: drag.v.y - (e.clientY - drag.y) * drag.s}; applyView(); } });
+    svg.addEventListener("pointerup", () => (drag = null));
+  })();
+  // the side panel is a drawer that opens on a selection
+  const openPanel = () => root.classList.add("panel-open");
+  $("#bk-close").onclick = () => { root.classList.remove("panel-open"); sel = null; render(); };
+
+  // ---- summary: Skyworks content vs opportunities
+  function renderSummary() {
+    const all = S.groups.flatMap(g => g.blocks);
+    const by = {part: 0, have: 0, opp: 0, ext: 0};
+    all.forEach(b => (by[status(b)] += b.qty || 1));
+    const opp = {}, chosen = [];
+    all.forEach(b => { if (status(b) === "opp") opp[fnOf(b).label] = (opp[fnOf(b).label] || 0) + (b.qty || 1); if (b.part) chosen.push(`${b.part}${b.qty > 1 ? ` ×${b.qty}` : ""}`); });
+    $("#bk-summary").innerHTML = `<div class="tiles">
+        <div class="tile"><b>${by.part}</b>Skyworks parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks can fill</div>
+        <div class="tile"><b>${by.opp}</b>opportunities</div><div class="tile"><b>${by.ext}</b>customer parts</div></div>` +
+      (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
+      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks part in Cross List yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
+  }
+
+  // ---- side panel
+  const panel = $("#bk-panel-body");
+  const group = id => S.groups.find(g => g.id === id);
+  const blockOf = (g, id) => g && g.blocks.find(b => b.id === id);
+  const partsCache = {};
+  async function parts(fn, q = "") {
+    const key = `${fn}|${q}`;
+    if (!partsCache[key]) partsCache[key] = fetch(`/api/blocks/parts?fn=${encodeURIComponent(fn)}&q=${encodeURIComponent(q)}`).then(r => r.json());
+    return partsCache[key];
+  }
+
+  function showBlock(g, b) {
+    openPanel();
+    const f = fnOf(b), st = status(b);
+    const comp = (f.companions || []).filter(c => FN[c]);
+    panel.innerHTML = `<h3>${esc(b.label || f.label)}</h3>
+      <p class="small"><span class="lg lg-${st}">${esc(STATUS_TEXT[st])}</span> · ${esc(CATS[f.category] || f.category || "")}</p>
+      ${f.note ? `<p class="small muted">${esc(f.note)}</p>` : ""}
+      ${b.part ? `<p>Chosen: <b>${esc(b.part)}</b> <button type="button" class="outline secondary small-btn" data-act="unpick">clear</button></p>` : ""}
+      <div class="row"><label class="small">Label <input data-f="label" value="${esc(b.label || "")}" placeholder="${esc(f.label)}"></label>
+        <label class="small">Qty <input data-f="qty" type="number" min="1" max="99" value="${b.qty || 1}" style="width:4rem"></label></div>
+      <div id="bk-parts"></div>
+      ${comp.length ? `<p class="small"><b>Usually designed in with it</b></p><div class="row">${comp.map(c => `<button type="button" class="bc-chip bc-chip-sm" data-add="${c}" title="${esc(STATUS_TEXT[COUNTS[c] === null ? "ext" : COUNTS[c] ? "have" : "opp"])}">+ ${esc(FN[c].label)}</button>`).join("")}</div>` : ""}
+      <div class="row"><button type="button" class="outline secondary small-btn" data-act="remove">Remove block</button>
+        <select data-act="move" class="small-sel" aria-label="Move to group"><option value="">Move to…</option>${S.groups.filter(x => x !== g).map(x => `<option value="${x.id}">${esc(x.label)}</option>`).join("")}</select></div>`;
+    if (st !== "ext" && COUNTS[b.fn]) {
+      const box = panel.querySelector("#bk-parts");
+      const draw = async q => {
+        const r = await parts(b.fn, q);
+        box.innerHTML = `<p class="small"><b>Skyworks parts in Cross List</b> (${r.total})</p>
+          <input type="search" placeholder="Filter parts" value="${esc(q)}" aria-label="Filter parts" data-q>
+          <ul class="bk-parts">${r.parts.map(p => `<li><span><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.mpn)}</a><br><small class="muted">${esc(p.detail)}</small></span><button type="button" class="outline small-btn" data-pick="${esc(p.mpn)}">use</button></li>`).join("")}</ul>
+          ${r.total > r.parts.length ? `<p class="small muted">${r.total - r.parts.length} more; filter to narrow.</p>` : ""}`;
+        const inp = box.querySelector("[data-q]");
+        inp.oninput = () => { clearTimeout(inp._t); inp._t = setTimeout(() => draw(inp.value), 250); };
+        box.querySelectorAll("[data-pick]").forEach(btn => (btn.onclick = () => { b.part = btn.dataset.pick; changed(); showBlock(g, b); }));
+      };
+      draw("");
+    } else if (st === "opp") {
+      panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in Cross List. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
+        <a href="/requests">Add a request</a> if a specific part should be crossed.</p>`;
+    }
+    panel.querySelectorAll("[data-f]").forEach(el => (el.onchange = () => { b[el.dataset.f] = el.dataset.f === "qty" ? Math.max(1, +el.value || 1) : el.value; changed(); }));
+    panel.querySelector('[data-act="remove"]').onclick = () => { g.blocks = g.blocks.filter(x => x !== b); sel = {group: g.id}; changed(); showGroup(g); };
+    panel.querySelector('[data-act="unpick"]')?.addEventListener("click", () => { b.part = null; changed(); showBlock(g, b); });
+    panel.querySelector('[data-act="move"]').onchange = e => { const to = group(e.target.value); if (!to) return; g.blocks = g.blocks.filter(x => x !== b); to.blocks.push(b); sel = {group: to.id, block: b.id}; changed(); showBlock(to, b); };
+    panel.querySelectorAll("[data-add]").forEach(btn => (btn.onclick = () => addFunction(btn.dataset.add, g)));
+  }
+
+  function showGroup(g) {
+    openPanel();
+    const others = S.groups.filter(x => x !== g);
+    const links = S.links.map((l, i) => [l, i]).filter(([l]) => l[0] === g.id || l[1] === g.id);
+    panel.innerHTML = `<h3>${esc(g.label)}</h3>
+      <div class="row"><label class="small">Name <input data-g="label" value="${esc(g.label)}"></label></div>
+      <div class="row small">Move <button type="button" class="outline small-btn" data-mv="-1,0" aria-label="Left">←</button><button type="button" class="outline small-btn" data-mv="1,0" aria-label="Right">→</button>
+        <button type="button" class="outline small-btn" data-mv="0,-1" aria-label="Up">↑</button><button type="button" class="outline small-btn" data-mv="0,1" aria-label="Down">↓</button>
+        Width <button type="button" class="outline small-btn" data-w="-1" aria-label="Narrower">−</button><button type="button" class="outline small-btn" data-w="1" aria-label="Wider">+</button></div>
+      <p class="small"><b>Connections</b></p>
+      <ul>${links.map(([l, i]) => `<li class="small">${esc(group(l[0])?.label)} → ${esc(group(l[1])?.label)} ${l[2] ? `(${esc(l[2])})` : ""} <button type="button" class="outline secondary small-btn" data-unlink="${i}">×</button></li>`).join("") || `<li class="small muted">none</li>`}</ul>
+      <div class="row"><select data-link class="small-sel" aria-label="Connect to group"><option value="">Connect to…</option>${others.map(x => `<option value="${x.id}">${esc(x.label)}</option>`).join("")}</select>
+        <input data-link-label placeholder="label, e.g. SPI" style="width:8rem"></div>
+      <p class="small">Add a function to this group with “+ Function” above while the group is selected.</p>
+      <div class="row"><button type="button" class="outline secondary small-btn" data-act="delgroup">Delete group</button></div>`;
+    panel.querySelector('[data-g="label"]').onchange = e => { g.label = e.target.value || g.label; changed(); };
+    panel.querySelectorAll("[data-mv]").forEach(btn => (btn.onclick = () => { const [dx, dy] = btn.dataset.mv.split(",").map(Number); g.col = Math.max(0, g.col + dx); g.row = Math.max(0, g.row + dy); changed(); }));
+    panel.querySelectorAll("[data-w]").forEach(btn => (btn.onclick = () => { g.w = Math.min(4, Math.max(1, (g.w || 1) + +btn.dataset.w)); changed(); }));
+    panel.querySelectorAll("[data-unlink]").forEach(btn => (btn.onclick = () => { S.links.splice(+btn.dataset.unlink, 1); changed(); showGroup(g); }));
+    panel.querySelector("[data-link]").onchange = e => { if (!e.target.value) return; S.links.push([g.id, e.target.value, panel.querySelector("[data-link-label]").value]); changed(); showGroup(g); };
+    panel.querySelector('[data-act="delgroup"]').onclick = () => {
+      if (g.blocks.length && !confirm(`Delete "${g.label}" and its ${g.blocks.length} blocks?`)) return;
+      S.groups = S.groups.filter(x => x !== g); S.links = S.links.filter(l => l[0] !== g.id && l[1] !== g.id); sel = null; changed();
+      panel.innerHTML = `<p class="small muted">Group deleted.</p>`;
+    };
+  }
+
+  // add a function to a group (the selected one, or a group for its category)
+  function addFunction(fn, g) {
+    const f = FN[fn];
+    if (!f) return;
+    g ||= sel && group(sel.group);
+    if (!g) {
+      g = S.groups.find(x => x.label === (CATS[f.category] || f.category));
+      if (!g) {
+        const maxRow = Math.max(-1, ...S.groups.map(x => x.row));
+        const inRow = S.groups.filter(x => x.row === maxRow).length;
+        g = {id: uid("g"), label: CATS[f.category] || f.category, col: inRow < 5 && maxRow >= 0 ? Math.max(...S.groups.filter(x => x.row === maxRow).map(x => x.col + (x.w || 1))) : 0, row: inRow < 5 && maxRow >= 0 ? maxRow : maxRow + 1, w: 1, blocks: []};
+        S.groups.push(g);
+      }
+    }
+    const b = {id: uid("b"), fn, label: "", qty: 1, part: null};
+    g.blocks.push(b);
+    sel = {group: g.id, block: b.id};
+    changed();
+    showBlock(g, b);
+  }
+
+  // ---- events
+  $("#bk-svg").addEventListener("click", e => {
+    const t = e.target.closest("[data-block], [data-group]");
+    if (!t) return;
+    const g = group(t.dataset.group);
+    if (t.dataset.block) { const b = blockOf(g, t.dataset.block); sel = {group: g.id, block: b.id}; render(); showBlock(g, b); }
+    else { sel = {group: g.id}; render(); showGroup(g); }
+  });
+  $("#bk-svg").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.target.dispatchEvent(new MouseEvent("click", {bubbles: true})); } });
+  $("#bk-add").addEventListener("change", e => { if (e.target.value) { addFunction(e.target.value); e.target.value = ""; } });
+  $("#bk-add-group").addEventListener("click", () => {
+    const name = prompt("Group name (e.g. Power rail, Timing, Networking)");
+    if (!name) return;
+    const maxRow = Math.max(0, ...S.groups.map(x => x.row));
+    const col = Math.max(-1, ...S.groups.filter(x => x.row === maxRow).map(x => x.col + (x.w || 1) - 1)) + 1;
+    const g = {id: uid("g"), label: name, col, row: maxRow, w: 1, blocks: []};
+    S.groups.push(g);
+    sel = {group: g.id};
+    changed();
+    showGroup(g);
+  });
+  window.addEventListener("resize", render);
+
+  function changed() { dirty = true; $("#bk-status").textContent = "Unsaved changes"; render(); }
+  $("#bk-name").value = design.name || "";
+  $("#bk-name").addEventListener("input", () => { dirty = true; $("#bk-status").textContent = "Unsaved changes"; });
+  $("#bk-save").addEventListener("click", async () => {
+    const res = await fetch(configId ? `/api/blocks/designs/${configId}` : "/api/blocks/designs",
+      {method: configId ? "PUT" : "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: $("#bk-name").value, data: S})});
+    if (!res.ok) { $("#bk-status").textContent = `Not saved (${res.status})`; return; }
+    const out = await res.json();
+    if (!configId) { configId = out.id; history.replaceState(null, "", `/blocks/${configId}`); }
+    dirty = false;
+    $("#bk-status").textContent = "Saved";
+  });
+  window.addEventListener("beforeunload", e => { if (dirty) e.preventDefault(); });
+  $("#bk-svg-dl").addEventListener("click", () => {
+    const svg = $("#bk-svg").cloneNode(true);
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.insertAdjacentHTML("afterbegin", `<style>${document.getElementById("bk-svg-style").textContent}</style>`);
+    const a = Object.assign(document.createElement("a"), {href: URL.createObjectURL(new Blob([svg.outerHTML], {type: "image/svg+xml"})), download: `${($("#bk-name").value || "block-diagram").replace(/[^\w.-]+/g, "_")}.svg`});
+    a.click();
+  });
+
+  if (!design.data && tpl) dirty = true;
+  render();
+})();

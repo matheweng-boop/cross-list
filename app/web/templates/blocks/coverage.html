@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Coverage – Block diagrams – Cross List{% endblock %}
+{% block content %}
+<h1>Function coverage</h1>
+<p class="subtitle muted">Which system functions Cross List can fill with Skyworks parts today. “Opportunity” means no Skyworks part is in
+  Cross List for it yet: either a portfolio gap or a product family that has not been imported (the full portfolio import is on the backlog).</p>
+{% for ckey, clabel in cat.categories.items() %}
+  {% set fns = cat.functions.items()|selectattr('1.category', 'equalto', ckey)|list %}
+  {% if fns %}
+  <h3 class="cov-h">{{ clabel }}</h3>
+  <div class="cov-grid">
+    {% for key, f in fns %}{% set n = counts[key] %}
+    <div class="cov-item {{ 'ext' if n is none else 'have' if n else 'opp' }}"><b>{{ f.label }}</b>
+      <br><small>{% if n is none %}customer part{% elif n %}{{ n }} Skyworks part{{ 's' if n != 1 }} in Cross List{% else %}opportunity{% endif %}</small></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}

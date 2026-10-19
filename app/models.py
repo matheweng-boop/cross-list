@@ -265,3 +265,14 @@ class CrossRequest(Base):
     status: Mapped[str] = mapped_column(String(20), default="open")  # open | in_progress | done | cannot
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BlockDiagram(Base):
+    """A saved system block diagram from the block-diagram generator (see blocks.js)."""
+
+    __tablename__ = "block_diagrams"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

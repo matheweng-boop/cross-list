@@ -153,6 +153,7 @@ def test_result_table_cross_types(client):
     ref, exact, better, info_worse, other_out, other_pins = ids(
         client, "SR8641", "SA7741X", "SD8641A", "SC141", "SB8441", "SB8641N"
     )
+
     def table(query):
         html = client.get(f"/parts/{ref}?all=true{query}").text
         return html, html.split('<table class="results">')[1].split('<details class="category-view">')[0]

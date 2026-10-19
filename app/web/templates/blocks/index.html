@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Block diagram generator – Cross List{% endblock %}
+{% block content %}
+<h1>Block diagram generator</h1>
+<p class="subtitle muted">Build a system block diagram from functions. Each block shows whether a Skyworks part in Cross List fills it,
+  or whether it is an <b>opportunity</b> (no Skyworks part in Cross List yet). Adding a block suggests what usually goes with it.</p>
+<h2>Start from a template</h2>
+<div class="tpl-grid">
+  {% for t in templates_ %}
+  <a class="tpl-card" href="/blocks/new?template={{ loop.index0 }}"><b>{{ t.name }}</b><br><small class="muted">{{ t.note }}</small>
+    <br><small>{{ t.groups|length }} groups · {{ t.groups|map(attribute='blocks')|map('length')|sum }} blocks</small></a>
+  {% endfor %}
+  <a class="tpl-card tpl-empty" href="/blocks/new"><b>Empty diagram</b><br><small class="muted">Add groups and functions yourself.</small></a>
+</div>
+<h2>Saved block diagrams</h2>
+{% if designs %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Name</th><th>Last saved</th><th></th></tr></thead>
+  <tbody>{% for d in designs %}
+    <tr><td><a href="/blocks/{{ d.id }}"><b>{{ d.name }}</b></a></td><td><small>{{ d.updated_at.strftime('%Y-%m-%d %H:%M') if d.updated_at }}</small></td>
+      <td><form method="post" action="/blocks/{{ d.id }}/delete" onsubmit="return confirm('Delete {{ d.name|e }}?')"><button class="secondary outline small-btn">Delete</button></form></td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">None yet.</p>{% endif %}
+{% endblock %}

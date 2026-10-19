@@ -1,0 +1,92 @@
+# Functions for the block-diagram generator. Each function says which parts in Cross List can fill it.
+#
+# source:  {family: <rules family>}        Skyworks parts of that Cross List family
+#          {broadcast: tuner|coprocessor|receiver}  Skyworks broadcast parts of that role
+#          external                         the customer's own part (processor, memory, sensors): not counted
+#          (omitted)                        no Skyworks part in Cross List yet: shown as an opportunity
+# companions: functions usually designed in next to this one (suggested when the block is added)
+# Note: "opportunity" only means Cross List has no Skyworks part for it yet. The full Skyworks portfolio is not
+# imported (backlog), so some opportunities are covered by Skyworks products that are simply not loaded.
+
+categories:
+  power: Power rail
+  protection: Protection
+  isolation: Isolation
+  timing: Timing
+  rf: RF front end
+  radio: Broadcast radio
+  sensing: Sensing & amplification
+  interface: Interface
+  networking: Networking
+  processing: Processing
+  memory: Memory
+  audio: Audio
+  sensors: Sensors
+
+functions:
+  # power
+  pmic: {label: PMIC, category: power, companions: [supervisor, voltage_reference], note: Multi-rail power management IC}
+  buck_boost: {label: Buck-boost controller, category: power, companions: [wide_vin_buck, tvs_esd]}
+  wide_vin_buck: {label: Wide-Vin buck, category: power, companions: [pol_buck, pol_ldo]}
+  pol_buck: {label: PoL buck, category: power}
+  pol_ldo: {label: PoL LDO, category: power}
+  ldo_tracker: {label: LDO tracker, category: power}
+  termination_ldo: {label: Termination LDO, category: power}
+  multiphase: {label: Multi-phase controller, category: power, note: High-current core supply for processors}
+  supervisor: {label: Supervisor, category: power}
+  sequencer: {label: Sequencer, category: power}
+  voltage_reference: {label: Voltage reference, category: power}
+  load_switch: {label: High-side / load switch, category: power, companions: [tvs_esd]}
+  isolated_dcdc: {label: Isolated DC-DC, category: power, companions: [digital_isolator], note: Power across an isolation barrier}
+  # protection
+  tvs_esd: {label: TVS / ESD protection, category: protection}
+  reverse_polarity: {label: Reverse-polarity / ideal-diode controller, category: protection}
+  # isolation
+  digital_isolator: {label: Digital isolator, category: isolation, source: {family: digital_isolator}, companions: [isolated_dcdc, pol_ldo, tvs_esd]}
+  gate_driver: {label: Isolated gate driver, category: isolation, source: {family: gate_driver}, companions: [digital_isolator, isolated_dcdc, current_sensor, isolated_amplifier, mcu, tvs_esd]}
+  isolated_amplifier: {label: Isolated amplifier / modulator, category: isolation, source: {family: isolated_amplifier}, companions: [isolated_dcdc, adc]}
+  current_sensor: {label: Isolated current sensor, category: isolation, source: {family: current_sensor}, companions: [adc, mcu]}
+  # timing
+  crystal_oscillator: {label: Crystal / oscillator, category: timing, companions: [clock_buffer]}
+  clock_generator: {label: Clock generator, category: timing, companions: [clock_buffer]}
+  clock_buffer: {label: Clock buffer, category: timing}
+  jitter_attenuator: {label: Jitter attenuator, category: timing}
+  rtc: {label: RTC, category: timing}
+  watchdog: {label: Watchdog, category: timing}
+  # RF
+  antenna: {label: Antenna, category: rf, source: external, companions: [antenna_switch, lna, tvs_esd]}
+  antenna_switch: {label: Antenna / RF switch, category: rf, source: {family: rf_switch}, companions: [lna, tvs_esd]}
+  rf_switch: {label: RF switch, category: rf, source: {family: rf_switch}}
+  lna: {label: LNA, category: rf, companions: [antenna_switch]}
+  rf_frontend: {label: RF front-end module, category: rf}
+  # broadcast radio
+  am_fm_tuner: {label: AM/FM / digital radio tuner, category: radio, source: {broadcast: tuner}, companions: [digital_radio_demod, antenna_switch, lna, pmic, pol_ldo, crystal_oscillator, clock_buffer, tvs_esd, audio_amp, soc, flash]}
+  digital_radio_demod: {label: Digital radio demodulator (HD / DAB / DRM), category: radio, source: {broadcast: coprocessor}, companions: [flash, soc, pol_ldo]}
+  single_chip_radio: {label: Single-chip radio receiver, category: radio, source: {broadcast: receiver}, companions: [crystal_oscillator, pol_ldo, audio_amp]}
+  # sensing
+  amplifier: {label: Amplifier, category: sensing, companions: [adc]}
+  temperature_sensor: {label: Temperature sensor, category: sensing}
+  adc: {label: ADC, category: sensing}
+  # interface
+  voltage_translator: {label: Voltage translator, category: interface}
+  io_expander: {label: I/O expander, category: interface}
+  serdes: {label: SERDES, category: interface, companions: [tvs_esd]}
+  redriver: {label: ReDriver, category: interface}
+  pcie_switch: {label: PCIe packet switch, category: interface}
+  pcie_buffer: {label: PCIe clock buffer, category: interface}
+  # networking
+  can_transceiver: {label: CAN transceiver, category: networking, companions: [tvs_esd, digital_isolator]}
+  ethernet_phy: {label: Ethernet PHY / switch, category: networking, companions: [tvs_esd]}
+  rs485_transceiver: {label: RS-485 transceiver, category: networking, companions: [digital_isolator, isolated_dcdc, tvs_esd]}
+  # processing and memory (customer parts)
+  mcu: {label: MCU, category: processing, source: external}
+  soc: {label: SoC / application processor, category: processing, source: external}
+  adas_processor: {label: Autonomous driving processor, category: processing, source: external}
+  ddr_flash: {label: Memory DDR / flash, category: memory, source: external}
+  flash: {label: Flash, category: memory, source: external}
+  # audio
+  audio_amp: {label: Audio amplifier, category: audio}
+  audio_codec: {label: Audio codec / DSP, category: audio}
+  # sensors (external inputs)
+  vehicle_sensors: {label: Vehicle sensors (wheel speed, steering, brake...), category: sensors, source: external}
+  camera_radar: {label: Camera / lidar / radar modules, category: sensors, source: external}

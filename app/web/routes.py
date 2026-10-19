@@ -63,10 +63,15 @@ SECTIONS = (
                                  ("Requests", "/requests")]),
     ("technical", "Technical discussions", "/technical", [("Technical", "/technical"),
                                                          ("Engineering notes", "/engineering")]),
+    ("blocks", "Block diagrams", "/blocks", [("Generator", "/blocks"), ("Coverage", "/blocks/coverage")]),
     ("broadcast", "Broadcast", "/broadcast", [("Overview", "/broadcast"),
                                               ("Configurations", "/broadcast/configurations")]),
 )  # fmt: skip
-SECTION_PREFIXES = {"technical": ("/technical", "/engineering", "/impact"), "broadcast": ("/broadcast",)}
+SECTION_PREFIXES = {
+    "technical": ("/technical", "/engineering", "/impact"),
+    "broadcast": ("/broadcast",),
+    "blocks": ("/blocks",),
+}
 
 
 def section_of(path: str) -> str:
@@ -248,7 +253,11 @@ def part_detail(
     rules = get_rules(part.family)
     # grade is always one of the two: an automotive part only takes automotive crosses (AEC-Q100 is a hard
     # requirement); a non-automotive part shows non-automotive crosses unless automotive is chosen
-    grade = "automotive" if grade_of(part) == "automotive" else (grade if grade in ("automotive", "industrial") else "industrial")
+    grade = (
+        "automotive"
+        if grade_of(part) == "automotive"
+        else (grade if grade in ("automotive", "industrial") else "industrial")
+    )
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
     crosses = crosses_for(session, part, scope, dev)

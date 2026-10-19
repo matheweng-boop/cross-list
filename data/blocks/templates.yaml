@@ -1,0 +1,76 @@
+# Block-diagram templates. Groups are placed on a grid (col, row; width / height in grid cells);
+# blocks are function ids (optionally "id x2" for two of them, or {fn: id, label: "..."}).
+# links connect groups: [from, to, label].
+
+- name: ADAS domain controller
+  note: Layout after a reference ADAS block diagram the user shared; every block is a function to fill.
+  groups:
+    - {id: protection, label: Protection, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd]}
+    - {id: power, label: Power rail, col: 1, row: 0, w: 2, blocks: [buck_boost, wide_vin_buck, pol_buck, pol_ldo, ldo_tracker, supervisor, sequencer, voltage_reference, multiphase]}
+    - {id: memory, label: Memory, col: 3, row: 0, blocks: [pol_buck, termination_ldo, ddr_flash]}
+    - {id: vdi, label: Vehicle data interface, col: 4, row: 0, w: 2, blocks: [buck_boost, wide_vin_buck, pol_ldo, serdes, load_switch, redriver, pcie_switch, tvs_esd]}
+    - {id: sensors, label: Sensor inputs, col: 0, row: 1, blocks: [vehicle_sensors]}
+    - {id: sensing, label: Sensor input block, col: 1, row: 1, blocks: [amplifier, temperature_sensor, voltage_translator, io_expander, tvs_esd]}
+    - {id: timing, label: Timing, col: 2, row: 1, blocks: [crystal_oscillator, watchdog, rtc]}
+    - {id: diag, label: Diagnostics, col: 3, row: 1, blocks: [adc, supervisor]}
+    - {id: proc, label: Processing, col: 4, row: 1, blocks: [mcu, adas_processor]}
+    - {id: net, label: Networking, col: 5, row: 1, blocks: [can_transceiver, ethernet_phy, pcie_buffer, tvs_esd]}
+    - {id: ext, label: Camera / lidar / radar, col: 6, row: 0, blocks: [camera_radar]}
+  links:
+    - [protection, power, "+12 V"]
+    - [power, proc, MCU / processor power]
+    - [power, memory, ""]
+    - [sensors, sensing, ""]
+    - [sensing, proc, sensor inputs]
+    - [timing, proc, clocks]
+    - [diag, proc, ""]
+    - [proc, vdi, vehicle data]
+    - [proc, net, ""]
+    - [vdi, ext, ""]
+
+- name: Car radio tuner system
+  note: Antenna to audio, with the tuners and demodulator from the Broadcast section.
+  groups:
+    - {id: ant, label: Antenna & RF, col: 0, row: 0, blocks: [antenna, antenna_switch, lna, tvs_esd]}
+    - {id: tuners, label: Tuners, col: 1, row: 0, blocks: [am_fm_tuner x2]}
+    - {id: demod, label: Digital radio, col: 2, row: 0, blocks: [digital_radio_demod, flash]}
+    - {id: proc, label: Head unit, col: 3, row: 0, blocks: [soc]}
+    - {id: audio, label: Audio, col: 4, row: 0, blocks: [audio_codec, audio_amp]}
+    - {id: power, label: Power rail, col: 1, row: 1, blocks: [reverse_polarity, pmic, pol_buck, pol_ldo, supervisor]}
+    - {id: timing, label: Timing, col: 2, row: 1, blocks: [crystal_oscillator, clock_buffer]}
+  links:
+    - [ant, tuners, RF]
+    - [tuners, demod, I/Q + I2S]
+    - [demod, proc, SPI + I2S]
+    - [tuners, proc, I2S]
+    - [proc, audio, I2S]
+    - [power, tuners, 1.8 V / 3.3 V]
+    - [timing, tuners, 36.864 MHz]
+
+- name: EV traction inverter
+  note: Three half-bridges with isolated gate drivers, phase-current sensing and isolated power.
+  groups:
+    - {id: ctrl, label: Control, col: 0, row: 0, blocks: [mcu, crystal_oscillator, supervisor]}
+    - {id: iso, label: Isolation, col: 1, row: 0, blocks: [digital_isolator, isolated_dcdc]}
+    - {id: drive, label: Gate drive, col: 2, row: 0, blocks: [gate_driver x6]}
+    - {id: sense, label: Sensing, col: 2, row: 1, blocks: [current_sensor x2, isolated_amplifier, temperature_sensor]}
+    - {id: power, label: Power rail, col: 0, row: 1, blocks: [reverse_polarity, wide_vin_buck, pol_ldo]}
+    - {id: net, label: Vehicle network, col: 1, row: 1, blocks: [can_transceiver, tvs_esd]}
+  links:
+    - [ctrl, iso, PWM / SPI]
+    - [iso, drive, ""]
+    - [sense, ctrl, phase current]
+    - [power, ctrl, ""]
+    - [ctrl, net, CAN]
+
+- name: Industrial isolated I/O
+  note: Isolated fieldbus and digital I/O for a PLC or drive.
+  groups:
+    - {id: ctrl, label: Controller, col: 0, row: 0, blocks: [mcu, crystal_oscillator]}
+    - {id: iso, label: Isolation, col: 1, row: 0, blocks: [digital_isolator x2, isolated_dcdc]}
+    - {id: field, label: Field side, col: 2, row: 0, blocks: [rs485_transceiver, can_transceiver, tvs_esd]}
+    - {id: power, label: Power rail, col: 0, row: 1, blocks: [wide_vin_buck, pol_ldo, supervisor]}
+  links:
+    - [ctrl, iso, UART / SPI]
+    - [iso, field, ""]
+    - [power, ctrl, ""]

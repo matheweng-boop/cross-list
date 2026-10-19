@@ -464,7 +464,9 @@ def notes_search_page(request: Request, q: str = ""):
             shown.append(h)
     notes, pages = notes_search.count()
     return templates.TemplateResponse(
-        request, "notes_search.html", {"q": q, "hits": shown[:25], "n_notes": notes, "n_pages": pages}
+        request,
+        "notes_search.html",
+        {"q": q, "hits": shown[:25], "n_notes": notes, "n_pages": pages, "n_ti": notes_search.count_ti()},
     )
 
 

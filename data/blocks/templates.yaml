@@ -1119,3 +1119,1724 @@
     question: Diversity receive path with its own switch
     choices: [yes (SP4T), 'no']
     source: SKY_BD_PHONE_ASM
+
+# ---- converted from data/blocks/research/ti_block_diagrams.yaml by tools/research_to_templates.py
+- name: HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-OBC, SLUAAS6, STDA010'
+  sources:
+  - {doc: TI-SOL-OBC, title: Onboard charger (OBC) - block diagram + subsystems, url: 'https://www.ti.com/solution/onboard-charger'}
+  - {doc: SLUAAS6, title: Isolated Bias Power Supply Architecture for HEV and EV Onboard Chargers, url: 'https://www.ti.com/lit/pdf/sluaas6'}
+  - {doc: STDA010, title: Isolated Bias Power Supply Architecture for HEV/EV Single Stage Onboard Chargers, url: 'https://www.ti.com/lit/pdf/stda010'}
+  groups:
+  - id: ac_input
+    label: AC/DC EMI filter
+    blocks: [pre_regulator]
+    col: 0
+    row: 0
+  - id: pfc_stage
+    label: PFC power stage
+    blocks: [gate_driver]
+    col: 1
+    row: 0
+  - id: pfc_sense
+    label: PFC voltage / current / temperature sense
+    blocks: [isolated_amplifier, current_sensor, temperature_sensor]
+    col: 2
+    row: 0
+  - id: pfc_controller
+    label: PFC controller (MCU)
+    blocks: [mcu]
+    col: 3
+    row: 0
+  - id: pfc_power
+    label: PFC bias & power supply
+    blocks: [isolated_dcdc, wide_vin_buck, pol_ldo]
+    col: 0
+    row: 1
+  - id: pfc_comm
+    label: PFC communication / PFC-to-DC/DC communication
+    blocks: [digital_isolator]
+    col: 1
+    row: 1
+  - id: dcdc_primary
+    label: DC/DC primary power stage + gate driver
+    blocks: [gate_driver, isolated_amplifier, current_sensor, temperature_sensor]
+    col: 2
+    row: 1
+  - id: transformer
+    label: Isolation transformer (DC/DC)
+    blocks:
+    - {fn: external_block, label: Isolation transformer (DC/DC)}
+    col: 3
+    row: 1
+  - id: dcdc_secondary
+    label: DC/DC secondary power stage + gate driver
+    blocks: [gate_driver, current_sensor, supervisor, temperature_sensor]
+    col: 0
+    row: 2
+  - id: dcdc_controller
+    label: DC/DC controller (MCU) + MCU monitoring
+    blocks: [mcu, supervisor, watchdog]
+    col: 1
+    row: 2
+  - id: dcdc_power
+    label: Primary / secondary bias supplies + DC/DC communication
+    blocks: [isolated_dcdc, pol_buck, pol_ldo, digital_isolator]
+    col: 2
+    row: 2
+  - id: obc_controller
+    label: OBC controller (LV side)
+    blocks: [mcu]
+    col: 3
+    row: 2
+  - id: evse_comm
+    label: EVSE communication (charger interface)
+    blocks: [isolated_can, can_transceiver, rs485_transceiver, tvs_esd]
+    col: 0
+    row: 3
+  - id: connector
+    label: Connector control & diagnostics + indicators
+    blocks: [motor_controller, temperature_sensor, led_driver]
+    col: 1
+    row: 3
+  - id: vehicle_can
+    label: OBC CAN (HEV CAN)
+    blocks: [can_transceiver, isolated_can, tvs_esd]
+    col: 2
+    row: 3
+  - id: sbc
+    label: System basis chip / PMIC (12 V)
+    blocks: [pmic, wide_vin_buck, pol_ldo]
+    col: 3
+    row: 3
+  - id: lv_input
+    label: 12 V supply input protection
+    blocks: [reverse_polarity]
+    col: 0
+    row: 4
+  - id: contactor
+    label: Contactor control
+    blocks: [load_switch]
+    col: 1
+    row: 4
+  - id: safety
+    label: HEV/EV safety (interlock, isolation leakage)
+    blocks: [adc, supervisor]
+    col: 2
+    row: 4
+  - id: thermal
+    label: Thermal management
+    blocks: [motor_controller, load_switch]
+    col: 3
+    row: 4
+  links:
+  - [ac_input, pfc_stage, AC power from grid]
+  - [pfc_stage, dcdc_primary, PFC bus]
+  - [dcdc_primary, transformer, '']
+  - [transformer, dcdc_secondary, '']
+  - [dcdc_secondary, vehicle_can, '']
+  - [pfc_sense, pfc_controller, voltage / current / temp sense]
+  - [pfc_controller, pfc_stage, PWM via PFC gate driver]
+  - [pfc_controller, pfc_comm, '']
+  - [pfc_comm, dcdc_controller, PFC to DC/DC communication]
+  - [dcdc_controller, dcdc_primary, PWM via isolated gate driver]
+  - [dcdc_controller, dcdc_secondary, PWM via secondary gate driver]
+  - [pfc_power, pfc_controller, '']
+  - [dcdc_power, dcdc_controller, '']
+  - [obc_controller, pfc_controller, PFC (isolated link)]
+  - [obc_controller, dcdc_controller, DC/DC (isolated link)]
+  - [evse_comm, obc_controller, '']
+  - [connector, obc_controller, '']
+  - [obc_controller, vehicle_can, '']
+  - [sbc, obc_controller, '']
+  - [lv_input, sbc, 12 V]
+  - [obc_controller, contactor, '']
+  - [obc_controller, safety, '']
+  - [obc_controller, thermal, '']
+  questions:
+  - id: obc_topology
+    question: OBC power topology
+    choices: [two-stage (PFC + isolated DC/DC), single-stage (matrix / bidirectional)]
+    source: TI-SOL-OBC SVG; STDA010 p.2 Fig 1-1, 1-2
+  - id: grid_phases
+    question: AC input
+    choices: [single-phase, three-phase]
+    source: STDA010 p.2
+  - id: bidirectional
+    question: Bidirectional (V2G / V2L) capability
+    choices: ['yes', 'no']
+    source: TI-SOL-OBC subsystem 'DC/DC secondary gate driver'
+  - id: battery_voltage
+    question: HV battery class
+    choices: [400 V, 800 V]
+    source: SLUAAS6 p.2-3
+  - id: switch_tech
+    question: Power switch technology
+    choices: [Si MOSFET, SiC MOSFET, GaN]
+    source: SLUAAS6 p.3
+  - id: bias_architecture
+    question: Isolated bias power architecture
+    choices: [centralized, semi-distributed, distributed (per-driver modules), bootstrap]
+    source: SLUAAS6 Fig 2-1..4-3 p.4-7
+  - id: current_sensing
+    question: Current sensing method (PFC / DC/DC)
+    choices: [shunt + isolated amplifier, shunt + isolated modulator, Hall-effect, current transformer]
+    source: TI-SOL-OBC SVG ('Shunt / magnetic')
+  - id: evse_link
+    question: EVSE communication
+    choices: [CAN, PLC (GreenPHY), wireless, PWM pilot only]
+    source: TI-SOL-OBC subsystem 'EVSE communication'
+  - id: isolated_vehicle_can
+    question: Isolated vehicle CAN
+    choices: ['yes', 'no']
+    source: TI-SOL-OBC subsystem 'OBC CAN'
+  - id: asil
+    question: Functional safety target
+    choices: [QM, ASIL B, ASIL C/D]
+    source: TI-SOL-OBC 'HEV/EV safety', 'MCU diagnostics/monitoring'
+- name: HEV/EV HV-to-LV DC/DC converter (phase-shifted full bridge, HV battery to 12 V) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-HVLVDCDC, SLUAB19'
+  sources:
+  - {doc: TI-SOL-HVLVDCDC, title: DC/DC converter system (HEV/EV HV-to-LV) - block diagram + subsystems, url: 'https://www.ti.com/solution/dc-dc-converter'}
+  - {doc: SLUAB19, title: Isolated Bias Power Supply Architecture for HEV/EV HVLV DCDC Converters, url: 'https://www.ti.com/lit/pdf/sluab19'}
+  groups:
+  - id: hv_input
+    label: HV battery + HV supply monitoring
+    blocks: [supervisor]
+    col: 0
+    row: 0
+  - id: primary_bridge
+    label: Primary full bridge (QA-QD) + isolated gate driver
+    blocks: [gate_driver]
+    col: 1
+    row: 0
+  - id: primary_sense
+    label: Primary current / voltage / temperature sense + sensing bias
+    blocks: [isolated_amplifier, current_sensor, temperature_sensor, isolated_dcdc]
+    col: 2
+    row: 0
+  - id: transformer
+    label: Power transformer
+    blocks:
+    - {fn: external_block, label: Power transformer}
+    col: 3
+    row: 0
+  - id: secondary_rect
+    label: Secondary synchronous rectifier (QE-QH) + half-bridge / isolated gate driver
+    blocks: [half_bridge_driver, gate_driver]
+    col: 0
+    row: 1
+  - id: secondary_sense
+    label: Secondary current / temperature sense + LV supply monitoring
+    blocks: [current_sensor, temperature_sensor, supervisor, pol_ldo]
+    col: 1
+    row: 1
+  - id: breaker
+    label: Circuit breaker (HSSC) to 12 V battery
+    blocks: [load_switch, power_loss_protection]
+    col: 2
+    row: 1
+  - id: mcu
+    label: Microcontroller + voltage reference
+    blocks: [mcu, voltage_reference]
+    col: 3
+    row: 1
+  - id: comms
+    label: CAN/LIN + communication / diagnostics (digital isolation)
+    blocks: [can_transceiver, digital_isolator]
+    col: 0
+    row: 2
+  - id: aux_power
+    label: 'Aux power: major (isolated from HV), minor, redundant, gate-driver bias, PMIC'
+    blocks: [hv_flyback, isolated_dcdc, wide_vin_buck, pmic, reverse_polarity]
+    col: 1
+    row: 2
+  links:
+  - [hv_input, primary_bridge, HV battery]
+  - [primary_bridge, transformer, '']
+  - [transformer, secondary_rect, '']
+  - [secondary_rect, breaker, 12 V output]
+  - [primary_sense, mcu, to MCU]
+  - [secondary_sense, mcu, to MCU]
+  - [hv_input, mcu, HV supply monitoring]
+  - [mcu, primary_bridge, PWM (isolated gate driver)]
+  - [mcu, secondary_rect, PWM]
+  - [mcu, comms, '']
+  - [aux_power, mcu, PMIC]
+  - [aux_power, primary_bridge, gate driver bias supply]
+  - [hv_input, aux_power, major auxiliary from HV battery]
+  questions:
+  - id: hv_class
+    question: HV battery class
+    choices: [400 V, 800 V]
+    source: SLUAB19 p.2-3
+  - id: bidirectional
+    question: Bidirectional (LV-to-HV pre-charge / jump-start)
+    choices: ['yes', 'no']
+    source: TI-SOL-HVLVDCDC subsystem list (TIDM-BIDIR-400-12)
+  - id: redundant_supply
+    question: Controller supply from HV battery (redundant)
+    choices: ['yes', 'no']
+    source: TI-SOL-HVLVDCDC 'Major auxiliary', 'Redundant power supply'
+  - id: bias_architecture
+    question: Gate-driver bias architecture
+    choices: [centralized, semi-distributed, DC/DC modules, bootstrap]
+    source: SLUAB19 Fig 2-1..4-2
+  - id: current_sense_method
+    question: Primary current sensing
+    choices: [shunt + isolated amplifier, Hall-effect, current transformer]
+    source: TI-SOL-HVLVDCDC SVG ('Shunt / magnetic')
+  - id: output_breaker
+    question: LV output circuit breaker
+    choices: [smart high-side switch controller (back-to-back FETs), none]
+    source: TI-SOL-HVLVDCDC 'Circuit breaker'
+- name: EV high-voltage battery system (wired cell supervision, BDU, BMU) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-HVBATT, SLYY197A'
+  sources:
+  - {doc: TI-SOL-HVBATT, title: High-voltage battery system (wired) - block diagram + subsystems, url: 'https://www.ti.com/solution/high-voltage-battery-system'}
+  - {doc: SLYY197A, title: Wired vs. Wireless Communications In EV Battery Management, url: 'https://www.ti.com/lit/pdf/slyy197'}
+  groups:
+  - id: cell_supervision
+    label: Cell supervision (CSC, per module)
+    blocks: [adc, temperature_sensor, tvs_esd]
+    col: 0
+    row: 0
+  - id: daisy_chain
+    label: Daisy-chain communication (isolated)
+    blocks: [digital_isolator]
+    col: 1
+    row: 0
+  - id: hv_sensing
+    label: High-voltage sensing & isolation monitoring (BDU)
+    blocks: [isolated_amplifier, isolated_switch_driver]
+    col: 2
+    row: 0
+  - id: safety_breaker
+    label: Safety breaker (pyrofuse driver)
+    blocks: [isolated_switch_driver]
+    col: 3
+    row: 0
+  - id: precharge
+    label: Precharge driver (solid-state switch driver)
+    blocks: [isolated_switch_driver]
+    col: 0
+    row: 1
+  - id: bdu_controller
+    label: BDU controller (pack monitor)
+    blocks: [adc, current_sensor]
+    col: 1
+    row: 1
+  - id: env_sensing
+    label: Environment sensing & storage
+    blocks: [temperature_sensor]
+    col: 2
+    row: 1
+  - id: isolation
+    label: Isolation (isolated power supply + digital isolator)
+    blocks: [isolated_dcdc, digital_isolator]
+    col: 3
+    row: 1
+  - id: bmu_controller
+    label: Battery system controller (BMU safety MCU)
+    blocks: [mcu]
+    col: 0
+    row: 2
+  - id: switch_control
+    label: Switch control (contactor drivers)
+    blocks: [load_switch]
+    col: 1
+    row: 2
+  - id: hvil
+    label: High-voltage interlock
+    blocks: [cc_regulator]
+    col: 2
+    row: 2
+  - id: power_comm
+    label: Power supervision & communication (12 V)
+    blocks: [pmic, reverse_polarity, watchdog, supervisor, can_transceiver, ethernet_phy, tvs_esd]
+    col: 3
+    row: 2
+  links:
+  - [cell_supervision, daisy_chain, daisy chain]
+  - [daisy_chain, bmu_controller, via daisy-chain bridge]
+  - [hv_sensing, bdu_controller, '']
+  - [bdu_controller, safety_breaker, '']
+  - [bdu_controller, precharge, 12V HV]
+  - [bdu_controller, isolation, SPI]
+  - [isolation, bmu_controller, SPI]
+  - [bdu_controller, env_sensing, '']
+  - [bmu_controller, switch_control, '']
+  - [bmu_controller, hvil, '']
+  - [power_comm, bmu_controller, '12 V supply, CAN/LIN/Ethernet']
+  - [bmu_controller, isolation, isolated power]
+  questions:
+  - id: cell_link
+    question: Cell-monitor communication
+    choices: [wired daisy chain (capacitive isolation), wired daisy chain (transformer isolation), wireless BMS]
+    source: SLYY197A Fig 2-3; TI-SOL-HVBATT wired/wireless variants
+  - id: pack_voltage
+    question: Pack voltage
+    choices: [400 V, 800 V]
+    source: TI-SOL-HVBATT
+  - id: current_sense_location
+    question: Pack current measurement
+    choices: [shunt in BDU pack monitor, isolated amplifier on shunt, Hall sensor]
+    source: TI-SOL-HVBATT 'Current sense', 'BDU controller'
+  - id: isolation_monitoring
+    question: Insulation monitoring method
+    choices: [switched resistor with solid-state relays, isolated amplifier on divider]
+    source: TI-SOL-HVBATT 'High-voltage sensing and isolation monitoring'
+  - id: safety_disconnect
+    question: Emergency disconnect
+    choices: [pyrofuse, contactor only, pyrofuse + contactor]
+    source: TI-SOL-HVBATT 'Safety breaker'
+  - id: vehicle_bus
+    question: Vehicle network
+    choices: [CAN FD, LIN, automotive Ethernet]
+    source: TI-SOL-HVBATT 'Power supervision and communication'
+- name: Energy storage system battery (multimodule, daisy chain) - rack BMS (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-ESSBMS'
+  sources:
+  - {doc: TI-SOL-ESSBMS, title: ESS battery management system - multimodule battery with daisy chain, url: 'https://www.ti.com/solution/ess-battery-management-system-bms'}
+  groups:
+  - id: bmu
+    label: Battery monitoring unit (per module)
+    blocks: [adc, temperature_sensor, load_switch]
+    col: 0
+    row: 0
+  - id: hv_monitor
+    label: High-voltage monitoring unit
+    blocks: [isolated_amplifier, adc, current_sensor, isolated_switch_driver]
+    col: 1
+    row: 0
+  - id: irm
+    label: Insulation resistance detection
+    blocks: [isolated_amplifier, isolated_switch_driver, isolated_dcdc, digital_isolator, isolated_can]
+    col: 2
+    row: 0
+  - id: bcu
+    label: Battery control unit
+    blocks: [rtc, supervisor, watchdog, mcu, digital_isolator, tvs_esd]
+    col: 0
+    row: 1
+  - id: comms
+    label: Communication
+    blocks: [isolated_can, rs485_transceiver, ethernet_phy, tvs_esd]
+    col: 1
+    row: 1
+  - id: aux_power
+    label: Auxiliary power supply (12/24 V)
+    blocks: [wide_vin_buck, pol_ldo, isolated_dcdc]
+    col: 2
+    row: 1
+  links:
+  - [bmu, bcu, daisy chain]
+  - [hv_monitor, bcu, '']
+  - [aux_power, irm, iso-power]
+  - [aux_power, hv_monitor, iso-power]
+  - [aux_power, bcu, power]
+  - [bcu, comms, '']
+  questions:
+  - id: module_link
+    question: Module-to-rack communication
+    choices: [isolated daisy chain, per-module CAN]
+    source: TI-SOL-ESSBMS variants (daisy chain vs CAN)
+  - id: rack_bus
+    question: Rack / PCS interface
+    choices: [CAN, RS-485, Ethernet]
+    source: TI-SOL-ESSBMS 'Communication'
+  - id: irm_needed
+    question: Insulation resistance detection in rack controller
+    choices: ['yes', 'no']
+    source: TI-SOL-ESSBMS 'Insulation resistance detection'
+  - id: aux_input
+    question: Auxiliary supply input
+    choices: [12 V, 24 V]
+    source: TI-SOL-ESSBMS SVG ('12V/24V')
+- name: 5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-AAS, SBAA686'
+  sources:
+  - {doc: TI-SOL-AAS, title: Active antenna system mMIMO (AAS) - RF sampling (sub-6 GHz) variant, url: 'https://www.ti.com/solution/active-antenna-system-mmimo-aas'}
+  - {doc: SBAA686, title: Enabling Triple-Band Base Station Radio Design Using AFE7769D Featuring Skyworks Power Amplifiers, url: 'https://www.ti.com/lit/pdf/sbaa686'}
+  groups:
+  - id: protection
+    label: Protection (-48 V input)
+    blocks: [power_loss_protection]
+    col: 0
+    row: 0
+  - id: iso_48v
+    label: Isolated -48 V DC/DC power supply
+    blocks: [isolated_dcdc, gate_driver, digital_isolator, current_sensor, voltage_reference]
+    col: 1
+    row: 0
+  - id: pol_power
+    label: Point-of-load power + sequencer
+    blocks: [multiphase, pol_buck, pol_ldo, sequencer]
+    col: 2
+    row: 0
+  - id: afe_power
+    label: Analog front end (AFE) power
+    blocks: [pol_buck, pol_ldo, load_switch, termination_ldo]
+    col: 3
+    row: 0
+  - id: pa_power
+    label: Power amplifier (PA) power
+    blocks: [rf_pa_bias, pol_buck, pol_ldo]
+    col: 0
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, jitter_attenuator, clock_buffer, clock_generator]
+    col: 1
+    row: 1
+  - id: optical
+    label: Optical (fronthaul)
+    blocks: [redriver, load_switch]
+    col: 2
+    row: 1
+  - id: dfe
+    label: Digital front end (DFE)
+    blocks: [redriver]
+    col: 3
+    row: 1
+  - id: baseband
+    label: Digital baseband processor + memory
+    blocks: [soc, flash]
+    col: 0
+    row: 2
+  - id: rf_afe
+    label: RF-sampling analog front end (4x AFE)
+    blocks: [rf_frontend]
+    col: 1
+    row: 2
+  - id: rf_fe_pa
+    label: RF front end & power amplifier
+    blocks: [rf_frontend, lna, rf_switch, rf_pa_bias, current_sensor, temperature_sensor, power_loss_protection]
+    col: 2
+    row: 2
+  - id: antenna_array
+    label: Antenna array
+    blocks: [antenna]
+    col: 3
+    row: 2
+  - id: glue
+    label: Glue logic
+    blocks: [voltage_translator, io_expander, supervisor]
+    col: 0
+    row: 3
+  - id: communication
+    label: Communication (fan / AC / COM port)
+    blocks: [rs485_transceiver, ethernet_phy]
+    col: 1
+    row: 3
+  links:
+  - [optical, dfe, eCPRI (from BBU)]
+  - [optical, baseband, '']
+  - [dfe, baseband, '']
+  - [baseband, rf_afe, JESD204 (4x)]
+  - [clocking, dfe, '']
+  - [clocking, baseband, '']
+  - [clocking, rf_afe, '']
+  - [clocking, rf_fe_pa, LO / reference]
+  - [rf_afe, rf_fe_pa, TX]
+  - [rf_fe_pa, rf_afe, RX / feedback]
+  - [rf_fe_pa, antenna_array, '']
+  - [protection, iso_48v, -48 V]
+  - [iso_48v, pol_power, '']
+  - [iso_48v, afe_power, '']
+  - [iso_48v, pa_power, '']
+  - [pa_power, rf_fe_pa, PA drain / bias]
+  questions:
+  - id: afe_arch
+    question: Transceiver architecture
+    choices: [RF sampling, IF sampling]
+    source: TI-SOL-AAS variants 25554 (RF sampling) vs 25347 (IF sampling)
+  - id: duplex
+    question: Duplex mode
+    choices: [TDD, FDD]
+    source: TI-SOL-AAS SVG (duplexer); SLAA862A Fig 5-1
+  - id: trx_count
+    question: TX/RX chain count
+    choices: [8T8R, 32T32R, 64T64R]
+    source: TI-SOL-AAS SVG (4x AFE stacked, antenna array)
+  - id: bands
+    question: Number of bands per radio
+    choices: [single band, dual band, triple band]
+    source: SBAA686 Fig 1-1
+  - id: pa_tech
+    question: Power amplifier technology
+    choices: [GaN, LDMOS, GaAs/SiGe module]
+    source: SBAA686 Table 3-2; TI DPD test reports
+  - id: pa_supply
+    question: PA drain supply
+    choices: [fixed DC/DC, envelope tracking / adjustable]
+    source: TI-SOL-AAS 'Power amplifier (PA) power'
+  - id: dpd
+    question: DPD location
+    choices: [in transceiver (AFE), in FPGA / DFE]
+    source: SBAA686 p.3; TI-SOL-AAS 'Digital front end'
+  - id: sync
+    question: Timing source
+    choices: [eCPRI / PTP from fronthaul, GPS, local OCXO holdover]
+    source: TI-SOL-AAS SVG (eCPRI into clocking)
+- name: Small cell base station (with Wi-Fi front end) (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-SMALLCELL, SLAA862A'
+  sources:
+  - {doc: TI-SOL-SMALLCELL, title: Small cell base station, url: 'https://www.ti.com/solution/small-cell-base-station'}
+  - {doc: SLAA862A, title: Small Cell and Repeater System Using Integrated RF Sampling Device, url: 'https://www.ti.com/lit/pdf/slaa862'}
+  groups:
+  - id: poe_pd
+    label: Power over Ethernet PD
+    blocks: [isolated_dcdc, current_sensor, digital_isolator, voltage_reference]
+    col: 0
+    row: 0
+  - id: ac_input
+    label: AC input
+    blocks:
+    - {fn: external_block, label: AC input}
+    col: 1
+    row: 0
+  - id: pol_power
+    label: Point-of-load (POL) power
+    blocks: [pol_buck, pol_ldo, termination_ldo]
+    col: 2
+    row: 0
+  - id: afe_power
+    label: Analog front end (AFE) power
+    blocks: [pol_buck, pol_ldo, load_switch]
+    col: 3
+    row: 0
+  - id: seq_mon
+    label: Sequencing & monitoring
+    blocks: [sequencer, supervisor, voltage_reference]
+    col: 0
+    row: 1
+  - id: baseband
+    label: Baseband & transport/control
+    blocks: [ethernet_phy, redriver, temperature_sensor, voltage_translator, io_expander, soc]
+    col: 1
+    row: 1
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, jitter_attenuator, clock_buffer]
+    col: 2
+    row: 1
+  - id: afe
+    label: Analog front end (transceiver)
+    blocks: [rf_frontend]
+    col: 3
+    row: 1
+  - id: rf_fe_pa
+    label: RF front end & power amplifier
+    blocks: [rf_frontend, lna, rf_switch, rf_pa_bias, current_sensor, temperature_sensor]
+    col: 0
+    row: 2
+  - id: antenna
+    label: Antenna array
+    blocks: [antenna]
+    col: 1
+    row: 2
+  - id: wifi_fe
+    label: Wi-Fi front end
+    blocks: [rf_frontend, rf_switch, tvs_esd]
+    col: 2
+    row: 2
+  - id: communication
+    label: Communication
+    blocks: [rs485_transceiver, load_switch, tvs_esd, soc]
+    col: 3
+    row: 2
+  links:
+  - [poe_pd, pol_power, ETH RJ45 power]
+  - [ac_input, pol_power, AC in]
+  - [baseband, afe, JESD204B]
+  - [afe, rf_fe_pa, TX]
+  - [rf_fe_pa, afe, RX]
+  - [rf_fe_pa, antenna, '']
+  - [baseband, wifi_fe, PCIe]
+  - [baseband, communication, 'UART, PPS']
+  - [clocking, baseband, '']
+  - [clocking, afe, '']
+  questions:
+  - id: power_source
+    question: Power input
+    choices: [PoE (PD), AC mains, -48 V DC]
+    source: TI-SOL-SMALLCELL SVG
+  - id: duplex
+    question: Duplex mode
+    choices: [TDD, FDD]
+    source: TI-SOL-SMALLCELL SVG; SLAA862A Fig 3-2, 5-1
+  - id: mimo
+    question: MIMO order
+    choices: [2T2R, 4T4R]
+    source: SLAA862A Fig 3-1..3-4
+  - id: indoor_outdoor
+    question: Deployment
+    choices: [indoor enterprise, outdoor]
+    source: TI-SOL-SMALLCELL
+  - id: wifi
+    question: Integrated Wi-Fi
+    choices: [none, Wi-Fi 6/6E 4x4]
+    source: TI-SOL-SMALLCELL 'W-Fi front end'
+  - id: timing
+    question: Timing source
+    choices: [GPS, IEEE 1588 / SyncE over backhaul]
+    source: TI-SOL-SMALLCELL SVG (GPS, network synchronizer)
+- name: WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-WIFIAP'
+  sources:
+  - {doc: TI-SOL-WIFIAP, title: WLAN / Wi-Fi access point, url: 'https://www.ti.com/solution/wlan-wifi-access-point'}
+  groups:
+  - id: poe_pd
+    label: Power over Ethernet PD
+    blocks: [isolated_dcdc, current_sensor, digital_isolator]
+    col: 0
+    row: 0
+  - id: pol_power
+    label: Non-isolated POL power (5-12 V)
+    blocks: [pol_buck, pol_ldo, termination_ldo, reverse_polarity, supervisor, current_sensor]
+    col: 1
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_generator, clock_buffer]
+    col: 2
+    row: 0
+  - id: processing
+    label: Processing
+    blocks: [soc, io_expander, voltage_translator]
+    col: 3
+    row: 0
+  - id: radio_fe
+    label: 4x4 radio front end (2.4 GHz + 5 GHz)
+    blocks: [rf_frontend, lna, rf_switch, antenna, tvs_esd]
+    col: 0
+    row: 1
+  - id: antennas
+    label: Antennas (4x 5 GHz, 4x 2.4 GHz)
+    blocks: [antenna]
+    col: 1
+    row: 1
+  - id: ble
+    label: Bluetooth Low Energy / Zigbee
+    blocks: [soc, rf_frontend]
+    col: 2
+    row: 1
+  - id: wan
+    label: WAN port (1G/2.5G/10G)
+    blocks: [ethernet_phy, tvs_esd, voltage_translator]
+    col: 3
+    row: 1
+  - id: lan
+    label: Gigabit LAN ports (with PoE passthrough)
+    blocks: [ethernet_phy, tvs_esd]
+    col: 0
+    row: 2
+  - id: usb
+    label: USB
+    blocks: [load_switch, tvs_esd]
+    col: 1
+    row: 2
+  - id: misc
+    label: RS-232 console, temperature sense, LED driver
+    blocks: [temperature_sensor, led_driver]
+    col: 2
+    row: 2
+  links:
+  - [poe_pd, pol_power, 5-12 V]
+  - [wan, poe_pd, 1 or 2 ports (PoE)]
+  - [wan, processing, RGMII / SMGII]
+  - [clocking, wan, '']
+  - [clocking, processing, '']
+  - [processing, radio_fe, PCIe or IQ (x2)]
+  - [radio_fe, antennas, '']
+  - [processing, ble, UART]
+  - [processing, lan, '']
+  - [processing, usb, USB]
+  - [processing, misc, I2C / UART / GPIO]
+  questions:
+  - id: wifi_gen
+    question: Wi-Fi generation
+    choices: [Wi-Fi 6, Wi-Fi 6E, Wi-Fi 7]
+    source: TI-SOL-WIFIAP (4x4 dual band)
+  - id: streams
+    question: Spatial streams per band
+    choices: [2x2, 4x4, 8x8]
+    source: TI-SOL-WIFIAP SVG (4x 5 GHz, 4x 2.4 GHz antennas)
+  - id: fem_type
+    question: Front-end implementation
+    choices: [integrated FEM (PA+LNA+switch), discrete PA/LNA/switch]
+    source: TI-SOL-WIFIAP 'Wi-Fi front end module'
+  - id: power_input
+    question: Power input
+    choices: [PoE 802.3at, PoE 802.3bt, DC adapter]
+    source: TI-SOL-WIFIAP SVG (adapter + PoE)
+  - id: iot_radio
+    question: Additional IoT radio
+    choices: [none, BLE, Zigbee/Thread, BLE + Zigbee]
+    source: TI-SOL-WIFIAP 'Bluetooth Low Energy/Zigbee'
+  - id: indoor_outdoor
+    question: Deployment
+    choices: [indoor, outdoor]
+    source: TI-SOL-WIFIAP
+- name: Automotive telematics control unit (TCU) / V2X module (TI)
+  category: RF & connectivity
+  note: 'From TI public material: TI-SOL-TCU, TI-SOL-V2X'
+  sources:
+  - {doc: TI-SOL-TCU, title: Automotive telematics control unit, url: 'https://www.ti.com/solution/automotive-telematics-control-unit'}
+  - {doc: TI-SOL-V2X, title: Vehicle to everything (V2X), url: 'https://www.ti.com/solution/vehicle-to-everything-v2x'}
+  groups:
+  - id: off_battery
+    label: Off-battery power
+    blocks: [reverse_polarity, wide_vin_buck]
+    col: 0
+    row: 0
+  - id: system_power
+    label: Telematics system power (9 V, 5 V, 3.3 V, 3.8-4.2 V modem rail)
+    blocks: [supervisor, wide_vin_buck, pol_buck, buck_boost, pol_ldo, load_switch]
+    col: 1
+    row: 0
+  - id: battery_backup
+    label: Battery backup (eCall)
+    blocks: [power_loss_protection]
+    col: 2
+    row: 0
+  - id: sense
+    label: Current & voltage sense
+    blocks: [current_sensor]
+    col: 3
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [rtc, crystal_oscillator, clock_generator, clock_buffer, watchdog]
+    col: 0
+    row: 1
+  - id: wireless
+    label: Wireless connectivity
+    blocks: [rf_frontend, lna, clock_buffer, antenna]
+    col: 1
+    row: 1
+  - id: rf_power
+    label: RF power (active antenna)
+    blocks: [tvs_esd, pol_ldo, antenna]
+    col: 2
+    row: 1
+  - id: modem_conn
+    label: Modem connectivity
+    blocks: [tvs_esd]
+    col: 3
+    row: 1
+  - id: hands_free
+    label: Hands-free (eCall audio)
+    blocks: [audio_codec, audio_amp, voltage_reference, tvs_esd]
+    col: 0
+    row: 2
+  - id: app_mcu
+    label: Application MCU + ambient backlight indicator
+    blocks: [mcu, led_driver]
+    col: 1
+    row: 2
+  - id: vehicle_proc
+    label: Vehicle processor
+    blocks: [soc, termination_ldo, pcie_buffer]
+    col: 2
+    row: 2
+  - id: logic
+    label: Logic & voltage translation
+    blocks: [voltage_translator, voltage_reference]
+    col: 3
+    row: 2
+  - id: boot_mon
+    label: System boot & monitoring (vehicle network)
+    blocks: [can_transceiver, ethernet_phy, redriver, temperature_sensor, tvs_esd, rs485_transceiver]
+    col: 0
+    row: 3
+  - id: user_input
+    label: Input user interface
+    blocks:
+    - {fn: external_block, label: Input user interface}
+    col: 1
+    row: 3
+  links:
+  - [off_battery, system_power, Vbat]
+  - [off_battery, sense, '']
+  - [system_power, wireless, 9 V / 5 V / 3.3 V / 3.8-4.2 V]
+  - [battery_backup, system_power, '']
+  - [clocking, vehicle_proc, '']
+  - [modem_conn, wireless, '']
+  - [rf_power, wireless, antenna]
+  - [hands_free, wireless, '']
+  - [logic, vehicle_proc, '']
+  - [logic, app_mcu, '']
+  - [boot_mon, app_mcu, '']
+  - [boot_mon, vehicle_proc, to head unit / eCall trigger]
+  questions:
+  - id: cellular
+    question: Cellular technology
+    choices: [LTE, 5G NR, 5G NR + C-V2X]
+    source: TI-SOL-TCU SVG (GSM/LTE); TI-SOL-V2X SVG (C-V2X LTE module)
+  - id: v2x
+    question: V2X radio
+    choices: [none, C-V2X (PC5), DSRC 802.11p, both]
+    source: TI-SOL-V2X SVG
+  - id: gnss
+    question: GNSS
+    choices: [single band L1, dual band L1/L5]
+    source: TI-SOL-TCU SVG (LNA + GPS/GLONASS)
+  - id: active_antenna
+    question: Remote/active antenna powered over coax
+    choices: ['yes', 'no']
+    source: TI-SOL-TCU 'RF power' (antenna LDO)
+  - id: ecall_backup
+    question: eCall backup battery
+    choices: ['yes', 'no']
+    source: TI-SOL-TCU 'Battery backup'
+  - id: wlan_bt
+    question: Wi-Fi / Bluetooth
+    choices: [none, Bluetooth only, Wi-Fi + Bluetooth]
+    source: TI-SOL-TCU 'Wireless connectivity'
+- name: Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-HEADUNIT, TI-SOL-RADIO'
+  sources:
+  - {doc: TI-SOL-HEADUNIT, title: Automotive head unit, url: 'https://www.ti.com/solution/automotive-head-unit'}
+  - {doc: TI-SOL-RADIO, title: Automotive radio tuner, url: 'https://www.ti.com/solution/automotive-radio-tuners'}
+  groups:
+  - id: off_battery
+    label: Off-battery power
+    blocks: [reverse_polarity, pre_regulator, wide_vin_buck, load_switch, pol_ldo, supervisor]
+    col: 0
+    row: 0
+  - id: system_power
+    label: Head unit / tuner system power
+    blocks: [pol_buck, pol_ldo, load_switch, supervisor]
+    col: 1
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [clock_generator, clock_buffer]
+    col: 2
+    row: 0
+  - id: boot_mon
+    label: System boot & monitoring (vehicle interface processor)
+    blocks: [mcu, rtc, temperature_sensor, current_sensor, supervisor, adc, sequencer, can_transceiver, voltage_reference, tvs_esd]
+    col: 3
+    row: 0
+  - id: app_proc
+    label: Applications processor
+    blocks: [soc, pmic, pol_buck, supervisor, watchdog, termination_ldo, flash, can_transceiver, ethernet_phy]
+    col: 0
+    row: 1
+  - id: radio_tuner
+    label: 'Radio tuner (digital radio tuner: AM/FM/HD/DAB/DMB tuners, radio DSP, audio ADC/DAC)'
+    blocks: [am_fm_tuner, digital_radio_demod, single_chip_radio, pol_ldo, tvs_esd, antenna]
+    col: 1
+    row: 1
+  - id: audio
+    label: Audio channel / audio amplifier
+    blocks: [audio_codec, audio_amp, tvs_esd]
+    col: 2
+    row: 1
+  - id: anc
+    label: ANC / hands-free microphone
+    blocks: [audio_codec]
+    col: 3
+    row: 1
+  - id: wireless
+    label: Wireless connectivity & navigation
+    blocks: [rf_frontend, antenna, pol_ldo, tvs_esd]
+    col: 0
+    row: 2
+  - id: media
+    label: External media & smartphone interface
+    blocks: [redriver, load_switch, tvs_esd, voltage_translator]
+    col: 1
+    row: 2
+  - id: camera
+    label: Camera interface
+    blocks: [load_switch, serdes, tvs_esd]
+    col: 2
+    row: 2
+  - id: display
+    label: Display support & backlight control
+    blocks: [led_driver, temperature_sensor]
+    col: 3
+    row: 2
+  - id: ui
+    label: Head unit user interface
+    blocks: [io_expander, position_sensor, led_driver, tvs_esd]
+    col: 0
+    row: 3
+  - id: logic
+    label: Digital logic & voltage translation
+    blocks: [voltage_translator]
+    col: 1
+    row: 3
+  links:
+  - [off_battery, system_power, '']
+  - [system_power, app_proc, '']
+  - [system_power, radio_tuner, '']
+  - [clocking, app_proc, '']
+  - [clocking, radio_tuner, '']
+  - [boot_mon, app_proc, '']
+  - [radio_tuner, app_proc, digital audio / control]
+  - [app_proc, audio, I2S / TDM]
+  - [anc, audio, '']
+  - [wireless, app_proc, '']
+  - [media, app_proc, USB]
+  - [camera, app_proc, '']
+  - [app_proc, display, '']
+  - [ui, app_proc, I2C]
+  questions:
+  - id: broadcast_standards
+    question: Broadcast standards
+    choices: [AM/FM only, AM/FM + HD Radio, AM/FM + DAB/DAB+, AM/FM + DRM, multi-standard]
+    source: TI-SOL-HEADUNIT SVG ('AM/FM/HD/DAB/DMB tuners')
+  - id: tuner_count
+    question: Number of tuners
+    choices: [single, dual (background scan / phase diversity), triple+]
+    source: TI-SOL-RADIO
+  - id: radio_partition
+    question: Radio partitioning
+    choices: [tuner + DSP in head unit, remote tuner module]
+    source: TI-SOL-RADIO / TI-SOL-HEADUNIT
+  - id: active_antenna
+    question: Active antenna powered over coax
+    choices: ['yes', 'no']
+    source: TI-SOL-HEADUNIT 'Antenna LDO'
+  - id: amp_location
+    question: Audio amplifier
+    choices: [integrated class-D in head unit, external amplifier]
+    source: TI-SOL-HEADUNIT 'Audio channel'
+  - id: amp_switching
+    question: Class-D switching frequency vs AM band
+    choices: [above AM band (~2.1 MHz), below AM band with spread spectrum]
+    source: SLOA242A (2.1-MHz class-D inductors)
+  - id: connectivity
+    question: Wireless connectivity
+    choices: [Bluetooth, Wi-Fi + Bluetooth, + GNSS, + NFC]
+    source: TI-SOL-HEADUNIT 'Wireless connectivity & navigation'
+- name: ADAS domain controller (camera / radar / lidar fusion) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-ADAS'
+  sources:
+  - {doc: TI-SOL-ADAS, title: ADAS domain controller, url: 'https://www.ti.com/solution/adas-domain-controller'}
+  groups:
+  - id: battery_input
+    label: Battery input protection
+    blocks: [tvs_esd, reverse_polarity]
+    col: 0
+    row: 0
+  - id: system_power
+    label: Battery & system power supply
+    blocks: [wide_vin_buck, pre_regulator, pol_ldo]
+    col: 1
+    row: 0
+  - id: sensor_power
+    label: Sensor power over signal line (PoC)
+    blocks: [buck_boost, load_switch]
+    col: 2
+    row: 0
+  - id: raw_sensor_if
+    label: Raw data sensor interface (cameras, lidar/radar)
+    blocks: [serdes, ethernet_phy, tvs_esd]
+    col: 3
+    row: 0
+  - id: object_sensor_if
+    label: Object data sensor interface (lidar/radar/ultrasonic modules)
+    blocks: [ethernet_phy, can_transceiver, tvs_esd]
+    col: 0
+    row: 1
+  - id: sensor_proc
+    label: Sensor data processing (application processor) + memory
+    blocks: [soc, flash, termination_ldo, pol_buck]
+    col: 1
+    row: 1
+  - id: fusion_proc
+    label: Fusion & object data processing + memory
+    blocks: [soc, flash, termination_ldo]
+    col: 2
+    row: 1
+  - id: proc_power
+    label: Processor power supply (discrete or integrated PMIC)
+    blocks: [pmic, supervisor, sequencer, pol_buck, pol_ldo, load_switch]
+    col: 3
+    row: 1
+  - id: core_supply
+    label: High-power core supply
+    blocks: [multiphase]
+    col: 0
+    row: 2
+  - id: safety_ctrl
+    label: Safety & system control
+    blocks: [mcu, voltage_reference, voltage_translator]
+    col: 1
+    row: 2
+  - id: safety_power
+    label: Safety power
+    blocks: [pmic, pol_ldo, supervisor, watchdog]
+    col: 2
+    row: 2
+  - id: vehicle_if
+    label: Vehicle interface
+    blocks: [ethernet_phy, can_transceiver, tvs_esd]
+    col: 3
+    row: 2
+  - id: video_out
+    label: Video output interface (infotainment, displays, drive recorder)
+    blocks: [serdes, ethernet_phy]
+    col: 0
+    row: 3
+  - id: diagnostics
+    label: Diagnostics / monitoring
+    blocks: [supervisor, watchdog, temperature_sensor, sequencer, adc, voltage_reference]
+    col: 1
+    row: 3
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator, clock_buffer, clock_generator, pcie_buffer]
+    col: 2
+    row: 3
+  links:
+  - [battery_input, system_power, '']
+  - [system_power, sensor_power, '']
+  - [sensor_power, raw_sensor_if, power over coax]
+  - [raw_sensor_if, sensor_proc, camera / radar raw data]
+  - [object_sensor_if, fusion_proc, object data]
+  - [sensor_proc, fusion_proc, '']
+  - [sensor_proc, video_out, '']
+  - [proc_power, sensor_proc, '']
+  - [proc_power, fusion_proc, '']
+  - [core_supply, fusion_proc, '']
+  - [fusion_proc, safety_ctrl, '']
+  - [safety_power, safety_ctrl, '']
+  - [safety_ctrl, vehicle_if, '']
+  - [fusion_proc, vehicle_if, diagnostics data]
+  questions:
+  - id: sensor_set
+    question: Sensor inputs
+    choices: [cameras only, cameras + radar, cameras + radar + lidar, + ultrasonic]
+    source: TI-SOL-ADAS SVG (surround-view / rear cameras, lidar/radar modules)
+  - id: camera_link
+    question: Camera link
+    choices: [FPD-Link / GMSL SerDes over coax, automotive Ethernet]
+    source: TI-SOL-ADAS 'Raw data sensor interface'
+  - id: sensor_power_poc
+    question: Sensor power over coax
+    choices: ['yes', 'no']
+    source: TI-SOL-ADAS 'Sensor power over signal line'
+  - id: processors
+    question: Processor partition
+    choices: [single SoC, dual SoC + safety MCU]
+    source: TI-SOL-ADAS SVG; SPRAD14
+  - id: core_current
+    question: SoC core supply
+    choices: [single-phase buck / PMIC, multiphase controller + power stages]
+    source: TI-SOL-ADAS 'High power core supply'
+  - id: pcie_clock
+    question: PCIe between processors / to storage
+    choices: [yes (common clock), yes (separate reference), 'no']
+    source: SNAA386 Fig 3-1, 3-2; TI-SOL-ADAS 'Clocking'
+  - id: asil
+    question: Functional safety target
+    choices: [ASIL B, ASIL D]
+    source: TI-SOL-ADAS 'Safety power', 'Safety & system control'
+- name: PLC digital input module (IEC 61131-2, 24 V) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-DI, SLLA370D'
+  sources:
+  - {doc: TI-SOL-DI, title: Digital input module (IEC 61131-2 variant), url: 'https://www.ti.com/solution/digital-input-module'}
+  - {doc: SLLA370D, title: How To Simplify Isolated 24V PLC Digital Input Module Designs, url: 'https://www.ti.com/lit/pdf/slla370'}
+  groups:
+  - id: field_inputs
+    label: Field sensors / switches
+    blocks:
+    - {fn: external_block, label: Field sensors / switches}
+    col: 0
+    row: 0
+  - id: input_protection
+    label: Signal input/output protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 0
+  - id: signal_isolation
+    label: Signal isolation (data isolation with IEC 61131-2 type 1-3 input current limit)
+    blocks: [digital_isolator]
+    col: 2
+    row: 0
+  - id: digital_processing
+    label: Digital processing
+    blocks: [mcu]
+    col: 0
+    row: 1
+  - id: wired_if
+    label: Wired interface (backplane)
+    blocks: [ethernet_phy, rs485_transceiver]
+    col: 1
+    row: 1
+  - id: backplane_protection
+    label: Input power protection (backplane 5 V / 24 V)
+    blocks: [power_loss_protection]
+    col: 2
+    row: 1
+  - id: backplane_power
+    label: Non-isolated DC/DC power supply (backplane)
+    blocks: [wide_vin_buck, pol_ldo, supervisor, sequencer]
+    col: 0
+    row: 2
+  - id: ui
+    label: Output user interface + wireless interface
+    blocks: [led_driver]
+    col: 1
+    row: 2
+  links:
+  - [field_inputs, input_protection, 24 V inputs]
+  - [input_protection, signal_isolation, '']
+  - [signal_isolation, digital_processing, '']
+  - [digital_processing, wired_if, '']
+  - [digital_processing, ui, '']
+  - [backplane_protection, backplane_power, 5 V / 24 V backplane]
+  questions:
+  - id: input_type
+    question: IEC 61131-2 input type
+    choices: [type 1, type 2, type 3]
+    source: TI-SOL-DI SVG ('Type 1..3 input current limit')
+  - id: channels
+    question: Channels per isolation group
+    choices: ['1', '4', '8', 16+]
+    source: SLLA370D Fig 4 (8-channel ISO1228)
+  - id: sink_source
+    question: Input polarity
+    choices: [sinking, sourcing, bidirectional]
+    source: SLLA370D Fig 4; SLVAG20
+  - id: speed
+    question: Input speed
+    choices: [standard (ms filter), high-speed (counter / encoder)]
+    source: TI-SOL-DI high-speed variant
+  - id: isolation_impl
+    question: Isolation implementation
+    choices: [isolated digital input IC, optocoupler / opto-emulator, digital isolator + discrete current limit]
+    source: TI-SOL-DI 'Signal isolation'; SLLA370D Fig 1-2
+  - id: field_power
+    question: Field-side supply
+    choices: [powered from field 24 V, isolated DC/DC from backplane]
+    source: TI-SOL-DI variants
+- name: PLC analog input module (voltage and 4-20 mA current inputs, HART) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-AI, SDAA162'
+  sources:
+  - {doc: TI-SOL-AI, title: Analog input module (voltage & current input variant), url: 'https://www.ti.com/solution/analog-input-module'}
+  - {doc: SDAA162, title: 'Designing EMC-Compliant, High-Accuracy PLC Analog Input Modules (0-10V / 4-20mA) with ADS125H18', url: 'https://www.ti.com/lit/pdf/sdaa162'}
+  groups:
+  - id: transmitters
+    label: Field transmitters (TT, PT, FT, LT)
+    blocks:
+    - {fn: external_block, label: 'Field transmitters (TT, PT, FT, LT)'}
+    col: 0
+    row: 0
+  - id: io_protection
+    label: Signal input-output protection
+    blocks: [tvs_esd]
+    col: 1
+    row: 0
+  - id: afe
+    label: Analog input front end
+    blocks: [adc, voltage_reference, amplifier]
+    col: 2
+    row: 0
+  - id: field_power_protect
+    label: 24 V field power input protection
+    blocks: [power_loss_protection]
+    col: 3
+    row: 0
+  - id: signal_chain_power
+    label: Signal chain power
+    blocks: [pol_buck, pol_ldo]
+    col: 0
+    row: 1
+  - id: iso_power
+    label: Isolated DC/DC power supply
+    blocks: [isolated_dcdc]
+    col: 1
+    row: 1
+  - id: signal_isolation
+    label: Signal isolation
+    blocks: [digital_isolator]
+    col: 2
+    row: 1
+  - id: digital_proc
+    label: IO module digital processing
+    blocks: [mcu, voltage_translator]
+    col: 3
+    row: 1
+  - id: backplane_comm
+    label: Backplane communication
+    blocks: [ethernet_phy, rs485_transceiver, can_transceiver]
+    col: 0
+    row: 2
+  - id: backplane_power
+    label: Input power protection + point-of-load regulators
+    blocks: [power_loss_protection, pol_buck, pol_ldo, supervisor, sequencer]
+    col: 1
+    row: 2
+  - id: ui
+    label: Small UI + configuration & commissioning
+    blocks: [led_driver]
+    col: 2
+    row: 2
+  links:
+  - [transmitters, io_protection, '']
+  - [io_protection, afe, '']
+  - [afe, signal_isolation, '']
+  - [signal_isolation, digital_proc, '']
+  - [digital_proc, backplane_comm, '']
+  - [digital_proc, ui, '']
+  - [field_power_protect, signal_chain_power, 24 V field power]
+  - [iso_power, signal_chain_power, '']
+  - [backplane_power, iso_power, 5 V / 24 V backplane]
+  questions:
+  - id: input_range
+    question: Input types
+    choices: [0-10 V / +/-10 V, 4-20 mA, both (universal), RTD / thermocouple]
+    source: TI-SOL-AI variants (universal, V&I, temperature); SDAA162
+  - id: hart
+    question: HART communication
+    choices: ['yes', 'no']
+    source: TI-SOL-AI SVG (HART modem)
+  - id: isolation_scheme
+    question: Isolation scheme
+    choices: [group isolation, channel-to-channel isolation]
+    source: TI-SOL-AI SVG
+  - id: channels
+    question: Channel count
+    choices: ['2', '4', '8', '16']
+    source: SDAA162; SLOA288
+  - id: emc_level
+    question: EMC target
+    choices: [IEC 61000-4-2/4/5 standard levels, elevated surge levels]
+    source: SDAA162 section 2
+- name: Three-phase solar string inverter (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-STRING, SLLA498A, SBOA624'
+  sources:
+  - {doc: TI-SOL-STRING, title: String inverter (three-phase variant), url: 'https://www.ti.com/solution/string-inverter'}
+  - {doc: SLLA498A, title: Power Topology Considerations for Solar String Inverters and Energy Storage Systems, url: 'https://www.ti.com/lit/pdf/slla498'}
+  - {doc: SBOA624, title: Summary of Solar Application Scenarios Using In-package Hall-effect Current Sensors, url: 'https://www.ti.com/lit/pdf/sboa624'}
+  groups:
+  - id: input_sense
+    label: Input current & voltage sense (PV string)
+    blocks: [current_sensor, isolated_amplifier]
+    col: 0
+    row: 0
+  - id: dcdc_stage
+    label: DC/DC power stage (boost / MPPT)
+    blocks: [gate_driver, temperature_sensor]
+    col: 1
+    row: 0
+  - id: bus_sense
+    label: Bus current & voltage sense
+    blocks: [current_sensor, isolated_amplifier]
+    col: 2
+    row: 0
+  - id: dcac_stage
+    label: DC/AC power stage (H-bridge, T-type, ANPC, flying cap)
+    blocks: [gate_driver, temperature_sensor]
+    col: 3
+    row: 0
+  - id: output_sense
+    label: Output current & voltage sense
+    blocks: [current_sensor, isolated_amplifier]
+    col: 0
+    row: 1
+  - id: relay
+    label: Relay control power stage (grid connection)
+    blocks: [load_switch]
+    col: 1
+    row: 1
+  - id: logic
+    label: DC/DC logic + DC/AC logic
+    blocks:
+    - {fn: external_block, label: DC/DC logic + DC/AC logic}
+    col: 2
+    row: 1
+  - id: diagnostics
+    label: Self-diagnostics / monitoring
+    blocks: [isolated_amplifier, isolated_switch_driver]
+    col: 3
+    row: 1
+  - id: afe
+    label: Analog front end (optional, integrated in MCU)
+    blocks: [adc, voltage_reference]
+    col: 0
+    row: 2
+  - id: digital
+    label: Digital processing
+    blocks: [mcu, supervisor, rtc]
+    col: 1
+    row: 2
+  - id: signal_isolation
+    label: Signal isolation (optional data isolation)
+    blocks: [digital_isolator]
+    col: 2
+    row: 2
+  - id: wired_if
+    label: Wired interface
+    blocks: [rs485_transceiver, ethernet_phy, isolated_can]
+    col: 3
+    row: 2
+  - id: wireless_if
+    label: Wireless interface
+    blocks: [rf_frontend, antenna]
+    col: 0
+    row: 3
+  - id: ui
+    label: Output user interface
+    blocks: [led_driver]
+    col: 1
+    row: 3
+  - id: hs_iso_power
+    label: High-side isolated DC/DC power supply (from PV)
+    blocks: [hv_flyback, isolated_dcdc]
+    col: 2
+    row: 3
+  - id: iso_acdc
+    label: Isolated AC/DC power supply (from grid, alternative)
+    blocks: [hv_flyback]
+    col: 3
+    row: 3
+  - id: ls_iso_power
+    label: Low-side isolated DC/DC power supply (gate-driver supplies)
+    blocks: [isolated_dcdc]
+    col: 0
+    row: 4
+  - id: nonisolated
+    label: Non-isolated DC/DC power supply (IO voltages)
+    blocks: [wide_vin_buck, pol_ldo]
+    col: 1
+    row: 4
+  links:
+  - [input_sense, dcdc_stage, PV string input]
+  - [dcdc_stage, bus_sense, DC bus]
+  - [bus_sense, dcac_stage, '']
+  - [dcac_stage, output_sense, L1/L2/L3/N]
+  - [output_sense, relay, '']
+  - [input_sense, afe, voltage / current]
+  - [bus_sense, afe, '']
+  - [output_sense, afe, '']
+  - [afe, digital, '']
+  - [digital, logic, PWM]
+  - [logic, dcdc_stage, '']
+  - [logic, dcac_stage, '']
+  - [digital, relay, '']
+  - [diagnostics, afe, '']
+  - [digital, signal_isolation, '']
+  - [signal_isolation, wired_if, '']
+  - [digital, wireless_if, '']
+  - [digital, ui, '']
+  - [hs_iso_power, ls_iso_power, internal rail]
+  - [iso_acdc, ls_iso_power, '']
+  - [ls_iso_power, dcac_stage, isolated power (for gate drivers)]
+  - [hs_iso_power, nonisolated, '']
+  questions:
+  - id: phases
+    question: Grid connection
+    choices: [single-phase, split-phase, three-phase]
+    source: TI-SOL-STRING variants; SBOA624 Fig 2-1, 2-4, 2-8
+  - id: dcac_topology
+    question: DC/AC topology
+    choices: [H-bridge (2-level), T-type (3-level), ANPC, flying capacitor]
+    source: TI-SOL-STRING SVG label
+  - id: switch_tech
+    question: Power switch technology
+    choices: [Si IGBT, SiC MOSFET, GaN]
+    source: TI-SOL-STRING 'DC/AC power stage'; SDAA518
+  - id: pv_voltage
+    question: Max PV string voltage
+    choices: [600 V, 1000 V, 1500 V]
+    source: SLLA498A p.2
+  - id: hybrid
+    question: Battery port (hybrid inverter)
+    choices: [none, low-voltage battery, high-voltage battery]
+    source: SLLA498A Fig 2-3; SBOA624 Fig 2-5
+  - id: current_sensing
+    question: Current sensing
+    choices: [in-package Hall sensor, shunt + isolated amplifier, shunt + isolated modulator]
+    source: SBOA624; TI-SOL-STRING 'Input/Bus/Output current & voltage sense'
+  - id: comms
+    question: Monitoring link
+    choices: [RS-485, Ethernet, PLC, Wi-Fi, Sub-1 GHz, Bluetooth]
+    source: TI-SOL-STRING wired / wireless interface
+  - id: auxpower_source
+    question: Auxiliary power source
+    choices: [from PV (high-side isolated DC/DC), from grid (isolated AC/DC)]
+    source: TI-SOL-STRING SVG ('OR')
+- name: Server / telecom AC/DC power supply unit (54 V output, with 12 V standby) (TI)
+  category: Power & isolation
+  note: 'From TI public material: TI-SOL-PSU'
+  sources:
+  - {doc: TI-SOL-PSU, title: AC/DC power supply unit (PSU) - 48 V/54 V output, url: 'https://www.ti.com/solution/ac-dc-power-supply-unit-psu-48v-54v-output'}
+  groups:
+  - id: filter
+    label: Filter and rectifier
+    blocks: [pre_regulator]
+    col: 0
+    row: 0
+  - id: pfc
+    label: PFC stage
+    blocks: [gate_driver, mcu]
+    col: 1
+    row: 0
+  - id: llc
+    label: Isolated DC/DC power stage
+    blocks: [gate_driver, half_bridge_driver]
+    col: 2
+    row: 0
+  - id: output_protection
+    label: Output protection (ORing)
+    blocks: [reverse_polarity, current_sensor]
+    col: 0
+    row: 1
+  - id: aux
+    label: Auxiliary power supply
+    blocks: [hv_flyback, pol_buck, pol_ldo, voltage_reference]
+    col: 1
+    row: 1
+  - id: control
+    label: Control unit
+    blocks: [mcu, supervisor, digital_isolator, temperature_sensor, voltage_reference]
+    col: 2
+    row: 1
+  - id: sense
+    label: Current and voltage sense
+    blocks: [current_sensor, isolated_amplifier]
+    col: 0
+    row: 2
+  links:
+  - [filter, pfc, AC]
+  - [pfc, llc, PFC bus]
+  - [llc, output_protection, '']
+  - [pfc, aux, '']
+  - [control, pfc, '']
+  - [control, llc, '']
+  - [sense, control, '']
+  - [aux, control, primary / secondary output]
+  questions:
+  - id: output_voltage
+    question: Main output
+    choices: [12 V, 48 V / 54 V]
+    source: TI-SOL-PSU variants (54 V and 12 V)
+  - id: pfc_topology
+    question: PFC topology
+    choices: [interleaved boost, totem-pole bridgeless]
+    source: TI-SOL-PSU 'PFC stage'; SLUP327
+  - id: switch_tech
+    question: Switch technology
+    choices: [Si, SiC, GaN]
+    source: TI-SOL-PSU (LMG35xx GaN listed)
+  - id: control_location
+    question: Digital controller location
+    choices: [primary side, secondary side]
+    source: TI-SOL-PSU 'Control unit' (isolator)
+  - id: pmbus
+    question: PMBus / telemetry over isolation
+    choices: ['yes', 'no']
+    source: TI-SOL-PSU SVG (CLK, Data outputs)
+- name: Industrial AC drive power stage (isolated, 200-690 V AC mains) (TI)
+  category: Industrial
+  note: 'From TI public material: TI-SOL-ACDRIVE'
+  sources:
+  - {doc: TI-SOL-ACDRIVE, title: AC drive power stage module (isolated variant), url: 'https://www.ti.com/solution/ac-drive-power-stage-module'}
+  groups:
+  - id: rectifier
+    label: Non-isolated AC/DC (rectifier, DC link)
+    blocks:
+    - {fn: external_block, label: 'Non-isolated AC/DC (rectifier, DC link)'}
+    col: 0
+    row: 0
+  - id: power_stage
+    label: 3-phase power stage
+    blocks: [gate_driver]
+    col: 1
+    row: 0
+  - id: brake
+    label: Regenerative brake power stage
+    blocks: [gate_driver]
+    col: 2
+    row: 0
+  - id: dclink_sense
+    label: DC link current and voltage sense
+    blocks: [isolated_amplifier, voltage_reference]
+    col: 3
+    row: 0
+  - id: motor_sense
+    label: Motor current & voltage sensing
+    blocks: [isolated_amplifier, current_sensor, pol_ldo]
+    col: 0
+    row: 1
+  - id: temp_monitor
+    label: Temperature monitoring
+    blocks: [isolated_amplifier, temperature_sensor]
+    col: 1
+    row: 1
+  - id: signal_cond
+    label: Signal conditioning
+    blocks: [adc, voltage_reference]
+    col: 2
+    row: 1
+  - id: digital
+    label: Digital processing
+    blocks: [mcu]
+    col: 3
+    row: 1
+  - id: iso_main
+    label: Isolated DC/DC main (24 V & other rails from DC link)
+    blocks: [hv_flyback, voltage_reference]
+    col: 0
+    row: 2
+  - id: iso_hot
+    label: Isolated DC/DC hot side (gate driver supply)
+    blocks: [isolated_dcdc, pol_ldo]
+    col: 1
+    row: 2
+  - id: input_protection
+    label: Input power protection (24 V auxiliary)
+    blocks: [power_loss_protection, reverse_polarity]
+    col: 2
+    row: 2
+  - id: nonisolated
+    label: Non-isolated DC/DC power supply
+    blocks: [wide_vin_buck, pmic, supervisor, sequencer, pol_ldo]
+    col: 3
+    row: 2
+  - id: sto
+    label: Diagnostics / monitoring (safe torque off input)
+    blocks: [digital_isolator, load_switch]
+    col: 0
+    row: 3
+  - id: wired_if
+    label: Wired interface (to control module)
+    blocks: [can_transceiver, rs485_transceiver, digital_isolator, isolated_can]
+    col: 1
+    row: 3
+  - id: fan
+    label: Fan power stage
+    blocks: [load_switch, digital_isolator]
+    col: 2
+    row: 3
+  - id: clocking
+    label: Clocking
+    blocks: [clock_buffer, clock_generator]
+    col: 3
+    row: 3
+  links:
+  - [rectifier, power_stage, DC link]
+  - [rectifier, brake, DC link]
+  - [rectifier, dclink_sense, '']
+  - [rectifier, iso_main, '']
+  - [dclink_sense, digital, '']
+  - [digital, power_stage, PWM]
+  - [digital, brake, brake control]
+  - [iso_hot, power_stage, gate driver supply]
+  - [power_stage, motor_sense, motor phases]
+  - [motor_sense, signal_cond, '']
+  - [signal_cond, digital, '']
+  - [power_stage, temp_monitor, NTC]
+  - [temp_monitor, digital, temp sense]
+  - [sto, power_stage, safe torque off]
+  - [iso_main, input_protection, 24 V & other rails]
+  - [input_protection, iso_hot, '']
+  - [input_protection, nonisolated, '']
+  - [digital, wired_if, connection to control module]
+  - [digital, fan, '']
+  - [clocking, digital, '']
+  questions:
+  - id: mains
+    question: Mains voltage class
+    choices: [200-240 V, 380-480 V, 575-690 V]
+    source: TI-SOL-ACDRIVE SVG (200-690 V)
+  - id: switch_tech
+    question: Power switch
+    choices: [IGBT, SiC MOSFET]
+    source: TI-SOL-ACDRIVE SVG (IGBT)
+  - id: gate_driver_protection
+    question: Gate driver protection features
+    choices: [DESAT, Miller clamp, soft turn-off, none]
+    source: SLUAAY2; SLYA091
+  - id: current_sensing
+    question: Motor current sensing
+    choices: [shunt + isolated delta-sigma modulator, shunt + isolated amplifier, Hall / fluxgate]
+    source: TI-SOL-ACDRIVE 'Motor current & voltage sensing'
+  - id: sto
+    question: Safe torque off (STO)
+    choices: ['yes', 'no']
+    source: TI-SOL-ACDRIVE 'Diagnostics/monitoring'
+  - id: brake
+    question: Regenerative brake chopper
+    choices: ['yes', 'no']
+    source: TI-SOL-ACDRIVE 'Regenerative brake power stage'
+  - id: gate_supply
+    question: Gate driver supply
+    choices: [isolated DC/DC per driver (push-pull / module), central flyback, bootstrap for high side]
+    source: TI-SOL-ACDRIVE 'Isolated DC/DC hot side'; SLAA672
+- name: Automotive phone-as-a-key (PaaK) module with BLE satellite modules (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-PAAK'
+  sources:
+  - {doc: TI-SOL-PAAK, title: Phone as a key (PaaK) module, url: 'https://www.ti.com/solution/phone-as-a-key-paak'}
+  groups:
+  - id: power
+    label: Power supply (discrete or SBC)
+    blocks: [reverse_polarity, wide_vin_buck, pol_ldo, supervisor, watchdog]
+    col: 0
+    row: 0
+  - id: comm
+    label: Communication interface (to BCM and satellites)
+    blocks: [can_transceiver, tvs_esd]
+    col: 1
+    row: 0
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 2
+    row: 0
+  - id: rf
+    label: RF interface (2.4 GHz BLE SoC + antenna)
+    blocks: [soc, rf_frontend, antenna]
+    col: 0
+    row: 1
+  - id: satellites
+    label: Multiple BLE satellite modules
+    blocks: [soc, antenna, can_transceiver]
+    col: 1
+    row: 1
+  links:
+  - [power, comm, Vout]
+  - [power, mcu, Vout]
+  - [power, rf, Vout]
+  - [comm, mcu, '']
+  - [mcu, rf, '']
+  - [satellites, comm, CAN/LIN]
+  questions:
+  - id: ranging
+    question: Ranging technology
+    choices: [BLE RSSI, BLE channel sounding, UWB, BLE + UWB]
+    source: TI-SOL-PAAK; SWRA791
+  - id: anchors
+    question: Number of satellite / anchor modules
+    choices: [1-2, 3-6, 7+]
+    source: TI-SOL-PAAK SVG ('Multiple BLE satellite modules')
+  - id: integration
+    question: Module integration
+    choices: [standalone PaaK module, integrated in BCM]
+    source: TI-SOL-PAAK SVG ('may be integrated in the BCM')
+  - id: backup_key
+    question: Backup key
+    choices: [NFC card, keyfob (LF/UHF)]
+    source: TI-SOL-PAAK variant 20182

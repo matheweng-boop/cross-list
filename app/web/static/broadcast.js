@@ -1260,7 +1260,7 @@
     set("IC0", "AMI", A.amfm && "ANT1");
     set("IC0", "FMB", A.amfm && "ANT1");
     set("IC0", "FMA", A.fm2 ? "ANT2" : A.amfm && "ANT1");
-    if (A.dab) { set(dabIc, "B3A/WXI", "ANT3"); set(dabIc, "B3B", A.dab2 ? "ANT4" : null); }
+    if (A.dab) { set(dabIc, "B3A/WXI", "ANT3"); set(dabIc, "B3B", A.dab2 ? "ANT4" : "ANT3"); }
     if (dabIc !== "IC0") {
       set(dabIc, "FMA", "loop:IC0.LTA"); set(dabIc, "FMB", "loop:IC0.LTB");
       if (A.dab) { set("IC0", "B3A/WXI", `loop:${dabIc}.LTA`); set("IC0", "B3B", `loop:${dabIc}.LTB`); }
@@ -1289,13 +1289,35 @@
       notes: `Generated for ${region}: ${chips.join(" + ")}${ics.IC3 ? ` + ${ics.IC3}` : ""}. ${two ? "Primary AM/FM and secondary FM antenna on IC0 (phase diversity possible)" : "One AM/FM antenna (no phase diversity)"}${A.dab ? `; DAB antenna${A.dab2 ? "s" : ""} on ${dabIc}` : ""}${dabIc !== "IC0" ? `; IC0 ⇄ ${dabIc} loop-throughs (LTA/LTB)` : ""}. Check against the full datasheet.`};
   }
 
+  // A listening mode follows the antennas: without a second FM antenna phase diversity becomes FM audio + scan
+  // (and HD MRC is dropped); without a second DAB antenna DAB MRC is dropped.
+  function fitAntennas(m, antennas) {
+    const n = band => antennas.filter(a => (a.bands || []).includes(band)).length;
+    const fm2 = n("FM") >= 2, dab2 = n("DAB") >= 2;
+    if ((!fm2 && (m.channels || []).some(c => c.job === "hd_mrc")) || (!dab2 && (m.channels || []).some(c => c.job === "dab_mrc"))) return null;
+    if (fm2) return m;
+    let changedPd = false;
+    for (const [slot, jobs] of Object.entries(m.tuners || {}))
+      m.tuners[slot] = jobs.map((j, i) => {
+        if (j === "fm_pd") { changedPd = true; return i === 0 ? "fm_audio" : "fm_scan"; }
+        if (j === "fm_pd_ts") { changedPd = true; return "fm_dab_scan"; }
+        if (j === "fm_mrc") return null;
+        return j;
+      });
+    if (Object.values(m.tuners || {}).some(js => js.includes(null))) return null;
+    if (changedPd) {
+      m.name = `${m.name} (no phase diversity)`;
+      m.notes = `${m.notes || ""} Without a secondary FM antenna there is no phase diversity: tuner 0 plays FM, tuner 1 scans.`.trim();
+    }
+    return m;
+  }
   function applyHardware(i) {
     const hw = JSON.parse(JSON.stringify(typeof i === "object" ? i : presetVariant(CONF.hardware[i]) || CONF.hardware[i]));
     S.devices = []; S.blocks = []; S.links = [];
     S.usecase = normalise({region: S.region, digital: S.digital, audioDsp: S.audio, features: [...S.features], hardware: hw.name, notes: hw.notes || "", ics: hw.ics, antennas: hw.antennas, rf: hw.rf,
       control: hw.control, route: hw.audio, clock: hw.clock, iq: hw.iq || {}, memory: {}, modes: [], mode: 0});
     syncUseCase();
-    S.usecase.modes = CONF.software.filter(sw => sw.region === S.region).map(modeFromPreset).filter(compatible);
+    S.usecase.modes = CONF.software.filter(sw => sw.region === S.region).map(modeFromPreset).map(m => fitAntennas(m, hw.antennas || [])).filter(m => m && compatible(m));
     if (!S.usecase.modes.length) S.usecase.modes.push(blankMode("Listening mode 1"));
     syncUseCase();
     autoComplete();
@@ -1490,10 +1512,22 @@
     root.querySelectorAll("[data-tuners]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.tuners === S.tuners)));
     root.querySelectorAll("[data-audio]").forEach(b => b.setAttribute("aria-pressed", String(S.audio != null && String(S.audio) === b.dataset.audio)));
     // progressive: region -> digital -> on-chip audio -> tuners -> features + candidates
+    // features: only those of the region / standard that the antennas allow and that a tuner meeting the other
+    // choices has; a feature that is not possible is hidden (with the antenna reason when that is the cause)
     const rel = relevant();
-    S.features = S.features.filter(f => rel.includes(f));
-    root.querySelectorAll("[data-feat]").forEach(b => { b.hidden = !rel.includes(b.dataset.feat); b.setAttribute("aria-pressed", String(S.features.includes(b.dataset.feat))); });
-    root.querySelectorAll("[data-audio]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.audio === "any" ? S.audioAsked && S.audio == null : S.audio != null && String(S.audio) === b.dataset.audio)));
+    const A = S.tuners ? antennaPlan(S.region, S.tuners) : {};
+    const antNeed = {PD: ["fm2", "a secondary FM antenna"], HD_MRC: ["fm2", "a secondary FM antenna"], DAB_MRC: ["dab2", "a secondary DAB antenna"]};
+    const antBlocks = f => antNeed[f] && S.tuners && !A[antNeed[f][0]] ? antNeed[f][1] : "";
+    const possible = f => CATALOG.some(c => ic0Ok(c) && FEATS(c).includes(f)) || (S.features.includes(f) && CATALOG.some(c => ic0Ok(c)));
+    S.features = S.features.filter(f => rel.includes(f) && !antBlocks(f));
+    root.querySelectorAll("[data-feat]").forEach(b => {
+      const f = b.dataset.feat, why = antBlocks(f);
+      b.hidden = !rel.includes(f) || !possible(f);
+      b.disabled = !!why;
+      b.title = why ? `Needs ${why} (Antennas above)` : "";
+      b.setAttribute("aria-pressed", String(S.features.includes(f)));
+    });
+    root.querySelectorAll("[data-audio]").forEach(b => b.setAttribute("aria-pressed", String(S.audio != null && String(S.audio) === b.dataset.audio)));
     $("#st-hw").hidden = S.digital == null;
     $("#st-tuners").hidden = !S.audioAsked;
     $("#st-feats").hidden = !S.tuners;
@@ -1564,10 +1598,9 @@
     }
     if (au) {
       S.audioAsked = true;
-      const v = au.dataset.audio === "any" ? null : au.dataset.audio === "true";
-      S.audio = v;
+      S.audio = au.dataset.audio === "true";
       render();
-      explain("audio_dsp", S.audio == null ? "On-chip audio: either" : S.audio ? "On-chip audio required" : "No on-chip audio");
+      explain("audio_dsp", S.audio ? "On-chip audio required" : "No on-chip audio");
       return;
     }
     if (tn) { S.tuners = S.tuners === +tn.dataset.tuners ? null : +tn.dataset.tuners; renderSteps(); explain("tuners", `${tn.dataset.tuners} tuner${tn.dataset.tuners > 1 ? "s" : ""}`); return; }

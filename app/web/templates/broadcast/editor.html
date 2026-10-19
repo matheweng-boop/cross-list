@@ -16,17 +16,17 @@
     </span></div>
   <div class="bc-step" id="st-hw" hidden><span class="bc-step-n">2</span><span class="bc-step-label">Hardware</span>
     <span class="bc-chips" role="group" aria-label="On-chip audio"><span class="small muted">On-chip audio</span>
-      <button type="button" class="bc-chip" data-audio="true" data-explain="audio_dsp" aria-pressed="false">required</button><button type="button" class="bc-chip" data-audio="false" data-explain="audio_dsp" aria-pressed="false">not required</button><button type="button" class="bc-chip" data-audio="any" data-explain="audio_dsp" aria-pressed="false">either</button>
+      <button type="button" class="bc-chip" data-audio="true" data-explain="audio_dsp" aria-pressed="false">required</button><button type="button" class="bc-chip" data-audio="false" data-explain="audio_dsp" aria-pressed="false">not required</button>
     </span>
     <span class="bc-chips" id="st-tuners" role="group" aria-label="Number of tuners" hidden><span class="small muted">Tuners</span>
       {% for n in (1, 2, 3, 4, 5, 6) %}<button type="button" class="bc-chip bc-chip-n" data-tuners="{{ n }}" data-explain="tuners" aria-pressed="false">{{ n }}</button>{% endfor %}
     </span>
-    <span class="bc-chips" id="st-feats" role="group" aria-label="Required features" hidden><span class="small muted">Features</span>
-      {% for key, label in features.features.items() if key not in ('AM', 'FM', 'AUDIO') %}<button type="button" class="bc-chip bc-chip-sm" data-feat="{{ key }}" data-explain="feature:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
-    </span>
     <span class="bc-chips" id="st-ant" role="group" aria-label="Antennas" hidden><span class="small muted">Antennas</span>
       <button type="button" class="bc-chip bc-chip-sm" data-ant="amfm" data-explain="ant_amfm" aria-pressed="false">Primary AM/FM</button><button type="button" class="bc-chip bc-chip-sm" data-ant="fm2" data-explain="ant_fm2" aria-pressed="false">Secondary FM</button><button type="button" class="bc-chip bc-chip-sm" data-ant="dab" data-explain="ant_dab" aria-pressed="false">Primary DAB</button><button type="button" class="bc-chip bc-chip-sm" data-ant="dab2" data-explain="ant_dab" aria-pressed="false">Secondary DAB</button>
       <label class="small bc-ant-ic">DAB into <select id="bc-dab-ic" class="small-sel" aria-label="Tuner IC for the DAB antennas"><option value="auto">secondary tuner (auto)</option><option value="IC0">IC0</option><option value="IC1">IC1</option><option value="IC2">IC2</option></select></label>
+    </span>
+    <span class="bc-chips" id="st-feats" role="group" aria-label="Required features" hidden><span class="small muted">Features</span>
+      {% for key, label in features.features.items() if key not in ('AM', 'FM', 'AUDIO') %}<button type="button" class="bc-chip bc-chip-sm" data-feat="{{ key }}" data-explain="feature:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
     </span>
     <div id="bc-cands" class="bc-cands" hidden></div>
     <span id="bc-feat-match" class="small bc-feat-match"></span>

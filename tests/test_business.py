@@ -87,3 +87,32 @@ def test_hunt_capabilities_and_feedback(client):
     client.post("/business/capabilities/feedback", data={"kind": "missing", "topic": "BAW filters", "text": "Add XBAW"})
     assert "Add XBAW" in client.get("/business/capabilities").text
     assert "Add XBAW" in client.get("/business/capabilities/feedback.txt").text
+
+
+def test_evidence_reviews_and_mappings(client, session):
+    from app.services import quality
+
+    for path in ("/business/evidence/pol_ldo", "/business/quality", "/business/technology?view=short"):
+        r = client.get(path)
+        assert r.status_code == 200 and "About this page" in r.text, path
+    assert client.get("/business/evidence/not_a_function").status_code == 404
+    r = client.post("/api/business/review", json={"dataset": "technology", "key": "pol_ldo", "verdict": "wrong",
+                                                   "comment": "Qorvo has LDOs", "author": "test"})  # fmt: skip
+    assert r.json()["state"] == "disputed"
+    assert (
+        client.post("/api/business/review", json={"dataset": "nope", "key": "x", "verdict": "correct"}).status_code
+        == 400
+    )
+    assert "Qorvo has LDOs" in client.get("/business/quality/todo.txt").text
+    # a confirmed catalogue part turns the gap into a portfolio function
+    mine = op.COMPANIES["combined"][1]
+    assert op.status_of("pol_ldo", op.makers(session), mine) != "supported"
+    client.post(
+        "/business/evidence/pol_ldo/mapping", data={"mpn": "TESTLDO1", "manufacturer": "Qorvo", "verdict": "yes"}
+    )
+    session.expire_all()
+    assert op.status_of("pol_ldo", op.makers(session), mine) == "supported"
+    client.post("/business/evidence/pol_ldo/mapping", data={"mpn": "TESTLDO1", "verdict": "undo"})
+    session.expire_all()
+    assert op.status_of("pol_ldo", op.makers(session), mine) != "supported"
+    assert any(c["level"] in ("ok", "warn", "error") for c in quality.checks(op.applications()))

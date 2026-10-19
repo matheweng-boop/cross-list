@@ -1,0 +1,557 @@
+# Foundry route per function (public foundry offerings; indicative).
+# Compiled 2026-10-19 from public foundry technology pages, press releases and trade press. No logins.
+# foundry_route: yes = mature commercial process exists; partial = exists but niche/limited; no = needs own fab / special process.
+# in_house refers to platforms in data/business/capabilities.yaml. Foundry lists are examples, not exhaustive.
+# Note: TSMC announced it will wind down GaN foundry services by 2027-07-31; GlobalFoundries and VIS licensed its GaN processes.
+pol_ldo:
+  typical_process: "0.18 um / 130 nm BCD or analog CMOS (5-40 V LDMOS options)"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI", "TSMC analog CMOS"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "LDOs are a standard foundry BCD/analog-CMOS product; no special process needed."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+temperature_sensor:
+  typical_process: "180-350 nm low-noise analog CMOS (bandgap / bipolar sensing)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XH018 / XH035 sensor CMOS", "TSMC analog CMOS", "Tower 180 nm mixed-signal CMOS"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Digital temperature sensors are built in ordinary mixed-signal CMOS."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+ble_soc:
+  typical_process: "40 nm / 22 nm ULL RF CMOS with embedded flash or RRAM/MRAM"
+  foundry_route: "yes"
+  foundries: ["TSMC 40 nm / 22ULL with eFlash or eRRAM", "GlobalFoundries 22FDX", "UMC 22 nm ULL"]
+  in_house: "Qorvo QPG 802.15.4 / BLE / Matter SoCs (GreenPeak heritage) on cmos_mixed_signal"
+  note: "Already fabless at Qorvo; e.g. Nordic nRF54L15 uses TSMC 22ULL eRRAM."
+  confidence: high
+  sources: ["https://www.techinsights.com/blog/summary-nordic-nrf54l15-tsmc-22ull-12-mb-ereram-process-analysis", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_DCE_28HPC_22ULP"]
+supervisor:
+  typical_process: "0.18-0.5 um analog CMOS / BCD (low-Iq comparators, bandgap)"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI", "X-FAB XH018"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Voltage supervisors are mature analog CMOS parts available in any analog foundry flow."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+adc:
+  typical_process: "180 nm-40 nm mixed-signal CMOS (SAR / delta-sigma); 180 nm BCD-on-SOI for automotive BMS"
+  foundry_route: "yes"
+  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018 / XT018", "Tower 180 nm mixed-signal", "GlobalFoundries 22FDX / 55 nm"]
+  in_house: "Skyworks capacitive isolation includes isolated delta-sigma modulators/ADCs (Si89xx); ADCs inside Qorvo PAC and Skyworks SoCs"
+  note: "Precision and high-speed ADCs are routinely built at foundries; top-precision vendors use proprietary fabs but it is not required."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.xfab.com/xt018", "https://www.xfab.com/technology/sensors"]
+amplifier:
+  typical_process: "0.18-0.35 um precision analog CMOS or BiCMOS (op-amps, current-sense, instrumentation)"
+  foundry_route: "yes"
+  foundries: ["TSMC analog CMOS / BCD", "X-FAB XH018 / XH035 low-noise CMOS", "Tower 180 nm BCD / SiGe BiCMOS"]
+  in_house: "Op-amp / current-sense blocks inside Qorvo PAC and Skyworks isolated amplifiers; no catalogue op-amp process"
+  note: "CMOS op-amps and current-sense amplifiers are foundry-friendly; the highest-performance bipolar/JFET op-amps mostly come from IDM complementary-bipolar fabs."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+mcu:
+  typical_process: "40-90 nm CMOS with embedded flash; 22/28 nm with eMRAM/eRRAM"
+  foundry_route: "yes"
+  foundries: ["TSMC 40/28/22 nm eNVM", "GlobalFoundries 22FDX / 55 nm eFlash", "UMC 40/22 nm", "X-FAB e-NVM (180 nm SONOS)"]
+  in_house: "Qorvo PAC motor-control SoCs and QPG SoCs embed MCU cores; no general-purpose MCU line"
+  note: "Most MCU vendors already use foundry eNVM processes."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_DCE_28HPC_22ULP", "https://www.techinsights.com/blog/summary-nordic-nrf54l15-tsmc-22ull-12-mb-ereram-process-analysis", "https://www.xfab.com/technology/e-nvm", "https://www.microchip.com/en-us/about/news-releases/corporate/sst-announces-qualification-of-embedded-superflash-on-globalfoundries-bcdlite-process"]
+isolated_dcdc:
+  typical_process: "Isolation barrier (thick-oxide capacitive or on-chip transformer) plus 0.18 um BCD driver/rectifier"
+  foundry_route: "yes"
+  foundries: ["X-FAB galvanic isolation (capacitive or inductive, up to 1700 V working)", "X-FAB XT018", "TSMC BCD"]
+  in_house: "Skyworks capacitive digital isolation platform (Si88xx with integrated DC-DC)"
+  note: "Foundry isolation modules exist; isolated power additionally needs a transformer (in-package or on-die) which is packaging work."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/galvanic-isolation", "https://www.xfab.com/xt018"]
+voltage_reference:
+  typical_process: "Bipolar / BiCMOS bandgap or buried-Zener (precision); analog CMOS for general purpose"
+  foundry_route: "yes"
+  foundries: ["TSMC analog CMOS / BCD", "X-FAB XH018 / XH035 (Zener and bipolar options)", "Tower SiGe BiCMOS"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "General-purpose references are easy in foundry analog CMOS; the lowest-drift buried-Zener / XFET parts are made on proprietary IDM processes."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+wifi_soc:
+  typical_process: "16/12 nm FinFET to N6RF / N4 RF CMOS"
+  foundry_route: "yes"
+  foundries: ["TSMC N16 / N6RF / N4", "GlobalFoundries 22FDX", "Samsung Foundry"]
+  in_house: "Wi-Fi FEMs (GaAs, SiGe, RF SOI, BAW) only; no Wi-Fi baseband/SoC"
+  note: "All Wi-Fi SoC vendors are fabless on TSMC-class RF CMOS; foundry route is standard, IP is the barrier."
+  confidence: high
+  sources: ["https://pr.tsmc.com/english/news/2831", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+tvs_esd:
+  typical_process: "Discrete silicon avalanche / snapback diode processes (often 6-8 inch power-discrete fabs)"
+  foundry_route: "partial"
+  foundries: ["Hua Hong power discrete platform (MOSFET/IGBT; TVS offering not public)", "X-FAB (Zener/Schottky options within CMOS; discrete TVS not public)"]
+  in_house: "Skyworks silicon RF diodes (PIN, Schottky, varactor, limiter) - adjacent discrete-diode know-how"
+  note: "Discrete TVS/ESD arrays are mostly made in IDM discrete fabs; a public pure-play TVS process offering was not found."
+  confidence: low
+  sources: ["https://eepower.com/news/hua-hong-power-discrete-platform-hits-5-million-wafer-shipments/", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+half_bridge_driver:
+  typical_process: "0.18-1 um HV BCD or HV-SOI (100-650 V level shifters, bootstrap)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (up to 375 V)", "X-FAB 1 um / 350 nm HV (up to 625-650 V)", "TSMC BCD", "Tower 180 nm BCD"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public; Skyworks isolated gate drivers (Si82xx)"
+  note: "HV gate drivers are well served by foundry HV BCD / SOI offerings."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/high-voltage", "https://www.xfab.com/xt018", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+three_phase_gate_driver:
+  typical_process: "0.18-0.35 um BCD (40-100 V) or HV-SOI (600 V)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "Qorvo PAC5xxx motor-control SoCs integrate 3-phase gate drivers (Active-Semi heritage)"
+  note: "Already shipped by Qorvo; automotive-grade foundry BCD flows exist."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+sequencer:
+  typical_process: "0.18 um BCD / analog CMOS with NVM trim"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI", "X-FAB e-NVM"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Simple mixed-signal function on any BCD/analog flow."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd", "https://www.xfab.com/technology/e-nvm"]
+audio_codec:
+  typical_process: "55-28 nm mixed-signal CMOS; 40/22 nm BCD for class-D smart amps"
+  foundry_route: "yes"
+  foundries: ["TSMC 40BCD / 22BCD and mixed-signal CMOS", "Tower 65 nm BCD (3.3 V platform for audio)", "GlobalFoundries 55 nm BCD"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Audio codecs and smart amps are fabless products on foundry CMOS/BCD."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+efuse_hotswap:
+  typical_process: "0.18-0.13 um BCD with integrated low-Rds(on) LDMOS (5-80 V)"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public; Skyworks load switches"
+  note: "Integrated eFuses need good LDMOS Rds(on), which 130/65 nm foundry BCD provides."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+gnss_lna:
+  typical_process: "RF SOI or SiGe BiCMOS LNA (also GaAs pHEMT), with SAW pre-filter in module"
+  foundry_route: "yes"
+  foundries: ["GlobalFoundries 8SW / 9SW RF SOI", "Tower RF SOI / SBC18 SiGe", "TSMC RF SOI"]
+  in_house: "Skyworks/Qorvo RF SOI, SiGe and GaAs pHEMT LNAs plus SAW filters and SiP integration"
+  note: "Core competence; both companies already make GNSS LNAs and FEMs."
+  confidence: high
+  sources: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+ethernet_phy:
+  typical_process: "28-12 nm CMOS (multi-gig, automotive T1); 40-55 nm for 10/100"
+  foundry_route: "yes"
+  foundries: ["TSMC 28/16/12 nm", "GlobalFoundries 22FDX", "UMC 28 nm"]
+  in_house: "none"
+  note: "Standard fabless product on foundry CMOS; the barrier is PHY DSP/AFE IP, not process."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+rtc:
+  typical_process: "0.18-0.35 um ultra-low-leakage CMOS (plus 32 kHz crystal or MEMS resonator)"
+  foundry_route: "yes"
+  foundries: ["TSMC analog CMOS", "X-FAB XH018 / XH035", "UMC low-power CMOS"]
+  in_house: "Skyworks timing (crystal oscillators, DSPLL) - adjacent, not RTC"
+  note: "Low-power CMOS foundry flow; crystal sourcing is the other piece."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+can_transceiver:
+  typical_process: "0.18-0.35 um HV BCD / BCD-on-SOI (40-58 V bus fault tolerance, AEC-Q100)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "none"
+  note: "Automotive transceivers are a stated target of foundry BCD-on-SOI platforms."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+watchdog:
+  typical_process: "0.18-0.35 um analog CMOS / BCD"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Small mixed-signal function on any analog flow."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+termination_ldo:
+  typical_process: "0.18 um / 130 nm BCD (sink/source LDMOS)"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "DDR VTT LDOs are standard BCD parts."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+reverse_polarity:
+  typical_process: "0.18-0.35 um HV BCD (charge pump, 40-80 V)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Ideal-diode controllers are automotive BCD parts; external MOSFET is separate."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+motor_driver_brushed:
+  typical_process: "0.18-0.13 um BCD with integrated LDMOS H-bridges (up to 40-60 V)"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI"]
+  in_house: "Qorvo PAC motor-control SoCs (Active-Semi heritage)"
+  note: "Tower and GF cite motor drivers as BCD targets."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+diversity_rx_module:
+  typical_process: "RF SOI switches/LNAs + SAW/BAW filters in SiP"
+  foundry_route: "yes"
+  foundries: ["GlobalFoundries 8SW / 9SW RF SOI", "Tower RF SOI", "TSMC RF SOI"]
+  in_house: "In production at both: RF SOI, SAW/TC-SAW/BAW filters, SiP module integration"
+  note: "Core competence; filters are made in-house, switches/LNAs on foundry or in-house RF SOI."
+  confidence: high
+  sources: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+io_expander:
+  typical_process: "0.18-0.35 um CMOS (I2C/SPI logic + I/O)"
+  foundry_route: "yes"
+  foundries: ["TSMC CMOS", "UMC CMOS", "X-FAB 180/350 nm CMOS"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Simple digital/mixed-signal part on mature CMOS."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/cmos", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+rf_transceiver:
+  typical_process: "RF CMOS (40 nm to N6RF) or SiGe BiCMOS for mmWave / defense"
+  foundry_route: "yes"
+  foundries: ["TSMC N16 / N6RF", "GlobalFoundries 22FDX / SiGe", "Tower SBC18 SiGe BiCMOS"]
+  in_house: "Qorvo Anokiwave beamformer / IF converter ICs; SiGe/BiCMOS at both companies; Skyworks broadcast RF CMOS"
+  note: "Foundry RF CMOS and SiGe are the industry norm for transceivers."
+  confidence: high
+  sources: ["https://pr.tsmc.com/english/news/2831", "https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html"]
+pre_regulator:
+  typical_process: "0.18-0.35 um HV BCD (40-60 V, automotive)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Wide-Vin boost/SEPIC controllers fit foundry automotive BCD."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+nfc_frontend:
+  typical_process: "40-90 nm mixed-signal CMOS with eNVM (controllers); 0.18 um for analog front ends"
+  foundry_route: "yes"
+  foundries: ["TSMC 40 nm eFlash / mixed-signal", "GlobalFoundries 55 nm / 40 nm", "UMC 40 nm"]
+  in_house: "none"
+  note: "NFC controllers are standard foundry CMOS; secure-element variants need certified sites."
+  confidence: medium
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+voltage_translator:
+  typical_process: "0.18-0.35 um CMOS (dual-rail I/O)"
+  foundry_route: "yes"
+  foundries: ["TSMC CMOS", "UMC CMOS", "X-FAB 180/350 nm CMOS"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Commodity logic part on mature CMOS."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/cmos"]
+haptics_driver:
+  typical_process: "0.18 um-40 nm BCD (LRA/ERM); HV BCD up to ~100-200 V for piezo"
+  foundry_route: "yes"
+  foundries: ["TSMC 40BCD / BCD", "Tower 65 nm / 180 nm BCD", "X-FAB XT018 (up to 375 V)"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "LRA drivers are low-voltage BCD; piezo drivers use HV BCD/SOI options."
+  confidence: medium
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/xt018"]
+acdc_controller:
+  typical_process: "0.35-1 um HV BCD with 650-700 V start-up device"
+  foundry_route: "yes"
+  foundries: ["X-FAB 1 um / 350 nm HV (625-650 V)", "TSMC BCD (HV options)", "GlobalFoundries BCDLite (AC-DC targeted)"]
+  in_house: "none (Qorvo's UnitedSiC power devices were divested)"
+  note: "Foundry HV processes with 650 V devices exist; most incumbents still use own HV fabs."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/high-voltage", "https://semiengineering.com/130-bcdlite-and-bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd"]
+secure_element:
+  typical_process: "40-90 nm CMOS with embedded flash in a Common Criteria / EMVCo-certified fab"
+  foundry_route: "partial"
+  foundries: ["TSMC 40/28 nm eNVM", "GlobalFoundries 40/22 nm eNVM", "UMC eNVM"]
+  in_house: "none"
+  note: "Processes exist, but security certification of the fab and design flow (CC EAL5+/6+) is required; whether a given site is certified is not public in most cases."
+  confidence: medium
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_DCE_28HPC_22ULP", "https://www.microchip.com/en-us/about/news-releases/corporate/sst-announces-qualification-of-embedded-superflash-on-globalfoundries-bcdlite-process"]
+power_fets:
+  typical_process: "Si trench / shielded-gate / superjunction MOSFETs on 8-inch power-discrete lines; GaN-on-Si HEMT (650/100 V)"
+  foundry_route: "partial"
+  foundries: ["Hua Hong power discrete (superjunction MOSFET, IGBT)", "X-FAB 8-inch GaN-on-Si and 6-inch SiC (Dresden / Lubbock)", "TSMC GaN-on-Si (exiting by July 2027)", "GlobalFoundries / VIS (licensed TSMC 650 V and 80 V GaN)"]
+  in_house: "Qorvo SiC JFETs (UnitedSiC) divested to onsemi; GaN-on-SiC is RF only; no GaN-on-Si"
+  note: "Foundry Si-MOSFET and GaN-on-Si capacity exists but is limited/in flux (TSMC GaN exit); leading power-FET vendors run own fabs."
+  confidence: medium
+  sources: ["https://eepower.com/news/hua-hong-power-discrete-platform-hits-5-million-wafer-shipments/", "https://www.xfab.com/technology/sic-gan", "https://www.ledinside.com/node/35291", "https://investor.tsmc.com/static/annualReports/2024/english/pdf/2024_tsmc_ar_e_ch5.pdf"]
+soc:
+  typical_process: "7-3 nm FinFET (application processors)"
+  foundry_route: "yes"
+  foundries: ["TSMC N7 / N5 / N3", "Samsung Foundry"]
+  in_house: "none"
+  note: "Process route is standard (all AP vendors are fabless), but design/IP scale is the barrier."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+env_sensor:
+  typical_process: "MEMS (piezoresistive/capacitive pressure), CMOS + polymer humidity, photodiode CMOS (light)"
+  foundry_route: "partial"
+  foundries: ["TSMC CMOS+MEMS pressure", "X-FAB MEMS and photodiode options", "Silex Microsystems MEMS", "Teledyne MEMS"]
+  in_house: "Qorvo NextInput MEMS force sensing (closing); no environmental sensor line"
+  note: "Light and pressure have foundry routes; humidity/gas sensing films are usually proprietary and not publicly offered by foundries."
+  confidence: medium
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS", "https://www.xfab.com/technology/sensors", "https://en.wikipedia.org/wiki/List_of_MEMS_foundries", "https://teledyneimaging.com/mems"]
+relay_driver:
+  typical_process: "0.18-0.35 um HV BCD (40-60 V low-side LDMOS, clamps)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Low-side drivers are standard automotive BCD parts."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+isolated_can:
+  typical_process: "Capacitive or inductive isolation barrier + automotive BCD transceiver"
+  foundry_route: "yes"
+  foundries: ["X-FAB galvanic isolation", "X-FAB XT018", "TSMC BCD"]
+  in_house: "Skyworks capacitive digital isolation (Si86xx/Si88xx) - transceiver front end would be new"
+  note: "Isolation is in-house at Skyworks; CAN PHY can come from foundry BCD."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/galvanic-isolation", "https://www.xfab.com/xt018"]
+touch_controller:
+  typical_process: "55-180 nm mixed-signal CMOS with HV (10-20 V) drive options and eNVM"
+  foundry_route: "yes"
+  foundries: ["TSMC mixed-signal / HV CMOS", "UMC HV", "X-FAB XH018"]
+  in_house: "Qorvo NextInput MEMS force sensing (closing)"
+  note: "Capacitive/inductive sensing controllers are fabless foundry CMOS products."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+battery_protector:
+  typical_process: "0.18-0.35 um HV CMOS / BCD (ultra-low Iq, trimmed comparators)"
+  foundry_route: "yes"
+  foundries: ["TSMC BCD (0.6 um to 22 nm)", "GlobalFoundries 130/55 nm BCD / BCDLite", "Tower 180 nm / 65 nm BCD", "X-FAB XT018 / XT011 BCD-on-SOI"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Cell protectors use low-Iq analog CMOS available at foundries."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+redriver:
+  typical_process: "SiGe BiCMOS or 40-28 nm CMOS (linear equalizers, 10-32 Gb/s)"
+  foundry_route: "yes"
+  foundries: ["Tower SBC18 SiGe BiCMOS", "GlobalFoundries SiGe", "TSMC 28/16 nm"]
+  in_house: "SiGe/BiCMOS at both companies (sige_bicmos); Qorvo optical drivers/TIAs"
+  note: "Linear redrivers are SiGe or CMOS foundry products."
+  confidence: medium
+  sources: ["https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+hv_flyback:
+  typical_process: "0.35-1 um HV BCD / HV-SOI (650-700 V start-up) or controller + GaN"
+  foundry_route: "yes"
+  foundries: ["X-FAB 1 um / 350 nm HV (625-650 V)", "TSMC BCD", "GlobalFoundries BCDLite"]
+  in_house: "none"
+  note: "Same route as AC/DC controllers; integrated-switch versions need 700 V devices offered by few foundries."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/high-voltage", "https://semiengineering.com/130-bcdlite-and-bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd"]
+hall_switch:
+  typical_process: "0.18-0.35 um CMOS with integrated Hall plates (automotive, up to 175 C)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XH018 / XH035 sensor CMOS", "TSMC analog CMOS"]
+  in_house: "none"
+  note: "Hall plates are made in standard CMOS layers; X-FAB markets sensor-interface CMOS adopted by tier-one vendors."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+serdes:
+  typical_process: "28-5 nm FinFET CMOS (or SiGe for very high-speed analog)"
+  foundry_route: "yes"
+  foundries: ["TSMC N16 / N7 / N5", "GlobalFoundries 22FDX / 12LP"]
+  in_house: "none (Skyworks timing/jitter attenuators are adjacent)"
+  note: "Process route is standard; SerDes IP is the barrier."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+ddr_flash:
+  typical_process: "Proprietary DRAM (1x/1a nm) and 3D NAND processes"
+  foundry_route: "no"
+  foundries: []
+  in_house: "none"
+  note: "Standalone DRAM and NAND are made only in memory-IDM fabs; no open foundry offering."
+  confidence: high
+  sources: ["https://equalocean.com/analysis/2020032513816-gigadevice-chinas-weapon-global-nor-flash-battle-1-2"]
+position_sensor:
+  typical_process: "CMOS Hall (0.18-0.35 um) or inductive CMOS; AMR/TMR needs magnetic BEOL module"
+  foundry_route: "partial"
+  foundries: ["X-FAB XH018 sensor CMOS (Hall / inductive)", "Tower 130 nm CMOS with TMR BEOL module (Crocus)", "MDT magnetic sensor foundry service (TMR/AMR/GMR)"]
+  in_house: "none"
+  note: "Hall/inductive sensors have mainstream foundry routes; magnetoresistive variants rely on niche foundries."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/sensors", "https://www.sec.gov/Archives/edgar/data/928876/000117891317002721/zk1720576.htm", "https://www.aap.com.au/aapreleases/cision20230718ae58683"]
+dac:
+  typical_process: "180-40 nm mixed-signal CMOS; SiGe BiCMOS for RF DACs"
+  foundry_route: "yes"
+  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018", "Tower SBC18 SiGe"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Standard foundry product."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+usb_pd_controller:
+  typical_process: "40-90 nm CMOS / BCD with 20-30 V tolerant CC/VBUS pins and eNVM"
+  foundry_route: "yes"
+  foundries: ["TSMC 40BCD / 22BCD", "GlobalFoundries BCDLite", "UMC"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "TSMC names USB interfaces and fast chargers as 40/22BCD targets."
+  confidence: high
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD", "https://semiengineering.com/130-bcdlite-and-bcd"]
+modem:
+  typical_process: "5-3 nm FinFET baseband + N6RF-class RF transceiver"
+  foundry_route: "yes"
+  foundries: ["TSMC N5 / N4 / N3 and N6RF", "Samsung Foundry"]
+  in_house: "RF front-end modules only (PAs, filters, switches); no modem baseband"
+  note: "Process route is standard; the barrier is 3GPP modem IP and certification."
+  confidence: high
+  sources: ["https://pr.tsmc.com/english/news/2831", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+flash:
+  typical_process: "Serial NOR: 55-65 nm floating-gate (foundry available); NAND: proprietary 3D NAND"
+  foundry_route: "partial"
+  foundries: ["XMC 65 nm NOR (GigaDevice)", "SMIC (reported, GigaDevice NOR)"]
+  in_house: "none"
+  note: "Fabless NOR via foundry is proven (GigaDevice/XMC); NAND has no foundry route."
+  confidence: medium
+  sources: ["https://equalocean.com/analysis/2020032513816-gigadevice-chinas-weapon-global-nor-flash-battle-1-2"]
+radar_transceiver:
+  typical_process: "22FDX / 28-16 nm RF CMOS (77-81 GHz) or SiGe BiCMOS"
+  foundry_route: "yes"
+  foundries: ["GlobalFoundries 22FDX (Bosch, Arbe)", "TSMC 28/16 nm RF", "Tower SBC18 SiGe"]
+  in_house: "Qorvo UWB (Decawave) radar-capable SoCs; Anokiwave mmWave beamformers; SiGe at both"
+  note: "Automotive radar SoCs are made at foundries today (e.g. Bosch on GF 22FDX)."
+  confidence: high
+  sources: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html"]
+vehicle_sensors:
+  typical_process: "Mixed: CMOS Hall / inductive (wheel speed), MEMS (pressure, inertial), BCD interfaces"
+  foundry_route: "partial"
+  foundries: ["X-FAB XH018 / MEMS", "TSMC CMOS+MEMS", "Silex / Teledyne MEMS"]
+  in_house: "none"
+  note: "Magnetic and pressure sensors have foundry routes; inertial/safety-grade MEMS are mostly IDM."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/sensors", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS", "https://en.wikipedia.org/wiki/List_of_MEMS_foundries"]
+ldo_tracker:
+  typical_process: "0.18-0.35 um automotive HV BCD (40 V load-dump)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Tracking LDOs are automotive BCD parts."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+multiphase:
+  typical_process: "130-40 nm BCD controller + power stages (DrMOS) in 65 nm / 130 nm BCD"
+  foundry_route: "yes"
+  foundries: ["Tower 65 nm BCD (CPU/GPU VR targeted)", "TSMC BCD", "GlobalFoundries 55/130 nm BCD"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Tower names CPU/GPU voltage regulators as 65 nm BCD targets."
+  confidence: high
+  sources: ["https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles"]
+lin_transceiver:
+  typical_process: "0.18-0.35 um HV BCD / BCD-on-SOI (40 V bus)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "none"
+  note: "Standard automotive BCD part."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+switch_detection_interface:
+  typical_process: "0.18-0.35 um automotive HV BCD"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "none"
+  note: "MSDI parts are automotive BCD; no special process."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+mmwave_antenna_module:
+  typical_process: "SiGe / RF SOI / CMOS beamformer + antenna-in-package on organic substrate"
+  foundry_route: "partial"
+  foundries: ["GlobalFoundries 22FDX / SiGe / RF SOI (RFIC)", "Tower SBC18 SiGe (RFIC)", "AiP substrates and assembly via OSATs (not a wafer foundry)"]
+  in_house: "Qorvo Anokiwave beamformers, GaN-on-SiC, microwave module assembly; antenna-in-package not held"
+  note: "RFICs have foundry routes; the antenna-in-package step is OSAT/substrate work that neither company has publicly."
+  confidence: medium
+  sources: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+rf_predriver:
+  typical_process: "GaAs HBT / pHEMT, SiGe BiCMOS, or GaN"
+  foundry_route: "yes"
+  foundries: ["AWSC GaAs HBT/pHEMT", "WIN Semiconductors GaAs/GaN", "Tower SiGe", "GlobalFoundries SiGe"]
+  in_house: "In production: GaAs HBT (both), GaN-on-SiC (Qorvo), SiGe (both)"
+  note: "Core competence; both companies also already use external GaAs foundries."
+  confidence: high
+  sources: ["https://www.awsc.com.tw/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html"]
+position_interface:
+  typical_process: "0.18-0.35 um HV BCD / mixed-signal CMOS (resolver excitation + sigma-delta)"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "Resolver-to-digital and sensor interfaces are standard automotive mixed-signal parts."
+  confidence: high
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+ppg_afe:
+  typical_process: "180-130 nm low-noise CMOS with integrated photodiode options + LED drivers"
+  foundry_route: "yes"
+  foundries: ["X-FAB XH018 (photodiodes, APD/SPAD)", "TSMC analog CMOS", "Tower 180 nm"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Foundry sensor CMOS with photodiode modules exists."
+  confidence: medium
+  sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.xfab.com/technology/sensors"]
+active_antenna_amp:
+  typical_process: "SiGe BiCMOS or GaAs pHEMT low-noise amplifier (AM/FM)"
+  foundry_route: "yes"
+  foundries: ["Tower SBC18 SiGe", "GlobalFoundries SiGe", "WIN / AWSC GaAs pHEMT"]
+  in_house: "GaAs pHEMT and SiGe LNAs at both companies"
+  note: "Process already in-house; automotive AM/FM specs are the gap."
+  confidence: high
+  sources: ["https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html", "https://www.awsc.com.tw/"]
+circulator_isolator:
+  typical_process: "Ferrite (YIG / garnet) ceramics with magnets; not a semiconductor wafer process"
+  foundry_route: "no"
+  foundries: []
+  in_house: "Skyworks Trans-Tech (Adamstown, MD) ceramics and ferrites - in production"
+  note: "No semiconductor foundry route; made in ceramic/ferrite plants, which Skyworks already owns."
+  confidence: high
+  sources: []
+smartcard_interface:
+  typical_process: "0.18-0.35 um CMOS with charge pump (1.8/3/5 V card supply)"
+  foundry_route: "yes"
+  foundries: ["TSMC analog CMOS", "X-FAB XH018 / XH035", "UMC"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Simple mixed-signal interface on mature CMOS."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+ecg_afe:
+  typical_process: "180-55 nm low-noise mixed-signal CMOS"
+  foundry_route: "yes"
+  foundries: ["X-FAB XH018 low-noise CMOS", "TSMC mixed-signal", "Tower 180 nm"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Biopotential AFEs are foundry CMOS products."
+  confidence: high
+  sources: ["https://www.xfab.com/technology/sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+ultrasonic_afe:
+  typical_process: "0.18-0.35 um HV BCD (transducer drive 10-100 V) + low-noise receive"
+  foundry_route: "yes"
+  foundries: ["X-FAB XT018 BCD-on-SOI (10-375 V, AEC-Q100 Grade 0)", "X-FAB XH018 HV CMOS", "GlobalFoundries 130BCDLite Gen2 ATV (up to 40 V, Auto Grade 1)", "TSMC BCD", "Tower 180 nm BCD (up to 125 V)"]
+  in_house: "none"
+  note: "Parking-sensor AFEs are automotive BCD parts."
+  confidence: medium
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+v2x_transceiver:
+  typical_process: "28-16 nm RF CMOS (802.11p / C-V2X modem + transceiver)"
+  foundry_route: "yes"
+  foundries: ["TSMC 28/16 nm / N6RF", "GlobalFoundries 22FDX"]
+  in_house: "V2X FEMs (GaAs, BAW, SiP) at both; no V2X modem"
+  note: "Process route is standard; modem IP is the barrier."
+  confidence: medium
+  sources: ["https://pr.tsmc.com/english/news/2831", "https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/"]
+wireless_power:
+  typical_process: "40-180 nm BCD (Qi Tx/Rx with integrated full bridge, 20-30 V)"
+  foundry_route: "yes"
+  foundries: ["GlobalFoundries BCDLite (wireless targeted)", "TSMC BCD", "Tower 65 nm BCD"]
+  in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
+  note: "GF lists wireless charging among BCDLite targets."
+  confidence: high
+  sources: ["https://semiengineering.com/130-bcdlite-and-bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+ultrasound_afe:
+  typical_process: "180-65 nm low-noise mixed-signal CMOS (LNA, VGA, ADC per channel)"
+  foundry_route: "yes"
+  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018", "Tower 180 nm"]
+  in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
+  note: "Receive AFEs are foundry CMOS; TSMC also lists MEMS ultrasound transceivers."
+  confidence: medium
+  sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS"]
+hv_pulser:
+  typical_process: "HV BCD-on-SOI (+/-100-200 V, fast edges), e.g. ST BCD8s-SOI"
+  foundry_route: "partial"
+  foundries: ["X-FAB XT018 BCD-on-SOI (up to 375 V)", "X-FAB 1 um / 350 nm HV SOI"]
+  in_house: "none"
+  note: "Foundry HV SOI exists, but medical pulsers are mostly on IDM processes; suitability of a specific foundry flow for +/-100 V fast pulsing is not public."
+  confidence: low
+  sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage", "https://www.st.com/en/switches-and-multiplexers/ultrasound-pulser-ics.html"]

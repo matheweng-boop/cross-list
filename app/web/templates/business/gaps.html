@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, usd, company_switch, status_chip, crowd, about, term %}
+{% from "business/_common.html" import pct, usd, company_switch, status_chip, crowd, about, term, path_chip %}
 {% block title %}Gaps & ranking – Business opportunity – Cross List{% endblock %}
 {% block content %}
 <h1>Gaps &amp; ranking</h1>
@@ -15,7 +15,7 @@
   <div class="bo-gap-head small"><span>Missing function</span><span>Needed in</span><span>{{ term('door_opener', 'Door opener') }}</span><span>{{ term('socket', 'Sockets') }}</span><span>{{ term('competition', 'Competition') }}</span><span>{{ term('asp_tam', 'TAM / year') }}</span></div>
   {% for e in rows %}
   <details class="bo-gap" id="fn-{{ e.fn }}">
-    <summary><span><b>{{ e.label }}</b> {{ status_chip(e.status, status_label) }}</span>
+    <summary><span><b>{{ e.label }}</b> {{ status_chip(e.status, status_label) }} {{ path_chip(e.path, path_label) }}</span>
       <span>{{ e.reach }} of {{ apps|length }}</span>
       <span><span class="bo-bar"><span style="width:{{ (e.adjacency * 100)|round }}%"></span></span> {{ e.adjacent }}/{{ e.reach }}</span>
       <span>{{ e.positions }}</span>
@@ -23,6 +23,8 @@
       <span class="small">{% if e.tam_apps %}{{ usd(e.tam) }}{% else %}<span class="muted">no data</span>{% endif %}</span></summary>
     <div class="bo-gap-body">
       <p class="bo-words">Read as: {{ e.label }} is in {{ e.reach }} of the {{ apps|length }} application diagrams ({{ e.positions }} sockets in total). {{ e.adjacent }} of those {{ e.reach }} already contain one of our parts{% if e.adjacent == e.reach %}, so every one of them is a door opener{% elif e.adjacent == 0 %}, so we have no door opener yet{% endif %}. Status: {{ status_label[e.status] }} – {{ bo_status_help[e.status] }}</p>
+      {% if e.path %}<p class="small"><b>Path to product:</b> {{ path_label[e.path.path] }}{% if e.path.effort %} · effort {{ e.path.effort }}{% endif %}{% if e.path.route %} · {{ e.path.route }}{% endif %}{% if e.path.missing %}<br><span class="muted">Still missing: {{ e.path.missing|join('; ') }}</span>{% endif %}</p>{% endif %}
+      <p class="small"><a href="/business/evidence/{{ e.fn }}?co={{ co }}">Full evidence and review →</a></p>
       {% if e.competition %}<p class="small"><b>Who sells it:</b> {{ e.competition.vendors|join(', ') }}{% if e.competition.note %}<br><span class="muted">{{ e.competition.note }}</span>{% endif %}</p>{% endif %}
       {% if e.hunt %}<p><b>Where to hunt:</b> {% for c in e.hunt %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}" title="{{ c.type }} · {{ c.apps|length }} relevant application{{ 's' if c.apps|length != 1 }}: {{ c.apps|join(', ') }}">{{ c.name }}</span>{% endfor %} <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}">all companies →</a></p>{% endif %}
       <table class="bo-mini"><thead><tr><th>Application</th><th>Market</th><th>Sockets</th><th>Already uses our</th></tr></thead><tbody>

@@ -28,7 +28,7 @@ import yaml
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import BusinessInput, Manufacturer, ManufacturerRole, Part
+from app.models import BusinessInput, Manufacturer, ManufacturerRole, Part, PartMapping
 from app.services import blocks
 
 COMPANIES = {
@@ -70,13 +70,17 @@ def makers(session: Session) -> dict[str, dict[str, int] | None]:
     ).all()
     for fam, name, n in rows:
         fam_competitors[fam][name] += n
+    confirmed: dict[str, Counter] = defaultdict(Counter)  # catalogue parts a reviewer mapped to the function
+    for m in session.scalars(select(PartMapping).where(PartMapping.verdict == "yes")):
+        confirmed[m.fn][m.manufacturer] += 1
     out: dict[str, dict[str, int] | None] = {}
     for fn, f in cat.items():
         cands = blocks._candidates(session, fn)
-        if cands is None:
-            out[fn] = None
+        if cands is None:  # a customer part, unless a reviewer confirmed that one of our parts fills it
+            out[fn] = dict(confirmed[fn]) if fn in confirmed else None
             continue
         c = Counter(x["manufacturer"] for x in cands)
+        c.update(confirmed.get(fn, {}))
         src = f.get("source")
         if isinstance(src, dict) and "family" in src:
             c.update(fam_competitors.get(src["family"], {}))
@@ -366,6 +370,25 @@ _TECHNOLOGY = _COMPETITION.parent / "technology.yaml"
 PROXIMITY_LABEL = {3: "Same technology", 2: "Adjacent", 1: "Distant", 0: "Unrelated"}
 PROXIMITY_WEIGHT = {3: 1.0, 2: 0.6, 1: 0.3, 0: 0.1}
 CROWDING_WEIGHT = {"low": 1.0, "medium": 0.9, "high": 0.75}
+# path to product (data/business/evidence/path.yaml) replaces the technology rating where present; trend multiplies
+PATH_LABEL = {"exists": "Already in portfolio (mapping missing)", "variant": "Spec variant of an existing line",
+              "new_design": "New design on our technology", "new_capability": "New technology: partner / acquire",
+              "not_pursue": "Not ours to build"}  # fmt: skip
+PATH_SHORT = {"exists": "Exists?", "variant": "Spec variant", "new_design": "New design",
+              "new_capability": "New technology", "not_pursue": "Not ours"}  # fmt: skip
+PATH_WEIGHT = {"exists": 1.0, "variant": 1.0, "new_design": 0.6, "new_capability": 0.3, "not_pursue": 0.1}
+TREND_WEIGHT = {"growing": 1.15, "stable": 1.0, "declining": 0.85}
+EVIDENCE_TOPICS = {"path": "Path to product", "patents": "Patents", "foundry": "Foundry route",
+                   "competitor_tech": "Competitor technology", "trends": "Market trend"}  # fmt: skip
+
+
+@lru_cache
+def evidence(topic: str) -> dict[str, dict]:
+    """Background evidence per function (data/business/evidence/<topic>.yaml)."""
+    path = _COMPETITION.parent / "evidence" / f"{topic}.yaml"
+    return (yaml.safe_load(path.read_text()) if path.exists() else None) or {}
+
+
 # system parts in the diagrams that are not semiconductor development targets
 _NOT_CHIPS = {
     "external_block",
@@ -407,14 +430,31 @@ def technology_fit(apps: list[Application]) -> list[dict]:
             e["adjacent"] += anchor
             e["background"] += a.background
             e["apps"].append(a)
+    paths, trends = evidence("path"), evidence("trends")
     for fn, e in rows.items():
         t = tech.get(fn) or {}
         prox = t.get("proximity")
         c = comp.get(fn) or {}
+        pa, tr = paths.get(fn) or {}, trends.get(fn) or {}
         e.update(proximity=prox, tech=t.get("tech") or [], reasoning=t.get("reasoning", ""), competition=c or None,
                  share=e["reach"] / n, adjacency=e["adjacent"] / e["reach"])  # fmt: skip
-        w = PROXIMITY_WEIGHT.get(prox, 0.05) * CROWDING_WEIGHT.get(c.get("crowding"), 0.85)
-        e["score"] = e["share"] * w
+        e.update(path=pa or None, trend=tr or None)
+        e["factors"] = factors = [("Applications", e["share"], f"{e['reach']} of {n} use it")]
+        if pa.get("path") in PATH_WEIGHT:
+            note = f"path: {PATH_LABEL[pa['path']]}"
+            if prox is not None:
+                note += f" (replaces technology rating {PROXIMITY_LABEL[prox]} {PROXIMITY_WEIGHT[prox]})"
+            factors.append(("Path to product", PATH_WEIGHT[pa["path"]], note))
+        else:
+            label = PROXIMITY_LABEL.get(prox, "not rated")
+            factors.append(("Technology", PROXIMITY_WEIGHT.get(prox, 0.05), f"rating: {label}"))
+        crowd = c.get("crowding")
+        factors.append(("Competition", CROWDING_WEIGHT.get(crowd, 0.85), CROWDING_LABEL.get(crowd, "not assessed")))
+        if tr.get("outlook") in TREND_WEIGHT:
+            factors.append(("Trend", TREND_WEIGHT[tr["outlook"]], f"outlook: {tr['outlook']}"))
+        e["score"] = 1.0
+        for _, w, _ in factors:
+            e["score"] *= w
     return sorted(rows.values(), key=lambda e: (-e["score"], -e["reach"], e["label"]))
 
 

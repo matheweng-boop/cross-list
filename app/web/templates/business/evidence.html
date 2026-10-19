@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import status_chip, crowd, review, path_chip, about %}
+{% block title %}{{ label }} – Evidence – Cross List{% endblock %}
+{% block content %}
+<p class="small"><a href="/business/technology?co={{ co }}#fn-{{ fn }}">← Technology fit</a> · <a href="/business/gaps?co={{ co }}#fn-{{ fn }}">Gaps &amp; ranking</a></p>
+<h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
+<p class="subtitle muted">Everything Cross List knows about this function: how it is scored, the path to a product, and the background evidence
+  (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
+  <a href="/business/quality">Data quality</a> and feed the next data update.</p>
+{{ about('evidence') }}
+<p>{{ status_chip(status, status_label) }} {{ path_chip(ev.path, path_label) }}</p>
+
+{% if row %}
+<h2>How it is scored</h2>
+<table class="bo-factors"><thead><tr><th>Factor</th><th>Weight</th><th>Why</th></tr></thead><tbody>
+  {% for name, w, why in row.factors %}<tr><td>{{ name }}</td><td>{{ '%.2f'|format(w) }}</td><td>{{ why }}</td></tr>{% endfor %}
+  <tr><th>Score</th><th>{{ '%.3f'|format(row.score) }}</th><td class="muted">product of the weights; patents, foundry route and competitor technology are shown below but not in the score</td></tr>
+</tbody></table>
+{% else %}<p class="small muted">Not in the Technology fit ranking (the portfolio already covers it, or it is not a chip).</p>{% endif %}
+
+<h2 id="path">Path to product</h2>
+{% set p = ev.path %}
+{% if p %}
+<article class="bo-ev"><header><span>{{ path_chip(p, path_label) }} {{ path_label[p.path] }}</span>{{ review('path', fn, rev, p.confidence) }}</header>
+  <p><b>Builds on:</b> {{ p.base }}</p>
+  {% if p.missing %}<p><b>Still missing:</b></p><ul>{% for m in p.missing %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+  <p><b>Effort:</b> {{ p.effort or '–' }} · <b>Route:</b> {{ p.route or '–' }}</p>
+  {% if p.sources %}<p class="small muted">Sources: {{ p.sources|join('; ') }}</p>{% endif %}
+</article>
+{% else %}<p class="muted small">No path assessed yet.</p>{% endif %}
+
+<h2 id="existing">Do we already sell it?</h2>
+<p class="small muted">Catalogue parts whose description matches this function but are not mapped to it. Confirm a match and it counts as a portfolio part
+  everywhere (coverage, gaps, technology fit); reject it and it disappears from this list.</p>
+{% if existing %}
+<div class="table-wrap"><table class="striped small">
+  <thead><tr><th>Part</th><th>Company</th><th>Description</th><th>Status</th><th>Fills this function?</th></tr></thead>
+  <tbody>{% for r in existing %}<tr><td>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}{% if r.named %} <span class="bo-notscore" title="named by the path evidence">named</span>{% endif %}</td>
+    <td>{{ r.manufacturer }}</td><td>{{ (r.description or '')[:150] }}</td><td>{{ r.status }}</td>
+    <td>{% if r.confirmed %}<span class="rv-st rv-verified">confirmed</span>
+      <form method="post" action="/business/evidence/{{ fn }}/mapping" class="inline"><input type="hidden" name="mpn" value="{{ r.mpn }}"><button name="verdict" value="undo" class="rv-b">undo</button></form>
+      {% else %}<form method="post" action="/business/evidence/{{ fn }}/mapping" class="inline"><input type="hidden" name="mpn" value="{{ r.mpn }}"><input type="hidden" name="manufacturer" value="{{ r.manufacturer }}">
+      <button name="verdict" value="yes" class="rv-b" title="Yes, it fills this function">yes</button><button name="verdict" value="no" class="rv-b" title="No, not a match">no</button></form>{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="small muted">No unmapped catalogue part matches.</p>{% endif %}
+
+<h2>Ratings</h2>
+<div class="bo-ev-grid">
+  <article class="bo-ev"><header><span>Technology rating <span class="bo-inscore" title="used when no path is assessed">score</span></span>{{ review('technology', fn, rev) }}</header>
+    {% if tech %}<p><span class="bo-prox px-{{ tech.proximity }}">{{ prox_label[tech.proximity] }}</span> {{ tech.tech|join(', ') }}</p><p>{{ tech.reasoning }}</p>{% else %}<p class="muted">not rated</p>{% endif %}
+    {% if platforms %}<p><b>Built on:</b> {% for k, pl in platforms %}<a class="bo-ours" href="/business/capabilities#p-{{ k }}">{{ pl.name }}</a>{% endfor %}</p>{% endif %}</article>
+  <article class="bo-ev"><header><span>Competition <span class="bo-inscore">score</span></span>{{ review('competition', fn, rev) }}</header>
+    {% if comp %}<p>{{ crowd(comp, crowding_label) }}</p><p>{{ comp.vendors|join(', ') }}</p><p class="muted">{{ comp.note }}</p>{% else %}<p class="muted">not assessed</p>{% endif %}</article>
+  {% set t = ev.trends %}
+  <article class="bo-ev"><header><span>Market trend <span class="bo-inscore">score</span></span>{{ review('trends', fn, rev, t.confidence if t else none) }}</header>
+    {% if t %}<p><b>{{ t.outlook|capitalize }}</b>: {{ t.note }}</p>{% if t.drivers %}<ul>{% for d in t.drivers %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+      {% if t.sources %}<p class="small muted">Sources: {{ t.sources|join('; ') }}</p>{% endif %}{% else %}<p class="muted">no trend data</p>{% endif %}</article>
+</div>
+
+<h2>Background evidence <span class="small muted">· shown for judgement, not in the score</span></h2>
+<div class="bo-ev-grid">
+  {% set pt = ev.patents %}
+  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">not in score</span></span>{{ review('patents', fn, rev, pt.confidence if pt else none) }}</header>
+    {% if pt %}<p><b>{{ pt.depth|replace('_', ' ') }}</b>{% if pt.count %} · about {{ pt.count }} results{% endif %}</p><p>{{ pt.note }}</p>
+      {% if pt.examples %}<ul>{% for x in pt.examples %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+      {% if pt.query %}<p class="small muted">Re-run: <code>{{ pt.query }}</code></p>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}</article>
+  {% set fo = ev.foundry %}
+  <article class="bo-ev"><header><span>Foundry route <span class="bo-notscore">not in score</span></span>{{ review('foundry', fn, rev, fo.confidence if fo else none) }}</header>
+    {% if fo %}<p><b>{{ fo.foundry_route }}</b> · {{ fo.typical_process }}</p>{% if fo.foundries %}<p>{{ fo.foundries|join(', ') }}</p>{% endif %}
+      <p><b>In house:</b> {{ fo.in_house }}</p><p class="muted">{{ fo.note }}</p>{% else %}<p class="muted">not researched yet</p>{% endif %}</article>
+  {% set ct = ev.competitor_tech %}
+  <article class="bo-ev"><header><span>Competitor technology <span class="bo-notscore">not in score</span></span>{{ review('competitor_tech', fn, rev, ct.confidence if ct else none) }}</header>
+    {% if ct %}<p><b>{{ ct.entry_position|replace('_', ' ') }}</b> · leaders: {{ ct.leaders|join(', ') }}</p><p>{{ ct.lead_tech }}</p>
+      {% if ct.differentiators %}<p><b>Room to differ:</b></p><ul>{% for d in ct.differentiators %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}</article>
+</div>
+
+{% if hunt %}<h2>Where to hunt</h2>
+<p>{% for c in hunt %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}" title="{{ c.type }} · {{ c.apps|join(', ') }}">{{ c.name }}</span>{% endfor %}
+  <a class="small" href="/business/customers?co={{ co }}&fn={{ fn }}">all →</a></p>{% endif %}
+<p><a href="/business/cases/new?fn={{ fn }}">Start a case analysis for {{ label }} →</a></p>
+<script src="/static/business.js" defer></script>
+{% endblock %}

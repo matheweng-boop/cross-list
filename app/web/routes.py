@@ -77,6 +77,7 @@ SECTIONS = (
                                                        ("Where to hunt", "/business/customers"),
                                                        ("Case analysis", "/business/cases"),
                                                        ("TAM data", "/business/data"),
+                                                       ("Data quality", "/business/quality"),
                                                        ("How it works", "/business/method")]),
 )  # fmt: skip
 SECTION_PREFIXES = {
@@ -84,6 +85,9 @@ SECTION_PREFIXES = {
     "blocks": ("/blocks",),
     "business": ("/business",),
 }
+
+
+SUB_ALIAS = {"/business/evidence": "/business/technology"}  # pages without their own sub-header
 
 
 def section_of(path: str) -> str:
@@ -94,6 +98,9 @@ def _sub_active(path: str, href: str, subs: list) -> bool:
     """The longest sub-header path that prefixes the page path (Find only on / and /find)."""
     if href == "/":
         return path in ("/", "/find")
+    for prefix, target in SUB_ALIAS.items():
+        if path.startswith(prefix):
+            path = target
     best = max((h for _, h in subs if h != "/" and path.startswith(h)), key=len, default=None)
     return href == best
 

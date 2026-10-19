@@ -37,3 +37,9 @@
 <script>(() => { const d = document.querySelector('[data-about="{{ page }}"]'), k = "bo-about-{{ page }}";
   try { if (localStorage.getItem(k) === "closed") d.open = false; d.addEventListener("toggle", () => { try { localStorage.setItem(k, d.open ? "open" : "closed"); } catch (e) {} }); } catch (e) {} })();</script>
 {% endif %}{% endmacro %}
+{% macro review(ds, key, rev, conf=none) %}{% set s = rev.get(ds ~ '|' ~ key) %}{% set st = s.state if s else 'unverified' %}
+<span class="rv" data-ds="{{ ds }}" data-key="{{ key }}">
+  <span class="rv-st rv-{{ st }}" title="{{ 'Reviewed by people: ' ~ s.correct ~ ' correct, ' ~ s.wrong ~ ' wrong, ' ~ s.unsure ~ ' unsure' if s else 'Not reviewed yet' }}{{ ' · source confidence: ' ~ conf if conf }}">{{ {'verified': 'verified', 'disputed': 'disputed', 'unverified': 'unverified'}[st] }}{% if conf and st == 'unverified' %} · {{ conf }}{% endif %}</span>
+  <button type="button" class="rv-b" data-v="correct" title="This is correct">✓</button><button type="button" class="rv-b" data-v="wrong" title="This is wrong (add what is right)">✗</button><button type="button" class="rv-b" data-v="unsure" title="Not sure / needs a check">?</button>
+</span>{% endmacro %}
+{% macro path_chip(p, labels) %}{% if p and p.path %}<span class="bo-path pa-{{ p.path }}" title="{{ labels[p.path] }}{{ ' · effort: ' ~ p.effort if p.effort }}{{ ' · route: ' ~ p.route if p.route }}">{{ {'exists': 'Exists?', 'variant': 'Spec variant', 'new_design': 'New design', 'new_capability': 'New technology', 'not_pursue': 'Not ours'}[p.path] }}</span>{% else %}<span class="muted small">no path yet</span>{% endif %}{% endmacro %}

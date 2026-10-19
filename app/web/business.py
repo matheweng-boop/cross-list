@@ -9,8 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import Case, CaseNote, TechFeedback
-from app.services import blocks, cases
+from app.models import Case, CaseNote, DataReview, PartMapping, TechFeedback
+from app.services import blocks, cases, quality
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -81,7 +81,9 @@ def gaps(request: Request, co: str = "combined", sort: str = "reach", session: S
     c["rows"] = sorted(rows, key=keys[c["sort"]])
     for e in c["rows"]:
         e["hunt"] = op.hunt_for_function(c["apps"], e["fn"])[:8]
+        e["path"] = op.evidence("path").get(e["fn"])
     c["portfolio"] = op.reach_of_portfolio(c["apps"])[:15]
+    c["path_label"] = op.PATH_LABEL
     return templates.TemplateResponse(request, "business/gaps.html", c)
 
 
@@ -114,6 +116,9 @@ def technology(request: Request, co: str = "combined", view: str = "all", sessio
         "develop": lambda e: (e["proximity"] or 0) >= 2,
         "low_attach": lambda e: e["adjacency"] < 0.5,
         "chips": lambda e: e["status"] == "na",
+        "short": lambda e: (e["path"] or {}).get("path") in ("exists", "variant"),
+        "build": lambda e: (e["path"] or {}).get("path") == "new_design",
+        "acquire": lambda e: (e["path"] or {}).get("path") == "new_capability",
     }
     c["view"] = view if view in views else "all"
     c["counts"] = {k: sum(map(f, rows)) for k, f in views.items()}
@@ -121,6 +126,8 @@ def technology(request: Request, co: str = "combined", view: str = "all", sessio
     for e in c["rows"]:
         e["hunt"] = op.hunt_for_function(c["apps"], e["fn"])[:8]
         e["platforms"] = op.platforms_for(e["fn"])
+        e["ev"] = {t: op.evidence(t).get(e["fn"]) for t in ("patents", "foundry", "competitor_tech")}
+    c["path_label"] = op.PATH_LABEL
     c.update(prox_label=op.PROXIMITY_LABEL, prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT,
              n_background=sum(a.background for a in c["apps"]))  # fmt: skip
     return templates.TemplateResponse(request, "business/technology.html", c)
@@ -315,3 +322,72 @@ def tech_feedback_txt(session: Session = Depends(get_session)):
     return "\n".join(
         f"- [{r.kind}] {r.topic or '-'}: {r.text} ({r.author or 'anonymous'}, {r.created_at:%Y-%m-%d})" for r in rows
     )
+
+
+# ---- evidence (the bigger picture per function), reviews, part mappings, data quality ------------------------
+def _rev(session: Session) -> dict[str, dict]:
+    return {f"{d}|{k}": {**s, "state": quality.state(s)} for (d, k), s in quality.summary(session).items()}
+
+
+@router.get("/business/evidence/{fn}", response_class=HTMLResponse)
+def evidence(request: Request, fn: str, co: str = "combined", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    if fn not in c["fns"]:
+        raise HTTPException(404, "Function not found")
+    row = next((e for e in op.technology_fit(c["apps"]) if e["fn"] == fn), None)
+    c.update(fn=fn, label=c["fns"][fn].get("label", fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
+             ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
+             tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
+             hunt=op.hunt_for_function(c["apps"], fn)[:15], existing=quality.possible_existing(session, fn),
+             rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
+    c["verdicts"] = quality.VERDICTS
+    return templates.TemplateResponse(request, "business/evidence.html", c)
+
+
+@router.post("/api/business/review")
+def review(payload: dict = Body(...), session: Session = Depends(get_session)):
+    ds, key, verdict = (
+        str(payload.get("dataset") or ""),
+        str(payload.get("key") or ""),
+        str(payload.get("verdict") or ""),
+    )
+    if ds not in quality.datasets() or verdict not in quality.VERDICTS or not key:
+        raise HTTPException(400, "Unknown dataset, key or verdict")
+    comment = str(payload.get("comment") or "").strip() or None
+    author = str(payload.get("author") or "").strip()[:100] or None
+    session.add(DataReview(dataset=ds, key=key[:120], verdict=verdict, comment=comment, author=author))
+    session.commit()
+    s = quality.summary(session).get((ds, key))
+    return {"ok": True, **{k: s[k] for k in ("correct", "wrong", "unsure")}, "state": quality.state(s)}
+
+
+@router.post("/business/evidence/{fn}/mapping")
+async def mapping(fn: str, request: Request, session: Session = Depends(get_session)):
+    form = await request.form()
+    mpn, verdict = str(form.get("mpn") or "").strip(), str(form.get("verdict") or "")
+    if fn in blocks.catalogue()["functions"] and mpn and verdict in ("yes", "no", "undo"):
+        row = session.scalar(select(PartMapping).where(PartMapping.fn == fn, PartMapping.mpn == mpn))
+        if verdict == "undo":
+            if row:
+                session.delete(row)
+        elif row:
+            row.verdict = verdict
+        else:
+            mfr, author = str(form.get("manufacturer") or "")[:40], str(form.get("author") or "").strip()[:100] or None
+            session.add(PartMapping(fn=fn, mpn=mpn, manufacturer=mfr, verdict=verdict, author=author))
+        session.commit()
+    return RedirectResponse(f"/business/evidence/{fn}#existing", status_code=303)
+
+
+@router.get("/business/quality", response_class=HTMLResponse)
+def data_quality(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    c = _ctx(session, co)
+    c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session), queue=quality.queue(session, c["apps"]),
+             rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
+             mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip
+    return templates.TemplateResponse(request, "business/quality.html", c)
+
+
+@router.get("/business/quality/todo.txt", response_class=PlainTextResponse)
+def quality_todo(session: Session = Depends(get_session)):
+    return quality.todo(session)

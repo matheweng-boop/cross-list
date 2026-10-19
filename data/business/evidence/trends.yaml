@@ -1,0 +1,438 @@
+# Demand trend per function over 3-5 years (public sources; indicative).
+# outlook: growing | stable | declining
+# Outlooks are qualitative judgements from public standards, regulation and industry press; no growth figures are given.
+# "stable" means unit demand holds or grows with the general semiconductor market, without a specific new driver.
+
+# ---------------------------------------------------------------- power
+pol_ldo:
+  outlook: stable
+  drivers: ["more low-noise rails per SoC, RF and sensor", "integration into PMICs and SoCs"]
+  note: "Each new SoC, radio and camera still needs clean low-noise rails, but many rails move inside PMICs; discrete demand roughly tracks unit volumes."
+  confidence: medium
+  sources: ["Texas Instruments, 'LDO basics' e-book / application notes (public)", "Yole Group, power management IC market overviews (public summaries)"]
+ldo_tracker:
+  outlook: growing
+  drivers: ["more remote sensors and cameras in ADAS/zonal cars", "off-board sensor supply with short-circuit protection"]
+  note: "Tracking LDOs feed off-board automotive sensors; the count of remote sensors per car rises with ADAS (EU GSR2) and zonal wiring."
+  confidence: medium
+  sources: ["Regulation (EU) 2019/2144 General Safety Regulation, eur-lex.europa.eu", "Euro NCAP 2026 protocols roadmap, euroncap.com"]
+termination_ldo:
+  outlook: stable
+  drivers: ["DDR4/DDR5/LPDDR5 memory in servers, cars and networking", "on-DIMM PMIC takes over termination in DDR5 modules"]
+  note: "Memory content per system grows, but DDR5 moves power management onto the DIMM (PMIC), so discrete VTT LDOs stay flat."
+  confidence: medium
+  sources: ["JEDEC JESD79-5 DDR5 SDRAM standard and JESD301 DDR5 PMIC standard, jedec.org"]
+multiphase:
+  outlook: growing
+  drivers: ["AI accelerators and GPUs with kilo-amp core rails", "48 V rack power (OCP ORv3) and vertical power delivery", "ADAS central computers"]
+  note: "AI servers drive sharply higher current per processor and more phases per board; the shift to 48 V rack distribution adds new conversion stages."
+  confidence: high
+  sources: ["Open Compute Project, Open Rack V3 (ORv3) 48 V specification, opencompute.org", "NVIDIA GB200 NVL72 product page, nvidia.com", "Infineon / Vicor / MPS AI-server power press releases 2024-2025"]
+supervisor:
+  outlook: stable
+  drivers: ["functional safety (ISO 26262) voltage monitoring", "integration into PMICs and MCUs"]
+  note: "Safety-rated window supervisors grow in automotive and industrial, offset by integration of basic reset into PMICs and MCUs."
+  confidence: medium
+  sources: ["ISO 26262:2018 Road vehicles - Functional safety, iso.org"]
+sequencer:
+  outlook: stable
+  drivers: ["multi-rail FPGAs/SoCs/AI boards", "integration into PMICs and digital controllers"]
+  note: "Complex boards need more rails sequenced, but PMICs and PMBus controllers absorb much of the function."
+  confidence: low
+  sources: ["PMBus specification, pmbus.org"]
+voltage_reference:
+  outlook: stable
+  drivers: ["precision measurement in BMS, test and industrial", "integration into ADCs"]
+  note: "Demand follows precision data acquisition and battery monitoring; most low-end references are integrated into converters."
+  confidence: low
+  sources: ["Analog Devices / TI voltage reference selection guides (public)"]
+isolated_dcdc:
+  outlook: growing
+  drivers: ["800 V EV traction inverters and on-board chargers (gate-driver bias)", "solar inverters and battery storage", "industrial isolated interfaces"]
+  note: "Every isolated gate driver and isolated interface in EV, solar and storage needs an isolated bias supply; 800 V platforms and SiC raise isolation requirements."
+  confidence: high
+  sources: ["IEA Global EV Outlook 2025, iea.org", "IEA Renewables 2024, iea.org", "Hyundai E-GMP / Porsche Taycan 800 V architecture press releases"]
+pre_regulator:
+  outlook: growing
+  drivers: ["isolated bias supplies in EV inverters/OBC/BMS", "battery-voltage stabilisation for 12 V/48 V low-voltage nets"]
+  note: "Follows isolated gate-driver bias in EV power electronics; 48 V low-voltage networks add wider input-range needs."
+  confidence: medium
+  sources: ["IEA Global EV Outlook 2025, iea.org", "Tesla Cybertruck 48 V low-voltage architecture coverage, 2023-2024 industry press"]
+hv_flyback:
+  outlook: growing
+  drivers: ["800 V EV platforms needing supply from the HV battery", "redundant bias for functional safety", "solar and storage"]
+  note: "HV-input flyback supplies for inverters, OBC and BMS grow with EV volumes and the shift toward 800 V platforms."
+  confidence: medium
+  sources: ["IEA Global EV Outlook 2025, iea.org", "Hyundai E-GMP / Kia EV6 800 V press materials, hyundai.com"]
+acdc_controller:
+  outlook: growing
+  drivers: ["GaN fast chargers (USB PD 3.1 EPR up to 240 W)", "EU common charger directive (USB-C)", "AI server PSUs with higher power density"]
+  note: "GaN-based high-density chargers and server PSUs need new controllers; the EU common-charger rule unbundles chargers, shifting volume rather than raising it."
+  confidence: medium
+  sources: ["USB-IF USB Power Delivery 3.1 specification, usb.org", "Directive (EU) 2022/2380 common charger, eur-lex.europa.eu", "Open Compute Project ORv3 power shelf specification, opencompute.org"]
+efuse_hotswap:
+  outlook: growing
+  drivers: ["AI servers and 48 V hot-swap backplanes", "zonal architectures replacing fuses and relays with eFuses", "smart power distribution in cars"]
+  note: "Zonal controllers replace melting fuses with semiconductor eFuses, and AI server boards need high-current hot-swap protection."
+  confidence: high
+  sources: ["Open Compute Project ORv3, opencompute.org", "Infineon PROFET / zonal architecture white papers, infineon.com", "TI 'Smart fuse' automotive power distribution application notes, ti.com"]
+power_fets:
+  outlook: growing
+  drivers: ["48 V server and automotive power", "eFuse/zonal power distribution", "GaN in chargers and data-centre PSUs"]
+  note: "Low-voltage power MOSFET and GaN demand rises with AI server power and vehicle electrification; SiC for traction is outside this low-voltage scope."
+  confidence: medium
+  sources: ["Yole Group, Power Electronics / GaN market monitor public summaries, yolegroup.com", "Open Compute Project ORv3, opencompute.org"]
+battery_protector:
+  outlook: stable
+  drivers: ["Li-ion packs in phones, wearables, tools, e-bikes", "EU Battery Regulation (EU) 2023/1542 safety and removability"]
+  note: "Follows Li-ion pack unit volumes; mature function with steady demand, more cells per pack in tools and e-mobility."
+  confidence: medium
+  sources: ["Regulation (EU) 2023/1542 on batteries, eur-lex.europa.eu"]
+wireless_power:
+  outlook: growing
+  drivers: ["Qi2 / Qi2.2 magnetic charging adoption in Android and accessories", "in-car wireless charging pads", "industrial wireless power"]
+  note: "Qi2 brings magnetic alignment to Android phones and accessories, renewing transmitter and receiver designs."
+  confidence: medium
+  sources: ["Wireless Power Consortium, Qi2 / Qi2.2 announcements, wirelesspowerconsortium.com"]
+usb_pd_controller:
+  outlook: growing
+  drivers: ["EU common charger directive mandating USB-C", "USB PD 3.1 EPR up to 240 W (laptops, tools)", "USB-C in cars"]
+  note: "USB-C becomes mandatory on many devices in the EU from 2024 (laptops 2026), and EPR extends PD into higher-power products."
+  confidence: high
+  sources: ["Directive (EU) 2022/2380 common charger, eur-lex.europa.eu", "USB-IF USB Power Delivery 3.1 specification, usb.org"]
+
+# ---------------------------------------------------------------- protection
+tvs_esd:
+  outlook: growing
+  drivers: ["more connectors and high-speed links per car (Ethernet, SerDes, USB-C)", "zonal architectures", "IEC 61000-4-2 / ISO 10605 requirements"]
+  note: "Every new external port and in-vehicle network link needs ESD/TVS protection; low-capacitance parts follow higher data rates."
+  confidence: medium
+  sources: ["IEC 61000-4-2 and ISO 10605 standards, iec.ch / iso.org", "OPEN Alliance automotive Ethernet EMC test specifications, opensig.org"]
+reverse_polarity:
+  outlook: growing
+  drivers: ["zonal and redundant power feeds in ADAS cars", "ideal-diode ORing for 48 V", "ISO 16750-2 load-dump/reverse battery"]
+  note: "Ideal-diode controllers replace diodes to cut losses and support redundant power paths for automated driving."
+  confidence: medium
+  sources: ["ISO 16750-2 Road vehicles - Electrical loads, iso.org", "TI / ADI ideal-diode automotive application notes (public)"]
+
+# ---------------------------------------------------------------- isolation
+isolated_can:
+  outlook: growing
+  drivers: ["EV BMS and charging (high-voltage domains)", "industrial and energy-storage CAN", "CAN FD / CAN XL"]
+  note: "Isolated CAN grows with high-voltage EV subsystems, solar/storage and industrial automation."
+  confidence: medium
+  sources: ["CAN in Automation (CiA), CAN XL specification CiA 610-1, can-cia.org", "IEA Global EV Outlook 2025, iea.org"]
+half_bridge_driver:
+  outlook: growing
+  drivers: ["GaN half-bridges in chargers, server PSUs and 48 V converters", "motor drives", "solar micro-inverters"]
+  note: "GaN adoption in power conversion needs fast half-bridge drivers; 48 V server and automotive conversion adds sockets."
+  confidence: medium
+  sources: ["Yole Group, GaN power market monitor public summaries, yolegroup.com", "Open Compute Project ORv3, opencompute.org"]
+three_phase_gate_driver:
+  outlook: growing
+  drivers: ["BLDC motors replacing brushed (pumps, fans, e-bikes, tools)", "EV thermal-management pumps and compressors", "48 V motors"]
+  note: "More brushless motors in cars, appliances (energy-efficiency rules) and robotics drive 3-phase gate-driver demand."
+  confidence: medium
+  sources: ["IEA 'Energy Efficiency' reports on electric motor systems, iea.org", "EU Ecodesign Regulation (EU) 2019/1781 on electric motors, eur-lex.europa.eu"]
+
+# ---------------------------------------------------------------- timing
+rtc:
+  outlook: stable
+  drivers: ["metering, IoT and industrial timestamping", "integration into MCUs and PMICs"]
+  note: "Discrete RTCs serve low-power timekeeping; MCU-integrated RTCs limit growth."
+  confidence: low
+  sources: ["Micro Crystal / NXP RTC product pages (public)"]
+watchdog:
+  outlook: stable
+  drivers: ["ISO 26262 and IEC 61508 independent monitoring", "integration into safety PMICs (SBCs)"]
+  note: "Safety standards keep independent watchdogs in use, but system-basis chips and safety PMICs integrate them."
+  confidence: low
+  sources: ["ISO 26262:2018, iso.org", "IEC 61508, iec.ch"]
+
+# ---------------------------------------------------------------- RF front end
+gnss_lna:
+  outlook: growing
+  drivers: ["dual-band L1/L5 GNSS for lane-level positioning", "eCall / ADAS positioning", "wearables and asset trackers"]
+  note: "Dual-frequency L1+L5/E5 receivers spread from phones to cars and wearables, adding an L5 LNA path."
+  confidence: medium
+  sources: ["EUSPA EO and GNSS Market Report 2024, euspa.europa.eu", "GPS.gov modernization (L5 signal), gps.gov"]
+diversity_rx_module:
+  outlook: stable
+  drivers: ["5G NR band count and 4x4 MIMO", "integration into larger front-end modules"]
+  note: "More bands and MIMO raise RF content per phone, but smartphone units are flat and diversity paths are integrated into larger modules."
+  confidence: medium
+  sources: ["3GPP Release 17/18 NR specifications, 3gpp.org", "IDC Worldwide Quarterly Mobile Phone Tracker press releases, idc.com"]
+rf_transceiver:
+  outlook: growing
+  drivers: ["sub-GHz IoT (Wi-SUN, LoRa, mioty) in metering and smart city", "UWB and proprietary 2.4 GHz", "private 5G"]
+  note: "Smart metering and long-range IoT keep adding sub-GHz radios; Wi-SUN and LoRaWAN deployments expand."
+  confidence: medium
+  sources: ["Wi-SUN Alliance publications, wi-sun.org", "LoRa Alliance annual reports, lora-alliance.org"]
+rf_predriver:
+  outlook: stable
+  drivers: ["5G massive MIMO radios", "private and Open RAN networks", "slower macro 5G capex"]
+  note: "Infrastructure radio demand is cyclical; 5G-Advanced and Open RAN add radios but operator capex has been flat to down."
+  confidence: medium
+  sources: ["Dell'Oro Group RAN market press releases 2024-2025, delloro.com", "O-RAN Alliance specifications, o-ran.org"]
+active_antenna_amp:
+  outlook: stable
+  drivers: ["shark-fin and glass antennas with integrated amplifiers", "AM radio retention (AM for Every Vehicle Act debate)", "DAB+ mandates in Europe"]
+  note: "Car radio antennas keep active amplifiers; EU DAB+ mandate supports content while some OEMs drop AM."
+  confidence: low
+  sources: ["Directive (EU) 2018/1972 European Electronic Communications Code (digital radio in new cars), eur-lex.europa.eu", "AM Radio for Every Vehicle Act, congress.gov"]
+circulator_isolator:
+  outlook: stable
+  drivers: ["5G massive MIMO and radar", "LEO satellite ground terminals and payloads", "shift to isolator-less GaN designs"]
+  note: "Ferrite circulators follow infrastructure and defence radar; LEO satellite terminals add demand while some designs remove them."
+  confidence: low
+  sources: ["Dell'Oro Group RAN market press releases, delloro.com", "Euroconsult / NSR public satellite ground segment overviews"]
+mmwave_antenna_module:
+  outlook: stable
+  drivers: ["5G FR2 (mmWave) limited mostly to US devices", "FWA mmWave", "FR3 (7-24 GHz) studies"]
+  note: "Handset mmWave adoption stalled outside the US; future upper mid-band (FR3) is a different design point."
+  confidence: medium
+  sources: ["GSMA Intelligence, 'The Mobile Economy 2025', gsma.com", "3GPP Release 19/20 6G study on 7-24 GHz, 3gpp.org"]
+
+# ---------------------------------------------------------------- radio / connectivity
+ble_soc:
+  outlook: growing
+  drivers: ["Bluetooth Channel Sounding (v6.0) for distance", "LE Audio / Auracast", "electronic shelf labels and asset tracking", "Matter over Thread devices"]
+  note: "Bluetooth SIG forecasts continued growth in LE single-mode devices, led by audio, location and ESL."
+  confidence: high
+  sources: ["Bluetooth SIG, Bluetooth Market Update 2025, bluetooth.com", "Bluetooth Core Specification 6.0 (Channel Sounding), bluetooth.com"]
+wifi_soc:
+  outlook: growing
+  drivers: ["Wi-Fi 7 (320 MHz, MLO) in 6 GHz", "Wi-Fi 8 (802.11bn UHR) development", "Wi-Fi in cars and IoT (Wi-Fi 6 low-power)"]
+  note: "Wi-Fi Alliance certified Wi-Fi 7 in 2024 and IEEE 802.11bn (Wi-Fi 8) is in progress; 6 GHz opening drives refresh."
+  confidence: high
+  sources: ["Wi-Fi Alliance, Wi-Fi CERTIFIED 7 announcement (Jan 2024), wi-fi.org", "IEEE 802.11 TGbn (UHR) status, ieee802.org"]
+modem:
+  outlook: growing
+  drivers: ["5G RedCap and eRedCap IoT", "LEO satellite NTN (3GPP Rel-17) in phones and IoT", "connected-car 5G and 2G/3G sunset"]
+  note: "RedCap and NB-NTN broaden cellular into mid-tier IoT and direct-to-device satellite; 2G/3G sunsets force module refresh."
+  confidence: high
+  sources: ["3GPP NTN overview, 3gpp.org/technologies/ntn-overview", "GSMA Intelligence, 'The Mobile Economy 2025', gsma.com", "Ericsson Mobility Report (June 2025), ericsson.com"]
+nfc_frontend:
+  outlook: growing
+  drivers: ["CCC Digital Key in cars (NFC backup)", "NFC wireless charging (WLC)", "contactless payments and ticketing"]
+  note: "NFC Forum WLC and digital car keys add NFC sockets beyond phones and payment terminals."
+  confidence: medium
+  sources: ["Car Connectivity Consortium, Digital Key 3.0, carconnectivity.org", "NFC Forum Wireless Charging Specification, nfc-forum.org"]
+v2x_transceiver:
+  outlook: growing
+  drivers: ["FCC 2024 rules for C-V2X at 5.9 GHz", "China C-V2X deployments", "Euro NCAP / EU C-ITS"]
+  note: "US regulators approved C-V2X in the 5.9 GHz band and China deploys C-V2X; adoption timing remains uncertain."
+  confidence: low
+  sources: ["FCC Second Report and Order on C-V2X in 5.9 GHz band (Nov 2024), fcc.gov", "5G Automotive Association (5GAA) roadmap, 5gaa.org", "EU C-ITS Delegated Regulation, transport.ec.europa.eu"]
+radar_transceiver:
+  outlook: growing
+  drivers: ["EU GSR2 / Euro NCAP AEB and corner radar", "4D imaging radar", "in-cabin child presence detection (60 GHz)"]
+  note: "Safety regulation and NCAP ratings push more radars per car, plus 60 GHz in-cabin sensing."
+  confidence: high
+  sources: ["Regulation (EU) 2019/2144 General Safety Regulation, eur-lex.europa.eu", "Euro NCAP child presence detection protocol, euroncap.com", "NHTSA FMVSS 127 AEB final rule (2024), nhtsa.gov"]
+
+# ---------------------------------------------------------------- sensing & amplification
+temperature_sensor:
+  outlook: stable
+  drivers: ["thermal monitoring in AI servers and battery packs", "integration into PMICs and SoCs"]
+  note: "Remote and digital temperature sensors follow server and battery thermal management; much sensing is integrated."
+  confidence: low
+  sources: ["JEDEC JESD302-1 DDR5 SPD hub/temperature sensor standard, jedec.org"]
+adc:
+  outlook: growing
+  drivers: ["EV battery monitoring and current sensing", "industrial automation and condition monitoring", "medical wearables"]
+  note: "Precision and isolated ADCs grow with BMS, motor control and industrial sensing."
+  confidence: medium
+  sources: ["IEA Global EV Outlook 2025, iea.org", "Analog Devices annual report FY2024 (industrial and automotive segments), analog.com"]
+amplifier:
+  outlook: stable
+  drivers: ["current sensing in 48 V and EV systems", "industrial sensing", "broad catalogue demand"]
+  note: "Op-amps and current-sense amplifiers are a broad, mature market; current sensing grows with electrification."
+  confidence: low
+  sources: ["Texas Instruments annual report 2024 (analog segment), ti.com"]
+dac:
+  outlook: stable
+  drivers: ["industrial process control (4-20 mA)", "test and measurement", "integration into MCUs"]
+  note: "Precision DACs follow industrial automation; low-end DACs are integrated into MCUs."
+  confidence: low
+  sources: ["Analog Devices annual report FY2024, analog.com"]
+position_sensor:
+  outlook: growing
+  drivers: ["BLDC motor commutation", "steer-by-wire and brake-by-wire redundancy", "robotics and humanoid actuators"]
+  note: "More electrified actuators and redundant x-by-wire systems need magnetic angle sensors."
+  confidence: medium
+  sources: ["UN ECE R79 amendments allowing steer-by-wire, unece.org", "Mercedes-Benz / Tesla Cybertruck steer-by-wire press releases"]
+position_interface:
+  outlook: stable
+  drivers: ["resolver-to-digital in EV traction motors", "inductive position sensing replacing resolvers"]
+  note: "Resolver interfaces follow EV traction motors, but some OEMs move to inductive sensors that integrate the interface."
+  confidence: low
+  sources: ["IEA Global EV Outlook 2025, iea.org"]
+hall_switch:
+  outlook: stable
+  drivers: ["seat, door, buckle and lid detection", "BLDC commutation", "consumer lids and covers"]
+  note: "High-volume mature function tracking vehicle and appliance builds."
+  confidence: low
+  sources: ["Allegro MicroSystems FY2025 annual report, allegromicro.com"]
+vehicle_sensors:
+  outlook: growing
+  drivers: ["ADAS cameras, radar and lidar per car", "EU GSR2 driver monitoring", "Euro NCAP 2026 protocols"]
+  note: "Regulation and safety ratings raise sensor count per vehicle (cameras, driver monitoring, radar)."
+  confidence: high
+  sources: ["Regulation (EU) 2019/2144 General Safety Regulation, eur-lex.europa.eu", "Euro NCAP 2026 protocols, euroncap.com"]
+env_sensor:
+  outlook: growing
+  drivers: ["indoor air quality (CO2, VOC, PM) in buildings and HVAC", "WELL / ASHRAE ventilation guidance", "smart home (Matter sensors)"]
+  note: "Air-quality awareness and Matter 1.2+ device types for air-quality sensors widen use in homes and buildings."
+  confidence: medium
+  sources: ["Connectivity Standards Alliance, Matter 1.2 specification (air quality device types), csa-iot.org", "ASHRAE Standard 241-2023 Control of Infectious Aerosols, ashrae.org"]
+ppg_afe:
+  outlook: growing
+  drivers: ["smartwatches and rings with blood-oxygen and heart-rate", "blood-pressure and sleep-apnea features", "remote patient monitoring"]
+  note: "Wearables add health features (FDA-cleared sleep apnea and hypertension notifications), increasing optical channels per device."
+  confidence: medium
+  sources: ["Apple newsroom, sleep apnea notification FDA authorization (Sept 2024), apple.com", "IDC Worldwide Wearables Tracker press releases, idc.com"]
+ecg_afe:
+  outlook: growing
+  drivers: ["wearable ECG (watches, patches)", "remote patient monitoring reimbursement", "hospital-at-home"]
+  note: "Single-lead ECG in wearables and continuous patches expands beyond hospital equipment."
+  confidence: medium
+  sources: ["CMS remote patient monitoring billing codes, cms.gov", "FDA 510(k) clearances for wearable ECG (public database), fda.gov"]
+ultrasonic_afe:
+  outlook: stable
+  drivers: ["parking sensors (some OEMs dropping them for cameras)", "ultrasonic flow metering", "level sensing"]
+  note: "Automotive park-assist sensors are mature and some OEMs replace them with vision; ultrasonic metering grows modestly."
+  confidence: low
+  sources: ["Tesla 'Tesla Vision update: replacing ultrasonic sensors' (Oct 2022), tesla.com"]
+ultrasound_afe:
+  outlook: growing
+  drivers: ["handheld and point-of-care ultrasound", "AI-guided imaging", "ultrasound in emerging markets"]
+  note: "Portable point-of-care ultrasound broadens the user base beyond radiology."
+  confidence: medium
+  sources: ["GE HealthCare Vscan Air / Butterfly Network annual reports (public)", "WHO medical devices priority list, who.int"]
+hv_pulser:
+  outlook: growing
+  drivers: ["portable ultrasound transmit channels", "non-destructive testing"]
+  note: "Follows ultrasound and NDT equipment; handheld systems need integrated low-power pulsers."
+  confidence: low
+  sources: ["Butterfly Network annual report 2024 (Form 10-K), sec.gov"]
+haptics_driver:
+  outlook: growing
+  drivers: ["haptic feedback in automotive touch screens and buttons", "game controllers and wearables", "solid-state buttons"]
+  note: "Cars replace mechanical buttons with touch surfaces needing haptic confirmation; Euro NCAP 2026 favours physical controls, which may temper this."
+  confidence: low
+  sources: ["Euro NCAP 2026 protocols (physical controls for key functions), euroncap.com"]
+touch_controller:
+  outlook: stable
+  drivers: ["larger and more automotive displays", "capacitive buttons in appliances", "smartphone units flat"]
+  note: "Automotive displays grow in size and count, but phone touch controllers are integrated with display drivers (TDDI)."
+  confidence: low
+  sources: ["Omdia / S&P Global automotive display public overviews", "Euro NCAP 2026 protocols (physical controls), euroncap.com"]
+
+# ---------------------------------------------------------------- interface
+can_transceiver:
+  outlook: stable
+  drivers: ["CAN FD and CAN SIC for higher speeds", "zonal architectures consolidating ECUs", "Ethernet taking backbone traffic"]
+  note: "CAN remains the edge bus in zonal designs; ECU consolidation and Ethernet backbones cap node growth."
+  confidence: medium
+  sources: ["CAN in Automation, CAN SIC (CiA 601-4) and CAN XL (CiA 610-1), can-cia.org"]
+lin_transceiver:
+  outlook: stable
+  drivers: ["actuators, lighting and sensors at zone edges", "10BASE-T1S competing for some nodes"]
+  note: "LIN keeps low-cost edge nodes; 10BASE-T1S may replace some LIN/CAN nodes over time."
+  confidence: medium
+  sources: ["ISO 17987 LIN standard, iso.org", "OPEN Alliance 10BASE-T1S, opensig.org"]
+ethernet_phy:
+  outlook: growing
+  drivers: ["zonal architectures with multi-gig automotive Ethernet backbones", "10BASE-T1S at the edge", "AI data-centre networking"]
+  note: "Zonal E/E architectures move vehicle backbones to 1-10 Gb/s automotive Ethernet and add 10BASE-T1S endpoints."
+  confidence: high
+  sources: ["IEEE 802.3ch (multi-gig automotive) and 802.3cg (10BASE-T1S), ieee802.org", "OPEN Alliance, opensig.org"]
+serdes:
+  outlook: growing
+  drivers: ["more and higher-resolution ADAS cameras and displays", "MIPI A-PHY and ASA Motion Link standards", "central compute"]
+  note: "Camera and display links per car increase; standardised A-PHY and ASA-ML challenge proprietary links."
+  confidence: high
+  sources: ["MIPI A-PHY specification, mipi.org", "Automotive SerDes Alliance (ASA) Motion Link, auto-serdes.org"]
+redriver:
+  outlook: growing
+  drivers: ["PCIe 5/6 and USB4 v2 signal integrity", "AI servers with PCIe 6 and CXL", "longer channels at higher data rates"]
+  note: "Each new PCIe/USB generation shortens reach, adding redrivers/retimers in servers and PCs."
+  confidence: medium
+  sources: ["PCI-SIG PCIe 6.0/7.0 specification announcements, pcisig.com", "USB-IF USB4 Version 2.0, usb.org"]
+voltage_translator:
+  outlook: stable
+  drivers: ["lower SoC I/O voltages (1.2/1.8 V) vs legacy 3.3 V peripherals"]
+  note: "Mixed-voltage interfaces persist as SoC I/O voltages fall; a mature commodity function."
+  confidence: low
+  sources: ["Nexperia / TI logic and translation selection guides (public)"]
+io_expander:
+  outlook: stable
+  drivers: ["GPIO-limited SoCs", "I3C adoption"]
+  note: "Mature commodity function following general electronics volumes."
+  confidence: low
+  sources: ["MIPI I3C specification, mipi.org"]
+switch_detection_interface:
+  outlook: stable
+  drivers: ["body and door modules", "zonal controllers aggregating switch inputs"]
+  note: "Multiple-switch detection ICs move into zonal controllers; content per car stable."
+  confidence: low
+  sources: ["NXP / TI multiple-switch detection interface product pages (public)"]
+relay_driver:
+  outlook: declining
+  drivers: ["relays replaced by eFuses and smart high-side switches in zonal designs", "industrial PLC relays remain"]
+  note: "Zonal power distribution replaces mechanical relays and fuses with semiconductor switches, eroding relay-driver use in cars."
+  confidence: medium
+  sources: ["Infineon zonal architecture / smart power distribution white papers, infineon.com"]
+smartcard_interface:
+  outlook: declining
+  drivers: ["eSIM and iSIM replacing removable SIM", "contactless payments replacing contact readers"]
+  note: "GSMA eSIM specifications (SGP.32 for IoT) and contactless payments reduce contact smartcard reader sockets."
+  confidence: medium
+  sources: ["GSMA eSIM IoT specification SGP.32, gsma.com", "Apple iPhone 14 US eSIM-only announcement (Sept 2022), apple.com"]
+motor_driver_brushed:
+  outlook: stable
+  drivers: ["low-cost actuators (mirrors, locks, HVAC flaps)", "BLDC replacing brushed in efficiency-sensitive uses"]
+  note: "Brushed motors remain in cost-sensitive actuators, while efficiency rules and EV thermal systems move pumps and fans to BLDC."
+  confidence: low
+  sources: ["EU Ecodesign Regulation (EU) 2019/1781 on electric motors, eur-lex.europa.eu"]
+
+# ---------------------------------------------------------------- networking / processing / memory
+mcu:
+  outlook: growing
+  drivers: ["zonal controllers and edge AI MCUs", "Matter / IoT devices", "industrial automation"]
+  note: "Zonal controllers and edge-AI MCUs raise performance per socket; the 2023-2024 inventory correction has been recovering."
+  confidence: medium
+  sources: ["WSTS semiconductor market forecast (spring/autumn 2025), wsts.org", "Connectivity Standards Alliance, Matter, csa-iot.org"]
+soc:
+  outlook: growing
+  drivers: ["software-defined vehicle central compute", "AI PCs and edge AI", "AI servers"]
+  note: "Centralised compute in cars and AI at the edge and in data centres increase high-end SoC demand."
+  confidence: high
+  sources: ["WSTS semiconductor market forecast 2025, wsts.org", "NVIDIA DRIVE Thor / Qualcomm Snapdragon Ride press releases"]
+ddr_flash:
+  outlook: growing
+  drivers: ["AI servers (HBM, DDR5)", "central compute in cars with LPDDR5", "AI PCs and phones needing more DRAM"]
+  note: "AI workloads increase memory per system across servers, PCs, phones and cars."
+  confidence: high
+  sources: ["WSTS semiconductor market forecast 2025 (memory segment), wsts.org", "Micron FY2025 Form 10-K, sec.gov"]
+flash:
+  outlook: growing
+  drivers: ["AI data-centre SSDs", "software-defined vehicle storage and OTA", "NOR flash for code in IoT/auto"]
+  note: "Storage per car and per server rises with data logging, OTA updates and AI datasets."
+  confidence: medium
+  sources: ["WSTS semiconductor market forecast 2025, wsts.org", "UN ECE R156 software update regulation, unece.org"]
+secure_element:
+  outlook: growing
+  drivers: ["EU Cyber Resilience Act", "UN R155 vehicle cybersecurity", "Matter device attestation", "CCC Digital Key"]
+  note: "Regulation (CRA, R155, US Cyber Trust Mark) and device attestation push hardware roots of trust into more products."
+  confidence: high
+  sources: ["Regulation (EU) 2024/2847 Cyber Resilience Act, eur-lex.europa.eu", "UN ECE Regulation No. 155, unece.org", "FCC U.S. Cyber Trust Mark (2024), fcc.gov"]
+
+# ---------------------------------------------------------------- audio
+audio_codec:
+  outlook: stable
+  drivers: ["voice assistants and in-car audio zones", "integration into SoCs", "LE Audio"]
+  note: "Codec count grows in cars (multi-zone audio, ANC) but integration into SoCs limits discrete demand in phones and PCs."
+  confidence: low
+  sources: ["Bluetooth SIG LE Audio, bluetooth.com"]

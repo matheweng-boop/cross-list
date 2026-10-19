@@ -1,0 +1,772 @@
+# Path to product per function for the combined Skyworks + Qorvo portfolio (indicative, public knowledge + repo catalogue).
+# path: exists (we sell it; catalogue mapping missing) | variant (existing product line, new specs: short development)
+#       | new_design (new product on our existing technology/process; new IP blocks) | new_capability (new process,
+#       technology or team needed: partner, license or acquire) | not_pursue (unrelated; customer's own chip)
+#
+# Compiled 2026-10-19 from data/catalog/skyworks_parts.yaml, data/catalog/qorvo_parts.yaml (keyword search over mpn,
+# description, category, base) and public knowledge of both companies. No new web requests. existing_parts are part
+# numbers exactly as written in the catalogue (max 8). Effort and route are indicative judgements, not plans.
+
+# ------------------------------------------------------------------ exists in the catalogue
+ble_soc:
+  path: exists
+  existing_parts: [QPG6200L, QPG7015M, QPG6105, QPG6095, QPG6100]
+  catalog_keywords: [Zigbee, Thread, BLE, Smart Home Communications Controller, multi-standard wireless SoC]
+  base: "Qorvo QPG (ex-GreenPeak) Zigbee/Thread/BLE SoCs; QPG6200L and QPG7015M are Standard, QPG6095/6100/6105 Discontinued. Catalogue maps them to wireless_soc."
+  missing: ["map QPG parts to ble_soc", "automotive AEC-Q100 grade", "BLE Channel Sounding / wider SDK ecosystem vs Nordic, Silicon Labs"]
+  effort: short
+  route: "build - QPG roadmap already in house"
+  confidence: high
+  sources: ["qorvo_parts.yaml: Control Products > Smart Home Communications Controllers (QPG6200L, QPG7015M)"]
+
+isolated_dcdc:
+  path: exists
+  existing_parts: [Si88240BD-AS, Si88340EC-AS, Si88220BD-IS, Si88240BD-IS, Si88320BD-IS, Si86P340BC-IS, Si86P440BC-IS]
+  catalog_keywords: [integrated dc-dc converter, Integrated Power Transfer, Si88xx, Si86Px]
+  base: "Skyworks Si88xx digital isolators with integrated dc-dc converter (incl. AEC-Q100 -AS) and Si86Px isolators with power transfer (Preview). Mapped as digital_isolator."
+  missing: ["map to isolated_dcdc", "standalone isolated DC-DC / transformer driver for >2 W gate-driver bias rails"]
+  effort: short
+  route: "build - existing isolation CMOS line"
+  confidence: high
+  sources: ["skyworks_parts.yaml: base 'Si88xx Automotive Digital Isolators with Integrated dc-dc Converter', datasheet si88x2x.pdf / Si88x4x.pdf", "Si86P... 'Isolator with Integrated Power Transfer'"]
+
+gnss_lna:
+  path: exists
+  existing_parts: [SKY65943-11, SKY55950-11, SKY55951-11, SKY65723-11, SKY65724-11, SKY65725-11, SKY65728-11, SKY5A2110]
+  catalog_keywords: [GNSS, GPS, BDS, L1, L5, Pre-Filter + LNA]
+  base: "Skyworks BDS/GPS/GNSS LNA front-end modules incl. L1+L5 (SKY55951-11) and automotive SKY5A2110; Qorvo GPS SAW/BAW filters as companions."
+  missing: ["map to gnss_lna (catalogue says rf_frontend)"]
+  effort: short
+  route: "build - catalogue mapping only"
+  confidence: high
+  sources: ["skyworks_parts.yaml: Front-end Modules > BDS/GPS/GNSS Front-end Modules; Front-end Modules for Automotive"]
+
+diversity_rx_module:
+  path: exists
+  existing_parts: [SKY53735-11, SKY53728-11, SKY53730-11, SKY53731-11, SKY53746-11, SKY53748-11, SKY53757-11, SKY53735-61]
+  catalog_keywords: [Diversity Receive Module, Diversity LFEM, RX Diversity FEM, MIMO Diversity]
+  base: "Skyworks 5G NR diversity receive modules / diversity LFEMs (Active); Qorvo also sells DRx modules publicly but none in the store crawl."
+  missing: ["map to diversity_rx_module (catalogue says rf_frontend)"]
+  effort: short
+  route: "build - catalogue mapping only"
+  confidence: high
+  sources: ["skyworks_parts.yaml: Cellular Front-end Modules > 5G/5G NR Front-end Modules; Front-end Modules > Diversity Receive Modules"]
+
+rf_predriver:
+  path: exists
+  existing_parts: [SKY66041-11, SKY66042-11, SKY66051-11, SKY66052-11, SKY66188-11, SKY66072-11, SKY66194-12]
+  catalog_keywords: [Pre-Driver, Linear Driver Amplifier, Driver Amp for Macro Base Station, Massive MIMO]
+  base: "Skyworks High Linearity Pre-Driver PAs and massive-MIMO driver amps; Qorvo GaAs/GaN driver MMICs also fit."
+  missing: ["map to rf_predriver (catalogue says rf_pa)"]
+  effort: short
+  route: "build - catalogue mapping only"
+  confidence: high
+  sources: ["skyworks_parts.yaml: Amplifiers > Wireless Infrastructure / Small Cell Power Amplifiers > High Linearity Pre-Driver Power Amplifiers"]
+
+three_phase_gate_driver:
+  path: exists
+  existing_parts: [ACT72350]
+  catalog_keywords: [3-Phase Integrated Motor Driver, BLDC Motor Controller and Driver, 160 V]
+  base: "Qorvo ACT72350 160 V 3-phase BLDC gate driver with buck; PAC55xx add an MCU (mapped motor_controller)."
+  missing: ["map ACT72350 to three_phase_gate_driver", "AEC-Q100 automotive grade", "functional-safety (ASIL) variant"]
+  effort: short
+  route: "build - Qorvo PAC/ACT motor line"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: Control Products > Intelligent Motor Controllers (ACT72350)"]
+
+rf_transceiver:
+  path: exists
+  existing_parts: [RFFC5072A, RFFC2072A, AWMF-0224, AWMF-0210, QM33110W]
+  catalog_keywords: [RF Transceiver ICs, frequency conversion device, IF Transceiver, Up/Down Converter]
+  base: "Qorvo RFFC50xx/20xx PLL+mixer RFICs and Anokiwave AWMF mmWave IF transceivers fill infrastructure / mmWave sockets; handset cellular RFIC stays platform vendor's."
+  missing: ["cellular handset transceiver not pursued (customer's chip)", "wideband direct-RF sampling transceiver"]
+  effort: short
+  route: "build - niche sockets only; not pursue handset RFIC"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: Integrated Modules > RF Transceiver ICs (already function rf_transceiver)"]
+
+# ------------------------------------------------------------------ variant of an existing line
+pol_ldo:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [LDO, low dropout, PMIC with LDOs]
+  base: "Qorvo ACT88xxx PMICs integrate 390 mA LDOs; Skyworks SKY87000 has an auto-bypass LDO. Same BCD/CMOS process for a standalone LDO."
+  missing: ["standalone low-noise LDO family", "AEC-Q100 grade", "package/test flow for high-volume commodity"]
+  effort: short
+  route: "build - LDO IP exists inside PMICs"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT88321VU101, ACT88760-104.E2T", "skyworks_parts.yaml: SKY87000-13-001"]
+
+ldo_tracker:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [LDO, tracking, PMIC]
+  base: "Same LDO IP as Qorvo ACT PMICs; tracking input is a small loop change."
+  missing: ["tracking reference input", "40 V automotive input rating", "AEC-Q100"]
+  effort: short
+  route: "build - derivative of PMIC LDO IP"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: Control Products > Modular Power PMICs"]
+
+termination_ldo:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [DDR, VTT, LDO, PMIC for SSD]
+  base: "Qorvo ACT88xxx PMICs for SSD / application processors power DDR rails; sink/source VTT LDO is a derivative."
+  missing: ["sink/source VTT output stage", "VREF buffer", "DDR4/5 JEDEC compliance"]
+  effort: short
+  route: "build - ACT PMIC process"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT88430VM113 (PMU for MCUs and SSDs)"]
+
+sequencer:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [sequencing, PMIC, power-good]
+  base: "Qorvo ACT43750 does GaN/GaAs bias sequencing; ACT PMICs have programmable sequencing. A standalone multi-rail sequencer reuses that logic."
+  missing: ["standalone multi-channel sequencer/monitor", "PMBus/I2C configuration tool"]
+  effort: short
+  route: "build - reuse ACT sequencing logic"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT43750-101 'Automatic Power GaN/GaAs Sequencing'"]
+
+efuse_hotswap:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [eFuse, Power Loss Protection, inrush]
+  base: "Qorvo ACT4910/ACT85610 power-loss-protection ICs integrate eFuse FETs; standalone eFuse is a subset."
+  missing: ["standalone eFuse / hot-swap controller with telemetry", "UL 2367 / IEC 62368 certification"]
+  effort: short
+  route: "build - subset of PLP silicon"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: Control Products > Power Loss Protection Devices (ACT85610QX101-T 'All eFuse ... FETs integrated')"]
+
+pre_regulator:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [buck-boost, integrated MOSFETs, automotive grade, 40 V]
+  base: "Qorvo ACT5101/ACT5102 4-switch buck-boost and automotive 40 V ACT4751M buck are close; battery-input pre-regulator needs automotive buck-boost/SEPIC spec."
+  missing: ["40 V automotive buck-boost/boost controller", "AEC-Q100 + load-dump rating", "low EMI spread spectrum"]
+  effort: medium
+  route: "build - Qorvo ACT power line"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT5101QI102-T, ACT5102QI102-T, ACT4751MQI101"]
+
+half_bridge_driver:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [half-bridge, gate driver, 600 V, BLDC Motor Controller and Driver]
+  base: "Qorvo PAC5xxx integrate half-bridge drivers up to 600 V (PAC5556); ACT72350 drivers; split out a standalone non-isolated driver."
+  missing: ["standalone half-bridge driver die/package", "100 V / 600 V bootstrap level-shift qualification"]
+  effort: short
+  route: "build - reuse PAC gate-drive IP"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: PAC5556AQX '600 V ... Motor Controller and Driver', ACT72350"]
+
+relay_driver:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [Smart Switch, Isolated Smart Switch, inductive load]
+  base: "Skyworks Si830x smart switches and Si834x isolated smart switches drive relay/solenoid loads (high-side, sourcing); low-side driver is a derivative."
+  missing: ["low-side sinking output variant", "automotive 12 V load-dump rating", "PWM hold-current mode"]
+  effort: short
+  route: "build - Si83xx industrial IO line"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Isolation > Industrial IO (Si83004BF-IT, Si83401BAA-IF)"]
+
+battery_protector:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [Battery Management, cell balancing, battery monitoring]
+  base: "Qorvo PAC25140/PAC25141N 10s-20s battery management SoCs monitor and protect packs; simple 1-4s protector is a cost-down variant."
+  missing: ["low-cell-count analog protector", "charge/discharge FET driver with ultra-low Iq", "high-volume cost structure"]
+  effort: medium
+  route: "build - Qorvo BMS line"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: PAC25140, PAC25141N, PAC22140"]
+
+usb_pd_controller:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [USB PD 3.0 PPS, USB-PD, QC 2.0, USB Auto-Detect]
+  base: "Qorvo ACT4529/ACT4751/ACT4752 car-charger bucks with USB PD/PPS support; add an integrated Type-C CC + PD protocol engine."
+  missing: ["integrated CC/PD 3.1 protocol engine and firmware", "USB-IF certification", "sink-side controller"]
+  effort: medium
+  route: "build - extend ACT475x"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT4752QI101-T, ACT4751MQI101 ('bias supply rails for ... USB PD controllers'), ACT4529YH-T0010"]
+
+temperature_sensor:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [Isolated Delta-Sigma Modulator, Isolated Amplifier, NTC]
+  base: "Skyworks Si894x/Si893x isolated modulators and Si892x isolated amplifiers already sense power-module NTCs across the barrier; a dedicated isolated temperature-sense part is a variant."
+  missing: ["NTC/diode excitation + linearisation", "standalone non-isolated digital temp sensor (new design)"]
+  effort: short
+  route: "build - Skyworks isolation analog line"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Isolation > Isolated Analog and ADCs (Si894x, Si892x)"]
+
+active_antenna_amp:
+  path: variant
+  existing_parts: []
+  catalog_keywords: [LNA, high linearity, AM/FM, automotive]
+  base: "Skyworks automotive LNAs/FEMs and Si47xx AM/FM tuners; an AM/FM in-antenna amplifier is a low-frequency high-linearity LNA variant."
+  missing: ["AM (0.15-30 MHz) high-impedance input stage", "AEC-Q100 + phantom-power interface"]
+  effort: medium
+  route: "build - pairs with Skyworks tuners"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Audio and Radio > Automotive Tuners; Front-end Modules for Automotive"]
+
+# ------------------------------------------------------------------ new design on existing technology
+supervisor:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [supervisor, reset, power-good, PMIC]
+  base: "Reset/power-good comparators exist inside Qorvo ACT PMICs; standalone supervisor needs precision trim and nA Iq."
+  missing: ["precision trimmed reference", "ultra-low-Iq comparators", "SOT-23 high-volume flow"]
+  effort: short
+  route: "build - commodity, bundle with PMICs"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: Modular Power PMICs (no standalone supervisor found)"]
+
+watchdog:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [watchdog, supervisor, PMIC for microcontrollers]
+  base: "Simple CMOS timer; fits alongside Qorvo ACT88430 MCU PMU or a supervisor family."
+  missing: ["windowed watchdog IP", "ISO 26262 safety documentation"]
+  effort: short
+  route: "build - add to supervisor/PMIC family"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT88430VM113 'PMU for Microcontrollers'"]
+
+voltage_reference:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [reference, bandgap]
+  base: "Bandgap IP inside Skyworks timing/isolation and Qorvo PMICs; precision reference needs low drift trim and packaging."
+  missing: ["low-drift (<5 ppm/C) trim", "low-stress package", "precision test"]
+  effort: medium
+  route: "build - mixed-signal CMOS"
+  confidence: low
+  sources: ["no catalogue match"]
+
+adc:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [Delta-Sigma Modulator, ADC]
+  base: "Skyworks Si894x isolated delta-sigma modulators and Si47xx tuner ADCs; a general-purpose SAR/sigma-delta ADC is new IP on known CMOS."
+  missing: ["SAR / multichannel delta-sigma ADC family", "precision references", "digital filter/interface"]
+  effort: medium
+  route: "build - reuse Si894x modulator IP"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Si894x Isolated Delta-Sigma Modulator"]
+
+dac:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [DAC, digital-to-analog]
+  base: "Bias/control DACs exist inside Qorvo ACT43750 and Skyworks timing parts; precision or RF DAC is new IP."
+  missing: ["precision multichannel DAC IP", "high-speed RF DAC (would be new capability)"]
+  effort: medium
+  route: "build - precision DAC only"
+  confidence: low
+  sources: ["no catalogue match"]
+
+amplifier:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [op amp, current sense amplifier, Isolated Amplifier]
+  base: "Skyworks Si892x isolated amplifiers and PAC5xxx current-sense AFEs show analog know-how; standalone op-amp/CSA family is new."
+  missing: ["precision op-amp / current-sense amplifier family", "zero-drift IP", "broad catalogue breadth"]
+  effort: medium
+  route: "build - start with current-sense amps for motor/power"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Si892x Isolated Amplifier", "qorvo_parts.yaml: PAC5524AQF 'Configurable AFE'"]
+
+audio_codec:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [codec, audio, Class-D, Wireless Audio SoC]
+  base: "Skyworks SKY76303 wireless audio SoC, SKY76206 Class-D amp and Si47xx tuner audio DSP contain audio converters; a standalone codec is new."
+  missing: ["high-SNR audio ADC/DAC IP", "DSP firmware / tools", "competition vs Cirrus, ADI, TI"]
+  effort: medium
+  route: "build - only for car audio pairing with tuners"
+  confidence: low
+  sources: ["skyworks_parts.yaml: SKY76303-21, SKY76206-21"]
+
+haptics_driver:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [Class-D, piezo, haptic, LED Flash Driver]
+  base: "Skyworks multi-level Class-D amp and flash/boost drivers give the output stage and boost; LRA/piezo control loop is new."
+  missing: ["LRA resonance tracking / back-EMF sensing", "high-voltage piezo boost", "waveform library"]
+  effort: medium
+  route: "build - mobile customers already served"
+  confidence: low
+  sources: ["skyworks_parts.yaml: SKY76206-21, Power Management > LED Camera Flash Drivers"]
+
+reverse_polarity:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [ideal diode, reverse blocking, automotive 40 V]
+  base: "Qorvo ACT4751M automotive 40 V BCD and Skyworks SKY84632 reverse-blocking load switch; ideal-diode controller needs charge pump and fast comparator."
+  missing: ["ideal-diode controller with charge pump", "-40 V reverse rating", "AEC-Q100"]
+  effort: medium
+  route: "build - automotive BCD"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: ACT4751MQI101", "skyworks_parts.yaml: SKY84632"]
+
+motor_driver_brushed:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [motor driver, H-bridge, BLDC Motor Controller and Driver]
+  base: "Qorvo PAC5xxx/ACT72350 gate-drive and current-sense IP; integrated-FET H-bridge/stepper needs power-FET integration."
+  missing: ["integrated low-Rds H-bridge FETs", "stepper microstepping current regulation", "AEC-Q100"]
+  effort: medium
+  route: "build - Qorvo motor line"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: PAC5285 '40V/20W Motor Controller and Driver', ACT72350"]
+
+can_transceiver:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [transceiver, RS-485, CAN]
+  base: "Skyworks Si858x isolated RS-485 transceivers prove bus-PHY design on the isolation process; CAN FD/SIC PHY is a new die."
+  missing: ["CAN FD / CAN SIC PHY IP", "±58 V bus fault tolerance", "ISO 11898-2 + automotive EMC certification"]
+  effort: medium
+  route: "build - or license CAN PHY die"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Isolation > Isolated Transceivers (Si85833D-IS)"]
+
+isolated_can:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [Isolated Transceivers, Isolated RS-485, digital isolator]
+  base: "Same architecture as Skyworks Si858x isolated RS-485 (isolator + bus PHY in one package); needs a CAN PHY die."
+  missing: ["CAN FD PHY die", "integrated isolated power option (Si88xx dc-dc)", "ISO 11898-2 conformance"]
+  effort: medium
+  route: "build - Si858x packaging + new or licensed CAN die"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Si858x Isolated RS-485 Transceivers"]
+
+lin_transceiver:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [LIN, transceiver, automotive]
+  base: "Qorvo automotive 40 V BCD (ACT4751M) and Skyworks bus-PHY know-how; LIN PHY is a simple new die."
+  missing: ["LIN 2.x / ISO 17987 PHY IP", "automotive EMC (IEC 62228) certification"]
+  effort: medium
+  route: "build - bundle with CAN"
+  confidence: medium
+  sources: ["no catalogue match"]
+
+switch_detection_interface:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [Isolated Digital Input, Industrial IO, wetting current]
+  base: "Skyworks Si838x isolated 24 V digital inputs handle field-switch sensing; automotive MSDI (non-isolated, SPI, AMUX) is a new design."
+  missing: ["22-channel wetting-current inputs", "AMUX + SPI", "automotive 40 V BCD and AEC-Q100"]
+  effort: medium
+  route: "build - Skyworks Industrial IO know-how"
+  confidence: low
+  sources: ["skyworks_parts.yaml: Si838x Digital Isolators (Industrial IO)"]
+
+position_interface:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [Isolated Amplifier, Delta-Sigma Modulator, resolver]
+  base: "Skyworks Si892x/Si894x signal chain plus Qorvo PAC AFEs; resolver excitation amp + RDC is new."
+  missing: ["resolver excitation driver", "resolver-to-digital / inductive sensor AFE", "ISO 26262 ASIL"]
+  effort: medium
+  route: "build - EV traction pairing with Si829x gate drivers"
+  confidence: low
+  sources: ["skyworks_parts.yaml: Si829x Automotive Isolated Gate Driver for EV Traction Inverters"]
+
+hv_flyback:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [flyback, isolated dc-dc, 400 V Input]
+  base: "Skyworks Si88xx isolated power and Qorvo ACT43950 400 V input regulator; an 800 V battery-input flyback controller is new."
+  missing: ["flyback PWM controller with HV start-up", "primary-side regulation", "AEC-Q100"]
+  effort: medium
+  route: "build - EV power pairing with Skyworks isolation"
+  confidence: low
+  sources: ["qorvo_parts.yaml: ACT43950 '400 V Input Constant Current Output Regulator' (Discontinued)"]
+
+acdc_controller:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [AC/DC, PFC, flyback, 400 V Input]
+  base: "Active-Semi (Qorvo) heritage in offline/primary-side controllers and ACT43950 400 V input; none in current catalogue."
+  missing: ["PFC / flyback / LLC / SR controller IP", "700 V start-up process", "safety certifications"]
+  effort: medium
+  route: "build - low priority, crowded market"
+  confidence: low
+  sources: ["qorvo_parts.yaml: ACT43950"]
+
+io_expander:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [I/O expander, GPIO, I2C]
+  base: "Plain digital CMOS; no catalogue line. Low strategic value."
+  missing: ["I2C/SPI GPIO expander family", "commodity cost structure"]
+  effort: short
+  route: "build - only as companion fill-in"
+  confidence: low
+  sources: ["no catalogue match"]
+
+voltage_translator:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [translator, level shift, digital isolator]
+  base: "Skyworks digital isolators already translate between supply domains, but a non-isolated translator is a new commodity logic part."
+  missing: ["auto-direction translator IP", "commodity logic packaging and cost"]
+  effort: short
+  route: "build - low priority"
+  confidence: low
+  sources: ["no catalogue match"]
+
+smartcard_interface:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [smart card, ISO 7816]
+  base: "Small mixed-signal interface; no catalogue line. Niche POS market."
+  missing: ["ISO 7816 / EMV interface IP", "EMVCo L1 certification"]
+  effort: short
+  route: "not pursue unless bundled - niche"
+  confidence: low
+  sources: ["no catalogue match"]
+
+redriver:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [redriver, equalizer, optical driver, TIA]
+  base: "Qorvo optical drivers/TIAs and Skyworks PCIe clock buffers give high-speed analog know-how; linear PCIe/USB redriver is new."
+  missing: ["CTLE linear equalizer IP for PCIe 5/6, USB4", "protocol compliance testing"]
+  effort: medium
+  route: "build - pairs with PCIe clock buffers"
+  confidence: low
+  sources: ["qorvo_parts.yaml: Optical Components > TIAs", "skyworks_parts.yaml: pcie_buffer parts"]
+
+tvs_esd:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [ESD, TVS, diode, limiter diode]
+  base: "Skyworks silicon diode lines (Schottky, PIN, limiter) in-house; TVS/ESD arrays need new snapback structures."
+  missing: ["TVS / low-capacitance ESD array structures", "IEC 61000-4-2/-5 qualification", "commodity cost base"]
+  effort: medium
+  route: "build or partner - commodity margins"
+  confidence: low
+  sources: ["skyworks_parts.yaml: Diodes > Limiter Diodes"]
+
+ultrasonic_afe:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [ultrasonic, transducer driver, LNA]
+  base: "Low-frequency (40-500 kHz) driver + LNA + ToF logic; Skyworks/Qorvo amplifier and Qorvo PAC driver IP are adjacent."
+  missing: ["transducer driver + echo AFE", "ToF DSP", "automotive park-assist qualification"]
+  effort: medium
+  route: "build - only with automotive anchor customer"
+  confidence: low
+  sources: ["no catalogue match"]
+
+ppg_afe:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [LED driver, TIA, optical]
+  base: "Skyworks LED/flash drivers and Qorvo optical TIAs cover LED drive and TIA; PPG ADC and ambient cancellation are new."
+  missing: ["low-noise TIA + ADC with ambient cancellation", "wearable algorithm partners"]
+  effort: medium
+  route: "build + partner - wearable customers"
+  confidence: low
+  sources: ["skyworks_parts.yaml: Power Management > LED drivers", "qorvo_parts.yaml: Optical Components > TIAs"]
+
+wireless_power:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [wireless power, Qi, power bank]
+  base: "Qorvo ACT BCD power stages and battery chargers; Qi TX/RX needs protocol, coil control and WPC certification."
+  missing: ["Qi 2 / MPP protocol stack", "WPC certification", "full-bridge rectifier/inverter IP"]
+  effort: long
+  route: "build + license - or not pursue"
+  confidence: low
+  sources: ["qorvo_parts.yaml: ACT2861 buck-boost charger"]
+
+mmwave_antenna_module:
+  path: new_design
+  existing_parts: []
+  catalog_keywords: [beamformer, 24-30 GHz, Ka-band, IF Transceiver]
+  base: "Qorvo/Anokiwave AWMF mmWave beamformers + transceivers and Skyworks/Qorvo module packaging; antenna-in-package design is new."
+  missing: ["antenna-in-package design and OTA test", "handset sockets owned by platform vendor"]
+  effort: long
+  route: "partner - FWA/infrastructure only"
+  confidence: low
+  sources: ["qorvo_parts.yaml: AWMF-0210, AWMF-0224, AWS-0103"]
+
+# ------------------------------------------------------------------ new capability needed
+ethernet_phy:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [Ethernet, PHY, PoE, SyncE]
+  base: "Skyworks PoE PSE/PD and SyncE timing sit next to the PHY, but no DSP-heavy PHY IP in either company."
+  missing: ["10BASE-T1S/100/1000BASE-T1 PHY DSP IP", "TSN/switch digital team", "automotive OPEN Alliance compliance"]
+  effort: long
+  route: "acquire or license - large IP gap"
+  confidence: medium
+  sources: ["skyworks_parts.yaml: Power over Ethernet, Timing > Network Synchronizers"]
+
+serdes:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [SerDes, GMSL, FPD-Link]
+  base: "No catalogue line; automotive camera/display SerDes is proprietary (GMSL, FPD-Link) or ASA Motion Link."
+  missing: ["multi-Gbps SerDes IP", "ASA / MIPI A-PHY licence", "ecosystem of camera partners"]
+  effort: long
+  route: "license ASA/A-PHY or not pursue"
+  confidence: medium
+  sources: ["no catalogue match"]
+
+multiphase:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [multiphase, VR, smart power stage]
+  base: "Qorvo ACT PMICs are low-current; multiphase processor VR needs digital control and DrMOS power stages."
+  missing: ["digital multiphase controller IP", "smart power stage process", "Intel/AMD/NVIDIA VR spec team"]
+  effort: long
+  route: "acquire - entrenched competitors"
+  confidence: medium
+  sources: ["no catalogue match"]
+
+rtc:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [RTC, real-time clock, 32 kHz, oscillator]
+  base: "Skyworks timing (Si5xx oscillators, clock generators) has crystal/MEMS-free oscillator know-how, but not nA 32 kHz RTC."
+  missing: ["ultra-low-power 32 kHz oscillator + calendar", "temperature-compensated crystal trim", "battery switchover"]
+  effort: medium
+  route: "build - leverage Skyworks timing team"
+  confidence: low
+  sources: ["skyworks_parts.yaml: Timing > Oscillators"]
+
+hall_switch:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [Hall, magnetic, current sensor]
+  base: "No magnetic sensing line; Skyworks current sensors are non-Hall. Hall plates in CMOS need magnetic trim/test."
+  missing: ["Hall-plate CMOS process trim", "magnetic test/calibration", "automotive sensor qualification"]
+  effort: long
+  route: "partner or acquire"
+  confidence: medium
+  sources: ["no catalogue match"]
+
+position_sensor:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [position, Hall, inductive, AMR, angle]
+  base: "No magnetic/inductive position-sensor IP in either company."
+  missing: ["Hall/AMR/inductive sensor elements", "ASIL-D safety sensor design", "end-of-line calibration"]
+  effort: long
+  route: "acquire or partner"
+  confidence: medium
+  sources: ["no catalogue match"]
+
+touch_controller:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [touch, capacitive sensing]
+  base: "Capacitive-touch MCUs stayed with Silicon Labs (not the Skyworks-acquired I&A business); no line today."
+  missing: ["capacitive/inductive sensing AFE + MCU", "touch firmware and tuning tools"]
+  effort: long
+  route: "not pursue or partner - crowded"
+  confidence: low
+  sources: ["no catalogue match"]
+
+env_sensor:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [humidity, pressure, ambient light]
+  base: "MEMS/environmental sensors not in either portfolio (Silicon Labs kept Si70xx humidity sensors)."
+  missing: ["MEMS / humidity sensing element process", "sensor calibration flow"]
+  effort: long
+  route: "acquire or not pursue"
+  confidence: low
+  sources: ["no catalogue match"]
+
+ecg_afe:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [ECG, biopotential]
+  base: "No medical precision ADC/AFE line; Skyworks isolated modulators are adjacent only."
+  missing: ["low-noise biopotential multichannel ADC", "medical (IEC 60601) qualification", "medical customer channel"]
+  effort: long
+  route: "not pursue or partner - medical niche"
+  confidence: low
+  sources: ["no catalogue match"]
+
+ultrasound_afe:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [ultrasound, LNA, VGA, ADC]
+  base: "RF LNA/VGA know-how exists, but no multichannel high-speed ADC + CW mixer AFE."
+  missing: ["8/16-ch LNA+VGA+ADC integration", "high-speed ADC IP", "medical imaging customers"]
+  effort: long
+  route: "not pursue or partner"
+  confidence: low
+  sources: ["no catalogue match"]
+
+hv_pulser:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [pulser, high voltage, T/R switch]
+  base: "Qorvo PAC 600 V gate-drive level shift is adjacent; ±100 V multi-level pulser needs bipolar HV DMOS process."
+  missing: ["±100 V HV CMOS/DMOS process", "integrated T/R switch", "medical imaging customers"]
+  effort: long
+  route: "partner or not pursue"
+  confidence: low
+  sources: ["qorvo_parts.yaml: PAC5556AQX (600 V)"]
+
+nfc_frontend:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [NFC, 13.56 MHz, RFID]
+  base: "No NFC line; RF front-end skill is adjacent but NFC needs controller, secure firmware and EMVCo/NFC Forum certs."
+  missing: ["NFC controller + firmware stack", "NFC Forum / EMVCo certification", "secure element pairing"]
+  effort: long
+  route: "not pursue - NXP/ST dominate"
+  confidence: low
+  sources: ["no catalogue match"]
+
+radar_transceiver:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [radar, 77 GHz, 60 GHz, mmWave]
+  base: "Qorvo GaAs mmWave history (discontinued TGC4702 automotive radar mixer) but no CMOS 60/77 GHz radar SoC."
+  missing: ["CMOS/SiGe 77 GHz radar transceiver + DSP", "radar signal-processing team", "ASIL qualification"]
+  effort: long
+  route: "acquire or not pursue"
+  confidence: medium
+  sources: ["qorvo_parts.yaml: TGC4702-FC (Discontinued)"]
+
+circulator_isolator:
+  path: new_capability
+  existing_parts: []
+  catalog_keywords: [circulator, isolator, ferrite]
+  base: "No ferrite circulators in either catalogue (search hits are digital isolators); Skyworks Trans-Tech ceramics are adjacent only."
+  missing: ["ferrite / garnet material and magnet assembly", "drop-in / SMT circulator manufacturing"]
+  effort: long
+  route: "partner - sell alongside GaN PAs"
+  confidence: low
+  sources: ["no catalogue match"]
+
+# ------------------------------------------------------------------ not pursued (customer's own chip or unrelated)
+mcu:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [microcontroller, Arm Cortex, MCU]
+  base: "Customer's processor; Qorvo PAC SoCs embed Arm Cortex MCUs only inside motor/BMS controllers."
+  missing: ["general-purpose MCU line, toolchain and ecosystem"]
+  effort: long
+  route: "not pursue - customer's own chip"
+  confidence: high
+  sources: ["qorvo_parts.yaml: PAC25141N 'integrated Arm Cortex'"]
+
+soc:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [SoC, application processor]
+  base: "Application processor is the customer's/platform vendor's chip and a key Skyworks/Qorvo customer."
+  missing: ["n/a"]
+  effort: long
+  route: "not pursue - customer's own chip"
+  confidence: high
+  sources: ["functions.yaml: source external"]
+
+wifi_soc:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [Wi-Fi SoC, combo, WLAN]
+  base: "Wi-Fi/BT combo SoCs come from Qualcomm, Broadcom, MediaTek, our Wi-Fi FEM customers; competing would hurt FEM business."
+  missing: ["Wi-Fi 7 baseband/MAC IP", "software stack"]
+  effort: long
+  route: "not pursue - customer conflict"
+  confidence: high
+  sources: ["functions.yaml: source external", "Skyworks/Qorvo Wi-Fi FEM catalogue lines"]
+
+modem:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [modem, 5G, NTN]
+  base: "Cellular modems are the platform vendor's chip; Skyworks Modems and DAAs are legacy dial-up, unrelated."
+  missing: ["n/a"]
+  effort: long
+  route: "not pursue - customer's own chip"
+  confidence: high
+  sources: ["skyworks_parts.yaml: Modems and DAAs > Data and Voice Modems (dial-up)"]
+
+v2x_transceiver:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [V2X, C-V2X, DSRC]
+  base: "V2X modem comes from Qualcomm/Autotalks; we sell the companion V2X FEMs (SKYA21043, QPF1004Q)."
+  missing: ["C-V2X baseband"]
+  effort: long
+  route: "not pursue - sell FEM instead"
+  confidence: high
+  sources: ["skyworks_parts.yaml: SKYA21043, SKY5A2105", "qorvo_parts.yaml: QPF1004Q, QPF1005Q"]
+
+secure_element:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [secure element, crypto, authentication]
+  base: "Secure MCUs with CC EAL6+ certification (NXP, Infineon, ST); unrelated to RF/analog/isolation."
+  missing: ["secure MCU IP and certification", "secure supply chain"]
+  effort: long
+  route: "not pursue - unrelated"
+  confidence: medium
+  sources: ["no catalogue match"]
+
+power_fets:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [MOSFET, SiC FET, GaN FET]
+  base: "Qorvo sold its UnitedSiC SiC FET business to onsemi (Jan 2025); Qorvo GaN-on-SiC is RF, not power switching."
+  missing: ["power MOSFET / SiC / GaN power process"]
+  effort: long
+  route: "not pursue - business divested"
+  confidence: high
+  sources: ["qorvo_parts.yaml header: 121 UnitedSiC ids, business sold to onsemi Jan 2025"]
+
+ddr_flash:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [DDR, flash, memory]
+  base: "Memory is a customer/third-party part."
+  missing: ["n/a"]
+  effort: long
+  route: "not pursue - unrelated"
+  confidence: high
+  sources: ["functions.yaml: source external"]
+
+flash:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [flash, NOR, NAND]
+  base: "Memory is a third-party part."
+  missing: ["n/a"]
+  effort: long
+  route: "not pursue - unrelated"
+  confidence: high
+  sources: ["functions.yaml: source external"]
+
+vehicle_sensors:
+  path: not_pursue
+  existing_parts: []
+  catalog_keywords: [wheel speed, steering, brake sensor]
+  base: "System-level vehicle sensors from Tier-1s; not a component socket."
+  missing: ["n/a"]
+  effort: long
+  route: "not pursue - external system part"
+  confidence: high
+  sources: ["functions.yaml: source external"]

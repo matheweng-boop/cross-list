@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import about, review %}
+{% block title %}Data quality – Business opportunity – Cross List{% endblock %}
+{% block content %}
+<h1>Data quality</h1>
+<p class="subtitle muted">How far the business data can be trusted, and where a review helps most. Automated checks run on every page load;
+  people mark items ✓ correct, ✗ wrong or ? unsure wherever they appear. Disputed and unsure items, open feedback and part-mapping
+  decisions are collected in a <a href="/business/quality/todo.txt">to-do for the next data update</a>.</p>
+{{ about('quality') }}
+
+<h2>Review status per dataset</h2>
+<div class="table-wrap"><table class="striped small">
+  <thead><tr><th>Dataset</th><th>Items</th><th>Verified</th><th>Disputed</th><th>Not reviewed</th><th>Low source confidence</th></tr></thead>
+  <tbody>{% for s in stats %}<tr><td><b>{{ s.label }}</b></td><td>{{ s.n_items }}</td>
+    <td>{{ s.verified }} <span class="bo-bar"><span style="width:{{ (100 * s.verified / s.n_items if s.n_items else 0)|round }}%"></span></span></td>
+    <td>{% if s.disputed %}<b class="q-error">{{ s.disputed }}</b>{% else %}0{% endif %}</td><td>{{ s.unverified }}</td><td>{{ s.low }}</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>Review queue <span class="small muted">· unreviewed items behind the top-ranked functions, most influential first</span></h2>
+<p class="small muted">Each row is a rating that feeds the Technology fit score of a top-25 function and has not been checked by a person yet.
+  Low-confidence items come first within a function. Open the evidence page to see the details, then mark the item.</p>
+{% if queue %}
+<div class="table-wrap"><table class="striped small">
+  <thead><tr><th>Rank</th><th>Function</th><th>Item</th><th>Source confidence</th><th>Review</th></tr></thead>
+  <tbody>{% for q in queue %}<tr><td>{{ q.rank }}</td><td><a href="/business/evidence/{{ q.fn }}?co={{ co }}">{{ q.label }}</a></td><td>{{ q.ds_label }}</td>
+    <td>{{ q.confidence or '–' }}</td><td>{{ review(q.dataset, q.fn, rev, q.confidence) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="small q-ok">Everything behind the top-ranked functions has been reviewed.</p>{% endif %}
+
+<h2>Automated checks</h2>
+{% for c in checks %}
+<div class="q-check lv-{{ c.level }}"><b class="q-{{ c.level }}">{{ {'ok': '✓', 'warn': '!', 'error': '✗'}[c.level] }} {{ c.title }}</b>
+  {% if c.n %}<span class="muted"> · {{ c.n }}</span> <span class="small muted">{{ c.hint }}</span>
+  <div class="small">{% for i in c.examples %}<span class="bo-ours">{{ i }}</span>{% endfor %}{% if c.n > c.examples|length %} <span class="muted">+{{ c.n - c.examples|length }} more</span>{% endif %}</div>{% endif %}
+</div>
+{% endfor %}
+
+<h2>Recent reviews and comments</h2>
+{% set commented = [] %}{% for k, s in rev.items() %}{% for v, cm, a, t in s.comments %}{% set _ = commented.append((t, k, v, cm, a)) %}{% endfor %}{% endfor %}
+{% if commented %}<div class="table-wrap"><table class="striped small"><thead><tr><th>When</th><th>Item</th><th>Verdict</th><th>Comment</th><th>By</th></tr></thead><tbody>
+  {% for t, k, v, cm, a in commented|sort(reverse=true) %}{% if loop.index <= 40 %}{% set ds, key = k.split('|', 1) %}<tr><td>{{ t.strftime('%Y-%m-%d') }}</td>
+    <td>{{ ds_labels.get(ds, ds) }}: <a href="/business/evidence/{{ key }}">{{ fns[key].label if key in fns else key }}</a></td><td>{{ verdicts[v] }}</td><td>{{ cm }}</td><td>{{ a or 'anonymous' }}</td></tr>{% endif %}{% endfor %}
+</tbody></table></div>{% else %}<p class="small muted">No comments yet.</p>{% endif %}
+
+{% if mappings %}<h2>Part-mapping decisions</h2>
+<div class="table-wrap"><table class="striped small"><thead><tr><th>Function</th><th>Part</th><th>Decision</th><th>By</th></tr></thead><tbody>
+  {% for m in mappings %}<tr><td><a href="/business/evidence/{{ m.fn }}#existing">{{ fns[m.fn].label if m.fn in fns else m.fn }}</a></td><td>{{ m.mpn }} ({{ m.manufacturer }})</td>
+    <td>{{ 'fills it' if m.verdict == 'yes' else 'not a match' }}</td><td>{{ m.author or 'anonymous' }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<script src="/static/business.js" defer></script>
+{% endblock %}

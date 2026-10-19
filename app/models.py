@@ -353,3 +353,34 @@ class TechFeedback(Base):
     author: Mapped[str | None] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(20), default="open")  # open | done | rejected
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class DataReview(Base):
+    """A reviewer's check of one business-data item (a competition entry, a technology rating, a path, a customer
+    segment, a platform, an evidence entry): correct, wrong or unsure, with an optional comment."""
+
+    __tablename__ = "data_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    dataset: Mapped[str] = mapped_column(String(40))  # competition | technology | path | patents | foundry | ...
+    key: Mapped[str] = mapped_column(String(120))  # function id, segment id or platform id
+    verdict: Mapped[str] = mapped_column(String(10))  # correct | wrong | unsure
+    comment: Mapped[str | None] = mapped_column(Text)
+    author: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PartMapping(Base):
+    """A reviewer's decision whether a catalogue part fills a function it is not mapped to (yes adds it to the
+    function's portfolio parts; no hides the suggestion)."""
+
+    __tablename__ = "part_mappings"
+    __table_args__ = (UniqueConstraint("fn", "mpn"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fn: Mapped[str] = mapped_column(String(80))
+    mpn: Mapped[str] = mapped_column(String(80))
+    manufacturer: Mapped[str] = mapped_column(String(40))
+    verdict: Mapped[str] = mapped_column(String(5))  # yes | no
+    author: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

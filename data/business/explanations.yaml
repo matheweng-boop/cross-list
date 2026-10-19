@@ -72,11 +72,13 @@ terms:
       for discussion, not a roadmap.
   tech_score:
     term: Technology fit score
-    short: Share of applications using it × technology weight × competition weight.
+    short: Share of applications using it × path (or technology) weight × competition weight × trend weight.
     long: >-
-      Share of all applications that use the function × technology weight (Same 1.0, Adjacent 0.6, Distant 0.3,
-      Unrelated 0.1) × competition weight (Few 1.0, Several 0.9, Crowded 0.75). Door openers are not in the score: this
-      ranking is about how often something appears and how easy it is for us to build.
+      Share of all applications that use the function × path weight where a path to product is assessed (Exists /
+      Spec variant 1.0, New design 0.6, New technology 0.3, Not ours 0.1), otherwise the technology weight (Same 1.0,
+      Adjacent 0.6, Distant 0.3, Unrelated 0.1) × competition weight (Few 1.0, Several 0.9, Crowded 0.75) × trend weight
+      (growing 1.15, stable 1.0, declining 0.85). Door openers are not in the score: this ranking is about how often
+      something appears and how easy it is for us to build.
   market:
     term: Market
     short: The end market of an application. Automotive = vehicle systems, whatever their library category.
@@ -90,6 +92,29 @@ terms:
       A function automotive applications need, where we have parts but none is marked automotive (AEC-Q100) in the
       public catalogue: an existing industrial / commercial part might be qualified instead of designing a new one.
       Qorvo's website rarely states the grade, so check Qorvo entries before acting.
+  path:
+    term: Path to product
+    short: How we would get a product - exists already, spec variant, new design on our technology, or new technology (partner / acquire).
+    long: >-
+      For a gap: Exists = we already sell parts that fill it; only the catalogue mapping is missing (confirm them on the
+      evidence page). Spec variant = an existing product line with new specifications, short development. New design =
+      a new product on technology we have, with new IP blocks. New technology = a process, technology or team we do not
+      have: partner, license or acquire. Not ours = the customer's own chip. Where a path is assessed it replaces the
+      technology rating in the score (weights 1.0 / 1.0 / 0.6 / 0.3 / 0.1).
+  trend:
+    term: Market trend
+    short: Demand outlook over 3-5 years from public sources; growing 1.15, stable 1.0, declining 0.85 in the score.
+    long: >-
+      The public demand trend for the function (new standards, architectures, regulation). It multiplies the Technology
+      fit score: growing 1.15, stable 1.0, declining 0.85. No trend data = 1.0.
+  review:
+    term: Review state
+    short: unverified (nobody checked it yet), verified (people marked it correct), disputed (marked wrong at least as often as correct).
+    long: >-
+      Every rating and evidence item can be marked correct, wrong or unsure by anyone using the site. Verified = only
+      correct marks; disputed = as many or more wrong marks than correct ones; unverified = not checked yet (the source
+      confidence of the research, high / medium / low, is shown next to it). Disputed and unsure items with their
+      comments go into the data to-do; reviews do not change a score until the data is corrected.
   customer_type:
     term: Customer type
     short: OEM (brand owner), Tier-1 (system supplier), module maker, ODM/EMS (contract designer / manufacturer), operator.
@@ -197,6 +222,27 @@ pages:
       - data/business/capabilities.yaml, from public company and press pages (sources on each card).
     limits:
       - Only what is public; process nodes and capacities are often not disclosed and are marked so.
+  evidence:
+    question: What is the full picture behind one function's rating, and is it right?
+    read:
+      - '"How it is scored" lists every factor in the score with its weight and reason.'
+      - Path to product says how we would get there and what is still missing.
+      - '"Do we already sell it?" lists catalogue parts that may fill the function; confirming one makes it count as portfolio everywhere.'
+      - Background evidence (patents, foundry route, competitor technology) informs judgement but is not in the score.
+    data:
+      - data/business/evidence/*.yaml (research from public sources, each with a confidence), technology.yaml, competition.yaml.
+    limits:
+      - Research entries are indicative; several were written from public knowledge without fetching every source. Review before relying on them.
+  quality:
+    question: How far can the business data be trusted, and what should be checked next?
+    read:
+      - Review status shows per dataset how much people have verified or disputed.
+      - The review queue lists unchecked ratings behind the top-ranked functions, most influential first.
+      - Automated checks flag missing entries, inconsistent ratings, unknown ids and unsourced items.
+    data:
+      - Reviews and part-mapping decisions are stored in the Cross List database; the to-do export collects disputed and unsure items.
+    limits:
+      - A review flags an item; the data file still has to be corrected (that is what the to-do is for).
   data:
     question: What commercial inputs are known?
     read:

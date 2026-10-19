@@ -3,6 +3,8 @@
 # foundry_route: yes = mature commercial process exists; partial = exists but niche/limited; no = needs own fab / special process.
 # in_house refers to platforms in data/business/capabilities.yaml. Foundry lists are examples, not exhaustive.
 # Note: TSMC announced it will wind down GaN foundry services by 2027-07-31; GlobalFoundries and VIS licensed its GaN processes.
+# Verified 2026-10-19: each entry carries a check block (status/date/evidence/note); evidence lists only pages actually opened
+# (foundry sites read via a headless browser where plain fetches were bot-blocked; UMC's own site stayed blocked, so UMC claims rest on UMC press releases republished by trade press).
 pol_ldo:
   typical_process: "0.18 um / 130 nm BCD or analog CMOS (5-40 V LDMOS options)"
   foundry_route: "yes"
@@ -11,22 +13,37 @@ pol_ldo:
   note: "LDOs are a standard foundry BCD/analog-CMOS product; no special process needed."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 temperature_sensor:
   typical_process: "180-350 nm low-noise analog CMOS (bandgap / bipolar sensing)"
   foundry_route: "yes"
-  foundries: ["X-FAB XH018 / XH035 sensor CMOS", "TSMC analog CMOS", "Tower 180 nm mixed-signal CMOS"]
+  foundries: ["X-FAB XH018 / XH035 sensor CMOS", "TSMC analog CMOS", "Tower mixed-signal CMOS"]
   in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
   note: "Digital temperature sensors are built in ordinary mixed-signal CMOS."
   confidence: high
   sources: ["https://www.xfab.com/technology/sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://towersemi.com/technology/mixed-signal-cmos/ - Tower mixed-signal/CMOS for analog, RF CMOS, audio and IoT (nodes not listed on page)"]
+    note: "Tower mixed-signal page does not list a 180 nm node; label generalised. All remaining offerings supported by the pages listed."
 ble_soc:
   typical_process: "40 nm / 22 nm ULL RF CMOS with embedded flash or RRAM/MRAM"
   foundry_route: "yes"
-  foundries: ["TSMC 40 nm / 22ULL with eFlash or eRRAM", "GlobalFoundries 22FDX", "UMC 22 nm ULL"]
+  foundries: ["TSMC 40ULP / 22ULL with eRRAM", "GlobalFoundries 22FDX", "UMC 22 nm ULL"]
   in_house: "Qorvo QPG 802.15.4 / BLE / Matter SoCs (GreenPeak heritage) on cmos_mixed_signal"
   note: "Already fabless at Qorvo; e.g. Nordic nRF54L15 uses TSMC 22ULL eRRAM."
   confidence: high
   sources: ["https://www.techinsights.com/blog/summary-nordic-nrf54l15-tsmc-22ull-12-mb-ereram-process-analysis", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_DCE_28HPC_22ULP"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/ulp - TSMC 22ULL, 28ULP, 40ULP, 55ULP for IoT/battery-powered SoCs", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/eflash - TSMC eNVM 0.5 um to 5 nm (OTP/MTP/Flash/MRAM/RRAM); eRRAM in volume at 40/28/22/12 nm", "https://www.techinsights.com/blog/summary-nordic-nrf54l15-tsmc-22ull-12-mb-ereram-process-analysis - Nordic nRF54L15 BLE SoC on TSMC 22ULL with 12 Mb eRRAM", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://www.design-reuse.com/news/47188/umc-22nm-usb-2-0-test-vehicle.html - UMC press release: 22uLP / 22uLL (ultra-low-leakage) process ready"]
+    note: "TSMC 40 nm / 22ULL: eRRAM shown, eFlash at these nodes not shown. All remaining offerings supported by the pages listed."
 supervisor:
   typical_process: "0.18-0.5 um analog CMOS / BCD (low-Iq comparators, bandgap)"
   foundry_route: "yes"
@@ -35,14 +52,24 @@ supervisor:
   note: "Voltage supervisors are mature analog CMOS parts available in any analog foundry flow."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 adc:
   typical_process: "180 nm-40 nm mixed-signal CMOS (SAR / delta-sigma); 180 nm BCD-on-SOI for automotive BMS"
   foundry_route: "yes"
-  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018 / XT018", "Tower 180 nm mixed-signal", "GlobalFoundries 22FDX / 55 nm"]
+  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018 / XT018", "Tower mixed-signal CMOS", "GlobalFoundries 22FDX / 55 nm"]
   in_house: "Skyworks capacitive isolation includes isolated delta-sigma modulators/ADCs (Si89xx); ADCs inside Qorvo PAC and Skyworks SoCs"
   note: "Precision and high-speed ADCs are routinely built at foundries; top-precision vendors use proprietary fabs but it is not required."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.xfab.com/xt018", "https://www.xfab.com/technology/sensors"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://towersemi.com/technology/mixed-signal-cmos/ - Tower mixed-signal/CMOS for analog, RF CMOS, audio and IoT (nodes not listed on page)", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://www.design-reuse.com/news/37276/sst-globalfoundries-automotive-grade-55nm-flash-memory.html - SST eFlash on GF 55 nm LPx/RF platform (smart card, NFC/RF, MCU)"]
+    note: "Tower mixed-signal page does not list a 180 nm node; label generalised. All remaining offerings supported by the pages listed."
 amplifier:
   typical_process: "0.18-0.35 um precision analog CMOS or BiCMOS (op-amps, current-sense, instrumentation)"
   foundry_route: "yes"
@@ -51,6 +78,11 @@ amplifier:
   note: "CMOS op-amps and current-sense amplifiers are foundry-friendly; the highest-performance bipolar/JFET op-amps mostly come from IDM complementary-bipolar fabs."
   confidence: medium
   sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 mcu:
   typical_process: "40-90 nm CMOS with embedded flash; 22/28 nm with eMRAM/eRRAM"
   foundry_route: "yes"
@@ -59,6 +91,11 @@ mcu:
   note: "Most MCU vendors already use foundry eNVM processes."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_DCE_28HPC_22ULP", "https://www.techinsights.com/blog/summary-nordic-nrf54l15-tsmc-22ull-12-mb-ereram-process-analysis", "https://www.xfab.com/technology/e-nvm", "https://www.microchip.com/en-us/about/news-releases/corporate/sst-announces-qualification-of-embedded-superflash-on-globalfoundries-bcdlite-process"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/eflash - TSMC eNVM 0.5 um to 5 nm (OTP/MTP/Flash/MRAM/RRAM); eRRAM in volume at 40/28/22/12 nm", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://www.design-reuse.com/news/37276/sst-globalfoundries-automotive-grade-55nm-flash-memory.html - SST eFlash on GF 55 nm LPx/RF platform (smart card, NFC/RF, MCU)", "https://us.design-reuse.com/news/43300/umc-40nm-sst-embedded-flash-process.html - UMC press release: 40 nm SST eFlash; 55 nm SST eFlash in production for SIM, banking, MCU, IoT", "https://www.design-reuse.com/news/54618/faraday-infineon-sonos-eflash-umc-40ulp.html - Infineon SONOS eFlash qualified on UMC 40ULP (IoT SoC)", "https://www.design-reuse.com/news/47188/umc-22nm-usb-2-0-test-vehicle.html - UMC press release: 22uLP / 22uLL (ultra-low-leakage) process ready", "https://www.xfab.com/technology/e-nvm - X-FAB SONOS eFlash on XH018/XP018; OTP and EEPROM on XT018, XH035 and others"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 isolated_dcdc:
   typical_process: "Isolation barrier (thick-oxide capacitive or on-chip transformer) plus 0.18 um BCD driver/rectifier"
   foundry_route: "yes"
@@ -67,14 +104,24 @@ isolated_dcdc:
   note: "Foundry isolation modules exist; isolated power additionally needs a transformer (in-package or on-die) which is packaging work."
   confidence: medium
   sources: ["https://www.xfab.com/technology/galvanic-isolation", "https://www.xfab.com/xt018"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/galvanic-isolation - X-FAB capacitive and inductive galvanic isolation, barrier up to 1700 V working", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 voltage_reference:
   typical_process: "Bipolar / BiCMOS bandgap or buried-Zener (precision); analog CMOS for general purpose"
   foundry_route: "yes"
-  foundries: ["TSMC analog CMOS / BCD", "X-FAB XH018 / XH035 (Zener and bipolar options)", "Tower SiGe BiCMOS"]
+  foundries: ["TSMC analog CMOS / BCD", "X-FAB XH018 / XH035 (bipolar options)", "Tower SiGe BiCMOS"]
   in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
   note: "General-purpose references are easy in foundry analog CMOS; the lowest-drift buried-Zener / XFET parts are made on proprietary IDM processes."
   confidence: medium
   sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs"]
+    note: "X-FAB XH018/XH035 Zener option not shown (bipolar transistors are; Zener diodes are listed for XT018). All remaining offerings supported by the pages listed."
 wifi_soc:
   typical_process: "16/12 nm FinFET to N6RF / N4 RF CMOS"
   foundry_route: "yes"
@@ -83,22 +130,37 @@ wifi_soc:
   note: "All Wi-Fi SoC vendors are fabless on TSMC-class RF CMOS; foundry route is standard, IP is the barrier."
   confidence: high
   sources: ["https://pr.tsmc.com/english/news/2831", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://pr.tsmc.com/english/news/2831 - TSMC N6RF for 5G RF and WiFi 6/6e (successor to 16 nm RF); N5/N4/N3 logic", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://www.eenewseurope.com/en/samsung-launches-8nm-rf-process-for-5g-chips/ - Samsung 8 nm RF for 5G sub-6/mmWave, alongside 28 nm and 14 nm RF", "https://semiconductor.samsung.com/foundry/process-technology/ - Samsung Foundry logic portfolio 180 nm to 2 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 tvs_esd:
   typical_process: "Discrete silicon avalanche / snapback diode processes (often 6-8 inch power-discrete fabs)"
   foundry_route: "partial"
-  foundries: ["Hua Hong power discrete platform (MOSFET/IGBT; TVS offering not public)", "X-FAB (Zener/Schottky options within CMOS; discrete TVS not public)"]
+  foundries: ["Hua Hong power discrete platform (MOSFET/IGBT; TVS offering not public)", "X-FAB XT018 (Zener/Schottky diode options; discrete TVS not public)"]
   in_house: "Skyworks silicon RF diodes (PIN, Schottky, varactor, limiter) - adjacent discrete-diode know-how"
   note: "Discrete TVS/ESD arrays are mostly made in IDM discrete fabs; a public pure-play TVS process offering was not found."
   confidence: low
   sources: ["https://eepower.com/news/hua-hong-power-discrete-platform-hits-5-million-wafer-shipments/", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://eepower.com/news/hua-hong-power-discrete-platform-hits-5-million-wafer-shipments/ - Hua Hong 200 mm power-discrete platform: super-junction MOSFETs and FS IGBTs (no TVS mentioned)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases"]
+    note: "X-FAB Zener/Schottky options are documented on XT018 (BCD-on-SOI), not a plain CMOS flow. All remaining offerings supported by the pages listed."
 half_bridge_driver:
   typical_process: "0.18-1 um HV BCD or HV-SOI (100-650 V level shifters, bootstrap)"
   foundry_route: "yes"
-  foundries: ["X-FAB XT018 BCD-on-SOI (up to 375 V)", "X-FAB 1 um / 350 nm HV (up to 625-650 V)", "TSMC BCD", "Tower 180 nm BCD"]
+  foundries: ["X-FAB XT018 BCD-on-SOI (up to 375 V)", "X-FAB HV SOI (1 um to 180 nm, up to 625 V)", "TSMC BCD", "Tower 180 nm BCD"]
   in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public; Skyworks isolated gate drivers (Si82xx)"
   note: "HV gate drivers are well served by foundry HV BCD / SOI offerings."
   confidence: high
   sources: ["https://www.xfab.com/technology/high-voltage", "https://www.xfab.com/xt018", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage - X-FAB HV SOI 1 um to 180 nm up to 625 V; HV CMOS 1 um to 180 nm; galvanic isolation", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers"]
+    note: "X-FAB HV range corrected: HV SOI is 1 um-180 nm up to 625 V; the 650 V figure on the page refers to galvanic isolation. All remaining offerings supported by the pages listed."
 three_phase_gate_driver:
   typical_process: "0.18-0.35 um BCD (40-100 V) or HV-SOI (600 V)"
   foundry_route: "yes"
@@ -107,6 +169,11 @@ three_phase_gate_driver:
   note: "Already shipped by Qorvo; automotive-grade foundry BCD flows exist."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 sequencer:
   typical_process: "0.18 um BCD / analog CMOS with NVM trim"
   foundry_route: "yes"
@@ -115,6 +182,11 @@ sequencer:
   note: "Simple mixed-signal function on any BCD/analog flow."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd", "https://www.xfab.com/technology/e-nvm"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)", "https://www.xfab.com/technology/e-nvm - X-FAB SONOS eFlash on XH018/XP018; OTP and EEPROM on XT018, XH035 and others"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 audio_codec:
   typical_process: "55-28 nm mixed-signal CMOS; 40/22 nm BCD for class-D smart amps"
   foundry_route: "yes"
@@ -123,6 +195,11 @@ audio_codec:
   note: "Audio codecs and smart amps are fabless products on foundry CMOS/BCD."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD - TSMC 130BCD to 22BCD; 40BCD/22BCD aimed at fast-charger, USB-interface and audio-amplifier ICs", "https://towersemi.com/2024/12/23/12232024/ - Tower press release: 300 mm 65 nm 3.3 V BCD (PML) for PMIC, audio ICs and CPU/GPU voltage regulators", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 efuse_hotswap:
   typical_process: "0.18-0.13 um BCD with integrated low-Rds(on) LDMOS (5-80 V)"
   foundry_route: "yes"
@@ -131,14 +208,24 @@ efuse_hotswap:
   note: "Integrated eFuses need good LDMOS Rds(on), which 130/65 nm foundry BCD provides."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 gnss_lna:
   typical_process: "RF SOI or SiGe BiCMOS LNA (also GaAs pHEMT), with SAW pre-filter in module"
   foundry_route: "yes"
-  foundries: ["GlobalFoundries 8SW / 9SW RF SOI", "Tower RF SOI / SBC18 SiGe", "TSMC RF SOI"]
+  foundries: ["GlobalFoundries 8SW / 9SW RF SOI", "Tower RF SOI / SBC18 SiGe", "TSMC MS/RF CMOS"]
   in_house: "Skyworks/Qorvo RF SOI, SiGe and GaAs pHEMT LNAs plus SAW filters and SiP integration"
   note: "Core competence; both companies already make GNSS LNAs and FEMs."
   confidence: high
-  sources: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+  sources: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/", "https://towersemi.com/technology/rf-test-page/rf-soi-rf-cmos-platforms/"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/ - GF 9SW RF-SOI (successor to 8SW) for 5G mobile front ends", "https://gf.com/technology-platforms/rf-soi/ - GF RF-SOI for switches, LNAs (130NSX) and mmWave front ends", "https://towersemi.com/technology/rf-test-page/rf-soi-rf-cmos-platforms/ - Tower RF-SOI for FEM switches with integrated LNAs", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar"]
+    note: "\"TSMC RF SOI\" replaced: no TSMC RF-SOI offering found on its MS/RF page or elsewhere. All remaining offerings supported by the pages listed. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 ethernet_phy:
   typical_process: "28-12 nm CMOS (multi-gig, automotive T1); 40-55 nm for 10/100"
   foundry_route: "yes"
@@ -147,14 +234,24 @@ ethernet_phy:
   note: "Standard fabless product on foundry CMOS; the barrier is PHY DSP/AFE IP, not process."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://www.yolegroup.com/industry-news/sst-and-umc-announce-immediate-availability-of-28nm-superflash-gen-4-automotive-grade-1-platform/ - SST ESF4 embedded flash on UMC 28HPC+ (Auto Grade 1)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 rtc:
   typical_process: "0.18-0.35 um ultra-low-leakage CMOS (plus 32 kHz crystal or MEMS resonator)"
   foundry_route: "yes"
-  foundries: ["TSMC analog CMOS", "X-FAB XH018 / XH035", "UMC low-power CMOS"]
+  foundries: ["TSMC analog CMOS", "X-FAB XH018 / XH035", "UMC low-power CMOS (40ULP / 22uLP / 22uLL)"]
   in_house: "Skyworks timing (crystal oscillators, DSPLL) - adjacent, not RTC"
   note: "Low-power CMOS foundry flow; crystal sourcing is the other piece."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://www.design-reuse.com/news/54618/faraday-infineon-sonos-eflash-umc-40ulp.html - Infineon SONOS eFlash qualified on UMC 40ULP (IoT SoC)", "https://www.design-reuse.com/news/47188/umc-22nm-usb-2-0-test-vehicle.html - UMC press release: 22uLP / 22uLL (ultra-low-leakage) process ready"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 can_transceiver:
   typical_process: "0.18-0.35 um HV BCD / BCD-on-SOI (40-58 V bus fault tolerance, AEC-Q100)"
   foundry_route: "yes"
@@ -163,6 +260,11 @@ can_transceiver:
   note: "Automotive transceivers are a stated target of foundry BCD-on-SOI platforms."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 watchdog:
   typical_process: "0.18-0.35 um analog CMOS / BCD"
   foundry_route: "yes"
@@ -171,6 +273,11 @@ watchdog:
   note: "Small mixed-signal function on any analog flow."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 termination_ldo:
   typical_process: "0.18 um / 130 nm BCD (sink/source LDMOS)"
   foundry_route: "yes"
@@ -179,6 +286,11 @@ termination_ldo:
   note: "DDR VTT LDOs are standard BCD parts."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 reverse_polarity:
   typical_process: "0.18-0.35 um HV BCD (charge pump, 40-80 V)"
   foundry_route: "yes"
@@ -187,6 +299,11 @@ reverse_polarity:
   note: "Ideal-diode controllers are automotive BCD parts; external MOSFET is separate."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 motor_driver_brushed:
   typical_process: "0.18-0.13 um BCD with integrated LDMOS H-bridges (up to 40-60 V)"
   foundry_route: "yes"
@@ -195,14 +312,24 @@ motor_driver_brushed:
   note: "Tower and GF cite motor drivers as BCD targets."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 diversity_rx_module:
   typical_process: "RF SOI switches/LNAs + SAW/BAW filters in SiP"
   foundry_route: "yes"
-  foundries: ["GlobalFoundries 8SW / 9SW RF SOI", "Tower RF SOI", "TSMC RF SOI"]
+  foundries: ["GlobalFoundries 8SW / 9SW RF SOI", "Tower RF SOI", "TSMC MS/RF CMOS"]
   in_house: "In production at both: RF SOI, SAW/TC-SAW/BAW filters, SiP module integration"
   note: "Core competence; filters are made in-house, switches/LNAs on foundry or in-house RF SOI."
   confidence: high
-  sources: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+  sources: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/", "https://towersemi.com/technology/rf-test-page/rf-soi-rf-cmos-platforms/"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://gf.com/de/gf-press-release/globalfoundries-announces-9sw-rfsoi-technology-for-next-generation-mobile-and-5g-applications/ - GF 9SW RF-SOI (successor to 8SW) for 5G mobile front ends", "https://gf.com/technology-platforms/rf-soi/ - GF RF-SOI for switches, LNAs (130NSX) and mmWave front ends", "https://towersemi.com/technology/rf-test-page/rf-soi-rf-cmos-platforms/ - Tower RF-SOI for FEM switches with integrated LNAs", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar"]
+    note: "\"TSMC RF SOI\" replaced: no TSMC RF-SOI offering found on its MS/RF page or elsewhere. All remaining offerings supported by the pages listed. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 io_expander:
   typical_process: "0.18-0.35 um CMOS (I2C/SPI logic + I/O)"
   foundry_route: "yes"
@@ -211,6 +338,11 @@ io_expander:
   note: "Simple digital/mixed-signal part on mature CMOS."
   confidence: high
   sources: ["https://www.xfab.com/technology/cmos", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3", "https://www.design-reuse.com/news/47188/umc-22nm-usb-2-0-test-vehicle.html - UMC press release: 22uLP / 22uLL (ultra-low-leakage) process ready", "https://www.yolegroup.com/industry-news/sst-and-umc-announce-immediate-availability-of-28nm-superflash-gen-4-automotive-grade-1-platform/ - SST ESF4 embedded flash on UMC 28HPC+ (Auto Grade 1)", "https://www.xfab.com/technology/cmos - X-FAB CMOS/SOI processes 1.0 um to 110 nm incl. 350 nm (XH035) and 180 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 rf_transceiver:
   typical_process: "RF CMOS (40 nm to N6RF) or SiGe BiCMOS for mmWave / defense"
   foundry_route: "yes"
@@ -218,7 +350,12 @@ rf_transceiver:
   in_house: "Qorvo Anokiwave beamformer / IF converter ICs; SiGe/BiCMOS at both companies; Skyworks broadcast RF CMOS"
   note: "Foundry RF CMOS and SiGe are the industry norm for transceivers."
   confidence: high
-  sources: ["https://pr.tsmc.com/english/news/2831", "https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html"]
+  sources: ["https://pr.tsmc.com/english/news/2831", "https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://pr.tsmc.com/english/news/2831 - TSMC N6RF for 5G RF and WiFi 6/6e (successor to 16 nm RF); N5/N4/N3 logic", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://investors.gf.com/news-releases/news-release-details/globalfoundries-announces-production-release-130cbic-sige/ - GF 130CBIC SiGe BiCMOS for smartphone LNAs and mmWave radar", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 pre_regulator:
   typical_process: "0.18-0.35 um HV BCD (40-60 V, automotive)"
   foundry_route: "yes"
@@ -227,14 +364,24 @@ pre_regulator:
   note: "Wide-Vin boost/SEPIC controllers fit foundry automotive BCD."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 nfc_frontend:
   typical_process: "40-90 nm mixed-signal CMOS with eNVM (controllers); 0.18 um for analog front ends"
   foundry_route: "yes"
-  foundries: ["TSMC 40 nm eFlash / mixed-signal", "GlobalFoundries 55 nm / 40 nm", "UMC 40 nm"]
+  foundries: ["TSMC 40ULP / eNVM (eRRAM) / mixed-signal", "GlobalFoundries 55 nm / 40 nm", "UMC 40 nm"]
   in_house: "none"
   note: "NFC controllers are standard foundry CMOS; secure-element variants need certified sites."
   confidence: medium
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/ulp - TSMC 22ULL, 28ULP, 40ULP, 55ULP for IoT/battery-powered SoCs", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/eflash - TSMC eNVM 0.5 um to 5 nm (OTP/MTP/Flash/MRAM/RRAM); eRRAM in volume at 40/28/22/12 nm", "https://www.design-reuse.com/news/37276/sst-globalfoundries-automotive-grade-55nm-flash-memory.html - SST eFlash on GF 55 nm LPx/RF platform (smart card, NFC/RF, MCU)", "https://techinsights.com/ko/node/52068 - NXP SN200 secure NFC on GF 40 nm LP with embedded flash", "https://us.design-reuse.com/news/43300/umc-40nm-sst-embedded-flash-process.html - UMC press release: 40 nm SST eFlash; 55 nm SST eFlash in production for SIM, banking, MCU, IoT", "https://www.design-reuse.com/news/54618/faraday-infineon-sonos-eflash-umc-40ulp.html - Infineon SONOS eFlash qualified on UMC 40ULP (IoT SoC)"]
+    note: "TSMC 40 nm eFlash not shown (40 nm eRRAM and 40ULP are). All remaining offerings supported by the pages listed."
 voltage_translator:
   typical_process: "0.18-0.35 um CMOS (dual-rail I/O)"
   foundry_route: "yes"
@@ -243,6 +390,11 @@ voltage_translator:
   note: "Commodity logic part on mature CMOS."
   confidence: high
   sources: ["https://www.xfab.com/technology/cmos"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3", "https://www.design-reuse.com/news/47188/umc-22nm-usb-2-0-test-vehicle.html - UMC press release: 22uLP / 22uLL (ultra-low-leakage) process ready", "https://www.yolegroup.com/industry-news/sst-and-umc-announce-immediate-availability-of-28nm-superflash-gen-4-automotive-grade-1-platform/ - SST ESF4 embedded flash on UMC 28HPC+ (Auto Grade 1)", "https://www.xfab.com/technology/cmos - X-FAB CMOS/SOI processes 1.0 um to 110 nm incl. 350 nm (XH035) and 180 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 haptics_driver:
   typical_process: "0.18 um-40 nm BCD (LRA/ERM); HV BCD up to ~100-200 V for piezo"
   foundry_route: "yes"
@@ -251,14 +403,24 @@ haptics_driver:
   note: "LRA drivers are low-voltage BCD; piezo drivers use HV BCD/SOI options."
   confidence: medium
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/xt018"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD - TSMC 130BCD to 22BCD; 40BCD/22BCD aimed at fast-charger, USB-interface and audio-amplifier ICs", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 acdc_controller:
   typical_process: "0.35-1 um HV BCD with 650-700 V start-up device"
   foundry_route: "yes"
-  foundries: ["X-FAB 1 um / 350 nm HV (625-650 V)", "TSMC BCD (HV options)", "GlobalFoundries BCDLite (AC-DC targeted)"]
+  foundries: ["X-FAB HV SOI (1 um to 180 nm, up to 625 V)", "GlobalFoundries BCDLite (AC-DC targeted)", "Tower 180 nm BCD (up to 700 V)"]
   in_house: "none (Qorvo's UnitedSiC power devices were divested)"
   note: "Foundry HV processes with 650 V devices exist; most incumbents still use own HV fabs."
   confidence: medium
   sources: ["https://www.xfab.com/technology/high-voltage", "https://semiengineering.com/130-bcdlite-and-bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/high-voltage - X-FAB HV SOI 1 um to 180 nm up to 625 V; HV CMOS 1 um to 180 nm; galvanic isolation", "https://semiengineering.com/130-bcdlite-and-bcd - GF 130 BCDLite/BCD 1.5-85 V; BCDLite targeted at DC-DC, AC-DC, PMIC, wireless and quick charging", "https://towersemi.com/technology/power-management/ - Tower BCD (up to 700 V) for DC-DC, motor drivers, battery management, voltage regulators; 180 nm platform listed as 5 V-700 V", "https://towersemi.com/technology/process-technology-offerings/ - Tower offerings: SiGe BiCMOS, RF CMOS (SOI and bulk), 700 V BCD, mixed-signal CMOS"]
+    note: "X-FAB HV range corrected: HV SOI is 1 um-180 nm up to 625 V; the 650 V figure on the page refers to galvanic isolation; \"TSMC BCD (HV options)\" removed: TSMC public BCD page tops out at 100 V (0.18 um Gen-2), no 600 V-class option; replaced by Tower 180 nm BCD up to 700 V. All remaining offerings supported by the pages listed."
 secure_element:
   typical_process: "40-90 nm CMOS with embedded flash in a Common Criteria / EMVCo-certified fab"
   foundry_route: "partial"
@@ -267,6 +429,11 @@ secure_element:
   note: "Processes exist, but security certification of the fab and design flow (CC EAL5+/6+) is required; whether a given site is certified is not public in most cases."
   confidence: medium
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_DCE_28HPC_22ULP", "https://www.microchip.com/en-us/about/news-releases/corporate/sst-announces-qualification-of-embedded-superflash-on-globalfoundries-bcdlite-process"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/eflash - TSMC eNVM 0.5 um to 5 nm (OTP/MTP/Flash/MRAM/RRAM); eRRAM in volume at 40/28/22/12 nm", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://us.design-reuse.com/news/43300/umc-40nm-sst-embedded-flash-process.html - UMC press release: 40 nm SST eFlash; 55 nm SST eFlash in production for SIM, banking, MCU, IoT", "https://www.yolegroup.com/industry-news/sst-and-umc-announce-immediate-availability-of-28nm-superflash-gen-4-automotive-grade-1-platform/ - SST ESF4 embedded flash on UMC 28HPC+ (Auto Grade 1)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 power_fets:
   typical_process: "Si trench / shielded-gate / superjunction MOSFETs on 8-inch power-discrete lines; GaN-on-Si HEMT (650/100 V)"
   foundry_route: "partial"
@@ -275,6 +442,11 @@ power_fets:
   note: "Foundry Si-MOSFET and GaN-on-Si capacity exists but is limited/in flux (TSMC GaN exit); leading power-FET vendors run own fabs."
   confidence: medium
   sources: ["https://eepower.com/news/hua-hong-power-discrete-platform-hits-5-million-wafer-shipments/", "https://www.xfab.com/technology/sic-gan", "https://www.ledinside.com/node/35291", "https://investor.tsmc.com/static/annualReports/2024/english/pdf/2024_tsmc_ar_e_ch5.pdf"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://eepower.com/news/hua-hong-power-discrete-platform-hits-5-million-wafer-shipments/ - Hua Hong 200 mm power-discrete platform: super-junction MOSFETs and FS IGBTs (no TVS mentioned)", "https://www.xfab.com/technology/sic-gan - X-FAB GaN-on-Si in 8-inch Dresden fab and SiC in 6-inch Lubbock fab", "https://www.ledinside.com/node/35291 - trade press: TSMC to exit GaN foundry production by July 2027", "https://www.trendforce.com/news/?p=48166 - trade press: GlobalFoundries licensed TSMC 650 V and 80 V GaN (Nov 2025); TSMC GaN foundry ends 2027-07-31", "https://compoundsemiconductor.net/article/123389/VIS_signs_GaN_licensing_agreement_with_TSMC - trade press: VIS licensed TSMC 650 V / 80 V GaN-on-Si"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 soc:
   typical_process: "7-3 nm FinFET (application processors)"
   foundry_route: "yes"
@@ -283,6 +455,11 @@ soc:
   note: "Process route is standard (all AP vendors are fabless), but design/IP scale is the barrier."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3", "https://www.eenewseurope.com/en/samsung-launches-8nm-rf-process-for-5g-chips/ - Samsung 8 nm RF for 5G sub-6/mmWave, alongside 28 nm and 14 nm RF", "https://semiconductor.samsung.com/foundry/process-technology/ - Samsung Foundry logic portfolio 180 nm to 2 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 env_sensor:
   typical_process: "MEMS (piezoresistive/capacitive pressure), CMOS + polymer humidity, photodiode CMOS (light)"
   foundry_route: "partial"
@@ -291,6 +468,11 @@ env_sensor:
   note: "Light and pressure have foundry routes; humidity/gas sensing films are usually proprietary and not publicly offered by foundries."
   confidence: medium
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS", "https://www.xfab.com/technology/sensors", "https://en.wikipedia.org/wiki/List_of_MEMS_foundries", "https://teledyneimaging.com/mems"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS - TSMC CMOS+MEMS monolithic pressure sensor, MEMS microphones, ultrasound transceivers", "https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://www.yolegroup.com/strategy-insights/from-ipo-to-expansion-silexs-next-growth-chapter/ - Silex Microsystems, pure-play MEMS foundry", "https://teledyneimaging.com/mems - Teledyne MEMS foundry (150/200 mm)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 relay_driver:
   typical_process: "0.18-0.35 um HV BCD (40-60 V low-side LDMOS, clamps)"
   foundry_route: "yes"
@@ -299,6 +481,11 @@ relay_driver:
   note: "Low-side drivers are standard automotive BCD parts."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 isolated_can:
   typical_process: "Capacitive or inductive isolation barrier + automotive BCD transceiver"
   foundry_route: "yes"
@@ -307,6 +494,11 @@ isolated_can:
   note: "Isolation is in-house at Skyworks; CAN PHY can come from foundry BCD."
   confidence: high
   sources: ["https://www.xfab.com/technology/galvanic-isolation", "https://www.xfab.com/xt018"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/galvanic-isolation - X-FAB capacitive and inductive galvanic isolation, barrier up to 1700 V working", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 touch_controller:
   typical_process: "55-180 nm mixed-signal CMOS with HV (10-20 V) drive options and eNVM"
   foundry_route: "yes"
@@ -315,6 +507,11 @@ touch_controller:
   note: "Capacitive/inductive sensing controllers are fabless foundry CMOS products."
   confidence: high
   sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/hv - TSMC HV processes 0.5 um to 16 nm (display/panel drivers)", "https://design-reuse.com/news/30539/umc-12v-eflash.html - UMC press release: 12 V HV eFlash (0.11/0.18 um) for touch-screen ICs", "https://www.silicon.co.uk/press-release/umc-launches-most-advanced-22nm-ehv-platform-to-power-next-generation-smartphone-displays - UMC 22 nm eHV display-driver platform", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 battery_protector:
   typical_process: "0.18-0.35 um HV CMOS / BCD (ultra-low Iq, trimmed comparators)"
   foundry_route: "yes"
@@ -323,6 +520,11 @@ battery_protector:
   note: "Cell protectors use low-Iq analog CMOS available at foundries."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.xfab.com/technology/bcd"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V", "https://towersemi.com/technology/power-management/180nm-power-management/ - Tower 180 nm BCD, LDMOS 5-200 V, galvanic capacitor for isolated drivers", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)", "https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/bcd - X-FAB BCD-on-SOI incl. XT011 110 nm (AEC-Q100 Grade 0)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 redriver:
   typical_process: "SiGe BiCMOS or 40-28 nm CMOS (linear equalizers, 10-32 Gb/s)"
   foundry_route: "yes"
@@ -330,15 +532,25 @@ redriver:
   in_house: "SiGe/BiCMOS at both companies (sige_bicmos); Qorvo optical drivers/TIAs"
   note: "Linear redrivers are SiGe or CMOS foundry products."
   confidence: medium
-  sources: ["https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+  sources: ["https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/", "https://towersemi.com/technology/rf-test-page/rf-soi-rf-cmos-platforms/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs", "https://investors.gf.com/news-releases/news-release-details/globalfoundries-announces-production-release-130cbic-sige/ - GF 130CBIC SiGe BiCMOS for smartphone LNAs and mmWave radar", "https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 hv_flyback:
   typical_process: "0.35-1 um HV BCD / HV-SOI (650-700 V start-up) or controller + GaN"
   foundry_route: "yes"
-  foundries: ["X-FAB 1 um / 350 nm HV (625-650 V)", "TSMC BCD", "GlobalFoundries BCDLite"]
+  foundries: ["X-FAB HV SOI (1 um to 180 nm, up to 625 V)", "TSMC BCD", "GlobalFoundries BCDLite", "Tower 180 nm BCD (up to 700 V)"]
   in_house: "none"
   note: "Same route as AC/DC controllers; integrated-switch versions need 700 V devices offered by few foundries."
   confidence: medium
   sources: ["https://www.xfab.com/technology/high-voltage", "https://semiengineering.com/130-bcdlite-and-bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/high-voltage - X-FAB HV SOI 1 um to 180 nm up to 625 V; HV CMOS 1 um to 180 nm; galvanic isolation", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://semiengineering.com/130-bcdlite-and-bcd - GF 130 BCDLite/BCD 1.5-85 V; BCDLite targeted at DC-DC, AC-DC, PMIC, wireless and quick charging", "https://www.microchip.com/en-us/about/news-releases/corporate/sst-announces-qualification-of-embedded-superflash-on-globalfoundries-bcdlite-process - SST embedded SuperFlash qualified on GF 130 nm BCDLite", "https://towersemi.com/technology/power-management/ - Tower BCD (up to 700 V) for DC-DC, motor drivers, battery management, voltage regulators; 180 nm platform listed as 5 V-700 V", "https://towersemi.com/technology/process-technology-offerings/ - Tower offerings: SiGe BiCMOS, RF CMOS (SOI and bulk), 700 V BCD, mixed-signal CMOS"]
+    note: "X-FAB HV range corrected: HV SOI is 1 um-180 nm up to 625 V; the 650 V figure on the page refers to galvanic isolation; Tower 180 nm BCD (listed 5 V-700 V) added as a 700 V-class option; TSMC BCD kept but its public page shows BCD only up to 100 V, so a 600 V+ start-up device would be external. All remaining offerings supported by the pages listed."
 hall_switch:
   typical_process: "0.18-0.35 um CMOS with integrated Hall plates (automotive, up to 175 C)"
   foundry_route: "yes"
@@ -347,14 +559,24 @@ hall_switch:
   note: "Hall plates are made in standard CMOS layers; X-FAB markets sensor-interface CMOS adopted by tier-one vendors."
   confidence: medium
   sources: ["https://www.xfab.com/technology/sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 serdes:
   typical_process: "28-5 nm FinFET CMOS (or SiGe for very high-speed analog)"
   foundry_route: "yes"
-  foundries: ["TSMC N16 / N7 / N5", "GlobalFoundries 22FDX / 12LP"]
+  foundries: ["TSMC N16 / N7 / N5", "GlobalFoundries 22FDX / 12 nm FinFET"]
   in_house: "none (Skyworks timing/jitter attenuators are adjacent)"
   note: "Process route is standard; SerDes IP is the barrier."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://gf.com/technology-platforms/finfet/ - GF FinFET (12 nm class) with RF and automotive options"]
+    note: "GF FinFET page says \"12nm\" but does not use the 12LP name. All remaining offerings supported by the pages listed."
 ddr_flash:
   typical_process: "Proprietary DRAM (1x/1a nm) and 3D NAND processes"
   foundry_route: "no"
@@ -363,14 +585,24 @@ ddr_flash:
   note: "Standalone DRAM and NAND are made only in memory-IDM fabs; no open foundry offering."
   confidence: high
   sources: ["https://equalocean.com/analysis/2020032513816-gigadevice-chinas-weapon-global-nor-flash-battle-1-2"]
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: []
+    note: "No foundry offering is named, so there is nothing to verify; the listed source (EqualOcean) was opened but does not discuss DRAM/NAND foundry routes, so the \"no foundry route\" judgement rests on general knowledge."
 position_sensor:
   typical_process: "CMOS Hall (0.18-0.35 um) or inductive CMOS; AMR/TMR needs magnetic BEOL module"
   foundry_route: "partial"
-  foundries: ["X-FAB XH018 sensor CMOS (Hall / inductive)", "Tower 130 nm CMOS with TMR BEOL module (Crocus)", "MDT magnetic sensor foundry service (TMR/AMR/GMR)"]
+  foundries: ["X-FAB XH018 / XH035 sensor CMOS (position-sensor interfaces)", "Tower 130 nm CMOS with TMR BEOL module (Crocus)", "MDT magnetic sensor foundry service (TMR/AMR/GMR)"]
   in_house: "none"
   note: "Hall/inductive sensors have mainstream foundry routes; magnetoresistive variants rely on niche foundries."
   confidence: medium
   sources: ["https://www.xfab.com/technology/sensors", "https://www.sec.gov/Archives/edgar/data/928876/000117891317002721/zk1720576.htm", "https://www.aap.com.au/aapreleases/cision20230718ae58683"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.sec.gov/Archives/edgar/data/928876/000117891317002721/zk1720576.htm - Tower 6-K: Crocus TMR sensors in volume on TowerJazz 0.13 um CMOS with magnetic BEOL module", "https://www.aap.com.au/aapreleases/cision20230718ae58683 - MDT press release: foundry services for TMR/GMR/AMR sensors"]
+    note: "X-FAB Hall/inductive claim not shown; X-FAB lists position sensors and low-noise sensor CMOS. All remaining offerings supported by the pages listed."
 dac:
   typical_process: "180-40 nm mixed-signal CMOS; SiGe BiCMOS for RF DACs"
   foundry_route: "yes"
@@ -379,14 +611,24 @@ dac:
   note: "Standard foundry product."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 usb_pd_controller:
   typical_process: "40-90 nm CMOS / BCD with 20-30 V tolerant CC/VBUS pins and eNVM"
   foundry_route: "yes"
-  foundries: ["TSMC 40BCD / 22BCD", "GlobalFoundries BCDLite", "UMC"]
+  foundries: ["TSMC 40BCD / 22BCD", "GlobalFoundries BCDLite", "UMC BCD (0.35 um to 55 nm)"]
   in_house: "Qorvo configurable PMIC / motor-control SoC line (Active-Semi heritage) and Skyworks power management (LED drivers, RF PMICs); process nodes not public"
   note: "TSMC names USB interfaces and fast chargers as 40/22BCD targets."
   confidence: high
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD", "https://semiengineering.com/130-bcdlite-and-bcd"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/platform_smartphone_tech_BCD - TSMC 130BCD to 22BCD; 40BCD/22BCD aimed at fast-charger, USB-interface and audio-amplifier ICs", "https://semiengineering.com/130-bcdlite-and-bcd - GF 130 BCDLite/BCD 1.5-85 V; BCDLite targeted at DC-DC, AC-DC, PMIC, wireless and quick charging", "https://www.microchip.com/en-us/about/news-releases/corporate/sst-announces-qualification-of-embedded-superflash-on-globalfoundries-bcdlite-process - SST embedded SuperFlash qualified on GF 130 nm BCDLite", "https://www.eenewseurope.com/en/umc-launches-55nm-bcd-platform-for-power-efficient-designs - UMC 55 nm BCD; BCD portfolio 0.35 um to 55 nm"]
+    note: "\"UMC\" made specific: UMC BCD 0.35 um-55 nm. All remaining offerings supported by the pages listed."
 modem:
   typical_process: "5-3 nm FinFET baseband + N6RF-class RF transceiver"
   foundry_route: "yes"
@@ -395,6 +637,11 @@ modem:
   note: "Process route is standard; the barrier is 3GPP modem IP and certification."
   confidence: high
   sources: ["https://pr.tsmc.com/english/news/2831", "https://www.tsmc.com/english/dedicatedFoundry/technology"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://pr.tsmc.com/english/news/2831 - TSMC N6RF for 5G RF and WiFi 6/6e (successor to 16 nm RF); N5/N4/N3 logic", "https://www.tsmc.com/english/dedicatedFoundry/technology/logic - TSMC logic nodes 0.18 um to N2 incl. 40 nm, 28 nm, 16 nm FinFET, N7, N5, N3", "https://www.eenewseurope.com/en/samsung-launches-8nm-rf-process-for-5g-chips/ - Samsung 8 nm RF for 5G sub-6/mmWave, alongside 28 nm and 14 nm RF", "https://semiconductor.samsung.com/foundry/process-technology/ - Samsung Foundry logic portfolio 180 nm to 2 nm"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 flash:
   typical_process: "Serial NOR: 55-65 nm floating-gate (foundry available); NAND: proprietary 3D NAND"
   foundry_route: "partial"
@@ -403,14 +650,24 @@ flash:
   note: "Fabless NOR via foundry is proven (GigaDevice/XMC); NAND has no foundry route."
   confidence: medium
   sources: ["https://equalocean.com/analysis/2020032513816-gigadevice-chinas-weapon-global-nor-flash-battle-1-2"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://evertiq.com/design/29235 - WXIC (XMC) 65 nm 300 mm NOR supply agreement with GigaDevice", "https://finance.technews.tw/2017/11/13/gigadevice-smic-nor-flash/ - report (citing Economic Daily) that SMIC supplies GigaDevice NOR capacity"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 radar_transceiver:
   typical_process: "22FDX / 28-16 nm RF CMOS (77-81 GHz) or SiGe BiCMOS"
   foundry_route: "yes"
-  foundries: ["GlobalFoundries 22FDX (Bosch, Arbe)", "TSMC 28/16 nm RF", "Tower SBC18 SiGe"]
+  foundries: ["GlobalFoundries 22FDX (Bosch, Arbe)", "TSMC 16 nm RF", "Tower SBC18 SiGe"]
   in_house: "Qorvo UWB (Decawave) radar-capable SoCs; Anokiwave mmWave beamformers; SiGe at both"
   note: "Automotive radar SoCs are made at foundries today (e.g. Bosch on GF 22FDX)."
   confidence: high
-  sources: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html"]
+  sources: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/ - Bosch mmWave radar SoC on GF 22FDX RF", "https://us.design-reuse.com/news/43962/arbe-robotics-globalfoundries-22fdx-imaging-radar.html - GF press release: Arbe imaging-radar chipset on 22FDX", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs"]
+    note: "TSMC 28 nm RF for radar not shown; TSMC says 16 nm RF is being optimized for mmWave automotive radar. All remaining offerings supported by the pages listed. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 vehicle_sensors:
   typical_process: "Mixed: CMOS Hall / inductive (wheel speed), MEMS (pressure, inertial), BCD interfaces"
   foundry_route: "partial"
@@ -419,6 +676,11 @@ vehicle_sensors:
   note: "Magnetic and pressure sensors have foundry routes; inertial/safety-grade MEMS are mostly IDM."
   confidence: medium
   sources: ["https://www.xfab.com/technology/sensors", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS", "https://en.wikipedia.org/wiki/List_of_MEMS_foundries"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS - TSMC CMOS+MEMS monolithic pressure sensor, MEMS microphones, ultrasound transceivers", "https://www.yolegroup.com/strategy-insights/from-ipo-to-expansion-silexs-next-growth-chapter/ - Silex Microsystems, pure-play MEMS foundry", "https://teledyneimaging.com/mems - Teledyne MEMS foundry (150/200 mm)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 ldo_tracker:
   typical_process: "0.18-0.35 um automotive HV BCD (40 V load-dump)"
   foundry_route: "yes"
@@ -427,6 +689,11 @@ ldo_tracker:
   note: "Tracking LDOs are automotive BCD parts."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 multiphase:
   typical_process: "130-40 nm BCD controller + power stages (DrMOS) in 65 nm / 130 nm BCD"
   foundry_route: "yes"
@@ -435,6 +702,11 @@ multiphase:
   note: "Tower names CPU/GPU voltage regulators as 65 nm BCD targets."
   confidence: high
   sources: ["https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://towersemi.com/2024/12/23/12232024/ - Tower press release: 300 mm 65 nm 3.3 V BCD (PML) for PMIC, audio ICs and CPU/GPU voltage regulators", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://gf.com/technology-platforms/bcd-bcdlite/ - GF 130BCD (5-40 V), 180BCD, 55BCD and HV BCD to 150 V; eFlash/OTP/MTP options; Auto Grade 1 lower-voltage BCD"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 lin_transceiver:
   typical_process: "0.18-0.35 um HV BCD / BCD-on-SOI (40 V bus)"
   foundry_route: "yes"
@@ -443,6 +715,11 @@ lin_transceiver:
   note: "Standard automotive BCD part."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 switch_detection_interface:
   typical_process: "0.18-0.35 um automotive HV BCD"
   foundry_route: "yes"
@@ -451,14 +728,24 @@ switch_detection_interface:
   note: "MSDI parts are automotive BCD; no special process."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 mmwave_antenna_module:
   typical_process: "SiGe / RF SOI / CMOS beamformer + antenna-in-package on organic substrate"
   foundry_route: "partial"
-  foundries: ["GlobalFoundries 22FDX / SiGe / RF SOI (RFIC)", "Tower SBC18 SiGe (RFIC)", "AiP substrates and assembly via OSATs (not a wafer foundry)"]
+  foundries: ["GlobalFoundries 22FDX / SiGe / RF SOI (RFIC)", "Tower SBC18 SiGe (RFIC)", "AiP substrates and assembly via OSATs, e.g. ASE (not a wafer foundry)"]
   in_house: "Qorvo Anokiwave beamformers, GaN-on-SiC, microwave module assembly; antenna-in-package not held"
   note: "RFICs have foundry routes; the antenna-in-package step is OSAT/substrate work that neither company has publicly."
   confidence: medium
-  sources: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html", "https://towersemi.com/wp-content/uploads/2025/05/Tower-Corporate-Overview-2025-digital.pdf"]
+  sources: ["https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/", "https://towersemi.com/technology/rf-test-page/rf-soi-rf-cmos-platforms/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options", "https://investors.gf.com/news-releases/news-release-details/globalfoundries-announces-production-release-130cbic-sige/ - GF 130CBIC SiGe BiCMOS for smartphone LNAs and mmWave radar", "https://gf.com/technology-platforms/rf-soi/ - GF RF-SOI for switches, LNAs (130NSX) and mmWave front ends", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs", "https://ase.aseglobal.com/?p=31 - ASE (OSAT) antenna-in-package manufacturing for mmWave"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 rf_predriver:
   typical_process: "GaAs HBT / pHEMT, SiGe BiCMOS, or GaN"
   foundry_route: "yes"
@@ -466,7 +753,12 @@ rf_predriver:
   in_house: "In production: GaAs HBT (both), GaN-on-SiC (Qorvo), SiGe (both)"
   note: "Core competence; both companies also already use external GaAs foundries."
   confidence: high
-  sources: ["https://www.awsc.com.tw/", "https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html"]
+  sources: ["https://www.awsc.com.tw/", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.awsc.com.tw/ - AWSC technology menu: InGaP HBT, ED pHEMT, IPD, VCSEL", "https://www.mwrf.com/companies/company/21166824/win-semiconductors - WIN GaAs HBT and pHEMT foundry processes; GaN-on-SiC process", "https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs", "https://investors.gf.com/news-releases/news-release-details/globalfoundries-announces-production-release-130cbic-sige/ - GF 130CBIC SiGe BiCMOS for smartphone LNAs and mmWave radar"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 position_interface:
   typical_process: "0.18-0.35 um HV BCD / mixed-signal CMOS (resolver excitation + sigma-delta)"
   foundry_route: "yes"
@@ -475,14 +767,24 @@ position_interface:
   note: "Resolver-to-digital and sensor interfaces are standard automotive mixed-signal parts."
   confidence: high
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 ppg_afe:
   typical_process: "180-130 nm low-noise CMOS with integrated photodiode options + LED drivers"
   foundry_route: "yes"
-  foundries: ["X-FAB XH018 (photodiodes, APD/SPAD)", "TSMC analog CMOS", "Tower 180 nm"]
+  foundries: ["X-FAB XH018 (photodiodes, APD/SPAD)", "TSMC analog CMOS", "Tower mixed-signal CMOS"]
   in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
   note: "Foundry sensor CMOS with photodiode modules exists."
   confidence: medium
   sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.xfab.com/technology/sensors"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://towersemi.com/technology/mixed-signal-cmos/ - Tower mixed-signal/CMOS for analog, RF CMOS, audio and IoT (nodes not listed on page)"]
+    note: "Tower mixed-signal page does not list a 180 nm node; label generalised. All remaining offerings supported by the pages listed."
 active_antenna_amp:
   typical_process: "SiGe BiCMOS or GaAs pHEMT low-noise amplifier (AM/FM)"
   foundry_route: "yes"
@@ -490,7 +792,12 @@ active_antenna_amp:
   in_house: "GaAs pHEMT and SiGe LNAs at both companies"
   note: "Process already in-house; automotive AM/FM specs are the gap."
   confidence: high
-  sources: ["https://www.keysight.com/be/en/lib/resources/miscellaneous/foundry-program-partner--towerjazz-2641657.html", "https://www.awsc.com.tw/"]
+  sources: ["https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/", "https://www.awsc.com.tw/"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://towersemi.com/technology/rf-and-hpa/sige-bicmos-platform/ - Tower SiGe BiCMOS (SBC18H5); low-noise devices for GPS/smartphone receivers; 24/77 GHz radar; TIAs, CDRs", "https://investors.gf.com/news-releases/news-release-details/globalfoundries-announces-production-release-130cbic-sige/ - GF 130CBIC SiGe BiCMOS for smartphone LNAs and mmWave radar", "https://www.mwrf.com/companies/company/21166824/win-semiconductors - WIN GaAs HBT and pHEMT foundry processes; GaN-on-SiC process", "https://www.awsc.com.tw/ - AWSC technology menu: InGaP HBT, ED pHEMT, IPD, VCSEL"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report. Bot-blocked Keysight page / unread Tower PDF in sources replaced by Tower technology pages."
 circulator_isolator:
   typical_process: "Ferrite (YIG / garnet) ceramics with magnets; not a semiconductor wafer process"
   foundry_route: "no"
@@ -499,22 +806,37 @@ circulator_isolator:
   note: "No semiconductor foundry route; made in ceramic/ferrite plants, which Skyworks already owns."
   confidence: high
   sources: []
+  check:
+    status: unconfirmed
+    date: 2026-10-19
+    evidence: []
+    note: "No foundry offering is named, so there is nothing to verify; the \"no foundry route\" judgement is a negative claim that no single page can confirm."
 smartcard_interface:
   typical_process: "0.18-0.35 um CMOS with charge pump (1.8/3/5 V card supply)"
   foundry_route: "yes"
-  foundries: ["TSMC analog CMOS", "X-FAB XH018 / XH035", "UMC"]
+  foundries: ["TSMC analog CMOS", "X-FAB XH018 / XH035", "UMC 55/40 nm eFlash (SIM / banking)"]
   in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
   note: "Simple mixed-signal interface on mature CMOS."
   confidence: high
   sources: ["https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.xfab.com/technology/sensors - X-FAB XH035/XH018 ultra-low-noise sensor CMOS; MEMS pressure/inertial; photodiodes, APD/SPAD; position sensors", "https://us.design-reuse.com/news/43300/umc-40nm-sst-embedded-flash-process.html - UMC press release: 40 nm SST eFlash; 55 nm SST eFlash in production for SIM, banking, MCU, IoT"]
+    note: "\"UMC\" made specific: UMC 55/40 nm SST eFlash used for SIM and banking chips. All remaining offerings supported by the pages listed."
 ecg_afe:
   typical_process: "180-55 nm low-noise mixed-signal CMOS"
   foundry_route: "yes"
-  foundries: ["X-FAB XH018 low-noise CMOS", "TSMC mixed-signal", "Tower 180 nm"]
+  foundries: ["X-FAB XH018 low-noise CMOS", "TSMC mixed-signal", "Tower mixed-signal CMOS"]
   in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
   note: "Biopotential AFEs are foundry CMOS products."
   confidence: high
   sources: ["https://www.xfab.com/technology/sensors", "https://www.xfab.com/technology/high-voltage-cmos-solutions"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://towersemi.com/technology/mixed-signal-cmos/ - Tower mixed-signal/CMOS for analog, RF CMOS, audio and IoT (nodes not listed on page)"]
+    note: "Tower mixed-signal page does not list a 180 nm node; label generalised. All remaining offerings supported by the pages listed."
 ultrasonic_afe:
   typical_process: "0.18-0.35 um HV BCD (transducer drive 10-100 V) + low-noise receive"
   foundry_route: "yes"
@@ -523,14 +845,24 @@ ultrasonic_afe:
   note: "Parking-sensor AFEs are automotive BCD parts."
   confidence: medium
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage-cmos-solutions", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://www.tipranks.com/news/press-releases/globalfoundries-enhances-technology-platforms-to-enable-critical-applications-for-next-generation-electric-and-autonomous-vehicles - GF press release: 130BCDLite Gen2 ATV125 up to 40 V, Auto Grade 1; 40ESF3 AutoPro175 embedded flash", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management - Tower press release: 65 nm BCD to 24 V; 180 nm BCD with DTI up to 125 V"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 v2x_transceiver:
   typical_process: "28-16 nm RF CMOS (802.11p / C-V2X modem + transceiver)"
   foundry_route: "yes"
-  foundries: ["TSMC 28/16 nm / N6RF", "GlobalFoundries 22FDX"]
+  foundries: ["TSMC 16 nm RF / N6RF", "GlobalFoundries 22FDX"]
   in_house: "V2X FEMs (GaAs, BAW, SiP) at both; no V2X modem"
   note: "Process route is standard; modem IP is the barrier."
   confidence: medium
   sources: ["https://pr.tsmc.com/english/news/2831", "https://www.yolegroup.com/industry-news/globalfoundries-22fdx-rf-solution-provides-the-basis-for-next-gen-mmwave-automotive-radar/"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://pr.tsmc.com/english/news/2831 - TSMC N6RF for 5G RF and WiFi 6/6e (successor to 16 nm RF); N5/N4/N3 logic", "https://gf.com/technology-platforms/fdx-fd-soi/ - GF FDX (22FDX) FD-SOI for wireless SoCs, MCUs, radar SoCs; eMRAM/RRAM eNVM options"]
+    note: "TSMC 28 nm RF not shown on TSMC pages; 16 nm RF and N6RF are. All remaining offerings supported by the pages listed."
 wireless_power:
   typical_process: "40-180 nm BCD (Qi Tx/Rx with integrated full bridge, 20-30 V)"
   foundry_route: "yes"
@@ -539,19 +871,34 @@ wireless_power:
   note: "GF lists wireless charging among BCDLite targets."
   confidence: high
   sources: ["https://semiengineering.com/130-bcdlite-and-bcd", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd", "https://ir.towerjazz.com/news-releases/news-release-details/tower-semiconductor-expands-its-leading-edge-power-management"]
+  check:
+    status: confirmed
+    date: 2026-10-19
+    evidence: ["https://semiengineering.com/130-bcdlite-and-bcd - GF 130 BCDLite/BCD 1.5-85 V; BCDLite targeted at DC-DC, AC-DC, PMIC, wireless and quick charging", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/bcd - TSMC BCD power-management processes covering 0.6 um to 22 nm; 0.18 um Gen-2 BCD extended to 100 V; 40 nm BCD Gen-2 5-28 V", "https://towersemi.com/technology/power-management/power-management-65nm/ - Tower 65 nm BCD up to 24 V (PMIC, DC-DC, motor drivers)"]
+    note: "Every named offering is supported by an opened foundry page, foundry press release or trade-press report."
 ultrasound_afe:
   typical_process: "180-65 nm low-noise mixed-signal CMOS (LNA, VGA, ADC per channel)"
   foundry_route: "yes"
-  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018", "Tower 180 nm"]
+  foundries: ["TSMC mixed-signal CMOS", "X-FAB XH018", "Tower mixed-signal CMOS"]
   in_house: "Bulk / mixed-signal CMOS design capability at both companies (cmos_mixed_signal); no in-house analog/BCD fab"
   note: "Receive AFEs are foundry CMOS; TSMC also lists MEMS ultrasound transceivers."
   confidence: medium
   sources: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog", "https://www.tsmc.com/english/dedicatedFoundry/technology/platform_IoT_tech_MEMS"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/analog - TSMC analog process portfolio from >0.5 um to 16/12 nm", "https://www.tsmc.com/english/dedicatedFoundry/technology/specialty/msrf - TSMC MS/RF from 12FFC+/16 nm RF to N6RF+ and 4 nm for WTR, WLAN and cellular RF; 16 nm RF being optimized for mmWave automotive radar", "https://www.xfab.com/technology/high-voltage-cmos-solutions - X-FAB XH018 180 nm sensor/HV CMOS: ultra-low-noise CMOS, 10-45 V devices, bipolar transistors, photodiodes and APD/SPAD, eFlash", "https://towersemi.com/technology/mixed-signal-cmos/ - Tower mixed-signal/CMOS for analog, RF CMOS, audio and IoT (nodes not listed on page)"]
+    note: "Tower mixed-signal page does not list a 180 nm node; label generalised. All remaining offerings supported by the pages listed."
 hv_pulser:
   typical_process: "HV BCD-on-SOI (+/-100-200 V, fast edges), e.g. ST BCD8s-SOI"
   foundry_route: "partial"
-  foundries: ["X-FAB XT018 BCD-on-SOI (up to 375 V)", "X-FAB 1 um / 350 nm HV SOI"]
+  foundries: ["X-FAB XT018 BCD-on-SOI (up to 375 V)", "X-FAB HV SOI (1 um to 180 nm, up to 625 V)"]
   in_house: "none"
   note: "Foundry HV SOI exists, but medical pulsers are mostly on IDM processes; suitability of a specific foundry flow for +/-100 V fast pulsing is not public."
   confidence: low
   sources: ["https://www.xfab.com/xt018", "https://www.xfab.com/technology/high-voltage", "https://www.st.com/en/switches-and-multiplexers/ultrasound-pulser-ics.html"]
+  check:
+    status: corrected
+    date: 2026-10-19
+    evidence: ["https://www.xfab.com/xt018 - X-FAB XT018 180 nm BCD-on-SOI, 10-375 V, AEC-Q100 Grade 0, Zener/Schottky diodes, SONOS flash/EEPROM; CAN FD, haptic, gate-driver and ultrasound Tx/Rx use cases", "https://www.xfab.com/technology/high-voltage - X-FAB HV SOI 1 um to 180 nm up to 625 V; HV CMOS 1 um to 180 nm; galvanic isolation"]
+    note: "X-FAB HV SOI label corrected to 1 um-180 nm, up to 625 V. All remaining offerings supported by the pages listed."

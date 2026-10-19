@@ -95,33 +95,76 @@ def template_groups() -> list[tuple[str, list[tuple[int, dict]]]]:
     return list(out.items())
 
 
-# Qorvo (combined with Skyworks): public catalogue parts read from store.qorvo.com, not datasheet-verified and
-# without Cross List parameters, so an answered requirement leaves them out (unknown is not assumed).
-QORVO_FILE = "research/qorvo_parts.yaml"
-_QORVO_SHOWN = ("Function", "Type", "Topology", "Input Voltage", "Power Supply Input Voltage", "Max Output Current",
-                "Buck Converters", "LDO Regulators", "Frequency Range Max", "Package")  # fmt: skip
+# Catalogue parts (data/catalog/<manufacturer>_parts.yaml, collected from the public product pages): every
+# Skyworks and Qorvo part with its category, package, a few key specs and lifecycle, mapped to a function. They
+# carry no Cross List parameters except the automotive grade, so an answered requirement other than automotive
+# leaves them out (unknown is not assumed). Parts already in Cross List with full parameters win over the
+# catalogue entry; tuners and demods come from the broadcast data.
+CATALOG_DIR = BLOCKS_DIR.parent / "catalog"
+QORVO_FALLBACK = "research/qorvo_parts.yaml"  # the first 82 verified Qorvo parts, until the full catalogue exists
+FUNCTION_ALIAS = {
+    "rf_pa": "power_amplifier", "rf_filter": "filter_saw_baw", "buck": "wide_vin_buck", "rf_vga": "rf_gain_block",
+    "catv_amplifier": "rf_gain_block", "rf_beamformer": "beamformer_ic", "rf_vco": "rf_synthesizer",
+    "rf_power_divider": "rf_passive", "rf_duplexer": "diplexer", "uwb_transceiver": "uwb_soc",
+    "rf_tunable_capacitor": "antenna_tuner", "rf_power_transistor": "power_amplifier", "rf_equalizer": "rf_passive",
+    "rf_modulator": "rf_mixer",
+}  # fmt: skip
+_RISK = re.compile(r"obsolete|last time buy|nrnd|not recommended|discontinued|no new designs", re.I)
+_SPEC_PREF = re.compile(r"config|channel|frequency|isolation|output current|gain|noise figure|insertion|input voltage|"
+                        r"interface|rating|power|converters|regulators", re.I)  # fmt: skip
+
+
+def _norm_mpn(mpn: str) -> str:
+    """SI8641BD-B-IS and SI8641BD-IS are one part (die revision letter dropped)."""
+    return re.sub(r"-[A-Z]-", "-", (mpn or "").upper())
+
+
+def _catalog_files() -> list[Path]:
+    files = sorted(CATALOG_DIR.glob("*_parts.yaml")) if CATALOG_DIR.exists() else []
+    if not any(f.name.startswith("qorvo") for f in files) and (BLOCKS_DIR / QORVO_FALLBACK).exists():
+        files.append(BLOCKS_DIR / QORVO_FALLBACK)
+    return files
 
 
 @lru_cache
-def qorvo_parts() -> dict[str, list[dict]]:
+def catalog_parts() -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
-    for p in (_yaml(QORVO_FILE) or {}).get("parts") or []:
-        specs = p.get("key_specs") or {}
-        text = " ".join([p.get("summary") or "", *map(str, specs.values())])
-        bits = [p.get("summary") or ""] + [f"{k} {specs[k]}" for k in _QORVO_SHOWN if specs.get(k)]
-        values = {"qualification": "automotive" if "AEC-Q" in text else None}
-        status = p.get("status") or ""
-        out.setdefault(p["function"], []).append(
-            {
-                "mpn": p["mpn"],
-                "manufacturer": "Qorvo",
-                "url": p.get("source") or "",
-                "values": values,
-                "detail": " · ".join(b for b in bits[:4] if b) + (f" · {status}" if status != "Standard" else ""),
-                "risk": status != "Standard",
-            }  # fmt: skip
-        )
+    for path in _catalog_files():
+        data = yaml.safe_load(path.read_text()) or {}
+        for p in data.get("parts") or []:
+            fn = FUNCTION_ALIAS.get(p.get("function"), p.get("function"))
+            if not fn:
+                continue
+            mfr = p.get("manufacturer") or ("Qorvo" if "qorvo" in path.name else "Skyworks")
+            specs = p.get("key_specs") or {}
+            text = " ".join([p.get("summary") or p.get("description") or "", *map(str, specs.values())])
+            auto = p.get("automotive")
+            if auto is None and "AEC-Q" in text:
+                auto = True
+            pref = [k for k in specs if _SPEC_PREF.search(k)][:3] or list(specs)[:2]
+            bits = [p.get("package") or "", *[f"{k} {specs[k]}" for k in pref], "automotive" if auto else ""]
+            desc = p.get("summary") or p.get("description") or ""
+            status = str(p.get("status") or "")
+            out.setdefault(fn, []).append(
+                {
+                    "mpn": p["mpn"],
+                    "manufacturer": mfr,
+                    "url": p.get("product_url") or p.get("source") or "",
+                    "values": {"qualification": "automotive" if auto else None},
+                    "detail": " · ".join(
+                        b
+                        for b in [*bits, desc[:200], status if status and status not in ("Active", "Standard") else ""]
+                        if b
+                    ),
+                    "risk": bool(_RISK.search(status)),
+                }  # fmt: skip
+            )
     return out
+
+
+def qorvo_parts() -> dict[str, list[dict]]:
+    """Qorvo catalogue parts by function (kept for callers that only want Qorvo)."""
+    return {k: [c for c in v if c["manufacturer"] == "Qorvo"] for k, v in catalog_parts().items()}
 
 
 def _reference_parts(session: Session, family: str):
@@ -179,7 +222,14 @@ def _candidates(session: Session, key: str) -> list[dict] | None:
             out.append(
                 dict(mpn=d["mpn"], manufacturer="Skyworks", url="/broadcast", values=values, risk=False, detail=detail)
             )
-    out += qorvo_parts().get(key, [])
+    have = {_norm_mpn(c["mpn"]) for c in out}
+    broadcast_fn = isinstance(src, dict) and "broadcast" in src
+    for c in catalog_parts().get(key, []):
+        if broadcast_fn and c["manufacturer"] == "Skyworks":
+            continue
+        if _norm_mpn(c["mpn"]) not in have:
+            have.add(_norm_mpn(c["mpn"]))
+            out.append(c)
     return out
 
 

@@ -83,6 +83,9 @@ functions:
   three_phase_gate_driver: {label: 3-phase gate driver (non-isolated), category: power, companions: [amplifier, wide_vin_buck, mcu], note: Smart BLDC gate driver for 12-100 V buses; often with current-sense amplifiers and a buck}
   half_bridge_driver: {label: Half-bridge gate driver (non-isolated), category: power, companions: [amplifier, mcu]}
   isolated_amplifier: {label: Isolated amplifier / modulator, category: isolation, source: {family: isolated_amplifier}, companions: [isolated_dcdc, adc]}
+  optocoupler: {label: Optocoupler, category: isolation}
+  isolated_smart_switch: {label: Isolated smart (high-side) switch, category: isolation}
+  isolated_digital_input: {label: Isolated digital input (24 V field input), category: isolation, companions: [tvs_esd, mcu]}
   isolated_can: {label: Isolated CAN transceiver, category: networking, companions: [isolated_dcdc, tvs_esd]}
   current_sensor: {label: Isolated current sensor, category: isolation, source: {family: current_sensor}, companions: [adc, mcu]}
   # timing
@@ -125,6 +128,20 @@ functions:
   beamformer_ic: {label: Analog beamformer IC (mmWave), category: rf}
   mmwave_antenna_module: {label: mmWave antenna module, category: rf, source: external, note: Transceiver + RF front end + array from the platform vendor; usually not an open socket}
   rf_transceiver: {label: RF transceiver (RFIC), category: rf, source: external}
+  # from the Skyworks catalogue categories (data/catalog/skyworks_categories.md)
+  rf_gain_block: {label: RF gain block / driver / VGA, category: rf}
+  rf_attenuator: {label: RF attenuator, category: rf}
+  rf_mixer: {label: RF mixer / modulator / demodulator, category: rf}
+  rf_synthesizer: {label: RF PLL / synthesizer / VCO, category: rf}
+  rf_passive: {label: RF passive (capacitor, splitter, multiplexer), category: rf}
+  pin_diode: {label: PIN diode, category: rf}
+  schottky_diode: {label: Schottky / detector / mixer diode, category: rf}
+  varactor_diode: {label: Varactor (tuning) diode, category: rf}
+  rf_limiter: {label: RF limiter, category: rf}
+  rf_phase_shifter: {label: RF phase shifter, category: rf}
+  frequency_multiplier: {label: Frequency multiplier, category: rf}
+  tv_tuner: {label: TV / set-top tuner, category: radio}
+  tv_demodulator: {label: Digital TV / satellite demodulator, category: radio}
   # broadcast radio
   am_fm_tuner:
     label: AM/FM / digital radio tuner
@@ -165,6 +182,14 @@ functions:
   radar_transceiver: {label: Radar transceiver / radar SoC, category: sensors, source: external}
   secure_element: {label: Secure element, category: processing, source: external}
   battery_charger: {label: Battery charger, category: power}
+  battery_monitor: {label: Battery monitor / fuel gauge, category: power}
+  poe_pd: {label: PoE powered-device interface, category: power, companions: [wide_vin_buck]}
+  poe_pse: {label: PoE PSE controller, category: power}
+  wireless_soc: {label: Wireless connectivity SoC (802.15.4 / BLE / UWB), category: networking, companions: [bt_fem, crystal_oscillator]}
+  optical_driver: {label: Optical laser / modulator driver, category: interface}
+  optical_tia: {label: Optical TIA, category: interface}
+  slic: {label: SLIC / ProSLIC voice interface, category: networking}
+  modem_daa: {label: Modem / DAA, category: networking}
   # interface
   voltage_translator: {label: Voltage translator, category: interface}
   io_expander: {label: I/O expander, category: interface}
@@ -184,6 +209,7 @@ functions:
   flash: {label: Flash, category: memory, source: external}
   # audio
   led_driver: {label: LED driver, category: audio, note: Lights and display backlight}
+  wireless_audio_soc: {label: Wireless audio SoC, category: audio}
   audio_amp: {label: Audio amplifier, category: audio}
   audio_codec: {label: Audio codec / DSP, category: audio}
   # sensors (external inputs)

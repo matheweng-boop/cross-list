@@ -38,7 +38,7 @@ def test_pages_counts_and_parts(client):
     assert all("DAB" in p["detail"] and "PD" in p["detail"] for m in narrowed["manufacturers"] for p in m["all"])
     counts = client.post("/api/blocks/counts", json={"req": {"am_fm_tuner": {"dab": True, "pd": True}}}).json()
     assert counts["am_fm_tuner"] == narrowed["total"] and counts["soc"] is None
-    assert client.get("/api/blocks/parts?fn=lna").json()["total"] == 0  # opportunity
+    assert client.get("/api/blocks/parts?fn=reverse_polarity").json()["total"] == 0  # opportunity
     d = client.post("/api/blocks/designs", json={"name": "T", "data": {"groups": [], "links": []}}).json()
     assert client.get(f"/blocks/{d['id']}").status_code == 200
 
@@ -97,3 +97,13 @@ def test_applications_without_vendor_names_and_coverage_uses(client):
     uses = b.function_uses()
     assert any("radio" in a["name"].lower() for a in uses["am_fm_tuner"])
     assert 'data-fn="pmic"' in client.get("/blocks/coverage").text
+
+
+def test_catalogue_parts_fill_functions(client):
+    lna = client.get("/api/blocks/parts?fn=lna").json()
+    mfrs = {m["manufacturer"] for m in lna["manufacturers"]}
+    assert lna["total"] > 20 and "Skyworks" in mfrs
+    # Si86 parts already in Cross List are not listed twice from the catalogue
+    iso = client.get("/api/blocks/parts?fn=digital_isolator").json()
+    names = [p["mpn"].upper() for m in iso["manufacturers"] for p in m["all"]]
+    assert len(names) == len(set(names))

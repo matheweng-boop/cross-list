@@ -116,19 +116,16 @@ async def main():
 
         async def w6():
             await m.goto(B + "/business")
-            await expect(m.locator("#sidebar")).not_to_be_in_viewport()
-            await m.locator(".nav-toggle").click()
-            await expect(m.locator(".nav-toggle")).to_have_attribute("aria-expanded", "true")
-            await expect(m.locator("#sidebar")).to_be_in_viewport()
-            await m.screenshot(path=S + "wf6_drawer.png")
-            await m.keyboard.press("Escape")
-            await expect(m.locator(".nav-toggle")).to_have_attribute("aria-expanded", "false")
+            # navigation is two rows at the top that wrap on a phone: no drawer, no separate scrolling menu
+            await expect(m.locator("nav.main-nav")).to_be_in_viewport()
+            await expect(m.locator("nav.sub-nav a.on")).to_be_in_viewport()
+            await m.screenshot(path=S + "wf6_nav.png")
             w = await m.evaluate("document.documentElement.scrollWidth")
             assert w <= 400, w
             await m.goto(B + "/parts?cat=isolation")
             await m.screenshot(path=S + "wf6_parts.png")
 
-        await step("6 mobile drawer, Escape closes, no horizontal page scroll", w6())
+        await step("6 phone: navigation rows at the top, no horizontal page scroll", w6())
 
         async def w7():
             await pg.goto(B + "/business")

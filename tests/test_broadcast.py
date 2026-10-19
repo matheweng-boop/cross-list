@@ -2,8 +2,30 @@ import re
 
 from app.services import broadcast
 
-TUNER_JOBS = {"off", "amfm_audio", "fm_audio", "am_audio", "fm_pd", "fm_scan", "am_scan", "dab", "fm_dab_scan", "drm"}
-DEMOD_JOBS = {"unused", "hd_audio", "hd_data", "dab_audio", "dab_scanless", "drm_audio", "cdr_audio"}
+TUNER_JOBS = {
+    "off",
+    "amfm_audio",
+    "fm_audio",
+    "am_audio",
+    "fm_pd",
+    "fm_mrc",
+    "fm_scan",
+    "am_scan",
+    "dab",
+    "fm_dab_scan",
+    "drm",
+}
+DEMOD_JOBS = {
+    "unused",
+    "hd_audio",
+    "hd_data",
+    "hd_mrc",
+    "dab_audio",
+    "dab_scanless",
+    "dab_mrc",
+    "drm_audio",
+    "cdr_audio",
+}
 FNS = set(re.findall(r"^\| `(\w+)` \|", (broadcast.DEVICES_DIR.parent / "SCHEMA.md").read_text(), re.M))
 
 
@@ -32,16 +54,33 @@ def test_signal_only_devices_get_unnumbered_pins():
 
 
 def test_use_case_presets_reference_known_parts_and_jobs():
-    mpns = {d["mpn"] for d in broadcast.catalog()}
+    parts = {d["mpn"]: d for d in broadcast.catalog()}
     for uc in broadcast.use_cases():
         ants = {a["id"] for a in uc["antennas"]}
+        assert uc["system"] in {"AM/FM", "HD", "DAB", "DRM"}
         for slot, ic in uc["ics"].items():
-            assert ic["mpn"] is None or ic["mpn"] in mpns, (uc["name"], slot)
+            assert ic["mpn"] is None or ic["mpn"] in parts, (uc["name"], slot)
             for t in ic.get("tuners") or []:
                 assert t["job"] in TUNER_JOBS
-                assert t["feed"].get("antenna") in ants or t["feed"].get("loop") in uc["ics"]
             for c in ic.get("channels") or []:
                 assert c["job"] in DEMOD_JOBS
+        for slot, pins in (uc.get("rf") or {}).items():
+            names = {p["name"] for p in parts[uc["ics"][slot]["mpn"]]["pins"]}
+            for pin, feed in pins.items():
+                assert pin in names, (uc["name"], slot, pin)
+                if feed.startswith("loop:"):
+                    src, out = feed[5:].split(".")
+                    assert out in {p["name"] for p in parts[uc["ics"][src]["mpn"]]["pins"]}
+                else:
+                    assert feed in ants
+
+
+def test_explanations_cover_every_job():
+    ex = broadcast.explanations()
+    for key in TUNER_JOBS:
+        assert f"job:{key}" in ex
+    for key in DEMOD_JOBS:
+        assert f"djob:{key}" in ex
 
 
 def test_pages_and_config_api(client):

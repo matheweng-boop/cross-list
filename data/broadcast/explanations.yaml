@@ -1,0 +1,155 @@
+# Short explanations shown in the broadcast configurator when something is clicked or chosen.
+# Each entry: what it is, then an example or the trade-off. Edit freely.
+# Keys: system:<type>, job:<tuner job>, djob:<demod job>, fn:<pin function>, clock:<mode>, feed:<kind>, plus topics.
+
+"system:AM/FM": >-
+  Analog AM/FM only, no digital radio. One tuner IC, no demodulator. Example: rest-of-world or entry
+  North America head unit. Trade-off: a single tuner is cheapest but has no background station list; a dual
+  tuner keeps the list fresh while you listen.
+"system:HD": >-
+  HD Radio (North America). The tuner plays AM/FM and passes I/Q of the same station to an HD demod, which
+  decodes the digital audio and blends. Example: IC0 dual tuner + IC3 HD demod. Trade-off: each HD channel
+  needs an HD I/Q licence, MRC a further licence.
+"system:DAB": >-
+  DAB/DAB+ (Europe, Australia) next to AM/FM. Usually a primary AM/FM tuner IC plus a companion DAB tuner IC
+  and a DAB demod. Example: 2x Si47962 = four tuners. Trade-off: more tuners allow FM phase diversity and
+  seamless linking at the same time.
+"system:DRM": >-
+  DRM30 (AM bands) / DRM+ (FM band), e.g. India. A DRM-capable tuner passes I/Q to a DRM-licensed demod.
+  Trade-off: with one tuner there is no background scan while listening.
+
+"job:off": >-
+  Tuner not used in this use case.
+"job:amfm_audio": >-
+  The tuner you listen to, on AM or FM. Example: North America IC0 tuner 0; its I/Q also feeds the HD demod.
+"job:fm_audio": >-
+  The tuner you listen to on FM. Example: FM foreground while tuner 1 receives DAB for linking.
+"job:am_audio": >-
+  The tuner you listen to on AM. Example: AM in the foreground while tuner 1 keeps the FM station list up to date.
+"job:fm_pd": >-
+  FM phase diversity: both tuners of one dual-tuner IC receive the same FM station on two antennas and combine
+  them against multipath. Needs two antennas on FMA and FMB. Trade-off: it occupies both tuners, so with only one
+  dual tuner there is nothing left for background scan or seamless linking.
+"job:fm_mrc": >-
+  Second FM branch for HD MRC: the same HD station on a second antenna; the demod combines both I/Q streams.
+  Trade-off: better HD reception at the cost of the background tuner and an extra HD MRC licence.
+"job:fm_scan": >-
+  Background tuner that builds the FM station list (and RDS data) while the other tuner plays. Example: tuner 1
+  of IC0 in North America. Trade-off: without it the list is only updated by a foreground seek.
+"job:am_scan": >-
+  Background tuner that builds the AM station list while another tuner plays.
+"job:dab": >-
+  Tuner on Band III that passes DAB I/Q to the demod. Example: IC1 tuner 0 in a four-tuner DAB system.
+"job:fm_dab_scan": >-
+  Background tuner that alternates between FM and DAB to keep both station / service lists current.
+"job:drm": >-
+  Tuner that passes DRM30 (AM) or DRM+ (FM) I/Q to a DRM demod.
+
+"djob:unused": >-
+  Demod channel not used. Unused channels of a larger demod are spare licences you pay for.
+"djob:hd_audio": >-
+  Decodes the HD audio of the station you listen to and blends from analog to digital. Example: DMOD0 fed by
+  IC0 tuner 0.
+"djob:hd_data": >-
+  Decodes HD data in the background (station list, artist / title) from the background tuner. Example: DMOD1
+  fed by IC0 tuner 1.
+"djob:hd_mrc": >-
+  Second branch of HD MRC: combines with the main HD channel from the other tuner. Needs a main HD channel and an
+  HD MRC licence; the two branches must come from different tuners and antennas.
+"djob:dab_audio": >-
+  Decodes the DAB/DAB+ service you listen to.
+"djob:dab_scanless": >-
+  Keeps the DAB service list current without a foreground scan, so switching services is instant.
+"djob:dab_mrc": >-
+  Second branch of DAB MRC: combines Band III from two antennas (two tuners) for better DAB reception.
+"djob:drm_audio": >-
+  Decodes the DRM service you listen to.
+"djob:cdr_audio": >-
+  Decodes China Digital Radio (CDR).
+
+"fn:power": >-
+  Supply pin. Example: VA 3.3 V analog, VD 1.8 V digital, VIO 1.8 or 3.3 V I/O (as the data short gives it).
+  Clicking adds the rail; rails are shared by every pin of the same voltage.
+"fn:ground": >-
+  Ground. Usually all ground pins and the exposed pad go to the ground plane.
+"fn:bypass": >-
+  Decoupling / reference pin that needs a capacitor close to the pin. Example (application guidance): ABYP2 with
+  1 uF + 2200 pF + 18 pF.
+"fn:xtal": >-
+  Crystal pins. Example: 36.864 MHz on IC0 as the system reference. On the other ICs XTALI is used as the clock
+  input from IC0 CLKO.
+"fn:refclk": >-
+  Reference clock input. Feed it from IC0 CLKO (star) rather than a separate oscillator.
+"fn:clock_out": >-
+  Clock output (CLKO) that distributes the reference to the other ICs. Keep its load under 50 pF in total:
+  each input adds about 4.5 to 5 pF, the rest is trace.
+"fn:rf_in": >-
+  Antenna input. Example: FMA from antenna 1 and FMB from antenna 2 for phase diversity; B3A/B3B for Band III.
+  Trade-off: a direct antenna on every IC needs splitters; the loop-through outputs of the first IC avoid that.
+"fn:rf_aux": >-
+  RF helper pin such as a loop-through (buffer) output. Example: LTA / LTB of IC0 feed B3A / B3B of IC1.
+"fn:iq_out": >-
+  Digital I/Q (ZIF) to the demod: ZIFI/ZIFQ data per tuner plus shared ZIFCLK / ZIFFS. Keep CLK / FS load under
+  50 pF, so short traces when one tuner feeds several demod ports.
+"fn:iq_in": >-
+  Demod I/Q input port; one per tuner I/Q pair.
+"fn:i2s_out": >-
+  Digital audio out (I2S / TDM, 32 to 192 kHz). Example: tuner FM audio into the demod for blending / linking, or
+  to the amplifier when there is no demod.
+"fn:i2s_in": >-
+  Digital audio in. Example: analog FM audio from the tuner into the demod for seamless blending.
+"fn:audio_out": >-
+  Analog audio out to an amplifier.
+"fn:audio_in": >-
+  Analog audio input.
+"fn:host": >-
+  Control interface (SPI or I2C) from the host MCU.
+"fn:flash": >-
+  SPI master to the firmware flash. The required size is not in the data shorts; enter it from the firmware
+  release.
+"fn:memory": >-
+  External memory interface (e.g. I2C EEPROM on the demod).
+"fn:reset": >-
+  Reset input from the host.
+"fn:interrupt": >-
+  Interrupt output to the host.
+"fn:gpio": >-
+  General purpose I/O.
+"fn:mode": >-
+  Strap pin that selects the boot / interface mode at reset.
+"fn:debug": >-
+  Debug or test pin; usually left open or brought to a test point.
+"fn:nc": >-
+  No connect.
+"fn:other": >-
+  Function not described in the data short; check the full datasheet.
+
+"clock:star": >-
+  This IC takes the reference from IC0 CLKO directly. Recommended: every IC sees the same clock with the best
+  phase noise. Trade-off: CLKO load grows with each IC (about 5 pF per input + trace, 50 pF max).
+"clock:own": >-
+  This IC has its own crystal. Trade-off: no CLKO loading, but the ICs are no longer locked to one reference.
+"clock:chain": >-
+  This IC takes the clock from another IC's CLKO (daisy chain). Avoid: each hop degrades phase noise.
+
+"feed:antenna": >-
+  Antenna straight into this pin. One antenna normally enters one IC; a second IC on the same antenna needs a
+  splitter or the loop-through.
+"feed:loop": >-
+  Fed from another IC's loop-through (buffer) output, e.g. IC0 LTA -> IC1 B3A. No splitter, no extra antenna
+  cable; the first IC must be powered for the second to receive.
+
+antennas: >-
+  One or two antennas is typical; all bands come in on the same antenna. Two antennas allow FM phase diversity and
+  MRC; with one antenna there is no phase diversity.
+linking: >-
+  Seamless linking switches between FM and DAB of the same programme without a gap. It needs a free DAB tuner while
+  FM plays. Trade-off: with one dual tuner you must step out of phase diversity to link.
+audio: >-
+  Audio hub ports: I2S or TDM, 32 to 192 kHz. Bit clock = sample rate x bits x slots. Example: 48 kHz x 32 bit x 2
+  slots = 3.072 MHz.
+memory: >-
+  Firmware flash size per IC. Not in the data shorts; enter it from the firmware release notes.
+crystal: >-
+  One crystal on IC0 is the system reference (application guidance: 36.864 MHz); CLKO distributes it to all other
+  tuners and demods.

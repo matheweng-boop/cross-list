@@ -48,7 +48,13 @@ def _editor(request: Request, config: BroadcastConfig | None):
     return templates.TemplateResponse(
         request,
         "broadcast/editor.html",
-        {"config": config, "catalog": broadcast.catalog(), "presets": broadcast.use_cases()},
+        {
+            "config": config,
+            "catalog": broadcast.catalog(),
+            "presets": broadcast.use_cases(),
+            "guidance": broadcast.guidance(),
+            "explanations": broadcast.explanations(),
+        },
     )
 
 

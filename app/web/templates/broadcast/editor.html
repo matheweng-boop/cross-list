@@ -2,57 +2,55 @@
 {% block title %}{{ config.name if config else 'New configuration' }} – Broadcast – Cross List{% endblock %}
 {% block content %}
 <div id="bc-editor" class="bc-editor">
-  <div class="bc-toolbar">
+  <div class="bc-bar">
     <input id="bc-name" type="text" placeholder="Configuration name" aria-label="Configuration name">
-    <button id="bc-save" type="button">Save</button>
+    <button id="bc-save" type="button" class="small-btn">Save</button>
     <span id="bc-status" class="muted small" role="status"></span>
   </div>
-  <div class="bc-toolbar">
-    <select id="bc-add" aria-label="Add a device">
-      <option value="">+ Add device…</option>
+  <div class="bc-step"><span class="bc-step-n">1</span><span class="bc-step-label">System</span>
+    <span class="bc-chips" role="group" aria-label="System type">
+      {% for key, label in [('AM/FM', 'AM/FM only'), ('HD', 'HD Radio'), ('DAB', 'DAB / DAB+'), ('DRM', 'DRM')] %}<button type="button" class="bc-chip" data-system="{{ key }}" data-explain="system:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </span></div>
+  <div class="bc-step"><span class="bc-step-n">2</span><span class="bc-step-label">Start from</span>
+    <span id="bc-preset-cards" class="bc-chips"><span class="muted small">pick a system first</span></span></div>
+  <div class="bc-work">
+    <div id="bc-usecase" class="bc-usecase"></div>
+    <aside id="bc-explain" class="bc-explain" aria-live="polite"><b>Explanation</b><p class="small muted">Point at or choose anything to see what it means, with an example or the trade-off.</p></aside>
+  </div>
+
+  <div class="bc-tools">
+    <select id="bc-add" aria-label="Add a device" class="small-sel">
+      <option value="">+ Device…</option>
       {% for role, label in [('tuner', 'Tuners (I/Q to a coprocessor)'), ('receiver', 'Single-chip receivers'), ('coprocessor', 'Coprocessors (digital demod)')] %}
       <optgroup label="{{ label }}">
         {% for d in catalog if d.role == role %}<option value="{{ d.mpn }}">{{ d.mpn }} – {{ (d.analog + d.digital_decode)|join(' ') }}{% if d.digital_iq %} · I/Q: {{ d.digital_iq|join(' ') }}{% endif %}{% if d.channels %} · {{ d.channels }} ch{% endif %}{% if not d.numbered %} · no pinout{% endif %}</option>{% endfor %}
       </optgroup>
       {% endfor %}
     </select>
-    <button id="bc-auto" type="button" class="secondary">Fill in surroundings</button>
-    <label class="bc-check"><input id="bc-compact" type="checkbox"> Compact (group GND / NC)</label>
-    <span class="bc-zoom"><button id="bc-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bc-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button></span>
+    <button id="bc-auto" type="button" class="secondary small-btn" title="Add supplies, ground, crystal, host, flash and audio where missing">Fill in</button>
+    <label class="bc-check"><input id="bc-compact" type="checkbox"> Group GND/NC</label>
+    <button id="bc-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bc-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button>
+    <span class="bc-tools-right">
+      <button id="bc-svg-dl" type="button" class="outline small-btn">SVG</button>
+      <button id="bc-json-dl" type="button" class="outline secondary small-btn">JSON</button>
+      <label class="outline secondary bc-upload small-btn" role="button">Load<input id="bc-json-ul" type="file" accept="application/json" hidden></label>
+      <button id="bc-clear" type="button" class="outline secondary small-btn">Clear</button>
+    </span>
   </div>
-
-  <section class="bc-usecase-wrap" aria-label="Use case">
-    <div class="bc-toolbar">
-      <select id="bc-preset" aria-label="Start from a use case">
-        <option value="">Start from a use case…</option>
-        {% for p in presets %}<option value="{{ loop.index0 }}">{{ p.name }}{% if p.region %} ({{ p.region }}){% endif %}</option>{% endfor %}
-      </select>
-    </div>
-    <div id="bc-usecase" class="bc-usecase"></div>
-  </section>
-
+  <div class="bc-canvas"><svg id="bc-svg" role="application" aria-label="Block diagram"></svg></div>
+  <p class="small muted">Click a pin to add what belongs on it, a device name to replace or remove it. Pin data from the Skyworks data shorts;
+    dashed blue parts are application guidance. Check values against the full datasheet.</p>
+  <div id="bc-menu" class="bc-menu" hidden></div>
+  <section id="bc-summary" class="bc-summary"></section>
   <details id="bc-start" class="bc-start">
-    <summary>Or: suggest devices for the standards you need</summary>
+    <summary>Suggest devices for a list of standards</summary>
     <fieldset class="bc-stds">
       {% for s in ['FM', 'AM', 'LW', 'SW', 'WB', 'RDS', 'HD', 'DAB', 'DRM', 'CDR'] %}<label><input type="checkbox" name="std" value="{{ s }}"{{ ' checked' if s in ('FM', 'AM') }}> {{ s }}</label>{% endfor %}
     </fieldset>
-    <label>Receive paths (antenna diversity / background tuner)
-      <select id="bc-paths">{% for n in (1, 2, 3, 4) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select></label>
-    <button id="bc-suggest" type="button" class="outline">Suggest devices</button>
+    <label>Receive paths <select id="bc-paths">{% for n in (1, 2, 3, 4) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select></label>
+    <button id="bc-suggest" type="button" class="outline small-btn">Suggest devices</button>
     <ul id="bc-suggestions" class="bc-suggestions"></ul>
   </details>
-
-  <p class="small muted">Click any pin to add what belongs on it; click a device name to replace or remove it.
-    Supplies, ground and host lines are shown as labels at the pin. Pin data from the Skyworks data shorts; check values against the full datasheet.</p>
-  <div class="bc-canvas"><svg id="bc-svg" role="application" aria-label="Block diagram"></svg></div>
-  <div id="bc-menu" class="bc-menu" hidden></div>
-  <section id="bc-summary" class="bc-summary"></section>
-  <p class="downloads">
-    <button id="bc-svg-dl" type="button" class="outline">Download SVG</button>
-    <button id="bc-json-dl" type="button" class="outline secondary">Download JSON</button>
-    <label class="outline secondary bc-upload" role="button">Load JSON<input id="bc-json-ul" type="file" accept="application/json" hidden></label>
-    <button id="bc-clear" type="button" class="outline secondary">Clear</button>
-  </p>
 </div>
 <style id="bc-svg-style">
 #bc-svg { background: #fbfaf7; font-family: system-ui, sans-serif; }
@@ -85,11 +83,14 @@
 #bc-svg .blk rect { fill: #ffffff; stroke: #8a929c; stroke-width: 1.1; }
 #bc-svg .k-supply rect { fill: #fdf0ea; stroke: #eb6834; } #bc-svg .k-antenna rect { fill: #f3ecfb; stroke: #8a4fd0; }
 #bc-svg .k-speaker rect { fill: #e8f7f0; stroke: #1baf7a; } #bc-svg .k-crystal rect, #bc-svg .k-osc rect { fill: #fdf5e3; stroke: #c98500; }
+#bc-svg .k-guide rect { fill: #f1f6ff; stroke: #2a78d6; stroke-dasharray: 5 2; } #bc-svg .w-guide { stroke: #2a78d6; stroke-dasharray: 5 2; }
 #bc-svg .k-host rect { fill: #e9eef5; stroke: #2a78d6; } #bc-svg .k-note rect { fill: #fffbe6; stroke-dasharray: 3 3; }
 #bc-svg .blk-label { font-size: 11px; font-weight: 600; fill: #1d2228; }
 #bc-svg .blk-detail { font-size: 9.5px; fill: #5b6470; }
 #bc-svg .empty { font-size: 14px; fill: #7a828c; }
 </style>
+<script type="application/json" id="bc-explanations">{{ explanations|tojson }}</script>
+<script type="application/json" id="bc-guidance">{{ guidance|tojson }}</script>
 <script type="application/json" id="bc-presets">{{ presets|tojson }}</script>
 <script type="application/json" id="bc-catalog">{{ catalog|tojson }}</script>
 <script type="application/json" id="bc-config">{{ {'id': config.id if config else None, 'name': config.name if config else '', 'data': config.data if config else {}}|tojson }}</script>

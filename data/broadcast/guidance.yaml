@@ -1,0 +1,59 @@
+# Application guidance for the broadcast configurator. Unlike data/broadcast/devices/, this is
+# not from the Skyworks data briefs: it is the user's application knowledge (2026-10-19).
+# Values marked "to confirm" were unclear and must be checked before use.
+source: "Application guidance (user, 2026-10-19), not from the data briefs"
+
+clock:
+  crystal: "36.864 MHz"          # on IC0, the system reference for all tuners and demods
+  master: IC0
+  distribution: star             # CLKO of IC0 to every other IC; daisy-chaining CLKO degrades phase noise
+  clko_max_load_pf: 50           # total capacitive load on CLKO, traces included
+  input_pf: [4.5, 5.0]           # clock input capacitance per pin of the tuner / demod families
+
+zif:
+  clk_fs_max_load_pf: 50         # ZIFCLK / ZIFFS maximum load: keep traces short
+  input_pf: [4.5, 5.0]
+  note: >-
+    Each tuner drives an I/Q pair (ZIFI/ZIFQ) with frame sync ZIFFS and clock ZIFCLK as master.
+    Tuner 0 I/Q carries the main HD channel, tuner 1 I/Q the background scan or alternate tuner.
+    With several I/Q connections into the demod, share ZIFCLK / ZIFFS.
+
+i2s:
+  sample_rates_khz: [32, 44.1, 48, 96, 192]
+  formats: [I2S, TDM]
+  note: The audio hub ports support several I2S / TDM configurations; set the bit clock for the sample rate.
+
+licenses:
+  - {when: hd_channel, text: "one HD I/Q software licence per HD channel"}
+  - {when: hd_mrc, text: "one HD MRC software licence"}
+
+antennas:
+  - A one- or two-antenna system is typical; all bands then come in on the same antenna.
+  - Two antennas allow FM phase diversity; with a single antenna there is no phase diversity.
+  - The second tuner IC is fed through the loop-through outputs of the IC the antenna enters (IC0 to IC1 or the other way).
+  - IC0 is the primary AM/FM tuner (phase diversity, FM HD MRC); the companion IC is the DAB tuner for the regional standard.
+
+# Extra parts on specific pins of the Si479xx tuners.
+applies_to: "^Si479"
+pins:
+  AMI:
+    - kind: filter
+      label: FM intrusion filter
+      detail: "shielded inductors, Q >= 25 at 1 MHz, low DCR, Isat ~1 A (to confirm)"
+      note: >-
+        Close to the AM/FM front end. Keeps large FM blockers out of the AM path (intermodulation, desensitisation)
+        while minimising loss in the 30 MHz AM/SW band.
+    - kind: esd
+      label: ESD protection
+      detail: "diode 8 kV contact / 15 kV air; 2.2 nF + resistor (value to confirm)"
+      note: The 2.2 nF capacitor and resistor are optimised for ESD immunity with a small sensitivity cost.
+    - kind: filter
+      label: L10 + 18 pF
+      detail: "L10: DC path to ground; 18 pF resonates with it"
+      note: The capacitor resonates with L10 to minimise loading on the AM path.
+  AMVAG:
+    - {kind: cap, label: Capacitor, detail: "1 uF (to confirm: 1 or 0.1 uF)"}
+  ABYP2:
+    - {kind: cap, label: Capacitors, detail: "1 uF + 2200 pF + 18 pF"}
+  VA2:
+    - {kind: cap, label: Capacitors, detail: "1 uF + 2200 pF + 18 pF"}

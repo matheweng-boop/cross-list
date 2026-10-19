@@ -80,6 +80,21 @@ def use_cases() -> list[dict]:
     return yaml.safe_load(path.read_text()) if path.exists() else []
 
 
+@lru_cache
+def guidance() -> dict:
+    """Application guidance from the user (data/broadcast/guidance.yaml), kept apart from the
+    data-brief facts: clock tree, ZIF / CLKO loading, licences, extra parts on named pins."""
+    path = DEVICES_DIR.parent / "guidance.yaml"
+    return yaml.safe_load(path.read_text()) if path.exists() else {}
+
+
+@lru_cache
+def explanations() -> dict:
+    """Short explanations with an example or trade-off, shown in the editor (data/broadcast/explanations.yaml)."""
+    path = DEVICES_DIR.parent / "explanations.yaml"
+    return yaml.safe_load(path.read_text()) if path.exists() else {}
+
+
 def standards_of(device: dict) -> list[str]:
     have = set(device["analog"]) | set(device["digital_decode"]) | set(device["digital_iq"])
     return [s for s in STANDARDS if s in have]

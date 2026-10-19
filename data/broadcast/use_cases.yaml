@@ -2,21 +2,25 @@
 #
 # Slots IC0..IC2 are tuner ICs (mpn: null = not populated), IC3 is the demodulator.
 # Tuner jobs:  off, fm_audio, am_audio, amfm_audio, fm_pd (FM phase diversity, both tuners of one IC),
-#              fm_scan, am_scan, dab, fm_dab_scan, drm
-# Feeds:       {antenna: ANT1} or {loop: IC0} (loop-through from the buffer output of another IC)
-# Demod jobs:  unused, hd_audio, hd_data, dab_audio, dab_scanless, drm_audio, cdr_audio
+#              fm_mrc (second FM branch for HD MRC), fm_scan, am_scan, dab, fm_dab_scan, drm
+# Demod jobs:  unused, hd_audio, hd_data, hd_mrc, dab_audio, dab_scanless, dab_mrc, drm_audio, cdr_audio
+# system:      AM/FM, HD, DAB or DRM (the first choice in the editor)
 # Sources:     "IC0.T0" = tuner 0 of IC0
-- name: North America HD
+# rf:          per IC, RF input pin -> antenna id, or "loop:IC0.LTA" (loop-through output of another IC)
+# clock:       crystal on the master IC; every other IC gets "star" (CLKO of the master), "own" (own crystal)
+#              or "chain:ICx" (CLKO of ICx, a daisy chain)
+- name: North America HD, one antenna
+  system: HD
   region: North America
   linking: false
   antennas:
     - {id: ANT1, label: AM/FM, bands: [AM, FM]}
+  rf:
+    IC0: {AMI: ANT1, FMA: ANT1, FMB: ANT1}
   ics:
     IC0:
       mpn: Si47961
-      tuners:
-        - {job: amfm_audio, feed: {antenna: ANT1}}
-        - {job: fm_scan, feed: {antenna: ANT1}}
+      tuners: [{job: amfm_audio}, {job: fm_scan}]
     IC1: {mpn: null}
     IC2: {mpn: null}
     IC3:
@@ -30,81 +34,137 @@
     IC3 decodes AM/FM HD audio on DMOD0 and FM HD data / station list on DMOD1; DMOD2 is unused.
     IC1 and IC2 are not populated (lower tuner variant).
 
-- name: North America without HD / rest of world, single tuner
-  region: Rest of world
+- name: North America HD, two antennas (FM HD MRC)
+  system: HD
+  region: North America
   linking: false
   antennas:
     - {id: ANT1, label: AM/FM, bands: [AM, FM]}
-  ics:
-    IC0:
-      mpn: Si47951
-      tuners:
-        - {job: amfm_audio, feed: {antenna: ANT1}}
-    IC1: {mpn: null}
-    IC2: {mpn: null}
-    IC3: {mpn: null}
-  notes: >-
-    Listening mode AM or FM on IC0. With a single tuner there is no background scan.
-
-- name: Rest of world, dual tuner (AM foreground, FM background)
-  region: Rest of world
-  linking: false
-  antennas:
-    - {id: ANT1, label: AM/FM, bands: [AM, FM]}
+    - {id: ANT2, label: FM, bands: [FM]}
+  rf:
+    IC0: {AMI: ANT1, FMA: ANT1, FMB: ANT2}
   ics:
     IC0:
       mpn: Si47961
-      tuners:
-        - {job: am_audio, feed: {antenna: ANT1}}
-        - {job: fm_scan, feed: {antenna: ANT1}}
+      tuners: [{job: amfm_audio}, {job: fm_mrc}]
+    IC1: {mpn: null}
+    IC2: {mpn: null}
+    IC3:
+      mpn: Si46931A1GE1AM
+      channels:
+        - {job: hd_audio, source: IC0.T0}
+        - {job: hd_mrc, source: IC0.T1}
+        - {job: unused}
+  notes: >-
+    Two antennas on IC0 allow FM HD MRC: tuner 0 and tuner 1 feed the same HD channel to DMOD0 and DMOD1.
+    Licences: two HD I/Q channels plus one HD MRC licence.
+
+- name: North America without HD / rest of world, single tuner
+  system: AM/FM
+  region: Rest of world
+  linking: false
+  antennas:
+    - {id: ANT1, label: AM/FM, bands: [AM, FM]}
+  rf:
+    IC0: {AMI: ANT1, FMB: ANT1}
+  ics:
+    IC0:
+      mpn: Si47951
+      tuners: [{job: amfm_audio}]
+    IC1: {mpn: null}
+    IC2: {mpn: null}
+    IC3: {mpn: null}
+  notes: Listening mode AM or FM on IC0. With a single tuner there is no background scan.
+
+- name: Rest of world, dual tuner (AM foreground, FM background)
+  system: AM/FM
+  region: Rest of world
+  linking: false
+  antennas:
+    - {id: ANT1, label: AM/FM, bands: [AM, FM]}
+  rf:
+    IC0: {AMI: ANT1, FMA: ANT1, FMB: ANT1}
+  ics:
+    IC0:
+      mpn: Si47961
+      tuners: [{job: am_audio}, {job: fm_scan}]
     IC1: {mpn: null}
     IC2: {mpn: null}
     IC3: {mpn: null}
   notes: >-
     AM in the foreground on tuner 0 while tuner 1 keeps the FM station list up to date. With FM in the
-    foreground, tuner 1 does the FM background scan instead.
+    foreground, tuner 1 does the FM background scan instead. One antenna: no phase diversity.
 
-- name: DAB, four tuners with FM phase diversity
+- name: Europe DAB, two antennas, 2x Si47962 (typical)
+  system: DAB
   region: Europe
   linking: true
   antennas:
-    - {id: ANT1, label: FM 1, bands: [FM]}
-    - {id: ANT2, label: FM 2, bands: [FM]}
-    - {id: ANT3, label: DAB Band III, bands: [DAB]}
+    - {id: ANT1, label: AM/FM/DAB, bands: [AM, FM, DAB]}
+    - {id: ANT2, label: FM/DAB, bands: [FM, DAB]}
+  rf:
+    IC0: {AMI: ANT1, FMA: ANT1, B3A/WXI: ANT1, FMB: ANT2, B3B: ANT2}
+    IC1: {B3A/WXI: "loop:IC0.LTA", B3B: "loop:IC0.LTB"}
   ics:
     IC0:
       mpn: Si47962
-      tuners:
-        - {job: fm_pd, feed: {antenna: ANT1}}
-        - {job: fm_pd, feed: {antenna: ANT2}}
+      tuners: [{job: fm_pd}, {job: fm_pd}]
     IC1:
       mpn: Si47962
-      tuners:
-        - {job: dab, feed: {antenna: ANT3}}
-        - {job: fm_dab_scan, feed: {loop: IC0}}
+      tuners: [{job: dab}, {job: dab}]
     IC2: {mpn: null}
     IC3:
       mpn: Si46922A1GE1AM
       channels:
         - {job: dab_audio, source: IC1.T0}
-        - {job: dab_scanless, source: IC1.T1}
+        - {job: dab_mrc, source: IC1.T1}
   notes: >-
-    2x Si47962 = four tuners. IC0 tuners 0 and 1 play FM with phase diversity; IC1 tuner 0 receives DAB,
-    tuner 1 does the FM / DAB background scan. The demod plays DAB audio or runs DAB scanless.
-    Seamless linking FM <-> DAB uses IC1, so phase diversity can keep running.
+    Every band comes in on the two antennas at IC0. IC0 runs FM phase diversity (FMA / FMB on different
+    antennas); IC1 gets Band III through the loop-through outputs LTA / LTB of IC0 and runs DAB with MRC.
+    Seamless linking FM <-> DAB uses IC1, so phase diversity keeps running.
 
-- name: DAB, one dual tuner (linking vs phase diversity)
+- name: Europe DAB, four antennas, 2x Si47962
+  system: DAB
   region: Europe
   linking: true
   antennas:
     - {id: ANT1, label: FM, bands: [FM]}
-    - {id: ANT2, label: DAB Band III, bands: [DAB]}
+    - {id: ANT2, label: AM/FM, bands: [AM, FM]}
+    - {id: ANT3, label: Band III A, bands: [DAB]}
+    - {id: ANT4, label: Band III B, bands: [DAB]}
+  rf:
+    IC0: {FMA: ANT1, FMB: ANT2, AMI: ANT2, B3A/WXI: ANT3, B3B: ANT4}
+    IC1: {B3A/WXI: "loop:IC0.LTA", B3B: "loop:IC0.LTB"}
   ics:
     IC0:
       mpn: Si47962
-      tuners:
-        - {job: fm_audio, feed: {antenna: ANT1}}
-        - {job: dab, feed: {antenna: ANT2}}
+      tuners: [{job: fm_pd}, {job: fm_pd}]
+    IC1:
+      mpn: Si47962
+      tuners: [{job: dab}, {job: dab}]
+    IC2: {mpn: null}
+    IC3:
+      mpn: Si46922A1GE1AM
+      channels:
+        - {job: dab_audio, source: IC1.T0}
+        - {job: dab_mrc, source: IC1.T1}
+  notes: >-
+    FM antenna on FMA, AM/FM antenna on FMB and AMI, two Band III antennas on B3A / B3B, looped through
+    from IC0 to IC1 (LTA / LTB). Four antennas give nothing over the two-antenna set-up for FM phase
+    diversity and DAB MRC unless the Band III antennas are better placed than the multiband ones.
+
+- name: DAB, one dual tuner, one antenna (linking vs phase diversity)
+  system: DAB
+  region: Europe
+  linking: true
+  antennas:
+    - {id: ANT1, label: AM/FM/DAB, bands: [AM, FM, DAB]}
+  rf:
+    IC0: {AMI: ANT1, FMA: ANT1, B3B: ANT1}
+  ics:
+    IC0:
+      mpn: Si47962
+      tuners: [{job: fm_audio}, {job: dab}]
     IC1: {mpn: null}
     IC2: {mpn: null}
     IC3:
@@ -113,5 +173,28 @@
         - {job: dab_audio, source: IC0.T1}
         - {job: unused}
   notes: >-
-    With one dual tuner, seamless linking needs tuner 1 for DAB while tuner 0 plays FM. Switching tuner 0
-    and 1 to FM phase diversity leaves no tuner for linking: step out of phase diversity first.
+    With one dual tuner, seamless linking needs tuner 1 for DAB while tuner 0 plays FM. Phase diversity is
+    not possible here: it needs both tuners and a second antenna.
+
+- name: DRM, single tuner
+  system: DRM
+  region: India / DRM regions
+  linking: false
+  antennas:
+    - {id: ANT1, label: AM/FM, bands: [AM, FM]}
+  rf:
+    IC0: {AMI: ANT1, FMB: ANT1}
+  ics:
+    IC0:
+      mpn: Si47957
+      tuners: [{job: drm}]
+    IC1: {mpn: null}
+    IC2: {mpn: null}
+    IC3:
+      mpn: Si46924A1GE1AM
+      channels:
+        - {job: drm_audio, source: IC0.T0}
+        - {job: unused}
+  notes: >-
+    Si47957 tunes AM (DRM30) or FM (DRM+) and passes I/Q to a DRM-licensed demod. One tuner: no background
+    scan while listening.

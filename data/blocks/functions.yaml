@@ -107,6 +107,24 @@ functions:
   lna: {label: LNA, category: rf, companions: [antenna_switch]}
   rf_pa_bias: {label: RF PA bias controller, category: rf}
   rf_frontend: {label: RF front-end module, category: rf}
+  # RF sockets from the MediaTek / Qualcomm / NXP platform research (data/blocks/research/rf_platforms.md)
+  power_amplifier: {label: RF power amplifier, category: rf, companions: [rf_pa_bias, circulator_isolator, filter_saw_baw], note: Discrete / infrastructure PA (massive MIMO, small cell)}
+  pa_module: {label: PA module / PAMiD, category: rf, companions: [antenna_tuner, diversity_rx_module, pmic], note: PA + switch + filter for the cellular TX path}
+  rf_predriver: {label: RF pre-driver amplifier, category: rf, companions: [power_amplifier]}
+  diversity_rx_module: {label: Diversity / RX front-end module, category: rf, companions: [antenna_switch, filter_saw_baw], note: LNA + switch + filter}
+  wifi_fem: {label: Wi-Fi front-end module, category: rf, companions: [diplexer, antenna_switch], note: PA + LNA + switch per chain, 2.4 / 5 / 6 GHz}
+  bt_fem: {label: Bluetooth / 802.15.4 front end, category: rf, note: 2.4 GHz PA / LNA range extension}
+  uwb_fem: {label: UWB front end, category: rf, companions: [rf_switch], note: Switch / LNA / filter for angle-of-arrival antennas}
+  v2x_fem: {label: V2X 5.9 GHz front end, category: rf, note: DSRC / C-V2X front end or antenna compensator}
+  gnss_lna: {label: GNSS LNA / front end, category: rf, companions: [filter_saw_baw], note: L1 / L5}
+  active_antenna_amp: {label: Active antenna amplifier (AM/FM), category: radio, companions: [am_fm_tuner], note: In-antenna AM/FM amplifier}
+  antenna_tuner: {label: Antenna aperture / impedance tuner, category: rf}
+  filter_saw_baw: {label: RF filter (SAW / BAW / LTCC), category: rf}
+  diplexer: {label: Diplexer / multiplexer, category: rf}
+  circulator_isolator: {label: Circulator / isolator, category: rf}
+  beamformer_ic: {label: Analog beamformer IC (mmWave), category: rf}
+  mmwave_antenna_module: {label: mmWave antenna module, category: rf, source: external, note: Transceiver + RF front end + array from the platform vendor; usually not an open socket}
+  rf_transceiver: {label: RF transceiver (RFIC), category: rf, source: external}
   # broadcast radio
   am_fm_tuner:
     label: AM/FM / digital radio tuner
@@ -138,6 +156,15 @@ functions:
   temperature_sensor: {label: Temperature sensor, category: sensing, note: e.g. power-module NTC / diode sensing across the isolation barrier}
   adc: {label: ADC, category: sensing}
   motor_controller: {label: Motor controller SoC (MCU + gate drivers + power), category: processing, companions: [can_transceiver, tvs_esd, current_sensor], note: e.g. Qorvo PAC52xx / PAC55xx; up to 160 V or 600 V gate drive}
+  modem: {label: Cellular modem (4G / 5G / NTN), category: processing, source: external}
+  wifi_soc: {label: Wi-Fi / Bluetooth combo SoC, category: networking, source: external, companions: [wifi_fem, bt_fem, crystal_oscillator]}
+  ble_soc: {label: Bluetooth LE / 802.15.4 SoC, category: networking, source: external, companions: [bt_fem, crystal_oscillator]}
+  uwb_soc: {label: UWB transceiver IC, category: networking, source: external, companions: [uwb_fem, rf_switch]}
+  v2x_transceiver: {label: V2X modem / transceiver, category: networking, source: external, companions: [v2x_fem]}
+  nfc_frontend: {label: NFC controller / front end, category: interface, source: external}
+  radar_transceiver: {label: Radar transceiver / radar SoC, category: sensors, source: external}
+  secure_element: {label: Secure element, category: processing, source: external}
+  battery_charger: {label: Battery charger, category: power}
   # interface
   voltage_translator: {label: Voltage translator, category: interface}
   io_expander: {label: I/O expander, category: interface}

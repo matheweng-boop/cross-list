@@ -22,7 +22,9 @@ TEMPLATES = ROOT / "data/blocks/templates.yaml"
 def convert(app: dict, docs: dict, vendor: str, category: str) -> dict:
     groups, ids = [], set()
     for g in app["groups"]:
-        fns = [h.split(" (")[0] for h in (g.get("fn_hint") or [])]
+        sock = g.get("socket_fn") or []
+        hints = [*(g.get("fn_hint") or []), *(sock if isinstance(sock, list) else [sock])]
+        fns = [str(h).split(" (")[0] for h in hints]
         fns = list(dict.fromkeys(f for f in fns if f in FN))
         blocks = fns or [{"fn": "external_block", "label": g["label"]}]
         groups.append({"id": g["id"], "label": g["label"], "blocks": blocks})

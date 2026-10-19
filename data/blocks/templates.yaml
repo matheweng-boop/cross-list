@@ -2840,3 +2840,1331 @@
     question: Backup key
     choices: [NFC card, keyfob (LF/UHF)]
     source: TI-SOL-PAAK variant 20182
+
+# ---- converted from data/blocks/research/rf_platforms.yaml by tools/research_to_templates.py
+- name: Automotive connected radio / entry infotainment (AM/FM/DAB tuner + Wi-Fi/BT + MPU) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_CONNECTED_RADIO, NXP_ECOCKPIT, NXP_SAF9000_PAGE, NXP_SAF9800_PAGE, NXP_TLH501X_PAGE'
+  sources:
+  - {doc: NXP_CONNECTED_RADIO, title: NXP Connected Radio application page (interactive block diagram), url: 'https://www.nxp.com/applications/INFOTAINMENT-CONNECTED-RADIO'}
+  - {doc: NXP_ECOCKPIT, title: NXP Mid/High Infotainment and eCockpit application page, url: 'https://www.nxp.com/applications/MID-HIGH-INFOTAINMENT-ECOCKPIT'}
+  - {doc: NXP_SAF9000_PAGE, title: NXP SAF9000 one-chip radio and audio SoC product page, url: 'https://www.nxp.com/products/SAF9000'}
+  - {doc: NXP_SAF9800_PAGE, title: NXP SAF9800 audio and analogue radio processor product page, url: 'https://www.nxp.com/products/SAF9800'}
+  - {doc: NXP_TLH501X_PAGE, title: NXP TLH501x ALNA - Low Noise Active Antenna Amplifier product page (No Longer Manufactured), url: 'https://www.nxp.com/products/TLH501x'}
+  groups:
+  - id: antenna
+    label: AM/FM/DAB antenna(s)
+    blocks: [antenna]
+    col: 0
+    row: 0
+  - id: rf_amplifier
+    label: RF amplifier (active antenna LNA)
+    blocks: [lna, active_antenna_amp]
+    col: 1
+    row: 0
+  - id: radio_chipset
+    label: Radio chipset (tuner + radio/audio processor)
+    blocks: [am_fm_tuner, digital_radio_demod, single_chip_radio]
+    col: 2
+    row: 0
+  - id: radio_clock
+    label: Crystal for the radio SoC
+    blocks: [crystal_oscillator]
+    col: 3
+    row: 0
+  - id: radio_flash
+    label: Radio SoC flash (optional)
+    blocks: [flash]
+    col: 0
+    row: 1
+  - id: wifi_bt
+    label: Wi-Fi / Bluetooth
+    blocks: [wifi_soc]
+    col: 1
+    row: 1
+  - id: wifi_frontend
+    label: Wi-Fi front-end modules + diplexer (per antenna)
+    blocks: [rf_frontend, wifi_fem, diplexer]
+    col: 2
+    row: 1
+  - id: cellular
+    label: Cellular modem (eCockpit variant)
+    blocks: [modem]
+    col: 3
+    row: 1
+  - id: mpu
+    label: Applications processor
+    blocks: [soc]
+    col: 0
+    row: 2
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 1
+    row: 2
+  - id: pmic
+    label: Power management IC
+    blocks: [pmic, pol_buck, pol_ldo]
+    col: 2
+    row: 2
+  - id: audio_amp
+    label: Audio amplifier
+    blocks: [audio_amp]
+    col: 3
+    row: 2
+  - id: vehicle_network
+    label: Vehicle network
+    blocks: [can_transceiver, ethernet_phy]
+    col: 0
+    row: 3
+  - id: nfc
+    label: NFC tag
+    blocks: [nfc_frontend]
+    col: 1
+    row: 3
+  - id: hmi
+    label: Display / keypad / GPIO / camera / USB / SD
+    blocks: [led_driver, io_expander, tvs_esd]
+    col: 2
+    row: 3
+  links:
+  - [antenna, rf_amplifier, RF]
+  - [rf_amplifier, radio_chipset, RF]
+  - [radio_clock, radio_chipset, Xtal]
+  - [radio_chipset, mpu, audio / control]
+  - [radio_chipset, audio_amp, audio]
+  - [wifi_bt, mpu, '']
+  - [wifi_bt, wifi_frontend, Wi-Fi 2.4 / 5 GHz]
+  - [mpu, memory, '']
+  - [mpu, vehicle_network, CAN / LIN / Ethernet]
+  - [pmic, mpu, rails]
+  - [pmic, radio_chipset, rails]
+  - [mpu, hmi, '']
+  - [mpu, nfc, I2C]
+  questions:
+  - id: tuners
+    question: How many tuners (antenna paths) does the radio need
+    choices: ['1', 2 (phase diversity / background scan), '3-5 (multi-tuner, digital radio + background)']
+    source: SAF9800-BD.jpg (Tuner1, Tuner2); SAF9000-BD-NEW.svg (Tuner1-Tuner5)
+  - id: digital_radio
+    question: Which digital radio standards
+    choices: [none (AM/FM only), DAB, HD Radio, DRM, CDR]
+    source: 'SAF9000-BD-NEW.svg (DAB, HD radio, DRM, CDR); SAF9800 = analogue radio (AM/FM) only per its title; TEF665X SDS: HD/DRM via external digital radio processor over'
+  - id: active_antenna
+    question: Active antenna amplifier (ALNA) in the antenna path
+    choices: [yes (AM + FM LNA with AGC), no (passive antenna)]
+    source: CONNECTED-RADIO SVG 'RF Amplifier'; TLH501X-BD.jpg; TEF665X SDS 'AM LNA with AGC, matching active and passive antenna applications'
+  - id: wifi_frontend_type
+    question: Wi-Fi front end integrated in the combo chip or external FEMs
+    choices: [internal PA/LNA/switch, external front-end modules + diplexer]
+    source: '88Q9098 product page: separate application diagrams 88Q9098_BD_INT_APP1 (internal) and 88Q9098_BD_EXT_APP1 (external Front-End Modules + Diplexer)'
+  - id: automotive_grade
+    question: Automotive qualification required for the RF parts
+    choices: [AEC-Q100 / AEC-Q200, not required]
+    source: application is automotive (NXP Infotainment); 88Q9098 is the automotive variant of 88W9098
+- name: V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_V2X, NXP_SAF5400_PAGE, NXP_SAF5400FS'
+  sources:
+  - {doc: NXP_V2X, title: NXP V2X Communications application page, url: 'https://www.nxp.com/applications/V2X-COMMUNICATIONS'}
+  - {doc: NXP_SAF5400_PAGE, title: NXP RoadLINK SAF5400 single-chip modem for V2X product page, url: 'https://www.nxp.com/products/SAF5400'}
+  - {doc: NXP_SAF5400FS, title: 'NXP RoadLINK SAF5400 V2X 802.11p Safety Modem (fact sheet, SAF5400V2XFS rev 2)', url: 'https://www.nxp.com/docs/en/fact-sheet/SAF5400V2XFSA4.pdf'}
+  groups:
+  - id: antenna_unit
+    label: Antenna / connectivity unit (roof antenna module)
+    blocks: [antenna]
+    col: 0
+    row: 0
+  - id: v2x_frontend
+    label: V2X 5.9 GHz RF front end / active-antenna compensator
+    blocks: [rf_frontend, lna, rf_switch, v2x_fem]
+    col: 1
+    row: 0
+  - id: v2x_modem
+    label: RFCMOS integrated RF receiver with SDR baseband (V2X modem)
+    blocks: [v2x_transceiver]
+    col: 2
+    row: 0
+  - id: v2x_clock
+    label: V2X modem reference clock
+    blocks: [crystal_oscillator]
+    col: 3
+    row: 0
+  - id: cellular_modem
+    label: Cellular modem / positioning
+    blocks: [modem, gnss_lna]
+    col: 0
+    row: 1
+  - id: wifi
+    label: Wi-Fi / antennas
+    blocks: [wifi_soc]
+    col: 1
+    row: 1
+  - id: app_processor
+    label: Applications processor (V2X stack)
+    blocks: [soc]
+    col: 2
+    row: 1
+  - id: security
+    label: Secure element
+    blocks: [secure_element]
+    col: 3
+    row: 1
+  - id: pmic
+    label: Power management IC
+    blocks: [pmic, pol_ldo]
+    col: 0
+    row: 2
+  - id: vehicle_network
+    label: Vehicle network
+    blocks: [can_transceiver, ethernet_phy]
+    col: 1
+    row: 2
+  links:
+  - [antenna_unit, v2x_frontend, 5.9 GHz]
+  - [v2x_frontend, v2x_modem, RF]
+  - [v2x_clock, v2x_modem, 40 MHz]
+  - [antenna_unit, cellular_modem, RF]
+  - [antenna_unit, wifi, RF]
+  - [v2x_modem, app_processor, SPI / SDIO]
+  - [cellular_modem, app_processor, '']
+  - [app_processor, security, '']
+  - [app_processor, vehicle_network, CAN / Ethernet]
+  - [pmic, app_processor, rails]
+  questions:
+  - id: channels
+    question: V2X channel / antenna configuration
+    choices: [single channel single antenna (SAF5300), single channel dual antenna (SAF5400 MRC diversity), concurrent dual channel (2x SAF5400)]
+    source: SAF5400FS p.1-2 (SAF5300/V110 single antenna, SAF5400/V110 dual antenna, two SAF5400 for concurrent dual-channel with MRC diversity)
+  - id: remote_antenna
+    question: Is the V2X antenna remote (cable to roof module) needing a compensator / external PA-LNA
+    choices: ['yes', no (antenna next to modem)]
+    source: SAF5400FS p.1 (remote active antenna, compensator, antenna diagnostics)
+  - id: automotive_grade
+    question: Automotive qualification
+    choices: [AEC-Q100]
+    source: automotive application
+- name: Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_CAR_ACCESS, NXP_NCJ29D5_PAGE, NXP_NCJ29D5FS, NXP_NCX3321_PAGE'
+  sources:
+  - {doc: NXP_CAR_ACCESS, title: 'NXP Smart Car Access application page (4 diagrams: vehicle, key fob, phone, smart card)', url: 'https://www.nxp.com/applications/SMART-CAR-ACCESS'}
+  - {doc: NXP_NCJ29D5_PAGE, title: NXP Trimension NCJ29D5 UWB IC for automotive product page, url: 'https://www.nxp.com/products/NCJ29D5'}
+  - {doc: NXP_NCJ29D5FS, title: NCJ29D5 Ultra-Wideband ICs for Automotive Applications (fact sheet), url: 'https://www.nxp.com/docs/en/fact-sheet/NCJ29D5FS.pdf'}
+  - {doc: NXP_NCX3321_PAGE, title: NXP NCx3321 automotive NFC frontend product page, url: 'https://www.nxp.com/products/NCx3321'}
+  groups:
+  - id: uwb_anchor_outside
+    label: UWB anchor(s), outside
+    blocks: [uwb_soc]
+    col: 0
+    row: 0
+  - id: uwb_anchor_inside
+    label: UWB anchor(s), inside (also UWB radar for child presence)
+    blocks: [uwb_soc]
+    col: 1
+    row: 0
+  - id: uwb_antenna_path
+    label: UWB antenna / external front end (multi-antenna AoA)
+    blocks: [antenna, rf_switch, uwb_fem]
+    col: 2
+    row: 0
+  - id: ble
+    label: Bluetooth LE (channel sounding)
+    blocks: [mcu, ble_soc]
+    col: 3
+    row: 0
+  - id: ble_frontend
+    label: BLE antenna / front end
+    blocks: [antenna, bt_fem]
+    col: 0
+    row: 1
+  - id: door_nfc
+    label: Door NFC reader (front end)
+    blocks: [nfc_frontend]
+    col: 1
+    row: 1
+  - id: incar_nfc_qi
+    label: In-car NFC and Qi wireless charging
+    blocks: [nfc_frontend, mcu]
+    col: 2
+    row: 1
+  - id: access_mcu
+    label: Smart access MCU + secure element (CCC)
+    blocks: [mcu, secure_element]
+    col: 3
+    row: 1
+  - id: sbc
+    label: System basis chip
+    blocks: [pmic, can_transceiver]
+    col: 0
+    row: 2
+  links:
+  - [uwb_antenna_path, uwb_anchor_outside, UWB]
+  - [uwb_antenna_path, uwb_anchor_inside, UWB]
+  - [uwb_anchor_outside, access_mcu, '']
+  - [uwb_anchor_inside, access_mcu, '']
+  - [ble_frontend, ble, 2.4 GHz]
+  - [ble, access_mcu, '']
+  - [door_nfc, access_mcu, '']
+  - [incar_nfc_qi, access_mcu, '']
+  - [sbc, access_mcu, power / CAN]
+  questions:
+  - id: uwb_radar
+    question: UWB ranging only, or ranging + radar (child presence / intrusion)
+    choices: [ranging only (NCJ29D5), ranging + radar (NCJ29D6), 802.15.4ab (NCJ29D8)]
+    source: Functional Blocks product titles (NCJ29D5, NCJ29D6, NCJ29D8)
+  - id: aoa_antennas
+    question: Number of UWB antennas per anchor (AoA)
+    choices: [1 (ranging), 2 (2D AoA), 3 (3D AoA)]
+    source: UWBIOTFS (SR150 dual-Rx, 3D AoA with 3 antennas); NCJ29D5-BD2 (single antenna port drawn)
+- name: Wi-Fi access point / router (tri-band, MPU + Wi-Fi radios) (NXP)
+  category: RF & connectivity
+  note: 'From NXP public material: NXP_WLAN_AP, NXP_88Q9098_PAGE, NXP_IW693FS'
+  sources:
+  - {doc: NXP_WLAN_AP, title: NXP WLAN Access Point application page, url: 'https://www.nxp.com/applications/WIRELESS-LAN-ACCESS-POINT'}
+  - {doc: NXP_88Q9098_PAGE, title: NXP 88Q9098 automotive 2x2 Wi-Fi 6 + BT 5.3 product page, url: 'https://www.nxp.com/products/88Q9098'}
+  - {doc: NXP_IW693FS, title: IW693 2x2 Wi-Fi 6E + Bluetooth fact sheet, url: 'https://www.nxp.com/docs/en/fact-sheet/IW693FS.pdf'}
+  groups:
+  - id: mpu
+    label: Network processor (MPU)
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi_24
+    label: Wi-Fi 2.4 GHz radio
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: wifi_5
+    label: Wi-Fi 5 GHz radio
+    blocks: [wifi_soc]
+    col: 2
+    row: 0
+  - id: wifi_6
+    label: Wi-Fi 6 GHz radio
+    blocks: [wifi_soc]
+    col: 3
+    row: 0
+  - id: wifi_fems
+    label: Wi-Fi front-end modules per chain (2.4 / 5 / 6 GHz)
+    blocks: [rf_frontend, rf_switch, wifi_fem, diplexer]
+    col: 0
+    row: 1
+  - id: iot_radio
+    label: IoT radio (Zigbee / Thread / BLE)
+    blocks: [mcu, ble_soc]
+    col: 1
+    row: 1
+  - id: iot_frontend
+    label: IoT radio 2.4 GHz front end (range extension)
+    blocks: [rf_frontend, bt_fem]
+    col: 2
+    row: 1
+  - id: nfc
+    label: NFC reader (commissioning)
+    blocks: [nfc_frontend]
+    col: 3
+    row: 1
+  - id: security
+    label: Secure element
+    blocks: [secure_element]
+    col: 0
+    row: 2
+  - id: ethernet
+    label: Ethernet PHYs
+    blocks: [ethernet_phy]
+    col: 1
+    row: 2
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 2
+    row: 2
+  - id: pmic
+    label: PMIC
+    blocks: [pmic]
+    col: 3
+    row: 2
+  links:
+  - [mpu, wifi_24, PCIe]
+  - [mpu, wifi_5, PCIe]
+  - [mpu, wifi_6, PCIe]
+  - [wifi_24, wifi_fems, 2.4 GHz]
+  - [wifi_5, wifi_fems, 5 GHz]
+  - [wifi_6, wifi_fems, 6 GHz]
+  - [mpu, iot_radio, USB]
+  - [iot_radio, iot_frontend, 2.4 GHz]
+  - [mpu, nfc, IIC]
+  - [mpu, security, SPI]
+  - [mpu, ethernet, ETH]
+  - [mpu, memory, '']
+  - [pmic, mpu, rails]
+  questions:
+  - id: bands
+    question: Which Wi-Fi bands (radios)
+    choices: [dual-band 2.4 + 5 GHz, tri-band 2.4 + 5 + 6 GHz]
+    source: WLAN SVG (three radios 2.4 / 5 / 6 GHz)
+  - id: chains
+    question: Spatial streams per band (FEMs per band)
+    choices: [2x2, 4x4]
+    source: Functional Blocks (88W8997 / 88W9098 2x2; 88W9064 4x4)
+  - id: fem_external
+    question: External FEM or radio's internal PA/LNA
+    choices: [internal (lower cost), external FEM (higher output power / range)]
+    source: IW693FS ('integrated ... PA, LNA and T/R switches ... supports external front-end modules (FEM) with PA and LNA')
+- name: Wi-Fi 6/6E + Bluetooth (+802.15.4) combo chip application (client / IoT / automotive module) (NXP)
+  category: RF & connectivity
+  note: 'From NXP public material: NXP_88Q9098_PAGE, NXP_IW612_DS, NXP_IW693FS, NXP_AN14463'
+  sources:
+  - {doc: NXP_88Q9098_PAGE, title: NXP 88Q9098 automotive 2x2 Wi-Fi 6 + BT 5.3 product page, url: 'https://www.nxp.com/products/88Q9098'}
+  - {doc: NXP_IW612_DS, title: 'IW612 1x1 Dual-band Wi-Fi 6, Bluetooth and 802.15.4 Tri-radio Solution, data sheet rev 8.0', url: 'https://www.nxp.com/docs/en/data-sheet/IW612.pdf'}
+  - {doc: NXP_IW693FS, title: IW693 2x2 Wi-Fi 6E + Bluetooth fact sheet, url: 'https://www.nxp.com/docs/en/fact-sheet/IW693FS.pdf'}
+  - {doc: NXP_AN14463, title: 'AN14463 Antenna Diversity, rev 2.0', url: 'https://www.nxp.com/docs/en/application-note/AN14463.pdf'}
+  groups:
+  - id: combo
+    label: Wi-Fi + Bluetooth (+ 802.15.4) combo SoC
+    blocks: [wifi_soc]
+    col: 0
+    row: 0
+  - id: fem
+    label: External Wi-Fi front-end modules (per chain, dual-band)
+    blocks: [rf_frontend, wifi_fem]
+    col: 1
+    row: 0
+  - id: diplexer
+    label: Diplexer (2.4 / 5 GHz onto one antenna)
+    blocks: [diplexer, filter_saw_baw]
+    col: 2
+    row: 0
+  - id: bt_switch
+    label: Antenna-sharing / diversity switch (SPDT / DPDT)
+    blocks: [rf_switch, antenna_switch]
+    col: 3
+    row: 0
+  - id: antennas
+    label: Antennas
+    blocks: [antenna]
+    col: 0
+    row: 1
+  - id: xtal
+    label: Reference crystal
+    blocks: [crystal_oscillator]
+    col: 1
+    row: 1
+  - id: supply
+    label: Supplies 3.3 V and 1.8 V
+    blocks: [pol_buck, pol_ldo, pmic]
+    col: 2
+    row: 1
+  - id: host
+    label: Host processor
+    blocks: [soc]
+    col: 3
+    row: 1
+  - id: external_radio
+    label: Co-located external radio (LTE / cellular)
+    blocks: [modem]
+    col: 0
+    row: 2
+  links:
+  - [host, combo, SDIO / PCIe / UART / SPI]
+  - [xtal, combo, XTAL_IN / XTAL_OUT]
+  - [supply, combo, 3.3 V / 1.8 V]
+  - [combo, fem, Wi-Fi 2.4 / 5 GHz]
+  - [fem, diplexer, '']
+  - [combo, bt_switch, BT / 802.15.4 Tx]
+  - [bt_switch, diplexer, 2.4 GHz]
+  - [diplexer, antennas, '']
+  - [combo, external_radio, coexistence (WCI-2 / PTA)]
+  questions:
+  - id: antenna_config
+    question: Antenna configuration
+    choices: [single antenna (Wi-Fi + BT share via SPDT + diplexer), dual antenna (separate BT antenna), antenna diversity (SPDT / DPDT)]
+    source: IW612 DS Fig 1 / Fig 2; AN14463
+  - id: external_fem
+    question: External Wi-Fi FEM
+    choices: [no (internal PA/LNA/switch), 'yes']
+    source: IW612 DS p.4 (no FEM needed); 88Q9098 / IW693 (external FEM supported)
+  - id: automotive
+    question: Automotive grade
+    choices: [yes (88Q / AW parts), 'no']
+    source: 88Q9098 'Automotive Solution', AW693 automotive
+- name: 5G massive MIMO base station RF front end (Airfast) (NXP)
+  category: RF & connectivity
+  note: 'From NXP public material: NXP_MMIMO, NXP_BTS7202U_DS'
+  sources:
+  - {doc: NXP_MMIMO, title: NXP RF Hardware for 5G Massive MIMO Base Transceiver Stations application page, url: 'https://www.nxp.com/applications/5G-MMIMO-ASP'}
+  - {doc: NXP_BTS7202U_DS, title: BTS7202U 3.3-4.2 GHz RX front-end module data sheet, url: 'https://www.nxp.com/docs/en/data-sheet/BTS7202U.pdf'}
+  groups:
+  - id: transceiver
+    label: Transceiver / DFE (Tx out, Rx in)
+    blocks: [rf_transceiver]
+    col: 0
+    row: 0
+  - id: predriver
+    label: Pre-driver
+    blocks: [rf_predriver]
+    col: 1
+    row: 0
+  - id: pa_module
+    label: PA modules (final stage)
+    blocks: [power_amplifier, rf_pa_bias]
+    col: 2
+    row: 0
+  - id: circulator
+    label: Circulator
+    blocks: [circulator_isolator]
+    col: 0
+    row: 1
+  - id: rx_fem
+    label: RX front-end module (switch + LNA)
+    blocks: [lna, rf_switch, rf_frontend, diversity_rx_module]
+    col: 1
+    row: 1
+  - id: antenna
+    label: Antenna element (array)
+    blocks: [antenna, filter_saw_baw]
+    col: 2
+    row: 1
+  links:
+  - [transceiver, predriver, Tx]
+  - [predriver, pa_module, '']
+  - [pa_module, circulator, '']
+  - [circulator, antenna, '']
+  - [circulator, rx_fem, Rx]
+  - [rx_fem, transceiver, Rx]
+  questions:
+  - id: band
+    question: Band
+    choices: [2300-2700 MHz, 3300-3800 MHz, 3300-5000 MHz]
+    source: Functional Blocks part titles
+  - id: lna_bypass
+    question: RX front end with LNA bypass
+    choices: ['yes', 'no']
+    source: BTS7205H/U 'with Bypass' vs BTS7203H/U
+- name: 5G O-RAN radio unit / Digital Airfast (4T4R) - baseband, DFE, PA, LNA, timing (NXP)
+  category: RF & connectivity
+  note: 'From NXP public material: NXP_5G_RU, NXP_DIGITAL_AIRFAST'
+  sources:
+  - {doc: NXP_5G_RU, title: NXP 5G Radio Unit application page (5G O-RAN 4T4R RU), url: 'https://www.nxp.com/applications/5G-RADIO-UNIT'}
+  - {doc: NXP_DIGITAL_AIRFAST, title: NXP Digital Airfast application page, url: 'https://www.nxp.com/applications/DIGITAL-AIRFAST'}
+  groups:
+  - id: power_in
+    label: Input power (-48 V / 12 V DC/DC)
+    blocks: [wide_vin_buck, isolated_dcdc, pmic]
+    col: 0
+    row: 0
+  - id: timing
+    label: Timing (122.88 MHz & PPS)
+    blocks: [jitter_attenuator, clock_generator, clock_buffer]
+    col: 1
+    row: 0
+  - id: host
+    label: Multicore Arm processor + 10G Ethernet (fronthaul)
+    blocks: [soc, ethernet_phy]
+    col: 2
+    row: 0
+  - id: baseband
+    label: Programmable baseband / Low-PHY + digital front end
+    blocks: [soc]
+    col: 0
+    row: 1
+  - id: transceiver
+    label: Modulator / demodulator (RF transceiver) x4
+    blocks: [rf_transceiver]
+    col: 1
+    row: 1
+  - id: pa
+    label: PA x4
+    blocks: [power_amplifier, rf_pa_bias]
+    col: 2
+    row: 1
+  - id: lna
+    label: LNA / RX front end x4
+    blocks: [lna, rf_switch, diversity_rx_module]
+    col: 0
+    row: 2
+  - id: flash
+    label: Flash
+    blocks: [flash]
+    col: 1
+    row: 2
+  links:
+  - [host, baseband, PCIe]
+  - [timing, baseband, 122.88 MHz & PPS]
+  - [baseband, transceiver, '']
+  - [transceiver, pa, Tx]
+  - [lna, transceiver, Rx]
+  - [power_in, baseband, rails]
+  questions:
+  - id: trx_count
+    question: How many TX/RX chains
+    choices: [4T4R, 8T8R, 32T32R / 64T64R (massive MIMO, see nxp_5g_mmimo)]
+    source: 5G-RADIO-UNIT SVG ('5G O-RAN 4T4R RU')
+  - id: timing_ref
+    question: Timing reference
+    choices: [122.88 MHz + PPS (drawn), other]
+    source: DIGITAL-AIRFAST SVG
+- name: 5G small cell / femtocell (sub-6 GHz 4T4R ISC and mmWave ISC) (NXP)
+  category: RF & connectivity
+  note: 'From NXP public material: NXP_FEMTO'
+  sources:
+  - {doc: NXP_FEMTO, title: NXP Femtocell Base Station application page (4T4R sub-6 GHz ISC + mmWave ISC diagrams), url: 'https://www.nxp.com/applications/FEMTOCELL-BASE-STATION'}
+  groups:
+  - id: power
+    label: Power (DC / PoE optional)
+    blocks: [pmic, wide_vin_buck]
+    col: 0
+    row: 0
+  - id: ethernet
+    label: Ethernet backhaul
+    blocks: [ethernet_phy]
+    col: 1
+    row: 0
+  - id: host
+    label: Host processor (L2/3)
+    blocks: [soc, ddr_flash]
+    col: 2
+    row: 0
+  - id: baseband
+    label: Programmable baseband L1
+    blocks: [soc]
+    col: 0
+    row: 1
+  - id: zif
+    label: ZIF transceiver (IQ)
+    blocks: [rf_transceiver]
+    col: 1
+    row: 1
+  - id: pa_lna
+    label: PA + LNA per chain (sub-6 4T4R)
+    blocks: [power_amplifier, lna, rf_frontend, rf_switch, filter_saw_baw]
+    col: 2
+    row: 1
+  - id: beamformer
+    label: Analog beamformer (mmWave)
+    blocks: [beamformer_ic]
+    col: 0
+    row: 2
+  - id: gnss_nlm
+    label: GPS + network listening module (sync)
+    blocks: [gnss_lna, lna]
+    col: 1
+    row: 2
+  links:
+  - [ethernet, host, '']
+  - [host, baseband, PCIe Gen3 x2]
+  - [baseband, zif, IQ]
+  - [zif, pa_lna, RF]
+  - [zif, beamformer, IF / RF (mmWave)]
+  - [gnss_nlm, host, timing / sync]
+  - [power, host, rails]
+  questions:
+  - id: band
+    question: Sub-6 GHz or mmWave small cell
+    choices: [sub-6 GHz 4T4R (PA/LNA per chain), mmWave (analog beamformer)]
+    source: page diagram selector '4T4R Sub-6 GHz ISC' / 'mmWave ISC'
+  - id: sync
+    question: Timing source
+    choices: [GPS, network listening (broadcast decode)]
+    source: FEMTOCELL SVG
+- name: Automotive 77 GHz radar (transceiver + radar MCU / one-chip SoC) (NXP)
+  category: Automotive systems
+  note: 'From NXP public material: NXP_RADAR, NXP_TEF82XX_PAGE, NXP_SAF85XXFS'
+  sources:
+  - {doc: NXP_RADAR, title: NXP Radar Systems application page (3 diagrams), url: 'https://www.nxp.com/applications/RADAR-SYSTEMS'}
+  - {doc: NXP_TEF82XX_PAGE, title: NXP TEF82xx 77 GHz RFCMOS radar transceiver product page, url: 'https://www.nxp.com/products/TEF82xx'}
+  - {doc: NXP_SAF85XXFS, title: SAF85xx RFCMOS Automotive Radar SoC fact sheet, url: 'https://www.nxp.com/docs/en/fact-sheet/SAF85xxFS.pdf'}
+  groups:
+  - id: transceiver
+    label: Radar transceiver (MMIC) - TX/RX, chirp generation, ADCs
+    blocks: [radar_transceiver]
+    col: 0
+    row: 0
+  - id: xtal
+    label: Crystal oscillator (transceiver reference)
+    blocks: [crystal_oscillator]
+    col: 1
+    row: 0
+  - id: radar_mcu
+    label: Radar MCU / processing platform
+    blocks: [mcu, adas_processor]
+    col: 2
+    row: 0
+  - id: pmic
+    label: Power management IC (separate supplies for MMIC and MCU)
+    blocks: [pmic, pol_buck, pol_ldo]
+    col: 0
+    row: 1
+  - id: vehicle_network
+    label: Vehicle network
+    blocks: [can_transceiver, ethernet_phy]
+    col: 1
+    row: 1
+  links:
+  - [xtal, transceiver, Xtal]
+  - [transceiver, radar_mcu, 'radar data (LVDS / CSI-2), SPI, chirp start, error']
+  - [pmic, transceiver, rails]
+  - [pmic, radar_mcu, rails]
+  - [radar_mcu, vehicle_network, CAN / FlexRay / Ethernet]
+  questions:
+  - id: architecture
+    question: Radar architecture
+    choices: [transceiver + radar MCU, one-chip radar SoC (SAF85xx), cascaded transceivers (imaging, 4x TX8/RX8)]
+    source: RADAR diagrams BD-ASP-NEW6 / BD-2-ASP / BD3
+- name: Smartphone peripheral sockets (Wi-Fi FEM, NFC + SE, UWB, charging, protection) (NXP)
+  category: RF & connectivity
+  note: 'From NXP public material: NXP_SMARTPHONE, NXP_PN7160_AN12988'
+  sources:
+  - {doc: NXP_SMARTPHONE, title: NXP Smartphone application page, url: 'https://www.nxp.com/applications/SMARTPHONE'}
+  - {doc: NXP_PN7160_AN12988, title: AN12988 PN7160 hardware design guide, url: 'https://www.nxp.com/docs/en/application-note/AN12988.pdf'}
+  groups:
+  - id: mpu
+    label: Application processor
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: wifi_bt
+    label: Wi-Fi + BT combo
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: wifi_fem
+    label: Wi-Fi front-end IC
+    blocks: [rf_frontend, wifi_fem]
+    col: 2
+    row: 0
+  - id: nfc_se
+    label: NFC + secure element
+    blocks: [nfc_frontend, crystal_oscillator]
+    col: 0
+    row: 1
+  - id: uwb
+    label: UWB
+    blocks: [uwb_soc]
+    col: 1
+    row: 1
+  - id: power
+    label: Charging, power management and USB-C power protection
+    blocks: [pmic, load_switch, tvs_esd]
+    col: 2
+    row: 1
+  - id: interfaces
+    label: Level translators, SIM/SD translators, MIPI / USB-C signal switches, GPIO expander, LED driver, audio codec
+    blocks: [voltage_translator, io_expander, redriver, led_driver, audio_codec, tvs_esd]
+    col: 0
+    row: 2
+  links:
+  - [mpu, wifi_bt, UART / PCIe]
+  - [wifi_bt, wifi_fem, 2.4 GHz]
+  - [mpu, nfc_se, I2C / SPI]
+  - [mpu, uwb, SPI]
+  - [power, mpu, VCC]
+  - [mpu, interfaces, I2C / I2S / SPI]
+  questions:
+  - id: wifi_band
+    question: Wi-Fi FEM band
+    choices: [2.4 GHz, 5 GHz, dual-band]
+    source: WLAN7207H is 2.4 GHz
+- name: 5G flagship smartphone (Dimensity 9400) - cellular, GNSS, Wi-Fi 7 / BT front-end sockets (MediaTek)
+  category: RF & connectivity
+  note: 'From MediaTek public material: MTK_D9400_PAGE, MTK_D9400_INFO'
+  sources:
+  - {doc: MTK_D9400_PAGE, title: MediaTek Dimensity 9400 product page (specifications table), url: 'https://www.mediatek.com/products/smartphones/mediatek-dimensity-9400'}
+  - {doc: MTK_D9400_INFO, title: MediaTek Dimensity 9400 infographic, url: 'https://www.mediatek.com/hubfs/MediaTek%20Assets/Pdfs/Infographics/MediaTek_D9400_Infographic.pdf'}
+  groups:
+  - id: soc_modem
+    label: SoC with integrated 5G modem (3GPP R17, sub-6 GHz)
+    blocks: [soc, modem]
+    col: 0
+    row: 0
+  - id: rf_transceiver
+    label: Cellular RF transceiver
+    blocks: [rf_transceiver]
+    col: 1
+    row: 0
+  - id: tx_frontend
+    label: Cellular TX front end (PA modules / PAMiD, envelope tracking)
+    blocks: [rf_frontend, rf_pa_bias, pa_module, power_amplifier]
+    col: 2
+    row: 0
+  - id: rx_frontend
+    label: Cellular RX front end (diversity / MIMO receive, LNAs)
+    blocks: [lna, rf_frontend, diversity_rx_module]
+    col: 3
+    row: 0
+  - id: antenna_switching
+    label: Antenna switches / tuners (multi-antenna, TX switching)
+    blocks: [antenna_switch, rf_switch, antenna_tuner]
+    col: 0
+    row: 1
+  - id: filters
+    label: Band filters / multiplexers
+    blocks: [filter_saw_baw]
+    col: 1
+    row: 1
+  - id: gnss
+    label: GNSS dual-frequency (L1 + L5)
+    blocks: [lna, gnss_lna]
+    col: 2
+    row: 1
+  - id: wifi_bt
+    label: Wi-Fi 7 / Bluetooth combo chip (4 nm)
+    blocks: [wifi_soc]
+    col: 3
+    row: 1
+  - id: wifi_frontend
+    label: Wi-Fi 2.4 / 5 / 6 GHz and BT front ends
+    blocks: [rf_frontend, wifi_fem, diplexer]
+    col: 0
+    row: 2
+  - id: clock_pmic
+    label: Reference clock and power management
+    blocks: [crystal_oscillator, pmic]
+    col: 1
+    row: 2
+  links:
+  - [soc_modem, rf_transceiver, '']
+  - [rf_transceiver, tx_frontend, Tx]
+  - [rx_frontend, rf_transceiver, Rx]
+  - [tx_frontend, filters, '']
+  - [filters, antenna_switching, '']
+  - [rx_frontend, antenna_switching, '']
+  - [gnss, soc_modem, L1 / L5]
+  - [soc_modem, wifi_bt, '']
+  - [wifi_bt, wifi_frontend, 2.4 / 5 / 6 GHz]
+  - [clock_pmic, soc_modem, ref clock / rails]
+  questions:
+  - id: ul_mimo
+    question: Uplink configuration
+    choices: [single Tx, FDD UL 2x2 MIMO / power class 2]
+    source: D9400 spec table 'FDD UL 2x2MIMO/PC2'
+  - id: gnss_bands
+    question: GNSS bands
+    choices: [L1 only, L1 + L5 dual-frequency]
+    source: D9400 spec table
+  - id: wifi_streams
+    question: Wi-Fi configuration
+    choices: [tri-band 2x2 + 2x2 + 1x1 (TBTC), dual-band 2x2]
+    source: D9400 page
+- name: Wi-Fi 7 access point / router (Filogic 880 / 860) (MediaTek)
+  category: RF & connectivity
+  note: 'From MediaTek public material: MTK_FILOGIC880, MTK_FILOGIC860, MTK_FILOGIC880_INFO'
+  sources:
+  - {doc: MTK_FILOGIC880, title: MediaTek Filogic 880 product page (Wi-Fi 7 AP platform), url: 'https://www.mediatek.com/products/broadband-wifi/mediatek-filogic-880'}
+  - {doc: MTK_FILOGIC860, title: MediaTek Filogic 860 product page, url: 'https://www.mediatek.com/products/broadband-wifi/mediatek-filogic-860'}
+  - {doc: MTK_FILOGIC880_INFO, title: MediaTek Filogic 880 infographic, url: 'https://www.mediatek.com/hubfs/MediaTek%20Assets/Pdfs/Infographics/MediaTek-Filogic-880-Infographics.pdf'}
+  groups:
+  - id: soc
+    label: Network SoC (quad Cortex-A73, NPU, crypto)
+    blocks: [soc, wifi_soc]
+    col: 0
+    row: 0
+  - id: radios
+    label: Wi-Fi 7 radios 2.4 / 5 / 6 GHz
+    blocks: [wifi_soc]
+    col: 1
+    row: 0
+  - id: wifi_fems
+    label: Wi-Fi FEMs (one per TX/RX chain per band)
+    blocks: [rf_frontend, lna, wifi_fem, filter_saw_baw]
+    col: 2
+    row: 0
+  - id: ethernet
+    label: Wired connectivity
+    blocks: [ethernet_phy]
+    col: 0
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 1
+    row: 1
+  - id: io
+    label: I/O
+    blocks:
+    - {fn: external_block, label: I/O}
+    col: 2
+    row: 1
+  - id: clock_power
+    label: Reference clock, PMIC / PoL
+    blocks: [crystal_oscillator, pmic, pol_buck]
+    col: 0
+    row: 2
+  links:
+  - [soc, radios, '']
+  - [radios, wifi_fems, per chain]
+  - [soc, ethernet, USXGMII / 2.5G / 1G]
+  - [soc, memory, '']
+  - [soc, io, '']
+  - [clock_power, soc, '']
+  questions:
+  - id: bands
+    question: Bands
+    choices: [dual-band 2.4 + 5/6 GHz (Filogic 860), tri-band 2.4 + 5 + 6 GHz (Filogic 880), penta-band]
+    source: Filogic 860 / 880 spec tables
+  - id: chains
+    question: Chains per band
+    choices: [4x4, 4x5 (4T5R, extra RX for MRC), 5x5]
+    source: Filogic 880 / 860 spec tables
+  - id: afc
+    question: 6 GHz standard power with AFC (higher 6 GHz output power)
+    choices: ['yes', 'no']
+    source: Filogic 880 spec 'BW320 (6GHz), 4096-QAM, MLO, MRU, and AFC'
+- name: Wi-Fi 7 + Bluetooth client / combo (Filogic 380 / 360) (MediaTek)
+  category: RF & connectivity
+  note: 'From MediaTek public material: MTK_FILOGIC380, MTK_FILOGIC360'
+  sources:
+  - {doc: MTK_FILOGIC380, title: MediaTek Filogic 380 product page (Wi-Fi 7 + BT 5.4 client), url: 'https://www.mediatek.com/products/broadband-wifi/mediatek-filogic-380'}
+  - {doc: MTK_FILOGIC360, title: 'MediaTek Filogic 360 product page (Wi-Fi 7 2x2 + BT, ''Single chip with RF, Baseband, MAC, iFEM'')', url: 'https://www.mediatek.com/products/broadband-wifi/mediatek-filogic-360'}
+  groups:
+  - id: combo
+    label: Wi-Fi 7 + Bluetooth single chip
+    blocks: [wifi_soc]
+    col: 0
+    row: 0
+  - id: wifi_fem
+    label: External Wi-Fi FEMs (when not iFEM)
+    blocks: [rf_frontend, wifi_fem]
+    col: 1
+    row: 0
+  - id: bt_antenna
+    label: Bluetooth extra antenna (MRC) / coexistence
+    blocks: [antenna, rf_switch, antenna_switch, diplexer]
+    col: 2
+    row: 0
+  - id: host_if
+    label: Host interface
+    blocks: [soc]
+    col: 0
+    row: 1
+  links:
+  - [host_if, combo, PCIe / USB]
+  - [combo, wifi_fem, 2.4 / 5 / 6 GHz]
+  - [combo, bt_antenna, BT]
+  questions:
+  - id: ifem
+    question: Integrated FEM (iFEM) or external FEMs
+    choices: [iFEM (Filogic 360), external FEM]
+    source: Filogic 360 spec 'Single chip with RF, Baseband, MAC, iFEM'
+- name: IoT edge-AI board (Genio 700 / MT8390) with companion PMIC, DCXO and Wi-Fi/BT combo (MediaTek)
+  category: RF & connectivity
+  note: 'From MediaTek public material: MTK_GENIO700_BD, MTK_GENIO700_FS'
+  sources:
+  - {doc: MTK_GENIO700_BD, title: 'Genio 700 (MT8390) block diagram, genio.mediatek.com', url: 'https://genio.mediatek.com/genio-700'}
+  - {doc: MTK_GENIO700_FS, title: MediaTek Genio 700 factsheet (block diagram with companion chips), url: 'https://www.mediatek.com/hubfs/MediaTek%20Assets/Pdfs/Factsheet-Genio-700.pdf'}
+  groups:
+  - id: soc
+    label: MT8390 (Genio 700) SoC
+    blocks: [soc]
+    col: 0
+    row: 0
+  - id: pmic
+    label: Main PMIC MT6365 (DC-DC / LDO, DCXO, audio codec, AUXADC, RTC)
+    blocks: [pmic, crystal_oscillator, audio_codec, rtc]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Additional DC-DC / LDO (MT6319, MT5721, MT6680)
+    blocks: [pol_buck, pol_ldo]
+    col: 2
+    row: 0
+  - id: charger
+    label: Battery charger
+    blocks: [battery_charger]
+    col: 0
+    row: 1
+  - id: wifi_bt
+    label: Wi-Fi / BT combo (optional, chip-on-board)
+    blocks: [wifi_soc]
+    col: 1
+    row: 1
+  - id: wifi_frontend
+    label: Wi-Fi / BT front end and antennas (2x2 dual-band)
+    blocks: [rf_frontend, antenna, wifi_fem, rf_switch, diplexer]
+    col: 2
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 0
+    row: 2
+  links:
+  - [pmic, soc, rails / 26 MHz-class DCXO clock]
+  - [dcdc, soc, rails]
+  - [charger, pmic, battery]
+  - [soc, wifi_bt, PCIe / SDIO (CoB)]
+  - [wifi_bt, wifi_frontend, 2.4 / 5 GHz]
+  - [soc, memory, '']
+  questions:
+  - id: wifi_gen
+    question: Wi-Fi generation of the companion
+    choices: [Wi-Fi 5 2x2 (MT7663), Wi-Fi 6 2x2 (MT7921)]
+    source: Genio 700 block diagram
+  - id: temp_grade
+    question: Temperature grade
+    choices: [consumer -20 to 95 C Tj, industrial -40 to 105 C Tj]
+    source: Genio 700 product page spec 'Temperature support'
+- name: 5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)
+  category: RF & connectivity
+  note: 'From MediaTek public material: MTK_T930_BLOG'
+  sources:
+  - {doc: MTK_T930_BLOG, title: 'MediaTek T930: flagship 5G-Advanced platform for FWA and Mi-Fi (blog)', url: 'https://www.mediatek.com/tek-talk-blogs/mediatek-t930-flagship-5g-adv-platform-for-fwa-mifi-devices'}
+  groups:
+  - id: platform
+    label: T930 platform (5G-Advanced modem, quad A55, network processor, integrated RF transceiver, GNSS receiver, power management)
+    blocks: [modem, rf_transceiver, soc]
+    col: 0
+    row: 0
+  - id: tx_frontend
+    label: TX front end (3 transmit antennas)
+    blocks: [rf_frontend, pa_module, power_amplifier]
+    col: 1
+    row: 0
+  - id: rx_frontend
+    label: RX front end (8 receive antennas)
+    blocks: [lna, diversity_rx_module, filter_saw_baw]
+    col: 2
+    row: 0
+  - id: antenna_switching
+    label: Antenna switching across 8 antennas
+    blocks: [antenna_switch, rf_switch]
+    col: 0
+    row: 1
+  - id: gnss
+    label: GNSS
+    blocks: [lna, gnss_lna]
+    col: 1
+    row: 1
+  - id: wifi
+    label: Wi-Fi (to LAN clients)
+    blocks: [wifi_soc, wifi_fem]
+    col: 2
+    row: 1
+  links:
+  - [platform, tx_frontend, Tx x3]
+  - [rx_frontend, platform, Rx x8]
+  - [tx_frontend, antenna_switching, '']
+  - [rx_frontend, antenna_switching, '']
+  - [gnss, platform, '']
+  - [platform, wifi, '']
+  questions:
+  - id: rx_count
+    question: Receive antennas
+    choices: [4Rx, 8Rx]
+    source: T930 blog (8Rx)
+- name: 'Automotive telematics (Dimensity Auto Connect MT2739: 5G-Advanced + NTN satellite) (MediaTek)'
+  category: Automotive systems
+  note: 'From MediaTek public material: MTK_MT2739_BLOG, MTK_COCKPIT'
+  sources:
+  - {doc: MTK_MT2739_BLOG, title: 'Dimensity Auto Connect MT2739: 5G-Advanced and satellite connectivity for automotive (blog)', url: 'https://www.mediatek.com/tek-talk-blogs/dimensity-auto-connect-mt2739'}
+  - {doc: MTK_COCKPIT, title: 'MediaTek Dimensity Auto Cockpit platforms page (C-X1, C-Y1, C-M1, C-V1)', url: 'https://www.mediatek.com/products/dimensity-auto/cockpit-platforms'}
+  groups:
+  - id: modem
+    label: MT2739 5G-Advanced automotive modem (R17, R18-ready, AEC-Q100 Grade 2)
+    blocks: [modem]
+    col: 0
+    row: 0
+  - id: cellular_frontend
+    label: Cellular RF front end (automotive)
+    blocks: [rf_frontend, pa_module, diversity_rx_module, antenna_switch]
+    col: 1
+    row: 0
+  - id: ntn_frontend
+    label: Satellite (NTN) RF path
+    blocks: [lna, power_amplifier, filter_saw_baw]
+    col: 2
+    row: 0
+  - id: cockpit_soc
+    label: Cockpit SoC (C-X1 / C-Y1 / C-M1 / C-V1)
+    blocks: [soc]
+    col: 0
+    row: 1
+  links:
+  - [modem, cellular_frontend, '']
+  - [modem, ntn_frontend, '']
+  - [modem, cockpit_soc, '']
+  questions:
+  - id: automotive_grade
+    question: AEC-Q100 grade
+    choices: [Grade 2 (stated for MT2739), Grade 1]
+    source: MT2739 blog ('AEC-Q100 Grade2')
+  - id: ntn
+    question: Satellite NTN support
+    choices: [none, NB-NTN messaging, NR-NTN broadband]
+    source: MT2739 blog
+- name: 5G smartphone modem-to-antenna (Snapdragon X80 / X85 Modem-RF) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC_X80_PB, QC_X85_PB, QC_RFFE_PAGE'
+  sources:
+  - {doc: QC_X80_PB, title: Snapdragon X80 5G Modem-RF System product brief (87-73875-1 rev C), url: 'https://docs.qualcomm.com/doc/87-73875-1/87-73875-1_REV_C_Snapdragon_X80_5G_Modem-RF_System_Product_Brief.pdf'}
+  - {doc: QC_X85_PB, title: Qualcomm X85 5G Modem-RF product brief (87-87284-1 rev B), url: 'https://docs.qualcomm.com/doc/87-87284-1/87-87284-1_REV_B_Qualcomm_x85_5G_Modem_RF_Product_Brief.pdf'}
+  - {doc: QC_RFFE_PAGE, title: Qualcomm RF & RF front end (RFFE) page (JS-rendered; only title + meta description readable), url: 'https://www.qualcomm.com/modems/rf-solutions/rf-rffe'}
+  groups:
+  - id: modem
+    label: 5G modem (with 5G AI processor)
+    blocks: [modem]
+    col: 0
+    row: 0
+  - id: transceiver
+    label: Converged mmWave-Sub6 RF transceiver
+    blocks: [rf_transceiver]
+    col: 1
+    row: 0
+  - id: mmwave_module
+    label: mmWave antenna module
+    blocks: [mmwave_antenna_module]
+    col: 2
+    row: 0
+  - id: sub6_rffe
+    label: Sub-6 GHz RF front end (PA modules, LNAs, switches, filters, ET)
+    blocks: [rf_frontend, lna, antenna_switch, rf_pa_bias, pa_module, diversity_rx_module, antenna_tuner, filter_saw_baw]
+    col: 0
+    row: 1
+  - id: gnss
+    label: GNSS
+    blocks: [lna, gnss_lna]
+    col: 1
+    row: 1
+  - id: satellite
+    label: Satellite (NTN)
+    blocks: [power_amplifier, lna]
+    col: 2
+    row: 1
+  links:
+  - [modem, transceiver, '']
+  - [transceiver, sub6_rffe, sub-6 GHz]
+  - [transceiver, mmwave_module, IF]
+  - [gnss, modem, '']
+  - [modem, satellite, '']
+  questions:
+  - id: mmwave
+    question: mmWave supported
+    choices: [sub-6 GHz only, sub-6 + mmWave (QTM modules)]
+    source: X80 PB (10CC mmWave, 6CC sub-6)
+  - id: ul_tx
+    question: Uplink Tx configuration
+    choices: [single Tx, 2Tx UL MIMO, switched uplink FDD-TDD]
+    source: X80 / X85 PB (UL MIMO, Switched Uplink)
+- name: Mobile Wi-Fi 7 + Bluetooth + UWB connectivity (FastConnect 7900) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC_FC7900_PB'
+  sources:
+  - {doc: QC_FC7900_PB, title: Qualcomm FastConnect 7900 Mobile Connectivity System product brief (87-73970-1 rev C), url: 'https://docs.qualcomm.com/doc/87-73970-1/87-73970-1_REV_C_Qualcomm_FastConnect_7900_Mobile_Connectivity_System_Product_Brief.pdf'}
+  groups:
+  - id: connectivity_chip
+    label: FastConnect 7900 (6 nm single chip Wi-Fi 7 2x2 + Bluetooth 6.0 + UWB)
+    blocks: [wifi_soc, uwb_soc]
+    col: 0
+    row: 0
+  - id: wifi_fem
+    label: Wi-Fi RF front-end modules (HBS modules)
+    blocks: [rf_frontend, wifi_fem]
+    col: 1
+    row: 0
+  - id: uwb_frontend
+    label: UWB antennas / front end
+    blocks: [antenna, uwb_fem, rf_switch]
+    col: 2
+    row: 0
+  links:
+  - [connectivity_chip, wifi_fem, 2.4 / 5 / 6 GHz]
+  - [connectivity_chip, uwb_frontend, UWB]
+  questions:
+  - id: hbs
+    question: High Band Simultaneous (5 + 6 GHz simultaneous)
+    choices: [yes (HBS module / diplexer needed), 'no']
+    source: FC7900 PB (HBS Multi-Link, QXM1099/98 HBS modules)
+- name: Enterprise / premium Wi-Fi access point (Dragonwing NPro A8 Elite, Wi-Fi 8) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC_NPRO_A8_PB'
+  sources:
+  - {doc: QC_NPRO_A8_PB, title: Qualcomm Dragonwing NPro A8 Elite Platform product brief (Wi-Fi 8 enterprise AP), url: 'https://docs.qualcomm.com/doc/87-96766-1/87-96766-1_REV_AA_Qualcomm_Dragonwing_NPro_A8_Elite_Platform_Product_Brief.pdf'}
+  groups:
+  - id: platform
+    label: NPro A8 Elite platform (SoC + radios + RF front end, single software stack)
+    blocks: [soc, wifi_soc]
+    col: 0
+    row: 0
+  - id: wifi_fems
+    label: Wi-Fi FEMs (2.4 / 4.9 / 5 / 6 GHz, up to 20 antennas)
+    blocks: [rf_frontend, wifi_fem, filter_saw_baw]
+    col: 1
+    row: 0
+  - id: ethernet
+    label: Ethernet SerDes
+    blocks: [ethernet_phy]
+    col: 2
+    row: 0
+  - id: memory
+    label: Memory
+    blocks: [ddr_flash]
+    col: 0
+    row: 1
+  - id: clocks_power
+    label: Clocks and power
+    blocks: [crystal_oscillator, clock_generator, pmic]
+    col: 1
+    row: 1
+  links:
+  - [platform, wifi_fems, per chain]
+  - [platform, ethernet, USXGMII]
+  - [platform, memory, '']
+  - [clocks_power, platform, '']
+  questions:
+  - id: public_safety
+    question: 4.9 GHz public-safety band
+    choices: ['yes', 'no']
+    source: NPro A8 PB spectral bands
+  - id: antennas
+    question: Antenna count
+    choices: [<= 8, '12', up to 20]
+    source: NPro A8 PB
+- name: 5G fixed-wireless-access CPE (Dragonwing FWA Gen 5 / Gen 6 Elite, QTM567 mmWave) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC_FWA5_PB, QC_FWA6_MD, QC_QTM567_PB'
+  sources:
+  - {doc: QC_FWA5_PB, title: Qualcomm Dragonwing FWA Gen 5 Elite Platform product brief, url: 'https://docs.qualcomm.com/doc/87-97363-1/87-97363-1_REV_AA_Qualcomm_Dragonwing_FWA_GEN_5_Elite_Platform_Product_Brief.pdf'}
+  - {doc: QC_FWA6_MD, title: Qualcomm Dragonwing FWA Gen 6 Elite Platform (markdown page listed in qualcomm.com/llms.txt), url: 'https://www.qualcomm.com/networking-infrastructure/products/fwa-series/fwa-gen-6-elite-platform.md'}
+  - {doc: QC_QTM567_PB, title: Qualcomm QTM567 extended-range mmWave antenna module product brief, url: 'https://docs.qualcomm.com/doc/87-78458-1/87-78458-1_REV_A_Qualcomm_QTM567_Product_Brief.pdf'}
+  groups:
+  - id: modem_rf
+    label: X85 / X105 5G Modem-RF (6 nm RFIC transceiver sub-6 / mmW)
+    blocks: [modem, rf_transceiver]
+    col: 0
+    row: 0
+  - id: sub6_rffe
+    label: Sub-6 GHz RFFE (8Rx/6Rx/4Rx multi-antenna, UL MIMO)
+    blocks: [rf_frontend, lna, antenna_switch, pa_module, diversity_rx_module, filter_saw_baw]
+    col: 1
+    row: 0
+  - id: mmwave_module
+    label: mmWave antenna module (QTM567)
+    blocks: [mmwave_antenna_module]
+    col: 2
+    row: 0
+  - id: wifi
+    label: 'Wi-Fi 7 / Wi-Fi 8 (FWA6: tri-band 5x5)'
+    blocks: [wifi_soc]
+    col: 0
+    row: 1
+  - id: wifi_fems
+    label: Wi-Fi FEMs (5 per band in FWA6)
+    blocks: [rf_frontend, wifi_fem]
+    col: 1
+    row: 1
+  links:
+  - [modem_rf, sub6_rffe, sub-6 GHz]
+  - [modem_rf, mmwave_module, IF]
+  - [modem_rf, wifi, '']
+  - [wifi, wifi_fems, per chain]
+  questions:
+  - id: mmwave
+    question: mmWave CPE
+    choices: [sub-6 only, sub-6 + mmWave (QTM567)]
+    source: FWA5 PB / QTM567 PB
+  - id: rx_antennas
+    question: Cellular receive antennas
+    choices: [4Rx, 6Rx, 8Rx]
+    source: FWA5 PB
+- name: IoT Bluetooth LE SoC reference design (QCC711) and IoT processor Wi-Fi companion (QCS6490 + WCN6750) (Qualcomm)
+  category: RF & connectivity
+  note: 'From Qualcomm public material: QC_QCC711_HDG, QC_QCS6490_MD, QC_QCS6490_PB'
+  sources:
+  - {doc: QC_QCC711_HDG, title: QCC711 Bluetooth Low Energy Hardware Design Guide (80-WL711-5 rev AF), url: 'https://docs.qualcomm.com/doc/80-WL711-5/80-WL711-5_REV_AF_QCC711_Bluetooth_Low_Energy_Hardware_Design_Guide.pdf'}
+  - {doc: QC_QCS6490_MD, title: Qualcomm Dragonwing QCS6490 page (markdown; lists WCN6750 / WCN6856 Wi-Fi/BT combo companions), url: 'https://www.qualcomm.com/internet-of-things/products/q6-series/qcs6490.md'}
+  - {doc: QC_QCS6490_PB, title: Qualcomm QCS6490 / QCM6490 processors product brief (rev F), url: 'https://docs.qualcomm.com/doc/87-28733-1/87-28733-1_REV_F_QUALCOMM_QCS6490_QCM6490_Processors_Product_Brief.pdf'}
+  groups:
+  - id: ble_soc
+    label: QCC711 BLE SoC
+    blocks: [ble_soc]
+    col: 0
+    row: 0
+  - id: rf_matching
+    label: RF matching network / band-pass filter
+    blocks: [antenna, filter_saw_baw]
+    col: 1
+    row: 0
+  - id: antenna
+    label: PCB antenna
+    blocks: [antenna]
+    col: 2
+    row: 0
+  - id: xtal_32m
+    label: 32 MHz RF crystal
+    blocks: [crystal_oscillator]
+    col: 0
+    row: 1
+  - id: xtal_32k
+    label: 32.768 kHz crystal
+    blocks: [crystal_oscillator]
+    col: 1
+    row: 1
+  - id: iot_processor
+    label: IoT processor (QCS6490) + Wi-Fi/BT combo companion
+    blocks: [soc, wifi_soc]
+    col: 2
+    row: 1
+  - id: wifi_frontend
+    label: Wi-Fi / BT front end of the combo
+    blocks: [rf_frontend, wifi_fem, rf_switch, diplexer]
+    col: 0
+    row: 2
+  links:
+  - [xtal_32m, ble_soc, XTAL32M]
+  - [xtal_32k, ble_soc, XTAL32K]
+  - [ble_soc, rf_matching, RF]
+  - [rf_matching, antenna, '']
+  - [iot_processor, wifi_frontend, '']
+  questions:
+  - id: rf_filter
+    question: RF output network
+    choices: [pi matching network, band-pass filter]
+    source: QCC711 HDG
+- name: Automotive telematics / connectivity (Snapdragon Auto 5G Modem-RF Gen 2, QCA6696 Wi-Fi/BT, C-V2X 9150) (Qualcomm)
+  category: Automotive systems
+  note: 'From Qualcomm public material: QC_AUTO_5G_GEN2, QC_QCA6696, QC_V2X_PAGE'
+  sources:
+  - {doc: QC_AUTO_5G_GEN2, title: Snapdragon Auto 5G Modem-RF Gen 2 page (JS-rendered; meta description only), url: 'https://www.qualcomm.com/automotive/solutions/connectivity-positioning/products/snapdragon-auto-5g-modem-rf-gen-2'}
+  - {doc: QC_QCA6696, title: Qualcomm QCA6696 automotive Wi-Fi + Bluetooth page (JS-rendered; meta description only), url: 'https://www.qualcomm.com/automotive/products/qca6696'}
+  - {doc: QC_V2X_PAGE, title: Qualcomm V2X page (JS-rendered; meta description only), url: 'https://www.qualcomm.com/automotive/solutions/v2x'}
+  groups:
+  - id: auto_modem
+    label: Snapdragon Auto 5G Modem-RF Gen 2 (up to 200 MHz network capacity)
+    blocks: [modem]
+    col: 0
+    row: 0
+  - id: cellular_rffe
+    label: Automotive cellular RFFE
+    blocks: [rf_frontend, pa_module, diversity_rx_module, antenna_switch]
+    col: 1
+    row: 0
+  - id: cv2x
+    label: C-V2X (PC5 direct, 5.9 GHz)
+    blocks: [v2x_transceiver]
+    col: 2
+    row: 0
+  - id: v2x_frontend
+    label: C-V2X 5.9 GHz front end
+    blocks: [rf_frontend, v2x_fem]
+    col: 0
+    row: 1
+  - id: wifi_bt
+    label: Automotive Wi-Fi + Bluetooth (QCA6696)
+    blocks: [wifi_soc]
+    col: 1
+    row: 1
+  - id: wifi_frontend
+    label: Automotive Wi-Fi FEMs
+    blocks: [rf_frontend, wifi_fem]
+    col: 2
+    row: 1
+  links:
+  - [auto_modem, cellular_rffe, '']
+  - [cv2x, v2x_frontend, 5.9 GHz]
+  - [wifi_bt, wifi_frontend, '']
+  questions:
+  - id: automotive_grade
+    question: Automotive qualification
+    choices: [AEC-Q100]
+    source: automotive application

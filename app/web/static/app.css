@@ -443,3 +443,14 @@ tr.req-done td { opacity: .6; }
 #st-sw .sw-open, #st-sw.closed .sw-close, #st-sw.closed #bc-sw-cards { display: none; }
 #st-sw.closed .sw-open { display: inline; }
 .spec-list.exception { color: #b26a00; }
+.cand-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin: .4rem 0; }
+@media (max-width: 760px) { .cand-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cand-grid .cand-slot { border: 1px solid var(--pico-muted-border-color); border-radius: .4rem; padding: .35rem .5rem; min-width: 0; }
+.cand-grid .cand-slot.off { opacity: .45; background: var(--pico-muted-border-color); }
+.cand-grid .cand-list { display: flex; flex-direction: column; gap: .1rem; max-height: 14rem; overflow-y: auto; }
+.cand-grid .cand { font-size: .8rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cand-grid .cand-note { display: block; margin-left: 1.6rem; white-space: normal; }
+#bc-explain { position: static; margin: .5rem 0; }
+.cand-grid { width: 100%; }
+.cand-grid .cand { flex-shrink: 0; }
+#bc-cands { flex: 1 1 100%; width: 100%; }

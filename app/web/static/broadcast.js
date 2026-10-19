@@ -1271,16 +1271,21 @@
     const box = $("#bc-cands");
     if (!box || !S.tuners) return;
     S.pick ||= {};
-    const slots = [...TUNER_SLOTS.filter(sl => slotTuners(sl, S.tuners)), ...(S.digital ? [DEMOD_SLOT] : [])];
+    // one column per IC; a slot this tuner count (or "without digital") does not use is greyed out
+    const used = sl => (sl === DEMOD_SLOT ? !!S.digital : slotTuners(sl, S.tuners) > 0);
     const save = S.showAll; S.showAll = false;
-    const html = slots.map(sl => {
+    const html = `<div class="cand-grid">` + ALL_SLOTS.map(sl => {
+      const role = sl === "IC0" ? "primary tuner" : sl === DEMOD_SLOT ? "demod" : "companion tuner";
+      if (!used(sl)) {
+        delete S.pick[sl];
+        return `<div class="cand-slot off"><b>${sl}</b> <span class="muted small">${role}</span><div class="small muted">not populated</div></div>`;
+      }
       const cands = CATALOG.filter(c => (sl === DEMOD_SLOT ? c.role === "coprocessor" : c.role === "tuner") && c.pins.length && partAllowed(c, sl))
         .filter(c => sl === DEMOD_SLOT || (c.tuners || 1) === slotTuners(sl, S.tuners));
       if (S.pick[sl] && !cands.some(c => c.mpn === S.pick[sl])) delete S.pick[sl];
-      const role = sl === "IC0" ? "primary tuner" : sl === DEMOD_SLOT ? "demod" : "companion tuner";
       return `<div class="cand-slot"><b>${sl}</b> <span class="muted small">${role}${sl !== DEMOD_SLOT ? `, ${slotTuners(sl, S.tuners)}T` : ""} · ${cands.length}</span>
         <div class="cand-list">${cands.map(c => `<label class="cand${c.borrowed_pins ? " borrowed" : ""}"><input type="checkbox" data-pick="${sl}|${esc(c.mpn)}"${S.pick[sl] === c.mpn ? " checked" : ""}> ${esc(c.mpn)}${c.borrowed_pins ? "*" : ""} <span class="cand-note">${esc(candNote(c, sl))}</span></label>`).join("") || `<span class="small uc-error">none</span>`}</div></div>`;
-    }).join("");
+    }).join("") + `</div>`;
     S.showAll = save;
     box.innerHTML = html + `<div class="cand-actions"><button type="button" class="small-btn" id="bc-create">Create block diagram</button>
       <span class="small muted">Unticked slots get the default part. * pinout borrowed (no data short).</span></div>`;

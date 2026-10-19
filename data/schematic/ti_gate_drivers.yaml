@@ -1,0 +1,363 @@
+# Typical-application data for the TI UCC20225 / UCC20225-Q1 / UCC20225A-Q1 isolated gate drivers
+# (format: data/schematic/README.md). Source text: var/text/gate_drivers/<stem>.txt (page markers "=== PAGE n ===").
+# The text extraction drops many spaces, so some quotes are copied with the words run together, exactly as extracted.
+covers: [data/real/ti_gate_drivers.yaml]
+datasheets:
+  - datasheet: ucc20225a-q1.pdf
+    doc: "UCC20225-Q1, UCC20225A-Q1 Isolated Dual-Channel Gate Driver with Single Input in LGA, SLUSDC2C (Rev C, September 2019)"
+    supplies:
+      - pin: VCCI
+        ground: GND
+        range_v: [3, 18]
+        page: 35
+        quote: "The recommended input supply voltage (VCCI) for UCC20225-Q1 family is between 3-V and 18-V."
+      - pin: VDDA
+        ground: VSSA
+        range_v: [6.5, 25]
+        note: "6.5-25 V for UCC20225A-Q1 (5-V UVLO); 9.2-25 V for UCC20225-Q1 (8-V UVLO)"
+        page: 35
+        quote: "The recommended output bias supply voltage (VDDA/VDDB) range is 6.5-V to 25-V for UCC20225A-Q1 and 9.2-V to 25-V for UCC20225-Q1."
+      - pin: VDDB
+        ground: VSSB
+        range_v: [6.5, 25]
+        note: "6.5-25 V for UCC20225A-Q1 (5-V UVLO); 9.2-25 V for UCC20225-Q1 (8-V UVLO)"
+        page: 35
+        quote: "The recommended output bias supply voltage (VDDA/VDDB) range is 6.5-V to 25-V for UCC20225A-Q1 and 9.2-V to 25-V for UCC20225-Q1."
+    components:
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^VCCI$'
+        to: GND
+        series: false
+        required: true
+        note: "minimum recommended value; low ESR/ESL, close to the device; example: 50-V MLCC over 100 nF (p29). Bypass pin 4 rather than pin 7 (see pin_rules)"
+        page: 35
+        quote: "this bypass capacitor has a minimumrecommendedvalueof100nF."
+      - kind: capacitor
+        value: "over 1 µF"
+        pins: '^VCCI$'
+        to: GND
+        series: false
+        required: false
+        note: "tantalum or electrolytic in parallel with the MLCC, only if the bias supply is a relatively long distance from the VCCI pin"
+        page: 29
+        quote: "electrolyticcapacitor,withavalueover1 µF,shouldbeplacedinparallelwiththeMLCC."
+      - kind: capacitor
+        value: "220 nF to 10 µF"
+        pins: '^VDD[AB]$'
+        to: GND
+        series: false
+        required: true
+        note: >-
+          device-biasing bypass VDDx to VSSx, low-ESR ceramic, close to the device. Design example: VDDA (bootstrap)
+          50-V 1 µF, sized from gate charge (Equations 19-21, p29); VDDB 50-V 10 µF + 50-V 0.22 µF MLCC (p30)
+        page: 35
+        quote: "A local bypass capacitor should be placed between the VDD and VSS pins, with a value of between 220 nF and 10 µF for device biasing."
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^VDD[AB]$'
+        to: GND
+        series: false
+        required: false
+        note: "in parallel with the device-biasing capacitor, for high-frequency filtering"
+        page: 35
+        quote: "It is further suggested that an additional 100-nF capacitor be placed in parallel with the device biasing capacitor for high frequency filtering."
+      - kind: capacitor
+        value: "over 10 µF"
+        pins: '^VDDB$'
+        to: GND
+        series: false
+        required: false
+        note: "tantalum or electrolytic in parallel with CVDD, only if the bias supply is a relatively long distance from the VDDB pin"
+        page: 30
+        quote: "the bias power supply output is a relatively long distance from the VDDB pin, a tantalum or electrolytic capacitor,"
+      - kind: diode
+        value: ""
+        pins: '^VDDA$'
+        to: VDDB
+        series: true
+        required: false
+        note: >-
+          external bootstrap diode DBOOT for high-side channel A (Figure 37); high-voltage fast-recovery or SiC Schottky,
+          voltage rating above the DC-link voltage with margin; example 600-V ultrafast MURA160T3G (p25). In series
+          with RBOOT
+        page: 30
+        quote: "In this example with a bootstrap configuration, the VDDB capacitor will also supply current for VDDA through the bootstrap diode."
+      - kind: resistor
+        value: ""
+        pins: '^VDDA$'
+        to: VDDB
+        series: true
+        required: false
+        note: "bootstrap resistor RBOOT in series with DBOOT: recommended 1-20 Ω depending on the diode; example 2.7 Ω"
+        page: 25
+        quote: "The recommended value for R is between 1 Ω and 20 Ω depending on the diode"
+      - kind: resistor
+        value: ""
+        pins: '^OUT[AB]$'
+        to: LOAD
+        series: true
+        required: false
+        note: >-
+          external gate resistors RON (turn-on) / ROFF (turn-off, with an anti-parallel diode, MSS1P4 in the example);
+          size from peak-current Equations 3-10 (p26-27); example RON = 2.2 Ω, ROFF = 0 Ω. RGS (gate-source) is drawn in
+          Figure 37 but no value is stated
+        page: 26
+        quote: "Theexternalgatedriverresistors,R /R ,areusedto:"
+      - kind: resistor
+        value: ""
+        pins: '^DT$'
+        to: GND
+        series: false
+        required: false
+        note: >-
+          RDT sets dead time: tDT (ns) ≈ 10 x RDT (kΩ) (Equation 1); example DT setting 250 ns (p30). Place close to
+          the DT pin (p36). Without RDT: DT tied to VCCI = ~0 ns, open = <15 ns (see pin_rules)
+        page: 23
+        quote: "One can program t by placing a resistor, R , between the DT pin and GND."
+      - kind: capacitor
+        value: "2.2 nF or above"
+        pins: '^DT$'
+        to: GND
+        series: false
+        required: false
+        note: "ceramic, in parallel with RDT, close to the DT pin; especially when dead time > 300 ns"
+        page: 23
+        quote: "it is recommended to parallel a ceramic capacitor, 2.2-nF or above, close to DT pin to achieve better noise"
+      - kind: capacitor
+        value: "≈1 nF"
+        pins: '^DISABLE$'
+        to: GND
+        series: false
+        required: false
+        note: "low ESR/ESL, close to the DIS pin, when connected to a microcontroller with distance. RDIS is drawn in Figure 37 with no value"
+        page: 3
+        quote: "Bypassusinga≈1nFlowESR/ESLcapacitorclosetoDISpinwhen"
+      - kind: resistor
+        value: ""
+        pins: '^PWM$'
+        to: SIGNAL
+        series: true
+        required: false
+        note: "optional input filter RIN, 0-100 Ω (example 51 Ω), with CIN; only to filter ringing from layout or long traces"
+        page: 25
+        quote: "Such a filter should use an R in the range of 0-Ω to 100-Ω and a C between 10-pF and 100-pF."
+      - kind: capacitor
+        value: ""
+        pins: '^PWM$'
+        to: GND
+        series: false
+        required: false
+        note: "optional input filter CIN, 10-100 pF (example 33 pF), with RIN"
+        page: 25
+        quote: "Such a filter should use an R in the range of 0-Ω to 100-Ω and a C between 10-pF and 100-pF."
+    pin_rules:
+      - pins: '^DISABLE$'
+        rule: "active high disables both outputs; internal pull-down (open = enabled); tie to GND if not used"
+        page: 3
+        quote: "Itisrecommendedtotiethispintogroundifnotusedtoachieve"
+      - pins: '^DT$'
+        rule: "tied to VCCI: dead time disabled (~0 ns)"
+        page: 22
+        quote: "If DT pin is tied to VCC, dead time function between OUTA and OUTB is disabled"
+      - pins: '^DT$'
+        rule: "left open: dead time < 15 ns; not recommended in noisy environments"
+        page: 23
+        quote: "If the DT pin is left open, the dead time duration (t ) is set to <15-ns. It is not recommended to leave DT pin"
+      - pins: '^PWM$'
+        rule: "internal pull-down if left open"
+        page: 3
+        quote: "PWMinputhasaTTL/CMOScompatibleinputthreshold.Thispinispulledlowinternallyif"
+      - pins: '^VCCI$'
+        rule: "pins 4 and 7 are shorted internally; bypass pin 4 to pin 1 (GND) in preference to pin 7"
+        page: 3
+        quote: "Thispinisinternallyshortedtopin4.Preferenceshouldbegiventobypassingpin-4topin-1"
+      - pins: '^NC$'
+        rule: "no internal connection"
+        page: 3
+        quote: "NC 3 – Nointernalconnection."
+    notes: >-
+      Values come from the Power Supply Recommendations (p35), the pin table (p3), the layout guidelines (p36) and the
+      design example around Figure 37 (p24-30). Bootstrap diode/resistor and the VDDA bootstrap capacitor apply to the
+      high-side/low-side bootstrap configuration of the example. Gate resistors, RIN/CIN and RBOOT values are design
+      dependent (ranges and examples in notes). Not stated: values for RGS and RDIS (drawn in Figure 37 only).
+      Checker caveat: the real-data file gives parts a named pinout (`pinout: ucc20225_npl`, defined under `pinouts:`),
+      which tools/check_typical.py does not resolve, so it reads the pin set as the characters of that name.
+
+  - datasheet: ucc20225.pdf
+    doc: "UCC20225 2.5-kV Isolated Dual-Channel Gate Driver with Single Input in LGA, SLUSCV8A (Rev A, February 2018)"
+    supplies:
+      - pin: VCCI
+        ground: GND
+        range_v: [3, 18]
+        page: 35
+        quote: "The recommended input supply voltage (VCCI) for UCC20225 is between 3-V and 18-V."
+      - pin: VDDA
+        ground: VSSA
+        range_v: [9.2, 25]
+        page: 35
+        quote: "output bias supply voltage (VDDA/VDDB) range is between 9.2-V to 25-V."
+      - pin: VDDB
+        ground: VSSB
+        range_v: [9.2, 25]
+        page: 35
+        quote: "output bias supply voltage (VDDA/VDDB) range is between 9.2-V to 25-V."
+    components:
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^VCCI$'
+        to: GND
+        series: false
+        required: true
+        note: "minimum recommended value; low ESR/ESL, close to the device; example: 50-V MLCC over 100 nF (p29)"
+        page: 35
+        quote: "this bypass capacitor has a minimum recommendedvalueof100nF."
+      - kind: capacitor
+        value: "over 1 µF"
+        pins: '^VCCI$'
+        to: GND
+        series: false
+        required: false
+        note: "tantalum or electrolytic in parallel with the MLCC, only if the bias supply is a relatively long distance from the VCCI pin"
+        page: 29
+        quote: "electrolyticcapacitor,withavalueover1 µF,shouldbeplacedinparallelwiththeMLCC."
+      - kind: capacitor
+        value: "220 nF to 10 µF"
+        pins: '^VDD[AB]$'
+        to: GND
+        series: false
+        required: true
+        note: >-
+          device-biasing bypass VDDx to VSSx, low-ESR ceramic, close to the device. Design example: VDDA (bootstrap)
+          50-V 1 µF, sized from gate charge (p29); VDDB 50-V 10 µF + 50-V 0.22 µF MLCC (p30)
+        page: 35
+        quote: "A local bypass capacitor should be placed between the VDD and VSS pins, with a value of between 220 nF and 10 µF for device biasing."
+      - kind: capacitor
+        value: "100 nF"
+        pins: '^VDD[AB]$'
+        to: GND
+        series: false
+        required: false
+        note: "in parallel with the device-biasing capacitor, for high-frequency filtering"
+        page: 35
+        quote: "It is further suggested that an additional 100-nF capacitor be placed in parallel with the device biasing capacitor for high frequency filtering."
+      - kind: capacitor
+        value: "over 10 µF"
+        pins: '^VDDB$'
+        to: GND
+        series: false
+        required: false
+        note: "tantalum or electrolytic in parallel with CVDD, only if the bias supply is a relatively long distance from the VDDB pin"
+        page: 30
+        quote: "the bias power supply output is a relatively long distance from the VDDB pin, a tantalum or electrolytic capacitor,"
+      - kind: diode
+        value: ""
+        pins: '^VDDA$'
+        to: VDDB
+        series: true
+        required: false
+        note: >-
+          external bootstrap diode DBOOT for high-side channel A (Figure 35); high-voltage fast-recovery or SiC Schottky,
+          voltage rating above the DC-link voltage with margin; example 600-V ultrafast MURA160T3G (p25). In series
+          with RBOOT
+        page: 30
+        quote: "In this example with a bootstrap configuration, the VDDB capacitor will also supply current for VDDA through the bootstrap diode."
+      - kind: resistor
+        value: ""
+        pins: '^VDDA$'
+        to: VDDB
+        series: true
+        required: false
+        note: "bootstrap resistor RBOOT in series with DBOOT: recommended 1-20 Ω depending on the diode; example 2.7 Ω"
+        page: 25
+        quote: "The recommended value for R is between 1 Ω and 20 Ω depending on the diode"
+      - kind: resistor
+        value: ""
+        pins: '^OUT[AB]$'
+        to: LOAD
+        series: true
+        required: false
+        note: >-
+          external gate resistors RON (turn-on) / ROFF (turn-off, with an anti-parallel diode in the example); size from
+          the peak-current equations (p26-27). RGS (gate-source) is drawn in the typical application schematic but no
+          value is stated
+        page: 26
+        quote: "Theexternalgatedriverresistors,R /R ,areusedto:"
+      - kind: resistor
+        value: ""
+        pins: '^DT$'
+        to: GND
+        series: false
+        required: false
+        note: >-
+          RDT sets dead time: DT (ns) = 10 x RDT (kΩ). Place close to the DT pin (p36). Without RDT: DT tied to VCCI =
+          ~0 ns, open = <15 ns (see pin_rules)
+        page: 3
+        quote: "Placing a resistor (R ) between DT and GND adjusts dead time"
+      - kind: capacitor
+        value: "2.2 nF or above"
+        pins: '^DT$'
+        to: GND
+        series: false
+        required: false
+        note: "ceramic, in parallel with RDT, close to the DT pin; especially when dead time > 300 ns"
+        page: 23
+        quote: "it is recommended to parallel a ceramic capacitor, 2.2-nF or above, close to DT pin to achieve better noise"
+      - kind: capacitor
+        value: "≈1 nF"
+        pins: '^DISABLE$'
+        to: GND
+        series: false
+        required: false
+        note: "low ESR/ESL, close to the DIS pin, when connected to a microcontroller with distance. RDIS is drawn in the typical application schematic with no value"
+        page: 3
+        quote: "Bypassusinga≈1nFlowESR/ESLcapacitorclosetoDISpinwhen"
+      - kind: resistor
+        value: ""
+        pins: '^PWM$'
+        to: SIGNAL
+        series: true
+        required: false
+        note: "optional input filter RIN, 0-100 Ω (example 51 Ω), with CIN; only to filter ringing from layout or long traces"
+        page: 25
+        quote: "Such a filter should use an R in the range of 0-Ω to 100-Ω and a C between 10-pF and 100-pF."
+      - kind: capacitor
+        value: ""
+        pins: '^PWM$'
+        to: GND
+        series: false
+        required: false
+        note: "optional input filter CIN, 10-100 pF (example 33 pF), with RIN"
+        page: 25
+        quote: "Such a filter should use an R in the range of 0-Ω to 100-Ω and a C between 10-pF and 100-pF."
+    pin_rules:
+      - pins: '^DISABLE$'
+        rule: "active high disables both outputs; internal pull-down (open = enabled); tie to GND if not used"
+        page: 3
+        quote: "Itisrecommendedtotiethispintogroundifnotusedtoachieve"
+      - pins: '^DT$'
+        rule: "tied to VCCI: dead time disabled (~0 ns)"
+        page: 22
+        quote: "If DT pin is tied to VCC, dead time function between OUTA and OUTB is disabled"
+      - pins: '^DT$'
+        rule: "left open: dead time < 15 ns"
+        page: 23
+        quote: "If the DT pin is left open, the dead time duration (t ) is set to <15-ns."
+      - pins: '^PWM$'
+        rule: "internal pull-down if left open"
+        page: 3
+        quote: "PWMinputhasaTTL/CMOScompatibleinputthreshold.Thispinispulledlowinternallyif"
+      - pins: '^VCCI$'
+        rule: "pins 4 and 7 are shorted internally"
+        page: 3
+        quote: "VCCI 7 P Primary-sidesupplyvoltage.Thispinisinternallyshortedtopin4."
+      - pins: '^NC$'
+        rule: "no internal connection"
+        page: 3
+        quote: "NC 3 – Nointernalconnection."
+    notes: >-
+      Same content as the UCC20225-Q1 datasheet: Power Supply Recommendations (p35), pin table (p3), layout guidelines
+      (p36) and the design example (p24-30). Unlike SLUSDC2C, this revision does not say which VCCI pin to bypass and
+      does not advise against leaving DT open. Gate resistors, RIN/CIN and RBOOT values are design dependent (ranges
+      and examples in notes). Not stated: values for RGS and RDIS. Checker caveat as for ucc20225a-q1.pdf (named
+      pinout `ucc20225_npl` not resolved by tools/check_typical.py).

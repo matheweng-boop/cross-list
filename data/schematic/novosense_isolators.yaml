@@ -1,0 +1,420 @@
+# Typical-application data (see data/schematic/README.md). Quotes are verbatim from the datasheet text.
+covers:
+- data/real/novosense_digital_isolators.yaml
+datasheets:
+- datasheet: NSI823x_Datasheet_2.0_EN.pdf
+  doc: NSI8230/NSI8231 Datasheet (EN) 2.0
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 20
+    quote: The NSI823x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 20
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN1$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN1 is high or NC, the output of Side 1 is enabled.
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  - pins: ^NC$
+    rule: no connection (no further handling stated)
+    page: 3
+    quote: 6 6 NC No Connection.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application circuit draws 100nF); no bulk cap. The typical circuit ties EN1 to VDD1 and EN2 to VDD2. Nothing stated about keeping GND1
+    and GND2 separate.
+- datasheet: NSI823x_Datasheet_1.6_EN.pdf
+  doc: NSI8230/NSI8231 Datasheet (EN) 1.6
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 21
+    quote: The NSI823x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 21
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN1$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN1 is high or NC, the output of Side 1 is enabled.
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  - pins: ^NC$
+    rule: no connection (no further handling stated)
+    page: 3
+    quote: 6 6 NC No Connection.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application circuit draws 100nF); no bulk cap. The typical circuit ties EN1 to VDD1 and EN2 to VDD2. Nothing stated about keeping GND1
+    and GND2 separate.
+- datasheet: NSI824x_Datasheet_2.0_EN.pdf
+  doc: NSI8240/NSI8241/NSI8242 Datasheet (EN) 2.0
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 22
+    quote: The NSI824x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 22
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^(EN1|NC)$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN1 is high or NC, the output of Side 1 is enabled.
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application figure is not in the text); no bulk cap. Nothing stated about keeping GND1 and GND2 separate.
+- datasheet: NSI824x-Q1_Datasheet_Rev1.4_EN.pdf
+  doc: NSI8240/NSI8241/NSI8242 (-Q1) Datasheet (EN) 1.4
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 20
+    quote: The NSI824x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 20
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^(EN1|NC)$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN1 is high or NC, the output of Side 1 is enabled.
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application circuit draws 100nF); no bulk cap. The typical circuit ties EN1 to VDD1 and EN2 to VDD2. Nothing stated about keeping GND1
+    and GND2 separate.
+- datasheet: NSI83xxWx-DSSWR_Datasheet_1.0_EN.pdf
+  doc: NSI8330/NSI8331/NSI8340/NSI8341/NSI8342 Datasheet (EN) 1.0
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 25
+    quote: The NSI83x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 25
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^EN1$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: Active high logic input. When EN1 is high or NC, the output
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 4
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  - pins: ^NC$
+    rule: no connection (no further handling stated)
+    page: 4
+    quote: 6 6 NC No Connection.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application circuit draws 100nF); no bulk cap. The typical circuit ties EN1 to VDD1 and EN2 to VDD2. Nothing stated about keeping GND1
+    and GND2 separate.
+- datasheet: NSI834xSx-DSSR_Datasheet_1.1_EN.pdf
+  doc: NSI834x Datasheet (EN) 1.1 (NSI834xSx-DSSR)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 21
+    quote: The NSI834x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 21
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^(EN1|NC)$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: Active high logic input. When EN1 is high or NC, the output
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application circuit draws 100nF); no bulk cap. The typical circuit ties EN1 to VDD1 and EN2 to VDD2. Nothing stated about keeping GND1
+    and GND2 separate.
+- datasheet: NSI834xSx-Q1SSR_Datasheet_1.1_EN.pdf
+  doc: NSI834x Datasheet (EN) 1.1 (NSI834xSx-Q1SSR)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 4
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 21
+    quote: The NSI834x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 21
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules:
+  - pins: ^(EN1|NC)$
+    rule: 'pin 7 is NC on the no-enable variant or EN1 (active high): high or NC = side 1 outputs enabled, low = high impedance'
+    page: 3
+    quote: Active high logic input. When EN1 is high or NC, the output
+  - pins: ^EN2$
+    rule: 'active-high output enable: high or NC = side 2 outputs enabled, low = high impedance'
+    page: 3
+    quote: When EN2 is high or NC, the output of Side 2 is enabled.
+  notes: Only the 0.1 µF bypass cap per side is stated (the typical application circuit draws 100nF); no bulk cap. The typical circuit ties EN1 to VDD1 and EN2 to VDD2. Nothing stated about keeping GND1
+    and GND2 separate.
+- datasheet: NSI836xWx-DSWR_Datasheet_1.1_EN.pdf
+  doc: NSI8360/NSI8361/NSI8362/NSI8363 Datasheet (EN) 1.1
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 20
+    quote: The NSI836x requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 20
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules: []
+  notes: Only the 0.1 µF bypass cap per side is stated; no bulk cap. No enable or NC pins. Nothing stated about keeping GND1 and GND2 separate.
+- datasheet: NSI836x-Q1_Datasheet_1.0_EN.pdf
+  doc: NSI8360/NSI8361/NSI8362/NSI8363 (-Q1) Datasheet (EN) 1.0
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.5
+    - 5.5
+    page: 5
+    quote: Power Supply Voltage VDD1, VDD2 2.5 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: one per side, as close as possible to the package; keep the area under the chip free of planes, traces, pads and vias
+    page: 20
+    quote: The NSI836x-Q1 requires a 0.1 µF bypass capacitor between VDD1 and GND1, VDD2 and GND2.
+  - kind: resistor
+    value: 50–300 Ω
+    pins: ^(IN|OUT)[A-F]$
+    to: SIGNAL
+    series: true
+    required: false
+    note: optional, if the system is excessively noisy; also improves latch-up immunity
+    page: 20
+    quote: the user may also include resistors (50–300 Ω) in series with the inputs and outputs if the system is excessively noisy
+  pin_rules: []
+  notes: Only the 0.1 µF bypass cap per side is stated; no bulk cap. No enable or NC pins. Nothing stated about keeping GND1 and GND2 separate.

@@ -1,0 +1,4761 @@
+# TI (ti.com) application notes, white papers and application briefs relevant to Skyworks/Qorvo product areas.
+# Competitor reference material for the Cross List app (Skyworks is the reference manufacturer; Skyworks + Qorvo combined).
+# Source of the list: the "Top documentation" tables and per-subsystem techDocs embedded in public ti.com/solution/<app>
+# pages, and the technical-documentation tables of public ti.com/product/<part> pages (fetched Oct 2026, <=1 req/s).
+# Titles, types and dates are as TI lists them; summaries are ours (from title, TOC and, where opened, the PDF).
+#
+# Fields:
+#   doc        TI literature number incl. revision letter as listed (url uses the revision-less number; TI redirects to latest)
+#   area       one of: digital_isolators, isolated_gate_drivers, isolated_amplifiers_current_sensing,
+#              isolated_dcdc_bias_power, clocks_timing, pmic_dcdc, motor_drivers, rf_switches_antenna_tuning, lna,
+#              rf_front_ends, audio, broadcast_radio, automotive, industrial, infrastructure
+#              (rf_switches_antenna_tuning and lna have no dedicated entries: TI publishes no such notes; the relevant
+#               notes are filed under rf_front_ends with lna / rf_switch / antenna_switch function ids)
+#   skyworks_qorvo_functions  Cross List function ids the note informs (see data/blocks/research/ti_block_diagrams.md for new ids)
+#   block_diagram.present  true = system/application block diagram found (where = figure/page); false = PDF opened, none found;
+#                          null = PDF not opened (we did not download every PDF on purpose)
+#   found_on   which ti.com solution page (#subsystem) or product page lists the document
+
+appnotes:
+- doc: SLLA284G
+  title: Digital Isolator Design Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla284
+  date: '2023-09-13'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: 'TI''s general digital isolator design guide: channel direction, default output, supply decoupling, PCB layout and creepage/clearance for capacitive isolators.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - active-antenna-system-mmimo-aas
+  - robot-servo-drive
+  - servo-drive-power-stage-module
+- doc: SLLA526D
+  title: Improve Your System Performance by Replacing Optocouplers with Digital Isolators
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slla526
+  date: '2025-11-07'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Compares optocouplers with capacitive digital isolators (speed, CMTI, lifetime, power) and argues for replacing optos in industrial and automotive designs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO6741
+  - product/ISO7721
+  - product/ISO7741-Q1
+  - product/ISO7741
+- doc: SLLA522A
+  title: How to Replace Optocouplers with Digital Isolators in Standard Interface Circuit
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla522
+  date: '2021-05-19'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Shows how to replace optocouplers with digital isolators in standard interface circuits (UART, SPI, GPIO, open-drain).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO6741
+  - product/ISO7741-Q1
+- doc: SLLA426
+  title: Considerations for Selecting Digital Isolators
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla426
+  date: '2018-07-24'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: 'Selection checklist for digital isolators: isolation rating, working voltage, CMTI, data rate, default output, channel count and package.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7721
+  - product/ISO7741-Q1
+  - product/ISO7741
+- doc: SDAA213
+  title: Understand Safety Requirements and Isolation for High-Voltage Application Part I
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa213
+  date: '2026-06-15'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - isolated_dcdc
+  summary: Part I of a series on safety requirements and insulation for high-voltage applications (basic vs reinforced isolation, standards).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7741-Q1
+  - product/ISO7741
+- doc: SLYY081B
+  title: Understanding failure modes in isolators
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy081
+  date: '2024-01-29'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - isolated_amplifier
+  summary: White paper on failure modes of isolators (electrical overstress, insulation breakdown) and how capacitive isolation behaves when it fails.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - uninterruptible-power-supply
+  - product/AMC1311
+  - product/ISO1042-Q1
+  - product/ISO7741
+- doc: SLLA564
+  title: Why are Digital Isolators Certified to Meet Electrical Equipment Standards?
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slla564
+  date: '2021-11-16'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Explains why digital isolators are certified to component and end-equipment standards (VDE, UL, CSA, IEC) and what each certification covers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1042-Q1
+  - product/ISO1500
+  - product/ISO6741
+  - product/ISO7721
+- doc: SLLA563
+  title: 'Distance Through Insulation: How Digital Isolators Meet Certification Requiremen'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slla563
+  date: '2021-06-11'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Explains distance-through-insulation and how thin-film capacitive isolators meet certification requirements.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1042-Q1
+  - product/ISO1500
+  - product/ISO6741
+  - product/ISO7721
+- doc: SLLA486C
+  title: Top Design Questions About Isolated CAN Bus Design
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla486
+  date: '2026-05-19'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - isolated_can
+  - digital_isolator
+  summary: 'FAQ on isolated CAN bus design: when to isolate, isolated power, bus protection and timing.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1042-Q1
+- doc: SLLA386D
+  title: How to Isolate Signal and Power in Isolated CAN Systems
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla386
+  date: '2025-11-07'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - isolated_can
+  - isolated_dcdc
+  summary: How to isolate both signal and power in isolated CAN systems (isolated CAN transceivers plus transformer driver or integrated isolated power).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1042-Q1
+  - product/SN6505B
+- doc: SLLA416D
+  title: How to Isolate Signal and Power for an RS-485 System
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla416
+  date: '2025-11-07'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - rs485_transceiver
+  - digital_isolator
+  - isolated_dcdc
+  summary: How to isolate signal and power for an RS-485 node, comparing discrete isolator + transceiver with integrated isolated RS-485.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1500
+  - product/ISO7741
+  - product/SN6505B
+- doc: SLLA424C
+  title: How to Isolate RS-485 for Smallest Size and Highest Reliability
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla424
+  date: '2022-07-06'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - rs485_transceiver
+  - digital_isolator
+  summary: Design techniques for small, reliable isolated RS-485 (integrated vs discrete, surge and EMC).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - micro-inverter#Wired interface
+  - string-inverter#Wired interface
+  - product/ISO1500
+- doc: SLLA554
+  title: Simplify the Design of Isolated CAN with Selective Wake ECUs
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla554
+  date: '2023-04-18'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - isolated_can
+  summary: Isolated CAN with selective wake (partial networking) for automotive ECUs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1042-Q1
+- doc: SLLA608
+  title: IEC60601-1-2 Compliant Dig. Iso Design W/ 16-kV Contact Discharge ESD Protection
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla608
+  date: '2023-02-16'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - tvs_esd
+  summary: Digital isolator design that meets IEC 60601-1-2 with 16-kV contact ESD protection for medical equipment.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7721
+  - product/ISO7741-Q1
+  - product/ISO7741
+- doc: SLLA523
+  title: Converting SPI to GPIO Through Digital Isolators
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla523
+  date: '2020-10-16'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - io_expander
+  summary: Converting SPI to parallel GPIO across a digital isolator to reduce channel count in isolated I/O modules.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - digital-input-module#Signal isolation
+  - digital-output-module#Digital output front end
+  - product/ISO7741
+  - product/TPS274160
+- doc: SLLA411
+  title: Simplify current and voltage monitoring with isolated SPI and I2C in your BMS
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla411
+  date: '2018-07-03'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - current_sensor
+  summary: Isolated SPI and I2C for current and voltage monitoring in battery management systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - battery-junction-box#Isolation
+  - high-voltage-battery-system#Isolation
+  - product/ISO7741-Q1
+- doc: SLLA417B
+  title: How to Isolate Signal and Power for I2C
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla417
+  date: '2021-05-19'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - isolated_dcdc
+  summary: How to isolate signal and power for I2C (bidirectional I2C isolators plus isolated supply).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/SN6505B
+- doc: SLLA524
+  title: What is EMC? 4 Questions About EMI, Radiated Emissions, ESD and EFT in Isolated
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla524
+  date: '2020-07-21'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Four questions about EMC (EMI, radiated emissions, ESD, EFT) in isolated systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7741
+- doc: SLYT742
+  title: How to reduce radiated emissions of digital isolators for systems with RF module
+  type: Analog design Journal
+  url: https://www.ti.com/lit/pdf/slyt742
+  date: '2018-03-26'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - rf_frontend
+  summary: How to reduce radiated emissions of digital isolators in systems that also contain an RF module (coexistence).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7721
+  - product/ISO7741
+- doc: SLLA469
+  title: Solutions to meet the higher automotive isolation creepage & clearance needs
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla469
+  date: '2020-01-13'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Meeting the larger creepage and clearance needed by 800-V automotive isolation with wide-body isolator packages.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7741-Q1
+- doc: SLLA368C
+  title: Low-Emission Designs With ISOW7841 Integrated Signal and Power Isolator
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla368
+  date: '2019-02-26'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - isolated_dcdc
+  summary: Low-emission layouts for ISOW7841 integrated signal-and-power isolator.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-control-module
+  - servo-drive-communication-module
+- doc: SLYT649A
+  title: Pushing the envelope with high-performance digital-isolation technology
+  type: Analog design Journal
+  url: https://www.ti.com/lit/pdf/slyt649
+  date: '2018-08-22'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Analog Design Journal article on the performance envelope of high-performance capacitive digital isolation.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - uninterruptible-power-supply
+  - product/ISO7721
+- doc: SLLA353A
+  title: Isolation Glossary
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla353
+  date: '2017-09-19'
+  area: digital_isolators
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Glossary of isolation terms (VIOTM, VIORM, VIOWM, CMTI, creepage, CTI) used in isolator datasheets.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7721
+  - product/ISO7741
+- doc: SLUAAY2
+  title: Choosing Appropriate Protection Approach for IGBT and SiC Power Modules
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluaay2
+  date: '2024-07-19'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Choosing a protection approach (DESAT, overcurrent, shunt) for IGBT and SiC power modules with isolated gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21750
+- doc: SLUA863C
+  title: Understanding the Short Circuit Protection for Silicon Carbide MOSFETs
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slua863
+  date: '2023-09-08'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Short-circuit behaviour of SiC MOSFETs and how isolated gate drivers detect and turn them off safely.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21750
+- doc: SLYA091
+  title: Does My Design Need a Miller Clamp?
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slya091
+  date: '2024-12-11'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: When an active Miller clamp is needed in a gate driver design to prevent parasitic turn-on.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21750
+  - product/UCC5350
+- doc: SLLA631A
+  title: Impact of Narrow Pulse Widths in Gate Driver Circuits
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla631
+  date: '2024-01-25'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  - half_bridge_driver
+  summary: Impact of narrow input pulse widths on gate driver behaviour (pulse distortion, deglitch).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21520
+- doc: SBAA586
+  title: Discrete DESAT for Opto-Compatible Isolated Gate Driver UCC23513 in Motor Drives
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa586
+  date: '2023-10-24'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Discrete DESAT circuit for the opto-compatible isolated gate driver UCC23513 in motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC23513
+- doc: SLUAAR5
+  title: Circuit Board Insulation Design According to IEC60664 for Motor Drive Apps
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sluaar5
+  date: '2023-08-31'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  - digital_isolator
+  summary: PCB insulation design (creepage, clearance, pollution degree) per IEC 60664 for motor-drive isolated gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7741
+  - product/UCC23513
+  - product/UCC5350
+- doc: SLUAAI2
+  title: The Use and Benefits of Ferrite Beads in Gate Drive Circuits
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sluaai2
+  date: '2021-12-16'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Using ferrite beads in gate-drive circuits to damp ringing.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21222
+  - product/UCC21520
+  - product/UCC21750
+  - product/UCC23513
+- doc: SLLA387A
+  title: Understanding Peak IOH and IOL Currents
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla387
+  date: '2020-02-28'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Explains peak source/sink (IOH/IOL) current specs for gate drivers and how they relate to switching speed.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - dc-fast-charging-power-module#AC/DC power stage
+  - dc-fast-charging-power-module#DC/DC power stage
+  - string-inverter
+  - product/UCC21222
+- doc: SLLA385A
+  title: External Gate Resistor Selection Guide
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla385
+  date: '2020-02-28'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: External gate resistor selection guide for isolated gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - telecom-rectifiers
+  - product/UCC21222
+  - product/UCC21520
+  - product/UCC23513
+- doc: SLYY140A
+  title: Impact of an isolated gate driver
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy140
+  date: '2019-02-20'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: White paper on the impact of an isolated gate driver on system efficiency, size and robustness.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-dc-power-supply-unit-psu-48v-54v-output#Isolated DC/DC power stage
+  - dc-fast-charging-power-module#AC/DC power stage
+  - dc-fast-charging-power-module#DC/DC power stage
+  - string-inverter
+- doc: SLUA944
+  title: Why is high UVLO important for safe IGBT & SiC MOSFET power switch operation
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slua944
+  date: '2019-01-30'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Why a high UVLO threshold matters for safe IGBT and SiC MOSFET operation.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21750
+- doc: SLUA909
+  title: Common Mode Transient Immunity (CMTI) for UCC2122x Isolated Gate Drivers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua909
+  date: '2018-07-19'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Common-mode transient immunity (CMTI) explained for UCC2122x dual isolated gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21222
+- doc: SLUA954
+  title: How to Drive High Voltage GaN FETs with UCC21220A
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slua954
+  date: '2019-03-06'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  - half_bridge_driver
+  summary: Driving high-voltage GaN FETs with the dual isolated driver UCC21220A.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21222
+- doc: SLUA994
+  title: Implementing a Bipolar Gate Drive for Low-Side IGBTs and SiC FETs in Motor Drive
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slua994
+  date: '2019-10-10'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Bipolar (negative) gate drive for low-side IGBTs and SiC FETs in motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - robot-servo-drive#Holding brake power stage
+- doc: SLUA912A
+  title: UCC23513 Input Resistor Selection Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua912
+  date: '2019-06-18'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Input resistor selection for the opto-compatible isolated gate driver UCC23513.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC23513
+- doc: SLUA778A
+  title: UCC21520, a Universal Isolated Gate Driver with Fast Dynamic Response
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua778
+  date: '2016-07-05'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: 'UCC21520 universal dual isolated gate driver: fast dynamic response and typical applications.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-dc-power-supply-unit-psu-48v-54v-output#Isolated DC/DC power stage
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#3-phase power stage
+  - robot-servo-drive#3-phase power stage
+- doc: SLYT648
+  title: Common-mode transient immunity for isolated gate drivers
+  type: Analog design Journal
+  url: https://www.ti.com/lit/pdf/slyt648
+  date: '2015-10-30'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Analog Design Journal article on common-mode transient immunity for isolated gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#3-phase power stage
+  - robot-servo-drive#3-phase power stage
+  - servo-drive-power-stage-module
+- doc: SLUA669B
+  title: Using a Single-Output Gate-Driver for High-Side or Low-Side Drive
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua669
+  date: '2023-09-08'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  - half_bridge_driver
+  summary: Using a single-output gate driver for either high-side or low-side drive.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - string-inverter
+  - telecom-rectifiers
+- doc: SLLA472A
+  title: Comparative Analysis of Two Different Methods for Gate-Drive Current Boosting
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla472
+  date: '2022-02-17'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Compares two methods for boosting gate-drive current (external buffer stages).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - central-inverter
+  - dc-fast-charging-power-module#AC/DC power stage
+  - dc-fast-charging-power-module#DC/DC power stage
+  - power-conversion-system-pcs
+- doc: SLUA988
+  title: Performance of the Analog PWM Channel in Smart Gate Drivers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua988
+  date: '2020-01-16'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  - isolated_amplifier
+  summary: Performance of the analog PWM (isolated temperature/voltage) channel in smart isolated gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#3-phase power stage
+  - robot-servo-drive
+  - robot-servo-drive#3-phase power stage
+- doc: SLYY139A
+  title: Silicon carbide gate drivers -- a disruptive technology in power electronics
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy139
+  date: '2019-02-20'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: White paper on SiC gate drivers as a disruptive technology in power electronics.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#3-phase power stage
+  - robot-servo-drive
+  - robot-servo-drive#3-phase power stage
+- doc: SLUA897
+  title: Solar Inverter Layout Considerations for UCC21220
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua897
+  date: '2018-06-06'
+  area: isolated_gate_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Layout considerations for UCC21220 isolated gate drivers in solar inverters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC21222
+- doc: SBAA359B
+  title: Comparing Isolated Amplifiers and Isolated Modulators
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sbaa359
+  date: '2024-06-04'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: Compares isolated amplifiers (analog output) with isolated delta-sigma modulators (bitstream) for current and voltage sensing.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1300
+  - product/AMC1306M05
+  - product/AMC1311
+  - product/AMC3330
+- doc: SDAA114A
+  title: Pairing Isolated Amplifiers With SAR AD Converters
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa114
+  date: '2026-07-10'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - adc
+  summary: How to pair isolated amplifiers with SAR ADCs (driving, filtering, common mode).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1311
+  - product/AMC1350
+  - product/AMC3330
+- doc: SLYY234
+  title: An Engineer's Guide to Isolated Signal Chain Solutions
+  type: E-book
+  url: https://www.ti.com/lit/pdf/slyy234
+  date: '2024-05-23'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: E-book on isolated signal-chain solutions (isolated amplifiers, modulators, comparators).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1300
+  - product/AMC1306M05
+  - product/AMC1311
+  - product/AMC1350
+- doc: SLYY244
+  title: An Engineer's Guide to Voltage Sensing
+  type: E-book
+  url: https://www.ti.com/lit/pdf/slyy244
+  date: '2025-03-20'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: E-book on voltage sensing including isolated high-voltage measurement.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1311
+- doc: SLYY204D
+  title: Addressing High-Volt Design Challenges w/ Reliable and Affordable Isolation Tech
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy204
+  date: '2026-05-15'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - digital_isolator
+  summary: White paper on reliable, affordable isolation technology for high-voltage designs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1300
+  - product/AMC1311
+  - product/AMC1350
+  - product/AMC3330
+- doc: SBAA460
+  title: Shunt Resistor Selection for Isolated Data Converters
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa460
+  date: '2023-05-04'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - current_sensor
+  summary: Shunt resistor selection for isolated data converters (power, accuracy, input range).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1300
+  - product/AMC1306M05
+  - product/AMC1311
+  - product/AMC1350
+- doc: SBAA598
+  title: Designing a Bootstrap Charge-Pump Power Supply for an Isolated Amplifier
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa598
+  date: '2023-09-25'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - isolated_dcdc
+  summary: Bootstrap charge-pump supply for the high side of an isolated amplifier, avoiding a separate isolated DC/DC.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1300
+  - product/AMC1311
+  - product/AMC1350
+- doc: SBAA605
+  title: Utilizing AMC3311 to Power AMC23C11 for Isolated Sensing and Fault Detection
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa605
+  date: '2023-11-09'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - isolated_dcdc
+  summary: Using the integrated isolated power of AMC3311 to supply an AMC23C11 isolated comparator for sensing and fault detection.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC3330
+- doc: SBAA554
+  title: Achieving High-Performance Isolated Current and Voltage Sensing in Server PSUs
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa554
+  date: '2022-07-21'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - current_sensor
+  summary: Isolated current and voltage sensing in server power supplies.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC3330
+- doc: SLYT827
+  title: Isolated Voltage Sensing in AC Motor Drives
+  type: Analog design Journal
+  url: https://www.ti.com/lit/pdf/slyt827
+  date: '2022-06-08'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: Analog Design Journal article on isolated voltage sensing in AC motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1311
+  - product/AMC1350
+  - product/AMC3330
+- doc: SBAA438A
+  title: Best in Class Radiated Emissions EMI Performance with Isolated Amplifiers
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sbaa438
+  date: '2023-03-15'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: Radiated-emissions performance of isolated amplifiers with integrated isolated power.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - robot-servo-drive#Motor current & voltage sense
+  - product/AMC1311
+  - product/AMC3330
+- doc: SBAA515A
+  title: Best Practices to Attenuate AMC3301 Family Radiated Emissions EMI
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa515
+  date: '2022-09-22'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: Layout practices to reduce radiated emissions of the AMC3301 family.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - string-inverter#Self-diagnostics/monitoring
+  - product/AMC3330
+- doc: SBAA607A
+  title: Clock Edge Delay Compensation With Isolated Modulators Digital Interface to MCUs
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa607
+  date: '2024-01-12'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: Clock-edge delay compensation for isolated modulator digital interfaces to MCUs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1306M05
+- doc: SBAA229B
+  title: Interfacing a Differential-Output (Isolated) Amp to a Single-Ended Input ADC
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa229
+  date: '2023-06-02'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - adc
+  summary: Interfacing a differential-output isolated amplifier to a single-ended ADC.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - uninterruptible-power-supply
+  - product/AMC1300
+  - product/AMC1311
+  - product/AMC3330
+- doc: SDAA073
+  title: Temperature Monitor for Power Modules and Power Electronic Parts
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa073
+  date: '2025-07-30'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - temperature_sensor
+  summary: Isolated temperature monitoring for power modules and power-electronic parts.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1350
+  - product/UCC33420
+- doc: SLUAB06
+  title: Insulation Resistance Detection Designs in GESS-BMS
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluab06
+  date: '2025-01-22'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - isolated_switch_driver
+  summary: Insulation-resistance detection designs in energy-storage (GESS) battery management systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC3330
+- doc: SBOA366C
+  title: Current Sensing Applications in Communication Infrastructure Equipment
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa366
+  date: '2023-08-08'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  - isolated_amplifier
+  summary: Current-sensing applications in communication infrastructure (PA bias, PoE, -48 V, hot swap).
+  block_diagram:
+    present: true
+    where: Fig 1 p.1 wireless-infrastructure power supply block diagram
+  found_on:
+  - product/TMCS1123
+- doc: SBOA369B
+  title: Improving Power Amplifier Efficiency With Current Monitors
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa369
+  date: '2023-07-24'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  - rf_pa_bias
+  summary: Using current monitors to optimise RF power amplifier efficiency (PA drain/bias current monitoring).
+  block_diagram:
+    present: false
+    where: circuit figure only (Fig 2 current-sense feedback)
+  found_on:
+  - product/TMCS1123
+- doc: SBOA578A
+  title: PCB Thermal Analysis of In-Package Magnetic Current Sensors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sboa578
+  date: '2026-09-21'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: PCB thermal analysis for in-package magnetic (Hall) current sensors.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TMCS1123
+- doc: SDAA059A
+  title: A Comparison of Fused Lead Frame and Non-Fused Lead Frame Variants of Hall Effect Current Sensors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa059
+  date: '2026-03-26'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Fused vs non-fused lead-frame Hall-effect current sensors.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TMCS1123
+- doc: SBAA801
+  title: Deep Dive into IEC 61000-4-5 Surge Immunity Testing of the TMCS1143 Hall-Effect Current Sensor
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa801
+  date: '2026-03-11'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  - tvs_esd
+  summary: IEC 61000-4-5 surge immunity testing of the TMCS1143 Hall current sensor.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - string-inverter
+- doc: SSZA114
+  title: Hall Effect Based Current Sensors in CLLLC Synchronous Rectification Control
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/ssza114
+  date: '2024-11-18'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Hall current sensors for synchronous-rectifier control in CLLLC converters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - micro-inverter#DC/DC power stage
+- doc: SBOA555B
+  title: Current Sensing in Collaborative and Industrial Robotic Arms
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa555
+  date: '2023-07-24'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Current sensing in collaborative and industrial robot arms.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - robot-servo-drive#Motor current & voltage sense
+  - product/TMCS1123
+- doc: SBOA174D
+  title: Current Sensing in an H-Bridge
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa174
+  date: '2023-04-07'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Current sensing in an H-bridge (in-line, low-side, high-side).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - robot-servo-drive#DC link current & voltage sense
+  - robot-servo-drive#Motor current & voltage sense
+- doc: SBOA534
+  title: Introduction to Current Sense Amplifiers
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa534
+  date: '2022-02-02'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Introduction to current-sense amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - micro-inverter#Input current & voltage sense
+  - string-inverter#Input current & voltage sense
+- doc: SBOA624
+  title: Summary of Solar Application Scenarios Using In-package Hall-effect Current Sensors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sboa624
+  date: '2025-03-19'
+  area: isolated_amplifiers_current_sensing
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Summary of solar application scenarios using in-package Hall-effect current sensors.
+  block_diagram:
+    present: true
+    where: Fig 2-1 p.3 3-phase string inverter, Fig 2-4 p.6 single-phase, Fig 2-5 p.7 hybrid, Fig 2-10 p.11 micro-inverter, Fig 2-11 p.11 optimizer
+  found_on:
+  - central-inverter#DC/AC output current & voltage sense
+  - central-inverter#DC/DC input current & voltage sense
+  - central-inverter#DC/DC output current & voltage sense
+  - central-inverter#Grid current & voltage sense
+- doc: SLUAAS6
+  title: Isolated Bias Power Supply Architecture for HEV and EV Onboard Chargers
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sluaas6
+  date: '2024-11-27'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - gate_driver
+  summary: Isolated bias power architectures (centralised, semi-distributed, distributed) for HEV/EV on-board chargers.
+  block_diagram:
+    present: true
+    where: Figs 2-1..5-1, p.4-8 (OBC bias-power architectures)
+  found_on:
+  - onboard-charger
+  - product/UCC14240-Q1
+  - product/UCC25800-Q1
+- doc: STDA010
+  title: Isolated Bias Power Supply Architecture for HEV/EV Single Stage Onboard Chargers
+  type: White paper
+  url: https://www.ti.com/lit/pdf/stda010
+  date: '2026-01-07'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - gate_driver
+  summary: Isolated bias power architectures for single-stage HEV/EV on-board chargers (common-source and common-drain).
+  block_diagram:
+    present: true
+    where: Fig 2-1 p.4, Fig 3-1 p.5 single-stage OBC; Figs 3-2..3-4 p.6-9 bias architectures
+  found_on:
+  - product/UCC14240-Q1
+- doc: SLUAB19
+  title: Isolated Bias Power Supply Architecture for HEV/EV HVLV DCDC Converters
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sluab19
+  date: '2025-01-16'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - gate_driver
+  summary: Isolated bias power architectures for HEV/EV high-voltage to low-voltage DC/DC converters.
+  block_diagram:
+    present: true
+    where: Figs 2-1..6-1 p.4-8 HV-LV DC/DC bias-power architectures
+  found_on:
+  - product/UCC14240-Q1
+- doc: SLUAAW2
+  title: Low-Cost, High-Performance Auxiliary Power Supply Solution for 11KW OBC
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sluaaw2
+  date: '2024-07-09'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Low-cost auxiliary power supply for an 11-kW OBC.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC25800-Q1
+- doc: SLUAAB9A
+  title: Bias Supply Design for Isolated Gate Driver Using UCC25800-Q1
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluaab9
+  date: '2021-12-01'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - gate_driver
+  summary: Bias supply design for isolated gate drivers using the UCC25800-Q1 open-loop LLC transformer driver.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - micro-inverter#Isolated DC/DC power supply
+  - string-inverter#Low side isolated DC/DC power supply
+  - product/UCC25800-Q1
+- doc: SLUAB37
+  title: Inrush Current Reduction Considerations for UCC25800- Q1 in Parallel Startup Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluab37
+  date: '2025-07-29'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Inrush current reduction for UCC25800-Q1 in parallel start-up.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC25800-Q1
+- doc: SDAA192
+  title: How to Pass CISPR25 Class 5 for UCC33420-Q1
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa192
+  date: '2025-11-10'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: How to pass CISPR 25 Class 5 with the UCC33420-Q1 integrated-transformer isolated DC/DC.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC33420
+- doc: SDAA139
+  title: How to Pass CISPR32 Class B for UCC33420-Q1
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa139
+  date: '2025-10-29'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: How to pass CISPR 32 Class B with the UCC33420 isolated DC/DC module.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC33420
+- doc: SLYY182A
+  title: 'Power Through the Isolation Barrier: The Landscape of Isolated DC/DC Bias Power'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy182
+  date: '2021-03-25'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Overview of isolated DC/DC bias power options (discrete transformer, push-pull, integrated-transformer modules).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC12050
+- doc: SLYY202
+  title: Fundamentals of EMI Requirements for an Isolated DC/DC Converter
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy202
+  date: '2021-01-07'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Fundamentals of EMI requirements for isolated DC/DC converters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC12050
+- doc: SLLA566A
+  title: How to Reduce Emissions in Push-Pull Isolated Power Supplies
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla566
+  date: '2021-10-05'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Reducing emissions in push-pull isolated supplies (transformer drivers).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/SN6505B
+- doc: SLLA436
+  title: Signal and Power Isolation with 3.3 V / 5 V Input and 12 V / 15 V Output
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla436
+  date: '2018-10-17'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Signal and power isolation with 3.3/5 V input and 12/15 V output (push-pull transformer driver).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/SN6505B
+- doc: SLOA285A
+  title: Topology Selection for Isolated Power Supplies in Patient Monitor
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sloa285
+  date: '2020-09-02'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Topology selection for isolated supplies in patient monitors.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO7741
+  - product/UCC12050
+- doc: SLUA977
+  title: A Reinforced-isolated Analog Input Chain for Space-constrained Applications
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slua977
+  date: '2019-09-01'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - isolated_amplifier
+  summary: Reinforced-isolated analog input chain for space-constrained applications (integrated isolated power).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC12050
+- doc: SBAA786A
+  title: Optimized Excitation Power Stage for Electrically Excited Synchronous Machines
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa786
+  date: '2026-05-05'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  summary: Excitation power stage for electrically excited synchronous machines.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC25800-Q1
+- doc: SLAA672
+  title: Analysis of Power Supply Topologies for IGBT Gate Drivers in Industrial Drives
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa672
+  date: '2015-07-06'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - gate_driver
+  summary: Analysis of power-supply topologies for IGBT gate drivers in industrial drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#Isolated DC/DC hot side
+  - servo-drive-power-stage-module
+  - servo-drive-power-stage-module#Isolated DC/DC hot side
+- doc: SLLA354
+  title: Is Your IGBT Gate-Driver Power Supply Optimized
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla354
+  date: '2015-03-12'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - gate_driver
+  summary: Optimising the IGBT gate-driver power supply.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#Isolated DC/DC hot side
+  - servo-drive-power-stage-module
+  - servo-drive-power-stage-module#Isolated DC/DC hot side
+- doc: SLUAAN0
+  title: Designing a Simple and Low-Cost Flybuck Solution With the TPS62933F
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluaan0
+  date: '2022-12-16'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - isolated_dcdc
+  - pol_buck
+  summary: Simple, low-cost Fly-Buck isolated bias using TPS62933F.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - central-inverter#Isolated DC/DC power supply
+  - micro-inverter#Non-isolated DC/DC power supply
+  - string-inverter#Low side isolated DC/DC power supply
+- doc: SLUAAE5
+  title: Flyback Selection Guide
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sluaae5
+  date: '2022-06-23'
+  area: isolated_dcdc_bias_power
+  skyworks_qorvo_functions:
+  - hv_flyback
+  - isolated_dcdc
+  summary: Flyback controller/converter selection guide.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - micro-inverter#Grid-side isolated AC/DC power supply
+  - string-inverter#High side isolated DC/DC power supply
+  - string-inverter#Isolated AC/DC power supply
+- doc: SNAA386
+  title: Clocking for PCIe Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa386
+  date: '2023-11-28'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - clock_buffer
+  - pcie_buffer
+  summary: PCIe clocking architectures (common clock, separate reference SRNS/SRIS) and jitter budgets up to Gen 6.
+  block_diagram:
+    present: true
+    where: Fig 3-1 p.3 common-clock, Fig 3-2 p.4 separate-reference PCIe clock architectures
+  found_on:
+  - adas-domain-controller#Clocking
+  - product/CDCE6214
+  - product/LMK03328
+  - product/LMK3H0102
+- doc: SNAA421
+  title: The Debug Guide for Network Synchronizers (Digital and Analog Phase-Locked Loops)
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa421
+  date: '2025-11-21'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  summary: Debug guide for network synchronizers (digital and analog PLLs).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK05318B
+- doc: SNAA377
+  title: Termination Guidelines for Differential and Single-Ended Signals
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa377
+  date: '2025-12-10'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_buffer
+  summary: Termination guidelines for differential (LVDS, LP-HCSL, LVPECL, CML) and single-ended clock signals.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK05318B
+  - product/LMK5C33216
+- doc: SNAA399
+  title: Oscillator Power Considerations for PLL Devices
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa399
+  date: '2025-10-30'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  - clock_generator
+  summary: Oscillator power considerations when driving PLL devices.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA406B
+  title: Driving Multiple Loads With a Single LVCMOS Oscillator
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa406
+  date: '2025-05-30'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  - clock_buffer
+  summary: Driving multiple loads from a single LVCMOS oscillator.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA408
+  title: EMI Reduction Strategies With Clocking Devices
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa408
+  date: '2025-04-21'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - clock_buffer
+  summary: EMI reduction strategies with clocking devices (spread spectrum, edge rate, output format).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK3H0102
+- doc: SBAA653A
+  title: Practical Clocking Considerations That Give Your Next High-Speed Converter Design an Edge
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa653
+  date: '2025-04-11'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - jitter_attenuator
+  summary: Practical clocking for high-speed data converters (jitter vs SNR, JESD204 SYSREF).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK04832
+  - product/LMX2594
+- doc: SNAA362
+  title: Standalone BAW Oscillators Advantages Over Quartz Oscillators
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa362
+  date: '2022-11-21'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: Advantages of standalone BAW oscillators over quartz oscillators.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Clocking
+  - robot-servo-drive#Clocking
+  - product/LMK6C
+- doc: SNAA400
+  title: BAW Oscillator Clocking TI Processors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa400
+  date: '2025-03-27'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: Clocking TI processors with BAW oscillators.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA392A
+  title: BAW Oscillator Solutions for Motor Drivers
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snaa392
+  date: '2024-12-13'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  - motor_controller
+  summary: BAW oscillator solutions for motor drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA372A
+  title: BAW Oscillator Solutions for Factory Automation
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snaa372
+  date: '2024-12-13'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: BAW oscillator solutions for factory automation.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA373A
+  title: BAW Oscillator Solutions for Energy Infrastructure
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snaa373
+  date: '2024-12-11'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: BAW oscillator solutions for energy infrastructure.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA382
+  title: BAW Oscillator Solutions for Network Interface Card
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snaa382
+  date: '2023-05-11'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: BAW oscillator solutions for network interface cards.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA390
+  title: Vibration and Mechanical Shock Performance of TI BAW Oscillators
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa390
+  date: '2023-07-11'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: Vibration and mechanical shock performance of BAW oscillators.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SNAA393
+  title: Jitter and Phase Noise Measurement Techniques for BAW Oscillators
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa393
+  date: '2024-01-30'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  summary: Jitter and phase-noise measurement techniques for BAW oscillators.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK6C
+- doc: SLYY224
+  title: The Importance of Clocks in Data Centers
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy224
+  date: '2023-11-21'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - clock_buffer
+  summary: White paper on the importance of clocks in data centers (PCIe, Ethernet, CPU clocking).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK3H0102
+- doc: SNAA411
+  title: Sine to Square Wave Conversion Using Clock Buffers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa411
+  date: '2024-09-03'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_buffer
+  summary: Sine-to-square conversion using clock buffers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK04832
+  - product/LMK1C1104
+  - product/LMX2594
+- doc: SNAA294
+  title: Multi-Clock Synchronization
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa294
+  date: '2019-12-30'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - jitter_attenuator
+  summary: Multi-clock synchronization techniques.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK04832
+- doc: SNAA325A
+  title: Understanding clocking needs for high-speed 56G PAM-4 serial links
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa325
+  date: '2019-02-22'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  - clock_generator
+  summary: Clocking needs for 56G PAM-4 serial links.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - core-router
+  - fixed-data-center-switch
+  - product/LMK05318B
+- doc: SNAA324A
+  title: Supported synchronization modes for TI network synchronizers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa324
+  date: '2019-02-22'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  summary: Synchronization modes (SyncE, 1588, holdover) supported by TI network synchronizers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - core-router
+  - fixed-data-center-switch
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+- doc: SNAA326
+  title: How to use the LMK05318 as a jitter cleaner
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa326
+  date: '2019-01-16'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  summary: Using LMK05318 as a jitter cleaner.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - core-router
+  - fixed-data-center-switch
+  - product/LMK05318B
+- doc: SNAA314
+  title: TI Network Synchronizer Clock Value Adds in Communications and Industrial Applic
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa314
+  date: '2018-04-12'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  - clock_buffer
+  summary: Network synchronizer clock value-adds in communications and industrial applications (zero-delay distribution, hitless switching).
+  block_diagram:
+    present: true
+    where: Fig 9 p.9 zero-delay clock distribution in backplane line cards; Figs 3-4 device
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - baseband-unit-bbu
+  - macro-remote-radio-unit-rru
+  - outdoor-backhaul-unit
+- doc: SNOAA34
+  title: TI BAW technology enables ultra-low jitter clocks for high-speed networks
+  type: White paper
+  url: https://www.ti.com/lit/pdf/snoaa34
+  date: '2019-02-17'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - crystal_oscillator
+  - jitter_attenuator
+  summary: BAW resonator technology for ultra-low-jitter network clocks.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+  - product/LMK05318B
+- doc: SNAA291A
+  title: Clocking Optimization for RF Sampling Analog-to-Digital Converters
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa291
+  date: '2021-04-07'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - jitter_attenuator
+  summary: Clocking optimisation for RF-sampling ADCs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+- doc: SNAA308B
+  title: LMK0461x Phase Noise Performance With DC-DC Converters
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa308
+  date: '2017-07-20'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  - pol_buck
+  summary: LMK0461x phase-noise performance when powered from DC/DC converters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+- doc: SLYT628
+  title: 'JESD204B multi-device synchronization: Breaking down the requirements'
+  type: Analog design Journal
+  url: https://www.ti.com/lit/pdf/slyt628
+  date: '2015-04-28'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - jitter_attenuator
+  summary: JESD204B multi-device synchronization requirements.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - product/LMK04832
+- doc: SNAA311A
+  title: Clocking for Medical Ultrasound Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa311
+  date: '2020-09-30'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_generator
+  - clock_buffer
+  summary: Clocking for medical ultrasound systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK03328
+  - product/LMK04832
+  - product/LMK1C1104
+- doc: SLAA928A
+  title: LMK1C110x Key Performance in System Level
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa928
+  date: '2020-03-10'
+  area: clocks_timing
+  skyworks_qorvo_functions:
+  - clock_buffer
+  summary: LMK1C110x LVCMOS buffer system-level performance.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK1C1104
+- doc: SLVAFD0C
+  title: Powering the AM62x with the TPS65219 PMIC
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafd0
+  date: '2025-08-18'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pmic
+  summary: Powering the AM62x processor with the TPS65219 PMIC (rail mapping, sequencing).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS65219
+- doc: SLVAFV9
+  title: Advantages of Using TPS65219 PMIC to Power AM62 Processor Versus a Discrete Power Design
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafv9
+  date: '2024-08-13'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pmic
+  summary: Integrated PMIC (TPS65219) vs discrete power for the AM62 processor.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS65219
+- doc: SLVAFP9
+  title: Powering Xilinx Zynq UltraScale+ MPSoCs With the TPS65219 PMIC
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafp9
+  date: '2024-10-31'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pmic
+  summary: Powering Zynq UltraScale+ MPSoCs with TPS65219.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS65219
+- doc: SLVAFQ2
+  title: Powering the i.MX 8M Plus With TPS65219
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafq2
+  date: '2023-12-20'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pmic
+  summary: Powering i.MX 8M Plus with TPS65219.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS65219
+- doc: SNVA885B
+  title: The Benefits of FlexPower PMIC Devices
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snva885
+  date: '2020-11-23'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pmic
+  summary: Benefits of FlexPower PMIC devices for ADAS and automotive processors.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Battery & system power supply
+  - adas-domain-controller#Processor power supply
+  - adas-domain-controller#Safety power
+  - front-camera
+- doc: SLUAAE9B
+  title: Benefiting from Step-Down Converters with an I2C Communication Interface
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluaae9
+  date: '2023-11-29'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_buck
+  summary: Benefits of step-down converters with an I2C interface (VID, telemetry).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#High power core supply
+  - product/TPS62870
+- doc: SLVAFH4
+  title: Operating TPS6287X-Q1 Devices in a Stacked Configuration
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafh4
+  date: '2023-01-30'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_buck
+  - multiphase
+  summary: Stacking TPS6287x-Q1 bucks for higher current (multiphase).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#High power core supply
+  - adas-domain-controller#Processor power supply
+  - product/TPS62870
+- doc: SLVA882B
+  title: Multiphase Buck Design from Start to Finish, Part 1
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva882
+  date: '2021-04-07'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - multiphase
+  summary: Multiphase buck design from start to finish, part 1.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - core-router
+- doc: SLVAE92A
+  title: Point-of-Load Solutions for Data Center App Implementing VR13.HC Vccin Spec
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvae92
+  date: '2020-01-08'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - multiphase
+  summary: Point-of-load solutions for data-center VR13.HC Vccin.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - intel-server
+- doc: SNVA860
+  title: DC/DC Point-of-load Power Solutions for Wired Networking Switch Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snva860
+  date: '2018-12-11'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_buck
+  - multiphase
+  summary: DC/DC point-of-load solutions for wired networking switches.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - fixed-data-center-switch
+- doc: SLVAF16A
+  title: Powering the AFE7920 with the TPS62913 Low-Ripple and Low-Noise Buck Converter
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaf16
+  date: '2021-12-13'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_buck
+  - pol_ldo
+  summary: Powering the AFE7920 RF-sampling transceiver with the low-noise TPS62913 buck (LDO-less).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - small-cell-base-station
+  - product/AFE7950
+- doc: SLAA758
+  title: An Efficient LDO-less Power Supply Solution for AFE76xx
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa758
+  date: '2017-11-13'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_buck
+  - pol_ldo
+  summary: LDO-less power supply for AFE76xx RF-sampling transceivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - macro-remote-radio-unit-rru
+  - small-cell-base-station
+- doc: SLVAEW7
+  title: Powering Sensitive Noise ADC Designs with the TPS62913 Low-Noise Buck Converter
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaew7
+  date: '2020-09-30'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_buck
+  summary: Powering noise-sensitive ADCs with the TPS62913 low-noise buck.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMX2594
+- doc: SLYY222A
+  title: Simplifying Power Architectures With Low-Noise Power Devices
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy222
+  date: '2024-11-04'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_ldo
+  - pol_buck
+  summary: Simplifying power architectures with low-noise power devices.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/BQ79616-Q1
+  - product/TPS7A20
+  - product/TPS7A94
+- doc: SLVAG05A
+  title: Measuring Output Noise for Ultra-Low Noise LDOs
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slvag05
+  date: '2026-09-02'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_ldo
+  summary: Measuring output noise of ultra-low-noise LDOs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS7A94
+- doc: STDA017
+  title: Reduce System Noise Using Parallel LDOs
+  type: White paper
+  url: https://www.ti.com/lit/pdf/stda017
+  date: '2025-11-03'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_ldo
+  summary: Reducing system noise with parallel LDOs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS7A94
+- doc: SLVAFX0B
+  title: Demystifying LDO Turn-On (Start-Up) Time
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slvafx0
+  date: '2026-03-10'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pol_ldo
+  summary: LDO turn-on (start-up) time explained.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS7A20
+  - product/TPS7A94
+- doc: SLVA789
+  title: Various Applications for Voltage-Tracking LDO
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva789
+  date: '2016-08-03'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - ldo_tracker
+  summary: Applications of voltage-tracking LDOs (sensor supplies following a reference rail).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#Power supply
+- doc: SLUA886A
+  title: 'DDR VTT Power Solutions: A Competitive Analysis'
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slua886
+  date: '2020-07-09'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - termination_ldo
+  summary: DDR VTT termination power solutions compared.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Fusion & object data memory
+  - adas-domain-controller#Sensor data memory
+  - network-interface-card-nic
+- doc: SLVA535B
+  title: Basic Calculations of a 4 Switch Buck-Boost Power Stage
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva535
+  date: '2018-07-09'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - buck_boost
+  summary: Basic power-stage calculations for a four-switch buck-boost.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS63070
+- doc: SLVAEP5A
+  title: Layer Design for Reducing Radiated EMI of DC to DC Buck-Boost Converters
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaep5
+  date: '2021-06-09'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - buck_boost
+  summary: Layer design to reduce radiated EMI of buck-boost converters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS63070
+  - product/TPS63900
+- doc: SLVAER8A
+  title: Extending Battery Life with Low-Iq and Dynamic Voltage Scaling
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaer8
+  date: '2020-10-12'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - buck_boost
+  summary: Extending battery life with low-IQ buck-boost and dynamic voltage scaling (TPS63900).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS63900
+- doc: SLVA676
+  title: High-Efficiency Backup Power Supply
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva676
+  date: '2014-12-11'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - buck_boost
+  - power_loss_protection
+  summary: High-efficiency backup power supply (buck-boost from backup storage).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS63070
+- doc: SLVAFC9
+  title: Buck Charger with MPPT and Boost Converter for Solar Powered Application
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafc9
+  date: '2022-08-17'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - buck_boost
+  summary: Buck charger with MPPT plus boost for solar-powered applications (TPS61094 supercap/battery backup).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS61094
+- doc: SLVAF41A
+  title: A Long-Lifetime, Cost-Competitive Solution in Smart Meters Based on the TPS61094
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaf41
+  date: '2021-11-05'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - buck_boost
+  - power_loss_protection
+  summary: TPS61094 bidirectional buck/boost with supercapacitor backup in smart meters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS61094
+- doc: SLVA862A
+  title: Basics of eFuses
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva862
+  date: '2018-04-05'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  - load_switch
+  summary: Basics of eFuses (current limit, OVP, reverse blocking).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS2663
+- doc: SLVAEB9A
+  title: Reliable Startup with Large and Unknown Capacitive Loads
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaeb9
+  date: '2022-02-07'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Reliable start-up with large unknown capacitive loads using eFuses.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS2663
+- doc: SLVAEC6
+  title: Minimizing System Down-time with Smart eFuses
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaec6
+  date: '2019-06-12'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Minimising server down-time with smart eFuses.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - intel-server#Platform controller hub (PCH)
+  - intel-server#System power
+  - network-interface-card-nic#Input power protection
+  - solid-state-drive-ssd-enterprise#Input power protection
+- doc: SLVAFR8
+  title: Enhancing Server Power Design Using Advanced Features of TI’s Smart eFuses
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafr8
+  date: '2025-01-29'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Server power design with smart-eFuse features (current sharing, telemetry).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS25985
+- doc: STDA058
+  title: Hot-Swap Solutions for High-Voltage DC-Powered AI Servers
+  type: White paper
+  url: https://www.ti.com/lit/pdf/stda058
+  date: '2026-10-08'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Hot-swap solutions for high-voltage DC-powered AI servers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS25985
+- doc: SLVA673A
+  title: Robust Hot Swap Design
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva673
+  date: '2015-04-08'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Robust hot-swap design.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - intel-server#Platform controller hub (PCH)
+  - intel-server#System power
+  - network-interface-card-nic#Input power protection
+  - solid-state-drive-ssd-enterprise#Input power protection
+- doc: SLVAE47A
+  title: 'Voltage Supervisors (Reset ICs): Frequently Asked Questions (FAQs)'
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvae47
+  date: '2020-03-17'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - supervisor
+  summary: FAQ on voltage supervisors and reset ICs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS3850
+- doc: SNVAA62
+  title: Common Applications of Wide VIN Overvoltage and Undervoltage Supervisors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snvaa62
+  date: '2023-09-19'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - supervisor
+  summary: Common applications of wide-VIN over/under-voltage supervisors.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - automotive-radio-tuners
+  - digital-cockpit-processing-unit
+- doc: SNVA878
+  title: Comparing Voltage and Processor Monitoring Solutions
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snva878
+  date: '2019-04-05'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - supervisor
+  - watchdog
+  summary: Comparing voltage and processor monitoring solutions (supervisor, watchdog, sequencer).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS3850
+- doc: SNVAA92
+  title: Designing a Power Supply for a Safety MCU to Meet Functional Safety ASIL B
+  type: White paper
+  url: https://www.ti.com/lit/pdf/snvaa92
+  date: '2023-11-15'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - pmic
+  - supervisor
+  - watchdog
+  summary: Designing a power supply for a safety MCU to meet ISO 26262 ASIL B.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - digital-cockpit-processing-unit
+- doc: SNVA780
+  title: Designing High Performance, Low-EMI, Automotive Power Supplies
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snva780
+  date: '2017-09-30'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - wide_vin_buck
+  summary: Designing high-performance, low-EMI automotive power supplies.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - phone-as-a-key-paak
+  - zone-control-module#Power supply
+  - product/LM61460-Q1
+- doc: SNVA974A
+  title: EMI Reduction Technique, Dual Random Spread Spectrum
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snva974
+  date: '2022-10-19'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - wide_vin_buck
+  summary: Dual random spread-spectrum EMI reduction for DC/DC converters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - automotive-radio-tuners
+  - digital-cockpit-processing-unit
+- doc: SLVAE36A
+  title: Step-Dwn (Buck) Convrtr Pwer Solutions for Programmable Logic Controller Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvae36
+  date: '2021-07-26'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - wide_vin_buck
+  - isolated_dcdc
+  summary: Buck converter solutions for PLC systems (transients, push-pull, Fly-Buck, modules).
+  block_diagram:
+    present: false
+    where: circuit-level figures only (clamp, push-pull, Fly-Buck); no system diagram
+  found_on:
+  - product/LM61460-Q1
+- doc: SLVAES2
+  title: Six System Architectures With Robust Reverse Battery Protection
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaes2
+  date: '2020-04-30'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - reverse_polarity
+  summary: Six system architectures with robust reverse-battery protection.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - digital-cockpit-processing-unit
+  - zone-control-module#Power supply
+- doc: SLVAE57B
+  title: Basics of Ideal Diodes
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvae57
+  date: '2021-10-05'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - reverse_polarity
+  summary: Basics of ideal diodes.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Battery input protection
+  - automotive-head-unit
+  - automotive-radio-tuners
+  - battery-junction-box#Circuit protection
+- doc: SLVAFK0
+  title: Priority Power MUX using Ideal Diodes in Automotive Zonal Modules
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slvafk0
+  date: '2023-05-23'
+  area: pmic_dcdc
+  skyworks_qorvo_functions:
+  - reverse_polarity
+  - load_switch
+  summary: Priority power MUX using ideal diodes in automotive zonal modules.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#Power supply
+- doc: SLVA980C
+  title: Brushless-DC Made Simple – Sensored Motor Control
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slva980
+  date: '2026-03-11'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  - motor_controller
+  summary: 'Brushless-DC made simple: sensored motor control with Hall sensors.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+- doc: SBAA698A
+  title: Understanding Gate Driver Slew Rate Control, MOSFET Switching Optimization and Protection Features
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa698
+  date: '2025-12-11'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: Gate-driver slew-rate control, MOSFET switching optimisation and protection features in TI motor gate drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV3255-Q1
+  - product/DRV8353
+  - product/DRV8705-Q1
+- doc: SLVAF66
+  title: System Design Considerations for High-Power Motor Driver Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaf66
+  date: '2021-06-22'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: System design considerations for high-power motor drivers (parallel FETs, layout, protection).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV3255-Q1
+  - product/DRV8353
+- doc: SLVA714D
+  title: Understanding Smart Gate Drive
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva714
+  date: '2021-03-01'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: Understanding smart gate drive (IDRIVE/TDRIVE).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - cordless-power-tool
+  - cordless-power-tool#Power stage
+  - zone-control-module#Load drivers
+  - product/DRV8353
+- doc: SLVA999A
+  title: Architecture for Brushless-DC Gate Drive Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva999
+  date: '2018-08-22'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: Architectures for brushless-DC gate-drive systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+- doc: SLVA959B
+  title: Best Practices for Board Layout of Motor Drivers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva959
+  date: '2021-10-14'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  - motor_controller
+  summary: Best practices for motor-driver board layout.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+- doc: SLVAFZ3
+  title: Relating Payload to Brushless DC Motor Driver Specifications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafz3
+  date: '2024-12-02'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: Relating payload requirements to BLDC motor driver specifications (robotics).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+- doc: SLVAFS9
+  title: Improving Thermal Performance for Integrated FET Drivers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafs9
+  date: '2024-08-23'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Improving thermal performance of integrated-FET motor drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8316
+- doc: SLVA938A
+  title: How to Design a Thermally-Efficient Integrated BLDC Motor Drive PCB
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva938
+  date: '2017-02-05'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Thermally efficient PCB for integrated BLDC motor drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8316
+- doc: SLLA605
+  title: Selection Guide for MCF831x Devices
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla605
+  date: '2023-04-26'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Selection guide for MCF831x code-free sensorless FOC motor drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/MCF8316A
+- doc: SLLA567
+  title: How to Reduce Motor Noise with Code-Free, Sensorless BLDC Motor Drivers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla567
+  date: '2021-08-31'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Reducing motor noise with code-free sensorless BLDC drivers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/MCF8316A
+  - product/MCT8316A
+- doc: SLLA621A
+  title: How to Use the MCF831x to Solve Thermal and Quick Startup Challenges
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla621
+  date: '2023-10-20'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Thermal and quick-start challenges solved with MCF831x.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/MCF8316A
+- doc: SLLA673
+  title: How to Optimize MCF8315 Hardware Design in Fan Application
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla673
+  date: '2025-03-17'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Optimising MCF8315 hardware in fan applications.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/MCF8316A
+- doc: SLLA592
+  title: MCx8316x for Vacuum Robot Applications
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla592
+  date: '2022-09-09'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: MCx8316x for vacuum-robot applications.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/MCF8316A
+  - product/MCT8316A
+- doc: SLVA642B
+  title: Hardware Design Considerations for an Electric Bicycle using BLDC Motor
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva642
+  date: '2021-06-23'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  - wide_vin_buck
+  summary: Hardware design considerations for an electric bicycle BLDC drive.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+- doc: SLAA967A
+  title: MSP430 and DRV83xx Selection Guide for Power Tools
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slaa967
+  date: '2021-06-14'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  - mcu
+  summary: MSP430 and DRV83xx selection guide for power tools.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - cordless-power-tool
+  - product/DRV8353
+- doc: STDA015
+  title: Design Considerations for 48V Automotive Body Motor Applications
+  type: White paper
+  url: https://www.ti.com/lit/pdf/stda015
+  date: '2026-02-17'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - half_bridge_driver
+  - motor_controller
+  summary: Design considerations for 48-V automotive body motor applications.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#Load drivers
+- doc: SLVAF39A
+  title: Driving Parallel MOSFETs Using the DRV3255-Q1
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slvaf39
+  date: '2021-02-22'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: Driving parallel MOSFETs with the 48-V DRV3255-Q1.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV3255-Q1
+- doc: SLVA835A
+  title: Protecting Automotive Motor Drive Systems from Reverse Polarity Conditions
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva835
+  date: '2019-02-19'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - reverse_polarity
+  - three_phase_gate_driver
+  summary: Protecting automotive motor drives from reverse polarity.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8705-Q1
+- doc: SLVA991A
+  title: Cut-Off Switch in High-Current Motor-Drive Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva991
+  date: '2018-08-20'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: Cut-off switch in high-current motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+  - product/DRV8705-Q1
+- doc: SLLA527A
+  title: Integrated Protection Against Back EMF Overvoltage in Motor Drive Systems
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla527
+  date: '2021-02-04'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - motor_controller
+  summary: Integrated protection against back-EMF overvoltage in motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#Load drivers
+- doc: SLVAE45
+  title: DRV835x Split Supply Power Topology
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slvae45
+  date: '2018-09-26'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - three_phase_gate_driver
+  summary: DRV835x split-supply power topology.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DRV8353
+- doc: SLYY172
+  title: How Capacitive Isolation Solves Key Challenges in AC Motor Drives
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy172
+  date: '2019-08-23'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - gate_driver
+  summary: How capacitive isolation addresses key challenges in AC motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AMC1300
+  - product/UCC23513
+- doc: SLYY078A
+  title: 'Power Electronics in Motor Drives: Where is it?'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy078
+  date: '2019-10-01'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - gate_driver
+  - motor_controller
+  summary: Where power electronics sit in motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/UCC23513
+- doc: SLYT820
+  title: Using isolated comparators for fault detection in electric motor drives
+  type: Analog design Journal
+  url: https://www.ti.com/lit/pdf/slyt820
+  date: '2022-03-14'
+  area: motor_drivers
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  summary: Isolated comparators for fault detection in electric motor drives.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - servo-drive-power-stage-module
+- doc: SBAA686
+  title: Enabling Triple-Band Base Station Radio Design Using AFE7769D Featuring Skyworks Power Amplifiers
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sbaa686
+  date: '2025-09-16'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - lna
+  - antenna_switch
+  summary: Triple-band base-station radio using the AFE7769D transceiver with Skyworks PAs (SKY66391-12, SKY66394-11, SKY66522-11); CFR/DPD results.
+  block_diagram:
+    present: true
+    where: Fig 1-1 p.2 triple-band radio (AFE7769D + Skyworks PAs, LNAs, duplexers); Fig 3-1 p.4 test setup
+  found_on:
+  - product/AFE7769D
+- doc: SDAA098
+  title: 'DPD Test Report: AFE77xxD With SKY66522-11 Power Amplifier'
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa098
+  date: '2025-08-25'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: 'DPD test report: AFE77xxD with Skyworks SKY66522-11 power amplifier.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7769D
+- doc: SBAA710
+  title: 'DPD Test Report: AFE77xxD With SKY66391-12 Power Amplifier'
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa710
+  date: '2025-06-26'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: 'DPD test report: AFE77xxD with Skyworks SKY66391-12 power amplifier.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7769D
+- doc: SBAA660A
+  title: 'DPD Test Report: AFE77xxD With GTRB267008FC Power Amplifier'
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa660
+  date: '2025-04-23'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: 'DPD test report: AFE77xxD with a GaN (GTRB267008FC) PA.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7769D
+- doc: SBAA370B
+  title: Using AFE77xx in a Digital Pre-distortion System
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa370
+  date: '2021-09-02'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: Using AFE77xx in a digital pre-distortion system (feedback path, PA linearisation).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7769D
+- doc: SLAA862A
+  title: Small Cell and Repeater System Using Integrated RF Sampling Device
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa862
+  date: '2021-09-02'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - lna
+  - rf_switch
+  summary: Small-cell and repeater system architectures using an integrated RF-sampling transceiver (2T2R, 4T4R, FB paths, TDD switching).
+  block_diagram:
+    present: true
+    where: Figs 3-1..3-5 p.9-11 small-cell / repeater TRX configurations; Fig 5-3 p.18 repeater
+  found_on:
+  - small-cell-base-station
+- doc: SLAA860
+  title: Modular Communications Transceiver for 4G/5G Distributed Antenna
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa860
+  date: '2018-08-18'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: Modular transceiver for 4G/5G distributed antenna systems (master, remote and base-station units).
+  block_diagram:
+    present: true
+    where: Fig 6 master unit, Fig 7 remote unit, Fig 8 base-station unit, p.8-9 (DAS)
+  found_on:
+  - small-cell-base-station
+- doc: SBAA682
+  title: Simplifying Distributive Antenna System or Repeater Design Without FPGA
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa682
+  date: '2025-04-21'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: DAS or repeater design without an FPGA using AFE77xxD.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7769D
+- doc: SBAA525A
+  title: AFE79xx as Single Chip Wideband Repeater Solution
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa525
+  date: '2023-05-30'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: AFE79xx as a single-chip wideband repeater.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7950
+- doc: SDAA397
+  title: Multi-AFE Synchronization using AFE7769D for Large Phased Array Antenna Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa397
+  date: '2026-07-21'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - clock_generator
+  summary: Multi-AFE synchronization with AFE7769D for large phased-array antennas.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE7769D
+- doc: SBAA650
+  title: The Future of Fixed Wireless Access
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa650
+  date: '2024-08-08'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: Fixed wireless access trends and radio architecture.
+  block_diagram:
+    present: false
+    where: no figure captions found
+  found_on:
+  - product/AFE7769D
+- doc: SNVA802
+  title: Improving RF Power Amplifier Efficiency in 5G Radio Systems
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snva802
+  date: '2018-09-05'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_pa_bias
+  - pol_buck
+  summary: Improving RF power-amplifier efficiency in 5G radios (envelope/drain supply).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+- doc: SNWA003A
+  title: Base Station Closed-Loop RF Pwr Cntrl w/LMV232 Crest-Factor Invariant Detector
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snwa003
+  date: '2013-04-30'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_pa_bias
+  summary: Base-station closed-loop RF power control with an LMV232 crest-factor-invariant detector.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - macro-remote-radio-unit-rru
+- doc: SWRA791
+  title: High Accuracy, Low Cost, Secure Ranging with Bluetooth Channel Sounding
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra791
+  date: '2024-02-27'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - antenna
+  summary: Secure, low-cost ranging with Bluetooth Channel Sounding (phone-as-a-key, positioning).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC2340R5
+  - product/CC2745R10-Q1
+- doc: TIDA029A
+  title: Bluetooth® Angle of Arrival (AoA) Antenna Design
+  type: Application note
+  url: https://www.ti.com/lit/pdf/tida029a
+  date: '2023-06-07'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - antenna
+  summary: Bluetooth angle-of-arrival antenna-array design.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - phone-as-a-key-paak
+- doc: SWRA834A
+  title: CC234x and CC27xx Hardware Configuration and PCB Design Considerations
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra834
+  date: '2026-02-04'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - antenna
+  summary: Hardware configuration and PCB design for CC234x/CC27xx Bluetooth LE devices (matching, antenna, crystal).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC2340R5
+  - product/CC2745R10-Q1
+- doc: SWRA726
+  title: Antenna Impedance Measurement and Matching
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra726
+  date: '2022-03-22'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - antenna
+  summary: Antenna impedance measurement and matching.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/WL1837MOD
+- doc: SWRA351B
+  title: DN035 -- Antenna Quick Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra351
+  date: '2022-02-09'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - antenna
+  summary: Antenna quick guide for sub-GHz and 2.4-GHz designs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - micro-inverter#Wireless interface
+  - string-inverter#Wireless interface
+  - product/CC1190
+- doc: SWRA161B
+  title: AN058 -- Antenna Selection Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra161
+  date: '2010-10-06'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - antenna
+  summary: Antenna selection guide.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - wlan-wifi-access-point
+  - product/CC1190
+- doc: SWAA161
+  title: WL18xx 5GHZ Antenna Diversity
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swaa161
+  date: '2015-06-29'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - antenna
+  - antenna_switch
+  summary: 5-GHz antenna diversity with WL18xx Wi-Fi (antenna switch control).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/WL1837MOD
+- doc: SWRA654A
+  title: SimpleLink WLAN Access Point
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra654
+  date: '2020-03-16'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: SimpleLink Wi-Fi access-point mode.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - wlan-wifi-access-point
+- doc: SWRA670A
+  title: CE Regulations for SRDs Operating in License-Free 2.4GHz/5GHz Bands-WiFi Devices
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra670
+  date: '2022-10-20'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: CE regulations for 2.4/5-GHz Wi-Fi short-range devices.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC2592
+- doc: SWRA603A
+  title: Debugging Communication Range
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra603
+  date: '2019-05-23'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - lna
+  summary: Debugging communication range (link budget, PA/LNA range extenders).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC1190
+  - product/CC2592
+- doc: SWRA542
+  title: Using CC1190 Front End With CC13xx Under EN300220
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra542
+  date: '2017-03-09'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - lna
+  summary: Using the CC1190 range extender (PA + LNA + switches) with CC13xx under EN 300 220.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC1190
+- doc: SWRA517
+  title: Using CC1190 Front End With CC13xx Under FCC 15.247
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra517
+  date: '2017-03-09'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - lna
+  summary: Using the CC1190 range extender with CC13xx under FCC 15.247.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC1190
+- doc: SWRA465A
+  title: Using CC2592 Front End with CC2530
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra465
+  date: '2015-07-29'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - lna
+  summary: Using the CC2592 2.4-GHz range extender (PA + LNA) with CC2530.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/CC2592
+- doc: SWRA808A
+  title: Wireless Technologies for Solar Micro Inverters and Trackers
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/swra808
+  date: '2024-04-09'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: Wireless technologies (sub-GHz, BLE, Wi-Fi) for solar micro-inverters and trackers.
+  block_diagram:
+    present: true
+    where: Figs 1-3 p.1-2 string inverter / optimizer / micro-inverter with wireless links
+  found_on:
+  - micro-inverter#Wireless interface
+- doc: SPRADP2
+  title: Enhanced Detections and Compute for ADAS systems with Next Gen Radar Sensors
+  type: White paper
+  url: https://www.ti.com/lit/pdf/spradp2
+  date: '2024-12-05'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - soc
+  summary: Next-generation automotive radar sensors for ADAS (detection and compute).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AWR2944
+- doc: SPRACG5
+  title: TI mmWave Radar sensor RF PCB Design, Manufacturing and Validation Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/spracg5
+  date: '2018-05-07'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - antenna
+  summary: mmWave radar RF PCB design, manufacturing and validation.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AWR2944
+- doc: SWRA725
+  title: Interference Mitigation on the AWR294x
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra725
+  date: '2021-11-12'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: Interference mitigation on AWR294x automotive radar.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AWR2944
+- doc: SWRA705
+  title: mmWave Radar Radome Design Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/swra705
+  date: '2021-08-17'
+  area: rf_front_ends
+  skyworks_qorvo_functions:
+  - antenna
+  summary: mmWave radar radome design guide.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - short-medium-radar#Radar front end & processing
+  - product/AWR2944
+- doc: SBAA735
+  title: 'Speaker, TV, Soundbar Audio Amplifiers: Features, Benefits, and Selection Guide'
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sbaa735
+  date: '2026-03-11'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Feature and selection guide for speaker, TV and soundbar Class-D audio amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS3251
+  - product/TAS5825M
+  - product/TPA3255
+- doc: SDAA353
+  title: Mastering Audio Performance with TAS58xx Family of Class-D Audio Amplifiers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa353
+  date: '2026-05-29'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Getting best audio performance from the TAS58xx Class-D family.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS5825M
+- doc: SLAAEU9
+  title: How to Avoid Distortion in TAS58xx
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaaeu9
+  date: '2026-07-15'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Avoiding distortion in TAS58xx amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS5825M
+- doc: SLAA701B
+  title: LC Filter Design
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa701
+  date: '2026-06-29'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: LC output-filter design for Class-D amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPA3255
+- doc: SLVA824A
+  title: Class-D Amplifier External Load Diagnostics
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva824
+  date: '2025-07-17'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: External load diagnostics for Class-D amplifiers (open/short speaker detection).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS6424-Q1
+  - product/TPA3255
+- doc: SLOA337
+  title: TAS6x84-Q1 LC Filter Selection Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sloa337
+  date: '2024-10-15'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: LC filter selection for automotive TAS6x84-Q1 amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS6584-Q1
+- doc: SLOA349
+  title: TAS6x84 Output Current and Voltage Measurement
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sloa349
+  date: '2025-03-18'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Output current and voltage measurement in TAS6x84 (real-time load monitoring).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS6584-Q1
+- doc: SLOA321
+  title: Real-Time Load Diagnostics
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sloa321
+  date: '2022-02-24'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Real-time load diagnostics for automotive amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS6584-Q1
+- doc: SLOA242A
+  title: Inductor Selection Guide for 2.1 MHz Class-D Amplifiers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sloa242
+  date: '2019-09-05'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Inductor selection for 2.1-MHz Class-D amplifiers (AM-band avoidance in cars).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS6424-Q1
+  - product/TAS6584-Q1
+- doc: SLYY179
+  title: Automotive Audio Design Considerations to Minimize Amplifier Size & Thermal Load
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy179
+  date: '2019-10-09'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Automotive audio design to minimise amplifier size and thermal load.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - digital-cockpit-processing-unit
+- doc: SBAA424A
+  title: Scalable Automotive Audio Solutions Using the PCM6xx0-Q1 Family of Products
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa424
+  date: '2022-05-26'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  - adc
+  summary: Scalable automotive audio (microphone/ANC input) with the PCM6xx0-Q1 ADC family.
+  block_diagram:
+    present: false
+    where: device functional block diagram only (Fig 1-1 p.2)
+  found_on:
+  - product/PCM6260-Q1
+- doc: SBAA425A
+  title: PCM6xx0-Q1 Use-Case Scenarios in Automotive Audio Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa425
+  date: '2022-05-26'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  summary: PCM6xx0-Q1 use cases in automotive audio (eCall, hands-free, ANC/RNC).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - digital-cockpit-processing-unit
+  - product/PCM6260-Q1
+- doc: SLOA250C
+  title: Automotive Diagnostics Using TAS2505-Q1
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sloa250
+  date: '2022-06-29'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Automotive diagnostics with TAS2505-Q1.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - automotive-telematics-control-unit
+- doc: SDAA435
+  title: How to Reduce Noise in Audio Data Converters
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa435
+  date: '2026-07-14'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  summary: Reducing noise in audio data converters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAD5212
+- doc: SLAAEG6A
+  title: Clocking Configuration of Device and Flexible Clocking For TAx5x1x Family
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaaeg6
+  date: '2024-09-05'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  - clock_generator
+  summary: Clocking configuration of TAx5x1x codecs (PLL, flexible clocking).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAD5212
+- doc: SLAA892
+  title: PLL and Clocking Configuration for Audio Devices
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa892
+  date: '2019-03-26'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  - clock_generator
+  summary: PLL and clocking configuration for audio devices.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS2563
+- doc: SLAA469A
+  title: Audio Serial Interface Configurations for Audio Codecs
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa469
+  date: '2019-06-27'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  summary: Audio serial interface (I2S/TDM) configurations for codecs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TLV320AIC3104
+- doc: SLAA749
+  title: Common Noise Issues in Audio Codecs
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa749
+  date: '2017-07-21'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_codec
+  summary: Common noise issues in audio codecs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TLV320AIC3104
+- doc: SLAA888
+  title: Benefits of Class-G and Class-H Boost in Audio Amplifiers
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa888
+  date: '2019-04-30'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  - buck_boost
+  summary: Class-G/Class-H boost in smart audio amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS2563
+- doc: SLAA899
+  title: Battery Voltage Tracking Limiter and Brown-Out Protection
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa899
+  date: '2019-06-26'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Battery-voltage tracking limiter and brown-out protection in boosted amplifiers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS2563
+- doc: SLAA857
+  title: SmartPA Speaker Protection Algorithm
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa857
+  date: '2018-08-06'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: SmartAmp speaker-protection algorithm.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS2563
+- doc: SLAA898
+  title: Power Amplifiers for Constant Voltage Audio Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa898
+  date: '2022-09-06'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Power amplifiers for constant-voltage (70/100-V) audio systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS3251
+  - product/TPA3255
+- doc: SLAA856A
+  title: TAS5825M Design Considerations for EMC
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa856
+  date: '2021-07-12'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: EMC design considerations for TAS5825M.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS5825M
+- doc: SNAA050A
+  title: AN-1737 Managing EMI in Class D Audio Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa050
+  date: '2013-05-01'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  summary: Managing EMI in Class-D audio applications.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TAS2563
+- doc: SLAY053
+  title: 'Smart speaker fundamentals: Weighing the many design trade-offs'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slay053
+  date: '2019-02-25'
+  area: audio
+  skyworks_qorvo_functions:
+  - audio_amp
+  - audio_codec
+  summary: Smart-speaker design trade-offs (audio, voice capture, connectivity).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - smart-speaker
+- doc: SLYT752B
+  title: Automotive Infotainment EE Buck Converter/Controller Selection Guide
+  type: Selection guide
+  url: https://www.ti.com/lit/pdf/slyt752
+  date: '2021-04-15'
+  area: broadcast_radio
+  skyworks_qorvo_functions:
+  - wide_vin_buck
+  - am_fm_tuner
+  summary: Buck converter/controller selection guide for automotive infotainment (head unit, radio).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - automotive-media-hub
+  - automotive-radio-tuners
+  - automotive-smart-telematics-gateway
+- doc: SZZY012
+  title: Designing infotainment systems that are interactive not distractive
+  type: White paper
+  url: https://www.ti.com/lit/pdf/szzy012
+  date: '2019-03-25'
+  area: broadcast_radio
+  skyworks_qorvo_functions:
+  - am_fm_tuner
+  - audio_amp
+  summary: White paper on interactive infotainment systems (head unit and radio context).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - automotive-radio-tuners
+  - automotive-smart-telematics-gateway
+  - automotive-telematics-control-unit
+- doc: SNVA864
+  title: Achieving Low IQ Voltage Supervision in Automotive, Wide-Vin Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snva864
+  date: '2019-01-24'
+  area: broadcast_radio
+  skyworks_qorvo_functions:
+  - supervisor
+  summary: Low-IQ voltage supervision in automotive wide-VIN applications such as radio/head unit.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - automotive-radio-tuners
+  - automotive-smart-telematics-gateway
+  - automotive-telematics-control-unit
+- doc: SLAAER3A
+  title: 'Integrating EVCC, DCDC, and Host Architecture: TI Automotive MCUs for Next-Generation EV Charging'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slaaer3
+  date: '2025-11-13'
+  area: automotive
+  skyworks_qorvo_functions:
+  - mcu
+  - isolated_can
+  summary: Integrating EVCC, DC/DC and host functions on automotive MCUs for EV charging (OBC context).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - onboard-charger
+- doc: SFFSAY3
+  title: Functional Safety Concept in On-Board Charger System
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sffsay3
+  date: '2026-01-07'
+  area: automotive
+  skyworks_qorvo_functions:
+  - current_sensor
+  - isolated_amplifier
+  summary: Functional-safety concept for an on-board charger system.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TMCS1123
+- doc: SLYY197A
+  title: Wired vs. Wireless Communications In EV Battery Management
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy197
+  date: '2023-06-06'
+  area: automotive
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - isolated_can
+  summary: Wired vs wireless communication in EV battery management (daisy-chain isolation, wBMS).
+  block_diagram:
+    present: true
+    where: Fig 1 p.2 distributed BMS, Fig 2 p.3 wired BMS, Fig 3 p.4 wireless BMS
+  found_on:
+  - product/BQ79616-Q1
+- doc: SLVAEP4
+  title: BQ79616-Q1 Daisy Chain Communications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaep4
+  date: '2023-10-26'
+  area: automotive
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: BQ79616-Q1 daisy-chain communication (capacitive/transformer isolation between cell monitors).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/BQ79616-Q1
+- doc: SCDA037
+  title: Expanding Functionality of Cell Supervision Unit in Battery Management Systems
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/scda037
+  date: '2021-09-14'
+  area: automotive
+  skyworks_qorvo_functions:
+  - adc
+  summary: Expanding cell supervision unit functionality in BMS.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ess-battery-management-system-bms#Battery cell & pack monitoring unit
+  - ess-battery-management-system-bms#Battery data monitoring
+  - ess-battery-management-system-bms#Battery monitoring unit
+  - product/BQ79616-Q1
+- doc: SNAA436
+  title: High Voltage Measurement in HEV/EV Application
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snaa436
+  date: '2025-06-16'
+  area: automotive
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - isolated_switch_driver
+  summary: High-voltage measurement in HEV/EV (isolated sensing).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1042-Q1
+- doc: SPRY345C
+  title: How a Zone Architecture Paves the Way to a Fully Software-Defined Vehicle
+  type: White paper
+  url: https://www.ti.com/lit/pdf/spry345
+  date: '2024-10-17'
+  area: automotive
+  skyworks_qorvo_functions:
+  - soc
+  - ethernet_phy
+  summary: Zone architecture for software-defined vehicles.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - short-medium-radar
+  - zone-control-module
+- doc: SLYY246
+  title: 'Smarter Power Distribution: Shaping the Future of Automotive Technology'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy246
+  date: '2025-06-02'
+  area: automotive
+  skyworks_qorvo_functions:
+  - load_switch
+  - power_loss_protection
+  summary: Smart power distribution in automotive zonal architectures.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#Load drivers
+  - zone-control-module#Smart fuse
+- doc: SLVA876A
+  title: Automotive Smart Fuse
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva876
+  date: '2023-04-04'
+  area: automotive
+  skyworks_qorvo_functions:
+  - load_switch
+  summary: Automotive smart fuse (eFuse) concepts.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module
+  - zone-control-module#Smart fuse
+- doc: SDAA247
+  title: Replacing Melting Fuses with TI Smart eFuse High-Side Switches
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa247
+  date: '2025-01-20'
+  area: automotive
+  skyworks_qorvo_functions:
+  - load_switch
+  summary: Replacing melting fuses with smart eFuse high-side switches.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS2HCS10-Q1
+- doc: SLLA606
+  title: Zonal Architecture and MCU I/O Expansion
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla606
+  date: '2023-02-02'
+  area: automotive
+  skyworks_qorvo_functions:
+  - io_expander
+  - mcu
+  summary: Zonal architecture and MCU I/O expansion.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#Analog and digital inputs
+  - zone-control-module#I/O expansion
+- doc: SNLA224B
+  title: FPD-Link ADAS Power-Over-Coax Design Guidelines
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snla224
+  date: '2025-10-24'
+  area: automotive
+  skyworks_qorvo_functions:
+  - serdes
+  summary: FPD-Link power-over-coax design guidelines for ADAS cameras.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-head-unit
+  - digital-cockpit-processing-unit
+- doc: SPRADU4
+  title: TI FPD-LINK and TI SoC in Automotive Multi-Camera and Multi-Display Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/spradu4
+  date: '2026-09-08'
+  area: automotive
+  skyworks_qorvo_functions:
+  - serdes
+  - soc
+  summary: FPD-Link with TI SoCs in multi-camera and multi-display systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/DS90UB953-Q1
+- doc: SNLA460
+  title: How to Implement Power over Data Lines for Automotive Ethernet
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snla460
+  date: '2024-07-01'
+  area: automotive
+  skyworks_qorvo_functions:
+  - ethernet_phy
+  summary: Power over data lines (PoDL) for automotive Ethernet.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Sensor power over signal line
+- doc: SPRAD14
+  title: Dual-TDA4x System Solution
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sprad14
+  date: '2022-04-29'
+  area: automotive
+  skyworks_qorvo_functions:
+  - soc
+  summary: Dual-TDA4x system solution for ADAS.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Fusion & object data processing
+  - adas-domain-controller#Sensor data processing
+- doc: SNVA840
+  title: Choosing the Right DC/DC Solution for Automotive Front Camera Systems
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snva840
+  date: '2018-06-28'
+  area: automotive
+  skyworks_qorvo_functions:
+  - wide_vin_buck
+  - pol_ldo
+  summary: Choosing DC/DC solutions for automotive front cameras.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - front-camera
+  - front-camera#Processor power supply
+- doc: SNVA842
+  title: Choosing the Right Voltage Reference for Your Automotive Application
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snva842
+  date: '2018-07-17'
+  area: automotive
+  skyworks_qorvo_functions:
+  - voltage_reference
+  summary: Choosing voltage references for automotive applications.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - adas-domain-controller#Diagnostics/monitoring
+  - adas-domain-controller#Safety & system control
+  - front-camera
+  - front-camera#Diagnostics/monitoring
+- doc: SLLA521B
+  title: How Selective Wake Enables Partial Networking
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla521
+  date: '2022-06-22'
+  area: automotive
+  skyworks_qorvo_functions:
+  - can_transceiver
+  summary: Selective wake and partial networking with CAN.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - zone-control-module#CAN
+  - product/TCAN1145-Q1
+- doc: SDAA190
+  title: Comparison of CAN, CAN FD, and CAN XL
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa190
+  date: '2026-06-18'
+  area: automotive
+  skyworks_qorvo_functions:
+  - can_transceiver
+  summary: Comparison of CAN, CAN FD and CAN XL.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TCAN1145-Q1
+- doc: SLVAFC1
+  title: Protecting Automotive CAN Bus Systems From ESD Overvoltage Events
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvafc1
+  date: '2022-04-27'
+  area: automotive
+  skyworks_qorvo_functions:
+  - tvs_esd
+  - can_transceiver
+  summary: Protecting automotive CAN buses from ESD overvoltage.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TCAN1145-Q1
+- doc: SLPY009
+  title: Bridging 12 V and 48 V in dual-battery automotive systems
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slpy009
+  date: '2018-10-18'
+  area: automotive
+  skyworks_qorvo_functions:
+  - buck_boost
+  summary: Bridging 12 V and 48 V in dual-battery automotive systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - automotive-pump
+- doc: SPRADM3
+  title: Getting Started with mmWave Sensors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/spradm3
+  date: '2025-03-12'
+  area: automotive
+  skyworks_qorvo_functions:
+  - soc
+  - rf_frontend
+  summary: Getting started with mmWave radar sensors.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AWR2944
+- doc: SLLA370D
+  title: How To Simplify Isolated 24V PLC Digital Input Module Designs
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla370
+  date: '2025-06-30'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Simplifying isolated 24-V PLC digital input module design with ISO121x isolated digital inputs.
+  block_diagram:
+    present: true
+    where: Figs 3-4 p.2 DI module channel / 8-ch module with ISO1211/ISO1228
+  found_on:
+  - digital-input-module
+  - product/ISO1228
+- doc: SLLA420C
+  title: Space-Saving Design Techniques for Multichannel High-Voltage Digital Input Modules
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla420
+  date: '2024-11-11'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Space-saving multichannel high-voltage digital input modules.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1228
+- doc: SLLA640
+  title: How to Dynamically Switch Between Serial and Parallel Modes Using ISO1228
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla640
+  date: '2025-04-21'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: Switching ISO1228 between serial and parallel modes.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1228
+- doc: SLVAFT3
+  title: Digital Input Module, Digital Output Module
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slvaft3
+  date: '2024-03-06'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - load_switch
+  summary: Overview of PLC digital input and digital output modules.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/ISO1228
+- doc: SLLA483
+  title: How to Design Isolated Digital Input Modules for Surge Immunity
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slla483
+  date: '2020-03-31'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - tvs_esd
+  summary: Designing isolated digital input modules for surge immunity.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - digital-input-module#Signal isolation
+- doc: SLVAE72
+  title: Protecting I/O modules from surge events
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slvae72
+  date: '2019-02-04'
+  area: industrial
+  skyworks_qorvo_functions:
+  - tvs_esd
+  summary: Protecting I/O modules from surge events.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - analog-input-module
+  - analog-output-module
+  - digital-input-module
+  - digital-output-module
+- doc: SLVA833D
+  title: Simplifying EFT, Surge and Power-Fail Protection Circuits in PLC Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva833
+  date: '2021-05-05'
+  area: industrial
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  - tvs_esd
+  summary: EFT, surge and power-fail protection circuits in PLC systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - analog-input-module
+  - analog-output-module
+  - product/TPS2663
+- doc: SLVAEC4
+  title: Backplane Power Protection in PLC Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaec4
+  date: '2019-06-11'
+  area: industrial
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Backplane power protection in PLC systems.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/TPS2663
+- doc: SDAA162
+  title: Designing EMC-Compliant, High-Accuracy PLC Analog Input Modules (0-10V / 4-20mA) with ADS125H18
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa162
+  date: '2026-07-06'
+  area: industrial
+  skyworks_qorvo_functions:
+  - adc
+  - digital_isolator
+  - isolated_dcdc
+  summary: EMC-compliant PLC analog input module (0-10 V / 4-20 mA) with ADS125H18.
+  block_diagram:
+    present: true
+    where: Figs 1-3, 1-6 p.4-6 AI module signal chain; Fig 2-1 p.8 EMC protection
+  found_on:
+  - product/ISO7721
+  - product/SN6505B
+- doc: SBAA631
+  title: PLC Analog Output Module Architectures
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa631
+  date: '2025-01-29'
+  area: industrial
+  skyworks_qorvo_functions:
+  - adc
+  - digital_isolator
+  summary: PLC analog output module architectures (per-channel DAC, multiplexed, PWM DAC).
+  block_diagram:
+    present: true
+    where: Fig 4-2 p.6 multiplexed AO architecture; Fig 5-2 p.8 PWM DAC
+  found_on:
+  - analog-output-module#Analog front end
+- doc: SBOA335
+  title: Multichannel Analog Input Modules for PLC Equipment
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa335
+  date: '2019-01-04'
+  area: industrial
+  skyworks_qorvo_functions:
+  - adc
+  summary: Multichannel analog input modules for PLC equipment.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - analog-input-module
+- doc: SLAAEH8
+  title: Design and Test of a HART-Enabled Field Transmitter for 4-20mA Loops
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaaeh8
+  date: '2024-10-17'
+  area: industrial
+  skyworks_qorvo_functions:
+  - adc
+  summary: HART-enabled 4-20 mA field transmitter design and test.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/AFE881H1
+- doc: SLLA498A
+  title: Power Topology Considerations for Solar String Inverters and Energy Storage Systems
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla498
+  date: '2024-12-05'
+  area: industrial
+  skyworks_qorvo_functions:
+  - gate_driver
+  - isolated_dcdc
+  - current_sensor
+  summary: Power topologies for solar string inverters and energy storage (MPPT, battery DC/DC, DC/AC stages).
+  block_diagram:
+    present: true
+    where: Fig 2-1 p.2 solar string inverter; Figs 2-2..2-4 p.3-5 stage diagrams
+  found_on:
+  - central-inverter
+  - micro-inverter#DC/AC power stage
+  - micro-inverter#DC/DC power stage
+  - power-conversion-system-pcs
+- doc: SDAA518
+  title: System-Level Benefits of Using 650V Integrated GaN Power Stages in Residential Solar Inverters
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sdaa518
+  date: '2026-09-18'
+  area: industrial
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: System benefits of 650-V integrated GaN power stages in residential solar inverters.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - string-inverter
+- doc: SNOAAB6
+  title: Power Line Communication in Solar Applications
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snoaab6
+  date: '2024-12-12'
+  area: industrial
+  skyworks_qorvo_functions:
+  - rf_frontend
+  summary: Power-line communication in solar applications.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - central-inverter#Wired interface
+  - micro-inverter#Wired interface
+  - string-inverter#Wired interface
+- doc: SLYY207
+  title: Four key design considerations when adding energy storage to solar power grids
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy207
+  date: '2021-03-22'
+  area: industrial
+  skyworks_qorvo_functions:
+  - isolated_amplifier
+  - digital_isolator
+  summary: Design considerations when adding energy storage to solar.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - power-conversion-system-pcs
+  - string-inverter
+  - product/AMC1306M05
+  - product/ISO7741
+- doc: SLLA497
+  title: Power Topologies in Electric Vehicle Charging Stations
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla497
+  date: '2020-09-16'
+  area: industrial
+  skyworks_qorvo_functions:
+  - gate_driver
+  - isolated_dcdc
+  summary: Power topologies in EV charging stations (AC/DC, DC/DC, portable chargers).
+  block_diagram:
+    present: true
+    where: Fig 1-1 p.2 AC station, Fig 1-2 p.3 DC station, Fig 2-1 p.4 power module
+  found_on:
+  - dc-fast-charging-power-module
+- doc: SLVAEI6B
+  title: L1 and L2 EV Charger Electric Vehicle Service Equipment Design Considerations
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaei6
+  date: '2021-06-09'
+  area: industrial
+  skyworks_qorvo_functions:
+  - isolated_switch_driver
+  - current_sensor
+  summary: Level 1/Level 2 EV charger (EVSE) design considerations.
+  block_diagram:
+    present: true
+    where: Fig 1-1 p.2 AC L1/L2 EVSE system configuration
+  found_on:
+  - ac-charging-pile-station
+- doc: SBAA541
+  title: Design Considerations for Current Sensing in DC EV Charging Applications
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa541
+  date: '2022-12-13'
+  area: industrial
+  skyworks_qorvo_functions:
+  - current_sensor
+  - isolated_amplifier
+  summary: Current sensing in DC EV charging.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-charging-pile-station
+  - dc-fast-charging-power-module
+  - dc-fast-charging-power-module#Bus current & voltage sense
+  - dc-fast-charging-power-module#Input current & voltage sense
+- doc: SLYY080B
+  title: 'Isolation in AC Motor Drives: Understanding the IEC 61800-5-1 Safety Standard'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy080
+  date: '2015-09-25'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  - gate_driver
+  summary: Isolation in AC motor drives under IEC 61800-5-1.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - robot-servo-drive
+  - servo-drive-power-stage-module
+  - product/ISO7741
+- doc: SLYY063A
+  title: 'High-voltage reinforced isolation: Definitions and test methodologies'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy063
+  date: '2026-05-12'
+  area: industrial
+  skyworks_qorvo_functions:
+  - digital_isolator
+  summary: High-voltage reinforced isolation definitions and test methods.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-control-module
+  - ac-drive-power-stage-module
+  - servo-drive-power-stage-module
+  - uninterruptible-power-supply
+- doc: SPRY316C
+  title: Time Sensitive Networking for Industrial Automation
+  type: White paper
+  url: https://www.ti.com/lit/pdf/spry316
+  date: '2023-07-31'
+  area: industrial
+  skyworks_qorvo_functions:
+  - ethernet_phy
+  - soc
+  summary: Time-sensitive networking for industrial automation.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - cpu-plc-controller
+  - servo-drive-communication-module
+  - stand-alone-remote-io
+- doc: SNLA420A
+  title: How and Why to Use Single Twisted-Pair Ethernet (SPE) for Industrial Robotics Environments
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snla420
+  date: '2024-01-19'
+  area: industrial
+  skyworks_qorvo_functions:
+  - ethernet_phy
+  summary: Single-pair Ethernet for industrial robotics.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - robot-servo-drive#Wired interface
+- doc: SLLA272D
+  title: The RS-485 Design Guide
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla272
+  date: '2021-05-03'
+  area: industrial
+  skyworks_qorvo_functions:
+  - rs485_transceiver
+  summary: RS-485 design guide.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-drive-power-stage-module
+  - ac-drive-power-stage-module#Wired interface
+  - servo-drive-power-stage-module
+  - servo-drive-power-stage-module#Wired interface
+- doc: SLUAA81A
+  title: Cell Balancing With BQ769x2 Battery Monitors
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sluaa81
+  date: '2022-02-15'
+  area: industrial
+  skyworks_qorvo_functions:
+  - adc
+  summary: Cell balancing with BQ769x2 battery monitors (ESS / industrial packs).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ess-battery-management-system-bms#Battery cell & pack monitoring unit
+  - ess-battery-management-system-bms#Battery data monitoring
+- doc: SLWY003
+  title: 'Preparing for a 5G world: An overview of the enabling technologies and hardware'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slwy003
+  date: '2018-12-10'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - clock_generator
+  summary: Overview of enabling technologies and hardware for 5G.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+- doc: SLYY166
+  title: 'Small Cells, Big Impact: Designing Power Soutions for 5G Applications'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy166
+  date: '2019-06-26'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - pol_buck
+  - multiphase
+  summary: Power solutions for 5G small cells.
+  block_diagram:
+    present: false
+    where: no system block diagram (coverage sketch, converter schematics)
+  found_on:
+  - small-cell-base-station
+- doc: SLVAE07
+  title: Protecting Radio, Baseband and Active Antenna Systems with TPS2352x Hot Swaps
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvae07
+  date: '2018-06-28'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Protecting radio, baseband and active-antenna systems with TPS2352x hot-swap controllers.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+- doc: SLVA986
+  title: Beyond BT High-Power PoE Solution using the TPS23880 and TPS2372-4
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slva986
+  date: '2018-04-17'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - pol_buck
+  summary: High-power PoE (beyond 802.3bt) using TPS23880 and TPS2372-4.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - gateway-xdsl-cable
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+- doc: SLAA824
+  title: Spurs Analysis in the RF Sampling ADC
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slaa824
+  date: '2018-02-09'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - adc
+  - rf_frontend
+  summary: Spur analysis in RF-sampling ADCs.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+- doc: SBAA225
+  title: RF Sampling ADC with 800MHz of IBW LTE
+  type: Application note
+  url: https://www.ti.com/lit/pdf/sbaa225
+  date: '2016-09-08'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - adc
+  - rf_frontend
+  summary: RF-sampling ADC with 800-MHz instantaneous bandwidth for LTE.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - small-cell-base-station
+- doc: SLYY068
+  title: 'Direct RF conversion: From vision to reality'
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slyy068
+  date: '2015-02-11'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - rf_frontend
+  - adc
+  summary: 'Direct RF conversion: from vision to reality.'
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+- doc: SNAU222
+  title: JESD204B Multi-Device Synchronization Using LMK0461x
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snau222
+  date: '2017-08-16'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  summary: JESD204B multi-device synchronization using LMK0461x.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - active-antenna-system-mmimo-aas
+  - macro-remote-radio-unit-rru
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+- doc: SNAA315
+  title: ITU-T G.8262 Compliance Test Results for the LMK05028 Digital PLL Network
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa315
+  date: '2018-04-10'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  summary: ITU-T G.8262 compliance of the LMK05028 network synchronizer.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - baseband-unit-bbu
+  - outdoor-backhaul-unit
+  - small-cell-base-station
+  - product/LMK05028
+- doc: SNAA345
+  title: ITU-T G.8262 Compliance Test Results for the LMK5C33216
+  type: Application note
+  url: https://www.ti.com/lit/pdf/snaa345
+  date: '2020-12-23'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - jitter_attenuator
+  summary: ITU-T G.8262 compliance of the LMK5C33216.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - product/LMK5C33216
+- doc: SLVAFJ9
+  title: How Active EMI Power-Supply Filter ICs Mitigate Common-Mode Emissions
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slvafj9
+  date: '2023-03-16'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - pre_regulator
+  summary: Active EMI filter ICs for common-mode emissions in AC/DC (server PSU, OBC, telecom rectifier).
+  block_diagram:
+    present: false
+    where: EMI-filter and device diagrams only
+  found_on:
+  - ac-dc-power-supply-unit-psu-48v-54v-output#Filter and rectifier
+  - onboard-charger#AC/DC EMI filter
+  - telecom-rectifiers#AC/DC EMI filter
+- doc: SNOAA15
+  title: Overcurrent Protection in High-Density GaN Power Designs
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/snoaa15
+  date: '2018-10-19'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: Overcurrent protection in high-density GaN power designs (server/telecom PSU).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-dc-power-supply-unit-psu-48v-54v-output#Isolated DC/DC power stage
+  - telecom-rectifiers
+- doc: SLUP327
+  title: GaN FET-Based CCM Totem-Pole Bridgeless PFC
+  type: White paper
+  url: https://www.ti.com/lit/pdf/slup327
+  date: '2015-10-02'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - gate_driver
+  summary: GaN FET-based CCM totem-pole bridgeless PFC.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - ac-dc-power-supply-unit-psu-48v-54v-output#PFC power stage
+- doc: SLVAED9
+  title: Reducing Power Loss and Overheating During Faults with eFuses
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slvaed9
+  date: '2019-06-27'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - power_loss_protection
+  summary: Reducing power loss and overheating during faults with eFuses (servers, NICs).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - intel-server#Platform controller hub (PCH)
+  - intel-server#System power
+  - network-interface-card-nic#Input power protection
+  - solid-state-drive-ssd-enterprise#Input power protection
+- doc: SCEA058A
+  title: Glitch free power sequencing with AXC level translators
+  type: Application note
+  url: https://www.ti.com/lit/pdf/scea058
+  date: '2018-09-20'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - voltage_translator
+  - sequencer
+  summary: Glitch-free power sequencing with AXC level translators.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - core-router
+  - fixed-data-center-switch
+  - gateway-xdsl-cable
+  - outdoor-backhaul-unit
+- doc: SLLA120
+  title: Interfacing Between LVPECL, VML, CML and LVDS Levels
+  type: Application note
+  url: https://www.ti.com/lit/pdf/slla120
+  date: '2002-12-17'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - clock_buffer
+  - redriver
+  summary: Interfacing between LVPECL, VML, CML and LVDS levels.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - core-router
+  - fixed-data-center-switch
+- doc: SLAA849
+  title: High-Density DACs Offer Superior Noise And Accuracy for Laser Drive Applications
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/slaa849
+  date: '2018-10-02'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - adc
+  summary: High-density DACs for laser drive in optical modules.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - optical-module-small-form-factor-pluggable
+- doc: SLUAAD9
+  title: Enabling Higher Data Rates for Optical Modules With Small and Efficient Power
+  type: White paper
+  url: https://www.ti.com/lit/pdf/sluaad9
+  date: '2021-03-22'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - pol_buck
+  summary: Small, efficient power for higher-data-rate optical modules.
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - optical-module-small-form-factor-pluggable
+  - product/TPS62870
+- doc: SBOA165F
+  title: Precision Current Measurements on High-Voltage Power-Supply Rails
+  type: Application brief
+  url: https://www.ti.com/lit/pdf/sboa165
+  date: '2022-10-17'
+  area: infrastructure
+  skyworks_qorvo_functions:
+  - current_sensor
+  summary: Precision current measurement on high-voltage rails (-48 V, PA supplies).
+  block_diagram:
+    present: null
+    where: not checked (PDF not opened)
+  found_on:
+  - baseband-unit-bbu

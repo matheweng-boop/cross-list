@@ -19,14 +19,16 @@ router = APIRouter()
 def index(request: Request, session: Session = Depends(get_session)):
     designs = session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc())).all()
     return templates.TemplateResponse(
-        request, "blocks/index.html", {"designs": designs, "template_groups": blocks.template_groups()}
+        request, "blocks/index.html", {"designs": designs, "cards": blocks.template_cards(session)}
     )
 
 
 @router.get("/blocks/coverage", response_class=HTMLResponse)
 def coverage(request: Request, session: Session = Depends(get_session)):
     cat = blocks.catalogue()
-    return templates.TemplateResponse(request, "blocks/coverage.html", {"cat": cat, "counts": blocks.counts(session)})
+    return templates.TemplateResponse(
+        request, "blocks/coverage.html", {"cat": cat, "counts": blocks.counts(session), "uses": blocks.function_uses()}
+    )
 
 
 @router.get("/blocks/new", response_class=HTMLResponse)
@@ -44,7 +46,7 @@ def edit(request: Request, design_id: int, session: Session = Depends(get_sessio
 
 
 def _editor(request, session, design, tpl):
-    info = {"id": None, "name": (tpl or {}).get("name", ""), "data": None}
+    info = {"id": None, "name": blocks.display_name(tpl) if tpl else "", "data": None}
     if design:
         info = {"id": design.id, "name": design.name, "data": design.data}
     return templates.TemplateResponse(
@@ -107,7 +109,7 @@ def _name(payload: dict) -> str:
 
 
 # --- feedback: kept for discussion before a change is made -------------------------------------------
-FEEDBACK_STATUS = {"open": "Open", "agreed": "Agreed, to do", "rejected": "Not doing", "done": "Done"}
+FEEDBACK_STATUS = {"open": "To review", "agreed": "Agreed, to do", "rejected": "Not doing", "done": "Done"}
 
 
 @router.post("/api/blocks/feedback")

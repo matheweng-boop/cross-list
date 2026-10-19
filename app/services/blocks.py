@@ -34,6 +34,59 @@ def templates() -> list[dict]:
     return _yaml("templates.yaml") or []
 
 
+# vendor / source in a template name ("(TI)", "(NXP)", "(Microchip AN5324)", "(TI reference)") is kept in the data
+# (sources) but not shown
+_SOURCE_PAREN = re.compile(
+    r"\s*\((?:[^()]*\b(?:TI|NXP|MediaTek|Qualcomm|Microchip|Skyworks|Infineon|RF|TIDM|TIDA|AN\d+|reference|Airfast|Dimensity|Filogic|Genio|MT\d+|T930|FastConnect|Dragonwing|QTM\d*|QCC\d*|QCS\d*|WCN\d*|Snapdragon|SAF\w*|TEF\w*)\b[^()]*)\)",
+    re.I,
+)
+
+
+_VENDOR_WORDS = re.compile(r"\s*/\s*Digital Airfast\b|\bAirfast\b\s*", re.I)
+
+
+def display_name(t: dict) -> str:
+    name = _VENDOR_WORDS.sub(" ", _SOURCE_PAREN.sub("", t.get("name") or ""))
+    return re.sub(r"\s{2,}", " ", name).strip()
+
+
+def template_functions(t: dict) -> list[str]:
+    out = []
+    for g in t.get("groups") or []:
+        for b in g.get("blocks") or []:
+            out.append(b["fn"] if isinstance(b, dict) else str(b).split()[0])
+    return list(dict.fromkeys(out))
+
+
+def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
+    """Applications by category for the generator page: display name, block count and the Skyworks / Qorvo
+    categories involved (have = parts in Cross List, else opportunity)."""
+    cat, n = catalogue(), counts(session)
+    out: dict[str, list] = {}
+    for i, t in enumerate(templates()):
+        chips: dict[str, bool] = {}
+        for fn in template_functions(t):
+            f = cat["functions"].get(fn) or {}
+            if n.get(fn) is None:
+                continue  # customer / external part
+            label = cat["categories"].get(f.get("category"), f.get("category"))
+            chips[label] = chips.get(label, False) or bool(n[fn])
+        blocks_n = sum(len(g.get("blocks") or []) for g in t.get("groups") or [])
+        card = {"i": i, "name": display_name(t), "blocks": blocks_n, "questions": len(t.get("questions") or []),
+                "chips": sorted(chips.items(), key=lambda c: (not c[1], c[0]))}  # fmt: skip
+        out.setdefault(t.get("category") or "Other", []).append(card)
+    return list(out.items())
+
+
+def function_uses() -> dict[str, list[dict]]:
+    """Which applications use each function (for the coverage page)."""
+    uses: dict[str, list] = {}
+    for i, t in enumerate(templates()):
+        for fn in template_functions(t):
+            uses.setdefault(fn, []).append({"i": i, "name": display_name(t), "category": t.get("category") or "Other"})
+    return uses
+
+
 def template_groups() -> list[tuple[str, list[tuple[int, dict]]]]:
     """Templates by category, in file order: [(category, [(index, template)])]."""
     out: dict[str, list] = {}

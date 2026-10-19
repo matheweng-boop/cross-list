@@ -450,20 +450,39 @@
     openPanel();
     const g = sel && group(sel.group), b = g && sel.block && blockOf(g, sel.block);
     const target = b ? `${g.label} / ${b.label || fnOf(b).label}` : g ? g.label : "";
-    const list = configId ? await (await fetch(`/api/blocks/feedback?diagram_id=${configId}`)).json() : [];
-    panel.innerHTML = `<h3>Feedback</h3><p class="small muted">Saved for discussion; nothing in the diagram or the templates changes until we agree on it. All feedback: <a href="/blocks/feedback">Block diagrams → Feedback</a>.</p>
-      <label class="small">About <input data-fb-target value="${esc(target)}" placeholder="whole diagram"></label>
-      <textarea data-fb-msg rows="4" placeholder="e.g. traction inverter needs an isolated temperature sensing block; Si823x lacks DESAT"></textarea>
-      <div class="row"><button type="button" class="small-btn" data-fb-save>Save feedback</button><span class="small muted" data-fb-st></span></div>
-      ${list.length ? `<p class="small"><b>On this diagram</b></p><ul>${list.map(f => `<li class="small">[${esc(f.status)}] ${f.target ? `<b>${esc(f.target)}</b>: ` : ""}${esc(f.message)} <span class="muted">${esc(f.created)}</span></li>`).join("")}</ul>` : ""}`;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    panel.innerHTML = `<h3>Feedback</h3>
+      <p class="small muted">Type or speak. It goes on the feedback to-do list (Block diagrams → Feedback) and is reviewed in batches; nothing changes until then.${target ? ` About: <b>${esc(target)}</b>.` : ""}</p>
+      <textarea data-fb-msg rows="5" placeholder="What should change?"></textarea>
+      <div class="row"><button type="button" class="small-btn" data-fb-save>Save</button>
+        ${SR ? `<button type="button" class="outline small-btn" data-fb-mic title="Voice input uses your browser's speech recognition; some browsers (e.g. Chrome) send the audio to their speech service.">🎤 Speak</button>` : `<span class="small muted">Voice: use your keyboard's dictation key.</span>`}
+        <span class="small muted" data-fb-st></span></div>`;
+    const msgEl = panel.querySelector("[data-fb-msg]"), st = panel.querySelector("[data-fb-st]");
+    const mic = panel.querySelector("[data-fb-mic]");
+    if (mic) {
+      let rec = null;
+      mic.onclick = () => {
+        if (rec) { rec.stop(); return; }
+        rec = new SR();
+        rec.lang = navigator.language || "en-US";
+        rec.interimResults = false;
+        rec.continuous = true;
+        rec.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) msgEl.value = `${msgEl.value} ${e.results[i][0].transcript}`.trim(); };
+        rec.onend = () => { rec = null; mic.textContent = "🎤 Speak"; st.textContent = ""; };
+        rec.onerror = e => { st.textContent = `Voice input not available (${e.error})`; };
+        rec.start();
+        mic.textContent = "■ Stop"; st.textContent = "Listening…";
+      };
+    }
     panel.querySelector("[data-fb-save]").onclick = async () => {
-      const msg = panel.querySelector("[data-fb-msg]").value.trim();
+      const msg = msgEl.value.trim();
       if (!msg) return;
       const res = await fetch("/api/blocks/feedback", {method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({diagram_id: configId, diagram_name: $("#bk-name").value || (tpl && tpl.name) || "", target: panel.querySelector("[data-fb-target]").value, message: msg})});
-      panel.querySelector("[data-fb-st]").textContent = res.ok ? "Saved" : `Not saved (${res.status})`;
-      if (res.ok) setTimeout(showFeedback, 400);
+        body: JSON.stringify({diagram_id: configId, diagram_name: $("#bk-name").value || (tpl && tpl.name) || "", target, message: msg})});
+      st.textContent = res.ok ? "Saved to the to-do list" : `Not saved (${res.status})`;
+      if (res.ok) msgEl.value = "";
     };
+    msgEl.focus();
   }
   $("#bk-feedback").onclick = showFeedback;
 

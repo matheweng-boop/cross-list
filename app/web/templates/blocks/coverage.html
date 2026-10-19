@@ -2,18 +2,49 @@
 {% block title %}Coverage – Block diagrams – Cross List{% endblock %}
 {% block content %}
 <h1>Function coverage</h1>
-<p class="subtitle muted">Which system functions Cross List can fill with Skyworks and Qorvo parts today (Qorvo: public store.qorvo.com catalogue data, not datasheet-verified). “Opportunity” means no Skyworks or Qorvo part is in
-  Cross List for it yet: either a portfolio gap or a product family that has not been imported (the full portfolio import is on the backlog).</p>
+<p class="subtitle muted">Which system functions Cross List can fill with Skyworks and Qorvo parts today. Click a function to see the
+  applications that use it. “Opportunity” = no Skyworks or Qorvo part in Cross List for it yet.</p>
+<div id="cov" class="cov">
+  <div id="cov-focus" class="cov-focus" hidden aria-live="polite"></div>
+  <div id="cov-all">
 {% for ckey, clabel in cat.categories.items() %}
   {% set fns = cat.functions.items()|selectattr('1.category', 'equalto', ckey)|list %}
   {% if fns %}
-  <h3 class="cov-h">{{ clabel }}</h3>
+  <section class="cov-sec"><h3 class="cov-h">{{ clabel }}</h3>
   <div class="cov-grid">
-    {% for key, f in fns %}{% set n = counts[key] %}
-    <div class="cov-item {{ 'ext' if n is none else 'have' if n else 'opp' }}"><b>{{ f.label }}</b>
-      <br><small>{% if n is none %}customer part{% elif n %}{{ n }} Skyworks part{{ 's' if n != 1 }} in Cross List{% else %}opportunity{% endif %}</small></div>
+    {% for key, f in fns %}{% set n = counts[key] %}{% set u = uses.get(key, []) %}
+    <button type="button" class="cov-item {{ 'ext' if n is none else 'have' if n else 'opp' }}" data-fn="{{ key }}" data-label="{{ f.label }}"><b>{{ f.label }}</b>
+      <br><small>{% if n is none %}customer part{% elif n %}{{ n }} Skyworks / Qorvo part{{ 's' if n != 1 }}{% else %}opportunity{% endif %} · {{ u|length }} application{{ 's' if u|length != 1 }}</small></button>
     {% endfor %}
-  </div>
+  </div></section>
   {% endif %}
 {% endfor %}
+  </div>
+</div>
+<script type="application/json" id="cov-uses">{{ uses|tojson }}</script>
+<script>
+(() => {
+  const uses = JSON.parse(document.getElementById("cov-uses").textContent);
+  const all = document.getElementById("cov-all"), focus = document.getElementById("cov-focus");
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  function show(btn) {
+    const list = uses[btn.dataset.fn] || [], byCat = {};
+    list.forEach(a => (byCat[a.category] ||= []).push(a));
+    focus.innerHTML = `<button type="button" class="outline secondary small-btn" id="cov-back">← All functions</button>
+      <div class="cov-picked">${btn.outerHTML}</div>
+      <h3>${list.length} application${list.length === 1 ? "" : "s"} with ${esc(btn.dataset.label)}</h3>` +
+      (list.length ? Object.entries(byCat).map(([c, as]) => `<p class="small muted cov-cat">${esc(c)}</p><ul class="cov-apps">${as.map(a => `<li><a href="/blocks/new?template=${a.i}">${esc(a.name)}</a></li>`).join("")}</ul>`).join("")
+        : `<p class="muted">No application uses it yet.</p>`);
+    all.classList.add("cov-hide");
+    setTimeout(() => { all.hidden = true; focus.hidden = false; requestAnimationFrame(() => focus.classList.add("cov-in")); }, 220);
+    document.getElementById("cov-back").onclick = back;
+    window.scrollTo({top: 0, behavior: "smooth"});
+  }
+  function back() {
+    focus.classList.remove("cov-in");
+    setTimeout(() => { focus.hidden = true; all.hidden = false; requestAnimationFrame(() => all.classList.remove("cov-hide")); }, 200);
+  }
+  all.querySelectorAll("[data-fn]").forEach(b => (b.onclick = () => show(b)));
+})();
+</script>
 {% endblock %}

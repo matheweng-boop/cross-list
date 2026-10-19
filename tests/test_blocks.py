@@ -50,7 +50,7 @@ def test_feedback_is_saved_for_discussion(client):
     assert r.status_code == 200
     assert client.get(f"/api/blocks/feedback?diagram_id={d['id']}").json()[0]["message"] == "Needs DESAT"
     assert "Needs DESAT" in client.get("/blocks/feedback").text
-    assert "- [Open] Inverter / Gate drive: Needs DESAT" in client.get("/blocks/feedback.txt").text
+    assert "- [To review] Inverter / Gate drive: Needs DESAT" in client.get("/blocks/feedback.txt").text
     assert client.post("/api/blocks/feedback", json={"message": " "}).status_code == 400
 
 
@@ -85,3 +85,15 @@ def test_motor_and_rf_templates(client):
     q = next(q for q in t["questions"] if q["id"] == "antenna_diversity_switch")
     assert q["sets"][0]["fn"] == "rf_switch"
     assert client.get(f"/blocks/new?template={i}").status_code == 200
+
+
+def test_applications_without_vendor_names_and_coverage_uses(client):
+    from app.services import blocks as b
+
+    assert b.display_name({"name": "Light EV BLDC drive, 48 V (TI)"}) == "Light EV BLDC drive, 48 V"
+    assert b.display_name({"name": "E-mobility drive up to 85 V (Microchip AN5324)"}) == "E-mobility drive up to 85 V"
+    page = client.get("/blocks").text
+    assert "Applications" in page and "(TI)" not in page and "(NXP)" not in page and "tpl-chip" in page
+    uses = b.function_uses()
+    assert any("radio" in a["name"].lower() for a in uses["am_fm_tuner"])
+    assert 'data-fn="pmic"' in client.get("/blocks/coverage").text

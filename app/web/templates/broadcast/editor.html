@@ -26,7 +26,7 @@
       <label class="small bc-ant-ic">DAB into <select id="bc-dab-ic" class="small-sel" aria-label="Tuner IC for the DAB antennas"><option value="auto">secondary tuner (auto)</option><option value="IC0">IC0</option><option value="IC1">IC1</option><option value="IC2">IC2</option></select></label>
     </span>
     <span class="bc-chips" id="st-feats" role="group" aria-label="Required features" hidden><span class="small muted">Features</span>
-      {% for key, label in features.features.items() if key not in ('AM', 'FM', 'AUDIO') %}<button type="button" class="bc-chip bc-chip-sm" data-feat="{{ key }}" data-explain="feature:{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+      {% for gname, keys in (features.feature_groups or {'': features.features.keys()|list}).items() %}<span class="feat-cat"><span class="small muted feat-cat-name">{{ gname }}</span>{% for key in keys if key in features.features and key not in ('AM', 'FM', 'AUDIO') %}<button type="button" class="bc-chip bc-chip-sm" data-feat="{{ key }}" data-explain="feature:{{ key }}" aria-pressed="false">{{ features.features[key] }}</button>{% endfor %}</span>{% endfor %}
     </span>
     <div id="bc-cands" class="bc-cands" hidden></div>
     <span id="bc-feat-match" class="small bc-feat-match"></span>

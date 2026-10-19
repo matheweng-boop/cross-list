@@ -8,8 +8,11 @@
 <h2>Tuner selection by feature</h2>
 <p class="small muted">Feature sets and layouts from application guidance. Tick features to keep only the tuners that have all of them.
   Parts on the same layout share a footprint: a single tuner on a dual-tuner layout can be swapped for a dual tuner on the same board.</p>
-<div class="feat-filter" role="group" aria-label="Required features">
-  {% for key, label in tf.features.items() %}<label><input type="checkbox" value="{{ key }}" data-feat-filter> {{ label }}</label>{% endfor %}
+<div class="feat-filter feat-groups" role="group" aria-label="Required features">
+  {% for gname, keys in (tf.feature_groups or {'Features': tf.features.keys()|list}).items() %}
+  <fieldset class="feat-group"><legend>{{ gname }}</legend>
+    {% for key in keys if key in tf.features %}<label><input type="checkbox" value="{{ key }}" data-feat-filter> {{ tf.features[key] }}</label>{% endfor %}
+  </fieldset>{% endfor %}
 </div>
 <div class="table-wrap"><table class="feat-matrix">
   <thead><tr><th>Part</th><th>Tuners</th><th>Layout</th>{% for key, label in tf.features.items() %}<th title="{{ label }}"><span>{{ key|replace('_', ' ') }}</span></th>{% endfor %}</tr></thead>

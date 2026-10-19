@@ -8852,7 +8852,7 @@
     - {id: an901_vin, question: "Input voltage", choices: ["< 5.5 V (no flyback needed)", "5.5 - 24 V", "24 - 36 V"], source: "AN901 p.1: flyback for VIN > 5.5 V or > 2 W"}
     - {id: an901_power, question: "Output power", choices: ["<= 2 W", "2 - 5 W", "> 5 W"], source: "AN901 p.1, Design Example 1 (5 W)"}
 
-# ---- converted from data/reference_designs/ti_applications.yaml by tools/research_to_templates.py
+# ---- imported by tools/import_diagrams.py
 - name: Automotive HVAC e-compressor drive (HV battery, isolated CAN/LIN, 3-phase IGBT/MOSFET inverter) (TI)
   category: Automotive systems
   note: 'From TI public material: TI-SOL-ECOMP'
@@ -8946,184 +8946,6 @@
     question: Phase current sensing
     choices: [low-side shunt + op amp, isolated amplifier, Hall sensor]
     source: TI-SOL-ECOMP 'Load current monitoring'
-- name: Automotive PTC electric heater (HV, isolated communication, MOSFET/IGBT low-side switching) (TI)
-  category: Automotive systems
-  note: 'From TI public material: TI-SOL-PTC'
-  sources:
-  - {doc: TI-SOL-PTC, title: 'PTC - high voltage, isolated communication - block diagram + subsystems', url: 'https://www.ti.com/solution/automotive-ptc-e-heater'}
-  groups:
-  - id: communication_interface
-    label: Communication interface
-    blocks: [can_transceiver, lin_transceiver, tvs_esd, pmic]
-    col: 0
-    row: 0
-  - id: reference_voltage_source
-    label: Reference voltage source
-    blocks: [voltage_reference]
-    col: 1
-    row: 0
-  - id: isolated_power_supply
-    label: Isolated power supply
-    blocks: [reverse_polarity, battery_protector, acdc_controller, pol_buck, pol_ldo, voltage_reference]
-    col: 2
-    row: 0
-  - id: load_current_monitoring
-    label: Load current monitoring
-    blocks: [current_sensor, amplifier]
-    col: 3
-    row: 0
-  - id: power_switch_temperature_sensing
-    label: Power switch temperature sensing
-    blocks: [temperature_sensor]
-    col: 0
-    row: 1
-  - id: mcu
-    label: MCU
-    blocks: [mcu]
-    col: 1
-    row: 1
-  - id: heater_temperature_monitoring
-    label: Heater temperature monitoring
-    blocks: [temperature_sensor]
-    col: 2
-    row: 1
-  - id: high_voltage_safety_interlock
-    label: High voltage safety interlock
-    blocks: [amplifier]
-    col: 3
-    row: 1
-  - id: digital_signal_isolation
-    label: Digital signal isolation
-    blocks: [digital_isolator]
-    col: 0
-    row: 2
-  - id: gate_driver
-    label: Gate driver
-    blocks: [gate_driver, power_fets]
-    col: 1
-    row: 2
-  - id: power_supply
-    label: Power supply
-    blocks: [watchdog, supervisor]
-    col: 2
-    row: 2
-  - id: heater_stage
-    label: PTC load + MOSFET / IGBT switch
-    blocks: [power_module, hv_battery]
-    col: 3
-    row: 2
-  links:
-  - [isolated_power_supply, power_supply, isolated supply from 12 V car battery]
-  - [power_supply, mcu, '']
-  - [reference_voltage_source, mcu, ADC reference]
-  - [communication_interface, digital_signal_isolation, CAN / LIN]
-  - [digital_signal_isolation, mcu, '']
-  - [high_voltage_safety_interlock, digital_signal_isolation, '']
-  - [mcu, gate_driver, PWM]
-  - [gate_driver, heater_stage, '']
-  - [power_switch_temperature_sensing, mcu, '']
-  - [heater_temperature_monitoring, mcu, heater element temperature]
-  - [load_current_monitoring, mcu, '']
-  questions:
-  - id: supply_class
-    question: Heater supply
-    choices: [12 V, 48 V, 400 / 800 V HV]
-    source: TI-SOL-PTC variants 12V / 48V / HV
-  - id: isolation_point
-    question: Isolation location (HV variants)
-    choices: [isolated communication, isolated gate driver]
-    source: TI-SOL-PTC variants 18284 / 186673
-  - id: heater_channels
-    question: Number of independently switched heater zones
-    choices: ['1', 2-3, more]
-    source: TI-SOL-PTC 'Load current monitoring' (different loads)
-  - id: vehicle_bus
-    question: Vehicle bus
-    choices: [CAN, LIN]
-    source: TI-SOL-PTC 'Communication interface'
-- name: EV high-voltage power distribution box (HV PDB, contactor drivers, isolated CAN) (TI)
-  category: Automotive systems
-  note: 'From TI public material: TI-SOL-HVPDB'
-  sources:
-  - {doc: TI-SOL-HVPDB, title: High-voltage power distribution box - block diagram + subsystems, url: 'https://www.ti.com/solution/high-voltage-power-distribution-box'}
-  groups:
-  - id: reference_voltage_source
-    label: Reference voltage source
-    blocks: [voltage_reference]
-    col: 0
-    row: 0
-  - id: power_supply
-    label: Power supply
-    blocks: [watchdog, supervisor, pol_ldo]
-    col: 1
-    row: 0
-  - id: mcu
-    label: MCU
-    blocks: [mcu]
-    col: 2
-    row: 0
-  - id: load_current_monitoring
-    label: Load current monitoring
-    blocks: [current_sensor, amplifier, isolated_amplifier]
-    col: 3
-    row: 0
-  - id: isolated_power_supply
-    label: Isolated power supply
-    blocks: [reverse_polarity, battery_protector, pol_buck, pol_ldo]
-    col: 0
-    row: 1
-  - id: high_voltage_safety_interlock
-    label: High-voltage safety interlock
-    blocks: [amplifier, isolated_amplifier]
-    col: 1
-    row: 1
-  - id: digital_signal_isolation
-    label: Digital signal isolation
-    blocks: [digital_isolator]
-    col: 2
-    row: 1
-  - id: contactor_drivers
-    label: Contactor drivers
-    blocks: [relay_driver]
-    col: 3
-    row: 1
-  - id: can
-    label: CAN
-    blocks: [tvs_esd, can_transceiver]
-    col: 0
-    row: 2
-  - id: hv_path
-    label: HV battery -> contactor -> HV loads
-    blocks: [hv_battery, external_block]
-    col: 1
-    row: 2
-  links:
-  - [isolated_power_supply, power_supply, isolated supply from 12 V battery]
-  - [power_supply, mcu, '']
-  - [reference_voltage_source, mcu, '']
-  - [can, digital_signal_isolation, CAN]
-  - [digital_signal_isolation, mcu, '']
-  - [high_voltage_safety_interlock, digital_signal_isolation, '']
-  - [mcu, contactor_drivers, '']
-  - [contactor_drivers, hv_path, contactor coil]
-  - [load_current_monitoring, mcu, load current]
-  questions:
-  - id: pack_voltage
-    question: HV bus
-    choices: [400 V, 800 V]
-    source: TI-SOL-HVPDB
-  - id: contactor_drive
-    question: Contactor coil drive
-    choices: [high-side + low-side switch, dedicated contactor driver with economizer PWM]
-    source: TI-SOL-HVPDB 'Contactor drivers'
-  - id: current_sense
-    question: Branch current measurement
-    choices: [shunt + amplifier, Hall-effect sensor, none]
-    source: TI-SOL-HVPDB 'Load current monitoring'
-  - id: isolation_point
-    question: Isolated interface
-    choices: [isolated CAN / digital isolator, isolated power only]
-    source: TI-SOL-HVPDB SVG (isolation lines)
 - name: Automotive 12 V / 48 V power distribution box (smart fuses, load drivers) (TI)
   category: Automotive systems
   note: 'From TI public material: TI-SOL-LVPDB'
@@ -9508,103 +9330,6 @@
     question: HMI connectivity
     choices: [Wi-Fi, Bluetooth, NFC, LTE]
     source: TI-SOL-WEVCS 'HMI wireless interface'
-- name: Electro-mechanical braking (EMB) caliper ECU (BLDC brake motor, electric park brake, pedal sensing) (TI)
-  category: Automotive systems
-  note: 'From TI public material: TI-SOL-EMB'
-  sources:
-  - {doc: TI-SOL-EMB, title: Electro-mechanical braking (EMB) - block diagram + subsystems, url: 'https://www.ti.com/solution/electro-mechanical-braking-emb'}
-  groups:
-  - id: input_power_protection
-    label: Input power protection
-    blocks: [reverse_polarity, battery_protector, load_switch]
-    col: 0
-    row: 0
-  - id: pedal_position_sensing
-    label: Pedal position sensing
-    blocks: [adc, position_sensor]
-    col: 1
-    row: 0
-  - id: diagnostics
-    label: Diagnostics
-    blocks: [voltage_reference, amplifier]
-    col: 2
-    row: 0
-  - id: sensor
-    label: Sensor
-    blocks: [position_sensor, adc, current_sensor, temperature_sensor]
-    col: 3
-    row: 0
-  - id: wired_interface
-    label: Wired Interface
-    blocks: [ethernet_phy, tvs_esd, can_transceiver]
-    col: 0
-    row: 1
-  - id: electric_park_brake_motor
-    label: Electric park brake motor driver
-    blocks: [motor_driver_brushed, relay_driver]
-    col: 1
-    row: 1
-  - id: brake_motor_driver
-    label: Brake motor driver
-    blocks: [three_phase_gate_driver, load_switch]
-    col: 2
-    row: 1
-  - id: non_isolated_dc_dc
-    label: Non-isolated DC/DC power supply & monitoring
-    blocks: [pol_buck, supervisor, watchdog, crystal_oscillator, pol_ldo, pmic]
-    col: 3
-    row: 1
-  - id: digital_processing
-    label: Digital processing
-    blocks: [mcu]
-    col: 0
-    row: 2
-  - id: brake_motor
-    label: Brake BLDC motor + 3-phase MOSFET inverter + phase isolation FETs
-    blocks: [power_fets, motor]
-    col: 1
-    row: 2
-  - id: epb_actuator
-    label: Electric park brake motor / solenoid
-    blocks: [motor]
-    col: 2
-    row: 2
-  links:
-  - [input_power_protection, non_isolated_dc_dc, 12 V]
-  - [input_power_protection, brake_motor, supply via HS switch / reverse protection FET]
-  - [non_isolated_dc_dc, brake_motor_driver, '']
-  - [non_isolated_dc_dc, digital_processing, '']
-  - [digital_processing, brake_motor_driver, '']
-  - [brake_motor_driver, brake_motor, gate drive]
-  - [brake_motor, sensor, 'rotor position, phase current']
-  - [sensor, brake_motor_driver, '']
-  - [sensor, digital_processing, 'position, wheel speed, current, temperature']
-  - [digital_processing, electric_park_brake_motor, '']
-  - [electric_park_brake_motor, epb_actuator, '']
-  - [diagnostics, digital_processing, '']
-  - [digital_processing, wired_interface, CAN / Ethernet]
-  - [pedal_position_sensing, wired_interface, to central ECU]
-  questions:
-  - id: architecture
-    question: Brake-by-wire architecture
-    choices: [wet (EHB), dry (EMB at each wheel)]
-    source: TI-SOL-EMB
-  - id: epb
-    question: Integrated electric park brake
-    choices: [yes (BDC motor), yes (solenoid), 'no']
-    source: TI-SOL-EMB 'Electric park brake motor driver'
-  - id: position_sensor
-    question: Motor position sensing
-    choices: [Hall, inductive, magnetic angle sensor, resolver]
-    source: TI-SOL-EMB 'Sensor'
-  - id: asil
-    question: Functional safety target
-    choices: [ASIL B, ASIL D]
-    source: TI-SOL-EMB 'Diagnostics'
-  - id: network
-    question: Vehicle network
-    choices: [CAN FD, automotive Ethernet]
-    source: TI-SOL-EMB 'Wired interface'
 - name: Automotive LiDAR module (laser driver, TIA / ADC / TDC receive chain, beam steering, processor + FPGA) (TI)
   category: Automotive systems
   note: 'From TI public material: TI-SOL-LIDAR'
@@ -9857,96 +9582,6 @@
     question: Fuel system sensors
     choices: [pressure, temperature, hydrogen concentration, voltage]
     source: TI-SOL-FCCU 'Fuel cell sensors'
-- name: Automotive surround view system ECU (4+ cameras over FPD-Link / Ethernet, vision processor, video out) (TI)
-  category: Automotive systems
-  note: 'From TI public material: TI-SOL-SVS'
-  sources:
-  - {doc: TI-SOL-SVS, title: Surround view system ECU - block diagram + subsystems, url: 'https://www.ti.com/solution/surround-view-system-ecu'}
-  groups:
-  - id: battery_input_protection
-    label: Battery input protection
-    blocks: [reverse_polarity, battery_protector, tvs_esd]
-    col: 0
-    row: 0
-  - id: camera_interface
-    label: Camera interface
-    blocks: [load_switch, serdes, ethernet_phy, pol_ldo, efuse_hotswap]
-    col: 1
-    row: 0
-  - id: video_interface
-    label: Video interface
-    blocks: [serdes]
-    col: 2
-    row: 0
-  - id: clocking
-    label: Clocking
-    blocks: [crystal_oscillator]
-    col: 3
-    row: 0
-  - id: diagnostics_monitoring
-    label: Diagnostics/monitoring
-    blocks: [supervisor, temperature_sensor, watchdog, voltage_reference]
-    col: 0
-    row: 1
-  - id: battery_and_system_power
-    label: Battery & system power supply
-    blocks: [buck_boost, wide_vin_buck, pol_buck, pol_ldo, pmic]
-    col: 1
-    row: 1
-  - id: memory
-    label: Memory
-    blocks: [pol_buck, termination_ldo, pol_ldo, ddr_flash]
-    col: 2
-    row: 1
-  - id: processor_power_supply
-    label: Processor power supply
-    blocks: [pol_buck, pol_ldo, load_switch, sequencer, pmic, supervisor, watchdog]
-    col: 3
-    row: 1
-  - id: digital_processing
-    label: Digital processing
-    blocks: [soc, mcu, voltage_translator, adc, voltage_reference, adas_processor]
-    col: 0
-    row: 2
-  - id: vehicle_interface
-    label: Vehicle interface
-    blocks: [ethernet_phy, can_transceiver, tvs_esd, serdes]
-    col: 1
-    row: 2
-  - id: cameras
-    label: Surround view cameras
-    blocks: [camera_radar]
-    col: 2
-    row: 2
-  links:
-  - [battery_input_protection, battery_and_system_power, battery]
-  - [battery_and_system_power, processor_power_supply, '']
-  - [processor_power_supply, digital_processing, '']
-  - [cameras, camera_interface, FPD-Link / Ethernet + power over coax]
-  - [camera_interface, digital_processing, video]
-  - [digital_processing, video_interface, 'to display, fusion ECU, car DVR']
-  - [digital_processing, vehicle_interface, 'CAN / Ethernet, diagnostics']
-  - [digital_processing, memory, '']
-  - [clocking, digital_processing, '']
-  - [clocking, camera_interface, '']
-  - [diagnostics_monitoring, digital_processing, '']
-  questions:
-  - id: camera_link
-    question: Camera link
-    choices: [FPD-Link SerDes (coax PoC), automotive Ethernet, analog video]
-    source: TI-SOL-SVS 'Camera interface'
-  - id: camera_count
-    question: Number of cameras
-    choices: ['4', 5-6, more]
-    source: TI-SOL-SVS
-  - id: processing
-    question: Processing
-    choices: [vision SoC + safety MCU, SoC only]
-    source: TI-SOL-SVS 'Digital processing'
-  - id: video_out
-    question: Video output
-    choices: [FPD-Link to display, Ethernet to fusion ECU / DVR]
-    source: TI-SOL-SVS 'Video interface'
 - name: Closed-loop stepper motor drive (DC input 12-100 V, encoder feedback, industrial Ethernet / fieldbus) (TI)
   category: Motor drives
   note: 'From TI public material: TI-SOL-CLSTEP'
@@ -10073,91 +9708,6 @@
     question: Command interface
     choices: [pulse/direction, fieldbus (RS-485 / CAN), industrial Ethernet]
     source: TI-SOL-CLSTEP interfaces
-- name: Linear motor (transport track) multi-inverter power stage (4-8 inverters per segment, 24-60 V DC) (TI)
-  category: Motor drives
-  note: 'From TI public material: TI-SOL-LINMOT'
-  sources:
-  - {doc: TI-SOL-LINMOT, title: Linear motor power stage - block diagram + subsystems, url: 'https://www.ti.com/solution/linear-motor-power-stage'}
-  groups:
-  - id: multi_inverter_power_stage
-    label: Multi-inverter power stage
-    blocks: [temperature_sensor, gate_driver, three_phase_gate_driver, half_bridge_driver, power_fets]
-    col: 0
-    row: 0
-  - id: temperature_sense_interface
-    label: Temperature sense interface
-    blocks: [temperature_sensor, voltage_reference, amplifier, adc]
-    col: 1
-    row: 0
-  - id: digital_processing
-    label: Digital processing
-    blocks: [mcu]
-    col: 2
-    row: 0
-  - id: current_voltage_sensing
-    label: Multi-inverter current & voltage sensing
-    blocks: [voltage_reference, amplifier, adc, current_sensor]
-    col: 3
-    row: 0
-  - id: input_power_protection
-    label: Input power protection
-    blocks: [efuse_hotswap, reverse_polarity, power_fets]
-    col: 0
-    row: 1
-  - id: point_of_load_power
-    label: Point-of-load power supply
-    blocks: [sequencer, pol_ldo, pol_buck, power_fets, watchdog, voltage_reference, supervisor]
-    col: 1
-    row: 1
-  - id: self_diagnostics_monitoring
-    label: Self-diagnostics/monitoring
-    blocks: [temperature_sensor, supervisor, watchdog, load_switch]
-    col: 2
-    row: 1
-  - id: temperature_sensor
-    label: Temperature sensor
-    blocks: [temperature_sensor]
-    col: 3
-    row: 1
-  - id: board_to_board_interface
-    label: Board-to-board interface
-    blocks: [voltage_translator, rs485_transceiver, serdes, digital_isolator, isolated_dcdc, tvs_esd]
-    col: 0
-    row: 2
-  - id: coils
-    label: Linear motor coils (3-phase or 2-phase per inverter)
-    blocks: [motor]
-    col: 1
-    row: 2
-  links:
-  - [input_power_protection, point_of_load_power, '']
-  - [input_power_protection, multi_inverter_power_stage, DC-link voltage]
-  - [point_of_load_power, digital_processing, multiple supply rails]
-  - [digital_processing, multi_inverter_power_stage, PWM (N inverters)]
-  - [multi_inverter_power_stage, coils, '']
-  - [coils, current_voltage_sensing, low-side shunt / in-phase current]
-  - [current_voltage_sensing, digital_processing, '']
-  - [temperature_sensor, temperature_sense_interface, coil temperature]
-  - [temperature_sense_interface, digital_processing, '']
-  - [self_diagnostics_monitoring, digital_processing, '']
-  - [board_to_board_interface, digital_processing, to segment controller (optional isolation)]
-  questions:
-  - id: inverter_count
-    question: Inverters per segment
-    choices: ['4', '6', '8']
-    source: TI-SOL-LINMOT SVG (N ~ 4-8)
-  - id: coil_system
-    question: Coil system
-    choices: [3-phase, 2-phase]
-    source: TI-SOL-LINMOT SVG note
-  - id: current_sense
-    question: Current sensing
-    choices: [low-side shunt, in-phase shunt]
-    source: TI-SOL-LINMOT SVG
-  - id: link_isolation
-    question: Board-to-board link
-    choices: [isolated (RS-485 / LVDS), non-isolated]
-    source: TI-SOL-LINMOT 'Board-to-board interface'
 - name: AC solid-state circuit breaker (SSCB) with air-gap relay, AC/DC current sensing, metering and BLE (TI)
   category: Industrial
   note: 'From TI public material: TI-SOL-SSCB'
@@ -12170,127 +11720,6 @@
     question: Connectivity
     choices: [Wi-Fi, cellular, none]
     source: TI-SOL-CPAP 'Wireless interface'
-- name: Medical oxygen concentrator (compressor motor, PSA valve drivers, O2 / N2 gas sensing, battery for portable units) (TI)
-  category: Medical
-  note: 'From TI public material: TI-SOL-O2C'
-  sources:
-  - {doc: TI-SOL-O2C, title: Oxygen concentrator - block diagram + subsystems, url: 'https://www.ti.com/solution/oxygen-concentrator'}
-  groups:
-  - id: gas_sensor_afe
-    label: Gas sensor
-    blocks: [adc, voltage_reference, amplifier, dac, tvs_esd]
-    col: 0
-    row: 0
-  - id: clocking
-    label: Clocking
-    blocks: [rtc, crystal_oscillator]
-    col: 1
-    row: 0
-  - id: pressure_flow_temp_afe
-    label: Pressure/flow/temperature sensor analog front end
-    blocks: [temperature_sensor, adc, env_sensor, voltage_reference, amplifier, tvs_esd, ultrasonic_afe]
-    col: 2
-    row: 0
-  - id: digital_processing
-    label: Digital processing
-    blocks: [mcu, soc, ultrasonic_afe, ble_soc]
-    col: 3
-    row: 0
-  - id: current_sense
-    label: Current sense
-    blocks: [current_sensor, adc, voltage_reference, amplifier, digital_isolator, isolated_amplifier]
-    col: 0
-    row: 1
-  - id: battery_management
-    label: Battery management
-    blocks: [battery_charger, battery_monitor, battery_protector]
-    col: 1
-    row: 1
-  - id: storage_memory
-    label: Storage memory
-    blocks: [ddr_flash, termination_ldo]
-    col: 2
-    row: 1
-  - id: input_user_interface
-    label: Input user interface
-    blocks: [touch_controller, display_driver, haptics_driver, tvs_esd, amplifier, io_expander, mcu, soc, voltage_reference]
-    col: 3
-    row: 1
-  - id: isolated_acdc
-    label: Isolated AC/DC power supply
-    blocks: [power_fets, acdc_controller, voltage_reference, amplifier]
-    col: 0
-    row: 2
-  - id: low_voltage_power_supply
-    label: Low voltage power supply
-    blocks: [sequencer, pol_ldo, supervisor, load_switch, pol_buck, buck_boost, efuse_hotswap, pmic, amplifier, wide_vin_buck, power_fets, watchdog]
-    col: 1
-    row: 2
-  - id: output_user_interface
-    label: Output user interface
-    blocks: [voltage_reference, dac, amplifier, display_driver, tvs_esd, io_expander]
-    col: 2
-    row: 2
-  - id: valve_drivers
-    label: Valve drivers for concentrator
-    blocks: [relay_driver, motor_driver_brushed]
-    col: 3
-    row: 2
-  - id: wireless_interface
-    label: Wireless interface
-    blocks: [ble_soc, mcu, ultrasonic_afe]
-    col: 0
-    row: 3
-  - id: wired_interface
-    label: Wired interface
-    blocks: [tvs_esd, usb_typec_hub, efuse_hotswap, rs485_transceiver, io_expander, digital_isolator, load_switch]
-    col: 1
-    row: 3
-  - id: compressor_drive
-    label: Motor driver (compressor)
-    blocks: [motor_driver_brushed, power_fets, gate_driver, haptics_driver, three_phase_gate_driver, motor_controller, half_bridge_driver]
-    col: 2
-    row: 3
-  - id: compressor
-    label: Compressor motor + sieve-bed valves
-    blocks: [motor, external_block]
-    col: 3
-    row: 3
-  links:
-  - [isolated_acdc, low_voltage_power_supply, '']
-  - [battery_management, low_voltage_power_supply, battery]
-  - [low_voltage_power_supply, digital_processing, '']
-  - [pressure_flow_temp_afe, digital_processing, '']
-  - [gas_sensor_afe, digital_processing, O2 purity]
-  - [digital_processing, compressor_drive, '']
-  - [compressor_drive, compressor, '']
-  - [compressor, current_sense, '']
-  - [current_sense, digital_processing, '']
-  - [digital_processing, valve_drivers, '']
-  - [valve_drivers, compressor, valves]
-  - [storage_memory, digital_processing, '']
-  - [clocking, digital_processing, '']
-  - [digital_processing, wireless_interface, BT / BLE]
-  - [digital_processing, output_user_interface, 'LCD, LEDs, alarm']
-  - [input_user_interface, digital_processing, '']
-  - [wired_interface, digital_processing, USB / RS-485]
-  questions:
-  - id: form
-    question: Form factor
-    choices: [stationary (AC), portable (battery)]
-    source: TI-SOL-O2C 'Battery management'
-  - id: compressor_motor
-    question: Compressor motor
-    choices: [BLDC, brushed DC, AC]
-    source: TI-SOL-O2C 'Motor driver (compressor)'
-  - id: o2_sensing
-    question: Oxygen purity sensing
-    choices: [ultrasonic, electrochemical / galvanic]
-    source: TI-SOL-O2C 'Gas sensor'
-  - id: valves
-    question: Valve drive
-    choices: [relay, solenoid driver]
-    source: TI-SOL-O2C 'Valve drivers'
 - name: 'Diagnostic electrocardiograph (12-lead ECG: defibrillator-protected inputs, biopotential AFE with RLD / pace / lead-off, printer + display) (TI)'
   category: Medical
   note: 'From TI public material: TI-SOL-ECG'
@@ -12678,87 +12107,6 @@
     question: Connectivity
     choices: [BLE, USB, none]
     source: TI-SOL-BPM interfaces
-- name: GFCI / RCD residual-current circuit breaker (CT sensing, grounded-neutral detection, GFCI SoC / MCU, trip solenoid) (TI)
-  category: Appliances & building
-  note: 'From TI public material: TI-SOL-GFCI'
-  sources:
-  - {doc: TI-SOL-GFCI, title: GFCI/RCD circuit breaker - block diagram + subsystems, url: 'https://www.ti.com/solution/gfci-rcd-circuit-breaker'}
-  groups:
-  - id: digital_processing
-    label: Digital processing
-    blocks: [mcu, soc]
-    col: 0
-    row: 0
-  - id: grounded_neutral_driver
-    label: Grounded neutral driver
-    blocks: [amplifier, voltage_reference]
-    col: 1
-    row: 0
-  - id: output_user_interface
-    label: Output user interface
-    blocks: [led_driver]
-    col: 2
-    row: 0
-  - id: self_diagnostics_monitoring
-    label: Self-diagnostics/monitoring
-    blocks: [supervisor, watchdog]
-    col: 3
-    row: 0
-  - id: non_isolated_ac_dc
-    label: Non-isolated AC/DC power supply
-    blocks: [pol_ldo, pol_buck, acdc_controller]
-    col: 0
-    row: 1
-  - id: voltage_sense_afe
-    label: Voltage sensing analog front end
-    blocks: [amplifier, voltage_reference]
-    col: 1
-    row: 1
-  - id: ct_afe
-    label: Analog front-end
-    blocks: [amplifier, current_sensor]
-    col: 2
-    row: 1
-  - id: trip_solenoid_drive
-    label: Power stage
-    blocks: [relay_driver]
-    col: 3
-    row: 1
-  - id: line
-    label: Line / neutral with differential and grounded-neutral CTs, trip contacts
-    blocks: [external_block]
-    col: 0
-    row: 2
-  links:
-  - [line, non_isolated_ac_dc, L / N]
-  - [non_isolated_ac_dc, digital_processing, '']
-  - [line, ct_afe, differential CT]
-  - [ct_afe, digital_processing, '']
-  - [digital_processing, grounded_neutral_driver, '']
-  - [grounded_neutral_driver, line, neutral CT excitation]
-  - [line, voltage_sense_afe, line voltage]
-  - [voltage_sense_afe, digital_processing, '']
-  - [digital_processing, trip_solenoid_drive, trip]
-  - [trip_solenoid_drive, line, solenoid / relay]
-  - [self_diagnostics_monitoring, digital_processing, watchdog]
-  - [digital_processing, output_user_interface, LED]
-  questions:
-  - id: rcd_type
-    question: RCD type
-    choices: [Type AC, Type A, Type B / EV (DC-sensitive)]
-    source: TI-SOL-GFCI
-  - id: processing
-    question: Detection IC
-    choices: [dedicated GFCI SoC, MCU with integrated op amps]
-    source: TI-SOL-GFCI 'Digital processing'
-  - id: self_test
-    question: Self-test / end-of-life
-    choices: [automatic periodic self-test, manual test button]
-    source: TI-SOL-GFCI 'Self-diagnostics/monitoring'
-  - id: arc_fault
-    question: Combined AFCI
-    choices: ['yes', 'no']
-    source: TI-SOL-GFCI
 - name: Wearable insulin pump / patch pump (BLE, safety MCU, H-bridge pump + needle drive, wake-up circuit, wireless charging) (TI)
   category: Medical
   note: 'From TI public material: TI-SOL-INSULIN'
@@ -12843,3 +12191,1191 @@
     question: Closed loop with CGM (artificial pancreas)
     choices: [yes (BLE link to CGM), 'no']
     source: TI-SOL-INSULIN 'Wireless interface'
+- name: 6.6 kW single-stage bidirectional on-board charger (GaN, DAB) (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-OBC66'
+  sources:
+  - {doc: REN-WC-OBC66, title: 6.6kW Single-Stage Onboard Charger (OBC) - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/6-6kw-single-stage-onboard-charger'}
+  groups:
+  - id: ac_input
+    label: AC input + EMI filter (Vac)
+    blocks:
+    - {fn: external_block, label: AC input + EMI filter (Vac)}
+    col: 0
+    row: 0
+  - id: bds_stage
+    label: GaN BDS single-stage AC bridge (G1-G8)
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: transformer
+    label: Resonant tank + isolation transformer (Lrp, C2/C3, CT)
+    blocks:
+    - {fn: external_block, label: 'Resonant tank + isolation transformer (Lrp, C2/C3, CT)'}
+    col: 2
+    row: 0
+  - id: hv_bridge
+    label: GaN FET full bridge, HV battery side (G9-G12)
+    blocks: [power_fets, hv_battery]
+    col: 3
+    row: 0
+  - id: lv_dcdc_hv
+    label: HV-to-LV DC/DC, HV-side GaN bridge (G13-G16)
+    blocks: [power_fets]
+    col: 0
+    row: 1
+  - id: lv_dcdc_lv
+    label: HV-to-LV DC/DC, LV-side MOSFET bridge (G17-G20) + 12 V battery
+    blocks: [power_fets]
+    col: 1
+    row: 1
+  - id: gate_drive
+    label: Isolated gate drives (G1-G8, G9-G16) + gate drive (G17-G20)
+    blocks: [gate_driver]
+    col: 2
+    row: 1
+  - id: sensing
+    label: Current / voltage sensing
+    blocks: [amplifier, isolated_amplifier, current_sensor]
+    col: 3
+    row: 1
+  - id: mcu
+    label: MCU (ADC, PWM, CAN, GPIO)
+    blocks: [mcu]
+    col: 0
+    row: 2
+  - id: power
+    label: 'Housekeeping supply: isolated flyback, LDO, PMIC'
+    blocks: [hv_flyback, pol_ldo, pmic]
+    col: 1
+    row: 2
+  - id: glue
+    label: GreenPAK glue logic / IO extension
+    blocks: [io_expander]
+    col: 2
+    row: 2
+  - id: can
+    label: CAN transceiver
+    blocks: [can_transceiver]
+    col: 3
+    row: 2
+  links:
+  - [ac_input, bds_stage, Vac]
+  - [bds_stage, transformer, Ilrp]
+  - [transformer, hv_bridge, '']
+  - [hv_bridge, lv_dcdc_hv, HV_BAT+/-]
+  - [lv_dcdc_hv, lv_dcdc_lv, transformer]
+  - [sensing, mcu, ADC]
+  - [mcu, gate_drive, PWM (8 + 8 + 4)]
+  - [gate_drive, bds_stage, G1-G8]
+  - [gate_drive, hv_bridge, G9-G12]
+  - [gate_drive, lv_dcdc_hv, G13-G16]
+  - [gate_drive, lv_dcdc_lv, G17-G20]
+  - [power, mcu, POWER]
+  - [glue, mcu, GPIO]
+  - [can, mcu, CAN]
+  questions:
+  - id: topology
+    question: OBC topology
+    choices: [single-stage AC/DC + DAB (electrolytic-free), two-stage PFC + isolated DC/DC]
+    source: page description
+  - id: switch_tech
+    question: Power switch technology
+    choices: [GaN bidirectional switch, GaN FET, Si MOSFET]
+    source: WS199
+  - id: integrated_ldc
+    question: Integrated HV-to-LV (12 V) DC/DC
+    choices: ['yes', 'no']
+    source: WS199 bottom half
+  - id: current_sense
+    question: Current sensing
+    choices: [current transformer + op amp, Hall IC, isolated op amp]
+    source: WS199
+- name: 3.3 kW integrated OBC + HV-to-LV DC/DC (shared transformer, GaN) (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-OBC33'
+  sources:
+  - {doc: REN-WC-OBC33, title: 3.3kW Integrated OBC and DC/DC - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/3-3kw-integrated-obc-and-dcdc'}
+  groups:
+  - id: ac_input
+    label: AC input relays + EMI filter
+    blocks:
+    - {fn: external_block, label: AC input relays + EMI filter}
+    col: 0
+    row: 0
+  - id: pfc
+    label: GaN totem-pole PFC
+    blocks: [power_fets, gate_driver]
+    col: 1
+    row: 0
+  - id: dcdc_primary
+    label: GaN full bridge (DC/DC primary)
+    blocks: [power_fets, gate_driver]
+    col: 2
+    row: 0
+  - id: transformer
+    label: Shared three-winding transformer
+    blocks:
+    - {fn: external_block, label: Shared three-winding transformer}
+    col: 3
+    row: 0
+  - id: hv_secondary
+    label: Main battery side GaN bridge + output relays
+    blocks: [power_fets, gate_driver, hv_battery]
+    col: 0
+    row: 1
+  - id: lv_rectifier
+    label: Auxiliary (12 V) synchronous rectifier + buck + reverse protection
+    blocks: [power_fets, half_bridge_driver, gate_driver]
+    col: 1
+    row: 1
+  - id: contactor
+    label: Contactor drive MOSFET
+    blocks: [relay_driver, power_fets]
+    col: 2
+    row: 1
+  - id: mcu
+    label: MCU (ADC, PWM, INTR, CAN, GPIO)
+    blocks: [mcu]
+    col: 3
+    row: 1
+  - id: glue
+    label: GreenPAK (protection / interrupt logic)
+    blocks:
+    - {fn: external_block, label: GreenPAK (protection / interrupt logic)}
+    col: 0
+    row: 2
+  - id: power
+    label: 'Bias power: flyback (+12V_P/+12V_A), PMIC (1.9/3.3/5 V), isolated DC/DC (+12V_S)'
+    blocks: [hv_flyback, pmic, isolated_dcdc]
+    col: 1
+    row: 2
+  - id: can
+    label: CAN
+    blocks: [can_transceiver]
+    col: 2
+    row: 2
+  links:
+  - [ac_input, pfc, '']
+  - [pfc, dcdc_primary, PFC bus]
+  - [dcdc_primary, transformer, '']
+  - [transformer, hv_secondary, main battery]
+  - [transformer, lv_rectifier, 12 V battery]
+  - [mcu, pfc, PWM -> gate drivers]
+  - [mcu, dcdc_primary, PWM -> gate drivers]
+  - [mcu, lv_rectifier, PWM -> MOSFET driver]
+  - [mcu, contactor, GPIO]
+  - [ac_input, mcu, 'V, I sensing (ADC)']
+  - [glue, mcu, INTR]
+  - [power, mcu, 1.9 V / 3.3 V / 5 V]
+  - [mcu, can, CAN]
+  questions:
+  - id: integration
+    question: OBC and DC/DC integration
+    choices: [shared transformer (simultaneous HV + LV charging), separate OBC and LDC]
+    source: page description
+  - id: switch_tech
+    question: HV switch technology
+    choices: [GaN FET, SiC MOSFET, Si superjunction]
+    source: WS303
+  - id: lv_rectification
+    question: 12 V output rectification
+    choices: [synchronous MOSFET, diode]
+    source: WS303
+- name: Mode 3 AC EV charger wallbox (single/three-phase, metering + PLC) (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-WALLBOX'
+  sources:
+  - {doc: REN-WC-WALLBOX, title: Mode 3 AC EV Charger Wallbox - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/mode-3-ac-ev-charger-wallbox'}
+  groups:
+  - id: metering_sense
+    label: AC metering current sense (per phase)
+    blocks: [current_sensor]
+    col: 0
+    row: 0
+  - id: metrology
+    label: Metrology MCU (24-bit ADC) + segment display
+    blocks: [mcu, adc]
+    col: 1
+    row: 0
+  - id: metering_power
+    label: 'Metering supply: isolated AC/DC + buck'
+    blocks: [acdc_controller, wide_vin_buck]
+    col: 2
+    row: 0
+  - id: rs485_link
+    label: RS-485 link via digital isolator
+    blocks: [rs485_transceiver, digital_isolator]
+    col: 3
+    row: 0
+  - id: safety
+    label: RDC-DD residual DC detection + interlock
+    blocks:
+    - {fn: external_block, label: RDC-DD residual DC detection + interlock}
+    col: 0
+    row: 1
+  - id: relay
+    label: Relay / contactor drive (HVPAK) + weld check
+    blocks: [relay_driver]
+    col: 1
+    row: 1
+  - id: pilot
+    label: Control pilot / proximity pilot circuit
+    blocks:
+    - {fn: external_block, label: Control pilot / proximity pilot circuit}
+    col: 2
+    row: 1
+  - id: iso_amp
+    label: Isolation amplifier (weld check sense)
+    blocks: [isolated_amplifier, optocoupler]
+    col: 3
+    row: 1
+  - id: controller
+    label: 'System controller (MPU: Linux, HMI, Ethernet)'
+    blocks: [soc, ddr_flash, display]
+    col: 0
+    row: 2
+  - id: controller_power
+    label: 'Controller supply: isolated AC/DC + PMIC'
+    blocks: [acdc_controller, pmic]
+    col: 1
+    row: 2
+  - id: sensors
+    label: PE / temperature measurement (AnalogPAK)
+    blocks: [adc, temperature_sensor]
+    col: 2
+    row: 2
+  - id: comms
+    label: GreenPHY PLC, Ethernet PHY, NFC, LTE
+    blocks: [ethernet_phy, nfc_frontend, modem]
+    col: 3
+    row: 2
+  - id: wlan
+    label: WLAN / Bluetooth LE module
+    blocks: [wifi_soc, ble_soc, flash, diplexer, antenna, pol_buck]
+    col: 0
+    row: 3
+  links:
+  - [metering_sense, metrology, 24-bit ADC]
+  - [metering_power, metrology, VDD]
+  - [metrology, rs485_link, UART]
+  - [rs485_link, controller, UART]
+  - [safety, relay, interlock]
+  - [controller, safety, GPIO]
+  - [relay, iso_amp, weld check]
+  - [iso_amp, controller, ADC]
+  - [pilot, controller, ADC / PWM]
+  - [controller_power, controller, I2C + rails]
+  - [sensors, controller, I2C]
+  - [comms, controller, SPI / Ethernet / UART]
+  - [wlan, controller, SPI]
+  questions:
+  - id: phases
+    question: AC input
+    choices: [single-phase, three-phase]
+    source: page description
+  - id: communication
+    question: EV communication
+    choices: [PWM (IEC 61851 CP) only, 'high-level communication (HomePlug GreenPHY PLC, ISO 15118)']
+    source: page description
+  - id: connectivity
+    question: Backend connectivity
+    choices: [Ethernet, Wi-Fi/BLE, LTE, NFC authentication]
+    source: WS188-2
+  - id: metering
+    question: Billing-grade metering
+    choices: [yes (metrology MCU), 'no']
+    source: WS188-2 'AC Metering'
+- name: EV battery management system (daisy-chained battery front ends, ASIL-D) (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-EVBMS'
+  sources:
+  - {doc: REN-WC-EVBMS, title: Standard EV Battery Management System - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/standard-ev-battery-management-system'}
+  groups:
+  - id: cells
+    label: Battery modules (cells + NTC temperature sensors)
+    blocks: [hv_battery, temperature_sensor]
+    col: 0
+    row: 0
+  - id: bfe
+    label: Battery management (cell monitor / balancing) ICs, daisy chained
+    blocks: [battery_monitor]
+    col: 1
+    row: 0
+  - id: pack_current
+    label: Pack current shunt + current amplifier
+    blocks: [current_sensor, amplifier]
+    col: 2
+    row: 0
+  - id: isolation
+    label: 'Isolation barrier: transformer-coupled daisy chain + photocouplers (EN / fault)'
+    blocks: [optocoupler]
+    col: 3
+    row: 0
+  - id: bfe_master
+    label: Battery management (LV-side master / communication interface)
+    blocks: [battery_monitor]
+    col: 0
+    row: 1
+  - id: mcu
+    label: BMS MCU (CAN, LIN)
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: pmic
+    label: PMIC from 12 V battery
+    blocks: [pmic]
+    col: 2
+    row: 1
+  - id: ipd
+    label: 'Intelligent power devices: fan, pump, relay'
+    blocks: [load_switch, relay_driver]
+    col: 3
+    row: 1
+  - id: vehicle_net
+    label: 'Vehicle network: CAN, LIN, RS-232'
+    blocks: [can_transceiver, lin_transceiver, rs485_transceiver]
+    col: 0
+    row: 2
+  links:
+  - [cells, bfe, cell voltage / temperature]
+  - [bfe, pack_current, '']
+  - [bfe, isolation, daisy chain / EN]
+  - [isolation, bfe_master, daisy chain]
+  - [isolation, mcu, photocoupler outputs]
+  - [bfe_master, mcu, '']
+  - [pmic, mcu, '']
+  - [pmic, vehicle_net, '']
+  - [mcu, ipd, fan / pump / relay]
+  - [mcu, vehicle_net, CAN / LIN / RS-232]
+  questions:
+  - id: bms_comm
+    question: Module-to-controller communication
+    choices: [wired isolated daisy chain, wireless BMS]
+    source: Renesas lists both 'Standard' and 'Wireless' EV BMS
+  - id: cells_per_module
+    question: Cells per battery front end
+    choices: [up to 14 (ISL78714), other]
+    source: ISL78714 product line
+  - id: safety
+    question: Functional safety target
+    choices: [ASIL-D, ASIL-C, QM]
+    source: page description 'ASIL-D ready'
+- name: Three-level T-type traction inverter (SiC + GaN bidirectional switches, 800 V) (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-TTYPE'
+  sources:
+  - {doc: REN-WC-TTYPE, title: Three-Level T-Type Traction Motor Inverter - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/three-level-t-type-traction-motor-inverter'}
+  groups:
+  - id: hv_bus
+    label: 450-800 V DC link (split capacitors)
+    blocks: [hv_battery, dc_link_cap]
+    col: 0
+    row: 0
+  - id: sic_bridge
+    label: SiC three-phase bridge (outer switches)
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: bds
+    label: GaN bidirectional switches (neutral-point clamp)
+    blocks: [power_fets]
+    col: 2
+    row: 0
+  - id: gate_drivers
+    label: Isolated gate drivers (6 SiC + 3 BDS)
+    blocks: [gate_driver]
+    col: 3
+    row: 0
+  - id: motor
+    label: PMSM motor
+    blocks: [motor]
+    col: 0
+    row: 1
+  - id: sensing
+    label: Phase current sense + position sensor
+    blocks: [current_sensor, position_sensor]
+    col: 1
+    row: 1
+  - id: mcu
+    label: Motor control MCU (PWM, ADC, CAN, I2C)
+    blocks: [mcu]
+    col: 2
+    row: 1
+  - id: power
+    label: 800-12 V isolated buck + PMIC
+    blocks: [isolated_dcdc, pmic]
+    col: 3
+    row: 1
+  - id: io
+    label: CAN transceiver, I/O, GreenPAK monitor
+    blocks: [can_transceiver]
+    col: 0
+    row: 2
+  links:
+  - [hv_bus, sic_bridge, 450-800 V]
+  - [hv_bus, bds, neutral point]
+  - [sic_bridge, motor, 3 phases]
+  - [bds, motor, '']
+  - [mcu, gate_drivers, PWM (6 + 3)]
+  - [gate_drivers, sic_bridge, '']
+  - [gate_drivers, bds, '']
+  - [sensing, mcu, ADC]
+  - [hv_bus, power, '']
+  - [power, mcu, '']
+  - [io, mcu, CAN / GPIO / I2C]
+  questions:
+  - id: levels
+    question: Inverter topology
+    choices: [three-level T-type (NPC with bidirectional switch), two-level six-switch]
+    source: page title
+  - id: bus_voltage
+    question: DC bus voltage
+    choices: [400 V, 800 V+]
+    source: WS200 '450-800V'
+  - id: position
+    question: Rotor position sensing
+    choices: [inductive position sensor, resolver]
+    source: WS200 'Position Sensor'
+- name: xEV traction inverter with inductive position sensor (IPS) or resolver (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-XEVIPS'
+  sources:
+  - {doc: REN-WC-XEVIPS, title: xEV Inverter with Inductive Position Sensor (IPS) - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/xev-inverter-inductive-position-sensor-ips'}
+  groups:
+  - id: ext_if
+    label: External interface via photocoupler
+    blocks: [optocoupler]
+    col: 0
+    row: 0
+  - id: power
+    label: PMIC + 5 V LDO from 12 V battery
+    blocks: [pmic, pol_ldo]
+    col: 1
+    row: 0
+  - id: mcu
+    label: Motor control MCU (RDC or ADC, resolver I/F)
+    blocks: [mcu]
+    col: 2
+    row: 0
+  - id: gate_drivers
+    label: Isolated gate drivers x6
+    blocks: [gate_driver]
+    col: 0
+    row: 1
+  - id: power_stage
+    label: IGBT/FRD power stage
+    blocks: [power_fets, power_module]
+    col: 1
+    row: 1
+  - id: motor
+    label: Motor
+    blocks: [motor]
+    col: 2
+    row: 1
+  - id: ips
+    label: 'IPS board: IPS sensor + Tx/Rx coils (or resolver)'
+    blocks: [position_sensor]
+    col: 0
+    row: 2
+  links:
+  - [ext_if, mcu, '']
+  - [power, mcu, Vcc]
+  - [mcu, gate_drivers, '']
+  - [gate_drivers, power_stage, '']
+  - [power_stage, motor, '']
+  - [ips, mcu, analog differential sin/cos]
+  - [power, ips, 5 V power]
+  questions:
+  - id: position_sensor
+    question: Rotor position sensor
+    choices: [inductive position sensor (IPS), resolver]
+    source: AS229-1 vs AS229-2
+  - id: switch_tech
+    question: Power switch
+    choices: [IGBT/FRD, SiC MOSFET]
+    source: AS229
+- name: DC fast charging station power module (3-phase PFC + isolated DC/DC, 400-800 V out) (Renesas)
+  category: Power & isolation
+  note: 'From Renesas public material: REN-WC-DCFC'
+  sources:
+  - {doc: REN-WC-DCFC, title: DC Fast Charging Station for Electric Vehicles - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/renewable-energy-grid/dc-fast-charging-station-electric-vehicles'}
+  groups:
+  - id: ac_input
+    label: 3-phase AC input 200-400 V (x3)
+    blocks:
+    - {fn: external_block, label: 3-phase AC input 200-400 V (x3)}
+    col: 0
+    row: 0
+  - id: pfc
+    label: Three-phase IGBT PFC (six-switch, boost inductors)
+    blocks: [power_fets, dc_link_cap]
+    col: 1
+    row: 0
+  - id: dcdc
+    label: Isolated DC/DC (full-bridge CLLC, IGBT)
+    blocks: [power_fets]
+    col: 2
+    row: 0
+  - id: gd_pfc
+    label: Isolated gate driver (PFC)
+    blocks: [gate_driver]
+    col: 3
+    row: 0
+  - id: gd_dcdc
+    label: Isolated gate driver (DC/DC)
+    blocks: [gate_driver]
+    col: 0
+    row: 1
+  - id: sense_in
+    label: Input voltage & current sensing
+    blocks: [current_sensor, isolated_amplifier]
+    col: 1
+    row: 1
+  - id: sense_out
+    label: Output voltage & current sensing
+    blocks: [current_sensor, isolated_amplifier]
+    col: 2
+    row: 1
+  - id: mcu
+    label: Control MCU (PWM x2, ADC x2, CAN)
+    blocks: [mcu]
+    col: 3
+    row: 1
+  - id: pmic
+    label: PMIC
+    blocks: [pmic]
+    col: 0
+    row: 2
+  - id: comms
+    label: Photocoupler, CAN transceiver / PLC modem, NFC / Ethernet
+    blocks: [optocoupler, can_transceiver, ethernet_phy, nfc_frontend]
+    col: 1
+    row: 2
+  links:
+  - [ac_input, pfc, 3-phase AC 200-400 V]
+  - [pfc, dcdc, DC link]
+  - [dcdc, sense_out, DC 400-800 V out]
+  - [ac_input, sense_in, '']
+  - [sense_in, mcu, ADC]
+  - [sense_out, mcu, ADC]
+  - [mcu, gd_pfc, PWM]
+  - [gd_pfc, pfc, '']
+  - [mcu, gd_dcdc, PWM]
+  - [gd_dcdc, dcdc, '']
+  - [pmic, mcu, VCC]
+  - [mcu, comms, CAN / PLC / NFC / Ethernet]
+  questions:
+  - id: output_voltage
+    question: Output voltage range
+    choices: [400-800 V, 200-500 V]
+    source: AS254
+  - id: switch_tech
+    question: Power switch
+    choices: [IGBT, SiC MOSFET]
+    source: AS254 (IGBT symbols)
+  - id: vehicle_comm
+    question: Vehicle communication
+    choices: [CAN (CHAdeMO / GB/T), PLC (CCS / ISO 15118)]
+    source: AS254 'CAN Transceiver, PLC Modem'
+- name: Industrial PLC with analog/digital I/O, fieldbus PHYs and optional functional-safety add-on (Renesas)
+  category: Industrial
+  note: 'From Renesas public material: REN-WC-PLC'
+  sources:
+  - {doc: REN-WC-PLC, title: Industrial Programmable Logic Controller (PLC) - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/industrial-automation/industrial-programmable-logic-controller-plc'}
+  groups:
+  - id: power_in
+    label: 24 V inputs (redundant) + protection + DC/DC + buck
+    blocks: [wide_vin_buck, reverse_polarity, tvs_esd]
+    col: 0
+    row: 0
+  - id: analog_in
+    label: Analog inputs xN (0-10 V / 4-20 mA)
+    blocks: [amplifier, tvs_esd]
+    col: 1
+    row: 0
+  - id: digital_in
+    label: Digital inputs xN
+    blocks: [isolated_digital_input, tvs_esd]
+    col: 2
+    row: 0
+  - id: sensors
+    label: Sensor signal conditioners (bridge / temperature)
+    blocks: [adc, amplifier]
+    col: 3
+    row: 0
+  - id: serial
+    label: RS-485 FD, RS-232 / 0-20 mA via optocoupler, USB
+    blocks: [rs485_transceiver, optocoupler, tvs_esd]
+    col: 0
+    row: 1
+  - id: fieldbus
+    label: IO-Link master PHY xN, ASi-5 PHY
+    blocks: [rs485_transceiver]
+    col: 1
+    row: 1
+  - id: mcu
+    label: PLC operation MCU (ADC, DAC, UART, SPI, Ethernet, LCD)
+    blocks: [mcu]
+    col: 2
+    row: 1
+  - id: outputs
+    label: Analog out x2 (op amp) + digital out xN (MOSFET high-side)
+    blocks: [amplifier, load_switch, power_fets]
+    col: 3
+    row: 1
+  - id: network
+    label: Ethernet PHY 100 Mb/s, industrial Gigabit Ethernet module
+    blocks: [ethernet_phy]
+    col: 0
+    row: 2
+  - id: wireless
+    label: Wi-Fi, Bluetooth LE, LTE-M module
+    blocks: [wifi_soc, ble_soc, modem, crystal_oscillator]
+    col: 1
+    row: 2
+  - id: hmi
+    label: TFT-LCD, keys / cap-touch, SD card
+    blocks: [display, touch_controller]
+    col: 2
+    row: 2
+  - id: fusa
+    label: Optional functional-safety controller with redundant RS-485 / RS-232 and digital inputs
+    blocks: [mcu, rs485_transceiver, optocoupler]
+    col: 3
+    row: 2
+  links:
+  - [power_in, mcu, 3.3 V / 5 V]
+  - [analog_in, mcu, ADC]
+  - [digital_in, mcu, GPIO]
+  - [sensors, mcu, I2C]
+  - [serial, mcu, UART / USB]
+  - [fieldbus, mcu, UART / SPI]
+  - [mcu, outputs, DAC / GPIO]
+  - [network, mcu, Ethernet / SPI]
+  - [wireless, mcu, UART / SCI]
+  - [hmi, mcu, LCD / DAC / SDHI]
+  - [mcu, fusa, SPI cross-check]
+  - [power_in, fusa, 3.3 V FuSa]
+  questions:
+  - id: io_mix
+    question: I/O mix
+    choices: [analog in, digital in, analog out, digital out, RTD / bridge sensors]
+    source: EU115-2
+  - id: fieldbus
+    question: Field communication
+    choices: [IO-Link master, ASi-5, RS-485, industrial Ethernet]
+    source: EU115-2
+  - id: safety
+    question: Functional safety add-on
+    choices: [yes (redundant MCU), 'no']
+    source: EU115-1 vs EU115-2
+  - id: wireless
+    question: Wireless / IoT
+    choices: [Wi-Fi, Bluetooth LE, LTE-M, none]
+    source: EU115-2
+- name: Hybrid solar inverter (GaN grid inverter + bidirectional LLC + 4x MPPT + 48 V battery) (Renesas)
+  category: Power & isolation
+  note: 'From Renesas public material: REN-WC-HYBINV'
+  sources:
+  - {doc: REN-WC-HYBINV, title: Hybrid Inverter - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/renewable-energy-grid/hybrid-inverter'}
+  groups:
+  - id: grid
+    label: AC grid + interface filter + Vgrid sense
+    blocks:
+    - {fn: external_block, label: AC grid + interface filter + Vgrid sense}
+    col: 0
+    row: 0
+  - id: grid_inverter
+    label: 'Grid inverter: GaN full bridge (inversion / rectification, 380-420 V bus)'
+    blocks: [power_fets, dc_link_cap]
+    col: 1
+    row: 0
+  - id: llc
+    label: Bidirectional LLC converter (GaN half bridge primary, MOSFET full bridge secondary)
+    blocks: [power_fets]
+    col: 2
+    row: 0
+  - id: mppt
+    label: 550 W MPPT converter x4 (65-75 V bus) + PV modules
+    blocks: [power_fets]
+    col: 3
+    row: 0
+  - id: battery_conv
+    label: Bidirectional charge/discharge converter + 48 V battery pack
+    blocks: [power_fets, battery_pack]
+    col: 0
+    row: 1
+  - id: drivers_hv
+    label: Gate drivers, HV side (MOSFET driver, GaN drivers)
+    blocks: [half_bridge_driver, gate_driver]
+    col: 1
+    row: 1
+  - id: drivers_lv
+    label: MOSFET drivers, LV side (x1 + x4)
+    blocks: [half_bridge_driver]
+    col: 2
+    row: 1
+  - id: sense
+    label: Op amps (4 + 14 channels) + comparator (protection)
+    blocks: [amplifier, current_sensor]
+    col: 3
+    row: 1
+  - id: mcu_grid
+    label: MCU, grid side (PWM, ADC, CAN, UART)
+    blocks: [mcu]
+    col: 0
+    row: 2
+  - id: mcu_dc
+    label: MCU, DC side (PWM, ADC, CAN, UART)
+    blocks: [mcu]
+    col: 1
+    row: 2
+  - id: bias
+    label: 'Auxiliary bias supply: flyback + buck + LDOs (3.3 V / 5 V per side)'
+    blocks: [hv_flyback, acdc_controller, wide_vin_buck, pol_ldo]
+    col: 2
+    row: 2
+  links:
+  - [grid, grid_inverter, AC grid]
+  - [grid_inverter, llc, 380-420 V DC bus]
+  - [llc, mppt, 65-75 V bus]
+  - [llc, battery_conv, 65-75 V bus]
+  - [mcu_grid, drivers_hv, PWM]
+  - [drivers_hv, grid_inverter, '']
+  - [drivers_hv, llc, '']
+  - [mcu_dc, drivers_lv, PWM (2 + 8)]
+  - [drivers_lv, mppt, '']
+  - [drivers_lv, battery_conv, '']
+  - [sense, mcu_grid, ADC (4)]
+  - [sense, mcu_dc, ADC (14) + comparator]
+  - [mcu_grid, mcu_dc, UART]
+  - [bias, mcu_grid, 3.3 V]
+  - [bias, mcu_dc, 3.3 V]
+  questions:
+  - id: storage
+    question: Energy storage
+    choices: [48 V battery (low-voltage), HV battery, none]
+    source: WS163-1
+  - id: mppt_count
+    question: Number of MPPT inputs
+    choices: [4 x 550 W microinverter-style, 1-2 string MPPT]
+    source: WS163-1
+  - id: switch_tech
+    question: Grid-side switches
+    choices: [GaN FET, SiC MOSFET, IGBT]
+    source: WS163-1
+- name: AC servo drive with EtherCAT (MPU, IPM, delta-sigma current sense, encoder) (Renesas)
+  category: Motor drives
+  note: 'From Renesas public material: REN-WC-ACSERVO'
+  sources:
+  - {doc: REN-WC-ACSERVO, title: AC Servo - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/motor-drive-systems/ac-servo'}
+  groups:
+  - id: ac_line
+    label: AC line rectifier + IPM / inverter (U, V, W)
+    blocks: [power_module, dc_link_cap]
+    col: 0
+    row: 0
+  - id: aux_psu
+    label: Auxiliary flyback (+24 V iso, +19 V, +5 V) with synchronous rectifier
+    blocks: [hv_flyback, acdc_controller]
+    col: 1
+    row: 0
+  - id: ipm_drive
+    label: IPM drivers x6 (photocoupler gate drive)
+    blocks: [gate_driver, optocoupler]
+    col: 2
+    row: 0
+  - id: current_sense
+    label: Delta-sigma modulators (3-channel phase current) + clock buffer
+    blocks: [isolated_amplifier, clock_buffer]
+    col: 3
+    row: 0
+  - id: io_iso
+    label: 'Photocouplers: inverter-board I/O (D0/D1, fault) and external control (pulse, CCW/CW)'
+    blocks: [optocoupler]
+    col: 0
+    row: 1
+  - id: pwm_buffer
+    label: Octal bidirectional transceiver (PWM to IPM)
+    blocks: [voltage_translator]
+    col: 1
+    row: 1
+  - id: mpu
+    label: Servo MPU (PWM, DSMIF, encoder IF, EtherCAT slave)
+    blocks: [soc, flash, crystal_oscillator]
+    col: 2
+    row: 1
+  - id: power
+    label: PMIC (3.3/1.8/1.1 V, 1.2 V to PHY) + buck (24 V plug-in)
+    blocks: [pmic, wide_vin_buck]
+    col: 3
+    row: 1
+  - id: encoder
+    label: 'Encoder interfaces: RS-422, RS-485/422 (ABZ / ABS)'
+    blocks: [rs485_transceiver, position_sensor]
+    col: 0
+    row: 2
+  - id: comms
+    label: EtherCAT PHY x2, RS-485, CAN, USB (TVS)
+    blocks: [ethernet_phy, rs485_transceiver, can_transceiver, tvs_esd]
+    col: 1
+    row: 2
+  - id: hmi
+    label: OLED + LED driver, EEPROM
+    blocks: [led_driver, flash]
+    col: 2
+    row: 2
+  - id: motor
+    label: Servo motor + encoder
+    blocks: [motor]
+    col: 3
+    row: 2
+  links:
+  - [ac_line, motor, 'U, V, W']
+  - [ac_line, aux_psu, '']
+  - [aux_psu, power, +5 V]
+  - [power, mpu, 3.3 / 1.8 / 1.1 V]
+  - [mpu, pwm_buffer, PWM]
+  - [pwm_buffer, ipm_drive, to IPM]
+  - [ipm_drive, ac_line, '']
+  - [current_sense, mpu, DSMIF]
+  - [ac_line, current_sense, phase current]
+  - [io_iso, mpu, GPIO / INT / timer]
+  - [motor, encoder, '']
+  - [encoder, mpu, encoder IF / timer capture]
+  - [comms, mpu, EtherCAT / UART / CAN / USB]
+  - [hmi, mpu, I2C]
+  questions:
+  - id: network
+    question: Industrial network
+    choices: [EtherCAT, PROFINET, EtherNet/IP, none]
+    source: CN032 'EtherCAT Slave Controller'
+  - id: current_sensing
+    question: Phase current sensing
+    choices: [isolated delta-sigma modulator, shunt + isolated amplifier, Hall sensor]
+    source: CN032 'DS Modulator'
+  - id: encoder
+    question: Encoder type
+    choices: [incremental ABZ, absolute serial (RS-485)]
+    source: CN032 'ABZ/ABS'
+  - id: power_stage
+    question: Power stage
+    choices: [IPM, discrete IGBT + gate drivers]
+    source: CN032 'IPM Driver x6'
+- name: Bidirectional 3 kW telecom UPS power (-48 V bus <-> battery, 3-phase 4-switch buck-boost) (Renesas)
+  category: Power & isolation
+  note: 'From Renesas public material: REN-WC-UPS3K'
+  sources:
+  - {doc: REN-WC-UPS3K, title: Bidirectional 3000W UPS Power - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/renewable-energy-grid/bidirectional-3000w-ups-power'}
+  groups:
+  - id: bus
+    label: -48 V telecom bus + bus current shunt (R1) + amp (IBUS)
+    blocks: [current_sensor, amplifier]
+    col: 0
+    row: 0
+  - id: phase1
+    label: 'Phase 1: 4-switch buck-boost (Q1-Q4, L1) + controller'
+    blocks: [power_fets, buck_boost]
+    col: 1
+    row: 0
+  - id: phase2
+    label: 'Phase 2: 4-switch buck-boost (Q5-Q8, L2) + controller'
+    blocks: [power_fets, buck_boost]
+    col: 2
+    row: 0
+  - id: phase3
+    label: 'Phase 3: 4-switch buck-boost (Q9-Q12, L3) + controller'
+    blocks: [power_fets, buck_boost]
+    col: 0
+    row: 1
+  - id: battery
+    label: 'Battery side: shunt (R2) + amp (IBAT), VBAT'
+    blocks: [current_sensor, amplifier, battery_pack]
+    col: 1
+    row: 1
+  - id: aux
+    label: 'Aux bucks: 12 V (fan, controller bias), 5 V (MCU)'
+    blocks: [wide_vin_buck]
+    col: 2
+    row: 1
+  - id: mcu
+    label: MCU (ADC VBus/IBus/VBat/IBat, PWM CC/CV droop, GPIO on/off, CAN)
+    blocks: [mcu, temperature_sensor]
+    col: 0
+    row: 2
+  - id: comms
+    label: Isolated CAN & RS-485
+    blocks: [isolated_can, rs485_transceiver]
+    col: 1
+    row: 2
+  links:
+  - [bus, phase1, '']
+  - [bus, phase2, '']
+  - [bus, phase3, '']
+  - [phase1, battery, VBAT]
+  - [phase2, battery, '']
+  - [phase3, battery, '']
+  - [battery, aux, '']
+  - [aux, mcu, 5 V]
+  - [bus, mcu, IBUS / VBUS]
+  - [battery, mcu, IBAT / VBAT]
+  - [mcu, phase1, 'CC/CV droop control (PWM), on/off']
+  - [mcu, comms, CAN]
+  questions:
+  - id: phases
+    question: Interleaved phases
+    choices: [3 x 1 kW, 1-2 phases]
+    source: CN048
+  - id: topology
+    question: Converter topology
+    choices: [4-switch buck-boost (bidirectional), buck + boost]
+    source: CN048
+  - id: interface
+    question: System interface
+    choices: [isolated CAN, isolated RS-485]
+    source: CN048
+- name: 20 kW bidirectional three-phase PFC / inverter (T-type IGBT, ESS / grid) (Renesas)
+  category: Power & isolation
+  note: 'From Renesas public material: REN-WC-PFCINV20K'
+  sources:
+  - {doc: REN-WC-PFCINV20K, title: 20kW 3-phase PFC Inverter - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/renewable-energy-grid/20kw-3-phase-pfc-inverter'}
+  groups:
+  - id: grid
+    label: Three-phase grid + boost inductors
+    blocks:
+    - {fn: external_block, label: Three-phase grid + boost inductors}
+    col: 0
+    row: 0
+  - id: bridge
+    label: Power IGBT x6 (half bridges) + power IGBT x6 (bidirectional neutral clamp), split DC bus
+    blocks: [power_fets, dc_link_cap]
+    col: 1
+    row: 0
+  - id: gate_drivers
+    label: Photocoupler gate drivers x12 (15 V)
+    blocks: [gate_driver, optocoupler]
+    col: 2
+    row: 0
+  - id: iso_sense
+    label: Photocoupler isolation amplifiers x8 (Va, Vb, Vc, Ia, Ib, Ic, VDCH, VDCL) + op amps x4
+    blocks: [isolated_amplifier, amplifier]
+    col: 3
+    row: 0
+  - id: aux_power
+    label: Auxiliary AC/DC (15 V) + LDO 5 V + buck 3.3 V
+    blocks: [acdc_controller, pol_ldo, wide_vin_buck]
+    col: 0
+    row: 1
+  - id: control_mcu
+    label: Power-board control MCU (12-bit ADC, 12 PWM, CAN)
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: can_link
+    label: CAN transceivers (power board <-> communication board)
+    blocks: [can_transceiver]
+    col: 2
+    row: 1
+  - id: comm_mcu
+    label: Communication-board MCU (RMII Ethernet, UART, SDHI)
+    blocks: [mcu, ethernet_phy]
+    col: 3
+    row: 1
+  - id: comm_periph
+    label: RTC, reset IC, SPI flash, EEPROM, RS-485, 3.3 V buck
+    blocks: [rtc, supervisor, flash, rs485_transceiver, pol_buck]
+    col: 0
+    row: 2
+  links:
+  - [grid, bridge, 3-phase AC]
+  - [bridge, aux_power, HV DC bus]
+  - [control_mcu, gate_drivers, PWM (12)]
+  - [gate_drivers, bridge, Q1-Q12]
+  - [bridge, iso_sense, 'Va/Vb/Vc, Ia/Ib/Ic, VDCH/VDCL']
+  - [iso_sense, control_mcu, 12-bit ADC (8)]
+  - [aux_power, control_mcu, 3.3 V]
+  - [control_mcu, can_link, CAN]
+  - [can_link, comm_mcu, CAN]
+  - [comm_periph, comm_mcu, I2C / SPI / UART]
+  questions:
+  - id: direction
+    question: Power flow
+    choices: [bidirectional (PFC rectifier / grid inverter), unidirectional]
+    source: CN078 'Bidirectional'
+  - id: topology
+    question: Bridge topology
+    choices: [three-level T-type (12 IGBT), two-level six-pack]
+    source: CN078
+  - id: isolation_sensing
+    question: Isolated sensing method
+    choices: [optically coupled isolation amplifier, Hall sensor, isolated delta-sigma]
+    source: CN078
+- name: Isolated GaN three-phase motor drive power stage (400 V DC, up to 3 kW) (Renesas)
+  category: Motor drives
+  note: 'From Renesas public material: REN-WC-ISOMOTOR'
+  sources:
+  - {doc: REN-WC-ISOMOTOR, title: Isolated Motor Drive Power Stage - Winning Combination, url: 'https://www.renesas.com/en/applications/industrial/motor-drive-systems/isolated-motor-drive-power-stage'}
+  groups:
+  - id: dc_link
+    label: 400 V DC input + DC link
+    blocks: [dc_link_cap]
+    col: 0
+    row: 0
+  - id: inverter
+    label: GaN FET three-phase bridge
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: gate_drive
+    label: Half-bridge GaN gate drivers x3 + photocouplers x6 (PWM isolation)
+    blocks: [half_bridge_driver, optocoupler]
+    col: 2
+    row: 0
+  - id: protection
+    label: 'Protection logic (GreenPAK): fault / shoot-through / OCP'
+    blocks:
+    - {fn: external_block, label: 'Protection logic (GreenPAK): fault / shoot-through / OCP'}
+    col: 3
+    row: 0
+  - id: v_sense
+    label: Phase voltage & VDC sensing -> isolation amplifiers x4
+    blocks: [isolated_amplifier]
+    col: 0
+    row: 1
+  - id: i_sense
+    label: Low-side shunt current sensing -> current sense amplifiers x3 -> isolation amplifiers x3
+    blocks: [current_sensor, isolated_amplifier]
+    col: 1
+    row: 1
+  - id: position
+    label: Inductive position sensor (alt. Hall / encoder / resolver) via photocouplers
+    blocks: [position_sensor, optocoupler]
+    col: 2
+    row: 1
+  - id: temperature
+    label: Temperature sensor via photocouplers x3
+    blocks: [temperature_sensor, optocoupler]
+    col: 3
+    row: 1
+  - id: aux_power
+    label: Isolated AC/DC from 400 V (8 V / 15 V) + buck converters (5 V, 3.3 V iso, 3.3 V non-iso)
+    blocks: [hv_flyback, acdc_controller, pol_buck]
+    col: 0
+    row: 2
+  - id: mcu
+    label: Motor control processor (PWM, ADC, SCI) via connector
+    blocks: [mcu]
+    col: 1
+    row: 2
+  - id: motor
+    label: Three-phase motor
+    blocks: [motor]
+    col: 2
+    row: 2
+  links:
+  - [dc_link, inverter, 400 VDC]
+  - [inverter, motor, 3 phases]
+  - [mcu, gate_drive, PWM (6)]
+  - [gate_drive, inverter, '']
+  - [protection, gate_drive, disable (3)]
+  - [i_sense, protection, OC (3)]
+  - [inverter, v_sense, '']
+  - [v_sense, mcu, ADC (4)]
+  - [i_sense, mcu, ADC (3)]
+  - [position, mcu, '4']
+  - [temperature, mcu, '3']
+  - [dc_link, aux_power, 400 VDC]
+  - [aux_power, mcu, 3.3 V iso]
+  questions:
+  - id: isolation_location
+    question: Where is the isolation barrier
+    choices: [between power stage and controller (isolated signals), in the gate drivers]
+    source: WS223-1 'Isolation Boundary'
+  - id: switch_tech
+    question: Inverter switches
+    choices: [GaN FET, SiC MOSFET, IGBT]
+    source: WS223-1
+  - id: position_sensor
+    question: Position sensor
+    choices: [inductive position sensor, Hall, encoder, resolver, sensorless]
+    source: WS223-1 'Alternative Position Sensor'
+  - id: current_sense
+    question: Current sensing
+    choices: [low-side shunt + CSA + isolation amplifier, isolated delta-sigma]
+    source: WS223-1
+- name: eCPRI massive-MIMO radio unit - timing / clock tree (system synchronizer, fanout, RF synthesizers) (Renesas)
+  category: Communications equipment
+  note: 'From Renesas public material: REN-WC-ECPRIRRU'
+  sources:
+  - {doc: REN-WC-ECPRIRRU, title: eCPRI Mass MIMO for RRU - Winning Combination, url: 'https://www.renesas.com/en/applications/communications-infrastructure/wireless-infrastructure/ecpri-mass-mimo-rru'}
+  groups:
+  - id: bbu
+    label: Baseband unit (network <-> CPRI / eCPRI)
+    blocks: [external_block]
+    col: 0
+    row: 0
+  - id: dfe
+    label: Digital front end (DFE)
+    blocks: [soc]
+    col: 1
+    row: 0
+  - id: transceiver
+    label: 'Transceiver: ADC / DAC + down / up converters'
+    blocks: [rf_transceiver, adc, dac, rf_mixer]
+    col: 2
+    row: 0
+  - id: rf_frontend
+    label: RF conditioning / amplification + antenna array
+    blocks: [rf_frontend, power_amplifier, lna, antenna]
+    col: 0
+    row: 1
+  - id: synchronizer
+    label: System synchronizer (DPLL, ultra-low phase noise APLL, DCO; recovered clock from DFE)
+    blocks: [jitter_attenuator, clock_generator]
+    col: 1
+    row: 1
+  - id: fanout
+    label: Clock fanout buffers x2 (122.88 / 491.52 MHz + SYSREF, <80 fs RMS)
+    blocks: [clock_buffer]
+    col: 2
+    row: 1
+  - id: rf_synth
+    label: RF synthesizers x8 (LO for up/down converters, 245.76 MHz reference)
+    blocks: [rf_synthesizer]
+    col: 0
+    row: 2
+  - id: ldos
+    label: 'Low-noise LDOs: x8 (3.3 V synthesizers), x2 (fanouts), x3 (synchronizer 1.2/1.8/3.3 V) from 5 V'
+    blocks: [pol_ldo]
+    col: 1
+    row: 2
+  links:
+  - [bbu, dfe, CPRI / eCPRI]
+  - [dfe, transceiver, data]
+  - [transceiver, rf_frontend, Tx / Rx RF]
+  - [dfe, synchronizer, recovered timing]
+  - [synchronizer, fanout, 122.88 MHz / 491.52 MHz + SYSREF]
+  - [fanout, transceiver, device clock + SYSREF (ADC / DAC)]
+  - [synchronizer, rf_synth, 245.76 MHz]
+  - [rf_synth, transceiver, LO]
+  - [ldos, rf_synth, 3.3 V]
+  - [ldos, fanout, 3.3 V]
+  - [ldos, synchronizer, 1.2 / 1.8 / 3.3 V]
+  questions:
+  - id: fronthaul
+    question: Fronthaul
+    choices: [eCPRI, CPRI]
+    source: CN340
+  - id: sync_standard
+    question: Timing standard
+    choices: [IEEE 1588 PTP + SyncE (ITU-T G.8275), free-running]
+    source: page description 'high timing precision'
+  - id: lo_count
+    question: Number of RF synthesizers / LOs
+    choices: [8 (one per transceiver pair), integrated in transceiver]
+    source: CN340 'RF Synthesizer x8'
+  - id: jitter
+    question: Clock jitter target
+    choices: [<80 fs RMS, <150 fs RMS]
+    source: CN340 '<80fs RMS'

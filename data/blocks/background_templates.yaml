@@ -4066,3 +4066,719 @@
     question: Wireless attach
     choices: [none, Wi-Fi 6E + Bluetooth, Wi-Fi + 5G]
     source: QC-PB-IQ9 'Wi-Fi 6E attach'
+
+# ---- imported by tools/import_diagrams.py
+- name: Automotive PTC electric heater (HV, isolated communication, MOSFET/IGBT low-side switching) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-PTC'
+  sources:
+  - {doc: TI-SOL-PTC, title: 'PTC - high voltage, isolated communication - block diagram + subsystems', url: 'https://www.ti.com/solution/automotive-ptc-e-heater'}
+  groups:
+  - id: communication_interface
+    label: Communication interface
+    blocks: [can_transceiver, lin_transceiver, tvs_esd, pmic]
+    col: 0
+    row: 0
+  - id: reference_voltage_source
+    label: Reference voltage source
+    blocks: [voltage_reference]
+    col: 1
+    row: 0
+  - id: isolated_power_supply
+    label: Isolated power supply
+    blocks: [reverse_polarity, battery_protector, acdc_controller, pol_buck, pol_ldo, voltage_reference]
+    col: 2
+    row: 0
+  - id: load_current_monitoring
+    label: Load current monitoring
+    blocks: [current_sensor, amplifier]
+    col: 3
+    row: 0
+  - id: power_switch_temperature_sensing
+    label: Power switch temperature sensing
+    blocks: [temperature_sensor]
+    col: 0
+    row: 1
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 1
+    row: 1
+  - id: heater_temperature_monitoring
+    label: Heater temperature monitoring
+    blocks: [temperature_sensor]
+    col: 2
+    row: 1
+  - id: high_voltage_safety_interlock
+    label: High voltage safety interlock
+    blocks: [amplifier]
+    col: 3
+    row: 1
+  - id: digital_signal_isolation
+    label: Digital signal isolation
+    blocks: [digital_isolator]
+    col: 0
+    row: 2
+  - id: gate_driver
+    label: Gate driver
+    blocks: [gate_driver, power_fets]
+    col: 1
+    row: 2
+  - id: power_supply
+    label: Power supply
+    blocks: [watchdog, supervisor]
+    col: 2
+    row: 2
+  - id: heater_stage
+    label: PTC load + MOSFET / IGBT switch
+    blocks: [power_module, hv_battery]
+    col: 3
+    row: 2
+  links:
+  - [isolated_power_supply, power_supply, isolated supply from 12 V car battery]
+  - [power_supply, mcu, '']
+  - [reference_voltage_source, mcu, ADC reference]
+  - [communication_interface, digital_signal_isolation, CAN / LIN]
+  - [digital_signal_isolation, mcu, '']
+  - [high_voltage_safety_interlock, digital_signal_isolation, '']
+  - [mcu, gate_driver, PWM]
+  - [gate_driver, heater_stage, '']
+  - [power_switch_temperature_sensing, mcu, '']
+  - [heater_temperature_monitoring, mcu, heater element temperature]
+  - [load_current_monitoring, mcu, '']
+  questions:
+  - id: supply_class
+    question: Heater supply
+    choices: [12 V, 48 V, 400 / 800 V HV]
+    source: TI-SOL-PTC variants 12V / 48V / HV
+  - id: isolation_point
+    question: Isolation location (HV variants)
+    choices: [isolated communication, isolated gate driver]
+    source: TI-SOL-PTC variants 18284 / 186673
+  - id: heater_channels
+    question: Number of independently switched heater zones
+    choices: ['1', 2-3, more]
+    source: TI-SOL-PTC 'Load current monitoring' (different loads)
+  - id: vehicle_bus
+    question: Vehicle bus
+    choices: [CAN, LIN]
+    source: TI-SOL-PTC 'Communication interface'
+- name: EV high-voltage power distribution box (HV PDB, contactor drivers, isolated CAN) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-HVPDB'
+  sources:
+  - {doc: TI-SOL-HVPDB, title: High-voltage power distribution box - block diagram + subsystems, url: 'https://www.ti.com/solution/high-voltage-power-distribution-box'}
+  groups:
+  - id: reference_voltage_source
+    label: Reference voltage source
+    blocks: [voltage_reference]
+    col: 0
+    row: 0
+  - id: power_supply
+    label: Power supply
+    blocks: [watchdog, supervisor, pol_ldo]
+    col: 1
+    row: 0
+  - id: mcu
+    label: MCU
+    blocks: [mcu]
+    col: 2
+    row: 0
+  - id: load_current_monitoring
+    label: Load current monitoring
+    blocks: [current_sensor, amplifier, isolated_amplifier]
+    col: 3
+    row: 0
+  - id: isolated_power_supply
+    label: Isolated power supply
+    blocks: [reverse_polarity, battery_protector, pol_buck, pol_ldo]
+    col: 0
+    row: 1
+  - id: high_voltage_safety_interlock
+    label: High-voltage safety interlock
+    blocks: [amplifier, isolated_amplifier]
+    col: 1
+    row: 1
+  - id: digital_signal_isolation
+    label: Digital signal isolation
+    blocks: [digital_isolator]
+    col: 2
+    row: 1
+  - id: contactor_drivers
+    label: Contactor drivers
+    blocks: [relay_driver]
+    col: 3
+    row: 1
+  - id: can
+    label: CAN
+    blocks: [tvs_esd, can_transceiver]
+    col: 0
+    row: 2
+  - id: hv_path
+    label: HV battery -> contactor -> HV loads
+    blocks: [hv_battery, external_block]
+    col: 1
+    row: 2
+  links:
+  - [isolated_power_supply, power_supply, isolated supply from 12 V battery]
+  - [power_supply, mcu, '']
+  - [reference_voltage_source, mcu, '']
+  - [can, digital_signal_isolation, CAN]
+  - [digital_signal_isolation, mcu, '']
+  - [high_voltage_safety_interlock, digital_signal_isolation, '']
+  - [mcu, contactor_drivers, '']
+  - [contactor_drivers, hv_path, contactor coil]
+  - [load_current_monitoring, mcu, load current]
+  questions:
+  - id: pack_voltage
+    question: HV bus
+    choices: [400 V, 800 V]
+    source: TI-SOL-HVPDB
+  - id: contactor_drive
+    question: Contactor coil drive
+    choices: [high-side + low-side switch, dedicated contactor driver with economizer PWM]
+    source: TI-SOL-HVPDB 'Contactor drivers'
+  - id: current_sense
+    question: Branch current measurement
+    choices: [shunt + amplifier, Hall-effect sensor, none]
+    source: TI-SOL-HVPDB 'Load current monitoring'
+  - id: isolation_point
+    question: Isolated interface
+    choices: [isolated CAN / digital isolator, isolated power only]
+    source: TI-SOL-HVPDB SVG (isolation lines)
+- name: Electro-mechanical braking (EMB) caliper ECU (BLDC brake motor, electric park brake, pedal sensing) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-EMB'
+  sources:
+  - {doc: TI-SOL-EMB, title: Electro-mechanical braking (EMB) - block diagram + subsystems, url: 'https://www.ti.com/solution/electro-mechanical-braking-emb'}
+  groups:
+  - id: input_power_protection
+    label: Input power protection
+    blocks: [reverse_polarity, battery_protector, load_switch]
+    col: 0
+    row: 0
+  - id: pedal_position_sensing
+    label: Pedal position sensing
+    blocks: [adc, position_sensor]
+    col: 1
+    row: 0
+  - id: diagnostics
+    label: Diagnostics
+    blocks: [voltage_reference, amplifier]
+    col: 2
+    row: 0
+  - id: sensor
+    label: Sensor
+    blocks: [position_sensor, adc, current_sensor, temperature_sensor]
+    col: 3
+    row: 0
+  - id: wired_interface
+    label: Wired Interface
+    blocks: [ethernet_phy, tvs_esd, can_transceiver]
+    col: 0
+    row: 1
+  - id: electric_park_brake_motor
+    label: Electric park brake motor driver
+    blocks: [motor_driver_brushed, relay_driver]
+    col: 1
+    row: 1
+  - id: brake_motor_driver
+    label: Brake motor driver
+    blocks: [three_phase_gate_driver, load_switch]
+    col: 2
+    row: 1
+  - id: non_isolated_dc_dc
+    label: Non-isolated DC/DC power supply & monitoring
+    blocks: [pol_buck, supervisor, watchdog, crystal_oscillator, pol_ldo, pmic]
+    col: 3
+    row: 1
+  - id: digital_processing
+    label: Digital processing
+    blocks: [mcu]
+    col: 0
+    row: 2
+  - id: brake_motor
+    label: Brake BLDC motor + 3-phase MOSFET inverter + phase isolation FETs
+    blocks: [power_fets, motor]
+    col: 1
+    row: 2
+  - id: epb_actuator
+    label: Electric park brake motor / solenoid
+    blocks: [motor]
+    col: 2
+    row: 2
+  links:
+  - [input_power_protection, non_isolated_dc_dc, 12 V]
+  - [input_power_protection, brake_motor, supply via HS switch / reverse protection FET]
+  - [non_isolated_dc_dc, brake_motor_driver, '']
+  - [non_isolated_dc_dc, digital_processing, '']
+  - [digital_processing, brake_motor_driver, '']
+  - [brake_motor_driver, brake_motor, gate drive]
+  - [brake_motor, sensor, 'rotor position, phase current']
+  - [sensor, brake_motor_driver, '']
+  - [sensor, digital_processing, 'position, wheel speed, current, temperature']
+  - [digital_processing, electric_park_brake_motor, '']
+  - [electric_park_brake_motor, epb_actuator, '']
+  - [diagnostics, digital_processing, '']
+  - [digital_processing, wired_interface, CAN / Ethernet]
+  - [pedal_position_sensing, wired_interface, to central ECU]
+  questions:
+  - id: architecture
+    question: Brake-by-wire architecture
+    choices: [wet (EHB), dry (EMB at each wheel)]
+    source: TI-SOL-EMB
+  - id: epb
+    question: Integrated electric park brake
+    choices: [yes (BDC motor), yes (solenoid), 'no']
+    source: TI-SOL-EMB 'Electric park brake motor driver'
+  - id: position_sensor
+    question: Motor position sensing
+    choices: [Hall, inductive, magnetic angle sensor, resolver]
+    source: TI-SOL-EMB 'Sensor'
+  - id: asil
+    question: Functional safety target
+    choices: [ASIL B, ASIL D]
+    source: TI-SOL-EMB 'Diagnostics'
+  - id: network
+    question: Vehicle network
+    choices: [CAN FD, automotive Ethernet]
+    source: TI-SOL-EMB 'Wired interface'
+- name: Automotive surround view system ECU (4+ cameras over FPD-Link / Ethernet, vision processor, video out) (TI)
+  category: Automotive systems
+  note: 'From TI public material: TI-SOL-SVS'
+  sources:
+  - {doc: TI-SOL-SVS, title: Surround view system ECU - block diagram + subsystems, url: 'https://www.ti.com/solution/surround-view-system-ecu'}
+  groups:
+  - id: battery_input_protection
+    label: Battery input protection
+    blocks: [reverse_polarity, battery_protector, tvs_esd]
+    col: 0
+    row: 0
+  - id: camera_interface
+    label: Camera interface
+    blocks: [load_switch, serdes, ethernet_phy, pol_ldo, efuse_hotswap]
+    col: 1
+    row: 0
+  - id: video_interface
+    label: Video interface
+    blocks: [serdes]
+    col: 2
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [crystal_oscillator]
+    col: 3
+    row: 0
+  - id: diagnostics_monitoring
+    label: Diagnostics/monitoring
+    blocks: [supervisor, temperature_sensor, watchdog, voltage_reference]
+    col: 0
+    row: 1
+  - id: battery_and_system_power
+    label: Battery & system power supply
+    blocks: [buck_boost, wide_vin_buck, pol_buck, pol_ldo, pmic]
+    col: 1
+    row: 1
+  - id: memory
+    label: Memory
+    blocks: [pol_buck, termination_ldo, pol_ldo, ddr_flash]
+    col: 2
+    row: 1
+  - id: processor_power_supply
+    label: Processor power supply
+    blocks: [pol_buck, pol_ldo, load_switch, sequencer, pmic, supervisor, watchdog]
+    col: 3
+    row: 1
+  - id: digital_processing
+    label: Digital processing
+    blocks: [soc, mcu, voltage_translator, adc, voltage_reference, adas_processor]
+    col: 0
+    row: 2
+  - id: vehicle_interface
+    label: Vehicle interface
+    blocks: [ethernet_phy, can_transceiver, tvs_esd, serdes]
+    col: 1
+    row: 2
+  - id: cameras
+    label: Surround view cameras
+    blocks: [camera_radar]
+    col: 2
+    row: 2
+  links:
+  - [battery_input_protection, battery_and_system_power, battery]
+  - [battery_and_system_power, processor_power_supply, '']
+  - [processor_power_supply, digital_processing, '']
+  - [cameras, camera_interface, FPD-Link / Ethernet + power over coax]
+  - [camera_interface, digital_processing, video]
+  - [digital_processing, video_interface, 'to display, fusion ECU, car DVR']
+  - [digital_processing, vehicle_interface, 'CAN / Ethernet, diagnostics']
+  - [digital_processing, memory, '']
+  - [clocking, digital_processing, '']
+  - [clocking, camera_interface, '']
+  - [diagnostics_monitoring, digital_processing, '']
+  questions:
+  - id: camera_link
+    question: Camera link
+    choices: [FPD-Link SerDes (coax PoC), automotive Ethernet, analog video]
+    source: TI-SOL-SVS 'Camera interface'
+  - id: camera_count
+    question: Number of cameras
+    choices: ['4', 5-6, more]
+    source: TI-SOL-SVS
+  - id: processing
+    question: Processing
+    choices: [vision SoC + safety MCU, SoC only]
+    source: TI-SOL-SVS 'Digital processing'
+  - id: video_out
+    question: Video output
+    choices: [FPD-Link to display, Ethernet to fusion ECU / DVR]
+    source: TI-SOL-SVS 'Video interface'
+- name: Linear motor (transport track) multi-inverter power stage (4-8 inverters per segment, 24-60 V DC) (TI)
+  category: Motor drives
+  note: 'From TI public material: TI-SOL-LINMOT'
+  sources:
+  - {doc: TI-SOL-LINMOT, title: Linear motor power stage - block diagram + subsystems, url: 'https://www.ti.com/solution/linear-motor-power-stage'}
+  groups:
+  - id: multi_inverter_power_stage
+    label: Multi-inverter power stage
+    blocks: [temperature_sensor, gate_driver, three_phase_gate_driver, half_bridge_driver, power_fets]
+    col: 0
+    row: 0
+  - id: temperature_sense_interface
+    label: Temperature sense interface
+    blocks: [temperature_sensor, voltage_reference, amplifier, adc]
+    col: 1
+    row: 0
+  - id: digital_processing
+    label: Digital processing
+    blocks: [mcu]
+    col: 2
+    row: 0
+  - id: current_voltage_sensing
+    label: Multi-inverter current & voltage sensing
+    blocks: [voltage_reference, amplifier, adc, current_sensor]
+    col: 3
+    row: 0
+  - id: input_power_protection
+    label: Input power protection
+    blocks: [efuse_hotswap, reverse_polarity, power_fets]
+    col: 0
+    row: 1
+  - id: point_of_load_power
+    label: Point-of-load power supply
+    blocks: [sequencer, pol_ldo, pol_buck, power_fets, watchdog, voltage_reference, supervisor]
+    col: 1
+    row: 1
+  - id: self_diagnostics_monitoring
+    label: Self-diagnostics/monitoring
+    blocks: [temperature_sensor, supervisor, watchdog, load_switch]
+    col: 2
+    row: 1
+  - id: temperature_sensor
+    label: Temperature sensor
+    blocks: [temperature_sensor]
+    col: 3
+    row: 1
+  - id: board_to_board_interface
+    label: Board-to-board interface
+    blocks: [voltage_translator, rs485_transceiver, serdes, digital_isolator, isolated_dcdc, tvs_esd]
+    col: 0
+    row: 2
+  - id: coils
+    label: Linear motor coils (3-phase or 2-phase per inverter)
+    blocks: [motor]
+    col: 1
+    row: 2
+  links:
+  - [input_power_protection, point_of_load_power, '']
+  - [input_power_protection, multi_inverter_power_stage, DC-link voltage]
+  - [point_of_load_power, digital_processing, multiple supply rails]
+  - [digital_processing, multi_inverter_power_stage, PWM (N inverters)]
+  - [multi_inverter_power_stage, coils, '']
+  - [coils, current_voltage_sensing, low-side shunt / in-phase current]
+  - [current_voltage_sensing, digital_processing, '']
+  - [temperature_sensor, temperature_sense_interface, coil temperature]
+  - [temperature_sense_interface, digital_processing, '']
+  - [self_diagnostics_monitoring, digital_processing, '']
+  - [board_to_board_interface, digital_processing, to segment controller (optional isolation)]
+  questions:
+  - id: inverter_count
+    question: Inverters per segment
+    choices: ['4', '6', '8']
+    source: TI-SOL-LINMOT SVG (N ~ 4-8)
+  - id: coil_system
+    question: Coil system
+    choices: [3-phase, 2-phase]
+    source: TI-SOL-LINMOT SVG note
+  - id: current_sense
+    question: Current sensing
+    choices: [low-side shunt, in-phase shunt]
+    source: TI-SOL-LINMOT SVG
+  - id: link_isolation
+    question: Board-to-board link
+    choices: [isolated (RS-485 / LVDS), non-isolated]
+    source: TI-SOL-LINMOT 'Board-to-board interface'
+- name: Medical oxygen concentrator (compressor motor, PSA valve drivers, O2 / N2 gas sensing, battery for portable units) (TI)
+  category: Medical
+  note: 'From TI public material: TI-SOL-O2C'
+  sources:
+  - {doc: TI-SOL-O2C, title: Oxygen concentrator - block diagram + subsystems, url: 'https://www.ti.com/solution/oxygen-concentrator'}
+  groups:
+  - id: gas_sensor_afe
+    label: Gas sensor
+    blocks: [adc, voltage_reference, amplifier, dac, tvs_esd]
+    col: 0
+    row: 0
+  - id: clocking
+    label: Clocking
+    blocks: [rtc, crystal_oscillator]
+    col: 1
+    row: 0
+  - id: pressure_flow_temp_afe
+    label: Pressure/flow/temperature sensor analog front end
+    blocks: [temperature_sensor, adc, env_sensor, voltage_reference, amplifier, tvs_esd, ultrasonic_afe]
+    col: 2
+    row: 0
+  - id: digital_processing
+    label: Digital processing
+    blocks: [mcu, soc, ultrasonic_afe, ble_soc]
+    col: 3
+    row: 0
+  - id: current_sense
+    label: Current sense
+    blocks: [current_sensor, adc, voltage_reference, amplifier, digital_isolator, isolated_amplifier]
+    col: 0
+    row: 1
+  - id: battery_management
+    label: Battery management
+    blocks: [battery_charger, battery_monitor, battery_protector]
+    col: 1
+    row: 1
+  - id: storage_memory
+    label: Storage memory
+    blocks: [ddr_flash, termination_ldo]
+    col: 2
+    row: 1
+  - id: input_user_interface
+    label: Input user interface
+    blocks: [touch_controller, display_driver, haptics_driver, tvs_esd, amplifier, io_expander, mcu, soc, voltage_reference]
+    col: 3
+    row: 1
+  - id: isolated_acdc
+    label: Isolated AC/DC power supply
+    blocks: [power_fets, acdc_controller, voltage_reference, amplifier]
+    col: 0
+    row: 2
+  - id: low_voltage_power_supply
+    label: Low voltage power supply
+    blocks: [sequencer, pol_ldo, supervisor, load_switch, pol_buck, buck_boost, efuse_hotswap, pmic, amplifier, wide_vin_buck, power_fets, watchdog]
+    col: 1
+    row: 2
+  - id: output_user_interface
+    label: Output user interface
+    blocks: [voltage_reference, dac, amplifier, display_driver, tvs_esd, io_expander]
+    col: 2
+    row: 2
+  - id: valve_drivers
+    label: Valve drivers for concentrator
+    blocks: [relay_driver, motor_driver_brushed]
+    col: 3
+    row: 2
+  - id: wireless_interface
+    label: Wireless interface
+    blocks: [ble_soc, mcu, ultrasonic_afe]
+    col: 0
+    row: 3
+  - id: wired_interface
+    label: Wired interface
+    blocks: [tvs_esd, usb_typec_hub, efuse_hotswap, rs485_transceiver, io_expander, digital_isolator, load_switch]
+    col: 1
+    row: 3
+  - id: compressor_drive
+    label: Motor driver (compressor)
+    blocks: [motor_driver_brushed, power_fets, gate_driver, haptics_driver, three_phase_gate_driver, motor_controller, half_bridge_driver]
+    col: 2
+    row: 3
+  - id: compressor
+    label: Compressor motor + sieve-bed valves
+    blocks: [motor, external_block]
+    col: 3
+    row: 3
+  links:
+  - [isolated_acdc, low_voltage_power_supply, '']
+  - [battery_management, low_voltage_power_supply, battery]
+  - [low_voltage_power_supply, digital_processing, '']
+  - [pressure_flow_temp_afe, digital_processing, '']
+  - [gas_sensor_afe, digital_processing, O2 purity]
+  - [digital_processing, compressor_drive, '']
+  - [compressor_drive, compressor, '']
+  - [compressor, current_sense, '']
+  - [current_sense, digital_processing, '']
+  - [digital_processing, valve_drivers, '']
+  - [valve_drivers, compressor, valves]
+  - [storage_memory, digital_processing, '']
+  - [clocking, digital_processing, '']
+  - [digital_processing, wireless_interface, BT / BLE]
+  - [digital_processing, output_user_interface, 'LCD, LEDs, alarm']
+  - [input_user_interface, digital_processing, '']
+  - [wired_interface, digital_processing, USB / RS-485]
+  questions:
+  - id: form
+    question: Form factor
+    choices: [stationary (AC), portable (battery)]
+    source: TI-SOL-O2C 'Battery management'
+  - id: compressor_motor
+    question: Compressor motor
+    choices: [BLDC, brushed DC, AC]
+    source: TI-SOL-O2C 'Motor driver (compressor)'
+  - id: o2_sensing
+    question: Oxygen purity sensing
+    choices: [ultrasonic, electrochemical / galvanic]
+    source: TI-SOL-O2C 'Gas sensor'
+  - id: valves
+    question: Valve drive
+    choices: [relay, solenoid driver]
+    source: TI-SOL-O2C 'Valve drivers'
+- name: GFCI / RCD residual-current circuit breaker (CT sensing, grounded-neutral detection, GFCI SoC / MCU, trip solenoid) (TI)
+  category: Appliances & building
+  note: 'From TI public material: TI-SOL-GFCI'
+  sources:
+  - {doc: TI-SOL-GFCI, title: GFCI/RCD circuit breaker - block diagram + subsystems, url: 'https://www.ti.com/solution/gfci-rcd-circuit-breaker'}
+  groups:
+  - id: digital_processing
+    label: Digital processing
+    blocks: [mcu, soc]
+    col: 0
+    row: 0
+  - id: grounded_neutral_driver
+    label: Grounded neutral driver
+    blocks: [amplifier, voltage_reference]
+    col: 1
+    row: 0
+  - id: output_user_interface
+    label: Output user interface
+    blocks: [led_driver]
+    col: 2
+    row: 0
+  - id: self_diagnostics_monitoring
+    label: Self-diagnostics/monitoring
+    blocks: [supervisor, watchdog]
+    col: 3
+    row: 0
+  - id: non_isolated_ac_dc
+    label: Non-isolated AC/DC power supply
+    blocks: [pol_ldo, pol_buck, acdc_controller]
+    col: 0
+    row: 1
+  - id: voltage_sense_afe
+    label: Voltage sensing analog front end
+    blocks: [amplifier, voltage_reference]
+    col: 1
+    row: 1
+  - id: ct_afe
+    label: Analog front-end
+    blocks: [amplifier, current_sensor]
+    col: 2
+    row: 1
+  - id: trip_solenoid_drive
+    label: Power stage
+    blocks: [relay_driver]
+    col: 3
+    row: 1
+  - id: line
+    label: Line / neutral with differential and grounded-neutral CTs, trip contacts
+    blocks: [external_block]
+    col: 0
+    row: 2
+  links:
+  - [line, non_isolated_ac_dc, L / N]
+  - [non_isolated_ac_dc, digital_processing, '']
+  - [line, ct_afe, differential CT]
+  - [ct_afe, digital_processing, '']
+  - [digital_processing, grounded_neutral_driver, '']
+  - [grounded_neutral_driver, line, neutral CT excitation]
+  - [line, voltage_sense_afe, line voltage]
+  - [voltage_sense_afe, digital_processing, '']
+  - [digital_processing, trip_solenoid_drive, trip]
+  - [trip_solenoid_drive, line, solenoid / relay]
+  - [self_diagnostics_monitoring, digital_processing, watchdog]
+  - [digital_processing, output_user_interface, LED]
+  questions:
+  - id: rcd_type
+    question: RCD type
+    choices: [Type AC, Type A, Type B / EV (DC-sensitive)]
+    source: TI-SOL-GFCI
+  - id: processing
+    question: Detection IC
+    choices: [dedicated GFCI SoC, MCU with integrated op amps]
+    source: TI-SOL-GFCI 'Digital processing'
+  - id: self_test
+    question: Self-test / end-of-life
+    choices: [automatic periodic self-test, manual test button]
+    source: TI-SOL-GFCI 'Self-diagnostics/monitoring'
+  - id: arc_fault
+    question: Combined AFCI
+    choices: ['yes', 'no']
+    source: TI-SOL-GFCI
+- name: Bidirectional 48 V / 12 V DC/DC converter (6-phase, EV/HEV) (Renesas)
+  category: Automotive systems
+  note: 'From Renesas public material: REN-WC-BIDCDC'
+  sources:
+  - {doc: REN-WC-BIDCDC, title: Bidirectional DC/DC Converter for 12V/48V EV/HEV Systems - Winning Combination, url: 'https://www.renesas.com/en/applications/automotive/ev-hev-vehicles/bi-directional-dcdc-converter-12v-48v-ev-hev-systems'}
+  groups:
+  - id: bat48
+    label: 48 V battery
+    blocks: [battery_pack]
+    col: 0
+    row: 0
+  - id: power_stage
+    label: Phase power stage x6 (buck/boost half bridge)
+    blocks: [power_fets]
+    col: 1
+    row: 0
+  - id: hb_driver
+    label: Half-bridge driver per phase
+    blocks: [half_bridge_driver]
+    col: 2
+    row: 0
+  - id: controller
+    label: Bidirectional PWM controller
+    blocks: [multiphase]
+    col: 0
+    row: 1
+  - id: bat12
+    label: 12 V battery + regulator
+    blocks: [battery_pack, pol_ldo]
+    col: 1
+    row: 1
+  - id: mcu
+    label: Supervisory MCU (starter kit)
+    blocks: [mcu]
+    col: 2
+    row: 1
+  - id: can
+    label: CAN
+    blocks: [can_transceiver]
+    col: 0
+    row: 2
+  links:
+  - [bat48, power_stage, '']
+  - [power_stage, bat12, 12 V bus]
+  - [controller, hb_driver, PWM]
+  - [hb_driver, power_stage, '']
+  - [mcu, controller, I2C/PMBus]
+  - [bat12, mcu, via regulator]
+  - [mcu, can, '']
+  questions:
+  - id: phases
+    question: Number of interleaved phases
+    choices: [1-6 (scalable)]
+    source: AS218 Phase 1-6
+  - id: direction
+    question: Power flow
+    choices: [bidirectional (buck 48->12 V / boost 12->48 V), unidirectional]
+    source: page title
+  - id: fet_rdson
+    question: MOSFET class
+    choices: ['100 V, 1.3-5 mOhm range']
+    source: linked MOSFET list

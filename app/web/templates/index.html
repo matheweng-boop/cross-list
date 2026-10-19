@@ -11,7 +11,7 @@
   manufacturer's page. To start from a competitor part, use <a href="/">Search &amp; replacements</a>.</p>
 
 <div class="browse">
-  <aside class="browse-filters" aria-label="Filters">
+  <aside class="browse-filters" aria-label="Filters"><details class="filters-toggle" open><summary>Search and filters</summary>
     <form method="get" action="/parts" class="browse-search">
       <label for="parts-q">Search products</label>
       <input type="search" id="parts-q" name="q" value="{{ q }}" placeholder="Part number or description">
@@ -38,7 +38,8 @@
     {{ facet('qual', 'Qualification', qual_label, qual) }}
     {{ facet('life', 'Lifecycle', life_label, life) }}
     {{ facet('role', 'Role', {'reference': 'Skyworks / Qorvo', 'competitor': 'Competitor'}, role) }}
-  </aside>
+  </details></aside>
+  <script>try { if (matchMedia("(max-width: 900px)").matches) document.querySelector(".filters-toggle").open = false; } catch (e) {}</script>
 
   <section class="browse-results" aria-live="polite">
     <div class="browse-head">

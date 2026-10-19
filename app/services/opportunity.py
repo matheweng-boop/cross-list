@@ -531,7 +531,7 @@ GAP_TYPE_LABEL = {
     "mapping": "Probably sold already – catalogue mapping missing",
     "true_gap": "True portfolio gap",
     "competitor_only": "Competitor only",
-    "unknown_evidence": "Gap – no evidence assessed yet",
+    "unknown_evidence": "Not assessed yet – gap without evidence",
     "not_ours": "Not our product type",
 }
 SCOPES = {"all": "All reference architectures (library + background)", "library": "Library architectures only"}

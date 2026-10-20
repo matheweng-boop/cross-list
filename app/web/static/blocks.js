@@ -18,7 +18,7 @@
   S.req ||= {}; // requirement answers per function: {fn: {reqId: value}}; unanswered = no filter
   S.qa ||= {}; // answers to the template's design questions: {questionId: choice}; unanswered = nothing assumed
   let sel = null; // {group} or {group, block}
-  const DIM = new Set(["opp", "ext"]); // statuses greyed out in the diagram (legend buttons toggle them)
+  const DIM = new Set(["ext"]); // statuses greyed out in the diagram (legend buttons toggle them); gaps show by default
   let dirty = false;
   let configId = design.id;
 
@@ -42,7 +42,7 @@
     const n = COUNTS[b.fn];
     return n === null ? "ext" : n ? "have" : "opp";
   }
-  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Opportunity: no Skyworks or Qorvo part in BizDev yet", ext: "Customer part"};
+  const STATUS_TEXT = {part: "Part chosen", have: "Skyworks / Qorvo parts fit", opp: "Gap: no Skyworks or Qorvo part in BizDev yet", ext: "Customer part"};
 
   // ---- layout
   const CELL = 250, GAP_X = 56, GAP_Y = 52, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
@@ -172,7 +172,7 @@
         const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + HEAD + Math.floor(i / r.cols) * (BH + BG);
         const st = status(b), f = fnOf(b);
         const label = b.label || f.label;
-        const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "opportunity" : st === "ext" ? "customer part" : "");
+        const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "gap" : st === "ext" ? "customer part" : "");
         parts.push(`<g class="blk st-${st}${DIM.has(st) ? " dim" : ""}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
           `<rect x="${cx}" y="${cy}" width="${BW}" height="${BH}"/>` +
           wrap(label, 16).slice(0, 2).map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + 15 + k * 13}" text-anchor="middle">${esc(t)}</text>`).join("") +
@@ -180,7 +180,7 @@
       });
       parts.push(`</g>`);
     }
-    if (!S.groups.length) parts.push(`<text x="40" y="80" fill="#888" font-size="14">Add a group, then add functions to it.</text>`);
+    if (!S.groups.length) parts.push(`<text x="40" y="80" fill="#888" font-size="14">Add a frame with + Frame, then add blocks to it.</text>`);
     const svg = $("#bk-svg");
     lastL = L;
     svg.innerHTML = parts.join("");
@@ -236,18 +236,20 @@
   const openPanel = () => root.classList.add("panel-open");
   $("#bk-close").onclick = () => { root.classList.remove("panel-open"); sel = null; render(); };
 
-  // ---- summary: Skyworks content vs opportunities
+  // ---- summary: Skyworks content vs gaps
   function renderSummary() {
     const all = S.groups.flatMap(g => g.blocks);
     const by = {part: 0, have: 0, opp: 0, ext: 0};
     all.forEach(b => (by[status(b)] += b.qty || 1));
     const opp = {}, chosen = [];
     all.forEach(b => { if (status(b) === "opp") opp[fnOf(b).label] = (opp[fnOf(b).label] || 0) + (b.qty || 1); if (b.part) chosen.push(`${b.part}${b.qty > 1 ? ` ×${b.qty}` : ""}`); });
-    $("#bk-summary").innerHTML = `<div class="tiles">
-        <div class="tile"><b>${by.part}</b>parts chosen</div><div class="tile"><b>${by.have}</b>blocks Skyworks / Qorvo can fill</div>
-        <div class="tile"><b>${by.opp}</b>opportunities</div><div class="tile"><b>${by.ext}</b>customer parts</div></div>` +
+    // covered = a part chosen or Skyworks / Qorvo parts available; choosing a part never lowers it
+    const total = by.part + by.have + by.opp, covered = by.part + by.have;
+    const progress = `Covered <b>${covered}</b> of ${total} blocks <span class="muted">(chosen ${by.part} · options available ${by.have})</span> · <b>${by.opp}</b> gap${by.opp === 1 ? "" : "s"} · ${by.ext} customer part${by.ext === 1 ? "" : "s"}`;
+    $("#bk-headline").innerHTML = progress + (by.opp ? ` · <a href="#bk-summary">see the gaps</a>` : "");
+    $("#bk-summary").innerHTML = `<p class="bk-progress">${progress}</p>` +
       (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
-      (Object.keys(opp).length ? `<p><b>Opportunities</b> (no Skyworks or Qorvo part in BizDev yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
+      (Object.keys(opp).length ? `<p><b>Gaps</b> (no Skyworks or Qorvo part in BizDev yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
   }
 
   // ---- legend: one button per status; a pressed button is highlighted, the others are greyed out
@@ -479,7 +481,7 @@
 
   // the functions of the catalogue as grouped options (the same list as the toolbar picker)
   const fnOptions = () => Object.entries(CATS).map(([ck, cl]) => `<optgroup label="${esc(cl)}">${Object.entries(FN).filter(([, f]) => f.category === ck)
-    .map(([k, f]) => `<option value="${k}">${esc(f.label)}${COUNTS[k] === null ? " (customer)" : COUNTS[k] ? ` · ${COUNTS[k]} parts` : " · opportunity"}</option>`).join("")}</optgroup>`).join("");
+    .map(([k, f]) => `<option value="${k}">${esc(f.label)}${COUNTS[k] === null ? " (customer)" : COUNTS[k] ? ` · ${COUNTS[k]} parts` : " · gap"}</option>`).join("")}</optgroup>`).join("");
   function showGroup(g, focusAdd) {
     openPanel();
     const others = S.groups.filter(x => x !== g);
@@ -653,7 +655,7 @@
     const target = b ? `${g.label} / ${b.label || fnOf(b).label}` : g ? g.label : "";
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     panel.innerHTML = `<h3>Feedback</h3>
-      <p class="small muted">Type or speak. It goes on the feedback to-do list (Block diagrams → Feedback) and is reviewed in batches; nothing changes until then.${target ? ` About: <b>${esc(target)}</b>.` : ""}</p>
+      <p class="small muted">Type or speak. It goes on the review list (Data management → Requests &amp; reviews) and is reviewed in batches; nothing changes until then.${target ? ` About: <b>${esc(target)}</b>.` : ""}</p>
       <textarea data-fb-msg rows="5" placeholder="What should change?"></textarea>
       <div class="row"><button type="button" class="small-btn" data-fb-save>Save</button>
         ${SR ? `<button type="button" class="outline small-btn" data-fb-mic title="Voice input uses your browser's speech recognition; some browsers (e.g. Chrome) send the audio to their speech service.">🎤 Speak</button>` : `<span class="small muted">Voice: use your keyboard's dictation key.</span>`}
@@ -845,7 +847,15 @@
 
   function changed() { dirty = true; $("#bk-status").textContent = "Unsaved changes"; render(); }
   $("#bk-name").value = design.name || "";
-  $("#bk-name").addEventListener("input", () => { dirty = true; $("#bk-status").textContent = "Unsaved changes"; });
+  $("#bk-name").addEventListener("input", () => {
+    dirty = true; $("#bk-status").textContent = "Unsaved changes";
+    $("#bk-title").textContent = $("#bk-name").value || "New block diagram";
+  });
+  $("#bk-help-btn").onclick = () => {
+    const t = $("#bk-help-text");
+    t.hidden = !t.hidden;
+    $("#bk-help-btn").setAttribute("aria-expanded", String(!t.hidden));
+  };
   $("#bk-save").addEventListener("click", async () => {
     const res = await fetch(configId ? `/api/blocks/designs/${configId}` : "/api/blocks/designs",
       {method: configId ? "PUT" : "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: $("#bk-name").value, data: S})});
@@ -874,7 +884,7 @@
   function scopes(drawable) {
     const has = b => !drawable || b.part;
     const n = S.groups.reduce((k, g) => k + g.blocks.filter(has).length, 0);
-    const out = [{kind: "all", label: drawable ? `Every block with a chosen part (${n})` : `Whole diagram (${n} blocks)`}];
+    const out = [{kind: "all", label: drawable ? `Blocks with a part (${n})` : `Whole diagram (${n})`}];
     for (const g of S.groups) { const k = g.blocks.filter(has).length; if (k) out.push({kind: "group", group: g.id, label: `Frame: ${g.label} (${k} block${k === 1 ? "" : "s"})`}); }
     for (const g of S.groups) for (const b of g.blocks.filter(has)) out.push({kind: "block", group: g.id, block: b.id, label: `Block: ${b.label || fnOf(b).label}${b.part ? " · " + b.part : ""} (in ${g.label})`});
     return out.map(x => ({...x, drawable}));

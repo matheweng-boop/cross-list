@@ -466,7 +466,7 @@
     panel.innerHTML = `<h2>${esc(cur.title)}</h2><p class="vz-lead">${esc(cur.lead)}</p>
       <div class="vz-body"><div class="vz-ctl">${cur.controls.map(c => c.type === "select"
         ? `<label class="vz-c"><span>${esc(c.label)}</span><select data-k="${c.k}">${c.options.map(([k, l]) => `<option value="${k}"${k === c.value ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>`
-        : `<label class="vz-c"><span>${esc(c.label)} <output data-o="${c.k}">${show(c, c.value)}</output></span><input type="range" data-k="${c.k}" min="${c.log ? 0 : c.min}" max="${c.log ? 1000 : c.max}" step="${c.log ? 1 : c.step || (c.max - c.min) / 200}" value="${toPos(c, c.value)}"></label>`).join("")}
+        : `<label class="vz-c"><span>${esc(c.label)} <output data-o="${c.k}">${show(c, c.value)}</output></span><input type="range" data-k="${c.k}" min="${c.log ? 0 : c.min}" max="${c.log ? 1000 : c.max}" step="${c.log ? 1 : c.step || (c.max - c.min) / 200}" value="${toPos(c, c.value)}" aria-valuetext="${esc(show(c, c.value))}"></label>`).join("")}
         <div class="vz-btns">${cur.animate ? '<button type="button" class="small-btn vz-play">▶ Play</button>' : ""}<button type="button" class="outline secondary small-btn vz-reset">Reset</button></div></div>
         <div class="vz-out"><div class="vz-kpis"></div></div></div>
       <div class="vz-chartwrap"><svg class="vz-chart" role="img" aria-label="${esc(cur.title)}"></svg></div>
@@ -477,6 +477,7 @@
       vals[c.k] = c.type === "select" ? el.value : fromPos(c, el.value);
       const o = panel.querySelector(`[data-o="${c.k}"]`);
       if (o) o.textContent = show(c, vals[c.k]);
+      if (c.type !== "select") el.setAttribute("aria-valuetext", show(c, vals[c.k]));  // read as "1.5 dB", not "1.5"
       render();
     }));
     panel.querySelector(".vz-reset").addEventListener("click", () => open(cur.id));

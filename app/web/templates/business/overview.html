@@ -11,7 +11,7 @@
 
 <div class="bo-tiles">
   <div class="bo-tile"><b>{{ pct(ov.metrics.coverage) }}</b><span>{{ term('coverage', 'Candidate coverage') }}</span>
-    <small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope sockets have a {{ co_label }} candidate · requirements not validated</small></div>
+    <small>{{ ov.metrics.supported }} of {{ ov.metrics.in_scope }} in-scope blocks have a {{ co_label }} candidate · requirements not validated</small></div>
   <div class="bo-tile"><b>{{ pct(ov.avg_coverage) }}</b><span>Average per architecture</span>
     <small>mean of {{ ov.apps }} {{ term('application', 'reference architectures') }} ({{ n_library }} library{% if n_background %} + {{ n_background }} {{ term('background', 'background') }}{% endif %})</small></div>
   <div class="bo-tile"><b>{{ ov.gap_functions }}</b><span>{{ term('function', 'Functions') }} with gaps</span>
@@ -25,10 +25,10 @@
 {{ about('overview') }}
 <details class="bo-help"><summary class="small"><b>Analysis pipeline and status</b></summary>
 <ol class="bo-pipeline">
-  <li class="done"><b>1 · Normalize architectures</b><span>{{ ov.apps }} reference architectures, {{ ov.positions }} sockets on {{ ov.functions }} normalized functions. {{ ov.metrics.unknown }} sockets on unknown functions.</span><a href="/blocks">Application library</a></li>
-  <li class="done"><b>2 · Match existing products</b><span>Each socket checked for {{ co_label }} parts in BizDev (catalogue + full-parameter families). Electrical requirements per application are not applied: “Portfolio” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Portfolio coverage</a></li>
-  <li class="done"><b>3 · Identify gaps</b><span>{{ ov.metrics.gap }} gap and {{ ov.metrics.competitor }} competitor-only sockets; {{ ov.metrics.na }} sockets are chips we do not make, left out of coverage.</span><a href="/business/explorer?co={{ co }}">Opportunity explorer</a></li>
-  <li class="todo"><b>4 · Cluster compatible opportunities</b><span>Needs electrical requirements per socket (voltage, current, qualification…). Today gaps are grouped by function only.</span></li>
+  <li class="done"><b>1 · Normalize architectures</b><span>{{ ov.apps }} reference architectures, {{ ov.positions }} blocks on {{ ov.functions }} normalized functions. {{ ov.metrics.unknown }} blocks on unknown functions.</span><a href="/blocks">Application library</a></li>
+  <li class="done"><b>2 · Match existing products</b><span>Each block checked for {{ co_label }} parts in BizDev (catalogue + full-parameter families). Electrical requirements per application are not applied: “Portfolio” means a candidate exists.</span><a href="/business/applications?co={{ co }}">Portfolio coverage</a></li>
+  <li class="done"><b>3 · Identify gaps</b><span>{{ ov.metrics.gap }} gap and {{ ov.metrics.competitor }} competitor-only blocks; {{ ov.metrics.na }} blocks are chips we do not make, left out of coverage.</span><a href="/business/explorer?co={{ co }}">Opportunity explorer</a></li>
+  <li class="todo"><b>4 · Cluster compatible opportunities</b><span>Needs electrical requirements per block (voltage, current, qualification…). Today gaps are grouped by function only.</span></li>
   <li class="part"><b>5 · Rank product concepts</b><span>Reach, door openers, path to product, competition and trend; TAM joins as ASPs and volumes are entered.</span><a href="/business/data?co={{ co }}">Commercial inputs</a></li>
 </ol></details>
 {% endblock %}

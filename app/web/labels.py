@@ -3,7 +3,9 @@ app/services/lifecycle.py, vendor names in app/services/vendors.py). Source data
 change how it is shown."""
 
 from datetime import date, datetime
+from functools import lru_cache
 
+from app.config import PROJECT_ROOT, get_settings
 from app.services import text as text_service
 
 # grade of a part: automotive (AEC-Q100 stated), not automotive (industrial / commercial stated), or not stated
@@ -44,6 +46,14 @@ def fmt_date(value, kind: str = "day") -> str:
     return value.strftime(_DATE_FORMATS[kind])
 
 
+@lru_cache
+def data_as_of() -> date | None:
+    """When the cross lists were last loaded (the load marker), else the newest data/real file; fixed per process."""
+    marker = get_settings().data_dir / "real_data.sha256"
+    files = [marker] if marker.exists() else list((PROJECT_ROOT / "data" / "real").glob("*.yaml"))
+    return datetime.fromtimestamp(max(f.stat().st_mtime for f in files)).date() if files else None
+
+
 def register(env) -> None:
     from app.services import lifecycle, vendors
     from app.services.seed import UNOFFICIAL_TITLE, unofficial_keys
@@ -56,5 +66,6 @@ def register(env) -> None:
     env.filters["desc"] = text_service.clean_description
     env.filters["date"] = fmt_date
     env.globals["grade_label"] = GRADE_LABELS
+    env.globals["data_as_of"] = data_as_of
     # lifecycle text as a source states it ("Standard", "Contact sales (ND)") in the five classes' words
     env.globals["life_text"] = lambda status: lifecycle.CLASS_LABELS[lifecycle.status_class(status)]

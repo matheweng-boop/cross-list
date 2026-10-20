@@ -281,22 +281,28 @@ def result_rows(crosses: dict) -> list:
     return rows
 
 
-def rank_reason(r, v) -> str:
-    """One line on why a result ranks where it does."""
-    bits = [v.label]
-    bits.append("pin-to-pin" if v.p2p else "not pin-to-pin")
+def electrical_verdict(v) -> str:
+    """How the priority 1 parameters compare, package and pinout left out (they have their own line)."""
     if v.worse:
         n, labels = len(v.worse), ", ".join(d.label for d in v.worse)
-        bits.append(f"{n} priority 1 deviation{'s' if n > 1 else ''} ({labels})")
-    elif v.better:
-        bits.append("priority 1 equal or better")
-    else:
-        bits.append("priority 1 equal")
+        return f"{n} priority 1 deviation{'s' if n > 1 else ''} ({labels})"
+    return "priority 1 equal or better" if v.better else "priority 1 equal"
+
+
+def fit_verdict(r, v) -> str:
+    """Package and pinout in words: "same package, pin-to-pin" or "larger package, different pinout"."""
+    pkg = "same package" if r.fit.same_package else f"{r.fit.package_relation} package"
+    return f"{pkg}, {'pin-to-pin' if v.p2p else 'different pinout'}"
+
+
+def rank_reason(r, v) -> str:
+    """One line on why a result ranks where it does."""
+    bits = [f"Electrical: {electrical_verdict(v)}", fit_verdict(r, v)]
     if v.exceptions:
         bits.append("exception: " + ", ".join(f"{d.label} {d.cand_display} vs {d.ref_display}" for d in v.exceptions))
     if r.lifecycle_risk:
         bits.append("lifecycle risk")
-    return "; ".join(bits)
+    return " · ".join(bits)
 
 
 def _deviations(dev: int) -> int:
@@ -382,6 +388,8 @@ def _part_context(
         "pkg_options": lambda p: alternates.package_options(session, p),
         "out_variants": lambda p: alternates.output_variants(session, p),
         "rank_reason": rank_reason,
+        "electrical_verdict": electrical_verdict,
+        "fit_verdict": fit_verdict,
         "cross_notes": cross_notes.notes_for,
         "position_note": cross_notes.position_note,
         "grade": grade,

@@ -2,33 +2,36 @@
 {% block title %}{{ page_title(request.url.path, design.name or 'Block diagram') }}{% endblock %}
 {% block content %}
 <div id="bk" class="bk">
+  <h1 id="bk-title" class="bk-title">{{ design.name or 'New block diagram' }}</h1>
+  <p id="bk-headline" class="bk-headline" role="status"></p>
   <div class="bc-bar">
     <input id="bk-name" type="text" placeholder="Block diagram name" aria-label="Block diagram name">
     <button id="bk-save" type="button" class="small-btn">Save</button>
     <span id="bk-status" class="small muted" role="status"></span>
   </div>
   <div class="bc-tools">
-    <select id="bk-add" class="small-sel" aria-label="Add a function">
-      <option value="">+ Block (into the selected frame)…</option>
+    <select id="bk-add" class="small-sel" aria-label="Add a block to the selected frame" title="Adds the block to the selected frame">
+      <option value="">+ Block</option>
       {% for ckey, clabel in catalogue.categories.items() %}<optgroup label="{{ clabel }}">
-        {% for key, f in catalogue.functions.items() if f.category == ckey %}{% set n = counts[key] %}<option value="{{ key }}">{{ f.label }}{% if n is none %} (customer){% elif n %} · {{ n }} Skyworks{% else %} · opportunity{% endif %}</option>{% endfor %}
+        {% for key, f in catalogue.functions.items() if f.category == ckey %}{% set n = counts[key] %}<option value="{{ key }}">{{ f.label }}{% if n is none %} (customer){% elif n %} · {{ n }} Skyworks{% else %} · gap{% endif %}</option>{% endfor %}
       </optgroup>{% endfor %}
     </select>
     <button id="bk-add-group" type="button" class="outline small-btn" title="A new frame (functional block) for blocks">+ Frame</button>
-    <button id="bk-req" type="button" class="secondary small-btn">Requirements</button>
-    <button id="bk-feedback" type="button" class="outline secondary small-btn">Feedback</button>
-    <button id="bk-schem-open" type="button" class="secondary small-btn" aria-controls="bk-schem">Convert to schematic</button>
+    <button id="bk-req" type="button" class="outline small-btn">Requirements</button>
+    <button id="bk-feedback" type="button" class="outline secondary small-btn" title="Comment on the diagram or the selected block; it goes to Requests &amp; reviews">Comment</button>
+    <button id="bk-schem-open" type="button" class="outline small-btn" aria-controls="bk-schem">Convert to schematic</button>
     <button id="bk-arrange" type="button" class="outline small-btn" title="Order the frames by signal flow, top to bottom">Arrange</button>
     <button id="bk-undo" type="button" class="outline secondary small-btn" disabled title="Undo the last move or arrange">Undo</button>
-    <span class="bk-legend" role="group" aria-label="Highlight in the diagram"><button type="button" class="lg lg-part" data-st="part">part chosen</button><button type="button" class="lg lg-have" data-st="have">Skyworks / Qorvo parts</button><button type="button" class="lg lg-opp" data-st="opp">opportunity</button><button type="button" class="lg lg-ext" data-st="ext">customer part</button></span>
+    <span class="bk-legend" role="group" aria-label="Highlight in the diagram"><button type="button" class="lg lg-part" data-st="part">part chosen</button><button type="button" class="lg lg-have" data-st="have">Skyworks / Qorvo parts</button><button type="button" class="lg lg-opp" data-st="opp">gap</button><button type="button" class="lg lg-ext" data-st="ext">customer part</button></span>
     <span class="bc-tools-right"><span aria-hidden="true">🔍</span><button id="bk-zoom-all" type="button" class="outline small-btn">All</button><button id="bk-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bk-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button>
-      <button id="bk-svg-dl" type="button" class="outline small-btn">SVG</button></span>
+      <button id="bk-svg-dl" type="button" class="outline small-btn">SVG</button>
+      <button id="bk-help-btn" type="button" class="outline secondary small-btn" aria-expanded="false" aria-controls="bk-help-text" title="How to use the editor">?</button></span>
   </div>
   <div class="bk-work">
     <div class="bc-canvas"><svg id="bk-svg" role="application" aria-label="Block diagram"></svg></div>
     <aside id="bk-panel" class="bk-panel" aria-live="polite"><button type="button" id="bk-close" class="outline secondary small-btn bk-close" aria-label="Close panel">×</button><div id="bk-panel-body"></div></aside>
   </div>
-  <p class="small muted">Drag a frame to move it, or drag a block into another frame. <b>+</b> in a frame's corner adds a block to it. <b>Arrange</b> orders the frames by signal flow. Click a block to focus the requirements and parts below on it; click it again (or the background) to deselect. The legend buttons highlight or grey out each kind of block. Click a group title to rename, move or connect it.</p>
+  <p id="bk-help-text" class="small muted bk-help-text" hidden>Drag a frame to move it, or drag a block into another frame. <b>+</b> in a frame's corner adds a block to it. <b>Arrange</b> orders the frames by signal flow. Click a block to focus the requirements and parts below on it; click it again (or the background) to deselect. The legend buttons highlight or grey out each kind of block. Click a frame title to rename, move or connect it. <b>Comment</b> records a remark on the diagram or the selected block for review; the Feedback button at the bottom right is for the site itself.</p>
   <div class="bk-bottom">
     <section id="bk-reqs" class="bk-reqs" aria-label="Requirements"></section>
     <section id="bk-below" class="bk-below" aria-live="polite"></section>

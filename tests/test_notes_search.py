@@ -8,7 +8,7 @@ def test_search_finds_app_note_passages():
 
 
 def test_search_includes_engineering_notes():
-    assert any(h.source == "BizDev note" and h.url == "/engineering/cmti_kv_us" for h in notes_search.search("CMTI"))
+    assert any(h.source == "Spec guide" and h.url == "/engineering/cmti_kv_us" for h in notes_search.search("CMTI"))
 
 
 def test_question_words_are_ignored_and_any_word_fallback():

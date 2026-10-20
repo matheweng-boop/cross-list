@@ -6,13 +6,12 @@
 
 <div class="bo-tiles">
   <div class="bo-tile"><b>{{ '{:,}'.format(scan.passed) }}</b><span>checks passed automatically</span><small>of {{ '{:,}'.format(scan.checked) }} checks across {{ scan.areas|length }} areas</small></div>
-  <div class="bo-tile"><b>{{ scan.totals.get('high', 0) }}</b><span>high priority for a person</span><small>change rankings, gap status or crosses if wrong</small></div>
-  <div class="bo-tile"><b>{{ scan.totals.get('medium', 0) }}</b><span>medium priority</span><small>change a label, a filter or an estimate</small></div>
-  <div class="bo-tile"><b>{{ scan.totals.get('low', 0) }}</b><span>low priority</span><small>completeness and spot checks</small></div>
+  {% for k, label, sub in [('high', 'high priority for a person', 'change rankings, gap status or crosses if wrong'), ('medium', 'medium priority', 'change a label, a filter or an estimate'), ('low', 'low priority', 'completeness and spot checks')] %}
+  <a class="bo-tile tile-link{{ ' on' if prio == k }}" href="/business/validation?prio={{ '' if prio == k else k }}#needs" title="{{ 'Show all priorities' if prio == k else 'Show only ' ~ k ~ ' priority' }}"><b>{{ scan.totals.get(k, 0) }}</b><span>{{ label }}</span><small>{{ sub }}</small></a>{% endfor %}
 </div>
 
-<h2>Needs a person</h2>
-<div class="filter-cols small"><div class="chip-row small"><span class="chip-lbl">Priority</span>
+<h2 id="needs">Needs a person</h2>
+<div class="small"><div class="chip-row small"><span class="chip-lbl">Priority</span>
   {% for k in ['', 'high', 'medium', 'low'] %}<a class="fchip{{ ' on' if prio == k }}" href="/business/validation?prio={{ k }}">{{ k|capitalize or 'All' }}</a>{% endfor %}</div></div>
 {% set shown = scan['items']|selectattr('priority', 'equalto', prio)|list if prio else scan['items'] %}
 {% if shown %}
@@ -32,5 +31,5 @@
     <td>{{ c.name }}</td><td>{{ '{:,}'.format(c.passed) }} / {{ '{:,}'.format(c.total) }}</td><td class="muted">{{ c.rule }}</td></tr>{% endfor %}</tbody></table></div>
 </details>
 {% endfor %}
-<p class="small muted">The same scan as text: <code>uv run python tools/data_scan.py</code> writes <code>docs/data_scan.md</code> (not committed).</p>
+<details class="small muted maint"><summary>For maintainers</summary><p>The same scan as text: <code>uv run python tools/data_scan.py</code> writes <code>docs/data_scan.md</code> (not committed).</p></details>
 {% endblock %}

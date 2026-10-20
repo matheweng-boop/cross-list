@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch, about %}
-{% macro meta_cells(kind, key) %}{% set m = meta.get((kind, key)) %}
-  <td><input name="meta:{{ kind }}:source:{{ key }}" value="{{ m.source or '' if m }}" placeholder="source" aria-label="Source for {{ key }}"></td>
-  <td><input name="meta:{{ kind }}:year:{{ key }}" value="{{ m.year or '' if m }}" inputmode="numeric" placeholder="year" class="w-year" aria-label="Reference year"></td>
-  <td><input name="meta:{{ kind }}:geography:{{ key }}" value="{{ m.geography or '' if m }}" placeholder="region" class="w-geo" aria-label="Geography"></td>
-  {% if kind == 'asp' %}<td><input name="meta:{{ kind }}:currency:{{ key }}" value="{{ m.currency or '' if m }}" placeholder="USD" class="w-cur" aria-label="Currency"></td>{% endif %}
-  <td><select name="meta:{{ kind }}:scenario:{{ key }}" aria-label="Scenario">{% for o in ['', 'base', 'low', 'high'] %}<option value="{{ o }}"{{ ' selected' if m and m.scenario == o }}>{{ o or '–' }}</option>{% endfor %}</select></td>
-  <td><select name="meta:{{ kind }}:confidence:{{ key }}" aria-label="Confidence">{% for o in ['', 'high', 'medium', 'low'] %}<option value="{{ o }}"{{ ' selected' if m and m.confidence == o }}>{{ o or '–' }}</option>{% endfor %}</select></td>
+{% macro meta_cells(kind, key, name) %}{% set m = meta.get((kind, key)) %}
+  <td><input name="meta:{{ kind }}:source:{{ key }}" value="{{ m.source or '' if m }}" placeholder="source" aria-label="Source for {{ name }}"></td>
+  <td><input name="meta:{{ kind }}:year:{{ key }}" value="{{ m.year or '' if m }}" inputmode="numeric" placeholder="year" class="w-year" aria-label="Reference year for {{ name }}"></td>
+  <td><input name="meta:{{ kind }}:geography:{{ key }}" value="{{ m.geography or '' if m }}" placeholder="region" class="w-geo" aria-label="Region for {{ name }}"></td>
+  {% if kind == 'asp' %}<td><input name="meta:{{ kind }}:currency:{{ key }}" value="{{ m.currency or '' if m }}" placeholder="USD" class="w-cur" aria-label="Currency for {{ name }}"></td>{% endif %}
+  <td><select name="meta:{{ kind }}:scenario:{{ key }}" aria-label="Scenario for {{ name }}">{% for o in ['', 'base', 'low', 'high'] %}<option value="{{ o }}"{{ ' selected' if m and m.scenario == o }}>{{ o or '–' }}</option>{% endfor %}</select></td>
+  <td><select name="meta:{{ kind }}:confidence:{{ key }}" aria-label="Confidence for {{ name }}">{% for o in ['', 'high', 'medium', 'low'] %}<option value="{{ o }}"{{ ' selected' if m and m.confidence == o }}>{{ o or '–' }}</option>{% endfor %}</select></td>
 {% endmacro %}
 {% block content %}
 <h1>Commercial inputs</h1>
 <p class="subtitle muted">ASPs per function and yearly volumes per architecture: the only inputs behind revenue figures. Leave a value empty when it is
-  unknown – it stays unknown (never zero) and every revenue figure says how much of it is priced. TAM per function = Σ volume × sockets × ASP.</p>
+  unknown – it stays unknown (never zero) and every revenue figure says how much of it is priced. TAM per function = Σ volume × blocks × ASP.</p>
 {{ about('data') }}
 {% if request.query_params.get('saved') %}<p class="uc-ok" role="status">Saved.</p>{% endif %}
 <form method="post" action="/business/data" id="ci-form">
@@ -27,7 +27,7 @@
       <tbody>{% for f in asp_fns %}<tr id="asp-{{ f }}" data-name="{{ (fns[f].label if f in fns else f)|lower }}" data-known="{{ 'y' if f in asp else 'n' }}"{% if focus == 'asp:' ~ f %} class="ci-focus"{% endif %}>
         <th scope="row">{{ fns[f].label if f in fns else f }}</th><td>{{ uses[f] }}</td>
         <td><input name="asp:{{ f }}" type="text" inputmode="decimal" value="{{ asp.get(f, '') }}" placeholder="unknown" class="w-val" aria-label="ASP for {{ fns[f].label if f in fns else f }}"></td>
-        {{ meta_cells('asp', f) }}</tr>{% endfor %}</tbody>
+        {{ meta_cells('asp', f, fns[f].label if f in fns else f) }}</tr>{% endfor %}</tbody>
     </table></div>
   </section>
   <section class="ci-sec">
@@ -38,7 +38,7 @@
       <tbody>{% for a in apps %}<tr data-name="{{ a.name|lower }}" data-known="{{ 'y' if a.name in vol else 'n' }}"{% if focus == 'vol:' ~ a.name %} class="ci-focus"{% endif %}>
         <th scope="row">{{ a.name }}{% if a.background %} <small class="muted">(background)</small>{% endif %}</th>
         <td><input name="vol:{{ a.name }}" type="text" inputmode="numeric" value="{{ '%d'|format(vol[a.name]) if a.name in vol else '' }}" placeholder="unknown" class="w-val" aria-label="Volume for {{ a.name }}"></td>
-        {{ meta_cells('volume', a.name) }}</tr>{% endfor %}</tbody>
+        {{ meta_cells('volume', a.name, a.name) }}</tr>{% endfor %}</tbody>
     </table></div>
   </section>
   <div class="compare-tray ci-save"><span class="small muted">Empty value = unknown. Changes apply to every analysis.</span><button type="submit" class="small-btn">Save inputs</button></div>

@@ -10,8 +10,8 @@
 <h2 id="idea">The idea in five steps</h2>
 <ol class="bo-steps">
   <li><b>Collect systems.</b> Public block diagrams of end systems (applications) from TI, NXP, Qualcomm, MediaTek, Skyworks and others.</li>
-  <li><b>Normalize.</b> Every block becomes a function (a chip type) with a quantity: a socket on the board.</li>
-  <li><b>Match.</b> For each socket: do Skyworks / Qorvo have a part (Portfolio), nobody (Gap), only competitors (Competitor only), or is it a chip we do not make (Not our product type)?</li>
+  <li><b>Normalize.</b> Every block becomes a function (a chip type) with a quantity: a block on the board.</li>
+  <li><b>Match.</b> For each block: do Skyworks / Qorvo have a part (Portfolio), nobody (Gap), only competitors (Competitor only), or is it a chip we do not make (Customer part)?</li>
   <li><b>Count.</b> Coverage per application; how often each missing function appears; whether those applications already use our parts (door openers); how crowded the market is; how close it is to our technology.</li>
   <li><b>Decide.</b> Rankings point at candidates; a Case analysis collects the facts and an AI market analysis for one candidate.</li>
 </ol>
@@ -21,41 +21,44 @@
 
 <h2 id="formulas">Formulas</h2>
 <div class="table-wrap"><table class="bo-formulas small"><tbody>
-  <tr><th>Coverage</th><td>sockets with our part ÷ (Portfolio + Gap + Competitor-only sockets)</td><td class="muted">"Not our product type" excluded</td></tr>
+  <tr><th>Coverage</th><td>blocks with our part ÷ (Portfolio + Gap + Competitor-only blocks)</td><td class="muted">"Customer part" excluded</td></tr>
   <tr><th>Needed in</th><td>number of applications whose diagram contains the function</td><td class="muted">each application counts once</td></tr>
   <tr><th>Door opener share</th><td>applications needing the function that already contain one of our parts ÷ applications needing it</td><td class="muted"></td></tr>
-  <tr><th>Sockets</th><td>Σ quantity of the function over the applications</td><td class="muted">2 LDOs in one diagram = 2</td></tr>
+  <tr><th>Blocks</th><td>Σ quantity of the function over the applications</td><td class="muted">2 LDOs in one diagram = 2</td></tr>
   <tr><th>Attach "how often"</th><td>applications containing both our product and the function ÷ applications containing our product</td><td class="muted">co-occurrence, not sales</td></tr>
   <tr><th>Technology fit score</th><td>(architectures using it ÷ all architectures in scope) × path weight (or technology weight where no path is assessed) × competition weight × trend weight</td>
     <td class="muted">technology {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}; competition {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
-  <tr><th>Content per system</th><td>Σ quantity × ASP over priced sockets; our share = priced sockets with our part ÷ all priced sockets</td><td class="muted">only where ASPs are entered</td></tr>
-  <tr><th>TAM per year</th><td>Σ over applications of annual volume × sockets × ASP</td><td class="muted">only where both are entered</td></tr>
+  <tr><th>Content per system</th><td>Σ quantity × ASP over priced blocks; our share = priced blocks with our part ÷ all priced blocks</td><td class="muted">only where ASPs are entered</td></tr>
+  <tr><th>TAM per year</th><td>Σ over applications of annual volume × blocks × ASP</td><td class="muted">only where both are entered</td></tr>
 </tbody></table></div>
 
 <h2 id="influence">What influences a rating</h2>
 <div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Input</th><th>Where it comes from</th><th>Effect</th></tr></thead><tbody>
   <tr><th>Applications using it</th><td>block diagrams (library + background)</td><td>in the score: share of applications</td></tr>
-  <tr><th>Path to product</th><td>evidence/path.yaml</td><td>in the score: Exists 1.0, Spec variant 1.0, New design 0.6, New technology 0.3, Not ours 0.1 – <b>replaces</b> the technology rating where assessed</td></tr>
-  <tr><th>Technology rating</th><td>technology.yaml</td><td>in the score only where no path is assessed: {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
-  <tr><th>Competition</th><td>competition.yaml</td><td>in the score: {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; not assessed 0.85</td></tr>
-  <tr><th>Market trend</th><td>evidence/trends.yaml</td><td>in the score: growing 1.15, stable 1.0, declining 0.85; no data 1.0</td></tr>
+  <tr><th>Path to product</th><td>path-to-product research</td><td>in the score: Exists 1.0, Spec variant 1.0, New design 0.6, New technology 0.3, Not ours 0.1 – <b>replaces</b> the technology rating where assessed</td></tr>
+  <tr><th>Technology rating</th><td>technology ratings</td><td>in the score only where no path is assessed: {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
+  <tr><th>Competition</th><td>competition assessment</td><td>in the score: {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; not assessed 0.85</td></tr>
+  <tr><th>Market trend</th><td>market-trend research</td><td>in the score: growing 1.15, stable 1.0, declining 0.85; no data 1.0</td></tr>
   <tr><th>Confirmed part mapping</th><td>reviewers on the evidence page</td><td>changes the status: the function becomes Portfolio and leaves the gap lists</td></tr>
-  <tr><th>Patents, foundry route, competitor technology</th><td>evidence/*.yaml</td><td><b>not in the score</b>: shown on the evidence page for judgement</td></tr>
+  <tr><th>Patents, foundry route, competitor technology</th><td>BizDev research</td><td><b>not in the score</b>: shown on the evidence page for judgement</td></tr>
   <tr><th>Reviews (✓ ✗ ?)</th><td>people using the site</td><td><b>not in the score</b>: flag items as verified or disputed and feed the data to-do</td></tr>
-  <tr><th>Door openers, customers, ASPs</th><td>diagrams, customers.yaml, TAM data</td><td>not in the Technology fit score (door openers rank the cross-sell view; ASPs feed TAM)</td></tr>
+  <tr><th>Door openers, customers, ASPs</th><td>diagrams, customer list, TAM data</td><td>not in the Technology fit score (door openers rank the cross-sell view; ASPs feed TAM)</td></tr>
 </tbody></table></div>
 
 <h2 id="sources">Data sources (live)</h2>
 <div class="table-wrap"><table class="striped small"><tbody>
   <tr><th>Applications</th><td><b>{{ src.library }}</b> in the library + <b>{{ src.background }}</b> background diagrams. By source: {% for v, n in src.vendors %}{{ v|vendor }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</td>
-    <td class="muted">data/blocks/templates.yaml, background_templates.yaml; research notes in data/blocks/research/</td></tr>
-  <tr><th>Functions</th><td>{{ src.functions }} normalized chip types</td><td class="muted">data/blocks/functions.yaml</td></tr>
+    <td class="muted">public reference designs and BizDev research</td></tr>
+  <tr><th>Functions</th><td>{{ src.functions }} normalized chip types</td><td class="muted">BizDev function list</td></tr>
   <tr><th>Our parts</th><td>{% for m, n in src.catalogue|dictsort %}{{ m }} {{ '{:,}'.format(n) }} catalogue parts{{ ', ' if not loop.last }}{% endfor %}, plus BizDev families with full parameters</td>
-    <td class="muted">public product pages (data/catalog/); automotive grade as stated there</td></tr>
-  <tr><th>Competition</th><td>{{ src.competition }} functions assessed</td><td class="muted">data/business/competition.yaml · public catalogue knowledge, indicative</td></tr>
-  <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">data/business/explorer?view=feasibility.yaml · public portfolio knowledge, indicative</td></tr>
+    <td class="muted">public product pages; automotive grade as stated there</td></tr>
+  <tr><th>Competition</th><td>{{ src.competition }} functions assessed</td><td class="muted">public catalogue knowledge, indicative</td></tr>
+  <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">public portfolio knowledge, indicative</td></tr>
   <tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered</td><td class="muted"><a href="/business/data">TAM data</a> · your inputs only</td></tr>
 </tbody></table></div>
+<details class="small muted maint"><summary>For maintainers</summary><p>Files behind these sources: applications <code>data/blocks/templates.yaml</code>, <code>background_templates.yaml</code> (research notes in <code>data/blocks/research/</code>);
+  functions <code>data/blocks/functions.yaml</code>; our parts <code>data/catalog/</code>; competition <code>data/business/competition.yaml</code>; technology ratings <code>data/business/technology.yaml</code>;
+  research <code>data/business/evidence/*.yaml</code> (path to product <code>path.yaml</code>, trends <code>trends.yaml</code>); customers <code>data/business/customers.yaml</code>.</p></details>
 
 <h2 id="pages">What each page answers</h2>
 <dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'explorer': 'Opportunity explorer', 'cases': 'Business cases', 'data': 'Commercial inputs'}.get(k, k|replace('_', ' ')|capitalize) }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
@@ -67,6 +70,6 @@
   <li><b>The sample shapes the result.</b> The numbers describe the diagrams collected, not the whole market; an area with many diagrams (e.g. RF) weighs more.</li>
   <li><b>Indicative ratings.</b> Competition and technology proximity are readings of public information for discussion, not a roadmap or a market study.</li>
   <li><b>Catalogue mapping.</b> A part we sell that is not mapped to the right function shows up as a gap; "Same technology" gaps are worth checking first.</li>
-  <li><b>No money without inputs.</b> Every socket weighs the same until ASPs and volumes are entered.</li>
+  <li><b>No money without inputs.</b> Every block weighs the same until ASPs and volumes are entered.</li>
 </ul>
 {% endblock %}

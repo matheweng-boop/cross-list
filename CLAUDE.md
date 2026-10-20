@@ -5,5 +5,5 @@
   if one is tracked; run the full test suite before every merge.
 - A second checkout (git worktree) gets its own environment with `uv sync`, never a symlink to another checkout's
   `.venv`: a committed link replaces the real folder on merge.
-- Research reports for Opportunities > Pre-lim ideas & reports follow the layout and priorities at the top of
+- Research reports for Opportunities > Research & ideas follow the layout and priorities at the top of
   `data/business/reports.yaml`: adjacent products and technologies first, then other opportunities, then market trend.

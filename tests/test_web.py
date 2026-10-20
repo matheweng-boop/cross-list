@@ -28,7 +28,7 @@ def test_part_page_shows_cross_types_and_top5(client):
         "Functional",
         "Package eq.",
         "Pin-to-pin",
-        "Critical deviations",
+        "Electrical (priority 1)",
         "Top 5 differences",
         "Download table (Excel)",
         "compare-tray",
@@ -221,7 +221,7 @@ def test_reference_part_page_unchanged(client):
 
 def test_suggestions_mark_competitor_parts(client):
     html = client.get("/suggest?q=7741").text
-    assert "find Skyworks part" in html
+    assert "find a Skyworks part" in html
 
 
 def test_finder_start_page(client):
@@ -310,7 +310,7 @@ def test_automotive_reference_banner(client):
 def test_navigation_sections_and_old_urls(client):
     """Sections in the top row, the section's pages in the second: every old URL lands in the right section and item."""
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
-                               ("/parts", "Products", "Search &amp; replacements"),
+                               ("/parts", "Products", "Browse products"),
                                ("/compare", "Products", "Compare"), ("/broadcast", "Products", "Radio &amp; audio"),
                                ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
@@ -375,3 +375,22 @@ def test_search_covers_the_manufacturer_catalogues(client):
     assert "Skyworks &amp; Qorvo catalogue" in html and "<b>SKY5A3200</b>" in html and "Front-end Modules" in html
     assert "SKY5A3200" in client.get("/suggest?q=sky5a32").text and "sg-cat" in client.get("/suggest?q=sky5a32").text
     assert "in the Skyworks and Qorvo catalogues" in client.get("/find?q=zzzzqqq").text
+
+
+def test_cross_row_links_part_and_has_details_toggle(client):
+    (ref,) = ids(client, "SR8641")
+    html = client.get(f"/parts/{ref}").text
+    assert 'class="cand-link"' in html and 'class="detail-toggle"' in html
+    assert "Electrical: " in html  # electrical verdict kept apart from package and pinout
+
+
+def test_footer_and_browse_in_menu(client):
+    html = client.get("/parts").text
+    assert 'class="site-foot"' in html and "Cross rules" in html
+    assert 'href="/parts" title="Every part by function' in html
+    assert 'aria-current="page" class="on">Browse products' in html
+
+
+def test_suggestions_are_a_combobox(client):
+    assert 'role="combobox"' in client.get("/").text
+    assert 'id="sg-p' in client.get("/suggest?q=7741").text

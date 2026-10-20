@@ -19,11 +19,19 @@
 #   with every figure and link in <slug>.background.html. Confidence: high / med / low; "est" marks our estimates.
 #   Preliminary cases are structured data: data/business/cases/<slug>.yaml (template: _template.yaml; method page
 #   /business/reports/method), and the body template only includes business/_prelim.html.
+#
+# Grouping fields (Research & ideas groups by these):
+#   app_type         application type, e.g. Automotive | Car radio | RF filters (the page groups by it; default Other)
+#   feasibility      product ideas only: 1 very close to today's portfolio (firmware, packaging, existing dies) |
+#                    2 in between (a new chip from technology we already have) | 3 furthest away (new technology or a
+#                    market nobody plays in yet: out-of-the-box thinking, still worth a look)
+#   feasibility_why  one line: why this score
 reports:
   - slug: filters-1-11ghz
     title: "Standalone filter opportunities, 1–11 GHz"
     kind: report
     area: RF filters
+    app_type: RF filters
     date: 2026-10-20
     status: draft
     question: "What could Skyworks suggest for standalone filters, especially wide bandwidth between 1 and 11 GHz, and in which applications?"
@@ -37,6 +45,9 @@ reports:
     title: "Car radio: a radio node for the antenna (2–3 years, reuse only)"
     kind: idea
     area: Broadcast radio
+    app_type: Car radio
+    feasibility: 2
+    feasibility_why: "The radio node is a new chip built from our tuner and decoder circuits; step 1 packages existing dies"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks develop next for car radio, given NXP and ST, software radio, remote tuner modules and HD Radio, with a 2–3-year turnaround and reuse of existing technology, and at what price?"
@@ -52,6 +63,9 @@ reports:
     title: "Automotive UWB: an 802.15.4ab anchor chip for digital key (2–3 years, reuse first)"
     kind: idea
     area: Automotive UWB
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "New 802.15.4ab chip from the existing Qorvo UWB radio and radar; firmware steps come first"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks (with legacy Qorvo UWB) develop next for car access in 2–3 years, reusing the DW3000 / QPF5100Q technology, now that ST and Calterah sample 802.15.4ab chips, NXP sells a complete access set and CCC Digital Key 4.0 is in testing, and at what price?"
@@ -67,6 +81,9 @@ reports:
     title: "Automotive UWB: child presence and kick sensing from the key anchors (1–3 years, reuse)"
     kind: idea
     area: Automotive UWB
+    app_type: Automotive
+    feasibility: 1
+    feasibility_why: "Firmware and a reference design on today's QPF5100Q"
     date: 2026-10-20
     status: draft
     question: "Should Skyworks (with legacy Qorvo UWB) sell UWB radar for Euro NCAP 2026 child-presence detection and kick sensing, reusing digital-key anchors, against 60 GHz radar (TI, Infineon, Calterah) and capacitive or ultrasonic sensors, within 1–3 years and reusing today's parts, and at what price?"
@@ -82,6 +99,9 @@ reports:
     title: "Automotive clock tree: a crystal-free clock for central compute and zones (2–3 years, reuse only)"
     kind: idea
     area: Automotive RF
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "Crystal-free clock is a new chip from our BAW resonator and Si5332 core; bridge parts are packaging work"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks offer next for clocking central computers, zonal controllers and satellite radar (PCIe, automotive Ethernet, SerDes references), given TI, SiTime (buying Renesas timing), Microchip and Diodes, with a 2–3-year turnaround and reuse of existing timing technology, and at what price?"
@@ -99,6 +119,9 @@ reports:
     title: "Automotive GNSS: an all-band front end for the roof antenna (2–3 years, reuse only)"
     kind: idea
     area: Automotive RF
+    app_type: Automotive
+    feasibility: 1
+    feasibility_why: "Builds on the existing SKY5A2110 L1+L5 module; adding L2 is packaging work"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks (with Qorvo filters) offer next for multi-band GNSS in the shark fin and roof antenna for lane-level ADAS, given TI, Infineon and NXP LNAs, Murata/Taoglas modules and all-band receivers from u-blox, ST and Qualcomm, with a 2–3-year turnaround and reuse of existing technology, and at what price?"
@@ -115,6 +138,9 @@ reports:
     title: "C-V2X front end: two carriers in one module (2–3 years, reuse)"
     kind: idea
     area: Automotive connectivity
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "Dual-path module from existing dies, plus a new US guard BAW filter"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks (with Qorvo) build next for 5.9 GHz V2X, now that the US is C-V2X only from 14 Dec 2026 on two channels, Europe runs ITS-G5, LTE-V2X and NR-V2X side by side in 5855–5925 MHz and Qualcomm owns Autotalks, reusing SKY5A2105, QPF1003Q and our BAW filters, and at what price?"
@@ -130,6 +156,9 @@ reports:
     title: "Automotive Wi-Fi 7 front end with V2X coexistence built in"
     kind: idea
     area: Automotive connectivity
+    app_type: Automotive
+    feasibility: 1
+    feasibility_why: "Existing Wi-Fi 7 FEM dies and automotive BAW filters in an AEC-Q104 package"
     date: 2026-10-20
     status: draft
     question: "Should Skyworks (with Qorvo) build an AEC-Q104 Wi-Fi 7 front end for cars (5 + 6 GHz MLO) with 5.9 GHz V2X coexistence filtering inside, reusing today's Wi-Fi 7 FEMs and automotive BAW filters, against Qualcomm QCA6797AQ with QXM19xx and modules from u-blox, LG Innotek and Murata, and at what price?"
@@ -145,6 +174,9 @@ reports:
     title: "Satellite in the car: an NTN front end for the telematics unit (n255/n256)"
     kind: idea
     area: Automotive telematics
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "First version from the existing SKY68040-11 die; the 26 dBm version needs a new die"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks (now with Qorvo) offer so the car's telematics unit can reach satellites in the L/S-band NTN bands n255/n256 (narrowband from 2027, wideband from 2029), given Qualcomm's modem + RF front end, MediaTek's satellite-ready modem, Murata and module makers, and at what price?"
@@ -161,6 +193,9 @@ reports:
     title: "NG-eCall and RedCap: a one-transmitter front end for value TCUs"
     kind: idea
     area: Automotive telematics
+    app_type: Automotive
+    feasibility: 1
+    feasibility_why: "One-transmitter module from existing SKY5A2206 dies and duplexers"
     date: 2026-10-20
     status: draft
     question: "What should Skyworks (now with Qorvo) offer for the low-cost LTE Cat-1bis / 5G RedCap telematics unit that every new EU car needs for NG-eCall from 2026–2027, against Qualcomm's modem with its own RF front end, Murata, and MediaTek / Quectel modules, and at what price?"

@@ -16,12 +16,18 @@ FILE = PROJECT_ROOT / "data" / "business" / "reports.yaml"
 BODIES = PROJECT_ROOT / "app" / "web" / "templates" / "business" / "reports"
 KINDS = {"report": "Report", "idea": "Product idea"}
 STATUSES = {"draft": "Draft, not reviewed", "reviewed": "Reviewed", "archived": "Archived"}
+FEASIBILITY = {  # product ideas: how far from today's portfolio (0 = not scored, e.g. a report)
+    1: ("Close to the portfolio", "Firmware, packaging or existing dies"),
+    2: ("In between", "A new chip from technology we already have"),
+    3: ("Out of the box", "New technology or a market nobody plays in yet"),
+}
 
 
 @lru_cache
 def reports() -> tuple[dict, ...]:
     rows = (yamlio.load(FILE.read_text()) or {}).get("reports") or [] if FILE.exists() else []
-    rows = [r for r in rows if (BODIES / f"{r['slug']}.html").exists()]
+    rows = [{**r, "app_type": r.get("app_type") or "Other", "feasibility": int(r.get("feasibility") or 0)}
+            for r in rows if (BODIES / f"{r['slug']}.html").exists()]  # fmt: skip
     return tuple(sorted(rows, key=lambda r: str(r.get("date") or ""), reverse=True))
 
 

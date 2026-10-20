@@ -1,7 +1,8 @@
 {# A preliminary case (data/business/cases/<slug>.yaml) with feedback per item and real ASPs; included as a report body. #}
 {% set slug = r.slug %}
+{% import "business/_feasibility.html" as fz %}
 {% macro react(x, scale=false) %}{% set f = x.fb or {} %}
-<details class="pc-react" id="i-{{ x.id }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">react</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+<details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">react</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
   <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
     <input type="hidden" name="key" value="{{ x.id }}">
     <textarea name="comment" rows="2" maxlength="2000" placeholder="Why, or what should change (optional)" aria-label="Comment"></textarea>
@@ -12,6 +13,7 @@
 {% macro conf(c) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence">{{ c }}</span>{% endif %}{% endmacro %}
 
 <h1>{{ case.title }}</h1>
+{% if r.feasibility %}<p class="pc-feas">{{ fz.feas(r.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span></p>{% endif %}
 <p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a></p>
 
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
@@ -62,3 +64,8 @@
 <h2>8. Risks and open questions</h2>
 <ul>{% for x in case.risks %}<li>{{ x }}</li>{% endfor %}</ul>
 <p class="small muted">Feedback on any item is listed in <a href="/manage/reviews">Requests &amp; reviews</a>; the case is revised from it. Sources and every figure: background notes below.</p>
+<dialog id="pc-dialog" class="pc-dialog" aria-labelledby="pc-dialog-title"><article>
+  <h3 id="pc-dialog-title"></h3><div class="pc-dialog-body"></div>
+  <form method="dialog"><button class="small-btn outline secondary">Close</button></form>
+</article></dialog>
+<script src="/static/prelim.js" defer></script>

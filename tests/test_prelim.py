@@ -31,6 +31,7 @@ def test_case_file_is_consistent(slug):
 def test_case_page_feedback_and_real_asp(client):
     r = client.get(f"/business/reports/{SLUG}")
     assert r.status_code == 200 and "Advantages" in r.text and "Real ASP" in r.text
+    assert 'id="pc-dialog"' in r.text and "prelim.js" in r.text and 'class="fz fz-' in r.text
     assert client.get("/business/reports/method").status_code == 200
     data = {"key": "f-node", "verdict": "further", "comment": "Two dies"}
     r = client.post(f"/business/reports/{SLUG}/react", data=data, follow_redirects=False)

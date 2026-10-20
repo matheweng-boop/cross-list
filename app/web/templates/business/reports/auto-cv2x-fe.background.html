@@ -1,0 +1,66 @@
+{% raw %}<h1>C-V2X front end: two carriers in one module: background notes</h1>
+<p class="meta">Prepared 20 Oct 2026. Every figure behind the business case with its source and confidence (high = primary document read; med = trade press or advocacy body; low = search snippet or analyst press release). No public price exists for any V2X front end; price anchors are consumer Wi-Fi FEM list prices, far above automotive contract prices. All fetches followed robots.txt, one request at a time, and stopped at the first block. Earlier automotive connectivity research (5GAA papers, Skyworks brochure) was reused, not fetched again.</p>
+
+<h2>Regulation, spectrum and standards</h2>
+<ul class="small rp-src">
+<li>US C-V2X band 5895–5925 MHz in three 10 MHz channels; industry uses 20 MHz (5905–5925) first, then 10 MHz (5895–5905), which "would require a second C-V2X radio"; DSRC must stop by 14 Dec 2026; geofenced higher OBU power, certification process not yet defined; NR-V2X direct not applicable in North America · 5.9 GHz Second Report and Order – FAQ, 5GAA, Feb 2025 · high — <a href="https://5gaa.org/content/uploads/2025/02/faq-5.9-ghz.pdf" rel="noopener" target="_blank">5gaa.org/content/uploads/2025/02/faq-5.9-ghz.pdf</a></li>
+<li>UNII-4 Wi-Fi 5850–5895 MHz directly below the C-V2X channels · FCC First Report and Order (2020), from general knowledge, not re-read · med</li>
+<li>EU: 5855–5875 MHz non-safety, 5875–5925 MHz safety ITS (rail to 5935); 10–20 MHz for day-1 services, whole 70–75 MHz needed; 20 MHz channels need a rule change; ITS-G5 stays on 5895–5905 MHz for years; ITS-G5 to add 802.11bd · 5.9 GHz band configuration for road-ITS deployment in Europe, 5GAA position paper, Mar 2024 · high — <a href="https://5gaa.org/content/uploads/2024/03/5gaa-position-paper-european-road-its-deployment.v3.pdf" rel="noopener" target="_blank">5gaa.org/content/uploads/2024/03/5gaa-position-paper-european-road-its</a></li>
+<li>5G-V2X Direct market readiness 2026–2029; European OEMs explicitly back it; first OEM-to-OEM demo Oct 2024 · 5GAA Annual Report 2024, 2025 · med (roadmap figure) — <a href="https://5gaa.org/content/uploads/2025/05/5gaa-annual-report-web.pdf" rel="noopener" target="_blank">5gaa.org/content/uploads/2025/05/5gaa-annual-report-web.pdf</a></li>
+<li>Rel-18 sidelink evolution: sidelink carrier aggregation and sidelink in unlicensed n46/n96/n102 · An Overview of 5G Advanced Evolution in 3GPP Release 18, arXiv · med (snippet) — <a href="https://arxiv.org/pdf/2201.01358" rel="noopener" target="_blank">arxiv.org/pdf/2201.01358</a></li>
+<li>USDOT plan: short term (to 2028) at least 2 OEMs commit to 5.9 GHz by MY2028; medium term (2029–2031) 5 capable vehicle models, 4 suppliers; long term (2032–2036) at least 6 OEMs · Saving Lives with Connectivity: Accelerate V2X Deployment (summary), USDOT, Aug 2024 · low (search snippets; the PDF URL returned an HTML page) — <a href="https://its.dot.gov/research_areas/emerging_tech/pdf/Accelerate_V2X_Deployment_summary_final.pdf" rel="noopener" target="_blank">its.dot.gov/research_areas/emerging_tech/pdf/Accelerate_V2X_Deployment</a></li>
+<li>Wi-Fi 6E named as an additional interferer to C-V2X; I2V more robust than V2I under adjacent-channel interference · 5.9GHz Interference Resiliency for Connected Vehicle Equipment, USDOT/ROSAP · low (snippet; host blocked) — <a href="https://rosap.ntl.bts.gov/view/dot/72842" rel="noopener" target="_blank">rosap.ntl.bts.gov/view/dot/72842</a></li>
+<li>BAW filters preferred for C-V2X coexistence because they cover the ITS band; newer parts extend filtering into 6–7 GHz · Wireless coexistence challenges in C-V2X, Electronics360 · low (snippet; fetch returned 403) — <a href="https://electronics360.globalspec.com/article/17398/wireless-coexistence-challenges-in-c-v2x" rel="noopener" target="_blank">electronics360.globalspec.com/article/17398/wireless-coexistence-chall</a></li>
+</ul>
+
+<h2>Market</h2>
+<ul class="small rp-src">
+<li>5.7 M new vehicles ship with V2X; C-V2X 57 % of OBU shipments in 2022, 82 % in 2025; China overtook Europe; broadcast V2X small next to cellular connectivity · New Vehicle Shipments with V2X by Technology, ABI Research chart data (MD-V2X-105), 4Q 2025 · low (analyst; public summary read) — <a href="https://www.abiresearch.com/news-resources/chart-data/new-vehicle-shipments-with-v2x-by-technology" rel="noopener" target="_blank">www.abiresearch.com/news-resources/chart-data/new-vehicle-shipments-wit</a></li>
+<li>China: &lt;30 C-V2X models, ≈4 % penetration in 2025, ≈25 % by 2030 if mandates tighten · China C-V2X: Policy Ambition Meets Commercial Reality, TechInsights, Mar 2026 · low (snippet) — <a href="https://www.techinsights.com/ko/node/61168" rel="noopener" target="_blank">www.techinsights.com/ko/node/61168</a></li>
+<li>China 2024: ≈0.5 M C-V2X passenger cars, 2.21 % · Sunsea, via search results · low</li>
+<li>MIIT fitment target cut to 7.5 % for 2026 · secondary sources in the earlier connectivity notes (Marqstats, CnEVPost) · low</li>
+<li>VW Car2X (802.11p / ITS-G5): &gt;2 M vehicles (2025), 2.3 M produced in Europe (Dec 2025) · Volkswagen Group / CARIAD · low (snippets) — <a href="https://www.volkswagen-group.com/en/articles/a-milestone-for-greater-road-safety-more-than-two-million-vehicles-produced-with-car2x-19913" rel="noopener" target="_blank">www.volkswagen-group.com/en/articles/a-milestone-for-greater-road-safe</a></li>
+<li>Light-vehicle production 92.1 M (2026), 97.2 M (2030) · Global Production Summary, S&amp;P Global Mobility, Mar 2026 · high (from the car-radio case) — <a href="https://cdn.ihsmarkit.com/www/pdf/0426/Global-Production-Summary_LVP.pdf" rel="noopener" target="_blank">cdn.ihsmarkit.com/www/pdf/0426/Global-Production-Summary_LVP.pdf</a></li>
+<li>Glass roof: C-V2X monopole loses ≈8 dB average gain vs metal roof; OEM V2X antenna spec 5850–5925 MHz, VSWR ≤2 · A. Ibrahim, PhD dissertation, Oakland University, 2023 · med — <a href="https://our.oakland.edu/server/api/core/bitstreams/24d16b69-ff52-4a87-ac32-d5ba37ca72fd/content" rel="noopener" target="_blank">our.oakland.edu/server/api/core/bitstreams/24d16b69-ff52-4a87-ac32-d5</a></li>
+</ul>
+
+<h2>Our parts (Skyworks + Qorvo)</h2>
+<ul class="small rp-src">
+<li>SKY5A2105: SP4T, LNA, PA, band-pass BAW, DSA; LTE-V2X +29 dBm, NR-V2X +26.5 dBm (2.5 dB MPR), 802.11p +26 dBm; compensator (SPI, DSA 0–31.75 dB in 0.25 dB steps) and ECU mode (GPIO, 5 dB steps); log detector &gt;25 dB; temperature sensor; AEC-Q104 Grade 2; 24-pin 3 × 5 mm LGA; &gt;50 % board-space saving claimed; 5.855–5.925 GHz; status Preview · SKY5A2105 Product Summary 206756A, Skyworks, 16 Nov 2023 · high — <a href="https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/3001-3100/SKY5A2105_206756A_PS.pdf" rel="noopener" target="_blank">www.skyworksinc.com/-/media/SkyWorks/Documents/Products/3001-3100/SKY5A2105</a></li>
+<li>SKY5A2105 shown with Autotalks Pluton 2 transceiver and Secton 3 / Tekton 3 SoC; AEC-Q104 Grade 2, IATF 16949 · Automotive Solutions brochure, Skyworks, 2024/25 · high — <a href="https://www.skyworksinc.com/en/thought-leadership/-/media/SkyWorks/Documents/Brochures/2025_PCIM_Automotive_brochure.pdf" rel="noopener" target="_blank">www.skyworksinc.com/en/thought-leadership/-/media/SkyWorks/Documents/Bro</a></li>
+<li>SKY5A1005: BAW notch 5855–5925 MHz, min 30 dB rejection, passes 2.4 and 5 GHz Wi-Fi, 40 MHz transition, 1.5 × 1.1 × 0.7 mm; Preview · SKY5A1005 Product Summary 207309A, Skyworks, 8 Dec 2025 · high — <a href="https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Product-Summary/SKY5A1005_207309A_PS.pdf" rel="noopener" target="_blank">www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Product-Summary/SKY5A1005</a></li>
+<li>SKYA21043: 5.9 GHz 802.11p DSRC high-power FEM, Active · BizDev Skyworks catalogue (skyworks_parts.yaml) · high</li>
+<li>Qorvo QPF1003Q: 5 GHz C-V2X/DSRC/Wi-Fi automotive FEM (PA, T/R switch, bypassable LNA), 28 dBm C-V2X at 10 MHz (29 dBm in table), Rx gain 13–13.5 dB, 5.0 × 4.0 × 0.925 mm, AEC-Q100 Grade 2 target, Production · qorvo.com product page (search snippet; host not requested) · low — <a href="https://www.qorvo.com/products/p/QPF1003Q" rel="noopener" target="_blank">www.qorvo.com/products/p/QPF1003Q</a></li>
+<li>Qorvo QPF1002Q: FEM 5.770–5.925 GHz, 28 dB TX, 13 dB RX, 28 dBm, 5 × 4 mm; QPF1004Q C-V2X/DSRC FEM; QPF1005Q V2X FEM · Qorvo store listing (qorvo_parts.yaml) · med</li>
+<li>Qorvo QPQ2200Q BAW 5.855–5.925 GHz, 1.3 dB IL, 1.1 × 0.9 mm; QPQ2230Q V2X notch BAW · Qorvo store listing (qorvo_parts.yaml) · med</li>
+<li>Qorvo QPF4554Q: 5.18–5.925 GHz Wi-Fi/C-V2X automotive switch + LNA (13 dB, NF 1.7 dB), 2.3 × 2.3 mm, AEC-Q100 Grade 2, Preview · qorvo.com page (snippet) · low — <a href="https://www.qorvo.com/products/p/QPF4554Q" rel="noopener" target="_blank">www.qorvo.com/products/p/QPF4554Q</a></li>
+<li>Qorvo V2X connected-car portfolio: QPF1002Q, QPF1003Q, QPC8019Q switch, Band 47/Wi-Fi BAW coexistence filter · Mouser portfolio page (snippet; host not fetched) · low</li>
+</ul>
+
+<h2>Competitors</h2>
+<ul class="small rp-src">
+<li>C-V2X chipsets: Autotalks SECTON, CRATON2, TEKTON3, SECTON3 (only TEKTON3/SECTON3 with 5G-V2X PC5); Huawei Balong 765/5000; Morningcore CX1860/CX1910; Qualcomm Snapdragon Automotive 4G/5G, 9150 C-V2X ASIC, Snapdragon 2150. Modules: Alps Alpine, CICTCI, Fibocom, LG Innotek LAM-V500, Quectel AG15/AG52xR/AG18/AG190W/AG55xQ/AG590E, Rolling Wireless, SimCOM, Unex, ZTE · List of C-V2X Devices v0.1, 5GAA, 7 Apr 2024 · high — <a href="https://5gaa.org/content/uploads/2024/12/5gaa-list-of-c-v2x-devices.pdf" rel="noopener" target="_blank">5gaa.org/content/uploads/2024/12/5gaa-list-of-c-v2x-devices.pdf</a></li>
+<li>Qualcomm completed Autotalks acquisition (5 Jun 2025); first 2023 deal (≈$350 M reported) abandoned after EC/CMA review; second price not disclosed (trade reports ≈$80–90 M) · Qualcomm press release and trade press · low (snippets) — <a href="https://www.qualcomm.com/news/releases/2025/06/qualcomm-acquires-autotalks-to-boost-v2x-deployments--enhance-ro" rel="noopener" target="_blank">www.qualcomm.com/news/releases/2025/06/qualcomm-acquires-autotalks-to-b</a></li>
+<li>TEKTON3/SECTON3: concurrent DSRC and C-V2X incl. NR-V2X on CEVA DSPs; series production award, market 2026 · Microwave Journal / eeNews · low (snippets) — <a href="https://www.microwavejournal.com/articles/39429-ceva-and-autotalks-expand-collaboration-to-create-first-5g-v2x-solution" rel="noopener" target="_blank">www.microwavejournal.com/articles/39429-ceva-and-autotalks-expand-coll</a></li>
+<li>NXP SAF5400: 802.11p single-chip modem; SAF5300 single antenna, SAF5400 dual antenna (MRC); two SAF5400 for concurrent dual channel; remote antenna with compensator · BizDev block-diagram library (NXP V2X communications unit) · high</li>
+<li>Qualcomm QXM19xx automotive Wi-Fi FEM (bundling precedent) · see Wi-Fi 7 case background · low</li>
+<li>Murata: no public C-V2X module or V2X FEM found · search, Oct 2026 · low</li>
+<li>competition.yaml: v2x_fem crowding low, no standalone supplier besides the reference companies; v2x_transceiver Qualcomm, NXP · BizDev data · med</li>
+</ul>
+
+<h2>Prices</h2>
+<ul class="small rp-src">
+<li>Qorvo QPF4550TR13 (5 GHz Wi-Fi 6 FEM, 5.15–5.895 GHz): $5.13 (1), $3.58 (100), $3.29 (1,000); out of stock; 10,000 per reel · LCSC product page, Oct 2026 · low (list price) — <a href="https://www.lcsc.com/product-detail/C19189780.html" rel="noopener" target="_blank">www.lcsc.com/product-detail/C19189780.html</a></li>
+<li>Skyworks SKY85337-11 (front end, band not shown): ≈$2.58 (1) to ≈$0.95 (1,000+) · LCSC listing (snippet) · low — <a href="https://fat.lcsc.com/product-detail/C5186961.html" rel="noopener" target="_blank">fat.lcsc.com/product-detail/C5186961.html</a></li>
+<li>SKY5A2105, QPF1003Q, QPF1002Q, QPQ2200Q, QPQ2230Q: no public price found (searches) · not stated</li>
+</ul>
+
+<h2>Hosts that blocked access or were not requested</h2>
+<ul class="small rp-src">
+<li>rosap.ntl.bts.gov: 403 on robots.txt; host stopped.</li>
+<li>electronics360.globalspec.com: robots.txt allowed the path, page returned 403; host stopped.</li>
+<li>its.dot.gov: the plan-summary PDF URL returned an HTML page (no PDF); not retried.</li>
+<li>www.qualcomm.com, tynmagazine.com: stopped earlier in this research (checkpoint / 403); snippets only.</li>
+<li>www.qorvo.com and distributors (Mouser, Digi-Key, Arrow): not requested, per the rules; snippets only.</li>
+</ul>
+{% endraw %}

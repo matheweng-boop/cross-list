@@ -48,3 +48,128 @@ reports:
       design from today's parts and CDR to production.
     tags: [car radio, radio node, remote tuner module, SDR, HD Radio, DAB+, DRM, CDR, AMIC, pricing, architecture]
     sources: "BizDev block-diagram library and broadcast data; ~140 public web requests (S&P, OICA, WorldDAB, DRM Consortium, Radio World, Hirschmann, OpenSynergy, distributor snippets)"
+  - slug: auto-uwb-15-4ab
+    title: "Automotive UWB: an 802.15.4ab anchor chip for digital key (2–3 years, reuse first)"
+    kind: idea
+    area: Automotive UWB
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (with legacy Qorvo UWB) develop next for car access in 2–3 years, reusing the DW3000 / QPF5100Q technology, now that ST and Calterah sample 802.15.4ab chips, NXP sells a complete access set and CCC Digital Key 4.0 is in testing, and at what price?"
+    summary: >-
+      Business-case draft. Our advantage is an automotive-qualified UWB chip with ranging and radar on one die plus
+      our own automotive RF front ends; our disadvantages are no public 802.15.4ab / narrowband-assist part (ST and
+      Calterah sampling since 2026) and no BLE, NFC or secure element against NXP's full set. Proposal: an 802.15.4ab
+      anchor SoC with on-chip NBA radio, in ranging and ranging + radar variants, about $3.5–5.5 and $4.5–6.5 in
+      volume (est), an optional anchor FEM (≈$0.6–1.1), and firmware MMS and DK 4.0 on today's QPF5100Q as the bridge.
+    tags: [UWB, 802.15.4ab, narrowband assist, digital key, CCC, car access, QPF5100Q, anchor FEM, pricing, architecture]
+    sources: "BizDev block-diagram library and catalogue; ~20 public web requests and searches (IEEE 802.15, ST blog, CNX Software, Rohde & Schwarz, ABI Research, TI, search snippets)"
+  - slug: auto-uwb-cpd
+    title: "Automotive UWB: child presence and kick sensing from the key anchors (1–3 years, reuse)"
+    kind: idea
+    area: Automotive UWB
+    date: 2026-10-20
+    status: draft
+    question: "Should Skyworks (with legacy Qorvo UWB) sell UWB radar for Euro NCAP 2026 child-presence detection and kick sensing, reusing digital-key anchors, against 60 GHz radar (TI, Infineon, Calterah) and capacitive or ultrasonic sensors, within 1–3 years and reusing today's parts, and at what price?"
+    summary: >-
+      Business-case draft. Our advantage is reuse: in cars with a UWB key the QPF5100Q anchors can sense breathing and
+      kicks without a separate 60 GHz module; our disadvantages are coarser resolution than 60 GHz (6–30 cm vs
+      3–7.5 cm), no production CPD algorithm or Euro NCAP dossier, and rivals (NXP, ST, Calterah) bundling the same.
+      Proposal: a cabin-sense package on today's QPF5100Q (CPD and kick firmware with a partner, Euro NCAP test
+      pack, standalone module reference), about $0.75–1.5 per car as a licence or $4–6 per standalone CPD chip (est).
+    tags: [UWB, child presence detection, Euro NCAP, in-cabin radar, 60 GHz radar, kick sensor, QPF5100Q, pricing, architecture]
+    sources: "BizDev block-diagram library and catalogue; Euro NCAP OM protocol v1.2; ~20 public web requests and searches (TI, IEEE MTT-S, Rohde & Schwarz, ABI Research, search snippets)"
+  - slug: auto-clock-tree
+    title: "Automotive clock tree: a crystal-free clock for central compute and zones (2–3 years, reuse only)"
+    kind: idea
+    area: Automotive RF
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks offer next for clocking central computers, zonal controllers and satellite radar (PCIe, automotive Ethernet, SerDes references), given TI, SiTime (buying Renesas timing), Microchip and Diodes, with a 2–3-year turnaround and reuse of existing timing technology, and at what price?"
+    summary: >-
+      Business-case draft. Our advantage is the broadest Grade 2 automotive PCIe clock line (Si5332-AM 6/8/12 outputs,
+      Si5225x generators, Si5325x Gen 1–6 buffers), already listed for central compute; our disadvantages are a crystal on
+      every Si5332-AM, Grade 2 only, Gen 5 generators, no automotive jitter attenuator or oscillator, and captive radar
+      timing, while TI (crystal-free BAW, Gen 7, $3.55 list) and SiTime (Grade 1 MEMS, plus Renesas timing) move ahead.
+      Proposal: ZoneClock, a crystal-free automotive clock tree from our BAW resonator and MultiSynth IP, Grade 1, PCIe
+      Gen 6, about $4–6.5 (12 outputs) and $1.6–2.6 (4 outputs) in volume (est), plus SoC reference designs, Gen 6 data
+      and a qualified jitter attenuator now.
+    tags: [automotive, timing, clock generator, PCIe, jitter attenuator, BAW, central compute, zonal, radar, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; Si5332-AM data sheet; ~20 public web requests and searches (TI, SiTime, evertiq, Skyworks, Yole, OEM releases, distributor snippets)"
+  - slug: auto-gnss-l1l5
+    title: "Automotive GNSS: an all-band front end for the roof antenna (2–3 years, reuse only)"
+    kind: idea
+    area: Automotive RF
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (with Qorvo filters) offer next for multi-band GNSS in the shark fin and roof antenna for lane-level ADAS, given TI, Infineon and NXP LNAs, Murata/Taoglas modules and all-band receivers from u-blox, ST and Qualcomm, with a 2–3-year turnaround and reuse of existing technology, and at what price?"
+    summary: >-
+      Business-case draft. Our advantage is SKY5A2110, an automotive L1 + L5 LNA module with filters, B13 notch and a
+      diplexed output (AEC-Q104 Grade 2), and the rest of the roof-module RF set; our disadvantages are L1 + L5 only while
+      receivers are all-band (u-blox ZED-X20K, ST STA8135GA), Grade 2, two RF inputs, and TI's Grade 1 wideband LNA at
+      $0.45 list. Proposal: an all-band automotive GNSS front end (L1 + L2/E6 + L5/E5, one input, one output) from our LNAs
+      and Qorvo SAW/BAW filters, Grade 1, about $1.6–2.6 in volume (est), plus a single-input L1 + L5 variant at about
+      $0.9–1.4 and a roof-module reference design.
+    tags: [automotive, GNSS, L1, L5, L2, E6, LNA, SAW, BAW, shark fin, ADAS, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; SKY5A2110 data sheet; ~15 public web requests and searches (TI, u-blox, ST, ABI public summaries, Infineon, distributor snippets)"
+  - slug: auto-cv2x-fe
+    title: "C-V2X front end: two carriers in one module (2–3 years, reuse)"
+    kind: idea
+    area: Automotive connectivity
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (with Qorvo) build next for 5.9 GHz V2X, now that the US is C-V2X only from 14 Dec 2026 on two channels, Europe runs ITS-G5, LTE-V2X and NR-V2X side by side in 5855–5925 MHz and Qualcomm owns Autotalks, reusing SKY5A2105, QPF1003Q and our BAW filters, and at what price?"
+    summary: >-
+      Business-case draft. We are the only public source of standalone V2X front ends (SKY5A2105, QPF1003Q) and own
+      the V2X BAW filters; the wide 5855–5925 MHz passband already exists. Weak points: one path per part, no UNII-4
+      rejection in the US, our chipset partner Autotalks now belongs to Qualcomm, and a small market (≈5.7 M V2X cars).
+      Proposal: a dual-carrier V2X front end (two TX/RX paths, compensator and ECU modes, EU wide-band and US guard
+      filter variants) at about $7–10 (est), replacing two single FEMs plus filter and switch.
+    tags: [V2X, C-V2X, NR-V2X, ITS-G5, front-end module, BAW, coexistence, UNII-4, automotive, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; ~20 public web requests plus earlier connectivity research (5GAA, Skyworks product summaries, ABI, LG Innotek, LCSC, search snippets)"
+  - slug: auto-wifi7-fem
+    title: "Automotive Wi-Fi 7 front end with V2X coexistence built in"
+    kind: idea
+    area: Automotive connectivity
+    date: 2026-10-20
+    status: draft
+    question: "Should Skyworks (with Qorvo) build an AEC-Q104 Wi-Fi 7 front end for cars (5 + 6 GHz MLO) with 5.9 GHz V2X coexistence filtering inside, reusing today's Wi-Fi 7 FEMs and automotive BAW filters, against Qualcomm QCA6797AQ with QXM19xx and modules from u-blox, LG Innotek and Murata, and at what price?"
+    summary: >-
+      Business-case draft. We have the broadest Wi-Fi 7 FEM range and automotive BAW coexistence filters
+      (SKY5A1005/1006/1008, Preview) but no automotive Wi-Fi 7 FEM; Qualcomm is in every public automotive Wi-Fi 7
+      module and offers its own automotive FEM, and NXP/Synaptics put the PA on chip. Proposal: a 2 × 2 MLO set of
+      AEC-Q104 iFEMs (5 GHz with V2X guard, 6 GHz with UNII-1–3 rejection) for module makers, about $2.2–3.6 per FEM
+      and $9–14 per car set (est), plus the filters alone for on-chip-PA designs.
+    tags: [Wi-Fi 7, MLO, front-end module, BAW, coexistence, V2X, AEC-Q104, automotive, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; ~20 public web requests plus earlier connectivity research (Skyworks product summaries, LG Innotek, LCSC, search snippets for Qualcomm, u-blox, NXP, Synaptics/Murata)"
+  - slug: auto-ntn-pa
+    title: "Satellite in the car: an NTN front end for the telematics unit (n255/n256)"
+    kind: idea
+    area: Automotive telematics
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (now with Qorvo) offer so the car's telematics unit can reach satellites in the L/S-band NTN bands n255/n256 (narrowband from 2027, wideband from 2029), given Qualcomm's modem + RF front end, MediaTek's satellite-ready modem, Murata and module makers, and at what price?"
+    summary: >-
+      Business-case draft. We already sell an NTN amplifier covering n255 and n256 (SKY68040-11, not automotive) and a
+      full AEC-Q104 cellular, GNSS and V2X set that works with any modem; MediaTek's MT2739 needs an external NTN RF
+      path. Weak points: no automotive NTN part, nothing at the 26 dBm 5GAA asks for, Qualcomm's bundled front end, and
+      narrowband NTN may need no new hardware. Proposal: an automotive NTN add-on module (n255 + n256 PA, GNSS-protecting
+      duplexers, receive path), first at 23 dBm from today's die, then 26 dBm for wideband NTN, about $1.5–2.5 and
+      $2.5–3.5 in volume (est), plus an antenna-side compensator variant.
+    tags: [automotive, telematics, NTN, satellite, n255, n256, power class 2, Skylo, Iridium, Starlink, MediaTek MT2739, Qualcomm, pricing, architecture]
+    sources: "BizDev block-diagram library and catalogue; 5GAA NTN technical report; Skyworks product summaries; MediaTek, CCS Insight, Marelli; search snippets (ABI, Counterpoint, Qualcomm, DCD, RCR); about 10 new public web requests (background notes)"
+  - slug: auto-redcap-ecall
+    title: "NG-eCall and RedCap: a one-transmitter front end for value TCUs"
+    kind: idea
+    area: Automotive telematics
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (now with Qorvo) offer for the low-cost LTE Cat-1bis / 5G RedCap telematics unit that every new EU car needs for NG-eCall from 2026–2027, against Qualcomm's modem with its own RF front end, Murata, and MediaTek / Quectel modules, and at what price?"
+    summary: >-
+      Business-case draft. EU NG-eCall (new types from 1 Jan 2026, all new vehicles from 1 Jan 2027) and 2G/3G
+      switch-offs put an LTE or 5G TCU in about 12 M EU cars and vans a year; RedCap SOPs start about 2028. We have a
+      qualified automotive cellular set and low-cost IoT front ends that work with any modem, but the set is sized for
+      4×4 MIMO, Qualcomm's A10 RedCap modem comes with its own front end and Chinese vendors set Cat-1bis prices.
+      Proposal: one regional single-transmit module (PA + duplexers + switch) for Cat-1bis, Cat-4 and RedCap plus an
+      optional second receiver, about $2.2–3.4 and $0.6–1.0 in volume (est), with a satellite-port option.
+    tags: [automotive, telematics, NG-eCall, RedCap, eRedCap, LTE Cat-1bis, 2G/3G sunset, Qualcomm A10, MediaTek, Quectel, US connected-vehicle rule, pricing]
+    sources: "BizDev block-diagram library and catalogue; 5GAA eCall position paper; Skyworks product summaries; Marelli release; search snippets (EUR-Lex/LawPlayer, ACEA, ABI, Qualcomm, BIS, Counterpoint, ResearchAndMarkets); about 8 new public web requests (background notes)"

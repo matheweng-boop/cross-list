@@ -1,0 +1,118 @@
+# Preliminary case: 5.9 GHz V2X front end. Layout and rules: _template.yaml. Figures and links: the report's background notes.
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "C-V2X front end: two carriers in one module"
+question: >-
+  What should Skyworks (with Qorvo) build next for 5.9 GHz V2X in 2–3 years, reusing SKY5A2105, QPF1003Q and our BAW
+  filters, now that the US is C-V2X only from 14 Dec 2026 on two channels and Europe runs ITS-G5, LTE-V2X and NR-V2X
+  side by side in 5855–5925 MHz, and Qualcomm owns Autotalks, and at what price?
+updated: 2026-10-20
+brief:
+  - "We are the only public source of standalone V2X front ends: SKY5A2105 (AEC-Q104 Grade 2, LTE/NR-V2X and 802.11p, compensator or ECU mode) and Qorvo's QPF1003Q/QPF1002Q, plus V2X BAW filters (QPQ2200Q, QPQ2230Q, SKY5A1005). The wide 5855–5925 MHz BAW passband Europe needs already exists."
+  - "Weak points: one path per part, so the US second channel and EU concurrent ITS-G5 + C-V2X need two FEMs; in the US today's filter passes UNII-4 Wi-Fi next door; and our chipset partner Autotalks is Qualcomm's since Jun 2025, in a small market (about 5.7 M V2X cars a year)."
+  - "Proposal: a dual-carrier V2X front end (two TX/RX paths, compensator and ECU modes, EU wide-band and US UNII-4-guard filter variants) at about $7–10 (est), replacing two single FEMs plus filter and switch."
+
+position:
+  advantages:
+    - {id: a-only, text: "Only public standalone V2X FEM line: SKY5A2105 and QPF1003Q/QPF1002Q; competitors sell chipsets or modules, not V2X FEMs", vs: "Qualcomm, NXP, module makers", conf: med}
+    - {id: a-modes, text: "One part for roof antenna or TCU: compensator mode (SPI, DSA 0–31.75 dB in 0.25 dB steps) and ECU mode (GPIO)", vs: "NXP (external compensator)", conf: high}
+    - {id: a-nr, text: "Already specified for all three waveforms: LTE-V2X +29 dBm, NR-V2X +26.5 dBm (2.5 dB MPR), 802.11p +26 dBm", vs: "NXP SAF5400 (802.11p only)", conf: high}
+    - {id: a-baw, text: "Own BAW for the V2X band: band-pass (QPQ2200Q, inside SKY5A2105) and notch (QPQ2230Q, SKY5A1005, 30 dB min)", vs: "Module makers buying filters", conf: high}
+    - {id: a-grade, text: "AEC-Q104 Grade 2, IATF 16949 flow, PPAP/IMDS already in place for RF modules", vs: "New entrants", conf: high}
+  disadvantages:
+    - {id: d-partner, text: "Our reference chipset partner is now the main competitor's: the brochure pairs SKY5A2105 with Autotalks parts, and Qualcomm closed Autotalks on 5 Jun 2025", vs: Qualcomm, offset: "Get onto Qualcomm/Autotalks reference designs; second path through Chinese chipsets (Huawei, Morningcore/CICTCI) and module makers", conf: med}
+    - {id: d-single, text: "One TX/RX path per part: the US 10 MHz channel needs a second radio and EU concurrent ITS-G5 + C-V2X needs two FEMs", vs: "NXP (2 × SAF5400 for concurrent dual channel)", offset: "Dual-carrier FEM in one package", conf: high}
+    - {id: d-unii4, text: "Today's BAW passes 5855–5925 MHz, so in the US it gives no rejection of UNII-4 Wi-Fi (5850–5895 MHz) right below the C-V2X channels", vs: "—", offset: "US guard-filter variant; car Wi-Fi FEM that stops at 5835 MHz (SKY5A1006)", conf: high}
+    - {id: d-dup, text: "Duplicate, partly Preview lines after the merger: SKY5A2105 (Preview) vs QPF1003Q; SKY5A1005 vs QPQ2230Q; QPF4554Q Preview", vs: "—", offset: "One merged V2X roadmap per socket, published to customers", conf: high}
+    - {id: d-size, text: "Small, policy-driven market: about 5.7 M V2X cars a year; China ≈4 % fitment in 2025", vs: "—", offset: "Share dies and BAW with Wi-Fi and telematics; sell to module makers", conf: low}
+    - {id: d-china, text: "China, the largest LTE-V2X market, is led by domestic chipsets and module makers (our judgement)", vs: "Huawei, CICTCI, Quectel", offset: "Wins at BYD and Geely as entry; compete on qualification and coexistence", conf: low}
+  diff_good:
+    - {id: g-coex, text: "We sell both sides of the 5.9 GHz edge: V2X FEM + automotive Wi-Fi coexistence filters (SKY5A1005/1006/1008) + Wi-Fi 7 FEMs, so we can guarantee V2X/Wi-Fi coexistence for the whole car", conf: med}
+    - {id: g-integr, text: "BAW, DSA, log detector (>25 dB) and temperature sensor in a 3 × 5 mm LGA; claimed >50 % board-space saving", conf: high}
+  diff_bad:
+    - {id: b-nomodem, text: "No V2X modem of our own: design-ins follow the chipset vendor's reference design", conf: high}
+    - {id: b-11p, text: "802.11p-only SKYA21043 loses the US after 14 Dec 2026; only EU ITS-G5 (VW Car2X) keeps it", conf: high}
+
+architecture:
+  columns: [Skyworks + Qorvo (front end), Qualcomm (+ Autotalks), NXP, Module makers]
+  rows:
+    - ["Built as", "V2X FEM (PA, LNA, switch, BAW, DSA) beside any chipset", "C-V2X chipsets (9150, 2150, TEKTON3/SECTON3); RF front end not public", "SAF5400 802.11p modem + external front end/compensator", "Chipset + FEM on a PCB module (LG Innotek LAM-V500, Quectel AG55xQ, CICTCI DMM2x)"]
+    - ["Where it sits", "Roof antenna (compensator) or TCU/ECU", "TCU / Snapdragon Auto platform", "Roof antenna unit + V2X ECU", "TCU or smart antenna"]
+    - ["Two carriers", "Two FEMs today", "Not stated", "Two SAF5400 (concurrent dual channel, MRC)", "Not stated"]
+    - ["5G-V2X direct", "FEM ready (+26.5 dBm NR)", "Only TEKTON3/SECTON3 listed with 5G-V2X PC5", "No (802.11p)", "Follows chipset"]
+    - ["Zonal fit", "Good: RF moves to the antenna (glass roof −8 dB, cable loss)", "V2X folds into the central TCU", "Separate V2X box; weak", "Good: one module per smart antenna"]
+  note: "From the BizDev block-diagram library (NXP V2X communications unit; TI TCU/V2X module; Qualcomm automotive telematics with C-V2X 9150) and the Skyworks automotive brochure, which shows SKY5A2105 with Autotalks transceiver and SoC. Trend: the TCU, V2X and Wi-Fi merge into one smart antenna or central connectivity unit (zonal platforms 2027–28)."
+
+market_now:
+  - {figure: "US 5.9 GHz rules", value: "C-V2X in 5895–5925 MHz (3 × 10 MHz); 20 MHz (5905–5925) first, then 10 MHz (5895–5905), which needs a second radio; DSRC ends 14 Dec 2026", source: "5GAA 5.9 GHz Second R&O FAQ, 2025", conf: high}
+  - {figure: "EU 5.9 GHz rules", value: "5855–5875 MHz non-safety, 5875–5925 MHz safety ITS; 10 MHz channels today, 20 MHz requested; whole 70–75 MHz needed; ITS-G5 stays on 5895–5905 MHz", source: "5GAA position paper, Mar 2024", conf: high}
+  - {figure: "V2X-equipped new vehicles", value: "5.7 M; C-V2X 82 % of OBU shipments in 2025 (57 % in 2022)", source: "ABI Research chart data, 4Q 2025", conf: low}
+  - {figure: "China C-V2X fitment", value: "≈4 % of new cars in 2025, <30 models; ≈0.5 M (2.21 %) in 2024", source: "TechInsights (Mar 2026); Sunsea (snippets)", conf: low}
+  - {figure: "EU 802.11p fleet", value: "VW Car2X: >2.3 M vehicles produced (Dec 2025)", source: "CARIAD / VW Group (snippet)", conf: low}
+  - {figure: "Chipsets with 5G-V2X direct", value: "Only Autotalks TEKTON3 and SECTON3 on 5GAA's list (Apr 2024)", source: "5GAA List of C-V2X Devices v0.1", conf: high}
+  - {figure: "Qualcomm–Autotalks", value: "Closed 5 Jun 2025 (first attempt dropped after EC/CMA review); price not disclosed", source: "Qualcomm release; trade press (snippets)", conf: low}
+  - {figure: "US deployment plan", value: "≥2 OEMs commit to 5.9 GHz by MY2028; 5 capable models by 2031", source: "USDOT Saving Lives with Connectivity, Aug 2024 (snippets)", conf: low}
+  - {figure: "Light-vehicle production", value: "92.1 M (2026)", source: "S&P Global Mobility, Mar 2026", conf: high}
+  - {figure: "Public price of V2X FEMs", value: "not stated (no list price found for SKY5A2105, QPF1003Q, QPF1002Q)", source: "Searches; distributors not fetched", conf: low}
+
+outlook:
+  - {id: o-us, text: "US C-V2X stays small to 2030: about 0.5–2 M cars a year (est), mostly on the 20 MHz channel; two-channel OBUs start in premium and fleet cars", basis: "DOT plan targets 2 OEMs by MY2028 and 5 models by 2031; ~16 M US sales; no OEM-wide commitment found", conf: low}
+  - {id: o-eu, text: "EU dual-mode cars (ITS-G5 + LTE/5G-V2X direct) from about 2028 (est); each needs two carriers at once", basis: "5GAA: 5G-V2X Direct market readiness 2026–2029; ITS-G5 stays on 5895–5905 MHz for years; VW Car2X 2.3 M", conf: med}
+  - {id: o-china, text: "China reaches 15–25 % C-V2X fitment by 2030 (5–8 M cars, est) only if mandates tighten; otherwise ≈5–10 %", basis: "≈4 % in 2025; TechInsights forecast ≈25 % by 2030; MIIT target cut to 7.5 % for 2026", conf: low}
+  - {id: o-total, text: "V2X cars grow from 5.7 M to about 10–15 M a year by 2030 (est); against: network V2N may take the safety use cases instead", basis: "Sum of the regions above; ABI says V2N is more impactful than broadcast V2X", conf: low}
+  - {id: o-integrate, text: "Qualcomm may bundle its own V2X front end with the Autotalks/9150 chipset, as it does for Wi-Fi with QXM19xx (judgement)", basis: "QXM19xx automotive Wi-Fi FEM paired with QCA6797AQ; Autotalks owned since Jun 2025", conf: low}
+  - {id: o-slu, text: "After 2030 sidelink moves into 5–7 GHz unlicensed (SL-U) and carrier aggregation, so V2X and Wi-Fi front ends converge", basis: "3GPP Rel-18 sidelink evolution (n46, n96, n102)", conf: med}
+
+features:
+  - {id: f-dual, feature: "Two TX/RX paths in one package (two antenna ports)", benefit: "US two-channel OBU and EU concurrent ITS-G5 + C-V2X with one part", distance: 2, why: "Two SKY5A2105-class die sets in one module; no new die"}
+  - {id: f-wide, feature: "Wide BAW passband 5855–5925 MHz for Europe", benefit: "Covers ITS-G5, LTE-V2X and NR-V2X channels", distance: 0, why: "SKY5A2105's BAW and QPQ2200Q already cover 5855–5925 MHz"}
+  - {id: f-guard, feature: "US variant: BAW pass 5895–5925 MHz with rejection of UNII-4 below", benefit: "Protects C-V2X from the car's own and passengers' 5.9 GHz Wi-Fi", distance: 3, why: "New BAW design; needs a ~20 MHz transition vs 40 MHz on SKY5A1005; may not be feasible (check)"}
+  - {id: f-nrlin, feature: "PA linear at back-off for NR-V2X and two carriers through one PA", benefit: "One antenna for two carriers; better efficiency at NR MPR", distance: 3, why: "New PA design on our GaAs HBT; two-carrier intermodulation targets not stated"}
+  - {id: f-geo, feature: "Geofenced high-power application note (closed-loop power with detector + DSA)", benefit: "Helps OEMs certify higher OBU power in the US", distance: 1, why: "Parts already have the detector and DSA; FCC process not yet defined"}
+  - {id: f-11p, feature: "Keep 802.11p mode for EU ITS-G5", benefit: "Serves VW-type dual-mode cars", distance: 0, why: "SKY5A2105 and QPF1003Q already support it"}
+  - {id: f-ref, feature: "Reference designs with Qualcomm/Autotalks and Chinese chipsets", benefit: "Design-in without a chipset of our own", distance: 2, why: "Boards and validation with partners; access to Qualcomm not certain"}
+  - {id: f-roadmap, feature: "One merged V2X roadmap (SKY5A2105 vs QPF1003Q, SKY5A1005 vs QPQ2230Q)", benefit: "Clear offer to customers, less duplicate qualification", distance: 1, why: "Portfolio decision and documents"}
+  - {id: f-g1, feature: "Grade 1 (125 °C) option for roof modules", benefit: "Hot roof and glass-roof antenna modules", distance: 3, why: "No public OEM spec demands it yet; may need redesign"}
+  - {id: f-slu, feature: "5–7 GHz sidelink (SL-U) path shared with the Wi-Fi 7 FEM", benefit: "Ready for Rel-18 V2X in unlicensed bands", distance: 3, why: "6 GHz PA/BAW exist in Wi-Fi; standard adoption in cars uncertain"}
+
+product:
+  name: "Dual-carrier V2X front end (V2X-DC), EU and US variants"
+  spec:
+    - ["Paths", "2 × (PA, LNA, T/R switch, DSA, log detector), two antenna ports; compensator and ECU modes; temperature sensor"]
+    - ["Filters", "EU/global: BAW 5855–5925 MHz on both paths · US: guard BAW for 5895–5925 MHz against UNII-4"]
+    - ["Output power", "Per path as SKY5A2105: LTE-V2X +29 dBm, NR-V2X +26.5 dBm, 802.11p +26 dBm"]
+    - ["Reuses", "SKY5A2105 PA/LNA/DSA and BAW dies; QPF1003Q design know-how; QPQ2200Q/SKY5A1005 BAW; Sky5 automotive SiP and AEC-Q104 Grade 2 flow"]
+    - ["New", "Second path in one package; US guard BAW; two-carrier linear PA mode (step 2)"]
+    - ["Replaces", "2 × SKY5A2105 or 2 × QPF1003Q + external filter + switch"]
+    - ["Answers", "Two NXP SAF5400 dual-channel builds; Qualcomm/Autotalks reference RF; discrete FEMs in module makers' designs"]
+    - ["Delivery (est)", "Step 1 two paths in one package: 12–18 months · Step 2 US guard BAW and two-carrier PA: 2–3 years"]
+
+prices:
+  method: "No public price exists for any V2X FEM, so the anchors are consumer 5 GHz Wi-Fi FEM list prices (low confidence) → value of the two FEMs, filter and switch the part replaces → range. Assumption: automotive contract prices are 30–50 % below reel list prices, but automotive FEMs carry a qualification and volume premium over consumer FEMs. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "Qorvo QPF4550 (5 GHz Wi-Fi 6 FEM, consumer)", price: "$3.29", qty: "1,000 (LCSC, out of stock)"}
+    - {part: "Skyworks SKY85337-11 (RF front end, consumer)", price: "≈ $0.95", qty: "1,000 (LCSC snippet)"}
+    - {part: "SKY5A2105 · QPF1003Q · QPF1002Q (V2X FEMs)", price: "not stated", qty: "—"}
+  items:
+    - {id: p-dc, item: "V2X-DC dual-carrier FEM", entry: 7.0, target: 8.5, premium: 10.0, basis: "Replaces 2 single V2X FEMs (est $3.5–5 each, 1–1.5× a consumer FEM list price) + switch and filter (est $0.5–1)"}
+    - {id: p-sc, item: "Single-path successor (SKY5A2105 class, US guard variant)", entry: 3.5, target: 4.25, premium: 5.0, basis: "Est; must stay near today's single FEM; guard filter adds about $0.3–0.5"}
+    - {id: p-guard, item: "Standalone US guard BAW filter", entry: 0.35, target: 0.5, premium: 0.7, basis: "No public anchor; est at 10–15 % of a FEM price"}
+
+volumes:
+  - {label: "V2X-DC, 1 M a year (US two-channel + EU premium)", units: 1000000, price: p-dc}
+  - {label: "V2X-DC, 3 M a year (EU dual-mode + China premium)", units: 3000000, price: p-dc}
+  - {label: "Single-path successor, 2 M a year", units: 2000000, price: p-sc}
+
+attach:
+  - {id: t-qc, lever: "Get the dual-carrier FEM onto Qualcomm/Autotalks reference designs (the brochure already pairs SKY5A2105 with Autotalks parts)", effort: high}
+  - {id: t-modules, lever: "Target the module makers on 5GAA's list (LG Innotek, Quectel, Rolling Wireless, Fibocom, CICTCI, ZTE, Alps Alpine)", effort: med}
+  - {id: t-kit, lever: "One validated V2X + Wi-Fi coexistence kit: V2X FEM, Wi-Fi FEMs and SKY5A1005/1006/1008 filters (judgement)", effort: low}
+  - {id: t-antenna, lever: "Smart-antenna makers for compensator mode; glass roofs cost about 8 dB (Oakland dissertation)", effort: med}
+  - {id: t-fcc, lever: "Application note for geofenced high-power OBU certification (judgement; FCC process not defined)", effort: low}
+
+risks:
+  - "Qualcomm owns the leading 5G-V2X chipset (Autotalks) and could bundle its own front end."
+  - "US guard filter: a ~20 MHz BAW transition at 5.9 GHz may not be achievable with acceptable loss; needs a feasibility study."
+  - "Market size depends on policy (FCC certification of geofencing, EU 20 MHz channels, China mandates); V2N could replace direct V2X for safety use cases."
+  - "Two carriers through one PA versus two PAs: cost, heat and intermodulation targets are not public."
+  - "Unknown from public data: our contract prices, Qualcomm's RF plans, and design-in status of SKY5A2105 (still Preview in the catalogue)."

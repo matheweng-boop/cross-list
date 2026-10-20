@@ -1,0 +1,121 @@
+# Preliminary case: low-cost 5G RedCap / LTE Cat-1bis telematics front end for EU NG-eCall. Layout and rules:
+# _template.yaml. Figures and links: the report's background notes. conf: high = primary document read; med = trade press
+# or advocacy body; low = search snippet or analyst PR. "est" = our estimate. distance: see DISTANCE in app/services/prelim.py.
+title: "NG-eCall and RedCap: a one-transmitter front end for value TCUs"
+question: >-
+  What should Skyworks (now with Qorvo) offer for the low-cost LTE Cat-1bis / 5G RedCap telematics unit that every new EU
+  car needs for NG-eCall from 2026–2027, against Qualcomm's modem with its own RF front end, Murata, and MediaTek /
+  Quectel modules, and at what price?
+updated: 2026-10-20
+brief:
+  - "Our position: we have a qualified AEC-Q104 automotive cellular set and low-cost IoT front ends that work with any modem, and the non-Qualcomm RedCap and Cat-1bis modems need an external front end."
+  - "Our weak points: our automotive set is sized for mid-price 4×4 MIMO 5G (up to 7 parts), Qualcomm's automotive RedCap modem comes with its own front end, and Chinese PA vendors set the price in Cat-1bis."
+  - "Proposal: one regional single-transmit module (amplifier + duplexers + antenna switch) for Cat-1bis, Cat-4 and RedCap, plus an optional second receiver, at about $2.2–3.4 and $0.6–1.0 in volume (est)."
+
+position:
+  advantages:
+    - {id: a-set, text: "Qualified automotive cellular set today: SKY5A2206 low/mid/high-band PA, SKY5A2205 TX/RX switch module, SKY5A2203 LNA bank, SKY5A5010 receive module; AEC-Q104 Grade 2 with PPAP and IMDS", vs: "Chinese PA vendors", conf: high}
+    - {id: a-agn, text: "Baseband agnostic (MIPI RFFE): fits the RedCap and Cat-1bis modems that have no own front end (MediaTek, UNISOC A7720, United Micro, Sequans)", vs: Qualcomm, conf: high}
+    - {id: a-iot, text: "Low-cost IoT front-end know-how: SKY68035-11 (3 × 3 mm, +24.5 dBm at the antenna, –40 to +105 °C, B65 and NTN in the band list); SKY68020-11 and SKY68031-11", vs: "Murata", conf: high}
+    - {id: a-filt, text: "With Qorvo, BAW and SAW in house, including automotive Q-suffix BAW and AEC-Q100 antenna switches (QPC8013Q, QPC8020Q)", vs: "Chinese PA vendors that buy filters", conf: med}
+    - {id: a-us, text: "US-headquartered, non-China RF supply for the US connected-vehicle rule (hardware from model year 2030) and USMCA; Marelli names both as requirements for its RedCap TCU", vs: "Chinese modules and RF vendors", conf: med}
+  disadvantages:
+    - {id: d-qc, text: "Qualcomm A10, its first automotive RedCap modem with NG-eCall, comes integrated with Qualcomm's RF front end; Qualcomm claimed (2020) all its next-generation 5G telematics wins included its front end", vs: Qualcomm, offset: "Win non-Qualcomm platforms and Tier-1 second sources; one module instead of Qualcomm's multi-part front end", conf: low}
+    - {id: d-price, text: "Cat-1bis modules are a Chinese-led, price-driven ecosystem; PA prices there are far below ours (not public, our judgement)", vs: "Vanchip, Maxscend and other Chinese PA vendors", offset: "Compete on system cost (one module for PA, switch and duplexers), automotive quality and the US rule", conf: low}
+    - {id: d-over, text: "Our automotive set is built for mid-price 4×4 MIMO 5G (discrete TX + integrated RX, up to 7 parts); RedCap needs 1 transmitter and 1–2 receivers", vs: "integrated modem-RF", offset: "The single-transmit module (f-pamid)", conf: high}
+    - {id: d-hd, text: "Our cheapest IoT front ends are half-duplex (LTE-M/NB-IoT); Cat-1bis and most RedCap use full-duplex FDD and need duplexers", vs: "—", offset: "Module with a duplexer bank; half-duplex part only for eRedCap HD-FDD", conf: high}
+    - {id: d-modules, text: "Module makers (Quectel, Fibocom, Rolling Wireless) pick the front end, not the car maker", vs: "Quectel, MediaTek", offset: "Module reference designs (t-module)", conf: med}
+    - {id: d-eu, text: "NG-eCall is an EU rule (about 12 M cars and vans a year); and many 2027 cars will use LTE, with RedCap SOPs from about 2028", vs: "—", offset: "Same module for LTE and RedCap, and for global value TCUs as 4G winds down", conf: med}
+    - {id: d-content, text: "Value TCUs carry less RF content per car than flagship 5G TCUs and can cannibalise Sky5 Value sockets", vs: "—", offset: "Add NTN and GNSS options to the value platform", conf: med}
+  diff_good:
+    - {id: g-pc2, text: "Power class 2 (HPUE) on n40/n41 in an automotive PA (SKY5A2206)", conf: high}
+    - {id: g-ntn, text: "An n255/n256 satellite amplifier already exists (SKY68040-11), so a value module can offer a satellite option (see case auto-ntn-pa)", conf: high}
+    - {id: g-grade, text: "Automotive modules with AEC-Q104 Grade 2, PPAP and IMDS, which module makers would otherwise have to qualify", conf: high}
+  diff_bad:
+    - {id: b-nomod, text: "No modem: Qualcomm and MediaTek certify NG-eCall on their platforms, not on our parts", conf: high}
+    - {id: b-pamid, text: "No automotive module with integrated duplexers (PAMiD) today: the automotive set uses separate TX and RX parts", conf: high}
+    - {id: b-ref, text: "No public reference design with an automotive RedCap modem found", conf: med}
+
+architecture:
+  columns: [Skyworks + Qorvo (discrete, any modem), Qualcomm (A10 modem + own RF front end), MediaTek / UNISOC / module makers]
+  rows:
+    - ["Built as", "Modem from others → SKY5A2206 PA + SKY5A2205 switch + receive modules (5G Value); IoT front ends for LTE-M/NB-IoT", "A10 RedCap/LTE modem with Qualcomm automotive RF front end, NG-eCall in the platform", "Modem (RedCap, Cat-1bis, MT2739) + external front end bought by the module maker"]
+    - ["Transmit / receive", "1 TX path per band group; receive sized for 4×4 MIMO", "Not stated", "1 TX, 1–2 RX (RedCap); 1 TX, 1 RX (Cat-1bis)"]
+    - ["Parts for a value TCU (est)", "4–7 today; 1–2 with the proposed module", "Not stated", "PA + switch + duplexers, or a PAMiD"]
+    - ["Fit with where cars are going", "Good: the TCU stays a separate node next to central computers; NG-eCall must survive a crash, so it stays a dedicated box", "Strong where Qualcomm is used end to end", "Open socket for RF vendors"]
+  note: "From the BizDev block-diagram library: Skyworks telematics & infotainment RF, TI automotive TCU (eCall backup battery and hands-free audio), Qualcomm automotive telematics, Qualcomm QCX216 Cat-1bis tracker (external multiband PA), MediaTek MT2739. Zonal plans (GM 2028, VW/Rivian 2027) keep the cellular modem outside the central computer."
+
+market_now:
+  - {figure: "NG-eCall dates (EU)", value: "New types from 1 Jan 2026; certificates of conformity of non-compliant new vehicles invalid from 1 Jan 2027", source: "Delegated Reg. (EU) 2024/1180 (snippets of the EUR-Lex text)", conf: med}
+  - {figure: "EU new registrations 2025", value: "Cars 10.82 M (+1.8 %); vans about 1.45 M (our calculation from ACEA diesel figures)", source: "ACEA via SteelOrbis; ACEA van release (snippets)", conf: med}
+  - {figure: "Legacy eCall fleet", value: "> 70 M vehicles that cannot practically be retrofitted", source: "5GAA position paper, Nov 2024 (IDIADA estimate)", conf: high}
+  - {figure: "2G/3G switch-off (examples)", value: "Deutsche Telekom 2G about Jun 2028; Vodafone DE 2G Sep 2028", source: "Trade press (snippets)", conf: low}
+  - {figure: "New cars with embedded cellular", value: "95 %", source: "FDM CCS Insight blog, Jan 2026", conf: med}
+  - {figure: "TCU fitment and 5G share", value: "78 % of new cars and CVs had a TCU (2024); 5G about 70 % of TCU shipments by 2029", source: "ResearchAndMarkets PR, Nov 2025", conf: low}
+  - {figure: "RedCap in automotive", value: "Marelli: 50 % higher data rate, 2.5× lower latency than 4G at a comparable price; samples early 2026, SOP 2028", source: "Marelli press release, 9 Dec 2025", conf: high}
+  - {figure: "Automotive RedCap modems", value: "Qualcomm A10 (Rel-17, NG-eCall over RedCap and LTE, –40 to +85 °C, with Qualcomm RF front end); United Micro RedCap chip with NG-eCall (Ceva)", source: "Qualcomm product page; everythingRF (snippets)", conf: low}
+  - {figure: "Module prices", value: "RedCap $35–50 (2024), more than 2× Cat-4 ($16–20); eRedCap $10–15 in 2026, about 25 % above Cat-1", source: "ABI Research PR / insight", conf: low}
+  - {figure: "US connected-vehicle rule", value: "Chinese/Russian software banned from MY2027, hardware from MY2030 (or 1 Jan 2029)", source: "BIS press release, Jan 2025 (snippet)", conf: med}
+
+outlook:
+  - {id: o-eu, text: "About 12 M EU cars and vans a year need an NG-eCall-capable LTE or 5G TCU from 2027, most of them in the value tier (est)", basis: "10.82 M cars + about 1.45 M vans (2025); certificate rule from 1 Jan 2027", conf: med}
+  - {id: o-lte, text: "LTE (Cat-1bis/Cat-4) carries most eCall-only TCUs in 2026–2028; RedCap takes over in programmes starting from 2028 (est)", basis: "Marelli SOP 2028; RedCap module prices still more than 2× Cat-4", conf: med}
+  - {id: o-4g, text: "4G switch-offs begin around 2030 in some regions, which favours RedCap; against: EU 4G will likely run well into the 2030s, so LTE can stay (est)", basis: "Marelli (2030); 5GAA asks for future-proof eCall rules", conf: low}
+  - {id: o-price, text: "RedCap modules fall by half or more toward Cat-4 prices; the front-end budget per TCU shrinks to a few dollars (est)", basis: "ABI: RedCap ASP must fall at least 50 %; eRedCap $10–15", conf: low}
+  - {id: o-global, text: "Value 5G TCUs spread beyond Europe as 5G becomes most TCU shipments by 2029–2030 (est)", basis: "ResearchAndMarkets 70 % by 2029; Counterpoint: RedCap brings 5G to all segments (snippet)", conf: low}
+  - {id: o-us, text: "North American telematics moves away from Chinese modules and RF parts for model year 2030 (est)", basis: "BIS rule; Marelli's USMCA and ban statement", conf: med}
+
+features:
+  - {id: f-kit, feature: "RedCap kit from today's parts: SKY5A2206 + SKY5A2205 + one SKY5A5010", benefit: "Value TCU design-ins now", distance: 1, why: "Application note and reduced reference BOM only"}
+  - {id: f-switch, feature: "Qorvo AEC-Q100 antenna switches (QPC8013Q, QPC8020Q) for main/backup antenna swap", benefit: "Robust eCall antenna path", distance: 0, why: "Parts exist"}
+  - {id: f-pamid, feature: "Single-transmit module: low/mid/high-band PA + regional duplexer bank + antenna switch, AEC-Q104", benefit: "One part instead of 4–6 for Cat-1bis, Cat-4 and RedCap; answers Qualcomm's integrated front end", distance: 2, why: "Existing PA, switch and filter dies in a new module; some new duplexer layouts"}
+  - {id: f-drx, feature: "Small second receiver (2 RX RedCap) from SKY5A5010-class dies", benefit: "Optional diversity for 2-RX RedCap", distance: 2, why: "Repackaging existing receive dies"}
+  - {id: f-hd, feature: "Automotive-qualified half-duplex front end (SKY68035-11 class) for eRedCap HD-FDD and eCall-only boxes", benefit: "Lowest-cost tier", distance: 2, why: "Already –40 to +105 °C; needs AEC-Q104 qualification and PPAP"}
+  - {id: f-ered, feature: "eRedCap (5 MHz) characterisation and power modes", benefit: "Rel-18 eRedCap readiness", distance: 1, why: "Measurement and register settings"}
+  - {id: f-ntnopt, feature: "n255/n256 satellite port on the value module", benefit: "Satellite eCall/breakdown as an option", distance: 2, why: "Reuses SKY68040-class die; duplexers new (see auto-ntn-pa)"}
+  - {id: f-ref, feature: "Reference designs with MediaTek, UNISOC A7720, United Micro and module makers", benefit: "Shorter design-in at module makers", distance: 2, why: "Boards, driver tables, NG-eCall test results"}
+  - {id: f-g1, feature: "Grade 1 (125 °C) version for roof or smart-antenna TCUs", benefit: "Opens roof placement", distance: 3, why: "No public OEM requirement found; may need design changes"}
+
+product:
+  name: "Value TCU front end VT1 (single-transmit module) + VR1 (second receiver)"
+  spec:
+    - ["Modes", "LTE Cat-1bis, Cat-4, 5G RedCap and eRedCap (one transmitter, FDD and TDD)"]
+    - ["Bands (EU SKU)", "B1/3/7/8/20/28/38 and n1/3/7/8/20/28/38/40/41 (est list); NA SKU with 2/4/5/12/13/14/66/71"]
+    - ["Contents", "Low/mid/high-band PA, duplexers, antenna switch with coupler, MIPI RFFE; VR1: 1 receive path for 2-RX RedCap"]
+    - ["Reuses", "SKY5A2206 PA dies, SKY5A2205 switch, Qorvo/Skyworks BAW and SAW, Sky5A packaging, AEC-Q104 flow"]
+    - ["New", "Duplexer bank layout in one automotive module; eRedCap power modes"]
+    - ["Replaces", "PA + switch + 4–6 duplexers/filters on a value TCU (Sky5 Value: up to 7 parts)"]
+    - ["Answers", "Qualcomm A10 with Qualcomm RF front end; Chinese Cat-1bis PA + filter sets"]
+    - ["Options", "n255/n256 satellite port (auto-ntn-pa); Grade 1"]
+    - ["Delivery (est)", "Kit from today's parts: now · VT1/VR1: 15–24 months, in time for 2028 RedCap SOPs"]
+
+prices:
+  method: "Few public anchors (low confidence) → share of the module price the front end can take → range. Assumption: automotive contract prices are 30–50 % below reel list prices and far below single-unit distributor prices. The front-end share of a module price is our assumption. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "Skyworks SKY68020-11 (LTE-M/NB-IoT front end)", price: "$5.16", qty: "not stated (distributor snippet)"}
+    - {part: "LTE Cat-4 module · RedCap module · eRedCap module", price: "$16–20 · $35–50 · $10–15", qty: "ABI Research estimates 2024–2026"}
+    - {part: "Automotive Cat-1bis / RedCap front end", price: "not stated", qty: "—"}
+  items:
+    - {id: p-vt1, item: "VT1 single-transmit module (regional)", entry: 2.2, target: 2.8, premium: 3.4, basis: "About 15–20 % of a $16–20 Cat-4-class module price (assumption); replaces PA, switch and 4–6 filters (est)"}
+    - {id: p-vr1, item: "VR1 second receiver", entry: 0.6, target: 0.8, premium: 1.0, basis: "One receive path with filters and LNA (est)"}
+    - {id: p-hd, item: "Automotive half-duplex front end (eRedCap / eCall-only)", entry: 1.0, target: 1.3, premium: 1.6, basis: "IoT front end lists $5.16 one-off; contract and volume far lower; automotive qualification adds (est)"}
+
+volumes:
+  - {label: "VT1, 6 M a year (half of EU NG-eCall cars and vans)", units: 6000000, price: p-vt1}
+  - {label: "VT1, 15 M a year (global value 5G/LTE TCUs, about 2030)", units: 15000000, price: p-vt1}
+  - {label: "VR1, 5 M a year (2-RX RedCap)", units: 5000000, price: p-vr1}
+  - {label: "Half-duplex, 2 M a year (eCall-only and aftermarket)", units: 2000000, price: p-hd}
+
+attach:
+  - {id: t-module, lever: "Reference designs with module makers that build on non-Qualcomm modems (Quectel AR588MA on MediaTek MT2739; others)", effort: med}
+  - {id: t-ecall, lever: "NG-eCall test results on the reference design with a test-equipment maker (Rohde & Schwarz verified NG-eCall to EN 17240:2024 on a Qualcomm platform)", effort: med}
+  - {id: t-us, lever: "State US/non-China supply and USMCA content (named by Marelli as requirements)", effort: low}
+  - {id: t-bundle, lever: "Bundle SKY5A2110 GNSS front end and Qorvo antenna switches in the reference design (judgement)", effort: low}
+  - {id: t-ntn, lever: "Offer the satellite port as a no-redesign option on the same footprint (judgement)", effort: med}
+
+risks:
+  - "Qualcomm's integrated front end may take most automotive RedCap designs."
+  - "Many 2027 eCall programmes will use LTE Cat-1bis/Cat-4 already in design; RedCap volume starts about 2028."
+  - "Chinese front-end prices in Cat-1bis may stay far below our cost; the US rule protects only North America."
+  - "Cannibalisation of Sky5 Value sockets in mid-price TCUs."
+  - "Unknown from public data: front-end share of module cost, contract prices, the EU eCall split between LTE and RedCap, and EU 2G/3G/4G switch-off dates beyond examples."

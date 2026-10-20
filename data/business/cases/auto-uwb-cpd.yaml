@@ -1,0 +1,120 @@
+# Preliminary case: UWB in-cabin child-presence detection (CPD) and kick sensing.
+# Layout and rules: _template.yaml. Figures and links: the report's background notes.
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Automotive UWB: child presence and kick sensing from the key anchors"
+question: >-
+  Should Skyworks (with legacy Qorvo UWB) sell UWB radar for Euro NCAP 2026 child-presence detection and kick sensing,
+  reusing digital-key anchors, against 60 GHz radar (TI, Infineon, Calterah) and capacitive or ultrasonic sensors,
+  within 1–3 years and reusing today's parts, and at what price?
+updated: 2026-10-20
+brief:
+  - "Our position: the QPF5100Q already lists child presence, kick and occupancy sensing, and in a car with a UWB key the interior and rear anchors can do this work without an extra module."
+  - "Our weak points: UWB radar resolves 6–30 cm where 60 GHz resolves 3–7.5 cm, we have no production CPD algorithm or Euro NCAP dossier, and NXP, ST and Calterah offer the same anchor-plus-radar idea."
+  - "Proposal: a 'cabin-sense' package on today's QPF5100Q (CPD and kick firmware with a partner algorithm, Euro NCAP test pack, standalone module reference) at about $0.75–1.5 per car as a licence or $4–6 for a dedicated CPD chip (est); the 15.4ab radar chip follows (case auto-uwb-15-4ab)."
+
+position:
+  advantages:
+    - {id: a-reuse, text: "Reuses digital-key anchors: no extra cabin module in cars that already have a UWB key", vs: "TI, Infineon, Calterah (60 GHz)", conf: med}
+    - {id: a-today, text: "Available now: QPF5100Q is automotive qualified and lists CPD, kick and occupancy (Jan 2025)", vs: "ST (A500 radar sampling only)", conf: low}
+    - {id: a-penet, text: "Below 10 GHz passes through blankets and seats better; works in all cabin conditions (supplier claim)", vs: "60 GHz radar", conf: low}
+    - {id: a-spectrum, text: "No in-cabin waiver question: 60 GHz in-cabin radar in the US runs under FCC waivers", vs: "60 GHz radar", conf: med}
+    - {id: a-kick, text: "Kick sensing from a rear anchor tolerates rain, snow and dirt better than capacitive electrodes (vendor claims); capacitive kick sensors have false-trigger recalls", vs: "Capacitive kick sensors", conf: low}
+    - {id: a-ultra, text: "Direct sensing of breathing; ultrasonic rear-occupant alerts miss a sleeping, covered child (Hyundai's own account)", vs: "Ultrasonic", conf: low}
+  disadvantages:
+    - {id: d-res, text: "Coarser resolution: UWB 6–30 cm range, ~58° angle vs 60 GHz FMCW 3–7.5 cm and 7–38°; harder to place a child per seat and footwell", vs: "TI AWRL6432, Infineon BGT60ATR24C", offset: "Two antenna ports, several anchors, and the wider 15.4ab channel in the next chip", conf: med}
+    - {id: d-nokey, text: "Cars without a UWB key need a dedicated anchor, which then competes head-on with a single-chip 60 GHz module ($12.64–15.90 1ku list for AWRL6432)", vs: TI, offset: "Standalone UWB CPD module priced below a 60 GHz module (p-cpdchip)", conf: high}
+    - {id: d-algo, text: "No production CPD algorithm or Euro NCAP SD-102 dossier of our own; TI ships a reference design with verified test data", vs: "TI", offset: "Algorithm partner and a pre-tested Euro NCAP pack (f-pack)", conf: med}
+    - {id: d-same, text: "Same idea from rivals with full access sets: NXP NCJ29D6A, ST64UWB-A500, Calterah Dubhe all bundle radar with the key chip", vs: "NXP, ST, Calterah", offset: "Our FEM and module reference; licence pricing", conf: med}
+    - {id: d-share, text: "One anchor must share time between key ranging and radar; coverage of all seats and footwells may need 2+ anchors (our judgement)", vs: "60 GHz (one ceiling module)", offset: "Radar runs when parked, ranging when the key is near; scheduling firmware", conf: low}
+    - {id: d-proof, text: "No public CPD design win for our parts; first UWB CPD in series production is Joynext's (China, 2025, chip not named)", vs: "NXP, Calterah", offset: "Tier-1 partner programme", conf: low}
+  diff_good:
+    - {id: g-dual, text: "One chip and one software stack for key, CPD, kick and intrusion: fewer modules and ECUs, fits zonal cars", conf: med}
+    - {id: g-fem, text: "We can add our own LNA/switch front end to extend radar reach on exterior (kick) anchors; rivals cannot", conf: low}
+    - {id: g-privacy, text: "No camera images: presence without privacy concerns (vendor argument)", conf: low}
+  diff_bad:
+    - {id: b-res, text: "Physics: 500 MHz–2 GHz bandwidth limits classification (adult vs child, seat position) against 5 GHz at 60 GHz", conf: med}
+    - {id: b-pmic, text: "No radar PMIC or CAN transceiver of our own; TI pairs its radar with TPS650365-Q1 and TCAN3404-Q1", conf: high}
+
+architecture:
+  columns: ["UWB anchor (us)", "60 GHz module (TI, Infineon, Calterah)", "Capacitive / ultrasonic"]
+  rows:
+    - ["Built as", "Interior/rear key anchor in radar mode; CPD data to access ECU", "Ceiling module: radar SoC + PMIC + CAN + flash (TI: 18 × 55 mm, 120° × 120°)", "Kick electrode + controller in the bumper; ultrasonic or seat sensors in the cabin"]
+    - ["Extra parts per car", "None with a UWB key; one anchor without", "One module", "One sensor per function"]
+    - ["Sensing", "Breathing, motion; 6–30 cm", "Breathing, motion, position; 3–7.5 cm", "Kick: proximity; ultrasonic: motion only"]
+    - ["Euro NCAP direct sensing", "Yes", "Yes", "Kick n/a; ultrasonic weak for sleeping child"]
+    - ["Zonal fit", "Good: one access domain", "Separate ECU on CAN", "Separate sensors"]
+  note: "From the BizDev block-diagram library: TI in-cabin 60 GHz radar module (radar SoC, PMIC, CAN, crystal, flash), NXP smart car access (interior anchors also UWB radar for CPD). Resolution figures from IEEE MTT-S. Capacitive kick: TI TIDA-01409 (up to 50 cm)."
+
+market_now:
+  - {figure: "Euro NCAP CPD points", value: "5 of 30 in Occupant Monitoring: child left behind 1.5–4.0, child entering unlocked car 0.5–1.0", source: "Euro NCAP Occupant Monitoring protocol v1.2, Jul 2026", conf: high}
+  - {figure: "Euro NCAP rules", value: "Direct sensing (heartbeat, breathing, movement), default on, children ≤ 6 years; warning ≤ 15 s after locking; all seats; footwells for unlocked entry", source: "Euro NCAP Occupant Monitoring protocol v1.2", conf: high}
+  - {figure: "Rear seat occupancy", value: "5 more points (belt reminder per rear seat); same sensor can serve it", source: "Euro NCAP Occupant Monitoring protocol v1.2", conf: high}
+  - {figure: "60 GHz CPD radar", value: "3.5 M radar shipments in 2030 driven by CPD", source: "ABI Research press release, Aug 2023", conf: low}
+  - {figure: "CPD system market", value: "$1.5 B (2024) → $3.0 B (2030)", source: "Analyst report summary (KSM), Dec 2025", conf: low}
+  - {figure: "Radar maturity", value: "In-cabin radar (60 GHz and UWB) emerging; mass adoption awaits final safety standards", source: "Yole release via Edge AI and Vision, Nov 2025", conf: high}
+  - {figure: "Resolution", value: "60 GHz FMCW 3–7.5 cm, 7–38°; UWB 6–30 cm, ~58°; 24 GHz 60 cm", source: "IEEE MTT-S featured article", conf: med}
+  - {figure: "60 GHz price", value: "TI AWRL6432 $12.64–15.90 (1ku)", source: "TI product page, Oct 2026", conf: high}
+  - {figure: "UWB CPD in production", value: "Joynext, China, May 2025, Japanese JV brand; meets C-NCAP direct detection", source: "S&P AutoTechInsight snippet", conf: low}
+  - {figure: "US rules", value: "No NHTSA CPD rule found; rear belt reminders only", source: "NHTSA; our research", conf: med}
+
+outlook:
+  - {id: o-ncap, text: "Most Euro NCAP-rated new models fit direct-sensing CPD by 2028 (est)", basis: "5 points of 30 in the section; direct sensing required since Jan 2026", conf: med}
+  - {id: o-split, text: "Cars with a UWB key use the anchors; cars without use a 60 GHz module (est)", basis: "Reuse argument (CEVA, Continental); ABI: UWB too costly for affordable cars", conf: low}
+  - {id: o-uwbshare, text: "For UWB: it is the cheapest route in UWB-key cars. Against: 60 GHz classifies better and also serves seat-belt and airbag functions; UWB takes perhaps a third of CPD sockets by 2030 (est)", basis: "Resolution figures; UWB in 10–20 % of cars (case auto-uwb-15-4ab); no market split published", conf: low}
+  - {id: o-kick, text: "UWB kick replaces capacitive only in cars with a rear UWB anchor; no production evidence yet (est)", basis: "Vendor demos (YFORE, Linguwerk, Calterah, ST); no OEM announcement found", conf: low}
+  - {id: o-china, text: "China adopts UWB CPD first because C-NCAP asks for direct detection and local chips are cheap (est)", basis: "Joynext 2025; Calterah moved its CPD suite from 60 GHz to UWB", conf: low}
+
+features:
+  - {id: f-cpdfw, feature: "CPD firmware on QPF5100Q with a partner algorithm", benefit: "Sells today's chip into Euro NCAP CPD", distance: 1, why: "Chip lists CPD; algorithm maturity not public"}
+  - {id: f-kickfw, feature: "Kick-sensing firmware for a rear anchor", benefit: "Removes the capacitive kick sensor", distance: 1, why: "Chip lists kick; field tuning needed"}
+  - {id: f-sched, feature: "Ranging/radar time-sharing and low-power parked mode", benefit: "One anchor does key and CPD; meets 15 s after locking", distance: 1, why: "Firmware scheduling"}
+  - {id: f-pack, feature: "Euro NCAP test pack: SD-102 dossier template and pre-test results", benefit: "Shortens OEM homologation", distance: 1, why: "Documentation and testing"}
+  - {id: f-vitals, feature: "Intrusion and rear-occupancy (belt reminder) modes", benefit: "Extra 5 Euro NCAP points from the same sensor", distance: 1, why: "Firmware on the same radar data"}
+  - {id: f-module, feature: "Standalone UWB CPD module reference (QPF5100Q + automotive regulator ACT4751M + partner CAN)", benefit: "Wins cars without a UWB key", distance: 2, why: "Board and reference design from existing parts"}
+  - {id: f-lna, feature: "Automotive UWB LNA/switch for the kick anchor (QM14068 + QPC8019Q class)", benefit: "Range and robustness through the bumper", distance: 2, why: "Qualification of existing dies"}
+  - {id: f-abradar, feature: "802.15.4ab radar mode, wider channel and more receive chains", benefit: "Closes part of the resolution gap", distance: 3, why: "New chip, shared with case auto-uwb-15-4ab"}
+  - {id: f-60g, feature: "Own 60 GHz radar SoC", benefit: "Matches TI/Infineon resolution", distance: 4, why: "mmWave CMOS radar not in our portfolio; not recommended"}
+
+product:
+  name: "UWB cabin-sense package (QPF5100Q today, AB-RR next)"
+  spec:
+    - ["Functions", "Child presence (all seats, footwells), rear occupancy, intrusion, kick-to-open"]
+    - ["Modes", "Licence on key anchors, or standalone CPD module"]
+    - ["Outputs", "Presence, seat zone, breathing flags over CAN/SPI to the access ECU or zone controller"]
+    - ["Reuses", "QPF5100Q radar mode, QM35825 ML know-how, ACT4751M regulator, QM14068/QPC8019Q front-end dies"]
+    - ["New", "Production CPD/kick algorithm (partner), scheduler, Euro NCAP test pack, module reference"]
+    - ["Replaces", "60 GHz CPD module (AWRL6432 + PMIC + CAN) in UWB-key cars; capacitive kick sensor"]
+    - ["Answers", "TI TIDEP-01037 / AWRL6432, Infineon BGT60ATR24C, Calterah Rhine-Pro and Dubhe, NXP NCJ29D6A"]
+    - ["Delivery (est)", "Firmware and test pack: 6–12 months · Module reference: 12–18 months · 15.4ab radar chip: 2028"]
+
+prices:
+  method: "Anchor on public prices → value of the module or sensor avoided → range. Assumption: automotive contract prices are 30–50 % below 1k list prices. The licence is priced per car on anchors already sold. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "TI AWRL6432 (60 GHz radar SoC)", price: "$12.64–15.90", qty: "1ku (TI list)"}
+    - {part: "NXP NCJ29D5 (UWB key chip, no radar)", price: "$4.85–6.33", qty: "1k budgetary"}
+    - {part: "Infineon BGT60ATR24C", price: "not stated", qty: "—"}
+    - {part: "Capacitive kick sensor module", price: "not stated", qty: "—"}
+  items:
+    - {id: p-cpdlic, item: "CPD licence per UWB-key car", entry: 0.75, target: 1.0, premium: 1.5, basis: "Avoids a 60 GHz chip of ≈$6.3–11 contract plus PMIC, CAN and board; licence kept under 15 % of the chip avoided"}
+    - {id: p-kicklic, item: "Kick licence per car", entry: 0.3, target: 0.5, premium: 0.75, basis: "No public anchor for capacitive kick modules; judgement"}
+    - {id: p-cpdchip, item: "QPF5100Q in a standalone CPD module", entry: 4.0, target: 5.0, premium: 6.0, basis: "Must sit below AWRL6432 contract (≈$6.3–11 est) and near NXP 15.4z ($4.85–6.33 1k)"}
+
+volumes:
+  - {label: "CPD licence, 3 M UWB-key cars a year", units: 3000000, price: p-cpdlic}
+  - {label: "Kick licence, 2 M cars a year", units: 2000000, price: p-kicklic}
+  - {label: "Standalone CPD chip, 1 M cars a year without UWB key", units: 1000000, price: p-cpdchip}
+
+attach:
+  - {id: t-algo, lever: "Algorithm partner (Qorvo + Algorized at CES 2024; ARIA + Algorized 2026; CEVA licenses UWB CPD software)", effort: med}
+  - {id: t-ncap, lever: "Pre-tested Euro NCAP CPD scenarios and SD-102 dossier template (TI publishes verified test data)", effort: med}
+  - {id: t-tier1, lever: "Tier-1s already showing UWB CPD: Continental, LG Innotek, Joynext, YFORE", effort: low}
+  - {id: t-bundle, lever: "Bundle with the key anchors and FEM: one supplier for access and cabin sensing (judgement)", effort: low}
+  - {id: t-china, lever: "C-NCAP direct-detection support for Chinese Tier-1s", effort: med}
+
+risks:
+  - "Resolution: Euro NCAP tests may favour 60 GHz for all seats and footwells; UWB results in the official tests are not public."
+  - "If UWB keys stay in premium cars, the reuse argument covers only a small part of production."
+  - "Time-sharing one anchor between key and radar is unproven at Euro NCAP timing."
+  - "NXP, ST and Calterah offer the same function on their key chips, so radar is a requirement, not a differentiator."
+  - "Unknown from public data: QPF5100Q radar performance, CPD design wins, capacitive kick module prices, real 60 GHz contract prices."

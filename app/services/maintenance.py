@@ -33,6 +33,8 @@ AFFECTS = {
     "foundry": "Evidence page only (not scored)",
     "competitor_tech": "Evidence page only (not scored)",
     "new_markets": "Ideas page only (not scored)",
+    "auto_reach": "Automotive map and its Top moves (applied immediately)",
+    "case": "Preliminary case: the case is revised from it",
 }
 FILE_UPDATE = (
     "Flag only: the data file must be corrected in the repository (Data quality → to-do); the vote changes no result."
@@ -95,9 +97,13 @@ def items(session: Session) -> list[dict]:
                 "author": r.author,
                 "date": r.created_at,
                 "status": "confirmed" if r.verdict == "correct" else "open",
-                "link": f"/business/evidence/{r.key}",
+                "link": f"/business/automotive?cell={r.key}#detail"
+                if r.dataset == "auto_reach"
+                else f"/business/reports/{r.dataset[5:]}#i-{r.key}"
+                if r.dataset.startswith("case:")
+                else f"/business/evidence/{r.key}",
                 "resolution": FILE_UPDATE,
-                "affects": AFFECTS.get(r.dataset, ""),
+                "affects": AFFECTS.get(r.dataset.split(":")[0], ""),
             }
         )
     for f in session.scalars(select(TechFeedback)):

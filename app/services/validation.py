@@ -137,7 +137,7 @@ def _part_checks_uncached(session: Session) -> tuple[dict, list]:
                 f"{len(unknown_life)} parts with unknown lifecycle",
                 "Lifecycle comes from manufacturer pages that did not list these parts.",
                 "NRND / obsolete parts are listed last; an unknown one may be recommended.",
-                "/lifecycle",
+                "/parts",
                 len(unknown_life),
                 unknown_life,
             )
@@ -205,7 +205,7 @@ def _part_checks_uncached(session: Session) -> tuple[dict, list]:
                 f"{len(lconf)} parts with conflicting lifecycle",
                 "Two public sources disagree; only a current product page or PCN decides.",
                 "A part may be shown as active although it is NRND, or the reverse.",
-                "/lifecycle",
+                "/parts",
                 len(lconf),
                 lconf,
             )

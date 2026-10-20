@@ -37,7 +37,7 @@
     <tr><th>Lifecycle</th><td>{{ lifecycle_badge(part)[0] }}{% if part.lifecycle_source %} <span class="muted">({{ part.lifecycle_source }})</span>{% endif %}</td></tr>
     <tr><th>Release date</th><td>{{ part.release_date or 'unknown' }}</td></tr>
     <tr><th>Datasheet revision</th><td>{{ part.datasheet_revision or 'unknown' }}{% if part.datasheet_date %} ({{ part.datasheet_date }}){% endif %}</td></tr>
-    <tr><th>DigiKey</th>{% if pricing_enabled() %}<td hx-get="/pricing/{{ part.id }}" hx-trigger="load"><span class="muted">Loading price and stock…</span></td>
+    <tr><th>DigiKey</th>{% if pricing_enabled() %}<td hx-get="/pricing/{{ part.id }}" hx-trigger="load"><span class="muted"><span class="spinner" aria-hidden="true"></span> Loading price and stock…</span></td>
       {% else %}<td class="muted">Not connected: add a DigiKey API key to see price and stock.</td>{% endif %}</tr>
   </tbody>
 </table>
@@ -109,7 +109,7 @@
 {% set badge = {'fff': 'ok', 'functional': 'info', 'package': 'cat'} %}
 {% set ncol = 7 if pricing_enabled() else 6 %}
 <div class="table-wrap"><table class="results">
-  <thead><tr><th scope="col">Candidate</th><th scope="col">Compatibility</th><th scope="col">Package</th><th scope="col" title="Same function on every pin position">Pins</th><th scope="col" title="Priority 1 vs {{ part.mpn }}">Critical deviations</th><th scope="col">Qualification · lifecycle</th>{% if pricing_enabled() %}<th scope="col">DigiKey</th>{% endif %}</tr></thead>
+  <thead><tr><th scope="col">Candidate</th><th scope="col">Compatibility</th><th scope="col">Package</th><th scope="col" title="Same function on every pin position">Pins</th><th scope="col" title="Priority 1 electrical parameters vs {{ part.mpn }}; package and pins are in their own columns">Electrical (priority 1)</th><th scope="col">Qualification · lifecycle</th>{% if pricing_enabled() %}<th scope="col">DigiKey</th>{% endif %}</tr></thead>
   <tbody>
   {% set ns = namespace(cat='', divided=false, unofficial=false) %}
   {% for r, v in rows %}{% set c = r.candidate %}{% set ck = unofficial_keys(c) %}{% if ck %}{% set ns.unofficial = true %}{% endif %}{% set rank = ranked.get(c.id) %}{% set notes = cross_notes(part.mpn, c.mpn) %}
@@ -119,12 +119,13 @@
     <tr class="rank-divider"><td colspan="{{ ncol }}">Other options ({{ n_rest }})</td></tr>{% endif %}
     <tr class="result-row cross-{{ v.category }}{{ ' ranked rank-' ~ rank if rank is not none }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
       <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
-        <button type="button" class="linklike" aria-expanded="false" aria-controls="d-{{ c.id }}"><b>{{ c.mpn }}</b></button>
+        <a href="/parts/{{ c.id }}" class="cand-link"><b>{{ c.mpn }}</b></a>
         {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
         <br><small class="muted">{{ c.manufacturer.name|vendor }}</small>
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
-        {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}{% if nvar %}<br><small class="muted">{{ nvar }} variant{{ 's' if nvar != 1 }} (open for details)</small>{% endif %}</td>
+        {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}
+        <br><button type="button" class="detail-toggle" aria-expanded="false" aria-controls="d-{{ c.id }}"><span class="dt-arrow" aria-hidden="true">▸</span> {{ 'Show details & ' ~ nvar ~ ' variant' ~ ('s' if nvar != 1 else '') if nvar else 'Details' }}</button></td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>
         {% if r.fff_status == 'rejected' %}<br><small class="muted">FFF rejected in review</small>{% endif %}</td>
       <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay against {{ part.mpn }}">{{ c.package.code }}</a>{{ unofficial_mark(c, 'package', ck) }}<br><small class="muted">{{ 'same package' if r.fit.same_package else r.fit.package_relation ~ ' package' }}</small></td>
@@ -139,7 +140,7 @@
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
       <td colspan="{{ ncol }}">
         {% if rank is not none %}{% include "_cross_detail.html" %}
-        {% else %}<div class="detail-lazy" data-src="/parts/{{ part.id }}/detail/{{ c.id }}?{{ request.url.query }}"><p class="small muted">Loading details…</p></div>{% endif %}
+        {% else %}<div class="detail-lazy" data-src="/parts/{{ part.id }}/detail/{{ c.id }}?{{ request.url.query }}"><p class="small muted"><span class="spinner" aria-hidden="true"></span> Loading details…</p></div>{% endif %}
       </td>
     </tr>
   {% endfor %}
@@ -163,7 +164,7 @@
 
 <details class="category-view" hx-get="/parts/{{ part.id }}/grouped?{{ request.url.query }}" hx-trigger="toggle once" hx-target="find .cv-body">
 <summary>Grouped by cross type</summary>
-<div class="cv-body"><p class="small muted">Loading…</p></div>
+<div class="cv-body"><p class="small muted"><span class="spinner" aria-hidden="true"></span> Loading…</p></div>
 </details>
 <div class="compare-tray" id="compare-tray" role="region" aria-label="Comparison" hidden>
   <span><b data-tray-count>0</b> selected · reference <b>{{ part.mpn }}</b></span>
@@ -191,16 +192,21 @@
   // Tap a result row to show its differences and downloads.
   document.querySelectorAll("tr.result-row").forEach(row => row.addEventListener("click", e => {
     if (e.target.closest("input, a, label, [hx-get]")) return;
-    const detail = document.getElementById(row.dataset.detail), btn = row.querySelector("[aria-expanded]");
+    if (e.target.closest("button") && !e.target.closest(".detail-toggle")) return;
+    const detail = document.getElementById(row.dataset.detail), btn = row.querySelector(".detail-toggle");
     detail.hidden = !detail.hidden;
     btn.setAttribute("aria-expanded", String(!detail.hidden));
+    btn.querySelector(".dt-arrow").textContent = detail.hidden ? "▸" : "▾";
     const lazy = detail.querySelector(".detail-lazy[data-src]");
     if (!detail.hidden && lazy && window.htmx) {
       const src = lazy.dataset.src; lazy.removeAttribute("data-src");
-      htmx.ajax("GET", src, {target: lazy, swap: "innerHTML"}).catch(() => { lazy.innerHTML = '<p class="small uc-error">Could not load the details. Close and open the row to try again.</p>'; lazy.dataset.src = src; });
+      btn.classList.add("loading");
+      htmx.ajax("GET", src, {target: lazy, swap: "innerHTML"})
+        .catch(() => { lazy.innerHTML = '<p class="small uc-error">Could not load the details. Close and open the row to try again.</p>'; lazy.dataset.src = src; })
+        .finally(() => btn.classList.remove("loading"));
     }
   }));
-  if (location.hash.startsWith("#row-")) document.querySelector(location.hash + " .linklike")?.click();
+  if (location.hash.startsWith("#row-")) document.querySelector(location.hash + " .detail-toggle")?.click();
   // Comparison tray: selected count, clear, compare (the reference is always included)
   const tray = document.getElementById("compare-tray"), picks = () => [...document.querySelectorAll('input[name="pick"][type="checkbox"]')];
   const sync = () => { const n = picks().filter(i => i.checked).length; tray.hidden = n === 0; tray.querySelector("[data-tray-count]").textContent = n; };

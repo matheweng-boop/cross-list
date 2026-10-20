@@ -48,7 +48,7 @@ def test_technology_fit_and_cases(client):
     assert "Technology fit" in client.get("/business/technology").text
     for v in ("develop", "low_attach", "chips"):
         assert client.get(f"/business/technology?view={v}").status_code == 200
-    assert "Not our product type" in client.get("/business/applications/1").text
+    assert "Customer part" in client.get("/business/applications/1").text
     page = client.get("/business/cases/new?fn=pol_ldo").text
     assert "What BizDev knows" in page and "PoL LDO" in page
     r = client.post("/business/cases", data={"title": "Automotive PoL LDO", "fn": "pol_ldo", "question": "Develop it?",

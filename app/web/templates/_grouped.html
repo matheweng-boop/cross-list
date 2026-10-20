@@ -11,7 +11,7 @@
   <article class="cross" id="{{ c }}-{{ r.candidate.id }}">
     <header>
       <b>{{ r.candidate.label }}</b>
-      <span class="muted">{{ r.candidate.package.code }}</span>
+      <span class="muted">{{ r.candidate.package.code }} · {{ 'same package' if r.fit.same_package else r.fit.package_relation ~ ' package' }}</span>
       {{ part_badges(r.candidate) }}
       {% for other in r.categories if other != c %}<span class="badge cat">also {{ other|upper }}</span>{% endfor %}
       {% if r.incomplete %}<span class="badge muted">incomplete data</span>{% endif %}
@@ -21,7 +21,7 @@
     {% if pricing_enabled() %}<div class="pricing" hx-get="/pricing/{{ r.candidate.id }}?ref={{ part.id }}" hx-trigger="revealed"></div>{% endif %}
     <details>
       <summary><b>Top 5 differences</b>
-        {% set top = r.top_differences() %}
+        {% set top = (r.top_differences(10)|reject('in', r.fit_diffs)|list)[:5] %}
         {% if top %}
         <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}{{ unofficial_mark(r.candidate, d.key) or unofficial_mark(r.reference, d.key) }}</li>{% endfor %}</ol>
         {% else %}<br>No differences in the compared parameters.{% endif %}

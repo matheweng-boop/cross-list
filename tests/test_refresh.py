@@ -20,11 +20,11 @@ def test_csv_refresh_records_changes(session, part, tmp_path):
     assert run(session, [CsvSource([csv_path])])["changed"] == 0
 
 
-def test_lifecycle_page_lists_changes(client, session, tmp_path):
+def test_refresh_records_change_events(session, tmp_path):
     csv_path = tmp_path / "pcn.csv"
     csv_path.write_text(
         "manufacturer,mpn,status,release_date,revision,revision_date,source\nSynGamma,SC141,obsolete,,,,PDN-1\n"
     )
     run(session, [CsvSource([csv_path])])
-    html = client.get("/lifecycle").text
-    assert "PDN-1" in html and "SC141" in html
+    events = session.query(ChangeEvent).all()
+    assert any(e.part.mpn == "SC141" and "PDN-1" in (e.source or "") for e in events)

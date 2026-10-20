@@ -1,16 +1,16 @@
 {% from "_macros.html" import part_badges %}
 {% if parts or catalogue %}
-<ul class="suggest-list" role="listbox">
+<ul class="suggest-list" role="listbox" aria-label="Matching part numbers">
   {% for p in parts %}
-  <li role="option"><a href="/parts/{{ p.id }}">
+  <li role="option" id="sg-p{{ p.id }}" aria-selected="false"><a href="/parts/{{ p.id }}" tabindex="-1">
     <span class="sg-mpn">{{ p.mpn }}</span>
     <span class="sg-meta">{{ p.manufacturer.name|vendor }} · {{ p.package.code }}</span>
-    {% if not p.is_reference %}<span class="badge new">find Skyworks part</span>{% endif %}
+    {% if not p.is_reference %}<span class="sg-hint">→ find a Skyworks part</span>{% endif %}
     {{ part_badges(p) }}
   </a></li>
   {% endfor %}
   {% for r in catalogue %}
-  <li role="option"><a href="/find?q={{ r.mpn|urlencode }}">
+  <li role="option" id="sg-c{{ loop.index }}" aria-selected="false"><a href="/find?q={{ r.mpn|urlencode }}" tabindex="-1">
     <span class="sg-mpn">{{ r.mpn }}</span>
     <span class="sg-meta">{{ r.manufacturer|vendor }} · {{ r.source_category }}</span>
     <span class="badge sg-cat" title="Catalogue record: no parameters or crosses in BizDev yet">catalogue</span>

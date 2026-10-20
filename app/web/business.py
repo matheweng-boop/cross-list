@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -22,7 +22,7 @@ from app.models import (
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, quality, vocab
+from app.services import blocks, cases, pipeline, prelim, quality, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -196,7 +196,7 @@ EXPLORER_FILTERS = {
     "build": ("New design", lambda e: (e["path"] or {}).get("path") == "new_design"),
     "acquire": ("New technology: partner / acquire", lambda e: (e["path"] or {}).get("path") == "new_capability"),
     "kept": ("Kept for consideration", lambda e: (e["decision"] or {}).get("status") == "keep"),
-    "chips": ("Not our product type", lambda e: e["gap_type"] == "not_ours"),
+    "chips": ("Customer parts (chips we do not make)", lambda e: e["gap_type"] == "not_ours"),
 }
 
 
@@ -222,6 +222,14 @@ def opportunity_explorer(
     sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "reach")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
     c["type_counts"] = Counter(e["gap_type"] for e in rows)
+    # fit as High / Medium / Low against the best score of all functions, so a filter does not move the bands
+    top = max((e["score"] or 0 for e in rows), default=0)
+    for e in rows:
+        e["band"] = (
+            None
+            if e["score"] is None or not top
+            else next(b for b, lim in (("High", 2 / 3), ("Medium", 1 / 3), ("Low", 0)) if e["score"] / top >= lim)
+        )
     if t in op.GAP_TYPE_LABEL:
         rows = [e for e in rows if e["gap_type"] == t]
     elif f != "chips":  # chips we do not make only on request
@@ -230,8 +238,14 @@ def opportunity_explorer(
         rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
     rows.sort(key=EXPLORER_SORTS[sort][2], reverse=dir == "desc")
     shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
+    shown = [e for e in rows if (e["decision"] or {}).get("status") != "set_aside"]
+    # columns with one value in every row are said once above the table instead (the sorted column always stays)
+    crowds = {(e["competition"] or {}).get("crowding") for e in shown}
+    c["same"] = {"gap": len({e["gap_type"] for e in shown}) == 1,
+                 "crowd": len(crowds) == 1 and len(shown) > 1 and sort != "competition",
+                 "tam": not any(e["tam_apps"] for e in shown) and sort != "tam"}  # fmt: skip
     c.update(
-        rows=[e for e in rows if (e["decision"] or {}).get("status") != "set_aside"],
+        rows=shown,
         aside=[e for e in rows if (e["decision"] or {}).get("status") == "set_aside"],
         sort=sort,
         dir=dir,
@@ -275,12 +289,12 @@ async def decide(request: Request, session: Session = Depends(get_session)):
 
 
 SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
-                     "customers": "Customers", "idea": "New ideas", "report": "Product ideas & reports"}  # fmt: skip
+                     "customers": "Customers", "idea": "New ideas", "report": "Research & ideas"}  # fmt: skip
 
 
 @router.post("/business/shortlist")
 async def shortlist_add(request: Request, session: Session = Depends(get_session)):
-    """Push an item into the business-case candidates (once; pushing again keeps the first)."""
+    """Put an item on the shortlist for a business case (once; pushing again keeps the first)."""
     form = await request.form()
     origin, key = str(form.get("origin") or ""), str(form.get("key") or "").strip()[:200]
     if origin not in SHORTLIST_ORIGINS or not key:
@@ -291,7 +305,18 @@ async def shortlist_add(request: Request, session: Session = Depends(get_session
                                   detail=str(form.get("detail") or "").strip()[:2000] or None,
                                   fn=fn if fn in blocks.catalogue()["functions"] else None))  # fmt: skip
         session.commit()
+    if request.headers.get("accept", "").startswith("application/json"):  # the button's script: stay on the page
+        return {"count": _shortlist_count(session)}
     return RedirectResponse(_back(request, form, "/business/shortlist"), status_code=303)
+
+
+def _shortlist_count(session: Session) -> int:
+    return session.scalar(select(func.count(ShortlistItem.id))) or 0
+
+
+@router.get("/api/shortlist/count")
+def shortlist_count(session: Session = Depends(get_session)):
+    return {"count": _shortlist_count(session)}
 
 
 @router.post("/business/shortlist/{item_id:int}")
@@ -714,7 +739,7 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
 
 @router.get("/business/reports", response_class=HTMLResponse)
 def product_reports(request: Request, kind: str = "", tag: str = ""):
-    """Pre-lim product ideas and reports: the list."""
+    """Research & ideas: product ideas and reports, the list."""
     rows = [
         r for r in rp.reports() if (not kind or r.get("kind") == kind) and (not tag or tag in (r.get("tags") or []))
     ]
@@ -760,6 +785,12 @@ async def report_question_decide(request: Request, qid: int, session: Session = 
     return RedirectResponse(f"/business/reports/questions?day={day}#q{qid}", status_code=303)
 
 
+@router.get("/business/reports/method", response_class=HTMLResponse)
+def case_method(request: Request):
+    """How a preliminary case is built: what we learnt, and the template every case follows."""
+    return templates.TemplateResponse(request, "business/case_method.html", {"distance": prelim.DISTANCE})
+
+
 @router.get("/business/reports/{slug}", response_class=HTMLResponse)
 def product_report(request: Request, slug: str, session: Session = Depends(get_session)):
     r = rp.report(slug)
@@ -767,8 +798,32 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
         raise HTTPException(404, "Report not found")
     ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.html",
            "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
-           "q_statuses": rp.Q_STATUSES}  # fmt: skip
+           "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
+           "verdict_label": prelim.VERDICT_LABEL}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+@router.post("/business/reports/{slug}/react")
+async def case_react(request: Request, slug: str, session: Session = Depends(get_session)):
+    form = await request.form()
+    key = str(form.get("key") or "")
+    try:
+        prelim.react(session, slug, key, str(form.get("verdict") or ""), str(form.get("comment") or ""),
+                     str(form.get("author") or ""))  # fmt: skip
+    except ValueError:
+        raise HTTPException(400, "Unknown item or verdict") from None
+    return RedirectResponse(f"/business/reports/{slug}#i-{key}", status_code=303)
+
+
+@router.post("/business/reports/{slug}/price")
+async def case_price(request: Request, slug: str, session: Session = Depends(get_session)):
+    form = await request.form()
+    key = str(form.get("key") or "")
+    try:
+        prelim.set_price(session, slug, key, _num(str(form.get("value") or "")))
+    except ValueError:
+        raise HTTPException(400, "Unknown price item") from None
+    return RedirectResponse(f"/business/reports/{slug}#i-{key}", status_code=303)
 
 
 @router.get("/business/reports/{slug}/background", response_class=HTMLResponse)

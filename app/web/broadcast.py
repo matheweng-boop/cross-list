@@ -6,22 +6,35 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import BroadcastConfig
-from app.services import broadcast
+from app.models import BroadcastConfig, Part
+from app.services import broadcast, products
+from app.services.queries import _pn_column, normalize_pn
 from app.web.routes import templates
 
 router = APIRouter()
 
 
+def _part_links(session: Session, mpns: set[str]) -> dict[str, str]:
+    """Where each radio part number leads: its part page when the part has full data, else the manufacturer's
+    catalogue page, else the part search."""
+    norm = {normalize_pn(m): m for m in mpns}
+    pages = {normalize_pn(mpn): f"/parts/{pid}" for pid, mpn in
+             session.execute(select(Part.id, Part.mpn).where(_pn_column().in_(norm)))}  # fmt: skip
+    catalogue = {normalize_pn(r["mpn"]): r["url"] for r in products._catalogue_index().values() if r.get("url")}
+    return {m: pages.get(k) or catalogue.get(k) or f"/find?q={m}" for k, m in norm.items()}
+
+
 @router.get("/broadcast", response_class=HTMLResponse)
-def overview(request: Request):
+def overview(request: Request, session: Session = Depends(get_session)):
     devices = broadcast.catalog()
     by_role = {role: [d for d in devices if d["role"] == role] for role in broadcast.ROLES}
+    tf = broadcast.tuner_features()
+    links = _part_links(session, {d["mpn"] for d in devices} | {t["mpn"] for t in tf.get("tuners") or []})
     return templates.TemplateResponse(
         request,
         "broadcast/index.html",
         {"by_role": by_role, "roles": broadcast.ROLES, "standards_of": broadcast.standards_of,
-         "documents": broadcast.documents(), "tf": broadcast.tuner_features(),
+         "documents": broadcast.documents(), "tf": tf, "links": links,
          "by_mpn": {d["mpn"]: d for d in devices}},
     )  # fmt: skip
 

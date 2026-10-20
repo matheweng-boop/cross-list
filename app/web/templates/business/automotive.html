@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% macro step(s, here) %}
+  {% if s.why %}<p>{{ s.why }}</p>{% endif %}
+  {% if s.missing %}<p><b>What it takes:</b> {{ s.missing }}</p>{% endif %}
+  {% if s.driver %}<p><b>Driver:</b> {{ s.driver }}{% if s.demand %} · demand {{ s.demand }}{% endif %}</p>{% endif %}
+  {% if s.platforms %}<p><b>Technology:</b> {{ s.platforms|join(', ') }}</p>{% endif %}
+  {% if s.parts and here %}<p><b>Starting point:</b> {% for p in s.parts %}<a href="{{ p.url }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% if s.confidence %}<p class="muted">Confidence {{ s.confidence }}</p>{% endif %}
+  {% if s.sources %}<details><summary class="small">Sources ({{ s.sources|length }})</summary><ul class="small">{% for x in s.sources %}<li>{{ x.text }}{% if x.url %} · <a href="{{ x.url }}" rel="noopener" target="_blank">link ↗</a>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+{% endmacro %}
+{% macro badge(st) %}<span class="badge {{ 'ok' if st == 'accepted' else ('bad' if st == 'rejected' else 'unknown') }}">{{ st }}</span>{% endmacro %}
+{% block content %}
+<h1>Automotive map</h1>
+<p class="subtitle muted">For each automotive application: which functions we already sell in automotive grade, which we sell but would have to qualify, and which our technology could reach. Click a letter for the reasoning.</p>
+
+<nav class="am-bar" aria-label="Map view">
+  <span class="am-views">{% for v, label in (('apps', 'By application'), ('rf', 'Table: RF, radio & timing'), ('all', 'Table: all functions')) %}<a href="?view={{ v }}" class="chip{{ ' on' if view == v }}"{% if view == v %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</span>
+  <span class="am-legend">{% for lv in levels %}<span class="am-key" title="{{ level_help[lv] }}"><span class="am-cell am-{{ lv }}">{{ 'G' if lv == 'gap' else lv }}</span> {{ level_label[lv] }}</span>{% endfor %}</span>
+</nav>
+
+{% if view == 'apps' %}
+<div class="am-apps">{% for a in m.apps %}
+  <section class="am-app"><h3>{{ a.label }}{% if a.diagrams %} <small class="muted" title="{{ a.diagrams|join(' · ') }}">{{ a.diagrams|length }} diagram{{ 's' if a.diagrams|length != 1 }}</small>{% endif %}</h3>
+  {% for lv in levels %}{% set cs = by_app[a.id].get(lv) %}{% if cs %}
+    <div class="am-row"><span class="am-cell am-{{ lv }}" title="{{ level_label[lv] }}">{{ 'G' if lv == 'gap' else lv }}</span>
+    {% for c in cs %}<a href="?view=apps&cell={{ c.key }}#detail" class="am-fnchip{{ ' am-sel' if sel and sel.key == c.key }}">{{ c.label }}{% if c.next and c.next.level %} <span class="am-nx" title="next: {{ level_label[c.next.level] }}">→{{ c.next.level }}</span>{% endif %}{% if c.status == 'accepted' %} ✓{% endif %}</a>{% endfor %}</div>
+  {% endif %}{% endfor %}
+  </section>{% endfor %}
+</div>
+<p class="small muted">→C / →D = a next step is proposed on a function we already sell. ✓ = accepted by a reviewer. A and B come from our parts (automotive grade as the cross lists and catalogue state it, or from ordering codes); C, D and next steps are proposals from our technology platforms and public research.</p>
+{% else %}
+<div class="table-wrap am-wrap"><table class="am-matrix">
+  <thead><tr><th scope="col">Application</th>{% for fn in columns %}<th scope="col" class="am-fn"><span>{{ label(fn) }}</span></th>{% endfor %}</tr></thead>
+  <tbody>{% for a in m.apps %}<tr>
+    <th scope="row">{{ a.label }}{% if a.diagrams %} <small class="muted" title="{{ a.diagrams|join(' · ') }}">{{ a.diagrams|length }} diagram{{ 's' if a.diagrams|length != 1 }}</small>{% endif %}</th>
+    {% for fn in columns %}{% set c = m.cells.get((a.id, fn)) %}<td>{% if c and (c.status != 'rejected' or c.level == 'A') %}<a href="?view={{ view }}&cell={{ c.key }}#detail" class="am-cell am-{{ c.level }}{{ ' am-sel' if sel and sel.key == c.key }}" title="{{ c.label }}: {{ level_label[c.level] }}{% if c.next and c.next.level and c.status != 'rejected' %} → next: {{ level_label[c.next.level] }}{% endif %}">{{ 'G' if c.level == 'gap' else c.level }}{% if c.next and c.next.level and c.status != 'rejected' %}<sup>+</sup>{% endif %}{% if c.status == 'accepted' %}<sup>✓</sup>{% endif %}</a>{% endif %}</td>{% endfor %}
+  </tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">G = gap. <sup>+</sup> = a next step is proposed on a function we already sell. <sup>✓</sup> = accepted by a reviewer. A and B come from our parts (automotive grade as the cross lists and catalogue state it, or from ordering codes); C, D and next steps are proposals from our technology platforms and public research.</p>
+{% endif %}
+
+{% if sel %}
+<section id="detail" class="pl-card am-detail">
+  <h2>{{ sel.app_label }} · {{ sel.label }}</h2>
+  <p><span class="am-cell am-{{ sel.level }}">{{ 'G' if sel.level == 'gap' else sel.level }}</span> <b>{{ level_label[sel.level] }}</b> <span class="muted">– {{ level_help[sel.level] }}</span>{% if sel.status and not (sel.next and sel.next.level) %} {{ badge(sel.status) }}{% endif %}</p>
+  {{ step(sel, true) }}
+  {% if sel.how %}<p class="small muted">Automotive grade from: {% for h, n in sel.how.items() %}{{ h }} ({{ n }}){{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% if sel.next %}<div class="am-next">
+    {% if sel.next.level %}<h3>Next step: <span class="am-cell am-{{ sel.next.level }}">{{ sel.next.level }}</span> {{ sel.next.title or level_label[sel.next.level] }} {{ badge(sel.status) }}</h3>{% else %}<h3>Note</h3>{% endif %}
+    {{ step(sel.next, true) }}
+  </div>{% endif %}
+  {% if sel.status %}<form method="post" action="/business/automotive/review" class="review-actions">
+    <input type="hidden" name="cell" value="{{ sel.key }}"><input type="hidden" name="view" value="{{ view }}">
+    <span class="small">Is this call right?</span>
+    {% if sel.status != 'accepted' %}<button name="verdict" value="accept">Accept</button>{% endif %}
+    {% if sel.status != 'rejected' %}<button name="verdict" value="reject" class="secondary outline">Reject</button>{% endif %}
+    {% if sel.status != 'proposed' %}<button name="verdict" value="reset" class="secondary outline">Back to proposed</button>{% endif %}
+  </form>{% endif %}
+</section>
+{% endif %}
+
+<h2 id="moves">Top moves</h2>
+<p class="small muted">The steps to an automotive product (B qualify, C variant, D adjacent), ranked by how strongly the research shows car makers asking for them, then by how many applications need the function.</p>
+{% if moves %}<div class="table-wrap"><table class="small am-moves">
+  <thead><tr><th scope="col">Step</th><th scope="col">Level</th><th scope="col">Applications</th><th scope="col">Driver</th></tr></thead>
+  <tbody>{% for x in moves %}<tr>
+    <td><a href="?view={{ view }}&cell={{ x.key }}#detail">{{ x.label }}</a>{% if x.label != label(x.fn) %} <small class="muted">{{ label(x.fn) }}</small>{% endif %}</td>
+    <td><span class="am-cell am-{{ x.now }}" title="today: {{ level_label[x.now] }}">{{ 'G' if x.now == 'gap' else x.now }}</span>{% if x.now != x.level %} → <span class="am-cell am-{{ x.level }}" title="{{ level_label[x.level] }}">{{ x.level }}</span>{% endif %}</td>
+    <td>{{ x.apps|join(', ') }}</td>
+    <td>{{ x.driver or '–' }}{% if x.demand %} <small class="muted">· demand {{ x.demand }}</small>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>{% else %}<p class="muted">No open steps in this view.</p>{% endif %}
+
+{% if m.rejected %}<details class="small"><summary>Rejected calls ({{ m.rejected|length }})</summary><ul>{% for c in m.rejected %}<li><a href="?view=all&cell={{ c.key }}#detail">{{ c.app_label }} · {{ c.label }}</a></li>{% endfor %}</ul></details>{% endif %}
+{% endblock %}

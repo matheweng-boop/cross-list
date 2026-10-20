@@ -7,9 +7,9 @@ working; this module only decides where a page sits.
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
+        ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
         ("Skyworks + Qorvo", "/portfolio", "The two lines side by side: strengths, which to pick, cross-selling"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
-        ("Lifecycle", "/lifecycle", "New, NRND and obsolete parts"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
     )),
     ("systems", "Systems & applications", (
@@ -22,9 +22,10 @@ NAV = (
         ("Overview", "/business", "Key results and analysis scope"),
         ("Opportunity explorer", "/business/explorer", "Rank missing functions by reach, feasibility, competition"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
+        ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
-        ("Pre-lim ideas & reports", "/business/reports", "Research reports and preliminary product ideas"),
+        ("Research & ideas", "/business/reports", "Research reports and preliminary product ideas"),
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
     )),
     ("knowledge", "Engineering knowledge", (
@@ -54,9 +55,8 @@ PLACES = {
     "/overlay/": ("products", "/"),
     "/packages/": ("products", "/"),
     "/pricing/": ("products", "/"),
-    "/parts": ("products", "/"),  # Browse products: no longer in the menu, the page still works
+    "/parts": ("products", "/parts"),
     "/compare": ("products", "/compare"),
-    "/lifecycle": ("products", "/lifecycle"),
     "/portfolio": ("products", "/portfolio"),
     "/broadcast/configurations": ("systems", "/broadcast/configurations"),
     "/broadcast": ("products", "/broadcast"),
@@ -73,6 +73,7 @@ PLACES = {
     "/business/evidence": ("opportunities", "/business/explorer"),
     "/business/attach": ("opportunities", "/business/attach"),
     "/business/rf-coverage": ("opportunities", "/business/rf-coverage"),
+    "/business/automotive": ("opportunities", "/business/automotive"),
     "/business/markets": ("opportunities", "/business/markets"),
     "/business/customers": ("opportunities", "/business/markets"),
     "/business/reports": ("opportunities", "/business/reports"),
@@ -107,7 +108,7 @@ TABS = (
         ("Portfolio coverage", "/business/applications"),
     ),
     (("Markets", "/business/markets"), ("Customers", "/business/customers")),
-    (("Candidates", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
+    (("Shortlist", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
     (("Review queue", "/manage/reviews"), ("Part requests", "/requests"), ("Diagram feedback", "/blocks/feedback")),
     (("Data quality", "/business/quality"), ("Human validation", "/business/validation")),
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),

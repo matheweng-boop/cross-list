@@ -11,6 +11,7 @@ def test_explorer_sorts_and_old_views(client):
     html = client.get("/business/explorer?view=feasibility").text  # old links land on the matching sort
     assert 'aria-sort="descending"' in html and "Fit score</a>" not in html
     assert "higher is better" in html and "Evidence" not in html.split("<thead>")[1].split("</thead>")[0]
+    assert "How the score works" in html and any(f">{b}</span>" in html for b in ("High", "Medium", "Low"))
 
 
 def test_keep_set_aside_and_restore(client):
@@ -56,8 +57,14 @@ def test_candidates_to_business_case(client):
     assert (
         html.count("Candidate one") == 1
         and "Wireless audio for e-bikes" in html
-        and "✓ on the list" in client.get("/business/explorer").text
+        and "★ on the shortlist" in client.get("/business/explorer").text
     )
+    # the button's script posts for JSON and stays on the page; the count feeds the badge on the tab
+    count = client.get("/api/shortlist/count").json()["count"]
+    r = client.post(
+        "/business/shortlist", data={"origin": "idea", "key": "Second idea"}, headers={"Accept": "application/json"}
+    )
+    assert r.status_code == 200 and r.json() == {"count": count + 1}
     item = re.search(r"shortlist=(\d+)", html).group(1)
     new = client.get(f"/business/cases/new?shortlist={item}").text
     assert f'name="shortlist" value="{item}"' in new

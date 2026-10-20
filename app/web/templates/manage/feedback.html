@@ -4,7 +4,11 @@
 <h1>Site feedback</h1>
 <p class="subtitle muted">What people sent with the Feedback button, one digest per day. Similar points are grouped (and linked to an earlier open point they repeat), so each is answered once; the answer is shown to everyone who sent it.</p>
 
-<div class="fb-days small">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/manage/feedback?day={{ day }}">{{ day|date('weekday') }} <small>{{ n }}{% if o %} · {{ o }} open{% endif %}</small></a>{% else %}<span class="muted">No feedback yet.</span>{% endfor %}</div>
+{% if not days %}
+<div class="empty-state"><p><b>No feedback yet.</b></p><p class="small">Points sent with the Feedback button (bottom right of every page) appear here, one digest per day.</p></div>
+{% else %}
+<div class="fb-days small chip-row">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/manage/feedback?day={{ day }}">{{ day|date('weekday') }} <small>{{ n }}{% if o %} · {{ o }} open{% endif %}</small></a>{% endfor %}
+  <form method="get" action="/manage/feedback" class="fb-pick inline-form"><label class="small">Earlier day <input type="date" name="day" value="{{ d.day }}" aria-label="Show the digest of this day"></label> <button type="submit" class="outline small-btn">Show</button></form></div>
 
 <section class="pl-card">
   <h2>{{ d.day|date('long') }} <small class="muted">{{ d.n }} item{{ 's' if d.n != 1 }} · {{ d.groups|length }} point{{ 's' if d.groups|length != 1 }} · {{ d.open }} open</small></h2>
@@ -28,4 +32,5 @@
   </article>
   {% else %}<p class="muted small">Nothing was sent on this day.</p>{% endfor %}
 </section>
+{% endif %}
 {% endblock %}

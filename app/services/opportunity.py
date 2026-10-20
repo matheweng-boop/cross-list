@@ -595,10 +595,10 @@ def platforms_for(fn: str) -> list[tuple[str, dict]]:
 GAP_TYPE_LABEL = {
     "candidate": "Candidate exists – requirements not validated",
     "mapping": "Probably sold already – catalogue mapping missing",
-    "true_gap": "True portfolio gap",
+    "true_gap": "Portfolio gap",
     "competitor_only": "Competitor only",
     "unknown_evidence": "Not assessed yet – gap without evidence",
-    "not_ours": "Not our product type",
+    "not_ours": "Customer part – not a product type we sell",
 }
 SCOPES = {"all": "All reference architectures (library + background)", "library": "Library architectures only"}
 

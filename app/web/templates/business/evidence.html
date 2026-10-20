@@ -74,9 +74,9 @@
       {% if ct.differentiators %}<p><b>Room to differ:</b></p><ul>{% for d in ct.differentiators %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}{{ checked(ct) }}</article>
 </div>
 
-{% if need %}<h2 id="architectures">Architectures that need it <span class="small muted">· {{ need.reach }} of {{ apps|length }}, {{ need.positions }} sockets, {{ need.adjacent }} with a door opener</span></h2>
+{% if need %}<h2 id="architectures">Architectures that need it <span class="small muted">· {{ need.reach }} of {{ apps|length }}, {{ need.positions }} blocks, {{ need.adjacent }} with a door opener</span></h2>
 <details><summary class="small">Show the {{ need.rows|length }} architectures and which of our parts each already uses</summary>
-<div class="table-wrap"><table class="bo-mini striped"><thead><tr><th>Architecture</th><th>Market</th><th>Sockets</th><th>Already uses our</th></tr></thead><tbody>
+<div class="table-wrap"><table class="bo-mini striped"><thead><tr><th>Architecture</th><th>Market</th><th>Blocks</th><th>Already uses our</th></tr></thead><tbody>
   {% for r in need.rows|sort(attribute='name') %}<tr><td>{{ r.name }}</td><td>{{ r.market }}</td><td>{{ r.qty }}</td>
     <td>{% if r.ours %}{{ r.ours|length }}: {{ r.ours[:4]|join(', ') }}{{ ' …' if r.ours|length > 4 }}{% else %}<span class="muted">none (no door opener)</span>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div></details>{% endif %}

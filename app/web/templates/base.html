@@ -26,7 +26,8 @@
   <nav class="sub-nav" aria-label="{{ label }}">{% for ilabel, href, desc in items %}<a href="{{ href }}" title="{{ desc }}"{% if ns.item == href %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a>{% endfor %}</nav>
   {% if not hide_header_search and path not in ('/', '/parts') %}
     <search class="top-search"><form action="/find" method="get">
-      <input type="search" name="q" id="global-search" placeholder="Find a part number" autocomplete="off" aria-label="Find a part number"
+      <input type="search" name="q" id="global-search" placeholder="Part number" autocomplete="off" aria-label="Find a part number"
+        role="combobox" aria-controls="suggestions" aria-expanded="false" aria-autocomplete="list"
         hx-get="/suggest" hx-trigger="input changed delay:250ms, search" hx-target="#suggestions" hx-sync="this:replace">
       </form><div id="suggestions" aria-live="polite"></div>
     </search>
@@ -38,9 +39,16 @@
   {% if ns.tabs %}<nav class="page-tabs" aria-label="Views">{% for label, href in ns.tabs %}<a href="{{ href }}"{% if ns.active_tab == href %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
   {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}
   {% block content %}{% endblock %}
+  {% if ns.tabs %}<script>(() => { const t = document.querySelector("main > nav.page-tabs"), h = document.querySelector("main h1"); if (t && h) h.after(t); })();</script>{% endif %}
 </main>
+<footer class="site-foot">
+  {% set asof = data_as_of() %}{% if asof %}<span>Cross lists loaded {{ asof|date }}</span>{% endif %}
+  <span>Built from public datasheets and catalogues</span>
+  <a href="/business/method">Methodology</a> · <a href="/rules">Cross rules</a>
+  <button type="button" onclick="document.querySelector('.fb-open').click()">Send feedback or ask a question</button>
+</footer>
 <div id="fb" class="fb">
-  <button type="button" class="fb-open" aria-expanded="false" aria-controls="fb-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback</button>
+  <button type="button" class="fb-open" aria-expanded="false" aria-controls="fb-panel" title="Send feedback on this page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback</button>
   <div class="fb-panel" id="fb-panel" hidden role="dialog" aria-label="Send feedback">
     <div class="fb-head"><b>Feedback</b><button type="button" class="fb-close" aria-label="Close">×</button></div>
     <p class="small muted">On: <span class="fb-where"></span></p>
@@ -57,10 +65,33 @@
 </div>
 <script src="/static/feedback.js" defer></script>
 <script>
-  // Suggestion list: close on Escape or a click outside the search.
+  // Suggestion list: arrow keys move through the options, Enter opens the highlighted one; Escape or a click outside
+  // closes it.
   const clear = () => document.querySelectorAll("#suggestions").forEach(el => (el.innerHTML = ""));
   document.addEventListener("keydown", e => { if (e.key === "Escape") clear(); });
   document.addEventListener("click", e => { if (!e.target.closest(".top-search, .search-bar")) clear(); });
+  document.addEventListener("keydown", e => {
+    const input = e.target.closest?.('input[role="combobox"]');
+    if (!input || !["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) return;
+    const opts = [...document.querySelectorAll('#suggestions [role="option"]')];
+    const cur = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
+    if (e.key === "Enter") {
+      if (cur >= 0) { e.preventDefault(); location.href = opts[cur].querySelector("a").href; }
+      return;
+    }
+    if (!opts.length) return;
+    e.preventDefault();
+    const next = e.key === "ArrowDown" ? Math.min(cur + 1, opts.length - 1) : Math.max(cur - 1, -1);
+    opts.forEach((o, i) => o.setAttribute("aria-selected", String(i === next)));
+    if (next >= 0) { input.setAttribute("aria-activedescendant", opts[next].id); opts[next].scrollIntoView({block: "nearest"}); }
+    else input.removeAttribute("aria-activedescendant");
+  });
+  document.addEventListener("htmx:afterSwap", e => {
+    if (e.target.id !== "suggestions") return;
+    const input = document.querySelector('input[role="combobox"][aria-controls="suggestions"]');
+    input?.setAttribute("aria-expanded", String(!!e.target.querySelector('[role="option"]')));
+    input?.removeAttribute("aria-activedescendant");
+  });
 </script>
 </body>
 </html>

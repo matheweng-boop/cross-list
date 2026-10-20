@@ -4,18 +4,18 @@
 {% block content %}
 <p class="small"><a href="/business/applications?co={{ co }}">← All applications</a></p>
 <h1>{{ app.name }}</h1>
-<p class="subtitle muted">{{ app.category }} · functional blocks (level 2) and their design-in positions (level 3). Change a status, quantity or
+<p class="subtitle muted">{{ app.category }} · functional blocks (level 2) and the blocks in them (level 3). Change a status, quantity or
   ASP to see what it means: the simulator runs on this page only. ASPs can be saved for every application.</p>
 {{ company_switch('/business/applications/' ~ app.i, co, companies) }}
 <div id="bo-sim" class="bo-sim">
   <div class="bo-tiles">
-    <div class="bo-tile"><b data-m="cov">{{ pct(m.coverage) }}</b><span>{{ term('coverage', 'candidate coverage') }}</span><small data-m="cov-sub">{{ m.supported }} of {{ m.in_scope }} in-scope positions</small></div>
-    <div class="bo-tile"><b data-m="share">{{ pct(m.content_share) }}</b><span class="bo-term" title="Of the money in priced sockets, the part in sockets with our parts">modeled portfolio content</span><small data-m="share-sub">priced positions only</small></div>
-    <div class="bo-tile"><b data-m="open">{{ usd(m.content_open) }}</b><span class="bo-term" title="Money per system in priced sockets we do not fill yet">additional content opportunity</span><small>per system, priced positions</small></div>
-    <div class="bo-tile"><b data-m="unaddr">{{ m.gap + m.competitor }}</b><span class="bo-term" title="Sockets that are a gap or competitor only">unaddressed sockets</span><small>gaps + competitor only</small></div>
-    <div class="bo-tile"><b data-m="pc">{{ pct(m.price_completeness) }}</b><span class="bo-term" title="In-scope sockets with an ASP entered">pricing completeness</span><small data-m="pc-sub">{{ m.priced }} of {{ m.in_scope }} positions priced</small></div>
+    <div class="bo-tile"><b data-m="cov">{{ pct(m.coverage) }}</b><span>{{ term('coverage', 'candidate coverage') }}</span><small data-m="cov-sub">{{ m.supported }} of {{ m.in_scope }} in-scope blocks</small></div>
+    <div class="bo-tile"><b data-m="share">{{ pct(m.content_share) }}</b><span class="bo-term" title="Of the money in priced blocks, the part in blocks with our parts">modeled portfolio content</span><small data-m="share-sub">priced blocks only</small></div>
+    <div class="bo-tile"><b data-m="open">{{ usd(m.content_open) }}</b><span class="bo-term" title="Money per system in priced blocks we do not fill yet">additional content opportunity</span><small>per system, priced blocks</small></div>
+    <div class="bo-tile"><b data-m="unaddr">{{ m.gap + m.competitor }}</b><span class="bo-term" title="Blocks that are a gap or competitor only">gaps</span><small>gaps + competitor only</small></div>
+    <div class="bo-tile"><b data-m="pc">{{ pct(m.price_completeness) }}</b><span class="bo-term" title="In-scope blocks with an ASP entered">pricing completeness</span><small data-m="pc-sub">{{ m.priced }} of {{ m.in_scope }} blocks priced</small></div>
   </div>
-  <div class="bo-legend small"><span class="bo-st st-supported">Portfolio</span><span class="bo-st st-gap">Gap (opportunity)</span><span class="bo-st st-competitor">Competitor only</span><span class="bo-st st-na" title="{{ bo_status_help.na }}">Not our product type</span> · processors, MCUs, memory, sensors, antennas and other chips Skyworks / Qorvo do not make; left out of the coverage percentage</div>
+  <div class="bo-legend small"><span class="bo-st st-supported">Portfolio</span><span class="bo-st st-gap">Gap</span><span class="bo-st st-competitor">Competitor only</span><span class="bo-st st-na" title="{{ bo_status_help.na }}">Customer part</span> · processors, MCUs, memory, sensors, antennas and other chips Skyworks / Qorvo do not make; left out of the coverage percentage</div>
   {% for g, gm in groups %}
   <section class="bo-group"><h3>{{ g }} <span class="small muted" data-g="{{ loop.index0 }}">{{ pct(gm.coverage) }} candidate coverage · {{ gm.supported }}/{{ gm.in_scope }}</span></h3>
     <div class="bo-pos-list">
@@ -60,10 +60,10 @@
       return {st, q, asp, el: r};
     });
     const m = calc(data), set = (k, v) => (root.querySelector(`[data-m="${k}"]`).textContent = v);
-    set("cov", pct(m.cov)); set("cov-sub", `${m.sup} of ${m.scope} in-scope positions`);
-    set("share", m.total ? pct(m.mine / m.total) : "—"); set("share-sub", m.total ? `${money(m.mine)} of ${money(m.total)} per system, priced positions only` : "no ASPs entered");
+    set("cov", pct(m.cov)); set("cov-sub", `${m.sup} of ${m.scope} in-scope blocks`);
+    set("share", m.total ? pct(m.mine / m.total) : "—"); set("share-sub", m.total ? `${money(m.mine)} of ${money(m.total)} per system, priced blocks only` : "no ASPs entered");
     set("open", money(m.total - m.mine)); set("unaddr", m.unaddr);
-    set("pc", pct(m.scope ? m.priced / m.scope : null)); set("pc-sub", `${m.priced} of ${m.scope} positions priced`);
+    set("pc", pct(m.scope ? m.priced / m.scope : null)); set("pc-sub", `${m.priced} of ${m.scope} blocks priced`);
     groupsOf.forEach(g => {
       const gm = calc(data.filter(d => g.contains(d.el)));
       g.querySelector("h3 .small").textContent = `${pct(gm.cov)} candidate coverage · ${gm.sup}/${gm.scope}`;

@@ -144,7 +144,7 @@
     selected = id;
     draw();
     history.replaceState(null, "", `?band=${id}`);
-    detail.innerHTML = '<p class="muted">Loading…</p>';
+    detail.innerHTML = '<p class="muted"><span class="spinner" aria-hidden="true"></span> Loading…</p>';
     try { detail.innerHTML = await (await fetch(`/rf-bands/${encodeURIComponent(id)}`)).text(); detail.scrollIntoView({behavior: "smooth", block: "start"}); }
     catch { detail.innerHTML = '<p class="uc-error">Could not load this band.</p>'; }
   }

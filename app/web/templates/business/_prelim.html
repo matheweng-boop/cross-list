@@ -1,0 +1,64 @@
+{# A preliminary case (data/business/cases/<slug>.yaml) with feedback per item and real ASPs; included as a report body. #}
+{% set slug = r.slug %}
+{% macro react(x, scale=false) %}{% set f = x.fb or {} %}
+<details class="pc-react" id="i-{{ x.id }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">react</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+  <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
+    <input type="hidden" name="key" value="{{ x.id }}">
+    <textarea name="comment" rows="2" maxlength="2000" placeholder="Why, or what should change (optional)" aria-label="Comment"></textarea>
+    <span class="pc-btns"><button name="verdict" value="agree" class="small-btn">Agree</button>{% if scale %}<button name="verdict" value="closer" class="small-btn outline">Closer</button><button name="verdict" value="further" class="small-btn outline">Further</button>{% endif %}<button name="verdict" value="disagree" class="small-btn outline secondary">Disagree</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reset</button>{% endif %}</span>
+  </form>
+  {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
+</details>{% endmacro %}
+{% macro conf(c) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence">{{ c }}</span>{% endif %}{% endmacro %}
+
+<h1>{{ case.title }}</h1>
+<p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a></p>
+
+<section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
+
+<h2>1. Position against the competition</h2>
+<div class="pc-grid">
+  {% for key, title, cls in (('advantages', 'Advantages', 'good'), ('disadvantages', 'Disadvantages', 'bad'), ('diff_good', 'Differentiators: good', 'good'), ('diff_bad', 'Differentiators: bad', 'bad')) %}
+  <section class="pc-box pc-{{ cls }}"><h3>{{ title }}</h3><ul>{% for x in case.position[key] %}
+    <li><span>{{ x.text }}</span>{% if x.vs %} <small class="muted">vs {{ x.vs }}</small>{% endif %} {{ conf(x.conf) }}{% if x.offset %}<br><small><b>→</b> {{ x.offset }}</small>{% endif %}{{ react(x) }}</li>{% endfor %}</ul></section>{% endfor %}
+</div>
+{% if case.architecture %}<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Architecture</th>{% for c in case.architecture.columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in case.architecture.rows %}<tr><th scope="row">{{ row[0] }}</th>{% for c in row[1:] %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>{% if case.architecture.note %}<p class="small muted">{{ case.architecture.note }}</p>{% endif %}{% endif %}
+
+<h2>2. The market today</h2>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Figure</th><th scope="col">Value</th><th scope="col">Source</th></tr></thead>
+  <tbody>{% for m in case.market_now %}<tr><td>{{ m.figure }}</td><td>{{ m.value }}</td><td>{{ m.source }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>3. Where it is heading <small class="muted">(our estimates)</small></h2>
+<ul class="pc-list">{% for o in case.outlook %}<li><b>{{ o.text }}</b> {{ conf(o.conf) }}<br><small class="muted">Basis: {{ o.basis }}</small>{{ react(o) }}</li>{% endfor %}</ul>
+
+<h2>4. Features that could benefit us, and how far they are</h2>
+<p class="small pc-scale">{% for n, (label, help) in distance.items() %}<span class="pc-d d-{{ n }}" title="{{ help }}">{{ n }} {{ label }}</span> {% endfor %}<span class="muted">· hover for the meaning; use Closer / Further to adjust</span></p>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Feature</th><th scope="col">Benefit</th><th scope="col">Distance</th><th scope="col">Why</th><th scope="col">Feedback</th></tr></thead>
+  <tbody>{% for f in case.features %}<tr><td><b>{{ f.feature }}</b></td><td>{{ f.benefit }}</td><td><span class="pc-d d-{{ f.distance }}" title="{{ distance[f.distance][1] }}">{{ f.distance }} {{ distance[f.distance][0] }}</span></td><td>{{ f.why }}</td><td>{{ react(f, true) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+
+{% if case.product %}<h2>5. Proposed product: {{ case.product.name }}</h2>
+<div class="table-wrap"><table class="small pc-table"><tbody>{% for k, v in case.product.spec %}<tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+
+<h2 id="asp">6. ASP</h2>
+<p class="small">{{ case.prices.method }}</p>
+<details class="small"><summary>Public price anchors</summary><div class="table-wrap"><table class="pc-table"><tbody>{% for a in case.prices.anchors %}<tr><td>{{ a.part }}</td><td>{{ a.price }}</td><td class="muted">{{ a.qty }}</td></tr>{% endfor %}</tbody></table></div></details>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Part</th><th scope="col">Entry</th><th scope="col">Target</th><th scope="col">Premium</th><th scope="col">Basis (est)</th><th scope="col">Real ASP, if known</th></tr></thead>
+  <tbody>{% for p in case.prices["items"] %}<tr id="i-{{ p.id }}"><td><b>{{ p.item }}</b></td><td>${{ '%.2f'|format(p.entry) }}</td><td><b>${{ '%.2f'|format(p.target) }}</b></td><td>${{ '%.2f'|format(p.premium) }}</td><td>{{ p.basis }}</td>
+    <td><form method="post" action="/business/reports/{{ slug }}/price" class="pc-price"><input type="hidden" name="key" value="{{ p.id }}"><input name="value" inputmode="decimal" value="{{ '%.2f'|format(p.real) if p.real is not none else '' }}" placeholder="$" aria-label="Real ASP for {{ p.item }}"><button class="small-btn outline">Save</button></form></td></tr>{% endfor %}</tbody>
+</table></div>
+{% if case.revenue %}<p class="small"><b>Illustration:</b>{% for v in case.revenue %} {{ v.label }} × ${{ '%.2f'|format(v.unit) }}{% if v.real %} (your ASP){% endif %} ≈ <b>${{ '{:,.0f}'.format(v.revenue / 1e6) }} M</b> a year{{ ';' if not loop.last else '.' }}{% endfor %} <span class="muted">Volumes are scenarios, not forecasts.</span></p>{% endif %}
+
+<h2>7. Raising the attach rate</h2>
+<ul class="pc-list">{% for t in case.attach %}<li>{{ t.lever }} <span class="pc-conf">{{ t.effort }} effort</span>{{ react(t) }}</li>{% endfor %}</ul>
+
+<h2>8. Risks and open questions</h2>
+<ul>{% for x in case.risks %}<li>{{ x }}</li>{% endfor %}</ul>
+<p class="small muted">Feedback on any item is listed in <a href="/manage/reviews">Requests &amp; reviews</a>; the case is revised from it. Sources and every figure: background notes below.</p>

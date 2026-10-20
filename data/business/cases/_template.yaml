@@ -4,6 +4,7 @@
 #
 # Rules
 #   - Start from the architecture (library block diagrams), not datasheets; check what today's parts already do.
+#   - Say what the customer's system gains: before and after, each gain with its type and a measure.
 #   - A roadmap item is a real step for the system; tweaks are supporting features with a low distance.
 #   - conf: high = primary document read; med = trade press or advocacy body; low = snippet or analyst PR.
 #   - Estimates are marked "est" and carry a basis. Never invent a number: write "not stated".
@@ -19,6 +20,16 @@ headline: ""                     # id of the feature the case is about; its dist
 question: ""                     # the decision, with the constraint (time frame, reuse only…)
 updated: 2026-01-01
 brief: []                        # 3 sentences: position, weak point, proposal with price
+
+customer_benefit:                # what the proposal changes in the customer's system; shown first after the brief
+  for: ""                        # who gains, e.g. "Roof telematics Tier-1; OEM connectivity team"
+  summary: ""                    # one sentence: the architectural change and why it matters to the customer
+  today: ""                      # how the customer builds it today: blocks, where they sit, links, part count
+  with_us: ""                    # how it is built with the proposal
+  gains: []                      # {id, kind, gain, how, measure, conf}  measure: "5–7 parts -> 1 (est)" or "not stated"
+                                 #   kind: parts | cabling | placement | scaling | performance | safety | software |
+                                 #         sourcing | compliance  (BENEFIT_KINDS in app/services/prelim.py)
+  gives_up: []                   # strings: what the customer gives up or must add
 
 position:
   advantages: []                 # {id, text, vs, conf}

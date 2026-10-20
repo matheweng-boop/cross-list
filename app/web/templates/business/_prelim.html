@@ -3,7 +3,7 @@
 {% import "business/_feasibility.html" as fz %}
 {% from "business/_common.html" import score_chip %}
 {% macro react(x, scale=false, question=false) %}{% set f = x.fb or {} %}
-<details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">{{ 'answer' if question else 'react' }}</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+<details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.gain or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">{{ 'answer' if question else 'react' }}</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
   <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
     <input type="hidden" name="key" value="{{ x.id }}">
     <textarea name="comment" rows="2" maxlength="2000" placeholder="{{ 'The answer, and who gave it' if question else 'Why, or what should change (optional)' }}" aria-label="Comment"></textarea>
@@ -23,6 +23,17 @@
 <p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a></p>
 
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
+
+{% set cb = case.customer_benefit %}{% if cb %}<section class="pc-benefit" id="customer-benefit" aria-labelledby="cb-title">
+<h2 id="cb-title">What the customer's architecture gains</h2>
+<p class="pc-cb-sum"><b>{{ cb.summary }}</b>{% if cb.for %}<br><small class="muted">For: {{ cb.for }}</small>{% endif %}</p>
+<div class="pc-cb-cmp"><section><h3>Today</h3><p class="small">{{ cb.today }}</p></section><span class="pc-cb-arrow" aria-hidden="true">→</span><section class="pc-cb-new"><h3>With the proposal</h3><p class="small">{{ cb.with_us }}</p></section></div>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Type</th><th scope="col">Gain for the customer</th><th scope="col">How</th><th scope="col">Measure</th><th scope="col">Feedback</th></tr></thead>
+  <tbody>{% for g in cb.gains %}<tr><td><span class="pc-kind">{{ benefit_kinds.get(g.kind, g.kind) }}</span></td><td><b>{{ g.gain }}</b></td><td>{{ g.how }}</td><td>{{ g.measure }} {{ conf(g.conf, g.conf_was) }}</td><td>{{ react(g) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if cb.gives_up %}<p class="small"><b>What the customer gives up:</b> {{ cb.gives_up|join('; ') }}.</p>{% endif %}
+</section>{% endif %}
 
 <h2>1. Position against the competition</h2>
 <div class="pc-grid">

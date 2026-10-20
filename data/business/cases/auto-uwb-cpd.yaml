@@ -15,6 +15,20 @@ brief:
   - "Our weak points: UWB radar resolves 6–30 cm where 60 GHz resolves 3–7.5 cm, we have no production CPD algorithm or Euro NCAP dossier, and NXP, ST and Calterah offer the same anchor-plus-radar idea."
   - "Proposal: a 'cabin-sense' package on today's QPF5100Q (CPD and kick firmware with a partner algorithm, Euro NCAP test pack, standalone module reference) at about $0.75–1.5 per car as a licence or $4–6 for a dedicated CPD chip (est); the 15.4ab radar chip follows (case auto-uwb-15-4ab)."
 
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "OEM safety and Euro NCAP team; access-system Tier-1"
+  summary: "Child-presence detection and kick-to-open become software on the key anchors the car already has, instead of a separate radar module in the headliner and a sensor in the bumper."
+  today: "UWB key anchors for access, plus a 60 GHz child-presence module in the headliner (radar SoC, PMIC, CAN, flash) on its own CAN node, plus a capacitive kick electrode and controller in the bumper."
+  with_us: "The interior and rear anchors run cabin-sense in time slots between key ranging and report presence, seat zone and kick over the anchor's existing link; cars without a UWB key get a standalone UWB CPD module built from the same parts."
+  gains:
+    - {id: cb-mod, kind: parts, gain: "No separate cabin radar module or kick sensor", how: "Radar mode on anchors that are already fitted", measure: "1 module + 1 kick sensor per car → 0 in UWB-key cars (est)", conf: med}
+    - {id: cb-harness, kind: cabling, gain: "One CAN node and its harness to the roof liner removed", how: "Results travel on the anchor's existing connection", measure: "1 node (est)", conf: low}
+    - {id: cb-reg, kind: compliance, gain: "No in-cabin 60 GHz waiver question in the US", how: "Sensing below 10 GHz under UWB rules", measure: "not stated", conf: med}
+    - {id: cb-trim, kind: software, gain: "Feature per trim and region by licence", how: "Same hardware, firmware enabled where Euro NCAP points matter", measure: "not stated", conf: low}
+  gives_up:
+    - "Coarser resolution (6–30 cm against 3–7.5 cm at 60 GHz)"
+    - "Sensing time shared with key ranging; production algorithm still to come from a partner"
+
 position:
   advantages:
     - {id: a-reuse, text: "Reuses digital-key anchors: no extra cabin module in cars that already have a UWB key", vs: "TI, Infineon, Calterah (60 GHz)", conf: med}

@@ -14,6 +14,19 @@ brief:
   - "Our disadvantages: no chipset (every public automotive Wi-Fi 7 module uses Qualcomm, which bundles its own front end), no automotive Wi-Fi power amplifier above 802.11ac, and in-car 6 GHz power is capped by regulation, so a high-power 6 GHz PA adds little."
   - "Proposal: RH57, a radio head for the roof telematics unit: V2X 5.9 GHz path as the base, 5 and 6 GHz Wi-Fi paths as an option (no carmaker has confirmed a Wi-Fi radio in the roof yet), BAW filters between them and front-end coexistence control, about $8–11 per antenna with Wi-Fi (est). Enabling step: automotive Wi-Fi 7 FEMs with the guard filter built in (about $1.6–2.8 each)."
 
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "Roof telematics Tier-1 (LG, Harman, Continental type); OEM connectivity team"
+  summary: "One radio head per roof antenna carries V2X and, optionally, Wi-Fi, with filtering between them, so the car's own Wi-Fi no longer cuts V2X range."
+  today: "Per antenna: a V2X front end, two Wi-Fi front ends, three filters and a meshplexer, often spread between head unit and TCU and joined by coax; US DOT measured in-car Wi-Fi cutting C-V2X range by more than half."
+  with_us: "RH57 at the roof antenna: the V2X path as the base and 5/6 GHz Wi-Fi paths as an option, BAW filters between them and front-end coexistence control; passenger Wi-Fi can stay in the head unit with our coexistence filters."
+  gains:
+    - {id: cb-coex, kind: performance, gain: "V2X keeps its range when the car's Wi-Fi is on", how: "BAW filters between paths; V2X transmit protects the Wi-Fi receiver; optional chipset signalling", measure: "Problem measured at more than half the range lost (US DOT); improvement not stated", conf: med}
+    - {id: cb-parts, kind: parts, gain: "One radio head per antenna", how: "V2X and Wi-Fi paths, filters and meshplexer in one package", measure: "7 parts → 1 (V2X FEM + 2 Wi-Fi FEMs + 3 filters + meshplexer)", conf: med}
+    - {id: cb-cable, kind: cabling, gain: "Coax loss made up at the antenna", how: "Compensator mode at the roof", measure: "not stated", conf: low}
+    - {id: cb-option, kind: scaling, gain: "One roof design with or without Wi-Fi", how: "RH57-WV and RH57-W variants; Wi-Fi paths optional", measure: "not stated", conf: low}
+  gives_up:
+    - "Wi-Fi at the roof is unproven: no production roof unit is known to carry a Wi-Fi radio, so many customers may use only the V2X path"
+
 position:
   advantages:
     - {id: a-allradio, text: "Only supplier with Wi-Fi 7 FEMs, V2X FEMs (SKY5A2105, QPF1003Q), automotive cellular (Sky5 SKY5A3xxx/5xxx) and GNSS (SKY5A2110) front ends and the BAW filters between them, for the same antenna or unit", vs: "Qualcomm, NXP, module makers", conf: high}

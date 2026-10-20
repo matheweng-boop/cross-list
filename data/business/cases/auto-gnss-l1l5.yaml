@@ -14,6 +14,19 @@ brief:
   - "Our weak points: the receivers have gone all-band (u-blox ZED-X20K and ST STA8135GA: L1/L2/L5/L6-E6), our module is L1 + L5 only, Grade 2, with two RF inputs, and TI sells a Grade 1 wideband GNSS LNA at $0.45 list."
   - "Proposal: an all-band automotive GNSS front end (L1 + L2/E6 + L5/E5, one input, one output) from our LNAs and Qorvo SAW/BAW filters, Grade 1, at about $1.6–2.6 in volume (est), plus a single-input L1 + L5 variant at about $0.9–1.4."
 
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "Antenna Tier-1 building the shark fin or roof module; OEM ADAS team needing lane-level positioning"
+  summary: "One input, one output, all bands: a single module in the fin gives the all-band receiver L1, L2/E6 and L5 for lane-level positioning, and keeps out the car's own V2X, cellular and Wi-Fi."
+  today: "Separate LNAs and SAW filters per band group (or our two-input SKY5A2110, L1 + L5 only); adding L2/E6 for lane-level ADAS means a fin redesign and more filters next to the transmitters in the same fin."
+  with_us: "One all-band module after the antenna, one coax to the receiver in the TCU or ADAS computer; a single-input L1 + L5 variant on the same footprint for cars that do not need L2/E6."
+  gains:
+    - {id: cb-parts, kind: parts, gain: "One module instead of discrete LNAs and filters", how: "Band split, LNAs and BAW/SAW filters in one package", measure: "5–8 parts → 1 (est: 2–3 LNAs + 3–5 filters)", conf: med}
+    - {id: cb-bands, kind: scaling, gain: "Lane-level bands added without a new fin design", how: "All-band and L1 + L5 variants on one footprint", measure: "2 variants, 1 layout (est)", conf: low}
+    - {id: cb-coex, kind: performance, gain: "GNSS keeps working next to the car's own transmitters", how: "Out-of-band rejection ≥55 dB from 600 MHz to 7.1 GHz (target), from the same supplier as the V2X and cellular parts", measure: "≥55 dB (target)", conf: med}
+    - {id: cb-grade, kind: placement, gain: "Fits hotter roof modules", how: "Grade 1 design", measure: "Grade 2 → Grade 1 (target)", conf: low}
+  gives_up:
+    - "A higher price than a discrete LNA (TI at $0.45 list); the gain only shows when filters and layout are counted"
+
 position:
   advantages:
     - {id: a-auto, text: "Automotive L1 + L5 module in production: LNAs, pre/post filters, B13 notch and diplexer in 2.2 × 2.7 mm, AEC-Q104 Grade 2 (SKY5A2110)", vs: "TI, Infineon, NXP (bare LNAs)", conf: high}

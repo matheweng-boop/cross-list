@@ -15,6 +15,21 @@ brief:
   - "Our weak point: no public 802.15.4ab or narrowband-assist (NBA) part while ST (sampling since Mar 2026) and Calterah (CES 2026) already have one; and no BLE, NFC, secure element or access MCU, which NXP sells as one set."
   - "Proposal: an 802.15.4ab anchor SoC with an on-chip NBA radio (two variants: ranging, ranging + radar) plus an optional anchor FEM, at about $3.5–5.5 (ranging) and $4.5–6.5 (radar) per chip in volume (est), with firmware MMS and DK 4.0 on today's QPF5100Q as the bridge."
 
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "OEM body and access team; access-system Tier-1"
+  summary: "Fewer radios and modules for car access: one 802.15.4ab anchor does UWB ranging and the narrowband assist that BLE anchors did, and the interior variant also senses the cabin, all reporting to the zone or central computer over CAN-FD."
+  today: "4–8 UWB anchors (802.15.4z) plus BLE anchors for wake-up and coarse location, wired to a dedicated access ECU; a separate 60 GHz child-presence radar module and a capacitive kick sensor."
+  with_us: "AB-R anchors on the outside (optional FEM at long-range positions), one AB-RR inside for ranging plus child presence and intrusion; CAN-FD in the anchor connects to the nearest zone controller; BLE anchors kept only where discovery needs them."
+  gains:
+    - {id: cb-ble, kind: parts, gain: "Fewer BLE anchors", how: "The on-chip narrowband radio (NBA) takes over wake-up and coarse location", measure: "Fewer, not none: phones still discover over BLE (est)", conf: med}
+    - {id: cb-cpd, kind: parts, gain: "No separate cabin radar or kick sensor in UWB-key cars", how: "AB-RR runs child presence, intrusion and kick from the anchor positions", measure: "1 radar module + 1 kick sensor per car → 0 (est)", conf: med}
+    - {id: cb-zone, kind: placement, gain: "Anchors connect to the nearest zone controller instead of a dedicated access ECU", how: "CAN-FD on the chip; access logic runs in the zone or central computer", measure: "1 dedicated access ECU → 0 where the OEM centralises (est)", conf: low}
+    - {id: cb-range, kind: performance, gain: "Range at hard exterior positions without a bigger antenna", how: "Optional anchor FEM (LNA and switch) from our own dies", measure: "not stated; offsets ST's claimed +3 dB", conf: low}
+    - {id: cb-bridge, kind: software, gain: "Today's anchors stay in production while the new chip arrives", how: "Firmware MMS and DK 4.0 on QPF5100Q; software path to the AB chip", measure: "No hardware change for the bridge", conf: low}
+  gives_up:
+    - "BLE, NFC, secure element and access MCU still come from others (NXP sells them as one set)"
+    - "A new chip qualification in 2028 programmes"
+
 position:
   advantages:
     - {id: a-radar1, text: "Ranging and radar (child presence, kick, occupancy) on one automotive-qualified chip today (QPF5100Q, Jan 2025); ST's entry part ST64UWB-A100 has no radar", vs: "ST", conf: low}

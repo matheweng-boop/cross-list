@@ -809,7 +809,7 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
            "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
            "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
            "verdict_label": prelim.VERDICT_LABEL, "question_groups": prelim.QUESTION_GROUPS,
-           "label": vocab.fn_label}  # fmt: skip
+           "benefit_kinds": prelim.BENEFIT_KINDS, "label": vocab.fn_label}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

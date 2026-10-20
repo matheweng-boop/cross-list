@@ -31,6 +31,11 @@ VERDICTS = {"agree": "correct", "disagree": "wrong", "closer": "closer", "furthe
 VERDICT_LABEL = {"correct": "agreed", "wrong": "disputed", "closer": "move closer", "further": "move further",
                  "answered": "answered"}  # fmt: skip
 QUESTION_GROUPS = (("bu", "Business unit (internal)"), ("customer", "OEM / Tier-1"))
+BENEFIT_KINDS = {  # what kind of architectural gain the customer gets; fixed so cases compare side by side
+    "parts": "Fewer parts", "cabling": "Cabling", "placement": "Placement", "scaling": "Scaling",
+    "performance": "Performance", "safety": "Safety", "software": "Software", "sourcing": "Sourcing",
+    "compliance": "Compliance",
+}  # fmt: skip
 LISTS = ("advantages", "disadvantages", "diff_good", "diff_bad")
 _SLUG = re.compile(r"^[a-z0-9-]+$")
 
@@ -54,6 +59,7 @@ def item_ids(slug: str) -> set[str]:
     rows = [x for k in LISTS for x in pos.get(k) or []]
     rows += [*(c.get("outlook") or []), *(c.get("features") or []), *(c.get("attach") or []),
              *((c.get("prices") or {}).get("items") or [])]  # fmt: skip
+    rows += (c.get("customer_benefit") or {}).get("gains") or []
     rows += [x for k, _ in QUESTION_GROUPS for x in (c.get("questions") or {}).get(k) or []]
     return {str(x["id"]) for x in rows if x.get("id")}
 
@@ -115,6 +121,7 @@ def case(session: Session, slug: str) -> dict | None:
         return [_reviewed({**x, "fb": fb.get(str(x.get("id")), {})}) for x in rows or []]
 
     pos = c.get("position") or {}
+    benefit = c.get("customer_benefit") or {}
     prices = c.get("prices") or {}
     items = [{**x, "real": asp.get(f"case:{slug}:{x['id']}"), "fb": fb.get(str(x["id"]), {})}
              for x in prices.get("items") or []]  # fmt: skip
@@ -128,6 +135,7 @@ def case(session: Session, slug: str) -> dict | None:
                             "revenue": (v.get("units") or 0) * (price or 0)})  # fmt: skip
     n_fb = sum(1 for f in fb.values() if f["verdict"] or f["comments"])
     return {**c, "position": {k: attach(pos.get(k)) for k in LISTS}, "outlook": attach(c.get("outlook")),
+            "customer_benefit": {**benefit, "gains": attach(benefit.get("gains"))} if benefit else None,
             "features": attach(c.get("features")), "attach": attach(c.get("attach")),
             "questions": {k: attach((c.get("questions") or {}).get(k)) for k, _ in QUESTION_GROUPS},
             "prices": {**prices, "items": items}, "revenue": revenue, "n_feedback": n_fb,

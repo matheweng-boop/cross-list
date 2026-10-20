@@ -71,3 +71,17 @@ def test_case_diagram_and_questions(slug, client):
             assert b.get("who", "other") in ("proposed", "ours", "customer", "other"), b
     assert all(lk[0] in gids and lk[1] in gids for lk in d.get("links") or [])
     assert client.get(f"/blocks/new?case={slug}").status_code == 200
+
+
+@pytest.mark.parametrize("slug", SLUGS)
+def test_case_customer_benefit(slug, client):
+    """Every case says what the customer's architecture gains: before, after and typed, measured gains."""
+    cb = prelim.raw(slug).get("customer_benefit") or {}
+    assert all(cb.get(k) for k in ("for", "summary", "today", "with_us")), slug
+    assert len(cb.get("gains") or []) >= 3
+    for g in cb["gains"]:
+        assert g["kind"] in prelim.BENEFIT_KINDS and g.get("gain") and g.get("how") and g.get("measure"), g
+        assert g["id"] in prelim.item_ids(slug)
+    page = client.get(f"/business/reports/{slug}").text
+    assert "What the customer&#39;s architecture gains" in page or "What the customer's architecture gains" in page
+    assert cb["gains"][0]["gain"].replace("'", "&#39;") in page or cb["gains"][0]["gain"] in page

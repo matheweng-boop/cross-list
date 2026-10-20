@@ -1,0 +1,766 @@
+# Skyworks + Qorvo: the two product lines of the combined company side by side (Products > Skyworks + Qorvo).
+# Curated reasoning for app/services/portfolio.py; counts on the page come from the catalogues, not from here.
+#
+# Built 2026-10-20 from repo data (data/catalog/*, data/real/*, data/business/*, data/blocks/templates.yaml) plus a few
+# public pages (sources at the end). Every part number below is in data/catalog/skyworks_parts.yaml,
+# qorvo_parts.yaml or qorvo_extra_parts.yaml with status Active / Preview / Standard / Featured (checked 2026-10-20).
+# "Preview" parts are sampling, not in volume. Spec numbers are catalogue / datasheet values from the repo;
+# "est" = estimate, "unverified" = single source. Competitor crosses come from data/real (isolation crosses computed
+# by the cross engine) or are catalogue-level comparisons (RF switches; RF cross lists still being imported).
+updated: 2026-10-20
+
+core_competence:
+  Skyworks:
+    summary: >-
+      High-volume, highly integrated RF front ends (Sky5 cellular, Wi-Fi 7/8 FEMs) plus the Silicon Labs-heritage
+      mixed-signal lines: digital isolation, isolated gate drivers and ultra-low-jitter timing.
+    strengths:
+      - "Cellular module integration: Sky5 PA/FEM, diversity-receive and antenna-switch modules (218 active FEM parts vs Qorvo 34)."
+      - "Widest Wi-Fi 7 / Wi-Fi 8 FEM range: 2.4 / 5 / 6 GHz, non-linear (DPD-friendly) high-efficiency parts, Wi-Fi 8 sampling."
+      - "Automotive RF: AEC-Q100 cellular, V2X, GNSS L1+L5 and switch parts in volume."
+      - "Isolation: ~2,200 isolator / gate-driver / isolated-amplifier OPNs; new Si86S and Si82Ax-Fx at 6 kVrms, 100-200 kV/us CMTI."
+      - "Timing: DSPLL jitter attenuators, NetSync IEEE 1588 clocks and crystal-free BAW-resonator clocks (SKY631xx / SKY69xxx)."
+    technologies: [gaas_hbt, rf_soi, sip_module_integration, tc_saw_filter, digital_isolation_capacitive, timing_dspll_crystal, timing_baw_resonator, ipd_thin_film, silicon_rf_diodes, optocouplers, broadcast_radio_tv]
+    markets: [smartphones and wearables, Wi-Fi access points and clients, automotive (telematics, V2X, GNSS, EV power), industrial and EV power conversion, data center and network timing, 5G small cell / massive MIMO]
+  Qorvo:
+    summary: >-
+      Compound-semiconductor depth for high power and high frequency (GaN-on-SiC, GaAs pHEMT, BAW) serving defense,
+      infrastructure and CATV, plus connectivity SoCs (UWB, Matter/Thread/Zigbee) and programmable power.
+    strengths:
+      - "GaN-on-SiC PAs and transistors to Ka-band (QGaN25 to 40 V, QGaN15 to 40 GHz) from a DoD Trusted Source fab in Richardson, TX."
+      - "Broadband microwave catalogue: LNAs, gain blocks, switches, DSAs, mixers, phase shifters and limiters to 30-50 GHz (215 active gain blocks vs Skyworks 6)."
+      - "BAW filters in production for Wi-Fi U-NII coexistence, 5G n77/n79 and GNSS, plus switched filter banks for defense."
+      - "UWB (Decawave DW3000 / QM35) incl. automotive DW3300Q; Matter/Thread/Zigbee QPG SoCs."
+      - "CATV/DOCSIS 4.0 GaAs/GaN power-doubler amplifiers to 1.8 GHz; Active-Semi PMICs and PAC motor-control SoCs."
+    technologies: [gan_on_sic, gaas_phemt, baw_filter, microwave_module_assembly, mmwave_beamformer, uwb_soc, low_power_radio_soc, pmic_configurable_power, flip_chip_wlp, rf_mems]
+    markets: [defense and aerospace (radar, EW, SATCOM), wireless infrastructure (macro / massive MIMO), CATV / HFC broadband, Wi-Fi access points, automotive UWB digital key, smart home / IoT, industrial motor control and power]
+
+segments:
+  # ------------------------------------------------------------------ head-to-head (both sell)
+  - id: wifi_fem
+    label: Wi-Fi front-end modules (2.4 / 5 / 6 GHz)
+    functions: [rf_frontend, wifi_fem]
+    lead: split
+    why: >-
+      Skyworks has the broader Wi-Fi 7 range and Wi-Fi 8 samples with non-linear high-efficiency PAs; Qorvo is strong
+      in high-power AP FEMs (31-32 dBm class) and single 5-7 GHz client FEMs in 2 x 2 mm.
+    pick_skyworks:
+      when: "Wi-Fi 7/8 APs and clients that run DPD, need a full 2.4/5/6 GHz set, or an automotive-grade Wi-Fi front end."
+      parts: [SKY85372-11, SKY85509-11, SKY85639-11, SKY85633-11]
+    pick_qorvo:
+      when: "Enterprise/mesh AP radios needing the highest linear Pout, or space-limited clients wanting one 5-7 GHz FEM."
+      parts: [QPF4557, QPF4659, QPF4216, QM45500]
+    applications:
+      - "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
+      - "Wi-Fi 7 access point / router (Filogic 880 / 860) (MediaTek)"
+      - "Wi-Fi front end (Skyworks)"
+      - "Optical network terminal (PON ONT) with 4x4 Wi-Fi and PoE ports (TI)"
+      - "Small cell base station (with Wi-Fi front end) (TI)"
+
+  - id: cellular_handset_fe
+    label: Cellular handset / IoT front ends (PA modules, diversity receive)
+    functions: [rf_frontend, rf_pa, pa_module, diversity_rx_module]
+    lead: Skyworks
+    why: >-
+      Skyworks' Sky5 SiP platform (GaAs HBT + SOI + own SAW/BAW, double-sided shielded modules) is the volume line;
+      Qorvo's public catalogue shows few current handset modules (ACG parts are mostly customer-specific).
+    pick_skyworks:
+      when: "Any 4G/5G phone, FWA CPE, wearable or cellular-IoT design: PA modules, LNA banks and diversity modules."
+      parts: [SKY58253-11, SKY53735-21, SKY5A3200, SKY68031-11]
+    pick_qorvo:
+      when: "Only where a customer is already designed in on a Qorvo ACG module; NB-IoT TX module as a second source."
+      parts: [QM55011]
+    applications:
+      - "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)"
+      - "5G flagship smartphone (Dimensity 9400) - cellular, GNSS, Wi-Fi 7 / BT front-end sockets (MediaTek)"
+      - "Smart asset tracker (GNSS + cellular + BLE / Wi-Fi) (TI)"
+      - "Smartwatch / wearable (BLE + LTE + GPS, PPG / ECG sensing) (TI)"
+
+  - id: infra_pa
+    label: Cellular / 5G infrastructure PAs and drivers
+    functions: [rf_pa, power_amplifier, rf_power_transistor]
+    lead: split
+    why: >-
+      Skyworks GaAs HBT PAs cover small cell and massive-MIMO (4-8 W class, wide instantaneous bandwidth); Qorvo GaN-on-SiC
+      covers 48 V macro and high-power radios (QPA3810 48 dBm Psat, QPD0060 49.5 dBm).
+    pick_skyworks:
+      when: "Small cells, 32T/64T massive-MIMO radios and driver stages, 0.7-4.2 GHz."
+      parts: [SKY66318-21, SKY66523-11, SKY66525-11, SKY66052-11]
+    pick_qorvo:
+      when: "Macro and 8T8R radios at 48 V where Pout above ~40 dBm per path and GaN efficiency matter."
+      parts: [QPA3810, QPD0060, QPA9942, QPA9122]
+    applications:
+      - "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)"
+      - "5G O-RAN radio unit / Digital Airfast (4T4R) - baseband, DFE, PA, LNA, timing (NXP)"
+      - "Massive MIMO radio (Skyworks)"
+      - "Small cell base station (Skyworks)"
+      - "Macro base station radio unit, TDD (Skyworks)"
+
+  - id: smallcell_receive
+    label: Base-station / small-cell receive (switch-LNA, LNA with bypass)
+    functions: [lna, rf_frontend]
+    lead: split
+    why: >-
+      Qorvo integrates the TDD switch and two-stage LNA in one module (QPB93xx, NF ~1.25 dB); Skyworks offers discrete
+      LNAs with the lowest NF (SKY67177-11 0.6 dB, bypass) and a fail-safe-switch LNA in sampling.
+    pick_skyworks:
+      when: "Lowest NF, flexible layout, or the customer already uses the Skyworks PA in the same radio."
+      parts: [SKY67177-11, SKY67210-11, SKY67151-396LF]
+    pick_qorvo:
+      when: "TDD radios that want the T/R switch, LNA and bypass in one 6 x 6 mm module."
+      parts: [QPB9378, QPM2101, QPL9097]
+    applications:
+      - "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)"
+      - "Small cell base station (with Wi-Fi front end) (TI)"
+      - "Massive MIMO radio (Skyworks)"
+      - "5G O-RAN radio unit / Digital Airfast (4T4R) - baseband, DFE, PA, LNA, timing (NXP)"
+
+  - id: lna_sub6_gnss
+    label: Catalogue LNAs below 6 GHz and GNSS LNAs
+    functions: [lna, gnss_lna]
+    lead: split
+    why: >-
+      Skyworks leads GNSS (L1+L5 LNA modules with SAW pre/post filters, AEC-Q100 version); Qorvo has more general LNAs
+      in 2 x 2 mm DFN with sub-1 dB NF (QPL9095 0.6 dB, QPL9096 0.75 dB).
+    pick_skyworks:
+      when: "GNSS receivers (dual-band L1+L5, automotive) and ultra-low-NF cellular-band LNAs."
+      parts: [SKY55951-11, SKY5A2110, SKY67151-396LF]
+    pick_qorvo:
+      when: "Small general-purpose LNAs per band (600 MHz-6 GHz) for radios, repeaters and test gear."
+      parts: [QPL9095, QPL9096, QPL9547]
+    applications:
+      - "Land mobile radio (public safety handheld) (TI)"
+      - "Smart asset tracker (GNSS + cellular + BLE / Wi-Fi) (TI)"
+      - "V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)"
+      - "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)"
+
+  - id: rf_switch_high_power
+    label: RF switches, high power
+    functions: [rf_switch]
+    lead: split
+    why: >-
+      Skyworks pHEMT/SOI switches handle 40-43.5 dBm below 3 GHz in tiny packages, incl. AEC-Q100; Qorvo's GaN
+      switch takes 43 dBm out to 12 GHz and its SOI switches offer 50-62 dB isolation.
+      Skyworks' 47-50 dBm PIN switches (SKY122xx) are Last Time Buy, so above ~44 dBm sell Qorvo or a competitor.
+    pick_skyworks:
+      when: "T/R and band switching to 43.5 dBm up to 3 GHz, or 40 dBm to 8.5 GHz with AEC-Q100."
+      parts: [SKY13290-313LF, SKY13405-490LF, SKYA21003, SKY13374-397LF]
+    pick_qorvo:
+      when: "High power above 6 GHz (GaN), or high isolation (50-62 dB) in radios and test equipment."
+      parts: [TGS2352-2-SM, QPC6324, QPC6188]
+    applications:
+      - "Land mobile radio (public safety handheld) (TI)"
+      - "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+      - "Small cell base station (Skyworks)"
+      - "Defense / tactical software-defined radio (direct-conversion TX/RX, high-speed ADC / DAC, FPGA + DSP/ARM, battery powered) (TI)"
+
+  - id: rf_switch_broadband
+    label: RF switches, broadband / microwave
+    functions: [rf_switch]
+    lead: Qorvo
+    why: >-
+      Qorvo GaAs/SOI switches run to 15, 30 and 50 GHz (QPC2320, QPC2420, QPC0542); Skyworks' active switches stop at
+      8.3-8.5 GHz but are smaller (1.1 x 0.7 mm) and cheaper for 6/7 GHz Wi-Fi.
+    pick_skyworks:
+      when: "Wi-Fi 6E/7 and UWB-band switching up to 8.3 GHz in 1.1 x 0.7 mm, incl. AEC-Q100."
+      parts: [SKY59608-711LF, SKY5A2108]
+    pick_qorvo:
+      when: "Test and measurement, EW, SATCOM and microwave radio above 8 GHz."
+      parts: [QPC2320, QPC2420, QPC0542, CMD204C3]
+    applications:
+      - "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)"
+      - "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+      - "Satellite communications payload (RF-sampling transponder with beamforming) (TI)"
+
+  - id: antenna_switch
+    label: Antenna switches and antenna tuning
+    functions: [antenna_switch, rf_switch]
+    lead: Skyworks
+    why: >-
+      Skyworks has the handset-class MIPI antenna-switch and tuning range (SP10T-SP16T, tuning switches, DPDT swap,
+      AEC-Q100); Qorvo's current catalogue lists only a few DP4T/SP4T parts (one AEC-Q100).
+    pick_skyworks:
+      when: "Phones, CPE, telematics: main/diversity antenna switching, aperture tuning, antenna swap."
+      parts: [SKY13492-21, SKY59269-702LF, SKY5A1007]
+    pick_qorvo:
+      when: "Low-loss DP4T/SP4T antenna selection where 0.2-0.4 dB IL and 43-45 dB isolation are required."
+      parts: [QPC1220Q, QPC8020Q]
+    applications:
+      - "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)"
+      - "Automotive telematics & infotainment RF (Skyworks)"
+      - "Small cell base station (Skyworks)"
+      - "Land mobile radio (public safety handheld) (TI)"
+
+  - id: gain_blocks
+    label: Gain blocks and driver amplifiers
+    functions: [rf_gain_block]
+    lead: Qorvo
+    why: >-
+      Qorvo has ~215 active gain blocks / drivers (InGaP HBT, pHEMT distributed amps to 37 GHz, GaN drivers);
+      Skyworks has a handful of InGaP cascadable amps and one digital VGA.
+    pick_skyworks:
+      when: "Simple 0.1-6 GHz InGaP stages or a sub-GHz DVGA already next to a Skyworks LNA/PA."
+      parts: [SKY65014-70LF, SKY65017-70LF, SKY67303-11]
+    pick_qorvo:
+      when: "Anything wideband, above 6 GHz, or needing high OIP3 / Pout per stage."
+      parts: [QPA9127, QPA9122, QPA4971, CMD240P4]
+    applications:
+      - "Outdoor microwave backhaul unit (ODU: modem ASIC + RF up/down-conversion chain, diplexer, PoE / -48 V, antenna alignment motor) (TI)"
+      - "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)"
+      - "Satellite communications payload (RF-sampling transponder with beamforming) (TI)"
+      - "Land mobile radio (public safety handheld) (TI)"
+
+  - id: attenuators
+    label: Attenuators (digital step, voltage variable, fixed)
+    functions: [rf_attenuator]
+    lead: Qorvo
+    why: >-
+      Qorvo sells current 6-7 bit DSAs from 5 MHz to 30 GHz (0.25 dB LSB, 65 dBm IIP3 low-band); Skyworks' active
+      line is fixed thin-film attenuator pads (its older DSAs are mostly end-of-life).
+    pick_skyworks:
+      when: "Bondable fixed pads for hybrid / chip-and-wire microwave assemblies."
+      parts: [ATN3590-03, ATN3590-10]
+    pick_qorvo:
+      when: "Gain control in radios, CATV and test gear; wideband DSAs for EW/SATCOM."
+      parts: [QPC6713Q, RFSA3713, QPC4614, QPC5430]
+    applications:
+      - "Outdoor microwave backhaul unit (ODU: modem ASIC + RF up/down-conversion chain, diplexer, PoE / -48 V, antenna alignment motor) (TI)"
+      - "Land mobile radio (public safety handheld) (TI)"
+      - "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)"
+      - "CATV / HFC DOCSIS 4.0 line extender amplifier (1.8 GHz downstream, 5-680 MHz upstream, diplexed) (Mini-Circuits)"
+
+  - id: filters
+    label: Standalone filters and multiplexers (BAW / SAW)
+    functions: [filter_saw_baw, rf_filter, diplexer, rf_passive]
+    lead: Qorvo
+    why: >-
+      Qorvo BAW filters are in production for Wi-Fi U-NII coexistence (QPQ5610 1.3 GHz BW, 1.7 dB IL), 5G n77/n79 and GNSS,
+      plus switched filter banks; Skyworks' standalone Wi-Fi BAW filters and Meshplexers are still Preview.
+      Neither has wideband (>25 %) ceramic/LTCC filters since Trans-Tech was sold (see filters-1-11ghz report).
+    pick_skyworks:
+      when: "Wi-Fi 7 mesh/tri-band designs already using Skyworks FEMs, and automotive Wi-Fi/V2X filters (sampling)."
+      parts: [SKY85918-11, SKY85923-11, SKY85929-11, SKY5A1008]
+    pick_qorvo:
+      when: "Production BAW for 5/6 GHz coexistence, n77/n79 radios and defense switched filter banks."
+      parts: [QPQ5610, QPQ5510, QPQ3509, QPB1033]
+    applications:
+      - "Wi-Fi 7 access point / router (Filogic 880 / 860) (MediaTek)"
+      - "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)"
+      - "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+      - "Land mobile radio (public safety handheld) (TI)"
+
+  - id: defense_xband
+    label: Defense radar / EW (X-band and up)
+    functions: [power_amplifier, lna, rf_phase_shifter, rf_limiter, beamformer_ic, rf_frontend]
+    lead: Qorvo
+    why: >-
+      Qorvo has the complete X-band chain from a Trusted fab: GaN PAs (QPA1011 25 W), limiter-LNAs, 6-bit phase shifters,
+      X-band FEMs and beamformers. Skyworks adds hi-rel silicon limiter/PIN diodes, hermetic optocouplers and timing.
+    pick_skyworks:
+      when: "Receiver protection diodes, hermetic isolation and low-jitter reference clocks around the Qorvo RF chain."
+      parts: [CLA4603 Series, APD0810 Series, OLF300, Si5395]
+    pick_qorvo:
+      when: "AESA T/R modules, X-band radar and EW transmit/receive chains."
+      parts: [QPA1011, QPM6000, QPC2110, QPF5012]
+    applications:
+      - "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+      - "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)"
+      - "Satellite communications payload (RF-sampling transponder with beamforming) (TI)"
+      - "Defense / tactical software-defined radio (direct-conversion TX/RX, high-speed ADC / DAC, FPGA + DSP/ARM, battery powered) (TI)"
+
+  - id: catv
+    label: CATV / HFC (DOCSIS 4.0) amplifiers and set-top receive
+    functions: [catv_amplifier, rf_gain_block, tv_tuner]
+    lead: Qorvo
+    why: >-
+      Qorvo GaAs/GaN power-doubler hybrids and MMICs cover 1.2 and 1.8 GHz DOCSIS plant; Skyworks has no CATV
+      amplifiers, only silicon TV/STB tuners at the customer end.
+    pick_skyworks:
+      when: "Set-top boxes and gateways receiving cable/terrestrial TV."
+      parts: [Si2144, Si2151]
+    pick_qorvo:
+      when: "Nodes, amplifiers and line extenders for DOCSIS 3.1/4.0 (1.2-1.8 GHz)."
+      parts: [QPA3316, QPA8840, QPA4428, QPC6742]
+    applications:
+      - "CATV / HFC DOCSIS 4.0 line extender amplifier (1.8 GHz downstream, 5-680 MHz upstream, diplexed) (Mini-Circuits)"
+
+  - id: iot_short_range
+    label: IoT radios (BLE / Zigbee / Thread / sub-GHz)
+    functions: [wireless_soc, rf_frontend, bt_fem]
+    lead: split
+    why: >-
+      Complementary: Qorvo makes the Matter/Thread/Zigbee/BLE SoC (QPG6200L) and gateway controller; Skyworks makes the
+      CMOS/GaAs range-extender front ends (+20-30 dBm) for 2.4 GHz and 900 MHz.
+    pick_skyworks:
+      when: "Range extension for any 802.15.4/BLE SoC (gateways, meters, lighting) and 902-928 MHz links."
+      parts: [RFX2401C, RFX2411N, SE2436L, SE2442L]
+    pick_qorvo:
+      when: "The radio SoC itself in Matter / Zigbee / Thread smart-home products."
+      parts: [QPG6200L, QPG7015M, QM42655]
+    applications:
+      - "Smart home control panel / hub (MPU, touch display, Wi-Fi + Zigbee / BLE, NFC; Matter-style appliance control) (NXP)"
+      - "Smart speaker (voice assistant, Wi-Fi / BT / Thread) (TI)"
+
+  - id: automotive_rf
+    label: Automotive RF (V2X, GNSS, telematics, in-car Wi-Fi)
+    functions: [rf_frontend, gnss_lna, rf_switch, v2x_fem, rf_filter]
+    lead: Skyworks
+    why: >-
+      Skyworks has AEC-Q100 parts across cellular (Sky5 auto), V2X (SKYA21043, SKY5A2105), GNSS L1+L5 and switches;
+      Qorvo adds an integrated C-V2X/DSRC FEM and an AEC-Q100 SP4T, and owns automotive UWB (separate segment).
+    pick_skyworks:
+      when: "Telematics control units, V2X modules and GNSS in vehicles."
+      parts: [SKYA21043, SKY5A2110, SKY5A3200, SKY5A2108]
+    pick_qorvo:
+      when: "A single integrated C-V2X FEM, or a low-loss automotive SP4T."
+      parts: [QPF1004Q, QPC8020Q]
+    applications:
+      - "Automotive telematics control unit (TCU) / V2X module (TI)"
+      - "V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)"
+      - "Automotive telematics & infotainment RF (Skyworks)"
+
+  - id: power_management
+    label: Power management (PMIC, bucks, motor control)
+    functions: [pmic, wide_vin_buck, motor_controller, pol_buck]
+    lead: Qorvo
+    why: >-
+      Qorvo (Active-Semi) has configurable PMICs, 40 V bucks incl. a low-noise RF point-of-load, and PAC motor SoCs up to
+      160 V; Skyworks' power line is RF-specific (Sky5 PMIC, PA step-down with MIPI).
+    pick_skyworks:
+      when: "Supplying Skyworks PA modules in phones / IoT (APT/ET step-down, Sky5 PMIC)."
+      parts: [SKY51001-41, SKY87006]
+    pick_qorvo:
+      when: "Motor drives, tools, fans/pumps and low-noise rails for RF boards."
+      parts: [PAC5223QM, ACT72350, ACT41000-104, ACT4751MQI101]
+    applications:
+      - "Industrial servo drive (single axis, AC motor) (TI)"
+      - "Light EV BLDC drive, 48 V (TI)"
+      - "Humanoid / collaborative robot joint motor drive (48 V) (TI)"
+      - "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)"
+
+  # ------------------------------------------------------------------ complementary (one line only)
+  - id: isolation
+    label: Digital isolators, isolated gate drivers, isolated amplifiers
+    functions: [digital_isolator, gate_driver, isolated_amplifier, isolated_dcdc]
+    lead: Skyworks only
+    why: >-
+      CMOS capacitive isolation (Silicon Labs heritage) with AEC-Q100 grades; new Si86S (6 kVrms, 100 kV/us) and Si82Ex
+      (6 kVrms, 200 kV/us, 7.5 A) close the CMTI gap of the older Si86xx (35 kV/us min). Qorvo sells none.
+    pick_skyworks:
+      when: "Isolated gate drive, isolated data and current sense in EV, solar, motor drive and telecom power."
+      parts: [SI86S641BE-IS2, Si82E39BEE-IS3, Si8921BD-IS4, Si88241BD-IS]
+    applications:
+      - "HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)"
+      - "Industrial AC drive power stage (isolated, 200-690 V AC mains) (TI)"
+      - "Three-phase solar string inverter (TI)"
+      - "HEV/EV traction inverter (TI reference)"
+      - "Solar micro inverter (GaN, single panel) (TI)"
+
+  - id: timing
+    label: Timing (jitter attenuators, network synchronizers, clock generators)
+    functions: [jitter_attenuator, clock_generator, clock_buffer]
+    lead: Skyworks only
+    why: >-
+      DSPLL/MultiSynth clocks and crystal-free BAW-resonator clocks (~17 fs jitter for 224G SerDes per launch material);
+      Qorvo has no timing line, so every Qorvo radio or radar design is a timing cross-sell.
+    pick_skyworks:
+      when: "5G radios, BBUs, cell-site routers, data-center optics and radar reference clocks."
+      parts: [SKY63101, SKY69001, Si5395, Si5391A]
+    applications:
+      - "Wireless infrastructure baseband unit (BBU: -48 V input, CPU / FPGA, CPRI / eCPRI radio ports, network timing) (TI)"
+      - "Cell site gateway router (switch ASIC, 10G / 25G / 100G optical ports, IEEE 1588 / SyncE timing, N+1 PSU) (TI)"
+      - "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)"
+      - "Massive MIMO radio (Skyworks)"
+
+  - id: uwb
+    label: UWB ranging (digital key, RTLS)
+    functions: [uwb_soc, uwb_fem]
+    lead: Qorvo only
+    why: >-
+      Decawave-heritage IEEE 802.15.4z UWB (channels 5/9) incl. automotive DW3300Q and the QM35 SoC; Skyworks has no UWB
+      radio but its AEC-Q100 2.4-8.3 GHz SPDT can do antenna switching in the same band.
+    pick_skyworks:
+      when: "UWB antenna diversity / anchor switching (6.5-8 GHz) next to the Qorvo radio."
+      parts: [SKY5A2108]
+    pick_qorvo:
+      when: "Car access anchors, phones / tags, industrial RTLS."
+      parts: [DW3300Q, QM35825, QM33120W, QM14068]
+    applications:
+      - "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)"
+      - "Smartphone peripheral sockets (Wi-Fi FEM, NFC + SE, UWB, charging, protection) (NXP)"
+
+  - id: beamformers_mmwave
+    label: Beamformers and mmWave
+    functions: [beamformer_ic, mmwave_antenna_module]
+    lead: Qorvo only
+    why: >-
+      Anokiwave-heritage silicon beamformers (X-band AWS-0103, 37-43.5 GHz AWMF-0236) plus GaN/GaAs mmWave PAs and FEMs;
+      Skyworks has no mmWave beamforming.
+    pick_qorvo:
+      when: "Phased arrays for radar, SATCOM terminals and mmWave FWA."
+      parts: [AWS-0103, AWMF-0236, QPA2640D]
+    applications:
+      - "Satellite communications payload (RF-sampling transponder with beamforming) (TI)"
+      - "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+
+competitors:
+  - vendor: Texas Instruments
+    aliases: [TI]
+    overlap: [isolation, timing, power_management, lna_sub6_gnss]
+    our_advantages:
+      - "Si82Ex gate drivers: 200 kV/us CMTI and 6 kVrms vs UCC21520 at 125 kV/us and 5.7 kVrms."
+      - "Si86xx: 13 ns propagation delay at 150 Mbps vs ISO6441 100 Mbps."
+      - "Timing: BAW-resonator jitter attenuators with no external crystal (SKY631xx)."
+      - "We sell the RF next to their converters and processors in the same radio; TI has no RF front ends."
+    their_advantages:
+      - "Older Si86xx min CMTI 35 kV/us vs ISO6441 100 kV/us; AMC1300B has 100 kV/us vs Si8921 50 kV/us."
+      - "Catalogue breadth (power, data converters, MCUs) and reference designs that set the block diagram."
+    lead_with: Skyworks
+    example_crosses:
+      - {ours: Si8641BD-IS, theirs: ISO6441FDWR, note: "Form-fit-function (3/1, 5 kVrms, SOIC-16W); ours faster, theirs higher CMTI. Offer SI86S641BE-IS2 (100 kV/us, 6 kVrms) where CMTI matters."}
+      - {ours: Si8234AB-IS, theirs: UCC20225NPLR, note: "Functional cross; 14-pin LGA fits the 13-pin LGA footprint (engineering note), lower peak current and CMTI."}
+      - {ours: Si8921BD-IS4, theirs: AMC1300BDWV, note: "Both ±250 mV shunt amps, 5 kVrms; TI higher CMTI (100 vs 50 kV/us)."}
+
+  - vendor: Analog Devices
+    overlap: [isolation, timing, rf_switch_broadband, gain_blocks, lna_sub6_gnss, beamformers_mmwave, infra_pa]
+    our_advantages:
+      - "Qorvo GaN-on-SiC power to Ka-band in-house; ADI's RF power line is smaller (competition.yaml)."
+      - "Skyworks Wi-Fi/cellular FEM volume and module integration that ADI does not offer."
+      - "Combined offer covers PA + switch + LNA + filter + timing in one radio."
+    their_advantages:
+      - "Data converters, transceivers (RF-sampling) and broad microwave catalogue that anchor the radio design."
+      - "iCoupler isolation and timing compete head-on with Skyworks Si86/Si53xx (no repo data to compare yet)."
+    lead_with: both
+    example_crosses: []
+
+  - vendor: Infineon
+    overlap: [isolation, rf_switch_high_power, antenna_switch, lna_sub6_gnss, power_management]
+    our_advantages:
+      - "Infineon's ISOFACE digital isolators in our data are all NRND or obsolete; Si86/Si86S is a direct replacement path."
+      - "Si82Ex: 200 kV/us CMTI and 7.5 A source/sink vs 2EDR8259H at 150 kV/us, 5 A / 9 A."
+      - "Skyworks AEC-Q100 RF switches (SKYA21003 to 8.5 GHz, 40 dBm) vs mostly industrial-grade BGS parts."
+    their_advantages:
+      - "Very small RF switch packages (TSLP-6 0.7 x 1.1 mm) and higher P0.1dB on some SPDTs (BGS12P2L6 38 dBm)."
+      - "Gate-driver + SiC/IGBT power-module bundle from one supplier; strong automotive position."
+    lead_with: Skyworks
+    example_crosses:
+      - {ours: Si82E39BEE-IS3, theirs: 2EDR8259HXUMA1, note: "Dual isolated driver; ours 6 kVrms / 200 kV/us / 7.5 A, theirs 5.7 kVrms / 150 kV/us / 5 A source, 9 A sink."}
+      - {ours: SKY13587-378LF, theirs: BGS12P2L6, note: "SPDT to 6 GHz; same IL (~0.5 dB); Infineon 38 dBm vs our 32 dBm max input, but smaller package."}
+      - {ours: SKY5A1007, theirs: BGSX22G5A10, note: "DPDT antenna swap; ours AEC-Q100 with 0.7 dB IL / 30 dB ISO vs 1.1 dB / 29 dB."}
+
+  - vendor: NXP
+    overlap: [infra_pa, uwb, iot_short_range, automotive_rf, lna_sub6_gnss]
+    our_advantages:
+      - "Qorvo GaN-on-SiC vs NXP Airfast LDMOS/GaN: higher frequency range and defense/foundry depth."
+      - "Skyworks small-cell / massive-MIMO GaAs PAs and full FEM set for the radios NXP baseband feeds."
+      - "Qorvo DW3300Q automotive UWB as alternative to NXP Trimension."
+    their_advantages:
+      - "System platforms (Layerscape/Airfast reference radios, car access with NFC + BLE + UWB + secure element)."
+      - "Owns the processor and the reference block diagram; RF parts are often pulled along."
+    lead_with: both
+    example_crosses: []
+
+  - vendor: Murata (incl. pSemi)
+    aliases: [pSemi, Murata]
+    overlap: [rf_switch_high_power, rf_switch_broadband, antenna_switch, filters, wifi_fem, cellular_handset_fe]
+    our_advantages:
+      - "AEC-Q100 switches with lower insertion loss (SKYA21003 0.8 dB vs PE42424 1.08 dB to 8.5 GHz)."
+      - "Qorvo GaN switching to 12 GHz at 43 dBm; pSemi tops at ~45 dBm below 2.7 GHz."
+      - "In-house BAW (Qorvo) and SAW/TC-SAW (Skyworks) for filters and integrated FEMs."
+    their_advantages:
+      - "pSemi high-power SOI (PE42820 45.5 dBm) and high isolation (PE42424 45 dB vs our 21 dB)."
+      - "Murata leads SAW/module volume and passives; pSemi digital step attenuators and MPACs."
+    lead_with: both
+    example_crosses:
+      - {ours: SKYA21003, theirs: PE42424, note: "SPDT 0.1-8.5 GHz; ours AEC-Q100, 40 dBm, lower IL; theirs 45 dB isolation in 1.5 x 1.5 DFN."}
+      - {ours: SKY13290-313LF, theirs: PE42820, note: "High-power SPDT below 2.7 GHz; theirs 45.5 dBm vs our 43.5 dBm, ours smaller (3 x 2 mm vs 5 x 5)."}
+
+  - vendor: MACOM
+    overlap: [rf_switch_high_power, rf_switch_broadband, gain_blocks, lna_sub6_gnss, defense_xband, infra_pa]
+    our_advantages:
+      - "Qorvo GaN PA + switch + limiter-LNA + phase shifter as one X-band chain from a Trusted fab."
+      - "TGS2352-2-SM covers 0.5-12 GHz at 43 dBm in 4 x 4 mm vs MACOM's band-specific 7 x 7 mm part."
+      - "Skyworks timing and isolation for the same radar/radio."
+    their_advantages:
+      - "Very high-power PIN switch modules (47-53 dBm) where Skyworks' SKY122xx are Last Time Buy."
+      - "Large catalogue (about 1,900 RF rows in our data) incl. optical and diodes."
+    lead_with: Qorvo
+    example_crosses:
+      - {ours: TGS2352-2-SM, theirs: MASW-011071, note: "GaN SPDT, both 43 dBm; ours 0.5-12 GHz in 4 x 4 mm, theirs 8-10.5 GHz in 7 x 7 mm with 38 dB isolation."}
+      - {ours: QPC6324, theirs: MASW-000932, note: "Low-band SPDT; ours 50-62 dB isolation, theirs higher power (49 dBm) and lower IL (0.35 dB)."}
+
+  - vendor: Mini-Circuits
+    overlap: [rf_switch_high_power, rf_switch_broadband, gain_blocks, attenuators, lna_sub6_gnss, catv]
+    our_advantages:
+      - "Volume-grade MMICs with automotive and infrastructure qualification; Qorvo DSAs and switches in smaller packages."
+      - "QPC2320 SPDT to 15 GHz with 0.8-1 dB IL in 2.25 x 2.25 mm."
+    their_advantages:
+      - "Huge catalogue for labs and low volume (~1,900 RF rows), fast samples, very high isolation (60+ dB) switches."
+      - "Reference designs (CATV, superheterodyne) that define the block diagram."
+    lead_with: Qorvo
+    example_crosses:
+      - {ours: QPC2320, theirs: M3SWA2-34DR+, note: "Broadband SPDT; ours lower IL in a smaller package, theirs to 30 GHz and 61 dB isolation."}
+      - {ours: SKY13405-490LF, theirs: VSW2-33-10W+, note: "0.1-3 GHz high-power SPDT; ours 0.4 dB IL / 27 dB ISO at 40 dBm, theirs 42.3 dBm."}
+
+  - vendor: Broadcom
+    overlap: [filters, wifi_fem, isolation]
+    our_advantages:
+      - "Qorvo BAW covers the same Wi-Fi coexistence bands (5 / 6 GHz) and 5G n77/n79, and both lines sell the Wi-Fi FEM next to the filter."
+      - "QPQ5610 covers all of 5945-7245 MHz in one filter (1.7 dB IL)."
+    their_advantages:
+      - "FBAR leadership in high-band handset filters and multiplexers (e.g. B25/B66/n70 quadplexer)."
+      - "Optocoupler and isolated gate-driver line competes with Skyworks isolation (not in our cross data)."
+    lead_with: Qorvo
+    example_crosses:
+      - {ours: QPQ5600, theirs: ACPF-W060, note: "6 GHz Wi-Fi coexistence BAW vs FBAR; check rejection at 5.9 GHz per design."}
+      - {ours: QPQ5510, theirs: ACPF-W050, note: "5 GHz U-NII 1-3 coexistence filter for 5/6 GHz tri-band radios."}
+
+  - vendor: Qualcomm
+    overlap: [cellular_handset_fe, wifi_fem, antenna_switch, filters]
+    our_advantages:
+      - "Supplier-neutral front ends for MediaTek, Samsung and other chipset platforms."
+      - "Broad-market reach (auto, infra, defense, isolation, timing) that Qualcomm RFFE does not address."
+    their_advantages:
+      - "Modem-to-antenna system bundling with its own RFFE, filters and ET (no public part list in our data)."
+    lead_with: Skyworks
+    example_crosses: []
+
+  - vendor: Novosense
+    overlap: [isolation]
+    our_advantages:
+      - "Si86 13 ns propagation delay vs NSI8241 18 ns; broader AEC-Q100 and Si86S 6 kVrms options."
+      - "Established Western supply chain and longer automotive track record (est)."
+    their_advantages:
+      - "CMTI 250 kV/us on NSI8241 vs 35 kV/us (Si86xx) and 100 kV/us (Si86S)."
+      - "Aggressive pricing in China (est)."
+    lead_with: Skyworks
+    example_crosses:
+      - {ours: Si8641BD-IS, theirs: NSI8241W0-DSWR, note: "Form-fit-function 3/1, 5 kVrms, SOW16; theirs 250 kV/us CMTI. Lead with SI86S641BE-IS2 where CMTI is specified."}
+      - {ours: Si82E39BEE-IS3, theirs: NSI6602A-DSWR, note: "Dual driver; ours 200 kV/us, 7.5 A vs theirs 100 kV/us, 4 A / 6 A."}
+
+  - vendor: Chipanalog
+    overlap: [isolation]
+    our_advantages:
+      - "Si86S at 6 kVrms vs CA-IS37xx 5 kVrms; Si82Ex 200 kV/us vs CA-IS32xx 150 kV/us."
+      - "Wider OPN range (isolated dc-dc, smart switches, isolated amplifiers, digital inputs)."
+    their_advantages:
+      - "150 kV/us CMTI on standard isolators vs 100 kV/us (Si86S) and 35 kV/us (Si86xx)."
+      - "Low price in the China market (est)."
+    lead_with: Skyworks
+    example_crosses:
+      - {ours: SI86S641BE-IS2, theirs: CA-IS3741HW, note: "3/1, SOIC-16W; ours 6 kVrms, theirs 5 kVrms but 150 kV/us CMTI."}
+      - {ours: Si82E39BEE-IS3, theirs: CA-IS3221CW, note: "Dual isolated driver; ours 6 kVrms / 200 kV/us / 7.5 A vs 5.7 kVrms / 150 kV/us / 5 A."}
+
+  - vendor: Trans-Tech/Lark
+    aliases: [Trans-Tech, Lark]
+    overlap: [filters, infra_pa]
+    our_advantages:
+      - "Acoustic (BAW/SAW) filters are smaller and cheaper per band for narrow-band coexistence."
+      - "Switched filter banks (QPB10xx) integrate switching that LC/cavity filters need separately."
+    their_advantages:
+      - "Former Skyworks unit (sold 2023): ceramic resonators, ferrite circulators and wideband LC/cavity/SIW filters we no longer make."
+      - "Wideband (>25 %) and mmWave filters, which neither Skyworks nor Qorvo covers."
+    lead_with: Qorvo
+    example_crosses:
+      - {ours: QPB1036, theirs: MS Series, note: "Integrated 2.9-3.5 GHz switched filter bank vs discrete LC band-pass filters plus switches (est, system-level)."}
+    note: "Also a partner option: their circulators (e.g. TTFR-002300, 3.7-3.98 GHz) sit next to our massive-MIMO PAs."
+
+  - vendor: Maxscend
+    overlap: [antenna_switch, lna_sub6_gnss, cellular_handset_fe]
+    our_advantages:
+      - "Integrated Sky5 modules and in-house filters vs mainly discrete switches/LNAs."
+      - "Automotive and infrastructure qualification."
+    their_advantages:
+      - "Price and share at Chinese handset OEMs in switches, LNAs and GNSS LNAs (competition.yaml)."
+    lead_with: Skyworks
+    example_crosses: []
+
+cross_sell:
+  - application: "Small cell base station (with Wi-Fi front end) (TI)"
+    skyworks:
+      - {function: rf_pa, parts: [SKY66318-21, SKY66052-11]}
+      - {function: rf_frontend, parts: [SKY85509-11, SKY85639-11]}
+      - {function: jitter_attenuator, parts: [SKY69001, Si5395]}
+    qorvo:
+      - {function: rf_frontend, parts: [QPB9378]}
+      - {function: filter_saw_baw, parts: [QPQ3509]}
+      - {function: lna, parts: [QPL9097]}
+    pitch: "Skyworks PA, Wi-Fi FEMs and network clock plus Qorvo switch-LNA and n77 BAW filter: the whole RF and timing path from one supplier."
+
+  - application: "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)"
+    skyworks:
+      - {function: rf_pa, parts: [SKY66523-11, SKY66525-11]}
+      - {function: jitter_attenuator, parts: [SKY63101]}
+      - {function: digital_isolator, parts: [Si88241BD-IS]}
+    qorvo:
+      - {function: rf_frontend, parts: [QPB9378]}
+      - {function: filter_saw_baw, parts: [QPQ3509]}
+      - {function: wide_vin_buck, parts: [ACT41000-104]}
+    pitch: "64T radio: Skyworks PAs and crystal-free clocks, Qorvo receive module, BAW filter and low-noise RF rail."
+
+  - application: "5G O-RAN radio unit / Digital Airfast (4T4R) - baseband, DFE, PA, LNA, timing (NXP)"
+    skyworks:
+      - {function: rf_pa, parts: [SKY66052-11]}
+      - {function: jitter_attenuator, parts: [SKY69001]}
+    qorvo:
+      - {function: power_amplifier, parts: [QPA3810, QPD0060]}
+      - {function: lna, parts: [QPL9097]}
+      - {function: rf_frontend, parts: [QPB9378]}
+    pitch: "Replace the third-party final stage: Skyworks driver and SyncE/1588 clock with Qorvo 48 V GaN finals and receive chain."
+
+  - application: "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
+    skyworks:
+      - {function: rf_frontend, parts: [SKY85372-11, SKY85509-11, SKY85639-11]}
+      - {function: poe_pd, parts: [Si34071-GM]}
+      - {function: clock_generator, parts: [Si5391A]}
+    qorvo:
+      - {function: filter_saw_baw, parts: [QPQ5510, QPQ5610]}
+      - {function: diplexer, parts: [QPQ4701]}
+      - {function: wifi_fem, parts: [QPF4659]}
+    pitch: "Tri-band / mesh AP: Skyworks Wi-Fi 7 FEMs and PoE PD with Qorvo U-NII BAW coexistence filters and a high-power 6 GHz FEM option."
+
+  - application: "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)"
+    skyworks:
+      - {function: rf_pa, parts: [SKY58253-11]}
+      - {function: diversity_rx_module, parts: [SKY53735-21]}
+      - {function: gnss_lna, parts: [SKY55951-11]}
+    qorvo:
+      - {function: wifi_fem, parts: [QPF4557, QPF4659]}
+      - {function: filter_saw_baw, parts: [QPQ3509, QPQ4900]}
+    pitch: "Skyworks cellular modules and GNSS with Qorvo high-power Wi-Fi 7 FEMs and n77/n79 BAW filters for in-device coexistence."
+
+  - application: "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+    skyworks:
+      - {function: jitter_attenuator, parts: [Si5395]}
+      - {function: rf_limiter, parts: [CLA4603 Series]}
+      - {function: gate_driver, parts: [Si82E39BEE-IS3]}
+    qorvo:
+      - {function: power_amplifier, parts: [QPA1011, QPA2612]}
+      - {function: lna, parts: [QPM6000]}
+      - {function: rf_phase_shifter, parts: [QPC2110]}
+    pitch: "Qorvo X-band GaN T/R chain plus Skyworks low-jitter reference, limiter diodes and isolated drivers for the power supply."
+
+  - application: "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)"
+    skyworks:
+      - {function: jitter_attenuator, parts: [SKY63101]}
+      - {function: rf_limiter, parts: [CLA4603 Series]}
+      - {function: digital_isolator, parts: [Si88241BD-IS]}
+    qorvo:
+      - {function: rf_switch, parts: [QPC2320, QPC0542]}
+      - {function: lna, parts: [CMD328K3]}
+      - {function: rf_attenuator, parts: [QPC5430]}
+    pitch: "Qorvo 6-50 GHz switching, LNA and DSA with Skyworks clocking for the high-speed converters and receiver protection."
+
+  - application: "Outdoor microwave backhaul unit (ODU: modem ASIC + RF up/down-conversion chain, diplexer, PoE / -48 V, antenna alignment motor) (TI)"
+    skyworks:
+      - {function: jitter_attenuator, parts: [Si5395]}
+      - {function: poe_pd, parts: [Si34071-GM]}
+      - {function: digital_isolator, parts: [Si8641BD-IS]}
+    qorvo:
+      - {function: rf_mixer, parts: [QPC4510]}
+      - {function: lna, parts: [QPA2628]}
+      - {function: rf_attenuator, parts: [QPC5430]}
+    pitch: "Qorvo K/Ka-band conversion, LNA and gain control with Skyworks synchronization clock, PoE and isolation."
+
+  - application: "V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)"
+    skyworks:
+      - {function: rf_frontend, parts: [SKYA21043]}
+      - {function: gnss_lna, parts: [SKY5A2110]}
+      - {function: rf_switch, parts: [SKY5A2108]}
+    qorvo:
+      - {function: v2x_fem, parts: [QPF1004Q]}
+      - {function: rf_switch, parts: [QPC8020Q]}
+    pitch: "All AEC-Q: Skyworks DSRC FEM, L1+L5 GNSS and switches, Qorvo integrated C-V2X FEM where one module is preferred."
+
+  - application: "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)"
+    skyworks:
+      - {function: rf_switch, parts: [SKY5A2108]}
+    qorvo:
+      - {function: uwb_soc, parts: [DW3300Q]}
+      - {function: uwb_fem, parts: [QM14068]}
+    pitch: "Qorvo automotive UWB anchor with Skyworks AEC-Q100 antenna switch for multi-antenna PDoA anchors."
+
+  - application: "HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)"
+    skyworks:
+      - {function: gate_driver, parts: [Si82E39BEE-AS3]}
+      - {function: isolated_amplifier, parts: [Si8921BB-AS]}
+      - {function: digital_isolator, parts: [SI86S641BE-AS2]}
+    qorvo:
+      - {function: wide_vin_buck, parts: [ACT4751MQI101]}
+      - {function: motor_controller, parts: [PAC5223QM]}
+    pitch: "Skyworks automotive isolation (drivers, current sense, data) with Qorvo automotive bias regulator and PAC fan/pump controller."
+
+technologies:
+  - id: gan_on_sic
+    label: GaN-on-SiC HEMT
+    owner: Qorvo
+    advantage: "Highest power density and efficiency at 28-48 V up to Ka-band; DoD Trusted fab. No GaN at Skyworks."
+    best_for: [infra_pa, defense_xband, rf_switch_high_power, catv]
+  - id: gaas_hbt
+    label: GaAs HBT (InGaP)
+    owner: both
+    advantage: "Linear, efficient PAs at 3-5 V; Skyworks runs it at handset/Wi-Fi/small-cell volume, Qorvo in gain blocks and CATV."
+    best_for: [wifi_fem, cellular_handset_fe, infra_pa, gain_blocks]
+  - id: gaas_phemt
+    label: GaAs pHEMT
+    owner: both
+    advantage: "Low NF and broadband: Qorvo 90-150 nm for LNAs, switches, DSAs and phase shifters to 40+ GHz; Skyworks for switches and LNAs below 6 GHz."
+    best_for: [lna_sub6_gnss, rf_switch_broadband, attenuators, defense_xband]
+  - id: baw_filter
+    label: BAW filters
+    owner: both
+    advantage: "Qorvo SMR BAW in production for 2-7 GHz coexistence and n77/n79; Skyworks BAW from Osaka is in Wi-Fi filters (Preview) and its timing resonators."
+    best_for: [filters, wifi_fem, smallcell_receive]
+  - id: tc_saw_filter
+    label: SAW / TC-SAW
+    owner: both
+    advantage: "Low-cost sub-3 GHz filtering; Skyworks integrates it in Sky5 modules and GNSS LNA FEMs, Qorvo sells standalone SAW/IF filters."
+    best_for: [cellular_handset_fe, lna_sub6_gnss]
+  - id: rf_soi
+    label: RF SOI
+    owner: both
+    advantage: "Small, low-cost switches, tuners and LNAs; Skyworks leads antenna switch/tuning, Qorvo high-isolation SOI switches."
+    best_for: [antenna_switch, rf_switch_high_power, automotive_rf]
+  - id: sip_module_integration
+    label: SiP / front-end module integration
+    owner: both
+    advantage: "Skyworks Sky5 double-sided shielded modules are the volume reference; Qorvo integrates GaN/GaAs FEMs for X-band and switch-LNA modules."
+    best_for: [cellular_handset_fe, wifi_fem, smallcell_receive, defense_xband]
+  - id: digital_isolation_capacitive
+    label: Capacitive digital isolation
+    owner: Skyworks
+    advantage: "Fast (13-14 ns, 150 Mbps) CMOS isolation; new generations at 6 kVrms and 100-200 kV/us CMTI."
+    best_for: [isolation, "HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)"]
+  - id: timing_baw_resonator
+    label: BAW-resonator / DSPLL timing
+    owner: Skyworks
+    advantage: "Femtosecond-class jitter without an external crystal; one clock tree for radios, BBUs and optics."
+    best_for: [timing, infra_pa, defense_xband]
+  - id: uwb_soc
+    label: UWB SoCs (IEEE 802.15.4z)
+    owner: Qorvo
+    advantage: "Market-leading UWB heritage (Decawave) with automotive and Apple-interoperable parts."
+    best_for: [uwb, "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)"]
+  - id: mmwave_beamformer
+    label: Silicon beamformers (Anokiwave)
+    owner: Qorvo
+    advantage: "Multi-channel beamformer ICs for X-band to 43.5 GHz arrays, pairing with Qorvo GaN/GaAs FEMs."
+    best_for: [beamformers_mmwave, defense_xband]
+  - id: pmic_configurable_power
+    label: Configurable PMICs and motor-control SoCs
+    owner: Qorvo
+    advantage: "Programmable power and motor-control SoCs / drivers up to 160 V; low-noise point-of-load bucks for radio boards."
+    best_for: [power_management]
+
+sources:
+  - "data/catalog/skyworks_parts.yaml, qorvo_parts.yaml, qorvo_extra_parts.yaml, skyworks_categories.md, qorvo_categories.md"
+  - "data/catalog/rf_competitors/*.yaml (pSemi, Infineon, MACOM, Mini-Circuits, Broadcom, Trans-Tech, Lark; Murata and Qualcomm list 0 parts)"
+  - "data/real/*.yaml (isolation and RF switch cross lists; isolation crosses from app/services/queries.crosses_for)"
+  - "data/cross_notes.yaml (Si8234AB vs UCC20225 footprint note)"
+  - "data/business/capabilities.yaml, technology.yaml, competition.yaml, evidence/competitor_tech.yaml, reports.yaml"
+  - "app/web/templates/business/reports/filters-1-11ghz.html (filter gap after the Trans-Tech sale)"
+  - "data/blocks/templates.yaml via app/services/blocks.py; app/services/rf_coverage.py and portfolio.rf_bands() for band coverage"
+  - "https://www.qorvo.com/about/news-events/news-releases/2026/skyworks-completes-combination-with-qorvo (combination closed 2026-10-05)"
+  - "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm (Skyworks FY2025 10-K)"
+  - "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm (Qorvo FY2025 10-K: HPA, CSG, ACG segments)"
+  - "https://semiconductor-today.com/news_items/2025/aug/skyworks-070825.shtml (Skyworks mobile ~62 % / broad markets ~38 % of revenue, Q3 FY2025)"

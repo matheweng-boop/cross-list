@@ -105,3 +105,18 @@ def parts_for(band_id: str, competitors: bool = False) -> list[dict]:
         out.append({"fn": f, "label": (cat.get(f) or {}).get("label", f), "specific": [p for p in ps if p["specific"]],
                     "wide": [p for p in ps if not p["specific"]]})  # fmt: skip
     return sorted(out, key=lambda g: (-len(g["specific"]), -len(g["wide"]), g["label"]))
+
+
+@lru_cache
+def band_counts() -> dict[str, dict[str, int]]:
+    """Per band: our active band-specific parts by line, and all covering parts (for the table view)."""
+    out = {}
+    for b in data()["bands"]:
+        groups = parts_for(b["id"])
+        spec = [p for g in groups for p in g["specific"]]
+        out[b["id"]] = {
+            "Skyworks": sum(p["manufacturer"] == "Skyworks" for p in spec),
+            "Qorvo": sum(p["manufacturer"] == "Qorvo" for p in spec),
+            "all": sum(len(g["specific"]) + len(g["wide"]) for g in groups),
+        }
+    return out

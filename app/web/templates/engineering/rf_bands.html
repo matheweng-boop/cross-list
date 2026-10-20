@@ -2,88 +2,159 @@
 {% block title %}RF bands – BizDev{% endblock %}
 {% block content %}
 <h1>RF bands</h1>
-<p class="subtitle muted">Cellular (LTE / 5G), GNSS, Wi-Fi and IoT, UWB and V2X, broadcast, satellite and radar bands on one frequency axis. Click a band for what it is used for, the front-end parts it calls for, and our parts whose frequency range covers it.</p>
+<p class="subtitle muted">Cellular (LTE / 5G), GNSS, Wi-Fi and IoT, UWB and V2X, broadcast, satellite and radar bands. Click a band for what it is used for, the front-end parts it calls for, and our parts whose frequency range covers it.</p>
 
 <div class="rb-bar">
-  <div class="rb-zoom small" role="group" aria-label="Frequency range">{% for k, label in [('all', 'All'), ('sub1', 'Below 1 GHz'), ('l', '1–3 GHz'), ('c', '3–8 GHz'), ('mmw', 'Above 8 GHz')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-zoom="{{ k }}">{{ label }}</button>{% endfor %}</div>
+  <div class="rb-views small" role="group" aria-label="View">{% for k, label in [('groups', 'By group'), ('spectrum', 'Full spectrum'), ('table', 'Table')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-view="{{ k }}">{{ label }}</button>{% endfor %}</div>
+  <div class="rb-zoom small" role="group" aria-label="Frequency range" hidden>{% for k, label in [('all', 'All'), ('sub1', 'Below 1 GHz'), ('l', '1–3 GHz'), ('c', '3–8 GHz'), ('mmw', 'Above 8 GHz')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-zoom="{{ k }}">{{ label }}</button>{% endfor %}</div>
   <div class="rb-groups small" role="group" aria-label="Show">{% for k, label in groups.items() %}<label class="rb-g g-{{ loop.index0 }}"><input type="checkbox" value="{{ k }}"{{ ' checked' if k != 'ieee' }}> {{ label }}</label>{% endfor %}</div>
 </div>
-<div class="rb-chart-wrap"><svg id="rb-chart" role="img" aria-label="Frequency band chart"></svg></div>
-<p class="small muted">Logarithmic frequency axis. FDD bands show uplink and downlink as two linked bars; GNSS and broadcast are receive-only. Hover a bar for its name.</p>
 
-<section id="rb-detail" class="pl-card" aria-live="polite">{% if not band %}<p class="muted">Click a band in the chart.</p>{% endif %}</section>
+<div id="rb-groupview" class="rb-groupview"></div>
+<div id="rb-spectrum" hidden><div class="rb-chart-wrap"><svg id="rb-chart" class="rb-svg" role="img" aria-label="Frequency band chart"></svg></div>
+  <p class="small muted">Logarithmic frequency axis from 100 kHz to 100 GHz. Use “By group” for a readable view of each band family.</p></div>
+<div id="rb-table" hidden>
+  <div class="rb-twrap"><table class="small rb-tbl">
+    <thead><tr><th scope="col">Band</th><th scope="col">Frequencies (MHz)</th><th scope="col">Mode</th><th scope="col">Regions</th><th scope="col">Used for</th><th scope="col" title="Active band-specific parts">Skyworks</th><th scope="col" title="Active band-specific parts">Qorvo</th></tr></thead>
+    {% for gk, glabel in groups.items() %}<tbody data-group="{{ gk }}"><tr class="rb-tg g-{{ loop.index0 }}"><th colspan="7" scope="rowgroup">{{ glabel }}</th></tr>
+      {% for b in bands if b.group == gk %}{% set c = counts.get(b.id, {}) %}<tr class="rb-trow" data-id="{{ b.id }}" tabindex="0">
+        <td><b>{{ b.name }}</b></td><td class="rb-nowrap">{% for r in b.ranges %}{{ r[2] }} {{ '%g'|format(r[0]) }}–{{ '%g'|format(r[1]) }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+        <td>{{ b.mode or '' }}</td><td>{{ b.regions or '' }}</td><td>{{ b.uses or '' }}</td>
+        <td class="n">{{ c.Skyworks or '–' }}</td><td class="n">{{ c.Qorvo or '–' }}</td></tr>{% endfor %}</tbody>{% endfor %}
+  </table></div>
+  <p class="small muted">Skyworks / Qorvo: active parts whose stated range is specific to the band (wideband parts are listed in the band's details).</p>
+</div>
+<p class="small muted rb-legend"><span class="rb-sw"></span> downlink / TDD / receive <span class="rb-sw ul"></span> uplink · FDD bands show uplink and downlink as a linked pair.</p>
+
+<section id="rb-detail" class="pl-card" aria-live="polite">{% if not band %}<p class="muted">Click a band.</p>{% endif %}</section>
 
 <script id="rb-data" type="application/json">{{ {'groups': groups.items()|list, 'bands': bands}|tojson }}</script>
 <script>
 (() => {
   const D = JSON.parse(document.getElementById("rb-data").textContent);
   const svg = document.getElementById("rb-chart"), detail = document.getElementById("rb-detail");
+  const groupView = document.getElementById("rb-groupview");
   const ZOOM = {all: [0.1, 110000], sub1: [10, 1100], l: [1000, 3000], c: [3000, 8500], mmw: [8000, 110000]};
   const GKEYS = D.groups.map(g => g[0]), GNAME = Object.fromEntries(D.groups);
-  let zoom = "all", selected = new URLSearchParams(location.search).get("band") || "";
+  let zoom = "all", view = "groups", selected = new URLSearchParams(location.search).get("band") || "";
   const shown = () => new Set([...document.querySelectorAll(".rb-groups input:checked")].map(i => i.value));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
   const shortName = b => b.name.split(" (")[0].replace(/^Band /, "B").replace(/ \/ .*$/, "").replace(/:.*$/, "");
-  const fmt = f => (f >= 1000 ? `${+(f / 1000).toFixed(f >= 10000 ? 0 : 2)} GHz` : f >= 1 ? `${+f.toFixed(1)} MHz` : `${+(f * 1000).toFixed(0)} kHz`);
+  const fmt = f => (f >= 1000 ? `${+(f / 1000).toFixed(f >= 10000 ? 0 : 2)} GHz` : f >= 1 ? `${+f.toFixed(f >= 100 ? 0 : 1)} MHz` : `${+(f * 1000).toFixed(0)} kHz`);
+  const lo = b => Math.min(...b.ranges.map(r => r[0])), hi = b => Math.max(...b.ranges.map(r => r[1]));
 
-  function draw() {
-    const [f0, f1] = ZOOM[zoom], W = Math.max(svg.parentElement.clientWidth, 760), LBL = 170, PAD = 14, ROW = 17, LANE_GAP = 10;
-    const x = f => LBL + (Math.log10(f) - Math.log10(f0)) / (Math.log10(f1) - Math.log10(f0)) * (W - LBL - PAD);
-    const vis = shown(), out = [];
-    let y = 26;
-    // frequency grid: decades, plus 1-2-5 steps when zoomed in
-    const ticks = [];
+  // Ticks on a log axis: 1-2-5 or finer steps depending on the span, at most ~10 labels.
+  function ticks(f0, f1) {
+    const out = [], span = f1 / f0;
+    const steps = span < 1.6 ? [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9]
+      : span < 20 ? [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8] : span < 200 ? [1, 2, 5] : [1];
     for (let e = Math.floor(Math.log10(f0)); e <= Math.ceil(Math.log10(f1)); e++)
-      for (const m of (f1 / f0 < 20 ? [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8] : f1 / f0 < 200 ? [1, 2, 5] : [1])) { const f = m * 10 ** e; if (f >= f0 && f <= f1) ticks.push(f); }
-    const lanes = [];
-    for (const g of GKEYS) {
-      if (!vis.has(g)) continue;
-      const items = D.bands.filter(b => b.group === g && b.ranges.some(r => r[1] >= f0 && r[0] <= f1));
-      if (!items.length) continue;
-      const rows = [];  // pack bands into rows without overlap (in pixels, with room for a short label)
-      for (const b of items.sort((a, c) => Math.min(...a.ranges.map(r => r[0])) - Math.min(...c.ranges.map(r => r[0])))) {
-        const lo = x(Math.max(f0, Math.min(...b.ranges.map(r => r[0])))), bar = x(Math.min(f1, Math.max(...b.ranges.map(r => r[1]))));
-        const lw = shortName(b).length * 6 + 8, hi = (bar - lo > lw ? bar : bar + lw) + 4;
-        let row = rows.findIndex(end => end < lo);
-        if (row < 0) { rows.push(0); row = rows.length - 1; }
-        rows[row] = hi;
-        b._row = row;
+      for (const m of steps) { const f = m * 10 ** e; if (f >= f0 && f <= f1) out.push(f); }
+    const every = Math.ceil(out.length / 10);
+    return out.filter((_, i) => i % every === 0);
+  }
+
+  // One chart: bands packed into rows on a log axis from f0 to f1. opts: {row, bar, label (lane titles), font}
+  function chart(el, items, f0, f1, opts) {
+    const W = Math.max(el.parentElement.clientWidth, 320), LBL = opts.label ? 170 : 8, PAD = 12, ROW = opts.row, BAR = opts.bar;
+    const FS = opts.font, CW = FS * 0.62, MINW = opts.minw || 4;
+    const x = f => LBL + (Math.log10(f) - Math.log10(f0)) / (Math.log10(f1) - Math.log10(f0)) * (W - LBL - PAD);
+    const out = [], lanes = [];
+    let y = 26;
+    for (const [g, list] of items) {
+      const rows = [];
+      for (const b of list.sort((a, c) => lo(a) - lo(c))) {
+        const a = x(Math.max(f0, lo(b))), z = Math.max(x(Math.min(f1, hi(b))), a + MINW), lw = shortName(b).length * CW + 10;
+        // a label that would run off the right edge goes to the left of the bar
+        const left = z - a <= lw && z + lw > W - PAD, start = left ? a - lw : a;
+        const end = (z - a > lw || left ? z : z + lw) + 6;
+        let r = rows.findIndex(e => e < start);
+        if (r < 0) { rows.push(0); r = rows.length - 1; }
+        rows[r] = end;
+        b._row = r;
+        b._left = left;
       }
-      lanes.push({g, items, n: rows.length, y});
-      y += rows.length * ROW + LANE_GAP + 8;
+      lanes.push({g, list, n: rows.length, y});
+      y += rows.length * ROW + (opts.label ? 18 : 6);
     }
-    const H = y + 8;
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
-    for (const f of ticks) out.push(`<line class="rb-tick" x1="${x(f)}" x2="${x(f)}" y1="18" y2="${H - 4}"/><text class="rb-tl" x="${x(f)}" y="12" text-anchor="middle">${fmt(f)}</text>`);
+    const H = y + 4;
+    el.setAttribute("viewBox", `0 0 ${W} ${H}`); el.setAttribute("width", W); el.setAttribute("height", H);
+    for (const f of ticks(f0, f1)) out.push(`<line class="rb-tick" x1="${x(f)}" x2="${x(f)}" y1="18" y2="${H - 2}"/><text class="rb-tl" x="${x(f)}" y="12" text-anchor="middle">${fmt(f)}</text>`);
     for (const L of lanes) {
       const gi = GKEYS.indexOf(L.g);
-      out.push(`<rect class="rb-lane" x="0" y="${L.y - 4}" width="${W}" height="${L.n * ROW + 8}"/><text class="rb-ll" x="6" y="${L.y + 10}">${esc(GNAME[L.g])}</text>`);
-      for (const b of L.items) {
+      if (opts.label) out.push(`<text class="rb-ll" x="6" y="${L.y + BAR - 3}">${esc(GNAME[L.g])}</text>`);
+      for (const b of L.list) {
         const ry = L.y + b._row * ROW, segs = b.ranges.filter(r => r[1] >= f0 && r[0] <= f1);
-        const xs = segs.map(r => [x(Math.max(r[0], f0)), Math.max(x(Math.min(r[1], f1)), x(Math.max(r[0], f0)) + 3)]);
+        const xs = segs.map(r => [x(Math.max(r[0], f0)), Math.max(x(Math.min(r[1], f1)), x(Math.max(r[0], f0)) + MINW)]);
         const tip = `${b.name}: ${b.ranges.map(r => `${r[2]} ${fmt(r[0])}–${fmt(r[1])}`).join(", ")}`;
         let g = `<g class="rb-band c${gi}${b.id === selected ? " on" : ""}" data-id="${b.id}" tabindex="0" role="button" aria-label="${esc(tip)}"><title>${esc(tip)}</title>`;
-        if (xs.length > 1) g += `<line class="rb-pair" x1="${xs[0][1]}" x2="${xs[xs.length - 1][0]}" y1="${ry + 6}" y2="${ry + 6}"/>`;
-        xs.forEach(([a, c], i) => (g += `<rect x="${a}" y="${ry}" width="${c - a}" height="12" rx="2"${segs[i][2] === "UL" ? ' class="ul"' : ""}/>`));
-        const short = shortName(b);
-        const room = xs[xs.length - 1][1] - xs[0][0];
-        if (room > short.length * 6 + 6) g += `<text class="rb-bl" x="${xs[0][0] + 3}" y="${ry + 9.5}">${esc(short)}</text>`;
-        else g += `<text class="rb-bl out" x="${xs[xs.length - 1][1] + 3}" y="${ry + 9.5}">${esc(short)}</text>`;
+        if (xs.length > 1) g += `<line class="rb-pair" x1="${xs[0][1]}" x2="${xs[xs.length - 1][0]}" y1="${ry + BAR / 2}" y2="${ry + BAR / 2}"/>`;
+        xs.forEach(([a, c], i) => {
+          g += `<rect x="${a}" y="${ry}" width="${c - a}" height="${BAR}" rx="3"${segs[i][2] === "UL" ? ' class="ul"' : ""}/>`;
+          if (opts.dir && xs.length > 1 && c - a > 22) g += `<text class="rb-dir" x="${(a + c) / 2}" y="${ry + BAR / 2 + FS * 0.35}" text-anchor="middle">${esc(segs[i][2])}</text>`;
+        });
+        const name = shortName(b), room = xs[xs.length - 1][1] - xs[0][0];
+        const inside = xs.length === 1 && room > name.length * CW + 8;
+        const tx = inside ? xs[0][0] + 4 : b._left ? xs[0][0] - 4 : xs[xs.length - 1][1] + 4;
+        g += `<text class="rb-bl${inside ? "" : " out"}" style="font-size:${FS}px" x="${tx}" y="${ry + BAR / 2 + FS * 0.35}"${b._left && !inside ? ' text-anchor="end"' : ""}>${esc(name)}</text>`;
         out.push(g + "</g>");
       }
     }
-    svg.innerHTML = out.join("");
+    el.innerHTML = out.join("");
   }
+
+  function drawSpectrum() {
+    const [f0, f1] = ZOOM[zoom], vis = shown();
+    const items = GKEYS.filter(g => vis.has(g)).map(g => [g, D.bands.filter(b => b.group === g && b.ranges.some(r => r[1] >= f0 && r[0] <= f1))]).filter(([, l]) => l.length);
+    chart(svg, items, f0, f1, {row: 24, bar: 18, label: true, font: 11});
+  }
+
+  // By group: each band family on its own axis, from its lowest to its highest band (with a margin).
+  function drawGroups() {
+    const vis = shown(), parts = [];
+    for (const g of GKEYS) {
+      if (!vis.has(g)) continue;
+      const list = D.bands.filter(b => b.group === g);
+      if (!list.length) continue;
+      parts.push(`<section class="rb-gsec g-${GKEYS.indexOf(g)}"><h3>${esc(GNAME[g])} <small class="muted">${list.length} band${list.length > 1 ? "s" : ""} · ${fmt(Math.min(...list.map(lo)))}–${fmt(Math.max(...list.map(hi)))}</small></h3><div class="rb-chart-wrap"><svg class="rb-svg" data-group="${g}" role="img" aria-label="${esc(GNAME[g])}"></svg></div></section>`);
+    }
+    groupView.innerHTML = parts.join("");
+    for (const el of groupView.querySelectorAll("svg[data-group]")) {
+      const list = D.bands.filter(b => b.group === el.dataset.group);
+      const a = Math.min(...list.map(lo)), z = Math.max(...list.map(hi)), m = (Math.log10(z) - Math.log10(a)) * 0.04 + 0.004;
+      chart(el, [[el.dataset.group, list]], 10 ** (Math.log10(a) - m), 10 ** (Math.log10(z) + m), {row: 34, bar: 26, label: false, font: 13, dir: true, minw: 8});
+    }
+  }
+
+  function drawTable() {
+    const vis = shown();
+    document.querySelectorAll("#rb-table tbody").forEach(t => (t.hidden = !vis.has(t.dataset.group)));
+    document.querySelectorAll(".rb-trow").forEach(r => r.classList.toggle("on", r.dataset.id === selected));
+  }
+
+  function draw() {
+    document.getElementById("rb-groupview").hidden = view !== "groups";
+    document.getElementById("rb-spectrum").hidden = view !== "spectrum";
+    document.getElementById("rb-table").hidden = view !== "table";
+    document.querySelector(".rb-zoom").hidden = view !== "spectrum";
+    document.querySelector(".rb-legend").hidden = view === "table";
+    if (view === "groups") drawGroups(); else if (view === "spectrum") drawSpectrum(); else drawTable();
+  }
+
   async function open(id) {
     selected = id;
     draw();
     history.replaceState(null, "", `?band=${id}`);
     detail.innerHTML = '<p class="muted">Loading…</p>';
-    try { detail.innerHTML = await (await fetch(`/rf-bands/${encodeURIComponent(id)}`)).text(); }
+    try { detail.innerHTML = await (await fetch(`/rf-bands/${encodeURIComponent(id)}`)).text(); detail.scrollIntoView({behavior: "smooth", block: "start"}); }
     catch { detail.innerHTML = '<p class="uc-error">Could not load this band.</p>'; }
   }
-  svg.addEventListener("click", e => { const g = e.target.closest(".rb-band"); if (g) open(g.dataset.id); });
-  svg.addEventListener("keydown", e => { const g = e.target.closest(".rb-band"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(g.dataset.id); } });
+  const pick = e => e.target.closest(".rb-band, .rb-trow");
+  document.addEventListener("click", e => { const g = pick(e); if (g) open(g.dataset.id); });
+  document.addEventListener("keydown", e => { const g = pick(e); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(g.dataset.id); } });
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+    view = b.dataset.view; document.querySelectorAll("[data-view]").forEach(x => x.classList.toggle("on", x === b)); draw();
+  }));
   document.querySelectorAll("[data-zoom]").forEach(b => b.addEventListener("click", () => {
     zoom = b.dataset.zoom; document.querySelectorAll("[data-zoom]").forEach(x => x.classList.toggle("on", x === b)); draw();
   }));

@@ -27,3 +27,19 @@ def test_uvlo_is_priority_1_for_gate_drivers():
 def test_invalid_rules_are_rejected(param, error):
     with pytest.raises(ValueError, match=error):
         parse_rules({"family": "f", "params": [param]})
+
+
+def test_default_fills_a_value_the_part_does_not_state():
+    class P:
+        def __init__(self, **kw):
+            self.kw = kw
+
+        def param_map(self):
+            return dict(self.kw)
+
+    rules = parse_rules({"family": "f", "params": [
+        {"key": "input_type", "priority": 1, "kind": "category", "hard": True, "default": "cmos"}]})  # fmt: skip
+    assert rules.values(P())["input_type"] == "cmos"
+    assert rules.values(P(input_type="led-emulator"))["input_type"] == "led-emulator"
+    iso = load_all_rules()["digital_isolator"]
+    assert iso.get("input_type").hard and iso.get("output_polarity").default == "non-inverting"

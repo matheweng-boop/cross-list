@@ -69,6 +69,7 @@ def _warm_caches() -> None:
         rf_coverage.parts()
         rf_coverage.competitor_parts()
         rf_bands.rf_parts()
+        rf_bands.band_counts()
         opportunity.customers()
         session = next(get_session())
         try:
@@ -103,6 +104,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.business import router as business_router
     from app.web.feedback import router as feedback_router
     from app.web.pipeline import router as pipeline_router
+    from app.web.portfolio import router as portfolio_router
     from app.web.requests import router as requests_router
     from app.web.routes import router as web_router
     from app.web.uploads import router as uploads_router
@@ -127,6 +129,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
 
     app.include_router(api_router, prefix="/api")
     app.include_router(web_router)
+    app.include_router(portfolio_router)
     app.include_router(broadcast_router)
     app.include_router(requests_router)
     app.include_router(blocks_router)

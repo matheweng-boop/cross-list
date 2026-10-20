@@ -554,7 +554,8 @@ def rf_bands_page(request: Request, band: str = ""):
     from app.services import rf_bands
 
     d = rf_bands.data()
-    ctx = {"groups": d["groups"], "bands": d["bands"], "band": band if rf_bands.band(band) else ""}
+    ctx = {"groups": d["groups"], "bands": d["bands"], "band": band if rf_bands.band(band) else "",
+           "counts": rf_bands.band_counts()}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/rf_bands.html", ctx)
 
 

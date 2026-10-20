@@ -1,0 +1,116 @@
+# Preliminary case: automotive Wi-Fi 7 front end. Layout and rules: _template.yaml. Figures and links: the report's background notes.
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Automotive Wi-Fi 7 front end with V2X coexistence built in"
+question: >-
+  Should Skyworks (with Qorvo) build an AEC-Q104 Wi-Fi 7 front end for cars (5 + 6 GHz MLO) with 5.9 GHz V2X
+  coexistence filtering inside, reusing today's Wi-Fi 7 FEMs and automotive BAW filters, given Qualcomm's QCA6797AQ
+  with its QXM19xx front end and modules from u-blox, LG Innotek and Murata, and at what price?
+updated: 2026-10-20
+brief:
+  - "We have the pieces but not the part: the broadest Wi-Fi 7 FEM range (consumer grade), automotive BAW coexistence filters (SKY5A1005 V2X notch, SKY5A1006 5 GHz stopping at 5835 MHz, SKY5A1008 6 GHz, all Preview) and Qorvo's automotive QPF4554Q/QPF4550Q, but no AEC-Q104 Wi-Fi 7 FEM."
+  - "Weak point: Qualcomm sells the chip in every public automotive Wi-Fi 7 module (u-blox RUBY-W2, LG Innotek) and an integrated automotive FEM with it (QXM19xx); NXP and Synaptics put the PA on the chip."
+  - "Proposal: a 2 × 2 MLO set of automotive iFEMs (5 GHz with V2X guard filter, 6 GHz with UNII-1–3 rejection) for module makers, about $2.2–3.6 per FEM and $9–14 per car set (est)."
+
+position:
+  advantages:
+    - {id: a-range, text: "Broadest Wi-Fi 7/8 FEM range: 5 GHz (SKY85509-11), 6 GHz (SKY85639-11), 5–7 GHz Sky5 (SKY55714-11), 5/6 GHz meshplexer (SKY85929-11)", vs: "Qualcomm QXM19xx, Broadcom", conf: high}
+    - {id: a-filters, text: "Automotive BAW coexistence filters already defined: SKY5A1005 V2X notch (30 dB min), SKY5A1006 5.170–5.835 GHz, SKY5A1008 5.945–7.125 GHz (50 dB to cellular, BT, UNII-1–3); Qorvo QPQ2230Q, QPQ2254Q", vs: "Murata XBAR (not automotive)", conf: high}
+    - {id: a-v2x, text: "We also make the V2X front end (SKY5A2105, QPF1003Q), so we can specify both sides of the 5.9 GHz edge", vs: "Qualcomm (V2X chipset, front end not public)", conf: med}
+    - {id: a-agnostic, text: "Chipset-agnostic: a FEM can serve Qualcomm, Synaptics, NXP and MediaTek designs; QXM19xx is tied to Qualcomm", vs: Qualcomm, conf: med}
+    - {id: a-auto, text: "AEC-Q104 Grade 2 SiP flow, PPAP and IMDS in place (SKY5A2105, Sky5 telematics)", vs: "Richwave, Vanchip, Kangxi", conf: high}
+  disadvantages:
+    - {id: d-nopart, text: "No AEC-Q Wi-Fi 7 FEM today; Qorvo's automotive Wi-Fi parts are Wi-Fi 5/6 class (QPF4554Q switch+LNA, Preview; RFFM5765Q end of life)", vs: "Qualcomm QXM19xx", offset: "Qualify a set from existing Wi-Fi 7 dies with our automotive BAW", conf: med}
+    - {id: d-bundle, text: "Qualcomm is in every public automotive Wi-Fi 7 module found and offers its own automotive FEM with the chip", vs: Qualcomm, offset: "Win on coexistence and range where QXM19xx falls short; target non-Qualcomm chipsets and module makers", conf: low}
+    - {id: d-onchip, text: "Many automotive Wi-Fi chips have PA, LNA and switch on chip (NXP AW693, Synaptics SYN4383/4384), so an external FEM is optional", vs: "NXP, Synaptics", offset: "Sell the filter alone where the FEM is internal; FEM for range and roof/RSE units", conf: med}
+    - {id: d-cost, text: "Consumer Wi-Fi FEMs are cheap and crowded (Richwave, Vanchip, Kangxi); our 5 GHz Wi-Fi FEMs list from about $1–3.3", vs: "Asian FEM suppliers", offset: "Compete on qualification and system coexistence, not price per chip", conf: low}
+    - {id: d-preview, text: "All three automotive Wi-Fi BAW filters are Preview (Dec 2025 summaries); no production status", vs: "—", offset: "Move to production with a module partner", conf: high}
+  diff_good:
+    - {id: g-guard, text: "A 5 GHz path that stops at 5835 MHz keeps the car's own Wi-Fi out of the V2X band; a 6 GHz path with 50 dB to UNII-1–3 lets 5 and 6 GHz run at once (MLO/HBS)", conf: high}
+    - {id: g-one, text: "One supplier for Wi-Fi FEMs, V2X FEM and coexistence filters in the same smart antenna or cockpit unit", conf: med}
+  diff_bad:
+    - {id: b-nochip, text: "No Wi-Fi chipset: design-ins follow Qualcomm's or another SoC vendor's reference design", conf: high}
+    - {id: b-ecosys, text: "No automotive Wi-Fi module partner found in public sources (u-blox and LG Innotek name Qualcomm only)", conf: low}
+
+architecture:
+  columns: [Skyworks + Qorvo, Qualcomm, NXP / Synaptics, Module makers]
+  rows:
+    - ["Built as", "External FEM per chain + BAW coexistence filter", "QCA6797AQ chip + QXM19xx integrated automotive FEM", "Combo chip with PA/LNA/switch on chip; external FEM optional", "Chip + FEMs + antennas in one module (RUBY-W2 23 × 23 mm; LG Innotek >150 parts)"]
+    - ["5 + 6 GHz at once", "Two FEMs per chain + 5/6 GHz meshplexer", "HBS / MLMR on chip", "AW693: 2 × 2 5–7 GHz + 1 × 1 2.4 GHz (Wi-Fi 6E)", "2 × 2 MLO on 5 and 6 GHz"]
+    - ["V2X coexistence", "BAW guard on the Wi-Fi path (SKY5A1006/1008) + V2X BAW", "Not stated", "Not stated", "Not stated"]
+    - ["Where it sits", "Module, head unit, TCU or roof", "Head unit / cockpit domain", "Head unit", "AVN, RSE, TCU, cockpit domain unit"]
+  note: "From the BizDev block-diagram library (Qualcomm automotive telematics with QCA6696 and C-V2X 9150; NXP Wi-Fi 6/6E combo and connected radio with external FEMs + diplexer; Skyworks telematics and infotainment). Trend: Wi-Fi moves into the cockpit domain controller and smart antenna next to V2X and cellular, where coexistence is decided."
+
+market_now:
+  - {figure: "First automotive Wi-Fi 7 chip", value: "Qualcomm QCA6797AQ (Feb 2024): 320 MHz, 4K-QAM, up to 5.8 Gbps, HBS/MLMR", source: "Qualcomm OnQ / Automotive World (snippets)", conf: low}
+  - {figure: "u-blox RUBY-W2", value: "2 × 2 MLO on 5 + 6 GHz, QCA6797AQ/QCA6787AQ, −40 to +105 °C, 23 × 23 mm; samples Jan 2025", source: "u-blox release via trade press (snippets)", conf: low}
+  - {figure: "LG Innotek Wi-Fi 7 module", value: "≈$68 M order, mass production 2027, Qualcomm chip, >150 parts, −40 to 105 °C, AVN for a global OEM", source: "LG Innotek release, 20 Apr 2026", conf: high}
+  - {figure: "Qualcomm automotive Wi-Fi FEM", value: "QXM19xx: integrated FEM, AEC-Q100, 2.4/5/6 GHz, Wi-Fi 6/6E/7, paired with QCA6797AQ/QCA6698AQ", source: "Qualcomm page / everythingRF (snippets)", conf: low}
+  - {figure: "On-chip front ends", value: "NXP AW693 (Wi-Fi 6E, AEC-Q100 Grade 2) has PA/LNA/T/R on chip, external FEM optional; Synaptics SYN4384 (Wi-Fi 7) with Murata module", source: "NXP page; Synaptics/Murata release (snippets)", conf: low}
+  - {figure: "In-vehicle Wi-Fi market", value: "$20.9 B (2025) → $47.7 B (2035), 9.6 % CAGR (service and hardware)", source: "Global Market Insights, quoted by LG Innotek", conf: low}
+  - {figure: "Embedded connectivity", value: "83 % of new cars in 2025 → 91 % (82.6 M) by 2030", source: "Berg Insight (snippet)", conf: low}
+  - {figure: "Wi-Fi attach rate in new cars", value: "not stated (Counterpoint forecast is paywalled)", source: "—", conf: low}
+  - {figure: "Light-vehicle production", value: "92.1 M (2026)", source: "S&P Global Mobility, Mar 2026", conf: high}
+  - {figure: "Public price anchors", value: "QPF4550 5 GHz Wi-Fi 6 FEM $3.29 at 1,000; automotive Wi-Fi 7 FEM: not stated", source: "LCSC, Oct 2026", conf: low}
+
+outlook:
+  - {id: o-attach, text: "Wi-Fi 7 reaches about 15–25 % of new cars by 2030 (≈15–24 M, est), mainly China and US mid/premium", basis: "Embedded connectivity 91 % by 2030 (Berg); first Wi-Fi 7 modules in production 2027 (LG Innotek); Counterpoint says China and US lead", conf: low}
+  - {id: o-ext, text: "About a third to half of those use external FEMs (est); entry designs keep on-chip PAs", basis: "NXP and Synaptics integrate the front end; Qualcomm offers QXM19xx; roof/RSE units need range", conf: low}
+  - {id: o-coex, text: "Coexistence filtering becomes a requirement as Wi-Fi and V2X share smart antennas and cockpit units (judgement)", basis: "SKY5A1005/1006/1008 target Wi-Fi + V2X coexistence; Wi-Fi 6E named as a new interferer to C-V2X in a USDOT report (snippet)", conf: low}
+  - {id: o-mlo, text: "MLO across 5 and 6 GHz becomes the default for CarPlay/Android Auto and RSE streaming", basis: "RUBY-W2 and LG Innotek both use 5 + 6 GHz; leaving 2.4 GHz", conf: med}
+  - {id: o-against, text: "Against: Qualcomm's bundle and on-chip PAs could leave external FEMs a niche of a few M a year (est)", basis: "Every public automotive Wi-Fi 7 module uses Qualcomm", conf: low}
+
+features:
+  - {id: w-5g, feature: "Automotive 5 GHz Wi-Fi 7 iFEM with V2X guard BAW (pass to 5835 MHz)", benefit: "Wi-Fi never transmits into the V2X band; no separate filter", distance: 2, why: "SKY85509-11-class die + SKY5A1006 BAW in one AEC-Q104 module"}
+  - {id: w-6g, feature: "Automotive 6 GHz Wi-Fi 7 iFEM with UNII-1–3 rejection", benefit: "5 and 6 GHz at once (MLO/HBS) on nearby antennas", distance: 2, why: "SKY85639-11-class die + SKY5A1008 BAW"}
+  - {id: w-set, feature: "2 × 2 MLO reference set: 4 iFEMs + 5/6 GHz meshplexer + V2X notch", benefit: "Complete validated front end for module makers", distance: 2, why: "Reference design from existing parts (SKY85929-11, SKY5A1005)"}
+  - {id: w-filters, feature: "Move SKY5A1005/1006/1008 from Preview to production", benefit: "Sells today where the PA is on chip (NXP, Synaptics)", distance: 1, why: "Qualification and documents"}
+  - {id: w-guide, feature: "Coexistence application note with V2X FEM (isolation, filter plan, antenna spacing)", benefit: "Makes coexistence part of the sale", distance: 1, why: "Documents and lab data from existing parts"}
+  - {id: w-one, feature: "One 5–7 GHz automotive FEM with switchable 5/6 GHz BAW", benefit: "Smaller than two FEMs per chain", distance: 3, why: "New die/switch arrangement; SKY55714-11 exists but MLO needs both bands at once"}
+  - {id: w-g1, feature: "Grade 1 (125 °C) option", benefit: "Roof and hot cockpit units", distance: 3, why: "Requirement not stated by OEMs; may need redesign"}
+  - {id: w-24, feature: "Automotive 2.4 GHz FEM refresh (Wi-Fi 7 + BT)", benefit: "Completes the tri-band set", distance: 2, why: "SKY55208-11 / QPF4239Q exist; qualify one"}
+  - {id: w-v2x, feature: "Wi-Fi + V2X combined front end in one module", benefit: "Smart antenna with one RF part for 5–6 GHz", distance: 3, why: "Combines Wi-Fi and V2X dies; QPF1003Q already mixes C-V2X, DSRC and Wi-Fi in one FEM"}
+
+product:
+  name: "Automotive Wi-Fi 7 MLO front-end set (A5 + A6 iFEMs)"
+  spec:
+    - ["Parts", "A5: 5 GHz iFEM (PA, LNA with bypass, T/R, coupler/detector, BAW 5.170–5.835 GHz) · A6: 6 GHz iFEM (BAW 5.945–7.125 GHz, 50 dB to UNII-1–3)"]
+    - ["Set", "2 × 2 MLO: 2 × A5 + 2 × A6 + 2 × 5/6 GHz meshplexer; optional V2X notch on shared antennas"]
+    - ["Qualification", "AEC-Q104 Grade 2 (−40 to +105 °C); Grade 1 later"]
+    - ["Reuses", "SKY85509-11 / SKY85639-11 Wi-Fi 7 dies, SKY5A1006/1008/1005 BAW, SKY85929-11, Sky5 automotive SiP flow; Qorvo QPF4550Q/QPF4554Q automotive experience"]
+    - ["New", "Filter-in-FEM modules and their automotive qualification"]
+    - ["Replaces", "Per chain: consumer FEM + separate BAW filter (or QXM19xx)"]
+    - ["Answers", "Qualcomm QXM19xx; on-chip PAs in NXP AW693 and Synaptics SYN4384 where range matters"]
+    - ["Delivery (est)", "Filters to production: 6–12 months · iFEMs: 18–24 months (for 2028–29 SOP)"]
+
+prices:
+  method: "Anchor on consumer Wi-Fi FEM list prices (low confidence) → value of FEM + filter per chain → range. Assumption: contract prices are 30–50 % below reel list prices; automotive qualification and the built-in filter carry a premium over consumer FEMs. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "Qorvo QPF4550 (5 GHz Wi-Fi 6 FEM)", price: "$3.29–5.13", qty: "1,000–1 (LCSC)"}
+    - {part: "Skyworks SKY85337-11 (consumer front end)", price: "≈ $0.95", qty: "1,000 (LCSC snippet)"}
+    - {part: "Automotive BAW filters SKY5A1005/1006/1008, QPQ2230Q", price: "not stated", qty: "—"}
+    - {part: "Qualcomm QXM19xx", price: "not stated", qty: "—"}
+  items:
+    - {id: p-a5, item: "A5: automotive 5 GHz iFEM with V2X guard", entry: 2.2, target: 2.8, premium: 3.4, basis: "Consumer 5 GHz FEM ≈$1–2 contract (est from $0.95–3.29 list) + BAW ≈$0.3–0.5 + automotive premium"}
+    - {id: p-a6, item: "A6: automotive 6 GHz iFEM", entry: 2.4, target: 3.0, premium: 3.6, basis: "As A5; 6 GHz FEMs higher frequency and power (est)"}
+    - {id: p-set, item: "2 × 2 MLO set (2 × A5, 2 × A6, 2 meshplexers)", entry: 9.0, target: 11.5, premium: 14.0, basis: "Sum of parts less a set discount (est)"}
+    - {id: p-filt, item: "Automotive coexistence BAW filter (SKY5A1005/1006/1008)", entry: 0.3, target: 0.45, premium: 0.6, basis: "No public anchor; est"}
+
+volumes:
+  - {label: "MLO set, 1 M cars a year (premium, non-Qualcomm or range designs)", units: 1000000, price: p-set}
+  - {label: "MLO set, 4 M cars a year (a third of external-FEM Wi-Fi 7 cars)", units: 4000000, price: p-set}
+  - {label: "Filters alone, 10 M a year (on-chip PA designs, 2–4 per car)", units: 10000000, price: p-filt}
+
+attach:
+  - {id: w-t-mod, lever: "Module makers first: u-blox, LG Innotek, Murata, Quectel; they choose FEMs and filters (judgement)", effort: med}
+  - {id: w-t-ref, lever: "Reference designs with Qualcomm QCA6797AQ and with Synaptics/NXP chips", effort: high}
+  - {id: w-t-coex, lever: "Sell Wi-Fi FEMs, V2X FEM and coexistence filters as one validated kit with measured isolation (judgement)", effort: low}
+  - {id: w-t-roof, lever: "Smart-antenna makers that put Wi-Fi next to V2X and cellular in the roof (glass roofs, shark fins)", effort: med}
+  - {id: w-t-life, lever: "Longevity statement: Qorvo's earlier automotive Wi-Fi FEMs went end of life in 2024 (RFFM5765Q)", effort: low}
+
+risks:
+  - "Qualcomm's chip-plus-QXM19xx bundle may leave no external FEM socket in Qualcomm designs."
+  - "On-chip PAs keep improving; external FEM content per car may shrink to filters."
+  - "Insertion loss of the built-in BAW (not stated publicly) may cost range compared with QXM19xx."
+  - "No public Wi-Fi attach rate or FEM price data; volumes and prices are scenarios."
+  - "Filter steepness: SKY5A1005 has a 40 MHz transition; UNII-4 Wi-Fi (to 5895 MHz) cannot be used by the car if V2X must be protected."

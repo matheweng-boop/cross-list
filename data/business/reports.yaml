@@ -111,3 +111,33 @@ reports:
       $0.9–1.4 and a roof-module reference design.
     tags: [automotive, GNSS, L1, L5, L2, E6, LNA, SAW, BAW, shark fin, ADAS, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; SKY5A2110 data sheet; ~15 public web requests and searches (TI, u-blox, ST, ABI public summaries, Infineon, distributor snippets)"
+  - slug: auto-cv2x-fe
+    title: "C-V2X front end: two carriers in one module (2–3 years, reuse)"
+    kind: idea
+    area: Automotive connectivity
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (with Qorvo) build next for 5.9 GHz V2X, now that the US is C-V2X only from 14 Dec 2026 on two channels, Europe runs ITS-G5, LTE-V2X and NR-V2X side by side in 5855–5925 MHz and Qualcomm owns Autotalks, reusing SKY5A2105, QPF1003Q and our BAW filters, and at what price?"
+    summary: >-
+      Business-case draft. We are the only public source of standalone V2X front ends (SKY5A2105, QPF1003Q) and own
+      the V2X BAW filters; the wide 5855–5925 MHz passband already exists. Weak points: one path per part, no UNII-4
+      rejection in the US, our chipset partner Autotalks now belongs to Qualcomm, and a small market (≈5.7 M V2X cars).
+      Proposal: a dual-carrier V2X front end (two TX/RX paths, compensator and ECU modes, EU wide-band and US guard
+      filter variants) at about $7–10 (est), replacing two single FEMs plus filter and switch.
+    tags: [V2X, C-V2X, NR-V2X, ITS-G5, front-end module, BAW, coexistence, UNII-4, automotive, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; ~20 public web requests plus earlier connectivity research (5GAA, Skyworks product summaries, ABI, LG Innotek, LCSC, search snippets)"
+  - slug: auto-wifi7-fem
+    title: "Automotive Wi-Fi 7 front end with V2X coexistence built in"
+    kind: idea
+    area: Automotive connectivity
+    date: 2026-10-20
+    status: draft
+    question: "Should Skyworks (with Qorvo) build an AEC-Q104 Wi-Fi 7 front end for cars (5 + 6 GHz MLO) with 5.9 GHz V2X coexistence filtering inside, reusing today's Wi-Fi 7 FEMs and automotive BAW filters, against Qualcomm QCA6797AQ with QXM19xx and modules from u-blox, LG Innotek and Murata, and at what price?"
+    summary: >-
+      Business-case draft. We have the broadest Wi-Fi 7 FEM range and automotive BAW coexistence filters
+      (SKY5A1005/1006/1008, Preview) but no automotive Wi-Fi 7 FEM; Qualcomm is in every public automotive Wi-Fi 7
+      module and offers its own automotive FEM, and NXP/Synaptics put the PA on chip. Proposal: a 2 × 2 MLO set of
+      AEC-Q104 iFEMs (5 GHz with V2X guard, 6 GHz with UNII-1–3 rejection) for module makers, about $2.2–3.6 per FEM
+      and $9–14 per car set (est), plus the filters alone for on-chip-PA designs.
+    tags: [Wi-Fi 7, MLO, front-end module, BAW, coexistence, V2X, AEC-Q104, automotive, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; ~20 public web requests plus earlier connectivity research (Skyworks product summaries, LG Innotek, LCSC, search snippets for Qualcomm, u-blox, NXP, Synaptics/Murata)"

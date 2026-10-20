@@ -22,8 +22,7 @@
   {% for t in tf.tuners %}{% set d = by_mpn.get(t.mpn) %}
     <tr data-feats="{{ t.features|join(' ') }}">
       {% set tip = ('pinout borrowed from ' ~ d.borrowed_pins) if d and d.borrowed_pins else ('no pinout yet' if not d or not d.pins else '') %}
-      <td class="fm-part">{{ part_link(t.mpn) }}{% if tip %}<br><small class="muted">{{ tip }}</small>{% endif %}
-        {% if t.note %}<details class="fm-note"><summary>note</summary><small>{{ t.note }}</small></details>{% endif %}</td>
+      <td class="fm-part">{{ part_link(t.mpn) }}{% if t.note %}<small class="bc-note">{{ t.note }}</small>{% endif %}{% if tip %}<small class="bc-note muted">{{ tip }}</small>{% endif %}</td>
       <td>{{ t.tuners }}</td>
       <td class="fm-layout" title="{{ tf.layouts[t.layout].label if t.layout in tf.layouts else t.layout }}">{{ t.layout }}</td>
       {% for key in tf.features %}<td class="fm-cell">{{ '✓' if key in t.features }}</td>{% endfor %}
@@ -44,12 +43,12 @@
   <tbody>
   {% for d in by_role[role] %}
     <tr>
-      <td>{{ part_link(d.mpn) }}<br><small class="muted">{{ d.family or '' }}{% if d.aec_q100 %} · <span class="badge grade-auto">AEC-Q100</span>{% endif %}</small></td>
+      <td>{{ part_link(d.mpn) }}<br><small class="muted">{{ d.family or '' }}{% if d.aec_q100 %} · <span class="badge grade-auto">AEC-Q100</span>{% endif %}</small>{% if d.note %}<small class="bc-note">{{ d.note }}</small>{% endif %}</td>
       <td>{% for s in d.analog %}<span class="std std-analog">{{ s }}</span>{% endfor %}
         {% for s in d.digital_decode %}<span class="std std-decode" title="Decoded on chip">{{ s }}</span>{% endfor %}
         {% for s in d.digital_iq %}<span class="std std-iq" title="Tuned on chip, decoded by a coprocessor (I/Q out)">{{ s }} I/Q</span>{% endfor %}</td>
       <td>{% if d.tuners %}{{ d.tuners }} tuner{{ 's' if d.tuners != 1 }}{% endif %}{% if d.channels %}{{ d.channels }} channel{{ 's' if d.channels != 1 }}{% endif %}</td>
-      <td><small>{{ d.options|join('; ') }}{% if d.note %}{{ '; ' if d.options }}{{ d.note }}{% endif %}</small></td>
+      <td><small>{{ d.options|join('; ') or '–' }}</small></td>
       <td><small>{{ d.package.type or '' }}-{{ d.package.pins or '?' }}{% if d.package.body_mm %}<br>{{ d.package.body_mm }} mm{% endif %}</small>
         {% if d.source.url %}<br><small><a href="{{ d.source.url }}" target="_blank" rel="noopener">{{ d.source.title or 'Source' }}</a></small>{% endif %}</td>
     </tr>

@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+{# one colour per line, used everywhere on the page: Skyworks, Qorvo, both lines, competitors #}
+{% macro w(v) %}{% set v = (v or '')|lower %}{{ 'w-both' if v in ('both', 'split') or ('skyworks' in v and 'qorvo' in v) else 'w-sky' if 'skyworks' in v else 'w-qor' if 'qorvo' in v else 'w-comp' if v == 'competitor' else 'w-none' }}{% endmacro %}
 {% set cc = cur.core_competence or {} %}
 <h1>Skyworks + Qorvo</h1>
 <p class="subtitle muted">The two product lines of the combined company side by side: what each is best at, which one to offer for which application, how they compare with each competitor, and where one diagram needs both. Counts are active catalogue parts; the reasoning is curated from public sources{% if cur.updated %} ({{ cur.updated }}){% endif %}.</p>
+<p class="pf-legend small" aria-label="Colour key"><span class="pf-sw w-sky">Skyworks</span><span class="pf-sw w-qor">Qorvo</span><span class="pf-sw w-both">Both lines</span><span class="pf-sw w-comp">Competitors</span></p>
 
 <nav class="pf-toc small" aria-label="On this page">
   <a href="#competence">Core competence</a><a href="#pick">Which line to offer</a><a href="#rf">RF by band</a><a href="#overlap">Overlap</a><a href="#competitors">Against competitors</a><a href="#crosssell">Cross-selling</a><a href="#tech">Technologies</a>
@@ -29,7 +32,7 @@
 <div class="pf-segs">
   {% for s in cur.segments %}
   <details class="pf-seg"{% if loop.index <= 3 %} open{% endif %}>
-    <summary><b>{{ s.label }}</b> <span class="pf-lead lead-{{ (s.lead or '')|lower|replace(' ', '-') }}">{{ s.lead }}</span></summary>
+    <summary><b>{{ s.label }}</b> <span class="pf-lead {{ w(s.lead) }}">{{ s.lead }}</span></summary>
     <p class="small">{{ s.why|unit }}</p>
     <div class="pf-two">
       {% for m, k in (('Skyworks', 'pick_skyworks'), ('Qorvo', 'pick_qorvo')) %}{% set pk = s[k] %}{% if pk %}
@@ -42,17 +45,17 @@
 {% else %}<p class="muted small">The curated comparison is being prepared.</p>{% endif %}
 
 <h2 id="rf">RF functions by band</h2>
-<p class="small muted">Active parts per band: <span class="ln-skyworks pf-key">Skyworks</span> / <span class="ln-qorvo pf-key">Qorvo</span>, and all collected competitors. The colour shows who has the broader line (within 2× counts as both).</p>
+<p class="small muted">Active parts per band: Skyworks / Qorvo, then <span class="w-comp pf-key">· competitors</span>. The cell colour shows which line is broader (within 2× counts as both lines).</p>
 <div class="pf-wrap"><table class="pf-band small">
   <thead><tr><th scope="col">Function</th>{% for b in bands.bands %}<th scope="col">{{ b.label }}</th>{% endfor %}</tr></thead>
   <tbody>{% for r in bands.rows %}<tr><th scope="row">{{ r.label }}</th>{% for c in r.cells %}
-    <td class="lead-{{ c.lead|lower }}" title="{{ r.label }}, {{ c.band }}: Skyworks {{ c.Skyworks }}, Qorvo {{ c.Qorvo }}, competitors {{ c.competitors }}">{% if c.Skyworks or c.Qorvo %}{{ c.Skyworks }} / {{ c.Qorvo }}{% else %}<span class="muted">–</span>{% endif %}<small class="muted"> · {{ c.competitors }}</small></td>{% endfor %}</tr>{% endfor %}</tbody>
+    <td class="{{ w(c.lead) }}" title="{{ r.label }}, {{ c.band }}: Skyworks {{ c.Skyworks }}, Qorvo {{ c.Qorvo }}, competitors {{ c.competitors }}">{% if c.Skyworks or c.Qorvo %}{{ c.Skyworks }} / {{ c.Qorvo }}{% else %}<span class="muted">–</span>{% endif %}<small class="pf-cn"> · {{ c.competitors }}</small></td>{% endfor %}</tr>{% endfor %}</tbody>
 </table></div>
 
 <h2 id="overlap">Overlap and complements</h2>
 <div class="pf-three small">
-  <section><h3>Both sell ({{ ov.both|length }})</h3><ul>{% for r in ov.both %}<li>{{ r.label }} <span class="muted">{{ r.Skyworks }} / {{ r.Qorvo }}</span></li>{% endfor %}</ul></section>
-  {% for m in ('Skyworks', 'Qorvo') %}<section><h3>Only {{ m }} ({{ ov[m]|length }})</h3><ul>{% for r in ov[m] %}<li>{{ r.label }} <span class="muted">{{ r[m] }}</span></li>{% endfor %}</ul></section>{% endfor %}
+  <details class="pf-col w-both"><summary><b>Both sell</b> <span class="muted">{{ ov.both|length }} functions</span></summary><ul>{% for r in ov.both %}<li>{{ r.label }} <span class="muted">{{ r.Skyworks }} / {{ r.Qorvo }}</span></li>{% endfor %}</ul></details>
+  {% for m in ('Skyworks', 'Qorvo') %}<details class="pf-col {{ w(m) }}"><summary><b>Only {{ m }}</b> <span class="muted">{{ ov[m]|length }} functions</span></summary><ul>{% for r in ov[m] %}<li>{{ r.label }} <span class="muted">{{ r[m] }}</span></li>{% endfor %}</ul></details>{% endfor %}
 </div>
 
 <h2 id="competitors">Against each competitor</h2>
@@ -60,7 +63,7 @@
 <div class="pf-comps">
   {% for c in comp if c.notes or c.rf_total or c.cross_total %}{% set n = c.notes or {} %}
   <details class="pf-comp">
-    <summary><b>{{ c.vendor|vendor }}</b> <small class="muted">{% if c.rf_total %}{{ c.rf_total }} RF parts{% endif %}{% if c.rf_total and c.cross_total %} · {% endif %}{% if c.cross_total %}{{ c.cross_total }} in the cross lists{% endif %}</small>{% if n.lead_with %} <span class="pf-lead lead-{{ n.lead_with|lower }}">lead with {{ n.lead_with }}</span>{% endif %}</summary>
+    <summary><b class="w-comp pf-key">{{ c.vendor|vendor }}</b> <small class="muted">{% if c.rf_total %}{{ c.rf_total }} RF parts{% endif %}{% if c.rf_total and c.cross_total %} · {% endif %}{% if c.cross_total %}{{ c.cross_total }} in the cross lists{% endif %}</small>{% if n.lead_with %} <span class="pf-lead {{ w(n.lead_with) }}">lead with {{ n.lead_with }}</span>{% endif %}</summary>
     {% if n %}<div class="pf-two small">
       <div><b>Our advantages</b><ul>{% for x in n.our_advantages or [] %}<li>{{ x|unit }}</li>{% endfor %}</ul></div>
       <div><b>Their advantages</b><ul>{% for x in n.their_advantages or [] %}<li>{{ x|unit }}</li>{% endfor %}</ul></div>
@@ -79,7 +82,7 @@
 {% endif %}
 <details class="pf-more"><summary class="small">All {{ bundles|length }} block diagrams where both lines supply blocks</summary>
 <div class="pf-wrap"><table class="small">
-  <thead><tr><th scope="col">Application</th><th scope="col">Blocks we fill</th><th scope="col">Only Skyworks</th><th scope="col">Only Qorvo</th></tr></thead>
+  <thead><tr><th scope="col">Application</th><th scope="col">Blocks we fill</th><th scope="col" class="w-sky pf-key">Only Skyworks</th><th scope="col" class="w-qor pf-key">Only Qorvo</th></tr></thead>
   <tbody>{% for b in bundles %}<tr><td><a href="/blocks/new?template={{ b.i }}">{{ b.name[:80] }}</a> <span class="muted">{{ b.category }}</span></td><td class="n">{{ b.covered }} / {{ b.blocks }}</td>
     <td>{% for f in b.only_skyworks[:5] %}{{ label(f) }}{{ ', ' if not loop.last }}{% endfor %}</td><td>{% for f in b.only_qorvo[:5] %}{{ label(f) }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>{% endfor %}</tbody>
 </table></div></details>
@@ -87,7 +90,7 @@
 <h2 id="tech">Technologies</h2>
 {% if cur.technologies %}<div class="pf-wrap"><table class="small">
   <thead><tr><th scope="col">Technology</th><th scope="col">Line</th><th scope="col">Advantage</th><th scope="col">Best for</th></tr></thead>
-  <tbody>{% for t in cur.technologies %}<tr><td><b>{{ t.label }}</b></td><td><span class="pf-lead lead-{{ (t.owner or '')|lower }}">{{ t.owner }}</span></td><td>{{ t.advantage|unit }}</td><td>{{ (t.best_for or [])|join(', ') }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for t in cur.technologies %}<tr><td><b>{{ t.label }}</b></td><td><span class="pf-lead {{ w(t.owner) }}">{{ t.owner }}</span></td><td>{{ t.advantage|unit }}</td><td>{{ (t.best_for or [])|join(', ') }}</td></tr>{% endfor %}</tbody>
 </table></div>{% else %}<p class="muted small">The curated comparison is being prepared.</p>{% endif %}
 {% if cur.sources %}<details class="small muted pf-more"><summary>Sources</summary><ul>{% for s in cur.sources %}<li>{{ s|unit }}</li>{% endfor %}</ul></details>{% endif %}
 {% endblock %}

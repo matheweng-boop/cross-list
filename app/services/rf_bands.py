@@ -1,12 +1,13 @@
 """Radio frequency bands (data/engineering_rf_bands.yaml) and the Skyworks / Qorvo RF parts whose published frequency
 range covers each band."""
 
+import re
 from collections import defaultdict
 from functools import lru_cache
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.services import blocks, lifecycle, vocab
+from app.services import blocks, broadcast, lifecycle, vocab
 from app.services.rf_coverage import frequency_ranges
 
 FILE = PROJECT_ROOT / "data" / "engineering_rf_bands.yaml"
@@ -49,7 +50,8 @@ def band(band_id: str) -> dict | None:
 
 @lru_cache
 def rf_parts() -> tuple[dict, ...]:
-    """Our catalogue parts in RF functions, with their stated frequency ranges (GHz)."""
+    """Our catalogue parts in RF functions and our broadcast tuners / receivers, with their stated frequency ranges
+    (GHz)."""
     rf_fns = {k for k, f in blocks.catalogue()["functions"].items() if f.get("category") == "rf"}
     out = []
     for path, doc in blocks._catalog_docs():
@@ -64,7 +66,48 @@ def rf_parts() -> tuple[dict, ...]:
                             "function": fns[0], "ranges": ranges, "url": p.get("product_url") or "",
                             "description": (p.get("description") or "")[:150],
                             "risk": lifecycle.is_risk(p.get("status"))})  # fmt: skip
-    return tuple(out)
+    return tuple(out + _broadcast_parts())
+
+
+# broadcast bands of our tuners and receivers: (code, stated range in the data short, unit to GHz, default MHz range)
+_BCAST = (
+    ("FM", r"FM[^\n]*?\((\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*MHz", 1e-3, (76, 108)),
+    ("AM", r"\bAM[^\n]*?\((\d+)\s*(?:-|to)\s*(\d+)\s*kHz", 1e-6, (520, 1710)),
+    ("LW", r"\bLW[^\n]*?\((\d+)\s*(?:-|to)\s*(\d+)\s*kHz", 1e-6, (144, 288)),
+    ("SW", r"\bSW[^\n]*?\((\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*MHz", 1e-3, (2.3, 30)),
+    ("WB", None, 1e-3, (162.4, 162.55)),  # NOAA weather band; the data shorts name it without a range
+    ("DAB", r"DAB[^\n]*?\((\d{3})\s*(?:-|to)\s*(\d{3})\s*MHz", 1e-3, (174, 240)),
+)
+
+
+def _broadcast_parts() -> list[dict]:
+    """Our broadcast tuners and single-chip receivers (data/broadcast), with the bands their data shorts state.
+    Coprocessors take I/Q, not RF, so they cover no band."""
+    cat = {p["mpn"].upper(): p for path, doc in blocks._catalog_docs() for p in doc.get("parts") or []}
+    docs = {x["doc"]: x for x in broadcast.documents()}
+    out = []
+    for d in broadcast.catalog():
+        if d["role"] not in ("tuner", "receiver"):
+            continue
+        text = [str(f) for f in (docs.get(d["doc"]) or {}).get("features") or []]
+        codes = {"DAB" if c == "DMB" else c for c in d["analog"] + d["digital_iq"] + d["digital_decode"]}
+        ranges = []
+        for code, pat, unit, default in _BCAST:
+            if code not in codes:
+                continue
+            m = next((m for f in text if pat and (m := re.search(pat, f))), None)
+            lo, hi = (float(m.group(1)), float(m.group(2))) if m else default
+            ranges.append((lo * unit, hi * unit))
+        if "DAB" in codes and any("1452" in f for f in [*text, str(d.get("note") or "")]):
+            ranges.append((1.452, 1.492))  # L-band
+        c = cat.get(d["mpn"].upper()) or cat.get(d["mpn"].split("-")[0].upper()) or {}
+        if ranges:
+            out.append({"mpn": d["mpn"], "manufacturer": "Skyworks",
+                        "function": "am_fm_tuner" if d["role"] == "tuner" else "single_chip_radio",
+                        "ranges": sorted(ranges), "url": c.get("product_url") or "",
+                        "description": (c.get("description") or d.get("description") or "")[:150],
+                        "risk": lifecycle.is_risk(c.get("status"))})  # fmt: skip
+    return out
 
 
 def _covers(lo: float, hi: float, a: float, b: float) -> bool:
@@ -96,6 +139,7 @@ def parts_for(band_id: str, competitors: bool = False) -> list[dict]:
         if any(_covers(lo, hi, a, b) for lo, hi in p["ranges"] for a, b in spans):
             width = max(hi - lo for lo, hi in p["ranges"])  # spot test frequencies do not make a part band-specific
             shown = [r for r in p["ranges"] if r[1] > r[0]] or p["ranges"][:1]  # ranges, not spot test frequencies
+            shown.sort(key=lambda r: not any(_covers(r[0], r[1], a, b) for a, b in spans))  # the covering one first
             by_fn[p["function"]].append({**p, "width": width, "specific": width <= limit, "shown": shown[:3]})
     out = []
     for f, ps in by_fn.items():

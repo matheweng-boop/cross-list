@@ -7,6 +7,22 @@ manufacturers:
   role: competitor
   website: https://www.infineon.com
 packages:
+- code: SOIC-16W
+  name: SOIC-16 wide body
+  pin_count: 16
+  pitch_mm: 1.27
+  body_length_mm: 10.3
+  body_width_mm: 7.5
+  span_mm: 10.3
+  height_mm: 2.65
+- code: SOIC-8N
+  name: SOIC-8 narrow body
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 4.9
+  body_width_mm: 3.9
+  span_mm: 6.0
+  height_mm: 1.75
 - code: SOIC-14W (IS3)
   name: SOIC-14 wide body, increased creepage (16-position body, positions 12 and 13 empty)
   pin_count: 14
@@ -28,22 +44,6 @@ packages:
   exposed_pad: false
   positions_total: 16
   pin_positions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16]
-- code: SOIC-16W
-  name: SOIC-16 wide body
-  pin_count: 16
-  pitch_mm: 1.27
-  body_length_mm: 10.3
-  body_width_mm: 7.5
-  span_mm: 10.3
-  height_mm: 2.65
-- code: SOIC-8N
-  name: SOIC-8 narrow body
-  pin_count: 8
-  pitch_mm: 1.27
-  body_length_mm: 4.9
-  body_width_mm: 3.9
-  span_mm: 6.0
-  height_mm: 1.75
 - code: PG-DSO-8-66
   name: Infineon PG-DSO-8-66 (8-pin DSO, 300 mil wide body)
   pin_count: 8
@@ -125,8 +125,6 @@ datasheets:
 - file: infineon-1ed020i12-f2-datasheet-en.pdf
   url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed020i12-f2-datasheet-en.pdf
   sha256: c813edfb5a1a9da6c27a2d6a57bdf7277abfd4711481fa0bbc6f20eb51ebe65e
-  revision: null
-  revision_date: null
 - file: infineon-1ed312xmu12f-datasheet-en.pdf
   url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed312xmu12f-datasheet-en.pdf
   sha256: 1e3788e47eb403870da004cc78265f77f1dfebfd4a75eb0aa6b89154d6f75b8b
@@ -1330,6 +1328,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 4.2
     output_supply_v: [4.5, 20.0]
     deadtime: programmable
@@ -1342,7 +1342,9 @@ parts:
     cmti_kv_us: infineon-2edb7259y-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2edb7259y-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2edb7259y-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-2edb7259y-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1372,6 +1374,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [8.5, 20.0]
     deadtime: programmable
@@ -1384,7 +1388,9 @@ parts:
     cmti_kv_us: infineon-2edb8259y-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2edb8259y-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2edb8259y-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-2edb8259y-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1414,6 +1420,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [15.6, 20.0]
     deadtime: programmable
@@ -1426,7 +1434,9 @@ parts:
     cmti_kv_us: infineon-2edb9259y-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2edb9259y-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2edb9259y-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-2edb9259y-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1455,6 +1465,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 1.0
+    peak_sink_a: 2.0
     uvlo_v: 4.2
     output_supply_v: [4.5, 20.0]
     deadtime: programmable
@@ -1466,7 +1478,9 @@ parts:
     cmti_kv_us: infineon-2edf7175f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2edf7175f-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2edf7175f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table
     protection: infineon-2edf7175f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table
@@ -1495,6 +1509,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 4.0
+    peak_sink_a: 8.0
     uvlo_v: 4.2
     output_supply_v: [4.5, 20.0]
     deadtime: programmable
@@ -1506,7 +1522,9 @@ parts:
     cmti_kv_us: infineon-2edf7275f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2edf7275f-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2edf7275f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table
     protection: infineon-2edf7275f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table
@@ -1535,6 +1553,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 4.0
+    peak_sink_a: 8.0
     uvlo_v: 8
     output_supply_v: [8.5, 20.0]
     deadtime: programmable
@@ -1546,7 +1566,9 @@ parts:
     cmti_kv_us: infineon-2edf8275f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2edf8275f-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2edf8275f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table
     protection: infineon-2edf8275f-datasheet-en.pdf p1 features, DISABLE and DTC pins, functional isolation table
@@ -1577,6 +1599,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [12.9, 20.0]
     deadtime: programmable
@@ -1594,7 +1618,9 @@ parts:
       infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1625,6 +1651,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [4.5, 20.0]
     deadtime: programmable
@@ -1642,7 +1670,9 @@ parts:
       infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1673,6 +1703,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [8.5, 20.0]
     deadtime: programmable
@@ -1690,7 +1722,9 @@ parts:
       infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1721,6 +1755,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [15.6, 20.0]
     deadtime: programmable
@@ -1738,7 +1774,9 @@ parts:
       infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1769,6 +1807,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 5.0
+    peak_sink_a: 9.0
     uvlo_v: 8
     output_supply_v: [15.6, 20.0]
     deadtime: programmable
@@ -1786,7 +1826,9 @@ parts:
       infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
     protection: infineon-eicedriver-2edr8259h-2edrx259x-2edrx258x-datasheet-en.pdf p1 features (STP/DTC), isolation table
@@ -1816,6 +1858,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 1.0
+    peak_sink_a: 2.0
     uvlo_v: 8
     output_supply_v: [4.5, 20.0]
     deadtime: programmable
@@ -1830,7 +1874,9 @@ parts:
     cmti_kv_us: infineon-2eds7165h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2eds7165h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2eds7165h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table
     protection: infineon-2eds7165h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table
@@ -1860,6 +1906,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 1.0
+    peak_sink_a: 2.0
     uvlo_v: 8
     output_supply_v: [8.5, 20.0]
     deadtime: programmable
@@ -1874,7 +1922,9 @@ parts:
     cmti_kv_us: infineon-2eds8165h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2eds8165h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2eds8165h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table
     protection: infineon-2eds8165h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table
@@ -1904,6 +1954,8 @@ parts:
     cmti_kv_us: 150.0
     channel_config: dual
     input_type: dual input
+    peak_source_a: 4.0
+    peak_sink_a: 8.0
     uvlo_v: 8
     output_supply_v: [8.5, 20.0]
     deadtime: programmable
@@ -1918,7 +1970,9 @@ parts:
     cmti_kv_us: infineon-2eds8265h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side and low-side)
     input_type: infineon-2eds8265h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-2eds8265h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table
     protection: infineon-2eds8265h-datasheet-en.pdf p1 features, DISABLE and DTC pins, reinforced isolation table
@@ -1967,9 +2021,9 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf pin description
-    peak_source_a: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: >-
       infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf p1 features, insulation characteristics
 - mpn: 1ED3011MC12IXUMA1
@@ -2017,9 +2071,9 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf pin description
-    peak_source_a: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: >-
       infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf p1 features, insulation characteristics
 - mpn: 1ED3012MC12IXUMA1
@@ -2067,9 +2121,9 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf pin description
-    peak_source_a: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: >-
       infineon-eicedriver-1ed301xmc12i-opto-emulator-gate-driver-ic-datasheet-en.pdf p1 features, insulation characteristics
 - mpn: 1EDB6275FXUMA1
@@ -2099,6 +2153,8 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.4
+    peak_sink_a: 9.8
     uvlo_v: 12.2
     output_supply_v: [12.8, 20.0]
     protection: [UVLO]
@@ -2110,7 +2166,9 @@ parts:
     cmti_kv_us: infineon-eicedriver-1edbx275f-datasheet-en-Z8F47172298.pdf p1 features, isolation table (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1edbx275f-datasheet-en-Z8F47172298.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-eicedriver-1edbx275f-datasheet-en-Z8F47172298.pdf p1 features, isolation table
 - mpn: 1EDB8275FXUMA1
@@ -2139,6 +2197,8 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.4
+    peak_sink_a: 9.8
     uvlo_v: 8
     output_supply_v: [8.5, 20.0]
     protection: [UVLO]
@@ -2149,7 +2209,9 @@ parts:
     cmti_kv_us: infineon-eicedriver-1edbx275f-datasheet-en.pdf p1 features, isolation table (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1edbx275f-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-eicedriver-1edbx275f-datasheet-en.pdf p1 features, isolation table
 - mpn: 1EDB9275FXUMA1
@@ -2179,6 +2241,8 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.4
+    peak_sink_a: 9.8
     uvlo_v: 14.9
     output_supply_v: [15.5, 20.0]
     protection: [UVLO]
@@ -2190,7 +2254,9 @@ parts:
     cmti_kv_us: infineon-eicedriver-1edbx275f-datasheet-en-Z8F47139825.pdf p1 features, isolation table (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1edbx275f-datasheet-en-Z8F47139825.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-eicedriver-1edbx275f-datasheet-en-Z8F47139825.pdf p1 features, isolation table
 - mpn: 2ED3140MC12LXUMA1
@@ -2224,6 +2290,7 @@ parts:
     uvlo_v: 9.3
     deadtime: programmable
     protection: [UVLO, disable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2233,11 +2300,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2EDR3140XQEXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2283,9 +2351,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2334,9 +2402,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2385,9 +2453,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2436,9 +2504,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2487,9 +2555,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2538,9 +2606,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2589,9 +2657,9 @@ parts:
       infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf pin description
-    peak_source_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    peak_sink_a: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     deadtime: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
     protection: infineon-eicedriver-2edr314xxqe-datasheet-en-Z8F80949906.pdf p1-2 features and product table, insulation
@@ -2626,6 +2694,7 @@ parts:
     uvlo_v: 12
     deadtime: programmable
     protection: [UVLO, disable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2635,11 +2704,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2ED3142MC12LXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2671,6 +2741,7 @@ parts:
     uvlo_v: 13.6
     deadtime: programmable
     protection: [UVLO, disable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2680,11 +2751,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2ED3143MC12LXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2716,6 +2788,7 @@ parts:
     uvlo_v: 16
     deadtime: programmable
     protection: [UVLO, disable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2725,11 +2798,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2ED3144MC12LXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2761,6 +2835,7 @@ parts:
     uvlo_v: 9.3
     deadtime: programmable
     protection: [UVLO, enable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2770,11 +2845,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2ED3145MC12LXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2806,6 +2882,7 @@ parts:
     uvlo_v: 12
     deadtime: programmable
     protection: [UVLO, enable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2815,11 +2892,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2ED3146MC12LXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2851,6 +2929,7 @@ parts:
     uvlo_v: 13.6
     deadtime: programmable
     protection: [UVLO, enable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2860,11 +2939,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2ED3147MC12LXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2896,6 +2976,7 @@ parts:
     uvlo_v: 16
     deadtime: programmable
     protection: [UVLO, enable, programmable dead time]
+    theta_ja_c_w: 65.0
   param_sources:
     isolation_rating_kvrms: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (UL 1577 VISO,
       1 min)
@@ -2905,11 +2986,12 @@ parts:
     cmti_kv_us: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation (CMTI min)
     channel_config: Infineon product table (Channels 2, High-side)
     input_type: infineon-2ed314xmc12l-datasheet-en.pdf pin description
-    peak_source_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-2ed314xmc12l-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     deadtime: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
     protection: infineon-2ed314xmc12l-datasheet-en.pdf p1-2 features and product table, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3120MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -2937,6 +3019,8 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.5
+    peak_sink_a: 5.5
     uvlo_v: 10
     protection: [UVLO]
   param_sources:
@@ -2949,7 +3033,9 @@ parts:
     cmti_kv_us: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
 - mpn: 1ED3121MC12HXUMA1
   manufacturer: Infineon
@@ -2978,8 +3064,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 10.5
+    peak_source_a: 5.5
+    peak_sink_a: 5.5
+    uvlo_v: 12.5
     protection: [UVLO]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (UL 1577 VISO, 1 min)
@@ -2990,8 +3079,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3123MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3019,8 +3111,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 13.5
+    peak_sink_a: 14.0
     uvlo_v: 10
     protection: [UVLO]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (UL 1577 VISO, 1 min)
@@ -3031,8 +3126,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3124MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3103,8 +3201,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 9.0
     uvlo_v: 12.5
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 151.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed312xmu12f-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO,
       1 min)
@@ -3113,8 +3214,11 @@ parts:
     cmti_kv_us: infineon-1ed312xmu12f-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed312xmu12f-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed312xmu12f-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3240MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3141,8 +3245,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 10.4
+    peak_source_a: 10.0
+    peak_sink_a: 10.0
+    uvlo_v: 12.5
     protection: [UVLO]
+    theta_ja_c_w: 104.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1 min)
@@ -3152,8 +3259,11 @@ parts:
     cmti_kv_us: infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3320MC12NXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3180,8 +3290,11 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
+    peak_source_a: 3.3
+    peak_sink_a: 6.0
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 71.4
   param_sources:
     isolation_rating_kvrms: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3190,8 +3303,11 @@ parts:
     cmti_kv_us: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed332xmc12n-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3322MC12NXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3218,8 +3334,11 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
+    peak_source_a: 6.0
+    peak_sink_a: 8.5
     uvlo_v: 13.6
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 71.4
   param_sources:
     isolation_rating_kvrms: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3228,8 +3347,11 @@ parts:
     cmti_kv_us: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed332xmc12n-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3323MC12NXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3256,8 +3378,11 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
-    uvlo_v: 11
+    peak_source_a: 6.0
+    peak_sink_a: 8.5
+    uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 71.4
   param_sources:
     isolation_rating_kvrms: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3266,8 +3391,11 @@ parts:
     cmti_kv_us: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed332xmc12n-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed332xmc12n-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3431MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3294,8 +3422,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 3.8
+    peak_sink_a: 2.5
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3304,8 +3435,11 @@ parts:
     cmti_kv_us: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed34x1mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3461MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3332,8 +3466,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 7.5
+    peak_sink_a: 5.0
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3342,8 +3479,11 @@ parts:
     cmti_kv_us: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed34x1mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3830MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3370,8 +3510,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 11
+    peak_source_a: 3.8
+    peak_sink_a: 2.5
+    uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3380,8 +3523,11 @@ parts:
     cmti_kv_us: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed38x0mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3860MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3408,8 +3554,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 11
+    peak_source_a: 7.5
+    peak_sink_a: 5.0
+    uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3418,8 +3567,11 @@ parts:
     cmti_kv_us: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed38x0mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI60I12AFXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3445,9 +3597,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 9.4
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     creepage_mm: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
@@ -3458,10 +3613,13 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxs12ff-datasheet-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI60N12AFXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3487,9 +3645,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
-    uvlo_v: 8.5
+    peak_source_a: 10.0
+    peak_sink_a: 9.4
+    uvlo_v: 9.1
     output_supply_v: [10.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     creepage_mm: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
@@ -3500,10 +3661,13 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxs12ff-datasheet-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3142MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3535,6 +3699,7 @@ parts:
     uvlo_v: 13.6
     output_supply_v: [14.0, 32.0]
     protection: [UVLO]
+    theta_ja_c_w: 113.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics (UL 1577 VISO, 1 min)
@@ -3545,11 +3710,12 @@ parts:
     cmti_kv_us: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf pin description
-    peak_source_a: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3144MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3581,6 +3747,7 @@ parts:
     uvlo_v: 13.6
     output_supply_v: [14.0, 32.0]
     protection: [UVLO]
+    theta_ja_c_w: 113.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics (UL 1577 VISO, 1 min)
@@ -3591,11 +3758,12 @@ parts:
     cmti_kv_us: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf pin description
-    peak_source_a: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf device table (typ source/sink)
-    peak_sink_a: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf device table (typ source/sink)
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3145MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3622,9 +3790,12 @@ parts:
     cmti_kv_us: 300.0
     channel_config: single
     input_type: single input
+    peak_source_a: 6.0
+    peak_sink_a: 6.5
     uvlo_v: 2
     output_supply_v: [4.35, 32.0]
     protection: [UVLO]
+    theta_ja_c_w: 113.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics (UL 1577 VISO, 1 min)
@@ -3635,9 +3806,12 @@ parts:
     cmti_kv_us: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3250MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3664,8 +3838,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.0
+    peak_sink_a: 10.0
     uvlo_v: 12.5
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 104.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1 min)
@@ -3675,8 +3852,11 @@ parts:
     cmti_kv_us: infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-eicedriver-1ed32xxmc12h-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3330MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3703,9 +3883,12 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 12.0
+    peak_sink_a: 12.0
     uvlo_v: 14
     output_supply_v: [14.0, 32.0]
     protection: [UVLO, desaturation, Miller clamp]
+    theta_ja_c_w: 130.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed3330mc12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     isolation_class: 'Infineon product table (Isolation Type: Galvanic isolation - Reinforced)'
@@ -3714,9 +3897,12 @@ parts:
     cmti_kv_us: infineon-1ed3330mc12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed3330mc12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed3330mc12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED020I12F2XUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3739,6 +3925,8 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 2.0
+    peak_sink_a: 2.0
     uvlo_v: 12
     output_supply_v: [13.0, 20.0]
     protection: [UVLO, desaturation, Miller clamp]
@@ -3747,7 +3935,9 @@ parts:
     cmti_kv_us: infineon-1ed020i12-f2-datasheet-en.pdf p1 features, electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed020i12-f2-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed020i12-f2-datasheet-en.pdf p1 features, electrical characteristics
 - mpn: 1ED3120MU12HXUMA1
@@ -3776,7 +3966,9 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 8
+    peak_source_a: 5.5
+    peak_sink_a: 5.5
+    uvlo_v: 10
     protection: [UVLO]
   param_sources:
     isolation_rating_kvrms: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO,
@@ -3786,7 +3978,9 @@ parts:
     cmti_kv_us: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmu12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
 - mpn: 1ED3121MU12HXUMA1
   manufacturer: Infineon
@@ -3814,8 +4008,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.5
+    peak_sink_a: 5.5
     uvlo_v: 12.5
     protection: [UVLO]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO,
       1 min)
@@ -3824,8 +4021,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmu12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3122MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3852,8 +4052,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 8
+    peak_source_a: 10.0
+    peak_sink_a: 9.0
+    uvlo_v: 10
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO,
       1 min)
@@ -3862,8 +4065,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmu12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3123MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3890,8 +4096,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
-    uvlo_v: 8
+    peak_source_a: 13.5
+    peak_sink_a: 14.0
+    uvlo_v: 10
     protection: [UVLO]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO,
       1 min)
@@ -3900,8 +4109,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmu12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3131MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3929,8 +4141,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.5
+    peak_sink_a: 5.5
     uvlo_v: 12.5
     protection: [UVLO]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: >-
       infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (UL 1577 VISO, 1 min)
@@ -3941,8 +4156,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3131MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3969,8 +4187,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.5
+    peak_sink_a: 5.5
     uvlo_v: 12.5
     protection: [UVLO]
+    theta_ja_c_w: 88.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO,
       1 min)
@@ -3979,8 +4200,11 @@ parts:
     cmti_kv_us: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed31xxmu12h-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3431MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4007,8 +4231,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 3.8
+    peak_sink_a: 2.5
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     creepage_mm: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (external creepage)
@@ -4016,8 +4243,11 @@ parts:
     cmti_kv_us: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed34x1mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3461MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4044,8 +4274,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 7.5
+    peak_sink_a: 5.0
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     creepage_mm: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (external creepage)
@@ -4053,8 +4286,11 @@ parts:
     cmti_kv_us: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed34x1mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3491MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4081,8 +4317,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 11.0
+    peak_sink_a: 7.5
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     creepage_mm: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (external creepage)
@@ -4090,8 +4329,11 @@ parts:
     cmti_kv_us: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed34x1mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed34x1mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3830MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4118,8 +4360,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 3.8
+    peak_sink_a: 2.5
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     creepage_mm: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (external creepage)
@@ -4127,8 +4372,11 @@ parts:
     cmti_kv_us: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed38x0mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3860MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4155,8 +4403,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 7.5
+    peak_sink_a: 5.0
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     creepage_mm: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (external creepage)
@@ -4164,8 +4415,11 @@ parts:
     cmti_kv_us: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed38x0mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED3890MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4192,8 +4446,11 @@ parts:
     cmti_kv_us: 200.0
     channel_config: single
     input_type: single input
+    peak_source_a: 11.0
+    peak_sink_a: 7.5
     uvlo_v: 12
     protection: [UVLO, desaturation, soft shutdown, Miller clamp]
+    theta_ja_c_w: 122.0
   param_sources:
     isolation_rating_kvrms: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (UL 1577 VISO, 1 min)
     creepage_mm: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (external creepage)
@@ -4201,8 +4458,11 @@ parts:
     cmti_kv_us: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed38x0mx12m-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed38x0mx12m-datasheet-en.pdf p1 features, insulation
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC20H12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4228,9 +4488,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 3.5
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4238,9 +4501,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC20I12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4266,9 +4532,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 3.5
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4276,9 +4545,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC20I12MHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4304,9 +4576,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.4
+    peak_sink_a: 4.1
     uvlo_v: 12
     output_supply_v: [13.0, 18.0]
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12mh-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4314,9 +4589,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12mh-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12mh-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12mh-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC30I12MHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4342,9 +4620,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.9
+    peak_sink_a: 6.2
     uvlo_v: 12
     output_supply_v: [13.0, 18.0]
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12mh-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4352,9 +4633,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12mh-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12mh-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12mh-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC40I12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4380,9 +4664,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 7.5
+    peak_sink_a: 6.8
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4390,9 +4677,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC60H12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4418,9 +4708,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 9.4
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4428,9 +4721,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDC60I12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4456,9 +4752,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 9.4
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     isolation_rating_kvrms: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (UL 1577 VISO, 1
       min)
@@ -4466,9 +4765,12 @@ parts:
     cmti_kv_us: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edcxxi12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edcxxi12ah-datasheet-en.pdf p1 features, insulation characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI20H12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4493,17 +4795,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 3.5
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxy12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI20I12AFXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4529,9 +4837,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 3.5
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     creepage_mm: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
@@ -4542,10 +4853,13 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxs12ff-datasheet-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI20I12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4570,17 +4884,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 3.5
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxy12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI20N12AFXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4606,9 +4926,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 3.5
     uvlo_v: 9.1
     output_supply_v: [10.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     creepage_mm: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
@@ -4619,10 +4942,13 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxs12ff-datasheet-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI30I12MFXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4648,9 +4974,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.9
+    peak_sink_a: 6.2
     uvlo_v: 12
     output_supply_v: [13.0, 18.0]
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 165.0
   param_sources:
     creepage_mm: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
@@ -4661,10 +4990,13 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxs12ff-datasheet-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI40I12AFXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4690,9 +5022,12 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 7.5
+    peak_sink_a: 6.8
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     creepage_mm: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
@@ -4703,10 +5038,13 @@ parts:
       (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxs12ff-datasheet-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: >-
       infineon-1edixxs12ff-datasheet-datasheet-en.pdf p1 features (DSO-8 150 mil with 4 mm creepage), electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI60I12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4731,17 +5069,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 9.4
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxy12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1ED020I12B2XUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4767,6 +5111,8 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 2.0
+    peak_sink_a: 2.0
     uvlo_v: 11.9
     output_supply_v: [13.0, 20.0]
     protection: [UVLO, desaturation, Miller clamp]
@@ -4779,7 +5125,9 @@ parts:
     cmti_kv_us: infineon-1ed020i12-b2-datasheet-en.pdf p1 features, insulation characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1ed020i12-b2-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed020i12-b2-datasheet-en.pdf p1 features, insulation characteristics
 - mpn: 1EDI20I12MHXUMA1
@@ -4806,17 +5154,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 4.4
+    peak_sink_a: 4.1
     uvlo_v: 12
     output_supply_v: [13.0, 18.0]
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxi12mh-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxi12mh-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxi12mh-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI30I12MHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4841,17 +5195,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 5.9
+    peak_sink_a: 6.2
     uvlo_v: 12
     output_supply_v: [13.0, 18.0]
     protection: [UVLO, Miller clamp]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxi12mh-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxi12mh-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxi12mh-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI40I12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4876,17 +5236,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
-    uvlo_v: 11.1
+    peak_source_a: 7.5
+    peak_sink_a: 6.8
+    uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxy12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 1EDI60H12AHXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4911,17 +5277,23 @@ parts:
     cmti_kv_us: 100.0
     channel_config: single
     input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 9.4
     uvlo_v: 12
     output_supply_v: [13.0, 35.0]
     protection: [UVLO]
+    theta_ja_c_w: 165.0
   param_sources:
     qualification: Infineon product table (Qualification)
     cmti_kv_us: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics (CMTI min)
     channel_config: Infineon product table (Channels 1, High-side)
     input_type: infineon-1edixxy12ah-datasheet-en.pdf pin description
-    uvlo_v: Infineon product table (VBS UVLO)
+    peak_source_a: Infineon product page parametrics (Output Current Source, typ)
+    peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
+    uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1edixxy12ah-datasheet-en.pdf electrical characteristics
+    theta_ja_c_w: Infineon product page parametrics (RthJA)
 - mpn: 2DIB0400FXUMA1
   manufacturer: Infineon
   family: digital_isolator

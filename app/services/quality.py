@@ -166,8 +166,9 @@ def research(apps: list[op.Application], scores: dict | None = None) -> list[dic
             continue
         for f in e["factors"]:
             if f["confidence"] == "low":
-                out.append({"fn": e["fn"], "label": e["label"], "score": e["score"], "band": e["band"],
-                            "factor": f["label"], "basis": f["basis"]})  # fmt: skip
+                out.append({"fn": e["fn"], "label": e["label"], "score": e["score"],
+                            "suggestion_label": e["suggestion_label"], "factor": f["label"],
+                            "basis": f["basis"]})  # fmt: skip
     return out
 
 

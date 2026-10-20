@@ -45,8 +45,19 @@ def lower(c, steps: int = 1) -> str:
     return CONFIDENCE[max(0, CONFIDENCE.index(conf(c)) - steps)]
 
 
-def band(score) -> str | None:
-    return None if score is None else next(b for b, lim in config()["bands"].items() if score >= lim)
+def suggestion(d: int | None, need: int) -> str:
+    """What kind of suggestion: quick_win, new_chip, niche, partner or unknown (see suggestions in scoring.yaml)."""
+    if d is None:
+        return "unknown"
+    if d >= 4:
+        return "partner"
+    if need < config()["suggestions"]["widely_needed"]:
+        return "niche"
+    return "quick_win" if d <= 2 else "new_chip"
+
+
+def suggestion_label(g: str | None) -> str:
+    return config()["suggestions"]["labels"].get(g, "") if g else ""
 
 
 def feasibility(d) -> int | None:
@@ -86,17 +97,19 @@ def _factor(key, value, basis, c, review=None) -> dict:
             "basis": basis, "confidence": conf(c)}  # fmt: skip
 
 
-def result(factors: list[dict], d: int | None = None) -> dict:
+def result(factors: list[dict], d: int | None = None, need: int = 0) -> dict:
     score = round(sum(f["value"] * f["weight"] for f in factors) / 100)
     by = {f["key"]: f for f in factors}
     overall = min((by[k]["confidence"] for k in config()["confidence"]["overall_from"]), key=CONFIDENCE.index)
-    return {"score": score, "band": band(score), "confidence": overall, "factors": factors, "distance": d,
-            "feasibility": feasibility(d), "demand_basis": "tam" if by["demand"]["basis"].startswith("TAM") else
-            "diagrams"}  # fmt: skip
+    g = suggestion(d, need)
+    return {"score": score, "suggestion": g, "suggestion_label": suggestion_label(g),
+            "suggestion_help": config()["suggestions"]["help"][g], "confidence": overall, "factors": factors,
+            "distance": d, "feasibility": feasibility(d),
+            "demand_basis": "tam" if by["demand"]["basis"].startswith("TAM") else "diagrams"}  # fmt: skip
 
 
-EMPTY = {"score": None, "band": None, "confidence": None, "factors": [], "distance": None, "feasibility": None,
-         "demand_basis": None}  # fmt: skip
+EMPTY = {"score": None, "suggestion": None, "suggestion_label": None, "suggestion_help": None, "confidence": None,
+         "factors": [], "distance": None, "feasibility": None, "demand_basis": None}  # fmt: skip
 
 
 def fields(s: dict | None) -> dict:
@@ -199,7 +212,7 @@ def _score(fn: str, u: dict, top: float, verdicts: dict, dist: tuple | None = No
         _factor("competition", *_competition(op.competition().get(fn)), verdicts.get(("competition", fn))),
         _factor("trend", *_trend(op.evidence("trends").get(fn)), verdicts.get(("trends", fn))),
     ]  # fmt: skip
-    return result(factors, d)
+    return result(factors, d, u["lib"] + u["bg"])
 
 
 def scorable(fn: str, u: dict) -> bool:
@@ -284,7 +297,7 @@ def band_row(tab: dict, row: dict) -> dict:
                 if crowd else "no competitor part in the band", comp["vendor_count_confidence"]),
         _factor("trend", *_trend(op.evidence("trends").get(row["fn"]))),
     ]  # fmt: skip
-    return result(factors, d)
+    return result(factors, d, need)
 
 
 def bundle(share: float, same: float, linked: float) -> int:

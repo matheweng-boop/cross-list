@@ -16,8 +16,25 @@
   <li><b>Decide.</b> Rankings point at candidates; a preliminary case or a Case analysis collects the facts for one candidate.</li>
 </ol>
 
-{% set w = cfg.weights %}{% set d = cfg.distance %}
-<h2 id="score">Opportunity score <small class="muted">· 0–100, one scale on every page</small></h2>
+{% set w = cfg.weights %}{% set d = cfg.distance %}{% set sg = cfg.suggestions %}
+<h2 id="score">Opportunity score <small class="muted">· in plain words first</small></h2>
+<p class="small">Every suggested part gets a <b>type</b> in words, from two facts on its row: how far it is from what we build, and how
+  many block diagrams need it. The <b>score</b> (0–100) only puts the parts of one type in order.</p>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Type</th><th>Rule</th><th>What it means</th></tr></thead><tbody>
+  <tr><th><span class="sg sg-quick_win">{{ sg.labels.quick_win }}</span></th><td>distance 0–2 and needed in {{ sg.widely_needed }}+ diagrams</td><td>{{ sg.help.quick_win }}</td></tr>
+  <tr><th><span class="sg sg-new_chip">{{ sg.labels.new_chip }}</span></th><td>distance 3 and needed in {{ sg.widely_needed }}+ diagrams</td><td>{{ sg.help.new_chip }}</td></tr>
+  <tr><th><span class="sg sg-niche">{{ sg.labels.niche }}</span></th><td>needed in fewer than {{ sg.widely_needed }} diagrams, distance 0–3</td><td>{{ sg.help.niche }}</td></tr>
+  <tr><th><span class="sg sg-partner">{{ sg.labels.partner }}</span></th><td>distance 4</td><td>{{ sg.help.partner }}</td></tr>
+  <tr><th><span class="sg sg-unknown">{{ sg.labels.unknown }}</span></th><td>no distance yet</td><td>{{ sg.help.unknown }}</td></tr>
+</tbody></table></div>
+<p class="small"><b>The score</b> asks five questions, each answered 0–100, and adds them by weight: how many systems need it ({{ w.demand }}%),
+  how close it is to what we build ({{ w.distance }}%), whether it sits next to parts we sell ({{ w.architecture }}%), how crowded the
+  market is ({{ w.competition }}%) and whether the market grows ({{ w.trend }}%).
+  <b>Example, PoL LDO:</b> needed in 119 diagrams (72) × {{ w.demand }}% = 21.6 · a spec variant of ours (85) × {{ w.distance }}% = 21.3 ·
+  next to our parts (99) × {{ w.architecture }}% = 14.9 · crowded (30) × {{ w.competition }}% = 4.5 · stable (60) × {{ w.trend }}% = 9.0 →
+  <b>71</b>, type <span class="sg sg-quick_win">{{ sg.labels.quick_win }}</span>. Hover any score for its own sum. Details below.</p>
+
+<h3 id="score-detail">The five factors <small class="muted">· 0–100, one scale on every page</small></h3>
 <p class="small">The score is the <b>weighted sum</b> of five factors, each 0–100, so every factor counts by its stated weight. Used by the
   Opportunity explorer (and its Technology fit view), the evidence pages, the Automotive map's Top moves and the preliminary cases.
   Functions that are not ours to build (path “Not ours”, customer parts) are not scored. Weights and mappings live in <code>data/business/scoring.yaml</code>.</p>
@@ -52,12 +69,11 @@
 </tbody></table></div>
 <p class="small muted">The path to product is used where assessed, else 0 for a function we already sell, else the technology rating. A curated automotive row may set its own distance (e.g. 2 for a package from our dies). Preliminary case features use the same scale.</p>
 
-<h3 id="confidence">Confidence and bands</h3>
+<h3 id="confidence">Confidence</h3>
 <ul class="small">
   <li><b>Missing data</b> scores the neutral {{ cfg.neutral }} with <b>low</b> confidence: an unresearched function is not punished as a bad one. Low-confidence factors are listed on <a href="/business/quality#research">Data quality</a> as research to do; a low overall confidence is flagged ⚑.</li>
   <li><b>Overall confidence</b> = the lowest of {{ cfg.confidence.overall_from|map('capitalize')|join(', ') }}. Architecture fit and trend are shown but do not set it.</li>
   <li><b>Reviews:</b> a reviewer's latest “wrong” on the data behind a factor (path, technology rating, competition, trend) lowers that factor's confidence one step (high → medium → low); “correct” changes nothing. On a preliminary case, a “disagree” lowers that item's confidence one step and the case's confidence one step.</li>
-  <li><b>Bands are absolute:</b> High {{ cfg.bands.High }}+, Medium {{ cfg.bands.Medium }}–{{ cfg.bands.High - 1 }}, Low below {{ cfg.bands.Medium }}. Adding a function never relabels the others.</li>
 </ul>
 
 <h2 id="related">Related scores on the same scale</h2>

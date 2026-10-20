@@ -181,13 +181,15 @@ def technology_moved(co: str = "combined", view: str = "all"):
 # Opportunity explorer columns that sort: key -> (label, default direction, sort key). Old `view` links map onto them.
 PATH_ORDER = {"exists": 0, "variant": 1, "new_design": 2, "new_capability": 3, "not_pursue": 4}
 CROWD_ORDER = {"low": 0, "medium": 1, "high": 2}
+SUGGESTION_ORDER = {"quick_win": 0, "new_chip": 1, "niche": 2, "partner": 3, "unknown": 4}
 EXPLORER_SORTS = {
     "label": ("Function", "asc", lambda e: e["label"].lower()),
     "path": ("Gap type · path", "asc", lambda e: (PATH_ORDER.get((e["path"] or {}).get("path"), 5), -e["reach"])),
     "reach": ("Needed in", "desc", lambda e: (e["reach"], e["adjacent"])),
     "competition": ("Competition", "asc",
                     lambda e: (CROWD_ORDER.get((e["competition"] or {}).get("crowding"), 3), -e["reach"])),
-    "score": ("Opportunity score", "desc", lambda e: (e["score"] if e["score"] is not None else -1, e["reach"])),
+    "score": ("Type · score", "desc",
+              lambda e: (-SUGGESTION_ORDER.get(e["suggestion"], 9), e["score"] if e["score"] is not None else -1)),
     "tam": ("TAM / year", "desc", lambda e: (e["tam"], e["reach"])),
 }  # fmt: skip
 VIEW_TO_SORT = {"reach": "reach", "crosssell": "reach", "feasibility": "score", "competition": "competition",
@@ -213,6 +215,7 @@ def opportunity_explorer(
     f: str = "",
     t: str = "",
     g: str = "",
+    s: str = "",
     session: Session = Depends(get_session),
 ):
     """Missing functions and RF band gaps, grouped by big category; any column sorts. Rows set aside are listed
@@ -223,7 +226,7 @@ def opportunity_explorer(
     for e in rows:
         d = decisions.get(e["key"])
         e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at} if d else None
-    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "reach")
+    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "score")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
     c["type_counts"] = Counter(e["gap_type"] for e in rows)
     if t in op.GAP_TYPE_LABEL:
@@ -232,6 +235,10 @@ def opportunity_explorer(
         rows = [e for e in rows if e["gap_type"] != "not_ours"]
     if f in EXPLORER_FILTERS:
         rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
+    c["sugg_counts"] = Counter(e["suggestion"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
+    s = s if s in SUGGESTION_ORDER else ""
+    if s:
+        rows = [e for e in rows if e["suggestion"] == s]
     c["group_counts"] = Counter(e["group"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
     g = g if g in c["group_counts"] else ""
     if g:
@@ -249,6 +256,7 @@ def opportunity_explorer(
         rows=shown,
         groups=[(n, [e for e in shown if e["group"] == n]) for n in order if any(e["group"] == n for e in shown)],
         g=g,
+        s=s,
         aside=[e for e in rows if (e["decision"] or {}).get("status") == "set_aside"],
         sort=sort,
         dir=dir,

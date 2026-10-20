@@ -1,4 +1,4 @@
-"""Opportunity score: weights, mappings, neutral values, absolute bands, the TAM switch and reviewer feedback."""
+"""Opportunity score: weights, mappings, neutral values, suggestion types, the TAM switch and reviewer feedback."""
 
 from sqlalchemy.orm import Session
 
@@ -32,16 +32,19 @@ def test_weights_and_mappings():
     assert cfg["competition"]["values"] == {"low": 100, "medium": 60, "high": 30}
 
 
-def test_neutral_for_missing_data_and_absolute_bands():
+def test_neutral_for_missing_data_and_suggestion_types():
     f = scoring._factor("competition", None, "not assessed", "high")
     assert f["value"] == scoring.config()["neutral"] == 50 and f["confidence"] == "low"
     assert scoring._competition(None) == (None, "not assessed", "low")
     assert scoring._trend({})[0] is None and scoring._trend({"regulation": "NG-eCall 2026"})[0] == 100
-    assert [scoring.band(x) for x in (100, 70, 69, 45, 44, 0)] == ["High", "High", "Medium", "Medium", "Low", "Low"]
-    assert scoring.band(None) is None
+    # the type comes from distance and how many diagrams need it, not from the score
+    cases = [(0, 50), (2, 10), (3, 10), (1, 9), (3, 1), (4, 200), (None, 50)]
+    assert [scoring.suggestion(d, n) for d, n in cases] == ["quick_win", "quick_win", "new_chip", "niche", "niche",
+                                                            "partner", "unknown"]  # fmt: skip
     neutral = [scoring._factor(k, None, "", "low") for k in scoring.weights()]
     r = scoring.result(neutral)
-    assert r["score"] == 50 and r["band"] == "Medium" and r["confidence"] == "low"
+    assert r["score"] == 50 and r["suggestion"] == "unknown" and r["suggestion_label"] == "Not assessed yet"
+    assert r["confidence"] == "low"
 
 
 def test_confidence_steps():
@@ -56,7 +59,7 @@ def test_table_scores_every_function_and_tam_switch():
     apps = _apps()
     tab = scoring.table(apps)
     rows = tab["rows"]
-    assert rows and all(0 <= r["score"] <= 100 and r["band"] for r in rows.values())
+    assert rows and all(0 <= r["score"] <= 100 and r["suggestion_label"] for r in rows.values())
     assert max(f["value"] for r in rows.values() for f in r["factors"] if f["key"] == "demand") == 100
     assert all(not scoring.scorable(fn, tab["usage"][fn]) for fn in op._NOT_CHIPS if fn in tab["usage"])
     fn = "pol_ldo"

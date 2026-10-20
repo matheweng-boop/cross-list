@@ -90,10 +90,22 @@ confidence:
   # a reviewer's latest "wrong" on the data behind a factor (path, technology, competition, trends) or on a case
   # item lowers that confidence one step: high -> medium -> low (owner); "correct" changes nothing
 
-bands:                       # absolute, so a label keeps its meaning when functions are added
-  High: 70
-  Medium: 45
-  Low: 0
+suggestions:
+  # What kind of suggestion a row is, in words, from two facts shown on the row: how far it is from what we build
+  # (distance) and how many block diagrams need it. The score only orders the rows within a suggestion type.
+  widely_needed: 10          # needed in this many diagrams (library + background) or more: not a niche
+  labels:
+    quick_win: Quick win             # distance 0–2 and widely needed: a variant, module or package of what we have
+    new_chip: New chip               # distance 3 and widely needed: a new chip from technology we have
+    niche: Niche                     # needed in fewer diagrams than widely_needed, distance 0–3
+    partner: Partner or acquire      # distance 4: technology we do not have
+    unknown: Not assessed yet        # no distance yet
+  help:
+    quick_win: "Close to what we build and needed in many systems"
+    new_chip: "Needs a new chip from technology we have; needed in many systems"
+    niche: "Needed in few of the block diagrams; worth it only with a specific customer"
+    partner: "Needs technology we do not have: partner or acquire"
+    unknown: "No path to product or technology rating yet"
 
 feasibility:                 # Research & ideas groups (1–3), derived from a case's headline feature distance
   0: 1

@@ -13,7 +13,9 @@ def test_explorer_sorts_and_old_views(client):
     html = client.get("/business/explorer?view=feasibility").text  # old links land on the matching sort
     assert 'aria-sort="descending"' in html and "Fit score</a>" not in html
     assert "higher is better" in html and "Evidence" not in html.split("<thead>")[1].split("</thead>")[0]
-    assert "How the score works" in html and any(f">{b}</span>" in html for b in ("High", "Medium", "Low"))
+    assert "How the type and score work" in html
+    assert any(f">{b}</span>" in html for b in ("Quick win", "New chip", "Niche"))
+    assert client.get("/business/explorer?s=niche").status_code == 200
 
 
 def test_keep_set_aside_and_restore(client):

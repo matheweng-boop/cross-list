@@ -1,0 +1,954 @@
+# Infineon RF parts for BizDev competitor coverage (public infineon.com pages only; see source.method).
+source:
+  vendor: Infineon
+  pages:
+  - https://www.infineon.com/products/rf/low-noise-amplifier-lnas/gnss-lnas
+  - https://www.infineon.com/products/rf/low-noise-amplifier-lnas/4g-5g-lna
+  - https://www.infineon.com/products/rf/low-noise-amplifier-lnas/multi-purpose-lnas
+  - https://www.infineon.com/products/rf/rf-switches-spxt-dpxt
+  - https://www.infineon.com/products/rf/antenna-cross-switches
+  - https://www.infineon.com/products/rf/antenna-tuners
+  - https://www.infineon.com/products/rf/driver-amplifiers
+  - https://www.infineon.com/products/rf/rf-transistors/low-noise-rf-transistors
+  - https://www.infineon.com/products/rf/rf-transistors/high-linearity-rf-transistors
+  - https://www.infineon.com/dataApi/en/product-table/<family>.product-table.en.json?collectionName=&familyIds=<id>
+  - https://www.infineon.com/en.sitemap.part-row-sitemap.xml
+  - https://www.infineon.com/part/<MPN>
+  collected: '2026-10-20'
+  method: 'robots.txt read first (allows *.json and /part/; disallows */search* and *filter=*, not used). Family pages fetched to find
+    each public product-table JSON (GET, the same URL the page script loads). Tables for GNSS LNAs, driver amplifiers, antenna cross
+    switches and low-noise RF transistors returned data; the tables for 4G/5G LNAs, multi-purpose LNAs, RF switches (SPxT/DPxT) and
+    antenna tuners returned an empty body (HTTP 200, content-length 0, served from CloudFront cache, also on retry), so those families
+    were filled from the public part pages: every BG* part in the public part sitemap not already covered, read from the page JSON-LD
+    (category, frequency, product status per orderable code) and meta description. curl with a browser User-Agent, one request at a
+    time, >=1.6 s apart.'
+  requests: 103
+  notes: 'Functions mapped from the Infineon family: GNSS / 4G-5G / multi-purpose LNAs and LNA banks -> lna; low-noise RF transistors
+    -> lna (discrete transistors, no frequency range published, fT and NFmin in the description); driver amplifiers -> rf_predriver
+    with pout_dbm = published OP1dB; RF switches, antenna cross switches and antenna-tuner switches (BGSA*) -> rf_switch. BGA420/BGA427/BGA614/BGA616
+    are listed by Infineon under multi-purpose LNAs but are broadband cascadable Si MMIC amplifiers (DC-3/6 GHz) and are mapped to rf_gain_block.
+    Descriptions are the page meta description (trailing "Find data sheet..." dropped) or, for table parts, built from the published
+    table values. Switch Pmax (power handling) is not given as pout. Status: Active = "active"/"active and preferred" for any orderable
+    code; NRND = "not for new design"; Discontinued. One unitless frequency ("2300 - 2700", BGA9H1BN6) read as MHz. Skipped: high-linearity
+    RF transistors (19, all discontinued; not LNAs), BGSC* tunable-capacitor/switch combos, coupler, bias/control IC, diodes, radar
+    transceivers (BGT*). The infineon.com /products/rf menu has no PA, mixer, synthesizer, attenuator, phase shifter, limiter, multiplier,
+    filter or beamformer family. Skipped by category: {"Coupler": ["BGC100GN6"], "Bias and Control IC": ["BGMC1210"], "Antenna tuners":
+    ["BGSC2341ML10", "BGSC4331MN10"], "General Purpose Diodes": ["BGX50A"]}'
+parts:
+- mpn: BGA7P220
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 2.3-2.7 GHz; gain 34.4 dB; OP1dB 27.5 dBm
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.7
+  pout_dbm: 27.5
+  power_basis: P1dB
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA7P220
+- mpn: BGA7P320
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 3.3-4.2 GHz; gain 34.4 dB; OP1dB 27.8 dBm
+  freq_min_ghz: 3.3
+  freq_max_ghz: 4.2
+  pout_dbm: 27.8
+  power_basis: P1dB
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA7P320
+- mpn: BGAP2D20A
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 2.3-2.7 GHz; gain 35.1 dB; OP1dB 28.9 dBm
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.7
+  pout_dbm: 28.9
+  power_basis: P1dB
+  status: Active
+  url: https://www.infineon.com/part/BGAP2D20A
+- mpn: BGAP2D30A
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 3.3-4.2 GHz; gain 35.2 dB; OP1dB 28.5 dBm
+  freq_min_ghz: 3.3
+  freq_max_ghz: 4.2
+  pout_dbm: 28.5
+  power_basis: P1dB
+  status: Active
+  url: https://www.infineon.com/part/BGAP2D30A
+- mpn: BGAP2S20A
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 2.3-2.7 GHz; gain 34.8 dB; OP1dB 28.9 dBm
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.7
+  pout_dbm: 28.9
+  power_basis: P1dB
+  status: Active
+  url: https://www.infineon.com/part/BGAP2S20A
+- mpn: BGAP2S30A
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 3.3-4.2 GHz; gain 35 dB; OP1dB 28.5 dBm
+  freq_min_ghz: 3.3
+  freq_max_ghz: 4.2
+  pout_dbm: 28.5
+  power_basis: P1dB
+  status: Active
+  url: https://www.infineon.com/part/BGAP2S30A
+- mpn: BGAP3D30H
+  manufacturer: Infineon
+  function: rf_predriver
+  description: Driver amplifier; 3.1-4.2 GHz; gain 38.5 dB; OP1dB 31.4 dBm
+  freq_min_ghz: 3.1
+  freq_max_ghz: 4.2
+  pout_dbm: 31.4
+  power_basis: P1dB
+  status: Active
+  url: https://www.infineon.com/part/BGAP3D30H
+- mpn: BGA420
+  manufacturer: Infineon
+  function: rf_gain_block
+  description: BGA420 is a Si-MMIC amplifier with SIEGET® 25 tech, 13 dB gain at 1.8 GHz, NF 2.2 dB, Pb-free.
+  freq_min_ghz: 0.0
+  freq_max_ghz: 3.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA420
+- mpn: BGA427
+  manufacturer: Infineon
+  function: rf_gain_block
+  description: BGA427 is a Si-MMIC amplifier with 18.5 dB gain at 1.8 GHz, NF 2.2 dB, Pb-free package, ideal for cascaded 50 Ω systems.
+  freq_min_ghz: 0.0
+  freq_max_ghz: 3.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA427
+- mpn: BGA614
+  manufacturer: Infineon
+  function: rf_gain_block
+  description: BGA614 is a broadband MMIC amplifier with 19 dB gain at 1 GHz, 2.1 dB noise figure, 12 dBm P-1dB, ideal for GSM, SAT-TV,
+    CATV.
+  freq_min_ghz: 0.0
+  freq_max_ghz: 6.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA614
+- mpn: BGA616
+  manufacturer: Infineon
+  function: rf_gain_block
+  description: BGA616 broadband MMIC amplifier offers 19 dB gain at 1 GHz, 2.7 GHz bandwidth, and 1 kV ESD protection. Functions in
+    GSM, CATV, SAT-TV.
+  freq_min_ghz: 0.0
+  freq_max_ghz: 6.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA616
+- mpn: BF771
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; fT 8 GHz; NFmin 1 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BF771
+- mpn: BF776
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; fT 46 GHz; NFmin 0.80 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BF776
+- mpn: BFP181
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB -2 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP181
+- mpn: BFP182W
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 5 dBm; fT 8 GHz; NFmin 0.90 dB @900MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP182W
+- mpn: BFP183
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP183
+- mpn: BFP183W
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 8.5 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP183W
+- mpn: BFP405
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 5 dBm; fT 25 GHz; NFmin 1.25 dB @1800MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP405
+- mpn: BFP410
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 10.5 dBm; fT 25 GHz; NFmin 1.20 dB @2000 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP410
+- mpn: BFP420
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 12 dBm; fT 25 GHz; NFmin 1.10 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP420
+- mpn: BFP460
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 11.5 dBm; fT 22 GHz; NFmin 1.10 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP460
+- mpn: BFP520
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 12 dBm; fT 45 GHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP520
+- mpn: BFP540ESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 11 dBm; fT 30 GHz; NFmin 0.90 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP540ESD
+- mpn: BFP620
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 14.5 dBm; fT 65 GHz; NFmin 0.70 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP620
+- mpn: BFP620F
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 14 dBm; fT 65 GHz; NFmin 0.70 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP620F
+- mpn: BFP640
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 12 dBm; fT 42 GHz; NFmin 0.60 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP640
+- mpn: BFP640ESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 12 dBm; fT 45 GHz; NFmin 0.60 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP640ESD
+- mpn: BFP640F
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 13.5 dBm; fT 42 GHz; NFmin 0.55 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP640F
+- mpn: BFP720ESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 6.5 dBm; fT 43 GHz; NFmin 0.60 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP720ESD
+- mpn: BFP740
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 11 dBm; fT 44 GHz; NFmin 0.45 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP740
+- mpn: BFP740ESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 10 dBm; fT 45 GHz; NFmin 0.55 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP740ESD
+- mpn: BFP740F
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 11 dBm; fT 45 GHz; NFmin 0.45 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP740F
+- mpn: BFP840ESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 4.5 dBm; fT 80 GHz; NFmin 0.60 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP840ESD
+- mpn: BFP840FESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 4.5 dBm; fT 85 GHz; NFmin 0.60 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP840FESD
+- mpn: BFP842ESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 7 dBm; fT 57 GHz; NFmin 0.45 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP842ESD
+- mpn: BFP843
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; fT 80 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP843
+- mpn: BFP843F
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; fT 80 GHz; NFmin 0.80 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFP843F
+- mpn: BFR181
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB -1 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR181
+- mpn: BFR181W
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB -1 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR181W
+- mpn: BFR182
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 5 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR182
+- mpn: BFR182W
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 5 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR182W
+- mpn: BFR183
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 9 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR183
+- mpn: BFR340L3
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB -1 dBm; fT 14 GHz; NFmin 1.15 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR340L3
+- mpn: BFR35AP
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 9 dBm; fT 5 GHz; NFmin 1.40 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR35AP
+- mpn: BFR360F
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 9 dBm; fT 14 GHz; NFmin 1 dB @1900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR360F
+- mpn: BFR360L3
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 9 dBm; fT 14 GHz; NFmin 1 dB @1800 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR360L3
+- mpn: BFR460L3
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 11.5 dBm; fT 22 GHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR460L3
+- mpn: BFR740L3RH
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 11 dBm; fT 42 GHz; NFmin 0.45 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR740L3RH
+- mpn: BFR840L3RHESD
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 4 dBm; fT 75 GHz; NFmin 0.55 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR840L3RHESD
+- mpn: BFR843EL3
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; fT 80 GHz; NFmin 0.95 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR843EL3
+- mpn: BFR92P
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 9 dBm; fT 5 GHz; NFmin 1.40 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFR92P
+- mpn: BFS481
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB -1 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFS481
+- mpn: BFS483
+  manufacturer: Infineon
+  function: lna
+  description: Low noise RF transistor; OP1dB 9 dBm; fT 8 GHz; NFmin 0.90 dB @900 MHz
+  status: Discontinued
+  url: https://www.infineon.com/part/BFS483
+- mpn: BGA10H1MN9
+  manufacturer: Infineon
+  function: lna
+  description: BGA10H1MN9 is a high-band LNA for 4G/5G (2.3-2.7 GHz), 19.7 dB gain, 0.8 dB noise figure, MIPI RFFE 3.0.
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.7
+  status: Active
+  url: https://www.infineon.com/part/BGA10H1MN9
+- mpn: BGA10M1MN9
+  manufacturer: Infineon
+  function: lna
+  description: BGA10M1MN9 is a mid-band LNA (1.8-2.2 GHz) with 20.6 dB gain, 0.85 dB NF, MIPI RFFE 3.0. Ideal for LTE/5G.
+  freq_min_ghz: 1.8
+  freq_max_ghz: 2.2
+  status: Active
+  url: https://www.infineon.com/part/BGA10M1MN9
+- mpn: BGA123L4
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.55-1.615 GHz; gain 18.2 dB; NF 0.75 dB
+  freq_min_ghz: 1.55
+  freq_max_ghz: 1.615
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA123L4
+- mpn: BGA123N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.55-1.615 GHz; gain 19 dB; NF 0.75 dB
+  freq_min_ghz: 1.55
+  freq_max_ghz: 1.615
+  status: Active
+  url: https://www.infineon.com/part/BGA123N6
+- mpn: BGA125N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.164-1.3 GHz; gain 20 dB; NF 0.8 dB
+  freq_min_ghz: 1.164
+  freq_max_ghz: 1.3
+  status: Active
+  url: https://www.infineon.com/part/BGA125N6
+- mpn: BGA524N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.55-1.615 GHz; gain 19.6 dB; NF 0.55 dB
+  freq_min_ghz: 1.55
+  freq_max_ghz: 1.615
+  status: Active
+  url: https://www.infineon.com/part/BGA524N6
+- mpn: BGA525N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.164-1.615 GHz; gain 19 dB; NF 0.7 dB
+  freq_min_ghz: 1.164
+  freq_max_ghz: 1.615
+  status: Active
+  url: https://www.infineon.com/part/BGA525N6
+- mpn: BGA535N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.164-1.615 GHz; gain 17.8 dB; NF 0.8 dB
+  freq_min_ghz: 1.164
+  freq_max_ghz: 1.615
+  status: Active
+  url: https://www.infineon.com/part/BGA535N6
+- mpn: BGA5H1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA5H1BN6 is a low noise amplifier for LTE, offering 18.1 dB gain, 0.7 dB noise figure, and 2300-2690 MHz range.
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.69
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA5H1BN6
+- mpn: BGA5L1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA5L1BN6 is a low noise amplifier for LTE (600-1000 MHz) with 18.5 dB gain and 0.7 dB noise.
+  freq_min_ghz: 0.6
+  freq_max_ghz: 1.0
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA5L1BN6
+- mpn: BGA5M1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA5M1BN6 is a low noise LTE amplifier (1805-2200 MHz) with 19.3 dB gain, 0.65 dB noise figure, and 9.5mA current.
+  freq_min_ghz: 1.805
+  freq_max_ghz: 2.2
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA5M1BN6
+- mpn: BGA715N7
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.55-1.615 GHz; gain 20 dB; NF 0.75 dB
+  freq_min_ghz: 1.55
+  freq_max_ghz: 1.615
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA715N7
+- mpn: BGA725L6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.55-1.615 GHz; gain 20 dB; NF 0.65 dB
+  freq_min_ghz: 1.55
+  freq_max_ghz: 1.615
+  status: Active
+  url: https://www.infineon.com/part/BGA725L6
+- mpn: BGA729N6
+  manufacturer: Infineon
+  function: lna
+  description: BGA729N6 is a broadband LNA with 16.3 dB gain, 1.1 dB NF, and 70-1000 MHz range for portable TVs.
+  freq_min_ghz: 0.07
+  freq_max_ghz: 1.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA729N6
+- mpn: BGA7H1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA7H1BN6 is a low noise amplifier for LTE (1805-2690 MHz) with 12.3 dB gain, 0.85 dB noise figure, and 1.5-3.6 V supply.
+  freq_min_ghz: 1.805
+  freq_max_ghz: 2.2
+  status: Active
+  url: https://www.infineon.com/part/BGA7H1BN6
+- mpn: BGA7H1N6
+  manufacturer: Infineon
+  function: lna
+  description: BGA7H1N6 is a Silicon Germanium Low Noise Amplifier with 12.5 dB gain, 0.60 dB noise figure, 2300-2690 MHz for LTE.
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.69
+  status: Active
+  url: https://www.infineon.com/part/BGA7H1N6
+- mpn: BGA7L1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA7L1BN6 is a low noise amplifier for LTE (716-960 MHz) with 13.6 dB gain and 0.75 dB noise figure.
+  freq_min_ghz: 0.716
+  freq_max_ghz: 0.96
+  status: Active
+  url: https://www.infineon.com/part/BGA7L1BN6
+- mpn: BGA7L1N6
+  manufacturer: Infineon
+  function: lna
+  description: BGA7L1N6 is a Silicon Germanium Low Noise Amplifier with 13.3 dB gain, 0.90 dB noise figure, 728-960 MHz range for LTE.
+  freq_min_ghz: 0.716
+  freq_max_ghz: 0.96
+  url: https://www.infineon.com/part/BGA7L1N6
+- mpn: BGA7M1N6
+  manufacturer: Infineon
+  function: lna
+  description: BGA7M1N6 is a Silicon Germanium LNA with 13.0 dB gain, 0.60 dB noise figure, and 1805-2200 MHz LTE operation.
+  freq_min_ghz: 1.805
+  freq_max_ghz: 2.2
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGA7M1N6
+- mpn: BGA824N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.55-1.615 GHz; gain 17 dB; NF 0.55 dB
+  freq_min_ghz: 1.55
+  freq_max_ghz: 1.615
+  status: Active
+  url: https://www.infineon.com/part/BGA824N6
+- mpn: BGA855N6
+  manufacturer: Infineon
+  function: lna
+  description: GNSS LNA; 1.164-1.3 GHz; gain 17.8 dB; NF 0.6 dB
+  freq_min_ghz: 1.164
+  freq_max_ghz: 1.3
+  status: Active
+  url: https://www.infineon.com/part/BGA855N6
+- mpn: BGA8G1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA8G1BN6 is a 4G/5G low noise amplifier in TSNP-6-2 package with high gain and low power. Ideal for wireless.
+  url: https://www.infineon.com/part/BGA8G1BN6
+- mpn: BGA8U1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA8U1BN6 is a 4.0-6.0 GHz low noise amp with 13.7 dB gain, 1.6 dB noise figure, and multi-state control for LTE.
+  freq_min_ghz: 4.0
+  freq_max_ghz: 6.0
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA8U1BN6
+- mpn: BGA8V1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA8V1BN6 is a low noise amplifier for LTE (3.3-3.8 GHz) offering 15 dB gain, 1.2 dB noise figure, and multi-state control.
+  freq_min_ghz: 3.3
+  freq_max_ghz: 3.8
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA8V1BN6
+- mpn: BGA9C1MN9
+  manufacturer: Infineon
+  function: lna
+  description: BGA9C1MN9 is a low noise amplifier for LTE/5G with 19.0 dB gain and 4.4-5.0 GHz range.
+  freq_min_ghz: 4.4
+  freq_max_ghz: 5.0
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA9C1MN9
+- mpn: BGA9H1BN6
+  manufacturer: Infineon
+  function: lna
+  description: BGA9H1BN6 is an LNA for 4G/5G (2.5-2.7 GHz) with 20 dB gain, 0.5 dB noise figure, low power modes.
+  freq_min_ghz: 2.3
+  freq_max_ghz: 2.7
+  status: Active
+  url: https://www.infineon.com/part/BGA9H1BN6
+- mpn: BGA9H1MN9
+  manufacturer: Infineon
+  function: lna
+  description: BGA9H1MN9 is a low noise amplifier for LTE/5G with 20.2 dB gain, 0.6 dB noise figure, and 1.1x1.1 mm size.
+  freq_min_ghz: 1.4
+  freq_max_ghz: 2.7
+  status: Active
+  url: https://www.infineon.com/part/BGA9H1MN9
+- mpn: BGA9U1MN9
+  manufacturer: Infineon
+  function: lna
+  description: BGA9U1MN9 is a low noise amplifier with 19.4 dB gain, 1.2 dB noise figure, and 5-7.2 GHz range for 5G/LTE.
+  freq_min_ghz: 5.0
+  freq_max_ghz: 7.2
+  status: Active
+  url: https://www.infineon.com/part/BGA9U1MN9
+- mpn: BGA9V1MN9
+  manufacturer: Infineon
+  function: lna
+  description: BGA9V1MN9 is a low noise amplifier for LTE/5G with 21 dB gain, 0.75 dB noise figure, and 3.3-4.2 GHz range.
+  freq_min_ghz: 3.3
+  freq_max_ghz: 4.2
+  status: Discontinued
+  url: https://www.infineon.com/part/BGA9V1MN9
+- mpn: BGB707L7ESD
+  manufacturer: Infineon
+  function: lna
+  description: BGB707L7ESD is a low noise amplifier MMIC with NFmin 0.6 dB@2.4 GHz, 2 kV ESD protection, ideal for GPS, WLAN, ISM.
+  freq_min_ghz: 0.05
+  freq_max_ghz: 10.0
+  status: Discontinued
+  url: https://www.infineon.com/part/BGB707L7ESD
+- mpn: BGB741L7ESD
+  manufacturer: Infineon
+  function: lna
+  description: BGB741L7ESD is a broadband low noise amplifier with NFmin 1.05 dB at 2.4 GHz, 3 V, 10 mA. Ideal for GPS, WLAN, ISM.
+  status: Discontinued
+  url: https://www.infineon.com/part/BGB741L7ESD
+- mpn: BGM687U50
+  manufacturer: Infineon
+  function: lna
+  description: BGM687U50 is a 7x LNA Bank covering 600-2700 MHz, with 4x4 MIMO and 7P7T for 5G/4G EN-DC and CA.
+  freq_min_ghz: 0.6
+  freq_max_ghz: 2.7
+  status: Active
+  url: https://www.infineon.com/part/BGM687U50
+- mpn: BGM787U50
+  manufacturer: Infineon
+  function: lna
+  description: BGM787U50 is a 7x LNA bank with 600-2700 MHz range, 7P7T cross-switch, and 4x4 MIMO for 5G/4G.
+  freq_min_ghz: 0.6
+  freq_max_ghz: 2.7
+  status: Active
+  url: https://www.infineon.com/part/BGM787U50
+- mpn: BGS12P2L6
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS12P2L6 is a high-power SPDT RF switch (0.05-6 GHz) for 5G/LTE TRx. Small 0.7x1.1mm2 with CMOS logic.
+  freq_min_ghz: 0.05
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGS12P2L6
+- mpn: BGS12PN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS12PN10 is an SPDT RF switch with 6.0 GHz support, 38 dBm power handling, ultra-low loss, for mobile apps.
+  freq_min_ghz: 0.5
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGS12PN10
+- mpn: BGS12WN6
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS12WN6 is a broadband SPDT RF switch with 0.05-9 GHz range, GPIO control for WiFi/Bluetooth/UWB.
+  freq_min_ghz: 0.05
+  freq_max_ghz: 9.0
+  status: Active
+  url: https://www.infineon.com/part/BGS12WN6
+- mpn: BGS13SN8
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS13SN8 is an SP3T RF switch for 2.4 GHz WiFi, Bluetooth, and cellular with low insertion loss, high isolation, and
+    1.1x1.1 mm size.
+  freq_min_ghz: 0.1
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGS13SN8
+- mpn: BGS14M8U9
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS14M8U9 is a high power SP4T switch for 5G/LTE to 7.125 GHz, 39 dBm, low loss, MIPI 2.1 RFFE.
+  freq_min_ghz: 0.04
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGS14M8U9
+- mpn: BGS14PN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS14PN10 is a high linearity SP4T RF switch supporting up to 6.0 GHz, 38 dBm power handling, and low insertion loss.
+  freq_min_ghz: 0.5
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGS14PN10
+- mpn: BGS14WMA9
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS14WMA9 is an SP4T RF switch for WLAN/Bluetooth, 1.1x1.1 mm², 26 dBm power handling, 0.05-6 GHz.
+  freq_min_ghz: 0.05
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGS14WMA9
+- mpn: BGS15MU14
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGS15MU14 is a SP5T high isolation switch offering >50 dB isolation to 6 GHz and 0.6 mm profile. Ideal for 5G FBRx.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGS15MU14
+- mpn: BGSA11GN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA11GN10 is a dual SPST RF switch supporting 0.79Ω RON, 36V RF voltage, and 0.1-6.0GHz coverage.
+  freq_min_ghz: 0.1
+  freq_max_ghz: 6.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGSA11GN10
+- mpn: BGSA12GN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA12GN10 is a high-linearity SPDT switch, 0.1-6.0 GHz, RON 1.6 Ω, ultra-low COFF 120 fF, for antenna tuning.
+  freq_min_ghz: 0.1
+  freq_max_ghz: 6.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGSA12GN10
+- mpn: BGSA12UGL8
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA12UGL8 is an SPDT RF switch with 0.59Ω RON, 270fF COFF, and 40V RF handling for antenna tuning to 6.0 GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGSA12UGL8
+- mpn: BGSA142GN12
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna tuning switch; SP4T; 0.4 - 6.0 GHz
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  url: https://www.infineon.com/part/BGSA142GN12
+- mpn: BGSA142M2N12
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA142M2N12 is an SP4T RF switch with low RON (1.75Ω), low COFF (110fF), and MIPI RFFE for antenna tuning up to 6GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  url: https://www.infineon.com/part/BGSA142M2N12
+- mpn: BGSA142MN12
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA142MN12 is a SP4T RF switch with low RON (1.75Ω), low COFF (110fF), and MIPI RFFE control for antenna tuning to 6.0
+    GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  url: https://www.infineon.com/part/BGSA142MN12
+- mpn: BGSA143GL10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA143GL10 is a compact SP4T RF switch with 1.15Ω RON and 140fF COFF. Handles 42V for antenna tuning up to 6GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGSA143GL10
+- mpn: BGSA143ML10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA143ML10, a SP4T RF switch with ultra-low RON, 42V peak handling, MIPI RFFE control for 6.0 GHz antenna tuning.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGSA143ML10
+- mpn: BGSA144ML10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA144ML10 is an SP4T RF switch with RON 1.74Ω, COFF 89fF, 80V handling, ideal for up to 7.125GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA144ML10
+- mpn: BGSA146MN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna tuning switch; SP4T
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Active
+  url: https://www.infineon.com/part/BGSA146MN10
+- mpn: BGSA147ML10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA147ML10 is an SP4T switch with 0.8Ω RON, 155fF COFF, and MIPI RFFE control up to 7.125GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA147ML10
+- mpn: BGSA148MN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA148MN10 is an SP4T antenna tuning switch with 0.8Ω RON, 155fF COFF, and 7.125GHz RF support. For impedance/antenna
+    tuning.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA148MN10
+- mpn: BGSA149M2N10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA149M2N10 is an SP4T antenna switch with 1.6Ω RON, 78fF COFF, and 50V RF handling for 5G.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Active
+  url: https://www.infineon.com/part/BGSA149M2N10
+- mpn: BGSA149MN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA149MN10 is an SP4T antenna tuning switch with 1.5Ω RON, 80fF COFF, and 7.125GHz RF support.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Active
+  url: https://www.infineon.com/part/BGSA149MN10
+- mpn: BGSA14GN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA14GN10 is a high-linearity SP4T RF switch for antenna tuning, covering 0.1-6.0 GHz with RON 1.6Ω, COFF 120fF.
+  freq_min_ghz: 0.1
+  freq_max_ghz: 6.0
+  status: NRND (not for new design)
+  url: https://www.infineon.com/part/BGSA14GN10
+- mpn: BGSA14M2N10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA14M2N10 is a compact SP4T antenna switch with 0.85Ω RON, 160fF COFF, MIPI RFFE control for RF to 7.125GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA14M2N10
+- mpn: BGSA14M3N10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA14M3N10 is an SP4T antenna switch with 1.1Ω RON, 116fF COFF, 45V RF handling up to 7.125GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA14M3N10
+- mpn: BGSA200ML9
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA200ML9 is a 2xSPST RF antenna tuning switch with low RON (1.35Ω), low COFF (156fF), and MIPI/GPIO control up to 8.25GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 8.25
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA200ML9
+- mpn: BGSA20UGL8
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA20UGL8 is a dual SPST RF switch with 2.3Ω RON, 200fF COFF, and >80V RF handling for 5G and RF tuning.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGSA20UGL8
+- mpn: BGSA20VGL8
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna tuning switch; 2xSPST; 0.4 - 6.0 GHz
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  url: https://www.infineon.com/part/BGSA20VGL8
+- mpn: BGSA400ML10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA400ML10 is a 4xSPST RF antenna switch with low COFF, low RON, and MIPI RFFE 2.1 interface, supporting up to 7.125GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA400ML10
+- mpn: BGSA402ML10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA402ML10 is a 4xSPST RF switch with RON 1.49Ω, COFF 170fF, MIPI RFFE 2.1, supporting up to 6 GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 6.0
+  url: https://www.infineon.com/part/BGSA402ML10
+- mpn: BGSA403ML10
+  manufacturer: Infineon
+  function: rf_switch
+  description: BGSA403ML10 is a 4xSPST RF antenna tuning switch with low RON 0.98Ω, low COFF 205fF, and MIPI RFFE 2.1.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSA403ML10
+- mpn: BGSA406MN10
+  manufacturer: Infineon
+  function: rf_switch
+  description: The BGSA406MN10 is a versatile shunt to ground 4xsingle-pole single-throw (4xSPST) RF antenna tuning switch optimized
+    for applications up to 7.125 GHz.
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Active
+  url: https://www.infineon.com/part/BGSA406MN10
+- mpn: BGSX22G5A10
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna cross switch; DPDT; 0.1-6 GHz; Pmax 39 dBm
+  freq_min_ghz: 0.1
+  freq_max_ghz: 6.0
+  status: Active
+  url: https://www.infineon.com/part/BGSX22G5A10
+- mpn: BGSX22G6U10
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna cross switch; DPDT; 0.4-7.125 GHz
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSX22G6U10
+- mpn: BGSX24M2U16
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna cross switch; DP4T; 0.4-7.125 GHz; Pmax 39 dBm
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSX24M2U16
+- mpn: BGSX24MU16
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna cross switch; DP4T; 0.1-5 GHz
+  freq_min_ghz: 0.1
+  freq_max_ghz: 5.0
+  status: Active
+  url: https://www.infineon.com/part/BGSX24MU16
+- mpn: BGSX33M5U16
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna cross switch; 3P3T; 0.4-7.125 GHz; Pmax 38 dBm
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSX33M5U16
+- mpn: BGSX44MU18
+  manufacturer: Infineon
+  function: rf_switch
+  description: Antenna cross switch; 4P4T; 0.4-7.125 GHz
+  freq_min_ghz: 0.4
+  freq_max_ghz: 7.125
+  status: Discontinued
+  url: https://www.infineon.com/part/BGSX44MU18

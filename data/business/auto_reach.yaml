@@ -1,0 +1,400 @@
+# Automotive map (Opportunities > Automotive map): how far Skyworks + Qorvo are from an automotive product, per
+# automotive application and function.
+#
+# The ladder (one letter per cell):
+#   A  automotive today      we sell a part of this function with an automotive grade (AEC-Q100/Q200)
+#   B  qualify it            we sell parts of this function, none automotive: mostly qualification work
+#   C  variant               we have the technology and a close product; a new design on the same process
+#   D  adjacent technology   related technology we own, further away (new process steps, packaging or partners)
+#   gap                      neither company has it
+#
+# A and B are COMPUTED from the parts (catalogue + cross lists; grade from app/services/autograde.py), never typed.
+# This file only adds what the parts cannot say:
+#   applications: the automotive applications shown as rows; `templates` are case-insensitive pieces of library
+#                 diagram names (data/blocks/templates.yaml); the functions of those diagrams become the row's cells.
+#   rows:         C / D / gap calls, next steps and notes. Fields:
+#     app          application id, or "*" for every application that uses the function
+#     fn           function id (data/blocks/functions.yaml)
+#     level        B | C | D | gap. On a cell with no part of ours (or with override) this is the cell's level. On a
+#                  cell we already fill (computed A or B) it is the NEXT step (e.g. A today, a C variant next).
+#                  Omit it for a note only.
+#     override     true: replaces a computed A/B for this application (our parts exist, but not for what this
+#                  application needs, e.g. its band); default false
+#     title        short name of the step, shown in Top moves (optional; default the function name)
+#     parts        MPNs that show the starting point (optional)
+#     platforms    ids from data/business/capabilities.yaml (optional)
+#     why          one or two sentences: why this level
+#     missing      what it takes to get to an automotive product
+#     driver       what drives it, with a date: a regulation, an OEM programme or a standard (optional)
+#     demand       high | medium | low: how strongly the sources show car makers needing it (optional; ranks moves)
+#     confidence   high | medium | low (low or medium where a fact comes from a search snippet or a vendor claim)
+#     sources      list of "title, publisher, year, URL"
+#     status       proposed (until accepted on the page; reviews are stored in the database, not here)
+#
+# Seeded 2026-10-20 from the public technology platforms (capabilities.yaml `could_also`), the automotive library
+# diagrams and two desk-research notes on automotive connectivity and on sensing / SDV / EV (public sources only).
+
+# the default "RF, radio & timing" view: these function categories plus these functions (radio SoCs and radar)
+rf_view:
+  categories: [rf, radio]
+  functions: [uwb_soc, wireless_soc, radar_transceiver, serdes, clock_generator, clock_buffer, crystal_oscillator,
+              jitter_attenuator, pcie_buffer]
+
+applications:
+  - {id: telematics, label: "Telematics & 5G TCU", templates: [telematics, tcu]}
+  - {id: v2x, label: V2X, templates: [v2x]}
+  - {id: satellite, label: "Satellite / NTN link", templates: []}
+  - {id: access, label: "Digital key & car access", templates: [phone-as-a-key, smart car access]}
+  - {id: infotainment, label: "Infotainment, radio & cluster", templates: [radio, infotainment, instrument cluster]}
+  - {id: adas, label: "ADAS, radar & LiDAR", templates: [adas, 77 ghz radar, lidar]}
+  - {id: incabin, label: In-cabin radar, templates: [in-cabin]}
+  - {id: bms, label: Battery systems, templates: [battery]}
+  - {id: traction, label: "Traction inverter & motor drives", templates: [traction inverter, bldc, e-compressor]}
+  - {id: onboard, label: "On-board charger & DC/DC", templates: [on-board charger, obc, hv-to-lv]}
+  - {id: charging, label: EV charging stations, templates: [wallbox, charging station]}
+  - {id: body, label: "Body, power distribution & vehicle control", templates: [power distribution, vehicle control unit, fuel cell]}
+
+
+
+rows:
+  # ---- telematics, V2X and satellite (connectivity research)
+  - app: v2x
+    fn: v2x_fem
+    level: C
+    title: "Two-carrier C-V2X front end with a wide BAW filter"
+    parts: [SKY5A2105]
+    platforms: [baw_filter, gaas_hbt, sip_module_integration]
+    why: >-
+      SKY5A2105 is our automotive V2X front end today. The US moves to C-V2X only on two channels that need two radios,
+      and Europe wants ITS-G5, LTE-V2X and NR-V2X side by side over 5855–5925 MHz, so the next part has two paths, a
+      wider BAW passband and NR-V2X linearity.
+    missing: Two-path FEM design, wider BAW filter, NR-V2X PA linearity at back-off.
+    driver: "US: DSRC ends 14 Dec 2026 (FCC); EU: 5G-V2X Direct market readiness 2026–2029 (5GAA)"
+    demand: high
+    confidence: high
+    sources:
+      - "5.9 GHz Second Report and Order – FAQ, 5GAA, 2025, https://5gaa.org/content/uploads/2025/02/faq-5.9-ghz.pdf"
+      - "5.9 GHz band configuration for road-ITS deployment in Europe, 5GAA, 2024, https://5gaa.org/content/uploads/2024/03/5gaa-position-paper-european-road-its-deployment.v3.pdf"
+      - "5GAA Annual Report 2024, 5GAA, 2025, https://5gaa.org/content/uploads/2025/05/5gaa-annual-report-web.pdf"
+    status: proposed
+  - app: telematics
+    fn: pa_module
+    level: C
+    title: "RedCap / NG-eCall value front end"
+    platforms: [gaas_hbt, sip_module_integration]
+    why: >-
+      Every new EU car needs an LTE/5G emergency-call path, which pushes entry cars to low-cost LTE or 5G RedCap
+      telematics; a single-transmit PA module with a small diversity receiver fits that tier next to our Sky5 Value set.
+    missing: RedCap-optimised single-TX PAMiD and DRx design, AEC-Q104 qualification.
+    driver: "EU NG-eCall: new types from 1 Jan 2026, all new vehicles from 1 Jan 2027 (Reg. 2024/1180)"
+    demand: high
+    confidence: medium
+    sources:
+      - "5GAA Position Paper on the eCall Legacy Fleet, 5GAA, 2024, https://5gaa.org/content/uploads/2024/11/5gaa-position-paper-on-ecall-legacy-fleet.pdf"
+      - "Delegated Regulation (EU) 2024/1180 (search snippet only), https://eur-lex.europa.eu/eli/reg_del/2024/1180/oj"
+      - "Automotive Solutions brochure, Skyworks, 2025, https://www.skyworksinc.com/en/thought-leadership/-/media/SkyWorks/Documents/Brochures/2025_PCIM_Automotive_brochure.pdf"
+    status: proposed
+  - app: telematics
+    fn: antenna_tuner
+    level: C
+    title: "Aperture tuner for 617 MHz in small and glass-roof shark fins"
+    platforms: [rf_soi, rf_mems]
+    why: >-
+      One roof module now covers 617–5925 MHz, and a glass roof costs about 8 dB of antenna gain; aperture tuning and
+      active parts at the antenna help a small fin reach the low bands.
+    missing: Automotive aperture tuner (SOI or MEMS), qualification.
+    driver: "OEM smart-antenna specifications (617–5925 MHz in one module)"
+    demand: medium
+    confidence: medium
+    sources:
+      - "Design of a compact multi-band antenna and analysis on glass roofs, A. Ibrahim, Oakland University, 2023, https://our.oakland.edu/server/api/core/bitstreams/24d16b69-ff52-4a87-ac32-d5ba37ca72fd/content"
+    status: proposed
+  - app: satellite
+    fn: pa_module
+    level: C
+    override: true
+    title: "NTN n255/n256 power-class-2 PA for the TCU"
+    platforms: [gaas_hbt, site_skyworks_newbury_park]
+    why: >-
+      Cars get narrowband satellite links (emergency, breakdown) from 2027 in the L/S-band NTN bands n255/n256; 5GAA
+      asks for 26 dBm (power class 2) with a 3 dBi antenna. Our telematics PAs do not list these bands; a linear L/S-band
+      PA on our GaAs HBT process is the step.
+    missing: n255/n256 PA and duplexer, AEC-Q104 qualification.
+    driver: "Narrowband NTN in cars from 2027; 3GPP Rel-19 vehicle-UE RF requirements (5GAA)"
+    demand: high
+    confidence: high
+    sources:
+      - "Maximising the benefit of future satellite communications for automotive, 5GAA, 2024, https://5gaa.org/content/uploads/2024/09/5gaa-ntn-ras-technical-report.pdf"
+    status: proposed
+  - app: satellite
+    fn: filter_saw_baw
+    level: C
+    override: true
+    title: "L/S-band NTN filters and duplexers"
+    platforms: [baw_filter, saw_filter]
+    why: >-
+      NTN bands sit next to terrestrial LTE/5G bands in the same TCU, so they need their own filters and duplexers; we
+      make BAW and SAW filters but none for these bands.
+    missing: n255/n256 filter designs, automotive temperature range and qualification.
+    driver: "Narrowband NTN in cars from 2027 (5GAA)"
+    demand: medium
+    confidence: medium
+    sources:
+      - "Maximising the benefit of future satellite communications for automotive, 5GAA, 2024, https://5gaa.org/content/uploads/2024/09/5gaa-ntn-ras-technical-report.pdf"
+    status: proposed
+  - app: satellite
+    fn: beamformer_ic
+    level: D
+    override: true
+    title: "Ka-band flat-array terminal for the roof"
+    platforms: [mmwave_beamformer, gan_on_sic]
+    why: >-
+      Broadband satellite in cars after 2030 needs flat beam-steered arrays (25–31 dBi) under the roof or in the glass;
+      Qorvo's Ku/Ka beamformers fit technically, but automotive cost, grade and antenna-in-package are far from today.
+    missing: Automotive-grade, low-cost Ka tile; antenna-in-package capability (not held).
+    driver: "Broadband NTN (>10 Mbps) from 2030 (5GAA)"
+    demand: low
+    confidence: medium
+    sources:
+      - "Maximising the benefit of future satellite communications for automotive, 5GAA, 2024, https://5gaa.org/content/uploads/2024/09/5gaa-ntn-ras-technical-report.pdf"
+    status: proposed
+  - app: "*"
+    fn: wifi_fem
+    level: C
+    title: "AEC-Q104 Wi-Fi 7 FEM with 5.9 GHz coexistence filtering"
+    platforms: [gaas_hbt, baw_filter, sip_module_integration]
+    why: >-
+      In-car Wi-Fi moves to Wi-Fi 7 (5 and 6 GHz together, 320 MHz channels). Wi-Fi sits on both sides of the 5.9 GHz
+      V2X band in the same roof or cockpit, so the automotive FEM needs built-in BAW coexistence filtering; we lead in
+      Wi-Fi 7 FEMs for phones and routers.
+    missing: Automotive Wi-Fi 7 FEM with integrated BAW notch, AEC-Q104 qualification.
+    driver: "First automotive Wi-Fi 7 chips and modules 2024–2026 (Qualcomm QCA6797AQ, u-blox, LG Innotek)"
+    demand: medium
+    confidence: medium
+    sources:
+      - "Qualcomm world's first Wi-Fi 7 for automotive, Automotive World, 2024 (search snippet only)"
+      - "LG Innotek to supply automotive Wi-Fi 7 module, Kyodo PR Wire, 2026, https://kyodonewsprwire.jp/release/202604207711 (search snippet only)"
+    status: proposed
+  - app: "*"
+    fn: gnss_lna
+    level: C
+    title: "Dual-band L1 + L5 GNSS LNA and filter for the shark fin"
+    platforms: [gaas_phemt, sige_bicmos, saw_filter]
+    why: >-
+      Lane-level ADAS moves GNSS to L1 + L5 (and triple band), and the GNSS receiver sits centimetres from cellular and
+      V2X transmitters; a dual-band LNA with strong out-of-band rejection is the next step from our GNSS front ends.
+    missing: L5 band coverage and high-rejection filtering in one automotive module; Grade 1 option.
+    driver: "Dual/triple-band GNSS for L2+ ADAS; L1-only chipsets down to 52 % by 2028 (ABI)"
+    demand: medium
+    confidence: medium
+    sources:
+      - "Newest u-blox automotive multi-band GNSS module, u-blox, 2022, https://www.u-blox.com/en/automotive-multi-band-gnss-module-adas-105-c"
+      - "Lane-level positioning spurring a shift towards triple-band GNSS, ABI Research, 2023 (search snippet only)"
+    status: proposed
+
+  # ---- digital key and in-cabin sensing
+  - app: access
+    fn: uwb_soc
+    level: C
+    title: "802.15.4ab UWB SoC (longer range, narrowband assist, radar mode)"
+    platforms: [uwb_soc]
+    why: >-
+      Our automotive UWB SoC (ex-Qorvo QPF5100Q) serves CCC Digital Key today; 802.15.4ab parts from ST and Calterah
+      have been sampling to Tier-1s since 2026 with about 8x range and a radar mode. Without a 15.4ab part we risk the
+      2028–2029 car programmes.
+    missing: 802.15.4ab SoC with narrowband assist and radar mode, CCC Digital Key 4.x software.
+    driver: "802.15.4ab chips sampling to Tier-1s and OEMs from May 2026 (ST, Calterah); CCC Digital Key 4.0 testing"
+    demand: high
+    confidence: medium
+    sources:
+      - "ST64UWB, the first 802.15.4ab device with narrowband assistance, STMicroelectronics blog, 2026, https://blog.st.com/st64uwb/"
+      - "CCC certification adds BLE and UWB, Business Wire, 2025, https://www.businesswire.com/news/home/20250325614658/en (search snippet only)"
+    status: proposed
+  - app: access
+    fn: uwb_fem
+    level: B
+    title: "UWB anchor front end (PA / LNA / switch)"
+    platforms: [rf_soi, gaas_phemt]
+    why: >-
+      A car has about 4–8 UWB anchors; longer-range 15.4ab and narrowband assist need a PA/LNA/switch per anchor where the
+      anchor sits on the body exterior. We sell UWB front ends, none automotive yet.
+    missing: AEC-Q100 qualification of a UWB FEM; 15.4ab narrowband-assist band coverage.
+    driver: "CCC Digital Key Release 3 (BLE + UWB) baseline; 802.15.4ab from 2028–2029 programmes"
+    demand: medium
+    confidence: medium
+    sources:
+      - "ST64UWB, STMicroelectronics blog, 2026, https://blog.st.com/st64uwb/"
+    status: proposed
+  - app: access
+    fn: bt_fem
+    level: B
+    title: "BLE Channel Sounding anchor front end and antenna switch"
+    platforms: [rf_soi]
+    why: >-
+      Bluetooth Channel Sounding adds secure ranging for keys and depends on antenna diversity and phase-stable front
+      ends; low-loss antenna-switch arrays and 2.4 GHz FEMs fit. We sell Bluetooth FEMs, none automotive yet.
+    missing: AEC-Q100 qualification; phase-stable switch array for multi-antenna ranging.
+    driver: "Bluetooth Core 6.0 Channel Sounding (2024); CCC digital-key work on it (2025)"
+    demand: medium
+    confidence: high
+    sources:
+      - "How Bluetooth Channel Sounding will shape the future of device positioning, Bluetooth SIG, 2024, https://www.bluetooth.com/wp-content/uploads/2024/12/mrn-channel-sounding.pdf"
+      - "NXP explains how Bluetooth Channel Sounding will enhance automotive digital keys, Bluetooth SIG, 2025, https://www.bluetooth.com/blog/nxp-explains-how-bluetooth-channel-sounding-will-enhance-automotive-digital-keys/"
+    status: proposed
+  - app: incabin
+    fn: uwb_soc
+    level: C
+    title: "UWB child-presence detection (CPD) reference design"
+    platforms: [uwb_soc]
+    why: >-
+      Euro NCAP 2026 rewards child-presence detection only with direct sensing (breathing, movement) across all seats;
+      our automotive UWB SoC lists CPD and kick sensing and can reuse the digital-key anchors instead of a separate
+      60 GHz radar.
+    missing: Production CPD algorithm (partner), 802.15.4ab radar mode, proof in Euro NCAP CPD tests.
+    driver: "Euro NCAP 2026: direct-sensing CPD worth up to 5 points, from Jan 2026"
+    demand: high
+    confidence: high
+    sources:
+      - "Safe Driving – Occupant Monitoring Protocol v1.2, Euro NCAP, 2026, https://cdn.euroncap.com/cars/assets/Euro_NCAP_Protocol_Safe_Driving_Occupant_Monitoring_v1_2_aebbc7361f.pdf"
+      - "Continental uses UWB to detect children in cars, eeNews Europe, 2023, https://www.eenewseurope.com/en/continental-uses-uwb-to-detect-children-in-cars"
+    status: proposed
+  - app: incabin
+    fn: radar_transceiver
+    level: gap
+    why: >-
+      60 GHz in-cabin radar is a closed single-chip SoC (TI AWRL6432, Infineon BGT60ATR24C); there is no front-end socket
+      for us, only clocks and power around it. Our answer is UWB radar instead.
+    missing: ""
+    confidence: high
+    sources:
+      - "TIDEP-01037 low-power in-cabin reference design, TI, 2025, https://www.ti.com/tool/TIDEP-01037"
+    status: proposed
+
+  # ---- radar, ADAS and central compute (sensing / SDV research)
+  - app: adas
+    fn: radar_transceiver
+    level: gap
+    why: >-
+      77–81 GHz radar RF is fully integrated in 22–28 nm CMOS SoCs (Bosch, Infineon, TI, NXP, Calterah); there are no
+      discrete LNA, PA or switch sockets.
+    missing: ""
+    confidence: high
+    sources:
+      - "Bosch drives ADAS applications forward with new radar SoCs, Bosch, 2025, https://www.bosch-presse.de/pressportal/de/en/radar-technology-bosch-drives-adas-applications-forward-with-new-socs-277889.html"
+    status: proposed
+  - app: adas
+    fn: clock_generator
+    level: C
+    title: "Central-compute and satellite-radar clock tree (PCIe, Ethernet, SerDes)"
+    parts: [Si5332-AM]
+    platforms: [timing_dspll_crystal]
+    why: >-
+      Car makers move to a few central computers plus zones, and radar becomes a satellite module that streams raw data
+      to the central computer; each link and computer adds PCIe, Ethernet and SerDes clock domains. We have automotive
+      clocks, but our brochure leaves the radar and ADAS rows empty.
+    missing: Design-in at central-compute programmes; multi-output clock with jitter cleaning sized for these trees.
+    driver: "VW/Rivian zonal 2027, Stellantis STLA One 2027, GM central computer 2028, BMW Neue Klasse to 2027"
+    demand: high
+    confidence: high
+    sources:
+      - "GM unveils centralized vehicle computing platform, GM, 2025, https://news.gm.com/home.detail.html/Pages/news/us/en/2025/oct/1022-SDV-GM-centralized-vehicle-computer-platform-electric-gas-vehicles.html"
+      - "ART: Autonomous Radar Transceiver Architecture for satellite radar, Infineon / JKU, 2026, https://ics.jku.at/files/2026GLSVLSI_ART_Autonomous_Radar_Transceiver_Architecture_for_Cost-Optimized_Satellite_Radar_Systems.pdf"
+      - "Automotive Solutions brochure, Skyworks, 2025, https://www.skyworksinc.com/en/thought-leadership/-/media/SkyWorks/Documents/Brochures/2025_PCIM_Automotive_brochure.pdf"
+    status: proposed
+  - app: adas
+    fn: jitter_attenuator
+    level: C
+    title: "Jitter attenuator for imaging radar and multi-gigabit links"
+    platforms: [timing_dspll_crystal, timing_baw_resonator]
+    why: >-
+      Imaging radar for Level 3 cascades many MMICs and needs multi-chip clock distribution, and multi-gigabit SerDes and
+      Ethernet need clean references; our jitter attenuators fit, in automotive grade.
+    missing: Automotive-grade jitter attenuator sized for radar and SerDes clocking; design-in.
+    driver: "Imaging radar for L3 from 2028 (Mobileye customer); MIPI A-PHY in production since 2025"
+    demand: medium
+    confidence: medium
+    sources:
+      - "Mobileye Imaging Radar chosen by global automaker for eyes-off driving, Mobileye, 2025, https://www.mobileye.com/news/mobileye-imaging-radar-chosen-by-global-automaker-for-eyes-off-driving/"
+    status: proposed
+  - app: adas
+    fn: serdes
+    level: gap
+    why: >-
+      Camera and satellite-radar links use SerDes PHYs from ADI (GMSL), TI (FPD-Link) and A-PHY vendors; we sell none.
+      The reference clocks next to them are ours to win.
+    missing: ""
+    confidence: medium
+    sources:
+      - "MIPI A-PHY four-company interoperability demo, EEJournal, 2026, https://www.eejournal.com/industry_news/mipi-a-phy-to-power-industrys-first-four-company-automotive-serdes-interoperability-demonstration-at-autosens-usa/"
+    status: proposed
+
+  # ---- EV
+  - app: bms
+    fn: wireless_soc
+    level: D
+    title: "UWB wireless BMS radio"
+    platforms: [uwb_soc]
+    why: >-
+      Wireless BMS adds 8–20 or more radios per pack, but they are integrated low-power SoCs (ADI, TI at 2.4 GHz; NXP
+      with UWB) with no front-end socket. A UWB wBMS could reuse our UWB IP; it is a technology option, not a product.
+    missing: wBMS protocol, ISO 26262 / ISO/SAE 21434 support, a battery-maker partner.
+    driver: "GM Ultium in production (ADI 2.4 GHz); NXP UWB wBMS in OEM evaluation since 2025"
+    demand: low
+    confidence: medium
+    sources:
+      - "ADI signs major wireless BMS deal with GM, eeNews Europe, 2020, https://www.eenewseurope.com/en/adi-signs-major-wireless-bms-deal-with-gm/"
+      - "NXP announces ultra-wideband wireless BMS, NXP, 2024 (search snippet only)"
+    status: proposed
+
+  # ---- technology-platform calls (capabilities.yaml could_also), no research demand yet
+  - app: "*"
+    fn: active_antenna_amp
+    level: C
+    platforms: [gaas_phemt, sige_bicmos, broadcast_radio_tv]
+    why: >-
+      We make low-noise pHEMT and SiGe amplifiers and the car-radio tuners; an active antenna amplifier for the roof or
+      glass antenna is the same amplifier technology in a new automotive design.
+    missing: Automotive amplifier design (AM/FM/DAB and GNSS bands, phantom-powered), AEC-Q100 qualification.
+    confidence: medium
+    sources: ["BizDev technology platforms (broadcast_radio_tv)"]
+    status: proposed
+  - app: "*"
+    fn: isolated_can
+    level: C
+    platforms: [digital_isolation_capacitive]
+    why: >-
+      We sell automotive digital isolators; an isolated CAN / CAN-FD transceiver combines that isolation with a CAN
+      physical layer.
+    missing: CAN-FD physical-layer design (not held), AEC-Q100 qualification.
+    confidence: medium
+    sources: ["BizDev technology platforms (digital_isolation_capacitive)"]
+    status: proposed
+  - app: bms
+    fn: adc
+    level: D
+    platforms: [digital_isolation_capacitive, cmos_mixed_signal]
+    why: >-
+      An isolated ADC for 800 V battery packs reuses our isolation IP and the sigma-delta front ends of our isolated
+      amplifiers; we sell no standalone ADC.
+    missing: Precision ADC product line and BMS functional-safety (ISO 26262) support.
+    confidence: low
+    sources: ["BizDev technology platforms (digital_isolation_capacitive)"]
+    status: proposed
+  - app: "*"
+    fn: rtc
+    level: D
+    platforms: [timing_dspll_crystal]
+    why: Real-time clocks use the same oscillator and PLL know-how as our timing parts but are not in the portfolio.
+    missing: Low-power RTC product, automotive qualification.
+    confidence: low
+    sources: ["BizDev technology platforms (timing_dspll_crystal)"]
+    status: proposed
+  - app: "*"
+    fn: supervisor
+    level: D
+    platforms: [cmos_mixed_signal]
+    why: Voltage supervisors and watchdogs reuse existing CMOS design flows, but we sell none today.
+    missing: Supervisor / watchdog product line, automotive qualification.
+    confidence: low
+    sources: ["BizDev technology platforms (cmos_mixed_signal)"]
+    status: proposed

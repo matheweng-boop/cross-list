@@ -74,7 +74,7 @@ def _warm_caches() -> None:
     """Parse the catalogues and data files and compute per-function candidates once, after start-up."""
     try:
         from app.db import get_session
-        from app.services import blocks, broadcast, opportunity, products, refdesigns, rf_bands, rf_coverage
+        from app.services import automotive, blocks, broadcast, opportunity, products, refdesigns, rf_bands, rf_coverage
 
         blocks.catalog_rows()
         blocks.catalog_parts()
@@ -96,6 +96,7 @@ def _warm_caches() -> None:
             from app.services import validation
 
             validation._part_checks(session)
+            automotive.build(session)
         finally:
             session.close()
     except Exception:  # a failed warm-up only means the first request does the work
@@ -120,6 +121,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.api.routes import router as api_router
     from app.auth.gate import PasswordGate
     from app.auth.gate import router as auth_router
+    from app.web.automotive import router as automotive_router
     from app.web.blocks import router as blocks_router
     from app.web.broadcast import router as broadcast_router
     from app.web.business import router as business_router
@@ -191,6 +193,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(requests_router)
     app.include_router(blocks_router)
     app.include_router(business_router)
+    app.include_router(automotive_router)
     app.include_router(pipeline_router)
     app.include_router(feedback_router)
     app.include_router(uploads_router)

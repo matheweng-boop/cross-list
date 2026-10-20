@@ -29,6 +29,7 @@
 #     demand       high | medium | low: how strongly the sources show car makers needing it (optional; ranks moves)
 #     confidence   high | medium | low (low or medium where a fact comes from a search snippet or a vendor claim)
 #     sources      list of "title, publisher, year, URL"
+#     case         slug of the preliminary case for this step (data/business/cases/<slug>.yaml), linked from Top moves
 #     status       proposed (until accepted on the page; reviews are stored in the database, not here)
 #
 # Seeded 2026-10-20 from the public technology platforms (capabilities.yaml `could_also`), the automotive library
@@ -62,6 +63,7 @@ rows:
     fn: v2x_fem
     level: C
     title: "Two-carrier C-V2X front end with a wide BAW filter"
+    case: auto-cv2x-fe
     parts: [SKY5A2105]
     platforms: [baw_filter, gaas_hbt, sip_module_integration]
     why: >-
@@ -81,6 +83,7 @@ rows:
     fn: pa_module
     level: C
     title: "RedCap / NG-eCall value front end"
+    case: auto-redcap-ecall
     platforms: [gaas_hbt, sip_module_integration]
     why: >-
       Every new EU car needs an LTE/5G emergency-call path, which pushes entry cars to low-cost LTE or 5G RedCap
@@ -114,6 +117,7 @@ rows:
     level: C
     override: true
     title: "NTN n255/n256 power-class-2 PA for the TCU"
+    case: auto-ntn-pa
     platforms: [gaas_hbt, site_skyworks_newbury_park]
     why: >-
       Cars get narrowband satellite links (emergency, breakdown) from 2027 in the L/S-band NTN bands n255/n256; 5GAA
@@ -162,6 +166,7 @@ rows:
     fn: wifi_fem
     level: C
     title: "AEC-Q104 Wi-Fi 7 FEM with 5.9 GHz coexistence filtering"
+    case: auto-wifi7-fem
     platforms: [gaas_hbt, baw_filter, sip_module_integration]
     why: >-
       In-car Wi-Fi moves to Wi-Fi 7 (5 and 6 GHz together, 320 MHz channels). Wi-Fi sits on both sides of the 5.9 GHz
@@ -179,6 +184,7 @@ rows:
     fn: gnss_lna
     level: C
     title: "Dual-band L1 + L5 GNSS LNA and filter for the shark fin"
+    case: auto-gnss-l1l5
     platforms: [gaas_phemt, sige_bicmos, saw_filter]
     why: >-
       Lane-level ADAS moves GNSS to L1 + L5 (and triple band), and the GNSS receiver sits centimetres from cellular and
@@ -197,6 +203,7 @@ rows:
     fn: uwb_soc
     level: C
     title: "802.15.4ab UWB SoC (longer range, narrowband assist, radar mode)"
+    case: auto-uwb-15-4ab
     platforms: [uwb_soc]
     why: >-
       Our automotive UWB SoC (ex-Qorvo QPF5100Q) serves CCC Digital Key today; 802.15.4ab parts from ST and Calterah
@@ -245,6 +252,7 @@ rows:
     fn: uwb_soc
     level: C
     title: "UWB child-presence detection (CPD) reference design"
+    case: auto-uwb-cpd
     platforms: [uwb_soc]
     why: >-
       Euro NCAP 2026 rewards child-presence detection only with direct sensing (breathing, movement) across all seats;
@@ -286,6 +294,7 @@ rows:
     fn: clock_generator
     level: C
     title: "Central-compute and satellite-radar clock tree (PCIe, Ethernet, SerDes)"
+    case: auto-clock-tree
     parts: [Si5332-AM]
     platforms: [timing_dspll_crystal]
     why: >-

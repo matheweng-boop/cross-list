@@ -121,7 +121,7 @@ def _curated(row: dict) -> dict:
             "confidence": row.get("confidence") or "", "sources": [_source(x) for x in row.get("sources") or []],
             "platforms": _platforms(row.get("platforms")),
             "parts": [{"mpn": m, "manufacturer": "", "url": f"/find?q={m}"} for m in row.get("parts") or []],
-            }  # fmt: skip
+            "case": row.get("case") or ""}  # fmt: skip
 
 
 def _cell(row: dict | None, comp: dict | None) -> dict | None:
@@ -182,7 +182,8 @@ def _moves(cells: list[dict]) -> list[dict]:
             continue
         m = by.setdefault((c["fn"], step["level"], step.get("title") or ""), {
             "fn": c["fn"], "label": step.get("title") or c["label"], "level": step["level"], "apps": [],
-            "demand": "", "driver": "", "key": c["key"], "category": c["category"], "now": c["level"]})  # fmt: skip
+            "demand": "", "driver": "", "key": c["key"], "category": c["category"], "now": c["level"],
+            "case": step.get("case") or ""})  # fmt: skip
         m["apps"].append(c["app_label"])
         if step.get("demand") and _DEMAND.get(step["demand"], 9) < _DEMAND.get(m["demand"], 9):
             m["demand"], m["driver"], m["key"] = step["demand"], step.get("driver") or "", c["key"]

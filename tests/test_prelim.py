@@ -1,19 +1,31 @@
+import pytest
 from sqlalchemy.orm import Session
 
 from app.db import get_engine
 from app.services import prelim
+from app.services import reports as rp
 
 SLUG = "radio-tuner-next"
 
 
-def test_case_file_is_consistent():
-    c = prelim.raw(SLUG)
-    ids = prelim.item_ids(SLUG)
-    assert c and len(ids) == len({str(x) for x in ids})
+SLUGS = sorted(p.stem for p in prelim.FOLDER.glob("*.yaml") if not p.stem.startswith("_"))
+
+
+@pytest.mark.parametrize("slug", SLUGS)
+def test_case_file_is_consistent(slug):
+    """Every case: ids unique, distances known, prices ordered, scenarios priced, listed in reports.yaml with a body."""
+    c = prelim.raw(slug)
+    assert c and c.get("title") and c.get("brief")
+    pos = c.get("position") or {}
+    rows = [x for k in prelim.LISTS for x in pos.get(k) or []]
+    rows += [*(c.get("outlook") or []), *(c.get("features") or []), *(c.get("attach") or []), *c["prices"]["items"]]
+    ids = [str(x["id"]) for x in rows]
+    assert len(ids) == len(set(ids)), [i for i in ids if ids.count(i) > 1]
     assert all(f["distance"] in prelim.DISTANCE for f in c["features"])
     prices = {p["id"] for p in c["prices"]["items"]}
     assert all(p["entry"] <= p["target"] <= p["premium"] for p in c["prices"]["items"])
-    assert all(v["price"] in prices for v in c["volumes"])
+    assert all(v["price"] in prices for v in c.get("volumes") or [])
+    assert rp.report(slug) is not None, "missing from reports.yaml or no body template"
 
 
 def test_case_page_feedback_and_real_asp(client):

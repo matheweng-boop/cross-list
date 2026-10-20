@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Interactive visuals – BizDev{% endblock %}
+{% block content %}
+<h1>Interactive visuals</h1>
+<p class="subtitle muted">Drag the sliders and watch the physics: each visual shows the equation, the same equation with your numbers, a live graph and what to notice. Reference lines (isolator CMTI, package creepage, driver current) come from the cross lists. Built from the standard equations; for background reading see <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/index.html" target="_blank" rel="noopener noreferrer">HyperPhysics ↗</a> (Georgia State University).</p>
+<div class="vz">
+  <nav id="vz-nav" class="vz-nav small" aria-label="Visuals"></nav>
+  <section id="vz-panel" class="vz-panel" aria-live="polite"></section>
+</div>
+<script id="vz-data" type="application/json">{{ data|tojson }}</script>
+<script src="/static/visuals.js"></script>
+{% endblock %}

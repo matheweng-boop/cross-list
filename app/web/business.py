@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.db import get_session
 from app.models import (
     BusinessAssumption,
@@ -25,6 +26,7 @@ from app.services import blocks, cases, pipeline, quality, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
+from app.services.seed import unofficial_counts
 from app.web.routes import templates
 from app.web.urls import local_path
 
@@ -636,6 +638,7 @@ async def mapping(fn: str, request: Request, session: Session = Depends(get_sess
 @router.get("/business/quality", response_class=HTMLResponse)
 def data_quality(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
+    c.update(unofficial=unofficial_counts(session), unofficial_on=get_settings().use_unofficial_data)
     c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session), queue=quality.queue(session, c["apps"]),
              rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
              mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip

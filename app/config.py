@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     secret_key: str = ""
     # Load data/real/*.yaml on startup when the database has no parts (fresh server disk).
     load_real_on_start: bool = False
+    # Merge data/real/unofficial/*.yaml: values read from unofficial copies of manufacturer datasheets, marked † in
+    # the pages. Set CROSSLIST_USE_UNOFFICIAL_DATA=false and restart to remove every one of them from the database.
+    use_unofficial_data: bool = True
     # DigiKey Product Information API (developer.digikey.com). Without these, pricing is off.
     digikey_client_id: str = ""
     digikey_client_secret: str = ""

@@ -18,8 +18,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import PROJECT_ROOT, get_settings
 from app.db import Base, init_engine
-from app.models import Part
-from app.services.seed import ensure_local_user, load_file
+from app.models import Package, Part
+from app.services.seed import UNOFFICIAL, UNOFFICIAL_DIR, ensure_local_user, load_file
 
 SYNTHETIC_FILE = PROJECT_ROOT / "data" / "synthetic" / "demo.yaml"
 
@@ -27,15 +27,29 @@ SYNTHETIC_FILE = PROJECT_ROOT / "data" / "synthetic" / "demo.yaml"
 def load_real_if_changed(session: Session) -> bool:
     """Load data/real/*.yaml when the files differ from the last load (server deploys).
 
-    Parts are updated in place, so engineer feedback and cached prices are kept.
+    Parts are updated in place, so engineer feedback and cached prices are kept. The unofficial overlays
+    (data/real/unofficial/) and the use_unofficial_data setting count as part of the data: switching the setting off or
+    deleting the folder reloads every file without them, which removes their values from the database.
     """
-    files = sorted((PROJECT_ROOT / "data" / "real").glob("*.yaml"))
-    digest = hashlib.sha256(b"".join(f.read_bytes() for f in files)).hexdigest()
+    real = PROJECT_ROOT / "data" / "real"
+    files = sorted(real.glob("*.yaml"))
+    use_unofficial = get_settings().use_unofficial_data
+    overlays = sorted((real / UNOFFICIAL_DIR).glob("*.yaml")) if use_unofficial else []
+    digest = hashlib.sha256(
+        b"".join(f.read_bytes() for f in files)
+        + b"".join(f.name.encode() + f.read_bytes() for f in overlays)
+        + f"unofficial={use_unofficial}".encode()
+    ).hexdigest()
     marker = get_settings().data_dir / "real_data.sha256"
     if marker.exists() and marker.read_text().strip() == digest:
         return False
     for path in files:
-        load_file(session, path)
+        load_file(session, path, unofficial=use_unofficial)
+    session.flush()
+    # packages defined only by an overlay that no part uses any more (overlay switched off or removed)
+    for pkg in session.scalars(select(Package).where(Package.name.startswith(UNOFFICIAL))):
+        if not session.scalar(select(func.count(Part.id)).where(Part.package_id == pkg.id)):
+            session.delete(pkg)
     session.flush()
     marker.parent.mkdir(parents=True, exist_ok=True)
     marker.write_text(digest)

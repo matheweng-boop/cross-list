@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import unofficial_mark, unofficial_footnote %}
 {% block content %}
 <h1>Compare parts</h1>
 <p class="subtitle muted">Type part numbers or a series (e.g. <code>Si8641BD-IS, ISO7741</code> or <code>Si864</code>), or pick from the series list below.
@@ -39,16 +40,17 @@
         {% if p.id|string in ids.split(',') %}<br><a class="small" href="/compare?ids={{ ids.split(',')|reject('equalto', p.id|string)|join(',') }}&alt={{ alt }}" aria-label="Remove {{ p.mpn }}">remove</a>{% endif %}</th>{% endfor %}
     </tr></thead>
     <tbody>
-    <tr><td>Package</td><td>1</td>{% for p in comparison.parts %}<td>{{ p.package.code }}</td>{% endfor %}</tr>
+    <tr><td>Package</td><td>1</td>{% for p in comparison.parts %}<td>{{ p.package.code }}{{ unofficial_mark(p, 'package') }}</td>{% endfor %}</tr>
     <tr><td>Lifecycle</td><td>–</td>{% for p in comparison.parts %}<td>{{ lifecycle_badge(p)[0] }}</td>{% endfor %}</tr>
     {% for row in comparison.rows %}
       <tr><td>{{ row.param.label }}</td><td>{{ row.param.priority or 'DigiKey' }}</td>
-        {% for cell in row.cells %}<td class="{{ cell.status if cell.status != 'equal' }}{{ ' best' if cell.best }}">{{ cell.display }}</td>{% endfor %}
+        {% for cell in row.cells %}<td class="{{ cell.status if cell.status != 'equal' }}{{ ' best' if cell.best }}">{{ cell.display }}{{ unofficial_mark(comparison.parts[loop.index0], row.param.key) }}</td>{% endfor %}
       </tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
+  {% set nu = namespace(any=false) %}{% for p in comparison.parts if unofficial_keys(p) %}{% set nu.any = true %}{% endfor %}{% if nu.any %}{{ unofficial_footnote() }}{% endif %}
   <h2 class="compare-list-h">Package overlay</h2>
   <div class="overlay-grid">
     {% for p in comparison.parts if p.id != comparison.baseline.id %}

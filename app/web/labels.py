@@ -46,7 +46,11 @@ def fmt_date(value, kind: str = "day") -> str:
 
 def register(env) -> None:
     from app.services import lifecycle, vendors
+    from app.services.seed import UNOFFICIAL_TITLE, unofficial_keys
 
+    # values from unofficial datasheet copies are marked † (macro unofficial_mark) with this title and a footnote
+    env.globals["unofficial_keys"] = lambda part: unofficial_keys(part) if part is not None else set()
+    env.globals["unofficial_title"] = UNOFFICIAL_TITLE
     env.filters["unit"] = unit
     env.filters["vendor"] = vendors.display
     env.filters["desc"] = text_service.clean_description

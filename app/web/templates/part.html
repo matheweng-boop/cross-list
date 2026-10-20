@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% from "_macros.html" import part_badges, diff_table %}
+{% from "_macros.html" import part_badges, diff_table, unofficial_mark, unofficial_footnote %}
+{% set uk = unofficial_keys(part) %}
 {% block title %}{{ page_title(request.url.path, part.mpn) }}{% endblock %}
 {% block content %}
 {% set back = request.query_params.get('from', '') %}{% if back.startswith('/parts?') or back == '/parts' %}<p class="small"><a href="{{ back }}">← Back to results</a></p>{% endif %}
@@ -7,7 +8,7 @@
 <dl class="ref-summary">
   <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name|vendor }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>
   <div><dt>Function</dt><dd>{{ family_title(part.family) }}</dd></div>
-  <div><dt>Package</dt><dd>{{ part.package.code }}{% if part.package_locked %} <span class="badge warn" title="{{ part.package_lock_reason }}">locked</span>{% endif %}</dd></div>
+  <div><dt>Package</dt><dd>{{ part.package.code }}{{ unofficial_mark(part, 'package', uk) }}{% if part.package_locked %} <span class="badge warn" title="{{ part.package_lock_reason }}">locked</span>{% endif %}</dd></div>
   <div><dt>Qualification</dt><dd>{% set g = grade_of(part) %}<span class="qual q-{{ 'not_automotive' if g == 'industrial' else g }}">{{ grade_label['not_automotive' if g == 'industrial' else g] }}</span></dd></div>
   <div><dt>Lifecycle</dt><dd>{{ lifecycle_badge(part)[0] }}</dd></div>
   <div><dt>Source</dt><dd>{% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}{% if part.datasheet_url and part.product_url %} · {% endif %}{% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}{% if not part.datasheet_url and not part.product_url %}<span class="muted">none linked</span>{% endif %}</dd></div>
@@ -23,6 +24,7 @@
   {% for a in alternates %}<a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> <small class="muted">({{ a.label }})</small>{{ ' · ' if not loop.last }}{% endfor %}
   · <a href="/compare?ids={{ part.id }}">compare</a></p>{% endif %}
 {% if part.notes %}<p class="banner">{{ part.notes }}</p>{% endif %}
+{% if uk %}{{ unofficial_footnote() }}{% endif %}
 
 <details>
 <summary>Part details</summary>
@@ -30,7 +32,7 @@
 <table>
   <tbody>
     <tr><th>Family</th><td>{{ family_titles()[part.family] }}</td></tr>
-    <tr><th>Package</th><td>{{ part.package.code }} – {{ part.package.name }} ({{ part.package.body_length_mm }}×{{ part.package.span_mm }} mm, {{ part.package.pin_count }} pins, {{ part.package.pitch_mm }} mm pitch)
+    <tr><th>Package</th><td>{{ part.package.code }}{{ unofficial_mark(part, 'package', uk) }} – {{ part.package.name }} ({{ part.package.body_length_mm }}×{{ part.package.span_mm }} mm, {{ part.package.pin_count }} pins, {{ part.package.pitch_mm }} mm pitch)
       {% if part.package_locked %}<br><span class="badge warn">Package locked</span> <span class="muted">{{ part.package_lock_reason }}</span>{% endif %}</td></tr>
     <tr><th>Lifecycle</th><td>{{ lifecycle_badge(part)[0] }}{% if part.lifecycle_source %} <span class="muted">({{ part.lifecycle_source }})</span>{% endif %}</td></tr>
     <tr><th>Release date</th><td>{{ part.release_date or 'unknown' }}</td></tr>
@@ -47,12 +49,13 @@
   {% for prio, items in groups.items() %}
   <h4>Priority {{ prio }}</h4>
   <div class="table-wrap"><table>
-    {% for p, v, src in items %}<tr><td>{{ p.label }}</td><td>{{ v }}</td><td class="muted">{{ src or '' }}</td></tr>{% endfor %}
+    {% for p, v, src in items %}<tr><td>{{ p.label }}</td><td>{{ v }}{{ unofficial_mark(part, p.key, uk) }}</td><td class="muted">{{ src or '' }}</td></tr>{% endfor %}
   </table></div>
   {% endfor %}
+  {% if uk|reject('in', ['package', 'pinout'])|list %}{{ unofficial_footnote() }}{% endif %}
 </details>
 <details>
-  <summary>Pinout{% if pinout_source %} <span class="muted">({{ pinout_source }})</span>{% endif %}</summary>
+  <summary>Pinout{{ unofficial_mark(part, 'pinout', uk) }}{% if pinout_source %} <span class="muted">({{ pinout_source }})</span>{% endif %}</summary>
   <div class="table-wrap"><table>
     <thead><tr><th>Pin</th><th>Function</th></tr></thead>
     {% for f in part.pinout %}<tr><td>{{ loop.index }}</td><td>{{ f }}</td></tr>{% endfor %}
@@ -108,8 +111,8 @@
 <div class="table-wrap"><table class="results">
   <thead><tr><th scope="col">Candidate</th><th scope="col">Compatibility</th><th scope="col">Package</th><th scope="col" title="Same function on every pin position">Pins</th><th scope="col" title="Priority 1 vs {{ part.mpn }}">Critical deviations</th><th scope="col">Qualification · lifecycle</th>{% if pricing_enabled() %}<th scope="col">DigiKey</th>{% endif %}</tr></thead>
   <tbody>
-  {% set ns = namespace(cat='', divided=false) %}
-  {% for r, v in rows %}{% set c = r.candidate %}{% set rank = ranked.get(c.id) %}{% set notes = cross_notes(part.mpn, c.mpn) %}
+  {% set ns = namespace(cat='', divided=false, unofficial=false) %}
+  {% for r, v in rows %}{% set c = r.candidate %}{% set ck = unofficial_keys(c) %}{% if ck %}{% set ns.unofficial = true %}{% endif %}{% set rank = ranked.get(c.id) %}{% set notes = cross_notes(part.mpn, c.mpn) %}
     {% if rank is not none and v.category != ns.cat %}{% set ns.cat = v.category %}
     <tr class="rank-divider cat-head"><td colspan="{{ ncol }}">{{ category_labels[v.category] }} <span class="muted">· {{ type_counts[v.category] }} found</span></td></tr>
     {% elif rank is none and not ns.divided %}{% set ns.divided = true %}
@@ -124,13 +127,13 @@
         {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}{% if nvar %}<br><small class="muted">{{ nvar }} variant{{ 's' if nvar != 1 }} (open for details)</small>{% endif %}</td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>
         {% if r.fff_status == 'rejected' %}<br><small class="muted">FFF rejected in review</small>{% endif %}</td>
-      <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay against {{ part.mpn }}">{{ c.package.code }}</a><br><small class="muted">{{ 'same package' if r.fit.same_package else r.fit.package_relation ~ ' package' }}</small></td>
+      <td><a href="/overlay/{{ part.id }}/{{ c.id }}" title="Package overlay against {{ part.mpn }}">{{ c.package.code }}</a>{{ unofficial_mark(c, 'package', ck) }}<br><small class="muted">{{ 'same package' if r.fit.same_package else r.fit.package_relation ~ ' package' }}</small></td>
       <td>{% if v.p2p %}<span class="p2p yes">✓ Pin-to-pin</span>{% else %}<span class="p2p no">✗ Different</span>{% endif %}</td>
       <td><span class="spec spec-{{ v.spec }}">{{ v.spec_label }}</span>
         {% if v.worse %}<br><small class="worse">−{{ v.worse|length }}: {{ v.worse[:2]|map(attribute='label')|join(', ') }}{{ '…' if v.worse|length > 2 }}</small>{% endif %}
         {% if v.better %}<br><small class="better">+{{ v.better|length }} better</small>{% endif %}
         {% if v.exceptions %}<br><small class="exception">exception: {{ v.exceptions|map(attribute='label')|join(', ') }}</small>{% endif %}</td>
-      <td>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span>{% else %}<span class="qual q-unknown">grade not stated</span>{% endif %}<br><small>{{ lifecycle_badge(c)[0] }}</small></td>
+      <td>{% set gb = grade_badge(c) %}{% if gb %}<span class="badge grade-{{ gb[1] }}">{{ gb[0] }}</span>{{ unofficial_mark(c, 'qualification', ck) }}{% else %}<span class="qual q-unknown">grade not stated</span>{% endif %}<br><small>{{ lifecycle_badge(c)[0] }}</small></td>
       {% if pricing_enabled() %}<td class="pricing" hx-get="/pricing/{{ c.id }}?ref={{ part.id }}&compact=true" hx-trigger="revealed"></td>{% endif %}
     </tr>
     <tr class="detail-row" id="d-{{ c.id }}" hidden>
@@ -142,6 +145,7 @@
   {% endfor %}
   </tbody>
 </table></div>
+{% if ns.unofficial %}{{ unofficial_footnote() }}{% endif %}
 {% if n_rest and not show_all %}<p><a href="?all=true{{ keep }}{{ '&type=' ~ type if type }}" role="button" class="outline secondary small-btn">Show all results ({{ n_rest }} more)</a></p>
 {% elif show_all and n_rest %}<p><a href="?{{ keep[1:] }}{{ '&type=' ~ type if type }}" class="small">Show best and next best only</a></p>{% endif %}
 {% set q = '?dev=' ~ dev ~ ('&scope=all' if scope == 'all' else '') ~ ('&company=' ~ company|urlencode if company else '') ~ ('&type=' ~ type if type else '') ~ ('&grade=' ~ grade if grade else '') %}

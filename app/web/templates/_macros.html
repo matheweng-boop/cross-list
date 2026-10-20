@@ -5,7 +5,17 @@
   {% if part.is_synthetic %}<span class="badge syn">synthetic</span>{% endif %}
 {%- endmacro %}
 
+{# † after a value read from an unofficial copy of the datasheet; keys = unofficial_keys(part), or a key to look up #}
+{% macro unofficial_mark(part, key, keys=none) -%}
+  {%- if key in (keys if keys is not none else unofficial_keys(part)) %}<sup class="unofficial" title="{{ unofficial_title }}">†</sup>{% endif -%}
+{%- endmacro %}
+
+{% macro unofficial_footnote() -%}
+<p class="small muted unofficial-note"><sup class="unofficial">†</sup> {{ unofficial_title }} (a distributor or datasheet-site mirror, not the manufacturer's site). The part's notes name the copy.</p>
+{%- endmacro %}
+
 {% macro diff_table(r) -%}
+{% set rk, ck = unofficial_keys(r.reference), unofficial_keys(r.candidate) %}
 <div class="table-wrap">
 <table class="diff">
   <thead><tr><th>Parameter</th><th>{{ r.reference.mpn }} (ref)</th><th>{{ r.candidate.mpn }}</th><th>Status</th></tr></thead>
@@ -15,14 +25,15 @@
       <td>{% if d.key in ('package', 'pinout') %}{% if d.status != 'equal' %}<a class="dev-link" href="/overlay/{{ r.reference.id }}/{{ r.candidate.id }}">{{ d.label }}</a>{% else %}{{ d.label }}{% endif %}
         {%- elif d.status != 'equal' %}<a class="dev-link" href="/engineering/{{ d.key }}?ref={{ r.reference.id }}&cand={{ r.candidate.id }}">{{ d.label }}</a>
         {%- else %}{{ d.label }}{% endif %} <span class="prio">P{{ d.priority }}{% if d.hard %} hard{% endif %}</span></td>
-      <td>{{ d.ref_display }}</td>
-      <td class="{{ d.status if d.status != 'equal' }}">{{ d.cand_display }}</td>
+      <td>{{ d.ref_display }}{{ unofficial_mark(r.reference, d.key, rk) }}</td>
+      <td class="{{ d.status if d.status != 'equal' }}">{{ d.cand_display }}{{ unofficial_mark(r.candidate, d.key, ck) }}</td>
       <td class="{{ d.status if d.status != 'equal' }}"><span class="status">{{ d.status }}</span></td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
 </div>
+{% if rk or ck %}{{ unofficial_footnote() }}{% endif %}
 <div class="downloads">
   <a href="/cross/{{ r.reference.id }}/{{ r.candidate.id }}.xlsx" role="button" class="outline">Download Excel</a>
   <a href="/cross/{{ r.reference.id }}/{{ r.candidate.id }}.csv" role="button" class="outline secondary">CSV</a>

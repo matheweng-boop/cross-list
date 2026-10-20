@@ -81,8 +81,15 @@ def application(request: Request, i: int, co: str = "combined", session: Session
 
 
 @router.get("/business/attach", response_class=HTMLResponse)
-def attach(request: Request, fn: str = "", co: str = "combined", session: Session = Depends(get_session)):
+def attach(request: Request, fn: str = "", co: str = "combined", part: str = "", app: str = "",
+           session: Session = Depends(get_session)):  # fmt: skip
+    """Cross-sell: from a part number (optionally narrowed by a loosely described application), or from a function."""
+    from app.services import crosssell
+
     c = _ctx(session, co)
+    c["q_part"], c["q_app"] = part.strip()[:60], app.strip()[:120]
+    c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
+    c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
     c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], c["fns"].get(kv[0], {}).get("label", kv[0])))
     c["fn"] = fn if fn in used else ""

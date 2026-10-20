@@ -39,7 +39,7 @@ def test_cross_sell_names_parts_and_bundles(client):
 def test_markets_chips_and_groups(client):
     html = client.get("/business/markets").text
     assert all(h in html for h in ("Existing portfolio", "Portfolio gap", "New technology"))
-    assert '<span>Markets</span>' in html and "Needed in" not in html
+    assert "<span>Markets</span>" in html and "Needed in" not in html
     market = re.search(r'href="/business/markets\?co=combined&amp;m=([^"&]+)&amp;', html).group(1)
     one = client.get(f"/business/markets?m={market}").text
     assert one.count('class="bo-mk"') < html.count('class="bo-mk"')

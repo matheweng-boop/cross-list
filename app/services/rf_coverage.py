@@ -118,6 +118,36 @@ def parts() -> tuple[dict, ...]:
     return tuple(out)
 
 
+COMPETITOR_DIR = Path(__file__).resolve().parents[2] / "data" / "catalog" / "rf_competitors"
+
+
+@lru_cache
+def competitor_parts() -> tuple[dict, ...]:
+    """Competitors' RF parts (data/catalog/rf_competitors/*.yaml): counted to show who else serves a slot, never offered
+    as our parts. Same fields as parts()."""
+    fset, bands = set(config()["functions"]), config()["bands"]
+    out = []
+    for path in sorted(COMPETITOR_DIR.glob("*.yaml")) if COMPETITOR_DIR.exists() else []:
+        for p in (yaml.safe_load(path.read_text()) or {}).get("parts") or []:
+            fn = p.get("function")
+            if fn not in fset:
+                continue
+            lo, hi = p.get("freq_min_ghz"), p.get("freq_max_ghz")
+            ranges = (
+                [(float(lo), float(hi))] if lo is not None and hi is not None and 0 <= float(lo) <= float(hi) else []
+            )
+            status = str(p.get("status") or "")
+            out.append({
+                "mpn": str(p["mpn"]), "manufacturer": p.get("manufacturer") or path.stem, "functions": [fn],
+                "url": p.get("url") or "", "description": str(p.get("description") or "")[:160], "status": status,
+                "risk": bool(blocks._RISK.search(status)), "ranges": ranges,
+                "bands": [b["id"] for b in bands if any(a < b["hi"] and z >= b["lo"] for a, z in ranges)],
+                "ghz": ranges[0] if ranges else None,
+                "power": power_class(float(p["pout_dbm"])) if p.get("pout_dbm") is not None else None,
+            })  # fmt: skip
+    return tuple(out)
+
+
 def application_bands(name: str) -> list[str]:
     found = []
     for rule in config()["applications"]:
@@ -207,22 +237,26 @@ def basis(fn: str, band: str) -> list[tuple[str, str]]:
 
 def rows() -> list[dict]:
     """One row per measured function (power amplifiers once per power class), with a cell per band."""
-    cfg, ps = config(), parts()
+    cfg, ps, cs = config(), parts(), competitor_parts()
     need, _, _, _ = demand()
     out = []
     for fn in cfg["functions"]:
         classes = [(c["id"], c["label"]) for c in cfg["power_classes"]] if fn == "power_amplifier" else [(None, "")]
         mine = [p for p in ps if fn in p["functions"]]
+        theirs = [p for p in cs if fn in p["functions"] and not p["risk"]]
         for cid, clabel in classes:
             sub = [p for p in mine if cid is None or p["power"] == cid]
+            comp = [p for p in theirs if cid is None or p["power"] == cid]
             cells = {}
             for b in cfg["bands"]:
                 inb = [p for p in sub if b["id"] in p["bands"]]
                 active = [p for p in inb if not p["risk"]]
                 # power amplifiers: blocks of this power class plus blocks whose power is not stated
                 n_need = need[f"{fn}:{cid}"][b["id"]] + need[f"{fn}:"][b["id"]] if cid else need[fn][b["id"]]
+                rivals = Counter(p["manufacturer"] for p in comp if b["id"] in p["bands"])
                 cells[b["id"]] = {"n": len(active), "risk": len(inb) - len(active), "need": n_need,
-                                  "by": Counter(p["manufacturer"] for p in active)}  # fmt: skip
+                                  "by": Counter(p["manufacturer"] for p in active),
+                                  "comp": sum(rivals.values()), "rivals": rivals}  # fmt: skip
             out.append({"fn": fn, "label": blocks.catalogue()["functions"].get(fn, {}).get("label", fn),
                         "power": cid, "power_label": clabel, "cells": cells, "total": len(sub),
                         "no_freq": sum(1 for p in sub if not p["bands"]),
@@ -231,6 +265,14 @@ def rows() -> list[dict]:
 
 
 THIN_NEED = 5  # a slot with one or two parts is "thin" when at least this many applications need it
+CROWDED = 4  # makers: a slot this many competitors serve is crowded
+
+
+def market(c: dict) -> str:
+    """Who else serves a slot: nobody (open, or little real need), competitors only, or crowded."""
+    if not c["comp"]:
+        return "nobody"
+    return "crowded" if len(c["rivals"]) >= CROWDED else "competitors"
 
 
 def gaps(rs: list[dict]) -> list[dict]:
@@ -251,13 +293,16 @@ def gaps(rs: list[dict]) -> list[dict]:
             else:
                 kind = "risk" if c["risk"] else "none"
             out.append({"fn": r["fn"], "label": r["label"], "power_label": r["power_label"], "band": bands[bid],
-                        "need": c["need"], "kind": kind, "risk": c["risk"], "n": c["n"]})  # fmt: skip
+                        "need": c["need"], "kind": kind, "risk": c["risk"], "n": c["n"], "comp": c["comp"],
+                        "rivals": c["rivals"].most_common(), "market": market(c)})  # fmt: skip
     order = {"none": 0, "risk": 1, "thin": 2, "power": 3}
-    return sorted(out, key=lambda g: (order[g["kind"]], -g["need"], g["label"]))
+    seen = {"competitors": 0, "crowded": 1, "nobody": 2}  # competitors only = proven demand, the strongest signal
+    return sorted(out, key=lambda g: (order[g["kind"]], seen[g["market"]], -g["need"], g["label"]))
 
 
-def slot_parts(fn: str, band: str, power: str | None = None) -> list[dict]:
+def slot_parts(fn: str, band: str, power: str | None = None, competitors: bool = False) -> list[dict]:
+    src = competitor_parts() if competitors else parts()
     return sorted(
-        (p for p in parts() if fn in p["functions"] and band in p["bands"] and (not power or p["power"] == power)),
+        (p for p in src if fn in p["functions"] and band in p["bands"] and (not power or p["power"] == power)),
         key=lambda p: (p["risk"], p["manufacturer"], p["mpn"]),
     )

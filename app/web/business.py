@@ -689,5 +689,8 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
            "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
            "fn": fn, "band": band, "power": power,
            "slot": rf.slot_parts(fn, band, power or None) if fn and band else None,
-           "why": rf.basis(fn, band) if fn and band else [], "n_stated": len(rf.block_bands())}  # fmt: skip
+           "why": rf.basis(fn, band) if fn and band else [], "n_stated": len(rf.block_bands()),
+           "rivals": rf.slot_parts(fn, band, power or None, competitors=True) if fn and band else [],
+           "n_comp": len(rf.competitor_parts()),
+           "comp_makers": sorted({p["manufacturer"] for p in rf.competitor_parts()})}  # fmt: skip
     return templates.TemplateResponse(request, "business/rf_coverage.html", ctx)

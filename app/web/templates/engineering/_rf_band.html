@@ -13,4 +13,7 @@
     <p>{% for p in g.wide[:40] %}<a href="/find?q={{ p.mpn|urlencode }}" title="{{ p.manufacturer }} · {{ '%g'|format(p.shown[0][0]) }}–{{ '%g'|format(p.shown[0][1]) }} GHz">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% if g.wide|length > 40 %} …{% endif %}</p></details>{% endif %}
 </details>
 {% else %}<p class="small muted">No active part of ours states a frequency range that covers this band. That can be a gap, or parts whose data sheet summary gives no frequency.</p>{% endfor %}
+{% if rivals %}<details class="rb-comp"><summary><b>Competitor parts that cover it</b> <small class="muted">{{ rivals|sum(attribute='specific', start=[])|length }} band-specific · {{ rivals|sum(attribute='wide', start=[])|length }} wideband · from public product pages, for comparison only</small></summary>
+{% for g in rivals %}<p class="small"><b>{{ g.label }}</b>: {% for p in (g.specific + g.wide)[:30] %}<a href="{{ p.url or '#' }}"{% if p.url %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ p.manufacturer }} · {% for lo, hi in p.shown %}{{ '%g'|format(lo) }}–{{ '%g'|format(hi) }} GHz{% endfor %}{{ ' · band-specific' if p.specific }}">{{ p.mpn }}</a> <small class="muted">{{ p.manufacturer }}</small>{{ ', ' if not loop.last }}{% endfor %}{% if (g.specific + g.wide)|length > 30 %} …{% endif %}</p>{% endfor %}
+</details>{% endif %}
 <p class="small muted">Frequencies from the catalogue's published specifications; a part counts when its range contains the band centre or half of the band. Check the data sheet for the exact band support.</p>

@@ -76,7 +76,13 @@ def _covers(lo: float, hi: float, a: float, b: float) -> bool:
     return lo <= c <= hi or (b > a and overlap >= (b - a) / 2)
 
 
-def parts_for(band_id: str) -> list[dict]:
+def competitor_rf_parts() -> tuple[dict, ...]:
+    from app.services.rf_coverage import competitor_parts
+
+    return tuple({**p, "function": p["functions"][0]} for p in competitor_parts() if p["ranges"])
+
+
+def parts_for(band_id: str, competitors: bool = False) -> list[dict]:
     """Active parts covering a band, grouped by function. A part is band-specific when its stated range is at most
     four times the band's width (or under 300 MHz); functions with the most band-specific parts come first, and
     within a function the narrowest ranges first."""
@@ -86,7 +92,7 @@ def parts_for(band_id: str) -> list[dict]:
     spans = [(r[0] / 1000, r[1] / 1000) for r in bd["ranges"]]
     limit = max(4 * max(b - a for a, b in spans), 0.3)
     by_fn: dict[str, list[dict]] = defaultdict(list)
-    for p in rf_parts():
+    for p in competitor_rf_parts() if competitors else rf_parts():
         if p["risk"]:
             continue
         if any(_covers(lo, hi, a, b) for lo, hi in p["ranges"] for a, b in spans):

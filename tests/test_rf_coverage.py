@@ -106,3 +106,25 @@ def test_rf_bands_routes(client):
     r = client.get("/rf-bands/n77")
     assert r.status_code == 200 and "3300" in r.text
     assert client.get("/rf-bands/nope").status_code == 404
+
+
+def test_competitor_parts_mark_who_serves_a_slot(tmp_path, monkeypatch):
+    # synthetic competitor file: counted per slot, never mixed with our parts
+    (tmp_path / "acme.yaml").write_text(
+        "parts:\n"
+        "  - {mpn: AC-X1, manufacturer: Acme, function: filter_saw_baw, freq_min_ghz: 8.5, freq_max_ghz: 10.5}\n"
+        "  - {mpn: AC-X2, manufacturer: Acme, function: filter_saw_baw, freq_min_ghz: 9, freq_max_ghz: 11,\n"
+        "     status: Obsolete}\n"
+    )
+    monkeypatch.setattr(rc, "COMPETITOR_DIR", tmp_path)
+    rc.competitor_parts.cache_clear()
+    try:
+        rows = rc.rows()
+        cell = next(r for r in rows if r["fn"] == "filter_saw_baw")["cells"]["X"]
+        assert cell["comp"] == 1 and cell["rivals"] == {"Acme": 1}  # obsolete part not counted
+        g = next(g for g in rc.gaps(rows) if g["fn"] == "filter_saw_baw" and g["band"]["id"] == "X")
+        assert g["market"] == "competitors"
+        assert all(p["manufacturer"] != "Acme" for p in rc.parts())
+        assert [p["mpn"] for p in rc.slot_parts("filter_saw_baw", "X", competitors=True)] == ["AC-X1", "AC-X2"]
+    finally:
+        rc.competitor_parts.cache_clear()

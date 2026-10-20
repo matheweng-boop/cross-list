@@ -568,7 +568,7 @@ def rf_band_detail(request: Request, band_id: str):
         raise HTTPException(404, "Unknown band")
     g = b["group"]
     ctx = {"b": b, "group": rf_bands.data()["groups"].get(g, ""), "note": rf_bands.GROUP_NOTES.get(g, ""),
-           "parts": rf_bands.parts_for(band_id)}  # fmt: skip
+           "parts": rf_bands.parts_for(band_id), "rivals": rf_bands.parts_for(band_id, competitors=True)}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/_rf_band.html", ctx)
 
 

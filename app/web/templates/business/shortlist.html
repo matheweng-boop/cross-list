@@ -1,12 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Business-case candidates – BizDev{% endblock %}
 {% macro table(items, empty) %}
 {% if items %}
 <div class="table-wrap"><table class="striped sl-table">
   <thead><tr><th scope="col">Candidate</th><th scope="col">From</th><th scope="col">Your note</th><th scope="col"></th></tr></thead>
   <tbody>{% for i in items %}<tr>
     <td><b>{{ i.title }}</b>{% if i.detail %}<br><small class="muted">{{ i.detail }}</small>{% endif %}{% if i.fn %}<br><a class="small" href="/business/evidence/{{ i.fn }}?co={{ co }}">evidence →</a>{% endif %}</td>
-    <td><span class="sl-origin so-{{ i.origin }}">{{ origins[i.origin] }}</span><br><small class="muted">{{ i.created_at.strftime('%Y-%m-%d') }}</small></td>
+    <td><span class="sl-origin so-{{ i.origin }}">{{ origins[i.origin] }}</span><br><small class="muted">{{ i.created_at|date }}</small></td>
     <td><form method="post" action="/business/shortlist/{{ i.id }}" class="sl-note"><input type="text" name="note" value="{{ i.note or '' }}" placeholder="why it is interesting" aria-label="Note"><button type="submit" class="outline small-btn">Save</button></form></td>
     <td class="sl-act">{% if i.case_id %}<a class="small-btn" role="button" href="/business/cases/{{ i.case_id }}">Open case: {{ case_titles.get(i.case_id, 'case') }}</a>
       {% else %}<a class="small-btn" role="button" href="/business/cases/new?co={{ co }}&shortlist={{ i.id }}{{ '&fn=' ~ i.fn if i.fn }}">Start analysing</a>{% endif %}
@@ -16,7 +15,7 @@
 {% else %}<p class="small muted">{{ empty }}</p>{% endif %}
 {% endmacro %}
 {% block content %}
-<h1>Business-case candidates</h1>
+<h1>Business cases <small class="muted">· candidates</small></h1>
 <p class="subtitle muted">What you pushed here with “+ Business case” from the Opportunity explorer, Cross-sell, Markets and Customers, and from New ideas.
   Pick the ones worth following up and start analysing: each becomes a business case.</p>
 

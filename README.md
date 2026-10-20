@@ -1,12 +1,13 @@
 # BizDev (formerly Cross List)
 
-Browser-based cross-reference tool for isolation semiconductors. Skyworks power
-isolation parts are the reference; candidates come from Novosense, TI, ADI, Diodes
-and others.
+Browser-based business-development tool for the Skyworks and Qorvo product lines:
+cross-references (isolation, gate drivers, isolated amplifiers, RF switches) against TI,
+Novosense, Infineon, Chipanalog, pSemi, MACOM, Mini-Circuits and others; application block
+diagrams; RF coverage, opportunities and business cases; engineering knowledge pages.
 
-> **Demo mode:** the database starts with **synthetic** parts from fictional
-> manufacturers ("SynRef" stands in for Skyworks). Values are invented. Real data
-> is imported from public datasheets only.
+All data comes from public datasheets, catalogues and filings (`data/`). Without real data
+the database can start with **synthetic** demo parts from fictional manufacturers
+("SynRef" stands in for Skyworks); their values are invented.
 
 ## Cross types
 

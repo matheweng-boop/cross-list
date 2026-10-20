@@ -1,14 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Site feedback – BizDev{% endblock %}
 {% block content %}
 {% set d = digest %}
 <h1>Site feedback</h1>
 <p class="subtitle muted">What people sent with the Feedback button, one digest per day. Similar points are grouped (and linked to an earlier open point they repeat), so each is answered once; the answer is shown to everyone who sent it.</p>
 
-<div class="fb-days small">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/manage/feedback?day={{ day }}">{{ day.strftime('%a %d %b') }} <small>{{ n }}{% if o %} · {{ o }} open{% endif %}</small></a>{% else %}<span class="muted">No feedback yet.</span>{% endfor %}</div>
+<div class="fb-days small">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/manage/feedback?day={{ day }}">{{ day|date('weekday') }} <small>{{ n }}{% if o %} · {{ o }} open{% endif %}</small></a>{% else %}<span class="muted">No feedback yet.</span>{% endfor %}</div>
 
 <section class="pl-card">
-  <h2>{{ d.day.strftime('%A %d %B %Y') }} <small class="muted">{{ d.n }} item{{ 's' if d.n != 1 }} · {{ d.groups|length }} point{{ 's' if d.groups|length != 1 }} · {{ d.open }} open</small></h2>
+  <h2>{{ d.day|date('long') }} <small class="muted">{{ d.n }} item{{ 's' if d.n != 1 }} · {{ d.groups|length }} point{{ 's' if d.groups|length != 1 }} · {{ d.open }} open</small></h2>
   {% if d.n %}<p class="small">{% for s, n in d.sections %}<span class="badge">{{ s }} {{ n }}</span> {% endfor %}{% for k, n in d.kinds.items() %}<span class="badge">{{ kinds.get(k, k) }} {{ n }}</span> {% endfor %}
     · <a href="/manage/feedback/digest.txt?day={{ d.day }}">plain-text digest</a></p>{% endif %}
 
@@ -16,9 +15,9 @@
   <article class="fb-group{{ ' fb-closed' if g.status not in ('new', 'planned') }}">
     <header><span class="fb-n" title="items in this point">×{{ g.ids|length }}</span> <b>{{ g.lead.text }}</b></header>
     <p class="small muted">{% for k in g.kinds %}{{ kinds.get(k, k) }}{{ ', ' if not loop.last }}{% endfor %} · {% for p in g.pages %}{{ p }}{{ ' · ' if not loop.last }}{% endfor %}
-      {% if g.repeats %} · <span class="lg lg-opp">repeats an open point from {{ g.repeats.created_at.strftime('%d %b') }}: “{{ g.repeats.text[:80] }}”</span>{% endif %}</p>
-    {% if g.members|length > 1 %}<details class="small"><summary>All {{ g.members|length }} items</summary><ul>{% for x in g.members %}<li>{{ x.text }} <span class="muted">— {{ x.author or 'anonymous' }}, {{ x.created_at.strftime('%H:%M') }}, <a href="{{ x.path }}">{{ x.page or x.path }}</a></span></li>{% endfor %}</ul></details>
-    {% else %}{% set x = g.members[0] %}<p class="small muted">{{ x.author or 'anonymous' }}, {{ x.created_at.strftime('%H:%M') }} · <a href="{{ x.path }}">open the page</a></p>{% endif %}
+      {% if g.repeats %} · <span class="lg lg-opp">repeats an open point from {{ g.repeats.created_at|date('short') }}: “{{ g.repeats.text[:80] }}”</span>{% endif %}</p>
+    {% if g.members|length > 1 %}<details class="small"><summary>All {{ g.members|length }} items</summary><ul>{% for x in g.members %}<li>{{ x.text }} <span class="muted">— {{ x.author or 'anonymous' }}, {{ x.created_at|date('time') }}, <a href="{{ x.path }}">{{ x.page or x.path }}</a></span></li>{% endfor %}</ul></details>
+    {% else %}{% set x = g.members[0] %}<p class="small muted">{{ x.author or 'anonymous' }}, {{ x.created_at|date('time') }} · <a href="{{ x.path }}">open the page</a></p>{% endif %}
     {% for x in g.members if x.selection %}<blockquote class="small">Selected on the page: {{ x.selection }}</blockquote>{% endfor %}
     <form method="post" action="/manage/feedback/respond" class="fb-respond">
       <input type="hidden" name="ids" value="{{ g.ids|join(',') }}"><input type="hidden" name="day" value="{{ d.day }}">

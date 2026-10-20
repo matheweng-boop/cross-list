@@ -23,7 +23,9 @@ def ids(client, mpn):
 
 
 def run_to_case(client, part, our, volume="100000", target=None):
-    r = client.get(f"/pipeline/new?part={part}" + (f"&our={our}" if our else ""), follow_redirects=False)
+    # a GET only shows the start button (prefetchers must not create drafts); the POST creates the draft
+    assert "Start the business case" in client.get(f"/pipeline/new?part={part}").text
+    r = client.post("/pipeline/new", data={"part": part, **({"our": our} if our else {})}, follow_redirects=False)
     draft = r.headers["location"].split("?")[0]
     assert r.headers["location"].endswith("?step=part")
     page = client.get(draft + "?step=part").text

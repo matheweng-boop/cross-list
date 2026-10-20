@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Cross requests – BizDev{% endblock %}
 {% block content %}
-<h1>Cross requests</h1>
+<h1>Part requests</h1>
 <p class="subtitle muted">Parts that still need to be added and crossed. Paste part numbers here (one per line or comma separated), or use
   “Request a cross” on any part or search without results. Then copy the open list into a conversation with Claude to have them programmed in.</p>
 <form method="post" action="/requests" class="request-form">
@@ -24,8 +23,8 @@
   <tbody>
   {% for r in rows %}{% set p = found[r.id] %}
     <tr class="req-{{ r.status }}">
-      <td><b>{{ r.mpn }}</b>{% if r.manufacturer %}<br><small class="muted">{{ r.manufacturer }}</small>{% endif %}{% if r.note %}<br><small>{{ r.note }}</small>{% endif %}</td>
-      <td><small>{{ r.created_at.strftime('%Y-%m-%d') if r.created_at }}</small></td>
+      <td><b>{{ r.mpn }}</b>{% if r.manufacturer %}<br><small class="muted">{{ r.manufacturer|vendor }}</small>{% endif %}{% if r.note %}<br><small>{{ r.note }}</small>{% endif %}</td>
+      <td><small>{{ r.created_at|date }}</small></td>
       <td>{% if p %}<a href="/parts/{{ p.id }}">yes, see crosses</a>{% else %}<span class="muted">not yet</span>{% endif %}</td>
       <td><form method="post" action="/requests/{{ r.id }}"><select name="status" onchange="this.form.submit()" aria-label="Status of {{ r.mpn }}">
         {% for k, label in statuses.items() %}<option value="{{ k }}" {{ 'selected' if r.status == k }}>{{ label }}</option>{% endfor %}</select></form></td>

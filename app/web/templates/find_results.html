@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import part_badges %}
-{% block title %}“{{ q }}” – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, '“' ~ q ~ '”') }}{% endblock %}
 {% block content %}
 <h1>Parts matching “{{ q }}”</h1>
 {% if competitors %}
@@ -8,7 +8,7 @@
 <div class="table-wrap"><table class="striped">
   <thead><tr><th>Part</th><th>Manufacturer</th><th>Package</th><th>Lifecycle</th></tr></thead>
   {% for p in competitors %}
-  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name }}</td><td>{{ p.package.code }}</td><td>{{ part_badges(p) }}</td></tr>
+  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name|vendor }}</td><td>{{ p.package.code }}</td><td>{{ part_badges(p) }}</td></tr>
   {% endfor %}
 </table></div>
 {% endif %}
@@ -28,7 +28,7 @@
   <thead><tr><th>Part</th><th>Manufacturer</th><th>Description</th><th>Category</th><th>Package</th><th>Lifecycle</th><th>Qualification</th><th></th></tr></thead>
   {% for r in catalogue %}
   <tr><td>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}</td>
-    <td class="small">{{ r.manufacturer }}</td><td class="small">{{ r.description }}</td>
+    <td class="small">{{ r.manufacturer|vendor }}</td><td class="small">{% if r.summary %}<b>{{ r.summary }}</b><br>{% endif %}<span class="muted" title="Source text">{{ r.description }}</span></td>
     <td class="small">{{ r.source_category }}{{ ' › ' ~ r.source_sub.split(' > ')[-1] if r.source_sub }}</td><td class="small">{{ r.package }}</td>
     <td class="small"><span class="life life-{{ r.lifecycle }}">{{ life_label[r.lifecycle] }}</span></td>
     <td class="small"><span class="qual q-{{ r.qualification }}">{{ qual_label[r.qualification] }}</span></td>

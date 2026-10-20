@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import about, review %}
-{% block title %}Data quality – Business opportunity – BizDev{% endblock %}
 {% block content %}
 <h1>Data quality</h1>
 <p class="subtitle muted">How far the business data can be trusted, and where a review helps most. Automated checks run on every page load;
@@ -38,13 +37,13 @@
 <h2>Recent reviews and comments</h2>
 {% set commented = [] %}{% for k, s in rev.items() %}{% for v, cm, a, t in s.comments %}{% set _ = commented.append((t, k, v, cm, a)) %}{% endfor %}{% endfor %}
 {% if commented %}<div class="table-wrap"><table class="striped small"><thead><tr><th>When</th><th>Item</th><th>Verdict</th><th>Comment</th><th>By</th></tr></thead><tbody>
-  {% for t, k, v, cm, a in commented|sort(reverse=true) %}{% if loop.index <= 40 %}{% set ds, key = k.split('|', 1) %}<tr><td>{{ t.strftime('%Y-%m-%d') }}</td>
+  {% for t, k, v, cm, a in commented|sort(reverse=true) %}{% if loop.index <= 40 %}{% set ds, key = k.split('|', 1) %}<tr><td>{{ t|date }}</td>
     <td>{{ ds_labels.get(ds, ds) }}: <a href="/business/evidence/{{ key }}">{{ fns[key].label if key in fns else key }}</a></td><td>{{ verdicts[v] }}</td><td>{{ cm }}</td><td>{{ a or 'anonymous' }}</td></tr>{% endif %}{% endfor %}
 </tbody></table></div>{% else %}<p class="small muted">No comments yet.</p>{% endif %}
 
 {% if mappings %}<h2>Part-mapping decisions</h2>
 <div class="table-wrap"><table class="striped small"><thead><tr><th>Function</th><th>Part</th><th>Decision</th><th>By</th></tr></thead><tbody>
-  {% for m in mappings %}<tr><td><a href="/business/evidence/{{ m.fn }}#existing">{{ fns[m.fn].label if m.fn in fns else m.fn }}</a></td><td>{{ m.mpn }} ({{ m.manufacturer }})</td>
+  {% for m in mappings %}<tr><td><a href="/business/evidence/{{ m.fn }}#existing">{{ fns[m.fn].label if m.fn in fns else m.fn }}</a></td><td>{{ m.mpn }} ({{ m.manufacturer|vendor }})</td>
     <td>{{ 'fills it' if m.verdict == 'yes' else 'not a match' }}</td><td>{{ m.author or 'anonymous' }}</td></tr>{% endfor %}
 </tbody></table></div>{% endif %}
 <script src="/static/business.js" defer></script>

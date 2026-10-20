@@ -140,6 +140,24 @@ def state(path: str) -> dict:
     return {"section": key, "item": href, "crumbs": crumbs, "tabs": tabs, "active_tab": active_tab}
 
 
+def page_label(path: str) -> str:
+    """The page's own name as the menus show it: the in-page tab (the first tab of a group is the menu item), else the
+    menu item."""
+    st = state(path)
+    section = next(s for s in _sections() if s[0] == st["section"])
+    item = next((i for i in section[2] if i[1] == st["item"]), section[2][0])
+    if st["tabs"] and st["active_tab"] and st["active_tab"] != st["tabs"][0][1]:
+        return next(lbl for lbl, h in st["tabs"] if h == st["active_tab"])
+    return item[0]
+
+
+def page_title(path: str, detail: str = "") -> str:
+    """<title>: '[detail – ]page – section – BizDev', from the same names as the menus."""
+    st = state(path)
+    section = next(s for s in _sections() if s[0] == st["section"])
+    return " – ".join(x for x in (detail, page_label(path), section[1], "BizDev") if x)
+
+
 # small line icons for the section row (SVG path data, 24 x 24, stroked)
 ICONS = {  # fmt: skip
     "products": '<path d="M7 7h10v10H7z M4 9h3M4 12h3M4 15h3M17 9h3M17 12h3M17 15h3M9 4v3M12 4v3M15 4v3M9 17v3M12 17v3M15 17v3"/>',  # noqa: E501

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch, crowd, about, term, push with context %}
-{% block title %}Cross-sell – BizDev{% endblock %}
-{% macro partlinks(ps) %}{% for p in ps %}<a class="offer{{ ' auto' if p.auto }}" href="{{ p.url }}"{% if not p.url.startswith('/') %} target="_blank" rel="noopener"{% endif %} title="{{ p.manufacturer }}">{{ p.mpn }}</a>{% else %}<span class="muted small">no part listed</span>{% endfor %}{% endmacro %}
+{% macro partlinks(ps) %}{% for p in ps %}<a class="offer{{ ' auto' if p.auto }}" href="{{ p.url }}"{% if not p.url.startswith('/') %} target="_blank" rel="noopener"{% endif %} title="{{ p.manufacturer|vendor }}">{{ p.mpn }}</a>{% else %}<span class="muted small">no part listed</span>{% endfor %}{% endmacro %}
 {% macro why(w, a_label, b_label) %}<details class="why small"><summary>Why?</summary>
   <p>{{ w.summary|capitalize }}.</p>
   <ul>{% for r in w.rows %}<li><a href="/business/applications/{{ r.i }}?co={{ co }}">{{ r.name }}</a>{% if r.background %} <span class="muted">(background)</span>{% endif %}:
@@ -25,7 +24,7 @@
 {% if not anchor %}<p class="uc-error small">No part number starting with “{{ q_part }}” in BizDev. Try fewer characters, or <a href="/business/attach?co={{ co }}">browse by function</a>.</p>
 {% else %}{% set S = sell %}
 <section class="pl-card cs-anchor">
-  <p><b>{{ anchor.mpn }}</b> <span class="muted">{{ anchor.manufacturer }}{{ '' if anchor.ours else ' · competitor part' }}</span> · {{ fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.fns[0] }}{% if anchor.fns|length > 1 %} <small class="muted">(also {% for f in anchor.fns[1:] %}{{ fns[f].label if f in fns else f }}{{ ', ' if not loop.last }}{% endfor %})</small>{% endif %}
+  <p><b>{{ anchor.mpn }}</b> <span class="muted">{{ anchor.manufacturer|vendor }}{{ '' if anchor.ours else ' · competitor part' }}</span> · {{ fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.fns[0] }}{% if anchor.fns|length > 1 %} <small class="muted">(also {% for f in anchor.fns[1:] %}{{ fns[f].label if f in fns else f }}{{ ', ' if not loop.last }}{% endfor %})</small>{% endif %}
     {% if anchor.automotive %} · <span class="qual q-auto">automotive</span>{% endif %}{% if anchor.ranges %} · {% for lo, hi in anchor.ranges[:2] %}{{ '%g'|format(lo) }}–{{ '%g'|format(hi) }} GHz{{ ', ' if not loop.last }}{% endfor %}{% endif %}
     {% if not anchor.exact %}<br><small class="muted">Closest match for “{{ q_part }}”{% if anchor.others %}; also: {% for o in anchor.others %}<a href="/business/attach?co={{ co }}&part={{ o|urlencode }}&app={{ q_app|urlencode }}">{{ o }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</small>{% endif %}</p>
   <p class="small">{% if q_app %}{{ S.n }} of {{ S.n_with_part }} architectures with this part match “{{ q_app }}”{% else %}In {{ S.n }} architecture{{ 's' if S.n != 1 }}{% endif %}.

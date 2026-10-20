@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path, 'Start a business case') }}{% endblock %}
+{% block content %}
+<h1>Start a business case</h1>
+<p>From <a href="/parts/{{ part.id }}">{{ part.mpn }}</a>{% if our %} with <a href="/parts/{{ our.id }}">{{ our.mpn }}</a>{% endif %}. The draft walks through the part, the application, the design and the numbers.</p>
+<form method="post" action="/pipeline/new">
+  <input type="hidden" name="part" value="{{ part.id }}">{% if our %}<input type="hidden" name="our" value="{{ our.id }}">{% endif %}
+  <button type="submit" class="small-btn">Start the business case</button>
+</form>
+{% endblock %}

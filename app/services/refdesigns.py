@@ -6,7 +6,6 @@ from functools import lru_cache
 from pathlib import Path
 
 from app import yamlio
-from app.services import blocks
 
 DIR = Path(__file__).resolve().parents[2] / "data" / "reference_designs"
 DOC_LABELS = {
@@ -21,7 +20,7 @@ DOC_LABELS = {
 @lru_cache
 def _files() -> tuple[tuple[Path, dict], ...]:
     """Every design file, parsed once per process."""
-    paths = sorted(p for p in DIR.glob("*.yaml") if not p.stem.endswith("_applications"))
+    paths = sorted(DIR.glob("*.yaml"))
     return tuple((path, yamlio.load(path.read_text()) or {}) for path in paths)
 
 
@@ -46,11 +45,6 @@ def designs() -> tuple[dict, ...]:
                 ).lower()  # fmt: skip
                 out.append(d)
     return tuple(out)
-
-
-def function_label(fn: str) -> str:
-    f = blocks.catalogue()["functions"].get(fn)
-    return f["label"] if f else fn.replace("_", " ")
 
 
 def search(q: str = "", vendor: str = "", market: str = "", fn: str = "", isolation: bool = False,

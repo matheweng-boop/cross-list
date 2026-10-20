@@ -3,7 +3,7 @@
   {%- set base = dict(params) -%}{%- set _ = base.update(kwargs) -%}
   /parts?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
-{% block title %}Browse products – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, 'Browse products') }}{% endblock %}
 {% block content %}
 <h1>Browse products</h1>
 <p class="subtitle muted">Every product once, in functional categories shared across manufacturers. Badges say what BizDev can do with each record:
@@ -56,7 +56,7 @@
       <tbody>{% for r in rows %}
         <tr><td>{% if r.part_id %}<a href="/parts/{{ r.part_id }}?from={{ (request.url.path ~ '?' ~ request.url.query)|urlencode }}"><b>{{ r.mpn }}</b></a>{% elif r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}
             <br><small class="muted" title="Source category">{{ r.source_category }}{{ ' › ' ~ r.source_sub.split(' > ')[-1] if r.source_sub }}</small></td>
-          <td class="small">{{ (r.description or '')[:160] }}</td><td class="small">{{ r.manufacturer }}</td><td class="small">{{ r.package }}</td>
+          <td class="small">{% if r.summary %}<b>{{ r.summary }}</b><br>{% endif %}<span class="muted" title="Source text">{{ (r.description or '')|truncate(160, killwords=false, end='…') }}</span></td><td class="small">{{ r.manufacturer|vendor }}</td><td class="small">{{ r.package }}</td>
           <td class="small"><span class="life life-{{ r.lifecycle }}">{{ life_label[r.lifecycle] }}</span></td>
           <td class="small"><span class="qual q-{{ r.qualification }}">{{ qual_label[r.qualification] }}</span></td>
           <td class="caps">{% for c in ('detailed', 'crosses', 'pinout', 'catalogue', 'source') if c in r.caps %}<span class="cap cap-{{ c }}" title="{{ cap_label[c] }}">{{ {'detailed': 'Parameters', 'crosses': 'Crosses', 'pinout': 'Pinout', 'catalogue': 'Catalogue', 'source': 'Source'}[c] }}</span>{% endfor %}</td></tr>

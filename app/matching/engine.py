@@ -243,6 +243,8 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
         rel = abs(c - r) / max(abs(r), 1e-12)
         if rel <= p.tolerance:
             return EQUAL, 0.0
+        if p.direction == "match":  # neither way is better (a UVLO threshold): outside the tolerance it differs
+            return DIFFERENT, min(rel, 1.0)
         better = c > r if p.direction == "higher" else c < r
         return (BETTER if better else WORSE), min(rel, 1.0)
 
@@ -295,10 +297,12 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
 # OUTA / VOA (driver output). Pin names are mapped to one spelling before comparing.
 _PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vo([a-z0-9]+)$", r"out\1"))
 # Family-specific names for the same pin. Only within the family: gate drivers use VDDA/VDDB for the two output
-# channels, not for the input and output sides. Isolated amplifiers: Skyworks side A/B names and TI's AVDD/DVDD,
-# AINP/AINN against TI's VDD1/VDD2, INP/INN. ACLK is left out: it is a clock input on some Skyworks parts and an
-# output on others.
+# channels, not for the input and output sides. Gate drivers: Skyworks VIA/VIB against INA/INB, and DISABLE against
+# DIS (EN is left alone: it has the opposite polarity). Isolated amplifiers: Skyworks side A/B names and TI's
+# AVDD/DVDD, AINP/AINN against TI's VDD1/VDD2, INP/INN. ACLK is left out: it is a clock input on some Skyworks parts
+# and an output on others.
 _FAMILY_PIN_ALIASES = {
+    "gate_driver": ((r"^vi([ab])$", r"in\1"), (r"^disable$", "dis")),
     "isolated_amplifier": (
         (r"^(vdda|avdd)$", "vdd1"), (r"^(vddb|dvdd)$", "vdd2"), (r"^(gnda|agnd)$", "gnd1"), (r"^(gndb|dgnd)$", "gnd2"),
         (r"^(aip|ainp)$", "inp"), (r"^(ain|ainn)$", "inn"), (r"^aop$", "outp"), (r"^aon$", "outn"), (r"^ao$", "out"),
@@ -330,11 +334,12 @@ def same_package(a: Package, b: Package) -> bool:
     if not a.pitch_mm or not b.pitch_mm:  # pitch not published (stored as 0): only the very same package matches
         return False
     # Pin count may differ: one package can leave positions empty where another
-    # has a no-connect pin. Pinouts are compared by position in check_fit.
+    # has a no-connect pin. Pinouts are compared by position in check_fit. Body sizes allow 0.15 mm: some vendors
+    # state the nominal JEDEC body (SOIC-8 4.9 x 3.9 mm), others a rounded one (Infineon PG-DSO-8 5.0 x 4.0 mm).
     return (
         abs(a.pitch_mm - b.pitch_mm) <= 0.01
-        and abs(a.body_length_mm - b.body_length_mm) <= 0.05
-        and abs(a.body_width_mm - b.body_width_mm) <= 0.05
+        and abs(a.body_length_mm - b.body_length_mm) <= 0.15
+        and abs(a.body_width_mm - b.body_width_mm) <= 0.15
         and abs(a.span_mm - b.span_mm) <= 0.1
         and a.exposed_pad == b.exposed_pad
     )

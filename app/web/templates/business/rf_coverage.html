@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}RF coverage – BizDev{% endblock %}
 {% macro cell(r, b) %}{% set c = r.cells[b.id] %}{% set cls = 'rf-ok' if c.n >= 3 else ('rf-thin' if c.n else ('rf-risk' if c.risk else ('rf-none' if c.need else 'rf-empty'))) %}
   <td class="rf-cell {{ cls }}{{ ' on' if fn == r.fn and band == b.id and (power or None) == r.power }}">
     <a href="/business/rf-coverage?fn={{ r.fn }}&band={{ b.id }}{% if r.power %}&power={{ r.power }}{% endif %}#slot" title="{{ c.n }} active part{{ 's' if c.n != 1 }}{% for m, k in c.by.items() %} · {{ m }} {{ k }}{% endfor %}{% if c.risk %} · {{ c.risk }} obsolete / NRND{% endif %} · needed by {{ c.need }} application{{ 's' if c.need != 1 }}{% if c.comp %} · competitors: {% for m, k in c.rivals.most_common() %}{{ m }} {{ k }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}">
@@ -32,14 +31,14 @@
   <h2>{{ (rows|selectattr('fn', 'equalto', fn)|first).label }}{% if power %} · {{ (cfg.power_classes|selectattr('id', 'equalto', power)|first).label }}{% endif %} · {{ (cfg.bands|selectattr('id', 'equalto', band)|first).label }} <small class="muted">{{ slot|length }} parts</small></h2>
   {% if slot %}<div class="table-wrap"><table class="striped small">
     <thead><tr><th scope="col">Part</th><th scope="col">Maker</th><th scope="col">Stated range (GHz)</th><th scope="col">Description</th><th scope="col">Status</th></tr></thead>
-    <tbody>{% for p in slot %}<tr{% if p.risk %} class="muted"{% endif %}><td>{% if p.url %}<a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.mpn }} ↗</a>{% else %}{{ p.mpn }}{% endif %}</td><td>{{ p.manufacturer }}</td>
-      <td>{{ '%g–%g'|format(p.ghz[0], p.ghz[1]) if p.ghz }}</td><td>{{ p.description }}</td><td>{{ p.status }}</td></tr>{% endfor %}</tbody>
+    <tbody>{% for p in slot %}<tr{% if p.risk %} class="muted"{% endif %}><td>{% if p.url %}<a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.mpn }} ↗</a>{% else %}{{ p.mpn }}{% endif %}</td><td>{{ p.manufacturer|vendor }}</td>
+      <td>{{ '%g–%g'|format(p.ghz[0], p.ghz[1]) if p.ghz }}</td><td>{{ p.description|desc(p.mpn) }}</td><td title="{{ p.status }}">{{ life_text(p.status) }}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% else %}<p class="small">No part of ours states a frequency in this band.</p>{% endif %}
   {% if rivals %}<details class="small"><summary><b>Competitor parts in this slot</b> ({{ rivals|length }})</summary><div class="table-wrap"><table class="striped small">
     <thead><tr><th scope="col">Part</th><th scope="col">Maker</th><th scope="col">Stated range (GHz)</th><th scope="col">Description</th><th scope="col">Status</th></tr></thead>
-    <tbody>{% for p in rivals %}<tr{% if p.risk %} class="muted"{% endif %}><td>{% if p.url %}<a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.mpn }} ↗</a>{% else %}{{ p.mpn }}{% endif %}</td><td>{{ p.manufacturer }}</td>
-      <td>{{ '%g–%g'|format(p.ghz[0], p.ghz[1]) if p.ghz }}</td><td>{{ p.description }}</td><td>{{ p.status }}</td></tr>{% endfor %}</tbody></table></div></details>{% endif %}
+    <tbody>{% for p in rivals %}<tr{% if p.risk %} class="muted"{% endif %}><td>{% if p.url %}<a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.mpn }} ↗</a>{% else %}{{ p.mpn }}{% endif %}</td><td>{{ p.manufacturer|vendor }}</td>
+      <td>{{ '%g–%g'|format(p.ghz[0], p.ghz[1]) if p.ghz }}</td><td>{{ p.description|desc(p.mpn) }}</td><td title="{{ p.status }}">{{ life_text(p.status) }}</td></tr>{% endfor %}</tbody></table></div></details>{% endif %}
   {% if why %}<details class="small" open><summary><b>Blocks that need it</b> ({{ why|length }})</summary><ul>{% for a, r in why %}<li>{{ a }}{% if r %} <span class="muted">— {{ r }}</span>{% endif %}</li>{% endfor %}</ul></details>
   {% elif apps.get(band) %}<p class="small muted">Applications counted for this band (from their names): {{ apps[band][:12]|join(' · ') }}{% if apps[band]|length > 12 %} …{% endif %}</p>{% endif %}
   <p class="small"><a href="/rf-bands">Which standards use this band →</a></p>

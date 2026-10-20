@@ -34,6 +34,8 @@ def _rank_value(p: ParamDef, v):
     if v is None:
         return None
     if p.kind == "number":
+        if p.direction == "match":
+            return None
         return float(v) if p.direction == "higher" else -float(v)
     if p.kind == "range":
         lo, hi = sorted(map(float, v))

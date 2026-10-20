@@ -3,7 +3,7 @@ title: Isolated gate drivers
 params:
   # --- Priority 1: must be equal or better ---
   - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
-  - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [basic, reinforced], exception: true}
+  - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [functional, basic, reinforced], exception: true}
   - {key: creepage_mm, label: Creepage, unit: mm, priority: 1, kind: number, direction: higher}
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true}
   - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 1, kind: number, direction: higher}
@@ -12,8 +12,10 @@ params:
   - {key: input_type, label: Input type, priority: 1, kind: category, hard: true}
   - {key: peak_source_a, label: Peak source current, unit: A, priority: 1, kind: number, direction: higher}
   - {key: peak_sink_a, label: Peak sink current, unit: A, priority: 1, kind: number, direction: higher}
-  # UVLO variants are not interchangeable: a 12 V UVLO part cannot replace an 8 V one.
-  - {key: uvlo_v, label: Output UVLO threshold, unit: V, priority: 1, kind: category}
+  # UVLO variants are not interchangeable: a 12 V UVLO part cannot replace an 8 V one. Vendors state either the
+  # option class (TI, Skyworks: 8 / 12 V) or the measured rising threshold (Infineon, some Novosense: 12.5, 13.6 V),
+  # so values within 6 % (12 and 12.5 V, not 12 and 13 V) count as the same variant; neither direction is better.
+  - {key: uvlo_v, label: Output UVLO threshold, unit: V, priority: 1, kind: number, direction: match, tolerance: 0.06}
   # --- Priority 2: for information ---
   - {key: output_supply_v, label: Output supply range, unit: V, priority: 2, kind: range}
   - {key: prop_delay_ns, label: Propagation delay (max), unit: ns, priority: 2, kind: number, direction: lower}

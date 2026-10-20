@@ -21,10 +21,12 @@ from app.models import (
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, quality
+from app.services import blocks, cases, pipeline, quality, vocab
 from app.services import opportunity as op
+from app.services import reports as rp
 from app.services import rf_coverage as rf
 from app.web.routes import templates
+from app.web.urls import local_path
 
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
@@ -92,7 +94,7 @@ def attach(request: Request, fn: str = "", co: str = "combined", part: str = "",
     c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
     c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
-    c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], c["fns"].get(kv[0], {}).get("label", kv[0])))
+    c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], vocab.fn_label(kv[0])))
     c["fn"] = fn if fn in used else ""
     c["result"] = op.attach(c["apps"], fn) if c["fn"] else None
     c["pairs"] = op.cross_sell_pairs(c["apps"]) if not c["fn"] else []
@@ -246,8 +248,7 @@ def opportunity_explorer(
 
 def _back(request: Request, form, default: str) -> str:
     """Where to return after a form post: a local path from the form, else the default."""
-    back = str(form.get("back") or "")
-    return back if back.startswith("/") and not back.startswith("//") else default
+    return local_path(form.get("back"), default)
 
 
 @router.post("/business/decision")
@@ -327,7 +328,7 @@ def method(request: Request, co: str = "combined", session: Session = Depends(ge
 def data(request: Request, co: str = "combined", focus: str = "", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     uses = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
-    c["asp_fns"] = sorted(uses, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    c["asp_fns"] = sorted(uses, key=lambda f: vocab.fn_label(f))
     c["uses"] = uses
     c["meta"] = {(m.kind, m.key): m for m in session.scalars(select(BusinessAssumption))}
     c["focus"] = focus
@@ -425,6 +426,8 @@ def _inputs(form) -> dict:
 async def case_create(request: Request, session: Session = Depends(get_session)):
     form = await request.form()
     fn = str(form.get("fn") or "") or None
+    if not str(form.get("title") or "").strip() and not fn and not _inputs(form):
+        raise HTTPException(400, "Give the case a title, a function or at least one input")
     case = Case(title=str(form.get("title") or "").strip()[:200] or "Untitled case",
                 fn=fn if fn in blocks.catalogue()["functions"] else None, inputs=_inputs(form))  # fmt: skip
     session.add(case)
@@ -524,7 +527,7 @@ def hunt(request: Request, fn: str = "", co: str = "combined", session: Session 
     c = _ctx(session, co)
     c["segments"] = op.hunt_by_segment(c["apps"])
     used = Counter(f for a in c["apps"] for f in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
-    c["fn_choices"] = sorted(used.items(), key=lambda kv: c["fns"].get(kv[0], {}).get("label", kv[0]).lower())
+    c["fn_choices"] = sorted(used.items(), key=lambda kv: vocab.fn_label(kv[0]).lower())
     c["fn"] = fn if fn in used else ""
     c["by_fn"] = op.hunt_for_function(c["apps"], fn) if c["fn"] else None
     c["unmatched"] = [a for a in c["apps"] if not a.background and not op.segments_of(a.name)]
@@ -583,7 +586,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
     if fn not in c["fns"]:
         raise HTTPException(404, "Function not found")
     row = next((e for e in op.technology_fit(c["apps"]) if e["fn"] == fn), None)
-    c.update(fn=fn, label=c["fns"][fn].get("label", fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
+    c.update(fn=fn, label=vocab.fn_label(fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
              ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
              tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
              hunt=op.hunt_for_function(c["apps"], fn)[:15], existing=quality.possible_existing(session, fn),
@@ -612,9 +615,11 @@ def review(payload: dict = Body(...), session: Session = Depends(get_session)):
 
 @router.post("/business/evidence/{fn}/mapping")
 async def mapping(fn: str, request: Request, session: Session = Depends(get_session)):
+    if fn not in blocks.catalogue()["functions"]:
+        raise HTTPException(404, "Unknown function")
     form = await request.form()
     mpn, verdict = str(form.get("mpn") or "").strip(), str(form.get("verdict") or "")
-    if fn in blocks.catalogue()["functions"] and mpn and verdict in ("yes", "no", "undo"):
+    if mpn and verdict in ("yes", "no", "undo"):
         row = session.scalar(select(PartMapping).where(PartMapping.fn == fn, PartMapping.mpn == mpn))
         if verdict == "undo":
             if row:
@@ -707,8 +712,6 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
 @router.get("/business/reports", response_class=HTMLResponse)
 def product_reports(request: Request, kind: str = "", tag: str = ""):
     """Pre-lim product ideas and reports: the list."""
-    from app.services import reports as rp
-
     rows = [
         r for r in rp.reports() if (not kind or r.get("kind") == kind) and (not tag or tag in (r.get("tags") or []))
     ]
@@ -728,8 +731,6 @@ def _question_day(day: str) -> date | None:
 @router.get("/business/reports/questions", response_class=HTMLResponse)
 def report_questions(request: Request, day: str = "", session: Session = Depends(get_session)):
     """Questions asked on the reports, one list per day, reviewed for good questions and duplicates."""
-    from app.services import reports as rp
-
     days = rp.question_days(session)
     d = _question_day(day) or (days[0][0] if days else datetime.now(UTC).date())
     ctx = {"days": days, "rv": rp.review(session, d), "statuses": rp.Q_STATUSES}
@@ -738,15 +739,11 @@ def report_questions(request: Request, day: str = "", session: Session = Depends
 
 @router.get("/business/reports/questions.txt", response_class=PlainTextResponse)
 def report_questions_text(day: str = "", session: Session = Depends(get_session)):
-    from app.services import reports as rp
-
     return rp.review_text(rp.review(session, _question_day(day) or datetime.now(UTC).date()))
 
 
 @router.post("/business/reports/questions/{qid:int}")
 async def report_question_decide(request: Request, qid: int, session: Session = Depends(get_session)):
-    from app.services import reports as rp
-
     form = await request.form()
     dup = str(form.get("duplicate_of") or "").lstrip("#").strip()
     try:
@@ -762,8 +759,6 @@ async def report_question_decide(request: Request, qid: int, session: Session = 
 
 @router.get("/business/reports/{slug}", response_class=HTMLResponse)
 def product_report(request: Request, slug: str, session: Session = Depends(get_session)):
-    from app.services import reports as rp
-
     r = rp.report(slug)
     if r is None:
         raise HTTPException(404, "Report not found")
@@ -776,8 +771,6 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
 @router.get("/business/reports/{slug}/background", response_class=HTMLResponse)
 def product_report_background(request: Request, slug: str):
     """The detail behind a report: the data tables and long-form notes kept out of the report itself."""
-    from app.services import reports as rp
-
     r = rp.report(slug)
     if r is None or not rp.has_background(slug):
         raise HTTPException(404, "No background for this report")
@@ -788,8 +781,6 @@ def product_report_background(request: Request, slug: str):
 
 @router.post("/business/reports/{slug}/ask")
 async def product_report_ask(request: Request, slug: str, session: Session = Depends(get_session)):
-    from app.services import reports as rp
-
     if rp.report(slug) is None:
         raise HTTPException(404, "Report not found")
     form = await request.form()

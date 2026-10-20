@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Engineering notes – BizDev{% endblock %}
 {% block content %}
-<h1>Engineering notes</h1>
+<h1>Specification guides</h1>
 <p class="subtitle muted">What each specification means in the application, and what a deviation between two parts costs.
   Results are marked <span class="evidence ds">Datasheet guaranteed</span>, <span class="evidence est">Engineering estimate</span>
   or <span class="evidence meas">Not modelled</span>. Tap a deviation in any cross table to open its note with both parts filled in.</p>
@@ -11,7 +10,7 @@
 <ul class="note-list">
 {% for n in notes %}
   <li><a href="/engineering/{{ n.key }}"><b>{{ n.title }}</b></a><br><span class="muted">{{ n.summary }}</span>
-    <br><small class="muted">{% for fam, prio in n.families %}{{ fam }} · P{{ prio }}{{ '; ' if not loop.last }}{% endfor %}</small></li>
+    <br><small class="muted">{% for fam, prio in n.families %}{{ family_title(fam) }} · P{{ prio }}{{ '; ' if not loop.last }}{% endfor %}</small></li>
 {% endfor %}
 </ul>
 {% endblock %}

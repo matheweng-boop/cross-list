@@ -4,6 +4,9 @@
 #   catalog:  manufacturer catalogue category (exact, as the company publishes it) and an optional regular expression
 #             on the catalogue sub-category; the first matching subfamily (file order) wins
 #   families: BizDev families (parts with full parameters, rules/<family>.yaml)
+#   functions: function ids (data/blocks/functions.yaml) of catalogue parts; a part's own function wins over its
+#             catalogue category, which is often only a top level ("Amplifiers") or a filing choice (a VCO under
+#             "Oscillators")
 # The manufacturer's own category and sub-category stay on every record as source metadata; nothing is renamed in
 # the source data. Records that match nothing are shown under "Unclassified" with their source category, so no
 # product disappears. Technically distinct types stay separate even when labels overlap (an RF power amplifier is
@@ -18,74 +21,74 @@ categories:
       - {id: isolated_analog, label: "Isolated amplifiers and ADCs", families: [isolated_amplifier], catalog: [{category: Isolation, sub: "Isolated Analog"}]}
       - {id: isolated_current_sensor, label: "Isolated current sensors", families: [current_sensor], catalog: [{category: Isolation, sub: "Current Sensors"}]}
       - {id: isolated_interface, label: "Isolated transceivers and industrial I/O", catalog: [{category: Isolation, sub: "Transceivers|Industrial IO"}]}
-      - {id: optocoupler, label: "Optocouplers", catalog: [{category: Optocouplers}]}
+      - {id: optocoupler, label: "Optocouplers", functions: [optocoupler], catalog: [{category: Optocouplers}]}
       - {id: isolation_other, label: "Other isolation", catalog: [{category: Isolation}]}
   - id: rf_amplifiers
     label: RF amplifiers
     subfamilies:
-      - {id: lna, label: "Low-noise amplifiers", catalog: [{category: Amplifiers, sub: "Low Noise|LNA"}]}
-      - {id: power_amplifier, label: "RF power amplifiers and drivers", catalog: [{category: Amplifiers, sub: "Power Amplifier|Pre-Driver|Driver Amp"}]}
-      - {id: catv_amplifier, label: "CATV / broadband amplifiers", catalog: [{category: Amplifiers, sub: "CATV"}]}
-      - {id: rf_power_transistor, label: "RF power transistors", catalog: [{category: Amplifiers, sub: "RF Power Transistors"}]}
-      - {id: frequency_multiplier, label: "Frequency multipliers", catalog: [{category: Amplifiers, sub: "Frequency Multipliers"}]}
+      - {id: lna, label: "Low-noise amplifiers", functions: [lna, gnss_lna], catalog: [{category: Amplifiers, sub: "Low Noise|LNA"}]}
+      - {id: power_amplifier, label: "RF power amplifiers and drivers", functions: [power_amplifier, rf_predriver, rf_pa_bias], catalog: [{category: Amplifiers, sub: "Power Amplifier|Pre-Driver|Driver Amp"}]}
+      - {id: catv_amplifier, label: "CATV / broadband amplifiers", functions: [catv_amplifier], catalog: [{category: Amplifiers, sub: "CATV"}]}
+      - {id: rf_power_transistor, label: "RF power transistors", functions: [rf_power_transistor], catalog: [{category: Amplifiers, sub: "RF Power Transistors"}]}
+      - {id: frequency_multiplier, label: "Frequency multipliers", functions: [frequency_multiplier], catalog: [{category: Amplifiers, sub: "Frequency Multipliers"}]}
       - {id: tunable_capacitor, label: "Digitally tunable capacitors", catalog: [{category: Amplifiers, sub: "Capacitors, Digitally Tunable"}]}
-      - {id: rf_amplifier_other, label: "Gain blocks and other RF amplifiers", catalog: [{category: Amplifiers}]}
+      - {id: rf_amplifier_other, label: "Gain blocks and other RF amplifiers", functions: [rf_gain_block], catalog: [{category: Amplifiers}]}
   - id: front_end
     label: RF front-end modules
     subfamilies:
-      - {id: wifi_fem, label: "Wi-Fi front-end modules", catalog: [{category: Front-end Modules, sub: "Wi-Fi"}]}
-      - {id: cellular_fem, label: "Cellular front-end modules", catalog: [{category: Front-end Modules, sub: "Cellular"}]}
+      - {id: wifi_fem, label: "Wi-Fi front-end modules", functions: [wifi_fem], catalog: [{category: Front-end Modules, sub: "Wi-Fi"}]}
+      - {id: cellular_fem, label: "Cellular front-end modules", functions: [pa_module], catalog: [{category: Front-end Modules, sub: "Cellular"}]}
       - {id: gnss_fem, label: "GNSS front-end modules", catalog: [{category: Front-end Modules, sub: "GNSS|GPS"}]}
-      - {id: diversity_rx, label: "Diversity receive modules", catalog: [{category: Front-end Modules, sub: "Diversity"}]}
-      - {id: iot_fem, label: "IoT, automotive and industrial front ends", catalog: [{category: Front-end Modules, sub: "Connected Home|Automotive|Industrial|M2M"}]}
+      - {id: diversity_rx, label: "Diversity receive modules", functions: [diversity_rx_module], catalog: [{category: Front-end Modules, sub: "Diversity"}]}
+      - {id: iot_fem, label: "IoT, automotive and industrial front ends", functions: [bt_fem, uwb_fem, v2x_fem], catalog: [{category: Front-end Modules, sub: "Connected Home|Automotive|Industrial|M2M"}]}
       - {id: fem_other, label: "Other front-end modules", catalog: [{category: Front-end Modules}, {category: Integrated Modules, sub: "Front-End Modules"}]}
   - id: rf_switches
     label: RF switches
     subfamilies:
-      - {id: rf_switch, label: "RF switches", families: [rf_switch], catalog: [{category: Switches}]}
+      - {id: rf_switch, label: "RF switches", functions: [antenna_switch], families: [rf_switch], catalog: [{category: Switches}]}
   - id: filters
     label: Filters and RF passives
     subfamilies:
-      - {id: filter, label: "Filters, duplexers and multiplexers", catalog: [{category: Filters}, {category: Filters and Duplexers}]}
-      - {id: rf_passive, label: "RF passives (couplers, splitters, baluns)", catalog: [{category: RF Passives}]}
+      - {id: filter, label: "Filters, duplexers and multiplexers", functions: [filter_saw_baw, diplexer], catalog: [{category: Filters}, {category: Filters and Duplexers}]}
+      - {id: rf_passive, label: "RF passives (couplers, splitters, baluns)", functions: [rf_passive, circulator_isolator], catalog: [{category: RF Passives}, {category: Passives}]}
   - id: rf_control
     label: RF control
     subfamilies:
-      - {id: attenuator, label: "Attenuators", catalog: [{category: Attenuators}, {category: Control Products, sub: "Attenuator"}]}
-      - {id: phase_shifter, label: "Phase shifters", catalog: [{category: Control Products, sub: "Phase shifter"}]}
-      - {id: limiter, label: "Power limiters", catalog: [{category: Control Products, sub: "Limiter"}]}
+      - {id: attenuator, label: "Attenuators", functions: [rf_attenuator], catalog: [{category: Attenuators}, {category: Control Products, sub: "Attenuator"}]}
+      - {id: phase_shifter, label: "Phase shifters", functions: [rf_phase_shifter], catalog: [{category: Control Products, sub: "Phase shifter"}]}
+      - {id: limiter, label: "Power limiters", functions: [rf_limiter], catalog: [{category: Control Products, sub: "Limiter"}]}
       - {id: equalizer, label: "Gain equalizers", catalog: [{category: Control Products, sub: "Equalizer"}]}
   - id: rf_conversion
     label: Frequency conversion and transceivers
     subfamilies:
-      - {id: mixer, label: "Mixers, modulators and demodulators", catalog: [{category: Mixers/Demodulators/Modulators}, {category: Frequency Converters}]}
-      - {id: rf_transceiver, label: "RF transceivers and beamformers", catalog: [{category: Integrated Modules, sub: "RF Transceiver|Beamformer"}]}
-      - {id: uwb, label: "UWB transceivers and modules", catalog: [{category: Integrated Modules, sub: "UWB|Uwb"}]}
+      - {id: mixer, label: "Mixers, modulators and demodulators", functions: [rf_mixer], catalog: [{category: Mixers/Demodulators/Modulators}, {category: Frequency Converters}]}
+      - {id: rf_transceiver, label: "RF transceivers and beamformers", functions: [rf_transceiver, beamformer_ic], catalog: [{category: Integrated Modules, sub: "RF Transceiver|Beamformer"}]}
+      - {id: uwb, label: "UWB transceivers and modules", functions: [uwb_soc], catalog: [{category: Integrated Modules, sub: "UWB|Uwb"}]}
       - {id: wireless_soc, label: "Low-power wireless SoCs (Zigbee / Thread / BLE)", catalog: [{category: Control Products, sub: "Communications Controllers"}]}
   - id: timing
     label: Timing
     subfamilies:
-      - {id: clock_generator, label: "Clock generators", catalog: [{category: Timing, sub: "Clock Generators"}]}
-      - {id: clock_buffer, label: "Clock buffers", catalog: [{category: Timing, sub: "Clock Buffers"}]}
-      - {id: jitter_attenuator, label: "Jitter attenuators", catalog: [{category: Timing, sub: "Jitter Attenuators"}]}
+      - {id: clock_generator, label: "Clock generators", functions: [clock_generator], catalog: [{category: Timing, sub: "Clock Generators"}]}
+      - {id: clock_buffer, label: "Clock buffers", functions: [clock_buffer, pcie_buffer], catalog: [{category: Timing, sub: "Clock Buffers"}]}
+      - {id: jitter_attenuator, label: "Jitter attenuators", functions: [jitter_attenuator], catalog: [{category: Timing, sub: "Jitter Attenuators"}]}
       - {id: network_sync, label: "Network synchronizers (IEEE 1588 / SyncE)", catalog: [{category: Timing, sub: "Network Synchronizers"}]}
-      - {id: oscillator, label: "Oscillators", catalog: [{category: Timing, sub: "Oscillators"}, {category: Oscillators}]}
-      - {id: rf_synthesizer, label: "RF synthesizers, PLLs and VCOs", catalog: [{category: Timing, sub: "Synthesizers"}, {category: PLLs/Synthesizers/VCOs}]}
+      - {id: oscillator, label: "Oscillators", functions: [crystal_oscillator], catalog: [{category: Timing, sub: "Oscillators"}, {category: Oscillators}]}
+      - {id: rf_synthesizer, label: "RF synthesizers, PLLs and VCOs", functions: [rf_synthesizer], catalog: [{category: Timing, sub: "Synthesizers"}, {category: PLLs/Synthesizers/VCOs}]}
       - {id: timing_other, label: "Other timing", catalog: [{category: Timing}]}
   - id: diodes
     label: RF diodes
     subfamilies:
-      - {id: schottky, label: "Schottky diodes", catalog: [{category: Diodes, sub: "Schottky"}]}
-      - {id: pin_diode, label: "PIN diodes", catalog: [{category: Diodes, sub: "PIN Diode"}]}
-      - {id: varactor, label: "Varactor diodes", catalog: [{category: Diodes, sub: "Varactor"}]}
+      - {id: schottky, label: "Schottky diodes", functions: [schottky_diode], catalog: [{category: Diodes, sub: "Schottky"}]}
+      - {id: pin_diode, label: "PIN diodes", functions: [pin_diode], catalog: [{category: Diodes, sub: "PIN Diode"}]}
+      - {id: varactor, label: "Varactor diodes", functions: [varactor_diode], catalog: [{category: Diodes, sub: "Varactor"}]}
       - {id: limiter_diode, label: "Limiter diodes", catalog: [{category: Diodes, sub: "Limiter"}]}
       - {id: diode_other, label: "Other diodes", catalog: [{category: Diodes}]}
   - id: power
     label: Power management
     subfamilies:
-      - {id: pmic, label: "PMICs", catalog: [{category: Control Products, sub: "PMIC"}, {category: Power Management, sub: "RF PMIC"}]}
+      - {id: pmic, label: "PMICs", functions: [pmic], catalog: [{category: Control Products, sub: "PMIC"}, {category: Power Management, sub: "RF PMIC"}]}
       - {id: dcdc, label: "DC-DC converters", catalog: [{category: Control Products, sub: "DC-DC"}, {category: Power Management, sub: "Step-Down"}]}
-      - {id: led_driver, label: "LED drivers", catalog: [{category: Power Management, sub: "LED|Lighting"}]}
+      - {id: led_driver, label: "LED drivers", functions: [led_driver], catalog: [{category: Power Management, sub: "LED|Lighting"}]}
       - {id: power_protection, label: "Protection and power-loss protection", catalog: [{category: Control Products, sub: "Power Loss"}, {category: Power Management, sub: "Protection"}]}
       - {id: battery_management, label: "Battery management", catalog: [{category: Control Products, sub: "Battery"}]}
       - {id: poe, label: "Power over Ethernet", catalog: [{category: Power over Ethernet}]}
@@ -93,7 +96,7 @@ categories:
   - id: motor_control
     label: Motor control
     subfamilies:
-      - {id: motor_controller, label: "Motor controller SoCs", catalog: [{category: Control Products, sub: "Motor"}]}
+      - {id: motor_controller, label: "Motor controller SoCs", functions: [motor_controller], catalog: [{category: Control Products, sub: "Motor"}]}
   - id: audio_radio
     label: Radio, audio and video
     subfamilies:

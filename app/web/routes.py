@@ -25,7 +25,18 @@ from app.matching.engine import (
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import alternates, cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
+from app.services import (
+    alternates,
+    cross_notes,
+    engineering,
+    export,
+    lifecycle,
+    mechanical,
+    notes_search,
+    pricing,
+    text,
+    vocab,
+)
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -35,7 +46,7 @@ from app.services.queries import (
     search_parts,
     single_cross,
 )
-from app.web import nav
+from app.web import labels, nav
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -76,6 +87,8 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
+labels.register(templates.env)
+templates.env.globals.update(fn_label=vocab.fn_label, family_title=vocab.family_title)
 
 
 # Navigation: task-based sections (app/web/nav.py); every existing URL keeps working
@@ -91,12 +104,13 @@ templates.env.globals.update(
     nav_sections=nav.NAV,
     nav_utility=nav.UTILITY,
     nav_icons=nav.ICONS,
+    page_title=nav.page_title,
+    page_label=nav.page_label,
 )
 
-GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
-
-
-GRADE_LABELS = {"automotive": "Automotive AEC-Q100", "industrial": "Non-automotive", "unknown": "Grade not stated"}
+# grade filter on the cross results: the keys grade_of() returns, worded as everywhere else (app/web/labels.py)
+GRADE_LABELS = {"automotive": labels.GRADE_LABELS["automotive"], "industrial": labels.GRADE_LABELS["not_automotive"],
+                "unknown": labels.GRADE_LABELS["unknown"]}  # fmt: skip
 
 
 def grade_of(part: Part) -> str:
@@ -108,10 +122,17 @@ def grade_of(part: Part) -> str:
 
 def _grade_badge(part: Part) -> tuple[str, str] | None:
     q = next((pv.value for pv in part.params if pv.key == "qualification"), None)
-    return GRADES.get(q)
+    return labels.GRADE_BADGES.get(q)
+
+
+def _part_summary(part: Part) -> str:
+    """Function · key specs · package · grade, from the part's parameters (app/services/text.py)."""
+    params = {pv.key: pv.value for pv in part.params}
+    return text.short_description(part.family, part.package.code if part.package else "", grade_of(part), params=params)
 
 
 templates.env.globals["grade_badge"] = _grade_badge
+templates.env.globals["part_summary"] = _part_summary
 templates.env.globals["grade_of"] = grade_of
 templates.env.globals["grade_labels"] = GRADE_LABELS
 
@@ -161,7 +182,7 @@ def find(request: Request, q: str = "", session: Session = Depends(get_session))
     matches = search_parts(session, q, limit=500)
     # the manufacturer catalogues (all public Skyworks and Qorvo parts) are searched too: most of them have no
     # parameters or crosses here, so they are listed with their catalogue data and a link to the manufacturer page
-    catalogue = products.search_catalogue(q, {products._pn(p.mpn) for p in matches})
+    catalogue = products.search_catalogue(q, {normalize_pn(p.mpn) for p in matches})
     exact = [p for p in matches if normalize_pn(p.mpn) == normalize_pn(q)]
     if len(exact) == 1 or (len(matches) == 1 and not catalogue):
         return RedirectResponse(f"/parts/{(exact or matches)[0].id}", status_code=303)
@@ -175,8 +196,8 @@ def find(request: Request, q: str = "", session: Session = Depends(get_session))
             "competitors": competitors,
             "references": references,
             "catalogue": catalogue,
-            "life_label": products.LIFE_LABEL,
-            "qual_label": products.QUAL_LABEL,
+            "life_label": lifecycle.CLASS_LABELS,
+            "qual_label": labels.GRADE_LABELS,
         },  # fmt: skip
     )
 
@@ -208,7 +229,7 @@ def index(
     if catalog and not cat:  # old catalogue category link: its first functional category
         cat = next((cid for c, _rx, cid, _sid in tax["rules"] if c == catalog), "")
     if lifecycle_status and not life:
-        life = {"last_time_buy": "nrnd"}.get(lifecycle_status, lifecycle_status)
+        life = lifecycle.status_class(lifecycle_status)
     if sub in tax["subs"] and not cat:
         cat = tax["subs"][sub]["category"]
     if company == "*":
@@ -217,24 +238,9 @@ def index(
     limit = max(50, min(limit, 5000))
     params = {"q": q, "cat": cat, "sub": sub, "company": company, "qual": qual, "life": life, "cap": cap, "role": role}
     ctx = {**params, "params": params, "res": res, "rows": res["rows"][:limit], "limit": limit, "tax": tax,
-           "qual_label": products.QUAL_LABEL, "cap_label": products.CAPABILITIES,
-           "life_label": products.LIFE_LABEL}  # fmt: skip
+           "qual_label": labels.GRADE_LABELS, "cap_label": products.CAPABILITIES,
+           "life_label": lifecycle.CLASS_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "index.html", ctx)
-
-
-def _series_of(mpn: str) -> str:
-    """Product series for browsing: SI8641BD-IS -> SI86, SI86S641EC-IS1 -> SI86S, ISO7741DBQR -> ISO77."""
-    m = re.match(r"[A-Z]+\d{2}(?:S(?=\d))?", (mpn or "").upper())
-    return m.group(0) if m else (mpn or "")[:4].upper()
-
-
-def _life_counts(parts: list, company: str) -> dict[str, int]:
-    out: dict[str, int] = {}
-    for p in parts:
-        if company and company != "*" and p.manufacturer.name != company:
-            continue
-        out[p.lifecycle_status.value] = out.get(p.lifecycle_status.value, 0) + 1
-    return out
 
 
 CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
@@ -522,9 +528,10 @@ def package_overlay(request: Request, a_id: int, b_id: int, lp: int = 0, session
 
 
 @router.get("/impact")
-def impact_page(ids: str = ""):
-    """Old address of the CMTI explorer: now the CMTI engineering note."""
-    return RedirectResponse(f"/engineering/cmti_kv_us?ids={ids}", status_code=307)
+def impact_page(ids: str = "", ref: str = "", cand: str = ""):
+    """Old address of the CMTI explorer: now the CMTI engineering note (its ids, or a reference and candidate)."""
+    ids = ids or ",".join(x for x in (ref, cand) if x)
+    return RedirectResponse(f"/engineering/cmti_kv_us?ids={urllib.parse.quote(ids, safe=',')}", status_code=307)
 
 
 @router.get("/notes", include_in_schema=False)
@@ -636,10 +643,6 @@ def series_of(mpn: str) -> str:
     return f"{m.group(0)[:-1]}x" if m and m.group(0)[-1].isdigit() else mpn.upper()
 
 
-def _norm_mpn(s: str) -> str:
-    return re.sub(r"[\s\-–]", "", s or "").upper()
-
-
 @router.get("/compare", response_class=HTMLResponse)
 def compare_page(
     request: Request,
@@ -656,9 +659,9 @@ def compare_page(
     # typed part numbers: exact matches are added, a prefix with several matches is offered to pick from
     matches, not_found, ambiguous = [], [], []
     for token in [t for t in re.split(r"[,;\s]+", add) if t][:20]:
-        key = _norm_mpn(token)
-        hits = [p for p in search_parts(session, token) if _norm_mpn(p.mpn).startswith(key)]
-        exact = [p for p in hits if _norm_mpn(p.mpn) == key]
+        key = normalize_pn(token)
+        hits = [p for p in search_parts(session, token) if normalize_pn(p.mpn).startswith(key)]
+        exact = [p for p in hits if normalize_pn(p.mpn) == key]
         if exact or len(hits) == 1:
             wanted += [p.id for p in (exact or hits) if p.id not in wanted]
         elif hits:
@@ -830,5 +833,5 @@ def suggest(request: Request, q: str = "", session: Session = Depends(get_sessio
     from app.services import products
 
     parts = search_parts(session, q, limit=60) if len(normalize_pn(q).replace("*", "")) >= 2 else []
-    catalogue = products.search_catalogue(q, {products._pn(p.mpn) for p in parts}, limit=max(0, 60 - len(parts)))
+    catalogue = products.search_catalogue(q, {normalize_pn(p.mpn) for p in parts}, limit=max(0, 60 - len(parts)))
     return templates.TemplateResponse(request, "_suggest.html", {"parts": parts, "catalogue": catalogue, "q": q})

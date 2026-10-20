@@ -1,5 +1,5 @@
 {% macro part_badges(part) -%}
-  {% set g = grade_badge(part) %}{% if g %}<span class="badge grade-{{ g[1] }}" title="{{ 'Automotive grade (AEC-Q100)' if g[1] == 'auto' else 'Not automotive qualified' }}">{{ g[0] }}</span>{% endif %}
+  {% set g = grade_badge(part) %}{% if g %}<span class="badge grade-{{ g[1] }}" title="{{ grade_label['automotive'] if g[1] == 'auto' else grade_label['not_automotive'] }}">{{ g[0] }}</span>{% endif %}
   {% set b = lifecycle_badge(part) %}<span class="badge {{ b[1] }}">{{ b[0] }}</span>
   {% if is_new(part) %}<span class="badge new">New</span>{% endif %}
   {% if part.is_synthetic %}<span class="badge syn">synthetic</span>{% endif %}

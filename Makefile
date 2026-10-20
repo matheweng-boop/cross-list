@@ -1,4 +1,4 @@
-.PHONY: install run test lint format seed refresh screenshots
+.PHONY: install run test lint format seed refresh
 
 install:          ## create the virtual environment and install dependencies
 	uv sync

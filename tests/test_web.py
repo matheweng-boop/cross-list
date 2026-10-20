@@ -226,7 +226,7 @@ def test_suggestions_mark_competitor_parts(client):
 
 def test_finder_start_page(client):
     html = client.get("/").text
-    assert "Find a replacement" in html and 'action="/find"' in html
+    assert "Search &amp; replacements" in html and 'action="/find"' in html
     # three starting actions and one definition of the cross types
     assert all(x in html for x in ('href="/compare"', 'href="/blocks"', 'href="/business"'))
     assert "every priority 1 parameter equal or better" in html
@@ -272,7 +272,7 @@ def test_cmti_explorer_page(client):
 
 def test_engineering_notes(client):
     html = client.get("/engineering").text
-    assert "Engineering notes" in html and "/engineering/creepage_mm" in html
+    assert "Specification guides" in html and "/engineering/creepage_mm" in html
     for key in ("isolation_rating_kvrms", "viorm_vpk", "prop_delay_ns", "peak_sink_a", "enable_pins"):
         assert client.get(f"/engineering/{key}").status_code == 200, key
     assert client.get("/engineering/no_such_thing").status_code == 404

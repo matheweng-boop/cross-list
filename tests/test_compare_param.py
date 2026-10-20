@@ -72,3 +72,11 @@ def test_format_value():
     assert format_value(P("range", unit="V"), [2.5, 5.5]) == "2.5 to 5.5 V"
     assert format_value(P("set"), ["b", "a"]) == "a, b"
     assert format_value(P("number", direction="higher"), None) == "—"
+
+
+@pytest.mark.parametrize(
+    "ref,cand,status", [(12, 12.5, EQUAL), (13, 13.6, EQUAL), (12, 13, DIFFERENT), (12, 8, DIFFERENT)]
+)
+def test_number_match_direction(ref, cand, status):
+    # a UVLO threshold: neither higher nor lower is better, so outside the tolerance the value only differs
+    assert compare_param(P("number", direction="match", tolerance=0.06), ref, cand)[0] == status

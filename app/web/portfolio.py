@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.services import portfolio as pf
+from app.services import vocab
 from app.web.routes import templates
 
 router = APIRouter()
@@ -14,5 +15,5 @@ router = APIRouter()
 @router.get("/portfolio", response_class=HTMLResponse)
 def portfolio(request: Request, session: Session = Depends(get_session)):
     ctx = {"cur": pf.curated(), "ov": pf.overlap(), "bands": pf.rf_bands(), "comp": pf.competitors(session),
-           "bundles": pf.bundles(), "label": pf.function_label}  # fmt: skip
+           "bundles": pf.bundles(), "label": vocab.fn_label}  # fmt: skip
     return templates.TemplateResponse(request, "portfolio.html", ctx)

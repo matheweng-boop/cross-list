@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import about %}
-{% block title %}Technology base – Business opportunity – BizDev{% endblock %}
 {% block content %}
-<h1>Technology base</h1>
+<h1>Technology platforms</h1>
 <p class="subtitle muted">The publicly known technology platforms of Skyworks and Qorvo (processes, filters, packaging, design IP), what they serve
   today and what else they could serve. Technology fit ratings point here. Send corrections or missing technologies with the form at the bottom.</p>
 {{ about('capabilities') }}
@@ -37,7 +36,7 @@
 <div class="table-wrap"><table class="striped small">
   <thead><tr><th>Kind</th><th>Topic</th><th>Feedback</th><th>From</th><th>Status</th></tr></thead>
   <tbody>{% for f in feedback %}<tr><td>{{ {'missing': 'Missing technology', 'correction': 'Correction', 'idea': 'Idea'}[f.kind] }}</td><td>{{ f.topic or '–' }}</td><td>{{ f.text }}</td>
-    <td>{{ f.author or 'anonymous' }}<br><span class="muted">{{ f.created_at.strftime('%Y-%m-%d') }}</span></td>
+    <td>{{ f.author or 'anonymous' }}<br><span class="muted">{{ f.created_at|date }}</span></td>
     <td><form method="post" action="/business/capabilities/feedback"><input type="hidden" name="act" value="status"><input type="hidden" name="id" value="{{ f.id }}">
       <select name="status" onchange="this.form.submit()" class="small-sel">{% for s in ['open', 'done', 'rejected'] %}<option{{ ' selected' if f.status == s }}>{{ s }}</option>{% endfor %}</select></form></td></tr>
   {% else %}<tr><td colspan="5" class="muted">No feedback yet.</td></tr>{% endfor %}</tbody>

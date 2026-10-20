@@ -4,7 +4,7 @@ brief is copied by the user, and the result is pasted back."""
 
 from sqlalchemy.orm import Session
 
-from app.services import blocks
+from app.services import blocks, vocab
 from app.services import opportunity as op
 
 STATUSES = {"collecting": "Collecting inputs", "analysing": "Analysis running", "discussing": "Discussing",
@@ -38,10 +38,9 @@ def context(session: Session, fn: str | None, co: str = "combined") -> dict | No
     for a in using:
         for f in {p.fn for p in a.positions if p.status == "supported" and p.fn != fn}:
             nearby[f] = nearby.get(f, 0) + 1
-    cat = blocks.catalogue()["functions"]
     return {
         "fn": fn,
-        "label": cat[fn].get("label", fn),
+        "label": vocab.fn_label(fn),
         "portfolio": label,
         "status": op.status_of(fn, mk, mine),
         "parts": {k: v for k, v in (mk.get(fn) or {}).items()},
@@ -50,7 +49,7 @@ def context(session: Session, fn: str | None, co: str = "combined") -> dict | No
         "sockets": sockets,
         "door": len(door),
         "markets": sorted({a.market for a in using}),
-        "nearby": sorted(((cat.get(f, {}).get("label", f), n) for f, n in nearby.items()), key=lambda x: -x[1])[:8],
+        "nearby": sorted(((vocab.fn_label(f), n) for f, n in nearby.items()), key=lambda x: -x[1])[:8],
         "competition": op.competition().get(fn),
         "technology": op.technology().get(fn),
         "hunt": op.hunt_for_function(apps, fn)[:12],

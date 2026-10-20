@@ -8,7 +8,6 @@
   <th scope="col" class="sortable{{ ' sorted' if on }}"{% if on %} aria-sort="{{ 'ascending' if dir == 'asc' else 'descending' }}"{% endif %}><a href="{{ url(sort=key, dir=nd) }}">{{ caller() if caller else sorts[key][0] }}<span class="sort-ind" aria-hidden="true">{{ ('▲' if dir == 'asc' else '▼') if on else '↕' }}</span></a>{{ extra }}</th>
 {%- endmacro %}
 {% macro decide(e, status, label, cls='') %}<form method="post" action="/business/decision" class="push-form"><input type="hidden" name="fn" value="{{ e.fn }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">{% if status == 'set_aside' %}<input type="hidden" name="note" value="">{% endif %}<button type="submit" class="small-btn {{ cls }}">{{ label }}</button></form>{% endmacro %}
-{% block title %}Opportunity explorer – BizDev{% endblock %}
 {% block content %}
 <h1>Opportunity explorer</h1>
 <p class="subtitle muted">Functions {{ co_label }} does not cover yet, one row each. Click a column title to sort; open a function for its evidence.</p>
@@ -63,7 +62,7 @@
 <div class="table-wrap"><table class="striped explorer">
   <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Fit score</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in aside %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td><td class="small">{{ e.decision.note or '–' }}</td>
-    <td class="small">{{ e.decision.date.strftime('%Y-%m-%d') if e.decision.date }}</td><td>{{ '%.2f'|format(e.score) if e.score is not none else '–' }}</td>
+    <td class="small">{{ e.decision.date|date }}</td><td>{{ '%.2f'|format(e.score) if e.score is not none else '–' }}</td>
     <td>{{ decide(e, 'clear', 'Restore', 'outline secondary') }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small muted">Nothing set aside. Use “Set aside” on a row to park a function that is not a priority now.</p>{% endif %}

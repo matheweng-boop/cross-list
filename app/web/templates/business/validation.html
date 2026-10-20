@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Human validation – BizDev{% endblock %}
 {% block content %}
 <h1>Human validation</h1>
 <p class="subtitle muted">A full scan of the data BizDev holds. Everything a rule or an opened source can confirm is checked automatically; this page
@@ -29,9 +28,9 @@
 <h2>Confirmed automatically</h2>
 {% for area, a in scan.areas.items() %}
 <details class="hv-area"{{ ' open' if loop.first }}><summary><b>{{ area }}</b> <span class="small muted">· {{ '{:,}'.format(a.records) }} records</span></summary>
-  <table class="small"><tbody>{% for c in a.checks %}<tr><td>{% if c.total and c.passed == c.total %}<span class="q-ok">✓</span>{% elif c.total %}<span class="q-warn">!</span>{% else %}–{% endif %}</td>
-    <td>{{ c.name }}</td><td>{{ '{:,}'.format(c.passed) }} / {{ '{:,}'.format(c.total) }}</td><td class="muted">{{ c.rule }}</td></tr>{% endfor %}</tbody></table>
+  <div class="table-wrap"><table class="small"><tbody>{% for c in a.checks %}<tr><td>{% if c.total and c.passed == c.total %}<span class="q-ok">✓</span>{% elif c.total %}<span class="q-warn">!</span>{% else %}–{% endif %}</td>
+    <td>{{ c.name }}</td><td>{{ '{:,}'.format(c.passed) }} / {{ '{:,}'.format(c.total) }}</td><td class="muted">{{ c.rule }}</td></tr>{% endfor %}</tbody></table></div>
 </details>
 {% endfor %}
-<p class="small muted">The same scan as text: <code>uv run python tools/data_scan.py</code> writes <code>docs/data_scan.md</code>.</p>
+<p class="small muted">The same scan as text: <code>uv run python tools/data_scan.py</code> writes <code>docs/data_scan.md</code> (not committed).</p>
 {% endblock %}

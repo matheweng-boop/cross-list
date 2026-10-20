@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import status_chip, crowd, review, path_chip, about, checked %}
-{% block title %}{{ label }} – Evidence – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, label ~ ' evidence') }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/explorer?co={{ co }}">← Opportunity explorer</a></p>
 <h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
@@ -36,7 +36,7 @@
 <div class="table-wrap"><table class="striped small">
   <thead><tr><th>Part</th><th>Company</th><th>Description</th><th>Status</th><th>Fills this function?</th></tr></thead>
   <tbody>{% for r in existing %}<tr><td>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener"><b>{{ r.mpn }}</b></a>{% else %}<b>{{ r.mpn }}</b>{% endif %}{% if r.named %} <span class="bo-notscore" title="named by the path evidence">named</span>{% endif %}</td>
-    <td>{{ r.manufacturer }}</td><td>{{ (r.description or '')[:150] }}</td><td>{{ r.status }}</td>
+    <td>{{ r.manufacturer|vendor }}</td><td>{{ (r.description|desc(r.mpn))|truncate(150, end='…') }}</td><td title="{{ r.status }}">{{ life_text(r.status) }}</td>
     <td>{% if r.confirmed %}<span class="rv-st rv-verified">confirmed</span>
       <form method="post" action="/business/evidence/{{ fn }}/mapping" class="inline"><input type="hidden" name="mpn" value="{{ r.mpn }}"><button name="verdict" value="undo" class="rv-b">undo</button></form>
       {% else %}<form method="post" action="/business/evidence/{{ fn }}/mapping" class="inline"><input type="hidden" name="mpn" value="{{ r.mpn }}"><input type="hidden" name="manufacturer" value="{{ r.manufacturer }}">
@@ -50,7 +50,7 @@
     {% if tech %}<p><span class="bo-prox px-{{ tech.proximity }}">{{ prox_label[tech.proximity] }}</span> {{ tech.tech|join(', ') }}</p><p>{{ tech.reasoning }}</p>{% else %}<p class="muted">not rated</p>{% endif %}
     {% if platforms %}<p><b>Built on:</b> {% for k, pl in platforms %}<a class="bo-ours" href="/business/capabilities#p-{{ k }}">{{ pl.name }}</a>{% endfor %}</p>{% endif %}</article>
   <article class="bo-ev"><header><span>Competition <span class="bo-inscore">score</span></span>{{ review('competition', fn, rev, none, comp.check if comp else none) }}</header>
-    {% if comp %}<p>{{ crowd(comp, crowding_label) }}</p><p>{{ comp.vendors|join(', ') }}</p><p class="muted">{{ comp.note }}</p>{{ checked(comp) }}{% else %}<p class="muted">not assessed</p>{% endif %}</article>
+    {% if comp %}<p>{{ crowd(comp, crowding_label) }}</p><p>{{ comp.vendors|map('vendor')|join(', ') }}</p><p class="muted">{{ comp.note }}</p>{{ checked(comp) }}{% else %}<p class="muted">not assessed</p>{% endif %}</article>
     {% set t = ev.trends %}
   <article class="bo-ev"><header><span>Market trend <span class="bo-inscore">score</span></span>{{ review('trends', fn, rev, t.confidence if t else none, t.check if t else none) }}</header>
     {% if t %}<p><b>{{ t.outlook|capitalize }}</b>: {{ t.note }}</p>{% if t.drivers %}<ul>{% for d in t.drivers %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
@@ -61,7 +61,7 @@
 <div class="bo-ev-grid">
   {% set pt = ev.patents %}
   <article class="bo-ev"><header><span>Patents <span class="bo-notscore">not in score</span></span>{{ review('patents', fn, rev, pt.confidence if pt else none, pt.check if pt else none) }}</header>
-    {% if pt %}<p><b>{{ pt.depth|replace('_', ' ') }}</b>{% if pt.count %} · about {{ pt.count }} results{% endif %}</p><p>{{ pt.note }}</p>
+    {% if pt %}<p><b>{{ pt.depth|replace('_', ' ')|capitalize }}</b>{% if pt.count %} · about {{ pt.count }} results{% endif %}</p><p>{{ pt.note }}</p>
       {% if pt.examples %}<ul>{% for x in pt.examples %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
       {% if pt.query %}<p class="small muted">Re-run: <code>{{ pt.query }}</code></p>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}{{ checked(pt) }}</article>
   {% set fo = ev.foundry %}
@@ -70,7 +70,7 @@
       <p><b>In house:</b> {{ fo.in_house }}</p><p class="muted">{{ fo.note }}</p>{% else %}<p class="muted">not researched yet</p>{% endif %}{{ checked(fo) }}</article>
   {% set ct = ev.competitor_tech %}
   <article class="bo-ev"><header><span>Competitor technology <span class="bo-notscore">not in score</span></span>{{ review('competitor_tech', fn, rev, ct.confidence if ct else none, ct.check if ct else none) }}</header>
-    {% if ct %}<p><b>{{ ct.entry_position|replace('_', ' ') }}</b> · leaders: {{ ct.leaders|join(', ') }}</p><p>{{ ct.lead_tech }}</p>
+    {% if ct %}<p><b>{{ ct.entry_position|replace('_', ' ')|capitalize }}</b> · leaders: {{ ct.leaders|map('vendor')|join(', ') }}</p><p>{{ ct.lead_tech }}</p>
       {% if ct.differentiators %}<p><b>Room to differ:</b></p><ul>{% for d in ct.differentiators %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}{{ checked(ct) }}</article>
 </div>
 

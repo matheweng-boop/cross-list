@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Compare – BizDev{% endblock %}
 {% block content %}
 <h1>Compare parts</h1>
 <p class="subtitle muted">Type part numbers or a series (e.g. <code>Si8641BD-IS, ISO7741</code> or <code>Si864</code>), or pick from the series list below.
@@ -18,7 +17,7 @@
 <form method="get" class="compare-matches">
   <input type="hidden" name="family" value="{{ family }}"><input type="hidden" name="alt" value="{{ alt }}">{% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
   <p class="small"><b>Several parts start with {% for t in ambiguous %}“{{ t }}”{{ ', ' if not loop.last }}{% endfor %}</b> – tick the ones to compare:</p>
-  <div class="picklist">{% for p in matches %}<label><input type="checkbox" name="pick" value="{{ p.id }}"> {{ p.mpn }} <span class="muted">{{ p.manufacturer.name }} · {{ p.package.code }}</span></label>{% endfor %}</div>
+  <div class="picklist">{% for p in matches %}<label><input type="checkbox" name="pick" value="{{ p.id }}"> {{ p.mpn }} <span class="muted">{{ p.manufacturer.name|vendor }} · {{ p.package.code }}</span></label>{% endfor %}</div>
   <button type="submit" class="small-btn">Compare selected</button>
 </form>
 {% endif %}
@@ -35,7 +34,7 @@
   <div class="table-wrap">
   <table class="compare-table">
     <thead><tr><th>Parameter</th><th>P</th>
-      {% for p in comparison.parts %}<th><a href="/parts/{{ p.id }}">{{ p.mpn }}</a><br><span class="muted">{{ p.manufacturer.name }}{% if p.id == comparison.baseline.id %} · baseline{% endif %}</span>
+      {% for p in comparison.parts %}<th><a href="/parts/{{ p.id }}">{{ p.mpn }}</a><br><span class="muted">{{ p.manufacturer.name|vendor }}{% if p.id == comparison.baseline.id %} · baseline{% endif %}</span>
         {% if p.id in alt_of %}<br><span class="badge alt-badge" title="{{ alt_of[p.id][1].family_label }} alternate of {{ alt_of[p.id][0] }}">{{ alt_of[p.id][1].family_label }} alternate of {{ alt_of[p.id][0] }}</span><br><small class="muted">{{ alt_of[p.id][1].label }}</small>{% endif %}
         {% if p.id|string in ids.split(',') %}<br><a class="small" href="/compare?ids={{ ids.split(',')|reject('equalto', p.id|string)|join(',') }}&alt={{ alt }}" aria-label="Remove {{ p.mpn }}">remove</a>{% endif %}</th>{% endfor %}
     </tr></thead>

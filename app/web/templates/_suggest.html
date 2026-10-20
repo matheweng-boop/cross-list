@@ -4,7 +4,7 @@
   {% for p in parts %}
   <li role="option"><a href="/parts/{{ p.id }}">
     <span class="sg-mpn">{{ p.mpn }}</span>
-    <span class="sg-meta">{{ p.manufacturer.name }} · {{ p.package.code }}</span>
+    <span class="sg-meta">{{ p.manufacturer.name|vendor }} · {{ p.package.code }}</span>
     {% if not p.is_reference %}<span class="badge new">find Skyworks part</span>{% endif %}
     {{ part_badges(p) }}
   </a></li>
@@ -12,7 +12,7 @@
   {% for r in catalogue %}
   <li role="option"><a href="/find?q={{ r.mpn|urlencode }}">
     <span class="sg-mpn">{{ r.mpn }}</span>
-    <span class="sg-meta">{{ r.manufacturer }} · {{ r.source_category }}</span>
+    <span class="sg-meta">{{ r.manufacturer|vendor }} · {{ r.source_category }}</span>
     <span class="badge sg-cat" title="Catalogue record: no parameters or crosses in BizDev yet">catalogue</span>
   </a></li>
   {% endfor %}

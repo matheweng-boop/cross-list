@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ u.title }} – Uploads – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, u.title) }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/manage/uploads">← All uploads</a></p>
 <h1>{{ u.title }}</h1>
-<p class="small muted">{{ kinds.get(u.kind, u.kind) }} · {{ statuses.get(u.status, u.status) }} · added {{ u.created_at.strftime('%d %b %Y %H:%M') }}{% if u.author %} by {{ u.author }}{% endif %}{% if u.topic %} · about {{ u.topic }}{% endif %}
+<p class="small muted">{{ kinds.get(u.kind, u.kind) }} · {{ statuses.get(u.status, u.status) }} · added {{ u.created_at|date('stamp') }}{% if u.author %} by {{ u.author }}{% endif %}{% if u.topic %} · about {{ u.topic }}{% endif %}
   {% if u.source %} · source: {% if u.source.startswith('https://') or u.source.startswith('http://') %}<a href="{{ u.source }}" target="_blank" rel="noopener noreferrer">{{ u.source }} ↗</a>{% else %}{{ u.source }}{% endif %}{% endif %}</p>
 
 {% if u.file_name %}

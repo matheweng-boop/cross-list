@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import BlockDiagram, BlockFeedback
-from app.services import blocks, refdesigns, schematic
+from app.services import blocks, refdesigns, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -89,9 +89,10 @@ def _editor(request, session, design, tpl):
 @router.post("/blocks/{design_id}/delete")
 def delete(design_id: int, session: Session = Depends(get_session)):
     d = session.get(BlockDiagram, design_id)
-    if d is not None:
-        session.delete(d)
-        session.commit()
+    if d is None:
+        raise HTTPException(404, "Block diagram not found")
+    session.delete(d)
+    session.commit()
     return RedirectResponse("/blocks", status_code=303)
 
 
@@ -124,9 +125,17 @@ def to_schematic(payload: dict = Body(...), session: Session = Depends(get_sessi
     return schematic.check(session, data, scope, answers)
 
 
+def _diagram(payload: dict) -> dict:
+    """The diagram to store: it must have its groups list (an empty object would open as a blank, broken editor)."""
+    data = payload.get("data")
+    if not isinstance(data, dict) or not isinstance(data.get("groups"), list):
+        raise HTTPException(400, "Nothing to save: the diagram has no blocks data")
+    return data
+
+
 @router.post("/api/blocks/designs")
 def create(payload: dict = Body(...), session: Session = Depends(get_session)):
-    d = BlockDiagram(name=_name(payload), data=payload.get("data") or {})
+    d = BlockDiagram(name=_name(payload), data=_diagram(payload))
     session.add(d)
     session.commit()
     return {"id": d.id, "name": d.name}
@@ -137,7 +146,7 @@ def update(design_id: int, payload: dict = Body(...), session: Session = Depends
     d = session.get(BlockDiagram, design_id)
     if d is None:
         raise HTTPException(404, "Block diagram not found")
-    d.name, d.data = _name(payload), payload.get("data") or {}
+    d.name, d.data = _name(payload), _diagram(payload)
     session.commit()
     return {"id": d.id, "name": d.name}
 
@@ -191,12 +200,13 @@ def update_feedback(
     fb_id: int, status: str = Form(""), delete: str = Form(""), session: Session = Depends(get_session)
 ):
     fb = session.get(BlockFeedback, fb_id)
-    if fb is not None:
-        if delete:
-            session.delete(fb)
-        elif status in FEEDBACK_STATUS:
-            fb.status = status
-        session.commit()
+    if fb is None:
+        raise HTTPException(404, "Feedback not found")
+    if delete:
+        session.delete(fb)
+    elif status in FEEDBACK_STATUS:
+        fb.status = status
+    session.commit()
     return RedirectResponse("/blocks/feedback", status_code=303)
 
 
@@ -238,5 +248,5 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
            "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
            "status": {f: op.status_of(f, mk, mine) for f in fns},
-           "label": {f: refdesigns.function_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
+           "label": {f: vocab.fn_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/reference_designs.html", ctx)

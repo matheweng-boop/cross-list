@@ -6,7 +6,7 @@
 </div>
 {% endmacro %}
 {% macro status_chip(s, labels) %}<span class="bo-st st-{{ s }}" title="{{ bo_status_help[s] }}">{{ labels[s] }}</span>{% endmacro %}
-{% macro crowd(c, labels) %}{% if c %}<span class="bo-crowd cr-{{ c.crowding }}" title="{{ c.vendors|join(', ') }}{{ ' – ' ~ c.note if c.note }}">{{ labels[c.crowding] ~ ' · ' ~ c.vendors|length if c.vendors else 'No established supplier' }}</span>{% else %}<span class="muted small">not assessed</span>{% endif %}{% endmacro %}
+{% macro crowd(c, labels) %}{% if c %}<span class="bo-crowd cr-{{ c.crowding }}" title="{{ c.vendors|map('vendor')|join(', ') }}{{ ' – ' ~ c.note if c.note }}">{{ labels[c.crowding] ~ ' · ' ~ c.vendors|length if c.vendors else 'No established supplier' }}</span>{% else %}<span class="muted small">not assessed</span>{% endif %}{% endmacro %}
 {% macro glossary(co_label) %}
 <details class="bo-help"><summary class="small"><b>How to read this</b></summary>
   <dl class="small">

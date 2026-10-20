@@ -130,9 +130,34 @@ def _fns_of(t: dict) -> set[str]:
     return {b["fn"] if isinstance(b, dict) else str(b).split(" x")[0].strip() for g in t["groups"] for b in g["blocks"]}
 
 
+BLOCK_BANDS = Path(__file__).resolve().parents[2] / "data" / "business" / "rf_block_bands.yaml"
+
+
+@lru_cache
+def block_bands() -> dict:
+    """Per-block bands (and PA power class) stated for each template: data/business/rf_block_bands.yaml."""
+    return ((yaml.safe_load(BLOCK_BANDS.read_text()) or {}).get("templates") or {}) if BLOCK_BANDS.exists() else {}
+
+
+def _block_needs(t: dict, fset: set) -> list[tuple[str, str, str | None, str]] | None:
+    """(function, band, power class, basis) for each RF block of a template with stated bands; None when the
+    template has no entry (the name rules are used instead)."""
+    entry = block_bands().get(t["name"])
+    if not entry:
+        return None
+    out = []
+    for g in t.get("groups") or []:
+        for fn, spec in (entry.get(g["id"]) or {}).items():
+            if fn in fset and isinstance(spec, dict):
+                out += [(fn, b, spec.get("power"), spec.get("basis") or "") for b in spec.get("bands") or []]
+    return out
+
+
 def demand() -> tuple[dict[str, Counter], dict[str, list[str]], int, int]:
-    """Applications needing each (function, band); the names behind each band; how many RF applications
-    have no band rule, out of all applications using a measured function."""
+    """Applications needing each (function, band), from the bands stated per block where the template has them
+    (power amplifiers also per power class, key "power_amplifier:<class>"), else from rules on the application name;
+    the names behind each band; RF applications with no band at all, out of all applications using a measured
+    function."""
     fset, limits = set(config()["functions"]), config().get("function_bands") or {}
     need: dict[str, Counter] = defaultdict(Counter)
     apps: dict[str, list[str]] = defaultdict(list)
@@ -142,15 +167,42 @@ def demand() -> tuple[dict[str, Counter], dict[str, list[str]], int, int]:
         if not fns:
             continue
         rf += 1
-        bands = application_bands(t["name"])
+        name = blocks.display_name(t)
+        stated = _block_needs(t, fset)
+        if stated is not None:
+            seen: set = set()
+            for fn, b, power, _ in stated:
+                if (fn, b) not in seen:
+                    seen.add((fn, b))
+                    need[fn][b] += 1
+                if fn == "power_amplifier" and (fn, b, power) not in seen:
+                    seen.add((fn, b, power))
+                    need[f"{fn}:{power or ''}"][b] += 1
+            bands = sorted({b for _, b, _, _ in stated})
+        else:
+            bands = application_bands(t["name"])
+            for b in bands:
+                for f in fns:
+                    if f not in limits or b in limits[f]:
+                        need[f][b] += 1
+                        if f == "power_amplifier":  # power not stated
+                            need[f"{f}:"][b] += 1
         if not bands:
             unknown += 1
         for b in bands:
-            apps[b].append(blocks.display_name(t))
-            for f in fns:
-                if f not in limits or b in limits[f]:
-                    need[f][b] += 1
+            apps[b].append(name)
     return need, apps, unknown, rf
+
+
+def basis(fn: str, band: str) -> list[tuple[str, str]]:
+    """(application, reason) for the blocks of a function stated in a band."""
+    fset = set(config()["functions"])
+    out = []
+    for t in [*blocks.templates(), *blocks.background_templates()]:
+        for f, b, _, why in _block_needs(t, fset) or []:
+            if f == fn and b == band and (blocks.display_name(t), why) not in out:
+                out.append((blocks.display_name(t), why))
+    return out
 
 
 def rows() -> list[dict]:
@@ -167,7 +219,9 @@ def rows() -> list[dict]:
             for b in cfg["bands"]:
                 inb = [p for p in sub if b["id"] in p["bands"]]
                 active = [p for p in inb if not p["risk"]]
-                cells[b["id"]] = {"n": len(active), "risk": len(inb) - len(active), "need": need[fn][b["id"]],
+                # power amplifiers: blocks of this power class plus blocks whose power is not stated
+                n_need = need[f"{fn}:{cid}"][b["id"]] + need[f"{fn}:"][b["id"]] if cid else need[fn][b["id"]]
+                cells[b["id"]] = {"n": len(active), "risk": len(inb) - len(active), "need": n_need,
                                   "by": Counter(p["manufacturer"] for p in active)}  # fmt: skip
             out.append({"fn": fn, "label": blocks.catalogue()["functions"].get(fn, {}).get("label", fn),
                         "power": cid, "power_label": clabel, "cells": cells, "total": len(sub),
@@ -176,23 +230,29 @@ def rows() -> list[dict]:
     return out
 
 
+THIN_NEED = 5  # a slot with one or two parts is "thin" when at least this many applications need it
+
+
 def gaps(rs: list[dict]) -> list[dict]:
-    """Slots that applications need where we have no active part (or only ageing ones), most needed first. For power
-    amplifiers a band counts as a gap only when no power class has a part; a missing class is listed as such."""
+    """Slots that applications need where we have no active part (or only ageing ones), then thin slots (one or two
+    active parts for five or more applications), most needed first. For power amplifiers a band counts as a gap only
+    when no power class has a part; a missing class is listed as such."""
     bands = {b["id"]: b for b in config()["bands"]}
     out = []
     pa = [r for r in rs if r["fn"] == "power_amplifier"]
     for r in rs:
         for bid, c in r["cells"].items():
-            if not c["need"] or c["n"]:
+            if not c["need"] or c["n"] > 2 or (c["n"] and c["need"] < THIN_NEED):
                 continue
-            if r["fn"] == "power_amplifier" and any(x["cells"][bid]["n"] for x in pa):
+            if c["n"]:
+                kind = "thin"
+            elif r["fn"] == "power_amplifier" and any(x["cells"][bid]["n"] for x in pa):
                 kind = "power"  # other power classes exist in this band
             else:
                 kind = "risk" if c["risk"] else "none"
             out.append({"fn": r["fn"], "label": r["label"], "power_label": r["power_label"], "band": bands[bid],
-                        "need": c["need"], "kind": kind, "risk": c["risk"]})  # fmt: skip
-    order = {"none": 0, "risk": 1, "power": 2}
+                        "need": c["need"], "kind": kind, "risk": c["risk"], "n": c["n"]})  # fmt: skip
+    order = {"none": 0, "risk": 1, "thin": 2, "power": 3}
     return sorted(out, key=lambda g: (order[g["kind"]], -g["need"], g["label"]))
 
 

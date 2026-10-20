@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}RF bands – BizDev{% endblock %}
+{% block content %}
+<h1>RF bands</h1>
+<p class="subtitle muted">Cellular (LTE / 5G), GNSS, Wi-Fi and IoT, UWB and V2X, broadcast, satellite and radar bands on one frequency axis. Click a band for what it is used for, the front-end parts it calls for, and our parts whose frequency range covers it.</p>
+
+<div class="rb-bar">
+  <div class="rb-zoom small" role="group" aria-label="Frequency range">{% for k, label in [('all', 'All'), ('sub1', 'Below 1 GHz'), ('l', '1–3 GHz'), ('c', '3–8 GHz'), ('mmw', 'Above 8 GHz')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-zoom="{{ k }}">{{ label }}</button>{% endfor %}</div>
+  <div class="rb-groups small" role="group" aria-label="Show">{% for k, label in groups.items() %}<label class="rb-g g-{{ loop.index0 }}"><input type="checkbox" value="{{ k }}"{{ ' checked' if k != 'ieee' }}> {{ label }}</label>{% endfor %}</div>
+</div>
+<div class="rb-chart-wrap"><svg id="rb-chart" role="img" aria-label="Frequency band chart"></svg></div>
+<p class="small muted">Logarithmic frequency axis. FDD bands show uplink and downlink as two linked bars; GNSS and broadcast are receive-only. Hover a bar for its name.</p>
+
+<section id="rb-detail" class="pl-card" aria-live="polite">{% if not band %}<p class="muted">Click a band in the chart.</p>{% endif %}</section>
+
+<script id="rb-data" type="application/json">{{ {'groups': groups.items()|list, 'bands': bands}|tojson }}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("rb-data").textContent);
+  const svg = document.getElementById("rb-chart"), detail = document.getElementById("rb-detail");
+  const ZOOM = {all: [0.1, 110000], sub1: [10, 1100], l: [1000, 3000], c: [3000, 8500], mmw: [8000, 110000]};
+  const GKEYS = D.groups.map(g => g[0]), GNAME = Object.fromEntries(D.groups);
+  let zoom = "all", selected = new URLSearchParams(location.search).get("band") || "";
+  const shown = () => new Set([...document.querySelectorAll(".rb-groups input:checked")].map(i => i.value));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+  const shortName = b => b.name.split(" (")[0].replace(/^Band /, "B").replace(/ \/ .*$/, "").replace(/:.*$/, "");
+  const fmt = f => (f >= 1000 ? `${+(f / 1000).toFixed(f >= 10000 ? 0 : 2)} GHz` : f >= 1 ? `${+f.toFixed(1)} MHz` : `${+(f * 1000).toFixed(0)} kHz`);
+
+  function draw() {
+    const [f0, f1] = ZOOM[zoom], W = Math.max(svg.parentElement.clientWidth, 760), LBL = 170, PAD = 14, ROW = 17, LANE_GAP = 10;
+    const x = f => LBL + (Math.log10(f) - Math.log10(f0)) / (Math.log10(f1) - Math.log10(f0)) * (W - LBL - PAD);
+    const vis = shown(), out = [];
+    let y = 26;
+    // frequency grid: decades, plus 1-2-5 steps when zoomed in
+    const ticks = [];
+    for (let e = Math.floor(Math.log10(f0)); e <= Math.ceil(Math.log10(f1)); e++)
+      for (const m of (f1 / f0 < 20 ? [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8] : f1 / f0 < 200 ? [1, 2, 5] : [1])) { const f = m * 10 ** e; if (f >= f0 && f <= f1) ticks.push(f); }
+    const lanes = [];
+    for (const g of GKEYS) {
+      if (!vis.has(g)) continue;
+      const items = D.bands.filter(b => b.group === g && b.ranges.some(r => r[1] >= f0 && r[0] <= f1));
+      if (!items.length) continue;
+      const rows = [];  // pack bands into rows without overlap (in pixels, with room for a short label)
+      for (const b of items.sort((a, c) => Math.min(...a.ranges.map(r => r[0])) - Math.min(...c.ranges.map(r => r[0])))) {
+        const lo = x(Math.max(f0, Math.min(...b.ranges.map(r => r[0])))), bar = x(Math.min(f1, Math.max(...b.ranges.map(r => r[1]))));
+        const lw = shortName(b).length * 6 + 8, hi = (bar - lo > lw ? bar : bar + lw) + 4;
+        let row = rows.findIndex(end => end < lo);
+        if (row < 0) { rows.push(0); row = rows.length - 1; }
+        rows[row] = hi;
+        b._row = row;
+      }
+      lanes.push({g, items, n: rows.length, y});
+      y += rows.length * ROW + LANE_GAP + 8;
+    }
+    const H = y + 8;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
+    for (const f of ticks) out.push(`<line class="rb-tick" x1="${x(f)}" x2="${x(f)}" y1="18" y2="${H - 4}"/><text class="rb-tl" x="${x(f)}" y="12" text-anchor="middle">${fmt(f)}</text>`);
+    for (const L of lanes) {
+      const gi = GKEYS.indexOf(L.g);
+      out.push(`<rect class="rb-lane" x="0" y="${L.y - 4}" width="${W}" height="${L.n * ROW + 8}"/><text class="rb-ll" x="6" y="${L.y + 10}">${esc(GNAME[L.g])}</text>`);
+      for (const b of L.items) {
+        const ry = L.y + b._row * ROW, segs = b.ranges.filter(r => r[1] >= f0 && r[0] <= f1);
+        const xs = segs.map(r => [x(Math.max(r[0], f0)), Math.max(x(Math.min(r[1], f1)), x(Math.max(r[0], f0)) + 3)]);
+        const tip = `${b.name}: ${b.ranges.map(r => `${r[2]} ${fmt(r[0])}–${fmt(r[1])}`).join(", ")}`;
+        let g = `<g class="rb-band c${gi}${b.id === selected ? " on" : ""}" data-id="${b.id}" tabindex="0" role="button" aria-label="${esc(tip)}"><title>${esc(tip)}</title>`;
+        if (xs.length > 1) g += `<line class="rb-pair" x1="${xs[0][1]}" x2="${xs[xs.length - 1][0]}" y1="${ry + 6}" y2="${ry + 6}"/>`;
+        xs.forEach(([a, c], i) => (g += `<rect x="${a}" y="${ry}" width="${c - a}" height="12" rx="2"${segs[i][2] === "UL" ? ' class="ul"' : ""}/>`));
+        const short = shortName(b);
+        const room = xs[xs.length - 1][1] - xs[0][0];
+        if (room > short.length * 6 + 6) g += `<text class="rb-bl" x="${xs[0][0] + 3}" y="${ry + 9.5}">${esc(short)}</text>`;
+        else g += `<text class="rb-bl out" x="${xs[xs.length - 1][1] + 3}" y="${ry + 9.5}">${esc(short)}</text>`;
+        out.push(g + "</g>");
+      }
+    }
+    svg.innerHTML = out.join("");
+  }
+  async function open(id) {
+    selected = id;
+    draw();
+    history.replaceState(null, "", `?band=${id}`);
+    detail.innerHTML = '<p class="muted">Loading…</p>';
+    try { detail.innerHTML = await (await fetch(`/rf-bands/${encodeURIComponent(id)}`)).text(); }
+    catch { detail.innerHTML = '<p class="uc-error">Could not load this band.</p>'; }
+  }
+  svg.addEventListener("click", e => { const g = e.target.closest(".rb-band"); if (g) open(g.dataset.id); });
+  svg.addEventListener("keydown", e => { const g = e.target.closest(".rb-band"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(g.dataset.id); } });
+  document.querySelectorAll("[data-zoom]").forEach(b => b.addEventListener("click", () => {
+    zoom = b.dataset.zoom; document.querySelectorAll("[data-zoom]").forEach(x => x.classList.toggle("on", x === b)); draw();
+  }));
+  document.querySelectorAll(".rb-groups input").forEach(i => i.addEventListener("change", draw));
+  window.addEventListener("resize", draw);
+  draw();
+  if (selected) open(selected);
+})();
+</script>
+{% endblock %}

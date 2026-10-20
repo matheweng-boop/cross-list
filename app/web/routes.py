@@ -549,6 +549,29 @@ def notes_search_page(request: Request, q: str = ""):
     )
 
 
+@router.get("/rf-bands", response_class=HTMLResponse)
+def rf_bands_page(request: Request, band: str = ""):
+    from app.services import rf_bands
+
+    d = rf_bands.data()
+    ctx = {"groups": d["groups"], "bands": d["bands"], "band": band if rf_bands.band(band) else ""}
+    return templates.TemplateResponse(request, "engineering/rf_bands.html", ctx)
+
+
+@router.get("/rf-bands/{band_id}", response_class=HTMLResponse)
+def rf_band_detail(request: Request, band_id: str):
+    """The details panel of one band: what it is, the front-end parts it calls for, and our parts that cover it."""
+    from app.services import rf_bands
+
+    b = rf_bands.band(band_id)
+    if b is None:
+        raise HTTPException(404, "Unknown band")
+    g = b["group"]
+    ctx = {"b": b, "group": rf_bands.data()["groups"].get(g, ""), "note": rf_bands.GROUP_NOTES.get(g, ""),
+           "parts": rf_bands.parts_for(band_id)}  # fmt: skip
+    return templates.TemplateResponse(request, "engineering/_rf_band.html", ctx)
+
+
 @router.get("/rf-notes", response_class=HTMLResponse)
 def rf_notes_page(request: Request):
     from app.services import rf_notes

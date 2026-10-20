@@ -42,7 +42,9 @@ def test_matrix_and_gaps():
         cell = next(r for r in rows if r["fn"] == g["fn"] and r["power_label"] == g["power_label"])["cells"][
             g["band"]["id"]
         ]
-        assert cell["need"] and not cell["n"]
+        assert cell["need"] and (
+            not cell["n"] if g["kind"] != "thin" else cell["n"] <= 2 and cell["need"] >= rc.THIN_NEED
+        )
 
 
 def test_page(client):
@@ -68,3 +70,39 @@ def test_rf_templates_completed_from_public_diagrams():
     assert ["antenna", "preselector", "RX"] in ew["links"]
     names = [x["name"] for x in t]
     assert any("DOCSIS 4.0 line extender" in n for n in names) and any("vector network analyzer" in n for n in names)
+
+
+def test_block_bands_are_valid_and_used():
+    cfg = rc.config()
+    bands, powers = {b["id"] for b in cfg["bands"]}, {c["id"] for c in cfg["power_classes"]}
+    names = {t["name"]: t for t in [*blocks.templates(), *blocks.background_templates()]}
+    stated = rc.block_bands()
+    assert stated
+    for name, groups in stated.items():
+        t = names[name]
+        ids = {g["id"] for g in t["groups"]}
+        for gid, fns in groups.items():
+            assert gid in ids
+            for spec in fns.values():
+                assert set(spec.get("bands") or []) <= bands and spec.get("power") in powers | {None}
+    need, _, unknown, n = rc.demand()
+    assert unknown < n / 4  # most RF applications have stated bands
+    assert any(g["kind"] == "thin" and g["fn"] == "rf_synthesizer" for g in rc.gaps(rc.rows()))
+
+
+def test_rf_bands_page_and_parts():
+    from app.services import rf_bands
+
+    gnss = rf_bands.parts_for("gnss_l1")
+    fam = next(g for g in gnss if g["fn"] == "gnss_lna")
+    assert fam["specific"] and all(p["specific"] for p in fam["specific"])
+    assert not any(
+        p["specific"] for g in gnss for p in g["specific"] if p["width"] > 1
+    )  # wideband parts are not specific
+
+
+def test_rf_bands_routes(client):
+    assert client.get("/rf-bands").status_code == 200
+    r = client.get("/rf-bands/n77")
+    assert r.status_code == 200 and "3300" in r.text
+    assert client.get("/rf-bands/nope").status_code == 404

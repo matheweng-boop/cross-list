@@ -688,5 +688,6 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
     ctx = {"rows": rs, "gaps": rf.gaps(rs), "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
            "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
            "fn": fn, "band": band, "power": power,
-           "slot": rf.slot_parts(fn, band, power or None) if fn and band else None}  # fmt: skip
+           "slot": rf.slot_parts(fn, band, power or None) if fn and band else None,
+           "why": rf.basis(fn, band) if fn and band else [], "n_stated": len(rf.block_bands())}  # fmt: skip
     return templates.TemplateResponse(request, "business/rf_coverage.html", ctx)

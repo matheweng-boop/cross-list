@@ -35,22 +35,24 @@
       <td>{{ '%g–%g'|format(p.ghz[0], p.ghz[1]) if p.ghz }}</td><td>{{ p.description }}</td><td>{{ p.status }}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% else %}<p class="small">No part of ours states a frequency in this band.</p>{% endif %}
-  {% if apps.get(band) %}<p class="small muted">Applications counted for this band: {{ apps[band][:12]|join(' · ') }}{% if apps[band]|length > 12 %} …{% endif %}</p>{% endif %}
+  {% if why %}<details class="small" open><summary><b>Blocks that need it</b> ({{ why|length }})</summary><ul>{% for a, r in why %}<li>{{ a }}{% if r %} <span class="muted">— {{ r }}</span>{% endif %}</li>{% endfor %}</ul></details>
+  {% elif apps.get(band) %}<p class="small muted">Applications counted for this band (from their names): {{ apps[band][:12]|join(' · ') }}{% if apps[band]|length > 12 %} …{% endif %}</p>{% endif %}
+  <p class="small"><a href="/rf-bands">Which standards use this band →</a></p>
 </section>
 {% endif %}
 
-<h2>Gaps applications need <small class="muted">{{ gaps|length }}</small></h2>
+<h2>Gaps and thin spots applications need <small class="muted">{{ gaps|length }}</small></h2>
 {% if gaps %}<div class="table-wrap"><table class="striped small">
   <thead><tr><th scope="col">Function</th><th scope="col">Band</th><th scope="col">Applications</th><th scope="col">Situation</th></tr></thead>
   <tbody>{% for g in gaps %}<tr><td><a href="/business/rf-coverage?fn={{ g.fn }}&band={{ g.band.id }}#slot">{{ g.label }}</a>{% if g.power_label %} <small class="muted">{{ g.power_label }}</small>{% endif %}</td><td>{{ g.band.label }}</td><td>{{ g.need }}</td>
-    <td>{% if g.kind == 'none' %}<span class="lg lg-opp">no part of ours</span>{% elif g.kind == 'risk' %}<span class="lg lg-opp">only {{ g.risk }} obsolete / NRND part{{ 's' if g.risk != 1 }}</span>{% else %}<span class="lg lg-ext">this power class missing; other classes exist</span>{% endif %}</td></tr>{% endfor %}</tbody>
+    <td>{% if g.kind == 'none' %}<span class="lg lg-opp">no part of ours</span>{% elif g.kind == 'risk' %}<span class="lg lg-opp">only {{ g.risk }} obsolete / NRND part{{ 's' if g.risk != 1 }}</span>{% elif g.kind == 'thin' %}<span class="lg lg-have">thin: {{ g.n }} active part{{ 's' if g.n != 1 }}</span>{% else %}<span class="lg lg-ext">this power class missing; other classes exist</span>{% endif %}</td></tr>{% endfor %}</tbody>
 </table></div>{% else %}<p class="small muted">No slot that an application needs is empty.</p>{% endif %}
 
 <details class="small rf-method"><summary>How this is measured, and its limits</summary>
   <ul>
     <li><b>Parts:</b> {{ '{:,}'.format(n_parts) }} Skyworks and Qorvo catalogue parts in these functions. A part covers a band when its published frequency range overlaps it (IEEE letter bands). {{ '{:,}'.format(no_freq) }} state no readable frequency and are left out, not guessed.</li>
     <li><b>Power amplifiers</b> are split by the highest output power stated (P1dB, Psat, linear or rated output power): up to 1 W, 1–10 W, over 10 W.</li>
-    <li><b>Demand</b> counts library and background applications that contain the function, with the bands taken from rules on the application's name (Wi-Fi → S / C, GNSS → L, satcom → L to Ka …, see data/business/rf_bands.yaml). {{ unknown }} of {{ n_rf }} RF applications match no rule. This is a rule of thumb until the diagrams state bands per block.</li>
+    <li><b>Demand</b> counts library and background applications whose blocks need the function in that band. For {{ n_stated }} applications the band (and for power amplifiers the output power) is stated per block, with its reason (data/business/rf_block_bands.yaml: from the vendor sources, or the usual allocation where they say nothing); the others fall back to rules on the application's name (data/business/rf_bands.yaml). {{ unknown }} of {{ n_rf }} RF applications have no band at all.</li>
     <li><b>Not yet included:</b> competitor RF parts, so a gap here means "no part of ours", not "nobody makes it".</li>
   </ul>
 </details>

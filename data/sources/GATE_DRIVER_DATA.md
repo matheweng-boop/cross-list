@@ -9,6 +9,11 @@ record the page in `param_sources`.
 - `channel_config`: `dual` (two isolated outputs), `single`.
 - `input_type`: `dual input` (one input per channel: INA/INB or VIA/VIB), `PWM input` (one PWM input generating
   high/low-side outputs), `PWM + dual input` if the datasheet offers both on one part.
+  Single-channel drivers: `single input` (one logic input, e.g. VI with EN/DIS, VI+/VI-, IN+/IN-), or
+  `LED emulator` for optocoupler-compatible inputs (anode/cathode, driven by forward current). Use exactly these
+  strings for every vendor (not `opto-compatible input`).
+- Peak currents: state the test condition you used in the file header (e.g. the VDD = 18 V row) when a datasheet
+  gives several.
 - `deadtime`: `programmable` (DT pin / resistor), `fixed`, `none`.
 - `protection`: a list from `UVLO`, `overlap protection`, `disable`, `enable`, `programmable dead time`,
   `input glitch filter`, `Miller clamp`, `desaturation`, `soft shutdown`.

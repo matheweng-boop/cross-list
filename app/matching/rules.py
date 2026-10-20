@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
-
+from app import yamlio
 from app.config import get_settings
 
 KINDS = {"number", "range", "category", "set", "ordinal", "bool"}
@@ -89,7 +88,7 @@ def load_all_rules(rules_dir: Path | None = None) -> dict[str, FamilyRules]:
     rules_dir = rules_dir or get_settings().rules_dir
     out = {}
     for path in sorted(Path(rules_dir).glob("*.yaml")):
-        rules = parse_rules(yaml.safe_load(path.read_text()))
+        rules = parse_rules(yamlio.load(path.read_text()))
         out[rules.family] = rules
     return out
 

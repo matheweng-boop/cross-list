@@ -15,6 +15,7 @@ from pathlib import Path
 
 import yaml
 
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.sources.http import get
 from app.sources.skyworks import LIFECYCLE_MAP, fetch_lifecycle
@@ -218,7 +219,7 @@ def _status(mpn: str, statuses: dict) -> str:
 
 
 def build(log=print) -> dict:
-    facts = yaml.safe_load(FACTS_FILE.read_text())
+    facts = yamlio.load(FACTS_FILE.read_text())
     table = json.loads((RAW_DIR / "table.json").read_text())
     urls = json.loads((RAW_DIR / "datasheet_urls.json").read_text())
     statuses = json.loads((RAW_DIR / "lifecycle.json").read_text())["statuses"]

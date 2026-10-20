@@ -11,8 +11,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
-
+from app import yamlio
 from app.services import blocks
 
 CONFIG = Path(__file__).resolve().parents[2] / "data" / "business" / "rf_bands.yaml"
@@ -26,7 +25,7 @@ _POWER_KEY = re.compile(r"P1 ?dB|Psat|saturated|output power|power rating|linear
 
 @lru_cache
 def config() -> dict:
-    return yaml.safe_load(CONFIG.read_text())
+    return yamlio.load(CONFIG.read_text())
 
 
 def _unit(key: str, value: str) -> float | None:
@@ -128,7 +127,7 @@ def competitor_parts() -> tuple[dict, ...]:
     fset, bands = set(config()["functions"]), config()["bands"]
     out = []
     for path in sorted(COMPETITOR_DIR.glob("*.yaml")) if COMPETITOR_DIR.exists() else []:
-        for p in (yaml.safe_load(path.read_text()) or {}).get("parts") or []:
+        for p in (yamlio.load(path.read_text()) or {}).get("parts") or []:
             fn = p.get("function")
             if fn not in fset:
                 continue
@@ -166,7 +165,7 @@ BLOCK_BANDS = Path(__file__).resolve().parents[2] / "data" / "business" / "rf_bl
 @lru_cache
 def block_bands() -> dict:
     """Per-block bands (and PA power class) stated for each template: data/business/rf_block_bands.yaml."""
-    return ((yaml.safe_load(BLOCK_BANDS.read_text()) or {}).get("templates") or {}) if BLOCK_BANDS.exists() else {}
+    return ((yamlio.load(BLOCK_BANDS.read_text()) or {}).get("templates") or {}) if BLOCK_BANDS.exists() else {}
 
 
 def _block_needs(t: dict, fset: set) -> list[tuple[str, str, str | None, str]] | None:

@@ -11,7 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-import yaml
+from app import yamlio
 
 MECH_FILE = Path(__file__).resolve().parents[2] / "data" / "mechanical.yaml"
 
@@ -58,7 +58,7 @@ def load_mechanical(path: Path = MECH_FILE) -> dict[str, Mechanical]:
     files = [path, *sorted(path.parent.glob("mechanical_*.yaml"))] if path == MECH_FILE else [path]
     tree = {}
     for file in files:
-        for maker, packages in (yaml.safe_load(file.read_text()) or {}).items():
+        for maker, packages in (yamlio.load(file.read_text()) or {}).items():
             tree.setdefault(maker, {}).update(packages)
     for packages in tree.values():
         for code, m in packages.items():

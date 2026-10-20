@@ -17,10 +17,10 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app import yamlio
 from app.matching.rules import load_all_rules
 from app.models import Part
 from app.services import blocks
@@ -41,7 +41,7 @@ CAPABILITIES = {
 
 @lru_cache
 def taxonomy() -> dict:
-    data = yaml.safe_load(TAXONOMY.read_text())
+    data = yamlio.load(TAXONOMY.read_text())
     cats, subs, rules, fam = {}, {}, [], {}
     for c in data["categories"]:
         cats[c["id"]] = {"label": c["label"], "subs": [s["id"] for s in c["subfamilies"]]}

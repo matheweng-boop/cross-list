@@ -18,10 +18,10 @@ from functools import lru_cache
 from html import escape
 from pathlib import Path
 
-import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app import yamlio
 from app.models import Part
 from app.services import blocks
 
@@ -36,7 +36,7 @@ def typical() -> dict[str, dict]:
     """Typical-application entries keyed by datasheet file name."""
     out = {}
     for f in sorted((ROOT / "data" / "schematic").glob("*.yaml")):
-        for e in (yaml.load(f.read_text(), Loader=yaml.CSafeLoader) or {}).get("datasheets") or []:
+        for e in (yamlio.load(f.read_text()) or {}).get("datasheets") or []:
             out[e["datasheet"]] = e
     return out
 
@@ -46,7 +46,7 @@ def datasheet_of() -> dict[str, str]:
     """Normalised MPN -> datasheet file name, from the real-data files."""
     out = {}
     for f in sorted((ROOT / "data" / "real").glob("*.yaml")):
-        for p in (yaml.load(f.read_text(), Loader=yaml.CSafeLoader) or {}).get("parts") or []:
+        for p in (yamlio.load(f.read_text()) or {}).get("parts") or []:
             if p.get("datasheet"):
                 out[blocks._norm_mpn(p["mpn"])] = p["datasheet"]
     return out

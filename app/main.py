@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
@@ -53,14 +54,22 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
 
 
 def _warm_caches() -> None:
-    """Parse the catalogues and compute per-function candidates once, after start-up."""
+    """Parse the catalogues and data files and compute per-function candidates once, after start-up."""
     try:
         from app.db import get_session
-        from app.services import blocks, products
+        from app.services import blocks, broadcast, opportunity, products, refdesigns, rf_bands, rf_coverage
 
         blocks.catalog_rows()
         blocks.catalog_parts()
         products._catalogue_index()
+        blocks.templates()
+        blocks.background_templates()
+        refdesigns.designs()
+        broadcast.documents()
+        rf_coverage.parts()
+        rf_coverage.competitor_parts()
+        rf_bands.rf_parts()
+        opportunity.customers()
         session = next(get_session())
         try:
             blocks.counts(session)
@@ -99,6 +108,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.uploads import router as uploads_router
 
     app.add_middleware(PasswordGate)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)  # the larger pages are 0.3-0.6 MB of HTML
     app.include_router(auth_router)
 
     @app.exception_handler(Exception)

@@ -10,8 +10,7 @@ import re
 from datetime import date
 from pathlib import Path
 
-import yaml
-
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.parsing.pins import canonicalize, fwd_rev, parse_pin_diagrams
 from app.sources.http import get
@@ -30,7 +29,7 @@ def _table_path(family: str) -> Path:
 
 
 def fetch(family: str = "digital_isolator", log=print) -> None:
-    facts = yaml.safe_load(FACTS_FILE.read_text())
+    facts = yamlio.load(FACTS_FILE.read_text())
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     DATASHEET_DIR.mkdir(parents=True, exist_ok=True)
     code = facts["categories"][family]
@@ -173,7 +172,7 @@ def _num(text) -> float | None:
 
 
 def build(family: str = "digital_isolator", log=print) -> dict:
-    facts = yaml.safe_load(FACTS_FILE.read_text())
+    facts = yamlio.load(FACTS_FILE.read_text())
     alias = {a.upper().replace(" ", ""): p["code"] for p in facts["packages"] for a in p["aliases"]}
     sheets: dict[str, Datasheet] = {}
     parts, skipped = [], []

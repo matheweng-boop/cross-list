@@ -3,6 +3,7 @@ ordered by impact on the rankings, catalogue parts that may already fill a gap, 
 
 import re
 from collections import Counter, defaultdict
+from functools import lru_cache
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -47,27 +48,38 @@ def state(s: dict | None) -> str:
 
 
 # ---- catalogue parts that may already fill a function ---------------------------------------------------------
-def possible_existing(session: Session, fn: str, limit: int = 12) -> list[dict]:
-    """Skyworks / Qorvo catalogue parts whose description matches the function's keywords but that are not mapped
-    to it, plus the parts the path evidence names. Parts a reviewer rejected are left out."""
+@lru_cache(maxsize=512)
+def _keyword_hits(fn: str) -> tuple[tuple[str, dict, bool], ...]:
+    """Catalogue rows matching the function's path keywords or named parts: (MPN, row, named). Depends only on the
+    data files, so it is worked out once per function and process."""
     path = op.evidence("path").get(fn) or {}
     words = [str(w) for w in path.get("catalog_keywords") or [] if len(str(w)) > 2]
     named = {str(m).upper() for m in path.get("existing_parts") or []}
     if not words and not named:
-        return []
+        return ()
     rx = re.compile(r"\b(" + "|".join(re.escape(w) for w in words) + r")\b", re.I) if words else None
-    have = {c["mpn"].upper() for c in blocks._candidates(session, fn) or []}
-    decided = {m.mpn.upper(): m.verdict for m in session.scalars(select(PartMapping).where(PartMapping.fn == fn))}
     out, seen = [], set()
     for r in blocks.catalog_rows():
         mpn = str(r.get("mpn") or "").upper()
-        if not mpn or mpn in have or mpn in seen or decided.get(mpn) == "no":
+        if not mpn or mpn in seen:
             continue
         text = f"{r.get('description', '')} {r.get('category', '')} {r.get('sub', '')}"
-        hit = mpn in named or any(mpn.startswith(n) for n in named if len(n) >= 5) or (rx and rx.search(text))
-        if hit:
+        if mpn in named or any(mpn.startswith(n) for n in named if len(n) >= 5) or (rx and rx.search(text)):
             seen.add(mpn)
-            out.append({**r, "named": mpn in named, "confirmed": decided.get(mpn) == "yes"})
+            out.append((mpn, r, mpn in named))
+    return tuple(out)
+
+
+def possible_existing(session: Session, fn: str, limit: int = 12) -> list[dict]:
+    """Skyworks / Qorvo catalogue parts whose description matches the function's keywords but that are not mapped
+    to it, plus the parts the path evidence names. Parts a reviewer rejected are left out."""
+    hits = _keyword_hits(fn)
+    if not hits:
+        return []
+    have = {c["mpn"].upper() for c in blocks._candidates(session, fn) or []}
+    decided = {m.mpn.upper(): m.verdict for m in session.scalars(select(PartMapping).where(PartMapping.fn == fn))}
+    out = [{**r, "named": named, "confirmed": decided.get(mpn) == "yes"}
+           for mpn, r, named in hits if mpn not in have and decided.get(mpn) != "no"]  # fmt: skip
     out.sort(key=lambda r: (not r["confirmed"], not r["named"], r.get("status") != "Active", r["mpn"]))
     return out[:limit]
 

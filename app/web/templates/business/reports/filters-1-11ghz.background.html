@@ -74,6 +74,183 @@
   </tbody>
 </table></div>
 
+<h2>Adjacent products and technologies: detail</h2>
+<div class="adj">
+<p>Compiled 2026-10-20 to support <code>filters-1-11ghz.html</code>. "Ours" = Skyworks + Qorvo (combination closed Oct 2026, market.md [S1–S4]).</p>
+<p>Public and BizDev data only. 13 web searches and 2 fetch attempts, both failed on DNS; no logins or POSTs.</p>
+<p>Labels: <b>est</b> = my estimate. <b>unverified</b> = a single or secondary source, usually a search-engine summary of a distributor or vendor page.</p>
+<p><code>[Sx]</code> = source in market.md. <code>[Ax]</code> = new source listed at the end.</p>
+<p>Method for the counts: active parts only (Skyworks Active/Preview; Qorvo Standard/Featured/Non standard). Frequency comes from catalogue key_specs, falling back to ranges in the description. "In 1–11 GHz" means the stated range overlaps 1–11 GHz. A part with no stated frequency is not counted as in-band. Counts are ±a few because of parsing (est). BizDev data: <code>data/catalog/skyworks_parts.yaml</code>, <code>data/catalog/qorvo_parts.yaml</code>.</p>
+<h3>1. Our adjacent parts in the BizDev catalogue</h3>
+<div class="wrap"><table><thead><tr><th scope="col">Block</th><th scope="col">Skyworks active (in 1–11 GHz)</th><th scope="col">Qorvo active (in 1–11 GHz)</th><th scope="col">Examples that pair naturally with a filter</th></tr></thead><tbody>
+<tr><td>LNA (incl. GNSS, limiter-LNA)</td><td>31 (29)</td><td>91 (75)</td><td>Infra/small cell: SKY67181-396LF (2.3–6 GHz), SKY67210-11 (3.1–4.2 GHz, fail-safe switch, Preview), QPL9097 (3.3–4.2 GHz), QPL9098 (4–6 GHz). Broadband/EW: CMD283C3 (2–6), CMD270P3 (4–8), CMD271P3 (6–11), CMD319C3 (8–12), QPL1000 (GaN 8–11). Ku LEO Rx: CMD320C3 (10.7–12.7)</td></tr>
+<tr><td>Switch-LNA / limiter-LNA</td><td>—</td><td>QPB9850 (2.3–5 GHz switch-LNA), QPB9362 (3.1–4.2 GHz), QPM1000 (limiter+LNA 2–20 GHz, 4 W CW), QPM6000 (limiter+LNA 8–14 GHz)</td><td>Already pairs with QPQ3509 in Qorvo's 2023 C-band launch [A2][A3]</td></tr>
+<tr><td>RF switch</td><td>71 (70)</td><td>101 (61; 34 have no stated frequency)</td><td>Filter-bank switching: QPC6144 SP4T 0.05–10 GHz, QPC2180 SP8T 0.1–8 GHz, QPC8400 SP15T 0.5–7.125 GHz, QPC2511 SP3T 2–11 GHz 30 W, CMD203C4 SP4T DC–20 GHz. Skyworks: SKY13373-460LF SP3T 0.1–8 GHz, SKY59608-711LF SPDT 2.4–8.3 GHz, SKY5A2108 (auto SPDT 2.4–8.3 GHz)</td></tr>
+<tr><td>Limiter</td><td>10 CLA460x series (diodes, no frequency field)</td><td>17 (16)</td><td>TGL2205/2206/2207 (1–6 GHz, VPIN), TGL2927-SM (2–4 GHz), QPP2209 (8–12 GHz, 40 W), QPP0100 (8–11.5 GHz, 100 W), TGL2217-SM (0.1–20 GHz)</td></tr>
+<tr><td>PA / driver</td><td>74 (49)</td><td>192 (119)</td><td>Small-cell PAs SKY66318-21 / SKY66520-11 (3.3–3.8 GHz), SKY66523-11 / SKY66525-11 (to 4.2 GHz), SKY66319-11 (4.4–5 GHz); Qorvo GaN/GaAs X-band PAs (40 cover 8.5–10.5 GHz)</td></tr>
+<tr><td>FEM (Wi-Fi, cellular, X-band, UWB, V2X)</td><td>196 (113; 69 have no frequency)</td><td>102 (87)</td><td>Filter already inside: SKY53759-11 / SKY53761-11 / SKY5A5009 n77/n79 LNA+filter modules [A8]; Wi-Fi 5/6 GHz FEMs (36 + 11 Skyworks); Qorvo QPF7551 (PA+BAW+switch+LNA, 5 GHz) [A8]; X-band FEMs QPF5002/5012, QPM1002, QPM5811, QPM2637 (GaN); UWB QM14068 (switch+LNA 6.2–8.3 GHz) [A12]; QPF0219 (2–18 GHz, 10 W)</td></tr>
+<tr><td>Diplexer / multiplexer</td><td>SKY85929-11 and SKY85932-11 (5/6 GHz BAW "Meshplexer"), SKY85931-11 (2.4/5/6 GHz triplexer), all Preview [A6]</td><td>QPQ1063 (SAW GNSS L1/L2 diplexer, 5×5 mm); QM25008 / QM26011 multiplexers (no frequency stated)</td><td>The only active multiplexers in 1–11 GHz; all are acoustic + passive combining</td></tr>
+<tr><td>Switched filter bank</td><td>—</td><td>QPB1029 (1.2–1.4 GHz), QPB1033 (2.7–3.3 GHz; 6 BAW filters + 2 switches + bypass, 6×6 mm), QPB1034, QPB1036 (2.9–3.5 GHz) [A1]</td><td>Already a filter+switch product; defense S-band radar</td></tr>
+<tr><td>Phase shifter / attenuator</td><td>0 / 15 (no frequency)</td><td>12 (9) / 36 (33)</td><td>Beamformer-adjacent; X-band beamformer AWS-0103 (8.5–10.55 GHz)</td></tr>
+<tr><td>Tuning elements</td><td>5 varactor series (SMV1213, SMV1405, SMV1408, SMV2019, SMV2023); 5 PIN series (APD0505, APD0520, APD0810, APD1505, APD2220)</td><td>antenna_tuner (DTC) 8, all discontinued</td><td>Building blocks for a varactor- or switched-capacitor tunable filter</td></tr>
+<tr><td>Coupler / balun / IPD discrete / LTCC</td><td><b>none active</b> (couplers only inside modules, e.g. SKY68035-11)</td><td><b>none</b></td><td>Gap: no catalogue couplers, baluns, LTCC or IPD filters</td></tr>
+<tr><td>Ceramic resonators / filters (Trans-Tech, Lark)</td><td><b>not in the BizDev catalogue</b></td><td>—</td><td>Public parts: TT49764E (4.7 GHz), TT49777E (3.2 GHz), TT49778E (1227/1575 MHz diplexer) [S14][S15]; Lark custom work to 40 GHz [S17]</td></tr>
+</tbody></table></div>
+<p>Takeaways:</p>
+<ul>
+<li>We already sell four filter-based combinations:</li>
+<ul>
+<li>filter + LNA, in GNSS: SKY65943-11, SKY55951-11, SKY5A2110</li>
+<li>filter + LNA, in n77/n79: SKY53759-11, SKY5A5009</li>
+<li>filter + switch bank: QPB1033 family</li>
+<li>BAW multiplexers: SKY85929/31/32</li>
+</ul>
+<li>For a filtered receive chain, we have every active block from 1 to 11 GHz:</li>
+<ul>
+<li>LNAs, switches, limiters, PAs, phase shifters and attenuators</li>
+<li>only the filters stop at about 7.1 GHz (market.md §5)</li>
+</ul>
+<li>Wide-band passive building blocks are missing as catalogue parts: couplers, baluns, LTCC/IPD filters.</li>
+</ul>
+<h3>2. Our adjacent technologies and IP</h3>
+<div class="wrap"><table><thead><tr><th scope="col">Technology</th><th scope="col">What we have (public)</th><th scope="col">Adjacent use with filters</th><th scope="col">Source</th></tr></thead><tbody>
+<tr><td>Skyworks BAW (Osaka)</td><td>SKY8591x/2x Wi-Fi, SKY5A100x auto, FR3 BAW sampling</td><td>Coexistence filters; filters inside multiplexers and FEMs</td><td>[S27][S28][S75]; BizDev data: <code>business/capabilities.yaml</code> (baw_filter)</td></tr>
+<tr><td>Qorvo BAW (Richardson, DoD Trusted 1A)</td><td>QPQ infrastructure/Wi-Fi/V2X; 880xxx IFF/GPS; BAW switched banks QPB10xx</td><td>Defense filter banks; ITAR-free IFF</td><td>[S5][S69][A1]</td></tr>
+<tr><td>SAW / TC-SAW (Osaka; Qorvo moving Greensboro to Texas); LowDrift/NoDrift</td><td>GNSS SAW QPQ1060/1061/1062/1065, QPQ1063 diplexer</td><td>GNSS / NTN L-band filtered LNAs</td><td>BizDev data: <code>business/capabilities.yaml</code> (saw_filter, tc_saw_filter)</td></tr>
+<tr><td>Trans-Tech ceramics (Adamstown, ~120 staff, AS9100)</td><td>Coaxial-resonator BPFs 0.2–8 GHz, up to 10 W; dielectric resonators; ferrite/garnet materials (43 patent families incl. ferrites)</td><td>High-power filter + limiter; ceramic diplexers; DROs</td><td>[S14][S15][S16]; BizDev data: <code>business/evidence/patents.yaml</code> (circulator_isolator)</td></tr>
+<tr><td>Lark Engineering (2025)</td><td>Custom cavity, lumped and mmWave filters 1 MHz–40 GHz</td><td>X-band / Ku filters; switched banks; multiplexers for defense and test</td><td>[S17]</td></tr>
+<tr><td>GaAs pHEMT / GaN-on-SiC MMIC (Qorvo QGaN15/25, 90 nm pHEMT)</td><td>Broadband switches, LNAs, VPIN limiters, X-band FEMs</td><td>MMIC filters (none in catalogue today), tunable or switched MMIC banks, limiter+filter+LNA</td><td>BizDev data: <code>business/capabilities.yaml</code> (gaas_phemt, gan_on_sic)</td></tr>
+<tr><td>SiP / module integration (Sky5, Qorvo modules, Richardson microwave module assembly)</td><td>Filter+LNA, filter+switch and FEM modules in volume</td><td>Packaging for filter+X combos; heterogeneous assembly of BAW + GaAs + ceramic</td><td>BizDev data: <code>business/capabilities.yaml</code> (sip_module_integration, microwave_module_assembly)</td></tr>
+<tr><td>IPD / thin-film passives</td><td>Skyworks "leader in passive devices": MIS capacitors, splitters, Meshplexer. No named IPD process is public; Qorvo has none public</td><td>IPD baluns, couplers and LPFs as discretes; BAW + IPD hybrid for full n77</td><td>BizDev data: <code>business/capabilities.yaml</code> (ipd_thin_film); [S19][S26]</td></tr>
+<tr><td>LTCC</td><td>None found</td><td>Needed for UWB and wide-band catalogue filters (build, buy or partner)</td><td>market.md §5; BizDev data: <code>business/technology.yaml</code> (rates LTCC as "minor extension", <b>unverified</b>)</td></tr>
+<tr><td>Tunable</td><td>Varactors (Skyworks), RF MEMS (Qorvo, ex-Cavendish; status not public), DTCs discontinued</td><td>Varactor or switched-element tunable filter vs ADI ADMV8818 / ADMV8913</td><td>BizDev data: <code>business/capabilities.yaml</code> (rf_mems, silicon_rf_diodes); [A4][A5]</td></tr>
+<tr><td>Acoustic + passive hybrids</td><td>Already shipping acoustic + passive combiners (Meshplexer triplexer); hybrid n77 shown in literature</td><td>Full n77, wider Wi-Fi, FR3</td><td>[A6][S19]</td></tr>
+</tbody></table></div>
+<h3>3. Combined-product ideas</h3>
+<p><b>1. Wi-Fi 7/8 BAW multiplexer and coexistence kit (2.4/5/6 GHz)</b></p>
+<ul>
+<li>What it is: grow the SKY85929/31/32 triplexers/diplexers into a family, sold with SKY85922/23-11, QPQ5604 and QPQ5610 standalone BAW, and paired with our Wi-Fi FEMs as a reference design [A6][S27][S29].</li>
+<li>Competitors:</li>
+<ul>
+<li>Murata LFD182G45PJEF833 (LTCC 2.4 / 5–7.125 GHz diplexer)</li>
+<li>Johanson 2450DP14A6000001T and similar (0603 tri-band combo diplexer)</li>
+<li>Yageo DPX1608LKE5R2460A [A7]</li>
+<li>Qualcomm HBS diplexer / QXF8xxx (BizDev data: <code>catalog/rf_platform_docs.yaml</code>)</li>
+<li>Murata XBAR [S30]</li>
+</ul>
+<li>Why we'd win: ours is the only catalogue BAW-based multiplexer we found. BAW skirts allow 5/6 GHz split operation where LTCC cannot. Broadcom keeps FBAR inside its FEMs [S83], and Akoustis has exited [S8].</li>
+<li>Why we might not: LTCC diplexers are a fraction of the price (est). Wi-Fi 8 may pull the filter into FEMs, ours or competitors'.</li>
+</ul>
+<p><b>2. Filtered switch-LNA receive module for 5G small cells, FWA and upper C-band</b></p>
+<ul>
+<li>What it is: QPQ3509 / QPQ3550 / QPQ4900 BAW plus QPB9850 or QPB9362 switch-LNA (or SKY67210-11) in one LGA. A second version would use a BAW + IPD hybrid for full n77.</li>
+<li>Our base: Qorvo already launched QPQ3509 and QPB9850 together as a two-chip set [A2]. Skyworks already integrates the same function for handsets (SKY53759-11, SKY5A5009) [A8].</li>
+<li>Competitors:</li>
+<ul>
+<li>ADI ADRF5545A (dual switch + LNA, 2.4–4.2 GHz, no filter) [A11]</li>
+<li>LTCC filters: Johanson n77/n79 parts, Mini-Circuits BFCN-3700+ [S41][S43]</li>
+</ul>
+<li>Why we'd win: one-footprint filter+switch+LNA with BAW rejection; no competitor product found (<b>unverified</b>). The upper C-band auction (2027) and n77/n79 sub-band radios add sockets [S71].</li>
+<li>Why we might not: OEMs often prefer separate parts so they can change the band. Full n77 still needs the hybrid. QPQ4900 lead times of 98–112 weeks hurt [S82].</li>
+</ul>
+<p><b>3. Defense S/C-band protected switched-filter-bank receive module</b></p>
+<ul>
+<li>What it is: extend QPB1029/1033/1034/1036 [A1] into C-band using QPQ BAW at 3.5–6 GHz, and add a front limiter (TGL2927-SM, TGL2206) and LNA (CMD283C3, CMD270P3).</li>
+<li>Our base: Trans-Tech ceramic channels for high power; Richardson Trusted 1A [S5].</li>
+<li>Competitors:</li>
+<ul>
+<li>MACOM MAFL-011202 (2–18 GHz, 3-band with bypass, about 6 dB IL, 9×7 mm) [A9]</li>
+<li>Mercury AM3163 [S58]</li>
+<li>ED2 FB010BW16SG [A9]</li>
+<li>Quantic PMI 8SFB-2G18G-SFF [A9]</li>
+<li>ADI ADMV8818 / ADMV8913 tunable [A4][A5]</li>
+</ul>
+<li>Why we'd win: BAW rejection in 6×6 mm, plus Trusted fab and our own limiters and LNAs.</li>
+<li>Why we might not: BAW channels are narrow (≤ about 20 % each), so octave 2–18 GHz coverage needs Lark thin-film/cavity or GaAs MMIC filters we don't catalogue. Tunable MMICs are displacing banks in SWaP-limited EW [A4].</li>
+</ul>
+<p><b>4. X-band limiter + filter + LNA (or a filter added to the X-band FEMs)</b></p>
+<ul>
+<li>What it is: QPP2209 / TGL2209-SM limiter, then a Lark thin-film or new GaAs MMIC 8–12 GHz BPF, then CMD319C3 / QPL1000 / QPM6000. The alternative is to fold the filter into QPF5002 / QPF5012 / QPM5811.</li>
+<li>Competitors:</li>
+<ul>
+<li>Mercury AM3235 MMIC BPF [S34]</li>
+<li>Smiths Planar X [S33]</li>
+<li>Knowles B096QC2S [S73]</li>
+<li>ADI ADMV8913 (7–12 GHz tunable HPF/LPF, about 5 dB IL) [A5]</li>
+<li>MACOM limiters (BizDev data: <code>catalog/rf_competitors/macom.yaml</code>)</li>
+</ul>
+<li>Why we'd win: the complete X-band chain from one Trusted supplier.</li>
+<li>Why we might not: no catalogue X-band filter today (Lark custom only). It is a crowded, entrenched niche with low volume.</li>
+</ul>
+<p><b>5. UWB filtered LNA module for channels 5 and 9, sold with Qorvo UWB SoCs</b></p>
+<ul>
+<li>What it is: QM14068 (switch + LNA 6.2–8.3 GHz, 1×1.2 mm, made for QM33/DW3000) [A12] plus a channel filter, sold as a reference set with Qorvo UWB SoCs (14 uwb_soc entries, BizDev data: <code>catalog/qorvo_parts.yaml</code>).</li>
+<li>Filter options: per-channel BAW is plausible, since ch5 is about 8 % and ch9 about 6 % fractional bandwidth (est). A both-channel filter (28 %) needs LTCC or IPD [S45][S46].</li>
+<li>Competitors: Abracon AFII-LC and Johanson Ch9 BPF (filters only) [S45][S46]. No UWB filter + LNA module from Infineon, NXP or Murata turned up (<b>unverified</b>).</li>
+<li>Why we'd win: captive pull from our own SoC, and about 1.4 B UWB devices by 2030 [S66].</li>
+<li>Why we might not: LTCC filters cost cents to a few dollars (est), and we have no LTCC.</li>
+</ul>
+<p><b>6. GNSS / L-band / NTN filtered LNA family (L1/L5, L-band NTN n253–n256)</b></p>
+<ul>
+<li>What it is: build on SKY55951-11, SKY65943-11 and SKY5A2110 with Qorvo SAW QPQ1060/61/62/65 and the QPQ1063 diplexer. Add a high-power defense variant with Trans-Tech TT49778E.</li>
+<li>Competitors: Taoglas TFM.100B / TFM.115A (SAW-LNA-SAW-LNA, 20×18 mm) [A10]; Infineon BGA123L4 (LNA only) (BizDev data: <code>catalog/rf_competitors/infineon.yaml</code>).</li>
+<li>Why we'd win: we own both acoustic filters and LNAs, AEC-Q automotive grade, and 2×1.6 mm size vs 20×18 mm modules [A10]. NTN bands are a new socket (BizDev data: <code>business/evidence/new_markets.yaml</code> baw_filters).</li>
+<li>Why we might not: below 2 GHz this is SAW and LNA commodity, with low price per unit.</li>
+</ul>
+<p><b>7. (Lower priority) High-power ceramic/cavity filter + limiter for radio-altimeter and C-band earth-station protection</b></p>
+<ul>
+<li>What it is: Trans-Tech ceramic or Lark cavity filter plus Skyworks CLA460x limiter diodes [S14][S17].</li>
+<li>Competitors: K&amp;L, Knowles, Smiths [S49][S52][S33]; filtered LNBs [S70].</li>
+<li>Why it is lower priority: the timing (retrofit by 2030) and the AS9100 fit help [S72], but volume is small.</li>
+</ul>
+<h3>4. Market trend (mostly already covered in market.md)</h3>
+<ul>
+<li><b>Module integration vs standalone:</b> covered in market.md:</li>
+<ul>
+<li>[S36][S77]: Yole, "new era of integration"</li>
+<li>[S80]: BAW is about 91 % Broadcom + Qorvo</li>
+<li>[S83]: Broadcom FBAR sold inside FEMs</li>
+<li>Our own catalogue shows the same pattern: most filter value is in FEMs and LNA-filter modules (§1).</li>
+</ul>
+<li><b>Wi-Fi 7/8:</b> [S65] and BizDev data: <code>business/evidence/trends.yaml</code> (802.11bn final approval planned 2028).</li>
+<li><b>Upper C-band:</b> [S71][S72].</li>
+<li><b>FR3:</b> [S75][S76]; BizDev data: <code>business/evidence/trends.yaml</code>.</li>
+<li><b>UWB:</b> [S66].</li>
+<li><b>LEO satellite user terminals</b> (not covered in market.md):</li>
+<ul>
+<li>Flat-panel forecasts disagree by about 10×. Valour sees almost 500 k COTM flat panels by 2035; ABI sees up to 2 M low-cost flat-panel VSATs a year by 2030 [A13] (<b>unverified</b>, summaries).</li>
+<li>Ku downlink is 10.7–12.7 GHz, at the top edge of the 1–11 GHz scope. We have a Ku LNA, CMD320C3, but no Ku filter.</li>
+<li>L/S-band NTN in phones is covered in BizDev data: <code>business/evidence/new_markets.yaml</code>.</li>
+</ul>
+</ul>
+<h3>Sources (new)</h3>
+<ul>
+<li>[A1] Qorvo QPB1033: <a href="https://www.qorvo.com/products/p/QPB1033" target="_blank" rel="noopener noreferrer">https://www.qorvo.com/products/p/QPB1033</a> ; Mouser: <a href="https://www.mouser.fr/new/qorvo/qorvo-qpb1033-module" target="_blank" rel="noopener noreferrer">https://www.mouser.fr/new/qorvo/qorvo-qpb1033-module</a> ; EverythingRF: <a href="https://www.everythingrf.com/news/details/21830-qorvo-introduces-s-band-switched-filter-bank-module-for-radar-applications" target="_blank" rel="noopener noreferrer">https://www.everythingrf.com/news/details/21830-qorvo-introduces-s-band-switched-filter-bank-module-for-radar-applications</a> (via search summary, <b>unverified</b> detail)</li>
+<li>[A2] Qorvo QPQ3509 + QPB9850 release (2023): <a href="https://www.qorvo.com/newsroom/news/2023/qorvo-delivers-industry-first-c-band-baw-band-pass-filter-switch-lna-module-for-5g-small-cell-radios" target="_blank" rel="noopener noreferrer">https://www.qorvo.com/newsroom/news/2023/qorvo-delivers-industry-first-c-band-baw-band-pass-filter-switch-lna-module-for-5g-small-cell-radios</a> ; <a href="https://www.wirelessdesignonline.com/doc/qorvo-delivers-industry-s-first-c-band-baw-band-pass-filter-and-switch-lna-module-for-g-small-cell-radios-0001" target="_blank" rel="noopener noreferrer">https://www.wirelessdesignonline.com/doc/qorvo-delivers-industry-s-first-c-band-baw-band-pass-filter-and-switch-lna-module-for-g-small-cell-radios-0001</a> ; QPB9850 figures from a secondary reprint (<b>unverified</b>): <a href="https://en.bomman.com/qorvo-news-cloud_16887.html" target="_blank" rel="noopener noreferrer">https://en.bomman.com/qorvo-news-cloud_16887.html</a></li>
+<li>[A3] Qorvo QPB9362: <a href="https://cn.qorvo.com/products/p/QPB9362" target="_blank" rel="noopener noreferrer">https://cn.qorvo.com/products/p/QPB9362</a> ; <a href="https://www.mouser.ca/new/qorvo/qorvo-qpb9362-lna-switch-modules" target="_blank" rel="noopener noreferrer">https://www.mouser.ca/new/qorvo/qorvo-qpb9362-lna-switch-modules</a> (the two sources give different ranges)</li>
+<li>[A4] ADI ADMV8818, 2–18 GHz tunable HPF/LPF, 9×9 mm: <a href="https://www.everythingrf.com/products/tunable-filters/analog-devices/824-29-admv8818" target="_blank" rel="noopener noreferrer">https://www.everythingrf.com/products/tunable-filters/analog-devices/824-29-admv8818</a> ; <a href="https://www.wirelessdesignonline.com/doc/digitally-tunable-hp-lp-filter-0001" target="_blank" rel="noopener noreferrer">https://www.wirelessdesignonline.com/doc/digitally-tunable-hp-lp-filter-0001</a></li>
+<li>[A5] ADI ADMV8052 (30–520 MHz tunable BPF, ~$98 at 1k): <a href="https://www.mouser.pl/new/analog-devices/adi-admv8052-tunable-filter" target="_blank" rel="noopener noreferrer">https://www.mouser.pl/new/analog-devices/adi-admv8052-tunable-filter</a> ; ADMV8913 (7–12 GHz HPF/LPF, ~5 dB IL): <a href="https://www.mouser.co.uk/adi-admv8913-evalz-eval-board" target="_blank" rel="noopener noreferrer">https://www.mouser.co.uk/adi-admv8913-evalz-eval-board</a> ; <a href="https://cdn.components.ru/media/PDF/2527960.pdf" target="_blank" rel="noopener noreferrer">https://cdn.components.ru/media/PDF/2527960.pdf</a> (analog.com not fetched: blocked earlier)</li>
+<li>[A6] Skyworks SKY85929-11: <a href="https://www.skyworksinc.com/Products/RF-Passives/SKY85929-11" target="_blank" rel="noopener noreferrer">https://www.skyworksinc.com/Products/RF-Passives/SKY85929-11</a> ; SKY85931-11: <a href="https://www.skyworksinc.com/Products/RF-Passives/SKY85931-11" target="_blank" rel="noopener noreferrer">https://www.skyworksinc.com/Products/RF-Passives/SKY85931-11</a> ; SKY85932-11: <a href="https://www.skyworksinc.com/Products/RF-Passives/SKY85932-11" target="_blank" rel="noopener noreferrer">https://www.skyworksinc.com/Products/RF-Passives/SKY85932-11</a> (via search summary)</li>
+<li>[A7] Murata LC (LTCC) diplexers: <a href="https://www.murata.com/en-us/products/filter/lcdiplexer/overview/basic" target="_blank" rel="noopener noreferrer">https://www.murata.com/en-us/products/filter/lcdiplexer/overview/basic</a> (search summary only, not fetched) ; Johanson Wi-Fi 6E/7 diplexers: <a href="https://www.johansontechnology.com/news/new-wifi-6e-and-wifi-7-diplexer-family/" target="_blank" rel="noopener noreferrer">https://www.johansontechnology.com/news/new-wifi-6e-and-wifi-7-diplexer-family/</a> ; Yageo: <a href="https://passive-components.eu/yageo-offers-high-performance-diplexers-for-dual-band-wi-fi-6e-7integration/" target="_blank" rel="noopener noreferrer">https://passive-components.eu/yageo-offers-high-performance-diplexers-for-dual-band-wi-fi-6e-7integration/</a></li>
+<li>[A8] Skyworks SKY5A5009: <a href="https://www.skyworksinc.com/Products/Front-end-Modules/SKY5A5009" target="_blank" rel="noopener noreferrer">https://www.skyworksinc.com/Products/Front-end-Modules/SKY5A5009</a> ; SKY53759-11: <a href="https://www.skyworksinc.com/Products/Front-end-Modules/SKY53759-11" target="_blank" rel="noopener noreferrer">https://www.skyworksinc.com/Products/Front-end-Modules/SKY53759-11</a> ; Qorvo QPF7551: <a href="https://rfmw.com/products/detail/qpf7551-qorvo/695609/" target="_blank" rel="noopener noreferrer">https://rfmw.com/products/detail/qpf7551-qorvo/695609/</a> (search summaries)</li>
+<li>[A9] MACOM MAFL-011202: <a href="https://www.macom.com/products/product-detail/MAFL-011202" target="_blank" rel="noopener noreferrer">https://www.macom.com/products/product-detail/MAFL-011202</a> ; ED2: <a href="https://www.mwrf.com/news/news/55292068/microwaves-rf-ed2-corps-smt-bandpass-filter-channels-2-to-18-ghz" target="_blank" rel="noopener noreferrer">https://www.mwrf.com/news/news/55292068/microwaves-rf-ed2-corps-smt-bandpass-filter-channels-2-to-18-ghz</a> ; PMI 8SFB: <a href="https://www.microwavejournal.com/articles/45401-8-channel-switch-filter-bank-8sfb-2g18g-sff" target="_blank" rel="noopener noreferrer">https://www.microwavejournal.com/articles/45401-8-channel-switch-filter-bank-8sfb-2g18g-sff</a></li>
+<li>[A10] Taoglas TFM.100B: <a href="https://www.everythingrf.com/products/front-end-modules/taoglas/529-318-tfm-100b" target="_blank" rel="noopener noreferrer">https://www.everythingrf.com/products/front-end-modules/taoglas/529-318-tfm-100b</a> ; TFM.115A: <a href="https://www.taoglas.com/datasheets/TFM.115A.pdf" target="_blank" rel="noopener noreferrer">https://www.taoglas.com/datasheets/TFM.115A.pdf</a> ; Skyworks SKY55951-11 datasheet: <a href="https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf" target="_blank" rel="noopener noreferrer">https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf</a></li>
+<li>[A11] ADI ADRF5545A: <a href="https://www.mouser.fr/adi-adrf5545a-front-end-module" target="_blank" rel="noopener noreferrer">https://www.mouser.fr/adi-adrf5545a-front-end-module</a> ; <a href="https://www.radiolocman.com/datasheet/pdf.html?di=172477" target="_blank" rel="noopener noreferrer">https://www.radiolocman.com/datasheet/pdf.html?di=172477</a></li>
+<li>[A12] Qorvo QM14068 datasheet: <a href="https://www.mouser.com/datasheet/2/412/QM14068_Data_Sheet-3402391.pdf" target="_blank" rel="noopener noreferrer">https://www.mouser.com/datasheet/2/412/QM14068_Data_Sheet-3402391.pdf</a> ; <a href="https://qorvo.com/products/p/QM14068" target="_blank" rel="noopener noreferrer">https://qorvo.com/products/p/QM14068</a></li>
+<li>[A13] Valour flat-panel forecast: <a href="https://www.microwavejournal.com/articles/45767-planes-vehicles-and-vessels-embrace-leo-connectivity-with-flat-panel-antenna-shipments-projected-to-reach-half-a-million-by-2035" target="_blank" rel="noopener noreferrer">https://www.microwavejournal.com/articles/45767-planes-vehicles-and-vessels-embrace-leo-connectivity-with-flat-panel-antenna-shipments-projected-to-reach-half-a-million-by-2035</a> ; ABI: <a href="https://abiresearch.com/press/meteoric-growth-in-vsat-bgan-satphones-and-5g-mobile-devices-to-fuel-a-us238-billion-satcom-terminals-market-by-2030" target="_blank" rel="noopener noreferrer">https://abiresearch.com/press/meteoric-growth-in-vsat-bgan-satphones-and-5g-mobile-devices-to-fuel-a-us238-billion-satcom-terminals-market-by-2030</a></li>
+</ul>
+<p>BizDev data used:</p>
+<ul>
+<li><code>data/catalog/skyworks_parts.yaml</code>, <code>data/catalog/qorvo_parts.yaml</code></li>
+<li><code>data/catalog/rf_competitors/{macom,psemi,infineon,mini-circuits}.yaml</code></li>
+<li><code>data/catalog/rf_platform_docs.yaml</code></li>
+<li><code>data/business/capabilities.yaml</code>, <code>data/business/technology.yaml</code></li>
+<li><code>data/business/evidence/{new_markets,trends,patents}.yaml</code></li>
+</ul>
+<p>The counting script and the parsed table are in the scratchpad: <code>/tmp/claude-0/-home-user-cross-list/20ed48d6-a5ec-5e79-a521-701f7b4cc7d6/scratchpad/adjscripts/</code>.</p>
+
+</div>
+
 <h2>Risks</h2>
 <ul>
   <li><b>Market shape:</b> BAW is ~91 % Broadcom + Qorvo by revenue, and most filter value sits inside modules; the standalone 1–11 GHz market is likely in the low billions (est).<sup>80</sup></li>

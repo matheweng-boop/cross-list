@@ -388,18 +388,43 @@
   const ROW = 17, HEAD = 46, DEV_W = 230, BLK_W = 140, BLK_H = 34, GAP = 50;
   const NET = ["power", "ground", "host"]; // shown as net labels at the pin, not as wires
 
+  // Pin groups: pins of one kind fold into one row ("Analog out ×6 ▸"); a click on the row shows its pins, a click
+  // on the open group's heading folds them again. RF inputs stay single (each antenna goes to its own pin).
+  // [short row label, full name]
+  const PIN_GROUPS = {
+    power: ["Supplies", "Supply pins"], bypass: ["Decoupling", "Decoupling / reference pins"], xtal: ["Crystal", "Crystal pins"],
+    audio_out: ["Analog out", "Analog audio outputs"], audio_in: ["Analog in", "Analog audio inputs"],
+    i2s_out: ["I2S out", "Digital audio outputs (I2S)"], i2s_in: ["I2S in", "Digital audio inputs (I2S)"],
+    iq_out: ["I/Q out", "Digital I/Q outputs"], iq_in: ["I/Q in", "Digital I/Q inputs"], flash: ["Flash SPI", "SPI flash (NVM) interface"],
+    memory: ["Memory", "External memory interface"], host: ["Host", "Host control interface (SPI / I2C)"], gpio: ["GPIO", "General-purpose I/O"],
+    test: ["Test", "Test / debug pins"], gnd: ["GND / NC", "Ground and no-connect pins"],
+  };
+  const groupKey = p => (p.fn === "ground" || p.fn === "nc" ? "gnd" : p.fn === "debug" || (p.fn === "other" && !/^EPAD$/i.test(p.name)) ? "test" : PIN_GROUPS[p.fn] ? p.fn : null);
+  const isOpen = (o, key) => (S.openGroups || []).includes(`${o.id}:${key}`);
+  function grouped(o, arr) {
+    if (!S.compact) return arr;
+    const byKey = {};
+    for (const p of arr) { const k = groupKey(p); if (k) (byKey[k] ||= []).push(p); }
+    const out = [], done = new Set();
+    for (const p of arr) {
+      const k = groupKey(p);
+      if (!k || byKey[k].length < 2) { out.push(p); continue; }
+      if (done.has(k)) continue;
+      done.add(k);
+      const ms = byKey[k], label = PIN_GROUPS[k][0];
+      if (isOpen(o, k)) {
+        out.push({header: true, group: k, n: `h:${k}`, pins: ms, name: `▾ ${label}`, fn: ms[0].fn});
+        out.push(...ms);
+      } else out.push({summary: true, group: k, n: ms[0].n, pins: ms, name: `${label} ×${ms.length} ▸`, fn: ms[0].fn});
+    }
+    return out;
+  }
+
   function visiblePins(o) {
     const ps = [...pinsOf(o)];
     const order = fn => (LEFT.includes(fn) ? LEFT.indexOf(fn) : RIGHT.indexOf(fn));
     const sort = arr => arr.sort((a, b) => order(a.fn) - order(b.fn) || String(a.bus || "").localeCompare(String(b.bus || "")) || a.n - b.n);
-    let L = sort(ps.filter(p => sideOf(p) === "L")), R = sort(ps.filter(p => sideOf(p) === "R"));
-    if (S.compact) {
-      const hide = p => (p.fn === "ground" || p.fn === "nc") && !linksAt(o.id, p.n).some(l => !NET.includes(l.kind));
-      const hidden = R.filter(hide);
-      R = R.filter(p => !hide(p));
-      if (hidden.length) R.push({summary: true, n: hidden[0].n, pins: hidden, name: `GND / NC ×${hidden.length}`, fn: "ground"});
-    }
-    return {L, R};
+    return {L: grouped(o, sort(ps.filter(p => sideOf(p) === "L"))), R: grouped(o, sort(ps.filter(p => sideOf(p) === "R")))};
   }
 
   // Block sizes: antennas carry their front-end parts as sub-rows, supply rails list their pins.
@@ -446,8 +471,8 @@
         const head = HEAD + jobLines(o).length * 12;
         const h = head + Math.max(L.length, R.length, 2) * ROW + 12;
         const pinY = {};
-        L.forEach((p, i) => (pinY[p.n] = {y: y + head + i * ROW + ROW / 2, side: "L"}));
-        R.forEach((p, i) => { const e = {y: y + head + i * ROW + ROW / 2, side: "R"}; (p.summary ? p.pins : [p]).forEach(q => (pinY[q.n] = e)); });
+        for (const [side, arr] of [["L", L], ["R", R]])
+          arr.forEach((p, i) => { const e = {y: y + head + i * ROW + ROW / 2, side}; if (p.header) pinY[p.n] = e; else (p.summary ? p.pins : [p]).forEach(q => (pinY[q.n] = e)); });
         pos[o.id] = {x: colX[ci].dev, y, w: DEV_W, h, head, L, R, pinY, col: ci};
         y += h + GAP;
       }
@@ -589,14 +614,22 @@
       for (const side of ["L", "R"]) {
         for (const p of P[side]) {
           const y = P.pinY[p.n].y, x0 = side === "L" ? P.x : P.x + P.w, x1 = side === "L" ? P.x - 14 : P.x + P.w + 14;
+          const names = p.pins ? p.pins.map(q => q.name).join(", ") : "";
+          if (p.header) {
+            parts.push(`<g class="pin-group open" data-dev="${o.id}" data-group="${p.group}" tabindex="0" role="button" aria-expanded="true" aria-label="Fold ${esc(PIN_GROUPS[p.group][1])}"><title>${esc(PIN_GROUPS[p.group][1])}: ${esc(names)}</title>` +
+              `<rect class="pin-hit" x="${side === "L" ? P.x : P.x + P.w / 2}" y="${y - ROW / 2}" width="${P.w / 2}" height="${ROW}"/>` +
+              `<text class="pin-gname" x="${side === "L" ? x0 + 6 : x0 - 6}" y="${y + 4}" text-anchor="${side === "L" ? "start" : "end"}">${esc(p.name)}</text></g>`);
+            continue;
+          }
           const ls = (p.summary ? p.pins : [p]).flatMap(q => linksAt(o.id, q.n));
-          const net = ls.find(l => NET.includes(l.kind));
-          const tag = net ? (block(net.b.blk) || {}).label : "";
-          parts.push(`<g class="pin fn-${p.fn}${ls.length ? " on" : ""}" data-dev="${o.id}" data-n="${p.n}"${p.summary ? ' data-summary="1"' : ""} tabindex="0" role="button" aria-label="Pin ${p.n} ${esc(p.name)}">` +
+          const tags = [...new Set(ls.filter(l => NET.includes(l.kind)).map(l => (block(l.b.blk) || {}).label).filter(Boolean))];
+          const tag = tags.length > 2 ? `${tags.slice(0, 2).join(" / ")} …` : tags.join(" / ");
+          parts.push(`<g class="pin fn-${p.fn}${ls.length ? " on" : ""}${p.summary ? " pin-group" : ""}" data-dev="${o.id}" data-n="${p.n}"${p.summary ? ` data-group="${p.group}" aria-expanded="false"` : ""} tabindex="0" role="button" aria-label="${p.summary ? `Show ${esc(names)}` : `Pin ${p.n} ${esc(p.name)}`}">` +
+            (p.summary ? `<title>${esc(PIN_GROUPS[p.group][1])}: ${esc(names)} (click to show)</title>` : "") +
             `<rect class="pin-hit" x="${side === "L" ? x1 - 4 : P.x + P.w / 2}" y="${y - ROW / 2}" width="${P.w / 2 + 18}" height="${ROW}"/>` +
             `<line class="pin-stub" x1="${x0}" y1="${y}" x2="${x1}" y2="${y}"/><circle class="pin-dot" cx="${x1}" cy="${y}" r="3"/>` +
             `<text class="pin-num" x="${side === "L" ? x0 - 4 : x0 + 4}" y="${y - 3}" text-anchor="${side === "L" ? "end" : "start"}">${p.summary ? "" : esc(p.num ?? p.n)}</text>` +
-            `<text class="pin-name" x="${side === "L" ? x0 + 6 : x0 - 6}" y="${y + 4}" text-anchor="${side === "L" ? "start" : "end"}">${esc(p.name)}</text>` +
+            `<text class="pin-name${p.summary ? " pin-gname" : ""}" x="${side === "L" ? x0 + 6 : x0 - 6}" y="${y + 4}" text-anchor="${side === "L" ? "start" : "end"}">${esc(p.name)}</text>` +
             (tag ? `<text class="net-tag" x="${side === "L" ? x1 - 6 : x1 + 6}" y="${y + 4}" text-anchor="${side === "L" ? "end" : "start"}">${esc(tag)}</text>` : "") +
             `</g>`);
         }
@@ -659,18 +692,18 @@
   document.addEventListener("click", e => { if (!e.target.closest("#bc-menu, #bc-svg")) closeMenu(); });
 
   function onActivate(ev) {
-    const t = ev.target.closest(".pin, .dev-head, .blk");
+    const t = ev.target.closest(".pin, .pin-group, .dev-head, .blk");
     if (!t) return closeMenu();
     ev.stopPropagation();
+    if (t.dataset.group) {  // a pin group: open or fold it
+      const key = `${t.dataset.dev}:${t.dataset.group}`, open = new Set(S.openGroups || []);
+      if (open.has(key)) open.delete(key); else open.add(key);
+      S.openGroups = [...open];
+      closeMenu();
+      return render();
+    }
     if (t.classList.contains("pin")) {
       const d = t.dataset.dev, n = +t.dataset.n, o = dev(d);
-      if (t.dataset.summary) {
-        const hidden = visiblePins(o).R.find(p => p.summary).pins;
-        return openMenu(ev, `${esc(o.mpn)} · ${hidden.length} ground / no-connect pins`, [
-          {label: "Connect all ground pins to GND", fn: () => hidden.filter(p => p.fn === "ground" && !linksAt(d, p.n).length).forEach(p => attachGround(d, p))},
-          {label: "Show these pins", fn: () => (S.compact = false)},
-        ]);
-      }
       const p = pin(o, n);
       explain(`fn:${p.fn}`, `${o.mpn} · ${p.name}`);
       const title = `${esc(o.mpn)} · ${p.num === "" ? "signal" : `pin ${p.num ?? p.n}`} <b>${esc(p.name)}</b><br><small>${esc(FN_LABEL[p.fn] || p.fn)}${p.bus ? ` · ${esc(p.bus)}` : ""}${p.band ? ` · ${esc(p.band)}` : ""}${p.note ? ` · ${esc(p.note)}` : ""}</small>`;
@@ -682,6 +715,9 @@
       return openMenu(ev, `<b>${esc(o.mpn)}</b> · ${esc(I.description || "")}`, [
         {label: "Zoom to this chip and its connections", fn: () => { focusId = d; }},
         {label: "Fill in surroundings (supplies, crystal, antennas, host…)", fn: autoComplete},
+        {label: "Connect all ground pins to GND", fn: () => pinsOf(o).filter(p => p.fn === "ground" && !linksAt(d, p.n).length).forEach(p => attachGround(d, p))},
+        {label: "Open all pin groups", fn: () => { S.openGroups = [...new Set([...(S.openGroups || []), ...Object.keys(PIN_GROUPS).map(k => `${d}:${k}`)])]; }},
+        {label: "Fold all pin groups", fn: () => { S.openGroups = (S.openGroups || []).filter(k => !k.startsWith(`${d}:`)); }},
         ...same.map(c => ({label: `Replace with ${c.mpn}`, hint: [...c.analog, ...c.digital_decode, ...c.digital_iq.map(s => s + " I/Q")].join(" "), fn: () => replaceDevice(d, c.mpn)})),
         ...(I.source && I.source.url ? [{label: "Open data short", fn: () => window.open(I.source.url, "_blank", "noopener")}] : []),
         {label: `Remove ${o.mpn}`, fn: () => removeDevice(d)},

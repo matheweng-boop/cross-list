@@ -1,0 +1,123 @@
+# Preliminary case: next-generation automotive UWB (IEEE 802.15.4ab) for digital key and car access.
+# Layout and rules: _template.yaml. Figures and links: the report's background notes.
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Automotive UWB: an 802.15.4ab anchor chip for digital key"
+question: >-
+  What should Skyworks (with legacy Qorvo UWB) develop next for car access in 2–3 years, reusing the DW3000 /
+  QPF5100Q technology, now that ST and Calterah sample 802.15.4ab chips, NXP sells a complete access set and CCC
+  Digital Key 4.0 is in testing, and at what price?
+updated: 2026-10-20
+brief:
+  - "Our position: an automotive-qualified 802.15.4z UWB SoC (QPF5100Q, DW3300Q) with ranging and radar on one chip, plus the only automotive RF front-end line among UWB chip vendors (switches, Wi-Fi/UNII FEMs, BAW filters)."
+  - "Our weak point: no public 802.15.4ab or narrowband-assist (NBA) part while ST (sampling since Mar 2026) and Calterah (CES 2026) already have one; and no BLE, NFC, secure element or access MCU, which NXP sells as one set."
+  - "Proposal: an 802.15.4ab anchor SoC with an on-chip NBA radio (two variants: ranging, ranging + radar) plus an optional anchor FEM, at about $3.5–5.5 (ranging) and $4.5–6.5 (radar) per chip in volume (est), with firmware MMS and DK 4.0 on today's QPF5100Q as the bridge."
+
+position:
+  advantages:
+    - {id: a-radar1, text: "Ranging and radar (child presence, kick, occupancy) on one automotive-qualified chip today (QPF5100Q, Jan 2025); ST's entry part ST64UWB-A100 has no radar", vs: "ST", conf: low}
+    - {id: a-phones, text: "Decawave heritage across the phone side: interoperable with Apple U1, UWB in Google Pixel 6 Pro; interop experience with the keys' other end", vs: "Calterah, Infineon", conf: med}
+    - {id: a-fe, text: "Own automotive RF parts in the band: QPC8019Q SPDT 0.6–8 GHz, SKY5A2108 SPDT 2.4–8.3 GHz, QPF1002Q 5.77–5.925 GHz FEM, QPQ2254Q 2.4 GHz BAW; UWB chip rivals sell no front ends", vs: "NXP, ST, Calterah", conf: med}
+    - {id: a-qual, text: "Automotive grade already in the line: DW3300Q to 105 °C, QPF5100Q qualified; Calterah and Samsung are new to automotive UWB", vs: "Calterah, Samsung", conf: med}
+  disadvantages:
+    - {id: d-ab, text: "No public 802.15.4ab / NBA part; ST64UWB sampling to Tier-1s and OEMs since Mar 2026, Calterah Dubhe shown Jan 2026", vs: "ST, Calterah", offset: "New anchor SoC (f-ab-soc); meanwhile firmware MMS and DK 4.0 on QPF5100Q", conf: med}
+    - {id: d-set, text: "No BLE, NFC, secure element or access MCU for cars: NXP sells UWB (NCJ29D5/D6), NFC (NCx3321), SE and MCU as one CCC set", vs: NXP, offset: "Anchor reference design with partner BLE/NFC; compete per anchor where the access ECU is central (zonal)", conf: high}
+    - {id: d-cost, text: "Price pressure: NXP NCJ29D5 at $4.85–6.33 (1k budgetary); Calterah on 22 nm and Samsung on 28 nm; our prices not public", vs: "NXP, Calterah, Samsung", offset: "Compete on system cost: one chip replaces a separate CPD radar and capacitive kick sensor", conf: low}
+    - {id: d-process, text: "ST's 18 nm FD-SOI claims +3 dB sensitivity (~50 % more range) and single-antenna parity with dual-antenna rivals; our process not public", vs: ST, offset: "External LNA in the anchor FEM recovers sensitivity at extra BOM", conf: med}
+    - {id: d-dk4, text: "NXP already claims CCC Digital Key 4.0 compliance in a reference design (Jan 2026); ours not stated", vs: NXP, offset: "DK 4.0 stack and CCC certification on QPF5100Q (f-dk4)", conf: low}
+    - {id: d-proof, text: "QPF5100Q production and design wins not confirmed publicly (Sep 2025: 'being tested by major manufacturers')", vs: "NXP", offset: "Publish design-win and SOP references", conf: low}
+    - {id: d-can, text: "No integrated car-network interface stated; NXP NCJ29D6B has a CAN transceiver, ST64UWB-A has FDCAN", vs: "NXP, ST", offset: "CAN-FD controller on the new SoC", conf: med}
+  diff_good:
+    - {id: g-fem, text: "Only UWB vendor that can add its own PA/LNA/switch and BAW filters: long-range exterior anchors and NBA/Wi-Fi 6 GHz coexistence from one supplier", conf: med}
+    - {id: g-ml, text: "QM35825 already has on-chip ML and radar (gesture, presence); the algorithm base for radar mode exists", conf: low}
+  diff_bad:
+    - {id: b-nba, text: "No narrowband radio inside our UWB chips; NBA needs a new 5.7–6.4 GHz radio block", conf: med}
+    - {id: b-china, text: "No visible support for China's ICCE / ICCOA key standards (ST lists ICCE); Calterah is local (our judgement)", conf: low}
+
+architecture:
+  columns: ["Skyworks + Qorvo", "NXP (full set)", "ST (ST64UWB)", "Calterah (Dubhe)"]
+  rows:
+    - ["Anchor chip", "QPF5100Q / DW3300Q, 802.15.4z", "NCJ29D5 (ranging), NCJ29D6A/B (ranging + radar, CAN)", "ST64UWB-A100 / A500, 802.15.4z + ab, NBA", "Dubhe 2T4R, 802.15.4ab, BLE-assisted MMS"]
+    - ["Radar on the anchor", "Yes (CPD, kick, occupancy)", "Yes (NCJ29D6A)", "A500 only", "Yes"]
+    - ["BLE / NFC / SE / MCU", "None automotive (partner)", "All own", "Own MCU + BLE families; NBA may drop BLE anchors", "BLE-assisted; rest not stated"]
+    - ["RF front end", "Own switches, FEMs, BAW", "None", "None", "None"]
+    - ["Zonal fit", "Good per anchor; access logic in the central computer", "Best where the access ECU is a separate box", "Good: CAN-FD in the anchor", "Good in China (ICCE/ICCOA)"]
+  note: "From the BizDev block-diagram library: NXP smart car access (UWB anchors outside and inside, interior anchors also radar for CPD; BLE; door NFC; access MCU + SE) and TI phone-as-a-key (BLE satellites on CAN/LIN). Zonal: BMW Neue Klasse puts access in one of four central computers, so the anchors become satellites (high). Anchor count of 4–8 per car is our estimate."
+
+market_now:
+  - {figure: "Vehicles with a digital key", value: "15.6 M (2023, 22 % of shipments) → nearly 60 M (2031, 70 %); CAGR 17.2 %", source: "ABI Research press release, Dec 2024", conf: low}
+  - {figure: "BLE + NFC + UWB key solutions", value: "fastest growing, CAGR 34 % (2024–31); UWB in top models of BMW, Kia, Mercedes-Benz, Hyundai", source: "ABI Research press release, Dec 2024", conf: low}
+  - {figure: "UWB anchors per car", value: "about 4–8 (est)", source: "Our estimate (connectivity research)", conf: low}
+  - {figure: "802.15.4ab status", value: "SA ballot from Jan 2026; submission to RevCom planned Dec 2026; draft 75 % stable in 2025", source: "IEEE P802.15.4ab PAR extension request, 2025", conf: high}
+  - {figure: "802.15.4ab gain", value: "MMS ≥ 18 dB link budget, about 8× range vs 15.4z; 16 MMS fragments up to about 30×", source: "ST blog, May 2026", conf: med}
+  - {figure: "15.4ab chips", value: "ST64UWB launched Mar 2026, sampling to Tier-1s/OEMs; Calterah Dubhe shown Jan 2026 (>400 m claimed with BLE-assisted MMS)", source: "ST blog; CNX Software; Rohde & Schwarz release", conf: med}
+  - {figure: "Other 15.4z automotive chips", value: "NXP NCJ29D5/D6 (MY2025 claim), Samsung Exynos Auto UA100 (Mar 2025, 28 nm), Infineon (3db Access, bought 2023)", source: "Search snippets of vendor releases", conf: low}
+  - {figure: "CCC Digital Key", value: "Release 3 (2021) BLE + UWB; certification for BLE/UWB since Mar 2025; 4.0 in interoperability testing", source: "CCC releases via search", conf: med}
+  - {figure: "Phones with 15.4ab", value: "none found (Apple U1/U2, Pixel are 15.4z)", source: "Search, Oct 2026", conf: low}
+  - {figure: "Public price anchors", value: "NXP NCJ29D5 $4.85–6.33 (1k budgetary); reel $8.45 (distributor); ST64UWB: no price announced", source: "NXP page snippet; distributor snippet; CNX Software", conf: low}
+
+outlook:
+  - {id: o-sop, text: "First 802.15.4ab car programmes start production about 2028–2029 (est)", basis: "Chips sampling 2026; standard to RevCom Dec 2026; typical 2–3-year automotive design cycle", conf: low}
+  - {id: o-share, text: "UWB reaches about 10–20 % of production (about 10–19 M cars) by 2030 (est), mostly upper segments", basis: "ABI: 60 M digital-key cars by 2031, UWB combos fastest growing but 'may not be worth it' in affordable models; 92–97 M cars a year", conf: low}
+  - {id: o-ble, text: "For: NBA lets some designs drop BLE anchors. Against: phones still discover over BLE and CCC keeps BLE; expect fewer BLE anchors, not none (est)", basis: "ST blog (BLE 'may no longer be required in many designs' but still useful for discovery); CCC Release 3", conf: med}
+  - {id: o-merge, text: "Cabin and rear radar functions (CPD, kick, intrusion) move onto the access anchors (est)", basis: "Every 15.4ab vendor and NXP list CPD + kick on the key chip; see case auto-uwb-cpd", conf: med}
+  - {id: o-bcs, text: "For UWB: relay-attack security in premium cars. Against: Bluetooth Channel Sounding takes entry cars at lower cost (est)", basis: "Bluetooth SIG; NXP on CS for keys (Sep 2025); ABI on UWB price premium", conf: med}
+  - {id: o-price, text: "15.4ab anchor prices fall to 15.4z levels within 2–3 years of SOP (est)", basis: "Calterah 22 nm, Samsung 28 nm, five or more suppliers", conf: low}
+
+features:
+  - {id: f-ab-soc, feature: "802.15.4ab anchor SoC: MMS, on-chip NBA radio (5.7–6.4 GHz), 2 antenna ports, CAN-FD", benefit: "Answers ST64UWB and Dubhe; keeps 2028–2030 car programmes", distance: 3, why: "UWB PHY/MAC reused; NBA radio and CAN-FD are new blocks from existing radio know-how"}
+  - {id: f-ab-radar, feature: "15.4ab radar mode on the R variant (new pulse shape, wider channel)", benefit: "CPD, kick, intrusion from the key anchors", distance: 3, why: "Builds on QPF5100Q / QM35825 radar; new PHY options"}
+  - {id: f-mms-fw, feature: "MMS ranging (UWB-driven or BLE-assisted) in firmware on QPF5100Q", benefit: "Longer-range bridge before the new chip", distance: 1, why: "Not confirmed that today's PHY can repeat fragments; ST says UWB-only MMS adds little range. Internal check needed"}
+  - {id: f-dk4, feature: "CCC Digital Key 4.0 stack and certification on QPF5100Q", benefit: "Parity with NXP's DK 4.0 claim", distance: 1, why: "Software and test events"}
+  - {id: f-safety, feature: "ASIL-A and ISO/SAE 21434 documentation", benefit: "Matches ST64UWB-A", distance: 1, why: "Documents on existing process"}
+  - {id: f-fem, feature: "Automotive anchor FEM: UWB LNA/bypass + switch (QM14068 + QPC8019Q class)", benefit: "Range for exterior anchors; offsets ST's sensitivity lead", distance: 2, why: "Existing dies; automotive qualification and module"}
+  - {id: f-nbafem, feature: "NBA + UWB front end in one module (UNII-3/5 PA, UWB LNA, switch, BAW)", benefit: "Full 15.4ab anchor front end; Wi-Fi 6 GHz coexistence", distance: 2, why: "QPF1002Q / QM14068 dies and BAW filters; new combination"}
+  - {id: f-ref, feature: "Anchor reference design (SoC + FEM + CAN + partner BLE)", benefit: "Tier-1 time to market", distance: 2, why: "Board, firmware, partner"}
+  - {id: f-ble, feature: "BLE radio inside the UWB SoC", benefit: "One chip per anchor where BLE stays", distance: 3, why: "Qorvo QPG BLE IP exists, not automotive"}
+  - {id: f-fdsoi, feature: "Move to an FD-SOI node like ST", benefit: "+3 dB sensitivity", distance: 4, why: "Process not ours; foundry choice unknown; not recommended"}
+
+product:
+  name: "AB anchor SoC (working name), variants AB-R (ranging + NBA) and AB-RR (+ radar); optional anchor FEM"
+  spec:
+    - ["Standards", "IEEE 802.15.4z and 802.15.4ab (MMS, NBA); CCC Digital Key 3.x/4.0, FiRa, ICCE"]
+    - ["Radio", "UWB channels 5 and 9 (others where allowed); NBA radio 5.7–6.4 GHz; 2 antenna ports (angle of arrival)"]
+    - ["Radar (AB-RR)", "Child presence, kick, intrusion, occupancy"]
+    - ["Interfaces", "CAN-FD, SPI; AEC-Q100 grade 2, ASIL-A"]
+    - ["Reuses", "QPF5100Q / DW3000 UWB PHY and MAC, QM35825 radar and ML, CCC stack; QPF1002Q / QM14068 for the FEM"]
+    - ["New", "NBA narrowband radio, MMS, 15.4ab radar mode, CAN-FD"]
+    - ["Replaces", "QPF5100Q + BLE anchor at exterior positions where NBA suffices; separate CPD radar and capacitive kick sensor (AB-RR)"]
+    - ["Answers", "ST ST64UWB-A100/A500, Calterah Dubhe CAL1106AQ, NXP NCJ29D6A/B"]
+    - ["Delivery (est)", "Firmware MMS + DK 4.0 on QPF5100Q: 6–12 months · FEM: 12–18 months · SoC samples: 18–24 months (2028), SOP 2029–30"]
+
+prices:
+  method: "Anchor on public prices (low confidence) → value of what the chip replaces → volume range. Assumption: automotive contract prices are 30–50 % below 1k budgetary or reel list prices. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "NXP NCJ29D5 (15.4z, three variants)", price: "$4.85–6.33", qty: "1k budgetary"}
+    - {part: "NXP NCJ29D5DHN (with CCC/FiRa MAC)", price: "$8.45", qty: "4,000 reel (distributor)"}
+    - {part: "ST ST64UWB-A100/A500 (15.4ab)", price: "not stated", qty: "—"}
+    - {part: "TI AWRL6432 (60 GHz CPD radar, for the radar variant)", price: "$12.64–15.90", qty: "1ku (TI list)"}
+    - {part: "Qorvo DW3300Q / QPF5100Q", price: "not stated", qty: "—"}
+  items:
+    - {id: p-abr, item: "AB-R anchor SoC (ranging + NBA)", entry: 3.5, target: 4.5, premium: 5.5, basis: "NXP 15.4z at $4.85–6.33 (1k) is ≈$2.4–4.4 contract; +≈$1 for 15.4ab/NBA while supply is short"}
+    - {id: p-abrr, item: "AB-RR anchor SoC (+ radar)", entry: 4.5, target: 5.5, premium: 6.5, basis: "+$1 for radar: one interior anchor replaces a CPD radar chip of ≈$6.3–11 contract (from $12.64–15.90 list)"}
+    - {id: p-fem, item: "Anchor FEM (UWB LNA/switch + NBA PA)", entry: 0.6, target: 0.8, premium: 1.1, basis: "No public anchor; judgement: 15–20 % of the SoC, only on exterior/long-range anchors"}
+
+volumes:
+  - {label: "AB-R, 10 % share of 15 M UWB cars × 6 anchors (9 M)", units: 9000000, price: p-abr}
+  - {label: "AB-RR, 1 interior anchor in 3 M cars", units: 3000000, price: p-abrr}
+  - {label: "Anchor FEM, 2 exterior anchors in 3 M cars (6 M)", units: 6000000, price: p-fem}
+
+attach:
+  - {id: t-ccc, lever: "CCC DK 4.0 certification and test events (Apple hosted the 4.0 event; NXP already claims 4.0)", effort: low}
+  - {id: t-interop, lever: "Published interop with Apple U-series, Samsung and Pixel phones (Qorvo's U1 interop and Pixel 6 Pro history)", effort: med}
+  - {id: t-ref, lever: "Anchor reference design with FEM, CAN and a partner BLE/NFC set (NXP and TI publish complete access designs)", effort: med}
+  - {id: t-cpd, lever: "Bundle a CPD/kick algorithm partner (Qorvo showed CPD with Algorized at CES 2024)", effort: med}
+  - {id: t-china, lever: "ICCE / ICCOA support for Chinese OEMs (ST lists ICCE)", effort: low}
+  - {id: t-migrate, lever: "Software-compatible path from QPF5100Q to the AB chip (judgement)", effort: low}
+
+risks:
+  - "802.15.4ab is not ratified (RevCom planned Dec 2026); NBA is optional and no phone supports 15.4ab yet, so anchors must stay 15.4z-compatible for years."
+  - "Legacy Qorvo may already have a 15.4ab project: public sources show none; check internally before committing."
+  - "Bluetooth Channel Sounding could take entry cars and cap UWB at premium segments."
+  - "Calterah, Samsung and NXP volume pricing could undercut a late entrant."
+  - "Unknown from public data: QPF5100Q design wins and volumes, our die cost and process, real contract prices, NBA radio area and power."

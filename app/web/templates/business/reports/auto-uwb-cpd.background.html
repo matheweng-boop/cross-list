@@ -1,0 +1,49 @@
+{% raw %}<h1>Automotive UWB, child presence and kick sensing: background notes</h1>
+<p class="meta">Prepared 20 Oct 2026. Every figure behind the business case with its source and confidence (high = primary document read; med = trade press, vendor blog or advocacy body; low = search snippet or analyst press release). Prices are list or budgetary prices, above automotive contract prices. All fetches followed robots.txt, one request at a time, and stopped at the first block. www.qorvo.com was not requested (owner's rule).</p>
+
+<h2>Requirements</h2>
+<ul class="small rp-src">
+<li>Direct sensing defined as tracking heartbeat, respiration, movement or other sign of life; CPD default on each journey; children up to and including 6 years; OEM dossier per SD-102; journey ends 15 min after switch-off and driver door opening · <em>Safe Driving – Occupant Monitoring Protocol v1.2</em>, Euro NCAP, Jul 2026 · high — <a href="https://cdn.euroncap.com/cars/assets/Euro_NCAP_Protocol_Safe_Driving_Occupant_Monitoring_v1_2_aebbc7361f.pdf" rel="noopener" target="_blank">cdn.euroncap.com/…/Euro_NCAP_Protocol_Safe_Driving_Occupant_Monitoring_v1_2…pdf</a></li>
+<li>Points (same document): Occupant Monitoring 30; Occupant Presence 10 = CPD 5 + crash occupancy 5; child left behind: warning 1.5 (rear only) / 3.0 (all passenger seats), warning + intervention 3.0 / 4.0; child entering unlocked vehicle 0.5 / 1.0; rear seat occupancy 5 points · high</li>
+<li>Timing and coverage (same document): warning ≤ 15 s after locking; ≤ 10 min after door closure for a child who entered an unlocked car; initial warning ≥ 3 s; all seat rows, movable and removable seats; driver seat and all footwells for unlocked entry; luggage area excluded · high</li>
+<li>Escalation within 90 s; intervention within 10 min of locking · Euro NCAP OM v1.2 (from the sensing research) · high</li>
+<li>US: enhanced belt reminders (FMVSS 208), no NHTSA CPD rule found · NHTSA, Dec 2024 (from the sensing research) · med</li>
+<li>60 GHz in-cabin radar in the US under FCC §15.255 waivers (Apr 2021: Vayyar, Valeo, Infineon, Tesla, IEE, Brose) · Wiley Law; FCC DA 21-814 (from the sensing research) · med</li>
+<li>C-NCAP asks for direct detection of children (Joynext UWB CPD "one of the initial mass-produced products in China" meeting it, May 2025) · S&amp;P AutoTechInsight via search snippet · low — <a href="https://autotechinsight.spglobal.com/news/5282098/joynext-launches-ultra-wideband-based-child-presence-detection-product-for-enhanced-vehicle-safety" rel="noopener" target="_blank">autotechinsight.spglobal.com/news/5282098/…</a> (host stopped)</li>
+</ul>
+
+<h2>Technology and competitors</h2>
+<ul class="small rp-src">
+<li>Resolution: 24 GHz ~60 cm, 58°; 60 GHz FMCW 3–7.5 cm, 7–38°, 5 GHz bandwidth; UWB 6–30 cm, 58°, 500 MHz–2 GHz · <em>Automotive In-Cabin Radar Uncovered</em>, IEEE MTT-S featured article · med (summary page read, not the full paper) — <a href="https://mtt.org/featured_article/automotive-in-cabin-radar-uncovered-the-essential-guide-to-choose-the-perfect-sensing-technology-for-your-vehicle/" rel="noopener" target="_blank">mtt.org/featured_article/automotive-in-cabin-radar-uncovered-…</a></li>
+<li>TI TIDEP-01037: AWRL6432 60 GHz, CPD and intruder detection, 18 × 55 mm, 120° × 120° FOV, 6.5 dBi; TPS650365-Q1 PMIC (ASIL-B), TCAN3404-Q1 CAN-FD; design guide with verified performance data · TI, Jan 2025 · high — <a href="https://www.ti.com/tool/TIDEP-01037" rel="noopener" target="_blank">www.ti.com/tool/TIDEP-01037</a></li>
+<li>TI AWRL6432 1ku $12.638–15.902 (four orderables; 1–99 pcs $20.98–26.40) · TI product page, read 20 Oct 2026 · high — <a href="https://www.ti.com/product/AWRL6432" rel="noopener" target="_blank">www.ti.com/product/AWRL6432</a></li>
+<li>Infineon BGT60ATR24C 58–62 GHz, 2 TX / 4 RX, with OPTIREG PMIC and AURIX · Infineon page via search (sensing research) · med; price not stated</li>
+<li>Calterah 60 GHz cabin radar on Rhine-Pro (TinyML, &gt;96 % occupant detection claimed); newer CPD suite on UWB Dubhe CAL1106AQ, with Calterah claiming lower BOM cost and power and better penetration than mmWave · everythingrf / LinkedIn via search snippets · low</li>
+<li>Calterah Dubhe: kick-to-open, CPD, intrusion on the key chip · Rohde &amp; Schwarz release, 5 Jan 2026 · high for the release — <a href="https://www.rohde-schwarz.com/ca/about-us/news-press/all-news/world-s-first-802.15.4ab-uwb-chip-verified-by-calterah-and-rohde-schwarz-to-be-demoed-at-ces-2026_229356-1603092.html" rel="noopener" target="_blank">www.rohde-schwarz.com/…/229356-1603092.html</a></li>
+<li>ST64UWB-A500 radar: CPD, kick, multi-target, distance and angle; radar only on A500 · CNX Software, 13 Mar 2026; ST blog, May 2026 · med — <a href="https://blog.st.com/st64uwb/" rel="noopener" target="_blank">blog.st.com/st64uwb/</a></li>
+<li>NXP NCJ29D6A: ranging + short-range radar for CPD, intrusion, kick · NXP release Nov 2023 via search · low</li>
+<li>QPF5100Q lists CPD, kick sensor, occupancy; automotive qualified Jan 2025 · Qorvo product page and release via search snippets · low. QPF5100Q being tested by major manufacturers; CPD demo at CES 2024 telling a child from objects · Qorvo article, Wireless Design Online, 17 Sep 2025 · med — <a href="https://www.wirelessdesignonline.com/doc/unlocking-the-future-uwb-steers-cars-into-the-fast-lane-0001" rel="noopener" target="_blank">www.wirelessdesignonline.com/doc/unlocking-the-future-…</a></li>
+<li>Qorvo with Algorized at CES 2024; Continental UWB CPD on CoSmA; LG Innotek UWB CPD and kick at CES 2026 · sensing research (eeNews Europe, PR Newswire) · med</li>
+<li>Continental to CEPT: CPD driven by Euro NCAP; sub-10 GHz UWB "robust in all environments, good material penetration, HW re-use"; 60 GHz radar listed as alternative · CEPT CG-UWB document via search snippet · low — <a href="https://cept.org/documents/cg-uwb/67684/uwb-21-08_uwb_vehicular-child-present-detection-and-use-cases-with-same-technology_v4" rel="noopener" target="_blank">cept.org/documents/cg-uwb/67684/…</a></li>
+<li>CEVA UWB radar CPD software: reuses digital-key anchors; &lt; 1 bpm resolution claimed · CEVA release (2023) via search · low</li>
+<li>ARIA Sensing + Algorized UWB CPD SoC platform, MWC 2026 · Microwaves &amp; RF via search · low</li>
+<li>YFORE UWB in-cabin and kick: Euro NCAP response &lt; 13 s, kick activation &gt; 98 %, false triggers &lt; 0.5 % (vendor) · Kyodo PR Wire, Aug 2026, via search · low</li>
+<li>Linguwerk UWB kick opener at CES 2026, more weather-tolerant than capacitive (vendor) · German Pavilion CES listing via search · low</li>
+<li>Capacitive kick reference: detection up to 50 cm · TI TIDA-01409 via search · low. Jeep Wagoneer S kick sensor false-activation bulletin (2025) · NHTSA TSB MC-11021012-0001 via search · low</li>
+<li>Hyundai ultrasonic rear-occupant alert loses accuracy with distance, temperature and noise and may miss a motionless covered child; Mobis replaced it with radar · Hyundai Motor Group story (2020) via search · low</li>
+<li>Our parts: ACT4751MQI101 automotive programmable regulator; QM14068 UWB LNA/bypass; QPC8019Q SPDT to 8 GHz · BizDev Qorvo catalogue · high</li>
+</ul>
+
+<h2>Market</h2>
+<ul class="small rp-src">
+<li>3.5 M 60 GHz automotive radar shipments in 2030 driven by CPD; driver and occupant monitoring 25 % CAGR 2023–30 · ABI Research press release, Aug 2023, via search · low — <a href="https://abiresearch.com/press/vehicular-child-presence-detection-to-drive-35-million-60ghz-automotive-radar-shipments-in-2030" rel="noopener" target="_blank">abiresearch.com/press/vehicular-child-presence-detection-…</a></li>
+<li>CPD system market $1.50 B (2024) → $3.00 B (2030), 12.25 % CAGR · KSM report summary (GII Korea), Dec 2025, via search · low</li>
+<li>In-cabin radar (60 GHz and UWB) emerging, mass adoption awaits final safety standards; radar device market $2.5 B (2024) · Yole release via Edge AI and Vision Alliance, 13 Nov 2025 (sensing research) · high for the release text</li>
+<li>UWB key share and anchors: see the auto-uwb-15-4ab background notes (ABI, Dec 2024; our 4–8 anchor estimate).</li>
+<li>Capacitive kick sensor and Infineon 60 GHz prices: not stated.</li>
+<li>Estimates (o-ncap, o-split, o-uwbshare, o-kick, o-china, all prices and volumes) are ours; basis given in the case.</li>
+</ul>
+
+<h2>Hosts that blocked automated access</h2>
+<p class="small">www.qorvo.com not requested (owner's rule). www.nxp.com, www.spglobal.com, www.eenewseurope.com and www.edge-ai-vision.com were stopped earlier. www.wirelessdesignonline.com: the page loaded and was used, then our checkpoint filter stopped the host. www.microwavejournal.com and audioxpress.com are disallowed by robots.txt for our agent. Distributors (Mouser, Digi-Key, findchips) are disallowed. Facts that depend on these hosts come from search snippets and are marked low.</p>
+{% endraw %}

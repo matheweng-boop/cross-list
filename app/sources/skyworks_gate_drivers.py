@@ -322,7 +322,7 @@ def page_texts(pdf: str) -> list[str]:
 
 def page_of(pdf: str, needle: str) -> int | None:
     """First page (1-based) whose text contains ``needle`` (whitespace-insensitive), skipping the contents."""
-    pat = re.compile(r"\s+".join(map(re.escape, needle.split())))
+    pat = re.compile(r"\s+".join(map(re.escape, needle.split())), re.I)
     hits = [i + 1 for i, t in enumerate(page_texts(pdf)) if pat.search(t)]
     real = [p for p in hits if not re.search(r"\.\s\.\s\.\s\.", page_texts(pdf)[p - 1])]
     return (real or hits or [None])[0]
@@ -1307,7 +1307,7 @@ def si82x_sources(x: str) -> dict:
         "isolation_class": ("IEC60747-17 Insulation Characteristics", "VDE 60747-17 reinforced insulation"),
         "creepage_mm": ("Insulation and Safety-Related Specifications", "insulation table"),
         "qualification": ("Automotive-Grade devices", "ordering guide notes: -A codes automotive grade"),
-        "cmti_kv_us": ("transient immunity", "timing table, min"),
+        "cmti_kv_us": ("CMTI 200", "timing table, min"),
         "channel_config": (og, "ordering guide"),
         "input_type": (og, "ordering guide inputs column"),
         "peak_source_a": (

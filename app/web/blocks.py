@@ -212,19 +212,29 @@ def feedback_text(session: Session = Depends(get_session)):
 
 @router.get("/reference-designs", response_class=HTMLResponse)
 def reference_designs(request: Request, q: str = "", vendor: str = "", market: str = "", fn: str = "",
-                      iso: bool = False, docs: bool = False, page: int = 1,
+                      iso: bool = False, docs: bool = False, page: int = 1, view: str = "",
                       session: Session = Depends(get_session)):  # fmt: skip
-    """Manufacturers' public reference designs, searchable; each function is marked portfolio / gap for us."""
+    """Manufacturers' public reference designs, searchable; each function is marked portfolio / gap for us. The
+    families view lists each product family once, with its member parts and the designs that use them."""
     rows = refdesigns.search(q, vendor, market, fn, iso, docs)
+    view = "families" if view == "families" else ""
+    items = refdesigns.families(rows, q) if view else rows
     per = 50
-    pages = max(1, -(-len(rows) // per))
+    pages = max(1, -(-len(items) // per))
     page = min(max(page, 1), pages)
+    shown = items[(page - 1) * per : page * per]
     mk = op.makers(session)
     mine = op.company("combined")[2]
-    fns = {f for d in rows[(page - 1) * per : page * per] for f in d.get("functions") or []}
+    fns = (
+        {f for d in shown for f in d.get("functions") or []}
+        if not view
+        else {f for x in shown for f, _ in x["functions"]}
+    )
     facets = refdesigns.facets(rows)
     fns |= {f for f, _ in facets["function"]}
-    ctx = {"rows": rows[(page - 1) * per : page * per], "n": len(rows), "n_all": len(refdesigns.designs()),
+    ctx = {"rows": shown if not view else [], "fams": shown if view else [], "view": view, "n_items": len(items),
+           "family_of": refdesigns.family_of, "grouped": refdesigns.grouped_parts,
+           "n": len(rows), "n_all": len(refdesigns.designs()),
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
            "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
            "status": {f: op.status_of(f, mk, mine) for f in fns},

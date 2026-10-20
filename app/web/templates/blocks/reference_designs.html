@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro url() -%}
-  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else ''} -%}{%- set _ = base.update(kwargs) -%}
+  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view} -%}{%- set _ = base.update(kwargs) -%}
   /reference-designs?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro fchip(f) %}<a class="lg rd-fn {{ {'supported': 'lg-have', 'gap': 'lg-opp', 'competitor': 'lg-opp'}.get(status.get(f), 'lg-ext') }}" href="{{ url(fn=f) }}" title="{{ bo_status_help.get(status.get(f), '') }}">{{ label[f] }}</a>{% endmacro %}
@@ -11,7 +11,7 @@
   Functions are marked <span class="lg lg-have">we have a part</span> or <span class="lg lg-opp">no part of ours</span>; customer parts are grey.</p>
 
 <form method="get" action="/reference-designs" class="rd-search" role="search">
-  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else ''}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
   <input type="search" name="q" value="{{ q }}" placeholder="Search title, part number or application, e.g. traction inverter, UCC21750" aria-label="Search reference designs">
   <button type="submit">Search</button>
 </form>
@@ -28,7 +28,16 @@
   <div class="rd-fn-grid">{% for k, c in facets.function %}<a class="fchip{{ ' on' if fn == k }}" href="{{ url(fn=k) }}">{{ label[k] }} <small>{{ c }}</small></a>{% endfor %}</div>
 </details>
 
-<p class="small muted">{{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>
+<nav class="rd-view small" aria-label="View"><a class="fchip{{ ' on' if not view }}" href="{{ url(view='', page=1) }}">Designs <small>{{ '{:,}'.format(n) }}</small></a><a class="fchip{{ ' on' if view }}" href="{{ url(view='families', page=1) }}">Product families{% if view %} <small>{{ '{:,}'.format(n_items) }}</small>{% endif %}</a></nav>
+<p class="small muted">{% if view %}{{ '{:,}'.format(n_items) }} famil{{ 'ies' if n_items != 1 else 'y' }} used in {{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}, most used first. A family groups part numbers that differ only in the last digits (1EDI3025AS and 1EDI3035AS are 1EDI30xxAS); a part number without such a series stands alone.{% else %}{{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}{% endif %}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>
+{% for f in fams %}
+<details class="rd-fam">
+  <summary><b>{{ f.family }}</b> <span class="small muted">{{ f.vendor }} · {{ f.members|length }} part{{ 's' if f.members|length != 1 }} · in {{ f.designs|length }} design{{ 's' if f.designs|length != 1 }}{% if f.markets %} · {% for m, k in f.markets %}{{ m }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}</span></summary>
+  <p class="small">Parts: {% for m, k in f.members.most_common() %}<a href="/find?q={{ m|urlencode }}" title="find replacements">{{ m }}</a> <small class="muted">({{ k }})</small>{{ ', ' if not loop.last }}{% endfor %}</p>
+  {% if f.functions %}<p class="rd-fnrow">{% for x, k in f.functions %}{{ fchip(x) }}{% endfor %}</p>{% endif %}
+  <ul class="small">{% for d in f.designs %}<li><a href="{{ d.url }}" target="_blank" rel="noopener">{{ d.id }} {{ d.title }} ↗</a>{% set used = (d.parts or [])|select('in', f.members)|list %}<span class="muted"> · {{ used|join(', ') }}{% if d.applications %} · {{ d.applications[:2]|join(', ') }}{% endif %}</span></li>{% endfor %}</ul>
+</details>
+{% endfor %}
 {% for d in rows %}
 <article class="rd-card">
   <header><a href="{{ d.url }}" target="_blank" rel="noopener"><b>{{ d.id }}</b> {{ d.title }} ↗</a>
@@ -36,10 +45,10 @@
   {% if d.summary %}<p class="small">{{ d.summary }}</p>{% endif %}
   {% if d.applications %}<p class="small muted">Applications: {{ d.applications[:6]|join(' · ') }}</p>{% endif %}
   {% if d.functions %}<p class="rd-fnrow">{% for f in d.functions %}{{ fchip(f) }}{% endfor %}</p>{% endif %}
-  {% if d.parts %}<p class="small">Parts: {{ d.parts[:12]|join(', ') }}{% if d.parts|length > 12 %} …{% endif %}</p>{% endif %}
+  {% if d.parts %}<p class="small">Parts: {% for fam, ms in grouped(d.parts)[:12] %}{% if ms|length > 1 or fam != ms[0]|upper %}<a href="{{ url(view='families', q=ms[0], page=1) }}" title="family {{ fam }}">{{ fam }}</a> <span class="muted">({{ ms|join(', ') }})</span>{% else %}<a href="{{ url(view='families', q=ms[0], page=1) }}">{{ ms[0] }}</a>{% endif %}{{ ', ' if not loop.last }}{% endfor %}{% if grouped(d.parts)|length > 12 %} …{% endif %}</p>{% endif %}
   {% if d.documents %}<p class="small rd-docs">{% for k, v in d.documents.items() if k != 'other' and v %}<a href="{{ v }}" target="_blank" rel="noopener">{{ doc_labels.get(k, k) }} ↗</a>{% endfor %}{% for v in d.documents.other or [] %}<a href="{{ v }}" target="_blank" rel="noopener">Other document ↗</a>{% endfor %}</p>{% endif %}
 </article>
-{% else %}<p class="muted">No design matches. <a href="/reference-designs">Clear the filters</a>.</p>{% endfor %}
+{% else %}{% if not view %}<p class="muted">No design matches. <a href="/reference-designs">Clear the filters</a>.</p>{% endif %}{% endfor %}
 {% if pages > 1 %}<nav class="rd-pager small" aria-label="Pages">{% if page > 1 %}<a href="{{ url(page=page - 1) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url(page=page + 1) }}">Next →</a>{% endif %}</nav>{% endif %}
 
 <p class="small muted rd-sources">Sources: {% for s in sources %}{{ s.vendor }} ({{ '{:,}'.format(s.n) }}{% if s.collected %}, collected {{ s.collected }}{% endif %}){{ ', ' if not loop.last }}{% endfor %}.

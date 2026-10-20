@@ -7,6 +7,7 @@ working; this module only decides where a page sits.
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
+        ("Skyworks + Qorvo", "/portfolio", "The two lines side by side: strengths, which to pick, cross-selling"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Lifecycle", "/lifecycle", "New, NRND and obsolete parts"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
@@ -55,6 +56,7 @@ PLACES = {
     "/parts": ("products", "/"),  # Browse products: no longer in the menu, the page still works
     "/compare": ("products", "/compare"),
     "/lifecycle": ("products", "/lifecycle"),
+    "/portfolio": ("products", "/portfolio"),
     "/broadcast/configurations": ("systems", "/broadcast/configurations"),
     "/broadcast": ("products", "/broadcast"),
     "/blocks/feedback": ("manage", "/manage/reviews"),

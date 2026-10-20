@@ -53,20 +53,28 @@ def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
     data = yamlio.load(Path(path).read_text())
     rules = load_all_rules()
 
+    # Manufacturers and packages are updated from the file on every load, so a corrected dimension, name or role
+    # reaches a database that already holds the row (the server's database persists across deploys).
     mfrs = {}
     for m in data.get("manufacturers", []):
         obj = session.scalar(select(Manufacturer).where(Manufacturer.name == m["name"]))
         if obj is None:
-            obj = Manufacturer(name=m["name"], role=ManufacturerRole(m["role"]), website=m.get("website"))
+            obj = Manufacturer(name=m["name"])
             session.add(obj)
+        obj.role, obj.website = ManufacturerRole(m["role"]), m.get("website", obj.website)
         mfrs[m["name"]] = obj
 
     pkgs = {}
     for p in data.get("packages", []):
         obj = session.scalar(select(Package).where(Package.code == p["code"]))
         if obj is None:
-            obj = Package(**p)
+            obj = Package(code=p["code"])
             session.add(obj)
+        for key in ("name", "pin_count", "pitch_mm", "body_length_mm", "body_width_mm", "span_mm"):
+            setattr(obj, key, p[key])
+        for key in ("height_mm", "positions_total", "pin_positions"):
+            setattr(obj, key, p.get(key))
+        obj.exposed_pad = bool(p.get("exposed_pad", False))
         pkgs[p["code"]] = obj
     session.flush()
 

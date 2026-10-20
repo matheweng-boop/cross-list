@@ -13,7 +13,7 @@ from app.services.lifecycle import is_risk, status_class
         ("Preview", "preview"), ("Pre Release", "preview"), ("Samples Only", "preview"),
         ("NRND", "nrnd"), ("No new designs", "nrnd"), ("Last Time Buy", "nrnd"), ("last_time_buy", "nrnd"),
         ("Discontinued", "obsolete"), ("Obsolete", "obsolete"),
-        (None, "unknown"), ("unknown", "unknown"), ("Contact sales (ND)", "unknown"),
+        (None, "unknown"), ("unknown", "unknown"), ("Contact sales (ND)", "nrnd"),
     ],
 )  # fmt: skip
 def test_status_class(status, cls):

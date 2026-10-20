@@ -77,8 +77,8 @@ def parse_rules(data: dict) -> FamilyRules:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")
         if p.priority not in (1, 2, 3):
             raise ValueError(f"{p.key}: priority must be 1, 2 or 3")
-        if p.kind == "number" and p.direction not in ("higher", "lower"):
-            raise ValueError(f"{p.key}: number needs direction higher|lower")
+        if p.kind == "number" and p.direction not in ("higher", "lower", "match"):
+            raise ValueError(f"{p.key}: number needs direction higher|lower|match")
         if p.derived_from and (p.kind != "bool" or not p.contains):
             raise ValueError(f"{p.key}: a derived parameter must be a bool with from.contains")
         if p.kind == "ordinal" and not p.levels:

@@ -15,7 +15,7 @@ _CACHE: dict = {}
 def package_creepage(session: Session, limit: int = 8) -> list[dict]:
     """Creepage per package as the data sheets state it: the most common value of each package used by at least
     20 isolation parts, widest spread of values first chosen by use."""
-    v = blocks._data_version(session)
+    v = (blocks._data_version(session), limit)
     if v in _CACHE:
         return _CACHE[v]
     q = (

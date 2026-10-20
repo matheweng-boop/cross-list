@@ -1,12 +1,57 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch, crowd, about, term, push with context %}
 {% block title %}Cross-sell – BizDev{% endblock %}
-{% macro partlinks(ps) %}{% for p in ps %}<a class="offer" href="{{ p.url }}"{% if not p.url.startswith('/') %} target="_blank" rel="noopener"{% endif %} title="{{ p.manufacturer }}">{{ p.mpn }}</a>{% else %}<span class="muted small">no part listed</span>{% endfor %}{% endmacro %}
+{% macro partlinks(ps) %}{% for p in ps %}<a class="offer{{ ' auto' if p.auto }}" href="{{ p.url }}"{% if not p.url.startswith('/') %} target="_blank" rel="noopener"{% endif %} title="{{ p.manufacturer }}">{{ p.mpn }}</a>{% else %}<span class="muted small">no part listed</span>{% endfor %}{% endmacro %}
+{% macro why(w, a_label, b_label) %}<details class="why small"><summary>Why?</summary>
+  <p>{{ w.summary|capitalize }}.</p>
+  <ul>{% for r in w.rows %}<li><a href="/business/applications/{{ r.i }}?co={{ co }}">{{ r.name }}</a>{% if r.background %} <span class="muted">(background)</span>{% endif %}:
+    {% if r.same %}both in <b>{{ r.same|join(', ') }}</b>{% else %}{{ a_label }} in <i>{{ r.a_blocks|join(', ') }}</i>, {{ b_label }} in <i>{{ r.b_blocks|join(', ') }}</i>{% endif %}
+    {% for x, y, lab in r.links %}<br><span class="muted">connected: {{ x }} → {{ y }}{% if lab %} ({{ lab }}){% endif %}</span>{% endfor %}</li>{% endfor %}
+    {% if w.more %}<li class="muted">and {{ w.more }} more</li>{% endif %}</ul>
+  {% for note in w.notes if note %}<p class="muted">{{ note }}</p>{% endfor %}
+</details>{% endmacro %}
 {% block content %}
 <h1>Cross-sell</h1>
 <p class="subtitle muted">Which of our parts to offer together, and which new products would sit next to a product we already sell.
   Modeled from {{ apps|length }} reference architectures (two functions in the same design), not observed sales.</p>
 {{ company_switch('/business/attach', co, companies, '&fn=' ~ fn) }}
+<form method="get" action="/business/attach" class="cs-search" role="search">
+  <input type="hidden" name="co" value="{{ co }}">
+  <label>Part number <input name="part" value="{{ q_part }}" placeholder="e.g. SKY87604, Si8261, ISO7741" autocomplete="off" required></label>
+  <label>Application <small class="muted">optional, any words</small> <input name="app" value="{{ q_app }}" placeholder="e.g. dcdc, broadcast, ev charger, 5g radio"></label>
+  <button type="submit">Find what to offer</button>
+</form>
+{% if q_part %}
+{% if not anchor %}<p class="uc-error small">No part number starting with “{{ q_part }}” in BizDev. Try fewer characters, or <a href="/business/attach?co={{ co }}">browse by function</a>.</p>
+{% else %}{% set S = sell %}
+<section class="pl-card cs-anchor">
+  <p><b>{{ anchor.mpn }}</b> <span class="muted">{{ anchor.manufacturer }}{{ '' if anchor.ours else ' · competitor part' }}</span> · {{ fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.fns[0] }}{% if anchor.fns|length > 1 %} <small class="muted">(also {% for f in anchor.fns[1:] %}{{ fns[f].label if f in fns else f }}{{ ', ' if not loop.last }}{% endfor %})</small>{% endif %}
+    {% if anchor.automotive %} · <span class="qual q-auto">automotive</span>{% endif %}{% if anchor.ranges %} · {% for lo, hi in anchor.ranges[:2] %}{{ '%g'|format(lo) }}–{{ '%g'|format(hi) }} GHz{{ ', ' if not loop.last }}{% endfor %}{% endif %}
+    {% if not anchor.exact %}<br><small class="muted">Closest match for “{{ q_part }}”{% if anchor.others %}; also: {% for o in anchor.others %}<a href="/business/attach?co={{ co }}&part={{ o|urlencode }}&app={{ q_app|urlencode }}">{{ o }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</small>{% endif %}</p>
+  <p class="small">{% if q_app %}{{ S.n }} of {{ S.n_with_part }} architectures with this part match “{{ q_app }}”{% else %}In {{ S.n }} architecture{{ 's' if S.n != 1 }}{% endif %}.
+    {% if q_app and S.apps %}<details class="small cs-apps"><summary>which architectures</summary>{% for a, sc, hit in S.apps[:40] %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}" title="matched: {{ hit|join(', ') }}">{{ a.name }}</a>{% endfor %}</details>{% endif %}
+    {% if q_app and not S.n %}<span class="uc-error">No architecture with this part matches these words; try broader words, or leave the application empty.</span>{% endif %}</p>
+</section>
+{% if S.n %}
+<h2>Offer with it <small class="muted">· our parts, best first · {{ S.ours|length }}</small></h2>
+<p class="small muted"><b>Score</b> = share of these architectures that also need it × (1 + 0.6 × share where both sit in the same block + 0.3 × share where their blocks are connected){% if anchor.automotive %} × automotive fit (automotive part: architectures outside automotive count less){% endif %}.</p>
+<div class="table-wrap"><table class="striped bo-attach-t cs-table">
+  <thead><tr><th scope="col">#</th><th scope="col">Function</th><th scope="col">Score</th><th scope="col">Together in</th><th scope="col">Parts to offer</th><th scope="col"></th></tr></thead>
+  <tbody>{% for e in S.ours[:25] %}<tr>
+    <td class="muted">{{ loop.index }}</td>
+    <td>{{ e.label }}{{ why(e.why, fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.mpn, e.label) }}</td>
+    <td title="together {{ (100 * e.share)|round|int }}% · same block {{ (100 * e.same)|round|int }}% · connected {{ (100 * e.linked)|round|int }}%{{ ' · automotive fit %.2f'|format(e.fit) if anchor.automotive }}"><span class="bo-bar"><span style="width:{{ [100, (80 * e.score)|round]|min }}%"></span></span> {{ '%.2f'|format(e.score) }}</td>
+    <td class="small">{{ e.apps }} of {{ S.n }}</td>
+    <td class="small">{{ partlinks(e.offer) }}</td>
+    <td>{{ push('crosssell', anchor.mpn ~ '+' ~ e.fn, anchor.mpn ~ ' + ' ~ e.label, 'Offer with ' ~ anchor.mpn ~ ': in ' ~ e.apps ~ ' of ' ~ S.n ~ ' architectures' ~ (' (' ~ q_app ~ ')' if q_app else ''), e.fn, (anchor.mpn ~ '+' ~ e.fn) in shortlisted) }}</td>
+  </tr>{% else %}<tr><td colspan="6" class="muted">None of our other products appears with it here.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if S.new %}<details class="small"><summary><b>New products customers also need next to it</b> · no part of ours yet · {{ S.new|length }}</summary>
+  <ul>{% for e in S.new[:20] %}<li><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a> <span class="muted">· in {{ e.apps }} of {{ S.n }} · {{ 'nobody in BizDev has it' if e.status == 'gap' else 'only competitors' }}</span></li>{% endfor %}</ul></details>{% endif %}
+{% endif %}
+{% endif %}
+<p class="small"><a href="/business/attach?co={{ co }}">← Browse by function instead</a></p>
+{% else %}
 <form method="get" action="/business/attach" class="bo-anchor">
   <input type="hidden" name="co" value="{{ co }}">
   <label>Start from a product we sell <select name="fn" onchange="this.form.submit()"><option value="">– overview: best bundles –</option>
@@ -19,7 +64,7 @@
   <thead><tr><th scope="col">Our product</th><th scope="col">Offer together with</th><th scope="col">Together in</th><th scope="col"></th></tr></thead>
   <tbody>{% for p in pairs %}<tr>
     <td><a href="/business/attach?co={{ co }}&fn={{ p.a }}">{{ p.a_label }}</a></td>
-    <td><a href="/business/attach?co={{ co }}&fn={{ p.b }}">{{ p.b_label }}</a></td>
+    <td><a href="/business/attach?co={{ co }}&fn={{ p.b }}">{{ p.b_label }}</a>{{ why(p.why, p.a_label, p.b_label) }}</td>
     <td>{{ p.apps }} architecture{{ 's' if p.apps != 1 }}</td>
     <td>{{ push('crosssell', p.a ~ '+' ~ p.b, p.a_label ~ ' + ' ~ p.b_label, 'Bundle: together in ' ~ p.apps ~ ' reference architectures', '', (p.a ~ '+' ~ p.b) in shortlisted) }}</td>
   </tr>{% else %}<tr><td colspan="4" class="muted">No two of our products appear in the same architecture.</td></tr>{% endfor %}</tbody>
@@ -36,7 +81,7 @@
 <div class="table-wrap"><table class="striped bo-attach-t">
   <thead><tr><th scope="col">Function</th><th scope="col">Together in</th><th scope="col">Parts to offer</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in ours %}<tr>
-    <td>{{ e.label }}</td>
+    <td>{{ e.label }}{{ why(e.why, fns[fn].label, e.label) }}</td>
     <td><span class="bo-bar"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
     <td class="small">{{ partlinks(e.offer) }}</td>
     <td>{{ push('crosssell', fn ~ '+' ~ e.fn, fns[fn].label ~ ' + ' ~ e.label, 'Offer together: in ' ~ e.apps ~ ' of ' ~ n ~ ' architectures with ' ~ fns[fn].label, e.fn, (fn ~ '+' ~ e.fn) in shortlisted) }}</td>
@@ -47,12 +92,13 @@
 <div class="table-wrap"><table class="striped bo-attach-t">
   <thead><tr><th scope="col">Function</th><th scope="col">Together in</th><th scope="col">Today</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in new %}<tr>
-    <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td>
+    <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a>{{ why(e.why, fns[fn].label, e.label) }}</td>
     <td><span class="bo-bar gap"><span style="width:{{ (100 * e.share)|round }}%"></span></span> {{ e.apps }} of {{ n }}</td>
     <td class="small">{{ 'Nobody in BizDev has it' if e.status == 'gap' else 'Only competitors' }}</td>
     <td>{{ push('crosssell', fn ~ '+' ~ e.fn, e.label ~ ' (next to ' ~ fns[fn].label ~ ')', 'New product: in ' ~ e.apps ~ ' of ' ~ n ~ ' architectures with ' ~ fns[fn].label, e.fn, (fn ~ '+' ~ e.fn) in shortlisted) }}</td>
   </tr>{% else %}<tr><td colspan="4" class="muted">Every function next to it is covered.</td></tr>{% endfor %}</tbody>
 </table></div>
+{% endif %}
 {% endif %}
 {{ about('attach') }}
 {% endblock %}

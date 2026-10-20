@@ -1,0 +1,349 @@
+# Application block diagrams from public Mini-Circuits pages (component-vendor reference), for the block-diagram generator.
+# Format follows data/blocks/research/ti_block_diagrams.yaml (docs + applications with groups / links / features / sources).
+#
+# How these were read: www.minicircuits.com/WebStore/applications/block-diagrams links ten one-page PDFs
+# (/pdfs/<name>.pdf). Each PDF was rendered to PNG locally and read; every PDF has a figure with reference designators
+# (AMP1, MIX1, ...) and a table "Schematic Part No. -> Sample Mini-Circuits Model Families". The CATV/DOCSIS, drone and
+# quantum application pages embed further figures (images.contentstack.io) that were downloaded and read the same way.
+# Groups below use the figure's own designators. mc_families = the sample families from each figure's table
+# (vendor reference only, not recommendations).
+#
+# Field notes (same conventions as ti_block_diagrams.yaml):
+#   groups[].fn_hint   BizDev function ids (data/blocks/functions.yaml). No equalizer / coupler / balun / splitter ids
+#                      exist, so those map to rf_passive (proposal: an rf_equalizer id, see comparison.md).
+#   links              [from, to, label] = connections drawn in the figure ("" when unlabelled)
+#   links_from         figure  = every link is a line drawn in the figure (direction from amplifier / arrow orientation)
+#                      partly_inferred = some links (marked "(inferred)" in the label) are not drawn
+#   completeness       full | subsystem | minimal - how complete a signal chain the figure shows
+#   features[]         design questions a user would answer for this application; choices are options, not answers
+#
+# Ten Mini-Circuits PDFs read: Transceiver, Repeater, Ku-Band Block Upconverter, Redundant L-Band Amplifier,
+# Eight-Element Phased Array, 2.4 GHz QAM Modulator, 4-6 GHz Amplifier, 1-2 GHz Gain/Slope Equalizer, CATV Return Path,
+# X7 Multiplier. Plus: DOCSIS 4.0 line extender (CATV page), drone module RF front end (drone page),
+# 4-channel AOM driver VGA (quantum page). Drone detection / counter-drone images were photos (product lists only).
+
+docs:
+  MC-BD-TRX: {title: "Transceiver - block diagram + model families", url: "https://www.minicircuits.com/pdfs/Transceiver.pdf"}
+  MC-BD-RPT: {title: "Repeater - block diagram + model families", url: "https://www.minicircuits.com/pdfs/Repeater.pdf"}
+  MC-BD-KUBUC: {title: "Ku-Band Block Upconverter - block diagram + model families", url: "https://www.minicircuits.com/pdfs/KU-BAND%20BLOCK%20UPCONVERTER.pdf"}
+  MC-BD-LBAND: {title: "Redundant L-Band Amplifier - block diagram + model families", url: "https://www.minicircuits.com/pdfs/Redundant%20L-Band%20Amplifier.pdf"}
+  MC-BD-PA8: {title: "Eight-Element Phased Array - block diagram with power levels", url: "https://www.minicircuits.com/pdfs/Eight-Element%20Phased%20Array.pdf"}
+  MC-BD-QAM: {title: "2.4 GHz QAM Modulator - block diagram + model families", url: "https://www.minicircuits.com/pdfs/2.4%20GHz%20QAM%20modulator.pdf"}
+  MC-BD-AMP46: {title: "4-6 GHz Amplifier - block diagram + model families", url: "https://www.minicircuits.com/pdfs/4-6%20GHz%20Ampfifier.pdf"}
+  MC-BD-EQ: {title: "1-2 GHz Gain/Slope Equalizer - block diagram + model families", url: "https://www.minicircuits.com/pdfs/1-2%20GHz%20Gain_Slope_Equalizer.pdf"}
+  MC-BD-CATVRP: {title: "CATV Return Path - block diagram + model families", url: "https://www.minicircuits.com/pdfs/CATV%20Return%20Path.pdf"}
+  MC-BD-X7: {title: "X7 Multiplier - block diagram + model families", url: "https://www.minicircuits.com/pdfs/X7%20Multiplier.pdf"}
+  MC-APP-CATV: {title: "CATV & Broadband Access (DOCSIS 3.1/4.0) - 'Typical Line Extender Amplifier Block Diagram' + channel-split figure", url: "https://www.minicircuits.com/WebStore/applications/CATV%20Broadband%20DOCSIS", note: "image CATV-Broadband-DOCSIS-Line-Extender-Amplifier-Block-Diagram.png; legend #1-#5 in page text"}
+  MC-APP-DRONE: {title: "RF Applications for Drone Modules & Drone Mitigation - 'Drone Module - RF Front-end' figure", url: "https://www.minicircuits.com/WebStore/applications/RF-Applications-for-Drone-Modules-and-Drone-Mitigation", note: "image Drone-module-rf-front-end-products-v1.png"}
+  MC-APP-QUANTUM: {title: "Quantum Computing RF & Microwave Solutions - 4-channel VGA (ZT-414) for AOM/AOD drive", url: "https://www.minicircuits.com/WebStore/applications/rf-microwave-quantum-computing-solutions", note: "image Multi-channel-variable-gain-amplifier-for-driving-AOM-v2.png"}
+
+applications:
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_superhet_transceiver
+    name: Superheterodyne transceiver with IF I/Q demodulator / modulator (TDD, shared antenna via T/R switch)
+    completeness: full
+    links_from: figure
+    sources:
+      - {doc: MC-BD-TRX, url: "https://www.minicircuits.com/pdfs/Transceiver.pdf", pages: "p.1 figure + model-family table"}
+    groups:
+      - {id: antenna_sw, label: "Antenna + SW1 (T/R switch)", side: rf, blocks: [antenna, SPDT switch], source: "MC-BD-TRX figure", fn_hint: [antenna, antenna_switch], mc_families: [HSWA, GSWA, CSWA, JSW, KSW, KSWA, MSW, MSWA, RSWA, VSW, VSWA]}
+      - {id: rx_front_end, label: "Receive front end: LIM1 -> BPF1 -> LNA1", side: rf, blocks: [limiter, bandpass filter, LNA], source: "MC-BD-TRX figure", fn_hint: [rf_limiter, filter_saw_baw, lna], mc_families: [RLM, CLM, BFCN, RBP, BFCG, BPF, CBP, JCBP, SXBP, SYBP, SAV, TAV, CMA, PMA, PGA, PSA, RAMP, TAMP]}
+      - {id: rx_lo, label: "RX LO: OSC1 -> AMP1 (LO buffer)", side: rf, blocks: [VCO, LO amplifier], source: "MC-BD-TRX figure", fn_hint: [rf_synthesizer, rf_gain_block], mc_families: [ROS, KSN, MAR, GALI, GVA, ERA, PHA]}
+      - {id: rx_downconv_if, label: "Down-conversion + IF strip: MIX1 -> LPF1 -> AMP2 -> ATT1", side: rf, blocks: [mixer, IF low-pass filter, IF amplifier, attenuator], source: "MC-BD-TRX figure", fn_hint: [rf_mixer, filter_saw_baw, rf_gain_block, rf_attenuator], mc_families: [ADE, SIM, MAC, LFCN, XLF, LFCW, GAT, PAT, YAT, RCAT]}
+      - {id: iq_demod, label: "IQ demodulator + OSC2 (2nd LO)", side: rf, blocks: [I/Q demodulator, VCO], source: "MC-BD-TRX figure", fn_hint: [rf_mixer, rf_synthesizer], mc_families: [ROS, KSN]}
+      - {id: rx_baseband, label: "I/Q baseband: LPF2/LPF3 -> I ADC / Q ADC", blocks: [anti-alias low-pass filters, ADCs], source: "MC-BD-TRX figure", fn_hint: [filter_saw_baw, adc], mc_families: [LFCN, XLF, SXLP, SCLF]}
+      - {id: tx_baseband, label: "I/Q baseband: I DAC / Q DAC -> LPF5/LPF6", blocks: [DACs, reconstruction low-pass filters], source: "MC-BD-TRX figure", fn_hint: [dac, filter_saw_baw], mc_families: [LFCN, XLF]}
+      - {id: iq_mod, label: "IQ modulator + OSC4", side: rf, blocks: [I/Q modulator, VCO], source: "MC-BD-TRX figure", fn_hint: [rf_mixer, rf_synthesizer], mc_families: [ROS, KSN]}
+      - {id: tx_upconv, label: "Up-conversion: MIX2 with OSC3 -> AMP3 (LO buffer)", side: rf, blocks: [mixer, VCO, LO amplifier], source: "MC-BD-TRX figure", fn_hint: [rf_mixer, rf_synthesizer, rf_gain_block], mc_families: [ADE, SIM, MAC, ROS, KSN]}
+      - {id: tx_chain, label: "Transmit chain: BPF2 -> ATT2 -> HPA1 -> LPF4 (harmonic filter)", side: rf, blocks: [bandpass filter, attenuator, power amplifier, low-pass harmonic filter], source: "MC-BD-TRX figure", fn_hint: [filter_saw_baw, rf_attenuator, power_amplifier], mc_families: [BFCN, RBP, GAT, PAT, YAT, RCAT, "GVA (up to 1 W)", LFCN, LPF, SXLP]}
+    links:
+      - [antenna_sw, rx_front_end, "RX"]
+      - [rx_front_end, rx_downconv_if, "RF"]
+      - [rx_lo, rx_downconv_if, "LO (OSC1 -> AMP1 -> MIX1)"]
+      - [rx_downconv_if, iq_demod, "IF"]
+      - [iq_demod, rx_baseband, "I / Q"]
+      - [tx_baseband, iq_mod, "I / Q"]
+      - [iq_mod, tx_upconv, "IF"]
+      - [tx_upconv, tx_chain, "RF"]
+      - [tx_chain, antenna_sw, "TX"]
+    features:
+      - {id: duplexing, question: "How do TX and RX share the antenna?", choices: ["T/R switch (TDD / half duplex)", "duplexer / diplexer (FDD)"], filters: "rf_switch isolation, power handling (new)", source: "MC-BD-TRX (SW1)"}
+      - {id: if_architecture, question: "Receiver / transmitter architecture", choices: ["single-IF superhet + analog IQ at IF", "dual-conversion superhet", "direct conversion (zero-IF)", "RF / IF sampling"], filters: "mixer count, LO count (new)", source: "MC-BD-TRX (MIX1 + IQ demodulator)"}
+      - {id: rx_protection, question: "Receiver input protection", choices: ["limiter before filter/LNA", "none"], filters: "rf_limiter power handling (new)", source: "MC-BD-TRX (LIM1)"}
+      - {id: gain_control, question: "Gain control in IF / TX chain", choices: ["fixed pads", "digital step attenuator", "voltage-variable attenuator"], filters: "rf_attenuator type (new)", source: "MC-BD-TRX (ATT1, ATT2)"}
+      - {id: tx_power, question: "Transmit output power class", choices: ["< 1 W (MMIC GVA-class)", "1-10 W", "> 10 W"], filters: "power_amplifier Psat (new)", source: "MC-BD-TRX table (HPA1 GVA up to 1 W)"}
+      - {id: lo_count, question: "Independent LO sources", choices: ["4 (one per conversion, as drawn)", "shared LO for RX/TX (TDD)", "integrated synthesizer"], filters: "rf_synthesizer channel count (new)", source: "MC-BD-TRX (OSC1-OSC4)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_if_repeater
+    name: RF repeater / signal booster with IF translation (shared LO, IF filtering and gain control)
+    completeness: full
+    links_from: figure
+    sources:
+      - {doc: MC-BD-RPT, url: "https://www.minicircuits.com/pdfs/Repeater.pdf", pages: "p.1 figure + model-family table"}
+    groups:
+      - {id: rx_antenna, label: "Donor / receive antenna", side: rf, blocks: [antenna], source: "MC-BD-RPT figure", fn_hint: [antenna], mc_families: []}
+      - {id: rx_front_end, label: "Input chain: LIM1 -> BPF1 -> LNA1 -> AMP1 -> ATT1 -> AMP2", side: rf, blocks: [limiter, bandpass filter, LNA, gain block, fixed attenuator, gain block], source: "MC-BD-RPT figure", fn_hint: [rf_limiter, filter_saw_baw, lna, rf_gain_block, rf_attenuator], mc_families: [RLM, CLM, BFCN, RBP, BFCG, SAV, TAV, PMA, PSA, MAR, GALI, GVA, GAT, PAT, YAT, RCAT]}
+      - {id: downconv, label: "MIX1 (down-convert to IF)", side: rf, blocks: [mixer], source: "MC-BD-RPT figure", fn_hint: [rf_mixer], mc_families: [ADE, SIM, MAC]}
+      - {id: lo, label: "OSC1 (single LO shared by MIX1 and MIX2)", side: rf, blocks: [VCO], source: "MC-BD-RPT figure", fn_hint: [rf_synthesizer], mc_families: [ROS, KSN]}
+      - {id: if_strip, label: "IF strip: LPF1 -> AMP3 -> ATT2 (variable) -> AMP4", side: rf, blocks: [IF low-pass filter, IF amplifier, variable attenuator (AGC), IF amplifier], source: "MC-BD-RPT figure", fn_hint: [filter_saw_baw, rf_gain_block, rf_attenuator], mc_families: [LFCN, DAT, EVA, RVA, HVA, MVA, SVA, SYVA, VACC]}
+      - {id: upconv, label: "MIX2 (up-convert back to RF)", side: rf, blocks: [mixer], source: "MC-BD-RPT figure", fn_hint: [rf_mixer], mc_families: [ADE, SIM, MAC]}
+      - {id: tx_chain, label: "Output chain: AMP5 -> HPA1", side: rf, blocks: [driver, power amplifier], source: "MC-BD-RPT figure", fn_hint: [rf_gain_block, power_amplifier], mc_families: [GVA, "GVA (up to 1 W)"]}
+      - {id: tx_antenna, label: "Service / transmit antenna", side: rf, blocks: [antenna], source: "MC-BD-RPT figure", fn_hint: [antenna], mc_families: []}
+    links:
+      - [rx_antenna, rx_front_end, ""]
+      - [rx_front_end, downconv, "RF"]
+      - [lo, downconv, "LO"]
+      - [downconv, if_strip, "IF"]
+      - [if_strip, upconv, "IF"]
+      - [lo, upconv, "LO (same OSC1)"]
+      - [upconv, tx_chain, "RF"]
+      - [tx_chain, tx_antenna, ""]
+    notes: "With one LO for both mixers the output returns to the input frequency (channel-selective on-frequency repeater); the figure draws no filter after MIX2, so image / LO-leak filtering before AMP5 is a gap a real design would add."
+    features:
+      - {id: repeater_type, question: "Repeater type", choices: ["on-frequency (same LO, IF filtering)", "frequency-translating (different LOs)", "broadband RF-only booster (no mixers)"], filters: "mixer / LO count (new)", source: "MC-BD-RPT (shared OSC1)"}
+      - {id: channel_filter, question: "Channel selectivity at IF", choices: ["LC low-pass (as drawn)", "SAW / crystal IF bandpass", "digital (ADC/DAC)"], filters: "filter_saw_baw type (new)", source: "MC-BD-RPT (LPF1)"}
+      - {id: agc, question: "Gain control", choices: ["voltage-variable attenuator AGC", "digital step attenuator", "fixed"], filters: "rf_attenuator type (new)", source: "MC-BD-RPT (ATT2 variable)"}
+      - {id: isolation, question: "Donor/service antenna isolation needed vs gain", choices: ["gain < isolation - margin", "add echo cancellation"], filters: "(new)", source: "general repeater practice (not in figure)"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_ku_block_upconverter
+    name: Satcom Ku-band block upconverter (BUC) core - L-band IF in, multiplied LO chain (x3)
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-BD-KUBUC, url: "https://www.minicircuits.com/pdfs/KU-BAND%20BLOCK%20UPCONVERTER.pdf", pages: "p.1 figure + model-family table"}
+    groups:
+      - {id: if_in, label: "IF input amplifier AMP4", side: rf, blocks: [gain block], source: "MC-BD-KUBUC figure", fn_hint: [rf_gain_block], mc_families: [MAR, GALI, YSF, ERA, MNA, LEE, PGA, PHA, PSA]}
+      - {id: mixer, label: "MIX1 (up-converter)", side: rf, blocks: [mixer], source: "MC-BD-KUBUC figure", fn_hint: [rf_mixer], mc_families: [SIM, HJK, LAVI]}
+      - {id: rf_out, label: "Output amplifier AMP5", side: rf, blocks: [driver amplifier], source: "MC-BD-KUBUC figure", fn_hint: [rf_gain_block], mc_families: [GVA, AVA, GALI, LVA]}
+      - {id: lo_source, label: "LO source: OSC1 -> ATT1 -> AMP1 -> LPF1 -> ATT2", side: rf, blocks: [VCO / oscillator, pad, buffer amplifier, harmonic low-pass filter, pad], source: "MC-BD-KUBUC figure", fn_hint: [rf_synthesizer, rf_attenuator, rf_gain_block, filter_saw_baw], mc_families: [ROS, KSN, GAT, PAT, YAT, RCAT, LFCN, XLF]}
+      - {id: lo_mult, label: "LO multiplier: MULT1 (x3) -> HPF1 -> ATT3", side: rf, blocks: [frequency tripler, high-pass filter (rejects fundamental / 2nd), pad], source: "MC-BD-KUBUC figure", fn_hint: [frequency_multiplier, filter_saw_baw, rf_attenuator], mc_families: [KSX2, RMK, CY2, HFCN, YAT, RCAT]}
+      - {id: lo_amp, label: "LO amplifiers AMP2 -> AMP3 (drive mixer LO port)", side: rf, blocks: [LO driver amplifiers], source: "MC-BD-KUBUC figure", fn_hint: [rf_gain_block], mc_families: [GVA, AVA, GALI, LVA]}
+    links:
+      - [if_in, mixer, "IF input"]
+      - [mixer, rf_out, "Ku-band output"]
+      - [lo_source, lo_mult, ""]
+      - [lo_mult, lo_amp, ""]
+      - [lo_amp, mixer, "LO"]
+    notes: "Figure stops at AMP5 'Output'. A complete BUC adds an image/LO-reject bandpass filter, a high-power PA (SSPA), output isolator and a reference-locked LO (10 MHz from the modem); these are NOT in the figure."
+    features:
+      - {id: lo_generation, question: "How is the Ku LO generated?", choices: ["lower-frequency VCO/PLL + multiplier (as drawn, x3)", "direct microwave PLL/VCO", "DRO"], filters: "frequency_multiplier factor (new)", source: "MC-BD-KUBUC (MULT1 X3)"}
+      - {id: lo_reference, question: "LO reference", choices: ["external 10 MHz from IDU/modem", "internal OCXO/TCXO"], filters: "crystal_oscillator (new)", source: "general BUC practice (not in figure)"}
+      - {id: output_power, question: "BUC output power", choices: ["driver only (as drawn)", "2-8 W SSPA", "> 8 W GaN SSPA"], filters: "power_amplifier Psat (new)", source: "figure ends at AMP5"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_redundant_lband_amplifier
+    name: Redundant (1:1 switched) L-band amplifier, 950-2000 MHz, with 180-degree balanced output stage and power monitoring
+    completeness: full
+    links_from: partly_inferred
+    sources:
+      - {doc: MC-BD-LBAND, url: "https://www.minicircuits.com/pdfs/Redundant%20L-Band%20Amplifier.pdf", pages: "p.1 figure + model-family table"}
+    groups:
+      - {id: in_switch, label: "SW1 input redundancy switch (SPDT), input 950-2000 MHz @ -30 dBm", side: rf, blocks: [SPDT switch], source: "MC-BD-LBAND figure", fn_hint: [rf_switch], mc_families: [MSP2T, MSP2TA]}
+      - {id: chain_a_in, label: "Chain A: ATT1 (variable) -> CPL1 -> AMP1 -> ATT2 -> AMP2 -> ATT3", side: rf, blocks: [variable attenuator, directional coupler, amplifier, pad, amplifier, pad], source: "MC-BD-LBAND figure (upper path)", fn_hint: [rf_attenuator, rf_passive, rf_gain_block], mc_families: [ZX76, ZFDC, ZNDC, ZX60, ZFL, ZJL, ZKL, VAT, FW, BW]}
+      - {id: chain_a_out, label: "Chain A balanced output: SPL1 (0/180) -> 2x AMP3 -> SPL2 (0/180) -> CPL2", side: rf, blocks: [180-degree splitter, 2 power amplifiers, 180-degree combiner, directional coupler], source: "MC-BD-LBAND figure ('180 deg balanced topology cancels second harmonic')", fn_hint: [rf_passive, power_amplifier], mc_families: [ZAPDJ, ZAPD, ZN2PD, ZFSC, ZX60, ZHL, ZHDC, ZADC]}
+      - {id: chain_b, label: "Chain B: identical standby chain (ATT1 ... CPL2)", side: rf, blocks: [same as chain A], source: "MC-BD-LBAND figure (lower path)", fn_hint: [rf_attenuator, rf_passive, rf_gain_block, power_amplifier], mc_families: []}
+      - {id: detectors, label: "PD1 power detectors on CPL1 / CPL2 coupled ports (DC out to control logic), both chains", blocks: [diode power detectors], source: "MC-BD-LBAND figure", fn_hint: [schottky_diode], mc_families: [ZX47]}
+      - {id: out_switch, label: "SW2 output redundancy switch (SPDT)", side: rf, blocks: [SPDT switch], source: "MC-BD-LBAND figure", fn_hint: [rf_switch], mc_families: [MSP2T, MSP2TA]}
+      - {id: control_logic, label: "Control logic (named, not drawn as a block)", blocks: [controller], source: "MC-BD-LBAND figure text 'DC out to control logic'", fn_hint: [mcu], mc_families: []}
+    links:
+      - [in_switch, chain_a_in, "950-2000 MHz"]
+      - [in_switch, chain_b, ""]
+      - [chain_a_in, chain_a_out, ""]
+      - [chain_a_out, out_switch, ""]
+      - [chain_b, out_switch, ""]
+      - [chain_a_in, detectors, "CPL1 coupled port"]
+      - [chain_a_out, detectors, "CPL2 coupled port"]
+      - [detectors, control_logic, "DC out to control logic"]
+      - [control_logic, in_switch, "switchover (inferred)"]
+      - [control_logic, out_switch, "switchover (inferred)"]
+    features:
+      - {id: redundancy, question: "Redundancy scheme", choices: ["1:1 hot/cold standby with input + output switches (as drawn)", "none", "N+1"], filters: "rf_switch count (new)", source: "MC-BD-LBAND (SW1, SW2)"}
+      - {id: output_topology, question: "Output stage topology", choices: ["180-degree balanced / push-pull (cancels 2nd harmonic)", "90-degree balanced", "single-ended"], filters: "(new)", source: "MC-BD-LBAND figure note"}
+      - {id: monitoring, question: "Health monitoring", choices: ["input + output couplers with diode detectors (as drawn)", "output only", "none"], filters: "schottky_diode / detector (new)", source: "MC-BD-LBAND (CPL1, CPL2, PD1)"}
+      - {id: switch_type, question: "Redundancy switch technology", choices: ["mechanical (as drawn: MSP2T)", "solid-state"], filters: "rf_switch type (new)", source: "MC-BD-LBAND table"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_phased_array_8el
+    name: Eight-element analog phased array T/R (900 MHz) - corporate 8-way feed, phase shifter per element on TX and RX
+    completeness: full
+    links_from: figure
+    sources:
+      - {doc: MC-BD-PA8, url: "https://www.minicircuits.com/pdfs/Eight-Element%20Phased%20Array.pdf", pages: "p.1 figure (power levels annotated)"}
+    groups:
+      - {id: tx_split, label: "TX 8-way splitter (input 900 MHz, +20 dBm)", side: rf, blocks: [8-way power splitter], source: "MC-BD-PA8 figure ('All splitters JCPS-8-10+')", fn_hint: [rf_passive], mc_families: [JCPS-8-10+]}
+      - {id: tx_element, label: "TX per element: phase shifter (+10 -> +8.5 dBm) -> amplifier (+23 dBm) -> phase shifter (+21.5 dBm)", side: rf, blocks: [phase shifter, power amplifier, phase shifter], source: "MC-BD-PA8 figure (HXG-122+, JSPHS-1000+)", fn_hint: [rf_phase_shifter, power_amplifier], mc_families: [JSPHS-1000+, HXG-122+]}
+      - {id: tr_switch, label: "T/R switch per element (+21 dBm at antenna)", side: rf, blocks: [SPDT switch], source: "MC-BD-PA8 figure ('All switches HSWA2-30DR+')", fn_hint: [rf_switch], mc_families: [HSWA2-30DR+]}
+      - {id: antennas, label: "Antenna elements (x8)", side: rf, blocks: [antenna], source: "MC-BD-PA8 figure", fn_hint: [antenna], mc_families: []}
+      - {id: rx_element, label: "RX per element: phase shifter -> LNA -> phase shifter", side: rf, blocks: [phase shifter, LNA, phase shifter], source: "MC-BD-PA8 figure (PMA-545G3+)", fn_hint: [rf_phase_shifter, lna], mc_families: [JSPHS-1000+, PMA-545G3+]}
+      - {id: rx_combine, label: "RX 8-way combiner -> output", side: rf, blocks: [8-way power combiner], source: "MC-BD-PA8 figure", fn_hint: [rf_passive], mc_families: [JCPS-8-10+]}
+    links:
+      - [tx_split, tx_element, "x8, +10 dBm per element"]
+      - [tx_element, tr_switch, "+21.5 dBm"]
+      - [tr_switch, antennas, "+21 dBm"]
+      - [antennas, tr_switch, "RX"]
+      - [tr_switch, rx_element, ""]
+      - [rx_element, rx_combine, "x8"]
+    features:
+      - {id: beamforming, question: "Beamforming method", choices: ["analog RF phase shifters per element (as drawn)", "analog beamformer IC", "digital (ADC/DAC per element)", "hybrid"], filters: "rf_phase_shifter bits / range (new)", source: "MC-BD-PA8"}
+      - {id: element_count, question: "Array size", choices: ["8 (as drawn)", "16-64", "> 64"], filters: "splitter way count (new)", source: "MC-BD-PA8"}
+      - {id: tr_method, question: "TX/RX separation per element", choices: ["T/R switch (TDD / pulsed)", "circulator", "separate TX and RX arrays"], filters: "rf_switch / circulator_isolator", source: "MC-BD-PA8 (HSWA2-30DR+)"}
+      - {id: amplitude_taper, question: "Amplitude taper / calibration", choices: ["none (as drawn)", "attenuator or VGA per element"], filters: "rf_attenuator (new)", source: "not in figure"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_docsis4_line_extender
+    name: CATV / HFC DOCSIS 4.0 line extender amplifier (1.8 GHz downstream, 5-680 MHz upstream, diplexed)
+    completeness: full
+    links_from: figure
+    sources:
+      - {doc: MC-APP-CATV, url: "https://www.minicircuits.com/WebStore/applications/CATV%20Broadband%20DOCSIS", pages: "'Typical Line Extender Amplifier Block Diagram' image + legend #1-#5; 'DOCSIS 4.0 Channel Split Options' image"}
+    groups:
+      - {id: port_in, label: "Input port (node side): AC bypass #1 + test-point coupler #2 + diplexer #3 (FWD/REV)", side: rf, blocks: [AC power bypass choke, test-point directional coupler, DOCSIS 4.0 diplexer], source: "MC-APP-CATV figure + legend (#1 TACH-182-75 choke, #2 TDC test point couplers, #3 D4PLXEH1/EV1 diplexers)", fn_hint: [rf_passive, diplexer], mc_families: [TACH-182-75-xx+, TDC-xx-182-xxx+, D4PLXEH1/EV1-x+]}
+      - {id: ds_lna, label: "Downstream LNA (with input transformer #4)", side: rf, blocks: [75-ohm MMIC LNA, 1.8 GHz transformer], source: "MC-APP-CATV figure (#4 TRS1-182-75-3+)", fn_hint: [lna, rf_passive], mc_families: [ADCA5192, ADCA5190, TRS1-182-75-3+]}
+      - {id: ds_agc1, label: "AGC / tilt (1)", side: rf, blocks: [variable attenuator, tilt equalizer], source: "MC-APP-CATV figure", fn_hint: [rf_attenuator, rf_passive], mc_families: []}
+      - {id: ds_driver1, label: "Downstream driver (with transformer #5)", side: rf, blocks: [driver amplifier, transformer], source: "MC-APP-CATV figure (#5 TC1-33-75G2+)", fn_hint: [rf_gain_block, rf_passive], mc_families: [ADCA5190, ADCA5191, TC1-33-75G2+]}
+      - {id: ds_agc2, label: "AGC / tilt (2)", side: rf, blocks: [variable attenuator, tilt equalizer], source: "MC-APP-CATV figure", fn_hint: [rf_attenuator, rf_passive], mc_families: []}
+      - {id: ds_driver2, label: "Downstream driver 2 (with transformer #5)", side: rf, blocks: [driver amplifier, transformer], source: "MC-APP-CATV figure", fn_hint: [rf_gain_block, rf_passive], mc_families: [ADCA5190, ADCA5191]}
+      - {id: ds_tilt, label: "Tilt", side: rf, blocks: [fixed tilt equalizer], source: "MC-APP-CATV figure", fn_hint: [rf_passive], mc_families: []}
+      - {id: ds_doubler, label: "Power doubler output stage", side: rf, blocks: [power-doubler amplifier / hybrid module], source: "MC-APP-CATV figure (1.2 GHz: ADCA3270/3950/3952/3990/3992; 1.8 GHz: ADCA3280/4010/4012)", fn_hint: [power_amplifier], mc_families: [ADCA3280, ADCA4010, ADCA4012, ADCA3270, ADCA3950, ADCA3952, ADCA3990, ADCA3992]}
+      - {id: port_out, label: "Output port (subscriber side): diplexer #3 + test-point coupler #2 + AC bypass #1", side: rf, blocks: [DOCSIS 4.0 diplexer, test-point coupler, AC power bypass choke], source: "MC-APP-CATV figure", fn_hint: [diplexer, rf_passive], mc_families: [D4PLXEH1/EV1-x+, TDC-xx-182-xxx+, TACH-182-75-xx+]}
+      - {id: us_lna, label: "Upstream LNA (5-680 MHz, transformer #4)", side: rf, blocks: [LNA], source: "MC-APP-CATV figure", fn_hint: [lna, rf_passive], mc_families: [ADCA5190, ADCA5192]}
+      - {id: us_agc, label: "Upstream AGC / tilt", side: rf, blocks: [variable attenuator, tilt equalizer], source: "MC-APP-CATV figure", fn_hint: [rf_attenuator, rf_passive], mc_families: []}
+      - {id: us_driver, label: "Upstream driver (transformer #5)", side: rf, blocks: [driver amplifier], source: "MC-APP-CATV figure", fn_hint: [rf_gain_block, rf_passive], mc_families: [ADCA5191]}
+    links:
+      - [port_in, ds_lna, "FWD 40-1800 MHz"]
+      - [ds_lna, ds_agc1, ""]
+      - [ds_agc1, ds_driver1, ""]
+      - [ds_driver1, ds_agc2, ""]
+      - [ds_agc2, ds_driver2, ""]
+      - [ds_driver2, ds_tilt, ""]
+      - [ds_tilt, ds_doubler, ""]
+      - [ds_doubler, port_out, "FWD"]
+      - [port_out, us_lna, "REV 5-680 MHz"]
+      - [us_lna, us_agc, ""]
+      - [us_agc, us_driver, ""]
+      - [us_driver, port_in, "REV"]
+    features:
+      - {id: docsis_version, question: "DOCSIS generation / downstream top frequency", choices: ["DOCSIS 3.1, 1.2 GHz", "DOCSIS 4.0, 1.8 GHz"], filters: "frequency range (new)", source: "MC-APP-CATV figure (1.2 GHz vs 1.8 GHz doubler lists)"}
+      - {id: split, question: "Upstream / downstream split", choices: ["85 MHz mid-split", "204 MHz high-split", "ESD 300/396/492/684 MHz", "FDX (overlapping, echo-cancelled)"], filters: "diplexer split frequency (new)", source: "MC-APP-CATV channel-split figure"}
+      - {id: output_stage, question: "Downstream output stage", choices: ["GaAs MMIC power doubler", "GaN power-doubler hybrid (SOT-115J)", "push-pull module"], filters: "power_amplifier TCP dBmV, CSO/CTB (new)", source: "MC-APP-CATV product tables"}
+      - {id: gain_control, question: "Level control", choices: ["AGC + tilt between stages (as drawn)", "manual pads / plug-in equalizers"], filters: "rf_attenuator (new)", source: "MC-APP-CATV figure"}
+      - {id: impedance, question: "System impedance", choices: ["75 ohm"], filters: "impedance 75 ohm (new)", source: "MC-APP-CATV page text"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_drone_rf_front_end
+    name: Drone / UAV data-link module RF front end (transceiver + PA, LNA, balun, T/R switch)
+    completeness: minimal
+    links_from: figure
+    sources:
+      - {doc: MC-APP-DRONE, url: "https://www.minicircuits.com/WebStore/applications/RF-Applications-for-Drone-Modules-and-Drone-Mitigation", pages: "'Drone Module - RF Front-end' image + featured product list"}
+    groups:
+      - {id: transceiver, label: "Back-end transceiver (RFO, RFI, CTL)", blocks: [RF transceiver], source: "MC-APP-DRONE figure", fn_hint: [rf_transceiver], mc_families: []}
+      - {id: pa, label: "PA", side: rf, blocks: [power amplifier], source: "MC-APP-DRONE featured products", fn_hint: [power_amplifier], mc_families: [GNA-252-5W+]}
+      - {id: lna_balun, label: "LNA -> balun (differential RFI)", side: rf, blocks: [LNA, balun], source: "MC-APP-DRONE figure + featured products", fn_hint: [lna, rf_passive], mc_families: [TSS-23ULN+, NCS2-771+, NCS2-282+]}
+      - {id: switch, label: "RF switch (T/R) + antenna", side: rf, blocks: [SPDT switch, antenna], source: "MC-APP-DRONE figure", fn_hint: [antenna_switch, antenna], mc_families: [HSWA2-30DR+]}
+    links:
+      - [transceiver, pa, "RFO"]
+      - [pa, switch, ""]
+      - [switch, lna_balun, ""]
+      - [lna_balun, transceiver, "RFI"]
+      - [transceiver, switch, "CTL"]
+    notes: "Page also lists LTCC low/high/band-pass filters, BPF+balun (BBFCG) and XAT attenuators as 'also available' for the module but the figure draws no filter."
+    features:
+      - {id: band, question: "Link band", choices: ["900 MHz", "2.4 GHz", "5.8 GHz", "multi-band"], filters: "frequency range", source: "not in figure"}
+      - {id: tx_power, question: "PA output class", choices: ["< 1 W", "~5 W (GNA-252-5W+ class)"], filters: "power_amplifier Psat (new)", source: "MC-APP-DRONE featured PA"}
+      - {id: filtering, question: "Front-end filtering", choices: ["none (as drawn)", "LTCC BPF / balun-filter"], filters: "filter_saw_baw", source: "MC-APP-DRONE 'also available'"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  - id: mc_aom_driver_vga
+    name: Quantum (trapped-ion / neutral-atom) 4-channel AOM / AOD RF driver (VGA rack, 50-300 MHz)
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-APP-QUANTUM, url: "https://www.minicircuits.com/WebStore/applications/rf-microwave-quantum-computing-solutions", pages: "ZT-414 4-channel VGA image + feature list"}
+    groups:
+      - {id: ch_input, label: "Per channel (x4): IN -> variable attenuator (ATT1A/1B/4A/4B) -> amplifier (AMP2A/2B/5A/5B)", side: rf, blocks: [digital / variable attenuator, gain amplifier], source: "MC-APP-QUANTUM figure", fn_hint: [rf_attenuator, rf_gain_block], mc_families: []}
+      - {id: ch_output, label: "Per channel (x4): filter -> output power amplifier -> OUT", side: rf, blocks: [filter, power amplifier], source: "MC-APP-QUANTUM figure", fn_hint: [filter_saw_baw, power_amplifier], mc_families: []}
+      - {id: control, label: "Microcontroller (USB / Ethernet)", blocks: [MCU, USB, Ethernet], source: "MC-APP-QUANTUM figure", fn_hint: [mcu, ethernet_phy], mc_families: []}
+      - {id: power, label: "AC:DC supply", blocks: [AC/DC], source: "MC-APP-QUANTUM figure", fn_hint: [acdc_controller], mc_families: []}
+    links:
+      - [ch_input, ch_output, "x4 channels"]
+      - [control, ch_input, "attenuator / amplifier control"]
+      - [power, ch_output, "DC"]
+    features:
+      - {id: gain_range, question: "Gain control range / step", choices: ["-8 to +52 dB in 0.25 dB steps (as specified)", "fixed gain"], filters: "rf_attenuator step size (new)", source: "MC-APP-QUANTUM feature list"}
+      - {id: channels, question: "Channel count", choices: ["4 (as drawn)", "8-16"], filters: "(new)", source: "MC-APP-QUANTUM"}
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Smaller subsystem figures. Read and recorded for completeness; see comparison.md - not recommended as stand-alone
+  # library templates (component-level building blocks).
+  - id: mc_qam_modulator_2g4
+    name: 2.4 GHz I/Q (QAM) modulator built from discrete parts
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-BD-QAM, url: "https://www.minicircuits.com/pdfs/2.4%20GHz%20QAM%20modulator.pdf", pages: "p.1"}
+    groups:
+      - {id: lo, label: "OSC1 -> AMP1", side: rf, blocks: [VCO, LO amplifier], source: "MC-BD-QAM", fn_hint: [rf_synthesizer, rf_gain_block], mc_families: [ROS, JTOS, PHA, PGA, GVA, GALI]}
+      - {id: quad_split, label: "SPL1 90-degree hybrid (terminated 4th port)", side: rf, blocks: [quadrature hybrid], source: "MC-BD-QAM", fn_hint: [rf_passive], mc_families: [QCN, QCC, QCS]}
+      - {id: mixers, label: "MIX1 x2 (I and Q, driven +/-20 mA)", side: rf, blocks: [2 mixers], source: "MC-BD-QAM", fn_hint: [rf_mixer], mc_families: [SYM, JYM, HJK, SIM]}
+      - {id: combiner, label: "SPL2 0-degree combiner -> output", side: rf, blocks: [2-way combiner], source: "MC-BD-QAM", fn_hint: [rf_passive], mc_families: [BP2U, GP2S1, SBTC, LRPS, SYPS, TCP, SCN, GP2Y, SEPS, RPS]}
+    links:
+      - [lo, quad_split, ""]
+      - [quad_split, mixers, "0 / 90 deg LO"]
+      - [mixers, combiner, ""]
+
+  - id: mc_c_band_driver_4_6ghz
+    name: 4-6 GHz transmit amplifier lineup (90-degree balanced driver, 1 W HPA, BPF, output coupler)
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-BD-AMP46, url: "https://www.minicircuits.com/pdfs/4-6%20GHz%20Ampfifier.pdf", pages: "p.1"}
+    groups:
+      - {id: source, label: "OSC1 signal source (4-6 GHz, +5 dBm) -> AMP1", side: rf, blocks: [signal generator, gain block], source: "MC-BD-AMP46", fn_hint: [rf_synthesizer, rf_gain_block], mc_families: [SSG, PHA, PGA, GVA, GALI, LEE, ERA]}
+      - {id: balanced, label: "Balanced stage: SPL1 (0/90) -> 2x AMP2 -> SPL1 (0/90)", side: rf, blocks: [90-degree hybrids, 2 amplifiers], source: "MC-BD-AMP46", fn_hint: [rf_passive, rf_gain_block], mc_families: [EP2W, GP2X, EP2C, EP2K]}
+      - {id: hpa, label: "HPA1 -> BPF1 -> CPL1 -> antenna", side: rf, blocks: [power amplifier, bandpass filter, directional coupler, antenna], source: "MC-BD-AMP46", fn_hint: [power_amplifier, filter_saw_baw, rf_passive, antenna], mc_families: ["GVA (up to 1 W)", BFCN, SYBD, SCBD, CPL]}
+    links:
+      - [source, balanced, ""]
+      - [balanced, hpa, ""]
+
+  - id: mc_gain_slope_equalizer
+    name: 1-2 GHz switched gain / slope equalizer (SP4T-selected paths, 1024-2050 MHz)
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-BD-EQ, url: "https://www.minicircuits.com/pdfs/1-2%20GHz%20Gain_Slope_Equalizer.pdf", pages: "p.1"}
+    groups:
+      - {id: sw_in, label: "SW1 SP4T input", side: rf, blocks: [SP4T switch], source: "MC-BD-EQ", fn_hint: [rf_switch], mc_families: [JSW4, GSWA]}
+      - {id: paths, label: "Paths: EQ1->AMP1 | ATT1->EQ2->ATT2->AMP2 | ATT3->AMP3 | TERM1", side: rf, blocks: [slope equalizers, pads, amplifiers, termination], source: "MC-BD-EQ", fn_hint: [rf_passive, rf_attenuator, rf_gain_block], mc_families: [VAEQ, REQ, YAT, RCAT, PHA, GVA, GALI]}
+      - {id: sw_out, label: "SW1 SP4T output", side: rf, blocks: [SP4T switch], source: "MC-BD-EQ", fn_hint: [rf_switch], mc_families: [JSW4, GSWA]}
+    links:
+      - [sw_in, paths, "1024-2050 MHz"]
+      - [paths, sw_out, ""]
+
+  - id: mc_catv_return_path
+    name: CATV return-path (upstream) injection amplifier, 5-100 MHz, push-pull with 75/50-ohm baluns
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-BD-CATVRP, url: "https://www.minicircuits.com/pdfs/CATV%20Return%20Path.pdf", pages: "p.1"}
+    groups:
+      - {id: tf_in, label: "TF1 input balun 75 -> 50 ohm (balanced)", side: rf, blocks: [transformer / balun], source: "MC-BD-CATVRP", fn_hint: [rf_passive], mc_families: [ADTL, TC, TRS, TX]}
+      - {id: amp, label: "AMP1 push-pull pair", side: rf, blocks: [dual matched amplifier], source: "MC-BD-CATVRP", fn_hint: [rf_gain_block], mc_families: [PHA, PGA, MGVA, MPGA]}
+      - {id: tf_out, label: "TF2 output balun 50 -> 75 ohm, centre-tap Vcc feed", side: rf, blocks: [transformer / balun], source: "MC-BD-CATVRP", fn_hint: [rf_passive], mc_families: [TX]}
+      - {id: cpl, label: "CPL1 coupler injecting onto cable (cable in -> cable out)", side: rf, blocks: [directional coupler], source: "MC-BD-CATVRP", fn_hint: [rf_passive], mc_families: [DBTC, TDC, ADC]}
+    links:
+      - [tf_in, amp, "50 ohm balanced"]
+      - [amp, tf_out, ""]
+      - [tf_out, cpl, "75 ohm"]
+
+  - id: mc_x7_multiplier
+    name: x7 frequency multiplier (harmonic generator + SAW selection)
+    completeness: subsystem
+    links_from: figure
+    sources:
+      - {doc: MC-BD-X7, url: "https://www.minicircuits.com/pdfs/X7%20Multiplier.pdf", pages: "p.1"}
+    groups:
+      - {id: chain, label: "OSC1 -> AMP1 -> LPF1 -> LIM1 (harmonic generator) -> SAW filter (selects 7th)", side: rf, blocks: [oscillator, amplifier, low-pass filter, limiter, SAW filter], source: "MC-BD-X7", fn_hint: [rf_synthesizer, rf_gain_block, filter_saw_baw, rf_limiter], mc_families: [ROS, KOS, KSN, ERA, GVA, MAR, LFCN, XLF, RLM]}
+    links: []

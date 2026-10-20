@@ -20,6 +20,7 @@ NAV = (
     ("opportunities", "Opportunities", (
         ("Overview", "/business", "Key results and analysis scope"),
         ("Opportunity explorer", "/business/explorer", "Rank missing functions by reach, feasibility, competition"),
+        ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
@@ -27,12 +28,16 @@ NAV = (
     ("knowledge", "Engineering knowledge", (
         ("Knowledge search", "/technical", "Search application notes and specification guides together"),
         ("Specification guides", "/engineering", "What each specification means and how to compare it"),
+        ("RF fundamentals", "/rf-notes", "RF specifications, components, architectures and technologies explained"),
+        ("RF bands", "/rf-bands", "Cellular, GNSS, Wi-Fi, satcom and radar bands, with the parts that cover each"),
         ("Technology platforms", "/business/capabilities", "Public Skyworks / Qorvo technologies"),
     )),
 )  # fmt: skip
 
 UTILITY = ("manage", "Data management", (
     ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
+    ("Site feedback", "/manage/feedback", "Daily digest of the Feedback button, with responses"),
+    ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
     ("Commercial inputs", "/business/data", "ASPs and volumes behind revenue figures"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
@@ -63,6 +68,7 @@ PLACES = {
     "/business/technology": ("opportunities", "/business/explorer"),
     "/business/evidence": ("opportunities", "/business/explorer"),
     "/business/attach": ("opportunities", "/business/attach"),
+    "/business/rf-coverage": ("opportunities", "/business/rf-coverage"),
     "/business/markets": ("opportunities", "/business/markets"),
     "/business/customers": ("opportunities", "/business/markets"),
     "/business/cases": ("opportunities", "/business/shortlist"),
@@ -76,10 +82,14 @@ PLACES = {
     "/business": ("opportunities", "/business"),
     "/rules": ("manage", "/business/method"),
     "/requests": ("manage", "/manage/reviews"),
+    "/manage/feedback": ("manage", "/manage/feedback"),
+    "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage": ("manage", "/manage/reviews"),
     "/technical": ("knowledge", "/technical"),
     "/notes": ("knowledge", "/technical"),
     "/engineering": ("knowledge", "/engineering"),
+    "/rf-notes": ("knowledge", "/rf-notes"),
+    "/rf-bands": ("knowledge", "/rf-bands"),
     "/impact": ("knowledge", "/engineering"),
 }
 

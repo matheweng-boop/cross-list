@@ -1,0 +1,1197 @@
+# RF engineering notes for Engineering knowledge > RF fundamentals (and the knowledge search).
+# Written in our own words from public pages of Mini-Circuits (minicircuits.com application notes) and RF Essentials
+# (rfessentials.com articles and knowledge base), collected 2026-10-20, robots.txt respected. Numbers and rules of
+# thumb are the sources' own; where a source's worked example is wrong, the key point says so and gives the corrected
+# value. Pasternack was not collected (bot protection); blog.minicircuits.com rate-limited and was not collected.
+topics:
+- id: p1db_dynamic_range
+  title: 1 dB compression (P1dB), saturation and dynamic range
+  category: rf_specs
+  from: Mini-Circuits
+  summary: 'P1dB is the output level at which an amplifier''s gain has dropped 1 dB below its small-signal value; past it
+    the device heads toward saturation (Psat), where extra drive produces almost no extra output. Gain compression is not
+    a sudden event: it begins well below P1dB, so a linear design keeps the operating point backed off from it. Dynamic range
+    is bounded below by noise figure and above by compression. For mixers the same idea is defined at the RF input (input
+    P1dB) rather than at the output, which is a frequent source of confusion when comparing datasheets. Data-sheet "input
+    (no damage)" ratings are absolute limits, not operating points.'
+  key_points:
+  - Most amplifiers begin compressing about 5-10 dB below P1dB; running above P1dB is not normal linear operation.
+  - Amplifier P1dB is usually quoted at the output; mixer P1dB and IP3 are quoted at the input (RF port for a down-converter,
+    IF port for an up-converter).
+  - 'Pulsed signals: Class-A amplifier ratings apply to peak, not average, power.'
+  - 'Rule of thumb for pulse stress on a 50-ohm amplifier: max input rating (W) x 100, square root = safe peak volts.'
+  - 'Safe connect order: load, then DC, then RF; disconnect in reverse (RF, DC, load). Wrong sequencing and input overdrive
+    are the most common user-induced failures.'
+  sources:
+  - title: AN60-038 Amplifier Terms Defined (with 24 Q&As)
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+  - title: AN60-008 Operating Precautions for Amplifiers
+    url: https://www.minicircuits.com/appdoc/AN60-008.html
+  - title: AN00-011 Frequently asked questions about mixers
+    url: https://www.minicircuits.com/appdoc/AN00-011.html
+- id: ip3_intermodulation
+  title: Third-order intercept (IP3) and two-tone intermodulation
+  category: rf_specs
+  from: Mini-Circuits
+  summary: When two closely spaced tones pass through a weakly nonlinear device, third-order products appear at 2f1-f2 and
+    2f2-f1, spaced from the carriers by the same tone spacing, so they land in-band and cannot be filtered. In the linear
+    region these products grow 3 dB for every 1 dB of input, while the wanted signal grows 1 dB per dB; IP3 is the extrapolated
+    point where the two lines would meet. Because the slope ratio is fixed, IP3 is a level-independent figure of merit, but
+    any measured IM3 (dBc) number is meaningless unless the per-tone input level is stated. Second-order products (f1+f2)
+    are characterised the same way with IP2, using a slope of 2.
+  key_points:
+  - 'OIP3 (dBm) = Pout per tone (dBm) + delta/2, where delta = carrier-to-IM3 difference in dB. Example: +10 dBm tones with
+    IM3 at -30 dBm (40 dB down) gives OIP3 = +30 dBm.'
+  - Input and output IP3 differ by the small-signal gain (or by the conversion loss for a mixer).
+  - Each 10 dB reduction of input improves the carrier-to-IM3 ratio by 20 dB.
+  - IP2 (dBm) = Pout (dBm) + A2, where A2 is the second-order product's distance below the fundamental.
+  - Two-tone vs single-tone (3rd harmonic) intercepts differ by a fixed offset; only the two-tone products are critical for
+    in-band interference.
+  sources:
+  - title: AN60-038 Amplifier Terms Defined
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+  - title: 'AN00-009 Mixers: Terms Defined, and Measuring Performance'
+    url: https://www.minicircuits.com/appdoc/AN00-009.html
+  - title: AN00-001 Figure of Merit of Mixer Intermod Performance (E-Factor)
+    url: https://www.minicircuits.com/appdoc/AN00-001.html
+- id: two_tone_test_setup
+  title: Measuring two-tone IM correctly
+  category: rf_specs
+  from: Mini-Circuits
+  summary: Two-tone measurements are easily corrupted by the test set rather than the device. The two signal generators must
+    be isolated from each other (otherwise they intermodulate inside each other's output stages), their harmonics must be
+    filtered, and every DUT port must see a broadband 50-ohm match. A good setup uses a high-directivity buffer amplifier,
+    a low-pass filter and a pad on each generator path, then a power combiner, with pads on all DUT ports. The analyzer itself
+    can generate IM, so the result is validated by checking the 3:1 slope.
+  key_points:
+  - Buffer amps + 6 dB pads + combiner gave about 70 dB isolation between the two tones in the reference setup.
+  - Unfiltered generator harmonics (even 60 dB down) can shift the measured IM by up to about 20 dB, in either direction.
+  - 'Validation: a 3 dB change of each tone must change IM3 by 9 dB; if not, add 10 dB of attenuation before the analyzer
+    and repeat to tell analyzer distortion from setup problems.'
+  - Use high-directivity amplifiers (or isolators above ~1 GHz) between source and combiner.
+  sources:
+  - title: AN00-008 Improve Two-Tone, Third-Order Intermodulation Testing
+    url: https://www.minicircuits.com/appdoc/AN00-008.html
+  - title: AN60-038 Amplifier Terms Defined (Q XIII-XIV)
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+- id: noise_figure_cascade
+  title: Noise figure, noise parameters and cascade budgets
+  category: rf_specs
+  from: Mini-Circuits
+  summary: 'Noise factor is the degradation of signal-to-noise ratio through a stage; noise figure is its value in dB. In
+    a cascade (Friis), the first stage''s noise figure dominates if its gain is high, so a low-NF, high-gain LNA at the front
+    lets later stages be noisier. Any loss ahead of the LNA (pads, switches, filters, limiters) adds directly to system NF:
+    a passive loss''s NF equals its attenuation. A transistor''s NF depends on source impedance, described by four noise parameters
+    (Fmin, magnitude and angle of Gamma_opt, Rn), and the match for minimum noise generally differs from the match for maximum
+    gain.'
+  key_points:
+  - 'Passive loss before the LNA sets a floor on NF: a 3 dB pad ahead of an LNA makes system NF at least 3 dB.'
+  - NF of an RF switch is taken as equal to its insertion loss.
+  - Mixer NF is roughly 0.5 dB above its conversion loss (diode mixers).
+  - 'Four noise parameters: Fmin, |Gamma_opt|, angle Gamma_opt, Rn; NF rises as the source moves away from Gamma_opt.'
+  - Stability factor K = 1 is the boundary for unconditional stability; MSG applies where K < 1, MAG where K > 1.
+  - Mini-Circuits publishes an online cascade noise figure calculator (applications/microwave_calculator.html).
+  sources:
+  - title: AN60-040 Understanding Noise Parameter Measurements
+    url: https://www.minicircuits.com/appdoc/AN60-040.html
+  - title: AN70-001 Fixed attenuators help minimize impedance mismatches
+    url: https://www.minicircuits.com/appdoc/AN70-001.html
+  - title: 'SW13-2 Switches: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/SW13-2.html
+  - title: 'AN00-009 Mixers: Terms Defined'
+    url: https://www.minicircuits.com/appdoc/AN00-009.html
+- id: vswr_mismatch_pads
+  title: VSWR, return loss and using pads to tame mismatch
+  category: rf_specs
+  from: Mini-Circuits
+  summary: Return loss, reflection coefficient and VSWR are three views of the same mismatch. When two mismatched parts are
+    connected, the worst-case combined VSWR is roughly the product of the two, which is why ripple and gain uncertainty pile
+    up in chains of reflective components. A small fixed attenuator between sensitive stages buys roughly twice its value
+    in return loss improvement, at the cost of gain, noise figure (if before the LNA) or output power (if after the PA). Amplifier
+    active directivity (isolation minus gain) determines how much the load match disturbs the input match.
+  key_points:
+  - Worst-case VSWR of two cascaded mismatches ~ VSWR1 x VSWR2 (e.g. 3.0:1 with 1.5:1 -> 4.5:1, about 3.9 dB return loss).
+  - A 50-ohm part in a 75-ohm system sees ~1.5:1 VSWR (about 14 dB return loss).
+  - Put at least a 6 dB pad (~12 dB return loss) between an oscillator and a reflective low-pass filter to avoid pulling.
+  - Even 1 dB pads reduce mismatch uncertainty in test setups; size pads also to protect instrument inputs.
+  - High-directivity buffer amplifiers isolate a mixer from reflections of a following filter.
+  sources:
+  - title: AN70-001 Fixed attenuators help minimize impedance mismatches
+    url: https://www.minicircuits.com/appdoc/AN70-001.html
+  - title: AN60-038 Amplifier Terms Defined (Q I-VI)
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+  - title: 'FILT8-2 Filters: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/FILT8-2.html
+- id: mixer_fundamentals
+  title: 'Frequency mixers: conversion loss, isolation, compression'
+  category: components
+  from: Mini-Circuits
+  summary: A mixer translates frequency by multiplying the RF by an LO, producing sum and difference outputs; one sideband
+    is normally used, and data sheets quote single-sideband conversion loss. In a double-balanced diode mixer the LO switches
+    the diode quad fully on and off, and circuit balance gives port-to-port isolation, typically falling with frequency because
+    of transformer, lead and diode imbalance. The upper end of mixer dynamic range is the input compression point, which tracks
+    LO drive; the lower end is noise figure, close to conversion loss. Active mixers add an amplifier in one port and specify
+    conversion gain instead.
+  key_points:
+  - Mini-Circuits 'Level N' = LO drive of +N dBm (Level 7 = +7 dBm, Level 17 = +17 dBm, Level 23 = +23 dBm).
+  - Compression starts when RF approaches within about 10 dB of the LO level.
+  - Double-balanced mixers typically still give ~30 dB isolation at the top of their band.
+  - Using both sidebands gives 3 dB lower conversion loss than single-sideband.
+  - A double-balanced mixer can work as a phase detector (DC-coupled IF) and, by passing DC through the IF port, as a low-frequency
+    variable attenuator.
+  - 'Diagnosing a damaged mixer: LO-RF isolation at low frequency below ~45-50 dB suggests a shorted/leaky diode.'
+  sources:
+  - title: 'AN00-009 Mixers: Terms Defined, and Measuring Performance'
+    url: https://www.minicircuits.com/appdoc/AN00-009.html
+  - title: AN00-011 Frequently asked questions about mixers
+    url: https://www.minicircuits.com/appdoc/AN00-011.html
+- id: mixer_selection_lo_level
+  title: 'Choosing a mixer: LO level, linearity and frequency range'
+  category: components
+  from: Mini-Circuits
+  summary: 'Mixer selection follows three steps: package (SMT, plug-in or connectorized), LO level, then a model whose band
+    straddles the need, ideally in its mid-band. LO level is chosen from the linearity requirement: the maximum RF input,
+    percent distortion, IP3 or IM3 spec is converted into a required input P1dB, then the lowest-level mixer that meets it
+    is picked, since higher LO costs DC power and adds LO leakage. Driving a high-level mixer with too little LO leaves the
+    diodes partly on and destroys its linearity advantage. Without any linearity spec, Level 7 is the default because it has
+    the widest choice and lowest cost.'
+  key_points:
+  - 'Diode mixers: LO should be ~10 dB above the highest expected RF input; input P1dB sits roughly 5 dB below LO level.'
+  - 'FET (high-IP3) mixers: LO can be ~3 dB below the RF level; input P1dB is about equal to or above the LO level.'
+  - 'IP3 is typically 7-13 dB above input P1dB (diode mixer: ~15 dB at the low end of band, ~10 dB at the top; FET: ~10 dB).'
+  - 'Example: max RF +5 dBm -> Level 13 mixer (+9 dBm input P1dB).'
+  - LO level can usually vary about +/-3 dB from nominal; Level 3 mixers still work at 0 dBm LO with 0.5-1.5 dB extra loss.
+  - 'Low temperature (to -55 C): pick a mixer rated two octaves below the lowest operating frequency (ferrite permeability
+    drops); high temperature: rate one octave above the highest frequency.'
+  - A 3 dB pad on the IF port is a low-cost substitute for a 'termination-insensitive' mixer (about 1 dB more loss).
+  sources:
+  - title: AN00-010 How to select a mixer
+    url: https://www.minicircuits.com/appdoc/AN00-010.html
+  - title: AN00-014 Selecting the Right Mixer for Your Application
+    url: https://www.minicircuits.com/appdoc/AN00-014.html
+  - title: AN00-011 Frequently asked questions about mixers
+    url: https://www.minicircuits.com/appdoc/AN00-011.html
+- id: mixer_technology_fet_diode_ltcc
+  title: 'Mixer technologies: diode vs FET, triple-balanced LTCC, IP3 efficiency'
+  category: technology
+  from: Mini-Circuits
+  summary: Diode mixers are broadband and repeatable; FET mixers reach higher IP3 for the same LO drive but usually over narrower
+    bands, and active FET mixers need clean DC bias. Mini-Circuits defines an IP3 efficiency figure E = (IP3 - LO power)/10,
+    so a conventional well-designed mixer (IP3 about 10 dB above LO) scores 1. Triple-balanced (double-double-balanced) mixers
+    use separate baluns on all three ports for wide bandwidth and good isolation on all port pairs, at the cost of about 3
+    dB more LO power; implementing two of the baluns in LTCC with die diode quads shrinks them and removes hand-wound steps.
+    Heterodyne conversion remains necessary where spur, blocking or wide tuning-range requirements exceed what direct RF sampling
+    achieves.
+  key_points:
+  - 'E-factor: diode mixers ~0.8 typical; Mini-Circuits FET mixers 1.4-2.1 (IP3 21-38 dBm).'
+  - FET mixer (HJK-19H) IP3 7-10 dB above a comparable diode mixer in 1.8-2.0 GHz; diode mixers keep a flatter E-factor over
+    very wide bands.
+  - 'Triple-balanced LTCC mixer example: ~6.5 dB conversion loss, ~30 dB L-R/L-I/R-I isolation, IIP3 ~+16 dBm, input P1dB
+    ~+6 dBm, needs +10 dBm LO.'
+  - Up-conversion with LO at half the output frequency puts the LO 2nd harmonic on the RF output (only ~20 dB down) - avoid
+    such frequency plans.
+  sources:
+  - title: AN00-001 Figure of Merit of Mixer Intermod Performance (E-Factor)
+    url: https://www.minicircuits.com/appdoc/AN00-001.html
+  - title: AN00-002 Triple balanced, low cost, LTCC mixers (MCA)
+    url: https://www.minicircuits.com/appdoc/AN00-002.html
+  - title: AN00-014 Selecting the Right Mixer for Your Application
+    url: https://www.minicircuits.com/appdoc/AN00-014.html
+  - title: AN00-011 Frequently asked questions about mixers
+    url: https://www.minicircuits.com/appdoc/AN00-011.html
+- id: frequency_planning_pitfalls
+  title: Frequency-plan and interface pitfalls around mixers
+  category: architecture
+  from: Mini-Circuits
+  summary: Several common chain problems come from the frequency plan and from what the mixer ports see. LO leakage to the
+    IF can equal the wanted IF level if the LO is close to the RF and isolation is modest, and LO harmonics can fall on the
+    wanted output. Mixers are nonlinear at every port, so reflections from a following IF amplifier or filter are re-mixed
+    into new spurs. The cure is a frequency plan that keeps LO, its harmonics and image away from the band, plus broadband
+    50-ohm terminations (pads, reflectionless filters or high-directivity amplifiers) at the IF.
+  key_points:
+  - 'Example: -10 dBm RF, 6 dB conversion loss, +7 dBm LO and 23 dB L-I isolation -> IF and LO leakage both at -16 dBm; move
+    the LO (e.g. to the high side) instead.'
+  - A non-50-ohm IF amplifier input reflects products back into the mixer and raises distortion.
+  - Mixer ports can be swapped (use the DC-coupled IF port as an input) for very low-frequency signals, with some linearity
+    penalty.
+  - Specify the frequency ranges of all three ports; the IF port is the lowest-frequency port in both up- and down-converters.
+  sources:
+  - title: AN00-011 Frequently asked questions about mixers
+    url: https://www.minicircuits.com/appdoc/AN00-011.html
+  - title: AN00-014 Selecting the Right Mixer for Your Application
+    url: https://www.minicircuits.com/appdoc/AN00-014.html
+  - title: AN75-007 Pairing Mixers with Reflectionless Filters
+    url: https://www.minicircuits.com/appdoc/AN75-007.html
+- id: mmic_darlington_gain_blocks
+  title: 'MMIC Darlington gain blocks: biasing, chokes and thermal design'
+  category: components
+  from: Mini-Circuits
+  summary: 'Darlington MMIC gain blocks (InGaP HBT in Mini-Circuits'' ERA, Gali, MAR, GVA etc.) are two-port, internally matched
+    and self-biased: RF in on one pin, RF out and DC bias share the output pin. They are current-controlled, so they need
+    a series bias resistor from a higher supply (approximating a current source) fed through an RF choke, plus DC blocking
+    capacitors; they cannot be DC-coupled. A larger supply-to-device voltage difference lets a larger resistor be used, which
+    stabilises current, P1dB and dissipation over temperature. Junction temperature, and hence MTTF, depends on bias current,
+    thermal resistance and board heat-sinking.'
+  key_points:
+  - Choke reactance should be at least ~500 ohms (10x the load) at the lowest frequency and free of self-resonance to the
+    top frequency; without one, the bias resistor loads the output (e.g. 1.7 dB gain loss with 115 ohms on ERA-4SM+).
+  - 'ERA-1SM+: 5 V supply gives ~13% current variation over -45..85 C (~1.4 dB P1dB swing); 12 V supply cuts this to ~0.4
+    dB.'
+  - If Vcc >= 2 x Vd, dissipation falls with temperature (no thermal runaway of dissipation); Pd peaks at Vd = Vcc/2.
+  - A PTC thermistor in parallel with the bias resistor can hold current constant at lower supply voltages.
+  - 'Junction temperature check: I x V x theta_jc + 85 C case + board rise (GVA-84+ example ~138 C); RF output power can be
+    subtracted from DC power (''RF cooling'').'
+  - Do not use supply voltage for AGC; use a voltage-variable attenuator instead.
+  sources:
+  - title: AN60-010 Biasing of Constant Current MMIC Amplifiers (ERA series)
+    url: https://www.minicircuits.com/appdoc/AN60-010.html
+  - title: AN60-038 Amplifier Terms Defined (Q VIII, XVII-XX)
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+- id: balanced_pushpull_amplifiers
+  title: Balanced and push-pull amplifier topologies
+  category: architecture
+  from: Mini-Circuits
+  summary: Higher output power, IP3 and better match can be had by combining two matched amplifiers rather than paralleling
+    them directly. In a balanced amplifier, 90-degree hybrids split and recombine the signal; reflections from the two halves
+    cancel at the input, giving a good match even with poorly matched devices. In a push-pull amplifier, baluns drive the
+    two halves 180 degrees apart so fundamentals add and even-order products (second harmonic, CSO in CATV) cancel, which
+    is why push-pull is standard in broadband cable amplifiers. Both need closely matched gain and phase between halves, achieved
+    for example by adjacent dice in a dual package, and careful heat-sinking.
+  key_points:
+  - Combining two identical halves in hybrids raises P1dB and IP3 (ideally ~+3 dB; general rule, the note gives no number).
+  - Push-pull with 180-degree baluns cancels second-order distortion; essential for wideband (multi-octave) CATV.
+  - 'Dual matched MMIC example (MERA): ~20-25 dB gain, ~18-19 dBm P1dB, paddle-to-ambient ~12 C/W on a metal-backed board
+    vs ~7x worse on bare FR4.'
+  - 'Thermal vias: one 20 mil via ~66 C/W; 12 in parallel ~5.5 C/W on 62 mil board.'
+  - Mini-Circuits block diagrams use a 180-degree balanced stage to cancel the 2nd harmonic in an L-band amplifier and a 90-degree
+    balanced stage in a 4-6 GHz driver.
+  sources:
+  - title: AN60-032 Uses and Advantages of MERA Dual Matched MMIC Amplifiers
+    url: https://www.minicircuits.com/appdoc/AN60-032.html
+  - title: AN60-038 Amplifier Terms Defined (Q VII)
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+  - title: 'Block diagram: Redundant L-Band Amplifier'
+    url: https://www.minicircuits.com/pdfs/Redundant%20L-Band%20Amplifier.pdf
+  - title: 'Block diagram: 4-6 GHz Amplifier'
+    url: https://www.minicircuits.com/pdfs/4-6%20GHz%20Ampfifier.pdf
+- id: multitone_peak_power
+  title: Driving a power amplifier with multiple carriers (PEP vs average)
+  category: rf_specs
+  from: Mini-Circuits
+  summary: With N equal, independent tones the average power is N times one tone, but the peak envelope power, reached when
+    all tone voltages align, is N squared times one tone. For low distortion the input must be set so that peak, not average,
+    output stays within the amplifier's linear rating; this backs each tone off much further than an average-power calculation
+    suggests. Overdriving beyond that only increases stress and distortion, not useful output. The same peak-to-average logic
+    underlies back-off for OFDM and multi-carrier signals.
+  key_points:
+  - 'Average = P1 + 10log(N); peak = P1 + 20log(N). 4 tones: +6 dB average; 9 tones: +9.5 dB average, +19.1 dB peak.'
+  - 'Example: 100 W amplifier, 9 tones, 50 dB gain -> about +30.9 dBm out and -19.1 dBm in per tone for low distortion.'
+  sources:
+  - title: AN60-037 High Power Amplifier in a Multi-Tone Environment
+    url: https://www.minicircuits.com/appdoc/AN60-037.html
+- id: gain_slope_equalizers
+  title: Gain-slope equalizers
+  category: components
+  from: Mini-Circuits
+  summary: Wideband amplifiers usually lose gain with frequency, and cascading them makes the tilt worse. A fixed equalizer
+    is an attenuator whose loss falls with frequency at a known slope; placed with the amplifier it flattens the net response,
+    trading some gain for flatness. Placing it before the amplifier costs noise figure, after it costs output power. Positive/negative
+    slope and positive/negative parabolic shapes exist for different gain errors, and the same tilt-correction function appears
+    as 'tilt' or 'AGC/tilt' blocks in CATV amplifiers.
+  key_points:
+  - 'Case study: PHA-1+ gain falls from 16.5 dB (100 MHz) to 10 dB (6 GHz); with a 6 dB negative-slope MMIC equalizer the
+    pair is ~10 dB +/-0.6 dB over 0.5-6 GHz.'
+  - 'MMIC equalizer example: 20 dB return loss, +31 dBm power handling, 2x2 mm.'
+  - 'Four types: positive slope, negative slope, positive parabolic, negative parabolic.'
+  sources:
+  - title: AN60-106 Flattening Negative Gain Slope with MMIC Fixed Equalizers
+    url: https://www.minicircuits.com/appdoc/AN60-106.html
+  - title: 'Block diagram: 1-2 GHz Gain/Slope Equalizer'
+    url: https://www.minicircuits.com/pdfs/1-2%20GHz%20Gain_Slope_Equalizer.pdf
+- id: filter_fundamentals
+  title: 'LC filter basics: responses, cut-off, cascading and placement'
+  category: components
+  from: Mini-Circuits
+  summary: Passive LC filters come as Butterworth-like (flat passband), Bessel-Thomson (flat group delay, preserves pulse
+    shape) and elliptic (sharp skirts) designs. Insertion loss combines input mismatch, output mismatch and element dissipation.
+    Ordinary filters are matched in the passband but strongly reflective in the stopband, which matters next to mixers, oscillators
+    and other filters; constant-impedance designs stay matched in both bands. Rejection can be scaled from published data
+    by the ratio of cut-off frequencies, and cascading two filters adds their rejection provided each sees a good match.
+  key_points:
+  - Cut-off fco = 3 dB point; for many low-pass models the 1 dB passband edge is ~0.9 x fco (DC-225 MHz passband -> fco 250
+    MHz).
+  - Typical VSWR ~1.2:1 mid-passband but ~18:1 in the stopband.
+  - LPF + HPF can form a bandpass if the overlap gives at least ~5% bandwidth at 1 dB loss.
+  - A low-pass filter has about half the reactive elements of a bandpass for the same upper rejection, so lower loss and cost
+    when only one side needs rejection.
+  - Filters are reciprocal; using a 50-ohm filter in 75 ohms changes ripple, rejection and VSWR.
+  - 'Linear-phase bandpass example: deviation from linear phase about +/-8 degrees over fc +/-43 MHz.'
+  sources:
+  - title: 'FILT8-2 Filters: Introduction, definition of terms, Q&As'
+    url: https://www.minicircuits.com/appdoc/FILT8-2.html
+  - title: AN75-004 Band Pass Filters with Linear Phase Response
+    url: https://www.minicircuits.com/appdoc/AN75-004.html
+- id: reflectionless_filters
+  title: Reflectionless (absorptive) filters next to mixers and in cascades
+  category: technology
+  from: Mini-Circuits
+  summary: Reflectionless filters absorb stopband energy in internal terminations, so their reflection coefficient stays low
+    at all frequencies. Next to a mixer, a conventional filter bounces spurs and LO harmonics back into the mixer, where they
+    re-mix into new in-band products; an absorptive filter breaks that loop and keeps the mixer's conversion loss and IP3
+    close to its stand-alone values. In cascades, conventional filters form standing waves between sections, producing stopband
+    ripple, passband ripple near the edge and erratic group delay, while absorptive sections cascade predictably. Older workarounds
+    (pads, isolation amplifiers, terminated diplexers, balanced filters in quadrature hybrids) cost noise figure, size or
+    bandwidth.
+  key_points:
+  - 'Measured: a reflection at 2 GHz at the mixer output fell from -34 dBm (conventional filter) to -66 dBm (reflectionless),
+    >30 dB better.'
+  - Cascading 2-3 reflectionless low-pass sections adds rejection with no ripple and flat group delay; two conventional sections
+    showed stopband ripple and large group-delay swings.
+  - 'Reflectionless filters trade lower ultimate rejection per section (example: 14-24 dB) for match; cascade sections when
+    more rejection is needed.'
+  sources:
+  - title: AN75-007 Pairing Mixers with Reflectionless Filters to Improve System Performance
+    url: https://www.minicircuits.com/appdoc/AN75-007.html
+  - title: AN75-008 Advantages of Cascading Reflectionless Filters
+    url: https://www.minicircuits.com/appdoc/AN75-008.html
+- id: ltcc_technology_power
+  title: LTCC components and their power handling
+  category: technology
+  from: Mini-Circuits
+  summary: 'Low-temperature co-fired ceramic (LTCC) builds multilayer passive structures (filters, baluns, couplers) by printing
+    noble-metal conductors on ceramic tapes and firing the stack around 850 C, giving small, repeatable, low-loss parts that
+    need no hand assembly. The ceramic itself tolerates very high temperature, so in practice the limit on RF power is the
+    solder joint to the PCB. Power rating is derived from measured thermal resistance and worst-case passband insertion loss:
+    the dissipated power times thermal resistance must keep the part below a chosen maximum temperature. Lower insertion loss
+    therefore directly raises power rating.'
+  key_points:
+  - Maximum part temperature is set by the solder (SnAgCu melts at 217 C; ~200 C used as the limit).
+  - 'Method: thermal-image the part at known input power to get theta, then Pmax from worst-case passband loss; derate for
+    100 C ambient.'
+  - LTCC baluns replace ferrite-core transformers in mixers below ~5 GHz, reducing manual steps.
+  sources:
+  - title: AN75-005 Maximum Power Handling in LTCC Low Pass Filters
+    url: https://www.minicircuits.com/appdoc/AN75-005.html
+  - title: AN00-002 Triple balanced, low cost, LTCC mixers
+    url: https://www.minicircuits.com/appdoc/AN00-002.html
+- id: power_splitters_combiners
+  title: Power splitters / combiners (0 degree, Wilkinson-type)
+  category: components
+  from: Mini-Circuits
+  summary: 'An N-way 0-degree splitter delivers equal-amplitude, in-phase outputs with high isolation between them; being
+    reciprocal it also combines. A plain tee splits but gives no isolation and a poor match; adding a transformer and an internal
+    resistor across the outputs makes the signals reaching the opposite output cancel, giving high isolation, and the resistor
+    dissipates nothing when the outputs are balanced. Isolation depends on a good match at the sum port. As a combiner, loss
+    depends on the relative phase and frequency of the inputs: in-phase equal signals combine without loss, uncorrelated signals
+    lose the theoretical split loss, and the internal resistor must dissipate the difference.'
+  key_points:
+  - 'Theoretical split loss = 10log(N): 3 dB for 2-way, 6 dB for 4-way, 9 dB for 8-way.'
+  - Sum-port reflection -20 dB reduces port-to-port isolation to ~26 dB; -10 dB reduces it to ~16 dB.
+  - In a 2-way combiner the internal resistor must handle half the power applied to each input; power is also limited by core
+    saturation at the low end.
+  - 'Splitter parameters move together: specify the one critical parameter tightly and the others follow.'
+  - Combiner isolation is what matters for two-tone test sources; insertion loss is what matters for combining amplifier outputs.
+  sources:
+  - title: AN10-006 Understanding Power Splitters
+    url: https://www.minicircuits.com/appdoc/AN10-006.html
+- id: directional_couplers
+  title: 'Directional couplers: coupling, directivity and uses'
+  category: components
+  from: Mini-Circuits
+  summary: A directional coupler samples a small, defined fraction of the power travelling one way on a main line. Its key
+    specs are coupling, coupling flatness, main-line loss and directivity, the ability to separate forward from reflected
+    power. Three-port couplers terminate the isolated port internally, which keeps directivity high; four-port (bi-directional)
+    couplers expose both coupled ports but only reach good directivity if all ports are well terminated, so two back-to-back
+    three-port couplers (a dual directional coupler) are often preferred. Couplers are used for power monitoring and leveling,
+    VSWR/reflectometer measurement, signal injection and test points (as in CATV taps).
+  key_points:
+  - 'Typical ranges cited: coupling 6-30 dB, main-line loss down to ~0.1 dB, directivity up to ~55 dB.'
+  - Directivity can be no better than the return loss of the terminations; a 50-ohm coupler in 75 ohms is limited to ~14 dB
+    directivity.
+  - Measurement error stays under ~1 dB when directivity exceeds the measured return loss by 20 dB.
+  - Pulsed rating ~ average rating / duty cycle for pulses much shorter than the termination's thermal time constant (reduce
+    for pulses > ~1 ms).
+  - Coupled-port power rating on a 3-port coupler is lower because that power ends in the internal load.
+  sources:
+  - title: 'COUP7-2 Directional Couplers: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/COUP7-2.html
+- id: attenuators_fixed_and_step
+  title: Fixed and digital step attenuators
+  category: components
+  from: Mini-Circuits
+  summary: 'Fixed attenuators (pi or tee resistor networks, symmetrical) set levels, protect instruments and improve inter-stage
+    match. Digital step attenuators switch binary-weighted fixed pads in and out with SPDT switches, so their 0 dB-state insertion
+    loss comes from the cascaded switches; accuracy, monotonicity, step size, IP3 and switching time are the selection criteria.
+    Process matters: GaAs MESFET/pHEMT attenuators lose IP3 and compression below a few hundred MHz and need DC blocks, while
+    RF CMOS designs keep linearity flat down to ~1 MHz, run from a single low supply with integrated serial/parallel drivers
+    and draw almost no current. Cascaded attenuators only add arithmetically if each has good return loss.'
+  key_points:
+  - 'CMOS DSA example: 0.5 dB LSB, 6-bit to 31.5 dB, ~0.05 dB accuracy on small steps, IIP3 ~+52 dBm from 1 MHz to 2.4 GHz,
+    ~1 us switching, ~100 uA supply.'
+  - In a 6-bit DSA the reference loss comes from up to 12 SPDT switches in series.
+  - Cascaded step attenuators sum accurately only with ~20 dB or better return loss per unit.
+  - 'Switching time convention: 50% of control to 90% (or 10%) of final RF; some vendors quote to within 0.5 dB of final value.'
+  - Fixed attenuator average power rating falls linearly with temperature.
+  sources:
+  - title: AN70-004 Digital Step Attenuators offer Precision and Linearity
+    url: https://www.minicircuits.com/appdoc/AN70-004.html
+  - title: 'DSA5-2 Digital Step Attenuators: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/DSA5-2.html
+  - title: 'ATT6-1 Fixed Attenuators: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/ATT6-1.html
+  - title: AN70-001 Fixed attenuators help minimize impedance mismatches
+    url: https://www.minicircuits.com/appdoc/AN70-001.html
+- id: rf_switches
+  title: 'RF switches: PIN vs GaAs FET, absorptive vs reflective'
+  category: components
+  from: Mini-Circuits
+  summary: Switch specs are insertion loss (on), isolation (off), VSWR, compression, video leakage and switching time. PIN-diode
+    switches act as current-controlled resistors above about 10 MHz and handle high peak power, limited mainly by average
+    dissipation, but switch in microseconds and have a low-frequency limit. GaAs FET switches switch in nanoseconds, work
+    down to DC (limited by blocking capacitors) and have about ten times less video leakage, but their power rating is set
+    by peak voltage/current. Absorptive switches terminate the off port in 50 ohms; reflective ones present an open or short.
+    Driving a switch into compression creates harmonics and raises loss.
+  key_points:
+  - 'Video leakage: ~30 mV p-p GaAs vs ~300 mV p-p PIN.'
+  - Use an absorptive switch whenever the unselected port must stay matched (e.g. a generator or amplifier on the idle port).
+  - 'As a modulator, derate RF input (example family: -10 dB below 200 MHz, -6 dB to 2 GHz, -5 dB above).'
+  - Ton/Toff = 50% control to 90%/10% RF; rise/fall = 10-90% of RF.
+  - Switch NF equals its insertion loss.
+  sources:
+  - title: 'SW13-2 Switches: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/SW13-2.html
+- id: frequency_multipliers
+  title: Frequency doublers and multiplier chains
+  category: components
+  from: Mini-Circuits
+  summary: 'A passive diode doubler is a balanced nonlinear circuit that outputs the second harmonic while its balance suppresses
+    the fundamental and odd harmonics. It needs drive within a specified window: too little raises conversion loss and degrades
+    match, too much drives it into heavy saturation where higher harmonics grow. Even harmonics fall about 12 dB per step,
+    so a doubler can serve as a quadrupler with more filtering. Odd multiples need a different approach, such as a limiter
+    or class-C stage as a harmonic generator followed by a selective filter, as in Mini-Circuits'' x7 multiplier diagram.
+    Multiplied LO chains need amplifiers, pads and filters around each multiplier, as the Ku-band upconverter diagram shows.'
+  key_points:
+  - 'Passive doubler: ~11 dB conversion loss and up to ~40 dB fundamental/odd-harmonic rejection; drive about 0 to +20 dBm
+    (test drive +5 to +15 dBm).'
+  - 4th harmonic ~12 dB below the 2nd; each further even harmonic ~12 dB lower.
+  - Output return loss changes with drive level because diode impedance depends on conduction.
+  - Square-wave drive can improve doubler efficiency.
+  sources:
+  - title: 'DOUB9-2 Frequency Doublers: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/DOUB9-2.html
+  - title: 'Block diagram: X7 Multiplier'
+    url: https://www.minicircuits.com/pdfs/X7%20Multiplier.pdf
+  - title: 'Block diagram: Ku-Band Block Upconverter'
+    url: https://www.minicircuits.com/pdfs/KU-BAND%20BLOCK%20UPCONVERTER.pdf
+- id: limiters_receiver_protection
+  title: Limiters for receiver (LNA) protection
+  category: components
+  from: Mini-Circuits
+  summary: A limiter protects a sensitive receiver, typically a HEMT/pHEMT LNA, from strong in-band or nearby signals that
+    front-end filtering cannot remove. A shunt PIN diode is nearly invisible at low level; large RF makes it conduct, so the
+    line becomes reflective and only a small leakage reaches the LNA. Key specs are band, small-signal insertion loss (which
+    adds directly to NF), leakage level, limiting range, maximum survivable power and recovery time after a pulse. A different
+    class of 'hard' limiter is used to hold a constant output level for FM detection or phase-sensitive systems.
+  key_points:
+  - LNAs can be damaged above roughly +13 dBm (20 mW) input.
+  - 'Broadband limiter example (30-3000 MHz): handles 1 W, limits output to ~+11.5 dBm, 0.23 dB loss, ~10 ns recovery.'
+  - 'Recovery time: 50% of the trailing edge of the high-power pulse to 90% of small-signal output.'
+  - Mini-Circuits places a limiter (LIM1) first in the receive path of its transceiver and repeater block diagrams.
+  sources:
+  - title: AN42-001 High Power Limiter Modules
+    url: https://www.minicircuits.com/appdoc/AN42-001.html
+  - title: 'LIM10-2 Limiters: Introduction, Q&As'
+    url: https://www.minicircuits.com/appdoc/LIM10-2.html
+- id: vco_design_tradeoffs
+  title: 'VCOs: oscillator principles and parameter trade-offs'
+  category: components
+  from: Mini-Circuits
+  summary: 'An oscillator is an amplifier whose feedback loop has unity gain and 360-degree phase at one frequency; equivalently
+    the active device presents a negative resistance that cancels resonator loss. In a VCO the tuning capacitor is a varactor:
+    abrupt-junction diodes have high Q and the best phase noise, hyperabrupt diodes give more linear and wider tuning but
+    lower Q. VCO parameters trade off: a wider tuning range needs higher tuning sensitivity, which makes the oscillator more
+    sensitive to noise on the tuning line and degrades phase noise; better load pulling needs an output pad or buffer amplifier,
+    which costs current.'
+  key_points:
+  - Hyperabrupt varactors cover an octave with under ~20 V tuning; abrupt varactors can use 0-60 V.
+  - Narrow tuning range + low Kv = better phase noise; higher carrier frequency = harder phase noise, pushing and pulling.
+  - 'Typical temperature effects (from 25 C): output power -0.5 to -1 dB at +85 C, supply current about +10%, phase noise
+    varies ~3 dB over -55..+85 C.'
+  - Phase noise is set mainly by resonator and varactor Q, the active device, and noise on Vcc and Vtune.
+  sources:
+  - title: AN95-007 Understanding VCO Concepts
+    url: https://www.minicircuits.com/appdoc/AN95-007.html
+  - title: AN95-005 How VCO Parameters Affect Each Other
+    url: https://www.minicircuits.com/appdoc/AN95-005.html
+- id: phase_noise_and_pll
+  title: Phase noise and PLL synthesizer noise shaping
+  category: rf_specs
+  from: Mini-Circuits
+  summary: 'Phase noise describes random short-term phase fluctuation of a source and is quoted as single-sideband power in
+    a 1 Hz bandwidth relative to the carrier (dBc/Hz) at a given offset; discrete spurs are specified separately. In a PLL
+    synthesizer the loop acts as a filter: inside the loop bandwidth the output follows the reference, whose noise is multiplied
+    by the division ratio N (20logN), and the VCO''s own noise is suppressed; outside the loop bandwidth the output follows
+    the free-running VCO. Phase detector and divider noise also appear inside the loop, so low N and high phase-detector gain
+    help. Practical VCO noise also depends on clean supplies, short shielded tuning lines and a well-matched load.'
+  key_points:
+  - Oscillator AM noise is typically ~20 dB below phase noise (oscillators run in saturation).
+  - 'Inside loop BW: reference (and divider) noise x N; outside: free-running VCO noise.'
+  - 'Preferred loop filter: integrator plus lead/lag (type-2 loop).'
+  - Double-balanced mixers serve as low-noise phase detectors in receivers; digital phase-frequency detectors are preferred
+    in synthesizers.
+  - 'VCO layout: all grounds to the board ground plane, multiple decoupling caps, low-noise supplies (batteries best), a resistive
+    pad at the output.'
+  sources:
+  - title: VCO15-6 Characterizing and Minimizing VCO Phase Noise
+    url: https://www.minicircuits.com/appdoc/VCO15-6.html
+  - title: VCO15-10 Phase locked loop fundamentals
+    url: https://www.minicircuits.com/appdoc/VCO15-10.html
+  - title: 'DET12-2 Phase Detectors: definitions'
+    url: https://www.minicircuits.com/appdoc/DET12-2.html
+- id: iq_modulators
+  title: 'I/Q modulators and demodulators: imbalance and sideband rejection'
+  category: architecture
+  from: Mini-Circuits
+  summary: An I/Q modulator splits the LO into two quadrature paths with a 90-degree hybrid, mixes each with the I and Q baseband
+    signals and sums the results in a 0-degree combiner; the demodulator reverses this. Amplitude and phase imbalance among
+    the hybrid, mixers and combiner limit unwanted-sideband rejection, and mixer balance and DC offset limit carrier (LO)
+    rejection. Odd-order products (fc +/- 3fi, 5fi) sit close to the wanted sideband and are hard to filter. Switched QPSK
+    drives the mixers as switches with +/-20 mA and is fine for constant-envelope PSK but not for QAM, which needs linear
+    mixer operation and higher SNR as constellation order rises.
+  key_points:
+  - 1 degree phase + 0.1 dB amplitude imbalance -> ~40 dB sideband rejection; 1 degree + 0.5 dB -> ~30 dB.
+  - Third- and fifth-order products typically -40 to -50 dBc.
+  - Symbol rate = bit rate / bits per symbol (QPSK 2, 8PSK 3, 16QAM 4, 64QAM 6, 256QAM 8).
+  - QPSK modulator insertion loss ~6 dB typical.
+  - 'Mini-Circuits'' 2.4 GHz QAM modulator diagram is exactly this: OSC -> amp -> 90-degree hybrid -> two mixers -> 0-degree
+    combiner.'
+  sources:
+  - title: 'MOD11-2 Modulators: definitions and I/Q measurement article'
+    url: https://www.minicircuits.com/appdoc/MOD11-2.html
+  - title: 'Block diagram: 2.4 GHz QAM Modulator'
+    url: https://www.minicircuits.com/pdfs/2.4%20GHz%20QAM%20modulator.pdf
+- id: rf_transformers_baluns
+  title: RF transformers and baluns
+  category: components
+  from: Mini-Circuits
+  summary: Wire-on-ferrite RF transformers match impedances (impedance ratio = turns ratio squared), step voltage up or down,
+    isolate DC and convert between balanced and unbalanced lines (baluns), which feed push-pull amplifiers, mixers and differential
+    ADC/transceiver ports. Low-frequency loss is set by primary inductance; high-frequency loss by interwinding capacitance
+    and leakage inductance. DC current, RF power and low frequency all push the core toward saturation, and core permeability
+    falls in the cold, raising low-end loss. In CATV equipment, 75-to-50 ohm baluns sit at the input and output of the push-pull
+    gain stages.
+  key_points:
+  - Turns ratio 2 -> 4:1 impedance (50 ohm -> 200 ohm).
+  - Using one half of a centre-tapped winding gives one quarter of the impedance ratio.
+  - Insertion loss is measured with two identical transformers back-to-back, divided by two.
+  - Bandwidth is often quoted at the 1, 2 and 3 dB loss points (e.g. 1 dB 2-50 MHz, 3 dB 0.15-400 MHz for a 1:1 part).
+  sources:
+  - title: 'TRAN14-2 RF Transformers: definitions and Q&As'
+    url: https://www.minicircuits.com/appdoc/TRAN14-2.html
+  - title: 'Block diagram: CATV Return Path'
+    url: https://www.minicircuits.com/pdfs/CATV%20Return%20Path.pdf
+- id: catv_docsis_amplifiers
+  title: CATV / DOCSIS 3.1-4.0 amplifier chains
+  category: architecture
+  from: Mini-Circuits
+  summary: Hybrid fibre-coax plant uses 75-ohm components, and DOCSIS 4.0 extends the downstream to 1.8 GHz while moving the
+    upstream/downstream split far higher (extended-spectrum DOCSIS) or overlapping them (full duplex). A line extender separates
+    the two directions with diplexers at each port, amplifies downstream through LNA, driver and power-doubler stages with
+    AGC and tilt correction between them, and amplifies upstream through its own LNA and driver. Test-point couplers and AC
+    power bypass chokes sit at both ports. The amplifier must hold high output (TCP) with low composite distortion across
+    a multi-octave band, which drives push-pull and power-doubler topologies.
+  key_points:
+  - Downstream 40-1800 MHz / upstream 5-680 MHz in Mini-Circuits' DOCSIS 4.0 line extender figure.
+  - 'DOCSIS 4.0 split options shown: 80 MHz TCS1 with 192/288/384/576 MHz TCS2 upstream, OFDM-only band from 1002 to 1794
+    MHz; DOCSIS 3.1 high-split = 199 MHz upstream.'
+  - 'Classic ranges: downstream 40-1250 MHz, upstream 5-200 MHz (AN60-087); one MMIC can cover both with a different matching
+    circuit and a larger output choke for the upstream band.'
+  - '75-ohm MMIC example: OIP3 +43 dBm, NF 2.9 dB, gain 15.5 +/-0.1 dB over 40-1500 MHz.'
+  sources:
+  - title: CATV and Broadband Access (DOCSIS 3.1 / 4.0) application page
+    url: https://www.minicircuits.com/WebStore/applications/CATV%20Broadband%20DOCSIS
+  - title: AN60-087 High-Dynamic-Range MMIC Amplifier Supports CATV Upstream and Downstream
+    url: https://www.minicircuits.com/appdoc/AN60-087.html
+- id: cascaded_noise_figure
+  title: Cascaded noise figure (Friis) and why the LNA goes first
+  category: rf_specs
+  from: RF Essentials
+  summary: The noise factor of a chain is the first stage's noise factor plus each later stage's excess noise factor divided
+    by the total gain ahead of it, so a high-gain, low-NF first stage hides everything behind it. Passive losses count as
+    stages whose noise factor equals their loss, which is why every dB of cable, switch, duplexer or filter loss in front
+    of the LNA adds roughly a dB to system NF. Moving a lossy mixer in front of the LNA wrecks sensitivity. The sources stress
+    including every element (connectors, cables, filters) and note that the simple equation assumes matched interfaces; mismatched
+    stages need S-parameter noise analysis.
+  key_points:
+  - F_total = F1 + (F2-1)/G1 + (F3-1)/(G1*G2) + ... (linear ratios, not dB); NF = 10*log10(F)
+  - 'Passive stage: F = 1/G (a 3 dB pad has F = 2, G = 0.5)'
+  - 'Example (SDR article): LNA NF 1.0 dB then 7 dB-loss mixer -> ~1.1 dB system NF (assumes ~20 dB LNA gain); mixer first
+    -> ~8 dB'
+  - Front-end switch / duplexer insertion loss adds ~1:1 to NF and subtracts ~1:1 from TX output
+  sources:
+  - title: 'KB: How do I calculate the total noise figure of a cascaded receiver chain?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-total-noise-figure-of-a-cascaded-receiver-chain-with-mult/
+  - title: 'Software-Defined Radio Architecture: From RF to Digital'
+    url: https://rfessentials.com/industry-news/signal-processing/software-defined-radio-architecture-rf-to-digital/
+  - title: TX/RX Single Antenna (SPDT) Dual Stage - design note
+    url: https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-dual-stage/
+- id: sensitivity_noise_floor
+  title: Receiver sensitivity, thermal noise floor and required SNR
+  category: rf_specs
+  from: RF Essentials
+  summary: Sensitivity is built up in dB from the thermal noise density at room temperature, the noise bandwidth, the receiver
+    noise figure and the SNR the demodulator needs. Antenna gain does not change the receiver's sensitivity number but improves
+    the system-level minimum detectable signal by the gain. FEC coding gain lowers the required SNR and so improves sensitivity
+    without hardware changes. For a mmWave handset front end with 100 MHz bandwidth and 4.5 dB NF, the noise floor alone is
+    about -89.5 dBm before any SNR requirement.
+  key_points:
+  - Sensitivity (dBm) = -174 + 10*log10(B_Hz) + NF + SNR_min
+  - 'Example: 10 MHz, NF 3 dB, SNR 10 dB -> -91 dBm'
+  - 'Theoretical SNR for BER 1e-6: BPSK/QPSK ~10.5 dB, 16-QAM ~14.5 dB, 64-QAM ~18.5 dB (+1-3 dB implementation margin)'
+  - 'Rate-1/2 convolutional code: ~5 dB coding gain'
+  sources:
+  - title: 'KB: How do I calculate the sensitivity of a receiver in dBm given the noise figure and bandwidth?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-sensitivity-of-a-receiver-in-dbm-given-the-noise-figure-a/
+  - title: 'KB: How do I design a millimeter wave front end module for a 5G user equipment device?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-millimeter-wave-front-end-module-for-a-5g-user-equipment-devic/
+- id: linearity_p1db_ip3
+  title: Linearity - P1dB, IP3 and cascading IIP3 through a receiver
+  category: rf_specs
+  from: RF Essentials
+  summary: P1dB is the drive level at which gain has fallen 1 dB below small-signal gain; it is measured by stepping a signal
+    generator into the DUT and plotting gain against input power after removing cable loss. IP3 is the extrapolated point
+    where third-order intermodulation (2f1-f2, 2f2-f1) would equal the wanted tones; because IM3 rises 3 dB per dB of input
+    it falls in-band and cannot be filtered. In a cascade, input-referred IP3 combines like parallel resistors weighted by
+    the gain ahead of each stage, so a high-gain LNA makes later stages (mixer, IF amp) dominate linearity - the classic NF-versus-IIP3
+    trade. Passive filters contribute almost nothing to IM3.
+  key_points:
+  - 1/IIP3_total = 1/IIP3_1 + G1/IIP3_2 + G1*G2/IIP3_3 + ... (mW and linear gain)
+  - 'Worked example: LNA 18 dB/-5 dBm, filter -2 dB/+50 dBm, mixer -7 dB/+15 dBm, IF amp 25 dB/+10 dBm -> IIP3 ~ -7.2 dBm
+    (LNA term dominates)'
+  - 'OP1dB ~= IP1dB + G0 - 1 dB; typical IP1dB: LNA -20..0 dBm, driver 0..+15 dBm, PA +20..+40 dBm'
+  - OIP3 is commonly ~10 dB above OP1dB for a single-stage amplifier (general rule, not from source)
+  sources:
+  - title: 'KB: How do I cascade IP3 values through a multi-stage receiver chain?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-cascade-ip3-values-through-a-multi-stage-receiver-chain/
+  - title: 'KB: How do I measure the P1dB compression point of an amplifier?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-measure-the-p1db-compression-point-of-an-amplifier-using-a-signal-gener/
+  - title: Spectrum Analyzer Dynamic Range
+    url: https://rfessentials.com/industry-news/test-measurement/spectrum-analyzer-dynamic-range/
+- id: dynamic_range_sfdr_blocking
+  title: Dynamic range - SFDR, blocking and reciprocal mixing
+  category: rf_specs
+  from: RF Essentials
+  summary: 'Spurious-free dynamic range is the span from the noise floor up to the input level where IM3 products just reach
+    the noise floor; it is two-thirds of the distance from noise floor to IIP3 because IM3 closes on the floor at 2 dB per
+    dB. Blocking dynamic range instead asks how strong an out-of-channel signal can be before the wanted signal is degraded,
+    and is set by the worst of three mechanisms: compression, reciprocal mixing of the blocker with LO phase noise, and cross-modulation.
+    For a 5G NR base station the source walks from the 3GPP blocker levels to filter rejection, LNA P1dB/OIP3 and ADC bit-depth
+    requirements.'
+  key_points:
+  - SFDR = 2/3 x (IIP3 - N_floor), N_floor = -174 + NF + 10*log10(B); example NF 6 dB, IIP3 -10 dBm, 10 MHz -> 58.7 dB
+  - 'Reciprocal-mixing limited blocker: P_block = N_floor - L(offset) + 10*log10(B_IF) (as given by source; sign convention:
+    L in dBc/Hz, negative)'
+  - '5G NR BS example: in-band blockers up to -15 dBm vs REFSENS ~-96 dBm -> ~81 dB + 10-15 dB margin -> 90-96 dB (15-16 bit)
+    ADC'
+  - 'n78 BS filter: < 1.5 dB IL over 3.3-3.8 GHz, > 40 dB at +20 MHz from band edge -> cavity filter (Q > 500)'
+  - 'LNA guard: P1dB > blocker + 10 dB (> -5 dBm for a -15 dBm blocker); LNA bypass for very strong signals'
+  sources:
+  - title: 'KB: How do I calculate the spurious-free dynamic range of a receiver chain?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-spurious-free-dynamic-range-of-a-receiver-chain/
+  - title: 'KB: How do I calculate the blocking dynamic range of a receiver?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-blocking-dynamic-range-of-a-receiver/
+  - title: 'KB: How do I design the RF filtering for a 5G NR base station to meet blocking requirements?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-filtering-for-a-5g-nr-base-station-to-meet-blocking-requi/
+- id: vswr_return_loss_mismatch
+  title: VSWR, return loss, reflection coefficient and mismatch loss
+  category: rf_specs
+  from: RF Essentials
+  summary: 'VSWR, return loss and reflection coefficient are three views of the same impedance mismatch; mismatch loss is
+    the fraction of power that does not reach the load because of it. Losses are small for moderate mismatch: a 1.5:1 port
+    wastes under 0.2 dB, 2:1 about half a dB, while 3:1 costs 1.25 dB and is usually unacceptable. S11 of -20 dB (VSWR ~1.22)
+    is a good match; -10 dB is marginal. For passive reciprocal parts S21 should equal S12 - a difference on a VNA points
+    at a measurement problem unless the part contains ferrite.'
+  key_points:
+  - Gamma = (VSWR-1)/(VSWR+1); RL = -20*log10(Gamma); ML = -10*log10(1-Gamma^2)
+  - VSWR 1.2 -> 0.036 dB; 1.5 -> 0.18 dB; 2.0 -> 0.51 dB (RL 9.5 dB); 3.0 -> 1.25 dB; 5.0 -> 2.55 dB
+  - S11 -10 dB = VSWR 1.92 (10 % reflected); -20 dB = 1.22 (1 %); -30 dB = 1.07 (0.1 %)
+  - 'Connector torque for repeatability: SMA 5 in-lb, 2.92 mm 8 in-lb, N 12 in-lb'
+  sources:
+  - title: 'KB: How do I calculate the mismatch loss in dB from a known VSWR value?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-mismatch-loss-in-db-from-a-known-vswr-value/
+  - title: S-Parameters Explained
+    url: https://rfessentials.com/industry-news/test-measurement/s-parameters-practical-guide/
+  - title: VSWR Calculator (listed tool)
+    url: https://rfessentials.com/resources/vswr-calculator/
+- id: txrx_isolation_options
+  title: Sharing one antenna between TX and RX - circulator vs T/R switch vs diplexer vs separate antennas
+  category: components
+  from: RF Essentials
+  summary: The block-diagram library shows the four standard ways to keep a transmitter out of its own receiver, each with
+    a typical isolation figure. A ferrite circulator allows simultaneous TX and RX but only gives 20-30 dB, so it suits CW
+    radar and full-duplex links that add cancellation or filtering. A solid-state SPDT gives more isolation and very fast
+    switching but forces time-division operation. A diplexer (two band filters on a common port) gives the highest isolation
+    for frequency-division links and FDD cellular, at the price of filter loss and size. Physically separate TX and RX antennas
+    (bistatic) remove the blind zone of pulsed radars and achieve 40-60 dB through spacing, directivity and cross-polarization.
+  key_points:
+  - 'Circulator: isolation 20-30 dB, IL 0.3-0.8 dB, full duplex; isolator = circulator with matched load on port 3'
+  - 'SPDT (GaAs MMIC): IL 0.5-1.5 dB, isolation 30-50 dB, 2-10 ns switching, TDD only'
+  - 'Diplexer (P2P microwave): TX-RX isolation > 70 dB; FDD handset duplexer 50-70 dB with < 1.5 dB IL per path'
+  - 'Separate antennas: 40-60 dB; pulsed monostatic min range R_min = c*(t_pulse + t_recovery)/2 (1 us + 100 ns -> 165 m)'
+  - 'Wi-Fi FEM T/R switch: 0.3-0.5 dB IL, > 20-30 dB isolation, < 1 us switching (SOI CMOS most common)'
+  sources:
+  - title: TX/RX Single Antenna (Circulator) Dual Stage
+    url: https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-circulator-dual-stage/
+  - title: TX/RX Single Antenna (SPDT) Dual Stage
+    url: https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-dual-stage/
+  - title: Point-to-Point Microwave Link (FDD)
+    url: https://rfessentials.com/resources/block-diagrams/point-to-point-microwave-link/
+  - title: Bistatic Ranging Sensor
+    url: https://rfessentials.com/resources/block-diagrams/bistatic-ranging-sensor/
+  - title: Waveguide Isolators and Circulators
+    url: https://rfessentials.com/industry-news/component-spotlight/waveguide-isolators-circulators/
+- id: receiver_architectures
+  title: Receiver architectures - superheterodyne, dual conversion, zero-IF and direct RF sampling
+  category: architecture
+  from: RF Essentials
+  summary: 'A superheterodyne receiver mixes to a fixed IF where narrow, high-Q crystal, ceramic or SAW filters set channel
+    selectivity, but needs an image-reject filter before the mixer because the image sits two IFs away. Choosing the IF is
+    a trade: high IF eases image rejection, low IF eases channel filtering, and a second conversion resolves both at the cost
+    of parts. Zero-IF mixes straight to I/Q baseband, eliminating image and IF filters, which is why it dominates integrated
+    5G, LTE and Wi-Fi transceivers, but it must handle DC offset from LO self-mixing, 1/f noise, even-order distortion and
+    I/Q imbalance with digital calibration. Direct RF sampling removes the mixer entirely and is practical below about 6 GHz
+    with multi-GSPS ADCs; at mmWave, conversion to an IF remains standard.'
+  key_points:
+  - Image frequency = f_LO +/- f_IF on the opposite side, 2*f_IF from the wanted signal (1 GHz with 70 MHz IF -> image 1.14
+    or 0.86 GHz); image filter 40-60 dB
+  - 'Single conversion example: RF 28 GHz, IF 2 GHz -> image at 24 GHz must fall outside the RF BPF'
+  - 'Typical: superhet image rejection 60-90 dB (filter), zero-IF 30-50 dB (matching-limited); dynamic range superhet 80-120
+    dB vs zero-IF 60-90 dB'
+  - Zero-IF LO phase noise -90 to -110 dBc/Hz @ 100 kHz; I/Q balance < 0.5 dB / < 2 deg before correction
+  - 'Direct sampling example: 12-bit 6.4 GSPS ADC digitises up to ~3 GHz without aliasing'
+  sources:
+  - title: Superheterodyne Receiver
+    url: https://rfessentials.com/resources/block-diagrams/superheterodyne-receiver/
+  - title: Direct Conversion (Zero-IF) Receiver
+    url: https://rfessentials.com/resources/block-diagrams/direct-conversion-receiver/
+  - title: TX/RX Single Antenna (SPDT) Single Stage
+    url: https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-single-stage/
+  - title: 'KB: How do I choose the intermediate frequency for a superheterodyne receiver design?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-choose-the-intermediate-frequency-for-a-superheterodyne-receiver-design/
+  - title: Software-Defined Radio Architecture
+    url: https://rfessentials.com/industry-news/signal-processing/software-defined-radio-architecture-rf-to-digital/
+- id: iq_imbalance
+  title: I/Q imbalance and image rejection in quadrature receivers
+  category: rf_specs
+  from: RF Essentials
+  summary: In zero-IF and low-IF receivers, any amplitude or phase mismatch between the I and Q paths lets an image of the
+    signal leak onto itself, limiting EVM. Sources include the quadrature LO splitter (branchline/Lange couplers degrade toward
+    band edges), I/Q mixer conversion-loss mismatch, baseband filter mismatch and ADC gain/timing skew; the first two are
+    flat across the band while the last two vary with frequency and need an FIR corrector rather than a single 2x2 matrix.
+    Correction uses pilots in communication systems, blind statistical estimation in radar, and factory tone-injection calibration
+    stored in non-volatile memory; temperature drift of 1-2 deg per 50 C means wide-temperature products recalibrate.
+  key_points:
+  - IRR ~ -20*log10( sqrt((10^(eps_dB/20)-1)^2 + (dphi_rad)^2) / 2 )
+  - 'Source error: its examples are optimistic. Correct values with that formula: 0.5 dB / 3 deg -> ~28 dB (source says 31),
+    1 dB / 5 deg -> ~22.5 dB (24), 0.1 dB / 1 deg -> ~40 dB (45)'
+  - 'Required IRR (source table): QPSK 17 dB, 16-QAM 25 dB, 64-QAM 33 dB, 256-QAM 38 dB'
+  - '1 ps I/Q ADC skew ~ 0.18 deg at 500 MHz; 28 GHz branchline: +/-0.3 dB / +/-2 deg over 1 GHz, worse at band edges'
+  - 'Frequency-dependent correction: 16-32 tap complex FIR over 200 MHz'
+  sources:
+  - title: I/Q Imbalance Correction in Direct-Conversion Receivers
+    url: https://rfessentials.com/industry-news/signal-processing/iq-imbalance-correction/
+- id: phase_noise_oscillators
+  title: Phase noise - what it is, Leeson's model and why it matters
+  category: rf_specs
+  from: RF Essentials
+  summary: Phase noise is the spreading of an oscillator's energy into skirts around the carrier, quoted in dBc/Hz at an offset.
+    It limits pulse-Doppler radar's ability to see slow targets next to clutter, rotates high-order QAM constellations (EVM),
+    and causes reciprocal mixing when a strong adjacent signal mixes with the LO skirts. Leeson's model shows the resonator's
+    loaded Q is the strongest lever close in, while device noise figure and signal power set the far-out floor; flicker noise
+    steepens the slope very close to the carrier. Measurement uses cross-correlation analyzers that cancel instrument noise;
+    a spectrum analyzer can only measure phase noise down to its own LO's level.
+  key_points:
+  - 'Leeson: L(fm) = 10*log[(2FkT/Ps)*(1 + (f0/(2*QL*fm))^2)*(1 + fc/fm)]; doubling QL improves close-in by 6 dB'
+  - 'Frequency multiplication by M degrades phase noise by 20*log10(M): x2 +6 dB, x3 +9.5 dB, x4 +12 dB'
+  - PLL in-band noise ~ 20*log10(N) + reference noise; outside the loop bandwidth the VCO dominates
+  - 'Radar LO: -90 dBc/Hz @ 1 kHz OK for X-band weather; slow ground movers need -120 dBc/Hz @ 1 kHz; mmWave 256-QAM LO <
+    -100 dBc/Hz @ 100 kHz'
+  - Analyzer LO must be >= 10 dB cleaner than the DUT
+  sources:
+  - title: Phase Noise in Microwave Oscillators
+    url: https://rfessentials.com/industry-news/signal-processing/phase-noise-microwave-oscillators/
+  - title: Frequency Synthesis for mmWave
+    url: https://rfessentials.com/industry-news/signal-processing/frequency-synthesis-pll-mmwave/
+  - title: Spectrum Analyzer Dynamic Range
+    url: https://rfessentials.com/industry-news/test-measurement/spectrum-analyzer-dynamic-range/
+- id: pll_synthesis
+  title: PLL frequency synthesizers - integer-N, fractional-N, loop bandwidth, mmWave LOs
+  category: components
+  from: RF Essentials
+  summary: 'A PLL locks a VCO to a crystal reference by dividing both and comparing them in a phase/frequency detector whose
+    charge pump drives a loop filter that sets the VCO tuning voltage. Integer-N gives the cleanest spurs but steps equal
+    to the comparison frequency; fractional-N uses sigma-delta modulation for sub-Hz steps and allows wider loops (faster
+    lock) at the cost of fractional spurs. Loop bandwidth is the main design knob: wider suppresses VCO noise and locks faster
+    but passes more reference noise and spurs. Above ~20 GHz designers either use a native mmWave VCO or synthesize lower
+    and multiply, accepting the 20*log(M) penalty, and must watch load-pulling from mismatched transitions.'
+  key_points:
+  - f_out = f_ref * N/R (integer-N); f_out = (N + FRAC/MOD) * f_PFD (fractional-N)
+  - 'Typical: reference 10-100 MHz (TCXO/OCXO), loop BW 1-100 kHz, lock time 10-500 us, spurs -50..-90 dBc'
+  - 'Best phase noise: low-noise OCXO, highest comparison frequency (smallest N), best free-running VCO outside loop BW'
+  - PLL-based chirp generators give better FMCW linearity than open-loop VCO sweeps
+  sources:
+  - title: PLL Frequency Synthesizer (block diagram)
+    url: https://rfessentials.com/resources/block-diagrams/pll-frequency-synthesizer/
+  - title: Frequency Synthesis for mmWave
+    url: https://rfessentials.com/industry-news/signal-processing/frequency-synthesis-pll-mmwave/
+- id: pa_linearization_dpd_doherty
+  title: PA linearity and efficiency - AM-AM / AM-PM, digital predistortion, Doherty
+  category: technology
+  from: RF Essentials
+  summary: Power amplifiers compress amplitude peaks (AM-AM) and add amplitude-dependent phase shift (AM-PM); with high-order
+    QAM the phase term often hurts EVM more. Real PAs also have memory from bias networks, thermal time constants and GaN
+    trapping, which causes asymmetric spectral regrowth. Digital predistortion applies an approximately inverse nonlinearity
+    in the baseband, observes the PA output through a coupler and observation receiver, and adapts its coefficients; it lets
+    the PA run 2-4 dB closer to saturation and roughly doubles efficiency at rated power. The Doherty topology (carrier plus
+    peaking amplifier through a quarter-wave inverter) keeps efficiency high across the 6-10 dB back-off range that OFDM signals
+    occupy, and is the preferred small-cell PA architecture together with DPD.
+  key_points:
+  - 'DPD models: LUT (memoryless, < 20 MHz), generalised memory polynomial (standard for 100-400 MHz 5G NR), Volterra (research
+    / strong memory)'
+  - 'Typical with vs without DPD: ACLR -30..-35 -> -50..-55 dBc; 256-QAM EVM -28..-30 -> -38..-42 dB; PAE 15-20 % -> 30-45
+    %'
+  - Adaptation runs every 1-100 ms; the actuator runs at full sample rate (500 MHz - 1 GHz)
+  - 'Doherty: near-peak efficiency over 6-10 dB output range, 5-15 % average-efficiency gain on OFDM'
+  - 'Wi-Fi FEM back-off: 1024-QAM needs EVM < -35 dB (3-5 dB back-off from P1dB); 4096-QAM needs ~2-3 dB more'
+  sources:
+  - title: Digital Predistortion for RF Power Amplifiers
+    url: https://rfessentials.com/industry-news/signal-processing/digital-predistortion-power-amplifiers/
+  - title: 'KB: How do I design a Doherty power amplifier for improved efficiency with modulated signals?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-doherty-power-amplifier-for-improved-efficiency-with-modulated/
+  - title: 'KB: How do I design a Wi-Fi front end module with integrated PA, LNA, and switch?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-wi-fi-front-end-module-with-integrated-pa-lna-and-switch/
+- id: semiconductor_technology_map
+  title: RF semiconductor technology map - GaN, GaAs, InP, SiGe, CMOS/SOI, LDMOS
+  category: technology
+  from: RF Essentials
+  summary: GaN's wide bandgap and high breakdown field allow 28-50 V operation and 5-10 W/mm power density, and on SiC substrates
+    it also gets roughly ten times GaAs's thermal conductivity, so it has displaced GaAs in AESA radar, EW jammers, satellite
+    SSPAs and sub-6 GHz 5G massive-MIMO and small-cell PAs; LDMOS remains competitive below 1 GHz on cost. GaAs and InP still
+    win for the lowest-noise LNAs, and InP above ~100 GHz. For mmWave handsets and beamformers SiGe BiCMOS dominates today
+    with SOI CMOS closing the gap, while GaAs HBT gives the best PAE where a separate PA die is acceptable. In Wi-Fi FEMs
+    GaAs HBT gives the highest PAE, SiGe integrates switch logic, CMOS is cheapest; SOI CMOS is the usual switch technology.
+  key_points:
+  - 'GaN vs GaAs: bandgap 3.4 vs 1.42 eV; breakdown 3.3 vs 0.4 MV/cm; power density 5-10 vs 0.5-1.5 W/mm; SiC 490 vs GaAs
+    46 W/m-K'
+  - GaN LNA NF ~1.0-1.5 dB at X-band vs 0.3-0.5 dB GaAs/InP; GaN-on-SiC wafers 3-5x GaAs cost
+  - 'Small-cell 3.5 GHz PA: GaN PAE 35-45 % vs LDMOS 25-35 %'
+  - '28 GHz UE PA PAE: GaAs HBT ~25-30 %, SiGe ~15-20 %'
+  - 'Wi-Fi PA: GaAs HBT PAE 30-40 %, CMOS 15-25 %'
+  sources:
+  - title: The GaN Revolution
+    url: https://rfessentials.com/industry-news/industry-trends/gan-revolution-replacing-gaas/
+  - title: 'KB: 5G small cell RF front end for urban densification'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-5g-small-cell-rf-front-end-for-urban-densification/
+  - title: 'KB: mmWave front end module for 5G UE'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-millimeter-wave-front-end-module-for-a-5g-user-equipment-devic/
+  - title: 'KB: Wi-Fi FEM with integrated PA, LNA and switch'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-wi-fi-front-end-module-with-integrated-pa-lna-and-switch/
+- id: acoustic_filters_duplexers
+  title: SAW vs BAW filters, FDD duplexers and multiplexers
+  category: components
+  from: RF Essentials
+  summary: Acoustic filters dominate handset and IoT front ends. SAW (surface waves on lithium tantalate/niobate) is cheapest
+    and best below about 2.5 GHz; TC-SAW adds an oxide overcoat to cut temperature drift. BAW (FBAR over an air cavity or
+    SMR on a Bragg reflector, AlN or ScAlN film) works from about 1.5 to 6+ GHz with lower loss, better power handling and
+    less drift, and is the choice for 5 GHz / 6 GHz Wi-Fi and n77/n78/n79. An FDD duplexer pairs a TX and an RX filter on
+    one antenna port and must reach 50-70 dB TX-RX isolation, suppress TX noise in the RX band by at least 50 dB and keep
+    each path under ~1.5 dB loss inside a duplex gap that can be only 20-80 MHz. TDD mid-band 5G needs only a switch plus
+    a band filter, which is one reason TDD was chosen there.
+  key_points:
+  - 'SAW: IL 1.5-3 dB, -25..-45 ppm/C (TC-SAW ~-15), 1-2 W, $0.10-0.50; BAW: IL 1-2 dB, -20..-30 ppm/C, 2-5 W, $0.30-2.00'
+  - 'Example drift: SAW at 868 MHz over 125 C span shifts ~4.9 MHz; TC-SAW ~1.6 MHz'
+  - BAW/FBAR resonator Q 1,000-3,000; complete duplexer < 2 x 2 mm
+  - A modern 5G phone needs 50-100+ filters across 15-30 LTE and 5-10 NR bands -> multiplexers, antenna tuners, CA filter
+    modules
+  - XBAR (Murata/Resonant) targets wide bandwidths for Wi-Fi 6E/7 and n77
+  sources:
+  - title: 'KB: SAW vs BAW filter for an IoT device front end'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-select-between-a-saw-filter-and-a-baw-filter-for-an-iot-device-front-en/
+  - title: 'KB: RF duplexer for an FDD cellular device'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-duplexer-for-an-fdd-cellular-device-to-achieve-sufficient/
+- id: wifi_fem_and_triband_ap
+  title: Wi-Fi front-end modules and the tri-band Wi-Fi 7 access point
+  category: architecture
+  from: RF Essentials
+  summary: A Wi-Fi FEM sits between the Wi-Fi SoC and one antenna and integrates the PA, LNA (often with a bypass for strong
+    signals) and T/R switch, sometimes the band filter. Every spatial stream in every band needs its own FEM, so a 4x4 tri-band
+    (2.4 / 5 / 6 GHz) Wi-Fi 7 AP uses twelve, making FEMs the second-largest RF cost after the SoC. The 6 GHz band must support
+    320 MHz channels and 4096-QAM, which forces tight EVM and extra PA back-off, and its allowed EIRP depends on the power
+    class (VLP, LPI or AFC-controlled standard power). The 2.4 GHz chain is mostly a coexistence problem (Bluetooth, Zigbee,
+    ovens), while 5 GHz must handle DFS radar bands.
+  key_points:
+  - 'PA Pout: 2.4 GHz +20..+23 dBm; 5/6 GHz +17..+20 dBm; LNA NF 1.5-2.5 dB, gain 12-18 dB, IP3 +5..+15 dBm'
+  - '6 GHz: EVM <= 1.8 % at 4096-QAM / 320 MHz; FCC EIRP VLP 14 dBm, LPI 18 dBm, standard power with AFC 30 dBm indoor / 36
+    dBm outdoor'
+  - 'Filters: 2.4 GHz SAW/LC, 5 GHz BAW/LC, 6 GHz BAW/IPD'
+  - 'FEM BOM: 2.4 GHz $0.40-1.50, 5 GHz $0.70-2.00, 6 GHz $1.00-3.00; tri-band 4x4 AP RFFE $40-80 (30-50 % of AP BOM)'
+  - Source claims 0.5 dB NF improvement ~ 10 % range increase and a good FEM gives 2-3x range vs bare SoC (source's estimates)
+  sources:
+  - title: 'KB: Wi-Fi FEM with integrated PA, LNA and switch'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-wi-fi-front-end-module-with-integrated-pa-lna-and-switch/
+  - title: 'KB: RF front end for a tri-band Wi-Fi 7 access point'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-front-end-for-a-tri-band-wi-fi-7-access-point/
+- id: mmwave_5g_front_ends
+  title: 5G mmWave (FR2) front ends - small cells, beamforming ICs and handset AiP modules
+  category: architecture
+  from: RF Essentials
+  summary: An FR2 small-cell panel runs from a baseband with multi-GSPS DAC/ADC at a 3-5 GHz IF, through an up/down converter
+    with a PLL LO, a distribution network and 16-64 beamforming ICs, to 256-1,024 patch elements spaced about half a wavelength
+    apart. Each BFIC handles 4-16 elements with per-element phase and gain control, T/R switching and combining, and the PA/LNA
+    are integrated in or beside it; per-element PA power is only 10-15 dBm, so EIRP comes from coherent array gain. Handsets
+    use antenna-in-package modules of 4-8 elements; per-element PA power falls as element count rises for a given 3GPP power
+    class. Heat (30-80 W in a sealed pole box) and phase noise are primary design constraints.
+  key_points:
+  - 'Bands: n257/n261 28 GHz, n258 26 GHz, n260 39 GHz; up to 400 MHz channels; 39 GHz has ~3 dB more FSPL than 28 GHz'
+  - 'Per element @28/39 GHz: PA 12-15 / 10-13 dBm, PAE 25-35 / 20-30 %, LNA NF 3-4 / 3.5-5 dB'
+  - 'EIRP example: 256 el. x 13 dBm + 24 dBi array gain ~ 61 dBm (cell radius 150-300 m)'
+  - 'UE power classes: PC1 43 dBm (FWA CPE), PC2 35 dBm, PC3 23 dBm (handset), PC4 10 dBm'
+  - 'UE module power: TX 0.5-1.8 W per 4-element module; RX 60-180 mW'
+  sources:
+  - title: FR2 mmWave Small Cell RF Front Ends
+    url: https://rfessentials.com/industry-news/mmwave-5g/fr2-mmwave-small-cell-rf-front-end/
+  - title: 'KB: mmWave front end module for a 5G UE'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-millimeter-wave-front-end-module-for-a-5g-user-equipment-devic/
+- id: beamforming_architectures
+  title: Analog vs digital vs hybrid beamforming and phased-array math
+  category: architecture
+  from: RF Essentials
+  summary: Analog beamforming shares one RF chain across all elements and steers with per-element phase shifters - cheap and
+    low power but one beam at a time and little null control. Digital beamforming gives every element its own RF chain and
+    converter, enabling many simultaneous beams and adaptive nulling but at very high data rates, power and heat, so it is
+    confined to fixed base stations. Hybrid beamforming splits the array into analog sub-arrays each with its own RF chain
+    and is what most commercial mmWave equipment ships. Beam direction follows from the progressive phase step, element spacing
+    above about half a wavelength produces grating lobes, gain drops as the beam scans off broadside, and corporate feed loss
+    directly reduces ERP.
+  key_points:
+  - 'Steering: sin(theta0) = dphi * lambda / (2*pi*d); HPBW ~ 0.886*lambda/(N*d*cos(theta0)); first sidelobe -13.2 dB (uniform)'
+  - 'No grating lobes to +/-60 deg scan: d <= lambda/(1+sin 60) = 0.536 lambda; full hemisphere d <= lambda/2'
+  - Scan loss ~1.5 dB at 45 deg, ~3 dB at 60 deg (projected aperture, cos(theta) in power)
+  - '256 elements @39 GHz: analog 1 RF chain 3-5 W; hybrid 8-32 chains 15-40 W; digital 256 chains 50-200 W, > 2 Tb/s'
+  - 'Phase shifters @39 GHz: CMOS switched-line 5-6 bit 8-14 dB IL; SiGe reflective 5-8 dB; MEMS 1-3 dB but 10-100 us'
+  - 'Corporate feed: log2(N) divider stages at 0.2-0.5 dB each (1,024 el. -> 2-5 dB)'
+  sources:
+  - title: Beamforming at 39 GHz
+    url: https://rfessentials.com/industry-news/mmwave-5g/beamforming-39ghz-architectures/
+  - title: 'Phased Array Beamforming: A Practical Guide'
+    url: https://rfessentials.com/industry-news/antenna-technology/phased-array-beamforming-guide/
+  - title: Phased Array Beamforming Network (block diagram)
+    url: https://rfessentials.com/resources/block-diagrams/phased-array-beamforming/
+- id: link_budget_mmwave_fwa
+  title: Link budgets, free-space path loss, rain and foliage at mmWave (28 GHz FWA)
+  category: rf_specs
+  from: RF Essentials
+  summary: A link closes when transmit EIRP minus path and miscellaneous losses plus receive antenna gain exceeds the receiver's
+    sensitivity by the required margin. At 28 GHz the base station typically uses a 256-element array (25-28 dBi per beam)
+    and the CPE a 64-128 element array (20-24 dBi) with a 7-9 dB noise figure. Rain at 0.01 % exceedance in much of the eastern
+    US costs about 8 dB/km, a single tree in leaf 15-25 dB and window-mounted CPE 10-25 dB of penetration loss, so gigabit
+    FWA cells are limited to a few hundred metres. The article's worked example contains arithmetic errors (see key points),
+    so its "2 dB residual margin" conclusion should not be reused.
+  key_points:
+  - FSPL(dB) = 20*log10(d_m) + 20*log10(f_Hz) - 147.55 (general formula)
+  - 'Source error: article uses 121 dB FSPL at 500 m / 28 GHz; correct is ~115.4 dB (121 dB corresponds to ~1 km)'
+  - 'Source error: 256-QAM sensitivity in 400 MHz with 9 dB NF is ~-79 dBm + ~22-25 dB SNR ~ -55 dBm, not the -72 dBm used'
+  - 'Rain at 28 GHz: 25 mm/h ~5.5 dB/km, 50 mm/h ~10 dB/km; ITU zone K 0.01 % ~42 mm/h ~ 8 dB/km'
+  - FCC Part 30 EIRP density limit 75 dBm / 100 MHz; sector capacity 2-4 Gb/s (400 MHz, 256-QAM, 4 layers)
+  sources:
+  - title: Fixed Wireless Access at 28 GHz
+    url: https://rfessentials.com/industry-news/mmwave-5g/fwa-28ghz-link-budget/
+  - title: Link Budget Calculator (listed tool)
+    url: https://rfessentials.com/resources/link-budget-calculator/
+- id: satcom_ground_segment
+  title: Satellite ground stations - Ka-band gateway chain, rain-fade mitigation, TWTA vs SSPA
+  category: technology
+  from: RF Essentials
+  summary: A Ka-band LEO gateway is a reflector with a corrugated feed and OMT, a diplexer, a low-noise amplifier on the 17.7-20.2
+    GHz downlink, up/down converters and a GaN block upconverter on the 27.5-30 GHz uplink, on a fast tracking mount; thousands
+    of such terminals are needed for the new constellations. Rain fades the uplink harder than the downlink, and operators
+    combine adaptive coding and modulation (about 15 dB of range in DVB-S2X), uplink power control driven by a beacon receiver
+    (5-15 dB, so the BUC idles well below P1dB), site diversity and larger dishes. In space, TWTAs keep the efficiency and
+    power lead above ~200 W and in GEO, while GaN SSPAs win on linearity, bandwidth, graceful failure and mass, and are now
+    default for LEO/MEO user links at 20-100 W.
+  key_points:
+  - 'Rain attenuation (light/moderate/heavy): 20 GHz 5/10/20 dB/km; 30 GHz 8.5/17/34 dB/km'
+  - 'Miami vs Phoenix: ~15 dB more Ka-band fade margin for 99.9 %; site diversity 20-50 km apart gains 10-15 dB'
+  - Antenna 2.4 m -> 3.7 m adds ~3.8 dB (20*log of diameter ratio)
+  - TWTA 60-70 % vs GaN SSPA 35-55 % saturated; at 5 dB OBO 35-40 % vs 25-30 %; C/IM3 -15..-20 vs -25..-30 dBc
+  - Gateway LNA NF < 1.5 dB, gain 35+ dB; BUC 10-80 W GaN
+  sources:
+  - title: LEO Mega-Constellations and the Ground Segment Bottleneck
+    url: https://rfessentials.com/industry-news/industry-trends/leo-constellations-ground-segment/
+  - title: Ka-Band Rain Fade Mitigation for Satellite Ground Stations
+    url: https://rfessentials.com/industry-news/satellite-space/ka-band-rain-fade-mitigation/
+  - title: TWTA vs SSPA
+    url: https://rfessentials.com/industry-news/satellite-space/twta-vs-sspa-satellite-payloads/
+- id: radar_fundamentals
+  title: Radar fundamentals - pulsed, CW Doppler, FMCW, pulse-Doppler and pulse compression
+  category: architecture
+  from: RF Essentials
+  summary: Pulsed radar measures range from round-trip delay, with resolution set by pulse width and a blind zone set by pulse
+    width plus T/R recovery. CW Doppler sensors mix the echo with a tap of the transmitter to get a beat proportional to radial
+    velocity, and are limited by TX-to-RX leakage. FMCW sweeps a chirp and mixes the echo with the live transmit signal, turning
+    range into a low beat frequency so modest ADCs suffice; a second FFT across chirps yields velocity, and range resolution
+    depends only on swept bandwidth. Pulse-Doppler radars use a coherent STALO/COHO pair and an FFT per range gate, trading
+    range and velocity ambiguity through PRF choice. Pulse compression with LFM chirps gives short-pulse resolution with long-pulse
+    energy, at the cost of -13.2 dB range sidelobes unless weighted.
+  key_points:
+  - 'Pulsed: R = c*dt/2; dR = c*tau/2 (150 m per us; source error: the spec table says ''1.5 m per us'')'
+  - 'Doppler: f_D = 2*v*f0/c (24 GHz, 1 m/s -> 160 Hz; 77 GHz, 30 m/s -> 15.4 kHz)'
+  - 'FMCW: dR = c/(2B) (1 GHz -> 15 cm, 4 GHz -> 3.75 cm); f_beat = 2*R*S/c; v_max = lambda/(4*T_chirp) (77 GHz, 50 us ->
+    19.5 m/s)'
+  - 'Source error: FMCW article''s example (4 GHz in 40 us, 50 m) gives a 33.3 MHz beat, not 33.3 kHz'
+  - '77 GHz automotive: PA 10-13 dBm, LNA NF 4-7 dB, chirp linearity error < 0.1 %'
+  - 'Pulse compression windows: Taylor -40 dB (0.84 dB SNR loss), Hamming -42.8 dB (1.34 dB); detection range scales with
+    (power)^(1/4)'
+  sources:
+  - title: Monostatic Ranging Sensor (Pulsed)
+    url: https://rfessentials.com/resources/block-diagrams/monostatic-ranging-sensor/
+  - title: Monostatic Speed Sensor (CW Doppler)
+    url: https://rfessentials.com/resources/block-diagrams/monostatic-speed-sensor/
+  - title: FMCW Radar Signal Processing
+    url: https://rfessentials.com/industry-news/radar-defense/fmcw-radar-range-velocity/
+  - title: Pulse-Doppler Radar
+    url: https://rfessentials.com/resources/block-diagrams/pulse-doppler-radar/
+  - title: Pulse Compression and Matched Filtering
+    url: https://rfessentials.com/industry-news/radar-defense/pulse-compression-matched-filtering/
+- id: aesa_tr_modules
+  title: AESA radar T/R modules
+  category: components
+  from: RF Essentials
+  summary: 'Each element of an active electronically scanned array has its own transmit/receive module: on transmit a phase
+    shifter, VGA, driver and GaN high-power amplifier feed the element through a circulator; on receive the circulator routes
+    the echo through a PIN limiter and LNA back through the (often shared) phase shifter and VGA. Modules are hermetic Kovar
+    or aluminium packages with a circulator, matched load, transitions and a filter around the MMICs. The move from GaAs to
+    GaN-on-SiC raised per-element power 2-5x in the same footprint, but at ~33 % PAE a 20 W PA dissipates ~40 W, so array
+    cooling is as important as the RF design. The same modules increasingly serve radar, EW jamming and passive intercept
+    modes.'
+  key_points:
+  - 'X-band: 10-20 W, LNA NF 2-3 dB, 6-bit phase, < 100 ns T/R; S-band 20-50 W; Ka-band 2-5 W, NF 3-4.5 dB'
+  - Circulator > 20 dB isolation, < 0.3 dB IL; limiter recovery < 100 ns
+  - APG-81 > 1,200 modules; ground air-defense radars 10,000+; $100-500 per TR module
+  - Module DC power 15-50 W; 1,200 x 40 W ~ 48 kW of heat
+  sources:
+  - title: AESA Radar TR Module Architecture
+    url: https://rfessentials.com/industry-news/radar-defense/aesa-tr-module-architecture/
+  - title: 'Phased Array Beamforming: A Practical Guide'
+    url: https://rfessentials.com/industry-news/antenna-technology/phased-array-beamforming-guide/
+- id: ew_receivers_and_jammers
+  title: Electronic warfare - wideband receivers, RWR, DRFM and counter-drone jamming
+  category: architecture
+  from: RF Essentials
+  summary: Electronic-support receivers must cover roughly 0.5-40 GHz with enough sensitivity for distant emitters and enough
+    linearity to survive nearby radars; classic channelized filter banks give 100 % intercept probability at the cost of hundreds
+    of filters, while modern designs digitize multi-GHz bandwidths and channelize in FPGAs, which shifts the burden to the
+    wideband LNA and preselector. Radar warning receivers measure frequency, pulse width, time of arrival, amplitude and angle
+    per pulse and match them to a threat library. DRFM jammers capture, delay and frequency-shift the victim radar's own pulses
+    to create false range and velocity. Counter-drone jammers target 2.4/5.8 GHz control and video links and GNSS L1/L2, typically
+    with GaN PAs and multi-band omni arrays.
+  key_points:
+  - 'Wideband ES LNA: 2-18 GHz, ~2 dB NF, +20 dBm IP3; switches < 10 ns (PIN or GaAs)'
+  - 'RWR: 2-18 GHz, MDS -55..-65 dBm, 50-70 dB instantaneous DR, AOA 2-10 deg RMS'
+  - 'DRFM: ADC/DAC 2-10 GSPS, 8-12 bit, 0.5-4 GHz IBW, through-latency 50-200 ns (< 100 ns for credible range deception)'
+  - 'J/S = Pj + Gj - Lj - (Ps + Gs - Ls); disruption typically needs J/S > 6 dB; spot vs barrage: 200 W in 20 MHz vs 100 MHz
+    = +7 dB J/S'
+  sources:
+  - title: Electronic Warfare RF Architecture
+    url: https://rfessentials.com/industry-news/radar-defense/electronic-warfare-rf-architecture/
+  - title: Radar Warning Receiver (RWR)
+    url: https://rfessentials.com/resources/block-diagrams/radar-warning-receiver/
+  - title: DRFM Jammer
+    url: https://rfessentials.com/resources/block-diagrams/drfm-jammer/
+  - title: Omnidirectional RF Jamming for counter-drone systems
+    url: https://rfessentials.com/industry-news/radar-defense/omnidirectional-rf-jamming-counter-drone-systems/
+- id: sdr_adc_chain
+  title: Software-defined radio - ADC selection, digital down-conversion and clocking
+  category: architecture
+  from: RF Essentials
+  summary: 'An SDR pushes the analog/digital boundary toward the antenna, but the front end still decides what the firmware
+    can recover: filtering (often switched filter banks in wideband designs), LNA noise/linearity and the conversion scheme.
+    ADC choice should be made on ENOB and SFDR at the actual input frequency, not headline bits. After the ADC, an NCO-based
+    digital down-converter retunes instantly, and CIC plus FIR decimation narrows the band with processing gain. Sampling-clock
+    jitter degrades SNR more at higher input frequencies, so sub-100 fs clocks are standard, and switching-regulator ripple
+    appears as ADC spurs unless rails are filtered or linear.'
+  key_points:
+  - '~6 dB dynamic range per ENOB bit; examples: 10.25 GSPS 12-bit ~9.0 ENOB / 62 dBFS SFDR; 1.25 GSPS 14-bit ~11 ENOB / 82
+    dBFS'
+  - Sample at >= 2.5x signal bandwidth for anti-alias margin (200 MHz -> >= 500 MSPS, 800-1000 typical)
+  - 'Processing gain = 10*log10(decimation): 1 GSPS to a 25 kHz channel (x40,000) -> ~46 dB'
+  - 12-bit at 3 GSPS ~ 36 Gb/s over JESD204B/C; ADC ENOB falls 0.1-0.3 bit per 10 C
+  sources:
+  - title: 'Software-Defined Radio Architecture: From RF to Digital'
+    url: https://rfessentials.com/industry-news/signal-processing/software-defined-radio-architecture-rf-to-digital/
+- id: directional_couplers_matching
+  title: Directional couplers and impedance-matching networks
+  category: components
+  from: RF Essentials
+  summary: 'Directional couplers sample forward (and in dual-directional form, reflected) power for PA monitoring, DPD feedback,
+    VSWR alarms and VNA receivers; coupling factor sets how much is sampled while directivity sets how well forward and reflected
+    waves are separated, which dominates reflected-power accuracy. Matching networks transform a load to the system impedance:
+    a two-element L-network has its Q fixed by the impedance ratio, while three-element Pi and T networks let the designer
+    choose Q (bandwidth); the low-pass Pi is the usual PA output match because it also suppresses harmonics. Above a few GHz
+    distributed elements replace lumped parts, and real component parasitics, pad capacitance and tolerance stacking must
+    be simulated.'
+  key_points:
+  - 'L-network Q = sqrt(R_high/R_low - 1): 4:1 -> Q 1.73 (~58 % BW), 50:1 -> Q 7 (~14 %)'
+  - 'Coupler: 20 dB coupling + 35 dB directivity -> ~+/-0.1 dB forward-power accuracy; 15 dB directivity -> ~+/-0.5 dB'
+  - 'Coupling choice: 10 dB for TX monitoring / DPD feedback, 20 dB for high-power radar, 3 dB hybrids for balanced mixers
+    and monopulse comparators'
+  - Use C0G/NP0 capacitors in matching networks; 0402 pad adds ~0.1 pF
+  sources:
+  - title: Waveguide Directional Couplers
+    url: https://rfessentials.com/industry-news/component-spotlight/waveguide-directional-couplers/
+  - title: Impedance Matching Networks
+    url: https://rfessentials.com/industry-news/rf-design/impedance-matching-networks/
+- id: rf_measurement_basics
+  title: RF measurement basics - spectrum analyzer dynamic range, VNA, Y-factor noise figure
+  category: rf_specs
+  from: RF Essentials
+  summary: 'A spectrum analyzer''s usable range is bounded below by its displayed average noise level (which falls with narrower
+    RBW) and above by its first mixer''s intermodulation, with an optimum input attenuation of typically 5-10 dB; close-in
+    measurements are limited by its LO phase noise. A VNA separates incident and reflected/ transmitted waves with couplers
+    and coherent receivers and needs calibration (SOLT corrects 12 error terms; TRL is best on-wafer). Noise figure is measured
+    by the Y-factor method: a calibrated noise source switched between hot and cold, with second-stage correction when DUT
+    gain is low.'
+  key_points:
+  - Analyzer two-tone SFDR = 2/3 x (TOI - DANL in RBW); sweep time ~ span / RBW^2
+  - Y = P_hot/P_cold; F = ENR/(Y-1); F_DUT = F_total - (F_meter-1)/G_DUT; ENR 5-15 dB; best NF uncertainty +/-0.1-0.3 dB
+  - 'For sub-1 dB NF: low-ENR (5 dB) source and >= 20 dB DUT gain'
+  - VNA dynamic range 100-140 dB; trace noise ~0.002 dB RMS at 10 kHz IFBW
+  - 'Caution: the analyzer article''s claim that averaging N sweeps lowers the noise floor by 10*log(N) is not right - averaging
+    reduces noise variance, not the mean displayed noise level'
+  sources:
+  - title: Spectrum Analyzer Dynamic Range
+    url: https://rfessentials.com/industry-news/test-measurement/spectrum-analyzer-dynamic-range/
+  - title: Vector Network Analyzer (block diagram)
+    url: https://rfessentials.com/resources/block-diagrams/vector-network-analyzer/
+  - title: Noise Figure Measurement Setup (Y-Factor)
+    url: https://rfessentials.com/resources/block-diagrams/noise-figure-measurement/
+- id: lpwan_uwb_iot_links
+  title: IoT links - LoRa link budget and UWB ranging front ends
+  category: technology
+  from: RF Essentials
+  summary: LoRa reaches very long ranges because spreading lets the receiver work far below the noise floor, so the maximum
+    allowable path loss can exceed 160 dB; practical range is set by terrain, buildings and the radio horizon rather than
+    free-space loss. UWB ranging uses roughly 500 MHz channels in the 3.1-10.6 GHz band at a very low emission mask, giving
+    nanosecond timing and centimetre-class accuracy for two-way ranging, TDoA positioning and secure car access; range is
+    regulation-limited to about 3-10 m indoors and 10-30 m outdoors line-of-sight.
+  key_points:
+  - 'LoRa sensitivity: SF12/125 kHz ~-137 dBm, SF7 ~-123 dBm (~2.5 dB per SF step); TX +14 dBm EU 868, up to +30 dBm US 915'
+  - MAPL = Ptx + Gtx + Grx - sensitivity (20 + 2 + 6 + 137 = 165 dB); real range 5-15 km rural, 1-5 km urban (source's 100
+    km free-space figure is not meaningful)
+  - 'UWB: channels 5 (6489.6 MHz) and 9 (7987.2 MHz), 499.2 MHz BW, -41.3 dBm/MHz EIRP; LNA NF 3-5 dB; 5-10 cm accuracy'
+  - 'UWB AoA: 3-4 antennas at lambda/2 (~23 mm at 6.5 GHz)'
+  sources:
+  - title: 'KB: LoRa LPWAN link budget at the edge of coverage'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-link-budget-for-a-lora-lpwan-sensor-at-the-edge-of-coverage/
+  - title: 'KB: RF section of a UWB ranging device'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-section-of-a-uwb-ranging-device-for-precision-location-ap/

@@ -21,7 +21,7 @@ TI_NOTES_FILE = PROJECT_ROOT / "data" / "catalog" / "ti_appnotes.yaml"
 
 @dataclass
 class Hit:
-    source: str  # "Skyworks app note", "TI app note" or "BizDev note"
+    source: str  # "Skyworks app note", "TI app note", "BizDev note" or "RF note"
     ref: str  # AN number or note key
     title: str
     url: str
@@ -58,6 +58,11 @@ def _index() -> sqlite3.Connection:
     for key, (title, summary) in NOTES.items():
         body = (NOTES_DIR / f"{key}.html").read_text() if (NOTES_DIR / f"{key}.html").exists() else ""
         rows.append((title, f"{summary} {_strip_html(body)}", "BizDev note", key, f"/engineering/{key}", None))
+    from app.services import rf_notes
+
+    for t in rf_notes.topics():
+        text = " ".join([t["summary"], *(t.get("key_points") or [])])
+        rows.append((t["title"], text, "RF note", t["id"], f"/rf-notes#{t['id']}", None))
     db.executemany("INSERT INTO docs VALUES (?, ?, ?, ?, ?, ?)", rows)
     return db
 

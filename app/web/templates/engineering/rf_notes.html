@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}RF fundamentals – BizDev{% endblock %}
+{% block content %}
+<h1>RF fundamentals</h1>
+<p class="subtitle muted">Short engineering notes on RF specifications, components, architectures and technologies, written in our own words from public Mini-Circuits application notes and RF Essentials articles, with the sources' numbers and rules of thumb. Open a topic for its key points and sources; the <a href="/technical">knowledge search</a> finds them too.</p>
+
+<nav class="rf-toc small" aria-label="Topics">{% for k, label, items in groups if items %}
+  <div><b>{{ label }}</b>{% for t in items %}<a href="#{{ t.id }}">{{ t.title }}</a>{% endfor %}</div>{% endfor %}
+</nav>
+
+{% for k, label, items in groups if items %}
+<h2 id="cat-{{ k }}">{{ label }} <small class="muted">{{ items|length }}</small></h2>
+{% for t in items %}
+<details class="rf-note" id="{{ t.id }}">
+  <summary><b>{{ t.title }}</b> <small class="muted">· {{ t.from }}</small></summary>
+  <p>{{ t.summary }}</p>
+  {% if t.key_points %}<ul class="small">{% for p in t.key_points %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+  <p class="small muted">Sources: {% for s in t.sources %}<a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.title }} ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p>
+</details>
+{% endfor %}{% endfor %}
+<script>
+  // A link to #topic opens that note.
+  const openHash = () => { const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") { d.open = true; d.scrollIntoView(); } };
+  window.addEventListener("hashchange", openHash); openHash();
+</script>
+{% endblock %}

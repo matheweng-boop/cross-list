@@ -1,0 +1,1001 @@
+# Application / signal-chain block diagrams from RF Essentials (https://rfessentials.com), public pages only.
+# Site: RF Essentials, St. Petersburg FL - a US maker of waveguide / mmWave components that also publishes an open RF
+# engineering reference (block-diagram library, knowledge base, glossary, calculators, articles). robots.txt allows "/"
+# for all agents (disallows only /conductor/, /.gemini/, /content/); nothing here came from those paths.
+# See comparison.md for how these compare with the current library and tech_notes.yaml for the technical notes.
+#
+# How these were read: each /resources/block-diagrams/<slug>/ page embeds ONE inline SVG (no image file). The SVG was
+# extracted, rendered locally (Pillow) and viewed, and its <line>/<rect> geometry was dumped to check which box each
+# arrow touches. Groups below are the boxes in the figure, labelled in the figure's own words; "blocks" adds the page
+# text's description. The figures are generic textbook signal chains (no part numbers, no vendor) - architecture
+# references, not reference designs. Spec ranges in features come from each page's "Typical Specifications" table.
+#
+# Field notes (same conventions as ti_block_diagrams.yaml):
+#   links_basis      figure            = groups and links read from the rendered figure (arrows / lines drawn)
+#                    figure_corrected  = read from the figure, but one or more arrow directions in the figure are
+#                                        physically reversed or the layout is garbled; links here give the physical
+#                                        signal direction and the note says what was changed
+#                    inferred_from_text = the page has no block diagram; groups and links were inferred from the
+#                                        article's ordered prose description of the chain (no figure behind them)
+#   groups[].fn_hint BizDev function ids (data/blocks/functions.yaml). Waveguide/cavity filters are mapped to
+#                    filter_saw_baw (the library's generic RF filter id) - see comparison.md for the caveat.
+#   links            [from, to, label] ("" when unlabelled)
+#   features[]       design questions a user would answer; choices are options, not answers
+# Not included: "Noise Figure Measurement Setup (Y-Factor)" (4 boxes: noise source -> DUT -> power meter -> calc;
+# a bench setup, not an application signal chain). It is summarised in tech_notes.yaml instead.
+# Article hero images (/images/*.webp) were checked (2 of them): they are decorative photos, not diagrams.
+
+docs:
+  RFE-BD-INDEX: {title: "RF Block Diagram Library (index)", url: "https://rfessentials.com/resources/block-diagrams/"}
+  RFE-BD-SUPERHET: {title: "Superheterodyne Receiver", url: "https://rfessentials.com/resources/block-diagrams/superheterodyne-receiver/"}
+  RFE-BD-ZIF: {title: "Direct Conversion (Zero-IF) Receiver", url: "https://rfessentials.com/resources/block-diagrams/direct-conversion-receiver/"}
+  RFE-BD-TRX-CIRC2: {title: "TX/RX, Single Antenna (Circulator), Dual Stage Conversion", url: "https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-circulator-dual-stage/"}
+  RFE-BD-TRX-SPDT2: {title: "TX/RX, Single Antenna (SPDT), Dual Stage Conversion", url: "https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-dual-stage/"}
+  RFE-BD-TRX-SPDT1: {title: "TX/RX, Single Antenna (SPDT), Single Stage Conversion", url: "https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-single-stage/"}
+  RFE-BD-P2P: {title: "Point-to-Point Microwave Link (FDD)", url: "https://rfessentials.com/resources/block-diagrams/point-to-point-microwave-link/"}
+  RFE-BD-PHASED: {title: "Phased Array Beamforming Network", url: "https://rfessentials.com/resources/block-diagrams/phased-array-beamforming/"}
+  RFE-BD-PLL: {title: "PLL Frequency Synthesizer", url: "https://rfessentials.com/resources/block-diagrams/pll-frequency-synthesizer/"}
+  RFE-BD-PD: {title: "Pulse-Doppler Radar", url: "https://rfessentials.com/resources/block-diagrams/pulse-doppler-radar/"}
+  RFE-BD-MONO-PULSE: {title: "Monostatic Ranging Sensor (Pulsed)", url: "https://rfessentials.com/resources/block-diagrams/monostatic-ranging-sensor/"}
+  RFE-BD-FMCW: {title: "Monostatic Ranging Sensor (FMCW)", url: "https://rfessentials.com/resources/block-diagrams/monostatic-ranging-sensor-fmcw/"}
+  RFE-BD-MONO-CW: {title: "Monostatic Speed Sensor (CW Doppler)", url: "https://rfessentials.com/resources/block-diagrams/monostatic-speed-sensor/"}
+  RFE-BD-BI-PULSE: {title: "Bistatic Ranging Sensor", url: "https://rfessentials.com/resources/block-diagrams/bistatic-ranging-sensor/"}
+  RFE-BD-BI-CW: {title: "Bistatic Speed Sensor", url: "https://rfessentials.com/resources/block-diagrams/bistatic-speed-sensor/"}
+  RFE-BD-MONOPULSE: {title: "Monopulse Tracking Radar", url: "https://rfessentials.com/resources/block-diagrams/monopulse-tracking-radar/"}
+  RFE-BD-SAR: {title: "Synthetic Aperture Radar (SAR)", url: "https://rfessentials.com/resources/block-diagrams/synthetic-aperture-radar/"}
+  RFE-BD-GPR: {title: "Ground Penetrating Radar (GPR)", url: "https://rfessentials.com/resources/block-diagrams/ground-penetrating-radar/"}
+  RFE-BD-RWR: {title: "Radar Warning Receiver (RWR)", url: "https://rfessentials.com/resources/block-diagrams/radar-warning-receiver/"}
+  RFE-BD-DRFM: {title: "DRFM (Digital RF Memory) Jammer", url: "https://rfessentials.com/resources/block-diagrams/drfm-jammer/"}
+  RFE-BD-TPR: {title: "Total Power Heterodyne Receiver", url: "https://rfessentials.com/resources/block-diagrams/total-power-heterodyne-receiver/"}
+  RFE-BD-DICKE: {title: "Dicke Switching Radiometer", url: "https://rfessentials.com/resources/block-diagrams/dicke-switching-radiometer/"}
+  RFE-BD-CORR: {title: "Correlation Interferometer", url: "https://rfessentials.com/resources/block-diagrams/correlation-interferometer/"}
+  RFE-BD-SA: {title: "Spectrum Analyzer (swept-tuned)", url: "https://rfessentials.com/resources/block-diagrams/spectrum-analyzer/"}
+  RFE-BD-VNA: {title: "Vector Network Analyzer (VNA)", url: "https://rfessentials.com/resources/block-diagrams/vector-network-analyzer/"}
+  RFE-ART-AESA: {title: "AESA Radar TR Module Architecture", url: "https://rfessentials.com/industry-news/radar-defense/aesa-tr-module-architecture/", date: "2026-04-14"}
+  RFE-ART-FR2: {title: "FR2 mmWave Small Cell RF Front Ends: Architecture, Components, and the 28/39 GHz Hardware Stack", url: "https://rfessentials.com/industry-news/mmwave-5g/fr2-mmwave-small-cell-rf-front-end/", date: "2026-04-14"}
+  RFE-ART-BF39: {title: "Beamforming at 39 GHz: Analog vs. Digital vs. Hybrid Architectures", url: "https://rfessentials.com/industry-news/mmwave-5g/beamforming-39ghz-architectures/", date: "2026-05-08"}
+  RFE-ART-DPD: {title: "Digital Predistortion for RF Power Amplifiers", url: "https://rfessentials.com/industry-news/signal-processing/digital-predistortion-power-amplifiers/"}
+  RFE-ART-LEO: {title: "LEO Mega-Constellations and the Ground Segment Bottleneck", url: "https://rfessentials.com/industry-news/industry-trends/leo-constellations-ground-segment/"}
+  RFE-ART-RAIN: {title: "Ka-Band Rain Fade Mitigation for Satellite Ground Stations", url: "https://rfessentials.com/industry-news/satellite-space/ka-band-rain-fade-mitigation/"}
+  RFE-ART-EW: {title: "Electronic Warfare RF Architecture", url: "https://rfessentials.com/industry-news/radar-defense/electronic-warfare-rf-architecture/"}
+  RFE-ART-FMCW: {title: "FMCW Radar Signal Processing", url: "https://rfessentials.com/industry-news/radar-defense/fmcw-radar-range-velocity/"}
+  RFE-ART-SDR: {title: "Software-Defined Radio Architecture: From RF to Digital", url: "https://rfessentials.com/industry-news/signal-processing/software-defined-radio-architecture-rf-to-digital/", date: "2026-04-13"}
+  RFE-KB-WIFIFEM: {title: "How do I design a Wi-Fi front end module with integrated PA, LNA, and switch?", url: "https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-wi-fi-front-end-module-with-integrated-pa-lna-and-switch/"}
+  RFE-KB-WIFI7AP: {title: "How do I design the RF front end for a tri-band Wi-Fi 7 access point?", url: "https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-front-end-for-a-tri-band-wi-fi-7-access-point/"}
+  RFE-KB-MMWUE: {title: "How do I design a millimeter wave front end module for a 5G user equipment device?", url: "https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-millimeter-wave-front-end-module-for-a-5g-user-equipment-devic/"}
+
+applications:
+  # =========================================================================================================
+  # Communication receivers / transceivers (figures)
+  # =========================================================================================================
+  - id: superhet_receiver
+    name: Superheterodyne receiver (single conversion, preselector + image filter + IF channel filter + AGC)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-SUPERHET, url: "https://rfessentials.com/resources/block-diagrams/superheterodyne-receiver/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: preselector, label: "BPF (preselector)", blocks: [RF band-select filter], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: lna, label: "LNA (low noise)", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: image_filter, label: "Image reject filter", blocks: [image-reject BPF, 40-60 dB image rejection], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: lo, label: "LO", blocks: [local oscillator], source: "figure", fn_hint: [rf_synthesizer, crystal_oscillator]}
+      - {id: mixer, label: "Mixer (downconverter)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_filter, label: "IF BPF (channel)", blocks: [crystal / ceramic / SAW IF filter], source: "figure + page text", fn_hint: [filter_saw_baw]}
+      - {id: if_amp, label: "IF amp (AGC)", blocks: [IF amplifier with AGC, 40-80 dB gain], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: demod, label: "Demodulator (AM/FM/PM) -> audio/data out", blocks: [envelope detector / discriminator / IQ demodulator], source: "figure", fn_hint: [rf_mixer, soc]}
+    links:
+      - [antenna, preselector, "f_RF"]
+      - [preselector, lna, "f_RF"]
+      - [lna, image_filter, ""]
+      - [image_filter, mixer, ""]
+      - [lo, mixer, "LO"]
+      - [mixer, if_filter, "f_IF"]
+      - [if_filter, if_amp, "f_IF"]
+      - [if_amp, demod, ""]
+    features:
+      - {id: if_choice, question: "IF frequency plan", choices: ["high IF (easier image rejection)", "low IF (easier channel selectivity)", "dual conversion"], filters: "image-filter rejection, IF filter bandwidth (new)", source: "RFE-BD-SUPERHET design note"}
+      - {id: lna_nf, question: "LNA noise figure target", choices: ["0.5-1 dB", "1-2 dB", "2-3 dB"], filters: "nf_db", source: "spec table: 0.5-3.0 dB"}
+      - {id: if_filter_tech, question: "IF channel filter technology", choices: [crystal, ceramic, SAW], filters: "filter technology (new)", source: "page text"}
+
+  - id: zero_if_receiver
+    name: Direct-conversion (zero-IF) I/Q receiver with baseband VGAs and dual ADC
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-ZIF, url: "https://rfessentials.com/resources/block-diagrams/direct-conversion-receiver/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: rf_bpf, label: "BPF (RF filter)", blocks: [band-select filter], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: lo, label: "LO + 90 deg split", blocks: [LO at f_RF, 0/90 deg quadrature splitter], source: "figure", fn_hint: [rf_synthesizer, rf_passive]}
+      - {id: mixer_i, label: "Mixer I (in-phase)", blocks: [I mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: mixer_q, label: "Mixer Q (quadrature)", blocks: [Q mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: lpf_i, label: "LPF I channel", blocks: [baseband low-pass filter], source: "figure", fn_hint: [amplifier]}
+      - {id: lpf_q, label: "LPF Q channel", blocks: [baseband low-pass filter], source: "figure", fn_hint: [amplifier]}
+      - {id: vga_i, label: "VGA I gain", blocks: [baseband VGA], source: "figure", fn_hint: [amplifier, rf_gain_block]}
+      - {id: vga_q, label: "VGA Q gain", blocks: [baseband VGA], source: "figure", fn_hint: [amplifier, rf_gain_block]}
+      - {id: adc_i, label: "ADC I data", blocks: [ADC 12-16 bit, 50-500 MSPS], source: "figure + spec table", fn_hint: [adc]}
+      - {id: adc_q, label: "ADC Q data", blocks: [ADC], source: "figure", fn_hint: [adc]}
+      - {id: dsp, label: "DSP", blocks: [DSP (DC-offset and IQ calibration, channel filtering)], source: "figure + page text", fn_hint: [soc]}
+    links:
+      - [antenna, rf_bpf, ""]
+      - [rf_bpf, lna, ""]
+      - [lna, mixer_i, ""]
+      - [lna, mixer_q, ""]
+      - [lo, mixer_i, "0 deg"]
+      - [lo, mixer_q, "90 deg"]
+      - [mixer_i, lpf_i, ""]
+      - [mixer_q, lpf_q, ""]
+      - [lpf_i, vga_i, ""]
+      - [lpf_q, vga_q, ""]
+      - [vga_i, adc_i, ""]
+      - [vga_q, adc_q, ""]
+      - [adc_i, dsp, "I"]
+      - [adc_q, dsp, "Q"]
+    features:
+      - {id: iq_balance, question: "I/Q balance target (before digital correction)", choices: ["< 0.5 dB / < 2 deg", "tighter (calibrated)"], filters: "IQ amplitude / phase error (new)", source: "spec table"}
+      - {id: lo_pn, question: "LO phase noise at 100 kHz", choices: ["-90 dBc/Hz", "-100 dBc/Hz", "-110 dBc/Hz"], filters: "phase noise (new)", source: "spec table"}
+      - {id: adc_res, question: "ADC resolution", choices: ["12 bit", "14 bit", "16 bit"], filters: "adc resolution_bits", source: "spec table"}
+
+  - id: trx_circulator_dual_conversion
+    name: Full-duplex transceiver, single antenna via 3-port circulator, dual-conversion TX and RX
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-TRX-CIRC2, url: "https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-circulator-dual-stage/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: circulator, label: "Circulator (3-port)", blocks: [ferrite circulator, 20-30 dB TX-RX isolation, 0.3-0.8 dB IL], source: "figure + spec table", fn_hint: [circulator_isolator]}
+      - {id: lna, label: "LNA", blocks: [GaAs/InP pHEMT LNA, NF 0.5-3 dB], source: "figure + page text", fn_hint: [lna]}
+      - {id: rx_bpf, label: "BPF (RX)", blocks: [RF BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: mixer1, label: "Mixer 1 (1st down)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_amp, label: "IF amp + filter", blocks: [IF amplifier, IF filter], source: "figure", fn_hint: [rf_gain_block, filter_saw_baw]}
+      - {id: mixer2, label: "Mixer 2 (2nd down)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: bb_rx, label: "Baseband RX output", blocks: [baseband / ADC], source: "figure", fn_hint: [adc, soc]}
+      - {id: lo1, label: "LO 1", blocks: [LO1 synthesizer], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: lo2, label: "LO 2", blocks: [LO2 synthesizer], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: bb_tx, label: "Baseband TX input", blocks: [baseband / DAC], source: "figure", fn_hint: [dac, soc]}
+      - {id: mixer3, label: "Mixer 3 (1st up)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: driver, label: "Driver amp", blocks: [driver amplifier, P1dB +10..+20 dBm], source: "figure + spec table", fn_hint: [rf_gain_block, rf_predriver]}
+      - {id: mixer4, label: "Mixer 4 (2nd up)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: tx_bpf, label: "BPF (TX)", blocks: [RF BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: pa, label: "PA (power amp)", blocks: [PA +20..+40 dBm, PAE 20-50 %], source: "figure + spec table", fn_hint: [power_amplifier]}
+    links:
+      - [antenna, circulator, ""]
+      - [circulator, lna, "RX"]
+      - [lna, rx_bpf, "f_RF"]
+      - [rx_bpf, mixer1, ""]
+      - [lo1, mixer1, "LO1"]
+      - [mixer1, if_amp, "f_IF1"]
+      - [if_amp, mixer2, ""]
+      - [lo2, mixer2, "LO2"]
+      - [mixer2, bb_rx, "f_IF2"]
+      - [bb_tx, mixer3, ""]
+      - [lo2, mixer3, "LO2"]
+      - [mixer3, driver, ""]
+      - [driver, mixer4, ""]
+      - [lo1, mixer4, "LO1"]
+      - [mixer4, tx_bpf, ""]
+      - [tx_bpf, pa, ""]
+      - [pa, circulator, "TX"]
+    features:
+      - {id: duplex_method, question: "TX/RX antenna sharing", choices: ["circulator (full duplex, 20-30 dB isolation)", "SPDT switch (TDD, 30-50 dB)", "diplexer (FDD, >70 dB)"], filters: "isolation_db (new for circulator)", source: "RFE-BD-TRX-CIRC2 / -SPDT2 / -P2P spec tables"}
+      - {id: conversion, question: "Conversion stages", choices: ["single", "dual"], filters: "mixer count (new)", source: "design notes"}
+      - {id: mixer_lo_drive, question: "Mixer LO drive level", choices: ["+7 dBm", "+10 dBm", "+13 dBm"], filters: "lo drive (new)", source: "spec table"}
+
+  - id: trx_spdt_dual_conversion
+    name: TDD transceiver, single antenna via SPDT T/R switch, dual-conversion TX and RX
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-TRX-SPDT2, url: "https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-dual-stage/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: spdt, label: "SPDT switch", blocks: [GaAs MMIC SPDT, IL 0.5-1.5 dB, isolation 30-50 dB, 2-10 ns], source: "figure + spec table", fn_hint: [rf_switch]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: rx_bpf, label: "BPF (RX)", blocks: [BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: mixer1, label: "Mixer 1 (1st down)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_amp, label: "IF amp + filter", blocks: [IF amp, IF filter], source: "figure", fn_hint: [rf_gain_block, filter_saw_baw]}
+      - {id: mixer2, label: "Mixer 2 (2nd down)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: bb_rx, label: "Baseband RX output", blocks: [baseband], source: "figure", fn_hint: [adc, soc]}
+      - {id: lo1, label: "LO 1", blocks: [LO1], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: lo2, label: "LO 2", blocks: [LO2], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: bb_tx, label: "Baseband TX input", blocks: [baseband], source: "figure", fn_hint: [dac, soc]}
+      - {id: mixer3, label: "Mixer 3 (1st up)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: driver, label: "Driver amp", blocks: [driver], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: mixer4, label: "Mixer 4 (2nd up)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: tx_bpf, label: "BPF (TX)", blocks: [BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: pa, label: "PA", blocks: [PA +20..+40 dBm], source: "figure", fn_hint: [power_amplifier]}
+    links:
+      - [antenna, spdt, ""]
+      - [spdt, lna, "RX"]
+      - [lna, rx_bpf, ""]
+      - [rx_bpf, mixer1, ""]
+      - [lo1, mixer1, "LO1"]
+      - [mixer1, if_amp, ""]
+      - [if_amp, mixer2, ""]
+      - [lo2, mixer2, "LO2"]
+      - [mixer2, bb_rx, ""]
+      - [bb_tx, mixer3, ""]
+      - [lo2, mixer3, "LO2 (drawn as 'LO 2' tick)"]
+      - [mixer3, driver, ""]
+      - [driver, mixer4, ""]
+      - [lo1, mixer4, "LO1 (drawn as 'LO 1' tick)"]
+      - [mixer4, tx_bpf, ""]
+      - [tx_bpf, pa, ""]
+      - [pa, spdt, "TX"]
+    features:
+      - {id: switch_tech, question: "T/R switch technology", choices: ["GaAs MMIC", "SOI CMOS", "PIN diode"], filters: "rf_switch technology (new)", source: "page text (GaAs MMIC)"}
+      - {id: switch_il, question: "Switch insertion loss budget", choices: ["< 0.5 dB", "0.5-1 dB", "1-1.5 dB"], filters: "insertion_loss_db", source: "spec table; design note: switch IL adds directly to NF and subtracts from Pout"}
+
+  - id: trx_spdt_single_conversion
+    name: TDD transceiver, single antenna via SPDT, single-conversion with shared LO
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-TRX-SPDT1, url: "https://rfessentials.com/resources/block-diagrams/txrx-single-antenna-spdt-single-stage/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: spdt, label: "SPDT switch", blocks: [SPDT T/R switch], source: "figure", fn_hint: [rf_switch]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: rx_bpf, label: "BPF (RX, also image reject)", blocks: [BPF], source: "figure + design note", fn_hint: [filter_saw_baw]}
+      - {id: rx_mixer, label: "Mixer (downconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_amp, label: "IF amp", blocks: [IF amplifier], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: bb_rx, label: "Baseband RX output", blocks: [baseband], source: "figure", fn_hint: [adc, soc]}
+      - {id: lo, label: "LO (shared TX/RX)", blocks: [synthesizer / PLL / VCO], source: "figure + page text", fn_hint: [rf_synthesizer]}
+      - {id: bb_tx, label: "Baseband TX input", blocks: [baseband], source: "figure", fn_hint: [dac, soc]}
+      - {id: driver, label: "Driver amp", blocks: [driver], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: tx_mixer, label: "Mixer (upconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: tx_bpf, label: "BPF (TX)", blocks: [BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: pa, label: "PA", blocks: [PA +20..+37 dBm], source: "figure + spec table", fn_hint: [power_amplifier]}
+    links:
+      - [antenna, spdt, ""]
+      - [spdt, lna, "RX"]
+      - [lna, rx_bpf, ""]
+      - [rx_bpf, rx_mixer, ""]
+      - [lo, rx_mixer, "LO"]
+      - [rx_mixer, if_amp, ""]
+      - [if_amp, bb_rx, ""]
+      - [bb_tx, driver, ""]
+      - [driver, tx_mixer, ""]
+      - [lo, tx_mixer, "LO"]
+      - [tx_mixer, tx_bpf, ""]
+      - [tx_bpf, pa, ""]
+      - [pa, spdt, "TX"]
+    features:
+      - {id: image_margin, question: "Is the IF high enough for the RF BPF to reject the image?", choices: [yes, "no -> dual conversion"], filters: "filter rejection at f_image (new)", source: "design note example: RF 28 GHz, IF 2 GHz, image 24 GHz"}
+
+  - id: p2p_microwave_link_fdd
+    name: Point-to-point microwave link terminal (FDD, diplexer, up/down-conversion to IF)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-P2P, url: "https://rfessentials.com/resources/block-diagrams/point-to-point-microwave-link/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [high-gain antenna 30-45 dBi], source: "figure + spec table", fn_hint: [antenna]}
+      - {id: diplexer, label: "Diplexer (TX/RX)", blocks: [diplexer, TX-RX isolation > 70 dB], source: "figure + spec table", fn_hint: [diplexer]}
+      - {id: lna, label: "LNA", blocks: [LNA NF 1.5-3.5 dB], source: "figure", fn_hint: [lna]}
+      - {id: rx_mixer, label: "Mixer (downconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: rx_lo, label: "RX LO", blocks: [RX synthesizer], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: if_out, label: "IF out (RX data)", blocks: [IF to modem], source: "figure", fn_hint: [external_block]}
+      - {id: if_in, label: "IF in (TX data)", blocks: [IF from modem], source: "figure", fn_hint: [external_block]}
+      - {id: tx_mixer, label: "Mixer (upconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: tx_lo, label: "TX LO", blocks: [TX synthesizer], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: pa, label: "PA", blocks: [PA +20..+33 dBm], source: "figure + spec table", fn_hint: [power_amplifier]}
+      - {id: far_end, label: "Far-end terminal (TX f2 / RX f1)", blocks: [identical terminal, reversed frequencies], source: "figure", fn_hint: [external_block]}
+    links:
+      - [antenna, diplexer, ""]
+      - [diplexer, lna, "RX"]
+      - [lna, rx_mixer, ""]
+      - [rx_lo, rx_mixer, "LO"]
+      - [rx_mixer, if_out, "RX data"]
+      - [if_in, tx_mixer, "TX data"]
+      - [tx_lo, tx_mixer, "LO"]
+      - [tx_mixer, pa, ""]
+      - [pa, diplexer, "TX"]
+      - [antenna, far_end, "free-space path"]
+    note: "The figure draws the IF IN / TX arrows pointing towards IF IN (right-to-left on both rows); the physical TX direction (IF in -> mixer -> PA -> diplexer) is used here. Figure has no TX/RX filters besides the diplexer and no driver stage."
+    features:
+      - {id: band, question: "Frequency band", choices: ["6-23 GHz (10-50 km)", "23-42 GHz", "E-band 71-86 GHz"], filters: "frequency range", source: "spec table + link-budget text"}
+      - {id: rain_margin, question: "Availability target / rain margin", choices: ["99.99 %", "99.999 % (30-40 dB margin)"], filters: "PA output power, antenna gain (new)", source: "design note"}
+      - {id: acm, question: "Adaptive modulation", choices: [yes, no], filters: "PA linearity (new)", source: "design note"}
+
+  - id: phased_array_tr_beamforming
+    name: Phased-array beamforming network (per-element phase shifter + PA/LNA + T/R switch, beam controller)
+    links_basis: figure_corrected
+    sources:
+      - {doc: RFE-BD-PHASED, url: "https://rfessentials.com/resources/block-diagrams/phased-array-beamforming/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: beam_ctrl, label: "Beam controller", blocks: [beam steering controller, SPI / serial phase-state bus], source: "figure + page text", fn_hint: [mcu, soc]}
+      - {id: phase_shift, label: "Phase shifter (element 1..N)", blocks: [digital phase shifter 5-7 bit, IL 3-8 dB], source: "figure + spec table", fn_hint: [rf_phase_shifter, beamformer_ic]}
+      - {id: pa, label: "PA (per element)", blocks: [PA +10..+30 dBm per element], source: "figure + spec table", fn_hint: [power_amplifier]}
+      - {id: lna, label: "LNA (per element)", blocks: [LNA NF 1.5-3.5 dB], source: "figure + spec table", fn_hint: [lna]}
+      - {id: tr_switch, label: "T/R switch (per element)", blocks: [T/R switch], source: "figure", fn_hint: [rf_switch]}
+      - {id: antenna, label: "Antenna elements 1..N", blocks: [N radiating elements, spacing < lambda/2], source: "figure + design note", fn_hint: [antenna]}
+    links:
+      - [beam_ctrl, phase_shift, "phase states"]
+      - [phase_shift, pa, "TX"]
+      - [pa, tr_switch, "TX"]
+      - [tr_switch, lna, "RX"]
+      - [lna, phase_shift, "RX"]
+      - [tr_switch, antenna, ""]
+    note: "Figure draws each row as a single series chain PHASE SHIFT -> PA -> LNA -> T/R SW -> ANT (arrows left-to-right), i.e. PA and LNA in series. That is not a working T/R module; the page text says each element has a PA for TX and an LNA for RX selected by the T/R switch. Links above use the physical arrangement (PA and LNA on separate paths of the T/R switch). Phased-array spec table lists '5-7 bits (5.6 - 1.4 deg)'; 5 bits is 11.25 deg, 7 bits 2.8 deg."
+    features:
+      - {id: elements, question: "Array size", choices: ["16-64", "256", "1024-4096"], filters: "element count (new)", source: "spec table 16-4096"}
+      - {id: ps_bits, question: "Phase-shifter resolution", choices: ["5 bit", "6 bit", "7 bit"], filters: "phase bits (new)", source: "spec table"}
+      - {id: pa_tech, question: "Element PA technology", choices: ["GaN-on-SiC (radar)", "SiGe BFIC (commercial 5G)"], filters: "technology (new)", source: "design note"}
+
+  - id: pll_synthesizer
+    name: PLL frequency synthesizer (crystal reference, /R, PFD + charge pump, loop filter, VCO, /N)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-PLL, url: "https://rfessentials.com/resources/block-diagrams/pll-frequency-synthesizer/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: ref, label: "Reference (XTAL OSC 10 / 100 MHz)", blocks: [TCXO / OCXO reference], source: "figure", fn_hint: [crystal_oscillator]}
+      - {id: r_div, label: "/R reference divider", blocks: [reference divider], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: pfd, label: "PFD (phase/frequency detector) + charge pump", blocks: [PFD, charge pump], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: loop_filter, label: "LPF (loop filter) -> V_tune", blocks: [passive / active loop filter], source: "figure", fn_hint: [rf_passive]}
+      - {id: vco, label: "VCO", blocks: [VCO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: n_div, label: "/N feedback divider (integer or fractional)", blocks: [N divider, sigma-delta for frac-N], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: out, label: "Output f_out = f_ref x N/R", blocks: [LO output], source: "figure", fn_hint: [rf_gain_block, frequency_multiplier]}
+    links:
+      - [ref, r_div, ""]
+      - [r_div, pfd, "f_ref/R"]
+      - [pfd, loop_filter, ""]
+      - [loop_filter, vco, "V_tune"]
+      - [vco, out, "f_out"]
+      - [vco, n_div, ""]
+      - [n_div, pfd, "f_out/N"]
+    features:
+      - {id: pll_type, question: "Integer-N or fractional-N", choices: ["integer-N (cleanest spurs)", "fractional-N (fine steps, faster lock)"], filters: "synthesizer type (new)", source: "RFE-BD-PLL + frequency-synthesis article"}
+      - {id: f_out, question: "Output frequency", choices: ["< 6 GHz", "6-20 GHz", "> 20 GHz (or multiply up)"], filters: "frequency range", source: "spec table 100 MHz - 40+ GHz"}
+      - {id: loop_bw, question: "Loop bandwidth priority", choices: ["lock speed", "lowest close-in phase noise", "lowest reference spurs"], filters: "(design choice)", source: "design note"}
+
+  # =========================================================================================================
+  # Radar (figures)
+  # =========================================================================================================
+  - id: pulse_doppler_radar
+    name: Coherent pulse-Doppler radar (STALO + COHO, T/R switch, range gates + Doppler FFT)
+    links_basis: figure_corrected
+    sources:
+      - {doc: RFE-BD-PD, url: "https://rfessentials.com/resources/block-diagrams/pulse-doppler-radar/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: tr_switch, label: "T/R switch", blocks: [T/R switch / duplexer], source: "figure", fn_hint: [rf_switch, circulator_isolator, rf_limiter]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer (coherent)", blocks: [coherent downconverter], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_amp, label: "IF amp", blocks: [IF amplifier], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: adc, label: "A/D (sample)", blocks: [ADC], source: "figure", fn_hint: [adc]}
+      - {id: range_gates, label: "Range gates (time-domain binning per PRI)", blocks: [range gating], source: "figure", fn_hint: [soc]}
+      - {id: doppler_fft, label: "FFT (per range bin Doppler)", blocks: [Doppler FFT, clutter filtering], source: "figure", fn_hint: [soc]}
+      - {id: stalo, label: "STALO (stable LO)", blocks: [STALO, phase noise -100..-120 dBc/Hz @ 10 kHz], source: "figure + spec table", fn_hint: [rf_synthesizer, crystal_oscillator]}
+      - {id: coho, label: "COHO (coherent oscillator)", blocks: [COHO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: pulse_mod, label: "Pulse modulator", blocks: [pulse modulator], source: "figure", fn_hint: [rf_switch, pin_diode]}
+      - {id: pa, label: "PA (high power)", blocks: [PA +40..+60 dBm peak], source: "figure + spec table", fn_hint: [power_amplifier]}
+    links:
+      - [antenna, tr_switch, ""]
+      - [tr_switch, lna, "RX"]
+      - [lna, mixer, ""]
+      - [mixer, if_amp, ""]
+      - [if_amp, adc, ""]
+      - [adc, range_gates, ""]
+      - [range_gates, doppler_fft, ""]
+      - [stalo, mixer, "coherent LO (phase reference)"]
+      - [stalo, coho, ""]
+      - [coho, pulse_mod, ""]
+      - [pulse_mod, pa, ""]
+      - [pa, tr_switch, "TX pulse to T/R"]
+    note: "In the figure the lower row's arrows point PA -> PULSE MOD -> COHO -> STALO (right to left), which is the reverse of the physical transmit flow; the page text says STALO/COHO provide the frequency/phase reference for the transmitted pulses. Links above use the physical direction (oscillators -> modulator -> PA). The figure does not draw the TX upconversion mixer that combines STALO and COHO."
+    features:
+      - {id: prf, question: "PRF regime", choices: ["low PRF (unambiguous range)", "medium PRF", "high PRF (unambiguous velocity)"], filters: "(system choice)", source: "design note"}
+      - {id: stalo_pn, question: "STALO phase noise at 10 kHz", choices: ["-100 dBc/Hz", "-110 dBc/Hz", "-120 dBc/Hz"], filters: "phase noise (new)", source: "spec table"}
+      - {id: peak_power, question: "PA peak power", choices: ["10 W", "100 W", "1 kW"], filters: "psat_dbm", source: "spec table +40..+60 dBm"}
+
+  - id: pulsed_ranging_radar
+    name: Monostatic pulsed ranging radar (T/R switch, pulse-modulated oscillator, envelope detection + timing)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-MONO-PULSE, url: "https://rfessentials.com/resources/block-diagrams/monostatic-ranging-sensor/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: tr_switch, label: "T/R switch", blocks: [fast T/R switch, recovery 10-100 ns], source: "figure + spec table", fn_hint: [rf_switch, rf_limiter]}
+      - {id: lna, label: "LNA", blocks: [LNA NF 1-3.5 dB], source: "figure", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer (downconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: lo, label: "LO", blocks: [LO (tapped from oscillator)], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: if_amp, label: "IF amp + filter", blocks: [IF amp, IF filter], source: "figure", fn_hint: [rf_gain_block, filter_saw_baw]}
+      - {id: det, label: "Detector (envelope)", blocks: [envelope detector], source: "figure", fn_hint: [schottky_diode]}
+      - {id: timing, label: "Timing (range processor)", blocks: [time-of-flight processor], source: "figure", fn_hint: [soc, mcu]}
+      - {id: osc, label: "Oscillator (source)", blocks: [oscillator 9.4-77 GHz], source: "figure + spec table", fn_hint: [rf_synthesizer]}
+      - {id: pulse_mod, label: "Pulse modulator", blocks: [pulse modulator], source: "figure", fn_hint: [rf_switch, pin_diode]}
+      - {id: pa, label: "PA", blocks: [PA +30..+50 dBm peak], source: "figure + spec table", fn_hint: [power_amplifier]}
+    links:
+      - [antenna, tr_switch, ""]
+      - [tr_switch, lna, "RX"]
+      - [lna, mixer, ""]
+      - [lo, mixer, "LO"]
+      - [mixer, if_amp, ""]
+      - [if_amp, det, ""]
+      - [det, timing, ""]
+      - [osc, pulse_mod, ""]
+      - [pulse_mod, pa, ""]
+      - [pa, tr_switch, "TX"]
+      - [osc, mixer, "LO tap"]
+    note: "Figure draws both a separate LO box above the mixer and an 'LO TAP' line from the oscillator to the mixer; both kept. The spec table's 'Range resolution 1.5 m per us' is wrong (c*tau/2 = 150 m per microsecond of pulse width)."
+    features:
+      - {id: pulse_width, question: "Pulse width", choices: ["10-100 ns", "0.1-1 us", "1-10 us"], filters: "(system choice; sets range resolution and minimum range)", source: "spec table + design note"}
+      - {id: tr_device, question: "T/R protection device", choices: ["PIN switch", "circulator + limiter"], filters: "rf_switch / rf_limiter (new)", source: "page text"}
+
+  - id: fmcw_ranging_radar
+    name: Monostatic FMCW ranging radar (ramp-driven VCO, circulator, dechirp mixer, beat LPF, ADC, range FFT)
+    links_basis: figure_corrected
+    sources:
+      - {doc: RFE-BD-FMCW, url: "https://rfessentials.com/resources/block-diagrams/monostatic-ranging-sensor-fmcw/", pages: "inline SVG + walkthrough + spec table"}
+      - {doc: RFE-ART-FMCW, url: "https://rfessentials.com/industry-news/radar-defense/fmcw-radar-range-velocity/", pages: "'The RF Front End' and 'Signal Processing Pipeline' sections"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: circ, label: "Circulator (3-port)", blocks: [circulator], source: "figure", fn_hint: [circulator_isolator]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer (dechirp)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: lpf, label: "LPF (beat)", blocks: [beat-frequency low-pass], source: "figure", fn_hint: [amplifier]}
+      - {id: if_amp, label: "Amp (IF gain)", blocks: [IF amplifier], source: "figure", fn_hint: [amplifier, rf_gain_block]}
+      - {id: adc, label: "ADC (sample)", blocks: [ADC 1-100 MSPS], source: "figure + spec table", fn_hint: [adc]}
+      - {id: fft, label: "FFT (range)", blocks: [range FFT, Doppler FFT, CFAR], source: "figure + article", fn_hint: [soc]}
+      - {id: ramp, label: "Ramp gen (triangle)", blocks: [ramp generator / PLL chirp control], source: "figure + design note", fn_hint: [rf_synthesizer, dac]}
+      - {id: vco, label: "VCO (swept)", blocks: [VCO 24-77 GHz], source: "figure + spec table", fn_hint: [rf_synthesizer]}
+      - {id: pa, label: "PA (not drawn; from article)", blocks: [PA 10-13 dBm at 77 GHz], source: "RFE-ART-FMCW text only", fn_hint: [power_amplifier]}
+    links:
+      - [antenna, circ, ""]
+      - [circ, lna, "RX"]
+      - [lna, mixer, ""]
+      - [mixer, lpf, ""]
+      - [lpf, if_amp, ""]
+      - [if_amp, adc, ""]
+      - [adc, fft, ""]
+      - [ramp, vco, ""]
+      - [vco, pa, "TX (PA from article; figure goes VCO -> circulator)"]
+      - [pa, circ, "TX"]
+      - [vco, mixer, "LO tap"]
+    note: "In the figure the mixer's LO line runs into the 'frequency vs time' inset rather than to the VCO, and the 'LO TAP (delayed by round trip)' label overlaps the ramp-to-VCO arrow; the LO tap from the VCO to the mixer is taken from the page text. Article worked example says a 50 m target gives a 33.3 kHz beat at 100 MHz/us chirp slope; the correct value is 33.3 MHz (f_beat = 2*R*S/c)."
+    features:
+      - {id: band, question: "Operating band", choices: ["24 GHz", "60 GHz", "77-81 GHz"], filters: "frequency range", source: "spec table + article"}
+      - {id: chirp_bw, question: "Chirp bandwidth (range resolution c/2B)", choices: ["200 MHz (75 cm)", "1 GHz (15 cm)", "4 GHz (3.75 cm)"], filters: "(system choice)", source: "spec table + design note"}
+      - {id: chirp_gen, question: "Chirp generation", choices: ["open-loop VCO", "PLL / fractional-N chirp"], filters: "rf_synthesizer type (new)", source: "design note"}
+
+  - id: cw_doppler_speed_sensor
+    name: Monostatic CW Doppler speed sensor (CW source, circulator, LO-tap mixer, Doppler LPF, DSP)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-MONO-CW, url: "https://rfessentials.com/resources/block-diagrams/monostatic-speed-sensor/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna (to target)", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: circ, label: "Circulator (3-port)", blocks: [circulator, 20-30 dB isolation], source: "figure + spec table", fn_hint: [circulator_isolator]}
+      - {id: lna, label: "LNA", blocks: [LNA NF 1-3 dB, gain 15-25 dB], source: "figure + spec table", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer", blocks: [mixer, CL 6-10 dB], source: "figure + spec table", fn_hint: [rf_mixer]}
+      - {id: lpf, label: "LPF (Doppler)", blocks: [Doppler LPF 10 Hz - 50 kHz], source: "figure + spec table", fn_hint: [amplifier]}
+      - {id: amp, label: "Amp (IF gain)", blocks: [audio/IF amplifier], source: "figure", fn_hint: [amplifier]}
+      - {id: dsp, label: "DSP (frequency counter) -> velocity", blocks: [FFT / counter], source: "figure", fn_hint: [mcu, soc]}
+      - {id: cw_source, label: "CW source (oscillator)", blocks: [Gunn / DRO / synthesizer, +5..+20 dBm], source: "figure + page text", fn_hint: [rf_synthesizer]}
+    links:
+      - [antenna, circ, ""]
+      - [circ, lna, "RX"]
+      - [lna, mixer, ""]
+      - [mixer, lpf, ""]
+      - [lpf, amp, ""]
+      - [amp, dsp, ""]
+      - [cw_source, circ, "TX"]
+      - [cw_source, mixer, "LO tap"]
+    features:
+      - {id: band, question: "Band", choices: ["10.5 GHz", "24 GHz", "77 GHz"], filters: "frequency range", source: "spec table 10-77 GHz"}
+      - {id: leakage, question: "TX leakage mitigation", choices: ["high-isolation circulator", "leakage cancellation", "bistatic antennas"], filters: "isolation_db (new)", source: "design note + bistatic page"}
+
+  - id: bistatic_pulsed_ranging
+    name: Bistatic pulsed ranging radar (separate TX and RX antennas, no T/R switch)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-BI-PULSE, url: "https://rfessentials.com/resources/block-diagrams/bistatic-ranging-sensor/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: tx_ant, label: "TX antenna", blocks: [TX antenna], source: "figure", fn_hint: [antenna]}
+      - {id: pa, label: "PA", blocks: [PA +30..+50 dBm], source: "figure", fn_hint: [power_amplifier]}
+      - {id: pulse_mod, label: "Pulse modulator", blocks: [pulse modulator], source: "figure", fn_hint: [rf_switch, pin_diode]}
+      - {id: osc, label: "Oscillator (source)", blocks: [oscillator], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: rx_ant, label: "RX antenna", blocks: [RX antenna], source: "figure", fn_hint: [antenna]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer (downconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_amp, label: "IF amp", blocks: [IF amp], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: det, label: "Detector (envelope)", blocks: [envelope detector], source: "figure", fn_hint: [schottky_diode]}
+      - {id: timing, label: "Timing (range proc)", blocks: [range processor], source: "figure", fn_hint: [soc]}
+    links:
+      - [osc, pulse_mod, ""]
+      - [pulse_mod, pa, ""]
+      - [pa, tx_ant, ""]
+      - [osc, mixer, "LO tap"]
+      - [rx_ant, lna, ""]
+      - [lna, mixer, ""]
+      - [mixer, if_amp, ""]
+      - [if_amp, det, ""]
+      - [det, timing, ""]
+    features:
+      - {id: isolation, question: "TX-RX antenna isolation", choices: ["40 dB", "50 dB", "60 dB"], filters: "(installation choice)", source: "spec table"}
+
+  - id: bistatic_cw_doppler
+    name: Bistatic CW Doppler speed sensor (separate TX / RX antennas, LO tap, Doppler LPF, DSP)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-BI-CW, url: "https://rfessentials.com/resources/block-diagrams/bistatic-speed-sensor/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: tx_ant, label: "TX antenna", blocks: [TX antenna], source: "figure", fn_hint: [antenna]}
+      - {id: cw_source, label: "CW source (oscillator)", blocks: [oscillator, +5..+20 dBm, optional PA], source: "figure + page text", fn_hint: [rf_synthesizer, power_amplifier]}
+      - {id: rx_ant, label: "RX antenna", blocks: [RX antenna], source: "figure", fn_hint: [antenna]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: lpf, label: "LPF (Doppler)", blocks: [LPF], source: "figure", fn_hint: [amplifier]}
+      - {id: amp, label: "Amp (IF gain)", blocks: [amplifier], source: "figure", fn_hint: [amplifier]}
+      - {id: dsp, label: "DSP (frequency counter)", blocks: [DSP], source: "figure", fn_hint: [mcu, soc]}
+    links:
+      - [cw_source, tx_ant, "TX"]
+      - [cw_source, mixer, "LO tap"]
+      - [rx_ant, lna, ""]
+      - [lna, mixer, ""]
+      - [mixer, lpf, ""]
+      - [lpf, amp, ""]
+      - [amp, dsp, ""]
+    features: []
+
+  - id: monopulse_tracking_radar
+    name: Monopulse tracking radar receiver (4-horn feed, hybrid comparator, 3 receive channels, angle error to servo)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-MONOPULSE, url: "https://rfessentials.com/resources/block-diagrams/monopulse-tracking-radar/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: horns, label: "Horns A-D (2x2 feed cluster)", blocks: [4 feed horns], source: "figure", fn_hint: [antenna]}
+      - {id: comparator, label: "Hybrid comparator (magic-tee network)", blocks: [magic tees / hybrid couplers], source: "figure + page text", fn_hint: [rf_passive]}
+      - {id: lna_sum, label: "LNA (sum)", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: lna_daz, label: "LNA (delta AZ)", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: lna_del, label: "LNA (delta EL)", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: lo, label: "LO (common to 3 mixers)", blocks: [LO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: mix, label: "Mixers (sum, dAZ, dEL)", blocks: [3 phase-matched mixers], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if, label: "IF (sum, dAZ, dEL)", blocks: [3 IF amplifiers], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: err_az, label: "dAZ / sum (AZ error)", blocks: [ratio detector], source: "figure", fn_hint: [soc]}
+      - {id: err_el, label: "dEL / sum (EL error)", blocks: [ratio detector], source: "figure", fn_hint: [soc]}
+      - {id: servo, label: "Servo (antenna drive)", blocks: [antenna servo], source: "figure", fn_hint: [external_block]}
+    links:
+      - [horns, comparator, "A, B, C, D"]
+      - [comparator, lna_sum, "sum"]
+      - [comparator, lna_daz, "delta AZ"]
+      - [comparator, lna_del, "delta EL"]
+      - [lna_sum, mix, ""]
+      - [lna_daz, mix, ""]
+      - [lna_del, mix, ""]
+      - [lo, mix, "LO"]
+      - [mix, if, ""]
+      - [if, err_az, "sum, dAZ"]
+      - [if, err_el, "sum, dEL"]
+      - [err_az, servo, ""]
+      - [err_el, servo, ""]
+    note: "Receive-only figure; no transmitter drawn. Three channels collapsed to one group per stage here (the figure draws 3 rows)."
+    features:
+      - {id: channels, question: "Receive channels", choices: ["3 (sum, dAZ, dEL)", "2 (multiplexed difference)"], filters: "(system choice)", source: "spec table"}
+
+  - id: sar_radar
+    name: Synthetic aperture radar (chirp generator + PA, T/R switch, I/Q receiver, range + azimuth compression, IMU/GPS motion compensation)
+    links_basis: figure_corrected
+    sources:
+      - {doc: RFE-BD-SAR, url: "https://rfessentials.com/resources/block-diagrams/synthetic-aperture-radar/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna (side-looking)", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: tr_switch, label: "T/R switch", blocks: [T/R switch], source: "figure", fn_hint: [rf_switch, circulator_isolator]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: mixer, label: "Mixer (demod)", blocks: [I/Q demodulator], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if, label: "IF (matched filter)", blocks: [IF amplifier / filter], source: "figure", fn_hint: [rf_gain_block, filter_saw_baw]}
+      - {id: adc, label: "ADC (I/Q)", blocks: [ADC], source: "figure", fn_hint: [adc]}
+      - {id: range_comp, label: "Range compression (pulse compression)", blocks: [matched filter], source: "figure", fn_hint: [soc]}
+      - {id: az_comp, label: "Azimuth compression (synthetic aperture)", blocks: [azimuth processor], source: "figure", fn_hint: [soc]}
+      - {id: img, label: "Image output", blocks: [image], source: "figure", fn_hint: [external_block]}
+      - {id: chirp, label: "Chirp generator (waveform)", blocks: [LFM chirp, DDS / AWG], source: "figure", fn_hint: [dac, rf_synthesizer]}
+      - {id: pa, label: "PA (high power)", blocks: [PA +40..+55 dBm], source: "figure + spec table", fn_hint: [power_amplifier]}
+      - {id: imu, label: "IMU / GPS (motion data)", blocks: [IMU, GNSS], source: "figure", fn_hint: [external_block]}
+    links:
+      - [antenna, tr_switch, ""]
+      - [tr_switch, lna, "RX"]
+      - [lna, mixer, ""]
+      - [mixer, if, ""]
+      - [if, adc, ""]
+      - [adc, range_comp, ""]
+      - [range_comp, az_comp, ""]
+      - [az_comp, img, ""]
+      - [chirp, pa, ""]
+      - [pa, tr_switch, "TX"]
+      - [chirp, mixer, "LO / reference"]
+      - [imu, az_comp, "motion compensation"]
+    note: "Figure draws an arrow PA -> CHIRP GEN, the TX line from CHIRP GEN to the T/R switch, and the 'LO' line from the mixer to the PA; that is physically reversed. Links above use chirp generator -> PA -> T/R switch and a reference/LO from the waveform chain to the mixer."
+    features:
+      - {id: band, question: "Band", choices: ["L (1.2 GHz)", "C", "X", "Ka (35 GHz)"], filters: "frequency range", source: "spec table"}
+      - {id: chirp_bw, question: "Chirp bandwidth", choices: ["10 MHz", "500 MHz (30 cm)", "2 GHz"], filters: "(system choice)", source: "spec table + page text"}
+
+  - id: gpr_impulse
+    name: Ground-penetrating radar (UWB impulse, bowtie antennas, equivalent-time T/H sampling, stacking)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-GPR, url: "https://rfessentials.com/resources/block-diagrams/ground-penetrating-radar/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: pulse_gen, label: "Pulse generator (500 ps - 5 ns)", blocks: [impulse generator], source: "figure", fn_hint: [external_block]}
+      - {id: tx_ant, label: "TX antenna (bowtie)", blocks: [bowtie / Vivaldi], source: "figure", fn_hint: [antenna]}
+      - {id: rx_ant, label: "RX antenna (bowtie)", blocks: [bowtie / Vivaldi], source: "figure", fn_hint: [antenna]}
+      - {id: lna, label: "LNA (wideband)", blocks: [wideband LNA], source: "figure", fn_hint: [lna]}
+      - {id: th, label: "T/H sample (equivalent time)", blocks: [track-and-hold sampler], source: "figure", fn_hint: [adc]}
+      - {id: adc, label: "ADC (high res)", blocks: [ADC], source: "figure", fn_hint: [adc]}
+      - {id: stack, label: "Stack (average)", blocks: [trace averaging 16-2048], source: "figure + spec table", fn_hint: [soc]}
+      - {id: display, label: "Display (B-scan)", blocks: [display], source: "figure", fn_hint: [display]}
+    links:
+      - [pulse_gen, tx_ant, ""]
+      - [pulse_gen, th, "trigger sync"]
+      - [rx_ant, lna, ""]
+      - [lna, th, ""]
+      - [th, adc, ""]
+      - [adc, stack, ""]
+      - [stack, display, ""]
+    features:
+      - {id: center_freq, question: "Centre frequency", choices: ["100 MHz (deep)", "400-900 MHz", "2 GHz (concrete)"], filters: "(system choice)", source: "page text"}
+
+  # =========================================================================================================
+  # Electronic warfare (figures)
+  # =========================================================================================================
+  - id: radar_warning_receiver
+    name: Radar warning receiver (spiral antennas, wideband BPF bank, crystal video detection, pulse analyser, threat library, DF)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-RWR, url: "https://rfessentials.com/resources/block-diagrams/radar-warning-receiver/", pages: "inline SVG + walkthrough + spec table"}
+      - {doc: RFE-ART-EW, url: "https://rfessentials.com/industry-news/radar-defense/electronic-warfare-rf-architecture/", pages: "section 2 (ES receiver)"}
+    groups:
+      - {id: spiral, label: "Spiral antennas (multiple sectors)", blocks: [cavity-backed spirals 2-18 GHz, 4-8 sectors], source: "figure + page text", fn_hint: [antenna]}
+      - {id: bpf_bank, label: "Wide BPF bank (2-18 GHz)", blocks: [channelized filter bank / digital channelizer], source: "figure", fn_hint: [filter_saw_baw, rf_switch]}
+      - {id: detect, label: "Detect (crystal video detector)", blocks: [crystal video detector, log video amp], source: "figure", fn_hint: [schottky_diode, amplifier]}
+      - {id: pulse_an, label: "Pulse analyzer (freq, PW, PRI, AOA, amplitude)", blocks: [PDW generation], source: "figure", fn_hint: [soc, adc]}
+      - {id: df, label: "Direction finding (amplitude comparison / interferometry)", blocks: [DF processor], source: "figure", fn_hint: [soc]}
+      - {id: threat_lib, label: "Threat library (emitter ID)", blocks: [emitter database], source: "figure", fn_hint: [soc]}
+      - {id: display, label: "Display (ID, bearing, threat priority)", blocks: [display], source: "figure", fn_hint: [display]}
+      - {id: cm, label: "CM response (countermeasure / jammer cue)", blocks: [countermeasures interface], source: "figure", fn_hint: [external_block]}
+    links:
+      - [spiral, bpf_bank, ""]
+      - [bpf_bank, detect, ""]
+      - [detect, pulse_an, ""]
+      - [df, pulse_an, "AOA from multiple antenna sectors"]
+      - [pulse_an, threat_lib, ""]
+      - [threat_lib, display, ""]
+      - [display, cm, ""]
+    note: "Figure has no LNA or limiter in front of the detectors (classic crystal-video RWR); the EW article says modern designs add a wideband LNA (2-18 GHz, ~2 dB NF, +20 dBm IP3) and preselector and move to wideband ADC + FPGA channelizers."
+    features:
+      - {id: receiver_type, question: "Receiver architecture", choices: ["crystal video (analog)", "channelized filter bank", "digital (wideband ADC + FPGA)"], filters: "(system choice)", source: "page text + EW article"}
+      - {id: coverage, question: "Frequency coverage", choices: ["2-18 GHz", "0.5-40 GHz"], filters: "frequency range", source: "spec table + EW article"}
+
+  - id: drfm_jammer
+    name: DRFM deception jammer (wideband RX, downconvert, >2 GSPS ADC, FPGA memory/modify, DAC, upconvert, PA)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-DRFM, url: "https://rfessentials.com/resources/block-diagrams/drfm-jammer/", pages: "inline SVG + walkthrough + spec table"}
+      - {doc: RFE-ART-EW, url: "https://rfessentials.com/industry-news/radar-defense/electronic-warfare-rf-architecture/", pages: "section 3 (DRFM)"}
+    groups:
+      - {id: rx_ant, label: "RX antenna (intercept)", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: lna, label: "LNA (wideband)", blocks: [wideband LNA], source: "figure", fn_hint: [lna]}
+      - {id: rx_lo, label: "LO (RX)", blocks: [LO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: rx_mixer, label: "Mixer (down)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: adc, label: "ADC (fast, > 2 GSPS)", blocks: [ADC 2-10 GSPS, 8-12 bit], source: "figure + spec table", fn_hint: [adc]}
+      - {id: memory, label: "Memory FPGA / DSP (store, delay, frequency shift)", blocks: [FPGA, waveform memory 1-100 us], source: "figure + spec table", fn_hint: [soc, ddr_flash]}
+      - {id: dac, label: "DAC (fast)", blocks: [DAC 2-10 GSPS], source: "figure", fn_hint: [dac]}
+      - {id: tx_lo, label: "LO (TX)", blocks: [LO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: tx_mixer, label: "Mixer (up)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: pa, label: "PA (high power)", blocks: [PA, ERP +30..+60 dBm], source: "figure + spec table", fn_hint: [power_amplifier]}
+      - {id: tx_ant, label: "TX antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+    links:
+      - [rx_ant, lna, ""]
+      - [lna, rx_mixer, ""]
+      - [rx_lo, rx_mixer, "LO"]
+      - [rx_mixer, adc, ""]
+      - [adc, memory, ""]
+      - [memory, dac, ""]
+      - [dac, tx_mixer, ""]
+      - [tx_lo, tx_mixer, "LO"]
+      - [tx_mixer, pa, ""]
+      - [pa, tx_ant, ""]
+    features:
+      - {id: ibw, question: "Instantaneous bandwidth", choices: ["500 MHz", "1-2 GHz", "4 GHz"], filters: "adc / dac sample rate", source: "spec table"}
+      - {id: technique, question: "Deception techniques", choices: [RGPO, VGPO, false targets, angle deception], filters: "(system choice)", source: "figure bottom row"}
+
+  # =========================================================================================================
+  # Radiometry / scientific (figures)
+  # =========================================================================================================
+  - id: total_power_radiometer
+    name: Total-power heterodyne radiometer (feed horn, LNA, RF BPF, mixer, IF BPF/amp, square-law detector, integrator ADC)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-TPR, url: "https://rfessentials.com/resources/block-diagrams/total-power-heterodyne-receiver/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna (feed horn)", blocks: [corrugated feed horn], source: "figure", fn_hint: [antenna]}
+      - {id: lna, label: "LNA", blocks: [LNA NF 0.3-2 dB (cryo InP < 10 K)], source: "figure + page text", fn_hint: [lna]}
+      - {id: rf_bpf, label: "BPF (RF filter)", blocks: [BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: lo, label: "LO", blocks: [PLL synthesizer LO], source: "figure + page text", fn_hint: [rf_synthesizer]}
+      - {id: mixer, label: "Mixer (downconv)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_bpf, label: "IF BPF", blocks: [IF filter], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: if_amp, label: "IF amp (gain)", blocks: [IF amplifier 40-60 dB], source: "figure + spec table", fn_hint: [rf_gain_block]}
+      - {id: det, label: "Detector (square law)", blocks: [diode power detector], source: "figure", fn_hint: [schottky_diode]}
+      - {id: adc, label: "ADC (integrator)", blocks: [integrator + ADC], source: "figure", fn_hint: [adc, amplifier]}
+    links:
+      - [antenna, lna, "RF"]
+      - [lna, rf_bpf, ""]
+      - [rf_bpf, mixer, "RF"]
+      - [lo, mixer, "LO"]
+      - [mixer, if_bpf, "IF"]
+      - [if_bpf, if_amp, ""]
+      - [if_amp, det, "IF"]
+      - [det, adc, "video"]
+    features:
+      - {id: lna_type, question: "LNA type", choices: ["cryogenic InP HEMT", "room-temperature GaAs"], filters: "nf_db", source: "page text"}
+
+  - id: dicke_radiometer
+    name: Dicke-switching radiometer (antenna / reference-load switch, receiver, square-law detector, synchronous demodulator)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-DICKE, url: "https://rfessentials.com/resources/block-diagrams/dicke-switching-radiometer/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: dicke_sw, label: "Dicke switch", blocks: [ferrite or PIN switch, 100-10,000 Hz, IL 0.3-1 dB], source: "figure + spec table", fn_hint: [rf_switch, pin_diode]}
+      - {id: ref_load, label: "Reference load (T_ref known)", blocks: [matched load / noise source], source: "figure", fn_hint: [rf_passive]}
+      - {id: lna, label: "LNA", blocks: [LNA], source: "figure", fn_hint: [lna]}
+      - {id: bpf, label: "BPF", blocks: [BPF], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: lo, label: "LO", blocks: [LO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: mixer, label: "Mixer", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_amp, label: "IF amp", blocks: [IF amp], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: det, label: "Detector (square law)", blocks: [diode detector], source: "figure", fn_hint: [schottky_diode]}
+      - {id: sync_demod, label: "Sync demod (lock-in to switch rate) -> integrator", blocks: [synchronous demodulator, integrator], source: "figure", fn_hint: [amplifier, adc]}
+    links:
+      - [antenna, dicke_sw, "ANT"]
+      - [ref_load, dicke_sw, "REF"]
+      - [dicke_sw, lna, ""]
+      - [lna, bpf, ""]
+      - [bpf, mixer, ""]
+      - [lo, mixer, "LO"]
+      - [mixer, if_amp, ""]
+      - [if_amp, det, ""]
+      - [det, sync_demod, ""]
+      - [dicke_sw, sync_demod, "switch reference signal (f_Dicke)"]
+    features: []
+
+  - id: correlation_interferometer
+    name: Two-element correlation interferometer (two LNA/BPF/mixer chains on a common LO, correlator)
+    links_basis: figure_corrected
+    sources:
+      - {doc: RFE-BD-CORR, url: "https://rfessentials.com/resources/block-diagrams/correlation-interferometer/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: ant1, label: "Antenna 1", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: ant2, label: "Antenna 2 (baseline d)", blocks: [antenna], source: "figure", fn_hint: [antenna]}
+      - {id: lna, label: "LNA (x2)", blocks: [LNA per channel], source: "figure", fn_hint: [lna]}
+      - {id: bpf, label: "BPF (x2)", blocks: [BPF per channel], source: "figure", fn_hint: [filter_saw_baw]}
+      - {id: lo, label: "LO (common, phase-coherent)", blocks: [shared LO], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: mix, label: "Mixer (x2, down)", blocks: [mixer per channel], source: "figure", fn_hint: [rf_mixer]}
+      - {id: correlator, label: "Correlator (cross-multiply + integrate)", blocks: [digital correlator (FX)], source: "figure + page text", fn_hint: [soc, adc]}
+      - {id: out, label: "Output (fringe visibility V(u,v))", blocks: [visibility output], source: "figure", fn_hint: [external_block]}
+    links:
+      - [ant1, lna, "channel 1"]
+      - [ant2, lna, "channel 2"]
+      - [lna, bpf, ""]
+      - [bpf, mix, ""]
+      - [lo, mix, "LO (both channels)"]
+      - [mix, correlator, "IF 1, IF 2"]
+      - [correlator, out, ""]
+    note: "The site's SVG layout is garbled (the right-hand channel boxes overlap the left channel's mixer and antenna). Read as two mirror-image chains; the page text confirms the topology."
+    features: []
+
+  # =========================================================================================================
+  # Test & measurement (figures)
+  # =========================================================================================================
+  - id: swept_spectrum_analyzer
+    name: Swept-tuned spectrum analyzer (YIG preselector, input attenuator, 1st mixer + YIG LO, IF, RBW, log detector, VBW, ADC, sweep generator)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-SA, url: "https://rfessentials.com/resources/block-diagrams/spectrum-analyzer/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: input, label: "Antenna / RF input", blocks: [RF input], source: "figure", fn_hint: [antenna]}
+      - {id: presel, label: "Pre-selector (YIG-tuned BPF)", blocks: [YIG tracking filter], source: "figure + page text", fn_hint: [filter_saw_baw]}
+      - {id: atten, label: "Atten (variable)", blocks: [step attenuator], source: "figure", fn_hint: [rf_attenuator]}
+      - {id: lo1, label: "LO 1 (YIG-tuned)", blocks: [YIG oscillator / synthesizer], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: mixer1, label: "Mixer (1st)", blocks: [mixer], source: "figure", fn_hint: [rf_mixer]}
+      - {id: if_gain, label: "IF gain", blocks: [IF amplifier], source: "figure", fn_hint: [rf_gain_block]}
+      - {id: rbw, label: "RBW filter (resolution BW)", blocks: [IF filter 1 Hz - 10 MHz], source: "figure + spec table", fn_hint: [filter_saw_baw]}
+      - {id: log_det, label: "Log detect", blocks: [log amplifier / detector], source: "figure", fn_hint: [schottky_diode, amplifier]}
+      - {id: vbw, label: "VBW filter (video BW)", blocks: [video low-pass], source: "figure", fn_hint: [amplifier]}
+      - {id: adc, label: "ADC (display)", blocks: [ADC + display], source: "figure", fn_hint: [adc]}
+      - {id: sweep, label: "Sweep gen (ramp: LO tune + display X axis)", blocks: [ramp generator], source: "figure", fn_hint: [dac]}
+    links:
+      - [input, presel, ""]
+      - [presel, atten, ""]
+      - [atten, mixer1, ""]
+      - [lo1, mixer1, "LO"]
+      - [mixer1, if_gain, ""]
+      - [if_gain, rbw, ""]
+      - [rbw, log_det, ""]
+      - [log_det, vbw, ""]
+      - [vbw, adc, ""]
+      - [sweep, lo1, "LO tune"]
+      - [sweep, adc, "display X axis"]
+    features: []
+
+  - id: vna_two_port
+    name: Two-port vector network analyzer (synthesized source, splitter, reference / test couplers, coherent receivers, DSP)
+    links_basis: figure
+    sources:
+      - {doc: RFE-BD-VNA, url: "https://rfessentials.com/resources/block-diagrams/vector-network-analyzer/", pages: "inline SVG + walkthrough + spec table"}
+    groups:
+      - {id: source, label: "Source (synthesizer)", blocks: [swept synthesizer], source: "figure", fn_hint: [rf_synthesizer]}
+      - {id: splitter, label: "Power splitter", blocks: [splitter], source: "figure", fn_hint: [rf_passive]}
+      - {id: ref_coupler, label: "Ref coupler", blocks: [directional coupler], source: "figure", fn_hint: [rf_passive]}
+      - {id: ref_rx, label: "Ref RX (a1/a2)", blocks: [coherent receiver (mixer + IF + ADC)], source: "figure", fn_hint: [rf_mixer, adc]}
+      - {id: port1, label: "Port 1", blocks: [test port], source: "figure", fn_hint: [external_block]}
+      - {id: dut, label: "DUT", blocks: [device under test], source: "figure", fn_hint: [external_block]}
+      - {id: port2, label: "Port 2", blocks: [test port], source: "figure", fn_hint: [external_block]}
+      - {id: test_coupler, label: "Test coupler", blocks: [directional coupler], source: "figure", fn_hint: [rf_passive]}
+      - {id: test_rx, label: "Test RX (b1/b2)", blocks: [coherent receiver], source: "figure", fn_hint: [rf_mixer, adc]}
+      - {id: load, label: "Load (50 ohm)", blocks: [termination], source: "figure", fn_hint: [rf_passive]}
+      - {id: dsp, label: "DSP (S-parameter calculation)", blocks: [ratio + error correction], source: "figure", fn_hint: [soc]}
+    links:
+      - [source, splitter, ""]
+      - [splitter, ref_coupler, ""]
+      - [ref_coupler, ref_rx, "a"]
+      - [ref_coupler, port1, "to DUT"]
+      - [port1, dut, ""]
+      - [dut, port2, ""]
+      - [port2, test_coupler, ""]
+      - [test_coupler, test_rx, "b"]
+      - [test_coupler, load, ""]
+      - [ref_rx, dsp, ""]
+      - [test_rx, dsp, ""]
+    features: []
+
+  # =========================================================================================================
+  # Inferred from article / knowledge-base text (no figure on the page)
+  # =========================================================================================================
+  - id: aesa_tr_module
+    name: AESA radar T/R module (phase shifter, VGA, driver, GaN HPA, circulator, limiter, LNA, matched load)
+    links_basis: inferred_from_text
+    sources:
+      - {doc: RFE-ART-AESA, url: "https://rfessentials.com/industry-news/radar-defense/aesa-tr-module-architecture/", pages: "section 1 (TX path / RX path lists), section 4 (passives)"}
+    groups:
+      - {id: manifold, label: "Array manifold / beamformer port", blocks: [corporate feed (Wilkinson / waveguide dividers)], source: "text + phased-array article", fn_hint: [rf_passive]}
+      - {id: phase_shifter, label: "Phase shifter (6 bit, shared TX/RX or dual)", blocks: [GaAs / SiGe digital phase shifter], source: "text", fn_hint: [rf_phase_shifter, beamformer_ic]}
+      - {id: vga, label: "VGA (amplitude taper / calibration)", blocks: [VGA], source: "text", fn_hint: [rf_gain_block, rf_attenuator]}
+      - {id: tr_select, label: "T/R select switch (common leg)", blocks: [T/R switch, < 100 ns at X-band], source: "text (T/R switch time in spec table; position inferred)", fn_hint: [rf_switch]}
+      - {id: driver, label: "Driver amplifier", blocks: [driver], source: "text", fn_hint: [rf_predriver, rf_gain_block]}
+      - {id: hpa, label: "High-power amplifier (GaN MMIC, 5-20 W/element)", blocks: [GaN-on-SiC HPA], source: "text", fn_hint: [power_amplifier]}
+      - {id: circulator, label: "Circulator (+ matched load on 3rd port)", blocks: [ferrite circulator > 20 dB isolation, < 0.3 dB IL, termination], source: "text", fn_hint: [circulator_isolator, rf_passive]}
+      - {id: limiter, label: "Limiter (PIN, < 100 ns recovery)", blocks: [PIN limiter], source: "text", fn_hint: [rf_limiter, pin_diode]}
+      - {id: rx_bpf, label: "Bandpass filter (before LNA)", blocks: [BPF], source: "text section 4", fn_hint: [filter_saw_baw]}
+      - {id: lna, label: "LNA (NF 1.5-3 dB)", blocks: [LNA], source: "text", fn_hint: [lna]}
+      - {id: element, label: "Antenna element (via coax / waveguide transition)", blocks: [radiating element], source: "text", fn_hint: [antenna]}
+      - {id: control, label: "DC / control interface (phase, amplitude, T/R timing)", blocks: [control ASIC / serial interface, bias], source: "text section 3", fn_hint: [mcu, rf_pa_bias]}
+    links:
+      - [manifold, phase_shifter, ""]
+      - [phase_shifter, vga, ""]
+      - [vga, tr_select, ""]
+      - [tr_select, driver, "TX"]
+      - [driver, hpa, "TX"]
+      - [hpa, circulator, "TX"]
+      - [circulator, element, ""]
+      - [circulator, limiter, "RX"]
+      - [limiter, rx_bpf, "RX"]
+      - [rx_bpf, lna, "RX"]
+      - [lna, tr_select, "RX"]
+      - [control, phase_shifter, "phase state"]
+      - [control, vga, "gain state"]
+      - [control, tr_select, "T/R timing"]
+    note: "Article lists the TX path (phase shifter, VGA, driver, HPA, circulator) and RX path (circulator, limiter, LNA, phase shifter, VGA) as separate ordered lists and says the phase shifter may be shared; the common-leg T/R select switch and the filter position are inferred. No figure on the page."
+    features:
+      - {id: band, question: "Band", choices: ["S (3-4 GHz, 20-50 W)", "X (9-10 GHz, 10-20 W)", "Ka (34-36 GHz, 2-5 W)"], filters: "psat_dbm, frequency range", source: "article spec table"}
+      - {id: hpa_tech, question: "HPA technology", choices: ["GaN-on-SiC", "GaAs (legacy)"], filters: "technology (new)", source: "section 2"}
+      - {id: ps_bits, question: "Phase-shifter bits", choices: ["6", "7"], filters: "phase bits (new)", source: "spec table"}
+
+  - id: fr2_mmwave_small_cell_hybrid_bf
+    name: 5G FR2 mmWave small cell front end (baseband DAC/ADC at 3-5 GHz IF, IF-to-RF converter + PLL LO, distribution, BFICs with PA/LNA, patch array)
+    links_basis: inferred_from_text
+    sources:
+      - {doc: RFE-ART-FR2, url: "https://rfessentials.com/industry-news/mmwave-5g/fr2-mmwave-small-cell-rf-front-end/", pages: "section 2, blocks 1-5"}
+      - {doc: RFE-ART-BF39, url: "https://rfessentials.com/industry-news/mmwave-5g/beamforming-39ghz-architectures/", pages: "hybrid beamforming / sub-array section"}
+    groups:
+      - {id: baseband, label: "Digital baseband + DAC / ADC (12-14 bit, > 10 GSPS, IF 3-5 GHz)", blocks: [baseband processor, RF DAC, RF ADC], source: "text block 1", fn_hint: [soc, dac, adc]}
+      - {id: converter, label: "IF-to-RF up / down converter", blocks: [mixer chain, IF/RF filters], source: "text block 2", fn_hint: [rf_mixer, filter_saw_baw, rf_gain_block]}
+      - {id: lo, label: "PLL LO (< -100 dBc/Hz @ 100 kHz for 256-QAM)", blocks: [PLL synthesizer, reference], source: "text block 2", fn_hint: [rf_synthesizer, frequency_multiplier, crystal_oscillator]}
+      - {id: distribution, label: "Distribution network (split to beamforming channels)", blocks: [power dividers], source: "text block 2", fn_hint: [rf_passive]}
+      - {id: bfic, label: "Beamforming ICs (16-64 per panel, 4-16 elements each; phase 6-8 bit, gain 5-6 bit, T/R switch, combiner)", blocks: [SiGe / CMOS BFIC], source: "text block 3", fn_hint: [beamformer_ic, rf_phase_shifter, rf_switch]}
+      - {id: pa_lna, label: "Per-element PA + LNA (PA 12-15 dBm @ 28 GHz; LNA NF 3-4 dB)", blocks: [PA, LNA (integrated with or next to BFIC)], source: "text block 4", fn_hint: [power_amplifier, lna]}
+      - {id: array, label: "Antenna array (256-1024 patch / AiP elements, lambda/2)", blocks: [patch array, feed network], source: "text block 5", fn_hint: [antenna]}
+    links:
+      - [baseband, converter, "IF (TX)"]
+      - [converter, baseband, "IF (RX)"]
+      - [lo, converter, "LO"]
+      - [converter, distribution, "RF"]
+      - [distribution, bfic, "per channel"]
+      - [bfic, pa_lna, "per element"]
+      - [pa_lna, array, ""]
+    note: "Five-block chain stated in prose (no figure). Hybrid partitioning (sub-arrays of 8-32 elements per RF chain) comes from the 39 GHz beamforming article. EIRP example: 256 elements x 13 dBm with 24 dBi array gain ~= 61 dBm."
+    features:
+      - {id: band, question: "FR2 band", choices: ["n257/n261 (28 GHz)", "n258 (26 GHz)", "n260 (39 GHz)"], filters: "frequency range", source: "article table"}
+      - {id: bf_arch, question: "Beamforming architecture", choices: ["analog (1 RF chain)", "hybrid (8-32 RF chains / 256 el.)", "digital (1 RF chain per element)"], filters: "(system choice)", source: "RFE-ART-BF39 table"}
+      - {id: elements, question: "Elements per panel", choices: ["256", "512", "1024"], filters: "beamformer_ic count (new)", source: "article"}
+
+  - id: dpd_pa_transmitter
+    name: PA transmitter with digital predistortion (DPD actuator, DAC, upconverter, PA, coupler-fed observation receiver, adaptation)
+    links_basis: inferred_from_text
+    sources:
+      - {doc: RFE-ART-DPD, url: "https://rfessentials.com/industry-news/signal-processing/digital-predistortion-power-amplifiers/", pages: "section 2 'The Feedback Loop' (transmit / observe / compare / adapt)"}
+    groups:
+      - {id: dpd, label: "DPD actuator + adaptation engine (FPGA)", blocks: [LUT / GMP / Volterra predistorter, coefficient adaptation], source: "text", fn_hint: [soc]}
+      - {id: dac, label: "DAC", blocks: [DAC], source: "text", fn_hint: [dac]}
+      - {id: upconv, label: "Upconverter", blocks: [mixer / modulator, LO], source: "text", fn_hint: [rf_mixer, rf_synthesizer]}
+      - {id: pa, label: "PA", blocks: [PA (Class AB / Doherty)], source: "text", fn_hint: [power_amplifier, rf_predriver]}
+      - {id: coupler, label: "Directional coupler (output sample)", blocks: [10 dB-class coupler (coupler article - DPD feedback)], source: "text + coupler article table", fn_hint: [rf_passive]}
+      - {id: antenna, label: "Antenna", blocks: [antenna], source: "text", fn_hint: [antenna]}
+      - {id: orx, label: "Observation receiver (downconvert + ADC)", blocks: [mixer, ADC], source: "text", fn_hint: [rf_mixer, adc, rf_attenuator]}
+    links:
+      - [dpd, dac, "predistorted samples"]
+      - [dac, upconv, ""]
+      - [upconv, pa, ""]
+      - [pa, coupler, ""]
+      - [coupler, antenna, ""]
+      - [coupler, orx, "coupled sample"]
+      - [orx, dpd, "observed PA output"]
+    features:
+      - {id: dpd_model, question: "DPD model", choices: ["LUT (< 20 MHz, memoryless)", "GMP (100-400 MHz 5G NR)", "Volterra"], filters: "(system choice)", source: "section 3"}
+      - {id: target, question: "Linearity target", choices: ["ACLR -45 dBc", "ACLR -50..-55 dBc"], filters: "aclr (new)", source: "section 5 table"}
+
+  - id: ka_leo_gateway_terminal
+    name: Ka-band LEO gateway ground terminal RF chain (reflector + corrugated feed + OMT, diplexer, LNA, downconverter, upconverter, GaN BUC with UPC)
+    links_basis: inferred_from_text
+    sources:
+      - {doc: RFE-ART-LEO, url: "https://rfessentials.com/industry-news/industry-trends/leo-constellations-ground-segment/", pages: "section 2 component list"}
+      - {doc: RFE-ART-RAIN, url: "https://rfessentials.com/industry-news/satellite-space/ka-band-rain-fade-mitigation/", pages: "sections 4 and 7 (UPC, BUC headroom, beacon receiver)"}
+    groups:
+      - {id: antenna, label: "Reflector 2-5 m + corrugated feed horn (tracking mount, 5 deg/s)", blocks: [reflector, feed horn, tracking mount], source: "text", fn_hint: [antenna, external_block]}
+      - {id: omt, label: "OMT (polarization separation)", blocks: [orthomode transducer], source: "text", fn_hint: [rf_passive]}
+      - {id: diplexer, label: "Diplexer / triplexer (TX / RX share feed)", blocks: [waveguide diplexer], source: "text", fn_hint: [diplexer]}
+      - {id: lna, label: "LNA 17.7-20.2 GHz (NF < 1.5 dB, gain 35+ dB)", blocks: [LNA / LNB], source: "text", fn_hint: [lna]}
+      - {id: downconv, label: "Downconverter (Ka -> IF)", blocks: [mixer, LO], source: "text", fn_hint: [rf_mixer, rf_synthesizer]}
+      - {id: upconv, label: "Upconverter (IF -> Ka)", blocks: [mixer, LO], source: "text", fn_hint: [rf_mixer, rf_synthesizer]}
+      - {id: buc, label: "BUC / HPA 27.5-30 GHz (GaN, 10-80 W, 5-15 dB UPC headroom)", blocks: [GaN BUC], source: "text", fn_hint: [power_amplifier, rf_mixer]}
+      - {id: beacon, label: "Beacon receiver (rain-fade detection for UPC)", blocks: [beacon receiver], source: "RFE-ART-RAIN text", fn_hint: [rf_transceiver]}
+      - {id: modem, label: "Modem / baseband (ACM)", blocks: [modem], source: "text", fn_hint: [modem, external_block]}
+    links:
+      - [antenna, omt, ""]
+      - [omt, diplexer, ""]
+      - [diplexer, lna, "RX 17.7-20.2 GHz"]
+      - [lna, downconv, ""]
+      - [downconv, modem, "IF"]
+      - [modem, upconv, "IF"]
+      - [upconv, buc, ""]
+      - [buc, diplexer, "TX 27.5-30 GHz"]
+      - [downconv, beacon, "beacon"]
+      - [beacon, buc, "uplink power control"]
+    note: "Component list (not a figure); ordering and the beacon/UPC loop are inferred from the two articles. BUC normally integrates the upconverter; kept separate because the article lists frequency converters separately."
+    features:
+      - {id: band, question: "Band", choices: ["Ka (17.7-20.2 / 27.5-30 GHz)", "Q/V band (next wave)"], filters: "frequency range", source: "LEO article"}
+      - {id: buc_power, question: "BUC power", choices: ["10 W", "20-40 W", "80 W"], filters: "psat_dbm", source: "LEO + rain-fade articles"}
+      - {id: fade_mitigation, question: "Rain-fade mitigation", choices: [ACM, UPC, site diversity, antenna oversizing], filters: "(system choice)", source: "RFE-ART-RAIN"}
+
+  - id: wifi7_triband_ap_fem_chain
+    name: Wi-Fi 7 tri-band access point RF front end (per-stream FEM = PA + LNA w/ bypass + T/R switch + band filter; 12 FEMs for 4x4 tri-band)
+    links_basis: inferred_from_text
+    sources:
+      - {doc: RFE-KB-WIFIFEM, url: "https://rfessentials.com/rf-knowledge-base/how-do-i-design-a-wi-fi-front-end-module-with-integrated-pa-lna-and-switch/", pages: "answer (1)-(5)"}
+      - {doc: RFE-KB-WIFI7AP, url: "https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-front-end-for-a-tri-band-wi-fi-7-access-point/", pages: "answer (1)-(5) + FAQ"}
+    groups:
+      - {id: soc, label: "Wi-Fi 7 SoC (MAC / PHY / baseband, MLO)", blocks: [Wi-Fi 7 chipset], source: "text", fn_hint: [wifi_soc, soc]}
+      - {id: fem_24, label: "2.4 GHz FEMs x4 (PA 18-22 dBm, LNA NF < 2.5 dB, T/R switch)", blocks: [FEM per stream], source: "text", fn_hint: [wifi_fem]}
+      - {id: fem_5, label: "5 GHz FEMs x4 (GaAs HBT PA 18-22 dBm, NF < 2 dB)", blocks: [FEM per stream], source: "text", fn_hint: [wifi_fem]}
+      - {id: fem_6, label: "6 GHz FEMs x4 (PA 18-22 dBm, EVM <= 1.8 % at 4096-QAM / 320 MHz)", blocks: [FEM per stream], source: "text", fn_hint: [wifi_fem]}
+      - {id: filters, label: "Band filters (2.4: SAW/LC; 5 GHz: BAW/LC; 6 GHz: BAW/IPD)", blocks: [coexistence filters], source: "text", fn_hint: [filter_saw_baw]}
+      - {id: antennas, label: "Antennas (one per stream per band)", blocks: [antennas], source: "text", fn_hint: [antenna]}
+    links:
+      - [soc, fem_24, "4 streams"]
+      - [soc, fem_5, "4 streams"]
+      - [soc, fem_6, "4 streams"]
+      - [fem_24, filters, ""]
+      - [fem_5, filters, ""]
+      - [fem_6, filters, ""]
+      - [filters, antennas, ""]
+    note: "No figure; per-chain topology stated in text: TX = transceiver -> PA -> T/R switch -> antenna, RX = antenna -> T/R switch -> LNA -> transceiver. KB names Skyworks SKY85797 / SKY85743 and Qorvo QPF4656 / QPF4528 as example FEMs (unverified here)."
+    features:
+      - {id: streams, question: "MIMO streams per band", choices: ["2x2 (consumer)", "4x4 (enterprise)"], filters: "wifi_fem count (new)", source: "text"}
+      - {id: six_ghz_class, question: "6 GHz power class", choices: ["VLP 14 dBm EIRP", "LPI 18 dBm EIRP", "standard power w/ AFC 30-36 dBm EIRP"], filters: "pout_dbm", source: "KB FAQ"}
+      - {id: lna_bypass, question: "LNA bypass mode needed", choices: [yes, no], filters: "feature (new)", source: "Wi-Fi FEM KB (3)"}

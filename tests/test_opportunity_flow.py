@@ -39,7 +39,7 @@ def test_cross_sell_names_parts_and_bundles(client):
 def test_markets_chips_and_groups(client):
     html = client.get("/business/markets").text
     assert all(h in html for h in ("Existing portfolio", "Portfolio gap", "New technology"))
-    assert '<th scope="col">Markets</th>' in html and "Needed in" not in html
+    assert "<span>Markets</span>" in html and "Needed in" not in html
     market = re.search(r'href="/business/markets\?co=combined&amp;m=([^"&]+)&amp;', html).group(1)
     one = client.get(f"/business/markets?m={market}").text
     assert one.count('class="bo-mk"') < html.count('class="bo-mk"')
@@ -70,3 +70,15 @@ def test_candidates_to_business_case(client):
 def test_top_missing_functions_removed_from_overview(client):
     html = client.get("/business").text
     assert "Top missing functions" not in html and "/business/explorer" in html
+
+
+def test_cross_sell_explains_each_pairing(client):
+    from app.services import opportunity as op
+
+    w = op.pair_reasons(op.applications(), "load_switch", "pol_buck")
+    assert w["n"] and w["rows"] and w["summary"]
+    r = w["rows"][0]
+    assert r["same"] or r["links"] or (r["a_blocks"] and r["b_blocks"])
+    page = client.get("/business/attach?fn=load_switch")
+    assert page.status_code == 200 and '<details class="why small"><summary>Why?</summary>' in page.text
+    assert '<details class="why small" open' not in page.text  # collapsed by default

@@ -1,0 +1,466 @@
+# Frequency band (and, for power amplifiers, output-power class) needed by each RF block in the application
+# block-diagram templates (data/blocks/templates.yaml and background_templates.yaml). Step 3 of the RF coverage
+# method in data/business/rf_bands.yaml: the RF coverage page can count demand per block from this file instead of
+# guessing bands from application names.
+#
+# Scope: every template with at least one function from rf_bands.yaml `functions`; one entry per group x function
+# occurrence (a function listed twice in one group is one entry).
+#   bands  band ids from rf_bands.yaml (sub1 < 1 GHz, L, S, C, X, Ku, K/Ka = "Ka", > 40 GHz = "mmw").
+#   power  power_amplifier / rf_predriver only, class ids from rf_bands.yaml (low <= 30 dBm, mid 30-40, high > 40),
+#          given only when a source states the power or the system class is well established; otherwise omitted.
+#   basis  why: the source (research ids in data/blocks/research/) or the standard allocation used.
+#
+# How values were decided, in order: (1) frequencies or parts stated by the template's own sources (vendor pages,
+# data sheets, research files); (2) the standard allocation of the named system (cellular FR1 0.6-5 GHz, Wi-Fi
+# 2.4 / 5 / 6 GHz, GNSS L1 / L5, UWB ch5 / ch9, V2X 5.9 GHz, NTN n255 / n256, SDARS 2.3 GHz, AM/FM/DAB, DOCSIS);
+# (3) for generic architecture diagrams (superheterodyne, zero-IF, radar, EW, spectrum / network analyzer) the bands
+# the architecture is typically used for, marked "band not stated" / "typical" in basis.
+# IF, LO and baseband stages carry the band of the frequency at that stage (an IF strip or COHO is sub1, a
+# microwave LO is in the RF band); basis says so. Undeterminable blocks have bands: [] and basis "not stated".
+# Updated 2026-10-20.
+
+templates:
+  "Car radio tuner system":
+    ant:
+      lna: {bands: [sub1], basis: "AM/FM 0.15-108 MHz and DAB Band III 174-240 MHz active-antenna LNA"}
+  "Macro base station radio unit, TDD (Skyworks)":
+    hp_switch:
+      rf_switch: {bands: [S, C], basis: "TDD macro bands n40/n41/n77/n78/n79 (2.3-5 GHz); 100-160 W fail-safe switch (SKY_MACRO)"}
+    rx_chain:
+      lna: {bands: [S, C], basis: "TDD macro receive, n40/n41/n77/n78/n79 2.3-5 GHz (SKY_MACRO)"}
+  "Small cell base station (Skyworks)":
+    rx_switch:
+      rf_switch: {bands: [L, S, C], basis: "small-cell bands 1.7-4.2 GHz (B2/B4/B66, B41, CBRS, n77/n78); 0.1-6 GHz SPDT (SKY_SMALLCELL)"}
+    rx_chain:
+      lna: {bands: [L, S, C], basis: "small-cell receive bands 1.7-4.2 GHz (B2/B4/B66, B41, CBRS, n77/n78)"}
+  "Massive MIMO radio (Skyworks)":
+    orx_switch:
+      rf_switch: {bands: [S, C], basis: "mMIMO TDD n41/n77/n78/n79 2.5-5 GHz DPD feedback switch (SKY_MMIMO)"}
+    dual_rx:
+      lna: {bands: [S, C], basis: "mMIMO TDD n41/n77/n78/n79 2.5-5 GHz dual LNA module (SKY_MMIMO)"}
+      rf_switch: {bands: [S, C], basis: "fail-safe switch in mMIMO dual RX module, 2.5-5 GHz (SKY_MMIMO)"}
+  "Automotive telematics & infotainment RF (Skyworks)":
+    cell_fe:
+      lna: {bands: [sub1, L, S], basis: "LTE/3G telematics bands 0.7-2.7 GHz (SKY_BD_TELEMATICS)"}
+    gps:
+      lna: {bands: [L], basis: "GPS L1 1575 MHz LNA (SKY_BD_TELEMATICS)"}
+    sdars:
+      lna: {bands: [S], basis: "SDARS 2320-2345 MHz LNA (SKY_BD_TELEMATICS)"}
+  "Wi-Fi front end (Skyworks)":
+    fe_2g:
+      lna: {bands: [S], basis: "Wi-Fi 2.4 GHz front end (SKY_BD_WIFI_NET)"}
+      rf_switch: {bands: [S], basis: "Wi-Fi 2.4 GHz T/R switch (SKY_BD_WIFI_NET 2.5 GHz switches)"}
+    fe_5g:
+      lna: {bands: [C], basis: "Wi-Fi 5 GHz front end (SKY_BD_WIFI_NET)"}
+      rf_switch: {bands: [C], basis: "Wi-Fi 5 GHz T/R switch (SKY_BD_WIFI_NET)"}
+  "Smartphone antenna switching (Skyworks)":
+    mode_switch:
+      rf_switch: {bands: [sub1, L], basis: "WCDMA TX band switching after PA: B5/B8 0.8-0.9 GHz, B1/B2/B4 1.7-1.98 GHz"}
+    rx_diff_switch:
+      rf_switch: {bands: [sub1, L, S], basis: "WCDMA/GSM receive bands 0.87-2.17 GHz (B1 Rx 2.11-2.17 GHz is S)"}
+  "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)":
+    rf_fe_pa:
+      lna: {bands: [L, S, C], basis: "SBAA686 triple band 1.8-2.69 GHz (SKY66391/66394/66522); mMIMO also n77/n78 to 4.2 GHz"}
+      rf_switch: {bands: [L, S, C], basis: "SBAA686 triple band 1.8-2.69 GHz; mMIMO AAS also n77/n78 to 4.2 GHz"}
+  "Small cell base station (with Wi-Fi front end) (TI)":
+    rf_fe_pa:
+      lna: {bands: [L, S, C], basis: "small-cell bands 1.7-4.2 GHz (not stated in TI-SOL-SMALLCELL; typical B2/B4/B41/n77/n78)"}
+      rf_switch: {bands: [L, S, C], basis: "small-cell T/R switch 1.7-4.2 GHz (band not stated by TI; typical small-cell bands)"}
+    wifi_fe:
+      rf_switch: {bands: [S, C], basis: "Wi-Fi 6/6E 4x4 front end, 2.4/5/6 GHz (TI-SOL-SMALLCELL)"}
+  "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)":
+    radio_fe:
+      lna: {bands: [S, C], basis: "4x4 dual-band 2.4 + 5 GHz FEM chains (TI-SOL-WIFIAP)"}
+      rf_switch: {bands: [S, C], basis: "4x4 dual-band 2.4 + 5 GHz FEM chains (TI-SOL-WIFIAP)"}
+  "Automotive telematics control unit (TCU) / V2X module (TI)":
+    wireless:
+      lna: {bands: [L], basis: "GNSS LNA (GPS/GLONASS L1, optional L5) (TI-SOL-TCU)"}
+  "Automotive connected radio / entry infotainment (AM/FM/DAB tuner + Wi-Fi/BT + MPU) (NXP)":
+    rf_amplifier:
+      lna: {bands: [sub1], basis: "AM/FM + DAB Band III active-antenna LNA (TLH501x, NXP_TLH501X_PAGE)"}
+  "V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)":
+    v2x_frontend:
+      lna: {bands: [C], basis: "V2X 802.11p / C-V2X 5.9 GHz (NXP_SAF5400FS)"}
+      rf_switch: {bands: [C], basis: "V2X 5.9 GHz T/R switch (NXP_V2X)"}
+  "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)":
+    uwb_antenna_path:
+      rf_switch: {bands: [C, X], basis: "UWB ch5 6.5 GHz + ch9 8.0 GHz (7.7-8.2 GHz straddles C/X), CCC digital key"}
+  "Wi-Fi access point / router (tri-band, MPU + Wi-Fi radios) (NXP)":
+    wifi_fems:
+      rf_switch: {bands: [S, C], basis: "tri-band Wi-Fi 2.4 / 5 / 6 GHz FEM chains (NXP_WLAN_AP)"}
+  "Wi-Fi 6/6E + Bluetooth (+802.15.4) combo chip application (client / IoT / automotive module) (NXP)":
+    diplexer:
+      filter_saw_baw: {bands: [S, C], basis: "2.4 / 5 GHz diplexer (IW612 DS Fig 1)"}
+    bt_switch:
+      rf_switch: {bands: [S, C], basis: "2.4 GHz Wi-Fi/BT sharing SPDT; diversity DPDT on 2.4/5 GHz (IW612, AN14463)"}
+  "5G massive MIMO base station RF front end (Airfast) (NXP)":
+    predriver:
+      rf_predriver: {bands: [S, C], power: low, basis: "AFLP5G25641 2.3-2.7 GHz 29 dBm, AFLP5G35645 3.4-3.8 GHz (NXP_MMIMO)"}
+    pa_module:
+      power_amplifier: {bands: [S, C], power: high, basis: "A5M36TG040-TC 3.4-3.8 GHz, 10 W avg (peak >10 W); band options to 5 GHz"}
+    rx_fem:
+      lna: {bands: [S, C], basis: "BTS7203H 2.3-2.7 GHz, BTS7202U 3.3-4.2 GHz, AFRX5G372 3.3-5 GHz (NXP_MMIMO)"}
+      rf_switch: {bands: [S, C], basis: "switch in RX FEM, 2.3-2.7 / 3.3-5 GHz (NXP_MMIMO)"}
+    antenna:
+      filter_saw_baw: {bands: [S, C], basis: "array band filter, 2300-2700 / 3300-5000 MHz options (NXP_MMIMO)"}
+  "5G O-RAN radio unit / Digital Airfast (4T4R) - baseband, DFE, PA, LNA, timing (NXP)":
+    pa:
+      power_amplifier: {bands: [S], power: high, basis: "A5M36TG040-TC 3.4-3.8 GHz, 10 W avg per chain (NXP_DIGITAL_AIRFAST)"}
+    lna:
+      lna: {bands: [S, C], basis: "BTS7202U 3.3-4.2 GHz RX FEM (NXP_DIGITAL_AIRFAST)"}
+      rf_switch: {bands: [S, C], basis: "switch in BTS7202U 3.3-4.2 GHz RX FEM"}
+  "5G small cell / femtocell (sub-6 GHz 4T4R ISC and mmWave ISC) (NXP)":
+    pa_lna:
+      power_amplifier: {bands: [L, S, C], power: low, basis: "sub-6 4T4R femto/indoor ISC, 1.7-4.2 GHz bands; ~0.25 W per chain"}
+      lna: {bands: [L, S, C], basis: "sub-6 4T4R femto/indoor ISC receive, 1.7-4.2 GHz bands"}
+      rf_switch: {bands: [L, S, C], basis: "sub-6 4T4R TDD T/R switch, 1.7-4.2 GHz bands"}
+      filter_saw_baw: {bands: [L, S, C], basis: "sub-6 4T4R band filter, 1.7-4.2 GHz bands"}
+    beamformer:
+      beamformer_ic: {bands: [Ka], basis: "mmWave ISC analog beamformer, n257/n258/n261 24-29.5 GHz, n260 39 GHz"}
+    gnss_nlm:
+      lna: {bands: [L], basis: "GPS L1 1575 MHz sync LNA; NLM listening band not stated (NXP_FEMTO)"}
+  "5G flagship smartphone (Dimensity 9400) - cellular, GNSS, Wi-Fi 7 / BT front-end sockets (MediaTek)":
+    tx_frontend:
+      power_amplifier: {bands: [sub1, L, S, C], power: low, basis: "FR1 sub-6 GHz cellular 0.6-5 GHz, power class 2 (26 dBm) (MTK_D9400)"}
+    rx_frontend:
+      lna: {bands: [sub1, L, S, C], basis: "FR1 sub-6 GHz cellular receive, 0.6-5 GHz (MTK_D9400)"}
+    antenna_switching:
+      rf_switch: {bands: [sub1, L, S, C], basis: "cellular antenna/TX switching, FR1 0.6-5 GHz"}
+    filters:
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "FR1 band filters / multiplexers 0.6-5 GHz"}
+    gnss:
+      lna: {bands: [L], basis: "GNSS L1 1575 + L5 1176 MHz (MTK_D9400 spec)"}
+  "Wi-Fi 7 access point / router (Filogic 880 / 860) (MediaTek)":
+    wifi_fems:
+      lna: {bands: [S, C], basis: "Wi-Fi 7 2.4 / 5 / 6 GHz FEMs per chain (MTK_FILOGIC880)"}
+      filter_saw_baw: {bands: [S, C], basis: "2.4 / 5 / 6 GHz diplexers and band filters (MTK_FILOGIC880)"}
+  "Wi-Fi 7 + Bluetooth client / combo (Filogic 380 / 360) (MediaTek)":
+    bt_antenna:
+      rf_switch: {bands: [S], basis: "Bluetooth 2.4 GHz extra antenna / coexistence switch"}
+  "IoT edge-AI board (Genio 700 / MT8390) with companion PMIC, DCXO and Wi-Fi/BT combo (MediaTek)":
+    wifi_frontend:
+      rf_switch: {bands: [S, C], basis: "2x2 dual-band Wi-Fi 2.4 / 5 GHz + BT front end (MTK_GENIO700)"}
+  "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)":
+    tx_frontend:
+      power_amplifier: {bands: [sub1, L, S, C], power: low, basis: "FR1 sub-6 GHz 3Tx, UE power class 2/1.5 (<= 29 dBm) (MTK_T930)"}
+    rx_frontend:
+      lna: {bands: [sub1, L, S, C], basis: "FR1 sub-6 GHz 8Rx receive (MTK_T930)"}
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "FR1 sub-6 GHz receive band filters"}
+    antenna_switching:
+      rf_switch: {bands: [sub1, L, S, C], basis: "FR1 antenna switching across 8 antennas"}
+    gnss:
+      lna: {bands: [L], basis: "GNSS L1 (L5) LNA"}
+  "Automotive telematics (Dimensity Auto Connect MT2739: 5G-Advanced + NTN satellite) (MediaTek)":
+    ntn_frontend:
+      lna: {bands: [L, S], basis: "NTN bands n255 L-band 1.5/1.6 GHz and n256 S-band 2 GHz"}
+      power_amplifier: {bands: [L, S], power: low, basis: "NTN UE uplink n255 1.6 GHz / n256 2.0 GHz, class 3 (23 dBm)"}
+      filter_saw_baw: {bands: [L, S], basis: "NTN n255 L-band / n256 S-band filters"}
+  "5G smartphone modem-to-antenna (Snapdragon X80 / X85 Modem-RF) (Qualcomm)":
+    sub6_rffe:
+      lna: {bands: [sub1, L, S, C], basis: "sub-6 GHz FR1 cellular 0.6-5 GHz (QC_X80_PB)"}
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "sub-6 GHz FR1 band filters 0.6-5 GHz"}
+    gnss:
+      lna: {bands: [L], basis: "GNSS L1 / L5 LNA"}
+    satellite:
+      power_amplifier: {bands: [L, S], power: low, basis: "NTN n255 1.6 GHz / n256 2.0 GHz uplink, handset class (23 dBm)"}
+      lna: {bands: [L, S], basis: "NTN n255 L-band 1.5 GHz / n256 S-band 2.2 GHz downlink"}
+  "Mobile Wi-Fi 7 + Bluetooth + UWB connectivity (FastConnect 7900) (Qualcomm)":
+    uwb_frontend:
+      rf_switch: {bands: [C, X], basis: "UWB ch5 6.5 GHz + ch9 8.0 GHz (7.7-8.2 GHz straddles C/X)"}
+  "Enterprise / premium Wi-Fi access point (Dragonwing NPro A8 Elite, Wi-Fi 8) (Qualcomm)":
+    wifi_fems:
+      filter_saw_baw: {bands: [S, C], basis: "Wi-Fi 2.4 / 4.9 / 5 / 6 GHz (QC_NPRO_A8_PB)"}
+  "5G fixed-wireless-access CPE (Dragonwing FWA Gen 5 / Gen 6 Elite, QTM567 mmWave) (Qualcomm)":
+    sub6_rffe:
+      lna: {bands: [sub1, L, S, C], basis: "sub-6 GHz FR1 8Rx receive 0.6-5 GHz (QC_FWA5_PB)"}
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "sub-6 GHz FR1 band filters 0.6-5 GHz"}
+  "IoT Bluetooth LE SoC reference design (QCC711) and IoT processor Wi-Fi companion (QCS6490 + WCN6750) (Qualcomm)":
+    rf_matching:
+      filter_saw_baw: {bands: [S], basis: "BLE 2.4 GHz output band-pass (QC_QCC711_HDG)"}
+    wifi_frontend:
+      rf_switch: {bands: [S, C], basis: "WCN6750 Wi-Fi 6E 2.4 / 5 / 6 GHz + BT front end"}
+  "Land mobile radio (public safety handheld) (TI)":
+    rf_path:
+      lna: {bands: [sub1], basis: "LMR VHF 136-174, UHF 380-520, 700/800 MHz"}
+      rf_mixer: {bands: [sub1], basis: "RF port at VHF/UHF/700-800 MHz LMR bands"}
+      power_amplifier: {bands: [sub1], power: mid, basis: "public-safety handheld, VHF/UHF/700-800 MHz, ~3-5 W"}
+      filter_saw_baw: {bands: [sub1], basis: "LMR band filters VHF/UHF/700-800 MHz"}
+      rf_attenuator: {bands: [sub1], basis: "LMR RF path, VHF/UHF/700-800 MHz"}
+      rf_gain_block: {bands: [sub1], basis: "LMR RF path, VHF/UHF/700-800 MHz"}
+    rx:
+      rf_gain_block: {bands: [sub1], basis: "IF / ADC-driver VGA after down-conversion; IF < 1 GHz"}
+    clock:
+      rf_synthesizer: {bands: [sub1], basis: "LO for VHF/UHF/700-800 MHz bands (LO = RF +/- IF, < 1 GHz)"}
+    sensing:
+      rf_mixer: {bands: [sub1], basis: "IQ modulator at the LMR RF frequency (< 1 GHz)"}
+  "Satellite communications payload (RF-sampling transponder with beamforming) (TI)":
+    antenna_path:
+      lna: {bands: [L, S, C, X, Ku, Ka], basis: "band not stated (TI-SOL-SATPAYLOAD); comms payloads use L/S (MSS) to Ku/Ka"}
+      power_amplifier: {bands: [L, S, C, X, Ku, Ka], basis: "band not stated; comms payloads L/S (MSS) to Ku/Ka; power not stated"}
+      beamformer_ic: {bands: [X, Ku, Ka], basis: "band not stated; phased-array payload beamformers are typically X/Ku/Ka"}
+    rx_chain:
+      filter_saw_baw: {bands: [L, S, C, X, Ku, Ka], basis: "RF preselect + IF filters; payload band not stated (L-Ka typical)"}
+      rf_mixer: {bands: [L, S, C, X, Ku, Ka], basis: "RF port at payload uplink band (not stated, L-Ka typical); IF to RF ADC"}
+      rf_gain_block: {bands: [sub1, L, S, C], basis: "FDA driving RF-sampling ADC at IF (TRF0108-SEP, ADC12DJ3200); IF < ~6 GHz"}
+    tx_chain:
+      rf_gain_block: {bands: [sub1, L, S, C], basis: "FDA after RF DAC at IF (DAC39RF10-SEP, TRF0108-SEP); IF < ~6 GHz"}
+      rf_mixer: {bands: [L, S, C, X, Ku, Ka], basis: "up-converts IF to payload downlink band (not stated, L-Ka typical)"}
+      filter_saw_baw: {bands: [L, S, C, X, Ku, Ka], basis: "RF band filter at payload downlink band (not stated, L-Ka typical)"}
+    clocking:
+      rf_synthesizer: {bands: [L, S, C, X, Ku, Ka], basis: "LO / sample clock (LMX1860-SEP); LO follows payload band, not stated"}
+      frequency_multiplier: {bands: [L, S, C, X, Ku, Ka], basis: "RF clock doubler for LO / converter clock; band not stated"}
+  "Multimedia tablet (cellular + Wi-Fi, USB-C) (TI)":
+    rf_front_end:
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "cellular LTE / 5G sub-6 band filters 0.6-5 GHz"}
+  "True-wireless (TWS) earbuds with charging case (QCC3020 / QCC5141 / QCC5171 reference designs, S5 Gen 1) (Qualcomm)":
+    rf_filter:
+      filter_saw_baw: {bands: [S], basis: "Bluetooth 2.4 GHz RF filter"}
+  "Battery-powered Wi-Fi IoT node with external PA (QCC730 xPA, dual-band 802.11n micro-power Wi-Fi) (Qualcomm)":
+    bpf:
+      filter_saw_baw: {bands: [S, C], basis: "2.4 GHz and 5 GHz band-pass filters (QC-SCH-QCC730-XPA)"}
+  "Fiber broadband gateway (XGS-PON + Wi-Fi 8, Dragonwing FiberPro A8 Elite IPQ96) (Qualcomm)":
+    rffe:
+      filter_saw_baw: {bands: [S, C], basis: "Wi-Fi 2.4 / 4.9 / 5 / 6 GHz per chain (QC-PB-FIBERPRO-A8)"}
+  "Wi-Fi 7 home router / broadband gateway with AI coprocessor and 10G PON (Dragonwing NPro A7 Elite IPQ5424) (Qualcomm)":
+    rffe:
+      filter_saw_baw: {bands: [S, C], basis: "Wi-Fi 7 2.4 / 5 / 6 GHz FEMs and filters (QC-PB-NPRO-A7)"}
+  "Outdoor microwave backhaul unit (ODU: modem ASIC + RF up/down-conversion chain, diplexer, PoE / -48 V, antenna alignment motor) (TI)":
+    clocking:
+      rf_synthesizer: {bands: [], basis: "not stated: clock-tree synthesizer (converter clock); RF LO is in rf_analog_chain"}
+    modem:
+      rf_mixer: {bands: [], basis: "not stated: modem IQ modulator / demodulator at IF; IF frequency not given"}
+    rf_analog_chain:
+      rf_synthesizer: {bands: [C, X, Ku, Ka, mmw], basis: "RF LO for 6-42 GHz or E-band 70/80 GHz links (TI-SOL-ODU, RFE-BD-P2P)"}
+      rf_mixer: {bands: [C, X, Ku, Ka, mmw], basis: "up/down-conversion, RF port 6-42 GHz or E-band 70/80 GHz"}
+      lna: {bands: [C, X, Ku, Ka, mmw], basis: "link band 6-42 GHz or E-band 71-86 GHz (RFE-BD-P2P NF 1.5-3.5 dB)"}
+      power_amplifier: {bands: [C, X, Ku, Ka, mmw], power: mid, basis: "link band 6-42 GHz / E-band; PA +20..+33 dBm (RFE-BD-P2P)"}
+      filter_saw_baw: {bands: [C, X, Ku, Ka, mmw], basis: "TX/RX band filters 6-42 GHz / E-band"}
+      rf_gain_block: {bands: [C, X, Ku, Ka, mmw], basis: "RF gain in 6-42 GHz / E-band chain"}
+      rf_attenuator: {bands: [C, X, Ku, Ka, mmw], basis: "RF gain control in 6-42 GHz / E-band chain"}
+      rf_limiter: {bands: [C, X, Ku, Ka, mmw], basis: "receiver protection in 6-42 GHz / E-band chain"}
+  "Defense / tactical software-defined radio (direct-conversion TX/RX, high-speed ADC / DAC, FPGA + DSP/ARM, battery powered) (TI)":
+    clock_and_timing:
+      rf_synthesizer: {bands: [sub1, L, S, C], basis: "direct-conversion LO = RF; band not stated, tactical SDR typ. 30 MHz-6 GHz"}
+    rf_rx:
+      rf_mixer: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      rf_gain_block: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      rf_limiter: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      lna: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      rf_attenuator: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+    rf_tx:
+      rf_mixer: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      rf_gain_block: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      rf_attenuator: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+      power_amplifier: {bands: [sub1, L, S, C], basis: "band not stated (TI-SOL-SDR); tactical SDR typically 30 MHz-6 GHz"}
+  "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)":
+    rf_front_end:
+      lna: {bands: [S, C, X, Ku], basis: "2-18 GHz typical EW coverage (RFE-BD-RWR; 0.5-40 GHz extended)"}
+      rf_mixer: {bands: [S, C, X, Ku], basis: "2-18 GHz typical EW coverage (RFE-BD-RWR; 0.5-40 GHz extended)"}
+      rf_gain_block: {bands: [S, C, X, Ku], basis: "2-18 GHz typical EW coverage (RFE-BD-RWR; 0.5-40 GHz extended)"}
+    clocking:
+      rf_synthesizer: {bands: [S, C, X, Ku], basis: "tuning LO for 2-18 GHz coverage (RFE-ART-EW)"}
+    antenna:
+      rf_switch: {bands: [S, C, X, Ku], basis: "T/R switch, 2-18 GHz typical EW coverage"}
+    preselector:
+      rf_limiter: {bands: [S, C, X, Ku], basis: "preselector / switched filter bank, 2-18 GHz (RFE-BD-RWR)"}
+      filter_saw_baw: {bands: [S, C, X, Ku], basis: "preselector / switched filter bank, 2-18 GHz (RFE-BD-RWR)"}
+      rf_switch: {bands: [S, C, X, Ku], basis: "preselector / switched filter bank, 2-18 GHz (RFE-BD-RWR)"}
+    jammer_tx:
+      rf_mixer: {bands: [S, C, X, Ku], basis: "up-converter to 2-18 GHz jamming band (RFE-BD-DRFM)"}
+      rf_synthesizer: {bands: [S, C, X, Ku], basis: "TX LO for 2-18 GHz (RFE-BD-DRFM)"}
+      rf_gain_block: {bands: [S, C, X, Ku], basis: "driver gain, 2-18 GHz"}
+      power_amplifier: {bands: [S, C, X, Ku], power: high, basis: "jammer PA 2-18 GHz, ERP +30..+60 dBm (RFE-BD-DRFM)"}
+  "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)":
+    radar_receiver_baseband:
+      filter_saw_baw: {bands: [sub1], basis: "baseband / IF anti-alias filter ahead of ADC, < 1 GHz"}
+      rf_gain_block: {bands: [sub1], basis: "baseband / IF ADC driver, < 1 GHz"}
+    radar_receiver_front_end:
+      rf_mixer: {bands: [S, C, X, Ku], basis: "IQ demodulator RF port; band not stated, radar typically S-Ku"}
+      filter_saw_baw: {bands: [S, C, X, Ku], basis: "RF band filter; band not stated, radar typically S-Ku"}
+    radar_transmitter_baseband:
+      filter_saw_baw: {bands: [sub1], basis: "DAC reconstruction filter, baseband < 1 GHz"}
+      rf_gain_block: {bands: [sub1], basis: "baseband amplifier after DAC, < 1 GHz"}
+    radar_transmitter_front_end:
+      rf_mixer: {bands: [S, C, X, Ku], basis: "IQ modulator to radar RF; band not stated, typically S-Ku"}
+      rf_predriver: {bands: [S, C, X, Ku], basis: "TX driver at radar RF; band not stated, typically S-Ku"}
+      filter_saw_baw: {bands: [S, C, X, Ku], basis: "TX band filter; band not stated, typically S-Ku"}
+    clocks:
+      rf_synthesizer: {bands: [S, C, X, Ku], basis: "LO / converter clock PLL; follows radar RF (not stated, typically S-Ku)"}
+    rf_front_end:
+      rf_switch: {bands: [S, C, X, Ku], basis: "T/R switch per element; band not stated, radar typically S-Ku"}
+      lna: {bands: [S, C, X, Ku], basis: "T/R module LNA; band not stated, radar typically S-Ku"}
+      power_amplifier: {bands: [S, C, X, Ku], power: high, basis: "GaN T/R-module PA (TI-SOL-RADAR), typically >10 W per element; S-Ku"}
+      rf_phase_shifter: {bands: [S, C, X, Ku], basis: "T/R module phase shifter; band not stated, typically S-Ku"}
+      rf_gain_block: {bands: [S, C, X, Ku], basis: "T/R module VGA; band not stated, typically S-Ku"}
+      rf_predriver: {bands: [S, C, X, Ku], basis: "T/R module driver ahead of GaN PA; S-Ku typical"}
+      rf_limiter: {bands: [S, C, X, Ku], basis: "receiver limiter in T/R module; S-Ku typical"}
+      filter_saw_baw: {bands: [S, C, X, Ku], basis: "element / band filter; S-Ku typical"}
+  "Medical infusion pump (stepper / DC pump motor, occlusion / air-in-line / flow sensing, battery backup, wireless) (TI)":
+    multiparameter_sensor_front_end:
+      filter_saw_baw: {bands: [], basis: "not stated: analog sensor-front-end filter, no RF band (likely not an RF filter)"}
+  "eCPRI massive-MIMO radio unit - timing / clock tree (system synchronizer, fanout, RF synthesizers) (Renesas)":
+    transceiver:
+      rf_mixer: {bands: [S, C], basis: "up/down-converters at mMIMO RF, TDD n41/n77/n78 2.5-4.2 GHz"}
+    rf_frontend:
+      power_amplifier: {bands: [S, C], basis: "mMIMO RRU TDD n41/n77/n78 2.5-4.2 GHz; power not stated"}
+      lna: {bands: [S, C], basis: "mMIMO RRU receive, TDD n41/n77/n78 2.5-4.2 GHz"}
+    rf_synth:
+      rf_synthesizer: {bands: [S, C], basis: "LO for up/down converters (REN-WC-ECPRIRRU) at mMIMO RF 2.5-4.2 GHz"}
+  "Superheterodyne transceiver with IF I/Q demodulator / modulator (TDD, shared antenna via T/R switch) (Mini-Circuits)":
+    rx_front_end:
+      rf_limiter: {bands: [sub1, L, S, C], basis: "RF front end; band not stated (MC-BD-TRX), sample MMIC families are sub-6 GHz"}
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "RF front end; band not stated (MC-BD-TRX), sample MMIC families are sub-6 GHz"}
+      lna: {bands: [sub1, L, S, C], basis: "RF front end; band not stated (MC-BD-TRX), sample MMIC families are sub-6 GHz"}
+    rx_lo:
+      rf_synthesizer: {bands: [sub1, L, S, C], basis: "1st LO near RF; band not stated, sub-6 GHz MMIC families"}
+      rf_gain_block: {bands: [sub1, L, S, C], basis: "LO buffer at 1st LO frequency (near RF)"}
+    rx_downconv_if:
+      rf_mixer: {bands: [sub1, L, S, C], basis: "1st mixer, RF port at RF band (not stated, sub-6 GHz)"}
+      filter_saw_baw: {bands: [sub1], basis: "IF low-pass after 1st mixer; IF not stated, typ. < 1 GHz"}
+      rf_gain_block: {bands: [sub1], basis: "IF amplifier; IF not stated, typ. < 1 GHz"}
+      rf_attenuator: {bands: [sub1], basis: "IF attenuator; IF not stated, typ. < 1 GHz"}
+    iq_demod:
+      rf_mixer: {bands: [sub1], basis: "IQ demodulator at IF (typ. < 1 GHz)"}
+      rf_synthesizer: {bands: [sub1], basis: "2nd LO at IF (typ. < 1 GHz)"}
+    rx_baseband:
+      filter_saw_baw: {bands: [sub1], basis: "I/Q baseband anti-alias low-pass"}
+    tx_baseband:
+      filter_saw_baw: {bands: [sub1], basis: "I/Q baseband reconstruction low-pass"}
+    iq_mod:
+      rf_mixer: {bands: [sub1], basis: "IQ modulator at TX IF (typ. < 1 GHz)"}
+      rf_synthesizer: {bands: [sub1], basis: "OSC4 IF LO for IQ modulator (typ. < 1 GHz)"}
+    tx_upconv:
+      rf_mixer: {bands: [sub1, L, S, C], basis: "up-converter, RF port at RF band (not stated, sub-6 GHz)"}
+      rf_synthesizer: {bands: [sub1, L, S, C], basis: "OSC3 TX LO near RF (not stated, sub-6 GHz)"}
+      rf_gain_block: {bands: [sub1, L, S, C], basis: "LO buffer at TX LO frequency (near RF)"}
+    tx_chain:
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "TX band-pass / harmonic filter at RF (not stated, sub-6 GHz)"}
+      rf_attenuator: {bands: [sub1, L, S, C], basis: "TX attenuator at RF (not stated, sub-6 GHz)"}
+      power_amplifier: {bands: [sub1, L, S, C], basis: "HPA at RF; band and power not stated (MC-BD-TRX)"}
+  "RF repeater / signal booster with IF translation (shared LO, IF filtering and gain control) (Mini-Circuits)":
+    rx_front_end:
+      rf_limiter: {bands: [sub1, L, S], basis: "cellular repeater/booster bands 0.7-2.7 GHz (band not stated in MC-BD-RPT)"}
+      filter_saw_baw: {bands: [sub1, L, S], basis: "cellular repeater/booster bands 0.7-2.7 GHz (band not stated in MC-BD-RPT)"}
+      lna: {bands: [sub1, L, S], basis: "cellular repeater/booster bands 0.7-2.7 GHz (band not stated in MC-BD-RPT)"}
+      rf_gain_block: {bands: [sub1, L, S], basis: "cellular repeater/booster bands 0.7-2.7 GHz (band not stated in MC-BD-RPT)"}
+      rf_attenuator: {bands: [sub1, L, S], basis: "cellular repeater/booster bands 0.7-2.7 GHz (band not stated in MC-BD-RPT)"}
+    downconv:
+      rf_mixer: {bands: [sub1, L, S], basis: "RF port at cellular band 0.7-2.7 GHz; IF out"}
+    lo:
+      rf_synthesizer: {bands: [sub1, L, S], basis: "single LO = RF +/- IF, near the 0.7-2.7 GHz RF band"}
+    if_strip:
+      filter_saw_baw: {bands: [sub1], basis: "IF channel filter; IF not stated, typ. 70-400 MHz"}
+      rf_gain_block: {bands: [sub1], basis: "IF amplifiers; IF not stated, typ. < 1 GHz"}
+      rf_attenuator: {bands: [sub1], basis: "IF AGC attenuator; IF not stated, typ. < 1 GHz"}
+    upconv:
+      rf_mixer: {bands: [sub1, L, S], basis: "RF port back at cellular band 0.7-2.7 GHz"}
+    tx_chain:
+      rf_gain_block: {bands: [sub1, L, S], basis: "driver at cellular band 0.7-2.7 GHz"}
+      power_amplifier: {bands: [sub1, L, S], power: mid, basis: "repeater/booster HPA 0.7-2.7 GHz, 1-10 W class"}
+  "CATV / HFC DOCSIS 4.0 line extender amplifier (1.8 GHz downstream, 5-680 MHz upstream, diplexed) (Mini-Circuits)":
+    ds_lna:
+      lna: {bands: [sub1, L], basis: "DOCSIS 4.0 downstream 108-1794 MHz (MC-APP-CATV)"}
+    ds_agc1:
+      rf_attenuator: {bands: [sub1, L], basis: "downstream AGC/tilt, up to 1.8 GHz"}
+    ds_driver1:
+      rf_gain_block: {bands: [sub1, L], basis: "downstream driver, up to 1.8 GHz"}
+    ds_agc2:
+      rf_attenuator: {bands: [sub1, L], basis: "downstream AGC/tilt, up to 1.8 GHz"}
+    ds_driver2:
+      rf_gain_block: {bands: [sub1, L], basis: "downstream driver, up to 1.8 GHz"}
+    ds_doubler:
+      power_amplifier: {bands: [sub1, L], power: low, basis: "power doubler to 1.8 GHz; ~70-75 dBmV total (~20-26 dBm)"}
+    us_lna:
+      lna: {bands: [sub1], basis: "upstream 5-680 MHz (MC-APP-CATV)"}
+    us_agc:
+      rf_attenuator: {bands: [sub1], basis: "upstream AGC/tilt, 5-680 MHz"}
+    us_driver:
+      rf_gain_block: {bands: [sub1], basis: "upstream driver, 5-680 MHz"}
+  "Direct-conversion (zero-IF) I/Q receiver with baseband VGAs and dual ADC (RF Essentials)":
+    rf_bpf:
+      filter_saw_baw: {bands: [sub1, L, S, C], basis: "generic ZIF (RFE-BD-ZIF, band not stated); typically sub-6 GHz cellular/Wi-Fi/SDR"}
+    lna:
+      lna: {bands: [sub1, L, S, C], basis: "generic ZIF, band not stated; typically sub-6 GHz"}
+    lo:
+      rf_synthesizer: {bands: [sub1, L, S, C], basis: "LO at f_RF (zero-IF); typically sub-6 GHz"}
+    mixer_i:
+      rf_mixer: {bands: [sub1, L, S, C], basis: "I mixer, RF/LO at f_RF; typically sub-6 GHz"}
+    mixer_q:
+      rf_mixer: {bands: [sub1, L, S, C], basis: "Q mixer, RF/LO at f_RF; typically sub-6 GHz"}
+    vga_i:
+      rf_gain_block: {bands: [sub1], basis: "baseband VGA (DC to tens of MHz)"}
+    vga_q:
+      rf_gain_block: {bands: [sub1], basis: "baseband VGA (DC to tens of MHz)"}
+  "Coherent pulse-Doppler radar (STALO + COHO, T/R switch, range gates + Doppler FFT) (RF Essentials)":
+    tr_switch:
+      rf_switch: {bands: [S, C, X, Ku], basis: "T/R switch at radar RF; band not stated (RFE-BD-PD), typically S-Ku"}
+      rf_limiter: {bands: [S, C, X, Ku], basis: "receiver limiter at radar RF; typically S-Ku"}
+    lna:
+      lna: {bands: [S, C, X, Ku], basis: "radar RF LNA; band not stated, typically S-Ku"}
+    mixer:
+      rf_mixer: {bands: [S, C, X, Ku], basis: "coherent down-converter, RF port S-Ku typical"}
+    if_amp:
+      rf_gain_block: {bands: [sub1], basis: "IF amplifier; IF typ. 30-500 MHz"}
+    stalo:
+      rf_synthesizer: {bands: [S, C, X, Ku], basis: "STALO = microwave LO near radar RF (S-Ku typical)"}
+    coho:
+      rf_synthesizer: {bands: [sub1], basis: "COHO runs at the IF (typ. 30-500 MHz)"}
+    pulse_mod:
+      rf_switch: {bands: [S, C, X, Ku], basis: "pulse modulator switch at radar RF (S-Ku typical)"}
+    pa:
+      power_amplifier: {bands: [S, C, X, Ku], power: high, basis: "pulsed PA +40..+60 dBm peak (RFE-BD-PD); S-Ku typical"}
+  "Monostatic FMCW ranging radar (ramp-driven VCO, circulator, dechirp mixer, beat LPF, ADC, range FFT) (RF Essentials)":
+    lna:
+      lna: {bands: [Ka, mmw], basis: "24 GHz (K) or 60 / 77-81 GHz FMCW (RFE-BD-FMCW)"}
+    mixer:
+      rf_mixer: {bands: [Ka, mmw], basis: "dechirp mixer RF/LO at 24 / 60 / 77 GHz"}
+    if_amp:
+      rf_gain_block: {bands: [sub1], basis: "beat-frequency IF, kHz to tens of MHz"}
+    ramp:
+      rf_synthesizer: {bands: [Ka, mmw], basis: "chirp PLL controlling the 24-77 GHz VCO (open-loop ramp would be baseband)"}
+    vco:
+      rf_synthesizer: {bands: [Ka, mmw], basis: "swept VCO 24-77 GHz (RFE-BD-FMCW)"}
+    pa:
+      power_amplifier: {bands: [Ka, mmw], power: low, basis: "PA 10-13 dBm at 77 GHz (RFE-ART-FMCW)"}
+  "Radar warning receiver (spiral antennas, wideband BPF bank, crystal video detection, pulse analyser, threat library, DF) (RF Essentials)":
+    bpf_bank:
+      filter_saw_baw: {bands: [S, C, X, Ku], basis: "wide BPF bank 2-18 GHz (RFE-BD-RWR)"}
+      rf_switch: {bands: [S, C, X, Ku], basis: "filter-bank switching, 2-18 GHz (RFE-BD-RWR)"}
+  "DRFM deception jammer (wideband RX, downconvert, >2 GSPS ADC, FPGA memory/modify, DAC, upconvert, PA) (RF Essentials)":
+    lna:
+      lna: {bands: [S, C, X, Ku], basis: "wideband intercept LNA; 2-18 GHz typical (RFE-ART-EW)"}
+    rx_lo:
+      rf_synthesizer: {bands: [S, C, X, Ku], basis: "RX LO tuning over 2-18 GHz typical"}
+    rx_mixer:
+      rf_mixer: {bands: [S, C, X, Ku], basis: "down-converter, RF port 2-18 GHz typical"}
+    tx_lo:
+      rf_synthesizer: {bands: [S, C, X, Ku], basis: "TX LO tuning over 2-18 GHz typical"}
+    tx_mixer:
+      rf_mixer: {bands: [S, C, X, Ku], basis: "up-converter, RF port 2-18 GHz typical"}
+    pa:
+      power_amplifier: {bands: [S, C, X, Ku], power: high, basis: "jammer PA, ERP +30..+60 dBm (RFE-BD-DRFM); 2-18 GHz typical"}
+  "Swept-tuned spectrum analyzer (YIG preselector, input attenuator, 1st mixer + YIG LO, IF, RBW, log detector, VBW, ADC, sweep generator) (RF Essentials)":
+    presel:
+      filter_saw_baw: {bands: [S, C, X, Ku, Ka], basis: "YIG preselector, used above ~3.6 GHz up to 26.5-44 GHz (generic SA)"}
+    atten:
+      rf_attenuator: {bands: [sub1, L, S, C, X, Ku, Ka], basis: "input step attenuator over full input range; generic SA ~9 kHz-26.5/44 GHz"}
+    lo1:
+      rf_synthesizer: {bands: [S, C, X], basis: "YIG 1st LO typically ~3-9 GHz (harmonic mixing for higher bands)"}
+    mixer1:
+      rf_mixer: {bands: [sub1, L, S, C, X, Ku, Ka], basis: "1st mixer RF port over full input range (generic SA, band not stated)"}
+    if_gain:
+      rf_gain_block: {bands: [sub1], basis: "final IF gain (IF typically tens of MHz to ~320 MHz)"}
+    rbw:
+      filter_saw_baw: {bands: [sub1], basis: "RBW filter at final IF (< 1 GHz)"}
+  "Two-port vector network analyzer (synthesized source, splitter, reference / test couplers, coherent receivers, DSP) (RF Essentials)":
+    source:
+      rf_synthesizer: {bands: [sub1, L, S, C, X, Ku, Ka], basis: "swept source; generic VNA, typical 10 MHz-26.5/40 GHz (band not stated)"}
+    ref_rx:
+      rf_mixer: {bands: [sub1, L, S, C, X, Ku, Ka], basis: "coherent receiver mixer over VNA range (generic, 10 MHz-40 GHz typical)"}
+    test_rx:
+      rf_mixer: {bands: [sub1, L, S, C, X, Ku, Ka], basis: "coherent receiver mixer over VNA range (generic, 10 MHz-40 GHz typical)"}
+  "5G mmWave fixed-wireless-access CPE (SoC + programmable baseband + analog beamformers) (NXP)":
+    abf:
+      beamformer_ic: {bands: [Ka], basis: "FR2 mmWave n257/n258/n261 24-29.5 GHz, n260 39 GHz (NXP_5G_FWA)"}

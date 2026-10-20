@@ -22,6 +22,7 @@ from app.models import (
 )
 from app.services import blocks, cases, pipeline, quality
 from app.services import opportunity as op
+from app.services import rf_coverage as rf
 from app.web.routes import templates
 
 router = APIRouter()
@@ -80,8 +81,15 @@ def application(request: Request, i: int, co: str = "combined", session: Session
 
 
 @router.get("/business/attach", response_class=HTMLResponse)
-def attach(request: Request, fn: str = "", co: str = "combined", session: Session = Depends(get_session)):
+def attach(request: Request, fn: str = "", co: str = "combined", part: str = "", app: str = "",
+           session: Session = Depends(get_session)):  # fmt: skip
+    """Cross-sell: from a part number (optionally narrowed by a loosely described application), or from a function."""
+    from app.services import crosssell
+
     c = _ctx(session, co)
+    c["q_part"], c["q_app"] = part.strip()[:60], app.strip()[:120]
+    c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
+    c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
     c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], c["fns"].get(kv[0], {}).get("label", kv[0])))
     c["fn"] = fn if fn in used else ""
@@ -101,6 +109,9 @@ def attach(request: Request, fn: str = "", co: str = "combined", session: Sessio
         c["anchor_parts"] = offer(c["fn"])
         for e in c["result"]["rows"]:
             e["offer"] = offer(e["fn"]) if e["status"] == "supported" else []
+            e["why"] = op.pair_reasons(c["result"]["apps"], c["fn"], e["fn"])
+    for pr in c["pairs"]:
+        pr["why"] = op.pair_reasons(c["apps"], pr["a"], pr["b"])
     c["shortlisted"] = {
         i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "crosssell"))
     }
@@ -674,3 +685,19 @@ def human_validation(request: Request, prio: str = "", session: Session = Depend
 
     ctx = {"scan": validation.scan(session), "prio": prio if prio in validation.PRIORITY else ""}
     return templates.TemplateResponse(request, "business/validation.html", ctx)
+
+
+@router.get("/business/rf-coverage", response_class=HTMLResponse)
+def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str = ""):
+    """RF functions by frequency band and output power: where our parts are, and where applications need one."""
+    rs = rf.rows()
+    need, apps, unknown, n_rf = rf.demand()
+    ctx = {"rows": rs, "gaps": rf.gaps(rs), "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
+           "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
+           "fn": fn, "band": band, "power": power,
+           "slot": rf.slot_parts(fn, band, power or None) if fn and band else None,
+           "why": rf.basis(fn, band) if fn and band else [], "n_stated": len(rf.block_bands()),
+           "rivals": rf.slot_parts(fn, band, power or None, competitors=True) if fn and band else [],
+           "n_comp": len(rf.competitor_parts()),
+           "comp_makers": sorted({p["manufacturer"] for p in rf.competitor_parts()})}  # fmt: skip
+    return templates.TemplateResponse(request, "business/rf_coverage.html", ctx)

@@ -1,0 +1,19 @@
+<h2>{{ b.name }}</h2>
+<p class="small muted">{{ group }}{% if b.mode %} · {{ {'FDD': 'FDD: paired uplink and downlink', 'TDD': 'TDD: one block, both directions', 'SDL': 'Supplementary downlink only', 'RX': 'Receive only'}.get(b.mode, b.mode) }}{% endif %}{% if b.regions %} · {{ b.regions }}{% endif %}</p>
+<p>{% for r in b.ranges %}<span class="rb-range">{{ r[2] }} {{ '%g'|format(r[0]) }}–{{ '%g'|format(r[1]) }} MHz</span>{% endfor %}</p>
+{% if b.uses %}<p><b>Used for:</b> {{ b.uses }}</p>{% endif %}
+{% if note %}<p class="small">{{ note }}</p>{% endif %}
+<h3>Our parts that cover it <small class="muted">· active Skyworks and Qorvo parts whose stated frequency range covers the band</small></h3>
+{% for g in parts %}
+<details class="rb-fn"{% if loop.index <= 3 and g.specific %} open{% endif %}>
+  <summary><b>{{ g.label }}</b> <small class="muted">{{ g.specific|length }} band-specific{% if g.wide %} · {{ g.wide|length }} wideband{% endif %}</small></summary>
+  {% if g.specific %}<ul class="small">{% for p in g.specific[:15] %}<li><a href="/find?q={{ p.mpn|urlencode }}">{{ p.mpn }}</a> <span class="muted">{{ p.manufacturer }} · {% for lo, hi in p.shown %}{{ '%g'|format(lo) }}–{{ '%g'|format(hi) }} GHz{{ ', ' if not loop.last }}{% endfor %} · {{ p.description[:90] }}</span></li>{% endfor %}
+    {% if g.specific|length > 15 %}<li class="muted">and {{ g.specific|length - 15 }} more</li>{% endif %}</ul>{% endif %}
+  {% if g.wide %}<details class="small rb-wide"><summary>{{ g.wide|length }} wideband part{{ 's' if g.wide|length != 1 }} that also cover it</summary>
+    <p>{% for p in g.wide[:40] %}<a href="/find?q={{ p.mpn|urlencode }}" title="{{ p.manufacturer }} · {{ '%g'|format(p.shown[0][0]) }}–{{ '%g'|format(p.shown[0][1]) }} GHz">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% if g.wide|length > 40 %} …{% endif %}</p></details>{% endif %}
+</details>
+{% else %}<p class="small muted">No active part of ours states a frequency range that covers this band. That can be a gap, or parts whose data sheet summary gives no frequency.</p>{% endfor %}
+{% if rivals %}<details class="rb-comp"><summary><b>Competitor parts that cover it</b> <small class="muted">{{ rivals|sum(attribute='specific', start=[])|length }} band-specific · {{ rivals|sum(attribute='wide', start=[])|length }} wideband · from public product pages, for comparison only</small></summary>
+{% for g in rivals %}<p class="small"><b>{{ g.label }}</b>: {% for p in (g.specific + g.wide)[:30] %}<a href="{{ p.url or '#' }}"{% if p.url %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ p.manufacturer }} · {% for lo, hi in p.shown %}{{ '%g'|format(lo) }}–{{ '%g'|format(hi) }} GHz{% endfor %}{{ ' · band-specific' if p.specific }}">{{ p.mpn }}</a> <small class="muted">{{ p.manufacturer }}</small>{{ ', ' if not loop.last }}{% endfor %}{% if (g.specific + g.wide)|length > 30 %} …{% endif %}</p>{% endfor %}
+</details>{% endif %}
+<p class="small muted">Frequencies from the catalogue's published specifications; a part counts when its range contains the band centre or half of the band. Check the data sheet for the exact band support.</p>

@@ -1,0 +1,110 @@
+# Radio frequency bands for Engineering knowledge > RF bands (interactive chart).
+# Frequencies in MHz from the published band plans: 3GPP TS 36.101 (LTE) and TS 38.101-1 / -2 (5G NR), the GNSS
+# interface control documents (GPS IS-GPS-200/705, Galileo OS SIS ICD, BeiDou ICDs, GLONASS ICD), IEEE 802.11 /
+# 802.15.4 / 802.15.4z, ETSI EN 300 220 (EU SRD), FCC Part 15.247, ITU Radio Regulations (broadcast, satellite,
+# radar allocations) and IEEE Std 521 (radar letter bands). Regional rules vary: the ranges are the band plans, not
+# the channels a given country licenses.
+# ranges: [lo, hi, label]; mode: FDD (paired uplink / downlink), TDD (one block, both directions), SDL (downlink only)
+
+groups:
+  cellular_low: "Cellular low band (< 1 GHz)"
+  cellular_mid: "Cellular mid / high band (1-2.7 GHz)"
+  cellular_c: "Cellular C-band / 5G FR1 (3-7 GHz)"
+  cellular_mmw: "5G mmWave (FR2)"
+  gnss: "GNSS / satellite navigation"
+  wlan: "Wi-Fi, Bluetooth, ISM, IoT"
+  short: "UWB, V2X, NFC, RFID"
+  broadcast: "Broadcast radio and TV"
+  satcom: "Satellite communications"
+  radar: "Radar"
+  ieee: "IEEE radar letter bands"
+
+bands:
+  # ---- cellular, below 1 GHz
+  - {id: b71, name: "Band 71 / n71 (600 MHz)", group: cellular_low, mode: FDD, ranges: [[663, 698, UL], [617, 652, DL]], regions: "US, Canada", uses: "LTE / 5G coverage layer"}
+  - {id: b12, name: "Band 12 / n12 (700 a)", group: cellular_low, mode: FDD, ranges: [[699, 716, UL], [729, 746, DL]], regions: "US", uses: "LTE, LTE-M, NB-IoT"}
+  - {id: b13, name: "Band 13 (700 c)", group: cellular_low, mode: FDD, ranges: [[777, 787, UL], [746, 756, DL]], regions: "US (Verizon)", uses: "LTE, LTE-M"}
+  - {id: b14, name: "Band 14 / n14 (700 PS)", group: cellular_low, mode: FDD, ranges: [[788, 798, UL], [758, 768, DL]], regions: "US (FirstNet)", uses: "public-safety LTE"}
+  - {id: b28, name: "Band 28 / n28 (700 APT)", group: cellular_low, mode: FDD, ranges: [[703, 748, UL], [758, 803, DL]], regions: "Europe, Asia-Pacific, Latin America", uses: "LTE / 5G coverage layer"}
+  - {id: b20, name: "Band 20 / n20 (800 DD)", group: cellular_low, mode: FDD, ranges: [[832, 862, UL], [791, 821, DL]], regions: "Europe, Africa", uses: "LTE, LTE-M, NB-IoT"}
+  - {id: b5, name: "Band 5 / n5 (850, GSM 850)", group: cellular_low, mode: FDD, ranges: [[824, 849, UL], [869, 894, DL]], regions: "Americas, Asia", uses: "GSM, UMTS, LTE, 5G"}
+  - {id: b26, name: "Band 26 (850 extended)", group: cellular_low, mode: FDD, ranges: [[814, 849, UL], [859, 894, DL]], regions: "US", uses: "LTE"}
+  - {id: b8, name: "Band 8 / n8 (900, GSM 900)", group: cellular_low, mode: FDD, ranges: [[880, 915, UL], [925, 960, DL]], regions: "Europe, Asia, Africa", uses: "GSM, UMTS, LTE, NB-IoT"}
+  # ---- cellular, 1-2.7 GHz
+  - {id: b11, name: "Band 11 / 21 (1.5 GHz)", group: cellular_mid, mode: FDD, ranges: [[1427.9, 1462.9, UL], [1475.9, 1510.9, DL]], regions: "Japan", uses: "LTE"}
+  - {id: b32, name: "Band 32 / n75 (L-band SDL)", group: cellular_mid, mode: SDL, ranges: [[1452, 1496, DL]], regions: "Europe", uses: "LTE / 5G supplementary downlink"}
+  - {id: b3, name: "Band 3 / n3 (1800, DCS)", group: cellular_mid, mode: FDD, ranges: [[1710, 1785, UL], [1805, 1880, DL]], regions: "Europe, Asia, Africa", uses: "GSM, LTE, 5G: most used LTE band worldwide"}
+  - {id: b66, name: "Band 66 / n66 (AWS-3)", group: cellular_mid, mode: FDD, ranges: [[1710, 1780, UL], [2110, 2200, DL]], regions: "Americas", uses: "LTE, 5G (superset of band 4)"}
+  - {id: b2, name: "Band 2 / 25 / n2 / n25 (1900 PCS)", group: cellular_mid, mode: FDD, ranges: [[1850, 1915, UL], [1930, 1995, DL]], regions: "Americas", uses: "GSM, UMTS, LTE, 5G"}
+  - {id: b39, name: "Band 39 / n39", group: cellular_mid, mode: TDD, ranges: [[1880, 1920, TDD]], regions: "China", uses: "TD-LTE, 5G"}
+  - {id: b1, name: "Band 1 / n1 (2100, IMT)", group: cellular_mid, mode: FDD, ranges: [[1920, 1980, UL], [2110, 2170, DL]], regions: "Europe, Asia, Africa", uses: "UMTS, LTE, 5G"}
+  - {id: b34, name: "Band 34 / n34", group: cellular_mid, mode: TDD, ranges: [[2010, 2025, TDD]], regions: "China, Europe", uses: "TD-SCDMA, TD-LTE"}
+  - {id: b40, name: "Band 40 / n40 (2300)", group: cellular_mid, mode: TDD, ranges: [[2300, 2400, TDD]], regions: "Asia, Middle East", uses: "TD-LTE, 5G"}
+  - {id: b30, name: "Band 30 / n30 (WCS)", group: cellular_mid, mode: FDD, ranges: [[2305, 2315, UL], [2350, 2360, DL]], regions: "US", uses: "LTE"}
+  - {id: b41, name: "Band 41 / n41 (2.5 GHz)", group: cellular_mid, mode: TDD, ranges: [[2496, 2690, TDD]], regions: "US, China, Japan", uses: "TD-LTE, 5G mid-band (T-Mobile US)"}
+  - {id: b7, name: "Band 7 / n7 (2600)", group: cellular_mid, mode: FDD, ranges: [[2500, 2570, UL], [2620, 2690, DL]], regions: "Europe, Asia, Latin America", uses: "LTE, 5G capacity layer"}
+  - {id: b38, name: "Band 38 / n38", group: cellular_mid, mode: TDD, ranges: [[2570, 2620, TDD]], regions: "Europe, China", uses: "TD-LTE"}
+  # ---- cellular C-band, FR1 above 3 GHz
+  - {id: b42, name: "Band 42 / 43 (3.5 GHz LTE)", group: cellular_c, mode: TDD, ranges: [[3400, 3800, TDD]], regions: "Europe, Japan", uses: "TD-LTE, fixed wireless"}
+  - {id: b48, name: "Band 48 / n48 (CBRS)", group: cellular_c, mode: TDD, ranges: [[3550, 3700, TDD]], regions: "US", uses: "shared-spectrum LTE / 5G, private networks"}
+  - {id: n78, name: "n78 (3.5 GHz)", group: cellular_c, mode: TDD, ranges: [[3300, 3800, TDD]], regions: "Europe, Asia, worldwide", uses: "main 5G mid-band"}
+  - {id: n77, name: "n77 (C-band 3.3-4.2 GHz)", group: cellular_c, mode: TDD, ranges: [[3300, 4200, TDD]], regions: "US (3.7-3.98 GHz C-band), Japan", uses: "5G mid-band"}
+  - {id: n79, name: "n79 (4.5 GHz)", group: cellular_c, mode: TDD, ranges: [[4400, 5000, TDD]], regions: "China, Japan", uses: "5G mid-band"}
+  - {id: b46, name: "Band 46 / n46 (LAA, 5 GHz unlicensed)", group: cellular_c, mode: TDD, ranges: [[5150, 5925, TDD]], regions: "worldwide (licence-assisted)", uses: "LTE-LAA, NR-U"}
+  - {id: n104, name: "n104 (upper 6 GHz)", group: cellular_c, mode: TDD, ranges: [[6425, 7125, TDD]], regions: "Europe, China (planned)", uses: "5G capacity"}
+  # ---- 5G mmWave (FR2)
+  - {id: n258, name: "n258 (26 GHz)", group: cellular_mmw, mode: TDD, ranges: [[24250, 27500, TDD]], regions: "Europe, Asia, Australia", uses: "5G mmWave, fixed wireless"}
+  - {id: n257, name: "n257 (28 GHz)", group: cellular_mmw, mode: TDD, ranges: [[26500, 29500, TDD]], regions: "US, Japan, Korea", uses: "5G mmWave"}
+  - {id: n261, name: "n261 (28 GHz US)", group: cellular_mmw, mode: TDD, ranges: [[27500, 28350, TDD]], regions: "US", uses: "5G mmWave"}
+  - {id: n260, name: "n260 (39 GHz)", group: cellular_mmw, mode: TDD, ranges: [[37000, 40000, TDD]], regions: "US", uses: "5G mmWave"}
+  - {id: n259, name: "n259 (41 GHz)", group: cellular_mmw, mode: TDD, ranges: [[39500, 43500, TDD]], regions: "planned", uses: "5G mmWave"}
+  - {id: n262, name: "n262 (47 GHz)", group: cellular_mmw, mode: TDD, ranges: [[47200, 48200, TDD]], regions: "US", uses: "5G mmWave"}
+  # ---- GNSS
+  - {id: gnss_l5, name: "GNSS L5 / E5a / B2a (1176 MHz)", group: gnss, mode: RX, ranges: [[1164, 1189, L5]], regions: "GPS, Galileo, BeiDou, NavIC, QZSS", uses: "second civil frequency: lane-level accuracy, multipath and ionosphere correction"}
+  - {id: gnss_e5b, name: "Galileo E5b / BeiDou B2b (1207 MHz)", group: gnss, mode: RX, ranges: [[1189, 1214, E5b]], regions: "Galileo, BeiDou", uses: "dual-frequency receivers"}
+  - {id: gnss_l2, name: "GPS L2 / GLONASS G2 (1227-1249 MHz)", group: gnss, mode: RX, ranges: [[1215, 1240, L2], [1242, 1249, G2]], regions: "GPS, GLONASS", uses: "survey, precision agriculture, RTK"}
+  - {id: gnss_e6, name: "Galileo E6 / BeiDou B3 / QZSS L6 (1268-1279 MHz)", group: gnss, mode: RX, ranges: [[1260, 1300, E6]], regions: "Galileo, BeiDou, QZSS", uses: "high-accuracy service (PPP corrections)"}
+  - {id: gnss_l1, name: "GNSS L1 / E1 / B1C (1575.42 MHz)", group: gnss, mode: RX, ranges: [[1559, 1591, L1]], regions: "GPS, Galileo, BeiDou, QZSS, SBAS", uses: "the main civil GNSS signal in every receiver"}
+  - {id: gnss_b1i, name: "BeiDou B1I (1561 MHz)", group: gnss, mode: RX, ranges: [[1559, 1563, B1I]], regions: "BeiDou", uses: "BeiDou legacy civil signal"}
+  - {id: gnss_g1, name: "GLONASS G1 (1598-1606 MHz)", group: gnss, mode: RX, ranges: [[1598, 1606, G1]], regions: "GLONASS", uses: "multi-constellation receivers"}
+  # ---- Wi-Fi, Bluetooth, ISM
+  - {id: ism433, name: "433 MHz ISM / SRD", group: wlan, mode: TDD, ranges: [[433.05, 434.79, ISM]], regions: "Europe (ITU Region 1)", uses: "remote keyless entry, tyre pressure, sensors"}
+  - {id: srd868, name: "868 MHz SRD (EU)", group: wlan, mode: TDD, ranges: [[863, 870, SRD]], regions: "Europe", uses: "LoRa, Sigfox, Wireless M-Bus, Zigbee sub-GHz, smart meters"}
+  - {id: ism915, name: "902-928 MHz ISM (US)", group: wlan, mode: TDD, ranges: [[902, 928, ISM]], regions: "Americas", uses: "LoRa, Wi-SUN, 802.15.4g, RFID, Z-Wave (908 MHz)"}
+  - {id: ism24, name: "2.4 GHz ISM: Wi-Fi, Bluetooth, 802.15.4", group: wlan, mode: TDD, ranges: [[2400, 2483.5, ISM]], regions: "worldwide", uses: "Wi-Fi 4-7, Bluetooth / BLE, Zigbee, Thread, Matter"}
+  - {id: wifi5, name: "Wi-Fi 5 GHz (U-NII-1 to 4)", group: wlan, mode: TDD, ranges: [[5150, 5350, "U-NII-1/2A"], [5470, 5730, "U-NII-2C"], [5735, 5895, "U-NII-3/4"]], regions: "worldwide (channels vary)", uses: "Wi-Fi 5/6/7; DFS radar detection in U-NII-2"}
+  - {id: wifi6, name: "Wi-Fi 6 GHz (6E / 7)", group: wlan, mode: TDD, ranges: [[5925, 7125, "U-NII-5 to 8"]], regions: "US (1200 MHz), Europe (5945-6425 MHz)", uses: "Wi-Fi 6E and 7, 320 MHz channels"}
+  - {id: wigig, name: "60 GHz WiGig (802.11ad / ay)", group: wlan, mode: TDD, ranges: [[57000, 71000, "60 GHz"]], regions: "worldwide (57-66 / 57-71 GHz)", uses: "multi-gigabit short range, in-cabin radar"}
+  # ---- UWB, V2X, NFC, RFID
+  - {id: nfc, name: "NFC / HF RFID (13.56 MHz)", group: short, mode: TDD, ranges: [[13.553, 13.567, HF]], regions: "worldwide", uses: "payment, access, wireless charging handshake"}
+  - {id: uhf_rfid, name: "UHF RFID (860-960 MHz)", group: short, mode: TDD, ranges: [[860, 960, UHF]], regions: "865-868 MHz EU, 902-928 MHz US", uses: "RAIN RFID tags, logistics"}
+  - {id: v2x, name: "ITS 5.9 GHz: C-V2X (n47) / DSRC", group: short, mode: TDD, ranges: [[5855, 5925, ITS]], regions: "US (5895-5925), Europe, China", uses: "vehicle-to-everything safety messages"}
+  - {id: uwb5, name: "UWB channel 5 (6.5 GHz)", group: short, mode: TDD, ranges: [[6240, 6739, ch5]], regions: "worldwide", uses: "secure ranging: digital car key, tags (802.15.4z)"}
+  - {id: uwb9, name: "UWB channel 9 (8 GHz)", group: short, mode: TDD, ranges: [[7738, 8237, ch9]], regions: "worldwide", uses: "secure ranging, in-cabin radar (802.15.4z / 4ab)"}
+  # ---- broadcast
+  - {id: am, name: "AM broadcast (MW 0.53-1.71 MHz, LW)", group: broadcast, mode: RX, ranges: [[0.148, 0.283, LW], [0.53, 1.71, MW]], regions: "worldwide", uses: "AM radio, car radios"}
+  - {id: fm, name: "FM broadcast (76-108 MHz)", group: broadcast, mode: RX, ranges: [[76, 108, FM]], regions: "87.5-108 MHz most countries, 76-95 MHz Japan", uses: "FM radio, RDS, HD Radio"}
+  - {id: dab, name: "DAB / DAB+ Band III (174-240 MHz)", group: broadcast, mode: RX, ranges: [[174, 240, "Band III"]], regions: "Europe, Australia", uses: "digital radio"}
+  - {id: dvbt, name: "UHF TV (470-694 MHz)", group: broadcast, mode: RX, ranges: [[470, 694, UHF]], regions: "Europe (to 790 MHz elsewhere)", uses: "DVB-T2, ATSC 3.0, ISDB-T"}
+  - {id: sdars, name: "SiriusXM satellite radio (S-band)", group: broadcast, mode: RX, ranges: [[2320, 2345, SDARS]], regions: "US, Canada", uses: "satellite radio in cars"}
+  # ---- satcom
+  - {id: sat_l, name: "L-band satcom (Inmarsat, Iridium)", group: satcom, mode: FDD, ranges: [[1525, 1559, DL], [1616, 1626.5, Iridium], [1626.5, 1660.5, UL]], regions: "global", uses: "mobile satellite, IoT, NTN"}
+  - {id: sat_c, name: "C-band satellite", group: satcom, mode: FDD, ranges: [[3700, 4200, DL], [5925, 6425, UL]], regions: "global", uses: "TV distribution, trunking"}
+  - {id: sat_ku, name: "Ku-band satellite", group: satcom, mode: FDD, ranges: [[10700, 12750, DL], [13750, 14500, UL]], regions: "global", uses: "DTH TV, VSAT, LEO broadband user terminals"}
+  - {id: sat_ka, name: "Ka-band satellite", group: satcom, mode: FDD, ranges: [[17700, 20200, DL], [27500, 30000, UL]], regions: "global", uses: "HTS broadband, LEO gateways"}
+  # ---- radar
+  - {id: radar_s, name: "S-band radar (2.7-3.1 GHz)", group: radar, mode: TDD, ranges: [[2700, 3100, S]], regions: "global", uses: "air traffic control, weather"}
+  - {id: radar_c, name: "C-band weather radar (5.25-5.85 GHz)", group: radar, mode: TDD, ranges: [[5250, 5850, C]], regions: "global", uses: "weather radar"}
+  - {id: radar_x, name: "X-band radar (8.5-10.5 GHz)", group: radar, mode: TDD, ranges: [[8500, 10500, X]], regions: "global", uses: "marine (9.3-9.5 GHz), military, AESA fire control"}
+  - {id: radar_24, name: "24 GHz radar (ISM 24.05-24.25 GHz)", group: radar, mode: TDD, ranges: [[24050, 24250, ISM]], regions: "global", uses: "short-range automotive / industrial sensors"}
+  - {id: radar_77, name: "Automotive radar 76-81 GHz", group: radar, mode: TDD, ranges: [[76000, 81000, "76-81"]], regions: "global", uses: "ACC (76-77 GHz), corner and imaging radar (77-81 GHz)"}
+  # ---- IEEE letter bands (ranges per IEEE 521)
+  - {id: ieee_l, name: "L band (1-2 GHz)", group: ieee, mode: "", ranges: [[1000, 2000, L]], uses: "GNSS, L-band satcom, long-range radar"}
+  - {id: ieee_s, name: "S band (2-4 GHz)", group: ieee, mode: "", ranges: [[2000, 4000, S]], uses: "Wi-Fi 2.4 GHz, cellular, weather / ATC radar"}
+  - {id: ieee_c, name: "C band (4-8 GHz)", group: ieee, mode: "", ranges: [[4000, 8000, C]], uses: "Wi-Fi 5/6 GHz, satcom, UWB"}
+  - {id: ieee_x, name: "X band (8-12 GHz)", group: ieee, mode: "", ranges: [[8000, 12000, X]], uses: "radar, satcom"}
+  - {id: ieee_ku, name: "Ku band (12-18 GHz)", group: ieee, mode: "", ranges: [[12000, 18000, Ku]], uses: "satcom, radar"}
+  - {id: ieee_k, name: "K band (18-27 GHz)", group: ieee, mode: "", ranges: [[18000, 27000, K]], uses: "satcom downlink, 24 GHz radar"}
+  - {id: ieee_ka, name: "Ka band (27-40 GHz)", group: ieee, mode: "", ranges: [[27000, 40000, Ka]], uses: "5G mmWave, satcom uplink"}
+  - {id: ieee_v, name: "V band (40-75 GHz)", group: ieee, mode: "", ranges: [[40000, 75000, V]], uses: "60 GHz, backhaul"}
+  - {id: ieee_w, name: "W band (75-110 GHz)", group: ieee, mode: "", ranges: [[75000, 110000, W]], uses: "automotive radar, E-band backhaul (71-86 GHz)"}

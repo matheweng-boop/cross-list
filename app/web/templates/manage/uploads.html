@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Uploads – BizDev{% endblock %}
+{% block content %}
+<h1>Uploads</h1>
+<p class="subtitle muted">Pictures, block diagrams, documents and written explanations to use in the library and the knowledge pages. Public or your own material only: nothing confidential.</p>
+
+<details class="pl-card up-add"{% if error or not rows %} open{% endif %}><summary><b>Add something</b></summary>
+  {% if error %}<p class="small uc-error">{{ error }}</p>{% endif %}
+  <form method="post" action="/manage/uploads" enctype="multipart/form-data" class="up-form">
+    <div class="up-kinds small">{% for k, label in kinds.items() %}<label><input type="radio" name="kind" value="{{ k }}"{{ ' checked' if k == 'picture' }}> {{ label }}</label>{% endfor %}</div>
+    <label>File <small class="muted">PNG, JPEG, GIF, WebP or PDF, up to {{ max_mb }} MB; optional for an explanation</small>
+      <input type="file" name="file" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"></label>
+    <label>Title <input name="title" maxlength="200" placeholder="e.g. 5G small cell RF front end, vendor figure"></label>
+    <label>Explanation <textarea name="explanation" rows="5" placeholder="What it shows, what to take from it, what should change in BizDev"></textarea></label>
+    <div class="up-row">
+      <label>About <input name="topic" maxlength="200" placeholder="Application, function, part number or page"></label>
+      <label>Source <input name="source" maxlength="500" placeholder="Public URL or reference (optional)"></label>
+      <label>Your name <input name="author" maxlength="100" placeholder="optional"></label>
+    </div>
+    <button type="submit">Upload</button>
+  </form>
+</details>
+
+<div class="scope-bar small filter-cols">
+  <div class="chip-row"><span class="chip-lbl">Type</span><a class="fchip{{ ' on' if not kind }}" href="/manage/uploads?status={{ status }}">All</a>{% for k, label in kinds.items() %}<a class="fchip{{ ' on' if kind == k }}" href="/manage/uploads?kind={{ k }}&status={{ status }}">{{ label }}</a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">Status</span><a class="fchip{{ ' on' if not status }}" href="/manage/uploads?kind={{ kind }}">All</a>{% for k, label in statuses.items() %}<a class="fchip{{ ' on' if status == k }}" href="/manage/uploads?kind={{ kind }}&status={{ k }}">{{ label }}</a>{% endfor %}</div>
+</div>
+
+<div class="up-grid">{% for u in rows %}
+  <a class="up-card" href="/manage/uploads/{{ u.id }}">
+    {% if u.content_type and u.content_type.startswith('image/') %}<img src="/manage/uploads/{{ u.id }}/file" alt="{{ u.title }}" loading="lazy">
+    {% else %}<span class="up-icon">{{ 'PDF' if u.content_type == 'application/pdf' else 'Text' }}</span>{% endif %}
+    <b>{{ u.title }}</b>
+    <small class="muted">{{ kinds.get(u.kind, u.kind) }} · {{ statuses.get(u.status, u.status) }} · {{ u.created_at.strftime('%d %b %Y') }}{% if u.topic %} · {{ u.topic }}{% endif %}</small>
+  </a>{% else %}<p class="muted">Nothing uploaded{{ ' with these filters' if kind or status }} yet.</p>{% endfor %}
+</div>
+{% endblock %}

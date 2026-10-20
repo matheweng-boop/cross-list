@@ -9,6 +9,14 @@
 #   2. Where else we see opportunities or devices: other applications, markets and customer systems that need it.
 #   3. Market research: the overall trend and development (size, growth, technology shifts, competitors).
 # Open with a short summary box and the portfolio position; close with risks and sources.
+#
+# Business cases for a product idea (kind: idea) use this order, so cases can be compared side by side:
+#   In brief · 1. Architecture position (where our blocks sit in the library diagrams vs each competitor, and fit
+#   with where the architecture is going) · 2. Our disadvantages and how we make up for them · 3. Reasoning chain
+#   (trend -> evidence -> meaning for us) · 4. Market data (value, source, confidence) · 5. Scenarios (for / against)
+#   · 6. Product definition (reuses, new, outputs, replaces, answers, delivery) · 7. Pricing (anchor, value,
+#   entry / target / premium, assumptions) · 8. Raising the attach rate · 9. Risks and open questions · Sources,
+#   with every figure and link in <slug>.background.html. Confidence: high / med / low; "est" marks our estimates.
 reports:
   - slug: filters-1-11ghz
     title: "Standalone filter opportunities, 1–11 GHz"
@@ -24,16 +32,17 @@ reports:
     tags: [filters, Wi-Fi 7, 5G n77, UWB, X-band, defense]
     sources: "BizDev catalogue, competitor and demand data; ~106 public web sources (background notes)"
   - slug: radio-tuner-next
-    title: "Car-radio tuners: what to build next (2–3 years, reuse only)"
+    title: "Car radio: a radio node for the antenna (2–3 years, reuse only)"
     kind: idea
     area: Broadcast radio
     date: 2026-10-20
     status: draft
-    question: "What should Skyworks develop next as tuner and/or demodulator products, given NXP and ST, SDR, RTM and HD Radio, with a 2–3-year turnaround and reuse of existing technology, and at what price?"
+    question: "What should Skyworks develop next for car radio, given NXP and ST, software radio, remote tuner modules and HD Radio, with a 2–3-year turnaround and reuse of existing technology, and at what price?"
     summary: >-
-      Business-case draft. Build first a dual digital-output tuner (Si4796x-D: Si47962 die + L-band, standard I/Q
-      output, QFN-56 layout) at about $5–6.50 in volume (est); quick wins are AMIC on all tuners, an RTM reference
-      design from today's parts and CDR to production; then a quad tuner and a tuner + DRM/CDR package. Includes
-      market data, for/against scenarios for SDR, RTM and HD Radio, pricing ranges and attach-rate levers.
-    tags: [car radio, SDR, RTM, HD Radio, DAB+, DRM, CDR, AMIC, pricing]
-    sources: "BizDev broadcast data; ~140 public web requests (S&P, OICA, WorldDAB, DRM Consortium, Radio World, Hirschmann, OpenSynergy, distributor snippets)"
+      Business-case draft. Our advantage is the split architecture (chainable tuners + separate multi-standard
+      decoder), which fits zonal cars; our disadvantages are cost per chip versus ST and chip count versus NXP. Proposal:
+      a radio node (2 or 4 tuners + decoder + car-network output, decoded audio or raw samples) for antenna modules,
+      about $16–19 (4 tuners) and $10–12 (2 tuners) in volume (est), plus AMIC on all tuners, a module reference
+      design from today's parts and CDR to production.
+    tags: [car radio, radio node, remote tuner module, SDR, HD Radio, DAB+, DRM, CDR, AMIC, pricing, architecture]
+    sources: "BizDev block-diagram library and broadcast data; ~140 public web requests (S&P, OICA, WorldDAB, DRM Consortium, Radio World, Hirschmann, OpenSynergy, distributor snippets)"

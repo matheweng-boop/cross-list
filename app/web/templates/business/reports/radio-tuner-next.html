@@ -1,111 +1,115 @@
-{% raw %}<h1>Car-radio tuners: what to build next (2–3 years, reuse only)</h1>
-<p class="meta">Business-case draft, 20 Oct 2026 · Not reviewed · Built from BizDev broadcast data (Si479xx tuners, Si46xx coprocessors and receivers) and about 140 public web requests. Confidence: <b>high</b> = primary document read; <b>med</b> = trade press or an advocacy body; <b>low</b> = search snippet or analyst press release. “est” = our estimate. All figures, prices and sources are in the background notes.</p>
+{% raw %}<h1>Car radio: a radio node for the antenna (2–3 years, reuse only)</h1>
+<p class="meta">Business-case draft, 20 Oct 2026 · Not reviewed · Built from the BizDev block-diagram library, our broadcast data (Si479xx tuners, Si46xx decoders) and about 140 public web requests. Confidence: <b>high</b> = primary document read; <b>med</b> = trade press or an advocacy body; <b>low</b> = search snippet or analyst press release. “est” = our estimate. All figures, prices and sources are in the background notes.</p>
 
 <section class="brief" aria-label="Summary">
   <p class="label">In brief</p>
   <ol>
-    <li><b>The radio is splitting into an RF front end and software.</b> Decoding is moving into the cockpit processor (software-defined radio, SDR) or into a remote tuner module (RTM) near the antenna. Every route still needs a tuner per antenna path; the separate decoder chip is what is at risk.</li>
-    <li><b>Build first: a dual digital-output tuner, “Si4796x-D”.</b> It reuses the Si47962 chip and the L-band block of Si47912, drops the audio pins (as Si47942 already does) and adds a standard digital I/Q output. It answers ST’s STA710 and keeps us in SDR and RTM designs. Target volume price <b>about $5–6.50</b> (est).</li>
-    <li><b>Quick wins around it:</b>
-      <ul>
-        <li>AMIC on all single tuners (firmware only), and as SoC software;</li>
-        <li>an RTM reference design from today’s parts;</li>
-        <li>CDR to production for China.</li>
-      </ul>
-      <b>Then:</b> a quad tuner (two dies in one package) and a tuner + DRM/CDR coprocessor in one package for China and India. <b>The cheapest lever of all:</b> open the NDA-gated evaluation kit and documentation.</li>
+    <li><b>Our advantage is the architecture, not one chip.</b> Our radio is split into chainable tuners and a separate multi-standard decoder, so it can sit at the antenna, in the head unit, or hand raw samples to a central computer. NXP builds everything into one head-unit chip; ST hands everything to the main processor. Cars are moving to zonal architectures, where RF stays at the antenna and audio moves to the central computer: that favours our split.</li>
+    <li><b>Our disadvantages:</b> higher cost per chip than ST’s mature reused designs, more chips than NXP’s one-chip radio, a non-standard sample output and weaker software-radio partnerships. At the antenna, a module built from our parts needs 5–7 parts.</li>
+    <li><b>Proposal: the radio node.</b> One part with 2 or 4 of our tuners, our multi-standard decoder and a direct car-network output (decoded audio and data, or raw samples for a central software radio). It reuses our tuner and decoder circuits; the network output is the new part. Target volume price <b>about $16–19 for 4 tuners and $10–12 for 2</b> (est), replacing about $22–29 of today’s parts.</li>
   </ol>
 </section>
 
-<h2>Reasoning chain</h2>
+<h2>1. Architecture position</h2>
+<p>From the block-diagram library: our “Car radio tuner system”, NXP’s connected-radio diagram (radio chipset in the head unit) and TI’s head unit with a radio tuner, plus ST’s public tuner material.</p>
 <div class="wrap"><table>
-  <thead><tr><th scope="col">Trend</th><th scope="col">Evidence</th><th scope="col">What it means for us</th><th scope="col">Device</th></tr></thead>
+  <thead><tr><th scope="col"></th><th scope="col">Skyworks: split</th><th scope="col">NXP: all-in-one</th><th scope="col">ST: host-centric</th></tr></thead>
   <tbody>
-    <tr><td>Decoding moves into the cockpit processor</td><td>Inntot (Visteon) SDR: 0.5 M (2024) → 2 M (early 2026), 5 M more in implementation <span class="muted">(med)</span>. Cockpit computers in 26 % of 2025 cars, 49.5 M units by 2030 <span class="muted">(low, analyst PR)</span></td><td>Fewer decoder-chip sockets; the tuner must hand clean digital I/Q to a processor</td><td>Si4796x-D, Si4799x-Q</td></tr>
-    <tr><td>Radio moves out of the head unit to the antenna</td><td>Hirschmann/TE RTM: head-unit variants 8–12 → 2–3 <span class="muted">(high, vendor)</span>. Zonal platforms from 2027–28 (GM, VW/Rivian, Stellantis, BMW) <span class="muted">(high)</span></td><td>Tuners and coprocessors go into antenna modules sold by antenna makers</td><td>RTM reference design (today’s parts), later I/Q RTM with Si4796x-D</td></tr>
-    <tr><td>Digital radio keeps spreading</td><td>DAB+ in almost all new EU cars; HD Radio in &gt;60 % of new US cars; DRM in 1 in 3 Indian cars; China drafting a mandate <span class="muted">(med–high)</span></td><td>Multi-standard I/Q stays essential; regional demand grows fastest in China and India</td><td>CDR release, tuner + coprocessor package</td></tr>
-    <tr><td>EVs make AM noisy</td><td>AM for Every Vehicle Act passed the House 15 Sep 2026 <span class="muted">(high)</span>; NXP launched EVAM-lite (Jul 2026) <span class="muted">(high)</span></td><td>Our AMIC becomes a selling point, but only on dual tuners today</td><td>AMIC everywhere, AMIC-SW</td></tr>
-    <tr><td>Competitors consolidate</td><td>NXP SAF9000: 5 tuners + all standards + audio (preproduction) <span class="muted">(low)</span>. ST STA709/710: digital-output tuners (JESD204B, LVDS) <span class="muted">(med)</span></td><td>We can’t copy NXP in 2–3 years; we can match and beat ST’s digital-output tuner</td><td>Si4796x-D</td></tr>
+    <tr><th scope="row">How it is built</th><td>Tuner ICs chained by an IC link (one clock, one boot flash, loop-through so no antenna splitters), then a separate decoder that also manages the tuners</td><td>Tuners, decoding, audio DSP and MCU in one head-unit chip (SAF4000; SAF9000/9800 add audio and AI)</td><td>Tuners send raw samples to the main processor, which does decoding, phase diversity and MRC in software (STA709/710); or tuners plus separate decoders (STA680/660)</td></tr>
+    <tr><th scope="row">Where the radio can sit</th><td><b>Anywhere:</b> antenna module, head unit, or decoding in the central computer</td><td>Head unit only; RF travels there by coax</td><td>Tuner anywhere; decoding always on the main processor</td></tr>
+    <tr><th scope="row">Scaling 1 → 4+ tuners</th><td>Add tuner chips on the same board design (pin and software compatible)</td><td>Fixed by the chip (4 or 5)</td><td>Add tuner chips; processor load grows</td></tr>
+    <tr><th scope="row">Regional variants</th><td>Change decoder or licence; tuner board unchanged</td><td>Firmware or licence</td><td>Software on the main processor</td></tr>
+    <tr><th scope="row">Audio</th><td>Separate from the radio</td><td>Inside the radio chip</td><td>On the main processor</td></tr>
+    <tr><th scope="row">Fit with zonal cars</th><td><b>Good:</b> RF at the antenna, either split point</td><td><b>Weak:</b> audio DSP duplicates the central computer; RF must reach the head unit</td><td><b>Good for software radio only;</b> depends on processor software and licences</td></tr>
+    <tr><th scope="row">Weak point</th><td>Chip count and the network link at the antenna</td><td>Flexibility</td><td>Reception features moved into software; no decoded-module option</td></tr>
+  </tbody>
+</table></div>
+<p class="small muted">Architecture trend behind the “fit” row: GM central computer + 3 zones from 2028; VW/Rivian zonal from 2027; Stellantis STLA One 2027; BMW Neue Klasse 4 “superbrains” (high). Hirschmann/TE remote tuner modules: head-unit variants 8–12 → 2–3 (high, vendor).</p>
+
+<h2>2. Our disadvantages and how we make up for them</h2>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Disadvantage</th><th scope="col">Against</th><th scope="col">Evidence</th><th scope="col">How we make up for it</th></tr></thead>
+  <tbody>
+    <tr><td><b>Higher cost per function</b></td><td>ST</td><td>ST reuses the same mature tuner and decoder designs (TDA7707 in volume since 2016; STA709 brief 2019); its tuners list at $4.60–6.10 vs ≈$8.40 for our Si47901 (low, list prices)</td><td>Compete on system cost, not chip cost: the node replaces 5–7 parts at the antenna. One die serves every variant and region by licence, so volume concentrates on one design. Step 1 reuses existing dies (no new mask cost). Keep RN2 close to an ST tuner + decoder pair</td></tr>
+    <tr><td><b>More chips for the same radio</b></td><td>NXP</td><td>NXP SAF4000: 4 tuners and all standards in one chip since 2017; SAF9000: 5 tuners (low). We need 2 tuner ICs + a decoder for 4 tuners</td><td>The radio node (RN4): 4 tuners + decoder in one part</td></tr>
+    <tr><td><b>No audio or AI processing in the radio</b></td><td>NXP</td><td>SAF9800 (Jul 2026): radio + HiFi 5 + neural processing (high)</td><td>Leave it out on purpose: in zonal cars audio moves to the central computer or amplifier, so it would be duplicated. Sell the node as “radio only, no unused DSP”</td></tr>
+    <tr><td><b>Proprietary sample output</b></td><td>ST</td><td>ST offers I2S, LVDS and JESD204B (med); ours is our own ZIF bus (works with R-Car since 2017, but non-standard)</td><td>Short term: document ZIF and offer a standard I2S/TDM mode. Node: raw samples over Ethernet</td></tr>
+    <tr><td><b>Weaker software-radio partnerships</b></td><td>ST, NXP</td><td>Inntot (Visteon) is in ST’s partner programme; NXP has its OrangeBox development platform (low–med)</td><td>Partner listings and tested ports with Inntot/Visteon, OpenSynergy (already supports us, not ST) and M’s STYLE</td></tr>
+    <tr><td><b>Slower access to kits and documents</b></td><td>ST (public briefs)</td><td>Our automotive kit’s documents are NDA-gated through sales (high); ST publishes product briefs (med)</td><td>Fast standard NDA or partner programme with documents, drivers and kits</td></tr>
+    <tr><td><b>At most 2 tuners per die</b></td><td>NXP</td><td>No Si479xx part goes beyond 2 tuners per die (high)</td><td>RN4 (two tuner cores with the decoder); a single four-tuner die only if volume proves it</td></tr>
+    <tr><td><b>China CDR not in production</b></td><td>Chinese SDR vendors, NXP SAF9000</td><td>Si46933/Si46943 in Preview; no tuner lists CDR I/Q (high)</td><td>Release CDR and confirm tuner support before the China mandate</td></tr>
+    <tr><td><b>Older audio DSP on our audio tuners</b></td><td>NXP</td><td>HiFi2-EP on Si4791x/92x/97x/98x vs HiFi 5 on NXP (med)</td><td>Don’t compete on audio; the node has none</td></tr>
+    <tr><td><b>No public long-term supply statement</b></td><td>—</td><td>None found for our radio line (gap)</td><td>Publish a longevity commitment</td></tr>
+    <tr><td><b>Ownership changes</b></td><td>—</td><td>Silicon Labs → Skyworks (2021) → Skyworks + Qorvo (2026). <i>Our judgement:</i> customers may question the radio line’s future</td><td>Roadmap briefings with key Tier-1s; the longevity commitment; the node as a visible new-generation product</td></tr>
+  </tbody>
+</table></div>
+<p class="small muted">Not known from public data: RF performance (sensitivity, selectivity, strong-signal handling), power consumption and die cost against ST and NXP. These need internal benchmark data.</p>
+
+<h2>3. Reasoning chain</h2>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Trend</th><th scope="col">Evidence</th><th scope="col">What it means for us</th></tr></thead>
+  <tbody>
+    <tr><td>RF moves to the antenna</td><td>Remote tuner modules (Hirschmann/TE, A²B or Ethernet link); zonal platforms 2027–28; A²B 2.0 with Ethernet tunnelling (2026) <span class="muted">(high/low)</span></td><td>Our split architecture fits; the antenna side needs fewer chips</td></tr>
+    <tr><td>Decoding moves into software for some carmakers</td><td>Inntot (Visteon) SDR 0.5 M → 2 M deployments, 5 M more in progress <span class="muted">(med)</span>; cockpit computers 23 M → 49.5 M by 2030 <span class="muted">(low)</span></td><td>The node must also send raw samples, not only decoded audio</td></tr>
+    <tr><td>Others keep decoder chips</td><td>Qualcomm cockpit teardowns still show NXP radio chips; Visteon says most radios still use decoder chips <span class="muted">(low)</span></td><td>Keep the decoder in the node; offer both outputs from one part</td></tr>
+    <tr><td>Audio moves to the central computer or amplifier</td><td>NXP adds HiFi 5 + AI to the radio chip (SAF9800, Jul 2026) <span class="muted">(high)</span>; zonal platforms centralise processing <span class="muted">(high)</span></td><td>Leave audio out; don’t follow NXP’s integration</td></tr>
+    <tr><td>Digital radio keeps spreading, regionally</td><td>DAB+ in almost all new EU cars; HD Radio &gt;60 % of new US cars; DRM 1 in 3 Indian cars; China drafting a mandate <span class="muted">(med–high)</span></td><td>One node, region set by licence, covers every market</td></tr>
+    <tr><td>EVs make AM noisy</td><td>AM for Every Vehicle Act passed the House 15 Sep 2026 <span class="muted">(high)</span>; NXP EVAM-lite (Jul 2026)</td><td>AMIC in the node is a differentiator</td></tr>
   </tbody>
 </table></div>
 
-<h2>Market data</h2>
+<h2>4. Market data</h2>
 <div class="wrap"><table>
   <thead><tr><th scope="col">Figure</th><th scope="col">Value</th><th scope="col">Source · confidence</th></tr></thead>
   <tbody>
     <tr><td>Light-vehicle production</td><td>92.1 M (2026) → 97.2 M (2030) → 100.6 M (2033)</td><td>S&amp;P Global Mobility, Mar 2026 · high</td></tr>
-    <tr><td>Vehicle production 2025 by region</td><td>96.4 M total; China 34.5 M, Europe 17.2 M, US 10.2 M, India 6.5 M</td><td>OICA 2026 · high</td></tr>
-    <tr><td>HD Radio in new US vehicles</td><td>&gt;60 %; 125 M on the road; ≈10 M new HD cars a year (est)</td><td>Radio World (Xperi column), Sep 2026 · med</td></tr>
-    <tr><td>DAB+ in new EU cars</td><td>“almost all” (95 % in 2021); ≈16–17 M a year built in Europe (est)</td><td>WorldDAB 2026 · med–high</td></tr>
-    <tr><td>DRM in Indian cars</td><td>&gt;13 M on the road; 1 in 3 new cars; ≈2 M a year (est, upper bound)</td><td>DRM Consortium, Oct 2025 · med</td></tr>
-    <tr><td>China</td><td>Mandatory in-car receiver standard (DRM on AM, CDR on FM) being drafted since Sep 2024</td><td>Radio World, DRM Consortium · med</td></tr>
-    <tr><td>SDR deployments</td><td>&gt;2 M done + 5 M in implementation (Inntot/Visteon, Jun 2026)</td><td>The Machine Maker; WorldDAB · med</td></tr>
-    <tr><td>Cockpit computers (SDR hosts)</td><td>23 M (26 % of cars) in 2025 → 49.5 M in 2030</td><td>Berg Insight · low (analyst PR)</td></tr>
-    <tr><td>Automotive tuner-IC market</td><td>$0.9–2.3 B (2024), 5–7 % a year. Our bottom-up check: $0.4–1.8 B</td><td>Several analyst PRs · low</td></tr>
-    <tr><td>Xperi (HD Radio licensor)</td><td>Revenue $493.7 M (2024) → $448.1 M (2025); Connected Car +60 % in Q2 2026 on HD deals</td><td>Radio World; earnings snippets · med/low</td></tr>
+    <tr><td>Production 2025 by region</td><td>96.4 M; China 34.5 M, Europe 17.2 M, US 10.2 M, India 6.5 M</td><td>OICA 2026 · high</td></tr>
+    <tr><td>HD Radio</td><td>&gt;60 % of new US vehicles; 125 M on the road; ≈10 M new a year (est)</td><td>Radio World (Xperi column), Sep 2026 · med</td></tr>
+    <tr><td>DAB+</td><td>“almost all” new EU cars (95 % in 2021); ≈16–17 M a year built in Europe (est)</td><td>WorldDAB 2026 · med–high</td></tr>
+    <tr><td>DRM</td><td>&gt;13 M Indian cars; 1 in 3 new cars; ≈2 M a year (est, upper bound)</td><td>DRM Consortium, Oct 2025 · med</td></tr>
+    <tr><td>Software radio</td><td>&gt;2 M deployed + 5 M in implementation (Jun 2026)</td><td>The Machine Maker; WorldDAB · med</td></tr>
+    <tr><td>Cockpit computers</td><td>23 M (26 %) in 2025 → 49.5 M in 2030</td><td>Berg Insight · low (analyst PR)</td></tr>
+    <tr><td>Remote tuner module case</td><td>Head-unit variants −75–85 %; module 3.2–5 W; ≈0.25–0.3 kg coax saved per car (est)</td><td>Hirschmann/TE · high (vendor); ADI note, LEONI · low</td></tr>
+    <tr><td>Automotive tuner-IC market</td><td>$0.9–2.3 B (2024), 5–7 % a year; our bottom-up check $0.4–1.8 B</td><td>Analyst PRs · low</td></tr>
   </tbody>
 </table></div>
 
-<h2>Scenarios: what speaks for and against</h2>
+<h2>5. Scenarios: what speaks for and against</h2>
 <div class="wrap"><table>
-  <thead><tr><th scope="col">Question</th><th scope="col">For</th><th scope="col">Against</th><th scope="col">Our read</th></tr></thead>
+  <thead><tr><th scope="col">If…</th><th scope="col">For</th><th scope="col">Against</th><th scope="col">What happens to the radio node</th></tr></thead>
   <tbody>
-    <tr><td><b>Will SDR sales grow?</b></td>
-      <td>Deployments doubling each year; one hardware for all regions (firmware/OTA); removes a decoder chip that lists at about $16–19 vs $5–10 for a tuner; middleware (OpenSynergy, Inntot, M’s STYLE) already supports our tuners</td>
-      <td>Qualcomm cockpit teardowns still show NXP radio chips; Visteon itself says most radios still use decoder chips; HD in software still needs Xperi licensing and certification; no public CPU-load figure; some cars drop radio (Tesla 2026 Standard trims)</td>
-      <td><b>Yes, gradually.</b> SDR grows with cockpit computers but decoder chips stay common to 2030. Bet on the tuner, which every SDR needs, and keep the coprocessor for non-SDR designs</td></tr>
-    <tr><td><b>Will RTM value grow or shrink?</b></td>
-      <td>Fits zonal wiring; head-unit variants −75–85 %; removes coax, antenna amplifiers and shielding; A²B 2.0 with Ethernet tunnelling (2026); off-the-shelf homologated RTMs exist</td>
-      <td>An extra powered box (3.2–5 W) while OEMs cut ECU counts; GM’s 2028 zones run no logic; coax weight saved is only ≈0.25–0.3 kg per car (est); no public RTM volumes or OEM awards; roof thermal limits</td>
-      <td><b>Grows in premium and multi-region platforms, but the module gets thinner.</b> Content shifts from “tuner + decoder” (decoded RTM) to “tuner + link” (I/Q RTM feeding central SDR). Our tuner content holds; coprocessor content per RTM falls over time</td></tr>
-    <tr><td><b>Will HD Radio grow?</b></td>
-      <td>&gt;60 % of new US cars and still rising (35 % in 2014); new Toyota, Honda, Audi, BMW, VW models; new US and Asian Tier-1 programmes; Mexico &gt;190 models; India’s private FM broadcasters back HD</td>
-      <td>All-digital AM is nearly absent (2 stations); AM station count falling; Xperi revenue lumpy; India may choose DRM</td>
-      <td><b>Stable to slowly rising in North America; India is the swing.</b> Keep HD on every new tuner and the HD certification path short</td></tr>
+    <tr><td><b>Remote tuner modules grow</b></td><td>Zonal wiring; fewer head-unit variants; homologated off-the-shelf modules exist; A²B 2.0</td><td>An extra powered box while carmakers cut ECU counts; small weight saving; no public volumes</td><td><b>Best case:</b> the node is the module’s main chip; one part instead of 5–7</td></tr>
+    <tr><td><b>Software radio grows</b></td><td>Deployments doubling yearly; one hardware for all regions; removes a $16–19 (list) decoder</td><td>HD in software needs Xperi licence and certification; CPU load unknown; most radios still use decoder chips</td><td><b>Still wins:</b> the node sends raw samples over the network; the decoder can stay off or be licensed off</td></tr>
+    <tr><td><b>HD Radio grows</b></td><td>&gt;60 % of new US cars, up from 35 % in 2014; new US and Asian Tier-1 programmes</td><td>All-digital AM nearly absent; India may choose DRM</td><td>Neutral: HD is in the node either way; India is covered by licence</td></tr>
+    <tr><td><b>Radio stays in the head unit</b></td><td>Today’s teardowns; cost pressure on extra modules</td><td>Zonal plans from 2027–28</td><td><b>Weak case:</b> NXP’s one-chip head unit wins; our existing tuner + decoder family carries on</td></tr>
   </tbody>
 </table></div>
 
-<h2>Device concepts</h2>
-<p class="small muted">Specs come from our own data shorts (file and section in the background notes). Effort is relative (low / med / high) with reasons; no cost or person-month numbers are invented.</p>
-
-<h3>1. Si4796x-D: dual digital-output tuner <span class="pill have">build first</span></h3>
+<h2>6. Product definition: the radio node</h2>
 <div class="wrap"><table class="small">
   <tbody>
-    <tr><th scope="row">Reuses</th><td>Si47962 die: dual AM/FM/LW/SW/WB and Band III front ends, PLLs, radio DSP (phase diversity, RDS, DAB noise canceller, digital AGC, AMIC, band scan), ZIF I/Q, loop-through. L-band block from Si47912. The audio-free QFN-56 pin map of Si47942</td></tr>
-    <tr><th scope="row">Removes</th><td>Audio DAC and I2S audio pins (10 pins freed). Note: Si4796x has no audio DSP to remove</td></tr>
-    <tr><th scope="row">Adds</th><td>A standard digital I/Q output on the freed pins; L-band (1452–1492 MHz) on a dual die; firmware for raw-I/Q streaming and for exporting both tuners to host PD/MRC</td></tr>
-    <tr><th scope="row">Bands</th><td>FM 64–108 MHz, AM 520–1710 kHz, LW 144–288 kHz, SW 2.3–30 MHz, weather band, DAB Band III 168–240 MHz, L-band 1452–1492 MHz (new)</td></tr>
-    <tr><th scope="row">I/Q served</th><td>HD (744.1875 kS/s), DAB (2.048 MS/s), DRM (192 kS/s); CDR rate to be confirmed</td></tr>
-    <tr><th scope="row">Output options</th><td><b>A</b> today’s ZIF pins re-framed as standard I2S/TDM: no new pins, low effort. <b>B</b> LVDS I2S on 4 differential pairs: med effort. <b>C</b> JESD204B: about 7–8 pins and a new high-speed SerDes, high effort. ST offers all three; we should offer at least A and B</td></tr>
-    <tr><th scope="row">Package</th><td>QFN-56, 8 × 8 mm: fits the existing QFN-56 dual layout (as Si47942 does), but not pin-compatible with Si4796x where the audio pins were used</td></tr>
-    <tr><th scope="row">Grade, supply</th><td>AEC-Q100 A-grade (as the base; temperature range not in our data); 3.3 V analog, 1.8 V digital, 1.8/3.3 V I/O</td></tr>
-    <tr><th scope="row">Answers</th><td>ST STA710 (dual, AM/FM/WX/DAB incl. L-band, I2S/LVDS/JESD204B). Advantage for us: phase diversity and AMIC on chip, pin/API family compatibility</td></tr>
-    <tr><th scope="row">Effort</th><td>Med with output A or B; med–high with L-band; high with JESD204B</td></tr>
+    <tr><th scope="row">Working names</th><td><b>RN4</b> (4 tuners, 4 decode channels) for premium and multi-region platforms; <b>RN2</b> (2 tuners, 2 channels) for mainstream</td></tr>
+    <tr><th scope="row">Reuses</th><td>Si4796x dual-tuner cores: AM, FM, LW, SW, weather band, DAB Band III, phase diversity, AMIC, DAB noise canceller, digital AGC, fast band scan, loop-through. Si469xx decoder: HD Radio, DAB/DAB+/DMB, DRM30/DRM+, CDR; MRC; seamless linking of broadcast and IP; over-the-air updates; licence-defined standards (Si46999); programmable Cortex-M3 (“C” parts) for module control</td></tr>
+    <tr><th scope="row">New</th><td>One device combining them; a car-network output; one boot flash and one 36.864 MHz clock for the whole node; firmware that runs it as one radio</td></tr>
+    <tr><th scope="row">Outputs</th><td><b>Decoded mode:</b> audio and data (I2S/TDM and DDSI) ready for an A²B transceiver, and an Ethernet MAC for an external automotive Ethernet PHY. <b>Sample mode:</b> raw I/Q of each tuner over Ethernet for a central software radio. Both from the same part, chosen in firmware</td></tr>
+    <tr><th scope="row">Left out on purpose</th><td>Audio DSP and AI processing (moving to the central computer); the network PHY itself (partner part)</td></tr>
+    <tr><th scope="row">Grade</th><td>AEC-Q100. Roof mounting may need a higher temperature grade than head units: to confirm with module makers</td></tr>
+    <tr><th scope="row">Replaces</th><td>At the antenna today: 2 × Si4796x + Si469xx + bridge MCU + separate clock and flash (5–7 parts) → 1 node + network PHY</td></tr>
+    <tr><th scope="row">Answers</th><td>NXP SAF4000/SAF9000 in zonal cars (no unused audio DSP, sits at the antenna); ST STA709/710 (keeps reception features on chip, works with or without software radio); lowers the cost of Hirschmann-type modules (customers, not competitors)</td></tr>
+    <tr><th scope="row">Delivery (est)</th><td><b>Step 1, about 12–18 months:</b> existing tuner and decoder dies plus a small network-bridge die in one package, for samples and design-ins. <b>Step 2, 2–3 years:</b> one die. Durations to be checked with engineering</td></tr>
   </tbody>
 </table></div>
 
-<h3>2. Si4799x-Q: quad digital-output tuner <span class="pill part">second</span></h3>
-<p>Two Si4796x-D dies in one package, linked inside the package (shared clock, IC link and boot flash, loop-through between cores). Enables phase diversity + background scan + DAB MRC from one part, which needs two ICs today. Answers NXP SAF4000 (up to 4 tuners) and partly SAF9000 (5). <b>Effort:</b> med as a two-die package; high as a single four-tuner die (no precedent beyond 2 tuners per die). Not layout-compatible with today’s boards.</p>
-
-<h3>3. AMIC everywhere <span class="pill have">quick win</span></h3>
-<p>Enable AMIC (licence SW479-AMIC-GE01) on the single tuners that lack it (Si4790x, Si4791x, Si4792x, Si4795x). AMIC already runs on single tuners (Si4798x, Si47992), so this is firmware and licence work: <b>low effort</b> (med for Si4790x if its DSP has no headroom; not stated). Then <b>AMIC-SW</b>: a port to cockpit SDR stacks, med effort. Answers NXP EVAM-lite.</p>
-
-<h3>4. RTM reference design <span class="pill have">quick win</span></h3>
-<p><b>Decoded RTM</b> from today’s parts: 2 × Si47962 (4 tuners) + Si469xx coprocessor, audio and data to the head unit over A²B (fits the coprocessor’s I2S/TDM directly) or Ethernet (needs a bridge processor). <b>No new silicon, low–med effort.</b> An <b>I/Q RTM</b> for central SDR follows once Si4796x-D exists.</p>
-
-<h3>5. China and India: CDR to production, then a tuner + coprocessor package <span class="pill part">near</span></h3>
-<p>Release Si46933/Si46943 (CDR, 3/4 channels, now Preview): low–med effort. <b>First confirm</b> which tuners are qualified for CDR I/Q; our data lists none. Then <b>“Si4796x-P” (P for package)</b>: Si47967 (dual AM/FM + DRM, phase diversity, AMIC) and a 2-channel Si469xx in one package, no die change, med effort; replaces two packages in cost-sensitive head units.</p>
-
-<h3>6. Automotive single-chip DAB+ receiver <span class="pill part">later</span></h3>
-<p>Requalify Si468x (today −40 to 85 °C, no AEC-Q100), low–med effort, or add audio to Si4629 (already AEC-Q100, no audio output), med effort. A cost play for EU entry radios, where DAB+ is mandatory.</p>
-
-<h3>Not recommended in 2–3 years</h3>
+<h3>Supporting actions (existing parts, no new silicon)</h3>
 <ul>
-  <li><b>An NXP SAF9000-style radio + audio + AI SoC:</b> needs a new DSP, an NPU and a larger process.</li>
-  <li><b>A new standalone audio DSP:</b> audio is moving into the cockpit processor too.</li>
+  <li><b>AMIC on every tuner:</b> firmware and licence on the single tuners that lack it (Si4790x, Si4791x, Si4792x, Si4795x); also as software for central software radios.</li>
+  <li><b>Remote tuner module reference design today:</b> 2 × Si47962 + Si469xx over A²B, to win module design-ins before the node exists.</li>
+  <li><b>CDR to production for China:</b> release Si46933/Si46943; first confirm which tuners support CDR (our data lists none).</li>
+  <li><b>Document the existing I/Q output</b> for software-radio processors (the 2017 Renesas R-Car design shows it works).</li>
 </ul>
 
-<h2>Pricing</h2>
-<p><b>How the ranges are built.</b> (1) Anchor: public distributor prices of today’s closest parts and the competitor part (all low confidence, search snippets). (2) Value: what the device removes or adds for the customer. (3) A volume range for automotive contract pricing. <b>Assumption:</b> high-volume automotive contracts sit about 30–50 % below these reel-quantity list prices; no contract price is public. Your own ASPs on <a href="/business/data">Commercial inputs</a> replace these numbers in the revenue figures.</p>
+<h2>7. Pricing</h2>
+<p><b>Method.</b> (1) Anchor on public list prices of today’s parts and competitors (low confidence, search snippets). (2) Value: what the node replaces. (3) Volume range for automotive contracts. <b>Assumption:</b> contract prices about 30–50 % below these reel-quantity list prices; none is public. Your ASPs on <a href="/business/data">Commercial inputs</a> replace these numbers.</p>
 <div class="wrap"><table>
   <thead><tr><th scope="col">Public anchor</th><th scope="col">List price</th><th scope="col">Quantity</th></tr></thead>
   <tbody>
@@ -113,44 +117,41 @@
     <tr><td>ST TDA7707 (dual tuner)</td><td>$6.14</td><td>3,000 reel</td></tr>
     <tr><td>Skyworks Si47901 (single tuner)</td><td>≈ $8.40</td><td>2,500 reel</td></tr>
     <tr><td>NXP TEF6686 (single AM/FM tuner)</td><td>$8.03–10.15</td><td>10 k / 1 (broker)</td></tr>
-    <tr><td>ST STA680 (HD decoder) · Skyworks Si4699 (coprocessor)</td><td>$18.70 · $18.06</td><td>500 · n/s</td></tr>
+    <tr><td>ST STA680 (HD decoder) · Skyworks Si4699 (decoder)</td><td>$18.70 · $18.06</td><td>500 · n/s</td></tr>
   </tbody>
 </table></div>
 <div class="wrap"><table>
-  <thead><tr><th scope="col">Device</th><th scope="col">Entry</th><th scope="col">Target</th><th scope="col">Premium</th><th scope="col">Why (est, volume price per unit)</th></tr></thead>
+  <thead><tr><th scope="col">Part</th><th scope="col">Entry</th><th scope="col">Target</th><th scope="col">Premium</th><th scope="col">Why (est, volume price per unit)</th></tr></thead>
   <tbody>
-    <tr><td>Si4796x-D dual</td><td>$4.50</td><td><b>$5.50</b></td><td>$6.50</td><td>Below two STA709s at list (≈$9.50) and near a TDA7707 dual; premium for phase diversity, AMIC and L-band. In an SDR design it enables removing a ≈$16–19 (list) decoder, so the system still saves money at the premium price</td></tr>
-    <tr><td>Si4799x-Q quad</td><td>$8.00</td><td><b>$9.50</b></td><td>$11.00</td><td>About 1.7× the dual: one part and one footprint instead of two; competes with SAF4000 (price not public)</td></tr>
-    <tr><td>AMIC licence</td><td>$0.25</td><td><b>$0.50</b></td><td>$0.75</td><td><b>No public anchor.</b> Set at 5–10 % of a single-tuner price; value is keeping AM in EVs without extra shielding or filtering. Use your own licence price list</td></tr>
-    <tr><td>RTM reference design (pull-through)</td><td colspan="3">≈ $20–25 Skyworks content per 4-tuner module (2 tuners + coprocessor)</td><td>Design is free; the value is the parts it pulls through. Based on the volume ranges above</td></tr>
-    <tr><td>Si4796x-P tuner + DRM/CDR package</td><td>$11.00</td><td><b>$13.00</b></td><td>$15.00</td><td>Two parts today list at ≈$24–28 together; packaging them saves board area and test. China and India are price-sensitive, so stay near the entry price for volume deals</td></tr>
-    <tr><td>Automotive Si468x DAB+ receiver</td><td>$4.00</td><td><b>$5.00</b></td><td>$6.00</td><td>Must undercut a tuner + low-cost decoder pair for entry EU radios; no automotive single-chip competitor found</td></tr>
+    <tr><td>RN4 (4 tuners + 4 channels)</td><td>$16.00</td><td><b>$17.50</b></td><td>$19.00</td><td>Replaces 2 dual tuners (≈$9–13 volume) + a 4-channel decoder (≈$9–13) + bridge MCU, clock and flash (≈$3, est): ≈$22–29 today. The module maker saves board area, assembly and qualification on top</td></tr>
+    <tr><td>RN2 (2 tuners + 2 channels)</td><td>$10.00</td><td><b>$11.00</b></td><td>$12.00</td><td>Replaces 1 dual tuner + a 2-channel decoder + bridge: ≈$14–18 today. Must stay close to an ST tuner + decoder pair</td></tr>
+    <tr><td>AMIC licence</td><td>$0.25</td><td><b>$0.50</b></td><td>$0.75</td><td><b>No public anchor.</b> 5–10 % of a single-tuner price; value is keeping AM in EVs. Use your own licence price list</td></tr>
   </tbody>
 </table></div>
-<p class="small muted">Illustration only (est): if 10 M SDR or RTM radios a year used one Si4796x-D at the target price, that is ≈$55 M a year; at 1.5 tuners per radio, ≈$80 M. Replace with your volumes and ASPs.</p>
+<p class="small muted">Illustration only (est): 5 M nodes a year at $17.50 ≈ $88 M; 10 M ≈ $175 M. Replace with your volumes and ASPs.</p>
 
-<h2>Raising the attach rate</h2>
-<p>Two meanings: how often our tuner wins the socket, and how many other Skyworks parts come with it. Ranked by likely effect against effort.</p>
+<h2>8. Raising the attach rate</h2>
+<p>Two meanings: how often we win the radio, and how many other Skyworks parts come with it.</p>
 <ol class="opps">
-  <li><b>Open the evaluation path.</b> Today the automotive kit (Si4699X-3DTF2-EVB) has its documents under NDA through sales, while consumer kits are open. Publish basic documentation and drivers; keep advanced features under NDA. <span class="pill have">low effort</span></li>
-  <li><b>“Works with” software bundles.</b> OpenSynergy’s tuner SDK supports our Si479xx and Si46xx (and NXP, not ST). Inntot is in ST’s partner programme, not ours. Join or start partner listings with Inntot/Visteon, OpenSynergy and M’s STYLE, with tested reference ports. <span class="pill have">low–med</span></li>
-  <li><b>SDR and RTM reference designs.</b> A cockpit-processor board (Renesas R-Car precedent from 2017; add Qualcomm-class) and the RTM reference, both with layout, bill of materials and test results. Hirschmann shows what customers value: pre-validated, homologated, “deploy within weeks”. <span class="pill part">med</span></li>
-  <li><b>Keep footprints and software compatible.</b> Si4794x/5x/6x are already pin, package and API compatible. Make Si4796x-D fit the same QFN-56 layout and keep the common API. <span class="pill have">design rule</span></li>
-  <li><b>Certification support.</b> HD Radio certification goes through Xperi with Intertek testing. Offer pre-tested reference results and a certification guide; do the same for DAB/DRM conformance and EV noise tests. <span class="pill part">med</span></li>
-  <li><b>Simple licensing.</b> One price list for HD per channel, MRC and AMIC, visible with the kit. <span class="pill have">low</span></li>
-  <li><b>Long-term supply statement.</b> None found for our broadcast line; a published longevity commitment answers OEM concerns. <span class="pill have">low</span></li>
-  <li><b>Bundle more Skyworks content.</b> Reference designs that also use our clocks, power and antenna-module RF parts; the BizDev radio configurator and block-diagram editor give a customer-specific bill of materials. <span class="pill have">low</span></li>
+  <li><b>Module reference design with antenna makers.</b> Customers value pre-validated, homologated modules that “deploy within weeks” (Hirschmann). Start now with today’s parts; move to the node. <span class="pill part">med</span></li>
+  <li><b>Partner listings with radio-software companies.</b> OpenSynergy already supports us (not ST); Inntot is in ST’s partner programme, not ours. Tested ports for the sample mode. <span class="pill have">low–med</span></li>
+  <li><b>Fast access for partners:</b> a quick standard NDA or partner programme with documentation, drivers and kits for software companies and processor makers. Today the automotive kit is NDA-gated through sales. <span class="pill have">low</span></li>
+  <li><b>Certification support:</b> pre-tested HD Radio (Xperi/Intertek), DAB and DRM results and EV noise tests in the reference module. <span class="pill part">med</span></li>
+  <li><b>Software continuity:</b> keep the common programming interface of Si479xx and Si46xx so existing radio software runs on the node. <span class="pill have">design rule</span></li>
+  <li><b>Simple licensing and long-term supply:</b> one licence price list (HD per channel, MRC, AMIC); a published longevity commitment (none found today). <span class="pill have">low</span></li>
+  <li><b>Bundle more Skyworks content:</b> clocks, power and antenna-module RF parts in the reference module; the BizDev configurator and block-diagram editor produce the customer bill of materials. <span class="pill have">low</span></li>
 </ol>
 
-<h2>Risks and open questions</h2>
+<h2>9. Risks and open questions</h2>
 <ul>
-  <li><b>Output interface:</b> which of I2S/TDM, LVDS or JESD204B do Renesas, Qualcomm-class SoCs and Visteon/Inntot accept? Decide before tape-out.</li>
-  <li><b>Coprocessor erosion:</b> SDR and I/Q RTMs remove Si469xx sockets over time; AMIC/MRC licences and regional packages offset part of it.</li>
-  <li><b>NXP SAF9000:</b> if it reaches volume at a good price, stand-alone tuners narrow to non-NXP platforms.</li>
-  <li><b>Regulation timing:</b> US AM bill (Senate), China standard, India’s FM standard all pending.</li>
-  <li><b>Data gaps:</b> CDR support on our tuners, temperature ranges, DSP headroom for AMIC on Si4790x, the L-band pin of Si47912, and all contract prices. Several competitor facts rest on search snippets because nxp.com, st.com, sec.gov and investors.skyworksinc.com blocked automated access.</li>
+  <li><b>Process:</b> can tuner and decoder circuits share one die? Our data doesn’t say; step 1 (one package) avoids the question.</li>
+  <li><b>Network output:</b> A²B, Ethernet or both, and which Ethernet speed; ask module makers and the carmakers’ zonal teams.</li>
+  <li><b>Remote tuner module volumes:</b> no public numbers or carmaker awards; the weak scenario keeps the radio in the head unit, where NXP is strong.</li>
+  <li><b>Cost:</b> ST’s mature parts are likely cheaper per function; the node competes on system cost (fewer parts at the antenna), not per-chip cost.</li>
+  <li><b>Cannibalisation:</b> the node replaces sales of today’s tuner + decoder sets in modules.</li>
+  <li><b>Data gaps:</b> CDR support on our tuners, temperature ranges, contract prices, RF performance and cost versus ST and NXP. nxp.com, st.com, sec.gov and investors.skyworksinc.com blocked automated access.</li>
 </ul>
 
 <h2>Sources</h2>
-<p class="small">The full list, with every figure, price and link, is in the background notes. Main sources: S&amp;P Global Mobility (Mar 2026), OICA (2026), Radio World (HD Radio, Sep 2026; Xperi, Feb 2026), WorldDAB (2026), DRM Consortium (2025–26), The Machine Maker / WorldDAB (Inntot, 2026), Hirschmann Car Communication (RTM), OpenSynergy (Radio Tuner SDK), LEONI (zonal), Silicon Labs (R-Car SDR, 2017), Skyworks (evaluation kits, AMIC brochure, Si469xx product summary), EE Journal (NXP SAF9800), PBS/AP (AM bill), distributor and broker listings (prices, snippets).</p>
+<p class="small">Full list with every figure and link in the background notes. Main sources: BizDev block-diagram library (car radio tuner system; NXP connected radio; TI head unit with radio tuner), S&amp;P Global Mobility (Mar 2026), OICA (2026), Radio World (Sep 2026, Feb 2026), WorldDAB (2026), DRM Consortium (2025–26), The Machine Maker / WorldDAB (Inntot, 2026), Hirschmann Car Communication (remote tuner module), OpenSynergy (Radio Tuner SDK), LEONI (zonal), IEEE Spectrum / GM newsroom (zonal platforms), Silicon Labs (R-Car SDR, 2017), Skyworks (evaluation kits, AMIC brochure, Si469xx product summary), EE Journal (NXP SAF9800), PBS/AP (AM bill), distributor and broker listings (prices, snippets).</p>
 {% endraw %}

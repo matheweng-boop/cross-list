@@ -14,7 +14,7 @@ def ids(client, *mpns):
 
 
 def test_pages_render(client):
-    for url in ["/parts", "/parts?role=&q=SA", "/compare", "/lifecycle", "/rules"]:
+    for url in ["/parts", "/parts?role=&q=SA", "/compare", "/rules"]:
         r = client.get(url)
         assert r.status_code == 200, url
         assert "synthetic" in r.text.lower()

@@ -10,7 +10,6 @@ NAV = (
         ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
         ("Skyworks + Qorvo", "/portfolio", "The two lines side by side: strengths, which to pick, cross-selling"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
-        ("Lifecycle", "/lifecycle", "New, NRND and obsolete parts"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
     )),
     ("systems", "Systems & applications", (
@@ -58,7 +57,6 @@ PLACES = {
     "/pricing/": ("products", "/"),
     "/parts": ("products", "/parts"),
     "/compare": ("products", "/compare"),
-    "/lifecycle": ("products", "/lifecycle"),
     "/portfolio": ("products", "/portfolio"),
     "/broadcast/configurations": ("systems", "/broadcast/configurations"),
     "/broadcast": ("products", "/broadcast"),

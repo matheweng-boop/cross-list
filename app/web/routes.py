@@ -2,13 +2,12 @@
 
 import re
 import urllib.parse
-from datetime import date, timedelta
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, lazyload
 
 from app.auth.deps import get_current_user
@@ -20,11 +19,10 @@ from app.matching.engine import (
     CATEGORY_SHORT,
     DEFAULT_MAX_DEVIATIONS,
     FFF_STATUS_LABELS,
-    LIFECYCLE_RISK,
     format_value,
 )
 from app.matching.rules import get_rules, load_all_rules
-from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
+from app.models import Package, Part, User
 from app.services import (
     alternates,
     cross_notes,
@@ -745,30 +743,6 @@ def compare_download(fmt: str, ids: str, baseline: int | None = None, session: S
     if fmt == "csv":
         return _download(export.comparison_csv(comparison), "comparison.csv", "text/csv")
     raise HTTPException(404, "Unknown format")
-
-
-@router.get("/lifecycle", response_class=HTMLResponse)
-def lifecycle_page(request: Request, session: Session = Depends(get_session)):
-    # only the parts the page lists are loaded (with their parameters), not all of them
-    since = date.today() - timedelta(days=get_settings().new_part_days)
-    recent = or_(Part.release_date >= since, Part.lifecycle_status == LifecycleStatus.preview)
-    candidates = session.scalars(select(Part).where(Part.release_date.is_not(None), recent)).unique()
-    new_parts = sorted((p for p in candidates if _is_new(p)), key=lambda p: p.release_date, reverse=True)
-    at_risk = sorted(
-        session.scalars(select(Part).where(Part.lifecycle_status.in_(list(LIFECYCLE_RISK)))).unique(),
-        key=lambda p: (p.lifecycle_status.value, p.mpn),
-    )
-    events = list(session.scalars(select(ChangeEvent).order_by(ChangeEvent.detected_at.desc()).limit(100)).unique())
-    recent_revisions = list(
-        session.scalars(
-            select(Part).where(Part.datasheet_date.is_not(None)).order_by(Part.datasheet_date.desc()).limit(15)
-        ).unique()
-    )
-    return templates.TemplateResponse(
-        request,
-        "lifecycle.html",
-        {"new_parts": new_parts, "at_risk": at_risk, "events": events, "recent_revisions": recent_revisions},
-    )
 
 
 @router.get("/rules", response_class=HTMLResponse)

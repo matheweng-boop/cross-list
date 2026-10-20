@@ -809,7 +809,8 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.html",
            "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
            "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
-           "verdict_label": prelim.VERDICT_LABEL}  # fmt: skip
+           "verdict_label": prelim.VERDICT_LABEL, "question_groups": prelim.QUESTION_GROUPS,
+           "label": vocab.fn_label}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

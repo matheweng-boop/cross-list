@@ -43,4 +43,14 @@ prices:
 volumes: []                      # {label, units, price: <price item id>}  scenarios, not forecasts
 
 attach: []                       # {id, lever, effort}
+
+questions:                       # what public data cannot settle; answers are recorded on the page ("answer")
+  bu: []                         # {id, text, why}            to the Skyworks business unit (internal)
+  customer: []                   # {id, text, who, why}       to OEMs and Tier-1s; who = e.g. "Tier-1 antenna team"
+
+diagram:                         # the customer system with the proposal in place (block-diagram library format);
+  note: ""                       # opens in the application workspace via /blocks/new?case=<slug>
+  groups: []                     # {id, label, col, row, w?, blocks: [{fn, label?, who, part?}]}
+                                 #   who: proposed | ours | customer | other;  fn: ids from data/blocks/functions.yaml
+  links: []                      # [from group id, to group id, "signal"]
 risks: []                        # strings

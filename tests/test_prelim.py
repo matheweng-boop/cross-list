@@ -19,6 +19,7 @@ def test_case_file_is_consistent(slug):
     pos = c.get("position") or {}
     rows = [x for k in prelim.LISTS for x in pos.get(k) or []]
     rows += [*(c.get("outlook") or []), *(c.get("features") or []), *(c.get("attach") or []), *c["prices"]["items"]]
+    rows += [x for k, _ in prelim.QUESTION_GROUPS for x in (c.get("questions") or {}).get(k) or []]
     ids = [str(x["id"]) for x in rows]
     assert len(ids) == len(set(ids)), [i for i in ids if ids.count(i) > 1]
     assert all(f["distance"] in prelim.DISTANCE for f in c["features"])
@@ -48,3 +49,25 @@ def test_case_page_feedback_and_real_asp(client):
     assert any(v["real"] and v["unit"] == 15.25 for v in c["revenue"])
     page = client.get(f"/business/reports/{SLUG}").text
     assert "move further" in page and "your ASP" in page
+
+
+@pytest.mark.parametrize("slug", SLUGS)
+def test_case_diagram_and_questions(slug, client):
+    """The customer diagram uses known functions and groups, and opens in the workspace; questions have text."""
+    from app.services import vocab
+
+    c = prelim.raw(slug)
+    for k, _ in prelim.QUESTION_GROUPS:
+        assert all(q.get("text") for q in (c.get("questions") or {}).get(k) or [])
+    d = c.get("diagram")
+    if not d:
+        return
+    gids = {g["id"] for g in d["groups"]}
+    fns = vocab.functions()
+    for g in d["groups"]:
+        for b in g["blocks"]:
+            b = b if isinstance(b, dict) else {"fn": b}
+            assert vocab.canonical(b["fn"]) in fns, b["fn"]
+            assert b.get("who", "other") in ("proposed", "ours", "customer", "other"), b
+    assert all(lk[0] in gids and lk[1] in gids for lk in d.get("links") or [])
+    assert client.get(f"/blocks/new?case={slug}").status_code == 200

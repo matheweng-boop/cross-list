@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import BlockDiagram, BlockFeedback
-from app.services import blocks, refdesigns, schematic, vocab
+from app.services import blocks, prelim, refdesigns, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -56,7 +56,13 @@ def coverage(request: Request, session: Session = Depends(get_session)):
 
 
 @router.get("/blocks/new", response_class=HTMLResponse)
-def new(request: Request, template: int | None = None, bare: bool = False, session: Session = Depends(get_session)):
+def new(request: Request, template: int | None = None, case: str = "", bare: bool = False,
+        session: Session = Depends(get_session)):  # fmt: skip
+    if case:  # the customer diagram of a preliminary case, opened as an unsaved design
+        c = prelim.raw(case) or {}
+        if not c.get("diagram"):
+            raise HTTPException(404, "This case has no block diagram")
+        return _editor(request, session, None, {"name": c["title"], **c["diagram"]}, None, bare)
     tpl = blocks.templates()[template] if template is not None and 0 <= template < len(blocks.templates()) else None
     return _editor(request, session, None, tpl, template if tpl else None, bare)
 

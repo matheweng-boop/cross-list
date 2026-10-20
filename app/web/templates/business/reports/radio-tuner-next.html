@@ -1,0 +1,109 @@
+{% raw %}<h1>Next car-radio tuner and demodulator products (2–3 years, reuse only)</h1>
+<p class="meta">20 Oct 2026 · Draft, not reviewed · BizDev broadcast data (Si479xx tuners, Si46xx coprocessors and receivers) and about 40 public web sources · “est” = estimate. Facts that rest only on search summaries are marked “(snippet)”.</p>
+
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>The radio is splitting in two.</b> Demodulation is moving into software on the cockpit processor or into remote tuner modules (RTMs) near the antenna. The tuner becomes an RF-to-digital front end. ST already sells one (STA709/710 with JESD204B or LVDS output). NXP answers with one large chip that does everything (SAF9000: 5 tuners, all standards; preproduction).</li>
+    <li><b>Our best 2–3-year move: an SDR-ready digital-output tuner family.</b> It reuses the Si479xx RF cores, the dual-tuner die, phase diversity and AMIC. The audio DSP and analog demodulators come out, and a standard digital I/Q link goes in. It suits cockpit SDR (Visteon/Inntot, Renesas, Qualcomm-class SoCs) and RTMs alike.</li>
+    <li><b>Around it, three quick moves:</b>
+      <ul>
+        <li>AMIC on every tuner and as a software licence for SoC radios (the US AM-in-every-vehicle bill, EV noise);</li>
+        <li>an RTM reference platform combining the new tuner and the Si469xx;</li>
+        <li>production-ready CDR and DRM for China and India, where regulation is pulling.</li>
+      </ul>
+      We would not try to copy NXP's all-in-one radio + audio + AI chip in this time frame.</li>
+  </ol>
+</section>
+
+<h2>Portfolio position</h2>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Area</th><th scope="col">Where we are</th><th scope="col">Versus NXP / ST</th></tr></thead>
+  <tbody>
+    <tr><td>AM/FM/HD/DAB/DRM tuners</td><td><span class="pill have">strong</span> 25 Si479xx parts: single and dual, phase diversity, HD/DAB MRC, AMIC; all active</td><td>On a par; NXP's TEF668x is a one-chip low-IF tuner</td></tr>
+    <tr><td>Digital-radio demod / decode</td><td><span class="pill have">strong</span> Si469xx 2–4 channels: HD, DAB, DRM, CDR, plus a multistandard SDR variant. CDR 3/4-channel still Preview</td><td>NXP SAF360x is older; NXP SAF9000 integrates it with the tuners</td></tr>
+    <tr><td>RF-to-digital tuner for SoC SDR</td><td><span class="pill part">partial</span> every Si479xx outputs I/Q, but over our own ZIF bus. The only I/Q-only part (Si47942) is DAB Band III only</td><td>ST STA709/710: AM/FM/DAB incl. L-band, JESD204B / LVDS</td></tr>
+    <tr><td>More than 2 tuners per chip</td><td><span class="pill none">no</span> 3–4 tuners need 2 ICs</td><td>NXP SAF4000: 4 tuners; SAF9000: 5</td></tr>
+    <tr><td>Radio + audio DSP + AI on one chip</td><td><span class="pill part">older</span> HiFi2-EP audio on Si4791x/92x/97x/98x</td><td>NXP SAF9800 (Jul 2026): HiFi 5 + neural processing + EV AM denoising</td></tr>
+    <tr><td>EV AM-noise cancelling</td><td><span class="pill have">have it</span> AMIC (I/Q-based, software licence), on dual-tuner families only</td><td>NXP EVAM-lite on SAF9800</td></tr>
+  </tbody>
+</table></div>
+
+<h2>1. Adjacent products and technologies: what we can build from what we have</h2>
+<p>Reusable blocks already in silicon or firmware:</p>
+<ul>
+  <li>wideband AM/FM/LW/SW/WB front end with loop-through;</li>
+  <li>Band III and L-band DAB front ends;</li>
+  <li>the dual tuner on one die, and multi-IC scaling to 4 tuners;</li>
+  <li>FM phase diversity, MRC for HD/DAB/DRM+/CDR, AMIC, DAB noise canceller and digital AGC;</li>
+  <li>the multistandard demod/decoder IP (HD, DAB, DRM, CDR, seamless linking);</li>
+  <li>automotive qualification and the HD Radio certification already in place.</li>
+</ul>
+
+<h3>Product ideas, strongest first</h3>
+<ol class="opps">
+  <li><b>SDR-ready digital-output tuner family (“Si479xx-D”).</b> Two variants, both I/Q-only:
+    <ul>
+      <li>a dual AM/FM/DAB tuner (Band III + L-band, with PD);</li>
+      <li>a quad tuner built as two dual cores on one die or in one package, giving FM PD plus a background tuner plus DAB MRC.</li>
+    </ul>
+    It has no audio DSP and no analog demodulator, and adds a standard digital I/Q output (LVDS/I2S-style or JESD204B-class). It keeps AGC, digital AGC and the DAB noise canceller in the tuner. Phase diversity can run on the chip or be exported.
+    <p class="ev"><span class="pill have">reuse</span> RF cores, dual die, ZIF I/Q path and IQMUX exist. New work: the output interface, a larger die or a second die in the package, firmware. This is the closest answer to ST STA710 and the cheaper alternative to NXP SAF9000 for platforms that already run SDR software. Precedent: our Si47961/62 fed Renesas R-Car SDR in 2017 (snippet).</p></li>
+  <li><b>AMIC everywhere, plus AMIC as SoC software.</b> Enable AMIC on the single-tuner families (Si4790x/91x/92x) and offer it as a licence for cockpit SDR stacks working on our I/Q.
+    <p class="ev"><span class="pill have">have it</span> firmware and licensing only. Drivers: the AM Radio for Every Vehicle Act passed the House on 15 Sep 2026 (Senate pending); several OEMs dropped AM in EVs because of noise; NXP now markets EVAM-lite. Our brochure already says AMIC is “compatible with SDR, cockpit and RTM systems”.</p></li>
+  <li><b>Remote tuner module (RTM) reference platform.</b> The new digital tuner plus the Si469xx coprocessor in the antenna module, sending audio and data to the head unit over A2B or automotive Ethernet. Ship it as a reference design with Tier-1 antenna-module makers.
+    <p class="ev"><span class="pill have">have the parts</span> · the link PHY is a partner part. Fits zonal architectures (fewer coax runs). Hirschmann/TE already sell RTMs in EU/US/Global variants; Skyworks' own 2023 Si469xx release names RTMs over A2B/Ethernet (snippet).</p></li>
+  <li><b>Regional digital radio in production: China (CDR + DRM) and India (DRM).</b> Move Si46933/Si46943 (CDR, 3–4 channels) from Preview to production. Offer a two-chip-in-one-package tuner + coprocessor for cost-sensitive head units.
+    <p class="ev"><span class="pill part">near</span> · China is drafting a mandatory in-car receiver standard (DRM on AM, CDR on FM; 22-month project from Sep 2024). In India about 30 % of new cars already have DRM, and the FM-band digital standard is undecided (TRAI, Oct 2025). Chinese SDR software vendors (Newglee) are moving in.</p></li>
+  <li><b>Lower-cost single-standard receiver for the EU entry segment.</b> An automotive-qualified Si468x-class single chip (tuner + DAB/DAB+ decode + DAC) for entry radios that must meet the EU digital-radio requirement.
+    <p class="ev"><span class="pill part">near</span> Si468x exists, but is not flagged automotive. Lower priority: DAB+ is already in “almost all” new EU cars, so this is a cost play.</p></li>
+</ol>
+
+<h3>Not recommended in 2–3 years</h3>
+<ul>
+  <li><b>An NXP-style radio + audio + AI SoC</b> (5 tuners, HiFi 5, NPU, PCIe/Ethernet). It needs a new DSP and NPU, a larger process and audio software. That is new technology, beyond the time frame.</li>
+  <li><b>A new standalone audio DSP.</b> The HiFi2-EP is dated, but audio is moving into the cockpit processor too.</li>
+</ul>
+
+<h2>2. Where else these products fit</h2>
+<ul>
+  <li><b>Cockpit SDR platforms:</b> Visteon (owns Inntot; more than 2 M SDR deployments by Feb 2026), Renesas R-Car, and Qualcomm-class cockpits that today still pair with external NXP radio chips.</li>
+  <li><b>Remote tuner modules and roof antenna modules:</b> antenna makers (Hirschmann/TE and others) and Tier-1s moving to zonal architectures.</li>
+  <li><b>Two-wheelers, commercial vehicles and aftermarket in India and China,</b> where DRM and CDR are being pushed.</li>
+  <li><b>Consumer and professional receivers:</b> DAB+/DRM home radios and monitoring receivers can reuse the digital-output tuner (low priority).</li>
+</ul>
+
+<h2>3. Market trend</h2>
+<ul>
+  <li><b>Software-defined radio:</b> the demod is moving into software. Inntot doubled to more than 2 M deployments in a year, and WorldDAB describes a “shift from chip-based radio decoders to software-defined architectures”. ST already leaves demod, PD and MRC to the host.</li>
+  <li><b>Consolidation:</b> NXP SAF9000 (5 tuners, all standards; preproduction, NDA) and SAF9800 (AM/FM + HiFi 5 + AI, Jul 2026).</li>
+  <li><b>Europe:</b> digital radio has been mandatory in new car radios since Dec 2020, DAB+ is in almost all new cars, and 166.6 M DAB receivers have been sold. FM is lasting longer than planned: Switzerland reversed its FM switch-off, and the UK decides in autumn 2026.</li>
+  <li><b>US:</b> HD Radio is in 125 M vehicles and over 60 % of new vehicles. The AM-in-every-vehicle bill passed the House on 15 Sep 2026. Hybrid radio (DTS AutoStage) is in 14 M vehicles.</li>
+  <li><b>India and China:</b> regulators are choosing digital standards (DRM, CDR). These are the growth regions for new receiver silicon.</li>
+  <li><b>Supply base:</b> thin. Only NXP and ST make tuners, while the new entrants are software-only. A strong RF-to-digital tuner keeps us relevant even when the demod moves to software.</li>
+</ul>
+
+<h2>Risks</h2>
+<ul>
+  <li><b>Losing demod content:</b> moving to SDR can shrink Si469xx sales. The AMIC and MRC licences, the RTM platform and the regional coprocessors offset this.</li>
+  <li><b>Interface choice:</b> JESD204B vs LVDS/I2S vs A2B/Ethernet. Ask Visteon, Renesas and Qualcomm-platform Tier-1s which one before choosing.</li>
+  <li><b>NXP SAF9000:</b> if it reaches volume at a good price, the stand-alone tuner market narrows to platforms that don't buy NXP.</li>
+  <li><b>Regulation timing:</b> the US AM bill, the China standard and the India standard decision are all pending.</li>
+  <li><b>Evidence gaps:</b> nxp.com, st.com and investors.skyworksinc.com blocked automated access, so several competitor facts are from search summaries.</li>
+</ul>
+
+<h2>Sources (selection)</h2>
+<ul class="small">
+  <li>BizDev broadcast data: data/broadcast/tuner_features.yaml, device data shorts, Si469xx product summary Rev E (Dec 2025), AMIC brochure (skyworksinc.com).</li>
+  <li>WorldDAB, “Inntot crosses 2M software-defined radio deployments”, Feb 2026 — https://www.worlddab.org/newsroom/17466/inntot-technologies-crosses-2m-software-defined-radio-deployments</li>
+  <li>EE Journal / NXP, SAF9800 release, Jul 2026 — https://www.eejournal.com/industry_news/nxp-simplifies-infotainment-design-with-single-chip-radio-and-ai-ml-enabled-audio-solution/</li>
+  <li>cnx-software, NXP SAF9000/SAF9100, Jul 2024 — https://www.cnx-software.com/2024/07/03/nxp-saf9000-and-saf9100-automotive-audio-dsp-bring-ai-to-car-infotainment/</li>
+  <li>ST STA710 / estore terrestrial radio receivers (snippet + estore list)</li>
+  <li>RadioToday, “DAB receiver sales pass 166 million worldwide”, Jun 2026</li>
+  <li>GOV.UK, radio review, Feb 2026; WorldDAB Switzerland and Germany pages, 2026</li>
+  <li>Radio World, “The State of HD Radio: 125 Million Cars and Counting”, Sep 2026</li>
+  <li>PBS NewsHour/AP, AM radio bill passes the House, Sep 2026</li>
+  <li>DRM Consortium: India (BES Expo 2026), China (Sep 2024, CCBN 2026)</li>
+  <li>Hirschmann Car Communication, Remote Tuner Module flyer</li>
+</ul>
+{% endraw %}

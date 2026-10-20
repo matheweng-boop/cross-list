@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import or_, select
-from sqlalchemy.orm import Session, noload
+from sqlalchemy.orm import Session, lazyload
 
 from app.auth.deps import get_current_user
 from app.config import get_settings
@@ -681,8 +681,8 @@ def compare_page(
         family = matches[0].family
     support = family_support(session)
     family = family or next((k for k, e in support.items() if e["parts"]), next(iter(support)))
-    # the series list shows part number, maker and package only: no parameters loaded
-    q = select(Part).where(Part.family == family).order_by(Part.mpn).options(noload(Part.params))
+    # the series list shows part number, maker and package only: parameters are not loaded
+    q = select(Part).where(Part.family == family).order_by(Part.mpn).options(lazyload(Part.params))
     available = list(session.scalars(q).unique())
     series: dict[str, list[Part]] = {}
     for p in available:

@@ -26,11 +26,22 @@ def statuses(ov):
     return {c.label: c.status for c in ov.checks}
 
 
+# Files whose datasheets give land patterns for every package. Later imports (many RF switch and competitor
+# packages) often have no published pad drawing; their outlines must still draw, without pads.
+FULLY_DRAWN = {"skyworks_si86.yaml", "skyworks_si823x.yaml", "ti_digital_isolators.yaml", "ti_gate_drivers.yaml",
+               "novosense_digital_isolators.yaml", "skyworks_switches.yaml",
+               "skyworks_gate_drivers_more.yaml"}  # fmt: skip
+
+
 def test_every_real_package_has_lead_data():
     mech = load_mechanical()
     for path in (ROOT / "data" / "real").glob("*.yaml"):
         for p in yaml.safe_load(path.read_text()).get("packages", []):
-            assert p["code"] in mech, f"{p['code']} ({path.name}) missing from data/mechanical.yaml"
+            if path.name in FULLY_DRAWN:
+                assert p["code"] in mech, f"{p['code']} ({path.name}) missing from data/mechanical.yaml"
+            else:
+                pk = SimpleNamespace(**{"positions_total": None, "pin_positions": None, "height_mm": None, **p})
+                assert outline(pk).code == p["code"]
 
 
 def test_pins_run_down_the_left_and_up_the_right():

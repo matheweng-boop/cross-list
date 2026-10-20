@@ -245,3 +245,14 @@ def test_isolated_amplifier_pin_aliases_apply_only_within_the_family():
     assert pins_compatible("AIP", "INP", "isolated_amplifier") and pins_compatible("ADAT", "DOUT", "isolated_amplifier")
     assert not pins_compatible("VDDA", "VDD1", "gate_driver")  # gate drivers: VDDA is output channel A
     assert not pins_compatible("ACLK", "CLKIN", "isolated_amplifier")  # input on some parts, output on others
+
+
+def test_packages_without_a_published_pitch_only_match_themselves():
+    from app.matching.engine import same_package
+    from app.models import Package
+
+    dims = {"pin_count": 6, "body_length_mm": 1.1, "body_width_mm": 0.7, "span_mm": 0.7}
+    a, b = Package(id=1, code="A", pitch_mm=0, **dims), Package(id=2, code="B", pitch_mm=0, **dims)
+    assert not same_package(a, b) and same_package(a, a)
+    c, d = Package(id=3, code="C", pitch_mm=0.4, **dims), Package(id=4, code="D", pitch_mm=0.4, **dims)
+    assert same_package(c, d)

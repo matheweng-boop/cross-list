@@ -327,6 +327,8 @@ def pins_compatible(ref: str, cand: str, family: str | None = None) -> bool:
 def same_package(a: Package, b: Package) -> bool:
     if a.id is not None and a.id == b.id:
         return True
+    if not a.pitch_mm or not b.pitch_mm:  # pitch not published (stored as 0): only the very same package matches
+        return False
     # Pin count may differ: one package can leave positions empty where another
     # has a no-connect pin. Pinouts are compared by position in check_fit.
     return (

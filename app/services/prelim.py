@@ -21,8 +21,11 @@ DISTANCE = {  # how far a feature is from what we ship today
     3: ("New chip", "New chip built from technology we already have"),
     4: ("New technology", "Needs a process, IP or capability we don't have"),
 }
-VERDICTS = {"agree": "correct", "disagree": "wrong", "closer": "closer", "further": "further", "reset": "unsure"}
-VERDICT_LABEL = {"correct": "agreed", "wrong": "disputed", "closer": "move closer", "further": "move further"}
+VERDICTS = {"agree": "correct", "disagree": "wrong", "closer": "closer", "further": "further", "answer": "answered",
+            "reset": "unsure"}  # fmt: skip
+VERDICT_LABEL = {"correct": "agreed", "wrong": "disputed", "closer": "move closer", "further": "move further",
+                 "answered": "answered"}  # fmt: skip
+QUESTION_GROUPS = (("bu", "Business unit (internal)"), ("customer", "OEM / Tier-1"))
 LISTS = ("advantages", "disadvantages", "diff_good", "diff_bad")
 _SLUG = re.compile(r"^[a-z0-9-]+$")
 
@@ -46,6 +49,7 @@ def item_ids(slug: str) -> set[str]:
     rows = [x for k in LISTS for x in pos.get(k) or []]
     rows += [*(c.get("outlook") or []), *(c.get("features") or []), *(c.get("attach") or []),
              *((c.get("prices") or {}).get("items") or [])]  # fmt: skip
+    rows += [x for k, _ in QUESTION_GROUPS for x in (c.get("questions") or {}).get(k) or []]
     return {str(x["id"]) for x in rows if x.get("id")}
 
 
@@ -87,6 +91,7 @@ def case(session: Session, slug: str) -> dict | None:
     n_fb = sum(1 for f in fb.values() if f["verdict"] or f["comments"])
     return {**c, "position": {k: attach(pos.get(k)) for k in LISTS}, "outlook": attach(c.get("outlook")),
             "features": attach(c.get("features")), "attach": attach(c.get("attach")),
+            "questions": {k: attach((c.get("questions") or {}).get(k)) for k, _ in QUESTION_GROUPS},
             "prices": {**prices, "items": items}, "revenue": revenue, "n_feedback": n_fb}  # fmt: skip
 
 

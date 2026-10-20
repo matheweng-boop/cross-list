@@ -119,3 +119,60 @@ risks:
   - "Chinese front-end prices in Cat-1bis may stay far below our cost; the US rule protects only North America."
   - "Cannibalisation of Sky5 Value sockets in mid-price TCUs."
   - "Unknown from public data: front-end share of module cost, contract prices, the EU eCall split between LTE and RedCap, and EU 2G/3G/4G switch-off dates beyond examples."
+
+questions:
+  bu:
+    - {id: q-bu-pamid, text: "Can SKY5A2206 PA dies, SKY5A2205 switch and Qorvo/Skyworks duplexers be combined in one AEC-Q104 module, and which duplexers need new layouts?", why: "f-pamid is distance 2 only if the dies and filters exist; we have no automotive PAMiD (b-pamid)"}
+    - {id: q-bu-cost, text: "What would VT1 cost to build, and what contract ASPs do SKY5A2206, SKY5A2205 and SKY5A5010 get today?", why: "VT1's $2.2–3.4 rests on an assumed 15–20 % share of a module price"}
+    - {id: q-bu-china, text: "How far are we above Chinese Cat-1bis PA + filter prices (Vanchip, Maxscend), from lost quotes?", why: "Their prices are not public (d-price); decides whether Cat-1bis is reachable outside North America"}
+    - {id: q-bu-hd, text: "What would AEC-Q104 qualification and PPAP of SKY68035-11 need, and is the die already automotive capable?", why: "Sets the half-duplex tier (f-hd, p-hd)"}
+    - {id: q-bu-overlap, text: "Which merged Skyworks/Qorvo cellular line owns value automotive modules, and is a single-transmit automotive module already on either roadmap?", why: "Avoid duplicating work; cannibalisation of Sky5 Value sockets (d-content)"}
+    - {id: q-bu-modems, text: "Which RedCap / Cat-1bis modem vendors (MediaTek, UNISOC, United Micro, Sequans) have we validated drivers with, and do any automotive TCU wins use our set?", why: "No public reference design with an automotive RedCap modem (b-ref)"}
+  customer:
+    - {id: q-c-tech, text: "Which radio do your EU eCall TCUs use for 2027–2030 programmes: Cat-1bis, Cat-4 or RedCap, and from which SOP does RedCap start?", who: "OEM / Tier-1 telematics team", why: "The EU LTE/RedCap split is not public (o-lte)"}
+    - {id: q-c-modem, text: "Which modem platform do you use for value TCUs, and does the module maker or you choose the RF front end?", who: "Tier-1 telematics team", why: "Qualcomm A10 bundles its RF (d-qc); module makers pick parts (d-modules)"}
+    - {id: q-c-rx, text: "Do you need 2 receivers (2-RX RedCap) or is 1 enough, and do you swap to a backup antenna for crash survival?", who: "Tier-1 telematics RF team", why: "Sizes VR1 and the antenna-switch option"}
+    - {id: q-c-bands, text: "How many regional SKUs do you build, and which bands must one EU or NA module cover?", who: "Tier-1 telematics RF team", why: "The band list is our estimate; decides the duplexer bank"}
+    - {id: q-c-supply, text: "How much weight do the US connected-vehicle rule and USMCA content carry in your RF supplier choice, outside North America too?", who: "Tier-1 purchasing / compliance", why: "Our main lever against Chinese PA vendors (a-us, o-us)"}
+    - {id: q-c-price, text: "What do you pay today for the cellular front end of a value TCU, and what would one module need to cost?", who: "Tier-1 purchasing", why: "Front-end share of module cost is not public; validates $2.2–3.4"}
+
+diagram:
+  note: "A value telematics unit for NG-eCall: a RedCap or Cat-1bis modem from a non-Qualcomm vendor with one single-transmit module (PA, duplexers, switch) and an optional second receiver. It replaces a PA, switch and 4–6 duplexers and filters, or the up-to-7-part Sky5 Value set."
+  groups:
+    - id: ant
+      label: Antennas
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "Main (roof)", who: customer}
+        - {fn: antenna, label: "Backup eCall", who: customer}
+        - {fn: gnss_lna, label: "GNSS L1 + L5", who: ours, part: "SKY5A2110"}
+    - id: fe
+      label: Cellular front end
+      col: 1
+      row: 0
+      blocks:
+        - {fn: antenna_switch, label: "Main / backup switch", who: ours, part: "QPC8013Q / QPC8020Q"}
+        - {fn: pa_module, label: "VT1 module", who: proposed, part: "Single-TX PA + regional duplexers + switch, AEC-Q104 (concept)"}
+        - {fn: diversity_rx_module, label: "VR1 second RX", who: proposed, part: "Optional, 2-RX RedCap (concept)"}
+    - id: modem
+      label: Modem
+      col: 2
+      row: 0
+      blocks:
+        - {fn: modem, label: "RedCap / Cat-1bis modem", who: other, part: "MediaTek, UNISOC A7720, United Micro, Sequans"}
+    - id: ecall
+      label: eCall unit
+      col: 2
+      row: 1
+      w: 2
+      blocks:
+        - {fn: mcu, label: "Application MCU", who: other}
+        - {fn: power_loss_protection, label: "Backup battery", who: other}
+        - {fn: audio_codec, label: "Hands-free audio", who: other}
+        - {fn: can_transceiver, label: "CAN", who: other}
+  links:
+    - [ant, fe, "cellular RF"]
+    - [ant, modem, "GNSS"]
+    - [fe, modem, "Tx/Rx, MIPI RFFE"]
+    - [modem, ecall, "NG-eCall voice + data"]

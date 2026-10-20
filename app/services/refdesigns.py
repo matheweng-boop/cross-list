@@ -43,12 +43,83 @@ def designs() -> tuple[dict, ...]:
                               *(d.get("applications") or [])]
                     if x
                 ).lower()  # fmt: skip
+                d["_type"] = app_type(d)
+                d["_sub"] = sub_class(d, d["_type"])
                 out.append(d)
     return tuple(out)
 
 
+# Broad application types: a design takes the type most of its application tags (and its title) point to.
+TYPES = (  # (type, pattern), in tie-break order
+    ("Power conversion & energy", r"power suppl|power deliver|power distribution|power conver|charg|battery|solar|"
+     r"energy|grid|\bups\b|dc/dc|dc-dc|ac/dc|ac-dc|pfc|circuit breaker|electrical panel|rectifier|hybrid, electric|"
+     r"buck|boost|converter|adapter|flyback|inverter|power module|gate driv|mosfet|igbt"),
+    ("Motor drives & motion", r"motor|drive|servo|stepper|robot|actuat|hvac|pump|fan\b|compressor|traction|e-bike"),
+    ("RF & communications", r"wireless|\brf\b|radio|antenna|\bbts\b|\brru\b|\bran\b|backhaul|microwave|satellite|"
+     r"\b5g\b|wi-?fi|bluetooth|networking|telecom|communications equipment|mmimo|transceiver"),
+    ("Sensing & measurement", r"sensor|sensing|test|measurement|oscillo|instrument|imaging|radar|lidar|meter|monitor|"
+     r"analy|camera|detector|digitizer|vital signs|ultrasound"),
+    ("Control, computing & data", r"\bplc\b|\bdcs\b|processor|gateway|zone control|data center|server|computing|"
+     r"controller|fpga|automation|storage"),
+    ("Displays, audio & HMI", r"infotainment|display|audio|cockpit|cluster|home theater|entertainment|"
+     r"personal electronics|wearable|\btv\b|touch|human machine"),
+    ("Lighting & body", r"lighting|\bled\b|body electronics|door|seat|mirror|wiper|interior"),
+    ("Appliances & tools", r"appliance|kitchen|oven|coffee|cleaning|garden|power tool|induction cook|induction heat|"
+     r"pet care|washer|refrigerat"),
+    ("Medical & healthcare", r"medical|healthcare|surgical|patient|telehealth|vital signs|ultrasound|infusion"),
+)
+OTHER_TYPE = "Other"
+_TYPE_RE = tuple((t, re.compile(p, re.I)) for t, p in TYPES)
+_VOLT = re.compile(r"(\d+(?:\.\d+)?)\s*(kV|V)(?:AC|DC|ac|dc)?\b")
+_FREQ = re.compile(r"(\d+(?:\.\d+)?)\s*(GHz|MHz)\b", re.I)
+VOLT_CLASSES = ("Up to 60 V", "60–600 V", "Above 600 V", "Voltage not stated")
+BAND_CLASSES = ("Below 1 GHz", "1–6 GHz", "Above 6 GHz", "Wired / baseband", "Frequency not stated")
+# Fallbacks from the application tags when the title and summary name no voltage or frequency (typical class of the
+# application, e.g. a grid or traction design is above 600 V, a cellular radio unit is 1–6 GHz).
+_VOLT_TAGS = ((VOLT_CLASSES[2], re.compile(r"grid|solar|ev charging|traction|hev/ev|hybrid, electric|energy storage|"
+                                           r"high.voltage|on-?board charger|wind|medium voltage|propulsion", re.I)),
+              (VOLT_CLASSES[1], re.compile(r"ac/dc|ac-dc|mains|appliance|circuit breaker|electrical panel|hvac|pfc|"
+                                           r"server|ac drive|induction|adapter|lighting", re.I)),
+              (VOLT_CLASSES[0], re.compile(r"usb|battery.powered|portable|wearable|personal electronics|48 ?v|12 ?v|"
+                                           r"body electronics|infotainment|cluster|poe|power over ethernet|sensor",
+                                           re.I)))  # fmt: skip
+_BAND_TAGS = ((BAND_CLASSES[2], re.compile(r"microwave|backhaul|satellite|radar|mmwave|e-band|ka-band", re.I)),
+              (BAND_CLASSES[1], re.compile(r"\bbts\b|\brru\b|cloud ran|mmimo|\baas\b|wireless infrastructure|"
+                                           r"small cell|wi-?fi|bluetooth|5g|lte", re.I)),
+              (BAND_CLASSES[3], re.compile(r"wired|broadband fixed|switches|baseband|cable|ethernet|optical", re.I)),
+              (BAND_CLASSES[0], re.compile(r"sub-?ghz|lora|\bism\b|smart meter|rfid|\bnfc\b", re.I)))  # fmt: skip
+
+
+def _from_tags(d: dict, table) -> str | None:
+    tags = " | ".join([*(d.get("applications") or []), d.get("title") or ""])
+    return next((c for c, rx in table if rx.search(tags)), None)
+
+
+def app_type(d: dict) -> str:
+    tags = [*(d.get("applications") or []), d.get("title") or ""]
+    score = [(sum(1 for x in tags if rx.search(x)), -i, t) for i, (t, rx) in enumerate(_TYPE_RE)]
+    best = max(score)
+    return best[2] if best[0] else OTHER_TYPE
+
+
+def sub_class(d: dict, atype: str) -> str:
+    """Within a type: frequency band for RF designs, voltage class (highest voltage named) for the others."""
+    text = f"{d.get('title') or ''} {d.get('summary') or ''}"
+    if atype == "RF & communications":
+        f = [float(v) * (1000 if u.lower() == "ghz" else 1) for v, u in _FREQ.findall(text)]
+        if not f:
+            return _from_tags(d, _BAND_TAGS) or BAND_CLASSES[4]
+        top = max(f)
+        return BAND_CLASSES[0] if top < 1000 else BAND_CLASSES[1] if top <= 6000 else BAND_CLASSES[2]
+    v = [float(x) * (1000 if u == "kV" else 1) for x, u in _VOLT.findall(text)]
+    if not v:
+        return _from_tags(d, _VOLT_TAGS) or VOLT_CLASSES[3]
+    top = max(v)
+    return VOLT_CLASSES[0] if top <= 60 else VOLT_CLASSES[1] if top <= 600 else VOLT_CLASSES[2]
+
+
 def search(q: str = "", vendor: str = "", market: str = "", fn: str = "", isolation: bool = False,
-           docs: bool = False) -> list[dict]:  # fmt: skip
+           docs: bool = False, atype: str = "", sub: str = "") -> list[dict]:  # fmt: skip
     words = q.lower().split()
     return [
         d
@@ -59,7 +130,20 @@ def search(q: str = "", vendor: str = "", market: str = "", fn: str = "", isolat
         and (not fn or fn in (d.get("functions") or []))
         and (not isolation or d.get("isolation"))
         and (not docs or d.get("documents"))
+        and (not atype or d["_type"] == atype)
+        and (not sub or d["_sub"] == sub)
     ]
+
+
+def type_tree(rows: list[dict]) -> list[dict]:
+    """Types with their sub-classes and counts, in the fixed order (empty ones left out)."""
+    order = [t for t, _ in TYPES] + [OTHER_TYPE]
+    subs_order = {c: i for i, c in enumerate(VOLT_CLASSES + BAND_CLASSES)}
+    tree: dict[str, Counter] = {}
+    for d in rows:
+        tree.setdefault(d["_type"], Counter())[d["_sub"]] += 1
+    return [{"type": t, "n": sum(tree[t].values()), "subs": sorted(tree[t].items(), key=lambda kv: subs_order[kv[0]])}
+            for t in order if t in tree]  # fmt: skip
 
 
 def facets(rows: list[dict]) -> dict[str, list[tuple[str, int]]]:

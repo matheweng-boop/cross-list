@@ -49,3 +49,15 @@ def test_question_is_saved_reviewed_and_answered(client):
 def test_background_page_only_when_present(client):
     has = rp.has_background("filters-1-11ghz")
     assert client.get("/business/reports/filters-1-11ghz/background").status_code == (200 if has else 404)
+
+
+def test_reports_grouped_by_type_and_feasibility(client):
+    from app.services import reports as rp
+
+    ideas = [r for r in rp.reports() if r["kind"] == "idea"]
+    assert ideas and all(r["feasibility"] in rp.FEASIBILITY and r.get("feasibility_why") for r in ideas)
+    page = client.get("/business/reports").text
+    assert "Group by" in page and "Suggested next topics" in page
+    assert all(f'<h2 class="rp-group">{t} ' in page for t in {r["app_type"] for r in rp.reports()})
+    page = client.get("/business/reports?view=feasibility").text
+    assert "Close to the portfolio" in page and "Reports" in page

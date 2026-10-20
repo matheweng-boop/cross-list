@@ -35,6 +35,7 @@ AFFECTS = {
     "new_markets": "Ideas page only (not scored)",
     "auto_reach": "Automotive map and its Top moves (applied immediately)",
     "case": "Preliminary case: the case is revised from it",
+    "application": "Application library: technically verified flag (applied immediately)",
 }
 FILE_UPDATE = (
     "Flag only: the data file must be corrected in the repository (Data quality → to-do); the vote changes no result."
@@ -101,6 +102,8 @@ def items(session: Session) -> list[dict]:
                 if r.dataset == "auto_reach"
                 else f"/business/reports/{r.dataset[5:]}#i-{r.key}"
                 if r.dataset.startswith("case:")
+                else "/blocks?verified=yes"
+                if r.dataset == "application"
                 else f"/business/evidence/{r.key}",
                 "resolution": FILE_UPDATE,
                 "affects": AFFECTS.get(r.dataset.split(":")[0], ""),

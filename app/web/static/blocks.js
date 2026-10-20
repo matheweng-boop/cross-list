@@ -861,7 +861,7 @@
       {method: configId ? "PUT" : "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: $("#bk-name").value, data: S})});
     if (!res.ok) { $("#bk-status").textContent = `Not saved (${res.status})`; return; }
     const out = await res.json();
-    if (!configId) { configId = out.id; history.replaceState(null, "", `/blocks/${configId}`); }
+    if (!configId) { configId = out.id; history.replaceState(null, "", `/blocks/${configId}${new URLSearchParams(location.search).get("bare") ? "?bare=1" : ""}`); }
     dirty = false;
     $("#bk-status").textContent = "Saved";
   });
@@ -983,3 +983,11 @@
   if (Object.keys(S.req).length) refreshCounts(); else render();
   // requirements live above the diagram (renderReqs); the drawer is only for a clicked block or group
 })();
+
+// "Own window": the same diagram in a separate browser window with only the toolbar and canvas (?bare=1).
+document.getElementById("bk-window")?.addEventListener("click", () => {
+  const u = new URL(location.href);
+  u.searchParams.set("bare", "1");
+  u.hash = "";
+  window.open(u.toString(), "_blank", `popup,width=${Math.min(screen.availWidth, 1600)},height=${Math.min(screen.availHeight, 1000)}`);
+});

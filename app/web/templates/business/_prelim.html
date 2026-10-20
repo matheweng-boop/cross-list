@@ -1,17 +1,20 @@
 {# A preliminary case (data/business/cases/<slug>.yaml) with feedback per item and real ASPs; included as a report body. #}
 {% set slug = r.slug %}
-{% macro react(x, scale=false) %}{% set f = x.fb or {} %}
-<details class="pc-react" id="i-{{ x.id }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">react</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+{% import "business/_feasibility.html" as fz %}
+{% macro react(x, scale=false, question=false) %}{% set f = x.fb or {} %}
+<details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">{{ 'answer' if question else 'react' }}</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
   <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
     <input type="hidden" name="key" value="{{ x.id }}">
-    <textarea name="comment" rows="2" maxlength="2000" placeholder="Why, or what should change (optional)" aria-label="Comment"></textarea>
-    <span class="pc-btns"><button name="verdict" value="agree" class="small-btn">Agree</button>{% if scale %}<button name="verdict" value="closer" class="small-btn outline">Closer</button><button name="verdict" value="further" class="small-btn outline">Further</button>{% endif %}<button name="verdict" value="disagree" class="small-btn outline secondary">Disagree</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reset</button>{% endif %}</span>
+    <textarea name="comment" rows="2" maxlength="2000" placeholder="{{ 'The answer, and who gave it' if question else 'Why, or what should change (optional)' }}" aria-label="Comment"></textarea>
+    {% if question %}<span class="pc-btns"><button name="verdict" value="answer" class="small-btn">Save answer</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reopen</button>{% endif %}</span>{% else %}
+    <span class="pc-btns"><button name="verdict" value="agree" class="small-btn">Agree</button>{% if scale %}<button name="verdict" value="closer" class="small-btn outline">Closer</button><button name="verdict" value="further" class="small-btn outline">Further</button>{% endif %}<button name="verdict" value="disagree" class="small-btn outline secondary">Disagree</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reset</button>{% endif %}</span>{% endif %}
   </form>
   {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
 </details>{% endmacro %}
 {% macro conf(c) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence">{{ c }}</span>{% endif %}{% endmacro %}
 
 <h1>{{ case.title }}</h1>
+{% if r.feasibility %}<p class="pc-feas">{{ fz.feas(r.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span></p>{% endif %}
 <p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a></p>
 
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
@@ -46,6 +49,17 @@
 {% if case.product %}<h2>5. Proposed product: {{ case.product.name }}</h2>
 <div class="table-wrap"><table class="small pc-table"><tbody>{% for k, v in case.product.spec %}<tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
 
+{% if case.diagram %}<h3 id="diagram">Block diagram to take to the customer</h3>
+<p class="small muted">{{ case.diagram.note or 'The customer system with the proposed part in place.' }}</p>
+<p class="pc-dleg small"><span class="pc-blk w-proposed">proposed part</span> <span class="pc-blk w-ours">Skyworks / Qorvo today</span> <span class="pc-blk w-other">customer or other supplier</span></p>
+<div class="pc-diagram">{% for g in case.diagram.groups|sort(attribute='row')|groupby('row') %}<div class="pc-drow">{% for grp in g.list|sort(attribute='col') %}
+  <section class="pc-dgrp"><h4>{{ grp.label }}</h4>{% for b in grp.blocks %}{% set bb = b if b is mapping else {'fn': b} %}
+    <span class="pc-blk w-{{ bb.who or 'other' }}" title="{{ label(bb.fn) }}">{{ bb.label or label(bb.fn) }}{% if bb.part %}<small>{{ bb.part }}</small>{% endif %}</span>{% endfor %}</section>{% endfor %}
+</div>{% endfor %}</div>
+{% if case.diagram.links %}<p class="small muted pc-dlinks">{% for l in case.diagram.links %}{% set a = case.diagram.groups|selectattr('id', 'eq', l[0])|first %}{% set z = case.diagram.groups|selectattr('id', 'eq', l[1])|first %}{{ a.label if a else l[0] }} → {{ z.label if z else l[1] }}{% if l[2] %} ({{ l[2] }}){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+<p><a class="button small-btn" href="/blocks/new?case={{ slug }}">Open in the application workspace</a> <span class="small muted">to edit it, pick parts and export it as SVG for the customer</span></p>
+{% endif %}
+
 <h2 id="asp">6. ASP</h2>
 <p class="small">{{ case.prices.method }}</p>
 <details class="small"><summary>Public price anchors</summary><div class="table-wrap"><table class="pc-table"><tbody>{% for a in case.prices.anchors %}<tr><td>{{ a.part }}</td><td>{{ a.price }}</td><td class="muted">{{ a.qty }}</td></tr>{% endfor %}</tbody></table></div></details>
@@ -59,6 +73,18 @@
 <h2>7. Raising the attach rate</h2>
 <ul class="pc-list">{% for t in case.attach %}<li>{{ t.lever }} <span class="pc-conf">{{ t.effort }} effort</span>{{ react(t) }}</li>{% endfor %}</ul>
 
-<h2>8. Risks and open questions</h2>
+{% if case.questions.bu or case.questions.customer %}<h2 id="questions-to-ask">8. Questions to ask</h2>
+<p class="small muted">What this case cannot settle from public data. Record each answer (and who gave it) with “answer”; answered questions feed the next revision.</p>
+<div class="pc-grid">{% for key, title in question_groups %}{% if case.questions[key] %}
+  <section class="pc-box pc-q"><h3>{{ title }}</h3><ol>{% for q in case.questions[key] %}
+    <li><span>{{ q.text }}</span>{% if q.who %} <small class="muted">ask: {{ q.who }}</small>{% endif %}{% if q.why %}<br><small class="muted">Why: {{ q.why }}</small>{% endif %}{{ react(q, question=true) }}</li>{% endfor %}</ol></section>{% endif %}{% endfor %}
+</div>
+{% endif %}
+<h2>{{ '9' if case.questions.bu or case.questions.customer else '8' }}. Risks and open questions</h2>
 <ul>{% for x in case.risks %}<li>{{ x }}</li>{% endfor %}</ul>
 <p class="small muted">Feedback on any item is listed in <a href="/manage/reviews">Requests &amp; reviews</a>; the case is revised from it. Sources and every figure: background notes below.</p>
+<dialog id="pc-dialog" class="pc-dialog" aria-labelledby="pc-dialog-title"><article>
+  <h3 id="pc-dialog-title"></h3><div class="pc-dialog-body"></div>
+  <form method="dialog"><button class="small-btn outline secondary">Close</button></form>
+</article></dialog>
+<script src="/static/prelim.js" defer></script>

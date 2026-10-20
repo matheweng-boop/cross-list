@@ -126,3 +126,65 @@ risks:
   - "Spectrum winners are unclear: L-band (Skylo/Viasat/Ligado), Iridium, S-band in Europe, and Starlink's 2 GHz band in the US."
   - "Qualcomm's bundled front end could close most Qualcomm-based TCUs."
   - "Unknown from public data: SKY68040-11 output power, GNSS desense with an n255 transmitter, filter feasibility, contract prices, and satellite-capable vehicle volumes outside one analyst forecast."
+
+questions:
+  bu:
+    - {id: q-bu-pout, text: "What output power and linearity does SKY68040-11 reach at n255 and n256, and can its die pass automotive (AEC-Q104) stress?", why: "Output power is not stated; NTN-23 (f-auto) rests on this die"}
+    - {id: q-bu-n256, text: "Does the SKY5A2206 mid-band path reach 1980–2010 MHz (n256) with acceptable power and efficiency?", why: "Would give n256 transmit on today's automotive PA (f-n256doc)"}
+    - {id: q-bu-filter, text: "Can our BAW/SAW lines make n255 and n256 duplexers with deep GNSS L1 rejection, given only ≈50 MHz between L1 and the n255 uplink?", why: "No such filter exists (f-filter, distance 3); GNSS desense is the main unknown"}
+    - {id: q-bu-pc2, text: "Can our InGaP HBT process deliver 26 dBm at the antenna port after duplexer loss at 105 °C, and at what die size?", why: "Decides NTN-26 (f-pc2) and its 2.5–3.5 $ range"}
+    - {id: q-bu-cost, text: "What would NTN-23 cost to build, and what contract ASPs do SKY5A2206 and SKY5A2205 get today?", why: "Only public anchor is a $5.16 one-off IoT front end"}
+    - {id: q-bu-overlap, text: "Which merged Skyworks/Qorvo automotive cellular line keeps NTN, and is NTN already on either roadmap?", why: "Two overlapping lines may delay decisions (d-merger)"}
+  customer:
+    - {id: q-c-when, text: "From which model year and in which regions do you plan satellite connectivity, and narrowband by firmware or wideband with new RF?", who: "OEM connected-car team", why: "Narrowband may need no new part (d-nohw); the case rests on wideband from 2029"}
+    - {id: q-c-modem, text: "Which modem platform will your 2028–2030 TCU use, and do you choose the RF front end or take the modem vendor's?", who: "Tier-1 telematics team", why: "Qualcomm bundles its RF (d-bundle); module makers choose RF (d-module)"}
+    - {id: q-c-power, text: "What transmit power at the antenna port and antenna gain do you target: 23 dBm / 0 dBi or 26 dBm / 3 dBi?", who: "Tier-1 telematics RF and antenna team", why: "PC2 is not in 3GPP yet (o-pc2); sizes NTN-26"}
+    - {id: q-c-bands, text: "Which satellite operators and bands will you support: Skylo n255, EU S-band n256, Iridium, Starlink's 2 GHz band?", who: "OEM connected-car / partnerships team", why: "Spectrum is fragmented (d-bands); decides filter options"}
+    - {id: q-c-gnss, text: "Where will the satellite antenna sit (cable length), and how much GNSS desense can you accept while NTN transmits?", who: "Tier-1 antenna module team", why: "Decides the compensator variant and the duplexer rejection target"}
+    - {id: q-c-price, text: "What would you pay for an NTN RF path in the TCU, given the value is a subscription, not a regulation?", who: "Tier-1 purchasing", why: "Validates the $1.5–2.5 / $2.5–3.5 ranges (d-cost)"}
+
+diagram:
+  note: "A telematics unit with a MediaTek-class 5G + NTN modem, our automotive cellular set and the NTN add-on module on the separate satellite RF path, with an optional compensator at a roof antenna. It replaces a discrete NTN amplifier, filters and LNA, or the modem vendor's bundled front end."
+  groups:
+    - id: ant
+      label: Roof antennas
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "Satellite L/S patch", who: customer, part: "0–3 dBi"}
+        - {fn: antenna, label: "Cellular / GNSS", who: customer}
+    - id: antmod
+      label: Antenna module (option)
+      col: 1
+      row: 0
+      blocks:
+        - {fn: rf_frontend, label: "NTN compensator", who: proposed, part: "PA + LNA + filters at the antenna (concept)"}
+        - {fn: gnss_lna, label: "GNSS L1 + L5", who: ours, part: "SKY5A2110"}
+    - id: ntn
+      label: NTN add-on module (TCU)
+      col: 1
+      row: 1
+      blocks:
+        - {fn: pa_module, label: "NTN-23 / NTN-26", who: proposed, part: "n255 + n256 PA (23 then 26 dBm) + receive LNA, AEC-Q104 (concept)"}
+        - {fn: filter_saw_baw, label: "NTN duplexers", who: proposed, part: "n255/n256, deep rejection at GNSS L1 (concept)"}
+    - id: cell
+      label: Cellular front end (TCU)
+      col: 1
+      row: 2
+      blocks:
+        - {fn: pa_module, label: "Cellular PA", who: ours, part: "SKY5A2206"}
+        - {fn: rf_frontend, label: "TX/RX module", who: ours, part: "SKY5A2205"}
+        - {fn: lna, label: "LNA bank", who: ours, part: "SKY5A2203"}
+    - id: modem
+      label: Modem
+      col: 2
+      row: 1
+      blocks:
+        - {fn: modem, label: "5G + NTN modem", who: other, part: "MediaTek MT2739 / Quectel AR588MA"}
+  links:
+    - [ant, antmod, "RF"]
+    - [antmod, ntn, "coax: L/S band"]
+    - [antmod, modem, "coax: GNSS"]
+    - [ant, cell, "cellular RF"]
+    - [ntn, modem, "NTN Tx/Rx, MIPI RFFE"]
+    - [cell, modem, "Tx/Rx, MIPI RFFE"]

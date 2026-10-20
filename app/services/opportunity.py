@@ -334,25 +334,6 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
     return sorted(rows, key=lambda e: (-e["reach"], -e["adjacent"], e["label"]))
 
 
-def overview(apps: list[Application], asp: dict, vol: dict) -> dict:
-    allpos = [p for a in apps for p in a.positions]
-    m = metrics(allpos, asp)
-    covs = [metrics(a.positions, asp)["coverage"] for a in apps]
-    covs = [c for c in covs if c is not None]
-    in_scope_fns = {p.fn for p in allpos if p.status in IN_SCOPE}
-    return {
-        "apps": len(apps),
-        "positions": len(allpos),
-        "metrics": m,
-        "avg_coverage": sum(covs) / len(covs) if covs else None,
-        "functions": len({p.fn for p in allpos}),
-        "gap_functions": len({p.fn for p in allpos if p.status in ("gap", "competitor")}),
-        "asp_known": sum(1 for f in in_scope_fns if f in asp),
-        "asp_needed": len(in_scope_fns),
-        "vol_known": sum(1 for a in apps if a.name in vol),
-    }
-
-
 # ---- competition (indicative, public catalogues) ---------------------------------------------------------
 @lru_cache
 def competition() -> dict[str, dict]:
@@ -593,6 +574,7 @@ def platforms_for(fn: str) -> list[tuple[str, dict]]:
 
 # ---- opportunity explorer: one row per function, several views; formulas unchanged ---------------------------
 GAP_TYPE_LABEL = {
+    "band_gap": "Band gap – we sell the function, not for this band or power",
     "candidate": "Candidate exists – requirements not validated",
     "mapping": "Probably sold already – catalogue mapping missing",
     "true_gap": "Portfolio gap",
@@ -642,8 +624,54 @@ def explorer(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
             "competition": competition().get(fn), "path": paths.get(fn), "proximity": f.get("proximity"),
             "trend": evidence("trends").get(fn), "score": f.get("score"), "factors": f.get("factors") or [],
             "background": f.get("background", sum(a.background for a in apps if any(p.fn == fn for p in a.positions))),
+            "key": fn, "group": group_of(fn),
         }  # fmt: skip
         out.append(row)
+    return out + rf_band_rows()
+
+
+# big categories that group the explorer: function category ids (data/blocks/functions.yaml) per group, in order
+GROUPS = {
+    "RF & radio": ("rf", "radio"),
+    "Power & protection": ("power", "protection", "isolation"),
+    "Timing": ("timing",),
+    "Interface & networking": ("interface", "networking"),
+    "Sensing & audio": ("sensing", "audio", "sensors"),
+    "Processing & memory": ("processing", "memory"),
+}
+_GROUP_OF = {c: g for g, cs in GROUPS.items() for c in cs}
+BAND_KINDS = {"none": "no part of ours", "risk": "only ageing parts of ours", "power": "this power class missing"}
+
+
+def group_of(fn: str) -> str:
+    return _GROUP_OF.get((blocks.catalogue()["functions"].get(fn) or {}).get("category", ""), "Other")
+
+
+def _crowding(n_vendors: int) -> str | None:
+    return None if not n_vendors else "low" if n_vendors == 1 else "medium" if n_vendors <= 3 else "high"
+
+
+def rf_band_rows() -> list[dict]:
+    """RF functions we sell, but not in a band or power class the library diagrams need (RF coverage gaps): one
+    explorer row per slot. Function-level rows count an RF function as covered as soon as one part exists."""
+    from app.services import rf_coverage as rf  # rf_coverage builds on the catalogue; imported here to keep it lazy
+
+    out = []
+    for g in rf.gaps(rf.rows()):
+        if g["kind"] not in BAND_KINDS:
+            continue
+        b = g["band"]
+        vendors = [v for v, _ in g["rivals"]]
+        label = f"{g['label']} · {b['label']}" + (f" · {g['power_label']}" if g["power_label"] else "")
+        out.append({
+            "fn": g["fn"], "key": f"{g['fn']}@{b['id']}" + (f"@{g['power_label']}" if g["power_label"] else ""),
+            "label": label, "status": "competitor" if g["comp"] else "gap", "gap_type": "band_gap",
+            "band_note": BAND_KINDS[g["kind"]], "rf_link": f"/business/rf-coverage?fn={g['fn']}&band={b['id']}",
+            "reach": g["need"], "positions": g["need"], "adjacent": 0, "adjacency": 0, "tam": 0.0, "tam_apps": 0,
+            "competition": {"crowding": _crowding(len(vendors)), "vendors": vendors} if vendors else None,
+            "path": None, "proximity": None, "trend": None, "score": None, "factors": [], "background": 0,
+            "group": "RF & radio",
+        })  # fmt: skip
     return out
 
 

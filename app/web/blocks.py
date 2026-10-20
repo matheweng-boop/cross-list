@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import BlockDiagram, BlockFeedback
-from app.services import blocks, refdesigns, schematic, vocab
+from app.services import blocks, prelim, refdesigns, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.get("/blocks", response_class=HTMLResponse)
-def index(request: Request, market: str = "", source: str = "", variants: bool = False,
+def index(request: Request, market: str = "", source: str = "", variants: bool = False, verified: str = "",
           session: Session = Depends(get_session)):  # fmt: skip
     """Application library: reference architectures with facets for end market and source; architectures that may
     describe the same application are flagged as possible variants (never merged)."""
@@ -31,6 +31,7 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
             (not market or c["market"] == market)
             and (not source or c["source"] == source)
             and (not variants or bool(c["variant"]))
+            and (verified not in ("yes", "no") or bool(c["verified"]) == (verified == "yes"))
         )
 
     cards = [(cat, [c for c in items if keep(c)]) for cat, items in groups]
@@ -40,7 +41,8 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
 
     ctx = {"designs": designs, "cards": [(k, v) for k, v in cards if v], "n_all": len(allcards),
            "n_shown": sum(len(v) for _, v in cards), "markets": facet("market"), "sources": facet("source"),
-           "market": market, "source": source, "variants": variants,
+           "market": market, "source": source, "variants": variants, "verified": verified,
+           "n_verified": sum(1 for c in allcards if c["verified"]),
            "n_variant": sum(1 for c in allcards if c["variant"]), "n_groups": len(blocks.variant_groups())}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/index.html", ctx)
 
@@ -54,20 +56,36 @@ def coverage(request: Request, session: Session = Depends(get_session)):
 
 
 @router.get("/blocks/new", response_class=HTMLResponse)
-def new(request: Request, template: int | None = None, session: Session = Depends(get_session)):
+def new(request: Request, template: int | None = None, case: str = "", bare: bool = False,
+        session: Session = Depends(get_session)):  # fmt: skip
+    if case:  # the customer diagram of a preliminary case, opened as an unsaved design
+        c = prelim.raw(case) or {}
+        if not c.get("diagram"):
+            raise HTTPException(404, "This case has no block diagram")
+        return _editor(request, session, None, {"name": c["title"], **c["diagram"]}, None, bare)
     tpl = blocks.templates()[template] if template is not None and 0 <= template < len(blocks.templates()) else None
-    return _editor(request, session, None, tpl)
+    return _editor(request, session, None, tpl, template if tpl else None, bare)
+
+
+@router.post("/blocks/verify")
+def verify(i: int = Form(...), on: str = Form("1"), author: str = Form(""), note: str = Form(""),
+           bare: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
+    """Mark a library architecture as technically verified, or back to entered."""
+    if not 0 <= i < len(blocks.templates()):
+        raise HTTPException(404, "Application not found")
+    blocks.set_verified(session, i, on == "1", author, note)
+    return RedirectResponse(f"/blocks/new?template={i}{'&bare=1' if bare else ''}#bk-verify", status_code=303)
 
 
 @router.get("/blocks/{design_id:int}", response_class=HTMLResponse)
-def edit(request: Request, design_id: int, session: Session = Depends(get_session)):
+def edit(request: Request, design_id: int, bare: bool = False, session: Session = Depends(get_session)):
     d = session.get(BlockDiagram, design_id)
     if d is None:
         raise HTTPException(404, "Block diagram not found")
-    return _editor(request, session, d, None)
+    return _editor(request, session, d, None, None, bare)
 
 
-def _editor(request, session, design, tpl):
+def _editor(request, session, design, tpl, tpl_i=None, bare=False):
     info = {"id": None, "name": blocks.display_name(tpl) if tpl else "", "data": None}
     if design:
         info = {"id": design.id, "name": design.name, "data": design.data}
@@ -82,6 +100,9 @@ def _editor(request, session, design, tpl):
             "requirements": blocks.requirements(session),
             "help": blocks.question_help(),
             "templates_": blocks.templates(),
+            "tpl_i": tpl_i,
+            "verified": blocks.verifications(session).get(blocks.verify_key(tpl)) if tpl else None,
+            "bare": bare,
         },
     )
 
@@ -222,13 +243,19 @@ def feedback_text(session: Session = Depends(get_session)):
 
 @router.get("/reference-designs", response_class=HTMLResponse)
 def reference_designs(request: Request, q: str = "", vendor: str = "", market: str = "", fn: str = "",
-                      iso: bool = False, docs: bool = False, page: int = 1, view: str = "",
-                      session: Session = Depends(get_session)):  # fmt: skip
+                      iso: bool = False, docs: bool = False, page: int = 1, view: str = "", atype: str = "",
+                      sub: str = "", session: Session = Depends(get_session)):  # fmt: skip
     """Manufacturers' public reference designs, searchable; each function is marked portfolio / gap for us. The
-    families view lists each product family once, with its member parts and the designs that use them."""
-    rows = refdesigns.search(q, vendor, market, fn, iso, docs)
-    view = "families" if view == "families" else ""
-    items = refdesigns.families(rows, q) if view else rows
+    types view groups them broadly (application type, then voltage class or frequency band); the families view lists
+    each product family once, with its member parts and the designs that use them. With no search or filter the
+    page opens on the types view."""
+    base = refdesigns.search(q, vendor, market, fn, iso, docs)
+    tree = refdesigns.type_tree(base)
+    rows = [d for d in base if (not atype or d["_type"] == atype) and (not sub or d["_sub"] == sub)]
+    if not view and not any((q, vendor, market, fn, iso, docs, atype, sub, page > 1)):
+        view = "types"
+    view = view if view in ("families", "types") else ""
+    items = refdesigns.families(rows, q) if view == "families" else [] if view == "types" else rows
     per = 50
     pages = max(1, -(-len(items) // per))
     page = min(max(page, 1), pages)
@@ -237,12 +264,13 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
     mine = op.company("combined")[2]
     fns = (
         {f for d in shown for f in d.get("functions") or []}
-        if not view
+        if view != "families"
         else {f for x in shown for f, _ in x["functions"]}
     )
     facets = refdesigns.facets(rows)
     fns |= {f for f, _ in facets["function"]}
-    ctx = {"rows": shown if not view else [], "fams": shown if view else [], "view": view, "n_items": len(items),
+    ctx = {"rows": shown if not view else [], "fams": shown if view == "families" else [], "view": view,
+           "n_items": len(items), "tree": tree, "atype": atype, "sub": sub,
            "family_of": refdesigns.family_of, "grouped": refdesigns.grouped_parts,
            "n": len(rows), "n_all": len(refdesigns.designs()),
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),

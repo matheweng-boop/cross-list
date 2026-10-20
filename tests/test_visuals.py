@@ -28,3 +28,18 @@ def test_iso6441_cmti_is_the_datasheet_minimum():
     p = {x["mpn"]: x["params"] for x in parts}
     assert p["ISO6441FDWR"]["cmti_kv_us"] == 200 and p["ISO6441DBQR"]["cmti_kv_us"] == 150
     assert p["ISO6441FDWR"]["data_rate_mbps"] == 150 and p["ISO6441DWRQ1"]["cmti_kv_us"] == 200
+
+
+def test_rf_parts_for_the_receiver_visuals(client):
+    parts = client.get("/api/visuals/rf-parts").json()["parts"]
+    assert parts and {p["stage"] for p in parts} >= {"lna", "switch", "filter"}
+    assert all(p["mfr"] in ("Skyworks", "Qorvo") and p["fmin"] <= p["fmax"] for p in parts)
+    lna = next(p for p in parts if p["mpn"] == "SKY67151-396LF")
+    assert lna["stage"] == "lna" and lna["nf"] == 0.25 and lna["fmin"] == 0.7 and lna["fmax"] == 3.8
+
+
+def test_spec_parsing():
+    assert visuals._nums("0.4-3.0") == [0.4, 3.0] and visuals._nums("-75") == [-75.0]
+    n = visuals._rf_numbers({"Frequency Range (GHz)": "0.4-3.0", "Gain Typ. (dB)": "16", "OIP3 (dBm)": "30"}, "lna")
+    assert n == {"fmin": 0.4, "fmax": 3.0, "gain": 16.0, "oip3": 30.0, "iip3": 14.0}
+    assert visuals._rf_numbers({"Frequency Range": "1710-1950", "Gain (dB)": "26"}, "gain")["fmax"] == 1.95

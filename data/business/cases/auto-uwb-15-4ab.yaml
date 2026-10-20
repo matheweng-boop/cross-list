@@ -121,3 +121,64 @@ risks:
   - "Bluetooth Channel Sounding could take entry cars and cap UWB at premium segments."
   - "Calterah, Samsung and NXP volume pricing could undercut a late entrant."
   - "Unknown from public data: QPF5100Q design wins and volumes, our die cost and process, real contract prices, NBA radio area and power."
+
+questions:
+  bu:
+    - {id: q-bu-ab, text: "Does legacy Qorvo UWB already have an 802.15.4ab / NBA chip project, and at what stage (concept, tape-out, samples)?", why: "Public sources show none; avoid proposing what exists or was stopped"}
+    - {id: q-bu-mms, text: "Can the QPF5100Q PHY repeat MMS fragments in firmware, and what range gain have we measured?", why: "The 6–12-month bridge (f-mms-fw) depends on it; ST says UWB-only MMS adds little"}
+    - {id: q-bu-cost, text: "What are the die cost, process node and contract ASPs of QPF5100Q / DW3300Q, and where do we stand against NXP NCJ29D5 ($4.85–6.33 at 1k)?", why: "Our prices are not stated; the $3.5–5.5 AB-R range rests on a 30–50 % list-to-contract guess"}
+    - {id: q-bu-wins, text: "Which OEM / Tier-1 programmes have QPF5100Q design wins, with SOP year and anchors per car?", why: "No public design win (d-proof); sets the base for the 9 M-anchor scenario"}
+    - {id: q-bu-sens, text: "What sensitivity and range do QPF5100Q / DW3300Q reach against ST64UWB's +3 dB claim, alone and with QM14068 in front?", why: "Decides whether the anchor FEM (f-fem) is needed to offset ST's process lead"}
+    - {id: q-bu-fe, text: "Can QM14068, QPC8019Q, QPF1002Q and SKY5A2108 dies be combined and AEC-Q qualified in one anchor FEM, and which merged Skyworks/Qorvo line would own it?", why: "f-fem / f-nbafem are distance 2 only if the dies qualify; p-fem has no anchor"}
+  customer:
+    - {id: q-c-ab, text: "From which model year do you require 802.15.4ab (MMS, NBA) in the anchors, and for how long must they stay 15.4z-compatible?", who: "OEM car-access / digital-key team", why: "Tests the 2028–29 SOP estimate (o-sop) and the ratification risk"}
+    - {id: q-c-anchors, text: "How many UWB and BLE anchors per car in your next platform, and will NBA let you drop BLE anchors?", who: "OEM E/E architecture team", why: "4–8 anchors and 'fewer BLE, not none' (o-ble) are our estimates"}
+    - {id: q-c-radar, text: "Would you run child presence, kick and intrusion on the interior and rear key anchors instead of a 60 GHz module, and at which positions?", who: "Tier-1 body / car-access team", why: "Sizes the AB-RR variant (3 M cars) and its +$1 premium"}
+    - {id: q-c-zonal, text: "Where does access logic sit (separate access ECU or zone / central computer), and which link do the anchors need: CAN-FD, SPI or Ethernet?", who: "OEM E/E architecture team", why: "NXP's set wins where the access ECU is a box; decides CAN-FD on the chip (d-can)"}
+    - {id: q-c-range, text: "What range and sensitivity must exterior anchors reach, and would you pay for an external UWB/NBA front end?", who: "Tier-1 antenna / RF team", why: "The anchor FEM ($0.6–1.1) has no public price anchor"}
+    - {id: q-c-price, text: "What do you pay per anchor today (UWB chip, BLE), and what price would a 15.4ab anchor chip need?", who: "Tier-1 purchasing", why: "Validates the $3.5–5.5 / $4.5–6.5 targets; NXP 1k budgetary is the only anchor"}
+
+diagram:
+  note: "The car-access domain with 802.15.4ab anchors: exterior AB-R chips with the optional anchor FEM, an interior AB-RR that also senses child presence, kick and intrusion, all reporting to the access logic in a zone or central computer. It replaces today's 15.4z anchors (QPF5100Q, NCJ29D5), some BLE anchors and a separate cabin radar."
+  groups:
+    - id: ext
+      label: Exterior anchors (4–6)
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "UWB/NBA antennas", who: customer, part: "2 ports for angle of arrival"}
+        - {fn: uwb_fem, label: "Anchor FEM", who: proposed, part: "UWB LNA/bypass + switch + NBA PA, from QM14068 / QPC8019Q / QPF1002Q dies (concept)"}
+        - {fn: uwb_soc, label: "AB-R anchor SoC", who: proposed, part: "802.15.4z/ab, MMS, NBA 5.7–6.4 GHz, CAN-FD (concept)"}
+    - id: int
+      label: Interior / rear anchors
+      col: 0
+      row: 1
+      blocks:
+        - {fn: antenna, label: "UWB antennas", who: customer}
+        - {fn: uwb_soc, label: "AB-RR anchor SoC", who: proposed, part: "AB-R + radar: CPD, kick, intrusion (concept)"}
+    - id: ble
+      label: Bluetooth LE
+      col: 1
+      row: 0
+      blocks:
+        - {fn: ble_soc, label: "BLE (discovery, CS)", who: other, part: "Partner; fewer BLE anchors where NBA suffices"}
+    - id: nfc
+      label: Door / in-car NFC
+      col: 1
+      row: 1
+      blocks:
+        - {fn: nfc_frontend, label: "NFC reader", who: other}
+    - id: access
+      label: Access ECU / zone computer
+      col: 2
+      row: 0
+      w: 2
+      blocks:
+        - {fn: can_transceiver, label: "CAN-FD", who: other}
+        - {fn: mcu, label: "Access logic", who: customer, part: "CCC Digital Key 3.x/4.0, ICCE; separate MCU or central computer"}
+        - {fn: secure_element, label: "Secure element", who: other}
+  links:
+    - [ext, access, "CAN-FD / SPI: ranging, AoA"]
+    - [int, access, "CAN-FD: ranging + presence / kick flags"]
+    - [ble, access, "BLE: discovery, key data"]
+    - [nfc, access, "NFC: backup key"]

@@ -4,6 +4,14 @@
 <div id="bk" class="bk">
   <h1 id="bk-title" class="bk-title">{{ design.name or 'New block diagram' }}</h1>
   <p id="bk-headline" class="bk-headline" role="status"></p>
+  {% if tpl_i is not none %}<form id="bk-verify" method="post" action="/blocks/verify" class="bk-verify small">
+    <input type="hidden" name="i" value="{{ tpl_i }}">{% if bare %}<input type="hidden" name="bare" value="1">{% endif %}
+    {% if verified %}<span class="vbadge on">✓ Technically verified</span> <span class="muted">by {{ verified.by or 'anonymous' }}, {{ verified.at|date('short') }}{% if verified.note %} · {{ verified.note }}{% endif %}</span>
+      <input type="hidden" name="on" value="0"><button class="small-btn outline secondary">Back to entered</button>
+    {% else %}<span class="vbadge">Entered, not verified</span>
+      <input type="hidden" name="on" value="1"><input name="author" maxlength="100" placeholder="Your name" aria-label="Verified by">
+      <input name="note" maxlength="300" placeholder="How it was checked (optional)" aria-label="How it was checked"><button class="small-btn outline">Mark technically verified</button>{% endif %}
+  </form>{% endif %}
   <div class="bc-bar">
     <input id="bk-name" type="text" placeholder="Block diagram name" aria-label="Block diagram name">
     <button id="bk-save" type="button" class="small-btn">Save</button>
@@ -25,7 +33,9 @@
     <span class="bk-legend" role="group" aria-label="Highlight in the diagram"><button type="button" class="lg lg-part" data-st="part">part chosen</button><button type="button" class="lg lg-have" data-st="have">Skyworks / Qorvo parts</button><button type="button" class="lg lg-opp" data-st="opp">gap</button><button type="button" class="lg lg-ext" data-st="ext">customer part</button></span>
     <span class="bc-tools-right"><span aria-hidden="true">🔍</span><button id="bk-zoom-all" type="button" class="outline small-btn">All</button><button id="bk-zoom-out" type="button" class="outline small-btn" aria-label="Zoom out">−</button><button id="bk-zoom-in" type="button" class="outline small-btn" aria-label="Zoom in">+</button>
       <button id="bk-svg-dl" type="button" class="outline small-btn">SVG</button>
-      <button id="bk-help-btn" type="button" class="outline secondary small-btn" aria-expanded="false" aria-controls="bk-help-text" title="How to use the editor">?</button></span>
+      <button id="bk-help-btn" type="button" class="outline secondary small-btn" aria-expanded="false" aria-controls="bk-help-text" title="How to use the editor">?</button>
+      {% if bare %}<a class="outline small-btn bk-win" role="button" href="{{ request.url.path }}{{ '?template=' ~ tpl_i if tpl_i is not none else '' }}" title="Back to the page with the menus">Full page</a>
+      {% else %}<button id="bk-window" type="button" class="outline small-btn bk-win" title="Open the diagram in its own window with only the toolbar (the saved state; save first)">⧉ Own window</button>{% endif %}</span>
   </div>
   <div class="bk-work">
     <div class="bc-canvas"><svg id="bk-svg" role="application" aria-label="Block diagram"></svg></div>

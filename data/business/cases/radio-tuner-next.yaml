@@ -122,3 +122,54 @@ risks:
   - "No public remote-tuner-module volumes; if radio stays in the head unit, NXP's one-chip radio wins there."
   - "Cannibalises today's tuner + decoder sets in modules."
   - "Unknown from public data: RF performance, power and die cost versus ST and NXP; contract prices."
+
+questions:
+  bu:
+    - {id: q-bu-process, text: "Can the Si479xx tuner and Si469xx decoder circuits share one process and die, or is step 1 (one package) the only near-term route?", why: "Decides step 2 timing and die cost"}
+    - {id: q-bu-cost, text: "What are today's die costs and contract ASPs for Si4796x and Si469xx, and where do we stand against ST's TDA7707 / STA709?", why: "The node competes on system cost; we need our real cost position"}
+    - {id: q-bu-cdr, text: "Which tuners are qualified for CDR I/Q, and when do Si46933/Si46943 leave Preview?", why: "China mandate; our data lists no CDR tuner"}
+    - {id: q-bu-perf, text: "How do our tuners compare with NXP and ST on sensitivity, selectivity, strong-signal handling and power?", why: "Not in public data; decides whether reception quality is a selling point"}
+    - {id: q-bu-roadmap, text: "Is anything like a radio node, an Ethernet output or a quad tuner already on the internal roadmap?", why: "Avoid proposing what exists or was rejected"}
+  customer:
+    - {id: q-c-rtm, text: "Will your next platform move the radio out of the head unit into a remote tuner or roof module, and from which model year?", who: "OEM E/E architecture team", why: "Sets the volume of the radio node"}
+    - {id: q-c-link, text: "Which link do you want from the antenna module: A²B, automotive Ethernet (which speed), or coax?", who: "OEM / Tier-1 antenna module team", why: "Decides the node's network output"}
+    - {id: q-c-sdr, text: "Will decoding run in your cockpit processor (software radio) or stay in a decoder chip?", who: "Tier-1 infotainment team", why: "Decoded mode vs sample mode"}
+    - {id: q-c-grade, text: "What temperature grade do you need at the roof or rear-window position?", who: "Tier-1 antenna module team", why: "Grade 2 vs Grade 1 changes the design"}
+    - {id: q-c-price, text: "What do you pay today for tuners + decoder + bridge in a remote module, and what price would make one part worth a redesign?", who: "Tier-1 purchasing", why: "Validates the $16–19 target"}
+
+diagram:
+  note: "A remote tuner module at the roof antenna with the radio node, linked to the head unit over A²B or Ethernet. Today the same module needs 2 dual tuners, a decoder, a bridge MCU, clock and flash."
+  groups:
+    - id: ant
+      label: Roof antenna
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "AM/FM/DAB antennas", who: customer}
+        - {fn: active_antenna_amp, label: "Antenna amplifier", who: other}
+    - id: node
+      label: Radio node module (at the antenna)
+      col: 1
+      row: 0
+      w: 2
+      blocks:
+        - {fn: single_chip_radio, label: "Radio node RN4", who: proposed, part: "4 tuners + HD/DAB/DRM/CDR decoder, AMIC (concept)"}
+        - {fn: ethernet_phy, label: "Ethernet PHY or A²B transceiver", who: other}
+        - {fn: pol_ldo, label: "Power", who: other}
+    - id: head
+      label: Head unit / central computer
+      col: 3
+      row: 0
+      blocks:
+        - {fn: ethernet_phy, label: "Ethernet / A²B", who: other}
+        - {fn: soc, label: "Cockpit processor", who: other, part: "audio, optional software radio"}
+    - id: audio
+      label: Audio
+      col: 3
+      row: 1
+      blocks:
+        - {fn: audio_amp, label: "Amplifier", who: other}
+  links:
+    - [ant, node, "RF"]
+    - [node, head, "decoded audio + data, or raw I/Q"]
+    - [head, audio, "I2S / A²B"]

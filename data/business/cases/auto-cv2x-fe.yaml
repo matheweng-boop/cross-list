@@ -116,3 +116,60 @@ risks:
   - "Market size depends on policy (FCC certification of geofencing, EU 20 MHz channels, China mandates); V2N could replace direct V2X for safety use cases."
   - "Two carriers through one PA versus two PAs: cost, heat and intermodulation targets are not public."
   - "Unknown from public data: our contract prices, Qualcomm's RF plans, and design-in status of SKY5A2105 (still Preview in the catalogue)."
+
+questions:
+  bu:
+    - {id: q-bu-qc, text: "Since Qualcomm closed Autotalks (Jun 2025), is SKY5A2105 still on TEKTON3/SECTON3 reference designs, and do we know of a Qualcomm V2X front end?", why: "Our reference partner is now the main competitor's (d-partner, o-integrate)"}
+    - {id: q-bu-wins, text: "What design-ins, volumes and contract ASPs do SKY5A2105 (Preview) and QPF1003Q / QPF1002Q have?", why: "No public V2X FEM price; p-dc is anchored on consumer Wi-Fi FEMs"}
+    - {id: q-bu-guard, text: "Can our BAW reach a ~20 MHz transition at 5895 MHz with acceptable loss, and is there test data?", why: "The US guard variant (f-guard) may not be feasible"}
+    - {id: q-bu-roadmap, text: "Which of SKY5A2105 vs QPF1003Q and SKY5A1005 vs QPQ2230Q survive the merger, and is a dual-path V2X module already planned?", why: "Duplicate, partly Preview lines (d-dup)"}
+    - {id: q-bu-2c, text: "What intermodulation and heat result from two carriers through one PA at +26–29 dBm, against two PAs?", why: "Two-carrier targets are not public (f-nrlin, risk)"}
+    - {id: q-bu-cost, text: "What would two SKY5A2105 die sets in one package cost, against two FEMs plus filter and switch?", why: "Tests the $7–10 V2X-DC range"}
+  customer:
+    - {id: q-c-chan, text: "Will you use the US second 10 MHz channel, or concurrent ITS-G5 + C-V2X in Europe, and from which model year?", who: "OEM V2X / connected-safety team", why: "Sets demand for two carriers (d-single, o-us, o-eu)"}
+    - {id: q-c-chipset, text: "Which V2X chipset will your 2028–2030 units use, and do you pick the front end or take the chipset vendor's?", who: "Tier-1 telematics team", why: "Qualcomm may bundle its own V2X front end (o-integrate)"}
+    - {id: q-c-where, text: "Will V2X RF sit at the roof antenna (compensator) or in the TCU, and what cable and glass-roof losses must it make up?", who: "Tier-1 antenna module team", why: "Decides compensator vs ECU mode and the antenna-maker channel (t-antenna)"}
+    - {id: q-c-unii4, text: "Have you measured C-V2X desense from in-car or passenger UNII-4 Wi-Fi, and would you pay for a guard filter?", who: "OEM V2X / EMC team", why: "The US guard filter has no price anchor (p-guard)"}
+    - {id: q-c-geo, text: "Do you plan geofenced higher-power OBUs in the US, needing closed-loop power control from the front end?", who: "OEM regulatory / V2X team", why: "f-geo; FCC process not yet defined"}
+    - {id: q-c-price, text: "What do you pay per car for V2X front ends today (one or two FEMs, filter, switch)?", who: "Tier-1 purchasing", why: "No public V2X FEM price; validates $7–10"}
+
+diagram:
+  note: "A roof antenna module with the dual-carrier V2X front end in compensator mode, feeding a C-V2X / ITS-G5 chipset in the telematics unit, next to car Wi-Fi with our coexistence filter. It replaces two single V2X FEMs (SKY5A2105 or QPF1003Q) plus external filter and switch."
+  groups:
+    - id: ant
+      label: Roof antenna module
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "V2X antennas (2)", who: customer}
+        - {fn: v2x_fem, label: "V2X-DC FEM", who: proposed, part: "2 TX/RX paths, compensator/ECU modes, EU wide or US guard BAW (concept)"}
+        - {fn: gnss_lna, label: "GNSS L1 + L5", who: ours, part: "SKY5A2110"}
+    - id: tcu
+      label: V2X / telematics unit
+      col: 1
+      row: 0
+      w: 2
+      blocks:
+        - {fn: v2x_transceiver, label: "V2X chipset", who: other, part: "Qualcomm 9150 / Autotalks TEKTON3, Huawei, CICTCI; NXP SAF5400 (ITS-G5)"}
+        - {fn: modem, label: "Cellular modem", who: other}
+        - {fn: soc, label: "V2X stack processor", who: other}
+        - {fn: secure_element, label: "Secure element", who: other}
+    - id: wifi
+      label: Car Wi-Fi
+      col: 1
+      row: 1
+      blocks:
+        - {fn: wifi_soc, label: "Wi-Fi chip", who: other}
+        - {fn: wifi_fem, label: "Wi-Fi FEM", who: other}
+        - {fn: filter_saw_baw, label: "5 GHz guard filter", who: ours, part: "SKY5A1006, stops at 5835 MHz (Preview)"}
+    - id: veh
+      label: Vehicle network
+      col: 3
+      row: 0
+      blocks:
+        - {fn: ethernet_phy, label: "Ethernet", who: other}
+        - {fn: can_transceiver, label: "CAN", who: other}
+  links:
+    - [ant, tcu, "coax: 5.9 GHz (2 carriers), GNSS"]
+    - [wifi, tcu, "coexistence signalling"]
+    - [tcu, veh, "CAN / Ethernet"]

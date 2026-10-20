@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-{% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else ''} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
+{% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else '', 'verified': verified} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
 <h1>Application library</h1>
 <p class="subtitle muted">Reference architectures from public material. Open one to see its blocks, candidate parts and unmet requirements.
   On each card: <span class="tpl-chip have">solid</span> = a Skyworks / Qorvo candidate exists in BizDev, <span class="tpl-chip">dashed</span> = no candidate yet.</p>
@@ -11,6 +11,7 @@
     {% for m in ms %}<a class="fchip{{ ' on' if market == m }}" href="{{ url(market=m) }}">{{ m }} <small>{{ mcount[m] }}</small></a>{% endfor %}</div>{% endfor %}
   <div class="chip-row"><span class="chip-lbl">Source</span><a class="fchip{{ ' on' if not source }}" href="{{ url(source='') }}">All</a>
     {% for m, n in sources %}<a class="fchip{{ ' on' if source == m }}" href="{{ url(source=m) }}">{{ m }} <small>{{ n }}</small></a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">Verification</span><a class="fchip{{ ' on' if verified not in ('yes', 'no') }}" href="{{ url(verified='') }}">All</a><a class="fchip{{ ' on' if verified == 'yes' }}" href="{{ url(verified='yes') }}" title="Checked by an engineer: blocks and connections are technically right">Technically verified <small>{{ n_verified }}</small></a><a class="fchip{{ ' on' if verified == 'no' }}" href="{{ url(verified='no') }}" title="Entered from public material, not yet checked">Entered only <small>{{ n_all - n_verified }}</small></a></div>
   <div class="chip-row"><span class="chip-lbl">Variants</span><a class="fchip{{ ' on' if variants }}" href="{{ url(variants='' if variants else 'true') }}" title="Architectures that may describe the same application: kept separate, counted separately">Possible variants only <small>{{ n_variant }} in {{ n_groups }} groups</small></a></div>
 </div>
 <div class="lib-facets small">
@@ -23,6 +24,7 @@
   <a class="tpl-card" href="/blocks/new?template={{ t.i }}"><b>{{ t.name }}</b>
     {% if t.sub %}<small class="tpl-sub">{{ t.sub }}</small>{% endif %}
     <small class="muted">{{ t.market }} · source {{ t.source }} · {{ t.blocks }} blocks{% if t.questions %} · {{ t.questions }} design questions{% endif %}</small>
+    <small>{% if t.verified %}<span class="vbadge on" title="by {{ t.verified.by or 'anonymous' }}, {{ t.verified.at|date('short') }}">✓ Technically verified</span>{% else %}<span class="vbadge">Entered</span>{% endif %}</small>
     {% if t.variant %}<small class="tpl-variant" title="{{ t.peers|join('; ') }}">Possible variant of {{ t.peers|length }} other{{ 's' if t.peers|length != 1 }} ({{ t.variant }})</small>{% endif %}
     {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in BizDev' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
   {% endfor %}

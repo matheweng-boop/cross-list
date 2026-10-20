@@ -2,7 +2,7 @@
 {% from "_macros.html" import unofficial_mark, unofficial_footnote %}
 {% block content %}
 <h1>Compare parts</h1>
-<p class="subtitle muted">Type part numbers or a series (e.g. <code>Si8641BD-IS, ISO7741</code> or <code>Si864</code>), or pick from the series list below.
+<p class="subtitle muted">Type part numbers or a series (e.g. <code>Si8641BD-IS, ISO7741</code> or <code>Si864</code>), or tick parts on a part page and press Compare.
   Colours are relative to the baseline part; bold marks the best value in a row.</p>
 
 <form method="get" class="compare-add" id="compare-form">
@@ -65,33 +65,4 @@
   </div>
 {% endif %}
 
-<h2 class="compare-list-h">Pick from the list</h2>
-<form method="get" class="grid-form">
-  <select name="family" onchange="this.form.submit()" aria-label="Family">
-    {% for key, e in support.items() %}<option value="{{ key }}" {{ 'selected' if family == key }}{{ ' disabled' if not e.parts }}>{{ e.title }} · {{ e.parts }} parts{{ ' (rules defined, no parts imported yet)' if not e.parts }}</option>{% endfor %}
-  </select>
-  {% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
-</form>
-<form method="get">
-  <input type="hidden" name="family" value="{{ family }}"><input type="hidden" name="alt" value="{{ alt }}">
-  {% if ids %}<input type="hidden" name="ids" value="{{ ids }}">{% endif %}
-  <input type="search" class="series-filter" placeholder="Filter series (e.g. 864, ISO77)" aria-label="Filter series" data-series-filter>
-  {% set chosen = selected|map(attribute='id')|list %}
-  <div class="series-list">
-  {% for name, parts in series.items() %}
-    <details class="series" data-series="{{ name }}">
-      <summary><b>{{ name }}</b> <span class="muted">{{ parts|length }} part{{ 's' if parts|length != 1 }} · {{ parts[0].manufacturer.name }}</span></summary>
-      <div class="picklist">{% for p in parts %}<label><input type="checkbox" name="pick" value="{{ p.id }}" {{ 'checked' if p.id in chosen }}> {{ p.mpn }} <span class="muted">{{ p.package.code }}</span></label>{% endfor %}</div>
-    </details>
-  {% endfor %}
-  </div>
-  <div class="sticky-actions"><button type="submit">Compare</button></div>
-</form>
-<script>
-  // Filter the series list as you type
-  document.querySelectorAll("[data-series-filter]").forEach(inp => inp.addEventListener("input", () => {
-    const q = inp.value.trim().toUpperCase().replace(/[-\s]/g, "");
-    document.querySelectorAll(".series").forEach(d => { d.hidden = q && !d.dataset.series.replace(/[-\s]/g, "").includes(q); });
-  }));
-</script>
 {% endblock %}

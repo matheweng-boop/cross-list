@@ -87,5 +87,5 @@ def test_short_description():
 
 def test_page_titles_follow_the_menus():
     assert nav.page_title("/rules") == "Cross rules – Data management – BizDev"
-    assert nav.page_title("/business/markets").startswith("Markets & customers – Opportunities")
+    assert nav.page_title("/business/markets").startswith("Markets & customers – Future growth")
     assert nav.page_title("/parts/1", "SI8641BD-IS").startswith("SI8641BD-IS – ")

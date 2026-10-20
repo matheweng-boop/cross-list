@@ -1,22 +1,41 @@
 {% extends "base.html" %}
+{% import "business/_feasibility.html" as fz %}
+{% macro card(r) %}
+  <a class="rp-card" href="/business/reports/{{ r.slug }}">
+    <span class="rp-meta small"><span class="rp-kind k-{{ r.kind }}">{{ kinds.get(r.kind, r.kind) }}</span> {{ r.area }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span> {{ fz.feas(r.feasibility, r.feasibility_why) }}</span>
+    <b class="rp-title">{{ r.title }}</b>
+    {% if r.question %}<span class="small muted rp-q">“{{ r.question }}”</span>{% endif %}
+    <span class="small">{{ r.summary }}</span>
+    {% if r.feasibility_why %}<span class="small muted">Feasibility: {{ r.feasibility_why }}</span>{% endif %}
+    {% if r.tags %}<span class="rp-tags">{% for t in r.tags %}<span class="badge">{{ t }}</span>{% endfor %}</span>{% endif %}
+  </a>{% endmacro %}
 {% block content %}
+{% set view = request.query_params.get('view') or 'type' %}
+{% set q = 'kind=' ~ kind ~ '&tag=' ~ tag|urlencode %}
 <h1>Research &amp; ideas</h1>
 <p class="subtitle muted">Research reports and preliminary product ideas, each a single page built from BizDev's own data (portfolio, competitors, application demand) and public web sources. Drafts are not reviewed; treat them as a starting point for discussion. Each report has a question box; <a href="/business/reports/questions">questions are reviewed daily</a>.</p>
 
 <div class="scope-bar small filter-cols">
-  <div class="chip-row"><span class="chip-lbl">Type</span><a class="fchip{{ ' on' if not kind }}" href="/business/reports?tag={{ tag|urlencode }}">All <small>{{ n_all }}</small></a>{% for k, label in kinds.items() %}<a class="fchip{{ ' on' if kind == k }}" href="/business/reports?kind={{ k }}&tag={{ tag|urlencode }}">{{ label }}</a>{% endfor %}</div>
-  {% if tags %}<div class="chip-row"><span class="chip-lbl">Topic</span><a class="fchip{{ ' on' if not tag }}" href="/business/reports?kind={{ kind }}">All</a>{% for t in tags %}<a class="fchip{{ ' on' if tag == t }}" href="/business/reports?kind={{ kind }}&tag={{ t|urlencode }}">{{ t }}</a>{% endfor %}</div>{% endif %}
+  <div class="chip-row"><span class="chip-lbl">Group by</span><a class="fchip{{ ' on' if view == 'type' }}" href="/business/reports?view=type&{{ q }}">Application type</a><a class="fchip{{ ' on' if view == 'feasibility' }}" href="/business/reports?view=feasibility&{{ q }}">Feasibility</a></div>
+  <div class="chip-row"><span class="chip-lbl">Type</span><a class="fchip{{ ' on' if not kind }}" href="/business/reports?view={{ view }}&tag={{ tag|urlencode }}">All <small>{{ n_all }}</small></a>{% for k, label in kinds.items() %}<a class="fchip{{ ' on' if kind == k }}" href="/business/reports?view={{ view }}&kind={{ k }}&tag={{ tag|urlencode }}">{{ label }}</a>{% endfor %}</div>
+  {% if tags %}<details class="rp-topics"{% if tag %} open{% endif %}><summary class="chip-lbl">Topic{% if tag %}: {{ tag }}{% endif %}</summary><div class="chip-row"><a class="fchip{{ ' on' if not tag }}" href="/business/reports?view={{ view }}&kind={{ kind }}">All</a>{% for t in tags %}<a class="fchip{{ ' on' if tag == t }}" href="/business/reports?view={{ view }}&kind={{ kind }}&tag={{ t|urlencode }}">{{ t }}</a>{% endfor %}</div></details>{% endif %}
 </div>
+{{ fz.legend() }}
 
-<div class="rp-list">{% for r in rows %}
-  <a class="rp-card" href="/business/reports/{{ r.slug }}">
-    <span class="rp-meta small"><span class="rp-kind k-{{ r.kind }}">{{ kinds.get(r.kind, r.kind) }}</span> {{ r.area }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span></span>
-    <b class="rp-title">{{ r.title }}</b>
-    {% if r.question %}<span class="small muted rp-q">“{{ r.question }}”</span>{% endif %}
-    <span class="small">{{ r.summary }}</span>
-    {% if r.tags %}<span class="rp-tags">{% for t in r.tags %}<span class="badge">{{ t }}</span>{% endfor %}</span>{% endif %}
-  </a>{% else %}<p class="muted">No report{{ ' with this filter' if kind or tag }} yet.</p>{% endfor %}
-</div>
+{% if not rows %}<p class="muted">No report{{ ' with this filter' if kind or tag }} yet.</p>
+{% elif view == 'feasibility' %}
+  {% for n, group in rows|groupby('feasibility') %}
+  <h2 class="rp-group">{% if n %}{{ fz.feas(n) }} <small class="muted">{{ fz.FEAS[n][1] }}</small>{% else %}Reports <small class="muted">(not scored)</small>{% endif %} <small class="muted">· {{ group|length }}</small></h2>
+  <div class="rp-list">{% for r in group %}{{ card(r) }}{% endfor %}</div>
+  {% endfor %}
+{% else %}
+  {% for t, group in rows|groupby('app_type') %}
+  <h2 class="rp-group">{{ t }} <small class="muted">· {{ group|length }}</small></h2>
+  <div class="rp-list">{% for r in group|sort(attribute='feasibility') %}{{ card(r) }}{% endfor %}</div>
+  {% endfor %}
+{% endif %}
+
+{% include "business/_suggested_topics.html" %}
 <p class="small"><a href="/business/reports/method">How a preliminary case is built: lessons and template →</a></p>
 <p class="small muted">New reports are written on request: send the question with the Feedback button and it is added here when done.</p>
 {% endblock %}

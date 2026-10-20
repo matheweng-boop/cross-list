@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.models import Manufacturer, ManufacturerRole, Part
+from app.models import DataReview, Manufacturer, ManufacturerRole, Part
 from app.services import broadcast, lifecycle, vocab
 
 BLOCKS_DIR = PROJECT_ROOT / "data" / "blocks"
@@ -153,7 +153,7 @@ def variant_groups() -> dict[str, list[int]]:
 def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
     """Applications by category for the generator page: display name, block count and the Skyworks / Qorvo
     categories involved (have = parts in BizDev, else opportunity)."""
-    cat, n = catalogue(), counts(session)
+    cat, n, checked = catalogue(), counts(session), verifications(session)
     out: dict[str, list] = {}
     for i, t in enumerate(templates()):
         chips: dict[str, bool] = {}
@@ -170,11 +170,40 @@ def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
         key = variant_key(t)
         peers = [display_name(templates()[j]) for j in variant_groups().get(key, []) if j != i]
         card = {"i": i, "name": title, "sub": sub, "blocks": blocks_n, "questions": len(t.get("questions") or []),
+                "verified": checked.get(verify_key(t)),
                 "chips": sorted(chips.items(), key=lambda c: (not c[1], c[0])), "source": source_of(t),
                 "market": market_of(t.get("name", ""), t.get("category") or "Other"), "variant": key if peers else None,
                 "peers": peers}  # fmt: skip
         out.setdefault(t.get("category") or "Other", []).append(card)
     return list(out.items())
+
+
+VERIFY_DATASET = "application"  # DataReview rows: correct = technically verified, unsure = back to entered
+
+
+def verify_key(t: dict) -> str:
+    """Stable key of a library architecture for its verification (its name; indexes shift when templates change)."""
+    return str(t.get("name") or "")[:120]
+
+
+def verifications(session: Session) -> dict[str, dict]:
+    """Architectures marked technically verified, by key: who marked it and when; the latest mark counts."""
+    out: dict[str, dict] = {}
+    q = select(DataReview).where(DataReview.dataset == VERIFY_DATASET).order_by(DataReview.id)
+    for r in session.scalars(q):
+        if r.verdict == "correct":
+            out[r.key] = {"by": r.author or "", "at": r.created_at, "note": r.comment or ""}
+        else:
+            out.pop(r.key, None)
+    return out
+
+
+def set_verified(session: Session, i: int, on: bool, author: str = "", note: str = "") -> None:
+    """Mark library architecture i as technically verified (on) or back to entered."""
+    t = templates()[i]
+    session.add(DataReview(dataset=VERIFY_DATASET, key=verify_key(t), verdict="correct" if on else "unsure",
+                           author=author.strip()[:100] or None, comment=note.strip()[:2000] or None))  # fmt: skip
+    session.commit()
 
 
 def function_uses() -> dict[str, list[dict]]:

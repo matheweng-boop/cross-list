@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="small"><a href="/business/reports">← Research &amp; ideas</a></p>
+<h1>How a preliminary case is built</h1>
+<p class="subtitle muted">What we learnt building the car-radio case, and the template every preliminary case follows, so cases can be compared side by side. The template file is <code>data/business/cases/_template.yaml</code>.</p>
+
+<h2>What we learnt</h2>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">#</th><th scope="col">Lesson</th><th scope="col">What went wrong first</th><th scope="col">Rule now</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><b>Start from the architecture, not the datasheet</b></td><td>Advantages were listed per chip</td><td>Compare where our blocks sit in the library block diagrams against each competitor, and where the architecture is going (zonal, central compute)</td></tr>
+    <tr><td>2</td><td><b>Check what we already have</b></td><td>“Digital-output tuner” was proposed, but every Si479xx already outputs I/Q</td><td>Before proposing a feature, confirm it isn't in today's parts or a firmware away</td></tr>
+    <tr><td>3</td><td><b>A roadmap item is a real step</b></td><td>A new interface or a quad in one package was a tweak</td><td>A roadmap item changes what the system can do or where it can sit; tweaks become supporting actions</td></tr>
+    <tr><td>4</td><td><b>State disadvantages as well as advantages</b></td><td>Only strengths were listed</td><td>For each competitor: where we lose (cost, integration, ecosystem) and how we make up for it</td></tr>
+    <tr><td>5</td><td><b>Respect competitors' cost position</b></td><td>Chip-for-chip comparison against ST</td><td>Mature, reused designs win on cost per chip; compete on system cost or capability instead</td></tr>
+    <tr><td>6</td><td><b>Be specific about the device</b></td><td>Vague “tuner family”</td><td>Name it, list what it reuses, what is new, its outputs, what it replaces and which competitor part it answers</td></tr>
+    <tr><td>7</td><td><b>Score the distance from today</b></td><td>Effort was implicit</td><td>Rate every feature 0–4 (below) against the constraint, e.g. “reuse only, 2–3 years”</td></tr>
+    <tr><td>8</td><td><b>Separate data from estimates</b></td><td>Claims mixed with numbers</td><td>Every figure has a source and a confidence; every forecast is marked “est” with its basis</td></tr>
+    <tr><td>9</td><td><b>Argue both sides</b></td><td>Trends were one-sided</td><td>For each trend (e.g. software radio, remote tuner modules, HD Radio): what speaks for, what against, and what it does to our product</td></tr>
+    <tr><td>10</td><td><b>Price from anchors and value</b></td><td>No price</td><td>Public anchors → value of what the part replaces → entry / target / premium; real ASPs replace the estimates</td></tr>
+    <tr><td>11</td><td><b>Attach-rate levers need evidence</b></td><td>“Open the evaluation kit” was overstated</td><td>Each lever cites what competitors do or what customers say; otherwise it is marked as judgement</td></tr>
+    <tr><td>12</td><td><b>Don't guess the expected answer</b></td><td>—</td><td>Build from evidence, mark gaps (e.g. RF performance, die cost need internal data), and let feedback adjust the case</td></tr>
+  </tbody>
+</table></div>
+
+<h2>The process</h2>
+<ol class="pc-steps">
+  <li><b>Question and constraint</b>: what to decide, time frame, reuse limits.</li>
+  <li><b>Architecture</b>: library block diagrams for us and each competitor; architecture trend.</li>
+  <li><b>Position</b>: advantages, disadvantages (with offset), differentiators good and bad.</li>
+  <li><b>Market</b>: today's figures with sources; where it is heading as estimates with basis; for/against per trend.</li>
+  <li><b>Features</b>: what could benefit us, each with its distance from today.</li>
+  <li><b>Product</b>: one specific definition built from the strongest features.</li>
+  <li><b>ASP</b>: anchors, value, range; real values when known.</li>
+  <li><b>Attach rate and risks.</b></li>
+  <li><b>Feedback loop</b>: reviewers agree, disagree or move a distance closer or further on each item; the case is revised.</li>
+</ol>
+
+<h2>Distance from current technology</h2>
+<div class="table-wrap"><table class="small pc-table"><tbody>{% for n, (label, help) in distance.items() %}<tr><td><span class="pc-d d-{{ n }}">{{ n }} {{ label }}</span></td><td>{{ help }}</td></tr>{% endfor %}</tbody></table></div>
+
+<h2>Template</h2>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Section</th><th scope="col">Contents</th><th scope="col">Feedback</th></tr></thead>
+  <tbody>
+    <tr><td>In brief</td><td>Three sentences: our position, our weak point, the proposal with its price</td><td>Questions box</td></tr>
+    <tr><td>1. Position</td><td>Advantages, disadvantages (→ how we offset), differentiators good / bad, each with “vs” and confidence; architecture table</td><td>Agree / disagree + comment per item</td></tr>
+    <tr><td>2. Market today</td><td>Figures with source and confidence</td><td>Questions box</td></tr>
+    <tr><td>3. Where it is heading</td><td>Estimates with their basis</td><td>Per item</td></tr>
+    <tr><td>4. Features</td><td>Feature, benefit, distance 0–4, why</td><td>Agree / closer / further / disagree</td></tr>
+    <tr><td>5. Product</td><td>Name and short spec: reuses, new, outputs, replaces, answers, delivery</td><td>Questions box</td></tr>
+    <tr><td>6. ASP</td><td>Method, public anchors, entry / target / premium with basis, revenue illustration from volume scenarios</td><td>Real ASP per part (replaces the estimate)</td></tr>
+    <tr><td>7. Attach rate</td><td>Levers with effort</td><td>Per item</td></tr>
+    <tr><td>8. Risks</td><td>Open questions and data gaps</td><td>Questions box</td></tr>
+    <tr><td>Background</td><td>Every figure and link</td><td>—</td></tr>
+  </tbody>
+</table></div>
+{% endblock %}

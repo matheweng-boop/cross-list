@@ -1,0 +1,44 @@
+# Template for a preliminary case. Copy to <slug>.yaml, add a reports.yaml entry (kind: idea) with the same slug and
+# a body app/web/templates/business/reports/<slug>.html containing {% include "business/_prelim.html" %}.
+# Put every figure and link in <slug>.background.html. Method and lessons: /business/reports/method.
+#
+# Rules
+#   - Start from the architecture (library block diagrams), not datasheets; check what today's parts already do.
+#   - A roadmap item is a real step for the system; tweaks are supporting features with a low distance.
+#   - conf: high = primary document read; med = trade press or advocacy body; low = snippet or analyst PR.
+#   - Estimates are marked "est" and carry a basis. Never invent a number: write "not stated".
+#   - ids are short, unique and stable: feedback and real ASPs are stored against them.
+#   - distance: 0 today · 1 firmware/licence/docs · 2 new package, module or reference design · 3 new chip from
+#     existing technology · 4 new technology.
+title: ""
+question: ""                     # the decision, with the constraint (time frame, reuse only…)
+updated: 2026-01-01
+brief: []                        # 3 sentences: position, weak point, proposal with price
+
+position:
+  advantages: []                 # {id, text, vs, conf}
+  disadvantages: []              # {id, text, vs, offset, conf}  offset = how we make up for it
+  diff_good: []                  # {id, text, conf}  what sets us apart, positively
+  diff_bad: []                   # {id, text, conf}  what sets us apart, negatively
+
+architecture:                    # optional; from the block-diagram library
+  columns: []                    # [Us, Competitor A, Competitor B]
+  rows: []                       # [label, us, A, B]
+  note: ""
+
+market_now: []                   # {figure, value, source, conf}
+outlook: []                      # {id, text, basis, conf}  estimates of where the market is heading
+features: []                     # {id, feature, benefit, distance, why}
+
+product:                         # optional; the proposal
+  name: ""
+  spec: []                       # [label, text]: reuses, new, outputs, replaces, answers, delivery
+
+prices:
+  method: ""                     # anchors -> value -> range, and the list-to-contract assumption
+  anchors: []                    # {part, price, qty}
+  items: []                      # {id, item, entry, target, premium, basis}
+volumes: []                      # {label, units, price: <price item id>}  scenarios, not forecasts
+
+attach: []                       # {id, lever, effort}
+risks: []                        # strings

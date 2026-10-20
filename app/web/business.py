@@ -22,7 +22,7 @@ from app.models import (
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, quality, vocab
+from app.services import blocks, cases, pipeline, prelim, quality, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -785,6 +785,12 @@ async def report_question_decide(request: Request, qid: int, session: Session = 
     return RedirectResponse(f"/business/reports/questions?day={day}#q{qid}", status_code=303)
 
 
+@router.get("/business/reports/method", response_class=HTMLResponse)
+def case_method(request: Request):
+    """How a preliminary case is built: what we learnt, and the template every case follows."""
+    return templates.TemplateResponse(request, "business/case_method.html", {"distance": prelim.DISTANCE})
+
+
 @router.get("/business/reports/{slug}", response_class=HTMLResponse)
 def product_report(request: Request, slug: str, session: Session = Depends(get_session)):
     r = rp.report(slug)
@@ -792,8 +798,32 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
         raise HTTPException(404, "Report not found")
     ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.html",
            "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
-           "q_statuses": rp.Q_STATUSES}  # fmt: skip
+           "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
+           "verdict_label": prelim.VERDICT_LABEL}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+@router.post("/business/reports/{slug}/react")
+async def case_react(request: Request, slug: str, session: Session = Depends(get_session)):
+    form = await request.form()
+    key = str(form.get("key") or "")
+    try:
+        prelim.react(session, slug, key, str(form.get("verdict") or ""), str(form.get("comment") or ""),
+                     str(form.get("author") or ""))  # fmt: skip
+    except ValueError:
+        raise HTTPException(400, "Unknown item or verdict") from None
+    return RedirectResponse(f"/business/reports/{slug}#i-{key}", status_code=303)
+
+
+@router.post("/business/reports/{slug}/price")
+async def case_price(request: Request, slug: str, session: Session = Depends(get_session)):
+    form = await request.form()
+    key = str(form.get("key") or "")
+    try:
+        prelim.set_price(session, slug, key, _num(str(form.get("value") or "")))
+    except ValueError:
+        raise HTTPException(400, "Unknown price item") from None
+    return RedirectResponse(f"/business/reports/{slug}#i-{key}", status_code=303)
 
 
 @router.get("/business/reports/{slug}/background", response_class=HTMLResponse)

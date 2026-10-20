@@ -67,7 +67,7 @@ PACKAGES = {
     # codes shared with skyworks_si86.yaml / skyworks_si823x.yaml (identical bodies, see the datasheet tables)
     "SOIC-8N": dict(name="SOIC-8 narrow body", pin_count=8, pitch_mm=1.27, body_length_mm=4.9, body_width_mm=3.9,
                     span_mm=6.0, height_mm=1.75),
-    "SSO-8": dict(name="Stretched SO-8 (wide body)", pin_count=8, pitch_mm=1.27, body_length_mm=5.84,
+    "SSO-8": dict(name="SSO-8 stretched SOIC-8 (wide body)", pin_count=8, pitch_mm=1.27, body_length_mm=5.84,
                   body_width_mm=7.49, span_mm=11.5, height_mm=2.79),
     "SOIC-16N": dict(name="SOIC-16 narrow body", pin_count=16, pitch_mm=1.27, body_length_mm=9.9, body_width_mm=3.9,
                      span_mm=6.0, height_mm=1.75),
@@ -90,7 +90,7 @@ PACKAGES = {
                          pin_positions=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14]),
     "DIP-8 GW": dict(name="DIP-8 gull-wing (surface mount)", pin_count=8, pitch_mm=2.54, body_length_mm=9.65,
                      body_width_mm=6.35, span_mm=9.65, height_mm=4.19),
-    "SDIP-6": dict(name="Stretched SO-6 (SDIP6, wide body)", pin_count=6, pitch_mm=1.27, body_length_mm=4.58,
+    "SDIP-6": dict(name="SDIP6 stretched SO-6 (wide body)", pin_count=6, pitch_mm=1.27, body_length_mm=4.58,
                    body_width_mm=7.5, span_mm=11.5, height_mm=2.65),
     "SSOP-36W": dict(name="SSOP-36 wide body", pin_count=36, pitch_mm=0.8, body_length_mm=15.4, body_width_mm=7.5,
                      span_mm=10.3, height_mm=2.65),
@@ -978,6 +978,7 @@ def build(log=print) -> dict:
     cat = catalogue()
     statuses = lookup_statuses()
     packages, datasheets, parts, used_cat = {}, [], [], set()
+    shared: dict = {}  # identical pinouts / source maps are one object, written once as a YAML anchor
     for key, rows in all_opns().items():
         decoder = SERIES[key][0]
         pdf, path, rev, rev_date = SHEETS[key]
@@ -1002,6 +1003,8 @@ def build(log=print) -> dict:
                 status = LIFECYCLE_MAP.get((st or "").strip().lower(), "unknown")
                 life_src = f"Skyworks lifecycle lookup: {st or 'not listed'} (code not in the catalogue)"
             p_sources = {k: v for k, v in sources.items() if k in params or k == "pinout"}
+            p_sources = shared.setdefault(("src", key, tuple(p_sources)), p_sources)
+            pinout = shared.setdefault(("pin", tuple(pinout)), pinout)
             parts.append({
                 "mpn": opn.upper(),
                 "manufacturer": "Skyworks",
@@ -1021,6 +1024,8 @@ def build(log=print) -> dict:
         datasheets.append({"file": pdf, "url": DS_URL + path, "sha256": sha256(pdf), "revision": rev,
                            "revision_date": rev_date})
         log(f"{key}: {n_series} parts")
+    si823x = yamlio.load((PROJECT_ROOT / "data" / "real" / "skyworks_si823x.yaml").read_text())["parts"]
+    used_cat |= {base_name(p["mpn"]).upper() for p in si823x} | {p["mpn"].upper() for p in si823x}
     missing = sorted(set(cat) - used_cat)
     return {"packages": packages, "datasheets": datasheets, "parts": parts, "catalogue_not_covered": missing}
 
@@ -1053,7 +1058,7 @@ HEADER = """\
 def write(log=print) -> None:
     data = build(log)
     head = HEADER + "".join(f"#   {code}: {PACKAGE_NOTES[code]}\n" for code in PACKAGE_NOTES if code in data["packages"])
-    head += "#\n# Catalogue gate-driver codes not covered (no current public datasheet lists them):\n"
+    head += "#\n# Catalogue gate-driver codes covered neither here nor in skyworks_si823x.yaml:\n"
     for i in range(0, len(data["catalogue_not_covered"]), 8):
         head += "#   " + ", ".join(data["catalogue_not_covered"][i : i + 8]) + "\n"
     out = {

@@ -43,6 +43,22 @@ packages:
   height_mm: 2.65
   positions_total: 16
   pin_positions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16]
+- code: SOIC-8 (DWV)
+  name: TI DWV 8-pin
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 5.85
+  body_width_mm: 7.5
+  span_mm: 11.5
+  height_mm: 2.8
+- code: SO-6 (DWY)
+  name: TI DWY 6-pin stretched SO-6 (wide body)
+  pin_count: 6
+  pitch_mm: 1.27
+  body_length_mm: 4.68
+  body_width_mm: 7.5
+  span_mm: 11.5
+  height_mm: 3.43
 - code: LGA-13 NPL (5x5)
   name: TI NPL0013A 13-pin VLGA (5 x 5 mm, 14-position grid, position 11 empty)
   pin_count: 13
@@ -285,6 +301,51 @@ datasheets:
   sha256: c089ada0f9257792398fb87f6a34d4f685f7c4d9ca7298b63c92d02d144243ee
   revision: B
   revision_date: '2024-02-01'
+- file: ucc23511.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23511.pdf
+  sha256: 83f531c7527c4f41888124c6795c222c274e1bb6f6f018472386ae73e341db78
+  revision: B
+  revision_date: '2020-10-01'
+- file: ucc23511-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23511-q1.pdf
+  sha256: 09adb02ced1d7d6c9467d4fdb991aa92c1c963be812986d78a12c245cda2f260
+  revision: A
+  revision_date: '2021-03-01'
+- file: ucc23513.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23513.pdf
+  sha256: 83346de6c6e3a0ff9632cae26165b2a25fbd2a8180a1143d1b97df174a1f82ce
+  revision: F
+  revision_date: '2026-07-01'
+- file: ucc23513-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23513-q1.pdf
+  sha256: 126ccb655acdc1a05aa829170bcd1bbe6976616a4269b6bf175ac19bf6125056
+  revision: B
+  revision_date: '2021-03-01'
+- file: ucc23313.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23313.pdf
+  sha256: e3ac484617bc7c0d1be67811fba382705a36463e14fffe0f39905fd006b68577
+  revision: B
+  revision_date: '2020-10-01'
+- file: ucc23313-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23313-q1.pdf
+  sha256: f0929cb4af24412c87121539d4d31f230b8150fced7661086f01ee0de7869423
+  revision: B
+  revision_date: '2021-03-01'
+- file: ucc23514.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23514.pdf
+  sha256: 16c7168af0d3685352faf57e4ef5827e413196cb6f8f3bb0846e10ff825a312d
+  revision: A
+  revision_date: '2020-10-01'
+- file: ucc23525.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23525.pdf
+  sha256: 5ddb11013e7c70350911a44a7db9034c74a7aa6635c6d85e209a9ff72a5905bc
+  revision: B
+  revision_date: '2025-06-01'
+- file: ucc23113.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc23113.pdf
+  sha256: 1dea664f93a80385e181032cce94a29e6605e4c200b245e12e986988ecaebb72
+  revision: '*'
+  revision_date: '2023-08-01'
 parts:
 - mpn: ISO5451DWR
   manufacturer: TI
@@ -5147,3 +5208,941 @@ parts:
     fall_time_ns: ucc21759-q1.pdf p10 (typ, 10 nF)
     pwd_ns: ucc21759-q1.pdf p10 (max)
     pinout: ucc21759-q1.pdf p3
+- mpn: UCC23511BDWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23511: 1.5A/2A single-channel opto-compatible reinforced isolated gate driver, 8-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23511.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23511.pdf
+  product_url: https://www.ti.com/product/UCC23511
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-10-16'
+    revision: B
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 10/16/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 1.5
+    peak_sink_a: 2.0
+    uvlo_v: 8
+    output_supply_v: [10.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23511.pdf p1, p6 (VISO 5700 VRMS)
+    isolation_class: ucc23511.pdf ucc23511.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23511.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23511.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23511.pdf p9 (CMTIH/CMTIL min)
+    channel_config: ucc23511.pdf p1 (single channel)
+    input_type: 'ucc23511.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23511.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23511.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23511.pdf p1, p8 (UCC23511B = 8-V UVLO version, VCC rising 8.5 V typ)
+    output_supply_v: ucc23511.pdf p4 (recommended VCC - VEE, 8-V UVLO version)
+    prop_delay_ns: ucc23511.pdf p9 (tPLH/tPHL max)
+    protection: ucc23511.pdf p1 (UVLO)
+    temp_range_c: ucc23511.pdf p4 (ambient)
+    theta_ja_c_w: ucc23511.pdf p4
+    rise_time_ns: ucc23511.pdf p9 (max; no typ given)
+    fall_time_ns: ucc23511.pdf p9 (max; no typ given)
+    pwd_ns: ucc23511.pdf p9 (max)
+    pinout: ucc23511.pdf p3
+- mpn: UCC23511DWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23511: 1.5A/2A single-channel opto-compatible reinforced isolated gate driver, 12-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23511.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23511.pdf
+  product_url: https://www.ti.com/product/UCC23511
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2019-11-07'
+    revision: B
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 11/07/2019 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 1.5
+    peak_sink_a: 2.0
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23511.pdf p1, p6 (VISO 5700 VRMS)
+    isolation_class: ucc23511.pdf ucc23511.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23511.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23511.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23511.pdf p9 (CMTIH/CMTIL min)
+    channel_config: ucc23511.pdf p1 (single channel)
+    input_type: 'ucc23511.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23511.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23511.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23511.pdf p1, p8 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23511.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23511.pdf p9 (tPLH/tPHL max)
+    protection: ucc23511.pdf p1 (UVLO)
+    temp_range_c: ucc23511.pdf p4 (ambient)
+    theta_ja_c_w: ucc23511.pdf p4
+    rise_time_ns: ucc23511.pdf p9 (max; no typ given)
+    fall_time_ns: ucc23511.pdf p9 (max; no typ given)
+    pwd_ns: ucc23511.pdf p9 (max)
+    pinout: ucc23511.pdf p3
+- mpn: UCC23511QDWYRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23511-Q1: Automotive, 1.5A/2A single-channel opto-compatible reinforced isolated gate driver, 12-V UVLO,
+    SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23511-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23511-q1.pdf
+  product_url: https://www.ti.com/product/UCC23511-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2021-03-22'
+    revision: A
+    revision_date: '2021-03-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/22/2021 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 1.5
+    peak_sink_a: 2.0
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23511-q1.pdf p1, p6 (VISO 5700 VRMS)
+    isolation_class: ucc23511-q1.pdf ucc23511-q1.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23511-q1.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23511-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc23511-q1.pdf p8-9 (CMTIH/CMTIL min)
+    channel_config: ucc23511-q1.pdf p1 (single channel)
+    input_type: 'ucc23511-q1.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23511-q1.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23511-q1.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23511-q1.pdf p1, p8 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23511-q1.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23511-q1.pdf p8-9 (tPLH/tPHL max)
+    protection: ucc23511-q1.pdf p1 (UVLO)
+    temp_range_c: ucc23511-q1.pdf p4 (ambient)
+    theta_ja_c_w: ucc23511-q1.pdf p4
+    rise_time_ns: ucc23511-q1.pdf p8-9 (max; no typ given)
+    fall_time_ns: ucc23511-q1.pdf p8-9 (max; no typ given)
+    pwd_ns: ucc23511-q1.pdf p8-9 (max)
+    pinout: ucc23511-q1.pdf p3
+- mpn: UCC23513DWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23513: 4.5A/5.3A single-channel opto-compatible reinforced isolated gate driver, 12-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23513.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23513.pdf
+  product_url: https://www.ti.com/product/UCC23513
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2019-07-02'
+    revision: F
+    revision_date: '2026-07-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 07/02/2019 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23513.pdf p1, p5-6 (VISO 5700 VRMS)
+    isolation_class: ucc23513.pdf ucc23513.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23513.pdf p5-6 (CPG > 8.5 mm)
+    qualification: ucc23513.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23513.pdf p7-8 (CMTIH/CMTIL min)
+    channel_config: ucc23513.pdf p1 (single channel)
+    input_type: 'ucc23513.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23513.pdf p1, p6-7 (IOH typ)
+    peak_sink_a: ucc23513.pdf p1, p6-7 (IOL typ)
+    uvlo_v: ucc23513.pdf p1, p6-7 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23513.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23513.pdf p7-8 (tPLH/tPHL max)
+    protection: ucc23513.pdf p1 (UVLO)
+    temp_range_c: ucc23513.pdf p4 (ambient)
+    theta_ja_c_w: ucc23513.pdf p5
+    rise_time_ns: ucc23513.pdf p7-8 (max; no typ given)
+    fall_time_ns: ucc23513.pdf p7-8 (max; no typ given)
+    pwd_ns: ucc23513.pdf p7-8 (max)
+    pinout: ucc23513.pdf p3
+- mpn: UCC23513BDWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23513: 4.5A/5.3A single-channel opto-compatible reinforced isolated gate driver, 8-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23513.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23513.pdf
+  product_url: https://www.ti.com/product/UCC23513
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-08-04'
+    revision: F
+    revision_date: '2026-07-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 08/04/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 8
+    output_supply_v: [10.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23513.pdf p1, p5-6 (VISO 5700 VRMS)
+    isolation_class: ucc23513.pdf ucc23513.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23513.pdf p5-6 (CPG > 8.5 mm)
+    qualification: ucc23513.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23513.pdf p7-8 (CMTIH/CMTIL min)
+    channel_config: ucc23513.pdf p1 (single channel)
+    input_type: 'ucc23513.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23513.pdf p1, p6-7 (IOH typ)
+    peak_sink_a: ucc23513.pdf p1, p6-7 (IOL typ)
+    uvlo_v: ucc23513.pdf p1, p6-7 (UCC23513B = 8-V UVLO version, VCC rising 8.5 V typ)
+    output_supply_v: ucc23513.pdf p4 (recommended VCC - VEE, 8-V UVLO version)
+    prop_delay_ns: ucc23513.pdf p7-8 (tPLH/tPHL max)
+    protection: ucc23513.pdf p1 (UVLO)
+    temp_range_c: ucc23513.pdf p4 (ambient)
+    theta_ja_c_w: ucc23513.pdf p5
+    rise_time_ns: ucc23513.pdf p7-8 (max; no typ given)
+    fall_time_ns: ucc23513.pdf p7-8 (max; no typ given)
+    pwd_ns: ucc23513.pdf p7-8 (max)
+    pinout: ucc23513.pdf p3
+- mpn: UCC23513BQDWYRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23513-Q1: Automotive, 4.5A/5.3A single-channel opto-compatible reinforced isolated gate driver, 8-V UVLO,
+    SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23513-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23513-q1.pdf
+  product_url: https://www.ti.com/product/UCC23513-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2021-03-22'
+    revision: B
+    revision_date: '2021-03-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/22/2021 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 8
+    output_supply_v: [10.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23513-q1.pdf p1, p6 (VISO 5700 VRMS)
+    isolation_class: ucc23513-q1.pdf ucc23513-q1.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23513-q1.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23513-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc23513-q1.pdf p9 (CMTIH/CMTIL min)
+    channel_config: ucc23513-q1.pdf p1 (single channel)
+    input_type: 'ucc23513-q1.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23513-q1.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23513-q1.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23513-q1.pdf p1, p8 (UCC23513B = 8-V UVLO version, VCC rising 8.5 V typ)
+    output_supply_v: ucc23513-q1.pdf p4 (recommended VCC - VEE, 8-V UVLO version)
+    prop_delay_ns: ucc23513-q1.pdf p9 (tPLH/tPHL max)
+    protection: ucc23513-q1.pdf p1 (UVLO)
+    temp_range_c: ucc23513-q1.pdf p4 (ambient)
+    theta_ja_c_w: ucc23513-q1.pdf p4
+    rise_time_ns: ucc23513-q1.pdf p9 (max; no typ given)
+    fall_time_ns: ucc23513-q1.pdf p9 (max; no typ given)
+    pwd_ns: ucc23513-q1.pdf p9 (max)
+    pinout: ucc23513-q1.pdf p3
+- mpn: UCC23513QDWYRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23513-Q1: Automotive, 4.5A/5.3A single-channel opto-compatible reinforced isolated gate driver, 12-V UVLO,
+    SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23513-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23513-q1.pdf
+  product_url: https://www.ti.com/product/UCC23513-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2021-03-22'
+    revision: B
+    revision_date: '2021-03-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/22/2021 from the same table'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23513-q1.pdf p1, p6 (VISO 5700 VRMS)
+    isolation_class: ucc23513-q1.pdf ucc23513-q1.pdf p1 (reinforced isolation)
+    creepage_mm: ucc23513-q1.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23513-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc23513-q1.pdf p9 (CMTIH/CMTIL min)
+    channel_config: ucc23513-q1.pdf p1 (single channel)
+    input_type: 'ucc23513-q1.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23513-q1.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23513-q1.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23513-q1.pdf p1, p8 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23513-q1.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23513-q1.pdf p9 (tPLH/tPHL max)
+    protection: ucc23513-q1.pdf p1 (UVLO)
+    temp_range_c: ucc23513-q1.pdf p4 (ambient)
+    theta_ja_c_w: ucc23513-q1.pdf p4
+    rise_time_ns: ucc23513-q1.pdf p9 (max; no typ given)
+    fall_time_ns: ucc23513-q1.pdf p9 (max; no typ given)
+    pwd_ns: ucc23513-q1.pdf p9 (max)
+    pinout: ucc23513-q1.pdf p3
+- mpn: UCC23313DWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23313: 4.5A/5.3A single-channel opto-compatible basic isolated gate driver, 12-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23313.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23313.pdf
+  product_url: https://www.ti.com/product/UCC23313
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2019-09-19'
+    revision: B
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 09/19/2019 from the same table'
+  params:
+    isolation_rating_kvrms: 3.75
+    isolation_class: basic
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23313.pdf p1, p6 (VISO 3750 VRMS)
+    isolation_class: ucc23313.pdf ucc23313.pdf p1 (basic isolation)
+    creepage_mm: ucc23313.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23313.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23313.pdf p8-9 (CMTIH/CMTIL min)
+    channel_config: ucc23313.pdf p1 (single channel)
+    input_type: 'ucc23313.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23313.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23313.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23313.pdf p1, p8 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23313.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23313.pdf p8-9 (tPLH/tPHL max)
+    protection: ucc23313.pdf p1 (UVLO)
+    temp_range_c: ucc23313.pdf p4 (ambient)
+    theta_ja_c_w: ucc23313.pdf p4
+    rise_time_ns: ucc23313.pdf p8-9 (max; no typ given)
+    fall_time_ns: ucc23313.pdf p8-9 (max; no typ given)
+    pwd_ns: ucc23313.pdf p8-9 (max)
+    pinout: ucc23313.pdf p3
+- mpn: UCC23313BDWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23313: 4.5A/5.3A single-channel opto-compatible basic isolated gate driver, 8-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23313.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23313.pdf
+  product_url: https://www.ti.com/product/UCC23313
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-10-16'
+    revision: B
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 10/16/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 3.75
+    isolation_class: basic
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 8
+    output_supply_v: [10.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23313.pdf p1, p6 (VISO 3750 VRMS)
+    isolation_class: ucc23313.pdf ucc23313.pdf p1 (basic isolation)
+    creepage_mm: ucc23313.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23313.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23313.pdf p8-9 (CMTIH/CMTIL min)
+    channel_config: ucc23313.pdf p1 (single channel)
+    input_type: 'ucc23313.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23313.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23313.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23313.pdf p1, p8 (UCC23313B = 8-V UVLO version, VCC rising 8.5 V typ)
+    output_supply_v: ucc23313.pdf p4 (recommended VCC - VEE, 8-V UVLO version)
+    prop_delay_ns: ucc23313.pdf p8-9 (tPLH/tPHL max)
+    protection: ucc23313.pdf p1 (UVLO)
+    temp_range_c: ucc23313.pdf p4 (ambient)
+    theta_ja_c_w: ucc23313.pdf p4
+    rise_time_ns: ucc23313.pdf p8-9 (max; no typ given)
+    fall_time_ns: ucc23313.pdf p8-9 (max; no typ given)
+    pwd_ns: ucc23313.pdf p8-9 (max)
+    pinout: ucc23313.pdf p3
+- mpn: UCC23313BQDWYRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23313-Q1: Automotive, 4.5A/5.3A single-channel opto-compatible basic isolated gate driver, 8-V UVLO, SO-6
+    (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23313-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23313-q1.pdf
+  product_url: https://www.ti.com/product/UCC23313-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2021-03-22'
+    revision: B
+    revision_date: '2021-03-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/22/2021 from the same table'
+  params:
+    isolation_rating_kvrms: 3.75
+    isolation_class: basic
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 8
+    output_supply_v: [10.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23313-q1.pdf p1, p6 (VISO 3750 VRMS)
+    isolation_class: ucc23313-q1.pdf ucc23313-q1.pdf p1 (basic isolation)
+    creepage_mm: ucc23313-q1.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23313-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc23313-q1.pdf p9 (CMTIH/CMTIL min)
+    channel_config: ucc23313-q1.pdf p1 (single channel)
+    input_type: 'ucc23313-q1.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23313-q1.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23313-q1.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23313-q1.pdf p1, p8 (UCC23313B = 8-V UVLO version, VCC rising 8.5 V typ)
+    output_supply_v: ucc23313-q1.pdf p4 (recommended VCC - VEE, 8-V UVLO version)
+    prop_delay_ns: ucc23313-q1.pdf p9 (tPLH/tPHL max)
+    protection: ucc23313-q1.pdf p1 (UVLO)
+    temp_range_c: ucc23313-q1.pdf p4 (ambient)
+    theta_ja_c_w: ucc23313-q1.pdf p4
+    rise_time_ns: ucc23313-q1.pdf p9 (max; no typ given)
+    fall_time_ns: ucc23313-q1.pdf p9 (max; no typ given)
+    pwd_ns: ucc23313-q1.pdf p9 (max)
+    pinout: ucc23313-q1.pdf p3
+- mpn: UCC23313QDWYRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23313-Q1: Automotive, 4.5A/5.3A single-channel opto-compatible basic isolated gate driver, 12-V UVLO, SO-6
+    (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VCC]
+  datasheet: ucc23313-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23313-q1.pdf
+  product_url: https://www.ti.com/product/UCC23313-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2021-03-22'
+    revision: B
+    revision_date: '2021-03-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/22/2021 from the same table'
+  params:
+    isolation_rating_kvrms: 3.75
+    isolation_class: basic
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 126.0
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23313-q1.pdf p1, p6 (VISO 3750 VRMS)
+    isolation_class: ucc23313-q1.pdf ucc23313-q1.pdf p1 (basic isolation)
+    creepage_mm: ucc23313-q1.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23313-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc23313-q1.pdf p9 (CMTIH/CMTIL min)
+    channel_config: ucc23313-q1.pdf p1 (single channel)
+    input_type: 'ucc23313-q1.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23313-q1.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23313-q1.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23313-q1.pdf p1, p8 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23313-q1.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23313-q1.pdf p9 (tPLH/tPHL max)
+    protection: ucc23313-q1.pdf p1 (UVLO)
+    temp_range_c: ucc23313-q1.pdf p4 (ambient)
+    theta_ja_c_w: ucc23313-q1.pdf p4
+    rise_time_ns: ucc23313-q1.pdf p9 (max; no typ given)
+    fall_time_ns: ucc23313-q1.pdf p9 (max; no typ given)
+    pwd_ns: ucc23313-q1.pdf p9 (max)
+    pinout: ucc23313-q1.pdf p3
+- mpn: UCC23514EDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23514: 4.5A/5.3A, single-channel opto-compatible reinforced isolated gate driver, various pinout options,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [NC, ANODE, CATHODE, NC, VEE, COM, VOUT, VCC]
+  datasheet: ucc23514.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23514.pdf
+  product_url: https://www.ti.com/product/UCC23514
+  notes: 'DWV 8-pin SOIC-WB; creepage 8.5 mm per the features list (p1). UCC23514E: UVLO referenced to a separate COM (emitter)
+    pin (p1, p4).'
+  lifecycle:
+    status: active
+    release_date: '2020-12-14'
+    revision: A
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 12/14/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 108.5
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23514.pdf p1, p8 (VISO 5000 VRMS)
+    isolation_class: ucc23514.pdf ucc23514.pdf p1 (5.0-kVRMS reinforced isolation)
+    creepage_mm: ucc23514.pdf p8 (CPG > 8.5 mm)
+    qualification: ucc23514.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23514.pdf p11 (CMTIH/CMTIL min)
+    channel_config: ucc23514.pdf p1 (single channel)
+    input_type: 'ucc23514.pdf p4-5 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23514.pdf p1, p10 (IOH typ)
+    peak_sink_a: ucc23514.pdf p1, p10 (IOL typ)
+    uvlo_v: ucc23514.pdf p1, p10 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23514.pdf p6 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23514.pdf p11 (tPLH/tPHL max)
+    protection: ucc23514.pdf p1 (UVLO)
+    temp_range_c: ucc23514.pdf p6 (ambient)
+    theta_ja_c_w: ucc23514.pdf p6
+    rise_time_ns: ucc23514.pdf p11 (max; no typ given)
+    fall_time_ns: ucc23514.pdf p11 (max; no typ given)
+    pwd_ns: ucc23514.pdf p11 (max)
+    pinout: ucc23514.pdf p4-5 (pin functions for the variant)
+- mpn: UCC23514VDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23514: 4.5A/5.3A, single-channel opto-compatible reinforced isolated gate driver, various pinout options,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [NC, ANODE, CATHODE, NC, VEE, VOUT, NC, VCC]
+  datasheet: ucc23514.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23514.pdf
+  product_url: https://www.ti.com/product/UCC23514
+  notes: 'DWV 8-pin SOIC-WB; creepage 8.5 mm per the features list (p1). UCC23514V: single VOUT pin (p1, p5).'
+  lifecycle:
+    status: active
+    release_date: '2020-12-14'
+    revision: A
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 12/14/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 108.5
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23514.pdf p1, p8 (VISO 5000 VRMS)
+    isolation_class: ucc23514.pdf ucc23514.pdf p1 (5.0-kVRMS reinforced isolation)
+    creepage_mm: ucc23514.pdf p8 (CPG > 8.5 mm)
+    qualification: ucc23514.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23514.pdf p11 (CMTIH/CMTIL min)
+    channel_config: ucc23514.pdf p1 (single channel)
+    input_type: 'ucc23514.pdf p4-5 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23514.pdf p1, p10 (IOH typ)
+    peak_sink_a: ucc23514.pdf p1, p10 (IOL typ)
+    uvlo_v: ucc23514.pdf p1, p10 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23514.pdf p6 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23514.pdf p11 (tPLH/tPHL max)
+    protection: ucc23514.pdf p1 (UVLO)
+    temp_range_c: ucc23514.pdf p6 (ambient)
+    theta_ja_c_w: ucc23514.pdf p6
+    rise_time_ns: ucc23514.pdf p11 (max; no typ given)
+    fall_time_ns: ucc23514.pdf p11 (max; no typ given)
+    pwd_ns: ucc23514.pdf p11 (max)
+    pinout: ucc23514.pdf p4-5 (pin functions for the variant)
+- mpn: UCC23514MDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23514: 4.5A/5.3A, single-channel opto-compatible reinforced isolated gate driver, various pinout options,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [ANODE, NC, CATHODE, NC, VEE, CLAMP, VOUT, VCC]
+  datasheet: ucc23514.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23514.pdf
+  product_url: https://www.ti.com/product/UCC23514
+  notes: 'DWV 8-pin SOIC-WB; creepage 8.5 mm per the features list (p1). UCC23514M: active Miller clamp output (p1, p4).'
+  lifecycle:
+    status: active
+    release_date: '2020-12-14'
+    revision: A
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 12/14/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 108.5
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23514.pdf p1, p8 (VISO 5000 VRMS)
+    isolation_class: ucc23514.pdf ucc23514.pdf p1 (5.0-kVRMS reinforced isolation)
+    creepage_mm: ucc23514.pdf p8 (CPG > 8.5 mm)
+    qualification: ucc23514.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23514.pdf p11 (CMTIH/CMTIL min)
+    channel_config: ucc23514.pdf p1 (single channel)
+    input_type: 'ucc23514.pdf p4-5 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23514.pdf p1, p10 (IOH typ)
+    peak_sink_a: ucc23514.pdf p1, p10 (IOL typ)
+    uvlo_v: ucc23514.pdf p1, p10 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23514.pdf p6 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23514.pdf p11 (tPLH/tPHL max)
+    protection: ucc23514.pdf p1, p4 (UVLO; UCC23514M active Miller clamp on pin 6)
+    temp_range_c: ucc23514.pdf p6 (ambient)
+    theta_ja_c_w: ucc23514.pdf p6
+    rise_time_ns: ucc23514.pdf p11 (max; no typ given)
+    fall_time_ns: ucc23514.pdf p11 (max; no typ given)
+    pwd_ns: ucc23514.pdf p11 (max)
+    pinout: ucc23514.pdf p4-5 (pin functions for the variant)
+- mpn: UCC23514SDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23514: 4.5A/5.3A, single-channel opto-compatible reinforced isolated gate driver, various pinout options,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [NC, ANODE, CATHODE, NC, VEE, OUTL, OUTH, VCC]
+  datasheet: ucc23514.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23514.pdf
+  product_url: https://www.ti.com/product/UCC23514
+  notes: 'DWV 8-pin SOIC-WB; creepage 8.5 mm per the features list (p1). UCC23514S: split outputs OUTH/OUTL (p1, p5).'
+  lifecycle:
+    status: active
+    release_date: '2020-12-14'
+    revision: A
+    revision_date: '2020-10-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 12/14/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 4.5
+    peak_sink_a: 5.3
+    uvlo_v: 12
+    output_supply_v: [14.0, 33.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 108.5
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    isolation_rating_kvrms: ucc23514.pdf p1, p8 (VISO 5000 VRMS)
+    isolation_class: ucc23514.pdf ucc23514.pdf p1 (5.0-kVRMS reinforced isolation)
+    creepage_mm: ucc23514.pdf p8 (CPG > 8.5 mm)
+    qualification: ucc23514.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23514.pdf p11 (CMTIH/CMTIL min)
+    channel_config: ucc23514.pdf p1 (single channel)
+    input_type: 'ucc23514.pdf p4-5 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23514.pdf p1, p10 (IOH typ)
+    peak_sink_a: ucc23514.pdf p1, p10 (IOL typ)
+    uvlo_v: ucc23514.pdf p1, p10 (12-V UVLO version, VCC rising 12.5 V typ)
+    output_supply_v: ucc23514.pdf p6 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23514.pdf p11 (tPLH/tPHL max)
+    protection: ucc23514.pdf p1 (UVLO)
+    temp_range_c: ucc23514.pdf p6 (ambient)
+    theta_ja_c_w: ucc23514.pdf p6
+    rise_time_ns: ucc23514.pdf p11 (max; no typ given)
+    fall_time_ns: ucc23514.pdf p11 (max; no typ given)
+    pwd_ns: ucc23514.pdf p11 (max)
+    pinout: ucc23514.pdf p4-5 (pin functions for the variant)
+- mpn: UCC23525CDWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23525: 5A/5A reinforced single-channel opto-compatible isolated gate driver, 12-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VSS, OUT, VDD]
+  datasheet: ucc23525.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23525.pdf
+  product_url: https://www.ti.com/product/UCC23525
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2025-06-25'
+    revision: B
+    revision_date: '2025-06-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/25/2025 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 200.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 5.0
+    peak_sink_a: 5.0
+    uvlo_v: 12
+    output_supply_v: [13.0, 30.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    rise_time_ns: 6.0
+    fall_time_ns: 10.0
+    pwd_ns: 30.0
+  param_sources:
+    isolation_rating_kvrms: ucc23525.pdf p1, p6 (VISO 5000 VRMS)
+    isolation_class: ucc23525.pdf ucc23525.pdf p1 (5-kVRMS reinforced)
+    creepage_mm: ucc23525.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23525.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23525.pdf p8 (CMTIH/CMTIL min 200 V/ns)
+    channel_config: ucc23525.pdf p1 (single channel)
+    input_type: 'ucc23525.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23525.pdf p1, p8 (IOH typ)
+    peak_sink_a: ucc23525.pdf p1, p8 (IOL typ)
+    uvlo_v: ucc23525.pdf p1 (12-V VDD UVLO), p8 (UVLOR 12.0 V typ)
+    output_supply_v: ucc23525.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23525.pdf p8 (tPLH/tPHL max)
+    protection: ucc23525.pdf p1 (UVLO)
+    temp_range_c: ucc23525.pdf p4 (ambient)
+    rise_time_ns: ucc23525.pdf p8 (typ, 1.8 nF)
+    fall_time_ns: ucc23525.pdf p8 (typ, 1.8 nF)
+    pwd_ns: ucc23525.pdf p8 (max)
+    pinout: ucc23525.pdf p3
+- mpn: UCC23113DWYR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC23113: 4.5A/5.3A single-channel opto-compatible functional isolated gate driver, 12-V UVLO, SO-6 (DWY)'
+  package: SO-6 (DWY)
+  pinout: [ANODE, NC, CATHODE, VEE, VOUT, VDD]
+  datasheet: ucc23113.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc23113.pdf
+  product_url: https://www.ti.com/product/UCC23113
+  notes: 'Functional isolation only (1.5-kVDC, p1): no VISO / basic or reinforced rating, so isolation_rating_kvrms and isolation_class
+    are omitted.'
+  lifecycle:
+    status: active
+    release_date: '2023-09-12'
+    revision: '*'
+    revision_date: '2023-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 09/12/2023 from the same table'
+  params:
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: LED emulator
+    peak_source_a: 5.0
+    peak_sink_a: 5.0
+    uvlo_v: 12
+    output_supply_v: [13.0, 30.0]
+    prop_delay_ns: 105.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    rise_time_ns: 28.0
+    fall_time_ns: 25.0
+    pwd_ns: 35.0
+  param_sources:
+    creepage_mm: ucc23113.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc23113.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc23113.pdf p7 (CMTIH/CMTIL min 100 V/ns)
+    channel_config: ucc23113.pdf p1 (single channel)
+    input_type: 'ucc23113.pdf p3 (opto-compatible e-diode input: ANODE, CATHODE)'
+    peak_source_a: ucc23113.pdf p1, p7 (IOH typ)
+    peak_sink_a: ucc23113.pdf p1, p7 (IOL typ)
+    uvlo_v: ucc23113.pdf p1 (12-V VDD UVLO), p7 (UVLOR 12.5 V typ)
+    output_supply_v: ucc23113.pdf p4 (recommended VCC - VEE, 12-V UVLO version)
+    prop_delay_ns: ucc23113.pdf p7 (tPLH/tPHL max)
+    protection: ucc23113.pdf p1 (UVLO)
+    temp_range_c: ucc23113.pdf p4 (ambient)
+    rise_time_ns: ucc23113.pdf p7 (max; no typ given)
+    fall_time_ns: ucc23113.pdf p7 (max; no typ given)
+    pwd_ns: ucc23113.pdf p7 (max)
+    pinout: ucc23113.pdf p3

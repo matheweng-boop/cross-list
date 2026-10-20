@@ -20,6 +20,7 @@ NAV = (
     ("opportunities", "Opportunities", (
         ("Overview", "/business", "Key results and analysis scope"),
         ("Opportunity explorer", "/business/explorer", "Rank missing functions by reach, feasibility, competition"),
+        ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
@@ -63,6 +64,7 @@ PLACES = {
     "/business/technology": ("opportunities", "/business/explorer"),
     "/business/evidence": ("opportunities", "/business/explorer"),
     "/business/attach": ("opportunities", "/business/attach"),
+    "/business/rf-coverage": ("opportunities", "/business/rf-coverage"),
     "/business/markets": ("opportunities", "/business/markets"),
     "/business/customers": ("opportunities", "/business/markets"),
     "/business/cases": ("opportunities", "/business/shortlist"),

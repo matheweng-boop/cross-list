@@ -22,6 +22,7 @@ from app.models import (
 )
 from app.services import blocks, cases, pipeline, quality
 from app.services import opportunity as op
+from app.services import rf_coverage as rf
 from app.web.routes import templates
 
 router = APIRouter()
@@ -674,3 +675,15 @@ def human_validation(request: Request, prio: str = "", session: Session = Depend
 
     ctx = {"scan": validation.scan(session), "prio": prio if prio in validation.PRIORITY else ""}
     return templates.TemplateResponse(request, "business/validation.html", ctx)
+
+
+@router.get("/business/rf-coverage", response_class=HTMLResponse)
+def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str = ""):
+    """RF functions by frequency band and output power: where our parts are, and where applications need one."""
+    rs = rf.rows()
+    need, apps, unknown, n_rf = rf.demand()
+    ctx = {"rows": rs, "gaps": rf.gaps(rs), "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
+           "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
+           "fn": fn, "band": band, "power": power,
+           "slot": rf.slot_parts(fn, band, power or None) if fn and band else None}  # fmt: skip
+    return templates.TemplateResponse(request, "business/rf_coverage.html", ctx)

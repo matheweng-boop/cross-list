@@ -1,0 +1,57 @@
+# RF coverage by frequency band (Opportunities > RF coverage, app/services/rf_coverage.py).
+#
+# A function such as "RF power amplifier" counts as covered as soon as one part exists, which hides real gaps
+# (a sub-6 GHz handset PA says nothing about a 40 W X-band radar PA). Here each RF function is split into slots:
+# function x frequency band (x output power for power amplifiers). A slot is covered when one of our parts
+# (Skyworks, Qorvo) states a frequency range that overlaps the band; parts marked obsolete / NRND / last time buy
+# are counted apart, so a slot held only by ageing parts shows as at risk.
+#
+# Bands follow the IEEE letter designations (IEEE 521), with everything below 1 GHz in one column.
+
+bands:
+  - {id: sub1, label: "< 1 GHz", lo: 0.003, hi: 1, uses: "sub-GHz IoT, LMR, cellular low band, CATV, UHF RFID"}
+  - {id: L, label: "L 1–2 GHz", lo: 1, hi: 2, uses: "GNSS, cellular mid band, L-band satcom"}
+  - {id: S, label: "S 2–4 GHz", lo: 2, hi: 4, uses: "Wi-Fi 2.4 GHz, Bluetooth, cellular high band / n77-n78, S-band radar"}
+  - {id: C, label: "C 4–8 GHz", lo: 4, hi: 8, uses: "Wi-Fi 5 / 6 GHz, V2X 5.9 GHz, UWB, C-band satcom and backhaul"}
+  - {id: X, label: "X 8–12 GHz", lo: 8, hi: 12, uses: "radar, X-band satcom, backhaul"}
+  - {id: Ku, label: "Ku 12–18 GHz", lo: 12, hi: 18, uses: "satcom terminals, radar, backhaul"}
+  - {id: Ka, label: "K / Ka 18–40 GHz", lo: 18, hi: 40, uses: "5G mmWave (n257-n261), Ka-band satcom, backhaul"}
+  - {id: mmw, label: "V / E / W > 40 GHz", lo: 40, hi: 110, uses: "E-band backhaul, 60 GHz, 77 GHz automotive radar"}
+
+# power amplifiers: highest stated output power (P1dB, Psat, linear or rated output power)
+power_classes:
+  - {id: low, label: "up to 1 W", max_dbm: 30}
+  - {id: mid, label: "1–10 W", max_dbm: 40}
+  - {id: high, label: "over 10 W", max_dbm: 999}
+
+# the RF functions measured per band (component-level sockets; band-specific modules such as Wi-Fi FEMs are not)
+functions: [power_amplifier, rf_predriver, rf_gain_block, lna, rf_switch, rf_attenuator, rf_phase_shifter, rf_limiter,
+            rf_mixer, rf_synthesizer, frequency_multiplier, filter_saw_baw, beamformer_ic]
+
+# Which bands an application needs, from words in its name. Rules of thumb for the usual allocations, not a
+# specification: step 3 (bands stated per block in the diagrams) will replace them. Applications that match no rule
+# are counted as "band not known".
+applications:
+  - {match: "GNSS|GPS|asset tracker|telematics|TCU", bands: [L]}
+  - {match: "Wi-?Fi|WLAN|access point|router|gateway|CPE|ONT", bands: [S, C]}
+  - {match: "Bluetooth|\\bBLE\\b|802\\.15\\.4|Zigbee|Thread", bands: [S]}
+  - {match: "UWB", bands: [C, X]}
+  - {match: "V2X|DSRC", bands: [C]}
+  - {match: "sub-?GHz|LoRa|LPWAN|NB-IoT|LTE-M|smart meter|AMR|RFID", bands: [sub1]}
+  - {match: "5G|\\bNR\\b|LTE|cellular|smartphone|handset|base station|small cell|radio unit|massive MIMO|O-RAN|FWA|repeater|booster", bands: [sub1, L, S, C]}
+  - {match: "mmWave|FR2|28 GHz|39 GHz", bands: [Ka]}
+  - {match: "satellite|satcom|\\bNTN\\b|VSAT|BUC|LNB", bands: [L, C, X, Ku, Ka]}
+  - {match: "backhaul|microwave link|ODU", bands: [C, X, Ku, Ka, mmw]}
+  - {match: "automotive radar|corner radar|77 GHz|imaging radar", bands: [mmw]}
+  - {match: "phased-array|pulsed.*radar|weather radar|surveillance radar|radar system", bands: [S, C, X, Ku]}
+  - {match: "electronic warfare|\\bEW\\b|jammer|SIGINT", bands: [sub1, L, S, C, X, Ku, Ka]}
+  - {match: "land mobile|LMR|public safety|tactical radio|software-defined radio|\\bSDR\\b|two-way radio", bands: [sub1, L, S]}
+  - {match: "CATV|DOCSIS|cable|broadband amplifier|line extender", bands: [sub1, L]}
+  - {match: "FM|AM/FM|DAB|broadcast|tuner|head unit", bands: [sub1, L]}
+  - {match: "test (&|and) measurement|signal generator|spectrum analy", bands: [sub1, L, S, C, X, Ku, Ka]}
+
+# functions that only exist in some bands: demand outside these is not counted (an application's band list is
+# broad; a mmWave beamformer in a 5G radio does not create demand for a sub-1 GHz beamformer)
+function_bands:
+  beamformer_ic: [X, Ku, Ka, mmw]
+  rf_phase_shifter: [S, C, X, Ku, Ka, mmw]

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.services import automotive as au
-from app.services import vocab
+from app.services import scoring, vocab
 from app.web.routes import templates
 
 router = APIRouter()
@@ -31,7 +31,8 @@ def automotive(request: Request, view: str = "apps", cell: str = "", session: Se
     app_id, _, fn = cell.partition(":")
     ctx = {"m": m, "view": view, "columns": columns, "moves": [x for x in m["moves"] if x["fn"] in cols][:12],
            "sel": m["cells"].get((app_id, fn)), "by_app": by_app, "levels": au.LEVELS, "level_label": au.LEVEL_LABEL,
-           "level_help": au.LEVEL_HELP, "label": vocab.fn_label}  # fmt: skip
+           "level_help": au.LEVEL_HELP, "label": vocab.fn_label, "ladder": scoring.config()["distance"]["ladder"],
+           "dist_label": scoring.distance_label}  # fmt: skip
     return templates.TemplateResponse(request, "business/automotive.html", ctx)
 
 

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push with context %}
+{% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push, score_chip with context %}
 {% macro url() -%}
   {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t, 'g': g} -%}{%- set _ = base.update(kwargs) -%}
   /business/explorer?{{ base|dictsort|selectattr('1')|list|urlencode }}
@@ -24,11 +24,13 @@
   <div class="chip-row"><span class="chip-lbl">Decision · type</span>{% for k, (label, _) in filters.items() if k in ('kept', 'chips') %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=('' if f == k else k)) }}">{{ label }}</a>{% endfor %}</div>
 </div></details>
 <details class="ex-fold"><summary class="small"><b>How the score works</b></summary>
-<p class="fit-help small"><b>Fit</b> (technology fit) says how well a function suits {{ co_label }}: <b>High</b>, <b>Medium</b> or <b>Low</b> against the best-scoring function (top, middle and bottom third). The number behind it (0–1, higher is better; hover a fit to see it and its factors) =
-  share of architectures that need it × path to product (exists / spec variant 1.0, new design 0.6, new technology 0.3) × competition (low 1.0, medium 0.9, high 0.75) × market trend (growing 1.15, declining 0.85).
-  Best possible: needed everywhere, already in reach, little competition · <a href="/business/method#influence">methodology</a>.
-  <span class="muted">Denominator: {{ apps|length }} reference architectures ({{ n_library }} library{% if n_background %} + {{ n_background }} background{% endif %}), counted as drawn.</span></p>
-<p class="small"><b>RF:</b> an RF function counts as covered as soon as one part exists, so RF also gets one row per band (and power class) that the block diagrams need and we don't cover: “Band gap” rows from <a href="/business/rf-coverage">RF coverage</a>. They have no fit score yet.</p>
+{% set w = scoring.weights %}<p class="fit-help small"><b>Opportunity score</b> (0–100, higher is better; hover a score for its factors; sorted by score this is the former Technology fit view) = the weighted sum of
+  demand {{ w.demand }}% (sockets in the block diagrams, background diagrams half; TAM instead where ASP and volume are entered) + portfolio distance {{ w.distance }}% (0 available today … 4 new technology)
+  + architecture fit {{ w.architecture }}% (door openers and our parts in the same or a connected block) + competition {{ w.competition }}% ({% for k, v in scoring.competition['values'].items() %}{{ crowding_label[k]|lower }} {{ v }}{{ ', ' if not loop.last }}{% endfor %})
+  + market trend {{ w.trend }}% ({% for k, v in scoring.trend['values'].items() %}{{ k }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}). Missing data counts as 50 with low confidence (⚑: research to do, listed on <a href="/business/quality#research">Data quality</a>).
+  Bands are absolute: <b>High</b> {{ scoring.bands.High }}+, <b>Medium</b> {{ scoring.bands.Medium }}–{{ scoring.bands.High - 1 }}, <b>Low</b> below {{ scoring.bands.Medium }} · <a href="/business/method#score">methodology</a>.
+  <span class="muted">Denominator: {{ apps|length }} reference architectures ({{ n_library }} library{% if n_background %} + {{ n_background }} background{% endif %}).</span></p>
+<p class="small"><b>RF:</b> an RF function counts as covered as soon as one part exists, so RF also gets one row per band (and power class) that the block diagrams need and we don't cover: “Band gap” rows from <a href="/business/rf-coverage">RF coverage</a>. Their score takes demand from the diagrams that need the band, distance from the coverage status and competition from competitor parts in the band; architecture is neutral.</p>
 </details>
 </div>
 {% if rows and (same.gap or same.crowd or same.tam) %}<p class="small ex-same">{% if same.gap %}All {{ rows|length }} rows: <span class="gt gt-{{ rows[0].gap_type }}" title="{{ gap_labels[rows[0].gap_type] }}">{{ gap_labels[rows[0].gap_type].split(' – ')[0] }}</span>{% endif %}{% if same.crowd %}{{ ' · ' if same.gap else 'All rows: ' }}competition {{ crowd(rows[0].competition, crowding_label) }}{% endif %}{% if same.tam %}{{ ' · ' if same.gap or same.crowd }}Market size (TAM): no prices and volumes entered yet – <a href="/business/data">add market data</a>{% endif %}</p>{% endif %}
@@ -39,7 +41,7 @@
     {{ th('path') }}
     {% call th('reach') %}Needed in <small class="muted">of {{ apps|length }}</small>{% endcall %}
     {% if not same.crowd %}{{ th('competition') }}{% endif %}
-    {% call th('score') %}Fit{% endcall %}
+    {% call th('score') %}Score{% endcall %}
     {% if not same.tam %}{{ th('tam') }}{% endif %}
     <th scope="col">Decision</th>
   </tr></thead>
@@ -49,7 +51,7 @@
       <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
       <td title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
       {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
-      <td>{% if e.score is not none %}<span class="fit fit-{{ e.band|lower }}" title="Fit {{ '%.2f'|format(e.score) }} = {% for n, w, why in e.factors %}{{ n }} {{ '%.2f'|format(w) }} ({{ why }}){{ ' × ' if not loop.last }}{% endfor %}"><span class="fit-bar"><span style="width:{{ ((e.score / max_score * 100) if max_score else 0)|round }}%"></span></span>{{ e.band }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
+      <td>{{ score_chip(e) }}</td>
       {% if not same.tam %}<td>{% if e.tam_apps %}{{ usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/data?focus=asp:{{ e.fn }}#asp-{{ e.fn }}" title="No ASP and volume entered yet">— <span class="visually-hidden">add the market data for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
       <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep', 'outline') }}{% endif %}
         <details class="aside-form"><summary class="small-btn outline secondary" role="button">Set aside</summary>
@@ -70,9 +72,9 @@
 <h2 class="h-aside">Set aside <small class="muted">· {{ aside|length }} not pursued for now; restore any time</small></h2>
 {% if aside %}
 <div class="table-wrap"><table class="striped explorer">
-  <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Fit</th><th scope="col"></th></tr></thead>
+  <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Score</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in aside %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a> <small class="muted">{{ e.group }}</small></td><td class="small">{{ e.decision.note or '–' }}</td>
-    <td class="small">{{ e.decision.date|date }}</td><td>{% if e.score is not none %}<span title="{{ '%.2f'|format(e.score) }}">{{ e.band }}</span>{% else %}–{% endif %}</td>
+    <td class="small">{{ e.decision.date|date }}</td><td>{{ score_chip(e) }}</td>
     <td>{{ decide(e, 'clear', 'Restore', 'outline secondary') }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small muted">Nothing set aside. Use “Set aside” on a row to park a function that is not a priority now.</p>{% endif %}

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_session
+from app.matching import engine
 from app.models import (
     BusinessAssumption,
     Case,
@@ -22,7 +23,7 @@ from app.models import (
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, prelim, quality, vocab
+from app.services import blocks, cases, pipeline, prelim, quality, scoring, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -95,6 +96,7 @@ def attach(request: Request, fn: str = "", co: str = "combined", part: str = "",
     c["q_part"], c["q_app"] = part.strip()[:60], app.strip()[:120]
     c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
     c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
+    c["bundle_cfg"] = scoring.config()["bundle"]
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
     c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], vocab.fn_label(kv[0])))
     c["fn"] = fn if fn in used else ""
@@ -185,7 +187,7 @@ EXPLORER_SORTS = {
     "reach": ("Needed in", "desc", lambda e: (e["reach"], e["adjacent"])),
     "competition": ("Competition", "asc",
                     lambda e: (CROWD_ORDER.get((e["competition"] or {}).get("crowding"), 3), -e["reach"])),
-    "score": ("Fit score", "desc", lambda e: (e["score"] if e["score"] is not None else -1, e["reach"])),
+    "score": ("Opportunity score", "desc", lambda e: (e["score"] if e["score"] is not None else -1, e["reach"])),
     "tam": ("TAM / year", "desc", lambda e: (e["tam"], e["reach"])),
 }  # fmt: skip
 VIEW_TO_SORT = {"reach": "reach", "crosssell": "reach", "feasibility": "score", "competition": "competition",
@@ -216,7 +218,7 @@ def opportunity_explorer(
     """Missing functions and RF band gaps, grouped by big category; any column sorts. Rows set aside are listed
     separately below."""
     c = _ctx(session, co, scope)
-    rows = op.explorer(c["apps"], c["asp"], c["vol"])
+    rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
     decisions = {d.fn: d for d in session.scalars(select(OpportunityDecision))}
     for e in rows:
         d = decisions.get(e["key"])
@@ -224,14 +226,6 @@ def opportunity_explorer(
     sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "reach")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
     c["type_counts"] = Counter(e["gap_type"] for e in rows)
-    # fit as High / Medium / Low against the best score of all functions, so a filter does not move the bands
-    top = max((e["score"] or 0 for e in rows), default=0)
-    for e in rows:
-        e["band"] = (
-            None
-            if e["score"] is None or not top
-            else next(b for b, lim in (("High", 2 / 3), ("Medium", 1 / 3), ("Low", 0)) if e["score"] / top >= lim)
-        )
     if t in op.GAP_TYPE_LABEL:
         rows = [e for e in rows if e["gap_type"] == t]
     elif f != "chips":  # chips we do not make only on request
@@ -266,7 +260,7 @@ def opportunity_explorer(
         gap_labels=op.GAP_TYPE_LABEL,
         path_label=op.PATH_LABEL,
         prox_label=op.PROXIMITY_LABEL,
-        max_score=max((e["score"] or 0 for e in rows), default=0),
+        scoring=scoring.config(),
     )
     return templates.TemplateResponse(request, "business/explorer.html", c)
 
@@ -357,7 +351,9 @@ def shortlist(request: Request, co: str = "combined", session: Session = Depends
 def method(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     c.update(src=op.sources(c["apps"]), help=op.explanations(), prox_label=op.PROXIMITY_LABEL,
-             prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT)  # fmt: skip
+             path_label=op.PATH_LABEL, cfg=scoring.config(),
+             cross={"categories": list(engine.CATEGORY_LABELS.values()), "max_dev": engine.DEFAULT_MAX_DEVIATIONS,
+                    "weights": engine.PRIORITY_WEIGHT, "unknown": engine.UNKNOWN_SEVERITY})  # fmt: skip
     return templates.TemplateResponse(request, "business/method.html", c)
 
 
@@ -622,7 +618,8 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
     c = _ctx(session, co)
     if fn not in c["fns"]:
         raise HTTPException(404, "Function not found")
-    row = next((e for e in op.technology_fit(c["apps"]) if e["fn"] == fn), None)
+    tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
+    row = next((e for e in op.technology_fit(c["apps"], tab) if e["fn"] == fn), None)
     c.update(fn=fn, label=vocab.fn_label(fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
              ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
              tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
@@ -674,7 +671,9 @@ async def mapping(fn: str, request: Request, session: Session = Depends(get_sess
 def data_quality(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     c.update(unofficial=unofficial_counts(session), unofficial_on=get_settings().use_unofficial_data)
-    c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session), queue=quality.queue(session, c["apps"]),
+    tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
+    c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session),
+             queue=quality.queue(session, c["apps"], tab), research=quality.research(c["apps"], tab),
              rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
              mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip
     return templates.TemplateResponse(request, "business/quality.html", c)

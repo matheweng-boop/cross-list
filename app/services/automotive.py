@@ -2,8 +2,10 @@
 automotive product (A automotive today, B qualify it, C variant, D adjacent technology, gap).
 
 A and B come from the parts (blocks._candidates, grade from autograde); C, D and notes from
-data/business/auto_reach.yaml. Reviews (accept / reject) are DataReview rows with dataset "auto_reach" and key
-"<app>:<fn>"; the latest verdict counts. The whole map is built once per data version and review state.
+data/business/auto_reach.yaml. Each letter is also a distance 0–4 (app/services/scoring.py); Top moves are ranked by
+the Opportunity score of the step's function at the step's distance. Reviews (accept / reject) are DataReview rows with
+dataset "auto_reach" and key "<app>:<fn>"; the latest verdict counts. The whole map is built once per data version and
+review state.
 """
 
 import re
@@ -16,7 +18,7 @@ from sqlalchemy.orm import Session
 from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import DataReview
-from app.services import autograde, blocks, vocab
+from app.services import autograde, blocks, scoring, vocab
 from app.services import opportunity as op
 
 FILE = PROJECT_ROOT / "data" / "business" / "auto_reach.yaml"
@@ -121,7 +123,8 @@ def _curated(row: dict) -> dict:
             "confidence": row.get("confidence") or "", "sources": [_source(x) for x in row.get("sources") or []],
             "platforms": _platforms(row.get("platforms")),
             "parts": [{"mpn": m, "manufacturer": "", "url": f"/find?q={m}"} for m in row.get("parts") or []],
-            "case": row.get("case") or ""}  # fmt: skip
+            "case": row.get("case") or "",
+            "distance": scoring.ladder_distance(str(row.get("level") or ""), row.get("distance"))}  # fmt: skip
 
 
 def _cell(row: dict | None, comp: dict | None) -> dict | None:
@@ -138,7 +141,7 @@ def _cell(row: dict | None, comp: dict | None) -> dict | None:
 
 def build(session: Session) -> dict:
     """The map: applications (rows), functions (columns), cells by (app, fn), moves and rejected calls."""
-    key = (blocks._data_version(session), _review_version(session))
+    key = (blocks._data_version(session), _review_version(session), tuple(scoring.review_version(session)))
     if key in _CACHE:
         return _CACHE[key]
     rows, verdicts, cat = _rows(), _verdicts(session), blocks.catalogue()["functions"]
@@ -155,6 +158,7 @@ def build(session: Session) -> dict:
             status = {"correct": "accepted", "wrong": "rejected"}.get(verdicts.get(k), "proposed") if reviewable else ""
             c.update(key=k, app=a["id"], app_label=a["label"], fn=fn, label=vocab.fn_label(fn), status=status,
                      category=(cat.get(fn) or {}).get("category", ""))  # fmt: skip
+            c.setdefault("distance", scoring.ladder_distance(c["level"]))
             cells[(a["id"], fn)] = c
     # RF first, then the radio SoCs and timing, then the catalogue's category order
     lead = ["rf", "radio", "networking", "timing", *blocks.catalogue()["categories"]]
@@ -164,7 +168,14 @@ def build(session: Session) -> dict:
     rv = config().get("rf_view") or {}
     rf = {f for f in columns if fn_cat[f] in (rv.get("categories") or []) or f in (rv.get("functions") or [])}
     live = [c for c in cells.values() if c["status"] != "rejected"]
-    out = {"apps": apps, "columns": columns, "rf": rf, "cells": cells, "moves": _moves(live),
+    tab = scoring.combined(session)
+
+    def score(fn: str, step: dict) -> dict | None:
+        d = step.get("distance")
+        why = f"automotive ladder {step['level']}: {LEVEL_LABEL[step['level']]}"
+        return scoring.rescore(tab, fn, d, why, scoring.conf(step.get("confidence") or "medium"))
+
+    out = {"apps": apps, "columns": columns, "rf": rf, "cells": cells, "moves": _moves(live, score),
            "rejected": [c for c in cells.values() if c["status"] == "rejected"],
            "counts": {lv: sum(1 for c in live if c["level"] == lv) for lv in LEVELS}}  # fmt: skip
     _CACHE.clear()
@@ -172,9 +183,10 @@ def build(session: Session) -> dict:
     return out
 
 
-def _moves(cells: list[dict]) -> list[dict]:
+def _moves(cells: list[dict], score=None) -> list[dict]:
     """The B, C and D steps (a cell's own level, or the next step on a cell we already fill), one per function and
-    step: research demand first, then B and C before D, then how many applications need it."""
+    step, ranked by score(fn, step): the Opportunity score at the step's distance; then research demand, B and C
+    before D, and how many applications need it."""
     by: dict[tuple, dict] = {}
     for c in cells:
         step = c.get("next") if (c.get("next") or {}).get("level") else c
@@ -183,12 +195,13 @@ def _moves(cells: list[dict]) -> list[dict]:
         m = by.setdefault((c["fn"], step["level"], step.get("title") or ""), {
             "fn": c["fn"], "label": step.get("title") or c["label"], "level": step["level"], "apps": [],
             "demand": "", "driver": "", "key": c["key"], "category": c["category"], "now": c["level"],
-            "case": step.get("case") or ""})  # fmt: skip
+            "case": step.get("case") or "", "distance": step.get("distance", scoring.ladder_distance(step["level"])),
+            "opp": score(c["fn"], step) if score else None})  # fmt: skip
         m["apps"].append(c["app_label"])
         if step.get("demand") and _DEMAND.get(step["demand"], 9) < _DEMAND.get(m["demand"], 9):
             m["demand"], m["driver"], m["key"] = step["demand"], step.get("driver") or "", c["key"]
-    return sorted(by.values(), key=lambda m: (_DEMAND.get(m["demand"], 3), m["level"] == "D", -len(m["apps"]),
-                                              m["level"], m["label"]))  # fmt: skip
+    return sorted(by.values(), key=lambda m: (-((m["opp"] or {}).get("score") or -1), _DEMAND.get(m["demand"], 3),
+                                              m["level"] == "D", -len(m["apps"]), m["level"], m["label"]))  # fmt: skip
 
 
 def review(session: Session, key: str, verdict: str, author: str | None = None) -> None:

@@ -26,8 +26,12 @@ FEASIBILITY = {  # product ideas: how far from today's portfolio (0 = not scored
 
 @lru_cache
 def reports() -> tuple[dict, ...]:
+    """Curated feasibility where set, else the one derived from the case's headline feature distance."""
+    from app.services import prelim  # prelim reads reports for the curated feasibility
+
     rows = (yamlio.load(FILE.read_text()) or {}).get("reports") or [] if FILE.exists() else []
-    rows = [{**r, "app_type": r.get("app_type") or "Other", "feasibility": int(r.get("feasibility") or 0)}
+    rows = [{**r, "app_type": r.get("app_type") or "Other",
+             "feasibility": int(r.get("feasibility") or 0) or (prelim.derived_feasibility(r["slug"]) or 0)}
             for r in rows if (BODIES / f"{r['slug']}.html").exists()]  # fmt: skip
     return tuple(sorted(rows, key=lambda r: str(r.get("date") or ""), reverse=True))
 

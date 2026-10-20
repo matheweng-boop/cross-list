@@ -2,8 +2,8 @@
 
 The part gives the function (and, where the catalogue states them, the automotive grade and RF bands); the application
 words choose which reference architectures count. Suggestions are the other functions in those architectures, ordered
-by a visible score: how often they appear with the part, whether they sit in the same block or a connected one, and
-how well the architectures fit the part's grade.
+by Bundle strength (0–100): how often they appear with the part and whether they sit in the same block or a connected
+one. An automotive part whose architectures are mostly not automotive gets a grade flag, not a lower score.
 """
 
 import re
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Part
 from app.partnumbers import normalize_pn
-from app.services import blocks
+from app.services import blocks, scoring
 from app.services import opportunity as op
 from app.services import rf_coverage as rf
 from app.services.pipeline import fn_for_family
@@ -133,8 +133,8 @@ def match_applications(apps: list[op.Application], q: str) -> list[tuple[op.Appl
 
 
 def suggest(session: Session, part: dict, app_q: str = "", co: str = "combined") -> dict:
-    """Functions to offer next to the part in the (matching) architectures that contain its function, ordered by
-    score = together share x (1 + 0.6 same-block share + 0.3 connected share) x grade fit."""
+    """Functions to offer next to the part in the (matching) architectures that contain its function, ordered by Bundle
+    strength (app/services/scoring.py and data/business/scoring.yaml, section bundle)."""
     _, _, mine = op.company(co)
     apps = op.with_status(op.applications(), op.makers(session), mine)
     anchor = part["fns"][0]  # the part's own function; the others it also fills only when no design has that one
@@ -157,12 +157,10 @@ def suggest(session: Session, part: dict, app_q: str = "", co: str = "combined")
         why = op.pair_reasons(sub, anchor, e["fn"])
         share = len(sub) / n
         same, linked = why["same"] / max(why["n"], 1), why["linked"] / max(why["n"], 1)
-        fit = 1.0
-        if part["automotive"]:
-            fit = 0.7 + 0.3 * (sum(a.market == "Automotive" for a in sub) / len(sub))
-        score = share * (1 + 0.6 * same + 0.3 * linked) * fit
-        out.append({**e, "apps": len(sub), "share": share, "same": same, "linked": linked, "fit": fit,
-                    "score": score, "why": why})  # fmt: skip
+        auto = sum(a.market == "Automotive" for a in sub) / len(sub)
+        flag = part["automotive"] and auto < scoring.config()["bundle"]["grade_flag_below"]
+        out.append({**e, "apps": len(sub), "share": share, "same": same, "linked": linked, "auto_share": auto,
+                    "grade_flag": flag, "score": scoring.bundle(share, same, linked), "why": why})  # fmt: skip
     out.sort(key=lambda e: (-e["score"], e["label"]))
     for e in out:
         e["offer"] = offer(session, e["fn"], part, mine) if e["status"] == "supported" else []

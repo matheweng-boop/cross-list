@@ -24,7 +24,7 @@
 </table></div>
 
 <h2>Review queue <span class="small muted">· unreviewed items behind the top-ranked functions, most influential first</span></h2>
-<p class="small muted">Each row is a rating that feeds the Technology fit score of a top-25 function and has not been checked by a person yet.
+<p class="small muted">Each row is a rating that feeds the Opportunity score of a top-25 function and has not been checked by a person yet.
   Low-confidence items come first within a function. Open the evidence page to see the details, then mark the item.</p>
 {% if queue %}
 <div class="table-wrap"><table class="striped small">
@@ -33,6 +33,17 @@
     <td>{{ q.confidence or '–' }}</td><td>{{ review(q.dataset, q.fn, rev, q.confidence, q.check) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small q-ok">Everything behind the top-ranked functions has been reviewed.</p>{% endif %}
+
+<h2 id="research">Research to do <span class="small muted">· low-confidence factors of the scored opportunities, highest score first</span></h2>
+<p class="small muted">A factor with no data counts as the neutral 50 with low confidence; a reviewer's “wrong” lowers a factor one step.
+  These are the gaps in the research behind the Opportunity explorer: filling them firms up (or moves) a score. <a href="/business/method#score">How the score works</a></p>
+{% if research %}{% set n_fns = research|map(attribute='fn')|unique|list|length %}
+<details class="small"{% if research|length <= 15 %} open{% endif %}><summary>{{ research|length }} factor{{ 's' if research|length != 1 }} in {{ n_fns }} function{{ 's' if n_fns != 1 }}</summary>
+<div class="table-wrap"><table class="striped small">
+  <thead><tr><th>Function</th><th>Score</th><th>Factor</th><th>Today</th></tr></thead>
+  <tbody>{% for q in research %}<tr><td><a href="/business/evidence/{{ q.fn }}?co={{ co }}">{{ q.label }}</a></td><td>{{ q.score }} <small class="muted">{{ q.band }}</small></td><td>{{ q.factor }}</td><td>{{ q.basis }}</td></tr>{% endfor %}</tbody>
+</table></div></details>
+{% else %}<p class="small q-ok">Every factor behind the scored opportunities has at least medium confidence.</p>{% endif %}
 
 <h2>Automated checks</h2>
 {% for c in checks %}

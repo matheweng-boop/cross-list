@@ -430,16 +430,12 @@ MARKET_GROUPS = {
 # ---- technology fit: frequent functions ranked by closeness to the portfolio's technology ---------------
 _TECHNOLOGY = _COMPETITION.parent / "technology.yaml"
 PROXIMITY_LABEL = {3: "Same technology", 2: "Adjacent", 1: "Distant", 0: "Unrelated"}
-PROXIMITY_WEIGHT = {3: 1.0, 2: 0.6, 1: 0.3, 0: 0.1}
-CROWDING_WEIGHT = {"low": 1.0, "medium": 0.9, "high": 0.75}
-# path to product (data/business/evidence/path.yaml) replaces the technology rating where present; trend multiplies
+# path to product (data/business/evidence/path.yaml); scored as a distance 0–4 in app/services/scoring.py
 PATH_LABEL = {"exists": "Already in portfolio (mapping missing)", "variant": "Spec variant of an existing line",
               "new_design": "New design on our technology", "new_capability": "New technology: partner / acquire",
               "not_pursue": "Not ours to build"}  # fmt: skip
 PATH_SHORT = {"exists": "Exists?", "variant": "Spec variant", "new_design": "New design",
               "new_capability": "New technology", "not_pursue": "Not ours"}  # fmt: skip
-PATH_WEIGHT = {"exists": 1.0, "variant": 1.0, "new_design": 0.6, "new_capability": 0.3, "not_pursue": 0.1}
-TREND_WEIGHT = {"growing": 1.15, "stable": 1.0, "declining": 0.85}
 EVIDENCE_TOPICS = {"path": "Path to product", "patents": "Patents", "foundry": "Foundry route",
                    "competitor_tech": "Competitor technology", "trends": "Market trend"}  # fmt: skip
 FIT_ORDER = {"high": 0, "medium": 1, "low": 2}
@@ -471,11 +467,13 @@ def technology() -> dict[str, dict]:
     return (yamlio.load(_TECHNOLOGY.read_text()) if _TECHNOLOGY.exists() else None) or {}
 
 
-def technology_fit(apps: list[Application]) -> list[dict]:
-    """Functions the portfolio does not cover (gap, competitor-only or not our product type) by how often they
-    occur in all diagrams (library + background), weighted by technology proximity and competition.
-    score = share of applications x proximity weight x crowding weight. Door-opener share is shown, not scored:
-    this list is about frequency, not attach."""
+def technology_fit(apps: list[Application], scores: dict | None = None) -> list[dict]:
+    """Functions the portfolio does not cover (gap, competitor-only or not our product type) by their Opportunity
+    score (app/services/scoring.py; pass a table from scoring.for_session to reuse it with reviews applied). Customer
+    parts and functions that are not ours to build carry no score and come last."""
+    from app.services import scoring  # scoring builds on this module
+
+    tab = scores or scoring.table(apps)
     tech, comp, n = technology(), competition(), len(apps) or 1
     rows: dict[str, dict] = {}
     for a in apps:
@@ -495,29 +493,11 @@ def technology_fit(apps: list[Application]) -> list[dict]:
     paths, trends = evidence("path"), evidence("trends")
     for fn, e in rows.items():
         t = tech.get(fn) or {}
-        prox = t.get("proximity")
-        c = comp.get(fn) or {}
-        pa, tr = paths.get(fn) or {}, trends.get(fn) or {}
-        e.update(proximity=prox, tech=t.get("tech") or [], reasoning=t.get("reasoning", ""), competition=c or None,
-                 share=e["reach"] / n, adjacency=e["adjacent"] / e["reach"])  # fmt: skip
-        e.update(path=pa or None, trend=tr or None)
-        e["factors"] = factors = [("Applications", e["share"], f"{e['reach']} of {n} use it")]
-        if pa.get("path") in PATH_WEIGHT:
-            note = f"path: {PATH_LABEL[pa['path']]}"
-            if prox is not None:
-                note += f" (replaces technology rating {PROXIMITY_LABEL[prox]} {PROXIMITY_WEIGHT[prox]})"
-            factors.append(("Path to product", PATH_WEIGHT[pa["path"]], note))
-        else:
-            label = PROXIMITY_LABEL.get(prox, "not rated")
-            factors.append(("Technology", PROXIMITY_WEIGHT.get(prox, 0.05), f"rating: {label}"))
-        crowd = c.get("crowding")
-        factors.append(("Competition", CROWDING_WEIGHT.get(crowd, 0.85), CROWDING_LABEL.get(crowd, "not assessed")))
-        if tr.get("outlook") in TREND_WEIGHT:
-            factors.append(("Trend", TREND_WEIGHT[tr["outlook"]], f"outlook: {tr['outlook']}"))
-        e["score"] = 1.0
-        for _, w, _ in factors:
-            e["score"] *= w
-    return sorted(rows.values(), key=lambda e: (-e["score"], -e["reach"], e["label"]))
+        e.update(proximity=t.get("proximity"), tech=t.get("tech") or [], reasoning=t.get("reasoning", ""),
+                 competition=comp.get(fn) or None, share=e["reach"] / n, adjacency=e["adjacent"] / e["reach"],
+                 path=paths.get(fn) or None, trend=trends.get(fn) or None,
+                 **scoring.fields(tab["rows"].get(fn)))  # fmt: skip
+    return sorted(rows.values(), key=lambda e: (e["score"] is None, -(e["score"] or 0), -e["reach"], e["label"]))
 
 
 # ---- where to hunt: companies that build the applications (public, indicative) ------------------------------
@@ -572,7 +552,7 @@ def platforms_for(fn: str) -> list[tuple[str, dict]]:
     return [(k, p) for k, p in capabilities().items() if fn in (p.get("functions") or [])]
 
 
-# ---- opportunity explorer: one row per function, several views; formulas unchanged ---------------------------
+# ---- opportunity explorer: one row per function, several views, one score ---------------------------
 GAP_TYPE_LABEL = {
     "band_gap": "Band gap – we sell the function, not for this band or power",
     "candidate": "Candidate exists – requirements not validated",
@@ -604,11 +584,14 @@ def in_scope(apps: list[Application], scope: str) -> list[Application]:
     return [a for a in apps if not a.background] if scope == "library" else apps
 
 
-def explorer(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
-    """Union of the gap ranking (reach, door openers, sockets, TAM) and the technology-fit ranking (path / technology,
-    competition, trend, score) per function, with its gap type. Both formulas are the existing ones."""
+def explorer(apps: list[Application], asp: dict, vol: dict, scores: dict | None = None) -> list[dict]:
+    """Union of the gap ranking (reach, door openers, sockets, TAM) and the technology-fit ranking per function, with
+    its gap type and Opportunity score; RF band gaps follow with their own score."""
+    from app.services import scoring
+
+    tab = scores or scoring.table(apps, asp, vol)
     gap = {e["fn"]: e for e in gaps(apps, asp, vol)}
-    fit = {e["fn"]: e for e in technology_fit(apps)}
+    fit = {e["fn"]: e for e in technology_fit(apps, tab)}
     paths = evidence("path")
     out = []
     for fn in {*gap, *fit}:
@@ -622,12 +605,12 @@ def explorer(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
             "adjacency": (base.get("adjacent", 0) / reach) if reach else 0,
             "tam": g.get("tam", 0.0), "tam_apps": g.get("tam_apps", 0),
             "competition": competition().get(fn), "path": paths.get(fn), "proximity": f.get("proximity"),
-            "trend": evidence("trends").get(fn), "score": f.get("score"), "factors": f.get("factors") or [],
+            "trend": evidence("trends").get(fn),
             "background": f.get("background", sum(a.background for a in apps if any(p.fn == fn for p in a.positions))),
-            "key": fn, "group": group_of(fn),
+            "key": fn, "group": group_of(fn), **scoring.fields(tab["rows"].get(fn)),
         }  # fmt: skip
         out.append(row)
-    return out + rf_band_rows()
+    return out + [{**r, **scoring.band_row(tab, r)} for r in rf_band_rows()]
 
 
 # big categories that group the explorer: function category ids (data/blocks/functions.yaml) per group, in order
@@ -666,7 +649,8 @@ def rf_band_rows() -> list[dict]:
         out.append({
             "fn": g["fn"], "key": f"{g['fn']}@{b['id']}" + (f"@{g['power_label']}" if g["power_label"] else ""),
             "label": label, "status": "competitor" if g["comp"] else "gap", "gap_type": "band_gap",
-            "band_note": BAND_KINDS[g["kind"]], "rf_link": f"/business/rf-coverage?fn={g['fn']}&band={b['id']}",
+            "band_note": BAND_KINDS[g["kind"]], "rf_kind": g["kind"],
+            "rf_link": f"/business/rf-coverage?fn={g['fn']}&band={b['id']}",
             "reach": g["need"], "positions": g["need"], "adjacent": 0, "adjacency": 0, "tam": 0.0, "tam_apps": 0,
             "competition": {"crowding": _crowding(len(vendors)), "vendors": vendors} if vendors else None,
             "path": None, "proximity": None, "trend": None, "score": None, "factors": [], "background": 0,

@@ -2,13 +2,14 @@
 
 import re
 import urllib.parse
+from datetime import date, timedelta
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import or_, select
+from sqlalchemy.orm import Session, noload
 
 from app.auth.deps import get_current_user
 from app.config import get_settings
@@ -23,7 +24,7 @@ from app.matching.engine import (
     format_value,
 )
 from app.matching.rules import get_rules, load_all_rules
-from app.models import ChangeEvent, Package, Part, User
+from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
 from app.services import alternates, cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
 from app.services.compare import compare_parts
 from app.services.queries import (
@@ -680,7 +681,9 @@ def compare_page(
         family = matches[0].family
     support = family_support(session)
     family = family or next((k for k, e in support.items() if e["parts"]), next(iter(support)))
-    available = list(session.scalars(select(Part).where(Part.family == family).order_by(Part.mpn)).unique())
+    # the series list shows part number, maker and package only: no parameters loaded
+    q = select(Part).where(Part.family == family).order_by(Part.mpn).options(noload(Part.params))
+    available = list(session.scalars(q).unique())
     series: dict[str, list[Part]] = {}
     for p in available:
         series.setdefault(series_of(p.mpn), []).append(p)
@@ -726,14 +729,21 @@ def compare_download(fmt: str, ids: str, baseline: int | None = None, session: S
 
 @router.get("/lifecycle", response_class=HTMLResponse)
 def lifecycle_page(request: Request, session: Session = Depends(get_session)):
-    parts = list(session.scalars(select(Part)).unique())
-    new_parts = sorted((p for p in parts if _is_new(p)), key=lambda p: p.release_date, reverse=True)
+    # only the parts the page lists are loaded (with their parameters), not all of them
+    since = date.today() - timedelta(days=get_settings().new_part_days)
+    recent = or_(Part.release_date >= since, Part.lifecycle_status == LifecycleStatus.preview)
+    candidates = session.scalars(select(Part).where(Part.release_date.is_not(None), recent)).unique()
+    new_parts = sorted((p for p in candidates if _is_new(p)), key=lambda p: p.release_date, reverse=True)
     at_risk = sorted(
-        (p for p in parts if p.lifecycle_status in LIFECYCLE_RISK),
+        session.scalars(select(Part).where(Part.lifecycle_status.in_(list(LIFECYCLE_RISK)))).unique(),
         key=lambda p: (p.lifecycle_status.value, p.mpn),
     )
     events = list(session.scalars(select(ChangeEvent).order_by(ChangeEvent.detected_at.desc()).limit(100)).unique())
-    recent_revisions = sorted((p for p in parts if p.datasheet_date), key=lambda p: p.datasheet_date, reverse=True)[:15]
+    recent_revisions = list(
+        session.scalars(
+            select(Part).where(Part.datasheet_date.is_not(None)).order_by(Part.datasheet_date.desc()).limit(15)
+        ).unique()
+    )
     return templates.TemplateResponse(
         request,
         "lifecycle.html",

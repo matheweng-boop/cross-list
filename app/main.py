@@ -75,6 +75,10 @@ def _warm_caches() -> None:
         try:
             blocks.counts(session)
             blocks.requirements(session)
+            products.index(session)
+            from app.services import validation
+
+            validation._part_checks(session)
         finally:
             session.close()
     except Exception:  # a failed warm-up only means the first request does the work

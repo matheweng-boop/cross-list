@@ -38,7 +38,20 @@ def _item(priority: str, area: str, title: str, why: str, impact: str, link: str
     }
 
 
-def scan(session: Session) -> dict:
+_PART_CHECKS: dict = {}
+
+
+def _part_checks(session: Session) -> tuple[dict, list]:
+    """The checks over parts and catalogues depend only on the part data: worked out once per data version (they
+    read every part with its parameters, about a second for 4,000 parts)."""
+    v = blocks._data_version(session)
+    if v not in _PART_CHECKS:
+        _PART_CHECKS.clear()
+        _PART_CHECKS[v] = _part_checks_uncached(session)
+    return _PART_CHECKS[v]
+
+
+def _part_checks_uncached(session: Session) -> tuple[dict, list]:
     areas: dict[str, dict] = {}
     items: list[dict] = []
 
@@ -227,6 +240,13 @@ def scan(session: Session) -> dict:
             )
         )
     areas["Manufacturer catalogues"] = {"records": len(rows), "checks": checks}
+    return areas, items
+
+
+def scan(session: Session) -> dict:
+    pa, pi = _part_checks(session)
+    areas: dict[str, dict] = dict(pa)
+    items: list[dict] = [dict(i) for i in pi]
 
     # ---- function mapping and qualification for the business analysis -----------------------------------------
     mine = op.COMPANIES["combined"][1]

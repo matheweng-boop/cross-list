@@ -120,8 +120,20 @@ def search_catalogue(q: str, exclude: set[str] | None = None, limit: int = 200) 
     return hits[:limit]
 
 
+_INDEX: dict = {}
+
+
 def index(session: Session) -> list[dict]:
-    """Every product once: catalogue records, merged with BizDev parts of the same identity."""
+    """Every product once: catalogue records, merged with BizDev parts of the same identity. Built once per data
+    version (it reads every part with its parameters); callers only read the rows."""
+    v = blocks._data_version(session)
+    if v not in _INDEX:
+        _INDEX.clear()
+        _INDEX[v] = _index_uncached(session)
+    return _INDEX[v]
+
+
+def _index_uncached(session: Session) -> list[dict]:
     rows = {k: {**v, "caps": set(v["caps"])} for k, v in _catalogue_index().items()}
     rules = load_all_rules()
     fam_sub = taxonomy()["families"]

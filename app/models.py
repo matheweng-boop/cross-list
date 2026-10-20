@@ -490,3 +490,25 @@ class SiteFeedback(Base):
     response: Mapped[str | None] = mapped_column(Text)
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class Upload(Base):
+    """A picture, block diagram, document or written explanation added on Data management > Uploads, kept for use in
+    the library and the knowledge pages. The file itself is stored under the data directory (uploads/)."""
+
+    __tablename__ = "uploads"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    kind: Mapped[str] = mapped_column(String(20), default="picture")  # picture | block_diagram | document | explanation
+    explanation: Mapped[str | None] = mapped_column(Text)
+    topic: Mapped[str | None] = mapped_column(String(200))  # application, function, part number or page it is about
+    source: Mapped[str | None] = mapped_column(String(500))  # where it comes from (URL or reference), if public
+    file_name: Mapped[str | None] = mapped_column(String(200))  # stored name under uploads/
+    original_name: Mapped[str | None] = mapped_column(String(200))
+    content_type: Mapped[str | None] = mapped_column(String(60))
+    size: Mapped[int | None] = mapped_column(Integer)
+    author: Mapped[str | None] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(20), default="new")  # new | used | archived
+    note: Mapped[str | None] = mapped_column(Text)  # what was done with it
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

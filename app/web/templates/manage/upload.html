@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ u.title }} – Uploads – BizDev{% endblock %}
+{% block content %}
+<p class="small"><a href="/manage/uploads">← All uploads</a></p>
+<h1>{{ u.title }}</h1>
+<p class="small muted">{{ kinds.get(u.kind, u.kind) }} · {{ statuses.get(u.status, u.status) }} · added {{ u.created_at.strftime('%d %b %Y %H:%M') }}{% if u.author %} by {{ u.author }}{% endif %}{% if u.topic %} · about {{ u.topic }}{% endif %}
+  {% if u.source %} · source: {% if u.source.startswith('https://') or u.source.startswith('http://') %}<a href="{{ u.source }}" target="_blank" rel="noopener noreferrer">{{ u.source }} ↗</a>{% else %}{{ u.source }}{% endif %}{% endif %}</p>
+
+{% if u.file_name %}
+  {% if u.content_type.startswith('image/') %}<p><a href="/manage/uploads/{{ u.id }}/file" target="_blank" rel="noopener"><img class="up-full" src="/manage/uploads/{{ u.id }}/file" alt="{{ u.title }}"></a></p>
+  {% else %}<p><a role="button" class="outline" href="/manage/uploads/{{ u.id }}/file" target="_blank" rel="noopener">Open the PDF ({{ (u.size / 1024)|round|int }} kB)</a></p>{% endif %}
+{% endif %}
+{% if u.explanation %}<div class="pl-card up-text">{% for para in u.explanation.split('\n\n') %}<p>{{ para }}</p>{% endfor %}</div>{% endif %}
+
+<details class="pl-card"><summary><b>Edit, file or delete</b></summary>
+  <form method="post" action="/manage/uploads/{{ u.id }}" class="up-form">
+    <div class="up-row">
+      <label>Type <select name="kind">{% for k, label in kinds.items() %}<option value="{{ k }}"{{ ' selected' if k == u.kind }}>{{ label }}</option>{% endfor %}</select></label>
+      <label>Status <select name="status">{% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if k == u.status }}>{{ label }}</option>{% endfor %}</select></label>
+    </div>
+    <label>Title <input name="title" maxlength="200" value="{{ u.title }}" required></label>
+    <label>Explanation <textarea name="explanation" rows="6">{{ u.explanation or '' }}</textarea></label>
+    <div class="up-row">
+      <label>About <input name="topic" maxlength="200" value="{{ u.topic or '' }}"></label>
+      <label>Source <input name="source" maxlength="500" value="{{ u.source or '' }}"></label>
+    </div>
+    <label>What was done with it <input name="note" maxlength="4000" value="{{ u.note or '' }}" placeholder="e.g. added to the library as template 160"></label>
+    <button type="submit">Save</button>
+  </form>
+  <form method="post" action="/manage/uploads/{{ u.id }}/delete" onsubmit="return confirm('Delete this upload and its file?')">
+    <button type="submit" class="outline secondary small-btn">Delete</button></form>
+</details>
+{% endblock %}

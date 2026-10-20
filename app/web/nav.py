@@ -35,6 +35,7 @@ NAV = (
 UTILITY = ("manage", "Data management", (
     ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
     ("Site feedback", "/manage/feedback", "Daily digest of the Feedback button, with responses"),
+    ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
     ("Commercial inputs", "/business/data", "ASPs and volumes behind revenue figures"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
@@ -80,6 +81,7 @@ PLACES = {
     "/rules": ("manage", "/business/method"),
     "/requests": ("manage", "/manage/reviews"),
     "/manage/feedback": ("manage", "/manage/feedback"),
+    "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage": ("manage", "/manage/reviews"),
     "/technical": ("knowledge", "/technical"),
     "/notes": ("knowledge", "/technical"),

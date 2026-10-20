@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro url() -%}
-  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view} -%}{%- set _ = base.update(kwargs) -%}
+  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view if view != 'types' else '', 'atype': atype, 'sub': sub} -%}{%- set _ = base.update(kwargs) -%}
   /reference-designs?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro fchip(f) %}<a class="lg rd-fn {{ {'supported': 'lg-have', 'gap': 'lg-opp', 'competitor': 'lg-opp'}.get(status.get(f), 'lg-ext') }}" href="{{ url(fn=f) }}" title="{{ bo_status_help.get(status.get(f), '') }}">{{ label[f] }}</a>{% endmacro %}
@@ -10,12 +10,14 @@
   Functions are marked <span class="lg lg-have">we have a part</span> or <span class="lg lg-opp">no part of ours</span>; customer parts are grey.</p>
 
 <form method="get" action="/reference-designs" class="rd-search" role="search">
-  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view if view != 'types' else '', 'atype': atype, 'sub': sub}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
   <input type="search" name="q" value="{{ q }}" placeholder="Search title, part number or application, e.g. traction inverter, UCC21750" aria-label="Search reference designs">
   <button type="submit">Search</button>
 </form>
 
 <div class="scope-bar small filter-cols">
+  <div class="chip-row"><span class="chip-lbl">Application type</span><a class="fchip{{ ' on' if not atype }}" href="{{ url(atype='', sub='', page=1) }}">All</a>{% for t in tree %}<a class="fchip{{ ' on' if atype == t.type }}" href="{{ url(atype=t.type, sub='', page=1, view=view if view == 'families' else '') }}">{{ t.type }} <small>{{ t.n }}</small></a>{% endfor %}</div>
+  {% if atype %}{% set cur = tree|selectattr('type', 'eq', atype)|first %}{% if cur %}<div class="chip-row"><span class="chip-lbl">{{ 'Frequency band' if atype == 'RF & communications' else 'Voltage class' }}</span><a class="fchip{{ ' on' if not sub }}" href="{{ url(sub='', page=1) }}">All</a>{% for k, c in cur.subs %}<a class="fchip{{ ' on' if sub == k }}" href="{{ url(sub=k, page=1) }}">{{ k }} <small>{{ c }}</small></a>{% endfor %}</div>{% endif %}{% endif %}
   <div class="chip-row"><span class="chip-lbl">Manufacturer</span><a class="fchip{{ ' on' if not vendor }}" href="{{ url(vendor='') }}">All</a>{% for k, c in facets.vendor %}<a class="fchip{{ ' on' if vendor == k }}" href="{{ url(vendor=k) }}">{{ k|vendor }} <small>{{ c }}</small></a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">End market</span><a class="fchip{{ ' on' if not market }}" href="{{ url(market='') }}">All</a>{% for k, c in facets.market[:10] %}<a class="fchip{{ ' on' if market == k }}" href="{{ url(market=k) }}">{{ k }} <small>{{ c }}</small></a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">Show only</span>
@@ -27,8 +29,15 @@
   <div class="rd-fn-grid">{% for k, c in facets.function %}<a class="fchip{{ ' on' if fn == k }}" href="{{ url(fn=k) }}">{{ label[k] }} <small>{{ c }}</small></a>{% endfor %}</div>
 </details>
 
-<nav class="rd-view small" aria-label="View"><a class="fchip{{ ' on' if not view }}" href="{{ url(view='', page=1) }}">Designs <small>{{ '{:,}'.format(n) }}</small></a><a class="fchip{{ ' on' if view }}" href="{{ url(view='families', page=1) }}">Product families{% if view %} <small>{{ '{:,}'.format(n_items) }}</small>{% endif %}</a></nav>
-<p class="small muted">{% if view %}{{ '{:,}'.format(n_items) }} famil{{ 'ies' if n_items != 1 else 'y' }} used in {{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}, most used first. A family groups part numbers that differ only in the last digits (1EDI3025AS and 1EDI3035AS are 1EDI30xxAS); a part number without such a series stands alone.{% else %}{{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}{% endif %}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>
+<nav class="rd-view small" aria-label="View"><a class="fchip{{ ' on' if view == 'types' }}" href="/reference-designs?view=types{{ '&q=' ~ q|urlencode if q }}">By application type</a><a class="fchip{{ ' on' if not view }}" href="{{ url(view='list', page=1) }}">Designs <small>{{ '{:,}'.format(n) }}</small></a><a class="fchip{{ ' on' if view == 'families' }}" href="{{ url(view='families', page=1) }}">Product families{% if view == 'families' %} <small>{{ '{:,}'.format(n_items) }}</small>{% endif %}</a></nav>
+{% if view == 'types' %}
+<p class="small muted">{{ '{:,}'.format(n) }} designs in {{ tree|length }} broad application types. Within a type: frequency band for RF, voltage class (the highest voltage the design names) for the others; where the design names none, the typical class of its application is used (e.g. grid or traction → above 600 V, cellular radio unit → 1–6 GHz).</p>
+<div class="rd-types">{% for t in tree %}
+  <section class="rd-type"><h3><a href="{{ url(atype=t.type, sub='', view='list', page=1) }}">{{ t.type }}</a> <small class="muted">{{ t.n }}</small></h3>
+    <ul class="small">{% for k, c in t.subs %}<li><a href="{{ url(atype=t.type, sub=k, view='list', page=1) }}">{{ k }}</a> <span class="muted">{{ c }}</span></li>{% endfor %}</ul></section>{% endfor %}
+</div>
+{% endif %}
+{% if view != 'types' %}<p class="small muted">{% if view == 'families' %}{{ '{:,}'.format(n_items) }} famil{{ 'ies' if n_items != 1 else 'y' }} used in {{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}, most used first. A family groups part numbers that differ only in the last digits (1EDI3025AS and 1EDI3035AS are 1EDI30xxAS); a part number without such a series stands alone.{% else %}{{ '{:,}'.format(n) }} design{{ 's' if n != 1 }}{% endif %}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>{% endif %}
 {% for f in fams %}
 <details class="rd-fam">
   <summary><b>{{ f.family }}</b> <span class="small muted">{{ f.vendor|vendor }} · {{ f.members|length }} part{{ 's' if f.members|length != 1 }} · in {{ f.designs|length }} design{{ 's' if f.designs|length != 1 }}{% if f.markets %} · {% for m, k in f.markets %}{{ m }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}</span></summary>

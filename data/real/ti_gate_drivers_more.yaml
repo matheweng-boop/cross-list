@@ -16,6 +16,14 @@ packages:
   body_width_mm: 3.9
   span_mm: 6.0
   height_mm: 1.75
+- code: SOIC-8 (D)
+  name: TI D 8-pin
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 4.9
+  body_width_mm: 3.9
+  span_mm: 6.0
+  height_mm: 1.75
 - code: WSON-13 DLG (4x4)
   name: TI DLG0013A 13-pin WSON 4 x 4 mm, two thermal pads
   pin_count: 13
@@ -43,6 +51,14 @@ packages:
   height_mm: 2.65
   positions_total: 16
   pin_positions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16]
+- code: SOIC-8 (DWL)
+  name: TI DWL 8-pin extra-wide SOIC (14 mm body)
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 6.4
+  body_width_mm: 14.0
+  span_mm: 16.6
+  height_mm: 4.03
 - code: SOIC-8 (DWV)
   name: TI DWV 8-pin
   pin_count: 8
@@ -346,6 +362,31 @@ datasheets:
   sha256: 1dea664f93a80385e181032cce94a29e6605e4c200b245e12e986988ecaebb72
   revision: '*'
   revision_date: '2023-08-01'
+- file: ucc5390.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  sha256: eb278e53fd6c50cee816e6683c06f4fd13001b953911f4e36ccf7d2c554de877
+  revision: J
+  revision_date: '2024-08-01'
+- file: ucc5350-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc5350-q1.pdf
+  sha256: 47302ddce5839f086919a32186fc191ded5ba81492a867feb8b309af92154fcd
+  revision: G
+  revision_date: '2025-01-01'
+- file: ucc5390-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc5390-q1.pdf
+  sha256: 50408b0e88c36242bed373ec2f0aa05dbc031c1de83458c57264364ed0dec70b
+  revision: B
+  revision_date: '2024-02-01'
+- file: ucc5350l-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc5350l-q1.pdf
+  sha256: f265159b5e7d68ec8baf32f44c37cdae4a2fe7d077b4257afd1a541343723896
+  revision: '*'
+  revision_date: '2025-03-01'
+- file: ucc5304.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc5304.pdf
+  sha256: 5b684c186a82ca1661dbe498c3c0943dc536cc3ea4f2c1e3f14d49b5218556c7
+  revision: B
+  revision_date: '2020-04-01'
 parts:
 - mpn: ISO5451DWR
   manufacturer: TI
@@ -6146,3 +6187,1099 @@ parts:
     fall_time_ns: ucc23113.pdf p7 (max; no typ given)
     pwd_ns: ucc23113.pdf p7 (max)
     pinout: ucc23113.pdf p3
+- mpn: UCC5310MCDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5310: 4.3A/2.2A single-channel basic/reinforced isolated gate driver with miller clamp, 12-V UVLO, SOIC-8
+    (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5310
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2018-06-13'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/13/2018 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.3
+    peak_sink_a: 2.2
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 75.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 119.8
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p9 (VISO 5000 VRMS, DWV package)
+    isolation_class: ucc5390.pdf p9 (reinforced insulation, DWV package)
+    creepage_mm: ucc5390.pdf p9 (CPG, DWV package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (UCC5310MC tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO, Miller clamp (M version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (DWV)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5310MCDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5310: 4.3A/2.2A single-channel basic/reinforced isolated gate driver with miller clamp, 12-V UVLO, SOIC-8
+    (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5310
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-06-30'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/30/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.3
+    peak_sink_a: 2.2
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 75.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (UCC5310MC tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO, Miller clamp (M version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5320ECDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5320: 4A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, GND2, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5320
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-06-30'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/30/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.3
+    peak_sink_a: 4.4
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 75.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 12.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ, referenced to GND2)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (UCC5320 tPHL max 75 ns; tPLH max 72 ns)
+    protection: ucc5390.pdf p1 (UVLO referenced to GND2 (E version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (UCC5320, typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5320SCDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5320: 4A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5320
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-06-30'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/30/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.3
+    peak_sink_a: 4.4
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 75.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 12.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (UCC5320 tPHL max 75 ns; tPLH max 72 ns)
+    protection: ucc5390.pdf p1 (UVLO; split outputs (S version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (UCC5320, typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5320SCDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5320: 4A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5320
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2018-06-13'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/13/2018 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.3
+    peak_sink_a: 4.4
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 75.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 119.8
+    iq_ma: 1.67
+    rise_time_ns: 12.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p9 (VISO 5000 VRMS, DWV package)
+    isolation_class: ucc5390.pdf p9 (reinforced insulation, DWV package)
+    creepage_mm: ucc5390.pdf p9 (CPG, DWV package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (UCC5320 tPHL max 75 ns; tPLH max 72 ns)
+    protection: ucc5390.pdf p1 (UVLO; split outputs (S version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (DWV)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (UCC5320, typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5350SBDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350: 10A/10A single-channel basic/reinforced isolated gate driver with miller clamp or split output, 8-V
+    UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5350
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-09-27'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 09/27/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 8.5
+    peak_sink_a: 10.0
+    uvlo_v: 8
+    output_supply_v: [9.5, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (8-V UVLO version, VCC2 rising 8.7 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO; split outputs (SB version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5350MCDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350: 10A/10A single-channel basic/reinforced isolated gate driver with miller clamp or split output, 12-V
+    UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5350
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-08-14'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 08/14/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 10.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO, Miller clamp (M version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5350MCDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350: 10A/10A single-channel basic/reinforced isolated gate driver with miller clamp or split output, 12-V
+    UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5350
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-06-30'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/30/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 10.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 119.8
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p9 (VISO 5000 VRMS, DWV package)
+    isolation_class: ucc5390.pdf p9 (reinforced insulation, DWV package)
+    creepage_mm: ucc5390.pdf p9 (CPG, DWV package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO, Miller clamp (M version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (DWV)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5390SCDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5390: 17A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5390
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-08-14'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 08/14/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 17.0
+    peak_sink_a: 17.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO; split outputs (S version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5390ECDWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5390: 17A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, GND2, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5390
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2018-04-25'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 04/25/2018 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 17.0
+    peak_sink_a: 17.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 119.8
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p9 (VISO 5000 VRMS, DWV package)
+    isolation_class: ucc5390.pdf p9 (reinforced insulation, DWV package)
+    creepage_mm: ucc5390.pdf p9 (CPG, DWV package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ, referenced to GND2)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO referenced to GND2 (E version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (DWV)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5390ECDR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5390: 17A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, GND2, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5390
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2017-08-14'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 08/14/2017 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 17.0
+    peak_sink_a: 17.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ, referenced to GND2)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO referenced to GND2 (E version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5390SCDRG4
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5390: 17A single-channel basic/reinforced isolated gate driver, split output or emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  datasheet: ucc5390.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390.pdf
+  product_url: https://www.ti.com/product/UCC5390
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2025-03-21'
+    revision: J
+    revision_date: '2024-08-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/21/2025 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 17.0
+    peak_sink_a: 17.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390.pdf p8 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5390.pdf p8 (basic insulation, D8 package)
+    creepage_mm: ucc5390.pdf p8 (CPG, D8 package)
+    qualification: ucc5390.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5390.pdf p1, p13 (CMTI min)
+    channel_config: ucc5390.pdf p1 (single channel)
+    input_type: ucc5390.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390.pdf p1, p12 (typ)
+    peak_sink_a: ucc5390.pdf p1, p12 (typ)
+    uvlo_v: ucc5390.pdf p11 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5390.pdf p6 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390.pdf p13 (tPLH/tPHL max)
+    protection: ucc5390.pdf p1 (UVLO; split outputs (S version))
+    temp_range_c: ucc5390.pdf p6 (ambient)
+    theta_ja_c_w: ucc5390.pdf p7 (D8)
+    iq_ma: ucc5390.pdf p11 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    fall_time_ns: ucc5390.pdf p13 (typ, 1 nF)
+    pwd_ns: ucc5390.pdf p13 (max)
+    pinout: ucc5390.pdf p4 (pin configuration for this option)
+- mpn: UCC5350SBQDRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350-Q1: Automotive, 10A single-channel basic/reinforced isolated gate driver, miller clamp or split output,
+    8-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  datasheet: ucc5350-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5350-q1.pdf
+  product_url: https://www.ti.com/product/UCC5350-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2022-09-26'
+    revision: G
+    revision_date: '2025-01-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 09/26/2022 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: automotive
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 8.5
+    peak_sink_a: 10.0
+    uvlo_v: 8
+    output_supply_v: [9.5, 33.0]
+    prop_delay_ns: 70.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5350-q1.pdf p7 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5350-q1.pdf p7 (basic insulation, D8 package)
+    creepage_mm: ucc5350-q1.pdf p7 (CPG, D8 package)
+    qualification: ucc5350-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc5350-q1.pdf p1, p11 (CMTI min)
+    channel_config: ucc5350-q1.pdf p1 (single channel)
+    input_type: ucc5350-q1.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5350-q1.pdf p1, p10 (typ)
+    peak_sink_a: ucc5350-q1.pdf p1, p10 (typ)
+    uvlo_v: ucc5350-q1.pdf p10 (8-V UVLO version, VCC2 rising 8.7 V typ)
+    output_supply_v: ucc5350-q1.pdf p5 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5350-q1.pdf p11 (tPLH/tPHL max)
+    protection: ucc5350-q1.pdf p1 (UVLO; split outputs (SB version))
+    temp_range_c: ucc5350-q1.pdf p5 (junction temperature range; the datasheet gives no ambient range)
+    theta_ja_c_w: ucc5350-q1.pdf p5 (D8)
+    iq_ma: ucc5350-q1.pdf p10 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5350-q1.pdf p11 (typ, 1 nF)
+    fall_time_ns: ucc5350-q1.pdf p11 (typ, 1 nF)
+    pwd_ns: ucc5350-q1.pdf p11 (max)
+    pinout: ucc5350-q1.pdf p4 (pin configuration for this option)
+- mpn: UCC5350MCQDWVRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350-Q1: Automotive, 10A single-channel basic/reinforced isolated gate driver, miller clamp or split output,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5350-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5350-q1.pdf
+  product_url: https://www.ti.com/product/UCC5350-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-06-30'
+    revision: G
+    revision_date: '2025-01-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 06/30/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 10.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 70.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 119.8
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5350-q1.pdf p7-8 (VISO 5000 VRMS, DWV package)
+    isolation_class: ucc5350-q1.pdf p7-8 (reinforced insulation, DWV package)
+    creepage_mm: ucc5350-q1.pdf p7-8 (CPG, DWV package)
+    qualification: ucc5350-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc5350-q1.pdf p1, p11 (CMTI min)
+    channel_config: ucc5350-q1.pdf p1 (single channel)
+    input_type: ucc5350-q1.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5350-q1.pdf p1, p10 (typ)
+    peak_sink_a: ucc5350-q1.pdf p1, p10 (typ)
+    uvlo_v: ucc5350-q1.pdf p10 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5350-q1.pdf p5 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5350-q1.pdf p11 (tPLH/tPHL max)
+    protection: ucc5350-q1.pdf p1 (UVLO, Miller clamp (MC version))
+    temp_range_c: ucc5350-q1.pdf p5 (junction temperature range; the datasheet gives no ambient range)
+    theta_ja_c_w: ucc5350-q1.pdf p5 (DWV)
+    iq_ma: ucc5350-q1.pdf p10 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5350-q1.pdf p11 (typ, 1 nF)
+    fall_time_ns: ucc5350-q1.pdf p11 (typ, 1 nF)
+    pwd_ns: ucc5350-q1.pdf p11 (max)
+    pinout: ucc5350-q1.pdf p4 (pin configuration for this option)
+- mpn: UCC5350MCQDRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350-Q1: Automotive, 10A single-channel basic/reinforced isolated gate driver, miller clamp or split output,
+    12-V UVLO, SOIC-8 (D)'
+  package: SOIC-8 (D)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5350-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5350-q1.pdf
+  product_url: https://www.ti.com/product/UCC5350-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-09-08'
+    revision: G
+    revision_date: '2025-01-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 09/08/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: basic
+    creepage_mm: 4.0
+    qualification: automotive
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 10.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 70.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 109.5
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5350-q1.pdf p7 (VISO 3000 VRMS, D8 package)
+    isolation_class: ucc5350-q1.pdf p7 (basic insulation, D8 package)
+    creepage_mm: ucc5350-q1.pdf p7 (CPG, D8 package)
+    qualification: ucc5350-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc5350-q1.pdf p1, p11 (CMTI min)
+    channel_config: ucc5350-q1.pdf p1 (single channel)
+    input_type: ucc5350-q1.pdf p4 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5350-q1.pdf p1, p10 (typ)
+    peak_sink_a: ucc5350-q1.pdf p1, p10 (typ)
+    uvlo_v: ucc5350-q1.pdf p10 (12-V UVLO version, VCC2 rising 12 V typ)
+    output_supply_v: ucc5350-q1.pdf p5 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5350-q1.pdf p11 (tPLH/tPHL max)
+    protection: ucc5350-q1.pdf p1 (UVLO, Miller clamp (MC version))
+    temp_range_c: ucc5350-q1.pdf p5 (junction temperature range; the datasheet gives no ambient range)
+    theta_ja_c_w: ucc5350-q1.pdf p5 (D8)
+    iq_ma: ucc5350-q1.pdf p10 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5350-q1.pdf p11 (typ, 1 nF)
+    fall_time_ns: ucc5350-q1.pdf p11 (typ, 1 nF)
+    pwd_ns: ucc5350-q1.pdf p11 (max)
+    pinout: ucc5350-q1.pdf p4 (pin configuration for this option)
+- mpn: UCC5390ECQDWVRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5390-Q1: Automotive, 17A single-channel basic/reinforced isolated gate driver with emitter-referenced UVLO,
+    12-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, GND2, VEE2]
+  datasheet: ucc5390-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5390-q1.pdf
+  product_url: https://www.ti.com/product/UCC5390-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2019-11-07'
+    revision: B
+    revision_date: '2024-02-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 11/07/2019 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: automotive
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 17.0
+    peak_sink_a: 17.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 33.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 119.8
+    iq_ma: 1.67
+    rise_time_ns: 10.0
+    fall_time_ns: 10.0
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5390-q1.pdf p7 (VISO 5000 VRMS, DWV package)
+    isolation_class: ucc5390-q1.pdf p7 (reinforced insulation, DWV package)
+    creepage_mm: ucc5390-q1.pdf p7 (CPG, DWV package)
+    qualification: ucc5390-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc5390-q1.pdf p1, p10 (CMTI min)
+    channel_config: ucc5390-q1.pdf p1 (single channel)
+    input_type: ucc5390-q1.pdf p3 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5390-q1.pdf p1, p9 (typ)
+    peak_sink_a: ucc5390-q1.pdf p1, p9 (typ)
+    uvlo_v: ucc5390-q1.pdf p9 (12-V UVLO version, VCC2 rising 12 V typ, referenced to GND2)
+    output_supply_v: ucc5390-q1.pdf p4 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5390-q1.pdf p10 (tPLH/tPHL max)
+    protection: ucc5390-q1.pdf p1 (12-V UVLO referenced to GND2)
+    temp_range_c: ucc5390-q1.pdf p4 (junction temperature range; the datasheet gives no ambient range)
+    theta_ja_c_w: ucc5390-q1.pdf p5 (DWV)
+    iq_ma: ucc5390-q1.pdf p9 (IVCC1 input quiescent, typ)
+    rise_time_ns: ucc5390-q1.pdf p10 (typ, 1 nF)
+    fall_time_ns: ucc5390-q1.pdf p10 (typ, 1 nF)
+    pwd_ns: ucc5390-q1.pdf p10 (max)
+    pinout: ucc5390-q1.pdf p3 (pin configuration for this option)
+- mpn: UCC5350MCQDWLRQ1
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5350L-Q1: Automotive, 10A/10A single-channel reinforced isolated gate driver, miller clamp, extended package,
+    12-V UVLO, SOIC-8 (DWL)'
+  package: SOIC-8 (DWL)
+  pinout: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  datasheet: ucc5350l-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5350l-q1.pdf
+  product_url: https://www.ti.com/product/UCC5350L-Q1
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2025-04-02'
+    revision: '*'
+    revision_date: '2025-03-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 04/02/2025 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 15.7
+    qualification: automotive
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 10.0
+    peak_sink_a: 10.0
+    uvlo_v: 12
+    output_supply_v: [13.2, 30.0]
+    prop_delay_ns: 80.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 87.1
+    iq_ma: 1.67
+    pwd_ns: 20.0
+  param_sources:
+    isolation_rating_kvrms: ucc5350l-q1.pdf p5-6 (VISO 5000 VRMS, DWL package)
+    isolation_class: 'TI product table (Isolation rating: Reinforced); ucc5350l-q1.pdf p1 gives 5 kVRMS, certifications planned'
+    creepage_mm: ucc5350l-q1.pdf p5-6 (CPG, DWL package)
+    qualification: ucc5350l-q1.pdf p1 (AEC-Q100 qualified)
+    cmti_kv_us: ucc5350l-q1.pdf p1, p7-8 (CMTI min)
+    channel_config: ucc5350l-q1.pdf p1 (single channel)
+    input_type: ucc5350l-q1.pdf p3 (IN+ non-inverting, IN- inverting CMOS inputs)
+    peak_source_a: ucc5350l-q1.pdf p1, p7 (typ)
+    peak_sink_a: ucc5350l-q1.pdf p1, p7 (typ)
+    uvlo_v: ucc5350l-q1.pdf p7 (12-V UVLO, VCC2 rising 12 V typ)
+    output_supply_v: ucc5350l-q1.pdf p4 (recommended VCC2 - VEE2)
+    prop_delay_ns: ucc5350l-q1.pdf p7-8 (tPLH/tPHL max)
+    protection: ucc5350l-q1.pdf p1 (UVLO, Miller clamp)
+    temp_range_c: ucc5350l-q1.pdf p4 (junction temperature range; the datasheet gives no ambient range)
+    theta_ja_c_w: ucc5350l-q1.pdf p4 (DWL)
+    iq_ma: ucc5350l-q1.pdf p7 (IVCC1 input quiescent, typ)
+    pwd_ns: ucc5350l-q1.pdf p7-8 (max)
+    pinout: ucc5350l-q1.pdf p3 (pin configuration for this option)
+- mpn: UCC5304DWVR
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5304: 4A/6A single-channel reinforced isolated gate driver, 5-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [IN, VCCI, VCCI, GND, VSS, VSS, OUT, VDD]
+  datasheet: ucc5304.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5304.pdf
+  product_url: https://www.ti.com/product/UCC5304
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2020-04-27'
+    revision: B
+    revision_date: '2020-04-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 04/27/2020 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 6.0
+    uvlo_v: 5
+    output_supply_v: [6.0, 18.0]
+    prop_delay_ns: 40.0
+    protection: [UVLO, input glitch filter]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 108.5
+    iq_ma: 1.5
+    rise_time_ns: 5.0
+    fall_time_ns: 6.0
+    pwd_ns: 5.5
+  param_sources:
+    isolation_rating_kvrms: ucc5304.pdf p6 (VISO 5000 VRMS)
+    isolation_class: ucc5304.pdf p1 (reinforced isolation)
+    creepage_mm: ucc5304.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc5304.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5304.pdf p9 (|CMH|, |CML| min 100 V/ns)
+    channel_config: ucc5304.pdf p1 (single channel)
+    input_type: ucc5304.pdf p3 (single IN pin)
+    peak_source_a: ucc5304.pdf p1
+    peak_sink_a: ucc5304.pdf p1
+    uvlo_v: ucc5304.pdf p1 (5-V UVLO), p8 (VDD UVLO rising 5.5 V typ)
+    output_supply_v: ucc5304.pdf p4 (recommended VDD)
+    prop_delay_ns: ucc5304.pdf p9 (max)
+    protection: ucc5304.pdf p1 (UVLO on both supplies, rejects input pulses < 5 ns)
+    temp_range_c: ucc5304.pdf p4 (ambient)
+    theta_ja_c_w: ucc5304.pdf p5
+    iq_ma: ucc5304.pdf p8 (VCCI quiescent, IN low, typ)
+    rise_time_ns: ucc5304.pdf p9 (typ, 1.8 nF)
+    fall_time_ns: ucc5304.pdf p9 (typ, 1.8 nF)
+    pwd_ns: ucc5304.pdf p9 (max)
+    pinout: ucc5304.pdf p3
+- mpn: UCC5304DWVRG4
+  manufacturer: TI
+  family: gate_driver
+  description: 'UCC5304: 4A/6A single-channel reinforced isolated gate driver, 5-V UVLO, SOIC-8 (DWV)'
+  package: SOIC-8 (DWV)
+  pinout: [IN, VCCI, VCCI, GND, VSS, VSS, OUT, VDD]
+  datasheet: ucc5304.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc5304.pdf
+  product_url: https://www.ti.com/product/UCC5304
+  notes: null
+  lifecycle:
+    status: active
+    release_date: '2025-03-21'
+    revision: B
+    revision_date: '2020-04-01'
+    source: 'TI orderable-part table (fetched 2026-10-20): ACTIVE; release date 03/21/2025 from the same table'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.0
+    peak_sink_a: 6.0
+    uvlo_v: 5
+    output_supply_v: [6.0, 18.0]
+    prop_delay_ns: 40.0
+    protection: [UVLO, input glitch filter]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 108.5
+    iq_ma: 1.5
+    rise_time_ns: 5.0
+    fall_time_ns: 6.0
+    pwd_ns: 5.5
+  param_sources:
+    isolation_rating_kvrms: ucc5304.pdf p6 (VISO 5000 VRMS)
+    isolation_class: ucc5304.pdf p1 (reinforced isolation)
+    creepage_mm: ucc5304.pdf p6 (CPG > 8.5 mm)
+    qualification: ucc5304.pdf p1 (no AEC-Q100; industrial)
+    cmti_kv_us: ucc5304.pdf p9 (|CMH|, |CML| min 100 V/ns)
+    channel_config: ucc5304.pdf p1 (single channel)
+    input_type: ucc5304.pdf p3 (single IN pin)
+    peak_source_a: ucc5304.pdf p1
+    peak_sink_a: ucc5304.pdf p1
+    uvlo_v: ucc5304.pdf p1 (5-V UVLO), p8 (VDD UVLO rising 5.5 V typ)
+    output_supply_v: ucc5304.pdf p4 (recommended VDD)
+    prop_delay_ns: ucc5304.pdf p9 (max)
+    protection: ucc5304.pdf p1 (UVLO on both supplies, rejects input pulses < 5 ns)
+    temp_range_c: ucc5304.pdf p4 (ambient)
+    theta_ja_c_w: ucc5304.pdf p5
+    iq_ma: ucc5304.pdf p8 (VCCI quiescent, IN low, typ)
+    rise_time_ns: ucc5304.pdf p9 (typ, 1.8 nF)
+    fall_time_ns: ucc5304.pdf p9 (typ, 1.8 nF)
+    pwd_ns: ucc5304.pdf p9 (max)
+    pinout: ucc5304.pdf p3

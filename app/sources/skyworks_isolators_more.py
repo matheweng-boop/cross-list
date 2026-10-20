@@ -476,6 +476,13 @@ DATASHEET_OVERRIDE = {
     "SI8716BC-AS": "si871x-2x-datasheet.pdf",
 }
 
+# Where each Si87xx data sheet states the output polarity (truth table / ordering guide).
+POLARITY_EVIDENCE = {
+    "Si87xx.pdf": r"Table 10\. Si87xx Truth Table Summary",
+    "si871x-2x-datasheet.pdf": r"Inverting Output",
+    "si873x-datasheet.pdf": r"Si8736 \(Inverting\)",
+}
+
 BASE_RE = re.compile(r"^SI(80\d\d|84\d\d|87\d\d|88\d\d\d)", re.I)
 
 
@@ -682,6 +689,11 @@ def build(raw_dir: Path = RAW_DIR, ds_dir: Path = DATASHEET_DIR) -> dict:
             "qualification": "OPN suffix (-A = automotive-grade flow)",
             "isolation_rating_kvrms": f"{ds_name} p.{guide[1]} (ordering guide)" if guide else "OPN isolation grade",
         }
+        if "pinout" in base:  # Si87xx optocoupler replacements
+            params["input_type"] = "led-emulator"
+            params["output_polarity"] = base["polarity"]
+            sources["input_type"] = f"{ds_name} p.{sheet.find(r'Anode of LED emulator')} (pin descriptions)"
+            sources["output_polarity"] = f"{ds_name} p.{sheet.find(POLARITY_EVIDENCE[ds_name])}"
         for key, fact in dsf["facts"].items():
             if key == "isolation_rating_kvrms":
                 continue

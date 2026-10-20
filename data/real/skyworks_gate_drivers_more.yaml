@@ -7,8 +7,9 @@
 # the -A codes only (the ordering guides state AEC-Q100 for the automotive-grade flow).
 #
 # Conventions (data/sources/GATE_DRIVER_DATA.md), plus for single-channel drivers:
-#   input_type: "single input" (VI, with EN/DIS or SPD), "complementary input" (VI+/VI- or IN+/IN-),
-#   "LED emulator input" (opto-compatible ANODE/CATHODE input, Si826x and Si8220/21).
+#   input_type: "single input" for every single-channel logic input (VI with EN/DIS or SPD, complementary
+#   VI+/VI- or IN+/IN-), as ti_gate_drivers_more.yaml does for IN+/IN-; "LED emulator" for the opto-compatible
+#   ANODE/CATHODE input of Si826x and Si8220/21 (same string as ti_gate_drivers_more.yaml).
 #   peak_source_a / peak_sink_a: typical; Si82Ax/Bx/Dx/Ex at VDD = 18 V (the row with a guaranteed
 #   minimum); SelVCD parts (Si82Cx/Fx) at speed 7 for the UVLO grade's test supply; Si82Bx parts with a
 #   Miller-clamp pin sink through VO only (3.66 A).
@@ -17712,7 +17713,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 5
@@ -17734,7 +17735,7 @@ parts:
     qualification: 'Si826x.pdf p.27 (Table 14: -A codes automotive grade)'
     cmti_kv_us: Si826x.pdf p.6 (Table 2, min)
     channel_config: Si826x.pdf p.24 (ordering guide)
-    input_type: Si826x.pdf p.22 (LED emulator input)
+    input_type: Si826x.pdf p.22 (LED emulator)
     peak_source_a: Si826x.pdf p.5 (Table 2, typ)
     peak_sink_a: Si826x.pdf p.5 (Table 2, typ)
     uvlo_v: Si826x.pdf p.24 (ordering guide; thresholds Table 2)
@@ -17772,7 +17773,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 5
@@ -17819,7 +17820,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 5
@@ -17860,7 +17861,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 8
@@ -17901,7 +17902,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 8
@@ -17942,7 +17943,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 8
@@ -17983,7 +17984,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 12
@@ -18024,7 +18025,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 12
@@ -18065,7 +18066,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.4
     peak_sink_a: 0.6
     uvlo_v: 12
@@ -18106,7 +18107,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 5
@@ -18147,7 +18148,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 5
@@ -18188,7 +18189,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 5
@@ -18229,7 +18230,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 8
@@ -18270,7 +18271,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 8
@@ -18311,7 +18312,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 8
@@ -18352,7 +18353,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 8
@@ -18393,7 +18394,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 8
@@ -18434,7 +18435,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 12
@@ -18475,7 +18476,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 12
@@ -18516,7 +18517,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 12
@@ -18557,7 +18558,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 12
@@ -18598,7 +18599,7 @@ parts:
     - 125
     cmti_kv_us: 35
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.8
     peak_sink_a: 4.0
     uvlo_v: 12
@@ -18646,7 +18647,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.5
     peak_sink_a: 2.5
     uvlo_v: 8
@@ -18717,7 +18718,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.5
     peak_sink_a: 2.5
     uvlo_v: 8
@@ -18755,7 +18756,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.5
     peak_sink_a: 2.5
     uvlo_v: 10
@@ -18793,7 +18794,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.5
     peak_sink_a: 2.5
     uvlo_v: 10
@@ -18831,7 +18832,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.5
     peak_sink_a: 2.5
     uvlo_v: 12.5
@@ -18869,7 +18870,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 1.5
     peak_sink_a: 2.5
     uvlo_v: 12.5
@@ -18907,7 +18908,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.3
     peak_sink_a: 0.5
     uvlo_v: 10
@@ -18945,7 +18946,7 @@ parts:
     - -40
     - 125
     channel_config: single
-    input_type: LED emulator input
+    input_type: LED emulator
     peak_source_a: 0.3
     peak_sink_a: 0.5
     uvlo_v: 12.5
@@ -19004,7 +19005,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19067,7 +19068,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19111,7 +19112,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19155,7 +19156,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19199,7 +19200,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -19243,7 +19244,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -19287,7 +19288,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -19331,7 +19332,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -19375,7 +19376,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -19419,7 +19420,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -19463,7 +19464,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -19507,7 +19508,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -19551,7 +19552,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -19595,7 +19596,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -19639,7 +19640,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -19683,7 +19684,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -19747,7 +19748,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19791,7 +19792,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19835,7 +19836,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19879,7 +19880,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -19923,7 +19924,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -19967,7 +19968,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20011,7 +20012,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20055,7 +20056,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20099,7 +20100,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20143,7 +20144,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20187,7 +20188,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20231,7 +20232,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20275,7 +20276,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -20319,7 +20320,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -20363,7 +20364,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -20407,7 +20408,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -20475,7 +20476,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -20519,7 +20520,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -20563,7 +20564,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -20607,7 +20608,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -20651,7 +20652,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20695,7 +20696,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20739,7 +20740,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20783,7 +20784,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -20827,7 +20828,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20871,7 +20872,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20915,7 +20916,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -20959,7 +20960,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -21003,7 +21004,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21047,7 +21048,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21091,7 +21092,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21135,7 +21136,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21203,7 +21204,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -21247,7 +21248,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -21291,7 +21292,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -21335,7 +21336,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -21379,7 +21380,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -21423,7 +21424,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -21467,7 +21468,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -21511,7 +21512,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -21555,7 +21556,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -21599,7 +21600,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -21643,7 +21644,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -21687,7 +21688,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -21731,7 +21732,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21775,7 +21776,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21819,7 +21820,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21863,7 +21864,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -21924,7 +21925,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -21989,7 +21990,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22034,7 +22035,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22079,7 +22080,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22124,7 +22125,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22169,7 +22170,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22214,7 +22215,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22259,7 +22260,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22304,7 +22305,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -22349,7 +22350,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -22394,7 +22395,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -22439,7 +22440,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -22484,7 +22485,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -22529,7 +22530,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -22574,7 +22575,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -22619,7 +22620,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -22680,7 +22681,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22724,7 +22725,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22768,7 +22769,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22812,7 +22813,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 9
@@ -22856,7 +22857,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22900,7 +22901,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22944,7 +22945,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -22988,7 +22989,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 12
@@ -23032,7 +23033,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -23076,7 +23077,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -23120,7 +23121,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -23164,7 +23165,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 13
@@ -23208,7 +23209,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -23252,7 +23253,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -23296,7 +23297,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -23340,7 +23341,7 @@ parts:
     - 125
     cmti_kv_us: 125
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 2.7
     peak_sink_a: 5.5
     uvlo_v: 15
@@ -24883,7 +24884,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -24925,7 +24926,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -24967,7 +24968,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -25009,7 +25010,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -25052,7 +25053,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25095,7 +25096,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25137,7 +25138,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25179,7 +25180,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25222,7 +25223,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25265,7 +25266,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25307,7 +25308,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25349,7 +25350,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25391,7 +25392,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 4
@@ -25433,7 +25434,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 4
@@ -25476,7 +25477,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -25520,7 +25521,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -25564,7 +25565,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -25608,7 +25609,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 8
@@ -25652,7 +25653,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25696,7 +25697,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25740,7 +25741,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25784,7 +25785,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -25828,7 +25829,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25872,7 +25873,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25916,7 +25917,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -25960,7 +25961,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 15
@@ -26004,7 +26005,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 4
@@ -26048,7 +26049,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 4
@@ -26100,7 +26101,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -26143,7 +26144,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 1.16
     peak_sink_a: 1.09
     uvlo_v: 12
@@ -27661,7 +27662,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -27703,7 +27704,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -27745,7 +27746,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -27787,7 +27788,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -27830,7 +27831,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -27873,7 +27874,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -27915,7 +27916,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -27957,7 +27958,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -28000,7 +28001,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28043,7 +28044,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28085,7 +28086,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28127,7 +28128,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28169,7 +28170,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 4
@@ -28211,7 +28212,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 4
@@ -28254,7 +28255,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -28298,7 +28299,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -28342,7 +28343,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -28386,7 +28387,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 8
@@ -28430,7 +28431,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -28474,7 +28475,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -28518,7 +28519,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -28562,7 +28563,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -28606,7 +28607,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28650,7 +28651,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28694,7 +28695,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28738,7 +28739,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 15
@@ -28782,7 +28783,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 4
@@ -28826,7 +28827,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 4
@@ -28878,7 +28879,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -28922,7 +28923,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -28966,7 +28967,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29010,7 +29011,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29054,7 +29055,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 15
@@ -29098,7 +29099,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 15
@@ -29142,7 +29143,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29187,7 +29188,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29232,7 +29233,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29277,7 +29278,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29322,7 +29323,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -29365,7 +29366,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 7.5
     uvlo_v: 12
@@ -29416,7 +29417,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29460,7 +29461,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29512,7 +29513,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 8
@@ -29556,7 +29557,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 8
@@ -29600,7 +29601,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29644,7 +29645,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 12
@@ -29688,7 +29689,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 4
@@ -29732,7 +29733,7 @@ parts:
     - 125
     cmti_kv_us: 200
     channel_config: single
-    input_type: complementary input
+    input_type: single input
     peak_source_a: 7.5
     peak_sink_a: 3.66
     uvlo_v: 4

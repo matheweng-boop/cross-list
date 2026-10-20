@@ -20,7 +20,6 @@ import time
 import urllib.parse
 import urllib.request
 from functools import cache
-from pathlib import Path
 
 import yaml
 
@@ -37,9 +36,16 @@ MECH_OUT = PROJECT_ROOT / "data" / "mechanical_skyworks_gate_drivers.yaml"
 USER_AGENT = "Mozilla/5.0 (CrossList datasheet importer)"
 PAUSE_S = 6.0
 
-LIFECYCLE_MAP = {"active": "active", "in production": "active", "preview": "preview", "samples only": "preview",
-                 "nrnd": "nrnd", "not recommended for new designs": "nrnd", "last time buy": "last_time_buy",
-                 "obsolete": "obsolete"}
+LIFECYCLE_MAP = {
+    "active": "active",
+    "in production": "active",
+    "preview": "preview",
+    "samples only": "preview",
+    "nrnd": "nrnd",
+    "not recommended for new designs": "nrnd",
+    "last time buy": "last_time_buy",
+    "obsolete": "obsolete",
+}
 
 # ------------------------------------------------------------------ datasheets
 
@@ -65,35 +71,121 @@ SHEETS = {
 
 PACKAGES = {
     # codes shared with skyworks_si86.yaml / skyworks_si823x.yaml (identical bodies, see the datasheet tables)
-    "SOIC-8N": dict(name="SOIC-8 narrow body", pin_count=8, pitch_mm=1.27, body_length_mm=4.9, body_width_mm=3.9,
-                    span_mm=6.0, height_mm=1.75),
-    "SSO-8": dict(name="SSO-8 stretched SOIC-8 (wide body)", pin_count=8, pitch_mm=1.27, body_length_mm=5.84,
-                  body_width_mm=7.49, span_mm=11.5, height_mm=2.79),
-    "SOIC-16N": dict(name="SOIC-16 narrow body", pin_count=16, pitch_mm=1.27, body_length_mm=9.9, body_width_mm=3.9,
-                     span_mm=6.0, height_mm=1.75),
-    "SOIC-16W": dict(name="SOIC-16 wide body", pin_count=16, pitch_mm=1.27, body_length_mm=10.3, body_width_mm=7.5,
-                     span_mm=10.3, height_mm=2.65),
-    "SOIC-14W (IS3)": dict(name="SOIC-14 wide body, increased creepage (16-position body, positions 12 and 13 "
-                           "empty)", pin_count=14, pitch_mm=1.27, body_length_mm=10.3, body_width_mm=7.5,
-                           span_mm=10.3, height_mm=2.65, positions_total=16,
-                           pin_positions=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16]),
-    "SOIC-20W": dict(name="SOIC-20 wide body", pin_count=20, pitch_mm=1.27, body_length_mm=12.8, body_width_mm=7.5,
-                     span_mm=10.3, height_mm=2.65),
+    "SOIC-8N": dict(
+        name="SOIC-8 narrow body",
+        pin_count=8,
+        pitch_mm=1.27,
+        body_length_mm=4.9,
+        body_width_mm=3.9,
+        span_mm=6.0,
+        height_mm=1.75,
+    ),
+    "SSO-8": dict(
+        name="SSO-8 stretched SOIC-8 (wide body)",
+        pin_count=8,
+        pitch_mm=1.27,
+        body_length_mm=5.84,
+        body_width_mm=7.49,
+        span_mm=11.5,
+        height_mm=2.79,
+    ),
+    "SOIC-16N": dict(
+        name="SOIC-16 narrow body",
+        pin_count=16,
+        pitch_mm=1.27,
+        body_length_mm=9.9,
+        body_width_mm=3.9,
+        span_mm=6.0,
+        height_mm=1.75,
+    ),
+    "SOIC-16W": dict(
+        name="SOIC-16 wide body",
+        pin_count=16,
+        pitch_mm=1.27,
+        body_length_mm=10.3,
+        body_width_mm=7.5,
+        span_mm=10.3,
+        height_mm=2.65,
+    ),
+    "SOIC-14W (IS3)": dict(
+        name="SOIC-14 wide body, increased creepage (16-position body, positions 12 and 13 empty)",
+        pin_count=14,
+        pitch_mm=1.27,
+        body_length_mm=10.3,
+        body_width_mm=7.5,
+        span_mm=10.3,
+        height_mm=2.65,
+        positions_total=16,
+        pin_positions=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16],
+    ),
+    "SOIC-20W": dict(
+        name="SOIC-20 wide body",
+        pin_count=20,
+        pitch_mm=1.27,
+        body_length_mm=12.8,
+        body_width_mm=7.5,
+        span_mm=10.3,
+        height_mm=2.65,
+    ),
     # new bodies
-    "SOIC-24W": dict(name="SOIC-24 wide body", pin_count=24, pitch_mm=1.27, body_length_mm=15.4, body_width_mm=7.5,
-                     span_mm=10.3, height_mm=2.65),
-    "DFN-14 (5x5)": dict(name="DFN-14 5 x 5 mm", pin_count=14, pitch_mm=0.65, body_length_mm=5.0,
-                         body_width_mm=5.0, span_mm=5.0, height_mm=0.9, exposed_pad=False),
-    "LGA-13 (5x5)": dict(name="LGA-13 5 x 5 mm (14-position grid, position 11 empty)", pin_count=13,
-                         pitch_mm=0.65, body_length_mm=5.0, body_width_mm=5.0, span_mm=5.0, height_mm=0.93,
-                         exposed_pad=False, positions_total=14,
-                         pin_positions=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14]),
-    "DIP-8 GW": dict(name="DIP-8 gull-wing (surface mount)", pin_count=8, pitch_mm=2.54, body_length_mm=9.65,
-                     body_width_mm=6.35, span_mm=9.65, height_mm=4.19),
-    "SDIP-6": dict(name="SDIP6 stretched SO-6 (wide body)", pin_count=6, pitch_mm=1.27, body_length_mm=4.58,
-                   body_width_mm=7.5, span_mm=11.5, height_mm=2.65),
-    "SSOP-36W": dict(name="SSOP-36 wide body", pin_count=36, pitch_mm=0.8, body_length_mm=15.4, body_width_mm=7.5,
-                     span_mm=10.3, height_mm=2.65),
+    "SOIC-24W": dict(
+        name="SOIC-24 wide body",
+        pin_count=24,
+        pitch_mm=1.27,
+        body_length_mm=15.4,
+        body_width_mm=7.5,
+        span_mm=10.3,
+        height_mm=2.65,
+    ),
+    "DFN-14 (5x5)": dict(
+        name="DFN-14 5 x 5 mm",
+        pin_count=14,
+        pitch_mm=0.65,
+        body_length_mm=5.0,
+        body_width_mm=5.0,
+        span_mm=5.0,
+        height_mm=0.9,
+        exposed_pad=False,
+    ),
+    "LGA-13 (5x5)": dict(
+        name="LGA-13 5 x 5 mm (14-position grid, position 11 empty)",
+        pin_count=13,
+        pitch_mm=0.65,
+        body_length_mm=5.0,
+        body_width_mm=5.0,
+        span_mm=5.0,
+        height_mm=0.93,
+        exposed_pad=False,
+        positions_total=14,
+        pin_positions=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14],
+    ),
+    "DIP-8 GW": dict(
+        name="DIP-8 gull-wing (surface mount)",
+        pin_count=8,
+        pitch_mm=2.54,
+        body_length_mm=9.65,
+        body_width_mm=6.35,
+        span_mm=9.65,
+        height_mm=4.19,
+    ),
+    "SDIP-6": dict(
+        name="SDIP6 stretched SO-6 (wide body)",
+        pin_count=6,
+        pitch_mm=1.27,
+        body_length_mm=4.58,
+        body_width_mm=7.5,
+        span_mm=11.5,
+        height_mm=2.65,
+    ),
+    "SSOP-36W": dict(
+        name="SSOP-36 wide body",
+        pin_count=36,
+        pitch_mm=0.8,
+        body_length_mm=15.4,
+        body_width_mm=7.5,
+        span_mm=10.3,
+        height_mm=2.65,
+    ),
 }
 
 PACKAGE_NOTES = {
@@ -105,52 +197,96 @@ PACKAGE_NOTES = {
     "8-10, pins 11-13 at positions 12-14. Not the same body as TI's LGA-13 NPL (1.0 mm high).",
     "DIP-8 GW": "Si826x.pdf Table 17: D 9.40-9.90, E1 6.10-6.60, E2 (lead span) 9.40-9.90, A max 4.19, e 2.54.",
     "SDIP-6": "Si826x.pdf Table 19: D 4.58, E1 7.50, E 11.50, A max 2.65, e 1.27.",
-    "SSOP-36W": "Si829x-product-summary.pdf Table 8: D 15.20-15.60, E1 7.40-7.60, E 10.05-10.55, A max 2.65, "
-    "e 0.80.",
+    "SSOP-36W": "Si829x-product-summary.pdf Table 8: D 15.20-15.60, E1 7.40-7.60, E 10.05-10.55, A max 2.65, e 0.80.",
     "SOIC-24W": "Si8281-82-83-84.pdf section 6.3 (JEDEC MS-013 AD): D 15.40, E1 7.50, E 10.30, A max 2.65.",
 }
 
 # Land patterns of the new bodies (format of data/mechanical.yaml)
 MECHANICAL = {
     "SOIC-24W": {
-        "lead_width_mm": [0.31, 0.51], "lead_length_mm": [0.40, 1.27], "sides": 2,
+        "lead_width_mm": [0.31, 0.51],
+        "lead_length_mm": [0.40, 1.27],
+        "sides": 2,
         "source": "Si8281-82-83-84.pdf section 6.3",
-        "land_patterns": [{"name": "Recommended", "pad_length_mm": 1.90, "pad_width_mm": 0.60,
-                           "row_spacing_mm": 9.40, "source": "Si8281-82-83-84.pdf Table 6.2"}],
+        "land_patterns": [
+            {
+                "name": "Recommended",
+                "pad_length_mm": 1.90,
+                "pad_width_mm": 0.60,
+                "row_spacing_mm": 9.40,
+                "source": "Si8281-82-83-84.pdf Table 6.2",
+            }
+        ],
     },
     "DFN-14 (5x5)": {
-        "lead_width_mm": [0.25, 0.35], "lead_length_mm": [0.50, 0.70], "sides": 2,
+        "lead_width_mm": [0.25, 0.35],
+        "lead_length_mm": [0.50, 0.70],
+        "sides": 2,
         "source": "Si823Hx-DataSheet.pdf Table 7.5",
         "note": "b = pad width, L = pad length; pads pulled back L1 0.05-0.15 from the body edge; no exposed pad",
-        "land_patterns": [{"name": "Recommended", "pad_length_mm": 0.80, "pad_width_mm": 0.40,
-                           "row_spacing_mm": 4.20, "source": "Si823Hx-DataSheet.pdf Table 8.5",
-                           "note": "X1 0.80 is the pad dimension along the lead, Y1 0.40 across it (Figure 8.5); "
-                           "NSMD pads"}],
+        "land_patterns": [
+            {
+                "name": "Recommended",
+                "pad_length_mm": 0.80,
+                "pad_width_mm": 0.40,
+                "row_spacing_mm": 4.20,
+                "source": "Si823Hx-DataSheet.pdf Table 8.5",
+                "note": "X1 0.80 is the pad dimension along the lead, Y1 0.40 across it (Figure 8.5); NSMD pads",
+            }
+        ],
     },
     "LGA-13 (5x5)": {
-        "lead_width_mm": [0.25, 0.35], "lead_length_mm": [0.55, 0.75], "sides": 2,
+        "lead_width_mm": [0.25, 0.35],
+        "lead_length_mm": [0.55, 0.75],
+        "sides": 2,
         "source": "Si82Ex-datasheet.pdf Figure 49 (Detail A: pad 0.3 +/- 0.05 x 0.65 +/- 0.1)",
         "note": "pad positions 0.65 mm apart, 13 of 14 used (position opposite pin 4 empty)",
-        "land_patterns": [{"name": "Recommended", "pad_length_mm": 0.65, "pad_width_mm": 0.30,
-                           "row_spacing_mm": 4.15, "source": "Si82Ex-datasheet.pdf Figure 52 (metallization, "
-                           "13X 2.075 from the centre line)"}],
+        "land_patterns": [
+            {
+                "name": "Recommended",
+                "pad_length_mm": 0.65,
+                "pad_width_mm": 0.30,
+                "row_spacing_mm": 4.15,
+                "source": "Si82Ex-datasheet.pdf Figure 52 (metallization, 13X 2.075 from the centre line)",
+            }
+        ],
     },
     "DIP-8 GW": {
-        "lead_width_mm": [0.35, 0.55], "lead_length_mm": [0.38, 0.89], "sides": 2,
+        "lead_width_mm": [0.35, 0.55],
+        "lead_length_mm": [0.38, 0.89],
+        "sides": 2,
         "source": "Si826x.pdf Table 17",
-        "land_patterns": [{"name": "Recommended", "pad_length_mm": 1.70, "pad_width_mm": 0.65,
-                           "row_spacing_mm": 8.90, "source": "Si826x.pdf Table 18",
-                           "note": "Table 18 gives min-max (C 8.85-8.90, X 0.60-0.65, Y 1.65-1.70); max used"}],
+        "land_patterns": [
+            {
+                "name": "Recommended",
+                "pad_length_mm": 1.70,
+                "pad_width_mm": 0.65,
+                "row_spacing_mm": 8.90,
+                "source": "Si826x.pdf Table 18",
+                "note": "Table 18 gives min-max (C 8.85-8.90, X 0.60-0.65, Y 1.65-1.70); max used",
+            }
+        ],
     },
     "SDIP-6": {
-        "lead_width_mm": [0.31, 0.51], "lead_length_mm": [0.40, 1.27], "sides": 2,
+        "lead_width_mm": [0.31, 0.51],
+        "lead_length_mm": [0.40, 1.27],
+        "sides": 2,
         "source": "Si826x.pdf Table 19",
-        "land_patterns": [{"name": "Recommended", "pad_length_mm": 2.05, "pad_width_mm": 0.60,
-                           "row_spacing_mm": 10.50, "source": "Si826x.pdf Table 20",
-                           "note": "Table 20 gives min-max (C 10.45-10.50, X 0.55-0.60, Y 2.00-2.05); max used"}],
+        "land_patterns": [
+            {
+                "name": "Recommended",
+                "pad_length_mm": 2.05,
+                "pad_width_mm": 0.60,
+                "row_spacing_mm": 10.50,
+                "source": "Si826x.pdf Table 20",
+                "note": "Table 20 gives min-max (C 10.45-10.50, X 0.55-0.60, Y 2.00-2.05); max used",
+            }
+        ],
     },
     "SSOP-36W": {
-        "lead_width_mm": [0.25, 0.35], "lead_length_mm": [0.40, 1.27], "sides": 2,
+        "lead_width_mm": [0.25, 0.35],
+        "lead_length_mm": [0.40, 1.27],
+        "sides": 2,
         "source": "Si829x-product-summary.pdf Table 8",
         "note": "no land pattern in the product summary",
     },
@@ -178,8 +314,9 @@ def soic8(*pins):
 
 @cache
 def page_texts(pdf: str) -> list[str]:
-    out = subprocess.run(["pdftotext", "-layout", str(PDF_DIR / pdf), "-"], capture_output=True, text=True,
-                         check=True).stdout
+    out = subprocess.run(
+        ["pdftotext", "-layout", str(PDF_DIR / pdf), "-"], capture_output=True, text=True, check=True
+    ).stdout
     return out.split("\f")
 
 
@@ -272,9 +409,16 @@ def decode_si8239x(opn: str, row: str):
         p["prop_delay_ns"] = 135 if dg4 else 55
     elif n != 3:
         p["prop_delay_ns"] = 40
-    kind = {0: "dual driver, enhanced UVLO, RDY", 1: "dual driver, enhanced UVLO, RDY", 2: "HS/LS driver, RDY",
-            3: "HS/LS driver, enhanced UVLO, RDY, deglitch", 4: "PWM-input HS/LS driver, RDY",
-            5: "dual driver, RDY", 6: "dual driver, RDY", 7: "dual driver"}.get(n, "PWM-input HS/LS driver, RDY")
+    kind = {
+        0: "dual driver, enhanced UVLO, RDY",
+        1: "dual driver, enhanced UVLO, RDY",
+        2: "HS/LS driver, RDY",
+        3: "HS/LS driver, enhanced UVLO, RDY, deglitch",
+        4: "PWM-input HS/LS driver, RDY",
+        5: "dual driver, RDY",
+        6: "dual driver, RDY",
+        7: "dual driver",
+    }.get(n, "PWM-input HS/LS driver, RDY")
     if pwm:
         kind += ", 40-600 ns dead time, deglitch" if dg4 else ", 10-200 ns dead time"
     if n in (0, 4, 5, 7):
@@ -282,8 +426,10 @@ def decode_si8239x(opn: str, row: str):
     desc = f"Si8239{n} 4.0 A isolated {kind}, {uvlo} V UVLO, {p['isolation_rating_kvrms']:g} kVrms"
     notes = None
     if n == 3:
-        notes = ("Propagation delay omitted: Table 4.1 gives 20-40 ns for Si82390/1/2/3/5/6/7 'with no de-glitch', "
-                 "but Si82393 has the de-glitch option and no separate value is given.")
+        notes = (
+            "Propagation delay omitted: Table 4.1 gives 20-40 ns for Si82390/1/2/3/5/6/7 'with no de-glitch', "
+            "but Si82393 has the de-glitch option and no separate value is given."
+        )
     return pkg, pin, p, desc, notes
 
 
@@ -303,11 +449,28 @@ def decode_si823hx(opn: str, row: str):
     pwm = n in (4, 8)
     hsls = n in (1, 2, 3, 4, 8)
     if n == 9:
-        pin = (soic8("VDDI", "VI", "DIS", "GNDI", "VDD", "VO", "NC", "GND") if t else
-               soic8("VI", "VDDI", "GNDI", "EN", "GND", "VO-", "VO+", "VDD"))
+        pin = (
+            soic8("VDDI", "VI", "DIS", "GNDI", "VDD", "VO", "NC", "GND")
+            if t
+            else soic8("VI", "VDDI", "GNDI", "EN", "GND", "VO-", "VO+", "VDD")
+        )
     elif pkg.startswith("DFN"):
-        pin = ["GNDI", "PWM" if pwm else "VIA", "VIB", "VDDI", en, "DT" if hsls else "NC", "VDDI", "GNDB", "VOB",
-               "VDDB", "NC", "GNDA", "VOA", "VDDA"]
+        pin = [
+            "GNDI",
+            "PWM" if pwm else "VIA",
+            "VIB",
+            "VDDI",
+            en,
+            "DT" if hsls else "NC",
+            "VDDI",
+            "GNDB",
+            "VOB",
+            "VDDB",
+            "NC",
+            "GNDA",
+            "VOA",
+            "VDDA",
+        ]
     else:
         p16 = dual16("PWM", "NC", en, "DT") if pwm else dual16("VIA", "VIB", en, "DT" if hsls else "NC")
         pin = to14(p16) if pkg.startswith("SOIC-14") else p16
@@ -335,8 +498,15 @@ def decode_si823hx(opn: str, row: str):
     }
     if not pwm:
         p["pwd_ns"] = 10 if n == 3 else 5
-    kind = ("single driver" + (" (VO+/VO- split outputs)" if not t else "") if n == 9 else
-            "PWM-input HS/LS driver" if pwm else "HS/LS driver" if hsls else "dual driver")
+    kind = (
+        "single driver" + (" (VO+/VO- split outputs)" if not t else "")
+        if n == 9
+        else "PWM-input HS/LS driver"
+        if pwm
+        else "HS/LS driver"
+        if hsls
+        else "dual driver"
+    )
     if n == 3:
         kind += ", deglitch"
     if n == 7:
@@ -355,12 +525,23 @@ def decode_si8252x(opn: str, row: str):
     en = "DIS" if n == "0" else "EN"
     pin = ["VIA", "VIB", "VDDIH", "GNDI", en, "DT", "NC", "VDDIH", "GNDB", "VOB", "VDDB", "GNDA", "VOA", "VDDA"]
     p = {
-        "isolation_rating_kvrms": 5.0, "creepage_mm": 8.0, **common(grade == "A"), "cmti_kv_us": 125,
-        "channel_config": "dual", "input_type": "dual input", "peak_source_a": 4.0, "peak_sink_a": 4.0,
-        "uvlo_v": uvlo, "output_supply_v": [5.5, 30], "prop_delay_ns": 30,
-        "protection": ["UVLO", "overlap protection", "disable" if en == "DIS" else "enable",
-                       "programmable dead time"],
-        "deadtime": "programmable", "theta_ja_c_w": 59, "iq_ma": 1.3, "rise_time_ns": 12, "fall_time_ns": 12,
+        "isolation_rating_kvrms": 5.0,
+        "creepage_mm": 8.0,
+        **common(grade == "A"),
+        "cmti_kv_us": 125,
+        "channel_config": "dual",
+        "input_type": "dual input",
+        "peak_source_a": 4.0,
+        "peak_sink_a": 4.0,
+        "uvlo_v": uvlo,
+        "output_supply_v": [5.5, 30],
+        "prop_delay_ns": 30,
+        "protection": ["UVLO", "overlap protection", "disable" if en == "DIS" else "enable", "programmable dead time"],
+        "deadtime": "programmable",
+        "theta_ja_c_w": 59,
+        "iq_ma": 1.3,
+        "rise_time_ns": 12,
+        "fall_time_ns": 12,
         "pwd_ns": 5.6,
     }
     desc = f"Si8252{n} 4.0 A isolated HS/LS driver, 4.5-20 V VDDIH, {en}, {uvlo} V UVLO, 5 kVrms, WB SOIC-14"
@@ -377,11 +558,17 @@ def decode_si827x(opn: str, row: str):
     if n == 1:
         pin = soic8("VI", "VDDI", "GNDI", "EN", "GND", "VO-", "VO+", "VDD")
     elif n == 4:
-        pin = (["NC", "PWM", "NC", "GNDI", "EN", "DT", "VDDI", "GNDB", "VOB", "VDDB", "GNDA", "VOA", "VDDA"] if lga
-               else dual16("PWM", "NC", "EN", "DT"))
+        pin = (
+            ["NC", "PWM", "NC", "GNDI", "EN", "DT", "VDDI", "GNDB", "VOB", "VDDB", "GNDA", "VOA", "VDDA"]
+            if lga
+            else dual16("PWM", "NC", "EN", "DT")
+        )
     else:
-        pin = (["NC", "VIA", "VIB", "GNDI", "EN", "NC", "VDDI", "GNDB", "VOB", "VDDB", "GNDA", "VOA", "VDDA"] if lga
-               else dual16("VIA", "VIB", "EN", "NC"))
+        pin = (
+            ["NC", "VIA", "VIB", "GNDI", "EN", "NC", "VDDI", "GNDB", "VOB", "VDDB", "GNDA", "VOA", "VDDA"]
+            if lga
+            else dual16("VIA", "VIB", "EN", "NC")
+        )
     deglitch = dg == "D"
     hsls = n in (3, 4)
     prot = ["UVLO"] + (["overlap protection"] if hsls else []) + ["enable"]
@@ -408,8 +595,12 @@ def decode_si827x(opn: str, row: str):
         "fall_time_ns": 13.3,
         "pwd_ns": (47 if deglitch else 19) if n == 4 else 8,
     }
-    kind = {1: "single driver (VO+/VO- split outputs)", 3: "HS/LS driver", 4: "PWM-input HS/LS driver",
-            5: "dual driver"}[n]
+    kind = {
+        1: "single driver (VO+/VO- split outputs)",
+        3: "HS/LS driver",
+        4: "PWM-input HS/LS driver",
+        5: "dual driver",
+    }[n]
     if n == 4:
         kind += ", 10-200 ns dead time" if dt == "1" else ", 20-700 ns dead time"
     kind += ", deglitch" if deglitch else ", low jitter"
@@ -423,18 +614,34 @@ def decode_si826x(opn: str, row: str):
     drv, u, iso, grade, sp = m.groups()
     uvlo = {"A": 5, "B": 8, "C": 12}[u]
     pkg = "SDIP-6" if iso == "D" else "DIP-8 GW" if sp == "P" else "SOIC-8N"
-    pin = (["ANODE", "NC", "CATHODE", "GND", "VO", "VDD"] if pkg == "SDIP-6" else
-           ["NC", "ANODE", "CATHODE", "NC", "GND", "VO", "VO", "VDD"])
+    pin = (
+        ["ANODE", "NC", "CATHODE", "GND", "VO", "VDD"]
+        if pkg == "SDIP-6"
+        else ["NC", "ANODE", "CATHODE", "NC", "GND", "VO", "VO", "VDD"]
+    )
     p = {
-        "isolation_rating_kvrms": {"C": 3.75, "D": 5.0}[iso], "isolation_class": "reinforced",
-        "creepage_mm": {"SOIC-8N": 3.9, "DIP-8 GW": 7.0, "SDIP-6": 8.3}[pkg], **common(grade == "A"),
-        "cmti_kv_us": 35, "channel_config": "single", "input_type": "LED emulator input",
-        "peak_source_a": 0.4 if drv == "A" else 1.8, "peak_sink_a": 0.6 if drv == "A" else 4.0, "uvlo_v": uvlo,
-        "output_supply_v": [6.5, 30], "prop_delay_ns": 60, "protection": ["UVLO", "input glitch filter"],
-        "theta_ja_c_w": 105 if pkg == "SDIP-6" else 110, "rise_time_ns": 5.5, "fall_time_ns": 8.5, "pwd_ns": 28,
+        "isolation_rating_kvrms": {"C": 3.75, "D": 5.0}[iso],
+        "isolation_class": "reinforced",
+        "creepage_mm": {"SOIC-8N": 3.9, "DIP-8 GW": 7.0, "SDIP-6": 8.3}[pkg],
+        **common(grade == "A"),
+        "cmti_kv_us": 35,
+        "channel_config": "single",
+        "input_type": "LED emulator",
+        "peak_source_a": 0.4 if drv == "A" else 1.8,
+        "peak_sink_a": 0.6 if drv == "A" else 4.0,
+        "uvlo_v": uvlo,
+        "output_supply_v": [6.5, 30],
+        "prop_delay_ns": 60,
+        "protection": ["UVLO", "input glitch filter"],
+        "theta_ja_c_w": 105 if pkg == "SDIP-6" else 110,
+        "rise_time_ns": 5.5,
+        "fall_time_ns": 8.5,
+        "pwd_ns": 28,
     }
-    desc = (f"Si8261 {'0.6' if drv == 'A' else '4.0'} A isolated gate driver with LED emulator (opto-compatible) "
-            f"input, {uvlo} V UVLO, {p['isolation_rating_kvrms']:g} kVrms")
+    desc = (
+        f"Si8261 {'0.6' if drv == 'A' else '4.0'} A isolated gate driver with LED emulator (opto-compatible) "
+        f"input, {uvlo} V UVLO, {p['isolation_rating_kvrms']:g} kVrms"
+    )
     return pkg, pin, p, desc, None
 
 
@@ -443,18 +650,33 @@ def decode_si8220(opn: str, row: str):
     n, u, iso = m.groups()
     uvlo = {"B": 8, "C": 10, "D": 12.5}[u]
     wb = iso == "D"
-    pin = (["CATHODE", "NC", "NC", "ANODE", "NC", "NC", "CATHODE", "NC", "VSS", "NC", "NC", "NC", "VO", "NC", "VDD",
-            "VSS"] if wb else ["NC", "ANODE", "CATHODE", "NC", "VSS", "VO", "VO", "VDD"])
+    pin = (
+        ["CATHODE", "NC", "NC", "ANODE", "NC", "NC", "CATHODE", "NC", "VSS", "NC", "NC", "NC", "VO", "NC", "VDD", "VSS"]
+        if wb
+        else ["NC", "ANODE", "CATHODE", "NC", "VSS", "VO", "VO", "VDD"]
+    )
     big = n == "0"
     p = {
-        "isolation_rating_kvrms": {"B": 2.5, "C": 3.75, "D": 5.0}[iso], "isolation_class": "basic",
-        "creepage_mm": 8.0 if wb else 4.01, **common(False), "channel_config": "single",
-        "input_type": "LED emulator input", "peak_source_a": 1.5 if big else 0.3, "peak_sink_a": 2.5 if big else 0.5,
-        "uvlo_v": uvlo, "output_supply_v": [6.5, 24], "prop_delay_ns": 60, "protection": ["UVLO"],
-        "theta_ja_c_w": 100 if wb else 140, "rise_time_ns": 20 if big else 30, "fall_time_ns": 20 if big else 30,
+        "isolation_rating_kvrms": {"B": 2.5, "C": 3.75, "D": 5.0}[iso],
+        "isolation_class": "basic",
+        "creepage_mm": 8.0 if wb else 4.01,
+        **common(False),
+        "channel_config": "single",
+        "input_type": "LED emulator",
+        "peak_source_a": 1.5 if big else 0.3,
+        "peak_sink_a": 2.5 if big else 0.5,
+        "uvlo_v": uvlo,
+        "output_supply_v": [6.5, 24],
+        "prop_delay_ns": 60,
+        "protection": ["UVLO"],
+        "theta_ja_c_w": 100 if wb else 140,
+        "rise_time_ns": 20 if big else 30,
+        "fall_time_ns": 20 if big else 30,
     }
-    desc = (f"Si822{n} {'2.5' if big else '0.5'} A isolated gate driver with opto (LED emulator) input, {uvlo:g} V "
-            f"UVLO, {p['isolation_rating_kvrms']:g} kVrms")
+    desc = (
+        f"Si822{n} {'2.5' if big else '0.5'} A isolated gate driver with opto (LED emulator) input, {uvlo:g} V "
+        f"UVLO, {p['isolation_rating_kvrms']:g} kVrms"
+    )
     notes = "CMTI omitted: Table 1 gives only a typical 30 kV/us. Rise/fall time = Table 1 maximum (no typical)."
     return ("SOIC-16W" if wb else "SOIC-8N"), pin, p, desc, notes
 
@@ -467,23 +689,79 @@ def decode_si8281(opn: str, row: str):
     sw = ["VSW", "VDDP"] if n in (1, 3) else ["RSN", "ESW"]
     if n in (1, 2):
         pkg = "SOIC-20W"
-        pin = ["GNDP", *sw, "VDDA", "GNDA", "RSTb", "FLTb", "RDY", "IN+", "IN-", "VSSB", "VMID", "CLMP", "VL", "VH",
-               "VDDB", "DSAT", "NC", "COMP", "VSNS"]
+        pin = [
+            "GNDP",
+            *sw,
+            "VDDA",
+            "GNDA",
+            "RSTb",
+            "FLTb",
+            "RDY",
+            "IN+",
+            "IN-",
+            "VSSB",
+            "VMID",
+            "CLMP",
+            "VL",
+            "VH",
+            "VDDB",
+            "DSAT",
+            "NC",
+            "COMP",
+            "VSNS",
+        ]
     else:
         pkg = "SOIC-24W"
-        pin = ["GNDP", *sw, "VDDA", "SH/FC", "SS", "GNDA", "RSTb", "FLTb", "RDY", "IN+", "IN-", "VSSB", "NC", "VSSB",
-               "VMID", "CLMP", "VL", "VH", "VDDB", "DSAT", "NC", "COMP", "VSNS"]
+        pin = [
+            "GNDP",
+            *sw,
+            "VDDA",
+            "SH/FC",
+            "SS",
+            "GNDA",
+            "RSTb",
+            "FLTb",
+            "RDY",
+            "IN+",
+            "IN-",
+            "VSSB",
+            "NC",
+            "VSSB",
+            "VMID",
+            "CLMP",
+            "VL",
+            "VH",
+            "VDDB",
+            "DSAT",
+            "NC",
+            "COMP",
+            "VSNS",
+        ]
     p = {
-        "isolation_rating_kvrms": {"C": 3.75, "D": 5.0}[iso], "creepage_mm": 8.0, **common(grade == "A"),
-        "cmti_kv_us": 125, "channel_config": "single", "input_type": "complementary input", "peak_source_a": 2.7,
-        "peak_sink_a": 5.5, "uvlo_v": uvlo, "output_supply_v": [{9: 10.0, 12: 13.2, 13: 14.0, 15: 16.0}[uvlo], 30],
-        "prop_delay_ns": 50, "protection": ["UVLO", "desaturation", "soft shutdown", "Miller clamp"],
-        "theta_ja_c_w": 74, "iq_ma": 6.8, "rise_time_ns": 5.5, "fall_time_ns": 8.5, "pwd_ns": 5,
+        "isolation_rating_kvrms": {"C": 3.75, "D": 5.0}[iso],
+        "creepage_mm": 8.0,
+        **common(grade == "A"),
+        "cmti_kv_us": 125,
+        "channel_config": "single",
+        "input_type": "single input",
+        "peak_source_a": 2.7,
+        "peak_sink_a": 5.5,
+        "uvlo_v": uvlo,
+        "output_supply_v": [{9: 10.0, 12: 13.2, 13: 14.0, 15: 16.0}[uvlo], 30],
+        "prop_delay_ns": 50,
+        "protection": ["UVLO", "desaturation", "soft shutdown", "Miller clamp"],
+        "theta_ja_c_w": 74,
+        "iq_ma": 6.8,
+        "rise_time_ns": 5.5,
+        "fall_time_ns": 8.5,
+        "pwd_ns": 5,
     }
     dcdc = "integrated switch" if n in (1, 3) else "external switch"
     extra = ", shutdown/frequency/soft-start control" if n in (3, 4) else ""
-    desc = (f"Si828{n} 4 A isolated single gate driver with DESAT, soft shutdown, Miller clamp and integrated DC-DC "
-            f"controller ({dcdc}{extra}), {uvlo} V UVLO, {p['isolation_rating_kvrms']:g} kVrms")
+    desc = (
+        f"Si828{n} 4 A isolated single gate driver with DESAT, soft shutdown, Miller clamp and integrated DC-DC "
+        f"controller ({dcdc}{extra}), {uvlo} V UVLO, {p['isolation_rating_kvrms']:g} kVrms"
+    )
     return pkg, pin, p, desc, None
 
 
@@ -492,22 +770,68 @@ def decode_si8285(opn: str, row: str):
     n, u, iso, grade = m.groups()
     uvlo = {"B": 9, "C": 12, "D": 13, "E": 15}[u]
     if n == "5":
-        pin = ["GNDA", "VDDA", "NC", "RSTb", "FLTb", "RDY", "IN+", "IN-", "VSSB", "VMID", "CLMP", "VL", "VH", "VDDB",
-               "DSAT", "NC"]
+        pin = [
+            "GNDA",
+            "VDDA",
+            "NC",
+            "RSTb",
+            "FLTb",
+            "RDY",
+            "IN+",
+            "IN-",
+            "VSSB",
+            "VMID",
+            "CLMP",
+            "VL",
+            "VH",
+            "VDDB",
+            "DSAT",
+            "NC",
+        ]
     else:
-        pin = ["IN+", "IN-", "VDDA", "GNDA", "RSTb", "FLTb", "NC", "NC", "VSSB", "VSSB", "VO", "VDDB", "VDDB", "DSAT",
-               "NC", "VMID"]
+        pin = [
+            "IN+",
+            "IN-",
+            "VDDA",
+            "GNDA",
+            "RSTb",
+            "FLTb",
+            "NC",
+            "NC",
+            "VSSB",
+            "VSSB",
+            "VO",
+            "VDDB",
+            "VDDB",
+            "DSAT",
+            "NC",
+            "VMID",
+        ]
     p = {
-        "isolation_rating_kvrms": {"C": 3.75, "D": 5.0}[iso], "isolation_class": "basic", "creepage_mm": 8.0,
-        **common(grade == "A"), "cmti_kv_us": 125, "channel_config": "single", "input_type": "complementary input",
-        "peak_source_a": 2.7, "peak_sink_a": 5.5, "uvlo_v": uvlo,
-        "output_supply_v": [{9: 10.0, 12: 13.2, 13: 14.0, 15: 16.0}[uvlo], 30], "prop_delay_ns": 50,
+        "isolation_rating_kvrms": {"C": 3.75, "D": 5.0}[iso],
+        "isolation_class": "basic",
+        "creepage_mm": 8.0,
+        **common(grade == "A"),
+        "cmti_kv_us": 125,
+        "channel_config": "single",
+        "input_type": "single input",
+        "peak_source_a": 2.7,
+        "peak_sink_a": 5.5,
+        "uvlo_v": uvlo,
+        "output_supply_v": [{9: 10.0, 12: 13.2, 13: 14.0, 15: 16.0}[uvlo], 30],
+        "prop_delay_ns": 50,
         "protection": ["UVLO", "desaturation", "soft shutdown"] + (["Miller clamp"] if n == "5" else []),
-        "theta_ja_c_w": 73, "iq_ma": 2.6, "rise_time_ns": 5.5, "fall_time_ns": 8.5, "pwd_ns": 5,
+        "theta_ja_c_w": 73,
+        "iq_ma": 2.6,
+        "rise_time_ns": 5.5,
+        "fall_time_ns": 8.5,
+        "pwd_ns": 5,
     }
     what = "split VH/VL outputs, Miller clamp, RDY" if n == "5" else "single VO output, HCPL-316J pin-compatible"
-    desc = (f"Si828{n} 4 A isolated single gate driver with DESAT and soft shutdown, {what}, {uvlo} V UVLO, "
-            f"{p['isolation_rating_kvrms']:g} kVrms, WB SOIC-16")
+    desc = (
+        f"Si828{n} 4 A isolated single gate driver with DESAT and soft shutdown, {what}, {uvlo} V UVLO, "
+        f"{p['isolation_rating_kvrms']:g} kVrms, WB SOIC-16"
+    )
     return "SOIC-16W", pin, p, desc, None
 
 
@@ -530,18 +854,54 @@ SINGLE_PINS = {
 VCD_PEAK = {4: 1.5, 8: 2.5, 12: 3.5, 15: 4.0}  # SelVCD speed 7, both directions
 VCD_RISE_FALL = {4: (16, 22), 8: (16, 19), 12: (17, 18), 15: (17, 20)}
 SI82X = {
-    "A": dict(peak=(1.16, 1.09), prop={"A": 31.4, "B": 55.8}, rf=(18.5, 14.5), iq=0.81,
-              theta={"SOIC-8N": 104, "SSO-8": 103}, drive="1 A voltage-mode"),
-    "B": dict(peak=(7.5, 7.5), prop={"A": 38.2, "B": 63.1}, rf=(8.3, 8.6), iq=0.81,
-              theta={"SOIC-8N": 101, "SSO-8": 99}, drive="6 A voltage-mode"),
-    "C": dict(peak=None, prop={"A": 43.4, "B": 72.6, "E": 144}, rf=None, iq=1.15,
-              theta={"SOIC-8N": 101, "SSO-8": 99}, drive="SelVCD current-source"),
-    "D": dict(peak=(1.16, 1.09), prop={"A": 32, "B": 58}, rf=(18.5, 14.5), iq=1.03,
-              theta={"SOIC-16N": 61, "SOIC-14W (IS3)": 69}, drive="1 A voltage-mode"),
-    "E": dict(peak=(7.5, 7.5), prop={"A": 40, "B": 65}, rf=(8.3, 8.6), iq=1.03,
-              theta={"SOIC-16N": 63, "SOIC-14W (IS3)": 59, "LGA-13 (5x5)": 116}, drive="6 A voltage-mode"),
-    "F": dict(peak=None, prop={"A": 40, "B": 65, "E": 140}, rf=None, iq=1.57,
-              theta={"SOIC-16N": 63, "SOIC-14W (IS3)": 59}, drive="SelVCD current-source"),
+    "A": dict(
+        peak=(1.16, 1.09),
+        prop={"A": 31.4, "B": 55.8},
+        rf=(18.5, 14.5),
+        iq=0.81,
+        theta={"SOIC-8N": 104, "SSO-8": 103},
+        drive="1 A voltage-mode",
+    ),
+    "B": dict(
+        peak=(7.5, 7.5),
+        prop={"A": 38.2, "B": 63.1},
+        rf=(8.3, 8.6),
+        iq=0.81,
+        theta={"SOIC-8N": 101, "SSO-8": 99},
+        drive="6 A voltage-mode",
+    ),
+    "C": dict(
+        peak=None,
+        prop={"A": 43.4, "B": 72.6, "E": 144},
+        rf=None,
+        iq=1.15,
+        theta={"SOIC-8N": 101, "SSO-8": 99},
+        drive="SelVCD current-source",
+    ),
+    "D": dict(
+        peak=(1.16, 1.09),
+        prop={"A": 32, "B": 58},
+        rf=(18.5, 14.5),
+        iq=1.03,
+        theta={"SOIC-16N": 61, "SOIC-14W (IS3)": 69},
+        drive="1 A voltage-mode",
+    ),
+    "E": dict(
+        peak=(7.5, 7.5),
+        prop={"A": 40, "B": 65},
+        rf=(8.3, 8.6),
+        iq=1.03,
+        theta={"SOIC-16N": 63, "SOIC-14W (IS3)": 59, "LGA-13 (5x5)": 116},
+        drive="6 A voltage-mode",
+    ),
+    "F": dict(
+        peak=None,
+        prop={"A": 40, "B": 65, "E": 140},
+        rf=None,
+        iq=1.57,
+        theta={"SOIC-16N": 63, "SOIC-14W (IS3)": 59},
+        drive="SelVCD current-source",
+    ),
 }
 
 
@@ -559,8 +919,21 @@ def decode_si82x(opn: str, row: str):
         pwm = nn[0] in "89"
         en = "DIS" if nn[0] in "28" else "EN"
         if pkg.startswith("LGA"):
-            pin = ["GNDI", "PWM" if pwm else "VIA", "NC" if pwm else "VIB", "VDDI", en, "DT", "VDDI", "GNDB", "VOB",
-                   "VDDB", "GNDA", "VOA", "VDDA"]
+            pin = [
+                "GNDI",
+                "PWM" if pwm else "VIA",
+                "NC" if pwm else "VIB",
+                "VDDI",
+                en,
+                "DT",
+                "VDDI",
+                "GNDB",
+                "VOB",
+                "VDDB",
+                "GNDA",
+                "VOA",
+                "VDDA",
+            ]
         else:
             p7, p8 = ("SPD-", "SPD+") if x == "F" else ("NC", "VDDI")
             p16 = dual16("PWM", "NC", en, "DT", p7, p8) if pwm else dual16("VIA", "VIB", en, "DT", p7, p8)
@@ -580,7 +953,7 @@ def decode_si82x(opn: str, row: str):
         comp = nn[0] == "4"
         prot += ["overlap protection"] if comp else []
         prot += ["disable"] if nn == "28" or x == "C" else ["enable"] if nn == "30" else []
-        input_type = "complementary input" if comp else "single input"
+        input_type = "single input"  # VI+/VI- or VI with EN/DIS
     else:
         prot += ["overlap protection", "disable" if en == "DIS" else "enable", "programmable dead time"]
         input_type = "PWM input" if pwm else "dual input"
@@ -609,21 +982,32 @@ def decode_si82x(opn: str, row: str):
         "pwd_ns": 10,
     }
     if single:
-        outs = {"28": "VO output, DIS", "30": "VO+/VO- split outputs, EN", "40": "VO+/VO- split outputs",
-                "41": "VO output + Miller clamp pin", "43": "VO+/VO- split outputs (alternate pinout)",
-                "44": "VO output + Miller clamp pin (alternate pinout)",
-                "47": "VO output + Miller clamp pin (alternate pinout)", "50": "VO+/VO- outputs, SPD± drive select",
-                "60": "VO+/VO- outputs, SPD+ drive select", "70": "VO+/VO- outputs, SPD- drive select"}[nn]
+        outs = {
+            "28": "VO output, DIS",
+            "30": "VO+/VO- split outputs, EN",
+            "40": "VO+/VO- split outputs",
+            "41": "VO output + Miller clamp pin",
+            "43": "VO+/VO- split outputs (alternate pinout)",
+            "44": "VO output + Miller clamp pin (alternate pinout)",
+            "47": "VO output + Miller clamp pin (alternate pinout)",
+            "50": "VO+/VO- outputs, SPD± drive select",
+            "60": "VO+/VO- outputs, SPD+ drive select",
+            "70": "VO+/VO- outputs, SPD- drive select",
+        }[nn]
         kind = f"single-channel {cfg['drive']} gate driver, {'VI+/VI-' if nn[0] == '4' else 'VI'} input, {outs}"
     else:
-        kind = (f"dual-channel {cfg['drive']} gate driver, {'PWM input HS/LS' if pwm else 'universal VIA/VIB'}, "
-                f"{en}, programmable dead time")
+        kind = (
+            f"dual-channel {cfg['drive']} gate driver, {'PWM input HS/LS' if pwm else 'universal VIA/VIB'}, "
+            f"{en}, programmable dead time"
+        )
     dgl = {"A": "", "B": ", 30 ns deglitch", "E": ", 90 ns deglitch"}[dg]
     desc = f"Si82{x}{nn} {kind}{dgl}, {uvlo} V UVLO, {p['isolation_rating_kvrms']:g} kVrms"
     notes = None
     if lga:
-        notes = ("LGA-13: the datasheet gives no creepage / IEC 60747-17 data for this package (Tables 11 and 13 "
-                 "cover NB SOIC-16 and WB SOIC-14 only).")
+        notes = (
+            "LGA-13: the datasheet gives no creepage / IEC 60747-17 data for this package (Tables 11 and 13 "
+            "cover NB SOIC-16 and WB SOIC-14 only)."
+        )
     return pkg, pin, p, desc, notes
 
 
@@ -632,22 +1016,74 @@ def decode_si829x(opn: str, row: str):
     if not m:
         return None  # Si82910/11/13: two-package chipset (input side + output side), not a single driver
     vpos, spi = m.groups()
-    pin = ["CSb", "SCLK", "SDO", "SDI", "GNDI", "GNDI", "FLT1b", "FLT2b", "VDDI", "GNDI", "IN_MON", "IN", "FOS",
-           "FOS_SEL", "RSTb", "AOUT2", "AOUT1", "ENUM", "VGREG", "VOLF", "GNDR", "MCOUT", "GNDO_PWR", "GM", "MID", "VO",
-           "VDDO_PWR", "VOHF", "VDREG", "VDDR", "GNDR", "TV1/VREF", "TV2/FOSX_SEL", "IV1", "IV2/FOSX", "DESAT"]
+    pin = [
+        "CSb",
+        "SCLK",
+        "SDO",
+        "SDI",
+        "GNDI",
+        "GNDI",
+        "FLT1b",
+        "FLT2b",
+        "VDDI",
+        "GNDI",
+        "IN_MON",
+        "IN",
+        "FOS",
+        "FOS_SEL",
+        "RSTb",
+        "AOUT2",
+        "AOUT1",
+        "ENUM",
+        "VGREG",
+        "VOLF",
+        "GNDR",
+        "MCOUT",
+        "GNDO_PWR",
+        "GM",
+        "MID",
+        "VO",
+        "VDDO_PWR",
+        "VOHF",
+        "VDREG",
+        "VDDR",
+        "GNDR",
+        "TV1/VREF",
+        "TV2/FOSX_SEL",
+        "IV1",
+        "IV2/FOSX",
+        "DESAT",
+    ]
     p = {
-        "isolation_rating_kvrms": 6.0, "isolation_class": "reinforced", **common(True), "channel_config": "single",
-        "input_type": "single input", "peak_source_a": 15, "peak_sink_a": 15, "output_supply_v": [18, 30],
-        "protection": ["UVLO", "overlap protection", "programmable dead time", "input glitch filter", "Miller clamp",
-                       "desaturation", "soft shutdown"],
+        "isolation_rating_kvrms": 6.0,
+        "isolation_class": "reinforced",
+        **common(True),
+        "channel_config": "single",
+        "input_type": "single input",
+        "peak_source_a": 15,
+        "peak_sink_a": 15,
+        "output_supply_v": [18, 30],
+        "protection": [
+            "UVLO",
+            "overlap protection",
+            "programmable dead time",
+            "input glitch filter",
+            "Miller clamp",
+            "desaturation",
+            "soft shutdown",
+        ],
         "deadtime": "programmable",
     }
-    desc = (f"Si82900 15 A SPI-configurable isolated safety gate driver (ProVCD, ISO 26262) for EV traction "
-            f"inverters, VPOS regulator {'enabled' if vpos == 'A' else 'disabled'}, "
-            f"{'chip select / enumeration' if spi == 'A' else 'daisy-chain'} SPI addressing, 6 kVRMS")
-    notes = ("From the Si829x product summary (no full datasheet is public): output current and UVLO are "
-             "SPI-programmable, so UVLO, CMTI minimum, delays and creepage are not given. Peak current = the "
-             "15 A maximum constant sink/source current.")
+    desc = (
+        f"Si82900 15 A SPI-configurable isolated safety gate driver (ProVCD, ISO 26262) for EV traction "
+        f"inverters, VPOS regulator {'enabled' if vpos == 'A' else 'disabled'}, "
+        f"{'chip select / enumeration' if spi == 'A' else 'daisy-chain'} SPI addressing, 6 kVRMS"
+    )
+    notes = (
+        "From the Si829x product summary (no full datasheet is public): output current and UVLO are "
+        "SPI-programmable, so UVLO, CMTI minimum, delays and creepage are not given. Peak current = the "
+        "15 A maximum constant sink/source current."
+    )
     return "SSOP-36W", pin, p, desc, notes
 
 
@@ -770,7 +1206,7 @@ SOURCES = {
         "qualification": ("8.1. Automotive Grade OPNs", "Table 14: -A codes automotive grade"),
         "cmti_kv_us": ("Transient Immunity", "Table 2, min"),
         "channel_config": ("Table 13. Si826x Ordering Guide", "ordering guide"),
-        "input_type": ("Table 11. Pin Descriptions", "LED emulator input"),
+        "input_type": ("Table 11. Pin Descriptions", "LED emulator"),
         "peak_source_a": ("Output High Current", "Table 2, typ"),
         "peak_sink_a": ("Output Low Current", "Table 2, typ"),
         "uvlo_v": ("Table 13. Si826x Ordering Guide", "ordering guide; thresholds Table 2"),
@@ -864,7 +1300,7 @@ SOURCES = {
 
 
 def si82x_sources(x: str) -> dict:
-    og = f"Si82{x}x Ordering Guide" if x in "CF" else f"Si82{x}xx Ordering Guide" if x != "E" else "Si82Ex Ordering Guide"
+    og = f"Si82{x}{'x' if x in 'CEF' else 'xx'} Ordering Guide"
     gate = "Gate Driver Characteristics"
     return {
         "isolation_rating_kvrms": (og, "ordering guide"),
@@ -874,10 +1310,14 @@ def si82x_sources(x: str) -> dict:
         "cmti_kv_us": ("transient immunity", "timing table, min"),
         "channel_config": (og, "ordering guide"),
         "input_type": (og, "ordering guide inputs column"),
-        "peak_source_a": ("Peak Output Current" if x not in "CF" else "Output Current", f"{gate}, typ"
-                          + (" at VDD 18 V" if x not in "CF" else " at speed 7 for the UVLO grade")),
-        "peak_sink_a": ("Peak Output Current" if x not in "CF" else "Output Current", f"{gate}, typ"
-                        + (" at VDD 18 V" if x not in "CF" else " at speed 7 for the UVLO grade")),
+        "peak_source_a": (
+            "Peak Output Current" if x not in "CF" else "Output Current",
+            f"{gate}, typ" + (" at VDD 18 V" if x not in "CF" else " at speed 7 for the UVLO grade"),
+        ),
+        "peak_sink_a": (
+            "Peak Output Current" if x not in "CF" else "Output Current",
+            f"{gate}, typ" + (" at VDD 18 V" if x not in "CF" else " at speed 7 for the UVLO grade"),
+        ),
         "uvlo_v": (og, "ordering guide; thresholds in Power Supply Characteristics"),
         "output_supply_v": ("Gate driver supply", "Power Supply Characteristics"),
         "prop_delay_ns": ("Propagation Delay", "Timing Characteristics, max for the deglitch option"),
@@ -1005,24 +1445,27 @@ def build(log=print) -> dict:
             p_sources = {k: v for k, v in sources.items() if k in params or k == "pinout"}
             p_sources = shared.setdefault(("src", key, tuple(p_sources)), p_sources)
             pinout = shared.setdefault(("pin", tuple(pinout)), pinout)
-            parts.append({
-                "mpn": opn.upper(),
-                "manufacturer": "Skyworks",
-                "family": "gate_driver",
-                "description": desc,
-                "package": pkg,
-                "pinout": pinout,
-                "datasheet": pdf,
-                "datasheet_url": DS_URL + path,
-                "product_url": (c or {}).get("product_url"),
-                "notes": notes,
-                "lifecycle": {"status": status, "revision": rev, "revision_date": rev_date, "source": life_src},
-                "params": params,
-                "param_sources": p_sources,
-            })
+            parts.append(
+                {
+                    "mpn": opn.upper(),
+                    "manufacturer": "Skyworks",
+                    "family": "gate_driver",
+                    "description": desc,
+                    "package": pkg,
+                    "pinout": pinout,
+                    "datasheet": pdf,
+                    "datasheet_url": DS_URL + path,
+                    "product_url": (c or {}).get("product_url"),
+                    "notes": notes,
+                    "lifecycle": {"status": status, "revision": rev, "revision_date": rev_date, "source": life_src},
+                    "params": params,
+                    "param_sources": p_sources,
+                }
+            )
             n_series += 1
-        datasheets.append({"file": pdf, "url": DS_URL + path, "sha256": sha256(pdf), "revision": rev,
-                           "revision_date": rev_date})
+        datasheets.append(
+            {"file": pdf, "url": DS_URL + path, "sha256": sha256(pdf), "revision": rev, "revision_date": rev_date}
+        )
         log(f"{key}: {n_series} parts")
     si823x = yamlio.load((PROJECT_ROOT / "data" / "real" / "skyworks_si823x.yaml").read_text())["parts"]
     used_cat |= {base_name(p["mpn"]).upper() for p in si823x} | {p["mpn"].upper() for p in si823x}
@@ -1040,8 +1483,9 @@ HEADER = """\
 # the -A codes only (the ordering guides state AEC-Q100 for the automotive-grade flow).
 #
 # Conventions (data/sources/GATE_DRIVER_DATA.md), plus for single-channel drivers:
-#   input_type: "single input" (VI, with EN/DIS or SPD), "complementary input" (VI+/VI- or IN+/IN-),
-#   "LED emulator input" (opto-compatible ANODE/CATHODE input, Si826x and Si8220/21).
+#   input_type: "single input" for every single-channel logic input (VI with EN/DIS or SPD, complementary
+#   VI+/VI- or IN+/IN-), as ti_gate_drivers_more.yaml does for IN+/IN-; "LED emulator" for the opto-compatible
+#   ANODE/CATHODE input of Si826x and Si8220/21 (same string as ti_gate_drivers_more.yaml).
 #   peak_source_a / peak_sink_a: typical; Si82Ax/Bx/Dx/Ex at VDD = 18 V (the row with a guaranteed
 #   minimum); SelVCD parts (Si82Cx/Fx) at speed 7 for the UVLO grade's test supply; Si82Bx parts with a
 #   Miller-clamp pin sink through VO only (3.66 A).
@@ -1057,7 +1501,8 @@ HEADER = """\
 
 def write(log=print) -> None:
     data = build(log)
-    head = HEADER + "".join(f"#   {code}: {PACKAGE_NOTES[code]}\n" for code in PACKAGE_NOTES if code in data["packages"])
+    notes = [f"#   {code}: {note}\n" for code, note in PACKAGE_NOTES.items() if code in data["packages"]]
+    head = HEADER + "".join(notes)
     head += "#\n# Catalogue gate-driver codes covered neither here nor in skyworks_si823x.yaml:\n"
     for i in range(0, len(data["catalogue_not_covered"]), 8):
         head += "#   " + ", ".join(data["catalogue_not_covered"][i : i + 8]) + "\n"
@@ -1069,9 +1514,12 @@ def write(log=print) -> None:
         "parts": data["parts"],
     }
     OUT.write_text(head + yaml.safe_dump(out, sort_keys=False, allow_unicode=True, width=120))
-    mech_head = ("# Lead and PCB land pattern data for the new Skyworks gate-driver packages of\n"
-                 "# data/real/skyworks_gate_drivers_more.yaml (format: data/mechanical.yaml). Packages already in\n"
-                 "# data/mechanical.yaml / mechanical_si823x.yaml are not repeated (a repeated key would replace them).\n")
+    mech_head = (
+        "# Lead and PCB land pattern data for the new Skyworks gate-driver packages of\n"
+        "# data/real/skyworks_gate_drivers_more.yaml (format: data/mechanical.yaml). Packages already in\n"
+        "# data/mechanical.yaml / mechanical_si823x.yaml are not repeated (a repeated key would\n"
+        "# replace them).\n"
+    )
     mech = {"Skyworks": {k: v for k, v in MECHANICAL.items() if k in data["packages"]}}
     MECH_OUT.write_text(mech_head + yaml.safe_dump(mech, sort_keys=False, allow_unicode=True, width=200))
     log(f"{len(data['parts'])} parts -> {OUT}")

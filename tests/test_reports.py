@@ -21,3 +21,31 @@ def test_report_page_and_unknown_slug(client):
     page = client.get("/business/reports/filters-1-11ghz")
     assert page.status_code == 200 and 'class="rpt"' in page.text and "Standalone filter" in page.text
     assert client.get("/business/reports/no-such-report").status_code == 404
+
+
+def test_question_is_saved_reviewed_and_answered(client):
+    url = "/business/reports/filters-1-11ghz"
+    r = client.post(f"{url}/ask", data={"text": "Which Trans-Tech ceramic filters cover the S band?"},
+                    follow_redirects=False)  # fmt: skip
+    assert r.status_code == 303 and r.headers["location"].endswith("#questions")
+    assert "Which Trans-Tech ceramic filters" in client.get(url).text
+    assert client.post(f"{url}/ask", data={"text": "  "}).status_code == 400
+    assert client.post("/business/reports/no-such-report/ask", data={"text": "x"}).status_code == 404
+
+    client.post(f"{url}/ask", data={"text": "What Trans-Tech ceramic filters cover S band?"})
+    page = client.get("/business/reports/questions")
+    assert page.status_code == 200 and "Possible duplicate of" in page.text
+    assert "like #" in client.get("/business/reports/questions.txt").text
+
+    qid = int(page.text.split('id="q', 2)[1].split('"')[0])
+    r = client.post(f"/business/reports/questions/{qid}", data={"status": "good", "answer": "Two, both 2.4 GHz."},
+                    follow_redirects=False)  # fmt: skip
+    assert r.status_code == 303
+    assert "Two, both 2.4 GHz." in client.get(url).text
+    assert client.post(f"/business/reports/questions/{qid}", data={"status": "bogus"}).status_code == 400
+    assert client.post("/business/reports/questions/99999", data={"status": "good"}).status_code == 404
+
+
+def test_background_page_only_when_present(client):
+    has = rp.has_background("filters-1-11ghz")
+    assert client.get("/business/reports/filters-1-11ghz/background").status_code == (200 if has else 404)

@@ -1,0 +1,139 @@
+{% raw %}<h1>Standalone filters, 1–11 GHz: background notes</h1>
+<p class="meta">Prepared 20 Oct 2026 from BizDev data (Skyworks / Qorvo catalogues, 3,990 collected competitor RF parts, 219 application block diagrams with the band each RF block needs) and public web sources. Figures marked “est” are estimates; “unverified” rests on a single or secondary source.</p>
+
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>Wide bandwidth above ~25 % is not acoustic territory.</b> BAW reaches ~7 % coupling (AlN), ~18 % with scandium, XBAR ~25 %. Full n77 (24 %), UWB channels 5–9 (28 %), X-band (40 %) and 2–18 GHz need LTCC, thin-film / IPD, ceramic, cavity or switched / tunable filters.<sup>19 21 23 24</sup></li>
+    <li><b>Skyworks' own standalone line is narrow and acoustic:</b> 10 BAW filters for Wi-Fi 5 / 6 GHz and V2X. With Qorvo (combination completed Oct 2026<sup>1 2</sup>) it adds 175 BAW / SAW / ceramic filters, but about half are obsolete or NRND and none is active above 8 GHz.</li>
+    <li><b>Competitors fill 4–11 GHz with non-acoustic catalogues:</b> Mini-Circuits alone lists ~110 active filters there (LTCC, cavity, thin film), including multi-GHz passbands such as 3.1–7.1 GHz.</li>
+    <li><b>Best near-term bets are acoustic and adjacent:</b> Wi-Fi 7/8 coexistence, automotive coexistence, 5G FR1 sub-band and hybrid n77 filters. <b>Wideband 1–11 GHz needs a non-acoustic capability</b>, where Trans-Tech (ceramic) and Lark (custom to 40 GHz), both Skyworks-owned, are the starting point.<sup>13 14 17</sup></li>
+  </ol>
+</section>
+
+<h2>Where the portfolio stands</h2>
+<p>Active filters with a stated passband, by centre frequency. “Ours” is Skyworks plus Qorvo; competitors are those BizDev could collect from public product pages (Mini-Circuits, MACOM, Broadcom). Analog Devices, NXP, Murata, Qualcomm and Guerrilla RF block automated access, so competitor counts are a floor.</p>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Centre frequency</th><th scope="col">Ours</th><th scope="col">Main technology (ours)</th><th scope="col">Competitors</th><th scope="col">Main technology (competitors)</th></tr></thead>
+  <tbody>
+    <tr><td>below 1 GHz</td><td class="n">13 <span class="bar" style="width:13px"></span></td><td>SAW</td><td class="n">292 <span class="bar c" style="width:80px"></span></td><td>lumped LC, ceramic</td></tr>
+    <tr><td>1–2 GHz</td><td class="n">17 <span class="bar" style="width:17px"></span></td><td>SAW, ceramic</td><td class="n">136 <span class="bar c" style="width:37px"></span></td><td>ceramic, LTCC, cavity</td></tr>
+    <tr><td>2–3 GHz</td><td class="n">12 <span class="bar" style="width:12px"></span></td><td>BAW, switched filter bank</td><td class="n">66 <span class="bar c" style="width:18px"></span></td><td>LTCC, ceramic, cavity</td></tr>
+    <tr><td>3–4 GHz</td><td class="n">6 <span class="bar" style="width:6px"></span></td><td>BAW, switched filter bank</td><td class="n">28 <span class="bar c" style="width:8px"></span></td><td>LTCC, cavity</td></tr>
+    <tr><td>4–6 GHz</td><td class="n">8 <span class="bar" style="width:8px"></span></td><td>BAW</td><td class="n">43 <span class="bar c" style="width:12px"></span></td><td>LTCC, cavity, ceramic</td></tr>
+    <tr><td>6–8 GHz</td><td class="n">7 <span class="bar" style="width:7px"></span></td><td>BAW (Wi-Fi 6 GHz)</td><td class="n">35 <span class="bar c" style="width:10px"></span></td><td>LTCC, thin film, cavity</td></tr>
+    <tr><td>8–11 GHz</td><td class="n">0</td><td><span class="pill none">none</span></td><td class="n">34 <span class="bar c" style="width:9px"></span></td><td>LTCC, thin film, cavity</td></tr>
+    <tr><td>above 11 GHz</td><td class="n">0</td><td><span class="pill none">none</span></td><td class="n">89 <span class="bar c" style="width:24px"></span></td><td>LTCC, cavity, reflectionless</td></tr>
+  </tbody>
+</table></div>
+<p class="meta">Widest passband among our active filters: ~20 % (Qorvo QPB1033 switched filter bank, 2.7–3.3 GHz; Skyworks SKY85921-11, 5.945–7.125 GHz). Bars share one scale (1 px per part).</p>
+
+<h3>Bandwidth each target needs, and what can deliver it</h3>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Band</th><th scope="col">Range</th><th scope="col">Fractional BW</th><th scope="col">Technology that fits</th><th scope="col">Skyworks today</th></tr></thead>
+  <tbody>
+    <tr><td>n78 / n79</td><td>3.3–3.8 / 4.4–5.0 GHz</td><td class="n">13–14 %</td><td>BAW</td><td><span class="pill part">Qorvo BAW (n79, C-band)</span></td></tr>
+    <tr><td>Wi-Fi 5 GHz / 6 GHz</td><td>5.17–5.895 / 5.945–7.125 GHz</td><td class="n">13 / 18 %</td><td>BAW, XBAR</td><td><span class="pill have">yes, BAW</span></td></tr>
+    <tr><td>n77 full band</td><td>3.3–4.2 GHz</td><td class="n">24 %</td><td>BAW + IPD/LTCC hybrid, LTCC</td><td><span class="pill none">no standalone part</span></td></tr>
+    <tr><td>UWB ch5–9</td><td>6.24–8.24 GHz</td><td class="n">28 %</td><td>LTCC, IPD</td><td><span class="pill none">none</span></td></tr>
+    <tr><td>X-band</td><td>8–12 GHz</td><td class="n">40 %</td><td>thin film, MMIC, cavity</td><td><span class="pill part">Lark custom only</span></td></tr>
+    <tr><td>EW / SIGINT</td><td>2–18 GHz</td><td class="n">&gt; 1 octave</td><td>switched banks, YIG, tunable MMIC</td><td><span class="pill none">none</span></td></tr>
+  </tbody>
+</table></div>
+<p class="meta">Fractional bandwidth = width ÷ centre frequency, from band edges (est). Sources 19–26, 33–35, 56–59.</p>
+
+<h3>Where BizDev's application diagrams need a filter</h3>
+<p>Applications with an RF filter block, by the band that block needs: <b>S 2–4 GHz: 25</b> (5G massive MIMO, small cells, Wi-Fi 7 APs, CPE, telematics) · <b>C 4–8 GHz: 22</b> (Wi-Fi 6E/7, 5G n77/n79, enterprise APs) · <b>L 1–2 GHz: 12</b> · <b>below 1 GHz: 12</b> · <b>X and Ku: 6 each</b> (radar, EW, satellite payload, backhaul, radar warning receiver) · <b>Ka: 3</b>. On the RF coverage page X- and Ku-band filters are “competitors only” gaps: needed by 6 applications each, served by Mini-Circuits (65 and 48 parts) and MACOM, with no active part of ours.</p>
+
+<h2>Opportunities, strongest first</h2>
+<ol class="opps">
+  <li><b>Wi-Fi 7/8 5 + 6 GHz coexistence BAW, sold standalone.</b> Simultaneous 5 and 6 GHz operation needs ≥ 50 dB rejection across a 50–250 MHz guard. Skyworks SKY8592x plus Qorvo QPQ5604 / QPQ55xx now sit in one catalogue; Akoustis, which held tier-1 Wi-Fi 7 sockets, exited in 2025; Broadcom mostly sells its FBAR inside FEMs.
+    <p class="ev">Fit: <span class="pill have">have it</span> · Demand: ~118 M Wi-Fi 7 APs forecast for 2026 (ABI, unverified); 22 BizDev applications need C-band filters.<sup>8 10 11 27 29 62 65 83</sup></p></li>
+  <li><b>Automotive coexistence: Wi-Fi 5/6 GHz, C-V2X band 47, GNSS L1/L5.</b> SKY5A1005/6/8 and Qorvo QPQ2200Q already exist; AEC-Q qualification keeps newcomers out and the Akoustis C-V2X part is gone.
+    <p class="ev">Fit: <span class="pill have">have it</span> · Value: automotive volume at good margins.<sup>28 67 68 86</sup></p></li>
+  <li><b>5G FR1 infrastructure and CPE: n77 / n78 / n79 and upper C-band.</b> Qorvo QPQ3509 (C-band), QPQ4900 (n79) and QPQ1298 (n41) are the base. The gap is a full-n77 standalone filter, which needs a BAW + IPD/LTCC hybrid (shown at 2.5 dB loss in IEEE work). The US upper C-band auction (3.98–4.14 GHz, 2027) adds new radios and edge filters.
+    <p class="ev">Fit: <span class="pill part">partly; needs a hybrid</span> · Price point: QPQ4900 ~$4.5 at volume, 98–112-week reel lead time listed.<sup>19 26 40 41 61 71 82</sup></p></li>
+  <li><b>Radio-altimeter and C-band earth-station protection, 3.98–4.4 GHz.</b> US airline fleets must be retrofitted by the end of 2030, funded from the auction (single trade-press source); earth-station LNBs need sharper edges. High power and AS9100 suit Trans-Tech ceramic and Lark cavity filters.
+    <p class="ev">Fit: <span class="pill part">via Trans-Tech / Lark</span> · Timing: 2027–2030.<sup>14 17 70 71 72</sup></p></li>
+  <li><b>UWB channel 5/9 filters.</b> ~1.4 B UWB devices by 2030 (ABI). Today's parts are LTCC (Abracon, Johanson) at a few dollars; Skyworks has no UWB filter and no LTCC line, so this needs build, buy or partner.
+    <p class="ev">Fit: <span class="pill none">capability gap</span> · High volume, low price.<sup>45 46 66</sup></p></li>
+  <li><b>Defense: IFF / GNSS BAW, ceramic L/S/C, X-band thin film, 2–18 GHz banks.</b> Qorvo's ITAR-free IFF BAW is ~10× smaller than ceramic; its Richardson BAW fab is DoD Trusted 1A; Lark covers custom work to 40 GHz. Sticky, high-value sockets, but Knowles, Smiths, Mercury, K&L and Spectrum Control are entrenched.
+    <p class="ev">Fit: <span class="pill part">partly</span> · BizDev demand: 6 applications each at X and Ku band.<sup>5 17 33 49 55 69</sup></p></li>
+  <li><b>6G FR3 (7–8 GHz) and mmWave IF (~3.3–7.1 GHz) filters.</b> Skyworks already samples FR3 front ends and says it has BAW for early FR3; FR2 converters use 3.3–7.125 GHz IFs suited to BAW or LTCC.
+    <p class="ev">Fit: <span class="pill have">BAW in development</span> · Timing tied to 6G (~2029+, est).<sup>74 75 76</sup></p></li>
+</ol>
+
+<h2>What would be needed for true wideband 1–11 GHz</h2>
+<p>Skyworks' acoustic fabs cannot reach 25 %+ bandwidths or octave coverage. Three routes, in order of effort:</p>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Route</th><th scope="col">Covers</th><th scope="col">Starting point</th><th scope="col">Trade-off</th></tr></thead>
+  <tbody>
+    <tr><td>Scale Trans-Tech / Lark into a catalogue line</td><td>L/S/C ceramic, custom cavity and lumped to 40 GHz</td><td>~120-person AS9100 business, already owned</td><td>Low volume; custom engineering per program</td></tr>
+    <tr><td>Hybrid acoustic + IPD/LTCC</td><td>full n77, wider 5/6 GHz, FR3</td><td>Skyworks + Qorvo BAW fabs</td><td>Needs IPD or LTCC process or a partner; best fit with existing customers</td></tr>
+    <tr><td>Buy or partner for LTCC / thin film / IPD</td><td>UWB, X-band, multi-GHz catalogue filters</td><td>LTCC houses, glass-IPD firms (est)</td><td>Commodity pricing at the low end; competes with Mini-Circuits, Murata, Kyocera AVX</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Risks</h2>
+<ul>
+  <li><b>Market shape:</b> BAW is ~91 % Broadcom + Qorvo by revenue, and most filter value sits inside modules; the standalone 1–11 GHz market is likely in the low billions (est).<sup>80</sup></li>
+  <li><b>Pricing:</b> commodity LTCC sells for about $4; Chinese suppliers dominate massive-MIMO ceramic filters.<sup>43 47</sup></li>
+  <li><b>Capacity and integration:</b> Qorvo's SAW fab transfer is under way, the Singapore filter site must move by 2030, and post-merger cost targets could prune low-volume standalone SKUs (est).<sup>5 91</sup></li>
+  <li><b>IP:</b> XBAR belongs to Murata/Resonant; Akoustis' IP went to a SpaceX subsidiary; Qorvo has enforced BAW IP in court.<sup>6 8 30</sup></li>
+  <li><b>Data:</b> filter market figures differ 2–3× between firms and are mostly paywalled summaries ($10–16 B total RF filters in 2024).<sup>36 78 79</sup></li>
+</ul>
+
+<h2>Sources</h2>
+<ol class="src">
+  <li value="1">Qorvo: Skyworks completes combination with Qorvo, Oct 2026 — qorvo.com/about/news-events/news-releases/2026/skyworks-completes-combination-with-qorvo</li>
+  <li value="2">Semiconductor Today, 6 Oct 2026 — semiconductor-today.com/news_items/2026/oct/skyworks-qorvo-061026.shtml</li>
+  <li value="5">Qorvo FY2026 10-K (Richardson BAW, Trusted 1A; SAW transfer) — sec.gov/Archives/edgar/data/1604778/000162828026032873/rfmd-20260328.htm</li>
+  <li value="6">Akoustis Chapter 11 — financierworldwide.com/fw-news/2024/12/17/akoustis-technologies-files-for-chapter-11-protection</li>
+  <li value="8">Akoustis asset sale to SpaceX — microwavejournal.com/articles/43990</li>
+  <li value="10">Akoustis Wi-Fi 7 tier-1 enterprise OEM win (2024) — globenewswire.com</li>
+  <li value="11">Akoustis tier-1 network infrastructure wins (2024) — globenewswire.com</li>
+  <li value="13">Skyworks FY2025 10-K Exhibit 21 (Trans-Tech) — sec.gov/Archives/edgar/data/4127/000000412725000085/fy25exhibit21.htm</li>
+  <li value="14">Trans-Tech ceramic bandpass filters — trans-techinc.com/products/ceramic-bandpass-filters</li>
+  <li value="17">Lark Engineering — larkengineering.com</li>
+  <li value="19">IEEE IUS 2019, hybrid IPD + acoustic n77 filter — ewh.ieee.org/conf/ius/2019/media/files/0015.pdf</li>
+  <li value="21">EPFL thesis, AlN coupling ≤ 7 % — infoscience.epfl.ch/record/33463</li>
+  <li value="23">Georgia Tech, ScAlN FBAR kt² 18 % (IWS 2019)</li>
+  <li value="24">Plessky et al., XBAR, Electronics Letters 2019 — infoscience.epfl.ch</li>
+  <li value="26">Yole interview with Broadcom on FBAR (n77 needs hybrid) — yolegroup.com (unverified summary)</li>
+  <li value="27">Skyworks Wi-Fi 7 portfolio release, 14 Oct 2025 — businesswire.com</li>
+  <li value="28">Skyworks SKY5A1008 / SKY5A1006 — skyworksinc.com/Products/Filters</li>
+  <li value="29">Qorvo QPQ5604 / QPQ5503 / QPQ5501 — mouser.com</li>
+  <li value="30">Murata XBAR release, 8 Jul 2025 — murata.com/en-us/news/acoustic-wave/bulk-acoustic-wave/2025/0708</li>
+  <li value="33">Smiths Interconnect Planar X X-band filters — smithsinterconnect.com</li>
+  <li value="36">Yole Status of the RF Industry 2025 (summary) — everythingrf.com</li>
+  <li value="40">Qorvo QPQ4900 n79 BAW — qorvo.com/products/p/QPQ4900</li>
+  <li value="41">Qorvo QPQ3509 C-band BAW (2023) — qorvo.com</li>
+  <li value="43">Mini-Circuits BFCN LTCC datasheets and pricing — minicircuits.com</li>
+  <li value="45">Abracon UWB LTCC filters — mouser.com</li>
+  <li value="46">Johanson UWB channel 9 BPF — johansontechnology.com</li>
+  <li value="47">Ceramic dielectric waveguide filter market (low-quality summaries)</li>
+  <li value="49">Knowles RF filter capabilities — wirelessdesignonline.com</li>
+  <li value="55">Mercury RF filters — mrcy.com</li>
+  <li value="61">Qorvo QPQ1298 n41 BAW (2020) — qorvo.com</li>
+  <li value="62">US patent 11476824, 5/6 GHz selective filtering — uspto.gov</li>
+  <li value="65">Dell'Oro / ABI Wi-Fi 7 (trade press, unverified)</li>
+  <li value="66">ABI Research, UWB 1.4 B devices by 2030 — abiresearch.com</li>
+  <li value="67">Qorvo V2X suite with QPQ2200Q (2020) — qorvo.com</li>
+  <li value="68">Skyworks SKY5A1005 — skyworksinc.com/Products/Filters/SKY5A1005</li>
+  <li value="69">Qorvo 880367 IFF BAW, 880273 GPS — qorvo.com</li>
+  <li value="70">Norsat, 5G interference with C-band earth stations — norsat.com/5g-interference</li>
+  <li value="71">DWT, FCC upper C-band transition order (Jul 2026) — dwt.com</li>
+  <li value="72">AeroCorner, FAA radio-altimeter final rule (unverified) — aerocorner.com</li>
+  <li value="74">Sivers FR2 converters, 3.3–7.125 GHz IF — sivers-semiconductors.com</li>
+  <li value="75">Skyworks FQ2 FY2026 call transcript (secondary) — insidermonkey.com</li>
+  <li value="76">Skyworks + MediaTek FR3 at MWC 2026 — microwavejournal.com</li>
+  <li value="78">Global Industry Analysts / Grand View summaries — gii.tw, giikorea.co.kr (paywalled)</li>
+  <li value="79">Valuates RF filter market — prnewswire.co.uk (paywalled)</li>
+  <li value="80">QYResearch BAW filters 2024 — giikorea.co.kr (paywalled)</li>
+  <li value="82">Avnet / RFMW QPQ4900 pricing and lead time — avnet.com</li>
+  <li value="83">Broadcom Wi-Fi 7 FEMs with FBAR — everythingrf.com</li>
+  <li value="86">Akoustis C-V2X filter — ir.akoustis.com</li>
+  <li value="91">Skyworks FY2025 10-K (Osaka fab, Singapore filter facility) — sec.gov</li>
+</ol>
+<p class="meta">BizDev data: Skyworks and Qorvo public catalogues; competitor parts from Mini-Circuits, MACOM, Infineon, pSemi and Broadcom public product pages (collected Oct 2026); application demand from data/business/rf_block_bands.yaml. Source numbers follow the full research notes kept with this analysis.</p>
+{% endraw %}

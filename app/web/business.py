@@ -2,6 +2,7 @@
 TAM data."""
 
 from collections import Counter
+from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
@@ -717,12 +718,83 @@ def product_reports(request: Request, kind: str = "", tag: str = ""):
     return templates.TemplateResponse(request, "business/reports.html", ctx)
 
 
+def _question_day(day: str) -> date | None:
+    try:
+        return date.fromisoformat(day) if day else None
+    except ValueError:
+        raise HTTPException(400, "Bad date") from None
+
+
+@router.get("/business/reports/questions", response_class=HTMLResponse)
+def report_questions(request: Request, day: str = "", session: Session = Depends(get_session)):
+    """Questions asked on the reports, one list per day, reviewed for good questions and duplicates."""
+    from app.services import reports as rp
+
+    days = rp.question_days(session)
+    d = _question_day(day) or (days[0][0] if days else datetime.now(UTC).date())
+    ctx = {"days": days, "rv": rp.review(session, d), "statuses": rp.Q_STATUSES}
+    return templates.TemplateResponse(request, "business/report_questions.html", ctx)
+
+
+@router.get("/business/reports/questions.txt", response_class=PlainTextResponse)
+def report_questions_text(day: str = "", session: Session = Depends(get_session)):
+    from app.services import reports as rp
+
+    return rp.review_text(rp.review(session, _question_day(day) or datetime.now(UTC).date()))
+
+
+@router.post("/business/reports/questions/{qid:int}")
+async def report_question_decide(request: Request, qid: int, session: Session = Depends(get_session)):
+    from app.services import reports as rp
+
+    form = await request.form()
+    dup = str(form.get("duplicate_of") or "").lstrip("#").strip()
+    try:
+        rp.decide(session, qid, str(form.get("status") or ""), str(form.get("answer") or ""),
+                  int(dup) if dup.isdigit() else None)  # fmt: skip
+    except ValueError:
+        raise HTTPException(400, "Unknown status") from None
+    except KeyError:
+        raise HTTPException(404, "Question not found") from None
+    day = str(form.get("day") or "")
+    return RedirectResponse(f"/business/reports/questions?day={day}#q{qid}", status_code=303)
+
+
 @router.get("/business/reports/{slug}", response_class=HTMLResponse)
-def product_report(request: Request, slug: str):
+def product_report(request: Request, slug: str, session: Session = Depends(get_session)):
     from app.services import reports as rp
 
     r = rp.report(slug)
     if r is None:
         raise HTTPException(404, "Report not found")
-    ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.html"}
+    ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.html",
+           "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
+           "q_statuses": rp.Q_STATUSES}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+@router.get("/business/reports/{slug}/background", response_class=HTMLResponse)
+def product_report_background(request: Request, slug: str):
+    """The detail behind a report: the data tables and long-form notes kept out of the report itself."""
+    from app.services import reports as rp
+
+    r = rp.report(slug)
+    if r is None or not rp.has_background(slug):
+        raise HTTPException(404, "No background for this report")
+    ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.background.html",
+           "background": True}  # fmt: skip
+    return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+@router.post("/business/reports/{slug}/ask")
+async def product_report_ask(request: Request, slug: str, session: Session = Depends(get_session)):
+    from app.services import reports as rp
+
+    if rp.report(slug) is None:
+        raise HTTPException(404, "Report not found")
+    form = await request.form()
+    text = str(form.get("text") or "").strip()
+    if not text:
+        raise HTTPException(400, "Write a question first")
+    rp.ask(session, slug, text, str(form.get("author") or ""))
+    return RedirectResponse(f"/business/reports/{slug}?asked=1#questions", status_code=303)

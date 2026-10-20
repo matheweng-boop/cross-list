@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Report questions – BizDev{% endblock %}
+{% block content %}
+{% set d = rv %}
+<p class="small"><a href="/business/reports">← Pre-lim product ideas and reports</a></p>
+<h1>Questions on the reports</h1>
+<p class="subtitle muted">Questions asked under each report, one list per day. Go through them once a day: keep the good ones (and answer them), mark duplicates of an earlier question, or set them aside. Likely duplicates are flagged by shared wording.</p>
+
+<div class="fb-days small">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/business/reports/questions?day={{ day }}">{{ day.strftime('%a %d %b') }} <small>{{ n }}{% if o %} · {{ o }} to review{% endif %}</small></a>{% else %}<span class="muted">No questions yet.</span>{% endfor %}</div>
+
+<section class="pl-card">
+  <h2>{{ d.day.strftime('%A %d %B %Y') }} <small class="muted">{{ d.rows|length }} question{{ 's' if d.rows|length != 1 }} · {{ d.waiting }} to review</small></h2>
+  {% if d.rows %}<p class="small"><a href="/business/reports/questions.txt?day={{ d.day }}">plain-text list</a></p>{% endif %}
+  {% for row in d.rows %}{% set q = row.q %}
+  <article class="fb-group{{ ' fb-closed' if q.status != 'new' }}" id="q{{ q.id }}">
+    <header><span class="fb-n">#{{ q.id }}</span> <b>{{ q.text }}</b></header>
+    <p class="small muted">{{ q.author or 'anonymous' }}, {{ q.created_at.strftime('%H:%M') }} · <a href="/business/reports/{{ q.slug }}#questions">{{ row.report.title if row.report else q.slug }}</a> · {{ statuses.get(q.status, q.status) }}{% if q.duplicate_of %} of #{{ q.duplicate_of }}{% endif %}</p>
+    {% if row.like %}<p class="small"><span class="lg lg-opp">Possible duplicate of</span> {% for x in row.like %}#{{ x.id }} “{{ x.text[:90] }}”{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+    <form method="post" action="/business/reports/questions/{{ q.id }}" class="fb-respond">
+      <input type="hidden" name="day" value="{{ d.day }}">
+      <select name="status" aria-label="Decision">{% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if k == q.status }}>{{ label }}</option>{% endfor %}</select>
+      <input name="duplicate_of" value="{{ q.duplicate_of or (row.like[0].id if row.like else '') }}" placeholder="dup. of #" aria-label="Duplicate of question number" class="rp-dup">
+      <input name="answer" value="{{ q.answer or '' }}" placeholder="Answer shown under the report" aria-label="Answer">
+      <button type="submit" class="small-btn">Save</button>
+    </form>
+  </article>
+  {% else %}<p class="muted small">No questions were asked on this day.</p>{% endfor %}
+</section>
+{% endblock %}

@@ -111,3 +111,59 @@ risks:
   - "Receiver modules integrate their own SAW; if antennas become passive with LNAs in the TCU, the fin socket shrinks."
   - "Grade 1 demand for the roof is not stated in any public OEM specification."
   - "Unknown from public data: SKY5A2110 price and design wins, Infineon/NXP automotive roadmaps, contract prices."
+
+questions:
+  bu:
+    - {id: q-bu-wins, text: "What are SKY5A2110's design wins, volumes and contract ASP, and which antenna makers use it?", why: "No public price or design win (b-noprice); base for the 15 M single-input scenario"}
+    - {id: q-bu-filters, text: "Can the ex-Qorvo filter line make E6/L6 (1278 MHz) and L-band (1525–1559 MHz) filters, at what size and loss, and can QPQ1028 / 880272 be automotive qualified?", why: "No E6 or L-band filter in our catalogue (risk, f-e6)"}
+    - {id: q-bu-g1, text: "What limits SKY5A2110 to Grade 2 (105 °C junction): process, LNA design or package?", why: "Decides whether Grade 1 (f-g1) is a requalification or a new design"}
+    - {id: q-bu-cost, text: "What would a 3-path module cost us (LNA dies, BAW/SAW filters, laminate, test), now that no filter partner margin applies?", why: "p-allband $1.6–2.6 rests on a filter allowance that is our judgement"}
+    - {id: q-bu-nf, text: "Have we measured cascaded NF and C/N0 of SKY5A2110 against TI TRF3302-Q1 or Infineon BGA525N6 plus the SAW they need?", why: "Selection tables compare our module NF with bare-LNA NF (d-nf)"}
+    - {id: q-bu-roadmap, text: "Is a single-input or L2/all-band automotive GNSS module already on the roadmap, and what replaces the LTB handset GNSS parts?", why: "Avoid duplication; the LTB line reads as a shrinking business (b-legacy)"}
+  customer:
+    - {id: q-c-bands, text: "Which GNSS bands will your 2028–2030 platforms use (L1, L1 + L5, or L1/L2/L5/E6 with corrections), and in which segments?", who: "OEM ADAS / positioning team", why: "o-dual is an estimate; ABI band figures cover all chipsets, not cars"}
+    - {id: q-c-feed, text: "Are your GNSS antennas single-feed or dual-feed, and would you accept two RF inputs on the front end?", who: "Tier-1 antenna module team", why: "Decides the single-input variant (d-inputs, f-single)"}
+    - {id: q-c-where, text: "Will the GNSS LNA stay in the shark fin, or move into the TCU behind a passive antenna?", who: "Tier-1 telematics / antenna team", why: "If antennas go passive, the fin socket shrinks (risk)"}
+    - {id: q-c-grade, text: "What temperature grade does the roof module need once it holds a TCU or V2X electronics?", who: "Tier-1 antenna module team", why: "Grade 1 demand is not in any public OEM specification"}
+    - {id: q-c-jam, text: "Do you require antenna diagnostics or a jamming / interference flag from the front end for ISO 21434?", who: "OEM cybersecurity / positioning team", why: "Decides whether f-sense is worth a new block (o-security)"}
+    - {id: q-c-price, text: "What do you pay today per fin for GNSS LNAs, SAW filters and diplexers, and what would one all-band part need to cost?", who: "Tier-1 purchasing", why: "Validates $1.6–2.6; SAW filter prices are not stated"}
+
+diagram:
+  note: "A shark fin / roof module with the all-band GNSS front end next to our V2X and cellular parts, feeding an all-band receiver in the TCU over coax. It replaces 2–3 GNSS LNAs, 3–5 SAW filters and diplexers (or today's two-input SKY5A2110)."
+  groups:
+    - id: ant
+      label: Roof antennas
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "GNSS patch (one feed)", who: customer}
+        - {fn: antenna, label: "Cellular / V2X antennas", who: customer}
+    - id: fin
+      label: Shark fin electronics
+      col: 1
+      row: 0
+      w: 2
+      blocks:
+        - {fn: gnss_lna, label: "All-band GNSS FE", who: proposed, part: "L1 + L2/E6 + L5/E5, one input, one output, Grade 1 (SKY5A2130 concept)"}
+        - {fn: v2x_fem, label: "V2X FEM", who: ours, part: "SKY5A2105"}
+        - {fn: lna, label: "Cellular LNA bank", who: ours, part: "SKY5A2203"}
+        - {fn: rf_switch, label: "Switches", who: ours, part: "SKY5A5109 / SKY5A5110"}
+    - id: tcu
+      label: Telematics control unit
+      col: 3
+      row: 0
+      blocks:
+        - {fn: pol_ldo, label: "Antenna bias (coax)", who: other}
+        - {fn: soc, label: "GNSS receiver", who: other, part: "u-blox ZED-X20K, ST STA8135GA, Qualcomm"}
+        - {fn: modem, label: "Cellular modem", who: other}
+        - {fn: v2x_transceiver, label: "V2X modem", who: other}
+    - id: adas
+      label: ADAS / central computer
+      col: 3
+      row: 1
+      blocks:
+        - {fn: soc, label: "Positioning / ADAS", who: customer, part: "Lane-level fusion, PPP/RTK corrections"}
+  links:
+    - [ant, fin, "RF"]
+    - [fin, tcu, "coax: GNSS (one output), V2X, cellular; DC bias"]
+    - [tcu, adas, "position, time, corrections (Ethernet)"]

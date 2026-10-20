@@ -118,3 +118,60 @@ risks:
   - "Radar timing stays captive; satellite radar adds links but no clocks inside the module."
   - "No public central-compute clock BoM: number of PCIe and Ethernet clock domains per computer is not stated."
   - "Unknown from public data: our die cost, jitter margin at Gen 6, contract prices of TI and SiTime."
+
+questions:
+  bu:
+    - {id: q-bu-baw, text: "Has the SKY631xx BAW resonator been tested for automotive Grade 1 drift, ageing, shock and vibration, and with what results?", why: "ZoneClock rests on it; data not public (first risk)"}
+    - {id: q-bu-gen6, text: "What jitter margin do Si5332-AM and Si5225x-AM have against PCIe Gen 6 today?", why: "Decides whether f-gen6 is a datasheet update or fails"}
+    - {id: q-bu-cost, text: "What are the die cost and contract ASPs of Si5332-AM and Si5325x-AM, and where do we stand against TI LMK3H0102-Q1 ($3.55 list)?", why: "ZC-12 / ZC-4 ranges assume 30–50 % below list; our cost is not stated"}
+    - {id: q-bu-ja, text: "Which DSPLL jitter attenuator die could pass AEC-Q100 at 105 °C without a redesign?", why: "f-ja is distance 2 only if the die is unchanged"}
+    - {id: q-bu-roadmap, text: "Is a crystal-free or Grade 1 automotive clock already on the timing roadmap, and how does the Qorvo merger change filter/BAW capacity for it?", why: "Avoid proposing what exists; BAW supply for timing vs RF filters"}
+    - {id: q-bu-wins, text: "Which central-compute, gateway and camera designs use Si5332-AM today, and with which SoC vendors do we have reference-design ties?", why: "Base for the 5–15 M ZC-12 scenarios and the SoC reference lever (t-soc)"}
+  customer:
+    - {id: q-c-domains, text: "How many PCIe, Ethernet and SerDes clock outputs and domains does your central computer and each zone controller need?", who: "Tier-1 central-compute hardware team", why: "No public clock BoM; sizes ZC-12 vs ZC-4"}
+    - {id: q-c-gen, text: "Which PCIe generation (5, 6 or 7) will your 2028–2030 computers use between SoC, accelerators and storage?", who: "Tier-1 ADAS compute team", why: "Gen 5 may not win new sockets after 2028 (o-pcie)"}
+    - {id: q-c-grade, text: "Which clock locations need Grade 1 (–40 to 125 °C) rather than Grade 2?", who: "OEM / Tier-1 component qualification team", why: "Our Grade 2 gap (d-grade); OEM need not stated"}
+    - {id: q-c-xtal, text: "Would you drop crystals for a BAW or MEMS clock, and what would stop you (ageing data, qualification, price)?", who: "Tier-1 hardware / component engineering", why: "Crystal-free by 2029 (o-crystalfree) is a low-confidence estimate"}
+    - {id: q-c-sync, text: "Will sensor time sync (gPTP / 802.1AS) run only in Ethernet switches and PHYs, or do you want a synchronising clock device?", who: "OEM E/E architecture team", why: "Demand for f-sync is unproven (o-sync)"}
+    - {id: q-c-price, text: "What do you pay per computer for the clock tree (generator, crystal, XOs, buffers)?", who: "Tier-1 purchasing", why: "Validates $4–6.5 for ZC-12; crystal and XO values are not stated"}
+
+diagram:
+  note: "A central computer and its zones clocked by ZoneClock: one crystal-free ZC-12 feeds PCIe, Ethernet and SerDes references, and a ZC-4 serves each zone. It replaces Si5332-AM + crystal + 1–3 XOs + a fan-out buffer per computer, or TI / SiTime crystal-free clocks."
+  groups:
+    - id: clk
+      label: Clock tree (central computer)
+      col: 0
+      row: 0
+      blocks:
+        - {fn: clock_generator, label: "ZoneClock ZC-12", who: proposed, part: "Crystal-free BAW + MultiSynth, 12 outputs, PCIe Gen 6, Grade 1 (concept)"}
+        - {fn: pcie_buffer, label: "PCIe buffer", who: ours, part: "Si53254/58A-AM, Gen 1–6"}
+        - {fn: jitter_attenuator, label: "Jitter attenuator", who: proposed, part: "AEC-Q100 version of an existing DSPLL (f-ja)"}
+    - id: cc
+      label: Central computer
+      col: 1
+      row: 0
+      w: 2
+      blocks:
+        - {fn: soc, label: "ADAS / central SoC", who: other, part: "NVIDIA Thor, Qualcomm Ride, Mobileye, R-Car"}
+        - {fn: pcie_switch, label: "PCIe switch", who: other}
+        - {fn: ddr_flash, label: "NVMe storage", who: other}
+        - {fn: ethernet_phy, label: "Ethernet switch / PHY", who: other}
+    - id: zone
+      label: Zone controllers
+      col: 3
+      row: 0
+      blocks:
+        - {fn: clock_generator, label: "ZoneClock ZC-4", who: proposed, part: "4 outputs, crystal-free (concept)"}
+        - {fn: mcu, label: "Zone MCU / SoC", who: other}
+        - {fn: ethernet_phy, label: "Ethernet PHY", who: other}
+    - id: radar
+      label: Cascaded imaging radar
+      col: 3
+      row: 1
+      blocks:
+        - {fn: clock_buffer, label: "40 MHz fan-out", who: ours, part: "Si5335x-AM, 0.1 ps additive (f-radar-an)"}
+        - {fn: radar_transceiver, label: "Radar SoCs", who: other, part: "Own crystal + on-chip PLL (captive)"}
+  links:
+    - [clk, cc, "PCIe 100 MHz (SSC), Ethernet 25/125/156.25 MHz, SerDes refs"]
+    - [cc, zone, "Automotive Ethernet backbone"]
+    - [zone, radar, "Ethernet / SerDes"]

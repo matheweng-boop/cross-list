@@ -118,3 +118,64 @@ risks:
   - "Time-sharing one anchor between key and radar is unproven at Euro NCAP timing."
   - "NXP, ST and Calterah offer the same function on their key chips, so radar is a requirement, not a differentiator."
   - "Unknown from public data: QPF5100Q radar performance, CPD design wins, capacitive kick module prices, real 60 GHz contract prices."
+
+questions:
+  bu:
+    - {id: q-bu-radar, text: "What breathing-detection range, seat and footwell separation and false-alarm rate does QPF5100Q radar reach in a real cabin?", why: "Not public; decides whether UWB can pass Euro NCAP for all seats against 60 GHz (d-res)"}
+    - {id: q-bu-algo, text: "How far did the CPD and kick algorithm work go (Algorized demo, CES 2024): production-ready code, owner, licence terms?", why: "We have no production algorithm or Euro NCAP dossier (d-algo)"}
+    - {id: q-bu-wins, text: "Are any OEMs or Tier-1s evaluating QPF5100Q for CPD or kick, and with which SOP?", why: "No public design win (d-proof); sets the 3 M-car licence scenario"}
+    - {id: q-bu-sched, text: "Can QPF5100Q share time between key ranging and radar, and what parked-mode current does CPD draw to warn within 15 s of locking?", why: "Time-sharing at Euro NCAP timing is unproven (risk, f-sched)"}
+    - {id: q-bu-cost, text: "What are QPF5100Q's die cost and contract ASP, and does a standalone CPD chip at $4–6 keep margin?", why: "p-cpdchip must sit below a 60 GHz chip; our cost is not stated"}
+    - {id: q-bu-licence, text: "Can we sell a per-car software licence (pricing, royalty tracking), and has either legacy company done so?", why: "The $0.75–1.5 CPD licence is a new revenue model for us"}
+  customer:
+    - {id: q-c-ncap, text: "Which sensor do you plan for Euro NCAP child presence on platforms with a UWB key and without, and from which model year?", who: "OEM occupant-safety team", why: "The UWB/60 GHz split (o-split) is our estimate"}
+    - {id: q-c-pretest, text: "Have UWB CPD results passed your pre-tests for all seats and footwells, including a covered, sleeping child?", who: "OEM occupant-safety / homologation team", why: "Resolution risk: official UWB results are not public"}
+    - {id: q-c-anchors, text: "How many interior and rear UWB anchors per car, and can they cover every seat and footwell for CPD?", who: "Tier-1 car-access team", why: "One anchor may not be enough (d-share)"}
+    - {id: q-c-scope, text: "Must the cabin sensor also serve rear-belt reminder, airbag or intrusion functions?", who: "OEM occupant-safety team", why: "60 GHz serves these too; sets UWB's share (o-uwbshare)"}
+    - {id: q-c-kick, text: "Would you replace the capacitive kick sensor with a rear UWB anchor, what does today's sensor cost, and how often does it false-trigger?", who: "Tier-1 body electronics (tailgate) team", why: "Kick licence has no price anchor; no production evidence (o-kick)"}
+    - {id: q-c-price, text: "What do you pay for a 60 GHz CPD module, and what per-car licence would you accept on anchors you already buy?", who: "Tier-1 purchasing", why: "Validates the $0.75–1.5 licence and the ≈$6.3–11 contract estimate for 60 GHz"}
+
+diagram:
+  note: "A car with a UWB key: the interior and rear anchors run the cabin-sense firmware for child presence, intrusion and kick, and cars without a UWB key get a standalone UWB CPD module. It replaces a 60 GHz CPD radar module (radar SoC, PMIC, CAN) and the capacitive kick sensor."
+  groups:
+    - id: cabin
+      label: Interior anchor(s)
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "UWB antennas", who: customer}
+        - {fn: uwb_soc, label: "QPF5100Q + cabin-sense", who: proposed, part: "Key ranging + CPD, occupancy, intrusion firmware (partner algorithm)"}
+    - id: rear
+      label: Rear anchor (tailgate)
+      col: 0
+      row: 1
+      blocks:
+        - {fn: uwb_fem, label: "UWB LNA / switch", who: proposed, part: "QM14068 + QPC8019Q class, automotive (concept)"}
+        - {fn: uwb_soc, label: "QPF5100Q + kick", who: proposed, part: "Key ranging + kick-to-open firmware"}
+    - id: module
+      label: Standalone CPD module (no UWB key)
+      col: 1
+      row: 1
+      blocks:
+        - {fn: uwb_soc, label: "QPF5100Q CPD", who: proposed, part: "Module reference"}
+        - {fn: wide_vin_buck, label: "Regulator", who: ours, part: "ACT4751M"}
+        - {fn: can_transceiver, label: "CAN", who: other}
+    - id: access
+      label: Access ECU / zone computer
+      col: 1
+      row: 0
+      blocks:
+        - {fn: can_transceiver, label: "CAN-FD", who: other}
+        - {fn: mcu, label: "Access / body logic", who: customer}
+    - id: body
+      label: Body / HMI
+      col: 2
+      row: 0
+      blocks:
+        - {fn: external_block, label: "Alerts (horn, app)", who: customer}
+        - {fn: motor, label: "Tailgate drive", who: customer}
+  links:
+    - [cabin, access, "CAN-FD / SPI: presence, seat zone"]
+    - [rear, access, "CAN-FD: kick event, ranging"]
+    - [module, access, "CAN: presence flags"]
+    - [access, body, "warning, open tailgate"]

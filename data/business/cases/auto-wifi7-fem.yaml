@@ -10,7 +10,7 @@ updated: 2026-10-20
 brief:
   - "Our advantage is architectural: we are the only supplier with Wi-Fi 7 front ends, V2X front ends, automotive cellular and GNSS front ends and the BAW filters that separate them on one antenna. Wi-Fi sits next to V2X in every automotive diagram with V2X, and US DOT measured in-car Wi-Fi cutting C-V2X range by more than half."
   - "Our disadvantages: no chipset (every public automotive Wi-Fi 7 module uses Qualcomm, which bundles its own front end), no automotive Wi-Fi power amplifier above 802.11ac, and in-car 6 GHz power is capped by regulation, so a high-power 6 GHz PA adds little."
-  - "Proposal: RH57, a radio head per smart antenna with 5 GHz Wi-Fi, 5.9 GHz V2X and 6 GHz Wi-Fi paths, BAW filters between them, a compensator mode for Wi-Fi and front-end coexistence control, about $8–11 per antenna (est). Enabling step: automotive Wi-Fi 7 FEMs with the guard filter built in (about $1.6–2.8 each)."
+  - "Proposal: RH57, a radio head for the roof telematics unit: V2X 5.9 GHz path as the base, 5 and 6 GHz Wi-Fi paths as an option (no carmaker has confirmed a Wi-Fi radio in the roof yet), BAW filters between them and front-end coexistence control, about $8–11 per antenna with Wi-Fi (est). Enabling step: automotive Wi-Fi 7 FEMs with the guard filter built in (about $1.6–2.8 each)."
 
 position:
   advantages:
@@ -32,7 +32,7 @@ position:
     - {id: g-one, text: "One supplier and one module for the 5–7 GHz radios at the antenna, instead of 6–7 parts from several vendors", conf: med}
   diff_bad:
     - {id: b-ref, text: "Design-ins follow the chipset reference design; Qualcomm's includes its own FEM", conf: med}
-    - {id: b-unproven, text: "No public OEM or Tier-1 puts Wi-Fi in the roof antenna yet; the library has no smart-antenna or cockpit diagram", conf: high}
+    - {id: b-unproven, text: "Telematics units and their antennas (Wi-Fi antennas included) are moving into the roof (LG 5G roof unit in production Aug 2026; Harman, Continental), but no carmaker confirms a Wi-Fi radio or front end there; mass-market hotspots keep the antenna in the dashboard", conf: med}
 
 architecture:
   columns: [Skyworks + Qorvo, Qualcomm, NXP / Synaptics, Module makers]
@@ -59,7 +59,7 @@ outlook:
   - {id: o-6ghz, text: "6 GHz-capable share rises from 21 % (2026) to about 35–45 % by 2030, led by the US and Korea; China stays 2.4 + 5 GHz (est)", basis: "IDC 2026 share; regional 6 GHz rules", conf: low}
   - {id: o-efem, text: "External FEMs stay in about a third to half of Wi-Fi 7 designs, tied to Qualcomm premium platforms (est)", basis: "Every RUBY-W2 variant uses eFEM; NXP/Synaptics on-chip", conf: low}
   - {id: o-coex, text: "Coexistence limits tighten (−37 dBm/MHz or lower at the V2X edge) as C-V2X spreads; filtering moves into the front end (est)", basis: "NTIA/DOT ask; EU −45; Japan −37; Korea −34", conf: med}
-  - {id: o-antenna, text: "Smart antennas absorb V2X, cellular and GNSS first; Wi-Fi at the antenna follows only for exterior uses (garage OTA, charging data, hotspot) — the open question for this case (est)", basis: "NXP V2X unit; TI TCU remote antenna; no public OEM roof-Wi-Fi programme", conf: low}
+  - {id: o-antenna, text: "Smart antennas absorb V2X, cellular and GNSS first; Wi-Fi at the antenna follows only for exterior uses (garage OTA, charging data, hotspot) — the open question for this case (est)", basis: "LG roof telematics unit in production (Aug 2026) and LG patent EP 4 478 536 with Wi-Fi antennas in the roof module; Harman/Continental roof units list Wi-Fi (snippets); against: dashboard hotspot antennas (GM, Ford), Tesla mirror antennas, antenna-only fins", conf: low}
   - {id: o-china, text: "China's volume moves to Wi-Fi 6/7 at 5 GHz with local FEMs; our share there depends on V2X and filters, not Wi-Fi PAs (est)", basis: "Counterpoint; local FEM suppliers", conf: low}
 
 features:
@@ -77,7 +77,7 @@ features:
 product:
   name: "RH57 radio head (RH57-WV with V2X, RH57-W Wi-Fi only)"
   spec:
-    - ["Paths", "5 GHz Wi-Fi 7 (5170–5835 MHz) · 5.9 GHz V2X (5855–5925 MHz) · 6 GHz Wi-Fi 7 (5945–7125 MHz); U-NII-4 excluded for Wi-Fi"]
+    - ["Paths", "5.9 GHz V2X (5855–5925 MHz) as the base; 5 GHz Wi-Fi 7 (5170–5835 MHz) and 6 GHz Wi-Fi 7 (5945–7125 MHz) as options for roof telematics units that carry Wi-Fi; U-NII-4 excluded for Wi-Fi"]
     - ["Per path", "PA, LNA with bypass, T/R, coupler/detector, BAW band filter"]
     - ["Modes", "ECU mode (next to the chipsets) or compensator mode (at the antenna, gain set to cable loss)"]
     - ["Coexistence", "BAW filters between paths; V2X transmit protects the Wi-Fi receiver; optional WCI-2/PTA input from the chipset"]
@@ -124,3 +124,61 @@ risks:
   - "Compensator mode at Wi-Fi 7 bandwidths and shared-antenna isolation are unproven (distance 3, possibly 4)."
   - "China volume goes to local FEM suppliers at low prices."
   - "Unknown from public data: output power, EVM and insertion loss of our Wi-Fi parts; QXM19xx performance and price; external-FEM share; contract prices."
+
+questions:
+  bu:
+    - {id: q-bu-dies, text: "Can the SKY85509-11 / SKY85639-11 (or QPF4507 / QPF4659) Wi-Fi 7 dies pass AEC-Q104 Grade 2 at 105 °C without a redesign?", why: "A5/A6 (f-a5a6) are distance 2 only if the dies hold; we have no automotive Wi-Fi PA above 802.11ac (d-nopa)"}
+    - {id: q-bu-perf, text: "What output power, EVM and insertion loss do our Wi-Fi 7 FEMs reach against Qualcomm QXM19xx and on-chip PAs (NXP AW693, Synaptics)?", why: "Not public; decides whether an external FEM is worth it over 13–16 dBm on-chip"}
+    - {id: q-bu-filters, text: "When do SKY5A1005/1006/1008 leave Preview, and what out-of-band emission at 5.925 GHz do we measure with a Wi-Fi 7 FEM against −37 dBm/MHz?", why: "All automotive coexistence BAW is Preview (d-preview); the test report (t-test) needs the data"}
+    - {id: q-bu-comp, text: "Can the SKY5A2105 compensator loop handle Wi-Fi 7 320 MHz channels and fast T/R turnaround, or does it need a new detector and switch?", why: "f-comp is distance 3, possibly 4"}
+    - {id: q-bu-merge, text: "Which merged Skyworks/Qorvo Wi-Fi 7 and V2X dies go into RH57, shared with the dual-carrier V2X FEM, and what longevity can we commit after Qorvo's 2024 automotive Wi-Fi EOL?", why: "One roadmap with auto-cv2x-fe; OEMs ask 10–15 years (t-supply)"}
+    - {id: q-bu-cost, text: "What are the contract ASPs and costs of our consumer Wi-Fi 7 FEMs and SKYA21043, and does a 1.5–2.25× automotive premium hold?", why: "p-a56 and p-rh57 rest on list prices and an assumed premium"}
+  customer:
+    - {id: q-c-roof, text: "In your roof-integrated TCU or smart antenna (LG, Harman SCA or Continental IAM type), is the Wi-Fi radio on the roof TCU board or in the cockpit with coax or a passive antenna? If on the roof, what feeds the cabin: a slot, the headliner or a second antenna?", who: "OEM / Tier-1 antenna team", why: "No public source confirms a Wi-Fi radio or FEM in a production roof unit; RH57's Wi-Fi paths depend on it (o-antenna, b-unproven)"}
+    - {id: q-c-exterior, text: "Which exterior Wi-Fi uses are in your requirements (garage OTA, depot or fleet offload, charging-site data, hotspot outside the car), and what range or throughput do they set compared with the cabin link?", who: "OEM connectivity / antenna team", why: "Exterior use is the only reason to put Wi-Fi RF at the roof; no public vehicle-to-charger Wi-Fi found"}
+    - {id: q-c-loss, text: "What Wi-Fi-band loss do you measure or budget for a glass roof, a metal roof and the headliner at 2.4, 5 and 6 GHz, and what coax loss do you accept today between antenna and Wi-Fi chip?", who: "Tier-1 antenna team", why: "Roof-glass loss is public only at 5.9 GHz (≈8 dB); sizes the compensator benefit (g-roof)"}
+    - {id: q-c-coex, text: "When Wi-Fi 5/6 GHz and C-V2X share the roof module, how do you meet the 5.925 GHz band-edge emission and receiver-blocking limits (filters, separate antennas, TDM via the chipset), and who owns that budget: antenna maker or TCU maker?", who: "OEM / Tier-1 antenna and EMC team", why: "Decides who buys our coexistence filters and whether front-end arbitration (f-arbiter) is wanted"}
+    - {id: q-c-thermal, text: "What temperature grade and thermal budget does your roof unit give an RF front end (Grade 1 or 2, PA duty cycle), and would you accept an active Wi-Fi front end or compensator at the antenna with a Qualcomm or non-Qualcomm reference design?", who: "Tier-1 antenna / roof-TCU team", why: "Grade 1 need is unconfirmed (f-grade1); Qualcomm's reference keeps its own FEM (d-chip)"}
+    - {id: q-c-price, text: "What do you pay per antenna today for the V2X FEM, Wi-Fi FEMs, filters and meshplexer, and what would one radio head need to cost?", who: "Tier-1 purchasing", why: "Validates the $8–11 RH57 range; QXM19xx price is not public"}
+
+diagram:
+  note: "A roof-integrated TCU (LG, Harman, Continental type) with RH57 on the V2X path and its Wi-Fi paths as an option, while passenger Wi-Fi stays in the head unit with our A5/A6 FEMs and coexistence filters; per antenna it replaces a V2X FEM, two Wi-Fi FEMs, three filters and a meshplexer. Research verdict: moderate evidence that TCUs and antennas move to the roof, weak evidence that any production roof unit holds a Wi-Fi radio or FEM."
+  groups:
+    - id: ant
+      label: Roof antennas
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "V2X / Wi-Fi antennas", who: customer}
+        - {fn: antenna, label: "Cabin-facing Wi-Fi", who: customer, part: "Slot or headliner grille"}
+    - id: roof
+      label: Roof TCU / smart antenna
+      col: 1
+      row: 0
+      w: 2
+      blocks:
+        - {fn: wifi_fem, label: "RH57 radio head", who: proposed, part: "5 GHz Wi-Fi + 5.9 GHz V2X + 6 GHz Wi-Fi, BAW, compensator; Wi-Fi paths optional (concept)"}
+        - {fn: v2x_transceiver, label: "V2X chipset", who: other}
+        - {fn: modem, label: "5G modem", who: other}
+        - {fn: gnss_lna, label: "GNSS L1 + L5", who: ours, part: "SKY5A2110"}
+    - id: cockpit
+      label: Head unit / cockpit
+      col: 1
+      row: 1
+      w: 2
+      blocks:
+        - {fn: wifi_soc, label: "Wi-Fi 7 chip", who: other, part: "Qualcomm, NXP, MediaTek, Synaptics"}
+        - {fn: wifi_fem, label: "A5 / A6 FEM", who: proposed, part: "Automotive Wi-Fi 7 FEM with guard filter (concept)"}
+        - {fn: filter_saw_baw, label: "Coexistence BAW", who: ours, part: "SKY5A1005 / 1006 / 1008 (Preview)"}
+        - {fn: soc, label: "Cockpit SoC", who: other}
+    - id: veh
+      label: Vehicle network
+      col: 3
+      row: 0
+      blocks:
+        - {fn: ethernet_phy, label: "Ethernet", who: other}
+  links:
+    - [ant, roof, "RF (short runs)"]
+    - [ant, cockpit, "coax: Wi-Fi (if the radio stays in the cockpit)"]
+    - [roof, veh, "Ethernet"]
+    - [veh, cockpit, "Ethernet"]

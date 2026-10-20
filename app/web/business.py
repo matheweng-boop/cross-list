@@ -271,7 +271,7 @@ async def decide(request: Request, session: Session = Depends(get_session)):
 
 
 SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
-                     "customers": "Customers", "idea": "New ideas"}  # fmt: skip
+                     "customers": "Customers", "idea": "New ideas", "report": "Product ideas & reports"}  # fmt: skip
 
 
 @router.post("/business/shortlist")
@@ -701,3 +701,28 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
            "n_comp": len(rf.competitor_parts()),
            "comp_makers": sorted({p["manufacturer"] for p in rf.competitor_parts()})}  # fmt: skip
     return templates.TemplateResponse(request, "business/rf_coverage.html", ctx)
+
+
+@router.get("/business/reports", response_class=HTMLResponse)
+def product_reports(request: Request, kind: str = "", tag: str = ""):
+    """Pre-lim product ideas and reports: the list."""
+    from app.services import reports as rp
+
+    rows = [
+        r for r in rp.reports() if (not kind or r.get("kind") == kind) and (not tag or tag in (r.get("tags") or []))
+    ]
+    tags = sorted({t for r in rp.reports() for t in r.get("tags") or []})
+    ctx = {"rows": rows, "kinds": rp.KINDS, "statuses": rp.STATUSES, "kind": kind, "tag": tag, "tags": tags,
+           "n_all": len(rp.reports())}  # fmt: skip
+    return templates.TemplateResponse(request, "business/reports.html", ctx)
+
+
+@router.get("/business/reports/{slug}", response_class=HTMLResponse)
+def product_report(request: Request, slug: str):
+    from app.services import reports as rp
+
+    r = rp.report(slug)
+    if r is None:
+        raise HTTPException(404, "Report not found")
+    ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.html"}
+    return templates.TemplateResponse(request, "business/report.html", ctx)

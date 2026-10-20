@@ -23,6 +23,7 @@ NAV = (
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
+        ("Pre-lim ideas & reports", "/business/reports", "Research reports and preliminary product ideas"),
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
     )),
     ("knowledge", "Engineering knowledge", (
@@ -71,6 +72,7 @@ PLACES = {
     "/business/rf-coverage": ("opportunities", "/business/rf-coverage"),
     "/business/markets": ("opportunities", "/business/markets"),
     "/business/customers": ("opportunities", "/business/markets"),
+    "/business/reports": ("opportunities", "/business/reports"),
     "/business/cases": ("opportunities", "/business/shortlist"),
     "/business/explore": ("opportunities", "/business/shortlist"),
     "/business/shortlist": ("opportunities", "/business/shortlist"),

@@ -14,6 +14,10 @@ params:
   # What the part does: a 3/1 isolator cannot replace a 4/0 one.
   - {key: channel_config, label: Channels (fwd/rev), priority: 1, kind: category, hard: true}
   - {key: integrated_power, label: Integrated isolated power, priority: 1, kind: category, hard: true}
+  # Optocoupler-replacement parts (LED-emulator input, often inverting) are not interchangeable with CMOS-input
+  # isolators; parts that state nothing are the usual CMOS-input, non-inverting kind.
+  - {key: input_type, label: Input type, priority: 1, kind: category, hard: true, default: cmos}
+  - {key: output_polarity, label: Output polarity, priority: 1, kind: category, hard: true, default: non-inverting}
   # --- Priority 2: for information ---
   - {key: vdd_range_v, label: Supply range, unit: V, priority: 2, kind: range}
   - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 2, kind: number, direction: higher}

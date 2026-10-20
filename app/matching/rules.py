@@ -26,6 +26,7 @@ class ParamDef:
     exclude: tuple[str, ...] = ()  # set items ignored when comparing (shown, not judged)
     derived_from: str | None = None  # bool derived from another set parameter …
     contains: str | None = None  # … being true when that set contains this item
+    default: object = None  # value assumed when a part states none (e.g. the usual CMOS input)
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,8 @@ class FamilyRules:
         """The part's parameter values, including derived ones."""
         values = part.param_map()
         for p in self.params:
+            if p.default is not None and values.get(p.key) in (None, "", []):
+                values[p.key] = p.default
             if p.derived_from:
                 src = values.get(p.derived_from)
                 values[p.key] = None if src is None else p.contains.upper() in {str(x).upper() for x in src}
@@ -68,6 +71,7 @@ def parse_rules(data: dict) -> FamilyRules:
             exclude=tuple(raw.get("exclude", ())),
             derived_from=(raw.get("from") or {}).get("param"),
             contains=(raw.get("from") or {}).get("contains"),
+            default=raw.get("default"),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")

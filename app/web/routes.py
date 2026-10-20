@@ -596,6 +596,14 @@ def visuals_page(request: Request, session: Session = Depends(get_session)):
     return templates.TemplateResponse(request, "engineering/visuals.html", {"data": data})
 
 
+@router.get("/api/visuals/rf-parts")
+def visuals_rf_parts():
+    """Active Skyworks / Qorvo RF parts with gain, NF, IP3, P1dB, loss and band, for the receiver visuals."""
+    from app.services import visuals
+
+    return {"parts": visuals.rf_parts()}
+
+
 @router.get("/rf-notes", response_class=HTMLResponse)
 def rf_notes_page(request: Request):
     from app.services import rf_notes

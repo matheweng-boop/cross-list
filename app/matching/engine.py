@@ -294,20 +294,31 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
 # Vendors name the same pin differently: VCCI / VDDI (input supply), VSSA / GNDA (output ground),
 # OUTA / VOA (driver output). Pin names are mapped to one spelling before comparing.
 _PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vo([a-z0-9]+)$", r"out\1"))
+# Family-specific names for the same pin. Only within the family: gate drivers use VDDA/VDDB for the two output
+# channels, not for the input and output sides. Isolated amplifiers: Skyworks side A/B names and TI's AVDD/DVDD,
+# AINP/AINN against TI's VDD1/VDD2, INP/INN. ACLK is left out: it is a clock input on some Skyworks parts and an
+# output on others.
+_FAMILY_PIN_ALIASES = {
+    "isolated_amplifier": (
+        (r"^(vdda|avdd)$", "vdd1"), (r"^(vddb|dvdd)$", "vdd2"), (r"^(gnda|agnd)$", "gnd1"), (r"^(gndb|dgnd)$", "gnd2"),
+        (r"^(aip|ainp)$", "inp"), (r"^(ain|ainn)$", "inn"), (r"^aop$", "outp"), (r"^aon$", "outn"), (r"^ao$", "out"),
+        (r"^(adat|data)$", "dout"),
+    ),
+}  # fmt: skip
 
 
-def pin_name(name: str) -> str:
+def pin_name(name: str, family: str | None = None) -> str:
     n = _norm(name)
-    for pattern, repl in _PIN_ALIASES:
+    for pattern, repl in _PIN_ALIASES + _FAMILY_PIN_ALIASES.get(family or "", ()):
         n = re.sub(pattern, repl, n)
     return n
 
 
-def pins_compatible(ref: str, cand: str) -> bool:
+def pins_compatible(ref: str, cand: str, family: str | None = None) -> bool:
     """Pins match when equal (after vendor aliases), or when a datasheet allows alternatives
     ("VDD1/NC") and the other part's function is one of them. A plain "GND" matches a ground with a
     side suffix (GNDI, GND1): the position already fixes which side it is on."""
-    r, c = {pin_name(x) for x in ref.split("/")}, {pin_name(x) for x in cand.split("/")}
+    r, c = {pin_name(x, family) for x in ref.split("/")}, {pin_name(x, family) for x in cand.split("/")}
     if r & c:
         return True
     return ("gnd" in r and any(x.startswith("gnd") for x in c)) or ("gnd" in c and any(x.startswith("gnd") for x in r))
@@ -344,7 +355,7 @@ def check_fit(ref: Part, cand: Part) -> Fit:
     if len(ref_pos) != len(cand_pos):
         return Fit(same_pkg, relation, False, pin_diffs)
     for i, (r, c) in enumerate(zip(ref_pos, cand_pos, strict=True), 1):
-        if not pins_compatible(r, c):
+        if not pins_compatible(r, c, ref.family if ref.family == cand.family else None):
             pin_diffs.append((i, r, c))
     return Fit(same_pkg, relation, not pin_diffs, pin_diffs)
 

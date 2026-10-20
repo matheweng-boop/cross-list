@@ -1,0 +1,3925 @@
+# Skyworks isolated amplifiers and isolated delta-sigma modulators (Si892x, Si893x, Si8935/36/37, Si894x).
+# Every OPN the Skyworks catalogue lists (function isolated_amplifier); values from the public datasheets.
+# Si8540 (the catalogue's only current_sensor) is not included: non-isolated high-side current-sense amplifier,
+# Last Time Buy, no orderable table and no datasheet on skyworksinc.com.
+source: 'skyworksinc.com Si892x/Si893x/Si8935-37/Si894x datasheets and the Skyworks catalogue (data/catalog/skyworks_parts.yaml:
+  OPNs, status), built 2026-10-20'
+manufacturers:
+- name: Skyworks
+  role: reference
+  website: https://www.skyworksinc.com
+packages:
+- code: SOIC-8N
+  name: SOIC-8 narrow body
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 4.9
+  body_width_mm: 3.9
+  span_mm: 6.0
+  height_mm: 1.75
+- code: SSO-8
+  name: SSO-8 stretched SOIC-8 (wide body)
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 5.84
+  body_width_mm: 7.49
+  span_mm: 11.5
+  height_mm: 2.79
+datasheets:
+- file: si8921-22-datasheet.pdf
+  url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  sha256: 0c222f9b92b51afa39caa31991bd399375acaff856bf3950fc631903da67c78a
+  revision: 206437E
+  revision_date: '2026-06-10'
+- file: si8931-32-datasheet.pdf
+  url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  sha256: a361302c99eaef8d3525e18e8bca5206a8df3f6ff6959175643411f95b6b6583
+  revision: 206438E
+  revision_date: '2026-06-10'
+- file: si8935-36-37-datasheet.pdf
+  url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  sha256: 9425ee38e1171ed30d0d438790c76d66a50ca75268a323fc49ca3b9bc869e581
+  revision: 206440C
+  revision_date: '2023-10-02'
+- file: si8941-46-47-datasheet.pdf
+  url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  sha256: 659f804bd08e7203f8b04a6f3bf62d8f00d9f283132e59ecc6c8211f543757d5
+  revision: 206439B
+  revision_date: '2023-10-02'
+parts:
+- mpn: SI8921AB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921A: automotive isolated amplifier for current-shunt measurement, ±62.5 mV input, analog, differential,
+    2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id001
+  - VDDA
+  - AIP
+  - AIN
+  - GNDA
+  - GNDB
+  - AON
+  - AOP
+  - VDDB
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8921AB-AS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, differential
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921AB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921A: isolated amplifier for current-shunt measurement, ±62.5 mV input, analog, differential, 2.5 kVrms,
+    NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id001
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8921AB-IS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, differential
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921AD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921A: automotive isolated amplifier for current-shunt measurement, ±62.5 mV input, analog, differential,
+    5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id001
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8921AD-AS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: preview
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, differential
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921AD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921A: isolated amplifier for current-shunt measurement, ±62.5 mV input, analog, differential, 5.0 kVrms,
+    WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id001
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8921AD-IS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, differential
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921BB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921B: automotive isolated amplifier for current-shunt measurement, ±250 mV input, analog, differential,
+    2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id002
+  - VDDA
+  - AIP
+  - AIN
+  - GNDA
+  - GNDB
+  - AON
+  - AOP
+  - VDDB
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8921BB-AS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, differential
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.02
+    bandwidth_khz: 600.0
+    snr_db: 82.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921BB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921B: isolated amplifier for current-shunt measurement, ±250 mV input, analog, differential, 2.5 kVrms,
+    NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id002
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8921BB-IS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, differential
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.02
+    bandwidth_khz: 600.0
+    snr_db: 82.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921BD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921B: automotive isolated amplifier for current-shunt measurement, ±250 mV input, analog, differential,
+    5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id002
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8921BD-AS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, differential
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.02
+    bandwidth_khz: 600.0
+    snr_db: 82.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8921BD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8921B: isolated amplifier for current-shunt measurement, ±250 mV input, analog, differential, 5.0 kVrms,
+    WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id002
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8921BD-IS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, differential
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 150.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.02
+    bandwidth_khz: 600.0
+    snr_db: 82.0
+    idd1_ma: 6.0
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922AB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922A: automotive isolated amplifier for current-shunt measurement, 8 to 68.5 mV input, analog, single-ended,
+    2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id003
+  - VDDA
+  - AIP
+  - AIN
+  - GNDA
+  - GNDB
+  - GNDB
+  - AO
+  - VDDB
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8922AB-AS
+  notes: 'Unipolar input: specified linear range 8 to 68.5 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 8 to 68.5 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, single-ended
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 8 to 68.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.08
+    bandwidth_khz: 600.0
+    snr_db: 71.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922AB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922A: isolated amplifier for current-shunt measurement, 8 to 68.5 mV input, analog, single-ended, 2.5 kVrms,
+    NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id003
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8922AB-IS
+  notes: 'Unipolar input: specified linear range 8 to 68.5 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 8 to 68.5 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 8 to 68.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.08
+    bandwidth_khz: 600.0
+    snr_db: 71.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922AD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922A: automotive isolated amplifier for current-shunt measurement, 8 to 68.5 mV input, analog, single-ended,
+    5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id003
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8922AD-AS4
+  notes: 'Unipolar input: specified linear range 8 to 68.5 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 8 to 68.5 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: preview
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, single-ended
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 8 to 68.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.08
+    bandwidth_khz: 600.0
+    snr_db: 71.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922AD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922A: isolated amplifier for current-shunt measurement, 8 to 68.5 mV input, analog, single-ended, 5.0 kVrms,
+    WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id003
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8922AD-IS4
+  notes: 'Unipolar input: specified linear range 8 to 68.5 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 8 to 68.5 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 8 to 68.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 32.8 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.08
+    bandwidth_khz: 600.0
+    snr_db: 71.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922BB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922B: automotive isolated amplifier for current-shunt measurement, 30 to 274 mV input, analog, single-ended,
+    2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id004
+  - VDDA
+  - AIP
+  - AIN
+  - GNDA
+  - GNDB
+  - GNDB
+  - AO
+  - VDDB
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8922BB-AS
+  notes: 'Unipolar input: specified linear range 30 to 274 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 30 to 274 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, single-ended
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 30 to 274 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922BB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922B: isolated amplifier for current-shunt measurement, 30 to 274 mV input, analog, single-ended, 2.5 kVrms,
+    NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id004
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8922BB-IS
+  notes: 'Unipolar input: specified linear range 30 to 274 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 30 to 274 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 30 to 274 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, NB SOIC-8 column); si8921-22-datasheet.pdf p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, NB SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922BD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922B: automotive isolated amplifier for current-shunt measurement, 30 to 274 mV input, analog, single-ended,
+    5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id004
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Automotive-Isolated-Amplifier/Si8922BD-AS4
+  notes: 'Unipolar input: specified linear range 30 to 274 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 30 to 274 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: preview
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, single-ended
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 30 to 274 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8922BD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8922B: isolated amplifier for current-shunt measurement, 30 to 274 mV input, analog, single-ended, 5.0 kVrms,
+    WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id004
+  datasheet: si8921-22-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si892x-Isolated-Amplifier/Si8922BD-IS4
+  notes: 'Unipolar input: specified linear range 30 to 274 mV (the catalogue lists 8 mV to 62.5 / 250 mV; the datasheet electrical
+    table and ordering guide say 30 to 274 mV). Fail-safe output when VDDA is lost.'
+  lifecycle:
+    status: active
+    release_date: '2018-02-01'
+    revision: 206437E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: 30 to 274 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 8.2 V/V
+    offset_uv: 350.0
+    gain_error_pct: 0.2
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 6.1
+    idd2_ma: 5.6
+  param_sources:
+    isolation_rating_kvrms: si8921-22-datasheet.pdf p.19-21 (UL 1577 VISO, WB stretched SOIC-8 column); si8921-22-datasheet.pdf
+      p.33
+    isolation_class: si8921-22-datasheet.pdf p.19-21 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8921-22-datasheet.pdf p.19-21 (CRP, WB stretched SOIC-8 column)
+    output_type: si8921-22-datasheet.pdf p.33; si8921-22-datasheet.pdf p.3-4
+    qualification: 'si8921-22-datasheet.pdf p.33 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8921-22-datasheet.pdf p.8-10 (CMTI min)
+    sense_type: si8921-22-datasheet.pdf p.1 (title, description)
+    input_range: si8921-22-datasheet.pdf p.8-10 (specified linear input range)
+    vdd1_range_v: si8921-22-datasheet.pdf p.8-10 (VDDA)
+    vdd2_range_v: si8921-22-datasheet.pdf p.8-10 (VDDB)
+    temp_range_c: si8921-22-datasheet.pdf p.8-10 (TA)
+    offset_uv: si8921-22-datasheet.pdf p.8-10 (input referred offset, max at 25 °C)
+    gain_error_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    nonlinearity_pct: si8921-22-datasheet.pdf p.8-10 (max at 25 °C)
+    snr_db: si8921-22-datasheet.pdf p.8-10 (typ; FIN = 10 kHz, BW = 100 kHz)
+    idd1_ma: si8921-22-datasheet.pdf p.8-10 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8921-22-datasheet.pdf p.8-10 (IDDB max at VDDB = 3.3 V)
+    pinout: si8921-22-datasheet.pdf p.3-4
+    gain: si8921-22-datasheet.pdf p.8-10 (typ)
+    bandwidth_khz: si8921-22-datasheet.pdf p.8-10 (amplifier bandwidth, typ)
+- mpn: SI8931B-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8931: automotive isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, differential,
+    2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id005
+  - VDDA
+  - VIN
+  - NC
+  - GNDA
+  - GNDB
+  - AON
+  - AOP
+  - VDDB
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Automotive-Isolated-Amplifier-for-Voltage-Measurement/Si8931B-AS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, differential
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 5.7
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, NB SOIC-8 column); si8931-32-datasheet.pdf p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, NB SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8931B-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8931: isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, differential, 2.5 kVrms,
+    NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id005
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Isolated-Amplifier-for-Voltage-Measurement/Si8931B-IS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, differential
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 5.7
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, NB SOIC-8 column); si8931-32-datasheet.pdf p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, NB SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8931D-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8931: automotive isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, differential,
+    5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id005
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Automotive-Isolated-Amplifier-for-Voltage-Measurement/Si8931D-AS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, differential
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 5.7
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8931-32-datasheet.pdf
+      p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8931D-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8931: isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, differential, 5.0 kVrms,
+    WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id005
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Isolated-Amplifier-for-Voltage-Measurement/Si8931D-IS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, differential
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.04
+    bandwidth_khz: 600.0
+    snr_db: 77.0
+    idd1_ma: 5.7
+    idd2_ma: 4.5
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8931-32-datasheet.pdf
+      p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8932B-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8932: automotive isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, single-ended,
+    2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id006
+  - VDDA
+  - VIN
+  - NC
+  - GNDA
+  - GNDB
+  - GNDB
+  - AO
+  - VDDB
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Automotive-Isolated-Amplifier-for-Voltage-Measurement/Si8932B-AS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, single-ended
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.05
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 5.7
+    idd2_ma: 5.0
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, NB SOIC-8 column); si8931-32-datasheet.pdf p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, NB SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8932B-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8932: isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, single-ended, 2.5 kVrms,
+    NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id006
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Isolated-Amplifier-for-Voltage-Measurement/Si8932B-IS
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.05
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 5.7
+    idd2_ma: 5.0
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, NB SOIC-8 column); si8931-32-datasheet.pdf p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, NB SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8932D-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8932: automotive isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, single-ended,
+    5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id006
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Automotive-Isolated-Amplifier-for-Voltage-Measurement/Si8932D-AS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, single-ended
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.05
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 5.7
+    idd2_ma: 5.0
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8931-32-datasheet.pdf
+      p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8932D-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8932: isolated amplifier for voltage measurement, 0.25 to 2.25 V input, analog, single-ended, 5.0 kVrms,
+    WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id006
+  datasheet: si8931-32-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8931-32-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8931-32-Isolated-Amplifier-for-Voltage-Measurement/Si8932D-IS4
+  notes: Fail-safe output when VDDA is lost.
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206438E
+    revision_date: '2026-06-10'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.5
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    gain: 1 V/V
+    offset_uv: 1000.0
+    gain_error_pct: 0.25
+    nonlinearity_pct: 0.05
+    bandwidth_khz: 600.0
+    snr_db: 76.0
+    idd1_ma: 5.7
+    idd2_ma: 5.0
+  param_sources:
+    isolation_rating_kvrms: si8931-32-datasheet.pdf p.16-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8931-32-datasheet.pdf
+      p.30
+    isolation_class: si8931-32-datasheet.pdf p.16-18 (VDE 60747-17 reinforced insulation; the insulation table and its reinforced-insulation
+      note cover both packages)
+    creepage_mm: si8931-32-datasheet.pdf p.16-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8931-32-datasheet.pdf p.30; si8931-32-datasheet.pdf p.3-4
+    qualification: 'si8931-32-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8931-32-datasheet.pdf p.7-9 (CMTI min)
+    sense_type: si8931-32-datasheet.pdf p.1 (title, description)
+    input_range: si8931-32-datasheet.pdf p.7-9 (specified linear input range)
+    vdd1_range_v: si8931-32-datasheet.pdf p.7-9 (VDDA)
+    vdd2_range_v: si8931-32-datasheet.pdf p.7-9 (VDDB)
+    temp_range_c: si8931-32-datasheet.pdf p.7-9 (TA)
+    offset_uv: si8931-32-datasheet.pdf p.7-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    nonlinearity_pct: si8931-32-datasheet.pdf p.7-9 (max at 25 °C)
+    snr_db: si8931-32-datasheet.pdf p.7-9 (typ; 100 kHz bandwidth)
+    idd1_ma: si8931-32-datasheet.pdf p.7-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8931-32-datasheet.pdf p.7-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8931-32-datasheet.pdf p.3-4
+    gain: si8931-32-datasheet.pdf p.7-9 (typ)
+    bandwidth_khz: si8931-32-datasheet.pdf p.7-9 (amplifier bandwidth, typ)
+- mpn: SI8935B-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8935: automotive isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream
+    (CMOS), clock input, external clock input, 5 to 25 MHz, 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id007
+  - VDDA
+  - VIN
+  - NC
+  - GNDA
+  - GNDB
+  - ADAT
+  - ACLK
+  - VDDB
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Automotive-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8935B-AS
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 2.7
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, NB SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, NB SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8935B-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8935: isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream (CMOS),
+    clock input, external clock input, 5 to 25 MHz, 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8935B-IS
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 2.7
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, NB SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, NB SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8935D-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8935: automotive isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream
+    (CMOS), clock input, external clock input, 5 to 25 MHz, 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Automotive-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8935D-AS4
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: preview
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 2.7
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, WB stretched SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, WB stretched SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8935D-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8935: isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream (CMOS),
+    clock input, external clock input, 5 to 25 MHz, 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8935D-IS4
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 2.7
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, WB stretched SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, WB stretched SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8936B-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8936: automotive isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream
+    (CMOS), clock output, 10 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Automotive-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8936B-AS
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 7.2
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, NB SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, NB SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8936B-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8936: isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream (CMOS),
+    clock output, 10 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8936B-IS
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 7.2
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, NB SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, NB SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8936D-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8936: automotive isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream
+    (CMOS), clock output, 10 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Automotive-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8936D-AS4
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: preview
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 7.2
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, WB stretched SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, WB stretched SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8936D-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8936: isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream (CMOS),
+    clock output, 10 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8936D-IS4
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 7.2
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, WB stretched SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, WB stretched SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8937B-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8937: automotive isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream
+    (CMOS), clock output, 20 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Automotive-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8937B-AS
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 11.0
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, NB SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, NB SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8937B-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8937: isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream (CMOS),
+    clock output, 20 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8937B-IS
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 11.0
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, NB SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, NB SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8937D-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8937: automotive isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream
+    (CMOS), clock output, 20 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Automotive-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8937D-AS4
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: preview
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 11.0
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, WB stretched SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, WB stretched SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8937D-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8937: isolated delta-sigma modulator for voltage measurement, 0.25 to 2.25 V input, digital bitstream (CMOS),
+    clock output, 20 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id007
+  datasheet: si8935-36-37-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8935-36-37-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si8935-36-37-Isolated-Delta-Sigma-Modulator-for-Voltage-Measurement/Si8937D-IS4
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2019-03-01'
+    revision: 206440C
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: voltage
+    input_range: 0.25 to 2.25 V
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 3000.0
+    gain_error_pct: 0.15
+    nonlinearity_pct: 0.016
+    snr_db: 86.0
+    idd1_ma: 8.7
+    idd2_ma: 11.0
+  param_sources:
+    isolation_rating_kvrms: si8935-36-37-datasheet.pdf p.13-14 (UL 1577 VISO, WB stretched SOIC-8 column); si8935-36-37-datasheet.pdf
+      p.26
+    isolation_class: si8935-36-37-datasheet.pdf p.13-14 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8935-36-37-datasheet.pdf p.13-14 (CRP, WB stretched SOIC-8 column)
+    output_type: si8935-36-37-datasheet.pdf p.26; si8935-36-37-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8935-36-37-datasheet.pdf p.26 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8935-36-37-datasheet.pdf p.6-7 (CMTI min)
+    sense_type: si8935-36-37-datasheet.pdf p.1 (title, description)
+    input_range: si8935-36-37-datasheet.pdf p.6-7 (specified linear input range)
+    vdd1_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDA)
+    vdd2_range_v: si8935-36-37-datasheet.pdf p.6-7 (VDDB)
+    temp_range_c: si8935-36-37-datasheet.pdf p.6-7 (TA)
+    offset_uv: si8935-36-37-datasheet.pdf p.6-7 (input referred offset, max at 25 °C)
+    gain_error_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    nonlinearity_pct: si8935-36-37-datasheet.pdf p.6-7 (max at 25 °C)
+    snr_db: si8935-36-37-datasheet.pdf p.6-7 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8935-36-37-datasheet.pdf p.6-7 (IDDB max at VDDB = 3.3 V)
+    pinout: si8935-36-37-datasheet.pdf p.2
+- mpn: SI8941AB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941A: automotive isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital
+    bitstream (CMOS), clock input, external clock input, 5 to 25 MHz, 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: &id008
+  - VDDA
+  - AIP
+  - AIN
+  - GNDA
+  - GNDB
+  - ADAT
+  - ACLK
+  - VDDB
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941AB-AS
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941AB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941A: isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital bitstream (CMOS),
+    clock input, external clock input, 5 to 25 MHz, 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941AB-IS
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941AD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941A: automotive isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital
+    bitstream (CMOS), clock input, external clock input, 5 to 25 MHz, 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941AD-AS4
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941AD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941A: isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital bitstream (CMOS),
+    clock input, external clock input, 5 to 25 MHz, 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941AD-IS4
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941BB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941B: automotive isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream
+    (CMOS), clock input, external clock input, 5 to 25 MHz, 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941BB-AS
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941BB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941B: isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream (CMOS),
+    clock input, external clock input, 5 to 25 MHz, 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941BB-IS
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941BD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941B: automotive isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream
+    (CMOS), clock input, external clock input, 5 to 25 MHz, 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941BD-AS4
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8941BD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8941B: isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream (CMOS),
+    clock input, external clock input, 5 to 25 MHz, 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8941BD-IS4
+  notes: 'Modulator clock: external clock input, 5 to 25 MHz.'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock input
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.2
+    idd2_ma: 4.8
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (external clock input, 5 to 25 MHz)
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946AB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946A: automotive isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital
+    bitstream (CMOS), clock output, 10 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946AB-AS
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946AB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946A: isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital bitstream (CMOS),
+    clock output, 10 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946AB-IS
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946AD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946A: automotive isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital
+    bitstream (CMOS), clock output, 10 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946AD-AS4
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946AD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946A: isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital bitstream (CMOS),
+    clock output, 10 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946AD-IS4
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946BB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946B: automotive isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream
+    (CMOS), clock output, 10 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946BB-AS
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946BB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946B: isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream (CMOS),
+    clock output, 10 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946BB-IS
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946BD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946B: automotive isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream
+    (CMOS), clock output, 10 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946BD-AS4
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8946BD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8946B: isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream (CMOS),
+    clock output, 10 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8946BD-IS4
+  notes: 'Modulator clock: 10 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.1
+    idd2_ma: 6.6
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (10 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947AB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947A: automotive isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital
+    bitstream (CMOS), clock output, 20 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947AB-AS
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947AB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947A: isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital bitstream (CMOS),
+    clock output, 20 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947AB-IS
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947AD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947A: automotive isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital
+    bitstream (CMOS), clock output, 20 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947AD-AS4
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947AD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947A: isolated delta-sigma modulator for current-shunt measurement, ±62.5 mV input, digital bitstream (CMOS),
+    clock output, 20 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947AD-IS4
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±62.5 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.008
+    snr_db: 86.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947BB-AS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947B: automotive isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream
+    (CMOS), clock output, 20 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947BB-AS
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947BB-IS
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947B: isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream (CMOS),
+    clock output, 20 MHz internal clock (output), 2.5 kVrms, NB SOIC-8'
+  package: SOIC-8N
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947BB-IS
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 2.5
+    isolation_class: reinforced
+    creepage_mm: 4.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, NB SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, NB SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947BD-AS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947B: automotive isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream
+    (CMOS), clock output, 20 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Automotive-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947BD-AS4
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: preview
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Preview; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: automotive
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2
+- mpn: SI8947BD-IS4
+  manufacturer: Skyworks
+  family: isolated_amplifier
+  description: 'Si8947B: isolated delta-sigma modulator for current-shunt measurement, ±250 mV input, digital bitstream (CMOS),
+    clock output, 20 MHz internal clock (output), 5.0 kVrms, WB stretched SOIC-8'
+  package: SSO-8
+  pinout: *id008
+  datasheet: si8941-46-47-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8941-46-47-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Isolation/Si894x-Isolated-Delta-Sigma-Modulator-for-Current-Measurement/Si8947BD-IS4
+  notes: 'Modulator clock: 20 MHz internal clock (output).'
+  lifecycle:
+    status: active
+    release_date: '2018-01-01'
+    revision: 206439B
+    revision_date: '2023-10-02'
+    source: 'Skyworks lifecycle lookup / catalogue: Active; release date = first datasheet revision (0.1)'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    output_type: digital bitstream (CMOS), clock output
+    qualification: industrial
+    cmti_kv_us: 50.0
+    sense_type: current (shunt)
+    input_range: ±250 mV
+    vdd1_range_v:
+    - 3.0
+    - 5.5
+    vdd2_range_v:
+    - 3.0
+    - 5.5
+    temp_range_c:
+    - -40.0
+    - 125.0
+    offset_uv: 180.0
+    gain_error_pct: 0.18
+    nonlinearity_pct: 0.004
+    snr_db: 90.0
+    idd1_ma: 8.8
+    idd2_ma: 9.7
+  param_sources:
+    isolation_rating_kvrms: si8941-46-47-datasheet.pdf p.17-18 (UL 1577 VISO, WB stretched SOIC-8 column); si8941-46-47-datasheet.pdf
+      p.30
+    isolation_class: si8941-46-47-datasheet.pdf p.17-18 (VDE 60747-17 reinforced insulation; the insulation table and its
+      reinforced-insulation note cover both packages)
+    creepage_mm: si8941-46-47-datasheet.pdf p.17-18 (CRP, WB stretched SOIC-8 column)
+    output_type: si8941-46-47-datasheet.pdf p.30; si8941-46-47-datasheet.pdf p.2 (20 MHz internal clock (output))
+    qualification: 'si8941-46-47-datasheet.pdf p.30 (-A suffix: AEC-Q100, automotive flow; -I suffix: industrial)'
+    cmti_kv_us: si8941-46-47-datasheet.pdf p.8-9 (CMTI min)
+    sense_type: si8941-46-47-datasheet.pdf p.1 (title, description)
+    input_range: si8941-46-47-datasheet.pdf p.8-9 (specified linear input range)
+    vdd1_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDA)
+    vdd2_range_v: si8941-46-47-datasheet.pdf p.8-9 (VDDB)
+    temp_range_c: si8941-46-47-datasheet.pdf p.8-9 (TA)
+    offset_uv: si8941-46-47-datasheet.pdf p.8-9 (input referred offset, max at 25 °C)
+    gain_error_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    nonlinearity_pct: si8941-46-47-datasheet.pdf p.8-9 (max at 25 °C)
+    snr_db: si8941-46-47-datasheet.pdf p.8-9 (typ; FIN = 5 kHz, BW = 40 kHz, 20 kHz for the 10 MHz version, SINC3 OSR 256)
+    idd1_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDA max at VDDA = 3.3 V)
+    idd2_ma: si8941-46-47-datasheet.pdf p.8-9 (IDDB max at VDDB = 3.3 V)
+    pinout: si8941-46-47-datasheet.pdf p.2

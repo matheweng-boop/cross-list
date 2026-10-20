@@ -236,3 +236,12 @@ def test_automotive_reference_lists_only_automotive_parts(session, part):
 def test_industrial_reference_accepts_automotive_upgrade(part):
     r = cross(part("SR8641"), part("SD8641A"), get_rules("digital_isolator"))
     assert "fff" in r.categories and any(d.key == "qualification" for d in r.verdict().better)
+
+
+def test_isolated_amplifier_pin_aliases_apply_only_within_the_family():
+    from app.matching.engine import pins_compatible
+
+    assert pins_compatible("VDDA", "VDD1", "isolated_amplifier")
+    assert pins_compatible("AIP", "INP", "isolated_amplifier") and pins_compatible("ADAT", "DOUT", "isolated_amplifier")
+    assert not pins_compatible("VDDA", "VDD1", "gate_driver")  # gate drivers: VDDA is output channel A
+    assert not pins_compatible("ACLK", "CLKIN", "isolated_amplifier")  # input on some parts, output on others

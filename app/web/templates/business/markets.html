@@ -30,15 +30,15 @@
 <p class="small muted">{{ help }}</p>
 {% if rows %}
 <div class="table-wrap"><table class="striped bo-markets">
-  <thead><tr><th scope="col">{{ term('function', 'Function') }}</th><th scope="col">Markets</th><th scope="col">Applications</th>
-    <th scope="col">{{ 'Our parts' if k == 'portfolio' else 'Path' }}</th>
-    {% for mk in shown %}<th scope="col" class="bo-mk" title="{{ per_market[mk] }} reference architectures">{{ mk }}</th>{% endfor %}<th scope="col"></th></tr></thead>
+  <thead><tr><th scope="col" class="bo-fn">{{ term('function', 'Function') }}</th><th scope="col" class="bo-vert"><span>Markets</span></th><th scope="col" class="bo-vert"><span>Applications</span></th>
+    {% if k != 'portfolio' %}<th scope="col">Path</th>{% endif %}
+    {% for mk in shown %}<th scope="col" class="bo-mk bo-vert" title="{{ per_market[mk] }} reference architectures"><span>{{ mk }}</span></th>{% endfor %}<th scope="col"></th></tr></thead>
   <tbody>{% for e in rows %}<tr>
-    <td><b>{{ e.label }}</b> <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}" title="Companies that build systems needing it">customers →</a>
+    <td class="bo-fn"><b>{{ e.label }}</b> <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}" title="Companies that build systems needing it">customers →</a>
       {% if e.requalify %}<br><span class="bo-requal bo-term" title="{{ bo_help().terms.requalify.short }}">qualify for automotive</span>{% elif e.qual_unknown %}<br><span class="qual q-unknown">grade not stated</span>{% endif %}</td>
-    <td>{{ e.n_markets }}</td>
-    <td>{{ e.n_apps }}</td>
-    <td class="small">{% if k == 'portfolio' %}{{ e.parts }} <span class="muted" title="automotive · stated not automotive · not stated">({{ e.auto_parts }} auto · {{ e.not_auto_parts }} not · {{ e.unknown_parts }} ?)</span>{% else %}{{ path_chip({'path': e.path} if e.path else none, path_label) }}{% endif %}</td>
+    <td class="bo-count">{{ e.n_markets }}</td>
+    <td class="bo-count">{{ e.n_apps }}</td>
+    {% if k != 'portfolio' %}<td>{{ path_chip({'path': e.path} if e.path else none, path_label) }}</td>{% endif %}
     {% for mk in shown %}{% set a = e.by_market.get(mk, []) %}<td class="bo-mk">{% if a %}<details><summary><span class="bo-dot{{ ' auto' if mk == 'Automotive' }}">{{ a|length }}</span></summary>
       <div class="bo-mk-apps">{% for x in a %}<a href="/business/applications/{{ x.i }}?co={{ co }}">{{ x.name }}</a>{% endfor %}</div></details>{% endif %}</td>{% endfor %}
     <td>{{ push('markets', e.fn, e.label ~ ' in ' ~ e.n_markets ~ ' market' ~ ('s' if e.n_markets != 1 else ''), title ~ ' · ' ~ e.n_apps ~ ' applications in ' ~ e.by_market.keys()|join(', '), e.fn, e.fn in shortlisted) }}</td>

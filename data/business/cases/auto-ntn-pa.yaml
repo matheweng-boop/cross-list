@@ -1,0 +1,128 @@
+# Preliminary case: satellite (NTN) in the car's telematics unit. Layout and rules: _template.yaml. Figures and links: the
+# report's background notes. conf: high = primary document read; med = trade press or advocacy body; low = search
+# snippet or analyst PR. "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Satellite in the car: an NTN front end for the telematics unit"
+question: >-
+  What should Skyworks (now with Qorvo) offer so the car's telematics unit can reach satellites in the L/S-band NTN
+  bands n255/n256 (narrowband from 2027, wideband from 2029), given Qualcomm's modem + RF front end, MediaTek's
+  satellite-ready modem, Murata and module makers, and at what price?
+updated: 2026-10-20
+brief:
+  - "Our position is better than it looks: we already sell a power amplifier that covers both NTN bands (SKY68040-11, n255 and n256) and a full AEC-Q104 automotive cellular set, GNSS front end and V2X front end that work with any modem."
+  - "Our weak points: the NTN amplifier is not automotive-qualified, nothing we sell reaches the 26 dBm (power class 2) that 5GAA asks for, and Qualcomm sells modem and front end together; narrowband satellite messaging may need no new hardware at all."
+  - "Proposal: an automotive NTN add-on module (n255 + n256 amplifier, duplexers that protect GNSS, receive path), first at 23 dBm from today's die, then a 26 dBm version for wideband NTN, at about $1.5–2.5 and $2.5–3.5 in volume (est)."
+
+position:
+  advantages:
+    - {id: a-ntnpa, text: "We already ship an NTN amplifier: SKY68040-11 covers n255/B24 (L-band) and n256/B23 (S-band) plus LTE-M/NB-IoT bands, InGaP HBT, 48 % efficiency at full power (May 2025)", vs: "Qualcomm, Murata", conf: high}
+    - {id: a-autoset, text: "Complete AEC-Q104 Grade 2 cellular set for the TCU (SKY5A2206 PA, SKY5A2205 TX/RX module, SKY5A2203 LNA bank, SKY5A5010/5005/5009 receive modules) plus GNSS L1+L5 (SKY5A2110) and V2X (SKY5A2105)", vs: "Murata, Chinese RF vendors", conf: high}
+    - {id: a-agnostic, text: "Works with any modem (MIPI RFFE, baseband agnostic); MediaTek's MT2739 has satellite in the modem but needs an external NTN RF path", vs: Qualcomm, conf: high}
+    - {id: a-gnss, text: "We make both sides of the hardest coexistence problem: the n255 uplink (from 1626.5 MHz) sits about 50 MHz above GNSS L1 (1575 MHz), and we sell both the NTN amplifier and the filtered GNSS front end", vs: "Qualcomm, Murata", conf: med}
+    - {id: a-filters, text: "With Qorvo, BAW and SAW filters in house, including automotive Q-suffix BAW (QPQ1040Q, QPQ1041Q, QPQ2200Q), so NTN duplexers need not be bought in", vs: "Chinese RF vendors, module makers", conf: med}
+    - {id: a-us, text: "US-headquartered RF supply fits the US connected-vehicle rule (Chinese/Russian hardware banned from model year 2030) and USMCA content needs, which Tier-1s now name as buying criteria", vs: "Chinese RF vendors and modules", conf: med}
+  disadvantages:
+    - {id: d-bundle, text: "Qualcomm sells modem and automotive front end together and claimed (2020) that all its next-generation 5G telematics wins included its RF front end; Skylo's NTN runs on Snapdragon Auto 5G Modem-RF Gen 2", vs: Qualcomm, offset: "Win the non-Qualcomm platforms first (MediaTek MT2739, UNISOC, module makers) and offer 26 dBm, which Qualcomm has not announced for NTN", conf: low}
+    - {id: d-noauto, text: "SKY68040-11 is not automotive-qualified; its output power is not stated; no automotive part covers n255/n256 today", vs: "—", offset: "Automotive module from the same die (feature f-auto), 12–18 months (est)", conf: high}
+    - {id: d-nohw, text: "Narrowband NTN can arrive through firmware on existing TCUs with no extra hardware (Skylo's approach), so there may be no new socket in 2027", vs: "Skylo + existing chipsets", offset: "Sell the wideband step: higher transmit power and antenna gain are what raise the uplink (under 1 Mbps at 23 dBm/0 dBi, up to 11 Mbps at 29 dBm/6 dBi)", conf: med}
+    - {id: d-module, text: "Module makers ship certified NTN modules (Murata Type 1SC-NTN, Skylo-certified; Quectel AR588MA on MT2739); the RF choice is theirs, not the car maker's", vs: "Murata, Quectel", offset: "Reference designs and Skylo certification with module makers (attach lever t-skylo)", conf: med}
+    - {id: d-bands, text: "Satellite spectrum is fragmented: n255 L-band (Skylo with Viasat, Ligado, TerreStar), n256 S-band (EU MSS), Iridium 1616–1626.5 MHz, Starlink on terrestrial bands and on EchoStar's 2 GHz band; one part cannot be optimal for all", vs: "—", offset: "One broadband 1.6–2.2 GHz amplifier with switched band filters; regional filter options", conf: med}
+    - {id: d-cost, text: "Every extra amplifier, filter and antenna adds cost to a cost-sensitive TCU; the value to the car maker is a subscription, not a regulation", vs: "integrated modem-RF", offset: "Option to fold NTN into the main mid-band amplifier module later (one part instead of two)", conf: med}
+    - {id: d-merger, text: "Two overlapping product lines being merged (closed Oct 2026) may delay roadmap decisions (our judgement)", vs: "—", offset: "Publish one combined automotive RF roadmap early", conf: low}
+  diff_good:
+    - {id: g-hpue, text: "Power class 2 already in an automotive amplifier: SKY5A2206 supports PC2 on n40 and n41 at 4.5 V", conf: high}
+    - {id: g-comp, text: "Antenna-side compensator heritage: SKY5A2105 has a compensator mode for the antenna end of the cable, the same need as a roof-mounted NTN patch", conf: high}
+    - {id: g-gnss, text: "GNSS L1+L5 front end with pre- and post-filter (SKY5A2110) can be co-designed with the NTN transmitter", conf: high}
+  diff_bad:
+    - {id: b-nomodem, text: "No modem: NTN certification (Skylo) is done on modules and modem platforms, so we depend on their schedules", conf: high}
+    - {id: b-noka, text: "No automotive Ka/Ku-band terminal; Qorvo's beamformers and GaN are defense/SATCOM cost and grade", conf: med}
+    - {id: b-noant, text: "No antennas: a 3 dBi dual-band L/S antenna needs two radiators and more than 5 × 5 cm, so antenna makers decide how much transmit power is needed", conf: high}
+
+architecture:
+  columns: [Skyworks + Qorvo (discrete, any modem), Qualcomm (modem + own RF front end), MediaTek / module makers (MT2739, Quectel AR588MA)]
+  rows:
+    - ["Built as", "Modem from others → our PA, TX/RX module, receive modules; NTN today only in an IoT PA (SKY68040-11)", "Snapdragon Auto 5G Modem-RF Gen 2 with Qualcomm automotive RF front end; NB-NTN via Skylo", "MT2739 with NB-NTN and NR-NTN in the modem; separate NTN RF path (PA, LNA, filter) from RF vendors"]
+    - ["NTN bands in the front end", "n255 + n256 on SKY68040-11 (not automotive); none on SKY5A parts", "Not stated publicly", "Not stated; RF path external"]
+    - ["Transmit power", "PC3 class assumed for SKY68040-11 (not stated); PC2 only on n40/n41 (SKY5A2206)", "Not stated", "Not stated"]
+    - ["Where it sits", "TCU board; compensator option at the antenna (as SKY5A2105)", "TCU board", "TCU board / module"]
+    - ["Fit with where cars are going", "Good: TCU stays a separate node next to central computers; satellite adds an antenna path", "Strong in TCUs that use Qualcomm end to end", "Open socket for RF vendors"]
+  note: "From the BizDev block-diagram library: Skyworks telematics & infotainment RF, Qualcomm automotive telematics (Snapdragon Auto 5G Modem-RF Gen 2), MediaTek MT2739 automotive telematics (separate satellite RF path), TI TCU. Central computers do not absorb the modem in public zonal plans (GM 2028, VW/Rivian 2027, BMW Neue Klasse); the TCU or a smart-antenna module keeps the cellular and satellite radios."
+
+market_now:
+  - {figure: "Light-vehicle production", value: "92.1 M (2026)", source: "S&P Global Mobility, Mar 2026", conf: high}
+  - {figure: "New cars with embedded cellular", value: "95 %", source: "FDM CCS Insight blog, Jan 2026", conf: med}
+  - {figure: "NTN service phases for cars", value: "Narrowband < 400 kbps from 2027 · wideband < 10 Mbps from 2029 · broadband > 10 Mbps from 2030 (Ku/Ka)", source: "5GAA technical report, Sep 2024", conf: high}
+  - {figure: "Vehicle terminal recommended to 3GPP", value: "NF 7 dB; transmit PC3 23 dBm and PC2 26 dBm; antenna 0 or 3 dBi", source: "5GAA technical report, Table 7", conf: high}
+  - {figure: "Today's NTN standard (Rel-17)", value: "n254/n255/n256 only PC3 23 dBm ± 2 dB, 0 dBi reference antenna", source: "5GAA report quoting TS 38.101-5", conf: high}
+  - {figure: "S-band uplink rate", value: "< 1 Mbps (23 dBm, 0 dBi) to 11 Mbps (29 dBm, 6 dBi)", source: "5GAA technical report", conf: high}
+  - {figure: "Antenna size", value: "0 dBi dual-band or 3 dBi single-band fits < 5 × 5 cm; 3 dBi dual-band needs > 5 × 5 cm", source: "5GAA technical report", conf: high}
+  - {figure: "Band frequencies", value: "n255 UL 1626.5–1660.5 / DL 1525–1559 MHz; n256 UL 1980–2010 / DL 2170–2200 MHz", source: "Hubble guide (snippet)", conf: low}
+  - {figure: "Satellite-connected vehicle shipments", value: "30 M by 2034, from 2027 outside China, 32 % CAGR; Geely and BYD already ship", source: "ABI Research PR, Oct 2024", conf: low}
+  - {figure: "Timing", value: "First commercial deployments ready 2027; NR-NTN hardware 2027–28, services from 2029", source: "FDM CCS Insight (Cubic), Jan 2026", conf: med}
+  - {figure: "Modems", value: "MediaTek MT2739: NB-NTN + NR-NTN, AEC-Q100 Grade 2 (Apr 2025); Qualcomm Snapdragon Auto 5G Modem-RF Gen 2 with Skylo NB-NTN", source: "MediaTek blog; CCS Insight", conf: high}
+  - {figure: "Spectrum moves", value: "SpaceX buys EchoStar AWS-4 (2000–2020/2180–2200 MHz) and H-block, about $17 B (Sep 2025); Iridium NTN Direct (L-band, Rel-19) devices planned 2026", source: "DCD; RCR Wireless / Telecom TV (snippets)", conf: low}
+  - {figure: "Coverage gaps", value: "Canada about 13 % of roads without 4G; EU main-road drivers without connectivity 12.4 % of the time", source: "CCS Insight; ABI Research PR", conf: low}
+
+outlook:
+  - {id: o-nb, text: "Narrowband NTN starts in 2027–2028 programmes mostly through firmware and today's 23 dBm front ends where the bands are already covered (est)", basis: "5GAA phase 1 from 2027; Skylo runs on existing automotive chipsets; Cubic expects first deployments 2027", conf: med}
+  - {id: o-vol, text: "About 10 M satellite-capable new vehicles a year by 2030 if ABI's path holds; half that if the rollout slips (est)", basis: "30 M in 2034 at 32 % CAGR from 2027 → about 9.9 M in 2030", conf: low}
+  - {id: o-pc2, text: "A vehicle terminal class above 23 dBm enters 3GPP NTN specifications in Rel-19/20 (est); against: MSS operators may resist higher uplink power, and some OEMs will accept lower rates", basis: "5GAA recommendation to 3GPP (RP-232733); Rel-17 has only PC3", conf: low}
+  - {id: o-wide, text: "The content opportunity is wideband NR-NTN from 2029: more uplink power and antenna gain are the only levers named (est)", basis: "5GAA link budget; CCS Insight 2029", conf: med}
+  - {id: o-dtc, text: "Direct-to-cell over terrestrial bands (Starlink style) needs no new car RF but matters mainly in North America and Oceania (est)", basis: "5GAA: unclear relevance in Europe, national spectrum patchwork, WRC-27", conf: med}
+  - {id: o-ka, text: "Ku/Ka broadband arrays stay a premium niche after 2030 (est)", basis: "25–31 dBi flat arrays, no automotive volumes public", conf: low}
+
+features:
+  - {id: f-sell, feature: "Offer SKY68040-11 for TCU and aftermarket NTN pilots now", benefit: "Early place in Skylo/Iridium pilots and module evaluations", distance: 0, why: "Part exists; not automotive-qualified, so pilots and aftermarket only"}
+  - {id: f-n256doc, feature: "Characterise whether the SKY5A2206 mid-band path reaches n256 (1980–2010 MHz)", benefit: "Possible n256 transmit on today's automotive PA", distance: 1, why: "Measurement and datasheet only, if the broadband path holds; not stated today"}
+  - {id: f-auto, feature: "Automotive NTN module at 23 dBm: SKY68040-class die + n255/n256 duplexers + receive LNA, AEC-Q104", benefit: "First automotive NTN part; answers MT2739's external NTN path", distance: 2, why: "Existing die and processes in a new module and qualification; duplexers counted in f-filter"}
+  - {id: f-filter, feature: "n255 and n256 duplexers with deep rejection at GNSS L1", benefit: "Satellite transmit without blinding GNSS in the same car", distance: 3, why: "New BAW/SAW designs on existing processes; none exist for these bands"}
+  - {id: f-pc2, feature: "26 dBm (power class 2) at the antenna port for n255/n256", benefit: "Meets 5GAA's vehicle request; raises uplink for wideband NTN", distance: 3, why: "New PA die on our InGaP HBT process; PC2 know-how from n40/n41 in SKY5A2206"}
+  - {id: f-comp, feature: "Antenna-side NTN compensator (PA + LNA + filters in the satellite antenna module)", benefit: "Recovers cable loss for roof-mounted antennas", distance: 3, why: "Concept exists in SKY5A2105 (V2X); new bands and detector loop"}
+  - {id: f-ref, feature: "Reference design with MediaTek MT2739 / Quectel AR588MA and SKY5A2110 GNSS", benefit: "Shortens design-in on non-Qualcomm platforms", distance: 2, why: "Board, driver tables and coexistence measurements"}
+  - {id: f-iridium, feature: "Iridium 1616–1626.5 MHz option", benefit: "Covers the second L-band operator", distance: 3, why: "Band status in 3GPP not confirmed; new filter, PA band edge"}
+  - {id: f-merge, feature: "One mid-band module with terrestrial bands + n255/n256", benefit: "Removes the extra part; lowest system cost later", distance: 3, why: "New PA module design from existing dies and filters"}
+  - {id: f-ka, feature: "Automotive Ka-band flat-array tile", benefit: "Broadband satellite after 2030", distance: 4, why: "Automotive-cost beamformer and antenna-in-package not held; not recommended now"}
+
+product:
+  name: "Automotive NTN add-on module, NTN-23 then NTN-26"
+  spec:
+    - ["Bands", "n255 (UL 1626.5–1660.5, DL 1525–1559 MHz) and n256 (UL 1980–2010, DL 2170–2200 MHz); B23/AWS-4 and Iridium as options"]
+    - ["Transmit", "NTN-23: 23 dBm (PC3) at the antenna port · NTN-26: 26 dBm (PC2)"]
+    - ["Receive", "LNA path for both downlinks, total NF target 7 dB (smartphone-like, per 5GAA)"]
+    - ["Filters", "n255/n256 duplexers with GNSS L1 protection; works next to SKY5A2110"]
+    - ["Control", "MIPI RFFE; register map compatible with major automotive modem drivers"]
+    - ["Reuses", "SKY68040-11 InGaP HBT PA die (NTN-23), SKY5A2206 PC2 know-how, Qorvo/Skyworks BAW and SAW, Sky5A packaging, AEC-Q104 flow"]
+    - ["New", "Automotive module and qualification; duplexers; PC2 die (NTN-26)"]
+    - ["Replaces / answers", "A discrete NTN PA + filters + LNA in MediaTek-based TCUs; answers Qualcomm's bundled RF front end"]
+    - ["Variant", "Antenna-side compensator for roof-mounted satellite antennas"]
+    - ["Delivery (est)", "NTN-23: 12–18 months · NTN-26: 24–30 months, timed to Rel-19/20 vehicle requirements and 2029 wideband services"]
+
+prices:
+  method: "Few public anchors (low confidence) → value of the parts replaced → range. Assumption: automotive contract prices are 30–50 % below reel list prices, and far below single-unit distributor prices. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "Skyworks SKY68020-11 (LTE-M/NB-IoT front end: PA + switch + filters)", price: "$5.16", qty: "not stated (distributor snippet)"}
+    - {part: "LTE Cat-4 module · 5G RedCap module (whole modules, for scale)", price: "$16–20 · $35–50", qty: "ABI Research estimate 2024"}
+    - {part: "Automotive NTN amplifier or module", price: "not stated", qty: "—"}
+  items:
+    - {id: p-ntn23, item: "NTN-23 module (PA + duplexers + LNA, AEC-Q104)", entry: 1.5, target: 2.0, premium: 2.5, basis: "A whole IoT front end lists at $5.16 one-off; contract and volume far lower; automotive qualification adds; replaces 4–6 discrete parts (est)"}
+    - {id: p-ntn26, item: "NTN-26 module (26 dBm, GNSS-protecting duplexers)", entry: 2.5, target: 3.0, premium: 3.5, basis: "About 1.5× NTN-23 for the PC2 die and stronger filters (est)"}
+    - {id: p-comp, item: "Antenna-side NTN compensator", entry: 3.5, target: 4.0, premium: 5.0, basis: "Adds detector and control and is sold to antenna makers; saves a larger antenna (est)"}
+
+volumes:
+  - {label: "NTN-23, 2 M a year (premium TCUs, 2028)", units: 2000000, price: p-ntn23}
+  - {label: "NTN-26, 5 M a year (half of ABI-path satellite cars, 2030)", units: 5000000, price: p-ntn26}
+  - {label: "Compensator, 1 M a year (roof antenna modules)", units: 1000000, price: p-comp}
+
+attach:
+  - {id: t-skylo, lever: "Certify the reference design in Skylo's device programme (Skylo certifies modules such as Murata Type 1SC-NTN and Rolling Wireless RN951Y)", effort: med}
+  - {id: t-mtk, lever: "Reference design with MediaTek MT2739 and Quectel AR588MA (MediaTek's diagram has a separate NTN RF path; Qorvo had MediaTek automotive 5G wins in 2022)", effort: med}
+  - {id: t-3gpp, lever: "Bring measured PC2 data to 5GAA and 3GPP Rel-19/20 vehicle-terminal work (judgement)", effort: med}
+  - {id: t-gnss, lever: "Ship coexistence data with SKY5A2110: GNSS sensitivity while NTN transmits (judgement)", effort: low}
+  - {id: t-antenna, lever: "Joint design with satellite-antenna makers for the 3 dBi patch and compensator (judgement)", effort: med}
+  - {id: t-us, lever: "State non-China supply and US content for the connected-vehicle rule and USMCA (Marelli names both as buying criteria)", effort: low}
+
+risks:
+  - "Narrowband NTN may run on existing 23 dBm front ends with no new part; the case rests on wideband from 2029."
+  - "3GPP may not adopt a vehicle power class above 23 dBm; without it, PC2 is a proprietary option."
+  - "Spectrum winners are unclear: L-band (Skylo/Viasat/Ligado), Iridium, S-band in Europe, and Starlink's 2 GHz band in the US."
+  - "Qualcomm's bundled front end could close most Qualcomm-based TCUs."
+  - "Unknown from public data: SKY68040-11 output power, GNSS desense with an n255 transmitter, filter feasibility, contract prices, and satellite-capable vehicle volumes outside one analyst forecast."

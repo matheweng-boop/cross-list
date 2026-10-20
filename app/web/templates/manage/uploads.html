@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Uploads – BizDev{% endblock %}
 {% block content %}
 <h1>Uploads</h1>
 <p class="subtitle muted">Pictures, block diagrams, documents and written explanations to use in the library and the knowledge pages. Public or your own material only: nothing confidential.</p>
@@ -31,7 +30,7 @@
     {% if u.content_type and u.content_type.startswith('image/') %}<img src="/manage/uploads/{{ u.id }}/file" alt="{{ u.title }}" loading="lazy">
     {% else %}<span class="up-icon">{{ 'PDF' if u.content_type == 'application/pdf' else 'Text' }}</span>{% endif %}
     <b>{{ u.title }}</b>
-    <small class="muted">{{ kinds.get(u.kind, u.kind) }} · {{ statuses.get(u.status, u.status) }} · {{ u.created_at.strftime('%d %b %Y') }}{% if u.topic %} · {{ u.topic }}{% endif %}</small>
+    <small class="muted">{{ kinds.get(u.kind, u.kind) }} · {{ statuses.get(u.status, u.status) }} · {{ u.created_at|date }}{% if u.topic %} · {{ u.topic }}{% endif %}</small>
   </a>{% else %}<p class="muted">Nothing uploaded{{ ' with these filters' if kind or status }} yet.</p>{% endfor %}
 </div>
 {% endblock %}

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Application library – BizDev{% endblock %}
 {% block content %}
 {% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else ''} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
 <h1>Application library</h1>
@@ -38,7 +37,7 @@
 <div class="table-wrap"><table>
   <thead><tr><th>Name</th><th>Last saved</th><th></th></tr></thead>
   <tbody>{% for d in designs %}
-    <tr><td><a href="/blocks/{{ d.id }}"><b>{{ d.name }}</b></a></td><td><small>{{ d.updated_at.strftime('%Y-%m-%d %H:%M') if d.updated_at }}</small></td>
+    <tr><td><a href="/blocks/{{ d.id }}"><b>{{ d.name }}</b></a></td><td><small>{{ d.updated_at|date('stamp') }}</small></td>
       <td><form method="post" action="/blocks/{{ d.id }}/delete" onsubmit="return confirm('Delete {{ d.name|e }}?')"><button class="secondary outline small-btn">Delete</button></form></td></tr>
   {% endfor %}</tbody>
 </table></div>

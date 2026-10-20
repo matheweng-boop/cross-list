@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app import yamlio
-from app.services import blocks, lifecycle
+from app.services import blocks, lifecycle, vocab
 
 CONFIG = Path(__file__).resolve().parents[2] / "data" / "business" / "rf_bands.yaml"
 _NUM = re.compile(r"\d+(?:\.\d+)?")
@@ -98,9 +98,7 @@ def parts() -> tuple[dict, ...]:
     out = []
     for path, data in blocks._catalog_docs():
         for p in data.get("parts") or []:
-            fn = blocks.FUNCTION_ALIAS.get(p.get("function"), p.get("function"))
-            fns = [f for f in dict.fromkeys([fn, *(blocks.FUNCTION_ALIAS.get(x, x) for x in p.get("also") or [])])
-                   if f in fset]  # fmt: skip
+            fns = [f for f in vocab.fills(p.get("function"), p.get("also") or []) if f in fset]
             if not fns:
                 continue
             ranges = frequency_ranges(p.get("key_specs") or {}, p.get("description") or "")
@@ -123,13 +121,14 @@ COMPETITOR_DIR = Path(__file__).resolve().parents[2] / "data" / "catalog" / "rf_
 @lru_cache
 def competitor_parts() -> tuple[dict, ...]:
     """Competitors' RF parts (data/catalog/rf_competitors/*.yaml): counted to show who else serves a slot, never offered
-    as our parts. Same fields as parts()."""
-    fset, bands = set(config()["functions"]), config()["bands"]
+    as our parts. Same fields as parts(). Every part of a known function is kept (circulators, diplexers ...); the band
+    views pick their own functions."""
+    known, bands = vocab.functions(), config()["bands"]
     out = []
     for path in sorted(COMPETITOR_DIR.glob("*.yaml")) if COMPETITOR_DIR.exists() else []:
         for p in (yamlio.load(path.read_text()) or {}).get("parts") or []:
-            fn = p.get("function")
-            if fn not in fset:
+            fns = [f for f in vocab.fills(p.get("function")) if f in known]
+            if not fns:
                 continue
             lo, hi = p.get("freq_min_ghz"), p.get("freq_max_ghz")
             ranges = (
@@ -137,7 +136,7 @@ def competitor_parts() -> tuple[dict, ...]:
             )
             status = str(p.get("status") or "")
             out.append({
-                "mpn": str(p["mpn"]), "manufacturer": p.get("manufacturer") or path.stem, "functions": [fn],
+                "mpn": str(p["mpn"]), "manufacturer": p.get("manufacturer") or path.stem, "functions": fns,
                 "url": p.get("url") or "", "description": str(p.get("description") or "")[:160], "status": status,
                 "risk": lifecycle.is_risk(status), "ranges": ranges,
                 "bands": [b["id"] for b in bands if any(a < b["hi"] and z >= b["lo"] for a, z in ranges)],
@@ -256,7 +255,7 @@ def rows() -> list[dict]:
                 cells[b["id"]] = {"n": len(active), "risk": len(inb) - len(active), "need": n_need,
                                   "by": Counter(p["manufacturer"] for p in active),
                                   "comp": sum(rivals.values()), "rivals": rivals}  # fmt: skip
-            out.append({"fn": fn, "label": blocks.catalogue()["functions"].get(fn, {}).get("label", fn),
+            out.append({"fn": fn, "label": vocab.fn_label(fn),
                         "power": cid, "power_label": clabel, "cells": cells, "total": len(sub),
                         "no_freq": sum(1 for p in sub if not p["bands"]),
                         "no_power": sum(1 for p in mine if p["power"] is None) if cid else 0})  # fmt: skip

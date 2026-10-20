@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Requests & reviews – BizDev{% endblock %}
 {% block content %}
 <h1>Requests &amp; reviews</h1>
 <p class="subtitle muted">Everything people have flagged, in one queue. Records stay where they were created; each line says how it is resolved and
@@ -16,7 +15,7 @@
   <thead><tr><th scope="col">Type</th><th scope="col">Item</th><th scope="col">Note</th><th scope="col">From · date</th><th scope="col">Status</th><th scope="col">How it is resolved · affects</th></tr></thead>
   <tbody>{% for i in rows %}<tr>
     <td>{{ types[i.type][0] }}</td><td><a href="{{ i.link }}">{{ i.title }}</a></td><td>{{ i.detail }}</td>
-    <td>{{ i.author or 'anonymous' }}<br><span class="muted">{{ i.date.strftime('%Y-%m-%d') }}</span></td><td>{{ i.status }}</td>
+    <td>{{ i.author or 'anonymous' }}<br><span class="muted">{{ i.date|date }}</span></td><td>{{ i.status }}</td>
     <td>{{ i.resolution }}<br><span class="muted">{{ i.affects }}</span></td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}

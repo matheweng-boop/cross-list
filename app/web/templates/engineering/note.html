@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ title }} – Engineering notes – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, title) }}{% endblock %}
 {% block content %}
 <p class="muted small"><a href="/engineering">Engineering notes</a> ›</p>
 <h1>{{ title }}</h1>
@@ -9,8 +9,8 @@
 <article class="note-context">
   <p><b>Your comparison</b> — {{ ctx.param.label }}{% if ctx.param.unit %} ({{ ctx.param.unit }}){% endif %}, priority {{ ctx.param.priority }}{{ ' (defines the function)' if ctx.param.hard }}</p>
   <div class="table-wrap"><table>
-    <tr><th>{{ ctx.reference.mpn }}<br><small class="muted">{{ ctx.reference.manufacturer.name }} · reference</small></th>
-        <th>{{ ctx.candidate.mpn }}<br><small class="muted">{{ ctx.candidate.manufacturer.name }}</small></th><th></th></tr>
+    <tr><th>{{ ctx.reference.mpn }}<br><small class="muted">{{ ctx.reference.manufacturer.name|vendor }} · reference</small></th>
+        <th>{{ ctx.candidate.mpn }}<br><small class="muted">{{ ctx.candidate.manufacturer.name|vendor }}</small></th><th></th></tr>
     <tr><td>{{ ctx.ref_display }}</td><td class="{{ ctx.status if ctx.status != 'equal' }}">{{ ctx.cand_display }}</td><td><span class="status">{{ ctx.status }}</span></td></tr>
   </table></div>
   <p class="small"><a href="/parts/{{ ctx.reference.id }}#row-{{ ctx.candidate.id }}">Back to the crosses for {{ ctx.reference.mpn }}</a></p>

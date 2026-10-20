@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import BlockDiagram, Case, CaseLine, CaseNote, Part, ShortlistItem
-from app.services import blocks
+from app.services import blocks, vocab
 
 STEPS = [
     ("part", "Part"),
@@ -52,7 +52,7 @@ def start(session: Session, part_id: int, our_id: int | None = None) -> dict:
         if ours is not None and not ours.is_reference:
             ours = None
     fn = fn_for_family(part.family)
-    label = (blocks.catalogue()["functions"].get(fn) or {}).get("label", part.family) if fn else part.family
+    label = vocab.fn_label(fn) if fn else vocab.family_title(part.family)
     return {
         "part": {**_part(part), "reference": part.is_reference},
         "competitor": _part(competitor),
@@ -116,14 +116,14 @@ def new_diagram(fn: str | None, label: str, our_mpn: str | None) -> dict:
 def design_rows(session: Session, data: dict, fn: str | None) -> list[dict]:
     """Every block of the diagram with what fills it: our chosen part, parts we could offer, a gap, or a customer
     part (not ours to sell)."""
-    counts, cat = blocks.counts(session), blocks.catalogue()["functions"]
+    counts = blocks.counts(session)
     rows = []
     for g in data.get("groups") or []:
         for b in g.get("blocks") or []:
             n = counts.get(b.get("fn"))
             status = "chosen" if b.get("part") else ("customer" if n is None else "have" if n else "gap")
             rows.append({"group": g.get("label", ""), "block": b["id"], "fn": b.get("fn"), "qty": b.get("qty") or 1,
-                         "label": b.get("label") or (cat.get(b.get("fn")) or {}).get("label", b.get("fn")),
+                         "label": b.get("label") or vocab.fn_label(b.get("fn")),
                          "part": b.get("part"), "status": status, "candidates": n or 0,
                          "is_cross": b.get("fn") == fn})  # fmt: skip
     return rows

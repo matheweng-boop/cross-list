@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "_macros.html" import part_badges %}
-{% block title %}Lifecycle – BizDev{% endblock %}
 {% block content %}
 <h1>Lifecycle</h1>
 <p class="subtitle muted">New releases, end-of-life risk, and recent datasheet revisions.</p>
@@ -9,7 +8,7 @@
 <div class="table-wrap"><table class="striped">
   <thead><tr><th>Part</th><th>Manufacturer</th><th>Released</th><th>Status</th><th>Revision</th></tr></thead>
   {% for p in new_parts %}
-  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name }}</td><td>{{ p.release_date }}</td><td>{{ part_badges(p) }}</td><td>{{ p.datasheet_revision or '—' }}</td></tr>
+  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name|vendor }}</td><td>{{ p.release_date }}</td><td>{{ part_badges(p) }}</td><td>{{ p.datasheet_revision or '—' }}</td></tr>
   {% else %}<tr><td colspan="5">None.</td></tr>{% endfor %}
 </table></div>
 
@@ -17,7 +16,7 @@
 <div class="table-wrap"><table class="striped">
   <thead><tr><th>Part</th><th>Manufacturer</th><th>Status</th><th>Last revision</th></tr></thead>
   {% for p in at_risk %}
-  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name }}</td><td>{{ part_badges(p) }}</td><td>{{ p.datasheet_revision or '—' }} {{ p.datasheet_date or '' }}</td></tr>
+  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name|vendor }}</td><td>{{ part_badges(p) }}</td><td>{{ p.datasheet_revision or '—' }} {{ p.datasheet_date or '' }}</td></tr>
   {% else %}<tr><td colspan="4">None.</td></tr>{% endfor %}
 </table></div>
 
@@ -25,7 +24,7 @@
 <div class="table-wrap"><table class="striped">
   <thead><tr><th>Part</th><th>Manufacturer</th><th>Revision</th><th>Date</th></tr></thead>
   {% for p in recent_revisions %}
-  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name }}</td><td>{{ p.datasheet_revision }}</td><td>{{ p.datasheet_date }}</td></tr>
+  <tr><td><a href="/parts/{{ p.id }}">{{ p.mpn }}</a></td><td>{{ p.manufacturer.name|vendor }}</td><td>{{ p.datasheet_revision }}</td><td>{{ p.datasheet_date }}</td></tr>
   {% endfor %}
 </table></div>
 
@@ -33,7 +32,7 @@
 <div class="table-wrap"><table class="striped">
   <thead><tr><th>Detected</th><th>Part</th><th>Change</th><th>From</th><th>To</th><th>Source</th></tr></thead>
   {% for e in events %}
-  <tr><td>{{ e.detected_at.strftime('%Y-%m-%d') }}</td><td><a href="/parts/{{ e.part.id }}">{{ e.part.mpn }}</a></td><td>{{ e.kind }}</td><td>{{ e.old_value or '—' }}</td><td>{{ e.new_value }}</td><td class="muted">{{ e.source }}</td></tr>
+  <tr><td>{{ e.detected_at|date }}</td><td><a href="/parts/{{ e.part.id }}">{{ e.part.mpn }}</a></td><td>{{ e.kind }}</td><td>{{ e.old_value or '—' }}</td><td>{{ e.new_value }}</td><td class="muted">{{ e.source }}</td></tr>
   {% else %}<tr><td colspan="6">No changes recorded yet. Run the refresh job to check for updates.</td></tr>{% endfor %}
 </table></div>
 {% endblock %}

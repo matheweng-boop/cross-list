@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Configurations – Broadcast – BizDev{% endblock %}
 {% block content %}
-<h1>Configurations</h1>
+<h1>Radio configurations</h1>
 <p class="subtitle muted">Block diagrams of tuners, coprocessors and their surroundings. Every pin can be clicked to add what belongs on it.</p>
 <p><a href="/broadcast/configurations/new" role="button">New configuration</a></p>
 {% if configs %}
@@ -11,7 +10,7 @@
   {% for c in configs %}
     <tr><td><a href="/broadcast/configurations/{{ c.id }}"><b>{{ c.name }}</b></a></td>
       <td><small>{{ (c.data.get('devices') or [])|map(attribute='mpn')|join(', ') }}</small></td>
-      <td><small>{{ c.updated_at.strftime('%Y-%m-%d %H:%M') if c.updated_at }}</small></td>
+      <td><small>{{ c.updated_at|date('stamp') }}</small></td>
       <td><form method="post" action="/broadcast/configurations/{{ c.id }}/delete" onsubmit="return confirm('Delete {{ c.name|e }}?')">
         <button class="secondary outline small-btn">Delete</button></form></td></tr>
   {% endfor %}

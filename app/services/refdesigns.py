@@ -6,7 +6,6 @@ from functools import lru_cache
 from pathlib import Path
 
 from app import yamlio
-from app.services import blocks
 
 DIR = Path(__file__).resolve().parents[2] / "data" / "reference_designs"
 DOC_LABELS = {
@@ -46,11 +45,6 @@ def designs() -> tuple[dict, ...]:
                 ).lower()  # fmt: skip
                 out.append(d)
     return tuple(out)
-
-
-def function_label(fn: str) -> str:
-    f = blocks.catalogue()["functions"].get(fn)
-    return f["label"] if f else fn.replace("_", " ")
 
 
 def search(q: str = "", vendor: str = "", market: str = "", fn: str = "", isolation: bool = False,

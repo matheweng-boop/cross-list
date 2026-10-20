@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 {% from "_macros.html" import part_badges, diff_table %}
-{% block title %}{{ part.mpn }} – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, part.mpn) }}{% endblock %}
 {% block content %}
 {% set back = request.query_params.get('from', '') %}{% if back.startswith('/parts?') or back == '/parts' %}<p class="small"><a href="{{ back }}">← Back to results</a></p>{% endif %}
 <h1>{{ part.mpn }}</h1>
 <dl class="ref-summary">
-  <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>
-  <div><dt>Function</dt><dd>{{ family_titles()[part.family] if part.family in family_titles() else part.family }}</dd></div>
+  <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name|vendor }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>
+  <div><dt>Function</dt><dd>{{ family_title(part.family) }}</dd></div>
   <div><dt>Package</dt><dd>{{ part.package.code }}{% if part.package_locked %} <span class="badge warn" title="{{ part.package_lock_reason }}">locked</span>{% endif %}</dd></div>
-  <div><dt>Qualification</dt><dd>{% set g = grade_of(part) %}<span class="qual q-{{ 'not_automotive' if g == 'industrial' else g }}">{{ {'automotive': 'AEC-Q100', 'industrial': 'Industrial / commercial', 'unknown': 'Not stated'}[g] }}</span></dd></div>
+  <div><dt>Qualification</dt><dd>{% set g = grade_of(part) %}<span class="qual q-{{ 'not_automotive' if g == 'industrial' else g }}">{{ grade_label['not_automotive' if g == 'industrial' else g] }}</span></dd></div>
   <div><dt>Lifecycle</dt><dd>{{ lifecycle_badge(part)[0] }}</dd></div>
   <div><dt>Source</dt><dd>{% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}{% if part.datasheet_url and part.product_url %} · {% endif %}{% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}{% if not part.datasheet_url and not part.product_url %}<span class="muted">none linked</span>{% endif %}</dd></div>
 </dl>
-<p class="muted small">{{ part.description }}</p>
+<p class="part-summary"><b>{{ part_summary(part) }}</b></p>
+{% if part.description %}<p class="muted small"><span title="As the manufacturer describes it">Source text:</span> {{ part.description|desc(part.mpn) }}</p>{% endif %}
 {% set top = (ranked|dictsort(by='value')|first) if ranked else none %}
 <p class="pl-start">{% if part.is_reference %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}"><button type="submit" class="small-btn">Start a business case with {{ part.mpn }}</button></form>
   <span class="small muted">place it in an application, add the other parts in the design, volume and price</span>
@@ -118,7 +119,7 @@
         <button type="button" class="linklike" aria-expanded="false" aria-controls="d-{{ c.id }}"><b>{{ c.mpn }}</b></button>
         {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
-        <br><small class="muted">{{ c.manufacturer.name }}</small>
+        <br><small class="muted">{{ c.manufacturer.name|vendor }}</small>
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
         {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}{% if nvar %}<br><small class="muted">{{ nvar }} variant{{ 's' if nvar != 1 }} (open for details)</small>{% endif %}</td>
       <td><span class="badge {{ badge[v.category] }}" title="{{ v.label }}">{{ v.short }}</span>

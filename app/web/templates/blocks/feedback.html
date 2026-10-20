@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Feedback – Block diagrams – BizDev{% endblock %}
 {% block content %}
-<h1>Feedback to-do</h1>
+<h1>Diagram feedback</h1>
 <p class="subtitle muted">Feedback typed or spoken in the block diagrams, kept here until it is reviewed. Changes are made in batches, not
   per item: mark what we agree on, then copy the open and agreed items into a conversation with Claude for one round of changes.</p>
 {% set active = rows|selectattr('status', 'in', ['open', 'agreed'])|list|length %}
@@ -17,7 +16,7 @@
     <tr class="req-{{ f.status }}">
       <td><small>{% if f.diagram_id %}<a href="/blocks/{{ f.diagram_id }}">{{ f.diagram_name or 'diagram' }}</a>{% else %}{{ f.diagram_name or '—' }}{% endif %}{% if f.target %}<br>{{ f.target }}{% endif %}</small></td>
       <td>{{ f.message }}</td>
-      <td><small>{{ f.created_at.strftime('%Y-%m-%d') if f.created_at }}</small></td>
+      <td><small>{{ f.created_at|date }}</small></td>
       <td><form method="post" action="/blocks/feedback/{{ f.id }}"><select name="status" onchange="this.form.submit()" aria-label="Status">
         {% for k, label in statuses.items() %}<option value="{{ k }}" {{ 'selected' if f.status == k }}>{{ label }}</option>{% endfor %}</select></form></td>
       <td><form method="post" action="/blocks/feedback/{{ f.id }}"><button name="delete" value="1" class="secondary outline small-btn" aria-label="Delete">×</button></form></td>

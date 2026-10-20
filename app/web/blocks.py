@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import BlockDiagram, BlockFeedback
-from app.services import blocks, refdesigns, schematic
+from app.services import blocks, refdesigns, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -248,5 +248,5 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
            "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
            "status": {f: op.status_of(f, mk, mine) for f in fns},
-           "label": {f: refdesigns.function_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
+           "label": {f: vocab.fn_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/reference_designs.html", ctx)

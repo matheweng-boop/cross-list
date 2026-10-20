@@ -64,3 +64,25 @@ def test_real_data_reloads_only_when_files_change(session, tmp_path, monkeypatch
     assert main.load_real_if_changed(session) is False
     (tmp_path / "data" / "real" / "demo.yaml").write_text(main.SYNTHETIC_FILE.read_text() + "\n# changed\n")
     assert main.load_real_if_changed(session) is True
+
+
+def test_reload_updates_package_and_manufacturer(session, tmp_path):
+    # the server's database persists across deploys, so a corrected package or role must reach the existing row
+    from sqlalchemy import select
+
+    from app.models import Manufacturer, Package
+
+    part = {"mpn": "X3", "manufacturer": "TestCo", "family": "digital_isolator", "package": "T-8", "pinout": ["P"] * 8}
+    load_file(session, write(tmp_path, part))
+    pkg = dict(BASE["packages"][0], name="corrected", pin_count=6, span_mm=6.2)
+    data = {
+        "manufacturers": [{"name": "TestCo", "role": "reference"}],
+        "packages": [pkg],
+        "parts": [{**part, "pinout": ["P"] * 6}],
+    }
+    path = tmp_path / "d2.yaml"
+    path.write_text(yaml.safe_dump(data))
+    load_file(session, path)  # the pinout check uses the corrected pin count
+    row = session.scalar(select(Package).where(Package.code == "T-8"))
+    assert (row.name, row.pin_count, row.span_mm) == ("corrected", 6, 6.2)
+    assert session.scalar(select(Manufacturer).where(Manufacturer.name == "TestCo")).role == "reference"

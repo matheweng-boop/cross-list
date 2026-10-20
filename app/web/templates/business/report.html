@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import push with context %}
-{% block title %}{{ r.title }}{{ ' – background' if background }} – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, r.title ~ (' – background' if background else '')) }}{% endblock %}
 {% block content %}
 {% if background %}
 <p class="small"><a href="/business/reports/{{ r.slug }}">← Back to the report</a></p>
@@ -21,7 +21,7 @@
   </form>
   {% if request.query_params.get('asked') %}<p class="small rp-thanks">Saved. Questions are reviewed once a day; the answer appears here.</p>{% endif %}
   {% if questions %}<ul class="rp-qs">{% for q in questions %}
-    <li><b>{{ q.text }}</b> <small class="muted">{{ q.author or 'anonymous' }}, {{ q.created_at.strftime('%d %b') }}{% if q.status != 'good' %} · {{ q_statuses.get(q.status, q.status) }}{% if q.duplicate_of %} of #{{ q.duplicate_of }}{% endif %}{% endif %}</small>
+    <li><b>{{ q.text }}</b> <small class="muted">{{ q.author or 'anonymous' }}, {{ q.created_at|date('short') }}{% if q.status != 'good' %} · {{ q_statuses.get(q.status, q.status) }}{% if q.duplicate_of %} of #{{ q.duplicate_of }}{% endif %}{% endif %}</small>
       {% if q.answer %}<p class="small">{{ q.answer }}</p>{% endif %}</li>{% endfor %}
   </ul>{% else %}<p class="small muted">No questions yet.</p>{% endif %}
   <p class="small"><a href="/business/reports/questions">Review all questions, by day →</a></p>

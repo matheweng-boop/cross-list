@@ -256,3 +256,11 @@ def test_packages_without_a_published_pitch_only_match_themselves():
     assert not same_package(a, b) and same_package(a, a)
     c, d = Package(id=3, code="C", pitch_mm=0.4, **dims), Package(id=4, code="D", pitch_mm=0.4, **dims)
     assert same_package(c, d)
+
+
+def test_gate_driver_pin_aliases():
+    from app.matching.engine import pins_compatible
+
+    assert pins_compatible("VIA", "INA", "gate_driver") and pins_compatible("DISABLE", "DIS", "gate_driver")
+    assert not pins_compatible("EN", "DIS", "gate_driver")  # opposite polarity
+    assert not pins_compatible("VIA", "INA", "digital_isolator")

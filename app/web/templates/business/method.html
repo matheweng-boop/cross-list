@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import pct %}
-{% block title %}How it works – Business opportunity – BizDev{% endblock %}
 {% block content %}
-<h1>How the business analysis works</h1>
+<h1>Methodology <small class="muted">· how the business analysis works</small></h1>
 <p class="subtitle muted">A reference for every page in Business opportunity: what the words mean, how each number is calculated, where the data comes
   from and what it cannot tell you. The counts below are live.</p>
 
@@ -48,7 +47,7 @@
 
 <h2 id="sources">Data sources (live)</h2>
 <div class="table-wrap"><table class="striped small"><tbody>
-  <tr><th>Applications</th><td><b>{{ src.library }}</b> in the library + <b>{{ src.background }}</b> background diagrams. By source: {% for v, n in src.vendors %}{{ v }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</td>
+  <tr><th>Applications</th><td><b>{{ src.library }}</b> in the library + <b>{{ src.background }}</b> background diagrams. By source: {% for v, n in src.vendors %}{{ v|vendor }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</td>
     <td class="muted">data/blocks/templates.yaml, background_templates.yaml; research notes in data/blocks/research/</td></tr>
   <tr><th>Functions</th><td>{{ src.functions }} normalized chip types</td><td class="muted">data/blocks/functions.yaml</td></tr>
   <tr><th>Our parts</th><td>{% for m, n in src.catalogue|dictsort %}{{ m }} {{ '{:,}'.format(n) }} catalogue parts{{ ', ' if not loop.last }}{% endfor %}, plus BizDev families with full parameters</td>

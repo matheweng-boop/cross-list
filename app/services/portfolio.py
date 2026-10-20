@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import Manufacturer, ManufacturerRole, Part
-from app.services import blocks
+from app.services import blocks, vendors, vocab
 from app.services import rf_coverage as rf
 
 FILE = PROJECT_ROOT / "data" / "business" / "portfolio_compare.yaml"
@@ -25,11 +25,6 @@ def curated() -> dict:
     return (yamlio.load(FILE.read_text()) if FILE.exists() else None) or {}
 
 
-def function_label(fn: str) -> str:
-    f = blocks.catalogue()["functions"].get(fn)
-    return f["label"] if f else fn.replace("_", " ")
-
-
 @lru_cache
 def overlap() -> dict:
     """Active catalogue parts per function for each line: functions both sell, and those only one sells."""
@@ -38,7 +33,7 @@ def overlap() -> dict:
         act = Counter(p["manufacturer"] for p in parts if not p.get("risk"))
         if not (act["Skyworks"] or act["Qorvo"]):
             continue
-        rows.append({"fn": fn, "label": function_label(fn), "Skyworks": act["Skyworks"], "Qorvo": act["Qorvo"]})
+        rows.append({"fn": fn, "label": vocab.fn_label(fn), "Skyworks": act["Skyworks"], "Qorvo": act["Qorvo"]})
     rows.sort(key=lambda r: -(r["Skyworks"] + r["Qorvo"]))
     return {
         "both": [r for r in rows if r["Skyworks"] and r["Qorvo"]],
@@ -73,19 +68,23 @@ def rf_bands() -> dict:
             lead = "" if not (s or q) else "both" if s and q and 0.5 <= s / q <= 2 else "Skyworks" if s > q else "Qorvo"
             cells.append({"band": b["id"], "Skyworks": s, "Qorvo": q, "competitors": comp, "lead": lead})
         if any(c["Skyworks"] or c["Qorvo"] for c in cells):
-            rows.append({"fn": fn, "label": function_label(fn), "cells": cells})
+            rows.append({"fn": fn, "label": vocab.fn_label(fn), "cells": cells})
     return {"bands": bands, "rows": rows}
 
 
 def competitors(session: Session) -> list[dict]:
     """Each competitor: its RF catalogue parts (catalogue rows) and its parts in the cross lists, by function."""
     notes = {c.get("vendor"): c for c in curated().get("competitors") or []}
-    # data names (TI, pSemi, Trans-Tech …) land on the curated vendor that lists them as aliases
-    alias = {a: v for v, c in notes.items() for a in c.get("aliases") or []}
+    # data names (TI, pSemi, Lark …) land on the curated vendor that names them or their owner (data/vendors.yaml)
+    alias = {vendors.group(a): v for v, c in notes.items() for a in [v, *(c.get("aliases") or [])]}
+
+    def who(name: str) -> str:
+        return alias.get(vendors.group(name), vendors.display(name))
+
     rf_by: dict[str, Counter] = defaultdict(Counter)
     for p in rf.competitor_parts():
         for fn in p["functions"]:
-            rf_by[alias.get(p["manufacturer"], p["manufacturer"])][fn] += 1
+            rf_by[who(p["manufacturer"])][fn] += 1
     cross_by: dict[str, Counter] = defaultdict(Counter)
     q = (
         select(Manufacturer.name, Part.family, func.count(Part.id))
@@ -95,7 +94,7 @@ def competitors(session: Session) -> list[dict]:
     )
     for name, fam, n in session.execute(q):
         if name not in LINES:
-            cross_by[alias.get(name, name)][fam] += n
+            cross_by[who(name)][fam] += n
     names = sorted(
         set(rf_by) | set(cross_by) | set(notes), key=lambda n: -(sum(rf_by[n].values()) + sum(cross_by[n].values()))
     )

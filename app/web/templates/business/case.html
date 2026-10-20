@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import crowd %}
-{% block title %}{{ title or 'New case' }} – Case analysis – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, title or 'New case') }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/cases">← All cases</a></p>
 <h1>{{ title or 'New case' }}</h1>
@@ -37,7 +37,7 @@
     <li>Markets: {{ ctx.markets|join(', ') or '–' }}</li>
     {% if ctx.nearby %}<li>Our products next to it: {% for n, k in ctx.nearby %}{{ n }} ({{ k }}){{ ', ' if not loop.last }}{% endfor %}</li>{% endif %}
     <li>Competition: {{ crowd(ctx.competition, {'low': 'Few suppliers', 'medium': 'Several suppliers', 'high': 'Crowded'}) }}
-      {% if ctx.competition and ctx.competition.vendors %}<br><span class="muted">{{ ctx.competition.vendors|join(', ') }}</span>{% endif %}</li>
+      {% if ctx.competition and ctx.competition.vendors %}<br><span class="muted">{{ ctx.competition.vendors|map('vendor')|join(', ') }}</span>{% endif %}</li>
     {% if ctx.technology %}<li>Technology: <span class="bo-prox px-{{ ctx.technology.proximity }}">{{ {3: 'Same technology', 2: 'Adjacent', 1: 'Distant', 0: 'Unrelated'}[ctx.technology.proximity] }}</span>
       {{ ctx.technology.reasoning }}</li>{% endif %}
     {% if ctx.platforms %}<li>Built on: {% for k, pl in ctx.platforms %}<a href="/business/capabilities#p-{{ k }}">{{ pl.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</li>{% endif %}
@@ -92,7 +92,7 @@
 <div class="case-notes">
   {% for k, label in kinds.items() %}
   <section class="case-col"><h3>{{ label }}s <small class="muted">{{ case.notes|selectattr('kind', 'eq', k)|list|length }}</small></h3>
-    {% for n in case.notes if n.kind == k %}<div class="case-note nk-{{ k }}">{{ n.text }}<small class="muted">{{ n.author or 'anonymous' }} · {{ n.created_at.strftime('%Y-%m-%d') }}
+    {% for n in case.notes if n.kind == k %}<div class="case-note nk-{{ k }}">{{ n.text }}<small class="muted">{{ n.author or 'anonymous' }} · {{ n.created_at|date }}
       <form method="post" action="/business/cases/{{ case.id }}" class="inline"><input type="hidden" name="act" value="delnote"><input type="hidden" name="note" value="{{ n.id }}"><button type="submit" class="link-btn" title="Remove">×</button></form></small></div>
     {% else %}<p class="small muted">none yet</p>{% endfor %}
   </section>{% endfor %}

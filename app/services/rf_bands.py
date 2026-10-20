@@ -6,7 +6,7 @@ from functools import lru_cache
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.services import blocks, lifecycle
+from app.services import blocks, lifecycle, vocab
 from app.services.rf_coverage import frequency_ranges
 
 FILE = PROJECT_ROOT / "data" / "engineering_rf_bands.yaml"
@@ -54,8 +54,7 @@ def rf_parts() -> tuple[dict, ...]:
     out = []
     for path, doc in blocks._catalog_docs():
         for p in doc.get("parts") or []:
-            fns = [blocks.FUNCTION_ALIAS.get(x, x) for x in [p.get("function"), *(p.get("also") or [])] if x]
-            fns = [f for f in dict.fromkeys(fns) if f in rf_fns]
+            fns = [f for f in vocab.fills(p.get("function"), p.get("also") or []) if f in rf_fns]
             if not fns:
                 continue
             ranges = frequency_ranges(p.get("key_specs") or {}, p.get("description") or "")
@@ -98,11 +97,10 @@ def parts_for(band_id: str, competitors: bool = False) -> list[dict]:
             width = max(hi - lo for lo, hi in p["ranges"])  # spot test frequencies do not make a part band-specific
             shown = [r for r in p["ranges"] if r[1] > r[0]] or p["ranges"][:1]  # ranges, not spot test frequencies
             by_fn[p["function"]].append({**p, "width": width, "specific": width <= limit, "shown": shown[:3]})
-    cat = blocks.catalogue()["functions"]
     out = []
     for f, ps in by_fn.items():
         ps.sort(key=lambda p: (p["width"], p["mpn"]))
-        out.append({"fn": f, "label": (cat.get(f) or {}).get("label", f), "specific": [p for p in ps if p["specific"]],
+        out.append({"fn": f, "label": vocab.fn_label(f), "specific": [p for p in ps if p["specific"]],
                     "wide": [p for p in ps if not p["specific"]]})  # fmt: skip
     return sorted(out, key=lambda g: (-len(g["specific"]), -len(g["wide"]), g["label"]))
 

@@ -10,9 +10,12 @@ BADGES = {
     LifecycleStatus.active: ("Active", "ok"),
     LifecycleStatus.nrnd: ("NRND", "warn"),
     LifecycleStatus.last_time_buy: ("Last time buy", "bad"),
-    LifecycleStatus.obsolete: ("Obsolete / EOL", "bad"),
-    LifecycleStatus.unknown: ("Unknown", "muted"),
+    LifecycleStatus.obsolete: ("Obsolete", "bad"),
+    LifecycleStatus.unknown: ("Not stated", "muted"),
 }
+# the five classes of status_class(), as facets and table cells name them
+CLASS_LABELS = {"active": "Active", "preview": "Preview / sampling", "nrnd": "NRND / last time buy",
+                "obsolete": "Obsolete", "unknown": "Not stated"}  # fmt: skip
 
 
 def is_new(part: Part, days: int, today: date | None = None) -> bool:
@@ -30,14 +33,15 @@ def badge(part: Part) -> tuple[str, str]:
 # "No new designs", "Last Time Buy", "Discontinued", "Pre Release", "last_time_buy", ...) in five classes.
 # Every page uses this one rule, so a part is active or at risk the same way everywhere.
 _OBSOLETE = re.compile(r"obsolete|discontinu|end of life|\beol\b", re.I)
-_NRND = re.compile(r"nrnd|not recommended|not for new|no new design|last[ _]time", re.I)
+_NRND = re.compile(r"nrnd|not recommended|not for new|no new design|last[ _]time|\(nd\)", re.I)
 _PREVIEW = re.compile(r"preview|sampl|pre[- _]?release|pre[- ]production", re.I)
-_ACTIVE = {"active", "standard", "production", "in production", "released", "new", "featured", "non standard",
-           "non-catalog model"}  # fmt: skip
+# "Non-catalog model" (Mini-Circuits) is a legacy part kept for existing customers: not stated active, so unknown
+_ACTIVE = {"active", "standard", "production", "in production", "released", "new", "featured", "non standard"}
 
 
 def status_class(status) -> str:
-    """'active', 'preview', 'nrnd' (incl. last time buy), 'obsolete' or 'unknown' (not stated, contact sales)."""
+    """'active', 'preview', 'nrnd' (incl. last time buy and Skyworks "Contact sales (ND)", not for new designs),
+    'obsolete' or 'unknown' (not stated, contact sales)."""
     s = str(status or "").strip().lower()
     if _OBSOLETE.search(s):
         return "obsolete"

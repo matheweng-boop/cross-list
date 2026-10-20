@@ -4,8 +4,11 @@
 #          {broadcast: tuner|coprocessor|receiver}  Skyworks broadcast parts of that role
 #          external                         the customer's own part (processor, memory, sensors): not counted
 #          (omitted)                        no Skyworks part in BizDev yet: shown as an opportunity
-# Qorvo catalogue parts (data/blocks/research/qorvo_parts.yaml, store.qorvo.com) are added to the function named
+# Catalogue parts (data/catalog/*_parts.yaml: Skyworks and Qorvo public product pages) are added to the function named
 # in that file, so a block can show the best two Skyworks and the best two Qorvo parts.
+# This file is the one vocabulary for function ids (app/services/vocab.py): every page shows `label`.
+# aliases: other ids the source files use for the same function (rf_pa, rf_filter ...), resolved on every read
+# fills:   other functions a part of this one is also offered for (a CATV amplifier also fills a gain-block socket)
 # companions: functions usually designed in next to this one (suggested when the block is added)
 # requirements: optional questions that narrow the parts that fit (nothing is assumed; unanswered = no filter)
 #   {id, label, param, op: contains | eq | gte | in, value} for yes/no; {id, label, param, op, choices: [...] | auto} for a choice
@@ -32,7 +35,7 @@ functions:
   # power
   pmic: {label: PMIC, category: power, companions: [supervisor, voltage_reference], note: Multi-rail power management IC}
   buck_boost: {label: Buck-boost controller, category: power, companions: [wide_vin_buck, tvs_esd]}
-  wide_vin_buck: {label: Wide-Vin buck, category: power, companions: [pol_buck, pol_ldo]}
+  wide_vin_buck: {label: Wide-Vin buck, category: power, companions: [pol_buck, pol_ldo], aliases: [buck]}
   pol_buck: {label: PoL buck, category: power}
   pol_ldo: {label: PoL LDO, category: power}
   ldo_tracker: {label: LDO tracker, category: power}
@@ -111,7 +114,7 @@ functions:
   rf_pa_bias: {label: RF PA bias controller, category: rf}
   rf_frontend: {label: RF front-end module, category: rf}
   # RF sockets from the MediaTek / Qualcomm / NXP platform research (data/blocks/research/rf_platforms.md)
-  power_amplifier: {label: RF power amplifier, category: rf, companions: [rf_pa_bias, circulator_isolator, filter_saw_baw], note: "Discrete / infrastructure PA (massive MIMO, small cell)"}
+  power_amplifier: {label: RF power amplifier, category: rf, companions: [rf_pa_bias, circulator_isolator, filter_saw_baw], note: "Discrete / infrastructure PA (massive MIMO, small cell)", aliases: [rf_pa]}
   pa_module: {label: PA module / PAMiD, category: rf, companions: [antenna_tuner, diversity_rx_module, pmic], note: PA + switch + filter for the cellular TX path}
   rf_predriver: {label: RF pre-driver amplifier, category: rf, companions: [power_amplifier]}
   diversity_rx_module: {label: Diversity / RX front-end module, category: rf, companions: [antenna_switch, filter_saw_baw], note: LNA + switch + filter}
@@ -121,25 +124,27 @@ functions:
   v2x_fem: {label: V2X 5.9 GHz front end, category: rf, note: DSRC / C-V2X front end or antenna compensator}
   gnss_lna: {label: GNSS LNA / front end, category: rf, companions: [filter_saw_baw], note: L1 / L5}
   active_antenna_amp: {label: Active antenna amplifier (AM/FM), category: radio, companions: [am_fm_tuner], note: In-antenna AM/FM amplifier}
-  antenna_tuner: {label: Antenna aperture / impedance tuner, category: rf}
-  filter_saw_baw: {label: RF filter (SAW / BAW / LTCC), category: rf}
-  diplexer: {label: Diplexer / multiplexer, category: rf}
+  antenna_tuner: {label: Antenna aperture / impedance tuner, category: rf, aliases: [rf_tunable_capacitor]}
+  filter_saw_baw: {label: RF filter (SAW / BAW / LTCC), category: rf, aliases: [rf_filter]}
+  diplexer: {label: Diplexer / multiplexer, category: rf, aliases: [rf_duplexer]}
   circulator_isolator: {label: Circulator / isolator, category: rf}
-  beamformer_ic: {label: Analog beamformer IC (mmWave), category: rf}
+  beamformer_ic: {label: Analog beamformer IC (mmWave), category: rf, aliases: [rf_beamformer]}
   mmwave_antenna_module: {label: mmWave antenna module, category: rf, source: external, note: Transceiver + RF front end + array from the platform vendor; usually not an open socket}
   rf_transceiver: {label: RF transceiver (RFIC), category: rf, source: external}
   # from the Skyworks catalogue categories (data/catalog/skyworks_categories.md)
-  rf_gain_block: {label: RF gain block / driver / VGA, category: rf}
+  rf_gain_block: {label: RF gain block / driver / VGA, category: rf, aliases: [rf_vga]}
   rf_attenuator: {label: RF attenuator, category: rf}
-  rf_mixer: {label: RF mixer / modulator / demodulator, category: rf}
-  rf_synthesizer: {label: RF PLL / synthesizer / VCO, category: rf}
-  rf_passive: {label: "RF passive (capacitor, splitter, multiplexer)", category: rf}
+  rf_mixer: {label: RF mixer / modulator / demodulator, category: rf, aliases: [rf_modulator]}
+  rf_synthesizer: {label: RF PLL / synthesizer / VCO, category: rf, aliases: [rf_vco]}
+  rf_passive: {label: "RF passive (coupler, splitter, balun)", category: rf, aliases: [rf_power_divider, rf_equalizer]}
   pin_diode: {label: PIN diode, category: rf}
   schottky_diode: {label: Schottky / detector / mixer diode, category: rf}
   varactor_diode: {label: Varactor (tuning) diode, category: rf}
   rf_limiter: {label: RF limiter, category: rf}
   rf_phase_shifter: {label: RF phase shifter, category: rf}
   frequency_multiplier: {label: Frequency multiplier, category: rf}
+  catv_amplifier: {label: CATV / broadband amplifier, category: rf, fills: [rf_gain_block], note: DOCSIS line amplifiers and nodes; also offered for gain-block sockets}
+  rf_power_transistor: {label: RF power transistor, category: rf, fills: [power_amplifier], note: Discrete GaN / LDMOS power transistor; also offered for power-amplifier sockets}
   tv_tuner: {label: TV / set-top tuner, category: radio}
   tv_demodulator: {label: Digital TV / satellite demodulator, category: radio}
   # broadcast radio
@@ -176,7 +181,7 @@ functions:
   modem: {label: Cellular modem (4G / 5G / NTN), category: processing, source: external}
   wifi_soc: {label: Wi-Fi / Bluetooth combo SoC, category: networking, source: external, companions: [wifi_fem, bt_fem, crystal_oscillator]}
   ble_soc: {label: Bluetooth LE / 802.15.4 SoC, category: networking, source: external, companions: [bt_fem, crystal_oscillator]}
-  uwb_soc: {label: UWB transceiver IC, category: networking, companions: [uwb_fem, rf_switch], note: Qorvo makes UWB ICs and modules}
+  uwb_soc: {label: UWB transceiver IC, category: networking, companions: [uwb_fem, rf_switch], note: Qorvo makes UWB ICs and modules, aliases: [uwb_transceiver]}
   v2x_transceiver: {label: V2X modem / transceiver, category: networking, source: external, companions: [v2x_fem]}
   nfc_frontend: {label: NFC controller / front end, category: interface, source: external}
   radar_transceiver: {label: Radar transceiver / radar SoC, category: sensors, source: external}

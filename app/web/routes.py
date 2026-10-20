@@ -25,7 +25,18 @@ from app.matching.engine import (
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import ChangeEvent, LifecycleStatus, Package, Part, User
-from app.services import alternates, cross_notes, engineering, export, lifecycle, mechanical, notes_search, pricing
+from app.services import (
+    alternates,
+    cross_notes,
+    engineering,
+    export,
+    lifecycle,
+    mechanical,
+    notes_search,
+    pricing,
+    text,
+    vocab,
+)
 from app.services.compare import compare_parts
 from app.services.queries import (
     crosses_for,
@@ -35,7 +46,7 @@ from app.services.queries import (
     search_parts,
     single_cross,
 )
-from app.web import nav
+from app.web import labels, nav
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -76,6 +87,8 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
+labels.register(templates.env)
+templates.env.globals.update(fn_label=vocab.fn_label, family_title=vocab.family_title)
 
 
 # Navigation: task-based sections (app/web/nav.py); every existing URL keeps working
@@ -91,12 +104,13 @@ templates.env.globals.update(
     nav_sections=nav.NAV,
     nav_utility=nav.UTILITY,
     nav_icons=nav.ICONS,
+    page_title=nav.page_title,
+    page_label=nav.page_label,
 )
 
-GRADES = {"automotive": ("AEC-Q100", "auto"), "industrial": ("Industrial", "ind"), "commercial": ("Commercial", "ind")}
-
-
-GRADE_LABELS = {"automotive": "Automotive AEC-Q100", "industrial": "Non-automotive", "unknown": "Grade not stated"}
+# grade filter on the cross results: the keys grade_of() returns, worded as everywhere else (app/web/labels.py)
+GRADE_LABELS = {"automotive": labels.GRADE_LABELS["automotive"], "industrial": labels.GRADE_LABELS["not_automotive"],
+                "unknown": labels.GRADE_LABELS["unknown"]}  # fmt: skip
 
 
 def grade_of(part: Part) -> str:
@@ -108,10 +122,17 @@ def grade_of(part: Part) -> str:
 
 def _grade_badge(part: Part) -> tuple[str, str] | None:
     q = next((pv.value for pv in part.params if pv.key == "qualification"), None)
-    return GRADES.get(q)
+    return labels.GRADE_BADGES.get(q)
+
+
+def _part_summary(part: Part) -> str:
+    """Function · key specs · package · grade, from the part's parameters (app/services/text.py)."""
+    params = {pv.key: pv.value for pv in part.params}
+    return text.short_description(part.family, part.package.code if part.package else "", grade_of(part), params=params)
 
 
 templates.env.globals["grade_badge"] = _grade_badge
+templates.env.globals["part_summary"] = _part_summary
 templates.env.globals["grade_of"] = grade_of
 templates.env.globals["grade_labels"] = GRADE_LABELS
 
@@ -175,8 +196,8 @@ def find(request: Request, q: str = "", session: Session = Depends(get_session))
             "competitors": competitors,
             "references": references,
             "catalogue": catalogue,
-            "life_label": products.LIFE_LABEL,
-            "qual_label": products.QUAL_LABEL,
+            "life_label": lifecycle.CLASS_LABELS,
+            "qual_label": labels.GRADE_LABELS,
         },  # fmt: skip
     )
 
@@ -217,8 +238,8 @@ def index(
     limit = max(50, min(limit, 5000))
     params = {"q": q, "cat": cat, "sub": sub, "company": company, "qual": qual, "life": life, "cap": cap, "role": role}
     ctx = {**params, "params": params, "res": res, "rows": res["rows"][:limit], "limit": limit, "tax": tax,
-           "qual_label": products.QUAL_LABEL, "cap_label": products.CAPABILITIES,
-           "life_label": products.LIFE_LABEL}  # fmt: skip
+           "qual_label": labels.GRADE_LABELS, "cap_label": products.CAPABILITIES,
+           "life_label": lifecycle.CLASS_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "index.html", ctx)
 
 

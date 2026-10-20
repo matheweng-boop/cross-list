@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from app import yamlio
 from app.models import BusinessInput, Manufacturer, ManufacturerRole, Part, PartMapping
-from app.services import blocks
+from app.services import blocks, vocab
 
 COMPANIES = {
     "combined": ("Skyworks + Qorvo", frozenset({"Skyworks", "Qorvo"})),
@@ -136,7 +136,6 @@ def market_of(name: str, category: str) -> str:
 
 
 def applications() -> list[Application]:
-    cat = blocks.catalogue()["functions"]
     out = []
     lib = blocks.templates()
     for i, t in enumerate([*lib, *blocks.background_templates()]):
@@ -149,7 +148,7 @@ def applications() -> list[Application]:
                     fn, *rest = str(b).split(" x")
                     qty, label = int(rest[0]) if rest else 1, ""
                 fn = fn.strip()
-                pos.append(Position(fn, label or (cat.get(fn) or {}).get("label", fn), g.get("label", ""), qty))
+                pos.append(Position(fn, label or vocab.fn_label(fn), g.get("label", ""), qty))
         category = t.get("category") or "Other"
         market = market_of(t.get("name", ""), category)
         out.append(Application(i, blocks.display_name(t), category, pos, market, background=i >= len(lib)))
@@ -241,13 +240,12 @@ def cross_sell_pairs(apps: list[Application], limit: int = 15) -> list[dict]:
     """Pairs of functions we both have parts for that appear together most often: a bundle to offer. Modeled from the
     reference architectures, not observed sales."""
     pairs: Counter = Counter()
-    cat = blocks.catalogue()["functions"]
     for a in apps:
         ours = sorted({p.fn for p in a.positions if p.status == "supported"})
         for i, x in enumerate(ours):
             for y in ours[i + 1 :]:
                 pairs[(x, y)] += 1
-    label = lambda f: (cat.get(f) or {}).get("label", f)  # noqa: E731
+    label = lambda f: vocab.fn_label(f)  # noqa: E731
     return [
         {"a": x, "b": y, "a_label": label(x), "b_label": label(y), "apps": n} for (x, y), n in pairs.most_common(limit)
     ]
@@ -316,7 +314,7 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
         anchor = any(p.status == "supported" for p in a.positions)
         for fn in {p.fn for p in a.positions if p.status in ("gap", "competitor")}:
             ps = [p for p in a.positions if p.fn == fn]
-            e = out.setdefault(fn, {"fn": fn, "label": (cat.get(fn) or {}).get("label", fn), "status": ps[0].status,
+            e = out.setdefault(fn, {"fn": fn, "label": vocab.fn_label(fn), "status": ps[0].status,
                                     "category": (cat.get(fn) or {}).get("category", ""), "reach": 0, "positions": 0,
                                     "adjacent": 0, "tam": 0.0, "tam_apps": 0, "apps": [], "rows": [],
                                     "competition": competition().get(fn)})  # fmt: skip
@@ -324,7 +322,7 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
             e["positions"] += sum(p.qty for p in ps)
             e["adjacent"] += 1 if anchor else 0
             e["apps"].append(a.name)
-            ours = sorted({(cat.get(p.fn) or {}).get("label", p.fn) for p in a.positions if p.status == "supported"})
+            ours = sorted({vocab.fn_label(p.fn) for p in a.positions if p.status == "supported"})
             qty = sum(p.qty for p in ps)
             e["rows"].append({"i": a.i, "name": a.name, "market": a.market, "qty": qty, "ours": ours})
             if fn in asp and a.name in vol:
@@ -406,14 +404,13 @@ def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:
     requalify = automotive applications need it and no part is stated automotive, but at least one is stated not
     automotive (an industrial part that could be qualified). qual_unknown = no part is stated automotive and the
     others do not state a grade: a data gap to check, not an opportunity."""
-    cat = blocks.catalogue()["functions"]
     names = sorted({a.market for a in apps}, key=lambda m: (m != "Automotive", m))
     rows: dict[str, dict] = {}
     for a in apps:
         for p in a.positions:
             if p.status not in IN_SCOPE:
                 continue
-            label = (cat.get(p.fn) or {}).get("label", p.fn)
+            label = vocab.fn_label(p.fn)
             e = rows.setdefault(p.fn, {"fn": p.fn, "label": label, "status": p.status, "by_market": defaultdict(list)})
             if a not in e["by_market"][a.market]:
                 e["by_market"][a.market].append(a)
@@ -498,7 +495,6 @@ def technology_fit(apps: list[Application]) -> list[dict]:
     occur in all diagrams (library + background), weighted by technology proximity and competition.
     score = share of applications x proximity weight x crowding weight. Door-opener share is shown, not scored:
     this list is about frequency, not attach."""
-    cat = blocks.catalogue()["functions"]
     tech, comp, n = technology(), competition(), len(apps) or 1
     rows: dict[str, dict] = {}
     for a in apps:
@@ -507,7 +503,7 @@ def technology_fit(apps: list[Application]) -> list[dict]:
             if fn in _NOT_CHIPS:
                 continue
             ps = [p for p in a.positions if p.fn == fn]
-            label = (cat.get(fn) or {}).get("label", fn)
+            label = vocab.fn_label(fn)
             e = rows.setdefault(fn, {"fn": fn, "label": label, "status": ps[0].status, "reach": 0, "positions": 0,
                                      "adjacent": 0, "background": 0, "apps": []})  # fmt: skip
             e["reach"] += 1

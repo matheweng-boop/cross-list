@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import Manufacturer, ManufacturerRole, Part
-from app.services import broadcast, lifecycle
+from app.services import broadcast, lifecycle, vocab
 
 BLOCKS_DIR = PROJECT_ROOT / "data" / "blocks"
 
@@ -192,13 +192,6 @@ def function_uses() -> dict[str, list[dict]]:
 # leaves them out (unknown is not assumed). Parts already in BizDev with full parameters win over the
 # catalogue entry; tuners and demods come from the broadcast data.
 CATALOG_DIR = BLOCKS_DIR.parent / "catalog"
-FUNCTION_ALIAS = {
-    "rf_pa": "power_amplifier", "rf_filter": "filter_saw_baw", "buck": "wide_vin_buck", "rf_vga": "rf_gain_block",
-    "catv_amplifier": "rf_gain_block", "rf_beamformer": "beamformer_ic", "rf_vco": "rf_synthesizer",
-    "rf_power_divider": "rf_passive", "rf_duplexer": "diplexer", "uwb_transceiver": "uwb_soc",
-    "rf_tunable_capacitor": "antenna_tuner", "rf_power_transistor": "power_amplifier", "rf_equalizer": "rf_passive",
-    "rf_modulator": "rf_mixer",
-}  # fmt: skip
 _SPEC_PREF = re.compile(r"config|channel|frequency|isolation|output current|gain|noise figure|insertion|input voltage|"
                         r"interface|rating|power|converters|regulators", re.I)  # fmt: skip
 
@@ -223,10 +216,9 @@ def catalog_parts() -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
     for path, data in _catalog_docs():
         for p in data.get("parts") or []:
-            fn = FUNCTION_ALIAS.get(p.get("function"), p.get("function"))
-            if not fn:
+            fns = vocab.fills(p.get("function"), p.get("also") or [])  # a part can fill several functions
+            if not fns:
                 continue
-            fns = [fn, *(FUNCTION_ALIAS.get(x, x) for x in p.get("also") or [])]  # a part can fill several functions
             mfr = p.get("manufacturer") or ("Qorvo" if "qorvo" in path.name else "Skyworks")
             specs = p.get("key_specs") or {}
             text = " ".join([p.get("summary") or p.get("description") or "", *map(str, specs.values())])
@@ -251,7 +243,7 @@ def catalog_parts() -> dict[str, list[dict]]:
                 "preview": "preview" in status.lower(),
                 "risk": lifecycle.is_risk(status),
             }  # fmt: skip
-            for f in dict.fromkeys(fns):
+            for f in fns:
                 out.setdefault(f, []).append(entry)
     return out
 
@@ -273,12 +265,14 @@ def catalog_rows() -> list[dict]:
                     "category": cat[0],
                     "sub": " > ".join(cat[1:]),
                     "mpn": p["mpn"],
+                    "function": vocab.canonical(p.get("function")),
                     "description": desc,
                     "package": p.get("package") or "",
                     "status": str(p.get("status") or "unknown"),
                     "url": url,
                     "automotive": p.get("automotive"),  # True / False as stated by the source, None = not stated
                     "datasheet": p.get("datasheet_url") or "",
+                    "key_specs": p.get("key_specs") or {},
                 }  # fmt: skip
             )
     return rows

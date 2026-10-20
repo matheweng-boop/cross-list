@@ -121,7 +121,7 @@ def test_evidence_reviews_and_mappings(client, session):
 def test_explore_page(client):
     for path in ("/business/explore", "/business/explore?fit=high"):
         r = client.get(path)
-        assert r.status_code == 200 and "New markets" in r.text, path
+        assert r.status_code == 200 and "New ideas" in r.text, path
 
 
 def test_explorer_views_scope_and_old_links(client):

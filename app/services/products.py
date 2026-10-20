@@ -24,13 +24,10 @@ from app import yamlio
 from app.matching.rules import load_all_rules
 from app.models import Part
 from app.partnumbers import normalize_pn
-from app.services import blocks, lifecycle
+from app.services import blocks, lifecycle, text, vocab
 
 TAXONOMY = Path(__file__).resolve().parents[2] / "data" / "taxonomy.yaml"
 UNCLASSIFIED = ("unclassified", "unclassified")
-LIFE_LABEL = {"active": "Active", "preview": "Preview / sampling", "nrnd": "NRND / last time buy",
-              "obsolete": "Obsolete", "unknown": "Not stated"}  # fmt: skip
-QUAL_LABEL = {"automotive": "Automotive (AEC-Q100)", "not_automotive": "Not automotive", "unknown": "Not stated"}
 CAPABILITIES = {
     "detailed": "Detailed parameters",
     "crosses": "Cross-reference supported",
@@ -43,23 +40,31 @@ CAPABILITIES = {
 @lru_cache
 def taxonomy() -> dict:
     data = yamlio.load(TAXONOMY.read_text())
-    cats, subs, rules, fam = {}, {}, [], {}
+    cats, subs, rules, fam, fns = {}, {}, [], {}, {}
     for c in data["categories"]:
         cats[c["id"]] = {"label": c["label"], "subs": [s["id"] for s in c["subfamilies"]]}
         for s in c["subfamilies"]:
             subs[s["id"]] = {"label": s["label"], "category": c["id"]}
             for f in s.get("families") or []:
-                fam[f] = s["id"]
+                fam[f] = fns[f] = s["id"]  # a BizDev family id is also the function id of its catalogue parts
+            for f in s.get("functions") or []:
+                fns[f] = s["id"]
             for m in s.get("catalog") or []:
                 rx = re.compile(m["sub"], re.I) if m.get("sub") else None
                 rules.append((m["category"], rx, c["id"], s["id"]))
     cats["unclassified"] = {"label": "Unclassified", "subs": ["unclassified"]}
     subs["unclassified"] = {"label": "Unclassified (see source category)", "category": "unclassified"}
-    return {"categories": cats, "subs": subs, "rules": rules, "families": fam}
+    return {"categories": cats, "subs": subs, "rules": rules, "families": fam, "functions": fns}
 
 
-def classify(category: str, sub: str) -> tuple[str, str]:
-    for cat, rx, cid, sid in taxonomy()["rules"]:
+def classify(category: str, sub: str, function: str | None = None) -> tuple[str, str]:
+    """The part's own function first (a catalogue may file an LNA only under "Amplifiers"), then the catalogue
+    category and sub-category."""
+    t = taxonomy()
+    sid = t["functions"].get(vocab.canonical(function) or "")
+    if sid:
+        return t["subs"][sid]["category"], sid
+    for cat, rx, cid, sid in t["rules"]:
         if cat == category and (rx is None or rx.search(sub or "")):
             return cid, sid
     return UNCLASSIFIED
@@ -69,12 +74,19 @@ def classify(category: str, sub: str) -> tuple[str, str]:
 def _catalogue_index() -> dict[tuple[str, str], dict]:
     out = {}
     for r in blocks.catalog_rows():
-        cid, sid = classify(r["category"], r["sub"])
+        cid, sid = classify(r["category"], r["sub"], r.get("function"))
         auto = r.get("automotive")
         out[(r["manufacturer"], blocks._norm_mpn(r["mpn"]))] = {
             "mpn": r["mpn"],
             "manufacturer": r["manufacturer"],
-            "description": r["description"],
+            "description": text.clean_description(r["description"], r["mpn"]),
+            "summary": text.short_description(
+                r.get("function"),
+                r["package"],
+                "automotive" if auto else None,
+                specs=r["key_specs"],
+                description=r["description"],
+            ),  # fmt: skip
             "package": r["package"],
             "category": cid,
             "sub": sid,
@@ -131,6 +143,9 @@ def _index_uncached(session: Session) -> list[dict]:
         qual = (
             "automotive" if q == "automotive" else "not_automotive" if q in ("industrial", "commercial") else "unknown"
         )
+        params = {pv.key: pv.value for pv in p.params}
+        package = p.package.code if p.package else ""
+        summary = text.short_description(p.family, package, qual, params=params)
         sid = fam_sub.get(p.family)
         cid = taxonomy()["subs"][sid]["category"] if sid else UNCLASSIFIED[0]
         caps = {
@@ -147,14 +162,21 @@ def _index_uncached(session: Session) -> list[dict]:
             if qual != "unknown":
                 e["catalogue_qualification"] = e["qualification"]
                 e["qualification"] = qual
+            # the cross lists record the lifecycle per orderable part from its data sheet or notice; the catalogue
+            # page can lag (SI8420BD-IS still "Active" there), so a stated BizDev lifecycle wins too
+            life = lifecycle.status_class(p.lifecycle_status.value)
+            if life != "unknown":
+                e.update(lifecycle=life, status_text=p.lifecycle_status.value.replace("_", " "))
             if e["category"] == UNCLASSIFIED[0] and sid:
                 e.update(category=cid, sub=sid)
+            e["summary"] = summary  # typed BizDev parameters say more than the catalogue's key specs
         else:
             rows[key] = {
                 "mpn": p.mpn,
                 "manufacturer": p.manufacturer.name,
-                "description": p.description or "",
-                "package": p.package.code if p.package else "",
+                "description": text.clean_description(p.description, p.mpn),
+                "summary": summary,
+                "package": package,
                 "category": cid,
                 "sub": sid or UNCLASSIFIED[1],
                 "source_category": "BizDev family",
@@ -167,7 +189,10 @@ def _index_uncached(session: Session) -> list[dict]:
                 "role": p.manufacturer.role.value,
                 "caps": caps,
             }
-    return list(rows.values())
+    out = list(rows.values())
+    for r in out:
+        r["search"] = text.search_key(r["description"], r["summary"])
+    return out
 
 
 def browse(
@@ -185,9 +210,10 @@ def browse(
     allrows = index(session)
     ql = q.strip().lower()
     qn = re.sub(r"[^a-z0-9]", "", ql)
+    qk = text.search_key(q.strip())
 
     def ok(r, skip=""):
-        if ql and not (qn and qn in re.sub(r"[^a-z0-9]", "", r["mpn"].lower()) or ql in r["description"].lower()):
+        if ql and not (qn and qn in re.sub(r"[^a-z0-9]", "", r["mpn"].lower()) or qk in r.get("search", "")):
             return False
         checks = {
             "cat": (cat, r["category"]),

@@ -21,7 +21,7 @@ from app.models import (
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, quality
+from app.services import blocks, cases, pipeline, quality, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -94,7 +94,7 @@ def attach(request: Request, fn: str = "", co: str = "combined", part: str = "",
     c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
     c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
-    c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], c["fns"].get(kv[0], {}).get("label", kv[0])))
+    c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], vocab.fn_label(kv[0])))
     c["fn"] = fn if fn in used else ""
     c["result"] = op.attach(c["apps"], fn) if c["fn"] else None
     c["pairs"] = op.cross_sell_pairs(c["apps"]) if not c["fn"] else []
@@ -328,7 +328,7 @@ def method(request: Request, co: str = "combined", session: Session = Depends(ge
 def data(request: Request, co: str = "combined", focus: str = "", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     uses = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
-    c["asp_fns"] = sorted(uses, key=lambda f: c["fns"].get(f, {}).get("label", f))
+    c["asp_fns"] = sorted(uses, key=lambda f: vocab.fn_label(f))
     c["uses"] = uses
     c["meta"] = {(m.kind, m.key): m for m in session.scalars(select(BusinessAssumption))}
     c["focus"] = focus
@@ -527,7 +527,7 @@ def hunt(request: Request, fn: str = "", co: str = "combined", session: Session 
     c = _ctx(session, co)
     c["segments"] = op.hunt_by_segment(c["apps"])
     used = Counter(f for a in c["apps"] for f in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
-    c["fn_choices"] = sorted(used.items(), key=lambda kv: c["fns"].get(kv[0], {}).get("label", kv[0]).lower())
+    c["fn_choices"] = sorted(used.items(), key=lambda kv: vocab.fn_label(kv[0]).lower())
     c["fn"] = fn if fn in used else ""
     c["by_fn"] = op.hunt_for_function(c["apps"], fn) if c["fn"] else None
     c["unmatched"] = [a for a in c["apps"] if not a.background and not op.segments_of(a.name)]
@@ -586,7 +586,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
     if fn not in c["fns"]:
         raise HTTPException(404, "Function not found")
     row = next((e for e in op.technology_fit(c["apps"]) if e["fn"] == fn), None)
-    c.update(fn=fn, label=c["fns"][fn].get("label", fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
+    c.update(fn=fn, label=vocab.fn_label(fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
              ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
              tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
              hunt=op.hunt_for_function(c["apps"], fn)[:15], existing=quality.possible_existing(session, fn),

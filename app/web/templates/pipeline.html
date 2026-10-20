@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Business case from {{ (s.competitor or s.ours or s.part).mpn }} – BizDev{% endblock %}
+{% block title %}{{ page_title(request.url.path, 'Business case from ' ~ (s.competitor or s.ours or s.part).mpn) }}{% endblock %}
 {% macro money(v) %}{{ '$' ~ '{:,.0f}'.format(v) if v else '–' }}{% endmacro %}
 {% block content %}
 <h1>Business case from a part</h1>
 <p class="pl-parts">
-  {% if s.competitor %}<a class="pl-chip comp" href="/parts/{{ s.competitor.id }}">{{ s.competitor.mpn }} <small>{{ s.competitor.manufacturer }}</small></a>
+  {% if s.competitor %}<a class="pl-chip comp" href="/parts/{{ s.competitor.id }}">{{ s.competitor.mpn }} <small>{{ s.competitor.manufacturer|vendor }}</small></a>
   <span class="pl-arrow" aria-hidden="true">→</span>{% endif %}
-  {% if s.ours %}<a class="pl-chip ours" href="/parts/{{ s.ours.id }}">{{ s.ours.mpn }} <small>{{ s.ours.manufacturer }}</small></a>
+  {% if s.ours %}<a class="pl-chip ours" href="/parts/{{ s.ours.id }}">{{ s.ours.mpn }} <small>{{ s.ours.manufacturer|vendor }}</small></a>
   {% else %}<span class="pl-chip gap">no part of ours yet</span>{% endif %}
   <span class="muted small">· {{ s.fn_label }}{% if s.application %} · in {{ s.application }}{% endif %}</span>
 </p>

@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push with context %}
 {% macro url() -%}
-  {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t} -%}{%- set _ = base.update(kwargs) -%}
+  {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t, 'g': g} -%}{%- set _ = base.update(kwargs) -%}
   /business/explorer?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro th(key, extra='') %}{% set on = sort == key %}{% set nd = ('asc' if dir == 'desc' else 'desc') if on else sorts[key][1] %}
   <th scope="col" class="sortable{{ ' sorted' if on }}"{% if on %} aria-sort="{{ 'ascending' if dir == 'asc' else 'descending' }}"{% endif %}><a href="{{ url(sort=key, dir=nd) }}">{{ caller() if caller else sorts[key][0] }}<span class="sort-ind" aria-hidden="true">{{ ('▲' if dir == 'asc' else '▼') if on else '↕' }}</span></a>{{ extra }}</th>
 {%- endmacro %}
-{% macro decide(e, status, label, cls='') %}<form method="post" action="/business/decision" class="push-form"><input type="hidden" name="fn" value="{{ e.fn }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">{% if status == 'set_aside' %}<input type="hidden" name="note" value="">{% endif %}<button type="submit" class="small-btn {{ cls }}">{{ label }}</button></form>{% endmacro %}
+{% macro decide(e, status, label, cls='') %}<form method="post" action="/business/decision" class="push-form"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">{% if status == 'set_aside' %}<input type="hidden" name="note" value="">{% endif %}<button type="submit" class="small-btn {{ cls }}">{{ label }}</button></form>{% endmacro %}
 {% block content %}
 <h1>Opportunity explorer</h1>
-<p class="subtitle muted">Functions {{ co_label }} does not cover yet, one row each. Click a column title to sort; click a function for its evidence.</p>
+<p class="subtitle muted">Functions {{ co_label }} does not cover yet, and RF bands it does not cover, grouped by category. Demand is how many block diagrams in the library need it. Click a column title to sort; click a row for its evidence.</p>
 
 {% set active = (scope != 'all') or f or t %}
+<div class="chip-row ex-groups small"><span class="chip-lbl">Category</span><a class="fchip{{ ' on' if not g }}" href="{{ url(g='') }}">All <small>{{ group_counts.values()|sum }}</small></a>{% for name, n in group_counts|dictsort %}<a class="fchip{{ ' on' if g == name }}" href="{{ url(g=name) }}">{{ name }} <small>{{ n }}</small></a>{% endfor %}</div>
 <div class="scope-bar small">{{ company_switch('/business/explorer', co, companies, '&sort=' ~ sort ~ '&scope=' ~ scope) }}</div>
 <div class="ex-folds">
 <details class="ex-fold"{% if active %} open{% endif %}><summary class="small"><b>Filters</b>{% if active %} <span class="muted">· {{ [scopes[scope] if scope != 'all', (gap_labels[t].split(' – ')[0]) if t, (filters[f][0]) if f]|select|join(' · ') }}</span> <a href="{{ url(f='', t='', scope='all') }}">clear</a>{% endif %}</summary>
@@ -27,13 +28,12 @@
   share of architectures that need it × path to product (exists / spec variant 1.0, new design 0.6, new technology 0.3) × competition (low 1.0, medium 0.9, high 0.75) × market trend (growing 1.15, declining 0.85).
   Best possible: needed everywhere, already in reach, little competition · <a href="/business/method#influence">methodology</a>.
   <span class="muted">Denominator: {{ apps|length }} reference architectures ({{ n_library }} library{% if n_background %} + {{ n_background }} background{% endif %}), counted as drawn.</span></p>
-<p class="small"><b>RF:</b> RF functions are measured per frequency band and output power on <a href="/business/rf-coverage">RF coverage</a>; here they count as covered as soon as one part exists.</p>
+<p class="small"><b>RF:</b> an RF function counts as covered as soon as one part exists, so RF also gets one row per band (and power class) that the block diagrams need and we don't cover: “Band gap” rows from <a href="/business/rf-coverage">RF coverage</a>. They have no fit score yet.</p>
 </details>
 </div>
 {% if rows and (same.gap or same.crowd or same.tam) %}<p class="small ex-same">{% if same.gap %}All {{ rows|length }} rows: <span class="gt gt-{{ rows[0].gap_type }}" title="{{ gap_labels[rows[0].gap_type] }}">{{ gap_labels[rows[0].gap_type].split(' – ')[0] }}</span>{% endif %}{% if same.crowd %}{{ ' · ' if same.gap else 'All rows: ' }}competition {{ crowd(rows[0].competition, crowding_label) }}{% endif %}{% if same.tam %}{{ ' · ' if same.gap or same.crowd }}Market size (TAM): no prices and volumes entered yet – <a href="/business/data">add market data</a>{% endif %}</p>{% endif %}
 
-{% if rows %}
-<div class="table-wrap"><table class="striped explorer">
+{% macro table(rs) %}<div class="table-wrap"><table class="striped explorer">
   <thead><tr>
     {{ th('label') }}
     {{ th('path') }}
@@ -43,22 +43,26 @@
     {% if not same.tam %}{{ th('tam') }}{% endif %}
     <th scope="col">Decision</th>
   </tr></thead>
-  <tbody>{% for e in rows %}{% set kept = (e.decision or {}).get('status') == 'keep' %}
+  <tbody>{% for e in rs %}{% set kept = (e.decision or {}).get('status') == 'keep' %}
     <tr{% if kept %} class="kept"{% endif %}>
-      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if kept %} <span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept</span>{% endif %}</td>
+      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if e.band_note %} <small class="muted">· {{ e.band_note }} · <a href="{{ e.rf_link }}">RF coverage</a></small>{% endif %}{% if kept %} <span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept</span>{% endif %}</td>
       <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
       <td title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
       {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
       <td>{% if e.score is not none %}<span class="fit fit-{{ e.band|lower }}" title="Fit {{ '%.2f'|format(e.score) }} = {% for n, w, why in e.factors %}{{ n }} {{ '%.2f'|format(w) }} ({{ why }}){{ ' × ' if not loop.last }}{% endfor %}"><span class="fit-bar"><span style="width:{{ ((e.score / max_score * 100) if max_score else 0)|round }}%"></span></span>{{ e.band }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
-      {% if not same.tam %}<td>{% if e.tam_apps %}{{ usd(e.tam) }}{% else %}<a class="muted" href="/business/data?focus=asp:{{ e.fn }}#asp-{{ e.fn }}" title="No ASP and volume entered yet">— <span class="visually-hidden">add the market data for {{ e.label }}</span></a>{% endif %}</td>{% endif %}
+      {% if not same.tam %}<td>{% if e.tam_apps %}{{ usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/data?focus=asp:{{ e.fn }}#asp-{{ e.fn }}" title="No ASP and volume entered yet">— <span class="visually-hidden">add the market data for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
       <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep', 'outline') }}{% endif %}
         <details class="aside-form"><summary class="small-btn outline secondary" role="button">Set aside</summary>
-          <form method="post" action="/business/decision"><input type="hidden" name="fn" value="{{ e.fn }}"><input type="hidden" name="status" value="set_aside"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">
+          <form method="post" action="/business/decision"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="set_aside"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">
             <input type="text" name="note" placeholder="Why, e.g. not now – revisit 2027" aria-label="Reason"><button type="submit" class="small-btn">Set aside</button></form></details>
-        {{ push('explorer', e.fn, e.label, gap_labels[e.gap_type].split(' – ')[0] ~ ' · needed in ' ~ e.reach ~ ' architectures', e.fn, e.fn in shortlisted) }}</td>
+        {{ push('explorer', e.key, e.label, gap_labels[e.gap_type].split(' – ')[0] ~ ' · needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</td>
     </tr>{% endfor %}
   </tbody>
-</table></div>
+</table></div>{% endmacro %}
+{% if rows %}
+{% for name, rs in groups %}<details class="ex-group" open><summary><h2>{{ name }} <small class="muted">· {{ rs|length }}</small></h2></summary>
+{{ table(rs) }}
+</details>{% endfor %}
 {% else %}
 <div class="empty-state"><p><b>No function matches these filters.</b></p><p class="small"><a href="{{ url(f='', t='') }}">Clear the filters</a>.</p></div>
 {% endif %}
@@ -67,7 +71,7 @@
 {% if aside %}
 <div class="table-wrap"><table class="striped explorer">
   <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Fit</th><th scope="col"></th></tr></thead>
-  <tbody>{% for e in aside %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></td><td class="small">{{ e.decision.note or '–' }}</td>
+  <tbody>{% for e in aside %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a> <small class="muted">{{ e.group }}</small></td><td class="small">{{ e.decision.note or '–' }}</td>
     <td class="small">{{ e.decision.date|date }}</td><td>{% if e.score is not none %}<span title="{{ '%.2f'|format(e.score) }}">{{ e.band }}</span>{% else %}–{% endif %}</td>
     <td>{{ decide(e, 'clear', 'Restore', 'outline secondary') }}</td></tr>{% endfor %}</tbody>
 </table></div>

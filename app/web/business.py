@@ -60,11 +60,11 @@ def _ctx(session: Session, co: str, scope: str = "all") -> dict:
     }
 
 
-@router.get("/business", response_class=HTMLResponse)
-def overview(request: Request, co: str = "combined", scope: str = "all", session: Session = Depends(get_session)):
-    c = _ctx(session, co, scope)
-    c["ov"] = op.overview(c["apps"], c["asp"], c["vol"])
-    return templates.TemplateResponse(request, "business/overview.html", c)
+@router.get("/business")
+def overview(request: Request):
+    """The Opportunities section opens on the explorer (the overview page was retired, feedback 2026-10-20)."""
+    q = f"?{request.url.query}" if request.url.query else ""
+    return RedirectResponse(f"/business/explorer{q}", status_code=307)
 
 
 @router.get("/business/applications", response_class=HTMLResponse)
@@ -210,14 +210,16 @@ def opportunity_explorer(
     dir: str = "",
     f: str = "",
     t: str = "",
+    g: str = "",
     session: Session = Depends(get_session),
 ):
-    """One table of missing functions; any column sorts. Functions set aside are listed separately below."""
+    """Missing functions and RF band gaps, grouped by big category; any column sorts. Rows set aside are listed
+    separately below."""
     c = _ctx(session, co, scope)
     rows = op.explorer(c["apps"], c["asp"], c["vol"])
     decisions = {d.fn: d for d in session.scalars(select(OpportunityDecision))}
     for e in rows:
-        d = decisions.get(e["fn"])
+        d = decisions.get(e["key"])
         e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at} if d else None
     sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "reach")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
@@ -236,6 +238,10 @@ def opportunity_explorer(
         rows = [e for e in rows if e["gap_type"] != "not_ours"]
     if f in EXPLORER_FILTERS:
         rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
+    c["group_counts"] = Counter(e["group"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
+    g = g if g in c["group_counts"] else ""
+    if g:
+        rows = [e for e in rows if e["group"] == g]
     rows.sort(key=EXPLORER_SORTS[sort][2], reverse=dir == "desc")
     shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
     shown = [e for e in rows if (e["decision"] or {}).get("status") != "set_aside"]
@@ -244,8 +250,11 @@ def opportunity_explorer(
     c["same"] = {"gap": len({e["gap_type"] for e in shown}) == 1,
                  "crowd": len(crowds) == 1 and len(shown) > 1 and sort != "competition",
                  "tam": not any(e["tam_apps"] for e in shown) and sort != "tam"}  # fmt: skip
+    order = [*op.GROUPS, "Other"]
     c.update(
         rows=shown,
+        groups=[(n, [e for e in shown if e["group"] == n]) for n in order if any(e["group"] == n for e in shown)],
+        g=g,
         aside=[e for e in rows if (e["decision"] or {}).get("status") == "set_aside"],
         sort=sort,
         dir=dir,
@@ -272,7 +281,8 @@ async def decide(request: Request, session: Session = Depends(get_session)):
     """Keep a missing function under consideration, set it aside (with a note), or clear the decision."""
     form = await request.form()
     fn, status = str(form.get("fn") or ""), str(form.get("status") or "")
-    if fn not in blocks.catalogue()["functions"] or status not in ("keep", "set_aside", "clear"):
+    known = fn in blocks.catalogue()["functions"] or any(r["key"] == fn for r in op.rf_band_rows())
+    if not known or status not in ("keep", "set_aside", "clear"):
         raise HTTPException(400, "Unknown function or decision")
     d = session.scalar(select(OpportunityDecision).where(OpportunityDecision.fn == fn))
     if status == "clear":

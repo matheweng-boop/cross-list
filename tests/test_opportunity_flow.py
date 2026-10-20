@@ -2,6 +2,8 @@
 
 import re
 
+KEEP = r'name="fn" value="([a-z0-9_]+)"><input type="hidden" name="status" value="keep"'  # a function row's Keep
+
 
 def test_explorer_sorts_and_old_views(client):
     for sort in ("label", "path", "reach", "competition", "score", "tam"):
@@ -15,7 +17,7 @@ def test_explorer_sorts_and_old_views(client):
 
 
 def test_keep_set_aside_and_restore(client):
-    first = re.search(r'name="fn" value="([a-z0-9_]+)"', client.get("/business/explorer").text).group(1)
+    first = re.search(KEEP, client.get("/business/explorer").text).group(1)
     r = client.post("/business/decision", data={"fn": first, "status": "keep", "back": "/business/explorer"},
                     follow_redirects=False)  # fmt: skip
     assert r.status_code == 303 and r.headers["location"] == "/business/explorer"
@@ -48,7 +50,7 @@ def test_markets_chips_and_groups(client):
 
 def test_candidates_to_business_case(client):
     page = client.get("/business/explorer").text
-    fn = re.search(r'name="fn" value="([a-z0-9_]+)"', page).group(1)
+    fn = re.search(KEEP, page).group(1)
     form = {"origin": "explorer", "key": fn, "title": "Candidate one", "fn": fn, "back": "/business/explorer"}
     assert client.post("/business/shortlist", data=form, follow_redirects=False).status_code == 303
     client.post("/business/shortlist", data=form)  # pushing twice keeps one
@@ -74,9 +76,19 @@ def test_candidates_to_business_case(client):
     assert client.post("/business/shortlist", data={"origin": "bogus", "key": "x"}).status_code == 400
 
 
-def test_top_missing_functions_removed_from_overview(client):
-    html = client.get("/business").text
-    assert "Top missing functions" not in html and "/business/explorer" in html
+def test_overview_retired_explorer_grouped_with_rf_band_gaps(client):
+    r = client.get("/business?co=skyworks", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/business/explorer?co=skyworks"
+    from app.services import opportunity as op
+
+    bands = op.rf_band_rows()
+    assert all(b["gap_type"] == "band_gap" and b["group"] == "RF & radio" and "@" in b["key"] for b in bands)
+    html = client.get("/business/explorer").text
+    assert 'class="ex-group"' in html and "Category" in html
+    if bands:  # an RF band gap can be kept like a function
+        r = client.post("/business/decision", data={"fn": bands[0]["key"], "status": "keep"}, follow_redirects=False)
+        assert r.status_code == 303
+    assert client.post("/business/decision", data={"fn": "nope@X", "status": "keep"}).status_code == 400
 
 
 def test_cross_sell_explains_each_pairing(client):

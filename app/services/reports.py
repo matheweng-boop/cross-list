@@ -1,5 +1,6 @@
-"""Pre-lim product ideas and reports: a list (data/business/reports.yaml), each with a body template, an optional
-background template (<slug>.background.html: the detail behind the report) and questions asked on its page."""
+"""Research & ideas (Future growth): reports and product ideas, listed in data/business/reports.yaml, each with a body
+template, an optional background template (<slug>.background.html: the detail behind the report) and questions asked
+on its page."""
 
 from datetime import UTC, date, datetime, timedelta
 from functools import lru_cache

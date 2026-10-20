@@ -228,7 +228,7 @@ def test_finder_start_page(client):
     html = client.get("/").text
     assert "Search &amp; replacements" in html and 'action="/find"' in html
     # three starting actions and one definition of the cross types
-    assert all(x in html for x in ('href="/compare"', 'href="/blocks"', 'href="/business"'))
+    assert all(x in html for x in ('href="/compare"', 'href="/blocks"', 'href="/business/explorer"'))
     assert "every priority 1 parameter equal or better" in html
 
 
@@ -315,8 +315,9 @@ def test_navigation_sections_and_old_urls(client):
                                ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
                                ("/blocks/coverage", "Systems &amp; applications", "Application library"),
-                               ("/business", "Opportunities", "Overview"),
-                               ("/business/markets", "Opportunities", "Markets &amp; customers"),
+                               ("/business", "Opportunities", "Opportunity explorer"),
+                               ("/business/markets", "Future growth", "Markets &amp; customers"),
+                               ("/business/reports", "Future growth", "Research &amp; ideas"),
                                ("/technical", "Engineering knowledge", "Knowledge search"),
                                ("/engineering/cmti_kv_us", "Engineering knowledge", "Specification guides"),
                                ("/rules", "Data management", "Methodology"),
@@ -346,8 +347,8 @@ def test_best_and_next_best_options_are_flagged(client):
 
 def test_compare_page_layout_and_typed_parts(client):
     html = client.get("/compare?add=SR8641,SA7741").text
-    assert html.index('name="add"') < html.index("compare-table") < html.index("Pick from the list")
-    assert "SR864x" in html  # parts grouped by series
+    assert html.index('name="add"') < html.index("compare-table")
+    assert "Pick from the list" not in html  # the series list was removed; search and part pages feed Compare
     assert "Not found" in client.get("/compare?add=NOSUCHPART").text
 
 

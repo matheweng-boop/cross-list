@@ -574,6 +574,15 @@ def rf_band_detail(request: Request, band_id: str):
     return templates.TemplateResponse(request, "engineering/_rf_band.html", ctx)
 
 
+@router.get("/visuals", response_class=HTMLResponse)
+def visuals_page(request: Request, session: Session = Depends(get_session)):
+    """Interactive visuals: sliders, live graphs and equations; reference lines from the cross lists."""
+    from app.services import visuals
+
+    data = {**visuals.reference_values(session), "creepage": visuals.package_creepage(session)}
+    return templates.TemplateResponse(request, "engineering/visuals.html", {"data": data})
+
+
 @router.get("/rf-notes", response_class=HTMLResponse)
 def rf_notes_page(request: Request):
     from app.services import rf_notes

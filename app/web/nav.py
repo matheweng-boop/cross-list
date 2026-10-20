@@ -32,6 +32,7 @@ NAV = (
         ("Specification guides", "/engineering", "What each specification means and how to compare it"),
         ("RF fundamentals", "/rf-notes", "RF specifications, components, architectures and technologies explained"),
         ("RF bands", "/rf-bands", "Cellular, GNSS, Wi-Fi, satcom and radar bands, with the parts that cover each"),
+        ("Interactive visuals", "/visuals", "Sliders, live graphs and equations: RF links, noise, filters, CMTI"),
         ("Technology platforms", "/business/capabilities", "Public Skyworks / Qorvo technologies"),
     )),
 )  # fmt: skip
@@ -94,6 +95,7 @@ PLACES = {
     "/engineering": ("knowledge", "/engineering"),
     "/rf-notes": ("knowledge", "/rf-notes"),
     "/rf-bands": ("knowledge", "/rf-bands"),
+    "/visuals": ("knowledge", "/visuals"),
     "/impact": ("knowledge", "/engineering"),
 }
 

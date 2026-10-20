@@ -102,6 +102,9 @@ def attach(request: Request, fn: str = "", co: str = "combined", session: Sessio
         c["anchor_parts"] = offer(c["fn"])
         for e in c["result"]["rows"]:
             e["offer"] = offer(e["fn"]) if e["status"] == "supported" else []
+            e["why"] = op.pair_reasons(c["result"]["apps"], c["fn"], e["fn"])
+    for pr in c["pairs"]:
+        pr["why"] = op.pair_reasons(c["apps"], pr["a"], pr["b"])
     c["shortlisted"] = {
         i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "crosssell"))
     }

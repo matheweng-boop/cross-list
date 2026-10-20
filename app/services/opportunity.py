@@ -253,6 +253,58 @@ def cross_sell_pairs(apps: list[Application], limit: int = 15) -> list[dict]:
     ]
 
 
+def _block_fns(g: dict) -> set[str]:
+    return {(b["fn"] if isinstance(b, dict) else str(b).split(" x")[0]).strip() for b in g.get("blocks") or []}
+
+
+def pair_reasons(apps: list[Application], a: str, b: str, limit: int = 5) -> dict:
+    """Why two functions are offered together: in which architectures they meet, whether they sit in the same block
+    there, whether the diagram connects their blocks, and whether the catalogue lists them as usual companions."""
+    tpls = [*blocks.templates(), *blocks.background_templates()]
+    cat = blocks.catalogue()["functions"]
+    rows = []
+    for app in apps:
+        fns = {p.fn for p in app.positions}
+        if a not in fns or b not in fns:
+            continue
+        t = tpls[app.i]
+        ga = [g for g in t.get("groups") or [] if a in _block_fns(g)]
+        gb = [g for g in t.get("groups") or [] if b in _block_fns(g)]
+        ids_a, ids_b = {g["id"] for g in ga}, {g["id"] for g in gb}
+        same = sorted({g["label"] for g in ga if g["id"] in ids_b})
+        links = [
+            (x, y, str(rest[0]) if rest else "")
+            for x, y, *rest in t.get("links") or []
+            if (x in ids_a and y in ids_b) or (x in ids_b and y in ids_a)
+        ]
+        label = {g["id"]: g["label"] for g in t.get("groups") or []}
+        named = [(label.get(x, x), label.get(y, y), lab) for x, y, lab in links]
+        rows.append({"i": app.i, "name": app.name, "background": app.background,
+                     "a_blocks": sorted({g["label"] for g in ga}), "b_blocks": sorted({g["label"] for g in gb}),
+                     "same": same, "links": named})  # fmt: skip
+    companion = b in ((cat.get(a) or {}).get("companions") or []) or a in ((cat.get(b) or {}).get("companions") or [])
+    n_same = sum(1 for r in rows if r["same"])
+    n_link = sum(1 for r in rows if r["links"] and not r["same"])
+    rows.sort(key=lambda r: (not r["same"], not r["links"], r["background"], r["name"]))
+    if n_same or n_link or companion:
+        bits = []
+        if n_same:
+            blocks_named = Counter(x for r in rows for x in r["same"]).most_common(2)
+            bits.append(f"same block in {n_same} of {len(rows)} ({', '.join(x for x, _ in blocks_named)})")
+        if n_link:
+            bits.append(f"blocks connected in {n_link}")
+        if companion:
+            bits.append("listed as a usual companion")
+        summary = "; ".join(bits)
+    else:
+        summary = (
+            f"in the same {len(rows)} designs but in separate blocks with no drawn connection (co-occurrence only)"
+        )
+    return {"rows": rows[:limit], "more": max(0, len(rows) - limit), "n": len(rows), "same": n_same, "linked": n_link,
+            "companion": companion, "summary": summary,
+            "notes": [(cat.get(f) or {}).get("note") for f in (a, b)]}  # fmt: skip
+
+
 # ---- gaps and ranking across applications ----------------------------------------------------------------
 def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
     """Every function that is a gap or competitor-only somewhere, ranked. Reach = applications that need it;

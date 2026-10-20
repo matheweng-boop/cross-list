@@ -63,20 +63,26 @@ def _editor(request: Request, config: BroadcastConfig | None):
 @router.post("/broadcast/configurations/{config_id}/delete")
 def delete_configuration(config_id: int, session: Session = Depends(get_session)):
     config = session.get(BroadcastConfig, config_id)
-    if config is not None:
-        session.delete(config)
-        session.commit()
+    if config is None:
+        raise HTTPException(404, "Configuration not found")
+    session.delete(config)
+    session.commit()
     return RedirectResponse("/broadcast/configurations", status_code=303)
 
 
 # --- JSON API used by the editor ---------------------------------------------------------
 
 
+def _config(payload: dict) -> dict:
+    data = payload.get("data")
+    if not isinstance(data, dict) or not data:
+        raise HTTPException(400, "Nothing to save: the configuration is empty")
+    return data
 
 
 @router.post("/api/broadcast/configs")
 def create_config(payload: dict = Body(...), session: Session = Depends(get_session)):
-    config = BroadcastConfig(name=_name(payload), data=payload.get("data") or {})
+    config = BroadcastConfig(name=_name(payload), data=_config(payload))
     session.add(config)
     session.commit()
     return {"id": config.id, "name": config.name}
@@ -88,7 +94,8 @@ def update_config(config_id: int, payload: dict = Body(...), session: Session = 
     if config is None:
         raise HTTPException(404, "Configuration not found")
     config.name = _name(payload)
-    config.data = payload.get("data") or {}
+    if payload.get("data"):  # a rename alone keeps the saved configuration
+        config.data = _config(payload)
     session.commit()
     return {"id": config.id, "name": config.name}
 

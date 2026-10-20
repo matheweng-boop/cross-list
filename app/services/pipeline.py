@@ -12,7 +12,6 @@ The draft state (PipelineDraft.state) is plain JSON so every step can be revisit
 Volumes and prices are the user's assumptions and are labelled so everywhere.
 """
 
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -276,5 +275,3 @@ def merge(session: Session, source: Case, target: Case) -> None:
                          + (f":\n{text}" if text else "")))  # fmt: skip
     source.status = "merged"
     source.inputs = {**(source.inputs or {}), "merged_into": str(target.id)}
-
-

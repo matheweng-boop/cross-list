@@ -7,11 +7,14 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import PROJECT_ROOT, get_settings
 from app.db import Base, init_engine
@@ -126,6 +129,42 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
         from app.web.routes import templates
 
         return templates.TemplateResponse(request, "error.html", {"url": str(request.url)}, status_code=500)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_error(request: Request, exc: StarletteHTTPException):
+        """Pages get a readable page (not found, bad input); API calls and HTMX fragments keep the JSON / text."""
+        if request.url.path.startswith("/api/") or request.headers.get("HX-Request") or exc.status_code < 400:
+            return await http_exception_handler(request, exc)
+        from app.web.routes import templates
+
+        title = {404: "Not found", 400: "Nothing was changed", 405: "Not available"}.get(
+            exc.status_code, "Not possible"
+        )
+        detail = (
+            exc.detail if isinstance(exc.detail, str) and exc.detail not in ("Not Found", "Method Not Allowed") else ""
+        )
+        message = detail or (
+            "This address does not exist on the site." if exc.status_code == 404 else "The request was refused."
+        )
+        ctx = {"title": title, "message": message}
+        return templates.TemplateResponse(request, "error_status.html", ctx, status_code=exc.status_code,
+                                          headers=getattr(exc, "headers", None))  # fmt: skip
+
+    @app.exception_handler(RequestValidationError)
+    async def bad_input(request: Request, exc: RequestValidationError):
+        if request.url.path.startswith("/api/"):
+            return await request_validation_exception_handler(request, exc)
+        from app.web.routes import templates
+
+        ctx = {
+            "title": "Not found",
+            "message": "The address has a value the page cannot use (for example a number that is text).",
+        }
+        return templates.TemplateResponse(request, "error_status.html", ctx, status_code=422)
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return RedirectResponse("/static/favicon.svg", status_code=301)
 
     @app.get("/healthz", include_in_schema=False)
     def healthz():

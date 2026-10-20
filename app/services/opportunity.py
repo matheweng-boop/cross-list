@@ -336,8 +336,6 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
     return sorted(rows, key=lambda e: (-e["reach"], -e["adjacent"], e["label"]))
 
 
-
-
 def overview(apps: list[Application], asp: dict, vol: dict) -> dict:
     allpos = [p for a in apps for p in a.positions]
     m = metrics(allpos, asp)
@@ -400,8 +398,6 @@ def qual_state(c: dict) -> str:
         if q in ("industrial", "commercial", "not_automotive")
         else "unknown"
     )
-
-
 
 
 def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:

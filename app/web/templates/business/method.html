@@ -21,7 +21,7 @@
 <dl class="bo-defs">{% for k, t in help.terms.items() %}<dt id="t-{{ k }}">{{ t.term }}</dt><dd>{{ t.long }}</dd>{% endfor %}</dl>
 
 <h2 id="formulas">Formulas</h2>
-<table class="bo-formulas small"><tbody>
+<div class="table-wrap"><table class="bo-formulas small"><tbody>
   <tr><th>Coverage</th><td>sockets with our part ÷ (Portfolio + Gap + Competitor-only sockets)</td><td class="muted">"Not our product type" excluded</td></tr>
   <tr><th>Needed in</th><td>number of applications whose diagram contains the function</td><td class="muted">each application counts once</td></tr>
   <tr><th>Door opener share</th><td>applications needing the function that already contain one of our parts ÷ applications needing it</td><td class="muted"></td></tr>
@@ -31,10 +31,10 @@
     <td class="muted">technology {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}; competition {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
   <tr><th>Content per system</th><td>Σ quantity × ASP over priced sockets; our share = priced sockets with our part ÷ all priced sockets</td><td class="muted">only where ASPs are entered</td></tr>
   <tr><th>TAM per year</th><td>Σ over applications of annual volume × sockets × ASP</td><td class="muted">only where both are entered</td></tr>
-</tbody></table>
+</tbody></table></div>
 
 <h2 id="influence">What influences a rating</h2>
-<table class="bo-formulas small"><thead><tr><th>Input</th><th>Where it comes from</th><th>Effect</th></tr></thead><tbody>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Input</th><th>Where it comes from</th><th>Effect</th></tr></thead><tbody>
   <tr><th>Applications using it</th><td>block diagrams (library + background)</td><td>in the score: share of applications</td></tr>
   <tr><th>Path to product</th><td>evidence/path.yaml</td><td>in the score: Exists 1.0, Spec variant 1.0, New design 0.6, New technology 0.3, Not ours 0.1 – <b>replaces</b> the technology rating where assessed</td></tr>
   <tr><th>Technology rating</th><td>technology.yaml</td><td>in the score only where no path is assessed: {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
@@ -44,7 +44,7 @@
   <tr><th>Patents, foundry route, competitor technology</th><td>evidence/*.yaml</td><td><b>not in the score</b>: shown on the evidence page for judgement</td></tr>
   <tr><th>Reviews (✓ ✗ ?)</th><td>people using the site</td><td><b>not in the score</b>: flag items as verified or disputed and feed the data to-do</td></tr>
   <tr><th>Door openers, customers, ASPs</th><td>diagrams, customers.yaml, TAM data</td><td>not in the Technology fit score (door openers rank the cross-sell view; ASPs feed TAM)</td></tr>
-</tbody></table>
+</tbody></table></div>
 
 <h2 id="sources">Data sources (live)</h2>
 <div class="table-wrap"><table class="striped small"><tbody>

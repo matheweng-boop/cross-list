@@ -222,10 +222,6 @@ def index(
     return templates.TemplateResponse(request, "index.html", ctx)
 
 
-
-
-
-
 CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
@@ -511,9 +507,10 @@ def package_overlay(request: Request, a_id: int, b_id: int, lp: int = 0, session
 
 
 @router.get("/impact")
-def impact_page(ids: str = ""):
-    """Old address of the CMTI explorer: now the CMTI engineering note."""
-    return RedirectResponse(f"/engineering/cmti_kv_us?ids={ids}", status_code=307)
+def impact_page(ids: str = "", ref: str = "", cand: str = ""):
+    """Old address of the CMTI explorer: now the CMTI engineering note (its ids, or a reference and candidate)."""
+    ids = ids or ",".join(x for x in (ref, cand) if x)
+    return RedirectResponse(f"/engineering/cmti_kv_us?ids={urllib.parse.quote(ids, safe=',')}", status_code=307)
 
 
 @router.get("/notes", include_in_schema=False)

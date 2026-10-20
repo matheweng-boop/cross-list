@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import get_settings
+from app.web.urls import local_path
 
 COOKIE = "crosslist_auth"
 MAX_AGE = 30 * 24 * 3600
@@ -44,7 +45,7 @@ class PasswordGate(BaseHTTPMiddleware):
 
 
 def _safe_next(next_url: str) -> str:
-    return next_url if next_url.startswith("/") and not next_url.startswith("//") else "/"
+    return local_path(next_url, "/")
 
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">

@@ -186,8 +186,6 @@ def function_uses() -> dict[str, list[dict]]:
     return uses
 
 
-
-
 # Catalogue parts (data/catalog/<manufacturer>_parts.yaml, collected from the public product pages): every
 # Skyworks and Qorvo part with its category, package, a few key specs and lifecycle, mapped to a function. They
 # carry no BizDev parameters except the automotive grade, so an answered requirement other than automotive

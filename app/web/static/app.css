@@ -344,7 +344,7 @@ tr.req-done td { opacity: .6; }
 .feat-matrix { font-size: .8rem; }
 .feat-matrix th span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font-size: .72rem; }
 .feat-matrix td.fm-cell { text-align: center; color: #128a5f; font-weight: 700; padding: .2rem; }
-.inline-overlay { margin: .4rem 0; max-width: 26rem; }
+.inline-overlay { margin: .4rem 0; max-width: min(26rem, 100%); }
 .inline-overlay img, .overlay-grid img { width: 100%; height: auto; background: #fff; border: 1px solid var(--pico-muted-border-color); border-radius: .3rem; }
 .overlay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: .8rem; }
 .overlay-grid figure { margin: 0; }
@@ -634,7 +634,7 @@ button.cov-item:hover { box-shadow: 0 2px 8px #0002; }
 .bo-steps li { margin: .25rem 0; font-size: .9rem; }
 .bo-formulas th { white-space: nowrap; } .bo-toc { margin-bottom: .6rem; }
 .bo-words { font-size: .8rem; margin: .1rem 0 .4rem; padding: .25rem .5rem; background: rgba(0,0,0,.03); border-radius: .25rem; }
-.ct { display: inline-block; font-size: .72rem; padding: 0 .45rem; margin: .05rem .15rem .05rem 0; border-radius: .6rem; background: #eee; color: #444; white-space: nowrap; }
+.ct { display: inline-block; font-size: .72rem; padding: 0 .45rem; margin: .05rem .15rem .05rem 0; border-radius: .6rem; background: #eee; color: #444; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 .ct-oem { background: #e8eefb; color: #1f3f8a; } .ct-tier-1 { background: #e3f4ea; color: #1b6b3a; } .ct-module-maker { background: #fff1d6; color: #6b4a00; }
 .ct-odm-ems { background: #f4e9fb; color: #5b2a7a; } .ct-operator-infrastructure { background: #e6f4f6; color: #135e6b; }
 .bo-gap > summary.bo-seg { grid-template-columns: minmax(0, 1.4fr) 7rem minmax(0, 3fr); }
@@ -1126,3 +1126,9 @@ details.why ul { margin: .25rem 0 .3rem; padding-left: 1rem; } details.why li { 
 .vz-eq-sym { font-size: 1.05rem; } .vz-eq-num { font-size: .95rem; color: var(--pico-primary); margin-top: .3rem; overflow-wrap: anywhere; }
 .vz-note { font-size: .92rem; border-left: 3px solid var(--pico-primary); padding-left: .7rem; }
 @media (max-width: 900px) { .vz { grid-template-columns: 1fr; } .vz-nav { position: static; display: flex; flex-wrap: wrap; } .vz-body { grid-template-columns: 1fr; } }
+
+/* a form that sits inside a sentence or a button row (actions that create something are POST, not links) */
+.inline-form { display: inline; margin: 0; }
+.inline-form button { display: inline; width: auto; margin: 0; }
+.linklike { background: none; border: 0; padding: 0; margin: 0; color: var(--pico-primary); width: auto; cursor: pointer; text-align: left; text-decoration: underline; font: inherit; }
+@media (max-width: 600px) { .bo-seg { flex-wrap: wrap; } }

@@ -26,6 +26,7 @@ from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
 from app.web.routes import templates
+from app.web.urls import local_path
 
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
@@ -247,8 +248,7 @@ def opportunity_explorer(
 
 def _back(request: Request, form, default: str) -> str:
     """Where to return after a form post: a local path from the form, else the default."""
-    back = str(form.get("back") or "")
-    return back if back.startswith("/") and not back.startswith("//") else default
+    return local_path(form.get("back"), default)
 
 
 @router.post("/business/decision")
@@ -426,6 +426,8 @@ def _inputs(form) -> dict:
 async def case_create(request: Request, session: Session = Depends(get_session)):
     form = await request.form()
     fn = str(form.get("fn") or "") or None
+    if not str(form.get("title") or "").strip() and not fn and not _inputs(form):
+        raise HTTPException(400, "Give the case a title, a function or at least one input")
     case = Case(title=str(form.get("title") or "").strip()[:200] or "Untitled case",
                 fn=fn if fn in blocks.catalogue()["functions"] else None, inputs=_inputs(form))  # fmt: skip
     session.add(case)
@@ -613,9 +615,11 @@ def review(payload: dict = Body(...), session: Session = Depends(get_session)):
 
 @router.post("/business/evidence/{fn}/mapping")
 async def mapping(fn: str, request: Request, session: Session = Depends(get_session)):
+    if fn not in blocks.catalogue()["functions"]:
+        raise HTTPException(404, "Unknown function")
     form = await request.form()
     mpn, verdict = str(form.get("mpn") or "").strip(), str(form.get("verdict") or "")
-    if fn in blocks.catalogue()["functions"] and mpn and verdict in ("yes", "no", "undo"):
+    if mpn and verdict in ("yes", "no", "undo"):
         row = session.scalar(select(PartMapping).where(PartMapping.fn == fn, PartMapping.mpn == mpn))
         if verdict == "undo":
             if row:

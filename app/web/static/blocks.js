@@ -13,7 +13,8 @@
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   let seq = 1;
   const uid = p => `${p}${Date.now().toString(36)}${seq++}`;
-  let S = design.data || fromTemplate(tpl) || {groups: [], links: []};
+  // a saved design without its groups list (old or broken data) opens like a new one instead of a blank editor
+  let S = Array.isArray(design.data?.groups) ? design.data : fromTemplate(tpl) || {groups: [], links: []};
   S.req ||= {}; // requirement answers per function: {fn: {reqId: value}}; unanswered = no filter
   S.qa ||= {}; // answers to the template's design questions: {questionId: choice}; unanswered = nothing assumed
   let sel = null; // {group} or {group, block}

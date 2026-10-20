@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -24,8 +24,18 @@ def _draft(session: Session, draft_id: int) -> PipelineDraft:
     return d
 
 
-@router.get("/pipeline/new")
-def pipeline_new(part: int, our: int | None = None, session: Session = Depends(get_session)):
+@router.get("/pipeline/new", response_class=HTMLResponse)
+def pipeline_new_confirm(request: Request, part: int, our: int | None = None, session: Session = Depends(get_session)):
+    """A link (or a browser prefetching it) only shows the button; the draft is created by the POST below."""
+    p = session.get(Part, part)
+    if p is None:
+        raise HTTPException(404, "Part not found")
+    ctx = {"part": p, "our": session.get(Part, our) if our else None}
+    return templates.TemplateResponse(request, "pipeline_start.html", ctx)
+
+
+@router.post("/pipeline/new")
+def pipeline_new(part: int = Form(...), our: int | None = Form(None), session: Session = Depends(get_session)):
     try:
         state = pl.start(session, part, our)
     except ValueError:

@@ -2,7 +2,7 @@
 
 import re
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,6 +11,7 @@ from app.db import get_session
 from app.models import CrossRequest, Part
 from app.partnumbers import normalize_pn
 from app.web.routes import templates
+from app.web.urls import local_path
 
 router = APIRouter()
 STATUSES = {"open": "Open", "in_progress": "In progress", "done": "Done", "cannot": "Cannot cross"}
@@ -47,7 +48,7 @@ def add_requests(
         session.add(CrossRequest(mpn=mpn[:100], manufacturer=manufacturer.strip() or None, note=note.strip() or None))
         open_keys.add(normalize_pn(mpn))
     session.commit()
-    return RedirectResponse(back if back.startswith("/") else "/requests", status_code=303)
+    return RedirectResponse(local_path(back, "/requests"), status_code=303)
 
 
 @router.post("/requests/{request_id}")
@@ -55,12 +56,13 @@ def update_request(
     request_id: int, status: str = Form(""), delete: str = Form(""), session: Session = Depends(get_session)
 ):
     r = session.get(CrossRequest, request_id)
-    if r is not None:
-        if delete:
-            session.delete(r)
-        elif status in STATUSES:
-            r.status = status
-        session.commit()
+    if r is None:
+        raise HTTPException(404, "Request not found")
+    if delete:
+        session.delete(r)
+    elif status in STATUSES:
+        r.status = status
+    session.commit()
     return RedirectResponse("/requests", status_code=303)
 
 

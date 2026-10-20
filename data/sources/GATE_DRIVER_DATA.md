@@ -16,7 +16,8 @@ record the page in `param_sources`.
   gives several.
 - `deadtime`: `programmable` (DT pin / resistor), `fixed`, `none`.
 - `protection`: a list from `UVLO`, `overlap protection`, `disable`, `enable`, `programmable dead time`,
-  `input glitch filter`, `Miller clamp`, `desaturation`, `soft shutdown`.
+  `input glitch filter`, `Miller clamp`, `desaturation`, `overcurrent` (an OC-pin short-circuit detector that is not
+  DESAT), `soft shutdown`.
 - `isolation_class`: `basic` or `reinforced`.
 - `qualification`: `automotive` (AEC-Q100 stated for that ordering code), else `industrial`.
 - `uvlo_v`: the output-side UVLO rising threshold as a number in V (e.g. 5, 8, 12), from the ordering code.

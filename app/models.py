@@ -492,6 +492,24 @@ class SiteFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
+class ReportQuestion(Base):
+    """A question asked on a pre-lim report page. Questions are reviewed once a day (Opportunities > Pre-lim ideas &
+    reports > Questions): kept as good, marked as a duplicate of an earlier one, or set aside; the answer is shown
+    under the report."""
+
+    __tablename__ = "report_questions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(100), index=True)  # report it was asked on
+    text: Mapped[str] = mapped_column(Text)
+    author: Mapped[str | None] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(20), default="new")  # new | good | duplicate | dropped
+    duplicate_of: Mapped[int | None] = mapped_column(Integer)
+    answer: Mapped[str | None] = mapped_column(Text)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
 class Upload(Base):
     """A picture, block diagram, document or written explanation added on Data management > Uploads, kept for use in
     the library and the knowledge pages. The file itself is stored under the data directory (uploads/)."""

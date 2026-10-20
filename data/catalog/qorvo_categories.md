@@ -279,3 +279,20 @@ and rf_pa_bias were proposed in the earlier research file and are now in functio
   led_driver, audio_amp, multiphase, pol_ldo, ldo_tracker. Qorvo's catalogue has no standalone parts for these blocks; for
   BizDev the Skyworks side covers them.
 * **SiC:** UnitedSiC FETs, JFETs, diodes and modules belong to onsemi (Jan 2025) and are omitted.
+
+## Supplement (2026-10-20): `qorvo_extra_parts.yaml`
+
+229 further Qorvo parts found after the store listing, from public sources only (robots.txt obeyed, GET only, at least
+10 s between requests per host, 14 page requests and 46 web searches in total). Every row has a `source`:
+
+* 5 from store.qorvo.com / rfmw.com product pages (both hosts were stopped at their first repeated 403);
+* 103 from web-search snippets of distributor and press pages (values only as the snippet states them);
+* 121 named only by store evaluation boards and kits (status unknown, no specs).
+
+By function: diplexer / duplexer / multiplexer 31, filters 26, synthesizer (PLL, VCO) 27, power amplifier 25,
+dividers and couplers 19, beamformers 10, other 58; 33 have no function yet (not shown in diagrams). Most filters,
+dividers and VCOs are legacy or discontinued. New parts of note: QPB1055 C-band BAW switched filter bank (Oct 2026),
+QPQ4701 BAW 2.4/5 GHz Wi-Fi diplexer (Apr 2026), QPA2311 / QPA0018 GaN PAs (Oct 2026).
+
+Still not reachable: anything listed only on qorvo.com (automotive Q variants, preview parts), the later pages of the
+store's duplexer, power-divider, VCO and PLL search pages, most of the 53 RF couplers, and datasheet-grade specs.

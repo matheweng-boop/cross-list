@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import push with context %}
+{% block title %}{{ r.title }}{{ ' – background' if background }} – BizDev{% endblock %}
+{% block content %}
+{% if background %}
+<p class="small"><a href="/business/reports/{{ r.slug }}">← Back to the report</a></p>
+<p class="rp-bg-note small">Background notes for <b>{{ r.title }}</b>: the data tables, detail and full source list behind the report. Used to answer questions; the report itself stays short.</p>
+<article class="rpt">{% include body %}</article>
+{% else %}
+<p class="small"><a href="/business/reports">← Pre-lim product ideas and reports</a></p>
+<p class="rp-meta small"><span class="rp-kind k-{{ r.kind }}">{{ kinds.get(r.kind, r.kind) }}</span> {{ r.area }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span>{% if r.sources %} · {{ r.sources }}{% endif %}</p>
+{% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
+<article class="rpt">{% include body %}</article>
+{% if has_background %}<p class="small"><a href="/business/reports/{{ r.slug }}/background">Background notes: data tables, detail and all sources →</a></p>{% endif %}
+
+<section class="rp-ask" id="questions">
+  <h2>Questions about this report</h2>
+  <form method="post" action="/business/reports/{{ r.slug }}/ask">
+    <textarea name="text" rows="2" required maxlength="2000" placeholder="Ask about something in the report, or something it leaves out" aria-label="Your question"></textarea>
+    <div class="rp-ask-row"><input name="author" maxlength="100" placeholder="Your name (optional)" aria-label="Your name"><button type="submit" class="small-btn">Ask</button></div>
+  </form>
+  {% if request.query_params.get('asked') %}<p class="small rp-thanks">Saved. Questions are reviewed once a day; the answer appears here.</p>{% endif %}
+  {% if questions %}<ul class="rp-qs">{% for q in questions %}
+    <li><b>{{ q.text }}</b> <small class="muted">{{ q.author or 'anonymous' }}, {{ q.created_at.strftime('%d %b') }}{% if q.status != 'good' %} · {{ q_statuses.get(q.status, q.status) }}{% if q.duplicate_of %} of #{{ q.duplicate_of }}{% endif %}{% endif %}</small>
+      {% if q.answer %}<p class="small">{{ q.answer }}</p>{% endif %}</li>{% endfor %}
+  </ul>{% else %}<p class="small muted">No questions yet.</p>{% endif %}
+  <p class="small"><a href="/business/reports/questions">Review all questions, by day →</a></p>
+</section>
+<div class="rp-foot">{{ push('report', r.slug, r.title, r.summary[:300] if r.summary else '', '', false, '+ Business case from this report') }}</div>
+{% endif %}
+{% endblock %}

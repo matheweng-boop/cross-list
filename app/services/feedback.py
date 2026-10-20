@@ -26,13 +26,17 @@ def _words(text: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+(?:[-.][a-z0-9]+)*", text.lower()) if w not in _STOP and len(w) > 1}
 
 
-def similar(a: SiteFeedback, b: SiteFeedback) -> bool:
-    wa, wb = _words(a.text), _words(b.text)
+def similar_text(a: str, b: str, threshold: float) -> bool:
+    """True when the shorter text shares at least `threshold` of its words with the other."""
+    wa, wb = _words(a), _words(b)
     if not wa or not wb:
-        return a.text.strip().lower() == b.text.strip().lower()
-    overlap = len(wa & wb) / min(len(wa), len(wb))
+        return a.strip().lower() == b.strip().lower()
+    return len(wa & wb) / min(len(wa), len(wb)) >= threshold
+
+
+def similar(a: SiteFeedback, b: SiteFeedback) -> bool:
     same_page = a.path.split("?")[0] == b.path.split("?")[0]
-    return overlap >= (0.5 if same_page else 0.7)
+    return similar_text(a.text, b.text, 0.5 if same_page else 0.7)
 
 
 def _day_bounds(day: date) -> tuple[datetime, datetime]:

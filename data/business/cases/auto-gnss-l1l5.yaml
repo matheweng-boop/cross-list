@@ -1,0 +1,113 @@
+# Preliminary case: automotive multi-band GNSS front end. Layout and rules: _template.yaml. Figures and links: the report's background notes.
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Automotive GNSS: an all-band front end for the roof antenna"
+question: >-
+  What should Skyworks (with Qorvo filters) offer next for multi-band GNSS in the shark fin and roof antenna for
+  lane-level ADAS in 2–3 years, reusing existing technology, given TI, Infineon and NXP LNAs, Murata/Taoglas modules
+  and all-band receivers from u-blox, ST and Qualcomm, and at what price?
+updated: 2026-10-20
+brief:
+  - "Our position: SKY5A2110 is already an automotive L1 + L5 LNA module with filters and a diplexed output (AEC-Q104 Grade 2, NF 1.2–1.5 dB, typically –58 to –80 dB out-of-band rejection to 7 GHz), and we sell the neighbours in the same shark fin (V2X FEM, LNA bank, switches)."
+  - "Our weak points: the receivers have gone all-band (u-blox ZED-X20K and ST STA8135GA: L1/L2/L5/L6-E6), our module is L1 + L5 only, Grade 2, with two RF inputs, and TI sells a Grade 1 wideband GNSS LNA at $0.45 list."
+  - "Proposal: an all-band automotive GNSS front end (L1 + L2/E6 + L5/E5, one input, one output) from our LNAs and Qorvo SAW/BAW filters, Grade 1, at about $1.6–2.6 in volume (est), plus a single-input L1 + L5 variant at about $0.9–1.4."
+
+position:
+  advantages:
+    - {id: a-auto, text: "Automotive L1 + L5 module in production: LNAs, pre/post filters, B13 notch and diplexer in 2.2 × 2.7 mm, AEC-Q104 Grade 2 (SKY5A2110)", vs: "TI, Infineon, NXP (bare LNAs)", conf: high}
+    - {id: a-rej, text: "Documented out-of-band rejection of typically –58 to –80 dB from 600 MHz to 7.1 GHz (cellular, n77/n79, Wi-Fi 6/7) and B13 second harmonic ≈ –108 dBm; gain stays 17–21 dB with +10/+15 dBm blockers", vs: "TI TRF3302-Q1, Infineon BGA525N6 (need external SAW)", conf: high}
+    - {id: a-fin, text: "One supplier for the roof module: V2X FEM SKY5A2105, LNA bank SKY5A2203, switches SKY5A5109/5110 and (ex-Qorvo) SDARS/GPS diplexer TQM2M9016", vs: "TI, Infineon", conf: high}
+    - {id: a-filters, text: "The combined company owns GNSS acoustic filters (Qorvo BAW GPS filters 880272/880273, L1/L2 SAW diplexer QPQ1028, L5 SAW 857143) and can build multi-band modules in-house", vs: "TI, Infineon (no acoustic filters)", conf: med}
+    - {id: a-current, text: "Low current: about 5 mA per path at 1.8 V and a 1.2 mA low-current mode, per-band enable", vs: "Taoglas modules (two-stage LNAs)", conf: med}
+  disadvantages:
+    - {id: d-bands, text: "L1 + L5/E5a only; no L2, E6/L6 or L-band, while automotive receivers are all-band (u-blox ZED-X20K L1/L2/L5/L6; ST STA8135GA L1/L2/L5/E6 + L-band)", vs: "u-blox, ST, Taoglas TFM.110A", offset: "All-band module from our LNAs and Qorvo filters", conf: high}
+    - {id: d-cost, text: "A bare automotive LNA is cheap: TI TRF3302-Q1 (Grade 1, 1165–1630 MHz, NF 0.85 dB) lists at $0.45 (1 k)", vs: TI, offset: "Compete on system cost: LNAs + 3–5 filters + diplexer + matching in one tested part, coexistence guaranteed", conf: high}
+    - {id: d-grade, text: "Grade 2 only (junction max 105 °C); TI offers Grade 1 (–40 to 125 °C)", vs: TI, offset: "Grade 1 version for roof modules that hold the TCU", conf: high}
+    - {id: d-inputs, text: "Two RF inputs need a dual-feed antenna or an external diplexer; wideband LNAs (Infineon BGA525N6 1164–1615 MHz, TI) work with one path", vs: "Infineon, TI", offset: "Single-input variant with an on-module input diplexer", conf: high}
+    - {id: d-nf, text: "Selection tables compare our module NF (1.2–1.5 dB, filters included) with bare-LNA NF of 0.55–0.85 dB", vs: "Infineon, TI, NXP", offset: "Publish cascaded NF and C/N0 with the filter the bare LNA needs", conf: med}
+    - {id: d-china, text: "Low-cost Chinese GNSS LNAs are entering automotive (Awinic AWR5005-Q1 in AEC-Q100 qualification; Maxscend)", vs: "Awinic, Maxscend", offset: "Focus on global OEMs and filtered modules; China only with local filters", conf: low}
+  diff_good:
+    - {id: g-coex, text: "Coexistence is designed in: B13 notch on L1 and < –70 dB below 1 GHz on L5, for a fin that also holds LTE/5G and V2X transmitters", conf: high}
+    - {id: g-combined, text: "LNA (Skyworks) + BAW/SAW (Qorvo) under one roof since Oct 2026: no filter partner margin in the module", conf: med}
+  diff_bad:
+    - {id: b-legacy, text: "Most of our older GNSS LNAs and FEMs are Last Time Buy or obsolete (SKY657xx, SKY659xx), which can read as a shrinking line", conf: high}
+    - {id: b-noprice, text: "No public price or automotive reference antenna for SKY5A2110; TI publishes prices and an automotive EVM", conf: med}
+
+architecture:
+  columns: [Skyworks + Qorvo (module), TI / Infineon / NXP (discrete LNA), Receiver makers (u-blox, ST, Qualcomm)]
+  rows:
+    - ["Built as", "LNAs + pre/post filters + diplexer in one AEC-Q104 module (SKY5A2110)", "Single wideband LNA; SAW filters from Murata, TDK and others", "All-band receiver or module with its own SAW; needs an active antenna"]
+    - ["Bands", "L1/E1/B1/G1 + L5/E5a", "TI 1165–1630 MHz; Infineon 1164–1615 MHz (BGA525N6); NXP L1 only", "L1/L2/L5/L6-E6, L-band corrections"]
+    - ["Where it sits", "Shark fin / roof module or TCU", "Shark fin / roof module", "TCU, ADAS ECU or GNSS module"]
+    - ["Zonal fit", "Good: the antenna LNA stays at the roof whatever happens to the receiver", "Good, cheapest per part", "Receiver may move into the TCU or central computer"]
+  note: "From the BizDev block-diagram library: TI telematics control unit (GNSS question: single-band L1 or dual-band L1/L5; 'RF power (active antenna)' feeds the antenna over coax) and the connectivity research on smart-antenna consolidation (617–5925 MHz in one fin; glass roofs cost about 8 dB)."
+
+market_now:
+  - {figure: "Light-vehicle production", value: "92.1 M (2026)", source: "S&P Global Mobility, Mar 2026 (radio case)", conf: high}
+  - {figure: "GNSS chipset shipments by band (all markets)", value: "L1-only 73 % (2021) → 52 % (2028); dual 43 %, triple 5 % in 2028", source: "ABI Research insight, Jun 2023 (public summary)", conf: low}
+  - {figure: "Band trend (2025)", value: "L1 + L5 grows fastest; tri-band nascent but growing; automotive 'settling on triple frequency'", source: "ABI Research 3Q 2025 data summary; 2023 insight", conf: low}
+  - {figure: "Automotive receivers", value: "u-blox ZED-X20K L1/L2/L5/L6, AEC-Q104, to 105 °C; ST STA8135GA L1/L2/L5/E6 + L-band, AEC-Q100", source: "u-blox product summary; ST via trade press", conf: med}
+  - {figure: "eCall", value: "LTE/5G NG-eCall required for new EU type approvals from 1 Jan 2026 (GNSS in every new EU car)", source: "Reg. (EU) 2024/1180 via 5GAA", conf: med}
+  - {figure: "Roof module", value: "Cellular, V2X and GNSS in one fin (617–5925 MHz); glass roof −8 dB V2X gain", source: "Oakland University dissertation, 2023", conf: med}
+  - {figure: "Cars with GNSS / with multi-band GNSS", value: "not stated", source: "—", conf: low}
+  - {figure: "Public list prices", value: "TI TRF3302-Q1 $0.45 (1 k); SKY55951-11 €2.38 (1), ≈€1.41 at a volume tier", source: "ti.com; distributor snippet", conf: low}
+
+outlook:
+  - {id: o-dual, text: "Dual-band L1 + L5 becomes standard on new L2+ platforms by about 2028; all-band (L1/L2/L5/E6) on premium and L3 cars with PPP corrections (est)", basis: "ABI band shift; all-band automotive receivers from u-blox and ST in production", conf: low}
+  - {id: o-roof, text: "More RF moves into the roof module (TCU in the fin, V2X compensator), raising coexistence and temperature demands on the GNSS LNA (est)", basis: "Smart-antenna consolidation; glass roofs; AEC-Q104 roof modules", conf: med}
+  - {id: o-against, text: "Against: OEMs that keep L1-only for cost, and Chinese OEMs that buy local LNAs, cap the volume of filtered multi-band modules (est)", basis: "L1-only still 52 % of chipsets in 2028 (ABI); Chinese LNA vendors entering", conf: low}
+  - {id: o-receiver, text: "Receivers keep moving into the TCU or central computer, but the antenna-side LNA and filter stay at the roof (est)", basis: "Active antennas fed over coax in TCU designs (TI TCU template)", conf: med}
+  - {id: o-security, text: "Anti-jamming and spoofing protection becomes a selection criterion (ISO 21434, Galileo OSNMA); front-end linearity and interference detection matter more (est)", basis: "u-blox X20K and ST STA8135GA list jamming mitigation", conf: med}
+
+features:
+  - {id: f-designin, feature: "Push SKY5A2110 into shark-fin and TCU designs now", benefit: "Volume from today's part", distance: 0, why: "Available, automotive qualified"}
+  - {id: f-coexdata, feature: "Publish co-location data with our V2X (SKY5A2105) and cellular FEMs, and cascaded NF/C/N0 vs bare LNA + SAW", benefit: "Answers the NF comparison and proves coexistence", distance: 1, why: "Measurements and application note"}
+  - {id: f-refant, feature: "Reference roof-module design: GNSS + V2X + LNA bank + switches + SDARS/GPS diplexer", benefit: "One-stop design for antenna makers", distance: 2, why: "Board from existing parts"}
+  - {id: f-single, feature: "Single-input L1 + L5 variant (input diplexer on the module)", benefit: "Fits single-feed patch antennas; answers wideband LNAs", distance: 2, why: "Module change with existing filter technology"}
+  - {id: f-l2, feature: "Add an L2 (1227 MHz) path", benefit: "Triple-band L1/L2/L5 for PPP/RTK receivers", distance: 2, why: "Existing LNA die re-matched; L2 SAW from the Qorvo line (QPQ1028)"}
+  - {id: f-e6, feature: "Add E6/L6 (1278 MHz) and L-band corrections (1525–1559 MHz)", benefit: "Matches u-blox X20 and ST Teseo V all-band", distance: 3, why: "New filter designs; no E6 or L-band filter in our catalogue"}
+  - {id: f-g1, feature: "Grade 1 (–40 to 125 °C) version", benefit: "Roof modules with a TCU inside; matches TI", distance: 3, why: "SKY5A2110 junction max 105 °C; design and qualification"}
+  - {id: f-sense, feature: "Antenna supply sensing (open/short) and an interference flag on the module", benefit: "Diagnostics and anti-jamming for ISO 21434 designs", distance: 3, why: "New mixed-signal blocks in the LNA chip"}
+  - {id: f-receiver, feature: "Own GNSS receiver", benefit: "Would compete with u-blox, ST, Qualcomm", distance: 4, why: "Not recommended: no baseband or positioning engine"}
+
+product:
+  name: "All-band automotive GNSS front end (working name SKY5A2130) and single-input SKY5A2110-S"
+  spec:
+    - ["Bands", "L1/E1/B1/G1 + L2/E6/B3 + L5/E5a/E5b/B2a (est); L-band optional"]
+    - ["Paths", "One antenna input, band split, one LNA per group, BAW/SAW post-filters, one diplexed/triplexed output"]
+    - ["Targets (est)", "Gain 18–28 dB selectable; module NF ≤ 1.8 dB; out-of-band rejection ≥ 55 dB 600 MHz–7.1 GHz; Grade 1; AEC-Q104"]
+    - ["Extras", "Per-band enable, low-current mode, antenna current sense, interference flag"]
+    - ["Reuses", "SKY5A2110 L1 and L5 LNAs and B13 notch, SKY65730 E5 path, Qorvo BAW GPS filters and L1/L2 SAW diplexer"]
+    - ["New", "E6/L-band filters, input band splitter, Grade 1 design"]
+    - ["Replaces", "2–3 LNAs + 3–5 SAW filters/diplexers + matching in the fin (or TI/Infineon LNA + external filters)"]
+    - ["Answers", "TI TRF3302-Q1 + SAW, Infineon BGA525N6 + SAW, Taoglas TFM.110A/120A modules"]
+    - ["Delivery (est)", "Single-input L1 + L5: 12–18 months · all-band with L2: 18–24 months · E6/L-band and Grade 1: 24–36 months"]
+
+prices:
+  method: "Anchor on public list prices (low confidence) → value of what the module replaces → volume range. Assumption: automotive contract prices are 30–50 % below 1 k-reel list prices. SAW filter and SKY5A2110 prices are not stated in our sources; the filter allowance is our judgement. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "TI TRF3302-Q1 (Grade 1 wideband GNSS LNA)", price: "$0.45", qty: "1 k"}
+    - {part: "Skyworks SKY55951-11 (non-auto L1 + L5 module)", price: "€2.38 (1) · ≈€1.41 (volume tier)", qty: "distributor snippet"}
+    - {part: "SKY5A2110 · Infineon BGA525N6 · GNSS SAW filters · Taoglas TFM modules", price: "not stated", qty: "—"}
+  items:
+    - {id: p-allband, item: "All-band front end (3 paths, Grade 1)", entry: 1.6, target: 2.0, premium: 2.6, basis: "Replaces 2–3 LNAs (≈$0.25–0.3 each contract, from TI $0.45 list) + 3–5 filters/diplexers (judgement ≈$0.15–0.3 each) + matching"}
+    - {id: p-single, item: "Single-input L1 + L5 module", entry: 0.9, target: 1.1, premium: 1.4, basis: "SKY55951-11 ≈€1.41 volume list → ≈$0.8–1.1 contract; must stay near TI LNA + 2 SAW"}
+
+volumes:
+  - {label: "All-band, 3 M a year (premium L2+/L3 with PPP corrections)", units: 3000000, price: p-allband}
+  - {label: "All-band, 10 M a year (triple band spreads to mainstream)", units: 10000000, price: p-allband}
+  - {label: "Single-input L1 + L5, 15 M a year (mainstream dual band)", units: 15000000, price: p-single}
+
+attach:
+  - {id: t-receiver, lever: "Joint reference active antennas with u-blox and ST (ZED-X20K, STA8135GA); receiver makers publish antenna requirements, so a listed front end shortens design-in (judgement)", effort: med}
+  - {id: t-antenna, lever: "Antenna makers' roof-module platforms (fin with GNSS + V2X + cellular): offer the full RF set and the reference design", effort: med}
+  - {id: t-price, lever: "Publish prices and an automotive EVM, as TI does for TRF3302-Q1", effort: low}
+  - {id: t-coex, lever: "Coexistence test reports with our V2X and cellular FEMs in one fin (evidence: datasheet blocker data)", effort: low}
+  - {id: t-longevity, lever: "Longevity statement for automotive GNSS parts, to offset the LTB of the handset line (judgement)", effort: low}
+
+risks:
+  - "Will OEMs pay for triple band, or stay with L1 + L5? ABI figures are for all chipsets, not automotive."
+  - "E6 and L-band filters do not exist in our catalogue; filter performance and size unknown."
+  - "Receiver modules integrate their own SAW; if antennas become passive with LNAs in the TCU, the fin socket shrinks."
+  - "Grade 1 demand for the roof is not stated in any public OEM specification."
+  - "Unknown from public data: SKY5A2110 price and design wins, Infineon/NXP automotive roadmaps, contract prices."

@@ -1,0 +1,120 @@
+# Preliminary case: automotive clock tree. Layout and rules: _template.yaml. Figures and links: the report's background notes.
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Automotive clock tree: a crystal-free clock for central compute and zones"
+question: >-
+  What should Skyworks offer next for clocking central computers, zonal controllers and satellite radar (PCIe,
+  automotive Ethernet, SerDes references) in 2–3 years, reusing existing timing technology, given TI, SiTime (buying
+  Renesas timing), Microchip and Diodes, and at what price?
+updated: 2026-10-20
+brief:
+  - "Our position: a broad Grade 2 automotive PCIe clock line (Si5332-AM 6/8/12 outputs, Si5225x generators, Si5325x Gen 1–6 buffers) that our own brochure already lists for central compute, gateway and camera. Central computers and satellite radar move clock sockets to exactly these trees."
+  - "Our weak points: Grade 2 only, a crystal on every Si5332-AM, no automotive jitter attenuator or oscillator, empty radar/ADAS rows, and radar SoCs keep their own timing. TI ships a crystal-free BAW clock (PCIe Gen 7, $3.55 list) and SiTime a Grade 1 MEMS clock generator, and SiTime is buying Renesas timing."
+  - "Proposal: ZoneClock, a crystal-free automotive clock tree (our BAW resonator + Si5332 MultiSynth), Grade 1, PCIe Gen 6, with SmartClock safety monitors: ZC-12 at about $4–6.5 and ZC-4 at about $1.6–2.6 in volume (est), plus reference designs and a qualified jitter attenuator now."
+
+position:
+  advantages:
+    - {id: a-breadth, text: "Broadest automotive PCIe line from one vendor: Si5332-AM generators (6/8/12 outputs, any frequency, 190 fs), Si52254/58A-AM generators, Si53254/58A-AM Gen 1–6 buffers, Si5335x-AM any-format buffers", vs: "TI, Microchip, Diodes", conf: high}
+    - {id: a-anyfreq, text: "One Si5332-AM replaces several XOs and buffers: up to 12 outputs, per-output format (LVDS, LVPECL, HCSL, LVCMOS) and voltage, two spread-spectrum domains", vs: "TI LMK3H0102-Q1 (2 outputs)", conf: high}
+    - {id: a-smartclock, text: "SmartClock input monitoring, fault reporting to a safety manager and AlwaysOn (±5 %) on loss of reference", vs: "Diodes, Microchip", conf: high}
+    - {id: a-listed, text: "Already in our automotive brochure for IVI, gateway, central compute and camera; factory-programmed custom part numbers free of charge (ClockBuilder Pro)", vs: "—", conf: high}
+    - {id: a-baw, text: "We own a BAW-resonator timing platform in production (SKY631xx, about 17 fs) that can remove the crystal, the same route TI took", vs: "SiTime (MEMS), Microchip", conf: high}
+  disadvantages:
+    - {id: d-crystal, text: "Si5332-AM needs an external 16–50 MHz crystal in free-run; TI LMK3H0102-Q1 is crystal-free (BAW) and claims to replace up to 5 XOs", vs: TI, offset: "Crystal-free ZoneClock from our BAW platform; meanwhile a crystal-in-package option", conf: high}
+    - {id: d-grade, text: "Grade 2 (–40 to 105 °C) only; SiTime Chorus and SiT9396 are Grade 1 / 125 °C, Microchip buffers –40 to 125 °C", vs: "SiTime, Microchip", offset: "Grade 1 on the next die; state which sockets truly need 125 °C", conf: med}
+    - {id: d-gen, text: "Si5332-AM generators are specified to PCIe Gen 5; TI LMK3H0102-Q1 is Gen 1–7, SiTime Chorus Gen 1–6", vs: "TI, SiTime", offset: "Characterise Gen 6 on today's parts; Gen 6/7 on ZoneClock", conf: high}
+    - {id: d-cost, text: "Per output we are not cheapest: TI lists a 2-output crystal-free clock at $3.55 (1 k); our 8-output Si5332-AM lists at about $4–10 plus a crystal", vs: TI, offset: "Sell the whole tree: one ZC-12 replaces generator + crystal + XOs + a buffer", conf: low}
+    - {id: d-ja, text: "No automotive jitter attenuator or network synchroniser in the catalogue (all DSPLL jitter attenuators are non-automotive)", vs: "TI, Renesas/SiTime", offset: "Qualify an existing jitter attenuator for imaging radar and SerDes hubs", conf: high}
+    - {id: d-radar, text: "Radar timing is captive: TI, NXP and Infineon radar SoCs run from a 40 MHz crystal through on-chip PLLs, and TI pairs its radar with its own PMIC and clocks", vs: "TI, Infineon, NXP", offset: "Target the central computer and cascaded imaging radar fan-out, not the single-chip radar", conf: med}
+    - {id: d-scale, text: "SiTime + Renesas timing (about $300 M revenue being acquired, close by end 2026) gives one rival MEMS resonators, clock generators, jitter attenuators and a route into Renesas MCUs/SoCs", vs: "SiTime/Renesas", offset: "Win the SoC reference designs (NVIDIA, Qualcomm, Mobileye) before the merged line is reorganised", conf: med}
+  diff_good:
+    - {id: g-tree, text: "'Clock tree on a chip': any frequency on any output with 0 ppm synthesis error, so PCIe 100 MHz, Ethernet 25/125/156.25 MHz and SerDes references come from one part", conf: high}
+    - {id: g-two-res, text: "We have both resonator routes in house: quartz-based DSPLL and integrated BAW", conf: high}
+  diff_bad:
+    - {id: b-empty, text: "Our automotive brochure lists no part for radar, ADAS domain controller, autonomous-driving ECU or lidar", conf: high}
+    - {id: b-no-osc, text: "No automotive XO or MEMS/BAW oscillator, while SiTime, TI (CDC6C-Q1) and Microchip sell them", conf: med}
+
+architecture:
+  columns: [Skyworks, TI, SiTime (+ Renesas timing)]
+  rows:
+    - ["Built as", "Crystal + MultiSynth generator (Si5332-AM, up to 12 outputs) + PCIe buffers (Si5325x)", "Crystal-free BAW generator (LMK3H0102-Q1), BAW oscillators; radar SoC + PMIC + clocks from one vendor", "MEMS-resonator clock generator (Chorus SiT9128x), MEMS XOs; adds Renesas generators, buffers and jitter attenuators"]
+    - ["Grade / PCIe", "Grade 2 · generators Gen 5, buffers Gen 6", "Grade 2 · Gen 7", "Grade 1 · Gen 6"]
+    - ["Radar", "Not listed; crystal at the radar SoC", "Captive: 40 MHz crystal into the AWR SoC PLL; fan-out buffer for cascades", "Lists lidar and radar"]
+    - ["Zonal fit", "Good in central compute and camera; nothing at the edge", "Good: crystal-free and system bundle", "Good: Grade 1, safety monitors, broadest after the deal"]
+  note: "From the BizDev block-diagram library: TI ADAS domain controller (clocking: crystal_oscillator, clock_buffer, clock_generator, pcie_buffer; raw sensor interface: SerDes, Ethernet PHY), NXP 77 GHz radar (crystal → transceiver), TI TCU (clocking). Central compute + zones: GM 2028, VW/Rivian 2027, Stellantis STLA One 2027, BMW Neue Klasse (high)."
+
+market_now:
+  - {figure: "Light-vehicle production", value: "92.1 M (2026)", source: "S&P Global Mobility, Mar 2026 (radio case)", conf: high}
+  - {figure: "Automotive timing SAM (SiTime's view)", value: "$400–500 M (2024)", source: "SiTime Q3 2024 earnings call, via search", conf: low}
+  - {figure: "Timing parts per car", value: "up to 60, rising to 100 (SiTime claim)", source: "SiTime, via search", conf: low}
+  - {figure: "Renesas timing business", value: "≈$300 M revenue; ~75 % data centre/comms, rest industrial + automotive; sold to SiTime for $1.5 B + 4.13 M shares, close by end 2026", source: "evertiq, 5 Feb 2026", conf: med}
+  - {figure: "SiTime", value: "$326.7 M revenue 2025; auto/industrial/aerospace $24.5 M in Q4 2025 (22 %)", source: "SiTime results release, via search", conf: low}
+  - {figure: "Radar modules", value: "166 M (2024); ~5 radars per car by 2030", source: "Yole press release, Nov 2025", conf: med}
+  - {figure: "ECUs", value: "Halved (Stellantis) to 'dozens into one' (GM); 4 central computers + zones (BMW)", source: "OEM releases 2025–2026", conf: high}
+  - {figure: "Public list prices", value: "TI LMK3H0102-Q1 $3.55 (1 k); Si5332-AM 8-output ≈$4.1–10.1 (1 k)", source: "ti.com; distributor snippets", conf: low}
+
+outlook:
+  - {id: o-central, text: "Most new platforms from 2027–2028 use a few central computers plus zones; clock content moves from many edge XOs to fewer multi-output, low-jitter trees (est)", basis: "GM 2028, VW/Rivian 2027, Stellantis 2027, BMW Neue Klasse; ECUs cut 2–10×", conf: med}
+  - {id: o-crystalfree, text: "Crystal-free (BAW or MEMS) clocks become the default for new automotive PCIe designs by about 2029 (est)", basis: "TI LMK3H0102-Q1 and SiTime Chorus already AEC-Q100; TI claims up to 5 XOs replaced. Against: quartz is cheap and proven", conf: low}
+  - {id: o-pcie, text: "ADAS computers move to PCIe Gen 5/6 between SoC, accelerators and storage; Gen 5 alone will not win new sockets after 2028 (est)", basis: "Vendors already list Gen 6 (Microchip, Diodes, SiTime, our buffers) and Gen 7 (TI)", conf: low}
+  - {id: o-radar, text: "Satellite and imaging radar add SerDes/Ethernet links and multi-chip reference distribution, but the radar-module clock stays a crystal on the SoC (est)", basis: "ART satellite radar paper (Infineon/JKU); TI cascade note uses a shared 40 MHz clock with a fan-out buffer", conf: med}
+  - {id: o-consol, text: "Timing consolidates: SiTime + Renesas becomes the broadest timing supplier from 2027; MEMS resonators may be built into Renesas MCUs/SoCs, making some sockets captive (est)", basis: "Deal and MOU announced Feb 2026; closing pending", conf: med}
+  - {id: o-sync, text: "Coherent sensor fusion raises demand for time synchronisation (gPTP/802.1AS) across zones, but most of it may stay inside Ethernet switches and PHYs (est)", basis: "Our inference from central fusion; no public OEM clock specification found", conf: low}
+
+features:
+  - {id: f-ref, feature: "Reference clock trees for the main ADAS SoCs (NVIDIA Thor, Qualcomm Ride, Mobileye, R-Car) with Si5332-AM + Si5325x", benefit: "Gets us into the SoC vendor's BoM before the zonal design-ins close", distance: 1, why: "Today's parts; documentation and validation only"}
+  - {id: f-gen6, feature: "Characterise and publish PCIe Gen 6 compliance for Si5332-AM / Si5225x-AM", benefit: "Removes the Gen 5 objection where the jitter already meets it", distance: 1, why: "Measurement and datasheet; margin not stated, may fail"}
+  - {id: f-safety, feature: "ISO 26262 safety manual and FMEDA for SmartClock", benefit: "Matches SiTime FailSafe in safety reviews", distance: 1, why: "Documentation on existing monitors"}
+  - {id: f-radar-an, feature: "Cascaded imaging-radar reference: 40 MHz reference fan-out and sync with Si5335x-AM buffers (0.1 ps additive jitter)", benefit: "First Skyworks part in the empty radar row", distance: 1, why: "Today's buffers; application note and lab data"}
+  - {id: f-sip, feature: "Si5332-AM with the crystal inside the package", benefit: "Removes crystal layout and qualification for the customer now", distance: 2, why: "Module from existing die and a bought crystal"}
+  - {id: f-ja, feature: "AEC-Q100 version of an existing DSPLL jitter attenuator", benefit: "Answers imaging radar and multi-gigabit SerDes hubs", distance: 2, why: "Requalification of an existing die; becomes 3 if the die needs changes for 105 °C"}
+  - {id: f-xo, feature: "Automotive differential XO line (Si5xx-AM)", benefit: "Covers the remaining XO sockets in zones and radar hubs", distance: 2, why: "Existing oscillators, automotive qualification and grading"}
+  - {id: f-zc, feature: "ZoneClock: crystal-free automotive clock tree (BAW resonator + MultiSynth), 4–12 outputs, Gen 6", benefit: "Answers TI LMK3H0102-Q1 and SiTime Chorus; one part replaces generator, crystal and XOs", distance: 3, why: "New chip from our BAW timing (SKY631xx) and Si5332 IP; automotive BAW qualification is new"}
+  - {id: f-g1, feature: "Grade 1 (–40 to 125 °C) on the new die", benefit: "Opens hot locations and matches SiTime", distance: 3, why: "Design and qualification; need not stated by OEMs"}
+  - {id: f-sync, feature: "Automotive network synchroniser (802.1AS/gPTP-aware DSPLL) for zonal sensor time sync", benefit: "Content in coherent-fusion architectures", distance: 3, why: "NetSync IP exists; automotive part is new; demand unproven"}
+  - {id: f-mmw, feature: "Radar LO / chirp synthesis outside the radar SoC", benefit: "Would enter the radar module itself", distance: 4, why: "Not recommended: radar RF and PLLs are integrated in CMOS SoCs"}
+
+product:
+  name: "ZoneClock ZC-12 / ZC-4 (crystal-free automotive clock tree)"
+  spec:
+    - ["Outputs", "ZC-12: 12 differential (or 24 LVCMOS) · ZC-4: 4 differential; per-output format LVDS, LP-HCSL, HCSL, LVCMOS; 85/100 Ω"]
+    - ["Frequencies", "Any frequency to 333 MHz: PCIe 100 MHz (SSC), Ethernet 25/125/156.25 MHz, SerDes and SoC references"]
+    - ["Targets (est)", "PCIe Gen 1–6 common clock, SRNS and SRIS; ≤100 fs rms; Grade 1 (–40 to 125 °C); AEC-Q100"]
+    - ["Safety", "SmartClock monitors, fault pins to the safety manager, ISO 26262 safety manual (ASIL-B ready, est)"]
+    - ["Reuses", "Si5332 MultiSynth and output drivers, SmartClock, SKY631xx BAW resonator, ClockBuilder Pro"]
+    - ["New", "Automotive-qualified BAW resonator package, Grade 1 design, Gen 6 jitter budget"]
+    - ["Replaces", "Si5332-AM + crystal + 1–3 XOs + one fan-out buffer per computer or zone"]
+    - ["Answers", "TI LMK3H0102-Q1, SiTime Chorus SiT9128x, Renesas 5P49V60"]
+    - ["Delivery (est)", "Steps now (references, Gen 6 data, crystal-in-package): 6–12 months · ZoneClock: 24–36 months"]
+
+prices:
+  method: "Anchor on public list prices (low confidence) → value of what the part replaces → volume range. Assumption: automotive contract prices are 30–50 % below these 1 k-reel list prices. Crystal and XO values are not public in our sources (not stated); their allowance is our judgement. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "TI LMK3H0102-Q1 (2 outputs, crystal-free, Gen 7)", price: "$3.55", qty: "1 k"}
+    - {part: "Skyworks Si5332D-D-AM2R (8 outputs, needs crystal)", price: "$10.08", qty: "1 k (distributor snippet)"}
+    - {part: "Skyworks Si5332 variant", price: "$4.13", qty: "1 k+ (distributor snippet)"}
+    - {part: "SiTime Chorus, SiT9396 · Microchip SYA75608 · Diodes PI6CG33xQ", price: "not stated", qty: "—"}
+  items:
+    - {id: p-zc12, item: "ZC-12 (12 outputs, crystal-free, Grade 1)", entry: 4.0, target: 5.0, premium: 6.5, basis: "Si5332-AM 8–12 outputs ≈$2–7 contract (from $4.1–10.1 list) plus crystal and 1–3 XOs avoided (judgement ≈$1–3)"}
+    - {id: p-zc4, item: "ZC-4 (4 outputs, crystal-free)", entry: 1.6, target: 2.0, premium: 2.6, basis: "TI LMK3H0102-Q1 2 outputs ≈$1.8–2.5 contract (from $3.55 list); we offer 2× the outputs at about the same price"}
+    - {id: p-sip, item: "Si5332-AM with crystal in package (step 1)", entry: 3.0, target: 3.8, premium: 4.8, basis: "Today's Si5332-AM contract (est ≈$2–7) plus a small premium for the integrated crystal"}
+
+volumes:
+  - {label: "ZC-12, 5 M a year (one per central computer on 2028–2030 platforms)", units: 5000000, price: p-zc12}
+  - {label: "ZC-12, 15 M a year (two per car on ~7–8 M zonal cars)", units: 15000000, price: p-zc12}
+  - {label: "ZC-4, 20 M a year (zones, camera and radar hubs, ~2–4 per car)", units: 20000000, price: p-zc4}
+  - {label: "Crystal-in-package Si5332-AM, 3 M a year (bridge to 2028)", units: 3000000, price: p-sip}
+
+attach:
+  - {id: t-soc, lever: "Clock trees in SoC vendor reference designs (NVIDIA, Qualcomm, Mobileye, Renesas R-Car); TI does this for its own radar and processors (judgement for the others)", effort: med}
+  - {id: t-tier1, lever: "Design-in with consolidating Tier-1s that now build both cockpit and ADAS compute (Harman + ZF ADAS)", effort: med}
+  - {id: t-cbp, lever: "Keep free factory-programmed custom part numbers and ClockBuilder Pro, which shorten automotive PPAP (evidence: our datasheet)", effort: low}
+  - {id: t-bundle, lever: "Bundle clocks with our isolation and connectivity parts per zonal controller (judgement)", effort: low}
+  - {id: t-longevity, lever: "Publish a longevity commitment for automotive timing during the SiTime–Renesas transition (judgement)", effort: low}
+
+risks:
+  - "Can our BAW resonator meet automotive Grade 1 drift and ageing? Data not public; internal test needed."
+  - "SiTime + Renesas may bundle timing with Renesas R-Car and MCUs (MOU), closing sockets."
+  - "Radar timing stays captive; satellite radar adds links but no clocks inside the module."
+  - "No public central-compute clock BoM: number of PCIe and Ethernet clock domains per computer is not stated."
+  - "Unknown from public data: our die cost, jitter margin at Gen 6, contract prices of TI and SiTime."

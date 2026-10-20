@@ -78,3 +78,36 @@ reports:
       pack, standalone module reference), about $0.75–1.5 per car as a licence or $4–6 per standalone CPD chip (est).
     tags: [UWB, child presence detection, Euro NCAP, in-cabin radar, 60 GHz radar, kick sensor, QPF5100Q, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; Euro NCAP OM protocol v1.2; ~20 public web requests and searches (TI, IEEE MTT-S, Rohde & Schwarz, ABI Research, search snippets)"
+  - slug: auto-clock-tree
+    title: "Automotive clock tree: a crystal-free clock for central compute and zones (2–3 years, reuse only)"
+    kind: idea
+    area: Automotive RF
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks offer next for clocking central computers, zonal controllers and satellite radar (PCIe, automotive Ethernet, SerDes references), given TI, SiTime (buying Renesas timing), Microchip and Diodes, with a 2–3-year turnaround and reuse of existing timing technology, and at what price?"
+    summary: >-
+      Business-case draft. Our advantage is the broadest Grade 2 automotive PCIe clock line (Si5332-AM 6/8/12 outputs,
+      Si5225x generators, Si5325x Gen 1–6 buffers), already listed for central compute; our disadvantages are a crystal on
+      every Si5332-AM, Grade 2 only, Gen 5 generators, no automotive jitter attenuator or oscillator, and captive radar
+      timing, while TI (crystal-free BAW, Gen 7, $3.55 list) and SiTime (Grade 1 MEMS, plus Renesas timing) move ahead.
+      Proposal: ZoneClock, a crystal-free automotive clock tree from our BAW resonator and MultiSynth IP, Grade 1, PCIe
+      Gen 6, about $4–6.5 (12 outputs) and $1.6–2.6 (4 outputs) in volume (est), plus SoC reference designs, Gen 6 data
+      and a qualified jitter attenuator now.
+    tags: [automotive, timing, clock generator, PCIe, jitter attenuator, BAW, central compute, zonal, radar, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; Si5332-AM data sheet; ~20 public web requests and searches (TI, SiTime, evertiq, Skyworks, Yole, OEM releases, distributor snippets)"
+  - slug: auto-gnss-l1l5
+    title: "Automotive GNSS: an all-band front end for the roof antenna (2–3 years, reuse only)"
+    kind: idea
+    area: Automotive RF
+    date: 2026-10-20
+    status: draft
+    question: "What should Skyworks (with Qorvo filters) offer next for multi-band GNSS in the shark fin and roof antenna for lane-level ADAS, given TI, Infineon and NXP LNAs, Murata/Taoglas modules and all-band receivers from u-blox, ST and Qualcomm, with a 2–3-year turnaround and reuse of existing technology, and at what price?"
+    summary: >-
+      Business-case draft. Our advantage is SKY5A2110, an automotive L1 + L5 LNA module with filters, B13 notch and a
+      diplexed output (AEC-Q104 Grade 2), and the rest of the roof-module RF set; our disadvantages are L1 + L5 only while
+      receivers are all-band (u-blox ZED-X20K, ST STA8135GA), Grade 2, two RF inputs, and TI's Grade 1 wideband LNA at
+      $0.45 list. Proposal: an all-band automotive GNSS front end (L1 + L2/E6 + L5/E5, one input, one output) from our LNAs
+      and Qorvo SAW/BAW filters, Grade 1, about $1.6–2.6 in volume (est), plus a single-input L1 + L5 variant at about
+      $0.9–1.4 and a roof-module reference design.
+    tags: [automotive, GNSS, L1, L5, L2, E6, LNA, SAW, BAW, shark fin, ADAS, pricing, architecture]
+    sources: "BizDev catalogue and block-diagram library; SKY5A2110 data sheet; ~15 public web requests and searches (TI, u-blox, ST, ABI public summaries, Infineon, distributor snippets)"

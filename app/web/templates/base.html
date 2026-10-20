@@ -38,6 +38,23 @@
   {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}
   {% block content %}{% endblock %}
 </main>
+<div id="fb" class="fb">
+  <button type="button" class="fb-open" aria-expanded="false" aria-controls="fb-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback</button>
+  <div class="fb-panel" id="fb-panel" hidden role="dialog" aria-label="Send feedback">
+    <div class="fb-head"><b>Feedback</b><button type="button" class="fb-close" aria-label="Close">×</button></div>
+    <p class="small muted">On: <span class="fb-where"></span></p>
+    <form>
+      <div class="fb-kinds small">{% for k, label in [('problem', 'Something is wrong'), ('idea', 'Idea'), ('data', 'Data'), ('question', 'Question')] %}<label><input type="radio" name="kind" value="{{ k }}"{{ ' checked' if k == 'idea' }}> {{ label }}</label>{% endfor %}</div>
+      <textarea name="text" rows="4" required maxlength="4000" placeholder="What should change, what is wrong, or what are you missing here?" aria-label="Feedback"></textarea>
+      <label class="fb-sel small" hidden><input type="checkbox" name="withsel" checked> Include the selected text: “<span></span>”</label>
+      <input name="author" maxlength="100" placeholder="Your name (optional)" aria-label="Your name">
+      <button type="submit" class="small-btn">Send</button>
+    </form>
+    <p class="fb-msg small" aria-live="polite"></p>
+    <div class="fb-mine small" hidden><b>Answers to your earlier feedback</b><ul></ul></div>
+  </div>
+</div>
+<script src="/static/feedback.js" defer></script>
 <script>
   // Suggestion list: close on Escape or a click outside the search.
   const clear = () => document.querySelectorAll("#suggestions").forEach(el => (el.innerHTML = ""));

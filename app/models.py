@@ -469,3 +469,24 @@ class PipelineDraft(Base):
     case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class SiteFeedback(Base):
+    """Feedback from the floating button on every page: what the person wrote and where they were. Similar items
+    are grouped in the daily digest (Data management > Site feedback); a response is written once per group and
+    shown to the people who sent it."""
+
+    __tablename__ = "site_feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(String(20), default="idea")  # problem | idea | data | question
+    path: Mapped[str] = mapped_column(String(500))  # page path with query string
+    page: Mapped[str | None] = mapped_column(String(300))  # section › page › heading, as shown in the panel
+    selection: Mapped[str | None] = mapped_column(Text)  # text selected on the page, when included
+    author: Mapped[str | None] = mapped_column(String(100))
+    client: Mapped[str | None] = mapped_column(String(40), index=True)  # random id kept in the browser
+    status: Mapped[str] = mapped_column(String(20), default="new")  # new | planned | done | wont | duplicate
+    response: Mapped[str | None] = mapped_column(Text)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

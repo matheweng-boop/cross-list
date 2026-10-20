@@ -28,6 +28,7 @@ NAV = (
     ("knowledge", "Engineering knowledge", (
         ("Knowledge search", "/technical", "Search application notes and specification guides together"),
         ("Specification guides", "/engineering", "What each specification means and how to compare it"),
+        ("RF fundamentals", "/rf-notes", "RF specifications, components, architectures and technologies explained"),
         ("Technology platforms", "/business/capabilities", "Public Skyworks / Qorvo technologies"),
     )),
 )  # fmt: skip
@@ -86,6 +87,7 @@ PLACES = {
     "/technical": ("knowledge", "/technical"),
     "/notes": ("knowledge", "/technical"),
     "/engineering": ("knowledge", "/engineering"),
+    "/rf-notes": ("knowledge", "/rf-notes"),
     "/impact": ("knowledge", "/engineering"),
 }
 

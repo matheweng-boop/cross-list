@@ -49,3 +49,22 @@ def test_page(client):
     r = client.get("/business/rf-coverage?fn=lna&band=L")
     assert r.status_code == 200
     assert "RF coverage by band" in r.text and 'id="slot"' in r.text
+
+
+def test_rf_notes_page_and_search(client):
+    from app.services import notes_search, rf_notes
+
+    assert len(rf_notes.topics()) >= 40
+    assert len({t["id"] for t in rf_notes.topics()}) == len(rf_notes.topics())
+    r = client.get("/rf-notes")
+    assert r.status_code == 200 and 'id="cascaded_noise_figure"' in r.text
+    assert any(h.source == "RF note" for h in notes_search.search("reflectionless filter"))
+
+
+def test_rf_templates_completed_from_public_diagrams():
+    t = blocks.templates()
+    ew = next(x for x in t if x["name"].startswith("Electronic warfare receiver / jammer"))
+    assert {"preselector", "jammer_tx"} <= {g["id"] for g in ew["groups"]}
+    assert ["antenna", "preselector", "RX"] in ew["links"]
+    names = [x["name"] for x in t]
+    assert any("DOCSIS 4.0 line extender" in n for n in names) and any("vector network analyzer" in n for n in names)

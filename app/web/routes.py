@@ -549,6 +549,13 @@ def notes_search_page(request: Request, q: str = ""):
     )
 
 
+@router.get("/rf-notes", response_class=HTMLResponse)
+def rf_notes_page(request: Request):
+    from app.services import rf_notes
+
+    return templates.TemplateResponse(request, "engineering/rf_notes.html", {"groups": rf_notes.by_category()})
+
+
 @router.get("/engineering", response_class=HTMLResponse)
 def engineering_index(request: Request):
     return templates.TemplateResponse(request, "engineering/index.html", {"notes": engineering.index()})

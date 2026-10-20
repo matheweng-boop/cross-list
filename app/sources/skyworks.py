@@ -18,8 +18,7 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
-import yaml
-
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.parsing.datasheet import detect_revision
 
@@ -95,7 +94,7 @@ def fetch_lifecycle(prefix: str) -> list[tuple[str, str]]:
 
 
 def fetch(facts_file: Path = FACTS_FILE, log=print) -> None:
-    facts = yaml.safe_load(facts_file.read_text())
+    facts = yamlio.load(facts_file.read_text())
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     DATASHEET_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -275,7 +274,7 @@ def _enable_pins(ctl: list[str]) -> str:
 
 
 def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path = DATASHEET_DIR) -> dict:
-    facts = yaml.safe_load(facts_file.read_text())
+    facts = yamlio.load(facts_file.read_text())
     records = parse_tables(raw_dir)
     lifecycle_path = raw_dir / "lifecycle.json"
     statuses = json.loads(lifecycle_path.read_text())["statuses"] if lifecycle_path.exists() else {}

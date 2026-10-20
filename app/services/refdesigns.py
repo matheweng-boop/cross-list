@@ -5,8 +5,7 @@ from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
-
+from app import yamlio
 from app.services import blocks
 
 DIR = Path(__file__).resolve().parents[2] / "data" / "reference_designs"
@@ -20,24 +19,24 @@ DOC_LABELS = {
 
 
 @lru_cache
+def _files() -> tuple[tuple[Path, dict], ...]:
+    """Every design file, parsed once per process."""
+    paths = sorted(p for p in DIR.glob("*.yaml") if not p.stem.endswith("_applications"))
+    return tuple((path, yamlio.load(path.read_text()) or {}) for path in paths)
+
+
+@lru_cache
 def sources() -> tuple[dict, ...]:
     """The `source` block of every design file (vendor, pages, collected, method)."""
-    out = []
-    for path in sorted(DIR.glob("*.yaml")):
-        if path.stem.endswith("_applications"):
-            continue
-        data = yaml.safe_load(path.read_text()) or {}
-        out.append({**(data.get("source") or {}), "file": path.name, "n": len(data.get("designs") or [])})
-    return tuple(out)
+    return tuple({**(data.get("source") or {}), "file": path.name, "n": len(data.get("designs") or [])}
+                 for path, data in _files())  # fmt: skip
 
 
 @lru_cache
 def designs() -> tuple[dict, ...]:
     out = []
-    for path in sorted(DIR.glob("*.yaml")):
-        if path.stem.endswith("_applications"):
-            continue
-        for d in (yaml.safe_load(path.read_text()) or {}).get("designs") or []:
+    for _path, data in _files():
+        for d in data.get("designs") or []:
             if d.get("id") and d.get("url"):
                 d["_text"] = " ".join(
                     str(x)

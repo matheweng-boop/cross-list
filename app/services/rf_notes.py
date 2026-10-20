@@ -3,8 +3,7 @@
 
 from functools import lru_cache
 
-import yaml
-
+from app import yamlio
 from app.config import PROJECT_ROOT
 
 FILE = PROJECT_ROOT / "data" / "engineering_rf_notes.yaml"
@@ -14,7 +13,7 @@ CATEGORIES = {"rf_specs": "RF specifications", "components": "Components", "arch
 
 @lru_cache
 def topics() -> tuple[dict, ...]:
-    return tuple((yaml.safe_load(FILE.read_text()) or {}).get("topics") or []) if FILE.exists() else ()
+    return tuple((yamlio.load(FILE.read_text()) or {}).get("topics") or []) if FILE.exists() else ()
 
 
 def by_category() -> list[tuple[str, str, list[dict]]]:

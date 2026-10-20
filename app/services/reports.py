@@ -4,10 +4,10 @@ background template (<slug>.background.html: the detail behind the report) and q
 from datetime import UTC, date, datetime, timedelta
 from functools import lru_cache
 
-import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import ReportQuestion
 from app.services.feedback import similar_text
@@ -20,7 +20,7 @@ STATUSES = {"draft": "Draft, not reviewed", "reviewed": "Reviewed", "archived": 
 
 @lru_cache
 def reports() -> tuple[dict, ...]:
-    rows = (yaml.safe_load(FILE.read_text()) or {}).get("reports") or [] if FILE.exists() else []
+    rows = (yamlio.load(FILE.read_text()) or {}).get("reports") or [] if FILE.exists() else []
     rows = [r for r in rows if (BODIES / f"{r['slug']}.html").exists()]
     return tuple(sorted(rows, key=lambda r: str(r.get("date") or ""), reverse=True))
 

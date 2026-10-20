@@ -4,8 +4,7 @@ range covers each band."""
 from collections import defaultdict
 from functools import lru_cache
 
-import yaml
-
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.services import blocks
 from app.services.rf_coverage import frequency_ranges
@@ -41,7 +40,7 @@ GROUP_NOTES = {
 
 @lru_cache
 def data() -> dict:
-    return yaml.safe_load(FILE.read_text()) or {"groups": {}, "bands": []}
+    return yamlio.load(FILE.read_text()) or {"groups": {}, "bands": []}
 
 
 def band(band_id: str) -> dict | None:

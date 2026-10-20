@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from html import escape, unescape
 
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.services.engineering import NOTES, NOTES_DIR
 
@@ -47,9 +48,7 @@ def _index() -> sqlite3.Connection:
                 (n["title"], n["text"], "Skyworks app note", n["id"], f"{n['url']}#page={n['page']}", n["page"])
             )
     if TI_NOTES_FILE.exists():
-        import yaml
-
-        for n in (yaml.safe_load(TI_NOTES_FILE.read_text()) or {}).get("appnotes") or []:
+        for n in (yamlio.load(TI_NOTES_FILE.read_text()) or {}).get("appnotes") or []:
             text = " ".join(
                 [n.get("summary") or "", n.get("type") or "", (n.get("area") or "").replace("_", " "),
                  " ".join(f.replace("_", " ") for f in n.get("skyworks_qorvo_functions") or [])]

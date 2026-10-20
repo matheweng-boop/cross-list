@@ -9,8 +9,7 @@ entry per part number.
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
-
+from app import yamlio
 from app.config import PROJECT_ROOT
 
 DEVICES_DIR = PROJECT_ROOT / "data" / "broadcast" / "devices"
@@ -23,7 +22,7 @@ STANDARDS = ("AM", "FM", "LW", "SW", "WB", "RDS", "HD", "DAB", "DMB", "DRM", "CD
 
 
 def _load(path: Path) -> dict:
-    doc = yaml.safe_load(path.read_text()) or {}
+    doc = yamlio.load(path.read_text()) or {}
     doc["doc"] = path.stem
     return doc
 
@@ -67,7 +66,7 @@ def catalog() -> list[dict]:
 def tuner_features() -> dict:
     """Tuner feature sets and layouts (data/broadcast/tuner_features.yaml, application guidance)."""
     path = DEVICES_DIR.parent / "tuner_features.yaml"
-    return yaml.safe_load(path.read_text()) if path.exists() else {"features": {}, "layouts": {}, "tuners": []}
+    return yamlio.load(path.read_text()) if path.exists() else {"features": {}, "layouts": {}, "tuners": []}
 
 
 def _apply_tuner_features(out: list[dict]) -> None:
@@ -145,7 +144,7 @@ def configurations() -> dict:
     (what is populated and how it is wired) and software listening modes (what each tuner and
     demodulator channel does)."""
     path = DEVICES_DIR.parent / "configurations.yaml"
-    return yaml.safe_load(path.read_text()) if path.exists() else {"regions": [], "hardware": [], "software": []}
+    return yamlio.load(path.read_text()) if path.exists() else {"regions": [], "hardware": [], "software": []}
 
 
 @lru_cache
@@ -153,14 +152,14 @@ def guidance() -> dict:
     """Application guidance from the user (data/broadcast/guidance.yaml), kept apart from the
     data-brief facts: clock tree, ZIF / CLKO loading, licences, extra parts on named pins."""
     path = DEVICES_DIR.parent / "guidance.yaml"
-    return yaml.safe_load(path.read_text()) if path.exists() else {}
+    return yamlio.load(path.read_text()) if path.exists() else {}
 
 
 @lru_cache
 def explanations() -> dict:
     """Short explanations with an example or trade-off, shown in the editor (data/broadcast/explanations.yaml)."""
     path = DEVICES_DIR.parent / "explanations.yaml"
-    return yaml.safe_load(path.read_text()) if path.exists() else {}
+    return yamlio.load(path.read_text()) if path.exists() else {}
 
 
 def standards_of(device: dict) -> list[str]:

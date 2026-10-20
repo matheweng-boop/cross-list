@@ -9,10 +9,10 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import Manufacturer, ManufacturerRole, Part
 from app.services import broadcast
@@ -22,7 +22,7 @@ BLOCKS_DIR = PROJECT_ROOT / "data" / "blocks"
 
 def _yaml(name: str):
     path: Path = BLOCKS_DIR / name
-    return yaml.safe_load(path.read_text()) if path.exists() else None
+    return yamlio.load(path.read_text()) if path.exists() else None
 
 
 @lru_cache
@@ -225,13 +225,10 @@ def _catalog_files() -> list[Path]:
     return files
 
 
-_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # libyaml when available: the catalogues are several MB
-
-
 @lru_cache
 def _catalog_docs() -> tuple[tuple[Path, dict], ...]:
     """Each catalogue file parsed once per process."""
-    return tuple((path, yaml.load(path.read_text(), Loader=_Loader) or {}) for path in _catalog_files())
+    return tuple((path, yamlio.load(path.read_text()) or {}) for path in _catalog_files())
 
 
 @lru_cache

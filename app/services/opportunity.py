@@ -24,10 +24,10 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app import yamlio
 from app.models import BusinessInput, Manufacturer, ManufacturerRole, Part, PartMapping
 from app.services import blocks
 
@@ -372,14 +372,14 @@ def overview(apps: list[Application], asp: dict, vol: dict) -> dict:
 @lru_cache
 def competition() -> dict[str, dict]:
     """Established suppliers per function from public catalogues: {fn: {crowding, vendors, note}}. Not market share."""
-    return (yaml.safe_load(_COMPETITION.read_text()) if _COMPETITION.exists() else None) or {}
+    return (yamlio.load(_COMPETITION.read_text()) if _COMPETITION.exists() else None) or {}
 
 
 @lru_cache
 def explanations() -> dict:
     """Terms and "About this page" texts for the Business opportunity pages (data/business/explanations.yaml)."""
     path = _COMPETITION.parent / "explanations.yaml"
-    return (yaml.safe_load(path.read_text()) if path.exists() else None) or {"terms": {}, "pages": {}}
+    return (yamlio.load(path.read_text()) if path.exists() else None) or {"terms": {}, "pages": {}}
 
 
 def sources(apps: list[Application]) -> dict:
@@ -488,7 +488,7 @@ FIT_ORDER = {"high": 0, "medium": 1, "low": 2}
 def evidence(topic: str) -> dict[str, dict]:
     """Background evidence per function (data/business/evidence/<topic>.yaml)."""
     path = _COMPETITION.parent / "evidence" / f"{topic}.yaml"
-    return (yaml.safe_load(path.read_text()) if path.exists() else None) or {}
+    return (yamlio.load(path.read_text()) if path.exists() else None) or {}
 
 
 # system parts in the diagrams that are not semiconductor development targets
@@ -507,7 +507,7 @@ _NOT_CHIPS = {
 @lru_cache
 def technology() -> dict[str, dict]:
     """Per function: proximity 0-3 to Skyworks / Qorvo technology, technologies and reasoning (public knowledge)."""
-    return (yaml.safe_load(_TECHNOLOGY.read_text()) if _TECHNOLOGY.exists() else None) or {}
+    return (yamlio.load(_TECHNOLOGY.read_text()) if _TECHNOLOGY.exists() else None) or {}
 
 
 def technology_fit(apps: list[Application]) -> list[dict]:
@@ -565,18 +565,20 @@ def technology_fit(apps: list[Application]) -> list[dict]:
 def customers() -> dict[str, dict]:
     """Application segments with the companies that build them: {segment: {label, match, customers, source}}."""
     path = _COMPETITION.parent / "customers.yaml"
-    return ((yaml.safe_load(path.read_text()) if path.exists() else None) or {}).get("segments") or {}
+    return ((yamlio.load(path.read_text()) if path.exists() else None) or {}).get("segments") or {}
 
 
-def segments_of(name: str) -> list[str]:
+@lru_cache(maxsize=4096)
+def segments_of(name: str) -> tuple[str, ...]:
     low = name.lower()
-    return [k for k, s in customers().items() if any(str(m).lower() in low for m in s.get("match") or [])]
+    return tuple(k for k, s in customers().items() if any(str(m).lower() in low for m in s.get("match") or []))
 
 
 def hunt_by_segment(apps: list[Application]) -> list[dict]:
+    seg = {a.name: segments_of(a.name) for a in apps}  # each application matched once, not once per segment
     out = []
     for k, s in customers().items():
-        matched = [a for a in apps if k in segments_of(a.name)]
+        matched = [a for a in apps if k in seg[a.name]]
         out.append({"id": k, "label": s.get("label", k), "apps": matched, "customers": s.get("customers") or [],
                     "source": s.get("source", ""), "check": s.get("check")})  # fmt: skip
     return sorted(out, key=lambda e: (-len(e["apps"]), e["label"]))
@@ -603,7 +605,7 @@ def hunt_for_function(apps: list[Application], fn: str) -> list[dict]:
 @lru_cache
 def capabilities() -> dict[str, dict]:
     path = _COMPETITION.parent / "capabilities.yaml"
-    return ((yaml.safe_load(path.read_text()) if path.exists() else None) or {}).get("platforms") or {}
+    return ((yamlio.load(path.read_text()) if path.exists() else None) or {}).get("platforms") or {}
 
 
 def platforms_for(fn: str) -> list[tuple[str, dict]]:

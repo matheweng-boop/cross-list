@@ -7,8 +7,7 @@ every orderable code that starts with UCC20225AQ1... as well as the exact code."
 import re
 from functools import lru_cache
 
-import yaml
-
+from app import yamlio
 from app.config import PROJECT_ROOT
 from app.matching.engine import pin_positions
 
@@ -27,7 +26,7 @@ def _key(mpn: str) -> str:
 
 @lru_cache
 def _notes() -> list[dict]:
-    return yaml.safe_load(NOTES_FILE.read_text()) or [] if NOTES_FILE.exists() else []
+    return yamlio.load(NOTES_FILE.read_text()) or [] if NOTES_FILE.exists() else []
 
 
 def notes_for(reference: str, candidate: str) -> list[dict]:

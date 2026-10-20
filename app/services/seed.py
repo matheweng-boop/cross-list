@@ -4,10 +4,10 @@ import copy
 from datetime import date
 from pathlib import Path
 
-import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app import yamlio
 from app.matching.rules import load_all_rules
 from app.models import (
     Datasheet,
@@ -50,7 +50,7 @@ def _num(value) -> float | None:
 
 
 def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
-    data = yaml.safe_load(Path(path).read_text())
+    data = yamlio.load(Path(path).read_text())
     rules = load_all_rules()
 
     mfrs = {}

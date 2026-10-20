@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-LOCAL_ONLY = (".venv", "venv", "var", "node_modules", ".pytest_cache", ".ruff_cache")
+LOCAL_ONLY = (".venv", "venv", "var", "node_modules", ".pytest_cache", ".ruff_cache", "__pycache__")
+LOCAL_SUFFIXES = (".db", ".pyc", ".sqlite", ".bundle")
 
 
 def _tracked() -> list[tuple[str, str]]:
@@ -24,5 +25,6 @@ def test_no_symlinks_committed():
 
 
 def test_no_local_environment_committed():
-    bad = [path for _, path in _tracked() if path.split("/")[0] in LOCAL_ONLY]
+    # any folder level, not just the top: app/__pycache__/x.pyc or tools/.venv are local too
+    bad = [path for _, path in _tracked() if set(path.split("/")) & set(LOCAL_ONLY) or path.endswith(LOCAL_SUFFIXES)]
     assert not bad, f"local environment files are committed: {bad[:10]}"

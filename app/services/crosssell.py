@@ -13,6 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Part
+from app.partnumbers import normalize_pn
 from app.services import blocks
 from app.services import opportunity as op
 from app.services import rf_coverage as rf
@@ -53,28 +54,24 @@ _ALIASES = {"dc/dc": "dcdc", "dc-dc": "dcdc", "ac/dc": "acdc", "ac-dc": "acdc", 
             "ble": "bluetooth", "satcom": "satellite", "car": "automotive", "server": "datacenter"}  # fmt: skip
 
 
-def _norm(mpn: str) -> str:
-    return re.sub(r"[^A-Z0-9]", "", (mpn or "").upper())
-
-
 def resolve_part(session: Session, q: str) -> dict | None:
     """A part number (exact first, then the closest one that starts with it) -> maker, ours or not, functions,
     automotive grade and RF bands where stated."""
-    key = _norm(q)
+    key = normalize_pn(q)
     if len(key) < 3:
         return None
     hits = []
     for fn, ps in blocks.catalog_parts().items():  # our catalogue (Skyworks, Qorvo)
         for p in ps:
-            k = _norm(p["mpn"])
+            k = normalize_pn(p["mpn"])
             if k == key or k.startswith(key):
                 hits.append((k != key, len(k), p["mpn"], p["manufacturer"], True, fn, p["values"].get("qualification")))
     for p in session.scalars(select(Part).where(func.upper(Part.mpn).like(f"{q.strip().upper()}%")).limit(20)):
         fn = fn_for_family(p.family)
         if fn:
-            hits.append((_norm(p.mpn) != key, len(p.mpn), p.mpn, p.manufacturer.name, p.is_reference, fn, None))
+            hits.append((normalize_pn(p.mpn) != key, len(p.mpn), p.mpn, p.manufacturer.name, p.is_reference, fn, None))
     for p in rf.competitor_parts():
-        k = _norm(p["mpn"])
+        k = normalize_pn(p["mpn"])
         if k == key or k.startswith(key):
             hits.append((k != key, len(k), p["mpn"], p["manufacturer"], False, p["functions"][0], None))
     if not hits:

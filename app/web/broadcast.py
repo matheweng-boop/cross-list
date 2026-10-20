@@ -72,9 +72,6 @@ def delete_configuration(config_id: int, session: Session = Depends(get_session)
 # --- JSON API used by the editor ---------------------------------------------------------
 
 
-@router.get("/api/broadcast/devices")
-def devices_json():
-    return broadcast.catalog()
 
 
 @router.post("/api/broadcast/configs")

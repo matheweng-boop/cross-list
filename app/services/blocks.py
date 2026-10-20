@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import Manufacturer, ManufacturerRole, Part
-from app.services import broadcast
+from app.services import broadcast, lifecycle
 
 BLOCKS_DIR = PROJECT_ROOT / "data" / "blocks"
 
@@ -186,12 +186,6 @@ def function_uses() -> dict[str, list[dict]]:
     return uses
 
 
-def template_groups() -> list[tuple[str, list[tuple[int, dict]]]]:
-    """Templates by category, in file order: [(category, [(index, template)])]."""
-    out: dict[str, list] = {}
-    for i, t in enumerate(templates()):
-        out.setdefault(t.get("category") or "Other", []).append((i, t))
-    return list(out.items())
 
 
 # Catalogue parts (data/catalog/<manufacturer>_parts.yaml, collected from the public product pages): every
@@ -200,7 +194,6 @@ def template_groups() -> list[tuple[str, list[tuple[int, dict]]]]:
 # leaves them out (unknown is not assumed). Parts already in BizDev with full parameters win over the
 # catalogue entry; tuners and demods come from the broadcast data.
 CATALOG_DIR = BLOCKS_DIR.parent / "catalog"
-QORVO_FALLBACK = "research/qorvo_parts.yaml"  # the first 82 verified Qorvo parts, until the full catalogue exists
 FUNCTION_ALIAS = {
     "rf_pa": "power_amplifier", "rf_filter": "filter_saw_baw", "buck": "wide_vin_buck", "rf_vga": "rf_gain_block",
     "catv_amplifier": "rf_gain_block", "rf_beamformer": "beamformer_ic", "rf_vco": "rf_synthesizer",
@@ -208,7 +201,6 @@ FUNCTION_ALIAS = {
     "rf_tunable_capacitor": "antenna_tuner", "rf_power_transistor": "power_amplifier", "rf_equalizer": "rf_passive",
     "rf_modulator": "rf_mixer",
 }  # fmt: skip
-_RISK = re.compile(r"obsolete|last time buy|nrnd|not recommended|discontinued|no new designs", re.I)
 _SPEC_PREF = re.compile(r"config|channel|frequency|isolation|output current|gain|noise figure|insertion|input voltage|"
                         r"interface|rating|power|converters|regulators", re.I)  # fmt: skip
 
@@ -219,10 +211,7 @@ def _norm_mpn(mpn: str) -> str:
 
 
 def _catalog_files() -> list[Path]:
-    files = sorted(CATALOG_DIR.glob("*_parts.yaml")) if CATALOG_DIR.exists() else []
-    if not any(f.name.startswith("qorvo") for f in files) and (BLOCKS_DIR / QORVO_FALLBACK).exists():
-        files.append(BLOCKS_DIR / QORVO_FALLBACK)
-    return files
+    return sorted(CATALOG_DIR.glob("*_parts.yaml")) if CATALOG_DIR.exists() else []
 
 
 @lru_cache
@@ -262,7 +251,7 @@ def catalog_parts() -> dict[str, list[dict]]:
                 "description": desc[:240],
                 "full": False,
                 "preview": "preview" in status.lower(),
-                "risk": bool(_RISK.search(status)),
+                "risk": lifecycle.is_risk(status),
             }  # fmt: skip
             for f in dict.fromkeys(fns):
                 out.setdefault(f, []).append(entry)
@@ -369,7 +358,7 @@ def _candidates_uncached(session: Session, key: str) -> list[dict] | None:
             out.append({"mpn": p.mpn, "manufacturer": p.manufacturer.name, "url": f"/parts/{p.id}",
                         "detail": " · ".join(bits), "values": values, "description": p.description or "",
                         "full": True, "preview": p.lifecycle_status.value == "preview", "pins": bool(p.pinout),
-                        "risk": p.lifecycle_status.value not in ("active", "preview")})  # fmt: skip
+                        "risk": lifecycle.is_risk(p.lifecycle_status.value)})  # fmt: skip
     elif isinstance(src, dict) and "broadcast" in src:
         for d in broadcast.catalog():
             if d["role"] != src["broadcast"]:

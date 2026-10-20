@@ -1,23 +1,18 @@
 """Shared database queries."""
 
-import re
-
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.matching.engine import DEFAULT_MAX_DEVIATIONS, CrossResult, cross, find_crosses
 from app.matching.rules import get_rules
 from app.models import CrossFeedback, FeedbackVerdict, LifecycleStatus, Manufacturer, ManufacturerRole, Part
-
-
-def normalize_pn(text: str) -> str:
-    """Part numbers compare without case, dashes, spaces or slashes; ``*`` is a wildcard."""
-    return re.sub(r"[\s\-_/]", "", text).upper()
+from app.partnumbers import SEPARATORS, normalize_pn  # noqa: F401  (re-exported for callers)
 
 
 def _pn_column():
+    """The part number as normalize_pn compares it, in SQL."""
     col = func.upper(Part.mpn)
-    for ch in ("-", " ", "_", "/"):
+    for ch in SEPARATORS:
         col = func.replace(col, ch, "")
     return col
 

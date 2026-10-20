@@ -4,12 +4,12 @@ recommendation, e.g. why a 13-pin LGA part is accepted against a 14-pin one.
 Part numbers match by prefix after removing dashes and spaces, so a note on "UCC20225A-Q1" covers
 every orderable code that starts with UCC20225AQ1... as well as the exact code."""
 
-import re
 from functools import lru_cache
 
 from app import yamlio
 from app.config import PROJECT_ROOT
 from app.matching.engine import pin_positions
+from app.partnumbers import normalize_pn
 
 NOTES_FILE = PROJECT_ROOT / "data" / "cross_notes.yaml"
 VERDICTS = {
@@ -20,20 +20,16 @@ VERDICTS = {
 }
 
 
-def _key(mpn: str) -> str:
-    return re.sub(r"[\s\-–]", "", mpn or "").upper()
-
-
 @lru_cache
 def _notes() -> list[dict]:
     return yamlio.load(NOTES_FILE.read_text()) or [] if NOTES_FILE.exists() else []
 
 
 def notes_for(reference: str, candidate: str) -> list[dict]:
-    ref, cand = _key(reference), _key(candidate)
+    ref, cand = normalize_pn(reference), normalize_pn(candidate)
     out = []
     for n in _notes():
-        if ref.startswith(_key(n["reference"])) and cand.startswith(_key(n["candidate"])):
+        if ref.startswith(normalize_pn(n["reference"])) and cand.startswith(normalize_pn(n["candidate"])):
             out.append({**n, "verdict_label": VERDICTS.get(n.get("verdict"), n.get("verdict") or "")})
     return out
 

@@ -11,6 +11,8 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 
+from app.partnumbers import normalize_pn
+
 API = "https://api.digikey.com"
 
 
@@ -76,7 +78,7 @@ def parse_product(product: dict) -> Quote:
 
 
 def _same_pn(a: str, b: str) -> bool:
-    return a.replace("-", "").replace(" ", "").upper() == b.replace("-", "").replace(" ", "").upper()
+    return normalize_pn(a) == normalize_pn(b)
 
 
 class DigiKeyClient:

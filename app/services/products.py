@@ -23,7 +23,8 @@ from sqlalchemy.orm import Session
 from app import yamlio
 from app.matching.rules import load_all_rules
 from app.models import Part
-from app.services import blocks
+from app.partnumbers import normalize_pn
+from app.services import blocks, lifecycle
 
 TAXONOMY = Path(__file__).resolve().parents[2] / "data" / "taxonomy.yaml"
 UNCLASSIFIED = ("unclassified", "unclassified")
@@ -64,19 +65,6 @@ def classify(category: str, sub: str) -> tuple[str, str]:
     return UNCLASSIFIED
 
 
-def _lifecycle(status: str) -> str:
-    s = (status or "").lower()
-    if re.search(r"obsolete|discontinu|end of life|eol", s):
-        return "obsolete"
-    if re.search(r"nrnd|not recommended|last time", s):
-        return "nrnd"
-    if "preview" in s or "sampling" in s or "pre-release" in s:
-        return "preview"
-    if s in ("active", "standard", "production", "released", "new"):
-        return "active"
-    return "unknown"
-
-
 @lru_cache
 def _catalogue_index() -> dict[tuple[str, str], dict]:
     out = {}
@@ -92,7 +80,7 @@ def _catalogue_index() -> dict[tuple[str, str], dict]:
             "sub": sid,
             "source_category": r["category"],
             "source_sub": r["sub"],
-            "lifecycle": _lifecycle(r["status"]),
+            "lifecycle": lifecycle.status_class(r["status"]),
             "status_text": r["status"],
             "qualification": "automotive" if auto is True else "not_automotive" if auto is False else "unknown",
             "url": r["url"],
@@ -104,19 +92,19 @@ def _catalogue_index() -> dict[tuple[str, str], dict]:
     return out
 
 
-def _pn(s: str) -> str:
-    return re.sub(r"[^A-Z0-9]", "", s.upper())
-
-
 def search_catalogue(q: str, exclude: set[str] | None = None, limit: int = 200) -> list[dict]:
     """Manufacturer-catalogue records (Skyworks, Qorvo) whose part number contains the query; part numbers that start
     with it first. `exclude` holds normalised part numbers already found among the parts with full data."""
-    qn = _pn(q)
+    qn = normalize_pn(q)
     if len(qn) < 2:
         return []
     exclude = exclude or set()
-    hits = [r for (_, k), r in _catalogue_index().items() if qn in _pn(r["mpn"]) and _pn(r["mpn"]) not in exclude]
-    hits.sort(key=lambda r: (not _pn(r["mpn"]).startswith(qn), len(r["mpn"]), r["mpn"]))
+    hits = [
+        r
+        for (_, k), r in _catalogue_index().items()
+        if qn in normalize_pn(r["mpn"]) and normalize_pn(r["mpn"]) not in exclude
+    ]
+    hits.sort(key=lambda r: (not normalize_pn(r["mpn"]).startswith(qn), len(r["mpn"]), r["mpn"]))
     return hits[:limit]
 
 
@@ -171,7 +159,7 @@ def _index_uncached(session: Session) -> list[dict]:
                 "sub": sid or UNCLASSIFIED[1],
                 "source_category": "BizDev family",
                 "source_sub": rules[p.family].title if p.family in rules else p.family,
-                "lifecycle": {"last_time_buy": "nrnd"}.get(p.lifecycle_status.value, p.lifecycle_status.value),
+                "lifecycle": lifecycle.status_class(p.lifecycle_status.value),
                 "status_text": p.lifecycle_status.value,
                 "qualification": qual,
                 "url": p.product_url or p.datasheet_url or "",

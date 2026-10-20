@@ -9,20 +9,17 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import CrossRequest, Part
+from app.partnumbers import normalize_pn
 from app.web.routes import templates
 
 router = APIRouter()
 STATUSES = {"open": "Open", "in_progress": "In progress", "done": "Done", "cannot": "Cannot cross"}
 
 
-def _key(mpn: str) -> str:
-    return re.sub(r"[\s\-–]", "", mpn or "").upper()
-
-
 def _part_for(session: Session, mpn: str) -> Part | None:
-    key = _key(mpn)
+    key = normalize_pn(mpn)
     for p in session.scalars(select(Part).where(Part.mpn.ilike(f"{mpn.strip()[:4]}%"))).unique():
-        if _key(p.mpn) == key:
+        if normalize_pn(p.mpn) == key:
             return p
     return None
 
@@ -41,12 +38,14 @@ def add_requests(
     mpns: str = Form(...), manufacturer: str = Form(""), note: str = Form(""), back: str = Form(""),
     session: Session = Depends(get_session),
 ):  # fmt: skip
-    open_keys = {_key(r.mpn) for r in session.scalars(select(CrossRequest).where(CrossRequest.status != "done"))}
+    open_keys = {
+        normalize_pn(r.mpn) for r in session.scalars(select(CrossRequest).where(CrossRequest.status != "done"))
+    }
     for mpn in [t.strip() for t in re.split(r"[,;\n\t]+", mpns) if t.strip()][:200]:
-        if _key(mpn) in open_keys:
+        if normalize_pn(mpn) in open_keys:
             continue
         session.add(CrossRequest(mpn=mpn[:100], manufacturer=manufacturer.strip() or None, note=note.strip() or None))
-        open_keys.add(_key(mpn))
+        open_keys.add(normalize_pn(mpn))
     session.commit()
     return RedirectResponse(back if back.startswith("/") else "/requests", status_code=303)
 

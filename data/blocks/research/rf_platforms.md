@@ -3,7 +3,7 @@
 Read 2026-10-19. Machine-readable extracts:
 
 - `data/blocks/research/rf_platforms.yaml`: 22 applications (NXP 10, MediaTek 6, Qualcomm 6), 59 cited docs. Each group says whether it is a socket a Skyworks / Qorvo-type part fills (`socket: true` + `socket_fn`) and how it is known (`drawn` / `text` / `inferred`).
-- `data/catalog/rf_platform_docs.yaml`: 88 documents (vendor, title, URL, date, area, functions, gated, summary). 10 are gated.
+- `data/blocks/research/rf_platform_docs.yaml`: 88 documents (vendor, title, URL, date, area, functions, gated, summary). 10 are gated.
 
 These are platform vendors. Their diagrams show the chipset (SoC, modem, Wi-Fi, UWB, V2X, radio). The front end around the chipset (PA/FEM, LNA, switch, tuner, filter, crystal, PMIC) is the socket.
 

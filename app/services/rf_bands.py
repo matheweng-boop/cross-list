@@ -6,7 +6,7 @@ from functools import lru_cache
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.services import blocks
+from app.services import blocks, lifecycle
 from app.services.rf_coverage import frequency_ranges
 
 FILE = PROJECT_ROOT / "data" / "engineering_rf_bands.yaml"
@@ -64,7 +64,7 @@ def rf_parts() -> tuple[dict, ...]:
                 out.append({"mpn": p["mpn"], "manufacturer": maker,
                             "function": fns[0], "ranges": ranges, "url": p.get("product_url") or "",
                             "description": (p.get("description") or "")[:150],
-                            "risk": bool(blocks._RISK.search(str(p.get("status") or "")))})  # fmt: skip
+                            "risk": lifecycle.is_risk(p.get("status"))})  # fmt: skip
     return tuple(out)
 
 

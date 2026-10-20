@@ -336,17 +336,6 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
     return sorted(rows, key=lambda e: (-e["reach"], -e["adjacent"], e["label"]))
 
 
-def reach_of_portfolio(apps: list[Application]) -> list[dict]:
-    """Functions the portfolio already supports, by how many applications need them (where to push existing
-    products: application engineering / marketing rather than a new product)."""
-    cat = blocks.catalogue()["functions"]
-    c: dict[str, dict] = {}
-    for a in apps:
-        for fn in {p.fn for p in a.positions if p.status == "supported"}:
-            e = c.setdefault(fn, {"fn": fn, "label": (cat.get(fn) or {}).get("label", fn), "reach": 0, "positions": 0})
-            e["reach"] += 1
-            e["positions"] += sum(p.qty for p in a.positions if p.fn == fn)
-    return sorted(c.values(), key=lambda e: (-e["reach"], e["label"]))
 
 
 def overview(apps: list[Application], asp: dict, vol: dict) -> dict:
@@ -413,8 +402,6 @@ def qual_state(c: dict) -> str:
     )
 
 
-def is_auto_part(c: dict) -> bool:
-    return qual_state(c) == "automotive"
 
 
 def markets(session: Session, apps: list[Application], mine: frozenset) -> dict:

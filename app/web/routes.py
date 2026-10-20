@@ -161,7 +161,7 @@ def find(request: Request, q: str = "", session: Session = Depends(get_session))
     matches = search_parts(session, q, limit=500)
     # the manufacturer catalogues (all public Skyworks and Qorvo parts) are searched too: most of them have no
     # parameters or crosses here, so they are listed with their catalogue data and a link to the manufacturer page
-    catalogue = products.search_catalogue(q, {products._pn(p.mpn) for p in matches})
+    catalogue = products.search_catalogue(q, {normalize_pn(p.mpn) for p in matches})
     exact = [p for p in matches if normalize_pn(p.mpn) == normalize_pn(q)]
     if len(exact) == 1 or (len(matches) == 1 and not catalogue):
         return RedirectResponse(f"/parts/{(exact or matches)[0].id}", status_code=303)
@@ -208,7 +208,7 @@ def index(
     if catalog and not cat:  # old catalogue category link: its first functional category
         cat = next((cid for c, _rx, cid, _sid in tax["rules"] if c == catalog), "")
     if lifecycle_status and not life:
-        life = {"last_time_buy": "nrnd"}.get(lifecycle_status, lifecycle_status)
+        life = lifecycle.status_class(lifecycle_status)
     if sub in tax["subs"] and not cat:
         cat = tax["subs"][sub]["category"]
     if company == "*":
@@ -222,19 +222,8 @@ def index(
     return templates.TemplateResponse(request, "index.html", ctx)
 
 
-def _series_of(mpn: str) -> str:
-    """Product series for browsing: SI8641BD-IS -> SI86, SI86S641EC-IS1 -> SI86S, ISO7741DBQR -> ISO77."""
-    m = re.match(r"[A-Z]+\d{2}(?:S(?=\d))?", (mpn or "").upper())
-    return m.group(0) if m else (mpn or "")[:4].upper()
 
 
-def _life_counts(parts: list, company: str) -> dict[str, int]:
-    out: dict[str, int] = {}
-    for p in parts:
-        if company and company != "*" and p.manufacturer.name != company:
-            continue
-        out[p.lifecycle_status.value] = out.get(p.lifecycle_status.value, 0) + 1
-    return out
 
 
 CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
@@ -636,10 +625,6 @@ def series_of(mpn: str) -> str:
     return f"{m.group(0)[:-1]}x" if m and m.group(0)[-1].isdigit() else mpn.upper()
 
 
-def _norm_mpn(s: str) -> str:
-    return re.sub(r"[\s\-–]", "", s or "").upper()
-
-
 @router.get("/compare", response_class=HTMLResponse)
 def compare_page(
     request: Request,
@@ -656,9 +641,9 @@ def compare_page(
     # typed part numbers: exact matches are added, a prefix with several matches is offered to pick from
     matches, not_found, ambiguous = [], [], []
     for token in [t for t in re.split(r"[,;\s]+", add) if t][:20]:
-        key = _norm_mpn(token)
-        hits = [p for p in search_parts(session, token) if _norm_mpn(p.mpn).startswith(key)]
-        exact = [p for p in hits if _norm_mpn(p.mpn) == key]
+        key = normalize_pn(token)
+        hits = [p for p in search_parts(session, token) if normalize_pn(p.mpn).startswith(key)]
+        exact = [p for p in hits if normalize_pn(p.mpn) == key]
         if exact or len(hits) == 1:
             wanted += [p.id for p in (exact or hits) if p.id not in wanted]
         elif hits:
@@ -830,5 +815,5 @@ def suggest(request: Request, q: str = "", session: Session = Depends(get_sessio
     from app.services import products
 
     parts = search_parts(session, q, limit=60) if len(normalize_pn(q).replace("*", "")) >= 2 else []
-    catalogue = products.search_catalogue(q, {products._pn(p.mpn) for p in parts}, limit=max(0, 60 - len(parts)))
+    catalogue = products.search_catalogue(q, {normalize_pn(p.mpn) for p in parts}, limit=max(0, 60 - len(parts)))
     return templates.TemplateResponse(request, "_suggest.html", {"parts": parts, "catalogue": catalogue, "q": q})

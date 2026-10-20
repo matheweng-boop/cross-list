@@ -21,7 +21,7 @@ DOC_LABELS = {
 @lru_cache
 def _files() -> tuple[tuple[Path, dict], ...]:
     """Every design file, parsed once per process."""
-    paths = sorted(p for p in DIR.glob("*.yaml") if not p.stem.endswith("_applications"))
+    paths = sorted(DIR.glob("*.yaml"))
     return tuple((path, yamlio.load(path.read_text()) or {}) for path in paths)
 
 

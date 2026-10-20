@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.matching.rules import load_all_rules
 from app.models import BusinessInput, Part, PartMapping
-from app.services import blocks, broadcast, products, quality
+from app.services import blocks, broadcast, lifecycle, products, quality
 from app.services import opportunity as op
 
 PRIORITY = {"high": 3, "medium": 2, "low": 1}
@@ -172,7 +172,7 @@ def _part_checks_uncached(session: Session) -> tuple[dict, list]:
             e["qualification"] == "not_automotive" and q == "automotive"
         ):
             qconf.append(p.mpn)
-        pl = {"last_time_buy": "nrnd"}.get(p.lifecycle_status.value, p.lifecycle_status.value)
+        pl = lifecycle.status_class(p.lifecycle_status.value)
         if pl != "unknown" and e["lifecycle"] != "unknown" and pl != e["lifecycle"]:
             lconf.append(f"{p.mpn} ({pl} vs catalogue {e['lifecycle']})")
     checks.append(

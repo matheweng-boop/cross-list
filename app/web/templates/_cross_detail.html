@@ -1,6 +1,6 @@
 {# One result row's details: included for the best and next-best rows, loaded on demand for the others
    (route /parts/{id}/detail/{cand}). Needs part, c, r, v, notes, rules. #}
-{% from "_macros.html" import diff_table %}
+{% from "_macros.html" import diff_table, unofficial_mark, unofficial_footnote %}
         {% set ov = out_variants(c) %}{% set po = pkg_options(c) %}{% set al = alts_for(c) %}
         {% if ov or po or al %}<div class="variants small"><b>Variants of {{ c.mpn }}</b><ul>
           {% for a in al %}<li>{{ a.family_label }} alternate: <a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> ({{ a.label }})</li>{% endfor %}
@@ -14,19 +14,19 @@
         {% set pnote = position_note(r) %}{% if pnote %}<p class="spec-list p2p-note">{{ pnote }} <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a></p>{% endif %}
         {% set note = '/engineering/{}?ref=' ~ part.id ~ '&cand=' ~ c.id %}
         {% if v.better %}<p class="spec-list better">Priority 1 better: {% for d in v.better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
-        {% if v.exceptions %}<p class="spec-list exception">Exception{{ 's' if v.exceptions|length > 1 }} (listed, not a knock-out): {% for d in v.exceptions %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }} vs {{ d.ref_display }}{{ '; ' if not loop.last }}{% endfor %} – check the insulation the application needs.</p>{% endif %}
+        {% if v.worse %}<p class="spec-list worse">Priority 1 deviations ({{ v.worse|length }}): {% for d in v.worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }}{{ unofficial_mark(r.candidate, d.key) }} vs {{ d.ref_display }}{{ unofficial_mark(r.reference, d.key) }} ({{ d.status }}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+        {% if v.exceptions %}<p class="spec-list exception">Exception{{ 's' if v.exceptions|length > 1 }} (listed, not a knock-out): {% for d in v.exceptions %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a> {{ d.cand_display }}{{ unofficial_mark(r.candidate, d.key) }} vs {{ d.ref_display }}{{ unofficial_mark(r.reference, d.key) }}{{ '; ' if not loop.last }}{% endfor %} – check the insulation the application needs.</p>{% endif %}
         {% if v.info_better or v.info_worse %}<p class="spec-list muted">For information (priority 2/3):
           {% if v.info_better %}<span class="better">better {% for d in v.info_better %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}{% if v.info_better and v.info_worse %}; {% endif %}
           {% if v.info_worse %}<span class="worse">worse {% for d in v.info_worse %}<a class="dev-link" href="{{ note.format(d.key) }}">{{ d.label }}</a>{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}</p>{% endif %}
         {% if v.worse or v.info_worse %}<p class="small muted">Tap a specification for what the deviation means in your application.</p>{% endif %}
         {% set top = r.top_differences() %}
         <b>Top 5 differences</b>
-        {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
+        {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}{{ unofficial_mark(r.candidate, d.key) or unofficial_mark(r.reference, d.key) }}</li>{% endfor %}</ol>
         {% else %}<p>No differences in the compared parameters.</p>{% endif %}
         {% set notes = r.p3_notes()|reject('in', top)|list %}
         {% if notes %}<p class="p3-notes">Also note (priority 3):
-          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }}{{ unofficial_mark(r.candidate, d.key) }} vs {{ d.ref_display }}{{ unofficial_mark(r.reference, d.key) }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
         {% if r.fff_status %}
         <div class="review review-actions">
           {% if r.feedback %}<p class="muted">Rejected as FFF by {{ r.feedback.user.display_name if r.feedback.user else 'unknown' }} on {{ r.feedback.created_at|date }}{% if r.feedback.note %}: “{{ r.feedback.note }}”{% endif %}</p>{% endif %}
@@ -39,4 +39,5 @@
         </div>
         {% endif %}
         <details><summary>All parameters</summary>{{ diff_table(r) }}</details>
+        {% if unofficial_keys(r.candidate) or unofficial_keys(r.reference) %}{{ unofficial_footnote() }}{% endif %}
         <p><a href="/parts/{{ c.id }}">Open {{ c.mpn }}</a> · <form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}"><input type="hidden" name="our" value="{{ c.id }}"><button type="submit" class="linklike"><b>Start a business case with {{ c.mpn }}</b></button></form> · <a href="/overlay/{{ part.id }}/{{ c.id }}">Package overlay</a>{% if rules.get('cmti_kv_us') %} · <a href="/engineering/cmti_kv_us?ref={{ part.id }}&cand={{ c.id }}">CMTI explorer</a>{% endif %}</p>

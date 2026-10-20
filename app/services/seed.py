@@ -4,7 +4,7 @@ import copy
 from datetime import date
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import yamlio
@@ -49,8 +49,75 @@ def _num(value) -> float | None:
     return None
 
 
-def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
+# Values read from unofficial copies of a manufacturer's datasheet (distributor or datasheet-site mirrors) live in a
+# separate overlay, data/real/unofficial/<same file name>, and are merged on load only while the setting
+# use_unofficial_data is on. Their sources and the overlay's package names carry this mark, so the pages flag them and
+# a load without the overlay replaces every one of them with the base file's value (or none).
+UNOFFICIAL = "[unofficial copy] "
+UNOFFICIAL_DIR = "unofficial"
+UNOFFICIAL_TITLE = "From an unofficial copy of the datasheet"
+
+
+def is_unofficial(text: str | None) -> bool:
+    return bool(text) and text.startswith(UNOFFICIAL)
+
+
+def unofficial_path(path: Path) -> Path:
+    return Path(path).parent / UNOFFICIAL_DIR / Path(path).name
+
+
+def unofficial_keys(part: Part) -> set[str]:
+    """Parameter keys (plus "pinout" and "package") of a part whose value came from an unofficial copy."""
+    keys = {pv.key for pv in part.params if is_unofficial(pv.source)}
+    if is_unofficial(part.pinout_source):
+        keys.add("pinout")
+    if part.package is not None and is_unofficial(part.package.name):
+        keys.add("package")
+    return keys
+
+
+def merge_unofficial(data: dict, overlay: dict) -> dict:
+    """The data file with its unofficial overlay merged in: overlay params, pinout and package replace the part's,
+    every source is marked, and the part's notes name the copy (host, URL, sha256, fetch date)."""
+    data = copy.deepcopy(data)
+    codes = {p["code"] for p in data.get("packages", [])}
+    data.setdefault("packages", []).extend(
+        {**p, "name": f"{UNOFFICIAL}{p['name']}"} for p in overlay.get("packages", []) if p["code"] not in codes
+    )
+    parts = {p["mpn"]: p for p in data.get("parts", [])}
+    for o in overlay.get("parts", []):
+        if o["mpn"] not in parts:
+            raise ValueError(f"unofficial overlay: {o['mpn']} is not in the data file")
+        part, prov = parts[o["mpn"]], o["provenance"]
+        given = o.get("param_sources", {})
+        sources = part.setdefault("param_sources", {})
+        part["params"] = {**part.get("params", {}), **o.get("params", {})}
+        filled = list(o.get("params", {}))
+        for key in ("pinout", "package"):
+            if o.get(key):
+                part[key] = o[key]
+                filled.append(key)
+        for key in filled:
+            sources[key] = f"{UNOFFICIAL}{prov['host']}: {given.get(key, '')}"[:300]
+        note = (
+            f"{UNOFFICIAL}{', '.join(filled)} from {prov['url']} (sha256 {prov['sha256'][:16]}, fetched "
+            f"{prov['fetched']}): {prov.get('note', 'unofficial copy of the datasheet')}"
+        )
+        part["notes"] = "; ".join(x for x in (part.get("notes"), note) if x)
+    return data
+
+
+def load_file(session: Session, path: Path, synthetic: bool = False, unofficial: bool | None = None) -> int:
+    """Load one data file. Its unofficial overlay (if any) is merged when ``unofficial`` is true, which defaults to
+    the use_unofficial_data setting."""
     data = yamlio.load(Path(path).read_text())
+    if unofficial is None:
+        from app.config import get_settings
+
+        unofficial = get_settings().use_unofficial_data
+    overlay = unofficial_path(path)
+    if unofficial and overlay.is_file():
+        data = merge_unofficial(data, yamlio.load(overlay.read_text()))
     rules = load_all_rules()
 
     # Manufacturers and packages are updated from the file on every load, so a corrected dimension, name or role
@@ -158,3 +225,13 @@ def load_file(session: Session, path: Path, synthetic: bool = False) -> int:
         count += 1
     session.flush()
     return count
+
+
+def unofficial_counts(session: Session) -> dict[str, int]:
+    """How much of the loaded data came from unofficial datasheet copies: parameter values, pinouts, packages, parts."""
+    values = set(session.scalars(select(ParamValue.part_id).where(ParamValue.source.startswith(UNOFFICIAL))))
+    pinouts = set(session.scalars(select(Part.id).where(Part.pinout_source.startswith(UNOFFICIAL))))
+    packages = set(session.scalars(select(Part.id).join(Package).where(Package.name.startswith(UNOFFICIAL))))
+    n_values = session.scalar(select(func.count(ParamValue.id)).where(ParamValue.source.startswith(UNOFFICIAL)))
+    return {"params": n_values or 0, "pinouts": len(pinouts), "packages": len(packages),
+            "parts": len(values | pinouts | packages)}  # fmt: skip

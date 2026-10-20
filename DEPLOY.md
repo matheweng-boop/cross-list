@@ -23,6 +23,10 @@ Every push to the `main` branch on GitHub redeploys the site automatically.
   a new password signs every browser out.
 - **New data or features:** pushed to GitHub, deployed by Render. Changed data files are loaded on start;
   your FFF review decisions and cached prices are kept.
+- **Switch off values from unofficial datasheet copies** (marked † in the pages, files in `data/real/unofficial/`):
+  Render → cross-list → Environment → add `CROSSLIST_USE_UNOFFICIAL_DATA` = `false` and save. The restart reloads
+  the data without them, so every such value leaves the database. Set it back to `true` (or delete it) to restore.
+  Deleting the `data/real/unofficial/` folder and deploying has the same effect, permanently.
 - **Own address** (e.g. `crosslist.example.com`): Render → cross-list → Settings → Custom Domains.
 - **Region:** `render.yaml` uses Frankfurt; change `region` before the first deploy if another is closer.
 - **Backups:** Render keeps daily snapshots of the disk (Render → cross-list → Disks).

@@ -1,5 +1,5 @@
 {# "Grouped by cross type": loaded when the section is opened (route /parts/{id}/grouped). #}
-{% from "_macros.html" import part_badges, diff_table %}
+{% from "_macros.html" import part_badges, diff_table, unofficial_mark, unofficial_footnote %}
 <nav class="catnav">
   {% for c in order %}<a href="#cat-{{ c }}" class="badge cat">{{ category_labels[c] }} ({{ crosses[c]|length }})</a>{% endfor %}
 </nav>
@@ -23,11 +23,11 @@
       <summary><b>Top 5 differences</b>
         {% set top = r.top_differences() %}
         {% if top %}
-        <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}</li>{% endfor %}</ol>
+        <ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}{{ unofficial_mark(r.candidate, d.key) or unofficial_mark(r.reference, d.key) }}</li>{% endfor %}</ol>
         {% else %}<br>No differences in the compared parameters.{% endif %}
         {% set notes = r.p3_notes()|reject('in', top)|list %}
         {% if notes %}<p class="p3-notes">Also note (priority 3):
-          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }} vs {{ d.ref_display }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+          {% for d in notes %}<span class="{{ d.status }}">{{ d.label }} {{ d.cand_display }}{{ unofficial_mark(r.candidate, d.key) }} vs {{ d.ref_display }}{{ unofficial_mark(r.reference, d.key) }}</span>{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
       </summary>
       {{ diff_table(r) }}
     </details>

@@ -34,6 +34,8 @@ class Row:
     pins: int = 0
     automotive: str = ""  # "yes" | "no" | "" (from the site)
     released: int = 0
+    pset: bool = False  # the price range sliders were moved by hand
+    shown: tuple = ()  # the price range used, for the sliders
     info: dict = field(default_factory=dict)
 
 
@@ -61,7 +63,8 @@ def rows_from_form(form) -> list[Row]:
                        breaks=at("breaks")[:4000], currency=at("cur") or "USD", anchor=at("anchor").strip()[:60],
                        parity_lo=_num(at("plo"), float, 0.0) / 100, parity_hi=_num(at("phi"), float, 0.0) / 100,
                        family=at("fam"), package=at("pkg").strip()[:30], pins=_num(at("pins"), int, 0),
-                       automotive=at("auto"), released=_num(at("rel"), int, 0)))  # fmt: skip
+                       automotive=at("auto"), released=_num(at("rel"), int, 0),
+                       pset=at("pset") == "1"))  # fmt: skip
     return out
 
 
@@ -88,14 +91,16 @@ def site_info(session: Session, mpn: str) -> dict:
     """What the site knows about a part: model family, package, pins, automotive grade, release year, sources."""
     cfg, key = pm.config(), mpn.upper()
     fam_of = cfg["function_family"]
-    out = {"family": "", "package": "", "pins": 0, "automotive": False, "released": None, "found": [], "part": None}
+    out = {"family": "", "package": "", "pins": 0, "automotive": False, "released": None, "units": None, "found": [],
+           "part": None}  # fmt: skip
     part = session.scalar(select(Part).where(func.upper(Part.mpn) == key))
     if part is not None:
         out.update(part=part, automotive=pm.is_automotive(part), found=["parts database"],
                    family=part.family if part.family in cfg["families"] else fam_of.get(part.family, ""),
                    package=part.package.code if part.package else "",
                    pins=(part.package.pin_count if part.package else 0) or 0,
-                   released=part.release_date.year if part.release_date else None)  # fmt: skip
+                   released=part.release_date.year if part.release_date else None,
+                   units=pm.units_of(part))  # fmt: skip
     bc = _broadcast(mpn)
     if bc is not None:
         pk = bc.get("package") or {}
@@ -103,12 +108,16 @@ def site_info(session: Session, mpn: str) -> dict:
         out["pins"] = out["pins"] or pk.get("pins") or 0
         out["automotive"] = out["automotive"] or bool(bc.get("aec_q100"))
         out["family"] = out["family"] or fam_of.get(bc.get("role") or "", "")
+        out["units"] = out["units"] or (bc.get("channels") if bc.get("role") == "coprocessor" else bc.get("tuners"))
         out["found"].append(f"radio datasheet ({bc['doc']})")
     row = next((r for r in blocks.catalog_rows() if r["mpn"].upper() == key), None)
     if row is not None:
         out["family"] = out["family"] or fam_of.get(row["function"] or "", "")
         out["package"] = out["package"] or row["package"] or ""
         out["automotive"] = out["automotive"] or bool(row.get("automotive"))
+        specs = row.get("key_specs") or {}
+        ch = [int(v) for k, v in specs.items() if k in ("Forward Channels", "Reverse Channels") and str(v).isdigit()]
+        out["units"] = out["units"] or (sum(ch) or None)
         out["found"].append(f"{row['manufacturer']} catalogue")
     return out
 
@@ -143,17 +152,33 @@ def own_prices(session: Session, row: Row, info: dict) -> tuple[list[tuple[int, 
     return None
 
 
+def spec(row: Row, info: dict) -> dict:
+    """What the cost model reads for a row. The part number decides package and pins when the site knows them (only
+    otherwise are the row's own entries used); channels, I/Q channels or tuners come from the site data only."""
+    return {"family": row.family or info["family"], "package": info["package"] or row.package,
+            "pins": info["pins"] or row.pins, "units": info["units"],
+            "automotive": row.automotive == "yes" if row.automotive else info["automotive"]}  # fmt: skip
+
+
 def _priced(session: Session, row: Row, info: dict, gm: float, fab: str) -> tuple[dict | None, str]:
     """The model for a part with prices of its own, and where they came from; (None, "") without any."""
     got = own_prices(session, row, info)
     if got is None:
         return None, ""
     pts, cur, source = got
-    auto = row.automotive == "yes" if row.automotive else info["automotive"]
-    wide = (row.package or info["package"]).upper().startswith("SOIC") and "W" in (row.package or info["package"])
-    m = pm.estimate(session, row.family or info["family"], pts, row.package or info["package"],
-                    row.pins or info["pins"], wide, auto, row.mpn, cur, gm, fab)  # fmt: skip
+    sp = spec(row, info)
+    m = pm.estimate(session, sp["family"], pts, sp["package"], sp["pins"], sp["automotive"], row.mpn, cur, gm, fab,
+                    sp["units"])  # fmt: skip
     return m, source
+
+
+def cost_ratio(row: Row, info: dict, anchor_cost: dict | None, gm: float, fab: str) -> float | None:
+    """The part's unit cost over its sibling's (channels, tuners, package and family all count); None if unknown."""
+    sp = spec(row, info)
+    mine = pm.cost(pm.part_ns(sp["family"], sp["package"], sp["pins"], sp["automotive"], row.mpn, sp["units"]), gm, fab)
+    if not mine or not anchor_cost:
+        return None
+    return mine["levels"]["mid"]["total"] / anchor_cost["levels"]["mid"]["total"]
 
 
 def price_row(session: Session, row: Row, vol: int, gm: float, adj: float, sop: int) -> dict:
@@ -189,11 +214,19 @@ def price_row(session: Session, row: Row, vol: int, gm: float, adj: float, sop: 
             if am is None or not am["rows"]:
                 out["error"] = f"{anchor} has no prices on the site either: paste DigiKey prices for one of them"
                 return out
-            lo, hi = sorted((row.parity_lo or cfg["parity"][0], row.parity_hi or cfg["parity"][1]))
+            ratio = cost_ratio(row, info, am["cost"], gm, fab)
+            follow = (ratio or 1.0) ** cfg["price_follows_cost"]
+            if row.pset and row.parity_lo and row.parity_hi:
+                lo, hi = sorted((row.parity_lo, row.parity_hi))
+            else:
+                lo, hi = cfg["parity"][0] * follow, cfg["parity"][1] * follow
             rows = pm.scaled(am, lo, hi)
-            out["anchor"] = {"mpn": anchor, "lo": lo, "hi": hi, "source": source, "auto": not row.anchor}
+            row.shown = row.shown or (lo, hi)
+            out["anchor"] = {"mpn": anchor, "lo": lo, "hi": hi, "source": source, "auto": not row.anchor,
+                             "ratio": ratio, "follow": follow, "by_hand": row.pset}  # fmt: skip
             picked = "" if row.anchor else " (same family, picked by the site)"
-            out["basis"] = f"{lo:.0%}–{hi:.0%} of {anchor}{picked}"
+            why = "" if row.pset or ratio is None or abs(follow - 1) < 0.005 else f"; unit cost ×{ratio:.2f}"
+            out["basis"] = f"{lo:.0%}–{hi:.0%} of {anchor}{picked}{why}"
             out["source"] = f"{anchor}: {source}"
             m = am
         rows = [{**r, "low": r["low"] * adj, "target": r["target"] * adj, "high": r["high"] * adj} for r in rows]

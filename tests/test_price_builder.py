@@ -1,11 +1,12 @@
 """Solution price builder: parts priced from their own prices or a sibling's, the system total, presets, no storage."""
 
+import pytest
 from starlette.datastructures import ImmutableMultiDict
 
 from app.services import price_builder as pb
 
 EUR = "1 25,10\n10 22,37\n100 19,80"  # made-up test numbers
-FIELDS = ("qty", "breaks", "cur", "anchor", "plo", "phi", "fam", "pkg", "pins", "auto", "rel")
+FIELDS = ("qty", "breaks", "cur", "anchor", "plo", "phi", "pset", "fam", "pkg", "pins", "auto", "rel")
 
 
 def _form(*rows, **glob):
@@ -28,9 +29,9 @@ def test_site_data_fills_in_and_siblings_price_parts_without_prices(session):
     assert pb.site_info(session, "Si46922")["family"] == "radio_coprocessor"
     assert pb.sibling("Si47961") == "Si47962" and pb.sibling("Si47981") == "Si47972" and pb.sibling("Si46922") is None
     rows = pb.rows_from_form(ImmutableMultiDict(_form(
-        {"mpn": "Si47961", "qty": 2, "plo": 80, "phi": 90},
+        {"mpn": "Si47961", "qty": 2, "plo": 80, "phi": 90},  # sliders not moved: the cost ratio decides
         {"mpn": "Si46922", "breaks": EUR, "cur": "EUR"},
-        {"mpn": "Si47981", "anchor": "Si47972", "plo": 55, "phi": 75},
+        {"mpn": "Si47981", "anchor": "Si47972", "plo": 55, "phi": 75, "pset": 1},
         {"mpn": ""},  # an empty row is dropped
     )))
     assert [r.mpn for r in rows] == ["Si47961", "Si46922", "Si47981"] and rows[0].parity_lo == 0.8
@@ -61,3 +62,26 @@ def test_page_add_load_and_nothing_in_the_link(client):
     preset = "radio:AM/FM, dual tuner, no demod"
     r = client.post("/pricing/builder", data=_post({"mpn": "Si46922"}, load=preset, do="load"))
     assert r.text.count('name="mpn" list="pb-mpns" value="Si4') == 2  # the kept row and the preset's tuner
+
+
+def test_part_number_sets_package_and_channels_and_cost_ratio_sets_the_range(session):
+    assert pb.site_info(session, "Si47981")["units"] == 1 and pb.site_info(session, "Si46942A1GE1AM")["units"] == 4
+    row = pb.Row(mpn="Si47981", package="SOIC-8", pins=8)  # ignored: the site knows this part
+    sp = pb.spec(row, pb.site_info(session, "Si47981"))
+    assert (sp["package"], sp["pins"], sp["units"]) == ("QFN-88", 88, 1)
+    free = pb.spec(pb.Row(mpn="NEW-PART-1", family="digital_isolator", package="SOIC-16W", pins=16),
+                   pb.site_info(session, "NEW-PART-1"))  # fmt: skip
+    assert (free["package"], free["units"]) == ("SOIC-16W", None)  # unknown part: package entered freely
+    single = pb.price_row(session, pb.Row(mpn="Si47981"), 1_000_000, 0.4, 1.0, 2028)["anchor"]
+    assert single["mpn"] == "Si47972" and single["ratio"] < 0.8 and single["lo"] < 0.9 * 0.8  # one tuner, not two
+    same = pb.price_row(session, pb.Row(mpn="Si47961"), 1_000_000, 0.4, 1.0, 2028)["anchor"]
+    assert abs(same["ratio"] - 1) < 0.01 and same["lo"] == pytest.approx(0.9, abs=0.01)  # same die size, same package
+
+
+def test_estimate_page_reads_the_part_number(client):
+    html = client.get("/pricing/estimate", params={"name": "Si46922", "family": "", "breaks": "1000 13,29",
+                                                   "currency": "EUR", "package": "SOIC-8"}).text  # fmt: skip
+    assert 'name="package" value="QFN-88" readonly' in html and 'name="units"' not in html  # channels: model only
+    assert 'name="wide"' not in html and "From 1 pasted price break" in html
+    free = client.get("/pricing/estimate", params={"family": "digital_isolator", "package": "SOIC-16W"}).text
+    assert 'value="SOIC-16W" placeholder' in free and "readonly" not in free.split("Price breaks")[0]

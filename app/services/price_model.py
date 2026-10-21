@@ -120,6 +120,45 @@ def fab_scenarios() -> list[str]:
     return list(config()["fab"]["wafer_factor"])
 
 
+WIDE = re.compile(r"\d+W\b|\((DW\w*|DF[MP])\)|\bW(IDE|B)\b", re.I)  # SOIC-16W, SOIC-16 (DW), SOIC-20 (DFM), SOIC-8 WB
+
+
+def is_wide(code: str, span_mm: float | None = None) -> bool:
+    """Wide-body package: from its body width when known, else from the package code."""
+    return (span_mm or 0) >= 9 or bool(WIDE.search(code or ""))
+
+
+def units_of(part) -> int | None:
+    """What scales the part within its family: channels (an isolator's channel split, e.g. 3/1 = 4), I/Q channels or
+    tuners; None when unknown."""
+    if getattr(part, "units", None):
+        return int(part.units)
+    for pv in getattr(part, "params", None) or []:
+        if pv.key == "channel_config" and pv.value:
+            nums = [int(x) for x in re.findall(r"\d+", str(pv.value))]
+            return sum(nums) or None
+    return None
+
+
+def scale(family: str, units: int | None) -> tuple[float, float]:
+    """(die area factor, test time factor) for `units` against the family's base; (1, 1) when unknown."""
+    sc = config().get("scaling", {}).get(family)
+    if not sc or not units:
+        return 1.0, 1.0
+    d = units - sc["base"]
+    return max(sc["min"], 1 + sc["die_per_unit"] * d), max(sc["min"], 1 + sc["test_per_unit"] * d)
+
+
+def part_ns(family: str, package: str = "", pins: int = 0, automotive: bool = False, name: str = "estimate",
+            units: int | None = None):  # fmt: skip
+    """A part that is not in the database, with what the cost model reads."""
+    from types import SimpleNamespace
+
+    pkg = SimpleNamespace(code=package, pin_count=pins or None, span_mm=None)
+    params = [SimpleNamespace(key="qualification", value="automotive")] if automotive else []
+    return SimpleNamespace(mpn=name, family=family, package=pkg, params=params, units=units)
+
+
 def cost(part: Part, gm: float | None = None, fab: str | None = None) -> dict | None:
     """Cost build-up (low / mid / high) for the part's family and package, with wafers priced for the `fab` scenario
     (default: the reference foundry prices); None for an unknown family."""
@@ -129,10 +168,12 @@ def cost(part: Part, gm: float | None = None, fab: str | None = None) -> dict | 
         return None
     pins = (part.package.pin_count if part.package else None) or 8
     pk_key = package_class(part.package.code if part.package else "") or "soic"
-    if pk_key == "soic" and part.package and (part.package.span_mm or 0) >= 9:  # e.g. SOIC-16W, SOIC-16 (DW)
+    if pk_key == "soic" and part.package and is_wide(part.package.code, part.package.span_mm):
         pk_key = "soic_wide"
     pk = cfg["packages"][pk_key]
-    big = max(1.0, fam["die_mm2"][1] / cfg["large_die_mm2"]) if fam else 1.0  # larger body for a larger die
+    units = units_of(part)
+    k_die, k_test = scale(part.family, units)
+    big = max(1.0, fam["die_mm2"][1] * k_die / cfg["large_die_mm2"])  # larger body for a larger die
     pkg = {"lead_frame": (pk["lead_frame"] + pk.get("lead_frame_per_pin", 0) * pins) * big,
            "mold": pk["mold"] * big, "wire": pk["wire_per_pin"] * pins,
            "assembly": pk["assembly"] + pk.get("assembly_per_pin", 0) * pins}  # fmt: skip
@@ -144,11 +185,12 @@ def cost(part: Part, gm: float | None = None, fab: str | None = None) -> dict | 
     pkg = {k: v * adj for k, v in pkg.items()}  # the owner's cost adjustment applies to every line
     for i, level in enumerate(("low", "mid", "high")):
         wafer = fam["wafer_usd"][i] * wf[i]
-        die = fam["dies"] * _die_cost(fam["die_mm2"][i], fam["wafer_mm"], wafer, fam["defects_per_cm2"]) * adj
-        test = fam["test_s"][i] * cls["test_usd_per_s"] * (cfg["automotive_test"][i] if auto else 1) * adj
+        die = fam["dies"] * _die_cost(fam["die_mm2"][i] * k_die, fam["wafer_mm"], wafer, fam["defects_per_cm2"]) * adj
+        test = fam["test_s"][i] * k_test * cls["test_usd_per_s"] * (cfg["automotive_test"][i] if auto else 1) * adj
         out[level] = {"die": die, "test": test, "total": die + sum(pkg.values()) + test}
     return {"family": fam, "class": cls, "automotive": auto, "fab": src, "wafer_factor": wf, "cost_adjust": adj,
-            "package": pk, "package_key": pk_key, "pins": pins,
+            "package": pk, "package_key": pk_key, "pins": pins, "units": units, "scale": (k_die, k_test),
+            "scaling": cfg.get("scaling", {}).get(part.family),
             "pkg": pkg, "levels": out, "margin": margin(gm),
             "floor": out["mid"]["total"] / (1 - margin(gm))}  # fmt: skip
 
@@ -259,10 +301,11 @@ def simulate(part: Part, f: dict, cb: dict | None, vol: int, k: list[float], fac
         if fam:
             adj = (cb or {}).get("cost_adjust", 1.0)
             wafer = _tri(rng, fam["wafer_usd"]) * _tri(rng, (cb or {}).get("wafer_factor", [1.0, 1.0, 1.0]))
-            die = fam["dies"] * adj * _die_cost(_tri(rng, fam["die_mm2"]), fam["wafer_mm"], wafer,
+            k_die, k_test = (cb or {}).get("scale", (1.0, 1.0))
+            die = fam["dies"] * adj * _die_cost(_tri(rng, fam["die_mm2"]) * k_die, fam["wafer_mm"], wafer,
                                                 fam["defects_per_cm2"])  # fmt: skip
             rate = (cb or {}).get("class", {}).get("test_usd_per_s", 0.01)
-            test = _tri(rng, fam["test_s"]) * rate * (_tri(rng, cfg["automotive_test"]) if auto else 1)
+            test = _tri(rng, fam["test_s"]) * k_test * rate * (_tri(rng, cfg["automotive_test"]) if auto else 1)
             unit_cost = die + pkg + test * adj
             price = max(price, unit_cost / (1 - margin(gm)))
         out.append(price)
@@ -316,15 +359,13 @@ def parse_breaks(text: str) -> list[tuple[int, float]]:
 
 
 def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], package: str = "", pins: int = 0,
-             wide: bool = False, automotive: bool = False, name: str = "estimate", currency: str = "USD",
-             gm: float | None = None, fab: str | None = None) -> dict:
-    """The model for a part that is not in the database: pasted price breaks (in `currency`, converted to USD), a family
-    and a package."""
+             automotive: bool = False, name: str = "estimate", currency: str = "USD", gm: float | None = None,
+             fab: str | None = None, units: int | None = None) -> dict:
+    """The model for a part that is not in the database: pasted price breaks (in `currency`, converted to USD), a
+    family, a package (wide body read from its code) and what scales the part (channels, I/Q channels, tuners)."""
     from types import SimpleNamespace
 
-    pkg = SimpleNamespace(code=package, pin_count=pins or None, span_mm=10.3 if wide else 6.0)
-    params = [SimpleNamespace(key="qualification", value="automotive")] if automotive else []
-    part = SimpleNamespace(mpn=name, family=family, package=pkg, params=params)
+    part = part_ns(family, package, pins, automotive, name, units)
     pq = SimpleNamespace(found=True, currency=currency, offers=[{"breaks": [list(b) for b in breaks_]}])
     m = model(session, part, pq, gm, fab)  # type: ignore[arg-type]
     m["source"] = "pasted"

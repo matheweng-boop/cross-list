@@ -117,7 +117,7 @@ GD3162 = "1 10.80\n10 8.43\n25 7.8388\n176 6.98864\n352 6.78261\n528 6.67943\n1,
 
 
 def test_oem_targets_and_our_part_from_a_competitor(client, session):
-    m = pm.estimate(session, "gate_driver", pm.parse_breaks(GD3162), "SOIC-32W", 32, wide=True, automotive=True)
+    m = pm.estimate(session, "gate_driver", pm.parse_breaks(GD3162), "SOIC-32W", 32, automotive=True)
     o = pm.oem_path(m, 2028)
     assert [r["phase"] for r in o["rows"]][:3] == ["today", "before SOP", "SOP"] and o["rows"][0]["low"] == o["start"]
     sop = next(r for r in o["rows"] if r["phase"] == "SOP")
@@ -175,3 +175,15 @@ def test_oem_path_flattens_after_the_price_down_years():
     by = {r["year"]: r for r in mid["rows"]}
     assert by[2027]["high"] == by[2032]["high"] < by[2026]["high"] and by[2028]["low"] == by[2032]["low"]
     assert by[2029]["flat"] and not by[2028]["flat"]
+
+
+def test_channels_scale_the_cost_and_the_package_sets_wide_body():
+    one, four, eight = (pm.cost(pm.part_ns("digital_isolator", "SOIC-16", 16, units=n)) for n in (1, 4, 8))
+    assert one["levels"]["mid"]["die"] < four["levels"]["mid"]["die"] < eight["levels"]["mid"]["die"]
+    assert four["scale"] == (1.0, 1.0) and pm.units_of(pm.part_ns("x", units=None)) is None
+    two, three = (pm.cost(pm.part_ns("radio_coprocessor", "QFN-88", 88, units=n)) for n in (2, 3))
+    assert three["levels"]["mid"]["total"] > two["levels"]["mid"]["total"]
+    for code in ("SOIC-16W", "SOIC-16 (DW)", "SOIC-8 (DWV)", "SOIC-20 (DFM)", "SOIC-16 WB"):
+        assert pm.is_wide(code), code
+        assert pm.cost(pm.part_ns("digital_isolator", code, 16))["package_key"] == "soic_wide"
+    assert not pm.is_wide("SOIC-16N") and not pm.is_wide("SOIC-8 (D)") and pm.is_wide("SOIC-8", 10.3)

@@ -311,7 +311,8 @@ def test_navigation_sections_and_old_urls(client):
     """Sections in the top row, the section's pages in the second: every old URL lands in the right section and item."""
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
                                ("/parts", "Products", "Browse products"),
-                               ("/compare", "Products", "Compare"), ("/broadcast", "Products", "Radio &amp; audio"),
+                               ("/compare", "Products", "Compare"),
+                               ("/broadcast", "Systems &amp; applications", "Radio &amp; audio"),
                                ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
                                ("/blocks/coverage", "Systems &amp; applications", "Application library"),

@@ -3,12 +3,15 @@
 #   2. a distributor-to-direct factor per volume (direct contracts sit below distributor reel prices);
 #   3. a bottom-up cost floor: dies on a wafer + lead frame, mold compound, wire and assembly + test, at a minimum margin.
 # Everything here is an ESTIMATE from general industry knowledge, not from any supplier's internal data; change any
-# number and the bands follow. The owner's "low end / in the band / high end" calls on parts calibrate each family.
+# number and the bands follow. Checked against 33 TI list prices (ti.com, 21 Oct 2026): test cost per second, gate-driver
+# die size and the slope past the last break were lowered so the band is not held at the floor for most parts. The owner's "low end / in the band / high end" calls on parts calibrate each family.
 
 curve:
   min_qty: 10            # fit the slope on breaks from this quantity up (single-piece prices carry handling costs)
   slope_range: [-0.30, -0.02]   # clamp of the fitted slope (log price vs log quantity)
   default_slope: -0.12   # when there are fewer than two usable breaks
+  extend_slope: [-0.12, -0.04]  # past the last break discounts are gentler: the extension's slope stays in this range
+                                # (TI list tiers fall about 45 % per tenfold up to 1k; no reel buyer sees that to 1M)
 
 # distributor price (curve extended to the volume) -> direct purchase price, as a range per yearly volume.
 # Owner, 21 Oct 2026: DigiKey is at least 50 % above normal purchasing, so direct is at most 1 / 1.5 = 0.67 of DigiKey;
@@ -32,24 +35,24 @@ families:
   digital_isolator:
     label: Digital isolator
     dies: 2
-    die_mm2: [0.8, 1.2, 2.0]
+    die_mm2: [0.7, 1.0, 1.8]
     process: "0.18 um class CMOS, 200 mm"
     wafer_mm: 200
     wafer_usd: [600, 750, 1000]
     defects_per_cm2: 0.1
     test_s: [1.0, 1.5, 3.0]          # includes the high-voltage isolation (hipot) test
-    test_usd_per_s: 0.04
+    test_usd_per_s: 0.02
     note: "Two dies (transmit and receive) across the isolation barrier; channel count changes die area little"
   gate_driver:
     label: Isolated gate driver
     dies: 2
-    die_mm2: [1.5, 2.2, 3.0]
+    die_mm2: [1.0, 1.6, 2.6]
     process: "0.18 um class CMOS / BCD, 200 mm"
     wafer_mm: 200
-    wafer_usd: [700, 900, 1200]
+    wafer_usd: [600, 800, 1100]
     defects_per_cm2: 0.1
     test_s: [1.5, 2.0, 3.5]
-    test_usd_per_s: 0.04
+    test_usd_per_s: 0.02
     note: "Input die and high-current driver die (BCD); protection features add area"
   isolated_amplifier:
     label: Isolated amplifier
@@ -60,7 +63,7 @@ families:
     wafer_usd: [700, 850, 1100]
     defects_per_cm2: 0.1
     test_s: [2.0, 3.0, 4.0]          # precision trim and hipot
-    test_usd_per_s: 0.04
+    test_usd_per_s: 0.02
     note: "Modulator and demodulator dies; precision trim makes test longer"
   rf_switch:
     label: RF switch
@@ -71,7 +74,7 @@ families:
     wafer_usd: [1000, 1200, 1500]
     defects_per_cm2: 0.15
     test_s: [0.3, 0.5, 1.0]
-    test_usd_per_s: 0.05
+    test_usd_per_s: 0.03
     note: "One SOI die; more throws and higher power mean a larger die"
 
 # package classes: package-code prefixes, and lead frame (or substrate), mold compound, wire per pin and assembly (USD, est)
@@ -103,7 +106,7 @@ packages:
     lead_frame: 0.012
     mold: 0.010
     wire_per_pin: 0.0015
-    assembly: 0.040
+    assembly: 0.030
   laminate:
     label: "Laminate / LGA module"
     prefixes: [LGA, ULGA, WLGA, MODULE, MCM, SMT, SMP, FLATPACK]

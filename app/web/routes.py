@@ -31,6 +31,7 @@ from app.services import (
     lifecycle,
     mechanical,
     notes_search,
+    price_model,
     pricing,
     text,
     vocab,
@@ -54,6 +55,7 @@ templates.env.globals.update(
     fff_labels=FFF_STATUS_LABELS,
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
     pricing_enabled=pricing.enabled,
+    has_list_price=price_model.has_list_price,
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
     category_short=CATEGORY_SHORT,
@@ -878,8 +880,6 @@ def pricing_line(
 @router.get("/pricing/{part_id}/model", response_class=HTMLResponse)
 def price_model_panel(request: Request, part_id: int, session: Session = Depends(get_session)):
     """Rough price band at 10k / 100k / 1M a year from the cached DigiKey breaks and a cost floor (estimate)."""
-    from app.services import price_model
-
     part = _part_or_404(session, part_id)
     try:
         pq = pricing.quote_for(session, part)
@@ -897,8 +897,6 @@ def price_model_panel(request: Request, part_id: int, session: Session = Depends
 def price_model_call(part_id: int, verdict: str = Form(...), comment: str = Form(""), author: str = Form(""),
                      session: Session = Depends(get_session)):  # fmt: skip
     """The owner's call: real prices of this part sit at the low end, in the band or at the high end."""
-    from app.services import price_model
-
     part = _part_or_404(session, part_id)
     try:
         price_model.record(session, part.mpn, verdict, comment, author)

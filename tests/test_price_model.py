@@ -50,4 +50,14 @@ def test_no_quote_says_what_is_missing(client, real):  # noqa: F811
     pid = ids(client, "SI86S641EC-IS1")
     html = client.get(f"/pricing/{pid}/model").text
     assert "Not enough to model yet" in html
-    assert 'id="price-model"' not in client.get(f"/parts/{pid}").text  # the panel needs DigiKey connected
+    assert 'id="price-model"' not in client.get(f"/parts/{pid}").text  # no DigiKey and no list price: no panel
+
+
+def test_list_price_when_no_digikey(client, session, part, real):  # noqa: F811
+    assert len(pm.list_prices()) >= 10
+    p = part("ISO7741DBQR")  # TI list price tiers from ti.com, no DigiKey quote in the test database
+    m = pm.model(session, p, None)
+    assert m["source"].startswith("TI list price") and len(m["rows"]) == 3 and not m["missing"]
+    assert m["rows"][0]["high"] < pm.list_prices()["ISO7741DBQR"]["breaks"][-1][1]  # direct below the list price
+    assert 'id="price-model"' in client.get(f"/parts/{p.id}").text
+    assert "TI list price" in client.get(f"/pricing/{p.id}/model").text

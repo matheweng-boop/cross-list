@@ -4,10 +4,10 @@
 {% if m.missing %}<p class="small muted">Not enough to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>{% endif %}
 {% if m.rows %}
 <div class="table-wrap"><table class="small pm-table">
-  <thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th><th scope="col" class="muted">DigiKey curve extended</th></tr></thead>
+  <thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th><th scope="col" class="muted">{{ m.source.split(' (')[0] }} curve extended</th></tr></thead>
   <tbody>{% for r in m.rows %}<tr><th scope="row">{{ '{:,}'.format(r.volume) }}</th><td>{{ money(r.low) }}{% if r.at_floor %} <small class="muted" title="held up by the cost floor">floor</small>{% endif %}</td><td><b>{{ money(r.target) }}</b></td><td>{{ money(r.high) }}</td><td class="muted">{{ money(r.distributor) }}</td></tr>{% endfor %}</tbody>
 </table></div>
-<p class="small muted">From {{ f.points|length }} DigiKey price break{{ 's' if f.points|length != 1 }} ({% for q, p in f.points %}{{ '{:,}'.format(q) }}: {{ money(p) }}{{ ', ' if not loop.last }}{% endfor %}): price falls about {{ '%.0f'|format((1 - 10 ** f.slope) * 100) }} % for every tenfold quantity{% if not f.fitted %} (default slope: too few breaks){% elif f.slope != f.raw_slope %} (fitted slope limited){% endif %}.
+<p class="small muted">From {{ f.points|length }} {{ m.source }} price break{{ 's' if f.points|length != 1 }} ({% for q, p in f.points %}{{ '{:,}'.format(q) }}: {{ money(p) }}{{ ', ' if not loop.last }}{% endfor %}): price falls about {{ '%.0f'|format((1 - 10 ** f.slope) * 100) }} % for every tenfold quantity{% if not f.fitted %} (default slope: too few breaks){% elif f.slope != f.raw_slope %} (fitted slope limited){% endif %}.
   Direct prices are taken as {% for v, k in cfg.volumes.items() %}{{ (k[0] * 100)|int }}–{{ (k[1] * 100)|int }} % of that at {{ '{:,}'.format(v|int) }}{{ ', ' if not loop.last }}{% endfor %}.
   {% if m.n_calls %}Your calls on {{ m.n_calls }} part{{ 's' if m.n_calls != 1 }} of this family move the band ×{{ '%.2f'|format(m.factor) }}.{% endif %}</p>
 {% endif %}

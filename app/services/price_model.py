@@ -22,6 +22,7 @@ from app.config import PROJECT_ROOT
 from app.models import DataReview, Part, PriceQuote
 
 FILE = PROJECT_ROOT / "data" / "business" / "price_model.yaml"
+LIST_FILE = PROJECT_ROOT / "data" / "business" / "list_prices.yaml"  # public list prices from makers' own pages
 DATASET = "price"  # DataReview rows: key = part number, verdict = low | ok | high
 CALLS = {"low": "Our real price is at or below the low end", "ok": "Within the band",
          "high": "Our real price is at or above the high end"}  # fmt: skip
@@ -31,6 +32,15 @@ SIGN = {"low": -1, "ok": 0, "high": 1}
 @lru_cache
 def config() -> dict:
     return yamlio.load(FILE.read_text())
+
+
+@lru_cache
+def list_prices() -> dict[str, dict]:
+    return (yamlio.load(LIST_FILE.read_text()) or {}).get("prices") or {} if LIST_FILE.exists() else {}
+
+
+def has_list_price(mpn: str) -> bool:
+    return mpn in list_prices()
 
 
 def breaks(pq: PriceQuote | None) -> list[tuple[int, float]]:
@@ -122,22 +132,27 @@ def family_factor(session: Session, family: str) -> tuple[float, int]:
 def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
     """The band per volume, the cost floor and everything they rest on; `missing` says what is not there."""
     cfg = config()
-    pts = breaks(pq)
+    pts, source = breaks(pq), "DigiKey"
+    if not pts and part.mpn in list_prices():  # no DigiKey breaks cached: the maker's own public list price tiers
+        lp = list_prices()[part.mpn]
+        pts, source = [(int(q), float(p)) for q, p in lp["breaks"]], f"{lp['maker']} list price ({lp['retrieved']})"
     f = fit(pts)
     cb = cost(part)
     factor, n_calls = family_factor(session, part.family)
     mine = calls(session).get(part.mpn)
-    out = {"points": pts, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls, "call": mine, "rows": [],
-           "missing": []}  # fmt: skip
+    out = {"points": pts, "source": source, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls,
+           "call": mine, "rows": [], "missing": []}  # fmt: skip
     if f is None:
-        out["missing"].append("no DigiKey price breaks cached for this part yet")
+        out["missing"].append("no DigiKey price breaks cached and no public list price for this part yet")
     if cb is None:
         out["missing"].append(f"no cost assumptions for the family '{part.family}'")
     if f is None:
         return out
     floor = cb["floor"] if cb else 0.0
     for vol, (k_lo, k_hi) in cfg["volumes"].items():
-        dist = f["p_end"] * (vol / f["q_end"]) ** f["slope"] if vol > f["q_end"] else f["p_end"]
+        lo_s, hi_s = cfg["curve"]["extend_slope"]
+        ext = min(hi_s, max(lo_s, f["slope"]))  # gentler past the last break
+        dist = f["p_end"] * (vol / f["q_end"]) ** ext if vol > f["q_end"] else f["p_end"]
         lo, hi = max(floor, dist * k_lo * factor), max(floor, dist * k_hi * factor)
         hi = max(hi, lo * cfg["margin"]["min_band"])  # at the floor the band keeps a minimum width
         sign = SIGN.get((mine or {}).get("verdict"), 0)

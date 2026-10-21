@@ -1,0 +1,123 @@
+# Market size (TAM) estimates for specific products or technologies (Data management > TAM estimates).
+#
+# Every figure is copied, as recorded, from the research notes of the preliminary cases
+# (app/web/templates/business/reports/<case>.background.html and data/business/cases/<case>.yaml). Nothing is
+# estimated here and nothing was fetched again. They are EXAMPLES to review: the owner marks each one agree or
+# disagree, with a comment, on the TAM estimates page; new estimates added on that page are stored in the database.
+#
+# Fields
+#   id        short, unique and stable: reviews are stored against it
+#   product   the product or technology the market is about
+#   fn        function id (data/blocks/functions.yaml), when one fits; optional
+#   value     the figure as the source states it (text); usd = the same in US dollars (the low end of a range)
+#   year      the year the figure is for; region = geography / scope of the market
+#   scope     what is counted, as far as the source says
+#   source    title, publisher, url ("" when no link was recorded), date ("not stated" when unknown)
+#   quality   source-quality note: what kind of source it is and how far it can be trusted
+#   origin    where in BizDev the figure was found
+estimates:
+  - id: tuner-ic-mrfr
+    product: Automotive tuner ICs
+    fn: am_fm_tuner
+    value: "$2.31 B"
+    usd: 2310000000
+    year: 2024
+    region: Global
+    scope: "Automotive tuner ICs; forecast $4.04 B in 2035 (5.2 % a year)"
+    source:
+      title: "Automotive Tuner IC Market (report summary)"
+      publisher: Market Research Future
+      url: "https://www.marketresearchfuture.com/de/reports/automotive-tuner-ic-market-34340"
+      date: not stated
+    quality: "Paid analyst report; only the public summary (search snippet) was seen. Analysts disagree by more than 2× on this market (see the other tuner estimates)."
+    origin: "Radio tuner case, background notes 4.13"
+  - id: tuner-ic-emergen
+    product: Automotive tuner ICs
+    fn: am_fm_tuner
+    value: "$1.42 B"
+    usd: 1420000000
+    year: 2024
+    region: Global
+    scope: "Automotive tuner ICs; 7.3 % a year"
+    source:
+      title: "Automotive Tuner IC Market (report summary)"
+      publisher: Emergen Research
+      url: "https://www.emergenresearch.com/industry-report/automotive-tuner-ic-market"
+      date: not stated
+    quality: "Paid analyst report; only the public summary (search snippet) was seen. Market definition not stated."
+    origin: "Radio tuner case, background notes 4.13"
+  - id: tuner-ic-datahorizzon
+    product: Automotive tuner ICs
+    fn: am_fm_tuner
+    value: "$0.89 B"
+    usd: 890000000
+    year: 2024
+    region: Global
+    scope: "Automotive tuner ICs; 5.7 % a year"
+    source:
+      title: "Automotive Tuner ICs Market (report summary)"
+      publisher: DataHorizzon Research
+      url: "https://datahorizzonresearch.com/automotive-tuner-ics-market-62254"
+      date: not stated
+    quality: "Paid analyst report; only the public summary (search snippet) was seen. Closest to BizDev's own bottom-up check ($0.4–1.8 B)."
+    origin: "Radio tuner case, background notes 4.13"
+  - id: digital-radio-tuner-marketintelo
+    product: Automotive digital radio tuner ICs
+    fn: am_fm_tuner
+    value: "$1.8 B"
+    usd: 1800000000
+    year: 2025
+    region: Global
+    scope: "Digital radio (DAB / HD / DRM) tuner ICs for cars; 6.2 % a year"
+    source:
+      title: "Automotive Digital Radio Tuner IC Market (report summary)"
+      publisher: MarketIntelo
+      url: "https://marketintelo.com/report/automotive-digital-radio-tuner-ic-market"
+      date: not stated
+    quality: "Paid analyst report; only the public summary (search snippet) was seen. Digital tuners only, so it should be smaller than all tuner ICs, which it is not for one of the three estimates above."
+    origin: "Radio tuner case, background notes 4.13"
+  - id: auto-timing-sitime
+    product: Automotive timing (oscillators, clock generators)
+    fn: clock_generator
+    value: "$400–500 M"
+    usd: 400000000
+    year: 2024
+    region: Global
+    scope: "Serviceable market for automotive timing as SiTime sees it (a company view, not a full market study)"
+    source:
+      title: "SiTime Q3 2024 earnings call (summary on fintool.com)"
+      publisher: SiTime
+      url: "https://fintool.com/app/research/companies/SITM/earnings/Q3 2024"
+      date: not stated
+    quality: "A supplier's own view, quoted in an analyst summary of the call. It may be set to suit SiTime's products."
+    origin: "Clock tree case, background notes"
+  - id: cpd-system-ksm
+    product: Child presence detection (CPD) systems
+    fn: radar_transceiver
+    value: "$1.5 B, rising to $3.0 B in 2030"
+    usd: 1500000000
+    year: 2024
+    region: Global
+    scope: "Complete CPD systems (sensor, electronics, software), not chips; 12.25 % a year"
+    source:
+      title: "Child presence detection system market (report summary)"
+      publisher: KSM, via GII Korea
+      url: ""
+      date: Dec 2025
+    quality: "Paid analyst report seen as a search snippet; no link was recorded. Counts whole systems, so the chip share is much smaller."
+    origin: "UWB child presence detection case"
+  - id: auto-wifi-modules
+    product: Automotive Wi-Fi modules
+    fn: wifi_fem
+    value: "$3.7–3.9 B"
+    usd: 3700000000
+    year: 2025
+    region: Global
+    scope: "Automotive Wi-Fi modules (radio, front end and board); about 10 % a year. Front-end modules are only a part of it."
+    source:
+      title: "Automotive Wi-Fi module market (press releases)"
+      publisher: SkyQuest; The Business Research Company
+      url: ""
+      date: not stated
+    quality: "Two analyst press releases that roughly agree; no link was recorded. Modules, not front-end chips."
+    origin: "Wi-Fi 7 front-end case"

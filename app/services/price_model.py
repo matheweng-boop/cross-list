@@ -93,7 +93,7 @@ def package_class(code: str) -> str | None:
 
 def _die_cost(area_mm2: float, wafer_mm: float, wafer_usd: float, d0: float) -> float:
     """Wafer cost / good dies: gross dies with the edge-loss term and the negative-binomial yield
-    (1 + A * D0 / alpha) ** -alpha for clustered defects (Technical library: semiconductor_cost)."""
+    (1 + A * D0 / alpha) ** -alpha for clustered defects (Systems library: semiconductor_cost)."""
     gross = math.pi * (wafer_mm / 2) ** 2 / area_mm2 - math.pi * wafer_mm / math.sqrt(2 * area_mm2)
     alpha = config()["yield_model"]["alpha"]
     good = max(gross, 1) * (1 + (area_mm2 / 100) * d0 / alpha) ** -alpha

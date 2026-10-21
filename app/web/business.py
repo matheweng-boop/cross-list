@@ -1,5 +1,5 @@
 """Business opportunity pages: overview (pipeline), applications (coverage + simulator), attach, gaps & ranking,
-TAM data."""
+TAM estimates."""
 
 from collections import Counter
 from datetime import UTC, date, datetime
@@ -13,7 +13,6 @@ from app.config import get_settings
 from app.db import get_session
 from app.matching import engine
 from app.models import (
-    BusinessAssumption,
     Case,
     CaseNote,
     DataReview,
@@ -22,9 +21,10 @@ from app.models import (
     PartMapping,
     PipelineDraft,
     ShortlistItem,
+    TamEstimate,
     TechFeedback,
 )
-from app.services import blocks, cases, library, pipeline, prelim, quality, scoring, vocab, walk
+from app.services import blocks, cases, library, pipeline, prelim, quality, scoring, tam, vocab, walk
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -363,21 +363,32 @@ def shortlist(request: Request, co: str = "combined", session: Session = Depends
 def method(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     c.update(src=op.sources(c["apps"]), help=op.explanations(), prox_label=op.PROXIMITY_LABEL,
-             path_label=op.PATH_LABEL, cfg=scoring.config(),
+             path_label=op.PATH_LABEL, cfg=scoring.config(), tam_n=tam.counts(session)["n"],
              cross={"categories": list(engine.CATEGORY_LABELS.values()), "max_dev": engine.DEFAULT_MAX_DEVIATIONS,
                     "weights": engine.PRIORITY_WEIGHT, "unknown": engine.UNKNOWN_SEVERITY})  # fmt: skip
     return templates.TemplateResponse(request, "business/method.html", c)
 
 
-@router.get("/business/data", response_class=HTMLResponse)
-def data(request: Request, co: str = "combined", focus: str = "", session: Session = Depends(get_session)):
-    c = _ctx(session, co)
-    uses = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status in op.IN_SCOPE})
-    c["asp_fns"] = sorted(uses, key=lambda f: vocab.fn_label(f))
-    c["uses"] = uses
-    c["meta"] = {(m.kind, m.key): m for m in session.scalars(select(BusinessAssumption))}
-    c["focus"] = focus
-    return templates.TemplateResponse(request, "business/data.html", c)
+@router.get("/business/data")
+def data_moved():
+    """Commercial inputs (ASPs and volumes) were replaced by TAM estimates per product or technology."""
+    return RedirectResponse("/business/tam", status_code=307)
+
+
+@router.post("/business/data")
+def data_moved_post():
+    return RedirectResponse("/business/tam", status_code=303)
+
+
+@router.get("/business/tam", response_class=HTMLResponse)
+def tam_page(request: Request, saved: str = "", error: str = "", session: Session = Depends(get_session)):
+    """TAM estimates: market size per product or technology, each with its source and the owner's review."""
+    rows = tam.estimates(session)
+    fns = blocks.catalogue()["functions"]
+    ctx = {"rows": rows, "counts": tam.counts(session), "hint": tam.check_hint, "saved": saved, "error": error,
+           "fns": fns, "fn_choices": sorted(((k, f.get("label", k)) for k, f in fns.items()),
+                                            key=lambda kv: kv[1].lower())}  # fmt: skip
+    return templates.TemplateResponse(request, "business/tam.html", ctx)
 
 
 def _num(v: str) -> float | None:
@@ -388,33 +399,39 @@ def _num(v: str) -> float | None:
         return None
 
 
-@router.post("/business/data")
-async def save_data(request: Request, co: str = Form("combined"), session: Session = Depends(get_session)):
-    form = await request.form()
-    meta: dict[tuple[str, str], dict] = {}
-    for k, v in form.items():
-        if k.startswith("asp:"):
-            op.set_input(session, "asp", k[4:], _num(str(v)))
-        elif k.startswith("vol:"):
-            op.set_input(session, "volume", k[4:], _num(str(v)))
-        elif k.startswith("meta:"):  # meta:<asp|volume>:<field>:<key>
-            _, kind, fld, key = k.split(":", 3)
-            if fld in ("source", "year", "geography", "currency", "scenario", "confidence"):
-                meta.setdefault((kind, key), {})[fld] = str(v).strip()
-    for (kind, key), fields in meta.items():
-        row = session.scalar(
-            select(BusinessAssumption).where(BusinessAssumption.kind == kind, BusinessAssumption.key == key)
-        )
-        if not any(fields.values()) and not row:
-            continue
-        row = row or BusinessAssumption(kind=kind, key=key)
-        year = fields.get("year", "")
-        row.source, row.year = fields.get("source") or None, int(year) if year.isdigit() else None
-        row.geography, row.currency = fields.get("geography") or None, fields.get("currency") or None
-        row.scenario, row.confidence = fields.get("scenario") or None, fields.get("confidence") or None
-        session.add(row)
+@router.post("/business/tam")
+async def tam_add(request: Request, session: Session = Depends(get_session)):
+    form = {k: str(v).strip() for k, v in (await request.form()).items()}
+    product, value = form.get("product", "")[:200], form.get("value", "")[:100]
+    if not product or not value:
+        return RedirectResponse("/business/tam?error=Give+the+product+and+the+market+size#add", status_code=303)
+    url = form.get("source_url", "")[:500]
+    year = form.get("year", "")
+    session.add(TamEstimate(
+        product=product, value=value, usd=tam.parse_usd(value), year=int(year) if year.isdigit() else None,
+        fn=form.get("fn") if form.get("fn") in blocks.catalogue()["functions"] else None,
+        region=form.get("region", "")[:100] or None, scope=form.get("scope", "")[:500] or None,
+        source_title=form.get("source_title", "")[:300] or None,
+        source_publisher=form.get("source_publisher", "")[:200] or None,
+        source_url=url if url.startswith(("http://", "https://")) else None,
+        source_date=form.get("source_date", "")[:40] or None, quality=form.get("quality", "")[:2000] or None,
+        author=form.get("author", "")[:100] or None,
+    ))  # fmt: skip
     session.commit()
-    return RedirectResponse(f"/business/data?co={co}&saved=1", status_code=303)
+    return RedirectResponse("/business/tam?saved=1", status_code=303)
+
+
+@router.post("/business/tam/review")
+def tam_review(key: str = Form(...), answer: str = Form(...), comment: str = Form(""), author: str = Form(""),
+               back: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
+    """Agree / disagree with an estimate (Yes / No in the Data quality questions), with an optional comment."""
+    verdict = {"agree": "correct", "yes": "correct", "disagree": "wrong", "no": "wrong"}.get(answer)
+    if verdict is None or not tam.known_key(session, key):
+        raise HTTPException(400, "Unknown estimate or answer")
+    session.add(DataReview(dataset=tam.DATASET, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
+                           author=author.strip()[:100] or None))  # fmt: skip
+    session.commit()
+    return RedirectResponse(local_path(back) if back else f"/business/tam#t-{key}", status_code=303)
 
 
 @router.post("/api/business/asp")
@@ -686,11 +703,26 @@ def data_quality(request: Request, co: str = "combined", session: Session = Depe
     c = _ctx(session, co)
     c.update(unofficial=unofficial_counts(session), unofficial_on=get_settings().use_unofficial_data)
     tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
-    c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session),
-             queue=quality.queue(session, c["apps"], tab), research=quality.research(c["apps"], tab),
+    c.update(checks=quality.checks(c["apps"]), questions=quality.questions(session, c["apps"], tab),
+             research=quality.research(c["apps"], tab),
              rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
              mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip
     return templates.TemplateResponse(request, "business/quality.html", c)
+
+
+@router.post("/business/quality/answer")
+def quality_answer(dataset: str = Form(...), key: str = Form(...), answer: str = Form(...), comment: str = Form(""),
+                   author: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
+    """Yes / No to one review question, with an optional comment: stored as a review of the item."""
+    verdict = {"yes": "correct", "no": "wrong"}.get(answer)
+    known = tam.known_key(session, key) if dataset == tam.DATASET else key in (quality.datasets().get(dataset) or
+                                                                                ("", {}))[1]  # fmt: skip
+    if verdict is None or not known:
+        raise HTTPException(400, "Unknown question or answer")
+    session.add(DataReview(dataset=dataset, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
+                           author=author.strip()[:100] or None))  # fmt: skip
+    session.commit()
+    return RedirectResponse("/business/quality?answered=1#questions", status_code=303)
 
 
 @router.get("/business/quality/todo.txt", response_class=PlainTextResponse)

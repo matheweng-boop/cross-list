@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Data management</h1>
+<p class="subtitle muted">What is waiting for you, and how much of each data set has been checked.</p>
+
+<div class="ov-wait small">
+  <a class="ov-chip" href="/manage/verify"><b>{{ waiting.verify }}</b> to verify</a>
+  <a class="ov-chip" href="/business/tam"><b>{{ tam.open }}</b> TAM figures to review</a>
+  <a class="ov-chip" href="/business/quality#questions">Data questions</a>
+  <a class="ov-chip" href="/manage/feedback"><b>{{ waiting.feedback }}</b> new feedback</a>
+  <a class="ov-chip" href="/manage/uploads?status=new"><b>{{ waiting.uploads }}</b> new uploads</a>
+</div>
+
+<h2 class="ov-h">Review status per data set</h2>
+<div class="table-wrap"><table class="ov-table">
+  <thead><tr><th scope="col">Data set</th><th scope="col" title="Items in the data set">Items</th><th scope="col" title="Checked and found right">✓</th><th scope="col" title="Checked and found wrong">✗</th><th scope="col" title="Not checked by a person yet">Open</th><th scope="col" title="Source opened and confirmed">Source ✓</th></tr></thead>
+  <tbody>{% for s in stats %}<tr>
+    <th scope="row">{% if s.name == 'tam' %}<a href="/business/tam">{{ s.label }}</a>{% else %}{{ s.label }}{% endif %}</th><td>{{ s.n_items }}</td>
+    <td><span class="ov-bar" title="{{ (100 * s.verified / s.n_items if s.n_items else 0)|round|int }} % checked"><i style="width:{{ (100 * s.verified / s.n_items if s.n_items else 0)|round|int }}%"></i></span>{{ s.verified }}</td>
+    <td>{% if s.disputed %}<b class="q-error">{{ s.disputed }}</b>{% else %}0{% endif %}</td><td>{{ s.unverified }}</td><td>{{ s.src_ok }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">✓ right · ✗ wrong (to fix in the next data update) · Open = not checked yet. Answer the open items as questions on <a href="/business/quality#questions">Data quality</a>.</p>
+{% endblock %}

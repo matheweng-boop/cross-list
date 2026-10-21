@@ -1,0 +1,120 @@
+# Price model (app/services/price_model.py): a rough price band per part at 10k / 100k / 1M a year, from
+#   1. the part's DigiKey price breaks (cached on the live site): fitted price-vs-quantity slope, extended past the reel;
+#   2. a distributor-to-direct factor per volume (direct contracts sit below distributor reel prices);
+#   3. a bottom-up cost floor: dies on a wafer + lead frame, mold compound, wire and assembly + test, at a minimum margin.
+# Everything here is an ESTIMATE from general industry knowledge, not from any supplier's internal data; change any
+# number and the bands follow. The owner's "low end / in the band / high end" calls on parts calibrate each family.
+
+curve:
+  min_qty: 10            # fit the slope on breaks from this quantity up (single-piece prices carry handling costs)
+  slope_range: [-0.30, -0.02]   # clamp of the fitted slope (log price vs log quantity)
+  default_slope: -0.12   # when there are fewer than two usable breaks
+
+# distributor price (curve extended to the volume) -> direct purchase price, as a range per yearly volume.
+# Owner, 21 Oct 2026: DigiKey is at least 50 % above normal purchasing, so direct is at most 1 / 1.5 = 0.67 of DigiKey;
+# the extended curve already brings the price down with volume, so the low end widens a little at higher volumes.
+volumes:
+  10000:   [0.55, 0.67]
+  100000:  [0.50, 0.67]
+  1000000: [0.45, 0.67]
+
+margin:
+  floor: 0.40            # below this gross margin a supplier rarely goes: the floor of the band
+  typical: [0.45, 0.65]
+  min_band: 1.15         # the high end stays at least 15 % above the low end (where the floor holds both up)  # shown with the cost build-up (Skyworks reports about 45-50 %, analog peers 60 % and more)
+
+calls:                   # the owner's calls on a part move its family's band
+  step: 0.08             # each "low end" call x0.92, each "high end" call x1.08
+  limits: [0.6, 1.6]
+
+# per part family: dies per part, area per die (mm2, low / mid / high), wafer and test (est)
+families:
+  digital_isolator:
+    label: Digital isolator
+    dies: 2
+    die_mm2: [0.8, 1.2, 2.0]
+    process: "0.18 um class CMOS, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [600, 750, 1000]
+    defects_per_cm2: 0.1
+    test_s: [1.0, 1.5, 3.0]          # includes the high-voltage isolation (hipot) test
+    test_usd_per_s: 0.04
+    note: "Two dies (transmit and receive) across the isolation barrier; channel count changes die area little"
+  gate_driver:
+    label: Isolated gate driver
+    dies: 2
+    die_mm2: [1.5, 2.2, 3.0]
+    process: "0.18 um class CMOS / BCD, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [700, 900, 1200]
+    defects_per_cm2: 0.1
+    test_s: [1.5, 2.0, 3.5]
+    test_usd_per_s: 0.04
+    note: "Input die and high-current driver die (BCD); protection features add area"
+  isolated_amplifier:
+    label: Isolated amplifier
+    dies: 2
+    die_mm2: [1.5, 2.0, 2.5]
+    process: "0.18 um class CMOS, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [700, 850, 1100]
+    defects_per_cm2: 0.1
+    test_s: [2.0, 3.0, 4.0]          # precision trim and hipot
+    test_usd_per_s: 0.04
+    note: "Modulator and demodulator dies; precision trim makes test longer"
+  rf_switch:
+    label: RF switch
+    dies: 1
+    die_mm2: [0.4, 0.8, 1.5]
+    process: "RF-SOI, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [1000, 1200, 1500]
+    defects_per_cm2: 0.15
+    test_s: [0.3, 0.5, 1.0]
+    test_usd_per_s: 0.05
+    note: "One SOI die; more throws and higher power mean a larger die"
+
+# package classes: package-code prefixes, and lead frame (or substrate), mold compound, wire per pin and assembly (USD, est)
+packages:
+  small_leadframe:
+    label: "Small lead frame (SOT, SC, DFN, SON)"
+    prefixes: [SOT, SC, DFN, VSON, WSON, TSNP, TSLP, MLPD, PDFN, MLP, STDFN, MSOP, MIS]
+    lead_frame: 0.004
+    mold: 0.002
+    wire_per_pin: 0.0010
+    assembly: 0.015
+  qfn:
+    label: "QFN"
+    prefixes: [QFN, PQFN, HQFN, MCLP, STQFN, AQFN]
+    lead_frame: 0.008
+    mold: 0.003
+    wire_per_pin: 0.0012
+    assembly: 0.025
+  soic:
+    label: "SOIC / SOP narrow body"
+    prefixes: [SOIC, SO, SOP, QSOP, SSOP, PG-DSO]
+    lead_frame: 0.006
+    mold: 0.004
+    wire_per_pin: 0.0015
+    assembly: 0.020
+  soic_wide:
+    label: "Wide-body SOIC (isolation: high-CTI mold compound, long creepage)"
+    prefixes: [SOW, SOWW, SSOW, SSO, PG-LDSO, SDIP, DUB, DIP, SOL]
+    lead_frame: 0.012
+    mold: 0.010
+    wire_per_pin: 0.0015
+    assembly: 0.040
+  laminate:
+    label: "Laminate / LGA module"
+    prefixes: [LGA, ULGA, WLGA, MODULE, MCM, SMT, SMP, FLATPACK]
+    lead_frame: 0.080            # the laminate substrate
+    mold: 0.010
+    wire_per_pin: 0.0020
+    assembly: 0.080
+  wlcsp:
+    label: "Wafer-level chip-scale package"
+    prefixes: [WLCSP]
+    lead_frame: 0.0
+    mold: 0.0
+    wire_per_pin: 0.0
+    assembly: 0.012              # bumping and singulation

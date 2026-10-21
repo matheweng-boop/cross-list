@@ -875,6 +875,38 @@ def pricing_line(
     )
 
 
+@router.get("/pricing/{part_id}/model", response_class=HTMLResponse)
+def price_model_panel(request: Request, part_id: int, session: Session = Depends(get_session)):
+    """Rough price band at 10k / 100k / 1M a year from the cached DigiKey breaks and a cost floor (estimate)."""
+    from app.services import price_model
+
+    part = _part_or_404(session, part_id)
+    try:
+        pq = pricing.quote_for(session, part)
+        session.commit()
+    except pricing.DigiKeyError:
+        session.rollback()
+        pq = pricing.quote_for(session, part, fetch=False)
+    currency = pq.currency if pq else get_settings().digikey_currency
+    ctx = {"part": part, "m": price_model.model(session, part, pq), "calls": price_model.CALLS,
+           "cfg": price_model.config(), "symbol": CURRENCY_SYMBOLS.get(currency, currency + " ")}  # fmt: skip
+    return templates.TemplateResponse(request, "_price_model.html", ctx)
+
+
+@router.post("/pricing/{part_id}/call")
+def price_model_call(part_id: int, verdict: str = Form(...), comment: str = Form(""), author: str = Form(""),
+                     session: Session = Depends(get_session)):  # fmt: skip
+    """The owner's call: real prices of this part sit at the low end, in the band or at the high end."""
+    from app.services import price_model
+
+    part = _part_or_404(session, part_id)
+    try:
+        price_model.record(session, part.mpn, verdict, comment, author)
+    except ValueError as e:
+        raise HTTPException(400, "Unknown call") from e
+    return RedirectResponse(f"/parts/{part.id}?price=open#price-model", status_code=303)
+
+
 @router.get("/suggest", response_class=HTMLResponse)
 def suggest(request: Request, q: str = "", session: Session = Depends(get_session)):
     """Live part-number suggestions (HTML fragment for the header search box)."""

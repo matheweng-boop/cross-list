@@ -1,0 +1,155 @@
+"""Rough price band per part at 10k / 100k / 1M a year (assumptions: data/business/price_model.yaml).
+
+1. Curve: the part's DigiKey price breaks (cached quote) give a price-vs-quantity slope (least squares on log-log),
+   extended past the reel quantity.
+2. Band: that extended distributor price times a distributor-to-direct factor range per volume.
+3. Floor: a bottom-up cost (dies on a wafer with a simple yield model + lead frame, mold compound, wire, assembly +
+   test) divided by (1 - minimum margin); the band never goes below it.
+4. Calls: the owner says whether real prices sit at the low end, in the band or at the high end; every call moves the
+   band of the part's family, and a part's own call places its target.
+
+Everything is an estimate; the page shows every input so a wrong one can be spotted and changed in the YAML.
+"""
+
+import math
+from functools import lru_cache
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app import yamlio
+from app.config import PROJECT_ROOT
+from app.models import DataReview, Part, PriceQuote
+
+FILE = PROJECT_ROOT / "data" / "business" / "price_model.yaml"
+DATASET = "price"  # DataReview rows: key = part number, verdict = low | ok | high
+CALLS = {"low": "Our real price is at or below the low end", "ok": "Within the band",
+         "high": "Our real price is at or above the high end"}  # fmt: skip
+SIGN = {"low": -1, "ok": 0, "high": 1}
+
+
+@lru_cache
+def config() -> dict:
+    return yamlio.load(FILE.read_text())
+
+
+def breaks(pq: PriceQuote | None) -> list[tuple[int, float]]:
+    """Lowest price at each break quantity over all the quote's offers (cut tape, reel …)."""
+    best: dict[int, float] = {}
+    for offer in (pq.offers or []) if pq is not None and pq.found else []:
+        for q, p in offer.get("breaks") or []:
+            if p and p > 0 and (q not in best or p < best[q]):
+                best[int(q)] = float(p)
+    return sorted(best.items())
+
+
+def fit(points: list[tuple[int, float]]) -> dict | None:
+    """Slope of log price vs log quantity on the breaks from min_qty up, clamped; anchored at the largest break."""
+    if not points:
+        return None
+    c = config()["curve"]
+    use = [(q, p) for q, p in points if q >= c["min_qty"]] or points
+    lo, hi = c["slope_range"]
+    if len(use) >= 2:
+        xs, ys = [math.log(q) for q, _ in use], [math.log(p) for _, p in use]
+        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+        sxx = sum((x - mx) ** 2 for x in xs)
+        slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / sxx if sxx else c["default_slope"]
+        fitted = True
+    else:
+        slope, fitted = c["default_slope"], False
+    q_end, p_end = use[-1]
+    return {"slope": min(hi, max(lo, slope)), "raw_slope": slope, "fitted": fitted, "q_end": q_end, "p_end": p_end,
+            "points": use}  # fmt: skip
+
+
+def package_class(code: str) -> str | None:
+    code = (code or "").upper().strip()
+    pairs = [(p, k) for k, v in config()["packages"].items() for p in v["prefixes"]]
+    prefixes = sorted(pairs, key=lambda x: -len(x[0]))  # longest first: SSOP before SSO, SOIC before SO
+    return next((k for p, k in prefixes if code.startswith(p)), None)
+
+
+def _die_cost(area_mm2: float, wafer_mm: float, wafer_usd: float, d0: float) -> float:
+    """Wafer cost / good dies: gross dies with the edge-loss term, Poisson yield exp(-A * D0)."""
+    gross = math.pi * (wafer_mm / 2) ** 2 / area_mm2 - math.pi * wafer_mm / math.sqrt(2 * area_mm2)
+    good = max(gross, 1) * math.exp(-(area_mm2 / 100) * d0)
+    return wafer_usd / good
+
+
+def cost(part: Part) -> dict | None:
+    """Cost build-up (low / mid / high) for the part's family and package; None for an unknown family."""
+    cfg = config()
+    fam = cfg["families"].get(part.family)
+    if fam is None:
+        return None
+    pins = (part.package.pin_count if part.package else None) or 8
+    pk_key = package_class(part.package.code if part.package else "") or "soic"
+    if pk_key == "soic" and part.package and (part.package.span_mm or 0) >= 9:  # e.g. SOIC-16W, SOIC-16 (DW)
+        pk_key = "soic_wide"
+    pk = cfg["packages"][pk_key]
+    pkg = {"lead_frame": pk["lead_frame"], "mold": pk["mold"], "wire": pk["wire_per_pin"] * pins,
+           "assembly": pk["assembly"]}  # fmt: skip
+    out = {}
+    for i, level in enumerate(("low", "mid", "high")):
+        die = fam["dies"] * _die_cost(fam["die_mm2"][i], fam["wafer_mm"], fam["wafer_usd"][i], fam["defects_per_cm2"])
+        test = fam["test_s"][i] * fam["test_usd_per_s"]
+        out[level] = {"die": die, "test": test, "total": die + sum(pkg.values()) + test}
+    return {"family": fam, "package": pk, "package_key": pk_key, "pins": pins, "pkg": pkg, "levels": out,
+            "floor": out["mid"]["total"] / (1 - cfg["margin"]["floor"])}  # fmt: skip
+
+
+def calls(session: Session) -> dict[str, dict]:
+    """Latest call per part number: {"verdict", "comment", "author", "date"}."""
+    out: dict[str, dict] = {}
+    for r in session.scalars(select(DataReview).where(DataReview.dataset == DATASET).order_by(DataReview.id)):
+        out[r.key] = {"verdict": r.verdict, "comment": r.comment, "author": r.author, "date": r.created_at}
+    return {k: v for k, v in out.items() if v["verdict"] in SIGN}
+
+
+def family_factor(session: Session, family: str) -> tuple[float, int]:
+    """(multiplier, number of calls) from the owner's calls on parts of the family."""
+    c = config()["calls"]
+    mpns = calls(session)
+    if not mpns:
+        return 1.0, 0
+    fam = {p.mpn: p.family for p in session.scalars(select(Part).where(Part.mpn.in_(list(mpns))))}
+    signs = [SIGN[v["verdict"]] for k, v in mpns.items() if fam.get(k) == family]
+    m = math.prod((1 + c["step"] * s) for s in signs) if signs else 1.0
+    return min(c["limits"][1], max(c["limits"][0], m)), len(signs)
+
+
+def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
+    """The band per volume, the cost floor and everything they rest on; `missing` says what is not there."""
+    cfg = config()
+    pts = breaks(pq)
+    f = fit(pts)
+    cb = cost(part)
+    factor, n_calls = family_factor(session, part.family)
+    mine = calls(session).get(part.mpn)
+    out = {"points": pts, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls, "call": mine, "rows": [],
+           "missing": []}  # fmt: skip
+    if f is None:
+        out["missing"].append("no DigiKey price breaks cached for this part yet")
+    if cb is None:
+        out["missing"].append(f"no cost assumptions for the family '{part.family}'")
+    if f is None:
+        return out
+    floor = cb["floor"] if cb else 0.0
+    for vol, (k_lo, k_hi) in cfg["volumes"].items():
+        dist = f["p_end"] * (vol / f["q_end"]) ** f["slope"] if vol > f["q_end"] else f["p_end"]
+        lo, hi = max(floor, dist * k_lo * factor), max(floor, dist * k_hi * factor)
+        hi = max(hi, lo * cfg["margin"]["min_band"])  # at the floor the band keeps a minimum width
+        sign = SIGN.get((mine or {}).get("verdict"), 0)
+        target = lo if sign < 0 else hi if sign > 0 else math.sqrt(lo * hi)
+        out["rows"].append({"volume": int(vol), "distributor": dist, "low": lo, "target": target, "high": hi,
+                            "at_floor": lo <= floor + 1e-9})  # fmt: skip
+    return out
+
+
+def record(session: Session, mpn: str, verdict: str, comment: str = "", author: str = "") -> None:
+    if verdict not in SIGN:
+        raise ValueError("unknown call")
+    session.add(DataReview(dataset=DATASET, key=mpn[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
+                           author=author.strip()[:100] or None))  # fmt: skip
+    session.commit()

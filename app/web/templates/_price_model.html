@@ -1,0 +1,29 @@
+{# Price vs volume panel of the part page (app/services/price_model.py); loaded when the panel is opened #}
+{% macro money(x) %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
+{% set f, cb = m.fit, m.cost %}
+{% if m.missing %}<p class="small muted">Not enough to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>{% endif %}
+{% if m.rows %}
+<div class="table-wrap"><table class="small pm-table">
+  <thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th><th scope="col" class="muted">DigiKey curve extended</th></tr></thead>
+  <tbody>{% for r in m.rows %}<tr><th scope="row">{{ '{:,}'.format(r.volume) }}</th><td>{{ money(r.low) }}{% if r.at_floor %} <small class="muted" title="held up by the cost floor">floor</small>{% endif %}</td><td><b>{{ money(r.target) }}</b></td><td>{{ money(r.high) }}</td><td class="muted">{{ money(r.distributor) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">From {{ f.points|length }} DigiKey price break{{ 's' if f.points|length != 1 }} ({% for q, p in f.points %}{{ '{:,}'.format(q) }}: {{ money(p) }}{{ ', ' if not loop.last }}{% endfor %}): price falls about {{ '%.0f'|format((1 - 10 ** f.slope) * 100) }} % for every tenfold quantity{% if not f.fitted %} (default slope: too few breaks){% elif f.slope != f.raw_slope %} (fitted slope limited){% endif %}.
+  Direct prices are taken as {% for v, k in cfg.volumes.items() %}{{ (k[0] * 100)|int }}–{{ (k[1] * 100)|int }} % of that at {{ '{:,}'.format(v|int) }}{{ ', ' if not loop.last }}{% endfor %}.
+  {% if m.n_calls %}Your calls on {{ m.n_calls }} part{{ 's' if m.n_calls != 1 }} of this family move the band ×{{ '%.2f'|format(m.factor) }}.{% endif %}</p>
+{% endif %}
+{% if cb %}<details class="small"><summary>Cost floor: {{ money(cb.floor) }} <span class="muted">(cost {{ money(cb.levels.mid.total) }} at {{ (cfg.margin.floor * 100)|int }} % minimum margin)</span></summary>
+<div class="table-wrap"><table class="pm-table"><thead><tr><th scope="col">Cost (est)</th><th scope="col">Low</th><th scope="col">Mid</th><th scope="col">High</th><th scope="col">Basis</th></tr></thead><tbody>
+  <tr><td>Dies</td>{% for l in ('low', 'mid', 'high') %}<td>{{ money(cb.levels[l].die) }}</td>{% endfor %}<td>{{ cb.family.dies }} × {{ cb.family.die_mm2|join(' / ') }} mm² on {{ cb.family.process }}, wafer {{ symbol }}{{ cb.family.wafer_usd|join(' / ') }}</td></tr>
+  <tr><td>Lead frame / substrate</td><td colspan="3">{{ money(cb.pkg.lead_frame) }}</td><td rowspan="4">{{ cb.package.label }}, {{ cb.pins }} pins</td></tr>
+  <tr><td>Mold compound</td><td colspan="3">{{ money(cb.pkg.mold) }}</td></tr>
+  <tr><td>Wire bonds</td><td colspan="3">{{ money(cb.pkg.wire) }}</td></tr>
+  <tr><td>Assembly</td><td colspan="3">{{ money(cb.pkg.assembly) }}</td></tr>
+  <tr><td>Test</td>{% for l in ('low', 'mid', 'high') %}<td>{{ money(cb.levels[l].test) }}</td>{% endfor %}<td>{{ cb.family.test_s|join(' / ') }} s at {{ symbol }}{{ cb.family.test_usd_per_s }}/s</td></tr>
+  <tr><th>Total</th>{% for l in ('low', 'mid', 'high') %}<th>{{ money(cb.levels[l].total) }}</th>{% endfor %}<td class="muted">{{ cb.family.note }}</td></tr>
+</tbody></table></div></details>{% endif %}
+{% if m.rows %}<form method="post" action="/pricing/{{ part.id }}/call" class="pm-call">
+  <p class="small"><b>Where do real prices sit?</b>{% if m.call %} Your last call: <span class="pc-v">{{ calls[m.call.verdict] }}</span>{% if m.call.comment %} <span class="muted">· {{ m.call.comment }}</span>{% endif %}{% endif %}</p>
+  <input type="text" name="comment" maxlength="2000" placeholder="Optional: what you know, e.g. 'about 0.45 at 500k'" aria-label="Comment">
+  <span class="pc-btns"><button name="verdict" value="low" class="small-btn outline">Low end</button><button name="verdict" value="ok" class="small-btn outline">In the band</button><button name="verdict" value="high" class="small-btn outline">High end</button></span>
+</form>
+<p class="small muted">A rough estimate for ranking and sanity checks, not a quote. Every assumption is in <code>data/business/price_model.yaml</code>; your calls stay in this site's database.</p>{% endif %}

@@ -128,3 +128,11 @@ def test_oem_targets_and_our_part_from_a_competitor(client, session):
                                                    "package": "SOIC-32W", "pins": 32, "wide": "true",
                                                    "automotive": "true", "sop": 2029, "ours": "Si82900"}).text
     assert "OEM target prices" in html and "SOP 2029" in html and "Si82900" in html and "priced at 90" in html
+
+
+def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
+    lp = pm.list_prices()["ISO7710FDR"]
+    assert lp["currency"] == "EUR" and lp["source"].startswith("DigiKey")
+    m = pm.model(session, part("ISO7710FDR"), None)
+    assert m["converted_from"] == "EUR" and m["source"].startswith("DigiKey (owner")
+    assert abs(m["fit"]["p_end"] - lp["breaks"][-1][1] * pm.usd_rate("EUR")) < 1e-9

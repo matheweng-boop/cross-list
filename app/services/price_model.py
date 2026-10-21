@@ -157,15 +157,18 @@ def family_factor(session: Session, family: str) -> tuple[float, int]:
 def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
     """The band per volume, the cost floor and everything they rest on; `missing` says what is not there."""
     cfg = config()
-    pts, source = breaks(pq), "DigiKey"
+    pts, source, list_cur = breaks(pq), "DigiKey", None
     if not pts and part.mpn in list_prices():  # no DigiKey breaks cached: the maker's own public list price tiers
         lp = list_prices()[part.mpn]
-        pts, source = [(int(q), float(p)) for q, p in lp["breaks"]], f"{lp['maker']} list price ({lp['retrieved']})"
+        list_cur = (lp.get("currency") or "USD").upper()
+        rate = usd_rate(list_cur)
+        pts = [(int(q), float(p) * rate) for q, p in lp["breaks"]]
+        source = f"{lp.get('source') or lp['maker'] + ' list price'} ({lp['retrieved']})"
     f = fit(pts)
     cb = cost(part)
     factor, n_calls = family_factor(session, part.family)
     mine = calls(session).get(part.mpn)
-    cur = (getattr(pq, "currency", None) or "USD").upper() if pts and source == "DigiKey" else "USD"
+    cur = list_cur or ((getattr(pq, "currency", None) or "USD").upper() if pts else "USD")
     out = {"points": pts, "source": source, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls,
            "call": mine, "rows": [], "missing": [], "converted_from": cur if cur != "USD" else None}  # fmt: skip
     if f is None:

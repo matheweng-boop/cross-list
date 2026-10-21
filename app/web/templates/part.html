@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import part_badges, diff_table, unofficial_mark, unofficial_footnote %}
+{% from "reviews/_parts.html" import part_reviews %}
 {% set uk = unofficial_keys(part) %}
 {% block title %}{{ page_title(request.url.path, part.mpn) }}{% endblock %}
 {% block content %}
@@ -14,6 +15,7 @@
   <div><dt>Source</dt><dd>{% if part.datasheet_url %}<a href="{{ part.datasheet_url }}" target="_blank" rel="noopener">Datasheet</a>{% endif %}{% if part.datasheet_url and part.product_url %} · {% endif %}{% if part.product_url %}<a href="{{ part.product_url }}" target="_blank" rel="noopener">Product page</a>{% endif %}{% if not part.datasheet_url and not part.product_url %}<span class="muted">none linked</span>{% endif %}</dd></div>
 </dl>
 <p class="part-summary"><b>{{ part_summary(part) }}</b></p>
+{{ part_reviews(part.mpn) }}
 {% if not part.is_reference %}<nav class="walk-bar small" aria-label="Walk-through from this part"><span><span class="walk-n">1</span> Replacement: below</span>
   <a class="button small-btn outline" href="/parts/{{ part.id }}/walk?upto=2#step-2">Next: 2 Sell around it →</a>
   <span class="muted">then best of ours, make it better, future · one step at a time</span></nav>{% endif %}

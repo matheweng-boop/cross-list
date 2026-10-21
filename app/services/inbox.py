@@ -1,7 +1,8 @@
 """Everything the owner said on the site since a day, as one text for the daily update run (GET /api/inbox).
 
 Site feedback (grouped as in the daily digest), cross verdicts, diagram and technology feedback, data-review answers
-(agree / disagree, yes / no, with comments) and questions asked on reports with their answers. Requested volumes,
+(agree / disagree, yes / no, with comments), questions asked on reports with their answers and the technology review
+requests (all open ones, and those closed since the day). Requested volumes,
 customers and markets are left out on purpose: they stay on the site.
 """
 
@@ -10,7 +11,15 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import BlockFeedback, CrossFeedback, DataReview, Part, ReportQuestion, SiteFeedback, TechFeedback
+from app.models import (
+    BlockFeedback,
+    CrossFeedback,
+    DataReview,
+    Part,
+    ReportQuestion,
+    SiteFeedback,
+    TechFeedback,
+)
 from app.services import feedback as fb
 
 
@@ -20,6 +29,10 @@ def _since(day: date) -> datetime:
 
 def _when(dt: datetime) -> str:
     return (dt if dt.tzinfo else dt.replace(tzinfo=UTC)).strftime("%Y-%m-%d %H:%M")
+
+
+def _aware(dt: datetime) -> datetime:
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def _one_line(text: str | None) -> str:
@@ -74,7 +87,23 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
             f"{' · answer: ' + _one_line(q.answer) if q.answer else ''}"
             for q in [*asked, *answered]] or ["None."]  # fmt: skip
 
+    # every open request (the run writes the review), and those closed since the last pull
+    from app.services import reviews as rv
+
+    rq = [e for e in rv.requests(session)
+          if e["status"] in ("new", "in_progress") or _aware(e["row"].created_at) >= start]  # fmt: skip
+    rq.sort(key=lambda e: e["row"].created_at)
+    out.append("\n## Technology review requests\n")
+    out.append("Open requests get a review written as data/reviews/<slug>.yaml (format: data/reviews/_format.yaml).\n")
+    for e in rq:
+        x = e["row"]
+        out.append(f"- {_when(x.created_at)} [{e['status']}] {x.mpn}: {_one_line(x.question)}"
+                   f"{' · application: ' + _one_line(x.application) if x.application else ''}"
+                   f"{' · review: /reviews/' + e['review']['slug'] if e['review'] else ''}")  # fmt: skip
+    if not rq:
+        out.append("None.")
+
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
-    if not any([n_site, crosses, blocks, tech, reviews, asked, answered]):
+    if not any([n_site, crosses, blocks, tech, reviews, asked, answered, rq]):  # open requests are work too
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

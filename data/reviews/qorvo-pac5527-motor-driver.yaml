@@ -1,0 +1,466 @@
+slug: qorvo-pac5527-motor-driver
+title: "Qorvo PAC5527 and the PAC family: one chip that powers, thinks and drives a brushless motor"
+status: draft
+date: 2026-10-21
+maker: Qorvo
+family: motor_controller
+parts: [PAC5527QM, PAC5527AQM, PAC5524QF, PAC5532AQX, PAC5556QX]
+app_area: Motor control
+question: >-
+  What problem do Qorvo's integrated motor controllers (the PAC "Power Application Controller" parts) solve, how do they
+  work, and which datasheet features matter in a cordless tool, an e-bike, a fan or a pump?
+
+in_brief:
+  - text: >-
+      The PAC5527 puts the three chips of a brushless-motor drive into one: the power supply, a 150 MHz Arm Cortex-M4F
+      microcontroller and six gate drivers for the external power transistors, plus the amplifiers that measure motor
+      current.
+    conf: high
+    src: s1
+  - text: >-
+      It is built for battery motors from about 6 V to 40 V in normal use (48 V is the absolute limit): 18 V and 24 V
+      cordless tools, garden tools, robot vacuums, fans and pumps. For 48 V e-bikes and above, the same family has
+      70 V, 160 V and 600 V parts.
+    conf: high
+    src: [s1, s2, s3]
+  - text: >-
+      We review the PAC5527 because it is the clearest example of the family: a full public datasheet copy exists, it
+      has the faster Cortex-M4F core, CAN, and a charge pump that allows 100% duty cycle. The siblings differ mainly in
+      supply voltage and gate-driver strength.
+    conf: med
+    src: [s1, s3]
+  - text: >-
+      The rival approaches are a fixed-algorithm driver with the transistors inside (TI MCF8316A, small motors only), or
+      a gate-driver chip next to a separate microcontroller. Infineon (MOTIX IMD701A) and ST (STSPIN32G4) sell the same
+      one-package idea as Qorvo.
+    conf: med
+    src: [s4, s5, s6, s7]
+  - text: >-
+      The family came from Active-Semi (bought by Qorvo in 2019) and is now part of Skyworks. It is not listed as
+      automotive qualified, so it is an industrial and consumer play.
+    conf: med
+    src: [s1, s2]
+
+problem:
+  summary: >-
+    A brushless (BLDC or PMSM) motor is more efficient, smaller and lasts longer than a brushed motor, but it cannot run
+    by itself: electronics must switch the current between its three windings at exactly the right moment. A designer
+    therefore needs a power supply, a fast microcontroller, gate drivers for six power transistors, current sensing and
+    protection, usually as four to six separate chips on a small, hot board inside a tool handle or a fan hub.
+  points:
+    - text: >-
+        Space: a drill or an e-bike controller has a tiny board. Fewer chips means a smaller board, fewer solder joints
+        and a lower bill of materials.
+      conf: med
+      src: s1
+    - text: >-
+        Battery voltage moves a lot: a pack sags under load and rises when charged. The gate drivers still need a steady
+        10 V to 12 V to switch the transistors fully on, or the transistors heat up.
+      conf: high
+      src: s1
+    - text: >-
+        Safety and life: a stalled tool can draw a very high current within microseconds. The chip must cut the current
+        in hardware, faster than software can react, to save the transistors and the battery.
+      conf: high
+      src: s1
+    - text: >-
+        Battery products sit on the shelf: when switched off, the electronics must draw almost nothing so the pack is
+        not drained (here 5 µA in hibernate).
+      conf: high
+      src: s1
+    - text: >-
+        Smooth, quiet running (fans, pumps, appliances) needs field-oriented control (FOC), a heavy calculation that a
+        small 8-bit or Cortex-M0 controller struggles with at high motor speed.
+      conf: med
+      src: [s1, s6]
+
+concept:
+  summary: >-
+    Qorvo calls the parts "Power Application Controllers". Inside are four blocks that work as one: the power manager
+    makes every supply from the battery, the microcontroller runs the motor software, the analog front end measures
+    currents and voltages, and the power drivers switch the six external transistors (MOSFETs) that carry the motor
+    current. The transistors stay outside, so the same chip can drive a 50 W fan or a much bigger tool motor.
+  blocks:
+    - name: "Power manager"
+      what: >-
+        Takes the battery (6 V to 40 V in normal use) and makes everything else: a buck-boost converter for a 10 V or 12 V
+        low-side gate supply, a charge pump that sits that 10 V to 12 V above the battery for the high-side drivers, and
+        five small regulators (5 V, 3.3 V, 3.3 V for the pins, 1.8 V, 1.2 V).
+      why: >-
+        No separate regulator chips. The 5 V rail (up to 100 mA) can also feed sensors or a display on the board.
+      conf: high
+      src: s1
+    - name: "Microcontroller (Arm Cortex-M4F, 150 MHz)"
+      what: >-
+        The brain that runs the customer's motor software, with a floating-point unit, 128 kB of flash and 32 kB of RAM
+        with error correction, timers that make the switching (PWM) signals, and CAN, I2C and three UART/SPI ports.
+      why: >-
+        Fast enough for field-oriented control at high motor speed, and programmable, so each customer can
+        tune it for their motor and add features (speed profiles, battery checks, tool modes).
+      conf: high
+      src: s1
+    - name: "Configurable analog front end"
+      what: >-
+        Ten analog pins that can be wired inside the chip to amplifiers (3 differential, 7 single-ended), comparators,
+        phase comparators that find the motor's position from its own voltage (back-EMF), two 10-bit DACs and
+        protection comparators. A 12-bit, 2.5 million samples per second converter reads them in sequences that the PWM
+        timers trigger.
+      why: >-
+        Measures motor current across a small shunt resistor without an extra amplifier chip, and allows sensorless
+        control (no Hall sensors in the motor).
+      conf: high
+      src: s1
+    - name: "Gate drivers (application-specific power drivers)"
+      what: >-
+        Three high-side and three low-side drivers, each switching one external MOSFET of the three-phase bridge, with
+        a drive strength you set in eight steps from 60 mA to 1 A, separately for turning on and turning off.
+      why: >-
+        Sets how fast the transistors switch (a trade between heat and electrical noise) without extra resistors, and
+        lets the customer pick the MOSFET size for the motor power.
+      conf: high
+      src: s1
+    - name: "Protection"
+      what: >-
+        Under- and over-voltage lockouts on the battery and the gate supplies, temperature monitoring, and a
+        cycle-by-cycle current limit: a protection comparator switches the drivers off within the same switching cycle
+        when the current is too high.
+      why: >-
+        Protects transistors, motor and battery even if the software hangs; needed for tool safety approvals.
+      conf: high
+      src: s1
+
+datasheet:
+  - section: "How to read this review's sources"
+    reading: >-
+      The walk-through uses the PAC5527 datasheet (Rev 1.2) from a distributor's public copy, because the maker's own
+      site is not used for this research. For the sibling parts only the catalogue figures are used. Where Qorvo's
+      datasheet does not say something, a competitor's public document is quoted and named (for example "as on
+      Infineon's IMD701A").
+    conf: high
+    src: [s1, s3]
+  - section: "1-3 Overview, block diagram and key features"
+    reading: >-
+      Start with the block diagram on page 2: power manager on the right, microcontroller in the middle, analog front
+      end and gate drivers at the bottom right. The key-features list on page 3 is the sales summary.
+    watch_out: >-
+      The front page lists "4 linear regulators" and "3 high-side gate drivers" twice; the detailed sections say 5
+      regulators and 3 high-side + 3 low-side drivers. Trust the detailed sections.
+    conf: high
+    src: s1
+  - section: "5 Absolute maximum ratings"
+    reading: >-
+      The limits the chip survives without damage: battery pin up to 48 V, gate supply up to 14 V, ESD 2 kV (human body
+      model). These are not operating values.
+    watch_out: >-
+      The name says 48 V, but the operating range in table 1 is 6 V to 40 V and the over-voltage lockout trips at about
+      45 V. A 10-cell lithium pack ("36 V") reaches 42 V when full, which is above the 40 V operating limit: check
+      with Qorvo before using the PAC5527 on 36 V tools.
+    conf: high
+    src: s1
+  - section: "6 Power manager and its electrical tables"
+    reading: >-
+      Explains the charge pump (high-side supply = battery + 10 V or 12 V), the buck-boost for the low-side supply, the
+      five regulators with their currents, the power-up order and hibernate mode (5 µA at 18 V).
+    watch_out: >-
+      The charge pump gives only about 4 mA: enough to hold the gates on (100% duty cycle) but it limits how many large
+      MOSFETs can be switched at high PWM frequency. The 10 µH inductor of the buck-boost must sit right next to the
+      chip.
+    conf: high
+    src: s1
+  - section: "7 Configurable analog front end"
+    reading: >-
+      Gains, offsets and speeds of the amplifiers and comparators. For current sensing look at the differential
+      amplifier: gain 1x to 16x, offset up to ±8 mV at gain 8, settles in 360 ns, input range -0.3 V to 2.5 V.
+    watch_out: >-
+      An 8 mV offset is large next to the 10 mV to 50 mV a shunt usually shows: the software must calibrate it out
+      (the chip has offset-calibration circuits). Low-current accuracy (idle, slow speed) depends on that.
+    conf: high
+    src: s1
+  - section: "8 Gate drivers (ASPD)"
+    reading: >-
+      The drive-current table (60 mA to 1 A, 8 steps) and the blanking times for the current limit. The high-side
+      source pin tolerates spikes down to -6 V and slopes up to 5 V/ns.
+    watch_out: >-
+      1 A peak is modest. Infineon's IMD701A applies 1.5 A in its tool reference design; with large, parallel MOSFETs
+      for a high-power tool the PAC5527 switches more slowly. Check with the customer's MOSFET choice.
+    conf: med
+    src: [s1, s6]
+  - section: "10-13 ADC, memory, clocks, Cortex-M4F core"
+    reading: >-
+      The converter and its trigger engine (up to 24 conversions in a row, started by the PWM timers), code protection
+      in four levels, 300 MHz PLL for fine PWM timing, typical current of the core.
+    conf: high
+    src: s1
+  - section: "20 Thermal characteristics"
+    reading: >-
+      Junction-to-ambient 23.4 °C/W on the exposed-pad 6 x 6 mm package; junction up to 125 °C.
+    watch_out: >-
+      The front page says -40 °C to 125 °C ambient, but the thermal table says ambient -40 °C to 105 °C (junction
+      125 °C). Use 105 °C ambient when talking to a customer.
+    conf: high
+    src: s1
+
+key_features:
+  - feature: "Supply range"
+    value: "6 V to 40 V operating; 48 V absolute maximum"
+    meaning: "The battery voltages it runs from directly, with no regulator in front."
+    why_it_matters: >-
+      Covers 3-cell to 9-cell lithium packs (10.8 V to 32.4 V nominal, 37.8 V when full). 10-cell "36 V" packs
+      are at the edge; 48 V e-bikes need the 70 V or 160 V sibling.
+    applications: [Cordless power tool, Robot vacuum, Fan, Pump]
+    conf: high
+    src: s1
+  - feature: "Charge pump for the high-side drivers"
+    value: "Battery + 10 V or 12 V, about 4 mA"
+    meaning: "Keeps the upper transistors switched on as long as needed, not only for short pulses."
+    why_it_matters: >-
+      100% duty cycle: full power at a low battery and a hard 'on' when a drill stalls, without the bootstrap
+      capacitors that other drivers need.
+    applications: [Cordless power tool, Garden tool]
+    conf: high
+    src: s1
+  - feature: "Buck-boost gate supply"
+    value: "10 V or 12 V, held across the whole battery range"
+    meaning: "The low-side transistors always get the same gate voltage, even when the battery sags to 6 V."
+    why_it_matters: "Lower transistor heat at low battery, and a wider choice of MOSFETs."
+    applications: [Cordless power tool, Robot vacuum]
+    conf: high
+    src: s1
+  - feature: "Microcontroller"
+    value: "Arm Cortex-M4F, 150 MHz, 128 kB flash, 32 kB RAM with ECC"
+    meaning: "A fast processor with floating-point maths, on the same chip as the driver."
+    why_it_matters: >-
+      Runs sensorless field-oriented control at high speed and the product's own features. The Cortex-M0 PAC52xx
+      parts are cheaper but slower.
+    applications: [Fan, Pump, Cordless power tool, E-bike]
+    conf: high
+    src: [s1, s2]
+  - feature: "Gate drive strength"
+    value: "3 high-side + 3 low-side, 60 mA to 1 A in 8 steps (est. fine up to about 1 kW with suitable MOSFETs)"
+    meaning: "How hard each transistor is switched on and off; set in software."
+    why_it_matters: >-
+      Tunes switching noise (EMC) against heat without extra parts; 1 A limits very large MOSFET banks. The power
+      figure is our estimate, not a datasheet value.
+    applications: [Cordless power tool, Fan, Appliance]
+    conf: med
+    src: s1
+  - feature: "Current sensing"
+    value: "3 differential amplifiers, gain 1x-16x; 7 single-ended, up to 48x; 12-bit ADC at 2.5 MSPS"
+    meaning: "Reads the motor current of each phase from small shunt resistors."
+    why_it_matters: "Needed for FOC and for torque limits (clutch-like behaviour in a drill); saves amplifier chips."
+    applications: [Cordless power tool, E-bike, Pump]
+    conf: high
+    src: s1
+  - feature: "Cycle-by-cycle current limit"
+    value: "10 protection comparators with 10-bit thresholds; blanking 0.5 µs to 4.7 µs"
+    meaning: "Hardware cuts each pulse that exceeds the current limit, with no software in the loop."
+    why_it_matters: "Survives a stalled motor or a short; the base of the tool's safety case."
+    applications: [Cordless power tool, Garden tool, E-bike]
+    conf: high
+    src: s1
+  - feature: "Sensorless position (back-EMF) comparators"
+    value: "3 phase comparators with a virtual motor centre point"
+    meaning: "Finds where the rotor is from the motor's own voltage."
+    why_it_matters: "No Hall sensors or their wires in the motor: cheaper, sealed motors for fans and pumps."
+    applications: [Fan, Pump, Robot vacuum]
+    conf: high
+    src: s1
+  - feature: "Hibernate current"
+    value: "5 µA at 18 V"
+    meaning: "What the chip draws from the battery when the product is off."
+    why_it_matters: "A tool can lie in a drawer for months without draining its pack; a push-button pin wakes it."
+    applications: [Cordless power tool, Robot vacuum]
+    conf: high
+    src: s1
+  - feature: "Interfaces"
+    value: "CAN 2.0B, I2C, 3 x UART/SPI"
+    meaning: "How the chip talks to the battery pack, a display or the bike's controller."
+    why_it_matters: "CAN links an e-bike motor to its display and battery; UART links a tool to a smart battery."
+    applications: [E-bike, Cordless power tool]
+    conf: high
+    src: s1
+  - feature: "Package and temperature"
+    value: "48-pin QFN, 6 x 6 mm; ambient -40 °C to 105 °C, junction 125 °C; 23.4 °C/W"
+    meaning: "Size on the board and how hot it may run."
+    why_it_matters: "Fits in a tool handle; the heat of the chip itself is small next to the MOSFETs."
+    applications: [Cordless power tool, Fan]
+    conf: high
+    src: s1
+  - feature: "Family voltage classes"
+    value: "40 V (PAC5527), 70 V (PAC5524), 160 V (PAC5532A), 600 V (PAC5556)"
+    meaning: "The same idea with a bigger supply and stronger drivers (up to 2 A at 160 V)."
+    why_it_matters: >-
+      One software base from a 24 V tool to a 48 V e-bike (70 V or 160 V parts) and to mains appliances and
+      compressors (600 V part).
+    applications: [E-bike, Appliance, HVAC]
+    conf: high
+    src: [s2, s3]
+
+applications:
+  - diagram: "Cordless power tool (battery-powered BDC / BLDC drive) (TI)"
+    role: >-
+      Replaces the microcontroller and the three-phase gate driver of the power stage, and the regulator in front of
+      them. The MOSFETs stay.
+    conf: high
+  - diagram: "Robot vacuum cleaner (TI)"
+    role: "Suction-fan and brush motors: one PAC per BLDC motor in place of gate driver + small MCU."
+    conf: med
+  - diagram: "Light EV BLDC drive, 48 V (TI)"
+    role: >-
+      The 'integrated motor controller SoC' option of the digital processing group. For 48 V packs (up to 54.6 V) the
+      70 V PAC5524 or 160 V PAC5532A fits, not the PAC5527.
+    conf: med
+  - diagram: "E-mobility BLDC drive, 72 V class up to 85 V (Microchip AN5324)"
+    role: "72 V class scooters and e-motorcycles: the 160 V PAC5532A in place of the digital signal controller and gate driver."
+    conf: med
+  - diagram: "Humanoid / collaborative robot joint motor drive (48 V) (TI)"
+    role: >-
+      Possible for small joints: replaces gate driver + MCU, but robot joints usually want a separate safety
+      microcontroller and an encoder interface.
+    conf: low
+  - diagram: "Refrigerator / freezer controller (inverter compressor) (TI)"
+    role: "The 600 V PAC5556 drives the compressor inverter from the rectified mains."
+    conf: med
+
+competitors:
+  - maker: TI
+    parts: "MCF8316A (and MCT8316A)"
+    how: >-
+      Transistors inside (95 mΩ, 8 A peak, 40 V) and a fixed, code-free sensorless FOC algorithm set by registers. Very
+      small and quick to design for fans and pumps, but no user software and limited to about 8 A. The PAC drives
+      external transistors, so it scales to bigger motors and runs the customer's own code.
+    conf: high
+    src: s4
+  - maker: TI
+    parts: "DRV8353 gate driver + a separate MCU (e.g. C2000 or MSPM0)"
+    how: >-
+      The two-chip way: a 102 V smart gate driver with current amplifiers, plus a microcontroller of the customer's
+      choice. More freedom and higher voltage, but more board space and two parts to buy.
+    conf: high
+    src: s5
+  - maker: Infineon
+    parts: "MOTIX IMD701A (XMC1400 MCU + 6EDL7141 gate driver in one package)"
+    how: >-
+      The same one-package idea, aimed squarely at cordless tools (18 V, 720 W reference design). Its Cortex-M0 MCU has
+      a maths co-processor instead of the PAC5527's M4F; the gate driver is configured with a PC tool and stored in
+      one-time memory.
+    conf: high
+    src: s6
+  - maker: ST
+    parts: "STSPIN32G4 (STM32G431 MCU + 3-phase gate driver)"
+    how: >-
+      Also MCU + gate driver in one package: 5.5 V to 75 V, 1 A drivers, 170 MHz Cortex-M4, built-in buck. Close to
+      the PAC5524 class and backed by ST's large motor-control software ecosystem.
+    conf: low
+    src: s7
+  - maker: Microchip
+    parts: "dsPIC33CDV family (dsPIC DSC + 3 half-bridge drivers)"
+    how: >-
+      A digital signal controller with gate drivers in one package for lower-voltage motors (gate-driver supply about
+      6.5 V to 29 V), with a LIN version for cars.
+    conf: low
+    src: s8
+  - maker: NXP
+    parts: "S12ZVM (MCU + gate driver) and MC33937 gate driver"
+    how: >-
+      Automotive 12 V pumps and fans: qualified for cars, which the PAC parts are not listed as. Seen in the site's
+      NXP HVAC diagram data only.
+    conf: low
+    src: s9
+
+our_position: >-
+  Since Skyworks bought Qorvo, the PAC family is the combined company's only motor-controller line: the Skyworks catalogue has no
+  motor controller of its own. It is strongest in battery tools and appliances, where the one-chip design and the
+  charge pump are real advantages; it is weaker where customers want a qualified automotive part or a big
+  software ecosystem (ST, TI, Infineon). Next to it we can sell: Skyworks isolated gate drivers and digital isolators
+  for the mains-powered (600 V) designs, and Qorvo battery-monitor and power-management parts in the battery pack.
+
+open_questions:
+  - "Is the PAC5527 rated for 10-cell (42 V full) tool packs, or does Qorvo point those customers to the PAC5524?"
+  - "Which PAC parts are still recommended for new designs after the Skyworks merger (PAC5532QX is 'no new designs')?"
+  - "Is there an automotive-qualified PAC version on the roadmap (pumps, fans, seat motors)?"
+  - "What motor software (FOC libraries, PC tuning tool) does Qorvo provide today, compared with ST's and Infineon's?"
+  - "Typical price at 100k a year against MCU + gate driver, and against Infineon's IMD701A?"
+
+learn:
+  "5": >-
+    A brushless motor spins when you push on its magnets in the right order. This chip is the hand that pushes at the
+    right time, and it also makes its own power from the battery.
+  "10": >-
+    Drills, fans and e-bikes use brushless motors because they last longer and waste less battery. But they need a
+    small computer to switch the current between three wires thousands of times a second. The PAC chip is that
+    computer, its power supply and its switch drivers in one.
+  "15": >-
+    Six transistors connect each of the three motor wires to plus or minus. The chip turns them on and off very fast
+    (PWM) and measures the current to know where the rotor is and how hard it pushes. It makes 12 V for the
+    transistor gates and 3.3 V for itself from the battery, and cuts the power if the current gets too high.
+  "20": >-
+    The datasheet tells you the battery range (6 V to 40 V), how hard the gate drivers can switch (up to 1 A), how
+    precise the current amplifiers are (offset up to 8 mV, so calibrate), how fast the converter samples (2.5 million
+    times a second) and how hot the chip may get (105 °C around it). Those numbers decide which motors and batteries
+    it suits.
+  "25": >-
+    Rivals either put the transistors inside and fix the algorithm (TI MCF8316A: simple, small motors) or keep the
+    gate driver and MCU apart (TI DRV8353 + MCU: flexible, bigger). Infineon IMD701A and ST STSPIN32G4 copy Qorvo's
+    all-in-one idea. Qorvo's edge is the integrated power manager and charge pump; its gaps are automotive grade and
+    software ecosystem.
+learn_links:
+  - {label: "Gate driver peak current", href: "/engineering/peak_source_a"}
+  - {label: "Under-voltage lockout (UVLO)", href: "/engineering/uvlo_v"}
+  - {label: "Traction inverters (systems library)", href: "/library/traction_asil_d"}
+
+sources:
+  - id: s1
+    title: "PAC5527 48V Charge Pump Motor Controller and Driver for BLDC Motors, data sheet Rev 1.2"
+    publisher: "Qorvo (copy hosted by distributor ES France)"
+    url: "https://www.es-france.com/img/cms/Documentations%20PDF/Composants/Qorvo%20IMC/PAC5527%20Data%20Sheet.pdf"
+    date: "2019"
+    note: "unofficial copy"
+  - id: s2
+    title: "Qorvo catalogue record PAC5527QM / PAC5527AQM: key specs (memory, ADC, amplifiers, interfaces, package)"
+    publisher: "Qorvo product catalogue, as stored in data/catalog/qorvo_parts.yaml"
+    url: ""
+    date: "2026-10"
+    note: "catalogue"
+  - id: s3
+    title: "Qorvo catalogue records PAC5524QF, PAC5532AQX, PAC5532QX, PAC5556QX, PAC52xx: supply range, gate drivers, MCU"
+    publisher: "Qorvo product catalogue, as stored in data/catalog/qorvo_parts.yaml"
+    url: ""
+    date: "2026-10"
+    note: "catalogue"
+  - id: s4
+    title: "MCF8316A product page: 40 V, 8 A peak sensorless FOC three-phase BLDC motor driver"
+    publisher: "Texas Instruments"
+    url: "https://www.ti.com/product/MCF8316A"
+    date: "read 2026-10"
+    note: "official"
+  - id: s5
+    title: "DRV8353 product page: 102 V three-phase smart gate driver with current shunt amplifiers"
+    publisher: "Texas Instruments"
+    url: "https://www.ti.com/product/DRV8353"
+    date: "read 2026-10"
+    note: "official"
+  - id: s6
+    title: "REF_IMD701A_720W_DC24 motor driver board for battery-powered applications, user manual UM032738 V1.0"
+    publisher: "Infineon"
+    url: "https://www.infineon.com/assets/row/public/documents/24/44/infineon-ref-imd701a-720w-dc24-motor-driver-board-for-battery-powered-applications-usermanual-en.pdf"
+    date: "2024-05-16"
+    note: "official"
+  - id: s7
+    title: "STSPIN32G4 product page and datasheet DS13630 (seen through a web-search summary only; st.com not read)"
+    publisher: "STMicroelectronics"
+    url: "https://www.st.com/content/st_com/en/products/motor-drivers/brushless-dc-motor-drivers/stspin32g4.html"
+    date: "2022 (datasheet Rev 2)"
+    note: "official page, search summary only"
+  - id: s8
+    title: "dsPIC33CDV64MC106 product page (seen through a web-search summary only; microchip.com refused our reader)"
+    publisher: "Microchip"
+    url: "https://www.microchip.com/en-us/product/dsPIC33CDV64MC106"
+    date: "read 2026-10"
+    note: "official page, search summary only"
+  - id: s9
+    title: "NXP automotive HVAC control module diagram (motor control: MC33937, S12ZVM), site research data"
+    publisher: "BizDev block-diagram research (data/blocks/research/nxp_more_block_diagrams.yaml)"
+    url: ""
+    date: "2026-10"
+    note: "site data"

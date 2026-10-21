@@ -12,6 +12,8 @@ into `main`: the owner gives the go-ahead (CLAUDE.md).
 3. **Work.** If there is anything to do, branch `update-<YYYY-MM-DD>` from `main`, fix and build what the comments ask
    (same quality bar as the feedback batches: tests for every change, plain-English page text, public data only, the
    polite-access rules for any web research), and add new questions for the owner to `docs/open_questions.md`.
+   For each open request under "Technology review requests", write the review as `data/reviews/<slug>.yaml` in the
+   format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the
    open questions from `docs/open_questions.md` that need an answer before the next merge. End by asking for the

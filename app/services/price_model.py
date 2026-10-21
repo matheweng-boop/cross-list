@@ -153,17 +153,28 @@ def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
     if f is None:
         return out
     floor = cb["floor"] if cb else 0.0
-    ext = cfg["curve"]["extend"]
+    mean, sd, rule = extension(f)
+    out["extension"] = {"mean": mean, "sd": sd, "rule": rule}
     for vol, (k_lo, k_hi) in cfg["volumes"].items():
         draws = simulate(part, f, cb, vol, k_lo, k_hi, factor)
         lo, mid, hi = _percentiles(draws, cfg["monte_carlo"]["percentiles"])
         hi = max(hi, lo * cfg["margin"]["min_band"])  # at the floor the band keeps a minimum width
         sign = SIGN.get((mine or {}).get("verdict"), 0)
         target = lo if sign < 0 else hi if sign > 0 else mid
-        dist = f["p_end"] * (vol / f["q_end"]) ** ext["mean"] if vol > f["q_end"] else f["p_end"]
+        dist = f["p_end"] * (vol / f["q_end"]) ** mean if vol > f["q_end"] else f["p_end"]
         out["rows"].append({"volume": int(vol), "distributor": dist, "low": lo, "target": target, "high": hi,
                             "at_floor": lo <= floor * 1.02})  # fmt: skip
     return out
+
+
+def extension(f: dict) -> tuple[float, float, str]:
+    """(mean, sd, rule) of the slope past the last break: the pooled scaling equation, or for a part whose own curve
+    is flat (complex mixed-signal / RF parts) a share of its own slope."""
+    c = config()["curve"]
+    flat = c["flat_curve"]
+    if f["fitted"] and f["raw_slope"] > flat["flat_above"]:
+        return flat["ratio"] * f["raw_slope"], flat["sd"], "flat"
+    return c["extend"]["mean"], c["extend"]["sd"], "pooled"
 
 
 def _tri(rng: random.Random, values: list) -> float:
@@ -182,12 +193,13 @@ def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: 
     never below the drawn cost floor. Seeded by the part number, so a page shows the same band every time."""
     cfg = config()
     ext, n = cfg["curve"]["extend"], cfg["monte_carlo"]["draws"]
+    mean, sd, _ = extension(f)
     rng = random.Random(zlib.crc32(f"{part.mpn}:{vol}".encode()))
     fam = (cb or {}).get("family")
     pkg = sum((cb or {}).get("pkg", {}).values())
     out = []
     for _ in range(n):
-        s = min(ext["limits"][1], max(ext["limits"][0], rng.gauss(ext["mean"], ext["sd"])))
+        s = min(ext["limits"][1], max(ext["limits"][0], rng.gauss(mean, sd)))
         dist = f["p_end"] * (vol / f["q_end"]) ** s if vol > f["q_end"] else f["p_end"]
         price = dist * rng.uniform(k_lo, k_hi) * factor
         if fam:

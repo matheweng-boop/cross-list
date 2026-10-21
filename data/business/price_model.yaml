@@ -12,7 +12,12 @@ curve:
   default_slope: -0.12   # when there are fewer than two usable breaks
   # Scaling equation past the last price break: P(V) = P_last * (V / q_last) ** s, with s drawn from this distribution.
   # Fitted on 13 Mini-Circuits switches whose web-store prices run past 1,000 units (to 5,000-10,000): s = -0.168, sd 0.049.
-  extend: {mean: -0.17, sd: 0.05, limits: [-0.32, -0.03]}
+  extend: {mean: -0.17, sd: 0.05, limits: [-0.32, -0.01]}
+  # Complex parts (owner, 21 Oct 2026, on the Si47962 car-radio tuner: "model B fits best"): large mixed-signal / RF dies,
+  # whose analog blocks do not shrink, few suppliers and long automotive supply keep the discount small. When a part's
+  # own distributor curve is flatter than `flat_above`, it is extended at `ratio` x its own slope (the ratio Mini-Circuits
+  # shows past 1k) instead of the pooled slope.
+  flat_curve: {flat_above: -0.10, ratio: 0.6, sd: 0.02}
 
 # Checks of the scaling equation (21 Oct 2026; rerun when more price curves arrive)
 validation:
@@ -20,6 +25,7 @@ validation:
   - {test: "Across makers: TI's slope (250->1k, -0.19) predicts Mini-Circuits past 1k", parts: 13, mean_error_pct: -4.1, mean_abs_pct: 5.2}
   - {test: "Old rule (flat cap -0.08) for comparison", parts: 13, mean_error_pct: 19.1, mean_abs_pct: 20.2}
   - {test: "Monte Carlo band: real Mini-Circuits prices past 1k inside P10-P90 (prices above 1k hidden; slope fitted on the same parts, so slightly optimistic)", parts: 26, inside_pct: 85}
+  - {test: "Owner's check, Si47962 tuner (DigiKey EUR 1-500 pcs, slope -0.055): the part's own flat curve (model B) fits better than the pooled slope", parts: 1, note: "owner's judgement from real prices"}
   - {test: "TI: 1k price from the 1-unit price with the other parts' ratio (leave one out)", parts: 55, mean_abs_pct: 5.3, worst_pct: 16.2}
 # Public prices stop at 10,000 units: 100k and 1M rest on the distributor-to-direct factor and the cost floor,
 # which only the owner's calls and real prices can check.

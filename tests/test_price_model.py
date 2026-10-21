@@ -136,3 +136,20 @@ def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
     m = pm.model(session, part("ISO7710FDR"), None)
     assert m["converted_from"] == "EUR" and m["source"].startswith("DigiKey (owner")
     assert abs(m["fit"]["p_end"] - lp["breaks"][-1][1] * pm.usd_rate("EUR")) < 1e-9
+
+
+def test_lifetime_economics_top_down(client, session):
+    m = pm.estimate(session, "gate_driver_smart", pm.parse_breaks(GD3162), "SOIC-32W", 32, wide=True, automotive=True)
+    assert pm.complexity("gate_driver_smart") == "complex"
+    o = pm.oem_path(m, 2028)
+    cost = m["cost"]["levels"]["mid"]["total"]
+    small, big = pm.lifetime(m, o, 100_000, cost), pm.lifetime(m, o, 1_000_000, cost)
+    assert small["years"] == pm.config()["oem"]["lifetime_years"] and 0 < small["margin"] < 1
+    assert small["rd"][0] <= small["rd"][1] and abs(big["rd"][1] - 10 * small["rd"][1]) < 1e-6 * big["rd"][1]
+    b = small["breakeven"][0]  # the volume that pays back the budget is the same whatever volume was assumed
+    assert b["volume"][0] == big["breakeven"][0]["volume"][0] and b["volume"][1] <= b["volume"][0]
+    html = client.get("/pricing/estimate", params={"family": "gate_driver_smart", "breaks": GD3162, "name": "GD3162",
+                                                   "package": "SOIC-32W", "pins": 32, "wide": "true",
+                                                   "automotive": "true", "volume": 600000, "ours": "Si82900"}).text
+    assert "what R&amp;D the product can pay for" in html and "600,000 a year" in html
+    assert html.count("R&amp;D it can pay") == 2  # the competitor and our part

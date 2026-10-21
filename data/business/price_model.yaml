@@ -60,6 +60,15 @@ oem:
   lifetime_years: 5          # production years shown after SOP
   volume: 100000             # yearly volume whose target price the path starts from
 
+# Lifetime economics, top-down: what R&D a product can pay for, from its market price path and unit cost, without
+# estimating anyone's engineering years. Shares of revenue from the library topic semiconductor_cost (Infineon FY2025:
+# R&D 15.2 %, SG&A 10.8 %); the operating-profit target is judgement.
+economics:
+  sga_share: [0.10, 0.12]
+  operating_target: [0.10, 0.20]
+  rd_share_typical: 0.15          # what an analog / power supplier spends on R&D across its portfolio
+  rd_budgets: [5000000, 10000000, 20000000]   # illustrations for the break-even volumes, not estimates of any part's R&D
+
 # Our part priced from a competitor's (Price estimate page): a newer entrant usually sits at or a little below the
 # incumbent; the range is a starting point, changed per estimate.
 parity: [0.90, 1.00]
@@ -133,6 +142,17 @@ families:
     test_s: [0.3, 0.5, 1.0]
     note: "One SOI die; more throws and higher power mean a larger die"
 
+  gate_driver_smart:
+    label: Smart isolated gate driver (ASIL-D, SPI, ADC, self-test)
+    class: complex
+    dies: 2
+    die_mm2: [3.0, 5.0, 8.0]
+    process: "0.18 um class BCD / CMOS, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [700, 900, 1200]
+    defects_per_cm2: 0.1
+    test_s: [3.0, 5.0, 8.0]        # safety monitors, ADC and BIST to test, plus hipot
+    note: "Traction-inverter drivers (Si829x, GD316x, UCC5880, 1EDI3041): safety mechanisms, SPI, ADC and programmable drive make larger dies than a basic driver (judgement)"
   am_fm_tuner:
     label: Car-radio tuner / tuner SoC
     class: complex

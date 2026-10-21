@@ -1,0 +1,11 @@
+{# Lifetime economics (app/services/price_model.py lifetime): the R&D a product can pay for, top-down #}
+{% macro usd(x) %}{% if x is none %}–{% elif x >= 1e6 or x <= -1e6 %}${{ '%.1f'|format(x / 1e6) }}M{% elif x >= 1e3 or x <= -1e3 %}${{ '%.0f'|format(x / 1e3) }}k{% else %}${{ '%.2f'|format(x) }}{% endif %}{% endmacro %}
+{% macro units(x) %}{% if x is none %}not reachable{% elif x >= 1e6 %}{{ '%.1f'|format(x / 1e6) }}M{% else %}{{ '{:,.0f}'.format(x) }}{% endif %}{% endmacro %}
+{% macro economics(l, name, cfg) %}{% if l %}<h3 class="pm-h">{{ name }}: what R&amp;D the product can pay for <small class="muted">· {{ units(l.volume) }} a year for {{ l.years }} production years</small></h3>
+<div class="table-wrap"><table class="small pm-table"><tbody>
+  <tr><th scope="row">Lifetime revenue</th><td>{{ usd(l.revenue) }}</td><td class="muted">OEM target prices (middle of the 5–7 % path) × volume</td></tr>
+  <tr><th scope="row">Gross profit</th><td>{{ usd(l.gross) }}</td><td class="muted">implied gross margin {{ '%.0f'|format(l.margin * 100) }} % (unit cost {{ usd(l.unit_cost) }}); suppliers average {{ (cfg.margin.typical[0] * 100)|int }}–{{ (cfg.margin.typical[1] * 100)|int }} %</td></tr>
+  <tr><th scope="row">R&amp;D it can pay for</th><td><b>{{ usd(l.rd[0]) }} – {{ usd(l.rd[1]) }}</b></td><td class="muted">gross profit minus sales &amp; admin ({{ (cfg.economics.sga_share[0] * 100)|int }}–{{ (cfg.economics.sga_share[1] * 100)|int }} %) and an operating profit of {{ (cfg.economics.operating_target[0] * 100)|int }}–{{ (cfg.economics.operating_target[1] * 100)|int }} % of revenue; a typical {{ (cfg.economics.rd_share_typical * 100)|int }} % R&amp;D share would be {{ usd(l.rd_typical) }}</td></tr>
+</tbody></table></div>
+<p class="small">Yearly volume needed to pay back an R&amp;D budget of {% for b in l.breakeven %}<b>{{ usd(b.budget) }}</b>: {{ units(b.volume[1]) }}–{{ units(b.volume[0]) }}{{ '; ' if not loop.last }}{% endfor %}.
+  <span class="muted">The budgets are illustrations, not estimates of this part's R&amp;D. A capability new to Skyworks (for example a first ASIL-D part, with its safety process, FMEDA and certification) sits toward the higher budgets; a derivative of an existing line toward the lower.</span></p>{% endif %}{% endmacro %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_price_economics.html" import economics %}
 {% block title %}Price estimate{% endblock %}
 {% block content %}
 <h1>Price estimate</h1>
@@ -18,6 +19,7 @@
   </div>
   <div class="grid">
     <label>Start of production (SOP)<input name="sop" type="number" min="2020" max="2050" value="{{ f.sop }}"></label>
+    <label>Yearly volume <small class="muted">(lifetime economics)</small><input name="volume" type="number" min="1000" step="1000" value="{{ f.volume }}"></label>
     <label>Our part priced from this one <small class="muted">(optional)</small><input name="ours" value="{{ f.ours }}" placeholder="e.g. Si82900"></label>
     <label>Ours vs this part<span class="pe-parity"><input name="parity_lo" type="number" step="0.01" min="0.2" max="3" value="{{ f.parity_lo }}" aria-label="from"> to <input name="parity_hi" type="number" step="0.01" min="0.2" max="3" value="{{ f.parity_hi }}" aria-label="to"></span></label>
   </div>
@@ -35,6 +37,7 @@
 {% if o.oem %}<h3 class="pm-h">{{ o.name }}: OEM target prices <small class="muted">· {{ '{:,}'.format(o.oem.volume) }} a year, SOP {{ o.oem.sop }}</small></h3>
 <div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">7 % a year</th><th scope="col">5 % a year</th></tr></thead>
 <tbody>{% for r in o.oem.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}</td><td>{{ money2(r.low) }}</td><td>{{ money2(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{{ economics(o.life, o.name, cfg) }}
 <p class="small muted">Our part has no public price: its band is the anchor part's band times the parity range. The parity range is a judgement (default {{ (cfg.parity[0] * 100)|int }}–{{ (cfg.parity[1] * 100)|int }} %: a newer entrant at or a little below the incumbent).</p>{% endif %}
 </section>{% endif %}
 {% endblock %}

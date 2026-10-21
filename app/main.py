@@ -129,6 +129,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.pipeline import router as pipeline_router
     from app.web.portfolio import router as portfolio_router
     from app.web.requests import router as requests_router
+    from app.web.reviews import router as reviews_router
     from app.web.routes import router as web_router
     from app.web.uploads import router as uploads_router
     from app.web.verify import router as verify_router
@@ -198,5 +199,6 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(pipeline_router)
     app.include_router(feedback_router)
     app.include_router(uploads_router)
+    app.include_router(reviews_router)
     app.include_router(verify_router)
     return app

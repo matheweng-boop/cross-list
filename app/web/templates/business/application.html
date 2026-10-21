@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import pct, usd, company_switch, status_chip, term %}
+{% from "reviews/_parts.html" import review_list %}
 {% block title %}{{ page_title(request.url.path, app.name) }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/applications?co={{ co }}">← All applications</a></p>
@@ -7,6 +8,7 @@
 <p class="subtitle muted">{{ app.category }} · functional blocks (level 2) and the blocks in them (level 3). Change a status, quantity or
   ASP to see what it means: the simulator runs on this page only. ASPs can be saved for every application.</p>
 {{ company_switch('/business/applications/' ~ app.i, co, companies) }}
+{{ review_list(tech_reviews_app(app.i), 'Technology reviews for parts in this diagram') }}
 <div id="bo-sim" class="bo-sim">
   <div class="bo-tiles">
     <div class="bo-tile"><b data-m="cov">{{ pct(m.coverage) }}</b><span>{{ term('coverage', 'candidate coverage') }}</span><small data-m="cov-sub">{{ m.supported }} of {{ m.in_scope }} in-scope blocks</small></div>

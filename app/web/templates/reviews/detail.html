@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "business/_growth.html" import learn_tab %}
+{% block title %}{{ page_title(request.url.path, r.parts|first) }}{% endblock %}
+{% macro react(x) %}{% set f = x.fb or {} %}
+<details class="pc-react" id="i-{{ x.key|replace('.', '-') }}" data-title="{{ x.text or x.feature or x.name or x.section or x.maker or x.diagram }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">react</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+  <form method="post" action="/reviews/{{ r.slug }}/react" class="pc-form">
+    <input type="hidden" name="key" value="{{ x.key }}">
+    <textarea name="comment" rows="2" maxlength="2000" placeholder="Why, or what should change (optional)" aria-label="Comment"></textarea>
+    <span class="pc-btns"><button name="verdict" value="agree" class="small-btn">Agree</button><button name="verdict" value="disagree" class="small-btn outline secondary">Disagree</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reset</button>{% endif %}</span>
+  </form>
+  {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
+</details>{% endmacro %}
+{% macro conf(x) %}{% if x.conf %}<span class="pc-conf c-{{ x.conf }}" title="confidence{{ ': ' ~ x.conf_was ~ ', one step lower after a reviewer disagreed' if x.conf_was }}">{{ x.conf }}{{ ' ↓' if x.conf_was }}</span>{% endif %}{% endmacro %}
+{% macro cite(x) %}{% if x.src %}{% set ids = x.src if x.src is not string else x.src.split(',') %}{% for s in ids %}{% set s = s|trim %}{% set so = r.src.get(s) %}<a class="rv-cite" href="#src-{{ s }}" title="{{ so.title if so }}{{ ' (' ~ so.note ~ ')' if so and so.note }}">[{{ s }}]</a>{% endfor %}{% endif %}{% endmacro %}
+{% macro tail(x) %} {{ conf(x) }}{{ cite(x) }}{{ react(x) }}{% endmacro %}
+{% block content %}
+{% set rows = r.rows %}
+<p class="small"><a href="/reviews">← Technology reviews</a></p>
+<p class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.app_area }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span> · {{ r.n_feedback }} item{{ 's' if r.n_feedback != 1 }} with feedback</p>
+<article class="rpt rv-article">
+<h1>{{ r.title }}</h1>
+<p class="rv-parts">{% for p in r.parts %}<span class="badge">{{ p }}</span> {% endfor %}</p>
+{% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
+{{ learn_tab(r.levels, r.learn_links) }}
+<p class="meta">Confidence: <b>high</b> read in the datasheet or the maker's own page, <b>med</b> a secondary source or our reading of several, <b>low</b> a snippet or our estimate · “est” = our estimate · [s1] = source, listed at the end · react to any item to agree or disagree.</p>
+
+<section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for x in rows.in_brief %}<li>{{ x.text }}{{ tail(x) }}</li>{% endfor %}</ol></section>
+
+<h2 id="problem">The problem</h2>
+<p>{{ r.problem.summary }}</p>
+{% if rows.problem %}<ul class="pc-list">{% for x in rows.problem %}<li>{{ x.text }}{{ tail(x) }}</li>{% endfor %}</ul>{% endif %}
+
+<h2 id="concept">The concept</h2>
+<p>{{ r.concept.summary }}</p>
+{% if rows.concept %}<div class="rv-blocks">{% for x in rows.concept %}
+  <section class="rv-block"><h3>{{ x.name }}</h3>{% if x.what %}<p class="small">{{ x.what }}</p>{% endif %}{% if x.why %}<p class="small muted"><b>Why:</b> {{ x.why }}</p>{% endif %}<p class="small">{{ tail(x) }}</p></section>{% endfor %}
+</div>{% endif %}
+
+{% if rows.datasheet %}<h2 id="datasheet">Reading the datasheet</h2>
+<ol class="rv-ds">{% for x in rows.datasheet %}<li><b>{{ x.section }}</b><p class="small">{{ x.reading }}</p>{% if x.watch_out %}<p class="small rv-watch"><b>Watch out:</b> {{ x.watch_out }}</p>{% endif %}<p class="small">{{ tail(x) }}</p></li>{% endfor %}</ol>{% endif %}
+
+<h2 id="features">Key features</h2>
+<div class="table-wrap"><table class="small pc-table rv-feat rv-cards">
+  <thead><tr><th scope="col">Feature</th><th scope="col">Value</th><th scope="col">What it means</th><th scope="col">Why it matters</th><th scope="col">Applications</th><th scope="col">Feedback</th></tr></thead>
+  <tbody>{% for x in rows.key_features %}<tr id="f-{{ loop.index0 }}"><td><b>{{ x.feature }}</b></td><td class="rv-val" data-label="Value">{{ x.value }}</td><td data-label="What it means">{{ x.meaning }}</td><td data-label="Why it matters">{{ x.why_it_matters }}</td><td data-label="Applications">{{ (x.applications or [])|join(', ') }}</td><td>{{ conf(x) }}{{ cite(x) }}{{ react(x) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2 id="where">Where it sits</h2>
+{% if rows.applications %}<ul class="pc-list">{% for x in rows.applications %}<li>{% if x.kind == 'library' %}<a href="/blocks/new?diagram={{ x.diagram|urlencode }}">{{ x.name }}</a>{% else %}<a href="/blocks/new?bg={{ x.index }}&place={{ r.parts|first|urlencode }}&fn={{ r.family }}">{{ x.name }}</a> <small class="muted">(background diagram, opened with the part placed)</small>{% endif %}<br><span class="small">{{ x.role }}</span>{{ tail(x) }}</li>{% endfor %}</ul>
+{% else %}<p class="small muted">Not placed in a library diagram yet.</p>{% endif %}
+
+<h2 id="competitors">Competitors and crosses</h2>
+{% if rows.competitors %}<div class="table-wrap"><table class="small pc-table rv-cards">
+  <thead><tr><th scope="col">Maker</th><th scope="col">Parts</th><th scope="col">How it differs</th><th scope="col">Feedback</th></tr></thead>
+  <tbody>{% for x in rows.competitors %}<tr><td><b>{{ x.maker }}</b></td><td data-label="Parts">{{ x.parts }}</td><td data-label="How it differs">{{ x.how }}</td><td>{{ conf(x) }}{{ cite(x) }}{{ react(x) }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
+<h3>Crosses on this site</h3>
+<ul class="small">{% for l in live %}<li><b>{{ l.mpn }}</b>: {% if l.part %}<a href="/parts/{{ l.part.id }}">part page</a>{% if l.crosses %} · {% for cat, c in l.crosses %}<a href="/parts/{{ c.id }}">{{ c.mpn }}</a> <small class="muted">({{ category_short.get(cat, cat) }})</small>{{ ', ' if not loop.last }}{% endfor %}{% else %} · no crosses found by the matching rules{% endif %}
+  {% else %}<span class="muted">not in the parts database yet (catalogue only), so no live crosses</span> · <a href="/find?q={{ l.mpn|urlencode }}">catalogue record</a>{% endif %}</li>{% endfor %}</ul>
+
+{% if rows.our_position %}<h2 id="position">Our position</h2>
+{% for x in rows.our_position %}<p>{{ x.text }}{{ react(x) }}</p>{% endfor %}{% endif %}
+
+{% if rows.open_questions %}<h2 id="questions">Open questions</h2>
+<ul class="pc-list">{% for x in rows.open_questions %}<li>{{ x.text }}{{ react(x) }}</li>{% endfor %}</ul>{% endif %}
+
+<h2 id="sources">Sources</h2>
+<ol class="small rv-sources">{% for s in r.sources %}<li id="src-{{ s.id }}"><b>[{{ s.id }}]</b> {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.title }}</a>{% else %}{{ s.title }}{% endif %}{% if s.publisher %} · {{ s.publisher }}{% endif %}{% if s.date %} · {{ s.date }}{% endif %}
+  {% if s.note %}{% if 'unofficial' in s.note %}<span class="rv-unoff" title="{{ unofficial_title }}: not from the maker's own site">unofficial copy</span>{% if s.note != 'unofficial copy' %} <span class="muted">{{ s.note|replace('unofficial copy', '')|trim(' ;,:') }}</span>{% endif %}{% else %}<span class="muted">· {{ s.note }}</span>{% endif %}{% endif %}</li>{% endfor %}</ol>
+</article>
+{% if reqs %}<p class="small">Answers {{ reqs|length }} request{{ 's' if reqs|length != 1 }}: {% for e in reqs %}<a href="/reviews#rq-{{ e.row.id }}">{{ e.row.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
+<p class="small muted">Feedback on any item goes to the daily update and is listed in <a href="/manage/reviews">Requests &amp; reviews</a>. <a href="/reviews#request">Request a review of another part →</a></p>
+<dialog id="pc-dialog" class="pc-dialog" aria-labelledby="pc-dialog-title"><article>
+  <h3 id="pc-dialog-title"></h3><div class="pc-dialog-body"></div>
+  <form method="dialog"><button class="small-btn outline secondary">Close</button></form>
+</article></dialog>
+<script src="/static/prelim.js" defer></script>
+{% endblock %}

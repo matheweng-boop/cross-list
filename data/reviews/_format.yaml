@@ -1,0 +1,58 @@
+# Technology review data format: one file per review, data/reviews/<slug>.yaml. Files starting with "_" (like this
+# one) are not shown. Shown at /reviews and /reviews/<slug>; checked by app/services/reviews.py (a file with an error is
+# left out and named at the bottom of /reviews; tests/test_reviews.py fails on it).
+#
+# Plain, short English for a non-coder in business development. Every fact carries `conf` (high | med | low) and, where
+# it comes from a document, a `src` id from `sources` (one id, or a list). "est" in a value marks our estimate.
+# Where the maker's datasheet is not public, base the concept, datasheet walk-through and features on the closest
+# competitor's public datasheet, say so in the text ("as on TI's MCF8316A") and point src at that datasheet.
+#
+# Items get agree / disagree reviews on the site (DataReview, dataset "review:<slug>", key "<section>.<index>", e.g.
+# key_features.2; sections: in_brief, problem (its points), concept (its blocks), datasheet, key_features,
+# applications, competitors, our_position, open_questions), so keep list order stable once published.
+
+slug: qorvo-pac5527-motor-driver      # = file name; lower-case letters, digits, dashes; at most 33 characters
+title: "Qorvo PAC5527: a motor controller that is also its own power supply and gate driver"
+status: draft                          # draft | reviewed
+date: 2026-10-21
+maker: Qorvo                           # Qorvo is part of Skyworks now: say so where it matters
+family: motor_controller               # function id from data/blocks/functions.yaml
+parts: [PAC5527QM, PAC5524QM]          # orderable part numbers the review covers (as in data/catalog/*.yaml when there)
+app_area: Motor control                # used to group the list page
+question: "What does the PAC5527 solve, how does it work and which features matter in a cordless tool or e-bike?"
+in_brief:                              # 3-6 bullets, the whole review in short
+  - {text: "...", conf: high, src: s1}
+problem:                               # the problem the part solves, from the customer's side
+  summary: "..."
+  points: [{text: "...", conf: med, src: s2}]
+concept:                               # how it works, block by block (what is inside and how the blocks work together)
+  summary: "..."
+  blocks:
+    - {name: "Configurable power manager", what: "...", why: "...", conf: high, src: s1}
+datasheet:                             # walk-through of the datasheet: the sections that matter and how to read them
+  - {section: "Absolute maximum ratings", reading: "...", watch_out: "...", conf: high, src: s1}
+key_features:                          # the datasheet features that matter for the applications
+  - feature: "Integrated 600 V gate drivers"
+    value: "1.5 A source / 2 A sink"
+    meaning: "what the number means in plain words"
+    why_it_matters: "why a designer cares"
+    applications: [Cordless power tool, E-bike]
+    conf: high
+    src: s1
+applications:                          # where it sits: exact diagram names from data/blocks/templates.yaml (library;
+                                       # linked by name) or background_templates.yaml (opened with the part placed);
+                                       # an unknown name is left out with a warning
+  - {diagram: "<exact template name>", role: "which block it fills and what it replaces", conf: med}
+competitors:                           # alternatives from other makers, with how they differ
+  - {maker: TI, parts: "MCF8316A", how: "...", conf: med, src: s3}
+our_position: "Where this sits in the combined Skyworks + Qorvo portfolio, and what is next to it we can sell."
+open_questions: ["..."]
+learn:                                 # "Learn about this": one short paragraph per level
+  "5": "..."
+  "10": "..."
+  "15": "..."
+  "20": "..."
+  "25": "..."
+learn_links: [{label: "...", href: "/library/... or /rf-notes#... or /engineering/... or /visuals#..."}]
+sources:                               # note: official | unofficial copy | standard summary | catalogue
+  - {id: s1, title: "...", publisher: "...", url: "...", date: "...", note: "official | unofficial copy | standard summary | catalogue"}

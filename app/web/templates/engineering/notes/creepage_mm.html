@@ -1,12 +1,113 @@
 <h2>What it is</h2>
 <p><b>Creepage</b> is the shortest path along the package surface between the two sides of the barrier; <b>clearance</b> is
-  the shortest path through air. Wide-body SOIC packages offer about 8 mm, extra-wide packages 14.5 mm or more.</p>
+  the shortest path through air. Wide-body SOIC and SSO-8 packages offer about 8 mm, extra-wide packages (TI DWW,
+  Novosense "W") 14.5–15 mm. Creepage protects against slow surface tracking at the steady working voltage; clearance
+  protects against fast sparks from short voltage spikes.</p>
+
+<h2>What sets the minimum</h2>
+<p>Three things, per IEC 60664-1 and the end-product standard: the <b>working voltage</b>, the <b>pollution degree</b> of
+  the air around the part, and the <b>material group</b> of the insulating surface. Reinforced insulation needs
+  <b>twice</b> the basic distance.</p>
+
+<h3 id="pollution">Pollution degree: how dirty and damp it gets</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Degree</th><th scope="col">In plain words</th><th scope="col">Typical places</th></tr></thead>
+  <tbody>
+    <tr><td>PD1</td><td>No dirt, or only dry dirt that does not conduct.</td><td>Sealed or potted parts, boards under a qualified conformal coating, clean rooms.</td></tr>
+    <tr><td>PD2</td><td>Dirt does not conduct, but now and then condensation makes it conduct for a while (usually when switched off).</td><td>Offices, labs, closed enclosures and cabinets, household appliances; the default for most isolator datasheets and most sealed car and charger housings.</td></tr>
+    <tr><td>PD3</td><td>Dirt that conducts, or dry dirt that becomes conductive because condensation is expected.</td><td>Machine tools and factory floors, unheated rooms, farming; the outside of outdoor inverters and chargers.</td></tr>
+    <tr><td>PD4</td><td>Lasting conduction from conductive dust, rain or snow.</td><td>Open outdoor equipment, under and on top of rail vehicles.</td></tr>
+  </tbody>
+</table></div>
+<p>A housing with at least IP54 may let the parts inside be designed for a lower pollution degree (CONEC note on
+  IEC 60664-1); outdoor solar inverters are typically certified PD3 outside and PD2 inside an IP65 box.</p>
+
+<h3 id="cti">Material group: how well the surface resists tracking</h3>
+<p>The comparative tracking index (CTI, IEC 60112) is the highest voltage at which a material survives 50 drops of salty
+  water without forming a conductive track. The higher the CTI, the shorter the creepage may be.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Group</th><th scope="col">CTI</th><th scope="col">Typical</th></tr></thead>
+  <tbody>
+    <tr><td>I</td><td>≥ 600</td><td>Isolator mould compounds from TI and Skyworks (all our isolator packages are rated group I, AN583)</td></tr>
+    <tr><td>II</td><td>400–600</td><td>Some optocouplers and connector plastics</td></tr>
+    <tr><td>IIIa</td><td>175–400</td><td>Most FR4 circuit boards</td></tr>
+    <tr><td>IIIb</td><td>100–175, or not specified</td><td>Unknown or untested materials</td></tr>
+  </tbody>
+</table></div>
+<p>Why it matters: group I mould compound halves the distance against group III. At 800 V and PD2 a group I package
+  needs 4 mm (basic), a group III one 8 mm. The board under the part is usually FR4 (group IIIa), so the board needs
+  the larger value or a slot.</p>
+
+<h3 id="table">Minimum creepage for basic insulation (mm)</h3>
+<div class="table-wrap"><table>
+  <thead>
+    <tr><th scope="col" rowspan="2">Working voltage (V rms or DC)</th><th scope="col">PD1</th><th scope="col" colspan="3">PD2, material group</th><th scope="col" colspan="3">PD3, material group</th></tr>
+    <tr><th scope="col">any</th><th scope="col">I</th><th scope="col">II</th><th scope="col">III</th><th scope="col">I</th><th scope="col">II</th><th scope="col">III</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>400</td><td>1.0</td><td>2.0</td><td>2.8</td><td>4.0</td><td>5.0</td><td>5.6</td><td>6.3</td></tr>
+    <tr><td>500</td><td>1.3</td><td>2.5</td><td>3.6</td><td>5.0</td><td>6.3</td><td>7.1</td><td>8.0</td></tr>
+    <tr><td>630</td><td>1.8</td><td>3.2</td><td>4.5</td><td>6.3</td><td>8.0</td><td>9.0</td><td>10</td></tr>
+    <tr><td>800</td><td>2.4</td><td>4.0</td><td>5.6</td><td>8.0</td><td>10</td><td>11</td><td>12.5</td></tr>
+    <tr><td>1000</td><td>3.2</td><td>5.0</td><td>7.1</td><td>10</td><td>12.5</td><td>14</td><td>16</td></tr>
+  </tbody>
+</table></div>
+<ul class="small">
+  <li><b>Reinforced = 2 × basic.</b> Example: 800 V, PD2, group I: 4.0 mm basic, 8.0 mm reinforced (TI's on-board charger example).</li>
+  <li><b>DC:</b> the working voltage is the highest rms <i>or</i> DC value across the barrier, so an 800 V DC link uses the 800 V row. Values in between may be interpolated linearly (TI used 565 V DC → 2.8 mm, PD2 group I).</li>
+  <li><b>Clearance</b> follows the impulse (spike) voltage instead: from the mains voltage and overvoltage category (OVC I–IV), reinforced one impulse step higher, times an altitude factor above 2000 m (1.29 at 4000 m, 1.48 at 5000 m). Example: 230 V mains, OVC II needs 2.5 kV basic (1.5 mm) and 4 kV reinforced (3.0 mm). For circuits without mains spikes, TI cites "nominal voltage + 1200 V". For a wide-body or extra-wide package, creepage is usually the tighter limit.</li>
+  <li>Some product standards use their own tables (IEC 62368-1 Table 17, IEC 61800-5-1 Table 10, IEC 62109-1 Table 14); the values above are the common IEC 60664-1 ones.</li>
+</ul>
+
+<h3 id="apps">What applications typically design to</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Application</th><th scope="col">Voltage across the barrier</th><th scope="col">Pollution degree</th><th scope="col">Insulation (control side to HV)</th></tr></thead>
+  <tbody>
+    <tr><td>EV traction inverter</td><td>400 V or 800 V battery; full charge ~ 900 V, design ceiling 1000 V (est)</td><td>PD2 inside the sealed housing</td><td>Reinforced at the 12 V-to-HV barrier</td></tr>
+    <tr><td>On-board charger</td><td>Mains 120–240 V; 400 V or 800 V DC link</td><td>PD2</td><td>Reinforced (TI example: 4 mm at 400 V, 8 mm at 800 V, group I)</td></tr>
+    <tr><td>DC fast charger</td><td>Up to ~1000 V DC output (est)</td><td>PD3 outside, PD2 inside a sealed cabinet (est, like solar)</td><td>Basic to earth, reinforced to touchable parts</td></tr>
+    <tr><td>Battery management (BMS), HV junction box</td><td>Pack voltage, 800 V and above</td><td>PD2 in the sealed pack</td><td>Reinforced; TI names these as needing more than 8 mm</td></tr>
+    <tr><td>Industrial motor drive (IEC 61800-5-1)</td><td>380–480 V mains; 565–800 V DC bus</td><td>PD2 in a cabinet; PD3 on machine tools</td><td>Basic to earth, reinforced to touchable I/O</td></tr>
+    <tr><td>Solar inverter (IEC 62109-1)</td><td>PV string up to 1000 V (also 1500 V)</td><td>PD3 outside, PD2 inside an IP65 box</td><td>Reinforced to communication ports</td></tr>
+  </tbody>
+</table></div>
+<p>Car standards (ISO 6469-3, ISO 21498, VDA LV 123) set voltage classes and tests, not creepage numbers; designers take
+  creepage from IEC 60664-1. Component standards (IEC 60747-17 / VDE 0884-17, UL 1577, CQC) certify the barrier inside the
+  package (working voltage, surge, partial discharge), not the creepage the system needs: a datasheet lists the package
+  creepage, CTI and the pollution degree it assumes (usually PD2).</p>
+
+<h3 id="800v">What an 800 V system asks of the package (material group I)</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Case</th><th scope="col">800 V</th><th scope="col">1000 V</th><th scope="col">8 mm package</th><th scope="col">14.5 mm package</th></tr></thead>
+  <tbody>
+    <tr><td>PD2, basic</td><td>4.0 mm</td><td>5.0 mm</td><td>enough</td><td>enough</td></tr>
+    <tr><td>PD2, reinforced</td><td>8.0 mm</td><td>10 mm</td><td>just enough at 800 V, not above (~ 900 V full charge needs 9 mm)</td><td>enough</td></tr>
+    <tr><td>PD3, basic</td><td>10 mm</td><td>12.5 mm</td><td>not enough</td><td>enough</td></tr>
+    <tr><td>PD3, reinforced</td><td>20 mm</td><td>25 mm</td><td>not enough</td><td>not enough: needs coating, potting or a sealed box (PD2)</td></tr>
+    <tr><td>PD1 (coated or potted), reinforced</td><td>4.8 mm</td><td>6.4 mm</td><td>enough</td><td>enough</td></tr>
+  </tbody>
+</table></div>
+<p>Note: the JEDEC wide SOIC-16 gives about 7.6 mm in air (metal tabs at the side, AN583), below the 8.0 mm an 800 V
+  reinforced PD2 barrier needs.</p>
+
 <h2>When it deviates</h2>
-<p>The minimum creepage follows from the working voltage, the pollution degree and the material group (CTI) of the mold
-  compound, per IEC 60664-1 and the end-product standard; reinforced insulation needs twice the basic value. Less package
-  creepage can make the part unusable at your voltage even if the electrical ratings match.</p>
+<p>Less package creepage can make the part unusable at your voltage even if the electrical ratings match. Ways designers
+  avoid a wider package: <b>conformal coating or potting</b> (PD1, qualified per IEC 60664-3), a <b>sealed housing</b>
+  (PD2), <b>placing the safety barrier elsewhere</b> (functional isolation at the driver, basic plus earth, reinforced only
+  where people can touch), <b>two isolators in series</b> (needs an extra supply in the middle), and <b>slots</b> in the board
+  (at least 1 mm wide in PD2, 1.5 mm in PD3) so the board keeps the distance the package has.</p>
+
 <h2>How to judge it</h2>
-<p>Look up the required creepage for your working voltage, pollution degree and material group in your standard, and check
-  the PCB keeps it too (slots or keep-outs under the package). A standards-based calculator needs those inputs and is not
-  modelled here.</p>
-<p class="muted small"><span class="evidence meas">Not modelled</span> Creepage tables differ by standard; we do not guess them.</p>
+<p>Ask for the working voltage (DC link or highest rms), the pollution degree and basic or reinforced. Read the table above
+  for material group I and compare with the package. Then check the board too: FR4 is group IIIa, so keep slots or keep-outs
+  under the part.</p>
+<p class="muted small"><span class="evidence ds">Public sources</span> Table values: TI SLUP419 and SLUP421 "Demystifying
+  clearance and creepage distance for high-voltage end equipment" (Power Supply Design Seminar, Mar 2024; 400, 800 and 1000 V
+  rows, PD1 and PD2) and MINMAX Technology "Clearance and Creepage Distance in PCB Design" (web page, read 21 Oct 2026;
+  full rows incl. PD3); they agree on every shared value. Also TI SLUAAR5 (Aug 2023; motor drive, interpolation, slots,
+  altitude), TI SLLA469 (Jan 2020; 4 mm for 400 V, 8 mm for 800 V batteries), Vishay 28962 (Jun 2026; 1000 V: 3.2 mm PD1,
+  5.0 mm PD2), Skyworks AN583 (Dec 2021; group I, PD2, 7.6 mm SOIC-16W), CONEC voltage-grading note (Dec 2023; PD examples,
+  IP54), EV Engineering &amp; Infrastructure (Jul 2026; sealed modules at PD2, LV 123 sets no creepage), TÜV SÜD
+  IEC 62109-1 report for a Sungrow inverter (May 2021; PD3 outside, PD2 inside), Broadcom optocoupler regulatory guide,
+  chapter 4 (undated; EN 50178 for group III boards: 8 mm basic and 16 mm reinforced at 800 V, matching group III above). The standards themselves (IEC 60664-1,
+  ISO 6469-3, LV 123) are paid and were not read. Rows marked est are our estimates.</p>

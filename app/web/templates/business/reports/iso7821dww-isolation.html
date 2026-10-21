@@ -1,5 +1,5 @@
 {% raw %}<h1>Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit</h1>
-<p class="meta">21 Oct 2026 · Research idea for a business case · built only from BizDev data: parts database (TI, Skyworks, Novosense digital isolators), cross results, block-diagram library (219 application diagrams), TI reference designs and the library topic on traction-inverter isolation. No new web research; open points are marked “open”.</p>
+<p class="meta">21 Oct 2026 · Research idea for a business case · built from BizDev data (parts database for TI, Skyworks and Novosense digital isolators, cross results, block-diagram library with 219 application diagrams, TI reference designs, library topic on traction-inverter isolation), plus public application notes on creepage and pollution degree and TI's public list prices (sections 3 and 4). Open points are marked “open”.</p>
 
 <section class="brief" aria-label="Summary">
   <p class="label">In brief</p>
@@ -7,7 +7,9 @@
     <li><b>The part:</b> TI ISO7821DWW is a 2-channel (one each way) reinforced digital isolator in a 16-pin extra-wide SOIC (DWW): 5.7 kVrms, 2828 Vpk working voltage, <b>14.5 mm creepage</b>, 100 Mbps, 85 kV/µs CMTI, –55 to 125 °C, industrial grade, enable pins on both sides.</li>
     <li><b>Our position:</b> our closest crosses, Si86S621 and Si86S622 (SSO-8), are reinforced too and better on CMTI (100 kV/µs), isolation rating (6 kVrms) and speed (150 Mbps), with automotive (-AS4) versions. But <b>none of our 672 digital isolators passes 8 mm creepage</b>; TI has 20 parts and Novosense 6 at 14.5–15 mm.</li>
     <li><b>Where it matters:</b> digital isolators sit in 66 of the 219 application diagrams, among them the HEV/EV on-board charger, DC fast charger, AC wallboxes, the HV-to-LV DC/DC and traction inverters, next to our isolated gate drivers, isolated DC-DC and isolated amplifiers.</li>
-    <li><b>The business-case question:</b> whether 800 V chargers and inverters push customers past 8 mm, and whether an extra-wide package for our existing isolator die (plus the neighbours) is worth it. Market size is open.</li>
+    <li><b>What 800 V needs (section 4):</b> in a sealed housing (pollution degree 2), with group I mould compound like ours, a reinforced barrier needs <b>8.0 mm at 800 V and 10 mm at 1000 V</b>. So 8 mm is just enough at 800 V, and too short for a fully charged 800 V battery (~900 V) or a 1000 V system. Where condensation or conductive dust is expected (pollution degree 3), even basic insulation needs 10–12.5 mm, so only the 14.5 mm class works.</li>
+    <li><b>Price:</b> TI asks no premium on reels (ISO7821DWWR $2.60 vs ISO7821DWR $2.64 at 1k) and +23 % in tubes ($4.12 vs $3.34). TI sells the extra-wide package at wide-body prices.</li>
+    <li><b>The business-case question:</b> should we offer an extra-wide package for our existing isolator die (and the neighbours) for 900–1000 V and dirty-environment designs, priced like our wide body? Market size is open.</li>
   </ol>
 </section>
 
@@ -27,7 +29,7 @@
 <h3>What could combine into a product, strongest first</h3>
 <ol class="opps">
   <li><b>Offer Si86S621/622-AS4 where 8 mm is enough.</b> Better CMTI, kVrms and speed, automotive grade, today. <span class="muted">Different package and pinout (8 vs 16 pins): a board change, not a drop-in.</span></li>
-  <li><b>An extra-wide-package version of our 2-channel isolator.</b> Same die in a 14.5 mm-class package to meet the creepage TI and Novosense offer. <span class="muted">Open: package availability, cost and qualification time.</span></li>
+  <li><b>An extra-wide-package version of our 2-channel isolator.</b> Same die in a 14.5 mm-class package, for reinforced barriers above 800 V (fully charged 800 V batteries, 1000 V chargers, BMS and HV junction boxes) and for basic barriers at pollution degree 3. TI sells it at wide-body reel prices, so it must not cost more to make. <span class="muted">Open: package availability, cost and qualification time. The barrier also needs a higher rating (TI: 2000 Vrms working in DWW vs 1500 Vrms in DW).</span></li>
   <li><b>An isolation set for the charger and inverter:</b> isolator + Si829x / Si8285/86 gate drivers + Si89xx sensing + isolated bias, sold as one reference. <span class="muted">Open: a reinforced isolated bias controller is missing.</span></li>
 </ol>
 
@@ -42,14 +44,53 @@
 <h2>3. Market trend</h2>
 <ul>
   <li><b>Crowded and price-driven:</b> TI, ADI, Infineon, ST, onsemi, Novosense, Chipanalog, 2Pai, Toshiba and Rohm; “established leaders plus fast-growing Chinese suppliers; increasingly price-competitive”.</li>
-  <li><b>Higher voltage:</b> 800 V SiC is now mainstream in traction (library topic), with CMTI of 100–200 kV/µs and reinforced isolation; creepage and working-voltage needs rise with it. <span class="muted">Open: the required creepage per IEC 60664-1 / ISO 6469-3 is not verified here.</span></li>
+  <li><b>Higher voltage:</b> 800 V SiC is now mainstream in traction (library topic), with CMTI of 100–200 kV/µs and reinforced isolation; creepage and working-voltage needs rise with it: 8 mm reinforced at 800 V, 10 mm at 1000 V (section 4). TI names BMS, high-voltage junction boxes and heaters beyond 800 V as applications that need more than 8 mm.</li>
   <li><b>Wide packages as a differentiator:</b> in BizDev only TI (20 parts) and Novosense (6, e.g. NSI8321W1 at 15 mm and 7.5 kVrms) reach 14.5–15 mm.</li>
-  <li><span class="muted">Open: market size, volumes and prices for extra-wide isolators are not in BizDev.</span></li>
+  <li><b>Prices (TI store, 21 Oct 2026, 1k units):</b> ISO7821DWWR $2.60 and ISO7821DWR $2.64 (reels); ISO7821DWW $4.12 and ISO7821DW $3.34 (tubes). <span class="muted">Open: market size and volumes; Novosense prices.</span></li>
+</ul>
+
+<h2>4. Creepage, pollution degree and what 800 V systems need</h2>
+<p>Creepage is the distance along the package surface between the two sides. The minimum depends on three things
+  (IEC 60664-1): the working voltage (rms or DC), how dirty and damp the air gets (<b>pollution degree</b>) and how well the
+  surface resists tracking (<b>material group</b>, from the CTI of the mould compound). Reinforced insulation needs twice the
+  basic distance.</p>
+<ul>
+  <li><b>PD1:</b> no dirt, or only dry dirt (sealed, potted or coated). <b>PD2:</b> the dirt does not conduct, but now and then condensation makes it conduct (closed housings, offices; most isolator datasheets and sealed car and charger boxes). <b>PD3:</b> conductive dirt, or condensation is expected (factory floors, unheated rooms, the outside of outdoor boxes). <b>PD4:</b> lasting wetness or conductive dust (open outdoors).</li>
+  <li><b>Material group:</b> I (CTI ≥ 600), II (400–600), IIIa (175–400, most FR4 boards), IIIb (100–175). TI and Skyworks isolator packages are group I, which halves the distance compared with group III.</li>
+</ul>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Working voltage</th><th scope="col">PD2, basic</th><th scope="col">PD2, reinforced</th><th scope="col">PD3, basic</th><th scope="col">PD3, reinforced</th></tr></thead>
+  <tbody>
+    <tr><td>400 V</td><td>2.0 mm</td><td>4.0 mm</td><td>5.0 mm</td><td>10 mm</td></tr>
+    <tr><td>500 V</td><td>2.5 mm</td><td>5.0 mm</td><td>6.3 mm</td><td>12.6 mm</td></tr>
+    <tr><td>630 V</td><td>3.2 mm</td><td>6.4 mm</td><td>8.0 mm</td><td>16 mm</td></tr>
+    <tr><td><b>800 V</b></td><td>4.0 mm</td><td><b>8.0 mm</b></td><td>10 mm</td><td>20 mm</td></tr>
+    <tr><td><b>1000 V</b></td><td>5.0 mm</td><td><b>10 mm</b></td><td>12.5 mm</td><td>25 mm</td></tr>
+  </tbody>
+</table></div>
+<p class="small muted">Material group I (our and TI's mould compound). Groups II and III need more: at 800 V, PD2, basic, 5.6 and 8.0 mm. The full table, with PD1 and all groups, is in the <a href="/engineering/creepage_mm">creepage guide</a>. TI SLUP419/SLUP421 and MINMAX's copy of the IEC 60664-1 table give the same values.</p>
+
+<h3>What each application designs to</h3>
+<ul>
+  <li><b>EV traction inverter and BMS:</b> 400 V or 800 V battery (~900 V when full, 1000 V design ceiling, est); PD2 inside the sealed housing; reinforced between the 12 V side and HV.</li>
+  <li><b>On-board charger:</b> PD2, reinforced. TI's worked example needs 4 mm at 400 V and 8 mm at 800 V (group I), and 11.2 mm for group II.</li>
+  <li><b>DC fast charger and solar inverter:</b> up to ~1000 V DC (solar also 1500 V); PD3 outside, PD2 inside a sealed IP65 cabinet (from a TÜV report for a Sungrow inverter; for chargers est).</li>
+  <li><b>Industrial motor drive (IEC 61800-5-1):</b> 380–480 V mains and a 565–800 V DC bus; PD2 in a cabinet, PD3 on machine tools; basic to earth, reinforced to I/O that people can touch.</li>
+  <li><b>Standards:</b> car standards (ISO 6469-3, ISO 21498, LV 123) set voltage classes and tests, not creepage; the creepage comes from IEC 60664-1. Component standards (IEC 60747-17 / VDE 0884-17, UL 1577) rate the barrier inside the package, not the creepage the system needs.</li>
+</ul>
+
+<h3>8 mm or 14.5 mm for 800 V</h3>
+<ul>
+  <li><b>8 mm is enough</b> for basic insulation at PD2 up to 1000 V, for reinforced at PD2 up to 800 V, and for anything coated or potted (PD1: 4.8 mm reinforced at 800 V). The JEDEC wide SOIC-16 gives only ~7.6 mm in air (AN583), so our SSO-8 (8.0 mm) fits better.</li>
+  <li><b>14.5 mm is needed</b> for reinforced insulation at PD2 above ~800 V (900 V needs 9 mm, 1000 V needs 10 mm) and for basic insulation at PD3 (10–12.5 mm).</li>
+  <li><b>No single package is enough</b> for reinforced insulation at PD3 (20–25 mm). Designers seal the box (PD2), coat or pot the board (PD1), or put two isolators in series.</li>
+  <li><b>Design measures that relax it:</b> conformal coating or potting, a sealed housing, the reinforced barrier only where people can touch (basic or functional isolation at the drivers), and board slots (at least 1 mm wide at PD2, 1.5 mm at PD3) so the FR4 board keeps the package's distance.</li>
 </ul>
 
 <h2>Risks</h2>
 <ul>
-  <li>Creepage above 8 mm may be needed only in a few designs; most chargers may be fine with 8 mm (open).</li>
+  <li>Most sealed 400 V and 800 V designs are fine with 8 mm at PD2. More than 8 mm is needed only for reinforced barriers above ~800 V, at PD3, or where coating is not wanted (the share of such designs is open).</li>
+  <li>TI sells DWW reels at DW prices, so an extra-wide package earns no price premium; it only wins sockets.</li>
   <li>A new package means qualification time and cost against a price-driven market.</li>
   <li>Our working voltage (2121 Vpk) is below ISO7821DWW's (2828 Vpk), and our low-temperature end is –40 °C vs –55 °C.</li>
 </ul>
@@ -57,9 +98,9 @@
 <h2>Open questions</h2>
 <ul>
   <li>Which customers asked for ISO7821DWW, in which product, and at what volume?</li>
-  <li>What creepage and working voltage do 800 V OEMs require for the charger and inverter barrier?</li>
+  <li>Which 800 V OEMs design the barrier for the full-charge voltage (~900 V) or for 1000 V, and which accept coating or potting instead of a wider package?</li>
   <li>Can our 2-channel isolator die go into an extra-wide package, and what would it cost?</li>
-  <li>What do TI and Novosense charge for their extra-wide parts?</li>
+  <li>What does Novosense charge for its 15 mm parts? (TI's prices are in section 3.)</li>
 </ul>
 
 <h2>Sources</h2>
@@ -67,4 +108,11 @@
   <li>BizDev parts database: ISO7821DWW, ISO7821DW (TI data sheet SLLSEM2I), Si86S621/622, Novosense NSI8321W1/NSI8322W1; cross results for ISO7821DWW.</li>
   <li>BizDev block-diagram library: digital isolator in 66 of 219 application diagrams; competition and technology data for the function.</li>
   <li>TI reference design TIDA-00785; library topic “Isolation in the ASIL-D traction inverter”.</li>
+  <li>TI, ISO7821 product page with TI store prices, <a href="https://www.ti.com/product/ISO7821">ti.com/product/ISO7821</a>, read 21 Oct 2026. Data sheet SLLSEM2I (Sep 2026): DW 8.15 mm and 1500 Vrms working; DWW 14.5 mm and 2000 Vrms; CTI &gt; 600, group I, PD2.</li>
+  <li>TI SLUP419 and SLUP421, “Demystifying clearance and creepage distance for high-voltage end equipment”, Power Supply Design Seminar, Mar 2024, <a href="https://www.ti.com/lit/pdf/slup419">ti.com/lit/pdf/slup419</a>, <a href="https://www.ti.com/lit/pdf/slup421">ti.com/lit/pdf/slup421</a>: creepage table and on-board charger example.</li>
+  <li>MINMAX Technology, “Clearance and Creepage Distance in PCB Design”, <a href="https://www.minmaxpower.com/en/resource/clearance-creepage-pcb-design">minmaxpower.com</a>, read 21 Oct 2026: full creepage table, including PD3.</li>
+  <li>TI SLUAAR5, “Circuit Board Insulation Design According to IEC60664 for Motor Drive Application”, Aug 2023, <a href="https://www.ti.com/lit/pdf/sluaar5">ti.com/lit/pdf/sluaar5</a>.</li>
+  <li>TI SLLA469, “How to Meet the Higher Isolation Creepage &amp; Clearance Needs in Automotive Applications”, Jan 2020, <a href="https://www.ti.com/lit/pdf/slla469">ti.com/lit/pdf/slla469</a>.</li>
+  <li>Skyworks AN583, “Safety Considerations and Layout Recommendations for Digital Isolators”, rev 0.3, Dec 2021, skyworksinc.com.</li>
+  <li>Vishay 28962, “Clearance and Creepage in Circuits Up to 1500 VDC”, Jun 2026, <a href="https://www.vishay.com/docs/28962/clearandcreepconsidcostsandspacefilmres.pdf">vishay.com</a>. CONEC, “Voltage grading of connectors”, Dec 2023, conec.com. EV Engineering &amp; Infrastructure, “How to manage creepage and clearance in high-density EV power modules”, Jul 2026, evengineeringonline.com. TÜV SÜD IEC 62109-1 test report for Sungrow SH3.0–6.0RS, May 2021. TI SSZTAI4 (isolators for solar inverters), Dec 2016.</li>
 </ul>{% endraw %}

@@ -98,7 +98,13 @@ Safe states (r2 §2.4):
   - 1EDI3041AS: 8 kV peak (IEC 60747-17) and 5.7 kVrms (UL 1577).
 - Creepage rule of thumb from AN583: basic 3.2 mm / 2.5 kVrms; reinforced 6.4 mm / 5 kVrms. Distances double for reinforced; Skyworks packages are rated material group I, pollution degree 2.
 - An 800 V bus (about 1000 V peak) falls in AN583's 354–1414 Vpk test band (an IEC 60950-1 table, now superseded).
-- In practice, choose wide-body packages with about 8 mm creepage (SSO-8, SOIC-16W/14W). IEC 60664-1 values were not verified.
+- In practice, choose wide-body packages with about 8 mm creepage (SSO-8, SOIC-16W/14W).
+- IEC 60664-1 creepage (added 21 Oct 2026, from public reproductions: TI SLUP419/SLUP421 and MINMAX; full table in the creepage specification guide, /engineering/creepage_mm). Basic insulation, material group I:
+  - pollution degree 2 (sealed housing): 4.0 mm at 800 V, 5.0 mm at 1000 V; reinforced is twice that, so 8.0 mm and 10 mm;
+  - pollution degree 3 (condensation or conductive dust expected): 10 mm at 800 V, 12.5 mm at 1000 V; reinforced 20 and 25 mm;
+  - so an 8 mm package is just enough for reinforced at 800 V and PD2; above that (full charge ~900 V, or 1000 V) it takes 14.5 mm, coating/potting (PD1) or two isolators in series;
+  - DC working voltage is used like rms; clearance follows the impulse voltage and altitude (×1.48 at 5000 m) and is rarely the limit for wide packages.
+- ISO 6469-3, ISO 21498 and LV 123 set voltage classes and tests, not creepage (EV Engineering & Infrastructure, Jul 2026). Sealed automotive modules are usually designed to pollution degree 2.
 
 ## Considerations and pitfalls
 
@@ -140,7 +146,7 @@ Qorvo: the repo's Qorvo data has no isolated gate driver or isolator. The Qorvo 
 
 See the YAML list. In short:
 - the Si829x full datasheet numbers and ASIL-D certificate status;
-- the 800 V creepage and working-voltage requirement per IEC 60664-1 / ISO 6469-3 (not readable for free);
+- whether OEMs size the 800 V barrier for 800 V (8 mm reinforced) or for the full-charge / 1000 V level (9–10 mm), and whether they coat or pot instead (the IEC 60664-1 numbers are now in the creepage guide);
 - a reinforced bias controller for 800 V high-side drivers;
 - the CMTI margin of the isolated amplifiers;
 - the Hall vs shunt trend;

@@ -536,12 +536,17 @@
     related: [["Gate-drive visual", "#gate"], ["Skyworks + Qorvo: isolation", "/portfolio#pick"], ["Search isolators", "/parts?cat=isolation"]],
   });
 
-  // IEC 60664-1 Table F.5, pollution degree 2, basic insulation (mm): voltage → [MG I, MG II, MG III]
+  // IEC 60664-1 creepage table (Table F.4 in TI SLUP419/SLUP421, F.5 in the 2020 edition), basic insulation (mm):
+  // voltage → [MG I, MG II, MG III], pollution degree 2. Cross-checked with MINMAX's reproduction (Oct 2026).
   const CREEP = [[50, .6, .85, 1.2], [63, .63, .9, 1.25], [80, .67, .95, 1.3], [100, .71, 1, 1.4], [125, .75, 1.05, 1.5], [160, .8, 1.1, 1.6], [200, 1, 1.4, 2], [250, 1.25, 1.8, 2.5], [320, 1.6, 2.2, 3.2], [400, 2, 2.8, 4], [500, 2.5, 3.6, 5], [630, 3.2, 4.5, 6.3], [800, 4, 5.6, 8], [1000, 5, 7.1, 10]];
-  const creep = (u, g) => {
-    if (u <= CREEP[0][0]) return CREEP[0][g];
-    for (let i = 1; i < CREEP.length; i++) if (u <= CREEP[i][0]) { const [a, b] = [CREEP[i - 1], CREEP[i]]; return a[g] + ((b[g] - a[g]) * (u - a[0])) / (b[0] - a[0]); }
-    return CREEP[CREEP.length - 1][g];
+  // pollution degree 1 (all groups) and 3 ([MG I, MG II, MG III])
+  const CREEP1 = [[50, .18], [63, .2], [80, .22], [100, .25], [125, .28], [160, .32], [200, .42], [250, .56], [320, .75], [400, 1], [500, 1.3], [630, 1.8], [800, 2.4], [1000, 3.2]];
+  const CREEP3 = [[50, 1.5, 1.7, 1.9], [63, 1.6, 1.8, 2], [80, 1.7, 1.9, 2.1], [100, 1.8, 2, 2.2], [125, 2, 2.2, 2.4], [160, 2.1, 2.3, 2.5], [200, 2.5, 2.8, 3.2], [250, 3.2, 3.6, 4], [320, 4, 4.5, 5], [400, 5, 5.6, 6.3], [500, 6.3, 7.1, 8], [630, 8, 9, 10], [800, 10, 11, 12.5], [1000, 12.5, 14, 16]];
+  const creep = (u, g, pd = 2) => {
+    const T = pd === 1 ? CREEP1 : pd === 3 ? CREEP3 : CREEP, c = pd === 1 ? 1 : g;
+    if (u <= T[0][0]) return T[0][c];
+    for (let i = 1; i < T.length; i++) if (u <= T[i][0]) { const [a, b] = [T[i - 1], T[i]]; return a[c] + ((b[c] - a[c]) * (u - a[0])) / (b[0] - a[0]); }
+    return T[T.length - 1][c];
   };
   V.push({
     id: "creep", group: "Isolation and power", title: "Creepage against working voltage",
@@ -550,18 +555,19 @@
       {k: "u", label: "Working voltage", min: 50, max: 1000, step: 10, value: 400, unit: "V rms"},
       {k: "g", label: "Mold compound (material group)", type: "select", options: [["1", "I (CTI ≥ 600)"], ["2", "II (CTI 400–600)"], ["3", "III (CTI 175–400)"]], value: "1"},
       {k: "ins", label: "Insulation", type: "select", options: [["1", "Basic"], ["2", "Reinforced (2×)"]], value: "2"},
+      {k: "pd", label: "Pollution degree", type: "select", options: [["1", "PD1 (sealed, coated or potted)"], ["2", "PD2 (closed housing, occasional condensation)"], ["3", "PD3 (condensation or conductive dust expected)"]], value: "2"},
     ],
     compute(v) {
-      const g = +v.g, k = +v.ins, need = creep(v.u, g) * k, us = range(50, 1000, 60);
+      const g = +v.g, k = +v.ins, pd = +(v.pd || 2), need = creep(v.u, g, pd) * k, us = range(50, 1000, 60);
       const pk = DATA.creepage, fit = pk.filter(p => p.mm >= need).map(p => `${p.code} (${p.mm} mm)`);
       return {
         outputs: [["Creepage required", `${num(need)} mm`], ["Packages that reach it", fit.length ? fit.slice(0, 4).join(", ") : "none of the listed", fit.length ? "ok" : "bad"]],
         eq: `creepage ≥ table value (U<sub>rms</sub>, pollution degree, material group) × 2 for reinforced`,
-        eqn: `${num(v.u)} V rms, PD2, group ${["", "I", "II", "III"][g]} → ${num(creep(v.u, g))} mm${k === 2 ? ` × 2 = ${num(need)} mm` : ""}`,
-        chart: {x: {min: 50, max: 1000, label: "Working voltage (V rms)"}, y: {min: 0, max: 22, label: "Creepage (mm)"},
-          series: [1, 2, 3].map(gr => ({pts: us.map(u => [u, creep(u, gr) * k]), color: [C.blue, C.orange, C.purple][gr - 1], width: gr === g ? 3 : 1.5, dash: gr === g ? "" : "5 4", label: `group ${["", "I", "II", "III"][gr]}`})),
+        eqn: `${num(v.u)} V rms, PD${pd}, group ${pd === 1 ? "any" : ["", "I", "II", "III"][g]} → ${num(creep(v.u, g, pd))} mm${k === 2 ? ` × 2 = ${num(need)} mm` : ""}`,
+        chart: {x: {min: 50, max: 1000, label: "Working voltage (V rms or DC)"}, y: {min: 0, max: pd === 3 ? 34 : 22, label: "Creepage (mm)"},
+          series: [1, 2, 3].map(gr => ({pts: us.map(u => [u, creep(u, gr, pd) * k]), color: [C.blue, C.orange, C.purple][gr - 1], width: gr === g ? 3 : 1.5, dash: gr === g ? "" : "5 4", label: `group ${["", "I", "II", "III"][gr]}`})),
           hlines: pk.map(p => ({y: p.mm, label: `${p.code} ${p.mm} mm`, color: C.grey})), marks: [{x: v.u, y: need, label: `${num(need)} mm`}]},
-        note: "Values from IEC 60664-1 (Table F.5, pollution degree 2), linearly interpolated: indicative only, the end-product standard (IEC 62368-1, 61800-5-1, 60664-1 edition) decides. Package creepage is what the data sheets in our cross lists state; wide bodies (8 mm) and extra-wide (14.5 mm) exist for 800 V+ systems.",
+        note: "Values from IEC 60664-1's creepage table as reproduced by TI (SLUP419/SLUP421) and MINMAX, linearly interpolated; DC working voltage is used like rms. Indicative only: the end-product standard (IEC 62368-1, 61800-5-1, 62109-1) decides. Package creepage is what the data sheets in our cross lists state; wide bodies (8 mm) and extra-wide (14.5 mm) exist for 800 V+ systems. At 800 V, PD2, group I, reinforced needs 8 mm; at PD3 no single package is enough. See the creepage guide for the full table.",
       };
     },
     related: [["Specification guides", "/engineering"]],

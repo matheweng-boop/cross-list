@@ -621,6 +621,33 @@ def visuals_rf_parts():
     return {"parts": visuals.rf_parts()}
 
 
+@router.get("/library", response_class=HTMLResponse)
+def library_index(request: Request):
+    from app.services import library
+
+    return templates.TemplateResponse(request, "library/index.html", {"topics": library.topics(),
+                                                                      "n_sources": len(library.sources())})  # fmt: skip
+
+
+@router.get("/library/sources", response_class=HTMLResponse)
+def library_sources(request: Request):
+    from app.services import library
+
+    return templates.TemplateResponse(request, "library/sources.html", {"sources": library.sources(),
+                                                                        "feas": library.FEASIBILITY})  # fmt: skip
+
+
+@router.get("/library/{key}", response_class=HTMLResponse)
+def library_topic(request: Request, key: str):
+    from app.services import library
+
+    t = library.topic(key)
+    if t is None:
+        raise HTTPException(404, "Topic not found")
+    ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label}
+    return templates.TemplateResponse(request, "library/topic.html", ctx)
+
+
 @router.get("/rf-notes", response_class=HTMLResponse)
 def rf_notes_page(request: Request):
     from app.services import rf_notes

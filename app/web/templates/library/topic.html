@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ t.title }}{% endblock %}
+{% macro cite(ids) %}{% for i in ids or [] %}{% set r = refs.get(i) %}<a class="lib-cite" href="#ref-{{ i }}" title="{{ r.title if r else i }}">[{{ i[1:] if i.startswith('r') else i }}]</a>{% endfor %}{% endmacro %}
+{% macro conf(c) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence">{{ c }}</span>{% endif %}{% endmacro %}
+{% block content %}
+<p class="small"><a href="/library">← Technical library</a></p>
+<h1>{{ t.title }}</h1>
+<p class="subtitle">{{ t.summary }}</p>
+<nav class="bo-toc small"><a href="#diagram">Block diagram</a> · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a> · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
+
+{% set d = t.block_diagram %}{% set ours = (t.skyworks_fit or [])|map(attribute='fn')|list %}
+{% if d %}<h2 id="diagram">{{ d.name or 'Block diagram' }}</h2>
+<p class="small muted">{{ d.note }}</p>
+<p class="pc-dleg small"><span class="pc-blk w-ours">Skyworks / Qorvo part exists</span> <span class="pc-blk w-other">others</span></p>
+<div class="pc-diagram">{% for g in d.groups|sort(attribute='row')|groupby('row') %}<div class="pc-drow">{% for grp in g.list|sort(attribute='col') %}
+  <section class="pc-dgrp"><h4>{{ grp.label }}</h4>{% for b in grp.blocks %}{% set bb = b if b is mapping else {'fn': b} %}
+    <span class="pc-blk w-{{ 'ours' if bb.fn in ours else 'other' }}" title="{{ label(bb.fn) }}">{{ bb.label or label(bb.fn) }}</span>{% endfor %}</section>{% endfor %}
+</div>{% endfor %}</div>
+{% if d.links %}<p class="small muted pc-dlinks">{% for l in d.links %}{% set a = d.groups|selectattr('id', 'eq', l[0])|first %}{% set z = d.groups|selectattr('id', 'eq', l[1])|first %}{{ a.label if a else l[0] }} → {{ z.label if z else l[1] }}{% if l[2] %} ({{ l[2] }}){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+<p><a class="button small-btn" href="/blocks/new?library={{ key }}">Open in the application workspace</a></p>{% endif %}
+
+<h2 id="rules">Design rules and considerations</h2>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Area</th><th scope="col">Rule</th><th scope="col">Why</th><th scope="col">Source</th></tr></thead>
+  <tbody>{% for r in t.design_rules or [] %}<tr><td>{{ r.area }}{% if r.kind == 'consideration' %}<br><small class="muted">consideration</small>{% endif %}</td><td><b>{{ r.rule }}</b></td><td>{{ r.why }}</td><td>{{ cite(r.refs) }} {{ conf(r.conf) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2 id="trends">Where research is heading</h2>
+<ul class="pc-list">{% for x in t.trends or [] %}<li><b>{{ x.text }}</b> <span class="pc-conf">{{ horizon.get(x.horizon, x.horizon) }}</span> {{ conf(x.conf) }} {{ cite(x.refs) }}{% if x.for_us %}<br><small><b>For us:</b> {{ x.for_us }}</small>{% endif %}</li>{% endfor %}</ul>
+
+<h2 id="ours">Where our parts sit</h2>
+<div class="table-wrap"><table class="small pc-table"><tbody>{% for s in t.skyworks_fit or [] %}<tr><th scope="row">{{ label(s.fn) }}</th>
+  <td>{% for p in s.parts or [] %}<a href="/find?q={{ p|urlencode }}">{{ p }}</a>{{ ', ' if not loop.last }}{% else %}<span class="muted">none</span>{% endfor %}</td><td>{{ s.note }}</td></tr>{% endfor %}</tbody></table></div>
+
+{% if t.open_questions %}<h2 id="questions">Open questions</h2><ul class="small">{% for q in t.open_questions %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
+
+<h2 id="refs">References</h2>
+<ol class="small lib-refs">{% for r in t.references or [] %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved }}</span><br><small>{{ r.why }}</small></li>{% endfor %}</ol>
+<p class="small muted">Summaries are ours; quotes are short and cited. The block diagram is drawn by us from the references.</p>
+{% endblock %}

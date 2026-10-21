@@ -300,3 +300,28 @@ def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], pa
     m["source"] = "pasted"
     m["converted_from"] = currency.upper() if currency.upper() != "USD" else None
     return m
+
+
+def oem_path(m: dict, sop: int | None = None, volume: int | None = None) -> dict | None:
+    """OEM target prices per year: the band's target at `volume` today, falling by the yearly productivity (5-7 %)
+    until SOP and through the production years. Rows: {year, low, high, phase}."""
+    c = config()["oem"]
+    volume = volume or c["volume"]
+    row = next((r for r in m.get("rows") or [] if r["volume"] == volume), None)
+    if row is None:
+        return None
+    sop = sop or c["default_sop"]
+    p_lo, p_hi = c["productivity"]
+    years = list(range(c["base_year"], max(sop, c["base_year"]) + c["lifetime_years"]))
+    rows = []
+    for y in years:
+        n = y - c["base_year"]
+        rows.append({"year": y, "high": row["target"] * (1 - p_lo) ** n, "low": row["target"] * (1 - p_hi) ** n,
+                     "phase": "today" if n == 0 else "before SOP" if y < sop else "SOP" if y == sop else "production"})
+    return {"volume": volume, "sop": sop, "start": row["target"], "rows": rows, "productivity": c["productivity"]}
+
+
+def scaled(m: dict, lo: float, hi: float) -> list[dict]:
+    """Another part's band from this one's: every price times a parity range (our part vs the anchor part)."""
+    return [{"volume": r["volume"], "low": r["low"] * lo, "target": r["target"] * (lo + hi) / 2, "high": r["high"] * hi}
+            for r in m.get("rows") or []]

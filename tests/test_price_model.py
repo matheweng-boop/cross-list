@@ -111,3 +111,20 @@ def test_usd_conversion():
 
     pq = SimpleNamespace(found=True, currency="EUR", offers=[{"breaks": [[100, 10.0], [1000, 8.0]]}])
     assert pm.breaks(pq) == [(100, 10.0 * pm.usd_rate("EUR")), (1000, 8.0 * pm.usd_rate("EUR"))]
+
+
+GD3162 = "1 10.80\n10 8.43\n25 7.8388\n176 6.98864\n352 6.78261\n528 6.67943\n1,056 6.52815"
+
+
+def test_oem_targets_and_our_part_from_a_competitor(client, session):
+    m = pm.estimate(session, "gate_driver", pm.parse_breaks(GD3162), "SOIC-32W", 32, wide=True, automotive=True)
+    o = pm.oem_path(m, 2028)
+    assert [r["phase"] for r in o["rows"]][:3] == ["today", "before SOP", "SOP"] and o["rows"][0]["low"] == o["start"]
+    sop = next(r for r in o["rows"] if r["phase"] == "SOP")
+    assert abs(sop["high"] - o["start"] * 0.95 ** 2) < 1e-9 and abs(sop["low"] - o["start"] * 0.93 ** 2) < 1e-9
+    ours = pm.scaled(m, 0.9, 1.0)
+    assert all(a["low"] < b["low"] and a["high"] == b["high"] for a, b in zip(ours, m["rows"], strict=True))
+    html = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "name": "GD3162",
+                                                   "package": "SOIC-32W", "pins": 32, "wide": "true",
+                                                   "automotive": "true", "sop": 2029, "ours": "Si82900"}).text
+    assert "OEM target prices" in html and "SOP 2029" in html and "Si82900" in html and "priced at 90" in html

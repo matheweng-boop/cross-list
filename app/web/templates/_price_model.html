@@ -33,3 +33,9 @@
   <span class="pc-btns"><button name="verdict" value="low" class="small-btn outline">Low end</button><button name="verdict" value="ok" class="small-btn outline">In the band</button><button name="verdict" value="high" class="small-btn outline">High end</button></span>
 </form>
 <p class="small muted">A rough estimate for ranking and sanity checks, not a quote. Every assumption is in <code>data/business/price_model.yaml</code>; your calls stay in this site's database.</p>{% endif %}
+
+{% macro oem_table(o, title) %}{% if o %}<h3 class="pm-h">{{ title }} <small class="muted">· {{ '{:,}'.format(o.volume) }} a year, SOP {{ o.sop }}, {{ (o.productivity[0] * 100)|int }}–{{ (o.productivity[1] * 100)|int }} % price-down a year</small></h3>
+<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">OEM target (7 % a year)</th><th scope="col">OEM target (5 % a year)</th></tr></thead>
+<tbody>{% for r in o.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}</td><td>{{ money(r.low) }}</td><td>{{ money(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}{% endmacro %}
+{% if m.oem %}{{ oem_table(m.oem, 'OEM target prices') }}
+<p class="small muted">Starts from today's target at {{ '{:,}'.format(m.oem.volume) }} a year ({{ money(m.oem.start) }}) and falls by the yearly productivity carmakers expect, before SOP and in every production year.{% if not estimate %} <a href="?price=open&sop={{ m.oem.sop + 1 }}#price-model" hx-get="/pricing/{{ part.id }}/model?sop={{ m.oem.sop + 1 }}" hx-target="closest .pm-body">SOP a year later</a>{% endif %}</p>{% endif %}

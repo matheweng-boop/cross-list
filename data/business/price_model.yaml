@@ -49,6 +49,19 @@ volumes:
   100000:  [0.50, 0.67]
   1000000: [0.45, 0.67]
 
+# OEM target prices: carmakers and Tier-1s expect a yearly price-down ("productivity") of 5-7 % from today's market
+# price, through the years before start of production (SOP) and every production year after it (owner, 21 Oct 2026).
+oem:
+  productivity: [0.05, 0.07]
+  base_year: 2026
+  default_sop: 2028
+  lifetime_years: 5          # production years shown after SOP
+  volume: 100000             # yearly volume whose target price the path starts from
+
+# Our part priced from a competitor's (Price estimate page): a newer entrant usually sits at or a little below the
+# incumbent; the range is a starting point, changed per estimate.
+parity: [0.90, 1.00]
+
 margin:
   floor: 0.40            # below this gross margin a supplier rarely goes: the floor of the band
   typical: [0.45, 0.65]

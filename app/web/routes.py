@@ -876,7 +876,7 @@ def pricing_line(
 
 
 @router.get("/pricing/{part_id}/model", response_class=HTMLResponse)
-def price_model_panel(request: Request, part_id: int, session: Session = Depends(get_session)):
+def price_model_panel(request: Request, part_id: int, sop: int = 0, session: Session = Depends(get_session)):
     """Rough price band at 10k / 100k / 1M a year from the cached DigiKey breaks and a cost floor (estimate)."""
     part = _part_or_404(session, part_id)
     try:
@@ -885,14 +885,17 @@ def price_model_panel(request: Request, part_id: int, session: Session = Depends
     except pricing.DigiKeyError:
         session.rollback()
         pq = pricing.quote_for(session, part, fetch=False)
-    ctx = {"part": part, "m": price_model.model(session, part, pq), "calls": price_model.CALLS,
-           "cfg": price_model.config(), "symbol": "$"}  # fmt: skip  # every model price is in USD
+    m = price_model.model(session, part, pq)
+    m["oem"] = price_model.oem_path(m, sop if 2020 <= sop <= 2050 else None)
+    ctx = {"part": part, "m": m, "calls": price_model.CALLS, "cfg": price_model.config(),
+           "symbol": "$"}  # fmt: skip  # every model price is in USD
     return templates.TemplateResponse(request, "_price_model.html", ctx)
 
 
 @router.get("/pricing/estimate", response_class=HTMLResponse)
 def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
                    wide: bool = False, automotive: bool = False, name: str = "", currency: str = "USD",
+                   sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0,
                    session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages)."""
     cfg = price_model.config()
@@ -901,8 +904,17 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
     m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate", currency) if (
         family and pts) else None  # fmt: skip
+    lo, hi = parity_lo or cfg["parity"][0], parity_hi or cfg["parity"][1]
+    lo, hi = sorted((min(max(lo, 0.2), 3.0), min(max(hi, 0.2), 3.0)))
+    sop = sop if 2020 <= sop <= 2050 else cfg["oem"]["default_sop"]
+    if m is not None:
+        m["oem"] = price_model.oem_path(m, sop)
+        if ours.strip():
+            m["ours"] = {"name": ours.strip()[:60], "lo": lo, "hi": hi, "rows": price_model.scaled(m, lo, hi)}
+            m["ours"]["oem"] = price_model.oem_path({"rows": m["ours"]["rows"]}, sop)
     ctx = {"cfg": cfg, "m": m, "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
-           "wide": wide, "automotive": automotive, "name": name, "currency": currency},
+           "wide": wide, "automotive": automotive, "name": name, "currency": currency, "sop": sop,
+           "ours": ours, "parity_lo": lo, "parity_hi": hi},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     return templates.TemplateResponse(request, "price_estimate.html", ctx)

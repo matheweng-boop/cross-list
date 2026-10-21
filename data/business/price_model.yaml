@@ -6,6 +6,13 @@
 # number and the bands follow. Checked against 33 TI list prices (ti.com, 21 Oct 2026): test cost per second, gate-driver
 # die size and the slope past the last break were lowered so the band is not held at the floor for most parts. The owner's "low end / in the band / high end" calls on parts calibrate each family.
 
+# Every price in the model is in USD. Prices in another currency (pasted on the Price estimate page, or DigiKey quotes
+# cached in EUR / GBP) are converted at the ECB euro reference rates of the date below (ecb.europa.eu, read 21 Oct 2026).
+fx:
+  date: 2026-10-20
+  source: "ECB euro foreign exchange reference rates"
+  usd_per: {USD: 1.0, EUR: 1.1215, GBP: 1.3347}   # GBP: 1.1215 / 0.84028
+
 curve:
   min_qty: 10            # fit the slope on breaks from this quantity up (single-piece prices carry handling costs)
   slope_range: [-0.30, -0.02]   # clamp of the fitted slope (log price vs log quantity)

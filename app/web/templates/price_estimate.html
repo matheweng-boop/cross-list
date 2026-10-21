@@ -9,7 +9,7 @@
   <div class="grid">
     <label>Part (optional)<input name="name" value="{{ f.name }}" placeholder="e.g. Si47962"></label>
     <label>Family<select name="family" required>{% for k, fam in cfg.families.items() %}<option value="{{ k }}"{{ ' selected' if f.family == k }}>{{ fam.label }} · {{ cfg.classes[fam.class].label.split(' (')[0] }}</option>{% endfor %}</select></label>
-    <label>Currency<select name="currency">{% for c in ('USD', 'EUR', 'GBP') %}<option{{ ' selected' if f.currency == c }}>{{ c }}</option>{% endfor %}</select></label>
+    <label>Currency of the pasted prices <small class="muted">(results in USD)</small><select name="currency">{% for c in ('USD', 'EUR', 'GBP') %}<option{{ ' selected' if f.currency == c }}>{{ c }}</option>{% endfor %}</select></label>
   </div>
   <div class="grid">
     <label>Package<input name="package" value="{{ f.package }}" placeholder="e.g. QFN-48, SOIC-16, LGA"></label>

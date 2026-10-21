@@ -48,13 +48,19 @@ def has_list_price(mpn: str) -> bool:
     return mpn in list_prices()
 
 
+def usd_rate(currency: str | None) -> float:
+    """USD per unit of the currency (ECB reference rate in the YAML); unknown currencies count as USD."""
+    return config()["fx"]["usd_per"].get((currency or "USD").upper(), 1.0)
+
+
 def breaks(pq: PriceQuote | None) -> list[tuple[int, float]]:
-    """Lowest price at each break quantity over all the quote's offers (cut tape, reel …)."""
+    """Lowest price at each break quantity over all the quote's offers (cut tape, reel …), in USD."""
+    rate = usd_rate(getattr(pq, "currency", None))
     best: dict[int, float] = {}
     for offer in (pq.offers or []) if pq is not None and pq.found else []:
         for q, p in offer.get("breaks") or []:
-            if p and p > 0 and (q not in best or p < best[q]):
-                best[int(q)] = float(p)
+            if p and p > 0 and (q not in best or p * rate < best[q]):
+                best[int(q)] = float(p) * rate
     return sorted(best.items())
 
 
@@ -159,8 +165,9 @@ def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
     cb = cost(part)
     factor, n_calls = family_factor(session, part.family)
     mine = calls(session).get(part.mpn)
+    cur = (getattr(pq, "currency", None) or "USD").upper() if pts and source == "DigiKey" else "USD"
     out = {"points": pts, "source": source, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls,
-           "call": mine, "rows": [], "missing": []}  # fmt: skip
+           "call": mine, "rows": [], "missing": [], "converted_from": cur if cur != "USD" else None}  # fmt: skip
     if f is None:
         out["missing"].append("no DigiKey price breaks cached and no public list price for this part yet")
     if cb is None:
@@ -280,14 +287,16 @@ def parse_breaks(text: str) -> list[tuple[int, float]]:
 
 
 def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], package: str = "", pins: int = 0,
-             wide: bool = False, automotive: bool = False, name: str = "estimate") -> dict:
-    """The model for a part that is not in the database: pasted price breaks, a family and a package."""
+             wide: bool = False, automotive: bool = False, name: str = "estimate", currency: str = "USD") -> dict:
+    """The model for a part that is not in the database: pasted price breaks (in `currency`, converted to USD), a family
+    and a package."""
     from types import SimpleNamespace
 
     pkg = SimpleNamespace(code=package, pin_count=pins or None, span_mm=10.3 if wide else 6.0)
     params = [SimpleNamespace(key="qualification", value="automotive")] if automotive else []
     part = SimpleNamespace(mpn=name, family=family, package=pkg, params=params)
-    pq = SimpleNamespace(found=True, offers=[{"breaks": [list(b) for b in breaks_]}])
+    pq = SimpleNamespace(found=True, currency=currency, offers=[{"breaks": [list(b) for b in breaks_]}])
     m = model(session, part, pq)  # type: ignore[arg-type]
     m["source"] = "pasted"
+    m["converted_from"] = currency.upper() if currency.upper() != "USD" else None
     return m

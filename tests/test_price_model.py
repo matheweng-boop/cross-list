@@ -100,5 +100,14 @@ def test_classes_and_estimate_page(client, session):
     assert m["cost"]["automotive"] and len(m["rows"]) == 3 and m["rows"][-1]["target"] < 13.13
     html = client.get("/pricing/estimate", params={"family": "am_fm_tuner", "breaks": DK_PASTE, "package": "QFN-48",
                                                    "pins": 48, "currency": "EUR", "name": "Si47962"}).text
-    assert "Si47962" in html and "1,000,000" in html and "€" in html and "Low end" not in html
+    assert "Si47962" in html and "1,000,000" in html and "converted from EUR" in html and "Low end" not in html
+    assert "€" not in html.split('id="price-model"')[1]  # results all in USD
     assert client.get("/pricing/estimate").status_code == 200
+
+
+def test_usd_conversion():
+    assert pm.usd_rate("EUR") == pm.config()["fx"]["usd_per"]["EUR"] > 1 and pm.usd_rate(None) == 1.0
+    from types import SimpleNamespace
+
+    pq = SimpleNamespace(found=True, currency="EUR", offers=[{"breaks": [[100, 10.0], [1000, 8.0]]}])
+    assert pm.breaks(pq) == [(100, 10.0 * pm.usd_rate("EUR")), (1000, 8.0 * pm.usd_rate("EUR"))]

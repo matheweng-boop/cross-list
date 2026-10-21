@@ -836,7 +836,6 @@ def feedback(
     return RedirectResponse(f"/parts/{reference_id}#row-{candidate_id}", status_code=303)
 
 
-CURRENCY_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£"}
 
 
 @router.get("/pricing/{part_id:int}", response_class=HTMLResponse)
@@ -863,7 +862,6 @@ def pricing_line(
     prices = [
         (q, pricing.price_at(pq, q), pricing.delta_pct(ref_pq, pq, q) if ref_pq else None) for q in pricing.QUANTITIES
     ]
-    currency = pq.currency if pq else get_settings().digikey_currency
     return templates.TemplateResponse(
         request,
         "_pricing.html",
@@ -872,7 +870,7 @@ def pricing_line(
             "prices": prices[-1:] if compact else prices,
             "compact": compact,
             "error": error,
-            "symbol": CURRENCY_SYMBOLS.get(currency, currency + " "),
+            "symbol": "$",  # price_at converts every quote to USD
         },
     )
 
@@ -887,9 +885,8 @@ def price_model_panel(request: Request, part_id: int, session: Session = Depends
     except pricing.DigiKeyError:
         session.rollback()
         pq = pricing.quote_for(session, part, fetch=False)
-    currency = pq.currency if pq else get_settings().digikey_currency
     ctx = {"part": part, "m": price_model.model(session, part, pq), "calls": price_model.CALLS,
-           "cfg": price_model.config(), "symbol": CURRENCY_SYMBOLS.get(currency, currency + " ")}  # fmt: skip
+           "cfg": price_model.config(), "symbol": "$"}  # fmt: skip  # every model price is in USD
     return templates.TemplateResponse(request, "_price_model.html", ctx)
 
 
@@ -901,11 +898,12 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     cfg = price_model.config()
     family = family if family in cfg["families"] else ""
     pts = price_model.parse_breaks(breaks)
-    m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate") if (
+    currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
+    m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate", currency) if (
         family and pts) else None  # fmt: skip
     ctx = {"cfg": cfg, "m": m, "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
            "wide": wide, "automotive": automotive, "name": name, "currency": currency},
-           "symbol": CURRENCY_SYMBOLS.get(currency, currency + " "), "estimate": True, "part": None,
+           "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     return templates.TemplateResponse(request, "price_estimate.html", ctx)
 

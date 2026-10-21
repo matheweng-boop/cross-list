@@ -1474,3 +1474,45 @@ body.bare .bc-canvas { min-height: calc(100vh - 7rem); }
 .pb-table tfoot th { border-top: 2px solid var(--pico-muted-border-color); }
 .linklike { all: unset; color: var(--pico-primary); text-decoration: underline; cursor: pointer; }
 input[readonly] { background: var(--pico-form-element-disabled-background-color, #f3f4f6); }
+
+/* ---- Data management (fb1021): overview, TAM estimates, yes/no questions, verify pop-up, feedback files ---- */
+.ov-wait { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .8rem; }
+.ov-chip { display: inline-flex; gap: .3rem; align-items: baseline; padding: .2rem .6rem; border: 1px solid var(--pico-muted-border-color); border-radius: 1rem; text-decoration: none; }
+.ov-h { font-size: 1rem; margin: .6rem 0 .3rem; }
+.ov-table { font-size: .8rem; width: auto; min-width: 100%; }
+.ov-table th, .ov-table td { padding: .2rem .45rem; white-space: nowrap; }
+.ov-table tbody th { font-weight: 600; }
+.ov-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.ov-bar { display: inline-block; width: 2.5rem; height: .35rem; margin-right: .3rem; background: var(--cl-unknown-bg); border-radius: .2rem; vertical-align: middle; overflow: hidden; }
+.ov-bar i { display: block; height: 100%; background: var(--cl-better); }
+.tam-list { display: grid; gap: .6rem; margin-bottom: 1rem; }
+.tam-card { border: 1px solid var(--pico-muted-border-color); border-radius: .6rem; padding: .6rem .8rem; }
+.tam-card.tam-agree { border-left: 4px solid var(--cl-better); } .tam-card.tam-disagree { border-left: 4px solid var(--cl-worse); }
+.tam-card header { display: flex; flex-wrap: wrap; gap: .2rem .5rem; align-items: baseline; }
+.tam-card p { margin: .2rem 0; }
+.tam-value { font-size: 1.05rem; }
+.tam-review, .qa-form { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .3rem 0 0; }
+.tam-review input[name=comment], .qa-form input[name=comment] { flex: 1 1 10rem; margin: 0; min-width: 0; font-size: .85rem; padding: .3rem .5rem; height: auto; }
+.qa-list { padding-left: 1.4rem; }
+.qa-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem); gap: .3rem 1rem; align-items: start; padding: .5rem 0; border-bottom: 1px solid var(--pico-muted-border-color); }
+.qa-q p { margin: .15rem 0; }
+.qa-form { margin: 0; flex-wrap: nowrap; }
+@media (max-width: 700px) { .qa-item { grid-template-columns: minmax(0, 1fr); } .qa-form { flex-wrap: wrap; } }
+dialog.vd > article.vd-card { width: min(70rem, calc(100vw - 1rem)); max-width: none; max-height: calc(100vh - 1rem); overflow: auto; margin: 0; padding: 0; }
+.vd-card > .vd-head { position: sticky; top: 0; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin: 0; padding: .5rem .8rem; background: var(--pico-background-color); border-bottom: 1px solid var(--pico-muted-border-color); }
+.vd-close { all: unset; cursor: pointer; font-size: 1.4rem; line-height: 1; padding: 0 .3rem; }
+.vd-body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr); gap: 1rem; padding: .6rem .8rem 1rem; }
+.vd-body h4 { font-size: .95rem; margin: 0 0 .3rem; }
+.vd-table { font-size: .8rem; }
+.vd-table td, .vd-table th { padding: .2rem .4rem; }
+.vd-side { position: sticky; top: 3rem; align-self: start; }
+@media (max-width: 760px) { .vd-body { grid-template-columns: minmax(0, 1fr); } .vd-side { position: static; } }
+@media (max-width: 480px) { .ov-bar { display: none; } .ov-table th, .ov-table td { padding: .2rem .3rem; } }
+.fb-file { display: block; margin-bottom: .4rem; } .fb-file input { margin: .2rem 0 0; font-size: .8rem; padding: .2rem; }
+.fb-files { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .3rem 0; }
+.fb-file-link { display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; max-width: 8rem; text-decoration: none; }
+.fb-file-link img { max-width: 8rem; max-height: 5rem; border: 1px solid var(--pico-muted-border-color); border-radius: .3rem; }
+.fb-file-link span { font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 8rem; }
+.pub-note { border: 2px solid var(--cl-better); background: var(--cl-better-bg); border-radius: .6rem; padding: .6rem 1rem; margin: .6rem 0 1rem; }
+.pub-note h2 { font-size: 1.05rem; margin: 0 0 .3rem; color: var(--cl-better); }
+.pub-note ul { margin: 0; padding-left: 1.1rem; } .pub-note li { margin-bottom: .2rem; font-size: .9rem; }

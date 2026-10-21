@@ -1,7 +1,7 @@
 """Full data scan: what can be confirmed automatically, and where a person has to look.
 
 Each area runs checks over the data BizDev holds (parts with parameters, the manufacturer catalogues, the block
-diagrams, the radio data, the function mapping, the business evidence, commercial inputs). A check either passes
+diagrams, the radio data, the function mapping, the business evidence, the TAM estimates). A check either passes
 (confirmed automatically, with the rule used), is resolved by a stated rule, or produces items for human validation.
 Human items carry a priority from their impact on results (what changes if the item is wrong), the reason a script
 cannot decide it, and the page where it is resolved. The scan never changes data.
@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.matching.rules import load_all_rules
-from app.models import BusinessInput, Part, PartMapping
+from app.models import Part, PartMapping
 from app.services import blocks, broadcast, lifecycle, products, quality, scoring
 from app.services import opportunity as op
 
@@ -455,24 +455,27 @@ def scan(session: Session) -> dict:
             )
     areas["Business evidence"] = {"records": sum(len(d) for _, d in quality.datasets().values()), "checks": checks}
 
-    # ---- commercial inputs -------------------------------------------------------------------------------------
-    rows_ci = list(session.scalars(select(BusinessInput)))
-    asp_n = sum(r.kind == "asp" for r in rows_ci)
-    needed = len({p.fn for a in apps for p in a.positions if p.status in op.IN_SCOPE})
-    areas["Commercial inputs"] = {
-        "records": len(rows_ci),
-        "checks": [_check("Functions with an ASP", needed, asp_n, "your inputs")],
-    }
-    if asp_n < needed:
+    # ---- TAM estimates (market size per product or technology, Data management > TAM estimates) -----------------
+    from app.services import tam
+
+    est = tam.estimates(session)
+    linked = sum(1 for e in est if e["source"]["url"])
+    answered = sum(1 for e in est if e["review"])
+    areas["TAM estimates"] = {
+        "records": len(est),
+        "checks": [_check("Estimates with a source link", len(est), linked, "a public source anyone can open"),
+                   _check("Estimates reviewed by a person", len(est), answered, "agree / disagree on the page")],
+    }  # fmt: skip
+    if answered < len(est):
         items.append(
             _item(
                 "medium",
-                "Commercial inputs",
-                f"{needed - asp_n} functions without an ASP",
-                "Prices are commercial knowledge; nothing is estimated automatically.",
-                "Revenue and TAM cover only priced functions.",
-                "/business/data?show=unknown",
-                needed - asp_n,
+                "TAM estimates",
+                f"{len(est) - answered} market-size figures not reviewed yet",
+                "Whether a figure fits the market we mean needs a person; analysts count markets differently.",
+                "A wrong market size misleads a business case.",
+                "/business/tam",
+                len(est) - answered,
             )
         )
 

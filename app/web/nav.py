@@ -43,11 +43,12 @@ NAV = (
 )  # fmt: skip
 
 UTILITY = ("manage", "Data management", (
+    ("Overview", "/manage/overview", "Review status per data set and what is waiting for you"),
     ("Verify next", "/manage/verify", "A small batch to check: crosses, diagrams and data that vouch for the rest"),
     ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
     ("Site feedback", "/manage/feedback", "Daily digest of the Feedback button, with responses"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
-    ("Commercial inputs", "/business/data", "ASPs and volumes behind revenue figures"),
+    ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
 ))  # fmt: skip
@@ -88,7 +89,8 @@ PLACES = {
     "/business/explore": ("growth", "/business/shortlist"),
     "/business/shortlist": ("growth", "/business/shortlist"),
     "/business/capabilities": ("knowledge", "/business/capabilities"),
-    "/business/data": ("manage", "/business/data"),
+    "/business/data": ("manage", "/business/tam"),
+    "/business/tam": ("manage", "/business/tam"),
     "/business/quality": ("manage", "/business/quality"),
     "/business/validation": ("manage", "/business/quality"),
     "/business/method": ("manage", "/business/method"),
@@ -98,6 +100,7 @@ PLACES = {
     "/manage/feedback": ("manage", "/manage/feedback"),
     "/manage/verify": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
+    "/manage/overview": ("manage", "/manage/overview"),
     "/manage": ("manage", "/manage/reviews"),
     "/technical": ("knowledge", "/technical"),
     "/notes": ("knowledge", "/technical"),

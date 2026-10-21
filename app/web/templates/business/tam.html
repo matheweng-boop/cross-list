@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import about %}
+{% block content %}
+<h1>TAM estimates</h1>
+<p class="subtitle muted">Market size (TAM) for specific products and technologies. Each figure shows its source and how far the source can be trusted.
+  Say if you agree with it, and why. Nothing here is estimated by BizDev.</p>
+{{ about('tam') }}
+<p class="small tam-sum"><b>{{ counts.n }}</b> estimates · <span class="q-ok">{{ counts.agree }} agreed</span> · {% if counts.disagree %}<b class="q-error">{{ counts.disagree }} disagreed</b>{% else %}0 disagreed{% endif %} · {{ counts.open }} not reviewed{% if counts.no_link %} · {{ counts.no_link }} without a source link{% endif %}</p>
+{% if saved %}<p class="banner small">Saved. The new estimate is in the list and in the Data quality questions.</p>{% endif %}
+
+{% if rows %}
+<div class="tam-list">
+{% for e in rows %}{% set r = e.review %}
+<article class="tam-card{{ ' tam-' ~ r.verdict if r }}" id="t-{{ e.key }}">
+  <header><b>{{ e.product }}</b>{% if e.fn and e.fn in fns %} <a class="small muted" href="/business/evidence/{{ e.fn }}">{{ fns[e.fn].label }}</a>{% endif %}
+    {% if e.example %}<span class="badge" title="{{ e.origin }}">example from research notes</span>{% else %}<span class="badge">added{{ ' by ' ~ e.author if e.author }}</span>{% endif %}</header>
+  <p class="tam-value"><b>{{ e.value }}</b>{% if e.year %} <span class="muted">in {{ e.year }}</span>{% endif %}{% if e.region %} <span class="muted">· {{ e.region }}</span>{% endif %}</p>
+  {% if e.scope %}<p class="small">{{ e.scope }}</p>{% endif %}
+  <p class="small"><b>Source:</b> {% if e.source.url %}<a href="{{ e.source.url }}" target="_blank" rel="noopener">{{ e.source.title or e.source.url }}</a>{% else %}{{ e.source.title or 'not stated' }} <span class="muted">(no link)</span>{% endif %}{% if e.source.publisher %} · {{ e.source.publisher }}{% endif %}{% if e.source.date %} · {{ e.source.date }}{% endif %}</p>
+  {% if e.quality %}<p class="small"><b>Source quality:</b> {{ e.quality }}</p>{% endif %}
+  <form method="post" action="/business/tam/review" class="tam-review">
+    <input type="hidden" name="key" value="{{ e.key }}">
+    {% if r %}<p class="small"><span class="pc-v v-{{ 'correct' if r.verdict == 'agree' else 'wrong' }}">you {{ r.verdict }}</span>{% if r.comment %} · {{ r.comment }}{% endif %} <span class="muted">· {{ r.date|date }}</span></p>{% endif %}
+    <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="answer" value="agree" class="small-btn">Agree</button><button name="answer" value="disagree" class="small-btn outline secondary">Disagree</button></span>
+    <input type="text" name="comment" maxlength="2000" placeholder="Why? (optional)" aria-label="Comment on {{ e.product }} {{ e.value }}">
+  </form>
+</article>
+{% endfor %}
+</div>
+{% else %}<div class="empty-state"><p><b>No TAM estimates yet.</b></p><p class="small">Add the first one below, with its source.</p></div>{% endif %}
+
+<details class="pl-card" id="add"{% if error or not rows %} open{% endif %}><summary><b>Add an estimate</b></summary>
+  {% if error %}<p class="small uc-error">{{ error }}</p>{% endif %}
+  <p class="small muted">Public sources only. Copy the figure as the source states it.</p>
+  <form method="post" action="/business/tam" class="tam-form">
+    <div class="up-row">
+      <label>Product or technology <input name="product" maxlength="200" required placeholder="e.g. Automotive UWB front ends"></label>
+      <label>Market size <input name="value" maxlength="100" required placeholder="e.g. $1.4 B"></label>
+      <label>Year <input name="year" inputmode="numeric" maxlength="4" placeholder="e.g. 2025"></label>
+      <label>Region <input name="region" maxlength="100" placeholder="e.g. Global, EU"></label>
+    </div>
+    <label>What is counted <input name="scope" maxlength="500" placeholder="e.g. chips only, or whole modules; growth rate if given"></label>
+    <label>Function <small class="muted">optional</small>
+      <select name="fn"><option value="">–</option>{% for k, label in fn_choices %}<option value="{{ k }}">{{ label }}</option>{% endfor %}</select></label>
+    <div class="up-row">
+      <label>Source title <input name="source_title" maxlength="300"></label>
+      <label>Publisher <input name="source_publisher" maxlength="200"></label>
+      <label>Link <input name="source_url" type="url" maxlength="500" placeholder="https://"></label>
+      <label>Date <input name="source_date" maxlength="40" placeholder="e.g. Mar 2026"></label>
+    </div>
+    <label>Source quality <input name="quality" maxlength="2000" placeholder="e.g. analyst press release, only the summary seen"></label>
+    <label>Your name <input name="author" maxlength="100" placeholder="optional"></label>
+    <button type="submit">Add</button>
+  </form>
+</details>
+<p class="small muted">Older pages that asked for ASPs and volumes now lead here. Prices are covered by the pricing model.</p>
+{% endblock %}

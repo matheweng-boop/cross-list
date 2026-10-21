@@ -18,7 +18,7 @@ ISSUE_TYPES = {
         "Technology or market evidence",
         "Ratings, competitors, customers, trends, platforms, patents, foundry.",
     ),
-    "commercial": ("Commercial assumptions", "ASPs and volumes behind revenue figures."),
+    "commercial": ("Market size (TAM)", "TAM estimates per product or technology and their sources."),
 }
 
 # what a data review affects, per dataset
@@ -37,6 +37,7 @@ AFFECTS = {
     "case": "Preliminary case: the case is revised from it",
     "application": "Application library: technically verified flag (applied immediately)",
     "library": "Technical library: the item's confidence (applied immediately); the topic is revised from it",
+    "tam": "TAM estimates page (not in any score)",
 }
 FILE_UPDATE = (
     "Flag only: the data file must be corrected in the repository (Data quality → to-do); the vote changes no result."
@@ -88,7 +89,7 @@ def items(session: Session) -> list[dict]:
             }
         )
     for r in session.scalars(select(DataReview)):
-        kind = "mapping" if r.dataset == "path" else "evidence"
+        kind = "mapping" if r.dataset == "path" else "commercial" if r.dataset == "tam" else "evidence"
         if r.comment and any(w in r.comment.lower() for w in ("aec", "automotive", "qualif")):
             kind = "qualification"
         out.append(
@@ -101,6 +102,8 @@ def items(session: Session) -> list[dict]:
                 "status": "confirmed" if r.verdict == "correct" else "open",
                 "link": f"/business/automotive?cell={r.key}#detail"
                 if r.dataset == "auto_reach"
+                else f"/business/tam#t-{r.key}"
+                if r.dataset == "tam"
                 else f"/business/reports/{r.dataset[5:]}#i-{r.key}"
                 if r.dataset.startswith("case:")
                 else f"/library/{r.dataset[8:]}#i-{r.key}"

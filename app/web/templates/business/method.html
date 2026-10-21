@@ -5,6 +5,17 @@
 <p class="subtitle muted">A reference for every page in Business opportunity: what the words mean, how each number is calculated, where the data comes
   from and what it cannot tell you. The counts below are live.</p>
 
+<section class="pub-note" id="public" aria-labelledby="public-h">
+  <h2 id="public-h">Public sources only</h2>
+  <ul>
+    <li><b>All data in BizDev comes from public sources:</b> datasheets, product catalogues, public reports, press releases, standards and public list prices.</li>
+    <li><b>No confidential company data is used.</b> Nothing from inside Skyworks, Qorvo, customers or competitors.</li>
+    <li><b>The AI collects data politely.</b> It follows each site's robots.txt rules, sends one request at a time with pauses in between,
+      never logs in and never fills in forms. When a site blocks it, it stops there and does not try to get around the block.</li>
+    <li>A fact from a site that could not be read comes from a search result summary and is marked low confidence.</li>
+  </ul>
+</section>
+
 <nav class="bo-toc small"><a href="#idea">The idea</a> · <a href="#score">Opportunity score</a> · <a href="#related">Related scores</a> · <a href="#terms">Definitions</a> · <a href="#formulas">Formulas</a> · <a href="#engineering">Engineering rules</a> · <a href="#sources">Data sources</a> · <a href="#pages">Pages</a> · <a href="#limits">Limits</a></nav>
 
 <h2 id="idea">The idea in five steps</h2>
@@ -114,14 +125,15 @@
     <td class="muted">public product pages; automotive grade as stated there</td></tr>
   <tr><th>Competition</th><td>{{ src.competition }} functions assessed</td><td class="muted">public catalogue knowledge, indicative</td></tr>
   <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">public portfolio knowledge, indicative</td></tr>
-  <tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered</td><td class="muted"><a href="/business/data">TAM data</a> · your inputs only</td></tr>
+  <tr><th>Market size (TAM)</th><td>{{ tam_n }} estimates per product or technology</td><td class="muted"><a href="/business/tam">TAM estimates</a> · public sources, each one reviewed</td></tr>
+  {% if asp or vol %}<tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered earlier</td><td class="muted">your inputs; used for TAM in the Opportunity explorer</td></tr>{% endif %}
 </tbody></table></div>
 <details class="small muted maint"><summary>For maintainers</summary><p>Files behind these sources: applications <code>data/blocks/templates.yaml</code>, <code>background_templates.yaml</code> (research notes in <code>data/blocks/research/</code>);
   functions <code>data/blocks/functions.yaml</code>; our parts <code>data/catalog/</code>; competition <code>data/business/competition.yaml</code>; technology ratings <code>data/business/technology.yaml</code>;
   research <code>data/business/evidence/*.yaml</code> (path to product <code>path.yaml</code>, trends <code>trends.yaml</code>); customers <code>data/business/customers.yaml</code>.</p></details>
 
 <h2 id="pages">What each page answers</h2>
-<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'explorer': 'Opportunity explorer', 'cases': 'Business cases', 'data': 'Commercial inputs'}.get(k, k|replace('_', ' ')|capitalize) }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
+<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'explorer': 'Opportunity explorer', 'cases': 'Business cases', 'tam': 'TAM estimates'}.get(k, k|replace('_', ' ')|capitalize) }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
 
 <h2 id="limits">What the analysis cannot tell you</h2>
 <ul class="small">

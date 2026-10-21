@@ -61,13 +61,30 @@
       selection: form.withsel?.checked ? selection : "",
     };
     store.set("fb-author", form.author.value);
+    const file = form.file?.files?.[0];
+    if (file && file.size > 10 * 1024 * 1024) { msg.textContent = "The file is larger than 10 MB. Pick a smaller one or remove it."; return; }
+    const detail = async r => { const j = await r.json().catch(() => ({})); return typeof j.detail === "string" ? j.detail : r.statusText; };
+    let sent = false;
     try {
       const r = await fetch("/site-feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(typeof j.detail === "string" ? j.detail : r.statusText); }
-      form.text.value = ""; selection = "";
-      msg.textContent = "Thank you. It is in today's feedback digest; the answer will appear here.";
+      if (!r.ok) throw new Error(await detail(r));
+      sent = true;
+      const { id } = await r.json();
+      let note = "";
+      if (file) {  // the file goes with the item, stored like the Uploads page does
+        msg.textContent = "Sending the file…";
+        const fd = new FormData();
+        fd.append("client", client); fd.append("file", file);
+        const f = await fetch(`/site-feedback/${id}/file`, { method: "POST", body: fd });
+        note = f.ok ? " The file is attached." : ` Your text was sent, but the file was not: ${await detail(f)}.`;
+      }
+      form.text.value = ""; form.file.value = ""; selection = "";
+      msg.textContent = "Thank you. It is in today's feedback digest; the answer will appear here." + note;
       form.hidden = true;
       setTimeout(loadMine, 300);
-    } catch (err) { msg.textContent = "Not sent: " + err.message + ". Your text is still in the box."; }
+    } catch (err) {
+      msg.textContent = sent ? "Your text was sent, but the file was not: " + err.message + "."
+        : "Not sent: " + err.message + ". Your text is still in the box.";
+    }
   });
 })();

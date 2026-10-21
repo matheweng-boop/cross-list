@@ -1,8 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Verify next{% endblock %}
+{% block title %}Verify next<script>
+  // Verify pop-up: the spec comparison and the answer form side by side
+  document.querySelectorAll(".vd-open").forEach(b => b.addEventListener("click", () => document.getElementById(b.dataset.dialog).showModal()));
+  document.querySelectorAll("dialog.vd").forEach(d => {
+    d.querySelector(".vd-close").addEventListener("click", () => d.close());
+    d.addEventListener("click", e => { if (e.target === d) d.close(); });  // click on the backdrop
+  });
+</script>
+{% endblock %}
 {% macro done_form(t) %}<form method="post" action="/manage/verify/{{ t.id }}" class="vf-form">
   <input type="text" name="note" maxlength="2000" placeholder="What is wrong, or a note (optional)" aria-label="Note for {{ t.title }}">
-  <span class="pc-btns"><button name="result" value="ok" class="small-btn">Correct</button><button name="result" value="wrong" class="small-btn outline secondary">Something is wrong</button></span>
+  <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="result" value="ok" class="small-btn">Correct</button><button name="result" value="wrong" class="small-btn outline secondary">Something is wrong</button></span>
 </form>{% endmacro %}
 {% block content %}
 <h1>Verify next</h1>
@@ -19,11 +27,37 @@
 {% for t in open %}{% set d = t.detail %}<article class="vf-task">
   <h3>{{ t.title }}</h3>
   <p class="small muted">Why this one: {{ d.why }}.</p>
-  {% if kind == 'cross' %}<p class="small">{{ d.type }} · <a href="/compare?ids={{ d.ref }},{{ d.cand }}">values side by side</a> · <a href="/parts/{{ d.ref }}#results">the cross</a> · datasheets: <a href="{{ d.ref_ds }}" target="_blank" rel="noopener">competitor</a>, <a href="{{ d.cand_ds }}" target="_blank" rel="noopener">ours</a></p>
+  {% if kind == 'cross' %}{% set cmp = compares.get(t.id) %}{% if cmp %}<p><button type="button" class="small-btn vd-open" data-dialog="vd-{{ t.id }}">Compare and answer</button></p>
+  <dialog class="vd" id="vd-{{ t.id }}" aria-labelledby="vd-h-{{ t.id }}"><article class="vd-card">
+    <header class="vd-head"><b id="vd-h-{{ t.id }}">{{ t.title }}</b><button type="button" class="vd-close" aria-label="Close">×</button></header>
+    <div class="vd-body">
+      <section class="vd-spec"><h4>Specifications <small class="muted">· {{ d.type }}</small></h4>
+        <div class="table-wrap"><table class="compare-table vd-table"><thead><tr><th>Parameter</th>{% for p in cmp.c.parts %}<th>{{ p.mpn }}<br><small class="muted">{{ 'competitor' if loop.first else 'ours' }}</small></th>{% endfor %}</tr></thead>
+        <tbody><tr><td>Package</td>{% for p in cmp.c.parts %}<td>{{ p.package.code if p.package else '–' }}</td>{% endfor %}</tr>
+        {% for row in cmp.c.rows %}<tr><td>{{ row.param.label }} <small class="muted">P{{ row.param.priority }}</small></td>{% for cell in row.cells %}<td class="{{ cell.status if cell.status != 'equal' }}">{{ cell.display }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+        <p class="small">Datasheets: <a href="{{ d.ref_ds }}" target="_blank" rel="noopener">competitor</a> · <a href="{{ d.cand_ds }}" target="_blank" rel="noopener">ours</a></p>
+      </section>
+      <section class="vd-side"><h4>Comments</h4>
+        <p class="small muted">Why this one: {{ d.why }}.</p>
+        {% for n in cmp.notes %}<p class="small"><span class="pc-v v-{{ 'correct' if n.verdict == 'accept' else 'wrong' }}">{{ 'accepted' if n.verdict == 'accept' else 'rejected' }}</span> {{ n.note or '' }}</p>{% else %}<p class="small muted">No earlier comments on this cross.</p>{% endfor %}
+        <p class="small"><b>Are the priority 1 values read right, and is the cross type right?</b></p>
+        {{ done_form(t) }}
+      </section>
+    </div>
+  </article></dialog>{% endif %}
+  <p class="small">{{ d.type }} · <a href="/compare?ids={{ d.ref }},{{ d.cand }}">values side by side</a> · <a href="/parts/{{ d.ref }}#results">the cross</a> · datasheets: <a href="{{ d.ref_ds }}" target="_blank" rel="noopener">competitor</a>, <a href="{{ d.cand_ds }}" target="_blank" rel="noopener">ours</a></p>
   {% elif kind == 'diagram' %}<p class="small">{{ d.category }} · {{ d.blocks }} blocks · <a href="/blocks/new?template={{ d.i }}">open the diagram</a></p>
   {% else %}<p class="small"><b>Claim:</b> {{ d.claim }}</p>{% if d.sources %}<p class="small muted">Sources: {{ d.sources|join(' · ') }}</p>{% endif %}<p class="small">{% if d.topic == 'library' %}<a href="/library/{{ d.library }}#{{ d.item }}">The rule in its library topic</a>{% else %}<a href="/business/evidence/{{ d.fn }}">All evidence for this function</a>{% endif %}</p>{% endif %}
   {{ done_form(t) }}
 </article>{% else %}<p class="small muted">Nothing to verify here right now.</p>{% endfor %}
 {% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ 'correct' if t.status == 'ok' else 'wrong' }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
 </section>{% endfor %}
+<script>
+  // Verify pop-up: the spec comparison and the answer form side by side
+  document.querySelectorAll(".vd-open").forEach(b => b.addEventListener("click", () => document.getElementById(b.dataset.dialog).showModal()));
+  document.querySelectorAll("dialog.vd").forEach(d => {
+    d.querySelector(".vd-close").addEventListener("click", () => d.close());
+    d.addEventListener("click", e => { if (e.target === d) d.close(); });  // click on the backdrop
+  });
+</script>
 {% endblock %}

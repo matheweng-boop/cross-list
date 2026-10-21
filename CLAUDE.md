@@ -3,6 +3,8 @@
 - `main` deploys to Render automatically. Merge into it only with the owner's go-ahead.
 - Before asking for that go-ahead, put the questions in `docs/open_questions.md` to the owner; record the answers
   there and remove what is settled.
+- The daily update run (scheduled) follows `docs/daily_update.md`: it pulls the owner's comments from the live site
+  and prepares a branch, never merging into `main` itself.
 - Never commit anything local to one machine: `.venv`, `var/`, caches, or symbolic links. `tests/test_repo.py` fails
   if one is tracked; run the full test suite before every merge.
 - A second checkout (git worktree) gets its own environment with `uv sync`, never a symlink to another checkout's

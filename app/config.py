@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     site_password: str = ""
     # Signs the login cookie; set a long random value in production.
     secret_key: str = ""
+    # Read-only key for GET /api/inbox (the daily update run pulls the owner's comments with it). Empty: the inbox is
+    # closed whenever the site has a password. Not the site password; set a long random value.
+    inbox_token: str = ""
     # Load data/real/*.yaml on startup when the database has no parts (fresh server disk).
     load_real_on_start: bool = False
     # Merge data/real/unofficial/*.yaml: values read from unofficial copies of manufacturer datasheets, marked † in

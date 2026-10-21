@@ -10,9 +10,9 @@ def test_inbox_needs_its_own_key_and_lists_what_the_owner_said(client, session, 
     monkeypatch.setattr(get_settings(), "inbox_token", "k" * 40)
     assert client.get("/api/inbox").status_code == 401
     assert client.get("/api/inbox", headers={"Authorization": "Bearer wrong"}).status_code == 401
-    assert client.get("/manage/feedback", follow_redirects=False).status_code == 303  # the rest stays behind the gate
     # the rest of the site stays behind the password
-    session.add(SiteFeedback(text="Make the legend bigger", kind="idea", path="/portfolio", page="Products › Portfolio"))
+    assert client.get("/manage/feedback", follow_redirects=False).status_code == 303
+    session.add(SiteFeedback(text="Make the legend bigger", kind="idea", path="/portfolio", page="Products"))
     session.add(DataReview(dataset="tam", key="tuner-ic-mrfr", verdict="wrong", comment="Too high"))
     session.add(VolumeRequest(mpn="NSI8241C0-DSWR", volume=150000, customer="ACME Motors", market="HVAC"))
     session.commit()

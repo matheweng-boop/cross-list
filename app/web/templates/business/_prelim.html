@@ -81,11 +81,10 @@
 <p class="small">{{ case.prices.method }}</p>
 <details class="small"><summary>Public price anchors</summary><div class="table-wrap"><table class="pc-table"><tbody>{% for a in case.prices.anchors %}<tr><td>{{ a.part }}</td><td>{{ a.price }}</td><td class="muted">{{ a.qty }}</td></tr>{% endfor %}</tbody></table></div></details>
 <div class="table-wrap"><table class="small pc-table">
-  <thead><tr><th scope="col">Part</th><th scope="col">Entry</th><th scope="col">Target</th><th scope="col">Premium</th><th scope="col">Basis (est)</th><th scope="col">Real ASP, if known</th></tr></thead>
-  <tbody>{% for p in case.prices["items"] %}<tr id="i-{{ p.id }}"><td><b>{{ p.item }}</b></td><td>${{ '%.2f'|format(p.entry) }}</td><td><b>${{ '%.2f'|format(p.target) }}</b></td><td>${{ '%.2f'|format(p.premium) }}</td><td>{{ p.basis }}</td>
-    <td><form method="post" action="/business/reports/{{ slug }}/price" class="pc-price"><input type="hidden" name="key" value="{{ p.id }}"><input name="value" inputmode="decimal" value="{{ '%.2f'|format(p.real) if p.real is not none else '' }}" placeholder="$" aria-label="Real ASP for {{ p.item }}"><button class="small-btn outline">Save</button></form></td></tr>{% endfor %}</tbody>
+  <thead><tr><th scope="col">Part</th><th scope="col">Entry</th><th scope="col">Target</th><th scope="col">Premium</th><th scope="col">Basis (est)</th></tr></thead>
+  <tbody>{% for p in case.prices["items"] %}<tr id="i-{{ p.id }}"><td><b>{{ p.item }}</b></td><td>${{ '%.2f'|format(p.entry) }}</td><td><b>${{ '%.2f'|format(p.target) }}</b></td><td>${{ '%.2f'|format(p.premium) }}</td><td>{{ p.basis }}</td></td></tr>{% endfor %}</tbody>
 </table></div>
-{% if case.revenue %}<p class="small"><b>Illustration:</b>{% for v in case.revenue %} {{ v.label }} × ${{ '%.2f'|format(v.unit) }}{% if v.real %} (your ASP){% endif %} ≈ <b>${{ '{:,.0f}'.format(v.revenue / 1e6) }} M</b> a year{{ ';' if not loop.last else '.' }}{% endfor %} <span class="muted">Volumes are scenarios, not forecasts.</span></p>{% endif %}
+{% if case.revenue %}<p class="small"><b>Illustration:</b>{% for v in case.revenue %} {{ v.label }} × ${{ '%.2f'|format(v.unit) }} ≈ <b>${{ '{:,.0f}'.format(v.revenue / 1e6) }} M</b> a year{{ ';' if not loop.last else '.' }}{% endfor %} <span class="muted">Volumes are scenarios, not forecasts.</span></p>{% endif %}
 
 <h2>7. Raising the attach rate</h2>
 <ul class="pc-list">{% for t in case.attach %}<li>{{ t.lever }} <span class="pc-conf">{{ t.effort }} effort</span>{{ react(t) }}</li>{% endfor %}</ul>

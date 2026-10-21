@@ -28,7 +28,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import yamlio
-from app.models import BusinessInput, Manufacturer, ManufacturerRole, Part, PartMapping
+from app.models import Manufacturer, ManufacturerRole, Part, PartMapping
 from app.services import blocks, vocab
 
 COMPANIES = {
@@ -165,21 +165,10 @@ def with_status(apps: list[Application], mk: dict, mine: frozenset) -> list[Appl
 
 # ---- commercial inputs -----------------------------------------------------------------------------------
 def inputs(session: Session) -> tuple[dict[str, float], dict[str, float]]:
-    asp, vol = {}, {}
-    for r in session.scalars(select(BusinessInput)):
-        (asp if r.kind == "asp" else vol)[r.key] = r.value
-    return asp, vol
-
-
-def set_input(session: Session, kind: str, key: str, value: float | None, note: str = "") -> None:
-    row = session.scalar(select(BusinessInput).where(BusinessInput.kind == kind, BusinessInput.key == key))
-    if value is None:
-        if row:
-            session.delete(row)
-    elif row:
-        row.value, row.note = value, note or row.note
-    else:
-        session.add(BusinessInput(kind=kind, key=key, value=value, note=note or None))
+    """Retired (owner, 21 Oct 2026): no ASPs or volumes are entered or read any more, so nothing proprietary goes into
+    the site; market size comes from public TAM estimates (app/services/tam.py, by_function). Values stored earlier
+    stay in the business_inputs table but are not used."""
+    return {}, {}
 
 
 # ---- metrics ---------------------------------------------------------------------------------------------
@@ -304,10 +293,10 @@ def pair_reasons(apps: list[Application], a: str, b: str, limit: int = 5) -> dic
 
 
 # ---- gaps and ranking across applications ----------------------------------------------------------------
-def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
+def gaps(apps: list[Application], asp: dict, vol: dict, public_tam: dict | None = None) -> list[dict]:
     """Every function that is a gap or competitor-only somewhere, ranked. Reach = applications that need it;
     positions = design-in positions (quantity summed); adjacency = of those applications, how many already have
-    a portfolio position (an anchor); TAM only where the ASP and the application volumes are known."""
+    a portfolio position (an anchor); TAM from public estimates for the function (``public_tam``), when any."""
     cat = blocks.catalogue()["functions"]
     out: dict[str, dict] = {}
     for a in apps:
@@ -325,10 +314,12 @@ def gaps(apps: list[Application], asp: dict, vol: dict) -> list[dict]:
             ours = sorted({vocab.fn_label(p.fn) for p in a.positions if p.status == "supported"})
             qty = sum(p.qty for p in ps)
             e["rows"].append({"i": a.i, "name": a.name, "market": a.market, "qty": qty, "ours": ours})
-            if fn in asp and a.name in vol:
-                e["tam"] += vol[a.name] * sum(p.qty for p in ps) * asp[fn]
-                e["tam_apps"] += 1
+    public = public_tam or {}
     rows = list(out.values())
+    for e in rows:  # public market size for the function (the same for every application it is used in)
+        t = public.get(e["fn"])
+        if t:
+            e["tam"], e["tam_apps"], e["tam_src"] = t["usd"], t["n"], t
     for e in rows:
         e["adjacency"] = e["adjacent"] / e["reach"] if e["reach"] else 0
     return sorted(rows, key=lambda e: (-e["reach"], -e["adjacent"], e["label"]))
@@ -590,7 +581,8 @@ def explorer(apps: list[Application], asp: dict, vol: dict, scores: dict | None 
     from app.services import scoring
 
     tab = scores or scoring.table(apps, asp, vol)
-    gap = {e["fn"]: e for e in gaps(apps, asp, vol)}
+    public = {fn: {"usd": u["tam"], "n": u["tam_apps"]} for fn, u in tab.get("usage", {}).items() if u.get("tam")}
+    gap = {e["fn"]: e for e in gaps(apps, asp, vol, public)}
     fit = {e["fn"]: e for e in technology_fit(apps, tab)}
     paths = evidence("path")
     out = []

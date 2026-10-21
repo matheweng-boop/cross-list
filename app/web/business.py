@@ -436,16 +436,6 @@ def tam_review(key: str = Form(...), answer: str = Form(...), comment: str = For
     return RedirectResponse(local_path(back) if back else f"/business/tam#t-{key}", status_code=303)
 
 
-@router.post("/api/business/asp")
-def save_asp(payload: dict = Body(...), session: Session = Depends(get_session)):
-    """ASPs entered in the application simulator: {function id: value or null}."""
-    for fn, v in (payload or {}).items():
-        if fn in blocks.catalogue()["functions"]:
-            op.set_input(session, "asp", fn, _num(str(v)) if v not in (None, "") else None)
-    session.commit()
-    return {"ok": True}
-
-
 # ---- case analysis -----------------------------------------------------------------------------------------
 def _case_ctx(session: Session, co: str) -> dict:
     key, label, _ = op.company(co)
@@ -711,7 +701,8 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
              ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
              tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
              hunt=op.hunt_for_function(c["apps"], fn)[:15], existing=quality.possible_existing(session, fn),
-             need=next((g for g in op.gaps(c["apps"], c["asp"], c["vol"]) if g["fn"] == fn), None),
+             need=next((g for g in op.gaps(c["apps"], c["asp"], c["vol"], tam.by_function(session))
+                        if g["fn"] == fn), None),  # fmt: skip
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
     c["walk_parts"] = walk.competitor_parts(session, fn)
@@ -932,17 +923,6 @@ async def case_react(request: Request, slug: str, session: Session = Depends(get
                      str(form.get("author") or ""))  # fmt: skip
     except ValueError:
         raise HTTPException(400, "Unknown item or verdict") from None
-    return RedirectResponse(f"/business/reports/{slug}#i-{key}", status_code=303)
-
-
-@router.post("/business/reports/{slug}/price")
-async def case_price(request: Request, slug: str, session: Session = Depends(get_session)):
-    form = await request.form()
-    key = str(form.get("key") or "")
-    try:
-        prelim.set_price(session, slug, key, _num(str(form.get("value") or "")))
-    except ValueError:
-        raise HTTPException(400, "Unknown price item") from None
     return RedirectResponse(f"/business/reports/{slug}#i-{key}", status_code=303)
 
 

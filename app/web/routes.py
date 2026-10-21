@@ -20,6 +20,7 @@ from app.matching.engine import (
     DEFAULT_MAX_DEVIATIONS,
     FFF_STATUS_LABELS,
     format_value,
+    ranked,
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import Package, Part, User
@@ -248,38 +249,9 @@ CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
 def result_rows(crosses: dict) -> list:
-    """Each listed candidate once with its verdict, in order of preference: drop-ins,
-    functional equivalents (fewest deviations first), package equivalents (pin-to-pin
-    first); closest first within each."""
-    seen = {}
-    for cat in CATEGORY_ORDER:
-        for r in crosses.get(cat, []):
-            seen.setdefault(r.candidate.id, r)
-    rows = [(r, r.verdict()) for r in seen.values()]
-
-    def key(rv):
-        r, v = rv
-        # fewest priority 1 deviations first (pin-to-pin first among package equivalents), then exceptions
-        if v.category == "package":
-            return (
-                r.lifecycle_risk,
-                CATEGORY_RANK[v.category],
-                not v.p2p,
-                len(r.deviations),
-                len(r.exceptions),
-                r.closeness,
-            )
-        return (
-            r.lifecycle_risk,
-            CATEGORY_RANK[v.category],
-            len(r.deviations),
-            len(r.exceptions),
-            not v.p2p,
-            r.closeness,
-        )
-
-    rows.sort(key=key)
-    return rows
+    """Each listed candidate once with its verdict, best first: drop-ins, then the fewest deviations, the same package
+    before another package and pin-to-pin before another pinout (app/matching/engine.py, rank_key)."""
+    return [(r, r.verdict()) for r in ranked(crosses)]
 
 
 def electrical_verdict(v) -> str:
@@ -347,7 +319,7 @@ def _part_context(
     if type:
         rows = [(r, v) for r, v in rows if v.category == type]
     # best and next best option per cross type; the rest only on request
-    ranked, top = {}, []
+    best, top = {}, []
     # (two different devices: an output-state or rating variant of the best part is not the next best)
     for cat in CATEGORY_ORDER:
         devices: set[str] = set()
@@ -356,11 +328,12 @@ def _part_context(
             if dev_key in devices:
                 continue
             devices.add(dev_key)
-            ranked[rv[0].candidate.id] = len(devices) - 1
+            best[rv[0].candidate.id] = len(devices) - 1
             top.append(rv)
             if len(devices) == 2:
                 break
-    rest = [rv for rv in rows if rv[0].candidate.id not in ranked]
+    rest = [rv for rv in rows if rv[0].candidate.id not in best]
+    top = [rv for rv in rows if rv[0].candidate.id in best]  # in the overall ranking, not grouped by type
     rows = top + (rest if all else [])
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
@@ -384,7 +357,7 @@ def _part_context(
         "type": type,
         "type_counts": type_counts,
         "dev": dev,
-        "ranked": ranked,
+        "ranked": best,
         "n_top": len(top),
         "n_rest": len(rest),
         "show_all": all,

@@ -1,3 +1,4 @@
+from app.models import BusinessInput
 from app.services import opportunity as op
 
 
@@ -19,15 +20,16 @@ def test_pages_and_inputs(client, session):
         assert r.status_code == 200, path
         assert 'class="sub-nav"' in r.text
     assert client.get("/business/applications/1?co=skyworks").status_code == 200
-    # the old Commercial inputs page leads to TAM estimates; ASPs from the simulator still work
+    # commercial inputs are retired (owner, 21 Oct 2026): the old page leads to TAM estimates, nothing is stored
     r = client.get("/business/data?focus=asp:gate_driver", follow_redirects=False)
     assert r.status_code == 307 and r.headers["location"] == "/business/tam"
     assert client.post("/business/data", data={"asp:gate_driver": "2.80"}, follow_redirects=False).status_code == 303
-    assert client.post("/api/business/asp", json={"gate_driver": "2.80"}).json()["ok"]
-    assert op.inputs(session)[0].get("gate_driver") == 2.8
-    assert client.post("/api/business/asp", json={"gate_driver": None}).json()["ok"]
-    session.expire_all()
-    assert "gate_driver" not in op.inputs(session)[0]
+    assert client.post("/api/business/asp", json={"gate_driver": "2.80"}).status_code in (404, 405)
+    session.add(BusinessInput(kind="asp", key="gate_driver", value=2.8))  # an old stored value is no longer read
+    session.commit()
+    assert op.inputs(session) == ({}, {})
+    sim = client.get("/business/applications/1?co=skyworks").text
+    assert "bo-save-asp" not in sim and "not sent or saved" in sim
     attach = client.get("/business/attach?fn=gate_driver").text
     assert "Cross-sell" in attach or "choose" in attach
 
@@ -187,3 +189,19 @@ def test_human_validation_page_and_scan(client, session):
     html = client.get("/business/validation").text
     assert "Human validation" in html and "Needs a person" in html and "Confirmed automatically" in html
     assert client.get("/business/validation?prio=high").status_code == 200
+
+
+def test_market_size_comes_from_public_tam_estimates(client, session):
+    """The explorer's TAM and the demand score use public TAM estimates per function, without disagreed ones."""
+    from app.services import scoring, tam
+
+    pub = tam.by_function(session)
+    t = pub["am_fm_tuner"]
+    assert t["n"] >= 3 and t["low"] <= t["usd"] <= t["high"]  # the median of the tuner IC sources
+    apps = op.with_status(op.applications(), op.makers(session), op.COMPANIES["combined"][1])
+    use = scoring.for_session(session, apps)["usage"]
+    if "am_fm_tuner" in use:
+        assert use["am_fm_tuner"]["tam"] == t["usd"]
+    client.post("/business/tam/review", data={"key": "tuner-ic-mrfr", "answer": "disagree"})
+    session.expire_all()
+    assert tam.by_function(session)["am_fm_tuner"]["high"] < 2.31e9  # the disagreed figure drops out

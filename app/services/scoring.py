@@ -158,7 +158,9 @@ def _demand(u: dict, top: float) -> tuple:
     if u["tam_apps"] and u["tam"] > 0:
         lo, hi = math.log10(cfg["tam_low"]), math.log10(cfg["tam_high"])
         v = min(100.0, max(0.0, 100 * (math.log10(u["tam"]) - lo) / (hi - lo)))
-        return v, f"TAM ${u['tam']:,.0f} per year ({u['tam_apps']} applications with a volume)", cfg["tam_confidence"]
+        n = u["tam_apps"]
+        basis = f"TAM ${u['tam']:,.0f} per year (public estimate, {n} source{'' if n == 1 else 's'})"
+        return v, basis, cfg["tam_confidence"]
     c = _diagram_confidence(u["lib"])
     sockets = f"{u['raw']:g} socket{'' if u['raw'] == 1 else 's'}"
     basis = f"{sockets} (weighted) in {u['lib']} library + {u['bg']} background diagrams (top function = 100)"
@@ -222,12 +224,15 @@ def scorable(fn: str, u: dict) -> bool:
 
 
 def table(apps: list[op.Application], asp: dict | None = None, vol: dict | None = None,
-          verdicts: dict | None = None, key: tuple | None = None) -> dict:  # fmt: skip
+          verdicts: dict | None = None, key: tuple | None = None, public_tam: dict | None = None) -> dict:  # fmt: skip
     """Scores of every function in the applications: {"rows": {fn: score}, "usage", "top", "verdicts"}. Demand is
     scaled to the most-needed scorable function, so a new part mapping does not rescale everyone else."""
     if key is not None and key in _CACHE:
         return _CACHE[key]
     use, verdicts = _usage(apps, asp or {}, vol or {}), verdicts or {}
+    for fn, t in (public_tam or {}).items():  # public market size per function (app/services/tam.py)
+        if fn in use:
+            use[fn]["tam"], use[fn]["tam_apps"] = t["usd"], t["n"]
     top = max((u["raw"] for fn, u in use.items() if scorable(fn, u)), default=0)
     out = {"rows": {fn: _score(fn, u, top, verdicts) for fn, u in use.items() if scorable(fn, u)},
            "usage": use, "top": top, "verdicts": verdicts}  # fmt: skip
@@ -250,18 +255,22 @@ def review_version(session: Session) -> tuple:
 
 def for_session(session: Session, apps: list[op.Application], asp: dict | None = None,
                 vol: dict | None = None) -> dict:  # fmt: skip
-    """The table with reviews applied, cached per data version, reviews, statuses and commercial inputs."""
+    """The table with reviews applied, cached per data version, reviews, statuses and public TAM estimates."""
+    from app.services import tam
+
     asp, vol = asp or {}, vol or {}
+    public = tam.by_function(session)
     statuses = frozenset((p.fn, p.status) for a in apps for p in a.positions)
     key = (blocks._data_version(session), tuple(review_version(session)), len(apps), hash(statuses),
-           hash(frozenset(asp.items())), hash(frozenset(vol.items())))  # fmt: skip
+           hash(frozenset(asp.items())), hash(frozenset(vol.items())),
+           hash(frozenset((fn, t["usd"], t["n"]) for fn, t in public.items())))  # fmt: skip
     if key in _CACHE:
         return _CACHE[key]
-    return table(apps, asp, vol, verdicts(session), key)
+    return table(apps, asp, vol, verdicts(session), key, public)
 
 
 def combined(session: Session) -> dict:
-    """The table for the combined Skyworks + Qorvo portfolio over all diagrams, with the entered ASPs and volumes."""
+    """The table for the combined Skyworks + Qorvo portfolio over all diagrams, with the public TAM estimates."""
     apps = op.with_status(op.applications(), op.makers(session), op.COMPANIES["combined"][1])
     return for_session(session, apps, *op.inputs(session))
 

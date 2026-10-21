@@ -124,7 +124,8 @@ def _feedback(session: Session, slug: str) -> dict[str, dict]:
 
 
 def case(session: Session, slug: str) -> dict | None:
-    """The case with feedback and real prices attached to its items, and the revenue illustration."""
+    """The case with feedback attached to its items, and the revenue illustration from the estimated target prices
+    (no real prices are entered: commercial inputs are retired, owner 21 Oct 2026)."""
     c = raw(slug)
     if c is None:
         return None
@@ -172,10 +173,3 @@ def react(session: Session, slug: str, key: str, verdict: str, comment: str = ""
                            comment=comment.strip()[:2000] or None, author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
 
-
-def set_price(session: Session, slug: str, key: str, value: float | None, note: str = "") -> None:
-    prices = {str(x["id"]) for x in ((raw(slug) or {}).get("prices") or {}).get("items") or []}
-    if key not in prices:
-        raise ValueError("unknown price item")
-    op.set_input(session, "asp", f"case:{slug}:{key}", value, note)
-    session.commit()

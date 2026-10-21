@@ -29,9 +29,9 @@ def test_case_file_is_consistent(slug):
     assert rp.report(slug) is not None, "missing from reports.yaml or no body template"
 
 
-def test_case_page_feedback_and_real_asp(client):
+def test_case_page_feedback_and_no_real_asp(client):
     r = client.get(f"/business/reports/{SLUG}")
-    assert r.status_code == 200 and "Advantages" in r.text and "Real ASP" in r.text
+    assert r.status_code == 200 and "Advantages" in r.text and "Real ASP" not in r.text  # no commercial inputs
     assert 'id="pc-dialog"' in r.text and "prelim.js" in r.text and 'class="fz fz-' in r.text
     assert client.get("/business/reports/method").status_code == 200
     data = {"key": "f-node", "verdict": "further", "comment": "Two dies"}
@@ -39,16 +39,15 @@ def test_case_page_feedback_and_real_asp(client):
     assert r.status_code == 303
     assert client.post(f"/business/reports/{SLUG}/react", data={"key": "nope", "verdict": "agree"}).status_code == 400
     assert client.post(f"/business/reports/{SLUG}/price", data={"key": "p-rn4", "value": "15.25"},
-                       follow_redirects=False).status_code == 303  # fmt: skip
+                       follow_redirects=False).status_code in (404, 405)  # fmt: skip
     with Session(get_engine()) as s:
         c = prelim.case(s, SLUG)
     node = next(f for f in c["features"] if f["id"] == "f-node")
     assert node["fb"]["verdict"] == "further" and node["fb"]["comments"][0]["text"] == "Two dies"
     rn4 = next(p for p in c["prices"]["items"] if p["id"] == "p-rn4")
-    assert rn4["real"] == 15.25
-    assert any(v["real"] and v["unit"] == 15.25 for v in c["revenue"])
+    assert rn4.get("real") is None and all(not v.get("real") for v in c["revenue"])  # estimated targets only
     page = client.get(f"/business/reports/{SLUG}").text
-    assert "move further" in page and "your ASP" in page
+    assert "move further" in page and "your ASP" not in page
 
 
 @pytest.mark.parametrize("slug", SLUGS)

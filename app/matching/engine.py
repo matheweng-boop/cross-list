@@ -533,12 +533,37 @@ def sort_key(category: str):
         if category == "functional":
             main = (len(r.deviations), len(r.exceptions), r.closeness)  # fewest deviations first
         elif category == "package":
-            main = (not r.fit.same_pinout, len(r.deviations), len(r.exceptions), r.closeness)  # pin-to-pin first
+            main = (len(r.deviations), not r.fit.same_pinout, len(r.exceptions), r.closeness)  # fewest deviations first
         else:
             main = (len(r.exceptions), r.closeness)
         return (r.lifecycle_risk, main, r.candidate.label)
 
     return key
+
+
+def rank_key(r: CrossResult):
+    """The order of preference across cross types (owner, 21 Oct 2026): a drop-in with the same function always comes
+    first; then the fewest priority 1 deviations; with as many deviations, the same package before another package and
+    pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom."""
+    return (
+        r.lifecycle_risk,
+        r.category != "fff",
+        len(r.deviations),
+        not r.fit.same_package,
+        not r.fit.same_pinout,
+        len(r.exceptions),
+        r.closeness,
+        r.candidate.label,
+    )
+
+
+def ranked(crosses: dict[str, list[CrossResult]]) -> list[CrossResult]:
+    """Every listed candidate once, best first (see ``rank_key``)."""
+    seen: dict[int, CrossResult] = {}
+    for cat in CATEGORY_ORDER:
+        for r in crosses.get(cat, []):
+            seen.setdefault(r.candidate.id, r)
+    return sorted(seen.values(), key=rank_key)
 
 
 def find_crosses(

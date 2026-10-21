@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.matching.engine import CATEGORY_LABELS, CATEGORY_ORDER
+from app.matching.engine import CATEGORY_LABELS, ranked
 from app.models import DataReview, Manufacturer, ManufacturerRole, Part, SiteFeedback, VerifyTask
 from app.services import blocks, scoring, vocab
 from app.services import opportunity as op
@@ -63,7 +63,7 @@ def _crosses(session: Session, n: int, per_family: int = 3) -> list[VerifyTask]:
         for size, url in sorted(groups, reverse=True)[:per_family]:
             ref = sorted(comp[url], key=lambda p: p.mpn)[0]
             res = crosses_for(session, ref)
-            hit = next(((r, c) for c in CATEGORY_ORDER for r in res.get(c, []) if r.candidate.datasheet_url), None)
+            hit = next(((r, r.category) for r in ranked(res) if r.candidate.datasheet_url), None)
             if hit is None or f"{url} | {hit[0].candidate.datasheet_url}" in used:
                 continue
             n_ours = len(ours.get(hit[0].candidate.datasheet_url, []))

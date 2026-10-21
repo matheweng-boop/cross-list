@@ -116,3 +116,25 @@ def parse_usd(text: str) -> float | None:
         return float(t) * mult if t else None
     except ValueError:
         return None
+
+
+def by_function(session: Session) -> dict[str, dict]:
+    """Public market size per function, for the Opportunity explorer and the demand score: the estimates linked to a
+    function, without the ones the owner disagreed with. Agreed figures are used when there are any; otherwise every
+    open one. usd = the median, with the low, high, latest year and how many sources (owner, 21 Oct 2026: market size
+    comes from public data only, never from commercial inputs)."""
+    out: dict[str, dict] = {}
+    groups: dict[str, list[dict]] = {}
+    for e in estimates(session):
+        verdict = (e["review"] or {}).get("verdict")
+        if e["fn"] and e["usd"] and verdict != "disagree":
+            groups.setdefault(e["fn"], []).append({**e, "agreed": verdict == "agree"})
+    for fn, rows in groups.items():
+        use = [e for e in rows if e["agreed"]] or rows
+        vals = sorted(float(e["usd"]) for e in use)
+        mid = len(vals) // 2
+        median = vals[mid] if len(vals) % 2 else (vals[mid - 1] + vals[mid]) / 2
+        out[fn] = {"usd": median, "low": vals[0], "high": vals[-1], "n": len(vals),
+                   "agreed": any(e["agreed"] for e in use),
+                   "year": max((e["year"] or 0) for e in use) or None}  # fmt: skip
+    return out

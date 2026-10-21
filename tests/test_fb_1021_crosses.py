@@ -14,7 +14,7 @@ import pytest
 from sqlalchemy import select
 
 from app import yamlio
-from app.matching.engine import cross, pins_compatible
+from app.matching.engine import cross, pins_compatible, ranked
 from app.matching.rules import curve_value, gate_output_config, get_rules
 from app.models import Package, ParamValue, Part
 from app.services.queries import crosses_for
@@ -246,9 +246,12 @@ def test_ucc5310mcdr_crosses_to_the_miller_clamp_variants(session, gate):
     # split-output Si82B40: same everything else, but a different output option
     r = cross(ref, gate("SI82B40ACE-IS4"), rules)
     assert [x.key for x in r.deviations] == ["output_config"]
-    # the NB SOIC-8 Miller-clamp code is pin-to-pin (VCC1/VDDI, CLAMP/MC, VEE2/GND); only the creepage differs
+    # the NB SOIC-8 Miller-clamp code is pin-to-pin (VCC1/VDDI, CLAMP/MC, VEE2/GND); only the creepage differs, and
+    # creepage is priority 3 (owner, 21 Oct 2026: good to know, not a requirement), so it is the drop-in
     r = cross(ref, gate("SI82B41ACC-IS"), rules)
-    assert r.fit.same_package and r.fit.same_pinout and [x.key for x in r.deviations] == ["creepage_mm"]
+    assert r.fit.same_package and r.fit.same_pinout and not r.deviations and r.categories == ["fff"]
+    assert [x.key for x in r.p3_notes()] == ["creepage_mm"]
+    assert ranked(crosses_for(session, ref))[0].candidate.mpn == "SI82B41ACC-IS"  # a drop-in always ranks first
     # the candidates without a deviation are all Miller-clamp parts; the split-output ones carry the deviation
     got = crosses_for(session, ref)["functional"]
     clean = [x for x in got if not x.deviations]

@@ -32,13 +32,9 @@ NAV = (
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
     )),
     ("knowledge", "Engineering knowledge", (
-        ("Knowledge search", "/technical", "Search application notes and specification guides together"),
-        ("Specification guides", "/engineering", "What each specification means and how to compare it"),
-        ("Technical library", "/library", "Deep dives: block diagrams, design rules, research trends, references"),
-        ("RF fundamentals", "/rf-notes", "RF specifications, components, architectures and technologies explained"),
-        ("RF bands", "/rf-bands", "Cellular, GNSS, Wi-Fi, satcom and radar bands, with the parts that cover each"),
-        ("Interactive visuals", "/visuals", "Sliders, live graphs and equations: RF links, noise, filters, CMTI"),
-        ("Technology platforms", "/business/capabilities", "Public Skyworks / Qorvo technologies"),
+        ("Systems library", "/library", "Deep dives per system: diagrams, design rules, trends, links to basics"),
+        ("Interactive visuals", "/visuals", "Sliders and live graphs: RF links, noise, filters, CMTI; RF band chart"),
+        ("General knowledge", "/knowledge", "RF fundamentals, specification guides, technology platforms and search"),
     )),
 )  # fmt: skip
 
@@ -87,7 +83,7 @@ PLACES = {
     "/business/cases": ("growth", "/business/shortlist"),
     "/business/explore": ("growth", "/business/shortlist"),
     "/business/shortlist": ("growth", "/business/shortlist"),
-    "/business/capabilities": ("knowledge", "/business/capabilities"),
+    "/business/capabilities": ("knowledge", "/knowledge"),
     "/business/data": ("manage", "/business/data"),
     "/business/quality": ("manage", "/business/quality"),
     "/business/validation": ("manage", "/business/quality"),
@@ -99,14 +95,15 @@ PLACES = {
     "/manage/verify": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage": ("manage", "/manage/reviews"),
-    "/technical": ("knowledge", "/technical"),
-    "/notes": ("knowledge", "/technical"),
-    "/engineering": ("knowledge", "/engineering"),
-    "/rf-notes": ("knowledge", "/rf-notes"),
     "/library": ("knowledge", "/library"),
-    "/rf-bands": ("knowledge", "/rf-bands"),
     "/visuals": ("knowledge", "/visuals"),
-    "/impact": ("knowledge", "/engineering"),
+    "/rf-bands": ("knowledge", "/visuals"),
+    "/knowledge": ("knowledge", "/knowledge"),
+    "/rf-notes": ("knowledge", "/knowledge"),
+    "/engineering": ("knowledge", "/knowledge"),
+    "/impact": ("knowledge", "/knowledge"),
+    "/technical": ("knowledge", "/knowledge"),
+    "/notes": ("knowledge", "/knowledge"),
 }
 
 # In-page tabs for views of the same thing (label, href); shown on every page of the group
@@ -121,6 +118,14 @@ TABS = (
     (("Review queue", "/manage/reviews"), ("Part requests", "/requests"), ("Diagram feedback", "/blocks/feedback")),
     (("Data quality", "/business/quality"), ("Human validation", "/business/validation")),
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),
+    (("All visuals", "/visuals"), ("RF bands", "/rf-bands")),
+    (
+        ("Overview", "/knowledge"),
+        ("RF fundamentals", "/rf-notes"),
+        ("Specification guides", "/engineering"),
+        ("Technology platforms", "/business/capabilities"),
+        ("Knowledge search", "/technical"),
+    ),
 )
 
 

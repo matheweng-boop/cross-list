@@ -648,7 +648,8 @@ def library_topic(request: Request, key: str, session: Session = Depends(get_ses
         raise HTTPException(404, "Topic not found")
     t = library.reviewed(session, key)
     ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
-           "notes": library.notes(key), "cases": library.cases_using(key)}  # fmt: skip
+           "notes": library.notes(key), "cases": library.cases_using(key), "related": library.related(key),
+           "rule_links": library.rule_links}  # fmt: skip
     return templates.TemplateResponse(request, "library/topic.html", ctx)
 
 
@@ -663,6 +664,16 @@ def library_react(key: str, item: str = Form(...), verdict: str = Form(...), com
     except ValueError as e:
         raise HTTPException(400, "Unknown item or verdict") from e
     return RedirectResponse(f"/library/{key}#i-{item}", status_code=303)
+
+
+@router.get("/knowledge", response_class=HTMLResponse)
+def general_knowledge(request: Request):
+    """General knowledge: the background the systems library builds on (RF fundamentals, specification guides,
+    technology platforms) and the search over all of it."""
+    from app.services import library, rf_notes
+
+    ctx = {"rf": rf_notes.by_category(), "guides": engineering.index(), "topics": library.topics()}
+    return templates.TemplateResponse(request, "engineering/knowledge.html", ctx)
 
 
 @router.get("/rf-notes", response_class=HTMLResponse)

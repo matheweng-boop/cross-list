@@ -319,8 +319,16 @@ def test_navigation_sections_and_old_urls(client):
                                ("/business", "Opportunities", "Opportunity explorer"),
                                ("/business/markets", "Future growth", "Markets &amp; customers"),
                                ("/business/reports", "Future growth", "Research &amp; ideas"),
-                               ("/technical", "Engineering knowledge", "Knowledge search"),
-                               ("/engineering/cmti_kv_us", "Engineering knowledge", "Specification guides"),
+                               ("/library", "Engineering knowledge", "Systems library"),
+                               ("/library/v2x_frontend", "Engineering knowledge", "Systems library"),
+                               ("/visuals", "Engineering knowledge", "Interactive visuals"),
+                               ("/rf-bands", "Engineering knowledge", "Interactive visuals"),
+                               ("/knowledge", "Engineering knowledge", "General knowledge"),
+                               ("/rf-notes", "Engineering knowledge", "General knowledge"),
+                               ("/technical", "Engineering knowledge", "General knowledge"),
+                               ("/engineering", "Engineering knowledge", "General knowledge"),
+                               ("/engineering/cmti_kv_us", "Engineering knowledge", "General knowledge"),
+                               ("/business/capabilities", "Engineering knowledge", "General knowledge"),
                                ("/rules", "Data management", "Methodology"),
                                ("/requests", "Data management", "Requests &amp; reviews")]:  # fmt: skip
         r = client.get(url)
@@ -334,6 +342,18 @@ def test_navigation_sections_and_old_urls(client):
     assert (
         'id="global-search"' in client.get("/broadcast").text and 'id="global-search"' not in client.get("/parts").text
     )
+    # Engineering knowledge: three items; RF fundamentals and the guides are General knowledge tabs, RF bands a visual
+    from app.web import nav
+
+    knowledge = next(s for s in nav.NAV if s[0] == "knowledge")
+    assert [i[0] for i in knowledge[2]] == ["Systems library", "Interactive visuals", "General knowledge"]
+    rf = client.get("/rf-notes").text
+    assert 'aria-current="page" class="on">RF fundamentals<' in rf and 'href="/engineering"' in rf
+    assert 'aria-current="page" class="on">Specification guides<' in client.get("/engineering/cmti_kv_us").text
+    bands = client.get("/rf-bands").text
+    assert 'aria-current="page" class="on">RF bands<' in bands and 'href="/visuals"' in bands
+    assert nav.page_title("/rf-notes").startswith("RF fundamentals – Engineering knowledge")
+    assert "Technical library" not in client.get("/library").text
 
 
 def test_best_and_next_best_options_are_flagged(client):
@@ -396,3 +416,47 @@ def test_footer_and_browse_in_menu(client):
 def test_suggestions_are_a_combobox(client):
     assert 'role="combobox"' in client.get("/").text
     assert 'id="sg-p' in client.get("/suggest?q=7741").text
+
+
+def test_general_knowledge_page(client):
+    """General knowledge holds RF fundamentals as a sub-category, the specification guides, technology platforms and
+    the search, and lists the systems that use them."""
+    html = client.get("/knowledge").text
+    assert "<h1>General knowledge</h1>" in html
+    for href in ('href="/rf-notes"', 'href="/rf-notes#cat-rf_specs"', 'href="/engineering"',
+                 'href="/engineering/cmti_kv_us"', 'href="/business/capabilities"',
+                 'action="/technical"', 'href="/library/v2x_frontend"'):  # fmt: skip
+        assert href in html, href
+
+
+def test_visuals_include_rf_bands():
+    from pathlib import Path
+
+    js = (Path(__file__).resolve().parents[1] / "app" / "web" / "static" / "visuals.js").read_text()
+    assert 'href="/rf-bands"' in js  # the RF band chart is listed with the visuals
+
+
+def test_systems_library_links_to_knowledge_and_visuals(client):
+    from app.services import engineering, library, rf_notes
+
+    ids = {t["id"] for t in rf_notes.topics()}
+    assert set(library.RF_NOTES) <= ids and set(library.SPEC_GUIDES) <= set(engineering.NOTES)
+    js = (library.PROJECT_ROOT / "app" / "web" / "static" / "visuals.js").read_text()
+    assert all(f'id: "{k}"' in js for k in library.VISUALS if k != "rf-bands")
+    v2x = library.related("v2x_frontend")
+    hrefs = {x["href"] for x in v2x["knowledge"] + v2x["visuals"]}
+    assert "/rf-notes#acoustic_filters_duplexers" in hrefs and "/visuals#filter" in hrefs and "/rf-bands" in hrefs
+    traction = library.related("traction_asil_d")
+    assert "/engineering/cmti_kv_us" in {x["href"] for x in traction["knowledge"]}
+    assert "/visuals#cmti" in {x["href"] for x in traction["visuals"]}
+    assert not any(x["href"].startswith("/rf-notes") for x in traction["knowledge"][:5])  # isolation, not RF
+    page = client.get("/library/v2x_frontend").text
+    assert 'class="kn-links' in page and 'href="/rf-notes#acoustic_filters_duplexers"' in page
+    assert 'href="/visuals#filter"' in page and ">basics</a>" in page
+
+
+def test_rf_by_band_table_has_a_key_and_marks_each_line(client):
+    html = client.get("/portfolio").text
+    table = html.split('<h2 id="rf">')[1].split('<h2 id="overlap">')[0]
+    assert 'class="pf-bkey' in table and "Skyworks parts" in table and "a gap for us" in table
+    assert 'class="pf-n pf-sky' in table and 'class="pf-n pf-qor' in table and not re.search(r"\d / \d", table)

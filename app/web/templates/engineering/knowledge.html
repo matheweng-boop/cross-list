@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>General knowledge</h1>
+<p class="subtitle muted">The basics behind the systems: how RF parts and specifications work, what each isolation specification means,
+  and the public Skyworks and Qorvo technologies. The <a href="/library">Systems library</a> links here from each system;
+  the <a href="/visuals">Interactive visuals</a> let you try the numbers.</p>
+
+<form method="get" action="/technical" role="search">
+  <input type="search" name="q" placeholder="Search everything: RF notes, specification guides, application notes" aria-label="Search general knowledge">
+</form>
+
+<div class="kn-grid">
+  <section class="kn-card" id="rf">
+    <h2><a href="/rf-notes">RF fundamentals</a></h2>
+    <p class="small muted">Short notes on RF specifications, components, architectures and technologies.</p>
+    <ul class="small">{% for k, label, items in rf if items %}<li><a href="/rf-notes#cat-{{ k }}">{{ label }}</a> <span class="muted">{{ items|length }} notes</span></li>{% endfor %}</ul>
+  </section>
+  <section class="kn-card" id="specs">
+    <h2><a href="/engineering">Specification guides</a></h2>
+    <p class="small muted">What each isolation and driver specification means, and what a difference between two parts costs.</p>
+    <ul class="small">{% for n in guides[:6] %}<li><a href="/engineering/{{ n.key }}">{{ n.title }}</a></li>{% endfor %}
+      {% if guides|length > 6 %}<li><a href="/engineering">All {{ guides|length }} guides</a></li>{% endif %}</ul>
+  </section>
+  <section class="kn-card" id="tech">
+    <h2><a href="/business/capabilities">Technology platforms</a></h2>
+    <p class="small muted">The public Skyworks and Qorvo process and packaging technologies, and what each is good for.</p>
+  </section>
+  <section class="kn-card" id="search">
+    <h2><a href="/technical">Knowledge search</a></h2>
+    <p class="small muted">One search over these notes, the specification guides, the systems library and the manufacturers' application notes.</p>
+  </section>
+</div>
+
+<h2>Where the basics are used</h2>
+<p class="small muted">Each system in the Systems library lists the notes above that it builds on.</p>
+<ul class="small">{% for t in topics %}<li><a href="/library/{{ t.key }}">{{ t.title }}</a></li>{% endfor %}</ul>
+{% endblock %}

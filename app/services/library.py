@@ -1,6 +1,7 @@
-"""Technical library: deep dives per topic (data/library/topics/<key>.yaml) with references, a block diagram drawn
+"""Systems library: deep dives per topic (data/library/topics/<key>.yaml) with references, a block diagram drawn
 by us, design rules, research trends and where our parts sit; and the background list of every source assessed
-(data/library/sources.yaml). Only our own summaries and short quotes with citations are stored."""
+(data/library/sources.yaml). Only our own summaries and short quotes with citations are stored. Each topic links to
+the General knowledge pages and the Interactive visuals it builds on, found by keyword (see `related`)."""
 
 import re
 from functools import lru_cache
@@ -135,3 +136,144 @@ def react(session, key: str, item: str, verdict: str, comment: str = "", author:
     session.add(DataReview(dataset=dataset(key), key=item[:120], verdict=VERDICTS[verdict],
                            comment=comment.strip()[:2000] or None, author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
+
+
+# ---- links to General knowledge and Interactive visuals ------------------------------------------------------------
+# target -> keywords. Capitalised keywords (PA, NF, LNA) match case-sensitively, others in any case; whole words.
+RF_NOTES = {  # RF fundamentals note ids (data/engineering_rf_notes.yaml)
+    "cascaded_noise_figure": ("noise figure", "NF", "LNA", "LNAs", "Friis", "low-noise amplifier"),
+    "sensitivity_noise_floor": ("sensitivity", "noise floor", "C/N0", "SNR"),
+    "linearity_p1db_ip3": ("linearity", "IP3", "IIP3", "OIP3", "P1dB", "compression", "intermodulation"),
+    "dynamic_range_sfdr_blocking": ("blocking", "blocker", "blockers", "dynamic range", "desense", "reciprocal mixing"),
+    "vswr_return_loss_mismatch": ("VSWR", "return loss", "impedance mismatch", "mismatch loss", "impedance matching"),
+    "acoustic_filters_duplexers": ("BAW", "SAW", "duplexer", "duplexers", "multiplexer", "acoustic", "notch"),
+    "filter_fundamentals": ("filter", "filters", "filtering", "band-pass", "low-pass", "rejection"),
+    "txrx_isolation_options": ("T/R switch", "circulator", "diplexer", "TDD", "half-duplex"),
+    "rf_switches": ("RF switch", "RF switches", "SPDT", "antenna switch"),
+    "attenuators_fixed_and_step": ("attenuator", "attenuators", "step attenuator"),
+    "directional_couplers": ("coupler", "couplers", "power detector"),
+    "pa_linearization_dpd_doherty": ("PA", "PAs", "power amplifier", "DPD", "predistortion", "Doherty", "ACLR", "EVM",
+                                     "back-off"),
+    "semiconductor_technology_map": ("GaN", "GaAs", "SiGe", "SOI", "CMOS", "LDMOS", "InP"),
+    "link_budget_mmwave_fwa": ("link budget", "path loss", "EIRP", "e.i.r.p.", "cable loss"),
+    "receiver_architectures": ("superheterodyne", "zero-IF", "direct sampling", "receiver architecture"),
+    "phase_noise_oscillators": ("phase noise", "oscillator", "jitter"),
+    "pll_synthesis": ("PLL", "synthesizer", "synthesiser"),
+    "beamforming_architectures": ("beamforming", "phased array", "beam steering", "antenna array"),
+    "radar_fundamentals": ("radar", "FMCW", "Doppler"),
+    "satcom_ground_segment": ("satellite", "satcom", "NTN"),
+    "limiters_receiver_protection": ("limiter", "limiters", "receiver protection"),
+    "mmwave_5g_front_ends": ("mmWave", "FR2"),
+    "wifi_fem_and_triband_ap": ("Wi-Fi", "WLAN", "FEM", "FEMs"),
+    "power_splitters_combiners": ("splitter", "combiner", "Wilkinson"),
+    "rf_transformers_baluns": ("balun", "baluns"),
+}  # fmt: skip
+SPEC_GUIDES = {  # specification guide keys (app/services/engineering.py NOTES)
+    "cmti_kv_us": ("CMTI", "dv/dt", "common-mode transient"),
+    "isolation_rating_kvrms": ("isolation rating", "kVrms", "withstand"),
+    "isolation_class": ("reinforced", "basic isolation"),
+    "creepage_mm": ("creepage", "clearance"),
+    "viorm_vpk": ("working voltage", "VIORM", "VIOWM"),
+    "default_output": ("default output", "fail-safe", "safe state"),
+    "qualification": ("AEC-Q100", "AEC-Q104", "AEC-Q", "automotive grade", "Grade 1", "Grade 2"),
+    "prop_delay_ns": ("propagation delay", "latency"),
+    "data_rate_mbps": ("data rate", "Mbps"),
+    "temp_range_c": ("temperature range", "ambient temperature"),
+    "pwd_ns": ("dead time", "skew", "pulse-width distortion"),
+    "peak_source_a": ("gate drive", "gate driver", "gate drivers", "peak current", "gate charge"),
+    "uvlo_v": ("UVLO", "undervoltage"),
+    "certifications": ("UL 1577", "VDE", "IEC 60747-17", "certification", "certifications"),
+    "integrated_power": ("isolated power", "isolated bias", "isolated supply", "isolated supplies"),
+}  # fmt: skip
+VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link, keywords)
+    "dbm": ("dBm: the power ladder", "/visuals#dbm", ("dBm",)),
+    "link": ("Link budget and range", "/visuals#link", ("link budget", "path loss", "EIRP", "e.i.r.p.", "cable loss")),
+    "wave": ("Wavelength and antenna size", "/visuals#wave", ("antenna", "antennas", "wavelength")),
+    "nf": ("Cascaded noise figure and sensitivity", "/visuals#nf",
+           ("noise figure", "NF", "LNA", "LNAs", "sensitivity", "C/N0")),
+    "ip3": ("IP3 and intermodulation", "/visuals#ip3", ("IP3", "IIP3", "OIP3", "intermodulation", "linearity", "P1dB")),
+    "vswr": ("Mismatch, VSWR and the standing wave", "/visuals#vswr",
+             ("VSWR", "return loss", "impedance mismatch", "mismatch loss")),
+    "filter": ("Band-pass filter: order, bandwidth, rejection", "/visuals#filter",
+               ("filter", "filters", "filtering", "BAW", "SAW", "rejection", "notch")),
+    "lc": ("LC resonance and Q", "/visuals#lc", ("resonance", "resonator", "Q factor")),
+    "skin": ("Skin depth", "/visuals#skin", ("skin depth", "skin effect")),
+    "cmti": ("CMTI against the switching edge", "/visuals#cmti", ("CMTI", "dv/dt")),
+    "creep": ("Creepage against working voltage", "/visuals#creep", ("creepage", "working voltage", "clearance")),
+    "gate": ("Gate-drive current and power", "/visuals#gate",
+             ("gate drive", "gate driver", "gate drivers", "gate charge")),
+    "thermal": ("Junction temperature", "/visuals#thermal", ("thermal", "junction temperature")),
+    "rf-bands": ("RF bands chart", "/rf-bands", ("GNSS", "LTE", "5G", "V2X", "UWB", "Wi-Fi", "NTN", "band", "bands")),
+}  # fmt: skip
+_NEVER = re.compile(r"(?!x)x")
+
+
+@lru_cache
+def _patterns(keywords: tuple[str, ...]) -> tuple[re.Pattern, re.Pattern]:
+    """(pattern for the keywords in any case, case-sensitive pattern for the capitalised ones); whole words only."""
+
+    def alt(ws: list[str], flags=0) -> re.Pattern:
+        if not ws:
+            return _NEVER
+        body = "|".join(re.escape(w) for w in sorted(ws, key=len, reverse=True))
+        return re.compile(r"(?<![\w/-])(?:" + body + r")(?![\w-])", flags)
+
+    return alt([w for w in keywords if w != w.upper()], re.I), alt([w for w in keywords if w == w.upper()])
+
+
+def _hits(text: str, keywords: tuple[str, ...]) -> int:
+    loose, exact = _patterns(keywords)
+    return len(loose.findall(text)) + len(exact.findall(text))
+
+
+def _text(x) -> str:
+    if isinstance(x, str):
+        return x
+    if isinstance(x, dict):
+        return " ".join(_text(v) for k, v in x.items() if k not in ("references", "refs", "id", "url"))
+    if isinstance(x, list | tuple):
+        return " ".join(_text(v) for v in x)
+    return ""
+
+
+def _short(title: str, n: int = 42) -> str:
+    """A note title up to its first ' - ', ':' or ', ', cut at a word to about n characters (for compact links)."""
+    t = re.split(r" - |: |, ", title)[0]
+    return t if len(t) <= n else t[:n].rsplit(" ", 1)[0] + "…"
+
+
+@lru_cache
+def _targets() -> dict[str, tuple[dict, ...]]:
+    from app.services import engineering, rf_notes
+
+    titles = {t["id"]: _short(t["title"]) for t in rf_notes.topics()}
+    rf = [{"title": titles[k], "href": f"/rf-notes#{k}", "kind": "RF fundamentals", "kw": kw}
+          for k, kw in RF_NOTES.items() if k in titles]  # fmt: skip
+    spec = [{"title": engineering.NOTES[k][0], "href": f"/engineering/{k}", "kind": "Specification guide", "kw": kw}
+            for k, kw in SPEC_GUIDES.items() if k in engineering.NOTES]  # fmt: skip
+    vis = [{"title": t, "href": h, "kind": "Interactive visual", "kw": kw} for t, h, kw in VISUALS.values()]
+    return {"knowledge": tuple(rf + spec), "visuals": tuple(vis)}
+
+
+def related_to(text: str, min_hits: int = 1, limit: int = 8) -> dict[str, list[dict]]:
+    """General knowledge pages and interactive visuals whose keywords appear in the text, most mentioned first."""
+    out = {}
+    for group, targets in _targets().items():
+        scored = sorted(((n, t) for t in targets if (n := _hits(text, t["kw"])) >= min_hits), key=lambda x: -x[0])
+        out[group] = [{k: v for k, v in t.items() if k != "kw"} | {"hits": n} for n, t in scored[:limit]]
+    return out
+
+
+@lru_cache
+def related(key: str) -> dict[str, list[dict]]:
+    """What a topic builds on: the General knowledge pages (RF fundamentals, specification guides) and the
+    Interactive visuals its text mentions at least twice."""
+    t = topic(key)
+    return related_to(_text(t), min_hits=2, limit=8) if t else {"knowledge": [], "visuals": []}
+
+
+def rule_links(rule: dict) -> dict | None:
+    """The General knowledge page and the visual a design rule leans on most (either may be None)."""
+    r = related_to(_text({k: rule.get(k) for k in ("area", "rule", "why")}), limit=1)
+    k, v = (r["knowledge"] or [None])[0], (r["visuals"] or [None])[0]
+    return {"knowledge": k, "visual": v} if k or v else None

@@ -66,8 +66,10 @@ def _place(data: dict | None, name: str, place: str, fn: str, design_id: int | N
 
 @router.get("/blocks/new", response_class=HTMLResponse)
 def new(request: Request, template: int | None = None, case: str = "", library: str = "", bare: bool = False,
-        place: str = "", fn: str = "", bg: int | None = None, name: str = "",
+        place: str = "", fn: str = "", bg: int | None = None, name: str = "", diagram: str = "",
         session: Session = Depends(get_session)):  # fmt: skip
+    if diagram and template is None:  # a library diagram by its name: links stay right when diagrams are added
+        template = next((i for i, t in enumerate(blocks.templates()) if t.get("name") == diagram), None)
     if place.strip():  # a part to place: in a library or background diagram, or in a new diagram of its own
         from app.services import pipeline as pl
 

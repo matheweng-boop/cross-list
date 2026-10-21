@@ -113,3 +113,23 @@ def test_catalogue_parts_fill_functions(client):
     iso = client.get("/api/blocks/parts?fn=digital_isolator").json()
     names = [p["mpn"].upper() for m in iso["manufacturers"] for p in m["all"]]
     assert len(names) == len(set(names))
+
+
+def test_report_diagram_links_use_names_that_exist(client):
+    """Reports link to library diagrams by name (?diagram=), so adding a diagram never moves a link."""
+    import pathlib
+    import re
+    import urllib.parse
+
+    from app.services import blocks
+
+    names = {t.get("name") for t in blocks.templates()}
+    found = 0
+    for f in pathlib.Path("app/web/templates/business/reports").glob("*.html"):
+        for raw in re.findall(r"/blocks/new\?diagram=([^\"&#]+)", f.read_text()):
+            assert urllib.parse.unquote(raw) in names, (f.name, urllib.parse.unquote(raw))
+            found += 1
+    assert found >= 10
+    wind = next(n for n in names if n and n.startswith("Wind turbine converter"))
+    page = client.get("/blocks/new", params={"diagram": wind}).text
+    assert "Wind turbine converter" in page

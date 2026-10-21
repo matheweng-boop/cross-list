@@ -5,6 +5,7 @@ the extra-wide case follows the preliminary-case template."""
 
 import html
 import re
+from urllib.parse import quote
 
 from app.services import blocks, prelim
 from app.services import reports as rp
@@ -92,8 +93,8 @@ def test_iso7821_report_ranks_the_extra_wide_applications(client):
     assert rows[0][1].startswith("Utility solar") and rows[1][1].startswith("Battery energy storage")
     for t in ("597 GW", "106 GW", "165 GW", "≈15 mm", "/business/reports/hv-extra-wide-isolation"):
         assert t in sec, t
-    for i in (i for i, _ in _new_templates().values()):
-        assert f"/blocks/new?template={i}" in sec
+    for _, t in _new_templates().values():  # linked by name, so adding diagrams never moves a link
+        assert f"/blocks/new?diagram={quote(t['name'])}" in sec
     assert "pollution degree 2), so 8 mm covers 800 V" in page and "Covered by 8 mm" in sec
     assert "ultra-wide SOIC" in page and "AN1456" in page
     r = rp.report("iso7821dww-isolation")

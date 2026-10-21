@@ -904,7 +904,7 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
            "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
            "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
            "verdict_label": prelim.VERDICT_LABEL, "question_groups": prelim.QUESTION_GROUPS,
-           "benefit_kinds": prelim.BENEFIT_KINDS, "label": vocab.fn_label}  # fmt: skip
+           "benefit_kinds": prelim.BENEFIT_KINDS, "label": vocab.fn_label, "report_of": rp.report}  # fmt: skip
     fn = (ctx["case"] or {}).get("fn")
     ctx["walk_parts"] = walk.competitor_parts(session, fn, 4) if fn else []
     ctx["library"] = library.items((ctx["case"] or {}).get("library") or [])

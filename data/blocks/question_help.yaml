@@ -389,3 +389,19 @@ rx_antennas: >-
   How many cellular receive antennas the CPE uses. More antennas improve throughput and coverage but need more LNAs, filters and antenna paths.
 rf_filter: >-
   The network between the radio chip and the antenna. A pi matching network is cheapest and matches impedance; a band-pass filter suppresses harmonics and out-of-band noise better for stricter emissions needs.
+dc_voltage: >-
+  The highest DC voltage in the system. Creepage grows with it: a reinforced barrier on a material group I package needs about 8 mm at 800 V, 10 mm at 1000 V and 15 mm at 1500 V in a sealed box (pollution degree 2), so 1000 V and 1500 V systems need an extra-wide package or two barriers.
+pollution_degree: >-
+  How dirty and damp the air around the isolator gets. PD2 (sealed cabinet, office) is the usual case; PD3 (condensation or conductive dust, ventilated outdoor boxes, rail) roughly 2.5 times the PD2 creepage; coating or potting the board (PD1) reduces it.
+creepage: >-
+  The surface distance the isolator package must give between its two sides. Choosing a value keeps only parts with at least that creepage: our widest packages give 8 mm today; TI and Novosense sell 14.5-15 mm extra-wide parts, and Skyworks has announced an ultra-wide SOIC (15 mm creepage).
+altitude: >-
+  The height above sea level the equipment is rated for. Thin air breaks down sooner, so clearance is multiplied by 1.14 at 3000 m and 1.48 at 5000 m (IEC 62368-1): a barrier that needs 8 mm at 2000 m needs 9.1 mm at 3000 m.
+line_voltage: >-
+  The voltage of the overhead line or third rail that feeds the train. Higher lines (1500 V and 3000 V DC) need higher-voltage switches, more series stages and larger insulation distances than 600-750 V DC tram lines.
+barrier_build: >-
+  How the safety barrier between the line and the low-voltage control is made. One reinforced package is simplest but must meet the full creepage; two basic barriers in series, fiber-optic links or potting are used when no package is wide enough.
+wind_topology: >-
+  A full-power converter carries all the generator power through two back-to-back inverters; a doubly-fed design converts only the rotor power (about a third), so it uses smaller converters but still needs the same isolation to the 690 V side.
+power_class: >-
+  The size of the system. Commercial three-phase systems (10-250 kW) use a few power stages; utility-scale (MW, containerised) systems use many stages in parallel, and so many more gate drivers, isolated amplifiers and isolators per site.

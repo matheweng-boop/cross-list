@@ -31,6 +31,7 @@ from app.services import (
     lifecycle,
     mechanical,
     notes_search,
+    price_builder,
     price_model,
     pricing,
     text,
@@ -933,6 +934,30 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     return templates.TemplateResponse(request, "price_estimate.html", ctx)
+
+
+@router.api_route("/pricing/builder", methods=["GET", "POST"], response_class=HTMLResponse)
+async def price_builder_page(request: Request, session: Session = Depends(get_session)):
+    """Solution price builder: add parts (or load a radio preset or a saved diagram), paste DigiKey prices, set the
+    assumptions with sliders and see each part and the system total. Posted, never stored or put in the link."""
+    form = await request.form() if request.method == "POST" else request.query_params
+    cfg = price_model.config()
+    rows = price_builder.rows_from_form(form)
+    if form.get("do") == "load" and form.get("load"):
+        rows += price_builder.load(session, str(form["load"]))
+    vols = [int(v) for v in cfg["volumes"]]
+    vol = int(form.get("vol") or 0) if str(form.get("vol") or "").isdigit() else 0
+    vol = vol if vol in vols else vols[-1]
+    gm = price_model.margin(int(form.get("gm") or 0) / 100 if str(form.get("gm") or "").isdigit() else None)
+    adj = min(max(int(form.get("adj") or 100) if str(form.get("adj") or "").isdigit() else 100, 50), 150)
+    sop = int(form.get("sop") or 0) if str(form.get("sop") or "").isdigit() else 0
+    sop = sop if 2020 <= sop <= 2050 else cfg["oem"]["default_sop"]
+    result = price_builder.solution(session, rows, vol, gm, adj / 100, sop) if rows else None
+    ctx = {"cfg": cfg, "rows": rows, "result": result, "vols": vols,
+           "g": {"vol": vol, "gm": round(gm * 100), "adj": adj, "sop": sop},
+           "presets": price_builder.presets(session), "suggest": price_builder.suggestions(),
+           "scenarios": [(f, None) for f in price_model.fab_scenarios()]}  # fmt: skip
+    return templates.TemplateResponse(request, "price_builder.html", ctx)
 
 
 @router.post("/pricing/{part_id}/call")

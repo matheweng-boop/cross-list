@@ -176,6 +176,31 @@ families:
     defects_per_cm2: 0.1
     test_s: [3.0, 5.0, 10.0]       # library: 4.7 s for a mixed-signal baseband device
     note: "Large mixed-signal die (RF front ends, ADCs, DSP); analog blocks do not shrink with the node"
+  radio_coprocessor:
+    label: Digital radio coprocessor / demodulator (DAB, HD Radio, DRM)
+    class: complex
+    dies: 1
+    die_mm2: [10, 15, 25]
+    process: "40-55 nm CMOS, 300 mm"
+    wafer_mm: 300
+    wafer_usd: [2000, 3000, 4000]
+    defects_per_cm2: 0.1
+    test_s: [2.0, 4.0, 8.0]
+    note: "Mostly digital DSP and memory, little analog; shrinks with the node better than a tuner (judgement)"
+
+# which model family a site part gets in the solution builder: by its catalogue function, or by its role in the radio
+# configurator; anything else is picked by hand
+function_family:
+  am_fm_tuner: am_fm_tuner
+  digital_radio_demod: radio_coprocessor
+  tuner: am_fm_tuner
+  receiver: am_fm_tuner
+  coprocessor: radio_coprocessor
+  digital_isolator: digital_isolator
+  gate_driver: gate_driver
+  isolated_amplifier: isolated_amplifier
+  rf_switch: rf_switch
+  antenna_switch: rf_switch
 
 # package classes: package-code prefixes, and lead frame (or substrate), mold compound, wire per pin and assembly (USD, est);
 # lead frame and assembly also grow per pin (a bigger body and paddle for a bigger die), and mold compound with the die

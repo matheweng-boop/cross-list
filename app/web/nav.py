@@ -11,6 +11,7 @@ NAV = (
         ("Skyworks + Qorvo", "/portfolio", "The two lines side by side: strengths, which to pick, cross-selling"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
+        ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
     )),
     ("systems", "Systems & applications", (

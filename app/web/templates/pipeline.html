@@ -1,8 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{{ page_title(request.url.path, 'Business case from ' ~ (s.competitor or s.ours or s.part).mpn) }}{% endblock %}
+{% block title %}{{ page_title(request.url.path, 'Case from ' ~ (s.competitor or s.ours or s.part).mpn) }}{% endblock %}
 {% macro money(v) %}{{ '$' ~ '{:,.0f}'.format(v) if v else '–' }}{% endmacro %}
+{% macro asked(r) %}{% if r.n %}<p class="small pl-asked">Asked before for {{ mpn }}: <b>{{ r.n }} request{{ 's' if r.n != 1 }}</b>{% if r.total %}, <b>{{ '{:,}'.format(r.total) }} pieces a year</b> in total{% endif %}{% if r.customers %} · {{ r.customers|join(', ') }}{% endif %}</p>{% endif %}{% endmacro %}
 {% block content %}
 <h1>Business case from a part</h1>
+{{ asked(requested) }}
 <p class="pl-parts">
   {% if s.competitor %}<a class="pl-chip comp" href="/parts/{{ s.competitor.id }}">{{ s.competitor.mpn }} <small>{{ s.competitor.manufacturer|vendor }}</small></a>
   <span class="pl-arrow" aria-hidden="true">→</span>{% endif %}
@@ -41,19 +43,19 @@
 <section class="pl-card">
   <h2>Which application is it for?</h2>
   {% if s.diagram_id %}<p class="small">Current: <b>{{ s.application }}</b> · <a href="/blocks/{{ s.diagram_id }}" target="_blank" rel="noopener">open in the workspace ↗</a> · <a href="/pipeline/{{ d.id }}?step=design">continue with it →</a>. Choosing another starts a new copy.</p>{% endif %}
-  <h3>Reference designs with a {{ s.fn_label }} <small class="muted">· {{ apps.templates|length }}</small></h3>
-  {% if apps.templates %}<div class="pl-list">{% for t in apps.templates %}
-    <form method="post" action="/pipeline/{{ d.id }}" class="pl-row"><input type="hidden" name="act" value="template"><input type="hidden" name="i" value="{{ t.i }}">
-      <span><b>{{ t.name }}</b> <small class="muted">{{ t.blocks }} functions</small></span><button type="submit" class="outline small-btn">Use this design</button></form>{% endfor %}</div>
-  {% else %}<p class="small muted">No reference design contains this function yet.</p>{% endif %}
-  {% if apps.saved %}<h3>Your saved diagrams with it</h3><div class="pl-list">{% for t in apps.saved %}
-    <form method="post" action="/pipeline/{{ d.id }}" class="pl-row"><input type="hidden" name="act" value="saved"><input type="hidden" name="id" value="{{ t.id }}">
-      <span><b>{{ t.name }}</b></span><button type="submit" class="outline small-btn">Use a copy</button></form>{% endfor %}</div>{% endif %}
+  <label for="pl-desc"><b>Describe the application</b> <small class="muted">in your own words, e.g. “heat pump for homes” or “48 V BMS”</small></label>
+  <textarea id="pl-desc" class="pl-desc" rows="2" maxlength="1000" data-fn="{{ s.fn or '' }}" placeholder="What does the customer build?">{{ s.description or '' }}</textarea>
+  <p class="small muted" id="pl-found-note" aria-live="polite">{% if s.description %}Best matches for your description{% else %}Designs with a {{ s.fn_label }}{% endif %} · top 10</p>
+  <div class="pl-list" id="pl-found">{% for t in found %}
+    <form method="post" action="/pipeline/{{ d.id }}" class="pl-row">{% if t.kind == 'template' %}<input type="hidden" name="act" value="template"><input type="hidden" name="i" value="{{ t.i }}">{% else %}<input type="hidden" name="act" value="saved"><input type="hidden" name="id" value="{{ t.id }}">{% endif %}<input type="hidden" name="description" value="{{ s.description or '' }}">
+      <span><b>{{ t.name }}</b> <small class="muted">{{ t.blocks }} functions{% if t.kind == 'saved' %} · your diagram{% endif %}{% if t.has %} · has a {{ s.fn_label }}{% endif %}{% if t.tags %} · {{ t.tags|join(', ') }}{% endif %}</small></span><button type="submit" class="outline small-btn">Use this design</button></form>{% else %}
+    <p class="small muted">No design matches yet. Try a general word (HVAC, BMS, motor drive, solar) or start a new diagram below.</p>{% endfor %}</div>
   <h3>Or start a new diagram</h3>
-  <form method="post" action="/pipeline/{{ d.id }}" class="pl-new"><input type="hidden" name="act" value="new_diagram">
+  <form method="post" action="/pipeline/{{ d.id }}" class="pl-new"><input type="hidden" name="act" value="new_diagram"><input type="hidden" name="description" value="{{ s.description or '' }}">
     <input name="name" placeholder="Application name, e.g. 800 V battery junction box" aria-label="Application name"><button type="submit" class="small-btn">Create with this part</button></form>
   <p class="small muted">The part is placed in its block; the diagram is saved in the Application workspace, where you can add and move blocks.</p>
 </section>
+<script src="/static/pipeline.js" defer></script>
 
 {% elif step == 'design' %}
 <section class="pl-card">
@@ -63,10 +65,13 @@
   <p class="small">{{ s.application }} · <a href="/blocks/{{ s.diagram_id }}" target="_blank" rel="noopener">open in the workspace to add, move or change blocks ↗</a> (reload this page afterwards)</p>
   <form method="post" action="/pipeline/{{ d.id }}" class="pl-inline"><input type="hidden" name="act" value="pick_all"><button type="submit" class="small-btn">Pick the best match for every open block</button></form>
   {% if s.picked %}<p class="small pt-applied">Picked: {{ s.picked|join(' · ') }}</p>{% endif %}
-  <div class="table-wrap"><table class="striped pl-table">
+  <div class="table-wrap"><table class="striped pl-table pl-design">
     <thead><tr><th scope="col">Frame</th><th scope="col">Function</th><th scope="col">Per system</th><th scope="col">Part</th></tr></thead>
     <tbody>{% for r in rows %}<tr{% if r.is_cross %} class="pl-cross"{% endif %}><td class="small">{{ r.group }}</td><td>{{ r.label }}{% if r.is_cross %} <span class="badge">this part</span>{% endif %}</td><td>{{ r.qty }}</td>
-      <td>{% if r.part %}<b>{{ r.part }}</b>{% elif r.status == 'have' %}<span class="muted small">{{ r.candidates }} parts fit – not picked</span>{% elif r.status == 'gap' %}<span class="lg lg-opp">gap: no part of ours</span>{% else %}<span class="lg lg-ext">customer part</span>{% endif %}</td></tr>{% endfor %}</tbody>
+      <td>{% if r.part %}<b>{{ r.part }}</b>{% elif r.status == 'have' %}{% set picks = suggest.get(r.fn) or [] %}{% if picks %}<span class="small">Suggested from Skyworks / Qorvo:</span>
+        <ul class="pl-sugg">{% for x in picks %}<li><form method="post" action="/pipeline/{{ d.id }}" class="inline-form"><input type="hidden" name="act" value="use"><input type="hidden" name="block" value="{{ r.block }}"><input type="hidden" name="mpn" value="{{ x.mpn }}"><button type="submit" class="outline small-btn" aria-label="Use {{ x.mpn }} for {{ r.label }}">Use</button></form>
+          {% if x.url %}<a href="{{ x.url }}" target="_blank" rel="noopener">{{ x.mpn }}</a>{% else %}<b>{{ x.mpn }}</b>{% endif %} <small class="muted">{{ x.manufacturer|vendor }}</small><br><small class="muted">Why: {{ x.why }}</small></li>{% endfor %}</ul>
+        {% if r.candidates > picks|length %}<small class="muted">{{ r.candidates }} parts fit in total: open the workspace to see all</small>{% endif %}{% else %}<span class="muted small">{{ r.candidates }} parts fit – not picked</span>{% endif %}{% elif r.status == 'gap' %}<span class="lg lg-opp">gap: no part of ours</span>{% else %}<span class="lg lg-ext">customer part</span>{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
   <form method="post" action="/pipeline/{{ d.id }}"><input type="hidden" name="act" value="design_done"><button type="submit">Continue to volume &amp; price</button></form>
   <p class="small muted">Every block with a part of ours becomes a line of the business case (the cross-sell); blocks with no part of ours become gap lines; customer parts are left out.</p>
@@ -98,21 +103,30 @@
 
 {% elif step == 'case' %}
 <section class="pl-card">
-  <h2>Create the business case</h2>
+  <h2>Create a prelim case</h2>
+  {% if sent %}<p class="pt-applied">Sent to the review queue. The AI schedules the check of whether there is a real market behind it.</p>{% endif %}
+  <p class="small">A prelim case is not a business case yet. The AI schedules it in the review queue and checks whether there is a real market behind it: volume, customers, competition. Only then does it become a business case.</p>
   <ul class="small">{% for x in s.lines if x.include %}<li>{{ x.label }}: <b>{{ x.our_mpn or 'no part of ours' }}</b>{% if x.competitor_mpn %} vs {{ x.competitor_mpn }}{% endif %}{% if x.volume %} · {{ '{:,}'.format(x.volume) }}/yr{% endif %}{% if x.price is not none %} · ${{ '%.2f'|format(x.price) }}{% endif %}</li>{% else %}<li class="muted">No lines included yet.</li>{% endfor %}</ul>
-  <p class="small">Assumed revenue for our parts: <b>{{ money(total) }}</b> per year.</p>
+  <p class="small">Assumed revenue for our parts: <b>{{ money(total) }}</b> per year.{% if volume %} This request: <b>{{ '{:,}'.format(volume) }}</b> pieces of {{ mpn }} a year.{% endif %}</p>
   <form method="post" action="/pipeline/{{ d.id }}" class="pl-finish"><input type="hidden" name="act" value="finish">
-    <label class="pl-choice"><input type="radio" name="target" value="new" checked> <b>New business case</b></label>
+    <label class="pl-choice"><input type="radio" name="target" value="new" checked> <b>New prelim case</b> <span class="small muted">for the review queue</span></label>
     <div class="pl-newcase">
-      <label>Title <input name="title" value="{{ (s.ours or s.competitor).mpn }}{{ ' in ' ~ s.application if s.application }}" maxlength="200"></label>
-      <label>Customer <input name="customer" placeholder="optional"></label>
-      <label>Markets <input name="markets" placeholder="optional, e.g. Automotive"></label>
+      <label>Title <input name="title" value="{{ (s.ours or s.competitor or s.part).mpn }}{{ ' in ' ~ s.application if s.application }}" maxlength="200"></label>
+      <label>Application, in your words <input name="description" value="{{ s.description or '' }}" maxlength="1000" placeholder="optional"></label>
+      <fieldset class="pl-multi" data-multi="customer"><legend>Customers</legend>
+        {% for c in (s.customers or ['']) %}<div class="pl-multi-row"><input name="customer" value="{{ c }}" placeholder="e.g. Bosch" aria-label="Customer"></div>{% endfor %}
+        <button type="button" class="outline small-btn pl-add" data-add="customer" aria-label="Add another customer">+ customer</button></fieldset>
+      <fieldset class="pl-multi" data-multi="market"><legend>Markets</legend>
+        {% for m in (s.markets or ['']) %}<div class="pl-multi-row"><input name="market" value="{{ m }}" placeholder="e.g. Automotive" aria-label="Market"></div>{% endfor %}
+        <button type="button" class="outline small-btn pl-add" data-add="market" aria-label="Add another market">+ market</button></fieldset>
     </div>
-    {% if cases %}<label class="pl-choice"><input type="radio" name="target" value="existing" id="pl-existing"> <b>Add to an existing business case</b></label>
+    {% if cases %}<label class="pl-choice"><input type="radio" name="target" value="existing" id="pl-existing"> <b>Or add the lines to an existing business case</b></label>
     <select name="existing" aria-label="Existing business case" onchange="document.getElementById('pl-existing').checked = true">
       {% for c in cases %}<option value="{{ c.id }}">{{ c.title }}</option>{% endfor %}</select>{% endif %}
-    <button type="submit">Create business case</button>
+    <button type="submit">Create the prelim case</button>
   </form>
+  <p class="small muted">Every request is kept: the volume asked for {{ mpn }} adds up over all requests.</p>
 </section>
+<script src="/static/pipeline.js" defer></script>
 {% endif %}
 {% endblock %}

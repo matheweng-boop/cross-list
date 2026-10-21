@@ -1,0 +1,23 @@
+{# Scheduled for business case review: topics pushed from Research & ideas (and preliminary cases); each one starts a
+business case. Needs: scheduled, sched_statuses, sched_label, sched_link, co. #}
+{% set back = request.url.path ~ '#scheduled' %}
+<section class="sch" id="scheduled" aria-labelledby="sch-title">
+<h2 id="sch-title">Scheduled for business case review <small class="muted">· {{ scheduled|selectattr('status', 'ne', 'done')|list|length }} open</small></h2>
+<p class="small muted">Business cases start here. Add a topic with “Schedule business case review” on a <a href="/business/reports">Research &amp; ideas</a> report, then start the case from this list.</p>
+{% if scheduled %}<ul class="sch-list">{% for s in scheduled %}{% set link = sched_link(s.source) %}
+  <li class="sch-item st-{{ s.status }}" id="sch-{{ s.id }}">
+    <div class="sch-main">
+      <b>{{ s.title }}</b> <span class="sch-st">{{ sched_statuses.get(s.status, s.status) }}</span>
+      <br><small class="muted">From {% if link %}<a href="{{ link }}">{{ sched_label(s.source) }}</a>{% else %}{{ sched_label(s.source) }}{% endif %} · {{ s.created_at|date }}{% if s.part %} · part {{ s.part }}{% endif %}{% if s.volume %} · volume {{ s.volume }}{% endif %}</small>
+      <form method="post" action="/business/schedule/{{ s.id }}" class="sch-note"><input type="hidden" name="next" value="{{ back }}"><input type="text" name="note" value="{{ s.note or '' }}" placeholder="Note: why now, who asked" aria-label="Note for {{ s.title }}"><button type="submit" class="outline small-btn">Save</button></form>
+    </div>
+    <div class="sch-act">
+      {% if s.case_id %}<a class="small-btn" role="button" href="/business/cases/{{ s.case_id }}">Open business case</a>
+      {% else %}<a class="small-btn" role="button" href="/business/cases/new?co={{ co }}&schedule={{ s.id }}">Start business case</a>{% endif %}
+      <form method="post" action="/business/schedule/{{ s.id }}" class="push-form"><input type="hidden" name="next" value="{{ back }}">
+        {% if s.status == 'done' %}<button name="act" value="reopen" class="outline small-btn">Reopen</button>{% else %}<button name="act" value="done" class="outline small-btn" title="The review is done">Mark reviewed</button>{% endif %}
+        <button name="act" value="remove" class="outline secondary small-btn" onclick="return confirm('Remove this topic from the list?')">Remove</button></form>
+    </div>
+  </li>{% endfor %}</ul>
+{% else %}<p class="small muted">Nothing scheduled yet. Open a report in <a href="/business/reports">Research &amp; ideas</a> and press “Schedule business case review”.</p>{% endif %}
+</section>

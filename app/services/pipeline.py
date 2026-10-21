@@ -15,7 +15,7 @@ Volumes and prices are the user's assumptions and are labelled so everywhere.
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import BlockDiagram, Case, CaseLine, CaseNote, Part, ShortlistItem
+from app.models import BlockDiagram, Case, CaseLine, CaseNote, Part, ShortlistItem, VolumeRequest
 from app.services import blocks, vocab
 
 STEPS = [
@@ -23,7 +23,7 @@ STEPS = [
     ("application", "Application"),
     ("design", "Parts in the design"),
     ("numbers", "Volume & price"),
-    ("case", "Business case"),
+    ("case", "Prelim case"),
 ]
 ROLE_LABEL = {"cross": "Cross", "design": "Also in the design", "gap": "Gap: no part of ours"}
 
@@ -275,3 +275,102 @@ def merge(session: Session, source: Case, target: Case) -> None:
                          + (f":\n{text}" if text else "")))  # fmt: skip
     source.status = "merged"
     source.inputs = {**(source.inputs or {}), "merged_into": str(target.id)}
+
+
+# ---- requests for a case: the volume asked for a part accrues over every request ------------------------------
+def requested(session: Session, mpn: str | None) -> dict:
+    """Every request for a case on the part: how many, the total volume asked (pieces a year) and who asked."""
+    rows = list(session.scalars(select(VolumeRequest).where(VolumeRequest.mpn == mpn).order_by(VolumeRequest.id)))
+    names = [x.strip() for r in rows for x in (r.customer or "").split(";") if x.strip()]
+    markets = [x.strip() for r in rows for x in (r.market or "").split(";") if x.strip()]
+    return {"n": len(rows), "total": sum(r.volume or 0 for r in rows), "customers": list(dict.fromkeys(names)),
+            "markets": list(dict.fromkeys(markets)), "last": rows[-1].created_at if rows else None}  # fmt: skip
+
+
+def request_volume(state: dict) -> int | None:
+    """Pieces of the part a year: the systems a year of its line times the parts per system."""
+    x = next((x for x in state.get("lines") or [] if x.get("key") == "cross"), None)
+    return x["volume"] * (x.get("qty") or 1) if x and x.get("volume") else None
+
+
+def form_list(form, key: str, limit: int = 20) -> list[str]:
+    """A repeated field (customer, market): the filled values in order, each once."""
+    vals = [str(v).strip()[:120] for v in form.getlist(key)] if hasattr(form, "getlist") else []
+    return list(dict.fromkeys(v for v in vals if v))[:limit]
+
+
+def record_request(session: Session, state: dict, source: str) -> VolumeRequest | None:
+    """One row per request for a case on the part (never merged): the total volume accrues across requests."""
+    mpn = (state.get("competitor") or state.get("part") or {}).get("mpn")
+    if not mpn:
+        return None
+    r = VolumeRequest(mpn=mpn, volume=request_volume(state), source=source[:60],
+                      customer="; ".join(state.get("customers") or [])[:500] or None,
+                      market="; ".join(state.get("markets") or [])[:500] or None)  # fmt: skip
+    session.add(r)
+    return r
+
+
+def prelim_note(state: dict, description: str = "") -> str:
+    """What the review queue gets with the prelim case: the application, who asks, the design and the numbers."""
+    comp, ours = state.get("competitor"), state.get("ours")
+    bits = [
+        f"Part: {comp['mpn']} ({comp['manufacturer']})" if comp else f"Part: {(ours or {}).get('mpn', '')}",
+        f"Our cross: {ours['mpn']}" if comp and ours else ("No part of ours: a new development" if comp else ""),
+        f"Application: {state['application']}" if state.get("application") else "",
+        f"Description: {description or state.get('description')}" if description or state.get("description") else "",
+        "Customers: " + ", ".join(state["customers"]) if state.get("customers") else "",
+        "Markets: " + ", ".join(state["markets"]) if state.get("markets") else "",
+        "Check: is there a real market behind it (volume, customers, competition)?",
+        "Parts in the design (volumes and prices are assumptions):\n" + _summary(state) if state.get("lines") else "",
+    ]
+    return "\n".join(b for b in bits if b)[:4000]
+
+
+def search_applications(session: Session, q: str, fn: str | None, limit: int = 10) -> list[dict]:
+    """Library and saved diagrams for a free-text application description, best match first (diagrams with the
+    part's function before others at the same score); with no text, the diagrams that have the function."""
+    from app.services.opportunity import market_of
+
+    rows = []
+    for i, t in enumerate(blocks.templates()):
+        has = bool(fn) and fn in blocks.template_functions(t)
+        idx = blocks.template_index(t, market_of(t.get("name", ""), t.get("category") or "Other"))
+        rows.append({"kind": "template", "i": i, "name": blocks.display_name(t), "has": has, "index": idx,
+                     "blocks": len(blocks.template_functions(t)), "tags": idx["tags"]})  # fmt: skip
+    for d in session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc()).limit(300)):
+        fns = [b.get("fn") for g in (d.data or {}).get("groups") or [] for b in g.get("blocks") or []]
+        idx = blocks.search_index(d.name, "", " ".join(g.get("label", "") for g in (d.data or {}).get("groups") or []))
+        rows.append({"kind": "saved", "id": d.id, "name": d.name, "has": bool(fn) and fn in fns, "index": idx,
+                     "blocks": len(set(fns)), "tags": idx["tags"]})  # fmt: skip
+    if blocks.query_words(q):
+        for r in rows:
+            r["score"] = blocks.search_score(r["index"], q)
+        rows = [r for r in rows if r["score"]]
+    else:
+        rows = [{**r, "score": 0} for r in rows if r["has"]]
+    rows.sort(key=lambda r: (-r["score"], not r["has"], r["kind"] != "template", r["name"]))
+    labels = {c["key"]: c["label"] for c in blocks.categories()}
+    return [{k: v for k, v in r.items() if k != "index"} | {"tags": [labels[t] for t in r["tags"]]}
+            for r in rows[:limit]]  # fmt: skip
+
+
+def suggestions(session: Session, rows: list[dict], per_block: int = 3) -> dict[str, list[dict]]:
+    """Up to three Skyworks / Qorvo parts per open block of the design, with the reason each is listed (the block
+    catalogue's ranking: lifecycle, grade, requirements, data depth)."""
+    from app.services import opportunity as op
+
+    mine = op.company("combined")[2]
+    out: dict[str, list[dict]] = {}
+    for r in rows:
+        f = r.get("fn")
+        if not f or f in out or r["status"] != "have":
+            continue
+        picks = []
+        for m in blocks.parts_for(session, f, top=2)["manufacturers"]:
+            if m["manufacturer"] in mine:
+                picks += [{"mpn": p["mpn"], "url": p["url"], "manufacturer": m["manufacturer"],
+                           "why": "; ".join(p["why"].split("; ")[:3]),  # rank, requirements / lifecycle, grade
+                           "detail": p.get("detail") or ""} for p in m["best"]]  # fmt: skip
+        out[f] = picks[:per_block]
+    return out

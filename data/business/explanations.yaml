@@ -142,7 +142,8 @@ terms:
     term: ASP and TAM
     short: Entered by you; never estimated. TAM = volume × sockets × ASP.
     long: >-
-      ASP (average selling price per device) and annual volume per application are inputs on the TAM data page. Nothing
+      ASP (average selling price per device) and annual volume per application are the values entered earlier (the input
+      page was replaced by TAM estimates per product, with sources, on Data management > TAM estimates). Nothing
       is estimated: revenue figures use only priced sockets and always show how complete the pricing is.
 
 pages:
@@ -157,7 +158,7 @@ pages:
       - Our parts come from BizDev (catalogue of Skyworks / Qorvo public product pages + parts with full parameters).
     limits:
       - A "Portfolio" socket means a candidate part exists, not that it meets the application's specs.
-      - Without ASPs and volumes every socket weighs the same; a cheap commodity looks as big as a high-value part.
+      - Without a public TAM estimate every socket weighs the same; a cheap commodity looks as big as a high-value part.
   applications:
     question: How much of each application can we fill today?
     read:
@@ -251,18 +252,21 @@ pages:
   quality:
     question: How far can the business data be trusted, and what should be checked next?
     read:
-      - Review status shows per dataset how much people have verified or disputed.
-      - The review queue lists unchecked ratings behind the top-ranked functions, most influential first.
+      - The questions are unchecked items behind the top-ranked functions and the TAM estimates, most influential first; answer Yes or No.
+      - Review status per data set is on Data management > Overview.
       - Automated checks flag missing entries, inconsistent ratings, unknown ids and unsourced items.
     data:
       - Reviews and part-mapping decisions are stored in the BizDev database; the to-do export collects disputed and unsure items.
     limits:
       - A review flags an item; the data file still has to be corrected (that is what the to-do is for).
-  data:
-    question: What commercial inputs are known?
+  tam:
+    question: How big is the market for a product or technology, and can the figure be trusted?
     read:
-      - Enter an ASP per function and a yearly volume per application; leave unknown values empty.
+      - One card per estimate, with its source and a note on how far the source can be trusted.
+      - Agree or disagree with each figure; add a comment on why.
     data:
-      - Your inputs only; stored in the BizDev database.
+      - Examples copied from the research notes of the preliminary cases (data/business/tam.yaml), and estimates added on this page.
+      - Public sources only; reviews are stored in the BizDev database.
     limits:
-      - Missing values are never estimated, so TAM covers only what is entered.
+      - Analyst figures for the same market often differ by 2× or more; compare what each one counts.
+      - These figures are not used in any score yet.

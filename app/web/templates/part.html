@@ -19,10 +19,12 @@
   <span class="muted">then best of ours, make it better, future · one step at a time</span></nav>{% endif %}
 {% if part.description %}<p class="muted small"><span title="As the manufacturer describes it">Source text:</span> {{ part.description|desc(part.mpn) }}</p>{% endif %}
 {% set top = (ranked|dictsort(by='value')|first) if ranked else none %}
-<p class="pl-start">{% if part.is_reference %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}"><button type="submit" class="small-btn">Start a business case with {{ part.mpn }}</button></form>
+<div class="pl-start">{% if part.is_reference %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}"><button type="submit" class="small-btn">Start a prelim case with {{ part.mpn }}</button></form>
   <span class="small muted">place it in an application, add the other parts in the design, volume and price</span>
-  {% else %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}">{% if top and top[1] == 0 %}<input type="hidden" name="our" value="{{ top[0] }}">{% endif %}<button type="submit" class="small-btn">Start a business case</button></form>
-  <span class="small muted">{{ 'with the best cross below' if top else 'no Skyworks cross found: it becomes a portfolio gap' }} · then application, the other parts in the design, volume and price</span>{% endif %}</p>
+  {% elif cross_ok %}<span class="small">We can cross it: <a href="/parts/{{ cross_ok.id }}">{{ cross_ok.mpn }}</a>. No case needed; a case is only for a part we cannot cross. <a href="/parts/{{ part.id }}/walk?upto=2#step-2">Sell around it →</a></span>
+  {% else %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}">{% if top and top[1] == 0 %}<input type="hidden" name="our" value="{{ top[0] }}">{% endif %}<button type="submit" class="small-btn">Start a prelim case</button></form>
+  <span class="small muted">no drop-in or functional cross of ours: a new part would be needed. Then application, the other parts in the design, volume and price; the AI schedules a check of the market.</span>{% endif %}
+  {% if requested.n %}<p class="small pl-asked">Asked before for {{ part.mpn }}: <b>{{ requested.n }} request{{ 's' if requested.n != 1 }}</b>{% if requested.total %}, <b>{{ '{:,}'.format(requested.total) }} pieces a year</b> in total{% endif %}{% if requested.customers %} · {{ requested.customers|join(', ') }}{% endif %}</p>{% endif %}</div>
 {% if alternates %}<p class="alt-line"><b>{{ alternates[0].family_label }} alternate{{ 's' if alternates|length > 1 }}:</b>
   {% for a in alternates %}<a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> <small class="muted">({{ a.label }})</small>{{ ' · ' if not loop.last }}{% endfor %}
   · <a href="/compare?ids={{ part.id }}">compare</a></p>{% endif %}

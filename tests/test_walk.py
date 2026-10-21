@@ -1,10 +1,14 @@
 """Part walk-through: one step at a time from the cross result, gaps recorded once as site feedback, links back."""
 
+import json
+import re
+
 from sqlalchemy import func, select
 
-from app.models import SiteFeedback
-from app.services import walk
-from tests.test_pipeline import ids, real  # noqa: F401  (fixture)
+from app.models import BlockDiagram, SiteFeedback
+from app.services import blocks, walk
+from app.services.seed import load_file
+from tests.test_pipeline import ROOT, ids, real  # noqa: F401  (fixture)
 
 
 def test_steps_only_when_asked(client, real):  # noqa: F811
@@ -40,3 +44,81 @@ def test_gaps_go_to_site_feedback_once(client, session, real):  # noqa: F811
 def test_function_page_links_back(client, real):  # noqa: F811
     html = client.get("/business/evidence/digital_isolator").text
     assert "Walk through from a competitor part" in html and "/walk" in html
+
+
+def test_sell_around_it_from_the_customer_view(client, real):  # noqa: F811
+    comp = ids(client, "ISO7741DBQR")
+    html = client.get(f"/parts/{comp}/walk").text
+    assert "You want ISO7741DBQR in this application" in html and "we also have" in html
+    assert html.count('class="walk-card"') > 9 and "/static/walk.js" in html and 'id="walk-q"' in html
+    assert "/blocks/new?template=" in html and "place=ISO7741DBQR&amp;fn=digital_isolator" in html
+    assert "Add ISO7741DBQR to an application" in html and "New block diagram from ISO7741DBQR" in html
+    assert 'class="walk-mini"' in html and 'class="mb-mine"' in html
+    assert 'data-q="motor"' in html  # quick picks: general categories over the cards
+
+
+def test_applications_searchable_by_general_category(client, real):  # noqa: F811
+    comp = ids(client, "ISO7741DBQR")
+
+    def shown(q):
+        html = client.get(f"/parts/{comp}/walk", params={"q": q}).text
+        cards = re.findall(r'<article class="walk-card"[^>]*?( hidden)?>\s*<h3>([^<]+)</h3>', html)
+        return [name for hid, name in cards if not hid], html
+
+    trac, _ = shown("traction inverter")
+    assert trac and all("traction" in n.lower() for n in trac)
+    hvac, _ = shown("HVAC")
+    assert hvac and all(n not in trac for n in hvac)
+    none, html = shown("zzqx")
+    assert none == [] and '<p id="walk-none" class="small muted">' in html
+
+
+def test_search_rules():
+    idx = blocks.search_index("HVAC motor control (AC input, PFC + 3-phase inverter)", "Industrial", "gate driver")
+    assert {"hvac", "motor"} <= set(idx["tags"])
+    assert blocks.search_all(idx, "HVAC") and blocks.search_all(idx, "motor drive") and blocks.search_all(idx, "gate")
+    assert not blocks.search_all(idx, "BMS") and not blocks.search_all(idx, "traction inverter")
+    assert blocks.query_units("traction inverter for a forklift")[0][0] == "traction inverter"
+    assert blocks.search_score(idx, "heat pump with a compressor") == 2
+
+
+def _design(html):
+    return json.loads(re.search(r'id="bk-design">(.*?)</script>', html, re.S).group(1))
+
+
+def test_add_part_to_an_application(client, session, real):  # noqa: F811
+    tpl = next(i for i, t in enumerate(blocks.templates()) if "digital_isolator" in blocks.template_functions(t))
+    design = _design(client.get(f"/blocks/new?template={tpl}&place=ISO7741DBQR&fn=digital_isolator").text)
+    assert design["id"] is None and "placed in" in design["prefill"]
+    parts = [b.get("part") for g in design["data"]["groups"] for b in g["blocks"] if b["fn"] == "digital_isolator"]
+    assert parts and all(p == "ISO7741DBQR" for p in parts)
+    # a new diagram from the part
+    new = _design(client.get("/blocks/new?place=ISO7741DBQR&fn=digital_isolator&name=Heat pump").text)
+    assert new["name"] == "Heat pump" and new["data"]["groups"][0]["blocks"][0]["part"] == "ISO7741DBQR"
+    # a saved diagram without the function gets a frame with the part; the saved one is unchanged until Save
+    d = BlockDiagram(name="My design", data={"groups": [{"id": "g1", "label": "Power", "col": 0, "row": 0, "w": 1,
+                                                         "blocks": [{"id": "b1", "fn": "pol_buck", "qty": 1}]}],
+                                             "links": []})  # fmt: skip
+    session.add(d)
+    session.commit()
+    ext = _design(client.get(f"/blocks/{d.id}?place=ISO7741DBQR&fn=digital_isolator").text)
+    assert ext["id"] == d.id and ext["data"]["groups"][-1]["label"] == "Added: ISO7741DBQR"
+    session.refresh(d)
+    assert len(d.data["groups"]) == 1
+    comp = ids(client, "ISO7741DBQR")
+    assert f"/blocks/{d.id}?place=ISO7741DBQR" in client.get(f"/parts/{comp}/walk").text
+
+
+def test_case_only_for_a_part_we_cannot_cross(client, session):
+    load_file(session, ROOT / "data" / "real" / "ti_digital_isolators.yaml")  # no part of ours: nothing crosses
+    session.commit()
+    comp = ids(client, "ISO7741DBQR")
+    page = client.get(f"/parts/{comp}").text
+    assert "Start a prelim case" in page and "No case needed" not in page
+    assert 'action="/pipeline/new"' in client.get(f"/parts/{comp}/walk").text
+
+
+def test_no_case_when_we_can_cross_it(client, real):  # noqa: F811
+    comp = ids(client, "ISO7741DBQR")
+    for html in (client.get(f"/parts/{comp}").text, client.get(f"/parts/{comp}/walk?upto=5").text):
+        assert "No case needed" in html and "Start a prelim case" not in html

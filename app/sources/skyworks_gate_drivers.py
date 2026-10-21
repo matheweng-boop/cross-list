@@ -850,6 +850,21 @@ SINGLE_PINS = {
     "70": ("VDDI", "VI", "SPD-", "GNDI", "VDD", "VO+", "VO-", "GND"),
 }
 
+# Output option per single-channel bond-out (ordering guide "Outputs" column): VO, VO+/VO-, or VO plus an MC pin.
+# Si82Cx: VO+/VO- with the Miller clamp acting through VO- (no clamp pin), so split output with the clamp listed under
+# protection. Dual-channel parts have one output per channel (VOA, VOB).
+SINGLE_OUTPUT = {"28": "single output", "41": "Miller clamp", "44": "Miller clamp", "47": "Miller clamp"}
+# Voltage-mode drivers (Si82Ax/Bx/Dx/Ex): typical peak current per gate-driver supply, Table "Gate Driver
+# Characteristics" rows VDD = 6 / 10 / 15 / 18 V (source at VO = 1.5 / 3 / 5 / 6 V, sink at VO = 4.5 / 7 / 10 / 12 V).
+# The engine reads them at a competitor's test supply (most state 15 V).
+VM_CURVES = {
+    "1A": ([[6, 0.75], [10, 0.92], [15, 1.12], [18, 1.16]], [[6, 0.84], [10, 1.0], [15, 1.04], [18, 1.09]]),
+    "6A": ([[6, 3.8], [10, 5.4], [15, 6.65], [18, 7.5]], [[6, 5.1], [10, 6.55], [15, 7.4], [18, 7.5]]),
+    "6A-MC": ([[6, 3.8], [10, 5.4], [15, 6.65], [18, 7.5]], [[6, 2.81], [10, 3.14], [15, 3.56], [18, 3.66]]),
+}
+# the typical-value supply of each UVLO grade ("Typical specifications" line of every Si82x electrical table)
+UVLO_TEST_VDD = {4: 6, 8: 10, 12: 15, 15: 18}
+
 # per series: peak (source, sink) or per-UVLO peaks, prop delay max per deglitch code, rise/fall, iq, theta, notes
 VCD_PEAK = {4: 1.5, 8: 2.5, 12: 3.5, 15: 4.0}  # SelVCD speed 7, both directions
 VCD_RISE_FALL = {4: (16, 22), 8: (16, 19), 12: (17, 18), 15: (17, 20)}
@@ -939,12 +954,18 @@ def decode_si82x(opn: str, row: str):
             p16 = dual16("PWM", "NC", en, "DT", p7, p8) if pwm else dual16("VIA", "VIB", en, "DT", p7, p8)
             pin = to14(p16) if pkg.startswith("SOIC-14") else p16
     mc = x in "CF" or nn in ("41", "44", "47")
+    curves = {}
     if cfg["peak"]:
         src_a, sink_a = cfg["peak"]
         if mc and x == "B":
             sink_a = 3.66
+        src_c, sink_c = VM_CURVES["1A" if x in "AD" else "6A-MC" if mc and x == "B" else "6A"]
+        assert (src_c[-1][1], sink_c[-1][1]) == (src_a, sink_a), opn  # the 18 V row is the stated value
+        curves = {"peak_current_vdd_v": 18, "peak_source_curve": src_c, "peak_sink_curve": sink_c}
     else:
         src_a = sink_a = VCD_PEAK[uvlo]
+        curves = {"peak_current_vdd_v": UVLO_TEST_VDD[uvlo]}
+    out_cfg = SINGLE_OUTPUT.get(nn, "split output") if single else "single output"
     rise, fall = cfg["rf"] or VCD_RISE_FALL[uvlo]
     if x == "B" and mc:
         fall = 7.5
@@ -968,8 +989,10 @@ def decode_si82x(opn: str, row: str):
         "cmti_kv_us": 200,
         "channel_config": "single" if single else "dual",
         "input_type": input_type,
+        "output_config": out_cfg,
         "peak_source_a": src_a,
         "peak_sink_a": sink_a,
+        **curves,
         "uvlo_v": uvlo,
         "output_supply_v": [5, 30],
         "prop_delay_ns": cfg["prop"][dg],
@@ -1310,6 +1333,14 @@ def si82x_sources(x: str) -> dict:
         "cmti_kv_us": ("CMTI 200", "timing table, min"),
         "channel_config": (og, "ordering guide"),
         "input_type": (og, "ordering guide inputs column"),
+        "output_config": (og, "ordering guide outputs column (VO / VO+, VO- / VO, MC)"),
+        "peak_current_vdd_v": (
+            "Peak Output Current" if x not in "CF" else "Typical specifications",
+            f"{gate}: test supply of the stated peak current"
+            + ("" if x not in "CF" else " (6 / 10 / 15 / 18 V for the 4 / 8 / 12 / 15 V UVLO grade)"),
+        ),
+        "peak_source_curve": ("Peak Output Current", f"{gate}, typ per VDD row"),
+        "peak_sink_curve": ("Peak Output Current", f"{gate}, typ per VDD row"),
         "peak_source_a": (
             "Peak Output Current" if x not in "CF" else "Output Current",
             f"{gate}, typ" + (" at VDD 18 V" if x not in "CF" else " at speed 7 for the UVLO grade"),
@@ -1488,7 +1519,11 @@ HEADER = """\
 #   ANODE/CATHODE input of Si826x and Si8220/21 (same string as ti_gate_drivers_more.yaml).
 #   peak_source_a / peak_sink_a: typical; Si82Ax/Bx/Dx/Ex at VDD = 18 V (the row with a guaranteed
 #   minimum); SelVCD parts (Si82Cx/Fx) at speed 7 for the UVLO grade's test supply; Si82Bx parts with a
-#   Miller-clamp pin sink through VO only (3.66 A).
+#   Miller-clamp pin sink through VO only (3.66 A). peak_current_vdd_v is the supply of the stated value;
+#   peak_source_curve / peak_sink_curve hold the voltage-mode drivers' whole VDD table, so a competitor's
+#   peak current stated at 15 V is compared with the 15 V row.
+#   output_config (Si82Ax-Fx): the ordering guide's outputs column: VO = single output, VO+/VO- = split output,
+#   VO + MC = Miller clamp; Si82Cx clamps through VO- (split output, Miller clamp under protection).
 #   prop_delay_ns: maximum for the code's deglitch / dead-time option. rise/fall: typ where given, else max.
 #   isolation_class: only where the datasheet states a component insulation standard (IEC/VDE 60747-17,
 #   VDE 0884-10, IEC 60747-5-5); omitted for Si823Hx, Si8252x and Si8281-84 (only IEC 62368-1 system ratings)

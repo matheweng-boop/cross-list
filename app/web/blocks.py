@@ -55,9 +55,35 @@ def coverage(request: Request, session: Session = Depends(get_session)):
     )
 
 
+def _place(data: dict | None, name: str, place: str, fn: str, design_id: int | None = None) -> dict:
+    """The editor's design with a part placed in its function's block (or a new frame): the walk-through's
+    "Add to an application". Nothing is saved until the person presses Save."""
+    fn = fn if fn in blocks.catalogue()["functions"] else ""
+    data, where = blocks.placed(data, fn or None, place[:100])
+    return {"id": design_id, "name": name[:200], "data": data,
+            "prefill": f"{place[:100]} placed in {where}: press Save to keep it"}  # fmt: skip
+
+
 @router.get("/blocks/new", response_class=HTMLResponse)
 def new(request: Request, template: int | None = None, case: str = "", library: str = "", bare: bool = False,
+        place: str = "", fn: str = "", bg: int | None = None, name: str = "", diagram: str = "",
         session: Session = Depends(get_session)):  # fmt: skip
+    if diagram and template is None:  # a library diagram by its name: links stay right when diagrams are added
+        template = next((i for i, t in enumerate(blocks.templates()) if t.get("name") == diagram), None)
+    if place.strip():  # a part to place: in a library or background diagram, or in a new diagram of its own
+        from app.services import pipeline as pl
+
+        place = place.strip()
+        lib, back = blocks.templates(), blocks.background_templates()
+        t = (lib[template] if template is not None and 0 <= template < len(lib)
+             else back[bg] if bg is not None and 0 <= bg < len(back) else None)  # fmt: skip
+        if t is not None:
+            info = _place(pl.diagram_from_template(t, None, None), blocks.display_name(t), place, fn)
+        else:
+            known = fn in blocks.catalogue()["functions"]
+            start = pl.new_diagram(fn, vocab.fn_label(fn), None) if known else {"groups": [], "links": []}
+            info = _place(start, name.strip() or f"New design with {place}", place, fn)
+        return _editor(request, session, None, None, None, bare, info)
     if case:  # the customer diagram of a preliminary case, opened as an unsaved design
         c = prelim.raw(case) or {}
         if not c.get("diagram"):
@@ -85,15 +111,18 @@ def verify(i: int = Form(...), on: str = Form("1"), author: str = Form(""), note
 
 
 @router.get("/blocks/{design_id:int}", response_class=HTMLResponse)
-def edit(request: Request, design_id: int, bare: bool = False, session: Session = Depends(get_session)):
+def edit(request: Request, design_id: int, bare: bool = False, place: str = "", fn: str = "",
+         session: Session = Depends(get_session)):  # fmt: skip
     d = session.get(BlockDiagram, design_id)
     if d is None:
         raise HTTPException(404, "Block diagram not found")
+    if place.strip():  # extend a saved diagram with a part (saved over it only when the person presses Save)
+        return _editor(request, session, None, None, None, bare, _place(d.data, d.name, place.strip(), fn, d.id))
     return _editor(request, session, d, None, None, bare)
 
 
-def _editor(request, session, design, tpl, tpl_i=None, bare=False):
-    info = {"id": None, "name": blocks.display_name(tpl) if tpl else "", "data": None}
+def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
+    info = info or {"id": None, "name": blocks.display_name(tpl) if tpl else "", "data": None}
     if design:
         info = {"id": design.id, "name": design.name, "data": design.data}
     return templates.TemplateResponse(

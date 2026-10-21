@@ -1,3 +1,4 @@
+from app.models import BusinessInput
 from app.services import opportunity as op
 
 
@@ -13,20 +14,22 @@ def test_coverage_counts_positions_not_skus():
     assert abs(m["price_completeness"] - 2 / 3) < 1e-9
 
 
-def test_pages_and_inputs(client):
-    for path in ("/business", "/business/applications", "/business/attach", "/business/explorer", "/business/data"):
+def test_pages_and_inputs(client, session):
+    for path in ("/business", "/business/applications", "/business/attach", "/business/explorer", "/business/tam"):
         r = client.get(path)
         assert r.status_code == 200, path
         assert 'class="sub-nav"' in r.text
     assert client.get("/business/applications/1?co=skyworks").status_code == 200
-    r = client.post(
-        "/business/data", data={"co": "combined", "asp:gate_driver": "2.80", "vol:Car radio tuner system": "1000"}
-    )
-    assert r.status_code in (200, 303)
-    page = client.get("/business/data").text
-    assert 'value="2.8"' in page and 'value="1000"' in page
-    assert client.post("/api/business/asp", json={"gate_driver": None}).json()["ok"]
-    assert 'value="2.8"' not in client.get("/business/data").text
+    # commercial inputs are retired (owner, 21 Oct 2026): the old page leads to TAM estimates, nothing is stored
+    r = client.get("/business/data?focus=asp:gate_driver", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/business/tam"
+    assert client.post("/business/data", data={"asp:gate_driver": "2.80"}, follow_redirects=False).status_code == 303
+    assert client.post("/api/business/asp", json={"gate_driver": "2.80"}).status_code in (404, 405)
+    session.add(BusinessInput(kind="asp", key="gate_driver", value=2.8))  # an old stored value is no longer read
+    session.commit()
+    assert op.inputs(session) == ({}, {})
+    sim = client.get("/business/applications/1?co=skyworks").text
+    assert "bo-save-asp" not in sim and "not sent or saved" in sim
     attach = client.get("/business/attach?fn=gate_driver").text
     assert "Cross-sell" in attach or "choose" in attach
 
@@ -71,10 +74,10 @@ def test_technology_fit_and_cases(client):
 
 def test_explanations_everywhere(client):
     help_ = op.explanations()
-    for page in ("overview", "applications", "markets", "attach", "explorer", "cases", "data"):
+    for page in ("overview", "applications", "markets", "attach", "explorer", "cases", "tam"):
         assert page in help_["pages"]
     for path in ("/business", "/business/applications", "/business/markets", "/business/attach", "/business/gaps",
-                 "/business/technology", "/business/explorer", "/business/cases", "/business/data"):  # fmt: skip
+                 "/business/technology", "/business/explorer", "/business/cases", "/business/tam"):  # fmt: skip
         assert "About this page" in client.get(path).text, path
     method = client.get("/business/method").text
     assert "Formulas" in method and "Door opener" in method and "Data sources" in method
@@ -160,21 +163,7 @@ def test_reviews_queue_types_and_resolution(client):
     assert "Product-to-function mapping" in html and "Applied immediately" in html
     assert "the vote changes no result" in html  # a review flag is never presented as a correction
     empty = client.get("/manage/reviews?type=commercial").text
-    assert "empty-state" in empty and "Commercial inputs" in empty
-
-
-def test_commercial_inputs_keep_unknowns_and_metadata(client, session):
-    from app.models import BusinessAssumption
-
-    form = {"co": "combined", "asp:pol_ldo": "0.12", "asp:supervisor": "", "meta:asp:source:pol_ldo": "distributor",
-            "meta:asp:year:pol_ldo": "2026", "meta:asp:confidence:pol_ldo": "low"}  # fmt: skip
-    r = client.post("/business/data", data=form)
-    assert r.status_code in (200, 303)
-    asp, _ = op.inputs(session)
-    assert asp.get("pol_ldo") == 0.12 and "supervisor" not in asp  # empty = unknown, never zero
-    m = session.query(BusinessAssumption).filter_by(kind="asp", key="pol_ldo").one()
-    assert m.source == "distributor" and m.year == 2026 and m.confidence == "low"
-    assert 'placeholder="unknown"' in client.get("/business/data").text
+    assert "empty-state" in empty and "Market size (TAM)" in empty
 
 
 def test_error_page_keeps_the_address(client):
@@ -200,3 +189,19 @@ def test_human_validation_page_and_scan(client, session):
     html = client.get("/business/validation").text
     assert "Human validation" in html and "Needs a person" in html and "Confirmed automatically" in html
     assert client.get("/business/validation?prio=high").status_code == 200
+
+
+def test_market_size_comes_from_public_tam_estimates(client, session):
+    """The explorer's TAM and the demand score use public TAM estimates per function, without disagreed ones."""
+    from app.services import scoring, tam
+
+    pub = tam.by_function(session)
+    t = pub["am_fm_tuner"]
+    assert t["n"] >= 3 and t["low"] <= t["usd"] <= t["high"]  # the median of the tuner IC sources
+    apps = op.with_status(op.applications(), op.makers(session), op.COMPANIES["combined"][1])
+    use = scoring.for_session(session, apps)["usage"]
+    if "am_fm_tuner" in use:
+        assert use["am_fm_tuner"]["tam"] == t["usd"]
+    client.post("/business/tam/review", data={"key": "tuner-ic-mrfr", "answer": "disagree"})
+    session.expire_all()
+    assert tam.by_function(session)["am_fm_tuner"]["high"] < 2.31e9  # the disagreed figure drops out

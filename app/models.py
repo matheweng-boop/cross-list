@@ -552,3 +552,72 @@ class VerifyTask(Base):
     author: Mapped[str | None] = mapped_column(String(100))
     assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TamEstimate(Base):
+    """A market size (TAM) estimate for a product or technology added on Data management > TAM estimates, next to the
+    researched examples in data/business/tam.yaml. Each carries its source; the owner's agree / disagree is a
+    DataReview (dataset "tam", key "u<id>")."""
+
+    __tablename__ = "tam_estimates"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product: Mapped[str] = mapped_column(String(200))
+    fn: Mapped[str | None] = mapped_column(String(80))
+    value: Mapped[str] = mapped_column(String(100))  # as the source states it, e.g. "$1.4 B"
+    usd: Mapped[float | None] = mapped_column(Float)
+    year: Mapped[int | None] = mapped_column(Integer)
+    region: Mapped[str | None] = mapped_column(String(100))
+    scope: Mapped[str | None] = mapped_column(String(500))
+    source_title: Mapped[str | None] = mapped_column(String(300))
+    source_publisher: Mapped[str | None] = mapped_column(String(200))
+    source_url: Mapped[str | None] = mapped_column(String(500))
+    source_date: Mapped[str | None] = mapped_column(String(40))
+    quality: Mapped[str | None] = mapped_column(Text)  # source-quality note
+    author: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class FeedbackAttachment(Base):
+    """A file sent with the Feedback button: the Upload that stores it (same limits and storage as Data management >
+    Uploads), linked to the feedback item."""
+
+    __tablename__ = "feedback_attachments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    feedback_id: Mapped[int] = mapped_column(ForeignKey("site_feedback.id", ondelete="CASCADE"), index=True)
+    upload_id: Mapped[int] = mapped_column(ForeignKey("uploads.id", ondelete="CASCADE"))
+
+
+class VolumeRequest(Base):
+    """One request for a case on a part (Products › part › prelim case): the volume asked for, by whom and where.
+    Rows are never merged, so the total volume asked for a part accrues over every request."""
+
+    __tablename__ = "volume_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mpn: Mapped[str] = mapped_column(String(100), index=True)
+    volume: Mapped[int | None] = mapped_column(Integer)  # pieces of this part per year, as asked
+    customer: Mapped[str | None] = mapped_column(String(500))  # one or more customers, "; " between them
+    market: Mapped[str | None] = mapped_column(String(500))  # one or more markets, "; " between them
+    source: Mapped[str] = mapped_column(String(60), default="pipeline")  # e.g. prelim:<draft id>
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class ScheduledReview(Base):
+    """A topic scheduled for a business case review (Future growth > Business cases): pushed from Research & ideas
+    (source "research:<report slug>"), from a preliminary case in the Products walk-through ("prelim:<draft id>") or
+    from the shortlist. Business cases start from this list; the case it started is linked."""
+
+    __tablename__ = "scheduled_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    source: Mapped[str | None] = mapped_column(String(120), index=True)  # free text, e.g. research:<slug>
+    note: Mapped[str | None] = mapped_column(Text)
+    part: Mapped[str | None] = mapped_column(String(100))  # part number the topic is about, if any
+    volume: Mapped[str | None] = mapped_column(String(60))  # as given, e.g. "200000" or "200 k a year"
+    status: Mapped[str] = mapped_column(String(12), default="scheduled")  # scheduled | started | done
+    case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

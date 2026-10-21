@@ -20,6 +20,7 @@ from app.matching.engine import (
     DEFAULT_MAX_DEVIATIONS,
     FFF_STATUS_LABELS,
     format_value,
+    ranked,
 )
 from app.matching.rules import get_rules, load_all_rules
 from app.models import Package, Part, User
@@ -248,38 +249,9 @@ CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
 def result_rows(crosses: dict) -> list:
-    """Each listed candidate once with its verdict, in order of preference: drop-ins,
-    functional equivalents (fewest deviations first), package equivalents (pin-to-pin
-    first); closest first within each."""
-    seen = {}
-    for cat in CATEGORY_ORDER:
-        for r in crosses.get(cat, []):
-            seen.setdefault(r.candidate.id, r)
-    rows = [(r, r.verdict()) for r in seen.values()]
-
-    def key(rv):
-        r, v = rv
-        # fewest priority 1 deviations first (pin-to-pin first among package equivalents), then exceptions
-        if v.category == "package":
-            return (
-                r.lifecycle_risk,
-                CATEGORY_RANK[v.category],
-                not v.p2p,
-                len(r.deviations),
-                len(r.exceptions),
-                r.closeness,
-            )
-        return (
-            r.lifecycle_risk,
-            CATEGORY_RANK[v.category],
-            len(r.deviations),
-            len(r.exceptions),
-            not v.p2p,
-            r.closeness,
-        )
-
-    rows.sort(key=key)
-    return rows
+    """Each listed candidate once with its verdict, best first: drop-ins, then the fewest deviations, the same package
+    before another package and pin-to-pin before another pinout (app/matching/engine.py, rank_key)."""
+    return [(r, r.verdict()) for r in ranked(crosses)]
 
 
 def electrical_verdict(v) -> str:
@@ -328,6 +300,10 @@ def _part_context(
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
     crosses = crosses_for(session, part, scope, dev)
+    # the part can be crossed: an active drop-in or functional equivalent of the grade (filters on the page aside).
+    # Only a part we cannot cross gets "Start a prelim case" (a new development).
+    cross_ok = next((r.candidate for cat in ("fff", "functional") for r in crosses.get(cat, [])
+                     if not r.lifecycle_risk and grade_of(r.candidate) == grade), None)  # fmt: skip
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
@@ -343,7 +319,7 @@ def _part_context(
     if type:
         rows = [(r, v) for r, v in rows if v.category == type]
     # best and next best option per cross type; the rest only on request
-    ranked, top = {}, []
+    best, top = {}, []
     # (two different devices: an output-state or rating variant of the best part is not the next best)
     for cat in CATEGORY_ORDER:
         devices: set[str] = set()
@@ -352,11 +328,12 @@ def _part_context(
             if dev_key in devices:
                 continue
             devices.add(dev_key)
-            ranked[rv[0].candidate.id] = len(devices) - 1
+            best[rv[0].candidate.id] = len(devices) - 1
             top.append(rv)
             if len(devices) == 2:
                 break
-    rest = [rv for rv in rows if rv[0].candidate.id not in ranked]
+    rest = [rv for rv in rows if rv[0].candidate.id not in best]
+    top = [rv for rv in rows if rv[0].candidate.id in best]  # in the overall ranking, not grouped by type
     rows = top + (rest if all else [])
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
@@ -380,7 +357,7 @@ def _part_context(
         "type": type,
         "type_counts": type_counts,
         "dev": dev,
-        "ranked": ranked,
+        "ranked": best,
         "n_top": len(top),
         "n_rest": len(rest),
         "show_all": all,
@@ -396,7 +373,16 @@ def _part_context(
         "grade": grade,
         "grade_counts": grade_counts,
         "ref_grade": grade_of(part),
+        "cross_ok": cross_ok,
+        "requested": _requested(session, part.mpn),
     }
+
+
+def _requested(session: Session, mpn: str) -> dict:
+    """Requests for a case on the part so far, with the volume asked in total (Business case from a part)."""
+    from app.services.pipeline import requested
+
+    return requested(session, mpn)
 
 
 def _part_or_404(session: Session, part_id: int) -> Part:
@@ -425,7 +411,7 @@ def part_detail(
 
 
 @router.get("/parts/{part_id}/walk", response_class=HTMLResponse)
-def part_walk(request: Request, part_id: int, upto: int = 2, session: Session = Depends(get_session)):
+def part_walk(request: Request, part_id: int, upto: int = 2, q: str = "", session: Session = Depends(get_session)):
     """Walk-through from the part: replacement, sell around it, best of ours, make it better, future. Only the steps
     asked for so far (1..upto) are computed; data they lack is recorded once as site feedback for the next review."""
     from app.services import opportunity as op
@@ -438,6 +424,11 @@ def part_walk(request: Request, part_id: int, upto: int = 2, session: Session = 
     w["gaps"] = [g for g in w["gaps"] if g[0] <= upto]
     added = walk.record_gaps(session, part, w["gaps"])
     ctx.update(w=w, steps=walk.STEPS, added=added, crowding_label=op.CROWDING_LABEL, path_label=op.PATH_LABEL)
+    if w.get("cards") is not None:  # step 2 seen from the customer, searchable by general category
+        q = q.strip()[:200]
+        shown = {id(c) for c in walk.filter_cards(w["cards"], q)}
+        ctx.update(q=q, shown=[id(c) in shown for c in w["cards"]], cats=walk.category_counts(w["cards"]),
+                   phrases=walk.search_phrases())  # fmt: skip
     return templates.TemplateResponse(request, "walk.html", ctx)
 
 
@@ -648,7 +639,8 @@ def library_topic(request: Request, key: str, session: Session = Depends(get_ses
         raise HTTPException(404, "Topic not found")
     t = library.reviewed(session, key)
     ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
-           "notes": library.notes(key), "cases": library.cases_using(key)}  # fmt: skip
+           "notes": library.notes(key), "cases": library.cases_using(key), "related": library.related(key),
+           "rule_links": library.rule_links}  # fmt: skip
     return templates.TemplateResponse(request, "library/topic.html", ctx)
 
 
@@ -663,6 +655,16 @@ def library_react(key: str, item: str = Form(...), verdict: str = Form(...), com
     except ValueError as e:
         raise HTTPException(400, "Unknown item or verdict") from e
     return RedirectResponse(f"/library/{key}#i-{item}", status_code=303)
+
+
+@router.get("/knowledge", response_class=HTMLResponse)
+def general_knowledge(request: Request):
+    """General knowledge: the background the systems library builds on (RF fundamentals, specification guides,
+    technology platforms) and the search over all of it."""
+    from app.services import library, rf_notes
+
+    ctx = {"rf": rf_notes.by_category(), "guides": engineering.index(), "topics": library.topics()}
+    return templates.TemplateResponse(request, "engineering/knowledge.html", ctx)
 
 
 @router.get("/rf-notes", response_class=HTMLResponse)

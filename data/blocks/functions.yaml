@@ -66,6 +66,7 @@ functions:
       - {id: channels, label: Channel configuration, param: channel_config, op: eq, choices: auto}
       - {id: default_output, label: Output state when unpowered, param: default_output, op: eq, choices: auto}
       - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
+      - {id: creepage, label: Creepage at least (mm), param: creepage_mm, op: gte, choices: [8, 10, 14.5, 15]}
   gate_driver:
     label: Isolated gate driver
     category: isolation
@@ -83,6 +84,7 @@ functions:
       - {id: reinforced, label: Reinforced isolation, param: isolation_class, op: eq, value: reinforced}
       - {id: cmti, label: CMTI at least (kV/µs), param: cmti_kv_us, op: gte, choices: [50, 100, 150]}
       - {id: automotive, label: Automotive (AEC-Q100), param: qualification, op: eq, value: automotive}
+      - {id: creepage, label: Creepage at least (mm), param: creepage_mm, op: gte, choices: [8, 10, 14.5, 15]}
   three_phase_gate_driver: {label: 3-phase gate driver (non-isolated), category: power, companions: [amplifier, wide_vin_buck, mcu], note: Smart BLDC gate driver for 12-100 V buses; often with current-sense amplifiers and a buck}
   half_bridge_driver: {label: Half-bridge gate driver (non-isolated), category: power, companions: [amplifier, mcu]}
   isolated_amplifier: {label: Isolated amplifier / modulator, category: isolation, source: {family: isolated_amplifier}, companions: [isolated_dcdc, adc]}

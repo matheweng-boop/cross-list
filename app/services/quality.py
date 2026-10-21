@@ -201,3 +201,98 @@ def todo(session: Session) -> str:
     for m in session.scalars(select(PartMapping).order_by(PartMapping.created_at)):
         lines.append(f"- [Part mapping] {m.fn}: {m.mpn} ({m.manufacturer}) -> {m.verdict} ({m.author or 'anonymous'})")
     return "\n".join(lines) + "\n"
+
+
+# ---- the review queue as yes / no questions (Data management > Data quality) ------------------------------------
+_PROX_WORDS = {3: "the same technology we already make", 2: "close to what we make (new design blocks needed)",
+               1: "far from what we make", 0: "unrelated to what we make"}  # fmt: skip
+_OUTLOOK_WORDS = {"growing": "grow", "stable": "stay about the same", "declining": "fall"}
+_PATH_WORDS = {"variant": "a new variant of a product line we already sell",
+               "new_design": "a new chip on technology we already have",
+               "new_capability": "new technology for us (partner, licence or buy a company)",
+               "not_pursue": "not ours to build (the customer's own chip or an unrelated technology)"}  # fmt: skip
+
+
+def _links(e: dict, n: int = 3) -> list[tuple[str, str]]:
+    """(site, URL) of the sources that were opened for the entry, else of the sources named in it."""
+    out: list[tuple[str, str]] = []
+    for x in ((e.get("check") or {}).get("evidence") or []) + list(e.get("sources") or []):
+        x = str(x)
+        i = x.find("http")
+        if i >= 0:
+            url = x[i:].split(" ")[0].rstrip(",;")
+            if url not in [u for _, u in out]:
+                out.append((url.split("/")[2] if url.count("/") >= 2 else url, url))
+    return out[:n]
+
+
+def _names(xs, n: int = 6) -> str:
+    xs = [str(x) for x in xs or []]
+    return ", ".join(xs[:n]) + (f" and {len(xs) - n} more" if len(xs) > n else "")
+
+
+def ask(dataset: str, fn: str, label: str, e: dict) -> dict | None:
+    """One specific yes / no question about a data item, what exactly to check, and where."""
+    first = label.split(" ")[0]
+    lab = label if any(c.isupper() for c in first[1:]) else label[:1].lower() + label[1:]  # "PoL LDO", "gate driver"
+    links = _links(e)
+    if dataset == "competition":
+        vendors = e.get("vendors") or []
+        if not vendors:
+            q = f"Is it right that no established company (other than us) sells a {lab} today?"
+            check = "Search for the product type. Answer No and name a company if you find one."
+        else:
+            q = f"Do these companies sell a {lab} today: {_names(vendors)}?"
+            check = ("Look at each company's product pages. Answer No if one does not sell it, or if a big supplier "
+                     "is missing (name it in the comment).")  # fmt: skip
+    elif dataset == "technology":
+        p = e.get("proximity")
+        if p not in _PROX_WORDS:
+            return None
+        q = f"Is a {lab} {_PROX_WORDS[p]} at Skyworks / Qorvo?"
+        check = f"The reason given: “{str(e.get('reasoning') or '').strip()}” Answer No if this is not right."
+    elif dataset == "path":
+        if e.get("path") == "exists":
+            parts = e.get("existing_parts") or []
+            q = f"Can these parts of ours be sold as a {lab}: {_names(parts, 5)}?" if parts else f"Do we sell a {lab}?"
+            check = "Open the parts on our product pages. Answer Yes if at least one does the job."
+        elif e.get("path") in _PATH_WORDS:
+            q = f"Would a {lab} be {_PATH_WORDS[e['path']]}?"
+            check = (f"What it builds on: {str(e.get('base') or 'not stated').strip()} Answer No if we already sell "
+                     f"it, or if it needs much more (or less) than that.")  # fmt: skip
+        else:
+            return None
+    elif dataset == "trends":
+        o = e.get("outlook")
+        if o not in _OUTLOOK_WORDS:
+            return None
+        q = f"Will demand for {lab} parts {_OUTLOOK_WORDS[o]} over the next 3–5 years?"
+        why = str(e.get("note") or "").strip()
+        check = (f"The reason given: “{why}” " if why else "") + (
+            "Open the source and check that it says this." if links
+            else "No source could be opened for this; answer from what you know, or write “not sure” in the comment."
+        )  # fmt: skip
+    else:
+        return None
+    return {"dataset": dataset, "key": fn, "question": q, "check": check, "links": links,
+            "page": f"/business/evidence/{fn}"}  # fmt: skip
+
+
+def questions(session: Session, apps: list[op.Application], scores: dict | None = None, limit: int = 30) -> list[dict]:
+    """The review queue as yes / no questions: the TAM estimates nobody has answered yet, then the unchecked items
+    behind the top-ranked functions (most influential first)."""
+    from app.services import tam
+
+    out = []
+    for e in tam.estimates(session):
+        if e["review"] is None:
+            url = e["source"]["url"]
+            out.append({"dataset": tam.DATASET, "key": e["key"], "question": e["question"], "check": tam.check_hint(e),
+                        "links": [(url.split("/")[2], url)] if url.count("/") >= 2 else [],
+                        "page": f"/business/tam#t-{e['key']}"})  # fmt: skip
+    ds = datasets()
+    for q in queue(session, apps, scores, limit=limit):
+        item = ask(q["dataset"], q["fn"], q["label"], ds[q["dataset"]][1][q["fn"]])
+        if item:
+            out.append(item)
+    return out[:limit]

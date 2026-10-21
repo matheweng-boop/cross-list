@@ -34,7 +34,7 @@
     </div>
   </section>
   {% endfor %}
-  <p><button type="button" id="bo-save-asp" class="small-btn">Save ASPs for all applications</button> <button type="button" id="bo-reset" class="outline secondary small-btn">Reset</button> <span id="bo-saved" class="small muted"></span></p>
+  <p><button type="button" id="bo-reset" class="outline secondary small-btn">Reset</button> <span class="small muted">A what-if in your browser only: ASPs typed here are not sent or saved.</span></p>
   <p class="small muted">Statuses come from BizDev parts for {{ co_label }}; “Portfolio” means a candidate part exists, not yet verified against this
     application's electrical requirements. Quantities and ASPs are inputs, not market data. The content percentage is a screening metric,
     not market share or revenue.</p>
@@ -72,12 +72,6 @@
   root.addEventListener("input", update);
   root.addEventListener("change", update);
   document.getElementById("bo-reset").onclick = () => { rows.forEach((r, i) => { [r.querySelector(".bo-status").value, r.querySelector(".bo-qty").value, r.querySelector(".bo-asp").value] = initial[i]; }); update(); };
-  document.getElementById("bo-save-asp").onclick = async () => {
-    const body = {};
-    rows.forEach(r => (body[r.dataset.fn] = r.querySelector(".bo-asp").value || null));
-    const res = await fetch("/api/business/asp", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
-    document.getElementById("bo-saved").textContent = res.ok ? "Saved: these ASPs now apply to every application" : `Not saved (${res.status})`;
-  };
   update();
 })();
 </script>

@@ -4,14 +4,22 @@ params:
   # --- Priority 1: must be equal or better ---
   - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
   - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [functional, basic, reinforced], exception: true}
-  - {key: creepage_mm, label: Creepage, unit: mm, priority: 1, kind: number, direction: higher}
+  - {key: creepage_mm, label: Creepage, unit: mm, priority: 3, kind: number, direction: higher}  # owner 21 Oct 2026: good to know, never blocks or ranks a cross
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true}
   - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 1, kind: number, direction: higher}
   # Output type: channels, input and drive strength define what the driver does.
   - {key: channel_config, label: Channel configuration, priority: 1, kind: category, hard: true}
   - {key: input_type, label: Input type, priority: 1, kind: category, hard: true}
-  - {key: peak_source_a, label: Peak source current, unit: A, priority: 1, kind: number, direction: higher}
-  - {key: peak_sink_a, label: Peak sink current, unit: A, priority: 1, kind: number, direction: higher}
+  # Output option, sold as separate part numbers (TI UCC53x0 S / M / E, Skyworks Si82B40 / Si82B41, Novosense NSI6601 /
+  # NSI6601M): split outputs (OUTH / OUTL), one output plus a Miller clamp pin, one output with the UVLO referred to
+  # GND2, or a plain single output. Not hard (a split-output part can stand in for a plain one), but a different option
+  # is a deviation, never a drop-in. Read from the pinout when the data file states none; a part with neither (no
+  # pinout transcribed, e.g. most Infineon and Chipanalog parts) shows it as unknown without counting it.
+  - {key: output_config, label: Output configuration, priority: 1, kind: category, derive: gate_output_config, unknown_ok: true}
+  # Source and sink are compared separately, each at the same supply: a part whose datasheet tabulates the peak
+  # current against VDD (Skyworks voltage-mode drivers, peak_*_curve) is read at the other part's supply.
+  - {key: peak_source_a, label: Peak source current, unit: A, priority: 1, kind: number, direction: higher, at: peak_current_vdd_v, curve: peak_source_curve}
+  - {key: peak_sink_a, label: Peak sink current, unit: A, priority: 1, kind: number, direction: higher, at: peak_current_vdd_v, curve: peak_sink_curve}
   # UVLO variants are not interchangeable: a 12 V UVLO part cannot replace an 8 V one. Vendors state either the
   # option class (TI, Skyworks: 8 / 12 V) or the measured rising threshold (Infineon, some Novosense: 12.5, 13.6 V),
   # so values within 6 % (12 and 12.5 V, not 12 and 13 V) count as the same variant; neither direction is better.
@@ -28,3 +36,6 @@ params:
   - {key: rise_time_ns, label: Rise time, unit: ns, priority: 3, kind: number, direction: lower}
   - {key: fall_time_ns, label: Fall time, unit: ns, priority: 3, kind: number, direction: lower}
   - {key: pwd_ns, label: Pulse width distortion, unit: ns, priority: 3, kind: number, direction: lower}
+  - {key: peak_current_vdd_v, label: Peak current test supply, unit: V, priority: 3, kind: number, direction: match}
+  - {key: peak_source_curve, label: Peak source current vs supply, unit: A, x_unit: V, priority: 3, kind: curve}
+  - {key: peak_sink_curve, label: Peak sink current vs supply, unit: A, x_unit: V, priority: 3, kind: curve}

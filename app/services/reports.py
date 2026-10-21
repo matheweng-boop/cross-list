@@ -22,6 +22,12 @@ FEASIBILITY = {  # product ideas: how far from today's portfolio (0 = not scored
     2: ("In between", "A new chip from technology we already have"),
     3: ("Out of the box", "New technology or a market nobody plays in yet"),
 }
+LEARN_AGES = {  # "Learn about this": one short paragraph per age, from simple to technical (default headings)
+    5: "What it is", 10: "Why it matters", 15: "What it needs", 20: "Where the request comes from",
+    25: "Who else does it, and where we stand",
+}
+GENERIC_TAGS = {"automotive", "pricing", "architecture", "filters", "telematics", "front-end module", "defense"}
+OPENER_ID = "q-bu-opener"  # the background question asked first to the business unit (bu_opener in reports.yaml)
 
 
 @lru_cache
@@ -38,6 +44,27 @@ def reports() -> tuple[dict, ...]:
 
 def report(slug: str) -> dict | None:
     return next((r for r in reports() if r["slug"] == slug), None)
+
+
+def learn(r: dict) -> list[dict]:
+    """The "Learn about this" levels of a report, youngest first."""
+    rows = sorted(r.get("learn") or [], key=lambda x: int(x.get("age") or 0))
+    return [{**x, "title": x.get("title") or LEARN_AGES.get(int(x.get("age") or 0), "")} for x in rows]
+
+
+def related(text: str = "", fn: str | None = None, slugs: tuple[str, ...] = ()) -> list[dict]:
+    """Reports that fit a topic: named by slug, the same function as their preliminary case, or a tag or part number
+    that appears in the text (e.g. a business case title or its part numbers)."""
+    from app.services import prelim
+
+    low = f" {text.lower()} "
+    out = []
+    for r in reports():
+        words = [t.lower() for t in r.get("tags") or [] if len(t) > 3 and t.lower() not in GENERIC_TAGS]
+        hit = r["slug"] in slugs or (fn and (prelim.raw(r["slug"]) or {}).get("fn") == fn)
+        if hit or any(f" {w} " in low or (len(w) > 6 and w in low) for w in words):
+            out.append(r)
+    return out
 
 
 def has_background(slug: str) -> bool:

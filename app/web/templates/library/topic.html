@@ -9,11 +9,15 @@
   {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
 </details>{% endmacro %}
 {% block content %}
-<p class="small"><a href="/library">← Technical library</a></p>
+<p class="small"><a href="/library">← Systems library</a></p>
 <h1>{{ t.title }}</h1>
 <p class="subtitle">{{ t.summary }}</p>
 <p class="small muted">Agree or disagree with any design rule or trend: a disagreement lowers its confidence and is listed in <a href="/manage/reviews">Requests &amp; reviews</a>{% if t.n_feedback %} · {{ t.n_feedback }} item{{ 's' if t.n_feedback != 1 }} with feedback{% endif %}.</p>
 {% if cases %}<p class="small">Used by the preliminary case{{ 's' if cases|length != 1 }}: {% for c in cases %}<a href="/business/reports/{{ c.slug }}">{{ c.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+{% if related.knowledge or related.visuals %}<section class="kn-links small" aria-label="Background">
+  {% if related.knowledge %}<p><b>Basics in General knowledge:</b> {% for x in related.knowledge %}<a class="kn-chip" href="{{ x.href }}" title="{{ x.kind }}: {{ x.title }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
+  {% if related.visuals %}<p><b>Try it in Interactive visuals:</b> {% for x in related.visuals %}<a class="kn-chip vz" href="{{ x.href }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
+</section>{% endif %}
 <nav class="bo-toc small"><a href="#diagram">Block diagram</a> · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a> · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
 
 {% set d = t.block_diagram %}{% set ours = (t.skyworks_fit or [])|map(attribute='fn')|list %}
@@ -30,7 +34,7 @@
 <h2 id="rules">Design rules and considerations</h2>
 <div class="table-wrap"><table class="small pc-table">
   <thead><tr><th scope="col">Area</th><th scope="col">Rule</th><th scope="col">Why</th><th scope="col">Source</th><th scope="col">Feedback</th></tr></thead>
-  <tbody>{% for r in t.design_rules or [] %}<tr id="{{ r.id }}"><td>{{ r.area }}{% if r.kind == 'consideration' %}<br><small class="muted">consideration</small>{% endif %}</td><td><b>{{ r.rule }}</b></td><td>{{ r.why }}</td><td>{{ cite(r.refs) }} {{ conf(r.conf, r.conf_was) }}</td><td>{{ react(r) }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for r in t.design_rules or [] %}<tr id="{{ r.id }}"><td>{{ r.area }}{% if r.kind == 'consideration' %}<br><small class="muted">consideration</small>{% endif %}{% set lk = rule_links(r) %}{% if lk %}<br><small class="kn-rule">{% if lk.knowledge %}<a href="{{ lk.knowledge.href }}" title="General knowledge: {{ lk.knowledge.title }}">basics</a>{% endif %}{% if lk.knowledge and lk.visual %} · {% endif %}{% if lk.visual %}<a href="{{ lk.visual.href }}" title="Interactive visual: {{ lk.visual.title }}">visual</a>{% endif %}</small>{% endif %}</td><td><b>{{ r.rule }}</b></td><td>{{ r.why }}</td><td>{{ cite(r.refs) }} {{ conf(r.conf, r.conf_was) }}</td><td>{{ react(r) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 
 <h2 id="trends">Where research is heading</h2>

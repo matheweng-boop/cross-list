@@ -22,7 +22,8 @@ EXPECTED = {  # with the default of 2 accepted priority 1 deviations
         # SC141 is only worse in priority 2, SD8641A is automotive (P1 better): both drop-ins
         "fff": ["SC141", "SD8641A", "SA7741", "SA7741X"],
         # same package, other pinout; then basic-insulation parts (an exception, not a knock-out)
-        "functional": ["SB8641N", "SD4100", "SA7740N", "SC140N", "SB8140Q"],
+        # (SD140N: creepage is priority 3 now, so its two other deviations fit the default of 2)
+        "functional": ["SB8641N", "SD4100", "SA7740N", "SC140N", "SB8140Q", "SD140N"],
         "package": ["SB8441"],  # pin-to-pin, other default output (SC142: other channels, not listed)
     },
     "SR8640N": {
@@ -174,7 +175,7 @@ def test_top_five_differences(part):
     assert len([d for d in r.all_diffs if d.status != "equal"]) > 5
     top = r.top_differences()
     assert len(top) == 5
-    assert all(d.priority == 1 for d in top)  # P1 differences outrank P2/P3
+    assert [d.priority for d in top] == sorted(d.priority for d in top)  # P1 differences outrank P2/P3
     assert [d.score for d in top] == sorted((d.score for d in top), reverse=True)
     assert "Isolation" in r.comment() and r.comment().startswith("1) ")
 
@@ -182,8 +183,8 @@ def test_top_five_differences(part):
 def test_fewer_than_five_differences(part):
     r = cross(part("SR8641"), part("SD4100"), get_rules("digital_isolator"))
     keys = [d.key for d in r.top_differences()]
-    # On equal scores a worse value (creepage) ranks above a better one (smaller package).
-    assert keys == ["isolation_class", "creepage_mm", "package", "isolation_rating_kvrms"]
+    # Creepage is priority 3 (owner, 21 Oct 2026): good to know, so it comes after the priority 1 differences.
+    assert keys == ["isolation_class", "package", "isolation_rating_kvrms", "creepage_mm"]
 
 
 def test_identical_part_has_no_differences(part):
@@ -203,7 +204,8 @@ def test_pin_alternatives_are_compatible():
 def test_isolator_priorities(part):
     rules = get_rules("digital_isolator")
     p1 = {p.key for p in rules.by_priority(1)}
-    assert {"isolation_rating_kvrms", "isolation_class", "creepage_mm", "default_output", "qualification"} <= p1
+    assert {"isolation_rating_kvrms", "isolation_class", "default_output", "qualification"} <= p1
+    assert "creepage_mm" in {p.key for p in rules.by_priority(3)}  # good to know, never blocks or ranks a cross
     assert "cmti_kv_us" in p1
     assert {p.key for p in rules.by_priority(2)} >= {"vdd_range_v", "viorm_vpk", "prop_delay_ns"}
     r = cross(part("SR8641"), part("SB8641N"), rules)

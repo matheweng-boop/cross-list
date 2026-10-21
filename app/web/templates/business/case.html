@@ -16,11 +16,13 @@
   <form method="post" action="{{ '/business/cases/' ~ case.id if case else '/business/cases' }}" class="case-form">
     <input type="hidden" name="act" value="inputs">
     {% if shortlist %}<input type="hidden" name="shortlist" value="{{ shortlist }}">{% endif %}
-    <label>Title <input name="title" value="{{ title }}" required placeholder="e.g. Automotive 3 A PoL LDO"></label>
+    {% if schedule %}<input type="hidden" name="schedule" value="{{ schedule }}">{% endif %}
+    {% if suggest %}<p class="small muted sg-tip">Click in a box: what BizDev already knows for it appears on the right (below the box on a phone), ready to use or copy.</p>{% endif %}
+    <label data-field="title">Title <input name="title" value="{{ title }}" required placeholder="e.g. Automotive 3 A PoL LDO"></label>
     <label>Function <select name="fn"><option value="">none (free topic)</option>
       {% for k, flabel in fn_choices %}<option value="{{ k }}"{{ ' selected' if k == fn }}>{{ flabel }}</option>{% endfor %}</select></label>
     {% for key, label, help, rows in fields %}
-    <label>{{ label }} <small class="muted">{{ help }}</small>
+    <label data-field="{{ key }}">{{ label }} <small class="muted">{{ help }}</small>
       {% if rows > 1 %}<textarea name="{{ key }}" rows="{{ rows }}">{{ values.get(key, '') }}</textarea>{% else %}<input name="{{ key }}" value="{{ values.get(key, '') }}">{% endif %}</label>
     {% endfor %}
     <button type="submit">{{ 'Save inputs' if case else 'Create case' }}</button>
@@ -28,6 +30,12 @@
 </section>
 
 <aside>
+  <div id="sg-slot"></div>
+  <section id="sg-panel" class="sg-panel" hidden aria-live="polite">
+    <p class="sg-head"><b>BizDev knows</b> <span class="small muted">for <span id="sg-field"></span></span></p>
+    <div id="sg-list"></div>
+  </section>
+  <script type="application/json" id="sg-data">{{ (suggest or {})|tojson }}</script>
   <h2>What BizDev knows</h2>
   {% if ctx %}
   <ul class="small case-facts">
@@ -47,6 +55,7 @@
 </aside>
 </div>
 
+<script src="/static/suggest.js" defer></script>
 {% if case %}
 <h2 id="lines">Parts in this business case <small class="muted">· {{ totals.lines }}</small></h2>
 {% if lines %}

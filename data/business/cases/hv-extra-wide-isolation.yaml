@@ -1,0 +1,196 @@
+# Preliminary case: extra-wide (≥15 mm creepage) isolation for 1000–1500 V and dirty environments. Layout and rules:
+# _template.yaml. Figures and links: hv-extra-wide-isolation.background.html. Follows the ISO7821DWW research report
+# (iso7821dww-isolation), which holds the ranked application table and the creepage tables.
+# conf: high = primary document read; med = trade press, forum or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Extra-wide isolation for 1500 V solar, storage and 800 V DC data centers: isolators, gate drivers and isolated amplifiers in our ultra-wide SOIC"
+fn: digital_isolator
+headline: f-uwb-iso
+library: [traction_asil_d]
+question: >-
+  Where does an isolator or isolated gate driver need more than the 8 mm creepage our packages give today, how big
+  are those markets, and should Skyworks put its existing isolator, gate-driver and isolated-amplifier dies into the
+  ultra-wide SOIC (≥15 mm creepage) that AN1456 announces, against TI's 14.5 mm DWW and 15.7 mm DWL parts,
+  Novosense's 15 mm isolators and Broadcom's 15 mm optocouplers, and at what price?
+updated: 2026-10-21
+brief:
+  - "Where more than 8 mm is really needed: the reinforced barrier in 1500 V DC systems (utility solar inverters and battery storage need about 15 mm; a TÜV assessor asked for 15 mm and refused TI's 14.5 mm), 1000 V chargers and wind converters (10–11 mm), 800 V DC data-center power at 3000 m altitude (9.1 mm clearance) and anything at pollution degree 3. Inside a car everything high-voltage sits in sealed boxes (pollution degree 2), so 8 mm covers 800 V there, as the owner expected."
+  - "Our position: no Skyworks isolator, gate driver or isolated amplifier passes 8 mm today (SSO-8 measures 8.5 mm), while TI sells 20 isolators at 14.5 mm and isolated amplifiers at 15.7 mm and Novosense 6 isolators at 15 mm. But our own AN1456 (Sep 2026) announces an ultra-wide SOIC with more than 15.0 mm creepage and 15.5 mm clearance: the package exists on the roadmap, the dies exist."
+  - "Proposal: an ultra-wide family from existing dies (2–4-channel isolators, isolated amplifiers, then a DESAT gate driver) rated for 1500 V DC reinforced, sold as a barrier set for 1500 V solar and storage and 800 V DC data centers; about $2.0 per isolator, $2.6 per isolated amplifier and $2.6 per gate driver (est), roughly $20 M a year in our volume scenarios. TI asks no premium for its extra-wide isolators but about 60 % more for its 15.7 mm isolated amplifiers."
+
+customer_benefit:
+  for: "Makers of 1500 V utility solar inverters and battery-storage PCS (Sungrow, SMA, Power Electronics type), 800 V DC power-shelf and sidecar makers (Delta, LiteOn, Flex, Megmeet, named by NVIDIA), wind-converter and 1000 V charger makers"
+  summary: "One reinforced package meets the full 15 mm a 1500 V barrier needs, so the designer keeps one isolator per signal instead of two barriers in series, potting or fiber optics, and one board design covers 3000 m altitude."
+  today: "At 1500 V DC the reinforced barrier between the power side and the control and communication side needs about 15 mm creepage on a sealed board (pollution degree 2). 8 mm parts force two basic barriers in series (twice the isolators and isolated supplies), Type 2 coating or potting, or fiber-optic links; TI's 14.5 mm ISO7821DWW was judged short of 15 mm by a TÜV assessor (TI E2E, 2020). Only TI's AMC1411 / AMC1400 amplifiers (15.7 mm), Novosense's 15 mm isolators and Broadcom's 15 mm optocouplers meet it in one package."
+  with_us: "Skyworks ultra-wide SOIC (≥15.0 mm creepage, ≥15.5 mm clearance) versions of the Si86xx isolators, Si89xx isolated amplifiers and a Si828x-class DESAT gate driver: every crossing of the 1500 V barrier (PWM, communication, voltage and current sensing) from one supplier, one package outline and one certification report."
+  gains:
+    - {id: cb-15mm, kind: compliance, gain: "Meets the 15 mm reinforced creepage of a 1500 V barrier in one package", how: "Ultra-wide SOIC with more than 15.0 mm creepage (AN1456); TI's 14.5 mm DWW falls 0.5 mm short", measure: "8 mm → ≥15 mm creepage; 15 mm asked by TÜV for 1500 V reinforced (TI E2E)", conf: med}
+    - {id: cb-parts, kind: parts, gain: "One isolator per signal instead of two barriers in series", how: "A single reinforced barrier replaces basic + supplementary barriers and their second isolated supply", measure: "2 isolators + 2 isolated bias supplies → 1 + 1 per crossing (est)", conf: low}
+    - {id: cb-alt, kind: scaling, gain: "One board for 2000 m and 3000 m sites", how: "15.5 mm clearance covers the 1.14× altitude factor at 3000 m", measure: "600 V OVC III reinforced clearance: 8.0 mm at 2000 m → 9.12 mm at 3000 m; 8 mm package no, ultra-wide yes (AN1456 Table 4)", conf: high}
+    - {id: cb-coat, kind: placement, gain: "No potting or Type 2 coating needed to shrink the creepage", how: "The package alone holds the distance; slots in the board keep it on FR4", measure: "Type 2 coating is 'especially difficult and costly' in production (AN1456); cost not stated", conf: med}
+    - {id: cb-source, kind: sourcing, gain: "A second source for the extra-wide barrier", how: "Today TI, Novosense and Broadcom (optocoupler) are the only one-package options", measure: "3 suppliers → 4 (BizDev parts data and public pages)", conf: med}
+  gives_up:
+    - "A larger footprint (about 16.6 mm across the leads for TI's 15 mm-class SOIC, est similar for ours)"
+    - "Not a drop-in for TI's DWW or DWL pinout (open until our outline is published)"
+    - "Rail and medium-voltage designs still need two barriers or fiber: even 15 mm is short of the 18–20 mm a tram line asks at pollution degree 3"
+
+position:
+  advantages:
+    - {id: a-pkg, text: "Ultra-wide SOIC already announced in our own app note AN1456 (Sep 2026): more than 15.5 mm clearance and 15.0 mm creepage, above TI's 14.5 mm DWW and level with Novosense's 15 mm", vs: "TI ISO7821DWW, Novosense NSI8321W1", conf: high}
+    - {id: a-dies, text: "Dies for every barrier function exist: 656 digital isolators, 154 isolated gate drivers, Si89xx isolated amplifiers and Si88xx isolator + DC-DC in BizDev", vs: "Novosense, Broadcom", conf: high}
+    - {id: a-perf, text: "Our reinforced dies beat ISO7821 on CMTI (100 vs 85 kV/µs), isolation rating (6 vs 5.7 kVrms) and speed (150 vs 100 Mbps), and capacitive isolation avoids the ageing of optocouplers", vs: "TI ISO7821, Broadcom optocouplers", conf: high}
+    - {id: a-set, text: "A full barrier set (isolator, gate driver, isolated amplifier, isolated DC-DC) from one supplier in one package outline; TI has isolators (DWW) and amplifiers (DWL) but no extra-wide gate driver turned up in our search", vs: TI, conf: low}
+    - {id: a-dc, text: "We already publish the data-center creepage guide (AN1456) that makes the 800 V DC and 3000 m case for the ultra-wide package", vs: "TI, Infineon, ADI (NVIDIA 800 V DC partners)", conf: high}
+  disadvantages:
+    - {id: d-none, text: "Nothing above 8 mm ships today (SSO-8 measured 8.5 mm); TI has 20 isolators at 14.5 mm and 15.7 mm amplifiers since at least 2020–2021, Novosense 6 isolators at 15 mm", vs: "TI, Novosense", offset: "Lead with the ultra-wide SOIC as soon as it is released; meanwhile sell SSO-8 where 8 mm is enough (800 V sealed, basic at 1500 V, coated boards)", conf: high}
+    - {id: d-viowm, text: "Working voltage: our SSO-8 parts are rated 2121 Vpk (1500 Vrms); a 1500 V DC reinforced barrier needs at least 1500 V DC working voltage with margin, and TI's DWW is rated 2000 Vrms (2828 Vpk) with the same die as its 1500 Vrms DW", vs: "TI ISO7821DWW, AMC1411 (2000 Vrms)", offset: "Certify the ultra-wide parts at 2000 Vrms working (VDE 0884-17) like TI: the package, not the die, set TI's limit", conf: med}
+    - {id: d-price, text: "No price premium for extra-wide isolators: TI sells ISO7821DWWR at $2.60 vs DWR $2.64 (1k)", vs: TI, offset: "Win sockets with the full set and the 15 mm margin; take the premium on isolated amplifiers, where TI charges about 60 % more for 15.7 mm", conf: high}
+    - {id: d-fiber, text: "Rail and medium-voltage converters solve it with fiber optics or a grounded midpoint (AN1456 section 6), not wider packages", vs: "Broadcom fiber links (AFBR-2634Z)", offset: "Target 1000–1500 V systems, where one package is enough", conf: med}
+    - {id: d-china, text: "Chinese inverter and storage makers dominate volume (China 55 % of 2024 solar, 54 % of 2025 storage) and Novosense is local", vs: Novosense, offset: "Price at parity with TI's DWW contract level; offer the full set and data-center designs outside China", conf: med}
+  diff_good:
+    - {id: g-15, text: "≥15.0 mm creepage clears the 15 mm a TÜV assessor asked for at 1500 V, where TI's 14.5 mm does not", conf: med}
+    - {id: g-set, text: "Isolator, isolated amplifier and gate driver in the same extra-wide outline: one layout rule and one creepage slot for the whole barrier", conf: low}
+    - {id: g-alt, text: "15.5 mm clearance keeps 600 V OVC III designs compliant at 3000 m and 5000 m (AN1456 Table 4)", conf: high}
+  diff_bad:
+    - {id: b-late, text: "Late: designs that needed it since the 1000 → 1500 V move already use TI, Novosense, Broadcom or two barriers", conf: med}
+    - {id: b-footprint, text: "Footprint and pinout differ from TI's DWW / DWL: a board change, not a drop-in", conf: med}
+
+architecture:
+  columns: [Skyworks (today → ultra-wide SOIC), TI, Novosense, Broadcom, "Infineon / ADI"]
+  rows:
+    - ["Digital isolator ≥14.5 mm", "None (8 mm; SSO-8 measured 8.5 mm) → ultra-wide SOIC ≥15.0 mm announced", "20 parts at 14.5 mm (DWW, e.g. ISO7821DWW)", "6 parts at 15 mm (NSI8321W1, NSI8322W1)", "Optocouplers in 15 mm SSO-8", "Not in BizDev at ≥14.5 mm"]
+    - ["Isolated gate driver ≥14.5 mm", "None (8 mm) → proposed", "None found (UCC21520 / UCC21710 / UCC5350 at 8–8.5 mm)", "Not found", "ACNT-H343 5 A optocoupler driver, 15 mm creepage (distributor page)", "8 mm class (EiceDRIVER >8 mm; ADuM4146 8.3 mm)"]
+    - ["Isolated amplifier ≥14.5 mm", "None (Si89xx 8–8.5 mm) → proposed", "AMC1411 / AMC1400, DWL 15.7 mm, 2000 Vrms working", "Not checked", "Not checked", "Not checked"]
+    - ["Where the barrier sits in the library diagrams", "Digital isolators in 71 of 224 diagrams; in the new 1500 V solar, 1500 V storage, 800 V DC data-center, wind and rail diagrams the reinforced barrier is drawn as its own frames (sensing, communication)", "Same diagrams: TI reference designs TIDA-010054, TIDA-01606, TIDA-010210 use 8–8.5 mm reinforced parts up to 800–1000 V", "—", "—", "—"]
+    - ["Fit with the architecture trend", "Good: PV and storage move from 1000 to 1500 V DC, data centers to 800 V DC (2027), sites to 3000 m", "Good: owns the 1500 V PV socket today", "Good in China", "Neutral: optocouplers and fiber", "Neutral: 8 mm class"]
+  note: "From the BizDev parts database (creepage ≥14 mm: TI 20 and Novosense 6 digital isolators, no gate drivers), the block-diagram library (5 diagrams added for this case: 1500 V PV string inverter, 1500 V battery storage, 800 V DC data-center power, railway auxiliary converter, wind converter) and public TI, Broadcom, Infineon and Wolfspeed pages. Ranked applications with creepage, isolators per unit and market: ISO7821DWW report, section 2."
+
+market_now:
+  - {figure: "1. Utility solar, 1500 V DC", value: "597 GW installed in 2024 (+33 %), 2.2 TW total; about 655 GW in 2025 and 1 TW a year by 2029 (forecast); China 329 GW (55 %)", source: "SolarPower Europe, Global Market Outlook 2025–2029 (May 2025); forecast and China share from trade-press coverage", conf: med}
+  - {figure: "1. 1500 V barrier creepage", value: "About 15 mm reinforced at PD2 (TÜV asked 15 mm and judged 14.5 mm short); basic 6.3 mm at 1250 V and 8.0 mm at 1600 V (group I), so 1500 V reinforced ≈15 mm (interpolated, est)", source: "TI E2E thread 938435 (Sep 2020); IEC 60664-1 table via MINMAX", conf: med}
+  - {figure: "2. Battery storage, 1500 V DC", value: "106 GW installed in 2025 (+43 %; 73 GW in 2024), 270 GW / 630 GWh in operation; 82 % utility-scale; 1,545 GW by 2034; China 54 %", source: "Wood Mackenzie, 13 Jan 2026", conf: high}
+  - {figure: "3. 800 V DC AI data centers", value: "NVIDIA moves to 800 V DC for 1 MW racks from 2027 (Kyber); partners include TI, Infineon, ADI, ST, onsemi, Renesas, Rohm, Navitas, Delta, LiteOn, Flex; TI showed an 800 V to 6 V isolated converter (97.6 % peak) in Mar 2026; units not stated", source: "NVIDIA technical blog, 20 May 2025; eeNews Europe, 19 Mar 2026", conf: high}
+  - {figure: "3. Data-center creepage and altitude", value: "800 V reinforced creepage at PD2 is 8 mm (exactly our wide body); Open Rack v3 asks for 3000 m, where 600 V OVC III reinforced clearance grows from 8.0 to 9.12 mm: 8 mm package no, ultra-wide yes", source: "Skyworks AN1456 (Sep 2026)", conf: high}
+  - {figure: "4. DC fast chargers, up to 1000 V", value: "About 2 million public fast chargers worldwide in 2024; ultra-fast (≥150 kW) +50 %, about 10 % of them; China 80 % of the growth", source: "IEA Global EV Outlook 2025 (search snippet; iea.org blocked our reader)", conf: low}
+  - {figure: "5. Wind converters, 690 V AC / ~1100 V DC", value: "165 GW installed in 2025 (+40 %), 1,299 GW in operation; Asia 131 GW (80 %)", source: "GWEC Global Wind Report 2026 release, 20 Apr 2026", conf: high}
+  - {figure: "6. 690 V industrial drives", value: "Market not stated; 690 V grids are 'more cost effective for high-power applications' and need more than 9 mm with altitude or PD3", source: "TI SBAA527 (Aug 2021); Skyworks AN1456", conf: med}
+  - {figure: "7. Rail (traction, auxiliary)", value: "Rail supply €201.8 bn a year (2021–2023), rolling stock €63.3 bn, +3 % a year to €240.8 bn; a 600 V DC tram needs 18–20 mm reinforced at PD3, so one package is not enough", source: "UNIFE World Rail Market Study 2024 abstract; Wolfspeed forum (Dec 2025)", conf: med}
+  - {figure: "Public extra-wide prices (TI store, 1k)", value: "ISO7821DWWR $2.60 vs ISO7821DWR $2.64 (isolator: no premium); AMC1411DWLR $3.80 (15.7 mm) vs AMC1311DWVR $2.38 (8.5 mm): +59 %", source: "TI product pages, 21 Oct 2026", conf: high}
+
+outlook:
+  - {id: o-1500, text: "1500 V DC becomes the norm for utility solar and storage; the reinforced barrier there needs ~15 mm in every inverter and PCS (est)", basis: "TI SBAA527 (PV moving from 1000 to 1500 V DC); TÜV 15 mm via TI E2E; Wood Mackenzie 82 % utility-scale storage", conf: med}
+  - {id: o-dc, text: "800 V DC data-center power ramps from 2027; power shelves and sidecars rated for 3000 m need more than 8 mm clearance at OVC III, so an ultra-wide package becomes the safe default (est)", basis: "NVIDIA 2027 Kyber plan; AN1456 altitude table", conf: med}
+  - {id: o-1000, text: "Fast chargers and wind converters move to 1000–1100 V DC links, where reinforced creepage is 10–11 mm at PD2: above 8 mm, below 15 mm (est)", basis: "IEC 60664-1 via MINMAX; TIDA-01606 (900 V max), wind 690 V AC (our reading)", conf: low}
+  - {id: o-car, text: "Inside the car stays at PD2 and 800 V: 8 mm stays enough; only a full 800 V battery (~900 V) or a 1000 V design would need 9–10 mm (est)", basis: "ISO7821DWW report section 4; owner's view", conf: med}
+  - {id: o-price, text: "Extra-wide isolators sell at wide-body prices; extra-wide isolated amplifiers keep a premium of about 50–60 % (est)", basis: "TI store prices, 21 Oct 2026", conf: med}
+  - {id: o-rail, text: "Rail and medium voltage keep fiber optics and two-barrier designs; an ultra-wide package wins only the second barrier there (est)", basis: "Wolfspeed forum (18–20 mm at PD3); AN1456 section 6", conf: low}
+
+features:
+  - {id: f-today, feature: "Sell SSO-8 (8.5 mm measured) where 8 mm is enough: 800 V sealed boxes, basic insulation at 1500 V, coated boards", benefit: "Revenue now in the same designs, and a position for the ultra-wide follow-up", distance: 0, why: "Shipping parts; needs only the application story"}
+  - {id: f-guide, feature: "Extend AN1456 to solar, storage and chargers (IEC 62109-1, IEC 62477-1, IEC 61851) with a 1500 V barrier table", benefit: "Our own creepage guide for the markets where the extra-wide parts win", distance: 1, why: "Documentation from public standards data"}
+  - {id: f-uwb-iso, feature: "Ultra-wide SOIC digital isolators (2–4 channels) from Si86xx dies, ≥15 mm creepage, certified ≥2000 Vrms working", benefit: "Meets the 15 mm reinforced barrier at 1500 V DC in one package; parity and margin over TI DWW", distance: 2, why: "Existing dies in the announced ultra-wide SOIC (AN1456); new package qualification and certification"}
+  - {id: f-uwb-amp, feature: "Ultra-wide isolated amplifiers and modulators from Si89xx dies", benefit: "DC-link and current sensing across the 1500 V barrier; the function where TI charges a premium", distance: 2, why: "Existing dies; same package; TI's AMC1411 shows the market"}
+  - {id: f-uwb-gd, feature: "Ultra-wide isolated gate driver with DESAT and Miller clamp (Si828x class)", benefit: "The only CMOS extra-wide driver besides optocouplers (Broadcom ACNT-H343)", distance: 2, why: "Existing driver dies; 3 if the driver's high-current pins need a new lead frame or the barrier a new rating"}
+  - {id: f-set, feature: "1500 V barrier reference design: isolators + isolated amplifiers + gate drivers + Si88xx isolated bias, with board slots and the creepage calculation", benefit: "Design-in for inverter and PCS makers; raises the attach rate", distance: 2, why: "Reference design from existing and proposed parts"}
+  - {id: f-viowm, feature: "Certify 2000 Vrms working voltage and 10 kVpk transient in the ultra-wide package (VDE 0884-17, UL 1577)", benefit: "Matches TI DWW / DWL ratings; 1500 V DC needs it", distance: 1, why: "TI gets 2000 Vrms from the same die in the wider package; certification work (est)"}
+  - {id: f-auto, feature: "AEC-Q100 ultra-wide parts for 1000 V vehicle chargers and battery junction boxes", benefit: "Covers a full 800 V battery (~900 V) and 1000 V designs with margin", distance: 2, why: "Automotive versions of the same dies exist (-AS4)"}
+
+product:
+  name: "Ultra-wide isolation family (UWB SOIC): isolators, isolated amplifiers and gate drivers for 1000–1500 V"
+  spec:
+    - ["Package", "Skyworks ultra-wide SOIC announced in AN1456: >15.5 mm clearance, >15.0 mm creepage, material group I mould compound"]
+    - ["Ratings (target, est)", "Reinforced; working voltage ≥2000 Vrms (VIOWM); transient ≥10 kVpk; CMTI ≥100 kV/µs; –40 to 125 °C"]
+    - ["Reuses", "Si86xx isolator dies (Si86S621/622 class), Si89xx isolated amplifier / modulator dies, Si828x / Si823x gate-driver dies, Si88xx isolator + DC-DC controller"]
+    - ["New", "Package qualification, pinouts, VDE 0884-17 / UL 1577 certificates at the higher working voltage, IEC 62109 / 62368 application notes"]
+    - ["Outputs", "2-channel (1/1) and 4-channel (3/1, 2/2) isolators; isolated amplifier and delta-sigma modulator; single-channel DESAT gate driver"]
+    - ["Replaces", "TI ISO7821DWW and other DWW isolators, TI AMC1411 / AMC1400 (DWL), Novosense NSI8321W1 / NSI8322W1, Broadcom ACNT-H343 optocoupler driver, and two-barrier designs (two isolators + two bias supplies)"]
+    - ["Answers", "Reinforced barrier at 1500 V DC (solar, storage); 1000 V chargers and wind converters; 800 V DC data-center power at 3000 m; basic barriers at pollution degree 3 up to 1000 V"]
+    - ["Delivery (est)", "Isolators first, when the ultra-wide SOIC is released (12–18 months, est); isolated amplifiers next; gate driver last (18–24 months, est)"]
+
+prices:
+  method: "Anchor on TI store list prices (1k, 21 Oct 2026) → contract level 30–40 % below list (est) → our range. Isolators: TI asks no extra-wide premium, so we price at parity. Isolated amplifiers: TI charges about 60 % more for 15.7 mm, so we take part of that premium. Gate driver: no public extra-wide CMOS driver price; priced from TI's 8 mm reinforced driver plus a creepage premium (est)."
+  anchors:
+    - {part: "TI ISO7821DWWR (2-ch isolator, 14.5 mm, reel)", price: "$2.60", qty: "1,000 (TI store)"}
+    - {part: "TI ISO7821DWR (same die, 8.15 mm, reel)", price: "$2.64", qty: "1,000 (TI store)"}
+    - {part: "TI AMC1411DWLR (isolated amplifier, 15.7 mm, reel)", price: "$3.80", qty: "1,000 (TI store)"}
+    - {part: "TI AMC1311DWVR / AMC1311BDWVR (same function, 8.5 mm, reel)", price: "$2.38 / $2.07", qty: "1,000 (TI store)"}
+    - {part: "TI UCC21520DWR (dual reinforced gate driver, 8 mm class, reel)", price: "$1.88", qty: "1,000 (TI store)"}
+    - {part: "Broadcom ACNT-H343 (5 A optocoupler gate driver, 15 mm)", price: "not stated", qty: "—"}
+    - {part: "Novosense NSI8321W1 (15 mm isolator)", price: "not stated", qty: "—"}
+  items:
+    - {id: p-iso, item: "Ultra-wide 2–4-channel reinforced digital isolator", entry: 1.6, target: 2.0, premium: 2.4, basis: "TI DWW reel $2.60 list at 1k → about $1.6–1.8 contract (est); no extra-wide premium in this function"}
+    - {id: p-amp, item: "Ultra-wide isolated amplifier / modulator", entry: 2.2, target: 2.6, premium: 3.0, basis: "TI AMC1411DWLR $3.80 list → about $2.3–2.7 contract (est); TI's +59 % over the 8.5 mm part shows room for a premium"}
+    - {id: p-gd, item: "Ultra-wide isolated gate driver with DESAT", entry: 2.0, target: 2.6, premium: 3.2, basis: "TI 8 mm reinforced dual driver $1.88 list; single-channel DESAT drivers and the 15 mm creepage add about 20–40 % (est); optocoupler alternative price not stated"}
+
+volumes:
+  - {label: "Isolators, 3 M a year (about 1 M 1500 V inverters and PCS a year × ~3 barrier isolators, est)", units: 3000000, price: p-iso}
+  - {label: "Isolated amplifiers, 4 M a year (1500 V solar and storage, wind × ~4, est)", units: 4000000, price: p-amp}
+  - {label: "Gate drivers, 2 M a year (designs where the driver is the reinforced barrier, est)", units: 2000000, price: p-gd}
+
+attach:
+  - {id: t-set, lever: "Sell the barrier as a set: ultra-wide isolators + Si89xx amplifiers + gate drivers + Si88xx isolated bias in one 1500 V reference design", effort: med}
+  - {id: t-gd, lever: "Our 8 mm gate drivers (Si828x, Si823x) on the power side of the same 1500 V and 800 V designs, where only functional or basic isolation is needed (AN1456 section 6.1)", effort: low}
+  - {id: t-can, lever: "Isolated CAN and RS-485 for BMS-to-PCS and inverter-to-logger links, in the same communication frames", effort: low}
+  - {id: t-dc, lever: "Data centers: put the ultra-wide parts into the 800 V to 6–12 V converters of the power-shelf makers NVIDIA names (Delta, LiteOn, Flex, Megmeet), with AN1456 as the door opener", effort: med}
+  - {id: t-guide, lever: "Publish the 1500 V barrier calculation (creepage, clearance, altitude, board slots) for IEC 62109-1 and IEC 62477-1, like AN1456 does for data centers", effort: low}
+
+questions:
+  bu:
+    - {id: q-bu-date, text: "When is the ultra-wide SOIC announced in AN1456 released, which dies go into it first, and at what working-voltage rating?", why: "The headline (f-uwb-iso) is distance 2 only if the package and a ≥2000 Vrms rating come with it"}
+    - {id: q-bu-cost, text: "What does the ultra-wide SOIC cost to make compared with the wide-body SOIC-16 and SSO-8?", why: "TI sells DWW at DW prices; we must too (d-price)"}
+    - {id: q-bu-gd, text: "Which gate-driver die (Si828x DESAT, Si823x dual) fits the ultra-wide outline, and does a dual driver make sense across one 15 mm barrier?", why: "f-uwb-gd distance 2 or 3"}
+    - {id: q-bu-req, text: "Which customers asked for ISO7821DWW or for 15 mm parts, in which product, and at what volume?", why: "Volumes here are scenarios from public market data only"}
+  customer:
+    - {id: q-c-1500, text: "For your 1500 V DC inverter or PCS, what creepage and working voltage does your assessor require across the control barrier (15 mm or 14.5 mm), and how do you meet it today: TI or Novosense extra-wide parts, two barriers, coating or fiber?", who: "Solar inverter / PCS hardware lead", why: "Sizes cb-15mm and cb-parts; 15 mm comes from one public TI E2E thread"}
+    - {id: q-c-count, text: "How many isolators, isolated amplifiers and gate drivers cross the reinforced barrier in one inverter or PCS?", who: "Solar inverter / PCS hardware lead", why: "Our counts per unit are estimates from the topology"}
+    - {id: q-c-dc, text: "For 800 V DC power shelves and sidecars, what altitude and overvoltage category do you design to, and is 8 mm enough for your safety agency?", who: "Data-center power-shelf maker (Delta, LiteOn, Flex type)", why: "AN1456 says 3000 m needs 9.1 mm clearance; decides whether the data-center scenario is real"}
+    - {id: q-c-dcfc, text: "Do your DC fast-charger modules go to 1000 V output, and is the control board inside a sealed (PD2) or ventilated (PD3) cabinet?", who: "DC fast-charger power-module maker", why: "1000 V reinforced at PD2 needs 10 mm; at PD3 even basic needs 12.5 mm"}
+
+diagram:
+  note: "A 1500 V DC utility string inverter (or a battery-storage PCS, which has the same barrier) with the proposed ultra-wide parts on every crossing of the reinforced barrier and our 8 mm gate drivers on the power side, where only functional or basic isolation is needed. Library diagrams: 1500 V PV string inverter, 1500 V battery storage, 800 V DC data-center power, wind converter, railway auxiliary converter."
+  groups:
+    - id: power
+      label: 1500 V power stage (MPPT boost + three-level inverter)
+      col: 0
+      row: 0
+      w: 2
+      blocks:
+        - {fn: power_fets, label: "SiC / IGBT switches", who: other}
+        - {fn: gate_driver, label: "Gate drivers (functional / basic)", who: ours, part: "Si828x / Si823x, 8 mm"}
+        - {fn: isolated_dcdc, label: "Gate-drive bias", who: ours, part: "Si88xx"}
+        - {fn: dc_link_cap, label: "1500 V DC link", who: customer}
+    - id: barrier
+      label: Reinforced barrier (≥15 mm creepage)
+      col: 2
+      row: 0
+      blocks:
+        - {fn: digital_isolator, label: "Ultra-wide isolators (PWM, faults)", who: proposed, part: "Si86xx dies in the ultra-wide SOIC (concept)"}
+        - {fn: isolated_amplifier, label: "Ultra-wide isolated amplifiers", who: proposed, part: "Si89xx dies (concept)"}
+        - {fn: gate_driver, label: "Ultra-wide gate driver (where the driver is the barrier)", who: proposed, part: "Si828x-class DESAT (concept)"}
+    - id: control
+      label: Control and communication (low-voltage side)
+      col: 3
+      row: 0
+      blocks:
+        - {fn: mcu, label: "Inverter DSP / MCU", who: other}
+        - {fn: isolated_can, label: "Isolated CAN / RS-485 to the plant", who: ours}
+        - {fn: ethernet_phy, label: "Ethernet to the logger", who: other}
+    - id: grid
+      label: Grid side
+      col: 0
+      row: 1
+      blocks:
+        - {fn: relay_driver, label: "AC relays", who: other}
+        - {fn: current_sensor, label: "Grid current", who: other}
+  links:
+    - [power, barrier, "1500 V side"]
+    - [barrier, control, "PWM, faults, measurements"]
+    - [power, grid, "800 V AC to the MV transformer"]
+
+risks:
+  - "Timing: TI, Novosense and Broadcom already hold the 1500 V sockets; a late ultra-wide family wins only redesigns and new platforms."
+  - "No price premium on extra-wide isolators (TI DWW = DW reel price); margin depends on the package costing no more than the wide body."
+  - "The working-voltage rating, not only creepage, must reach about 2000 Vrms for 1500 V DC; not yet shown for our dies in the wider package."
+  - "Many designs avoid the need: coating or potting (PD1), basic insulation with a protective earth, a grounded DC midpoint, or fiber optics (AN1456 section 6)."
+  - "China holds over half of solar and storage volume, with Novosense as a local 15 mm supplier."
+  - "Unknown from public data: units per design, the share of designs that put the reinforced barrier on an isolator rather than an optocoupler or fiber, contract prices, and the release date of our ultra-wide SOIC."

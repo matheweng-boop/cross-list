@@ -1,4 +1,4 @@
-"""Technical library: topic files are consistent (six references, valid functions, rules cite references) and the pages
+"""Systems library: topic files are consistent (six references, valid functions, rules cite references) and the pages
 and the workspace open them."""
 
 import pytest
@@ -45,9 +45,9 @@ def test_topic_pages(client, key):
 
 def test_library_feeds_the_decision_pages(client):
     ev = client.get("/business/evidence/digital_isolator").text
-    assert "From the technical library" in ev and "/library/traction_asil_d" in ev
+    assert "From the systems library" in ev and "/library/traction_asil_d" in ev
     case = client.get("/business/reports/auto-cv2x-fe").text
-    assert "From the technical library" in case and "/library/v2x_frontend" in case
+    assert "From the systems library" in case and "/library/v2x_frontend" in case
     topic = client.get("/library/v2x_frontend").text
     assert "/business/reports/auto-cv2x-fe" in topic and "Full research notes" in topic
     hits = client.get("/technical?q=DESAT blanking").text

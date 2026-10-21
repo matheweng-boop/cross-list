@@ -23,6 +23,9 @@
     {% if g.members|length > 1 %}<details class="small"><summary>All {{ g.members|length }} items</summary><ul>{% for x in g.members %}<li>{{ x.text }} <span class="muted">— {{ x.author or 'anonymous' }}, {{ x.created_at|date('time') }}, <a href="{{ x.path }}">{{ x.page or x.path }}</a></span></li>{% endfor %}</ul></details>
     {% else %}{% set x = g.members[0] %}<p class="small muted">{{ x.author or 'anonymous' }}, {{ x.created_at|date('time') }} · <a href="{{ x.path }}">open the page</a></p>{% endif %}
     {% for x in g.members if x.selection %}<blockquote class="small">Selected on the page: {{ x.selection }}</blockquote>{% endfor %}
+    {% set att = [] %}{% for x in g.members %}{% for u in files.get(x.id, []) %}{% set _ = att.append(u) %}{% endfor %}{% endfor %}
+    {% if att %}<div class="fb-files small"><b>Attached:</b>{% for u in att %}
+      <a class="fb-file-link" href="/manage/uploads/{{ u.id }}/file" target="_blank" rel="noopener">{% if u.content_type and u.content_type.startswith('image/') %}<img src="/manage/uploads/{{ u.id }}/file" alt="{{ u.original_name or 'picture' }}" loading="lazy">{% else %}<span class="up-icon">PDF</span>{% endif %}<span>{{ u.original_name or 'file' }}</span></a>{% endfor %}</div>{% endif %}
     <form method="post" action="/manage/feedback/respond" class="fb-respond">
       <input type="hidden" name="ids" value="{{ g.ids|join(',') }}"><input type="hidden" name="day" value="{{ d.day }}">
       <select name="status" aria-label="Status">{% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if k == g.status }}>{{ label }}</option>{% endfor %}</select>

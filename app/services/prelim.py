@@ -53,15 +53,29 @@ def raw(slug: str) -> dict | None:
 
 
 def item_ids(slug: str) -> set[str]:
-    """Every id a reviewer can react to or price."""
+    """Every id a reviewer can react to or price (the business-unit opener of the report too, case or not)."""
+    from app.services import reports as rp
+
     c = raw(slug) or {}
+    extra = {rp.OPENER_ID} if (rp.report(slug) or {}).get("bu_opener") else set()
     pos = c.get("position") or {}
     rows = [x for k in LISTS for x in pos.get(k) or []]
     rows += [*(c.get("outlook") or []), *(c.get("features") or []), *(c.get("attach") or []),
              *((c.get("prices") or {}).get("items") or [])]  # fmt: skip
     rows += (c.get("customer_benefit") or {}).get("gains") or []
     rows += [x for k, _ in QUESTION_GROUPS for x in (c.get("questions") or {}).get(k) or []]
-    return {str(x["id"]) for x in rows if x.get("id")}
+    return {str(x["id"]) for x in rows if x.get("id")} | extra
+
+
+def opener(session: Session, slug: str, fb: dict | None = None) -> dict | None:
+    """The report's first question to the business unit (bu_opener in reports.yaml) with its recorded answers."""
+    from app.services import reports as rp
+
+    o = (rp.report(slug) or {}).get("bu_opener")
+    if not o:
+        return None
+    fb = _feedback(session, slug) if fb is None else fb
+    return {**o, "id": rp.OPENER_ID, "text": o.get("question", ""), "fb": fb.get(rp.OPENER_ID, {})}
 
 
 def headline(c: dict) -> dict | None:
@@ -110,7 +124,8 @@ def _feedback(session: Session, slug: str) -> dict[str, dict]:
 
 
 def case(session: Session, slug: str) -> dict | None:
-    """The case with feedback and real prices attached to its items, and the revenue illustration."""
+    """The case with feedback attached to its items, and the revenue illustration from the estimated target prices
+    (no real prices are entered: commercial inputs are retired, owner 21 Oct 2026)."""
     c = raw(slug)
     if c is None:
         return None
@@ -139,6 +154,7 @@ def case(session: Session, slug: str) -> dict | None:
             "features": attach(c.get("features")), "attach": attach(c.get("attach")),
             "questions": {k: attach((c.get("questions") or {}).get(k)) for k, _ in QUESTION_GROUPS},
             "prices": {**prices, "items": items}, "revenue": revenue, "n_feedback": n_fb,
+            "opener": opener(session, slug, fb),
             "opportunity": opportunity(session, slug, fb)}  # fmt: skip
 
 
@@ -157,10 +173,3 @@ def react(session: Session, slug: str, key: str, verdict: str, comment: str = ""
                            comment=comment.strip()[:2000] or None, author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
 
-
-def set_price(session: Session, slug: str, key: str, value: float | None, note: str = "") -> None:
-    prices = {str(x["id"]) for x in ((raw(slug) or {}).get("prices") or {}).get("items") or []}
-    if key not in prices:
-        raise ValueError("unknown price item")
-    op.set_input(session, "asp", f"case:{slug}:{key}", value, note)
-    session.commit()

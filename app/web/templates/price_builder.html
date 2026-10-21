@@ -9,9 +9,11 @@
     <label>Per system<input name="qty" type="number" min="1" max="99" value="{{ r.qty if r else 1 }}"></label>
     <label>Priced from <small class="muted">(when it has no prices; blank = a sibling from the same family)</small><input name="anchor" list="pb-mpns" value="{{ r.anchor if r else '' }}" placeholder="a sibling with prices, e.g. Si47962" autocomplete="off"></label>
   </div>
-  {% set plo = (r.parity_lo * 100)|round|int if r and r.parity_lo else (cfg.parity[0] * 100)|int %}
-  {% set phi = (r.parity_hi * 100)|round|int if r and r.parity_hi else (cfg.parity[1] * 100)|int %}
-  <div class="pb-parity small"><span>Price vs that part: <output>{{ plo }}</output>–<output>{{ phi }}</output> %</span>
+  {% set rng = r.shown if r and r.shown else ((r.parity_lo, r.parity_hi) if r and r.pset else cfg.parity) %}
+  {% set plo = (rng[0] * 100)|round|int %}
+  {% set phi = (rng[1] * 100)|round|int %}
+  <div class="pb-parity small"><input type="hidden" name="pset" value="{{ '1' if r and r.pset else '' }}">
+    <span>Price vs that part: <output>{{ plo }}</output>–<output>{{ phi }}</output> % <small class="muted">{% if r and r.pset %}set by you · <button type="button" class="pb-reset linklike">use the cost ratio</button>{% else %}from the unit-cost ratio{% endif %}</small></span>
     <input type="range" name="plo" min="30" max="150" step="1" value="{{ plo }}" aria-label="Parity, low end in percent" data-out="0">
     <input type="range" name="phi" min="30" max="150" step="1" value="{{ phi }}" aria-label="Parity, high end in percent" data-out="1"></div>
   <label class="small">DigiKey prices <small class="muted">(optional: copy the price table from the product page; quantity and unit price per line)</small>
@@ -23,8 +25,9 @@
       <label>Automotive<select name="auto"><option value="">From the site{% if r and r.info %}: {{ 'yes' if r.info.automotive else 'no' }}{% endif %}</option><option value="yes"{{ ' selected' if r and r.automotive == 'yes' }}>Yes</option><option value="no"{{ ' selected' if r and r.automotive == 'no' }}>No</option></select></label>
     </div>
     <div class="grid">
-      <label>Package<input name="pkg" value="{{ r.package if r else '' }}" placeholder="{{ r.info.package if r and r.info.package else 'e.g. QFN-56' }}"></label>
-      <label>Pins<input name="pins" type="number" min="0" max="2000" value="{{ r.pins if r and r.pins else '' }}" placeholder="{{ r.info.pins if r and r.info.pins else '' }}"></label>
+      {% set known = r.info if r and r.info else {} %}
+      <label>Package{% if known.package %} <small class="muted">(set by the part number)</small><input name="pkg" value="{{ known.package }}" readonly>{% else %}<input name="pkg" value="{{ r.package if r else '' }}" placeholder="e.g. QFN-56, SOIC-16W">{% endif %}</label>
+      <label>Pins{% if known.pins %} <small class="muted">(set by the part number)</small><input name="pins" type="number" value="{{ known.pins }}" readonly>{% else %}<input name="pins" type="number" min="0" max="2000" value="{{ r.pins if r and r.pins else '' }}">{% endif %}</label>
       <label>Released (year)<input name="rel" type="number" min="1980" max="2050" value="{{ r.released if r and r.released else '' }}" placeholder="{{ r.info.released if r and r.info.released else 'blank = new' }}"></label>
     </div>
   </details>
@@ -102,9 +105,17 @@
     del.closest(".pb-row").remove();
     if (!rows.querySelector(".pb-row")) rows.append(blank.content.cloneNode(true));
   });
+  rows.addEventListener("click", e => {
+    const b = e.target.closest(".pb-reset");
+    if (!b) return;
+    b.closest(".pb-parity").querySelector('input[name="pset"]').value = "";
+    submit();
+  });
   form.addEventListener("input", e => {
     const t = e.target;
     if (t.type !== "range") return;
+    const pset = t.closest(".pb-parity")?.querySelector('input[name="pset"]');
+    if (pset) pset.value = "1";
     const outs = t.closest(".pb-parity, label")?.querySelectorAll("output") || [];
     (outs[+t.dataset.out || 0] || outs[0]).value = t.value;
   });

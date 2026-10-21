@@ -902,12 +902,18 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
 
 @router.get("/pricing/estimate", response_class=HTMLResponse)
 def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
-                   wide: bool = False, automotive: bool = False, name: str = "", currency: str = "USD",
+                   automotive: bool = False, name: str = "", currency: str = "USD",
                    sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0, gm: int = 0,
                    released: int = 0, session: Session = Depends(get_session)):  # fmt: skip
-    """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages)."""
+    """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
+    A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely."""
     cfg = price_model.config()
-    family = family if family in cfg["families"] else ""
+    known = price_builder.site_info(session, name.strip()) if name.strip() else {}
+    family = family if family in cfg["families"] else (known.get("family") or "")
+    package, pins = (known["package"], known["pins"] or pins) if known.get("package") else (package, pins)
+    units = known.get("units") or 0  # channels / tuners: read from the part number, used by the model only
+    released = released or (known.get("released") or 0)
+    automotive = automotive or bool(known.get("automotive"))
     pts = price_model.parse_breaks(breaks)
     currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
     gm_f = price_model.margin(gm / 100 if gm else None)
@@ -917,8 +923,8 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     released = released if 1980 <= released <= 2050 else None
     scenarios = []
     for fab in price_model.fab_scenarios() if (family and pts) else []:
-        m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate", currency,
-                                 gm_f, fab)  # fmt: skip
+        m = price_model.estimate(session, family, pts, package, pins, automotive, name or "estimate", currency,
+                                 gm_f, fab, units or None)  # fmt: skip
         m["oem"] = price_model.oem_path(m, sop, released=released)
         m["name"] = name.strip()[:60]
         if ours.strip():
@@ -927,7 +933,8 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
         scenarios.append((fab, m))
     m = scenarios[0][1] if scenarios else None
     ctx = {"cfg": cfg, "m": m, "scenarios": scenarios,
-           "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "", "wide": wide,
+           "known": known, "suggest": price_builder.suggestions(),
+           "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
                  "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
                  "released": released or "",
                  "ours": ours, "parity_lo": lo, "parity_hi": hi},

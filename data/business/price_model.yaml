@@ -188,6 +188,18 @@ families:
     test_s: [2.0, 4.0, 8.0]
     note: "Mostly digital DSP and memory, little analog; shrinks with the node better than a tuner (judgement)"
 
+# What sizes a part within its family (owner, 21 Oct 2026: channels for digital isolators, I/Q channels for digital
+# radio demodulators; tuners for car-radio tuners). The family's die area and test time are for `base` units; each unit
+# more or fewer changes them by `die_per_unit` / `test_per_unit` of that (shared blocks such as the oscillator,
+# bandgap, interfaces and DSP core do not scale), never below `min`. Judgement, not any company's figures.
+scaling:
+  digital_isolator: {by: channels, label: channels, base: 4, die_per_unit: 0.12, test_per_unit: 0.08, min: 0.55}
+  radio_coprocessor: {by: iq_channels, label: I/Q channels, base: 2, die_per_unit: 0.30, test_per_unit: 0.20, min: 0.6}
+  am_fm_tuner: {by: tuners, label: tuners, base: 2, die_per_unit: 0.40, test_per_unit: 0.35, min: 0.5}
+# A part priced from a sibling: its default price range is the sibling's times the parity range times
+# (unit cost ratio) ** price_follows_cost; prices follow cost less than one for one (judgement).
+price_follows_cost: 0.7
+
 # which model family a site part gets in the solution builder: by its catalogue function, or by its role in the radio
 # configurator; anything else is picked by hand
 function_family:

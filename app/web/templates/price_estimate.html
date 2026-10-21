@@ -6,16 +6,21 @@
   DigiKey, without VAT). Same model as the part pages: the tested scaling equation (or the part's own flat curve for
   complex parts), direct purchasing at most two-thirds of the distributor price, and a cost floor by family and package.
   For several parts, a radio set-up or a block diagram, use the <a href="/pricing/builder">solution price builder</a>.</p>
+<datalist id="pe-mpns">{% for m in suggest %}<option value="{{ m }}">{% endfor %}</datalist>
 <form method="get" action="/pricing/estimate" class="pe-form">
   <div class="grid">
-    <label>Part (optional)<input name="name" value="{{ f.name }}" placeholder="e.g. Si47962"></label>
-    <label>Family<select name="family" required>{% for k, fam in cfg.families.items() %}<option value="{{ k }}"{{ ' selected' if f.family == k }}>{{ fam.label }} · {{ cfg.classes[fam.class].label.split(' (')[0] }}</option>{% endfor %}</select></label>
+    <label>Part (optional) <small class="muted">{% if known.found %}· known: {{ known.found|join(', ') }}{% else %}· a known part number sets package and channels{% endif %}</small><input name="name" value="{{ f.name }}" placeholder="e.g. Si47962" list="pe-mpns"></label>
+    <label>Family{% if known.family %} <small class="muted">(from the part number)</small>{% endif %}<select name="family" required>{% for k, fam in cfg.families.items() %}<option value="{{ k }}"{{ ' selected' if f.family == k }}>{{ fam.label }} · {{ cfg.classes[fam.class].label.split(' (')[0] }}</option>{% endfor %}</select></label>
     <label>Currency of the pasted prices <small class="muted">(results in USD)</small><select name="currency">{% for c in ('USD', 'EUR', 'GBP') %}<option{{ ' selected' if f.currency == c }}>{{ c }}</option>{% endfor %}</select></label>
   </div>
   <div class="grid">
-    <label>Package<input name="package" value="{{ f.package }}" placeholder="e.g. QFN-48, SOIC-16, LGA"></label>
-    <label>Pins<input name="pins" type="number" min="1" max="2000" value="{{ f.pins }}"></label>
-    <label class="pe-checks"><span><input type="checkbox" name="wide" value="true"{{ ' checked' if f.wide }}> wide-body (isolation)</span><span><input type="checkbox" name="automotive" value="true"{{ ' checked' if f.automotive }}> automotive grade</span></label>
+    {% if known.package %}<label>Package <small class="muted">(set by the part number)</small><input name="package" value="{{ f.package }}" readonly></label>
+    <label>Pins <small class="muted">(set by the part number)</small><input name="pins" type="number" value="{{ f.pins }}" readonly></label>
+    {% else %}<label>Package <small class="muted">(wide body is read from it, e.g. SOIC-16W)</small><input name="package" value="{{ f.package }}" placeholder="e.g. QFN-48, SOIC-16W, LGA"></label>
+    <label>Pins<input name="pins" type="number" min="1" max="2000" value="{{ f.pins }}"></label>{% endif %}
+  </div>
+  <div class="grid">
+    <label class="pe-checks"><span><input type="checkbox" name="automotive" value="true"{{ ' checked' if f.automotive }}> automotive grade</span></label>
   </div>
   <div class="grid">
     <label>Start of production (SOP)<input name="sop" type="number" min="2020" max="2050" value="{{ f.sop }}"></label>

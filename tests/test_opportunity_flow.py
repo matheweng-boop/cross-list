@@ -59,7 +59,7 @@ def test_candidates_to_business_case(client):
     client.post("/business/shortlist", data={"origin": "idea", "key": "Wireless audio for e-bikes"})
     html = client.get("/business/shortlist").text
     assert (
-        html.count("Candidate one") == 1
+        html.count("<b>Candidate one</b>") == 1
         and "Wireless audio for e-bikes" in html
         and "★ on the shortlist" in client.get("/business/explorer").text
     )
@@ -69,7 +69,7 @@ def test_candidates_to_business_case(client):
         "/business/shortlist", data={"origin": "idea", "key": "Second idea"}, headers={"Accept": "application/json"}
     )
     assert r.status_code == 200 and r.json() == {"count": count + 1}
-    item = re.search(r"shortlist=(\d+)", html).group(1)
+    item = re.search(r'value="shortlist:(\d+)"', html).group(1)  # candidates are scheduled for a case review
     new = client.get(f"/business/cases/new?shortlist={item}").text
     assert f'name="shortlist" value="{item}"' in new
     r = client.post("/business/cases", data={"title": "Analysed", "shortlist": item}, follow_redirects=False)

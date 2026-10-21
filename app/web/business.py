@@ -4,7 +4,7 @@ TAM data."""
 from collections import Counter
 from datetime import UTC, date, datetime
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -21,10 +21,11 @@ from app.models import (
     Part,
     PartMapping,
     PipelineDraft,
+    ScheduledReview,
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, library, pipeline, prelim, quality, scoring, vocab, walk
+from app.services import blocks, cases, library, pipeline, prelim, quality, schedule, scoring, vocab, walk
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -355,7 +356,8 @@ def shortlist(request: Request, co: str = "combined", session: Session = Depends
     c = _case_ctx(session, co)
     items = list(session.scalars(select(ShortlistItem).order_by(ShortlistItem.created_at.desc())))
     c.update(portfolio=[i for i in items if i.origin != "idea"], ideas=[i for i in items if i.origin == "idea"],
-             origins=SHORTLIST_ORIGINS, case_titles={x.id: x.title for x in session.scalars(select(Case))})  # fmt: skip
+             origins=SHORTLIST_ORIGINS, case_titles={x.id: x.title for x in session.scalars(select(Case))},
+             scheduled=schedule.items(session), on_schedule=schedule.by_source(session, "shortlist"))  # fmt: skip
     return templates.TemplateResponse(request, "business/shortlist.html", c)
 
 
@@ -432,6 +434,8 @@ def _case_ctx(session: Session, co: str) -> dict:
     key, label, _ = op.company(co)
     return {"co": key, "co_label": label, "companies": op.COMPANIES, "statuses": cases.STATUSES,
             "kinds": cases.NOTE_KINDS, "fields": cases.FIELDS, "fns": blocks.catalogue()["functions"],
+            "sched_statuses": schedule.STATUSES, "sched_label": schedule.source_label,
+            "sched_link": schedule.source_link,
             "fn_choices": sorted(((k, f.get("label", k)) for k, f in blocks.catalogue()["functions"].items()),
                                  key=lambda kv: kv[1].lower())}  # fmt: skip
 
@@ -440,12 +444,51 @@ def _case_ctx(session: Session, co: str) -> dict:
 def case_list(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _case_ctx(session, co)
     c["cases"] = session.scalars(select(Case).order_by(Case.updated_at.desc())).all()
+    c["scheduled"] = schedule.items(session)
     return templates.TemplateResponse(request, "business/cases.html", c)
+
+
+@router.post("/business/schedule")
+async def schedule_add(request: Request, session: Session = Depends(get_session)):
+    """Schedule a topic for a business case review (shared contract, see app/services/schedule.py): title
+    (required), source, note, part, volume; adds or updates the entry, then back to `next` (a local path) or the
+    list."""
+    form = await request.form()
+    try:
+        item = schedule.schedule(session, str(form.get("title") or ""), str(form.get("source") or ""),
+                                 str(form.get("note") or ""), str(form.get("part") or ""),
+                                 str(form.get("volume") or ""))  # fmt: skip
+    except ValueError:
+        raise HTTPException(400, "Give the topic a title") from None
+    if request.headers.get("accept", "").startswith("application/json"):
+        return {"id": item.id, "status": item.status}
+    return RedirectResponse(local_path(form.get("next"), "/business/cases#scheduled"), status_code=303)
+
+
+@router.post("/business/schedule/{item_id:int}")
+async def schedule_update(request: Request, item_id: int, session: Session = Depends(get_session)):
+    """Change one scheduled topic: its note, mark it reviewed, put it back, or remove it."""
+    form = await request.form()
+    item = session.get(ScheduledReview, item_id)
+    if item is None:
+        raise HTTPException(404, "Scheduled topic not found")
+    act = str(form.get("act") or "note")
+    if act == "remove":
+        session.delete(item)
+    elif act == "done":
+        item.status = "done"
+    elif act == "reopen":
+        item.status = "started" if item.case_id else "scheduled"
+    else:
+        item.note = str(form.get("note") or "").strip()[:4000] or None
+    session.commit()
+    return RedirectResponse(local_path(form.get("next"), "/business/cases#scheduled"), status_code=303)
 
 
 @router.get("/business/cases/new", response_class=HTMLResponse)
 def case_new(request: Request, fn: str = "", co: str = "combined", title: str = "", idea: str = "",
-             shortlist: int | None = None, session: Session = Depends(get_session)):  # fmt: skip
+             shortlist: int | None = None, schedule_id: int | None = Query(None, alias="schedule"),
+             session: Session = Depends(get_session)):  # fmt: skip
     """New case, optionally from a function (Opportunity explorer) or an idea (Ideas page): nothing is saved until
     the user creates it."""
     c = _case_ctx(session, co)
@@ -458,8 +501,18 @@ def case_new(request: Request, fn: str = "", co: str = "combined", title: str = 
         start = f"From {SHORTLIST_ORIGINS[item.origin]}: {item.detail or item.title}\n"
         note = f"Note: {item.note}\n" if item.note else ""
         values["notes"] = (start + note + values.get("notes", "")).strip()
+    sched = session.get(ScheduledReview, schedule_id) if schedule_id else None
+    if sched is not None:  # started from the scheduled reviews (the usual way)
+        start = f"Scheduled from {schedule.source_label(sched.source)}: {sched.title}\n"
+        note = f"Note: {sched.note}\n" if sched.note else ""
+        values["notes"] = (start + note + values.get("notes", "")).strip()
+        if sched.volume and not values.get("volume"):
+            values["volume"] = sched.volume
     c.update(case=None, fn=fn if ctx else "", ctx=ctx, values=values, shortlist=item.id if item else None,
-             title=title[:200] or (item.title if item else "") or (f"New {ctx['label']}" if ctx else ""))  # fmt: skip
+             schedule=sched.id if sched else None,
+             title=title[:200] or (sched.title if sched else "") or (item.title if item else "")
+             or (f"New {ctx['label']}" if ctx else ""))  # fmt: skip
+    c["suggest"] = cases.suggestions(session, None, ctx, [], sched, c["title"])
     return templates.TemplateResponse(request, "business/case.html", c)
 
 
@@ -482,6 +535,8 @@ async def case_create(request: Request, session: Session = Depends(get_session))
     )
     if item is not None:
         item.case_id = case.id
+    if str(form.get("schedule") or "").isdigit():
+        schedule.link_case(session, int(str(form.get("schedule"))), case)
     session.commit()
     return RedirectResponse(f"/business/cases/{case.id}", status_code=303)
 
@@ -505,6 +560,8 @@ def case_detail(request: Request, case_id: int, co: str = "combined", session: S
              brief=cases.brief(case, ctx, lines), lines=lines, totals=pipeline.totals(lines),
              role_label=pipeline.ROLE_LABEL, others=others,
              merged_into=session.get(Case, int(merged)) if str(merged or "").isdigit() else None)  # fmt: skip
+    sched = session.scalar(select(ScheduledReview).where(ScheduledReview.case_id == case.id))
+    c["suggest"] = cases.suggestions(session, case, ctx, lines, sched)
     return templates.TemplateResponse(request, "business/case.html", c)
 
 
@@ -559,6 +616,7 @@ async def case_update(case_id: int, request: Request, session: Session = Depends
             it.case_id = None
         for dr in session.scalars(select(PipelineDraft).where(PipelineDraft.case_id == case.id)):
             dr.case_id = None
+        schedule.unlink_case(session, case.id)
         session.delete(case)
         session.commit()
         return RedirectResponse("/business/cases", status_code=303)
@@ -761,14 +819,14 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
 
 
 @router.get("/business/reports", response_class=HTMLResponse)
-def product_reports(request: Request, kind: str = "", tag: str = ""):
+def product_reports(request: Request, kind: str = "", tag: str = "", session: Session = Depends(get_session)):
     """Research & ideas: product ideas and reports, the list."""
     rows = [
         r for r in rp.reports() if (not kind or r.get("kind") == kind) and (not tag or tag in (r.get("tags") or []))
     ]
     tags = sorted({t for r in rp.reports() for t in r.get("tags") or []})
     ctx = {"rows": rows, "kinds": rp.KINDS, "statuses": rp.STATUSES, "kind": kind, "tag": tag, "tags": tags,
-           "n_all": len(rp.reports())}  # fmt: skip
+           "n_all": len(rp.reports()), "scheduled": schedule.by_source(session, "research")}  # fmt: skip
     return templates.TemplateResponse(request, "business/reports.html", ctx)
 
 
@@ -827,6 +885,9 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     fn = (ctx["case"] or {}).get("fn")
     ctx["walk_parts"] = walk.competitor_parts(session, fn, 4) if fn else []
     ctx["library"] = library.items((ctx["case"] or {}).get("library") or [])
+    ctx["scheduled"] = schedule.by_source(session, "research").get(slug)
+    ctx["learn"] = rp.learn(r)
+    ctx["opener"] = (ctx["case"] or {}).get("opener") or prelim.opener(session, slug)
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

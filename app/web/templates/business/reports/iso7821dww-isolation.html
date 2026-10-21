@@ -1,0 +1,70 @@
+{% raw %}<h1>Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit</h1>
+<p class="meta">21 Oct 2026 · Research idea for a business case · built only from BizDev data: parts database (TI, Skyworks, Novosense digital isolators), cross results, block-diagram library (219 application diagrams), TI reference designs and the library topic on traction-inverter isolation. No new web research; open points are marked “open”.</p>
+
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>The part:</b> TI ISO7821DWW is a 2-channel (one each way) reinforced digital isolator in a 16-pin extra-wide SOIC (DWW): 5.7 kVrms, 2828 Vpk working voltage, <b>14.5 mm creepage</b>, 100 Mbps, 85 kV/µs CMTI, –55 to 125 °C, industrial grade, enable pins on both sides.</li>
+    <li><b>Our position:</b> our closest crosses, Si86S621 and Si86S622 (SSO-8), are reinforced too and better on CMTI (100 kV/µs), isolation rating (6 kVrms) and speed (150 Mbps), with automotive (-AS4) versions. But <b>none of our 672 digital isolators passes 8 mm creepage</b>; TI has 20 parts and Novosense 6 at 14.5–15 mm.</li>
+    <li><b>Where it matters:</b> digital isolators sit in 66 of the 219 application diagrams, among them the HEV/EV on-board charger, DC fast charger, AC wallboxes, the HV-to-LV DC/DC and traction inverters, next to our isolated gate drivers, isolated DC-DC and isolated amplifiers.</li>
+    <li><b>The business-case question:</b> whether 800 V chargers and inverters push customers past 8 mm, and whether an extra-wide package for our existing isolator die (plus the neighbours) is worth it. Market size is open.</li>
+  </ol>
+</section>
+
+<h2>1. Adjacent products and technologies</h2>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Next to ISO7821DWW</th><th scope="col">What we have</th><th scope="col">Examples and notes</th></tr></thead>
+  <tbody>
+    <tr><td>2-channel reinforced isolator (1/1)</td><td><span class="pill have">yes, 8 mm max</span></td><td>Si86S621 / Si86S622 (SSO-8, 6 kVrms, 2121 Vpk, 100 kV/µs, 150 Mbps; -IS4 industrial, -AS4 automotive). Also 1/1 parts in SOIC-16W at 8 mm (5 kVrms) and SOIC-8N at 3.9–4 mm.</td></tr>
+    <tr><td>Extra-wide package (14.5 mm creepage)</td><td><span class="pill none">none</span></td><td>No Skyworks digital isolator above 8 mm in BizDev (packages: QSOP-16, SOIC-8N, SOIC-16N, SOIC-16W, SOIC-20W, SSO-8).</td></tr>
+    <tr><td>Isolated gate drivers</td><td><span class="pill have">154 parts</span></td><td>Si829x ASIL-D safety driver for traction (6 kVrms reinforced, 125 kV/µs); Si8285/86 with DESAT (basic, 8 mm).</td></tr>
+    <tr><td>Isolator + isolated DC-DC controller</td><td><span class="pill part">basic only</span></td><td>Si88xx (automotive, 1414 Vpk, 7.6 mm creepage); no reinforced bias controller in the data.</td></tr>
+    <tr><td>Isolated current and voltage sensing</td><td><span class="pill have">yes</span></td><td>Si892x / Si894x shunt amplifiers and modulators, Si893x DC-link voltage (reinforced; SSO-8 5 kVrms, 8–8.5 mm).</td></tr>
+    <tr><td>Process</td><td><span class="pill have">yes</span></td><td>Capacitive digital isolation (Si86xx / Si88xx / Si82xx / Si89xx): “same technology” for this function.</td></tr>
+  </tbody>
+</table></div>
+
+<h3>What could combine into a product, strongest first</h3>
+<ol class="opps">
+  <li><b>Offer Si86S621/622-AS4 where 8 mm is enough.</b> Better CMTI, kVrms and speed, automotive grade, today. <span class="muted">Different package and pinout (8 vs 16 pins): a board change, not a drop-in.</span></li>
+  <li><b>An extra-wide-package version of our 2-channel isolator.</b> Same die in a 14.5 mm-class package to meet the creepage TI and Novosense offer. <span class="muted">Open: package availability, cost and qualification time.</span></li>
+  <li><b>An isolation set for the charger and inverter:</b> isolator + Si829x / Si8285/86 gate drivers + Si89xx sensing + isolated bias, sold as one reference. <span class="muted">Open: a reinforced isolated bias controller is missing.</span></li>
+</ol>
+
+<h2>2. Where else we see opportunities</h2>
+<ul>
+  <li><b>Charging:</b> HEV/EV on-board charger (two-stage PFC + isolated DC/DC), DC fast charging station, AC wallboxes (TI, NXP and Renesas diagrams) and wireless EV charging; each also uses our gate drivers, isolated DC-DC or isolated amplifiers.</li>
+  <li><b>Car power:</b> traction inverters (400 / 800 V), HV-to-LV DC/DC, HV battery system and power distribution box, e-compressor, vehicle control unit.</li>
+  <li><b>Power conversion:</b> solar string, micro and central inverters, energy-storage PCS, UPS, server and data-center battery backup, portable power stations.</li>
+  <li><b>Reference designs:</b> TI TIDA-00785 (isolated GaN driver) pairs ISO7821 with a GaN gate driver and an isolated supply: the same pairing we can offer.</li>
+</ul>
+
+<h2>3. Market trend</h2>
+<ul>
+  <li><b>Crowded and price-driven:</b> TI, ADI, Infineon, ST, onsemi, Novosense, Chipanalog, 2Pai, Toshiba and Rohm; “established leaders plus fast-growing Chinese suppliers; increasingly price-competitive”.</li>
+  <li><b>Higher voltage:</b> 800 V SiC is now mainstream in traction (library topic), with CMTI of 100–200 kV/µs and reinforced isolation; creepage and working-voltage needs rise with it. <span class="muted">Open: the required creepage per IEC 60664-1 / ISO 6469-3 is not verified here.</span></li>
+  <li><b>Wide packages as a differentiator:</b> in BizDev only TI (20 parts) and Novosense (6, e.g. NSI8321W1 at 15 mm and 7.5 kVrms) reach 14.5–15 mm.</li>
+  <li><span class="muted">Open: market size, volumes and prices for extra-wide isolators are not in BizDev.</span></li>
+</ul>
+
+<h2>Risks</h2>
+<ul>
+  <li>Creepage above 8 mm may be needed only in a few designs; most chargers may be fine with 8 mm (open).</li>
+  <li>A new package means qualification time and cost against a price-driven market.</li>
+  <li>Our working voltage (2121 Vpk) is below ISO7821DWW's (2828 Vpk), and our low-temperature end is –40 °C vs –55 °C.</li>
+</ul>
+
+<h2>Open questions</h2>
+<ul>
+  <li>Which customers asked for ISO7821DWW, in which product, and at what volume?</li>
+  <li>What creepage and working voltage do 800 V OEMs require for the charger and inverter barrier?</li>
+  <li>Can our 2-channel isolator die go into an extra-wide package, and what would it cost?</li>
+  <li>What do TI and Novosense charge for their extra-wide parts?</li>
+</ul>
+
+<h2>Sources</h2>
+<ul class="small">
+  <li>BizDev parts database: ISO7821DWW, ISO7821DW (TI data sheet SLLSEM2I), Si86S621/622, Novosense NSI8321W1/NSI8322W1; cross results for ISO7821DWW.</li>
+  <li>BizDev block-diagram library: digital isolator in 66 of 219 application diagrams; competition and technology data for the function.</li>
+  <li>TI reference design TIDA-00785; library topic “Isolation in the ASIL-D traction inverter”.</li>
+</ul>{% endraw %}

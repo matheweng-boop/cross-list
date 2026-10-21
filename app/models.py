@@ -552,3 +552,22 @@ class VerifyTask(Base):
     author: Mapped[str | None] = mapped_column(String(100))
     assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ScheduledReview(Base):
+    """A topic scheduled for a business case review (Future growth > Business cases): pushed from Research & ideas
+    (source "research:<report slug>"), from a preliminary case in the Products walk-through ("prelim:<draft id>") or
+    from the shortlist. Business cases start from this list; the case it started is linked."""
+
+    __tablename__ = "scheduled_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    source: Mapped[str | None] = mapped_column(String(120), index=True)  # free text, e.g. research:<slug>
+    note: Mapped[str | None] = mapped_column(Text)
+    part: Mapped[str | None] = mapped_column(String(100))  # part number the topic is about, if any
+    volume: Mapped[str | None] = mapped_column(String(60))  # as given, e.g. "200000" or "200 k a year"
+    status: Mapped[str] = mapped_column(String(12), default="scheduled")  # scheduled | started | done
+    case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

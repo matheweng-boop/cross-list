@@ -7,6 +7,7 @@
 <p class="subtitle muted">Everything BizDev knows about this function: how it is scored, the path to a product, and the background evidence
   (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
   <a href="/business/quality">Data quality</a> and feed the next data update.</p>
+{% if walk_parts %}<p class="small walk-back">Walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a> <small class="muted">{{ p.manufacturer.name|vendor }}</small>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 {{ about('evidence') }}
 <p>{{ status_chip(status, status_label) }} {{ path_chip(ev.path, path_label) }}</p>
 

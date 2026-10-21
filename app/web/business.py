@@ -18,12 +18,13 @@ from app.models import (
     CaseNote,
     DataReview,
     OpportunityDecision,
+    Part,
     PartMapping,
     PipelineDraft,
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, prelim, quality, scoring, vocab
+from app.services import blocks, cases, pipeline, prelim, quality, scoring, vocab, walk
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -96,6 +97,8 @@ def attach(request: Request, fn: str = "", co: str = "combined", part: str = "",
     c["q_part"], c["q_app"] = part.strip()[:60], app.strip()[:120]
     c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
     c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
+    c["walk_part"] = (session.scalar(select(Part).where(Part.mpn == c["anchor"]["mpn"]).limit(1))
+                      if c["anchor"] and not c["anchor"]["ours"] else None)  # fmt: skip
     c["bundle_cfg"] = scoring.config()["bundle"]
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
     c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], vocab.fn_label(kv[0])))
@@ -301,7 +304,8 @@ async def decide(request: Request, session: Session = Depends(get_session)):
 
 
 SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
-                     "customers": "Customers", "idea": "New ideas", "report": "Research & ideas"}  # fmt: skip
+                     "customers": "Customers", "idea": "New ideas", "report": "Research & ideas",
+                     "part": "Part walk-through"}  # fmt: skip
 
 
 @router.post("/business/shortlist")
@@ -635,6 +639,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
              need=next((g for g in op.gaps(c["apps"], c["asp"], c["vol"]) if g["fn"] == fn), None),
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
+    c["walk_parts"] = walk.competitor_parts(session, fn)
     return templates.TemplateResponse(request, "business/evidence.html", c)
 
 
@@ -818,6 +823,8 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
            "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
            "verdict_label": prelim.VERDICT_LABEL, "question_groups": prelim.QUESTION_GROUPS,
            "benefit_kinds": prelim.BENEFIT_KINDS, "label": vocab.fn_label}  # fmt: skip
+    fn = (ctx["case"] or {}).get("fn")
+    ctx["walk_parts"] = walk.competitor_parts(session, fn, 4) if fn else []
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

@@ -20,7 +20,7 @@
   · <span class="small">confidence</span> <span class="pc-conf c-{{ opp.confidence }}" title="the score's confidence{{ ', one step lower: a reviewer disagreed with ' ~ opp.disputed|join(', ') if opp.disputed }}">{{ opp.confidence }}{{ ' ↓' if opp.disputed }}</span></p>
 {% if opp.feasibility %}<p class="pc-feas">{{ fz.feas(opp.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span>
   {% if opp.mismatch %}<span class="feas-flag" title="Derived from the headline feature's distance {{ opp.headline.distance }} (0–1 → 1, 2–3 → 2, 4 → 3); the curated value in reports.yaml is kept">⚑ derived feasibility is {{ opp.derived }}, not {{ opp.curated }}</span>{% endif %}</p>{% endif %}
-<p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a></p>
+<p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a>{% if walk_parts %} · walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>
 
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
 

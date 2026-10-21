@@ -1,0 +1,297 @@
+# Technology review: Qorvo ACT88321 configurable PMIC (format: see the review schema shared by the review workers).
+# Sources read 2026-10-21. Qorvo's own site is not reachable for us (bot checkpoint), so the Qorvo datasheet is a
+# public copy on a distributor's file server (marked "unofficial copy"); competitor datasheets come from their makers.
+slug: qorvo-act88321-pmic
+title: "Qorvo ACT88321: one small chip that makes all the power rails of an SSD controller, set by a factory code"
+status: draft
+date: 2026-10-21
+maker: Qorvo
+family: pmic
+parts: [ACT88321VU101, ACT88321VU103, ACT88321VU104, ACT88321VU105, ACT88321VU106, ACT88321VU112]
+app_area: Power management
+question: "What does the ACT88321 solve, how does it work, how do you read its datasheet, and which features matter in an SSD, an FPGA board or a camera?"
+in_brief:
+  - text: "The ACT88321 turns one 3.3 V (or up to 5.5 V) input into the five supplies a processor needs: three buck converters (4 A, 4 A, 2 A) and two 390 mA LDOs, in a 2.18 x 2.58 mm chip-scale package."
+    conf: high
+    src: s1
+  - text: "Its main idea is configurability: voltages, start-up order, delays, soft-start, switching frequency and sleep behaviour are stored as factory defaults (a 'CMI' code, the last three digits of the part number) and can be changed over I2C, so one silicon design fits many processors without a PCB change."
+    conf: high
+    src: s1
+  - text: "Each CMI is matched to one SSD controller: VU103 and VU104 to Innogrit controllers (VU104 developed with Innogrit), VU105 and VU106 to Silicon Motion SM2269XT, VU110 to Phison PS5013. Selling it means winning the controller maker's reference design."
+    conf: high
+    src: s1
+  - text: "We chose it because it is a current ('Standard') part with six orderable codes in the catalogue, a full 61-page public datasheet copy, and it shows the whole Qorvo PMIC concept. Most of the older ACT88xx / ACT8xxx parts in the catalogue are discontinued."
+    conf: high
+    src: s2
+  - text: "No AEC-Q100 automotive or functional-safety ACT88xxx PMIC shows up in the catalogue. For cameras or ADAS, the review describes those features from TI's TPS6594-Q1 page (competitor), not from a Qorvo document."
+    conf: med
+    src: s6
+  - text: "Note on sources: the Qorvo datasheet copy has all the tables, but its efficiency curves are pictures only. Where the Qorvo copy is thin (efficiency curves, user-programmable memory, safety), the walk-through uses competitor datasheets (TI TPS65219, TI TPS6594-Q1, Richtek RT5142) and says so."
+    conf: high
+    src: s3
+problem:
+  summary: "A modern controller chip (an SSD controller, an FPGA, a vision processor) does not run on one voltage. It needs a core rail below 1 V, a 1.2 V memory or I/O rail, a 1.8 V I/O rail, a 2.5-3.3 V rail for the flash or other chips, and they must come up and go down in a fixed order. Building this from five separate regulators plus a sequencer and a supervisor takes board space, parts and design time. An M.2 SSD has very little room and must sip power in standby."
+  points:
+    - text: "Many rails, each with its own value: on the Innogrit IG5220 board (CMI 104) the rails are 3.0 V, 0.8 V, 1.2 V, 1.2 V and 1.8 V."
+      conf: high
+      src: s1
+    - text: "The order matters: the CMI 104 table switches Buck2 and LDO1 on first, then LDO2 after 0.5 ms, Buck1 after 1 ms, then an external enable and finally Buck3. A wrong order can latch up or damage the processor."
+      conf: high
+      src: s1
+    - text: "Small board area: the whole power section must fit on an M.2 2280 card next to the controller, DRAM and flash. The datasheet says Qorvo's customer Innogrit uses the part on a PCIe Gen4 DRAM-less M.2 2280 board."
+      conf: high
+      src: s1
+    - text: "Very low standby power: SSDs have standby modes with almost no load; the datasheet's ultra-low-power mode exists to meet these ('a requirement in their standby modes')."
+      conf: high
+      src: s1
+    - text: "Fast design-in: each new controller generation changes the rail values. A configurable PMIC avoids a new chip or a new PCB; only the factory code or I2C settings change."
+      conf: high
+      src: s1
+    - text: "The 3.3 V bus problem: on a 3.3 V SSD the 3.3 V rail itself must also be switched in sequence. The built-in bypass switch on Buck1 does this, so no extra load switch is needed."
+      conf: high
+      src: s1
+concept:
+  summary: "Five regulators share one chip and one digital 'master controller'. The controller holds the default settings (from the factory CMI code), runs a small state machine (reset, start sequence, active, sleep, deep sleep, fault), watches the input and every output, and talks to the host processor over I2C and a few configurable pins (power-good, reset, interrupt, enables)."
+  blocks:
+    - name: "Buck1: 4 A step-down with bypass switch"
+      what: "A fixed-frequency (1.125 or 2.25 MHz) current-mode buck, 0.6-3.775 V in 25 mV steps. It can also act as a plain switch that passes the 3.3 V input straight through (30 mOhm), with its own over-current and over-voltage cut-off."
+      why: "Makes the 2.5-3.3 V rail for flash or I/O, or switches the 3.3 V bus in sequence without an extra part. Peak efficiency up to 96.5 % per the datasheet text."
+      conf: high
+      src: s1
+    - name: "Buck2: 4 A core-rail buck (ACOT)"
+      what: "An adaptive constant-on-time buck with 0.5-1.77 V in 10 mV steps, 1.5-3.3 MHz, dynamic voltage scaling (switch between two set voltages on the fly)."
+      why: "Feeds the processor core. Constant-on-time control answers load jumps quickly with small output capacitors; fine 10 mV steps let the core run at the lowest safe voltage."
+      conf: high
+      src: s1
+    - name: "Buck3: 2 A buck (ACOT)"
+      what: "Same control type as Buck2, 0.5-3.6 V in 100 mV steps, 2 A."
+      why: "Typical use: the 1.2 V or 1.8 V memory / I/O rail."
+      conf: high
+      src: s1
+    - name: "LDO1 and LDO2: 390 mA linear regulators; LDO1 also a load switch"
+      what: "0.6-3.75 V in 50 mV steps. LDO1 has its own input and can run as an N- or P-type load switch (310 mOhm in NLSW mode)."
+      why: "Quiet small rails (PLL, analog, 1.8 V I/O) without an inductor; the load-switch mode sequences a rail made elsewhere."
+      conf: high
+      src: s1
+    - name: "Master controller, registers and factory code (CMI)"
+      what: "Registers set voltages, delays (0-32 ms), soft-start, frequency, current limits and fault masks. Defaults come from the factory code. Changes made over I2C are lost when power is removed; new defaults need a custom factory code (minimum order quantity applies)."
+      why: "This is the 'one chip, many customers' concept. It also means a customer cannot save their own settings in the field, unlike TI's user-programmable TPS6521905."
+      conf: high
+      src: s1
+    - name: "Sequencing and GPIOs"
+      what: "Each rail has a turn-on trigger, delay, soft-start and turn-off delay. Four GPIOs can be power-good, reset (with 0.5-100 ms delay), interrupt, sleep inputs, voltage-select inputs or an enable for an external regulator."
+      why: "Replaces a separate sequencer and reset supervisor, and can bring an outside supply into the same start-up order."
+      conf: high
+      src: s1
+    - name: "Monitoring and protection"
+      what: "Input under-voltage lock-out (2.6 or 3.5 V), two programmable input-low warnings (SYSMON, SYSWARN), two input over-voltage levels, output power-good (93 %) and over-voltage (110 %) on every rail, three-level current limit on the bucks, thermal warning and shutdown (155 C)."
+      why: "Lets the controller save data or shut down cleanly when the 3.3 V input sags (for example a host pulling power), and protects the expensive controller from a faulty rail."
+      conf: high
+      src: s1
+    - name: "Sleep modes"
+      what: "Sleep and deep-sleep states set by I2C or a pin, plus low-power (about 40 uA) and ultra-low-power (about 10 uA) buck modes."
+      why: "Meets SSD standby power budgets."
+      conf: high
+      src: s1
+    - name: "Functional safety (automotive) - not in the ACT88321"
+      what: "The ACT88321 has no watchdog, no safety documentation and no automotive rating. Automotive SoC PMICs such as TI's TPS6594-Q1 add AEC-Q100 grade 1, ISO 26262 documentation up to ASIL-D, a watchdog, error-signal monitors and CRC checks on the settings memory."
+      why: "Shows what a Qorvo PMIC would need to enter ADAS camera or domain-controller sockets."
+      conf: med
+      src: s4
+datasheet:
+  - section: "Page 1: features, description and applications"
+    reading: "Read the rail list first (3 bucks, 2 LDOs, their currents) and the input range (2.7-5.5 V). The description says what is configurable and that the part ships 'with a default configuration'."
+    watch_out: "The cover lists 'Fsw 1.125 MHz to 3.3 MHz' for all bucks together; each buck has its own range in the tables."
+    conf: high
+    src: s1
+  - section: "Typical application and functional block diagram (pages 2-3)"
+    reading: "Shows the outside parts: one input capacitor, one 0.47 uH inductor and one or two output capacitors per buck, 1 uF on the LDOs. Count them to estimate board area and bill of materials."
+    watch_out: "AVIN must always be the highest input voltage on the chip (note in the operating conditions)."
+    conf: high
+    src: s1
+  - section: "Ordering information: the rails table (page 4)"
+    reading: "This is the most important table for a sales discussion. Each row is one factory code (CMI) with its input voltage, the five rail voltages, the I2C address and the package. 'LSW' / 'PLSW' means LDO1 is used as a load switch; two values (e.g. 2.9/2.5 V) mean the rail can switch between two set points."
+    watch_out: "The last three digits are a configuration, not a different chip; ask which code matches the customer's controller. Codes marked 'Preliminary' (VU105.E1T) or missing from the store (VU110) need checking with the factory."
+    conf: high
+    src: s1
+  - section: "Absolute maximum ratings and operating conditions (page 7)"
+    reading: "Absolute maximum: 6 V on power pins, junction -40 to 150 C, 2 kV HBM ESD. Recommended: 2.7-5.5 V input, junction up to 125 C."
+    watch_out: "The 6 V limit means the part runs only from a 3.3 V or 5 V rail; it cannot sit on a 12 V SSD input. Qorvo's ACT86610 / ACT85610 cover 12 V inputs."
+    conf: high
+    src: s1
+  - section: "Thermal (page 7 and layout section)"
+    reading: "Junction-to-ambient 37 C/W, measured on Qorvo's evaluation board. Multiply the total power lost in the chip by 37 to get the rise above the board temperature (1.5 W lost = about 55 C rise)."
+    watch_out: "The value is for Qorvo's board; a crowded M.2 card can be worse. TI gives a fuller set (31.3 C/W junction-to-ambient plus junction-to-board and junction-to-case) for its 4 x 4 mm QFN TPS65219, a good model of what to ask for."
+    conf: high
+    src: s1
+  - section: "System control characteristics (pages 9-11)"
+    reading: "Thresholds for under-voltage lock-out, input over-voltage, power-good, sleep currents, start-up time (about 0.6-0.9 ms after power is applied) and the menus of delays (0-32 ms) and reset timing (0.5-100 ms)."
+    watch_out: "Many values are 'set point +/- 3.5 %'; the actual set point lives in the CMI tables at the back."
+    conf: high
+    src: s1
+  - section: "Per-regulator tables (pages 12-20)"
+    reading: "For each buck and LDO: output range and step, maximum current, accuracy (+/-1 % at 25 C, +/-1.5-2 % over temperature), current limit, switching frequency and soft-start. For the LDOs also dropout (up to 400 mV at 400 mA)."
+    watch_out: "The 4 A rating of Buck1 is tied to using both of its balls and a 105 C junction for lifetime; a hotter board means less current."
+    conf: high
+    src: s1
+  - section: "Typical operating characteristics: efficiency curves (pages 42-47)"
+    reading: "Efficiency curves plot efficiency (%) against load current on a log scale, one curve per input voltage. Read the light-load end (standby) and the actual working current, not only the peak. In the public copy these pages are images only, so this review gives no curve values beyond the 96.5 % peak in the text. TI's TPS65219 datasheet shows the same type of plot (efficiency of Buck1 and Buck2/3 at 5 V in, 1.8 V out)."
+    watch_out: "Curves are 'typical' at 25 C on the maker's board; they are not guaranteed limits."
+    conf: med
+    src: s3
+  - section: "CMI option pages (pages 48-61)"
+    reading: "One page per factory code with three tables: rail voltages and current limits per state (active, sleep, deep sleep), the start-up sequence (order, trigger, delay, soft-start) and the input thresholds. The text says which controller each code was made for."
+    watch_out: "The datasheet says these pages override the main text, and some base functions are removed in some codes; the customer must test the exact code."
+    conf: high
+    src: s1
+  - section: "How the competitor documents differ"
+    reading: "TI splits the same content into a datasheet plus a technical reference manual per orderable code, and lists which TI or NXP processor each code serves (AM62x, AM64x, i.MX 8M Plus, i.MX 93). Richtek's RT5142 datasheet (SSD PMIC) uses the same structure: rail list, trim version in the part number, non-volatile register defaults."
+    watch_out: "Compare per code, not per base part: two codes of the same chip can have different rails and sequences."
+    conf: high
+    src: s3
+key_features:
+  - feature: "Five rails in one chip"
+    value: "3 bucks (4 A, 4 A, 2 A) + 2 LDOs (390 mA)"
+    meaning: "One part makes all the supplies a mid-size controller needs."
+    why_it_matters: "Fewer parts, less board area, one supplier; for an SSD this is the whole power section behind the 3.3 V input."
+    applications: [SSD, FPGA board, Computer vision camera]
+    conf: high
+    src: s1
+  - feature: "Tiny package"
+    value: "30-ball WLCSP, 2.18 x 2.58 mm"
+    meaning: "About the size of a grain of rice; plus small 0.47 uH inductors because the bucks switch at 1.1-3.3 MHz."
+    why_it_matters: "Fits next to the controller on an M.2 2280 card or a camera board."
+    applications: [SSD, Computer vision camera, Wearable]
+    conf: high
+    src: s1
+  - feature: "Factory configuration codes (CMI) plus I2C changes"
+    value: "6 codes in datasheet Rev. C; 6 orderable in the catalogue"
+    meaning: "The same silicon ships with different default voltages and start-up order; the host can change most settings after power-up."
+    why_it_matters: "Fast design-in with the controller maker's reference design; a new controller needs only a new code. Limitation: user changes are not saved at power-off."
+    applications: [SSD, FPGA board]
+    conf: high
+    src: s1
+  - feature: "Programmable sequencing"
+    value: "Per rail: trigger, 0-32 ms on / off delay, soft-start 50-500 us; reset delay 0.5-100 ms"
+    meaning: "The chip powers each rail in the right order and holds the processor in reset until all are good."
+    why_it_matters: "Replaces a separate sequencer and supervisor; avoids start-up failures of the controller."
+    applications: [SSD, FPGA board]
+    conf: high
+    src: s1
+  - feature: "Buck1 bypass (load) switch"
+    value: "30 mOhm, 2.7-3.7 V input, current trip 3.1-5.8 A"
+    meaning: "Buck1 can just pass the 3.3 V input through, switched on at the right moment and protected."
+    why_it_matters: "On a 3.3 V SSD the 3.3 V rail is sequenced too, with no extra switch IC."
+    applications: [SSD]
+    conf: high
+    src: s1
+  - feature: "Core rail with fine steps and voltage scaling"
+    value: "Buck2: 0.5-1.77 V in 10 mV steps, 4 A, two set points (DVS)"
+    meaning: "The core voltage can be set precisely and moved between two levels while running."
+    why_it_matters: "Saves power at low workload and matches controllers that need 0.70-0.96 V cores (as in the codes for SM2269XT and PS5013)."
+    applications: [SSD, FPGA board, Computer vision camera]
+    conf: high
+    src: s1
+  - feature: "Light-load efficiency"
+    value: "Low-power mode about 40 uA, ultra-low-power mode about 10 uA per buck; up to 8 % better at 2 mA"
+    meaning: "When the drive idles, the PMIC itself uses almost nothing."
+    why_it_matters: "SSD and laptop standby specs count microwatts; this is often the deciding spec."
+    applications: [SSD, Wearable, Battery camera]
+    conf: high
+    src: s1
+  - feature: "Input monitoring and warnings"
+    value: "UVLO 2.6 / 3.5 V; SYSMON 2.7-4.8 V and SYSWARN 2.7-5.7 V in 100 mV steps; input OV 3.7-5.8 V"
+    meaning: "The chip tells the controller early that the input is falling or too high."
+    why_it_matters: "Gives the SSD controller time to save data before power is lost (together with a power-loss-protection IC such as Qorvo's ACT4910 / ACT85610)."
+    applications: [SSD]
+    conf: high
+    src: s1
+  - feature: "Output protection on every rail"
+    value: "Power-good at 93 %, over-voltage at 110 %, 3-level current limit, 155 C thermal shutdown"
+    meaning: "Every rail is watched; a fault switches all rails off for 100 ms and restarts them in order."
+    why_it_matters: "Protects a controller that costs far more than the PMIC."
+    applications: [SSD, FPGA board, Computer vision camera]
+    conf: high
+    src: s1
+  - feature: "Temperature range and rating"
+    value: "Junction -40 to 125 C (operating); no AEC-Q100 rating stated"
+    meaning: "Industrial and consumer temperature range; not qualified for cars."
+    why_it_matters: "Fine for SSDs, cameras and industrial FPGA boards; ADAS cameras need an AEC-Q100 part such as TI's TPS6594-Q1 (grade 1, -40 to 125 C ambient)."
+    applications: [Industrial camera, Automotive camera (not a fit)]
+    conf: med
+    src: s4
+applications:
+  - diagram: "Notebook PC (power, USB-C charging, embedded controller) (TI)"
+    role: "Not on the motherboard itself but inside its M.2 SSD: the ACT88321 is the PMIC of the SSD card, behind the 3.3 V M.2 supply."
+    conf: high
+  - diagram: "Server motherboard (x86 CPU, PCH, BMC, VR power) (TI)"
+    role: "Inside an M.2 boot drive on the board. Enterprise SSDs with 12 V input fit Qorvo's ACT86610 / ACT85610 rather than the ACT88321."
+    conf: med
+  - diagram: "Wired IP security camera (PoE) (TI)"
+    role: "Fills the PMIC block after the PoE converter's 3.3 V or 5 V output, powering a vision processor's core, DDR and I/O rails (the datasheet lists computer vision)."
+    conf: med
+  - diagram: "Video doorbell (battery powered, Wi-Fi) (TI)"
+    role: "Same role on a battery camera; the low-power modes help standby time."
+    conf: low
+  - diagram: "Digital X-ray flat-panel detector (static; TFT row drivers + charge-integrating AFEs, FPGA, battery + wireless) (TI)"
+    role: "Possible PMIC for the FPGA's core and I/O rails in the low-voltage supply block (FPGA is a listed application)."
+    conf: low
+  - diagram: "Smart home control panel / hub (MPU, touch display, Wi-Fi + Zigbee / BLE, NFC; Matter-style appliance control) (NXP)"
+    role: "The PMIC block for an application processor; older siblings (ACT8945A for Microchip SAMA5) were made for this kind of socket."
+    conf: low
+  - diagram: "Automotive surround view system ECU (4+ cameras over FPD-Link / Ethernet, vision processor, video out) (TI)"
+    role: "Not a fit today: the processor power block needs an AEC-Q100, ASIL-rated PMIC (as TI's TPS6594-Q1). This marks the gap in the Qorvo line."
+    conf: med
+competitors:
+  - maker: TI
+    parts: "TPS65219 (and TPS65215-Q1 for cars)"
+    how: "Closest match: 3 bucks (3.5 A, 2 A, 2 A) + 4 LDOs, 2.5-5.5 V in, 4 x 4 mm QFN. Pre-set codes per TI / NXP / ST processor, and a user-programmable code (TPS6521905) whose settings the customer can store in EEPROM. Not aimed at SSDs; larger package than the ACT88321."
+    conf: high
+    src: s3
+  - maker: TI
+    parts: "TPS6594-Q1"
+    how: "Automotive SoC PMIC: 5 bucks (up to 14 A multi-phase) + 4 LDOs, AEC-Q100 grade 1, ISO 26262 up to ASIL-D, watchdog, error monitors, CRC on settings. Targets Jacinto ADAS processors. Qorvo has no equivalent in the catalogue."
+    conf: high
+    src: s4
+  - maker: Richtek
+    parts: "RT5142"
+    how: "Dedicated SSD PMIC: 4 bucks (4 A, 2 A, 4 A, 2 A) + 2 LDOs (400 mA), 2.7-3.7 V in, 8 GPIOs, non-volatile register defaults with a trim version in the part number, 2.66 x 2.70 mm WL-CSP. The most direct head-to-head competitor in SSDs; one more buck than the ACT88321."
+    conf: high
+    src: s5
+  - maker: Silergy
+    parts: "SY21523, SY21572"
+    how: "Listed by the maker as 'PMIC for SSD system' with 5 bucks + 2 LDOs and I2C control (seen in a search listing only; pages not read)."
+    conf: low
+  - maker: "NXP, ADI / Maxim, Renesas / Dialog, Rohm, Infineon, MPS"
+    parts: "PF5020 / PF8x00 (NXP), MAX77714 class (ADI), DA9062 / DA9063 (Renesas), BD96801Q12 (Rohm)"
+    how: "Processor and automotive PMICs that compete in SoC / camera sockets rather than SSDs. Not checked for this review (NXP's site blocked our reader earlier); listed from general knowledge only."
+    conf: low
+our_position: "The ACT88321 is Qorvo's (now Skyworks') current mid-size SSD / FPGA PMIC. Around it, the combined company can sell: Qorvo's other SSD power parts (ACT88329 and ACT88420 for other controllers, ACT88760 with 7 bucks for larger SoCs, ACT86610 Gen 6 12 V SSD PMIC with eFuse control, and the ACT4910 / ACT4921 / ACT85610 power-loss-protection ICs that hold up an enterprise SSD when power fails); and Skyworks' PCIe clock buffers (e.g. Si532xx / Si531xx families), crystal oscillators and clock generators for the same SSD or FPGA board. Skyworks adds single-rail SKY87202 / SKY87203 bucks for extra rails; its own PMICs (SKY51001, SKY87020 / SKY87021) serve RF and SkyBlue systems, not processors, so the ACT line (Qorvo, ex Active-Semi) is the processor-PMIC base of the combined portfolio. Gaps: no automotive or functional-safety PMIC, no user-programmable (EEPROM) version, and the win depends on being in the SSD controller maker's reference design."
+open_questions:
+  - "Which SSD controller makers (Innogrit, Silicon Motion, Phison, others) still carry an ACT88321 code in their current reference designs, and which use Richtek or Silergy instead?"
+  - "Is the ACT88321VU112 (in the store, not in datasheet Rev. C) a newer controller code? Which controller?"
+  - "Is there a newer datasheet than Rev. C (March 2022)? The public copy may be out of date."
+  - "What are the minimum order quantity and lead time for a new custom CMI code?"
+  - "Is an automotive (AEC-Q100) or functional-safety version of the ACT88xxx line planned, for camera or ADAS sockets?"
+  - "Would a user-programmable version (settings saved by the customer, as TI's TPS6521905) speed up design-ins with smaller customers?"
+learn:
+  "5": "A chip needs several different 'strengths' of electricity, a bit like a toy that needs a big battery and a small one. The ACT88321 is a tiny box that takes one supply and makes five, and turns them on one after the other in the right order."
+  "10": "Computers inside an SSD run on low voltages like 0.8 V, 1.2 V, 1.8 V and 3.3 V. The ACT88321 makes all of them from the 3.3 V that comes from the laptop. It also watches each one and switches everything off if something goes wrong, so the expensive controller chip is not damaged."
+  "15": "The ACT88321 has three switching regulators (bucks), which convert voltage efficiently using a small coil, and two linear regulators (LDOs), which are quieter but waste more energy. A digital controller inside sets each voltage, the start-up order and the delays. The settings come from a factory code in the part number, so the same chip can be sold to different SSD makers."
+  "20": "Buck1 is a fixed-frequency current-mode converter that can also act as a 3.3 V load switch; Buck2 and Buck3 use adaptive constant-on-time control for fast load response with small capacitors, and Buck2 supports dynamic voltage scaling in 10 mV steps for the core. Power-good (93 %), over-voltage (110 %), current limits and input warnings report through I2C and an interrupt pin. Low-power and ultra-low-power modes cut quiescent current to about 10 uA per buck for SSD standby. Settings changed over I2C are volatile; new defaults need a factory CMI."
+  "25": "Design-in and trade-offs: the ACT88321's value is the co-designed CMI with the SSD controller vendor (Innogrit, SMI, Phison), which turns the PMIC into part of the controller reference design. Against Richtek's RT5142 (4 bucks) it trades one rail for a smaller 30-ball package and the bypass switch. Against TI's TPS65219 it lacks user EEPROM and broad processor support, and against automotive PMICs (TPS6594-Q1) it lacks AEC-Q100, ASIL documentation, watchdog and CRC-protected configuration. Thermal (37 C/W on the eval board) and the 4 A lifetime rating at 105 C junction limit the usable current on dense M.2 cards; the 6 V absolute maximum keeps it behind a 3.3 V or 5 V rail."
+learn_links:
+  - {label: "Junction temperature (interactive)", href: "/visuals#thermal"}
+  - {label: "Operating temperature range", href: "/engineering/temp_range_c"}
+  - {label: "Automotive grade (AEC-Q100)", href: "/engineering/qualification"}
+  - {label: "UVLO threshold", href: "/engineering/uvlo_v"}
+  - {label: "Supply range", href: "/engineering/vdd_range_v"}
+  - {label: "Functional safety (ASIL-D) in a traction inverter", href: "/library/traction_asil_d"}
+  - {label: "What an IC costs and why NRE matters (custom codes)", href: "/library/semiconductor_cost"}
+sources:
+  - {id: s1, title: "ACT88321 Advanced PMIC with 3 Bucks, 2 LDOs, and Load Bypass Switches, datasheet Rev. C (61 pages)", publisher: "Qorvo", url: "https://static.chipdip.ru/lib/143/DOC029143851.pdf", date: "2022-03-24", note: "unofficial copy"}
+  - {id: s2, title: "BizDev Qorvo catalogue: ACT88321 and other pmic parts (data/catalog/qorvo_parts.yaml, from store.qorvo.com listings)", publisher: "BizDev (Qorvo store data)", url: "https://store.qorvo.com/products/detail/act88321vu101-qorvo/685076/", date: "2026-10-19", note: "catalogue"}
+  - {id: s3, title: "TPS65219 Power Management IC (PMIC) with 3 BUCKs and 4 LDOs for Industrial Applications (SLVSGA0D)", publisher: "Texas Instruments", url: "https://www.ti.com/lit/ds/symlink/tps65219.pdf", date: "2026-04", note: "official"}
+  - {id: s4, title: "TPS6594-Q1 product page (automotive PMIC for Jacinto processors)", publisher: "Texas Instruments", url: "https://www.ti.com/product/TPS6594-Q1", date: "2026-10-21", note: "official"}
+  - {id: s5, title: "RT5142 Power Management Unit Total Power Solution for SSD, datasheet DS5142-01", publisher: "Richtek", url: "https://www.richtek.com/assets/product_file/RT5142/DS5142-01.pdf", date: "2023-08", note: "official"}
+  - {id: s6, title: "Qorvo public data access note (data/blocks/research/qorvo_access.md): no automotive ACT88xxx PMIC in the store catalogue", publisher: "BizDev", url: "", date: "2026-10-19", note: "catalogue"}

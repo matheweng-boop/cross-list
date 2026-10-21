@@ -12,7 +12,7 @@ import sys
 raw = open(sys.argv[1], "rb").read(400000).decode("utf-8", "replace")
 low = raw.lower()
 title = (re.search(r"<title[^>]*>(.*?)</title>", raw, re.I | re.S) or [None, ""])[1].strip().lower()
-STRONG = ("cf-chl", "challenge-platform", "cf_chl_opt", "_incapsula_resource", "request unsuccessful. incapsula",
+STRONG = ("cf-chl", "cf_chl_opt", "_incapsula_resource", "request unsuccessful. incapsula",
           "px-captcha", "perimeterx", "ddos-guard", "verify you are human", "are you a robot", "automation tools",
           "unusual traffic from your computer", "client challenge", "please enable js and disable any ad blocker")
 TITLES = ("just a moment", "attention required", "access denied", "client challenge", "captcha", "security check",
@@ -20,6 +20,8 @@ TITLES = ("just a moment", "attention required", "access denied", "client challe
 if any(s in low for s in STRONG) or any(t in title for t in TITLES):
     sys.exit(0)
 text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|noscript)[^>]*>.*?</\1>", " ", raw)))
-if "captcha" in low and len(text.strip()) < 1500:
+# weak signs (reCAPTCHA / hCaptcha for forms, Cloudflare's passive challenge-platform script) count only on an almost
+# empty page
+if ("captcha" in low or "challenge-platform" in low) and len(text.strip()) < 1500:
     sys.exit(0)
 sys.exit(1)

@@ -61,3 +61,15 @@ def test_list_price_when_no_digikey(client, session, part, real):  # noqa: F811
     assert m["rows"][0]["high"] < pm.list_prices()["ISO7741DBQR"]["breaks"][-1][1]  # direct below the list price
     assert 'id="price-model"' in client.get(f"/parts/{p.id}").text
     assert "TI list price" in client.get(f"/pricing/{p.id}/model").text
+
+
+def test_monte_carlo_is_stable_and_ordered(session, part, real):  # noqa: F811
+    p = part("ISO7741DBQR")
+    a, b = pm.model(session, p, None), pm.model(session, p, None)
+    assert [r["target"] for r in a["rows"]] == [r["target"] for r in b["rows"]]  # seeded by the part number
+    for r in a["rows"]:
+        assert r["low"] <= r["target"] <= r["high"]
+    f = pm.fit([(q, pr) for q, pr in BREAKS])
+    draws = pm.simulate(p, f, pm.cost(p), 100000, 0.5, 0.67, 1.0)
+    assert len(draws) == pm.config()["monte_carlo"]["draws"] and min(draws) >= pm.cost(p)["levels"]["low"]["total"]
+    assert {v["test"][:12] for v in pm.config()["validation"]} and len(pm.list_prices()) >= 60

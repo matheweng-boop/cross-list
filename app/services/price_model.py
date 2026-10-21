@@ -2,7 +2,9 @@
 
 1. Curve: the part's DigiKey price breaks (cached quote) give a price-vs-quantity slope (least squares on log-log),
    extended past the reel quantity.
-2. Band: that extended distributor price times a distributor-to-direct factor range per volume.
+2. Band: past the last break the price follows P(V) = P_last * (V / q_last) ** s, with s checked against real prices
+   (see validation in the YAML); a Monte Carlo over s, the distributor-to-direct factor and the cost inputs gives the
+   10th / 50th / 90th percentile at each volume as low / target / high.
 3. Floor: a bottom-up cost (dies on a wafer with a simple yield model + lead frame, mold compound, wire, assembly +
    test) divided by (1 - minimum margin); the band never goes below it.
 4. Calls: the owner says whether real prices sit at the low end, in the band or at the high end; every call moves the
@@ -12,6 +14,8 @@ Everything is an estimate; the page shows every input so a wrong one can be spot
 """
 
 import math
+import random
+import zlib
 from functools import lru_cache
 
 from sqlalchemy import select
@@ -149,16 +153,49 @@ def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
     if f is None:
         return out
     floor = cb["floor"] if cb else 0.0
+    ext = cfg["curve"]["extend"]
     for vol, (k_lo, k_hi) in cfg["volumes"].items():
-        lo_s, hi_s = cfg["curve"]["extend_slope"]
-        ext = min(hi_s, max(lo_s, f["slope"]))  # gentler past the last break
-        dist = f["p_end"] * (vol / f["q_end"]) ** ext if vol > f["q_end"] else f["p_end"]
-        lo, hi = max(floor, dist * k_lo * factor), max(floor, dist * k_hi * factor)
+        draws = simulate(part, f, cb, vol, k_lo, k_hi, factor)
+        lo, mid, hi = _percentiles(draws, cfg["monte_carlo"]["percentiles"])
         hi = max(hi, lo * cfg["margin"]["min_band"])  # at the floor the band keeps a minimum width
         sign = SIGN.get((mine or {}).get("verdict"), 0)
-        target = lo if sign < 0 else hi if sign > 0 else math.sqrt(lo * hi)
+        target = lo if sign < 0 else hi if sign > 0 else mid
+        dist = f["p_end"] * (vol / f["q_end"]) ** ext["mean"] if vol > f["q_end"] else f["p_end"]
         out["rows"].append({"volume": int(vol), "distributor": dist, "low": lo, "target": target, "high": hi,
-                            "at_floor": lo <= floor + 1e-9})  # fmt: skip
+                            "at_floor": lo <= floor * 1.02})  # fmt: skip
+    return out
+
+
+def _tri(rng: random.Random, values: list) -> float:
+    lo, mid, hi = values
+    return rng.triangular(lo, hi, mid)
+
+
+def _percentiles(xs: list[float], ps: list[int]) -> list[float]:
+    s = sorted(xs)
+    return [s[min(len(s) - 1, int(p / 100 * len(s)))] for p in ps]
+
+
+def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: float, factor: float) -> list[float]:
+    """Monte Carlo draws of the direct price at a yearly volume: the slope past the last break (normal, from the
+    scaling-equation check), the distributor-to-direct factor (uniform) and the cost inputs (triangular), the price
+    never below the drawn cost floor. Seeded by the part number, so a page shows the same band every time."""
+    cfg = config()
+    ext, n = cfg["curve"]["extend"], cfg["monte_carlo"]["draws"]
+    rng = random.Random(zlib.crc32(f"{part.mpn}:{vol}".encode()))
+    fam = (cb or {}).get("family")
+    pkg = sum((cb or {}).get("pkg", {}).values())
+    out = []
+    for _ in range(n):
+        s = min(ext["limits"][1], max(ext["limits"][0], rng.gauss(ext["mean"], ext["sd"])))
+        dist = f["p_end"] * (vol / f["q_end"]) ** s if vol > f["q_end"] else f["p_end"]
+        price = dist * rng.uniform(k_lo, k_hi) * factor
+        if fam:
+            die = fam["dies"] * _die_cost(_tri(rng, fam["die_mm2"]), fam["wafer_mm"], _tri(rng, fam["wafer_usd"]),
+                                          fam["defects_per_cm2"])  # fmt: skip
+            unit_cost = die + pkg + _tri(rng, fam["test_s"]) * fam["test_usd_per_s"]
+            price = max(price, unit_cost / (1 - cfg["margin"]["floor"]))
+        out.append(price)
     return out
 
 

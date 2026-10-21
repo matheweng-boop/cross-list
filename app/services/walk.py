@@ -100,7 +100,7 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
             gaps.append((3, f"{e['label']}: we sell it but no part of ours is named for it (catalogue mapping)"))
         elif anchor["automotive"] and not any(o["auto"] for o in e["offer"]):
             gaps.append((3, f"{e['label']}: no automotive-grade part of ours to offer next to an automotive {label}"))
-    out.update(s2=sell, ours=ours, new=new, cards=app_cards(sell, fn, part.mpn),
+    out.update(s2=sell, ours=ours, new=new, cards=app_cards(sell, fn, part.mpn, bool(anchor and anchor["automotive"])),
                saved=saved_designs(session, fn))  # fmt: skip
     if upto < 4:
         return out
@@ -165,7 +165,7 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
 BLOCK_CLASS = {"supported": "ours", "gap": "gap", "competitor": "gap"}
 
 
-def app_cards(sell: dict, fn: str, mpn: str) -> list[dict]:
+def app_cards(sell: dict, fn: str, mpn: str, automotive: bool = False) -> list[dict]:
     """Step 2 seen from the customer: one card per application that uses the part's function, with a small diagram
     (frames and their blocks: this part, ours, gap, customer part), our parts for the other blocks, the general
     categories it falls in (HVAC, BMS, traction inverter...) and what the search looks at."""
@@ -187,12 +187,16 @@ def app_cards(sell: dict, fn: str, mpn: str) -> list[dict]:
                     also.append({"label": p.label, **offers[p.fn][0]})
         index = blocks.template_index(t, a.market)
         where = f"template={a.i}" if a.i < len(lib) else f"bg={a.i - len(lib)}"
+        uses = sum(p.fn == fn for p in a.positions)  # designs that use the part's function several times first
         cards.append({"i": a.i, "name": blocks.display_name(t), "market": a.market, "background": a.background,
+                      "uses": uses, "grade_fit": not automotive or a.market == "Automotive",
                       "tag_keys": index["tags"],
                       "tags": [labels[k] for k in index["tags"]], "index": index,
                       "groups": [{"label": g, "blocks": bs} for g, bs in groups.items()], "also": also, "gaps": gaps,
                       "open": f"/blocks/new?{where}&place={quote(mpn)}&fn={fn}"})  # fmt: skip
-    cards.sort(key=lambda c: (c["background"], -len(c["also"]), c["name"]))
+    # most relevant first: library designs, the part's grade (automotive part: vehicle designs), designs that use its
+    # function more often, then the most of our parts around it
+    cards.sort(key=lambda c: (c["background"], not c["grade_fit"], -c["uses"], -len(c["also"]), c["name"]))
     return cards
 
 

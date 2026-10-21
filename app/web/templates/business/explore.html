@@ -24,11 +24,11 @@
         <li>{{ sg[:i_http].rstrip(' -–(') if url else sg }}{% if url %} <a href="{{ url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}</ul></details>
       {% else %}<p class="small muted">No public signal found yet.</p>{% endif %}
       {% set ikey = t.technology ~ ' → ' ~ i.market ~ ': ' ~ i.application %}<p class="small">{{ push('idea', ikey[:200], t.technology ~ ' for ' ~ i.market, i.application ~ ' – ' ~ i.why_fit, '', ikey[:200] in shortlisted) }}
-        <a href="/business/cases/new?title={{ (t.technology ~ ' for ' ~ i.market)|urlencode }}&idea={{ (i.application ~ ' – ' ~ i.why_fit)|urlencode }}">or start the business case now →</a></p>
+        <form method="post" action="/business/schedule" class="push-form"><input type="hidden" name="title" value="{{ t.technology ~ ' for ' ~ i.market }}"><input type="hidden" name="source" value="idea:{{ ikey[:110] }}"><input type="hidden" name="note" value="{{ i.application ~ ' – ' ~ i.why_fit }}"><input type="hidden" name="next" value="{{ request.url.path }}?{{ request.url.query }}"><button type="submit" class="outline small-btn" title="Put it on the list for a business case review">Schedule business case review</button></form></p>
     </article>
   {% endfor %}
   </div>
 </section>
-{% else %}<div class="empty-state"><p><b>No ideas{{ ' with this fit' if fit }}.</b></p><p class="small">Ideas come from BizDev's new-market research (existing technology → new markets, with public signals). {% if fit %}<a href="/business/explore">Show all fits</a>{% else %}Suggest one with the Feedback button, or start a <a href="/business/cases/new">business case</a> directly.{% endif %}</p></div>{% endfor %}
+{% else %}<div class="empty-state"><p><b>No ideas{{ ' with this fit' if fit }}.</b></p><p class="small">Ideas come from BizDev's new-market research (existing technology → new markets, with public signals). {% if fit %}<a href="/business/explore">Show all fits</a>{% else %}Suggest one with the Feedback button, or research a topic in <a href="/business/reports">Research &amp; ideas</a>.{% endif %}</p></div>{% endfor %}
 <script src="/static/business.js" defer></script>
 {% endblock %}

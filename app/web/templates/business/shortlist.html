@@ -8,21 +8,25 @@
     <td><span class="sl-origin so-{{ i.origin }}">{{ origins[i.origin] }}</span><br><small class="muted">{{ i.created_at|date }}</small></td>
     <td><form method="post" action="/business/shortlist/{{ i.id }}" class="sl-note"><input type="text" name="note" value="{{ i.note or '' }}" placeholder="why it is interesting" aria-label="Note"><button type="submit" class="outline small-btn">Save</button></form></td>
     <td class="sl-act">{% if i.case_id %}<a class="small-btn" role="button" href="/business/cases/{{ i.case_id }}">Open case: {{ case_titles.get(i.case_id, 'case') }}</a>
-      {% else %}<a class="small-btn" role="button" href="/business/cases/new?co={{ co }}&shortlist={{ i.id }}{{ '&fn=' ~ i.fn if i.fn }}">Start analysing</a>{% endif %}
+      {% elif on_schedule.get(i.id|string) %}<a class="small" href="#sch-{{ on_schedule[i.id|string].id }}">✓ scheduled for review</a>
+      {% else %}<form method="post" action="/business/schedule" class="push-form"><input type="hidden" name="title" value="{{ i.title }}"><input type="hidden" name="source" value="shortlist:{{ i.id }}"><input type="hidden" name="note" value="{{ i.note or i.detail or '' }}"><input type="hidden" name="next" value="/business/shortlist#scheduled"><button type="submit" class="small-btn" title="Put it on the list for a business case review">Schedule review</button></form>{% endif %}
       <form method="post" action="/business/shortlist/{{ i.id }}" class="push-form"><input type="hidden" name="remove" value="1"><button type="submit" class="outline secondary small-btn" title="Remove from the shortlist">Remove</button></form></td>
   </tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small muted">{{ empty }}</p>{% endif %}
 {% endmacro %}
 {% block content %}
-<h1>Shortlist</h1>
-<p class="subtitle muted">What you added with “☆ Shortlist” in the Opportunity explorer, Cross-sell, Markets and Customers, and from New ideas.
-  Pick the ones worth following up and start analysing: each becomes a business case.</p>
+<h1>Business cases</h1>
+<p class="subtitle muted">How a topic becomes a business case: research it in <a href="/business/reports">Research &amp; ideas</a>, schedule it for a business case review, then start the case from the list below. <a href="/business/cases">All business cases →</a></p>
+{% include "business/_scheduled.html" %}
 
-<h2>From the existing portfolio <small class="muted">· {{ portfolio|length }}</small></h2>
+<h2 class="sl-h">Shortlist</h2>
+<p class="small muted">What you added with “☆ Shortlist” in the Opportunity explorer, Cross-sell, Markets and Customers, and from New ideas. Schedule the ones worth a review.</p>
+
+<h3>From the existing portfolio <small class="muted">· {{ portfolio|length }}</small></h3>
 {{ table(portfolio, 'Nothing yet. Use “☆ Shortlist” in the Opportunity explorer, Cross-sell, Markets or Customers.') }}
 
-<h2>New ideas <small class="muted">· {{ ideas|length }}</small></h2>
+<h3>New ideas <small class="muted">· {{ ideas|length }}</small></h3>
 {{ table(ideas, 'Nothing yet. Push an idea from New ideas, or write one below.') }}
 <form method="post" action="/business/shortlist" class="sl-add"><input type="hidden" name="origin" value="idea">
   <input type="text" name="key" placeholder="A new idea, e.g. wireless audio module for e-bikes" required aria-label="New idea" maxlength="200">

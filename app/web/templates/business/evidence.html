@@ -83,6 +83,10 @@
 {% if hunt %}<h2>Where to hunt</h2>
 <p>{% for c in hunt %}<span class="ct ct-{{ (c.type or '')|lower|replace('/', '-')|replace(' ', '-') }}" title="{{ c.type }} · {{ c.apps|join(', ') }}">{{ c.name }}</span>{% endfor %}
   <a class="small" href="/business/customers?co={{ co }}&fn={{ fn }}">all →</a></p>{% endif %}
-<p><a href="/business/cases/new?fn={{ fn }}">Start a case analysis for {{ label }} →</a></p>
+<form method="post" action="/business/schedule" class="small">
+  <input type="hidden" name="title" value="{{ label }}: business case review"><input type="hidden" name="source" value="evidence:{{ fn }}">
+  <input type="hidden" name="next" value="/business/evidence/{{ fn }}?co={{ co }}">
+  <button type="submit" class="outline small-btn">Schedule business case review for {{ label }}</button>
+  <span class="muted">Business cases start from the scheduled list on <a href="/business/shortlist#scheduled">Business cases</a>.</span></form>
 <script src="/static/business.js" defer></script>
 {% endblock %}

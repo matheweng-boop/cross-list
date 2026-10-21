@@ -90,14 +90,15 @@
 <h2>7. Raising the attach rate</h2>
 <ul class="pc-list">{% for t in case.attach %}<li>{{ t.lever }} <span class="pc-conf">{{ t.effort }} effort</span>{{ react(t) }}</li>{% endfor %}</ul>
 
-{% if case.questions.bu or case.questions.customer %}<h2 id="questions-to-ask">8. Questions to ask</h2>
+{% if case.questions.bu or case.questions.customer or case.opener %}<h2 id="questions-to-ask">8. Questions to ask</h2>
 <p class="small muted">What this case cannot settle from public data. Record each answer (and who gave it) with “answer”; answered questions feed the next revision.</p>
-<div class="pc-grid">{% for key, title in question_groups %}{% if case.questions[key] %}
-  <section class="pc-box pc-q"><h3>{{ title }}</h3><ol>{% for q in case.questions[key] %}
+<div class="pc-grid">{% for key, title in question_groups %}{% if case.questions[key] or (key == 'bu' and case.opener) %}
+  <section class="pc-box pc-q"><h3>{{ title }}</h3><ol>{% if key == 'bu' and case.opener %}{% set o = case.opener %}
+    <li class="pc-opener"><span><b>Start here:</b> {{ o.question }}</span><br><small class="muted">Background and idea, with the pros and cons against competitors at the top of the page.</small>{{ react(o, question=true) }}</li>{% endif %}{% for q in case.questions[key] %}
     <li><span>{{ q.text }}</span>{% if q.who %} <small class="muted">ask: {{ q.who }}</small>{% endif %}{% if q.why %}<br><small class="muted">Why: {{ q.why }}</small>{% endif %}{{ react(q, question=true) }}</li>{% endfor %}</ol></section>{% endif %}{% endfor %}
 </div>
 {% endif %}
-<h2>{{ '9' if case.questions.bu or case.questions.customer else '8' }}. Risks and open questions</h2>
+<h2>{{ '9' if case.questions.bu or case.questions.customer or case.opener else '8' }}. Risks and open questions</h2>
 <ul>{% for x in case.risks %}<li>{{ x }}</li>{% endfor %}</ul>
 <p class="small muted">Feedback on any item is listed in <a href="/manage/reviews">Requests &amp; reviews</a>; the case is revised from it. Sources and every figure: background notes below.</p>
 <dialog id="pc-dialog" class="pc-dialog" aria-labelledby="pc-dialog-title"><article>

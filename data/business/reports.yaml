@@ -26,7 +26,96 @@
 #                    2 in between (a new chip from technology we already have) | 3 furthest away (new technology or a
 #                    market nobody plays in yet: out-of-the-box thinking, still worth a look)
 #   feasibility_why  one line: why this score
+#
+# Conversation and learning fields (every report and case; Research & ideas renders them):
+#   bu_opener        the FIRST question to the business unit: the background question and idea, short, as a
+#                    conversation starter, with pros (for us) and cons (against us) versus the competition and vs (who)
+#   learn            "Learn about this" tab: one short paragraph each for age 5, 10, 15, 20 and 25 (what it is, why it
+#                    matters, what it needs, where the request comes from, competitors and where we stand)
+#   learn_links      knowledge-base pages to read next: {label, href} on /library, /rf-notes, /engineering, /visuals
 reports:
+  - slug: iso7821dww-isolation
+    title: 'Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit'
+    kind: report
+    area: Power & isolation
+    app_type: Power and charging
+    date: 2026-10-21
+    status: draft
+    question: TI's ISO7821DWW is a reinforced dual-channel digital isolator in a 16-pin extra-wide SOIC (DWW). Which Skyworks
+      solutions apply in power conversion, charging (on-board chargers, DC fast chargers) and automotive, and is there a business
+      case for an extra-wide-package isolator?
+    summary: 'Research idea for a business case. ISO7821DWW: 2 channels (1/1), reinforced, 5.7 kVrms, 14.5 mm creepage, 100
+      Mbps, 85 kV/µs, industrial grade. Our closest crosses (Si86S621/622, SSO-8) are reinforced 6 kVrms, 100 kV/µs, 150 Mbps,
+      with automotive versions, but none of our 672 digital isolators passes 8 mm creepage, while TI (20 parts) and Novosense
+      (6) offer 14.5–15 mm. Adjacent: our isolated gate drivers, isolated DC-DC and isolated amplifiers in the same charger
+      and inverter designs. Open: is a wider package worth it for 800 V?'
+    tags:
+    - ISO7821DWW
+    - digital isolator
+    - reinforced isolation
+    - creepage
+    - on-board charger
+    - DC fast charger
+    - EV charging
+    - power conversion
+    - Si86S621
+    - automotive
+    sources: BizDev parts database (TI, Skyworks, Novosense digital isolators) and cross results; block-diagram library (66
+      of 219 diagrams); TI reference design TIDA-00785; library topic on traction-inverter isolation. No new web research.
+    bu_opener:
+      question: TI sells ISO7821DWW, a 2-channel reinforced isolator in an extra-wide package (14.5 mm creepage) for high-voltage
+        power and charging. Our nearest parts (Si86S621/622) are strong but stop at 8 mm. Do customers in 800 V chargers and
+        inverters ask for more than 8 mm, and would an extra-wide package for our existing isolator die be worth it?
+      pros:
+      - Si86S621/622 beat it on CMTI (100 vs 85 kV/µs), isolation rating (6 vs 5.7 kVrms) and data rate (150 vs 100 Mbps)
+      - Automotive (AEC-Q100) versions exist (-AS4); ISO7821DWW is industrial grade
+      - 'Large isolator line (672 parts in BizDev) and the neighbours in the same designs: isolated gate drivers, isolated DC-DC,
+        isolated amplifiers'
+      cons:
+      - No Skyworks isolator above 8 mm creepage; TI (20 parts) and Novosense (6) offer 14.5–15 mm
+      - Lower working voltage (2121 vs 2828 Vpk) and narrower temperature range (–40 vs –55 °C at the low end)
+      - 'Different package and pinout (8 vs 16 pins): no drop-in; Novosense NSI8321W1 is closer (15 mm, 7.5 kVrms); crowded,
+        price-driven market'
+      vs: TI ISO7821DWW; Novosense NSI8321W1 / NSI8322W1; ADI, Infineon, ST, onsemi, Toshiba, Rohm and Chinese suppliers
+    learn:
+    - age: 5
+      text: 'Some parts of a machine carry dangerous high voltage, others carry tiny safe signals. A digital isolator is a wall
+        with a window: the message gets through, the danger does not.'
+    - age: 10
+      text: Electric cars, chargers and solar inverters work with hundreds of volts. The small computer that controls them must
+        talk to the high-voltage side without getting hurt, and so must the people who touch the car or the charger.
+    - age: 15
+      text: A digital isolator passes on/off signals across an insulating barrier. It is judged by the voltage the barrier withstands
+        (kVrms for one minute, working voltage for its lifetime), the distance between the pins on the outside of the package
+        (creepage), how fast the voltage may jump without errors (CMTI), speed and temperature grade.
+    - age: 20
+      text: The request comes from a TI part, ISO7821DWW, seen in power, charging and automotive designs. Its extra-wide package
+        gives 14.5 mm creepage, which allows higher working voltages and dirtier environments. In BizDev, digital isolators
+        sit in 66 of 219 application diagrams, among them on-board chargers, DC fast chargers, wallboxes and traction inverters.
+    - age: 25
+      text: 'TI leads with wide and extra-wide packages; Novosense offers 15 mm parts; ADI, Infineon, ST, onsemi and Chinese
+        suppliers crowd the market. Our capacitive isolators (Si86xx, Si88xx) match or beat ISO7821 on CMTI and kVrms and come
+        in automotive grade, but our widest package gives 8 mm. Open: does 800 V push OEMs past 8 mm (IEC 60664-1 / ISO 6469-3
+        numbers are not verified here), and can our die go into a wider package?'
+    learn_links:
+    - label: Creepage
+      href: /engineering/creepage_mm
+    - label: Basic vs reinforced isolation
+      href: /engineering/isolation_class
+    - label: Isolation rating
+      href: /engineering/isolation_rating_kvrms
+    - label: Working voltage
+      href: /engineering/viorm_vpk
+    - label: CMTI
+      href: /engineering/cmti_kv_us
+    - label: Automotive grade
+      href: /engineering/qualification
+    - label: 'Interactive: creepage vs working voltage'
+      href: /visuals#creep
+    - label: 'Interactive: CMTI vs the switching edge'
+      href: /visuals#cmti
+    - label: 'Library: isolation in the traction inverter'
+      href: /library/traction_asil_d
   - slug: filters-1-11ghz
     title: "Standalone filter opportunities, 1–11 GHz"
     kind: report
@@ -41,6 +130,52 @@ reports:
       LTCC or IPD, which we don't have since Trans-Tech (with Lark) was sold; build, buy or partner.
     tags: [filters, Wi-Fi 7, 5G n77, UWB, X-band, defense]
     sources: "BizDev catalogue, competitor and demand data; ~106 public web sources (background notes)"
+    bu_opener:
+      question: Our filters sit next to LNAs, switches and FEMs we already sell. Should we turn that into a few combined filter
+        products (a Wi-Fi 7/8 BAW multiplexer family, a filtered switch-LNA for 5G small cells, a protected filter bank for
+        defense), and how do we cover wideband filters now that Trans-Tech and Lark are sold?
+      pros:
+      - 'We sell every other block of a 1–11 GHz receive chain: LNAs, switches, limiters, PAs, multiplexers'
+      - BAW beats LTCC diplexers (Murata, Johanson, Yageo) on 5/6 GHz rejection
+      - 'Fewer acoustic rivals: Akoustis exited in 2025'
+      cons:
+      - Our filters stop at about 7 GHz and are narrowband acoustic only
+      - No ceramic, LTCC, IPD or cavity filters since Trans-Tech (with Lark) was sold; they now compete with us
+      - 'Wideband catalogue filters are commodity: LTCC at about $4 or less, ~110 Mini-Circuits filters at 4–11 GHz'
+      vs: Murata, Johanson, Yageo (LTCC); Trans-Tech and Lark (ceramic, cavity); Mini-Circuits; ADI, MACOM, Mercury (defense)
+    learn:
+    - age: 5
+      text: 'A radio hears many stations at once. A filter is like a sieve: it lets the one station you want through and keeps
+        the others out.'
+    - age: 10
+      text: 'Phones, Wi-Fi routers, cars and radars all send and receive at the same time on nearby frequencies. Without good
+        filters they disturb each other: calls drop and Wi-Fi slows down.'
+    - age: 15
+      text: A filter is judged on how little it loses (insertion loss), how strongly it blocks the neighbours (rejection) and
+        how wide its window is (bandwidth). Small acoustic filters (BAW, SAW) are sharp but narrow; windows wider than about
+        25 % of the frequency need ceramic, LTCC, IPD or cavity filters.
+    - age: 20
+      text: 'The question covers 1–11 GHz: Wi-Fi 7/8, 5G n77 small cells, UWB channels 5–9, satellite and S/C/X-band defense
+        radios all need filters. Most filter value now sits inside front-end modules, so a standalone filter sells best combined
+        with parts we already make.'
+    - age: 25
+      text: 'BAW is about 91 % Broadcom plus Qorvo; Murata''s XBAR is the main new wideband acoustic technology. For wideband
+        we have nothing since Trans-Tech (with Lark) was sold in 2023: build, buy or partner. The best bets reuse our BAW: a
+        Wi-Fi 7/8 multiplexer family, a filtered switch-LNA module (QPQ3509/QPQ4900 with QPB9850) and a protected switched filter
+        bank (QPB1033, QPB1055).'
+    learn_links:
+    - label: Filter basics
+      href: /rf-notes#filter_fundamentals
+    - label: Acoustic filters and duplexers
+      href: /rf-notes#acoustic_filters_duplexers
+    - label: LTCC technology
+      href: /rf-notes#ltcc_technology_power
+    - label: Reflectionless filters
+      href: /rf-notes#reflectionless_filters
+    - label: 'Interactive: band-pass filter'
+      href: /visuals#filter
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
   - slug: radio-tuner-next
     title: "Car radio: a radio node for the antenna (2–3 years, reuse only)"
     kind: idea
@@ -59,6 +194,49 @@ reports:
       design from today's parts and CDR to production.
     tags: [car radio, radio node, remote tuner module, SDR, HD Radio, DAB+, DRM, CDR, AMIC, pricing, architecture]
     sources: "BizDev block-diagram library and broadcast data; ~140 public web requests (S&P, OICA, WorldDAB, DRM Consortium, Radio World, Hirschmann, OpenSynergy, distributor snippets)"
+    bu_opener:
+      question: Car radio is moving to the antenna and to central computers. Should we build a radio node (2 or 4 tuners + decoder
+        + car-network output) from our existing tuner and decoder circuits in 2–3 years, at about $10–12 (2 tuners) and $16–19
+        (4 tuners), against NXP's one-chip radio and ST's cheaper tuners?
+      pros:
+      - 'Split architecture (chainable tuners + separate decoder) fits zonal cars: at the antenna, in the head unit or feeding
+        a central computer'
+      - 'Broadest digital standards in one decoder family: HD Radio, DAB/DAB+, DRM/DRM+, CDR'
+      - One family scales from 1 to 4+ tuners on the same board design
+      cons:
+      - 'Higher cost per chip: ST tuners list at $4.60–6.10 vs about $8.40 for our Si47901'
+      - 'More chips: 3 parts for 4 tuners vs one NXP chip (SAF4000, SAF9000)'
+      - 'Weaker software-radio partners: Inntot (Visteon) is in ST''s partner programme'
+      vs: NXP, ST
+    learn:
+    - age: 5
+      text: The car radio catches music and news from the air and plays it in the car.
+    - age: 10
+      text: 'Cars still need radio: it is free, works without a phone and carries traffic and emergency news. New cars receive
+        AM, FM and digital radio (DAB+, HD Radio, DRM).'
+    - age: 15
+      text: A radio needs tuners (to pick the station) and a decoder (to turn digital radio into sound). Several tuners together
+        give better reception while driving (phase diversity) and a background tuner scans for stations. One design must cover
+        regions with different standards.
+    - age: 20
+      text: The request comes from car makers moving electronics into zones and central computers. The radio can sit next to
+        the antenna (a remote tuner module), in the head unit, or send raw samples to a central computer for software radio.
+        We want a product in 2–3 years that reuses circuits we already have.
+    - age: 25
+      text: NXP sells a one-chip radio with 4–5 tuners; ST reuses mature, cheaper designs and has software-radio partners. Our
+        advantage is the split architecture and the widest digital standard coverage; our weak points are cost per chip and
+        chip count (a module at the antenna needs 5–7 of our parts). The radio node answers both.
+    learn_links:
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: Receiver architectures
+      href: /rf-notes#receiver_architectures
+    - label: Software radio and the ADC chain
+      href: /rf-notes#sdr_adc_chain
+    - label: Sensitivity and noise floor
+      href: /rf-notes#sensitivity_noise_floor
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost
   - slug: auto-uwb-15-4ab
     title: "Automotive UWB: an 802.15.4ab anchor chip for digital key (2–3 years, reuse first)"
     kind: idea
@@ -77,6 +255,46 @@ reports:
       volume (est), an optional anchor FEM (≈$0.6–1.1), and firmware MMS and DK 4.0 on today's QPF5100Q as the bridge.
     tags: [UWB, 802.15.4ab, narrowband assist, digital key, CCC, car access, QPF5100Q, anchor FEM, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; ~20 public web requests and searches (IEEE 802.15, ST blog, CNX Software, Rohde & Schwarz, ABI Research, TI, search snippets)"
+    bu_opener:
+      question: Digital car keys move to the new UWB standard 802.15.4ab with narrowband assist. Should we build a 15.4ab anchor
+        chip from the Qorvo UWB radio and radar (about $3.5–5.5 ranging, $4.5–6.5 with radar, est), with firmware on today's
+        QPF5100Q as the bridge, while ST and Calterah already sample?
+      pros:
+      - Ranging and radar on one automotive-qualified chip today (QPF5100Q); ST's entry part has no radar
+      - Our own automotive RF front ends in the band; UWB chip rivals sell none
+      - Decawave heritage, interoperable with the phone side (Apple U1, Google Pixel)
+      cons:
+      - No public 802.15.4ab / narrowband-assist part; ST samples since Mar 2026, Calterah showed one in Jan 2026
+      - No BLE, NFC, secure element or access MCU, which NXP sells as one set
+      - 'Price pressure: NXP NCJ29D5 at $4.85–6.33 (1k budgetary)'
+      vs: NXP, ST, Calterah, Samsung
+    learn:
+    - age: 5
+      text: A digital car key lets the car know you are close, so the door opens without you pressing a button.
+    - age: 10
+      text: Your phone or key fob talks to small radios (anchors) around the car. Ultra-wideband (UWB) measures the distance
+        very precisely, so thieves cannot fool the car by relaying the signal from far away.
+    - age: 15
+      text: A UWB anchor needs exact time-of-flight ranging, low power, automotive grade and it must work with every phone.
+        The same radio can also act as a small radar, to sense a kick under the bumper or a child left in the car.
+    - age: 20
+      text: The request comes from the car industry's key standard (CCC Digital Key 4.0, in testing) and the new IEEE 802.15.4ab,
+        which adds narrowband assist (NBA) for longer range and lower power. Car makers will ask for 15.4ab anchors in their
+        next platforms; we want a product in 2–3 years that reuses our UWB technology.
+    - age: 25
+      text: 'We have automotive-qualified 802.15.4z chips with ranging and radar (QPF5100Q, DW3300Q) plus automotive front ends.
+        ST (ST64UWB, 18 nm FD-SOI) and Calterah already sample 15.4ab chips, and NXP sells UWB + NFC + secure element + MCU
+        as one set. The proposal: a 15.4ab anchor SoC with on-chip NBA, ranging and radar variants, with firmware MMS and DK
+        4.0 on QPF5100Q as the bridge.'
+    learn_links:
+    - label: 'Library: automotive UWB'
+      href: /library/auto_uwb
+    - label: UWB and low-power links
+      href: /rf-notes#lpwan_uwb_iot_links
+    - label: 'Interactive: link budget and range'
+      href: /visuals#link
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost
   - slug: auto-uwb-cpd
     title: "Automotive UWB: child presence and kick sensing from the key anchors (1–3 years, reuse)"
     kind: idea
@@ -95,6 +313,45 @@ reports:
       pack, standalone module reference), about $0.75–1.5 per car as a licence or $4–6 per standalone CPD chip (est).
     tags: [UWB, child presence detection, Euro NCAP, in-cabin radar, 60 GHz radar, kick sensor, QPF5100Q, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; Euro NCAP OM protocol v1.2; ~20 public web requests and searches (TI, IEEE MTT-S, Rohde & Schwarz, ABI Research, search snippets)"
+    bu_opener:
+      question: Euro NCAP rewards child-presence detection from 2026. Should we sell 'cabin sense' firmware on today's QPF5100Q
+        key anchors (about $0.75–1.5 per car as a licence, or a $4–6 dedicated chip, est), so cars with a UWB key need no extra
+        60 GHz radar?
+      pros:
+      - 'Reuses digital-key anchors: no extra cabin module in cars that already have a UWB key'
+      - 'Available now: QPF5100Q is automotive qualified and lists child presence, kick and occupancy'
+      - Below 10 GHz passes blankets and seats better (supplier claim); no FCC waiver question as with 60 GHz in-cabin radar
+      cons:
+      - 'Coarser resolution: UWB 6–30 cm vs 60 GHz radar 3–7.5 cm'
+      - No production CPD algorithm or Euro NCAP dossier of our own; TI ships a reference design with test data
+      - NXP, ST and Calterah bundle the same radar idea with their key chips
+      vs: TI, Infineon, Calterah (60 GHz radar); NXP, ST, Calterah (UWB)
+    learn:
+    - age: 5
+      text: Sometimes a child or a pet is left in a hot car by mistake. A sensor can notice them breathing and call for help.
+    - age: 10
+      text: Euro NCAP, the group that gives cars safety stars, rewards cars that detect a child left inside (from 2026). Car
+        makers look for a sensor that sees a small sleeping child, even under a blanket.
+    - age: 15
+      text: Child-presence detection needs a radar that sees tiny movements like breathing, tells seats and footwell apart,
+        gives few false alarms and uses little power while the car is parked. The same idea can sense a foot kick under the
+        bumper to open the tailgate.
+    - age: 20
+      text: 'The request comes from the Euro NCAP occupant-monitoring protocol and from cars that already have UWB key anchors:
+        if the anchors can also sense the cabin, the car maker saves a separate radar module.'
+    - age: 25
+      text: Rivals are 60 GHz radar chips (TI AWRL6432, Infineon, Calterah) with finer resolution and ready reference designs,
+        plus UWB key sets that bundle radar (NXP NCJ29D6A, ST64UWB-A500, Calterah Dubhe). Our QPF5100Q already lists CPD and
+        kick; the gap is a production algorithm (with a partner) and a Euro NCAP test pack.
+    learn_links:
+    - label: 'Library: automotive UWB'
+      href: /library/auto_uwb
+    - label: Radar basics
+      href: /rf-notes#radar_fundamentals
+    - label: UWB and low-power links
+      href: /rf-notes#lpwan_uwb_iot_links
+    - label: 'Interactive: wavelength and antenna size'
+      href: /visuals#wave
   - slug: auto-clock-tree
     title: "Automotive clock tree: a crystal-free clock for central compute and zones (2–3 years, reuse only)"
     kind: idea
@@ -115,6 +372,45 @@ reports:
       and a qualified jitter attenuator now.
     tags: [automotive, timing, clock generator, PCIe, jitter attenuator, BAW, central compute, zonal, radar, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; Si5332-AM data sheet; ~20 public web requests and searches (TI, SiTime, evertiq, Skyworks, Yole, OEM releases, distributor snippets)"
+    bu_opener:
+      question: Central computers and zones need many clean clocks. Should we build ZoneClock, a crystal-free Grade 1 automotive
+        clock tree from our BAW resonator and Si5332 MultiSynth (about $4–6.5 for 12 outputs, est), and qualify a jitter attenuator
+        now, while TI ships crystal-free BAW clocks and SiTime buys Renesas timing?
+      pros:
+      - Broadest Grade 2 automotive PCIe clock line from one vendor (Si5332-AM, Si5225x, Si5325x)
+      - One Si5332-AM replaces several oscillators and buffers (up to 12 outputs, any format)
+      - SmartClock monitoring and fault reporting to the safety manager
+      cons:
+      - Every Si5332-AM needs a crystal; TI's LMK3H0102-Q1 is crystal-free (BAW)
+      - Grade 2 only and PCIe Gen 5; SiTime offers Grade 1, TI goes to Gen 7
+      - 'Not the cheapest per output: TI lists a 2-output crystal-free clock at $3.55 (1k)'
+      vs: TI, SiTime (with Renesas timing), Microchip, Diodes
+    learn:
+    - age: 5
+      text: Inside a car computer every chip needs a steady beat, like a drummer keeping time in a band. A clock chip is that
+        drummer.
+    - age: 10
+      text: New cars have big central computers and zone boxes that move huge amounts of data (PCIe, automotive Ethernet). If
+        the beat wobbles, the data gets errors, so these computers need many very clean clocks.
+    - age: 15
+      text: 'A clock tree makes many outputs from one reference: different frequencies and formats, low jitter (wobble), spread
+        spectrum against interference, automotive temperature grade and safety monitoring that reports when a clock fails.'
+    - age: 20
+      text: The request comes from central compute, zonal controllers and satellite radar, which move clock sockets to exactly
+        these trees. Car makers want fewer parts (no separate crystals), Grade 1 (125 °C) and the newest PCIe.
+    - age: 25
+      text: TI ships a crystal-free BAW clock (PCIe Gen 7, $3.55 list), SiTime a Grade 1 MEMS clock generator and it is buying
+        Renesas timing; Microchip and Diodes sell buffers. Our line is broad but needs a crystal, is Grade 2 and Gen 5. ZoneClock
+        would combine our BAW resonator with Si5332 MultiSynth to close these gaps.
+    learn_links:
+    - label: Phase noise and oscillators
+      href: /rf-notes#phase_noise_oscillators
+    - label: PLL synthesis
+      href: /rf-notes#pll_synthesis
+    - label: Phase noise and PLLs
+      href: /rf-notes#phase_noise_and_pll
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost
   - slug: auto-gnss-l1l5
     title: "Automotive GNSS: an all-band front end for the roof antenna (2–3 years, reuse only)"
     kind: idea
@@ -134,6 +430,46 @@ reports:
       $0.9–1.4 and a roof-module reference design.
     tags: [automotive, GNSS, L1, L5, L2, E6, LNA, SAW, BAW, shark fin, ADAS, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; SKY5A2110 data sheet; ~15 public web requests and searches (TI, u-blox, ST, ABI public summaries, Infineon, distributor snippets)"
+    bu_opener:
+      question: Lane-level ADAS needs all-band GNSS in the shark fin. Should we build an all-band automotive GNSS front end
+        (L1 + L2/E6 + L5, one input, Grade 1) from our LNAs and Qorvo SAW/BAW filters at about $1.6–2.6 (est), when TI sells
+        a Grade 1 wideband LNA at $0.45?
+      pros:
+      - SKY5A2110 is already an automotive L1 + L5 module with filters and a diplexed output
+      - Strong rejection of cellular, n77/n79 and Wi-Fi in the same roof module
+      - With Qorvo we own the GNSS acoustic filters and sell the neighbours in the shark fin
+      cons:
+      - L1 + L5 only, while receivers (u-blox ZED-X20K, ST STA8135GA) are all-band
+      - Grade 2 only and two RF inputs; TI offers Grade 1
+      - 'A bare automotive LNA is cheap: TI TRF3302-Q1 at $0.45 (1k)'
+      vs: TI, Infineon, NXP (LNAs); Murata, Taoglas (modules); u-blox, ST, Qualcomm (receivers)
+    learn:
+    - age: 5
+      text: Satellites high in the sky send signals that tell the car where it is, like a map that knows where your dot is.
+    - age: 10
+      text: Cars that steer and keep their lane by themselves need to know their position within a lane, not just the street.
+        Using several satellite frequencies at once makes the position much more exact.
+    - age: 15
+      text: The GNSS front end sits in the roof antenna. It needs a very quiet amplifier (low noise figure), filters that block
+        the strong cellular, Wi-Fi and V2X signals in the same shark fin, all wanted bands (L1, L2/E6, L5) and automotive grade.
+    - age: 20
+      text: The request comes from lane-level ADAS and from receivers that went all-band (u-blox ZED-X20K, ST STA8135GA). Antenna
+        makers now want one front end for all bands, with one input and one output.
+    - age: 25
+      text: TI, Infineon and NXP sell bare LNAs (TI at $0.45, Grade 1); Murata and Taoglas sell modules. Our SKY5A2110 is a
+        complete L1 + L5 module but Grade 2 with two inputs. The proposal adds L2/E6, one input and Grade 1 using our LNAs and
+        Qorvo filters, plus a cheaper single-input L1 + L5 variant.
+    learn_links:
+    - label: 'Library: automotive GNSS front ends'
+      href: /library/gnss_frontend
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: Noise figure in a chain
+      href: /rf-notes#noise_figure_cascade
+    - label: 'Interactive: noise figure and sensitivity'
+      href: /visuals#nf
+    - label: Acoustic filters and duplexers
+      href: /rf-notes#acoustic_filters_duplexers
   - slug: auto-cv2x-fe
     title: "C-V2X front end: two carriers in one module (2–3 years, reuse)"
     kind: idea
@@ -152,6 +488,48 @@ reports:
       filter variants) at about $7–10 (est), replacing two single FEMs plus filter and switch.
     tags: [V2X, C-V2X, NR-V2X, ITS-G5, front-end module, BAW, coexistence, UNII-4, automotive, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; ~20 public web requests plus earlier connectivity research (5GAA, Skyworks product summaries, ABI, LG Innotek, LCSC, search snippets)"
+    bu_opener:
+      question: 'V2X is changing: the US goes C-V2X only on two channels and Europe runs three systems side by side, but Qualcomm
+        now owns our chipset partner Autotalks. Should we build a dual-carrier V2X front end (two paths, EU and US filter variants)
+        at about $7–10 (est), in a market of about 5.7 M V2X cars a year?'
+      pros:
+      - Only public source of standalone V2X front ends (SKY5A2105, QPF1003Q)
+      - Own V2X BAW filters; the wide 5855–5925 MHz passband Europe needs already exists
+      - 'Compensator mode: one part works at the roof antenna or in the ECU'
+      cons:
+      - 'One path per part: the US second channel and EU concurrent systems need two FEMs'
+      - Today's filter does not reject the UNII-4 Wi-Fi next to the US channels
+      - Our chipset partner Autotalks is Qualcomm's since Jun 2025; small market
+      vs: Qualcomm (with Autotalks), NXP, module makers
+    learn:
+    - age: 5
+      text: 'Cars can talk to each other and to traffic lights by radio, to warn each other: careful, I am braking!'
+    - age: 10
+      text: This is called V2X (vehicle-to-everything). It warns about a crash ahead or a car hidden around a corner, which
+        makes roads safer.
+    - age: 15
+      text: A V2X front end amplifies the transmit signal (+26 to +29 dBm), receives with low noise and filters out the car's
+        own Wi-Fi and cellular radios. It works at 5.9 GHz with each region's channel plan, often at the roof antenna to make
+        up for cable loss.
+    - age: 20
+      text: 'The request comes from rule changes: the US is C-V2X only from 14 Dec 2026 on two channels; Europe runs ITS-G5,
+        LTE-V2X and NR-V2X side by side in 5855–5925 MHz. Car makers then need two paths, and in the US a filter against UNII-4
+        Wi-Fi right next door.'
+    - age: 25
+      text: Qualcomm closed Autotalks (Jun 2025), our reference chipset partner; NXP uses two SAF5400 for dual channel. We have
+        the only standalone V2X FEMs and the V2X BAW filters. The proposal is a dual-carrier front end with compensator and
+        ECU modes and EU wide-band or US guard-filter variants, replacing two single FEMs plus filter and switch.
+    learn_links:
+    - label: 'Library: 5.9 GHz V2X front ends'
+      href: /library/v2x_frontend
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: Acoustic filters and duplexers
+      href: /rf-notes#acoustic_filters_duplexers
+    - label: TX/RX isolation options
+      href: /rf-notes#txrx_isolation_options
+    - label: 'Interactive: link budget and range'
+      href: /visuals#link
   - slug: auto-wifi7-fem
     title: "Automotive Wi-Fi 7: a radio head for the smart antenna, with V2X coexistence built in"
     kind: idea
@@ -170,6 +548,45 @@ reports:
       antenna (est); enabling step: automotive Wi-Fi 7 FEMs with the guard filter (≈$1.6–2.8) and the filters alone.
     tags: [Wi-Fi 7, smart antenna, coexistence, V2X, BAW, front-end module, AEC-Q104, automotive, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; ~45 public web requests (u-blox product summaries, NTIA/US DOT, Wi-Fi Alliance/IDC, LG Innotek, LCSC, FCC and Counterpoint snippets)"
+    bu_opener:
+      question: Wi-Fi 7 is coming to the car's smart antenna, right next to V2X. Should we build RH57, a radio head per antenna
+        (V2X base, Wi-Fi 5/6 GHz optional, BAW filters and coexistence control between them) at about $8–11 (est), when Qualcomm
+        bundles its own Wi-Fi front end and NXP puts the amplifier on chip?
+      pros:
+      - Only supplier with Wi-Fi 7, V2X, cellular and GNSS front ends plus the BAW filters between them
+      - Automotive coexistence BAW already defined (SKY5A1005/1006/1008, QPQ2200Q/2230Q)
+      - 'US DOT measured in-car Wi-Fi cutting C-V2X range by more than half: a problem we can solve'
+      cons:
+      - 'No chipset: every public automotive Wi-Fi 7 module uses Qualcomm, with its own FEM'
+      - No automotive Wi-Fi power amplifier above 802.11ac today
+      - In-car 6 GHz power is capped by regulation; NXP and Synaptics put the PA on chip
+      vs: Qualcomm, NXP, Synaptics, module makers
+    learn:
+    - age: 5
+      text: The car can have its own Wi-Fi, like at home, so phones and screens inside can go online.
+    - age: 10
+      text: Wi-Fi 7 is the newest and fastest Wi-Fi. In cars it connects phones to the screens, updates the car's software and
+        talks to chargers. But it sits right next to the radio cars use to warn each other (V2X).
+    - age: 15
+      text: A Wi-Fi front end amplifies and filters the signal at 2.4, 5 and 6 GHz. In a car it must be automotive grade, and
+        filters must stop Wi-Fi from blinding V2X at 5.9 GHz, only a few MHz away.
+    - age: 20
+      text: The request comes from smart-antenna modules on the roof that combine many radios, and from US DOT tests that showed
+        in-car Wi-Fi cutting C-V2X range by more than half. Car makers need the two to work side by side.
+    - age: 25
+      text: 'Qualcomm sells chip plus front end; NXP AW693 and Synaptics put PA, LNA and switch on chip; in-car 6 GHz power
+        is capped (US very low power, EU low-power indoor banned in road vehicles). Our edge is architectural: all front ends
+        and the BAW filters between them. The proposal is RH57, a radio head per smart antenna, with automotive Wi-Fi 7 FEMs
+        with a guard filter as the first step.'
+    learn_links:
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: 'Library: 5.9 GHz V2X front ends'
+      href: /library/v2x_frontend
+    - label: Wi-Fi FEMs and tri-band APs
+      href: /rf-notes#wifi_fem_and_triband_ap
+    - label: Acoustic filters and duplexers
+      href: /rf-notes#acoustic_filters_duplexers
   - slug: auto-ntn-pa
     title: "Satellite in the car: an NTN front end for the telematics unit (n255/n256)"
     kind: idea
@@ -189,6 +606,48 @@ reports:
       $2.5–3.5 in volume (est), plus an antenna-side compensator variant.
     tags: [automotive, telematics, NTN, satellite, n255, n256, power class 2, Skylo, Iridium, Starlink, MediaTek MT2739, Qualcomm, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; 5GAA NTN technical report; Skyworks product summaries; MediaTek, CCS Insight, Marelli; search snippets (ABI, Counterpoint, Qualcomm, DCD, RCR); about 10 new public web requests (background notes)"
+    bu_opener:
+      question: From 2027 cars will reach satellites in the n255/n256 bands. Should we build an automotive NTN add-on module
+        (23 dBm from today's SKY68040-11 die, then 26 dBm) at about $1.5–2.5 and $2.5–3.5 (est), when Qualcomm sells modem plus
+        front end and narrowband satellite messaging may need no new hardware at all?
+      pros:
+      - We already ship an NTN amplifier for n255 and n256 (SKY68040-11)
+      - Full AEC-Q104 cellular, GNSS and V2X set that works with any modem; MediaTek's MT2739 needs an external NTN path
+      - 'We make both sides of the hardest problem: the NTN transmitter and the GNSS front end it can blind'
+      cons:
+      - SKY68040-11 is not automotive-qualified, and nothing we sell reaches 26 dBm
+      - Qualcomm bundles modem and automotive front end
+      - 'Narrowband NTN can come by firmware on existing TCUs: maybe no new socket in 2027'
+      vs: Qualcomm, MediaTek, Murata, Quectel
+    learn:
+    - age: 5
+      text: Where there are no phone towers, a car can still call for help by talking to a satellite in space.
+    - age: 10
+      text: Cars already have a phone inside (the telematics unit) for emergency calls and updates. Adding satellite means it
+        keeps working in mountains, deserts and on empty roads.
+    - age: 15
+      text: Satellites are far away, so the car must send with more power (23 to 26 dBm), listen very carefully (low noise)
+        and use new bands, n255 and n256. The satellite uplink sits only about 50 MHz above GPS, so strong filters are needed
+        to keep the car's own navigation working.
+    - age: 20
+      text: 'The request comes from the 5GAA roadmap: narrowband satellite messaging from 2027, wideband from 2029, and a 26
+        dBm vehicle class asked from 3GPP. Modem makers (MediaTek MT2739) already have satellite inside but need an external
+        RF path.'
+    - age: 25
+      text: 'Qualcomm sells modem plus its own front end; Murata and Quectel sell certified NTN modules. We have SKY68040-11
+        for n255/n256 (not automotive) and the full automotive TCU set. The proposal: an automotive NTN add-on module, 23 dBm
+        first from today''s die, 26 dBm later, with GNSS-protecting duplexers and an antenna-side variant.'
+    learn_links:
+    - label: 'Library: telematics unit RF front end'
+      href: /library/tcu_rf
+    - label: 'Library: automotive GNSS front ends'
+      href: /library/gnss_frontend
+    - label: Satellite communication basics
+      href: /rf-notes#satcom_ground_segment
+    - label: 'Interactive: link budget and range'
+      href: /visuals#link
+    - label: 'Interactive: dBm, the power ladder'
+      href: /visuals#dbm
   - slug: auto-redcap-ecall
     title: "NG-eCall and RedCap: a one-transmitter front end for value TCUs"
     kind: idea
@@ -208,3 +667,42 @@ reports:
       optional second receiver, about $2.2–3.4 and $0.6–1.0 in volume (est), with a satellite-port option.
     tags: [automotive, telematics, NG-eCall, RedCap, eRedCap, LTE Cat-1bis, 2G/3G sunset, Qualcomm A10, MediaTek, Quectel, US connected-vehicle rule, pricing]
     sources: "BizDev block-diagram library and catalogue; 5GAA eCall position paper; Skyworks product summaries; Marelli release; search snippets (EUR-Lex/LawPlayer, ACEA, ABI, Qualcomm, BIS, Counterpoint, ResearchAndMarkets); about 8 new public web requests (background notes)"
+    bu_opener:
+      question: Every new EU car needs an LTE or 5G emergency-call unit from 2027 (NG-eCall), about 12 M cars and vans a year.
+        Should we offer one single-transmit front-end module for Cat-1bis, Cat-4 and RedCap at about $2.2–3.4 (est), when Qualcomm's
+        A10 comes with its own front end and Chinese vendors set Cat-1bis prices?
+      pros:
+      - Qualified automotive cellular set today (SKY5A2206, SKY5A2205, SKY5A2203, SKY5A5010)
+      - 'Works with any modem: fits RedCap and Cat-1bis modems without their own front end (MediaTek, UNISOC, Sequans)'
+      - With Qorvo, BAW/SAW filters and automotive antenna switches in house
+      cons:
+      - Qualcomm's A10 RedCap modem comes with Qualcomm's own front end
+      - Cat-1bis is a Chinese-led, price-driven market
+      - Our set is sized for 4×4 MIMO 5G (up to 7 parts); RedCap needs 1 transmitter and 1–2 receivers
+      vs: Qualcomm, Murata, MediaTek / Quectel modules, Chinese PA vendors
+    learn:
+    - age: 5
+      text: If a car has an accident, it can call for help by itself, even if nobody inside can speak.
+    - age: 10
+      text: In Europe every new car must have this automatic emergency call (eCall). The old 2G and 3G networks are switching
+        off, so new cars need a 4G or 5G phone inside, at least for this.
+    - age: 15
+      text: The emergency-call unit needs one transmitter, one or two receivers and the regional bands, and it must survive
+        a crash (backup antenna). It must be very cheap, because many cars have it only because the law asks for it.
+    - age: 20
+      text: 'The request comes from EU NG-eCall: new types from 1 Jan 2026, all new vehicles from 1 Jan 2027, about 12 M EU
+        cars and vans a year; 5G RedCap units start about 2028. Low-cost modems without their own front end need an external
+        one.'
+    - age: 25
+      text: 'Qualcomm''s A10 RedCap modem bundles its front end; Murata and MediaTek/Quectel modules compete; Chinese PA vendors
+        set Cat-1bis prices. Our automotive set is qualified but sized for premium 4×4 MIMO. The proposal: one regional single-transmit
+        module (PA + duplexers + switch) with an optional second receiver and a satellite-port option.'
+    learn_links:
+    - label: 'Library: telematics unit RF front end'
+      href: /library/tcu_rf
+    - label: Acoustic filters and duplexers
+      href: /rf-notes#acoustic_filters_duplexers
+    - label: 'Interactive: dBm, the power ladder'
+      href: /visuals#dbm
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from app.matching.engine import BETTER, EQUAL, UNKNOWN, compare_param, format_value
+from app.matching.engine import BETTER, EQUAL, UNKNOWN, compare_param, format_at
 from app.matching.rules import FamilyRules, ParamDef
 from app.models import Part
 
@@ -50,17 +50,22 @@ def _rank_value(p: ParamDef, v):
 
 def compare_parts(parts: list[Part], baseline: Part, rules: FamilyRules, priorities=(1, 2)) -> Comparison:
     rows = []
-    maps = [rules.values(p) for p in parts]
     base_map = rules.values(baseline)
+    # each part against the baseline at the same test conditions (peak currents at one supply)
+    pairs = [
+        (base_map, base_map) if p.id == baseline.id else rules.at_same_conditions(base_map, rules.values(p))
+        for p in parts
+    ]
+    maps = [v for _, v in pairs]
     for pdef in rules.by_priority(*priorities):
         cells = []
-        for part, values in zip(parts, maps, strict=True):
+        for part, (base, values) in zip(parts, pairs, strict=True):
             v = values.get(pdef.key)
             if part.id == baseline.id:
                 status = "baseline"
             else:
-                status, _ = compare_param(pdef, base_map.get(pdef.key), v)
-            cells.append(Cell(format_value(pdef, v), status))
+                status, _ = compare_param(pdef, base.get(pdef.key), v)
+            cells.append(Cell(format_at(rules, pdef, values), status))
         ranks = [_rank_value(pdef, m.get(pdef.key)) for m in maps]
         known = [r for r in ranks if r is not None]
         if len(known) >= 2 and max(known) != min(known):

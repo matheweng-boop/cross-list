@@ -101,7 +101,7 @@ def _part_checks_uncached(session: Session) -> tuple[dict, list]:
         r = rules.get(p.family)
         if not r:
             continue
-        pm = p.param_map()
+        pm = r.values(p)  # derived values (an output option read from the pinout) count as present
         for prm in r.params:
             if prm.priority == 1 and pm.get(prm.key) in (None, ""):
                 missing[(p.family, prm.key)] += 1

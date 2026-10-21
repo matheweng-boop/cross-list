@@ -18,7 +18,7 @@
   {% for p in rules.params %}
   <tr><td>{{ p.label }}{% if p.unit %} <span class="muted">({{ p.unit }})</span>{% endif %}</td><td>{{ p.priority }}</td>
     <td>{{ p.kind }}{% if p.hard %} · <b>hard</b>{% endif %}</td>
-    <td>{% if p.kind == 'number' %}{{ p.direction }}{% elif p.kind == 'range' %}wider range{% elif p.kind == 'ordinal' %}{{ p.levels|join(' < ') }}{% elif p.kind == 'set' %}more items (superset){% else %}must match{% endif %}</td></tr>
+    <td>{% if p.kind == 'number' %}{{ p.direction }}{% if p.at %}, at the same {{ rules.get(p.at).label|lower }}{% endif %}{% elif p.kind == 'curve' %}shown only{% elif p.kind == 'range' %}wider range{% elif p.kind == 'ordinal' %}{{ p.levels|join(' < ') }}{% elif p.kind == 'set' %}more items (superset){% else %}must match{% endif %}</td></tr>
   {% endfor %}
 </table></div>
 {% endfor %}

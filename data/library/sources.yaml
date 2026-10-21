@@ -1,0 +1,74 @@
+# Technical library: every source assessed for the RF / isolation deep dives (feasibility check 2026-10-21), kept in the
+# background for later runs. Each topic file in data/library/topics/ names the references actually read.
+# feasibility: high | medium | low | blocked. Access is what our polite reader found (robots.txt first, one request at a
+# time, stop at the first block); a blocked host is never worked around.
+# Licence rule for every source: we store our own summaries and short quotes with a citation, never full text or figures.
+sources:
+  - {id: openalex, name: "OpenAlex", url: "https://api.openalex.org", area: both, kind: discovery,
+     offers: "Finds open-access papers and shows each one's licence and free copy; e.g. 871 OA papers on isolated gate drivers in traction inverters since 2022, 4,731 on automotive radar front ends since 2023",
+     licence: "Metadata CC0", access: "Allowed, no key", feasibility: high}
+  - {id: arxiv, name: "arXiv", url: "https://arxiv.org", area: both, kind: papers,
+     offers: "Preprints on radar, V2X, NTN, UWB and positioning; fewer on gate drivers and functional safety",
+     licence: "Per paper; default licence allows reading, not redistribution", access: "Paper pages and PDFs allowed (15 s apart); the API is disallowed", feasibility: high}
+  - {id: ti, name: "Texas Instruments application notes", url: "https://www.ti.com/lit", area: both, kind: app_note,
+     offers: "Traction-inverter gate-driver design guide (SLUA963B), ISO 26262 for traction inverters (SDAA370), ASIL-D targets (SSZT066), 800 V SiC reference design, mmWave radar notes",
+     licence: "Use only for designing with TI parts; no reproduction. Summaries with citation only", access: "Allowed", feasibility: high}
+  - {id: infineon, name: "Infineon public documents", url: "https://www.infineon.com", area: isolation, kind: app_note,
+     offers: "EiceDRIVER ASIL-D gate-driver datasheets (e.g. 1EDI3041AS: CMTI > 150 V/ns, IEC 60747-17 reinforced) and traction application notes",
+     licence: "Copyright; summaries with citation", access: "Allowed for public assets", feasibility: high}
+  - {id: skyworks, name: "Skyworks public documents", url: "https://www.skyworksinc.com", area: both, kind: app_note,
+     offers: "Our own baseline: isolation reference designs and selector guide, Si829x ASIL-D gate driver, automotive RF datasheets",
+     licence: "Own public material", access: "Allowed (investor site blocked)", feasibility: high}
+  - {id: wolfspeed, name: "Wolfspeed reference designs", url: "https://www.wolfspeed.com", area: isolation, kind: reference_design,
+     offers: "SiC traction-inverter reference designs and application notes", licence: "Copyright; summaries", access: "Allowed", feasibility: medium}
+  - {id: etsi, name: "ETSI free standards", url: "https://www.etsi.org/deliver", area: rf, kind: standard,
+     offers: "EN 302 571 (5.9 GHz ITS), ITS-G5, EN 303 413 (GNSS receivers), EN 302 264 (short-range radar), UWB standards",
+     licence: "Free download, no reproduction; cite clauses and paraphrase", access: "Allowed", feasibility: high}
+  - {id: 3gpp, name: "3GPP specifications", url: "https://www.3gpp.org/ftp/Specs", area: rf, kind: standard,
+     offers: "V2X, NTN, RedCap and the RF core specifications (band and coexistence tables)", licence: "Free; cite and paraphrase",
+     access: "Allowed", feasibility: medium}
+  - {id: ieee802, name: "IEEE 802 Mentor (public documents)", url: "https://mentor.ieee.org", area: rf, kind: standard,
+     offers: "802.15.4ab (next-generation UWB) and 802.11bd/bn (V2X) contributions and project documents", licence: "Public contributions; cite",
+     access: "Allowed", feasibility: medium}
+  - {id: c2ccc, name: "CAR 2 CAR Communication Consortium", url: "https://www.car-2-car.org", area: rf, kind: white_paper,
+     offers: "About 40 papers: ITS-G5 / LTE-V2X co-channel coexistence, multi-channel operation, spectrum needs, security",
+     licence: "Free download; some prohibit reproduction. Summaries only", access: "Allowed", feasibility: high}
+  - {id: 5gaa, name: "5GAA", url: "https://5gaa.org", area: rf, kind: white_paper,
+     offers: "About 100 papers: NTN technical report, 5.9 GHz FAQ, C-V2X device list, eCall", licence: "Free download; copyright 5GAA",
+     access: "Allowed", feasibility: high}
+  - {id: steer, name: "Steer, Microwave and RF Design (open textbook)", url: "https://eng.libretexts.org", area: rf, kind: textbook,
+     offers: "Five volumes of RF fundamentals: radio systems, transmission lines, networks, modules, amplifiers and oscillators",
+     licence: "CC BY-NC (internal use with attribution; legal check before external use)", access: "HTML pages allowed (5 s apart); book-PDF link not allowed", feasibility: high}
+  - {id: mitocw, name: "MIT OpenCourseWare", url: "https://ocw.mit.edu", area: both, kind: course,
+     offers: "6.622 Power Electronics (notes and typed transcripts) and 6.776 High-Speed Communication Circuits (LNA, mixer, PA, VCO)",
+     licence: "CC BY-NC-SA 4.0", access: "Allowed", feasibility: high}
+  - {id: repositories, name: "University repositories and theses", url: "", area: both, kind: papers,
+     offers: "Author copies listed by OpenAlex: TU Delft (radar theses), HAL (77 GHz front ends), PoliTo (inverter EMI), Aalborg, UPCommons",
+     licence: "Per item (often CC BY)", access: "TU Delft allowed (20 s apart); DiVA reset the connection; MIT DSpace blocked (429)", feasibility: medium}
+  - {id: doaj, name: "DOAJ", url: "https://doaj.org/api", area: both, kind: discovery, offers: "Article search; poor recall compared with OpenAlex",
+     licence: "Metadata open", access: "Allowed", feasibility: low}
+  - {id: wikipedia, name: "Wikipedia / Wikibooks", url: "https://en.wikipedia.org", area: both, kind: background,
+     offers: "Background only, not authoritative for design rules", licence: "CC BY-SA",
+     access: "Pages load, but our reader's bot check flagged them by mistake; fix the reader before use", feasibility: low}
+  - {id: nptel, name: "NPTEL (Indian Institutes of Technology)", url: "https://nptel.ac.in", area: both, kind: course,
+     offers: "RF integrated circuits and power-electronics lectures", licence: "Reported CC BY-SA, not confirmed",
+     access: "Content loads through JavaScript; archive links 404", feasibility: low}
+  - {id: tudelftocw, name: "TU Delft OpenCourseWare", url: "https://ocw.tudelft.nl", area: both, kind: course, offers: "A few RF and power-electronics courses",
+     licence: "CC BY-NC-SA", access: "Flagged by mistake by our reader's bot check; fix before use", feasibility: low}
+  - {id: mdpi, name: "MDPI journals", url: "https://www.mdpi.com", area: both, kind: papers,
+     offers: "Many CC BY papers (gate drivers, SiC crosstalk, 800 V EMI, 77 GHz CMOS radar)", licence: "CC BY",
+     access: "Blocked (403 on robots.txt): abstracts through OpenAlex only", feasibility: blocked}
+  - {id: ieeexplore, name: "IEEE Xplore open access", url: "https://ieeexplore.ieee.org", area: both, kind: papers,
+     offers: "IEEE Access, OJ-VT, OJ-PEL papers", licence: "CC BY for open-access papers",
+     access: "robots.txt not available (502): treated as not crawlable; author copies only", feasibility: blocked}
+  - {id: iso, name: "ISO 26262 / CISPR 25", url: "https://www.iso.org", area: both, kind: standard, offers: "The standards themselves",
+     licence: "Paid", access: "Blocked (403) and paid: vendor and academic summaries instead", feasibility: blocked}
+  - {id: coursera, name: "Coursera / edX", url: "", area: both, kind: course, offers: "Power-electronics courses",
+     licence: "Terms prohibit scraping", access: "Not used", feasibility: blocked}
+  - {id: youtube, name: "YouTube lecture transcripts", url: "", area: both, kind: course, offers: "Many lectures",
+     licence: "Terms prohibit automated transcript extraction", access: "Not used", feasibility: blocked}
+  - {id: otherVendors, name: "ST, ADI, NXP, Rohm", url: "", area: isolation, kind: app_note,
+     offers: "Strong traction gate-driver material (STGAP4S, ADuM4177, GD3160, BM6112)", licence: "Copyright; summaries",
+     access: "Unreachable or stopped earlier; Rohm robots.txt disallows its English pages", feasibility: low}
+  - {id: universityNotes, name: "ETH Zurich PES, Berkeley EE lecture notes", url: "", area: both, kind: course,
+     offers: "Strong, but mostly course-internal", licence: "Often all rights reserved", access: "Not tested further", feasibility: low}

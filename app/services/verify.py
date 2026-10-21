@@ -118,15 +118,44 @@ def _claim(topic: str, e: dict) -> str:
     return f"{op.PATH_LABEL.get(e.get('path'), e.get('path'))} · {e.get('base') or ''}".strip(" ·")
 
 
+def _library_rule(session: Session) -> VerifyTask | None:
+    """The least certain design rule of the technical library that nobody has reviewed or been given yet."""
+    from app.services import library
+
+    used = _used(session, "data")
+    reviewed = {(d, k) for d, k in session.execute(select(DataReview.dataset, DataReview.key))}
+    rank = {"low": 0, "med": 1, "medium": 1, "high": 2}
+    cands = [(rank.get(r.get("conf"), 1), t["order"] if "order" in t else 99, t, r) for t in library.topics()
+             for r in t.get("design_rules") or []
+             if f"library:{t['key']}:{r['id']}" not in used and (library.dataset(t["key"]), r["id"]) not in reviewed]
+    if not cands:
+        return None
+    _, _, tp, r = min(cands, key=lambda c: c[:2])
+    refs = library.refs_by_id(tp)
+    sources = [f"{refs[i]['title']} ({refs[i]['publisher']})" for i in r.get("refs") or [] if i in refs]
+    n_rules = sum(len(x.get("design_rules") or []) for x in library.topics())
+    return VerifyTask(kind="data", key=f"library:{tp['key']}:{r['id']}", covers=n_rules,
+                      title=f"Design rule: {r['area']} ({tp['title'].split(':')[0].split('(')[0].strip()})",
+                      detail={"topic": "library", "library": tp["key"], "item": r["id"], "fn": "",
+                              "claim": f"{r['rule']} Why: {r.get('why') or ''}"[:600], "sources": sources,
+                              "why": f"the least certain of {n_rules} library design rules read from the same "
+                                     f"kind of references"})  # fmt: skip
+
+
 def _data(session: Session, n: int) -> list[VerifyTask]:
+    """Evidence entries behind the scores (the types rotate from batch to batch) and one library design rule."""
+    rule = _library_rule(session)
+    n_evidence = n - 1 if rule else n
     tab = scoring.combined(session)
     need = sorted((u["raw"], fn) for fn, u in tab["usage"].items() if fn in tab["rows"])
     order = [fn for _, fn in reversed(need)]
     used = _used(session, "data")
     reviewed = {(d, k) for d, k in session.execute(select(DataReview.dataset, DataReview.key))}
     out: list[VerifyTask] = []
-    for topic, label in DATA_TOPICS.items():
-        if len(out) >= n:
+    kinds = list(DATA_TOPICS.items())
+    start = len(used) // max(n, 1) % len(kinds)  # rotate which evidence comes first in each new batch
+    for topic, label in kinds[start:] + kinds[:start]:
+        if len(out) >= n_evidence:
             break
         entries = op.competition() if topic == "competition" else op.evidence(topic)
         taken = {x.detail["fn"] for x in out}  # a different function per item
@@ -142,7 +171,7 @@ def _data(session: Session, n: int) -> list[VerifyTask]:
                               detail={"fn": fn, "topic": topic, "claim": _claim(topic, e)[:400],
                                       "sources": (e.get("sources") or [])[:4],
                                       "why": why}))  # fmt: skip
-    return out
+    return out + ([rule] if rule else [])
 
 
 PICK = {"cross": _crosses, "diagram": _diagrams, "data": _data}
@@ -181,7 +210,12 @@ def complete(session: Session, task_id: int, ok: bool, note: str = "", author: s
     d = t.detail or {}
     if t.kind == "diagram" and ok:
         blocks.set_verified(session, d["i"], True, author, note)
-    if t.kind == "data":
+    if t.kind == "data" and d.get("topic") == "library":
+        from app.services import library
+
+        session.add(DataReview(dataset=library.dataset(d["library"]), key=d["item"],
+                               verdict="correct" if ok else "wrong", comment=t.note, author=t.author))  # fmt: skip
+    elif t.kind == "data":
         session.add(DataReview(dataset=d["topic"], key=d["fn"], verdict="correct" if ok else "wrong",
                                comment=t.note, author=t.author))  # fmt: skip
     if not ok:

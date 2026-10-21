@@ -1,0 +1,102 @@
+order: 1
+topic: v2x_frontend
+title: "5.9 GHz V2X front ends (C-V2X, ITS-G5/802.11p/bd) and coexistence with car Wi-Fi"
+summary: "A V2X front end puts a PA, an LNA, a T/R switch and a 5855–5925 MHz BAW filter next to the roof antenna or in the telematics unit. A step attenuator and a power detector make up the cable loss (compensator mode). Output power is set by EIRP limits: 33 dBm e.i.r.p. in Europe, and in 3GPP the limit falls by the declared gain after the antenna connector. Linearity is set by the transmit mask, ACLR, EVM and power back-off (MPR/A-MPR) of each waveform. Research is moving to several carriers in one car: ITS-G5 with LTE-V2X in the same channel, NR-V2X time-shared with LTE-V2X on one PA, 802.11bd with 256-QAM and 20 MHz channels, and in the US, UNII-4 Wi-Fi directly below the C-V2X channels. That calls for faster switching, more linear PAs, steeper filters and dual-path front ends."
+references:
+  - {id: r1, title: "ETSI EN 302 571 V2.1.1: ITS radiocommunications equipment operating in 5855–5925 MHz (Harmonised Standard)", publisher: "ETSI", year: 2017, url: "https://www.etsi.org/deliver/etsi_en/302500_302599/302571/02.01.01_60/en_302571v020101p.pdf", type: standard, licence: "Free download; no reproduction without ETSI permission (we paraphrase and cite clauses)", retrieved: 2026-10-21, why: "The legal RF limits in Europe for any 5.9 GHz V2X radio: power, PSD, mask, out-of-band, receiver blocking and selectivity, tolling protection"}
+  - {id: r2, title: "3GPP TR 38.886 V16.3.0: V2X Services based on NR; User Equipment (UE) radio transmission and reception", publisher: "3GPP", year: 2021, url: "https://www.3gpp.org/ftp/Specs/archive/38_series/38.886/38886-g30.zip", type: standard, licence: "Free; © 3GPP (paraphrased, clause-cited)", retrieved: 2026-10-21, why: "The NR-V2X RF rules for n47: power class, MPR/A-MPR, post-connector gain, ACLR, EVM, REFSENS, ACS, TDM with LTE-V2X on one PA (zip was cut off at 94 %; main text recovered)"}
+  - {id: r3, title: "SKY5A2105: 5.9 GHz C-V2X and 802.11p DSRC High-Power Front-End Module (Product Summary 206756A)", publisher: "Skyworks Solutions", year: 2023, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/3001-3100/SKY5A2105_206756A_PS.pdf", type: app_note, licence: "Public product summary; Skyworks copyright", retrieved: 2026-10-21, why: "Our own reference V2X FEM: block content, power per waveform, compensator vs ECU control, detector and attenuator ranges"}
+  - {id: r4, title: "Multi-Channel Operation (MCO) Part 2: Technical capabilities and limits (WP 2084 V1.0)", publisher: "CAR 2 CAR Communication Consortium", year: 2020, url: "https://www.car-2-car.org/fileadmin/documents/General_Documents/C2CCC_WP_2084_MCO-TechnicalCapabilies_V1.0.pdf", type: white_paper, licence: "Free download; no reproduction without permission (summarised)", retrieved: 2026-10-21, why: "Shows which RF parameters (TX mask vs RX selectivity, overloading, IM, CSMA threshold) limit several V2X channels in one area; lists 802.11bd PHY features"}
+  - {id: r5, title: "Co-channel coexistence between ITS-G5 and LTE-V2X: mitigation methods (WP 2091 V1.0)", publisher: "CAR 2 CAR Communication Consortium", year: 2021, url: "https://www.car-2-car.org/fileadmin/documents/General_Documents/C2CCC_WP_2091_Co-ChannelCoexistence_MitigationMethods_V1.0.pdf", type: white_paper, licence: "Free download; no reproduction without permission (summarised)", retrieved: 2026-10-21, why: "Evaluates ETSI TR 103 766 methods A–F for ITS-G5 and LTE-V2X in the same EU channel; the chosen method makes one radio send both waveforms back to back"}
+  - {id: r6, title: "Survey of Spectrum Regulation for Intelligent Transportation Systems (Choi, Marojevic, Dietrich, Reed, Ahn), IEEE Access 8", publisher: "IEEE Access / arXiv 2008.00084", year: 2020, url: "https://arxiv.org/abs/2008.00084", type: paper, licence: "CC BY 4.0", retrieved: 2026-10-21, why: "Open-access review of DSRC, C-V2X and UNII-4 Wi-Fi sharing in the US, EU, China, Korea and Japan, with adjacent-channel Wi-Fi interference results (2020, before the final FCC rules)"}
+block_diagram:
+  name: "V2X front end at the roof antenna (compensator mode) beside car Wi-Fi"
+  note: "Drawn by us from r1–r5 (not copied). One V2X path is shown, as in SKY5A2105: T/R switch, BAW band-pass, PA, LNA, step attenuator, log detector and temperature sensor. It sits next to the V2X antenna and makes up the coax loss to the V2X chipset. A dual-carrier car (US 20 + 10 MHz, EU ITS-G5 + C-V2X) has two such paths. The car's Wi-Fi 5/6 GHz front end shares the roof module and needs its own filter so it does not leak into 5855–5925 MHz."
+  groups:
+    - id: g1
+      label: "Roof antennas"
+      col: 0
+      row: 0
+      blocks:
+        - {fn: antenna, label: "V2X antenna(s) 5.9 GHz"}
+        - {fn: antenna, label: "Wi-Fi 5/6 GHz antennas"}
+        - {fn: gnss_lna, label: "GNSS L1/L5 (timing for C-V2X)"}
+    - id: g2
+      label: "V2X front end (compensator or ECU mode)"
+      col: 1
+      row: 0
+      blocks:
+        - {fn: antenna_switch, label: "T/R switch (SP4T, BAW bypass)"}
+        - {fn: filter_saw_baw, label: "BAW 5855–5925 MHz (US: guard vs UNII-4?)"}
+        - {fn: power_amplifier, label: "PA: LTE +29 / NR +26.5 / 11p +26 dBm"}
+        - {fn: lna, label: "LNA (sets NF ahead of coax loss)"}
+        - {fn: rf_attenuator, label: "DSA 0–31.75 dB (cable-loss trim)"}
+        - {fn: schottky_diode, label: "Log power detector (>25 dB)"}
+        - {fn: temperature_sensor, label: "Temperature sensor"}
+    - id: g3
+      label: "Coax harness"
+      col: 2
+      row: 0
+      blocks:
+        - {fn: rf_passive, label: "Coax + connectors (cable loss)"}
+    - id: g4
+      label: "V2X / telematics unit"
+      col: 3
+      row: 0
+      blocks:
+        - {fn: v2x_transceiver, label: "LTE-V2X / NR-V2X / ITS-G5 chipset"}
+        - {fn: soc, label: "V2X stack processor"}
+        - {fn: secure_element, label: "Secure element (signing)"}
+        - {fn: modem, label: "Cellular modem (Uu)"}
+    - id: g5
+      label: "Car Wi-Fi (same roof module or cabin)"
+      col: 1
+      row: 1
+      blocks:
+        - {fn: wifi_fem, label: "Wi-Fi 6E/7 FEM"}
+        - {fn: filter_saw_baw, label: "5 GHz BAW / V2X notch"}
+        - {fn: wifi_soc, label: "Wi-Fi SoC"}
+  links:
+    - [g1, g2, "5.9 GHz RF, short trace"]
+    - [g2, g3, "TX/RX RF + SPI/GPIO control"]
+    - [g3, g4, "coax (loss made up in compensator mode)"]
+    - [g5, g1, "Wi-Fi antennas: isolation from V2X antenna"]
+    - [g5, g4, "coexistence signalling / TDM"]
+design_rules:
+  - {id: d1, area: "TX power", rule: "Europe: at most 33 dBm e.i.r.p. and 23 dBm/MHz e.i.r.p. in 5855–5925 MHz. Conducted power at the connector = 33 dBm minus the gain after the connector (antenna, plus any amplifier after it). 3GPP writes this as P_regulatory = 33 − G_post_connector dBm, or 10 − G_post_connector dBm inside a CEN DSRC tolling zone.", why: "The limits are EIRP limits, so the PA target depends on antenna gain and cable loss, not on the chip alone", refs: [r1, r2], conf: high, kind: rule}
+  - {id: d2, area: "Output power per waveform", rule: "Size the PA for the strongest waveform at the antenna port: SKY5A2105 gives LTE-V2X +29 dBm, NR-V2X +26.5 dBm (2.5 dB MPR) and 802.11p +26 dBm. 3GPP NR-V2X power class 3 in n47 is 23 dBm (+2/−3 dB).", why: "The PA must cover cable loss in ECU mode and the extra back-off that NR and 11p need for linearity", refs: [r3, r2], conf: high, kind: rule}
+  - {id: d3, area: "Back-off (MPR)", rule: "Allow NR-V2X MPR for power class 3: ≤2.5 dB (inner RB allocations) to ≤4.5 dB (outer) for QPSK–64QAM, ≤7.0 dB for 256QAM, 3.5 dB for a single PSFCH and ≤6.0 dB for S-SSB. These figures assume one PA shared by LTE-V2X and NR-V2X, calibrated to −30 dBc ACLR.", why: "The back-off sets the real usable power and the PA's linear headroom", refs: [r2], conf: high, kind: rule}
+  - {id: d4, area: "Compensator gain vs A-MPR", rule: "With NS_33 (EU mask), A-MPR = A-MPR_base + G_post_connector × A-MPR_step. The step is 0.5 dB per dB of declared post-connector gain on most channels, and 0.7–1.2 dB on 5860 MHz. More gain after the connector therefore costs more back-off.", why: "A compensator or active antenna after the chipset connector raises EIRP and spectrum-mask exposure. The front end must stay linear at the higher output, or the chipset backs off.", refs: [r2], conf: high, kind: consideration}
+  - {id: d5, area: "Linearity / mask", rule: "Meet the ETSI 10 MHz mask at 33 dBm reference: −26 dBc at ±5 MHz, −32 dBc at ±5.5 MHz, −40 dBc at ±10 MHz, −50 dBc at ±15 MHz (absolute limits, so low-power devices must meet them too). Meet 3GPP ACLR of 30 dB for NR-V2X.", why: "The TX mask, not RX selectivity, limits how close two V2X channels can be used: at 33 dBm the adjacent leakage is about 1.3 dB worse than the selectivity effect", refs: [r1, r2, r4], conf: high, kind: rule}
+  - {id: d6, area: "EVM", rule: "TX EVM ≤ 8 % for 64QAM and ≤ 3.5 % for 256QAM (NR-V2X, as for PUSCH). 802.11bd adds 256-QAM, so plan the same tighter EVM for ITS-G5 NGV.", why: "256-QAM pushes the PA further into back-off and needs a cleaner LO and PA", refs: [r2, r4], conf: high, kind: rule}
+  - {id: d7, area: "Out-of-band and tolling", rule: "Unwanted emissions must be ≤ −30 dBm/MHz e.i.r.p. in 5835–5855 and 5925–5945 MHz and in the spurious domain from 1 GHz to 18 GHz. The 5795–5815 MHz tolling band is protected under ETSI TS 102 792. Transmit power control must reach at least 3 dBm.", why: "Sets the rejection the BAW and harmonic filtering must give at the PA output, and the low end of the power-control range", refs: [r1], conf: high, kind: rule}
+  - {id: d8, area: "RX blocking", rule: "The receiver must tolerate a ≥ −30 dBm blocker at ±50, ±100 and ±200 MHz. Put the BAW band-pass before the LNA, so UNII-3/UNII-4 Wi-Fi and 6 GHz Wi-Fi on the same roof cannot compress it.", why: "At ±50 MHz the blocker is UNII-3/4 Wi-Fi territory; the overloading threshold depends on LNA linearity", refs: [r1, r4], conf: high, kind: rule}
+  - {id: d9, area: "Sensitivity / NF", rule: "Targets: ETSI −85 dBm (BPSK ½, 10 MHz, which assumes NF 10 dB + 5 dB implementation margin). EN 302 663 is 6 dB tighter at −88 dBm (QPSK ½). NR-V2X n47 REFSENS is −92.5 dBm (10 MHz, 15 kHz), which assumes a 13 dB NF. Every dB of coax loss in front of the LNA adds a dB of NF, so put the LNA at the antenna (compensator mode) when the cable is long.", why: "Coax at 5.9 GHz is lossy and roof modules sit metres from the TCU", refs: [r1, r2, r4], conf: med, kind: consideration}
+  - {id: d10, area: "Coexistence with Wi-Fi", rule: "A filter at the V2X receiver cannot remove another transmitter's leakage that falls inside the V2X channel. That emission must be stopped at the aggressor (the Wi-Fi FEM filter and mask) and by antenna isolation. Choose channels with care: simulations show UNII-4 Wi-Fi on some channels hurts C-V2X (US plan of that time).", why: "In the US, UNII-4 Wi-Fi (5850–5895 MHz) sits directly below the C-V2X channels (5895–5925 MHz)", refs: [r4, r6], conf: med, kind: consideration}
+  - {id: d11, area: "Two radios in one car", rule: "Budget isolation between a car's own V2X carriers. An adjacent-channel transmitter at 23 dBm (8 dBi antenna) can push the victim's CSMA energy-detect level (−65 dBm per 10 MHz) up to about 15 m away, or about 5 m with a tighter mask. Overloading and intermodulation at <2 m depend on the device architecture.", why: "Dual-carrier OBUs (US 20 + 10 MHz, EU ITS-G5 + C-V2X) put two transmitters centimetres apart", refs: [r4], conf: high, kind: consideration}
+  - {id: d12, area: "NR + LTE sidelink", rule: "In n47, NR-V2X and LTE-V2X sidelinks share time (TDM only; no intra-band FDM). The baseline is one PA, with up to 150 µs switching time and one lost slot or subframe per switch. Separate RF chains with two PAs may switch faster.", why: "This sets whether a single-path FEM is enough for dual-mode NR + LTE cars", refs: [r2], conf: high, kind: rule}
+  - {id: d13, area: "Co-channel ITS-G5 + LTE-V2X", rule: "Under method C, the only viable co-channel method, an LTE-V2X station sends a 40 µs 802.11p PHY header (L-STF, L-LTF, L-SIG) in front of each LTE subframe. If the header goes into the last empty symbol, about 30 µs remain for TX/RX switching. The PA, DSA and switch must settle between waveforms on that time scale.", why: "One front end must carry both waveforms back to back, with fast bias, gain and switch changes", refs: [r5], conf: high, kind: consideration}
+  - {id: d14, area: "Power control loop", rule: "Cover the full TPC range with the detector and attenuator: ETSI asks for TPC from 3 dBm to maximum (about 30 dB). SKY5A2105 gives a log detector with >25 dB range and a DSA of 0–31.75 dB (0.25 dB steps over SPI in compensator mode, 5 dB steps over GPIO in ECU mode). Check that the bottom of the TPC range is still closed-loop.", why: "The detector range (>25 dB) is a little shorter than the TPC span (our arithmetic)", refs: [r1, r3], conf: med, kind: consideration}
+  - {id: d15, area: "Duty cycle / thermal", rule: "ITS-G5 (DCC): each burst ≤ 4 ms and duty cycle ≤ 3 % per second. Design PA heat for short bursts, but qualify at the roof temperature: SKY5A2105 is AEC-Q104 Grade 2 (−40 to +105 °C).", why: "Average heat is low, but roof modules run hot", refs: [r1, r3], conf: med, kind: consideration}
+  - {id: d16, area: "RX-mode leakage", rule: "In receive mode, emissions in 5795–5815 MHz must be ≤ −60 dBm e.i.r.p. (antenna ≤ 2 m high), and ≤ −47 dBm e.i.r.p. elsewhere above 1 GHz. Keep the PA off and the LO leakage low in RX and idle.", why: "The tolling band sits 40 MHz below the ITS band", refs: [r1], conf: high, kind: rule}
+trends:
+  - {id: t1, text: "Several carriers per car: the EU Multi-Channel Operation needs more than one 10 MHz channel at once, and the authors suggest a TX mask defined per power class instead of an absolute mask", horizon: 2-3y, refs: [r4], conf: med, for_us: "Dual-path FEMs with better PA linearity and steeper BAW are the hardware answer; that is the case for a dual-carrier SKY5A2105 successor"}
+  - {id: t2, text: "ITS-G5 and LTE-V2X in the same EU channel: without mitigation both degrade badly; only dynamic method C (LTE sends an 802.11p header) is judged viable; NR-V2X cannot share a channel with LTE-V2X", horizon: 2-3y, refs: [r5], conf: high, for_us: "Front ends must switch waveforms in tens of µs and run both modes through one PA; dual-mode (11p + C-V2X) support stays a must-have in Europe"}
+  - {id: t3, text: "NR-V2X joins LTE-V2X in n47 by time sharing on one PA (150 µs switch). Dual PAs are noted as the faster option; channel bandwidths go up to 40 MHz, with FCC 40 MHz masks", horizon: 2-3y, refs: [r2], conf: high, for_us: "A two-PA front end lets OEMs run LTE and NR sidelink without the 150 µs gaps; 40 MHz needs a wide-band, linear PA"}
+  - {id: t4, text: "802.11bd (NGV) evolves ITS-G5: LDPC, midambles, DCM, 256-QAM, 20 MHz channels made of two 10 MHz channels, and a 60 GHz mode; it is backward compatible with 11p", horizon: 2-3y, refs: [r4], conf: high, for_us: "256-QAM and 20 MHz raise EVM and bandwidth targets for 11p-mode FEMs; the 60 GHz mode is outside today's portfolio"}
+  - {id: t5, text: "US: Wi-Fi in UNII-4 (5850–5895 MHz) directly below C-V2X (5895–5925 MHz); simulations show Wi-Fi channel choice matters for C-V2X", horizon: now, refs: [r6], conf: med, for_us: "Sell guard filtering on both sides: V2X notch and 5 GHz BAW on the Wi-Fi FEM (SKY5A1005/1006) and possibly a US guard BAW on the V2X side"}
+  - {id: t6, text: "Power rules are written as EIRP with a declared gain after the connector, so antenna-side amplification is explicitly in the standard", horizon: now, refs: [r2, r1], conf: high, for_us: "Supports compensator and smart-antenna FEMs at the roof, where SKY5A2105 already has a mode"}
+skyworks_fit:
+  - {fn: v2x_fem, parts: ["SKY5A2105", "SKYA21043", "QPF1003Q", "QPF1002Q"], note: "SKY5A2105 (Preview): SP4T, LNA, PA, BAW band-pass, DSA, log detector, temperature sensor; compensator or ECU mode; covers LTE/NR-V2X and 802.11p. SKYA21043 is 802.11p only (US DSRC ends 14 Dec 2026; EU ITS-G5 keeps it). QPF1003Q/QPF1002Q are the Qorvo V2X FEMs (QPF1002Q: 5.770–5.925 GHz, 28 dBm in the catalogue). All are one path per part."}
+  - {fn: filter_saw_baw, parts: ["QPQ2200Q", "QPQ2230Q", "SKY5A1005", "SKY5A1006", "SKY5A1008"], note: "QPQ2200Q: 5855–5925 MHz BAW band-pass (1.3 dB IL). SKY5A1005 / QPQ2230Q: V2X notch for the Wi-Fi path (SKY5A1005: ≥30 dB in 5855–5925 MHz, 40 MHz transition). SKY5A1006: 5 GHz Wi-Fi BAW, passband 5170–5835 MHz. SKY5A1008: 6 GHz Wi-Fi. There is no US guard BAW (pass 5895–5925, reject UNII-4) in the catalogue."}
+  - {fn: wifi_fem, parts: ["QPF4554Q"], note: "Automotive Wi-Fi/C-V2X FEM, 5.18–5.925 GHz (Preview in the catalogue). The repo's Wi-Fi 7 case notes there is no automotive Wi-Fi 7 PA in the portfolio yet."}
+  - {fn: gnss_lna, parts: ["SKY5A2110"], note: "GNSS L1+L5 front end in the same roof module; C-V2X timing and NR-V2X ±0.1 ppm frequency accuracy depend on GNSS"}
+  - {fn: v2x_transceiver, parts: [], note: "No V2X modem of our own; design-ins follow the chipset vendor's reference design (see case auto-cv2x-fe)"}
+open_questions:
+  - "Is a newer ETSI EN 302 571 than V2.1.1 (2017) published, with C-V2X-specific requirements? The C2C-CC paper cites a draft V2.1.9 / V2.2.1 (2020). Not checked."
+  - "What PA power and A-MPR budget does a compensator need when the declared post-connector gain is +5 to +10 dB? 3GPP gives the formula, but no OEM budget is public."
+  - "US FCC Second R&O conducted/EIRP limits and OOBE masks for C-V2X OBUs: not read from the primary source (docs.fcc.gov and federalregister.gov are blocked for us)."
+  - "Can a single PA meet the two-carrier IM3 and mask at +26–29 dBm for US 20 + 10 MHz, or are two PAs needed? 3GPP studied TDM only, so concurrent two-carrier targets are not public."
+  - "How much antenna isolation do roof modules reach between V2X and 5/6 GHz Wi-Fi antennas? No public measurement was found."
+  - "Will LTE-V2X power class 2 (26 dBm) or NR-V2X PC2 be used in n47? Not verified in the documents read."
+  - "Does SKY5A2105's >25 dB detector range cover the full ETSI TPC span (3 dBm to max) in closed loop?"

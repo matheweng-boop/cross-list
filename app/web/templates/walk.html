@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import crowd, push, score_chip, usd with context %}
+{% from "business/_common.html" import crowd, push, score_chip, usd, library_box with context %}
 {% block title %}{{ part.mpn }} walk-through{% endblock %}
 {% set s1, s4, s5, upto = w.s1, w.s4, w.s5, w.upto %}
 {% macro next(n) %}{% if upto == n and n < 5 %}<p class="walk-next"><a class="button small-btn" href="/parts/{{ part.id }}/walk?upto={{ n + 1 }}#step-{{ n + 1 }}">Next: {{ n + 1 }} {{ steps[n + 1] }} →</a> <span class="small muted">or stop here</span></p>{% endif %}{% endmacro %}
@@ -54,6 +54,7 @@
     <p class="small">Market size: {% if s4.tam %}{{ usd(s4.tam) }} a year <small class="muted">({{ s4.tam_apps }} applications with a volume)</small>{% else %}<span class="muted">unknown, <a href="/business/data">add ASP and volumes</a></span>{% endif %}</p>
     <p class="small">Trend: {% if s4.trend %}<b>{{ s4.trend.outlook or ('growing: ' ~ s4.trend.regulation) }}</b>{% if s4.trend.note %}<br><small class="muted">{{ s4.trend.note }}</small>{% endif %}{% else %}<span class="muted">not recorded</span>{% endif %}</p></div>
 </div>
+{{ library_box(s4.library) }}
 <p class="small"><a href="/business/evidence/{{ w.fn }}">{{ w.label }}: the bigger picture</a> (path to product, patents, foundry, competitor technology, where to hunt).</p>
 {{ gaps(4) }}{{ next(4) }}</section>{% endif %}
 

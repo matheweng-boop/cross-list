@@ -32,6 +32,7 @@ NAV = (
     ("knowledge", "Engineering knowledge", (
         ("Knowledge search", "/technical", "Search application notes and specification guides together"),
         ("Specification guides", "/engineering", "What each specification means and how to compare it"),
+        ("Technical library", "/library", "Deep dives: block diagrams, design rules, research trends, references"),
         ("RF fundamentals", "/rf-notes", "RF specifications, components, architectures and technologies explained"),
         ("RF bands", "/rf-bands", "Cellular, GNSS, Wi-Fi, satcom and radar bands, with the parts that cover each"),
         ("Interactive visuals", "/visuals", "Sliders, live graphs and equations: RF links, noise, filters, CMTI"),
@@ -98,6 +99,7 @@ PLACES = {
     "/notes": ("knowledge", "/technical"),
     "/engineering": ("knowledge", "/engineering"),
     "/rf-notes": ("knowledge", "/rf-notes"),
+    "/library": ("knowledge", "/library"),
     "/rf-bands": ("knowledge", "/rf-bands"),
     "/visuals": ("knowledge", "/visuals"),
     "/impact": ("knowledge", "/engineering"),

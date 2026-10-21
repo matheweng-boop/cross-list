@@ -19,7 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Case, Part, ShortlistItem, SiteFeedback
-from app.services import crosssell, prelim, scoring, vocab
+from app.services import crosssell, library, prelim, scoring, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services.pipeline import fn_for_family
@@ -116,7 +116,10 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
         gaps.append((4, f"{label}: no ASP and application volumes entered, so the market size is unknown"))
     if apps and not hunt:
         gaps.append((4, f"{label}: no customers listed for the applications that use it (customers.yaml)"))
-    s4 = {"short": s1["worse"], "short_everywhere": s1["short_everywhere"], "markets": markets,
+    lib = library.for_function(fn)
+    if not lib:
+        gaps.append((4, f"{label}: no technical-library topic covers it yet (design rules, research trends)"))
+    s4 = {"library": lib, "short": s1["worse"], "short_everywhere": s1["short_everywhere"], "markets": markets,
           "n_apps": len(apps), "comp": comp, "trend": trend, "hunt": hunt, "tam": tam,
           "tam_apps": use.get("tam_apps", 0)}  # fmt: skip
     out["s4"] = s4

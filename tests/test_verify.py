@@ -39,3 +39,13 @@ def test_data_answer_feeds_the_score_reviews(client, session, real):  # noqa: F8
                                                   DataReview.key == t.detail["fn"]))  # fmt: skip
     assert row is not None and row.verdict == "correct"
     assert client.post(f"/manage/verify/{t.id}", data={"result": "ok"}).status_code == 404  # done once
+
+
+def test_data_batch_includes_a_library_rule(client, session, real):  # noqa: F811
+    client.get("/manage/verify")
+    rule = next(t for t in _open(session, "data") if t.detail["topic"] == "library")
+    assert rule.key.startswith("library:") and rule.detail["claim"]
+    client.post(f"/manage/verify/{rule.id}", data={"result": "ok"})
+    row = session.scalar(select(DataReview).where(DataReview.dataset == f"library:{rule.detail['library']}",
+                                                  DataReview.key == rule.detail["item"]))  # fmt: skip
+    assert row is not None and row.verdict == "correct"

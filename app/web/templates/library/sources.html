@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Library sources{% endblock %}
+{% block content %}
+<p class="small"><a href="/library">← Technical library</a></p>
+<h1>Sources assessed</h1>
+<p class="subtitle muted">Every source checked for the deep dives (21 Oct 2026), kept for later runs: what it offers, its licence, and
+  what our polite reader found. A blocked host is never worked around. For every source we keep only our own summaries and
+  short quotes with citations.</p>
+<div class="table-wrap"><table class="small striped">
+  <thead><tr><th scope="col">Source</th><th scope="col">Offers</th><th scope="col">Licence</th><th scope="col">Access</th><th scope="col">Use</th></tr></thead>
+  {% for f in ('high', 'medium', 'low', 'blocked') %}{% for s in sources if s.feasibility == f %}<tr>
+    <td><b>{% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</b><br><small class="muted">{{ s.kind|replace('_', ' ') }} · {{ {'rf': 'RF', 'isolation': 'isolation', 'both': 'RF and isolation'}[s.area] }}</small></td>
+    <td>{{ s.offers }}</td><td>{{ s.licence }}</td><td>{{ s.access }}</td><td><span class="lib-feas f-{{ f }}">{{ feas[f] }}</span></td></tr>{% endfor %}{% endfor %}</tbody>
+</table></div>
+{% endblock %}

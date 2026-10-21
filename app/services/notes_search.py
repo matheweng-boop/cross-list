@@ -1,5 +1,5 @@
-"""Keyword search over Skyworks application notes, TI application notes (title + summary, data/catalog/ti_appnotes.yaml)
-and the BizDev engineering notes.
+"""Keyword search over Skyworks application notes, TI application notes (title + summary,
+data/catalog/ti_appnotes.yaml), the BizDev engineering notes and the technical library (topics, design rules, trends).
 
 Everything runs locally: an in-memory SQLite FTS5 index built once from data/appnotes.jsonl
 and the engineering-note templates. Nothing is sent to an outside service.
@@ -22,7 +22,7 @@ TI_NOTES_FILE = PROJECT_ROOT / "data" / "catalog" / "ti_appnotes.yaml"
 
 @dataclass
 class Hit:
-    source: str  # "Skyworks app note", "TI app note", "Spec guide" or "RF note"
+    source: str  # "Skyworks app note", "TI app note", "Spec guide", "RF note" or "Library topic / rule / trend"
     ref: str  # AN number or note key
     title: str
     url: str
@@ -62,6 +62,17 @@ def _index() -> sqlite3.Connection:
     for t in rf_notes.topics():
         text = " ".join([t["summary"], *(t.get("key_points") or [])])
         rows.append((t["title"], text, "RF note", t["id"], f"/rf-notes#{t['id']}", None))
+    from app.services import library
+
+    for tp in library.topics():
+        k = tp["key"]
+        rows.append((tp["title"], tp.get("summary") or "", "Library topic", k, f"/library/{k}", None))
+        for r in tp.get("design_rules") or []:
+            rows.append((f"{tp['title']}: {r['area']}", f"{r['rule']} {r.get('why') or ''}", "Library rule",
+                         f"{k}#{r['id']}", f"/library/{k}#{r['id']}", None))  # fmt: skip
+        for r in tp.get("trends") or []:
+            rows.append((f"{tp['title']}: trend", f"{r['text']} {r.get('for_us') or ''}", "Library trend",
+                         f"{k}#{r['id']}", f"/library/{k}#{r['id']}", None))  # fmt: skip
     db.executemany("INSERT INTO docs VALUES (?, ?, ?, ?, ?, ?)", rows)
     return db
 

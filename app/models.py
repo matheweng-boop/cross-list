@@ -552,3 +552,18 @@ class VerifyTask(Base):
     author: Mapped[str | None] = mapped_column(String(100))
     assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class VolumeRequest(Base):
+    """One request for a case on a part (Products › part › prelim case): the volume asked for, by whom and where.
+    Rows are never merged, so the total volume asked for a part accrues over every request."""
+
+    __tablename__ = "volume_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mpn: Mapped[str] = mapped_column(String(100), index=True)
+    volume: Mapped[int | None] = mapped_column(Integer)  # pieces of this part per year, as asked
+    customer: Mapped[str | None] = mapped_column(String(500))  # one or more customers, "; " between them
+    market: Mapped[str | None] = mapped_column(String(500))  # one or more markets, "; " between them
+    source: Mapped[str] = mapped_column(String(60), default="pipeline")  # e.g. prelim:<draft id>
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

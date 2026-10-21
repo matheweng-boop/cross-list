@@ -67,16 +67,20 @@ def quote_for(session: Session, part: Part, fetch: bool = True, refresh: bool = 
 
 
 def price_at(pq: PriceQuote | None, qty: int) -> tuple[float, str] | None:
-    """Lowest unit price for buying ``qty`` pieces, and the packaging it comes in."""
+    """Lowest unit price for buying ``qty`` pieces, in USD (a quote cached in another currency is converted at the ECB
+    rate in data/business/price_model.yaml), and the packaging it comes in."""
+    from app.services.price_model import usd_rate
+
     if pq is None or not pq.found:
         return None
+    rate = usd_rate(pq.currency)
     best = None
     for offer in pq.offers or []:
         if offer["min_qty"] > qty:
             continue
         price = next((p for q, p in reversed(offer["breaks"]) if q <= qty), None)
-        if price is not None and (best is None or price < best[0]):
-            best = (price, offer["package"])
+        if price is not None and (best is None or price * rate < best[0]):
+            best = (price * rate, offer["package"])
     return best
 
 
@@ -107,7 +111,7 @@ def add_to_comparison(session: Session, comparison) -> None:
             (
                 ParamDef(
                     f"dk_price_{q}",
-                    f"Price @{qty_label(q)} ({get_settings().digikey_currency})",
+                    f"Price @{qty_label(q)} (USD)",
                     0,
                     "number",
                     direction="lower",

@@ -1,0 +1,65 @@
+{# Price vs volume panel of the part page and the estimate page (app/services/price_model.py). `scenarios` holds the
+   model for every wafer-source what-if; the switch only flips visibility in the browser (base.html), so the choice never
+   reaches the server. `m` is the reference scenario, for everything that does not depend on it. #}
+{% macro usdm(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
+{% macro money(x) %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
+{% macro oem_table(o, title) %}{% if o %}<h3 class="pm-h">{{ title }} <small class="muted">· {{ '{:,}'.format(o.volume) }} a year, SOP {{ o.sop }}, {% if o.assumed_new %}no public release date: treated as a new part{% else %}released {{ o.released }}{% endif %}</small></h3>
+<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">OEM target ({{ (o.productivity[1] * 100)|int }} % a year for {{ o.years[1] }} years)</th><th scope="col">OEM target ({{ (o.productivity[0] * 100)|int }} % a year for {{ o.years[0] }} years)</th></tr></thead>
+<tbody>{% for r in o.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}{{ ' · flat' if r.flat }}</td><td>{{ money(r.low) }}</td><td>{{ money(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}{% endmacro %}
+{% macro per_fab(k, first) %}<div data-fab="{{ k }}"{{ ' hidden' if not first }}>{{ caller() }}</div>{% endmacro %}
+<div class="pm-scope">
+{% set f, cb = m.fit, m.cost %}
+{% if not estimate and m.rows %}<form class="pm-opts small" hx-get="/pricing/{{ part.id }}/model" hx-trigger="change" hx-target="closest .pm-body">
+  {% if m.oem %}<input type="hidden" name="sop" value="{{ m.oem.sop }}">{% endif %}
+  <label class="pm-gm">Gross margin <output>{{ (m.gm * 100)|round|int }}</output> %
+    <input type="range" name="gm" min="{{ (cfg.margin.slider[0] * 100)|int }}" max="{{ (cfg.margin.slider[1] * 100)|int }}" step="1" value="{{ (m.gm * 100)|round|int }}"
+      oninput="this.previousElementSibling.value = this.value" aria-label="Gross margin in percent"></label>
+</form>{% endif %}
+{% if scenarios|length > 1 and m.cost and m.rows %}<div class="pm-fab small"><span id="pm-fab-l">What-if, wafers from:</span>
+  {% for k, s in scenarios %}<button type="button" class="small-btn{{ '' if loop.first else ' outline' }}" data-fab-pick="{{ k }}" aria-describedby="pm-fab-l" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ cfg.fab.labels[k] }}</button>{% endfor %}
+  <small class="muted">Generic public cost assumptions, not a statement of where any part is made. Both are worked out together; the switch only changes what your browser shows, so the choice is never sent, saved or put in the link.</small></div>{% endif %}
+{% if m.missing %}<p class="small muted">Not enough to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>{% endif %}
+{% for k, m in scenarios %}{% call per_fab(k, loop.first) %}{% set f, cb = m.fit, m.cost %}{% if m.rows %}
+<div class="table-wrap"><table class="small pm-table">
+  <thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th><th scope="col" class="muted">{{ m.source.split(' (')[0] }} curve extended</th></tr></thead>
+  <tbody>{% for r in m.rows %}<tr><th scope="row">{{ '{:,}'.format(r.volume) }}</th><td>{{ money(r.low) }}{% if r.at_floor %} <small class="muted" title="held up by the cost floor">floor</small>{% endif %}</td><td><b>{{ money(r.target) }}</b></td><td>{{ money(r.high) }}</td><td class="muted">{{ money(r.distributor) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}{% endcall %}{% endfor %}
+{% set f, cb = m.fit, m.cost %}{% if m.rows %}
+<p class="small muted">From {{ f.points|length }} {{ m.source }} price break{{ 's' if f.points|length != 1 }} ({% for q, p in f.points %}{{ '{:,}'.format(q) }}: {{ money(p) }}{{ ', ' if not loop.last }}{% endfor %}).
+  {% if m.converted_from %}All prices in USD: converted from {{ m.converted_from }} at {{ cfg.fx.usd_per[m.converted_from] }} USD per {{ m.converted_from }} ({{ cfg.fx.source }}, {{ cfg.fx.date }}).{% endif %}
+  Past the last break the price follows <i>P(V) = P<sub>last</sub> × (V / q<sub>last</sub>)<sup>s</sup></i> with s = {{ '%.3f'|format(m.extension.mean) }} ± {{ m.extension.sd }}
+  (about {{ '%.0f'|format((1 - 10 ** m.extension.mean) * 100) }} % cheaper per tenfold{% if m.extension.rule == 'flat' %}: this part's own curve is flat, as for complex mixed-signal parts, so it is extended at {{ (cfg.curve.flat_curve.ratio * 100)|int }} % of its own slope{% else %}: the slope checked on TI and Mini-Circuits prices{% endif %}); direct prices are {% for v, k in cfg.volumes.items() %}{{ (k[0] * 100)|int }}–{{ (k[-1] * 100)|int }} %{{ ', ' if not loop.last }}{% endfor %} of that at 10k / 100k / 1M{% if cfg.volumes.values()|map('length')|max > 2 %}, most likely near the low end at high volumes{% endif %}.
+  Low / target / high are the {{ cfg.monte_carlo.percentiles|join(' / ') }}th percentiles of {{ '{:,}'.format(cfg.monte_carlo.draws) }} Monte Carlo draws of the slope, that factor and the cost inputs.
+  {% if m.n_calls %}Your calls on {{ m.n_calls }} part{{ 's' if m.n_calls != 1 }} of this family move the band ×{{ '%.2f'|format(m.factor) }}.{% endif %}</p>
+<details class="small"><summary>How well the equation holds</summary><ul>{% for v in cfg.validation %}<li>{{ v.test }} ({{ v.parts }} {{ 'prices' if v.inside_pct is defined else 'parts' }}): {% if v.note is defined %}{{ v.note }}{% elif v.inside_pct is defined %}{{ v.inside_pct }} % inside the band (80 % expected){% else %}{% if v.mean_error_pct is defined %}average error {{ '%+.1f'|format(v.mean_error_pct) }} %, {% endif %}typical error {{ v.mean_abs_pct }} %{% if v.worst_pct is defined %}, worst {{ v.worst_pct }} %{% endif %}{% endif %}</li>{% endfor %}</ul>
+  <p class="muted">Public prices stop at 10,000 units: 100k and 1M rest on the distributor-to-direct factor and the cost floor, which only your calls and real prices can check.</p></details>
+{% endif %}
+{% for k, m in scenarios %}{% call per_fab(k, loop.first) %}{% set f, cb = m.fit, m.cost %}
+{% if cb and m.rows %}<p class="small pm-gm-line"><b>At {{ (m.gm * 100)|round|int }} % gross margin:</b> cost-plus price {{ usdm(cb.floor) }} (unit cost {{ usdm(cb.levels.mid.total) }});
+  the target price allows a unit cost of up to {% for r in m.rows %}{{ usdm(r.allowed_cost) }} at {{ '{:,}'.format(r.volume) }}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
+{% if cb %}<details class="small"><summary>Cost floor: {{ usdm(cb.floor) }} <span class="muted">(cost {{ usdm(cb.levels.mid.total) }} at {{ (m.gm * 100)|round|int }} % gross margin; every cost line × {{ cb.cost_adjust }} after your check; all in USD)</span></summary>
+<div class="table-wrap"><table class="pm-table"><thead><tr><th scope="col">Cost (est)</th><th scope="col">Low</th><th scope="col">Mid</th><th scope="col">High</th><th scope="col">Basis</th></tr></thead><tbody>
+  <tr><td>Dies</td>{% for l in ('low', 'mid', 'high') %}<td>{{ usdm(cb.levels[l].die) }}</td>{% endfor %}<td>{{ cb.family.dies }} × {{ cb.family.die_mm2|join(' / ') }} mm² on {{ cb.family.process }}, wafer ${{ cb.family.wafer_usd|join(' / ') }} {% if cb.wafer_factor != [1.0, 1.0, 1.0] %}, × {{ cb.wafer_factor|join(' / ') }} for the {{ cfg.fab.labels[cb.fab]|lower }} scenario{% endif %}</td></tr>
+  <tr><td>Lead frame / substrate</td><td colspan="3">{{ usdm(cb.pkg.lead_frame) }}</td><td rowspan="4">{{ cb.package.label }}, {{ cb.pins }} pins</td></tr>
+  <tr><td>Mold compound</td><td colspan="3">{{ usdm(cb.pkg.mold) }}</td></tr>
+  <tr><td>Wire bonds</td><td colspan="3">{{ usdm(cb.pkg.wire) }}</td></tr>
+  <tr><td>Assembly</td><td colspan="3">{{ usdm(cb.pkg.assembly) }}</td></tr>
+  <tr><td>Test</td>{% for l in ('low', 'mid', 'high') %}<td>{{ usdm(cb.levels[l].test) }}</td>{% endfor %}<td>{{ cb.family.test_s|join(' / ') }} s at ${{ cb['class'].test_usd_per_s }}/s ({{ cb['class'].label.split(' (')[0]|lower }} class){% if cb.automotive %} × {{ cfg.automotive_test|join(' / ') }} for automotive test{% endif %}</td></tr>
+  <tr><th>Total</th>{% for l in ('low', 'mid', 'high') %}<th>{{ usdm(cb.levels[l].total) }}</th>{% endfor %}<td class="muted">{{ cb.family.note }}</td></tr>
+</tbody></table></div></details>{% endif %}
+{% if m.oem %}{{ oem_table(m.oem, 'OEM target prices') }}
+<p class="small muted">Starts from today's target at {{ '{:,}'.format(m.oem.volume) }} a year ({{ money(m.oem.start) }}) and falls by the yearly productivity carmakers expect, but only in a part's first {{ m.oem.years|join('–') }} years on the market; after that the price {{ 'stays flat' if not m.oem.mature_rate else 'falls only ' ~ (m.oem.mature_rate * 100)|round(1) ~ ' % a year' }}{% if m.oem.flat_from <= m.oem.rows[-1].year %} (here from {{ [m.oem.flat_from, m.oem.rows[0].year]|max }}){% endif %}.{% if not estimate %} <a href="?price=open&sop={{ m.oem.sop + 1 }}#price-model" hx-get="/pricing/{{ part.id }}/model?sop={{ m.oem.sop + 1 }}" hx-target="closest .pm-body">SOP a year later</a>{% endif %}</p>{% endif %}
+{% if m.ours %}{% set o = m.ours %}<h2 class="pe-ours">{{ o.name }} <small class="muted">· priced at {{ (o.lo * 100)|round|int }}–{{ (o.hi * 100)|round|int }} % of {{ f.name or 'the anchor part' }}</small></h2>
+<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th></tr></thead>
+<tbody>{% for r in o.rows %}<tr><th scope="row">{{ '{:,}'.format(r.volume) }}</th><td>{{ usdm(r.low) }}</td><td><b>{{ usdm(r.target) }}</b></td><td>{{ usdm(r.high) }}</td></tr>{% endfor %}</tbody></table></div>
+{% if o.oem %}{{ oem_table(o.oem, o.name ~ ': OEM target prices') }}{% endif %}
+<p class="small muted">Our part has no public price: its band is the anchor part's band times the parity range. The parity range is a judgement (default {{ (cfg.parity[0] * 100)|int }}–{{ (cfg.parity[1] * 100)|int }} %: a newer entrant at or a little below the incumbent).</p>{% endif %}
+{% endcall %}{% endfor %}
+{% if m.rows and not estimate %}<form method="post" action="/pricing/{{ part.id }}/call" class="pm-call">
+  <p class="small"><b>Where do real prices sit?</b>{% if m.call %} Your last call: <span class="pc-v">{{ calls[m.call.verdict] }}</span>{% if m.call.comment %} <span class="muted">· {{ m.call.comment }}</span>{% endif %}{% endif %}</p>
+  <input type="text" name="comment" maxlength="2000" placeholder="Optional: what you know, e.g. 'about 0.45 at 500k'" aria-label="Comment">
+  <span class="pc-btns"><button name="verdict" value="low" class="small-btn outline">Low end</button><button name="verdict" value="ok" class="small-btn outline">In the band</button><button name="verdict" value="high" class="small-btn outline">High end</button></span>
+</form>
+<p class="small muted">A rough estimate for ranking and sanity checks, not a quote. Every assumption is in <code>data/business/price_model.yaml</code>; your calls stay in this site's database.</p>{% endif %}
+</div>

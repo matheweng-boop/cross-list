@@ -40,6 +40,13 @@
 <div class="table-wrap"><table class="small pc-table"><tbody>{% for s in t.skyworks_fit or [] %}<tr><th scope="row">{{ label(s.fn) }}</th>
   <td>{% for p in s.parts or [] %}<a href="/find?q={{ p|urlencode }}">{{ p }}</a>{{ ', ' if not loop.last }}{% else %}<span class="muted">none</span>{% endfor %}</td><td>{{ s.note }}</td></tr>{% endfor %}</tbody></table></div>
 
+{% if t.model_parameters %}<h2 id="numbers">Numbers for the price model</h2>
+<p class="small muted">Used by the price model's complexity classes (<a href="/pricing/estimate">Price estimate</a>). Low-confidence numbers are judgement or search snippets.</p>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Parameter</th><th scope="col">Class</th><th scope="col">Low</th><th scope="col">Mid</th><th scope="col">High</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead>
+  <tbody>{% for p in t.model_parameters %}<tr id="{{ p.id }}"><td>{{ p.parameter }}{% if p.note %}<br><small class="muted">{{ p.note }}</small>{% endif %}</td><td>{{ p['class'] }}</td><td>{{ p.low }}</td><td>{{ p.mid }}</td><td>{{ p.high }}</td><td>{{ p.unit }}</td><td>{{ cite(p.refs) }} {{ conf(p.conf) }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
+
 {% if t.open_questions %}<h2 id="questions">Open questions</h2><ul class="small">{% for q in t.open_questions %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
 
 <h2 id="refs">References</h2>

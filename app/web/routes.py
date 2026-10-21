@@ -31,6 +31,8 @@ from app.services import (
     lifecycle,
     mechanical,
     notes_search,
+    price_builder,
+    price_model,
     pricing,
     text,
     vocab,
@@ -54,6 +56,7 @@ templates.env.globals.update(
     fff_labels=FFF_STATUS_LABELS,
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
     pricing_enabled=pricing.enabled,
+    has_list_price=price_model.has_list_price,
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
     category_short=CATEGORY_SHORT,
@@ -834,10 +837,9 @@ def feedback(
     return RedirectResponse(f"/parts/{reference_id}#row-{candidate_id}", status_code=303)
 
 
-CURRENCY_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£"}
 
 
-@router.get("/pricing/{part_id}", response_class=HTMLResponse)
+@router.get("/pricing/{part_id:int}", response_class=HTMLResponse)
 def pricing_line(
     request: Request,
     part_id: int,
@@ -861,7 +863,6 @@ def pricing_line(
     prices = [
         (q, pricing.price_at(pq, q), pricing.delta_pct(ref_pq, pq, q) if ref_pq else None) for q in pricing.QUANTITIES
     ]
-    currency = pq.currency if pq else get_settings().digikey_currency
     return templates.TemplateResponse(
         request,
         "_pricing.html",
@@ -870,9 +871,105 @@ def pricing_line(
             "prices": prices[-1:] if compact else prices,
             "compact": compact,
             "error": error,
-            "symbol": CURRENCY_SYMBOLS.get(currency, currency + " "),
+            "symbol": "$",  # price_at converts every quote to USD
         },
     )
+
+
+@router.get("/pricing/{part_id}/model", response_class=HTMLResponse)
+def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
+                      session: Session = Depends(get_session)):  # fmt: skip
+    """Rough price band at 10k / 100k / 1M a year from the cached DigiKey breaks and a cost floor (estimate). Every
+    wafer-source scenario is worked out; the reader switches between them in the browser only."""
+    part = _part_or_404(session, part_id)
+    try:
+        pq = pricing.quote_for(session, part)
+        session.commit()
+    except pricing.DigiKeyError:
+        session.rollback()
+        pq = pricing.quote_for(session, part, fetch=False)
+    scenarios = []
+    for fab in price_model.fab_scenarios():
+        m = price_model.model(session, part, pq, gm / 100 if gm else None, fab)
+        m["oem"] = price_model.oem_path(m, sop if 2020 <= sop <= 2050 else None,
+                                        released=part.release_date.year if part.release_date else None)
+        scenarios.append((fab, m))
+    ctx = {"part": part, "m": scenarios[0][1], "scenarios": scenarios, "calls": price_model.CALLS,
+           "cfg": price_model.config(),
+           "symbol": "$"}  # fmt: skip  # every model price is in USD
+    return templates.TemplateResponse(request, "_price_model.html", ctx)
+
+
+@router.get("/pricing/estimate", response_class=HTMLResponse)
+def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
+                   wide: bool = False, automotive: bool = False, name: str = "", currency: str = "USD",
+                   sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0, gm: int = 0,
+                   released: int = 0, session: Session = Depends(get_session)):  # fmt: skip
+    """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages)."""
+    cfg = price_model.config()
+    family = family if family in cfg["families"] else ""
+    pts = price_model.parse_breaks(breaks)
+    currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
+    gm_f = price_model.margin(gm / 100 if gm else None)
+    lo, hi = parity_lo or cfg["parity"][0], parity_hi or cfg["parity"][1]
+    lo, hi = sorted((min(max(lo, 0.2), 3.0), min(max(hi, 0.2), 3.0)))
+    sop = sop if 2020 <= sop <= 2050 else cfg["oem"]["default_sop"]
+    released = released if 1980 <= released <= 2050 else None
+    scenarios = []
+    for fab in price_model.fab_scenarios() if (family and pts) else []:
+        m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate", currency,
+                                 gm_f, fab)  # fmt: skip
+        m["oem"] = price_model.oem_path(m, sop, released=released)
+        m["name"] = name.strip()[:60]
+        if ours.strip():
+            m["ours"] = {"name": ours.strip()[:60], "lo": lo, "hi": hi, "rows": price_model.scaled(m, lo, hi)}
+            m["ours"]["oem"] = price_model.oem_path({"rows": m["ours"]["rows"]}, sop)
+        scenarios.append((fab, m))
+    m = scenarios[0][1] if scenarios else None
+    ctx = {"cfg": cfg, "m": m, "scenarios": scenarios,
+           "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "", "wide": wide,
+                 "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
+                 "released": released or "",
+                 "ours": ours, "parity_lo": lo, "parity_hi": hi},
+           "symbol": "$", "estimate": True, "part": None,
+           "calls": price_model.CALLS}  # fmt: skip
+    return templates.TemplateResponse(request, "price_estimate.html", ctx)
+
+
+@router.api_route("/pricing/builder", methods=["GET", "POST"], response_class=HTMLResponse)
+async def price_builder_page(request: Request, session: Session = Depends(get_session)):
+    """Solution price builder: add parts (or load a radio preset or a saved diagram), paste DigiKey prices, set the
+    assumptions with sliders and see each part and the system total. Posted, never stored or put in the link."""
+    form = await request.form() if request.method == "POST" else request.query_params
+    cfg = price_model.config()
+    rows = price_builder.rows_from_form(form)
+    if form.get("do") == "load" and form.get("load"):
+        rows += price_builder.load(session, str(form["load"]))
+    vols = [int(v) for v in cfg["volumes"]]
+    vol = int(form.get("vol") or 0) if str(form.get("vol") or "").isdigit() else 0
+    vol = vol if vol in vols else vols[-1]
+    gm = price_model.margin(int(form.get("gm") or 0) / 100 if str(form.get("gm") or "").isdigit() else None)
+    adj = min(max(int(form.get("adj") or 100) if str(form.get("adj") or "").isdigit() else 100, 50), 150)
+    sop = int(form.get("sop") or 0) if str(form.get("sop") or "").isdigit() else 0
+    sop = sop if 2020 <= sop <= 2050 else cfg["oem"]["default_sop"]
+    result = price_builder.solution(session, rows, vol, gm, adj / 100, sop) if rows else None
+    ctx = {"cfg": cfg, "rows": rows, "result": result, "vols": vols,
+           "g": {"vol": vol, "gm": round(gm * 100), "adj": adj, "sop": sop},
+           "presets": price_builder.presets(session), "suggest": price_builder.suggestions(),
+           "scenarios": [(f, None) for f in price_model.fab_scenarios()]}  # fmt: skip
+    return templates.TemplateResponse(request, "price_builder.html", ctx)
+
+
+@router.post("/pricing/{part_id}/call")
+def price_model_call(part_id: int, verdict: str = Form(...), comment: str = Form(""), author: str = Form(""),
+                     session: Session = Depends(get_session)):  # fmt: skip
+    """The owner's call: real prices of this part sit at the low end, in the band or at the high end."""
+    part = _part_or_404(session, part_id)
+    try:
+        price_model.record(session, part.mpn, verdict, comment, author)
+    except ValueError as e:
+        raise HTTPException(400, "Unknown call") from e
+    return RedirectResponse(f"/parts/{part.id}?price=open#price-model", status_code=303)
 
 
 @router.get("/suggest", response_class=HTMLResponse)

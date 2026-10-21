@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Solution price builder{% endblock %}
+{% macro usd(x) %}${{ '%.3f'|format(x) if x < 1 else '{:,.2f}'.format(x) }}{% endmacro %}
+{% macro pct(x) %}{{ (x * 100)|round|int }}{% endmacro %}
+{% macro row_fields(r) %}
+<fieldset class="pb-row">
+  <div class="grid">
+    <label>Part<input name="mpn" list="pb-mpns" value="{{ r.mpn if r else '' }}" placeholder="e.g. Si47961" autocomplete="off"></label>
+    <label>Per system<input name="qty" type="number" min="1" max="99" value="{{ r.qty if r else 1 }}"></label>
+    <label>Priced from <small class="muted">(when it has no prices; blank = a sibling from the same family)</small><input name="anchor" list="pb-mpns" value="{{ r.anchor if r else '' }}" placeholder="a sibling with prices, e.g. Si47962" autocomplete="off"></label>
+  </div>
+  {% set plo = (r.parity_lo * 100)|round|int if r and r.parity_lo else (cfg.parity[0] * 100)|int %}
+  {% set phi = (r.parity_hi * 100)|round|int if r and r.parity_hi else (cfg.parity[1] * 100)|int %}
+  <div class="pb-parity small"><span>Price vs that part: <output>{{ plo }}</output>–<output>{{ phi }}</output> %</span>
+    <input type="range" name="plo" min="30" max="150" step="1" value="{{ plo }}" aria-label="Parity, low end in percent" data-out="0">
+    <input type="range" name="phi" min="30" max="150" step="1" value="{{ phi }}" aria-label="Parity, high end in percent" data-out="1"></div>
+  <label class="small">DigiKey prices <small class="muted">(optional: copy the price table from the product page; quantity and unit price per line)</small>
+    <textarea name="breaks" rows="3" placeholder="1   18,66&#10;10  16,263&#10;100 14,2928">{{ r.breaks if r else '' }}</textarea></label>
+  <details class="small pb-data"><summary>Part data{% if r and r.info and r.info.found %} <span class="muted">· from {{ r.info.found|join(', ') }}</span>{% endif %}</summary>
+    <div class="grid">
+      <label>Currency of pasted prices<select name="cur">{% for c in cfg.fx.usd_per %}<option{{ ' selected' if r and r.currency == c }}>{{ c }}</option>{% endfor %}</select></label>
+      <label>Family<select name="fam"><option value="">{% if r and r.info.family %}From the site: {{ cfg.families[r.info.family].label }}{% else %}From the site{% endif %}</option>{% for k, fam in cfg.families.items() %}<option value="{{ k }}"{{ ' selected' if r and r.family == k }}>{{ fam.label }}</option>{% endfor %}</select></label>
+      <label>Automotive<select name="auto"><option value="">From the site{% if r and r.info %}: {{ 'yes' if r.info.automotive else 'no' }}{% endif %}</option><option value="yes"{{ ' selected' if r and r.automotive == 'yes' }}>Yes</option><option value="no"{{ ' selected' if r and r.automotive == 'no' }}>No</option></select></label>
+    </div>
+    <div class="grid">
+      <label>Package<input name="pkg" value="{{ r.package if r else '' }}" placeholder="{{ r.info.package if r and r.info.package else 'e.g. QFN-56' }}"></label>
+      <label>Pins<input name="pins" type="number" min="0" max="2000" value="{{ r.pins if r and r.pins else '' }}" placeholder="{{ r.info.pins if r and r.info.pins else '' }}"></label>
+      <label>Released (year)<input name="rel" type="number" min="1980" max="2050" value="{{ r.released if r and r.released else '' }}" placeholder="{{ r.info.released if r and r.info.released else 'blank = new' }}"></label>
+    </div>
+  </details>
+  <button type="button" class="outline secondary small-btn pb-del">Remove</button>
+</fieldset>
+{% endmacro %}
+{% block content %}
+<h1>Solution price builder</h1>
+<p class="subtitle muted">Price several parts, a radio set-up or a block diagram with the same tested model as the part pages. Add parts, paste
+  DigiKey prices where the site has none (or price a part from a sibling), then move the sliders to test your assumptions.
+  Nothing is saved: the parts and settings stay in this page until you leave it.</p>
+<datalist id="pb-mpns">{% for m in suggest %}<option value="{{ m }}">{% endfor %}</datalist>
+<form method="post" action="/pricing/builder" id="pb-form">
+  <div class="grid pb-global">
+    <label>Volume a year<select name="vol">{% for v in vols %}<option value="{{ v }}"{{ ' selected' if g.vol == v }}>{{ '{:,}'.format(v) }} systems</option>{% endfor %}</select></label>
+    <label>Start of production (SOP)<input name="sop" type="number" min="2020" max="2050" value="{{ g.sop }}"></label>
+  </div>
+  <div class="grid pb-global">
+    <label class="pm-gm">Gross margin <output>{{ g.gm }}</output> %
+      <input type="range" name="gm" min="{{ (cfg.margin.slider[0] * 100)|int }}" max="{{ (cfg.margin.slider[1] * 100)|int }}" step="1" value="{{ g.gm }}" aria-label="Gross margin in percent">
+      <small class="muted">sets the cost floor under every part</small></label>
+    <label class="pm-gm">Market level <output>{{ g.adj }}</output> %
+      <input type="range" name="adj" min="50" max="150" step="1" value="{{ g.adj }}" aria-label="Market level in percent">
+      <small class="muted">moves every band: 100 % is the model as tested, below means you expect tougher pricing</small></label>
+  </div>
+  <div id="pb-rows">{% for r in rows %}{{ row_fields(r) }}{% else %}{{ row_fields(None) }}{% endfor %}</div>
+  <template id="pb-blank">{{ row_fields(None) }}</template>
+  <div class="pb-actions">
+    <button type="button" class="outline" id="pb-add">Add a part</button>
+    <span class="pb-load"><select name="load" aria-label="Preset or saved diagram"><option value="">Add the parts of…</option>{% for k, lab in presets %}<option value="{{ k }}">{{ lab }}</option>{% endfor %}</select>
+      <button type="submit" name="do" value="load" class="outline secondary">Add</button></span>
+    <button type="submit" name="do" value="price">Price it</button>
+  </div>
+</form>
+
+{% if result %}
+<section class="pe-result pm-scope" id="pb-result">
+<h2>Prices at {{ '{:,}'.format(g.vol) }} systems a year</h2>
+{% if scenarios|length > 1 %}<div class="pm-fab small"><span id="pm-fab-l">What-if, wafers from:</span>
+  {% for k, s in scenarios %}<button type="button" class="small-btn{{ '' if loop.first else ' outline' }}" data-fab-pick="{{ k }}" aria-describedby="pm-fab-l" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ cfg.fab.labels[k] }}</button>{% endfor %}
+  <small class="muted">Generic public cost assumptions, not a statement of where any part is made. Both are worked out together; the switch only changes what your browser shows, so the choice is never sent, saved or put in the link.</small></div>{% endif %}
+{% for fab, tot in result.totals %}{% set fi = loop.index0 %}<div data-fab="{{ fab }}"{{ ' hidden' if not loop.first }}>
+<div class="table-wrap"><table class="small pm-table pb-table">
+  <thead><tr><th scope="col">Part</th><th scope="col">Price basis</th><th scope="col">Per system</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th><th scope="col">Target × qty</th></tr></thead>
+  <tbody>{% for p in result.parts %}{% if p.scenarios %}{% set s = p.scenarios[fi][1] %}
+    <tr><th scope="row">{{ p.row.mpn }}<br><small class="muted">{{ cfg.families[p.family].label }}{{ ' · automotive' if (p.row.automotive == 'yes' or (not p.row.automotive and p.info.automotive)) }}</small></th>
+      <td class="muted" title="{{ p.source }}">{{ p.basis }}{% if s.at.at_floor %}; held up by the cost floor{% endif %}</td><td>{{ p.row.qty }}</td>
+      <td>{{ usd(s.at.low) }}</td><td><b>{{ usd(s.at.target) }}</b></td><td>{{ usd(s.at.high) }}</td><td>{{ usd(s.at.target * p.row.qty) }}</td></tr>
+  {% else %}<tr><th scope="row">{{ p.row.mpn }}</th><td colspan="6" class="uc-error">{{ p.error }}</td></tr>{% endif %}{% endfor %}</tbody>
+  <tfoot><tr><th scope="row" colspan="3">System ({{ tot.n }} of {{ result.parts|length }} part{{ 's' if result.parts|length != 1 }} priced)</th><th>{{ usd(tot.low) }}</th><th>{{ usd(tot.target) }}</th><th>{{ usd(tot.high) }}</th><th>{{ usd(tot.target) }}</th></tr></tfoot>
+</table></div>
+{% if tot.oem %}<h3 class="pm-h">OEM target prices for the system <small class="muted">· SOP {{ g.sop }}, {{ pct(cfg.oem.productivity[0]) }}–{{ pct(cfg.oem.productivity[1]) }} % price-down a year in each part's first {{ cfg.oem.price_down_years|join('–') }} years on the market, then flat</small></h3>
+<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">{{ pct(cfg.oem.productivity[1]) }} % a year</th><th scope="col">{{ pct(cfg.oem.productivity[0]) }} % a year</th></tr></thead>
+<tbody>{% for r in tot.oem %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}</td><td>{{ usd(r.low) }}</td><td>{{ usd(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</div>{% endfor %}
+<p class="small muted">Each part: the band of the tested equation from its own prices (or a sibling's times your price range), direct prices
+  {% for v, k in cfg.volumes.items() %}{{ pct(k[0]) }}–{{ pct(k[-1]) }} %{{ ', ' if not loop.last }}{% endfor %} of the extended distributor curve at 10k / 100k / 1M,
+  and never below its cost floor at {{ g.gm }} % gross margin. The system low and high add up the parts' lows and highs, so the system range is wider
+  than any single part's. Hover over a price basis to see where the prices come from. Every part is read at the system volume ({{ '{:,}'.format(g.vol) }}), whatever its count per system.
+  A rough estimate for ranking and sanity checks, not a quote; the assumptions are in <code>data/business/price_model.yaml</code>.</p>
+</section>
+{% endif %}
+<script>
+(() => {
+  const form = document.getElementById("pb-form"), rows = document.getElementById("pb-rows");
+  const blank = document.getElementById("pb-blank");
+  const submit = () => form.requestSubmit(form.querySelector('button[value="price"]'));
+  document.getElementById("pb-add").onclick = () => {
+    rows.append(blank.content.cloneNode(true));
+    rows.lastElementChild.querySelector('input[name="mpn"]').focus();
+  };
+  rows.addEventListener("click", e => {
+    const del = e.target.closest(".pb-del");
+    if (!del) return;
+    del.closest(".pb-row").remove();
+    if (!rows.querySelector(".pb-row")) rows.append(blank.content.cloneNode(true));
+  });
+  form.addEventListener("input", e => {
+    const t = e.target;
+    if (t.type !== "range") return;
+    const outs = t.closest(".pb-parity, label")?.querySelectorAll("output") || [];
+    (outs[+t.dataset.out || 0] || outs[0]).value = t.value;
+  });
+  form.addEventListener("change", e => {
+    if (e.target.type === "range" || e.target.name === "vol") submit();
+  });
+})();
+</script>
+{% endblock %}

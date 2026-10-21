@@ -1,0 +1,262 @@
+# Price model (app/services/price_model.py): a rough price band per part at 10k / 100k / 1M a year, from
+#   1. the part's DigiKey price breaks (cached on the live site): fitted price-vs-quantity slope, extended past the reel;
+#   2. a distributor-to-direct factor per volume (direct contracts sit below distributor reel prices);
+#   3. a bottom-up cost floor: dies on a wafer + lead frame, mold compound, wire and assembly + test, at a minimum margin.
+# Everything here is an ESTIMATE from general industry knowledge, not from any supplier's internal data; change any
+# number and the bands follow. Checked against 33 TI list prices (ti.com, 21 Oct 2026): test cost per second, gate-driver
+# die size and the slope past the last break were lowered so the band is not held at the floor for most parts. The owner's "low end / in the band / high end" calls on parts calibrate each family.
+
+# Every price in the model is in USD. Prices in another currency (pasted on the Price estimate page, or DigiKey quotes
+# cached in EUR / GBP) are converted at the ECB euro reference rates of the date below (ecb.europa.eu, read 21 Oct 2026).
+fx:
+  date: 2026-10-20
+  source: "ECB euro foreign exchange reference rates"
+  usd_per: {USD: 1.0, EUR: 1.1215, GBP: 1.3347}   # GBP: 1.1215 / 0.84028
+
+curve:
+  min_qty: 10            # fit the slope on breaks from this quantity up (single-piece prices carry handling costs)
+  slope_range: [-0.30, -0.02]   # clamp of the fitted slope (log price vs log quantity)
+  default_slope: -0.12   # when there are fewer than two usable breaks
+  # Scaling equation past the last price break: P(V) = P_last * (V / q_last) ** s, with s drawn from this distribution.
+  # Fitted on 13 Mini-Circuits switches whose web-store prices run past 1,000 units (to 5,000-10,000): s = -0.168, sd 0.049.
+  extend: {mean: -0.17, sd: 0.05, limits: [-0.32, -0.01]}
+  # Complex parts (owner, 21 Oct 2026, on the Si47962 car-radio tuner: "model B fits best"): large mixed-signal / RF dies,
+  # whose analog blocks do not shrink, few suppliers and long automotive supply keep the discount small. When a part's
+  # own distributor curve is flatter than `flat_above`, it is extended at `ratio` x its own slope (the ratio Mini-Circuits
+  # shows past 1k) instead of the pooled slope.
+  flat_curve: {flat_above: -0.10, ratio: 0.6, sd: 0.035}   # sd widened after the DigiKey check below
+
+# Checks of the scaling equation (21 Oct 2026; rerun when more price curves arrive)
+validation:
+  - {test: "Mini-Circuits: predict the largest break (3k-10k) from the 1k price with s = -0.17", parts: 13, mean_error_pct: 0.2, mean_abs_pct: 5.4, worst_pct: 19.3}
+  - {test: "Across makers: TI's slope (250->1k, -0.19) predicts Mini-Circuits past 1k", parts: 13, mean_error_pct: -4.1, mean_abs_pct: 5.2}
+  - {test: "Old rule (flat cap -0.08) for comparison", parts: 13, mean_error_pct: 19.1, mean_abs_pct: 20.2}
+  - {test: "Monte Carlo band: real Mini-Circuits prices past 1k inside P10-P90 (prices above 1k hidden; slope fitted on the same parts, so slightly optimistic)", parts: 26, inside_pct: 85}
+  - {test: "Owner's check, Si47962 tuner (DigiKey EUR 1-500 pcs, slope -0.055): the part's own flat curve (model B) fits better than the pooled slope", parts: 1, note: "owner's judgement from real prices"}
+  - {test: "DigiKey isolator curves past 1k (TI ISO7710, Skyworks Si8710, ADI ADuM110N; owner's screenshots, EUR): flat-curve rule from the prices up to 1k", parts: 9, mean_error_pct: 3.6, mean_abs_pct: 4.1, worst_pct: 8.3}
+  - {test: "Same check: real DigiKey prices inside P10-P90 (flat-curve sd 0.035; misses from the cut-tape to reel step)", parts: 9, inside_pct: 78}
+  - {test: "TI: 1k price from the 1-unit price with the other parts' ratio (leave one out)", parts: 55, mean_abs_pct: 5.3, worst_pct: 16.2}
+# Public prices stop at 10,000 units: 100k and 1M rest on the distributor-to-direct factor and the cost floor,
+# which only the owner's calls and real prices can check.
+
+# Monte Carlo: each volume's band is the 10th / 50th / 90th percentile of this many draws of the slope past the last
+# break, the distributor-to-direct factor (uniform in its range) and the cost inputs (triangular low / mid / high)
+monte_carlo: {draws: 2000, percentiles: [10, 50, 90]}
+
+# distributor price (curve extended to the volume) -> direct purchase price, as a range per yearly volume.
+# Owner, 21 Oct 2026: DigiKey is at least 50 % above normal purchasing, so direct is at most 1 / 1.5 = 0.67 of DigiKey;
+# the extended curve already brings the price down with volume, so the low end widens a little at higher volumes.
+# [low, high] is drawn evenly; [low, most likely, high] from a triangle. Owner, 21 Oct 2026: at high volumes the target
+# should sit between the old low and target and the high end came out too high, so 100k and 1M peak at their low end
+# with a lower ceiling. Tuned on GD3162, Si47962, Si47972, ISO7741 and ISO7710: target near the midpoint of the old low
+# and target (3-8 % above it), high 10-15 % lower, low 3-6 % lower (low and target move together through the slope).
+volumes:
+  10000:   [0.55, 0.67]
+  100000:  [0.50, 0.50, 0.62]
+  1000000: [0.47, 0.47, 0.58]
+
+# OEM target prices: carmakers and Tier-1s expect a yearly price-down ("productivity") of 5-7 % from today's market
+# price, through the years before start of production (SOP) and every production year after it (owner, 21 Oct 2026).
+oem:
+  productivity: [0.05, 0.07]
+  base_year: 2026
+  default_sop: 2028
+  lifetime_years: 5          # production years shown after SOP
+  volume: 100000             # yearly volume whose target price the path starts from
+  # Owner, 21 Oct 2026: a part sees the yearly price-down for its first years on the market, then its price flattens.
+  # Years after release with price-down: 5 (with 5 % a year) and 6 (with 7 % a year), the two edges of the range; after
+  # that the price falls by `mature_rate` a year. A part without a public release date is treated as new (base year).
+  price_down_years: [5, 6]
+  mature_rate: 0.0
+
+# Our part priced from a competitor's (Price estimate page): a newer entrant usually sits at or a little below the
+# incumbent; the range is a starting point, changed per estimate.
+parity: [0.90, 1.00]
+
+margin:
+  floor: 0.40            # below this gross margin a supplier rarely goes: the floor of the band (the slider's default)
+  slider: [0.20, 0.85]   # range of the gross-margin slider on the price pages
+  typical: [0.45, 0.65]
+  min_band: 1.15         # the high end stays at least 15 % above the low end (where the floor holds both up)  # shown with the cost build-up (Skyworks reports about 45-50 %, analog peers 60 % and more)
+
+calls:                   # the owner's calls on a part move its family's band
+  step: 0.08             # each "low end" call x0.92, each "high end" call x1.08
+  limits: [0.6, 1.6]
+
+# Complexity classes (Technical library: semiconductor_cost). Test cost per second is the effective rate of a test cell
+# shared by several parts at once (single-site about USD 0.02/s, multi-site about half; RF / mixed-signal test runs fewer
+# sites). Complex parts are extended along their own flat curve; with no curve, at `slope` (mean, sd).
+classes:
+  commodity: {label: "Commodity (small die, many suppliers)", test_usd_per_s: 0.010}
+  standard:  {label: "Standard (mixed-signal, 2-3 dies or protection features)", test_usd_per_s: 0.010}
+  complex:   {label: "Complex (large mixed-signal / RF die, firmware, few suppliers)", test_usd_per_s: 0.015,
+              slope: [-0.06, 0.03]}
+
+# Owner, 21 Oct 2026: the cost floor came out about 10 % high (fab price breaks are better than assumed): every unit
+# cost is scaled by `cost_adjust`.
+cost_adjust: 0.90
+# Wafer-source what-if: a foundry's wafer price carries its margin; an in-house fab works at cost but with its own
+# overhead and utilisation risk. In-house wafers cost this share of the foundry prices below (low / mid / high, generic
+# judgement, not any company's figures). Both scenarios are always worked out and shown by a switch in the browser:
+# nothing here or in the database says where any part is actually made. The first scenario is the reference.
+fab:
+  wafer_factor: {external: [1.0, 1.0, 1.0], in_house: [0.70, 0.80, 0.90]}
+  labels: {external: "External foundry", in_house: "In-house fab"}
+
+yield_model: {alpha: 3}          # negative binomial: Y = (1 + A * D0 / alpha) ** -alpha (clustered defects)
+automotive_test: [1.5, 2.0, 3.0]
+large_die_mm2: 10                # above this die area the package body, lead frame and mold grow with the die # automotive parts: multi-temperature test, outlier screening, sometimes burn-in (judgement)
+
+# per part family: complexity class, dies per part, area per die (mm2, low / mid / high), wafer and test time (est)
+families:
+  digital_isolator:
+    label: Digital isolator
+    class: standard
+    dies: 2
+    die_mm2: [0.7, 1.0, 1.8]
+    process: "0.18 um class CMOS, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [600, 750, 1000]
+    defects_per_cm2: 0.1
+    test_s: [1.0, 1.5, 3.0]          # includes the high-voltage isolation (hipot) test
+    note: "Two dies (transmit and receive) across the isolation barrier; channel count changes die area little"
+  gate_driver:
+    label: Isolated gate driver
+    class: standard
+    dies: 2
+    die_mm2: [1.0, 1.6, 2.6]
+    process: "0.18 um class CMOS / BCD, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [600, 800, 1100]
+    defects_per_cm2: 0.1
+    test_s: [1.5, 2.0, 3.5]
+    note: "Input die and high-current driver die (BCD); protection features add area"
+  isolated_amplifier:
+    label: Isolated amplifier
+    class: standard
+    dies: 2
+    die_mm2: [1.5, 2.0, 2.5]
+    process: "0.18 um class CMOS, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [700, 850, 1100]
+    defects_per_cm2: 0.1
+    test_s: [2.0, 3.0, 4.0]          # precision trim and hipot
+    note: "Modulator and demodulator dies; precision trim makes test longer"
+  rf_switch:
+    label: RF switch
+    class: commodity
+    dies: 1
+    die_mm2: [0.4, 0.8, 1.5]
+    process: "RF-SOI, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [1000, 1200, 1500]
+    defects_per_cm2: 0.15
+    test_s: [0.3, 0.5, 1.0]
+    note: "One SOI die; more throws and higher power mean a larger die"
+
+  gate_driver_smart:
+    label: Smart isolated gate driver (ASIL-D, SPI, ADC, self-test)
+    class: complex
+    dies: 2
+    die_mm2: [3.0, 5.0, 8.0]
+    process: "0.18 um class BCD / CMOS, 200 mm"
+    wafer_mm: 200
+    wafer_usd: [700, 900, 1200]
+    defects_per_cm2: 0.1
+    test_s: [3.0, 5.0, 8.0]        # safety monitors, ADC and BIST to test, plus hipot
+    note: "Traction-inverter drivers (Si829x, GD316x, UCC5880, 1EDI3041): safety mechanisms, SPI, ADC and programmable drive make larger dies than a basic driver (judgement)"
+  am_fm_tuner:
+    label: Car-radio tuner / tuner SoC
+    class: complex
+    dies: 1
+    die_mm2: [15, 25, 40]
+    process: "40-65 nm RF CMOS, 300 mm"
+    wafer_mm: 300
+    wafer_usd: [2000, 3000, 4500]  # library: 130 nm USD 2,000 and 22 nm USD 4,500 per 300 mm wafer (2019)
+    defects_per_cm2: 0.1
+    test_s: [3.0, 5.0, 10.0]       # library: 4.7 s for a mixed-signal baseband device
+    note: "Large mixed-signal die (RF front ends, ADCs, DSP); analog blocks do not shrink with the node"
+  radio_coprocessor:
+    label: Digital radio coprocessor / demodulator (DAB, HD Radio, DRM)
+    class: complex
+    dies: 1
+    die_mm2: [10, 15, 25]
+    process: "40-55 nm CMOS, 300 mm"
+    wafer_mm: 300
+    wafer_usd: [2000, 3000, 4000]
+    defects_per_cm2: 0.1
+    test_s: [2.0, 4.0, 8.0]
+    note: "Mostly digital DSP and memory, little analog; shrinks with the node better than a tuner (judgement)"
+
+# which model family a site part gets in the solution builder: by its catalogue function, or by its role in the radio
+# configurator; anything else is picked by hand
+function_family:
+  am_fm_tuner: am_fm_tuner
+  digital_radio_demod: radio_coprocessor
+  tuner: am_fm_tuner
+  receiver: am_fm_tuner
+  coprocessor: radio_coprocessor
+  digital_isolator: digital_isolator
+  gate_driver: gate_driver
+  isolated_amplifier: isolated_amplifier
+  rf_switch: rf_switch
+  antenna_switch: rf_switch
+
+# package classes: package-code prefixes, and lead frame (or substrate), mold compound, wire per pin and assembly (USD, est);
+# lead frame and assembly also grow per pin (a bigger body and paddle for a bigger die), and mold compound with the die
+# area above `large_die_mm2` (owner: complex parts need larger packages)
+packages:
+  small_leadframe:
+    label: "Small lead frame (SOT, SC, DFN, SON)"
+    prefixes: [SOT, SC, DFN, VSON, WSON, TSNP, TSLP, MLPD, PDFN, MLP, STDFN, MSOP, MIS]
+    lead_frame: 0.004
+    mold: 0.002
+    wire_per_pin: 0.0010
+    assembly: 0.015
+    lead_frame_per_pin: 0.0003
+    assembly_per_pin: 0.0004
+  qfn:
+    label: "QFN"
+    prefixes: [QFN, PQFN, HQFN, MCLP, STQFN, AQFN]
+    lead_frame: 0.008
+    mold: 0.003
+    wire_per_pin: 0.0012
+    assembly: 0.025
+    lead_frame_per_pin: 0.0004
+    assembly_per_pin: 0.0006
+  soic:
+    label: "SOIC / SOP narrow body"
+    prefixes: [SOIC, SO, SOP, QSOP, SSOP, PG-DSO]
+    lead_frame: 0.006
+    mold: 0.004
+    wire_per_pin: 0.0015
+    assembly: 0.020
+    lead_frame_per_pin: 0.0004
+    assembly_per_pin: 0.0006
+  soic_wide:
+    label: "Wide-body SOIC (isolation: high-CTI mold compound, long creepage)"
+    prefixes: [SOW, SOWW, SSOW, SSO, PG-LDSO, SDIP, DUB, DIP, SOL]
+    lead_frame: 0.012
+    mold: 0.010
+    wire_per_pin: 0.0015
+    assembly: 0.030
+    lead_frame_per_pin: 0.0005
+    assembly_per_pin: 0.0008
+  laminate:
+    label: "Laminate / LGA module"
+    prefixes: [LGA, ULGA, WLGA, MODULE, MCM, SMT, SMP, FLATPACK]
+    lead_frame: 0.080            # the laminate substrate
+    mold: 0.010
+    wire_per_pin: 0.0020
+    assembly: 0.080
+    lead_frame_per_pin: 0.002
+    assembly_per_pin: 0.0015
+  wlcsp:
+    label: "Wafer-level chip-scale package"
+    prefixes: [WLCSP]
+    lead_frame: 0.0
+    mold: 0.0
+    wire_per_pin: 0.0
+    assembly: 0.012              # bumping and singulation
+    lead_frame_per_pin: 0.0
+    assembly_per_pin: 0.0002

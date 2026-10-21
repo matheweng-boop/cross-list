@@ -46,6 +46,10 @@
 </table>
 </div>
 </details>
+{% if pricing_enabled() or has_list_price(part.mpn) %}<details id="price-model" class="pm"{% if request.query_params.get('price') %} open{% endif %} hx-get="/pricing/{{ part.id }}/model" hx-target="find .pm-body" hx-trigger="{{ 'load' if request.query_params.get('price') else 'toggle once' }}">
+<summary>Price vs volume <span class="small muted">· rough band at 10k, 100k and 1M a year (estimate)</span></summary>
+<div class="pm-body"><p class="small muted"><span class="spinner" aria-hidden="true"></span> Working out the band…</p></div>
+</details>{% endif %}
 
 <details>
   <summary>Parameters</summary>

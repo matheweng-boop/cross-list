@@ -24,7 +24,7 @@ from app.models import (
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, prelim, quality, scoring, vocab, walk
+from app.services import blocks, cases, library, pipeline, prelim, quality, scoring, vocab, walk
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -640,6 +640,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
     c["walk_parts"] = walk.competitor_parts(session, fn)
+    c["library"] = library.for_function(fn)
     return templates.TemplateResponse(request, "business/evidence.html", c)
 
 
@@ -825,6 +826,7 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
            "benefit_kinds": prelim.BENEFIT_KINDS, "label": vocab.fn_label}  # fmt: skip
     fn = (ctx["case"] or {}).get("fn")
     ctx["walk_parts"] = walk.competitor_parts(session, fn, 4) if fn else []
+    ctx["library"] = library.items((ctx["case"] or {}).get("library") or [])
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

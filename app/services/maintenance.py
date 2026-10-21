@@ -36,6 +36,7 @@ AFFECTS = {
     "auto_reach": "Automotive map and its Top moves (applied immediately)",
     "case": "Preliminary case: the case is revised from it",
     "application": "Application library: technically verified flag (applied immediately)",
+    "library": "Technical library: the item's confidence (applied immediately); the topic is revised from it",
 }
 FILE_UPDATE = (
     "Flag only: the data file must be corrected in the repository (Data quality → to-do); the vote changes no result."
@@ -102,6 +103,8 @@ def items(session: Session) -> list[dict]:
                 if r.dataset == "auto_reach"
                 else f"/business/reports/{r.dataset[5:]}#i-{r.key}"
                 if r.dataset.startswith("case:")
+                else f"/library/{r.dataset[8:]}#i-{r.key}"
+                if r.dataset.startswith("library:")
                 else "/blocks?verified=yes"
                 if r.dataset == "application"
                 else f"/business/evidence/{r.key}",

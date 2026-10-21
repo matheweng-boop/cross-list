@@ -21,7 +21,7 @@
   <p class="small muted">Why this one: {{ d.why }}.</p>
   {% if kind == 'cross' %}<p class="small">{{ d.type }} · <a href="/compare?ids={{ d.ref }},{{ d.cand }}">values side by side</a> · <a href="/parts/{{ d.ref }}#results">the cross</a> · datasheets: <a href="{{ d.ref_ds }}" target="_blank" rel="noopener">competitor</a>, <a href="{{ d.cand_ds }}" target="_blank" rel="noopener">ours</a></p>
   {% elif kind == 'diagram' %}<p class="small">{{ d.category }} · {{ d.blocks }} blocks · <a href="/blocks/new?template={{ d.i }}">open the diagram</a></p>
-  {% else %}<p class="small"><b>Claim:</b> {{ d.claim }}</p>{% if d.sources %}<p class="small muted">Sources: {{ d.sources|join(' · ') }}</p>{% endif %}<p class="small"><a href="/business/evidence/{{ d.fn }}">All evidence for this function</a></p>{% endif %}
+  {% else %}<p class="small"><b>Claim:</b> {{ d.claim }}</p>{% if d.sources %}<p class="small muted">Sources: {{ d.sources|join(' · ') }}</p>{% endif %}<p class="small">{% if d.topic == 'library' %}<a href="/library/{{ d.library }}#{{ d.item }}">The rule in its library topic</a>{% else %}<a href="/business/evidence/{{ d.fn }}">All evidence for this function</a>{% endif %}</p>{% endif %}
   {{ done_form(t) }}
 </article>{% else %}<p class="small muted">Nothing to verify here right now.</p>{% endfor %}
 {% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ 'correct' if t.status == 'ok' else 'wrong' }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}

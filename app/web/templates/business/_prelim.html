@@ -1,7 +1,7 @@
 {# A preliminary case (data/business/cases/<slug>.yaml) with feedback per item and real ASPs; included as a report body. #}
 {% set slug = r.slug %}
 {% import "business/_feasibility.html" as fz %}
-{% from "business/_common.html" import score_chip %}
+{% from "business/_common.html" import score_chip, library_box %}
 {% macro react(x, scale=false, question=false) %}{% set f = x.fb or {} %}
 <details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.gain or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">{{ 'answer' if question else 'react' }}</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
   <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
@@ -23,6 +23,7 @@
 <p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a>{% if walk_parts %} · walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>
 
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
+{{ library_box(library, 2) }}
 
 {% set cb = case.customer_benefit %}{% if cb %}<section class="pc-benefit" id="customer-benefit" aria-labelledby="cb-title">
 <h2 id="cb-title">What the customer's architecture gains</h2>

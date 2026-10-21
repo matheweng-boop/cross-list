@@ -638,14 +638,28 @@ def library_sources(request: Request):
 
 
 @router.get("/library/{key}", response_class=HTMLResponse)
-def library_topic(request: Request, key: str):
+def library_topic(request: Request, key: str, session: Session = Depends(get_session)):
     from app.services import library
 
-    t = library.topic(key)
-    if t is None:
+    if library.topic(key) is None:
         raise HTTPException(404, "Topic not found")
-    ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label}
+    t = library.reviewed(session, key)
+    ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
+           "notes": library.notes(key), "cases": library.cases_using(key)}  # fmt: skip
     return templates.TemplateResponse(request, "library/topic.html", ctx)
+
+
+@router.post("/library/{key}/react")
+def library_react(key: str, item: str = Form(...), verdict: str = Form(...), comment: str = Form(""),
+                  author: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
+    """A reviewer agrees or disagrees with a design rule or trend; a disagreement lowers its confidence one step."""
+    from app.services import library
+
+    try:
+        library.react(session, key, item, verdict, comment, author)
+    except ValueError as e:
+        raise HTTPException(400, "Unknown item or verdict") from e
+    return RedirectResponse(f"/library/{key}#i-{item}", status_code=303)
 
 
 @router.get("/rf-notes", response_class=HTMLResponse)

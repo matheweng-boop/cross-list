@@ -55,3 +55,9 @@
   {% for f in s.factors %}<tr><td>{{ f.label }}</td><td>{{ f.value }}</td><td>{{ f.weight }}%</td><td>{{ '%.1f'|format(f.value * f.weight / 100) }}</td><td>{{ f.basis }}</td><td><span class="pc-conf c-{{ f.confidence }}">{{ f.confidence }}</span></td></tr>{% endfor %}
   <tr><th>Opportunity score</th><th>{{ s.score }}</th><th colspan="2"><span class="sg sg-{{ s.suggestion }}">{{ s.suggestion_label }}</span></th><td class="muted">weighted sum of the factors (0–100); missing data counts as 50 · <a href="/business/method#score">methodology</a></td><th><span class="pc-conf c-{{ s.confidence }}">{{ s.confidence }}</span></th></tr>
 </tbody></table></div>{% endmacro %}
+
+{# Technical library topics that cover a function: link, our role in it, and the research trends with what they mean for us #}
+{% macro library_box(items, max_trends=3) %}{% if items %}<section class="lib-box"><h3>From the technical library</h3>
+{% for x in items %}<p class="small"><a href="/library/{{ x.key }}"><b>{{ x.title }}</b></a> <small class="muted">· {{ x.n_rules }} design rules{{ ' · our parts named' if x.ours }}</small>{% if x.note %}<br><small>{{ x.note }}</small>{% endif %}</p>
+{% if loop.first %}<ul class="small">{% for tr in x.trends[:max_trends] %}<li>{{ tr.text }}{% if tr.for_us %} <span class="muted">· for us: {{ tr.for_us }}</span>{% endif %} <a href="/library/{{ x.key }}#{{ tr.id }}" class="lib-cite">→</a></li>{% endfor %}</ul>{% endif %}{% endfor %}
+</section>{% endif %}{% endmacro %}

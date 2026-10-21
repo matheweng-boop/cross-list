@@ -46,10 +46,14 @@ monte_carlo: {draws: 2000, percentiles: [10, 50, 90]}
 # distributor price (curve extended to the volume) -> direct purchase price, as a range per yearly volume.
 # Owner, 21 Oct 2026: DigiKey is at least 50 % above normal purchasing, so direct is at most 1 / 1.5 = 0.67 of DigiKey;
 # the extended curve already brings the price down with volume, so the low end widens a little at higher volumes.
+# [low, high] is drawn evenly; [low, most likely, high] from a triangle. Owner, 21 Oct 2026: at high volumes the target
+# should sit between the old low and target and the high end came out too high, so 100k and 1M peak at their low end
+# with a lower ceiling. Tuned on GD3162, Si47962, Si47972, ISO7741 and ISO7710: target near the midpoint of the old low
+# and target (3-8 % above it), high 10-15 % lower, low 3-6 % lower (low and target move together through the slope).
 volumes:
   10000:   [0.55, 0.67]
-  100000:  [0.50, 0.67]
-  1000000: [0.45, 0.67]
+  100000:  [0.50, 0.50, 0.62]
+  1000000: [0.47, 0.47, 0.58]
 
 # OEM target prices: carmakers and Tier-1s expect a yearly price-down ("productivity") of 5-7 % from today's market
 # price, through the years before start of production (SOP) and every production year after it (owner, 21 Oct 2026).

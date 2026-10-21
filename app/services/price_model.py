@@ -201,8 +201,8 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
     floor = cb["floor"] if cb else 0.0
     mean, sd, rule = extension(f, part.family)
     out["extension"] = {"mean": mean, "sd": sd, "rule": rule}
-    for vol, (k_lo, k_hi) in cfg["volumes"].items():
-        draws = simulate(part, f, cb, vol, k_lo, k_hi, factor, gm)
+    for vol, k in cfg["volumes"].items():
+        draws = simulate(part, f, cb, vol, k, factor, gm)
         lo, mid, hi = _percentiles(draws, cfg["monte_carlo"]["percentiles"])
         hi = max(hi, lo * cfg["margin"]["min_band"])  # at the floor the band keeps a minimum width
         sign = SIGN.get((mine or {}).get("verdict"), 0)
@@ -238,10 +238,11 @@ def _percentiles(xs: list[float], ps: list[int]) -> list[float]:
     return [s[min(len(s) - 1, int(p / 100 * len(s)))] for p in ps]
 
 
-def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: float, factor: float,
+def simulate(part: Part, f: dict, cb: dict | None, vol: int, k: list[float], factor: float,
              gm: float | None = None) -> list[float]:  # fmt: skip
     """Monte Carlo draws of the direct price at a yearly volume: the slope past the last break (normal, from the
-    scaling-equation check), the distributor-to-direct factor (uniform) and the cost inputs (triangular), the price
+    scaling-equation check), the distributor-to-direct factor `k` (uniform over [low, high], or triangular over
+    [low, most likely, high]) and the cost inputs (triangular), the price
     never below the drawn cost floor. Seeded by the part number, so a page shows the same band every time."""
     cfg = config()
     ext, n = cfg["curve"]["extend"], cfg["monte_carlo"]["draws"]
@@ -254,7 +255,7 @@ def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: 
     for _ in range(n):
         s = min(ext["limits"][1], max(ext["limits"][0], rng.gauss(mean, sd)))
         dist = f["p_end"] * (vol / f["q_end"]) ** s if vol > f["q_end"] else f["p_end"]
-        price = dist * rng.uniform(k_lo, k_hi) * factor
+        price = dist * (rng.uniform(*k) if len(k) == 2 else _tri(rng, k)) * factor
         if fam:
             adj = (cb or {}).get("cost_adjust", 1.0)
             wafer = _tri(rng, fam["wafer_usd"]) * _tri(rng, (cb or {}).get("wafer_factor", [1.0, 1.0, 1.0]))

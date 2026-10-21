@@ -70,7 +70,7 @@ def test_monte_carlo_is_stable_and_ordered(session, part, real):  # noqa: F811
     for r in a["rows"]:
         assert r["low"] <= r["target"] <= r["high"]
     f = pm.fit([(q, pr) for q, pr in BREAKS])
-    draws = pm.simulate(p, f, pm.cost(p), 100000, 0.5, 0.67, 1.0)
+    draws = pm.simulate(p, f, pm.cost(p), 100000, [0.5, 0.67], 1.0)
     assert len(draws) == pm.config()["monte_carlo"]["draws"] and min(draws) >= pm.cost(p)["levels"]["low"]["total"]
     assert {v["test"][:12] for v in pm.config()["validation"]} and len(pm.list_prices()) >= 60
 

@@ -108,7 +108,13 @@ def is_automotive(part: Part) -> bool:
     return any(pv.key == "qualification" and pv.value == "automotive" for pv in getattr(part, "params", None) or [])
 
 
-def cost(part: Part) -> dict | None:
+def margin(gm: float | None = None) -> float:
+    """The gross margin in use: the slider's value (clamped to the YAML range), else the configured minimum."""
+    lo, hi = config()["margin"]["slider"]
+    return min(hi, max(lo, gm)) if gm else config()["margin"]["floor"]
+
+
+def cost(part: Part, gm: float | None = None) -> dict | None:
     """Cost build-up (low / mid / high) for the part's family and package; None for an unknown family."""
     cfg = config()
     fam = cfg["families"].get(part.family)
@@ -131,7 +137,8 @@ def cost(part: Part) -> dict | None:
         test = fam["test_s"][i] * cls["test_usd_per_s"] * (cfg["automotive_test"][i] if auto else 1)
         out[level] = {"die": die, "test": test, "total": die + sum(pkg.values()) + test}
     return {"family": fam, "class": cls, "automotive": auto, "package": pk, "package_key": pk_key, "pins": pins,
-            "pkg": pkg, "levels": out, "floor": out["mid"]["total"] / (1 - cfg["margin"]["floor"])}  # fmt: skip
+            "pkg": pkg, "levels": out, "margin": margin(gm),
+            "floor": out["mid"]["total"] / (1 - margin(gm))}  # fmt: skip
 
 
 def calls(session: Session) -> dict[str, dict]:
@@ -154,7 +161,7 @@ def family_factor(session: Session, family: str) -> tuple[float, int]:
     return min(c["limits"][1], max(c["limits"][0], m)), len(signs)
 
 
-def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
+def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None = None) -> dict:
     """The band per volume, the cost floor and everything they rest on; `missing` says what is not there."""
     cfg = config()
     pts, source, list_cur = breaks(pq), "DigiKey", None
@@ -165,12 +172,13 @@ def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
         pts = [(int(q), float(p) * rate) for q, p in lp["breaks"]]
         source = f"{lp.get('source') or lp['maker'] + ' list price'} ({lp['retrieved']})"
     f = fit(pts)
-    cb = cost(part)
+    cb = cost(part, gm)
     factor, n_calls = family_factor(session, part.family)
     mine = calls(session).get(part.mpn)
     cur = list_cur or ((getattr(pq, "currency", None) or "USD").upper() if pts else "USD")
     out = {"points": pts, "source": source, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls,
-           "call": mine, "rows": [], "missing": [], "converted_from": cur if cur != "USD" else None}  # fmt: skip
+           "call": mine, "rows": [], "missing": [], "converted_from": cur if cur != "USD" else None,
+           "gm": margin(gm)}  # fmt: skip
     if f is None:
         out["missing"].append("no DigiKey price breaks cached and no public list price for this part yet")
     if cb is None:
@@ -181,14 +189,15 @@ def model(session: Session, part: Part, pq: PriceQuote | None) -> dict:
     mean, sd, rule = extension(f, part.family)
     out["extension"] = {"mean": mean, "sd": sd, "rule": rule}
     for vol, (k_lo, k_hi) in cfg["volumes"].items():
-        draws = simulate(part, f, cb, vol, k_lo, k_hi, factor)
+        draws = simulate(part, f, cb, vol, k_lo, k_hi, factor, gm)
         lo, mid, hi = _percentiles(draws, cfg["monte_carlo"]["percentiles"])
         hi = max(hi, lo * cfg["margin"]["min_band"])  # at the floor the band keeps a minimum width
         sign = SIGN.get((mine or {}).get("verdict"), 0)
         target = lo if sign < 0 else hi if sign > 0 else mid
         dist = f["p_end"] * (vol / f["q_end"]) ** mean if vol > f["q_end"] else f["p_end"]
         out["rows"].append({"volume": int(vol), "distributor": dist, "low": lo, "target": target, "high": hi,
-                            "at_floor": lo <= floor * 1.02})  # fmt: skip
+                            "at_floor": lo <= floor * 1.02,
+                            "allowed_cost": target * (1 - margin(gm))})  # fmt: skip
     return out
 
 
@@ -216,7 +225,8 @@ def _percentiles(xs: list[float], ps: list[int]) -> list[float]:
     return [s[min(len(s) - 1, int(p / 100 * len(s)))] for p in ps]
 
 
-def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: float, factor: float) -> list[float]:
+def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: float, factor: float,
+             gm: float | None = None) -> list[float]:  # fmt: skip
     """Monte Carlo draws of the direct price at a yearly volume: the slope past the last break (normal, from the
     scaling-equation check), the distributor-to-direct factor (uniform) and the cost inputs (triangular), the price
     never below the drawn cost floor. Seeded by the part number, so a page shows the same band every time."""
@@ -238,7 +248,7 @@ def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: 
             rate = (cb or {}).get("class", {}).get("test_usd_per_s", 0.01)
             test = _tri(rng, fam["test_s"]) * rate * (_tri(rng, cfg["automotive_test"]) if auto else 1)
             unit_cost = die + pkg + test
-            price = max(price, unit_cost / (1 - cfg["margin"]["floor"]))
+            price = max(price, unit_cost / (1 - margin(gm)))
         out.append(price)
     return out
 
@@ -290,7 +300,8 @@ def parse_breaks(text: str) -> list[tuple[int, float]]:
 
 
 def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], package: str = "", pins: int = 0,
-             wide: bool = False, automotive: bool = False, name: str = "estimate", currency: str = "USD") -> dict:
+             wide: bool = False, automotive: bool = False, name: str = "estimate", currency: str = "USD",
+             gm: float | None = None) -> dict:
     """The model for a part that is not in the database: pasted price breaks (in `currency`, converted to USD), a family
     and a package."""
     from types import SimpleNamespace
@@ -299,7 +310,7 @@ def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], pa
     params = [SimpleNamespace(key="qualification", value="automotive")] if automotive else []
     part = SimpleNamespace(mpn=name, family=family, package=pkg, params=params)
     pq = SimpleNamespace(found=True, currency=currency, offers=[{"breaks": [list(b) for b in breaks_]}])
-    m = model(session, part, pq)  # type: ignore[arg-type]
+    m = model(session, part, pq, gm)  # type: ignore[arg-type]
     m["source"] = "pasted"
     m["converted_from"] = currency.upper() if currency.upper() != "USD" else None
     return m

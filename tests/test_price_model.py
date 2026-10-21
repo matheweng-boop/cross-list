@@ -152,4 +152,16 @@ def test_lifetime_economics_top_down(client, session):
                                                    "package": "SOIC-32W", "pins": 32, "wide": "true",
                                                    "automotive": "true", "volume": 600000, "ours": "Si82900"}).text
     assert "what R&amp;D the product can pay for" in html and "600,000 a year" in html
-    assert html.count("R&amp;D it can pay") == 2  # the competitor and our part
+    assert html.count("R&amp;D it can pay") == 2 and "GD3162: what R&amp;D" in html  # the competitor and our part
+
+
+def test_gross_margin_slider(client, session, part, real):  # noqa: F811
+    p = part("ISO7741DBQR")
+    low, high = pm.model(session, p, None, 0.30), pm.model(session, p, None, 0.70)
+    assert low["gm"] == 0.30 and high["gm"] == 0.70 and high["cost"]["floor"] > low["cost"]["floor"]
+    assert all(h["allowed_cost"] < lo["allowed_cost"] for h, lo in zip(high["rows"], low["rows"], strict=True))
+    assert pm.margin(0.99) == pm.config()["margin"]["slider"][1] and pm.margin(None) == pm.config()["margin"]["floor"]
+    html = client.get(f"/pricing/{p.id}/model?gm=55").text
+    assert 'type="range" name="gm"' in html and "At 55 % gross margin" in html
+    est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "gm": 60}).text
+    assert "At 60 % gross margin" in est and 'value="60"' in est

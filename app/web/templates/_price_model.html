@@ -3,6 +3,9 @@
 {% macro usdm(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
 {% macro money(x) %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
 {% set f, cb = m.fit, m.cost %}
+{% if not estimate and m.rows %}<label class="pm-gm small">Gross margin <output>{{ (m.gm * 100)|round|int }}</output> %
+  <input type="range" name="gm" min="{{ (cfg.margin.slider[0] * 100)|int }}" max="{{ (cfg.margin.slider[1] * 100)|int }}" step="1" value="{{ (m.gm * 100)|round|int }}"
+    oninput="this.previousElementSibling.value = this.value" hx-get="/pricing/{{ part.id }}/model" hx-trigger="change" hx-target="closest .pm-body"{% if m.oem %} hx-vals='{"sop": {{ m.oem.sop }}}'{% endif %} aria-label="Gross margin in percent"></label>{% endif %}
 {% if m.missing %}<p class="small muted">Not enough to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>{% endif %}
 {% if m.rows %}
 <div class="table-wrap"><table class="small pm-table">
@@ -18,7 +21,9 @@
 <details class="small"><summary>How well the equation holds</summary><ul>{% for v in cfg.validation %}<li>{{ v.test }} ({{ v.parts }} {{ 'prices' if v.inside_pct is defined else 'parts' }}): {% if v.note is defined %}{{ v.note }}{% elif v.inside_pct is defined %}{{ v.inside_pct }} % inside the band (80 % expected){% else %}{% if v.mean_error_pct is defined %}average error {{ '%+.1f'|format(v.mean_error_pct) }} %, {% endif %}typical error {{ v.mean_abs_pct }} %{% if v.worst_pct is defined %}, worst {{ v.worst_pct }} %{% endif %}{% endif %}</li>{% endfor %}</ul>
   <p class="muted">Public prices stop at 10,000 units: 100k and 1M rest on the distributor-to-direct factor and the cost floor, which only your calls and real prices can check.</p></details>
 {% endif %}
-{% if cb %}<details class="small"><summary>Cost floor: {{ usdm(cb.floor) }} <span class="muted">(cost {{ usdm(cb.levels.mid.total) }} at {{ (cfg.margin.floor * 100)|int }} % minimum margin; all in USD)</span></summary>
+{% if cb and m.rows %}<p class="small pm-gm-line"><b>At {{ (m.gm * 100)|round|int }} % gross margin:</b> cost-plus price {{ usdm(cb.floor) }} (unit cost {{ usdm(cb.levels.mid.total) }});
+  the target price allows a unit cost of up to {% for r in m.rows %}{{ usdm(r.allowed_cost) }} at {{ '{:,}'.format(r.volume) }}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
+{% if cb %}<details class="small"><summary>Cost floor: {{ usdm(cb.floor) }} <span class="muted">(cost {{ usdm(cb.levels.mid.total) }} at {{ (m.gm * 100)|round|int }} % gross margin; all in USD)</span></summary>
 <div class="table-wrap"><table class="pm-table"><thead><tr><th scope="col">Cost (est)</th><th scope="col">Low</th><th scope="col">Mid</th><th scope="col">High</th><th scope="col">Basis</th></tr></thead><tbody>
   <tr><td>Dies</td>{% for l in ('low', 'mid', 'high') %}<td>{{ usdm(cb.levels[l].die) }}</td>{% endfor %}<td>{{ cb.family.dies }} × {{ cb.family.die_mm2|join(' / ') }} mm² on {{ cb.family.process }}, wafer ${{ cb.family.wafer_usd|join(' / ') }}</td></tr>
   <tr><td>Lead frame / substrate</td><td colspan="3">{{ usdm(cb.pkg.lead_frame) }}</td><td rowspan="4">{{ cb.package.label }}, {{ cb.pins }} pins</td></tr>
@@ -40,4 +45,4 @@
 <tbody>{% for r in o.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}</td><td>{{ money(r.low) }}</td><td>{{ money(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}{% endmacro %}
 {% if m.oem %}{{ oem_table(m.oem, 'OEM target prices') }}
 <p class="small muted">Starts from today's target at {{ '{:,}'.format(m.oem.volume) }} a year ({{ money(m.oem.start) }}) and falls by the yearly productivity carmakers expect, before SOP and in every production year.{% if not estimate %} <a href="?price=open&sop={{ m.oem.sop + 1 }}#price-model" hx-get="/pricing/{{ part.id }}/model?sop={{ m.oem.sop + 1 }}" hx-target="closest .pm-body">SOP a year later</a>{% endif %}</p>{% endif %}
-{{ economics(m.life, part.mpn if part else (f.name or 'This part'), cfg) }}
+{{ economics(m.life, part.mpn if part else (m.name or 'This part'), cfg) }}

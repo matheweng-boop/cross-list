@@ -23,6 +23,10 @@
     <label>Our part priced from this one <small class="muted">(optional)</small><input name="ours" value="{{ f.ours }}" placeholder="e.g. Si82900"></label>
     <label>Ours vs this part<span class="pe-parity"><input name="parity_lo" type="number" step="0.01" min="0.2" max="3" value="{{ f.parity_lo }}" aria-label="from"> to <input name="parity_hi" type="number" step="0.01" min="0.2" max="3" value="{{ f.parity_hi }}" aria-label="to"></span></label>
   </div>
+  <label class="pm-gm">Gross margin <output>{{ f.gm }}</output> %
+    <input type="range" name="gm" min="{{ (cfg.margin.slider[0] * 100)|int }}" max="{{ (cfg.margin.slider[1] * 100)|int }}" step="1" value="{{ f.gm }}"
+      oninput="this.previousElementSibling.value = this.value" onchange="this.form.breaks.value.trim() && this.form.requestSubmit()" aria-label="Gross margin in percent">
+    <small class="muted">sets the cost floor and the unit cost the market price allows; suppliers average {{ (cfg.margin.typical[0] * 100)|int }}–{{ (cfg.margin.typical[1] * 100)|int }} %</small></label>
   <label>Price breaks, one per line: quantity and unit price
     <textarea name="breaks" rows="6" placeholder="1   18,66&#10;10  16,263&#10;100 14,2928&#10;500 13,13008">{{ f.breaks }}</textarea></label>
   <button type="submit">Estimate</button>

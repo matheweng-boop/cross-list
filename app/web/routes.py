@@ -876,7 +876,8 @@ def pricing_line(
 
 
 @router.get("/pricing/{part_id}/model", response_class=HTMLResponse)
-def price_model_panel(request: Request, part_id: int, sop: int = 0, session: Session = Depends(get_session)):
+def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
+                      session: Session = Depends(get_session)):  # fmt: skip
     """Rough price band at 10k / 100k / 1M a year from the cached DigiKey breaks and a cost floor (estimate)."""
     part = _part_or_404(session, part_id)
     try:
@@ -885,7 +886,7 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, session: Ses
     except pricing.DigiKeyError:
         session.rollback()
         pq = pricing.quote_for(session, part, fetch=False)
-    m = price_model.model(session, part, pq)
+    m = price_model.model(session, part, pq, gm / 100 if gm else None)
     m["oem"] = price_model.oem_path(m, sop if 2020 <= sop <= 2050 else None)
     m["life"] = price_model.lifetime(m, m["oem"], price_model.config()["oem"]["volume"],
                                      m["cost"]["levels"]["mid"]["total"] if m.get("cost") else None)
@@ -898,20 +899,22 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, session: Ses
 def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
                    wide: bool = False, automotive: bool = False, name: str = "", currency: str = "USD",
                    sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0, volume: int = 0,
-                   session: Session = Depends(get_session)):  # fmt: skip
+                   gm: int = 0, session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages)."""
     cfg = price_model.config()
     family = family if family in cfg["families"] else ""
     pts = price_model.parse_breaks(breaks)
     currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
-    m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate", currency) if (
-        family and pts) else None  # fmt: skip
+    gm_f = price_model.margin(gm / 100 if gm else None)
+    m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate", currency,
+                             gm_f) if (family and pts) else None  # fmt: skip
     lo, hi = parity_lo or cfg["parity"][0], parity_hi or cfg["parity"][1]
     lo, hi = sorted((min(max(lo, 0.2), 3.0), min(max(hi, 0.2), 3.0)))
     sop = sop if 2020 <= sop <= 2050 else cfg["oem"]["default_sop"]
     volume = volume if 1000 <= volume <= 100_000_000 else cfg["oem"]["volume"]
     if m is not None:
         m["oem"] = price_model.oem_path(m, sop)
+        m["name"] = name.strip()[:60]
         cost_mid = m["cost"]["levels"]["mid"]["total"] if m.get("cost") else None
         m["life"] = price_model.lifetime(m, m["oem"], volume, cost_mid)
         if ours.strip():
@@ -920,6 +923,7 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
             m["ours"]["life"] = price_model.lifetime(m["ours"], m["ours"]["oem"], volume, cost_mid)
     ctx = {"cfg": cfg, "m": m, "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
            "wide": wide, "automotive": automotive, "name": name, "currency": currency, "sop": sop, "volume": volume,
+           "gm": round(gm_f * 100),
            "ours": ours, "parity_lo": lo, "parity_hi": hi},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip

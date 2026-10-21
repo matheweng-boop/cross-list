@@ -41,9 +41,13 @@ def test_moves_rank_research_first():
         {"fn": "v2x_fem", "label": "V2X", "level": "A", "key": "v:v2x_fem", "app_label": "V", "category": "rf",
          "next": {"level": "C", "title": "Two-carrier", "demand": "high", "driver": "FCC 2026"}},
     ]  # fmt: skip
-    moves = au._moves(cells)
+    moves = au._moves(cells)  # without scores: research demand first
     assert [m["label"] for m in moves] == ["Two-carrier", "PMIC"]
     assert moves[0]["now"] == "A" and moves[0]["driver"] == "FCC 2026" and len(moves[1]["apps"]) == 2
+    assert [m["distance"] for m in moves] == [3, 1]  # C and B on the distance scale
+    scored = au._moves(cells, lambda fn, step: {"score": {"pmic": 80, "v2x_fem": 60}[fn]})
+    assert [m["label"] for m in scored] == ["PMIC", "Two-carrier"]  # the Opportunity score ranks; demand text stays
+    assert scored[1]["driver"] == "FCC 2026" and scored[0]["opp"]["score"] == 80
 
 
 def test_config_ids_are_known():

@@ -2,6 +2,8 @@
 # conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
 # "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
 title: "Car radio: a radio node for the antenna"
+fn: am_fm_tuner
+headline: f-node
 question: >-
   What should Skyworks develop next for car radio in 2–3 years, reusing existing technology, given NXP and ST,
   software radio, remote tuner modules and HD Radio, and at what price?
@@ -10,6 +12,21 @@ brief:
   - "Our advantage is the architecture: chainable tuners plus a separate multi-standard decoder can sit at the antenna, in the head unit, or feed a central computer. Zonal cars favour that split."
   - "Our disadvantages: higher cost per chip than ST's mature reused designs, and more chips than NXP's one-chip radio. At the antenna a module built from our parts needs 5–7 parts."
   - "Proposal: a radio node, 2 or 4 tuners + decoder + car-network output (decoded audio or raw samples), at about $10–12 (2 tuners) and $16–19 (4 tuners) in volume (est)."
+
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "OEM E/E architecture team; Tier-1 building the antenna module or head unit"
+  summary: "Move the radio out of the head unit to the antenna and send digital audio over the car network instead of RF over coax, with one part that scales from 2 to 4 tuners."
+  today: "Antenna amplifiers at the roof and glass, coax runs to the head unit, tuners and decoding in the head unit (NXP one-chip radio) or tuners feeding the main processor (ST). A remote tuner module built from our parts today needs 2 dual tuners, a decoder, a bridge MCU, a clock and flash (5–7 parts)."
+  with_us: "RN2 or RN4 at the antenna: tuners, decoder and network output in one package; one A²B or Ethernet link carries decoded audio and data (or raw samples) to the head unit or central computer; the head unit carries no radio silicon."
+  gains:
+    - {id: cb-cable, kind: cabling, gain: "RF coax to the head unit replaced by a digital link the car already has", how: "Tuning and decoding happen at the antenna; only audio and data travel", measure: "Radio coax runs to the head unit → 0 (est; 2–4 today depending on antennas)", conf: low}
+    - {id: cb-parts, kind: parts, gain: "One part at the antenna instead of 5–7", how: "Tuners, decoder, clock and boot in one package (step 1), one die (step 2)", measure: "5–7 → 1 (est, from our own module bill of materials)", conf: med}
+    - {id: cb-place, kind: placement, gain: "The OEM chooses where the radio sits per platform without redesign", how: "Same part at the antenna, in the head unit or feeding a central computer (decoded audio or raw samples)", measure: "3 split points, 1 design", conf: med}
+    - {id: cb-scale, kind: scaling, gain: "One board and one software stack from entry to premium", how: "RN2 and RN4 share package, pinout and API", measure: "2 or 4 tuners on the same footprint (est)", conf: med}
+    - {id: cb-sw, kind: software, gain: "A path to software radio without losing broadcast quality", how: "Raw-sample output lets a central computer add features later; OTA updates on the node", measure: "not stated", conf: low}
+  gives_up:
+    - "A network link and power supply at the antenna, and a module that survives roof temperatures"
+    - "Head-unit makers lose the radio from their box; the Tier-1 relationship may shift to the antenna supplier"
 
 position:
   advantages:

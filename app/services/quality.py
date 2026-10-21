@@ -97,9 +97,9 @@ def checks(apps: list[op.Application]) -> list[dict]:
         )
 
     add("warn", "Gap functions without a technology rating", sorted(in_scope - set(op.technology())),
-        "Technology fit falls back to a weight of 0.05.")  # fmt: skip
+        "Without a path either, distance scores the neutral 50 with low confidence.")  # fmt: skip
     add("warn", "Gap functions without a competition entry", sorted(in_scope - set(op.competition())),
-        "Competition weight falls back to 0.85.")  # fmt: skip
+        "Competition scores the neutral 50 with low confidence.")  # fmt: skip
     add("warn", "Gap functions without a path to product", sorted(in_scope - set(op.evidence("path"))),
         "The technology rating is used instead of the path.")  # fmt: skip
     bands = {"low": (0, 3), "medium": (4, 7), "high": (8, 999)}
@@ -140,11 +140,11 @@ def checks(apps: list[op.Application]) -> list[dict]:
 
 
 # ---- review queue: unreviewed items that move the rankings most -----------------------------------------------
-def queue(session: Session, apps: list[op.Application], limit: int = 30) -> list[dict]:
+def queue(session: Session, apps: list[op.Application], scores: dict | None = None, limit: int = 30) -> list[dict]:
     rev = summary(session)
     ds = datasets()
     out = []
-    for rank, e in enumerate(op.technology_fit(apps)[:25], 1):
+    for rank, e in enumerate(op.technology_fit(apps, scores)[:25], 1):
         for name in ("path", "technology", "competition", "trends"):
             if e["fn"] in ds[name][1] and state(rev.get((name, e["fn"]))) == "unverified":
                 ent = ds[name][1][e["fn"]]
@@ -156,6 +156,20 @@ def queue(session: Session, apps: list[op.Application], limit: int = 30) -> list
     order = {"low": 0, None: 1, "medium": 2, "high": 3}
     out.sort(key=lambda q: (q["rank"], order.get(q["confidence"], 1)))
     return out[:limit]
+
+
+def research(apps: list[op.Application], scores: dict | None = None) -> list[dict]:
+    """Low-confidence factors of the scored gap functions, highest score first: research to do."""
+    out = []
+    for e in op.technology_fit(apps, scores):
+        if e["score"] is None:
+            continue
+        for f in e["factors"]:
+            if f["confidence"] == "low":
+                out.append({"fn": e["fn"], "label": e["label"], "score": e["score"],
+                            "suggestion_label": e["suggestion_label"], "factor": f["label"],
+                            "basis": f["basis"]})  # fmt: skip
+    return out
 
 
 def stats(session: Session) -> list[dict]:

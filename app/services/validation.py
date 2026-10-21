@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.matching.rules import load_all_rules
 from app.models import BusinessInput, Part, PartMapping
-from app.services import blocks, broadcast, lifecycle, products, quality
+from app.services import blocks, broadcast, lifecycle, products, quality, scoring
 from app.services import opportunity as op
 
 PRIORITY = {"high": 3, "medium": 2, "low": 1}
@@ -252,7 +252,7 @@ def scan(session: Session) -> dict:
     mine = op.COMPANIES["combined"][1]
     mk = op.makers(session)
     apps = op.with_status(op.applications(), mk, mine)
-    fit = op.technology_fit(apps)
+    fit = op.technology_fit(apps, scoring.for_session(session, apps, *op.inputs(session)))
     rank = {e["fn"]: i for i, e in enumerate(fit, 1)}
     checks = []
     paths = op.evidence("path")

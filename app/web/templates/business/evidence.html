@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import status_chip, crowd, review, path_chip, about, checked %}
+{% from "business/_common.html" import status_chip, crowd, review, path_chip, about, checked, factor_table %}
 {% block title %}{{ page_title(request.url.path, label ~ ' evidence') }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/explorer?co={{ co }}">← Opportunity explorer</a></p>
@@ -7,16 +7,15 @@
 <p class="subtitle muted">Everything BizDev knows about this function: how it is scored, the path to a product, and the background evidence
   (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
   <a href="/business/quality">Data quality</a> and feed the next data update.</p>
+{% if walk_parts %}<p class="small walk-back">Walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a> <small class="muted">{{ p.manufacturer.name|vendor }}</small>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 {{ about('evidence') }}
 <p>{{ status_chip(status, status_label) }} {{ path_chip(ev.path, path_label) }}</p>
 
-{% if row %}
+{% if row and row.score is not none %}
 <h2>How it is scored</h2>
-<table class="bo-factors"><thead><tr><th>Factor</th><th>Weight</th><th>Why</th></tr></thead><tbody>
-  {% for name, w, why in row.factors %}<tr><td>{{ name }}</td><td>{{ '%.2f'|format(w) }}</td><td>{{ why }}</td></tr>{% endfor %}
-  <tr><th>Score</th><th>{{ '%.3f'|format(row.score) }}</th><td class="muted">product of the weights; patents, foundry route and competitor technology are shown below but not in the score</td></tr>
-</tbody></table>
-{% else %}<p class="small muted">Not in the Technology fit ranking (the portfolio already covers it, or it is not a chip).</p>{% endif %}
+{{ factor_table(row) }}
+<p class="small muted">Patents, foundry route and competitor technology are shown below but are not in the score.</p>
+{% else %}<p class="small muted">No Opportunity score: the portfolio already covers it, or it is not a chip we would build.</p>{% endif %}
 
 <h2 id="path">Path to product</h2>
 {% set p = ev.path %}

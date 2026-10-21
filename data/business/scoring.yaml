@@ -1,0 +1,124 @@
+# Opportunity score (app/services/scoring.py): one additive score 0–100 per function, used by the Opportunity explorer,
+# Technology fit, the Automotive map (Top moves) and the preliminary cases. Approved by the owner on 2026-10-20
+# (methodology proposal, sections 3–5). Every factor is 0–100; the score is the weighted sum, rounded.
+# Missing data scores the neutral 50 with low confidence, so an unresearched function is not punished as a bad one.
+
+# Weights in percent; they must add up to 100.
+weights:
+  demand: 30        # how many systems need it: the block diagrams are the starting point (owner)
+  distance: 25      # how far from what we can build: reuse and a 2–3-year turnaround are the main constraint
+  architecture: 15  # how well it rides on what we already sell: the owner's architecture lens, drives attach rate
+  competition: 15   # room to win
+  trend: 15         # where the market is heading: future growth needs market dynamics (owner)
+
+labels:
+  demand: Demand
+  distance: Portfolio distance
+  architecture: Architecture fit
+  competition: Competition
+  trend: Market trend
+
+neutral: 50         # value of a factor with no data (always low confidence)
+
+demand:
+  # Σ sockets (block quantity) over the diagrams that need the function; a background diagram counts half (owner:
+  # background diagrams are statistics only). Scaled so the most-needed function of all scored ones is 100.
+  library: 1.0
+  background: 0.5
+  # TAM replaces the diagram count as soon as an ASP and at least one application volume are entered for the function
+  # (owner). Log scale: tam_low per year or less = 0, tam_high or more = 100 (×10 in TAM = +50).
+  tam_low: 10000000
+  tam_high: 1000000000
+  tam_confidence: medium     # entered inputs, not checked against a market study
+  # confidence of the diagram count: library diagrams that need the function
+  confident_from: 3          # this many or more: high
+  # 1 to confident_from - 1: medium; background diagrams only: low
+
+distance:
+  # one distance scale 0–4 for path to product, technology rating, automotive ladder, RF coverage and case features
+  points: {0: 100, 1: 85, 2: 65, 3: 40, 4: 15}
+  labels:
+    0: Available today (sell, document)
+    1: Firmware, licence or qualification
+    2: New package, module or reference design
+    3: New chip from existing technology
+    4: New technology (partner / acquire)
+  path:                      # data/business/evidence/path.yaml; not_pursue = not ours to build: not scored
+    exists: 0
+    variant: 1
+    new_design: 3
+    new_capability: 4
+  technology:                # data/business/technology.yaml proximity, used only where no path is assessed
+    3: 1                     # same technology: a new variant
+    2: 3                     # adjacent: a new chip
+    1: 4                     # distant
+    0: 4                     # unrelated
+  technology_confidence: medium   # the ratings carry no confidence field; a reading of public portfolios
+  supported_confidence: medium    # we sell a candidate part; its fit to the application is not validated
+  ladder:                    # Automotive map letters (a curated row may set its own `distance`, e.g. 2 for a package)
+    A: 0
+    B: 1
+    C: 3
+    D: 4
+  rf:                        # RF coverage band gaps: we sell the function, not for this band or power class
+    none: 3                  # no part of ours in the band: a new die on our RF technology
+    power: 3                 # the power class is missing: a new PA die
+    risk: 1                  # only ageing parts of ours: a refresh or requalification
+  rf_confidence: medium      # computed from the catalogue's stated bands
+
+architecture:
+  # door-opener share (diagrams that already hold one of our parts) and neighbour share (diagrams where one of our
+  # parts sits in the same block or in a block the diagram connects to it); each share 0–1
+  door_opener: 0.6
+  neighbour: 0.4
+
+competition:
+  values: {low: 100, medium: 60, high: 30}   # few suppliers score high; a crowded market scores low (owner)
+  confidence:                # from the source check in competition.yaml
+    confirmed: high
+    corrected: high
+    unconfirmed: medium
+  vendor_count_confidence: medium   # RF band gaps: crowding from the competitor parts in the band
+
+trend:
+  values: {growing: 100, stable: 60, declining: 20}
+  # an entry in trends.yaml with `regulation:` (a rule with a date, e.g. NG-eCall, Euro NCAP) counts as growing
+
+confidence:
+  # overall confidence = the lowest of these factors; architecture and trend are shown but do not set it
+  overall_from: [demand, distance, competition]
+  # a reviewer's latest "wrong" on the data behind a factor (path, technology, competition, trends) or on a case
+  # item lowers that confidence one step: high -> medium -> low (owner); "correct" changes nothing
+
+suggestions:
+  # What kind of suggestion a row is, in words, from two facts shown on the row: how far it is from what we build
+  # (distance) and how many block diagrams need it. The score only orders the rows within a suggestion type.
+  widely_needed: 10          # needed in this many diagrams (library + background) or more: not a niche
+  labels:
+    quick_win: Quick win             # distance 0–2 and widely needed: a variant, module or package of what we have
+    new_chip: New chip               # distance 3 and widely needed: a new chip from technology we have
+    niche: Niche                     # needed in fewer diagrams than widely_needed, distance 0–3
+    partner: Partner or acquire      # distance 4: technology we do not have
+    unknown: Not assessed yet        # no distance yet
+  help:
+    quick_win: "Close to what we build and needed in many systems"
+    new_chip: "Needs a new chip from technology we have; needed in many systems"
+    niche: "Needed in few of the block diagrams; worth it only with a specific customer"
+    partner: "Needs technology we do not have: partner or acquire"
+    unknown: "No path to product or technology rating yet"
+
+feasibility:                 # Research & ideas groups (1–3), derived from a case's headline feature distance
+  0: 1
+  1: 1
+  2: 2
+  3: 2
+  4: 3
+
+bundle:
+  # Cross-sell "Bundle strength" = 100 × (together share × together + same-block share × same_block + connected share
+  # × connected); shares are of the architectures that hold the part
+  together: 0.6
+  same_block: 0.25
+  connected: 0.15
+  # an automotive part: flag a suggestion when fewer than this share of its architectures are automotive
+  grade_flag_below: 0.5

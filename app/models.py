@@ -530,3 +530,25 @@ class Upload(Base):
     status: Mapped[str] = mapped_column(String(20), default="new")  # new | used | archived
     note: Mapped[str | None] = mapped_column(Text)  # what was done with it
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class VerifyTask(Base):
+    """One item of the owner's verification batch (Data management > Verify next): a cross checked against its two
+    datasheets, a library block diagram, or a data item behind the scores. Each is picked to stand for many others
+    (parts on the same datasheets, diagrams of the same kind); a kind gets its next batch only when its open tasks
+    are done."""
+
+    __tablename__ = "verify_tasks"
+    __table_args__ = (UniqueConstraint("kind", "key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(10))  # cross | diagram | data
+    key: Mapped[str] = mapped_column(String(600))  # what it stands for, e.g. the two datasheet URLs of a cross
+    title: Mapped[str] = mapped_column(String(300))
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)  # links and the reason it was picked
+    covers: Mapped[int] = mapped_column(Integer, default=1)  # how many items it stands for
+    status: Mapped[str] = mapped_column(String(10), default="open")  # open | ok | wrong
+    note: Mapped[str | None] = mapped_column(Text)
+    author: Mapped[str | None] = mapped_column(String(100))
+    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -421,6 +421,23 @@ def part_detail(
     return templates.TemplateResponse(request, "part.html", ctx)
 
 
+@router.get("/parts/{part_id}/walk", response_class=HTMLResponse)
+def part_walk(request: Request, part_id: int, upto: int = 2, session: Session = Depends(get_session)):
+    """Walk-through from the part: replacement, sell around it, best of ours, make it better, future. Only the steps
+    asked for so far (1..upto) are computed; data they lack is recorded once as site feedback for the next review."""
+    from app.services import opportunity as op
+    from app.services import walk
+
+    part = _part_or_404(session, part_id)
+    ctx = _part_context(session, part, False, "", "auto", "", DEFAULT_MAX_DEVIATIONS, "", False)
+    upto = min(max(upto, 2), 5)
+    w = walk.walk(session, part, ctx["rows"], upto)
+    w["gaps"] = [g for g in w["gaps"] if g[0] <= upto]
+    added = walk.record_gaps(session, part, w["gaps"])
+    ctx.update(w=w, steps=walk.STEPS, added=added, crowding_label=op.CROWDING_LABEL, path_label=op.PATH_LABEL)
+    return templates.TemplateResponse(request, "walk.html", ctx)
+
+
 @router.get("/parts/{part_id}/grouped", response_class=HTMLResponse)
 def part_grouped(request: Request, part_id: int, hide_eol: bool = False, company: str = "", scope: str = "auto",
                  type: str = "", dev: int = DEFAULT_MAX_DEVIATIONS, grade: str = "",

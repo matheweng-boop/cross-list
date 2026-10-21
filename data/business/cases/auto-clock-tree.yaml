@@ -2,6 +2,8 @@
 # conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
 # "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
 title: "Automotive clock tree: a crystal-free clock for central compute and zones"
+fn: clock_generator
+headline: f-zc
 question: >-
   What should Skyworks offer next for clocking central computers, zonal controllers and satellite radar (PCIe,
   automotive Ethernet, SerDes references) in 2–3 years, reusing existing timing technology, given TI, SiTime (buying
@@ -11,6 +13,19 @@ brief:
   - "Our position: a broad Grade 2 automotive PCIe clock line (Si5332-AM 6/8/12 outputs, Si5225x generators, Si5325x Gen 1–6 buffers) that our own brochure already lists for central compute, gateway and camera. Central computers and satellite radar move clock sockets to exactly these trees."
   - "Our weak points: Grade 2 only, a crystal on every Si5332-AM, no automotive jitter attenuator or oscillator, empty radar/ADAS rows, and radar SoCs keep their own timing. TI ships a crystal-free BAW clock (PCIe Gen 7, $3.55 list) and SiTime a Grade 1 MEMS clock generator, and SiTime is buying Renesas timing."
   - "Proposal: ZoneClock, a crystal-free automotive clock tree (our BAW resonator + Si5332 MultiSynth), Grade 1, PCIe Gen 6, with SmartClock safety monitors: ZC-12 at about $4–6.5 and ZC-4 at about $1.6–2.6 in volume (est), plus reference designs and a qualified jitter attenuator now."
+
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "Tier-1 or OEM designing central computer and zonal controller boards"
+  summary: "One crystal-free, Grade 1 clock chip per computer or zone replaces the crystal, oscillators and fan-out buffer, and reports clock faults to the safety manager."
+  today: "Per computer: a clock generator (Si5332-AM, Grade 2) with its crystal, 1–3 crystal oscillators and a fan-out buffer; the crystal needs layout keep-outs and its own qualification; radar SoCs keep their own crystal."
+  with_us: "ZC-12 in the central computer and ZC-4 in each zone: every PCIe, Ethernet and SerDes reference from one crystal-free part, with fault pins into the safety manager."
+  gains:
+    - {id: cb-parts, kind: parts, gain: "One clock part per computer or zone", how: "BAW resonator inside the package replaces the crystal and oscillators", measure: "3–6 parts → 1 (est, from the parts it replaces)", conf: med}
+    - {id: cb-board, kind: placement, gain: "Clock can sit next to hot SoCs and in harsh zones", how: "Grade 1 (–40 to 125 °C); no crystal, which is the part most sensitive to shock and vibration", measure: "Grade 2 → Grade 1 (target)", conf: med}
+    - {id: cb-safety, kind: safety, gain: "Clock faults reach the safety manager", how: "SmartClock monitors and fault pins, ISO 26262 safety manual", measure: "ASIL-B ready (target)", conf: low}
+    - {id: cb-scale, kind: scaling, gain: "One clock design and one configuration tool across computer and zones", how: "ZC-12 and ZC-4 share the architecture and ClockBuilder Pro", measure: "4 to 12 outputs, one family", conf: med}
+  gives_up:
+    - "A new part to qualify; crystal-free jitter must be proven against PCIe Gen 6"
 
 position:
   advantages:

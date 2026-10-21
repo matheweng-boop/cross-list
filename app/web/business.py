@@ -11,18 +11,20 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_session
+from app.matching import engine
 from app.models import (
     BusinessAssumption,
     Case,
     CaseNote,
     DataReview,
     OpportunityDecision,
+    Part,
     PartMapping,
     PipelineDraft,
     ShortlistItem,
     TechFeedback,
 )
-from app.services import blocks, cases, pipeline, prelim, quality, vocab
+from app.services import blocks, cases, pipeline, prelim, quality, scoring, vocab, walk
 from app.services import opportunity as op
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -95,6 +97,9 @@ def attach(request: Request, fn: str = "", co: str = "combined", part: str = "",
     c["q_part"], c["q_app"] = part.strip()[:60], app.strip()[:120]
     c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
     c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
+    c["walk_part"] = (session.scalar(select(Part).where(Part.mpn == c["anchor"]["mpn"]).limit(1))
+                      if c["anchor"] and not c["anchor"]["ours"] else None)  # fmt: skip
+    c["bundle_cfg"] = scoring.config()["bundle"]
     used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
     c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], vocab.fn_label(kv[0])))
     c["fn"] = fn if fn in used else ""
@@ -179,13 +184,15 @@ def technology_moved(co: str = "combined", view: str = "all"):
 # Opportunity explorer columns that sort: key -> (label, default direction, sort key). Old `view` links map onto them.
 PATH_ORDER = {"exists": 0, "variant": 1, "new_design": 2, "new_capability": 3, "not_pursue": 4}
 CROWD_ORDER = {"low": 0, "medium": 1, "high": 2}
+SUGGESTION_ORDER = {"quick_win": 0, "new_chip": 1, "niche": 2, "partner": 3, "unknown": 4}
 EXPLORER_SORTS = {
     "label": ("Function", "asc", lambda e: e["label"].lower()),
     "path": ("Gap type · path", "asc", lambda e: (PATH_ORDER.get((e["path"] or {}).get("path"), 5), -e["reach"])),
     "reach": ("Needed in", "desc", lambda e: (e["reach"], e["adjacent"])),
     "competition": ("Competition", "asc",
                     lambda e: (CROWD_ORDER.get((e["competition"] or {}).get("crowding"), 3), -e["reach"])),
-    "score": ("Fit score", "desc", lambda e: (e["score"] if e["score"] is not None else -1, e["reach"])),
+    "score": ("Type · score", "desc",
+              lambda e: (-SUGGESTION_ORDER.get(e["suggestion"], 9), e["score"] if e["score"] is not None else -1)),
     "tam": ("TAM / year", "desc", lambda e: (e["tam"], e["reach"])),
 }  # fmt: skip
 VIEW_TO_SORT = {"reach": "reach", "crosssell": "reach", "feasibility": "score", "competition": "competition",
@@ -211,33 +218,30 @@ def opportunity_explorer(
     f: str = "",
     t: str = "",
     g: str = "",
+    s: str = "",
     session: Session = Depends(get_session),
 ):
     """Missing functions and RF band gaps, grouped by big category; any column sorts. Rows set aside are listed
     separately below."""
     c = _ctx(session, co, scope)
-    rows = op.explorer(c["apps"], c["asp"], c["vol"])
+    rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
     decisions = {d.fn: d for d in session.scalars(select(OpportunityDecision))}
     for e in rows:
         d = decisions.get(e["key"])
         e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at} if d else None
-    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "reach")
+    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "score")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
     c["type_counts"] = Counter(e["gap_type"] for e in rows)
-    # fit as High / Medium / Low against the best score of all functions, so a filter does not move the bands
-    top = max((e["score"] or 0 for e in rows), default=0)
-    for e in rows:
-        e["band"] = (
-            None
-            if e["score"] is None or not top
-            else next(b for b, lim in (("High", 2 / 3), ("Medium", 1 / 3), ("Low", 0)) if e["score"] / top >= lim)
-        )
     if t in op.GAP_TYPE_LABEL:
         rows = [e for e in rows if e["gap_type"] == t]
     elif f != "chips":  # chips we do not make only on request
         rows = [e for e in rows if e["gap_type"] != "not_ours"]
     if f in EXPLORER_FILTERS:
         rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
+    c["sugg_counts"] = Counter(e["suggestion"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
+    s = s if s in SUGGESTION_ORDER else ""
+    if s:
+        rows = [e for e in rows if e["suggestion"] == s]
     c["group_counts"] = Counter(e["group"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
     g = g if g in c["group_counts"] else ""
     if g:
@@ -255,6 +259,7 @@ def opportunity_explorer(
         rows=shown,
         groups=[(n, [e for e in shown if e["group"] == n]) for n in order if any(e["group"] == n for e in shown)],
         g=g,
+        s=s,
         aside=[e for e in rows if (e["decision"] or {}).get("status") == "set_aside"],
         sort=sort,
         dir=dir,
@@ -266,7 +271,7 @@ def opportunity_explorer(
         gap_labels=op.GAP_TYPE_LABEL,
         path_label=op.PATH_LABEL,
         prox_label=op.PROXIMITY_LABEL,
-        max_score=max((e["score"] or 0 for e in rows), default=0),
+        scoring=scoring.config(),
     )
     return templates.TemplateResponse(request, "business/explorer.html", c)
 
@@ -299,7 +304,8 @@ async def decide(request: Request, session: Session = Depends(get_session)):
 
 
 SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
-                     "customers": "Customers", "idea": "New ideas", "report": "Research & ideas"}  # fmt: skip
+                     "customers": "Customers", "idea": "New ideas", "report": "Research & ideas",
+                     "part": "Part walk-through"}  # fmt: skip
 
 
 @router.post("/business/shortlist")
@@ -357,7 +363,9 @@ def shortlist(request: Request, co: str = "combined", session: Session = Depends
 def method(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     c.update(src=op.sources(c["apps"]), help=op.explanations(), prox_label=op.PROXIMITY_LABEL,
-             prox_weight=op.PROXIMITY_WEIGHT, crowd_weight=op.CROWDING_WEIGHT)  # fmt: skip
+             path_label=op.PATH_LABEL, cfg=scoring.config(),
+             cross={"categories": list(engine.CATEGORY_LABELS.values()), "max_dev": engine.DEFAULT_MAX_DEVIATIONS,
+                    "weights": engine.PRIORITY_WEIGHT, "unknown": engine.UNKNOWN_SEVERITY})  # fmt: skip
     return templates.TemplateResponse(request, "business/method.html", c)
 
 
@@ -622,7 +630,8 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
     c = _ctx(session, co)
     if fn not in c["fns"]:
         raise HTTPException(404, "Function not found")
-    row = next((e for e in op.technology_fit(c["apps"]) if e["fn"] == fn), None)
+    tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
+    row = next((e for e in op.technology_fit(c["apps"], tab) if e["fn"] == fn), None)
     c.update(fn=fn, label=vocab.fn_label(fn), row=row, status=op.status_of(fn, c["mk"], op.company(co)[2]),
              ev={t: op.evidence(t).get(fn) for t in op.EVIDENCE_TOPICS}, topics=op.EVIDENCE_TOPICS,
              tech=op.technology().get(fn), comp=op.competition().get(fn), platforms=op.platforms_for(fn),
@@ -630,6 +639,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
              need=next((g for g in op.gaps(c["apps"], c["asp"], c["vol"]) if g["fn"] == fn), None),
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
+    c["walk_parts"] = walk.competitor_parts(session, fn)
     return templates.TemplateResponse(request, "business/evidence.html", c)
 
 
@@ -674,7 +684,9 @@ async def mapping(fn: str, request: Request, session: Session = Depends(get_sess
 def data_quality(request: Request, co: str = "combined", session: Session = Depends(get_session)):
     c = _ctx(session, co)
     c.update(unofficial=unofficial_counts(session), unofficial_on=get_settings().use_unofficial_data)
-    c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session), queue=quality.queue(session, c["apps"]),
+    tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
+    c.update(checks=quality.checks(c["apps"]), stats=quality.stats(session),
+             queue=quality.queue(session, c["apps"], tab), research=quality.research(c["apps"], tab),
              rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
              mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip
     return templates.TemplateResponse(request, "business/quality.html", c)
@@ -810,7 +822,9 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
            "has_background": rp.has_background(slug), "questions": rp.questions(session, slug),
            "q_statuses": rp.Q_STATUSES, "case": prelim.case(session, slug), "distance": prelim.DISTANCE,
            "verdict_label": prelim.VERDICT_LABEL, "question_groups": prelim.QUESTION_GROUPS,
-           "label": vocab.fn_label}  # fmt: skip
+           "benefit_kinds": prelim.BENEFIT_KINDS, "label": vocab.fn_label}  # fmt: skip
+    fn = (ctx["case"] or {}).get("fn")
+    ctx["walk_parts"] = walk.competitor_parts(session, fn, 4) if fn else []
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

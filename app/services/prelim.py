@@ -1,6 +1,10 @@
 """Preliminary business cases: one structured file per case (data/business/cases/<slug>.yaml, layout in _template.yaml)
 shown on the case's report page. Reviewers react to each item (DataReview rows, dataset "case:<slug>", latest verdict
-counts) and enter real ASPs (business inputs, key "case:<slug>:<item>") that replace the estimates."""
+counts) and enter real ASPs (business inputs, key "case:<slug>:<item>") that replace the estimates.
+
+Each case also carries the Opportunity score of its main function (`fn:`) at the distance of its headline feature
+(`headline:`, default the first feature), the feasibility 1–3 derived from that distance, and a confidence: the
+score's, one step lower when a reviewer disagreed with any item; a disagreed item's own confidence drops one step."""
 
 import re
 from functools import lru_cache
@@ -12,6 +16,7 @@ from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import DataReview
 from app.services import opportunity as op
+from app.services import scoring
 
 FOLDER = PROJECT_ROOT / "data" / "business" / "cases"
 DISTANCE = {  # how far a feature is from what we ship today
@@ -26,6 +31,11 @@ VERDICTS = {"agree": "correct", "disagree": "wrong", "closer": "closer", "furthe
 VERDICT_LABEL = {"correct": "agreed", "wrong": "disputed", "closer": "move closer", "further": "move further",
                  "answered": "answered"}  # fmt: skip
 QUESTION_GROUPS = (("bu", "Business unit (internal)"), ("customer", "OEM / Tier-1"))
+BENEFIT_KINDS = {  # what kind of architectural gain the customer gets; fixed so cases compare side by side
+    "parts": "Fewer parts", "cabling": "Cabling", "placement": "Placement", "scaling": "Scaling",
+    "performance": "Performance", "safety": "Safety", "software": "Software", "sourcing": "Sourcing",
+    "compliance": "Compliance",
+}  # fmt: skip
 LISTS = ("advantages", "disadvantages", "diff_good", "diff_bad")
 _SLUG = re.compile(r"^[a-z0-9-]+$")
 
@@ -49,8 +59,42 @@ def item_ids(slug: str) -> set[str]:
     rows = [x for k in LISTS for x in pos.get(k) or []]
     rows += [*(c.get("outlook") or []), *(c.get("features") or []), *(c.get("attach") or []),
              *((c.get("prices") or {}).get("items") or [])]  # fmt: skip
+    rows += (c.get("customer_benefit") or {}).get("gains") or []
     rows += [x for k, _ in QUESTION_GROUPS for x in (c.get("questions") or {}).get(k) or []]
     return {str(x["id"]) for x in rows if x.get("id")}
+
+
+def headline(c: dict) -> dict | None:
+    """The feature the case is about (`headline:` id, else the first feature)."""
+    feats = c.get("features") or []
+    return next((f for f in feats if f.get("id") == c.get("headline")), feats[0] if feats else None)
+
+
+def derived_feasibility(slug: str) -> int | None:
+    h = headline(raw(slug) or {})
+    return scoring.feasibility(h.get("distance")) if h else None
+
+
+def opportunity(session: Session, slug: str, fb: dict | None = None) -> dict:
+    """Opportunity score of the case's function at its headline distance, feasibility (derived, and the curated one
+    from reports.yaml when it differs) and the case confidence."""
+    from app.services import reports as rp
+
+    c = raw(slug) or {}
+    fb = _feedback(session, slug) if fb is None else fb
+    h = headline(c) or {}
+    d = h.get("distance")
+    disputed = sorted(k for k, f in fb.items() if f["verdict"] == "wrong")
+    dc = scoring.lower("medium") if h.get("id") in disputed else "medium"
+    fn = c.get("fn")
+    why = f"headline feature: {h.get('feature', '')}"
+    s = scoring.rescore(scoring.combined(session), fn, d, why, dc) if fn else None
+    confidence = (s or {}).get("confidence") or "low"
+    curated = int((rp.report(slug) or {}).get("feasibility") or 0) or None
+    derived = scoring.feasibility(d)
+    return {"fn": fn, "headline": h, "score": s, "feasibility": curated or derived, "derived": derived,
+            "curated": curated, "mismatch": bool(curated and derived and curated != derived),
+            "confidence": scoring.lower(confidence) if disputed else confidence, "disputed": disputed}  # fmt: skip
 
 
 def _feedback(session: Session, slug: str) -> dict[str, dict]:
@@ -74,9 +118,10 @@ def case(session: Session, slug: str) -> dict | None:
     asp, _ = op.inputs(session)
 
     def attach(rows):
-        return [{**x, "fb": fb.get(str(x.get("id")), {})} for x in rows or []]
+        return [_reviewed({**x, "fb": fb.get(str(x.get("id")), {})}) for x in rows or []]
 
     pos = c.get("position") or {}
+    benefit = c.get("customer_benefit") or {}
     prices = c.get("prices") or {}
     items = [{**x, "real": asp.get(f"case:{slug}:{x['id']}"), "fb": fb.get(str(x["id"]), {})}
              for x in prices.get("items") or []]  # fmt: skip
@@ -90,9 +135,19 @@ def case(session: Session, slug: str) -> dict | None:
                             "revenue": (v.get("units") or 0) * (price or 0)})  # fmt: skip
     n_fb = sum(1 for f in fb.values() if f["verdict"] or f["comments"])
     return {**c, "position": {k: attach(pos.get(k)) for k in LISTS}, "outlook": attach(c.get("outlook")),
+            "customer_benefit": {**benefit, "gains": attach(benefit.get("gains"))} if benefit else None,
             "features": attach(c.get("features")), "attach": attach(c.get("attach")),
             "questions": {k: attach((c.get("questions") or {}).get(k)) for k, _ in QUESTION_GROUPS},
-            "prices": {**prices, "items": items}, "revenue": revenue, "n_feedback": n_fb}  # fmt: skip
+            "prices": {**prices, "items": items}, "revenue": revenue, "n_feedback": n_fb,
+            "opportunity": opportunity(session, slug, fb)}  # fmt: skip
+
+
+def _reviewed(x: dict) -> dict:
+    """A disagreed item's confidence drops one step (high -> med -> low); the original is kept as conf_was."""
+    if x.get("conf") and (x.get("fb") or {}).get("verdict") == "wrong":
+        low = scoring.lower(x["conf"])
+        x = {**x, "conf_was": x["conf"], "conf": "med" if low == "medium" else low}
+    return x
 
 
 def react(session: Session, slug: str, key: str, verdict: str, comment: str = "", author: str = "") -> None:

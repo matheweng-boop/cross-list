@@ -2,6 +2,8 @@
 # conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
 # "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
 title: "C-V2X front end: two carriers in one module"
+fn: v2x_fem
+headline: f-dual
 question: >-
   What should Skyworks (with Qorvo) build next for 5.9 GHz V2X in 2–3 years, reusing SKY5A2105, QPF1003Q and our BAW
   filters, now that the US is C-V2X only from 14 Dec 2026 on two channels and Europe runs ITS-G5, LTE-V2X and NR-V2X
@@ -11,6 +13,19 @@ brief:
   - "We are the only public source of standalone V2X front ends: SKY5A2105 (AEC-Q104 Grade 2, LTE/NR-V2X and 802.11p, compensator or ECU mode) and Qorvo's QPF1003Q/QPF1002Q, plus V2X BAW filters (QPQ2200Q, QPQ2230Q, SKY5A1005). The wide 5855–5925 MHz BAW passband Europe needs already exists."
   - "Weak points: one path per part, so the US second channel and EU concurrent ITS-G5 + C-V2X need two FEMs; in the US today's filter passes UNII-4 Wi-Fi next door; and our chipset partner Autotalks is Qualcomm's since Jun 2025, in a small market (about 5.7 M V2X cars a year)."
   - "Proposal: a dual-carrier V2X front end (two TX/RX paths, compensator and ECU modes, EU wide-band and US UNII-4-guard filter variants) at about $7–10 (est), replacing two single FEMs plus filter and switch."
+
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "Antenna or TCU Tier-1; OEMs selling V2X in the US (two channels) and Europe (ITS-G5 and C-V2X)"
+  summary: "Two V2X carriers from one part at the antenna: the US second channel and Europe's ITS-G5 plus C-V2X without a second front end, filter and switch."
+  today: "One path per front end: two SKY5A2105 or QPF1003Q, an external filter and a switch per antenna for two carriers; in the US the filter passes the car's own UNII-4 Wi-Fi next door."
+  with_us: "One dual-carrier front end per antenna, in compensator mode at the roof or in the ECU; EU wide-band and US guard-filter variants on one footprint."
+  gains:
+    - {id: cb-parts, kind: parts, gain: "One part instead of four for two carriers", how: "Two paths and the switching in one package", measure: "2 FEMs + filter + switch → 1", conf: med}
+    - {id: cb-region, kind: scaling, gain: "One antenna design for the US and Europe", how: "Filter variant, same footprint and control", measure: "2 variants, 1 layout (est)", conf: low}
+    - {id: cb-coex, kind: performance, gain: "V2X protected from the car's own Wi-Fi", how: "US guard BAW against UNII-4 next to the 5895–5925 MHz channels", measure: "not stated", conf: med}
+    - {id: cb-roof, kind: cabling, gain: "Cable and glass-roof loss made up at the antenna", how: "Compensator mode sets gain to the cable loss", measure: "Glass roof costs about 8 dB (source in case)", conf: med}
+  gives_up:
+    - "Our chipset partner Autotalks now belongs to Qualcomm; small market (about 5.7 M V2X cars a year)"
 
 position:
   advantages:

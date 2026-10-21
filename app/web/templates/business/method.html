@@ -5,45 +5,105 @@
 <p class="subtitle muted">A reference for every page in Business opportunity: what the words mean, how each number is calculated, where the data comes
   from and what it cannot tell you. The counts below are live.</p>
 
-<nav class="bo-toc small"><a href="#idea">The idea</a> · <a href="#terms">Definitions</a> · <a href="#formulas">Formulas</a> · <a href="#sources">Data sources</a> · <a href="#pages">Pages</a> · <a href="#limits">Limits</a></nav>
+<nav class="bo-toc small"><a href="#idea">The idea</a> · <a href="#score">Opportunity score</a> · <a href="#related">Related scores</a> · <a href="#terms">Definitions</a> · <a href="#formulas">Formulas</a> · <a href="#engineering">Engineering rules</a> · <a href="#sources">Data sources</a> · <a href="#pages">Pages</a> · <a href="#limits">Limits</a></nav>
 
 <h2 id="idea">The idea in five steps</h2>
 <ol class="bo-steps">
   <li><b>Collect systems.</b> Public block diagrams of end systems (applications) from TI, NXP, Qualcomm, MediaTek, Skyworks and others.</li>
   <li><b>Normalize.</b> Every block becomes a function (a chip type) with a quantity: a block on the board.</li>
   <li><b>Match.</b> For each block: do Skyworks / Qorvo have a part (Portfolio), nobody (Gap), only competitors (Competitor only), or is it a chip we do not make (Customer part)?</li>
-  <li><b>Count.</b> Coverage per application; how often each missing function appears; whether those applications already use our parts (door openers); how crowded the market is; how close it is to our technology.</li>
-  <li><b>Decide.</b> Rankings point at candidates; a Case analysis collects the facts and an AI market analysis for one candidate.</li>
+  <li><b>Score.</b> One Opportunity score 0–100 per function: demand, distance from our portfolio, architecture fit, competition and market trend, each with a confidence.</li>
+  <li><b>Decide.</b> Rankings point at candidates; a preliminary case or a Case analysis collects the facts for one candidate.</li>
 </ol>
+
+{% set w = cfg.weights %}{% set d = cfg.distance %}{% set sg = cfg.suggestions %}
+<h2 id="score">Opportunity score <small class="muted">· in plain words first</small></h2>
+<p class="small">Every suggested part gets a <b>type</b> in words, from two facts on its row: how far it is from what we build, and how
+  many block diagrams need it. The <b>score</b> (0–100) only puts the parts of one type in order.</p>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Type</th><th>Rule</th><th>What it means</th></tr></thead><tbody>
+  <tr><th><span class="sg sg-quick_win">{{ sg.labels.quick_win }}</span></th><td>distance 0–2 and needed in {{ sg.widely_needed }}+ diagrams</td><td>{{ sg.help.quick_win }}</td></tr>
+  <tr><th><span class="sg sg-new_chip">{{ sg.labels.new_chip }}</span></th><td>distance 3 and needed in {{ sg.widely_needed }}+ diagrams</td><td>{{ sg.help.new_chip }}</td></tr>
+  <tr><th><span class="sg sg-niche">{{ sg.labels.niche }}</span></th><td>needed in fewer than {{ sg.widely_needed }} diagrams, distance 0–3</td><td>{{ sg.help.niche }}</td></tr>
+  <tr><th><span class="sg sg-partner">{{ sg.labels.partner }}</span></th><td>distance 4</td><td>{{ sg.help.partner }}</td></tr>
+  <tr><th><span class="sg sg-unknown">{{ sg.labels.unknown }}</span></th><td>no distance yet</td><td>{{ sg.help.unknown }}</td></tr>
+</tbody></table></div>
+<p class="small"><b>The score</b> asks five questions, each answered 0–100, and adds them by weight: how many systems need it ({{ w.demand }}%),
+  how close it is to what we build ({{ w.distance }}%), whether it sits next to parts we sell ({{ w.architecture }}%), how crowded the
+  market is ({{ w.competition }}%) and whether the market grows ({{ w.trend }}%).
+  <b>Example, PoL LDO:</b> needed in 119 diagrams (72) × {{ w.demand }}% = 21.6 · a spec variant of ours (85) × {{ w.distance }}% = 21.3 ·
+  next to our parts (99) × {{ w.architecture }}% = 14.9 · crowded (30) × {{ w.competition }}% = 4.5 · stable (60) × {{ w.trend }}% = 9.0 →
+  <b>71</b>, type <span class="sg sg-quick_win">{{ sg.labels.quick_win }}</span>. Hover any score for its own sum. Details below.</p>
+
+<h3 id="score-detail">The five factors <small class="muted">· 0–100, one scale on every page</small></h3>
+<p class="small">The score is the <b>weighted sum</b> of five factors, each 0–100, so every factor counts by its stated weight. Used by the
+  Opportunity explorer (and its Technology fit view), the evidence pages, the Automotive map's Top moves and the preliminary cases.
+  Functions that are not ours to build (path “Not ours”, customer parts) are not scored. Weights and mappings live in <code>data/business/scoring.yaml</code>.</p>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Factor</th><th>Weight</th><th>What it measures</th><th>0–100 from</th><th>Confidence</th></tr></thead><tbody>
+  <tr><th>{{ cfg.labels.demand }}</th><td>{{ w.demand }}%</td><td>how many systems need it</td>
+    <td>Σ sockets (block quantity) in the diagrams; a library diagram counts {{ cfg.demand.library }}, a background diagram {{ cfg.demand.background }}; the most-needed function = 100.
+      <b>TAM replaces it</b> as soon as an ASP and a volume are entered for the function: ${{ '{:,.0f}'.format(cfg.demand.tam_low) }} a year or less = 0, ${{ '{:,.0f}'.format(cfg.demand.tam_high) }} or more = 100, log scale. The tooltip says which basis was used.</td>
+    <td>high from {{ cfg.demand.confident_from }} library diagrams, medium from 1, low with background diagrams only; TAM {{ cfg.demand.tam_confidence }}</td></tr>
+  <tr><th>{{ cfg.labels.distance }}</th><td>{{ w.distance }}%</td><td>how far from what we can build</td>
+    <td>distance {% for k, v in d.points.items() %}{{ k }} → {{ v }}{{ ', ' if not loop.last }}{% endfor %} (scale below)</td>
+    <td>the path's own confidence; technology rating {{ d.technology_confidence }}; none: low</td></tr>
+  <tr><th>{{ cfg.labels.architecture }}</th><td>{{ w.architecture }}%</td><td>how well it rides on what we already sell</td>
+    <td>100 × ({{ cfg.architecture.door_opener }} × door-opener share + {{ cfg.architecture.neighbour }} × share of diagrams where one of our parts sits in the same block or a connected one)</td>
+    <td>as demand (diagram count)</td></tr>
+  <tr><th>{{ cfg.labels.competition }}</th><td>{{ w.competition }}%</td><td>room to win</td>
+    <td>{% for k, v in cfg.competition['values'].items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; not assessed {{ cfg.neutral }}</td>
+    <td>source check {% for k, v in cfg.competition.confidence.items() %}{{ k }} → {{ v }}{{ ', ' if not loop.last }}{% endfor %}; RF band gaps (supplier count) {{ cfg.competition.vendor_count_confidence }}</td></tr>
+  <tr><th>{{ cfg.labels.trend }}</th><td>{{ w.trend }}%</td><td>where the market is heading</td>
+    <td>{% for k, v in cfg.trend['values'].items() %}{{ k }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; a dated regulation counts as growing; not assessed {{ cfg.neutral }}</td>
+    <td>the trend research's own confidence</td></tr>
+</tbody></table></div>
+
+<h3 id="distance">One distance scale, 0–4</h3>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Distance</th><th>Meaning</th><th>Points</th><th>From path to product</th><th>From technology rating</th><th>Automotive ladder</th><th>RF band gap</th><th>Feasibility</th></tr></thead><tbody>
+  {% for k, label in d.labels.items() %}<tr><th>{{ k }}</th><td>{{ label }}</td><td>{{ d.points[k] }}</td>
+    <td>{% for p, v in d.path.items() if v == k %}{{ path_label[p] }}{{ ', ' if not loop.last }}{% endfor %}</td>
+    <td>{% for p, v in d.technology.items() if v == k %}{{ prox_label[p] }}{{ ', ' if not loop.last }}{% endfor %}</td>
+    <td>{% for p, v in d.ladder.items() if v == k %}{{ p }}{{ ', ' if not loop.last }}{% endfor %}</td>
+    <td>{% for p, v in d.rf.items() if v == k %}{{ {'none': 'no part of ours in the band', 'power': 'power class missing', 'risk': 'only ageing parts'}[p] }}{{ ', ' if not loop.last }}{% endfor %}</td>
+    <td>{{ cfg.feasibility[k] }}</td></tr>{% endfor %}
+  <tr><th>–</th><td>Not ours to build</td><td colspan="6" class="muted">path “{{ path_label['not_pursue'] }}” or a customer part: excluded, not scored</td></tr>
+</tbody></table></div>
+<p class="small muted">The path to product is used where assessed, else 0 for a function we already sell, else the technology rating. A curated automotive row may set its own distance (e.g. 2 for a package from our dies). Preliminary case features use the same scale.</p>
+
+<h3 id="confidence">Confidence</h3>
+<ul class="small">
+  <li><b>Missing data</b> scores the neutral {{ cfg.neutral }} with <b>low</b> confidence: an unresearched function is not punished as a bad one. Low-confidence factors are listed on <a href="/business/quality#research">Data quality</a> as research to do; a low overall confidence is flagged ⚑.</li>
+  <li><b>Overall confidence</b> = the lowest of {{ cfg.confidence.overall_from|map('capitalize')|join(', ') }}. Architecture fit and trend are shown but do not set it.</li>
+  <li><b>Reviews:</b> a reviewer's latest “wrong” on the data behind a factor (path, technology rating, competition, trend) lowers that factor's confidence one step (high → medium → low); “correct” changes nothing. On a preliminary case, a “disagree” lowers that item's confidence one step and the case's confidence one step.</li>
+</ul>
+
+<h2 id="related">Related scores on the same scale</h2>
+<div class="table-wrap"><table class="bo-formulas small"><tbody>
+  <tr><th>Cross-sell: Bundle strength</th><td>100 × ({{ cfg.bundle.together }} × share of the part's architectures that also need the function + {{ cfg.bundle.same_block }} × same-block share + {{ cfg.bundle.connected }} × connected share)</td>
+    <td class="muted">an automotive part whose architectures are less than {{ (100 * cfg.bundle.grade_flag_below)|round|int }}% automotive gets a “grade?” flag, not a lower score</td></tr>
+  <tr><th>Automotive map: Top moves</th><td>ranked by the Opportunity score of the step's function, with the ladder letter's distance in place of the function's own; then by research demand</td><td class="muted">letters shown with their distance (A·0, B·1, C·3, D·4)</td></tr>
+  <tr><th>Preliminary cases</th><td>the Opportunity score of the case's main function at the distance of its headline feature; feasibility 1–3 derived from that distance; confidence as above</td>
+    <td class="muted">a curated feasibility in reports.yaml is kept and flagged when it differs</td></tr>
+</tbody></table></div>
 
 <h2 id="terms">Definitions</h2>
 <dl class="bo-defs">{% for k, t in help.terms.items() %}<dt id="t-{{ k }}">{{ t.term }}</dt><dd>{{ t.long }}</dd>{% endfor %}</dl>
 
-<h2 id="formulas">Formulas</h2>
+<h2 id="formulas">Formulas <small class="muted">· the counts behind the pages</small></h2>
 <div class="table-wrap"><table class="bo-formulas small"><tbody>
   <tr><th>Coverage</th><td>blocks with our part ÷ (Portfolio + Gap + Competitor-only blocks)</td><td class="muted">"Customer part" excluded</td></tr>
   <tr><th>Needed in</th><td>number of applications whose diagram contains the function</td><td class="muted">each application counts once</td></tr>
-  <tr><th>Door opener share</th><td>applications needing the function that already contain one of our parts ÷ applications needing it</td><td class="muted"></td></tr>
+  <tr><th>Door opener share</th><td>applications needing the function that already contain one of our parts ÷ applications needing it</td><td class="muted">part of architecture fit</td></tr>
   <tr><th>Blocks</th><td>Σ quantity of the function over the applications</td><td class="muted">2 LDOs in one diagram = 2</td></tr>
   <tr><th>Attach "how often"</th><td>applications containing both our product and the function ÷ applications containing our product</td><td class="muted">co-occurrence, not sales</td></tr>
-  <tr><th>Technology fit score</th><td>(architectures using it ÷ all architectures in scope) × path weight (or technology weight where no path is assessed) × competition weight × trend weight</td>
-    <td class="muted">technology {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}; competition {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
   <tr><th>Content per system</th><td>Σ quantity × ASP over priced blocks; our share = priced blocks with our part ÷ all priced blocks</td><td class="muted">only where ASPs are entered</td></tr>
   <tr><th>TAM per year</th><td>Σ over applications of annual volume × blocks × ASP</td><td class="muted">only where both are entered</td></tr>
 </tbody></table></div>
 
-<h2 id="influence">What influences a rating</h2>
-<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Input</th><th>Where it comes from</th><th>Effect</th></tr></thead><tbody>
-  <tr><th>Applications using it</th><td>block diagrams (library + background)</td><td>in the score: share of applications</td></tr>
-  <tr><th>Path to product</th><td>path-to-product research</td><td>in the score: Exists 1.0, Spec variant 1.0, New design 0.6, New technology 0.3, Not ours 0.1 – <b>replaces</b> the technology rating where assessed</td></tr>
-  <tr><th>Technology rating</th><td>technology ratings</td><td>in the score only where no path is assessed: {% for p in [3, 2, 1, 0] %}{{ prox_label[p] }} {{ prox_weight[p] }}{{ ', ' if not loop.last }}{% endfor %}</td></tr>
-  <tr><th>Competition</th><td>competition assessment</td><td>in the score: {% for k, v in crowd_weight.items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; not assessed 0.85</td></tr>
-  <tr><th>Market trend</th><td>market-trend research</td><td>in the score: growing 1.15, stable 1.0, declining 0.85; no data 1.0</td></tr>
-  <tr><th>Confirmed part mapping</th><td>reviewers on the evidence page</td><td>changes the status: the function becomes Portfolio and leaves the gap lists</td></tr>
-  <tr><th>Patents, foundry route, competitor technology</th><td>BizDev research</td><td><b>not in the score</b>: shown on the evidence page for judgement</td></tr>
-  <tr><th>Reviews (✓ ✗ ?)</th><td>people using the site</td><td><b>not in the score</b>: flag items as verified or disputed and feed the data to-do</td></tr>
-  <tr><th>Door openers, customers, ASPs</th><td>diagrams, customer list, TAM data</td><td>not in the Technology fit score (door openers rank the cross-sell view; ASPs feed TAM)</td></tr>
-</tbody></table></div>
+<h2 id="engineering">Engineering rules <small class="muted">· not business scores, unchanged</small></h2>
+<ul class="small">
+  <li><b>Part crosses</b> (<a href="/rules">cross rules</a>): {{ cross.categories|join(' / ') }}; a functional equivalent accepts up to {{ cross.max_dev }} priority-1 deviations. Closeness = Σ priority weight × severity, with priority weights {% for k, v in cross.weights.items() %}{{ v|int }}{{ ' / ' if not loop.last }}{% endfor %}; an unknown value counts as a deviation of severity {{ cross.unknown }}.</li>
+  <li><b>Validation priorities</b> (<a href="/business/validation">human validation</a>): high / medium / low by impact on the data, e.g. ten or more parts missing a priority-1 value is high. Low-confidence opportunity factors are added as research items on Data quality.</li>
+</ul>
 
 <h2 id="sources">Data sources (live)</h2>
 <div class="table-wrap"><table class="striped small"><tbody>

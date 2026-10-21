@@ -131,6 +131,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.requests import router as requests_router
     from app.web.routes import router as web_router
     from app.web.uploads import router as uploads_router
+    from app.web.verify import router as verify_router
 
     app.add_middleware(PasswordGate)
     app.add_middleware(GZipMiddleware, minimum_size=1000)  # the larger pages are 0.3-0.6 MB of HTML
@@ -197,4 +198,5 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(pipeline_router)
     app.include_router(feedback_router)
     app.include_router(uploads_router)
+    app.include_router(verify_router)
     return app

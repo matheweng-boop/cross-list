@@ -1,8 +1,9 @@
 {# A preliminary case (data/business/cases/<slug>.yaml) with feedback per item and real ASPs; included as a report body. #}
 {% set slug = r.slug %}
 {% import "business/_feasibility.html" as fz %}
+{% from "business/_common.html" import score_chip %}
 {% macro react(x, scale=false, question=false) %}{% set f = x.fb or {} %}
-<details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">{{ 'answer' if question else 'react' }}</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+<details class="pc-react" id="i-{{ x.id }}" data-title="{{ x.text or x.gain or x.feature or x.lever or x.item }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">{{ 'answer' if question else 'react' }}</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
   <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
     <input type="hidden" name="key" value="{{ x.id }}">
     <textarea name="comment" rows="2" maxlength="2000" placeholder="{{ 'The answer, and who gave it' if question else 'Why, or what should change (optional)' }}" aria-label="Comment"></textarea>
@@ -11,19 +12,34 @@
   </form>
   {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
 </details>{% endmacro %}
-{% macro conf(c) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence">{{ c }}</span>{% endif %}{% endmacro %}
+{% macro conf(c, was=none) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence{{ ': ' ~ was ~ ', one step lower after a reviewer disagreed' if was }}">{{ c }}{{ ' ↓' if was }}</span>{% endif %}{% endmacro %}
 
 <h1>{{ case.title }}</h1>
-{% if r.feasibility %}<p class="pc-feas">{{ fz.feas(r.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span></p>{% endif %}
-<p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a></p>
+{% set opp = case.opportunity %}
+<p class="pc-feas">{% if opp.score %}<span class="small">Opportunity score</span> {{ score_chip(opp.score) }} <small class="muted">· {{ label(opp.fn) }} at distance {{ opp.headline.distance }} ({{ opp.headline.feature }})</small>{% elif opp.fn %}<small class="muted">{{ label(opp.fn) }}: not in the block diagrams, no Opportunity score</small>{% endif %}
+  · <span class="small">confidence</span> <span class="pc-conf c-{{ opp.confidence }}" title="the score's confidence{{ ', one step lower: a reviewer disagreed with ' ~ opp.disputed|join(', ') if opp.disputed }}">{{ opp.confidence }}{{ ' ↓' if opp.disputed }}</span></p>
+{% if opp.feasibility %}<p class="pc-feas">{{ fz.feas(opp.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span>
+  {% if opp.mismatch %}<span class="feas-flag" title="Derived from the headline feature's distance {{ opp.headline.distance }} (0–1 → 1, 2–3 → 2, 4 → 3); the curated value in reports.yaml is kept">⚑ derived feasibility is {{ opp.derived }}, not {{ opp.curated }}</span>{% endif %}</p>{% endif %}
+<p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a>{% if walk_parts %} · walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>
 
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
+
+{% set cb = case.customer_benefit %}{% if cb %}<section class="pc-benefit" id="customer-benefit" aria-labelledby="cb-title">
+<h2 id="cb-title">What the customer's architecture gains</h2>
+<p class="pc-cb-sum"><b>{{ cb.summary }}</b>{% if cb.for %}<br><small class="muted">For: {{ cb.for }}</small>{% endif %}</p>
+<div class="pc-cb-cmp"><section><h3>Today</h3><p class="small">{{ cb.today }}</p></section><span class="pc-cb-arrow" aria-hidden="true">→</span><section class="pc-cb-new"><h3>With the proposal</h3><p class="small">{{ cb.with_us }}</p></section></div>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Type</th><th scope="col">Gain for the customer</th><th scope="col">How</th><th scope="col">Measure</th><th scope="col">Feedback</th></tr></thead>
+  <tbody>{% for g in cb.gains %}<tr><td><span class="pc-kind">{{ benefit_kinds.get(g.kind, g.kind) }}</span></td><td><b>{{ g.gain }}</b></td><td>{{ g.how }}</td><td>{{ g.measure }} {{ conf(g.conf, g.conf_was) }}</td><td>{{ react(g) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if cb.gives_up %}<p class="small"><b>What the customer gives up:</b> {{ cb.gives_up|join('; ') }}.</p>{% endif %}
+</section>{% endif %}
 
 <h2>1. Position against the competition</h2>
 <div class="pc-grid">
   {% for key, title, cls in (('advantages', 'Advantages', 'good'), ('disadvantages', 'Disadvantages', 'bad'), ('diff_good', 'Differentiators: good', 'good'), ('diff_bad', 'Differentiators: bad', 'bad')) %}
   <section class="pc-box pc-{{ cls }}"><h3>{{ title }}</h3><ul>{% for x in case.position[key] %}
-    <li><span>{{ x.text }}</span>{% if x.vs %} <small class="muted">vs {{ x.vs }}</small>{% endif %} {{ conf(x.conf) }}{% if x.offset %}<br><small><b>→</b> {{ x.offset }}</small>{% endif %}{{ react(x) }}</li>{% endfor %}</ul></section>{% endfor %}
+    <li><span>{{ x.text }}</span>{% if x.vs %} <small class="muted">vs {{ x.vs }}</small>{% endif %} {{ conf(x.conf, x.conf_was) }}{% if x.offset %}<br><small><b>→</b> {{ x.offset }}</small>{% endif %}{{ react(x) }}</li>{% endfor %}</ul></section>{% endfor %}
 </div>
 {% if case.architecture %}<div class="table-wrap"><table class="small pc-table">
   <thead><tr><th scope="col">Architecture</th>{% for c in case.architecture.columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
@@ -37,7 +53,7 @@
 </table></div>
 
 <h2>3. Where it is heading <small class="muted">(our estimates)</small></h2>
-<ul class="pc-list">{% for o in case.outlook %}<li><b>{{ o.text }}</b> {{ conf(o.conf) }}<br><small class="muted">Basis: {{ o.basis }}</small>{{ react(o) }}</li>{% endfor %}</ul>
+<ul class="pc-list">{% for o in case.outlook %}<li><b>{{ o.text }}</b> {{ conf(o.conf, o.conf_was) }}<br><small class="muted">Basis: {{ o.basis }}</small>{{ react(o) }}</li>{% endfor %}</ul>
 
 <h2>4. Features that could benefit us, and how far they are</h2>
 <p class="small pc-scale">{% for n, (label, help) in distance.items() %}<span class="pc-d d-{{ n }}" title="{{ help }}">{{ n }} {{ label }}</span> {% endfor %}<span class="muted">· hover for the meaning; use Closer / Further to adjust</span></p>

@@ -40,6 +40,7 @@ NAV = (
 )  # fmt: skip
 
 UTILITY = ("manage", "Data management", (
+    ("Verify next", "/manage/verify", "A small batch to check: crosses, diagrams and data that vouch for the rest"),
     ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
     ("Site feedback", "/manage/feedback", "Daily digest of the Feedback button, with responses"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
@@ -90,6 +91,7 @@ PLACES = {
     "/rules": ("manage", "/business/method"),
     "/requests": ("manage", "/manage/reviews"),
     "/manage/feedback": ("manage", "/manage/feedback"),
+    "/manage/verify": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage": ("manage", "/manage/reviews"),
     "/technical": ("knowledge", "/technical"),

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import crowd, push, score_chip, usd with context %}
+{% block title %}{{ part.mpn }} walk-through{% endblock %}
+{% set s1, s4, s5, upto = w.s1, w.s4, w.s5, w.upto %}
+{% macro next(n) %}{% if upto == n and n < 5 %}<p class="walk-next"><a class="button small-btn" href="/parts/{{ part.id }}/walk?upto={{ n + 1 }}#step-{{ n + 1 }}">Next: {{ n + 1 }} {{ steps[n + 1] }} →</a> <span class="small muted">or stop here</span></p>{% endif %}{% endmacro %}
+{% macro gaps(n) %}{% set gs = w.gaps|selectattr(0, 'eq', n)|map(attribute=1)|list %}{% if gs %}
+<div class="walk-gap"><p class="small"><b>Data missing</b> · sent to <a href="/manage/feedback">Site feedback</a> for the next review</p>
+  <ul class="small">{% for g in gs %}<li>{{ g }}</li>{% endfor %}</ul></div>{% endif %}{% endmacro %}
+{% block content %}
+<p class="small"><a href="/parts/{{ part.id }}">← {{ part.mpn }} crosses</a></p>
+<h1>{{ part.mpn }} <small class="muted">· walk-through</small></h1>
+<p class="subtitle muted">{{ part.manufacturer.name|vendor }} · {{ w.label }}. From the competitor part to what we sell and build: each step uses data from the rest of the site. What a step lacks goes to Site feedback for the next review{% if added %} ({{ added }} new item{{ 's' if added != 1 }} just now){% endif %}.</p>
+
+<ol class="walk-nav">{% for n, title in steps.items() %}{% set k = w.gaps|selectattr(0, 'eq', n)|list|length %}
+  <li{% if n > upto %} class="walk-later"{% endif %}>{% if n <= upto %}<a href="#step-{{ n }}">{% endif %}<span class="walk-n">{{ n }}</span> {{ title }}{% if k %} <small class="walk-miss" title="data missing">{{ k }} missing</small>{% endif %}{% if n <= upto %}</a>{% endif %}</li>{% endfor %}</ol>
+
+<section class="walk-step" id="step-1"><h2><span class="walk-n">1</span> Replacement: is ours suitable?</h2>
+{% if s1.best %}<p class="walk-answer walk-{{ s1.suitable }}">{% if s1.suitable == 'dropin' %}Yes: <a href="/parts/{{ s1.best.id }}">{{ s1.best.mpn }}</a> is a drop-in.{% else %}With care: <a href="/parts/{{ s1.best.id }}">{{ s1.best.mpn }}</a> is a {{ s1.verdict.label|lower }}{% if s1.worse %}, worse on {{ s1.worse|join(', ') }}{% endif %}.{% endif %}</p>
+<p class="small muted">{{ s1.n }} cross{{ 'es' if s1.n != 1 }} of ours on the <a href="/parts/{{ part.id }}">part page</a>, with every spec, the overlay and the export.</p>
+{% else %}<p class="walk-answer walk-none">No: we have no cross for {{ part.mpn }}.</p>{% endif %}
+{{ gaps(1) }}</section>
+
+{% if w.fn %}
+<section class="walk-step" id="step-2"><h2><span class="walk-n">2</span> Sell around it</h2>
+{% if w.s2.n %}<p class="walk-answer">{{ w.s2.n }} block diagram{{ 's' if w.s2.n != 1 }} use a {{ w.label }}. In the same designs, strongest bundle first:</p>
+<div class="table-wrap"><table class="small striped">
+  <thead><tr><th scope="col">Function</th><th scope="col" title="0–100: how often it is in the same design, the same block or a connected block">Bundle strength</th><th scope="col">Together in</th><th scope="col">We sell it?</th></tr></thead>
+  <tbody>{% for e in w.ours %}<tr><td>{{ e.label }}</td><td>{{ e.score }}</td><td>{{ e.apps }} of {{ w.s2.n }}</td><td>yes · step 3</td></tr>{% endfor %}
+  {% for e in w.new %}<tr><td><a href="/business/evidence/{{ e.fn }}">{{ e.label }}</a></td><td>{{ e.score }}</td><td>{{ e.apps }} of {{ w.s2.n }}</td><td class="muted">no: an opportunity</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small"><a href="/business/attach?part={{ part.mpn|urlencode }}">All {{ w.s2.ours|length + w.s2.new|length }} in Cross-sell</a>, with the reasons per design and a filter by application.</p>{% endif %}
+{{ gaps(2) }}{{ next(2) }}</section>
+
+{% if upto >= 3 %}<section class="walk-step" id="step-3"><h2><span class="walk-n">3</span> Best of ours around it</h2>
+{% if w.ours %}<p class="small muted">Our parts per function, best first{% if w.anchor.automotive %}; automotive-grade first because {{ part.mpn }} is automotive{% endif %}{% if w.anchor.ranges %}; RF parts that share its band{% endif %}.</p>
+<div class="table-wrap"><table class="small">
+  <tbody>{% for e in w.ours %}<tr><th scope="row">{{ e.label }}{% if e.grade_flag %} <span class="badge warn" title="Most designs with both are not automotive">grade?</span>{% endif %}</th>
+    <td>{% for o in e.offer %}<a href="{{ o.url }}">{{ o.mpn }}</a> <small class="muted">{{ o.manufacturer|vendor }}{{ ' · auto' if o.auto }}</small>{{ ' · ' if not loop.last }}{% else %}<span class="muted">no part named</span>{% endfor %}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Parts are matched by function, grade and band; voltage, current and other application specs are not checked.</p>
+{% else %}<p class="muted">Nothing of ours in these designs yet.</p>{% endif %}
+{{ gaps(3) }}{{ next(3) }}</section>{% endif %}
+
+{% if upto >= 4 %}<section class="walk-step" id="step-4"><h2><span class="walk-n">4</span> Make it better, other applications</h2>
+<div class="walk-grid">
+  <div><h3>Where ours falls short</h3>
+    {% if s4.short_everywhere %}<p class="small">Every cross of ours is worse on <b>{{ s4.short_everywhere|join(', ') }}</b>: the line falls short, not one part.</p>{% endif %}
+    {% if s4.short %}<p class="small">Best cross worse on: {{ s4.short|join(', ') }}.</p>{% elif s1.best %}<p class="small">Nothing on priority 1 specs.</p>{% if s1.minor %}<p class="small muted">Priority 2–3 worse: {{ s1.minor|join(', ') }}.</p>{% endif %}{% else %}<p class="small">No cross: the whole part is the gap.</p>{% endif %}</div>
+  <div><h3>Where it is used</h3>
+    {% if s4.markets %}<p class="small">{% for m, n in s4.markets %}{{ m }} <small class="muted">{{ n }}</small>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+    {% if s4.hunt %}<p class="small">Customers to ask: {% for c in s4.hunt %}{{ c.name }}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}</div>
+  <div><h3>Competition and market</h3>
+    <p class="small">{% if s4.comp %}{{ crowd(s4.comp, crowding_label) }}{% else %}<span class="muted">competition not assessed</span>{% endif %}</p>
+    <p class="small">Market size: {% if s4.tam %}{{ usd(s4.tam) }} a year <small class="muted">({{ s4.tam_apps }} applications with a volume)</small>{% else %}<span class="muted">unknown, <a href="/business/data">add ASP and volumes</a></span>{% endif %}</p>
+    <p class="small">Trend: {% if s4.trend %}<b>{{ s4.trend.outlook or ('growing: ' ~ s4.trend.regulation) }}</b>{% if s4.trend.note %}<br><small class="muted">{{ s4.trend.note }}</small>{% endif %}{% else %}<span class="muted">not recorded</span>{% endif %}</p></div>
+</div>
+<p class="small"><a href="/business/evidence/{{ w.fn }}">{{ w.label }}: the bigger picture</a> (path to product, patents, foundry, competitor technology, where to hunt).</p>
+{{ gaps(4) }}{{ next(4) }}</section>{% endif %}
+
+{% if upto >= 5 %}<section class="walk-step" id="step-5"><h2><span class="walk-n">5</span> What the future needs</h2>
+<p class="walk-answer walk-v-{{ s5.verdict }}"><b>{{ s5.verdict_label }}</b> <span class="small">· {{ s5.why }}</span></p>
+<div class="walk-grid">
+  <div><h3>Opportunity</h3><p class="small">{{ w.label }}: {{ score_chip(s5.score) }}</p>
+    {% if s5.path %}<p class="small">Path: {{ path_label.get(s5.path.path, s5.path.path) }}{% if s5.path.effort %}, effort {{ s5.path.effort }}{% endif %}{% if s5.path.route %} · {{ s5.path.route }}{% endif %}</p>
+    {% if s5.path.missing %}<p class="small">Missing today: {{ s5.path.missing|join('; ') }}</p>{% endif %}{% endif %}</div>
+  <div><h3>Already written about it</h3>
+    {% if s5.cases or s5.business %}<ul class="small">{% for c in s5.cases %}<li><a href="/business/reports/{{ c.slug }}">{{ c.title }}</a> <small class="muted">{{ c.how }}</small></li>{% endfor %}
+      {% for b in s5.business %}<li><a href="/business/cases/{{ b.id }}">{{ b.title }}</a> <small class="muted">business case · {{ b.status }}</small></li>{% endfor %}</ul>
+    {% else %}<p class="small muted">Nothing yet.</p>{% endif %}</div>
+  <div><h3>Next</h3>
+    <p>{{ push('part', part.mpn, part.mpn ~ ' (' ~ w.label ~ ')', s5.verdict_label ~ ': ' ~ s5.why, w.fn, s5.shortlisted, '☆ Shortlist for a case') }}</p>
+    <p class="small"><a href="/business/cases/new?fn={{ w.fn }}&title={{ (w.label ~ ' against ' ~ part.mpn)|urlencode }}&idea={{ (s5.verdict_label ~ ' – ' ~ s5.why)|urlencode }}">Start a business case now</a> · <a href="/business/reports">Research &amp; ideas</a></p></div>
+</div>
+{{ gaps(5) }}</section>{% endif %}
+{% else %}{{ gaps(2) }}{% endif %}
+{% endblock %}

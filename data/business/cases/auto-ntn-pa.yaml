@@ -2,6 +2,8 @@
 # report's background notes. conf: high = primary document read; med = trade press or advocacy body; low = search
 # snippet or analyst PR. "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
 title: "Satellite in the car: an NTN front end for the telematics unit"
+fn: pa_module
+headline: f-auto
 question: >-
   What should Skyworks (now with Qorvo) offer so the car's telematics unit can reach satellites in the L/S-band NTN
   bands n255/n256 (narrowband from 2027, wideband from 2029), given Qualcomm's modem + RF front end, MediaTek's
@@ -11,6 +13,19 @@ brief:
   - "Our position is better than it looks: we already sell a power amplifier that covers both NTN bands (SKY68040-11, n255 and n256) and a full AEC-Q104 automotive cellular set, GNSS front end and V2X front end that work with any modem."
   - "Our weak points: the NTN amplifier is not automotive-qualified, nothing we sell reaches the 26 dBm (power class 2) that 5GAA asks for, and Qualcomm sells modem and front end together; narrowband satellite messaging may need no new hardware at all."
   - "Proposal: an automotive NTN add-on module (n255 + n256 amplifier, duplexers that protect GNSS, receive path), first at 23 dBm from today's die, then a 26 dBm version for wideband NTN, at about $1.5–2.5 and $2.5–3.5 in volume (est)."
+
+customer_benefit:                # what the proposal changes in the customer's system
+  for: "TCU Tier-1 using a modem without its own front end (MediaTek-class)"
+  summary: "Satellite added to an existing TCU design as one drop-in module on its own path, without touching the cellular front end and without disturbing GNSS."
+  today: "Either Qualcomm's modem with its bundled front end, or a discrete NTN amplifier, filters and LNA that the Tier-1 designs and qualifies, solving the n255-next-to-GNSS-L1 problem itself."
+  with_us: "The NTN module sits beside our automotive cellular set and GNSS front end on the TCU board; an optional compensator at a roof satellite antenna; 23 dBm first, 26 dBm later on the same socket (est)."
+  gains:
+    - {id: cb-parts, kind: parts, gain: "One qualified module instead of a discrete satellite path", how: "Amplifier, duplexers and receive path in one AEC-Q104 package", measure: "3–5 parts → 1 (est)", conf: low}
+    - {id: cb-option, kind: scaling, gain: "One TCU board with or without satellite", how: "Separate path: populate the module only on trims or regions that sell satellite", measure: "1 layout, 2 builds (est)", conf: low}
+    - {id: cb-coex, kind: performance, gain: "Satellite transmit does not blind GNSS", how: "Duplexers designed together with our GNSS front end (n255 uplink about 50 MHz above L1)", measure: "not stated", conf: med}
+    - {id: cb-modem, kind: sourcing, gain: "Free modem choice and non-China RF supply", how: "Baseband-agnostic MIPI RFFE; US-headquartered supply for the US connected-vehicle rule", measure: "not stated", conf: med}
+  gives_up:
+    - "An extra antenna path in the car; narrowband satellite messaging may need no new hardware at all"
 
 position:
   advantages:

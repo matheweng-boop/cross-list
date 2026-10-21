@@ -26,6 +26,7 @@
 <section class="pl-card cs-anchor">
   <p><b>{{ anchor.mpn }}</b> <span class="muted">{{ anchor.manufacturer|vendor }}{{ '' if anchor.ours else ' · competitor part' }}</span> · {{ fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.fns[0] }}{% if anchor.fns|length > 1 %} <small class="muted">(also {% for f in anchor.fns[1:] %}{{ fns[f].label if f in fns else f }}{{ ', ' if not loop.last }}{% endfor %})</small>{% endif %}
     {% if anchor.automotive %} · <span class="qual q-auto">automotive</span>{% endif %}{% if anchor.ranges %} · {% for lo, hi in anchor.ranges[:2] %}{{ '%g'|format(lo) }}–{{ '%g'|format(hi) }} GHz{{ ', ' if not loop.last }}{% endfor %}{% endif %}
+    {% if walk_part %}<br><a class="small" href="/parts/{{ walk_part.id }}/walk?upto=2">Walk through {{ walk_part.mpn }} step by step</a> <small class="muted">replacement, sell around it, best of ours, make it better, future</small>{% endif %}
     {% if not anchor.exact %}<br><small class="muted">Closest match for “{{ q_part }}”{% if anchor.others %}; also: {% for o in anchor.others %}<a href="/business/attach?co={{ co }}&part={{ o|urlencode }}&app={{ q_app|urlencode }}">{{ o }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</small>{% endif %}</p>
   <p class="small">{% if q_app %}{{ S.n }} of {{ S.n_with_part }} architectures with this part match “{{ q_app }}”{% else %}In {{ S.n }} architecture{{ 's' if S.n != 1 }}{% endif %}.
     {% if q_app and S.apps %}<details class="small cs-apps"><summary>which architectures</summary>{% for a, sc, hit in S.apps[:40] %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}" title="matched: {{ hit|join(', ') }}">{{ a.name }}</a>{% endfor %}</details>{% endif %}
@@ -33,13 +34,13 @@
 </section>
 {% if S.n %}
 <h2>Offer with it <small class="muted">· our parts, best first · {{ S.ours|length }}</small></h2>
-<p class="small muted"><b>Score</b> = share of these architectures that also need it × (1 + 0.6 × share where both sit in the same block + 0.3 × share where their blocks are connected){% if anchor.automotive %} × automotive fit (automotive part: architectures outside automotive count less){% endif %}.</p>
+{% set bw = bundle_cfg %}<p class="small muted"><b>Bundle strength</b> (0–100) = 100 × ({{ bw.together }} × share of these architectures that also need it + {{ bw.same_block }} × share where both sit in the same block + {{ bw.connected }} × share where their blocks are connected).{% if anchor.automotive %} <b>Grade?</b> flags a suggestion when fewer than {{ (100 * bw.grade_flag_below)|round|int }}% of its architectures are automotive: check that the offer suits an automotive part.{% endif %}</p>
 <div class="table-wrap"><table class="striped bo-attach-t cs-table">
-  <thead><tr><th scope="col">#</th><th scope="col">Function</th><th scope="col">Score</th><th scope="col">Together in</th><th scope="col">Parts to offer</th><th scope="col"></th></tr></thead>
+  <thead><tr><th scope="col">#</th><th scope="col">Function</th><th scope="col">Bundle strength</th><th scope="col">Together in</th><th scope="col">Parts to offer</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in S.ours[:25] %}<tr>
     <td class="muted">{{ loop.index }}</td>
     <td>{{ e.label }}{{ why(e.why, fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.mpn, e.label) }}</td>
-    <td title="together {{ (100 * e.share)|round|int }}% · same block {{ (100 * e.same)|round|int }}% · connected {{ (100 * e.linked)|round|int }}%{{ ' · automotive fit %.2f'|format(e.fit) if anchor.automotive }}"><span class="bo-bar"><span style="width:{{ [100, (80 * e.score)|round]|min }}%"></span></span> {{ '%.2f'|format(e.score) }}</td>
+    <td title="together {{ (100 * e.share)|round|int }}% · same block {{ (100 * e.same)|round|int }}% · connected {{ (100 * e.linked)|round|int }}%{{ ' · automotive architectures %d%%'|format((100 * e.auto_share)|round|int) if anchor.automotive }}"><span class="bo-bar"><span style="width:{{ e.score }}%"></span></span> {{ e.score }}{% if e.grade_flag %} <span class="pc-conf c-low" title="Automotive part, but only {{ (100 * e.auto_share)|round|int }}% of these architectures are automotive">grade?</span>{% endif %}</td>
     <td class="small">{{ e.apps }} of {{ S.n }}</td>
     <td class="small">{{ partlinks(e.offer) }}</td>
     <td>{{ push('crosssell', anchor.mpn ~ '+' ~ e.fn, anchor.mpn ~ ' + ' ~ e.label, 'Offer with ' ~ anchor.mpn ~ ': in ' ~ e.apps ~ ' of ' ~ S.n ~ ' architectures' ~ (' (' ~ q_app ~ ')' if q_app else ''), e.fn, (anchor.mpn ~ '+' ~ e.fn) in shortlisted) }}</td>

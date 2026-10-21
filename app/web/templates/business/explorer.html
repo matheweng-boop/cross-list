@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push with context %}
+{% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push, score_chip with context %}
 {% macro url() -%}
-  {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t, 'g': g} -%}{%- set _ = base.update(kwargs) -%}
+  {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t, 'g': g, 's': s} -%}{%- set _ = base.update(kwargs) -%}
   /business/explorer?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro th(key, extra='') %}{% set on = sort == key %}{% set nd = ('asc' if dir == 'desc' else 'desc') if on else sorts[key][1] %}
@@ -12,23 +12,26 @@
 <h1>Opportunity explorer</h1>
 <p class="subtitle muted">Functions {{ co_label }} does not cover yet, and RF bands it does not cover, grouped by category. Demand is how many block diagrams in the library need it. Click a column title to sort; click a row for its evidence.</p>
 
-{% set active = (scope != 'all') or f or t %}
+{% set active = (scope != 'all') or f or t or s %}
 <div class="chip-row ex-groups small"><span class="chip-lbl">Category</span><a class="fchip{{ ' on' if not g }}" href="{{ url(g='') }}">All <small>{{ group_counts.values()|sum }}</small></a>{% for name, n in group_counts|dictsort %}<a class="fchip{{ ' on' if g == name }}" href="{{ url(g=name) }}">{{ name }} <small>{{ n }}</small></a>{% endfor %}</div>
 <div class="scope-bar small">{{ company_switch('/business/explorer', co, companies, '&sort=' ~ sort ~ '&scope=' ~ scope) }}</div>
 <div class="ex-folds">
-<details class="ex-fold"{% if active %} open{% endif %}><summary class="small"><b>Filters</b>{% if active %} <span class="muted">· {{ [scopes[scope] if scope != 'all', (gap_labels[t].split(' – ')[0]) if t, (filters[f][0]) if f]|select|join(' · ') }}</span> <a href="{{ url(f='', t='', scope='all') }}">clear</a>{% endif %}</summary>
+<details class="ex-fold"{% if active %} open{% endif %}><summary class="small"><b>Filters</b>{% if active %} <span class="muted">· {{ [scopes[scope] if scope != 'all', scoring.suggestions.labels[s] if s, (gap_labels[t].split(' – ')[0]) if t, (filters[f][0]) if f]|select|join(' · ') }}</span> <a href="{{ url(f='', t='', s='', scope='all') }}">clear</a>{% endif %}</summary>
 <div class="filter-cols">
   <div class="chip-row"><span class="chip-lbl">Scope</span>{% for k, label in scopes.items() %}<a class="fchip{{ ' on' if scope == k }}" href="{{ url(scope=k) }}">{{ label }}</a>{% endfor %}</div>
+  <div class="chip-row"><span class="chip-lbl">Type</span><a class="fchip{{ ' on' if not s }}" href="{{ url(s='') }}">All</a>{% for k in ('quick_win', 'new_chip', 'niche', 'partner', 'unknown') if sugg_counts.get(k) %}<a class="fchip{{ ' on' if s == k }}" href="{{ url(s=k) }}" title="{{ scoring.suggestions.help[k] }}">{{ scoring.suggestions.labels[k] }} <small>{{ sugg_counts[k] }}</small></a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">Gap type</span><a class="fchip{{ ' on' if not t }}" href="{{ url(t='') }}">All</a>{% for k, label in gap_labels.items() if k not in ('candidate', 'not_ours') and type_counts.get(k) %}<a class="fchip gt-{{ k }}{{ ' on' if t == k }}" href="{{ url(t=k) }}" title="{{ label }}">{{ label.split(' – ')[0] }} <small>{{ type_counts[k] }}</small></a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">Path to product</span><a class="fchip{{ ' on' if not f }}" href="{{ url(f='') }}">All</a>{% for k, (label, _) in filters.items() if k in ('short', 'develop', 'build', 'acquire') %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=k) }}">{{ label }}</a>{% endfor %}</div>
   <div class="chip-row"><span class="chip-lbl">Decision · type</span>{% for k, (label, _) in filters.items() if k in ('kept', 'chips') %}<a class="fchip{{ ' on' if f == k }}" href="{{ url(f=('' if f == k else k)) }}">{{ label }}</a>{% endfor %}</div>
 </div></details>
-<details class="ex-fold"><summary class="small"><b>How the score works</b></summary>
-<p class="fit-help small"><b>Fit</b> (technology fit) says how well a function suits {{ co_label }}: <b>High</b>, <b>Medium</b> or <b>Low</b> against the best-scoring function (top, middle and bottom third). The number behind it (0–1, higher is better; hover a fit to see it and its factors) =
-  share of architectures that need it × path to product (exists / spec variant 1.0, new design 0.6, new technology 0.3) × competition (low 1.0, medium 0.9, high 0.75) × market trend (growing 1.15, declining 0.85).
-  Best possible: needed everywhere, already in reach, little competition · <a href="/business/method#influence">methodology</a>.
-  <span class="muted">Denominator: {{ apps|length }} reference architectures ({{ n_library }} library{% if n_background %} + {{ n_background }} background{% endif %}), counted as drawn.</span></p>
-<p class="small"><b>RF:</b> an RF function counts as covered as soon as one part exists, so RF also gets one row per band (and power class) that the block diagrams need and we don't cover: “Band gap” rows from <a href="/business/rf-coverage">RF coverage</a>. They have no fit score yet.</p>
+<details class="ex-fold"><summary class="small"><b>How the type and score work</b></summary>
+{% set w = scoring.weights %}{% set sg = scoring.suggestions %}<p class="fit-help small"><b>Type</b> says what kind of suggestion a row is, from how far it is from what we build and how many diagrams need it:
+  {% for k in ('quick_win', 'new_chip', 'niche', 'partner') %}<span class="sg sg-{{ k }}">{{ sg.labels[k] }}</span> {{ sg.help[k]|lower }}{{ ' · ' if not loop.last }}{% endfor %}.
+  “Widely needed” means {{ sg.widely_needed }} or more diagrams.
+  The <b>score</b> (0–100) puts the rows of one type in order: how many systems need it {{ w.demand }}% + how close it is to what we build {{ w.distance }}% + next to parts we sell {{ w.architecture }}% + room to win {{ w.competition }}% + market growth {{ w.trend }}%. Hover a score for its sum · <a href="/business/method#score">worked example</a>. Sorted by type, then score (higher is better), this is the former Technology fit view.
+  Missing data counts as 50 with low confidence (⚑: research to do, listed on <a href="/business/quality#research">Data quality</a>).
+  <span class="muted">Denominator: {{ apps|length }} reference architectures ({{ n_library }} library{% if n_background %} + {{ n_background }} background{% endif %}).</span></p>
+{% if not g or g.startswith('RF') %}<p class="small"><b>RF:</b> an RF function counts as covered as soon as one part exists, so RF also gets one row per band (and power class) that the block diagrams need and we don't cover: “Band gap” rows from <a href="/business/rf-coverage">RF coverage</a>. Their score takes demand from the diagrams that need the band, distance from the coverage status and competition from competitor parts in the band; architecture is neutral.</p>{% endif %}
 </details>
 </div>
 {% if rows and (same.gap or same.crowd or same.tam) %}<p class="small ex-same">{% if same.gap %}All {{ rows|length }} rows: <span class="gt gt-{{ rows[0].gap_type }}" title="{{ gap_labels[rows[0].gap_type] }}">{{ gap_labels[rows[0].gap_type].split(' – ')[0] }}</span>{% endif %}{% if same.crowd %}{{ ' · ' if same.gap else 'All rows: ' }}competition {{ crowd(rows[0].competition, crowding_label) }}{% endif %}{% if same.tam %}{{ ' · ' if same.gap or same.crowd }}Market size (TAM): no prices and volumes entered yet – <a href="/business/data">add market data</a>{% endif %}</p>{% endif %}
@@ -39,7 +42,7 @@
     {{ th('path') }}
     {% call th('reach') %}Needed in <small class="muted">of {{ apps|length }}</small>{% endcall %}
     {% if not same.crowd %}{{ th('competition') }}{% endif %}
-    {% call th('score') %}Fit{% endcall %}
+    {% call th('score') %}Type · score{% endcall %}
     {% if not same.tam %}{{ th('tam') }}{% endif %}
     <th scope="col">Decision</th>
   </tr></thead>
@@ -49,7 +52,7 @@
       <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
       <td title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
       {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
-      <td>{% if e.score is not none %}<span class="fit fit-{{ e.band|lower }}" title="Fit {{ '%.2f'|format(e.score) }} = {% for n, w, why in e.factors %}{{ n }} {{ '%.2f'|format(w) }} ({{ why }}){{ ' × ' if not loop.last }}{% endfor %}"><span class="fit-bar"><span style="width:{{ ((e.score / max_score * 100) if max_score else 0)|round }}%"></span></span>{{ e.band }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
+      <td>{{ score_chip(e) }}</td>
       {% if not same.tam %}<td>{% if e.tam_apps %}{{ usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/data?focus=asp:{{ e.fn }}#asp-{{ e.fn }}" title="No ASP and volume entered yet">— <span class="visually-hidden">add the market data for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
       <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep', 'outline') }}{% endif %}
         <details class="aside-form"><summary class="small-btn outline secondary" role="button">Set aside</summary>
@@ -70,9 +73,9 @@
 <h2 class="h-aside">Set aside <small class="muted">· {{ aside|length }} not pursued for now; restore any time</small></h2>
 {% if aside %}
 <div class="table-wrap"><table class="striped explorer">
-  <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Fit</th><th scope="col"></th></tr></thead>
+  <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Score</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in aside %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a> <small class="muted">{{ e.group }}</small></td><td class="small">{{ e.decision.note or '–' }}</td>
-    <td class="small">{{ e.decision.date|date }}</td><td>{% if e.score is not none %}<span title="{{ '%.2f'|format(e.score) }}">{{ e.band }}</span>{% else %}–{% endif %}</td>
+    <td class="small">{{ e.decision.date|date }}</td><td>{{ score_chip(e) }}</td>
     <td>{{ decide(e, 'clear', 'Restore', 'outline secondary') }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small muted">Nothing set aside. Use “Set aside” on a row to park a function that is not a priority now.</p>{% endif %}

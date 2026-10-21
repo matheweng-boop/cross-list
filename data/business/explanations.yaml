@@ -73,14 +73,14 @@ terms:
       core technology (leading-edge digital, memory, image sensors). An indicative reading of the public portfolios,
       for discussion, not a roadmap.
   tech_score:
-    term: Technology fit score
-    short: Share of applications using it × path (or technology) weight × competition weight × trend weight.
+    term: Opportunity score
+    short: 0–100 weighted sum of demand 30 %, portfolio distance 25 %, architecture fit 15 %, competition 15 % and market trend 15 %.
     long: >-
-      Share of all applications that use the function × path weight where a path to product is assessed (Exists /
-      Spec variant 1.0, New design 0.6, New technology 0.3, Not ours 0.1), otherwise the technology weight (Same 1.0,
-      Adjacent 0.6, Distant 0.3, Unrelated 0.1) × competition weight (Few 1.0, Several 0.9, Crowded 0.75) × trend weight
-      (growing 1.15, stable 1.0, declining 0.85). Door openers are not in the score: this ranking is about how often
-      something appears and how easy it is for us to build.
+      One additive score per function, with a confidence: demand (sockets in the block diagrams, background diagrams
+      half, or TAM once ASP and volume are entered), portfolio distance (0 available today ... 4 new technology),
+      architecture fit (door openers and our parts in the same or a connected block), competition (few suppliers 100,
+      several 60, crowded 30) and market trend (growing 100, stable 60, declining 20). Missing data counts as 50 with
+      low confidence. Bands are absolute: High 70+, Medium 45-69, Low below 45. Details on the Methodology page.
   market:
     term: Market
     short: The end market of an application. Automotive = vehicle systems, whatever their library category.
@@ -102,14 +102,16 @@ terms:
       For a gap: Exists = we already sell parts that fill it; only the catalogue mapping is missing (confirm them on the
       evidence page). Spec variant = an existing product line with new specifications, short development. New design =
       a new product on technology we have, with new IP blocks. New technology = a process, technology or team we do not
-      have: partner, license or acquire. Not ours = the customer's own chip. Where a path is assessed it replaces the
-      technology rating in the score (weights 1.0 / 1.0 / 0.6 / 0.3 / 0.1).
+      have: partner, license or acquire. Not ours = the customer's own chip. In the Opportunity score the path sets the
+      portfolio distance (Exists 0, Spec variant 1, New design 3, New technology 4; Not ours is not scored); without a
+      path the technology rating does.
   trend:
     term: Market trend
-    short: Demand outlook over 3-5 years from public sources; growing 1.15, stable 1.0, declining 0.85 in the score.
+    short: Demand outlook over 3-5 years from public sources; growing 100, stable 60, declining 20 in the score (15 %).
     long: >-
-      The public demand trend for the function (new standards, architectures, regulation). It multiplies the Technology
-      fit score: growing 1.15, stable 1.0, declining 0.85. No trend data = 1.0.
+      The public demand trend for the function (new standards, architectures, regulation). In the Opportunity score
+      (weight 15 %): growing 100, stable 60, declining 20; a dated regulation counts as growing; no trend data = 50
+      with low confidence.
   review:
     term: Review state
     short: unverified (nobody checked it yet), verified (people marked it correct), disputed (marked wrong at least as often as correct).
@@ -117,7 +119,8 @@ terms:
       Every rating and evidence item can be marked correct, wrong or unsure by anyone using the site. Verified = only
       correct marks; disputed = as many or more wrong marks than correct ones; unverified = not checked yet (the source
       confidence of the research, high / medium / low, is shown next to it). Disputed and unsure items with their
-      comments go into the data to-do; reviews do not change a score until the data is corrected.
+      comments go into the data to-do. A latest "wrong" on the data behind a score factor lowers that factor's
+      confidence one step; the score itself changes only when the data is corrected.
   gap_type:
     term: Gap type
     short: True gap, probably sold already (mapping missing), competitor only, no evidence yet, or not our product type.
@@ -203,7 +206,7 @@ pages:
       - Reference architectures (block diagrams) for reach, door openers and sockets; evidence files for path, competition, trend; your inputs for TAM.
     limits:
       - Counts are reference architectures as drawn; related variants are not merged, so they are not unique applications or market volume.
-      - The formulas are the same as on the former Gaps & ranking and Technology fit pages.
+      - The Opportunity score is the same on every page; its bands are absolute, so filters and new functions do not relabel rows.
   customers:
     question: Which companies design the systems that need a function, i.e. where should sales go hunt?
     read:

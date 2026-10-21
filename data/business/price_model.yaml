@@ -59,6 +59,11 @@ oem:
   default_sop: 2028
   lifetime_years: 5          # production years shown after SOP
   volume: 100000             # yearly volume whose target price the path starts from
+  # Owner, 21 Oct 2026: a part sees the yearly price-down for its first years on the market, then its price flattens.
+  # Years after release with price-down: 5 (with 5 % a year) and 6 (with 7 % a year), the two edges of the range; after
+  # that the price falls by `mature_rate` a year. A part without a public release date is treated as new (base year).
+  price_down_years: [5, 6]
+  mature_rate: 0.0
 
 # Our part priced from a competitor's (Price estimate page): a newer entrant usually sits at or a little below the
 # incumbent; the range is a starting point, changed per estimate.
@@ -82,6 +87,17 @@ classes:
   standard:  {label: "Standard (mixed-signal, 2-3 dies or protection features)", test_usd_per_s: 0.010}
   complex:   {label: "Complex (large mixed-signal / RF die, firmware, few suppliers)", test_usd_per_s: 0.015,
               slope: [-0.06, 0.03]}
+
+# Owner, 21 Oct 2026: the cost floor came out about 10 % high (fab price breaks are better than assumed): every unit
+# cost is scaled by `cost_adjust`.
+cost_adjust: 0.90
+# Wafer-source what-if: a foundry's wafer price carries its margin; an in-house fab works at cost but with its own
+# overhead and utilisation risk. In-house wafers cost this share of the foundry prices below (low / mid / high, generic
+# judgement, not any company's figures). Both scenarios are always worked out and shown by a switch in the browser:
+# nothing here or in the database says where any part is actually made. The first scenario is the reference.
+fab:
+  wafer_factor: {external: [1.0, 1.0, 1.0], in_house: [0.70, 0.80, 0.90]}
+  labels: {external: "External foundry", in_house: "In-house fab"}
 
 yield_model: {alpha: 3}          # negative binomial: Y = (1 + A * D0 / alpha) ** -alpha (clustered defects)
 automotive_test: [1.5, 2.0, 3.0]

@@ -18,6 +18,7 @@
   </div>
   <div class="grid">
     <label>Start of production (SOP)<input name="sop" type="number" min="2020" max="2050" value="{{ f.sop }}"></label>
+    <label>Released (year) <small class="muted">(optional; blank = new part)</small><input name="released" type="number" min="1980" max="2050" value="{{ f.released }}" placeholder="e.g. 2016"></label>
     <label>Our part priced from this one <small class="muted">(optional)</small><input name="ours" value="{{ f.ours }}" placeholder="e.g. Si82900"></label>
     <label>Ours vs this part<span class="pe-parity"><input name="parity_lo" type="number" step="0.01" min="0.2" max="3" value="{{ f.parity_lo }}" aria-label="from"> to <input name="parity_hi" type="number" step="0.01" min="0.2" max="3" value="{{ f.parity_hi }}" aria-label="to"></span></label>
   </div>
@@ -32,13 +33,5 @@
 {% if f.breaks and not m %}<p class="uc-error small">Pick a family and paste at least one line with a quantity and a price.</p>{% endif %}
 {% if m %}<section id="price-model" class="pe-result"><h2>{{ f.name or 'Estimate' }} <small class="muted">· {{ cfg.families[f.family].label }}{{ ' · automotive' if f.automotive }}</small></h2>
 {% include "_price_model.html" %}
-{% if m.ours %}{% set o = m.ours %}<h2 class="pe-ours">{{ o.name }} <small class="muted">· priced at {{ (o.lo * 100)|round|int }}–{{ (o.hi * 100)|round|int }} % of {{ f.name or 'the anchor part' }}</small></h2>
-{% macro money2(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
-<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th></tr></thead>
-<tbody>{% for r in o.rows %}<tr><th scope="row">{{ '{:,}'.format(r.volume) }}</th><td>{{ money2(r.low) }}</td><td><b>{{ money2(r.target) }}</b></td><td>{{ money2(r.high) }}</td></tr>{% endfor %}</tbody></table></div>
-{% if o.oem %}<h3 class="pm-h">{{ o.name }}: OEM target prices <small class="muted">· {{ '{:,}'.format(o.oem.volume) }} a year, SOP {{ o.oem.sop }}</small></h3>
-<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">7 % a year</th><th scope="col">5 % a year</th></tr></thead>
-<tbody>{% for r in o.oem.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}</td><td>{{ money2(r.low) }}</td><td>{{ money2(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
-<p class="small muted">Our part has no public price: its band is the anchor part's band times the parity range. The parity range is a judgement (default {{ (cfg.parity[0] * 100)|int }}–{{ (cfg.parity[1] * 100)|int }} %: a newer entrant at or a little below the incumbent).</p>{% endif %}
 </section>{% endif %}
 {% endblock %}

@@ -86,6 +86,26 @@
     if (next >= 0) { input.setAttribute("aria-activedescendant", opts[next].id); opts[next].scrollIntoView({block: "nearest"}); }
     else input.removeAttribute("aria-activedescendant");
   });
+  // Price model: the wafer-source what-if switches what the browser shows and nothing else. The choice is kept in this
+  // page's memory only, so a reload of the panel (e.g. the margin slider) keeps it; it is never sent, saved or linked.
+  let pmFab = null;
+  const pmShow = (scope, k) => {
+    scope?.querySelectorAll("[data-fab]").forEach(el => { el.hidden = el.dataset.fab !== k; });
+    scope?.querySelectorAll("[data-fab-pick]").forEach(b => {
+      const on = b.dataset.fabPick === k;
+      b.setAttribute("aria-pressed", String(on));
+      b.classList.toggle("outline", !on);
+    });
+  };
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-fab-pick]");
+    if (!b) return;
+    pmFab = b.dataset.fabPick;
+    pmShow(b.closest(".pm-scope"), pmFab);
+  });
+  document.addEventListener("htmx:afterSwap", e => {
+    if (pmFab) e.target.querySelectorAll(".pm-scope").forEach(s => pmShow(s, pmFab));
+  });
   document.addEventListener("htmx:afterSwap", e => {
     if (e.target.id !== "suggestions") return;
     const input = document.querySelector('input[role="combobox"][aria-controls="suggestions"]');

@@ -114,8 +114,15 @@ def margin(gm: float | None = None) -> float:
     return min(hi, max(lo, gm)) if gm else config()["margin"]["floor"]
 
 
-def cost(part: Part, gm: float | None = None) -> dict | None:
-    """Cost build-up (low / mid / high) for the part's family and package; None for an unknown family."""
+def fab_scenarios() -> list[str]:
+    """The wafer-source what-ifs, reference (foundry prices) first. Never stored per part or family: the page works out
+    every scenario and the reader flips between them in the browser, so no choice is sent, logged or saved."""
+    return list(config()["fab"]["wafer_factor"])
+
+
+def cost(part: Part, gm: float | None = None, fab: str | None = None) -> dict | None:
+    """Cost build-up (low / mid / high) for the part's family and package, with wafers priced for the `fab` scenario
+    (default: the reference foundry prices); None for an unknown family."""
     cfg = config()
     fam = cfg["families"].get(part.family)
     if fam is None:
@@ -132,11 +139,16 @@ def cost(part: Part, gm: float | None = None) -> dict | None:
     cls = cfg["classes"][fam.get("class", "standard")]
     auto = is_automotive(part)
     out = {}
+    src = fab if fab in cfg["fab"]["wafer_factor"] else fab_scenarios()[0]
+    wf, adj = cfg["fab"]["wafer_factor"][src], cfg["cost_adjust"]
+    pkg = {k: v * adj for k, v in pkg.items()}  # the owner's cost adjustment applies to every line
     for i, level in enumerate(("low", "mid", "high")):
-        die = fam["dies"] * _die_cost(fam["die_mm2"][i], fam["wafer_mm"], fam["wafer_usd"][i], fam["defects_per_cm2"])
-        test = fam["test_s"][i] * cls["test_usd_per_s"] * (cfg["automotive_test"][i] if auto else 1)
+        wafer = fam["wafer_usd"][i] * wf[i]
+        die = fam["dies"] * _die_cost(fam["die_mm2"][i], fam["wafer_mm"], wafer, fam["defects_per_cm2"]) * adj
+        test = fam["test_s"][i] * cls["test_usd_per_s"] * (cfg["automotive_test"][i] if auto else 1) * adj
         out[level] = {"die": die, "test": test, "total": die + sum(pkg.values()) + test}
-    return {"family": fam, "class": cls, "automotive": auto, "package": pk, "package_key": pk_key, "pins": pins,
+    return {"family": fam, "class": cls, "automotive": auto, "fab": src, "wafer_factor": wf, "cost_adjust": adj,
+            "package": pk, "package_key": pk_key, "pins": pins,
             "pkg": pkg, "levels": out, "margin": margin(gm),
             "floor": out["mid"]["total"] / (1 - margin(gm))}  # fmt: skip
 
@@ -161,7 +173,8 @@ def family_factor(session: Session, family: str) -> tuple[float, int]:
     return min(c["limits"][1], max(c["limits"][0], m)), len(signs)
 
 
-def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None = None) -> dict:
+def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None = None,
+          fab: str | None = None) -> dict:  # fmt: skip
     """The band per volume, the cost floor and everything they rest on; `missing` says what is not there."""
     cfg = config()
     pts, source, list_cur = breaks(pq), "DigiKey", None
@@ -172,7 +185,7 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
         pts = [(int(q), float(p) * rate) for q, p in lp["breaks"]]
         source = f"{lp.get('source') or lp['maker'] + ' list price'} ({lp['retrieved']})"
     f = fit(pts)
-    cb = cost(part, gm)
+    cb = cost(part, gm, fab)
     factor, n_calls = family_factor(session, part.family)
     mine = calls(session).get(part.mpn)
     cur = list_cur or ((getattr(pq, "currency", None) or "USD").upper() if pts else "USD")
@@ -243,11 +256,13 @@ def simulate(part: Part, f: dict, cb: dict | None, vol: int, k_lo: float, k_hi: 
         dist = f["p_end"] * (vol / f["q_end"]) ** s if vol > f["q_end"] else f["p_end"]
         price = dist * rng.uniform(k_lo, k_hi) * factor
         if fam:
-            die = fam["dies"] * _die_cost(_tri(rng, fam["die_mm2"]), fam["wafer_mm"], _tri(rng, fam["wafer_usd"]),
-                                          fam["defects_per_cm2"])  # fmt: skip
+            adj = (cb or {}).get("cost_adjust", 1.0)
+            wafer = _tri(rng, fam["wafer_usd"]) * _tri(rng, (cb or {}).get("wafer_factor", [1.0, 1.0, 1.0]))
+            die = fam["dies"] * adj * _die_cost(_tri(rng, fam["die_mm2"]), fam["wafer_mm"], wafer,
+                                                fam["defects_per_cm2"])  # fmt: skip
             rate = (cb or {}).get("class", {}).get("test_usd_per_s", 0.01)
             test = _tri(rng, fam["test_s"]) * rate * (_tri(rng, cfg["automotive_test"]) if auto else 1)
-            unit_cost = die + pkg + test
+            unit_cost = die + pkg + test * adj
             price = max(price, unit_cost / (1 - margin(gm)))
         out.append(price)
     return out
@@ -301,7 +316,7 @@ def parse_breaks(text: str) -> list[tuple[int, float]]:
 
 def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], package: str = "", pins: int = 0,
              wide: bool = False, automotive: bool = False, name: str = "estimate", currency: str = "USD",
-             gm: float | None = None) -> dict:
+             gm: float | None = None, fab: str | None = None) -> dict:
     """The model for a part that is not in the database: pasted price breaks (in `currency`, converted to USD), a family
     and a package."""
     from types import SimpleNamespace
@@ -310,29 +325,38 @@ def estimate(session: Session, family: str, breaks_: list[tuple[int, float]], pa
     params = [SimpleNamespace(key="qualification", value="automotive")] if automotive else []
     part = SimpleNamespace(mpn=name, family=family, package=pkg, params=params)
     pq = SimpleNamespace(found=True, currency=currency, offers=[{"breaks": [list(b) for b in breaks_]}])
-    m = model(session, part, pq, gm)  # type: ignore[arg-type]
+    m = model(session, part, pq, gm, fab)  # type: ignore[arg-type]
     m["source"] = "pasted"
     m["converted_from"] = currency.upper() if currency.upper() != "USD" else None
     return m
 
 
-def oem_path(m: dict, sop: int | None = None, volume: int | None = None) -> dict | None:
+def oem_path(m: dict, sop: int | None = None, volume: int | None = None, released: int | None = None) -> dict | None:
     """OEM target prices per year: the band's target at `volume` today, falling by the yearly productivity (5-7 %)
-    until SOP and through the production years. Rows: {year, low, high, phase}."""
+    until SOP and through the production years, but only while the part is in its first 5-6 years on the market
+    (from the `released` year; unknown = new); after that the price is flat. Rows: {year, low, high, phase, flat}."""
     c = config()["oem"]
     volume = volume or c["volume"]
     row = next((r for r in m.get("rows") or [] if r["volume"] == volume), None)
     if row is None:
         return None
     sop = sop or c["default_sop"]
-    p_lo, p_hi = c["productivity"]
-    years = list(range(c["base_year"], max(sop, c["base_year"]) + c["lifetime_years"]))
+    base = c["base_year"]
+    rel = released if released and released <= base else base
+    (p_lo, p_hi), (n_lo, n_hi), mr = c["productivity"], c["price_down_years"], c["mature_rate"]
+
+    def price(y: int, p: float, n_years: int) -> float:
+        down = max(0, min(y, rel + n_years) - base)  # years from today to y that are still in the price-down window
+        return row["target"] * (1 - p) ** down * (1 - mr) ** (y - base - down)
+
     rows = []
-    for y in years:
-        n = y - c["base_year"]
-        rows.append({"year": y, "high": row["target"] * (1 - p_lo) ** n, "low": row["target"] * (1 - p_hi) ** n,
-                     "phase": "today" if n == 0 else "before SOP" if y < sop else "SOP" if y == sop else "production"})
-    return {"volume": volume, "sop": sop, "start": row["target"], "rows": rows, "productivity": c["productivity"]}
+    for y in range(base, max(sop, base) + c["lifetime_years"]):
+        phase = "today" if y == base else "before SOP" if y < sop else "SOP" if y == sop else "production"
+        rows.append({"year": y, "high": price(y, p_lo, n_lo), "low": price(y, p_hi, n_hi), "flat": y > rel + n_hi,
+                     "phase": phase})
+    return {"volume": volume, "sop": sop, "start": row["target"], "rows": rows, "productivity": c["productivity"],
+            "released": released, "assumed_new": released is None, "years": c["price_down_years"],
+            "flat_from": rel + n_hi + 1, "mature_rate": mr}  # fmt: skip
 
 
 def scaled(m: dict, lo: float, hi: float) -> list[dict]:

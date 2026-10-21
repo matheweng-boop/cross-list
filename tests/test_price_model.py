@@ -148,3 +148,30 @@ def test_gross_margin_slider(client, session, part, real):  # noqa: F811
     assert 'type="range" name="gm"' in html and "At 55 % gross margin" in html
     est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "gm": 60}).text
     assert "At 60 % gross margin" in est and 'value="60"' in est
+
+
+def test_fab_scenarios_and_cost_adjustment(client, session, part, real):  # noqa: F811
+    p = part("ISO7741DBQR")
+    ext, own = pm.cost(p, None, "external"), pm.cost(p, None, "in_house")
+    assert own["levels"]["mid"]["total"] < ext["levels"]["mid"]["total"] and pm.config()["cost_adjust"] == 0.9
+    assert pm.cost(p, None, "nonsense")["fab"] == pm.fab_scenarios()[0] == "external"
+    assert all("fab" not in fam for fam in pm.config()["families"].values())  # no claim about where anything is made
+    html = client.get(f"/pricing/{p.id}/model?gm=45").text
+    # both scenarios are on the page; the reference shows, the other is hidden until the reader flips the switch
+    assert 'data-fab="external">' in html and 'data-fab="in_house" hidden>' in html
+    assert 'data-fab-pick="in_house"' in html and 'aria-pressed="false"' in html
+    assert "never sent, saved or put in the link" in html
+    assert 'name="fab"' not in html and "?fab=" not in html and "&fab=" not in html  # never a form field or link
+    est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "ours": "X"}).text
+    assert 'data-fab="in_house" hidden>' in est and 'name="fab"' not in est and est.count('class="pe-ours"') == 2
+
+def test_oem_path_flattens_after_the_price_down_years():
+    m = {"rows": [{"volume": 100000, "low": 0.9, "target": 1.0, "high": 1.1}]}
+    new, old = pm.oem_path(m, 2028), pm.oem_path(m, 2028, released=2016)
+    assert new["assumed_new"] and not old["assumed_new"] and old["released"] == 2016
+    assert new["rows"][-1]["low"] < new["rows"][1]["low"] < 1.0  # a new part keeps getting cheaper
+    assert all(r["low"] == r["high"] == 1.0 and r["flat"] for r in old["rows"])  # ten years on the market: flat
+    mid = pm.oem_path(m, 2028, released=2022)  # 5 % stops after 2027, 7 % after 2028
+    by = {r["year"]: r for r in mid["rows"]}
+    assert by[2027]["high"] == by[2032]["high"] < by[2026]["high"] and by[2028]["low"] == by[2032]["low"]
+    assert by[2029]["flat"] and not by[2028]["flat"]

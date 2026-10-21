@@ -340,23 +340,3 @@ def scaled(m: dict, lo: float, hi: float) -> list[dict]:
     return [{"volume": r["volume"], "low": r["low"] * lo, "target": r["target"] * (lo + hi) / 2, "high": r["high"] * hi}
             for r in m.get("rows") or []]
 
-
-def lifetime(m: dict, oem: dict | None, volume: int, unit_cost: float | None) -> dict | None:
-    """Top-down lifetime economics at `volume` a year over the production years of the OEM path (price = the middle of
-    the 5-7 % price-down range): revenue, gross profit, the implied gross margin, the R&D the product can pay for after
-    SG&A and an operating-profit target, and the yearly volume needed to pay back each illustrative R&D budget."""
-    if not oem or unit_cost is None:
-        return None
-    e = config()["economics"]
-    prices = [(r["low"] + r["high"]) / 2 for r in oem["rows"] if r["phase"] in ("SOP", "production")]
-    if not prices:
-        return None
-    revenue = sum(prices) * volume
-    gross = sum(p - unit_cost for p in prices) * volume
-    keep = [e["sga_share"][0] + e["operating_target"][0], e["sga_share"][1] + e["operating_target"][1]]
-    rd = [gross - keep[1] * revenue, gross - keep[0] * revenue]  # [cautious, generous]
-    per_unit_year = [sum(p - unit_cost - k * p for p in prices) for k in (keep[1], keep[0])]
-    breakeven = [{"budget": b, "volume": [b / u if u > 0 else None for u in per_unit_year]} for b in e["rd_budgets"]]
-    return {"volume": volume, "years": len(prices), "revenue": revenue, "gross": gross,
-            "margin": gross / revenue if revenue else None, "rd": rd, "rd_typical": e["rd_share_typical"] * revenue,
-            "breakeven": breakeven, "unit_cost": unit_cost}  # fmt: skip

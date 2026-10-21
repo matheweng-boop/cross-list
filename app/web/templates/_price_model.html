@@ -1,5 +1,4 @@
 {# Price vs volume panel of the part page (app/services/price_model.py); loaded when the panel is opened #}
-{% from "_price_economics.html" import economics %}
 {% macro usdm(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
 {% macro money(x) %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
 {% set f, cb = m.fit, m.cost %}
@@ -45,4 +44,3 @@
 <tbody>{% for r in o.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}</td><td>{{ money(r.low) }}</td><td>{{ money(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}{% endmacro %}
 {% if m.oem %}{{ oem_table(m.oem, 'OEM target prices') }}
 <p class="small muted">Starts from today's target at {{ '{:,}'.format(m.oem.volume) }} a year ({{ money(m.oem.start) }}) and falls by the yearly productivity carmakers expect, before SOP and in every production year.{% if not estimate %} <a href="?price=open&sop={{ m.oem.sop + 1 }}#price-model" hx-get="/pricing/{{ part.id }}/model?sop={{ m.oem.sop + 1 }}" hx-target="closest .pm-body">SOP a year later</a>{% endif %}</p>{% endif %}
-{{ economics(m.life, part.mpn if part else (m.name or 'This part'), cfg) }}

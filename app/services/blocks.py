@@ -547,3 +547,114 @@ def parts_for(session: Session, key: str, q: str = "", answers: dict | None = No
             }
         )
     return {"total": len(cands), "manufacturers": result}
+
+
+# ---- application search by general category (walk-through "Sell around it", case from a part) ---------------------
+@lru_cache
+def categories() -> list[dict]:
+    """General application categories with the words that mean them (data/blocks/categories.yaml)."""
+    return _yaml("categories.yaml") or []
+
+
+STOP_WORDS = frozenset(
+    "a an and or the for of in on to with by at from as is it its this that be we our my you your are was "
+    "new system systems design designs application applications based using use used customer customers want wants "
+    "part parts like need needs".split()
+)  # fmt: skip
+
+
+@lru_cache(maxsize=4096)
+def _word_re(w: str) -> re.Pattern:
+    """A word or phrase at a word start; short words (up to 3 letters, e.g. "ev", "bms") must also end there."""
+    end = r"(?![a-z0-9])" if len(w) <= 3 else ""
+    return re.compile(rf"(?<![a-z0-9]){re.escape(w)}{end}")
+
+
+@lru_cache(maxsize=1024)
+def _tag_re(w: str) -> re.Pattern:
+    """A category word as a whole word or phrase; "refrigerat*" also matches any ending."""
+    if w.endswith("*"):
+        return re.compile(rf"(?<![a-z0-9]){re.escape(w[:-1])}")
+    return re.compile(rf"(?<![a-z0-9]){re.escape(w)}(?![a-z0-9])")
+
+
+def tags_for(text: str) -> list[str]:
+    """The general categories (keys) whose words occur in the text (a diagram's name and category)."""
+    low = text.lower()
+    return [c["key"] for c in categories() if any(_tag_re(w).search(low) for w in c.get("words") or [])]
+
+
+def search_index(name: str, category: str = "", extra: str = "") -> dict:
+    """What a diagram is searched on: its general categories (from the name and category) and its plain text (name,
+    category, market, frame and block labels)."""
+    return {"tags": tags_for(f"{name} {category}"), "text": f"{name} {category} {extra}".lower()}
+
+
+def query_words(q: str) -> list[str]:
+    return [w for w in re.findall(r"[a-z0-9][a-z0-9/+.\-]*", (q or "").lower()) if w not in STOP_WORDS]
+
+
+@lru_cache
+def category_phrases() -> list[tuple[str, frozenset]]:
+    """Every category word and key with the categories it stands for, longest first."""
+    out: dict[str, set] = {}
+    for c in categories():
+        for w in [c["key"].replace("_", " "), *(c.get("words") or [])]:
+            out.setdefault(w.lower().rstrip("*"), set()).add(c["key"])
+    return sorted(((w, frozenset(k)) for w, k in out.items()), key=lambda x: (-len(x[0]), x[0]))
+
+
+def query_units(q: str) -> list[tuple[str, frozenset]]:
+    """The search split into what must match: category phrases ("traction inverter", "hvac": a diagram in one of
+    their categories, or with the phrase in its text) and the other words (in the text)."""
+    rest = " " + " ".join(query_words(q)) + " "
+    units = []
+    for w, keys in category_phrases():
+        if f" {w} " in rest:
+            units.append((w, keys))
+            rest = rest.replace(f" {w} ", " ")
+    return units + [(w, frozenset()) for w in rest.split()]
+
+
+def unit_hits(index: dict, unit: tuple[str, frozenset]) -> bool:
+    w, keys = unit
+    return bool(keys.intersection(index["tags"])) or bool(_word_re(w).search(index["text"]))
+
+
+def search_score(index: dict, q: str) -> int:
+    """How many parts of the search the diagram matches (0 = none)."""
+    return sum(unit_hits(index, u) for u in query_units(q))
+
+
+def search_all(index: dict, q: str) -> bool:
+    """The diagram matches every part of the search (an empty search matches everything)."""
+    return all(unit_hits(index, u) for u in query_units(q))
+
+
+def template_index(t: dict, market: str = "") -> dict:
+    """The search index of a library or background diagram."""
+    extra = " ".join([market, *(g.get("label", "") for g in t.get("groups") or []),
+                      *(vocab.fn_label(f) for f in template_functions(t))])  # fmt: skip
+    return search_index(display_name(t), t.get("category") or "", extra)
+
+
+def placed(data: dict | None, fn: str | None, mpn: str) -> tuple[dict, str]:
+    """A copy of a diagram with the part in every block of its function that has no part yet; when no block has
+    the function, a new frame with the part is added. Returns (data, the frame it is in)."""
+    import copy
+
+    data = copy.deepcopy(data or {})
+    data.setdefault("groups", [])
+    data.setdefault("links", [])
+    where = ""
+    for g in data["groups"]:
+        for b in g.get("blocks") or []:
+            if fn and b.get("fn") == fn and not b.get("part"):
+                b["part"], where = mpn, where or g.get("label", "")
+    if not where:
+        col = max((int(g.get("col") or 0) + int(g.get("w") or 1) for g in data["groups"]), default=0)
+        data["groups"].append({"id": "gadded", "label": f"Added: {mpn}", "col": col, "row": 0, "w": 1,
+                               "blocks": [{"id": "badded", "fn": fn or "", "label": "" if fn else mpn,
+                                           "qty": 1, "part": mpn}]})  # fmt: skip
+        where = f"Added: {mpn}"
+    return data, where

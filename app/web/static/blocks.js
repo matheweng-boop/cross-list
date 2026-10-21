@@ -980,6 +980,8 @@
   $("#bk-undo").addEventListener("click", () => { if (!undoLayout) return; restore(undoLayout); undoLayout = null; changed(); updateUndo(); });
 
   if (!design.data && tpl) dirty = true;
+  // opened with a part placed in it (walk-through "Add to an application"): unsaved until Save is pressed
+  if (design.prefill) { dirty = true; $("#bk-status").textContent = design.prefill; }
   if (Object.keys(S.req).length) refreshCounts(); else render();
   // requirements live above the diagram (renderReqs); the drawer is only for a clicked block or group
 })();

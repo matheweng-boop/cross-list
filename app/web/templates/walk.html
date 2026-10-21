@@ -6,6 +6,11 @@
 {% macro gaps(n) %}{% set gs = w.gaps|selectattr(0, 'eq', n)|map(attribute=1)|list %}{% if gs %}
 <div class="walk-gap"><p class="small"><b>Data missing</b> · sent to <a href="/manage/feedback">Site feedback</a> for the next review</p>
   <ul class="small">{% for g in gs %}<li>{{ g }}</li>{% endfor %}</ul></div>{% endif %}{% endmacro %}
+{% macro case_start() %}{% set r = w.requested %}
+<div class="walk-case small">{% if w.s1.acceptable %}<p>No case needed: we can cross it with <a href="/parts/{{ w.s1.acceptable.id }}">{{ w.s1.acceptable.mpn }}</a>. A case is only for a part we cannot cross.</p>
+{% else %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}"><button type="submit" class="small-btn">Start a prelim case</button></form>
+  <span class="muted">no drop-in or functional cross of ours: a new part would be needed. The AI schedules a check of the market.</span>{% endif %}
+{% if r.n %}<p>Asked before: <b>{{ r.n }} request{{ 's' if r.n != 1 }}</b>{% if r.total %}, <b>{{ '{:,}'.format(r.total) }} pieces a year</b> in total{% endif %}{% if r.customers %} · {{ r.customers|join(', ') }}{% endif %}</p>{% endif %}</div>{% endmacro %}
 {% block content %}
 <p class="small"><a href="/parts/{{ part.id }}">← {{ part.mpn }} crosses</a></p>
 <h1>{{ part.mpn }} <small class="muted">· walk-through</small></h1>
@@ -18,17 +23,54 @@
 {% if s1.best %}<p class="walk-answer walk-{{ s1.suitable }}">{% if s1.suitable == 'dropin' %}Yes: <a href="/parts/{{ s1.best.id }}">{{ s1.best.mpn }}</a> is a drop-in.{% else %}With care: <a href="/parts/{{ s1.best.id }}">{{ s1.best.mpn }}</a> is a {{ s1.verdict.label|lower }}{% if s1.worse %}, worse on {{ s1.worse|join(', ') }}{% endif %}.{% endif %}</p>
 <p class="small muted">{{ s1.n }} cross{{ 'es' if s1.n != 1 }} of ours on the <a href="/parts/{{ part.id }}">part page</a>, with every spec, the overlay and the export.</p>
 {% else %}<p class="walk-answer walk-none">No: we have no cross for {{ part.mpn }}.</p>{% endif %}
+{{ case_start() }}
 {{ gaps(1) }}</section>
 
 {% if w.fn %}
 <section class="walk-step" id="step-2"><h2><span class="walk-n">2</span> Sell around it</h2>
-{% if w.s2.n %}<p class="walk-answer">{{ w.s2.n }} block diagram{{ 's' if w.s2.n != 1 }} use a {{ w.label }}. In the same designs, strongest bundle first:</p>
+{% if w.s2.n %}<p class="walk-answer">Seen from the customer: “You want {{ part.mpn }} in this application. Is this block diagram close to your design? If so, we also have these parts.”</p>
+<p class="small muted">{{ w.s2.n }} application{{ 's' if w.s2.n != 1 }} use a {{ w.label }}. Search by a general word to find yours.</p>
+<form class="walk-search" method="get" action="/parts/{{ part.id }}/walk#step-2" role="search">
+  <input type="hidden" name="upto" value="{{ upto }}">
+  <input type="search" id="walk-q" name="q" value="{{ q }}" placeholder="HVAC, BMS, traction inverter, solar…" aria-label="Find an application" autocomplete="off">
+  <button type="submit" class="small-btn">Find</button>
+</form>
+{% if cats %}<p class="walk-cats">{% for k, label, n in cats %}<button type="button" class="outline small-btn walk-cat" data-q="{{ k }}" aria-pressed="false">{{ label }} <small>{{ n }}</small></button>{% endfor %}</p>{% endif %}
+<p class="small muted" id="walk-count" aria-live="polite"></p>
+<p class="walk-legend small"><span><i class="mb-mine"></i> {{ part.mpn }}</span> <span><i class="mb-ours"></i> we sell it</span> <span><i class="mb-gap"></i> gap</span> <span><i class="mb-ext"></i> customer part</span></p>
+<div class="walk-cards" id="walk-cards" data-first="9">{% for c in w.cards %}
+  <article class="walk-card" data-tags="{{ c.tag_keys|join(' ') }}" data-text="{{ c.index.text }}"{% if not shown[loop.index0] or (not q and loop.index0 >= 9) %} hidden{% endif %}>
+    <h3>{{ c.name }}</h3>
+    <p class="small muted">{{ c.market }}{% if c.tags %} · {{ c.tags|join(', ') }}{% endif %}</p>
+    <div class="walk-mini" role="img" aria-label="Block diagram: {{ c.groups|map(attribute='label')|join(', ') }}">{% for g in c.groups %}<div class="walk-mini-g"><span>{{ g.label }}</span><div>{% for b in g.blocks %}<i class="mb-{{ b.cls }}" title="{{ b.label }}"></i>{% endfor %}</div></div>{% endfor %}</div>
+    {% if c.also %}<p class="small walk-also-h"><b>If so, we also have:</b></p>
+    <ul class="small walk-also">{% for o in c.also[:5] %}<li>{{ o.label }}: {% if o.url %}<a href="{{ o.url }}">{{ o.mpn }}</a>{% else %}<b>{{ o.mpn }}</b>{% endif %} <small class="muted">{{ o.manufacturer|vendor }}</small></li>{% endfor %}{% if c.also|length > 5 %}<li class="muted">and {{ c.also|length - 5 }} more</li>{% endif %}</ul>
+    {% else %}<p class="small muted">No other part of ours in this design yet.</p>{% endif %}
+    {% if c.gaps %}<p class="small muted">{{ c.gaps }} block{{ 's' if c.gaps != 1 }} we cannot fill yet.</p>{% endif %}
+    <p><a class="button small-btn" href="{{ c.open }}">Yes, close: open it with {{ part.mpn }}</a></p>
+  </article>{% endfor %}</div>
+<p id="walk-none" class="small muted"{% if shown|select|list %} hidden{% endif %}>No application matches. Try a broader word (HVAC, BMS, motor drive, solar), or add the part to a new diagram below.</p>
+{% if not q and w.cards|length > 9 %}<p><button type="button" class="outline small-btn" id="walk-more">Show all {{ w.cards|length }} applications</button></p>{% endif %}
+
+<details class="walk-add" id="add-to-app"><summary><b>Add {{ part.mpn }} to an application</b> <small class="muted">extend a diagram or start a new one</small></summary>
+  <p class="small">The block editor opens with {{ part.mpn }} in its block. Nothing is saved until you press Save.</p>
+  <form method="get" action="/blocks/new" class="walk-add-new"><input type="hidden" name="place" value="{{ part.mpn }}"><input type="hidden" name="fn" value="{{ w.fn }}">
+    <input name="name" placeholder="New application, e.g. heat pump for homes" aria-label="Name of the new application" maxlength="150">
+    <button type="submit" class="small-btn">New block diagram from {{ part.mpn }}</button></form>
+  {% if w.saved %}<p class="small"><b>Or extend one of your saved diagrams:</b></p>
+  <ul class="small walk-saved">{% for d in w.saved[:8] %}<li><a href="/blocks/{{ d.id }}?place={{ part.mpn|urlencode }}&amp;fn={{ w.fn }}">{{ d.name }}</a>{% if d.has %} <small class="muted">has a {{ w.label }}</small>{% endif %}</li>{% endfor %}</ul>{% endif %}
+  <p class="small muted">Or pick a library diagram above with “Yes, close”.</p>
+</details>
+
+<details class="small"><summary>Functions most often in the same designs</summary>
 <div class="table-wrap"><table class="small striped">
   <thead><tr><th scope="col">Function</th><th scope="col" title="0–100: how often it is in the same design, the same block or a connected block">Bundle strength</th><th scope="col">Together in</th><th scope="col">We sell it?</th></tr></thead>
   <tbody>{% for e in w.ours %}<tr><td>{{ e.label }}</td><td>{{ e.score }}</td><td>{{ e.apps }} of {{ w.s2.n }}</td><td>yes · step 3</td></tr>{% endfor %}
   {% for e in w.new %}<tr><td><a href="/business/evidence/{{ e.fn }}">{{ e.label }}</a></td><td>{{ e.score }}</td><td>{{ e.apps }} of {{ w.s2.n }}</td><td class="muted">no: an opportunity</td></tr>{% endfor %}</tbody>
 </table></div>
-<p class="small"><a href="/business/attach?part={{ part.mpn|urlencode }}">All {{ w.s2.ours|length + w.s2.new|length }} in Cross-sell</a>, with the reasons per design and a filter by application.</p>{% endif %}
+<p class="small"><a href="/business/attach?part={{ part.mpn|urlencode }}">All {{ w.s2.ours|length + w.s2.new|length }} in Cross-sell</a>, with the reasons per design and a filter by application.</p></details>
+<script type="application/json" id="walk-search-data">{{ phrases|tojson }}</script>
+<script src="/static/walk.js" defer></script>{% endif %}
 {{ gaps(2) }}{{ next(2) }}</section>
 
 {% if upto >= 3 %}<section class="walk-step" id="step-3"><h2><span class="walk-n">3</span> Best of ours around it</h2>
@@ -70,7 +112,8 @@
     {% else %}<p class="small muted">Nothing yet.</p>{% endif %}</div>
   <div><h3>Next</h3>
     <p>{{ push('part', part.mpn, part.mpn ~ ' (' ~ w.label ~ ')', s5.verdict_label ~ ': ' ~ s5.why, w.fn, s5.shortlisted, '☆ Shortlist for a case') }}</p>
-    <p class="small"><a href="/business/cases/new?fn={{ w.fn }}&title={{ (w.label ~ ' against ' ~ part.mpn)|urlencode }}&idea={{ (s5.verdict_label ~ ' – ' ~ s5.why)|urlencode }}">Start a business case now</a> · <a href="/business/reports">Research &amp; ideas</a></p></div>
+    {{ case_start() }}
+    <p class="small"><a href="/business/reports">Research &amp; ideas</a></p></div>
 </div>
 {{ gaps(5) }}</section>{% endif %}
 {% else %}{{ gaps(2) }}{% endif %}

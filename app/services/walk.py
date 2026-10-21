@@ -14,19 +14,21 @@ Data a step needs but the site does not hold is a gap: it is shown on the step a
 """
 
 from collections import Counter
+from urllib.parse import quote
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Case, Part, ShortlistItem, SiteFeedback
-from app.services import crosssell, library, prelim, scoring, vocab
+from app.models import BlockDiagram, Case, Part, ShortlistItem, SiteFeedback
+from app.services import blocks, crosssell, library, prelim, scoring, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
-from app.services.pipeline import fn_for_family
+from app.services.pipeline import fn_for_family, requested
 
 STEPS = {1: "Replacement", 2: "Sell around it", 3: "Best of ours around it", 4: "Make it better, other applications",
          5: "What the future needs"}  # fmt: skip
 AUTHOR = "Walk-through (automatic)"
+ACCEPTABLE = ("fff", "functional")  # cross types that count as "we can cross it"
 VERDICTS = {
     "sell": "Sell what we have",
     "improve": "Improve what we have",
@@ -51,16 +53,18 @@ def competitor_parts(session: Session, fn: str, limit: int = 6) -> list[Part]:
 def _step1(rows: list) -> dict:
     """The best cross of the part page and whether it is suitable as it is."""
     if not rows:
-        return {"best": None, "suitable": "none", "worse": [], "minor": [], "short_everywhere": []}
+        return {"best": None, "suitable": "none", "worse": [], "minor": [], "short_everywhere": [], "acceptable": None}
     r, v = rows[0]
     worse = [d.label for d in v.worse]
     minor = [d.label for d in v.info_worse]
     suitable = "dropin" if v.category == "fff" and not worse else "deviations"
+    # a drop-in or functional replacement means we can cross it: no new development, so no case
+    acceptable = next((rr.candidate for rr, vv in rows if vv.category in ACCEPTABLE), None)
     # specs where every listed cross of ours is worse: the line as a whole falls short
     lists = [{d.label for d in vv.worse} for _, vv in rows]
     short = sorted(set.intersection(*lists)) if lists else []
     return {"best": r.candidate, "verdict": v, "suitable": suitable, "worse": worse, "minor": minor,
-            "short_everywhere": short, "n": len(rows)}  # fmt: skip
+            "short_everywhere": short, "n": len(rows), "acceptable": acceptable}  # fmt: skip
 
 
 def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "combined") -> dict:
@@ -77,7 +81,8 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
     label = vocab.fn_label(fn) if fn else part.family
     if s1["best"] is None:
         gaps.append((1, f"No Skyworks / Qorvo cross for {label}: the part is a portfolio gap or its specs are missing"))
-    out = {"fn": fn, "label": label, "anchor": anchor, "s1": s1, "upto": upto, "gaps": gaps}
+    out = {"fn": fn, "label": label, "anchor": anchor, "s1": s1, "upto": upto, "gaps": gaps,
+           "requested": requested(session, part.mpn)}  # fmt: skip
     if not fn:
         if upto >= 2:
             gaps.append((2, f"Family '{part.family}' is not mapped to a block-diagram function: no data for steps 2–5"))
@@ -95,7 +100,8 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
             gaps.append((3, f"{e['label']}: we sell it but no part of ours is named for it (catalogue mapping)"))
         elif anchor["automotive"] and not any(o["auto"] for o in e["offer"]):
             gaps.append((3, f"{e['label']}: no automotive-grade part of ours to offer next to an automotive {label}"))
-    out.update(s2=sell, ours=ours, new=new)
+    out.update(s2=sell, ours=ours, new=new, cards=app_cards(sell, fn, part.mpn),
+               saved=saved_designs(session, fn))  # fmt: skip
     if upto < 4:
         return out
 
@@ -154,6 +160,68 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
     out["s5"] = {"verdict": verdict, "verdict_label": VERDICTS[verdict], "why": why, "score": score, "path": path,
                  "cases": cases_on, "business": business, "shortlisted": listed is not None}  # fmt: skip
     return out
+
+
+BLOCK_CLASS = {"supported": "ours", "gap": "gap", "competitor": "gap"}
+
+
+def app_cards(sell: dict, fn: str, mpn: str) -> list[dict]:
+    """Step 2 seen from the customer: one card per application that uses the part's function, with a small diagram
+    (frames and their blocks: this part, ours, gap, customer part), our parts for the other blocks, the general
+    categories it falls in (HVAC, BMS, traction inverter...) and what the search looks at."""
+    lib, back = blocks.templates(), blocks.background_templates()
+    offers = {e["fn"]: e["offer"] for e in sell["ours"]}
+    labels = {c["key"]: c["label"] for c in blocks.categories()}
+    cards = []
+    for a, _, _ in sell["apps"]:
+        t = lib[a.i] if a.i < len(lib) else back[a.i - len(lib)]
+        groups: dict[str, list] = {}
+        also, seen, gaps = [], {fn}, 0
+        for p in a.positions:
+            cls = "mine" if p.fn == fn else BLOCK_CLASS.get(p.status, "ext")
+            groups.setdefault(p.group, []).append({"label": p.label, "cls": cls})
+            gaps += cls == "gap"
+            if cls == "ours" and p.fn not in seen:
+                seen.add(p.fn)
+                if offers.get(p.fn):
+                    also.append({"label": p.label, **offers[p.fn][0]})
+        index = blocks.template_index(t, a.market)
+        where = f"template={a.i}" if a.i < len(lib) else f"bg={a.i - len(lib)}"
+        cards.append({"i": a.i, "name": blocks.display_name(t), "market": a.market, "background": a.background,
+                      "tag_keys": index["tags"],
+                      "tags": [labels[k] for k in index["tags"]], "index": index,
+                      "groups": [{"label": g, "blocks": bs} for g, bs in groups.items()], "also": also, "gaps": gaps,
+                      "open": f"/blocks/new?{where}&place={quote(mpn)}&fn={fn}"})  # fmt: skip
+    cards.sort(key=lambda c: (c["background"], -len(c["also"]), c["name"]))
+    return cards
+
+
+def filter_cards(cards: list[dict], q: str) -> list[dict]:
+    """The cards that match every part of the search (general categories, then words)."""
+    return [c for c in cards if blocks.search_all(c["index"], q)]
+
+
+def category_counts(cards: list[dict]) -> list[tuple[str, str, int]]:
+    """General categories over the cards, most used first: the quick picks above the search (what to type, label,
+    number of applications)."""
+    labels = {c["key"]: c["label"] for c in blocks.categories()}
+    n = Counter(t for c in cards for t in c["tag_keys"]).most_common(10)
+    return [(k.replace("_", " "), labels[k], k_n) for k, k_n in n]
+
+
+def saved_designs(session: Session, fn: str, limit: int = 30) -> list[dict]:
+    """Saved block diagrams to add the part to: those that already have its function first."""
+    rows = []
+    for d in session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc()).limit(200)):
+        has = any(b.get("fn") == fn for g in (d.data or {}).get("groups") or [] for b in g.get("blocks") or [])
+        rows.append({"id": d.id, "name": d.name, "has": has})
+    rows.sort(key=lambda r: not r["has"])
+    return rows[:limit]
+
+
+def search_phrases() -> dict:
+    """The category phrases and ignored words for the page's live search (the same rules as blocks.search_all)."""
+    return {"phrases": [[w, sorted(k)] for w, k in blocks.category_phrases()], "stop": sorted(blocks.STOP_WORDS)}
 
 
 def _case_link(slug: str, fn: str) -> str:

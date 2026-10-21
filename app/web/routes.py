@@ -328,6 +328,10 @@ def _part_context(
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
     crosses = crosses_for(session, part, scope, dev)
+    # the part can be crossed: an active drop-in or functional equivalent of the grade (filters on the page aside).
+    # Only a part we cannot cross gets "Start a prelim case" (a new development).
+    cross_ok = next((r.candidate for cat in ("fff", "functional") for r in crosses.get(cat, [])
+                     if not r.lifecycle_risk and grade_of(r.candidate) == grade), None)  # fmt: skip
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
@@ -396,7 +400,16 @@ def _part_context(
         "grade": grade,
         "grade_counts": grade_counts,
         "ref_grade": grade_of(part),
+        "cross_ok": cross_ok,
+        "requested": _requested(session, part.mpn),
     }
+
+
+def _requested(session: Session, mpn: str) -> dict:
+    """Requests for a case on the part so far, with the volume asked in total (Business case from a part)."""
+    from app.services.pipeline import requested
+
+    return requested(session, mpn)
 
 
 def _part_or_404(session: Session, part_id: int) -> Part:
@@ -425,7 +438,7 @@ def part_detail(
 
 
 @router.get("/parts/{part_id}/walk", response_class=HTMLResponse)
-def part_walk(request: Request, part_id: int, upto: int = 2, session: Session = Depends(get_session)):
+def part_walk(request: Request, part_id: int, upto: int = 2, q: str = "", session: Session = Depends(get_session)):
     """Walk-through from the part: replacement, sell around it, best of ours, make it better, future. Only the steps
     asked for so far (1..upto) are computed; data they lack is recorded once as site feedback for the next review."""
     from app.services import opportunity as op
@@ -438,6 +451,11 @@ def part_walk(request: Request, part_id: int, upto: int = 2, session: Session = 
     w["gaps"] = [g for g in w["gaps"] if g[0] <= upto]
     added = walk.record_gaps(session, part, w["gaps"])
     ctx.update(w=w, steps=walk.STEPS, added=added, crowding_label=op.CROWDING_LABEL, path_label=op.PATH_LABEL)
+    if w.get("cards") is not None:  # step 2 seen from the customer, searchable by general category
+        q = q.strip()[:200]
+        shown = {id(c) for c in walk.filter_cards(w["cards"], q)}
+        ctx.update(q=q, shown=[id(c) in shown for c in w["cards"]], cats=walk.category_counts(w["cards"]),
+                   phrases=walk.search_phrases())  # fmt: skip
     return templates.TemplateResponse(request, "walk.html", ctx)
 
 

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path, 'Send the prelim case') }}{% endblock %}
+{% block content %}
+<h1>Prelim case: {{ p.title }}</h1>
+<p>Saved. It now goes to the review queue, where the AI schedules a check of whether there is a real market behind it.</p>
+<form method="post" action="/business/schedule" id="pl-send"{% if auto %} data-autosend="1"{% endif %}>
+  <input type="hidden" name="title" value="{{ p.title }}">
+  <input type="hidden" name="source" value="{{ p.source }}">
+  <input type="hidden" name="note" value="{{ p.note }}">
+  <input type="hidden" name="part" value="{{ p.part }}">
+  <input type="hidden" name="volume" value="{{ p.volume or '' }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <button type="submit">Send to the review queue</button>
+  <a href="/pipeline/{{ d.id }}?step=case" class="small">back</a>
+</form>
+<details class="small"><summary>What is sent</summary><pre class="pl-note">{{ p.note }}</pre></details>
+<script src="/static/pipeline.js" defer></script>
+{% endblock %}

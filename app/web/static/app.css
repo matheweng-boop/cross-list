@@ -1474,3 +1474,34 @@ body.bare .bc-canvas { min-height: calc(100vh - 7rem); }
 .pb-table tfoot th { border-top: 2px solid var(--pico-muted-border-color); }
 .linklike { all: unset; color: var(--pico-primary); text-decoration: underline; cursor: pointer; }
 input[readonly] { background: var(--pico-form-element-disabled-background-color, #f3f4f6); }
+/* Engineering knowledge (systems library links, general knowledge) and Skyworks + Qorvo RF-by-band cells */
+:root { --pf-sky-ink: #1f5fa8; --pf-qor-ink: #b23a0a; --pf-sky-tint: #e6eefa; --pf-qor-tint: #fdeadf; --pf-gap: #9aa3ad; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --pf-sky-ink: #8fbaf0; --pf-qor-ink: #f5a77a; --pf-sky-tint: #1c2c44; --pf-qor-tint: #3d2417; --pf-gap: #5d6670; }
+}
+:root[data-theme="dark"] { --pf-sky-ink: #8fbaf0; --pf-qor-ink: #f5a77a; --pf-sky-tint: #1c2c44; --pf-qor-tint: #3d2417; --pf-gap: #5d6670; }
+.pf-n { display: inline-block; min-width: 1.75rem; padding: 0 .25rem; margin-right: 2px; text-align: center; line-height: 1.45;
+  font-variant-numeric: tabular-nums; border: 1.5px solid transparent; }
+.pf-n.pf-sky { border-radius: 2px; color: var(--pf-sky-ink); background: var(--pf-sky-tint); border-color: var(--pf-sky-ink); }
+.pf-n.pf-qor { border-radius: 1rem; color: var(--pf-qor-ink); background: var(--pf-qor-tint); border-color: var(--pf-qor-ink); }
+.pf-n.pf-sky.on { background: #1f5fa8; border-color: #1f5fa8; color: #fff; font-weight: 700; }
+.pf-n.pf-qor.on { background: #c2410c; border-color: #c2410c; color: #fff; font-weight: 700; }
+.pf-n.zero { background: transparent; border-style: dashed; border-color: var(--pico-muted-border-color); color: var(--pico-muted-color); font-weight: 400; }
+.pf-band td { padding-top: .3rem; padding-bottom: .3rem; }
+.pf-band .pf-none { display: inline-block; min-width: calc(3.5rem + 4px); text-align: center; }
+.pf-band td.pf-gap, .pf-gapkey { background: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--pf-gap) 30%, transparent) 5px 7px); }
+.pf-gapkey { display: inline-block; width: 1.4rem; height: .95rem; vertical-align: middle; border: 1px solid var(--pf-gap); border-radius: 2px; }
+.pf-bkey { display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; align-items: center; margin: .2rem 0 .6rem; }
+.pf-bkey > span { display: inline-flex; align-items: center; gap: .3rem; }
+.pf-bkey .pf-n { margin-right: 0; }
+.pf-band th[scope=row] { position: sticky; left: 0; z-index: 1; background: var(--pico-background-color); }
+@media (max-width: 600px) { .pf-band th[scope=row] { white-space: normal; min-width: 7.5rem; max-width: 8.5rem; line-height: 1.25; } }
+.kn-links { border-left: 3px solid var(--pico-primary); padding: .4rem .9rem; margin: .4rem 0 1rem; background: var(--pico-card-background-color); border-radius: 0 .4rem .4rem 0; }
+.kn-links p { margin: .15rem 0; }
+.kn-links a.kn-chip { display: inline-block; margin: .1rem .15rem; padding: 0 .5rem; border: 1px solid var(--pico-muted-border-color); border-radius: .4rem; text-decoration: none; }
+.kn-links a.kn-chip.vz { border-color: var(--pico-primary); }
+.kn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .8rem; margin: .6rem 0 1rem; }
+.kn-card { border: 1px solid var(--pico-muted-border-color); border-radius: .45rem; padding: .7rem 1rem; margin: 0; }
+.kn-card h2 { font-size: 1.1rem; margin: 0 0 .3rem; }
+.kn-card ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+.kn-card li { margin: .1rem 0; }

@@ -618,7 +618,8 @@
   // ------------------------------------------------------------------ page
   const groups = [...new Set(V.map(v => v.group))];
   const nav = $("#vz-nav"), panel = $("#vz-panel");
-  nav.innerHTML = groups.map(g => `<div class="vz-g"><b>${esc(g)}</b>${V.filter(v => v.group === g).map(v => `<a href="#${v.id}" data-id="${v.id}">${esc(v.title)}</a>`).join("")}</div>`).join("");
+  nav.innerHTML = groups.map(g => `<div class="vz-g"><b>${esc(g)}</b>${V.filter(v => v.group === g).map(v => `<a href="#${v.id}" data-id="${v.id}">${esc(v.title)}</a>`).join("")}</div>`).join("")
+    + '<div class="vz-g"><b>Spectrum</b><a href="/rf-bands">RF bands chart</a></div>';  // its own page, same section
   let cur = null, vals = {}, anim = null, phase = 0;
 
   const toPos = (c, x) => (c.log ? Math.round((1000 * (log10(x) - log10(c.min))) / (log10(c.max) - log10(c.min))) : x);

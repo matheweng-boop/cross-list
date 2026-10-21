@@ -1,4 +1,5 @@
 {# Price vs volume panel of the part page (app/services/price_model.py); loaded when the panel is opened #}
+{% macro usdm(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
 {% macro money(x) %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
 {% set f, cb = m.fit, m.cost %}
 {% if m.missing %}<p class="small muted">Not enough to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>{% endif %}
@@ -15,17 +16,17 @@
 <details class="small"><summary>How well the equation holds</summary><ul>{% for v in cfg.validation %}<li>{{ v.test }} ({{ v.parts }} {{ 'prices' if v.inside_pct is defined else 'parts' }}): {% if v.note is defined %}{{ v.note }}{% elif v.inside_pct is defined %}{{ v.inside_pct }} % inside the band (80 % expected){% else %}{% if v.mean_error_pct is defined %}average error {{ '%+.1f'|format(v.mean_error_pct) }} %, {% endif %}typical error {{ v.mean_abs_pct }} %{% if v.worst_pct is defined %}, worst {{ v.worst_pct }} %{% endif %}{% endif %}</li>{% endfor %}</ul>
   <p class="muted">Public prices stop at 10,000 units: 100k and 1M rest on the distributor-to-direct factor and the cost floor, which only your calls and real prices can check.</p></details>
 {% endif %}
-{% if cb %}<details class="small"><summary>Cost floor: {{ money(cb.floor) }} <span class="muted">(cost {{ money(cb.levels.mid.total) }} at {{ (cfg.margin.floor * 100)|int }} % minimum margin)</span></summary>
+{% if cb %}<details class="small"><summary>Cost floor: {{ usdm(cb.floor) }} <span class="muted">(cost {{ usdm(cb.levels.mid.total) }} at {{ (cfg.margin.floor * 100)|int }} % minimum margin; costs in USD{% if symbol != '$' %}, compared with your prices as if 1:1{% endif %})</span></summary>
 <div class="table-wrap"><table class="pm-table"><thead><tr><th scope="col">Cost (est)</th><th scope="col">Low</th><th scope="col">Mid</th><th scope="col">High</th><th scope="col">Basis</th></tr></thead><tbody>
-  <tr><td>Dies</td>{% for l in ('low', 'mid', 'high') %}<td>{{ money(cb.levels[l].die) }}</td>{% endfor %}<td>{{ cb.family.dies }} × {{ cb.family.die_mm2|join(' / ') }} mm² on {{ cb.family.process }}, wafer {{ symbol }}{{ cb.family.wafer_usd|join(' / ') }}</td></tr>
-  <tr><td>Lead frame / substrate</td><td colspan="3">{{ money(cb.pkg.lead_frame) }}</td><td rowspan="4">{{ cb.package.label }}, {{ cb.pins }} pins</td></tr>
-  <tr><td>Mold compound</td><td colspan="3">{{ money(cb.pkg.mold) }}</td></tr>
-  <tr><td>Wire bonds</td><td colspan="3">{{ money(cb.pkg.wire) }}</td></tr>
-  <tr><td>Assembly</td><td colspan="3">{{ money(cb.pkg.assembly) }}</td></tr>
-  <tr><td>Test</td>{% for l in ('low', 'mid', 'high') %}<td>{{ money(cb.levels[l].test) }}</td>{% endfor %}<td>{{ cb.family.test_s|join(' / ') }} s at {{ symbol }}{{ cb.family.test_usd_per_s }}/s</td></tr>
-  <tr><th>Total</th>{% for l in ('low', 'mid', 'high') %}<th>{{ money(cb.levels[l].total) }}</th>{% endfor %}<td class="muted">{{ cb.family.note }}</td></tr>
+  <tr><td>Dies</td>{% for l in ('low', 'mid', 'high') %}<td>{{ usdm(cb.levels[l].die) }}</td>{% endfor %}<td>{{ cb.family.dies }} × {{ cb.family.die_mm2|join(' / ') }} mm² on {{ cb.family.process }}, wafer ${{ cb.family.wafer_usd|join(' / ') }}</td></tr>
+  <tr><td>Lead frame / substrate</td><td colspan="3">{{ usdm(cb.pkg.lead_frame) }}</td><td rowspan="4">{{ cb.package.label }}, {{ cb.pins }} pins</td></tr>
+  <tr><td>Mold compound</td><td colspan="3">{{ usdm(cb.pkg.mold) }}</td></tr>
+  <tr><td>Wire bonds</td><td colspan="3">{{ usdm(cb.pkg.wire) }}</td></tr>
+  <tr><td>Assembly</td><td colspan="3">{{ usdm(cb.pkg.assembly) }}</td></tr>
+  <tr><td>Test</td>{% for l in ('low', 'mid', 'high') %}<td>{{ usdm(cb.levels[l].test) }}</td>{% endfor %}<td>{{ cb.family.test_s|join(' / ') }} s at ${{ cb['class'].test_usd_per_s }}/s ({{ cb['class'].label.split(' (')[0]|lower }} class){% if cb.automotive %} × {{ cfg.automotive_test|join(' / ') }} for automotive test{% endif %}</td></tr>
+  <tr><th>Total</th>{% for l in ('low', 'mid', 'high') %}<th>{{ usdm(cb.levels[l].total) }}</th>{% endfor %}<td class="muted">{{ cb.family.note }}</td></tr>
 </tbody></table></div></details>{% endif %}
-{% if m.rows %}<form method="post" action="/pricing/{{ part.id }}/call" class="pm-call">
+{% if m.rows and not estimate %}<form method="post" action="/pricing/{{ part.id }}/call" class="pm-call">
   <p class="small"><b>Where do real prices sit?</b>{% if m.call %} Your last call: <span class="pc-v">{{ calls[m.call.verdict] }}</span>{% if m.call.comment %} <span class="muted">· {{ m.call.comment }}</span>{% endif %}{% endif %}</p>
   <input type="text" name="comment" maxlength="2000" placeholder="Optional: what you know, e.g. 'about 0.45 at 500k'" aria-label="Comment">
   <span class="pc-btns"><button name="verdict" value="low" class="small-btn outline">Low end</button><button name="verdict" value="ok" class="small-btn outline">In the band</button><button name="verdict" value="high" class="small-btn outline">High end</button></span>

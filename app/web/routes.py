@@ -839,7 +839,7 @@ def feedback(
 CURRENCY_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£"}
 
 
-@router.get("/pricing/{part_id}", response_class=HTMLResponse)
+@router.get("/pricing/{part_id:int}", response_class=HTMLResponse)
 def pricing_line(
     request: Request,
     part_id: int,
@@ -891,6 +891,23 @@ def price_model_panel(request: Request, part_id: int, session: Session = Depends
     ctx = {"part": part, "m": price_model.model(session, part, pq), "calls": price_model.CALLS,
            "cfg": price_model.config(), "symbol": CURRENCY_SYMBOLS.get(currency, currency + " ")}  # fmt: skip
     return templates.TemplateResponse(request, "_price_model.html", ctx)
+
+
+@router.get("/pricing/estimate", response_class=HTMLResponse)
+def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
+                   wide: bool = False, automotive: bool = False, name: str = "", currency: str = "USD",
+                   session: Session = Depends(get_session)):  # fmt: skip
+    """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages)."""
+    cfg = price_model.config()
+    family = family if family in cfg["families"] else ""
+    pts = price_model.parse_breaks(breaks)
+    m = price_model.estimate(session, family, pts, package, pins, wide, automotive, name or "estimate") if (
+        family and pts) else None  # fmt: skip
+    ctx = {"cfg": cfg, "m": m, "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
+           "wide": wide, "automotive": automotive, "name": name, "currency": currency},
+           "symbol": CURRENCY_SYMBOLS.get(currency, currency + " "), "estimate": True, "part": None,
+           "calls": price_model.CALLS}  # fmt: skip
+    return templates.TemplateResponse(request, "price_estimate.html", ctx)
 
 
 @router.post("/pricing/{part_id}/call")

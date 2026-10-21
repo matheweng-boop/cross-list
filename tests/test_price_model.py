@@ -73,3 +73,32 @@ def test_monte_carlo_is_stable_and_ordered(session, part, real):  # noqa: F811
     draws = pm.simulate(p, f, pm.cost(p), 100000, 0.5, 0.67, 1.0)
     assert len(draws) == pm.config()["monte_carlo"]["draws"] and min(draws) >= pm.cost(p)["levels"]["low"]["total"]
     assert {v["test"][:12] for v in pm.config()["validation"]} and len(pm.list_prices()) >= 60
+
+
+DK_PASTE = """QUANTITY
+UNIT PRICE	EXT PRICE
+1
+€ 18,66000	€ 18,66
+10
+€ 16,26300	€ 162,63
+100
+€ 14,29280	€ 1.429,28
+500
+€ 13,13008	€ 6.565,04"""
+
+
+def test_parse_breaks_both_layouts():
+    assert pm.parse_breaks(DK_PASTE) == [(1, 18.66), (10, 16.263), (100, 14.2928), (500, 13.13008)]
+    assert pm.parse_breaks("1 3.035\n1,000 1.355\n2.500 $1.20") == [(1, 3.035), (1000, 1.355), (2500, 1.2)]
+
+
+def test_classes_and_estimate_page(client, session):
+    assert pm.complexity("am_fm_tuner") == "complex" and pm.complexity("rf_switch") == "commodity"
+    f = pm.fit(pm.parse_breaks(DK_PASTE))
+    assert pm.extension(f, "am_fm_tuner")[2] == "flat"  # a complex part follows its own flat curve
+    m = pm.estimate(session, "am_fm_tuner", pm.parse_breaks(DK_PASTE), "QFN-48", 48, automotive=True, name="Si47962")
+    assert m["cost"]["automotive"] and len(m["rows"]) == 3 and m["rows"][-1]["target"] < 13.13
+    html = client.get("/pricing/estimate", params={"family": "am_fm_tuner", "breaks": DK_PASTE, "package": "QFN-48",
+                                                   "pins": 48, "currency": "EUR", "name": "Si47962"}).text
+    assert "Si47962" in html and "1,000,000" in html and "€" in html and "Low end" not in html
+    assert client.get("/pricing/estimate").status_code == 200

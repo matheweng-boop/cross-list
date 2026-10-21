@@ -10,6 +10,7 @@ NAV = (
         ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
         ("Skyworks + Qorvo", "/portfolio", "The two lines side by side: strengths, which to pick, cross-selling"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
+        ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
     )),
     ("systems", "Systems & applications", (
@@ -54,6 +55,7 @@ UTILITY = ("manage", "Data management", (
 PLACES = {
     "/find": ("products", "/"),
     "/parts/": ("products", "/"),
+    "/pricing/estimate": ("products", "/pricing/estimate"),
     "/cross/": ("products", "/"),
     "/overlay/": ("products", "/"),
     "/packages/": ("products", "/"),

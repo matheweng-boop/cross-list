@@ -51,10 +51,24 @@ calls:                   # the owner's calls on a part move its family's band
   step: 0.08             # each "low end" call x0.92, each "high end" call x1.08
   limits: [0.6, 1.6]
 
-# per part family: dies per part, area per die (mm2, low / mid / high), wafer and test (est)
+# Complexity classes (Technical library: semiconductor_cost). Test cost per second is the effective rate of a test cell
+# shared by several parts at once (single-site about USD 0.02/s, multi-site about half; RF / mixed-signal test runs fewer
+# sites). Complex parts are extended along their own flat curve; with no curve, at `slope` (mean, sd).
+classes:
+  commodity: {label: "Commodity (small die, many suppliers)", test_usd_per_s: 0.010}
+  standard:  {label: "Standard (mixed-signal, 2-3 dies or protection features)", test_usd_per_s: 0.010}
+  complex:   {label: "Complex (large mixed-signal / RF die, firmware, few suppliers)", test_usd_per_s: 0.015,
+              slope: [-0.06, 0.03]}
+
+yield_model: {alpha: 3}          # negative binomial: Y = (1 + A * D0 / alpha) ** -alpha (clustered defects)
+automotive_test: [1.5, 2.0, 3.0]
+large_die_mm2: 10                # above this die area the package body, lead frame and mold grow with the die # automotive parts: multi-temperature test, outlier screening, sometimes burn-in (judgement)
+
+# per part family: complexity class, dies per part, area per die (mm2, low / mid / high), wafer and test time (est)
 families:
   digital_isolator:
     label: Digital isolator
+    class: standard
     dies: 2
     die_mm2: [0.7, 1.0, 1.8]
     process: "0.18 um class CMOS, 200 mm"
@@ -62,10 +76,10 @@ families:
     wafer_usd: [600, 750, 1000]
     defects_per_cm2: 0.1
     test_s: [1.0, 1.5, 3.0]          # includes the high-voltage isolation (hipot) test
-    test_usd_per_s: 0.02
     note: "Two dies (transmit and receive) across the isolation barrier; channel count changes die area little"
   gate_driver:
     label: Isolated gate driver
+    class: standard
     dies: 2
     die_mm2: [1.0, 1.6, 2.6]
     process: "0.18 um class CMOS / BCD, 200 mm"
@@ -73,10 +87,10 @@ families:
     wafer_usd: [600, 800, 1100]
     defects_per_cm2: 0.1
     test_s: [1.5, 2.0, 3.5]
-    test_usd_per_s: 0.02
     note: "Input die and high-current driver die (BCD); protection features add area"
   isolated_amplifier:
     label: Isolated amplifier
+    class: standard
     dies: 2
     die_mm2: [1.5, 2.0, 2.5]
     process: "0.18 um class CMOS, 200 mm"
@@ -84,10 +98,10 @@ families:
     wafer_usd: [700, 850, 1100]
     defects_per_cm2: 0.1
     test_s: [2.0, 3.0, 4.0]          # precision trim and hipot
-    test_usd_per_s: 0.02
     note: "Modulator and demodulator dies; precision trim makes test longer"
   rf_switch:
     label: RF switch
+    class: commodity
     dies: 1
     die_mm2: [0.4, 0.8, 1.5]
     process: "RF-SOI, 200 mm"
@@ -95,10 +109,23 @@ families:
     wafer_usd: [1000, 1200, 1500]
     defects_per_cm2: 0.15
     test_s: [0.3, 0.5, 1.0]
-    test_usd_per_s: 0.03
     note: "One SOI die; more throws and higher power mean a larger die"
 
-# package classes: package-code prefixes, and lead frame (or substrate), mold compound, wire per pin and assembly (USD, est)
+  am_fm_tuner:
+    label: Car-radio tuner / tuner SoC
+    class: complex
+    dies: 1
+    die_mm2: [15, 25, 40]
+    process: "40-65 nm RF CMOS, 300 mm"
+    wafer_mm: 300
+    wafer_usd: [2000, 3000, 4500]  # library: 130 nm USD 2,000 and 22 nm USD 4,500 per 300 mm wafer (2019)
+    defects_per_cm2: 0.1
+    test_s: [3.0, 5.0, 10.0]       # library: 4.7 s for a mixed-signal baseband device
+    note: "Large mixed-signal die (RF front ends, ADCs, DSP); analog blocks do not shrink with the node"
+
+# package classes: package-code prefixes, and lead frame (or substrate), mold compound, wire per pin and assembly (USD, est);
+# lead frame and assembly also grow per pin (a bigger body and paddle for a bigger die), and mold compound with the die
+# area above `large_die_mm2` (owner: complex parts need larger packages)
 packages:
   small_leadframe:
     label: "Small lead frame (SOT, SC, DFN, SON)"
@@ -107,6 +134,8 @@ packages:
     mold: 0.002
     wire_per_pin: 0.0010
     assembly: 0.015
+    lead_frame_per_pin: 0.0003
+    assembly_per_pin: 0.0004
   qfn:
     label: "QFN"
     prefixes: [QFN, PQFN, HQFN, MCLP, STQFN, AQFN]
@@ -114,6 +143,8 @@ packages:
     mold: 0.003
     wire_per_pin: 0.0012
     assembly: 0.025
+    lead_frame_per_pin: 0.0004
+    assembly_per_pin: 0.0006
   soic:
     label: "SOIC / SOP narrow body"
     prefixes: [SOIC, SO, SOP, QSOP, SSOP, PG-DSO]
@@ -121,6 +152,8 @@ packages:
     mold: 0.004
     wire_per_pin: 0.0015
     assembly: 0.020
+    lead_frame_per_pin: 0.0004
+    assembly_per_pin: 0.0006
   soic_wide:
     label: "Wide-body SOIC (isolation: high-CTI mold compound, long creepage)"
     prefixes: [SOW, SOWW, SSOW, SSO, PG-LDSO, SDIP, DUB, DIP, SOL]
@@ -128,6 +161,8 @@ packages:
     mold: 0.010
     wire_per_pin: 0.0015
     assembly: 0.030
+    lead_frame_per_pin: 0.0005
+    assembly_per_pin: 0.0008
   laminate:
     label: "Laminate / LGA module"
     prefixes: [LGA, ULGA, WLGA, MODULE, MCM, SMT, SMP, FLATPACK]
@@ -135,6 +170,8 @@ packages:
     mold: 0.010
     wire_per_pin: 0.0020
     assembly: 0.080
+    lead_frame_per_pin: 0.002
+    assembly_per_pin: 0.0015
   wlcsp:
     label: "Wafer-level chip-scale package"
     prefixes: [WLCSP]
@@ -142,3 +179,5 @@ packages:
     mold: 0.0
     wire_per_pin: 0.0
     assembly: 0.012              # bumping and singulation
+    lead_frame_per_pin: 0.0
+    assembly_per_pin: 0.0002

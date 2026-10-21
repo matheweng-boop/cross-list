@@ -91,7 +91,8 @@ def test_rescore_band_row_and_bundle():
     tab = scoring.table(_apps())
     a = scoring.rescore(tab, "pol_ldo", 0, "today", "high")
     b = scoring.rescore(tab, "pol_ldo", 4, "new technology", "high")
-    assert a["score"] - b["score"] == round((100 - 15) * scoring.weights()["distance"] / 100)
+    # both scores are rounded, so their difference is within 1 of the weighted distance step
+    assert abs(a["score"] - b["score"] - (100 - 15) * scoring.weights()["distance"] / 100) < 1
     assert scoring.rescore(tab, "not_a_function", 0, "", "high") is None
     row = {"fn": "lna", "reach": 3, "rf_kind": "none", "band_note": "no part of ours", "competition": None}
     r = scoring.band_row(tab, row)

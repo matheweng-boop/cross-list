@@ -14243,3 +14243,492 @@
   - [ref_rx, dsp, '']
   - [test_rx, dsp, '']
   questions: []
+- name: Utility-scale PV string inverter, 1500 V DC (multi-MPPT boost + three-level inverter, 800 V AC to the MV transformer) (after TI, TÜV and Skyworks public material)
+  category: Power & isolation
+  note: >-
+    Drawn in BizDev for the extra-wide-creepage case (hv-extra-wide-isolation) from public material: TI string inverter
+    page, TI reference designs TIDA-010210 (three-level ANPC, up to 1000 V DC) and TIDA-01606 (T-type, 800-900 V DC),
+    TI SBAA527 (PV moves from 1000 V to 1500 V DC; 15.7 mm isolated amplifiers), a TÜV SÜD IEC 62109-1 report (PD3
+    outside, PD2 inside the cabinet) and a TI E2E answer that a TÜV assessor asked for 15 mm creepage for reinforced
+    isolation in a 1500 V DC inverter. The reinforced barrier sits between the 1500 V power side and the low-voltage
+    control and communication side: digital isolators, isolated amplifiers and, where the controller is earth- or
+    user-referenced, the gate drivers. About 12-24 gate-driver channels, 3-6 isolated amplifiers and 2-6 digital
+    isolators per inverter (est from the topology: n boost legs + 3 three-level legs).
+  sources:
+  - {doc: TI-SOL-STRING, title: String inverter - block diagram + subsystems, url: 'https://www.ti.com/solution/string-inverter'}
+  - {doc: TIDA-010210, title: '11-kW, bidirectional, three-phase ANPC based on GaN reference design', url: 'https://www.ti.com/tool/TIDA-010210'}
+  - {doc: SBAA527, title: "TI's first isolated amplifiers with ultra-wide creepage and clearance (Aug 2021)", url: 'https://www.ti.com/lit/ab/sbaa527/sbaa527.pdf'}
+  - {doc: E2E-938435, title: 'ISO7821: 1500 V solar inverter system (TI E2E, Sep 2020)', url: 'https://e2e.ti.com/support/isolation-group/isolation/f/isolation-forum/938435/iso7821-1500v-solar-inverter-system'}
+  groups:
+  - id: pv_in
+    label: PV strings up to 1500 V DC (DC switch, insulation monitoring, string current)
+    blocks: [relay_driver, current_sensor, {fn: isolated_amplifier, label: Insulation / PV voltage sense (reinforced)}]
+    col: 0
+    row: 0
+  - id: mppt
+    label: MPPT boost stages (n parallel legs, SiC)
+    blocks: [power_fets, {fn: gate_driver, label: Boost gate drivers, qty: 6}, isolated_dcdc]
+    col: 1
+    row: 0
+  - id: inverter
+    label: Three-level inverter (ANPC / T-type), 1500 V DC link to 800 V AC
+    blocks: [dc_link_cap, power_fets, {fn: gate_driver, label: Inverter gate drivers, qty: 12}, isolated_dcdc]
+    col: 2
+    row: 0
+  - id: grid
+    label: AC relays and output to the MV transformer (800 V AC)
+    blocks: [relay_driver, current_sensor]
+    col: 3
+    row: 0
+  - id: sense
+    label: 'Reinforced barrier: DC-link, string and grid voltage / current sensing'
+    blocks: [{fn: isolated_amplifier, label: Isolated amplifiers / modulators, qty: 4}, adc, voltage_reference]
+    col: 0
+    row: 1
+  - id: control
+    label: Inverter control (DSP / MCU on the low-voltage side)
+    blocks: [mcu, temperature_sensor, watchdog]
+    col: 1
+    row: 1
+  - id: comms
+    label: 'Reinforced barrier: communication to the plant (RS-485 / CAN / Ethernet)'
+    blocks: [{fn: digital_isolator, label: Digital isolators (reinforced), qty: 2}, isolated_can, rs485_transceiver, ethernet_phy, isolated_dcdc]
+    col: 2
+    row: 1
+  - id: logger
+    label: Plant controller / data logger
+    blocks: [mcu, ethernet_phy, modem]
+    col: 3
+    row: 1
+  - id: aux
+    label: Auxiliary power from the 1500 V bus (HV flyback, isolated bias)
+    blocks: [hv_flyback, isolated_dcdc, pol_buck, pol_ldo]
+    col: 0
+    row: 2
+  links:
+  - [pv_in, mppt, PV strings up to 1500 V DC]
+  - [mppt, inverter, 1500 V DC link]
+  - [inverter, grid, 800 V AC]
+  - [sense, control, measurements across the barrier]
+  - [control, mppt, PWM across the barrier]
+  - [control, inverter, PWM across the barrier]
+  - [control, comms, '']
+  - [comms, logger, RS-485 / Ethernet]
+  - [aux, control, isolated low-voltage supply]
+  - [pv_in, aux, PV DC]
+  questions:
+  - id: dc_voltage
+    question: Maximum DC voltage of the PV array
+    choices: [1000 V DC, 1500 V DC]
+    source: TI SBAA527 (PV moves from 1000 V to 1500 V DC)
+  - id: pollution_degree
+    question: Where the isolators sit
+    choices:
+    - inside a sealed IP65 cabinet (PD2)
+    - in a ventilated or outdoor enclosure (PD3)
+    - on a coated or potted board (PD1)
+    source: TÜV SÜD IEC 62109-1 report (PD3 external, PD2 internal); IEC 60664-1 via TI SLUP419 and MINMAX
+  - id: isolation_class
+    question: Isolation class
+    choices: [basic, reinforced]
+    sets:
+    - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
+    - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
+    source: IEC 62109-1 via TI SSZTAI4 and the TI E2E thread
+  - id: creepage
+    question: Creepage the barrier needs (material group I package)
+    choices:
+    - 8 mm (800 V reinforced or 1500 V basic at PD2)
+    - 10 mm (1000 V reinforced at PD2)
+    - 15 mm (1500 V reinforced at PD2)
+    sets:
+    - fn: digital_isolator
+      req: creepage
+      map: {'8 mm (800 V reinforced or 1500 V basic at PD2)': '8', '10 mm (1000 V reinforced at PD2)': '10', '15 mm (1500 V reinforced at PD2)': '15'}
+    - fn: gate_driver
+      req: creepage
+      map: {'8 mm (800 V reinforced or 1500 V basic at PD2)': '8', '10 mm (1000 V reinforced at PD2)': '10', '15 mm (1500 V reinforced at PD2)': '15'}
+    source: IEC 60664-1 table via MINMAX (basic, PD2, group I - 6.3 mm at 1250 V, 8.0 mm at 1600 V); TI E2E 938435 (15 mm asked by TÜV)
+  - id: switch_tech
+    question: Power switch
+    choices: [IGBT module, SiC MOSFET, GaN in a three-level stage]
+    source: TIDA-010210, TIDA-01606
+- name: Battery energy storage system, 1500 V DC (rack BMS, DC block and bidirectional three-level PCS to the MV transformer) (after TI, Wood Mackenzie and Skyworks public material)
+  category: Power & isolation
+  note: >-
+    Drawn in BizDev for the extra-wide-creepage case (hv-extra-wide-isolation). Utility-scale storage (82 % of 2025
+    installations, Wood Mackenzie) uses battery racks up to 1500 V DC and a bidirectional power conversion system (PCS);
+    the reinforced barrier sits where 1500 V meets the low-voltage control, the BMS communication and the energy
+    management system. Built from the TI PCS and rack-BMS diagrams in the library and TI reference designs TIDA-010210 /
+    TIDA-01606 (three-level bidirectional stages); Skyworks AN1456 puts ESS controllers and central 1500 V DC links in
+    overvoltage category III. About 12-18 gate-driver channels in the PCS, 2-4 isolated amplifiers, and 2-6 digital
+    isolators or isolated CAN per rack and PCS (est).
+  sources:
+  - {doc: TI-SOL-PCS, title: Power conversion system (PCS) - block diagram + subsystems, url: 'https://www.ti.com/solution/power-conversion-system-pcs'}
+  - {doc: TIDA-01606, title: '11-kW, bidirectional three-phase three-level (T-type) inverter and PFC reference design', url: 'https://www.ti.com/tool/TIDA-01606'}
+  - {doc: WoodMac-2026, title: 'Global energy storage market surpasses 100 GW annual installation milestone in 2025 (Wood Mackenzie, 13 Jan 2026)', url: 'https://www.woodmac.com/news/opinion/global-energy-storage-market-surpasses-100-gw-annual-installation-milestone-in-2025/'}
+  - {doc: AN1456, title: 'Skyworks AN1456, Understanding creepage and clearance requirements for data centers (Sep 2026)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1456-Data-Center-Creepage-Clearance-Requirements.pdf'}
+  groups:
+  - id: racks
+    label: Battery racks up to 1500 V DC (cell monitors, rack BMU, contactors)
+    blocks: [hv_battery, battery_monitor, relay_driver, {fn: digital_isolator, label: BMU isolation (reinforced)}]
+    col: 0
+    row: 0
+  - id: dcblock
+    label: DC block (combiner, fuses, insulation monitoring, optional DC/DC per rack cluster)
+    blocks: [relay_driver, {fn: isolated_amplifier, label: Insulation / bus voltage sense}, power_fets, {fn: gate_driver, label: DC/DC gate drivers, qty: 4}]
+    col: 1
+    row: 0
+  - id: pcs
+    label: Bidirectional three-level PCS, 1500 V DC to 690-800 V AC
+    blocks: [dc_link_cap, power_fets, {fn: gate_driver, label: PCS gate drivers, qty: 12}, isolated_dcdc]
+    col: 2
+    row: 0
+  - id: grid
+    label: AC breaker and MV transformer
+    blocks: [relay_driver, current_sensor]
+    col: 3
+    row: 0
+  - id: sense
+    label: 'Reinforced barrier: battery, DC-link and grid voltage / current sensing'
+    blocks: [{fn: isolated_amplifier, label: Isolated amplifiers / modulators, qty: 4}, current_sensor, adc]
+    col: 0
+    row: 1
+  - id: control
+    label: PCS control (DSP / MCU on the low-voltage side)
+    blocks: [mcu, temperature_sensor, watchdog]
+    col: 1
+    row: 1
+  - id: comms
+    label: 'Reinforced barrier: BMS, PCS and EMS communication (CAN / RS-485 / Ethernet)'
+    blocks: [{fn: digital_isolator, label: Digital isolators (reinforced), qty: 2}, isolated_can, rs485_transceiver, ethernet_phy, isolated_dcdc]
+    col: 2
+    row: 1
+  - id: ems
+    label: Energy management system / site controller
+    blocks: [mcu, ethernet_phy, modem]
+    col: 3
+    row: 1
+  - id: aux
+    label: Auxiliary power (HV flyback from the DC bus, isolated bias)
+    blocks: [hv_flyback, isolated_dcdc, pol_buck, pol_ldo]
+    col: 0
+    row: 2
+  links:
+  - [racks, dcblock, up to 1500 V DC]
+  - [dcblock, pcs, 1500 V DC bus]
+  - [pcs, grid, 690-800 V AC]
+  - [sense, control, measurements across the barrier]
+  - [control, pcs, PWM across the barrier]
+  - [control, dcblock, '']
+  - [racks, comms, BMS data]
+  - [control, comms, '']
+  - [comms, ems, CAN / Ethernet]
+  - [aux, control, isolated low-voltage supply]
+  questions:
+  - id: dc_voltage
+    question: Battery DC voltage class
+    choices: [1000 V DC, 1500 V DC]
+    source: Library PCS and rack-BMS diagrams; Skyworks AN1456 (central 1500 V DC links)
+  - id: power_class
+    question: Power class
+    choices: [commercial three-phase (10-250 kW), utility (MW and containerised)]
+    source: TI-SOL-PCS
+  - id: pollution_degree
+    question: Where the isolators sit
+    choices:
+    - inside a sealed container or cabinet (PD2)
+    - in a ventilated or outdoor enclosure (PD3)
+    - on a coated or potted board (PD1)
+    source: IEC 60664-1 via TI SLUP419 and MINMAX
+  - id: isolation_class
+    question: Isolation class
+    choices: [basic, reinforced]
+    sets:
+    - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
+    - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
+    source: IEC 62477-1 (power electronic converters), our reading
+  - id: creepage
+    question: Creepage the barrier needs (material group I package)
+    choices:
+    - 8 mm (800 V reinforced or 1500 V basic at PD2)
+    - 10 mm (1000 V reinforced at PD2)
+    - 15 mm (1500 V reinforced at PD2)
+    sets:
+    - fn: digital_isolator
+      req: creepage
+      map: {'8 mm (800 V reinforced or 1500 V basic at PD2)': '8', '10 mm (1000 V reinforced at PD2)': '10', '15 mm (1500 V reinforced at PD2)': '15'}
+    - fn: gate_driver
+      req: creepage
+      map: {'8 mm (800 V reinforced or 1500 V basic at PD2)': '8', '10 mm (1000 V reinforced at PD2)': '10', '15 mm (1500 V reinforced at PD2)': '15'}
+    source: IEC 60664-1 table via MINMAX; TI E2E 938435
+- name: AI data-center 800 V DC power (grid to 800 V DC, busway with protection, energy storage, 800 V to 6-12 V isolated converters in the rack) (after NVIDIA, TI and Skyworks public material)
+  category: Power & isolation
+  note: >-
+    Drawn in BizDev for the extra-wide-creepage case (hv-extra-wide-isolation). NVIDIA plans 800 V DC for 1 MW racks from
+    2027 (Kyber): 13.8 kV AC is converted to 800 V DC at the perimeter (rectifier or solid-state transformer), carried on
+    busways and converted to 12 V or 6 V in the rack (NVIDIA technical blog, May 2025). TI showed an 800 V hot-swap
+    controller, an 800 V to 6 V isolated GaN bus converter and a 30 kW 800 V AC/DC supply (Mar 2026). The reinforced
+    barrier sits in every 800 V to low-voltage converter and in the monitoring of the busway (IEC 62368-1, PD2). Skyworks
+    AN1456 - an 8 mm wide body just covers 800 V reinforced creepage, but data centers ask for 3000 m altitude, where a
+    600 V OVC III reinforced clearance grows to 9.1 mm; the upcoming ultra-wide SOIC (15.5 mm clearance) covers it.
+  sources:
+  - {doc: NVIDIA-800VDC, title: 'NVIDIA 800 VDC architecture will power the next generation of AI factories (NVIDIA technical blog, 20 May 2025)', url: 'https://developer.nvidia.com/blog/nvidia-800-v-hvdc-architecture-will-power-the-next-generation-of-ai-factories/'}
+  - {doc: TI-800VDC, title: 'TI 800 VDC architecture for AI data centres (eeNews Europe, 19 Mar 2026)', url: 'https://www.eenewseurope.com/en/ti-800-vdc-architecture-ai-data-centres'}
+  - {doc: AN1456, title: 'Skyworks AN1456, Understanding creepage and clearance requirements for data centers (Sep 2026)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1456-Data-Center-Creepage-Clearance-Requirements.pdf'}
+  groups:
+  - id: perimeter
+    label: 13.8 kV AC to 800 V DC at the perimeter (rectifier or solid-state transformer)
+    blocks: [power_module, {fn: gate_driver, label: Rectifier / SST gate drivers, qty: 12}, isolated_dcdc, mcu]
+    col: 0
+    row: 0
+  - id: busway
+    label: 800 V DC busway and rack entry (hot-swap / eFuse, breaker)
+    blocks: [efuse_hotswap, {fn: isolated_amplifier, label: Bus voltage / current sense (reinforced)}, current_sensor]
+    col: 1
+    row: 0
+  - id: storage
+    label: Energy storage on the 800 V bus (capacitor bank, battery backup)
+    blocks: [dc_link_cap, battery_pack, power_fets, {fn: gate_driver, label: Bidirectional DC/DC drivers, qty: 4}]
+    col: 2
+    row: 0
+  - id: shelf_ctrl
+    label: Power-shelf / sidecar controller and telemetry (PMBus across the barrier)
+    blocks: [mcu, {fn: digital_isolator, label: PMBus / fault isolation (reinforced)}, isolated_amplifier]
+    col: 0
+    row: 1
+  - id: tray
+    label: 'Reinforced barrier: compute-tray 800 V to 6 / 12 V isolated bus converter (GaN / SiC)'
+    blocks: [power_fets, {fn: gate_driver, label: Primary-side gate drivers, qty: 4}, {fn: digital_isolator, label: Control across the barrier (reinforced)}, isolated_dcdc]
+    col: 1
+    row: 1
+  - id: gpu
+    label: GPU core power (multiphase buck from 6 / 12 V)
+    blocks: [multiphase, pol_buck, pol_ldo]
+    col: 2
+    row: 1
+  - id: mgmt
+    label: Rack management controller
+    blocks: [mcu, ethernet_phy]
+    col: 3
+    row: 1
+  links:
+  - [perimeter, busway, 800 V DC]
+  - [busway, storage, 800 V DC]
+  - [busway, tray, 800 V DC into the rack]
+  - [tray, gpu, 6 / 12 V]
+  - [shelf_ctrl, perimeter, '']
+  - [shelf_ctrl, busway, telemetry across the barrier]
+  - [shelf_ctrl, mgmt, PMBus / Ethernet]
+  - [tray, mgmt, telemetry]
+  questions:
+  - id: dc_voltage
+    question: DC distribution voltage
+    choices: [±400 V (800 V pole to pole), 800 V DC, 1500 V DC]
+    source: NVIDIA 800 VDC blog; Skyworks AN1456 (central 800 V or 1500 V DC links)
+  - id: altitude
+    question: Altitude the equipment must be rated for
+    choices: [2000 m, 3000 m (Open Rack v3), 5000 m]
+    source: Skyworks AN1456 Table 3 and Table 4
+  - id: isolation_class
+    question: Isolation class
+    choices: [basic, reinforced]
+    sets:
+    - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
+    - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
+    source: IEC 62368-1 via Skyworks AN1456
+  - id: creepage
+    question: Creepage the barrier needs (material group I package)
+    choices:
+    - 8 mm (800 V reinforced or 1500 V basic at PD2)
+    - 10 mm (1000 V reinforced at PD2)
+    - 15 mm (1500 V reinforced at PD2)
+    sets:
+    - fn: digital_isolator
+      req: creepage
+      map: {'8 mm (800 V reinforced or 1500 V basic at PD2)': '8', '10 mm (1000 V reinforced at PD2)': '10', '15 mm (1500 V reinforced at PD2)': '15'}
+    - fn: gate_driver
+      req: creepage
+      map: {'8 mm (800 V reinforced or 1500 V basic at PD2)': '8', '10 mm (1000 V reinforced at PD2)': '10', '15 mm (1500 V reinforced at PD2)': '15'}
+    source: Skyworks AN1456 Table 5 and Table 7
+  - id: switch_tech
+    question: Power switch in the 800 V converter
+    choices: [GaN, SiC MOSFET]
+    source: TI 800 VDC architecture (GaN bus converter)
+- name: Railway auxiliary converter (750 V-3 kV DC catenary to 400 V AC and 110 V DC battery charging) (after Skyworks AN1456, Wolfspeed forum and UNIFE public material)
+  category: Power & isolation
+  note: >-
+    Drawn in BizDev for the extra-wide-creepage case (hv-extra-wide-isolation). The auxiliary converter feeds air
+    conditioning, compressors, lighting and the train battery from the catenary (600-750 V DC trams and metros, 1500 V
+    and 3000 V DC mainline). Railway equipment (EN 50124-1) is designed for PD3 and OV3; a designer on the Wolfspeed forum
+    (Dec 2025) computes 18.1 mm (material group I) to 20.1 mm (group II) reinforced creepage for a 600 V DC tram line, so
+    even a 15 mm package is not enough alone. Designs use two barriers in series, fiber optics or potting; a wide
+    package still helps the second barrier. About 6-12 gate-driver channels, 2-4 isolated amplifiers and 2-4 digital
+    isolators per converter (est).
+  sources:
+  - {doc: Wolfspeed-forum, title: 'HAS310M17BM3 gate driver for railway application (Wolfspeed Power Applications Forum, Dec 2025)', url: 'https://forum.wolfspeed.com/discussion/comment/3417'}
+  - {doc: AN1456, title: 'Skyworks AN1456, Understanding creepage and clearance requirements for data centers (Sep 2026): topology workarounds and fiber optics', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1456-Data-Center-Creepage-Clearance-Requirements.pdf'}
+  - {doc: UNIFE-2024, title: UNIFE World Rail Market Study 2024 (abstract), url: 'https://unife.org/wp-content/uploads/2024/07/Abstract_UNIFE_World_Rail_Market_Study.pdf'}
+  groups:
+  - id: catenary
+    label: Catenary input 750 / 1500 / 3000 V DC (line filter, pre-charge, line contactor)
+    blocks: [relay_driver, dc_link_cap, {fn: isolated_amplifier, label: Line voltage sense (double / reinforced)}]
+    col: 0
+    row: 0
+  - id: dcdc
+    label: Input DC/DC with medium-frequency transformer (SiC 1.7-3.3 kV)
+    blocks: [power_module, {fn: gate_driver, label: Input-stage gate drivers, qty: 4}, isolated_dcdc]
+    col: 1
+    row: 0
+  - id: inverter
+    label: Three-phase inverter, 400 V AC 50 Hz (HVAC, compressors, sockets)
+    blocks: [power_fets, {fn: gate_driver, label: Inverter gate drivers, qty: 6}, isolated_dcdc]
+    col: 2
+    row: 0
+  - id: charger
+    label: 110 V / 24 V DC battery charger and low-voltage loads
+    blocks: [power_fets, gate_driver, battery_pack]
+    col: 3
+    row: 0
+  - id: sense
+    label: 'Barrier to the catenary: voltage and current sensing'
+    blocks: [{fn: isolated_amplifier, label: Isolated amplifiers, qty: 3}, current_sensor, adc]
+    col: 0
+    row: 1
+  - id: control
+    label: Converter control (MCU / DSP)
+    blocks: [mcu, temperature_sensor, watchdog]
+    col: 1
+    row: 1
+  - id: comms
+    label: Train bus (MVB / CAN / Ethernet) through isolation
+    blocks: [{fn: digital_isolator, label: Digital isolators}, isolated_can, ethernet_phy, rs485_transceiver]
+    col: 2
+    row: 1
+  - id: aux
+    label: Control supply from the 110 V battery (isolated DC/DC)
+    blocks: [isolated_dcdc, pol_buck, pol_ldo]
+    col: 3
+    row: 1
+  links:
+  - [catenary, dcdc, 750-3000 V DC]
+  - [dcdc, inverter, isolated DC link]
+  - [dcdc, charger, '']
+  - [sense, control, measurements across the barrier]
+  - [control, dcdc, PWM across the barrier]
+  - [control, inverter, PWM]
+  - [control, comms, '']
+  - [aux, control, isolated low-voltage supply]
+  questions:
+  - id: line_voltage
+    question: Catenary voltage
+    choices: [600-750 V DC (tram and metro), 1500 V DC, 3000 V DC, 15 / 25 kV AC (through a transformer)]
+    source: Wolfspeed forum thread (600 V DC tram); our reading of common line voltages
+  - id: pollution_degree
+    question: Pollution degree and overvoltage category designed for
+    choices: [PD2 and OV2 (sealed box), PD3 and OV3 (typical for rail)]
+    source: Wolfspeed forum thread (EN 50124-1, PD3, OV3)
+  - id: isolation_class
+    question: Isolation class
+    choices: [basic, reinforced]
+    sets:
+    - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
+    - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
+    source: EN 50124-1 as quoted on the Wolfspeed forum
+  - id: barrier_build
+    question: How the barrier to the catenary is built
+    choices: [one reinforced package, two basic barriers in series, fiber-optic links, potting or coating]
+    source: Wolfspeed forum reply (fiber optics or larger isolators); Skyworks AN1456 section 6
+- name: Wind turbine converter (back-to-back, 690 V AC, about 1100 V DC link, full-power or doubly-fed) (after TI SBAA527, Skyworks AN1456 and GWEC public material)
+  category: Power & isolation
+  note: >-
+    Drawn in BizDev for the extra-wide-creepage case (hv-extra-wide-isolation). Wind converters run from 690 V AC with a
+    DC link around 1000-1100 V (our reading). TI names solar and wind inverters and 690 V drives among the systems that
+    need more than 9 mm creepage and clearance (SBAA527), and Skyworks AN1456 shows that 400/690 V systems need 9.1 mm
+    reinforced clearance at 3000 m in OVC III, more than an 8 mm wide body gives. Converter cabinets sit in the nacelle
+    or tower base, often offshore, so condensation (PD3) is a design case unless the cabinet is sealed (our reading).
+    About 12-24 gate-driver channels (machine and grid side, brake chopper), 4-8 isolated amplifiers and 2-4 digital
+    isolators per converter (est).
+  sources:
+  - {doc: SBAA527, title: "TI's first isolated amplifiers with ultra-wide creepage and clearance (Aug 2021)", url: 'https://www.ti.com/lit/ab/sbaa527/sbaa527.pdf'}
+  - {doc: AN1456, title: 'Skyworks AN1456, Understanding creepage and clearance requirements for data centers (Sep 2026)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1456-Data-Center-Creepage-Clearance-Requirements.pdf'}
+  - {doc: GWEC-2026, title: 'Global wind installations rise record 40 % (GWEC, 20 Apr 2026)', url: 'https://www.gwec.net/news/global-wind-installations-rise-record-40-as-industry-charts-way-out-of-energy-crisis'}
+  groups:
+  - id: gen
+    label: Generator (permanent-magnet or doubly-fed rotor), 690 V
+    blocks: [motor]
+    col: 0
+    row: 0
+  - id: machine
+    label: Machine-side converter (IGBT / SiC modules)
+    blocks: [power_module, {fn: gate_driver, label: Machine-side gate drivers, qty: 6}, isolated_dcdc]
+    col: 1
+    row: 0
+  - id: dclink
+    label: DC link about 1100 V and brake chopper
+    blocks: [dc_link_cap, power_fets, gate_driver]
+    col: 2
+    row: 0
+  - id: gridside
+    label: Grid-side converter, 690 V AC
+    blocks: [power_module, {fn: gate_driver, label: Grid-side gate drivers, qty: 6}, isolated_dcdc]
+    col: 3
+    row: 0
+  - id: sense
+    label: 'Reinforced barrier: DC-link, phase current and grid voltage sensing'
+    blocks: [{fn: isolated_amplifier, label: Isolated amplifiers / modulators, qty: 6}, current_sensor, adc]
+    col: 0
+    row: 1
+  - id: control
+    label: Converter control (DSP / MCU)
+    blocks: [mcu, temperature_sensor, watchdog]
+    col: 1
+    row: 1
+  - id: comms
+    label: 'Reinforced barrier: turbine controller link (CAN / Ethernet / fiber)'
+    blocks: [{fn: digital_isolator, label: Digital isolators (reinforced), qty: 2}, isolated_can, ethernet_phy]
+    col: 2
+    row: 1
+  - id: grid
+    label: Grid breaker and turbine transformer
+    blocks: [relay_driver, current_sensor]
+    col: 3
+    row: 1
+  - id: aux
+    label: Auxiliary and gate-drive power (isolated DC/DC)
+    blocks: [isolated_dcdc, pol_buck, pol_ldo]
+    col: 0
+    row: 2
+  links:
+  - [gen, machine, 690 V AC]
+  - [machine, dclink, '']
+  - [dclink, gridside, about 1100 V DC]
+  - [gridside, grid, 690 V AC]
+  - [sense, control, measurements across the barrier]
+  - [control, machine, PWM across the barrier]
+  - [control, gridside, PWM across the barrier]
+  - [control, comms, '']
+  - [aux, control, isolated low-voltage supply]
+  questions:
+  - id: wind_topology
+    question: Converter type
+    choices: [full-power converter (permanent-magnet generator), doubly-fed (rotor converter for about a third of the power)]
+    source: Our reading of common wind turbine designs
+  - id: altitude
+    question: Altitude the equipment must be rated for
+    choices: [2000 m, 3000 m, 5000 m]
+    source: Skyworks AN1456 Table 3 and Table 4
+  - id: pollution_degree
+    question: Where the isolators sit
+    choices:
+    - inside a sealed cabinet (PD2)
+    - in a ventilated cabinet with condensation (PD3)
+    - on a coated or potted board (PD1)
+    source: IEC 60664-1 via TI SLUP419 and MINMAX
+  - id: isolation_class
+    question: Isolation class
+    choices: [basic, reinforced]
+    sets:
+    - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
+    - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
+    source: IEC 61800-5-1 / IEC 62477-1, our reading

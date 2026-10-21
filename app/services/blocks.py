@@ -584,10 +584,17 @@ def tags_for(text: str) -> list[str]:
     return [c["key"] for c in categories() if any(_tag_re(w).search(low) for w in c.get("words") or [])]
 
 
+_SUPPLY_RAIL = re.compile(r"(?<![a-z0-9])rails?(?![a-z0-9])")
+
+
 def search_index(name: str, category: str = "", extra: str = "") -> dict:
     """What a diagram is searched on: its general categories (from the name and category) and its plain text (name,
     category, market, frame and block labels)."""
-    return {"tags": tags_for(f"{name} {category}"), "text": f"{name} {category} {extra}".lower()}
+    text = f"{name} {category} {extra}".lower()
+    # supply rails ("power rail", "other rails", "DIN-rail") are not railways: a search for "rail" finds the railway
+    # category, so the bare word is read as "supply" in the text
+    text = _SUPPLY_RAIL.sub("supply", text)
+    return {"tags": tags_for(f"{name} {category}"), "text": text}
 
 
 def query_words(q: str) -> list[str]:

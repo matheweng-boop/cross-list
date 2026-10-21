@@ -33,6 +33,8 @@
 #   learn            "Learn about this" tab: one short paragraph each for age 5, 10, 15, 20 and 25 (what it is, why it
 #                    matters, what it needs, where the request comes from, competitors and where we stand)
 #   learn_links      knowledge-base pages to read next: {label, href} on /library, /rf-notes, /engineering, /visuals
+#   see_also         slugs of related reports or cases (a research report and the business case built on it), shown
+#                    as "See also" links under the report's header
 reports:
   - slug: iso7821dww-isolation
     title: 'Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit'
@@ -41,6 +43,7 @@ reports:
     app_type: Power and charging
     date: 2026-10-21
     status: draft
+    see_also: [hv-extra-wide-isolation]
     question: TI's ISO7821DWW is a reinforced dual-channel digital isolator in a 16-pin extra-wide SOIC (DWW). Which Skyworks
       solutions apply in power conversion, charging (on-board chargers, DC fast chargers) and automotive, and is there a business
       case for an extra-wide-package isolator?
@@ -51,7 +54,10 @@ reports:
       reinforced 8.0 mm at 800 V and 10 mm at 1000 V, so 8 mm is just enough at 800 V but not for a fully charged 800 V
       battery or a 1000 V system; where condensation or conductive dust is expected (pollution degree 3) only 14.5 mm works.
       TI prices DWW reels like DW reels ($2.60 vs $2.64 at 1k). Adjacent: our isolated gate drivers, isolated DC-DC and
-      isolated amplifiers in the same charger and inverter designs.'
+      isolated amplifiers in the same charger and inverter designs. Ranked applications (21 Oct): 1500 V solar and storage
+      need about 15 mm, 800 V DC data centers at 3000 m and 1000 V chargers and wind converters 9–11 mm, rail 18–20 mm;
+      inside the car (PD2) 8 mm covers 800 V. Our AN1456 announces an ultra-wide SOIC (>15 mm): business case
+      hv-extra-wide-isolation.'
     tags:
     - ISO7821DWW
     - digital isolator
@@ -65,20 +71,27 @@ reports:
     - automotive
     - pollution degree
     - 800 V
-    sources: BizDev parts database (TI, Skyworks, Novosense digital isolators) and cross results; block-diagram library (66
-      of 219 diagrams); TI reference design TIDA-00785; library topic on traction-inverter isolation; public creepage notes
-      (TI SLUP419/SLUP421, SLUAAR5, SLLA469, SSZTAI4; MINMAX; Vishay; Skyworks AN583; CONEC; EV Engineering; a TÜV
-      IEC 62109-1 report) and the TI ISO7821 product page (prices), 21 Oct 2026.
+    - 1500 V
+    - solar inverter
+    - BESS
+    - data center
+    sources: BizDev parts database (TI, Skyworks, Novosense digital isolators) and cross results; block-diagram library (71
+      of 224 diagrams); TI reference designs TIDA-00785, TIDA-010054, TIDA-01606, TIDA-010210; library topic on
+      traction-inverter isolation; public creepage notes (TI SLUP419/SLUP421, SLUAAR5, SLLA469, SSZTAI4, SBAA527; MINMAX;
+      Vishay; Skyworks AN583 and AN1456; CONEC; EV Engineering; a TÜV IEC 62109-1 report; TI E2E; Wolfspeed forum), market
+      pages (SolarPower Europe, Wood Mackenzie, GWEC, NVIDIA, UNIFE) and the TI ISO7821 product page (prices), 21 Oct 2026.
     bu_opener:
       question: TI sells ISO7821DWW, a 2-channel reinforced isolator in an extra-wide package (14.5 mm creepage) for high-voltage
         power and charging, at the same reel price as its 8 mm version. Our nearest parts (Si86S621/622) stop at 8 mm, which
-        is just enough for a reinforced barrier at 800 V in a sealed box, but not at 900–1000 V or where condensation is
-        expected. Would an extra-wide package for our existing isolator die be worth it?
+        is just enough for a reinforced barrier at 800 V in a sealed box (so inside the car), but not for 1500 V solar and
+        storage (about 15 mm), 1000 V chargers or where condensation is expected. Our AN1456 already announces an ultra-wide
+        SOIC (>15 mm). Which dies should go into it first?
       pros:
       - Si86S621/622 beat it on CMTI (100 vs 85 kV/µs), isolation rating (6 vs 5.7 kVrms) and data rate (150 vs 100 Mbps)
       - Automotive (AEC-Q100) versions exist (-AS4); ISO7821DWW is industrial grade
       - 'Large isolator line (672 parts in BizDev) and the neighbours in the same designs: isolated gate drivers, isolated DC-DC,
         isolated amplifiers'
+      - Our announced ultra-wide SOIC (>15.0 mm creepage) clears the 15 mm a TÜV assessor asked for at 1500 V; TI's 14.5 mm does not
       cons:
       - No Skyworks isolator above 8 mm creepage; TI (20 parts) and Novosense (6) offer 14.5–15 mm. A reinforced barrier
         needs 10 mm at 1000 V (pollution degree 2) and 20 mm at 800 V (pollution degree 3)
@@ -103,14 +116,20 @@ reports:
       text: The request comes from a TI part, ISO7821DWW, seen in power, charging and automotive designs. Its extra-wide package
         gives 14.5 mm creepage, which allows higher working voltages and dirtier environments (a higher pollution degree,
         from a sealed box, PD2, to a place with condensation or conductive dust, PD3). In BizDev, digital isolators
-        sit in 66 of 219 application diagrams, among them on-board chargers, DC fast chargers, wallboxes and traction inverters.
+        sit in 71 of 224 application diagrams, among them on-board chargers, DC fast chargers, wallboxes and traction inverters.
+        The places where more than 8 mm is really needed are 1500 V solar inverters and battery storage (about 15 mm), 800 V DC
+        data-center power at high altitude, 1000 V chargers and wind converters; rail needs even more. Inside a car the
+        high-voltage boxes are sealed (pollution degree 2), so 8 mm covers 800 V there.
     - age: 25
       text: 'TI leads with wide and extra-wide packages; Novosense offers 15 mm parts; ADI, Infineon, ST, onsemi and Chinese
         suppliers crowd the market. Our capacitive isolators (Si86xx, Si88xx) match or beat ISO7821 on CMTI and kVrms and come
         in automotive grade, but our widest package gives 8 mm. Per IEC 60664-1 (as reproduced by TI and MINMAX), a reinforced
         barrier with group I mould compound needs 8 mm at 800 V and 10 mm at 1000 V in a sealed box (pollution degree 2),
         and 20–25 mm where condensation is expected (pollution degree 3), which coating, potting or sealing avoids. TI sells
-        the 14.5 mm reel at the 8 mm price. Open: which OEMs design to 900–1000 V, and can our die go into a wider package?'
+        the 14.5 mm reel at the 8 mm price, but asks about 60 % more for its 15.7 mm isolated amplifier. A TÜV assessor asked
+        for 15 mm at 1500 V and refused 14.5 mm. Our AN1456 announces an ultra-wide SOIC with more than 15 mm creepage; the
+        business case (hv-extra-wide-isolation) proposes isolators, isolated amplifiers and gate drivers in it. Open: release
+        date, working-voltage rating and cost of that package.'
     learn_links:
     - label: Creepage
       href: /engineering/creepage_mm
@@ -128,6 +147,70 @@ reports:
       href: /visuals#creep
     - label: 'Interactive: CMTI vs the switching edge'
       href: /visuals#cmti
+    - label: 'Library: isolation in the traction inverter'
+      href: /library/traction_asil_d
+  - slug: hv-extra-wide-isolation
+    title: "Extra-wide isolation for 1500 V solar, storage and 800 V DC data centers: isolators, gate drivers and isolated amplifiers in our ultra-wide SOIC"
+    kind: idea
+    area: Power & isolation
+    app_type: Power and charging
+    feasibility: 2
+    feasibility_why: "Existing isolator, amplifier and gate-driver dies in a new package, the ultra-wide SOIC our app note AN1456 already announces; needs qualification and a 2000 Vrms rating"
+    date: 2026-10-21
+    status: draft
+    see_also: [iso7821dww-isolation]
+    question: "Where does an isolator or isolated gate driver need more than our 8 mm creepage, how big are those markets, and should Skyworks put its existing dies into the ultra-wide SOIC (≥15 mm) that AN1456 announces, against TI's 14.5 mm and 15.7 mm parts, Novosense's 15 mm isolators and Broadcom's 15 mm optocouplers, and at what price?"
+    summary: >-
+      Business-case draft following the ISO7821DWW research. More than 8 mm is really needed only for the reinforced
+      barrier at 1000–1500 V (1500 V solar and storage need about 15 mm; a TÜV assessor refused TI's 14.5 mm), in 800 V DC
+      data-center power rated for 3000 m (9.1 mm clearance) and at pollution degree 3. Inside a car (sealed, PD2) 8 mm
+      covers 800 V. Our AN1456 already announces an ultra-wide SOIC (>15.0 mm creepage, >15.5 mm clearance). Proposal: put
+      our isolator, isolated-amplifier and gate-driver dies into it and sell a 1500 V barrier set; about $2.0, $2.6 and
+      $2.6 a part (est). Five block diagrams added (1500 V solar, 1500 V storage, 800 V DC data center, wind, rail).
+    tags: [extra-wide package, creepage, reinforced isolation, 1500 V, solar inverter, battery energy storage, BESS, 800 V DC, data center, wind, railway, digital isolator, isolated gate driver, isolated amplifier, pricing]
+    sources: "BizDev parts database, block-diagram library and TI list prices; Skyworks AN1456; public pages read 21 Oct 2026 (NVIDIA, TI reference designs and app brief SBAA527, TI E2E, Wolfspeed forum, Wood Mackenzie, SolarPower Europe, GWEC, UNIFE, eeNews Europe) and search snippets (IEA, Broadcom); every figure in the background notes"
+    bu_opener:
+      question: Utility solar and battery storage have moved to 1500 V DC, where the safety barrier between power and control needs about
+        15 mm creepage; data centers move to 800 V DC at up to 3000 m. Our AN1456 already announces an ultra-wide SOIC (>15 mm). Should we
+        put our isolator, isolated-amplifier and gate-driver dies into it and sell a 1500 V barrier set at about $2.0–2.6 a part (est)?
+      pros:
+      - Our ultra-wide SOIC (>15.0 mm creepage) clears the 15 mm a TÜV assessor asked for; TI's 14.5 mm DWW does not
+      - Dies for every barrier function exist (isolators, isolated amplifiers, gate drivers, isolated DC-DC)
+      - 'Big, growing markets: 597 GW solar in 2024, 106 GW storage in 2025 (+43 %), 165 GW wind in 2025 (+40 %)'
+      cons:
+      - Nothing above 8 mm ships today; TI (20 isolators, 15.7 mm amplifiers) and Novosense (6 isolators) are there already
+      - No price premium on extra-wide isolators (TI DWW reel = DW reel price)
+      - Rail and medium voltage use fiber or two barriers; China (over half the volume) has Novosense locally
+      vs: TI ISO7821DWW and AMC1411; Novosense NSI8321W1; Broadcom ACNT-H343
+    learn:
+    - age: 5
+      text: Big solar farms and giant batteries use very strong electricity. The small computer that controls them needs a thick wall
+        between itself and that electricity, so nobody gets hurt.
+    - age: 10
+      text: A digital isolator passes messages through a wall. The higher the voltage, the wider the wall must be on the outside of the chip.
+        Our chips are 8 mm wide there; solar farms and storage at 1500 volts need about 15 mm.
+    - age: 15
+      text: 'Creepage is the distance along the package surface between the two sides. It grows with voltage and dirt: a reinforced
+        barrier needs 8 mm at 800 V, 10 mm at 1000 V and about 15 mm at 1500 V in a sealed box (pollution degree 2), and much more
+        where condensation is expected (pollution degree 3). Inside a car the boxes are sealed, so 8 mm covers 800 V.'
+    - age: 20
+      text: 'Where the extra-wide parts win: 1500 V solar inverters and battery-storage converters (the biggest), 800 V DC data-center
+        power rated for 3000 m altitude, 1000 V fast chargers and wind converters. Rail needs 18–20 mm and uses two barriers or fiber.
+        Heat pumps, medical equipment and the car itself are covered by 8 mm.'
+    - age: 25
+      text: 'TI sells 14.5 mm isolators at no premium and 15.7 mm isolated amplifiers at about 60 % more; Novosense has 15 mm isolators,
+        Broadcom 15 mm optocouplers. A TÜV assessor asked for 15 mm at 1500 V and refused 14.5 mm. Our AN1456 announces an ultra-wide
+        SOIC with more than 15 mm creepage: the proposal is a family from existing dies, certified at 2000 Vrms working, sold as a
+        barrier set with our 8 mm gate drivers and isolated bias on the power side.'
+    learn_links:
+    - label: Creepage
+      href: /engineering/creepage_mm
+    - label: Basic vs reinforced isolation
+      href: /engineering/isolation_class
+    - label: Working voltage
+      href: /engineering/viorm_vpk
+    - label: 'Interactive: creepage vs working voltage'
+      href: /visuals#creep
     - label: 'Library: isolation in the traction inverter'
       href: /library/traction_asil_d
   - slug: filters-1-11ghz

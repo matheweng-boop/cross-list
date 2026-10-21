@@ -21,8 +21,16 @@ record the page in `param_sources`.
 - `isolation_class`: `basic` or `reinforced`.
 - `qualification`: `automotive` (AEC-Q100 stated for that ordering code), else `industrial`.
 - `uvlo_v`: the output-side UVLO rising threshold as a number in V (e.g. 5, 8, 12), from the ordering code.
-- `peak_source_a`, `peak_sink_a`: typical peak currents in A. `cmti_kv_us`: minimum CMTI.
-- `isolation_rating_kvrms`, `creepage_mm` (package creepage), `output_supply_v` [min, max], `prop_delay_ns` (max),
+- `peak_source_a`, `peak_sink_a`: typical peak currents in A, source and sink separately (TI's device comparison
+  table, e.g. UCC5310MC 4.3 A / 2.2 A). `peak_current_vdd_v`: the output supply they are stated at (TI and Novosense
+  15 V; NSI6602A/B 12 V). Voltage-mode drivers whose datasheet tabulates the current per supply also get
+  `peak_source_curve` / `peak_sink_curve` ([[V, A], ...]); the engine then compares at the other part's supply.
+- `output_config`: the output option of the ordering code: `split output` (OUTH/OUTL, VO+/VO-), `Miller clamp` (one
+  output plus a clamp pin: UCC53x0M, Si82B41/44/47), `split output + Miller clamp`, `UVLO to GND2` (UCC53x0E),
+  `single output`. When omitted it is read from the pinout (rules `derive`); state it for parts without a pinout.
+- `cmti_kv_us`: minimum CMTI.
+- `isolation_rating_kvrms` (UL 1577 Viso of that ordering code's package: one family can be 2.5 kVrms in LGA13 and
+  5.7 kVrms in SOW16), `isolation_class` likewise per package, `creepage_mm` (package creepage), `output_supply_v` [min, max], `prop_delay_ns` (max),
   `temp_range_c` [min, max], `theta_ja_c_w`, `iq_ma`, `rise_time_ns`, `fall_time_ns`, `pwd_ns` (max).
 
 ## Packages

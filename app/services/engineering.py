@@ -8,7 +8,7 @@ a parameter without a body gets a generic page built from its rules definition.
 from dataclasses import dataclass
 from pathlib import Path
 
-from app.matching.engine import compare_param, format_value
+from app.matching.engine import compare_param, format_at
 from app.matching.rules import ParamDef, load_all_rules
 from app.models import Part
 
@@ -76,9 +76,9 @@ def context(key: str, reference: Part | None, candidate: Part | None) -> Context
     p = rules.get(key) if rules else None
     if p is None:
         return None
-    rv, cv = rules.values(reference), rules.values(candidate)
+    rv, cv = rules.at_same_conditions(rules.values(reference), rules.values(candidate))
     status, _ = compare_param(p, rv.get(key), cv.get(key))
-    return Context(reference, candidate, p, format_value(p, rv.get(key)), format_value(p, cv.get(key)), status)
+    return Context(reference, candidate, p, format_at(rules, p, rv), format_at(rules, p, cv), status)
 
 
 def device(part: Part) -> dict:

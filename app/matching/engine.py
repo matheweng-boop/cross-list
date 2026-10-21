@@ -58,6 +58,7 @@ class Diff:
     hard: bool = False
     must_meet: bool = False
     exception: bool = False  # worse = an exception to list, not a deviation
+    unknown_ok: bool = False  # an unknown value is shown but not counted as a deviation
 
     @property
     def score(self) -> float:
@@ -223,7 +224,19 @@ def format_value(p: ParamDef, value) -> str:
         return ", ".join(sorted(value)) if value else "none"
     if p.kind == "bool":
         return "yes" if value else "no"
+    if p.kind == "curve":
+        x_unit = f" {p.x_unit}" if p.x_unit else ""
+        return ", ".join(f"{_fmt_num(float(y))}{unit} at {_fmt_num(float(x))}{x_unit}" for x, y in sorted(value))
     return f"{value}{unit}" if p.kind == "category" and p.unit else str(value)
+
+
+def format_at(rules: FamilyRules, p: ParamDef, values: dict) -> str:
+    """The value with its test condition, when the parameter has one (``7.5 A at 18 V``)."""
+    text = format_value(p, values.get(p.key))
+    cond = rules.get(p.at) if p.at else None
+    if cond is None or values.get(p.key) is None or values.get(p.at) is None:
+        return text
+    return f"{text} at {format_value(cond, values.get(p.at))}"
 
 
 # ---------------------------------------------------------------- parameters
@@ -287,6 +300,9 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
             return (BETTER if cand else WORSE), 1.0
         return DIFFERENT, 1.0
 
+    if p.kind == "curve":  # shown for information; the values read off it are compared instead
+        return EQUAL, 0.0
+
     raise ValueError(p.kind)
 
 
@@ -302,7 +318,14 @@ _PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vo([a-z0-9]+)$", r"out\1
 # AVDD/DVDD, AINP/AINN against TI's VDD1/VDD2, INP/INN. ACLK is left out: it is a clock input on some Skyworks parts
 # and an output on others.
 _FAMILY_PIN_ALIASES = {
-    "gate_driver": ((r"^vi([ab])$", r"in\1"), (r"^disable$", "dis")),
+    # Single-channel drivers: TI VCC1 / GND1 / VCC2 / VEE2 / OUTH / OUTL / CLAMP against Skyworks VDDI / GNDI / VDD /
+    # GND / VO+ / VO- / MC (Si82Bx is sold as a pin-compatible UCC53x0 alternative). The output-side GND of a Skyworks
+    # single-channel driver is its most negative output supply, the role of TI's VEE2.
+    "gate_driver": (
+        (r"^vi([ab+-])$", r"in\1"), (r"^disable$", "dis"), (r"^vddi$", "vdd1"), (r"^gndi$", "gnd1"),
+        (r"^vdd$", "vdd2"), (r"^vee2?$", "gnd2"), (r"^vo([+-]?)$", r"out\1"), (r"^out\+$", "outh"),
+        (r"^out-$", "outl"), (r"^mc$", "clamp"),
+    ),
     "isolated_amplifier": (
         (r"^(vdda|avdd)$", "vdd1"), (r"^(vddb|dvdd)$", "vdd2"), (r"^(gnda|agnd)$", "gnd1"), (r"^(gndb|dgnd)$", "gnd2"),
         (r"^(aip|ainp)$", "inp"), (r"^(ain|ainn)$", "inn"), (r"^aop$", "outp"), (r"^aon$", "outn"), (r"^ao$", "out"),
@@ -436,17 +459,24 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 
 def _deviations(diffs: list[Diff]) -> list[Diff]:
     """Priority 1 parameters that are worse, different or unknown; an ``exception`` parameter that is worse is
-    listed separately and does not count (an unknown value still does: it cannot be checked)."""
-    return [d for d in diffs if d.priority == 1 and ((d.is_negative and not d.exception) or d.status == UNKNOWN)]
+    listed separately and does not count (an unknown value still does: it cannot be checked, unless the parameter is
+    ``unknown_ok``)."""
+    return [
+        d
+        for d in diffs
+        if d.priority == 1 and ((d.is_negative and not d.exception) or (d.status == UNKNOWN and not d.unknown_ok))
+    ]
 
 
 def cross(
     ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS
 ) -> CrossResult:
     fit = check_fit(ref, cand)
-    rv, cv = rules.values(ref), rules.values(cand)
+    rv, cv = rules.at_same_conditions(rules.values(ref), rules.values(cand))
     diffs = []
     for p in rules.params:
+        if p.kind == "curve":
+            continue
         status, sev = compare_param(p, rv.get(p.key), cv.get(p.key))
         diffs.append(
             Diff(
@@ -454,12 +484,13 @@ def cross(
                 p.label,
                 p.priority,
                 status,
-                format_value(p, rv.get(p.key)),
-                format_value(p, cv.get(p.key)),
+                format_at(rules, p, rv),
+                format_at(rules, p, cv),
                 sev,
                 p.hard,
                 p.must_meet,
                 p.exception,
+                p.unknown_ok,
             )
         )
 

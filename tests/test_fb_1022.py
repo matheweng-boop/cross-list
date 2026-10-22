@@ -34,3 +34,13 @@ def test_walk_market_size_points_to_tam_and_is_not_logged(client, session, real)
     assert "no public market-size estimate yet" in html or "public estimate" in html
     texts = session.scalars(select(SiteFeedback.text).where(SiteFeedback.author == walk.AUTHOR)).all()
     assert not any("market size" in t or "market-size" in t for t in texts)
+
+
+def test_no_feedback_sections_at_the_bottom(client):
+    caps = client.get("/business/capabilities").text
+    assert 'action="/business/capabilities/feedback"' not in caps and 'id="feedback"' not in caps
+    rep = client.get("/business/reports/filters-1-11ghz").text
+    assert "/ask" not in rep and 'class="fb-open"' in rep  # only the floating button
+    # old form targets still answer
+    r = client.post("/business/capabilities/feedback", data={"kind": "idea", "text": "x"}, follow_redirects=False)
+    assert r.status_code == 303

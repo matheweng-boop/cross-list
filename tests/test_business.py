@@ -88,7 +88,7 @@ def test_hunt_capabilities_and_feedback(client):
         r = client.get(path)
         assert r.status_code == 200 and "About this page" in r.text, path
     client.post("/business/capabilities/feedback", data={"kind": "missing", "topic": "BAW filters", "text": "Add XBAW"})
-    assert "Add XBAW" in client.get("/business/capabilities").text
+    assert 'action="/business/capabilities/feedback"' not in client.get("/business/capabilities").text
     assert "Add XBAW" in client.get("/business/capabilities/feedback.txt").text
 
 

@@ -26,7 +26,8 @@ def test_page_renders(client):
 def test_product_categories_cover_both_lines():
     pc = pf.product_categories()
     labels = {r["label"]: r for r in pc["rows"]}
-    assert labels["Isolated gate drivers"]["Skyworks"] > 0 and labels["Filters, duplexers and multiplexers"]["Qorvo"] > 0
+    assert labels["Isolated gate drivers"]["Skyworks"] > 0
+    assert labels["Filters, duplexers and multiplexers"]["Qorvo"] > 0
     assert pc["totals"]["Skyworks"] == sum(r["Skyworks"] for r in pc["rows"])
     assert pf.category_of("Isolation", "Isolated Gate Drivers") == "Isolated gate drivers"
     assert pf.category_of("TV and Video", "Digital TV and Satellite Demodulators") == "Broadcast radio, TV and audio"

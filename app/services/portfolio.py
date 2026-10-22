@@ -149,7 +149,7 @@ CATEGORY_RULES = (
     ("RF power transistors", ("power transistor",)),
     ("Amplifiers (PA, LNA, gain, CATV)", ("amplifier",)),
     ("Wireless transceivers and UWB", ("uwb", "transceiver ic", "communications controller")),
-    ("Power management", ("power management", "dc-dc", "pmic", "battery management", "power loss", "power over ethernet")),
+    ("Power management", ("power management", "dc-dc", "pmic", "battery management", "power loss", "over ethernet")),
     ("Motor controllers", ("motor controller",)),
     ("Diodes", ("diode",)),
     ("RF passives", ("passive", "coupler", "divider", "delay line")),

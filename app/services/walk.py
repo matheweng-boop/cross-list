@@ -118,8 +118,7 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
         gaps.append((4, f"{label}: competition not assessed (data/business/competition.yaml)"))
     if not trend:
         gaps.append((4, f"{label}: no market trend recorded (data/business/evidence/trends.yaml)"))
-    if tam is None:
-        gaps.append((4, f"{label}: no ASP and application volumes entered, so the market size is unknown"))
+    # no public TAM estimate yet is expected (owner, 22 Oct 2026): shown on the step, not logged as a data error
     if apps and not hunt:
         gaps.append((4, f"{label}: no customers listed for the applications that use it (customers.yaml)"))
     lib = library.for_function(fn)

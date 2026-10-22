@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from tests.test_pipeline import ids, real  # noqa: F401  (fixture)
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -18,3 +20,17 @@ def test_sso8_creepage_is_at_least_not_measured():
     bg = files[2].read_text()
     assert "7. Summary and Future Outlook" in bg
     assert "Skyworks is currently developing a new ultra-wide-body (UWB) SOIC package" in bg
+
+
+def test_walk_market_size_points_to_tam_and_is_not_logged(client, session, real):  # noqa: F811
+    from sqlalchemy import select
+
+    from app.models import SiteFeedback
+    from app.services import walk
+
+    comp = ids(client, "ISO7741DBQR")
+    html = client.get(f"/parts/{comp}/walk?upto=5").text
+    assert "ASP and application volumes" not in html
+    assert "no public market-size estimate yet" in html or "public estimate" in html
+    texts = session.scalars(select(SiteFeedback.text).where(SiteFeedback.author == walk.AUTHOR)).all()
+    assert not any("market size" in t or "market-size" in t for t in texts)

@@ -18,3 +18,5 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 - Pinouts: transcribe them (docs/pinout_backlog.md, a few datasheets per daily run).
 - fetch-tool: merged.
 - Updates: through the daily run; off-schedule only after the owner confirms several times.
+- Old explorer table: keep it while it still holds sort, filter and set-aside; remove it once those are on Cross-sell & gaps.
+- Drone diagrams: added now (three generic ones); deep dives follow in the daily runs.

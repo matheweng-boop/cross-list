@@ -1655,3 +1655,25 @@ dialog.vd > article.vd-card { width: min(70rem, calc(100vw - 1rem)); max-width: 
   .rv-cards td[data-label]::before { content: attr(data-label) ": "; font-weight: 600; color: var(--pico-muted-color); }
   .rv-feat td.rv-val { min-width: 0; }
 }
+
+/* Tables that never scroll sideways (owner, 22 Oct 2026): compact columns that wrap; on narrow screens each row
+   becomes a card, its cells a grid with the column name above each value. */
+.fit-wrap { overflow: visible; }
+.stack-table { width: 100%; }
+.stack-table thead th { white-space: normal !important; }
+.stack-table.rf-matrix th, .stack-table.rf-matrix td { padding: .3rem .3rem; }
+.stack-table.rf-matrix .rf-cell a { min-width: 0; }
+.stack-table.pf-band td { white-space: normal; }
+.stack-table th[scope=row] { white-space: normal !important; position: static !important; }
+@media (max-width: 900px) {
+  .stack-table, .stack-table tbody, .stack-table tr, .stack-table th[scope=row] { display: block; width: 100%; }
+  .stack-table thead { display: none; }
+  .stack-table tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; margin: 0 0 .6rem; padding: 0 0 .4rem;
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .stack-table th[scope=row] { grid-column: 1 / -1; max-width: none !important; min-width: 0 !important; padding: .2rem 0; font-weight: 600; }
+  .stack-table td { display: block; min-width: 0; text-align: center; padding: .2rem .15rem !important; }
+  .stack-table td[data-label]::before { content: attr(data-label); display: block; font-size: .62rem; line-height: 1.2;
+    color: var(--pico-muted-color); font-weight: 400; }
+  .stack-table.pf-band .pf-n { min-width: 1.4rem; }
+  .stack-table.pf-band .pf-none { min-width: 0; }
+}

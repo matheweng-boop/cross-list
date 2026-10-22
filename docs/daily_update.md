@@ -20,6 +20,9 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
    Standing work when the day's comments leave room: the next unticked lines of `docs/pinout_backlog.md` (pinouts of
    Infineon and Chipanalog gate drivers; these datasheets count toward the download cap below).
+   Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.
+   Open application area requests (inbox section "Application area requests") are researched the same way; set their
+   status on `/blocks/area-requests`.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the
    open questions from `docs/open_questions.md` that need an answer before the next merge. End by asking for the

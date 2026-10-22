@@ -150,6 +150,25 @@ def variant_groups() -> dict[str, list[int]]:
     return {k: v for k, v in groups.items() if len(v) > 1}
 
 
+FOCUS_AREAS = {  # owner, 22 Oct 2026: the library leads with these four; the rest is under "Other areas"
+    "automotive": "Automotive",
+    "datacenter": "Data centers",
+    "drones": "Drones",
+    "cellular": "Cellular",
+}
+
+
+def focus_of(name: str, category: str, market: str) -> list[str]:
+    """The focus areas (keys of FOCUS_AREAS) a library diagram belongs to: automotive by its end market, the others
+    by the general categories in its name and category (data/blocks/categories.yaml)."""
+    tags = set(tags_for(f"{name} {category}"))
+    out = ["automotive"] if market == "Automotive" else []
+    if "datacenter" in tags or category == "Enterprise & data center":
+        out.append("datacenter")
+    out += [k for k in ("drones", "cellular") if k in tags]
+    return out
+
+
 def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
     """Applications by category for the generator page: display name, block count and the Skyworks / Qorvo
     categories involved (have = parts in BizDev, else opportunity)."""
@@ -174,6 +193,7 @@ def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
                 "chips": sorted(chips.items(), key=lambda c: (not c[1], c[0])), "source": source_of(t),
                 "market": market_of(t.get("name", ""), t.get("category") or "Other"), "variant": key if peers else None,
                 "peers": peers}  # fmt: skip
+        card["focus"] = focus_of(display_name(t), t.get("category") or "", card["market"])
         out.setdefault(t.get("category") or "Other", []).append(card)
     return list(out.items())
 

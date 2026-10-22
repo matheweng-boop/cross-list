@@ -2,7 +2,7 @@
 
 Site feedback (grouped as in the daily digest), cross verdicts, diagram and technology feedback, data-review answers
 (agree / disagree, yes / no, with comments), questions asked on reports with their answers and the technology review
-requests (all open ones, and those closed since the day). Requested volumes,
+requests and application area requests (all open ones, and those closed since the day). Requested volumes,
 customers and markets are left out on purpose: they stay on the site.
 """
 
@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import (
+    AreaRequest,
     BlockFeedback,
     CrossFeedback,
     DataReview,
@@ -103,7 +104,16 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     if not rq:
         out.append("None.")
 
+    # application areas asked for in the library: every open one, and those closed since the last pull
+    areas = [a for a in session.scalars(select(AreaRequest).order_by(AreaRequest.created_at))
+             if a.status in ("new", "planned") or _aware(a.updated_at or a.created_at) >= start]  # fmt: skip
+    out.append("\n## Application area requests\n")
+    out.append("Research a few documents per run; add diagrams to the library and set the status on "
+               "/blocks/area-requests.\n")
+    out += [f"- {_when(a.created_at)} [{a.status}] {_one_line(a.area)}{' · why: ' + _one_line(a.why) if a.why else ''}"
+            f"{' · ' + a.author if a.author else ''}" for a in areas] or ["None."]  # fmt: skip
+
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
-    if not any([n_site, crosses, blocks, tech, reviews, asked, answered, rq]):  # open requests are work too
+    if not any([n_site, crosses, blocks, tech, reviews, asked, answered, rq, areas]):  # open requests are work too
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

@@ -22,7 +22,7 @@
     <label>Function <select name="fn"><option value="">none (free topic)</option>
       {% for k, flabel in fn_choices %}<option value="{{ k }}"{{ ' selected' if k == fn }}>{{ flabel }}</option>{% endfor %}</select></label>
     {% for key, label, help, rows in fields %}
-    <label data-field="{{ key }}">{{ label }} <small class="muted">{{ help }}</small>
+    <label data-field="{{ key }}">{{ label }} <small class="muted">{{ help }}{% if key == 'price' %} · work it out on <a href="/pricing/estimate">Price estimate</a> · <a href="/pricing/builder">Solution price builder</a>{% elif key == 'market_size' %} · from <a href="/business/tam">TAM estimates</a>{% endif %}</small>
       {% if rows > 1 %}<textarea name="{{ key }}" rows="{{ rows }}">{{ values.get(key, '') }}</textarea>{% else %}<input name="{{ key }}" value="{{ values.get(key, '') }}">{% endif %}</label>
     {% endfor %}
     <button type="submit">{{ 'Save inputs' if case else 'Create case' }}</button>

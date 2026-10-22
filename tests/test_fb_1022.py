@@ -110,3 +110,26 @@ def test_research_lists_product_ideas_as_feasibility_studies(client):
                     follow_redirects=False)  # fmt: skip
     assert r.status_code == 303
     assert "Business case review (scheduled)" in client.get("/business/reports/filters-1-11ghz").text
+
+
+def test_business_case_asks_feasibility_price_manufacturing_markets_competition(client):
+    import re
+
+    from app.services import cases
+
+    keys = [k for k, *_ in cases.FIELDS]
+    for k in ("feasibility", "price", "manufacturing", "inhouse", "markets", "market_size", "competitors",
+              "competitor_prices", "competitor_share", "anything_else"):  # fmt: skip
+        assert k in keys, k
+    page = client.get("/business/cases/new?fn=pol_ldo").text
+    assert "Is the technology feasible?" in page and "Anything else to add?" in page
+    assert 'data-field="market_size"' in page and "Manufacturing locations" in page
+    r = client.post("/business/cases", data={"title": "LDO case", "fn": "pol_ldo", "feasibility": "Existing die",
+                                              "manufacturing": "Open: not public", "anything_else": "Add export"})
+    assert r.status_code in (200, 303)
+    cid = int(re.search(r"/business/cases/(\d+)", client.get("/business/cases").text).group(1))
+    brief = client.get(f"/business/cases/{cid}/brief.md").text
+    assert "Existing die" in brief and "Manufacturing" in brief and "Anything else to add?" in brief
+    assert "public prices" in brief and "share of the" in brief
+    sg = re.search(r'<script type="application/json" id="sg-data">(.*?)</script>', page, re.S)
+    assert sg and "market_size" in sg.group(1)  # a hint for market size (estimate or "add one on TAM estimates")

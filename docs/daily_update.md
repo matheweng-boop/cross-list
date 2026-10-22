@@ -40,7 +40,7 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Cross-sell & gaps (owner, 22 Oct 2026): move sort, filter and set-aside from the old explorer table
    (`/business/explorer/table`) into `/blocks/cross-sell`; once nothing is lost, remove the old table.
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals
-   (`category: physics` in `data/engineering_rf_notes.yaml`, visuals in `app/web/static/visuals.js`; HyperPhysics first,
+   (`category: physics` in `data/engineering_rf_notes.yaml`, visuals in `app/web/static/visuals.js`; OpenStax University Physics first,
    then the physics and maths sources in `data/library/sources.yaml`; link only, never copy).
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

@@ -89,3 +89,10 @@ def test_markets_filters_compact_with_more_filters(client):
     head, more = html.split('class="more-filters"', 1)
     assert ">Leap</span>" in head and "Qualify for automotive" in more.split("</details>")[0]
     assert 'class="more-filters" open' in client.get("/business/markets?view=multi").text
+
+
+def test_feedback_window_has_dictation(client):
+    html = client.get("/").text
+    assert '<p class="fb-dict small" hidden>' in html and "fb-mic" in html  # shown by the script only if supported
+    js = (ROOT / "app/web/static/feedback.js").read_text()
+    assert "window.SpeechRecognition || window.webkitSpeechRecognition" in js and "if (!SR || !root) return;" in js

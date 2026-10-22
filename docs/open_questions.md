@@ -8,6 +8,7 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 2. **Tuner market figures.** The three public TAM figures for automotive tuner ICs disagree by more than 2x
    ($0.89 B to $2.31 B for 2024). They are yes/no questions in the Data quality review queue, and the answers now
    change the Opportunity explorer's market size directly.
+3. **Competitors.** Competitive analytics starts with SiTime. Which companies next, and in what order?
 
 ## Settled (owner, 22 Oct 2026)
 

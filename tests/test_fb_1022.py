@@ -49,7 +49,8 @@ def test_no_feedback_sections_at_the_bottom(client):
 def test_walk_cards_short_heading_full_text_and_next_on_top(client, real):  # noqa: F811
     from app.services import walk
 
-    assert walk.short_name("True-wireless (TWS) earbuds with charging case") == "True-wireless earbuds with charging case"
+    tws = "True-wireless (TWS) earbuds with charging case"
+    assert walk.short_name(tws) == "True-wireless earbuds with charging case"
     assert walk.short_name("AC solid-state circuit breaker (SSCB) with air-gap relay, AC/DC current sensing") == (
         "AC solid-state circuit breaker"
     )

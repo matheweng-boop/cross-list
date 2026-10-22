@@ -26,6 +26,7 @@ NAV = (
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
+        ("Competitive analytics", "/business/competitors", "Competitor profiles: size, products, strengths, overlap"),
     )),
     ("growth", "Future growth", (
         ("Research & ideas", "/business/reports", "Research reports and preliminary product ideas and cases"),
@@ -80,6 +81,7 @@ PLACES = {
     "/business/attach": ("opportunities", "/business/attach"),
     "/business/rf-coverage": ("opportunities", "/business/rf-coverage"),
     "/business/automotive": ("opportunities", "/business/automotive"),
+    "/business/competitors": ("opportunities", "/business/competitors"),
     "/business/markets": ("growth", "/business/markets"),
     "/business/customers": ("growth", "/business/markets"),
     "/business/reports": ("growth", "/business/reports"),

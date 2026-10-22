@@ -163,6 +163,8 @@ def test_library_focus_areas_and_area_requests(client, session):
     assert blocks.focus_of("Quadcopter drone flight controller", "", "Consumer") == ["drones"]
     assert blocks.focus_of("5G smartphone modem-to-antenna", "", "Consumer") == ["cellular"]
     assert "automotive" in blocks.focus_of("Body controller", "", "Automotive")
+    assert blocks.focus_of("Cell site gateway router", "Communications equipment", "Industrial") == ["cellular"]
+    assert blocks.focus_of("Smart thermostat", "Appliances & building", "Consumer") == []
     html = client.get("/blocks").text
     order = [html.index(f'id="area-{k}"') for k in ("automotive", "datacenter", "drones", "cellular")]
     assert order == sorted(order) and order[-1] < html.index('id="other-areas"')
@@ -182,4 +184,3 @@ def test_library_focus_areas_and_area_requests(client, session):
     daily = (ROOT / "docs/daily_update.md").read_text()
     assert ("Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per "
             "run") in daily
-

@@ -36,6 +36,20 @@ def fn_for_family(family: str) -> str | None:
     return next((k for k, f in fns.items() if (f.get("source") or {}).get("family") == family), None)
 
 
+# Families that hold several block-diagram functions; each part says which one in this parameter (timing: clock
+# generator, jitter attenuator, buffers, oscillators share one rules family).
+FUNCTION_PARAM = "function_type"
+
+
+def fn_for_part(part: Part) -> str | None:
+    """The block-catalogue function a BizDev part fills: its own function_type when its family holds several
+    functions (timing), else the function of its family."""
+    own = next((pv.value for pv in part.params if pv.key == FUNCTION_PARAM), None)
+    if own and own in blocks.catalogue()["functions"]:
+        return own
+    return fn_for_family(part.family)
+
+
 def _part(p: Part | None) -> dict | None:
     return {"id": p.id, "mpn": p.mpn, "manufacturer": p.manufacturer.name} if p else None
 
@@ -51,7 +65,7 @@ def start(session: Session, part_id: int, our_id: int | None = None) -> dict:
         ours = session.get(Part, our_id) if our_id else None
         if ours is not None and not ours.is_reference:
             ours = None
-    fn = fn_for_family(part.family)
+    fn = fn_for_part(part)
     label = vocab.fn_label(fn) if fn else vocab.family_title(part.family)
     return {
         "part": {**_part(part), "reference": part.is_reference},

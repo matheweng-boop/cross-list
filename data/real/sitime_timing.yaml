@@ -1,0 +1,265 @@
+# SiTime timing parts, plus the Renesas timing parts (VersaClock, ClockMatrix: Renesas' timing business is now
+# owned by SiTime; the datasheets still carry the Renesas name), for timing crosses (rules/timing.yaml). First batch
+# 2026-10-22, read from the public datasheets listed below (sitime.com and renesas.com, fetched 2026-10-22,
+# robots.txt checked). Pinouts not read yet except the oscillators (docs/timing_backlog.md).
+source: sitime.com and renesas.com datasheets (fetched 2026-10-22)
+manufacturers:
+- name: SiTime
+  role: competitor
+  website: https://www.sitime.com
+- name: Renesas
+  role: competitor
+  website: https://www.renesas.com
+packages:
+- code: SiTime 7050 6-pin
+  name: SiTime 7.0 x 5.0 x 0.85 mm 6-pad oscillator package with centre pad (no electrical function); pad pitch not read
+  pin_count: 6
+  pitch_mm: 0.0
+  body_length_mm: 7.0
+  body_width_mm: 5.0
+  span_mm: 5.0
+  height_mm: 0.85
+  exposed_pad: true
+- code: SiTime 5032 10-lead QFN
+  name: SiTime 5.0 x 3.2 x 0.85 mm 10-lead QFN; pitch not read
+  pin_count: 10
+  pitch_mm: 0.0
+  body_length_mm: 5.0
+  body_width_mm: 3.2
+  span_mm: 3.2
+  height_mm: 0.85
+  exposed_pad: false
+- code: SiTime 64-QFN 9x9
+  name: SiTime 64-pin QFN 9 x 9 mm; pitch not read
+  pin_count: 64
+  pitch_mm: 0.0
+  body_length_mm: 9.0
+  body_width_mm: 9.0
+  span_mm: 9.0
+  height_mm: null
+  exposed_pad: true
+- code: Renesas NLG 24-VFQFPN 4x4
+  name: Renesas 24-pin VFQFPN 4 x 4 mm, 0.5 mm pitch (NLG)
+  pin_count: 24
+  pitch_mm: 0.5
+  body_length_mm: 4.0
+  body_width_mm: 4.0
+  span_mm: 4.0
+  height_mm: null
+  exposed_pad: true
+- code: Renesas 144-CABGA 10x10
+  name: Renesas 144-ball CABGA 10 x 10 mm, 0.8 mm ball pitch
+  pin_count: 144
+  pitch_mm: 0.8
+  body_length_mm: 10.0
+  body_width_mm: 10.0
+  span_mm: 10.0
+  height_mm: null
+  exposed_pad: false
+datasheets:
+- file: SiT9365-datasheet.pdf
+  url: https://www.sitime.com/sites/default/files/gated/SiT9365-datasheet.pdf
+  sha256: d8176bc290f08098e0f5217e460341d0385ef6133e3996daaf2a19dc168e4c21
+  revision: '1.11'
+  revision_date: '2023-01-01'
+- file: SiT3521-datasheet.pdf
+  url: https://www.sitime.com/sites/default/files/gated/SiT3521-datasheet.pdf
+  sha256: 0cc23a30d560bb2d7ab21534dfdc1ad5b8e3689b368a3d640233a80a9e7f5f71
+  revision: '1.02'
+  revision_date: '2023-12-28'
+- file: SiT95211-datasheet.pdf
+  url: https://www.sitime.com/sites/default/files/gated/SiT95211-datasheet.pdf
+  sha256: 2783fc1bda6fb9ebd0e09870d527fea87f685edc2a108e4da3421eb3e41f2b76
+  revision: '1.0'
+  revision_date: '2026-05-25'
+- file: 5p49v6965-datasheet.pdf
+  url: https://www.renesas.com/en/document/dst/5p49v6965-datasheet
+  sha256: 9196ff773a825b707270270eb133eb9440bd9d8ef8f84c5da0ed4fb2344baf24
+  revision: current
+  revision_date: '2025-11-20'
+- file: 8a34001-datasheet.pdf
+  url: https://www.renesas.com/en/document/dst/8a34001-datasheet
+  sha256: be853b108c9be08f31101a06fd59e7a53be9ed8d4f509f229a8eb99619ba3a8e
+  revision: current
+  revision_date: '2023-08-10'
+parts:
+- mpn: SiT9365
+  manufacturer: SiTime
+  family: timing
+  description: Standard-frequency differential MEMS XO, 25–325 MHz, 225 fs
+  package: SiTime 7050 6-pin
+  pinout: [OE/NC, NC, GND, OUT+, OUT-, VDD]
+  datasheet: SiT9365-datasheet.pdf
+  datasheet_url: https://www.sitime.com/sites/default/files/gated/SiT9365-datasheet.pdf
+  product_url: https://www.sitime.com/products/differential-oscillators/sit9365
+  notes: 'MEMS XO with 32 standard frequencies between 25 and 325 MHz (other frequencies: SiT9366 / SiT9367).
+    LVPECL, low-swing LVPECL, LVDS, HCSL. 225 fs typ. at 156.25 MHz, 12 kHz–20 MHz (0.1 ps with the 10GbE
+    1.875–20 MHz band). Supply options 2.5 / 2.8 / 3.0 / 3.3 V ±10 % (no 1.8 V). Stability down to ±10 ppm;
+    –40 to 105 °C option. Also 3.2 x 2.5 and 5.0 x 3.2 mm; the 7.0 x 5.0 mm one is recorded here. Same 6-pad
+    layout as the Skyworks Si545 5 x 7 mm, but with a centre pad (no electrical function).'
+  lifecycle:
+    status: active
+    source: 'sitime.com product page: Production'
+  params:
+    function_type: crystal_oscillator
+    outputs: 1
+    output_formats: [LVPECL, LVDS, HCSL]
+    freq_range_mhz: [25, 325]
+    vdd_range_v: [2.25, 3.63]
+    jitter_fs: 225
+    qualification: industrial
+    temp_range_c: [-40, 105]
+    control: [pin]
+    stability_ppm: 10
+  param_sources:
+    function_type: SiT9365-datasheet.pdf p1
+    output_formats: SiT9365-datasheet.pdf p1
+    freq_range_mhz: SiT9365-datasheet.pdf p1
+    vdd_range_v: SiT9365-datasheet.pdf Table 1
+    jitter_fs: SiT9365-datasheet.pdf jitter table (7.0 x 5.0 mm)
+    temp_range_c: SiT9365-datasheet.pdf Table 1
+    stability_ppm: SiT9365-datasheet.pdf Table 1
+    pinout: SiT9365-datasheet.pdf Table 7
+- mpn: SiT3521
+  manufacturer: SiTime
+  family: timing
+  description: I2C / SPI programmable differential MEMS oscillator, 1–340 MHz, 210 fs
+  package: SiTime 5032 10-lead QFN
+  pinout: []
+  datasheet: SiT3521-datasheet.pdf
+  datasheet_url: https://www.sitime.com/sites/default/files/gated/SiT3521-datasheet.pdf
+  product_url: https://www.sitime.com/products/differential-oscillators/sit3521
+  notes: 'Elite platform MEMS oscillator programmable over I2C or SPI to any frequency 1–340 MHz, with DCO pulling up
+    to ±3200 ppm. LVPECL, LVDS or HCSL. 210 fs typ. at 156.25 MHz (12 kHz–20 MHz). 2.5–3.3 V options (no 1.8 V).
+    Stability down to ±10 ppm, –40 to 105 °C option. 10-lead 5.0 x 3.2 mm QFN: a different footprint from the
+    Si549 (5 x 7, 3.2 x 5 or 2.5 x 3.2 mm ceramic).'
+  lifecycle:
+    status: unknown
+    source: sitime.com datasheet (status not checked)
+  params:
+    function_type: crystal_oscillator
+    outputs: 1
+    output_formats: [LVPECL, LVDS, HCSL]
+    freq_range_mhz: [1, 340]
+    vdd_range_v: [2.25, 3.63]
+    jitter_fs: 210
+    qualification: industrial
+    temp_range_c: [-40, 105]
+    control: [I2C, SPI]
+    stability_ppm: 10
+  param_sources:
+    function_type: SiT3521-datasheet.pdf p1
+    output_formats: SiT3521-datasheet.pdf p1
+    freq_range_mhz: SiT3521-datasheet.pdf Table 1
+    vdd_range_v: SiT3521-datasheet.pdf Table 1
+    jitter_fs: SiT3521-datasheet.pdf p1
+    temp_range_c: SiT3521-datasheet.pdf Table 1
+    stability_ppm: SiT3521-datasheet.pdf Table 1
+- mpn: SiT95211
+  manufacturer: SiTime
+  family: timing
+  description: Quad-PLL 12-output ultra-low-jitter clock generator, up to 2.9 GHz
+  package: SiTime 64-QFN 9x9
+  pinout: []
+  datasheet: SiT95211-datasheet.pdf
+  datasheet_url: https://www.sitime.com/sites/default/files/gated/SiT95211-datasheet.pdf
+  product_url: https://www.sitime.com/products/clock-generators/sit95211
+  notes: 'Four fractional PLLs with a DPLL front end, 4 differential inputs, 12 differential outputs (LVPECL, LVDS,
+    HCSL, CML, LVCMOS), 0.5 Hz–2949 MHz. 72 fs typ. at 156.25 MHz, 64 fs at 625 MHz (12 kHz–20 MHz; SiTime headlines
+    21 fs with a 4 MHz high-pass filter, not comparable). VDD 1.8 V core plus 3.3 V input / crystal rail. No PCIe
+    compliance stated. The competitor for Si5341 / Si5395 / Si5397 class sockets (SerDes, 224G PAM4).'
+  lifecycle:
+    status: active
+    source: 'sitime.com product page: Production'
+  params:
+    function_type: clock_generator
+    outputs: 12
+    output_formats: [LVPECL, LVDS, HCSL, CML, LVCMOS]
+    freq_range_mhz: [0.0000005, 2949.12]
+    vdd_range_v: [1.71, 1.89]
+    jitter_fs: 72
+    qualification: industrial
+    temp_range_c: [-40, 85]
+    inputs: 4
+    control: [I2C, SPI]
+  param_sources:
+    function_type: SiT95211-datasheet.pdf p1
+    outputs: SiT95211-datasheet.pdf p1
+    output_formats: SiT95211-datasheet.pdf Table 3 note 1
+    freq_range_mhz: SiT95211-datasheet.pdf p1
+    vdd_range_v: SiT95211-datasheet.pdf Table 2 (PLL supply)
+    jitter_fs: SiT95211-datasheet.pdf Table 9 (156.25 MHz)
+    temp_range_c: SiT95211-datasheet.pdf Table 2
+- mpn: 5P49V6965
+  manufacturer: Renesas
+  family: timing
+  description: VersaClock 6E programmable clock generator, 4 output pairs, PCIe Gen 1–5
+  package: Renesas NLG 24-VFQFPN 4x4
+  pinout: []
+  datasheet: 5p49v6965-datasheet.pdf
+  datasheet_url: https://www.renesas.com/en/document/dst/5p49v6965-datasheet
+  product_url: https://www.renesas.com/en/products/5p49v6965
+  notes: 'VersaClock 6E (Renesas timing, now owned by SiTime). 4 universal output pairs (LVPECL, LVDS, HCSL or 2 x
+    LVCMOS) plus an LVCMOS reference output; 1 kHz–350 MHz differential (LVCMOS to 200 MHz). 0.5 ps typ.
+    (12 kHz–20 MHz). PCIe Gen 1–5 with spread spectrum off (Gen 1–4 with SSC on). 1.8 / 2.5 / 3.3 V, OTP + I2C.
+    Classic competitor for Si5332 in industrial / networking designs.'
+  lifecycle:
+    status: active
+    source: 'renesas.com product page: Active'
+  params:
+    function_type: clock_generator
+    outputs: 4
+    output_formats: [LVPECL, LVDS, HCSL, LVCMOS]
+    freq_range_mhz: [0.001, 350]
+    vdd_range_v: [1.71, 3.465]
+    jitter_fs: 500
+    qualification: industrial
+    temp_range_c: [-40, 85]
+    pcie_gen: gen5
+    inputs: 2
+    control: [I2C, pin]
+  param_sources:
+    function_type: 5p49v6965-datasheet.pdf p1
+    outputs: 5p49v6965-datasheet.pdf p1
+    output_formats: 5p49v6965-datasheet.pdf p1
+    freq_range_mhz: 5p49v6965-datasheet.pdf p1
+    vdd_range_v: 5p49v6965-datasheet.pdf recommended operating conditions (VDDA / VDDD)
+    jitter_fs: 5p49v6965-datasheet.pdf jitter table
+    temp_range_c: 5p49v6965-datasheet.pdf ordering information
+    pcie_gen: 5p49v6965-datasheet.pdf p1
+- mpn: 8A34001
+  manufacturer: Renesas
+  family: timing
+  description: ClockMatrix synchronization management unit, 8 channels, 12 differential outputs
+  package: Renesas 144-CABGA 10x10
+  pinout: []
+  datasheet: 8a34001-datasheet.pdf
+  datasheet_url: https://www.renesas.com/en/document/dst/8a34001-datasheet
+  product_url: https://www.renesas.com/en/products/8a34001
+  notes: 'ClockMatrix (Renesas timing, now owned by SiTime): 8 timing channels, each a synthesizer, jitter attenuator,
+    DCO or DPLL; IEEE 1588 / SyncE (G.8262, G.8273.2). 8 differential inputs, 12 differential outputs (LVCMOS, LVDS,
+    LVPECL, HCSL, CML, SSTL, HSTL), 0.5 Hz–1 GHz. Jitter below 150 fs (10 kHz–20 MHz, a wider band than 12 kHz). Core
+    VDD_DIG 1.14–1.89 V plus 1.8 V and 2.5 / 3.3 V analog rails. A network-synchronisation part: a fair match for
+    Si5345-class sockets on telecom line cards, more than a plain jitter cleaner needs.'
+  lifecycle:
+    status: active
+    source: 'renesas.com product page: Active'
+  params:
+    function_type: jitter_attenuator
+    outputs: 12
+    output_formats: [LVPECL, LVDS, HCSL, CML, LVCMOS]
+    freq_range_mhz: [0.0000005, 1000]
+    vdd_range_v: [1.14, 1.89]
+    jitter_fs: 150
+    qualification: industrial
+    temp_range_c: [-40, 85]
+    inputs: 8
+    control: [I2C, SPI]
+  param_sources:
+    function_type: 8a34001-datasheet.pdf p1
+    outputs: 8a34001-datasheet.pdf p1
+    output_formats: 8a34001-datasheet.pdf p1
+    freq_range_mhz: 8a34001-datasheet.pdf p1
+    vdd_range_v: 8a34001-datasheet.pdf Table 26 (VDD_DIG)
+    jitter_fs: 8a34001-datasheet.pdf p1 (below 150 fs, 10 kHz–20 MHz; an upper bound, used as typical)
+    temp_range_c: 8a34001-datasheet.pdf Table 25

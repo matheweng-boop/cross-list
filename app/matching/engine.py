@@ -224,6 +224,12 @@ def format_value(p: ParamDef, value) -> str:
         return ", ".join(sorted(value)) if value else "none"
     if p.kind == "bool":
         return "yes" if value else "no"
+    if p.key == "function_type":  # timing: a block-diagram function id, shown by its label
+        from app.services.vocab import fn_label
+
+        return fn_label(str(value))
+    if p.key == "pcie_gen":
+        return "none stated" if value == "none" else f"Gen {str(value).removeprefix('gen')}"
     if p.kind == "curve":
         x_unit = f" {p.x_unit}" if p.x_unit else ""
         return ", ".join(f"{_fmt_num(float(y))}{unit} at {_fmt_num(float(x))}{x_unit}" for x, y in sorted(value))
@@ -331,6 +337,8 @@ _FAMILY_PIN_ALIASES = {
         (r"^(aip|ainp)$", "inp"), (r"^(ain|ainn)$", "inn"), (r"^aop$", "outp"), (r"^aon$", "outn"), (r"^ao$", "out"),
         (r"^(adat|data)$", "dout"),
     ),
+    # Oscillators: Skyworks CLK+ / CLK- against SiTime and others' OUT+ / OUT-.
+    "timing": ((r"^clk([+-])$", r"out\1"),),
 }  # fmt: skip
 
 

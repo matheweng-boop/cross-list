@@ -9,6 +9,15 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    ($0.89 B to $2.31 B for 2024). They are yes/no questions in the Data quality review queue, and the answers now
    change the Opportunity explorer's market size directly.
 3. **Competitors.** Competitive analytics starts with SiTime. Which companies next, and in what order?
+4. **Timing: Microchip.** Microchip timing (ZL30733, PL610) was skipped because microchip hosts are blocked for this
+   work. Leave Microchip out of timing crosses, or name a public source you are happy with?
+5. **Timing: strictness.** A timing cross lists a part only when it has at most 2 shortfalls among function, outputs,
+   output formats, frequency range and core supply. That hides near misses such as TI CDCE6214-Q1 for Si5332-AM1
+   (4 outputs, no LVPECL, stops at 328 MHz) and every competitor oscillator for Si545 / Si549 (narrower frequency
+   range, no 1.8 V). They show with "allow 3 deviations" on the part page. Keep it strict, or count the core supply
+   as priority 2 (a board rail is often available)?
+6. **Timing: SiTime datasheet links.** SiTime serves its datasheets from a folder named "gated", although they open
+   without a form or login (robots.txt allows them). Fine to keep reading them that way?
 
 ## Settled (owner, 22 Oct 2026)
 

@@ -391,6 +391,8 @@ def _candidates_uncached(session: Session, key: str) -> list[dict] | None:
     if isinstance(src, dict) and "family" in src:
         for p in session.scalars(_reference_parts(session, src["family"])).unique():
             values = {pv.key: pv.value for pv in p.params}
+            if src.get("function") and values.get("function_type") != src["function"]:
+                continue  # a family holding several functions (timing): only this function's parts
             bits = [p.package.code]
             for k, unit in SHOWN.items():
                 v = values.get(k)

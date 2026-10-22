@@ -28,7 +28,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import yamlio
-from app.models import Manufacturer, ManufacturerRole, Part, PartMapping
+from app.models import Manufacturer, ManufacturerRole, ParamValue, Part, PartMapping
 from app.services import blocks, vocab
 
 COMPANIES = {
@@ -70,6 +70,15 @@ def makers(session: Session) -> dict[str, dict[str, int] | None]:
     ).all()
     for fam, name, n in rows:
         fam_competitors[fam][name] += n
+    # families holding several functions (timing) count competitors per function_type
+    fn_competitors: dict[str, Counter] = defaultdict(Counter)
+    for value, name in session.execute(
+        select(ParamValue.value, Manufacturer.name)
+        .join(Part, ParamValue.part_id == Part.id)
+        .join(Part.manufacturer)
+        .where(ParamValue.key == "function_type", Manufacturer.role == ManufacturerRole.competitor)
+    ).all():
+        fn_competitors[str(value)][name] += 1
     confirmed: dict[str, Counter] = defaultdict(Counter)  # catalogue parts a reviewer mapped to the function
     for m in session.scalars(select(PartMapping).where(PartMapping.verdict == "yes")):
         confirmed[m.fn][m.manufacturer] += 1
@@ -82,7 +91,9 @@ def makers(session: Session) -> dict[str, dict[str, int] | None]:
         c = Counter(x["manufacturer"] for x in cands)
         c.update(confirmed.get(fn, {}))
         src = f.get("source")
-        if isinstance(src, dict) and "family" in src:
+        if isinstance(src, dict) and src.get("function"):
+            c.update(fn_competitors.get(src["function"], {}))
+        elif isinstance(src, dict) and "family" in src:
             c.update(fam_competitors.get(src["family"], {}))
         out[fn] = dict(c)
     return out

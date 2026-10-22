@@ -1,6 +1,8 @@
 # Functions for the block-diagram generator. Each function says which parts in BizDev can fill it.
 #
 # source:  {family: <rules family>}        Skyworks parts of that BizDev family
+#          {family: timing, function: <id>} Skyworks parts of a family holding several functions, by their
+#                                           function_type parameter
 #          {broadcast: tuner|coprocessor|receiver}  Skyworks broadcast parts of that role
 #          external                         the customer's own part (processor, memory, sensors): not counted
 #          (omitted)                        no Skyworks part in BizDev yet: shown as an opportunity
@@ -94,10 +96,10 @@ functions:
   isolated_can: {label: Isolated CAN transceiver, category: networking, companions: [isolated_dcdc, tvs_esd]}
   current_sensor: {label: Isolated current sensor, category: isolation, source: {family: current_sensor}, companions: [adc, mcu]}
   # timing
-  crystal_oscillator: {label: Crystal / oscillator, category: timing, companions: [clock_buffer]}
-  clock_generator: {label: Clock generator, category: timing, companions: [clock_buffer]}
-  clock_buffer: {label: Clock buffer, category: timing}
-  jitter_attenuator: {label: Jitter attenuator, category: timing}
+  crystal_oscillator: {label: Crystal / oscillator, category: timing, source: {family: timing, function: crystal_oscillator}, companions: [clock_buffer]}
+  clock_generator: {label: Clock generator, category: timing, source: {family: timing, function: clock_generator}, companions: [clock_buffer]}
+  clock_buffer: {label: Clock buffer, category: timing, source: {family: timing, function: clock_buffer}}
+  jitter_attenuator: {label: Jitter attenuator, category: timing, source: {family: timing, function: jitter_attenuator}}
   rtc: {label: RTC, category: timing}
   watchdog: {label: Watchdog, category: timing}
   # RF
@@ -203,7 +205,7 @@ functions:
   serdes: {label: SERDES, category: interface, companions: [tvs_esd]}
   redriver: {label: ReDriver, category: interface}
   pcie_switch: {label: PCIe packet switch, category: interface}
-  pcie_buffer: {label: PCIe clock buffer, category: interface}
+  pcie_buffer: {label: PCIe clock buffer, category: interface, source: {family: timing, function: pcie_buffer}}
   # networking
   can_transceiver: {label: CAN transceiver, category: networking, companions: [tvs_esd, digital_isolator]}
   ethernet_phy: {label: Ethernet PHY / switch, category: networking, companions: [tvs_esd]}

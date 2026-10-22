@@ -231,7 +231,7 @@ def suggestions(session: Session, case, ctx: dict | None, lines: list, sched=Non
     the matching research reports with their preliminary cases."""
     from app.services import prelim, schedule
     from app.services import reports as rp
-    from app.services.pipeline import fn_for_family
+    from app.services.pipeline import fn_for_part
 
     out: dict[str, list[dict]] = {k: [] for k in ("title", *(f[0] for f in FIELDS))}
 
@@ -281,7 +281,7 @@ def suggestions(session: Session, case, ctx: dict | None, lines: list, sched=Non
             for r in others:
                 other = f"{r.candidate.label}: {_diff_text(r) or 'close match'}"
                 add("competitors", f"Other crosses of {p.mpn}", other)
-        fn = fn or fn_for_family(p.family)
+        fn = fn or fn_for_part(p)
     if ctx is None and fn:
         ctx = context(session, fn)
     if ctx:  # the function in the block-diagram library

@@ -1,0 +1,286 @@
+# TI timing parts for timing crosses (rules/timing.yaml). First batch 2026-10-22, read from the public TI datasheets
+# listed below (www.ti.com/lit/ds/symlink, fetched 2026-10-22, robots.txt checked). Pinouts not read yet
+# (docs/timing_backlog.md).
+source: ti.com datasheets (fetched 2026-10-22)
+manufacturers:
+- name: TI
+  role: competitor
+  website: https://www.ti.com
+packages:
+- code: TI RHS 48-pin WQFN 7x7
+  name: TI RHS 48-pin WQFN 7 x 7 mm, exposed pad; pitch not read from the drawing
+  pin_count: 48
+  pitch_mm: 0.0
+  body_length_mm: 7.0
+  body_width_mm: 7.0
+  span_mm: 7.0
+  height_mm: null
+  exposed_pad: true
+- code: TI RGT 16-pin VQFN 3x3
+  name: TI RGT 16-pin VQFN 3 x 3 mm, exposed pad; pitch not read from the drawing
+  pin_count: 16
+  pitch_mm: 0.0
+  body_length_mm: 3.0
+  body_width_mm: 3.0
+  span_mm: 3.0
+  height_mm: null
+  exposed_pad: true
+- code: TI RGE 24-pin VQFN 4x4
+  name: TI RGE 24-pin VQFN 4 x 4 mm, exposed pad; pitch not read from the drawing
+  pin_count: 24
+  pitch_mm: 0.0
+  body_length_mm: 4.0
+  body_width_mm: 4.0
+  span_mm: 4.0
+  height_mm: null
+  exposed_pad: true
+- code: TI NKD 64-pin WQFN 9x9
+  name: TI NKD 64-pin WQFN 9 x 9 mm, 0.5 mm pitch, exposed pad
+  pin_count: 64
+  pitch_mm: 0.5
+  body_length_mm: 9.0
+  body_width_mm: 9.0
+  span_mm: 9.0
+  height_mm: null
+  exposed_pad: true
+- code: TI REX 28-pin VQFN 4x4
+  name: TI REX 28-pin VQFN 4 x 4 mm, exposed pad; pitch not read from the drawing
+  pin_count: 28
+  pitch_mm: 0.0
+  body_length_mm: 4.0
+  body_width_mm: 4.0
+  span_mm: 4.0
+  height_mm: null
+  exposed_pad: true
+- code: TI RKP 40-pin VQFN 5x5
+  name: TI RKP 40-pin VQFN 5 x 5 mm, 0.4 mm pitch, exposed pad
+  pin_count: 40
+  pitch_mm: 0.4
+  body_length_mm: 5.0
+  body_width_mm: 5.0
+  span_mm: 5.0
+  height_mm: null
+  exposed_pad: true
+datasheets:
+- file: lmk03328.pdf
+  url: https://www.ti.com/lit/ds/symlink/lmk03328.pdf
+  sha256: a05d94495da76b43cddb25e12ec1b6e955e8fe04a9d5c975ca940d49a349d4ac
+  revision: SNAS668E
+  revision_date: '2024-09-01'
+- file: lmk3h0102-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/lmk3h0102-q1.pdf
+  sha256: 9419723dd5f356b798ae2950d7190e9e7736ce676323cdef30489da1bf2fdee8
+  revision: SNAS862B
+  revision_date: '2025-10-01'
+- file: cdce6214-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/cdce6214-q1.pdf
+  sha256: 95b8059dd8e8eb0330f680d71a3c41b37b6afb8ed9e0d4d4b463c7ec7c73f14b
+  revision: SNAS786C
+  revision_date: '2025-07-01'
+- file: lmk04832.pdf
+  url: https://www.ti.com/lit/ds/symlink/lmk04832.pdf
+  sha256: ff1e23f71837db8268693221382e8f1b70531792323e0bcee0c1cc70ce9ea9df
+  revision: SNAS688C
+  revision_date: '2018-05-01'
+- file: lmkdb1104.pdf
+  url: https://www.ti.com/lit/ds/symlink/lmkdb1104.pdf
+  sha256: ede56225e0d53e73eff0cb555511aed499e3622a8536805ed23ba389bc214008
+  revision: SNAS855G
+  revision_date: '2026-05-01'
+parts:
+- mpn: LMK03328
+  manufacturer: TI
+  family: timing
+  description: 8-output dual-PLL ultra-low-jitter clock generator, PCIe Gen 1–6
+  package: TI RHS 48-pin WQFN 7x7
+  pinout: []
+  datasheet: lmk03328.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/lmk03328.pdf
+  product_url: https://www.ti.com/product/LMK03328
+  notes: 'Two fractional-N PLLs, 8 outputs (AC-LVPECL, AC-LVDS, AC-CML, HCSL or LVCMOS), 1–1000 MHz (LVCMOS to 200
+    MHz). 100 fs typ. (50 MHz crystal, integer mode, 12 kHz–20 MHz; 120 fs with 19.2–38.88 MHz crystals). Single 3.3 V
+    core, outputs 1.8 / 2.5 / 3.3 V. Pin mode, I2C or EEPROM start-up. Closest TI match for Si5332 (6–12 outputs)
+    and the 4-output Si5340, but it needs a 3.3 V core rail.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA)
+  params:
+    function_type: clock_generator
+    outputs: 8
+    output_formats: [LVPECL, LVDS, CML, HCSL, LVCMOS]
+    freq_range_mhz: [1, 1000]
+    vdd_range_v: [3.135, 3.465]
+    jitter_fs: 100
+    qualification: industrial
+    temp_range_c: [-40, 85]
+    pcie_gen: gen6
+    inputs: 2
+    control: [I2C, pin]
+  param_sources:
+    function_type: lmk03328.pdf p1
+    outputs: lmk03328.pdf p1
+    output_formats: lmk03328.pdf p1
+    freq_range_mhz: lmk03328.pdf 6.x output characteristics (AC-LVPECL / CML 1–1000 MHz)
+    vdd_range_v: lmk03328.pdf 6.5 conditions (3.3 V ±5 %)
+    jitter_fs: lmk03328.pdf 6.x RMS phase jitter (50 MHz crystal, integer-N)
+    temp_range_c: lmk03328.pdf p1
+    pcie_gen: lmk03328.pdf p1 (PCIe Gen1–Gen6) and RJGEN6 spec
+- mpn: LMK3H0102-Q1
+  manufacturer: TI
+  family: timing
+  description: Automotive reference-less BAW clock generator, 2 differential outputs, PCIe Gen 1–7
+  package: TI RGT 16-pin VQFN 3x3
+  pinout: []
+  datasheet: lmk3h0102-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/lmk3h0102-q1.pdf
+  product_url: https://www.ti.com/product/LMK3H0102-Q1
+  notes: 'AEC-Q100 grade 2 (–40 to 105 °C). Built-in BAW resonator: no crystal needed, ±25 ppm total stability.
+    2 differential outputs (AC-LVDS, DC-LVDS, LP-HCSL) or up to 5 LVCMOS, 2.5–400 MHz. 12 kHz–20 MHz random jitter only
+    stated as 0.5 ps max (LVCMOS, 50 MHz; no typical differential figure); built for PCIe (Gen 6 CC 34.5 fs max with SSC). 1.8 / 2.5 / 3.3 V. A smaller, crystal-free answer to
+    Si5332-AM where only one or two PCIe / Ethernet clocks are needed.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA)
+  params:
+    function_type: clock_generator
+    outputs: 2
+    output_formats: [LVDS, HCSL, LVCMOS]
+    freq_range_mhz: [2.5, 400]
+    vdd_range_v: [1.71, 3.465]
+    jitter_fs: 500
+    qualification: automotive
+    temp_range_c: [-40, 105]
+    pcie_gen: gen7
+    inputs: 0
+    control: [I2C, pin]
+  param_sources:
+    function_type: lmk3h0102-q1.pdf p1
+    outputs: lmk3h0102-q1.pdf p1
+    output_formats: lmk3h0102-q1.pdf p1
+    freq_range_mhz: lmk3h0102-q1.pdf p1
+    vdd_range_v: lmk3h0102-q1.pdf 5.3
+    jitter_fs: lmk3h0102-q1.pdf 5.x (12 kHz–20 MHz random jitter, max)
+    qualification: lmk3h0102-q1.pdf p1 (AEC-Q100 grade 2)
+    temp_range_c: lmk3h0102-q1.pdf 5.3
+    pcie_gen: lmk3h0102-q1.pdf p1
+- mpn: CDCE6214-Q1
+  manufacturer: TI
+  family: timing
+  description: Automotive low-power clock generator, 4 differential outputs, PCIe Gen 1–6
+  package: TI RGE 24-pin VQFN 4x4
+  pinout: []
+  datasheet: cdce6214-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/cdce6214-q1.pdf
+  product_url: https://www.ti.com/product/CDCE6214-Q1
+  notes: 'AEC-Q100 grade 2 (–40 to 105 °C). One frac-N PLL, 4 differential outputs (LVDS-like, LP-HCSL or LVCMOS)
+    plus an LVCMOS reference output, 24 kHz–328.125 MHz. 350 fs typ. integer mode, differential, 12 kHz–20 MHz
+    (1.7 ps fractional). PCIe Gen 1–6 without SSC (Gen 1–4 with SSC). 1.8 / 2.5 / 3.3 V. The usual TI answer to
+    Si5332-AM1 in ADAS and infotainment.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA)
+  params:
+    function_type: clock_generator
+    outputs: 4
+    output_formats: [LVDS, HCSL, LVCMOS]
+    freq_range_mhz: [0.024, 328.125]
+    vdd_range_v: [1.71, 3.465]
+    jitter_fs: 350
+    qualification: automotive
+    temp_range_c: [-40, 105]
+    pcie_gen: gen6
+    inputs: 2
+    control: [I2C, pin]
+  param_sources:
+    function_type: cdce6214-q1.pdf p1
+    outputs: cdce6214-q1.pdf p1
+    output_formats: cdce6214-q1.pdf p1
+    freq_range_mhz: cdce6214-q1.pdf p1
+    vdd_range_v: cdce6214-q1.pdf 6.3
+    jitter_fs: cdce6214-q1.pdf p1 (integer mode, differential)
+    qualification: cdce6214-q1.pdf p1 (AEC-Q100 grade 2)
+    temp_range_c: cdce6214-q1.pdf 6.3
+    pcie_gen: cdce6214-q1.pdf p1 (Gen 1–6 without SSC)
+- mpn: LMK04832
+  manufacturer: TI
+  family: timing
+  description: Dual-loop JESD204B jitter cleaner, 14 outputs, up to 3255 MHz
+  package: TI NKD 64-pin WQFN 9x9
+  pinout: []
+  datasheet: lmk04832.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/lmk04832.pdf
+  product_url: https://www.ti.com/product/LMK04832
+  notes: 'Dual-loop jitter cleaner (external VCXO on PLL1) with SYSREF for JESD204B data converters. 14 device-clock
+    outputs (CML, LVPECL, LCPECL, HSDS, LVDS, 2x LVCMOS; no HCSL) up to 3255 MHz. 54 fs typ. at 2500 MHz (12 kHz–20
+    MHz): measured at a much higher output frequency than the Skyworks 90 fs figures. Lowest output frequency taken as
+    2440 MHz VCO / 1023 divider (worked out, not stated). Single 3.3 V supply. Not a like-for-like part for Si5345:
+    it needs an external VCXO and is configured over SPI only.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA)
+  params:
+    function_type: jitter_attenuator
+    outputs: 14
+    output_formats: [CML, LVPECL, LVDS, LVCMOS]
+    freq_range_mhz: [2.4, 3255]
+    vdd_range_v: [3.15, 3.45]
+    jitter_fs: 54
+    qualification: industrial
+    temp_range_c: [-40, 85]
+    inputs: 3
+    control: [SPI]
+  param_sources:
+    function_type: lmk04832.pdf p1
+    outputs: lmk04832.pdf p1
+    output_formats: lmk04832.pdf p1
+    freq_range_mhz: lmk04832.pdf p1 (max 3255 MHz; minimum worked out from VCO / divider)
+    vdd_range_v: lmk04832.pdf 6.3
+    jitter_fs: lmk04832.pdf p1 (at 2500 MHz)
+    temp_range_c: lmk04832.pdf 6.3
+- mpn: LMKDB1104
+  manufacturer: TI
+  family: timing
+  description: 4-output PCIe Gen 1–7 LP-HCSL clock buffer
+  package: TI REX 28-pin VQFN 4x4
+  pinout: []
+  datasheet: lmkdb1104.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/lmkdb1104.pdf
+  product_url: https://www.ti.com/product/LMKDB1104
+  notes: 'PCIe Gen 1–7, Intel DB2000QL compliant. Additive jitter 3 fs max for PCIe Gen 6 (31 fs max 12 kHz–20 MHz at
+    156.25 MHz). 1–400 MHz. Supply 1.8 V or 3.3 V (1.71–1.89 V or 2.97–3.6 V; not 1.5 V). –40 to 105 °C. 85 Ω or 100 Ω
+    outputs (Z85 / Z100 / FS order codes). Main TI answer to Si53204.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA)
+  params:
+    function_type: pcie_buffer
+    outputs: 4
+    output_formats: [HCSL]
+    freq_range_mhz: [1, 400]
+    vdd_range_v: [1.71, 3.6]
+    jitter_fs: 3
+    qualification: industrial
+    temp_range_c: [-40, 105]
+    pcie_gen: gen7
+    inputs: 1
+    control: [I2C, pin]
+  param_sources:
+    function_type: lmkdb1104.pdf p1
+    outputs: lmkdb1104.pdf Table 4-1
+    output_formats: lmkdb1104.pdf p1 (LP-HCSL)
+    freq_range_mhz: lmkdb1104.pdf frequency and timing characteristics
+    vdd_range_v: lmkdb1104.pdf 6.3
+    jitter_fs: lmkdb1104.pdf p1 (PCIe Gen 6 additive, max)
+    temp_range_c: lmkdb1104.pdf 6.3
+    pcie_gen: lmkdb1104.pdf p1
+- mpn: LMKDB1108
+  like: LMKDB1104
+  description: 8-output PCIe Gen 1–7 LP-HCSL clock buffer
+  package: TI RKP 40-pin VQFN 5x5
+  product_url: https://www.ti.com/product/LMKDB1108
+  notes: 'Same family and datasheet as LMKDB1104 (8 outputs). Main TI answer to Si53208.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA)
+  params:
+    outputs: 8

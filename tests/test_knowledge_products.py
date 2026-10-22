@@ -20,7 +20,7 @@ def test_by_product_page_and_guide_box(client):
         assert f'id="p-{key}"' in html
     assert "Why it matters to the customer" in html and 'href="/engineering/cmti_kv_us"' in html
     note = client.get("/engineering/cmti_kv_us").text
-    assert 'class="kn-why kn-why-note"' in note and "shoot-through" in note
+    assert 'class="kn-why kn-why-note small"' in note and "shoot-through" in note
     assert note.index("Why it matters to the customer") < note.index("What it is")
     assert 'class="kn-est"' in client.get("/engineering/creepage_mm").text
     gd = next(p for p in knowledge.by_product() if p["key"] == "gate_drivers")

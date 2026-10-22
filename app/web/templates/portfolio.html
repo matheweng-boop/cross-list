@@ -7,8 +7,8 @@
 <p class="subtitle muted">The two product lines of the combined company side by side: what each is best at, which one to offer for which application, how they compare with each competitor, and where one diagram needs both. Counts are active catalogue parts; the reasoning is curated from public sources{% if cur.updated %} ({{ cur.updated }}){% endif %}.</p>
 <p class="pf-legend small" aria-label="Colour key"><span class="pf-sw w-sky">Skyworks</span><span class="pf-sw w-qor">Qorvo</span><span class="pf-sw w-both">Both lines</span><span class="pf-sw w-comp">Competitors</span></p>
 
-<nav class="pf-toc small" aria-label="On this page">
-  <a href="#competence">Core competence</a><a href="#pick">Which line to offer</a><a href="#rf">RF by band</a><a href="#overlap">Overlap</a><a href="#competitors">Against competitors</a><a href="#crosssell">Cross-selling</a><a href="#tech">Technologies</a>
+<nav class="pf-toc" aria-label="On this page"><span class="muted small">Jump to</span>
+  <a href="#categories">Product categories</a><a href="#rf">RF by band</a><a href="#synergies">Synergies</a><a href="#competence">Core competence</a><a href="#pick">Which line to offer</a><a href="#overlap">Overlap</a><a href="#competitors">Against competitors</a><a href="#crosssell">Cross-selling</a><a href="#tech">Technologies</a>
 </nav>
 
 <div class="pf-totals">
@@ -44,9 +44,24 @@
 </div>
 {% else %}<p class="muted small">The curated comparison is being prepared.</p>{% endif %}
 
-<h2 id="rf">RF functions by band</h2>
 {# each cell: Skyworks count (blue, square, left), Qorvo count (orange, round, right), competitors (grey); the broader line is filled #}
 {% macro pill(m, n, lead) %}{% set big = lead in ('both', m) %}<span class="pf-n pf-{{ 'sky' if m == 'Skyworks' else 'qor' }}{{ ' on' if big and n }}{{ ' zero' if not n }}">{{ n }}</span>{% endmacro %}
+<h2 id="categories">Product categories</h2>
+<p class="small muted">Every active Skyworks and Qorvo catalogue part, sorted into shared product categories: what each company brings to the combined portfolio.</p>
+<div class="pf-bkey small" aria-label="What the table shows">
+  <span><span class="pf-n pf-sky on">12</span> Skyworks parts</span>
+  <span><span class="pf-n pf-qor on">12</span> Qorvo parts</span>
+  <span><span class="pf-n pf-sky on">9</span><span class="pf-n pf-qor">2</span> filled = the company with more parts (both filled: within 2× of each other)</span>
+  <span><span class="pf-n pf-sky zero">0</span> none</span>
+</div>
+<table class="pf-cat small">
+  <thead><tr><th scope="col">Category</th><th scope="col" class="n">Skyworks</th><th scope="col" class="n">Qorvo</th></tr></thead>
+  <tbody>{% for r in cats.rows %}<tr title="{{ r.label }}: Skyworks {{ r.Skyworks }}, Qorvo {{ r.Qorvo }}"><th scope="row">{{ r.label }}</th><td class="n">{{ pill('Skyworks', r.Skyworks, r.lead) }}</td><td class="n">{{ pill('Qorvo', r.Qorvo, r.lead) }}</td></tr>{% endfor %}</tbody>
+  <tfoot><tr><th scope="row">All active parts</th><td class="n">{{ pill('Skyworks', cats.totals.Skyworks, cats.lead) }}</td><td class="n">{{ pill('Qorvo', cats.totals.Qorvo, cats.lead) }}</td></tr></tfoot>
+</table>
+<p class="small muted">Discontinued, last-time-buy and not-for-new-design parts are left out. The two catalogues name categories differently; BizDev maps both to these shared names.</p>
+
+<h2 id="rf">RF functions by band</h2>
 <p class="small muted">Active parts in each band. Every cell shows Skyworks on the left and Qorvo on the right; the small grey number is all competitors together.</p>
 <div class="pf-bkey small" aria-label="What the table shows">
   <span><span class="pf-n pf-sky on">12</span> Skyworks parts (square, left)</span>
@@ -61,6 +76,17 @@
   <tbody>{% for r in bands.rows %}<tr><th scope="row">{{ r.label }}</th>{% for c in r.cells %}{% set ours = c.Skyworks or c.Qorvo %}
     <td data-label="{{ c.band }}"{% if not ours and c.competitors %} class="pf-gap"{% endif %} title="{{ r.label }}, {{ c.band }}: Skyworks {{ c.Skyworks }}, Qorvo {{ c.Qorvo }}, competitors {{ c.competitors }}">{% if ours %}{{ pill('Skyworks', c.Skyworks, c.lead) }}{{ pill('Qorvo', c.Qorvo, c.lead) }}{% else %}<span class="muted pf-none">–</span>{% endif %}<small class="pf-cn"> · {{ c.competitors }}</small></td>{% endfor %}</tr>{% endfor %}</tbody>
 </table></div>
+
+<h2 id="synergies">Synergies</h2>
+<p class="small muted">Functions where one company has the stronger line and the other company's function sits next to it in the library diagrams (same block or a connected one). Offer them together: a Skyworks lead opens the door for the Qorvo part, and the other way round. Strength 0–100 is the Bundle strength used on Cross-sell.</p>
+{% if syn %}<div class="pf-syn">{% for x in syn %}
+  <article class="pf-syn-card small">
+    <p class="pf-syn-pair"><span class="ln-skyworks"><b>{{ x.skyworks_label }}</b> <span class="muted">Skyworks · {{ x.n_skyworks }}</span></span><span class="pf-syn-plus" aria-hidden="true">+</span><span class="ln-qorvo"><b>{{ x.qorvo_label }}</b> <span class="muted">Qorvo · {{ x.n_qorvo }}</span></span></p>
+    <p><b>Strength {{ x.score }}</b> · together in {{ x.n }} diagrams{% if x.same %} · same block in {{ x.same }}{% endif %}{% if x.linked %} · connected in {{ x.linked }}{% endif %}</p>
+    <p class="muted">e.g. {% for d in x.diagrams %}<a href="/blocks/new?template={{ d.i }}">{{ d.name|truncate(60) }}</a>{{ '; ' if not loop.last }}{% endfor %}</p>
+    <p>{% for mpn in x.skyworks_parts %}<a class="badge ln-skyworks" href="/parts?q={{ mpn.mpn|urlencode }}">{{ mpn.mpn }}</a> {% endfor %}{% for mpn in x.qorvo_parts %}<a class="badge ln-qorvo" href="/parts?q={{ mpn.mpn|urlencode }}">{{ mpn.mpn }}</a> {% endfor %}</p>
+  </article>{% endfor %}
+</div>{% else %}<p class="muted small">No pairs found yet.</p>{% endif %}
 
 <h2 id="overlap">Overlap and complements</h2>
 <div class="pf-three small">

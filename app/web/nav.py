@@ -8,7 +8,8 @@ NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
         ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
-        ("Skyworks + Qorvo", "/portfolio", "The two lines side by side: strengths, which to pick, cross-selling"),
+        ("Skyworks + Qorvo portfolio", "/portfolio",
+         "What each company adds: product categories, RF by band, synergies, which to pick"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),

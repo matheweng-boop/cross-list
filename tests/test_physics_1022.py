@@ -76,7 +76,8 @@ def test_new_visuals_name_their_families_and_topics(client):
 
 def test_resources_recorded_with_what_they_are_good_for(client):
     src = {s["id"]: s for s in library.sources()}
-    for k in ("hyperphysics", "openstax", "falstad", "phet", "wolframdemos", "desmos", "lamar", "betterexplained", "microwaves101"):
+    for k in ("hyperphysics", "openstax", "falstad", "phet", "wolframdemos", "desmos", "lamar", "betterexplained",
+              "microwaves101"):
         assert src[k]["offers"] and src[k]["access"] and src[k]["licence"], k
     page = client.get("/library/sources").text
     assert "physics and maths" in page and "Falstad" in page

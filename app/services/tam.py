@@ -124,8 +124,8 @@ def by_function(session: Session) -> dict[str, dict]:
     """Public market size per function, for the Opportunity explorer and the demand score: the estimates linked to a
     function, without the ones the owner disagreed with. Where some figures cover the whole market (coverage full),
     only those count (owner, 22 Oct 2026: for tuners, the total radio market). Agreed figures are used when there are
-    any; otherwise every open one. usd = the median, with the low, high, latest year and how many sources (owner, 21 Oct 2026: market size
-    comes from public data only, never from commercial inputs)."""
+    any; otherwise every open one. usd = the median, with the low, high, latest year and how many sources (owner,
+    21 Oct 2026: market size comes from public data only, never from commercial inputs)."""
     out: dict[str, dict] = {}
     groups: dict[str, list[dict]] = {}
     for e in estimates(session):

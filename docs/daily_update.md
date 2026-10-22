@@ -20,3 +20,17 @@ into `main`: the owner gives the go-ahead (CLAUDE.md).
    go-ahead to merge the branch into `main`.
 
 If nothing came in and no question was answered, say so in one line and do nothing else.
+
+## Saving tokens (owner, 22 Oct 2026: slower is fine, cheaper matters)
+
+- Stop early: if the inbox says "Nothing new since the last pull" and no open question is answered, write the one-line
+  summary and end. Do not read the codebase, run tests or start any agent.
+- Work alone: no subagents, no parallel workers, no multi-agent workflows. Do the items one after another.
+- Read narrowly: find code with `grep -n` / `rg` and read only the lines around a match (`sed -n`), never whole large
+  files (routes.py, business.py, the catalogue YAML). Don't re-read a file you just edited.
+- Downloads: only for a requested technology review or a comment that needs a public source. Reuse what is cached
+  first (var/datasheets, var/appnotes, var/text, the scratchpad research folders). Fetch one document at a time with
+  the polite fetch helper, convert PDFs with `pdftotext` and search the text with `grep` for the needed sections
+  instead of reading it all. At most about 5 new documents per run; leave the rest as an open item for the next run.
+- Tests: run only the test files for what changed while working; run the full suite once, at the end, before pushing.
+- Write the summary short: one line per comment, then the open questions.

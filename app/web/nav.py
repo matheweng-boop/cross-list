@@ -46,7 +46,7 @@ UTILITY = ("manage", "Data management", (
     ("Schedule", "/manage/schedule", "What runs continuously, daily, weekly; what tonight's run picks up"),
     ("Verify next", "/manage/verify", "A small batch to check: crosses, diagrams and data that vouch for the rest"),
     ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
-    ("Site feedback", "/manage/feedback", "Daily digest of the Feedback button, with responses"),
+    ("Site feedback", "/manage/feedback", "Open comments from the Feedback button, with responses"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
     ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),

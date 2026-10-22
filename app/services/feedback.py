@@ -79,6 +79,32 @@ def digest(session: Session, day: date) -> dict:
             "kinds": Counter(x.kind for x in items), "open": sum(1 for r in out if r["status"] in OPEN)}  # fmt: skip
 
 
+def open_points(session: Session) -> dict:
+    """Every point not yet worked into the site (status New or Planned), from all days, as one list: similar items
+    grouped, newest point first (owner, 22 Oct 2026: one list instead of a button per day)."""
+    items = list(session.scalars(select(SiteFeedback).where(SiteFeedback.status.in_(OPEN))
+                                 .order_by(SiteFeedback.created_at.desc())))  # fmt: skip
+    groups: list[list[SiteFeedback]] = []
+    for it in items:
+        g = next((g for g in groups if any(similar(it, x) for x in g)), None)
+        if g is None:
+            groups.append([it])
+        else:
+            g.append(it)
+    out = []
+    for g in groups:
+        statuses = Counter(x.status for x in g)
+        out.append({
+            "ids": [x.id for x in g], "members": g, "lead": max(g, key=lambda x: len(x.text)),
+            "pages": sorted({x.page or x.path for x in g}), "kinds": sorted({x.kind for x in g}),
+            "status": statuses.most_common(1)[0][0], "response": next((x.response for x in g if x.response), ""),
+            "repeats": None, "newest": max(_as_utc(x.created_at) for x in g),
+            "first": min(_as_utc(x.created_at) for x in g),
+        })  # fmt: skip
+    out.sort(key=lambda r: r["newest"], reverse=True)
+    return {"n": len(items), "groups": out}
+
+
 def days(session: Session, limit: int = 30) -> list[tuple[date, int, int]]:
     """Days with feedback, newest first: (day, items, still open)."""
     per: dict[date, list[int]] = {}

@@ -1,24 +1,8 @@
 {% extends "base.html" %}
-{% block content %}
-{% set d = digest %}
-<h1>Site feedback</h1>
-<p class="subtitle muted">What people sent with the Feedback button, one digest per day. Similar points are grouped (and linked to an earlier open point they repeat), so each is answered once; the answer is shown to everyone who sent it.</p>
-
-{% if not days %}
-<div class="empty-state"><p><b>No feedback yet.</b></p><p class="small">Points sent with the Feedback button (bottom right of every page) appear here, one digest per day.</p></div>
-{% else %}
-<div class="fb-days small chip-row">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/manage/feedback?day={{ day }}">{{ day|date('weekday') }} <small>{{ n }}{% if o %} · {{ o }} open{% endif %}</small></a>{% endfor %}
-  <form method="get" action="/manage/feedback" class="fb-pick inline-form"><label class="small">Earlier day <input type="date" name="day" value="{{ d.day }}" aria-label="Show the digest of this day"></label> <button type="submit" class="outline small-btn">Show</button></form></div>
-
-<section class="pl-card">
-  <h2>{{ d.day|date('long') }} <small class="muted">{{ d.n }} item{{ 's' if d.n != 1 }} · {{ d.groups|length }} point{{ 's' if d.groups|length != 1 }} · {{ d.open }} open</small></h2>
-  {% if d.n %}<p class="small">{% for s, n in d.sections %}<span class="badge">{{ s }} {{ n }}</span> {% endfor %}{% for k, n in d.kinds.items() %}<span class="badge">{{ kinds.get(k, k) }} {{ n }}</span> {% endfor %}
-    · <a href="/manage/feedback/digest.txt?day={{ d.day }}">plain-text digest</a></p>{% endif %}
-
-  {% for g in d.groups %}
+{% macro point(g, day='') %}
   <article class="fb-group{{ ' fb-closed' if g.status not in ('new', 'planned') }}">
     <header><span class="fb-n" title="items in this point">×{{ g.ids|length }}</span> <b>{{ g.lead.text }}</b></header>
-    <p class="small muted">{% for k in g.kinds %}{{ kinds.get(k, k) }}{{ ', ' if not loop.last }}{% endfor %} · {% for p in g.pages %}{{ p }}{{ ' · ' if not loop.last }}{% endfor %}
+    <p class="small muted">{% if g.newest %}{{ g.newest|date('short') }}{% if g.first and g.first.date() != g.newest.date() %} (first {{ g.first|date('short') }}){% endif %} · {% endif %}{% for k in g.kinds %}{{ kinds.get(k, k) }}{{ ', ' if not loop.last }}{% endfor %} · {% for p in g.pages %}{{ p }}{{ ' · ' if not loop.last }}{% endfor %}
       {% if g.repeats %} · <span class="lg lg-opp">repeats an open point from {{ g.repeats.created_at|date('short') }}: “{{ g.repeats.text[:80] }}”</span>{% endif %}</p>
     {% if g.members|length > 1 %}<details class="small"><summary>All {{ g.members|length }} items</summary><ul>{% for x in g.members %}<li>{{ x.text }} <span class="muted">— {{ x.author or 'anonymous' }}, {{ x.created_at|date('time') }}, <a href="{{ x.path }}">{{ x.page or x.path }}</a></span></li>{% endfor %}</ul></details>
     {% else %}{% set x = g.members[0] %}<p class="small muted">{{ x.author or 'anonymous' }}, {{ x.created_at|date('time') }} · <a href="{{ x.path }}">open the page</a></p>{% endif %}
@@ -27,13 +11,43 @@
     {% if att %}<div class="fb-files small"><b>Attached:</b>{% for u in att %}
       <a class="fb-file-link" href="/manage/uploads/{{ u.id }}/file" target="_blank" rel="noopener">{% if u.content_type and u.content_type.startswith('image/') %}<img src="/manage/uploads/{{ u.id }}/file" alt="{{ u.original_name or 'picture' }}" loading="lazy">{% else %}<span class="up-icon">PDF</span>{% endif %}<span>{{ u.original_name or 'file' }}</span></a>{% endfor %}</div>{% endif %}
     <form method="post" action="/manage/feedback/respond" class="fb-respond">
-      <input type="hidden" name="ids" value="{{ g.ids|join(',') }}"><input type="hidden" name="day" value="{{ d.day }}">
+      <input type="hidden" name="ids" value="{{ g.ids|join(',') }}"><input type="hidden" name="day" value="{{ day }}">
       <select name="status" aria-label="Status">{% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if k == g.status }}>{{ label }}</option>{% endfor %}</select>
       <input name="response" value="{{ g.response or '' }}" placeholder="Response shown to the sender(s)" aria-label="Response">
       <button type="submit" class="small-btn">Save</button>
     </form>
   </article>
+{% endmacro %}
+{% block content %}
+<h1>Site feedback</h1>
+{% if open_list is defined %}
+{% set o = open_list %}
+<p class="subtitle muted">Comments from the Feedback button that are not worked into the site yet (New or Planned), newest first.
+  Similar comments are grouped, so each is answered once; the answer is shown to everyone who sent it. Set a point to Done
+  and it leaves this list.</p>
+<p class="small"><b>{{ o.groups|length }} open point{{ 's' if o.groups|length != 1 }}</b> ({{ o.n }} comment{{ 's' if o.n != 1 }})
+  {% if days %} · <a href="/manage/feedback?archive=1">Done / archive by day</a>{% endif %}</p>
+<section class="pl-card">
+  {% for g in o.groups %}{{ point(g) }}
+  {% else %}<div class="empty-state"><p><b>Nothing open.</b></p><p class="small">Every comment is worked in or answered. New points sent with the Feedback button (bottom right of every page) appear here.</p></div>{% endfor %}
+</section>
+{% else %}
+{% set d = digest %}
+<p class="subtitle muted">Archive: everything sent on one day, done or not. <a href="/manage/feedback">Back to the open list</a>.</p>
+{% if not days %}
+<div class="empty-state"><p><b>No feedback yet.</b></p></div>
+{% else %}
+<details class="small"><summary>Pick a day</summary>
+<div class="fb-days small chip-row">{% for day, n, o in days %}<a class="fchip{{ ' on' if day == d.day }}" href="/manage/feedback?day={{ day }}">{{ day|date('weekday') }} <small>{{ n }}{% if o %} · {{ o }} open{% endif %}</small></a>{% endfor %}
+  <form method="get" action="/manage/feedback" class="fb-pick inline-form"><label class="small">Earlier day <input type="date" name="day" value="{{ d.day }}" aria-label="Show the digest of this day"></label> <button type="submit" class="outline small-btn">Show</button></form></div>
+</details>
+<section class="pl-card">
+  <h2>{{ d.day|date('long') }} <small class="muted">{{ d.n }} item{{ 's' if d.n != 1 }} · {{ d.groups|length }} point{{ 's' if d.groups|length != 1 }} · {{ d.open }} open</small></h2>
+  {% if d.n %}<p class="small">{% for s, n in d.sections %}<span class="badge">{{ s }} {{ n }}</span> {% endfor %}{% for k, n in d.kinds.items() %}<span class="badge">{{ kinds.get(k, k) }} {{ n }}</span> {% endfor %}
+    · <a href="/manage/feedback/digest.txt?day={{ d.day }}">plain-text digest</a></p>{% endif %}
+  {% for g in d.groups %}{{ point(g, d.day) }}
   {% else %}<p class="muted small">Nothing was sent on this day.</p>{% endfor %}
 </section>
+{% endif %}
 {% endif %}
 {% endblock %}

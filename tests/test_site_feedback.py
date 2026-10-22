@@ -52,3 +52,30 @@ def test_earlier_open_point_is_flagged(client, session):
     _send(client, "Can I export the RF coverage matrix to Excel?")
     d = fb.digest(session, datetime.now(UTC).date())
     assert any(g["repeats"] and g["repeats"].id == old.id for g in d["groups"])
+
+
+def test_one_open_list_newest_first_with_archive(client, session):
+    """Owner, 22 Oct 2026: no button per day, one list of what is not worked in yet."""
+    now = datetime.now(UTC)
+    session.add_all([
+        SiteFeedback(text="Old open point about the price table", path="/business/price", status="new",
+                     created_at=now - timedelta(days=3)),
+        SiteFeedback(text="Finished point about colours", path="/", status="done", created_at=now - timedelta(days=1)),
+        SiteFeedback(text="Planned point about markets filter", path="/growth/markets", status="planned",
+                     created_at=now - timedelta(days=1)),
+    ])  # fmt: skip
+    session.commit()
+    _send(client, "Newest point about block diagrams")
+    html = client.get("/manage/feedback").text
+    assert 'class="fchip' not in html  # no day buttons on the list
+    assert "Finished point" not in html
+    order = [html.index(t) for t in ("Newest point", "Planned point", "Old open point")]
+    assert order == sorted(order) and "3 open points" in html
+    assert 'href="/manage/feedback?archive=1"' in html
+    archive = client.get("/manage/feedback?archive=1").text
+    assert "Back to the open list" in archive and 'class="fchip' in archive
+    day = (now - timedelta(days=1)).date().isoformat()
+    assert "Finished point" in client.get(f"/manage/feedback?day={day}").text
+    ids = re.search(r'name="ids" value="(\d+)"', html).group(1)  # the newest point
+    client.post("/manage/feedback/respond", data={"ids": ids, "status": "done", "response": "Done"})
+    assert "Newest point" not in client.get("/manage/feedback").text

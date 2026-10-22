@@ -135,7 +135,7 @@ def gaps_moved(co: str = "combined", sort: str = "reach"):
     view = {"adjacency": "crosssell", "positions": "reach", "tam": "commercial", "crowding": "competition"}.get(
         sort, "reach"
     )
-    return RedirectResponse(f"/business/explorer?co={co}&view={view}", status_code=307)
+    return RedirectResponse(f"/business/explorer/table?co={co}&view={view}", status_code=307)
 
 
 @router.get("/business/markets", response_class=HTMLResponse)
@@ -179,7 +179,8 @@ def markets(request: Request, co: str = "combined", view: str = "all", m: str = 
 def technology_moved(co: str = "combined", view: str = "all"):
     """Old Technology fit page: now the feasibility view of the explorer (its filters map onto explorer filters)."""
     f = view if view in EXPLORER_FILTERS else ""
-    return RedirectResponse(f"/business/explorer?co={co}&view=feasibility" + (f"&f={f}" if f else ""), status_code=307)
+    url = f"/business/explorer/table?co={co}&view=feasibility" + (f"&f={f}" if f else "")
+    return RedirectResponse(url, status_code=307)
 
 
 # Opportunity explorer columns that sort: key -> (label, default direction, sort key). Old `view` links map onto them.
@@ -208,7 +209,50 @@ EXPLORER_FILTERS = {
 }
 
 
-@router.get("/business/explorer", response_class=HTMLResponse)
+EXPLORER_PARAMS = ("scope", "view", "sort", "dir", "f", "t", "g", "s")
+
+
+@router.get("/business/explorer")
+def explorer_moved(request: Request, co: str = "combined"):
+    """The explorer now opens as Systems & applications > Cross-sell & gaps (owner, 22 Oct 2026); links that sort or
+    filter keep landing on the detailed table."""
+    if any(k in request.query_params for k in EXPLORER_PARAMS):
+        return RedirectResponse(f"/business/explorer/table?{request.url.query}", status_code=307)
+    return RedirectResponse(f"/blocks/cross-sell?co={op.company(co)[0]}", status_code=307)
+
+
+def _by_score(e: dict):
+    return (e["score"] is None, -(e["score"] or 0), -e["reach"], e["label"])
+
+
+@router.get("/blocks/cross-sell", response_class=HTMLResponse)
+def cross_sell_gaps(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    """Cross-sell & gaps: the explorer's data in three short lists (sell what we have, gaps we can build, new
+    technology), each as compact cards; the sortable table stays one click away."""
+    c = _ctx(session, co)
+    mine = op.company(co)[2]
+    sell = []
+    for e in op.markets(session, c["apps"], mine)["rows"]:
+        if e["group"] == "portfolio":
+            by = e["by_market"]
+            sell.append({"fn": e["fn"], "label": e["label"], "n_apps": sum(len(v) for v in by.values()),
+                         "markets": sorted(by, key=lambda m: (-len(by[m]), m)),
+                         "requalify": e["requalify"]})  # fmt: skip
+    sell.sort(key=lambda e: (-e["n_apps"], e["label"]))
+    rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
+    decisions = {d.fn: d.status for d in session.scalars(select(OpportunityDecision))}
+    rows = [{**e, "decision": decisions.get(e["key"])} for e in rows]
+    open_rows = [e for e in rows if e["gap_type"] != "not_ours" and e["decision"] != "set_aside"]
+    new = sorted([e for e in open_rows if (e["path"] or {}).get("path") == "new_capability"], key=_by_score)
+    gaps = sorted([e for e in open_rows if e not in new], key=_by_score)
+    shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
+    c.update(sell=sell, gaps=gaps, new=new, shortlisted=shortlisted, path_label=op.PATH_LABEL,
+             n_not_ours=sum(e["gap_type"] == "not_ours" for e in rows),
+             n_aside=sum(e["decision"] == "set_aside" for e in rows))  # fmt: skip
+    return templates.TemplateResponse(request, "business/cross_sell_gaps.html", c)
+
+
+@router.get("/business/explorer/table", response_class=HTMLResponse)
 def opportunity_explorer(
     request: Request,
     co: str = "combined",
@@ -301,7 +345,7 @@ async def decide(request: Request, session: Session = Depends(get_session)):
         d.status = status
         d.note = str(form.get("note") or "").strip()[:500] or d.note
     session.commit()
-    return RedirectResponse(_back(request, form, "/business/explorer"), status_code=303)
+    return RedirectResponse(_back(request, form, "/business/explorer/table"), status_code=303)
 
 
 SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
@@ -674,7 +718,7 @@ async def tech_feedback(request: Request, session: Session = Depends(get_session
         kind = kind if kind in ("missing", "correction", "idea") else "idea"
         session.add(TechFeedback(topic=topic, kind=kind, text=str(form.get("text")).strip(), author=author))
     session.commit()
-    return RedirectResponse("/business/capabilities#feedback", status_code=303)
+    return RedirectResponse("/business/capabilities", status_code=303)
 
 
 @router.get("/business/capabilities/feedback.txt", response_class=PlainTextResponse)

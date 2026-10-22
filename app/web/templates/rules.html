@@ -11,6 +11,21 @@
 {{ cross_type_definitions() }}
 <p class="small">Preference: drop-in, then functional, then package equivalent. Anything else is not listed. Obsolete / NRND / last-time-buy candidates are always listed last.</p>
 </details>
+<details open id="values"><summary>Which datasheet value is compared</summary>
+<ul class="small">
+  <li><b>Typical first, then maximum</b> (owner, 22 Oct 2026): performance values are compared at the datasheet's typical value
+    when it states one; without a typical we use the maximum (for CMTI, which has no maximum, the minimum). This applies to
+    propagation delay and CMTI today (gate drivers and digital isolators); each value's source line says "typ" or "max".
+    Re-read so far: Skyworks Si82Ax-Fx, Si823x, Si8239x, Si826x, Si827x (CMTI), Si86 digital isolators, all Novosense gate drivers,
+    Infineon 1ED314x. Other files still hold the maximum until they are re-read.</li>
+  <li><b>Limits stay limits</b>: isolation rating and class, creepage, supply and temperature ranges and the UVLO option are
+    ratings, not typical values, and are compared as stated.</li>
+  <li><b>UVLO</b>: variants must match within 6 %. When none does, the next lower threshold ranks first: it starts up
+    wherever the original does (<a href="/engineering/uvlo_v">why</a>).</li>
+  <li><b>Dead time and overlap protection</b> count as one capability, dead-time control
+    (<a href="/engineering/deadtime">the difference</a>).</li>
+</ul>
+</details>
 {% for fam, rules in all_rules.items() %}
 <h2>{{ rules.title }}</h2>
 <div class="table-wrap"><table class="striped">

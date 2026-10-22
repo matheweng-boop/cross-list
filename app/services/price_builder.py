@@ -122,6 +122,34 @@ def site_info(session: Session, mpn: str) -> dict:
     return out
 
 
+def variants(session: Session, mpn: str, limit: int = 30) -> list[dict]:
+    """Orderable variants of what was typed (owner, 22 Oct 2026: "if there are multiple variants of the same part, list
+    all options"): part numbers that start with it, or, for a full part number, with its base before the ordering
+    suffix (NSI8241C0-DSWR -> NSI8241C0...). Each {mpn, package, pins}; empty when there is only one."""
+    key = mpn.strip().upper()
+    if len(key) < 3:
+        return []
+
+    def find(prefix: str) -> dict[str, dict]:
+        out: dict[str, dict] = {}
+        q = select(Part).where(func.upper(Part.mpn).like(prefix.replace("%", "") + "%")).limit(limit)
+        for p in session.scalars(q).unique():
+            out[p.mpn.upper()] = {"mpn": p.mpn, "package": p.package.code if p.package else "",
+                                  "pins": (p.package.pin_count if p.package else 0) or 0}  # fmt: skip
+        for r in blocks.catalog_rows():
+            if len(out) >= limit:
+                break
+            if r["mpn"].upper().startswith(prefix) and r["mpn"].upper() not in out:
+                out[r["mpn"].upper()] = {"mpn": r["mpn"], "package": r.get("package") or "", "pins": 0}
+        return out
+
+    found = find(key)
+    if len(found) <= 1 and "-" in key:
+        found = find(key.split("-", 1)[0])
+    rows = sorted(found.values(), key=lambda v: v["mpn"].upper())
+    return rows if len(rows) > 1 else []
+
+
 def sibling(mpn: str) -> str | None:
     """A part with prices from the same datasheet family (e.g. Si47962 for Si47961), to price from by default."""
     me = _broadcast(mpn)

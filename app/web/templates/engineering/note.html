@@ -4,6 +4,9 @@
 <p class="muted small"><a href="/engineering">Spec guides</a> ›</p>
 <h1>{{ title }}</h1>
 <p class="subtitle muted">{{ summary }}</p>
+{% if why %}<section class="kn-why kn-why-note small" aria-label="Why it matters to the customer"><b>Why it matters to the customer</b>
+  {% for g in why %}{% if g.heading %}<p class="small"><b>{{ g.heading }}</b></p>{% endif %}<ul>{% for pt in g.points %}<li><span class="kn-kind k-{{ pt.kind }}">{{ kinds[pt.kind] }}</span> {{ pt.text }}{% if pt.est %} <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>{% endif %}</li>{% endfor %}</ul>{% endfor %}
+</section>{% endif %}
 
 {% if ctx %}
 <article class="note-context">

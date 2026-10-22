@@ -203,6 +203,12 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link
     "gate": ("Gate-drive current and power", "/visuals#gate",
              ("gate drive", "gate driver", "gate drivers", "gate charge")),
     "thermal": ("Junction temperature", "/visuals#thermal", ("thermal", "junction temperature")),
+    "bvd": ("Acoustic resonator (SAW / BAW)", "/visuals#bvd",
+            ("acoustic resonator", "piezoelectric", "coupling factor")),
+    "mod": ("AM vs FM modulation", "/visuals#mod", ("AM", "FM", "modulation", "superheterodyne")),
+    "jitter": ("Phase noise to jitter", "/visuals#jitter", ("jitter", "phase noise", "jitter attenuator")),
+    "swloss": ("Switching loss vs frequency", "/visuals#swloss",
+               ("switching loss", "switching losses", "conduction loss")),
     "rf-bands": ("RF bands chart", "/rf-bands", ("GNSS", "LTE", "5G", "V2X", "UWB", "Wi-Fi", "NTN", "band", "bands")),
 }  # fmt: skip
 _NEVER = re.compile(r"(?!x)x")

@@ -137,9 +137,11 @@ base_parts:
 # Per-datasheet facts. Values by package where the datasheet tabulates them.
 # `t_option` values apply to Si86xx "T" grade parts (reinforced, 10 kV surge).
 datasheets:
+  # typ first (owner, 22 Oct 2026): prop delay and CMTI are the datasheet's typical at VDD = 5 V; max / min only when no typ is stated
   si864x-datasheet.pdf:
     isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8640BT-IS Si8640BT-AS 4 0 150 Low 5.0"}
-    cmti_kv_us:  {value: 35, t_option: 60, evidence: "Si86xxxA/B/C/D See Figure 4.3 Common- 35 50"}
+    prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation 5.0 8.0 13 ns"}
+    cmti_kv_us:  {value: 50, t_option: 100, evidence: "Si86xxxA/B/C/D See Figure 4.3 Common- 35 50"}
     isolation_class: {value: basic, t_option: reinforced, evidence: "All other options certified to basic"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "certified under GB4943.1-2011"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, QSOP-16: 3.6}, evidence: "Nominal External Tracking \\(Creepage\\) 1 CPG 8.0 4.01 3.6"}
@@ -149,7 +151,8 @@ datasheets:
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si863x-datasheet.pdf:
     isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8630BT-IS Si8630BT-AS 3 0 150 Low 5.0"}
-    cmti_kv_us:  {value: 35, t_option: 60, evidence: "Si86xxxT Circuit on page 14 60 100"}
+    prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation 5.0 8.0 13 ns"}
+    cmti_kv_us:  {value: 50, t_option: 100, evidence: "Si86xxxT Circuit on page 14 60 100"}
     isolation_class: {value: basic, t_option: reinforced, evidence: "Si862xxT options certified to rein"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "GB4943.1"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01}, evidence: "Nominal External Tracking 1 L\\(IO2\\) 8.0 4.01"}
@@ -158,7 +161,8 @@ datasheets:
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si861x-2x-datasheet.pdf:
     isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8620BT-IS Si8620BT-AS 2 0 150 Low 5.0"}
-    cmti_kv_us:  {value: 35, t_option: 60, evidence: "Si86xxxT Mode Transient Immunity 60 100"}
+    prop_delay_ns: {value: 8.0, evidence: "Propagation delay t , t 5.0 8.0 13 ns"}
+    cmti_kv_us:  {value: 50, t_option: 100, evidence: "Si86xxxT Mode Transient Immunity 60 100"}
     isolation_class: {value: basic, t_option: reinforced, evidence: "Si862xxT options certified to reinforced per"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si861x/2x is certified under GB4943.1"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-8N: 4.01}, evidence: "Nominal external tracking \\(creepage\\)1 CPG 8.0 4.01"}
@@ -166,7 +170,8 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-channel skew t — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature1 TA –40 25 125"}
   si865x-datasheet.pdf:
-    cmti_kv_us:  {value: 35, evidence: "Common Mode Transient Immunity CMTI V = V or 0 V 35 50"}
+    prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation 5.0 8.0 13 ns"}
+    cmti_kv_us:  {value: 50, evidence: "Common Mode Transient Immunity CMTI V = V or 0 V 35 50"}
     isolation_class: {value: basic, evidence: "VDE 0884-10"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si865x is certified under GB4943.1-2011"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, QSOP-16: 3.6}, evidence: "Nominal External Tracking \\(Creepage\\) 1 CPG 8.0 4.01 3.6"}
@@ -174,7 +179,8 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si866x.pdf:
-    cmti_kv_us:  {value: 35, evidence: "CMTI 35 50 — kV/µs"}
+    prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t PHL , t PLH Delay Timing on page 14 5.0 8.0 13 ns"}
+    cmti_kv_us:  {value: 50, evidence: "CMTI 35 50 — kV/µs"}
     isolation_class: {value: basic, evidence: "VDE 0884-10"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si866x is certified under GB4943.1-2011"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, QSOP-16: 3.6}, evidence: "Nominal External Tracking \\(Creepage\\) 1 CPG 8.0 4.01 3.6"}
@@ -183,7 +189,7 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t PSK — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si860x.pdf:
-    cmti_kv_us:  {value: 35, evidence: "CMTI 35 50 — kV/µs"}
+    cmti_kv_us:  {value: 50, evidence: "CMTI 35 50 — kV/µs"}
     isolation_class: {value: basic, evidence: "60747-5-2: Up to 1200 V for basic insulation working voltage"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si860x is certified under GB4943.1-2011"}
     creepage_mm: {by_package: {SOIC-8N: 4.01, SOIC-16N: 4.01, SOIC-16W: 8.0}, evidence: "Nominal External Tracking \\(Creepage\\)1 L\\(1O2\\) 4.01 4.01 8.0"}
@@ -191,7 +197,8 @@ datasheets:
     skew_ns:     {value: 10, evidence: "Channel-Channel Skew t PSK — — 10 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature1 T A –40 25 125"}
   si86xx-1Mbps-datasheet.pdf:
-    cmti_kv_us:  {value: 35, evidence: "Common Mode CMTI V = V or 0 V 35 50"}
+    prop_delay_ns: {value: 35.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation — — 35 ns"}  # max: no typ stated
+    cmti_kv_us:  {value: 50, evidence: "Common Mode CMTI V = V or 0 V 35 50"}
     isolation_class: {value: basic, evidence: "certified according to IEC 60747-5-2"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86xx is certified under GB4943.1-2011"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 4.01, SOIC-8N: 4.01}, evidence: "Nominal External Tracking L\\(IO2\\) 8.0 4.01 4.01"}
@@ -208,6 +215,8 @@ datasheets:
     temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature T –40 25 125"}
   si86s61x_2x_Ox-datasheet.pdf:
     cmti_kv_us:  {value: 100, high_cmti: 150, evidence: "Si86SxxxB/Ex 100"}
+    prop_delay_ns: {value: 9.0, deglitch: 36.0, evidence: "Si86SxxxF/Hx t PHL , t PLH See Propagation Delay Timing, Figure 7 30.5 36 41.5 ns"}
+    data_rate_mbps: {deglitch: 10.0, evidence: "Data rate Si86SxxxF/Hx — — 10 Mbps"}
     isolation_class: {value: reinforced, evidence: "Reinforced IEC 60747-17 rating"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86S61x/2x/Ox is certified under GB4943.1"}
     creepage_mm: {by_package: {SSO-8: 8.0, SOIC-8N: 3.9}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.9"}
@@ -217,6 +226,8 @@ datasheets:
     temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature T A –40 25 125"}
   si86s6xx-datasheet.pdf:
     cmti_kv_us:  {value: 100, high_cmti: 150, evidence: "Si86SxxxB/Ex 100 — —"}
+    prop_delay_ns: {value: 9.0, deglitch: 36.0, low_power: 11.5, evidence: "\\(Si86SLx, low power mode\\) t PHL , t PLH See Figure 17"}
+    data_rate_mbps: {deglitch: 10.0, evidence: "Data Rate Si86SxxxF/Hx — — 10 Mbps"}
     isolation_class: {value: reinforced, evidence: "Reinforced IEC 60747-17 rating"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86Sx is certified under GB4943.1"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 3.9, QSOP-16: 3.6}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.9 3.6"}
@@ -226,6 +237,7 @@ datasheets:
     temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature1 T A –40 25 125"}
   Si86Px-datasheet.pdf:
     integrated_power: {value: isolated dc-dc, evidence: "Power supply for integrated power"}
+    prop_delay_ns: {value: 8.0, evidence: "Propagation delay t , t 5.0 8.0 15.0 ns"}
     cmti_kv_us:  {value: 100, evidence: "Common-mode transient immunity CMTI\\W*100 — — kV"}
     isolation_class: {value: basic, evidence: "60747-17 \\(basic insulation\\)"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86Px is certified under GB4943.1"}

@@ -32,6 +32,9 @@ class ParamDef:
     at: str | None = None  # parameter holding the test condition of this value (the supply of a peak current)
     curve: str | None = None  # a ``curve`` parameter giving this value at other test conditions
     x_unit: str = ""  # curve: unit of the test condition
+    # direction "match": the side that is the safer stand-in when no variant matches (a UVLO threshold: a lower one
+    # still starts up at every supply the reference starts at; owner, 22 Oct 2026). Still a deviation, ranked closer.
+    prefer: str | None = None
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,9 @@ class FamilyRules:
     family: str
     title: str
     params: tuple[ParamDef, ...] = field(default_factory=tuple)
+    # functional_focus (owner, 22 Oct 2026, timing): judge a cross by function and specs only; package and pinout do
+    # not decide the cross type or the order, and a functional match without priority 1 deviations counts as crossed
+    functional_focus: bool = False
 
     def by_priority(self, *priorities: int) -> list[ParamDef]:
         return [p for p in self.params if p.priority in priorities]
@@ -145,6 +151,7 @@ def parse_rules(data: dict) -> FamilyRules:
             at=raw.get("at"),
             curve=raw.get("curve"),
             x_unit=raw.get("x_unit", ""),
+            prefer=raw.get("prefer"),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")
@@ -152,6 +159,8 @@ def parse_rules(data: dict) -> FamilyRules:
             raise ValueError(f"{p.key}: priority must be 1, 2 or 3")
         if p.kind == "number" and p.direction not in ("higher", "lower", "match"):
             raise ValueError(f"{p.key}: number needs direction higher|lower|match")
+        if p.prefer not in (None, "lower", "higher") or (p.prefer and p.direction != "match"):
+            raise ValueError(f"{p.key}: prefer (lower|higher) goes with direction match")
         if p.derived_from and (p.kind != "bool" or not p.contains):
             raise ValueError(f"{p.key}: a derived parameter must be a bool with from.contains")
         if p.kind == "ordinal" and not p.levels:
@@ -161,7 +170,8 @@ def parse_rules(data: dict) -> FamilyRules:
         if p.kind != "curve" and bool(p.at) != bool(p.curve):
             raise ValueError(f"{p.key}: at and curve go together")
         params.append(p)
-    return FamilyRules(family=data["family"], title=data.get("title", data["family"]), params=tuple(params))
+    return FamilyRules(family=data["family"], title=data.get("title", data["family"]), params=tuple(params),
+                       functional_focus=bool(data.get("functional_focus")))
 
 
 @lru_cache

@@ -79,7 +79,7 @@ def test_compare_downloads(client):
     a, b = ids(client, "SR8233", "SA21520")
     x = client.get(f"/compare.xlsx?ids={a},{b}&baseline={a}")
     ws = load_workbook(io.BytesIO(x.content)).active
-    assert any(c.value == "Propagation delay (max)" for row in ws.iter_rows() for c in row)
+    assert any(c.value == "Propagation delay (typ, else max)" for row in ws.iter_rows() for c in row)
     text = client.get(f"/compare.csv?ids={a},{b}").text
     assert "SynAlpha SA21520" in text
     assert client.get("/compare.csv?ids=").status_code == 400
@@ -228,7 +228,7 @@ def test_finder_start_page(client):
     html = client.get("/").text
     assert "Search &amp; replacements" in html and 'action="/find"' in html
     # three starting actions and one definition of the cross types
-    assert all(x in html for x in ('href="/compare"', 'href="/blocks"', 'href="/business/explorer"'))
+    assert all(x in html for x in ('href="/compare"', 'href="/blocks"', 'href="/blocks/cross-sell"'))
     assert "every priority 1 parameter equal or better" in html
 
 
@@ -316,7 +316,8 @@ def test_navigation_sections_and_old_urls(client):
                                ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
                                ("/blocks/coverage", "Systems &amp; applications", "Application library"),
-                               ("/business", "Opportunities", "Opportunity explorer"),
+                               ("/business", "Systems &amp; applications", "Cross-sell &amp; gaps"),
+                               ("/business/competitors", "Opportunities", "Competitive analytics"),
                                ("/business/markets", "Future growth", "Markets &amp; customers"),
                                ("/business/reports", "Future growth", "Research &amp; ideas"),
                                ("/library", "Engineering knowledge", "Systems library"),

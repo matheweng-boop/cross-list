@@ -6,7 +6,7 @@ params:
   - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [functional, basic, reinforced], exception: true}
   - {key: creepage_mm, label: Creepage, unit: mm, priority: 3, kind: number, direction: higher}  # owner 21 Oct 2026: good to know, never blocks or ranks a cross
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true}
-  - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 1, kind: number, direction: higher}
+  - {key: cmti_kv_us, label: "CMTI (typ, else min)", unit: kV/µs, priority: 1, kind: number, direction: higher}
   # Output type: channels, input and drive strength define what the driver does.
   - {key: channel_config, label: Channel configuration, priority: 1, kind: category, hard: true}
   - {key: input_type, label: Input type, priority: 1, kind: category, hard: true}
@@ -22,14 +22,19 @@ params:
   - {key: peak_sink_a, label: Peak sink current, unit: A, priority: 1, kind: number, direction: higher, at: peak_current_vdd_v, curve: peak_sink_curve}
   # UVLO variants are not interchangeable: a 12 V UVLO part cannot replace an 8 V one. Vendors state either the
   # option class (TI, Skyworks: 8 / 12 V) or the measured rising threshold (Infineon, some Novosense: 12.5, 13.6 V),
-  # so values within 6 % (12 and 12.5 V, not 12 and 13 V) count as the same variant; neither direction is better.
-  - {key: uvlo_v, label: Output UVLO threshold, unit: V, priority: 1, kind: number, direction: match, tolerance: 0.06}
+  # so values within 6 % (12 and 12.5 V, not 12 and 13 V) count as the same variant. When no variant matches, a lower
+  # threshold is the safer stand-in (owner, 22 Oct 2026: NSI6602A, 6 V option -> Si82E29AGC, 4 V, not the 8 V
+  # Si82E29ABC): it starts up at every supply the original starts at, while a higher one may stay off. Still a
+  # deviation (less undervoltage protection); it only ranks closer.
+  - {key: uvlo_v, label: Output UVLO threshold, unit: V, priority: 1, kind: number, direction: match, tolerance: 0.06, prefer: lower}
   # --- Priority 2: for information ---
   - {key: output_supply_v, label: Output supply range, unit: V, priority: 2, kind: range}
-  - {key: prop_delay_ns, label: Propagation delay (max), unit: ns, priority: 2, kind: number, direction: lower}
-  - {key: protection, label: Protection features, priority: 2, kind: set}
+  - {key: prop_delay_ns, label: "Propagation delay (typ, else max)", unit: ns, priority: 2, kind: number, direction: lower}
+  # Dead time and overlap protection are one capability in the dual drivers compared (owner's question, 22 Oct 2026:
+  # the NSI6602 dead-time logic also blocks overlapping inputs), judged once by `deadtime` below, not twice here.
+  - {key: protection, label: Protection features, priority: 2, kind: set, exclude: [programmable dead time, overlap protection]}
   - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
-  - {key: deadtime, label: Dead-time control, priority: 2, kind: category}
+  - {key: deadtime, label: Dead-time control (incl. overlap protection), priority: 2, kind: category}
   - {key: theta_ja_c_w, label: Thermal resistance θJA, unit: °C/W, priority: 2, kind: number, direction: lower}
   # --- Priority 3: for information ---
   - {key: iq_ma, label: Quiescent current, unit: mA, priority: 3, kind: number, direction: lower}

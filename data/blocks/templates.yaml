@@ -14732,3 +14732,67 @@
     - {fn: gate_driver, req: reinforced, map: {reinforced: true}}
     - {fn: digital_isolator, req: reinforced, map: {reinforced: true}}
     source: IEC 61800-5-1 / IEC 62477-1, our reading
+
+# Drones (owner, 22 Oct 2026: one of the four focus areas). Generic architectures (est) from the usual public
+# building blocks of small multirotor drones; to be checked against public reference designs by the daily run.
+- name: Drone flight controller and motor drives (quadcopter)
+  category: Motor drives
+  note: "Generic small multirotor (est): battery, flight controller with IMU and barometer, four BLDC motor drives (ESCs) and a camera gimbal."
+  groups:
+  - {id: battery, label: Battery pack, col: 0, row: 0, blocks: [battery_pack, battery_monitor, battery_protector]}
+  - {id: power, label: Power rails, col: 1, row: 0, blocks: [wide_vin_buck, pol_buck, pol_ldo, supervisor, tvs_esd]}
+  - {id: fc, label: Flight controller, col: 2, row: 0, blocks: [mcu, crystal_oscillator, flash]}
+  - {id: sensors, label: Flight sensors, col: 3, row: 0, blocks: [position_sensor, env_sensor, temperature_sensor]}
+  - {id: esc, label: Motor drives (ESC) x4, col: 1, row: 1, w: 2, blocks: [three_phase_gate_driver, power_fets, current_sensor, motor_controller, motor]}
+  - {id: gimbal, label: Camera gimbal, col: 3, row: 1, blocks: [three_phase_gate_driver, motor, position_sensor]}
+  links:
+  - [battery, power, battery voltage]
+  - [battery, esc, motor power]
+  - [power, fc, 3.3 V / 5 V]
+  - [sensors, fc, attitude and altitude]
+  - [fc, esc, throttle commands]
+  - [fc, gimbal, gimbal angles]
+  questions:
+  - {id: cells, question: Battery size, choices: [2–4 cells (small), 6 cells, 12 cells and up (heavy lift)]}
+  - {id: esc_type, question: Motor drive, choices: [one board with four drives, one drive per arm]}
+
+- name: Drone radio links (remote control, video, GNSS, Remote ID)
+  category: RF & connectivity
+  note: "Generic drone radio set (est): a long-range control link, a 2.4 / 5.8 GHz video downlink, satellite positioning and Bluetooth / Wi-Fi Remote ID."
+  groups:
+  - {id: proc, label: Flight / video processor, col: 0, row: 0, blocks: [soc, pmic, ddr_flash]}
+  - {id: rc, label: Control link (sub-GHz or 2.4 GHz), col: 1, row: 0, blocks: [rf_transceiver, rf_frontend, power_amplifier, lna, antenna_switch]}
+  - {id: video, label: Video downlink (2.4 / 5.8 GHz), col: 2, row: 0, blocks: [wifi_soc, wifi_fem, filter_saw_baw]}
+  - {id: gnss, label: Satellite positioning, col: 1, row: 1, blocks: [gnss_lna, filter_saw_baw]}
+  - {id: rid, label: Remote ID, col: 2, row: 1, blocks: [ble_soc, bt_fem]}
+  - {id: ant, label: Antennas, col: 3, row: 0, blocks: [antenna, diplexer]}
+  links:
+  - [proc, rc, commands and telemetry]
+  - [proc, video, video stream]
+  - [gnss, proc, position]
+  - [proc, rid, ID broadcast]
+  - [rc, ant, '']
+  - [video, ant, '']
+  questions:
+  - {id: range, question: Control-link range, choices: [under 2 km, 2–10 km, over 10 km]}
+  - {id: video_band, question: Video band, choices: [2.4 GHz, 5.8 GHz, both]}
+  - {id: gnss_bands, question: GNSS bands, choices: [L1 only, L1 + L5 (dual band)]}
+
+- name: Drone with 4G / 5G link (beyond visual line of sight)
+  category: RF & connectivity
+  note: "Generic connected drone (est): a cellular modem for control and video beyond sight, with Wi-Fi and GNSS; the same front-end sockets as a cellular module."
+  groups:
+  - {id: proc, label: Flight computer, col: 0, row: 0, blocks: [soc, pmic, ddr_flash, clock_generator]}
+  - {id: modem, label: 4G / 5G modem, col: 1, row: 0, blocks: [modem, rf_transceiver]}
+  - {id: fe, label: Cellular front end, col: 2, row: 0, blocks: [pa_module, diversity_rx_module, antenna_tuner, filter_saw_baw, antenna_switch]}
+  - {id: wifi, label: Wi-Fi, col: 1, row: 1, blocks: [wifi_soc, wifi_fem]}
+  - {id: gnss, label: Satellite positioning, col: 2, row: 1, blocks: [gnss_lna, filter_saw_baw]}
+  - {id: ant, label: Antennas, col: 3, row: 0, blocks: [antenna]}
+  links:
+  - [proc, modem, control and video]
+  - [modem, fe, RF]
+  - [fe, ant, '']
+  - [proc, wifi, '']
+  - [gnss, proc, position]
+  questions:
+  - {id: cell_gen, question: Cellular generation, choices: [LTE Cat-4, 5G sub-6 GHz, 5G RedCap]}

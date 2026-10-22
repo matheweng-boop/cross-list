@@ -242,6 +242,8 @@
 
   V.push({
     id: "wave", group: "RF links", title: "Wavelength and antenna size",
+    explains: [["UWB", "/knowledge#p-uwb"], ["Broadcast radio tuners", "/knowledge#p-tuners"]],
+    physics: [["Antennas and wavelength", "phys_antennas_wavelength"]],
     lead: "Wavelength sets antenna size and tells you when a PCB trace starts behaving like a transmission line.",
     controls: [{k: "f", label: "Frequency", min: 0.001, max: 100, value: 2.4, unit: "GHz", log: true}],
     compute(v) {
@@ -266,6 +268,8 @@
   let chain = NF_DEFAULT();
   V.push({
     id: "nf", group: "Receivers", title: "Cascaded noise figure and sensitivity",
+    explains: [["Front-end modules and LNAs", "/knowledge#p-front_ends"], ["Broadcast radio tuners", "/knowledge#p-tuners"]],
+    physics: [["Gain and noise", "phys_noise_gain"]],
     lead: "Why the first stage decides the receiver. Build the chain below: drag blocks to reorder them, add or remove stages, and move each block's gain and noise figure. Our parts that meet each block's numbers at the chosen frequency are suggested underneath.",
     controls: [
       {k: "f", label: "Frequency (for part suggestions)", min: 0.05, max: 40, value: 2.4, unit: "GHz", log: true},
@@ -352,6 +356,8 @@
 
   V.push({
     id: "ip3", group: "Receivers", title: "IP3 and intermodulation",
+    explains: [["Front-end modules and PAs", "/knowledge#p-front_ends"], ["RF switches", "/knowledge#p-rf_switches"]],
+    physics: [["Linearity", "phys_linearity"]],
     lead: "Two strong signals create third-order products that grow three times as fast as the signals themselves.",
     controls: [
       {k: "g", label: "Gain", min: 0, max: 40, step: 0.5, value: 15, unit: "dB"},
@@ -375,6 +381,8 @@
 
   V.push({
     id: "vswr", group: "Matching and filters", title: "Mismatch, VSWR and the standing wave",
+    explains: [["RF switches and antenna tuning", "/knowledge#p-rf_switches"], ["Front-end modules", "/knowledge#p-front_ends"]],
+    physics: [["Impedance matching and VSWR", "phys_matching_vswr"]],
     lead: "A load that is not 50 Ω reflects part of the wave; the reflection and the forward wave add up to a standing wave.",
     controls: [
       {k: "r", label: "Load resistance", min: 1, max: 1000, value: 100, unit: "Ω", log: true},
@@ -436,6 +444,8 @@
 
   V.push({
     id: "lc", group: "Matching and filters", title: "LC resonance and Q",
+    explains: [["RF filters", "/knowledge#p-filters"], ["Clocks and oscillators", "/knowledge#p-timing"]],
+    physics: [["Resonance and Q", "phys_resonance_q"]],
     lead: "An inductor and a capacitor resonate where their reactances cancel; the Q sets how sharp the peak is.",
     controls: [
       {k: "l", label: "Inductance", min: 0.1, max: 1000, value: 3.3, unit: "nH", log: true},
@@ -482,6 +492,8 @@
   const EDGE = v => v.src === "edge", GATE = v => v.src === "gate", COSS = v => v.src === "coss";
   V.push({
     id: "cmti", group: "Isolation and power", title: "CMTI against the switching edge",
+    explains: [["Digital isolators", "/knowledge#p-digital_isolators"], ["Isolated gate drivers", "/knowledge#p-gate_drivers"]],
+    physics: [["Crossing an isolation barrier", "phys_isolation_coupling"]],
     lead: "The isolator must ride through the voltage slew of the power stage it sits across. Pick an application to load its typical conditions, then choose what sets the edge: the edge time, the gate drive, or the load current charging the switch capacitance.",
     presetLabel: "Applications",
     presets: [
@@ -550,6 +562,8 @@
   };
   V.push({
     id: "creep", group: "Isolation and power", title: "Creepage against working voltage",
+    explains: [["Digital isolators", "/knowledge#p-digital_isolators"], ["Isolated gate drivers", "/knowledge#p-gate_drivers"]],
+    physics: [["Creepage and clearance", "phys_creepage_clearance"]],
     lead: "The distance along the package surface between the two sides must grow with the working voltage, the pollution and the insulating material.",
     controls: [
       {k: "u", label: "Working voltage", min: 50, max: 1000, step: 10, value: 400, unit: "V rms"},
@@ -621,6 +635,171 @@
     },
   });
 
+  // ---- physics visuals (22 Oct 2026): each names the product families it explains and its physics topic
+  const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+  const cdiv = (a, b) => { const d = b[0] * b[0] + b[1] * b[1]; return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d]; };
+  const cabs = a => Math.hypot(a[0], a[1]);
+  V.push({
+    id: "bvd", group: "Matching and filters", title: "Acoustic resonator (SAW / BAW)",
+    lead: "A piezoelectric resonator has a series resonance (impedance dips) and, just above it, a parallel resonance (impedance peaks). The coupling k² sets their spacing and so the widest filter it can build; Q sets how sharp they are.",
+    explains: [["RF filters, duplexers and multiplexers", "/knowledge#p-filters"], ["Clocks and oscillators (BAW references)", "/knowledge#p-timing"]],
+    physics: [["Piezoelectricity and acoustic resonators", "phys_piezo_acoustic"], ["Resonance and Q", "phys_resonance_q"]],
+    controls: [
+      {k: "fs", label: "Series resonance fs", min: 0.5, max: 8, value: 2.5, unit: "GHz", log: true},
+      {k: "k2", label: "Coupling k²eff", min: 1, max: 14, step: 0.1, value: 6.5, unit: "%"},
+      {k: "q", label: "Resonator Q", min: 50, max: 4000, value: 2000, unit: "", log: true},
+      {k: "c0", label: "Static capacitance C0", min: 0.2, max: 5, value: 1, unit: "pF", log: true},
+    ],
+    presets: [
+      {label: "BAW 2.5 GHz (AlN)", values: {fs: 2.5, k2: 6.5, q: 2000, c0: 1.2}, note: "Typical aluminium-nitride BAW: about 6–7 % coupling, Q in the low thousands."},
+      {label: "SAW 900 MHz", values: {fs: 0.9, k2: 7.5, q: 900, c0: 3.5}, note: "Lithium-tantalate SAW at a low band: good coupling, lower Q than BAW."},
+      {label: "Wide band 3.7 GHz (ScAlN)", values: {fs: 3.7, k2: 11, q: 1200, c0: 0.9}, note: "Scandium-doped AlN raises the coupling for wide 5G bands such as n77, at some cost in Q."},
+    ],
+    compute(v) {
+      const fs = v.fs * 1e9, k2 = v.k2 / 100, C0 = v.c0 * 1e-12, fp = fs / (1 - (4 * k2) / (Math.PI * Math.PI));
+      const C1 = C0 * ((fp / fs) ** 2 - 1), L1 = 1 / ((2 * Math.PI * fs) ** 2 * C1), R1 = (2 * Math.PI * fs * L1) / v.q;
+      const z = f => { const w = 2 * Math.PI * f, zm = [R1, w * L1 - 1 / (w * C1)], z0 = [0, -1 / (w * C0)]; return cabs(cdiv(cmul(zm, z0), [zm[0] + z0[0], zm[1] + z0[1]])); };
+      const a = fs - (fp - fs) * 1.5, b = fp + (fp - fs) * 1.5, fsx = range(a, b, 500);
+      const zs = fsx.map(z), lo = 10 ** Math.floor(log10(Math.min(...zs))), hi = 10 ** Math.ceil(log10(Math.max(...zs)));
+      const t = 11000 / (2 * fs);
+      return {
+        outputs: [["Parallel resonance fp", si(fp, "Hz")], ["Spacing fp − fs", si(fp - fs, "Hz")], ["Rough ladder-filter bandwidth ≈ 2 (fp − fs)", si(2 * (fp - fs), "Hz")],
+          ["|Z| at fs / at fp", `${si(z(fs), "Ω")} / ${si(z(fp), "Ω")}`], ["C0 reactance at fs (aim ≈ 50 Ω)", si(1 / (2 * Math.PI * fs * C0), "Ω")], ["AlN film thickness for a BAW ≈ v / 2fs", si(t, "m")]],
+        eq: `f<sub>p</sub> = f<sub>s</sub> / (1 − 4k²/π²) &nbsp;·&nbsp; C<sub>1</sub> = C<sub>0</sub> ((f<sub>p</sub>/f<sub>s</sub>)² − 1) &nbsp;·&nbsp; BAW: f ≈ v / (2t)`,
+        eqn: `f<sub>p</sub> = ${si(fs, "Hz")} / (1 − 4 · ${num(k2)} / π²) = ${si(fp, "Hz")} &nbsp;·&nbsp; t ≈ 11,000 m/s / (2 · ${si(fs, "Hz")}) = ${si(t, "m")}`,
+        chart: {x: {min: a, max: b, label: "Frequency", fmt: x => si(x, "Hz")}, y: {min: lo, max: hi, log: true, label: "Impedance |Z|", fmt: x => si(x, "Ω")},
+          series: [{pts: fsx.map((f, i) => [f, zs[i]]), width: 3}], hlines: [{y: 50, label: "50 Ω"}],
+          vlines: [{x: fs, label: "fs", color: C.green}, {x: fp, label: "fp", color: C.orange}]},
+        note: "Model: Butterworth-Van Dyke (a series R-L-C branch for the moving crystal, in parallel with the plate capacitance C0). In a ladder filter, series resonators sit at the band centre at fs and shunt resonators are tuned lower so their fp lands there; the pass band can only be about as wide as the fs–fp gap, which is why wide 5G bands need high-coupling materials. Higher Q gives a deeper dip, a taller peak, lower loss and steeper band edges.",
+      };
+    },
+    related: [["LC resonance and Q", "#lc"], ["Band-pass filter", "#filter"]],
+  });
+
+  const besselJ = (n, x) => { let s = 0; const N = Math.max(400, Math.ceil(4 * Math.abs(x)) + 200); for (let i = 0; i <= N; i++) { const t = (Math.PI * i) / N; s += (i === 0 || i === N ? 0.5 : 1) * Math.cos(n * t - x * Math.sin(t)); } return s / N; };
+  V.push({
+    id: "mod", group: "Broadcast radio", title: "AM vs FM modulation",
+    lead: "The same audio tone carried two ways: AM changes the carrier's strength, FM changes its frequency. Compare the waveforms, then the spectra and the bandwidth each needs.",
+    explains: [["Broadcast radio tuners", "/knowledge#p-tuners"]],
+    physics: [["AM and FM modulation", "phys_am_fm"], ["Mixing and the superheterodyne", "phys_mixing_superhet"]],
+    animate: true,
+    controls: [
+      {k: "view", label: "Show", type: "select", options: [["wave", "Waveforms (time)"], ["spec", "Spectrum (frequency)"]], value: "wave"},
+      {k: "fm", label: "Audio tone fm", min: 0.1, max: 15, value: 1, unit: "kHz", log: true},
+      {k: "m", label: "AM depth m", min: 0, max: 1, step: 0.01, value: 0.6, unit: ""},
+      {k: "df", label: "FM deviation Δf", min: 0.5, max: 100, value: 3, unit: "kHz", log: true},
+    ],
+    presets: [
+      {label: "AM broadcast", values: {fm: 4.5, m: 0.8, df: 3}, note: "AM stations are spaced 9 or 10 kHz apart, so the audio is limited to about 4.5–5 kHz."},
+      {label: "FM broadcast", values: {fm: 15, m: 0.6, df: 75}, note: "Broadcast FM: ±75 kHz deviation and 15 kHz audio – Carson's rule gives 180 kHz, inside the 200 kHz channel."},
+      {label: "Narrow-band FM (voice)", values: {fm: 3, m: 0.6, df: 2.5}, note: "Two-way radio uses ±2.5 or ±5 kHz deviation for 12.5 or 25 kHz channels."},
+    ],
+    compute(v, phase = 0) {
+      const beta = v.df / v.fm, carson = 2 * (v.df + v.fm), amBw = 2 * v.fm, sbPct = (100 * v.m * v.m) / (2 + v.m * v.m);
+      const j0 = besselJ(0, beta), outputs = [["AM bandwidth 2 fm", `${num(amBw)} kHz`], ["FM index β = Δf / fm", num(beta)],
+        ["FM bandwidth (Carson) 2 (Δf + fm)", `${num(carson)} kHz`], ["FM needs × the AM bandwidth", num(carson / amBw)],
+        ["AM power in the sidebands (the audio)", `${num(sbPct)} %`], ["FM power left in the carrier J0(β)²", `${num(100 * j0 * j0)} %`]];
+      const eq = `AM: s = [1 + m cos(2π f<sub>m</sub>t)] cos(2π f<sub>c</sub>t) &nbsp;·&nbsp; FM: s = cos(2π f<sub>c</sub>t + β sin(2π f<sub>m</sub>t)), β = Δf / f<sub>m</sub> &nbsp;·&nbsp; B<sub>FM</sub> ≈ 2(Δf + f<sub>m</sub>)`;
+      const eqn = `β = ${num(v.df)} / ${num(v.fm)} = ${num(beta)} &nbsp;·&nbsp; B<sub>FM</sub> ≈ 2 (${num(v.df)} + ${num(v.fm)}) = ${num(carson)} kHz &nbsp;·&nbsp; B<sub>AM</sub> = ${num(amBw)} kHz`;
+      let chart;
+      if (v.view === "spec") {
+        const span = Math.max(1.25 * carson / 2, 3 * v.fm), nmax = Math.min(400, Math.ceil(span / v.fm) + 1), series = [];
+        for (let n = -nmax; n <= nmax; n++) {
+          const lvl = 20 * log10(Math.abs(besselJ(Math.abs(n), beta)) + 1e-9);
+          if (lvl > -60) series.push({pts: [[n * v.fm, -60], [n * v.fm, lvl]], color: C.blue, width: 2});
+        }
+        const am = [[0, 0], [-v.fm, 20 * log10(v.m / 2 + 1e-9)], [v.fm, 20 * log10(v.m / 2 + 1e-9)]];
+        am.forEach(([x, y]) => series.push({pts: [[x, -60], [x, y]], color: C.orange, width: 5, opacity: 0.55}));
+        series.push({pts: [[0, -99], [0, -99]], color: C.orange, label: "AM"}, {pts: [[0, -99], [0, -99]], color: C.blue, label: "FM"});
+        chart = {x: {min: -span, max: span, label: "Offset from the carrier (kHz)"}, y: {min: -60, max: 3, label: "Level (dB, carrier = 0)"}, series,
+          bands: [{x0: -carson / 2, x1: carson / 2, color: C.blue, opacity: 0.07, label: "FM (Carson)"}, {x0: -v.fm, x1: v.fm, color: C.orange, opacity: 0.12}]};
+      } else {
+        const fc = 12, ts = range(0, 2, 900), sh = phase / (2 * Math.PI), bd = Math.min(beta, 6);
+        chart = {x: {min: 0, max: 2, label: "Time (periods of the audio tone)"}, y: {min: -3.2, max: 3.2, label: "Amplitude"},
+          series: [
+            {pts: ts.map(t => [t, 1.6 + 0.75 * (1 + v.m * Math.cos(2 * Math.PI * (t + sh))) * Math.cos(2 * Math.PI * fc * t) / (1 + v.m) * 1.5]), color: C.orange, width: 1.6, label: "AM"},
+            {pts: ts.map(t => [t, -1.6 + 1.1 * Math.cos(2 * Math.PI * fc * t + bd * Math.sin(2 * Math.PI * (t + sh)))]), color: C.blue, width: 1.6, label: "FM"},
+            {pts: ts.map(t => [t, 1.6 + 1.125 * (1 + v.m * Math.cos(2 * Math.PI * (t + sh))) / (1 + v.m)]), color: C.grey, width: 1.2, dash: "4 3"},
+          ]};
+      }
+      return {outputs, eq, eqn, chart,
+        note: "Waveforms: the carrier is drawn only 12 times faster than the tone so you can see it (a real FM station's carrier is about 100 MHz) and the FM swing is capped for drawing. AM's envelope is the audio itself, so any noise that changes the amplitude is heard; FM ignores amplitude, which is why it sounds cleaner and the stronger station 'captures' the receiver. The price is bandwidth: broadcast FM needs about 20 times more than AM."};
+    },
+    related: [["Wavelength and antenna size", "#wave"], ["Cascaded noise figure and sensitivity", "#nf"]],
+  });
+
+  const IB = {a: [12e3, 20e6, "12 kHz – 20 MHz (SerDes, SONET)"], b: [1e3, 100e6, "1 kHz – 100 MHz (wide)"], c: [10e3, 1e6, "10 kHz – 1 MHz (close-in)"]};
+  V.push({
+    id: "jitter", group: "Timing", title: "Phase noise to jitter",
+    lead: "A clock's phase noise, measured in dBc/Hz at each offset from the carrier, adds up to its timing jitter. Move the PLL's in-band noise, loop bandwidth and noise floor and see the jitter, and what it does to an ADC or a radio.",
+    explains: [["Clocks, oscillators and network timing", "/knowledge#p-timing"], ["Front ends (LO quality)", "/knowledge#p-front_ends"]],
+    physics: [["Phase noise and jitter", "phys_phase_noise_jitter"], ["Phase-locked loops", "phys_pll"]],
+    controls: [
+      {k: "l0", label: "In-band phase noise", min: -150, max: -80, step: 1, value: -135, unit: "dBc/Hz"},
+      {k: "bw", label: "PLL loop bandwidth", min: 1, max: 10000, value: 200, unit: "kHz", log: true},
+      {k: "fl", label: "Noise floor", min: -175, max: -135, step: 1, value: -160, unit: "dBc/Hz"},
+      {k: "f0", label: "Clock frequency", min: 10, max: 3000, value: 156.25, unit: "MHz", log: true},
+      {k: "fin", label: "ADC input frequency", min: 1, max: 6000, value: 1000, unit: "MHz", log: true},
+      {k: "ib", label: "Integration band", type: "select", options: Object.entries(IB).map(([k, x]) => [k, x[2]]), value: "a"},
+    ],
+    compute(v) {
+      const L = f => 10 * log10(10 ** (v.l0 / 10) / (1 + (f / (v.bw * 1e3)) ** 2) + 10 ** (v.fl / 10));
+      const [f1, f2] = IB[v.ib], fx = range(f1, f2, 600, true);
+      let s = 0;
+      for (let i = 1; i < fx.length; i++) s += 0.5 * (10 ** (L(fx[i]) / 10) + 10 ** (L(fx[i - 1]) / 10)) * (fx[i] - fx[i - 1]);
+      const phi = Math.sqrt(2 * s), tj = phi / (2 * Math.PI * v.f0 * 1e6), snr = -20 * log10(2 * Math.PI * v.fin * 1e6 * tj);
+      const fp = range(100, 1e8, 300, true);
+      return {
+        outputs: [["RMS jitter", si(tj, "s"), tj < 100e-15 ? "ok" : tj > 1e-12 ? "bad" : ""], ["RMS phase error", `${num(phi * 180 / Math.PI)}°`],
+          ["ADC SNR limit at the input frequency", `${num(snr)} dB`], ["≈ effective bits (ENOB) limit", num((snr - 1.76) / 6.02)], ["EVM floor ≈ phase error", `${num(100 * phi)} %`]],
+        eq: `σ<sub>φ</sub> = √(2 ∫ 10<sup>L(f)/10</sup> df) &nbsp;·&nbsp; σ<sub>t</sub> = σ<sub>φ</sub> / (2π f<sub>0</sub>) &nbsp;·&nbsp; SNR = −20 log<sub>10</sub>(2π f<sub>in</sub> σ<sub>t</sub>)`,
+        eqn: `σ<sub>t</sub> = ${num(phi)} rad / (2π · ${si(v.f0 * 1e6, "Hz")}) = ${si(tj, "s")} &nbsp;·&nbsp; SNR = −20 log(2π · ${si(v.fin * 1e6, "Hz")} · ${si(tj, "s")}) = ${num(snr)} dB`,
+        chart: {x: {min: 100, max: 1e8, log: true, label: "Offset from the carrier", fmt: x => si(x, "Hz")}, y: {min: -180, max: -60, label: "Phase noise L(f) (dBc/Hz)"},
+          series: [{pts: fp.map(f => [f, L(f)]), width: 3}], bands: [{x0: f1, x1: f2, color: C.blue, opacity: 0.08, label: "integrated"}],
+          vlines: [{x: v.bw * 1e3, label: "loop bandwidth", color: C.orange}], hlines: [{y: v.fl, label: "floor"}]},
+        note: "Simplified PLL: flat in-band noise up to the loop bandwidth, falling 20 dB per decade beyond it, down to the output noise floor. Real plots also rise close to the carrier and may have spurs. Jitter numbers only compare over the same band. Modern clock generators and jitter attenuators reach roughly 50–150 fs rms over 12 kHz–20 MHz; at 1 GHz ADC input, 100 fs limits the SNR to about 64 dB.",
+      };
+    },
+  });
+
+  V.push({
+    id: "swloss", group: "Isolation and power", title: "Switching loss vs frequency",
+    lead: "Conduction loss stays the same at any switching frequency; switching loss grows with every edge. Faster edges (SiC, GaN, a strong gate driver) move the crossover up, so the converter can switch faster with smaller magnetics.",
+    explains: [["Isolated gate drivers", "/knowledge#p-gate_drivers"], ["Power management and motor control", "/knowledge#p-power_motor"]],
+    physics: [["Switching and conduction losses", "phys_switching_losses"], ["Energy in inductors and capacitors", "phys_lc_energy"]],
+    controls: [
+      {k: "v", label: "Bus voltage", min: 12, max: 1000, value: 400, unit: "V", log: true},
+      {k: "i", label: "Load current", min: 1, max: 300, value: 30, unit: "A", log: true},
+      {k: "t", label: "Edge time tr + tf", min: 2, max: 500, value: 40, unit: "ns", log: true},
+      {k: "coss", label: "Output capacitance Coss", min: 10, max: 2000, value: 150, unit: "pF", log: true},
+      {k: "ron", label: "On-resistance", min: 1, max: 200, value: 25, unit: "mΩ", log: true},
+      {k: "fs", label: "Switching frequency", min: 5, max: 2000, value: 50, unit: "kHz", log: true},
+    ],
+    presets: [
+      {label: "Si IGBT, 400 V", values: {v: 400, i: 30, t: 300, coss: 200, ron: 50, fs: 16}, note: "Slow edges keep IGBT inverters at a few to about 20 kHz."},
+      {label: "SiC MOSFET, 800 V", values: {v: 800, i: 30, t: 30, coss: 120, ron: 25, fs: 50}, note: "SiC edges of tens of ns allow 50–100 kHz – and 50–100 V/ns dV/dt, hence the CMTI rating of the gate driver."},
+      {label: "GaN HEMT, 48 V", values: {v: 48, i: 20, t: 4, coss: 300, ron: 5, fs: 500}, note: "GaN at 48 V switches in a few ns, so 0.5–2 MHz converters with tiny inductors are possible."},
+    ],
+    compute(v) {
+      const kSw = 0.5 * v.v * v.i * v.t * 1e-9 + 0.5 * v.coss * 1e-12 * v.v * v.v, pc = v.i * v.i * v.ron * 1e-3 * 0.5;
+      const f = v.fs * 1e3, ps = kSw * f, fx = range(5e3, 2e6, 200, true), cross = pc / kSw;
+      const Lh = (v.v / 2) * 0.5 / (0.3 * v.i * f), E = 0.5 * Lh * v.i * v.i;
+      const all = fx.map(x => pc + kSw * x), hi = 10 ** Math.ceil(log10(Math.max(...all, pc * 2))), lo = Math.max(1e-3, 10 ** Math.floor(log10(Math.min(pc, kSw * 5e3))));
+      return {
+        outputs: [["Conduction loss (50 % duty)", si(pc, "W")], ["Switching loss", si(ps, "W"), ps > pc ? "bad" : ""], ["Total per switch", si(pc + ps, "W")],
+          ["Crossover frequency", si(cross, "Hz")], ["Buck inductor for 30 % ripple", si(Lh, "H")], ["Energy it stores ½ L I²", si(E, "J")]],
+        eq: `P<sub>cond</sub> = I² R<sub>on</sub> D &nbsp;·&nbsp; P<sub>sw</sub> ≈ (½ V I (t<sub>r</sub>+t<sub>f</sub>) + ½ C<sub>oss</sub> V²) f<sub>sw</sub> &nbsp;·&nbsp; L = V<sub>out</sub>(1 − D) / (ΔI f<sub>sw</sub>)`,
+        eqn: `P<sub>sw</sub> ≈ (½ · ${num(v.v)} V · ${num(v.i)} A · ${num(v.t)} ns + ½ · ${num(v.coss)} pF · (${num(v.v)} V)²) · ${num(v.fs)} kHz = ${si(ps, "W")}`,
+        chart: {x: {min: 5e3, max: 2e6, log: true, label: "Switching frequency", fmt: x => si(x, "Hz")}, y: {min: lo, max: hi, log: true, label: "Loss per switch", fmt: x => si(x, "W")},
+          series: [{pts: fx.map(x => [x, pc]), color: C.green, width: 2, dash: "6 4", label: "conduction"}, {pts: fx.map(x => [x, kSw * x]), color: C.orange, width: 2, label: "switching"},
+            {pts: fx.map((x, i) => [x, all[i]]), color: C.blue, width: 3, label: "total"}],
+          marks: [{x: f, y: pc + ps, label: si(pc + ps, "W")}], vlines: [{x: cross, label: "crossover", color: C.grey}]},
+        note: "A first estimate for one hard-switched transistor (no diode reverse recovery, no soft switching). Halving the edge time halves the overlap loss, which needs about twice the gate-drive peak current and gives twice the dV/dt – so the gate driver's peak current and CMTI decide how far the customer can push the frequency. Higher frequency then shrinks the inductor: the stored energy ½ L I² falls in proportion.",
+      };
+    },
+    related: [["Gate-drive current and power", "#gate"], ["CMTI against the switching edge", "#cmti"], ["Junction temperature", "#thermal"]],
+  });
+
   // ------------------------------------------------------------------ page
   const groups = [...new Set(V.map(v => v.group))];
   const nav = $("#vz-nav"), panel = $("#vz-panel");
@@ -639,6 +818,7 @@
     vals = Object.fromEntries(cur.controls.map(c => [c.k, c.value]));
     nav.querySelectorAll("a").forEach(a => a.classList.toggle("on", a.dataset.id === cur.id));
     panel.innerHTML = `<h2>${esc(cur.title)}</h2><p class="vz-lead">${esc(cur.lead)}</p>
+      ${cur.explains ? `<p class="small vz-explains">Explains: ${cur.explains.map(([l, h]) => `<a href="${h}">${esc(l)}</a>`).join(" · ")}${cur.physics ? ` · Physics: ${cur.physics.map(([l, id]) => `<a href="/rf-notes#${id}">${esc(l)}</a>`).join(" · ")}` : ""}</p>` : ""}
       ${cur.presets ? `<div class="vz-presets"><span class="small muted">${esc(cur.presetLabel || "Typical conditions")}:</span> ${cur.presets.map((p, i) => `<button type="button" class="vz-pre" data-p="${i}">${esc(p.label)}</button>`).join("")}<p class="vz-pre-note small" hidden></p></div>` : ""}
       ${cur.setup ? '<div class="vz-extra"></div>' : ""}
       <div class="vz-body"><div class="vz-ctl">${cur.controls.map(c => c.type === "select"

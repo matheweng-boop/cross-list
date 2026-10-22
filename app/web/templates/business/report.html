@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "business/_feasibility.html" as fz %}
 {% from "business/_common.html" import push with context %}
 {% from "business/_growth.html" import schedule_button, learn_tab, opener_box %}
 {% block title %}{{ page_title(request.url.path, r.title ~ (' – background' if background else '')) }}{% endblock %}
@@ -9,7 +10,7 @@
 <article class="rpt">{% include body %}</article>
 {% else %}
 <p class="small"><a href="/business/reports">← Research &amp; ideas</a></p>
-<p class="rp-meta small"><span class="rp-kind k-{{ r.kind }}">{{ kinds.get(r.kind, r.kind) }}</span> {{ r.area }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span>{% if r.sources %} · {{ r.sources }}{% endif %}</p>
+<p class="rp-meta small">{{ fz.stage(scheduled) }} {{ r.area }} · {{ r.date }}{% if r.sources %} · {{ r.sources }}{% endif %}</p>
 {{ learn_tab(learn, r.learn_links) }}
 {% for s in r.see_also or [] %}{% set o = report_of(s) %}{% if o %}<p class="small rp-see">See also: <a href="/business/reports/{{ o.slug }}">{{ o.title }}</a></p>{% endif %}{% endfor %}
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
@@ -18,19 +19,14 @@
 <article class="rpt">{% include body %}</article>
 {% if has_background %}<p class="small"><a href="/business/reports/{{ r.slug }}/background">Background notes: data tables, detail and all sources →</a></p>{% endif %}
 
-<section class="rp-ask" id="questions">
+{% if questions %}<section class="rp-ask" id="questions">
   <h2>Questions about this report</h2>
-  <form method="post" action="/business/reports/{{ r.slug }}/ask">
-    <textarea name="text" rows="2" required maxlength="2000" placeholder="Ask about something in the report, or something it leaves out" aria-label="Your question"></textarea>
-    <div class="rp-ask-row"><input name="author" maxlength="100" placeholder="Your name (optional)" aria-label="Your name"><button type="submit" class="small-btn">Ask</button></div>
-  </form>
-  {% if request.query_params.get('asked') %}<p class="small rp-thanks">Saved. Questions are reviewed once a day; the answer appears here.</p>{% endif %}
-  {% if questions %}<ul class="rp-qs">{% for q in questions %}
+  <ul class="rp-qs">{% for q in questions %}
     <li><b>{{ q.text }}</b> <small class="muted">{{ q.author or 'anonymous' }}, {{ q.created_at|date('short') }}{% if q.status != 'good' %} · {{ q_statuses.get(q.status, q.status) }}{% if q.duplicate_of %} of #{{ q.duplicate_of }}{% endif %}{% endif %}</small>
       {% if q.answer %}<p class="small">{{ q.answer }}</p>{% endif %}</li>{% endfor %}
-  </ul>{% else %}<p class="small muted">No questions yet.</p>{% endif %}
+  </ul>
   <p class="small"><a href="/business/reports/questions">Review all questions, by day →</a></p>
-</section>
+</section>{% endif %}
 <div class="rp-foot">{{ push('report', r.slug, r.title, r.summary[:300] if r.summary else '', '', false, '☆ Shortlist this report') }}</div>
 {% endif %}
 {% endblock %}

@@ -146,7 +146,8 @@ def _index_uncached(session: Session) -> list[dict]:
         params = {pv.key: pv.value for pv in p.params}
         package = p.package.code if p.package else ""
         summary = text.short_description(p.family, package, qual, params=params)
-        sid = fam_sub.get(p.family)
+        # a family holding several functions (timing) is classified by the part's own function
+        sid = fam_sub.get(p.family) or taxonomy()["functions"].get(str(params.get("function_type") or ""))
         cid = taxonomy()["subs"][sid]["category"] if sid else UNCLASSIFIED[0]
         caps = {
             "detailed",

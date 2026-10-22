@@ -34,6 +34,7 @@ NOTES = {
     "peak_source_a": ("Peak drive current", "How long the driver takes to move the gate charge."),
     "uvlo_v": ("UVLO threshold", "Why UVLO variants are not interchangeable."),
     "certifications": ("Safety certifications", "UL 1577, VDE / IEC 60747-17, CSA, CQC, TÜV."),
+    "deadtime": ("Dead time and overlap protection", "Two names for one shoot-through guard in half-bridge drivers."),
 }
 ALIASES = {"skew_ns": "pwd_ns", "peak_sink_a": "peak_source_a"}
 

@@ -15,5 +15,6 @@ router = APIRouter()
 @router.get("/portfolio", response_class=HTMLResponse)
 def portfolio(request: Request, session: Session = Depends(get_session)):
     ctx = {"cur": pf.curated(), "ov": pf.overlap(), "bands": pf.rf_bands(), "comp": pf.competitors(session),
-           "bundles": pf.bundles(), "label": vocab.fn_label}  # fmt: skip
+           "bundles": pf.bundles(), "label": vocab.fn_label, "cats": pf.product_categories(),
+           "syn": pf.synergies()}  # fmt: skip
     return templates.TemplateResponse(request, "portfolio.html", ctx)

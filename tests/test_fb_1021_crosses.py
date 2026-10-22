@@ -209,7 +209,7 @@ def test_stated_output_option_agrees_with_the_pinout():
             if p.get("family") != "gate_driver" or not stated or not p.get("pinout"):
                 continue
             derived = gate_output_config(Part(pinout=p["pinout"]), p["params"])
-            if stated == "two-level outputs":  # NSI6601S: OUT and OUTF, no pin pattern of its own
+            if mpn.startswith("NSI6601S"):  # OUT and OUTF: compared on the standard OUT as a single output (owner)
                 continue
             assert derived == stated, (mpn, stated, derived)
     assert rules.get("output_config").derive == "gate_output_config"

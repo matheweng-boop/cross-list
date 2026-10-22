@@ -133,3 +133,15 @@ def test_report_diagram_links_use_names_that_exist(client):
     wind = next(n for n in names if n and n.startswith("Wind turbine converter"))
     page = client.get("/blocks/new", params={"diagram": wind}).text
     assert "Wind turbine converter" in page
+
+
+def test_diagram_feedback_can_be_deleted_with_confirmation(client):
+    """Owner, 22 Oct 2026 (Requests & reviews › Diagram feedback): items can be deleted there."""
+    fid = client.post("/api/blocks/feedback", json={"message": "Remove this note please"}).json()["id"]
+    html = client.get("/blocks/feedback").text
+    form = html.split(f'action="/blocks/feedback/{fid}" class="fb-del"', 1)[1].split("</form>", 1)[0]
+    assert 'data-confirm="Delete this diagram feedback for good?"' in form and 'name="delete"' in form
+    assert "confirm(f.dataset.confirm)" in html
+    r = client.post(f"/blocks/feedback/{fid}", data={"delete": "1"}, follow_redirects=False)
+    assert r.status_code == 303 and "Remove this note please" not in client.get("/blocks/feedback").text
+    assert client.post(f"/blocks/feedback/{fid}", data={"delete": "1"}).status_code == 404

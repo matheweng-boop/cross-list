@@ -3,6 +3,8 @@
 # (rfessentials.com articles and knowledge base), collected 2026-10-20, robots.txt respected. Numbers and rules of
 # thumb are the sources' own; where a source's worked example is wrong, the key point says so and gives the corrected
 # value. Pasternack was not collected (bot protection); blog.minicircuits.com rate-limited and was not collected.
+# Category physics (at the end of the file): the physics behind each product family, written by BizDev; see the comment
+# above the first physics topic for its extra fields and link checks.
 topics:
 - id: p1db_dynamic_range
   title: 1 dB compression (P1dB), saturation and dynamic range
@@ -1195,3 +1197,723 @@ topics:
     url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-link-budget-for-a-lora-lpwan-sensor-at-the-edge-of-coverage/
   - title: 'KB: RF section of a UWB ranging device'
     url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-section-of-a-uwb-ranging-device-for-precision-location-ap/
+# ---------------------------------------------------------------------------------------------------------------
+# Physics behind our products (category physics, owner 22 Oct 2026: "update the engineering knowledge, physics database,
+# especially related to the products in Skyworks and Qorvo portfolio, again hyperphysics as a resource").
+# Written by BizDev in its own words from standard textbook physics. Extra fields on these notes:
+#   equations: the key equations (plain text); why: why it matters to the customer (kind cost | bom | robust | design,
+#   as in data/knowledge_by_product.yaml); families: product family keys of data/knowledge_by_product.yaml;
+#   parts: catalogue searches (/find?q=...); guides: specification guide keys; notes: other RF note ids;
+#   visuals: interactive visual ids (/visuals#id); try: public interactive simulators and demos (data/library/sources.yaml
+#   kind visualisation). sources: HyperPhysics first, then other reading.
+# Links: Falstad, PhET, Wolfram Demonstrations, Better Explained, Paul's Online Notes and Microwaves101 pages were checked
+# on 22 Oct 2026 (robots.txt read first, one request at a time). HyperPhysics could not be opened from the research
+# machine (plain HTTP is not passed by its proxy and the HTTPS certificate does not match the host name); its links use
+# the site's own page names and are listed in docs/open_questions.md for one check from a browser.
+- id: phys_resonance_q
+  title: Resonance and Q factor - why some filters are sharper than others
+  category: physics
+  from: BizDev (textbook physics)
+  summary: Anything that can store energy in two forms and swap it back and forth has a natural frequency at which it
+    rings - a swing, a guitar string, a coil with a capacitor, a vibrating crystal. At that resonance a small push builds a
+    big response. The quality factor Q says how little energy is lost each cycle; a high-Q resonator rings for a long time
+    and responds only to a narrow band of frequencies. Every RF filter, oscillator and clock is built from resonators, so Q
+    decides how close a filter can cut next to the wanted band and how clean an oscillator is.
+  equations:
+  - f0 = 1 / (2 pi sqrt(L C))
+  - Q = f0 / bandwidth(3 dB) = 2 pi x energy stored / energy lost per cycle
+  - Filter insertion loss rises roughly as 1 / Q of its resonators
+  why:
+  - kind: robust
+    text: High-Q resonators let a filter reject a neighbouring band only a few MHz away (e.g. Band 41 next to Wi-Fi), so the
+      radio keeps working when both are on.
+  - kind: cost
+    text: Lower filter loss means the PA needs less output power for the same antenna power - longer battery life and less
+      heat.
+  - kind: design
+    text: Chip inductors reach a Q of about 30-80 at GHz, ceramic resonators a few hundred, acoustic (SAW/BAW) resonators
+      1,000 or more, quartz 10,000 or more. The technology choice follows from the Q needed.
+  families: [filters, timing, front_ends]
+  parts:
+  - {label: Qorvo filters and duplexers (QPQ), q: QPQ}
+  - {label: Skyworks clocks (Si53xx), q: Si53}
+  notes: [filter_fundamentals, acoustic_filters_duplexers, vco_design_tradeoffs]
+  visuals: [lc, bvd]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Series resonance
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/serres.html
+  - title: HyperPhysics - Driven oscillator and resonance
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/oscdr.html
+  - title: Paul's Online Notes - Mechanical vibrations (damped and forced)
+    url: https://tutorial.math.lamar.edu/Classes/DE/Vibrations.aspx
+  try:
+  - title: Wolfram Demonstrations - Driven damped oscillator with resonance
+    url: https://demonstrations.wolfram.com/DrivenDampedOscillatorWithResonanceEffect/
+  - title: Falstad circuit simulator (has LC and RLC examples)
+    url: https://www.falstad.com/circuit/
+- id: phys_piezo_acoustic
+  title: Piezoelectricity and acoustic resonators - how SAW and BAW filters work
+  category: physics
+  from: BizDev (textbook physics)
+  summary: Some crystals (quartz, lithium tantalate, aluminium nitride) bend when a voltage is applied and produce a voltage
+    when bent - the piezoelectric effect. A thin piece of such a material between electrodes vibrates mechanically at a
+    frequency set by its size and the speed of sound in it. Sound travels about 100,000 times slower than radio waves, so a
+    resonator for 2 GHz is only micrometres in size. SAW filters send a wave along the surface between comb-shaped
+    electrodes (good up to about 2.5-3 GHz); BAW filters let the wave bounce through the thickness of a thin film (good to
+    about 7 GHz and for steep, temperature-stable edges). Each resonator has two nearby frequencies - series resonance
+    (low impedance) and parallel resonance (high impedance); their spacing, set by the material's coupling factor k2,
+    limits how wide a filter can be.
+  equations:
+  - 'BAW: f = v / (2 t)   (t = film thickness, v = acoustic velocity, about 11,000 m/s in AlN)'
+  - 'SAW: f = v / lambda = v / (electrode period)   (v about 3,000-4,000 m/s)'
+  - 'Coupling: k2eff ~ (pi^2 / 4) x (fp - fs) / fp; maximum filter bandwidth grows with k2eff'
+  why:
+  - kind: bom
+    text: Acoustic filters are tiny and are stacked into duplexers and multiplexers inside one module, which removes discrete
+      filters from the customer's board.
+  - kind: robust
+    text: Temperature-compensated SAW and BAW drift only a few ppm per degree, so the band edge stays put from -40 to +85 C
+      and the guard band to the neighbour can be narrow.
+  - kind: design
+    text: Coupling (k2) sets the widest band a filter can pass, Q sets the loss and edge steepness. Wide 5G bands (n77, n79)
+      need high-coupling materials such as scandium-doped AlN.
+  families: [filters, timing, uwb]
+  parts:
+  - {label: Qorvo SAW / BAW filters (QPQ), q: QPQ}
+  notes: [acoustic_filters_duplexers]
+  visuals: [bvd, filter]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Impedance (series and parallel resonance background)
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/imped.html
+  - title: Microwave and RF Design (Steer, open textbook on LibreTexts)
+    url: https://eng.libretexts.org
+  try:
+  - title: Wolfram Demonstrations - Piezoelectricity in barium titanate
+    url: https://demonstrations.wolfram.com/PiezoelectricityInBariumTitanate/
+  - title: Wolfram Demonstrations - Impedance spectra of piezoelectric rods
+    url: https://demonstrations.wolfram.com/ImpedanceSpectraOfPiezoelectricRods/
+- id: phys_noise_gain
+  title: Gain and noise - thermal noise, noise figure and the first amplifier
+  category: physics
+  from: BizDev (textbook physics)
+  summary: Every resistor and every transistor adds random noise because its electrons jiggle with heat. At room temperature
+    this sets a floor of -174 dBm in each hertz of bandwidth that no receiver can get below. An amplifier raises signal and
+    noise alike and adds a little noise of its own; the noise figure (NF) says how much the signal-to-noise ratio gets worse
+    on the way through. Because later stages are divided by the gain in front of them, the first amplifier (the LNA)
+    decides almost all of the receiver's noise.
+  equations:
+  - Noise power N = k T B   (k = 1.38e-23 J/K; -174 dBm/Hz at 290 K)
+  - F = SNRin / SNRout;  NF = 10 log10(F)
+  - 'Friis: F_total = F1 + (F2 - 1) / G1 + (F3 - 1) / (G1 G2) + ...'
+  why:
+  - kind: robust
+    text: Each dB of noise figure saved is about 1 dB of extra link margin - longer range, fewer dropped calls, faster GNSS
+      fix.
+  - kind: cost
+    text: A low-NF LNA can be cheaper than a bigger antenna or a higher-power transmitter at the other end.
+  - kind: design
+    text: Loss in front of the LNA (cables, switches, filters) adds to the noise figure dB for dB, which is why low-loss
+      switches and filters matter.
+  families: [front_ends, tuners, uwb]
+  parts:
+  - {label: Qorvo LNAs (QPL), q: QPL}
+  - {label: Skyworks front ends and LNAs (SKY6xxxx), q: SKY6}
+  notes: [cascaded_noise_figure, sensitivity_noise_floor, noise_figure_cascade]
+  visuals: [nf, dbm]
+  key_points: []
+  sources:
+  - title: Better Explained - Demystifying the natural logarithm (why dB are logarithms)
+    url: https://betterexplained.com/articles/demystifying-the-natural-logarithm-ln/
+  - title: Paul's Online Notes - Logarithm properties
+    url: https://tutorial.math.lamar.edu/Extras/AlgebraTrigReview/LogProperties.aspx
+  try:
+  - title: Wolfram Demonstrations - Noise temperature of a radar system
+    url: https://demonstrations.wolfram.com/NoiseTemperatureOfARadarSystem/
+  - title: Wolfram Demonstrations - Detecting a signal with background noise
+    url: https://demonstrations.wolfram.com/DetectingASignalWithBackgroundNoise/
+- id: phys_linearity
+  title: Linearity - why strong signals create new, unwanted frequencies
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A perfect amplifier would multiply the input by a constant. Real transistors bend the curve a little at large
+    signals, and that bending can be written as extra squared and cubed terms. When two signals pass through, the cubed term
+    makes new tones at 2f1 - f2 and 2f2 - f1, right next to the wanted ones, where no filter can remove them. These
+    products grow three times faster (in dB) than the signal, so a little more drive makes them much worse. IP3 is the
+    level where the two lines would meet; the higher it is, the more strong signals the part tolerates.
+  equations:
+  - y = a1 x + a2 x^2 + a3 x^3 + ...
+  - Third-order products at 2 f1 - f2 and 2 f2 - f1; they rise 3 dB per 1 dB of input
+  - OIP3 = Pout + (Pout - PIM3) / 2   (dBm, per tone)
+  why:
+  - kind: robust
+    text: High IP3 keeps a receiver working next to a strong transmitter (a cell tower, the phone's own Wi-Fi), so the
+      customer sees fewer blocked or dropped links.
+  - kind: cost
+    text: A more linear PA can run closer to its maximum power before predistortion is needed, which saves DC power and
+      heat.
+  - kind: design
+    text: Switches and filters have IP3 too - in a carrier-aggregation phone their intermodulation can land in a receive
+      band, so switch linearity is a selling point.
+  families: [front_ends, rf_switches, filters]
+  parts:
+  - {label: Qorvo PAs (QPA), q: QPA}
+  - {label: Skyworks switches (SKY13xxx), q: SKY13}
+  notes: [linearity_p1db_ip3, ip3_intermodulation, pa_linearization_dpd_doherty]
+  visuals: [ip3]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Beats (two tones adding)
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Sound/beat.html
+  try:
+  - title: Wolfram Demonstrations - Spectrum at the output of a nonlinearity
+    url: https://demonstrations.wolfram.com/SpectrumAtTheOutputOfANonlinearity/
+- id: phys_switch_loss_isolation
+  title: RF switches - insertion loss, isolation and power handling from Ron and Coff
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A semiconductor RF switch is a transistor used as a valve. When on, it behaves like a small resistor (Ron), which
+    costs a little signal - the insertion loss. When off, it behaves like a small capacitor (Coff), which still leaks some
+    signal across - limited isolation, and the leak grows with frequency because a capacitor passes high frequencies more
+    easily. Making the transistor bigger lowers Ron but raises Coff, so the product Ron x Coff is the technology's figure of
+    merit. To handle high power, several transistors are stacked in series so each sees only part of the RF voltage
+    (silicon-on-insulator makes this easy).
+  equations:
+  - 'Insertion loss ~ 20 log10(1 + Ron / (2 Z0))   (Z0 = 50 ohm)'
+  - Off-state reactance Xoff = 1 / (2 pi f Coff); isolation falls about 6 dB per doubling of frequency
+  - 'Peak RF voltage on 50 ohm: Vpk = sqrt(2 P Z0); 1 W gives 10 V, 10 W about 32 V'
+  - 'Figure of merit: Ron x Coff (fs); cut-off frequency fc = 1 / (2 pi Ron Coff)'
+  why:
+  - kind: cost
+    text: Every 0.1 dB of switch loss in the transmit path is PA power turned into heat; low-loss switches save battery and
+      let the customer use a smaller PA.
+  - kind: robust
+    text: Enough stacked transistors stop the switch from compressing or breaking under antenna mismatch, when the RF
+      voltage can double.
+  - kind: bom
+    text: High-isolation switches can replace a second filter or a separate antenna path in multi-radio designs.
+    est: true
+  families: [rf_switches, front_ends]
+  parts:
+  - {label: Skyworks switches (SKY13xxx), q: SKY13}
+  notes: [rf_switches, txrx_isolation_options]
+  visuals: [vswr]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Capacitance
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/capac.html
+  - title: HyperPhysics - Impedance
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/imped.html
+  try:
+  - title: Falstad circuit simulator (try a resistor and capacitor as on and off switch)
+    url: https://www.falstad.com/circuit/
+  - title: PhET - Circuit construction kit AC
+    url: https://phet.colorado.edu/en/simulations/circuit-construction-kit-ac
+- id: phys_semiconductors
+  title: Semiconductor physics - GaN, GaAs, SiGe and SOI compared
+  category: physics
+  from: BizDev (textbook physics)
+  summary: In a semiconductor, electrons need a certain energy (the band gap) to break free and conduct. A wider band gap
+    means the material withstands a stronger electric field before it breaks down, so it can work at higher voltage and
+    power and higher temperature. How fast electrons move (mobility and saturation velocity) decides how high in frequency
+    a transistor works. GaN combines a wide gap with fast electrons - high power at high frequency. GaAs has very fast
+    electrons and suits low-noise and handset PAs. SiGe adds speed to cheap silicon and integrates with digital logic. SOI
+    puts silicon on an insulating layer, which makes stacked, low-loss switches possible.
+  equations:
+  - 'Band gap (eV): Si 1.12, GaAs 1.42, SiC 3.2, GaN 3.4'
+  - 'Critical field (MV/cm, approx.): Si 0.3, GaAs 0.4, SiC 2.5-3, GaN 3.3'
+  - 'Drift velocity v = mu E (low field); max power ~ breakdown voltage x max current'
+  - 'Johnson limit: fT x breakdown voltage is roughly constant for a material'
+  why:
+  - kind: cost
+    text: GaN delivers the same RF power from a smaller die at higher voltage - fewer devices to combine in base stations
+      and radar.
+  - kind: robust
+    text: Wide-gap devices tolerate higher junction temperatures and mismatch, so they survive harsh antenna conditions.
+  - kind: design
+    text: The process explains the part - a GaAs LNA for lowest noise, SOI for switches and tuners, SiGe for integrated
+      front ends, GaN for high power.
+  families: [front_ends, rf_switches, power_motor]
+  parts:
+  - {label: Qorvo PAs (QPA), q: QPA}
+  - {label: Qorvo power devices and gate drivers (QPD), q: QPD}
+  notes: [semiconductor_technology_map]
+  visuals: [thermal]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Band theory of solids
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Solids/band.html
+  - title: HyperPhysics - Semiconductors
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Solids/semcn.html
+  try:
+  - title: Wolfram Demonstrations - Band structure of a PN junction
+    url: https://demonstrations.wolfram.com/BandStructureOfPNJunctionSemiconductor/
+  - title: Wolfram Demonstrations - Doped silicon semiconductors
+    url: https://demonstrations.wolfram.com/DopedSiliconSemiconductors/
+- id: phys_matching_vswr
+  title: Impedance matching, reflections, VSWR and the Smith chart
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A radio wave travelling down a cable or a board trace sees a characteristic impedance, usually 50 ohm. If the
+    load at the end (an antenna, a filter, an amplifier input) has a different impedance, part of the wave bounces back.
+    The forward and reflected waves add into a standing wave, whose peak-to-valley ratio is the VSWR. Matching networks of
+    inductors and capacitors transform the load to 50 ohm; the Smith chart is the engineer's map for picking them - every
+    point is an impedance, and adding a series or shunt part moves the point along a circle.
+  equations:
+  - 'Reflection coefficient Gamma = (ZL - Z0) / (ZL + Z0)'
+  - VSWR = (1 + |Gamma|) / (1 - |Gamma|)
+  - Return loss = -20 log10 |Gamma|;  mismatch loss = -10 log10(1 - |Gamma|^2)
+  why:
+  - kind: cost
+    text: 'A VSWR of 2:1 reflects 11 % of the power (0.5 dB) - power the PA must make and the battery must supply.'
+  - kind: robust
+    text: Parts specified for rugged operation (e.g. 10:1 VSWR) survive a broken or detuned antenna without damage.
+  - kind: bom
+    text: Antenna tuners and well-matched modules remove external matching parts and the board re-spins to tune them.
+    est: true
+  families: [rf_switches, front_ends, uwb]
+  parts:
+  - {label: Skyworks switches and antenna tuners (SKY13xxx), q: SKY13}
+  notes: [vswr_return_loss_mismatch, vswr_mismatch_pads, directional_couplers_matching]
+  visuals: [vswr]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Standing waves
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Waves/standw.html
+  - title: Microwaves101 - Smith chart basics
+    url: https://www.microwaves101.com/encyclopedias/smith-chart-basics
+  - title: Microwaves101 - Voltage standing wave ratio (VSWR)
+    url: https://www.microwaves101.com/encyclopedias/voltage-standing-wave-ratio-vswr
+  - title: Better Explained - A visual, intuitive guide to imaginary numbers (why impedance is complex)
+    url: https://betterexplained.com/articles/a-visual-intuitive-guide-to-imaginary-numbers/
+  try:
+  - title: Wolfram Demonstrations - The Smith chart
+    url: https://demonstrations.wolfram.com/TheSmithChart/
+  - title: Wolfram Demonstrations - Engineering-style Smith chart
+    url: https://demonstrations.wolfram.com/EngineeringStyleSmithChart/
+  - title: Microwaves101 - QuickSmith (Smith chart tool)
+    url: https://www.microwaves101.com/encyclopedias/quicksmith
+- id: phys_antennas_wavelength
+  title: Antennas, wavelength and path loss
+  category: physics
+  from: BizDev (textbook physics)
+  summary: An antenna turns current on a wire into a radio wave and back. It works best when it is about half a wavelength
+    long, and the wavelength shrinks as the frequency rises (12.5 cm at 2.4 GHz, 1 cm at 28 GHz). That is why mmWave phones
+    carry several tiny antenna arrays, while an AM radio uses a small coil on a ferrite rod far shorter than its 300 m
+    wavelength. Between two antennas the signal spreads out over a growing sphere, so it drops by 6 dB every time the
+    distance doubles - and more at higher frequency for antennas of the same gain.
+  equations:
+  - lambda = c / f   (c = 3 x 10^8 m/s)
+  - Half-wave dipole length ~ lambda / 2
+  - 'Free-space path loss FSPL (dB) = 20 log10(4 pi d / lambda)'
+  why:
+  - kind: design
+    text: The band decides the antenna size and how many antennas fit; that drives the front-end architecture (switches,
+      tuners, beamformers).
+  - kind: robust
+    text: A small antenna is detuned easily by a hand or the car body; antenna tuners keep it matched, so the link holds.
+  - kind: cost
+    text: Each 6 dB saved in the link budget (better LNA, lower loss) doubles the range or halves the number of base stations
+      needed.
+    est: true
+  families: [front_ends, uwb, tuners, rf_switches]
+  parts:
+  - {label: Qorvo UWB (DW3xxx), q: DW3}
+  notes: [link_budget_mmwave_fwa, beamforming_architectures]
+  visuals: [wave, link]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Standing waves (a half-wave dipole is a standing wave on a wire)
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Waves/standw.html
+  try:
+  - title: Falstad - Antenna simulator
+    url: https://www.falstad.com/antenna/
+  - title: Wolfram Demonstrations - Dipole antenna radiation pattern
+    url: https://demonstrations.wolfram.com/DipoleAntennaRadiationPattern/
+  - title: Falstad - 2D electromagnetic waves
+    url: https://www.falstad.com/emwave2/
+- id: phys_mixing_superhet
+  title: Mixing, frequency conversion and the superheterodyne radio
+  category: physics
+  from: BizDev (textbook physics)
+  summary: Multiplying two sine waves produces two new ones - at the difference and at the sum of the two frequencies. A
+    mixer does exactly that, so a receiver can shift any wanted station down to one fixed intermediate frequency (IF), where
+    a single, very good filter and amplifier do the work. This is the superheterodyne principle, used in almost every radio
+    since the 1930s. The catch is the image - a second input frequency, on the other side of the local oscillator, that
+    lands on the same IF and must be filtered out before the mixer. Zero-IF and low-IF receivers move the work into
+    digital I/Q processing instead.
+  equations:
+  - cos(a) x cos(b) = 1/2 [cos(a - b) + cos(a + b)]
+  - f_IF = |f_RF - f_LO|
+  - Image frequency f_image = f_LO +- f_IF, i.e. 2 x f_IF away from the wanted signal
+  why:
+  - kind: robust
+    text: Good image rejection and a clean LO keep a strong station on the image or next channel from drowning the wanted
+      one - fewer listener complaints in dense cities.
+  - kind: bom
+    text: Single-chip tuners that do the IF filtering digitally remove external IF filters (ceramic, SAW) and their
+      tuning.
+  - kind: design
+    text: The choice of IF trades image rejection (high IF) against selectivity (low IF); dual-conversion and digital IF
+      get both.
+  families: [tuners, front_ends, timing]
+  parts:
+  - {label: Skyworks broadcast tuners (Si47xx), q: Si47}
+  notes: [mixer_fundamentals, receiver_architectures, iq_imbalance, frequency_planning_pitfalls]
+  visuals: [mod]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Beats (the sum and difference of two tones)
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Sound/beat.html
+  - title: HyperPhysics - AM and FM radio
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Audio/radio.html
+  - title: Better Explained - Easy trig identities with Euler's formula
+    url: https://betterexplained.com/articles/easy-trig-identities-with-eulers-formula/
+  try:
+  - title: Wolfram Demonstrations - Resonance and beats
+    url: https://demonstrations.wolfram.com/ResonanceAndBeats/
+  - title: Falstad - Fourier series (build a wave from sines)
+    url: https://www.falstad.com/fourier/
+- id: phys_am_fm
+  title: AM and FM modulation - how broadcast radio carries sound
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A radio carrier is a steady sine wave; modulation writes the sound onto it. AM varies the carrier's strength
+    (amplitude) with the sound; it needs little bandwidth and simple receivers, but any noise or interference that changes
+    the amplitude is heard. FM varies the carrier's frequency instead; it needs much more bandwidth but the receiver can
+    ignore amplitude noise, so FM sounds cleaner and the stronger of two stations wins cleanly (the capture effect).
+    Digital radio (DAB, HD Radio, DRM) puts digital symbols onto many carriers, with the same physics underneath.
+  equations:
+  - 'AM: s(t) = A [1 + m cos(2 pi fm t)] cos(2 pi fc t); bandwidth = 2 fm'
+  - 'AM sidebands carry m^2 / (2 + m^2) of the power (at most one third)'
+  - 'FM: s(t) = A cos(2 pi fc t + beta sin(2 pi fm t)), beta = delta_f / fm'
+  - "Carson's rule: FM bandwidth ~ 2 (delta_f + fm); broadcast FM 2 (75 + 15) = 180 kHz"
+  why:
+  - kind: robust
+    text: Tuner sensitivity, selectivity and FM capture decide whether a car radio holds a station between cities and
+      under power lines.
+  - kind: bom
+    text: Tuners that cover AM, FM and digital radio in one chip replace separate receivers per standard and region.
+  - kind: design
+    text: AM's long wavelength and weak signals need high-impedance antenna inputs and good noise figure; FM needs
+      adjacent-channel rejection.
+  families: [tuners]
+  parts:
+  - {label: Skyworks broadcast tuners (Si47xx), q: Si47}
+  notes: [receiver_architectures, sensitivity_noise_floor]
+  visuals: [mod]
+  key_points: []
+  sources:
+  - title: HyperPhysics - AM and FM radio
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/Audio/radio.html
+  - title: Better Explained - Intuitive understanding of sine waves
+    url: https://betterexplained.com/articles/intuitive-understanding-of-sine-waves/
+  try:
+  - title: Wolfram Demonstrations - Amplitude modulation
+    url: https://demonstrations.wolfram.com/AmplitudeModulation/
+  - title: Wolfram Demonstrations - Analog modulation (AM, FM, PM)
+    url: https://demonstrations.wolfram.com/AnalogModulation/
+  - title: Wolfram Demonstrations - Power content of frequency and phase modulation
+    url: https://demonstrations.wolfram.com/PowerContentOfFrequencyModulationAndPhaseModulation/
+- id: phys_phase_noise_jitter
+  title: Phase noise and jitter - two views of an imperfect clock
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A perfect oscillator would tick at exactly the same interval forever. A real one wobbles a little in timing. Seen
+    in time, the wobble is jitter (femtoseconds to picoseconds); seen in frequency, it is phase noise - a skirt of noise
+    either side of the carrier, given in dBc per hertz at an offset. Integrating the phase noise over the offsets that
+    matter gives the jitter. Jitter limits how fast and clean a data link, an ADC or a 5G radio can be; phase noise on a
+    radio's LO also mixes strong neighbours into the wanted channel (reciprocal mixing).
+  equations:
+  - 'Integrated phase noise: sigma_phi (rad rms) = sqrt(2 x integral of 10^(L(f)/10) df)'
+  - 'RMS jitter: sigma_t = sigma_phi / (2 pi f0)'
+  - 'Jitter-limited ADC SNR = -20 log10(2 pi f_in sigma_t)'
+  - EVM floor (%) ~ 100 x sigma_phi (rad)
+  why:
+  - kind: robust
+    text: Low-jitter clocks keep 56G/112G SerDes links, 5G radios and high-speed ADCs within their error budgets - fewer
+      bit errors and retransmissions.
+  - kind: cost
+    text: A cleaner clock lets the customer use a slower, cheaper ADC or skip a separate jitter cleaner.
+    est: true
+  - kind: design
+    text: Compare jitter only over the same integration band (e.g. 12 kHz-20 MHz); a number without its band is
+      meaningless.
+  families: [timing, front_ends, tuners]
+  parts:
+  - {label: Skyworks clocks and jitter attenuators (Si53xx), q: Si53}
+  - {label: Skyworks oscillators (Si54x), q: Si54}
+  notes: [phase_noise_oscillators, phase_noise_and_pll, sdr_adc_chain]
+  visuals: [jitter]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Damped oscillator (why every resonator has a finite Q)
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html
+  - title: Better Explained - An interactive guide to the Fourier transform
+    url: https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/
+  try:
+  - title: Wolfram Demonstrations - Frequency spectrum of a noisy signal
+    url: https://demonstrations.wolfram.com/FrequencySpectrumOfANoisySignal/
+- id: phys_timing_resonators
+  title: Timing resonators - quartz crystal, MEMS and BAW references
+  category: physics
+  from: BizDev (textbook physics)
+  summary: Every clock starts with a resonator. A quartz crystal is a thin slice that vibrates through its thickness; its
+    frequency is set by the thickness and is very stable because quartz is piezoelectric with very low loss (Q of 10,000 to
+    over 1,000,000). An AT-cut crystal's frequency changes with temperature along an S-shaped curve of a few tens of ppm.
+    MEMS oscillators use a tiny silicon resonator with electronic temperature compensation. BAW resonators vibrate at GHz
+    directly, so the oscillator needs less frequency multiplication. Higher Q and less multiplication both mean lower phase
+    noise.
+  equations:
+  - 'AT-cut quartz: f (MHz) ~ 1.66 / t (mm)   (fundamental mode)'
+  - 'Stability: delta_f / f in ppm; 1 ppm at 100 MHz = 100 Hz'
+  - 'Multiplying a clock by N raises its phase noise by 20 log10(N) dB'
+  why:
+  - kind: bom
+    text: A programmable oscillator or a clock generator with integrated reference replaces several fixed crystals and their
+      load capacitors.
+  - kind: robust
+    text: Better stability over temperature and ageing keeps networks in sync (5G, SyncE, IEEE 1588) through the product's
+      life.
+  - kind: cost
+    text: Any-frequency oscillators shorten lead times - one part number covers many frequencies, so the customer stocks
+      fewer.
+    est: true
+  families: [timing, filters]
+  parts:
+  - {label: Skyworks oscillators (Si54x), q: Si54}
+  - {label: Skyworks clocks (Si53xx), q: Si53}
+  notes: [vco_design_tradeoffs, phase_noise_oscillators]
+  visuals: [bvd, jitter]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Driven oscillator and resonance
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/oscdr.html
+  try:
+  - title: Wolfram Demonstrations - Dynamics of a longitudinal piezoelectric beam
+    url: https://demonstrations.wolfram.com/DynamicsOfALongitudinalPiezoelectricBeam/
+  - title: Falstad - Harmonic oscillator
+    url: https://www.falstad.com/harmonicosc/
+- id: phys_pll
+  title: Phase-locked loops - making many frequencies from one clean reference
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A PLL is a feedback loop that steers a voltage-controlled oscillator (VCO) until a divided-down copy of its output
+    lines up in phase with a reference. The output is then exactly N times the reference, and N can be changed to tune.
+    Inside the loop bandwidth the output follows the reference (multiplied up), outside it follows the free-running VCO.
+    The loop bandwidth is therefore a trade-off - wide enough to clean up the VCO, narrow enough to filter the reference.
+    Jitter attenuators use a very narrow loop to clean a noisy recovered clock.
+  equations:
+  - f_out = N x f_ref   (fractional-N allows non-integer N)
+  - 'In-band phase noise ~ reference noise + 20 log10(N)'
+  - Outside the loop bandwidth, VCO phase noise falls about 20 dB per decade
+  why:
+  - kind: bom
+    text: One clock IC with several PLLs generates all the frequencies a board needs (CPU, SerDes, Ethernet), replacing a
+      handful of oscillators.
+  - kind: robust
+    text: A narrow-loop jitter attenuator keeps the system clean when the incoming network clock is noisy or switches over.
+  - kind: design
+    text: Loop bandwidth, N and the reference quality decide the jitter; ask the customer for the integration band and the
+      data rate first.
+  families: [timing, front_ends, tuners]
+  parts:
+  - {label: Skyworks clocks and jitter attenuators (Si53xx), q: Si53}
+  notes: [pll_synthesis, phase_noise_and_pll]
+  visuals: [jitter]
+  key_points: []
+  sources:
+  - title: Paul's Online Notes - Laplace transforms (the maths of feedback loops)
+    url: https://tutorial.math.lamar.edu/Classes/DE/LaplaceTransforms.aspx
+  try:
+  - title: Wolfram Demonstrations - Bode, Nyquist and Nichols diagrams of second-order systems
+    url: https://demonstrations.wolfram.com/BodeNyquistAndNicholsDiagramsOfSecondOrderSystems/
+- id: phys_isolation_coupling
+  title: Crossing an isolation barrier - capacitive and magnetic coupling, and CMTI
+  category: physics
+  from: BizDev (textbook physics)
+  summary: An isolator passes a signal between two circuits that share no wire and may sit hundreds of volts apart. Two
+    physical routes exist. Capacitive coupling sends the signal through a thin insulating layer (silicon dioxide) as a
+    changing electric field - current flows only while the voltage changes. Magnetic (transformer) coupling sends it as a
+    changing magnetic field between two coils. Both are blind to a steady voltage difference, which is the point. The same
+    physics also lets a fast common-mode jump of the whole floating side (dV/dt from a switching SiC or GaN transistor) push
+    current through the barrier; CMTI is how fast that jump can be before the output glitches.
+  equations:
+  - 'Capacitor current: i = C dV/dt;  C = eps0 eps_r A / d'
+  - "Faraday's law (transformer): v = M di/dt"
+  - 'Common-mode current through the barrier: i_cm = C_barrier x dV/dt (e.g. 1 pF x 100 V/ns = 100 mA)'
+  why:
+  - kind: robust
+    text: High CMTI means no false switching or corrupted data next to a fast SiC switch - no shoot-through, no false
+      faults.
+  - kind: cost
+    text: With enough CMTI the customer keeps fast switching edges, which cuts switching loss and heatsink size.
+  - kind: design
+    text: Capacitive (oxide) barriers are small and fast with long life; transformer barriers can also carry power. The
+      application decides.
+  families: [digital_isolators, gate_drivers, isolated_analog]
+  parts:
+  - {label: Skyworks digital isolators (Si86xx), q: Si86}
+  - {label: Skyworks isolated gate drivers (Si827x), q: Si827}
+  - {label: Skyworks isolated analog (Si89xx), q: Si89}
+  guides: [cmti_kv_us, integrated_power]
+  visuals: [cmti]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Capacitance
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/capac.html
+  - title: HyperPhysics - Faraday's law
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/farlaw.html
+  try:
+  - title: PhET - Faraday's law
+    url: https://phet.colorado.edu/en/simulations/faradays-law
+  - title: PhET - Capacitor lab basics
+    url: https://phet.colorado.edu/en/simulations/capacitor-lab-basics
+  - title: Wolfram Demonstrations - Leakage inductance in a transformer
+    url: https://demonstrations.wolfram.com/LeakageInductanceInATransformer/
+- id: phys_dielectric_breakdown
+  title: Dielectric breakdown, working voltage and lifetime of an insulation barrier
+  category: physics
+  from: BizDev (textbook physics)
+  summary: An insulator holds back voltage until the electric field inside it - volts per metre of thickness - pulls
+    electrons loose and a conducting path forms. Silicon dioxide withstands several hundred volts per micrometre, which is why
+    a barrier only tens of micrometres thick can hold thousands of volts for a minute. Over years, a lower continuous
+    voltage can still wear the insulator through tiny partial discharges and slow damage, so isolators carry two kinds of
+    rating - a short withstand test (kV rms for 60 s) and a lifetime working voltage (VIORM). Reinforced isolation means
+    one barrier is good enough to protect a person on its own.
+  equations:
+  - 'Electric field E = V / d'
+  - 'Withstand: barrier thickness >= V / E_breakdown, plus a safety margin'
+  - 'Lifetime models: time to failure falls steeply (exponentially) with field strength'
+  why:
+  - kind: robust
+    text: A barrier rated for the real working voltage over 20+ years keeps the product safe for its whole life, not only in
+      the factory test.
+  - kind: cost
+    text: Reinforced isolation in one package avoids a second barrier (two isolators or an extra transformer).
+  - kind: design
+    text: The withstand rating is a test, not an operating point - size the part on VIORM and the end-product standard.
+  families: [digital_isolators, gate_drivers, isolated_analog]
+  parts:
+  - {label: Skyworks digital isolators (Si86xx), q: Si86}
+  guides: [isolation_rating_kvrms, viorm_vpk, isolation_class]
+  visuals: [creep]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Dielectric constant and polarisation
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/dielec.html
+  try:
+  - title: PhET - Capacitor lab basics (dielectric between plates)
+    url: https://phet.colorado.edu/en/simulations/capacitor-lab-basics
+  - title: Wolfram Demonstrations - Parallel-plate capacitors
+    url: https://demonstrations.wolfram.com/ParallelPlateCapacitors/
+- id: phys_creepage_clearance
+  title: Creepage and clearance - distance through air and along the surface
+  category: physics
+  from: BizDev (textbook physics)
+  summary: Two conductors at different voltages can fail in two ways outside the chip. Through the air, a spark jumps when the
+    field exceeds air's breakdown strength (about 3 kV per mm in a uniform field at sea level, less at altitude) - the
+    minimum air gap is the clearance, set by peak and surge voltages. Along a surface, moisture and dirt slowly form a
+    conductive track at the steady working voltage - the minimum surface path is the creepage, set by the rms working
+    voltage, the pollution degree and the material's tracking resistance (CTI).
+  equations:
+  - 'Clearance: gap >= V_peak / E_air (about 3 kV/mm uniform field, plus margin and altitude correction)'
+  - 'Creepage: from the IEC 60664-1 table (working voltage, pollution degree, material group); x2 for reinforced'
+  why:
+  - kind: bom
+    text: A wide-body package with enough creepage on its own saves board slots, potting or coating.
+  - kind: cost
+    text: Mould compound with CTI >= 600 (material group I) halves the creepage needed, keeping the package small.
+  - kind: robust
+    text: Enough creepage prevents slow surface tracking in damp, dirty environments over the product's life.
+  families: [digital_isolators, gate_drivers, isolated_analog]
+  parts:
+  - {label: Skyworks isolated gate drivers (Si823x), q: Si823}
+  guides: [creepage_mm]
+  visuals: [creep]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Dielectric constant and polarisation
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/dielec.html
+  try:
+  - title: Falstad - Electrostatics (field lines between conductors)
+    url: https://www.falstad.com/emstatic/
+- id: phys_lc_energy
+  title: Energy in inductors and capacitors - the heart of every power converter
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A capacitor stores energy in an electric field, an inductor in a magnetic field. A switching power supply moves
+    energy in small packets, many thousands of times per second - charge the inductor, then release it into the output
+    capacitor. The faster it switches, the smaller each packet, so the inductor and capacitor can be smaller. The voltage
+    across an inductor and the current into a capacitor can only change gradually, which is what smooths the output (and
+    what causes the ripple).
+  equations:
+  - 'Capacitor energy E = 1/2 C V^2;  inductor energy E = 1/2 L I^2'
+  - 'Inductor ripple (buck): delta_I = V_out (1 - D) / (L f_sw)'
+  - 'Capacitor ripple: delta_V ~ delta_I / (8 C f_sw)'
+  why:
+  - kind: bom
+    text: Higher switching frequency shrinks the inductor and capacitors - a smaller, cheaper board.
+  - kind: cost
+    text: The trade-off is switching loss (next topic); the best design is where the two meet.
+  - kind: robust
+    text: Saturating an inductor (too much current for its size) lets the current spike; sizing on peak current protects
+      the switches.
+  families: [power_motor, gate_drivers]
+  parts:
+  - {label: Qorvo PMICs (ACT8xxxx), q: ACT8}
+  - {label: Qorvo motor controllers (PAC5xxx), q: PAC5}
+  visuals: [swloss, gate]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Energy stored in a capacitor
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/capeng.html
+  - title: HyperPhysics - Energy stored in an inductor
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/indeng.html
+  try:
+  - title: Wolfram Demonstrations - Electromagnetic field energies in capacitors and inductors
+    url: https://demonstrations.wolfram.com/ElectromagneticFieldEnergiesInCapacitorsAndInductors/
+  - title: Wolfram Demonstrations - Transfer function of a continuous-mode boost converter
+    url: https://demonstrations.wolfram.com/TransferFunctionForContinuousModeBoostConverter/
+  - title: Falstad circuit simulator (has buck and boost examples)
+    url: https://www.falstad.com/circuit/
+- id: phys_switching_losses
+  title: Switching and conduction losses - where the heat in a converter comes from
+  category: physics
+  from: BizDev (textbook physics)
+  summary: A power transistor loses energy in two ways. While on, current through its small resistance heats it (conduction
+    loss), independent of how often it switches. During each turn-on and turn-off, voltage and current overlap for a few
+    nanoseconds and the transistor's own capacitance is charged and dumped (switching loss) - and this happens every cycle,
+    so it grows with frequency. Fast edges cut switching loss, which is why SiC and GaN switch in a few nanoseconds - and why
+    the gate driver must deliver high peak current and tolerate the resulting fast dV/dt (CMTI).
+  equations:
+  - 'Conduction: P_cond = I_rms^2 x R_on'
+  - 'Switching (overlap): P_sw ~ 1/2 x V x I x (t_r + t_f) x f_sw'
+  - 'Output capacitance: P_oss ~ 1/2 x C_oss x V^2 x f_sw'
+  - 'Gate drive: P_gate = Q_g x V_g x f_sw'
+  why:
+  - kind: cost
+    text: Lower switching loss means a smaller heatsink, fewer paralleled transistors or a higher switching frequency with
+      smaller magnetics.
+  - kind: robust
+    text: Less heat means a cooler junction and longer life (each 10 C cooler roughly doubles many wear-out lifetimes).
+    est: true
+  - kind: design
+    text: Faster edges need a gate driver with high peak current and high CMTI - the link between our power and isolation
+      products.
+  families: [gate_drivers, power_motor]
+  parts:
+  - {label: Skyworks isolated gate drivers (Si827x), q: Si827}
+  - {label: Qorvo motor controllers (PAC5xxx), q: PAC5}
+  guides: [peak_source_a, cmti_kv_us]
+  visuals: [swloss, gate, thermal]
+  key_points: []
+  sources:
+  - title: HyperPhysics - Energy stored in a capacitor
+    url: http://hyperphysics.phy-astr.gsu.edu/hbase/electric/capeng.html
+  - title: MIT OpenCourseWare - 6.622 Power Electronics
+    url: https://ocw.mit.edu
+  try:
+  - title: Falstad circuit simulator (has buck and boost examples)
+    url: https://www.falstad.com/circuit/

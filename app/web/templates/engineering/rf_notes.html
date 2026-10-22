@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>RF fundamentals</h1>
-<p class="subtitle muted">Short engineering notes on RF specifications, components, architectures and technologies, written in our own words from public Mini-Circuits application notes and RF Essentials articles, with the sources' numbers and rules of thumb. Open a topic for its key points and sources; the <a href="/technical">knowledge search</a> finds them too. Part of <a href="/knowledge">General knowledge</a>; the <a href="/library">Systems library</a> links here from each system.</p>
+<p class="subtitle muted">Short engineering notes on RF specifications, components, architectures and technologies, written in our own words from public Mini-Circuits application notes and RF Essentials articles, with the sources' numbers and rules of thumb. <a href="#cat-physics">Physics behind our products</a> explains the physics of each Skyworks and Qorvo product family in plain English: the key equations, why it matters to the customer, the parts and guides it explains, <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/index.html" target="_blank" rel="noopener noreferrer">HyperPhysics ↗</a> pages and free simulators to try (<a href="/library/sources">sources</a>). Open a topic for its key points and sources; the <a href="/technical">knowledge search</a> finds them too. Part of <a href="/knowledge">General knowledge</a>; the <a href="/library">Systems library</a> links here from each system.</p>
 
 <nav class="rf-toc small" aria-label="Topics">{% for k, label, items in groups if items %}
   <div><b>{{ label }}</b>{% for t in items %}<a href="#{{ t.id }}">{{ t.title }}</a>{% endfor %}</div>{% endfor %}
@@ -13,8 +13,14 @@
 <details class="rf-note" id="{{ t.id }}">
   <summary><b>{{ t.title }}</b> <small class="muted">· {{ t.from }}</small></summary>
   <p>{{ t.summary }}</p>
+  {% if t.equations %}<div class="rf-eq small"><b>Key equations</b><ul>{% for e in t.equations %}<li><code>{{ e }}</code></li>{% endfor %}</ul></div>{% endif %}
+  {% if t.why %}<div class="kn-why small"><b>Why it matters to the customer</b>
+    <ul>{% for w in t.why %}<li><span class="kn-kind k-{{ w.kind }}">{{ kinds[w.kind] }}</span> {{ w.text }}{% if w.est %} <span class="kn-est">est</span>{% endif %}</li>{% endfor %}</ul></div>{% endif %}
+  {% if t.category == 'physics' %}<div class="small rf-links">{% for label, items in links(t).items() if items %}
+    <p class="kn-links"><span class="muted">{{ label }}</span> {% for x in items %}<a href="{{ x.href }}">{{ x.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endfor %}</div>{% endif %}
   {% if t.key_points %}<ul class="small">{% for p in t.key_points %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
   <p class="small muted">Sources: {% for s in t.sources %}<a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.title }} ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p>
+  {% if t.try %}<p class="small muted">Try it yourself: {% for s in t.try %}<a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.title }} ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 </details>
 {% endfor %}{% endfor %}
 <script>

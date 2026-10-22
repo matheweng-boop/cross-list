@@ -8,23 +8,25 @@
   });
 </script>
 {% endblock %}
-{% macro done_form(t) %}<form method="post" action="/manage/verify/{{ t.id }}" class="vf-form">
-  <input type="text" name="note" maxlength="2000" placeholder="What is wrong, or a note (optional)" aria-label="Note for {{ t.title }}">
+{% macro done_form(t, rows=3) %}<form method="post" action="/manage/verify/{{ t.id }}" class="vf-form">
+  <textarea name="note" rows="{{ rows }}" maxlength="2000" placeholder="What is wrong, or a note (optional). Your keyboard's dictation key works here." aria-label="Note for {{ t.title }}"></textarea>
   <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="result" value="ok" class="small-btn">Correct</button><button name="result" value="wrong" class="small-btn outline secondary">Something is wrong</button></span>
 </form>{% endmacro %}
 {% block content %}
 <h1>Verify next</h1>
 <p class="subtitle muted">A small batch instead of a long queue. Each item stands for many others: if two or three are right, the rest
-  read the same way are very likely right too. A section gets its next batch only when you have finished it; anything marked wrong
+  read the same way are very likely right too. Only a few are shown at a time; the next ones appear when you have answered these,
+  and a section gets a new batch only when you have finished it. Anything marked wrong
   goes to <a href="/manage/feedback">Site feedback</a> for the next run.</p>
 {% if new %}<p class="banner small">New batch: {% for k in new %}{{ kinds[k] }}{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
 
 {% for kind, label in kinds.items() %}{% set open = board.open[kind] %}{% set done = board.done[kind] %}
-<section class="vf-sec" id="{{ kind }}"><h2>{{ label }} <small class="muted">· {{ open|length }} open{% if done %} · {{ done|length }} done, vouching for about {{ '{:,}'.format(board.vouched[kind]) }}{% endif %}</small></h2>
+{% set shown = board.shown[kind] %}{% set waiting = board.waiting[kind] %}
+<section class="vf-sec" id="{{ kind }}"><h2>{{ label }} <small class="muted">· {{ shown|length }} to answer{% if waiting %} · {{ waiting }} more waiting{% endif %}{% if done %} · {{ done|length }} done, vouching for about {{ '{:,}'.format(board.vouched[kind]) }}{% endif %}</small></h2>
 {% if kind == 'cross' %}<p class="small muted">Open both datasheets and the side-by-side values: are the priority 1 values read correctly, and is the cross type right?</p>
 {% elif kind == 'diagram' %}<p class="small muted">Open the diagram: are the blocks the right functions, in the right groups, with the right links? “Correct” marks it technically verified.</p>
 {% else %}<p class="small muted">Is the claim right according to its sources? Your answer adjusts the confidence of the scores that use it.</p>{% endif %}
-{% for t in open %}{% set d = t.detail %}<article class="vf-task">
+{% for t in shown %}{% set d = t.detail %}<article class="vf-task">
   <h3>{{ t.title }}</h3>
   <p class="small muted">Why this one: {{ d.why }}.</p>
   {% if kind == 'cross' %}{% set cmp = compares.get(t.id) %}{% if cmp %}<p><button type="button" class="small-btn vd-open" data-dialog="vd-{{ t.id }}">Compare and answer</button></p>
@@ -32,8 +34,9 @@
     <header class="vd-head"><b id="vd-h-{{ t.id }}">{{ t.title }}</b><button type="button" class="vd-close" aria-label="Close">×</button></header>
     <div class="vd-body">
       <section class="vd-spec"><h4>Specifications <small class="muted">· {{ d.type }}</small></h4>
-        <div class="table-wrap"><table class="compare-table vd-table"><thead><tr><th>Parameter</th>{% for p in cmp.c.parts %}<th>{{ p.mpn }}<br><small class="muted">{{ 'competitor' if loop.first else 'ours' }}</small></th>{% endfor %}</tr></thead>
-        <tbody><tr><td>Package</td>{% for p in cmp.c.parts %}<td>{{ p.package.code if p.package else '–' }}</td>{% endfor %}</tr>
+        <div class="table-wrap"><table class="compare-table vd-table"><thead><tr><th>Parameter</th>{% for p in cmp.c.parts %}<th>{{ p.mpn }}<br><small class="muted">{{ 'competitor' if loop.first else 'ours' }}</small>{% set ds = p.datasheet_url or (d.ref_ds if loop.first else d.cand_ds) %}{% if ds %}<br><a class="small vd-ds" href="{{ ds }}" target="_blank" rel="noopener">Datasheet ↗</a>{% endif %}</th>{% endfor %}</tr></thead>
+        <tbody><tr><td>Datasheet</td>{% for p in cmp.c.parts %}{% set ds = p.datasheet_url or (d.ref_ds if loop.first else d.cand_ds) %}<td>{% if ds %}<a href="{{ ds }}" target="_blank" rel="noopener">{{ ds.rsplit('/', 1)[-1][:40] }}</a>{% else %}–{% endif %}{% if p.product_url %} · <a href="{{ p.product_url }}" target="_blank" rel="noopener">product page</a>{% endif %}</td>{% endfor %}</tr>
+        <tr><td>Package</td>{% for p in cmp.c.parts %}<td>{{ p.package.code if p.package else '–' }}</td>{% endfor %}</tr>
         {% for row in cmp.c.rows %}<tr><td>{{ row.param.label }} <small class="muted">P{{ row.param.priority }}</small></td>{% for cell in row.cells %}<td class="{{ cell.status if cell.status != 'equal' }}">{{ cell.display }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
         <p class="small">Datasheets: <a href="{{ d.ref_ds }}" target="_blank" rel="noopener">competitor</a> · <a href="{{ d.cand_ds }}" target="_blank" rel="noopener">ours</a></p>
       </section>
@@ -41,7 +44,7 @@
         <p class="small muted">Why this one: {{ d.why }}.</p>
         {% for n in cmp.notes %}<p class="small"><span class="pc-v v-{{ 'correct' if n.verdict == 'accept' else 'wrong' }}">{{ 'accepted' if n.verdict == 'accept' else 'rejected' }}</span> {{ n.note or '' }}</p>{% else %}<p class="small muted">No earlier comments on this cross.</p>{% endfor %}
         <p class="small"><b>Are the priority 1 values read right, and is the cross type right?</b></p>
-        {{ done_form(t) }}
+        {{ done_form(t, 8) }}
       </section>
     </div>
   </article></dialog>{% endif %}
@@ -50,6 +53,7 @@
   {% else %}<p class="small"><b>Claim:</b> {{ d.claim }}</p>{% if d.sources %}<p class="small muted">Sources: {{ d.sources|join(' · ') }}</p>{% endif %}<p class="small">{% if d.topic == 'library' %}<a href="/library/{{ d.library }}#{{ d.item }}">The rule in its library topic</a>{% else %}<a href="/business/evidence/{{ d.fn }}">All evidence for this function</a>{% endif %}</p>{% endif %}
   {{ done_form(t) }}
 </article>{% else %}<p class="small muted">Nothing to verify here right now.</p>{% endfor %}
+{% if waiting %}<p class="small muted">{{ waiting }} more in this batch, shown once you have answered the one{{ 's' if shown|length != 1 }} above.</p>{% endif %}
 {% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ 'correct' if t.status == 'ok' else 'wrong' }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
 </section>{% endfor %}
 <script>

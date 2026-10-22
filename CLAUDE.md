@@ -4,7 +4,10 @@
 - Before asking for that go-ahead, put the questions in `docs/open_questions.md` to the owner; record the answers
   there and remove what is settled.
 - The daily update run (scheduled, 18:42 Berlin) follows `docs/daily_update.md`: it pulls the owner's comments from
-  the live site, prepares a branch and merges it into `main` only after the owner's go-ahead in that run's session.
+  the live site, prepares a branch and merges it into `main` only after the owner's go-ahead in that run's session
+  or as a GO reply from the owner's own Telegram chat (`scripts/telegram.py wait-go`, owner, 22 Oct 2026).
+- When a task the owner asked for finishes, tell them in one line on Telegram (`scripts/telegram.py send`; needs
+  TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in the session): what finished and where to look. Status only, no data.
 - Off-schedule updates are blocked (owner, 22 Oct 2026): any other merge into `main` needs the owner to confirm it
   at least twice, in separate messages, after being told it is outside the daily run. Otherwise leave the work on a
   branch for the next daily run.

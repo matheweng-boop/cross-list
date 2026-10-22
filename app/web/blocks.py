@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import BlockDiagram, BlockFeedback
+from app.models import AreaRequest, BlockDiagram, BlockFeedback
 from app.services import blocks, prelim, refdesigns, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
@@ -39,12 +39,51 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
     def facet(key):
         return sorted(Counter(c[key] for c in allcards).items(), key=lambda kv: (-kv[1], kv[0]))
 
+    shown = [c for _, v in cards for c in v]
+    focus = [(k, label, [c for c in shown if k in c["focus"]]) for k, label in blocks.FOCUS_AREAS.items()]
+    other = [(k, [c for c in v if not c["focus"]]) for k, v in cards]
     ctx = {"designs": designs, "cards": [(k, v) for k, v in cards if v], "n_all": len(allcards),
+           "focus": focus, "other": [(k, v) for k, v in other if v],
+           "asked": request.query_params.get("asked") == "1",
            "n_shown": sum(len(v) for _, v in cards), "markets": facet("market"), "sources": facet("source"),
            "market": market, "source": source, "variants": variants, "verified": verified,
            "n_verified": sum(1 for c in allcards if c["verified"]),
            "n_variant": sum(1 for c in allcards if c["variant"]), "n_groups": len(blocks.variant_groups())}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/index.html", ctx)
+
+
+@router.post("/blocks/area-request")
+def area_request(area: str = Form(""), why: str = Form(""), author: str = Form(""),
+                 session: Session = Depends(get_session)):  # fmt: skip
+    """Ask for another application area in the library; reviewed in Requests & reviews and in the daily inbox."""
+    area = " ".join(area.split())[:200]
+    if not area:
+        raise HTTPException(400, "Name the area")
+    session.add(AreaRequest(area=area, why=why.strip()[:2000] or None, author=author.strip()[:100] or None))
+    session.commit()
+    return RedirectResponse("/blocks?asked=1#request-area", status_code=303)
+
+
+AREA_STATUSES = {"new": "New", "planned": "Planned", "done": "Added", "declined": "Declined"}
+
+
+@router.get("/blocks/area-requests", response_class=HTMLResponse)
+def area_requests(request: Request, session: Session = Depends(get_session)):
+    rows = session.scalars(select(AreaRequest).order_by(AreaRequest.created_at.desc())).all()
+    ctx = {"rows": rows, "statuses": AREA_STATUSES}
+    return templates.TemplateResponse(request, "blocks/area_requests.html", ctx)
+
+
+@router.post("/blocks/area-requests/{req_id:int}")
+def area_request_status(req_id: int, status: str = Form(...), session: Session = Depends(get_session)):
+    row = session.get(AreaRequest, req_id)
+    if row is None:
+        raise HTTPException(404)
+    if status not in AREA_STATUSES:
+        raise HTTPException(400, "Unknown status")
+    row.status = status
+    session.commit()
+    return RedirectResponse("/blocks/area-requests", status_code=303)
 
 
 @router.get("/blocks/coverage", response_class=HTMLResponse)

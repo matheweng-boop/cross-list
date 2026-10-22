@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro cell(r, b) %}{% set c = r.cells[b.id] %}{% set cls = 'rf-ok' if c.n >= 3 else ('rf-thin' if c.n else ('rf-risk' if c.risk else ('rf-none' if c.need else 'rf-empty'))) %}
-  <td class="rf-cell {{ cls }}{{ ' on' if fn == r.fn and band == b.id and (power or None) == r.power }}">
+  <td data-label="{{ b.label }}" class="rf-cell {{ cls }}{{ ' on' if fn == r.fn and band == b.id and (power or None) == r.power }}">
     <a href="/business/rf-coverage?fn={{ r.fn }}&band={{ b.id }}{% if r.power %}&power={{ r.power }}{% endif %}#slot" title="{{ c.n }} active part{{ 's' if c.n != 1 }}{% for m, k in c.by.items() %} · {{ m }} {{ k }}{% endfor %}{% if c.risk %} · {{ c.risk }} obsolete / NRND{% endif %} · needed by {{ c.need }} application{{ 's' if c.need != 1 }}{% if c.comp %} · competitors: {% for m, k in c.rivals.most_common() %}{{ m }} {{ k }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}">
       <b>{{ c.n if c.n else ('0' if c.risk else ('!' if c.need else '·')) }}</b>{% if c.risk %}<small class="rf-r">+{{ c.risk }}</small>{% endif %}{% if c.need %}<small class="rf-need">{{ c.need }}</small>{% endif %}{% if c.comp %}<small class="rf-comp" aria-label="competitor makers">{{ c.rivals|length }}</small>{% endif %}</a></td>
 {% endmacro %}
@@ -18,12 +18,12 @@
   <span class="rf-need-demo"><small class="rf-comp">3</small> competitor makers with active parts{% if n_comp %} ({{ comp_makers|join(', ') }}){% endif %}</span>
 </div>
 
-<div class="table-wrap"><table class="rf-matrix">
+<div class="fit-wrap"><table class="rf-matrix stack-table">
   <thead><tr><th scope="col">Function</th>{% for b in cfg.bands %}<th scope="col" title="{{ b.uses }}">{{ b.label }}<br><small class="muted">{{ apps.get(b.id, [])|length }} apps</small></th>{% endfor %}<th scope="col" title="parts with no readable frequency">no freq.</th></tr></thead>
   <tbody>{% for r in rows %}<tr{% if r.power %} class="rf-pa"{% endif %}>
     <th scope="row">{{ r.label }}{% if r.power_label %} <small class="muted">{{ r.power_label }}</small>{% endif %}</th>
     {% for b in cfg.bands %}{{ cell(r, b) }}{% endfor %}
-    <td class="small muted">{{ r.no_freq }}</td></tr>{% endfor %}</tbody>
+    <td class="small muted" data-label="no freq.">{{ r.no_freq }}</td></tr>{% endfor %}</tbody>
 </table></div>
 
 {% if slot is not none %}

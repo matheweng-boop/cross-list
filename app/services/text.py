@@ -215,6 +215,22 @@ def _isolation_spec(params: dict) -> list[str]:
     return out
 
 
+def _timing_spec(params: dict) -> list[str]:
+    """'8 outputs · 1–1000 MHz · 100 fs' for clocks, buffers and oscillators."""
+    out = []
+    if params.get("outputs") and params.get("function_type") != "crystal_oscillator":
+        n = _n(params["outputs"])
+        out.append(f"{n} output{'s' if n != '1' else ''}")
+    f = params.get("freq_range_mhz")
+    if isinstance(f, list) and len(f) == 2:
+        lo = float(f[0])
+        low = _n(lo) if lo >= 1 else f"{lo * 1000:g} kHz" if lo >= 0.001 else f"{lo * 1e6:g} Hz"
+        out.append(f"{low}–{_n(f[1])} MHz")
+    if params.get("jitter_fs"):
+        out.append(f"{_n(params['jitter_fs'])} fs")
+    return out
+
+
 def short_description(
     fn: str | None, package: str = "", grade: str | None = None, specs: dict | None = None, params: dict | None = None,
     description: str = "",
@@ -223,9 +239,12 @@ def short_description(
     not known is left out, never shown as n/a. `specs` are catalogue key specs (free text), `params` BizDev
     parameters (typed); `description` is only read for a frequency range when no spec states one."""
     params = {k: v for k, v in (params or {}).items() if v not in (None, "", [])}
+    fn = params.get("function_type") or fn  # a family holding several functions (timing) names the part's own
     bits = [vocab.fn_label(fn)] if fn else []
     f = vocab.functions().get(vocab.canonical(fn) or "") or {}
-    if f.get("category") == "rf" or "freq_range_ghz" in params:
+    if "function_type" in params:
+        bits += _timing_spec(params)
+    elif f.get("category") == "rf" or "freq_range_ghz" in params:
         bits += _rf_spec(fn or "", specs or {}, description, params)
     else:
         bits += _isolation_spec({**_isolation_params(specs or {}), **params})

@@ -390,7 +390,7 @@ def decode_si8239x(opn: str, row: str):
         "isolation_class": "basic",
         "creepage_mm": 4.01 if pkg == "SOIC-16N" else 8.0,
         **common(grade == "A"),
-        "cmti_kv_us": 35,
+        "cmti_kv_us": 100,  # typ (min 35): typ first, owner 22 Oct 2026
         "channel_config": "dual",
         "input_type": "PWM input" if pwm else "dual input",
         "peak_source_a": 2.0,
@@ -579,7 +579,7 @@ def decode_si827x(opn: str, row: str):
         "isolation_class": "basic",
         "creepage_mm": 3.5 if lga else 3.9,
         **common(grade == "A", (-55, 125) if grade == "Z" else (-40, 125)),
-        "cmti_kv_us": 200 if deglitch else 150,
+        "cmti_kv_us": 350 if deglitch else 300,  # typ (min 200 / 150): typ first, owner 22 Oct 2026
         "channel_config": "single" if n == 1 else "dual",
         "input_type": "single input" if n == 1 else "PWM input" if n == 4 else "dual input",
         "peak_source_a": 1.8,
@@ -624,7 +624,7 @@ def decode_si826x(opn: str, row: str):
         "isolation_class": "reinforced",
         "creepage_mm": {"SOIC-8N": 3.9, "DIP-8 GW": 7.0, "SDIP-6": 8.3}[pkg],
         **common(grade == "A"),
-        "cmti_kv_us": 35,
+        "cmti_kv_us": 50,  # typ (min 35): typ first, owner 22 Oct 2026
         "channel_config": "single",
         "input_type": "LED emulator",
         "peak_source_a": 0.4 if drv == "A" else 1.8,
@@ -865,13 +865,14 @@ VM_CURVES = {
 # the typical-value supply of each UVLO grade ("Typical specifications" line of every Si82x electrical table)
 UVLO_TEST_VDD = {4: 6, 8: 10, 12: 15, 15: 18}
 
-# per series: peak (source, sink) or per-UVLO peaks, prop delay max per deglitch code, rise/fall, iq, theta, notes
+# per series: peak (source, sink) or per-UVLO peaks, prop delay typ per deglitch code (typ first: owner, 22 Oct 2026),
+# rise/fall, iq, theta, notes
 VCD_PEAK = {4: 1.5, 8: 2.5, 12: 3.5, 15: 4.0}  # SelVCD speed 7, both directions
 VCD_RISE_FALL = {4: (16, 22), 8: (16, 19), 12: (17, 18), 15: (17, 20)}
 SI82X = {
     "A": dict(
         peak=(1.16, 1.09),
-        prop={"A": 31.4, "B": 55.8},
+        prop={"A": 21.0, "B": 46.0},
         rf=(18.5, 14.5),
         iq=0.81,
         theta={"SOIC-8N": 104, "SSO-8": 103},
@@ -879,7 +880,7 @@ SI82X = {
     ),
     "B": dict(
         peak=(7.5, 7.5),
-        prop={"A": 38.2, "B": 63.1},
+        prop={"A": 26.0, "B": 51.0},
         rf=(8.3, 8.6),
         iq=0.81,
         theta={"SOIC-8N": 101, "SSO-8": 99},
@@ -887,7 +888,7 @@ SI82X = {
     ),
     "C": dict(
         peak=None,
-        prop={"A": 43.4, "B": 72.6, "E": 144},
+        prop={"A": 30.0, "B": 56.0, "E": 127},
         rf=None,
         iq=1.15,
         theta={"SOIC-8N": 101, "SSO-8": 99},
@@ -895,7 +896,7 @@ SI82X = {
     ),
     "D": dict(
         peak=(1.16, 1.09),
-        prop={"A": 32, "B": 58},
+        prop={"A": 22.0, "B": 47.0},
         rf=(18.5, 14.5),
         iq=1.03,
         theta={"SOIC-16N": 61, "SOIC-14W (IS3)": 69},
@@ -903,7 +904,7 @@ SI82X = {
     ),
     "E": dict(
         peak=(7.5, 7.5),
-        prop={"A": 40, "B": 65},
+        prop={"A": 30.0, "B": 52.5},
         rf=(8.3, 8.6),
         iq=1.03,
         theta={"SOIC-16N": 63, "SOIC-14W (IS3)": 59, "LGA-13 (5x5)": 116},
@@ -911,7 +912,7 @@ SI82X = {
     ),
     "F": dict(
         peak=None,
-        prop={"A": 40, "B": 65, "E": 140},
+        prop={"A": 30.0, "B": 52.5, "E": 115},
         rf=None,
         iq=1.57,
         theta={"SOIC-16N": 63, "SOIC-14W (IS3)": 59},
@@ -1137,7 +1138,7 @@ SOURCES = {
         "isolation_class": ("Table 4.2. Regulatory Information", "VDE 0884-10 basic insulation"),
         "creepage_mm": ("Table 4.3. Insulation and Safety-Related", "Table 4.3"),
         "qualification": ("Industrial and Automotive Grade OPNs", "ordering guide: -A codes AEC-Q100"),
-        "cmti_kv_us": ("Common Mode Transient Immunity", "Table 4.1, min"),
+        "cmti_kv_us": ("Common Mode Transient Immunity", "Table 4.1, typ; min 35"),
         "channel_config": ("Table 1.1. Si8239x Ordering Guide", "ordering guide"),
         "input_type": ("Table 1.1. Si8239x Ordering Guide", "ordering guide"),
         "peak_source_a": ("Output Short-Circuit Pulsed Source", "Table 4.1, IOH test (Figure 4.2), typ"),
@@ -1204,7 +1205,7 @@ SOURCES = {
         "isolation_class": ("Table 10. Regulatory Information", "VDE 60747-17 basic insulation"),
         "creepage_mm": ("Table 11. Insulation and Safety-Related", "Table 11"),
         "qualification": ("8.1. Industrial and Automotive Grade OPNs", "ordering guide: -A codes AEC-Q100"),
-        "cmti_kv_us": ("Common-mode transient immunity", "Table 8, min (deglitch 200, low jitter 150)"),
+        "cmti_kv_us": ("Common-mode transient immunity", "Table 8, typ (deglitch 350, low jitter 300; min 200 / 150)"),
         "channel_config": ("Table 4. Si827x Family Overview", "Table 4"),
         "input_type": ("Table 4. Si827x Family Overview", "Table 4"),
         "peak_source_a": ("High-level peak output current", "Table 8, typ, VDD 15 V"),
@@ -1227,7 +1228,7 @@ SOURCES = {
         "isolation_class": ("Table 6. VDE 0884-10 Insulation", "VDE 0884-10 reinforced (Tables 3 and 6)"),
         "creepage_mm": ("Table 4. Insulation and Safety-Related", "Table 4, min"),
         "qualification": ("8.1. Automotive Grade OPNs", "Table 14: -A codes automotive grade"),
-        "cmti_kv_us": ("Transient Immunity", "Table 2, min"),
+        "cmti_kv_us": ("Transient Immunity", "Table 2, typ; min 35"),
         "channel_config": ("Table 13. Si826x Ordering Guide", "ordering guide"),
         "input_type": ("Table 11. Pin Descriptions", "LED emulator"),
         "peak_source_a": ("Output High Current", "Table 2, typ"),
@@ -1351,7 +1352,10 @@ def si82x_sources(x: str) -> dict:
         ),
         "uvlo_v": (og, "ordering guide; thresholds in Power Supply Characteristics"),
         "output_supply_v": ("Gate driver supply", "Power Supply Characteristics"),
-        "prop_delay_ns": ("Propagation Delay", "Timing Characteristics, max for the deglitch option"),
+        "prop_delay_ns": (
+            "Propagation Delay",
+            "Timing Characteristics, typ for the deglitch option; typ first, owner 22 Oct 2026",
+        ),
         "protection": (og, "ordering guide and Device Operation"),
         "temp_range_c": ("Operating temperature", "Absolute Maximum Ratings / operating range"),
         "deadtime": ("Dead", "DT pin, Timing Characteristics"),
@@ -1524,7 +1528,8 @@ HEADER = """\
 #   peak current stated at 15 V is compared with the 15 V row.
 #   output_config (Si82Ax-Fx): the ordering guide's outputs column: VO = single output, VO+/VO- = split output,
 #   VO + MC = Miller clamp; Si82Cx clamps through VO- (split output, Miller clamp under protection).
-#   prop_delay_ns: maximum for the code's deglitch / dead-time option. rise/fall: typ where given, else max.
+#   prop_delay_ns: Si82Ax-Fx typical for the code's deglitch option (typ first, then max: owner, 22 Oct 2026); the
+#   other series still the maximum for the code's deglitch / dead-time option. rise/fall: typ where given, else max.
 #   isolation_class: only where the datasheet states a component insulation standard (IEC/VDE 60747-17,
 #   VDE 0884-10, IEC 60747-5-5); omitted for Si823Hx, Si8252x and Si8281-84 (only IEC 62368-1 system ratings)
 #   and for LGA-13 codes. creepage_mm is the nominal external creepage of the package from the insulation table.

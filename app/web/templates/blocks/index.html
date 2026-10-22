@@ -17,20 +17,36 @@
 <div class="lib-facets small">
   <p class="muted">{{ n_shown }} of {{ n_all }} library architectures. Related architectures (e.g. two traction inverters) are kept as separate sources and flagged as possible variants; they are not merged and each counts once in every metric.</p>
 </div>
-{% for cat, items in cards %}
-<h3 class="tpl-cat">{{ cat }}</h3>
-<div class="tpl-grid">
-  {% for t in items %}
+{% macro card(t) %}
   <a class="tpl-card" href="/blocks/new?template={{ t.i }}"><b>{{ t.name }}</b>
     {% if t.sub %}<small class="tpl-sub">{{ t.sub }}</small>{% endif %}
     <small class="muted">{{ t.market }} · source {{ t.source }} · {{ t.blocks }} blocks{% if t.questions %} · {{ t.questions }} design questions{% endif %}</small>
     <small>{% if t.verified %}<span class="vbadge on" title="by {{ t.verified.by or 'anonymous' }}, {{ t.verified.at|date('short') }}">✓ Technically verified</span>{% else %}<span class="vbadge">Entered</span>{% endif %}</small>
     {% if t.variant %}<small class="tpl-variant" title="{{ t.peers|join('; ') }}">Possible variant of {{ t.peers|length }} other{{ 's' if t.peers|length != 1 }} ({{ t.variant }})</small>{% endif %}
     {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in BizDev' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
-  {% endfor %}
-</div>
-{% else %}<div class="empty-state"><p><b>No architecture matches these filters.</b></p><p class="small"><a href="/blocks">Show all</a>.</p></div>
+{% endmacro %}
+{% if not cards %}<div class="empty-state"><p><b>No architecture matches these filters.</b></p><p class="small"><a href="/blocks">Show all</a>.</p></div>{% endif %}
+<nav class="lib-focus-nav small" aria-label="Focus areas">{% for k, label, items in focus %}<a href="#area-{{ k }}">{{ label }} <small class="muted">{{ items|length }}</small></a>{% endfor %}<a href="#other-areas">Other areas</a><a href="#request-area">Request an area</a></nav>
+{% for k, label, items in focus %}
+<h2 class="tpl-cat lib-focus" id="area-{{ k }}">{{ label }} <small class="muted">· {{ items|length }}</small></h2>
+{% if items %}<div class="tpl-grid">{% for t in items %}{{ card(t) }}{% endfor %}</div>
+{% else %}<p class="small muted">No diagram yet{{ ' with these filters' if market or source or variants or verified }}. The daily update researches this area a few documents at a time and adds diagrams here.</p>{% endif %}
 {% endfor %}
+<details class="lib-other" id="other-areas"><summary><b>Other areas</b> <small class="muted">· {{ other|map(attribute=1)|map('length')|sum }} diagrams in {{ other|length }} categories</small></summary>
+{% for cat, items in other %}
+<h3 class="tpl-cat">{{ cat }}</h3>
+<div class="tpl-grid">{% for t in items %}{{ card(t) }}{% endfor %}</div>
+{% endfor %}
+</details>
+<section class="lib-request" id="request-area">
+  <h2>Request another area</h2>
+  {% if asked %}<p class="small rp-thanks">Saved. Requests are reviewed in <a href="/manage/reviews?type=area">Requests &amp; reviews</a> and picked up by the daily update.</p>{% endif %}
+  <form method="post" action="/blocks/area-request" class="lib-request-form">
+    <input name="area" required maxlength="200" placeholder="Area, e.g. robotics, satellites, hearing aids" aria-label="Area">
+    <input name="why" maxlength="2000" placeholder="Why (optional)" aria-label="Why">
+    <button type="submit" class="small-btn">Request</button>
+  </form>
+</section>
 <div class="tpl-grid">
   <a class="tpl-card tpl-empty" href="/blocks/new"><b>Empty diagram</b><br><small class="muted">Add groups and functions yourself.</small></a>
 </div>

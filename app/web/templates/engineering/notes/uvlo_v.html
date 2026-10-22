@@ -4,3 +4,9 @@
 <p>The threshold must suit the power device. A lower UVLO than intended lets a SiC MOSFET or IGBT run with too little gate
   voltage (high on-resistance, overheating); a higher one can shut down a correctly supplied gate drive. Treat a different
   UVLO as a functional difference, not a better or worse value.</p>
+<h2>When no variant matches</h2>
+<p>Vendors offer different steps (Skyworks 4 / 8 / 12 / 15 V, Novosense 6 / 8 / 13 V, Infineon 9.3 / 12 / 13.6 V). When no
+  variant matches, the cross ranks the next <b>lower</b> threshold first (owner, 22 Oct 2026): it still starts up at every
+  supply the original starts at, while a higher one may keep the driver off. Example: Novosense NSI6602A (6 V option) →
+  Si82E29AGC (4 V), not Si82E29ABC (8 V). It stays a deviation: the lower part protects the power device less at low
+  supply, so check the gate supply in the design.</p>

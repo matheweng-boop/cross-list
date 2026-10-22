@@ -1,0 +1,19 @@
+<h2>Two names, one job</h2>
+<p>Both features stop the high-side and low-side switch of a half bridge from conducting at the same time (shoot-through).
+  They act at different moments:</p>
+<ul>
+  <li><b>Dead time</b> works on every normal switching edge: after one output turns off, the driver waits a set time
+    (set with a resistor on the DT pin) before it turns the other output on, so the first switch is fully off.</li>
+  <li><b>Overlap protection</b> works only when something goes wrong: if the controller commands both inputs high at the
+    same time, the driver keeps (or pulls) both outputs low.</li>
+</ul>
+<h2>What it means for a cross</h2>
+<p>In the dual-channel drivers we compare, the two come together: the dead-time logic is also what blocks overlapping
+  inputs. Skyworks Si82Ex names both ("Dead time control and overlap protection"); the Novosense NSI6602 datasheet only
+  says "programmable deadtime", but its logic table shows the same overlap behaviour (both inputs high → both outputs
+  low), unless DT is tied to VDDI to allow overlap. So the crosses count them as <b>one</b> capability, dead-time control
+  (owner's question, 22 Oct 2026): a part listing only one of the two names is not marked down for the other.</p>
+<h2>When it does matter</h2>
+<p>A driver without a DT pin (dead time set by the controller only) or one with overlap allowed is still fine when the
+  microcontroller or DSP generates the dead time itself; most motor-control PWM timers do. It matters when the controller
+  cannot guarantee it, for example a simple analog PWM IC driving a half bridge.</p>

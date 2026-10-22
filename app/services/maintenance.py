@@ -6,7 +6,7 @@ mistaken for a correction of the underlying fact."""
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import BlockFeedback, CrossFeedback, CrossRequest, DataReview, PartMapping, TechFeedback
+from app.models import AreaRequest, BlockFeedback, CrossFeedback, CrossRequest, DataReview, PartMapping, TechFeedback
 
 ISSUE_TYPES = {
     "missing_product": ("Missing product", "A part to add or cross that BizDev does not cover yet."),
@@ -19,6 +19,7 @@ ISSUE_TYPES = {
         "Ratings, competitors, customers, trends, platforms, patents, foundry.",
     ),
     "commercial": ("Market size (TAM)", "TAM estimates per product or technology and their sources."),
+    "area": ("Application area request", "Another application area asked for in the Application library."),
 }
 
 # what a data review affects, per dataset
@@ -124,7 +125,7 @@ def items(session: Session) -> list[dict]:
                 "author": f.author,
                 "date": f.created_at,
                 "status": f.status,
-                "link": "/business/capabilities#feedback",
+                "link": "/business/capabilities/feedback.txt",
                 "resolution": FILE_UPDATE,
                 "affects": "Technology platforms, technology ratings",
             }
@@ -141,6 +142,20 @@ def items(session: Session) -> list[dict]:
                 "link": "/blocks/feedback",
                 "resolution": "Needs a template update in the repository.",
                 "affects": "Application library and every analysis using that architecture",
+            }
+        )
+    for a in session.scalars(select(AreaRequest)):
+        out.append(
+            {
+                "type": "area",
+                "title": a.area,
+                "detail": a.why or "",
+                "author": a.author,
+                "date": a.created_at,
+                "status": a.status,
+                "link": "/blocks/area-requests",
+                "resolution": "The daily update researches it a few documents per run and adds diagrams.",
+                "affects": "Application library",
             }
         )
     out.sort(key=lambda i: i["date"], reverse=True)

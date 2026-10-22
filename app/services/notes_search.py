@@ -60,7 +60,8 @@ def _index() -> sqlite3.Connection:
     from app.services import rf_notes
 
     for t in rf_notes.topics():
-        text = " ".join([t["summary"], *(t.get("key_points") or [])])
+        text = " ".join([t["summary"], *(t.get("key_points") or []), *(t.get("equations") or []),
+                         *(w["text"] for w in t.get("why") or [])])  # fmt: skip
         rows.append((t["title"], text, "RF note", t["id"], f"/rf-notes#{t['id']}", None))
     from app.services import library
 

@@ -3,12 +3,29 @@
 <h1>General knowledge</h1>
 <p class="subtitle muted">The basics behind the systems: how RF parts and specifications work, what each isolation specification means,
   and the public Skyworks and Qorvo technologies. The <a href="/library">Systems library</a> links here from each system;
-  the <a href="/visuals">Interactive visuals</a> let you try the numbers.</p>
+  the <a href="/visuals">Interactive visuals</a> let you try the numbers. Selling one product? Start with <a href="#by-product">By product</a>.</p>
 
 <form method="get" action="/technical" role="search">
   <input type="search" name="q" placeholder="Search everything: RF notes, specification guides, application notes" aria-label="Search general knowledge">
 </form>
 
+<h2 id="by-product">By product</h2>
+<p class="small muted">Everything about one product family on one card: why it matters to the customer, then the guides, visuals, notes and reviews behind it. <span class="kn-est">est</span> = BizDev's own reasoning, not from a source.</p>
+{% macro links(label, items) %}{% if items %}<p class="kn-links"><span class="muted">{{ label }}</span> {% for x in items %}<a href="{{ x.href }}"{% if x.summary %} title="{{ x.summary }}"{% endif %}>{{ x.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}{% endmacro %}
+<div class="kn-prod-grid">{% for p in products %}
+  <article class="kn-prod" id="p-{{ p.key }}">
+    <h3>{{ p.title }}</h3>
+    <p class="small muted">{{ p.line }}</p>
+    <p class="small">{{ p.pitch }}</p>
+    {% if p.points %}<div class="kn-why small"><b>Why it matters to the customer</b>
+      <ul>{% for pt in p.points %}<li><span class="kn-kind k-{{ pt.kind }}">{{ kinds[pt.kind] }}</span> {{ pt.text }}{% if pt.est %} <span class="kn-est">est</span>{% endif %} <a class="muted" href="{{ pt.href }}">{{ pt.guide }}</a></li>{% endfor %}</ul></div>{% endif %}
+    <div class="small">
+      {{ links('Spec guides', p.guides) }}{{ links('Visuals', p.visuals) }}{{ links('Fundamentals', p.rf_notes) }}{{ links('Systems library', p.topics) }}{{ links('Technology reviews', p.reviews) }}
+    </div>
+  </article>{% endfor %}
+</div>
+
+<h2>All topics</h2>
 <div class="kn-grid">
   <section class="kn-card" id="rf">
     <h2><a href="/rf-notes">RF fundamentals</a></h2>

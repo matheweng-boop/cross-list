@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path) }}{% endblock %}
+{% block content %}
+<h1>Competitive analytics</h1>
+<p class="subtitle muted">A high-level profile per competitor: what the company does, its size, its products, strengths and weaknesses, and where it meets Skyworks and Qorvo. Public sources only; every figure shows its source and date. New companies are added by the daily update.</p>
+{% if errors %}<p class="small muted">Profiles not shown: {{ errors|join('; ') }}</p>{% endif %}
+{% if not rows %}<p class="muted">No profiles yet.</p>{% endif %}
+<div class="rp-list">{% for c in rows %}
+  <a class="rp-card" href="/business/competitors/{{ c.slug }}">
+    <span class="rp-meta small">{{ c.ticker or 'Private' }} · {{ c.hq }} · checked {{ c.updated }}</span>
+    <b class="rp-title">{{ c.name }}</b>
+    <span class="small">{{ c.summary|truncate(200) }}</span>
+    <span class="rp-tags">{% for o in c.overlap or [] if o.level == 'direct' %}<span class="badge">{{ o.area }}</span>{% endfor %}</span>
+  </a>{% endfor %}
+</div>
+{% endblock %}

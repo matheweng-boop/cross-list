@@ -60,4 +60,4 @@ def test_reports_grouped_by_type_and_feasibility(client):
     assert "Group by" in page and "Suggested next topics" in page
     assert all(f'<h2 class="rp-group">{t} ' in page for t in {r["app_type"] for r in rp.reports()})
     page = client.get("/business/reports?view=feasibility").text
-    assert "Close to the portfolio" in page and "Reports" in page
+    assert "Close to the portfolio" in page  # owner, 22 Oct: no separate "Reports" group, every entry is an idea

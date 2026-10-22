@@ -24,6 +24,9 @@ from app.services import opportunity as op
 from app.services.queries import crosses_for
 
 BATCH = {"cross": 6, "diagram": 2, "data": 3}
+# Shown at a time (owner, 22 Oct 2026: "keep more hidden in the queue"): the rest of the batch waits and appears as
+# the shown ones are answered.
+SHOW = {"cross": 2, "diagram": 1, "data": 2}
 KINDS = {"cross": "Crosses", "diagram": "Block diagrams", "data": "Other data"}
 AUTHOR = "Verify next"
 DATA_TOPICS = {"competition": "Competition", "trends": "Market trend", "path": "Path to product"}
@@ -196,7 +199,9 @@ def board(session: Session) -> dict:
     """Open tasks per kind and what the done ones vouch for."""
     rows = list(session.scalars(select(VerifyTask).order_by(VerifyTask.id)))
     done = [r for r in rows if r.status != "open"]
-    return {"open": {k: [r for r in rows if r.kind == k and r.status == "open"] for k in BATCH},
+    open_ = {k: [r for r in rows if r.kind == k and r.status == "open"] for k in BATCH}
+    return {"open": open_, "shown": {k: v[: SHOW[k]] for k, v in open_.items()},
+            "waiting": {k: max(len(v) - SHOW[k], 0) for k, v in open_.items()},
             "done": {k: [r for r in done if r.kind == k] for k in BATCH},
             "vouched": {k: sum(r.covers for r in done if r.kind == k and r.status == "ok") for k in BATCH}}  # fmt: skip
 

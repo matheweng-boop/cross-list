@@ -13,17 +13,18 @@ Data a step needs but the site does not hold is a gap: it is shown on the step a
 (kind "data"), so the next feedback review picks it up.
 """
 
+import re
 from collections import Counter
 from urllib.parse import quote
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.models import BlockDiagram, Case, Part, ShortlistItem, SiteFeedback
+from app.models import BlockDiagram, Case, ParamValue, Part, ShortlistItem, SiteFeedback
 from app.services import blocks, crosssell, library, prelim, scoring, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
-from app.services.pipeline import fn_for_family, requested
+from app.services.pipeline import FUNCTION_PARAM, fn_for_family, fn_for_part, requested
 
 STEPS = {1: "Replacement", 2: "Sell around it", 3: "Best of ours around it", 4: "Make it better, other applications",
          5: "What the future needs"}  # fmt: skip
@@ -44,10 +45,11 @@ def competitor_parts(session: Session, fn: str, limit: int = 6) -> list[Part]:
     """Competitor parts in the cross-reference database whose family maps to the function (for links back from
     the function, case and cross-sell pages to a walk-through)."""
     mine = [f for f in session.scalars(select(Part.family).distinct()) if fn_for_family(f) == fn]
-    if not mine:
-        return []
-    q = select(Part).where(Part.family.in_(mine)).order_by(Part.mpn)
-    return [p for p in session.scalars(q) if not p.is_reference][:limit]
+    # families holding several functions (timing) name each part's function in a parameter
+    split = [pid for pid, v in session.execute(select(ParamValue.part_id, ParamValue.value)
+                                               .where(ParamValue.key == FUNCTION_PARAM)) if v == fn]  # fmt: skip
+    q = select(Part).where(or_(Part.family.in_(mine), Part.id.in_(split))).order_by(Part.mpn)
+    return [p for p in session.scalars(q).unique() if not p.is_reference and fn_for_part(p) == fn][:limit]
 
 
 def _step1(rows: list) -> dict:
@@ -59,7 +61,11 @@ def _step1(rows: list) -> dict:
     minor = [d.label for d in v.info_worse]
     suitable = "dropin" if v.category == "fff" and not worse else "deviations"
     # a drop-in means we can cross it: no new development, so no case
-    acceptable = next((rr.candidate for rr, vv in rows if vv.category in ACCEPTABLE), None)
+    # timing (owner, 22 Oct 2026): a functional match without priority 1 shortfalls counts too, whatever the package
+    from app.matching.engine import _functional_focus
+
+    acceptable = next((rr.candidate for rr, vv in rows if vv.category in ACCEPTABLE or (
+        vv.category == "functional" and not vv.worse and _functional_focus(rr.reference.family))), None)
     # specs where every listed cross of ours is worse: the line as a whole falls short
     lists = [{d.label for d in vv.worse} for _, vv in rows]
     short = sorted(set.intersection(*lists)) if lists else []
@@ -72,7 +78,7 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
     `rows` = the part page's cross results (best first)."""
     gaps: list[tuple[int, str]] = []
     s1 = _step1(rows)
-    fn = fn_for_family(part.family)
+    fn = fn_for_part(part)
     anchor = crosssell.resolve_part(session, part.mpn) or (
         {"mpn": part.mpn, "manufacturer": part.manufacturer.name, "ours": part.is_reference, "fns": [fn],
          "automotive": False, "grade": None, "ranges": [], "exact": True, "others": []} if fn else None
@@ -118,8 +124,7 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
         gaps.append((4, f"{label}: competition not assessed (data/business/competition.yaml)"))
     if not trend:
         gaps.append((4, f"{label}: no market trend recorded (data/business/evidence/trends.yaml)"))
-    if tam is None:
-        gaps.append((4, f"{label}: no ASP and application volumes entered, so the market size is unknown"))
+    # no public TAM estimate yet is expected (owner, 22 Oct 2026): shown on the step, not logged as a data error
     if apps and not hunt:
         gaps.append((4, f"{label}: no customers listed for the applications that use it (customers.yaml)"))
     lib = library.for_function(fn)
@@ -188,7 +193,8 @@ def app_cards(sell: dict, fn: str, mpn: str, automotive: bool = False) -> list[d
         index = blocks.template_index(t, a.market)
         where = f"template={a.i}" if a.i < len(lib) else f"bg={a.i - len(lib)}"
         uses = sum(p.fn == fn for p in a.positions)  # designs that use the part's function several times first
-        cards.append({"i": a.i, "name": blocks.display_name(t), "market": a.market, "background": a.background,
+        name = blocks.display_name(t)
+        cards.append({"i": a.i, "name": name, "short": short_name(name), "market": a.market, "background": a.background,
                       "uses": uses, "grade_fit": not automotive or a.market == "Automotive",
                       "tag_keys": index["tags"],
                       "tags": [labels[k] for k in index["tags"]], "index": index,
@@ -203,6 +209,16 @@ def app_cards(sell: dict, fn: str, mpn: str, automotive: bool = False) -> list[d
 def filter_cards(cards: list[dict], q: str) -> list[dict]:
     """The cards that match every part of the search (general categories, then words)."""
     return [c for c in cards if blocks.search_all(c["index"], q)]
+
+
+def short_name(name: str) -> str:
+    """A general heading for an application card (owner, 22 Oct 2026): without the brackets and, for a long name,
+    without what follows " with " or ", "; the full name opens on click."""
+    s = re.sub(r"\s*\([^)]*\)", "", name).strip() or name
+    for sep in (" with ", ", ", ": "):
+        if len(s) > 40 and sep in s:
+            s = s.split(sep)[0]
+    return s
 
 
 def category_counts(cards: list[dict]) -> list[tuple[str, str, int]]:

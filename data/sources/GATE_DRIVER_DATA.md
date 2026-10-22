@@ -28,9 +28,17 @@ record the page in `param_sources`.
 - `output_config`: the output option of the ordering code: `split output` (OUTH/OUTL, VO+/VO-), `Miller clamp` (one
   output plus a clamp pin: UCC53x0M, Si82B41/44/47), `split output + Miller clamp`, `UVLO to GND2` (UCC53x0E),
   `single output`. When omitted it is read from the pinout (rules `derive`); state it for parts without a pinout.
-- `cmti_kv_us`: minimum CMTI.
+- Typical first (owner, 22 Oct 2026): for performance values (`prop_delay_ns`, `cmti_kv_us`, `pwd_ns`, `rise_time_ns`,
+  `fall_time_ns`, `iq_ma`) take the datasheet's **typ** value when it states one; without a typ, take the max (for
+  CMTI, which has no max, the min). Say which in `param_sources` ("typ" / "max"). Prop delay: the slower of tPLH and
+  tPHL typ for the ordering code's option (deglitch filter, supply). Ratings and limits keep their limit value:
+  `isolation_rating_kvrms`, `isolation_class`, `creepage_mm`, `output_supply_v`, `temp_range_c`, `uvlo_v` (the
+  option class of the ordering code). Re-read so far (prop delay, and CMTI where a typ is stated): Skyworks Si82Ax-Fx,
+  Skyworks Si86 (digital isolators), all Novosense gate drivers, Infineon 1ED314x. The other files, and pwd / rise /
+  fall values, still hold what they held until they are re-read (`docs/open_questions.md`).
+- `cmti_kv_us`: CMTI, typ when stated, else min.
 - `isolation_rating_kvrms` (UL 1577 Viso of that ordering code's package: one family can be 2.5 kVrms in LGA13 and
-  5.7 kVrms in SOW16), `isolation_class` likewise per package, `creepage_mm` (package creepage), `output_supply_v` [min, max], `prop_delay_ns` (max),
+  5.7 kVrms in SOW16), `isolation_class` likewise per package, `creepage_mm` (package creepage), `output_supply_v` [min, max], `prop_delay_ns` (typ, else max),
   `temp_range_c` [min, max], `theta_ja_c_w`, `iq_ma`, `rise_time_ns`, `fall_time_ns`, `pwd_ns` (max).
 
 ## Packages

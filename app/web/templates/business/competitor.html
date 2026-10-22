@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ c.name }} · Competitive analytics{% endblock %}
+{% block content %}
+<p class="small"><a href="/business/competitors">← Competitive analytics</a></p>
+<h1>{{ c.name }}</h1>
+<p class="subtitle muted">{{ c.ticker or 'Private company' }} · {{ c.hq }} · profile checked {{ c.updated }}</p>
+<p>{{ c.summary }}</p>
+{% if c.model %}<p><b>How it makes its parts:</b> {{ c.model }}</p>{% endif %}
+
+<h2>Size</h2>
+<ul class="cp-figs">{% for f in c.figures %}
+  <li><b>{{ f.label }}:</b> {{ f.value }} <span class="small muted">· {{ f.source }}{% if f.conf %} · confidence {{ f.conf }}{% endif %}</span></li>{% endfor %}
+</ul>
+
+{% if c.products %}<h2>Products</h2>
+<ul>{% for p in c.products %}<li><b>{{ p.name }}</b> – {{ p.what }}</li>{% endfor %}</ul>{% endif %}
+
+{% if c.markets %}<h2>Markets</h2>
+<ul>{% for m in c.markets %}<li><b>{{ m.name }}</b>{% if m.share %} · {{ m.share }}{% endif %}{% if m.note %} – {{ m.note }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+
+<div class="grid">
+  <section><h2>Strengths</h2><ul>{% for s in c.strengths or [] %}<li>{{ s }}</li>{% endfor %}</ul></section>
+  <section><h2>Weaknesses</h2><ul>{% for s in c.weaknesses or [] %}<li>{{ s }}</li>{% endfor %}</ul></section>
+</div>
+
+{% if c.overlap %}<h2>Where they compete with Skyworks and Qorvo</h2>
+<div class="rp-list">{% for o in c.overlap %}
+  <div class="rp-card cp-ov">
+    <span class="rp-meta small">{{ levels[o.level] }}</span>
+    <b class="rp-title">{{ o.area }}</b>
+    <span class="small"><b>Skyworks:</b> {{ o.skyworks }}</span>
+    <span class="small"><b>Qorvo:</b> {{ o.qorvo }}</span>
+    {% if o.link %}<a class="small" href="{{ o.link }}">See our parts or case →</a>{% endif %}
+  </div>{% endfor %}
+</div>{% endif %}
+
+{% if c.moves %}<h2>Recent moves</h2><ul>{% for m in c.moves %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+{% if c.for_bizdev %}<h2>What it means for us</h2><ul>{% for m in c.for_bizdev %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+
+{% if c.sources %}<details><summary>Sources</summary><ul class="small">{% for s in c.sources %}{% set u = s.split(' - ', 1) %}
+  <li><a href="{{ u[0] }}" rel="noopener noreferrer" target="_blank">{{ u[1] if u|length > 1 else u[0] }}</a></li>{% endfor %}</ul></details>{% endif %}
+{% endblock %}

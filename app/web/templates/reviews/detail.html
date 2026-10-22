@@ -2,14 +2,14 @@
 {% from "business/_growth.html" import learn_tab %}
 {% block title %}{{ page_title(request.url.path, r.parts|first) }}{% endblock %}
 {% macro react(x) %}{% set f = x.fb or {} %}
-<details class="pc-react" id="i-{{ x.key|replace('.', '-') }}" data-title="{{ x.text or x.feature or x.name or x.section or x.maker or x.diagram }}"><summary>{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}<span class="muted">react</span>{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</summary>
+<div class="pc-react pc-inline" id="i-{{ x.key|replace('.', '-') }}" data-title="{{ x.text or x.feature or x.name or x.section or x.maker or x.diagram }}"><span class="pc-state">{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</span>
   <form method="post" action="/reviews/{{ r.slug }}/react" class="pc-form">
     <input type="hidden" name="key" value="{{ x.key }}">
-    <textarea name="comment" rows="2" maxlength="2000" placeholder="Why, or what should change (optional)" aria-label="Comment"></textarea>
+    <input name="comment" maxlength="2000" placeholder="Why (optional)" aria-label="Comment">
     <span class="pc-btns"><button name="verdict" value="agree" class="small-btn">Agree</button><button name="verdict" value="disagree" class="small-btn outline secondary">Disagree</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reset</button>{% endif %}</span>
   </form>
   {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
-</details>{% endmacro %}
+</div>{% endmacro %}
 {% macro conf(x) %}{% if x.conf %}<span class="pc-conf c-{{ x.conf }}" title="confidence{{ ': ' ~ x.conf_was ~ ', one step lower after a reviewer disagreed' if x.conf_was }}">{{ x.conf }}{{ ' ↓' if x.conf_was }}</span>{% endif %}{% endmacro %}
 {% macro cite(x) %}{% if x.src %}{% set ids = x.src if x.src is not string else x.src.split(',') %}{% for s in ids %}{% set s = s|trim %}{% set so = r.src.get(s) %}<a class="rv-cite" href="#src-{{ s }}" title="{{ so.title if so }}{{ ' (' ~ so.note ~ ')' if so and so.note }}">[{{ s }}]</a>{% endfor %}{% endif %}{% endmacro %}
 {% macro tail(x) %} {{ conf(x) }}{{ cite(x) }}{{ react(x) }}{% endmacro %}

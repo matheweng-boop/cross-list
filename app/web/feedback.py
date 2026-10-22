@@ -114,15 +114,20 @@ def feedback_context(path: str = "/", heading: str = ""):
 
 
 @router.get("/manage/feedback", response_class=HTMLResponse)
-def feedback_digest(request: Request, day: str = "", session: Session = Depends(get_session)):
+def feedback_digest(request: Request, day: str = "", archive: bool = False, session: Session = Depends(get_session)):
+    """One list of the open points (owner, 22 Oct 2026); the per-day digests stay reachable as the archive."""
     days = fb.days(session)
+    ctx = {"days": days, "kinds": fb.KINDS, "statuses": fb.STATUSES}
+    if not day and not archive:
+        points = fb.open_points(session)
+        ctx |= {"open_list": points, "files": attachments(session, [i for g in points["groups"] for i in g["ids"]])}
+        return templates.TemplateResponse(request, "manage/feedback.html", ctx)
     try:
         d = date.fromisoformat(day) if day else (days[0][0] if days else datetime.now(UTC).date())
     except ValueError:
         raise HTTPException(400, "Bad date") from None
     digest = fb.digest(session, d)
-    files = attachments(session, [i for g in digest["groups"] for i in g["ids"]])
-    ctx = {"days": days, "digest": digest, "kinds": fb.KINDS, "statuses": fb.STATUSES, "files": files}
+    ctx |= {"digest": digest, "files": attachments(session, [i for g in digest["groups"] for i in g["ids"]])}
     return templates.TemplateResponse(request, "manage/feedback.html", ctx)
 
 

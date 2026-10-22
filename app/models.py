@@ -637,3 +637,19 @@ class TechReviewRequest(Base):
     status: Mapped[str] = mapped_column(String(12), default="new")  # new | in_progress | done | dropped
     review_slug: Mapped[str | None] = mapped_column(String(60))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class AreaRequest(Base):
+    """A request for another application area in the Application library (owner, 22 Oct 2026: the library focuses on
+    automotive, data centers, drones and cellular; other areas are asked for here). Reviewed in Data management >
+    Requests & reviews and listed in the daily inbox."""
+
+    __tablename__ = "area_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    area: Mapped[str] = mapped_column(String(200))
+    why: Mapped[str | None] = mapped_column(Text)
+    author: Mapped[str | None] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(12), default="new")  # new | planned | done | declined
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

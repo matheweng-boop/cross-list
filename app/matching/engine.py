@@ -31,6 +31,7 @@ from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
 UNKNOWN_SEVERITY = 0.25
+PREFERRED_SIDE_WEIGHT = 0.25  # a "match" value off on the preferred side (see ParamDef.prefer) weighs a quarter
 CATEGORY_ORDER = ("fff", "functional", "package")
 CATEGORY_LABELS = {
     "fff": "Drop-in (FFF)",
@@ -224,6 +225,12 @@ def format_value(p: ParamDef, value) -> str:
         return ", ".join(sorted(value)) if value else "none"
     if p.kind == "bool":
         return "yes" if value else "no"
+    if p.key == "function_type":  # timing: a block-diagram function id, shown by its label
+        from app.services.vocab import fn_label
+
+        return fn_label(str(value))
+    if p.key == "pcie_gen":
+        return "none stated" if value == "none" else f"Gen {str(value).removeprefix('gen')}"
     if p.kind == "curve":
         x_unit = f" {p.x_unit}" if p.x_unit else ""
         return ", ".join(f"{_fmt_num(float(y))}{unit} at {_fmt_num(float(x))}{x_unit}" for x, y in sorted(value))
@@ -257,7 +264,8 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
         if rel <= p.tolerance:
             return EQUAL, 0.0
         if p.direction == "match":  # neither way is better (a UVLO threshold): outside the tolerance it differs
-            return DIFFERENT, min(rel, 1.0)
+            safer = p.prefer and (c < r if p.prefer == "lower" else c > r)
+            return DIFFERENT, min(rel, 1.0) * (PREFERRED_SIDE_WEIGHT if safer else 1.0)
         better = c > r if p.direction == "higher" else c < r
         return (BETTER if better else WORSE), min(rel, 1.0)
 
@@ -331,6 +339,8 @@ _FAMILY_PIN_ALIASES = {
         (r"^(aip|ainp)$", "inp"), (r"^(ain|ainn)$", "inn"), (r"^aop$", "outp"), (r"^aon$", "outn"), (r"^ao$", "out"),
         (r"^(adat|data)$", "dout"),
     ),
+    # Oscillators: Skyworks CLK+ / CLK- against SiTime and others' OUT+ / OUT-.
+    "timing": ((r"^clk([+-])$", r"out\1"),),
 }  # fmt: skip
 
 
@@ -513,6 +523,8 @@ def cross(
         category = None
     elif fff_status == FFF_AUTO:
         category = "fff"
+    elif rules.functional_focus and len(deviations) <= max_deviations:
+        category = "functional"  # timing: the package never decides (owner, 22 Oct 2026)
     elif not fit.fits and len(deviations) <= max_deviations and (fit.same_package or not ref.package_locked):
         category = "functional"  # a package-locked reference only accepts its own package
     elif fit.same_package:
@@ -541,16 +553,24 @@ def sort_key(category: str):
     return key
 
 
+def _functional_focus(family: str | None) -> bool:
+    from app.matching.rules import load_all_rules
+
+    rules = load_all_rules().get(family or "")
+    return bool(rules and rules.functional_focus)
+
+
 def rank_key(r: CrossResult):
     """The order of preference across cross types (owner, 21 Oct 2026): a drop-in with the same function always comes
     first; then the fewest priority 1 deviations; with as many deviations, the same package before another package and
     pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom."""
+    pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
         r.category != "fff",
         len(r.deviations),
-        not r.fit.same_package,
-        not r.fit.same_pinout,
+        pkg and not r.fit.same_package,
+        pkg and not r.fit.same_pinout,
         len(r.exceptions),
         r.closeness,
         r.candidate.label,

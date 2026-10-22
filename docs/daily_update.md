@@ -29,9 +29,8 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    converted (list in `data/sources/GATE_DRIVER_DATA.md`), 2–3 cached datasheets per run.
    Owner, 22 Oct 2026: every parameter compares at the best level both datasheets state (typ, then max, then
    min); store min / typ / max per part (CMTI and propagation delay first) and change the comparison (see docs/open_questions.md, Settled), with tests.
-   Owner, 22 Oct 2026, for the next run: replace the HyperPhysics links on the physics topics
-   (data/engineering_rf_notes.yaml, /visuals) with other public sources; profile Murata next; sort the tuner TAM
-   figures by scope (AM/FM tuner only vs radio incl. digital demodulators).
+   Owner, 22 Oct 2026, for the next run: profile Murata next (the HyperPhysics links and the tuner TAM scope were done
+   on update-2026-10-22c).
    Competitive analytics: one more competitor profile per run when there is room (owner's list in
    `docs/open_questions.md` first; `data/business/competitors/_format.yaml`, public sources only).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.

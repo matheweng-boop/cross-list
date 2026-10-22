@@ -29,6 +29,7 @@ def researched() -> tuple[dict, ...]:
             "key": str(e["id"]), "product": e.get("product") or "", "fn": e.get("fn") or "",
             "value": str(e.get("value") or ""), "usd": e.get("usd"), "year": e.get("year"),
             "region": e.get("region") or "", "scope": e.get("scope") or "", "quality": e.get("quality") or "",
+            "coverage": e.get("coverage") or "", "coverage_note": e.get("coverage_note") or "",
             "source": {"title": src.get("title") or "", "publisher": src.get("publisher") or "",
                        "url": src.get("url") or "", "date": str(src.get("date") or "")},
             "origin": e.get("origin") or "", "example": True, "author": None,
@@ -39,6 +40,7 @@ def researched() -> tuple[dict, ...]:
 def _row(r: TamEstimate) -> dict:
     return {"key": f"u{r.id}", "product": r.product, "fn": r.fn or "", "value": r.value, "usd": r.usd,
             "year": r.year, "region": r.region or "", "scope": r.scope or "", "quality": r.quality or "",
+            "coverage": "", "coverage_note": "",
             "source": {"title": r.source_title or "", "publisher": r.source_publisher or "",
                        "url": r.source_url or "", "date": r.source_date or ""},
             "origin": "Added on this page", "example": False, "author": r.author}  # fmt: skip
@@ -120,8 +122,9 @@ def parse_usd(text: str) -> float | None:
 
 def by_function(session: Session) -> dict[str, dict]:
     """Public market size per function, for the Opportunity explorer and the demand score: the estimates linked to a
-    function, without the ones the owner disagreed with. Agreed figures are used when there are any; otherwise every
-    open one. usd = the median, with the low, high, latest year and how many sources (owner, 21 Oct 2026: market size
+    function, without the ones the owner disagreed with. Where some figures cover the whole market (coverage full),
+    only those count (owner, 22 Oct 2026: for tuners, the total radio market). Agreed figures are used when there are
+    any; otherwise every open one. usd = the median, with the low, high, latest year and how many sources (owner, 21 Oct 2026: market size
     comes from public data only, never from commercial inputs)."""
     out: dict[str, dict] = {}
     groups: dict[str, list[dict]] = {}
@@ -130,6 +133,7 @@ def by_function(session: Session) -> dict[str, dict]:
         if e["fn"] and e["usd"] and verdict != "disagree":
             groups.setdefault(e["fn"], []).append({**e, "agreed": verdict == "agree"})
     for fn, rows in groups.items():
+        rows = [e for e in rows if e["coverage"] == "full"] or rows
         use = [e for e in rows if e["agreed"]] or rows
         vals = sorted(float(e["usd"]) for e in use)
         mid = len(vals) // 2

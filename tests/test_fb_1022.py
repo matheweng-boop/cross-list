@@ -153,3 +153,33 @@ def test_price_estimate_variants_sop_and_break_rows(client, session, real, part)
          ("breaks", "100 2.50")]  # fmt: skip
     html = client.get("/pricing/estimate", params=q).text
     assert 'id="price-model"' in html and 'value="1000"' in html and "100 2.50" in html
+
+
+def test_library_focus_areas_and_area_requests(client, session):
+    from datetime import date
+
+    from app.services import blocks, inbox
+
+    assert blocks.focus_of("Quadcopter drone flight controller", "", "Consumer") == ["drones"]
+    assert blocks.focus_of("5G smartphone modem-to-antenna", "", "Consumer") == ["cellular"]
+    assert "automotive" in blocks.focus_of("Body controller", "", "Automotive")
+    html = client.get("/blocks").text
+    order = [html.index(f'id="area-{k}"') for k in ("automotive", "datacenter", "drones", "cellular")]
+    assert order == sorted(order) and order[-1] < html.index('id="other-areas"')
+    assert '<details class="lib-other" id="other-areas">' in html and 'action="/blocks/area-request"' in html
+    r = client.post("/blocks/area-request", data={"area": "Robotics", "why": "Humanoid robots"}, follow_redirects=False)
+    assert r.status_code == 303
+    assert client.post("/blocks/area-request", data={"area": " "}).status_code == 400
+    assert "Robotics" in client.get("/manage/reviews?type=area").text
+    page = client.get("/blocks/area-requests").text
+    assert "Robotics" in page and "Humanoid robots" in page
+    text = inbox.collect(session, date.today())
+    assert "## Application area requests" in text and "Robotics" in text and "why: Humanoid robots" in text
+    rid = int(page.split('action="/blocks/area-requests/')[1].split('"')[0])
+    r = client.post(f"/blocks/area-requests/{rid}", data={"status": "planned"}, follow_redirects=False)
+    assert r.status_code == 303
+    assert client.post(f"/blocks/area-requests/{rid}", data={"status": "x"}).status_code == 400
+    daily = (ROOT / "docs/daily_update.md").read_text()
+    assert ("Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per "
+            "run") in daily
+

@@ -12,13 +12,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import PROJECT_ROOT, get_settings
 from app.db import Base, init_engine
-from app.models import Package, Part
+from app.models import BusinessInput, Package, Part
 from app.services.seed import UNOFFICIAL, UNOFFICIAL_DIR, ensure_local_user, load_file
 
 SYNTHETIC_FILE = PROJECT_ROOT / "data" / "synthetic" / "demo.yaml"
@@ -62,6 +62,8 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
     Base.metadata.create_all(engine)
     with Session(engine) as session:
         ensure_local_user(session)
+        # the owner deleted the retired commercial inputs (ASPs and volumes), 22 Oct 2026: nothing proprietary is kept
+        session.execute(delete(BusinessInput))
         empty = session.scalar(select(func.count(Part.id))) == 0
         if get_settings().load_real_on_start:
             load_real_if_changed(session)

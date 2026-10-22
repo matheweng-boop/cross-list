@@ -27,6 +27,9 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    `rules/timing.yaml`; the cap counts toward the ~5 documents per run). Tick the line when its parts are in.
    Typical first (owner, 22 Oct 2026): re-read prop delay and CMTI typical values for the data files not yet
    converted (list in `data/sources/GATE_DRIVER_DATA.md`), 2–3 cached datasheets per run.
+   Owner, 22 Oct 2026, for the next run: replace the HyperPhysics links on the physics topics
+   (data/engineering_rf_notes.yaml, /visuals) with other public sources; profile Murata next; sort the tuner TAM
+   figures by scope (AM/FM tuner only vs radio incl. digital demodulators).
    Competitive analytics: one more competitor profile per run when there is room (owner's list in
    `docs/open_questions.md` first; `data/business/competitors/_format.yaml`, public sources only).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.

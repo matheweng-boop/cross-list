@@ -347,7 +347,8 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
 
         grade = opn[len(m.group(0)) : len(m.group(0)) + 2]
         t_option = not base_name.startswith(("Si86S", "Si86P")) and grade[1:2] == "T"
-        high_cmti = base_name.startswith("Si86S") and grade[:1] in ("F", "H")
+        high_cmti = base_name.startswith("Si86S") and grade[:1] in ("F", "H")  # also the 36 ns deglitch option
+        low_power = base_name.startswith("Si86SL")
         automotive = bool(re.search(r"-A[SU]\d?$", opn)) or _flag(f.get("AEC-Q100"))
 
         params: dict = {
@@ -372,9 +373,15 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
                 value = fact["t_option"]
             elif high_cmti and "high_cmti" in fact:
                 value = fact["high_cmti"]
+            elif high_cmti and "deglitch" in fact:  # Si86S F/H codes: 36 ns deglitch filter (timing, data rate)
+                value = fact["deglitch"]
+            elif low_power and "low_power" in fact:  # Si86SLx: low-power mode timing
+                value = fact["low_power"]
             else:
                 value = fact.get("value")  # facts with only `t_option` apply to T parts only
-            if value is None or (key in params and params[key] is not None and "value" not in fact):
+                if value is None or (key in params and params[key] is not None and "value" not in fact):
+                    continue
+            if value is None:
                 continue
             params[key] = value
             sources[key] = f"{ds_name} p.{sheet.find(fact['evidence'])}"

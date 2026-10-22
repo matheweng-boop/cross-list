@@ -31,6 +31,7 @@ from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
 UNKNOWN_SEVERITY = 0.25
+PREFERRED_SIDE_WEIGHT = 0.25  # a "match" value off on the preferred side (see ParamDef.prefer) weighs a quarter
 CATEGORY_ORDER = ("fff", "functional", "package")
 CATEGORY_LABELS = {
     "fff": "Drop-in (FFF)",
@@ -263,7 +264,8 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
         if rel <= p.tolerance:
             return EQUAL, 0.0
         if p.direction == "match":  # neither way is better (a UVLO threshold): outside the tolerance it differs
-            return DIFFERENT, min(rel, 1.0)
+            safer = p.prefer and (c < r if p.prefer == "lower" else c > r)
+            return DIFFERENT, min(rel, 1.0) * (PREFERRED_SIDE_WEIGHT if safer else 1.0)
         better = c > r if p.direction == "higher" else c < r
         return (BETTER if better else WORSE), min(rel, 1.0)
 

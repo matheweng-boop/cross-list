@@ -79,7 +79,7 @@ def test_compare_downloads(client):
     a, b = ids(client, "SR8233", "SA21520")
     x = client.get(f"/compare.xlsx?ids={a},{b}&baseline={a}")
     ws = load_workbook(io.BytesIO(x.content)).active
-    assert any(c.value == "Propagation delay (max)" for row in ws.iter_rows() for c in row)
+    assert any(c.value == "Propagation delay (typ, else max)" for row in ws.iter_rows() for c in row)
     text = client.get(f"/compare.csv?ids={a},{b}").text
     assert "SynAlpha SA21520" in text
     assert client.get("/compare.csv?ids=").status_code == 400

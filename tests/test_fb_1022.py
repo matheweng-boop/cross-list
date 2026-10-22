@@ -96,3 +96,17 @@ def test_feedback_window_has_dictation(client):
     assert '<p class="fb-dict small" hidden>' in html and "fb-mic" in html  # shown by the script only if supported
     js = (ROOT / "app/web/static/feedback.js").read_text()
     assert "window.SpeechRecognition || window.webkitSpeechRecognition" in js and "if (!SR || !root) return;" in js
+
+
+def test_research_lists_product_ideas_as_feasibility_studies(client):
+    html = client.get("/business/reports").text
+    assert "Product idea" in html and "Feasibility study" in html
+    assert ">Report</span>" not in html and ">Type</span>" not in html  # no report / idea split
+    assert ">Application</a>" in html and ">Feasibility</a>" in html
+    assert "Reports <small" not in client.get("/business/reports?view=feasibility").text
+    page = client.get("/business/reports/filters-1-11ghz").text
+    assert "Feasibility study" in page and ">Report</span>" not in page
+    r = client.post("/business/schedule", data={"title": "Filters", "source": "research:filters-1-11ghz"},
+                    follow_redirects=False)  # fmt: skip
+    assert r.status_code == 303
+    assert "Business case review (scheduled)" in client.get("/business/reports/filters-1-11ghz").text

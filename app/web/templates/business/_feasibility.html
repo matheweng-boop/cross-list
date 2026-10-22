@@ -1,4 +1,7 @@
 {# Feasibility of a product idea (reports.yaml: feasibility 1–3), shared by Research & ideas and the case page. #}
 {% set FEAS = {1: ('Close to the portfolio', 'Firmware, packaging or existing dies'), 2: ('In between', 'A new chip from technology we already have'), 3: ('Out of the box', 'New technology or a market nobody plays in yet')} %}
 {% macro feas(n, why='') %}{% if n %}<span class="fz fz-{{ n }}" title="{{ FEAS[n][1] }}{{ ': ' ~ why if why }}">{{ n }} · {{ FEAS[n][0] }}</span>{% endif %}{% endmacro %}
+{# Owner, 22 Oct 2026: everything here is a product idea; until it goes through a business case review (scheduled or
+   started from Research & ideas) it is a feasibility study. The YAML "kind" field stays but is not shown. #}
+{% macro stage(sc) %}<span class="rp-kind k-idea">Product idea</span> <span class="rp-stage{{ ' on' if sc }}">{% if sc %}Business case review{% if sc.status == 'scheduled' %} (scheduled){% elif sc.status == 'done' %} (done){% endif %}{% else %}Feasibility study{% endif %}</span>{% endmacro %}
 {% macro legend() %}<p class="small fz-legend">Feasibility: {% for n, (label, help) in FEAS.items() %}<span class="fz fz-{{ n }}">{{ n }} · {{ label }}</span> <span class="muted">{{ help }}</span>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endmacro %}

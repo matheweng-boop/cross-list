@@ -119,6 +119,15 @@ def test_case_only_for_a_part_we_cannot_cross(client, session):
 
 
 def test_no_case_when_we_can_cross_it(client, real):  # noqa: F811
-    comp = ids(client, "ISO7741DBQR")
-    for html in (client.get(f"/parts/{comp}").text, client.get(f"/parts/{comp}/walk?upto=5").text):
+    """Owner, 22 Oct 2026: a part counts as crossed only with a drop-in; our own parts never get the button."""
+    dropin = ids(client, "SC141")  # SR8641 (ours) is a drop-in
+    for html in (client.get(f"/parts/{dropin}").text, client.get(f"/parts/{dropin}/walk?upto=5").text):
         assert "No case needed" in html and "Start a prelim case" not in html
+    functional = ids(client, "ISO7741DBQR")  # only functional crosses (other package): not crossed
+    page = client.get(f"/parts/{functional}").text
+    assert "Start a prelim case" in page and "No drop-in of ours" in page and "closest" in page
+    walk = client.get(f"/parts/{functional}/walk?upto=5").text
+    assert "Start a prelim case" in walk and "No drop-in of ours" in walk
+    ours = ids(client, "SR8641")
+    for html in (client.get(f"/parts/{ours}").text, client.get(f"/parts/{ours}/walk?upto=5").text):
+        assert "Start a prelim case" not in html

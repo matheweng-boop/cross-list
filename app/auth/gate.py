@@ -18,7 +18,7 @@ from app.web.urls import local_path
 
 COOKIE = "crosslist_auth"
 MAX_AGE = 30 * 24 * 3600
-OPEN_PATHS = ("/login", "/healthz", "/static/")
+OPEN_PATHS = ("/login", "/healthz", "/static/", "/api/inbox")  # /api/inbox checks its own read-only key
 
 router = APIRouter()
 

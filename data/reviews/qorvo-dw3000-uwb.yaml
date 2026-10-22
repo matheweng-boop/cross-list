@@ -1,0 +1,287 @@
+# Technology review: Qorvo ultra-wideband (UWB), DW3000 family and its automotive / SoC successors.
+# Format: review_schema.md (data/reviews/<slug>.yaml). conf: high = primary document read; med = trade press, vendor
+# article or our reading of a primary document; low = search snippet or our judgement. "est" = our estimate.
+# Datasheet note: Qorvo's own site may not be requested. A public copy of the DW3000 datasheet (v1.3, Sep 2022) was found
+# on GitHub and is the base of the walk-through. No public datasheet was found for the automotive QPF5100Q / DW3300Q or
+# the QM35825 SoC, so where those matter we use competitor documents (NXP Trimension fact sheets, ST64UWB launch details)
+# and say so in the text.
+slug: qorvo-dw3000-uwb
+title: "Qorvo DW3000 UWB: a radio that measures distance and angle to within centimetres, and cannot be fooled by a relay"
+status: draft
+date: 2026-10-21
+maker: Qorvo
+family: uwb_soc
+parts: [DW3110, DW3120, DW3210, DW3220, QM33120W, DW3300Q, QPF5100Q, QM35825, DWM3000, DWM3001C]
+app_area: Wireless connectivity and positioning
+question: "What does Qorvo's UWB chip solve, how does it measure distance and angle, and which datasheet numbers matter for a car key, a phone or tag, and indoor positioning?"
+
+in_brief:
+  - {text: "UWB answers one question very well: how far away is that device, and in which direction? It measures the radio signal's flight time, which gives about 10 cm accuracy, where Bluetooth signal strength gives about a metre or worse.", conf: high, src: s1}
+  - {text: "We review the DW3000 family (DW3110 / DW3210 one antenna; DW3120 / DW3220 two antennas for angle). Its full datasheet is public, and the same radio core sits in Qorvo's newer parts: the QM33120W transceiver, the automotive DW3300Q and QPF5100Q, and the QM35825 SoC.", conf: med, src: s1}
+  - {text: "The strongest application is the car's digital key (CCC Digital Key). A scrambled timestamp (STS, IEEE 802.15.4z) means a thief cannot relay or fake the signal to make the key look closer than it is.", conf: high, src: s1}
+  - {text: "Key numbers (DW3110, typical): channels 5 (6.5 GHz) and 9 (8.0 GHz); sensitivity -100 dBm on channel 5; ranging ±6 cm after calibration; angle about ±5° with two antennas; 72-88 mA while receiving, 260 nA in deep sleep; 38.4 MHz crystal; SPI up to 36 MHz; -40 to +85 °C.", conf: high, src: s1}
+  - {text: "Where Qorvo's own datasheet is not public (the automotive QPF5100Q, the QM35825 SoC), we explain using competitor documents (NXP Trimension SR150 / NCJ29D5, ST ST64UWB) and say so for each point.", conf: high, src: s4}
+  - {text: "For Skyworks the chip is a door opener. UWB power is capped by regulation, so range comes from the receive side: the antenna switch, LNA and filters around the chip. That is our front-end business (QM14068 LNA/switch, SKY5A2108 switch).", conf: med, src: s15}
+
+problem:
+  summary: >-
+    Many products need to know exactly where a person or device is, and they need to trust that answer. A car should unlock
+    only when its owner's phone is really at the door. A phone should point to a lost tag. A factory should track a pallet to
+    within a few centimetres. Older radios guess distance from signal strength, and a thief can fool that by relaying the
+    signal. UWB measures the time the signal takes to travel, and that time cannot be shortened.
+  points:
+    - {text: "Relay attacks: thieves already open cars with keyless entry by relaying the key's signal from inside the house to the car. A key that measures time of flight securely defeats this, because a relay can only add delay, never remove it. NXP and Qorvo both sell UWB for car access on this argument.", conf: high, src: s5}
+    - {text: "Bluetooth and Wi-Fi place an item only to within about 150 cm, even in ideal conditions (NXP's figure). UWB places it to about 10 cm. Signal strength (RSSI) changes with the body, a pocket or a wall, so it cannot tell 'at the door' from 'in the kitchen'.", conf: med, src: s4}
+    - {text: "Secure distance needs more than accuracy. Older UWB (IEEE 802.15.4-2011) could be attacked at the physical layer ('Cicada', 'ghost peak' attacks that make the receiver see a fake early pulse). IEEE 802.15.4z added the scrambled timestamp sequence (STS) to stop this.", conf: high, src: s8}
+    - {text: "Indoor positioning: GPS does not work indoors. Anchors fixed on walls can locate tags to centimetres by time difference of arrival (TDoA), with fewer anchors than BLE needs.", conf: med, src: s4}
+    - {text: "Phones and cars must work together across brands. That needs a common standard (IEEE 802.15.4z), common profiles (FiRa for devices, CCC Digital Key for cars) and, for iPhones, compatibility with Apple's U1/U2 chip.", conf: high, src: s11}
+
+concept:
+  summary: >-
+    A UWB radio sends very short pulses (about 2 ns) spread over a 500 MHz wide channel, at a power so low that it sits
+    under the noise of other radios (-41.3 dBm/MHz, about half a milliwatt in total). A short pulse gives a sharp arrival
+    time. Light travels 30 cm in one nanosecond, so a radio that timestamps arrivals to a fraction of a nanosecond can
+    measure distance to centimetres. Two devices swap messages and each notes when it sent and received (two-way ranging).
+    A second antenna adds direction: the tiny phase difference between the two antennas gives the angle. A secret,
+    scrambled pulse pattern (STS) makes sure the timestamp comes from the real partner.
+  blocks:
+    - {name: "Impulse-radio UWB transmitter", what: "A pulse generator, mixer and PLL make 2 ns pulses on channel 5 (6489.6 MHz) or channel 9 (7987.2 MHz), each 499.2 MHz wide.", why: "Short pulses give a sharp time of arrival. Spreading the power over 500 MHz keeps the radio under the strict UWB power limit.", conf: high, src: s1}
+    - {name: "Wideband receiver (LNA, down-conversion, baseband)", what: "A low-noise amplifier and direct down-conversion to baseband, then a digital receiver that finds the first arriving pulse (leading edge) in the channel impulse response.", why: "Inside a room or car the signal bounces. The first path is the true distance and the later echoes must be ignored. This is why UWB copes well with multipath.", conf: high, src: s1}
+    - {name: "Precise timestamps and two-way ranging (TWR)", what: "The chip stamps each frame's send and receive time. In double-sided TWR, three frames (poll, response, final) cancel most of the clock error between the two devices.", why: "Distance = flight time x speed of light. 1 ns of error is 30 cm, so the timestamps and the crystal decide the accuracy.", conf: high, src: s1}
+    - {name: "TDoA mode", what: "A tag sends one short message. Several anchors with synchronised clocks note when it arrives, and the differences in arrival time give the position.", why: "The tag only transmits, so a coin-cell tag lasts long and many tags can share the air. This suits warehouses, hospitals and factories.", conf: high, src: s1}
+    - {name: "Scrambled timestamp sequence (STS, IEEE 802.15.4z)", what: "A pseudo-random pulse sequence made by an AES-128 generator. Only devices that share the key can predict it, and the receiver takes its timestamp from the STS.", why: "An attacker cannot make the signal look earlier (closer) without knowing the sequence. This is the basis of a relay-proof car key. The chip also has hardware AES-256.", conf: high, src: s1}
+    - {name: "Second antenna port and PDoA (angle of arrival)", what: "On DW3120 / DW3220 the receiver switches between two antenna ports and measures the phase difference of the same signal (PDoA). An antenna spacing of about half a wavelength (about 2 cm) turns this into an angle.", why: "Distance plus angle from one anchor gives a position, which is how a phone points to a tag or how a car knows which side the driver is on. PDoA works only when STS is on.", conf: high, src: s1}
+    - {name: "Host interface and MAC help", what: "A 4-wire SPI slave (up to 36 MHz), CRC, frame filtering, an IRQ line and GPIOs. The ranging protocol (FiRa, CCC, Apple) runs in the host MCU on the DW3000. Newer Qorvo SoCs (QM35825, QPF5100Q) put an MCU and memory on the chip.", why: "The DW3000 is a transceiver only and needs an MCU beside it. That costs board space but leaves software choice to the customer. On SoCs the stack runs on the chip.", conf: med, src: s1}
+    - {name: "Power management, always-on memory, sensors", what: "Runs directly from a 2.4-3.6 V coin cell or from a PMIC. It has 256 bytes of always-on memory to keep its configuration in sleep, an EXTON pin to switch off an external DC-DC, and temperature and voltage monitors.", why: "Tags and fobs live on coin cells. The chip sleeps at 260 nA and wakes in about 1 ms.", conf: high, src: s1}
+    - {name: "External front-end control (EXTPA, EXTTXE, EXTRXE pins)", what: "GPIOs that switch an external power amplifier, LNA or antenna switch in time with transmit and receive.", why: "This is the socket for a front-end module (Qorvo QM14068 LNA/switch, QM14070 PA; Skyworks switches) when range matters, for example at a car anchor.", conf: high, src: s1}
+
+datasheet:
+  - section: "Which datasheet we use"
+    reading: "This walk-through uses the DW3000 datasheet v1.3 (Sep 2022). It is Qorvo's (Decawave's) own document, but the copy we read is public on GitHub and is not from Qorvo's site. No public datasheet was found for the automotive QPF5100Q / DW3300Q or the QM35825 SoC. For their automotive and SoC features we use competitor documents (NXP NCJ29D5 and SR150 fact sheets, ST64UWB launch details) and label each such point."
+    watch_out: "A newer revision may exist. Check figures against Qorvo's current datasheet before quoting them to a customer."
+    conf: high
+    src: s1
+  - section: "Front page and variants table (Table 1)"
+    reading: "Four variants: DW3110 (WLCSP, 1 antenna), DW3120 (WLCSP, 2 antennas, PDoA), DW3210 (QFN 5 x 5 mm, 1 antenna), DW3220 (QFN, PDoA). All are -40 to +85 °C. The DW3000 is backward compatible with the older DW1000 on channel 5."
+    watch_out: "The BizDev catalogue shows DW3120 and DW3220 as discontinued. Qorvo's dual-port QM33120W (WLCSP, 802.15.4z) looks like the follow-on (est)."
+    conf: high
+    src: s1
+  - section: "Channels and spectrum (Tables 6, 11, 16; Figures 4-5)"
+    reading: "Channel 5 = 6489.6 MHz and channel 9 = 7987.2 MHz, each 499.2 MHz wide. The transmit spectrum plots show the shape against the regulatory mask. Channel 9 is the one that matters for cars."
+    watch_out: "The car-key body CCC says channel 5 is being lost to Wi-Fi 6E/7 and mobile (IMT) use, and that channel 9 is its only remaining global channel. Channel 9 support is a must."
+    conf: high
+    src: s10
+  - section: "Transmit power (Table 11, Figures 6-7)"
+    reading: "Output is programmable up to about -31 dBm/MHz (DW3110), in a 30 dB range with coarse and fine steps. Regulators allow -41.3 dBm/MHz mean e.i.r.p., so the extra ~10 dB of headroom makes up for antenna and board losses. Power drifts only 0.01-0.02 dB/°C."
+    watch_out: "The QFN versions give about 2 dB less, and the PDoA versions lose another 1.2 dB (ch5) or 1.4 dB (ch9) in the internal switch. More TX power is not allowed, so range must come from the receiver."
+    conf: high
+    src: s1
+  - section: "Receiver sensitivity (Tables 7-9)"
+    reading: "Read it in dBm per 500 MHz at 1 % packet error. Typical values: -100 dBm (ch5, 850 kb/s, long preamble), -94.3 dBm (ch5, 6.8 Mb/s with STS), -98.6 dBm (ch5, ranging-only frames with no data). Channel 9 is about 1 dB worse."
+    watch_out: "The conditions matter (preamble length, data rate, STS). Compare chips at the same settings. The PDoA variants are 1.2-1.4 dB less sensitive. As a comparison, NXP quotes -97 dBm at 10 % PER for SR150, so the numbers are not like for like."
+    conf: high
+    src: s1
+  - section: "Link budget (Table 12)"
+    reading: "This shows how many dB of path loss the link can take at the legal power with 0 dBi antennas: 85-91 dB for data frames and up to 97-98 dB for ranging frames with no data."
+    watch_out: "It assumes no loss between the antenna and the pin. Every dB lost in a switch, filter or cable comes straight off this budget. That is where a low-loss switch or an external LNA helps."
+    conf: high
+    src: s1
+  - section: "Blocking and linearity (Table 6, Figures 8-9)"
+    reading: "In-band blocking is -80 dBm and out-of-band blocking is -17 dBm (3 dB desense). Input P1dB is -25 dBm on ch5 and -32 dBm on ch9. The absolute maximum RF input is +14 dBm."
+    watch_out: "In a phone or car, Wi-Fi 6E/7 at 6-7 GHz transmits close by. The out-of-band figure tells you how much filtering is needed. Europe's car-access standard (ETSI EN 302 065-3-1) also sets anchor blocking tests (-85 / -50 dBm interferers)."
+    conf: high
+    src: s1
+  - section: "Location accuracy (Table 14, Figures 10-11)"
+    reading: "Ranging is ±6 cm after calibration (about ±15 cm without), with a 1.5 cm standard deviation in line of sight. PDoA is ±10°, which gives an angle of arrival of about ±5°."
+    watch_out: "These are line-of-sight bench numbers. A body or car pillar in the path adds error. PDoA needs STS on and more than 5 ppm of frequency offset between the two devices. Calibration per board is needed."
+    conf: high
+    src: s1
+  - section: "Current in each mode (Table 5, section 6.4)"
+    reading: "Deep sleep 260 nA; sleep 850 nA; idle on the RC clock 8 mA; idle with the PLL on 18 mA (ch5) or 32 mA (ch9); continuous receive 72 mA (ch5) or 88 mA (ch9); transmit peak 23-35 mA per rail. A single frame averages 14-19 mA. One ranging exchange needs about 1 ms of start-up and three frames of about 170 µs each."
+    watch_out: "The receiver dominates. Channel 9 costs more than channel 5. A buck converter to 1.6 V on VDD3 cuts the power a lot. Use the duty cycle of the application (how often it ranges) to estimate battery life, not the peak current."
+    conf: high
+    src: s1
+  - section: "Host interface (section 4.9)"
+    reading: "A 4-wire SPI slave up to 36 MHz (20 MHz in CRC mode). GPIO5 and GPIO6 set the SPI mode at power-up. There is no daisy chain. An IRQ pin tells the host when a frame has arrived."
+    watch_out: "The DW3000 needs a host MCU and a software driver. FiRa, CCC or Apple protocols are firmware on that MCU. Qorvo SoCs (QM35825, QPF5100Q) and NXP SR150 run the stack on the chip (NXP: FiRa UCI over SPI)."
+    conf: high
+    src: s4
+  - section: "Crystal and clock (Table 10, section 4.10)"
+    reading: "A 38.4 MHz crystal (10 pF load, ESR up to 60 Ω, ±20 ppm) with on-chip trimming of ±20 ppm. A TCXO can drive the clock input instead; its phase-noise limits are -132 dBc/Hz at 1 kHz and -145 dBc/Hz at 10 kHz."
+    watch_out: "Clock error turns directly into distance error. Trim each board in production (store the value in OTP), or use a TCXO for anchors. ST64UWB uses a 32 MHz crystal, so the parts are not drop-in replacements."
+    conf: high
+    src: s1
+  - section: "Antenna ports and RF pins (Table 2)"
+    reading: "RF1 and RF2 are 50 Ω single-ended ports. RF1 needs a 2 pF series capacitor. On single-port variants RF2 is terminated in 50 Ω. A TX/RX switch is built in."
+    watch_out: "The 50 Ω trace, the stack-up (section 7.3) and the antenna's bandwidth (more than 500 MHz) decide real performance. For angle, the two antennas must be matched in phase."
+    conf: high
+    src: s1
+  - section: "Package, temperature, ESD, grade (Tables 1, 15; section 9)"
+    reading: "WLCSP52 is 3.1 x 3.5 mm and QFN40 is 5 x 5 mm, both MSL 1. ESD is 2 kV HBM and 500 V CDM. The DW3000 is rated -40 to +85 °C (industrial). The automotive DW3300Q goes to +105 °C in a 5.16 x 5.16 mm package (catalogue)."
+    watch_out: "The DW3000 is not automotive qualified. Cars need DW3300Q or QPF5100Q (AEC-Q). For comparison, ST64UWB-A is AEC-Q100 grade 2, -40 to +115 °C, HWQFN40 6 x 6 mm with wettable flanks (ST data, reported by cnx-software)."
+    conf: med
+    src: s2
+
+key_features:
+  - feature: "Channels 5 and 9"
+    value: "6489.6 MHz and 7987.2 MHz, each 499.2 MHz wide"
+    meaning: "The chip works on the two UWB channels that phones and cars use worldwide."
+    why_it_matters: "Channel 9 is the only global channel left for car keys (CCC). Having both channels keeps the chip compatible with phones and older tags."
+    applications: [Car digital key, Phone and tag finding, Indoor positioning]
+    conf: high
+    src: s1
+  - feature: "IEEE 802.15.4z STS secure ranging"
+    value: "AES-128 scrambled timestamp sequence; AES-256 hardware engine"
+    meaning: "Distance is measured on a secret pulse pattern that only the paired devices know."
+    why_it_matters: "This defeats relay and distance-faking attacks. Without it a UWB car key is no better than an old keyless fob. It is the core of CCC Digital Key and of FiRa secure ranging."
+    applications: [Car digital key, Smart door lock, Secure payment and access]
+    conf: high
+    src: s1
+  - feature: "Ranging accuracy"
+    value: "±6 cm after calibration (about ±15 cm without); 1.5 cm standard deviation, line of sight"
+    meaning: "The measured distance is within a hand's width of the truth."
+    why_it_matters: "It lets a car tell inside from outside, or driver's side from passenger side, and lets a factory track a pallet to its rack. BLE signal strength gives about a metre at best."
+    applications: [Car digital key, Indoor positioning, Asset tracking]
+    conf: high
+    src: s1
+  - feature: "Two antenna ports for angle (PDoA)"
+    value: "DW3120 / DW3220: PDoA ±10°, AoA about ±5°; costs 1.2-1.4 dB of sensitivity and TX power"
+    meaning: "With two antennas the chip also tells which direction the other device is in."
+    why_it_matters: "A phone can show an arrow to a tag. A single anchor can give a position instead of only a distance. On SR150, NXP goes further with 3D angle from three antennas (software support), so that is the benchmark."
+    applications: [Phone and tag finding, Car digital key, Indoor positioning]
+    conf: high
+    src: s1
+  - feature: "Receiver sensitivity and link budget"
+    value: "-100 dBm (ch5, 850 kb/s); -94.3 dBm (6.8 Mb/s, STS); link budget 85-98 dB at -41.3 dBm/MHz"
+    meaning: "This is how weak a signal the chip can still read, and how much loss the link can take."
+    why_it_matters: "UWB power is capped by law, so range depends on the receiver. A phone in a back pocket at a car pillar is the hard case. Europe's car-access standard even sets a minimum receiver sensitivity."
+    applications: [Car digital key, Indoor positioning]
+    conf: high
+    src: s1
+  - feature: "Low-power modes"
+    value: "Deep sleep 260 nA; sleep 850 nA; wake-up about 1 ms; single-frame TX/RX 14-19 mA average"
+    meaning: "The chip uses almost nothing while it waits and wakes fast to range."
+    why_it_matters: "Tags, fobs and trackers run for months or years on a coin cell. NXP's SR040 is built for the same CR2032 use."
+    applications: [Phone and tag finding, Asset tracking, Car key fob]
+    conf: high
+    src: s1
+  - feature: "Receive current"
+    value: "72 mA (ch5) / 88 mA (ch9) continuous; idle with PLL 18 / 32 mA"
+    meaning: "Listening costs most of the energy."
+    why_it_matters: "A car anchor or a phone listens often. The scheduling (how often and how long it listens) decides battery drain in the phone and quiescent current in a parked car. The 802.15.4ab narrowband assist aims to cut this."
+    applications: [Car digital key, Phone]
+    conf: high
+    src: s1
+  - feature: "Transceiver only (DW3000) vs SoC (QM35825, QPF5100Q)"
+    value: "DW3000: SPI up to 36 MHz, needs a host MCU. QPF5100Q: on-chip MCU with 2 MB flash and 256 KB SRAM (catalogue)"
+    meaning: "On the DW3000 the ranging software runs on a separate microcontroller. On the SoCs it runs on the UWB chip."
+    why_it_matters: "SoCs cut parts and certification work for car anchors and tags. Rivals (NXP SR150 with Cortex-M33, ST64UWB with Cortex-M85) are SoCs, so the transceiver-only DW3000 fits best where an MCU is already on the board."
+    applications: [Car digital key, Indoor positioning, Asset tracking]
+    conf: med
+    src: s3
+  - feature: "Radar mode on the same chip (QPF5100Q, QM35825)"
+    value: "Child presence, kick-to-open and occupancy (QPF5100Q); gesture and presence (QM35825)"
+    meaning: "The chip can also listen to its own echoes to sense breathing or movement, like a small radar."
+    why_it_matters: "One interior anchor can do both key ranging and the Euro NCAP child-presence check, so no separate 60 GHz radar is needed (see case auto-uwb-cpd)."
+    applications: [Car child presence detection, Smart home presence]
+    conf: low
+    src: s14
+  - feature: "External front-end control pins"
+    value: "EXTPA, EXTTXE, EXTRXE GPIOs"
+    meaning: "The chip can switch an external amplifier, LNA or antenna switch at the right moment."
+    why_it_matters: "This is where a Skyworks/Qorvo front end plugs in to add range at hard car anchor positions or in industrial anchors."
+    applications: [Car digital key, Indoor positioning]
+    conf: high
+    src: s1
+  - feature: "Crystal and calibration"
+    value: "38.4 MHz, ±20 ppm with ±20 ppm on-chip trim; OTP memory for calibration"
+    meaning: "The reference clock sets the timing, and each board can be trimmed once in the factory."
+    why_it_matters: "Uncorrected clock error becomes distance error. Production calibration is part of the cost of a UWB product."
+    applications: [Indoor positioning, Car digital key]
+    conf: high
+    src: s1
+  - feature: "Automotive grade"
+    value: "DW3300Q: -40 to +105 °C, 5.16 x 5.16 mm; QPF5100Q: automotive qualified (catalogue). DW3000: -40 to +85 °C only"
+    meaning: "Only the Q parts are made and tested for cars."
+    why_it_matters: "Car anchors sit in doors, pillars and bumpers. ST64UWB-A goes to +115 °C (grade 2), which sets the bar for the next generation."
+    applications: [Car digital key, Car child presence detection]
+    conf: high
+    src: s2
+
+applications:
+  - {diagram: "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)", role: "Fills the 'UWB anchor(s), outside' and 'UWB anchor(s), inside' uwb_soc blocks with DW3300Q or QPF5100Q in place of NXP NCJ29D5/D6. The 'UWB antenna / external front end' block takes QM14068 (LNA/switch) and SKY5A2108 (switch). The inside anchor's radar mode is the case auto-uwb-cpd, and the next-generation chip is the case auto-uwb-15-4ab.", conf: med}
+  - {diagram: "Automotive phone-as-a-key (PaaK) module with BLE satellite modules (TI)", role: "TI's diagram answers 'ranging technology' with BLE RSSI or channel sounding. Choosing 'UWB' or 'BLE + UWB' adds a Qorvo UWB anchor beside each BLE satellite for relay-proof distance.", conf: med}
+  - {diagram: "Smartphone peripheral sockets (Wi-Fi FEM, NFC + SE, UWB, charging, protection) (NXP)", role: "The UWB socket (uwb_soc). Big phone makers use in-house chips (Apple U1/U2, Samsung), so the open socket is in other Android phones. Qorvo had a design in Google Pixel 6 Pro (snippet). A UWB FEM can sit next to it.", conf: low}
+  - {diagram: "Mobile Wi-Fi 7 + Bluetooth + UWB connectivity (FastConnect 7900) (Qualcomm)", role: "Here UWB is built into Qualcomm's connectivity chip, so this replaces a separate Qorvo UWB chip. Only the 'UWB antennas / front end' block (uwb_fem, rf_switch) stays open to us.", conf: med}
+  - {diagram: "Smart door lock (NFC controller, MIFARE credentials, BLE / Wi-Fi, motor driver) (NXP)", role: "The 'UWB hands-free' credential option adds a UWB chip (DW3000 + host MCU, or a QM35 SoC) so the lock opens as the phone approaches and not when it is only nearby on the other side of the door.", conf: med}
+  - {diagram: "5G RedCap smartwatch with satellite NB-NTN, UWB and dual-band GNSS (Snapdragon Wear Elite) (Qualcomm)", role: "The 'UWB (digital keys, proximity)' uwb_soc block: a low-power WLCSP UWB chip (DW3110 / QM33120W class) for a watch used as a car key or finder.", conf: med}
+  - {diagram: "Multiparameter patient monitor, mainstream MPU-based (measurement modules, Wi-Fi / BLE / UWB / NFC) (NXP)", role: "The 'UWB (optional)' block and the UWB tags: indoor positioning of patients and equipment by TDoA, the DW3000's original RTLS market (modules DWM3000 / DWM3001C).", conf: med}
+
+competitors:
+  - {maker: NXP, parts: "Trimension NCJ29D5 / NCJ29D6 (automotive), SR150 / SR040 (IoT), SR250 (newer IoT/mobile)", how: "As on NXP's SR150 fact sheet: an SoC with Cortex-M33, a CoolFlux DSP for ToF, AoA and radar, channels 5, 6, 8 and 9, HPRF mode, TX peak above +10.5 dBm, RX -97 dBm at 10 % PER, NF 4 dB, ±10 cm, dual Rx and 3D AoA with three antennas, MFi certified for Apple U1, and FiRa UCI over SPI. NCJ29D5 (2019 fact sheet) is a 6.0-8.5 GHz automotive SoC with integrated power management and crypto. NXP also sells the BLE, NFC, secure element and MCU, so it offers the full car-access set. SR250 is not covered by our documents.", conf: high, src: s4}
+  - {maker: STMicroelectronics, parts: "ST64UWB-A100, ST64UWB-A500, ST64UWB-C100", how: "The first 802.15.4ab chips with narrowband assist (5.7-6.4 GHz), sampling since Mar 2026. Cortex-M85, 18 nm FD-SOI (+3 dB link budget claimed), channels 5, 6, 8, 9, 10 and 12, BPRF and HPRF, 2 antenna ports, FDCAN, CCC and ICCE support, AEC-Q100 grade 2 at -40 to +115 °C. The A500 adds radar (child presence, kick).", conf: med, src: s6}
+  - {maker: Apple, parts: "U1, U2 (in-house)", how: "Apple's own chips in iPhone, Watch and AirTag. They are not sold, but they set the phone side that every car and accessory must interoperate with. Qorvo and NXP both have certified U1 interoperability.", conf: med, src: s16}
+  - {maker: Samsung, parts: "Exynos Connect U100 (phones/tags), Exynos Auto UA100 (cars, sampling 2025)", how: "In-house for Galaxy phones and SmartTags. UA100 is a 28 nm single-chip automotive UWB with RF, baseband, NVM and PMU. The facts come from search snippets only.", conf: low, src: s18}
+  - {maker: Qualcomm, parts: "FastConnect 7900 (Wi-Fi 7 + BT + UWB in one chip)", how: "Puts UWB inside the phone's connectivity chip, which removes the separate UWB socket in Snapdragon phones.", conf: med, src: s20}
+  - {maker: "Infineon (with 3db Access)", parts: "AIROC UWB (no named automotive part found)", how: "Infineon bought 3db Access, a secure-ranging UWB IP company, in 2023 and targets car access and child presence. No public part datasheet was found.", conf: low, src: s18}
+  - {maker: "Calterah", parts: "Dubhe UWB SoC", how: "An 802.15.4ab chip (2T4R) with positioning and radar in one SoC, shown at CES 2026 with Rohde & Schwarz test equipment. It comes from a 60 GHz radar supplier with many car makers as customers.", conf: med, src: s19}
+  - {maker: "Ceva and others (IP licensing)", parts: "UWB IP cores", how: "Licensed UWB IP lets MCU and SoC makers add UWB without their own radio team. That lowers the entry barrier and the price over time. CEVA licenses UWB child-presence software (case notes). Not checked in a primary document this run.", conf: low, src: s21}
+
+our_position: >-
+  Qorvo (now part of Skyworks) is one of the two original UWB chip suppliers. Decawave was bought in 2020. The DW1000 and
+  DW3000 parts set the industrial positioning market, and Qorvo UWB is certified to work with Apple's U1. For cars, the
+  automotive DW3300Q and QPF5100Q (ranging plus radar) are in the catalogue, but no design win is public, and NXP sells the
+  complete access set (UWB, BLE, NFC, secure element, MCU). The combined company's real edge is the RF around the chip.
+  UWB transmit power is capped, so range at hard car positions comes from the receive path. We can offer a UWB anchor
+  reference with our own LNA/switch (QM14068), PA (QM14070), an automotive grade-2 switch (SKY5A2108, 2.4-8.3 GHz) and BAW
+  filters that protect UWB from the car's own 6 GHz Wi-Fi and V2X. No other UWB chip vendor can supply all of these. The
+  next steps are an 802.15.4ab chip with narrowband assist, which ST and Calterah already sample (see business case
+  auto-uwb-15-4ab), and the child-presence firmware on today's QPF5100Q (case auto-uwb-cpd).
+
+open_questions:
+  - "Is the QPF5100Q (or DW3300Q) CCC Digital Key Release 3 certified, and which car models or Tier-1s use it? No public design win was found."
+  - "Do QPF5100Q / QM35825 support the 802.15.4z HPRF mode? The DW3000 datasheet lists only BPRF, while NXP SR150 and ST64UWB list HPRF. We believe CCC uses HPRF (low confidence)."
+  - "What are the QPF5100Q's sensitivity, TX power, current and temperature range? Its datasheet is not public, so the automotive points in this review lean on NXP and ST documents."
+  - "Is QM33120W the replacement for the discontinued DW3120 / DW3220, and is it pin and software compatible?"
+  - "When will Qorvo have an 802.15.4ab / narrowband-assist chip? ST has sampled since Mar 2026."
+  - "Are QM14068 and QM14070 automotive qualified, and do they cover all of channel 9 (7.7-8.3 GHz) at the needed linearity next to 6 GHz Wi-Fi?"
+  - "Is Qorvo's UWB still in any Google Pixel or other Android phone today? Our evidence is a 2021 search snippet."
+  - "What are the contract prices for DW3110 / QPF5100Q compared with NXP NCJ29D5 ($4.85-6.33 1k budgetary, snippet)?"
+
+learn:
+  "5": "Some radios can tell how far away something is. UWB sends very short clicks of radio and times how long they take to arrive. Because the clicks are so short, it can tell distance to about the width of your hand. A car uses it to open only when your phone is right at the door."
+  "10": "Light and radio travel about 30 cm in a billionth of a second. A UWB chip notes the exact moment a message leaves and arrives, and the two devices swap messages, so the chip can work out the distance. A secret pattern inside the message stops a thief from faking it. With two antennas the chip can also tell which direction the other device is in."
+  "15": "UWB spreads very low power over a 500 MHz channel (channel 5 at 6.5 GHz or channel 9 at 8 GHz). The pulses are about 2 ns long. Two-way ranging (poll, response, final) cancels most clock error, and the result is about ±6 cm. TDoA lets a tag 'shout' once while fixed anchors compare arrival times. PDoA compares the phase at two antennas about 2 cm apart to get an angle of about ±5°. The 802.15.4z STS is an AES-made pulse pattern that only partners can predict. This is the basis of CCC Digital Key and FiRa."
+  "20": "Read the datasheet like a link budget. TX is capped by regulation at -41.3 dBm/MHz (the chip can do about -31). The link budget is 85-98 dB with ideal antennas, so every dB of switch or filter loss costs range. Sensitivity depends on preamble length, data rate and STS settings, so compare chips under the same conditions. Blocking (-80 dBm in-band, -17 dBm out-of-band) sets how much filtering you need next to 6 GHz Wi-Fi. Receive current (72-88 mA) and duty cycle set battery life. Crystal trim and per-board calibration set accuracy. A PDoA variant pays 1.2-1.4 dB for its internal switch."
+  "25": "System questions: secure first-path detection under adaptive attacks (STS receivers must not rely on simple threshold leading-edge detection); clock-offset correction in DS-TWR; NLOS bias at body-blocked car anchors; anchor count against coverage; trigger-before-transmit and duty-cycle rules in ETSI EN 302 065-3-1; the loss of channel 5 to Wi-Fi/IMT and the WRC-27 threat to channel 9; and 802.15.4ab (narrowband-assisted multi-millisecond ranging for about 8x range, radar with wider channels, LE-UWB). Product strategy follows from these: SoC integration, automotive grade 2, radar firmware and a front end that recovers the link budget."
+
+learn_links:
+  - {label: "Automotive UWB: anchors, 802.15.4ab, cabin sensing and coexistence (library topic)", href: "/library/auto_uwb"}
+  - {label: "Business case: UWB child presence and kick sensing (auto-uwb-cpd)", href: "/business/reports/auto-uwb-cpd"}
+  - {label: "Business case: an 802.15.4ab anchor chip for digital key (auto-uwb-15-4ab)", href: "/business/reports/auto-uwb-15-4ab"}
+  - {label: "RF note: IoT links, LoRa link budget and UWB ranging front ends", href: "/rf-notes#lpwan_uwb_iot_links"}
+  - {label: "RF band: UWB channel 9 (8 GHz)", href: "/rf-bands/uwb9"}
+  - {label: "RF band: UWB channel 5 (6.5 GHz)", href: "/rf-bands/uwb5"}
+
+sources:
+  - {id: s1, title: "DW3000 Datasheet, version 1.3 (DW3110/DW3120/DW3210/DW3220)", publisher: "Decawave (Qorvo)", url: "https://raw.githubusercontent.com/SendingA/Some-UWB-Papers/main/DW3000_Data_Sheet.pdf", date: "2022-09", note: "unofficial copy (public GitHub repository; official file is on qorvo.com, not requested)"}
+  - {id: s2, title: "BizDev Qorvo catalogue: uwb_soc and uwb_fem rows (DW3110, DW3120, DW3210, DW3220, DW3300Q, QM33120W, QM35825, DWM3000, DWM3001C, QM14068)", publisher: "BizDev (store crawl, Oct 2026)", url: "data/catalog/qorvo_parts.yaml", date: "2026-10-19", note: "catalogue"}
+  - {id: s3, title: "BizDev Qorvo extra parts: QPF5100Q and QM35826", publisher: "BizDev (from a distributor snippet and the Qorvo press release of 7 Jan 2025)", url: "data/catalog/qorvo_extra_parts.yaml", date: "2026-10-20", note: "catalogue"}
+  - {id: s4, title: "Trimension SR150 and SR040: UWB positioning and ranging optimized for IoT use cases (fact sheet UWBIOTFSA4)", publisher: "NXP Semiconductors", url: "https://www.nxp.com/docs/en/fact-sheet/UWBIOTFSA4.pdf", date: "2023-03-31", note: "official (competitor); read from the copy cached in an earlier run, nxp.com is now stopped"}
+  - {id: s5, title: "NCJ29D5 Ultra-Wideband ICs for Automotive Applications (fact sheet)", publisher: "NXP Semiconductors", url: "https://www.nxp.com/docs/en/fact-sheet/NCJ29D5FS.pdf", date: "2019-11-22", note: "official (competitor); cached from an earlier run"}
+  - {id: s6, title: "ST ST64UWB Cortex-M85 ultra-wideband SoC supports IEEE 802.15.4z and 802.15.4ab UWB standards, radar sensing", publisher: "CNX Software", url: "https://www.cnx-software.com/2026/03/13/st-st64uwb-cortex-m85-ultra-wideband-soc-supports-ieee-802-15-4z-and-802-15-4ab-uwb-standards-radar-sensing/", date: "2026-03-13", note: "trade press summary of ST's data briefs; cached from an earlier run (st.com data briefs not reachable)"}
+  - {id: s7, title: "ST64UWB, the first 802.15.4ab device with narrowband assistance", publisher: "STMicroelectronics blog", url: "https://blog.st.com/st64uwb/", date: "2026-05-04", note: "official (competitor), read in an earlier run; figures via the auto-uwb-15-4ab background notes"}
+  - {id: s8, title: "Secure Ranging with IEEE 802.15.4z HRP UWB (arXiv 2312.03964v2)", publisher: "Apple (Luo et al.), arXiv", url: "https://arxiv.org/abs/2312.03964", date: "2024", note: "paper; cached from an earlier run"}
+  - {id: s9, title: "\"UWBCarGraz\" Dataset for Car Occupancy Detection using Ultra-Wideband Radar (arXiv 2311.10478)", publisher: "Graz University of Technology, arXiv", url: "https://arxiv.org/abs/2311.10478", date: "2023", note: "paper; cached from an earlier run"}
+  - {id: s10, title: "UWB Spectrum Regulatory Position (CCC Digital Key) v2025 R2", publisher: "Car Connectivity Consortium", url: "https://carconnectivity.org/wp-content/uploads/2022/12/CCC-UWB-Spectrum-Regulatory-Position_v2025-R2.pdf", date: "2025", note: "standard body position paper; cached from an earlier run"}
+  - {id: s11, title: "CCC Digital Key overview page", publisher: "Car Connectivity Consortium", url: "https://carconnectivity.org/digital-key/", date: "2026-10-21", note: "standard summary (read 21 Oct 2026)"}
+  - {id: s12, title: "ETSI EN 302 065-3-1 V3.2.1: UWB vehicular access systems, 3.8-4.2 GHz or 6-8.5 GHz", publisher: "ETSI", url: "https://www.etsi.org/deliver/etsi_en/302000_302099/3020650301/03.02.01_60/en_3020650301v030201p.pdf", date: "2025-02", note: "standard; via the BizDev library topic auto_uwb"}
+  - {id: s13, title: "Coexistence Document for IEEE 802.15.4ab (P802.15-23-0452-07-04ab)", publisher: "IEEE 802.15 WG", url: "https://mentor.ieee.org/802.15/dcn/23/15-23-0452-07-04ab-coexistence-assessment-document.pdf", date: "2024-05", note: "standard summary; via the BizDev library topic auto_uwb"}
+  - {id: s14, title: "Unlocking the Future: UWB Steers Cars into the Fast Lane", publisher: "Qorvo, on Wireless Design Online", url: "https://www.wirelessdesignonline.com/doc/unlocking-the-future-uwb-steers-cars-into-the-fast-lane-0001", date: "2025-09-17", note: "vendor-authored article; cached from an earlier run"}
+  - {id: s15, title: "SKY5A2108 Sky5 2.4 to 8.3 GHz SPDT switch, data sheet 206432E", publisher: "Skyworks Solutions", url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Data-Sheet/SKY5A2108_206432E.pdf", date: "2025-03", note: "official; via the BizDev library topic auto_uwb"}
+  - {id: s16, title: "BizDev capabilities: uwb_soc (Decawave acquisition, DW3000 family, Apple U1/U2 interoperability)", publisher: "BizDev", url: "data/business/capabilities.yaml", date: "2026-10", note: "catalogue (internal summary of SEC filings and a Qorvo feature page, not re-checked)"}
+  - {id: s17, title: "How do I design the RF section of a UWB ranging device for precision location applications?", publisher: "RF Essentials knowledge base", url: "https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-section-of-a-uwb-ranging-device-for-precision-location-ap/", date: "2026-04", note: "tutorial; via the BizDev RF notes"}
+  - {id: s18, title: "Automotive UWB 802.15.4ab case: background notes (competitor chips, prices, Samsung, Infineon/3db, Qualcomm, Pixel)", publisher: "BizDev", url: "app/web/templates/business/reports/auto-uwb-15-4ab.background.html", date: "2026-10-20", note: "internal notes; most of these facts are search snippets (low)"}
+  - {id: s19, title: "World's first 802.15.4ab UWB chip verified by Calterah and Rohde & Schwarz to be demoed at CES 2026", publisher: "Rohde & Schwarz", url: "https://www.rohde-schwarz.com/ca/about-us/news-press/all-news/world-s-first-802.15.4ab-uwb-chip-verified-by-calterah-and-rohde-schwarz-to-be-demoed-at-ces-2026_229356-1603092.html", date: "2026-01-05", note: "press release; cached from an earlier run"}
+  - {id: s20, title: "BizDev block-diagram library: Mobile Wi-Fi 7 + Bluetooth + UWB connectivity (FastConnect 7900) (Qualcomm)", publisher: "BizDev (from Qualcomm public material)", url: "data/blocks/templates.yaml", date: "2026-10", note: "catalogue"}
+  - {id: s21, title: "Automotive UWB child presence and kick sensing: preliminary case", publisher: "BizDev", url: "data/business/cases/auto-uwb-cpd.yaml", date: "2026-10-20", note: "internal case; competitor facts there are mostly med/low"}

@@ -621,3 +621,19 @@ class ScheduledReview(Base):
     case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class TechReviewRequest(Base):
+    """A request for a technology review of an existing part (Systems & applications > Technology reviews): what the
+    person wants to understand about it. The daily update run writes the review as data/reviews/<slug>.yaml and links
+    it here (review_slug); a review that covers the part also answers the request."""
+
+    __tablename__ = "tech_review_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mpn: Mapped[str] = mapped_column(String(100), index=True)
+    question: Mapped[str] = mapped_column(Text)
+    application: Mapped[str | None] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(12), default="new")  # new | in_progress | done | dropped
+    review_slug: Mapped[str | None] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

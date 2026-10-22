@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path) }}{% endblock %}
+{% block content %}
+<h1>Technology reviews</h1>
+<p class="subtitle muted">One part explained for business development: the problem it solves, the idea behind it, how to read its datasheet and which features matter in which application. Each item can be agreed or disputed. Ask for a part that has no review yet with the form below; requests are picked up by the daily update.</p>
+
+<form method="get" action="/reviews" class="rv-search" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Part number or words" aria-label="Search the reviews">
+  <button type="submit" class="small-btn">Search</button>{% if q %} <a class="small" href="/reviews">Show all</a>{% endif %}
+</form>
+
+{% if not rows %}<p class="muted">{{ 'No review matches “' ~ q ~ '”.' if q else 'No reviews yet.' }} {% if q %}<a href="/reviews?part={{ q|urlencode }}#request">Request one for {{ q }}</a>{% endif %}</p>{% endif %}
+{% for area, group in rows|groupby('app_area') %}
+<h2 class="rp-group">{{ area }} <small class="muted">· {{ group|length }}</small></h2>
+<div class="rp-list">{% for r in group %}
+  <a class="rp-card" href="/reviews/{{ r.slug }}">
+    <span class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span></span>
+    <b class="rp-title">{{ r.title }}</b>
+    <span class="rp-tags">{% for p in r.parts %}<span class="badge">{{ p }}</span>{% endfor %}</span>
+    {% if r.question %}<span class="small muted rp-q">“{{ r.question }}”</span>{% endif %}
+  </a>{% endfor %}
+</div>
+{% endfor %}
+
+<section class="rv-request" id="request" aria-labelledby="rq-title">
+  <h2 id="rq-title">Request a technology review</h2>
+  <p class="small muted">For any part, ours or a competitor's. Say what you want to understand; the review answers that first.</p>
+  <form method="post" action="/reviews/request">
+    <label>Part number
+      <input name="mpn" required maxlength="100" value="{{ part }}" list="rv-mpns" autocomplete="off" placeholder="e.g. PAC5527QM"
+             hx-get="/reviews/suggest" hx-trigger="input changed delay:250ms" hx-target="#rv-mpns" hx-swap="innerHTML">
+    </label><datalist id="rv-mpns"></datalist>
+    <label>What do you want to understand?
+      <textarea name="question" required rows="3" maxlength="2000" placeholder="e.g. Which features matter in a cordless drill, and how does it compare with TI's MCF8316A?"></textarea>
+    </label>
+    <label>Application <small class="muted">(optional)</small>
+      <input name="application" maxlength="200" placeholder="e.g. Cordless power tool, e-bike, ceiling fan">
+    </label>
+    <button type="submit" class="small-btn">Request the review</button>
+  </form>
+</section>
+
+<section id="requested" aria-labelledby="rqd-title">
+  <h2 id="rqd-title">Requested <small class="muted">· {{ open_reqs|length }} open</small></h2>
+  {% if asked %}<p class="small rp-thanks">Saved. The daily update picks it up; the review appears in this list.</p>{% endif %}
+  {% macro req_row(e) %}{% set x = e.row %}
+  <li id="rq-{{ x.id }}" class="rv-rq"><b>{{ x.mpn }}</b> <span class="rv-st s-{{ e.status }}">{{ e.label }}</span>
+    <small class="muted">· {{ x.created_at|date('short') }}{% if x.application %} · {{ x.application }}{% endif %}</small><br>
+    <span class="small">{{ x.question }}</span>
+    {% if e.review %}<br><a class="small" href="/reviews/{{ e.review.slug }}">→ {{ e.review.title }}</a>{% endif %}
+    <details class="small rv-rq-edit"><summary class="muted">change status</summary>
+      <form method="post" action="/reviews/requests/{{ x.id }}" class="inline-form">
+        <select name="status" aria-label="Status">{% for k, v in req_statuses.items() %}<option value="{{ k }}"{{ ' selected' if x.status == k }}>{{ v }}</option>{% endfor %}</select>
+        <select name="review" aria-label="Review that answers it"><option value="">(no review linked)</option>{% for r in all_rows %}<option value="{{ r.slug }}"{{ ' selected' if x.review_slug == r.slug }}>{{ r.title[:60] }}</option>{% endfor %}</select>
+        <button type="submit" class="small-btn outline">Save</button>
+      </form></details></li>{% endmacro %}
+  {% if open_reqs %}<ul class="rv-rqs">{% for e in open_reqs %}{{ req_row(e) }}{% endfor %}</ul>{% else %}<p class="small muted">No open requests.</p>{% endif %}
+  {% if done_reqs %}<details class="small"><summary>Answered or dropped · {{ done_reqs|length }}</summary><ul class="rv-rqs">{% for e in done_reqs %}{{ req_row(e) }}{% endfor %}</ul></details>{% endif %}
+</section>
+{% if errors %}<p class="small muted rv-errs">{{ errors|length }} review file{{ 's' if errors|length != 1 }} could not be shown (format errors): {{ errors|join(' | ') }}</p>{% endif %}
+{% endblock %}

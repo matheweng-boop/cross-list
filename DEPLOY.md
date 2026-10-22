@@ -37,6 +37,22 @@ Every push to the `main` branch on GitHub redeploys the site automatically.
 | --- | --- |
 | Code, rules, parts data (`data/real/*.yaml`), pad data | GitHub, built into the image |
 | Database: FFF reviews, cached DigiKey prices | Render disk at `/data` |
-| Password, secret key, DigiKey keys | Render environment variables (never in the code) |
+| Password, secret key, DigiKey keys, inbox key | Render environment variables (never in the code) |
 
 Run the same image locally: `docker build -t cross-list . && docker run -p 8000:8000 -v $PWD/var:/data cross-list`.
+
+## Daily update run (comments pulled automatically)
+
+A scheduled Claude session reads everything said on the site once a day through `GET /api/inbox`, which needs its
+own read-only key, never the site password.
+
+1. Make a long random key (for example 40 letters and digits from a password manager).
+2. Render → cross-list → Environment → add `CROSSLIST_INBOX_TOKEN` = the key, and save (the service restarts).
+3. Claude cloud environment settings (the environment menu in the session's title bar → Edit):
+   - Network secrets → Add secret: host = the site's host (`<service>.onrender.com`), header `Authorization`, value
+     `Bearer <key>`. The environment adds it to requests for that host; the key never enters a session. (Without
+     network secrets: the environment variable `CROSSLIST_INBOX_TOKEN` = the key.)
+   - Environment variable `CROSSLIST_SITE_URL` = the site's address (`https://<service>.onrender.com`).
+   - If the network access level is limited, add that host to the allowed domains.
+4. The run follows `docs/daily_update.md`. Without the key the inbox is closed (HTTP 404) whenever the site has a
+   password; with a wrong key it answers 401. Change the key in both places to revoke it.

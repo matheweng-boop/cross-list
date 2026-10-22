@@ -205,3 +205,21 @@ def test_market_size_comes_from_public_tam_estimates(client, session):
     client.post("/business/tam/review", data={"key": "tuner-ic-mrfr", "answer": "disagree"})
     session.expire_all()
     assert tam.by_function(session)["am_fm_tuner"]["high"] < 2.31e9  # the disagreed figure drops out
+
+
+def test_old_commercial_inputs_are_deleted_at_start(tmp_path):
+    """The owner deleted the retired commercial inputs (22 Oct 2026): a start leaves none in the database."""
+    from sqlalchemy import func, select
+    from sqlalchemy.orm import Session as S
+
+    from app.db import get_engine
+    from app.main import create_app
+
+    url = f"sqlite:///{tmp_path / 'ci.db'}"
+    create_app(url, seed_synthetic=False)
+    with S(get_engine()) as s:
+        s.add(BusinessInput(kind="vol", key="Some application", value=1e6))
+        s.commit()
+    create_app(url, seed_synthetic=False)
+    with S(get_engine()) as s:
+        assert s.scalar(select(func.count(BusinessInput.id))) == 0

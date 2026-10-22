@@ -1,15 +1,18 @@
 """Floating feedback button (every page) and the daily feedback digest in Data management."""
 
-from datetime import UTC, date, datetime
+import hmac
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.db import get_session
 from app.models import FeedbackAttachment, SiteFeedback, Upload
 from app.services import feedback as fb
+from app.services import inbox as ib
 from app.services import uploads as up
 from app.web import nav
 from app.web.routes import templates
@@ -138,3 +141,22 @@ def feedback_respond(ids: str = Form(...), status: str = Form(...), response: st
         raise HTTPException(400, "Unknown status") from None
     session.commit()
     return RedirectResponse(f"/manage/feedback?day={day}" if day else "/manage/feedback", status_code=303)
+
+
+@router.get("/api/inbox", response_class=PlainTextResponse)
+def inbox(request: Request, since: str = "", session: Session = Depends(get_session)):
+    """Everything the owner said on the site since a day (default: yesterday), for the daily update run. Needs the
+    read-only key (CROSSLIST_INBOX_TOKEN) as "Authorization: Bearer <key>"; without one set, it is closed whenever
+    the site has a password."""
+    s = get_settings()
+    sent = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
+    if s.inbox_token:
+        if not hmac.compare_digest(sent.encode(), s.inbox_token.encode()):
+            raise HTTPException(401, "A valid inbox key is needed")
+    elif s.site_password:
+        raise HTTPException(404)
+    try:
+        day = date.fromisoformat(since) if since else datetime.now(UTC).date() - timedelta(days=1)
+    except ValueError:
+        raise HTTPException(400, "since must be YYYY-MM-DD") from None
+    return ib.collect(session, day)

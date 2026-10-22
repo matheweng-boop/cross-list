@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import crowd, push, score_chip, usd, library_box with context %}
+{% from "reviews/_parts.html" import review_list %}
 {% block title %}{{ part.mpn }} walk-through{% endblock %}
 {% set s1, s4, s5, upto = w.s1, w.s4, w.s5, w.upto %}
 {% macro next(n) %}{% if upto == n and n < 5 %}<p class="walk-next"><a class="button small-btn" href="/parts/{{ part.id }}/walk?upto={{ n + 1 }}#step-{{ n + 1 }}">Next: {{ n + 1 }} {{ steps[n + 1] }} →</a> <span class="small muted">or stop here</span></p>{% endif %}{% endmacro %}
@@ -7,15 +8,17 @@
 <div class="walk-gap"><p class="small"><b>Data missing</b> · sent to <a href="/manage/feedback">Site feedback</a> for the next review</p>
   <ul class="small">{% for g in gs %}<li>{{ g }}</li>{% endfor %}</ul></div>{% endif %}{% endmacro %}
 {% macro case_start() %}{% set r = w.requested %}
-<div class="walk-case small">{% if w.s1.acceptable %}<p>No case needed: we can cross it with <a href="/parts/{{ w.s1.acceptable.id }}">{{ w.s1.acceptable.mpn }}</a>. A case is only for a part we cannot cross.</p>
+<div class="walk-case small">{% if part.is_reference %}{# our own part: no prelim case #}
+{% elif w.s1.acceptable %}<p>No case needed: we can cross it with a drop-in, <a href="/parts/{{ w.s1.acceptable.id }}">{{ w.s1.acceptable.mpn }}</a>. A case is only for a part we cannot cross.</p>
 {% else %}<form method="post" action="/pipeline/new" class="inline-form"><input type="hidden" name="part" value="{{ part.id }}"><button type="submit" class="small-btn">Start a prelim case</button></form>
-  <span class="muted">no drop-in or functional cross of ours: a new part would be needed. The AI schedules a check of the market.</span>{% endif %}
+  <span class="muted">{% if not w.s1.best %}<b>No cross at all:</b> the strongest case for a new part.{% else %}No drop-in of ours (closest: {{ w.s1.best.mpn }}, with deviations).{% endif %} The AI schedules a check of the market.</span>{% endif %}
 {% if r.n %}<p>Asked before: <b>{{ r.n }} request{{ 's' if r.n != 1 }}</b>{% if r.total %}, <b>{{ '{:,}'.format(r.total) }} pieces a year</b> in total{% endif %}{% if r.customers %} · {{ r.customers|join(', ') }}{% endif %}</p>{% endif %}</div>{% endmacro %}
 {% block content %}
 <p class="small"><a href="/parts/{{ part.id }}">← {{ part.mpn }} crosses</a></p>
 <h1>{{ part.mpn }} <small class="muted">· walk-through</small></h1>
 <p class="subtitle muted">{{ part.manufacturer.name|vendor }} · {{ w.label }}. From the competitor part to what we sell and build: each step uses data from the rest of the site. What a step lacks goes to Site feedback for the next review{% if added %} ({{ added }} new item{{ 's' if added != 1 }} just now){% endif %}.</p>
 
+{% set trs = tech_reviews_for(part.mpn) %}{% for x in tech_reviews_fn(w.fn) if x not in trs %}{% set _ = trs.append(x) %}{% endfor %}{{ review_list(trs, 'Technology reviews for this part or its function') }}
 <ol class="walk-nav">{% for n, title in steps.items() %}{% set k = w.gaps|selectattr(0, 'eq', n)|list|length %}
   <li{% if n > upto %} class="walk-later"{% endif %}>{% if n <= upto %}<a href="#step-{{ n }}">{% endif %}<span class="walk-n">{{ n }}</span> {{ title }}{% if k %} <small class="walk-miss" title="data missing">{{ k }} missing</small>{% endif %}{% if n <= upto %}</a>{% endif %}</li>{% endfor %}</ol>
 

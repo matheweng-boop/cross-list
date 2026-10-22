@@ -300,10 +300,11 @@ def _part_context(
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
     crosses = crosses_for(session, part, scope, dev)
-    # the part can be crossed: an active drop-in or functional equivalent of the grade (filters on the page aside).
-    # Only a part we cannot cross gets "Start a prelim case" (a new development).
-    cross_ok = next((r.candidate for cat in ("fff", "functional") for r in crosses.get(cat, [])
-                     if not r.lifecycle_risk and grade_of(r.candidate) == grade), None)  # fmt: skip
+    # the part counts as crossed only with an active drop-in of the grade (owner, 22 Oct 2026; filters on the page
+    # aside). Without one it gets "Start a prelim case"; with no cross of any type it is the strongest case.
+    graded = [r for r in ranked(crosses) if not r.lifecycle_risk and grade_of(r.candidate) == grade]
+    cross_ok = next((r.candidate for r in graded if r.category == "fff"), None)
+    closest = graded[0].candidate if graded and cross_ok is None else None
     rejected = [r for r in crosses["package"] if r.fff_status == "rejected"]
     if hide_eol:
         crosses = {c: [r for r in rs if not r.lifecycle_risk] for c, rs in crosses.items()}
@@ -374,6 +375,8 @@ def _part_context(
         "grade_counts": grade_counts,
         "ref_grade": grade_of(part),
         "cross_ok": cross_ok,
+        "closest_cross": closest,
+        "no_cross": not graded,
         "requested": _requested(session, part.mpn),
     }
 

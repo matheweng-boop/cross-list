@@ -12,13 +12,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import PROJECT_ROOT, get_settings
 from app.db import Base, init_engine
-from app.models import Package, Part
+from app.models import BusinessInput, Package, Part
 from app.services.seed import UNOFFICIAL, UNOFFICIAL_DIR, ensure_local_user, load_file
 
 SYNTHETIC_FILE = PROJECT_ROOT / "data" / "synthetic" / "demo.yaml"
@@ -62,6 +62,8 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
     Base.metadata.create_all(engine)
     with Session(engine) as session:
         ensure_local_user(session)
+        # the owner deleted the retired commercial inputs (ASPs and volumes), 22 Oct 2026: nothing proprietary is kept
+        session.execute(delete(BusinessInput))
         empty = session.scalar(select(func.count(Part.id))) == 0
         if get_settings().load_real_on_start:
             load_real_if_changed(session)
@@ -129,6 +131,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.pipeline import router as pipeline_router
     from app.web.portfolio import router as portfolio_router
     from app.web.requests import router as requests_router
+    from app.web.reviews import router as reviews_router
     from app.web.routes import router as web_router
     from app.web.uploads import router as uploads_router
     from app.web.verify import router as verify_router
@@ -198,5 +201,6 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(pipeline_router)
     app.include_router(feedback_router)
     app.include_router(uploads_router)
+    app.include_router(reviews_router)
     app.include_router(verify_router)
     return app

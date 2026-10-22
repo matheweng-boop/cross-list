@@ -28,7 +28,7 @@ from app.services.pipeline import fn_for_family, requested
 STEPS = {1: "Replacement", 2: "Sell around it", 3: "Best of ours around it", 4: "Make it better, other applications",
          5: "What the future needs"}  # fmt: skip
 AUTHOR = "Walk-through (automatic)"
-ACCEPTABLE = ("fff", "functional")  # cross types that count as "we can cross it"
+ACCEPTABLE = ("fff",)  # only a drop-in counts as "we can cross it" (owner, 22 Oct 2026)
 VERDICTS = {
     "sell": "Sell what we have",
     "improve": "Improve what we have",
@@ -58,7 +58,7 @@ def _step1(rows: list) -> dict:
     worse = [d.label for d in v.worse]
     minor = [d.label for d in v.info_worse]
     suitable = "dropin" if v.category == "fff" and not worse else "deviations"
-    # a drop-in or functional replacement means we can cross it: no new development, so no case
+    # a drop-in means we can cross it: no new development, so no case
     acceptable = next((rr.candidate for rr, vv in rows if vv.category in ACCEPTABLE), None)
     # specs where every listed cross of ours is worse: the line as a whole falls short
     lists = [{d.label for d in vv.worse} for _, vv in rows]

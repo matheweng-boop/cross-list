@@ -7,7 +7,7 @@
 {% block content %}
 <h1>Markets <small class="muted">· one product, several markets</small></h1>
 <p class="subtitle muted">Functions and the end markets whose reference architectures need them, split by the leap it takes: sell what we have, fill a portfolio gap, or new technology.</p>
-<div class="scope-bar small filter-cols">
+<div class="scope-bar small filter-cols mk-filters">
   {{ company_switch('/business/markets', co, companies, '&view=' ~ view ~ '&m=' ~ chosen|join(',')) }}
   {% for title, ms in market_groups(markets) %}<div class="chip-row"><span class="chip-lbl">{{ title }}</span>
     {% if loop.first %}<a class="fchip{{ ' on' if not chosen }}" href="{{ url(m='') }}">All {{ markets|length }} markets</a>{% endif %}
@@ -16,11 +16,13 @@
   <div class="chip-row"><span class="chip-lbl">Leap</span>
     {% for k, label in groups.items() %}<a class="fchip{{ ' on' if g == k }}" href="{{ url(g=('' if g == k else k)) }}" title="{{ label[1] }}">{{ label[0] }} <small>{{ by_group[k]|length }}</small></a>{% endfor %}
   </div>
+  <details class="more-filters"{% if view and view != 'all' %} open{% endif %}><summary class="small">More filters{% if view and view != 'all' %} <small>(1 on)</small>{% endif %}</summary>
   <div class="chip-row"><span class="chip-lbl">Reach · qualification</span>
     <a class="fchip{{ ' on' if view == 'multi' }}" href="{{ url(view=('all' if view == 'multi' else 'multi')) }}">2+ markets</a>
     <a class="fchip{{ ' on' if view == 'requalify' }}" href="{{ url(view=('all' if view == 'requalify' else 'requalify')) }}" title="{{ bo_help().terms.requalify.short }}">Qualify for automotive <small>{{ n_requalify }}</small></a>
     <a class="fchip{{ ' on' if view == 'qual_unknown' }}" href="{{ url(view=('all' if view == 'qual_unknown' else 'qual_unknown')) }}" title="Automotive needs it, but our parts do not state a grade">Grade not stated <small>{{ n_qual_unknown }}</small></a>
   </div>
+  </details>
 </div>
 
 {% for k, (title, help) in groups.items() if not g or g == k %}{% set rows = by_group[k] %}

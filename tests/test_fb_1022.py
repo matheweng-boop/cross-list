@@ -81,3 +81,11 @@ def test_agree_disagree_shown_without_react_click(client):
         assert '<details class="pc-react"' not in src and "pc-inline" in src
     r = client.post("/library/v2x_frontend/react", data={"item": "x", "verdict": "agree"}, follow_redirects=False)
     assert r.status_code in (303, 400, 404)
+
+
+def test_markets_filters_compact_with_more_filters(client):
+    html = client.get("/business/markets").text
+    assert 'class="more-filters"><summary class="small">More filters' in html
+    head, more = html.split('class="more-filters"', 1)
+    assert ">Leap</span>" in head and "Qualify for automotive" in more.split("</details>")[0]
+    assert 'class="more-filters" open' in client.get("/business/markets?view=multi").text

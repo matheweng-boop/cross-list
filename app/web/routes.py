@@ -664,9 +664,10 @@ def library_react(key: str, item: str = Form(...), verdict: str = Form(...), com
 def general_knowledge(request: Request):
     """General knowledge: the background the systems library builds on (RF fundamentals, specification guides,
     technology platforms) and the search over all of it."""
-    from app.services import library, rf_notes
+    from app.services import knowledge, library, rf_notes
 
-    ctx = {"rf": rf_notes.by_category(), "guides": engineering.index(), "topics": library.topics()}
+    ctx = {"rf": rf_notes.by_category(), "guides": engineering.index(), "topics": library.topics(),
+           "products": knowledge.by_product(), "kinds": knowledge.KINDS}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/knowledge.html", ctx)
 
 
@@ -689,6 +690,8 @@ def engineering_note(
 ):  # fmt: skip
     """One engineering note. ``ref``/``cand`` come from a result row; ``ids`` lists parts for
     the calculators (reference first, four at most)."""
+    from app.services import knowledge
+
     note = engineering.note_key(key)
     reference = session.get(Part, ref) if ref else None
     candidate = session.get(Part, cand) if cand else None
@@ -712,6 +715,8 @@ def engineering_note(
             "parts": parts,
             "devices": [engineering.device(p) for p in parts],
             "others": [n for n in engineering.index() if n["key"] != note],
+            "why": knowledge.why(note),
+            "kinds": knowledge.KINDS,
         },
     )
 

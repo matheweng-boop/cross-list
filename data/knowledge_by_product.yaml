@@ -1,0 +1,236 @@
+# General knowledge by product (owner, 22 Oct 2026: "If I want to sell the product, I need all information on hand at
+# a glance ... the primary question should always be 'why does it matter to the customer?'").
+#
+# why_it_matters: per specification guide key (app/services/engineering.py NOTES), the points a customer gains from
+#   the spec. kind: cost | bom | robust | design. est: true marks a point BizDev reasoned out itself (not stated in the
+#   guide or a source); the page shows it as "est".
+# products: per product family, the guides, interactive visuals (app/services/library.py VISUALS), RF notes
+#   (data/engineering_rf_notes.yaml ids) and systems library topics that belong to it. Technology reviews are found by
+#   review_words in the review's title, family and application area, so new reviews appear without editing this file.
+
+why_it_matters:
+  cmti_kv_us:
+    - kind: robust
+      text: Enough CMTI margin at the real switch-node slew rate means no output glitches, corrupted data or false faults, and in gate drivers no risk of shoot-through.
+    - kind: cost
+      text: A part with too little CMTI forces slower edges (gate resistors, softer turn-on), which adds switching loss and heat. High CMTI lets the customer keep fast SiC or GaN edges.
+    - kind: bom
+      text: Fast edges with enough CMTI can mean a smaller heatsink or fewer paralleled power devices than a slowed-down design.
+      est: true
+    - kind: design
+      text: Above the margin the application needs, a higher rating brings no functional gain. Sell the margin at the customer's dv/dt, not the bigger number.
+  creepage_mm:
+    - kind: robust
+      text: Creepage protects against slow surface tracking at the steady working voltage, for the whole life of the product, including damp and dirty conditions (pollution degree).
+    - kind: bom
+      text: A wide-body (about 8 mm) or extra-wide (14.5–15 mm) package can meet reinforced creepage on its own. Without it the customer needs board slots, potting or a coating.
+    - kind: cost
+      text: Mould compound of material group I (CTI ≥ 600, all our isolator packages) halves the distance needed against group III at the same voltage, so the package stays smaller.
+    - kind: cost
+      text: Potting or a conformal coating to reach a lower pollution degree costs process time and rework; a package with enough creepage avoids that step.
+      est: true
+  cti:
+    - kind: cost
+      text: "CTI (comparative tracking index) sets the material group: group I (CTI ≥ 600) needs half the creepage of group III. At 800 V and PD2 that is 4 mm against 8 mm (basic)."
+    - kind: design
+      text: The FR4 board under the part is usually group IIIa, so the board needs the larger distance or a slot even when the package is group I.
+  isolation_rating_kvrms:
+    - kind: robust
+      text: The one-minute withstand rating (UL 1577) shows how robust the barrier is against high-voltage tests and faults.
+    - kind: cost
+      text: A part below the test voltage the end-product standard requires cannot be used at all; a part above it passes the system's hipot test first time.
+    - kind: design
+      text: A higher rating than the standard asks for gives margin, not function. It does not raise the continuous working voltage.
+  isolation_class:
+    - kind: bom
+      text: A reinforced isolator can be the only barrier between hazardous voltage and something a person can touch. A basic one needs a second insulation layer.
+    - kind: cost
+      text: One reinforced part instead of a basic part plus extra insulation (a second isolator, a transformer or more spacing) saves parts and assembly.
+      est: true
+    - kind: robust
+      text: Reinforced parts are certified to stricter surge, test and lifetime requirements (IEC 60747-17).
+  viorm_vpk:
+    - kind: robust
+      text: The working voltage (VIORM / VIOWM) is what the barrier may see for its rated lifetime. Margin here is lifetime margin on a 400 V or 800 V DC link.
+    - kind: design
+      text: If the continuous barrier stress exceeds it, the part is not qualified for that use, whatever its one-minute rating.
+    - kind: cost
+      text: One part family with an 800 V-class working voltage covers both 400 V and 800 V platforms, so the customer qualifies one part.
+      est: true
+  default_output:
+    - kind: robust
+      text: The right default state keeps power switches off and resets held while the controller side is unpowered, at power-up and brown-out.
+    - kind: bom
+      text: With the right default the customer needs no extra pull resistors or gating logic to force a safe state.
+      est: true
+    - kind: design
+      text: The wrong variant looks like a pin-to-pin drop-in but is not. Check what each receiving circuit must see while the sending side is off.
+  prop_delay_ns:
+    - kind: design
+      text: A shorter delay allows a faster SPI clock through the isolator and shortens control-loop and fault-reaction delays.
+    - kind: robust
+      text: For gate drivers the spread of the delay matters more than its size; a tight spread allows a shorter dead time.
+    - kind: cost
+      text: Faster isolated SPI can mean one isolated link serves several ADC channels instead of adding a second isolator.
+      est: true
+  pwd_ns:
+    - kind: design
+      text: Tighter pulse-width distortion and skew allow a shorter dead time in a half bridge, with less dead-time distortion and less diode conduction.
+    - kind: cost
+      text: Less diode conduction lowers loss a little; at 20 kHz going from 300 ns to 200 ns dead time is a timing gain of 0.2 % of the period, not a 0.2 % efficiency gain.
+  uvlo_v:
+    - kind: robust
+      text: The UVLO threshold that suits the power device keeps a SiC MOSFET or IGBT from running on too little gate voltage (high on-resistance, overheating).
+    - kind: design
+      text: UVLO variants are not interchangeable. A higher threshold than intended can shut down a correctly supplied gate drive.
+    - kind: bom
+      text: A built-in UVLO matched to SiC removes the need for an external supply supervisor on the gate-drive rail.
+      est: true
+  peak_source_a:
+    - kind: cost
+      text: Enough peak current moves the gate charge quickly, so the power device switches fast with less switching loss and heat.
+    - kind: bom
+      text: A strong driver can drive large or paralleled devices directly, without an external booster buffer.
+      est: true
+    - kind: design
+      text: A strong driver can be slowed with a gate resistor; a weak one cannot be made faster.
+  integrated_power:
+    - kind: bom
+      text: Integrated isolated power removes the separate isolated supply (transformer, controller, rectifier) from the isolated side.
+    - kind: cost
+      text: Efficiency sets the heat. At 3 W, 70 % efficiency dissipates about 1.29 W and 85 % about 0.53 W.
+    - kind: design
+      text: The board around it is different (no isolated supply, other pins), so it defines the function; it is never a simple swap.
+  certifications:
+    - kind: cost
+      text: Component certifications (UL 1577, VDE / IEC 60747-17, CSA, CQC) save end-product testing and open markets such as China.
+    - kind: design
+      text: A missing certification does not change how the part works, but can delay a launch or block a market.
+  qualification:
+    - kind: robust
+      text: AEC-Q100 parts are qualified for automotive stress, temperature and production control; an industrial part cannot replace them.
+    - kind: cost
+      text: A qualified part avoids the customer's own extended qualification, which takes months.
+      est: true
+  data_rate_mbps:
+    - kind: design
+      text: Headroom between the signal and the part's maximum rate keeps edges clean and timing margins intact.
+    - kind: cost
+      text: A faster channel can carry several signals multiplexed, so fewer isolator channels are needed.
+      est: true
+  temp_range_c:
+    - kind: robust
+      text: A range that covers the hottest spot in the enclosure keeps the datasheet guarantees valid in the field.
+    - kind: bom
+      text: A wider range (e.g. to 125 °C) can let the part sit near hot power stages without extra cooling or spacing.
+      est: true
+  vdd_range_v:
+    - kind: bom
+      text: A wide supply range runs directly from the existing 3.3 V or 5 V rail, with no level shifter or extra regulator.
+      est: true
+  channel_config:
+    - kind: bom
+      text: The right number and direction of channels in one package replaces two smaller isolators, saving board area and placement cost.
+      est: true
+
+products:
+  - key: digital_isolators
+    title: Digital isolators
+    line: Skyworks (Si86xx, Si87xx)
+    pitch: Safe, fast data across a high-voltage barrier in inverters, chargers, BMS and industrial I/O.
+    guides: [cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, prop_delay_ns, data_rate_mbps, channel_config, vdd_range_v, temp_range_c, certifications, qualification]
+    why: [cmti_kv_us, creepage_mm, isolation_class, default_output]
+    visuals: [cmti, creep]
+    rf_notes: []
+    topics: [traction_asil_d]
+    review_words: [digital isolator, isolator]
+  - key: gate_drivers
+    title: Isolated gate drivers
+    line: Skyworks (Si823x, Si827x, Si828x)
+    pitch: Drive SiC, IGBT and GaN switches across the barrier in traction inverters, chargers, solar and motor drives.
+    guides: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, prop_delay_ns, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, certifications, qualification, temp_range_c]
+    why: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns]
+    visuals: [cmti, gate, creep, thermal]
+    rf_notes: []
+    topics: [traction_asil_d]
+    review_words: [gate driver]
+  - key: isolated_analog
+    title: Isolated amplifiers, ADCs and current sensors
+    line: Skyworks (Si89xx)
+    pitch: Measure current and voltage on the high-voltage side and pass the result safely to the controller.
+    guides: [cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, certifications, qualification, temp_range_c]
+    why: [cmti_kv_us, creepage_mm, isolation_class]
+    visuals: [cmti, creep]
+    rf_notes: []
+    topics: [traction_asil_d]
+    review_words: [isolated amplifier, isolated adc, current sens]
+  - key: rf_switches
+    title: RF switches and antenna tuning
+    line: Skyworks and Qorvo
+    pitch: Route antennas and bands with low loss and high linearity in phones, cars, Wi-Fi and infrastructure.
+    guides: []
+    why: []
+    visuals: [vswr, ip3, dbm]
+    rf_notes: [rf_switches, vswr_return_loss_mismatch, linearity_p1db_ip3, txrx_isolation_options]
+    topics: [roof_coexistence, v2x_frontend]
+    review_words: [rf switch, antenna tuning]
+  - key: front_ends
+    title: Front-end modules, PAs and LNAs
+    line: Skyworks and Qorvo
+    pitch: The radio's last and first stage. Range, battery life and coexistence depend on them.
+    guides: []
+    why: []
+    visuals: [link, nf, ip3, dbm]
+    rf_notes: [wifi_fem_and_triband_ap, pa_linearization_dpd_doherty, cascaded_noise_figure, sensitivity_noise_floor, mmwave_5g_front_ends]
+    topics: [v2x_frontend, tcu_rf, gnss_frontend]
+    review_words: [front-end, fem, power amplifier, lna]
+  - key: filters
+    title: RF filters, duplexers and multiplexers
+    line: Qorvo (BAW, SAW) and Skyworks
+    pitch: Keep radios from jamming each other; more bands and radios in one product need more and sharper filters.
+    guides: []
+    why: []
+    visuals: [filter, lc]
+    rf_notes: [acoustic_filters_duplexers, filter_fundamentals, dynamic_range_sfdr_blocking]
+    topics: [roof_coexistence, tcu_rf]
+    review_words: [filter, duplexer, multiplexer]
+  - key: tuners
+    title: Broadcast radio tuners and demodulators
+    line: Skyworks (Si47xx, Si479xx)
+    pitch: AM / FM / DAB / HD Radio reception in car head units and consumer radios.
+    guides: [qualification, temp_range_c]
+    why: [qualification]
+    visuals: [nf, wave, dbm]
+    rf_notes: [sensitivity_noise_floor, dynamic_range_sfdr_blocking, receiver_architectures]
+    topics: [roof_coexistence]
+    review_words: [tuner, radio receiver, broadcast]
+  - key: timing
+    title: Clocks, oscillators and network timing
+    line: Skyworks
+    pitch: Clean clocks for data centres, 5G radios and networking; jitter directly limits data rate and link quality.
+    guides: [temp_range_c]
+    why: []
+    visuals: []
+    rf_notes: [phase_noise_oscillators, pll_synthesis, vco_design_tradeoffs]
+    topics: []
+    review_words: [clock, oscillator, jitter, timing]
+  - key: uwb
+    title: UWB and low-power wireless
+    line: Qorvo (DW3000, QM33)
+    pitch: Secure distance measurement for digital car keys, asset tracking and indoor positioning.
+    guides: [qualification]
+    why: [qualification]
+    visuals: [link, rf-bands]
+    rf_notes: [lpwan_uwb_iot_links]
+    topics: [auto_uwb]
+    review_words: [uwb, ultra-wideband]
+  - key: power_motor
+    title: Power management and motor control
+    line: Qorvo (ACT PMICs, PAC motor controllers)
+    pitch: Highly integrated power and motor-control chips that cut parts count in SSDs, tools and appliances.
+    guides: [temp_range_c, qualification]
+    why: [qualification]
+    visuals: [thermal]
+    rf_notes: []
+    topics: [semiconductor_cost]
+    review_words: [pmic, power management, motor]

@@ -909,11 +909,19 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
 def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
                    automotive: bool = False, name: str = "", currency: str = "USD",
                    sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0, gm: int = 0,
-                   released: int = 0, session: Session = Depends(get_session)):  # fmt: skip
+                   released: int = 0, bq: list[str] = Query([]), bp: list[str] = Query([]),
+                   session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
-    A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely."""
+    A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely.
+    Several orderable variants of the part number are offered to pick from. SOP defaults to the year of the
+    datasheet's first revision when the site knows it. Price breaks come as volume / price rows, pasted text or
+    both."""
     cfg = price_model.config()
     known = price_builder.site_info(session, name.strip()) if name.strip() else {}
+    variants = price_builder.variants(session, name) if name.strip() else []
+    rows = [(q.strip(), p.strip()) for q, p in zip(bq, bp, strict=False) if q.strip() or p.strip()]
+    pasted = breaks
+    breaks = "\n".join([breaks.strip(), *(f"{q} {p}" for q, p in rows if q and p)]).strip()
     family = family if family in cfg["families"] else (known.get("family") or "")
     package, pins = (known["package"], known["pins"] or pins) if known.get("package") else (package, pins)
     units = known.get("units") or 0  # channels / tuners: read from the part number, used by the model only
@@ -924,7 +932,10 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     gm_f = price_model.margin(gm / 100 if gm else None)
     lo, hi = parity_lo or cfg["parity"][0], parity_hi or cfg["parity"][1]
     lo, hi = sorted((min(max(lo, 0.2), 3.0), min(max(hi, 0.2), 3.0)))
-    sop = sop if 2020 <= sop <= 2050 else cfg["oem"]["default_sop"]
+    sop_from = "entered" if 1980 <= sop <= 2050 else ""
+    if not sop_from and known.get("released"):
+        sop, sop_from = known["released"], "datasheet"  # the year of the datasheet's first revision
+    sop = sop if 1980 <= sop <= 2050 else cfg["oem"]["default_sop"]
     released = released if 1980 <= released <= 2050 else None
     scenarios = []
     for fab in price_model.fab_scenarios() if (family and pts) else []:
@@ -938,7 +949,8 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
         scenarios.append((fab, m))
     m = scenarios[0][1] if scenarios else None
     ctx = {"cfg": cfg, "m": m, "scenarios": scenarios,
-           "known": known, "suggest": price_builder.suggestions(),
+           "known": known, "suggest": price_builder.suggestions(), "variants": variants, "sop_from": sop_from,
+           "rows": rows or [("", "")], "pasted": pasted,
            "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
                  "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
                  "released": released or "",

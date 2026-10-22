@@ -133,3 +133,22 @@ def test_business_case_asks_feasibility_price_manufacturing_markets_competition(
     assert "public prices" in brief and "share of the" in brief
     sg = re.search(r'<script type="application/json" id="sg-data">(.*?)</script>', page, re.S)
     assert sg and "market_size" in sg.group(1)  # a hint for market size (estimate or "add one on TAM estimates")
+
+
+def test_price_estimate_variants_sop_and_break_rows(client, session, real, part):  # noqa: F811
+    from datetime import date
+
+    html = client.get("/pricing/estimate", params={"name": "ISO7741"}).text
+    assert 'class="pe-variants"' in html and "ISO7741DBQR" in html and "ISO7741DWR" in html
+    assert 'class="outline small-btn pe-add"' in html and ">or</span>" in html and 'name="bq"' in html
+    p = part("ISO7741DWR")
+    p.release_date = date(2016, 3, 1)
+    session.commit()
+    html = client.get("/pricing/estimate", params={"name": "ISO7741DWR"}).text
+    assert 'name="sop" type="number" min="1980" max="2050" value="2016"' in html
+    assert "year of the datasheet&#39;s first revision" in html or "year of the datasheet's first revision" in html
+    # rows and pasted text together make the breaks
+    q = [("family", "digital_isolator"), ("name", "X1"), ("bq", "1"), ("bp", "3.10"), ("bq", "1000"), ("bp", "1.90"),
+         ("breaks", "100 2.50")]  # fmt: skip
+    html = client.get("/pricing/estimate", params=q).text
+    assert 'id="price-model"' in html and 'value="1000"' in html and "100 2.50" in html

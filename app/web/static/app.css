@@ -1677,3 +1677,19 @@ dialog.vd > article.vd-card { width: min(70rem, calc(100vw - 1rem)); max-width: 
   .stack-table.pf-band .pf-n { min-width: 1.4rem; }
   .stack-table.pf-band .pf-none { min-width: 0; }
 }
+
+/* Agree / Disagree shown directly, no "react" click first (owner, 22 Oct 2026) */
+.pc-react.pc-inline { display: block; margin: .3rem 0 0; font-size: .78rem; }
+.pc-inline .pc-state:empty { display: none; }
+.pc-inline .pc-state { margin-right: .3rem; }
+.pc-inline .pc-form { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin: .15rem 0 0; }
+.pc-inline .pc-form input[name=comment] { flex: 1 1 9rem; min-width: 0; margin: 0; padding: .15rem .4rem; height: auto; font-size: .78rem; }
+.pc-inline .pc-btns button { padding: .1rem .5rem; font-size: .75rem; }
+.pc-inline p { margin: .2rem 0 0; }
+@media (max-width: 600px) {
+  /* item tables with Agree / Disagree: one block per row on phones, nothing scrolls sideways */
+  .pc-table, .pc-table tbody, .pc-table tr, .pc-table td, .pc-table tbody th { display: block; width: 100%; }
+  .pc-table thead { display: none; }
+  .pc-table tr { padding: .4rem 0; border-bottom: 1px solid var(--pico-muted-border-color); }
+  .pc-table td, .pc-table tbody th { padding: .1rem 0; border: 0; }
+}

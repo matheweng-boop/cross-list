@@ -70,3 +70,14 @@ def test_band_tables_do_not_scroll(client):
     assert 'class="pf-band small stack-table"' in pf
     css = (ROOT / "app/web/static/app.css").read_text()
     assert ".stack-table thead { display: none; }" in css
+
+
+def test_agree_disagree_shown_without_react_click(client):
+    html = client.get("/library/v2x_frontend").text
+    assert 'class="pc-react pc-inline"' in html and ">Agree</button>" in html and ">Disagree</button>" in html
+    assert '<details class="pc-react"' not in html and ">react<" not in html
+    for path in ("app/web/templates/business/_prelim.html", "app/web/templates/reviews/detail.html"):
+        src = (ROOT / path).read_text()
+        assert '<details class="pc-react"' not in src and "pc-inline" in src
+    r = client.post("/library/v2x_frontend/react", data={"item": "x", "verdict": "agree"}, follow_redirects=False)
+    assert r.status_code in (303, 400, 404)

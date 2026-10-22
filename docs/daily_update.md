@@ -27,8 +27,8 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    `rules/timing.yaml`; the cap counts toward the ~5 documents per run). Tick the line when its parts are in.
    Typical first (owner, 22 Oct 2026): re-read prop delay and CMTI typical values for the data files not yet
    converted (list in `data/sources/GATE_DRIVER_DATA.md`), 2–3 cached datasheets per run.
-   Owner, 22 Oct 2026: CMTI compares at the best level both datasheets state (typ, then max, then min); store
-   min / typ / max per part for CMTI and change the comparison (see docs/open_questions.md, Settled), with tests.
+   Owner, 22 Oct 2026: every parameter compares at the best level both datasheets state (typ, then max, then
+   min); store min / typ / max per part (CMTI and propagation delay first) and change the comparison (see docs/open_questions.md, Settled), with tests.
    Owner, 22 Oct 2026, for the next run: replace the HyperPhysics links on the physics topics
    (data/engineering_rf_notes.yaml, /visuals) with other public sources; profile Murata next; sort the tuner TAM
    figures by scope (AM/FM tuner only vs radio incl. digital demodulators).

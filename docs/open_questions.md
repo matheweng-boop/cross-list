@@ -14,9 +14,9 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 - Microchip timing parts: left out.
 - SiTime datasheets from the "gated" folder: keep reading them (no login or form; robots.txt allows).
 - MSW2060-206: the MACOM datasheet values stand (20–1200 MHz, –65 to +125 °C operating, 8 x 5 x 2.5 mm).
-- CMTI (and any value with min / typ / max): compare at the best level BOTH datasheets state, in the order typical,
-  then maximum, then minimum. Example: CA-IS3740HB (100 min / 150 typ) vs SI86S640EE-IS2 (100 min only) compares
-  100 vs 100. To build: keep min / typ / max per part for CMTI first (daily run, standing work).
+- Every parameter with min / typ / max (confirmed by the owner): compare at the best level BOTH datasheets state,
+  in the order typical, then maximum, then minimum (the common denominator). Example: CA-IS3740HB (100 min / 150 typ) vs SI86S640EE-IS2 (100 min only) compares
+  100 vs 100. To build: keep min / typ / max per part, CMTI and propagation delay first (daily run, standing work).
 - NSI6601S: compared on its standard OUT as a single output (OUTF, the second slew-rate pin, is ignored).
 - Competitors after SiTime: Murata next.
 - HyperPhysics: the owner found no good links; use a different source. Replace the HyperPhysics links on the physics

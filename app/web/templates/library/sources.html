@@ -9,7 +9,7 @@
 <div class="table-wrap"><table class="small striped">
   <thead><tr><th scope="col">Source</th><th scope="col">Offers</th><th scope="col">Licence</th><th scope="col">Access</th><th scope="col">Use</th></tr></thead>
   {% for f in ('high', 'medium', 'low', 'blocked') %}{% for s in sources if s.feasibility == f %}<tr>
-    <td><b>{% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</b><br><small class="muted">{{ s.kind|replace('_', ' ') }} · {{ {'rf': 'RF', 'isolation': 'isolation', 'both': 'RF and isolation'}[s.area] }}</small></td>
+    <td><b>{% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</b><br><small class="muted">{{ s.kind|replace('_', ' ') }} · {{ {'rf': 'RF', 'isolation': 'isolation', 'both': 'RF and isolation', 'physics': 'physics and maths'}[s.area] }}</small></td>
     <td>{{ s.offers }}</td><td>{{ s.licence }}</td><td>{{ s.access }}</td><td><span class="lib-feas f-{{ f }}">{{ feas[f] }}</span></td></tr>{% endfor %}{% endfor %}</tbody>
 </table></div>
 {% endblock %}

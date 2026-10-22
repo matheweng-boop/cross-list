@@ -141,7 +141,7 @@ products:
     guides: [cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, prop_delay_ns, data_rate_mbps, channel_config, vdd_range_v, temp_range_c, certifications, qualification]
     why: [cmti_kv_us, creepage_mm, isolation_class, default_output]
     visuals: [cmti, creep]
-    rf_notes: []
+    rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
     topics: [traction_asil_d]
     review_words: [digital isolator, isolator]
   - key: gate_drivers
@@ -150,8 +150,8 @@ products:
     pitch: Drive SiC, IGBT and GaN switches across the barrier in traction inverters, chargers, solar and motor drives.
     guides: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, prop_delay_ns, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, certifications, qualification, temp_range_c]
     why: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns]
-    visuals: [cmti, gate, creep, thermal]
-    rf_notes: []
+    visuals: [cmti, gate, creep, thermal, swloss]
+    rf_notes: [phys_isolation_coupling, phys_switching_losses, phys_creepage_clearance, phys_dielectric_breakdown]
     topics: [traction_asil_d]
     review_words: [gate driver]
   - key: isolated_analog
@@ -161,7 +161,7 @@ products:
     guides: [cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, certifications, qualification, temp_range_c]
     why: [cmti_kv_us, creepage_mm, isolation_class]
     visuals: [cmti, creep]
-    rf_notes: []
+    rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
     topics: [traction_asil_d]
     review_words: [isolated amplifier, isolated adc, current sens]
   - key: rf_switches
@@ -171,7 +171,7 @@ products:
     guides: []
     why: []
     visuals: [vswr, ip3, dbm]
-    rf_notes: [rf_switches, vswr_return_loss_mismatch, linearity_p1db_ip3, txrx_isolation_options]
+    rf_notes: [phys_switch_loss_isolation, phys_matching_vswr, rf_switches, vswr_return_loss_mismatch, linearity_p1db_ip3, txrx_isolation_options]
     topics: [roof_coexistence, v2x_frontend]
     review_words: [rf switch, antenna tuning]
   - key: front_ends
@@ -181,7 +181,7 @@ products:
     guides: []
     why: []
     visuals: [link, nf, ip3, dbm]
-    rf_notes: [wifi_fem_and_triband_ap, pa_linearization_dpd_doherty, cascaded_noise_figure, sensitivity_noise_floor, mmwave_5g_front_ends]
+    rf_notes: [phys_noise_gain, phys_linearity, phys_semiconductors, wifi_fem_and_triband_ap, pa_linearization_dpd_doherty, cascaded_noise_figure, sensitivity_noise_floor, mmwave_5g_front_ends]
     topics: [v2x_frontend, tcu_rf, gnss_frontend]
     review_words: [front-end, fem, power amplifier, lna]
   - key: filters
@@ -190,8 +190,8 @@ products:
     pitch: Keep radios from jamming each other; more bands and radios in one product need more and sharper filters.
     guides: []
     why: []
-    visuals: [filter, lc]
-    rf_notes: [acoustic_filters_duplexers, filter_fundamentals, dynamic_range_sfdr_blocking]
+    visuals: [filter, lc, bvd]
+    rf_notes: [phys_piezo_acoustic, phys_resonance_q, acoustic_filters_duplexers, filter_fundamentals, dynamic_range_sfdr_blocking]
     topics: [roof_coexistence, tcu_rf]
     review_words: [filter, duplexer, multiplexer]
   - key: tuners
@@ -200,8 +200,8 @@ products:
     pitch: AM / FM / DAB / HD Radio reception in car head units and consumer radios.
     guides: [qualification, temp_range_c]
     why: [qualification]
-    visuals: [nf, wave, dbm]
-    rf_notes: [sensitivity_noise_floor, dynamic_range_sfdr_blocking, receiver_architectures]
+    visuals: [nf, wave, dbm, mod]
+    rf_notes: [phys_am_fm, phys_mixing_superhet, sensitivity_noise_floor, dynamic_range_sfdr_blocking, receiver_architectures]
     topics: [roof_coexistence]
     review_words: [tuner, radio receiver, broadcast]
   - key: timing
@@ -210,8 +210,8 @@ products:
     pitch: Clean clocks for data centres, 5G radios and networking; jitter directly limits data rate and link quality.
     guides: [temp_range_c]
     why: []
-    visuals: []
-    rf_notes: [phase_noise_oscillators, pll_synthesis, vco_design_tradeoffs]
+    visuals: [jitter, bvd]
+    rf_notes: [phys_timing_resonators, phys_phase_noise_jitter, phys_pll, phase_noise_oscillators, pll_synthesis, vco_design_tradeoffs]
     topics: []
     review_words: [clock, oscillator, jitter, timing]
   - key: uwb
@@ -221,7 +221,7 @@ products:
     guides: [qualification]
     why: [qualification]
     visuals: [link, rf-bands]
-    rf_notes: [lpwan_uwb_iot_links]
+    rf_notes: [phys_antennas_wavelength, lpwan_uwb_iot_links]
     topics: [auto_uwb]
     review_words: [uwb, ultra-wideband]
   - key: power_motor
@@ -230,7 +230,7 @@ products:
     pitch: Highly integrated power and motor-control chips that cut parts count in SSDs, tools and appliances.
     guides: [temp_range_c, qualification]
     why: [qualification]
-    visuals: [thermal]
-    rf_notes: []
+    visuals: [thermal, swloss]
+    rf_notes: [phys_lc_energy, phys_switching_losses, phys_semiconductors]
     topics: [semiconductor_cost]
     review_words: [pmic, power management, motor]

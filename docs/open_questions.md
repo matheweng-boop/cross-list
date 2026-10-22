@@ -9,6 +9,10 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    ($0.89 B to $2.31 B for 2024). They are yes/no questions in the Data quality review queue, and the answers now
    change the Opportunity explorer's market size directly.
 3. **Competitors.** Competitive analytics starts with SiTime. Which companies next, and in what order?
+4. **HyperPhysics links.** HyperPhysics could not be opened from the research machine (it serves plain HTTP, and its
+   HTTPS certificate does not match its name), so the HyperPhysics links on the new physics topics
+   (`/rf-notes#cat-physics`) use the site's own page names but are unchecked. Could you click two or three of them
+   from your browser? If they work, keep them; if not, say which and they are replaced in the next Saturday run.
 
 ## Settled (owner, 22 Oct 2026)
 

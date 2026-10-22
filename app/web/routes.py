@@ -674,8 +674,10 @@ def general_knowledge(request: Request):
 @router.get("/rf-notes", response_class=HTMLResponse)
 def rf_notes_page(request: Request):
     from app.services import rf_notes
+    from app.services.knowledge import KINDS
 
-    return templates.TemplateResponse(request, "engineering/rf_notes.html", {"groups": rf_notes.by_category()})
+    ctx = {"groups": rf_notes.by_category(), "links": rf_notes.links, "kinds": KINDS}
+    return templates.TemplateResponse(request, "engineering/rf_notes.html", ctx)
 
 
 @router.get("/engineering", response_class=HTMLResponse)

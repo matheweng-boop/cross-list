@@ -62,8 +62,9 @@ def test_applications_searchable_by_general_category(client, real):  # noqa: F81
 
     def shown(q):
         html = client.get(f"/parts/{comp}/walk", params={"q": q}).text
-        cards = re.findall(r'<article class="walk-card"[^>]*?( hidden)?>\s*<h3>([^<]+)</h3>', html)
-        return [name for hid, name in cards if not hid], html
+        cards = re.findall(r'<article class="walk-card"[^>]*?( hidden)?>\s*<h3>(?:<button[^>]*data-full="([^"]+)"|([^<]+))',
+                           html)  # fmt: skip
+        return [full or name for hid, full, name in cards if not hid], html
 
     trac, _ = shown("traction inverter")
     assert trac and all("traction" in n.lower() for n in trac)

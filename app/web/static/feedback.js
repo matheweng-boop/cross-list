@@ -88,3 +88,34 @@
     }
   });
 })();
+
+// Dictation in the feedback window (owner, 22 Oct 2026): the browser's Web Speech API fills the text box. The button
+// stays hidden where the browser has no speech recognition. BizDev gets only the typed-out text.
+(() => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const root = document.getElementById("fb");
+  if (!SR || !root) return;
+  const box = root.querySelector(".fb-dict"), mic = root.querySelector(".fb-mic"), st = root.querySelector(".fb-mic-st");
+  const text = root.querySelector("textarea[name=text]");
+  if (!box || !mic || !text) return;
+  box.hidden = false;
+  let rec = null;
+  const stop = () => { if (rec) rec.stop(); };
+  mic.addEventListener("click", () => {
+    if (rec) { stop(); return; }
+    rec = new SR();
+    rec.lang = document.documentElement.lang || navigator.language || "en-US";
+    rec.interimResults = false;
+    rec.continuous = true;
+    rec.onresult = e => {
+      for (let i = e.resultIndex; i < e.results.length; i++)
+        if (e.results[i].isFinal) text.value = `${text.value} ${e.results[i][0].transcript}`.trim();
+    };
+    rec.onend = () => { rec = null; mic.textContent = "🎤 Dictate"; mic.setAttribute("aria-pressed", "false"); st.textContent = ""; };
+    rec.onerror = e => { st.textContent = `Dictation not available (${e.error})`; };
+    try { rec.start(); } catch { rec = null; return; }
+    mic.textContent = "■ Stop"; mic.setAttribute("aria-pressed", "true"); st.textContent = "Listening…";
+  });
+  root.querySelector("form")?.addEventListener("submit", stop);
+  root.querySelector(".fb-close")?.addEventListener("click", stop);
+})();

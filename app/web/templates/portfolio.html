@@ -56,10 +56,10 @@
   <span><span class="pf-cn">· 40</span> competitor parts</span>
   <span><span class="pf-gapkey"></span> only competitors sell here: a gap for us</span>
 </div>
-<div class="pf-wrap"><table class="pf-band small">
+<div class="fit-wrap"><table class="pf-band small stack-table">
   <thead><tr><th scope="col">Function</th>{% for b in bands.bands %}<th scope="col">{{ b.label }}</th>{% endfor %}</tr></thead>
   <tbody>{% for r in bands.rows %}<tr><th scope="row">{{ r.label }}</th>{% for c in r.cells %}{% set ours = c.Skyworks or c.Qorvo %}
-    <td{% if not ours and c.competitors %} class="pf-gap"{% endif %} title="{{ r.label }}, {{ c.band }}: Skyworks {{ c.Skyworks }}, Qorvo {{ c.Qorvo }}, competitors {{ c.competitors }}">{% if ours %}{{ pill('Skyworks', c.Skyworks, c.lead) }}{{ pill('Qorvo', c.Qorvo, c.lead) }}{% else %}<span class="muted pf-none">–</span>{% endif %}<small class="pf-cn"> · {{ c.competitors }}</small></td>{% endfor %}</tr>{% endfor %}</tbody>
+    <td data-label="{{ c.band }}"{% if not ours and c.competitors %} class="pf-gap"{% endif %} title="{{ r.label }}, {{ c.band }}: Skyworks {{ c.Skyworks }}, Qorvo {{ c.Qorvo }}, competitors {{ c.competitors }}">{% if ours %}{{ pill('Skyworks', c.Skyworks, c.lead) }}{{ pill('Qorvo', c.Qorvo, c.lead) }}{% else %}<span class="muted pf-none">–</span>{% endif %}<small class="pf-cn"> · {{ c.competitors }}</small></td>{% endfor %}</tr>{% endfor %}</tbody>
 </table></div>
 
 <h2 id="overlap">Overlap and complements</h2>

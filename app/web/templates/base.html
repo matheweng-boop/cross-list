@@ -55,6 +55,7 @@
     <form>
       <div class="fb-kinds small">{% for k, label in [('problem', 'Something is wrong'), ('idea', 'Idea'), ('data', 'Data'), ('question', 'Question')] %}<label><input type="radio" name="kind" value="{{ k }}"{{ ' checked' if k == 'idea' }}> {{ label }}</label>{% endfor %}</div>
       <textarea name="text" rows="4" required maxlength="4000" placeholder="What should change, what is wrong, or what are you missing here?" aria-label="Feedback"></textarea>
+      <p class="fb-dict small" hidden><button type="button" class="outline small-btn fb-mic" aria-pressed="false" title="Dictation uses your browser's own speech recognition; BizDev receives only the text. Some browsers (e.g. Chrome) send the audio to their own speech service.">🎤 Dictate</button> <span class="fb-mic-st muted" aria-live="polite"></span></p>
       <label class="fb-sel small" hidden><input type="checkbox" name="withsel" checked> Include the selected text: “<span></span>”</label>
       <label class="fb-file small">Add a picture or PDF (optional, up to 10 MB)
         <input type="file" name="file" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"></label>

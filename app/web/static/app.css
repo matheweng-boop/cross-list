@@ -1565,7 +1565,8 @@ dialog.vd > article.vd-card { width: min(70rem, calc(100vw - 1rem)); max-width: 
 .walk-card p:last-child { margin: auto 0 0; padding-top: .3rem; } .walk-card .button { width: auto; }
 .walk-mini { display: flex; flex-wrap: wrap; gap: .25rem; margin: .2rem 0 .3rem; }
 .walk-mini-g { border: 1px dashed var(--pico-muted-border-color); border-radius: .3rem; padding: .1rem .25rem; max-width: 100%; }
-.walk-mini-g span { display: block; font-size: .62rem; line-height: 1.2; color: var(--pico-muted-color); max-width: 7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.walk-mini-g span { display: block; font-size: .62rem; line-height: 1.2; color: var(--pico-muted-color); max-width: 7rem; overflow-wrap: anywhere; }
+.walk-card, .walk-card p, .walk-card li { overflow-wrap: anywhere; } .walk-name { text-align: left; font-weight: 600; }
 .walk-mini-g div { display: flex; flex-wrap: wrap; gap: 2px; max-width: 7rem; }
 .walk-also { margin: 0 0 .2rem; padding-left: 1rem; } .walk-also li { margin: 0; }
 .walk-add { margin: .6rem 0; padding: .5rem .7rem; border: 1px solid var(--pico-muted-border-color); border-left: 3px solid var(--pico-primary); border-radius: .4rem; }
@@ -1654,3 +1655,70 @@ dialog.vd > article.vd-card { width: min(70rem, calc(100vw - 1rem)); max-width: 
   .rv-cards td[data-label]::before { content: attr(data-label) ": "; font-weight: 600; color: var(--pico-muted-color); }
   .rv-feat td.rv-val { min-width: 0; }
 }
+
+/* Tables that never scroll sideways (owner, 22 Oct 2026): compact columns that wrap; on narrow screens each row
+   becomes a card, its cells a grid with the column name above each value. */
+.fit-wrap { overflow: visible; }
+.stack-table { width: 100%; }
+.stack-table thead th { white-space: normal !important; }
+.stack-table.rf-matrix th, .stack-table.rf-matrix td { padding: .3rem .3rem; }
+.stack-table.rf-matrix .rf-cell a { min-width: 0; }
+.stack-table.pf-band td { white-space: normal; }
+.stack-table th[scope=row] { white-space: normal !important; position: static !important; }
+@media (max-width: 900px) {
+  .stack-table, .stack-table tbody, .stack-table tr, .stack-table th[scope=row] { display: block; width: 100%; }
+  .stack-table thead { display: none; }
+  .stack-table tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; margin: 0 0 .6rem; padding: 0 0 .4rem;
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .stack-table th[scope=row] { grid-column: 1 / -1; max-width: none !important; min-width: 0 !important; padding: .2rem 0; font-weight: 600; }
+  .stack-table td { display: block; min-width: 0; text-align: center; padding: .2rem .15rem !important; }
+  .stack-table td[data-label]::before { content: attr(data-label); display: block; font-size: .62rem; line-height: 1.2;
+    color: var(--pico-muted-color); font-weight: 400; }
+  .stack-table.pf-band .pf-n { min-width: 1.4rem; }
+  .stack-table.pf-band .pf-none { min-width: 0; }
+}
+
+/* Agree / Disagree shown directly, no "react" click first (owner, 22 Oct 2026) */
+.pc-react.pc-inline { display: block; margin: .3rem 0 0; font-size: .78rem; }
+.pc-inline .pc-state:empty { display: none; }
+.pc-inline .pc-state { margin-right: .3rem; }
+.pc-inline .pc-form { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin: .15rem 0 0; }
+.pc-inline .pc-form input[name=comment] { flex: 1 1 9rem; min-width: 0; margin: 0; padding: .15rem .4rem; height: auto; font-size: .78rem; }
+.pc-inline .pc-btns button { padding: .1rem .5rem; font-size: .75rem; }
+.pc-inline p { margin: .2rem 0 0; }
+@media (max-width: 600px) {
+  /* item tables with Agree / Disagree: one block per row on phones, nothing scrolls sideways */
+  .pc-table, .pc-table tbody, .pc-table tr, .pc-table td, .pc-table tbody th { display: block; width: 100%; }
+  .pc-table thead { display: none; }
+  .pc-table tr { padding: .4rem 0; border-bottom: 1px solid var(--pico-muted-border-color); }
+  .pc-table td, .pc-table tbody th { padding: .1rem 0; border: 0; }
+}
+
+/* Markets: compact filters, rarely used ones under "More filters" (owner, 22 Oct 2026) */
+.mk-filters .chip-row { margin: 0 0 .2rem; gap: .2rem .25rem; }
+.mk-filters .fchip { padding: .05rem .45rem; font-size: .76rem; }
+.more-filters { margin: .1rem 0 0; } .more-filters > summary { cursor: pointer; color: var(--pico-primary); width: fit-content; }
+.more-filters[open] > summary { margin-bottom: .2rem; }
+@media (max-width: 700px) {
+  .mk-filters { gap: .35rem; padding: .4rem .5rem; }
+  .mk-filters .chip-row, .mk-filters nav.company-filter { flex-direction: row; flex-wrap: wrap; align-items: center; gap: .15rem .2rem; }
+  .mk-filters .chip-lbl { flex: 1 1 100%; margin: 0; }
+  .mk-filters .fchip, .mk-filters nav.company-filter a.badge { display: inline-flex; padding: .05rem .4rem; font-size: .76rem; border: 1px solid var(--pico-muted-border-color); border-radius: 1rem; }
+}
+.fb-dict { margin: -.2rem 0 .4rem; } .fb-dict .fb-mic { width: auto; margin: 0; padding: .1rem .55rem; font-size: .78rem; }
+.rp-stage { font-size: .74rem; color: #8a5a00; } .rp-stage.on { color: #2e7d4f; font-weight: 600; }
+
+/* Price estimate: tighter boxes, price breaks as rows or pasted (owner, 22 Oct 2026) */
+.pe-form .grid { gap: .2rem .8rem; margin-bottom: 0; }
+.pe-form label { margin-bottom: .35rem; }
+.pe-form input:not([type=checkbox]):not([type=range]), .pe-form select { margin-bottom: 0; padding-top: .35rem; padding-bottom: .35rem; height: auto; }
+.pe-form .pe-variants { margin-top: .25rem; font-size: .85rem; }
+.pe-breaks { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .4rem .9rem; margin: .2rem 0 .6rem; padding: 0; border: 0; }
+.pe-breaks legend { font-weight: 500; margin-bottom: .2rem; }
+.pe-rows { display: flex; flex-direction: column; gap: .25rem; flex: 0 1 16rem; min-width: 0; }
+.pe-row { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; }
+.pe-row input { margin: 0 !important; }
+.pe-rows .pe-add { width: 2.2rem; margin: 0; padding: .05rem 0; font-size: 1.1rem; line-height: 1.2; }
+.pe-or { align-self: center; color: var(--pico-muted-color); font-style: italic; }
+.pe-paste { flex: 1 1 14rem; min-width: 0; margin: 0 !important; }
+.pe-paste textarea { margin: .2rem 0 0; }

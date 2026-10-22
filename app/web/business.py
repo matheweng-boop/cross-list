@@ -674,7 +674,7 @@ async def tech_feedback(request: Request, session: Session = Depends(get_session
         kind = kind if kind in ("missing", "correction", "idea") else "idea"
         session.add(TechFeedback(topic=topic, kind=kind, text=str(form.get("text")).strip(), author=author))
     session.commit()
-    return RedirectResponse("/business/capabilities#feedback", status_code=303)
+    return RedirectResponse("/business/capabilities", status_code=303)
 
 
 @router.get("/business/capabilities/feedback.txt", response_class=PlainTextResponse)

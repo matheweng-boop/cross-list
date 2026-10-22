@@ -20,6 +20,8 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
    Standing work when the day's comments leave room: the next unticked lines of `docs/pinout_backlog.md` (pinouts of
    Infineon and Chipanalog gate drivers; these datasheets count toward the download cap below).
+   Timing crosses: the next 2–3 datasheets from `docs/timing_backlog.md` per run (data/real/*_timing.yaml, rules
+   `rules/timing.yaml`; the cap counts toward the ~5 documents per run). Tick the line when its parts are in.
    Competitive analytics: one more competitor profile per run when there is room (owner's list in
    `docs/open_questions.md` first; `data/business/competitors/_format.yaml`, public sources only).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.

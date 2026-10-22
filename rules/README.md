@@ -35,3 +35,6 @@ Category values are compared as text, so every data file must use the same words
 | `output_config` (gate drivers) | `split output` (OUTH / OUTL, VO+ / VO-), `Miller clamp` (one output plus a clamp pin), `split output + Miller clamp`, `UVLO to GND2` (one output, UVLO referred to a GND2 pin: TI UCC53x0E), `single output` (one output per channel, no clamp pin), `two-level outputs` (Novosense NSI6601S: OUT and OUTF for two slew rates) |
 | `uvlo_v` (gate drivers) | the option class (8, 12 V) or the rising threshold; values within 6 % count as the same variant |
 | `default_output` (digital isolators) | `low`, `high`; `n/a` for LED-emulator inputs, which have no input-side supply |
+| `function_type` (timing) | `clock_generator`, `jitter_attenuator`, `clock_buffer`, `pcie_buffer`, `crystal_oscillator` (the block-diagram function ids; a timing part fills the function it names) |
+| `output_formats` (timing) | `LVPECL`, `LVDS`, `HCSL` (LP-HCSL and HCSL-fast too), `CML`, `LVCMOS` (dual CMOS too); vendor variants such as AC-LVPECL or LVDS-like are written as the plain format |
+| `pcie_gen` (timing) | `none` (no PCIe compliance stated), `gen1` … `gen7`: the highest generation the datasheet states |

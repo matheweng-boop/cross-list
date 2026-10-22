@@ -13,3 +13,96 @@
     preferred if one existed.
   author: application engineering
   date: 2026-10-19
+# ---------------------------------------------------------------- timing (first batch, 22 Oct 2026)
+# Pin-to-pin drop-ins are rare across vendors in timing: each vendor has its own pinout and configuration software,
+# so a timing cross usually means a board change and a new configuration file.
+- reference: LMKDB1104
+  candidate: Si53204
+  verdict: best
+  title: PCIe 4-output buffer, different package and supply
+  note: >-
+    Same job: 4 LP-HCSL outputs, PCIe Gen 1-6 (TI also states Gen 7), 85 or 100 ohm output options on both. Not a
+    drop-in: the Si53204 is a 5 x 5 mm 32-pin QFN against TI's 4 x 4 mm 28-pin VQFN, and it runs from 1.5 V or
+    1.8 V only, so a board that powers the TI part from 3.3 V needs a 1.8 V rail. Additive jitter is far inside the
+    PCIe Gen 6 limit on both (TI 3 fs max, Skyworks 20 fs max).
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: LMKDB1108
+  candidate: Si53208
+  verdict: best
+  title: PCIe 8-output buffer, different package and supply
+  note: >-
+    8 LP-HCSL outputs, PCIe Gen 1-6 on both. Si53208 is a 6 x 6 mm 48-pin QFN (0.4 mm pitch) against TI's 5 x 5 mm
+    40-pin VQFN, and needs 1.5 V or 1.8 V (TI also runs from 3.3 V). Board change, no software change.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: CDCE6214-Q1
+  candidate: Si5332A-AM1
+  verdict: best
+  title: Automotive clock generator, AEC-Q100 grade 2 on both
+  note: >-
+    Both are AEC-Q100 grade 2 (-40 to 105 C) clock generators for ADAS and infotainment. The Si5332-AM1 has 6 outputs
+    (TI 4 differential plus one LVCMOS), lower jitter (190 fs against 350 fs typical) and PCIe Gen 1-5 (TI Gen 1-6
+    without spread spectrum). It does not go below 5 MHz (TI down to 24 kHz): check the design's lowest clock. Different
+    package (5 x 5 mm QFN-32 against 4 x 4 mm VQFN-24), so a board change and a new ClockBuilder Pro configuration.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: LMK03328
+  candidate: Si5341A
+  verdict: best
+  title: Full 1 GHz range, but a 1.8 V core rail
+  note: >-
+    Si5341A covers every LMK03328 output frequency (to 1028 MHz) with 10 outputs and 90 fs against 100 fs. It needs
+    a 1.8 V core plus 3.3 V analog supply where the LMK03328 runs from 3.3 V only. When the design's outputs stay at
+    or below 333 MHz, the Si5332A-GM2 (8 outputs, one 1.8-3.3 V supply) is the simpler and cheaper fit.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: LMK03328
+  candidate: Si5332A-GM
+  verdict: acceptable
+  title: Fits when no output is above 333 MHz
+  note: >-
+    Same supply flexibility (1.8-3.3 V) and PCIe Gen 1-6, 8 outputs on the GM2. Si5332 stops at 333.33 MHz and has
+    no CML output, so it only replaces an LMK03328 whose outputs are all at or below 333 MHz and not CML.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: 5P49V6965
+  candidate: Si5332A-GM1
+  verdict: best
+  title: VersaClock 6E against Si5332
+  note: >-
+    The classic match: one PLL, LVPECL / LVDS / HCSL / LVCMOS outputs, 1.8-3.3 V, I2C plus factory programming.
+    Si5332A-GM1 has 6 outputs against 4, lower jitter (190 fs against 500 fs typical) and PCIe Gen 6 against Gen 5.
+    It does not go below 5 MHz (VersaClock 6E down to 1 kHz) and is 5 x 5 mm against 4 x 4 mm: board change.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: 8A34001
+  candidate: Si5345
+  verdict: acceptable
+  title: Jitter cleaner only; no IEEE 1588 DPLL
+  note: >-
+    Si5345 matches the jitter-cleaning part of the job (10 outputs, 90 fs, 1.8 V core). It has no DPLL / DCO for
+    IEEE 1588 and G.8273.2, which is why timing cards use the ClockMatrix. For those sockets the closer Skyworks match
+    is the Si538x network synchronizer family, not yet in the cross data (docs/timing_backlog.md).
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: SiT9365
+  candidate: Si545
+  verdict: best
+  title: Same 6-pad 7 x 5 mm layout; check supply tolerance
+  note: >-
+    Both are 6-pad 7.0 x 5.0 mm differential oscillators with the same pin functions (OE, NC, GND, OUT+, OUT-, VDD).
+    The SiTime part has a centre pad with no electrical function; the Si545 has none, so it leaves that land unused.
+    Land-pattern sizes are not compared yet. Si545 covers any frequency 0.2-1500 MHz with lower jitter (80 fs
+    against 225 fs) but is specified at 3.3 V +-5 %, the SiT9365 at +-10 %.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22
+- reference: Si5332A-AM
+  candidate: LMK3H0102-Q1
+  verdict: not_recommended
+  title: Threat only for small PCIe sockets
+  note: >-
+    TI's reference-less BAW part needs no crystal but has only 2 differential outputs. It replaces a Si5332-AM only
+    where one or two clocks are needed; with more loads it would need a buffer next to it.
+  author: BizDev timing batch (datasheet comparison)
+  date: 2026-10-22

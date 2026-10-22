@@ -17,14 +17,14 @@ import re
 from collections import Counter
 from urllib.parse import quote
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.models import BlockDiagram, Case, Part, ShortlistItem, SiteFeedback
+from app.models import BlockDiagram, Case, ParamValue, Part, ShortlistItem, SiteFeedback
 from app.services import blocks, crosssell, library, prelim, scoring, vocab
 from app.services import opportunity as op
 from app.services import reports as rp
-from app.services.pipeline import fn_for_family, requested
+from app.services.pipeline import FUNCTION_PARAM, fn_for_family, fn_for_part, requested
 
 STEPS = {1: "Replacement", 2: "Sell around it", 3: "Best of ours around it", 4: "Make it better, other applications",
          5: "What the future needs"}  # fmt: skip
@@ -45,10 +45,11 @@ def competitor_parts(session: Session, fn: str, limit: int = 6) -> list[Part]:
     """Competitor parts in the cross-reference database whose family maps to the function (for links back from
     the function, case and cross-sell pages to a walk-through)."""
     mine = [f for f in session.scalars(select(Part.family).distinct()) if fn_for_family(f) == fn]
-    if not mine:
-        return []
-    q = select(Part).where(Part.family.in_(mine)).order_by(Part.mpn)
-    return [p for p in session.scalars(q) if not p.is_reference][:limit]
+    # families holding several functions (timing) name each part's function in a parameter
+    split = [pid for pid, v in session.execute(select(ParamValue.part_id, ParamValue.value)
+                                               .where(ParamValue.key == FUNCTION_PARAM)) if v == fn]  # fmt: skip
+    q = select(Part).where(or_(Part.family.in_(mine), Part.id.in_(split))).order_by(Part.mpn)
+    return [p for p in session.scalars(q).unique() if not p.is_reference and fn_for_part(p) == fn][:limit]
 
 
 def _step1(rows: list) -> dict:
@@ -73,7 +74,7 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
     `rows` = the part page's cross results (best first)."""
     gaps: list[tuple[int, str]] = []
     s1 = _step1(rows)
-    fn = fn_for_family(part.family)
+    fn = fn_for_part(part)
     anchor = crosssell.resolve_part(session, part.mpn) or (
         {"mpn": part.mpn, "manufacturer": part.manufacturer.name, "ours": part.is_reference, "fns": [fn],
          "automotive": False, "grade": None, "ranges": [], "exact": True, "others": []} if fn else None

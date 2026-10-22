@@ -17,7 +17,7 @@ from app.partnumbers import normalize_pn
 from app.services import blocks, scoring
 from app.services import opportunity as op
 from app.services import rf_coverage as rf
-from app.services.pipeline import fn_for_family
+from app.services.pipeline import fn_for_part
 
 # words people type -> words architectures use; a concept matches when any of its words is in the architecture
 SYNONYMS = {
@@ -67,7 +67,7 @@ def resolve_part(session: Session, q: str) -> dict | None:
             if k == key or k.startswith(key):
                 hits.append((k != key, len(k), p["mpn"], p["manufacturer"], True, fn, p["values"].get("qualification")))
     for p in session.scalars(select(Part).where(func.upper(Part.mpn).like(f"{q.strip().upper()}%")).limit(20)):
-        fn = fn_for_family(p.family)
+        fn = fn_for_part(p)
         if fn:
             hits.append((normalize_pn(p.mpn) != key, len(p.mpn), p.mpn, p.manufacturer.name, p.is_reference, fn, None))
     for p in rf.competitor_parts():

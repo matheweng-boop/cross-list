@@ -54,7 +54,10 @@ def queue(session: Session) -> dict[str, int]:
     from app.services import reviews as rv
 
     backlog = _doc("pinout_backlog.md")
+    timing = _doc("timing_backlog.md")
     return {
+        "timing_left": len(re.findall(r"^- \[ \]", timing, flags=re.M)),
+        "timing_done": len(re.findall(r"^- \[x\]", timing, flags=re.M | re.I)),
         "reviews": sum(e["status"] in ("new", "in_progress") for e in rv.requests(session)),
         "areas": session.scalar(select(func.count()).select_from(AreaRequest).where(AreaRequest.status == "new")) or 0,
         "pinouts_left": len(re.findall(r"^- \[ \]", backlog, flags=re.M)),

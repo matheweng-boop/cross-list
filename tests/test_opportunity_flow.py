@@ -8,28 +8,28 @@ KEEP = r'name="fn" value="([a-z0-9_]+)"><input type="hidden" name="status" value
 def test_explorer_sorts_and_old_views(client):
     for sort in ("label", "path", "reach", "competition", "score", "tam"):
         for d in ("asc", "desc"):
-            r = client.get(f"/business/explorer?sort={sort}&dir={d}")
+            r = client.get(f"/business/explorer/table?sort={sort}&dir={d}")
             assert r.status_code == 200 and 'class="sortable sorted"' in r.text, (sort, d)
-    html = client.get("/business/explorer?view=feasibility").text  # old links land on the matching sort
+    html = client.get("/business/explorer/table?view=feasibility").text  # old links land on the matching sort
     assert 'aria-sort="descending"' in html and "Fit score</a>" not in html
     assert "higher is better" in html and "Evidence" not in html.split("<thead>")[1].split("</thead>")[0]
     assert "How the type and score work" in html
     assert any(f">{b}</span>" in html for b in ("Quick win", "New chip", "Niche"))
-    assert client.get("/business/explorer?s=niche").status_code == 200
+    assert client.get("/business/explorer/table?s=niche").status_code == 200
 
 
 def test_keep_set_aside_and_restore(client):
-    first = re.search(KEEP, client.get("/business/explorer").text).group(1)
+    first = re.search(KEEP, client.get("/business/explorer/table").text).group(1)
     r = client.post("/business/decision", data={"fn": first, "status": "keep", "back": "/business/explorer"},
                     follow_redirects=False)  # fmt: skip
     assert r.status_code == 303 and r.headers["location"] == "/business/explorer"
-    assert "✓ kept" in client.get("/business/explorer").text
+    assert "✓ kept" in client.get("/business/explorer/table").text
     client.post("/business/decision", data={"fn": first, "status": "set_aside", "note": "revisit 2027"})
-    html = client.get("/business/explorer").text
+    html = client.get("/business/explorer/table").text
     aside = html.split('class="h-aside"')[1]
     assert "revisit 2027" in aside and "1 not pursued" in aside
     client.post("/business/decision", data={"fn": first, "status": "clear"})
-    assert "0 not pursued" in client.get("/business/explorer").text
+    assert "0 not pursued" in client.get("/business/explorer/table").text
     assert client.post("/business/decision", data={"fn": "nope", "status": "keep"}).status_code == 400
 
 
@@ -51,7 +51,7 @@ def test_markets_chips_and_groups(client):
 
 
 def test_candidates_to_business_case(client):
-    page = client.get("/business/explorer").text
+    page = client.get("/business/explorer/table").text
     fn = re.search(KEEP, page).group(1)
     form = {"origin": "explorer", "key": fn, "title": "Candidate one", "fn": fn, "back": "/business/explorer"}
     assert client.post("/business/shortlist", data=form, follow_redirects=False).status_code == 303
@@ -61,7 +61,7 @@ def test_candidates_to_business_case(client):
     assert (
         html.count("<b>Candidate one</b>") == 1
         and "Wireless audio for e-bikes" in html
-        and "★ on the shortlist" in client.get("/business/explorer").text
+        and "★ on the shortlist" in client.get("/business/explorer/table").text
     )
     # the button's script posts for JSON and stays on the page; the count feeds the badge on the tab
     count = client.get("/api/shortlist/count").json()["count"]
@@ -85,7 +85,7 @@ def test_overview_retired_explorer_grouped_with_rf_band_gaps(client):
 
     bands = op.rf_band_rows()
     assert all(b["gap_type"] == "band_gap" and b["group"] == "RF & radio" and "@" in b["key"] for b in bands)
-    html = client.get("/business/explorer").text
+    html = client.get("/business/explorer/table").text
     assert 'class="ex-group"' in html and "Category" in html
     if bands:  # an RF band gap can be kept like a function
         r = client.post("/business/decision", data={"fn": bands[0]["key"], "status": "keep"}, follow_redirects=False)
@@ -103,3 +103,21 @@ def test_cross_sell_explains_each_pairing(client):
     page = client.get("/business/attach?fn=load_switch")
     assert page.status_code == 200 and '<details class="why small"><summary>Why?</summary>' in page.text
     assert '<details class="why small" open' not in page.text  # collapsed by default
+
+
+def test_cross_sell_and_gaps_page_in_systems(client):
+    """Owner, 22 Oct 2026: the explorer's data as Systems & applications > Cross-sell & gaps, in three groups."""
+    r = client.get("/business/explorer", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"].startswith("/blocks/cross-sell")
+    r = client.get("/business/explorer?sort=score", follow_redirects=False)
+    assert r.headers["location"] == "/business/explorer/table?sort=score"
+    html = client.get("/blocks/cross-sell").text
+    for anchor, title in (("sell", "Sell what we have"), ("gaps", "Gaps to fill"), ("new", "New technology")):
+        assert f'id="{anchor}"' in html and title in html
+    assert html.count('class="csg-card"') > 5 and "<table" not in html.split("About this page")[0]
+    assert 'href="/business/explorer/table?co=combined"' in html and 'action="/business/attach"' in html
+    from app.web import nav
+
+    assert nav.place("/blocks/cross-sell") == ("systems", "/blocks/cross-sell")
+    opp = dict((k, items) for k, _, items in nav.NAV)["opportunities"]
+    assert ("/business/competitors" in [i[1] for i in opp]) and "/business/explorer" not in [i[1] for i in opp]

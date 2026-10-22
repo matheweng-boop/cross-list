@@ -2,19 +2,20 @@
 {% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push, score_chip with context %}
 {% macro url() -%}
   {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t, 'g': g, 's': s} -%}{%- set _ = base.update(kwargs) -%}
-  /business/explorer?{{ base|dictsort|selectattr('1')|list|urlencode }}
+  /business/explorer/table?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro th(key, extra='') %}{% set on = sort == key %}{% set nd = ('asc' if dir == 'desc' else 'desc') if on else sorts[key][1] %}
   <th scope="col" class="sortable{{ ' sorted' if on }}"{% if on %} aria-sort="{{ 'ascending' if dir == 'asc' else 'descending' }}"{% endif %}><a href="{{ url(sort=key, dir=nd) }}">{{ caller() if caller else sorts[key][0] }}<span class="sort-ind" aria-hidden="true">{{ ('▲' if dir == 'asc' else '▼') if on else '↕' }}</span></a>{{ extra }}</th>
 {%- endmacro %}
 {% macro decide(e, status, label, cls='') %}<form method="post" action="/business/decision" class="push-form"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">{% if status == 'set_aside' %}<input type="hidden" name="note" value="">{% endif %}<button type="submit" class="small-btn {{ cls }}">{{ label }}</button></form>{% endmacro %}
 {% block content %}
-<h1>Opportunity explorer</h1>
+<p class="small"><a href="/blocks/cross-sell?co={{ co }}">← Cross-sell &amp; gaps</a></p>
+<h1>Opportunity explorer: detailed table</h1>
 <p class="subtitle muted">Functions {{ co_label }} does not cover yet, and RF bands it does not cover, grouped by category. Demand is how many block diagrams in the library need it. Click a column title to sort; click a row for its evidence.</p>
 
 {% set active = (scope != 'all') or f or t or s %}
 <div class="chip-row ex-groups small"><span class="chip-lbl">Category</span><a class="fchip{{ ' on' if not g }}" href="{{ url(g='') }}">All <small>{{ group_counts.values()|sum }}</small></a>{% for name, n in group_counts|dictsort %}<a class="fchip{{ ' on' if g == name }}" href="{{ url(g=name) }}">{{ name }} <small>{{ n }}</small></a>{% endfor %}</div>
-<div class="scope-bar small">{{ company_switch('/business/explorer', co, companies, '&sort=' ~ sort ~ '&scope=' ~ scope) }}</div>
+<div class="scope-bar small">{{ company_switch('/business/explorer/table', co, companies, '&sort=' ~ sort ~ '&scope=' ~ scope) }}</div>
 <div class="ex-folds">
 <details class="ex-fold"{% if active %} open{% endif %}><summary class="small"><b>Filters</b>{% if active %} <span class="muted">· {{ [scopes[scope] if scope != 'all', scoring.suggestions.labels[s] if s, (gap_labels[t].split(' – ')[0]) if t, (filters[f][0]) if f]|select|join(' · ') }}</span> <a href="{{ url(f='', t='', s='', scope='all') }}">clear</a>{% endif %}</summary>
 <div class="filter-cols">

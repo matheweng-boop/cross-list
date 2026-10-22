@@ -131,7 +131,7 @@ def test_every_case_names_a_scored_function():
 
 
 def test_pages_show_the_score(client):
-    html = client.get("/business/explorer?sort=score").text
+    html = client.get("/business/explorer/table?sort=score").text
     assert "Opportunity score" in html and "of 100" in html
     method = client.get("/business/method").text
     assert all(w in method for w in ("Portfolio distance", "Architecture fit", "Engineering rules", "Bundle strength"))

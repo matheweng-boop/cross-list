@@ -129,9 +129,9 @@ def test_explore_page(client):
 
 def test_explorer_views_scope_and_old_links(client):
     for view in ("reach", "crosssell", "feasibility", "competition", "commercial", "evidence"):
-        r = client.get(f"/business/explorer?view={view}")
+        r = client.get(f"/business/explorer/table?view={view}")
         assert r.status_code == 200 and "Denominator" in r.text, view
-    lib = client.get("/business/explorer?scope=library").text
+    lib = client.get("/business/explorer/table?scope=library").text
     assert "Library architectures only" in lib and "reference architectures" in lib
     # old pages land on the matching view
     r = client.get("/business/gaps?sort=tam", follow_redirects=False)
@@ -139,7 +139,7 @@ def test_explorer_views_scope_and_old_links(client):
     r = client.get("/business/technology?view=short", follow_redirects=False)
     assert "view=feasibility" in r.headers["location"] and "f=short" in r.headers["location"]
     # unknown TAM is shown as unknown, never as zero
-    assert "unknown" in client.get("/business/explorer?view=commercial").text
+    assert "unknown" in client.get("/business/explorer/table?view=commercial").text
 
 
 def test_gap_types_and_qualification_states():

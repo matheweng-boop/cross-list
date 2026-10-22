@@ -49,3 +49,23 @@ def test_data_batch_includes_a_library_rule(client, session, real):  # noqa: F81
     row = session.scalar(select(DataReview).where(DataReview.dataset == f"library:{rule.detail['library']}",
                                                   DataReview.key == rule.detail["item"]))  # fmt: skip
     assert row is not None and row.verdict == "correct"
+
+
+def test_only_a_few_shown_and_the_rest_wait(client, session, real):  # noqa: F811
+    """Owner, 22 Oct 2026: keep more hidden; show the next ones once the shown ones are answered. Larger note field
+    and the datasheet links inside the comparison."""
+    html = client.get("/manage/verify").text
+    crosses = sorted(_open(session, "cross"), key=lambda t: t.id)
+    shown = [t for t in crosses if f'action="/manage/verify/{t.id}"' in html]
+    assert len(shown) == min(len(crosses), verify.SHOW["cross"])
+    if len(crosses) > verify.SHOW["cross"]:
+        hidden = crosses[verify.SHOW["cross"]]
+        assert f'action="/manage/verify/{hidden.id}"' not in html and "more waiting" in html
+        for t in shown:
+            client.post(f"/manage/verify/{t.id}", data={"result": "ok"})
+        assert f'action="/manage/verify/{hidden.id}"' in client.get("/manage/verify").text
+    t = shown[0]
+    dialog = html.split(f'id="vd-{t.id}"', 1)[1].split("</dialog>", 1)[0]
+    assert '<textarea name="note" rows="8"' in dialog
+    assert "Datasheet ↗" in dialog
+    assert f'href="{t.detail["ref_ds"]}"' in dialog and f'href="{t.detail["cand_ds"]}"' in dialog

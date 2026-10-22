@@ -55,7 +55,7 @@ def _cross_compare(session: Session, t: VerifyTask) -> dict | None:
 def verify_page(request: Request, session: Session = Depends(get_session)):
     new = verify.assign(session)
     board = verify.board(session)
-    compares = {t.id: _cross_compare(session, t) for t in board["open"]["cross"]}
+    compares = {t.id: _cross_compare(session, t) for t in board["shown"]["cross"]}
     ctx = {"board": board, "kinds": verify.KINDS, "batch": verify.BATCH, "new": new, "topics": verify.DATA_TOPICS,
            "compares": compares}  # fmt: skip
     return templates.TemplateResponse(request, "verify.html", ctx)

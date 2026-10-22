@@ -21,6 +21,7 @@
 {% set trs = tech_reviews_for(part.mpn) %}{% for x in tech_reviews_fn(w.fn) if x not in trs %}{% set _ = trs.append(x) %}{% endfor %}{{ review_list(trs, 'Technology reviews for this part or its function') }}
 <ol class="walk-nav">{% for n, title in steps.items() %}{% set k = w.gaps|selectattr(0, 'eq', n)|list|length %}
   <li{% if n > upto %} class="walk-later"{% endif %}>{% if n <= upto %}<a href="#step-{{ n }}">{% endif %}<span class="walk-n">{{ n }}</span> {{ title }}{% if k %} <small class="walk-miss" title="data missing">{{ k }} missing</small>{% endif %}{% if n <= upto %}</a>{% endif %}</li>{% endfor %}</ol>
+{{ next(upto) }}
 
 <section class="walk-step" id="step-1"><h2><span class="walk-n">1</span> Replacement: is ours suitable?</h2>
 {% if s1.best %}<p class="walk-answer walk-{{ s1.suitable }}">{% if s1.suitable == 'dropin' %}Yes: <a href="/parts/{{ s1.best.id }}">{{ s1.best.mpn }}</a> is a drop-in.{% else %}With care: <a href="/parts/{{ s1.best.id }}">{{ s1.best.mpn }}</a> is a {{ s1.verdict.label|lower }}{% if s1.worse %}, worse on {{ s1.worse|join(', ') }}{% endif %}.{% endif %}</p>
@@ -43,11 +44,11 @@
 <p class="walk-legend small"><span><i class="mb-mine"></i> {{ part.mpn }}</span> <span><i class="mb-ours"></i> we sell it</span> <span><i class="mb-gap"></i> gap</span> <span><i class="mb-ext"></i> customer part</span></p>
 <div class="walk-cards" id="walk-cards" data-first="9">{% for c in w.cards %}
   <article class="walk-card" data-tags="{{ c.tag_keys|join(' ') }}" data-text="{{ c.index.text }}"{% if not shown[loop.index0] or (not q and loop.index0 >= 9) %} hidden{% endif %}>
-    <h3>{{ c.name }}</h3>
+    <h3>{% if c.short != c.name %}<button type="button" class="link-btn walk-name" data-full="{{ c.name }}" title="Full name" aria-haspopup="dialog">{{ c.short }}</button>{% else %}{{ c.name }}{% endif %}</h3>
     <p class="small muted">{{ c.market }}{% if c.tags %} · {{ c.tags|join(', ') }}{% endif %}</p>
     <div class="walk-mini" role="img" aria-label="Block diagram: {{ c.groups|map(attribute='label')|join(', ') }}">{% for g in c.groups %}<div class="walk-mini-g"><span>{{ g.label }}</span><div>{% for b in g.blocks %}<i class="mb-{{ b.cls }}" title="{{ b.label }}"></i>{% endfor %}</div></div>{% endfor %}</div>
     {% if c.also %}<p class="small walk-also-h"><b>If so, we also have:</b></p>
-    <ul class="small walk-also">{% for o in c.also[:5] %}<li>{{ o.label }}: {% if o.url %}<a href="{{ o.url }}">{{ o.mpn }}</a>{% else %}<b>{{ o.mpn }}</b>{% endif %} <small class="muted">{{ o.manufacturer|vendor }}</small></li>{% endfor %}{% if c.also|length > 5 %}<li class="muted">and {{ c.also|length - 5 }} more</li>{% endif %}</ul>
+    <ul class="small walk-also">{% for o in c.also %}<li>{{ o.label }}: {% if o.url %}<a href="{{ o.url }}">{{ o.mpn }}</a>{% else %}<b>{{ o.mpn }}</b>{% endif %} <small class="muted">{{ o.manufacturer|vendor }}</small></li>{% endfor %}</ul>
     {% else %}<p class="small muted">No other part of ours in this design yet.</p>{% endif %}
     {% if c.gaps %}<p class="small muted">{{ c.gaps }} block{{ 's' if c.gaps != 1 }} we cannot fill yet.</p>{% endif %}
     <p><a class="button small-btn" href="{{ c.open }}">Yes, close: open it with {{ part.mpn }}</a></p>
@@ -72,9 +73,10 @@
   {% for e in w.new %}<tr><td><a href="/business/evidence/{{ e.fn }}">{{ e.label }}</a></td><td>{{ e.score }}</td><td>{{ e.apps }} of {{ w.s2.n }}</td><td class="muted">no: an opportunity</td></tr>{% endfor %}</tbody>
 </table></div>
 <p class="small"><a href="/business/attach?part={{ part.mpn|urlencode }}">All {{ w.s2.ours|length + w.s2.new|length }} in Cross-sell</a>, with the reasons per design and a filter by application.</p></details>
+<dialog id="walk-full" class="pc-dialog"><article><h3>Application</h3><p id="walk-full-name"></p><form method="dialog"><button class="small-btn">Close</button></form></article></dialog>
 <script type="application/json" id="walk-search-data">{{ phrases|tojson }}</script>
 <script src="/static/walk.js" defer></script>{% endif %}
-{{ gaps(2) }}{{ next(2) }}</section>
+{{ gaps(2) }}</section>
 
 {% if upto >= 3 %}<section class="walk-step" id="step-3"><h2><span class="walk-n">3</span> Best of ours around it</h2>
 {% if w.ours %}<p class="small muted">Our parts per function, best first{% if w.anchor.automotive %}; automotive-grade first because {{ part.mpn }} is automotive{% endif %}{% if w.anchor.ranges %}; RF parts that share its band{% endif %}.</p>
@@ -84,7 +86,7 @@
 </table></div>
 <p class="small muted">Parts are matched by function, grade and band; voltage, current and other application specs are not checked.</p>
 {% else %}<p class="muted">Nothing of ours in these designs yet.</p>{% endif %}
-{{ gaps(3) }}{{ next(3) }}</section>{% endif %}
+{{ gaps(3) }}</section>{% endif %}
 
 {% if upto >= 4 %}<section class="walk-step" id="step-4"><h2><span class="walk-n">4</span> Make it better, other applications</h2>
 <div class="walk-grid">
@@ -101,7 +103,7 @@
 </div>
 {{ library_box(s4.library) }}
 <p class="small"><a href="/business/evidence/{{ w.fn }}">{{ w.label }}: the bigger picture</a> (path to product, patents, foundry, competitor technology, where to hunt).</p>
-{{ gaps(4) }}{{ next(4) }}</section>{% endif %}
+{{ gaps(4) }}</section>{% endif %}
 
 {% if upto >= 5 %}<section class="walk-step" id="step-5"><h2><span class="walk-n">5</span> What the future needs</h2>
 <p class="walk-answer walk-v-{{ s5.verdict }}"><b>{{ s5.verdict_label }}</b> <span class="small">· {{ s5.why }}</span></p>

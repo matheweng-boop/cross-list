@@ -13,6 +13,7 @@ Data a step needs but the site does not hold is a gap: it is shown on the step a
 (kind "data"), so the next feedback review picks it up.
 """
 
+import re
 from collections import Counter
 from urllib.parse import quote
 
@@ -187,7 +188,8 @@ def app_cards(sell: dict, fn: str, mpn: str, automotive: bool = False) -> list[d
         index = blocks.template_index(t, a.market)
         where = f"template={a.i}" if a.i < len(lib) else f"bg={a.i - len(lib)}"
         uses = sum(p.fn == fn for p in a.positions)  # designs that use the part's function several times first
-        cards.append({"i": a.i, "name": blocks.display_name(t), "market": a.market, "background": a.background,
+        name = blocks.display_name(t)
+        cards.append({"i": a.i, "name": name, "short": short_name(name), "market": a.market, "background": a.background,
                       "uses": uses, "grade_fit": not automotive or a.market == "Automotive",
                       "tag_keys": index["tags"],
                       "tags": [labels[k] for k in index["tags"]], "index": index,
@@ -202,6 +204,16 @@ def app_cards(sell: dict, fn: str, mpn: str, automotive: bool = False) -> list[d
 def filter_cards(cards: list[dict], q: str) -> list[dict]:
     """The cards that match every part of the search (general categories, then words)."""
     return [c for c in cards if blocks.search_all(c["index"], q)]
+
+
+def short_name(name: str) -> str:
+    """A general heading for an application card (owner, 22 Oct 2026): without the brackets and, for a long name,
+    without what follows " with " or ", "; the full name opens on click."""
+    s = re.sub(r"\s*\([^)]*\)", "", name).strip() or name
+    for sep in (" with ", ", ", ": "):
+        if len(s) > 40 and sep in s:
+            s = s.split(sep)[0]
+    return s
 
 
 def category_counts(cards: list[dict]) -> list[tuple[str, str, int]]:

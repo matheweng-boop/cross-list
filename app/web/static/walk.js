@@ -56,3 +56,15 @@
   more?.addEventListener("click", () => { all = true; apply(); });
   apply();
 })();
+
+// Card headings are short and general; a click shows the full application name (owner, 22 Oct 2026).
+(() => {
+  const dlg = document.getElementById("walk-full");
+  if (!dlg) return;
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest(".walk-name");
+    if (!b) return;
+    document.getElementById("walk-full-name").textContent = b.dataset.full;
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  });
+})();

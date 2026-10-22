@@ -44,3 +44,20 @@ def test_no_feedback_sections_at_the_bottom(client):
     # old form targets still answer
     r = client.post("/business/capabilities/feedback", data={"kind": "idea", "text": "x"}, follow_redirects=False)
     assert r.status_code == 303
+
+
+def test_walk_cards_short_heading_full_text_and_next_on_top(client, real):  # noqa: F811
+    from app.services import walk
+
+    assert walk.short_name("True-wireless (TWS) earbuds with charging case") == "True-wireless earbuds with charging case"
+    assert walk.short_name("AC solid-state circuit breaker (SSCB) with air-gap relay, AC/DC current sensing") == (
+        "AC solid-state circuit breaker"
+    )
+    comp = ids(client, "ISO7741DBQR")
+    html = client.get(f"/parts/{comp}/walk").text
+    assert html.index("Next: 3 Best of ours around it") < html.index('id="step-1"')  # with the step buttons on top
+    assert html.count("Next: 3") == 1
+    assert 'class="link-btn walk-name"' in html and 'id="walk-full"' in html
+    assert "more</li>" not in html  # nothing cut off
+    css = (ROOT / "app/web/static/app.css").read_text()
+    assert "text-overflow: ellipsis; white-space: nowrap; }\n.walk-also" not in css

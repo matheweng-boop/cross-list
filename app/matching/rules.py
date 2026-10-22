@@ -39,6 +39,9 @@ class FamilyRules:
     family: str
     title: str
     params: tuple[ParamDef, ...] = field(default_factory=tuple)
+    # functional_focus (owner, 22 Oct 2026, timing): judge a cross by function and specs only; package and pinout do
+    # not decide the cross type or the order, and a functional match without priority 1 deviations counts as crossed
+    functional_focus: bool = False
 
     def by_priority(self, *priorities: int) -> list[ParamDef]:
         return [p for p in self.params if p.priority in priorities]
@@ -161,7 +164,8 @@ def parse_rules(data: dict) -> FamilyRules:
         if p.kind != "curve" and bool(p.at) != bool(p.curve):
             raise ValueError(f"{p.key}: at and curve go together")
         params.append(p)
-    return FamilyRules(family=data["family"], title=data.get("title", data["family"]), params=tuple(params))
+    return FamilyRules(family=data["family"], title=data.get("title", data["family"]), params=tuple(params),
+                       functional_focus=bool(data.get("functional_focus")))
 
 
 @lru_cache

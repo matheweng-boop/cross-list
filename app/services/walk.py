@@ -61,7 +61,11 @@ def _step1(rows: list) -> dict:
     minor = [d.label for d in v.info_worse]
     suitable = "dropin" if v.category == "fff" and not worse else "deviations"
     # a drop-in means we can cross it: no new development, so no case
-    acceptable = next((rr.candidate for rr, vv in rows if vv.category in ACCEPTABLE), None)
+    # timing (owner, 22 Oct 2026): a functional match without priority 1 shortfalls counts too, whatever the package
+    from app.matching.engine import _functional_focus
+
+    acceptable = next((rr.candidate for rr, vv in rows if vv.category in ACCEPTABLE or (
+        vv.category == "functional" and not vv.worse and _functional_focus(rr.reference.family))), None)
     # specs where every listed cross of ours is worse: the line as a whole falls short
     lists = [{d.label for d in vv.worse} for _, vv in rows]
     short = sorted(set.intersection(*lists)) if lists else []

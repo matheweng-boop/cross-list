@@ -44,9 +44,11 @@ def test_timing_rules_priorities():
     rules = get_rules("timing")
     assert "timing" in load_all_rules()
     p1 = {p.key for p in rules.by_priority(1)}
-    assert p1 == {"function_type", "outputs", "output_formats", "freq_range_mhz", "vdd_range_v"}
+    # owner, 22 Oct 2026: function, jitter and outputs first; package never decides; supply is priority 2
+    assert p1 == {"function_type", "outputs", "output_formats", "freq_range_mhz", "jitter_fs"}
+    assert rules.functional_focus and rules.get("vdd_range_v").priority == 2
     assert rules.get("function_type").hard
-    assert {p.key for p in rules.by_priority(2)} == {"jitter_fs", "qualification", "temp_range_c", "pcie_gen"}
+    assert {p.key for p in rules.by_priority(2)} == {"vdd_range_v", "qualification", "temp_range_c", "pcie_gen"}
     assert rules.get("qualification").must_meet and rules.get("jitter_fs").direction == "lower"
 
 
@@ -74,12 +76,12 @@ def test_pcie_buffer_crosses_both_ways(session, timing):
     to_ours = _crosses(session, "LMKDB1104")
     assert {"Si53204-A01", "Si53204-A02"} <= set(to_ours)
     r = to_ours["Si53204-A01"]
-    assert r.category == "functional" and [d.key for d in r.deviations] == ["freq_range_mhz", "vdd_range_v"]
+    assert r.category == "functional" and [d.key for d in r.deviations] == ["freq_range_mhz", "jitter_fs"]
     # not a drop-in: different package, pinout not read
     assert not r.fit.same_package and r.category != "fff"
     to_ti = _crosses(session, "Si53204-A01")
     assert set(to_ti) == {"LMKDB1104", "LMKDB1108"}
-    assert [d.key for d in to_ti["LMKDB1104"].deviations] == ["vdd_range_v"]
+    assert [d.key for d in to_ti["LMKDB1104"].deviations] == []  # supply is priority 2 now
 
 
 def test_function_type_keeps_kinds_apart(session, timing):
@@ -93,7 +95,8 @@ def test_function_type_keeps_kinds_apart(session, timing):
 
 
 def test_automotive_reference_only_gets_automotive_candidates(session, timing):
-    assert set(_crosses(session, "Si5332A-AM1")) == {"LMK3H0102-Q1"}
+    ours = _crosses(session, "Si5332A-AM1")
+    assert all(r.candidate.param_map()["qualification"] == "automotive" for r in ours.values())
     to_ours = _crosses(session, "CDCE6214-Q1")
     assert to_ours and all(r.candidate.param_map()["qualification"] == "automotive" for r in to_ours.values())
     assert "Si5332A-GM1" not in to_ours

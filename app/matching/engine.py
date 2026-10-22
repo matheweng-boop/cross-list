@@ -521,6 +521,8 @@ def cross(
         category = None
     elif fff_status == FFF_AUTO:
         category = "fff"
+    elif rules.functional_focus and len(deviations) <= max_deviations:
+        category = "functional"  # timing: the package never decides (owner, 22 Oct 2026)
     elif not fit.fits and len(deviations) <= max_deviations and (fit.same_package or not ref.package_locked):
         category = "functional"  # a package-locked reference only accepts its own package
     elif fit.same_package:
@@ -549,16 +551,24 @@ def sort_key(category: str):
     return key
 
 
+def _functional_focus(family: str | None) -> bool:
+    from app.matching.rules import load_all_rules
+
+    rules = load_all_rules().get(family or "")
+    return bool(rules and rules.functional_focus)
+
+
 def rank_key(r: CrossResult):
     """The order of preference across cross types (owner, 21 Oct 2026): a drop-in with the same function always comes
     first; then the fewest priority 1 deviations; with as many deviations, the same package before another package and
     pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom."""
+    pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
         r.category != "fff",
         len(r.deviations),
-        not r.fit.same_package,
-        not r.fit.same_pinout,
+        pkg and not r.fit.same_package,
+        pkg and not r.fit.same_pinout,
         len(r.exceptions),
         r.closeness,
         r.candidate.label,

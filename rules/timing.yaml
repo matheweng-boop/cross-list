@@ -1,5 +1,7 @@
 family: timing
 title: Timing (clocks, buffers, oscillators)
+# Owner, 22 Oct 2026: for timing, look at function, jitter and outputs, not at pin-to-pin replacements.
+functional_focus: true
 # One family for every timing part; `function_type` says which kind it is, and only parts of the same kind are
 # compared. Pin-to-pin drop-ins are rare across vendors in timing: each vendor has its own pinout, programming
 # interface and configuration software (Skyworks ClockBuilder Pro, TI TICS Pro, Renesas Timing Commander, SiTime
@@ -15,13 +17,13 @@ params:
   # The candidate's output frequency range must cover the reference's.
   - {key: freq_range_mhz, label: Output frequency range, unit: MHz, priority: 1, kind: range, tolerance: 0.01}
   # Core supply (the main VDD pin). Other rails (an extra 3.3 V analog rail, output-bank supplies) are in the notes.
-  - {key: vdd_range_v, label: Core supply range, unit: V, priority: 1, kind: range}
+  - {key: vdd_range_v, label: Core supply range, unit: V, priority: 2, kind: range}
   # --- Priority 2: should match ---
   # Typical RMS jitter, 12 kHz to 20 MHz unless the notes say otherwise. Clock generators, jitter attenuators and
   # oscillators: phase jitter of the output. Buffers: additive jitter; PCIe buffers: the newest PCIe generation's
   # additive jitter the datasheet states. Vendors measure at different frequencies and with different filters, so
   # values within 10 % count as equal.
-  - {key: jitter_fs, label: RMS jitter (typ.), unit: fs, priority: 2, kind: number, direction: lower, tolerance: 0.1}
+  - {key: jitter_fs, label: RMS jitter (typ.), unit: fs, priority: 1, kind: number, direction: lower, tolerance: 0.1}
   # An AEC-Q100 reference only gets AEC-Q100 candidates. Parts that state no grade are the usual industrial kind.
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 2, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true, default: industrial}
   - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}

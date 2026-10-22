@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path) }}{% endblock %}
+{% block content %}
+<h1>Schedule</h1>
+<p class="subtitle muted">Everything that is processed for BizDev and how often, and what the evening run picks up tonight. Nothing goes live without your GO.</p>
+
+<section id="tonight">
+<h2>Tonight's run <small class="muted">· 18:42 Berlin</small></h2>
+<p class="small">Waiting for it now: <b>{{ q.reviews }}</b> technology review request{{ '' if q.reviews == 1 else 's' }} · <b>{{ q.areas }}</b> application-area request{{ '' if q.areas == 1 else 's' }} · <b>{{ q.pinouts_left }}</b> pinout datasheets left ({{ q.pinouts_done }} done) · <b>{{ q.questions }}</b> open question{{ '' if q.questions == 1 else 's' }} for you · plus any comment you send before then.</p>
+<ol class="sch-list">{% for j in tonight %}
+  <li><b>{{ j.name }}</b> – {{ j.what }}{% if j.where %} <a class="small" href="{{ j.where }}">Open</a>{% endif %}</li>{% endfor %}
+</ol>
+<p class="small muted">If nothing new came in and no question was answered, the run stops after step 2 and says so in one line.</p>
+</section>
+
+{% if questions %}<section id="questions">
+<h2>Open questions for you</h2>
+<ul>{% for t in questions %}<li>{{ t }}</li>{% endfor %}</ul>
+<p class="small muted">Answer them with the Feedback button; the evening run records the answers.</p>
+</section>{% endif %}
+
+<h2>Everything, by how often it runs</h2>
+{% for key, label, rows in groups %}
+<section class="sch-group">
+<h3>{{ label }} <small class="muted">· {{ rows|length }}</small></h3>
+{% if rows %}<ul>{% for j in rows %}<li><b>{{ j.name }}</b> – {{ j.what }}{% if j.where %} <a class="small" href="{{ j.where }}">Open</a>{% endif %}</li>{% endfor %}</ul>
+{% else %}<p class="small muted">Nothing runs {{ label|lower }} yet.{% if key in ('weekly', 'biweekly') %} Tell us with the Feedback button if something should (for example a re-check of catalogue changes or competitor news).{% endif %}</p>{% endif %}
+</section>
+{% endfor %}
+{% endblock %}

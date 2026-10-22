@@ -71,3 +71,13 @@ def verify_done(task_id: int, result: str = Form(...), note: str = Form(""), aut
     except ValueError as e:
         raise HTTPException(404, "No open task") from e
     return RedirectResponse(f"/manage/verify#{t.kind}", status_code=303)
+
+
+@router.get("/manage/schedule", response_class=HTMLResponse)
+def schedule_page(request: Request, session: Session = Depends(get_session)):
+    """Everything that is processed and how often, and what tonight's run will pick up."""
+    from app.services import runs
+
+    ctx = {"groups": runs.by_frequency(), "tonight": runs.tonight(), "q": runs.queue(session),
+           "questions": runs.open_questions()}  # fmt: skip
+    return templates.TemplateResponse(request, "manage/schedule.html", ctx)

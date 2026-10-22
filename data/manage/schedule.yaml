@@ -1,0 +1,19 @@
+# Data management > Schedule: everything that is processed for BizDev and how often. Keep in step with
+# docs/daily_update.md and the scheduled task (owner, 22 Oct 2026). frequency: continuous | deploy | daily | weekly |
+# biweekly. "tonight" (daily only): part of the evening run (18:42 Berlin), in run order.
+jobs:
+  - {name: Your input on the site, frequency: continuous, what: "Feedback button, cross verdicts, Agree / Disagree, review answers, requests (parts, technology reviews, application areas) are saved the moment you send them.", where: /manage/reviews}
+  - {name: Votes that apply at once, frequency: continuous, what: "Automotive map, application library 'technically verified' and library-topic confidence change immediately when you vote.", where: /manage/reviews}
+  - {name: Feedback digest, frequency: continuous, what: "The daily digest of the Feedback button is rebuilt each time you open it.", where: /manage/feedback}
+  - {name: Verify next batch, frequency: continuous, what: "A new small batch of crosses and data to check is picked whenever the last one is done.", where: /manage/verify}
+  - {name: Site start-up, frequency: deploy, what: "Each time the site redeploys (after a GO): data files are reloaded into the database, old commercial inputs are deleted, checks run."}
+  - {name: Pull your comments, frequency: daily, tonight: 1, what: "Everything you said on the site since the last run is fetched (read-only key)."}
+  - {name: Open questions, frequency: daily, tonight: 2, what: "Your answers are recorded in the open-question list and acted on; settled ones are removed.", where: /manage/schedule#questions}
+  - {name: Work on your comments, frequency: daily, tonight: 3, what: "Each comment is fixed or built on a new update branch, with tests."}
+  - {name: Technology reviews, frequency: daily, tonight: 4, what: "Every open review request gets its review written (public datasheets).", where: /reviews}
+  - {name: Pinout backlog, frequency: daily, tonight: 5, what: "The next few gate-driver datasheets are transcribed (about 5 documents a run)."}
+  - {name: Competitor profile, frequency: daily, tonight: 6, what: "One more company on Competitive analytics when there is room.", where: /business/competitors}
+  - {name: Deep dives and area requests, frequency: daily, tonight: 7, what: "Data centres and drones (a few documents a run) and the open application-area requests.", where: /blocks/area-requests}
+  - {name: Cross-sell & gaps clean-up, frequency: daily, tonight: 8, what: "Sort, filter and set-aside move from the old explorer table to the new page; then the old table goes.", where: /blocks/cross-sell}
+  - {name: Checks, frequency: daily, tonight: 9, what: "All automatic tests and code checks must pass before anything is offered to you."}
+  - {name: Summary and GO, frequency: daily, tonight: 10, what: "A short summary goes to Telegram and the session; reply GO within 30 minutes to put the update live, else it waits for the next run."}

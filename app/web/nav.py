@@ -43,6 +43,7 @@ NAV = (
 
 UTILITY = ("manage", "Data management", (
     ("Overview", "/manage/overview", "Review status per data set and what is waiting for you"),
+    ("Schedule", "/manage/schedule", "What runs continuously, daily, weekly; what tonight's run picks up"),
     ("Verify next", "/manage/verify", "A small batch to check: crosses, diagrams and data that vouch for the rest"),
     ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
     ("Site feedback", "/manage/feedback", "Daily digest of the Feedback button, with responses"),
@@ -104,6 +105,7 @@ PLACES = {
     "/manage/verify": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage/overview": ("manage", "/manage/overview"),
+    "/manage/schedule": ("manage", "/manage/schedule"),
     "/manage": ("manage", "/manage/reviews"),
     "/library": ("knowledge", "/library"),
     "/visuals": ("knowledge", "/visuals"),

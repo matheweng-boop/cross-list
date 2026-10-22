@@ -15,27 +15,23 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    from your browser? If they work, keep them; if not, say which and they are replaced in the next Saturday run.
 5. **Timing: Microchip.** Microchip timing (ZL30733, PL610) was skipped because microchip hosts are blocked for this
    work. Leave Microchip out of timing crosses, or name a public source you are happy with?
-6. **Timing: strictness.** A timing cross lists a part only when it has at most 2 shortfalls among function, outputs,
-   output formats, frequency range and core supply. That hides near misses such as TI CDCE6214-Q1 for Si5332-AM1
-   (4 outputs, no LVPECL, stops at 328 MHz) and every competitor oscillator for Si545 / Si549 (narrower frequency
-   range, no 1.8 V). They show with "allow 3 deviations" on the part page. Keep it strict, or count the core supply
-   as priority 2 (a board rail is often available)?
-7. **Timing: SiTime datasheet links.** SiTime serves its datasheets from a folder named "gated", although they open
+6. **Timing: SiTime datasheet links.** SiTime serves its datasheets from a folder named "gated", although they open
    without a form or login (robots.txt allows them). Fine to keep reading them that way?
-8. **SI86S640HE-IS2 prop delay.** You wrote 10 ns. The datasheet (si86s6xx rev B, ordering guide and Table 10) says
-   the "H" code is the default-high option **with a 36 ns deglitch filter**: 36 ns typ (42 max) and 10 Mbps. The
-   ~10 ns you quote is the B / E codes without the filter (9 ns typ; Si86SLx 11.5 ns). We now show 36 ns and 10 Mbps
-   for the F / H codes. Is that right, or do you have a source for 10 ns on the H code? (For CA-IS3740HB the no-filter
-   SI86S640EE-IS2 may then be the better offer; it has 100 instead of 150 kV/µs CMTI.)
-9. **1ED3140 UVLO letters.** The Infineon datasheet (1ED314xMU12F / 1ED314xMC12H, v2.20) sets the UVLO by the fourth
-   digit: 1ED3140 9.3 V, 1ED3141 12.0 V, 1ED3142 13.6 V. The G / B / C / E letters are the Skyworks Si82x code, and
-   the Si82Bx datasheet gives 4 / 8 / 12 / 15 V (B = 8 V, not 6 V). The cross now ranks the 8 V (B) code first for
-   the 9.3 V 1ED3140. Agreed?
-10. **MSW2060-206.** The MACOM datasheet (MSW206x-206 rev V2) gives MSW2060 = 20–1200 MHz, MSW2061 = 200–4500 MHz,
+7. **MSW2060-206.** The MACOM datasheet (MSW206x-206 rev V2) gives MSW2060 = 20–1200 MHz, MSW2061 = 200–4500 MHz,
    MSW2062 = 1.5–6.5 GHz, operating –65 to +125 °C (+150 °C is the storage limit), body 8 x 5 x 2.5 mm. We used
    those. 0.5–6 GHz is the MASW-011060. Which source showed 0.5–6 GHz and 150 °C for the MSW2060?
+8. **CMTI, like with like.** Skyworks states only a minimum CMTI for Si86S (B/E codes 100, F/H codes 150 kV/µs);
+   Chipanalog CA-IS374x states 100 min / 150 typ. With "typ first", CA-IS3740HB (150 typ) looks better than
+   SI86S640EE-IS2 (100 min), although both guarantee 100 kV/µs. Compare CMTI minimum against minimum whenever one
+   side gives no typical value (the fair test), or keep typ first?
 
 ## Settled (owner, 22 Oct 2026)
+
+- Timing: judged on function, jitter and outputs; package and pin-to-pin do not count; core supply is priority 2.
+- SI86S640HE-IS2: 36 ns typ is right for the H code (deglitch filter); 9–10 ns typ applies to the B / E codes without
+  the filter. For CA-IS3740HB the SI86S640EE-IS2 is the offer: 9 ns typ vs 12 ns typ, same 150 Mbps, UVLO 2.18 V vs
+  2.24 V rising (typ). CA-IS374x prop delay now 12 ns typ (was 16 max).
+- 1ED3140 UVLO: compare the actual UVLO voltages (owner: it matters); our 8 V (B) code first for the 9.3 V 1ED3140.
 
 - Values: typical first, then max (min for CMTI); limits stay limits. Rolled out for prop delay and CMTI on the
   files listed in data/sources/GATE_DRIVER_DATA.md; the rest a few datasheets per daily run.

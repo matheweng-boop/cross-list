@@ -1,0 +1,140 @@
+{% raw %}<h1>Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits</h1>
+<p class="meta">23 Oct 2026 · Research topic asked by the owner: “I would like a research topic for hot-swap controllers in automotive. Are there any known pain points in having to get near 800 V and be able to safely plug something in or out?” · built from BizDev data (parts database, Skyworks catalogue, block-diagram library, library topic on traction-inverter isolation, cached Skyworks app notes AN1052 and AN1456) and four public TI pages read on 23 Oct 2026. Standards are paid and were not read: they are summarised at the level the owner asked for. Our own reasoning is marked “est”. All sources: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
+
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>Short answer:</b> yes, there are well-known pain points, and the car solves them by <b>never really hot-plugging at 400–800 V</b>. Before anything is plugged in or out, the high-voltage system is switched off by contactors, the connectors are interlocked, and the capacitors are pre-charged when it is switched back on. The “hot-swap controller” of a 12 V or 48 V board does not exist at 800 V; its job is done by contactors, pre-charge circuits, fuses and, more and more, solid-state switches.</li>
+    <li><b>The pain points:</b> (1) <b>inrush</b>: connecting 800 V to the inverter's or charger's capacitors without pre-charge would draw kiloamps (about 16 kA with 50 mΩ in the loop, est); (2) <b>DC arcs</b>: unlike AC, an 800 V DC arc does not go out by itself, so opening a connector or a relay under load burns it; (3) contactors that weld, wear and are big and costly; (4) <b>insulation faults</b> must be found before someone touches the car (insulation monitoring); (5) the capacitors must be <b>discharged</b> quickly after switch-off or a crash.</li>
+    <li><b>The trend:</b> solid-state parts take over pieces of the mechanical chain: SiC-MOSFET <b>active pre-charge</b> (TI reference design TIDA-050063), solid-state relays for <b>insulation monitoring</b> (TI TPSI2140-Q1, 1200 V), and solid-state battery disconnects and eFuses on the 48 V and zonal side (est). Each solid-state switch on the high-voltage side needs an <b>isolated driver with its own floating supply</b>, plus isolated current and voltage sensing.</li>
+    <li><b>Where we fit:</b> our <b>Si875x isolated FET driver</b> builds exactly such solid-state relays without a floating supply (AN1052), but only at <b>2.5 kVrms in a narrow SOIC-8</b>; TI's equivalent, TPSI3050-Q1, is <b>5 kVrms reinforced, 1000 Vrms working, automotive, $2.30 at 1k</b>. Around it we have the full set: isolated gate drivers with fast short-circuit detection (Si828x, Si829x), isolated current and voltage sensing (Si89xx), isolators (Si86xx) and isolated bias (Si88xx).</li>
+    <li><b>Data centres (the owner's earlier remark):</b> the same problem appears in 48 V racks, where hot-swap controllers and eFuses are mature, and in the new <b>800 V DC racks</b> (NVIDIA from 2027), where boards really are plugged in live; TI already shows an “800 V hot-swap controller” in its data-centre line-up. The car and the data centre need the same building blocks (est).</li>
+    <li><b>Next step (feasibility 2):</b> a reinforced, automotive successor of Si875x (5 kVrms, SSO-8, higher gate drive, fault feedback) sold as a <b>solid-state pre-charge and disconnect set</b> with our gate drivers and Si89xx sensing, for 800 V cars and 800 V DC racks.</li>
+  </ol>
+</section>
+
+<h3>Portfolio position</h3>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Function in the hot-plug chain</th><th scope="col">What we have</th><th scope="col">Main competitor parts</th></tr></thead>
+  <tbody>
+    <tr><td>Isolated switch driver (builds a solid-state relay, no floating supply)</td><td><span class="pill part">yes, 2.5 kVrms only</span> <a href="/find?q=Si8751AB-AS">Si8751AB-AS</a> / <a href="/find?q=Si8752AB-AS">Si8752AB-AS</a>: automotive, NB SOIC-8, 8–12 V gate drive, switching up to 7.5 kHz</td><td>TI TPSI3050-Q1 (5 kVrms reinforced, 10 V, 1.5 / 3 A), TPSI3100-Q1 (17 V, with comparators); Infineon solid-state isolators (not read)</td></tr>
+    <tr><td>Integrated high-voltage solid-state relay (insulation monitoring, small currents)</td><td><span class="pill none">no</span></td><td>TI TPSI2140-Q1: 1200 V, 50 mA, 2 mA avalanche, $2.90 at 1k; photo-MOS relays</td></tr>
+    <tr><td>Isolated gate driver for SiC pre-charge or disconnect switches</td><td><span class="pill have">yes</span> Si828x (DESAT), Si829x (ASIL D), Si823x</td><td>TI UCC217xx, Infineon EiceDRIVER, ADI, ST, NXP</td></tr>
+    <tr><td>Isolated current and voltage sensing (inrush, over-current, DC-link voltage)</td><td><span class="pill have">yes</span> <a href="/find?q=SI8921BD-AS4">Si8921BD-AS4</a>, Si8941, <a href="/find?q=SI8931D-AS4">Si8931D-AS4</a> (5 kVrms, automotive)</td><td>TI AMC13xx / AMC33xx, TMCS1123 (Hall); ADI; LEM modules</td></tr>
+    <tr><td>Isolator and isolated bias for the controller</td><td><span class="pill have">yes</span> Si86xx, Si88xx (automotive), Si86Px (integrated power, samples)</td><td>TI ISO77xx / ISOW, UCC14130-Q1; ADI isoPower</td></tr>
+    <tr><td>Hot-swap / eFuse controller (12–80 V)</td><td><span class="pill none">no</span></td><td>TI, ADI, Infineon, ST, onsemi, MPS (not read)</td></tr>
+    <tr><td>Contactors, pyro fuses, fuses</td><td><span class="pill none">not our field</span></td><td>TE, Sensata, Panasonic, Littelfuse, Eaton, Autoliv (not read)</td></tr>
+  </tbody>
+</table></div>
+
+<h2>1. Adjacent products and technologies</h2>
+<p>The high-voltage “hot-plug” chain in a car is: contactors (or solid-state switches) + pre-charge + interlock + insulation monitor + discharge, each with a controller on the 12 V side and a barrier in between. Every place where a switch on the high-voltage side is driven from the 12 V side needs an isolated driver, and every place where current or voltage is watched needs isolated sensing: that is our isolation line.</p>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Next to the hot-plug chain</th><th scope="col">What we have</th><th scope="col">Examples and notes</th></tr></thead>
+  <tbody>
+    <tr><td>Solid-state pre-charge (SiC or Si MOSFET + current-limiting inductor or resistor)</td><td><span class="pill part">driver only, 2.5 kVrms</span></td><td>TI TIDA-050063 “high-voltage solid-state relay active precharge” uses TPSI3050-Q1. Si875x can drive the same MOSFETs, but its 2.5 kVrms basic barrier is not enough for a reinforced 800 V design (est).</td></tr>
+    <tr><td>Solid-state battery disconnect / high-voltage eFuse</td><td><span class="pill part">driver + sensing</span></td><td>SiC switches with an isolated gate driver that detects a short in well under a microsecond (Si828x DESAT; library topic on traction isolation) and Si89xx current sensing. No single-chip controller exists at 800 V (est).</td></tr>
+    <tr><td>Insulation monitoring (resistance from 400 / 800 V to the chassis)</td><td><span class="pill part">sensing yes, switch no</span></td><td>TI's reference designs (TIDA-01513, TIDA-010232, TIDA-010272) switch a measuring resistor network with the TPSI2140-Q1 relay and measure with isolated amplifiers. We have the amplifiers (Si893x) but no 1200 V integrated relay.</td></tr>
+    <tr><td>Active discharge of the DC link</td><td><span class="pill have">yes (driver)</span></td><td>Si875x is already noted in our library for DC-link active discharge and pre-charge switches (<a href="/library/traction_asil_d">library topic</a>).</td></tr>
+    <tr><td>48 V and 12 V zonal power (smart fuses, eFuses)</td><td><span class="pill none">no</span></td><td>Low-voltage eFuse and high-side switch market (TI, Infineon, ST, NXP, onsemi): crowded; not isolated, so not our technology (est).</td></tr>
+  </tbody>
+</table></div>
+
+<h3>What could combine into a product, strongest first</h3>
+<ol class="opps">
+  <li><b>A reinforced Si875x successor (feasibility 2).</b> Our isolator and driver technology in SSO-8 or wide SOIC: 5 kVrms reinforced, 10–15 V gate drive, fault feedback, AEC-Q100. It answers TPSI3050-Q1 in pre-charge, active discharge, solid-state disconnect and AC/DC relays of chargers. <span class="muted">Open: the power-transfer design across a reinforced barrier and the price against $2.30 (TI, 1k).</span></li>
+  <li><b>A solid-state pre-charge and disconnect set:</b> the new driver + Si828x DESAT gate drivers for the main SiC switches + Si8921BD / Si8941BD current sensing + Si8931D voltage sensing + Si86xx isolators, as one reference design for the battery junction box and the charger. <span class="muted">Today's parts plus the new driver; competes with TI's TIDA-050063.</span></li>
+  <li><b>A 1200 V integrated isolated relay for insulation monitoring (feasibility 3).</b> Driver and back-to-back high-voltage MOSFETs in one package, like TPSI2140-Q1. <span class="muted">Needs 1200 V MOSFETs in the package: new for us.</span></li>
+</ol>
+
+<h2>2. Where else we see opportunities</h2>
+<h3 id="where">Where plugging in and out happens around 400 / 800 V</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Where</th><th scope="col">What is connected or disconnected</th><th scope="col">How it is made safe today</th><th scope="col">Pain point</th><th scope="col">Solid-state chance (est)</th><th scope="col">Diagram</th></tr></thead>
+  <tbody>
+    <tr><td>Battery pack / battery junction box (BDU)</td><td>The whole pack to the vehicle bus, at every start and stop</td><td>Two main contactors, a pre-charge contactor + resistor, fuse or pyro fuse, current sensor</td><td>Inrush, contactor welding, size and cost, slow pyro fuse</td><td>High: SiC active pre-charge; solid-state disconnect later</td><td><a href="/blocks/new?diagram=EV%20high-voltage%20battery%20system%20%28wired%20cell%20supervision%2C%20BDU%2C%20BMU%29%20%28TI%29">EV battery system</a>, <a href="/blocks/new?diagram=EV%20high-voltage%20battery%20management%20system%20%28BMU%20%2B%20cell%20monitoring%20unit%20%2B%20battery%20junction%20box%29%20%28NXP%29">BMS + junction box</a></td></tr>
+    <tr><td>Battery modules (service, second life)</td><td>Modules in and out of the pack in a workshop</td><td>Pack disconnected first; modules handled at module voltage; manual service disconnect splits the pack</td><td>Each module is still live (tens to hundreds of volts), no switch to turn it off</td><td>Low in the car (est)</td><td>—</td></tr>
+    <tr><td>Power distribution / zonal (HV PDU)</td><td>Branches: heater, compressor, DC-DC, OBC</td><td>Fuses, sometimes branch contactors; each load has its own capacitors</td><td>Inrush into each branch, no selective switch-off</td><td>Medium: solid-state branch switches (est)</td><td>—</td></tr>
+    <tr><td>Charging inlet (DC fast charging)</td><td>The charger cable to the car at up to 1000 V</td><td>The cable is dead until both sides agree; insulation check before current flows; the connector is locked while charging; the charger ramps the current down before its contactors open (standard not read)</td><td>Arcs if the plug opens under load; welding of the car's charging contactors</td><td>Medium: solid-state charging contactors (est)</td><td><a href="/blocks/new?diagram=DC%20fast%20charging%20station%20%28power%20module%20%2B%20controller%20%2B%20HMI%29%20%28TI%29">DC fast charging</a></td></tr>
+    <tr><td>On-board charger and DC-DC</td><td>Mains and the 800 V bus; bidirectional (V2G)</td><td>AC relays + inrush resistor; pre-charge from the battery side</td><td>Inrush, relay wear in V2G</td><td>Medium</td><td><a href="/blocks/new?diagram=HEV%2FEV%20on-board%20charger%20%28two-stage%20PFC%20%2B%20isolated%20DC%2FDC%29%20%28TI%29">OBC</a>, <a href="/blocks/new?diagram=6.6%20kW%20single-stage%20bidirectional%20on-board%20charger%20%28GaN%2C%20DAB%29%20%28Renesas%29">bidirectional OBC</a></td></tr>
+    <tr><td>Service disconnect and HV connectors</td><td>Plugs of any HV component in the workshop</td><td>High-voltage interlock loop (HVIL): a low-voltage loop through every HV connector; its pins break first, so the contactors open before the power pins part</td><td>None while it works; HVIL wiring and its diagnosis add cost</td><td>Low (it is a mechanical concept)</td><td>—</td></tr>
+    <tr><td>Traction inverter</td><td>No plugging, but the biggest DC-link capacitor to pre-charge and discharge</td><td>Pre-charge in the junction box; active discharge in the inverter</td><td>Discharge time after a crash</td><td>Discharge switch already solid-state</td><td><a href="/blocks/new?diagram=HEV%2FEV%20traction%20inverter%20%28TI%20reference%29">Traction inverter</a></td></tr>
+    <tr><td>12 V / 48 V side</td><td>Loads and batteries; zonal controllers</td><td>Smart fuses and eFuses; a pyro fuse and contactors in 48 V batteries</td><td>The classic hot-swap topic, but not isolated</td><td>High, but not our technology</td><td><a href="/blocks/new?diagram=Automotive%2012%20V%20%2F%2048%20V%20power%20distribution%20box%20%28smart%20fuses%2C%20load%20drivers%29%20%28TI%29">12/48 V PDU</a>, <a href="/blocks/new?diagram=Automotive%20low-voltage%20%2812%20V%20%2F%2048%20V%20Li-ion%29%20battery%20system%20with%20BMS%2C%20pyrofuse%20and%20contactors%20%28TI%29">48 V battery</a></td></tr>
+  </tbody>
+</table></div>
+
+<h3 id="datacentre">Outside the car: data centres and storage</h3>
+<ul>
+  <li><b>48 V racks:</b> server boards and power shelves are hot-plugged every day; hot-swap controllers and eFuses are mature there (TI, ADI, Infineon and others; the library's battery-backup diagram has an ORing / hot-swap block: <a href="/blocks/new?diagram=Data-center%20%2F%20telecom%20battery%20backup%20unit%20%28BBU%3A%20bidirectional%20charge%20%2F%20backup%20DC%2FDC%2C%20fuel%20gauge%2C%20ORing%20%2F%20hot-swap%29%20%28TI%29">BBU</a>). Not isolated, so not our field.</li>
+  <li><b>800 V DC racks:</b> NVIDIA moves its AI racks to 800 V DC from 2027; TI's announced 800 V line-up includes an “800 V hot-swap controller” next to its 800 V to 6 V isolated converter. Here boards are really plugged in live at 800 V, so the car's problems (inrush, DC arcs, insulation) appear in the rack, with isolated drive and sensing on every slot (est). See the <a href="/blocks/new?diagram=AI%20data-center%20800%20V%20DC%20power%20%28grid%20to%20800%20V%20DC%2C%20busway%20with%20protection%2C%20energy%20storage%2C%20800%20V%20to%206-12%20V%20isolated%20converters%20in%20the%20rack%29%20%28after%20NVIDIA%2C%20TI%20and%20Skyworks%20public%20material%29">800 V DC data-centre diagram</a> and the <a href="/business/reports/hv-extra-wide-isolation">extra-wide isolation case</a>.</li>
+  <li><b>Battery storage racks (1000–1500 V):</b> rack contactors, pre-charge and insulation monitoring as in the car; TI's 1500 V rack monitor reference (TIDA-010272) uses the TPSI2140 relay (<a href="/blocks/new?diagram=Energy%20storage%20system%20battery%20%28multimodule%2C%20daisy%20chain%29%20-%20rack%20BMS%20%28TI%29">rack BMS</a>).</li>
+  <li><b>DC fast chargers:</b> output contactors, insulation check before every session and pre-charge of the car's link; the same set of parts (est).</li>
+</ul>
+
+<h2>3. Market trend and technology</h2>
+<h3>400 V and 800 V architectures</h3>
+<p>Most EVs use a 400 V class battery (about 250–450 V); a growing share uses 800 V class (about 550–900 V) for faster charging and thinner cables, usually with SiC in the inverter. A fully charged “800 V” pack sits near 900 V, and fast chargers go to 1000 V. Every high-voltage component has capacitors on its input, so every switch-on is a capacitor charge (est, common knowledge; not researched in this run).</p>
+
+<h3>Inrush and pre-charge</h3>
+<p>Example (est): 800 V into 500 µF of DC-link capacitors stores 160 J (½·C·V²). With only 50 mΩ of battery, cable and contactor resistance in the loop, the first current peak would be about 16 kA. A 50 Ω pre-charge resistor limits it to 16 A, charges the link in about 75 ms (three times R·C), and must absorb the same 160 J every time, which is why pre-charge resistors are large and why a fault (a short behind the contactor) can burn them. Active pre-charge with a SiC switch and an inductor (TI TIDA-050063) replaces the resistor and the pre-charge contactor with a controlled current, which needs an isolated driver on the high-voltage side.</p>
+
+<h3>Arcing at DC connectors and contacts</h3>
+<p>AC current passes zero 100–120 times a second and an arc usually dies there; DC never does. At 400–800 V an arc across a few millimetres keeps burning until the gap is long enough or the arc is blown out. That is why HV connectors are never meant to be opened under load (HVIL makes sure of it), why contactors have magnetic blow-out or gas-filled chambers and a limited number of breaks under load, and why welding of contactors after an inrush or short is a known failure (est, common engineering knowledge; not researched in this run).</p>
+
+<h3>Solid-state switching vs relays and contactors</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col"></th><th scope="col">Contactor / relay</th><th scope="col">SiC / GaN solid-state switch</th></tr></thead>
+  <tbody>
+    <tr><td>Losses when on</td><td>Very low (contact resistance)</td><td>Higher: conduction loss in the MOSFET, needs cooling at high current</td></tr>
+    <tr><td>Switching off a fault</td><td>Milliseconds; arc; limited breaks</td><td>Microseconds, no arc, no wear; needs an energy absorber for the cable inductance</td></tr>
+    <tr><td>Galvanic separation when off</td><td>Yes (air gap)</td><td>No: a leakage path remains, so standards and OEMs may still ask for a mechanical switch in series (est)</td></tr>
+    <tr><td>Control</td><td>Coil driver on the 12 V side</td><td>Isolated driver with a floating supply, current and voltage sensing, fault detection: <b>our parts</b></td></tr>
+    <tr><td>Where it wins first (est)</td><td>Main battery disconnect today</td><td>Pre-charge, active discharge, insulation monitoring relays, branch switches; main disconnect later</td></tr>
+  </tbody>
+</table></div>
+
+<h3>eFuses and hot-swap controllers</h3>
+<p>A hot-swap controller limits the inrush when a board is plugged into a live bus and switches it off on a short; an eFuse puts the switch and the controller in one part. Both exist up to about 80 V (12 V and 48 V cars, 48 V racks) and are not isolated. Above that, the same job is built from discrete SiC switches, an isolated driver, isolated sensing and a controller: a “solid-state circuit breaker” (est). TI announced an 800 V hot-swap controller for data centres (eeNews Europe, Mar 2026); details not read.</p>
+
+<h3>Isolation monitoring</h3>
+<p>The high-voltage system floats against the chassis, so a single insulation fault is not dangerous yet; the car must find it before a second one makes it so. An insulation monitor switches known resistors between the high-voltage rails and the chassis and measures the voltage shift; the switches must stand the full voltage plus test pulses. TI builds this with TPSI2140-Q1 (1200 V, 50 mA, 2 mA avalanche for HiPot and charger surge tests) and isolated amplifiers (TIDA-01513, TIDA-010232).</p>
+
+<h3>Safety standards (summary; not read)</h3>
+<ul>
+  <li><b>ISO 6469-3</b> (electrically propelled road vehicles, electrical safety): requirements for voltage class B circuits (above 60 V DC / 30 V AC up to 1500 V DC / 1000 V AC): protection against electric shock (basic insulation plus barriers and enclosures, or double / reinforced insulation), equipotential bonding, minimum insulation resistance (commonly quoted: 100 Ω/V for DC circuits, 500 Ω/V for AC), and marking.</li>
+  <li><b>LV 123</b> (German carmakers' test specification for HV components) became <b>ISO 21498</b> (Part 1: voltage sub-classes and characteristics; Part 2: electrical tests for components), including the behaviour at switch-on and switch-off and the discharge of the component's capacitors.</li>
+  <li>Related: UN ECE R100 and FMVSS 305 (post-crash: high voltage below 60 V DC or low energy within a short time), IEC 61851-23 for the DC charger side, ISO 26262 for the functional safety of the switching chain.</li>
+</ul>
+
+<h3>Who makes the parts</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Part</th><th scope="col">Makers</th><th scope="col">Note</th></tr></thead>
+  <tbody>
+    <tr><td>Isolated switch drivers / solid-state relays</td><td>TI (TPSI3050-Q1, TPSI3100-Q1, TPSI2140-Q1), Infineon, Skyworks (Si875x)</td><td>TI's are reinforced and automotive; ours basic 2.5 kVrms</td></tr>
+    <tr><td>Hot-swap and eFuse controllers (≤80 V)</td><td>TI, ADI, Infineon, ST, onsemi, MPS</td><td>Not isolated (not read)</td></tr>
+    <tr><td>Isolated gate drivers for SiC switches</td><td>TI, Infineon, ADI, ST, NXP, onsemi, Skyworks</td><td>Our Si828x / Si829x are in this group</td></tr>
+    <tr><td>Isolated current and voltage sensing</td><td>TI, ADI, Allegro, Infineon, Melexis, LEM, Skyworks</td><td>See the <a href="/business/reports/iso-current-sense-charging">current-sensing case</a></td></tr>
+    <tr><td>SiC MOSFETs for solid-state switches</td><td>Infineon, onsemi, ST, Wolfspeed, Rohm</td><td>Not our field</td></tr>
+    <tr><td>Contactors, fuses, pyro fuses</td><td>TE, Sensata, Panasonic, Littelfuse, Eaton, Mersen, Autoliv</td><td>Littelfuse also sells SiC and protection parts (owner's earlier remark); not read</td></tr>
+  </tbody>
+</table></div>
+<p class="small"><b>Price points (TI store, 1k, 23 Oct 2026):</b> TPSI3050-Q1 $2.299 (reel); TPSI2140-Q1 $2.896. Our Si875x price: not public in BizDev.</p>
+
+<h2>Risks</h2>
+<ul>
+  <li>TI already sells the reinforced automotive isolated switch driver and the 1200 V relay, with reference designs; we would be a second source, late.</li>
+  <li>Solid-state main disconnects may stay rare: conduction losses, cost and the request for galvanic separation keep contactors in the main path (est).</li>
+  <li>The 12 V / 48 V eFuse market is large but not isolated, so it does not use our technology.</li>
+  <li>The standards were not read; the values here are those commonly quoted.</li>
+</ul>
+
+<h2>Open questions</h2>
+<ul>
+  <li>Can the Si875x power transfer be made reinforced (5 kVrms) with a higher gate voltage, and at what cost?</li>
+  <li>Do OEMs and Tier-1s plan solid-state pre-charge or battery disconnects for 800 V platforms, and when?</li>
+  <li>What does an 800 V DC rack slot use for hot-plug today, and is the driver isolated?</li>
+</ul>
+
+<h2>Sources</h2>
+<p class="small">TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); Skyworks AN1052 (Si875x) and AN1456 (data-centre creepage); BizDev parts database, Skyworks catalogue and block-diagram library; library topic on traction-inverter isolation; NVIDIA technical blog (20 May 2025) and eeNews Europe (19 Mar 2026) as recorded in the extra-wide isolation case. Every figure with its link and confidence: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
+{% endraw %}

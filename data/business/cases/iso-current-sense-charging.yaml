@@ -1,0 +1,177 @@
+# Preliminary case: a fully integrated isolated current-sense amplifier for EV charging (isolated amplifier + built-in
+# isolated power, and an optional built-in shunt). Layout and rules: _template.yaml. Figures and links:
+# iso-current-sense-charging.background.html. Asked by the owner in the 23 Oct 2026 review ("Current sensing is big and
+# more important in charging applications ... is there a market for shunt + DC-DC built in, or others?").
+# conf: high = primary document read; med = trade press, forum or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+title: "Fully integrated isolated current sensing for EV charging: our Si89xx shunt amplifier with built-in isolated power, and a built-in shunt for small currents"
+fn: isolated_amplifier
+headline: f-dcdc
+library: [traction_asil_d]
+question: >-
+  Is there a market for an isolated current-sense amplifier that carries its own isolated power supply (one supply on
+  the low-voltage side, like TI's AMC3301 / AMC3302) and, for small currents, its own shunt, in on-board chargers, DC
+  fast chargers and wallboxes? Can Skyworks build it from the Si89xx amplifier and modulator dies and the integrated
+  isolated power of Si86Px, how accurate must it be, and at what price against TI, ADI, Allegro, Infineon, Melexis and LEM?
+updated: 2026-10-23
+brief:
+  - "Yes for built-in isolated power: TI already sells a whole family of isolated amplifiers and modulators with a built-in isolated DC-DC (AMC3301, AMC3302-Q1, AMC3306M05-Q1 and others) and uses them in two of its three 800 V charger reference designs; the AMC3301 reel lists at only $1.65 (1k). For a built-in shunt the answer is 'only for small currents': up to about 80 A the market is already served by isolated Hall sensors with the conductor in the package (TI TMCS1123, ±1.4 % over temperature and lifetime, $1.96–2.15 at 1k; Allegro, Melexis, Infineon); above that the shunt stays on the board or the customer buys a LEM-type module. We found no isolated amplifier with a built-in shunt."
+  - "Our position: the Si8921BD / Si8941BD dies match TI's accuracy (0.2 % gain error, 150–180 µV offset) and beat it on noise (82 vs 71 dB SNR) and bandwidth (600 vs 334 kHz), with 5 kVrms reinforced isolation and automotive versions; AN1270 puts the total static error of the amplifier at about ±0.5 % (RSS, –40 to 125 °C). But each one needs a separate isolated 5 V supply on the high-voltage side, and the CMTI is 50 kV/µs against 85 kV/µs for TI's integrated parts. Our Si86Px (samples, Mar 2026) already puts an isolated DC-DC and a miniature transformer in the package (up to 0.5 W)."
+  - "Proposal: an 'Si89xx-P' family: the Si892x / Si894x die plus the Si86Px power stage in one wide-body package, reinforced, AEC-Q100, CMTI raised to ≥100 kV/µs for SiC chargers; about $1.5 (target, est) against AMC3301's $1.65 list. A built-in-shunt version for ≤50 A (wallbox, OBC auxiliary rails) is a later, out-of-the-box step. Sold with our gate drivers and isolators in the same charger."
+
+customer_benefit:
+  for: "On-board charger and DC fast-charger power-module makers (Tier-1s and charger OEMs), wallbox makers; also battery-junction-box and BMS teams"
+  summary: "Each current-measurement point across the high-voltage barrier becomes one part with one low-voltage supply, instead of an amplifier plus its own isolated supply on the high-voltage side, and the error budget comes from one datasheet."
+  today: "A shunt on the high-voltage rail, an isolated amplifier or modulator (Si892x / Si894x, AMC1301 / AMC1302 class) and, for each sense point, a floating 5 V supply: taken from the gate-driver bias with a Zener and LDO (AN1270 figure 1), or from an isolated DC-DC (Si88xx with an external transformer, or a module). Where the current is under about 80 A, many designs use a Hall sensor with the conductor in the package instead (TI's 800 V reference designs use both)."
+  with_us: "Si89xx-P: the shunt amplifier or modulator with its isolated power inside, reinforced and automotive, supplied only from 3.3 V or 5 V on the low-voltage side; the shunt stays external for 50–500 A. For small currents a version with the shunt inside."
+  gains:
+    - {id: cb-supply, kind: parts, gain: "No high-side supply per sense point", how: "The isolated DC-DC and transformer are in the package (Si86Px technology, up to 0.5 W; the amplifier side needs about 30 mW)", measure: "1 isolated amplifier + Zener/LDO or isolated DC-DC + transformer → 1 part per sense point (est)", conf: med}
+    - {id: cb-place, kind: placement, gain: "Sense point anywhere on the high-voltage side", how: "No need to sit next to a gate-driver supply to borrow its bias; the part can sit at the shunt (DC link, output, battery side)", measure: "not stated", conf: low}
+    - {id: cb-error, kind: performance, gain: "Low and predictable error", how: "Gain error 0.2 %, offset 150 µV, nonlinearity 0.02 % (Si8921BD); total static error about ±0.5 % RSS over –40 to 125 °C before the shunt (AN1270)", measure: "±0.5 % RSS (IC) vs ±1.4 % max for an integrated Hall sensor without calibration (TMCS1123)", conf: high}
+    - {id: cb-noise, kind: performance, gain: "Less noise and more bandwidth than the integrated competitor", how: "Our analog die: 82 dB SNR and 600 kHz vs AMC3301's 71 dB and 334 kHz (BizDev parts data); faster over-current detection in SiC chargers", measure: "SNR +11 dB, bandwidth ×1.8 (datasheet values)", conf: high}
+    - {id: cb-safe, kind: safety, gain: "One reinforced barrier for sensing and its supply", how: "5 kVrms reinforced (SSO-8 class) instead of a basic-rated external DC-DC (Si88xx 3.75 kVrms basic)", measure: "basic → reinforced across the power path of the sense point", conf: med}
+  gives_up:
+    - "A slightly larger package than an 8-pin amplifier (TI uses a 16-pin wide SOIC for the integrated parts)"
+    - "Emissions from the in-package DC-DC must be handled (TI publishes low-emission layouts); not yet shown for our part"
+    - "Above about 80–100 A the shunt (and its heat) stays on the board; the built-in shunt only fits small currents"
+
+position:
+  advantages:
+    - {id: a-perf, text: "Si8921BD analog die: 82 dB SNR and 600 kHz bandwidth vs AMC3301 71 dB / 334 kHz and AMC3302-Q1 70 dB / 340 kHz, at equal gain error (0.2 %) and offset (150 µV)", vs: "TI AMC3301, AMC3302-Q1", conf: high}
+    - {id: a-iso, text: "5 kVrms reinforced in SSO-8 (8–8.5 mm) vs 4.25 kVrms for TI's integrated-DC/DC parts", vs: "TI AMC3301 family", conf: high}
+    - {id: a-power, text: "The isolated power stage exists: Si86Px puts a DC-DC and a miniature transformer in the package (0.5 W, 43 % peak efficiency); about 15 times the 30 mW one amplifier draws on its high side (est)", vs: TI, conf: high}
+    - {id: a-set, text: "Same charger, same supplier: isolated gate drivers (Si828x / Si823x), isolators (Si86xx), isolated bias (Si88xx) and sensing", vs: "Allegro, Melexis, LEM (sensing only)", conf: med}
+  disadvantages:
+    - {id: d-cmti, text: "CMTI 50 kV/µs on Si892x / Si894x vs 85 kV/µs (AMC3301) and 100 kV/µs+ asked for SiC; a SiC charger switches at 50–100 V/ns", vs: "TI AMC3301 / AMC3302-Q1", offset: "Raise CMTI to ≥100 kV/µs in the new version (as on our Si86 isolators and gate drivers)", conf: high}
+    - {id: d-late, text: "TI has sold integrated-DC/DC isolated amplifiers since 2019 (AMC3301) and designs them into its own 800 V charger references", vs: TI, offset: "Lead with noise, bandwidth and 5 kVrms; offer a pin-compatible footprint where possible (open)", conf: high}
+    - {id: d-price, text: "TI's list price is low: AMC3301DWER $1.65 at 1k (reel), below its own AMC1306M25 modulator ($2.38)", vs: TI, offset: "Target the automotive (-Q1) sockets and the set price with our drivers", conf: high}
+    - {id: d-hall, text: "Below about 80 A integrated Hall sensors need no shunt and no isolated supply at all, at about $2 (TMCS1123) and ±1.4 % uncalibrated", vs: "TI TMCS1123, Allegro, Melexis, Infineon", offset: "Win where accuracy, bandwidth or current above 80 A matter: DC fast chargers, OBC DC link, battery current", conf: high}
+  diff_good:
+    - {id: g-noise, text: "Lowest noise and widest bandwidth of the integrated parts compared (from BizDev datasheet values)", conf: high}
+    - {id: g-budget, text: "A published error-budget method (AN1270) that the customer can reuse for the whole chain", conf: high}
+  diff_bad:
+    - {id: b-none, text: "No integrated-power isolated amplifier today; the Si86Px power stage is samples-only and basic-rated (3.75 kVrms)", conf: high}
+    - {id: b-auto, text: "Si86Px is industrial; the automotive qualification of the in-package transformer is open", conf: med}
+
+architecture:
+  columns: ["Skyworks (today → proposed)", TI, "Allegro / Melexis / Infineon", "LEM / module makers"]
+  rows:
+    - ["Isolated shunt amplifier / modulator", "Si892x, Si894x (2.5 or 5 kVrms, automotive) → Si89xx-P with built-in power", "AMC1301 / AMC1302, AMC1306 (external supply); AMC3301, AMC3302-Q1, AMC3306M05-Q1 (built-in DC/DC)", "—", "—"]
+    - ["Isolated supply for the sense point", "Gate-driver bias + Zener/LDO, or Si88xx controller + external transformer → inside the package", "Inside the package (AMC33xx); UCC14130-Q1 isolated bias for the rest", "Not needed (Hall)", "Inside the module"]
+    - ["Built-in conductor or shunt", "None", "TMCS1123: Hall, 80 A rms, reinforced, 600 Vrms working", "Hall with in-package conductor (e.g. Allegro, Melexis, Infineon; parts not read)", "Closed-loop / fluxgate modules for 50–1000 A and billing-grade DC meters (not read)"]
+    - ["Where it sits in the library diagrams", "Isolated amplifiers and current sensors in the OBC, DC fast-charger module, wallbox, BMS / battery junction box, HV-to-LV DC/DC and traction inverter diagrams", "TIDA-01606: TMCS1123 + AMC3306M05; TIDA-010210: AMC3302; TIDA-010054: AMC1306M05 + AMC1302", "—", "—"]
+    - ["Fit with the architecture trend", "Good: 800 V SiC chargers want more sense points, low noise and one supply", "Good: owns the integrated socket today", "Good below 80 A", "Neutral: high-current and metering niches"]
+  note: "From the BizDev parts database (Skyworks and TI isolated amplifiers), the block-diagram library (OBC, DC fast charging station and power module, wallbox, EV battery system, HV-to-LV DC/DC) and the TI reference designs read for the extra-wide isolation case on 21 Oct 2026."
+
+market_now:
+  - {figure: "Current sensor market (all types)", value: "$3.35 B in 2026 → $6.39 B in 2032 (11.4 % a year); isolated current sensors hold the largest share; drivers named: EVs, batteries, renewables, automation", source: "MarketsandMarkets press release 'Current Sensor Industry worth $6.39 billion by 2032', read 23 Oct 2026 (date not stated)", conf: low}
+  - {figure: "Key players named", value: "Asahi Kasei, Infineon, Allegro, LEM, Melexis, TDK, Honeywell, TI, Tamura, Omron, ST, Yageo, ADI, Broadcom, Aceinna", source: "Same press release", conf: low}
+  - {figure: "DC fast chargers", value: "About 2 million public fast chargers worldwide in 2024; ultra-fast (≥150 kW) +50 %", source: "IEA Global EV Outlook 2025 (search snippet, recorded in the extra-wide isolation case)", conf: low}
+  - {figure: "Integrated DC/DC in TI's own 800 V charger designs", value: "TIDA-01606 (11 kW, 800 V): TMCS1123 Hall + AMC3306M05 modulator with built-in DC/DC; TIDA-010210 (11 kW, up to 1000 V): AMC3302 with built-in DC/DC; TIDA-010054 (10 kW DAB): AMC1306M05 + AMC1302 with external supply", source: "TI tool pages, read 21 Oct 2026 (extra-wide isolation case, background 2.1–2.3)", conf: high}
+  - {figure: "Public list prices (TI store, 1k)", value: "AMC3301DWER $1.65 (reel; tube $6.26); TMCS1123 $1.96–2.15 (reel); AMC1306M25DWVR $2.38 (reel)", source: "TI product pages, read 21 and 23 Oct 2026", conf: high}
+
+outlook:
+  - {id: o-points, text: "800 V SiC chargers add sense points (bidirectional PFC phases, DAB primary and secondary, DC output, insulation path), so isolated amplifiers per charger rise (est)", basis: "TIDA-01606 / 010210 / 010054 parts lists; library diagrams", conf: med}
+  - {id: o-integr, text: "Integrated isolated power becomes the default for sense points away from the gate drivers (DC link, output, battery side) (est)", basis: "TI uses it in 2 of 3 current 800 V charger references", conf: med}
+  - {id: o-hall, text: "Below about 80 A integrated Hall sensors keep gaining (no shunt, no supply, ±1–1.5 %); above 100 A shunts and modules stay (est)", basis: "TMCS1123 page (80 A rms, ±1.4 %); shunt heat at high current", conf: med}
+  - {id: o-meter, text: "DC fast chargers need billing-grade DC metering (calibration law in several countries), a separate, module-based niche (est)", basis: "Our reading; not researched in this run", conf: low}
+
+features:
+  - {id: f-today, feature: "Sell Si8921BD / Si8941BD-AS4 (5 kVrms reinforced, automotive) with the Si88xx isolated bias and the AN1270 error budget in charger designs", benefit: "Revenue now: same accuracy as TI, less noise", distance: 0, why: "Shipping parts"}
+  - {id: f-dcdc, feature: "Si89xx-P: Si892x / Si894x die + Si86Px isolated power stage in one wide-body package, single 3.3 / 5 V supply", benefit: "One part per sense point; answers AMC3301 / AMC3302-Q1", distance: 2, why: "Existing amplifier die and existing in-package power stage (Si86Px); new multi-die package, reinforced rating and automotive qualification"}
+  - {id: f-cmti, feature: "Raise CMTI to ≥100 kV/µs on the amplifier die", benefit: "Robust next to SiC switches (50–100 V/ns)", distance: 3, why: "Die change; our isolators and gate drivers already reach 100 kV/µs and more"}
+  - {id: f-ref, feature: "800 V OBC / DC-charger sensing reference design: shunt choice, layout, AN1270 error budget including the shunt", benefit: "Design-in help; shows the total error the customer will see", distance: 1, why: "Documentation and a board from existing parts"}
+  - {id: f-shunt, feature: "Built-in-shunt version for ≤50 A (wallbox, OBC auxiliary rails, BMS sub-packs)", benefit: "No shunt, no supply, one part; competes with integrated Hall sensors at better offset and bandwidth (est)", distance: 4, why: "Current-carrying lead frame and shunt in a reinforced package is new for us; heat and creepage limit it"}
+
+product:
+  name: "Si89xx-P: reinforced isolated shunt amplifier and modulator with built-in isolated power (optional built-in shunt)"
+  spec:
+    - ["Reuses", "Si8921/22 analog amplifier and Si8941/46/47 modulator dies (±62.5 / ±250 mV inputs); Si86Px integrated DC-DC and miniature transformer; Skyworks capacitive isolation"]
+    - ["New", "Multi-die wide-body package with the power stage; reinforced rating for the power path; CMTI ≥100 kV/µs; AEC-Q100 Grade 1; fault output when the internal supply is lost"]
+    - ["Outputs", "Differential analog (amplifier) or 1-bit stream with internal or external clock (modulator), like the Si892x / Si894x today"]
+    - ["Accuracy (target, est)", "Gain error ≤0.2 %, offset ≤150 µV, nonlinearity ≤0.02 %: today's die values; total static error about ±0.5 % RSS over –40 to 125 °C before the shunt (AN1270 method); with a ±0.5 % 50 ppm/K shunt about ±1 % RSS uncalibrated and ±0.5 % after one gain calibration (est)"]
+    - ["Replaces", "Amplifier + Zener/LDO bias or + isolated DC-DC; TI AMC3301 / AMC3302-Q1 / AMC3306M05-Q1; Hall sensors where accuracy or current above 80 A matter"]
+    - ["Answers", "OBC (PFC phase and output currents, DC link), DC fast-charger modules (PFC, DAB, output), battery current in the junction box, HV-to-LV DC/DC"]
+    - ["Delivery (est)", "Reference design and today's parts now; Si89xx-P 18–24 months (est); built-in shunt later, only if the integrated Hall market leaves room"]
+
+prices:
+  method: "Anchor on TI store list prices at 1k (21 and 23 Oct 2026) → contract level 20–40 % below list (est) → our range. TI prices the integrated-DC/DC amplifier reel low ($1.65), so we price at parity on the industrial part and take a small premium for automotive grade, noise and 5 kVrms; the built-in shunt is priced against integrated Hall sensors."
+  anchors:
+    - {part: "TI AMC3301DWER (isolated amplifier + DC/DC, reel)", price: "$1.65", qty: "1,000 (TI store)"}
+    - {part: "TI AMC3301DWE (same, tube)", price: "$6.26", qty: "1,000 (TI store)"}
+    - {part: "TI TMCS1123 (isolated Hall, 80 A, reel)", price: "$1.96–2.15", qty: "1,000 (TI store)"}
+    - {part: "TI AMC1306M25DWVR (isolated modulator, external supply, reel)", price: "$2.38", qty: "1,000 (TI store)"}
+    - {part: "TI AMC3302-Q1 (automotive, built-in DC/DC)", price: "not stated", qty: "—"}
+  items:
+    - {id: p-ind, item: "Si89xx-P industrial (amplifier or modulator + built-in power)", entry: 1.2, target: 1.5, premium: 1.8, basis: "AMC3301DWER $1.65 list at 1k (est contract $1.1–1.3)"}
+    - {id: p-auto, item: "Si89xx-P automotive (AEC-Q100, CMTI ≥100 kV/µs)", entry: 1.5, target: 1.9, premium: 2.3, basis: "Automotive grade usually lists 10–30 % above industrial (est); AMC3302-Q1 price not stated"}
+    - {id: p-shunt, item: "Built-in-shunt version (≤50 A)", entry: 1.6, target: 2.0, premium: 2.4, basis: "TMCS1123 $1.96–2.15 list at 1k: priced at parity with integrated Hall (est)"}
+
+volumes:
+  - {label: "Automotive OBC and HV DC/DC: 1.5 M parts a year (e.g. 0.5 M chargers × 3 sense points, est)", units: 1500000, price: p-auto}
+  - {label: "DC fast-charger modules and storage: 0.5 M parts a year (est)", units: 500000, price: p-ind}
+  - {label: "Built-in shunt for wallboxes and auxiliary rails: 1 M parts a year (est)", units: 1000000, price: p-shunt}
+
+attach:
+  - {id: t-drv, lever: "Sell sensing with our isolated gate drivers (Si828x DESAT, Si823x) in the same PFC and DAB stages", effort: low}
+  - {id: t-iso, lever: "Si86xx isolators for the control and communication barrier of the same charger", effort: low}
+  - {id: t-ref, lever: "An 800 V OBC sensing reference board and an AN1270-style calculator that includes the shunt", effort: med}
+  - {id: t-hot, lever: "Pair with the solid-state pre-charge and disconnect ideas in the hot-swap report (auto-hv-hot-swap): the same sense points do over-current detection there", effort: med}
+
+questions:
+  bu:
+    - {id: q-bu-p, text: "Can the Si86Px power stage go into a package with the Si892x / Si894x die, and reach a reinforced rating and AEC-Q100?", why: "Sets the headline (f-dcdc) at distance 2"}
+    - {id: q-bu-cmti, text: "What does it take to raise the Si89xx CMTI from 50 to ≥100 kV/µs?", why: "f-cmti; SiC chargers need it"}
+    - {id: q-bu-req, text: "Which charger customers asked for an amplifier with built-in power or a built-in shunt, and at what volume?", why: "Volumes here are scenarios only"}
+  customer:
+    - {id: q-c-err, text: "What total current error do you need over temperature and lifetime at each sense point (PFC, DC link, output), and do you calibrate at end of line?", who: "OBC / DC-charger hardware lead", why: "Decides between shunt + amplifier and integrated Hall (±1.4 % uncalibrated)"}
+    - {id: q-c-supply, text: "How do you power the high side of each isolated amplifier today, and what would one part with built-in power save you?", who: "OBC / DC-charger hardware lead", why: "Sizes cb-supply"}
+    - {id: q-c-shunt, text: "Up to what current would you buy a part with the shunt inside, and what heat and creepage limits apply?", who: "Wallbox / OBC hardware lead", why: "Decides whether f-shunt is worth it"}
+
+diagram:
+  note: "An 800 V bidirectional on-board charger (PFC + dual active bridge) with the proposed Si89xx-P at each current-sense point and our gate drivers, isolators and bias around it. Library diagrams: HEV/EV on-board charger (TI), 6.6 kW bidirectional OBC (Renesas), DC fast charging station power module (Renesas)."
+  groups:
+    - id: pfc
+      label: AC input and bidirectional PFC
+      col: 0
+      row: 0
+      blocks:
+        - {fn: power_fets, label: "SiC / GaN PFC switches", who: other}
+        - {fn: gate_driver, label: "Isolated gate drivers", who: ours, part: "Si828x / Si823x"}
+        - {fn: isolated_amplifier, label: "PFC phase current (shunt)", who: proposed, part: "Si89xx-P (concept)"}
+    - id: link
+      label: 800 V DC link
+      col: 1
+      row: 0
+      blocks:
+        - {fn: dc_link_cap, label: "DC-link capacitors", who: customer}
+        - {fn: isolated_amplifier, label: "DC-link voltage", who: ours, part: "Si8931D / Si8935D"}
+    - id: dab
+      label: Dual active bridge to the battery
+      col: 2
+      row: 0
+      blocks:
+        - {fn: power_fets, label: "SiC switches (primary and secondary)", who: other}
+        - {fn: gate_driver, label: "Isolated gate drivers", who: ours, part: "Si828x"}
+        - {fn: isolated_amplifier, label: "Output / battery current (shunt)", who: proposed, part: "Si89xx-P (concept)"}
+        - {fn: current_sensor, label: "Small auxiliary currents", who: proposed, part: "Built-in-shunt version (concept)"}
+    - id: ctrl
+      label: Control (low-voltage side)
+      col: 3
+      row: 0
+      blocks:
+        - {fn: mcu, label: "Charger MCU / DSP", who: other}
+        - {fn: digital_isolator, label: "Isolators to the vehicle side", who: ours, part: "Si86xx"}
+        - {fn: isolated_dcdc, label: "Gate-drive bias", who: ours, part: "Si88xx"}
+  links:
+    - [pfc, link, "800 V DC"]
+    - [link, dab, "800 V DC"]
+    - [pfc, ctrl, "currents, PWM"]
+    - [dab, ctrl, "currents, PWM"]
+
+risks:
+  - "TI already owns the integrated-power socket with low list prices ($1.65 at 1k) and its own 800 V reference designs."
+  - "Integrated Hall sensors cover most currents under 80 A without a shunt or supply; the built-in-shunt idea may find little room."
+  - "The in-package power stage (Si86Px) is samples-only, industrial and basic-rated; reinforced and automotive ratings are not yet shown."
+  - "EMI from an in-package DC-DC near a precision amplifier needs care (TI publishes low-emission layouts)."
+  - "Unknown from public data: sense points per charger, contract prices, the share of designs that calibrate at end of line, and Skyworks' plans for Si86Px."

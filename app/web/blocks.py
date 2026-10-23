@@ -49,6 +49,9 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
            "market": market, "source": source, "variants": variants, "verified": verified,
            "n_verified": sum(1 for c in allcards if c["verified"]),
            "n_variant": sum(1 for c in allcards if c["variant"]), "n_groups": len(blocks.variant_groups())}  # fmt: skip
+    from app.services import library
+
+    ctx["deep_dives"] = library.topics()  # owner, 23 Oct 2026: the Systems library sits with the applications
     return templates.TemplateResponse(request, "blocks/index.html", ctx)
 
 

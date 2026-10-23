@@ -16,6 +16,7 @@ NAV = (
     )),
     ("systems", "Systems & applications", (
         ("Application library", "/blocks", "Reference architectures and their coverage"),
+        ("Systems library", "/library", "Deep dives per system: diagrams, design rules, trends, links to basics"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
         ("Cross-sell & gaps", "/blocks/cross-sell", "What to sell more of, the gaps to fill and new technology"),
         ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
@@ -35,7 +36,6 @@ NAV = (
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
     )),
     ("knowledge", "Engineering knowledge", (
-        ("Systems library", "/library", "Deep dives per system: diagrams, design rules, trends, links to basics"),
         ("Interactive visuals", "/visuals", "Sliders and live graphs: RF links, noise, filters, CMTI; RF band chart"),
         ("General knowledge", "/knowledge", "RF fundamentals, specification guides, technology platforms and search"),
     )),
@@ -112,7 +112,7 @@ PLACES = {
     "/owner": ("manage", "/manage/people"),
     "/manage/schedule": ("manage", "/manage/schedule"),
     "/manage": ("manage", "/manage/reviews"),
-    "/library": ("knowledge", "/library"),
+    "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications
     "/visuals": ("knowledge", "/visuals"),
     "/rf-bands": ("knowledge", "/visuals"),
     "/knowledge": ("knowledge", "/knowledge"),

@@ -320,8 +320,8 @@ def test_navigation_sections_and_old_urls(client):
                                ("/business/competitors", "Opportunities", "Competitive analytics"),
                                ("/business/markets", "Future growth", "Markets &amp; customers"),
                                ("/business/reports", "Future growth", "Research &amp; ideas"),
-                               ("/library", "Engineering knowledge", "Systems library"),
-                               ("/library/v2x_frontend", "Engineering knowledge", "Systems library"),
+                               ("/library", "Systems &amp; applications", "Systems library"),
+                               ("/library/v2x_frontend", "Systems &amp; applications", "Systems library"),
                                ("/visuals", "Engineering knowledge", "Interactive visuals"),
                                ("/rf-bands", "Engineering knowledge", "Interactive visuals"),
                                ("/knowledge", "Engineering knowledge", "General knowledge"),
@@ -343,11 +343,13 @@ def test_navigation_sections_and_old_urls(client):
     assert (
         'id="global-search"' in client.get("/broadcast").text and 'id="global-search"' not in client.get("/parts").text
     )
-    # Engineering knowledge: three items; RF fundamentals and the guides are General knowledge tabs, RF bands a visual
+    # Engineering knowledge: two items (the Systems library moved to Systems & applications, owner 23 Oct 2026)
     from app.web import nav
 
     knowledge = next(s for s in nav.NAV if s[0] == "knowledge")
-    assert [i[0] for i in knowledge[2]] == ["Systems library", "Interactive visuals", "General knowledge"]
+    assert [i[0] for i in knowledge[2]] == ["Interactive visuals", "General knowledge"]
+    systems = next(s for s in nav.NAV if s[0] == "systems")
+    assert [i[0] for i in systems[2]][:2] == ["Application library", "Systems library"]
     rf = client.get("/rf-notes").text
     assert 'aria-current="page" class="on">RF fundamentals<' in rf and 'href="/engineering"' in rf
     assert 'aria-current="page" class="on">Specification guides<' in client.get("/engineering/cmti_kv_us").text

@@ -27,7 +27,10 @@ Every push to the `main` branch on GitHub redeploys the site automatically.
   Render → cross-list → Environment → add `CROSSLIST_USE_UNOFFICIAL_DATA` = `false` and save. The restart reloads
   the data without them, so every such value leaves the database. Set it back to `true` (or delete it) to restore.
   Deleting the `data/real/unofficial/` folder and deploying has the same effect, permanently.
-- **Own address** (e.g. `crosslist.example.com`): Render → cross-list → Settings → Custom Domains.
+- **Own address** (e.g. `crosslist.example.com`): Render → cross-list → Settings → Custom Domains. Passkeys belong
+  to one address: also set `CROSSLIST_RP_ID` = `crosslist.example.com` and `CROSSLIST_ORIGIN` =
+  `https://crosslist.example.com` (Render → Environment). Passkeys made on the old address stop working there; sign
+  in with the password, add new passkeys and send guests new invites.
 - **Region:** `render.yaml` uses Frankfurt; change `region` before the first deploy if another is closer.
 - **Backups:** Render keeps daily snapshots of the disk (Render → cross-list → Disks).
 
@@ -56,3 +59,40 @@ own read-only key, never the site password.
    - If the network access level is limited, add that host to the allowed domains.
 4. The run follows `docs/daily_update.md`. Without the key the inbox is closed (HTTP 404) whenever the site has a
    password; with a wrong key it answers 401. Change the key in both places to revoke it.
+
+## Guests and passkeys
+
+Only signed-in people see anything. You sign in with the site password (it stays your backup) or with a passkey;
+invited guests sign in with a passkey only. A passkey is a sign-in key kept by a phone or computer and unlocked with
+a fingerprint, face or screen PIN.
+
+- **Render settings:** nothing new for `https://cross-list.onrender.com`. Only for another address set
+  `CROSSLIST_RP_ID` (the host name) and `CROSSLIST_ORIGIN` (the full `https://` address); see "Own address" above.
+- **Your own passkeys:** top right → My passkeys → Add a passkey on this device (once per phone or computer).
+- **Invite someone:** Data management → People & invites → name (and a note for yourself) → Create invite link →
+  Copy link, and send it yourself. The link works once, for 7 days; with it the person creates their passkey.
+- **What guests can do:** read every page and use every input (feedback button, agree / disagree, comments,
+  requests, saved diagrams, price estimate and builder). Data management is yours alone. Nothing a guest sends
+  changes the site until you approve it on Data management → Guest input (one item at a time); approved items are
+  applied exactly as if you had sent them, under the guest's name. The daily run sees only approved items.
+- **Remove someone:** People & invites → Remove. They are signed out at once and their passkeys stop working.
+- **Lost passkey:** you sign in with the password and add a new passkey (remove the old one on My passkeys). A
+  guest: remove them and send a new invite.
+
+## Security
+
+- **Sign-in:** password or passkey (WebAuthn); the session cookie is signed, HttpOnly, SameSite=Lax and Secure on
+  https, and checked against the account on every request (removing a guest ends their sessions at once).
+- **Bots:** the sign-in and invite pages need a short proof of work done by the browser (under a second, nothing
+  sent elsewhere; each check works once and for 5 minutes). Per address at most 30 sign-in attempts in 5 minutes;
+  10 failures in 15 minutes lock that address for 15 minutes; when failures spike site-wide every attempt waits 3 s.
+  Failures are logged (address and method, never the password). The address is the first `X-Forwarded-For` entry,
+  which uvicorn takes from Render's proxy (`--proxy-headers`); the container is reachable only through that proxy.
+- **Search engines:** `/robots.txt` disallows everything, every response says `X-Robots-Tag: noindex, nofollow`.
+- **Browser headers on every response:** Content-Security-Policy (this site only; inline scripts and styles are
+  allowed because the pages use small inline scripts, onclick handlers and style attributes), nosniff,
+  Referrer-Policy same-origin, X-Frame-Options DENY, a Permissions-Policy that blocks camera, location and similar
+  (the microphone stays allowed for dictation) and Strict-Transport-Security on https.
+- **Requests:** data may only be sent from the site itself (other sites' forms are refused); uploads up to 10 MB,
+  other input up to 4 MB.
+- No outside service is used for any of this.

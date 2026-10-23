@@ -1,13 +1,4 @@
-import pytest
-
-from app.config import get_settings
-
-
-@pytest.fixture
-def locked(client, monkeypatch):
-    monkeypatch.setattr(get_settings(), "site_password", "s3cret")
-    monkeypatch.setattr(get_settings(), "secret_key", "k")
-    return client
+from tests.conftest import solve_pow
 
 
 def test_open_without_password(client):
@@ -24,13 +15,14 @@ def test_pages_ask_for_the_password(locked):
 
 
 def test_wrong_password_is_refused(locked):
-    r = locked.post("/login", data={"password": "nope", "next": "/parts"}, follow_redirects=False)
+    r = locked.post("/login", data={"password": "nope", "next": "/parts", **solve_pow(locked)}, follow_redirects=False)
     assert r.status_code == 401
     assert locked.get("/parts", follow_redirects=False).status_code == 303
 
 
 def test_sign_in_and_out(locked):
-    r = locked.post("/login", data={"password": "s3cret", "next": "/parts"}, follow_redirects=False)
+    r = locked.post("/login", data={"password": "s3cret", "next": "/parts", **solve_pow(locked)},
+                    follow_redirects=False)  # fmt: skip
     assert r.status_code == 303 and r.headers["location"] == "/parts"
     assert locked.get("/parts").status_code == 200
     assert "Sign out" in locked.get("/parts").text
@@ -39,5 +31,6 @@ def test_sign_in_and_out(locked):
 
 
 def test_next_cannot_leave_the_site(locked):
-    r = locked.post("/login", data={"password": "s3cret", "next": "//evil.example"}, follow_redirects=False)
+    r = locked.post("/login", data={"password": "s3cret", "next": "//evil.example", **solve_pow(locked)},
+                    follow_redirects=False)  # fmt: skip
     assert r.headers["location"] == "/"

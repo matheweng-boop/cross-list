@@ -22,6 +22,7 @@ from app.models import (
     TechFeedback,
 )
 from app.services import feedback as fb
+from app.services import guest_input
 
 
 def _since(day: date) -> datetime:
@@ -113,7 +114,13 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += [f"- {_when(a.created_at)} [{a.status}] {_one_line(a.area)}{' · why: ' + _one_line(a.why) if a.why else ''}"
             f"{' · ' + a.author if a.author else ''}" for a in areas] or ["None."]  # fmt: skip
 
+    # guest input: only what the owner approved (already applied, with names); pending items only as a count
+    guests = guest_input.inbox_lines(session, start)
+    out += guests
+    approved = not guests[2].startswith("None.")
+
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
-    if not any([n_site, crosses, blocks, tech, reviews, asked, answered, rq, areas]):  # open requests are work too
+    # open requests are work too
+    if not any([n_site, crosses, blocks, tech, reviews, asked, answered, rq, areas, approved]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

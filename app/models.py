@@ -17,6 +17,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Table,
     Text,
@@ -653,3 +654,101 @@ class AreaRequest(Base):
     status: Mapped[str] = mapped_column(String(12), default="new")  # new | planned | done | declined
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+# --- Sign-in with passkeys and invited guests (owner, 23 Oct 2026) ---------------------------------------------------
+# The older `User` table above stays as it is (it carries no role); the people who can sign in are `Account` rows.
+
+
+class Account(Base):
+    """A person who can sign in: the owner (password or passkey) or an invited guest (passkey only). Bumping
+    session_version signs the person out everywhere at once."""
+
+    __tablename__ = "accounts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    role: Mapped[str] = mapped_column(String(10), default="guest")  # owner | guest
+    disabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    session_version: Mapped[int] = mapped_column(Integer, default=1)
+    handle: Mapped[str] = mapped_column(String(64), unique=True)  # random WebAuthn user handle (base64url)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    passkeys: Mapped[list["PasskeyCredential"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan", order_by="PasskeyCredential.created_at"
+    )
+
+
+class PasskeyCredential(Base):
+    __tablename__ = "passkey_credentials"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id", ondelete="CASCADE"), index=True)
+    credential_id: Mapped[str] = mapped_column(String(1400), unique=True)  # base64url
+    public_key: Mapped[bytes] = mapped_column(LargeBinary)
+    sign_count: Mapped[int] = mapped_column(Integer, default=0)
+    transports: Mapped[list | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    account: Mapped[Account] = relationship(back_populates="passkeys")
+
+
+class Invite(Base):
+    """A one-time invite link. Only the SHA-256 of the token is stored; the link itself is shown once."""
+
+    __tablename__ = "invites"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token_sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    name: Mapped[str] = mapped_column(String(100))
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("accounts.id", ondelete="SET NULL"))
+
+
+class WebauthnChallenge(Base):
+    """A passkey challenge: random, single use, valid 5 minutes, bound to the browser by a cookie holding a nonce
+    (only its SHA-256 is stored)."""
+
+    __tablename__ = "webauthn_challenges"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nonce_sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    challenge: Mapped[bytes] = mapped_column(LargeBinary)
+    purpose: Mapped[str] = mapped_column(String(20))  # login | invite | owner
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("accounts.id", ondelete="CASCADE"))
+    invite_id: Mapped[int | None] = mapped_column(ForeignKey("invites.id", ondelete="CASCADE"))
+    handle: Mapped[str | None] = mapped_column(String(64))  # user handle offered to a new guest's passkey
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class ExternalSubmission(Base):
+    """Something a guest sent (comment, vote, request, saved design...). It changes nothing until the owner approves
+    it; approval replays the stored request through the same route the owner uses, with the guest's name as author."""
+
+    __tablename__ = "external_submissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("accounts.id", ondelete="SET NULL"), index=True)
+    author: Mapped[str] = mapped_column(String(100))  # the guest's name when it was sent
+    kind: Mapped[str] = mapped_column(String(60))  # plain-English label of the input, e.g. "Site feedback"
+    method: Mapped[str] = mapped_column(String(10), default="POST")
+    target: Mapped[str] = mapped_column(String(500))  # the route the input was sent to
+    payload: Mapped[dict] = mapped_column(JSON)  # content type, query and body as sent
+    page: Mapped[str | None] = mapped_column(String(500))  # the page the guest was on
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    status: Mapped[str] = mapped_column(String(10), default="pending", index=True)  # pending | approved | rejected
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    owner_note: Mapped[str | None] = mapped_column(Text)
+    result: Mapped[dict | None] = mapped_column(JSON)  # what the replay answered (status, id of what was created)
+
+
+class PowSpent(Base):
+    """A proof-of-work challenge already used on the sign-in or invite page (each works once)."""
+
+    __tablename__ = "pow_spent"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

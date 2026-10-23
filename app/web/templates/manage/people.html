@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>People &amp; invites</h1>
+<p class="subtitle muted">Invite someone as a guest: they read every page and can comment, vote and send requests. Everything they send waits for you on <a href="/manage/guest-input">Guest input</a>. Data management stays yours alone.</p>
+{% if msg %}<p class="banner" role="status">{{ msg }}</p>{% endif %}
+
+{% if new_link %}<div class="pl-card" role="status">
+  <p><b>Invite link for {{ new_name }}</b> (works once, for 7 days; it is shown only now):</p>
+  <p><input id="invite-link" value="{{ new_link }}" readonly aria-label="Invite link"></p>
+  <p><button type="button" class="small-btn" data-copy="#invite-link">Copy link</button> <span class="small muted" data-copy-msg aria-live="polite"></span></p>
+  <p class="small muted">Send it to {{ new_name }} yourself (mail or chat). Opening it lets them create a passkey on their phone or computer.</p>
+</div>{% endif %}
+
+<details class="pl-card"{% if not guests %} open{% endif %}><summary><b>Invite someone</b></summary>
+  <form method="post" action="/manage/people/invite">
+    <label>Name <input name="name" maxlength="100" required placeholder="e.g. Anna Berger"></label>
+    <label>Note for yourself <small class="muted">optional</small> <input name="note" maxlength="2000" placeholder="e.g. RF field engineer, Munich"></label>
+    <button type="submit">Create invite link</button>
+  </form>
+</details>
+
+<h2>Guests</h2>
+{% if guests %}<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Since</th><th scope="col">Passkeys (created · last used)</th><th scope="col"></th></tr></thead>
+  <tbody>{% for g in guests %}<tr>
+    <th scope="row">{{ g.name }}{% if g.disabled %} <span class="muted small">(removed)</span>{% endif %}</th>
+    <td>{{ g.created_at.strftime('%Y-%m-%d') }}</td>
+    <td class="small">{% for k in g.passkeys %}{{ k.created_at.strftime('%Y-%m-%d') }} · {{ k.last_used_at.strftime('%Y-%m-%d %H:%M') if k.last_used_at else 'not used yet' }}{% if not loop.last %}<br>{% endif %}{% else %}none{% endfor %}</td>
+    <td>{% if not g.disabled %}<form method="post" action="/manage/people/{{ g.id }}/remove" class="inline-form" data-confirm="Remove {{ g.name }}? They are signed out at once and their passkeys stop working."><button type="submit" class="outline small-btn">Remove</button></form>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>{% else %}<p class="muted">No guests yet.</p>{% endif %}
+
+<h2>Invite links</h2>
+{% if invites %}<div class="table-wrap"><table>
+  <thead><tr><th scope="col">For</th><th scope="col">Note</th><th scope="col">Created</th><th scope="col">Status</th><th scope="col"></th></tr></thead>
+  <tbody>{% for r in invites %}<tr>
+    <th scope="row">{{ r.i.name }}</th><td class="small">{{ r.i.note or '' }}</td><td>{{ r.i.created_at.strftime('%Y-%m-%d') }}</td>
+    <td>{% if r.state == 'used' %}used {{ r.i.used_at.strftime('%Y-%m-%d') }}{% elif r.state == 'expired' %}expired or cancelled{% else %}open until {{ r.i.expires_at.strftime('%Y-%m-%d') }}{% endif %}</td>
+    <td>{% if r.state == 'open' %}<form method="post" action="/manage/people/invites/{{ r.i.id }}/cancel" class="inline-form"><button type="submit" class="outline small-btn">Cancel</button></form>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>{% else %}<p class="muted">No invite links yet.</p>{% endif %}
+<p class="small muted">A guest who lost their passkey (new phone): remove them and send a new invite. Your own passkeys: <a href="/owner/passkeys">My passkeys</a>.</p>
+<script src="/static/auth.js" defer></script>
+{% endblock %}

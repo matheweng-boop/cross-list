@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
   <title>{% block title %}{{ page_title(request.url.path) }}{% endblock %}</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -11,18 +12,18 @@
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
 <body class="shell{{ ' bare' if bare }}">
-{% set path = request.url.path %}{% set ns = nav_state(path) %}
+{% set path = request.url.path %}{% set ns = nav_state(path) %}{% set me = signed_in(request) %}{% set guest = me and me.is_guest %}
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
   <div class="head-row">
     <a href="/" class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M7 8h10M7 12h6M7 16h10"/></svg>BizDev</a>
     <nav class="main-nav" aria-label="Sections">
       {% for key, label, items in nav_sections %}<a href="{{ items[0][1] }}"{% if ns.section == key %} aria-current="true" class="on"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[key]|safe }}</svg>{{ label }}</a>{% endfor %}
-      {% set ukey, ulabel, uitems = nav_utility %}<a href="{{ uitems[0][1] }}" class="utility{{ ' on' if ns.section == ukey }}"{% if ns.section == ukey %} aria-current="true"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[ukey]|safe }}</svg>{{ ulabel }}</a>
+      {% set ukey, ulabel, uitems = nav_utility %}{% if not guest %}<a href="{{ uitems[0][1] }}" class="utility{{ ' on' if ns.section == ukey }}"{% if ns.section == ukey %} aria-current="true"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[ukey]|safe }}</svg>{{ ulabel }}</a>{% endif %}
     </nav>
-    {% if site_locked() %}<a href="/logout" class="sign-out small">Sign out</a>{% endif %}
+    {% if site_locked() %}<span class="sign-out small">{% if me and me.is_owner %}<a href="/owner/passkeys">My passkeys</a> · {% endif %}<a href="/logout">Sign out</a></span>{% endif %}
   </div>
-  {% for key, label, items in nav_sections + (nav_utility,) if key == ns.section %}
+  {% for key, label, items in nav_sections + (() if guest else (nav_utility,)) if key == ns.section %}
   <div class="sub-row">
   <nav class="sub-nav" aria-label="{{ label }}">{% for ilabel, href, desc in items %}<a href="{{ href }}" title="{{ desc }}"{% if ns.item == href %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a>{% endfor %}</nav>
   {% if not hide_header_search and path not in ('/', '/parts') %}
@@ -38,6 +39,8 @@
 </header>
 <main id="main" class="content" tabindex="-1">
   {% if ns.tabs %}<nav class="page-tabs" aria-label="Views">{% for label, href in ns.tabs %}<a href="{{ href }}"{% if ns.active_tab == href %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
+  {% if guest %}<p class="banner guest-note" role="note">You are signed in as {{ me.name }} (guest). Your input is reviewed before it is used.</p>{% endif %}
+  {% if request.cookies.get('crosslist_flash') == 'review' %}<p class="banner" role="status">Thanks, sent for review. The owner reviews every guest input before it is used.</p>{% endif %}
   {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}
   {% block content %}{% endblock %}
   {% if ns.tabs %}<script>(() => { const t = document.querySelector("main > nav.page-tabs"), h = document.querySelector("main h1"); if (t && h) h.after(t); })();</script>{% endif %}

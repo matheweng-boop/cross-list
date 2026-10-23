@@ -682,7 +682,8 @@
       if (!msg) return;
       const res = await fetch("/api/blocks/feedback", {method: "POST", headers: {"Content-Type": "application/json"},
         body: JSON.stringify({diagram_id: configId, diagram_name: $("#bk-name").value || (tpl && tpl.name) || "", target, message: msg})});
-      st.textContent = res.ok ? "Saved to the to-do list" : `Not saved (${res.status})`;
+      const out = res.ok ? await res.json().catch(() => ({})) : {};
+      st.textContent = res.ok ? (out.review ? out.message : "Saved to the to-do list") : `Not saved (${res.status})`;
       if (res.ok) msgEl.value = "";
     };
     msgEl.focus();
@@ -861,6 +862,7 @@
       {method: configId ? "PUT" : "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: $("#bk-name").value, data: S})});
     if (!res.ok) { $("#bk-status").textContent = `Not saved (${res.status})`; return; }
     const out = await res.json();
+    if (out.review) { dirty = false; $("#bk-status").textContent = out.message; return; }
     if (!configId) { configId = out.id; history.replaceState(null, "", `/blocks/${configId}${new URLSearchParams(location.search).get("bare") ? "?bare=1" : ""}`); }
     dirty = false;
     $("#bk-status").textContent = "Saved";

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My passkeys</h1>
+<p class="subtitle muted">Sign in with your fingerprint, face or screen PIN instead of the password. The site password keeps working as your backup.</p>
+{% if msg %}<p class="banner" role="status">{{ msg }}</p>{% endif %}
+{% if keys %}<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Added</th><th scope="col">Last used</th><th scope="col"></th></tr></thead>
+  <tbody>{% for k in keys %}<tr><td>{{ k.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ k.last_used_at.strftime('%Y-%m-%d %H:%M') if k.last_used_at else 'not used yet' }}</td>
+    <td><form method="post" action="/owner/passkeys/{{ k.id }}/delete" class="inline-form" data-confirm="Remove this passkey?"><button type="submit" class="outline small-btn">Remove</button></form></td></tr>{% endfor %}</tbody>
+</table></div>{% else %}<p class="muted">No passkeys yet.</p>{% endif %}
+<p><button type="button" id="owner-add-passkey">Add a passkey on this device</button></p>
+<p class="small muted" id="auth-msg" aria-live="polite"></p>
+{% if not locked %}<p class="small muted">The site has no password set (local use), so nobody needs to sign in here.</p>{% endif %}
+<script src="/static/auth.js" defer></script>
+{% endblock %}

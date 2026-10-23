@@ -16,5 +16,5 @@ router = APIRouter()
 def portfolio(request: Request, session: Session = Depends(get_session)):
     ctx = {"cur": pf.curated(), "ov": pf.overlap(), "bands": pf.rf_bands(), "comp": pf.competitors(session),
            "bundles": pf.bundles(), "label": vocab.fn_label, "cats": pf.product_categories(),
-           "syn": pf.synergies()}  # fmt: skip
+           "syn": pf.synergies(), "matches": pf.pick_matches(), "match_rule": pf.MATCH_RULE}  # fmt: skip
     return templates.TemplateResponse(request, "portfolio.html", ctx)

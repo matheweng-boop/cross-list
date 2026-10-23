@@ -1941,3 +1941,40 @@ article { border: 1px solid var(--card-line); border-radius: var(--radius-card);
 .pk-setup ul { margin: .6rem 0 0; padding-left: 1.1rem; }
 .pk-setup li { margin: .15rem 0; }
 .auth-page .auth-first { margin: .4rem 0 0; }
+
+/* RF coverage by band (owner, 23 Oct 2026): smaller type with no wrapping on this table only, and the colour code:
+   active parts green, NRND / obsolete grey and struck through, applications solid blue, competitors solid red, white
+   text on both. Fixed colour pairs, each at least 4.5:1, so they read the same in light and dark mode. */
+@media (min-width: 901px) {
+  .stack-table.rf-matrix.rf-small { font-size: .72rem; border-spacing: 2px 2px; }
+  .stack-table.rf-matrix.rf-small th, .stack-table.rf-matrix.rf-small td { padding: .2rem .25rem; white-space: nowrap !important; }
+  .stack-table.rf-matrix.rf-small .rf-cell a { min-width: 0; flex-wrap: nowrap; gap: .15rem; }
+}
+.rf-small .rf-ok, .rf-key .rf-ok { background: #cdebd5; color: #14532d; }
+.rf-small .rf-thin, .rf-key .rf-thin { background: #e9f6ec; color: #14532d; }
+.rf-small .rf-risk, .rf-key .rf-risk { background: #ececec; color: #4a4a4a; }
+.rf-small .rf-none, .rf-key .rf-none { background: #fde2dd; color: #8a1c0c; }
+.rf-small .rf-empty { color: #767676; }
+.rf-small .rf-r, .rf-key .rf-r { color: #595959; text-decoration: line-through; font-size: .66rem; }
+.rf-small .rf-need, .rf-key .rf-need { background: #1d4ed8; color: #fff; border: 0; border-radius: .6rem; padding: 0 .3rem; font-size: .64rem; }
+.rf-small .rf-comp, .rf-key .rf-comp { background: #b91c1c; color: #fff; border-radius: .6rem; padding: 0 .3rem; font-size: .64rem; }
+.rf-key { display: flex; flex-wrap: wrap; gap: .3rem .9rem; align-items: center; margin: 0 0 .6rem; }
+.rf-key .rf-cell { display: inline-flex; gap: .15rem; padding: 0 .4rem; }
+.rf-st-ok { color: #1c6b3a; font-weight: 600; }
+.rf-st-risk { color: #595959; text-decoration: line-through; }
+:root[data-theme="dark"] .rf-st-ok { color: #7ee2a0; }
+:root[data-theme="dark"] .rf-st-risk { color: #b0b0b0; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .rf-st-ok { color: #7ee2a0; }
+  :root:not([data-theme="light"]) .rf-st-risk { color: #b0b0b0; }
+}
+
+/* Skyworks + Qorvo, Which line to offer (owner, 23 Oct 2026): bigger part chips, room above "Used in", and the
+   similar / further-design-effort marks (white on solid colour, at least 4.5:1). */
+.pf-parts .badge.pf-part { font-size: .95rem; font-weight: 600; padding: .3rem .65rem; border-width: 2px; }
+.pf-parts:has(.pf-part) { gap: .45rem; margin-top: .5rem; }
+.pf-match { margin: .8rem 0 0; } .pf-match p { margin: 0 0 .3rem; } .pf-match ul { margin: 0; padding-left: 1.1rem; }
+.pf-match li { margin: .15rem 0; }
+.pf-used { margin-top: 1rem; padding-top: .6rem; border-top: 1px dashed var(--pico-muted-border-color); line-height: 1.6; }
+.pf-sim, .pf-effort { display: inline-block; border-radius: .6rem; padding: 0 .45rem; color: #fff; font-weight: 600; }
+.pf-sim { background: #1c6b3a; } .pf-effort { background: #9a3412; }

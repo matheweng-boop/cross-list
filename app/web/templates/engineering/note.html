@@ -36,6 +36,6 @@
 
 <script type="application/json" id="note-devices">{{ devices|tojson }}</script>
 <script src="/static/notes.js"></script>
-<p class="muted small">Used in: {% for fam, prio in families %}{{ fam }} (priority {{ prio }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+{% if families %}<p class="muted small">Used in: {% for fam, prio in families %}{{ fam }} (priority {{ prio }}){{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
 <details><summary>Other notes</summary><ul>{% for n in others %}<li><a href="/engineering/{{ n.key }}">{{ n.title }}</a> <span class="muted">– {{ n.summary }}</span></li>{% endfor %}</ul></details>
 {% endblock %}

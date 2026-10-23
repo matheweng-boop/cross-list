@@ -35,6 +35,9 @@ NOTES = {
     "uvlo_v": ("UVLO threshold", "Why UVLO variants are not interchangeable."),
     "certifications": ("Safety certifications", "UL 1577, VDE / IEC 60747-17, CSA, CQC, TÜV."),
     "deadtime": ("Dead time and overlap protection", "Two names for one shoot-through guard in half-bridge drivers."),
+    "emc_eft_cispr": ("EFT burst and CISPR emissions on isolated designs: what the setup and the design change",
+                      "Why the return path of common-mode current decides EFT and emissions results "
+                      "with Si88 isolators."),
 }
 ALIASES = {"skew_ns": "pwd_ns", "peak_sink_a": "peak_source_a"}
 

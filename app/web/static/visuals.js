@@ -800,6 +800,204 @@
     related: [["Gate-drive current and power", "#gate"], ["CMTI against the switching edge", "#cmti"], ["Junction temperature", "#thermal"]],
   });
 
+  // EFT burst (IEC 61000-4-4) and CISPR 25/32 what-if for an isolated design with an Si88x2x (digital isolator +
+  // DC-DC controller + external transformer). Data-sheet numbers (Si88x2x, Tables 6 and 8): CMTI 40 kV/µs min,
+  // 100 typ; input-output capacitance 1.4 pF. Everything else is a relative capacitive-divider estimate (est) for
+  // comparing setups, not a pass/fail prediction. Note: /engineering/emc_eft_cispr.
+  const SI88 = {cmtiMin: 40, cmtiTyp: 100, cio: 1.4};
+  const EFT = v => v.mode === "eft", CIS = v => v.mode === "cispr";
+  const ser = (a, b) => (a * b) / (a + b);
+  const EMC_DEF = {mode: "eft", inj: "all", tie: "a", cdn: "33", y: "0", dcdc: "on", sec: "float", std: "c25", kv: "1", cinj: 1000, cra: 20, crb: 20, cww: 20};
+  // charge one 5/50 ns pulse (50 Ω source) pushes through the coupling capacitor into a low-impedance input (est)
+  const pulseCharge = (() => {
+    const shape = t => Math.exp(-t / 72) - Math.exp(-t / 1.9);  // ns; about 5 ns rise, 50 ns half width
+    let pk = 0;
+    for (let t = 0; t < 60; t += 0.05) pk = Math.max(pk, shape(t));
+    const run = cNf => {
+      let vc = 0, q = 0;
+      for (let t = 0; t < 600; t += 0.05) { const i = (shape(t) / pk - vc) / 50; vc += (i * 0.05) / cNf; q += Math.max(i, 0) * 0.05; }
+      return q;
+    };
+    const q33 = run(33);
+    return {"33": 1, "3.3": run(3.3) / q33};
+  })();
+  function emcModel(v) {
+    const kv = +v.kv, cy = +v.y * 1000, ccdn = v.cdn === "33" ? 33000 : 3300;  // pF
+    const cww = v.cww, cx = SI88.cio + cww + cy;  // the transformer is fitted whether or not it switches
+    const bonded = v.sec === "bond", crb = bonded ? 1e7 : v.crb;
+    const gen = (kv * 1000) / 5;  // kV/µs: V_burst / 5 ns rise
+    const gndb = v.inj === "n" && v.tie === "b";
+    let share, chit;
+    if (gndb) { share = 1; chit = cx + crb; }  // the hit line drives the secondary; L and PE hold the primary
+    else {
+      share = (v.cinj * crb) / ((v.cinj + v.cra) * (cx + crb) + cx * crb);
+      if (v.inj === "n") share *= 0.5;  // one of two lines driven, the CDN holds the other (est)
+      chit = ser(v.cinj, v.cra + ser(cx, crb));
+    }
+    const tau = 0.05 * ser(ccdn, chit);  // ns: 50 Ω × pF
+    const fEdge = 1 - Math.exp(-5 / tau);  // a big capacitance slows the edge the 50 Ω generator can make
+    const slope = gen * share * fEdge;
+    // CISPR: share of the converter's common-mode current that returns locally through the Y capacitor (est)
+    const local = cy ? (bonded ? 0.5 : cy / (cy + v.crb)) : 0;
+    return {kv, cy, cww, cx, bonded, gen, share, tau, fEdge, slope, gndb, local,
+      iIso: SI88.cio * slope * 1e-3, iT: cww * slope * 1e-3, iY: cy * slope * 1e-3};  // A: pF × kV/µs = mA
+  }
+  const amp = a => (a >= 1 ? `${num(a)} A` : `${num(a * 1000)} mA`);
+  const leak = cy => 2 * Math.PI * 50 * cy * 1e-12 * 230;  // A at 230 V 50 Hz across the barrier
+
+  function emcSvg(v, m) {
+    const eft = EFT(v), c25 = v.std === "c25", on = v.dcdc === "on", sub = (a, b) => `${a}<tspan class="emc-sb" dy="3">${b}</tspan><tspan dy="-3"> </tspan>`;
+    const box = (x, y, w, h, t, s, cls = "") => `<rect class="emc-blk ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/><text class="emc-t" x="${x + w / 2}" y="${y + (s ? h / 2 - 2 : h / 2 + 4)}" text-anchor="middle">${t}</text>${s ? `<text class="emc-s" x="${x + w / 2}" y="${y + h / 2 + 13}" text-anchor="middle">${s}</text>` : ""}`;
+    const w = pts => `<polyline class="emc-w" points="${pts}"/>`;
+    const hot = (pts, frac, cls) => (frac > 0.004 ? `<polyline class="${cls}" points="${pts}" stroke-width="${(2.5 + 9 * Math.min(1, frac)).toFixed(1)}"/>` : "");
+    const capH = (x, y, lab, dim) => `<g class="${dim ? "emc-dim" : ""}"><line class="emc-cp" x1="${x - 11}" x2="${x + 11}" y1="${y}" y2="${y}"/><line class="emc-cp" x1="${x - 11}" x2="${x + 11}" y1="${y + 8}" y2="${y + 8}"/>${lab}</g>`;
+    const o = [];
+    // ground plane and the generator's ground
+    o.push(`<rect class="emc-plane" x="4" y="506" width="372" height="12" rx="2"/><text class="emc-s" x="190" y="536" text-anchor="middle">Reference ground plane</text>`);
+    o.push(w("12,34 6,34 6,506"));
+    // the isolation barrier
+    o.push(`<line class="emc-barrier" x1="190" x2="190" y1="208" y2="470"/><text class="emc-s emc-bl" x="196" y="214">isolation barrier</text>`);
+    // wires
+    o.push(w("92,56 92,76"), w("92,200 92,222"), w("140,274 140,300"), w("240,274 240,300"), w("288,184 288,222"), w("150,352 150,374"), w("270,396 330,396 330,274"));
+    const lines = eft || !c25 ? [[52, "L"], [92, "N"], [132, "PE"]] : [[62, "+"], [122, "−"]];
+    for (const [x, l] of lines) o.push(w(`${x},120 ${x},160`), `<text class="emc-s" x="${x + 5}" y="145">${l}</text>`);
+    // Y capacitor across the barrier, stray capacitances to the plane (or the bond)
+    o.push(w("60,274 60,446 186,446"), w("194,446 350,446 350,274"));
+    o.push(`<g class="${m.cy ? "" : "emc-dim"}"><line class="emc-cp" x1="186" x2="186" y1="435" y2="457"/><line class="emc-cp" x1="194" x2="194" y1="435" y2="457"/></g><text class="emc-s" x="190" y="474" text-anchor="middle">${m.cy ? `Y ${m.cy >= 3000 ? "3.3 nF (3 × 10 nF)" : "1 nF"}` : "Y: none"}</text>`);
+    o.push(w("24,274 24,480"), w("24,488 24,506"), capH(24, 480, `<text class="emc-s" x="38" y="490">${sub("C", "ret,A")}</text>`));
+    if (m.bonded) o.push(`<polyline class="emc-w emc-bond" points="362,274 362,506"/><text class="emc-s" x="356" y="490" text-anchor="end">bonded</text>`);
+    else o.push(w("362,274 362,480"), w("362,488 362,506"), capH(362, 480, `<text class="emc-s" x="348" y="490" text-anchor="end">${sub("C", "ret,B")}</text>`));
+    if (eft && m.gndb) o.push(`<polyline class="emc-w emc-dash" points="92,140 176,140 176,290 240,290"/><text class="emc-s" x="178" y="136">N → GNDB</text>`);
+    // current paths (drawn under the blocks)
+    if (eft) {
+      const cls = "emc-hot", tot = m.cx || 1;
+      const fi = SI88.cio / tot, ft = m.cww / tot, fy = m.cy / tot, k = Math.min(1, m.slope / SI88.cmtiMin);
+      if (m.gndb) o.push(hot("92,56 92,76", 1, cls), hot("92,120 92,140 176,140 176,290 240,290 240,274", 1, cls));
+      else {
+        o.push(hot("92,56 92,76", 1, cls));
+        for (const [x] of v.inj === "n" ? [[92]] : lines) o.push(hot(`${x},120 ${x},160`, 1, cls));
+        o.push(hot("92,200 92,222", 1, cls), hot("24,274 24,506", 0.3, cls));
+      }
+      o.push(hot("140,274 140,326 240,326 240,274", fi * k + 0.15, cls));
+      o.push(hot("150,352 150,396 330,396 330,274", ft * k + (m.cww ? 0.1 : 0), cls));
+      if (m.cy) o.push(hot("60,274 60,446 186,446", fy * k + 0.1, cls), hot("194,446 350,446 350,274", fy * k + 0.1, cls));
+      o.push(hot("362,274 362,512 6,512 6,34 12,34", m.bonded ? 1 : 0.35, cls));
+    } else if (on) {
+      const loc = m.local, cab = 1 - loc;
+      o.push(hot("150,396 330,396 330,274", 1, "emc-cm"));
+      if (m.cy) o.push(hot("350,274 350,446 194,446", loc, "emc-loc"), hot("186,446 60,446 60,274", loc, "emc-loc"));
+      o.push(hot("362,274 362,512 6,512 6,34 12,34", cab, "emc-cm"), hot("92,56 92,76", cab, "emc-cm"), hot("92,120 92,160", cab, "emc-cm"), hot("92,200 92,222", cab, "emc-cm"), hot("140,274 140,300", Math.max(loc, cab), "emc-cm"));
+    }
+    // blocks
+    o.push(box(12, 12, 160, 44, eft ? "Burst generator" : c25 ? "Artificial network" : "LISN", eft ? `5/50 ns · ${v.kv} kV · 50 Ω` : c25 ? "5 µH / 50 Ω (CISPR 25)" : "50 µH / 50 Ω (CISPR 32)"));
+    o.push(box(12, 76, 160, 44, eft ? "Coupling network" : c25 ? "Supply harness" : "Mains cable", eft ? (v.cdn === "33" ? "33 nF per line" : "3 × 10 nF = 3.3 nF (not std)") : c25 ? "probe at 50 / 750 mm" : "Class A / B limits", eft && v.cdn !== "33" ? "emc-warn" : ""));
+    o.push(box(12, 160, 160, 40, "Input filter", "X / Y caps, CM choke"));
+    o.push(box(12, 222, 160, 52, "Primary side", "VDDA / GNDA"));
+    o.push(box(208, 222, 160, 52, "Secondary side", "VDDB / GNDB"));
+    o.push(box(208, 140, 160, 44, "Load and cable", `part of C ret,B`));
+    o.push(box(110, 300, 160, 52, "Si88 isolator + DC-DC", "1.4 pF · CMTI 40 kV/µs min", "emc-chip"));
+    o.push(box(110, 374, 160, 44, "Transformer", on ? `${sub("C", "ww")} ${num(m.cww)} pF (est)${CIS(v) ? " · 250 kHz" : ""}` : `${sub("C", "ww")} ${num(m.cww)} pF · not switching`, on ? "" : "emc-off"));
+    // legend
+    const lg = (y, cls, t) => `<line class="${cls}" x1="212" x2="236" y1="${y}" y2="${y}" stroke-width="6"/><text class="emc-s" x="242" y="${y + 4}">${t}</text>`;
+    o.push(`<text class="emc-t" x="212" y="26">${eft ? "EFT burst" : c25 ? "CISPR 25" : "CISPR 32"}</text>`);
+    if (eft) o.push(lg(46, "emc-hot", "common-mode current"), `<text class="emc-s" x="212" y="70">thicker = more current</text><text class="emc-s" x="212" y="86">estimate (est)</text>`);
+    else o.push(lg(46, "emc-cm", "through cables (measured)"), lg(66, "emc-loc", "local, via Y (not measured)"), `<text class="emc-s" x="212" y="90">${on ? "source: DC-DC switching" : "DC-DC off: no source"}</text>`);
+    return `<svg class="emc-svg" viewBox="0 0 380 548" role="img" aria-label="Block diagram: ${eft ? "EFT burst" : "CISPR emissions"} test setup with the common-mode current path">${o.join("")}</svg>`;
+  }
+
+  function emcChanges(v, m) {
+    const out = [], eft = EFT(v), slopeIf = (k) => emcModel({...v, [k]: EMC_DEF[k]}).slope;
+    const move = k => ` Barrier slope ${num(slopeIf(k))} → ${num(m.slope)} kV/µs (est).`;
+    if (eft) {
+      if (v.inj === "n") out.push(`<b>N only:</b> adds a line-to-line part, so the input filter, rectifier and regulator see the burst too, not only the barrier.${v.tie === "b" ? "" : " In the model about half the common-mode part reaches the primary side (est)." + move("inj")}`);
+      if (v.inj === "n" && v.tie === "b") out.push(`<b>N tied to the secondary ground (GNDB):</b> the burst drives the secondary side directly while L and PE hold the primary, so nearly all the slope lands across the isolator (est). Only capacitance across the barrier slows it, because the 50 Ω generator has to charge it.${m.bonded ? " With the secondary also bonded, the burst goes straight into the plane: not a meaningful setup." : ""}`);
+      if (v.cdn !== "33") out.push(`<b>3 × 10 nF in series (3.3 nF) in the generator path:</b> τ ≈ 50 Ω × 3.3 nF ≈ 165 ns against a 50 ns pulse. The peak drops only a little, but a low-impedance input gets about ${Math.round(pulseCharge["3.3"] * 100)} % of the charge per pulse it gets with 33 nF (est). A milder test and <b>not a valid IEC 61000-4-4 test</b>.${move("cdn")}`);
+      if (v.y !== "0") out.push(`<b>Y capacitor ${v.y === "1" ? "1 nF" : "3.3 nF (3 × 10 nF in series)"} across the barrier:</b> a local return path; the primary and secondary move together, so less slope is left across the isolator.${move("y")} Cost: about ${num(leak(m.cy) * 1e6)} µA leakage at 230 V 50 Hz (if the barrier sees mains), and a Y-rated part.`);
+      if (v.dcdc === "off") out.push("<b>DC-DC off:</b> the transformer is still fitted, so the capacitive paths here stay the same, but the converter is not running: a secondary-rail droop or reset cannot show up, and the converter's own emissions are gone. <b>Not representative.</b>");
+      if (v.sec === "bond") out.push(`<b>Secondary bonded to the plane:</b> the secondary can no longer move with the primary, so the burst current has to cross the barrier capacitances.${move("sec")} Bond only if the real installation does.`);
+      if (v.kv !== "1") out.push(`<b>${v.kv} kV burst:</b> the edge at the generator scales with the level: ${v.kv} kV / 5 ns = ${num(m.gen)} kV/µs.${move("kv")}`);
+    } else {
+      out.push("<b>CISPR mode:</b> the noise source is the DC-DC converter itself (about 250 kHz plus harmonics), charging the transformer's interwinding capacitance every cycle. Where that common-mode current returns decides what the receiver sees.");
+      if (v.y !== "0") out.push(`<b>Y capacitor ${v.y === "1" ? "1 nF" : "3.3 nF"}:</b> the current returns locally instead of through the cables and the network. AN1131 example: a single 1000 pF Y capacitor let a 2-layer Si88241 board pass CISPR 25 class 1 and 2 conducted limits.${v.y === "3.3" ? " 3.3 nF lowers it further at low frequencies; above some tens of MHz the capacitor's own inductance limits it (AN1131)." : ""} Cost: leakage current (about ${num(leak(m.cy) * 1e6)} µA at 230 V 50 Hz) and a Y-rated part.`);
+      if (v.dcdc === "off") out.push("<b>DC-DC off:</b> the main source is switched off, so emissions drop, but the result says nothing about the product. <b>Not representative.</b>");
+      if (v.sec === "bond") out.push(`<b>Secondary bonded to the plane:</b> the current through the transformer capacitance has a low-impedance way back through the plane and the network, which is what the receiver measures (est).${m.cy ? " With the Y capacitor, part of it still stays local." : ""} Bond only if the real installation does.`);
+      if (v.std === "c32") out.push("<b>CISPR 32:</b> mains measured through a 50 µH / 50 Ω LISN, Class A or the stricter Class B (residential). A different network impedance, so CISPR 25 results do not carry over.");
+    }
+    const strays = ["cinj", "cra", "crb", "cww"].filter(k => v[k] !== EMC_DEF[k]);
+    if (strays.length) out.push("<b>Stray capacitances changed:</b> they decide the result as much as any part does, and must be measured or simulated for a real board.");
+    if (!out.length || (out.length === 1 && !eft && v.y === "0" && v.dcdc === "on" && v.sec === "float" && v.std === "c25" && !strays.length))
+      out.push(eft ? "<b>Baseline:</b> all lines together, standard 33 nF coupling, no Y capacitor, DC-DC on, secondary floating. Change a toggle to see what moves and why." : "<b>Baseline:</b> no Y capacitor, secondary floating, DC-DC on and loaded. Change a toggle to compare.");
+    return out;
+  }
+
+  V.push({
+    id: "emc", group: "Isolation and power", title: "EFT and CISPR: setup and design what-if",
+    explains: [["Digital isolators with integrated DC-DC (Si88xx)", "/knowledge#p-isolators_dcdc"]],
+    physics: [["Crossing an isolation barrier", "phys_isolation_coupling"]],
+    lead: "Both the EFT burst test and CISPR emissions are about common-mode current and the path it takes back to the ground plane. Flip the test setup and the design choices and watch where the current flows across an isolated design with an Si88 isolator, its DC-DC controller and the external transformer. All results are relative estimates (est), not pass/fail predictions.",
+    controls: [
+      {k: "mode", label: "Test", type: "select", options: [["eft", "EFT burst (IEC 61000-4-4)"], ["cispr", "CISPR emissions"]], value: "eft"},
+      {k: "inj", label: "Injection", type: "select", options: [["all", "All lines (L + N + PE)"], ["n", "N only"]], value: "all", when: EFT},
+      {k: "tie", label: "N connects to", type: "select", options: [["a", "Primary circuit (usual)"], ["b", "Secondary ground GNDB"]], value: "a", when: v => EFT(v) && v.inj === "n"},
+      {k: "cdn", label: "Coupling capacitor", type: "select", options: [["33", "33 nF (standard)"], ["3.3", "3 × 10 nF in series = 3.3 nF (not standard)"]], value: "33", when: EFT},
+      {k: "kv", label: "Burst level", type: "select", options: [["0.5", "0.5 kV"], ["1", "1 kV"], ["2", "2 kV"], ["4", "4 kV"]], value: "1", when: EFT},
+      {k: "std", label: "Standard", type: "select", options: [["c25", "CISPR 25 (vehicle, 5 µH AN)"], ["c32", "CISPR 32 (multimedia, 50 µH LISN)"]], value: "c25", when: CIS},
+      {k: "y", label: "Y capacitor across the barrier", type: "select", options: [["0", "None"], ["1", "1 nF"], ["3.3", "3.3 nF (3 × 10 nF)"]], value: "0"},
+      {k: "dcdc", label: "DC-DC converter", type: "select", options: [["on", "On (running, loaded)"], ["off", "Off"]], value: "on"},
+      {k: "sec", label: "Secondary ground", type: "select", options: [["float", "Floating"], ["bond", "Bonded to the plane"]], value: "float"},
+      {k: "cinj", label: "Burst coupling into the primary, C inj (est)", min: 10, max: 10000, value: 1000, unit: "pF", log: true, when: EFT},
+      {k: "cra", label: "Primary side to plane, C ret,A (est)", min: 2, max: 200, value: 20, unit: "pF", log: true, when: EFT},
+      {k: "crb", label: "Secondary + load + cable to plane, C ret,B (est)", min: 2, max: 200, value: 20, unit: "pF", log: true, when: v => v.sec !== "bond"},
+      {k: "cww", label: "Transformer interwinding, C ww (est)", min: 2, max: 100, value: 20, unit: "pF", log: true},
+    ],
+    compute(v) {
+      const m = emcModel(v), eft = EFT(v), changes = emcChanges(v, m);
+      const svg = emcSvg(v, m);
+      const why = `<div class="emc-why"><b>What changed and why</b><ul>${changes.map(c => `<li>${c}</li>`).join("")}</ul></div>`;
+      if (eft) {
+        const marg = SI88.cmtiMin / m.slope, tone = marg >= 2 ? "ok" : marg >= 1 ? "warn" : "bad";
+        const max = Math.max(m.slope, SI88.cmtiTyp) * 1.2, pct = x => `${Math.min(100, (x / max) * 100).toFixed(1)}%`;
+        const label = marg >= 1 ? `${num(marg)}× margin below the 40 kV/µs CMTI minimum (est)` : `${num(1 / marg)}× above the 40 kV/µs CMTI minimum (est)`;
+        const bar = `<div class="emc-barbox"><b>Estimated barrier slope against the Si88x2x CMTI</b>
+          <div class="emc-bar" role="img" aria-label="Barrier slope ${num(m.slope)} kV/µs; CMTI 40 kV/µs minimum, 100 typical"><div class="emc-fill t-${tone}" style="width:${pct(m.slope)}"></div>
+          <span class="emc-mk" style="left:${pct(SI88.cmtiMin)}"><i>40 min</i></span><span class="emc-mk typ" style="left:${pct(SI88.cmtiTyp)}"><i>100 typ</i></span></div>
+          <p class="emc-margin t-${tone}">${num(m.slope)} kV/µs · ${label}</p></div>`;
+        return {
+          outputs: [["Edge at the generator", `${num(m.gen)} kV/µs`], ["Barrier slope (est)", `${num(m.slope)} kV/µs`, tone],
+            ["Against CMTI 40 kV/µs min", marg >= 1 ? `${num(marg)}× margin` : `${num(1 / marg)}× over`, tone],
+            ["Peak current across the barrier (est)", `isolator ${amp(m.iIso)} · transformer ${amp(m.iT)} · Y ${m.cy ? amp(m.iY) : "–"}`],
+            ["Line-to-line stress", v.inj === "n" ? "yes: filter, rectifier, regulator" : "none (common mode)", v.inj === "n" ? "warn" : ""],
+            ["Charge per pulse vs 33 nF", `${Math.round(pulseCharge[v.cdn] * 100)} %${v.cdn === "33" ? "" : " (not std)"}`, v.cdn === "33" ? "" : "warn"],
+            ["Secondary rail", v.dcdc === "on" ? (m.iT > 0.05 ? "may droop or reset (est)" : "small disturbance (est)") : "not exercised (converter off)", v.dcdc === "on" ? "" : "warn"]],
+          eq: "dV/dt<sub>barrier</sub> ≈ share × V<sub>burst</sub> / t<sub>rise</sub> · (1 − e<sup>−t<sub>rise</sub>/τ</sup>), share = C<sub>inj</sub>C<sub>ret,B</sub> / [(C<sub>inj</sub> + C<sub>ret,A</sub>)(C<sub>across</sub> + C<sub>ret,B</sub>) + C<sub>across</sub>C<sub>ret,B</sub>], C<sub>across</sub> = 1.4 pF + C<sub>ww</sub> + C<sub>Y</sub>",
+          eqn: `${num(m.gen)} kV/µs × share ${num(m.share)} × edge ${num(m.fEdge)} (τ ${si(m.tau * 1e-9, "s")}) = ${num(m.slope)} kV/µs; C<sub>across</sub> = ${num(m.cx)} pF; I = C × dV/dt`,
+          html: `<div class="emc-wrap"><div class="emc-dia">${svg}</div><div class="emc-side">${bar}${why}</div></div>`,
+          note: "Relative estimate (est) from a capacitive divider: wiring and choke inductance, which slow the real edge, are ignored. Use it to compare setups, not to predict pass or fail; the stray capacitances must be measured or simulated. Data sheet: Si88x2x CMTI 40 kV/µs min, 100 typ; isolator input-output capacitance 1.4 pF.",
+          nochart: true,
+        };
+      }
+      let score = v.y === "1" ? -1 : v.y === "3.3" ? -2 : 0;
+      if (v.sec === "bond") score += 1;
+      const off = v.dcdc === "off";
+      const tend = off ? "Lower, but not representative" : score < 0 ? "Lower than the baseline" : score > 0 ? "Higher than the baseline" : "Similar to the baseline";
+      const reason = off ? "The converter, the main source, is switched off." : score < 0 ? "More of the converter's common-mode current returns locally through the Y capacitor, not through the cables." : score > 0 ? "The bond gives the common-mode current a low-impedance way back through the plane and the measured network." : v.sec === "bond" ? "The Y capacitor's local path roughly offsets the bond (est)." : "No local return path: the current goes back through the cables and the network.";
+      const tone = off ? "warn" : score < 0 ? "ok" : score > 0 ? "bad" : "";
+      const card = `<div class="emc-barbox"><b>Emissions tendency (qualitative)</b><p class="emc-tend t-${tone}">${tend}</p><p class="small">${reason}</p>${v.y === "1" ? '<p class="small muted">Example, not a prediction: in AN1131 a 1000 pF Y capacitor let a 2-layer Si88241 board pass CISPR 25 class 1 and 2 conducted limits.</p>' : ""}</div>`;
+      return {
+        outputs: [["Emissions tendency", tend, tone],
+          ["Common-mode current returns", off ? "– (no source)" : m.cy ? (v.sec === "bond" ? "partly local, partly via the plane (est)" : `about ${Math.round(m.local * 100)} % locally via Y (est)`) : "through cables and the network"],
+          ["Network", v.std === "c25" ? "5 µH / 50 Ω AN, classes 1–5" : "50 µH / 50 Ω LISN, Class A / B"],
+          ["Leakage through Y at 230 V 50 Hz", m.cy ? `${num(leak(m.cy) * 1e6)} µA (est)` : "none added"]],
+        eq: "I<sub>CM</sub> ≈ C<sub>ww</sub> · dV<sub>sw</sub>/dt, returning through C<sub>Y</sub> (local) or C<sub>ret,B</sub> / bond → plane → network (measured)",
+        eqn: off ? "Converter off: no switching, no I<sub>CM</sub> from it." : m.cy && v.sec !== "bond" ? `local share ≈ C<sub>Y</sub> / (C<sub>Y</sub> + C<sub>ret,B</sub>) = ${num(m.cy)} / (${num(m.cy)} + ${num(v.crb)}) pF = ${Math.round(m.local * 100)} % (capacitive divider, ignores the Y capacitor's inductance)` : "No dB numbers here: the level depends on the board, the transformer and the setup.",
+        html: `<div class="emc-wrap"><div class="emc-dia">${svg}</div><div class="emc-side">${card}${why}</div></div>`,
+        note: "Qualitative only: the tendency compares with the baseline (no Y capacitor, secondary floating, DC-DC on and loaded). Si88x2x switches at about 250 kHz (225–275 kHz) with dithering for low EMI (data sheet); its harmonics fall inside the 150 kHz-and-up range both standards measure.",
+        nochart: true,
+      };
+    },
+    related: [["Engineering note: EFT burst and CISPR emissions on isolated designs", "/engineering/emc_eft_cispr"], ["CMTI against the switching edge", "#cmti"], ["CMTI guide", "/engineering/cmti_kv_us"]],
+  });
+
   // ------------------------------------------------------------------ page
   const groups = [...new Set(V.map(v => v.group))];
   const nav = $("#vz-nav"), panel = $("#vz-panel");
@@ -878,6 +1076,8 @@
       if (lab) lab.hidden = c.when ? !c.when(vals) : false;
     }
     const svg = panel.querySelector(".vz-chart");
+    svg.parentElement.hidden = !!r.nochart;  // visuals that draw their own diagram in .vz-more
+    if (r.nochart) return;
     if (r.bars) bars(svg, r.bars); else plot(svg, r.chart);
   }
   const route = () => open((location.hash || "").slice(1) || V[0].id);

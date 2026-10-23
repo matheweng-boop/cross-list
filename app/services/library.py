@@ -184,6 +184,8 @@ SPEC_GUIDES = {  # specification guide keys (app/services/engineering.py NOTES)
     "uvlo_v": ("UVLO", "undervoltage"),
     "certifications": ("UL 1577", "VDE", "IEC 60747-17", "certification", "certifications"),
     "integrated_power": ("isolated power", "isolated bias", "isolated supply", "isolated supplies"),
+    "emc_eft_cispr": ("EFT", "burst", "IEC 61000-4-4", "CISPR 25", "CISPR 32", "conducted emissions",
+                      "radiated emissions"),
 }  # fmt: skip
 VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link, keywords)
     "dbm": ("dBm: the power ladder", "/visuals#dbm", ("dBm",)),
@@ -207,6 +209,8 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link
             ("acoustic resonator", "piezoelectric", "coupling factor")),
     "mod": ("AM vs FM modulation", "/visuals#mod", ("AM", "FM", "modulation", "superheterodyne")),
     "jitter": ("Phase noise to jitter", "/visuals#jitter", ("jitter", "phase noise", "jitter attenuator")),
+    "emc": ("EFT and CISPR: setup and design what-if", "/visuals#emc",
+            ("EFT", "burst", "CISPR", "Y capacitor", "common-mode current", "emissions")),
     "swloss": ("Switching loss vs frequency", "/visuals#swloss",
                ("switching loss", "switching losses", "conduction loss")),
     "rf-bands": ("RF bands chart", "/rf-bands", ("GNSS", "LTE", "5G", "V2X", "UWB", "Wi-Fi", "NTN", "band", "bands")),

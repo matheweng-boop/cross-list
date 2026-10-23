@@ -1,0 +1,157 @@
+<p class="small">Try it: <a href="/visuals#emc">EFT and CISPR: setup and design what-if</a> (interactive block diagram).
+  Example part: Skyworks Si88x2x, a dual digital isolator with an on-chip DC-DC controller that drives a small external
+  transformer. Everything here is public data or general physics; points marked
+  <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span> are BizDev's own reasoning.</p>
+
+<h2>The one idea: where does the common-mode current return?</h2>
+<p>Both tests are about <b>common-mode current</b>: current that flows the same way on all wires and comes back through
+  stray capacitance and the reference ground plane. In the EFT burst test the generator pushes it in; in the CISPR
+  emissions test the product's own DC-DC converter makes it, and the receiver measures how much of it reaches the cables.
+  In an isolated design the current has to cross the isolation barrier somewhere. It takes every capacitance it finds:</p>
+<ul>
+  <li>the isolator itself: <b>1.4 pF</b> input-to-output (Si88x2x data sheet, Table 8, at 1 MHz);</li>
+  <li>the DC-DC transformer's interwinding capacitance: typically several to tens of pF, depending on the transformer
+    <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>, so usually far bigger than the
+    isolator's 1.4 pF;</li>
+  <li>any Y (safety) capacitor or overlapping ground planes the designer adds across the barrier;</li>
+  <li>and the stray capacitance of each side, its load and its cables to the ground plane
+    (C<sub>ret,A</sub>, C<sub>ret,B</sub>).</li>
+</ul>
+<p>AN1131 puts it plainly: it is often the unintentional common-mode currents that contribute most to emissions, and in
+  its Si88241 case study the transformer interwinding capacitance is the dominant cause of conducted emissions. Change any
+  of these paths, in the test setup or in the design, and the result changes.</p>
+<p><b>What the isolator must survive.</b> The fast edge that the barrier sees must stay inside the isolator's common-mode
+  transient immunity: Si88x2x <b>CMTI 40 kV/µs minimum, 100 kV/µs typical</b> (data sheet, Table 6). A rough way to compare
+  setups <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>:</p>
+<p class="small emc-formula">barrier slope ≈ (C<sub>inj</sub> / (C<sub>ret,A</sub>
+  + C<sub>ret,B</sub> + C<sub>across</sub>)) × V<sub>burst</sub> / t<sub>rise</sub></p>
+<p class="small muted">C<sub>inj</sub> is how strongly the burst couples into the circuit, C<sub>across</sub> the sum of
+  everything across the barrier. 1 kV in 5 ns is 200 kV/µs at the generator, five times the CMTI minimum, so how much of it
+  reaches the barrier matters. Use it to compare setups, not to predict pass or fail: the stray capacitances must be measured
+  or simulated, and wiring and choke inductance slow the real edge. The visual uses a slightly fuller version of the same
+  capacitive divider.</p>
+
+<h2>EFT burst (IEC 61000-4-4): setup choices</h2>
+<p class="small muted">Per IEC 61000-4-4 (summary): 5/50 ns pulses into 50 Ω, in bursts at 5 kHz or 100 kHz repetition,
+  burst period 300 ms; on power lines the coupling/decoupling network (CDN) injects through 33 nF coupling capacitors, in
+  common mode against the reference ground plane. The product standard sets the test level and whether a temporary glitch
+  is acceptable.</p>
+<h3>All lines together, or N only</h3>
+<ul>
+  <li><b>All lines (L + N + PE together)</b> is mainly a common-mode stress: the whole primary side jumps against the
+    ground plane and the current returns through the barrier capacitances and the secondary side's stray capacitance.</li>
+  <li><b>N only</b> adds a line-to-line part: the input filter, rectifier and regulator are stressed as well, not only the
+    barrier. If the hit line is tied to one side's ground (for example GNDB on the secondary) while that side's supply has no
+    high-voltage path of its own, most of the slope lands across the isolator
+    <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>.</li>
+</ul>
+<h3>Coupling capacitance: 33 nF, or 3 × 10 nF in series</h3>
+<p>Three 10 nF capacitors in series are 3.3 nF. Where they sit decides what they mean:</p>
+<ul>
+  <li><b>In the generator's coupling path</b> instead of the standard 33 nF, they make a milder test. With 50 Ω the time
+    constant is about 165 ns against a 50 ns pulse, so the peak drops only a little, but the charge each pulse can push into
+    a low-impedance input falls (about 40 % less in BizDev's simple model
+    <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>). This is <b>not a valid standard
+    test</b>.</li>
+  <li><b>In the product, across the barrier</b>, the same 3.3 nF is a design choice (stitching or Y capacitance): a local
+    return path that lowers the barrier slope in EFT and lowers emissions in CISPR, at the cost of more leakage current at
+    mains frequency. These capacitors must be safety-rated (Y class); three in series is a common safety choice.</li>
+</ul>
+<h3>Filters</h3>
+<p>Filters only on L and N, with none on the ground path, change little: the common-mode current simply takes the
+  unfiltered ground path. A common-mode filter helps only if every path the current can take goes through it.</p>
+<h3>DC-DC on or off</h3>
+<ul>
+  <li>With the converter running, the transformer's interwinding capacitance is a coupling path far bigger than the
+    isolator's 1.4 pF, and the burst current flows into the converter's secondary rail: it can droop or reset.</li>
+  <li>The converter also adds its own emissions (next section).</li>
+  <li>Testing with it off, or with the secondary fed from a bench supply, is <b>not representative</b>: the path and the
+    failure that matter are not exercised.</li>
+</ul>
+
+<h2>CISPR 25 / CISPR 32 emissions: setup choices</h2>
+<ul>
+  <li><b>Networks.</b> CISPR 25 (vehicle components) feeds each supply lead through a 5 µH / 50 Ω artificial network (AN);
+    an AN is needed on the return lead too if it is longer than 200 mm. CISPR 32 (multimedia equipment) measures mains
+    through a 50 µH / 50 Ω LISN. The network sets the impedance the common-mode current sees, so results from one do not
+    carry over to the other.</li>
+  <li><b>Harness and probe positions.</b> In the CISPR 25 current-probe method the probe clamps the complete harness, at
+    50 mm and at 750 mm from the product. Harness length and height over the plane change the result.</li>
+  <li><b>Classes.</b> CISPR 25 has classes 1 to 5 (5 is the strictest), agreed between purchaser and supplier in the test
+    plan. CISPR 32 has Class A and the stricter Class B (residential).</li>
+  <li><b>Bonding.</b> Whether the secondary ground, the load or a shield is bonded to the plane decides whether the
+    converter's common-mode current goes back through the measured network or stays local. A bond that the real
+    installation does not have makes the result meaningless
+    <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>.</li>
+  <li><b>Load and DC-DC load.</b> The converter's switching current, and with it the emissions, depend on the load it
+    supplies. Test at the real (or worst-case) load, with the converter running.</li>
+  <li><b>The converter.</b> Si88x2x switches at about 250 kHz (225–275 kHz, data sheet Table 6); Si883xx/6xx can be set
+    between 200 and 800 kHz. The data sheet says the converter uses dithering for low EMI. Its harmonics fall right inside the
+    150 kHz-and-up range both standards measure.</li>
+</ul>
+
+<h2>Design levers and their trade-offs</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Lever</th><th>What it does</th><th>Cost of it</th></tr></thead>
+  <tbody>
+    <tr><td><b>Y / stitching capacitance</b> across the barrier, near the transformer</td>
+      <td>Gives the common-mode current a short local return path. AN1131: a single 1000 pF Y capacitor let a 2-layer Si88241
+        board pass CISPR 25 class 1 and 2 conducted limits. Also lowers the barrier slope in EFT
+        <span class="kn-est" title="BizDev's own reasoning, not from a source">est</span>.</td>
+      <td>More leakage current at mains frequency (safety standards limit it); must be Y1/Y2 rated (AN1131); its own
+        inductance limits it above some tens of MHz. Overlapping inner ground planes (4+ layers) give a capacitor without a
+        part.</td></tr>
+    <tr><td><b>Snubber</b></td>
+      <td>Damps ringing and voltage spikes on the switch and rectifier. The data sheet recommends one to minimise radiated
+        emissions; in AN1131 the secondary snubber gave a few dB at high frequency for about 1 % efficiency.</td>
+      <td>A resistor and capacitor; a little efficiency.</td></tr>
+    <tr><td><b>Common-mode choke</b></td>
+      <td>High impedance for common-mode current while passing the supply current. AN1131 found a choke on the converter's
+        input gave the greatest benefit in its case study.</td>
+      <td>Board space and cost; it stops working above its self-resonant frequency, so ferrite beads or a capacitor may be
+        needed as well.</td></tr>
+    <tr><td><b>Layout and transformer</b></td>
+      <td>Short switching loops that do not run through the ground and power planes (AN1131); a transformer with lower
+        interwinding capacitance (in AN1131, ten turns of tape between windings instead of one cut it by about 33 %).</td>
+      <td>Design effort, not parts; possibly a 4-layer board.</td></tr>
+  </tbody>
+</table></div>
+<p class="small muted">AN892 (the Si882xx/883xx DC-DC design guide) covers the converter itself: an asymmetric half-bridge
+  flyback, with a transformer leakage inductance kept small (its example: under 100 nH) and a rectifier diode chosen with
+  margin above the calculated reverse voltage, because the diode capacitance and the leakage inductance add a voltage
+  spike.</p>
+
+<h2>Testing to pass versus testing right</h2>
+<p>These changes make a result <b>invalid</b> (they test something other than the product):</p>
+<ul>
+  <li>a coupling capacitance other than the standard 33 nF in the EFT generator path (for example 3 × 10 nF in series);</li>
+  <li>DC-DC converter off, or the secondary powered from a bench supply;</li>
+  <li>a bond, shield or ground connection in the test that the real installation does not have, or one left out that it has;</li>
+  <li>a harness, network (5 µH vs 50 µH), probe position or load other than the test plan says;</li>
+  <li>a class not agreed in the test plan.</li>
+</ul>
+<p>These are <b>legitimate design changes</b> (keep them, and re-test the full product): Y or stitching capacitance across
+  the barrier (with the leakage-current check), a snubber, a common-mode choke covering every path, a better layout or a
+  lower-capacitance transformer.</p>
+
+<h2>Sources</h2>
+<ul class="small">
+  <li>Skyworks, <a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si88x2x.pdf" target="_blank" rel="noopener noreferrer">Si88x2x data sheet ↗</a>
+    (206584B, 29 Aug 2023): CMTI 40 min / 100 typ kV/µs and switching frequency 225 / 250 / 275 kHz (Table 6); input-output
+    capacitance 1.4 pF at 1 MHz (Table 8); maximum surge isolation voltage 8000 V (Table 10); programmable frequency
+    (section 2.3.3); external transformer, blocking capacitor and rectifier diode, and the snubber recommendation
+    (application section); dithering for low EMI (front page).</li>
+  <li>Skyworks, <a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1131-layout-guide.pdf" target="_blank" rel="noopener noreferrer">AN1131: Design Guide for Reducing Radiated and Conducted Emissions in Isolated Systems ↗</a>
+    (Rev. 0.2, 3 Dec 2021): common-mode currents (1.2, 1.4); CISPR 25 networks, current probe at 50 / 750 mm and classes
+    1–5 (2.2); CISPR 32 Class A / B and the 50 µH LISN (2.3); capacitance between power domains, leakage and Y1/Y2 (7.1);
+    common-mode chokes (7.2); Si88241 case study: interwinding capacitance, 1000 pF Y capacitor, snubber, transformer,
+    input choke (10.2–10.3).</li>
+  <li>Skyworks, <a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN892.pdf" target="_blank" rel="noopener noreferrer">AN892: Design Guide for Isolated DC/DC Using the Si882xx/883xx ↗</a>
+    (Rev. 0.2, 26 Jul 2021): topology, leakage inductance, rectifier diode voltage.</li>
+  <li>IEC 61000-4-4, Electrical fast transient/burst immunity test: pulse, burst and CDN values per IEC 61000-4-4 (summary;
+    no clause numbers quoted).</li>
+  <li>Barrier-slope model, 3.3 nF time constant and charge, transformer capacitance range, N-to-GNDB case: BizDev's own
+    estimates (est).</li>
+</ul>
+<p class="small">Related: <a href="/engineering/cmti_kv_us">CMTI</a> · <a href="/engineering/isolation_rating_kvrms">Isolation rating</a>
+  · <a href="/engineering/integrated_power">Integrated isolated power</a> · <a href="/visuals#emc">the interactive what-if</a>.</p>

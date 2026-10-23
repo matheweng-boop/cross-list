@@ -126,6 +126,8 @@ PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <body><main class="container auth-page">
 <h1>BizDev</h1>{error}
 {password}<button type="button" class="secondary" id="passkey-login" data-next="{next}">Sign in with a passkey</button>
+<p class="small auth-first">First time? Sign in with your password once, then add a passkey under My passkeys.
+Guests: use the invite link you received.</p>
 <p class="small muted" id="auth-msg" aria-live="polite"></p>
 <p class="small muted">A passkey is a sign-in key kept by your phone or computer (unlocked with your fingerprint,
 face or

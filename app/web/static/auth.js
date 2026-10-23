@@ -27,7 +27,7 @@
   async function post(url, body) {
     const r = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})});
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.detail || `The site answered ${r.status}`);
+    if (!r.ok) throw Object.assign(new Error(j.detail || `it answered ${r.status}`), {name: "SiteError"});
     return j;
   }
 
@@ -43,8 +43,75 @@
   };
   const createOpts = o => ({...o, challenge: unb64u(o.challenge), user: {...o.user, id: unb64u(o.user.id)},
     excludeCredentials: (o.excludeCredentials || []).map(c => ({...c, id: unb64u(c.id)}))});
-  const failText = e => e && e.name === "NotAllowedError" ? "Cancelled, or the device did not answer. Try again." : (e && e.message) || "Something went wrong.";
+  const getOpts = o => ({...o, challenge: unb64u(o.challenge),
+    allowCredentials: (o.allowCredentials || []).map(a => ({...a, id: unb64u(a.id)}))});
+
+  // Plain-English text for every way a passkey step can fail: never fail silently.
+  const failText = (e, creating) => {
+    const n = e && e.name;
+    if (n === "NotAllowedError") return "The passkey prompt was cancelled, timed out or blocked by the browser. Tap the button again.";
+    if (n === "InvalidStateError") return creating ? "This device already has a passkey for this site. Use it to sign in, or remove it in the device's password settings first." : "The passkey could not be used on this device. Try again.";
+    if (n === "SecurityError") return "The browser refused passkeys for this address. Open the site at its usual https address and try again.";
+    if (n === "AbortError") return "The passkey step was interrupted. Tap the button again.";
+    if (n === "NotSupportedError") return "This device or browser cannot make this kind of passkey. Try an up-to-date phone or computer.";
+    if (n === "SiteError") return `The site said: ${e.message}`;
+    if (n === "TypeError") return "Could not reach the site. Check the connection and try again.";
+    return e && e.message ? `Something went wrong: ${e.message}` : "Something went wrong. Try again.";
+  };
   const noPasskeys = () => !window.PublicKeyCredential && (msg("This browser cannot use passkeys. Use an up-to-date browser on your phone or computer."), true);
+
+  // Options are fetched BEFORE the tap. Safari (WebKit) shows the passkey prompt only when navigator.credentials is
+  // called directly inside the tap; after an awaited network request the tap no longer counts. So the options (and, to
+  // sign in, the browser check) are prepared on page load, again every 4 minutes (the server's challenge lives 5 minutes
+  // and works once) and after every failure, and each click handler calls navigator.credentials first.
+  const FRESH = 240e3;
+  function prepared(fetchOpts, build) {
+    const st = {opts: null, at: 0, busy: null, err: null, timer: 0};
+    const load = () => {
+      if (st.busy) return st.busy;
+      clearTimeout(st.timer);
+      st.opts = null; st.err = null;
+      st.busy = fetchOpts()
+        .then(o => { st.opts = build(o); st.at = Date.now(); },
+              e => { st.err = e; msg(`${failText(e)} Tap the button to try again.`); })
+        .finally(() => { st.busy = null; if (!st.err) st.timer = setTimeout(() => { if (!document.hidden) load(); }, FRESH); });
+      return st.busy;
+    };
+    const stale = () => !st.opts || Date.now() - st.at > FRESH;
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && !st.busy && !st.err && stale()) load(); });
+    addEventListener("pageshow", e => { if (e.persisted) load(); });
+    load();
+    return {
+      load,
+      // the prepared options, used once; null (and a fresh fetch) when they are missing or too old
+      take() {
+        const o = st.opts;
+        if (!o || Date.now() - st.at > FRESH + 30e3) {
+          if (!st.busy) load();
+          msg("Preparing… tap again in a moment.");
+          return null;
+        }
+        st.opts = null;
+        return o;
+      },
+    };
+  }
+  // navigator.credentials as a promise, also when it throws at once
+  const call = f => { try { return Promise.resolve(f()); } catch (e) { return Promise.reject(e); } };
+
+  // After navigator.credentials was called inside the tap: send the result, then go on or explain the failure.
+  function finish(btn, prep, pending, send, creating) {
+    msg("Follow your device's prompt…");
+    btn.disabled = true;
+    pending
+      .then(c => {
+        if (!c) throw Object.assign(new Error("no passkey"), {name: "NotAllowedError"});
+        msg("Checking…");
+        return send(credJSON(c));
+      })
+      .then(r => { msg(creating ? "Your passkey is ready. Opening BizDev…" : "Confirmed. Opening BizDev…"); location.href = r.next || "/"; })
+      .catch(err => { msg(failText(err, creating)); btn.disabled = false; prep.load(); });
+  }
 
   // sign-in page: password form waits for the browser check
   const pw = $("#pw-form");
@@ -61,68 +128,57 @@
       } catch (err) { msg("The browser check failed. Reload the page and try again."); }
     });
   }
+
+  // One passkey button: its options are prepared ahead, and the tap calls navigator.credentials before anything else.
   const login = $("#passkey-login");
-  if (login) login.addEventListener("click", async () => {
-    if (noPasskeys()) return;
-    login.disabled = true; msg("Checking your browser…");
-    try {
-      const o = await post("/passkey/login/options", await takePow());
-      nextPow();
-      msg("Follow your device's prompt…");
-      const c = await navigator.credentials.get({publicKey: {...o, challenge: unb64u(o.challenge), allowCredentials: []}});
-      const r = await post("/passkey/login/verify", {credential: credJSON(c), next: login.dataset.next || "/"});
-      location.href = r.next || "/";
-    } catch (err) { msg(failText(err)); nextPow(); }
-    login.disabled = false;
-  });
+  if (login && window.PublicKeyCredential) {
+    // sign in: its own browser check and options, both ready before the tap
+    const prep = prepared(async () => post("/passkey/login/options", await solve()), o => ({...getOpts(o), allowCredentials: []}));
+    login.addEventListener("click", () => {
+      const o = prep.take();
+      if (!o) return;
+      const pending = call(() => navigator.credentials.get({publicKey: o}));
+      finish(login, prep, pending, cred => post("/passkey/login/verify", {credential: cred, next: login.dataset.next || "/"}), false);
+    });
+  } else if (login) login.addEventListener("click", noPasskeys);
 
   // invite page: the guest's first passkey
   const inv = $("#invite-create");
-  if (inv) {
-    nextPow();
-    inv.addEventListener("click", async () => {
-      if (noPasskeys()) return;
-      inv.disabled = true; msg("Checking your browser…");
-      const base = `/invite/${inv.dataset.token}`;
-      try {
-        const o = await post(`${base}/options`, await takePow());
-        msg("Follow your device's prompt…");
-        const c = await navigator.credentials.create({publicKey: createOpts(o)});
-        const r = await post(`${base}/verify`, {credential: credJSON(c)});
-        msg("Your passkey is ready. Opening BizDev…");
-        location.href = r.next || "/";
-      } catch (err) { msg(failText(err)); nextPow(); inv.disabled = false; }
+  if (inv && window.PublicKeyCredential) {
+    const base = `/invite/${inv.dataset.token}`;
+    const prep = prepared(async () => post(`${base}/options`, await solve()), createOpts);
+    inv.addEventListener("click", () => {
+      const o = prep.take();
+      if (!o) return;
+      const pending = call(() => navigator.credentials.create({publicKey: o}));
+      finish(inv, prep, pending, cred => post(`${base}/verify`, {credential: cred}), true);
     });
-  }
+  } else if (inv) inv.addEventListener("click", noPasskeys);
 
   // My passkeys (owner)
   const add = $("#owner-add-passkey");
-  if (add) add.addEventListener("click", async () => {
-    if (noPasskeys()) return;
-    add.disabled = true;
-    try {
-      const o = await post("/owner/passkeys/options");
-      msg("Follow your device's prompt…");
-      const c = await navigator.credentials.create({publicKey: createOpts(o)});
-      const r = await post("/owner/passkeys/verify", {credential: credJSON(c)});
-      location.href = r.next;
-    } catch (err) { msg(failText(err)); add.disabled = false; }
-  });
+  if (add && window.PublicKeyCredential) {
+    const prep = prepared(() => post("/owner/passkeys/options"), createOpts);
+    add.addEventListener("click", () => {
+      const o = prep.take();
+      if (!o) return;
+      const pending = call(() => navigator.credentials.create({publicKey: o}));
+      finish(add, prep, pending, cred => post("/owner/passkeys/verify", {credential: cred}), true);
+    });
+  } else if (add) add.addEventListener("click", noPasskeys);
 
   // owner confirmation (step-up) with one of the owner's passkeys
   const conf = $("#owner-confirm-passkey");
-  if (conf) conf.addEventListener("click", async () => {
-    if (noPasskeys()) return;
-    conf.disabled = true;
-    try {
-      const o = await post("/owner/confirm/options");
-      msg("Follow your device's prompt…");
-      const c = await navigator.credentials.get({publicKey: {...o, challenge: unb64u(o.challenge),
-        allowCredentials: (o.allowCredentials || []).map(a => ({...a, id: unb64u(a.id)}))}});
-      const r = await post("/owner/confirm/verify", {credential: credJSON(c), next: conf.dataset.next || "/manage/people"});
-      location.href = r.next || "/manage/people";
-    } catch (err) { msg(failText(err)); conf.disabled = false; }
-  });
+  if (conf && window.PublicKeyCredential) {
+    const prep = prepared(() => post("/owner/confirm/options"), getOpts);
+    conf.addEventListener("click", () => {
+      const o = prep.take();
+      if (!o) return;
+      const pending = call(() => navigator.credentials.get({publicKey: o}));
+      const next = conf.dataset.next || "/manage/people";
+      finish(conf, prep, pending, cred => post("/owner/confirm/verify", {credential: cred, next}).then(r => ({next: r.next || next})), false);
+    });
+  } else if (conf) conf.addEventListener("click", noPasskeys);
 
   // copy an invite link; confirm before a remove
   document.addEventListener("click", async e => {

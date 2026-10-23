@@ -21,7 +21,7 @@
       {% for key, label, items in nav_sections %}<a href="{{ items[0][1] }}"{% if ns.section == key %} aria-current="true" class="on"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[key]|safe }}</svg>{{ label }}</a>{% endfor %}
       {% set ukey, ulabel, uitems = nav_utility %}{% if not guest %}<a href="{{ uitems[0][1] }}" class="utility{{ ' on' if ns.section == ukey }}"{% if ns.section == ukey %} aria-current="true"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[ukey]|safe }}</svg>{{ ulabel }}</a>{% endif %}
     </nav>
-    {% if site_locked() %}<span class="sign-out small">{% if me and me.is_owner %}<a href="/owner/passkeys">My passkeys</a> · {% endif %}<a href="/logout">Sign out</a></span>{% endif %}
+    {% if site_locked() %}<span class="sign-out">{% if me and me.is_owner %}<a href="/owner/passkeys" class="my-keys{{ ' on' if path == '/owner/passkeys' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4"/><path d="M10.5 12.5 20 3m-3.5 3.5 3 3m-5.5-.5 2 2"/></svg>My passkeys</a>{% endif %}<a href="/logout" class="small">Sign out</a></span>{% endif %}
   </div>
   {% for key, label, items in nav_sections + (() if guest else (nav_utility,)) if key == ns.section %}
   <div class="sub-row">
@@ -38,6 +38,8 @@
   {% endfor %}
 </header>
 <main id="main" class="content" tabindex="-1">
+  {% if passkey_nudge(request) %}<div class="banner pk-nudge" id="pk-nudge" role="note"><span>Set up a passkey on this device: sign in faster and more safely.</span>
+    <a href="/owner/passkeys" class="pk-nudge-go">Set up now</a><button type="button" class="pk-nudge-close" aria-label="Hide until the browser is closed" title="Hide until the browser is closed">×</button></div>{% endif %}
   {% if ns.tabs %}<nav class="page-tabs" aria-label="Views">{% for label, href in ns.tabs %}<a href="{{ href }}"{% if ns.active_tab == href %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
   {% if guest %}<p class="banner guest-note" role="note">You are signed in as {{ me.name }} (guest). Your input is reviewed before it is used.</p>{% endif %}
   {% if request.cookies.get('crosslist_flash') == 'review' %}<p class="banner" role="status">Thanks, sent for review. The owner reviews every guest input before it is used.</p>{% endif %}
@@ -72,6 +74,11 @@
 </div>
 <script src="/static/feedback.js" defer></script>
 <script>
+  // Passkey banner: hidden until the browser is closed (a session cookie the page reads).
+  document.querySelector(".pk-nudge-close")?.addEventListener("click", () => {
+    document.cookie = `crosslist_pk_nudge=off; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+    document.getElementById("pk-nudge")?.remove();
+  });
   // Suggestion list: arrow keys move through the options, Enter opens the highlighted one; Escape or a click outside
   // closes it.
   const clear = () => document.querySelectorAll("#suggestions").forEach(el => (el.innerHTML = ""));

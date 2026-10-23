@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, lazyload
 
 from app.auth.deps import get_current_user
 from app.config import get_settings
-from app.db import get_session
+from app.db import get_engine, get_session
 from app.matching.engine import (
     CATEGORY_LABELS,
     CATEGORY_ORDER,
@@ -90,6 +90,25 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
+
+PASSKEY_NUDGE_COOKIE = "crosslist_pk_nudge"
+
+
+def _passkey_nudge(request: Request) -> bool:
+    """The "Set up a passkey on this device" banner: an owner who signed in with the password and has no passkey yet,
+    unless dismissed for this browser session (a session cookie set by the banner's close button)."""
+    p = getattr(request.state, "principal", None)
+    if p is None or not p.is_owner or not p.id or not get_settings().site_password:
+        return False
+    if request.cookies.get(PASSKEY_NUDGE_COOKIE) == "off" or request.url.path == "/owner/passkeys":
+        return False
+    from app.auth import stepup
+
+    with Session(get_engine()) as s:
+        return stepup.owner_passkey_count(s, p.id) == 0
+
+
+templates.env.globals["passkey_nudge"] = _passkey_nudge
 labels.register(templates.env)
 templates.env.globals.update(fn_label=vocab.fn_label, family_title=vocab.family_title)
 
@@ -141,8 +160,6 @@ templates.env.globals["grade_labels"] = GRADE_LABELS
 
 
 def _has_synthetic() -> bool:
-    from app.db import get_engine
-
     with Session(get_engine()) as s:
         return s.scalar(select(Part.id).where(Part.is_synthetic.is_(True)).limit(1)) is not None
 

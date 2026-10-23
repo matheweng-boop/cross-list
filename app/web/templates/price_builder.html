@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Solution price builder{% endblock %}
-{% macro usd(x) %}${{ '%.3f'|format(x) if x < 1 else '{:,.2f}'.format(x) }}{% endmacro %}
+{# owner, 23 Oct 2026: a number that cannot be computed shows "Not Enough Data", never a dash, NaN or an error #}
+{% macro usd(x) %}{% if x is number and x == x and -1e300 < x < 1e300 %}${{ '%.3f'|format(x) if x < 1 else '{:,.2f}'.format(x) }}{% else %}<span class="pm-ned">Not Enough Data</span>{% endif %}{% endmacro %}
 {% macro pct(x) %}{{ (x * 100)|round|int }}{% endmacro %}
 {% macro row_fields(r) %}
 <fieldset class="pb-row">
@@ -76,8 +77,8 @@
     <tr><th scope="row">{{ p.row.mpn }}<br><small class="muted">{{ cfg.families[p.family].label }}{{ ' · automotive' if (p.row.automotive == 'yes' or (not p.row.automotive and p.info.automotive)) }}</small></th>
       <td class="muted" title="{{ p.source }}">{{ p.basis }}{% if s.at.at_floor %}; held up by the cost floor{% endif %}</td><td>{{ p.row.qty }}</td>
       <td>{{ usd(s.at.low) }}</td><td><b>{{ usd(s.at.target) }}</b></td><td>{{ usd(s.at.high) }}</td><td>{{ usd(s.at.target * p.row.qty) }}</td></tr>
-  {% else %}<tr><th scope="row">{{ p.row.mpn }}</th><td colspan="6" class="uc-error">{{ p.error }}</td></tr>{% endif %}{% endfor %}</tbody>
-  <tfoot><tr><th scope="row" colspan="3">System ({{ tot.n }} of {{ result.parts|length }} part{{ 's' if result.parts|length != 1 }} priced)</th><th>{{ usd(tot.low) }}</th><th>{{ usd(tot.target) }}</th><th>{{ usd(tot.high) }}</th><th>{{ usd(tot.target) }}</th></tr></tfoot>
+  {% else %}<tr><th scope="row">{{ p.row.mpn }}</th><td class="uc-error">{{ p.error }}</td><td>{{ p.row.qty }}</td>{% for _ in range(4) %}<td>{{ usd(None) }}</td>{% endfor %}</tr>{% endif %}{% endfor %}</tbody>
+  <tfoot><tr><th scope="row" colspan="3">System ({{ tot.n }} of {{ result.parts|length }} part{{ 's' if result.parts|length != 1 }} priced)</th>{% for k in ('low', 'target', 'high', 'target') %}<th>{{ usd(tot[k] if tot.n else None) }}</th>{% endfor %}</tr></tfoot>
 </table></div>
 {% if tot.oem %}<h3 class="pm-h">OEM target prices for the system <small class="muted">· SOP {{ g.sop }}, {{ pct(cfg.oem.productivity[0]) }}–{{ pct(cfg.oem.productivity[1]) }} % price-down a year in each part's first {{ cfg.oem.price_down_years|join('–') }} years on the market, then flat</small></h3>
 <div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">{{ pct(cfg.oem.productivity[1]) }} % a year</th><th scope="col">{{ pct(cfg.oem.productivity[0]) }} % a year</th></tr></thead>

@@ -3148,7 +3148,12 @@ parts:
   datasheet: MSW203x-203.pdf
   datasheet_url: https://cdn.macom.com/datasheets/MSW203x-203.pdf
   product_url: https://www.macom.com/products/product-detail/MSW2030-203
-  notes: 'package pitch not given in the datasheet text (stored as 0); MACOM description: SP2T PIN Diode Switch'
+  notes: 'package pitch not given in the datasheet text (stored as 0); MACOM description: SP2T PIN Diode Switch.
+    Checked 23 Oct 2026 (owner verification): the MACOM product page for MSW2030-203 gives 50-1000 MHz, isolation
+    52 dB, insertion loss 0.30 dB, IIP3 65 dBm, 100 W CW (the values used here; typical, at no stated frequency). The
+    datasheet it links (MSW203x-203 Rev. V3) no longer lists the MSW2030: its tables cover MSW2031-203 (0.4-4 GHz,
+    0.5 dB typ, 35 dB typ) and MSW2032-203 (2-6 GHz, 0.6 dB typ, 35 dB typ). Its front-page "400 MHz to 6 GHz in 2
+    bands, 0.25 dB" is the series headline for those two parts, not this one.'
   lifecycle:
     status: active
     source: 'macom.com product finder (isDiscontinued: false)'
@@ -3167,12 +3172,12 @@ parts:
   param_sources:
     configuration: macom.com product table
     freq_range_ghz: macom.com product table
-    insertion_loss_db: macom.com product table (typical)
-    isolation_db: macom.com product table (typical)
-    iip3_dbm: macom.com product table (typical)
+    insertion_loss_db: macom.com product page MSW2030-203 (typical over 50-1000 MHz; checked 23 Oct 2026)
+    isolation_db: macom.com product page MSW2030-203 (typical over 50-1000 MHz; checked 23 Oct 2026)
+    iip3_dbm: macom.com product page MSW2030-203 (typical; checked 23 Oct 2026)
     max_input_power_dbm: macom.com product table 'CW Incident Power' (100 W)
     control_interface: 'MSW203x-203.pdf p.1: "SP2T PIN Diode Switch" (PIN-diode switch driven by bias current from an external driver, no logic inputs) -> none'
-    qualification: 'MSW203x-203.pdf p.5: operating range -65 °C to +125 °C (abs. max table); no AEC-Q100 grade stated'
+    qualification: 'MSW203x-203.pdf p.5: operating range -65 °C to +125 °C (abs. max table, series); no AEC-Q100 grade stated'
 - mpn: MSW2031-203
   manufacturer: MACOM
   family: rf_switch

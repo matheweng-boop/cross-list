@@ -934,7 +934,7 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
 @router.get("/pricing/estimate", response_class=HTMLResponse)
 def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
                    automotive: bool = False, name: str = "", currency: str = "USD",
-                   sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0, gm: int = 0,
+                   sop: int = 0, gm: int = 0,
                    released: int = 0, bq: list[str] = Query([]), bp: list[str] = Query([]),
                    session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
@@ -956,8 +956,6 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     pts = price_model.parse_breaks(breaks)
     currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
     gm_f = price_model.margin(gm / 100 if gm else None)
-    lo, hi = parity_lo or cfg["parity"][0], parity_hi or cfg["parity"][1]
-    lo, hi = sorted((min(max(lo, 0.2), 3.0), min(max(hi, 0.2), 3.0)))
     sop_from = "entered" if 1980 <= sop <= 2050 else ""
     if not sop_from and known.get("released"):
         sop, sop_from = known["released"], "datasheet"  # the year of the datasheet's first revision
@@ -969,9 +967,6 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                                  gm_f, fab, units or None)  # fmt: skip
         m["oem"] = price_model.oem_path(m, sop, released=released)
         m["name"] = name.strip()[:60]
-        if ours.strip():
-            m["ours"] = {"name": ours.strip()[:60], "lo": lo, "hi": hi, "rows": price_model.scaled(m, lo, hi)}
-            m["ours"]["oem"] = price_model.oem_path({"rows": m["ours"]["rows"]}, sop)
         scenarios.append((fab, m))
     m = scenarios[0][1] if scenarios else None
     ctx = {"cfg": cfg, "m": m, "scenarios": scenarios,
@@ -979,8 +974,7 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
            "rows": rows or [("", "")], "pasted": pasted,
            "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
                  "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
-                 "released": released or "",
-                 "ours": ours, "parity_lo": lo, "parity_hi": hi},
+                 "released": released or ""},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     return templates.TemplateResponse(request, "price_estimate.html", ctx)

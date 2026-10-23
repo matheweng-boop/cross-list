@@ -4,6 +4,7 @@ Counts come from the catalogues and the cross lists; the reasoning (core compete
 segment, advantages against each competitor, cross-sell bundles) is curated in data/business/portfolio_compare.yaml.
 """
 
+import re
 from collections import Counter, defaultdict
 from functools import lru_cache
 
@@ -240,3 +241,113 @@ def synergies(limit: int = 12, min_diagrams: int = 2) -> list[dict]:
         if len(picked) >= limit:
             break
     return picked
+
+
+# --- Which line to offer: does a Skyworks pick match a Qorvo pick? (owner, 23 Oct 2026) ------------------------------
+# Functions that do the same job in a diagram under different catalogue names.
+SAME_JOB = ({"rf_frontend", "wifi_fem"}, {"rf_switch", "antenna_switch"}, {"lna", "gnss_lna"},
+            {"filter_saw_baw", "rf_passive"})  # fmt: skip
+MATCH_RULE = ("est: similar when both parts do the same job (same function), their stated frequency ranges overlap, "
+              "their supply voltages agree within 20 % and their output power class is the same; otherwise Further "
+              "design effort required (extra parts, another band, power stage or supply rail around the other line's "
+              "part).")  # fmt: skip
+_SUPPLY_KEY = re.compile(r"supply|\bvcc\b|\bvdd\b|\bvd\b|voltage", re.I)
+_SKIP_SUPPLY = re.compile(r"control|logic|isolation|withstand|breakdown|surge|cmti|current|\(m?A\)", re.I)
+
+
+def _same_job(a: str, b: str) -> bool:
+    return a == b or any(a in g and b in g for g in SAME_JOB)
+
+
+def _ghz(specs: dict, description: str) -> tuple[float, float] | None:
+    """Stated frequency span in GHz; a 'MHz' column holding GHz-sized numbers (2.4-2.5 for a Wi-Fi part) is read as
+    GHz (est: no RF front end works below 10 MHz)."""
+    ranges = rf.frequency_ranges(specs, description)
+    if not ranges:
+        return None
+    lo, hi = min(r[0] for r in ranges), max(r[1] for r in ranges)
+    return (lo * 1000, hi * 1000) if hi < 0.01 else (lo, hi)
+
+
+def _supply(specs: dict) -> tuple[float, float] | None:
+    vals = []
+    for k, v in (specs or {}).items():
+        if _SUPPLY_KEY.search(str(k)) and not _SKIP_SUPPLY.search(str(k)):
+            vals += [float(n) for n in re.findall(r"\d+(?:\.\d+)?", str(v)) if 0.5 <= float(n) <= 100]
+    return (min(vals), max(vals)) if vals else None
+
+
+def _pick_part(mpn: str, rows: dict) -> dict:
+    r = rows.get(mpn.upper()) or {}
+    specs = r.get("key_specs") or {}
+    return {"mpn": mpn, "function": r.get("function") or "", "label": vocab.fn_label(r["function"]) if r.get(
+        "function") else "", "ghz": _ghz(specs, r.get("description") or ""), "supply": _supply(specs),
+            "power": rf.power_class(rf.output_power_dbm(specs))}  # fmt: skip
+
+
+def _compare(s: dict, q: dict) -> dict:
+    reasons, notes, checked = [], [], 0
+    if not (s["function"] and q["function"]):
+        reasons.append("function not in the catalogue")
+    elif not _same_job(s["function"], q["function"]):
+        reasons.append(f"different function ({s['label']} vs {q['label']})")
+    if s["ghz"] and q["ghz"]:
+        checked += 1
+        if s["ghz"][0] > q["ghz"][1] or q["ghz"][0] > s["ghz"][1]:
+            reasons.append(f"different band ({s['ghz'][0]:g}–{s['ghz'][1]:g} vs {q['ghz'][0]:g}–{q['ghz'][1]:g} GHz)")
+    else:
+        notes.append("frequency")
+    if s["supply"] and q["supply"]:
+        checked += 1
+        if s["supply"][0] > q["supply"][1] * 1.2 or q["supply"][0] > s["supply"][1] * 1.2:
+            reasons.append(f"different supply ({s['supply'][1]:g} V vs {q['supply'][1]:g} V)")
+    else:
+        notes.append("supply")
+    if s["power"] and q["power"]:
+        checked += 1
+        if s["power"] != q["power"]:
+            reasons.append(f"different output power class ({_power_label(s['power'])} vs {_power_label(q['power'])})")
+    notes = [f"not stated on both sides, not checked: {', '.join(notes)}"] if notes and not reasons else []
+    if reasons and s["function"] and q["function"] and not _same_job(s["function"], q["function"]):
+        n = _same_block(s["function"], q["function"])
+        if n:
+            notes.append(f"used side by side in the same block of {n} library diagram{'s' if n != 1 else ''}")
+    return {"skyworks": s, "qorvo": q, "similar": not reasons, "reasons": reasons, "notes": notes,
+            "score": (0 if reasons else 10) - 2 * len(reasons) + checked
+            + (3 if _same_job(s["function"], q["function"]) else 0)}  # fmt: skip
+
+
+def _power_label(cls: str) -> str:
+    return next((c["label"] for c in rf.config()["power_classes"] if c["id"] == cls), cls)
+
+
+@lru_cache
+def _same_block(a: str, b: str) -> int:
+    """Library diagrams with both functions in one block (they work together there, they do not replace each other)."""
+    n = 0
+    for t in blocks.templates():
+        for g in t["groups"]:
+            fns = {x["fn"] if isinstance(x, dict) else str(x).split(" x")[0].strip() for x in g["blocks"]}
+            if a in fns and b in fns:
+                n += 1
+                break
+    return n
+
+
+@lru_cache
+def pick_matches() -> dict[str, dict]:
+    """Per curated segment with picks on both sides: each Skyworks pick against its closest Qorvo pick, marked similar
+    or "Further design effort required" by MATCH_RULE, with the reasons. Read from the catalogue's functions,
+    frequencies and supplies (est)."""
+    rows = {r["mpn"].upper(): r for r in blocks.catalog_rows()}
+    out = {}
+    for seg in curated().get("segments") or []:
+        sky = [(_pick_part(m, rows)) for m in (seg.get("pick_skyworks") or {}).get("parts") or []]
+        qor = [(_pick_part(m, rows)) for m in (seg.get("pick_qorvo") or {}).get("parts") or []]
+        if not (sky and qor):
+            continue
+        pairs = [max((_compare(s, q) for q in qor), key=lambda c: c["score"]) for s in sky]
+        n = sum(p["similar"] for p in pairs)
+        out[seg["id"]] = {"pairs": pairs, "similar": n, "total": len(pairs),
+                          "verdict": "similar" if n == len(pairs) else "mixed" if n else "effort"}  # fmt: skip
+    return out

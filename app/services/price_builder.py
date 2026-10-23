@@ -8,6 +8,7 @@ stored: the parts and assumptions live in the page's form only.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from sqlalchemy import func, select
@@ -87,20 +88,74 @@ def _broadcast(mpn: str) -> dict | None:
     return cat[base] if base else cat.get(min((k for k in cat if k.startswith(key)), default=""))
 
 
+FIRST_ISSUE = re.compile(r"^(?:rev\.?\s*)?(?:\d{6}A|A|V1|1(?:\.0+)?)$", re.I)  # 206709A, Rev A, V1, 1.0
+
+
+def released_year(part: Part) -> int | None:
+    """The year the part came out: its release date (the first datasheet issue), else the date of its datasheet when
+    that datasheet is still the first issue (Skyworks document letter A, revision A, V1 or 1.0); None when unknown."""
+    if part.release_date:
+        return part.release_date.year
+    rev = (part.datasheet_revision or "").strip()
+    if part.datasheet_date and FIRST_ISSUE.match(rev):
+        return part.datasheet_date.year
+    return None
+
+
+PINS = re.compile(r"(\d{1,4})\s*(?:L\b|-?\s*(?:pins?|leads?|lead|ld)\b)|^[A-Za-z]+-(\d{1,4})(?!\d)", re.I)
+
+
+def pins_from(code: str) -> int:
+    """Pin count written in a package text: "QFN, 16L (4 x 4 mm)", "MCM, 28-pin", "QFN-56"; 0 when not written."""
+    m = PINS.search(code or "")
+    return int(m.group(1) or m.group(2)) if m else 0
+
+
+def _db_parts(session: Session, key: str) -> list[Part]:
+    """The part number in the database: exact (any case), else its orderable variants (ISO7741 -> ISO7741DWR …),
+    else the variants of its base before the ordering suffix (Si8641BD-B-IS -> Si8641BD…)."""
+    exact = session.scalars(select(Part).where(func.upper(Part.mpn) == key)).unique().all()
+    if exact:
+        return list(exact)
+    for prefix in (key, key.split("-", 1)[0] if "-" in key else ""):
+        if len(prefix) >= 4:
+            q = select(Part).where(func.upper(Part.mpn).like(prefix.replace("%", "") + "%")).limit(60)
+            hits = session.scalars(q).unique().all()
+            if hits:
+                return list(hits)
+    return []
+
+
 def site_info(session: Session, mpn: str) -> dict:
-    """What the site knows about a part: model family, package, pins, automotive grade, release year, sources."""
-    cfg, key = pm.config(), mpn.upper()
+    """What the site knows about a part: model family, package, pins, automotive grade, release year, sources.
+    Read from the parts database (the cross lists in data/real), the radio datasheets and the makers' catalogues. For
+    a base part number with several variants, what they share (family, and package and pins when they all have the
+    same), and the earliest release year among them."""
+    cfg, key = pm.config(), mpn.strip().upper()
     fam_of = cfg["function_family"]
     out = {"family": "", "package": "", "pins": 0, "automotive": False, "released": None, "units": None, "found": [],
            "part": None}  # fmt: skip
-    part = session.scalar(select(Part).where(func.upper(Part.mpn) == key))
-    if part is not None:
-        out.update(part=part, automotive=pm.is_automotive(part), found=["parts database"],
-                   family=part.family if part.family in cfg["families"] else fam_of.get(part.family, ""),
-                   package=part.package.code if part.package else "",
-                   pins=(part.package.pin_count if part.package else 0) or 0,
-                   released=part.release_date.year if part.release_date else None,
-                   units=pm.units_of(part))  # fmt: skip
+    hits = _db_parts(session, key) if key else []
+    exact = next((p for p in hits if p.mpn.upper() == key), None)
+    if hits:
+        part = exact or hits[0]
+
+        def fam(p: Part) -> str:
+            return p.family if p.family in cfg["families"] else fam_of.get(p.family, "")
+
+        pkgs = {(p.package.code, p.package.pin_count or pins_from(p.package.code)) for p in hits if p.package}
+        pkg, pins = (next(iter(pkgs)) if len(pkgs) == 1 else ("", 0)) if exact is None else (
+            (part.package.code, part.package.pin_count or pins_from(part.package.code)) if part.package else ("", 0))
+        years = [y for y in map(released_year, [exact] if exact is not None else hits) if y]
+        families = {fam(p) for p in hits} - {""}
+        out.update(part=exact, automotive=pm.is_automotive(part) if exact is not None else False,
+                   family=fam(part) if exact is not None else (families.pop() if len(families) == 1 else ""),
+                   package=pkg or "", pins=pins or 0, released=min(years) if years else None,
+                   units=pm.units_of(part) if exact is not None else None,
+                   found=["parts database" if exact is not None else f"parts database ({len(hits)} variants)"])
+        if exact is not None and out["released"] is None and "-" in key:  # same datasheet as its sibling variants
+            years = [y for y in map(released_year, _db_parts(session, key.split("-", 1)[0] + "-")) if y]
+            out["released"] = min(years) if years else None
     bc = _broadcast(mpn)
     if bc is not None:
         pk = bc.get("package") or {}
@@ -109,11 +164,15 @@ def site_info(session: Session, mpn: str) -> dict:
         out["automotive"] = out["automotive"] or bool(bc.get("aec_q100"))
         out["family"] = out["family"] or fam_of.get(bc.get("role") or "", "")
         out["units"] = out["units"] or (bc.get("channels") if bc.get("role") == "coprocessor" else bc.get("tuners"))
+        rev = re.match(r"\s*(?:Rev\.?\s*)?([\w.]+),.*?\b((?:19|20)\d\d)\b", str((bc.get("source") or {}).get("revision")))
+        if out["released"] is None and rev and FIRST_ISSUE.match(rev.group(1)):  # "Rev. 1.0, May 2, 2019"
+            out["released"] = int(rev.group(2))
         out["found"].append(f"radio datasheet ({bc['doc']})")
     row = next((r for r in blocks.catalog_rows() if r["mpn"].upper() == key), None)
     if row is not None:
         out["family"] = out["family"] or fam_of.get(row["function"] or "", "")
         out["package"] = out["package"] or row["package"] or ""
+        out["pins"] = out["pins"] or pins_from(out["package"])
         out["automotive"] = out["automotive"] or bool(row.get("automotive"))
         specs = row.get("key_specs") or {}
         ch = [int(v) for k, v in specs.items() if k in ("Forward Channels", "Reverse Channels") and str(v).isdigit()]

@@ -96,6 +96,8 @@ def valid_invite(session: Session, token: str) -> Invite | None:
 # --- challenges ------------------------------------------------------------------------------------------------------
 def _store_challenge(session: Session, resp: Response, request: Request, purpose: str, **bind) -> bytes:
     session.execute(delete(WebauthnChallenge).where(WebauthnChallenge.expires_at < now()))
+    if old := request.cookies.get(WA_COOKIE):  # the pages fetch options ahead and refresh them: one per browser
+        session.execute(delete(WebauthnChallenge).where(WebauthnChallenge.nonce_sha256 == token_hash(old)))
     if session.scalar(select(func.count()).select_from(WebauthnChallenge)) >= MAX_OPEN_CHALLENGES:
         raise HTTPException(429, "Too many sign-ins in progress. Try again in a few minutes.")
     nonce = secrets.token_urlsafe(32)

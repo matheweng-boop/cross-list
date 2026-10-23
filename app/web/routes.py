@@ -601,7 +601,8 @@ def rf_bands_page(request: Request, band: str = ""):
 
     d = rf_bands.data()
     ctx = {"groups": d["groups"], "bands": d["bands"], "band": band if rf_bands.band(band) else "",
-           "counts": rf_bands.band_counts()}  # fmt: skip
+           "counts": rf_bands.band_counts(), "types": d.get("types") or [],
+           "apps": d.get("applications") or []}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/rf_bands.html", ctx)
 
 

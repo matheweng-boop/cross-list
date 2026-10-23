@@ -704,6 +704,52 @@ topics:
     url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-blocking-dynamic-range-of-a-receiver/
   - title: 'KB: How do I design the RF filtering for a 5G NR base station to meet blocking requirements?'
     url: https://rfessentials.com/rf-knowledge-base/how-do-i-design-the-rf-filtering-for-a-5g-nr-base-station-to-meet-blocking-requi/
+# The next two notes are BizDev's plain-word introductions (owner 23 Oct 2026: "What does dBm mean? What does IIP3
+# mean? IIP3 can be listed in the engineering knowledge"), built on the Mini-Circuits and RF Essentials notes above.
+- id: dbm_basics
+  title: dBm and decibels in plain words
+  category: rf_specs
+  from: BizDev (plain-word introduction)
+  summary: 'RF powers span more than 20 orders of magnitude, from a GNSS satellite signal of about 0.0000000000000001 W
+    to a radar pulse of 1 kW, so engineers count in decibels. dBm is power compared with one milliwatt: 0 dBm is 1 mW,
+    every +10 dB is ten times more and every +3 dB twice as much. A plain dB number is a ratio (gain, loss, isolation,
+    rejection), so dBm + dB = dBm: a -90 dBm signal through a 20 dB LNA leaves at -70 dBm. dBc is a level below the
+    carrier (a wanted signal), dBi an antenna''s gain over an ideal isotropic antenna, dBW power against 1 W (dBm - 30).'
+  key_points:
+  - 0 dBm = 1 mW; +10 dBm = 10 mW; +20 dBm = 100 mW; +30 dBm = 1 W; -30 dBm = 1 uW; -100 dBm = 0.1 pW
+  - +3 dB = x2, +6 dB = x4, +10 dB = x10, +20 dB = x100 in power
+  - Into 50 ohm, 0 dBm is about 0.22 V rms and +30 dBm about 7.1 V rms
+  - 'Thermal noise floor: -174 dBm per hertz at room temperature, so -114 dBm in 1 MHz'
+  - Gains and losses add and subtract in dB along a chain; multiplying linear ratios is the same thing
+  - 'Interactive: dBm power ladder with plain explanations of each level (/visuals#dbm)'
+  sources:
+  - title: AN60-038 Amplifier Terms Defined
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+  - title: 'KB: How do I calculate the sensitivity of a receiver in dBm given the noise figure and bandwidth?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-calculate-the-sensitivity-of-a-receiver-in-dbm-given-the-noise-figure-a/
+- id: iip3_basics
+  title: IIP3 in plain words - how much strong signals a receiver tolerates
+  category: rf_specs
+  from: BizDev (plain-word introduction)
+  summary: 'IIP3 (input third-order intercept point) measures linearity. Two strong unwanted signals at f1 and f2 that pass
+    through an LNA, mixer or switch create new, false signals at 2f1 - f2 and 2f2 - f1. These grow 3 dB for every 1 dB of
+    input, three times as fast as the signals, and land right next to them, where a filter cannot remove them. IIP3 is the
+    input level at which the false signals would, extrapolated, be as strong as the real ones; the part compresses about
+    10 dB before that, so it is a figure of merit, not an operating level. Higher IIP3 means a receiver keeps working next
+    to strong transmitters (a cell tower, the car''s own V2X or LTE, two strong FM stations). OIP3 is the same point at the
+    output: OIP3 = IIP3 + gain.'
+  key_points:
+  - 'Level of the false signal at the input: IM3 = 3 x P(per tone) - 2 x IIP3 (all in dBm)'
+  - 'Example: two -30 dBm blockers into an LNA with IIP3 0 dBm give IM3 = -90 - 0 = -90 dBm; with IIP3 +10 dBm, -110 dBm'
+  - Each 1 dB more blocker adds 3 dB of IM3; each 1 dB more IIP3 removes 2 dB; each 1 dB of filter rejection removes 3 dB
+  - 'Typical IIP3: LNAs -5 to +20 dBm, mixers +15 to +30 dBm, RF switches +60 to +75 dBm (catalogue values)'
+  - In a chain the stages after a high-gain LNA dominate the total IIP3, the opposite of noise figure (see the cascade note)
+  - 'Interactive: IP3 lines (/visuals#ip3), blocker view of the dBm ladder (/visuals#dbm), FM intermodulation (/visuals#fmim)'
+  sources:
+  - title: AN60-038 Amplifier Terms Defined
+    url: https://www.minicircuits.com/appdoc/AN60-038.html
+  - title: 'KB: How do I cascade IP3 values through a multi-stage receiver chain?'
+    url: https://rfessentials.com/rf-knowledge-base/how-do-i-cascade-ip3-values-through-a-multi-stage-receiver-chain/
 - id: vswr_return_loss_mismatch
   title: VSWR, return loss, reflection coefficient and mismatch loss
   category: rf_specs

@@ -1,0 +1,47 @@
+/* RF bands "Spectrum by type" view and the receiver visuals (dBm ladder notes, cascade table, FM intermodulation). */
+.rbt { display: grid; gap: .5rem; margin: .4rem 0; }
+.rbt-apps, .rbt-types { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.rbt-apps .fchip { width: auto; margin: 0; background: transparent; color: var(--pico-primary); border-color: var(--pico-primary); padding: .15rem .6rem; }
+.rbt-apps .fchip.on { background: var(--pico-primary); color: #fff; }
+.rbt-chip { width: auto; margin: 0; display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .55rem; font-size: .8rem;
+  border-radius: 1rem; border: 1px solid var(--c, #8a94a3); background: #fff; color: #3a4450; }
+.rbt-chip i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; background: var(--c, #8a94a3); }
+.rbt-chip[aria-pressed="false"] { opacity: .55; text-decoration: line-through; border-style: dashed; }
+.rbt-chip[aria-pressed="false"] i { background: transparent; border: 1px solid var(--c, #8a94a3); }
+.rbt-all { width: auto; margin: 0; padding: .1rem .5rem; font-size: .78rem; background: transparent; color: var(--pico-primary); border: 0; text-decoration: underline; }
+.rbt-appnote { margin: 0; padding: .35rem .6rem; border-left: 4px solid var(--pico-primary); background: #f3f6fb; border-radius: .25rem; }
+.rb-svg .rbt-band rect { fill-opacity: .45; }
+.rb-svg .rbt-band.on rect, .rb-svg .rbt-band:hover rect, .rb-svg .rbt-band:focus rect { fill-opacity: .9; }
+.rb-svg .rbt-ll { fill: #2c3540; font-size: 11px; font-weight: 600; } .rb-svg .rbt-span { fill: #6b7480; font-weight: 400; }
+.rb-svg .rbt-ovl { fill: #a0233c; } .rb-svg .rbt-ov-r { fill: #c0263f; fill-opacity: .75; }
+.rb-svg .rbt-lam { fill: #0f766e; font-size: 10px; }
+.rbt-ov ul { margin: .2rem 0 .3rem 1rem; padding: 0; } .rbt-ov li { margin: 0 0 .15rem; list-style: disc; }
+.rbt-f { font-variant-numeric: tabular-nums; white-space: nowrap; color: #a0233c; }
+.rbt-bl { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+.rbt-b { width: auto; margin: 0; padding: .12rem .5rem; font-size: .78rem; background: #fff; color: #2c3540; border: 1px solid var(--c, #8a94a3);
+  border-left-width: 4px; border-radius: .3rem; }
+.rbt-b small { color: #6b7480; } .rbt-b.on { background: #eef4fb; }
+.rb-lam { color: #0f766e; }
+
+/* dBm ladder: what each rung means */
+.vz-rungs { display: grid; gap: .35rem; margin: .4rem 0; }
+.vz-rung { border: 1px solid var(--pico-muted-border-color); border-left: 4px solid #1f5fa8; border-radius: .35rem; padding: .3rem .6rem; background: #fff; }
+.vz-rung summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: .1rem .6rem; align-items: baseline; }
+.vz-rung summary b.lv { font-variant-numeric: tabular-nums; min-width: 5.5rem; }
+.vz-rung.near { border-left-color: #c2410c; background: #fff8f2; }
+.vz-rung dl { margin: .3rem 0 .1rem; display: grid; grid-template-columns: minmax(6rem, max-content) 1fr; gap: .15rem .6rem; }
+.vz-rung dt { font-weight: 600; color: #3a4450; } .vz-rung dd { margin: 0; }
+@media (max-width: 560px) { .vz-rung dl { grid-template-columns: 1fr; } .vz-rung dd { margin-bottom: .25rem; } }
+.vz-terms { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin: .3rem 0; }
+
+/* cascade: stage table and part pickers */
+.vz-blk select.vz-part { font-size: .78rem; padding: .15rem .3rem; margin: .2rem 0; height: auto; }
+.vz-ned { color: #b42318; font-weight: 600; }
+.vz-cas { overflow-x: auto; } .vz-cas table { font-size: .8rem; margin: .3rem 0; } .vz-cas td, .vz-cas th { padding: .2rem .4rem; white-space: nowrap; }
+.vz-cas td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.vz-ex { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: .3rem 0; }
+.vz-ex button { width: auto; margin: 0; padding: .15rem .6rem; font-size: .8rem; }
+
+/* FM intermodulation */
+.vz-im table { font-size: .8rem; } .vz-im td, .vz-im th { padding: .2rem .4rem; } .vz-im td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vz-im tr.hit td { background: #fdecec; } .vz-im .vz-imwrap { overflow-x: auto; }

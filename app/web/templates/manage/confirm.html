@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Confirm it is you</h1>
+<p class="subtitle muted">Creating an invite, removing a passkey, removing all guests and switching password sign-in need a fresh confirmation. It counts for 5 minutes in this browser.</p>
+{% if msg %}<p class="banner" role="status">{{ msg }}</p>{% endif %}
+{% if left %}<p>You are confirmed for about {{ (left // 60) + 1 }} more minute(s). <a href="{{ next }}">Go back</a>.</p>{% endif %}
+{% if has_passkeys %}<p><button type="button" id="owner-confirm-passkey" data-next="{{ next }}">Confirm with a passkey</button></p>{% endif %}
+{% if password %}
+<form method="post" action="/owner/confirm/password">
+  <input type="hidden" name="next" value="{{ next }}">
+  <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+  <button type="submit" class="secondary">Confirm with the password</button>
+</form>
+{% elif not has_passkeys %}<p>You have no passkey and password sign-in is off. Set CROSSLIST_PASSWORD_LOGIN=force-on on Render to use the password again.</p>{% endif %}
+<p class="small muted" id="auth-msg" aria-live="polite"></p>
+<p class="small muted"><a href="{{ next }}">Cancel</a></p>
+<script src="/static/auth.js" defer></script>
+{% endblock %}

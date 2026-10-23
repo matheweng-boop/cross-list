@@ -76,8 +76,24 @@ a fingerprint, face or screen PIN.
   changes the site until you approve it on Data management → Guest input (one item at a time); approved items are
   applied exactly as if you had sent them, under the guest's name. The daily run sees only approved items.
 - **Remove someone:** People & invites → Remove. They are signed out at once and their passkeys stop working.
+  **Remove all guests** (same page) does this for every guest at once and also cancels the open invite links.
+- **Limits:** at most 5 open invite links and 10 guests at a time (the People page shows the counts). To change
+  them, set `CROSSLIST_MAX_OPEN_INVITES` and `CROSSLIST_MAX_GUESTS` on Render.
+- **Confirm it is you:** creating an invite, removing a passkey, removing all guests and switching password sign-in
+  ask for a passkey or the password again when your last confirmation (or sign-in) is more than 5 minutes old.
 - **Lost passkey:** you sign in with the password and add a new passkey (remove the old one on My passkeys). A
   guest: remove them and send a new invite.
+- **Password sign-in switch:** My passkeys → Switch password sign-in off (possible only with at least 2 passkeys).
+  Then the sign-in page shows only the passkey button and the site refuses the password.
+- **Way back in if all your passkeys are lost** while password sign-in is off: Render → the service → Environment →
+  add `CROSSLIST_PASSWORD_LOGIN` = `force-on` → Save (the site restarts). The password works again; add new
+  passkeys, then delete the variable so the switch on My passkeys counts again.
+- **Alerts on your phone (Telegram):** set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` on Render (the same bot and
+  chat as the daily run). You then get a message when an invite is created (name and expiry only, never the link),
+  a guest registers a passkey, you add or remove a passkey, a guest (or all guests) is removed, password sign-in is
+  switched on or off, and when someone signs in with the password or an address is locked out for wrong passwords.
+  Without the two variables the site only logs these events. Messages never contain links, tokens or passwords, and
+  a slow Telegram never delays the site (each message is sent in the background, 3-second limit).
 
 ## Security
 
@@ -95,4 +111,6 @@ a fingerprint, face or screen PIN.
   (the microphone stays allowed for dictation) and Strict-Transport-Security on https.
 - **Requests:** data may only be sent from the site itself (other sites' forms are refused); uploads up to 10 MB,
   other input up to 4 MB.
-- No outside service is used for any of this.
+- **Owner actions:** sensitive changes need a confirmation from the last 5 minutes, kept in its own signed cookie
+  (HttpOnly, SameSite=Strict, 5 minutes), so a stolen session cookie alone cannot create invites or remove passkeys.
+- No outside service is used for any of this, except the optional Telegram alerts (api.telegram.org).

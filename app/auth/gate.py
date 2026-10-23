@@ -1,20 +1,21 @@
 """The sign-in gate: only signed-in people see anything.
 
-The owner signs in with the site password (the backup) or a passkey; invited guests with a passkey. Off when
-CROSSLIST_SITE_PASSWORD is empty (local use: everyone is the owner). Guests read every page except Data management;
-anything a guest sends is stored for the owner's review (app/services/guest_input.py) instead of being applied.
+The owner signs in with the site password (the backup, unless switched off) or a passkey; invited guests with a
+passkey. Off when CROSSLIST_SITE_PASSWORD is empty (local use: everyone is the owner). Guests read every page except
+Data management; anything a guest sends is stored for the owner's review (app/services/guest_input.py) instead of
+being applied.
 """
 
 import asyncio
 import html
 from urllib.parse import quote, urlsplit
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.auth import access
+from app.auth import access, stepup
 from app.auth.session import (
     COOKIE,
     OWNER,
@@ -26,11 +27,13 @@ from app.auth.session import (
     guard,
     pow_check,
     pow_issue,
+    principal,
     set_login_cookie,
 )
 from app.config import get_settings
-from app.db import get_engine
-from app.services import guest_input
+from app.db import get_engine, get_session
+from app.models import Account
+from app.services import guest_input, notify
 from app.web.urls import local_path
 
 FLASH = "crosslist_flash"
@@ -122,13 +125,7 @@ PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <link rel="stylesheet" href="/static/vendor/pico.min.css"><link rel="stylesheet" href="/static/app.css"></head>
 <body><main class="container auth-page">
 <h1>BizDev</h1>{error}
-<form method="post" action="/login" id="pw-form" data-pow><input type="hidden" name="next" value="{next}">
-<input type="hidden" name="pow_challenge"><input type="hidden" name="pow_nonce">
-<input type="password" name="password" placeholder="Password" autocomplete="current-password" aria-label="Password"
- required autofocus>
-<button type="submit">Sign in</button></form>
-<p class="auth-or small muted">or</p>
-<button type="button" class="secondary" id="passkey-login" data-next="{next}">Sign in with a passkey</button>
+{password}<button type="button" class="secondary" id="passkey-login" data-next="{next}">Sign in with a passkey</button>
 <p class="small muted" id="auth-msg" aria-live="polite"></p>
 <p class="small muted">A passkey is a sign-in key kept by your phone or computer (unlocked with your fingerprint,
 face or
@@ -136,9 +133,32 @@ face or
 </main><script src="/static/auth.js" defer></script></body></html>"""
 
 
+PASSWORD_FORM = """<form method="post" action="/login" id="pw-form" data-pow>
+<input type="hidden" name="next" value="{next}">
+<input type="hidden" name="pow_challenge"><input type="hidden" name="pow_nonce">
+<input type="password" name="password" placeholder="Password" autocomplete="current-password" aria-label="Password"
+ required autofocus>
+<button type="submit">Sign in</button></form>
+<p class="auth-or small muted">or</p>
+"""
+
+
+def _password_allowed() -> bool:
+    with Session(get_engine()) as s:
+        return stepup.password_allowed(s)
+
+
 def _page(error: str = "", next_url: str = "/", status: int = 200) -> HTMLResponse:
     err = f'<p class="banner" role="alert">{html.escape(error)}</p>' if error else ""
-    return HTMLResponse(PAGE.format(error=err, next=html.escape(_safe_next(next_url), quote=True)), status_code=status)
+    nxt = html.escape(_safe_next(next_url), quote=True)
+    pw = PASSWORD_FORM.format(next=nxt) if _password_allowed() else ""
+    return HTMLResponse(PAGE.format(error=err, password=pw, next=nxt), status_code=status)
+
+
+def password_failed(ip: str) -> None:
+    """A wrong password: counted for the lock, and the owner is told when the address gets locked."""
+    if guard.failed(ip, "password"):
+        notify.alert(f"Password sign-in locked for 15 minutes after repeated failures from address {ip}.")
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -166,13 +186,18 @@ async def login(request: Request, password: str = Form(""), next: str = Form("/"
             return _page("The browser check did not finish. Wait a moment and press Sign in again.", next, 400)
         if not s.site_password:
             return RedirectResponse(_safe_next(next), status_code=303)
-        if s.site_password and _same(password, s.site_password):
+        if not stepup.password_allowed(db):
+            guard.failed(ip, "password-off")
+            return _page("Password sign-in is switched off. Sign in with a passkey.", next, 403)
+        if _same(password, s.site_password):
             owner = ensure_owner(db)
             db.commit()
             resp = RedirectResponse(_safe_next(next), status_code=303)
             set_login_cookie(resp, request, owner)
+            stepup.set_confirmed(resp, request, owner)
+            notify.alert(f"The owner signed in with the password (address {ip}).")
             return resp
-    guard.failed(ip, "password")
+    password_failed(ip)
     await asyncio.sleep(FAIL_DELAY)
     return _page("Wrong password.", next, 401)
 
@@ -187,4 +212,46 @@ def _same(a: str, b: str) -> bool:
 def logout():
     resp = RedirectResponse("/login", status_code=303)
     resp.delete_cookie(COOKIE)
+    resp.delete_cookie(stepup.STEPUP_COOKIE)
     return resp
+
+
+# --- owner confirmation (step-up) ------------------------------------------------------------------------------------
+@router.get("/owner/confirm", response_class=HTMLResponse)
+def confirm_page(request: Request, next: str = "/manage/people", msg: str = "",
+                 session: Session = Depends(get_session)):  # fmt: skip
+    from app.web.routes import templates
+
+    p = principal(request)
+    if p is None or not p.is_owner:
+        return PlainTextResponse("Only the owner can do this.", status_code=403)
+    ctx = {"next": _safe_next(next), "msg": msg[:200], "password": stepup.password_allowed(session),
+           "has_passkeys": stepup.owner_passkey_count(session, p.id) > 0,
+           "left": stepup.seconds_left(request, session)}  # fmt: skip
+    return templates.TemplateResponse(request, "manage/confirm.html", ctx, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/owner/confirm/password")
+async def confirm_password(request: Request, password: str = Form(""), next: str = Form("/manage/people")):
+    """Confirm with the password (only while password sign-in is allowed)."""
+    p = principal(request)
+    if p is None or not p.is_owner:
+        return PlainTextResponse("Only the owner can do this.", status_code=403)
+    ip = client_ip(request)
+    why = guard.refuse(ip)
+    if why:
+        return RedirectResponse(stepup.confirm_url(next, why), status_code=303)
+    s = get_settings()
+    with Session(get_engine()) as db:
+        if not stepup.password_allowed(db) or not s.site_password:
+            return RedirectResponse(stepup.confirm_url(next, "Password sign-in is switched off. Use a passkey."),
+                                    status_code=303)  # fmt: skip
+        if _same(password, s.site_password):
+            owner = db.get(Account, p.id)
+            resp = RedirectResponse(_safe_next(next), status_code=303)
+            if owner is not None:
+                stepup.set_confirmed(resp, request, owner)
+            return resp
+    password_failed(ip)
+    await asyncio.sleep(FAIL_DELAY)
+    return RedirectResponse(stepup.confirm_url(next, "Wrong password."), status_code=303)

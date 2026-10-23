@@ -716,7 +716,7 @@ class WebauthnChallenge(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     nonce_sha256: Mapped[str] = mapped_column(String(64), unique=True)
     challenge: Mapped[bytes] = mapped_column(LargeBinary)
-    purpose: Mapped[str] = mapped_column(String(20))  # login | invite | owner
+    purpose: Mapped[str] = mapped_column(String(20))  # login | invite | owner | confirm
     account_id: Mapped[int | None] = mapped_column(ForeignKey("accounts.id", ondelete="CASCADE"))
     invite_id: Mapped[int | None] = mapped_column(ForeignKey("invites.id", ondelete="CASCADE"))
     handle: Mapped[str | None] = mapped_column(String(64))  # user handle offered to a new guest's passkey
@@ -752,3 +752,13 @@ class PowSpent(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     key: Mapped[str] = mapped_column(String(64), unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class SiteSetting(Base):
+    """An owner setting changed on the site (for example whether password sign-in is allowed)."""
+
+    __tablename__ = "site_settings"
+
+    key: Mapped[str] = mapped_column(String(60), primary_key=True)
+    value: Mapped[str] = mapped_column(String(200))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

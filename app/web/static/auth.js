@@ -109,6 +109,21 @@
     } catch (err) { msg(failText(err)); add.disabled = false; }
   });
 
+  // owner confirmation (step-up) with one of the owner's passkeys
+  const conf = $("#owner-confirm-passkey");
+  if (conf) conf.addEventListener("click", async () => {
+    if (noPasskeys()) return;
+    conf.disabled = true;
+    try {
+      const o = await post("/owner/confirm/options");
+      msg("Follow your device's prompt…");
+      const c = await navigator.credentials.get({publicKey: {...o, challenge: unb64u(o.challenge),
+        allowCredentials: (o.allowCredentials || []).map(a => ({...a, id: unb64u(a.id)}))}});
+      const r = await post("/owner/confirm/verify", {credential: credJSON(c), next: conf.dataset.next || "/manage/people"});
+      location.href = r.next || "/manage/people";
+    } catch (err) { msg(failText(err)); conf.disabled = false; }
+  });
+
   // copy an invite link; confirm before a remove
   document.addEventListener("click", async e => {
     const b = e.target.closest("[data-copy]");

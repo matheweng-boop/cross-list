@@ -3,6 +3,8 @@
 <h1>People &amp; invites</h1>
 <p class="subtitle muted">Invite someone as a guest: they read every page and can comment, vote and send requests. Everything they send waits for you on <a href="/manage/guest-input">Guest input</a>. Data management stays yours alone.</p>
 {% if msg %}<p class="banner" role="status">{{ msg }}</p>{% endif %}
+<p><b>{{ n_guests }}</b> of at most {{ max_guests }} guests · <b>{{ n_open }}</b> of at most {{ max_open }} open invite links</p>
+<p class="small muted">{% if confirmed %}Confirmed: invites, passkey removal and the switches below work for about {{ (confirmed // 60) + 1 }} more minute(s).{% else %}Creating an invite, removing a passkey and removing all guests need a fresh confirmation (at most every 5 minutes). You are asked when needed, or <a href="/owner/confirm?next={{ request.url.path | urlencode }}">confirm now</a>.{% endif %}</p>
 
 {% if new_link %}<div class="pl-card" role="status">
   <p><b>Invite link for {{ new_name }}</b> (works once, for 7 days; it is shown only now):</p>
@@ -11,11 +13,12 @@
   <p class="small muted">Send it to {{ new_name }} yourself (mail or chat). Opening it lets them create a passkey on their phone or computer.</p>
 </div>{% endif %}
 
-<details class="pl-card"{% if not guests %} open{% endif %}><summary><b>Invite someone</b></summary>
+<details class="pl-card"{% if not guests or prefill %} open{% endif %}><summary><b>Invite someone</b></summary>
+  {% if limit_msg %}<p class="banner" role="status">{{ limit_msg }}</p>{% endif %}
   <form method="post" action="/manage/people/invite">
-    <label>Name <input name="name" maxlength="100" required placeholder="e.g. Anna Berger"></label>
+    <label>Name <input name="name" maxlength="100" required placeholder="e.g. Anna Berger" value="{{ prefill or '' }}"></label>
     <label>Note for yourself <small class="muted">optional</small> <input name="note" maxlength="2000" placeholder="e.g. RF field engineer, Munich"></label>
-    <button type="submit">Create invite link</button>
+    <button type="submit"{% if limit_msg %} disabled{% endif %}>Create invite link</button>
   </form>
 </details>
 
@@ -28,7 +31,9 @@
     <td class="small">{% for k in g.passkeys %}{{ k.created_at.strftime('%Y-%m-%d') }} · {{ k.last_used_at.strftime('%Y-%m-%d %H:%M') if k.last_used_at else 'not used yet' }}{% if not loop.last %}<br>{% endif %}{% else %}none{% endfor %}</td>
     <td>{% if not g.disabled %}<form method="post" action="/manage/people/{{ g.id }}/remove" class="inline-form" data-confirm="Remove {{ g.name }}? They are signed out at once and their passkeys stop working."><button type="submit" class="outline small-btn">Remove</button></form>{% endif %}</td>
   </tr>{% endfor %}</tbody>
-</table></div>{% else %}<p class="muted">No guests yet.</p>{% endif %}
+</table></div>
+<form method="post" action="/manage/people/remove-all" class="inline-form" data-confirm="Remove ALL guests? Everyone is signed out at once, their passkeys are deleted and open invite links are cancelled."><button type="submit" class="outline secondary small-btn">Remove all guests</button></form>
+{% else %}<p class="muted">No guests yet.</p>{% endif %}
 
 <h2>Invite links</h2>
 {% if invites %}<div class="table-wrap"><table>

@@ -15,58 +15,21 @@ refused or could not be reached.
 """
 
 import argparse
-import json
-import os
-import ssl
 import sys
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
+from pathlib import Path
 
-API = "https://api.telegram.org"
-LIMIT = 4000  # Telegram allows 4096 characters per message
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-
-def _ctx() -> ssl.SSLContext:
-    cafile = os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE")
-    return ssl.create_default_context(cafile=cafile) if cafile else ssl.create_default_context()
-
-
-def _call(token: str, method: str, **params) -> dict:
-    data = urllib.parse.urlencode(params).encode()
-    try:
-        with urllib.request.urlopen(f"{API}/bot{token}/{method}", data=data, timeout=60, context=_ctx()) as r:
-            out = json.load(r)
-    except urllib.error.HTTPError as e:
-        try:
-            desc = json.load(e).get("description", "")
-        except ValueError:
-            desc = ""
-        raise RuntimeError(f"Telegram refused {method}: HTTP {e.code} {desc}".strip()) from None
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Telegram not reachable ({e.reason}); is api.telegram.org allowed?") from None
-    if not out.get("ok"):
-        raise RuntimeError(f"Telegram refused {method}: {out.get('description', '')}")
-    return out
+from app.services import notify  # noqa: E402  (shared with the site's alerts)
 
 
 def send(token: str, chat: str, text: str) -> int:
-    text = text.strip() or "(empty)"
-    parts = [text[i:i + LIMIT] for i in range(0, len(text), LIMIT)]
-    sent = 0
-    for p in parts:
-        sent = _call(token, "sendMessage", chat_id=chat, text=p, disable_web_page_preview="true")["result"]["date"]
-    return sent
+    return notify.send(token, chat, text)
 
 
 def replies(token: str, chat: str, since: int) -> list[str]:
-    """The owner's text messages since ``since`` (unix time), oldest first; read updates are acknowledged."""
-    ups = _call(token, "getUpdates", timeout=0, allowed_updates='["message"]')["result"]
-    if ups:
-        _call(token, "getUpdates", offset=ups[-1]["update_id"] + 1, timeout=0)  # don't see them again
-    msgs = [u["message"] for u in ups if "message" in u]
-    return [m.get("text", "") for m in msgs if str(m["chat"]["id"]) == chat and m["date"] >= since and m.get("text")]
+    return notify.replies(token, chat, since)
 
 
 def main() -> int:
@@ -79,10 +42,11 @@ def main() -> int:
     w.add_argument("--since", type=int, required=True)
     w.add_argument("--minutes", type=float, default=30)
     args = ap.parse_args()
-    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN", ""), os.environ.get("TELEGRAM_CHAT_ID", "").strip()
-    if not token or not chat:
+    cfg = notify.settings()
+    if cfg is None:
         print("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set (cloud environment settings)", file=sys.stderr)
         return 2
+    token, chat = cfg
     try:
         if args.cmd == "send":
             print(send(token, chat, sys.stdin.read()))

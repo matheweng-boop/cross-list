@@ -178,7 +178,8 @@ class LoginGuard:
         q.append(t)
         return None
 
-    def failed(self, ip: str, how: str) -> None:
+    def failed(self, ip: str, how: str) -> bool:
+        """Record a failure; True when it locked the address just now."""
         t = time.monotonic()
         q = self._trim(self.failures[ip], self.FAIL_WINDOW, t)
         q.append(t)
@@ -188,6 +189,8 @@ class LoginGuard:
             self.locked[ip] = t + self.LOCK
             q.clear()
             log.warning("sign-in locked for 15 minutes: ip=%s", ip)
+            return True
+        return False
 
     def slowdown(self) -> float:
         t = time.monotonic()

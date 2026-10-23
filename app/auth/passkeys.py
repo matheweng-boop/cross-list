@@ -11,8 +11,9 @@ import hmac
 import html
 import secrets
 from datetime import timedelta
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
@@ -31,7 +32,9 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
+from app.auth import stepup
 from app.auth.session import (
+    GUEST,
     OWNER,
     aware,
     client_ip,
@@ -45,6 +48,7 @@ from app.auth.session import (
 from app.config import get_settings
 from app.db import get_engine, get_session
 from app.models import Account, Invite, PasskeyCredential, WebauthnChallenge
+from app.services import notify
 from app.web.urls import local_path
 
 router = APIRouter()
@@ -66,6 +70,17 @@ def new_invite(session: Session, name: str, note: str = "") -> tuple[Invite, str
     session.add(inv)
     session.flush()
     return inv, token
+
+
+def open_invites(session: Session) -> int:
+    """Invite links that are unused and unexpired."""
+    return session.scalar(select(func.count()).select_from(Invite)
+                          .where(Invite.used_at.is_(None), Invite.expires_at > now())) or 0  # fmt: skip
+
+
+def active_guests(session: Session) -> int:
+    return session.scalar(select(func.count()).select_from(Account)
+                          .where(Account.role == GUEST, Account.disabled.is_(False))) or 0  # fmt: skip
 
 
 def valid_invite(session: Session, token: str) -> Invite | None:
@@ -216,6 +231,7 @@ async def login_verify(request: Request):
         s.commit()
         resp = JSONResponse({"ok": True, "next": local_path(str(data.get("next") or "/"), "/")})
         set_login_cookie(resp, request, account)
+        stepup.set_confirmed(resp, request, account)
         resp.delete_cookie(WA_COOKIE)
         return resp
 
@@ -290,6 +306,8 @@ async def invite_verify(token: str, request: Request):
         if row is None or inv is None or row.invite_id != inv.id or not row.handle or not isinstance(credential, dict):
             guard.failed(ip, "invite")
             return _fail("This invite link is no longer valid, or the step took too long. Reload the page.", 400)
+        if active_guests(s) >= get_settings().max_guests:
+            return _fail("The guest list is full for now. Ask the owner to make room and send a new link.", 409)
         account = Account(name=inv.name, role="guest", handle=row.handle)
         s.add(account)
         try:
@@ -307,6 +325,7 @@ async def invite_verify(token: str, request: Request):
         s.flush()
         s.execute(update(Invite).where(Invite.id == inv.id).values(account_id=account.id))
         s.commit()
+        notify.alert(f"Guest {account.name} used their invite and registered a passkey.")
         resp = JSONResponse({"ok": True, "next": "/"})
         set_login_cookie(resp, request, account)
         resp.delete_cookie(WA_COOKIE)
@@ -329,7 +348,10 @@ def owner_passkeys(request: Request, msg: str = "", session: Session = Depends(g
     from app.web.routes import templates
 
     acct = _owner(request, session)
-    ctx = {"account": acct, "keys": acct.passkeys, "msg": msg[:200], "locked": bool(get_settings().site_password)}
+    ctx = {"account": acct, "keys": acct.passkeys, "msg": msg[:200], "locked": bool(get_settings().site_password),
+           "pw_switch": stepup.password_switch(session), "pw_forced": stepup.password_forced(),
+           "pw_why_not": stepup.why_cannot_switch_off(session, acct.id),
+           "confirmed": stepup.seconds_left(request, session)}  # fmt: skip
     return templates.TemplateResponse(request, "manage/passkeys.html", ctx)
 
 
@@ -356,6 +378,7 @@ async def owner_verify(request: Request, session: Session = Depends(get_session)
         session.rollback()
         return _fail((str(e) if isinstance(e, ValueError) else "The passkey could not be added.") + " Try again.")
     session.commit()
+    notify.alert(f"The owner added a passkey (now {stepup.owner_passkey_count(session, acct.id)}).")
     resp = JSONResponse({"ok": True, "next": "/owner/passkeys?msg=Passkey+added"})
     resp.delete_cookie(WA_COOKIE)
     return resp
@@ -367,6 +390,86 @@ def owner_delete(key_id: int, request: Request, session: Session = Depends(get_s
     pk = session.get(PasskeyCredential, key_id)
     if pk is None or pk.account_id != acct.id:
         raise HTTPException(404, "Passkey not found")
+    if (r := stepup.require(request, session, "/owner/passkeys")) is not None:
+        return r
+    left = len(acct.passkeys) - 1
+    if not stepup.password_switch(session) and left < stepup.MIN_PASSKEYS_WITHOUT_PASSWORD:
+        msg = ("Password sign-in is off, so you need at least 2 passkeys. Add another passkey or switch password "
+               "sign-in on first.")  # fmt: skip
+        return RedirectResponse(f"/owner/passkeys?msg={quote(msg)}", status_code=303)
     session.delete(pk)
     session.commit()
+    notify.alert(f"The owner removed a passkey (now {left}).")
     return RedirectResponse("/owner/passkeys?msg=Passkey+removed", status_code=303)
+
+
+@router.post("/owner/password-login")
+def owner_password_switch(request: Request, allow: str = Form(...), session: Session = Depends(get_session)):
+    """Allow or refuse password sign-in (needs a fresh confirmation; off only with at least 2 passkeys)."""
+    acct = _owner(request, session)
+    if (r := stepup.require(request, session, "/owner/passkeys")) is not None:
+        return r
+    on = allow == "on"
+    if not on and (why := stepup.why_cannot_switch_off(session, acct.id)):
+        return RedirectResponse(f"/owner/passkeys?msg={quote(why)}", status_code=303)
+    if on == stepup.password_switch(session):
+        return RedirectResponse("/owner/passkeys?msg=Nothing+changed", status_code=303)
+    stepup.set_password_switch(session, on)
+    session.commit()
+    state = "on" if on else "off"
+    notify.alert(f"The owner switched password sign-in {state}.")
+    return RedirectResponse(f"/owner/passkeys?msg=Password+sign-in+switched+{state}", status_code=303)
+
+
+# --- owner confirmation with a passkey (step-up) ---------------------------------------------------------------------
+@router.post("/owner/confirm/options")
+def confirm_options(request: Request, session: Session = Depends(get_session)):
+    acct = _owner(request, session)
+    if not acct.passkeys:
+        return _fail("You have no passkey yet. Confirm with the password, or add a passkey first.")
+    resp = Response(media_type="application/json")
+    challenge = _store_challenge(session, resp, request, "confirm", account_id=acct.id)
+    opts = generate_authentication_options(
+        rp_id=get_settings().rp_id, challenge=challenge, timeout=CHALLENGE_TTL * 1000,
+        user_verification=UserVerificationRequirement.PREFERRED,
+        allow_credentials=[PublicKeyCredentialDescriptor(id=base64url_to_bytes(c.credential_id))
+                           for c in acct.passkeys],
+    )  # fmt: skip
+    return _json_options(opts, resp)
+
+
+@router.post("/owner/confirm/verify")
+async def confirm_verify(request: Request, session: Session = Depends(get_session)):
+    acct = _owner(request, session)
+    ip = client_ip(request)
+    if why := guard.refuse(ip):
+        return _fail(why, 429)
+    data = await _body(request)
+    credential = data.get("credential")
+    row = _take_challenge(session, request, "confirm")
+    if row is None or row.account_id != acct.id or not isinstance(credential, dict):
+        return _fail("The step took too long. Try again.")
+    cred_id = str(credential.get("rawId") or credential.get("id") or "")
+    pk = session.scalar(select(PasskeyCredential).where(PasskeyCredential.credential_id == cred_id))
+    if pk is None or pk.account_id != acct.id:
+        guard.failed(ip, "confirm")
+        return _fail("This passkey is not one of yours.", 401)
+    s_ = get_settings()
+    try:
+        v = verify_authentication_response(credential=credential, expected_challenge=row.challenge,
+                                           expected_rp_id=s_.rp_id, expected_origin=s_.origin,
+                                           credential_public_key=pk.public_key,
+                                           credential_current_sign_count=pk.sign_count,
+                                           require_user_verification=False)  # fmt: skip
+    except Exception:
+        guard.failed(ip, "confirm")
+        return _fail("The passkey could not be checked. Try again.", 401)
+    if pk.sign_count and v.new_sign_count and v.new_sign_count <= pk.sign_count:
+        guard.failed(ip, "confirm-counter")
+        return _fail("This passkey looks copied (its counter went back). Refused.", 401)
+    pk.sign_count, pk.last_used_at = v.new_sign_count, now()
+    session.commit()
+    resp = JSONResponse({"ok": True, "next": local_path(str(data.get("next") or "/manage/people"), "/")})
+    stepup.set_confirmed(resp, request, acct)
+    resp.delete_cookie(WA_COOKIE)
+    return resp

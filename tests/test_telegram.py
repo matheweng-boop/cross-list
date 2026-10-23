@@ -29,14 +29,14 @@ def _fake(calls):
 
 def test_replies_only_from_the_owners_chat_and_acknowledged(monkeypatch):
     calls = []
-    monkeypatch.setattr(tg, "_call", _fake(calls))
+    monkeypatch.setattr(tg.notify, "_call", _fake(calls))
     assert tg.replies("T", "42", 100) == ["fix the tuner table first", "Go!"]
     assert calls[-1] == ("getUpdates", {"offset": 5, "timeout": 0})
 
 
 def test_wait_go_and_long_messages_are_split(monkeypatch, capsys):
     calls = []
-    monkeypatch.setattr(tg, "_call", _fake(calls))
+    monkeypatch.setattr(tg.notify, "_call", _fake(calls))
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "T")
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
     monkeypatch.setattr(sys, "argv", ["telegram.py", "wait-go", "--since", "100", "--minutes", "0"])
@@ -54,5 +54,5 @@ def test_missing_settings_and_errors_hide_the_token(monkeypatch, capsys):
     def boom(token, method, **params):
         raise RuntimeError(f"failed at /botSECRET123/{method}")
 
-    monkeypatch.setattr(tg, "_call", boom)
+    monkeypatch.setattr(tg.notify, "_call", boom)
     assert tg.main() == 3 and "SECRET123" not in capsys.readouterr().err

@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     origin: str = "https://cross-list.onrender.com"
     # Proof of work on the sign-in and invite pages: leading zero bits of SHA-256 (15: about half a second on a phone).
     pow_bits: int = 15
+    # At most this many open invite links (unused and unexpired) and this many active guests at a time.
+    max_open_invites: int = 5
+    max_guests: int = 10
+    # Emergency way back in: "force-on" allows password sign-in even when the owner switched it off on the site.
+    password_login: str = ""
 
 
 @lru_cache

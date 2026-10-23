@@ -87,3 +87,30 @@ def make_guest(locked):
         return g, aid
 
     return make
+
+
+# --- Telegram alerts (23 Oct 2026) -----------------------------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def _no_real_telegram(monkeypatch):
+    """Tests never reach Telegram, even when the machine has the bot settings."""
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+
+@pytest.fixture
+def alerts(monkeypatch):
+    """Alerts switched on with a fake bot; returns the list of texts sent (sent inline, not in a thread)."""
+    from app.services import notify
+
+    sent = []
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "BOTTOKEN123")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+
+    def call(token, method, _timeout=60, **params):
+        assert method == "sendMessage" and params["chat_id"] == "42" and _timeout <= 3
+        sent.append(params["text"])
+        return {"ok": True, "result": {"date": 1}}
+
+    monkeypatch.setattr(notify, "_call", call)
+    monkeypatch.setattr(notify, "_start", lambda target, *args: target(*args))
+    return sent

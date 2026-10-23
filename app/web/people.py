@@ -5,32 +5,53 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
-from app.auth.passkeys import new_invite
-from app.auth.session import aware, now
+from app.auth import stepup
+from app.auth.passkeys import active_guests, new_invite, open_invites
+from app.auth.session import GUEST, aware, now
+from app.config import get_settings
 from app.db import get_engine, get_session
-from app.models import Account, ExternalSubmission, Invite
-from app.services import guest_input
+from app.models import Account, ExternalSubmission, Invite, PasskeyCredential
+from app.services import guest_input, notify
 from app.web.routes import templates
 
 router = APIRouter()
 
 
-def _people_ctx(session: Session) -> dict:
+def _limit_reached(session: Session) -> str:
+    """Why no new invite can be made now ("" when one can)."""
+    s = get_settings()
+    n_open, n_guests = open_invites(session), active_guests(session)
+    if n_open >= s.max_open_invites:
+        return (f"Limit reached: {n_open} invite links are still open (at most {s.max_open_invites}). Wait until one "
+                "is used or expires, or cancel one.")  # fmt: skip
+    if n_guests >= s.max_guests:
+        return f"Limit reached: there are {n_guests} guests (at most {s.max_guests}). Remove someone first."
+    if n_guests + n_open >= s.max_guests:
+        return (f"Limit reached: {n_guests} guests and {n_open} open invite links already fill the {s.max_guests} "
+                "guest places. Cancel an invite or remove a guest first.")  # fmt: skip
+    return ""
+
+
+def _people_ctx(session: Session, request: Request | None = None) -> dict:
     guests = session.scalars(select(Account).where(Account.role == "guest").order_by(Account.disabled,
                                                                                      Account.created_at)).all()
     invites = session.scalars(select(Invite).order_by(Invite.created_at.desc()).limit(50)).all()
     t = now()
     rows = [{"i": i, "state": "used" if i.used_at else ("expired" if aware(i.expires_at) <= t else "open")}
             for i in invites]  # fmt: skip
-    return {"guests": guests, "invites": rows}
+    s = get_settings()
+    return {"guests": guests, "invites": rows, "n_open": open_invites(session), "n_guests": active_guests(session),
+            "max_open": s.max_open_invites, "max_guests": s.max_guests, "limit_msg": _limit_reached(session),
+            "confirmed": stepup.seconds_left(request, session) if request else 0}  # fmt: skip
 
 
 @router.get("/manage/people", response_class=HTMLResponse)
-def people(request: Request, msg: str = "", session: Session = Depends(get_session)):
-    return templates.TemplateResponse(request, "manage/people.html", {**_people_ctx(session), "msg": msg[:200]})
+def people(request: Request, msg: str = "", name: str = "", session: Session = Depends(get_session)):
+    ctx = {**_people_ctx(session, request), "msg": msg[:300], "prefill": name[:100]}
+    return templates.TemplateResponse(request, "manage/people.html", ctx)
 
 
 @router.post("/manage/people/invite", response_class=HTMLResponse)
@@ -38,10 +59,15 @@ def invite(request: Request, name: str = Form(...), note: str = Form(""), sessio
     """Creates the link and shows it once (only its SHA-256 is kept)."""
     if not name.strip():
         raise HTTPException(400, "Give the person's name")
+    if (r := stepup.require(request, session, f"/manage/people?name={quote(name.strip()[:100])}")) is not None:
+        return r
+    if why := _limit_reached(session):
+        return RedirectResponse(f"/manage/people?msg={quote(why)}", status_code=303)
     inv, token = new_invite(session, name, note)
     session.commit()
+    notify.alert(f"Invite created for {inv.name}, valid until {aware(inv.expires_at):%Y-%m-%d %H:%M} UTC.")
     link = f"{str(request.base_url).rstrip('/')}/invite/{token}"
-    ctx = {**_people_ctx(session), "msg": "", "new_link": link, "new_name": inv.name}
+    ctx = {**_people_ctx(session, request), "msg": "", "new_link": link, "new_name": inv.name}
     return templates.TemplateResponse(request, "manage/people.html", ctx, headers={"Cache-Control": "no-store"})
 
 
@@ -66,7 +92,29 @@ def remove_guest(account_id: int, session: Session = Depends(get_session)):
     acct.session_version += 1
     acct.passkeys.clear()
     session.commit()
+    notify.alert(f"The owner removed guest {acct.name}.")
     return RedirectResponse(f"/manage/people?msg={quote(acct.name + ' was removed')}", status_code=303)
+
+
+@router.post("/manage/people/remove-all")
+def remove_all_guests(request: Request, session: Session = Depends(get_session)):
+    """Disables every guest, deletes their passkeys, cancels open invites and ends their sessions (one alert)."""
+    if (r := stepup.require(request, session, "/manage/people")) is not None:
+        return r
+    t = now()
+    guest_ids = select(Account.id).where(Account.role == GUEST)
+    n_guests = active_guests(session)
+    n_keys = session.execute(delete(PasskeyCredential).where(PasskeyCredential.account_id.in_(guest_ids))).rowcount
+    session.execute(update(Account).where(Account.role == GUEST)
+                    .values(disabled=True, session_version=Account.session_version + 1))  # fmt: skip
+    n_inv = session.execute(update(Invite).where(Invite.used_at.is_(None), Invite.expires_at > t)
+                            .values(expires_at=t)).rowcount  # fmt: skip
+    session.commit()
+    notify.alert(f"The owner removed all guests: {n_guests} signed out, {n_keys} passkeys deleted, "
+                 f"{n_inv} open invites cancelled.")  # fmt: skip
+    msg = (f"All guests removed: {n_guests} guests signed out, {n_keys} passkeys deleted, {n_inv} open invites "
+           "cancelled.")  # fmt: skip
+    return RedirectResponse(f"/manage/people?msg={quote(msg)}", status_code=303)
 
 
 @router.get("/manage/guest-input", response_class=HTMLResponse)

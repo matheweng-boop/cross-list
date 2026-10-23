@@ -36,6 +36,173 @@
 #   see_also         slugs of related reports or cases (a research report and the business case built on it), shown
 #                    as "See also" links under the report's header
 reports:
+  - slug: auto-hv-hot-swap
+    title: 'Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits'
+    kind: report
+    area: Power & isolation
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "The next step is a reinforced successor of our Si875x isolated FET driver: a new chip from isolation and driver technology we already have"
+    date: 2026-10-23
+    status: draft
+    see_also: [iso-current-sense-charging, hv-extra-wide-isolation]
+    question: Are there known pain points in getting near 800 V in a car and being able to plug something in or out safely, who
+      makes the parts that solve them (hot-swap controllers, eFuses, contactors, solid-state switches, insulation monitors), and
+      where do Skyworks' isolated drivers, isolators and isolated sensing fit?
+    summary: 'Research topic for the owner. The car never really hot-plugs at 400–800 V: contactors switch the system off first,
+      an interlock loop (HVIL) makes sure no connector opens under load, capacitors are pre-charged at switch-on and discharged
+      after switch-off, and an insulation monitor checks the chassis. Pain points: inrush (about 16 kA without pre-charge, est),
+      DC arcs that do not go out by themselves, contactor welding, size and cost, insulation faults and discharge time.
+      Hot-swap controllers and eFuses stop at about 80 V; above that the job is done by SiC switches with isolated drivers and
+      sensing. TI leads with TPSI3050-Q1 (reinforced isolated switch driver, $2.30 at 1k, active pre-charge design TIDA-050063)
+      and TPSI2140-Q1 (1200 V relay for insulation monitoring, $2.90). Our Si875x does the same job but only at 2.5 kVrms. Data
+      centres face the same problem in 800 V DC racks (NVIDIA 2027; TI shows an 800 V hot-swap controller). Next step: a
+      reinforced Si875x successor and a solid-state pre-charge set with our gate drivers and Si89xx sensing.'
+    tags:
+    - hot-swap
+    - eFuse
+    - pre-charge
+    - contactor
+    - solid-state relay
+    - isolated switch driver
+    - Si8751
+    - Si8752
+    - TPSI3050-Q1
+    - TPSI2140-Q1
+    - insulation monitoring
+    - battery junction box
+    - HVIL
+    - ISO 6469-3
+    - ISO 21498
+    - 800 V
+    - 800 V DC
+    - data center
+    sources: BizDev parts database, Skyworks catalogue, block-diagram library and library topic on traction-inverter isolation;
+      Skyworks AN1052 and AN1456; TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); NVIDIA and eeNews Europe pages
+      recorded for the extra-wide isolation case; standards summarised, not read
+    bu_opener:
+      question: In 800 V cars, chargers and the new 800 V DC data-centre racks, solid-state switches are starting to replace the
+        pre-charge resistor, insulation-monitor relays and later the contactors. Each one needs an isolated driver with its own
+        floating supply. TI sells a reinforced automotive one (TPSI3050-Q1, 5 kVrms, $2.30 at 1k); our Si875x does the same job
+        at 2.5 kVrms only. Should we make a reinforced Si875x successor and sell it as a pre-charge and disconnect set?
+      pros:
+      - Si875x already builds solid-state relays without a floating supply (AN1052); the technology and the customers exist
+      - 'The rest of the set is ours today: Si828x / Si829x gate drivers with fast short-circuit detection, Si89xx current and
+        voltage sensing (5 kVrms, automotive), Si86xx isolators, Si88xx isolated bias'
+      - The same set serves 800 V DC data-centre racks, battery storage racks and DC fast chargers
+      cons:
+      - TI is there first with a reinforced driver (TPSI3050-Q1), a 1200 V relay (TPSI2140-Q1) and reference designs
+      - Our Si875x is basic 2.5 kVrms in a narrow SOIC-8, not enough for a reinforced 800 V barrier
+      - Contactors stay in the main path for a long time (losses, cost, galvanic separation); hot-swap and eFuse chips up to
+        80 V are not isolated, so not our technology
+      vs: TI TPSI3050-Q1, TPSI3100-Q1, TPSI2140-Q1; Infineon; ADI; contactor and fuse makers (TE, Sensata, Littelfuse, Eaton)
+    learn:
+    - age: 5
+      text: 'An electric car has a big battery with very strong electricity. Before anyone plugs something in or out, the car
+        switches the strong electricity off, like turning off a tap before changing a hose.'
+    - age: 10
+      text: When the car switches its battery back on, the parts behind it fill up with electricity all at once, like water
+        rushing into an empty pipe. The car fills them slowly first (pre-charge), so nothing sparks or breaks.
+    - age: 15
+      text: 'At 400 or 800 volts DC, a spark (an arc) does not stop by itself as it does with AC, so plugs must never open under
+        load. Cars use big switches (contactors), a slow-charge resistor, a safety loop through every plug (HVIL) and an
+        insulation monitor that checks nothing leaks to the car body. Standards: ISO 6469-3 for electrical safety, ISO 21498
+        (formerly LV 123) for the components.'
+    - age: 20
+      text: The owner asked whether hot-swap controllers exist for 800 V in cars. They do not as single chips (they stop at about
+        80 V); instead, carmakers start to use silicon-carbide switches for pre-charge, discharge and insulation monitoring.
+        Each needs an isolated driver with its own floating supply and isolated current sensing. The same appears in 800 V DC
+        data-centre racks, where boards are really plugged in live.
+    - age: 25
+      text: 'TI leads: TPSI3050-Q1 (reinforced isolated switch driver, 5 kVrms, $2.30) with an active pre-charge reference design,
+        and TPSI2140-Q1 (1200 V integrated relay, $2.90) for insulation monitoring. Our Si875x isolated FET driver does the same job
+        at 2.5 kVrms only; our gate drivers, Si89xx sensing, isolators and isolated bias complete the set. Proposal: a reinforced
+        Si875x successor (feasibility 2) and a 1200 V integrated relay later (feasibility 3).'
+    learn_links:
+    - label: Basic vs reinforced isolation
+      href: /engineering/isolation_class
+    - label: Integrated isolated power
+      href: /engineering/integrated_power
+    - label: Working voltage
+      href: /engineering/viorm_vpk
+    - label: CMTI
+      href: /engineering/cmti_kv_us
+    - label: 'Interactive: creepage vs working voltage'
+      href: /visuals#creep
+    - label: 'Library: isolation in the traction inverter'
+      href: /library/traction_asil_d
+  - slug: iso-current-sense-charging
+    title: 'Fully integrated isolated current sensing for EV charging: our Si89xx shunt amplifier with built-in isolated power, and a built-in shunt for small currents'
+    kind: idea
+    area: Power & isolation
+    app_type: Power and charging
+    feasibility: 2
+    feasibility_why: "Existing Si89xx amplifier die and the Si86Px in-package isolated power stage in one package; needs a reinforced rating and AEC-Q100. The built-in shunt is further away (new technology)"
+    date: 2026-10-23
+    status: draft
+    see_also: [auto-hv-hot-swap, iso7821dww-isolation]
+    question: Is there a market for an isolated current-sense amplifier with built-in isolated power (and, for small currents, a
+      built-in shunt) in on-board chargers, DC fast chargers and wallboxes, how accurate must it be, and can Skyworks build it
+      from the Si89xx dies and the Si86Px integrated power against TI, ADI, Allegro, Infineon, Melexis and LEM?
+    summary: >-
+      Business-case draft on the owner's 23 Oct question. Built-in isolated power: yes, TI sells a family (AMC3301, AMC3302-Q1,
+      AMC3306M05-Q1) and uses it in two of its three 800 V charger reference designs; AMC3301 reel lists at $1.65 (1k).
+      Built-in shunt: only for small currents, where integrated Hall sensors already serve (TI TMCS1123, 80 A, ±1.4 %
+      uncalibrated, about $2); no isolated amplifier with a built-in shunt found. Our Si8921BD die matches TI's accuracy and
+      beats it on noise (82 vs 71 dB) and bandwidth (600 vs 334 kHz), total static error about ±0.5 % RSS (AN1270), but
+      needs a separate high-side supply and has 50 kV/µs CMTI. Proposal: Si89xx die + Si86Px power stage in one reinforced
+      automotive package, about $1.5–1.9 (est). Market: current sensors $3.35 B in 2026 to $6.39 B by 2032 (analyst PR).
+    tags: [isolated amplifier, current sensing, shunt, integrated DC-DC, isolated power, EV charging, on-board charger, DC fast charger, wallbox, AMC3301, AMC3302, TMCS1123, Si8921, Si8941, Si86Px, error budget, pricing]
+    sources: "BizDev parts database (Skyworks and TI isolated amplifiers), Skyworks AN1270 and the Si86Px datasheet (cache); TI product pages AMC3301 and TMCS1123 and a MarketsandMarkets press release (read 23 Oct 2026); TI reference designs and IEA figures recorded for the extra-wide isolation case; every figure in the background notes"
+    bu_opener:
+      question: In EV chargers every current measurement across the high-voltage barrier needs an isolated amplifier and its own
+        floating supply. TI sells amplifiers with the isolated supply built in (AMC3301 at $1.65, AMC3302-Q1) and uses them in its
+        800 V charger designs. Our Si89xx dies are as accurate and quieter, and Si86Px already has an in-package isolated power
+        stage. Should we combine the two into one reinforced automotive part, and is a built-in shunt worth it?
+      pros:
+      - 'Our analog die beats AMC3301 on noise (82 vs 71 dB SNR) and bandwidth (600 vs 334 kHz) at the same 0.2 % gain error,
+        and isolates 5 kVrms vs 4.25 kVrms'
+      - The in-package isolated power stage exists (Si86Px, 0.5 W); an amplifier needs about 30 mW
+      - Sold with our gate drivers, isolators and isolated bias in the same charger
+      cons:
+      - TI has sold integrated-power isolated amplifiers since 2019, at a low list price ($1.65 at 1k)
+      - 'CMTI 50 kV/µs on our die vs 85 kV/µs (TI) and 100+ for SiC: needs a die change'
+      - Below about 80 A integrated Hall sensors (TMCS1123, Allegro, Melexis, Infineon) need no shunt and no supply at all
+      vs: TI AMC3301 / AMC3302-Q1 / AMC3306M05-Q1 and TMCS1123; ADI; Allegro; Infineon; Melexis; LEM modules
+    learn:
+    - age: 5
+      text: A charger has to know how much electricity flows, but the strong electricity must stay away from its small brain.
+        A special chip measures it through a safe wall.
+    - age: 10
+      text: The chip measures a tiny voltage across a small resistor (a shunt) that the current flows through, and sends the
+        answer across an insulating wall. The measuring side sits on the dangerous side, so it needs its own little power supply.
+    - age: 15
+      text: 'An isolated amplifier is judged by its error (gain error, offset, nonlinearity, and how they drift with temperature),
+        its isolation rating, its speed and how well it ignores fast voltage jumps (CMTI). The shunt adds its own error. Building
+        the power supply into the chip saves parts and space.'
+    - age: 20
+      text: The owner asked in the 23 Oct review whether there is a market for a shunt amplifier with a built-in DC-DC (and shunt).
+        There is, as TI sells several and uses them in its own 800 V charger designs. Built-in shunts exist only as Hall sensors with
+        the conductor in the package, up to about 80 A. On-board chargers, DC fast chargers, wallboxes and battery boxes are the
+        targets.
+    - age: 25
+      text: 'TI AMC3301 / AMC3302-Q1 (built-in DC/DC, 4.25 kVrms, $1.65 at 1k) and TMCS1123 (Hall, 80 A, ±1.4 %, about $2) set the
+        bar; Allegro, Melexis, Infineon and LEM cover Hall and modules. Our Si8921BD / Si8941BD match TI on accuracy (about ±0.5 %
+        total static error, AN1270) and beat it on noise and bandwidth, but need a separate supply and have lower CMTI. Proposal:
+        Si89xx die + Si86Px power in one reinforced automotive package; a built-in shunt only later.'
+    learn_links:
+    - label: Integrated isolated power
+      href: /engineering/integrated_power
+    - label: CMTI
+      href: /engineering/cmti_kv_us
+    - label: Basic vs reinforced isolation
+      href: /engineering/isolation_class
+    - label: Automotive grade
+      href: /engineering/qualification
+    - label: 'Interactive: CMTI vs the switching edge'
+      href: /visuals#cmti
+    - label: 'Library: isolation in the traction inverter'
+      href: /library/traction_asil_d
   - slug: iso7821dww-isolation
     title: 'Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit'
     kind: report

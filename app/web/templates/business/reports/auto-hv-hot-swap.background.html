@@ -1,0 +1,45 @@
+{% raw %}<h1>Hot-swap at 400 V and 800 V: background notes</h1>
+<p class="meta">23 Oct 2026. Every figure with its source and confidence (high = primary document read; med = trade press, forum or advocacy body; low = search snippet, a standard not read, or our own reading). “est” = our estimate, with its basis. Public data only: robots.txt read first, GET only, one request at a time, at least 5 s between ti.com requests, each page once. Standards are paid and were not read.</p>
+
+<h2>1. Competitor parts read</h2>
+<ul class="small rp-src">
+<li>1.1 · TPSI3050-Q1: “automotive reinforced isolated switch driver with integrated 10-V gate supply”; “combined with an external power switch, forms a complete isolated solid state relay (SSR)”; 10 V nominal gate drive, 1.5 / 3.0 A peak source / sink; “generates its own secondary bias supply from the power received from its primary side, so no isolated secondary supply bias is required”; two-wire mode 6.5–48 V or three-wire mode 3–5.5 V; 5000 Vrms withstand, reinforced, 1000 Vrms working, 12 kVpk surge, 7071 Vpk reinforced per DIN EN IEC; –40 to 125 °C; SO-MOD (DWZ) 8 pins; TI reference designs listed on the page: TIDA-050063 “High-voltage solid-state relay active precharge” (pre-charges large DC-link capacitors in HEV / EV, no microcontroller, 5 V supply), zero-cross switching and over-current / over-temperature protection SSR designs; TI article “Why pre-charge circuits are necessary in high voltage systems”; sister part TPSI3100-Q1 (17 V gate supply, dual isolated comparators). Price: TPSI3050QDWZRQ1 $4.23 / $3.449 / $2.711 / <b>$2.299</b> at 1 / 100 / 250 / 1,000 · TI product page, read 23 Oct 2026 · high — <a href="https://www.ti.com/product/TPSI3050-Q1" rel="noopener" target="_blank">ti.com/product/TPSI3050-Q1</a></li>
+<li>1.2 · TPSI2140-Q1: “1200-V, 50-mA, automotive isolated switch with 2-mA avalanche rating”; capacitive isolation with internal back-to-back MOSFETs, “a completely integrated solution requiring no secondary side power supply”; primary side 9 mA; ±1.2 kV standoff; supports system dielectric withstand (HiPot) tests and DC fast-charger surge currents up to 2 mA (2 mA for 5 s, 1 mA for 60 s); 8 mm primary-to-secondary; reference designs on the page: TIDA-01513 (automotive HV and isolation leakage measurement), TIDA-010232 (AFE for insulation monitoring in EV charging and solar), TIDA-010272 (1500 V rack monitor unit for storage); TI documents “A comparative analysis of insulation monitoring device (IMD) architectures in bidirectional onboard chargers” and “How solid-state relays simplify insulation monitoring designs”. Price $5.329 / $4.344 / $3.414 / <b>$2.896</b> at 1 / 100 / 250 / 1,000 · TI product page, read 23 Oct 2026 · high — <a href="https://www.ti.com/product/TPSI2140-Q1" rel="noopener" target="_blank">ti.com/product/TPSI2140-Q1</a></li>
+<li>1.3 · Infineon solid-state isolators, ADI and other isolated switch drivers; hot-swap and eFuse controllers of TI, ADI, Infineon, ST, onsemi and MPS; contactor, fuse and pyro-fuse makers (TE, Sensata, Panasonic, Littelfuse, Eaton, Mersen, Autoliv): named from our general knowledge, no page read in this run · low</li>
+</ul>
+
+<h2>2. Our parts</h2>
+<ul class="small rp-src">
+<li>2.1 · Si875x: “enables creating custom solid state relay (SSR) configurations”; “a floating secondary side dc voltage source is unnecessary as the product generates its own self contained gate drive output voltage”; output typically 8–12 V; Si8751 CMOS input, Si8752 diode-emulation input; intended for switching at or below 7.5 kHz; turn-on to 90 % about 500 µs (Si8751, 10 kΩ TT) with a 600 pF gate load · Skyworks AN1052 “Selecting a FET for use with the Si875x driver” (BizDev app-note cache) · high</li>
+<li>2.2 · Si8751AB-AS, Si8752AB-AS (automotive), Si8751AB-IS, Si8752AB-IS: Active, NB SOIC-8, 2.5 kVrms isolation rating; “a simple way to replace solid-state relays (SSRs) or electromechanical relays (EMRs)” · Skyworks catalogue in BizDev (data/catalog/skyworks_parts.yaml) · high</li>
+<li>2.3 · Library: “Si8751A / Si8752A automotive isolated FET drivers are in the Skyworks catalogue for DC-link active discharge or pre-charge switches, but are not imported in data/real” · <a href="/library/traction_asil_d">library topic traction_asil_d</a> · high (BizDev)</li>
+<li>2.4 · Sensing and drivers: Si8921BD-AS4 and Si8931D-AS4 (5 kVrms reinforced, SSO-8, automotive), Si8941BD (modulator); 154 isolated gate drivers in BizDev (Si828x DESAT, Si829x ASIL D); Si88xx isolator + DC-DC controller (automotive, 3.75 kVrms basic); Si86Px isolators with integrated power (samples, Mar 2026) · BizDev parts data · high</li>
+<li>2.5 · Si834x isolated smart switch: industrial (-IF) low-voltage output switch, not for high-voltage hot-plug · Skyworks catalogue in BizDev · high</li>
+</ul>
+
+<h2>3. Data centres</h2>
+<ul class="small rp-src">
+<li>3.1 · NVIDIA moves to 800 V DC for 1 MW racks from 2027 (Kyber) · NVIDIA technical blog, 20 May 2025, read 21 Oct 2026 for the extra-wide isolation case (its background 3.3) · high — <a href="https://developer.nvidia.com/blog/nvidia-800-v-hvdc-architecture-will-power-the-next-generation-of-ai-factories/" rel="noopener" target="_blank">developer.nvidia.com</a></li>
+<li>3.2 · TI's 800 V DC line-up includes an 800 V hot-swap controller, an 800 V to 6 V isolated GaN converter (97.6 % peak), a 30 kW 800 V AC/DC supply and an 800 V capacitor bank · eeNews Europe, 19 Mar 2026, read 21 Oct 2026 (extra-wide isolation case, background 3.4) · med — <a href="https://www.eenewseurope.com/en/ti-800-vdc-architecture-ai-data-centres" rel="noopener" target="_blank">eenewseurope.com</a></li>
+<li>3.3 · Data-centre zones and creepage at 800 V DC: power shelves, BBUs and sidecars in OVC II, central 800 V links in OVC III; pollution degree 2 · Skyworks AN1456 (Sep 2026, BizDev cache) · high</li>
+<li>3.4 · Owner, 22 Oct 2026: “eFuse and hot swap are extremely interesting for data centers. Any other areas to expand in?” · BizDev review log</li>
+</ul>
+
+<h2>4. Pain points and numbers (our reading)</h2>
+<ul class="small rp-src">
+<li>4.1 · Inrush example: 500 µF at 800 V stores ½·500 µF·(800 V)² = 160 J; 800 V / 50 mΩ ≈ 16 kA first peak; with 50 Ω: 16 A peak, R·C = 25 ms, about 75 ms to 95 %; the resistor absorbs about the stored energy (160 J) per pre-charge · low (est; capacitance and loop resistance are typical assumptions, not from a source)</li>
+<li>4.2 · DC arcs (no current zero), contactor blow-out and gas-filled chambers, limited breaks under load, welding after inrush or short; HVIL with first-breaking pins · low (common engineering knowledge; not researched in this run)</li>
+<li>4.3 · Solid-state vs contactor (losses, microsecond fault turn-off, no galvanic gap, need for an isolated driver and sensing) · low (est)</li>
+<li>4.4 · 400 V class about 250–450 V, 800 V class about 550–900 V; fast chargers to 1000 V · low (common figures; not researched in this run)</li>
+</ul>
+
+<h2>5. Standards (summary level, not read)</h2>
+<ul class="small rp-src">
+<li>5.1 · ISO 6469-3 (Electrically propelled road vehicles – Safety specifications – Part 3: Electrical safety): voltage class B = above 60 V DC / 30 V AC up to 1500 V DC / 1000 V AC; protection against electric shock under single-fault conditions; insulation resistance commonly quoted as at least 100 Ω/V (DC) and 500 Ω/V (AC) · low (standard not read)</li>
+<li>5.2 · LV 123 (German OEM specification for electrical characteristics and tests of HV components) and its successor ISO 21498-1 / -2 (voltage class B components: voltage sub-classes; electrical tests) · low (not read)</li>
+<li>5.3 · UN ECE R100, FMVSS 305 (post-crash electrical safety), IEC 61851-23 (DC charging station), ISO 26262 (functional safety) · low (not read)</li>
+</ul>
+
+<h2>6. Requests made</h2>
+<p class="small">23 Oct 2026, all GET, one at a time, shared with the current-sensing case (iso-current-sense-charging): www.ti.com robots.txt, TPSI3050-Q1, TPSI2140-Q1, AMC3301, TMCS1123; www.marketsandmarkets.com robots.txt and one press release. Seven requests in all, no block. Everything else came from BizDev data and cached Skyworks app notes.</p>
+{% endraw %}

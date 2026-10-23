@@ -110,3 +110,70 @@ bands:
   - {id: ieee_ka, name: "Ka band (27-40 GHz)", group: ieee, mode: "", ranges: [[27000, 40000, Ka]], uses: "5G mmWave, satcom uplink"}
   - {id: ieee_v, name: "V band (40-75 GHz)", group: ieee, mode: "", ranges: [[40000, 75000, V]], uses: "60 GHz, backhaul"}
   - {id: ieee_w, name: "W band (75-110 GHz)", group: ieee, mode: "", ranges: [[75000, 110000, W]], uses: "automotive radar, E-band backhaul (71-86 GHz)"}
+
+# ---- band types: the clickable chips on the Spectrum view (owner 23 Oct 2026: "make the types like FM clickable, so
+# I can select or deselect the range"). A band can belong to more than one type (2.4 GHz ISM is Wi-Fi and BLE).
+types:
+  - {id: am, label: AM, bands: [am]}
+  - {id: fm, label: FM, bands: [fm]}
+  - {id: dab, label: DAB, bands: [dab, dab_l]}
+  - {id: tv, label: "TV, weather, sat radio", bands: [dvbt, noaa, sdars]}
+  - {id: cell_low, label: "Cellular < 1 GHz", bands: [b71, b12, b13, b14, b28, b20, b5, b26, b8]}
+  - {id: cell_mid, label: "Cellular 1-2.7 GHz", bands: [b11, b32, b3, b66, b2, b39, b1, b34, b40, b30, b41, b7, b38]}
+  - {id: cell_c, label: "5G C-band", bands: [b42, b48, n78, n77, n79, b46, n104]}
+  - {id: mmw, label: "5G mmWave", bands: [n258, n257, n261, n260, n259, n262]}
+  - {id: gnss, label: GNSS, bands: [gnss_l5, gnss_e5b, gnss_l2, gnss_e6, gnss_l1, gnss_b1i, gnss_g1]}
+  - {id: wifi, label: Wi-Fi, bands: [ism24, wifi5, wifi6, wigig]}
+  - {id: ble, label: "Bluetooth / BLE", bands: [ism24]}
+  - {id: subghz, label: "Sub-GHz IoT", bands: [ism433, srd868, ism915]}
+  - {id: uwb, label: UWB, bands: [uwb5, uwb9]}
+  - {id: v2x, label: V2X, bands: [v2x]}
+  - {id: nfc, label: "NFC / RFID", bands: [nfc, uhf_rfid]}
+  - {id: satcom, label: Satcom, bands: [sat_l, sat_c, sat_ku, sat_ka]}
+  - {id: radar, label: Radar, bands: [radar_s, radar_c, radar_x, radar_24, radar_77]}
+  - {id: ieee, label: "IEEE letter bands", bands: [ieee_l, ieee_s, ieee_c, ieee_x, ieee_ku, ieee_k, ieee_ka, ieee_v, ieee_w], hide: true}
+
+# ---- applications (owner 23 Oct 2026: "have the bands sort by application: Mobile, Drones, Automotive and so on;
+# choose 10 applications where RF bands are relevant"). bands: what a typical product of that kind receives or sends
+# (BizDev's own summary, est); note: where our parts sit.
+applications:
+  - id: phone
+    label: Mobile phone
+    bands: [b71, b12, b13, b14, b28, b20, b5, b8, b3, b66, b2, b39, b1, b40, b41, b7, b38, n78, n77, n79, n258, n257, n260, gnss_l1, gnss_l5, ism24, wifi5, wifi6, uwb5, uwb9, nfc, sat_l, fm]
+    note: "Up to 30 bands in one phone: PA modules, diversity receive modules, multiplexers and BAW filters, antenna switches and tuners, Wi-Fi and BLE front ends, GNSS LNAs, UWB."
+  - id: car_info
+    label: Automotive infotainment
+    bands: [am, fm, dab, dab_l, noaa, sdars, dvbt, gnss_l1, gnss_l5, ism24, wifi5]
+    note: "Head unit and shark fin: AM / FM / DAB tuners (Si47xx), antenna LNAs and filters, GNSS LNAs, Wi-Fi and BLE for phone projection."
+  - id: car_adas
+    label: Automotive ADAS / radar
+    bands: [radar_24, radar_77, gnss_l1, gnss_l5, uwb5, uwb9, wigig]
+    note: "Radar at 76-81 GHz (single chip), dual-band GNSS for lane-level position, UWB and 60 GHz radar for in-cabin presence and child detection."
+  - id: v2x
+    label: V2X / connected car
+    bands: [v2x, wifi5, b20, b8, b3, b1, b7, b5, b2, b66, b12, b13, b14, b71, n78, n77, gnss_l1, gnss_l5]
+    note: "Telematics unit: LTE / 5G front end, 5.9 GHz C-V2X with a coexistence filter against 5.8 GHz Wi-Fi, GNSS for timing and position."
+  - id: drone
+    label: Drones
+    bands: [ism24, wifi5, ism433, srd868, ism915, gnss_l1, gnss_l5, gnss_g1, b20, b3, b7]
+    note: "Control link (2.4 GHz or 868 / 915 MHz), video downlink (5.8 GHz), multi-constellation GNSS, optional LTE: small PAs, LNAs and front-end modules."
+  - id: wearable
+    label: Wearables
+    bands: [ism24, gnss_l1, gnss_l5, nfc, uwb5, uwb9, b12, b13, b20, b8, b3, b2, b66, b1, b28, b5]
+    note: "BLE first, then GNSS, NFC payment, UWB and LTE-M / NB-IoT in watches: low-power front ends and very small filters."
+  - id: home
+    label: Smart home / IoT
+    bands: [ism24, wifi5, wifi6, ism433, srd868, ism915, b12, b13, b20, b8, nfc, uwb5]
+    note: "Wi-Fi, Thread / Zigbee / Matter at 2.4 GHz, sub-GHz LoRa and Wi-SUN, NB-IoT: Wi-Fi front-end modules, 2.4 GHz and sub-GHz PAs and LNAs."
+  - id: ap
+    label: Wi-Fi access point / router
+    bands: [ism24, wifi5, wifi6, wigig, b40, b41, b7, b46, n79]
+    note: "Tri-band Wi-Fi 6E / 7 front-end modules and BAW coexistence filters; the cellular neighbours (B40, B41, B7, n79) are why the filters are needed."
+  - id: sat
+    label: Satellite / GNSS
+    bands: [gnss_l5, gnss_e5b, gnss_l2, gnss_e6, gnss_l1, gnss_b1i, gnss_g1, sat_l, sat_c, sat_ku, sat_ka, sdars]
+    note: "GNSS receivers (all bands for survey and RTK), L-band IoT and NTN, Ku / Ka user terminals and gateways: LNAs, LNBs, GaN PAs."
+  - id: industrial
+    label: Industrial / ISM
+    bands: [ism433, srd868, ism915, ism24, wifi5, uhf_rfid, nfc, b48, n78, radar_24, wigig]
+    note: "Wireless sensors, RFID readers, private LTE / 5G (CBRS, n78), 24 GHz level and motion radar: rugged PAs, LNAs and switches."

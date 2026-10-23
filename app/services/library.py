@@ -194,6 +194,8 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link
     "nf": ("Cascaded noise figure and sensitivity", "/visuals#nf",
            ("noise figure", "NF", "LNA", "LNAs", "sensitivity", "C/N0")),
     "ip3": ("IP3 and intermodulation", "/visuals#ip3", ("IP3", "IIP3", "OIP3", "intermodulation", "linearity", "P1dB")),
+    "fmim": ("FM intermodulation: where interference can come from", "/visuals#fmim",
+             ("FM intermodulation", "image frequency", "image rejection")),
     "vswr": ("Mismatch, VSWR and the standing wave", "/visuals#vswr",
              ("VSWR", "return loss", "impedance mismatch", "mismatch loss")),
     "filter": ("Band-pass filter: order, bandwidth, rejection", "/visuals#filter",

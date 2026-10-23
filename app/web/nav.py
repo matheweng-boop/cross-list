@@ -15,18 +15,19 @@ NAV = (
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),
     )),
+    # owner, 23 Oct 2026: Systems & applications = parts and knowledge we have; Opportunities = gaps and new
+    # technology; Future growth = the business side. Systems first, then applications, workspace, designs, cross-sell.
     ("systems", "Systems & applications", (
-        ("Application library", "/blocks", "Reference architectures and their coverage"),
-        ("Systems library", "/library", "Deep dives per system: diagrams, design rules, trends, links to basics"),
+        ("Systems library", "/library", "Full systems and their sub-systems, with deep dives"),
+        ("Application library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
-        ("Cross-sell & gaps", "/blocks/cross-sell", "What to sell more of, the gaps to fill and new technology"),
         ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
-        ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
-    )),
-    ("opportunities", "Opportunities", (
+        ("Cross-sell", "/blocks/cross-sell", "Which of our parts go together in a system, sub-system or diagram"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
-        ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
+    )),
+    ("opportunities", "Opportunities", (
+        ("Gaps & new technology", "/business/opportunities", "Functions with no part of ours yet: gaps and new tech"),
         ("Competitive analytics", "/business/competitors", "Competitor profiles: size, products, strengths, overlap"),
         ("Risks", "/business/risks", "Competing technologies and products that could endanger our solutions"),
     )),
@@ -34,6 +35,7 @@ NAV = (
         ("Research & ideas", "/business/reports", "Research reports and preliminary product ideas and cases"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
         ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
+        ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
     )),
     ("knowledge", "Engineering knowledge", (
         ("Interactive visuals", "/visuals", "Sliders and live graphs: RF links, noise, filters, CMTI; RF band chart"),
@@ -42,15 +44,12 @@ NAV = (
 )  # fmt: skip
 
 UTILITY = ("manage", "Data management", (
-    ("Overview", "/manage/overview", "Review status per data set and what is waiting for you"),
+    ("Overview", "/manage/overview", "Everything at a glance: raw data, today's feedback, what waits for you"),
     ("Schedule", "/manage/schedule", "What runs continuously, daily, weekly; what tonight's run picks up"),
-    ("Verify next", "/manage/verify", "A small batch to check: crosses, diagrams and data that vouch for the rest"),
-    ("Requests & reviews", "/manage/reviews", "Part requests, diagram feedback and data reviews"),
-    ("Site feedback", "/manage/feedback", "Open comments from the Feedback button, with responses"),
+    # owner, 23 Oct 2026: Verify next, requests, site feedback and guest input as one item with tabs
+    ("Site data", "/manage/verify", "Verify next, requests, diagram feedback, site feedback and guest input"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
-    ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
-    ("Guest input", "/manage/guest-input", "What invited guests sent: approve or reject each item"),
     ("People & invites", "/manage/people", "Invite guests, see their passkeys, remove someone"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
 ))  # fmt: skip
@@ -68,10 +67,9 @@ PLACES = {
     "/parts": ("products", "/parts"),
     "/compare": ("products", "/compare"),
     "/portfolio": ("products", "/portfolio"),
-    "/broadcast/configurations": ("systems", "/broadcast"),  # owner, 23 Oct 2026: a tab of Radio & audio
-    "/broadcast": ("systems", "/broadcast"),
-    "/blocks/feedback": ("manage", "/manage/reviews"),
-    "/blocks/area-requests": ("manage", "/manage/reviews"),
+    "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application
+    "/blocks/feedback": ("manage", "/manage/verify"),
+    "/blocks/area-requests": ("manage", "/manage/verify"),
     "/blocks/coverage": ("systems", "/blocks"),
     "/blocks/new": ("systems", "/blocks/new"),
     "/blocks/": ("systems", "/blocks/new"),
@@ -80,13 +78,15 @@ PLACES = {
     "/reviews": ("products", "/reviews"),  # owner, 23 Oct 2026: reviews belong to parts
     "/business/applications": ("systems", "/blocks"),
     "/blocks/cross-sell": ("systems", "/blocks/cross-sell"),
-    "/business/explorer": ("systems", "/blocks/cross-sell"),
-    "/business/gaps": ("systems", "/blocks/cross-sell"),
-    "/business/technology": ("systems", "/blocks/cross-sell"),
-    "/business/evidence": ("systems", "/blocks/cross-sell"),
-    "/business/attach": ("opportunities", "/business/attach"),
-    "/business/rf-coverage": ("opportunities", "/business/rf-coverage"),
-    "/business/automotive": ("opportunities", "/business/automotive"),
+    "/business/opportunities": ("opportunities", "/business/opportunities"),
+    "/business/explorer": ("opportunities", "/business/opportunities"),
+    "/business/gaps": ("opportunities", "/business/opportunities"),
+    "/business/technology": ("opportunities", "/business/opportunities"),
+    "/business/evidence": ("opportunities", "/business/opportunities"),
+    "/business/attach": ("systems", "/blocks/cross-sell"),  # owner, 23 Oct 2026: parts we have
+    "/business/rf-coverage": ("systems", "/business/rf-coverage"),
+    "/business/risks": ("opportunities", "/business/risks"),
+    "/business/automotive": ("systems", "/business/automotive"),
     "/business/competitors": ("opportunities", "/business/competitors"),
     "/business/markets": ("growth", "/business/markets"),
     "/business/customers": ("growth", "/business/markets"),
@@ -95,23 +95,25 @@ PLACES = {
     "/business/explore": ("growth", "/business/shortlist"),
     "/business/shortlist": ("growth", "/business/shortlist"),
     "/business/capabilities": ("knowledge", "/knowledge"),
-    "/business/data": ("manage", "/business/tam"),
-    "/business/tam": ("manage", "/business/tam"),
+    "/business/data": ("growth", "/business/tam"),
+    "/business/tam": ("growth", "/business/tam"),  # owner, 23 Oct 2026: the business side
     "/business/quality": ("manage", "/business/quality"),
     "/business/validation": ("manage", "/business/quality"),
     "/business/method": ("manage", "/business/method"),
-    "/business": ("opportunities", "/business/rf-coverage"),
+    "/business": ("opportunities", "/business/opportunities"),
     "/rules": ("manage", "/business/method"),
-    "/requests": ("manage", "/manage/reviews"),
-    "/manage/feedback": ("manage", "/manage/feedback"),
+    "/requests": ("manage", "/manage/verify"),
+    "/manage/feedback": ("manage", "/manage/verify"),
     "/manage/verify": ("manage", "/manage/verify"),
+    "/manage/site-data": ("manage", "/manage/verify"),
+    "/manage/reviews": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage/overview": ("manage", "/manage/overview"),
-    "/manage/guest-input": ("manage", "/manage/guest-input"),
+    "/manage/guest-input": ("manage", "/manage/verify"),
     "/manage/people": ("manage", "/manage/people"),
     "/owner": ("manage", "/manage/people"),
     "/manage/schedule": ("manage", "/manage/schedule"),
-    "/manage": ("manage", "/manage/reviews"),
+    "/manage": ("manage", "/manage/overview"),
     "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications
     "/visuals": ("knowledge", "/visuals"),
     "/rf-bands": ("knowledge", "/visuals"),
@@ -131,10 +133,12 @@ TABS = (
         ("Portfolio coverage", "/business/applications"),
     ),
     (("Markets", "/business/markets"), ("Customers", "/business/customers")),
-    (("Cross-sell & gaps", "/blocks/cross-sell"), ("Detailed table", "/business/explorer/table")),
+    (("By system", "/blocks/cross-sell"), ("By part", "/business/attach")),
+    (("Gaps & new technology", "/business/opportunities"), ("Detailed table", "/business/explorer/table")),
     (("Shortlist", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
-    (("Review queue", "/manage/reviews"), ("Part requests", "/requests"), ("Diagram feedback", "/blocks/feedback"),
-     ("Area requests", "/blocks/area-requests")),
+    (("Verify next", "/manage/verify"), ("Review queue", "/manage/reviews"), ("Part requests", "/requests"),
+     ("Diagram feedback", "/blocks/feedback"), ("Area requests", "/blocks/area-requests"),
+     ("Site feedback", "/manage/feedback"), ("Guest input", "/manage/guest-input")),
     (("Data quality", "/business/quality"), ("Human validation", "/business/validation")),
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),
     (("All visuals", "/visuals"), ("RF bands", "/rf-bands")),
@@ -151,6 +155,13 @@ TABS = (
 
 def _sections():
     return (*NAV, UTILITY)
+
+
+def owner_page(href: str) -> bool:
+    """A menu entry only the owner may open (e.g. TAM estimates under Future growth): hidden from guests."""
+    from app.auth.access import owner_only
+
+    return owner_only(href.split("?")[0], "GET")
 
 
 def place(path: str) -> tuple[str, str]:

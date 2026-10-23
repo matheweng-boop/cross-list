@@ -1,0 +1,272 @@
+# Systems and their sub-systems (owner, 23 Oct 2026): the Systems library and the Application library group
+# their content by these. Each library diagram (data/blocks/templates.yaml) is listed by its exact name; a
+# diagram may sit in more than one sub-system. Diagrams not listed appear under "Other" by their category.
+# elements: what the sub-system is made of (shown as chips); topics: Systems library deep dives
+# (data/library/topics/<key>.yaml); links: other pages that belong to the sub-system.
+systems:
+  - key: automotive
+    title: "Automotive"
+    summary: "Everything electronic in a car: access, radio, connectivity, sensing, powertrain, battery and charging."
+    subsystems:
+      - key: car-access
+        title: "UWB in the car: access and cabin sensing"
+        summary: "Digital key, hands-free entry and in-cabin presence detection."
+        elements:
+          - "Digital key / UWB anchors"
+          - "BLE phone-as-a-key"
+          - "NFC card key"
+          - "Kick sensor (hands-free tailgate)"
+          - "Interior radar (child presence)"
+        diagrams:
+          - "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)"
+          - "Automotive phone-as-a-key (PaaK) module with BLE satellite modules (TI)"
+          - "Automotive in-cabin 60 GHz radar module (occupancy / child presence / vital signs) (TI)"
+        topics: [auto_uwb]
+      - key: car-radio
+        title: "Car radio"
+        summary: "Broadcast reception in the head unit or a separate tuner box."
+        elements:
+          - "Tuner (AM / FM)"
+          - "Digital-radio demodulator (DAB / HD Radio)"
+          - "Antenna amplifier and diversity"
+          - "Audio amplifier"
+        diagrams:
+          - "Car radio tuner system"
+          - "Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB) (TI)"
+          - "Automotive connected radio / entry infotainment (AM/FM/DAB tuner + Wi-Fi/BT + MPU) (NXP)"
+        links:
+          - ["Tuners & demodulators", "/broadcast"]
+          - ["Radio configurations", "/broadcast/configurations"]
+      - key: telematics-v2x
+        title: "Telematics and V2X"
+        summary: "The car's links to the network, to other cars and to satellites."
+        elements:
+          - "5G / LTE front end"
+          - "V2X 5.9 GHz (C-V2X, 802.11p)"
+          - "GNSS"
+          - "Car Wi-Fi and Bluetooth"
+          - "Satellite NTN and eCall"
+          - "Roof antenna module"
+        diagrams:
+          - "Automotive telematics & infotainment RF (Skyworks)"
+          - "Automotive telematics control unit (TCU) / V2X module (TI)"
+          - "V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)"
+          - "V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)"
+          - "Automotive telematics (Dimensity Auto Connect MT2739: 5G-Advanced + NTN satellite) (MediaTek)"
+          - "Automotive telematics / connectivity (Snapdragon Auto 5G Modem-RF Gen 2, QCA6696 Wi-Fi/BT, C-V2X 9150) (Qualcomm)"
+        topics: [tcu_rf, v2x_frontend, gnss_frontend, roof_coexistence]
+      - key: adas
+        title: "ADAS and sensing"
+        summary: "Driver assistance: radar, camera and lidar into a domain controller."
+        elements:
+          - "Front and corner radar (77 GHz)"
+          - "Camera"
+          - "Lidar"
+          - "Domain controller"
+        diagrams:
+          - "ADAS domain controller"
+          - "ADAS domain controller (camera / radar / lidar fusion) (TI)"
+          - "Automotive 77 GHz radar (transceiver + radar MCU / one-chip SoC) (NXP)"
+          - "Automotive LiDAR module (laser driver, TIA / ADC / TDC receive chain, beam steering, processor + FPGA) (TI)"
+      - key: powertrain
+        title: "Electric powertrain"
+        summary: "Traction inverter and the controls and drives around it."
+        elements:
+          - "Traction inverter"
+          - "Isolated gate drivers"
+          - "E-compressor"
+          - "Vehicle control unit"
+          - "Fuel cell control"
+        diagrams:
+          - "EV traction inverter"
+          - "HEV/EV traction inverter (TI reference)"
+          - "Automotive 48 V BLDC drive, 1 kW (TI TIDA-00281)"
+          - "Automotive HVAC e-compressor drive (HV battery, isolated CAN/LIN, 3-phase IGBT/MOSFET inverter) (TI)"
+          - "HEV/EV vehicle control unit (VCU: application processor + safety MCU, CAN / FlexRay / Ethernet, sensor supplies) (TI)"
+          - "Fuel cell control unit (FCCU: FC boost DC/DC control + fuel control system, cell monitoring) (TI)"
+          - "Three-level T-type traction inverter (SiC + GaN bidirectional switches, 800 V) (Renesas)"
+          - "xEV traction inverter with inductive position sensor (IPS) or resolver (Renesas)"
+        topics: [traction_asil_d]
+      - key: battery-power
+        title: "Battery and power distribution"
+        summary: "High- and low-voltage batteries and how power reaches the loads."
+        elements:
+          - "HV battery management"
+          - "12 V / 48 V battery"
+          - "HV-to-LV DC/DC"
+          - "Power distribution box"
+        diagrams:
+          - "EV high-voltage battery system (wired cell supervision, BDU, BMU) (TI)"
+          - "EV high-voltage battery management system (BMU + cell monitoring unit + battery junction box) (NXP)"
+          - "EV battery management system (daisy-chained battery front ends, ASIL-D) (Renesas)"
+          - "Automotive low-voltage (12 V / 48 V Li-ion) battery system with BMS, pyrofuse and contactors (TI)"
+          - "HEV/EV HV-to-LV DC/DC converter (phase-shifted full bridge, HV battery to 12 V) (TI)"
+          - "Automotive 12 V / 48 V power distribution box (smart fuses, load drivers) (TI)"
+      - key: charging
+        title: "Charging"
+        summary: "On-board chargers and the chargers outside the car."
+        elements:
+          - "On-board charger"
+          - "AC wallbox"
+          - "DC fast charger"
+          - "Wireless charging pad"
+        diagrams:
+          - "HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)"
+          - "6.6 kW single-stage bidirectional on-board charger (GaN, DAB) (Renesas)"
+          - "3.3 kW integrated OBC + HV-to-LV DC/DC (shared transformer, GaN) (Renesas)"
+          - "AC EV charging station / wallbox (Level 2 residential) (TI)"
+          - "AC EV charging station (wallbox, level 1-3; metrology MCU + host controller, ISO 15118 PLC) (NXP)"
+          - "Mode 3 AC EV charger wallbox (single/three-phase, metering + PLC) (Renesas)"
+          - "DC fast charging station (power module + controller + HMI) (TI)"
+          - "DC fast charging station power module (3-phase PFC + isolated DC/DC, 400-800 V out) (Renesas)"
+          - "Wireless (inductive) EV charging station, ground assembly (PFC + HF inverter + coil, FOD / LOP / alignment, HMI) (TI)"
+      - key: cockpit
+        title: "Cockpit and body"
+        summary: "Displays and controls in front of the driver."
+        elements:
+          - "Instrument cluster"
+          - "Head-unit display"
+        diagrams:
+          - "Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD) (NXP)"
+  - key: datacenter
+    title: "Data center"
+    summary: "Power into and through the rack, backup, compute and the network."
+    subsystems:
+      - key: rack-power
+        title: "Rack power"
+        summary: "From the grid to the voltage the processors need."
+        elements:
+          - "AC/DC power supply (54 V)"
+          - "800 V DC distribution"
+          - "Isolated converters in the rack"
+        diagrams:
+          - "Server / telecom AC/DC power supply unit (54 V output, with 12 V standby) (TI)"
+          - "AI data-center 800 V DC power (grid to 800 V DC, busway with protection, energy storage, 800 V to 6-12 V isolated converters in the rack) (after NVIDIA, TI and Skyworks public material)"
+      - key: backup
+        title: "Backup and energy storage"
+        summary: "Keeps the rack running when the grid fails."
+        elements:
+          - "Battery backup unit (BBU)"
+          - "UPS"
+          - "Battery energy storage"
+        diagrams:
+          - "Data-center / telecom battery backup unit (BBU: bidirectional charge / backup DC/DC, fuel gauge, ORing / hot-swap) (TI)"
+          - "Bidirectional 3 kW telecom UPS power (-48 V bus <-> battery, 3-phase 4-switch buck-boost) (Renesas)"
+          - "Energy storage system battery (multimodule, daisy chain) - rack BMS (TI)"
+          - "Battery energy storage system, 1500 V DC (rack BMS, DC block and bidirectional three-level PCS to the MV transformer) (after TI, Wood Mackenzie and Skyworks public material)"
+      - key: servers
+        title: "Servers and compute"
+        summary: "The board: processor power, management controller."
+        elements:
+          - "Processor voltage regulators"
+          - "Board management controller"
+        diagrams:
+          - "Server motherboard (x86 CPU, PCH, BMC, VR power) (TI)"
+      - key: network
+        title: "Networking and Wi-Fi"
+        summary: "Enterprise access points and wired networking."
+        elements:
+          - "Enterprise Wi-Fi access point"
+          - "PoE powered devices"
+        diagrams:
+          - "Enterprise / premium Wi-Fi access point (Dragonwing NPro A8 Elite, Wi-Fi 8) (Qualcomm)"
+          - "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
+  - key: drones
+    title: "Drones"
+    summary: "Flight control, motors and the radio links to the pilot and the network."
+    subsystems:
+      - key: flight
+        title: "Flight control and motors"
+        summary: "Flight controller, sensors and the motor drives."
+        elements:
+          - "Flight controller"
+          - "Motor drives (ESC)"
+          - "Battery and power"
+        diagrams:
+          - "Drone flight controller and motor drives (quadcopter)"
+      - key: radio-links
+        title: "Radio links"
+        summary: "Remote control, video downlink, GNSS and Remote ID."
+        elements:
+          - "Remote control link"
+          - "Video downlink"
+          - "GNSS"
+          - "Remote ID"
+        diagrams:
+          - "Drone radio links (remote control, video, GNSS, Remote ID)"
+      - key: cellular-link
+        title: "Cellular link (beyond line of sight)"
+        summary: "4G / 5G for flights beyond visual range."
+        elements:
+          - "4G / 5G modem front end"
+        diagrams:
+          - "Drone with 4G / 5G link (beyond visual line of sight)"
+  - key: cellular
+    title: "Cellular"
+    summary: "Phones, wearables and devices, and the network that serves them."
+    subsystems:
+      - key: radio-unit
+        title: "Base station radio units"
+        summary: "Macro and massive-MIMO radios."
+        elements:
+          - "Power amplifier"
+          - "Low-noise amplifier and switch"
+          - "Filters"
+          - "Transceiver and DFE"
+        diagrams:
+          - "Macro base station radio unit, TDD (Skyworks)"
+          - "Massive MIMO radio (Skyworks)"
+          - "5G active antenna system / massive MIMO radio (RF-sampling sub-6 GHz) (TI)"
+          - "5G massive MIMO base station RF front end (Airfast) (NXP)"
+          - "5G O-RAN radio unit / Digital Airfast (4T4R) - baseband, DFE, PA, LNA, timing (NXP)"
+      - key: small-cell
+        title: "Small cells and repeaters"
+        summary: "Low-power cells and signal boosters."
+        elements:
+          - "Small cell radio"
+          - "Repeater"
+        diagrams:
+          - "Small cell base station (Skyworks)"
+          - "Small cell base station (with Wi-Fi front end) (TI)"
+          - "5G small cell / femtocell (sub-6 GHz 4T4R ISC and mmWave ISC) (NXP)"
+          - "RF repeater / signal booster with IF translation (shared LO, IF filtering and gain control) (Mini-Circuits)"
+      - key: transport
+        title: "Timing, baseband and transport"
+        summary: "Baseband units, timing, routers and backhaul."
+        elements:
+          - "Baseband unit"
+          - "Timing and clocks"
+          - "Cell-site router"
+          - "Microwave backhaul"
+        diagrams:
+          - "Wireless infrastructure baseband unit (BBU: -48 V input, CPU / FPGA, CPRI / eCPRI radio ports, network timing) (TI)"
+          - "eCPRI massive-MIMO radio unit - timing / clock tree (system synchronizer, fanout, RF synthesizers) (Renesas)"
+          - "Cell site gateway router (switch ASIC, 10G / 25G / 100G optical ports, IEEE 1588 / SyncE timing, N+1 PSU) (TI)"
+          - "Outdoor microwave backhaul unit (ODU: modem ASIC + RF up/down-conversion chain, diplexer, PoE / -48 V, antenna alignment motor) (TI)"
+      - key: devices
+        title: "Phones and wearables"
+        summary: "Modem-to-antenna in phones, watches and tablets."
+        elements:
+          - "Cellular front end"
+          - "Antenna switching and tuning"
+          - "Wi-Fi / BT / UWB sockets"
+        diagrams:
+          - "Smartphone antenna switching (Skyworks)"
+          - "Smartphone peripheral sockets (Wi-Fi FEM, NFC + SE, UWB, charging, protection) (NXP)"
+          - "5G flagship smartphone (Dimensity 9400) - cellular, GNSS, Wi-Fi 7 / BT front-end sockets (MediaTek)"
+          - "5G smartphone modem-to-antenna (Snapdragon X80 / X85 Modem-RF) (Qualcomm)"
+          - "4G LTE smartwatch with always-on co-processor (Snapdragon W5+ Gen 1) (Qualcomm)"
+          - "5G RedCap smartwatch with satellite NB-NTN, UWB and dual-band GNSS (Snapdragon Wear Elite) (Qualcomm)"
+          - "Smartwatch / wearable (BLE + LTE + GPS, PPG / ECG sensing) (TI)"
+          - "Multimedia tablet (cellular + Wi-Fi, USB-C) (TI)"
+      - key: fwa-iot
+        title: "Fixed wireless and IoT"
+        summary: "Home 5G routers, hotspots and asset trackers."
+        elements:
+          - "FWA / hotspot front end"
+          - "LTE-M / NB-IoT tracker"
+        diagrams:
+          - "5G FWA / Mi-Fi CPE (T930) - modem-RF with 3Tx / 8Rx, GNSS (MediaTek)"
+          - "5G fixed-wireless-access CPE (Dragonwing FWA Gen 5 / Gen 6 Elite, QTM567 mmWave) (Qualcomm)"
+          - "Smart asset tracker (GNSS + cellular + BLE / Wi-Fi) (TI)"
+          - "Global asset tracker - LTE-M / NB-IoT / EGPRS with GEO satellite NTN (9205S modem, QTS110 tracker) (Qualcomm)"

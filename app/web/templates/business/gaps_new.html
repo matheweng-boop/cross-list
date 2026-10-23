@@ -1,38 +1,24 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import about, company_switch, crowd, path_chip, push, score_chip with context %}
-{% block title %}Cross-sell & gaps{% endblock %}
+{% block title %}Gaps & new technology{% endblock %}
 {% block content %}
-<h1>Cross-sell &amp; gaps</h1>
-<p class="subtitle muted">Where {{ co_label }} can win more: products to sell into more designs, gaps we could fill on our own technology, and functions that need new technology. “Needed in” counts the reference diagrams ({{ n_library }} library, {{ n_background }} background) that use the function.</p>
-<div class="scope-bar small">{{ company_switch('/blocks/cross-sell', co, companies) }}</div>
+<h1>Gaps &amp; new technology</h1>
+<p class="subtitle muted">Functions the reference diagrams need where {{ co_label }} has no part yet: gaps we could fill on our own technology, and functions that need new technology. “Needed in” counts the reference diagrams ({{ n_library }} library, {{ n_background }} background) that use the function. What we already sell is under <a href="/blocks/cross-sell">Systems &amp; applications › Cross-sell</a>.</p>
+<div class="scope-bar small">{{ company_switch('/business/opportunities', co, companies) }}</div>
 <nav class="csg-toc small" aria-label="On this page">
-  <a href="#sell">1 · Sell what we have <small>{{ sell|length }}</small></a>
-  <a href="#gaps">2 · Gaps to fill <small>{{ gaps|length }}</small></a>
-  <a href="#new">3 · New technology <small>{{ new|length }}</small></a>
+  <a href="#gaps">1 · Gaps to fill <small>{{ gaps|length }}</small></a>
+  <a href="#new">2 · New technology <small>{{ new|length }}</small></a>
 </nav>
 
 {% macro more(items, n) %}{% if items|length > n %}<details class="csg-more small"><summary>Show {{ items|length - n }} more</summary>{{ caller() }}</details>{% endif %}{% endmacro %}
-
-{% macro sell_card(e) %}<article class="csg-card"><b>{{ e.label }}</b>
-  <small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }} · {{ e.markets[:3]|join(', ') }}{% if e.markets|length > 3 %} +{{ e.markets|length - 3 }}{% endif %}</small>
-  {% if e.requalify %}<small class="csg-flag">Automotive designs need it: qualify a part</small>{% endif %}
-  <small><a href="/business/attach?fn={{ e.fn|urlencode }}&amp;co={{ co }}">What sells with it</a> · <a href="/business/evidence/{{ e.fn }}?co={{ co }}">Evidence</a></small></article>{% endmacro %}
 
 {% macro gap_card(e) %}<article class="csg-card"><b><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></b>
   <small>Needed in {{ e.reach }} diagram{{ 's' if e.reach != 1 }}{% if e.tam_apps %} · TAM ${{ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
   <small>{{ score_chip(e) }} {{ path_chip(e.path, path_label) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}</small>
   <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small></article>{% endmacro %}
 
-<section class="csg-group csg-sell" id="sell">
-  <h2>1 · Sell what we have</h2>
-  <p class="small muted">We have parts for these functions. Offer them in every design that uses them; start from one part number on <a href="/business/attach">Cross-sell</a> to see what sits next to it.</p>
-  <form method="get" action="/business/attach" class="csg-attach" role="search"><input name="part" placeholder="Part number we sell, e.g. Si8641" aria-label="Part number"><button type="submit" class="small-btn">Cross-sell</button></form>
-  <div class="csg-grid">{% for e in sell[:9] %}{{ sell_card(e) }}{% endfor %}</div>
-  {% call more(sell, 9) %}<div class="csg-grid">{% for e in sell[9:] %}{{ sell_card(e) }}{% endfor %}</div>{% endcall %}
-</section>
-
 <section class="csg-group csg-gap" id="gaps">
-  <h2>2 · Gaps to fill</h2>
+  <h2>1 · Gaps to fill</h2>
   <p class="small muted">No part of ours yet, but a spec variant or a new design on our technology could cover it (RF band gaps included). Best score first.</p>
   {% if gaps %}<div class="csg-grid">{% for e in gaps[:9] %}{{ gap_card(e) }}{% endfor %}</div>
   {% call more(gaps, 9) %}<div class="csg-grid">{% for e in gaps[9:] %}{{ gap_card(e) }}{% endfor %}</div>{% endcall %}
@@ -40,7 +26,7 @@
 </section>
 
 <section class="csg-group csg-new" id="new">
-  <h2>3 · New technology</h2>
+  <h2>2 · New technology</h2>
   <p class="small muted">Needs a technology we do not have: partner or acquire.</p>
   {% if new %}<div class="csg-grid">{% for e in new[:9] %}{{ gap_card(e) }}{% endfor %}</div>
   {% call more(new, 9) %}<div class="csg-grid">{% for e in new[9:] %}{{ gap_card(e) }}{% endfor %}</div>{% endcall %}

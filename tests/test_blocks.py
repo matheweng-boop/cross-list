@@ -21,7 +21,7 @@ def test_templates_use_known_functions():
 
 
 def test_pages_counts_and_parts(client):
-    assert "Car radio tuner system" in client.get("/blocks").text
+    assert "Car radio tuner system" in client.get("/blocks?system=automotive").text  # diagrams open per system
     page = client.get("/blocks/new?template=1").text
     assert 'id="bk-template"' in page and "am_fm_tuner" in page
     assert "opportunity" in client.get("/blocks/coverage").text

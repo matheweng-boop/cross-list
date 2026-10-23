@@ -1,6 +1,9 @@
 """Data management: the Overview (review status per data set, what is waiting) and Verify next (the owner's small
 verification batch, refilled per kind when it is done)."""
 
+from datetime import UTC, datetime, time, timedelta
+from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import func, select
@@ -8,12 +11,25 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.matching.rules import get_rules
-from app.models import CrossFeedback, Part, SiteFeedback, Upload, VerifyTask
+from app.models import (
+    AreaRequest,
+    BlockFeedback,
+    ChangeEvent,
+    CrossFeedback,
+    CrossRequest,
+    Datasheet,
+    Manufacturer,
+    Part,
+    SiteFeedback,
+    Upload,
+    VerifyTask,
+)
 from app.services import guest_input, quality, tam, verify
 from app.services.compare import compare_parts
 from app.web.routes import templates
 
 router = APIRouter()
+BERLIN = ZoneInfo("Europe/Berlin")
 
 
 @router.get("/manage/overview", response_class=HTMLResponse)
@@ -28,13 +44,62 @@ def overview(request: Request, session: Session = Depends(get_session)):
         "uploads": session.scalar(select(func.count()).select_from(Upload).where(Upload.status == "new")),
         "guest": guest_input.pending_count(session),
     }
+    waiting.update(overview_counts(session))
     t = tam.counts(session)
     stats = quality.stats(session)
     stats.append({"name": "tam", "label": "TAM estimates", "n_items": t["n"], "verified": t["agree"],
                   "disputed": t["disagree"], "unverified": t["open"], "src_ok": t["n"] - t["no_link"], "src_corr": 0,
                   "src_no": t["no_link"], "low": 0})  # fmt: skip
-    ctx = {"waiting": waiting, "stats": stats, "tam": t}
+    split = ", ".join(f"{n} {verify.KINDS.get(k, k).lower()}" for k, n in sorted(n_open.items()))
+    ctx = {"waiting": waiting, "stats": stats, "tam": t, "raw": raw_status(session), "verify_split": split}
     return templates.TemplateResponse(request, "manage/overview.html", ctx)
+
+
+def _count(session: Session, model, *where) -> int:
+    return session.scalar(select(func.count()).select_from(model).where(*where)) or 0
+
+
+def overview_counts(session: Session, now: datetime | None = None) -> dict[str, int]:
+    """What came in today and the open requests (owner, 23 Oct 2026: everything on one page). "Today" is the calendar
+    day in Berlin, where the owner and the daily run are."""
+    from app.services import reviews as rv
+
+    now = now or datetime.now(UTC)
+    start = datetime.combine(now.astimezone(BERLIN).date(), time(0), BERLIN).astimezone(UTC)
+    return {
+        "feedback_today": _count(session, SiteFeedback, SiteFeedback.created_at >= start),
+        "part_requests": _count(session, CrossRequest, CrossRequest.status.in_(("open", "in_progress"))),
+        "diagram_feedback": _count(session, BlockFeedback, BlockFeedback.status == "open"),
+        "area_requests": _count(session, AreaRequest, AreaRequest.status == "new"),
+        "review_requests": sum(e["status"] in ("new", "in_progress") for e in rv.requests(session)),
+    }
+
+
+def raw_status(session: Session) -> dict:
+    """The raw data behind the site: parts, datasheets and the newest import, library diagrams and systems."""
+    from app.services import blocks
+    from app.services import systems as sy
+
+    ours = select(Manufacturer.id).where(Manufacturer.name.in_(("Skyworks", "Qorvo")))
+    week = datetime.now(UTC) - timedelta(days=7)
+    return {
+        "parts": _count(session, Part),
+        "ours": _count(session, Part, Part.manufacturer_id.in_(ours)),
+        "makers": _count(session, Manufacturer),
+        "datasheets": _count(session, Datasheet),
+        "last_datasheet": session.scalar(select(func.max(Datasheet.imported_at))),
+        "changes_week": _count(session, ChangeEvent, ChangeEvent.detected_at >= week),
+        "diagrams": len(blocks.templates()),
+        "systems": len(sy.systems()),
+        "subsystems": sum(len(s["subsystems"]) for s in sy.systems()),
+        "unassigned": len(sy.unassigned()),
+    }
+
+
+@router.get("/manage/site-data")
+def site_data():
+    """Data management > Site data opens on its first tab, Verify next."""
+    return RedirectResponse("/manage/verify", status_code=307)
 
 
 def _cross_compare(session: Session, t: VerifyTask) -> dict | None:

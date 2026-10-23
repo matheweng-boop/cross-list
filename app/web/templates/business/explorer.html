@@ -9,7 +9,7 @@
 {%- endmacro %}
 {% macro decide(e, status, label, cls='') %}<form method="post" action="/business/decision" class="push-form"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">{% if status == 'set_aside' %}<input type="hidden" name="note" value="">{% endif %}<button type="submit" class="small-btn {{ cls }}">{{ label }}</button></form>{% endmacro %}
 {% block content %}
-<p class="small"><a href="/blocks/cross-sell?co={{ co }}">← Cross-sell &amp; gaps</a></p>
+<p class="small"><a href="/business/opportunities?co={{ co }}">← Gaps &amp; new technology</a></p>
 <h1>Opportunity explorer: detailed table</h1>
 <p class="subtitle muted">Functions {{ co_label }} does not cover yet, and RF bands it does not cover, grouped by category. Demand is how many block diagrams in the library need it. Click a column title to sort; click a row for its evidence.</p>
 

@@ -25,7 +25,7 @@
   </div>
   {% for key, label, items in nav_sections + (() if guest else (nav_utility,)) if key == ns.section %}
   <div class="sub-row">
-  <nav class="sub-nav" aria-label="{{ label }}">{% for ilabel, href, desc in items %}<a href="{{ href }}" title="{{ desc }}"{% if ns.item == href %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a>{% endfor %}</nav>
+  <nav class="sub-nav" aria-label="{{ label }}">{% for ilabel, href, desc in items if not (guest and owner_page(href)) %}<a href="{{ href }}" title="{{ desc }}"{% if ns.item == href %} aria-current="page" class="on"{% endif %}>{{ ilabel }}</a>{% endfor %}</nav>
   {% if not hide_header_search and path not in ('/', '/parts') %}
     <search class="top-search"><form action="/find" method="get">
       <input type="search" name="q" id="global-search" placeholder="Part number" autocomplete="off" aria-label="Find a part number"

@@ -14796,3 +14796,33 @@
   - [gnss, proc, position]
   questions:
   - {id: cell_gen, question: Cellular generation, choices: [LTE Cat-4, 5G sub-6 GHz, 5G RedCap]}
+
+- name: V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)
+  category: Automotive systems
+  note: "Owner, 23 Oct 2026: Autotalks as the reference for the V2X applications. Autotalks (Qualcomm since Jun 2025) sold a V2X chipset in two set-ups: standalone, with the V2X stack on the chipset's own processor, and companion, attached to the telematics unit's processor; both with an external 5.9 GHz front end per antenna path for diversity or a second channel (est, from public product descriptions; autotalks.com is no longer online, checked 23 Oct 2026). Skyworks' automotive material paired SKY5A2105 with Autotalks parts."
+  sources:
+  - {doc: 5GAA_FAQ_59, title: '5GAA FAQ on the 5.9 GHz band', url: 'https://5gaa.org/content/uploads/2025/02/faq-5.9-ghz.pdf'}
+  groups:
+  - {id: ant, label: V2X antennas (roof and second position), col: 0, row: 0, blocks: [antenna x2]}
+  - {id: fe1, label: "5.9 GHz front end, path 1 (PA / LNA / switch + filter)", col: 1, row: 0, blocks: [v2x_fem, filter_saw_baw]}
+  - {id: fe2, label: "5.9 GHz front end, path 2 (diversity or second channel)", col: 1, row: 1, blocks: [v2x_fem, filter_saw_baw]}
+  - {id: chip, label: V2X chipset (RF transceiver + 802.11p / C-V2X PC5 modem), col: 2, row: 0, blocks: [v2x_transceiver, crystal_oscillator]}
+  - {id: host, label: Processor with the V2X stack (on the chipset when standalone; the TCU's when companion), col: 3, row: 0, blocks: [soc]}
+  - {id: hsm, label: Security (signs and checks every message), col: 3, row: 1, blocks: [secure_element]}
+  - {id: gnss, label: GNSS (position and time for every message), col: 2, row: 1, blocks: [gnss_lna, filter_saw_baw]}
+  - {id: pwr, label: Power, col: 0, row: 2, blocks: [pmic, pol_ldo]}
+  - {id: net, label: Vehicle network, col: 1, row: 2, blocks: [can_transceiver, ethernet_phy]}
+  links:
+  - [ant, fe1, 5.9 GHz]
+  - [ant, fe2, 5.9 GHz]
+  - [fe1, chip, RF]
+  - [fe2, chip, RF]
+  - [chip, host, SPI / SDIO / PCIe]
+  - [gnss, chip, time (1 PPS) and position]
+  - [host, hsm, '']
+  - [host, net, CAN / Ethernet]
+  - [pwr, chip, rails]
+  questions:
+  - {id: v2x_mode, question: Set-up, choices: [standalone V2X unit, companion to the telematics unit, inside a smart antenna module]}
+  - {id: v2x_tech, question: Radio technology, choices: [802.11p / ITS-G5, LTE-V2X (PC5), NR-V2X, dual mode 802.11p + C-V2X]}
+  - {id: v2x_paths, question: Antenna paths, choices: [one path, two paths for diversity, two paths for two channels at once]}

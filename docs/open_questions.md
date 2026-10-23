@@ -3,16 +3,17 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **Grouping of the diagrams into systems (Systems & applications, 23 Oct 2026).** Four systems are built:
-   Automotive (8 sub-systems), Data center (4), Drones (3), Cellular (5); 77 of the 172 library diagrams sit in
-   them, the other 95 under "Other" by their old category (industrial, solar and storage, motor drives, medical,
-   consumer, home and building, test and defense RF). Please say: (a) should Other become more systems, for
-   example Industrial & energy, Consumer & wearables, Aerospace & defense; (b) is it right that DC fast chargers sit
-   under Automotive › Charging, smartwatches under Cellular › Phones and wearables, and only the enterprise Wi-Fi
-   access point under Data center (home routers stay in Other); (c) Kick sensor and Interior radar are listed as
-   parts of "UWB in the car" but only the in-cabin radar has its own diagram: should each get one; (d) Car radio
-   is split into tuner, digital-radio demodulator, antenna amplifier and audio amplifier: is that the split you
-   want. The mapping is one file (data/blocks/systems.yaml), so changes are quick.
+1. **Grouping of the diagrams into systems (Systems & applications, 23 Oct 2026), still open:** (a) should the 95
+   diagrams under "Other" become more systems, for example Industrial & energy, Consumer & wearables, Aerospace &
+   defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
+   own diagram: should each get one. Placements and the Car radio split are settled (below).
+
+## Settled (owner, 23 Oct 2026, systems grouping)
+
+- DC fast chargers under Automotive › Charging, smartwatches under Cellular › Phones and wearables: OK.
+- Car radio split into tuner, digital-radio demodulator, antenna amplifier and audio amplifier: correct. To expand
+  later: remote tuner modules (decentralised full tuner modules) and software-defined radio (tuner plus a
+  microprocessor only) as further car-radio applications.
 
 ## Settled (checked 23 Oct 2026, from the owner's verification of MSW2030-203 → SKY12212-478LF)
 

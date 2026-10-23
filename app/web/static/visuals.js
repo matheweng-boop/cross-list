@@ -1218,6 +1218,10 @@
     related: [["Engineering note: EFT burst and CISPR emissions on isolated designs", "/engineering/emc_eft_cispr"], ["CMTI against the switching edge", "#cmti"], ["CMTI guide", "/engineering/cmti_kv_us"]],
   });
 
+  // visuals kept in their own files: each templates/engineering/visuals/_<id>.html include loads a static/vz/<id>.js
+  // that pushes a function onto window.VZ_ADD before this file runs; it receives the helpers and adds its definitions
+  for (const add of window.VZ_ADD || []) add({V, DATA, C, num, si, db, undb, log10, clamp, esc, range});
+
   // ------------------------------------------------------------------ page
   const groups = [...new Set(V.map(v => v.group))];
   const nav = $("#vz-nav"), panel = $("#vz-panel");

@@ -184,10 +184,11 @@ SPEC_GUIDES = {  # specification guide keys (app/services/engineering.py NOTES)
     "uvlo_v": ("UVLO", "undervoltage"),
     "certifications": ("UL 1577", "VDE", "IEC 60747-17", "certification", "certifications"),
     "integrated_power": ("isolated power", "isolated bias", "isolated supply", "isolated supplies"),
+    "uwb_signal_path": ("group delay", "group-delay", "pre-echo", "precursor", "pulse fidelity", "phase linearity"),
     "emc_eft_cispr": ("EFT", "burst", "IEC 61000-4-4", "CISPR 25", "CISPR 32", "conducted emissions",
                       "radiated emissions"),
 }  # fmt: skip
-VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link, keywords)
+VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id>.js) -> (title, link, keywords)
     "dbm": ("dBm: the power ladder", "/visuals#dbm", ("dBm",)),
     "link": ("Link budget and range", "/visuals#link", ("link budget", "path loss", "EIRP", "e.i.r.p.", "cable loss")),
     "wave": ("Wavelength and antenna size", "/visuals#wave", ("antenna", "antennas", "wavelength")),
@@ -215,6 +216,12 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js) -> (title, link
             ("EFT", "burst", "CISPR", "Y capacitor", "common-mode current", "emissions")),
     "swloss": ("Switching loss vs frequency", "/visuals#swloss",
                ("switching loss", "switching losses", "conduction loss")),
+    "uwb": ("UWB: power limit, range, time of flight, relay and first path", "/visuals#uwb",  # static/vz/uwb.js
+            ("time of flight", "two-way ranging", "first path", "relay attack", "distance bounding", "STS", "ranging")),
+    "dab": ("DAB: from I/Q samples to the ensemble and the audio", "/visuals#dab",  # static/vz/dab.js
+            ("DAB", "DAB+", "ensemble", "multiplex", "I/Q", "OFDM")),
+    "turnon": ("Three-step turn-on: overshoot, ringing, EMI and the filter", "/visuals#turnon",  # static/vz/turnon.js
+               ("turn-on", "overshoot", "ringing", "EMI filter", "ProVCD", "di/dt")),
     "rf-bands": ("RF bands chart", "/rf-bands", ("GNSS", "LTE", "5G", "V2X", "UWB", "Wi-Fi", "NTN", "band", "bands")),
 }  # fmt: skip
 _NEVER = re.compile(r"(?!x)x")

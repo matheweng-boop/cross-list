@@ -34,6 +34,12 @@ def _rf_titles() -> dict[str, str]:
     return {t["id"]: t["title"] for _, _, items in rf_notes.by_category() for t in items}
 
 
+def _note_why() -> dict[str, list[dict]]:
+    from app.services import rf_notes
+
+    return {t["id"]: t.get("why") or [] for t in rf_notes.topics()}
+
+
 def _reviews_for(words: list[str]) -> list[dict]:
     from app.services import reviews
 
@@ -56,6 +62,8 @@ def by_product() -> list[dict]:
         w = data().get("why_it_matters") or {}
         points = [{**pt, "guide": engineering.NOTES[k][0], "href": f"/engineering/{k}"}
                   for k in p.get("why") or [] for pt in w.get(k, [])[:1]]  # fmt: skip
+        points += [{**pt, "guide": rf[n], "href": f"/rf-notes#{n}"}  # RF notes' own points (families without guides)
+                   for n in p.get("why_notes") or [] if n in rf for pt in _note_why().get(n, [])[:1]]  # fmt: skip
         out.append({
             "key": p["key"], "title": p["title"], "line": p.get("line") or "", "pitch": p.get("pitch") or "",
             "points": points, "guides": guides,
@@ -78,6 +86,7 @@ def problems() -> list[str]:
                 if k not in engineering.NOTES]  # fmt: skip
         bad += [f"{p['key']} visual {v}" for v in p.get("visuals") or [] if v not in lib.VISUALS]
         bad += [f"{p['key']} rf note {n}" for n in p.get("rf_notes") or [] if n not in rf]
+        bad += [f"{p['key']} why note {n}" for n in p.get("why_notes") or [] if not _note_why().get(n)]
         bad += [f"{p['key']} topic {t}" for t in p.get("topics") or [] if t not in topics]
         for pt in [x for k in p.get("why") or [] for x in (data().get("why_it_matters") or {}).get(k, [])]:
             if pt.get("kind") not in KINDS:

@@ -3,7 +3,33 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-None open right now.
+1. **Grouping of the diagrams into systems (Systems & applications, 23 Oct 2026), still open:** (a) should the 95
+   diagrams under "Other" become more systems, for example Industrial & energy, Consumer & wearables, Aerospace &
+   defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
+   own diagram: should each get one. Placements and the Car radio split are settled (below).
+
+## Settled (owner, 23 Oct 2026, systems grouping)
+
+- DC fast chargers under Automotive › Charging, smartwatches under Cellular › Phones and wearables: OK.
+- Car radio split into tuner, digital-radio demodulator, antenna amplifier and audio amplifier: correct. To expand
+  later: remote tuner modules (decentralised full tuner modules) and software-defined radio (tuner plus a
+  microprocessor only) as further car-radio applications.
+
+## Settled (checked 23 Oct 2026, from the owner's verification of MSW2030-203 → SKY12212-478LF)
+
+- MSW2030-203: our values stand and now say where they come from. The MACOM product page for MSW2030-203 gives
+  50–1000 MHz, 0.30 dB insertion loss, 52 dB isolation, 65 dBm IIP3, 100 W CW. The datasheet it links (MSW203x-203
+  Rev. V3) no longer lists the MSW2030: "400 MHz to 6 GHz in 2 bands, 0.25 dB, 65 dBm" is the front-page headline for
+  MSW2031-203 (0.4–4 GHz, 0.5 dB typ, 35 dB typ) and MSW2032-203 (2–6 GHz, 0.6 dB typ, 35 dB typ). The 35 dB
+  isolation belongs to those two parts.
+- SKY12212-478LF insertion loss is specified both ways (datasheet Table 4, typical): TX–ANT 0.47 / 0.29 / 0.33 /
+  0.46 / 0.55 dB and ANT–RX 0.44 / 0.26 / 0.24 / 0.32 / 0.34 dB at 0.05 / 0.6 / 1.2 / 2.0 / 2.7 GHz. We store the
+  worse path (TX–ANT).
+- Frequencies were not consistent: the cross compared SKY12212's worst values in its own band (0.55 dB and 28 dB, both
+  at 2.7 GHz) with MSW2030's values for 50–1000 MHz. Fixed: an RF switch with a wider band is now read over the
+  reference's band from its datasheet points. Over 0.05–1 GHz the SKY12212 has 0.47 dB insertion loss and about
+  36 dB isolation (worst common port, between the 0.6 and 1.2 GHz points), against 0.30 dB and 52 dB: still worse
+  on both, so it stays a cross with deviations.
 
 ## Settled (owner, 22 Oct 2026)
 

@@ -1,8 +1,9 @@
 {# Price vs volume panel of the part page and the estimate page (app/services/price_model.py). `scenarios` holds the
    model for every wafer-source what-if; the switch only flips visibility in the browser (base.html), so the choice never
    reaches the server. `m` is the reference scenario, for everything that does not depend on it. #}
-{% macro usdm(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
-{% macro money(x) %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
+{# owner, 23 Oct 2026: a number that cannot be computed shows "Not Enough Data", never a dash, NaN or an error #}
+{% macro usdm(x) %}{% if x is number and x == x and -1e300 < x < 1e300 %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% else %}<span class="pm-ned">Not Enough Data</span>{% endif %}{% endmacro %}
+{% macro money(x) %}{% if x is number and x == x and -1e300 < x < 1e300 %}{{ symbol }}{{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% else %}<span class="pm-ned">Not Enough Data</span>{% endif %}{% endmacro %}
 {% macro oem_table(o, title) %}{% if o %}<h3 class="pm-h">{{ title }} <small class="muted">· {{ '{:,}'.format(o.volume) }} a year, SOP {{ o.sop }}, {% if o.assumed_new %}no public release date: treated as a new part{% else %}released {{ o.released }}{% endif %}</small></h3>
 <div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Year</th><th scope="col"></th><th scope="col">OEM target ({{ (o.productivity[1] * 100)|int }} % a year for {{ o.years[1] }} years)</th><th scope="col">OEM target ({{ (o.productivity[0] * 100)|int }} % a year for {{ o.years[0] }} years)</th></tr></thead>
 <tbody>{% for r in o.rows %}<tr{% if r.phase == 'SOP' %} class="pm-sop"{% endif %}><th scope="row">{{ r.year }}</th><td class="muted">{{ r.phase }}{{ ' · flat' if r.flat }}</td><td>{{ money(r.low) }}</td><td>{{ money(r.high) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}{% endmacro %}
@@ -18,7 +19,9 @@
 {% if scenarios|length > 1 and m.cost and m.rows %}<div class="pm-fab small"><span id="pm-fab-l">What-if, wafers from:</span>
   {% for k, s in scenarios %}<button type="button" class="small-btn{{ '' if loop.first else ' outline' }}" data-fab-pick="{{ k }}" aria-describedby="pm-fab-l" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ cfg.fab.labels[k] }}</button>{% endfor %}
   <small class="muted">Generic public cost assumptions, not a statement of where any part is made. Both are worked out together; the switch only changes what your browser shows, so the choice is never sent, saved or put in the link.</small></div>{% endif %}
-{% if m.missing %}<p class="small muted">Not enough to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>{% endif %}
+{% if m.missing %}<p class="small muted"><b>Not Enough Data</b> to model yet: {{ m.missing|join('; ') }}.{% if not f %} DigiKey prices are cached when the part's price is shown on the live site.{% endif %}</p>
+{% if not m.rows %}<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th></tr></thead>
+<tbody>{% for v in cfg.volumes %}<tr><th scope="row">{{ '{:,}'.format(v|int) }}</th>{% for _ in range(3) %}<td><span class="pm-ned">Not Enough Data</span></td>{% endfor %}</tr>{% endfor %}</tbody></table></div>{% endif %}{% endif %}
 {% for k, m in scenarios %}{% call per_fab(k, loop.first) %}{% set f, cb = m.fit, m.cost %}{% if m.rows %}
 <div class="table-wrap"><table class="small pm-table">
   <thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th><th scope="col" class="muted">{{ m.source.split(' (')[0] }} curve extended</th></tr></thead>
@@ -50,11 +53,6 @@
 </tbody></table></div></details>{% endif %}
 {% if m.oem %}{{ oem_table(m.oem, 'OEM target prices') }}
 <p class="small muted">Starts from today's target at {{ '{:,}'.format(m.oem.volume) }} a year ({{ money(m.oem.start) }}) and falls by the yearly productivity carmakers expect, but only in a part's first {{ m.oem.years|join('–') }} years on the market; after that the price {{ 'stays flat' if not m.oem.mature_rate else 'falls only ' ~ (m.oem.mature_rate * 100)|round(1) ~ ' % a year' }}{% if m.oem.flat_from <= m.oem.rows[-1].year %} (here from {{ [m.oem.flat_from, m.oem.rows[0].year]|max }}){% endif %}.{% if not estimate %} <a href="?price=open&sop={{ m.oem.sop + 1 }}#price-model" hx-get="/pricing/{{ part.id }}/model?sop={{ m.oem.sop + 1 }}" hx-target="closest .pm-body">SOP a year later</a>{% endif %}</p>{% endif %}
-{% if m.ours %}{% set o = m.ours %}<h2 class="pe-ours">{{ o.name }} <small class="muted">· priced at {{ (o.lo * 100)|round|int }}–{{ (o.hi * 100)|round|int }} % of {{ f.name or 'the anchor part' }}</small></h2>
-<div class="table-wrap"><table class="small pm-table"><thead><tr><th scope="col">Volume a year</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th></tr></thead>
-<tbody>{% for r in o.rows %}<tr><th scope="row">{{ '{:,}'.format(r.volume) }}</th><td>{{ usdm(r.low) }}</td><td><b>{{ usdm(r.target) }}</b></td><td>{{ usdm(r.high) }}</td></tr>{% endfor %}</tbody></table></div>
-{% if o.oem %}{{ oem_table(o.oem, o.name ~ ': OEM target prices') }}{% endif %}
-<p class="small muted">Our part has no public price: its band is the anchor part's band times the parity range. The parity range is a judgement (default {{ (cfg.parity[0] * 100)|int }}–{{ (cfg.parity[1] * 100)|int }} %: a newer entrant at or a little below the incumbent).</p>{% endif %}
 {% endcall %}{% endfor %}
 {% if m.rows and not estimate %}<form method="post" action="/pricing/{{ part.id }}/call" class="pm-call">
   <p class="small"><b>Where do real prices sit?</b>{% if m.call %} Your last call: <span class="pc-v">{{ calls[m.call.verdict] }}</span>{% if m.call.comment %} <span class="muted">· {{ m.call.comment }}</span>{% endif %}{% endif %}</p>

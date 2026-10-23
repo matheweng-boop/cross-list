@@ -20,6 +20,8 @@
 {% endmacro %}
 {% block content %}
 <h1>Site feedback</h1>
+{% if questions %}<details class="fb-questions" id="questions" open><summary><b>Questions for you</b> <small class="muted">· {{ questions|length }} from the daily run; answer with the Feedback button</small></summary>
+  <ol class="small">{% for title, body in questions %}<li><b>{{ title }}</b>{% if body %} {{ body }}{% endif %}</li>{% endfor %}</ol></details>{% endif %}
 {% if open_list is defined %}
 {% set o = open_list %}
 <p class="subtitle muted">Comments from the Feedback button that are not worked into the site yet (New or Planned), newest first.

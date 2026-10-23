@@ -312,11 +312,20 @@ def test_navigation_sections_and_old_urls(client):
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
                                ("/parts", "Products", "Browse products"),
                                ("/compare", "Products", "Compare"),
-                               ("/broadcast", "Systems &amp; applications", "Radio &amp; audio"),
-                               ("/broadcast/configurations", "Systems &amp; applications", "Radio &amp; audio"),
+                               ("/broadcast", "Systems &amp; applications", "Application library"),
+                               ("/broadcast/configurations", "Systems &amp; applications", "Application library"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
                                ("/blocks/coverage", "Systems &amp; applications", "Application library"),
-                               ("/business", "Systems &amp; applications", "Cross-sell &amp; gaps"),
+                               ("/business", "Opportunities", "Gaps &amp; new technology"),
+                               ("/blocks/cross-sell", "Systems &amp; applications", "Cross-sell"),
+                               ("/business/attach", "Systems &amp; applications", "Cross-sell"),
+                               ("/business/rf-coverage", "Systems &amp; applications", "RF coverage"),
+                               ("/business/automotive", "Systems &amp; applications", "Automotive map"),
+                               ("/business/tam", "Future growth", "TAM estimates"),
+                               ("/manage/overview", "Data management", "Overview"),
+                               ("/manage/verify", "Data management", "Site data"),
+                               ("/manage/feedback", "Data management", "Site data"),
+                               ("/manage/guest-input", "Data management", "Site data"),
                                ("/business/competitors", "Opportunities", "Competitive analytics"),
                                ("/business/markets", "Future growth", "Markets &amp; customers"),
                                ("/business/reports", "Future growth", "Research &amp; ideas"),
@@ -331,7 +340,7 @@ def test_navigation_sections_and_old_urls(client):
                                ("/engineering/cmti_kv_us", "Engineering knowledge", "General knowledge"),
                                ("/business/capabilities", "Engineering knowledge", "General knowledge"),
                                ("/rules", "Data management", "Methodology"),
-                               ("/requests", "Data management", "Requests &amp; reviews")]:  # fmt: skip
+                               ("/requests", "Data management", "Site data")]:  # fmt: skip
         r = client.get(url)
         assert r.status_code == 200, url
         assert f'aria-current="page" class="on">{item}<' in r.text, url
@@ -349,7 +358,8 @@ def test_navigation_sections_and_old_urls(client):
     knowledge = next(s for s in nav.NAV if s[0] == "knowledge")
     assert [i[0] for i in knowledge[2]] == ["Interactive visuals", "General knowledge"]
     systems = next(s for s in nav.NAV if s[0] == "systems")
-    assert [i[0] for i in systems[2]][:2] == ["Application library", "Systems library"]
+    assert [i[0] for i in systems[2]] == ["Systems library", "Application library", "Application workspace",
+                                         "Reference designs", "Cross-sell", "RF coverage", "Automotive map"]
     rf = client.get("/rf-notes").text
     assert 'aria-current="page" class="on">RF fundamentals<' in rf and 'href="/engineering"' in rf
     assert 'aria-current="page" class="on">Specification guides<' in client.get("/engineering/cmti_kv_us").text
@@ -444,7 +454,8 @@ def test_systems_library_links_to_knowledge_and_visuals(client):
 
     ids = {t["id"] for t in rf_notes.topics()}
     assert set(library.RF_NOTES) <= ids and set(library.SPEC_GUIDES) <= set(engineering.NOTES)
-    js = (library.PROJECT_ROOT / "app" / "web" / "static" / "visuals.js").read_text()
+    static = library.PROJECT_ROOT / "app" / "web" / "static"  # visuals.js plus visuals in their own files (vz/)
+    js = "".join(f.read_text() for f in [static / "visuals.js", *sorted(static.glob("vz/*.js"))])
     assert all(f'id: "{k}"' in js for k in library.VISUALS if k != "rf-bands")
     v2x = library.related("v2x_frontend")
     hrefs = {x["href"] for x in v2x["knowledge"] + v2x["visuals"]}

@@ -29,6 +29,7 @@
 <h2 id="pick">Which line to offer</h2>
 {% if cur.segments %}
 <p class="small muted">Per segment: who leads and why, and the parts to start with. “Only” segments are where one line has no counterpart, so the other line's customer is a cross-selling target.</p>
+<p class="small pf-rule"><span class="pf-sim">Similar</span> or <span class="pf-effort">Further design effort required</span>: {{ match_rule }}</p>
 <div class="pf-segs">
   {% for s in cur.segments %}
   <details class="pf-seg"{% if loop.index <= 3 %} open{% endif %}>
@@ -37,9 +38,15 @@
     <div class="pf-two">
       {% for m, k in (('Skyworks', 'pick_skyworks'), ('Qorvo', 'pick_qorvo')) %}{% set pk = s[k] %}{% if pk %}
       <div class="pf-pick ln-{{ m|lower }}"><span class="small"><b>Offer {{ m }}</b> {{ pk.when|unit }}</span>
-        <div class="pf-parts">{% for mpn in pk.parts or [] %}<a class="badge" href="/parts?q={{ mpn|urlencode }}">{{ mpn }}</a>{% endfor %}</div></div>{% endif %}{% endfor %}
+        <div class="pf-parts">{% for mpn in pk.parts or [] %}<a class="badge pf-part" href="/parts?q={{ mpn|urlencode }}">{{ mpn }}</a>{% endfor %}</div></div>{% endif %}{% endfor %}
     </div>
-    {% if s.applications %}<p class="small muted">Used in: {{ s.applications|join(' · ') }}</p>{% endif %}
+    {% set mt = matches.get(s.id) %}{% if mt %}<div class="pf-match small">
+      <p><b>Skyworks vs Qorvo pick:</b> {% if mt.verdict == 'similar' %}<span class="pf-sim">Similar</span>{% else %}<span class="pf-effort">Further design effort required</span>{% endif %}
+        <span class="muted">· {{ mt.similar }} of {{ mt.total }} Skyworks parts have a similar Qorvo part (est)</span></p>
+      <ul>{% for p in mt.pairs %}<li><b>{{ p.skyworks.mpn }}</b> {{ '≈' if p.similar else '↔' }} <b>{{ p.qorvo.mpn }}</b>:
+        {% if p.similar %}<span class="pf-sim">similar</span>{% else %}<span class="pf-effort">Further design effort required</span> <span class="muted">({{ p.reasons|join('; ') }})</span>{% endif %}{% if p.notes %} <span class="muted">· {{ p.notes|join('; ') }}</span>{% endif %}</li>{% endfor %}</ul>
+    </div>{% endif %}
+    {% if s.applications %}<p class="small muted pf-used">Used in: {{ s.applications|join(' · ') }}</p>{% endif %}
   </details>{% endfor %}
 </div>
 {% else %}<p class="muted small">The curated comparison is being prepared.</p>{% endif %}

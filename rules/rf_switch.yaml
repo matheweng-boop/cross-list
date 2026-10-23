@@ -13,8 +13,10 @@ params:
   # Parts that state no grade are the usual industrial kind (AEC-Q100 is always stated where it applies).
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true, default: industrial}
   # --- Priority 2: should match ---
-  - {key: insertion_loss_db, label: Insertion loss (worst in band), unit: dB, priority: 2, kind: number, direction: lower, tolerance: 0.05}
-  - {key: isolation_db, label: Isolation (worst in band), unit: dB, priority: 2, kind: number, direction: higher, tolerance: 0.05}
+  # Worst in the part's own band; a candidate with a wider band and a stated curve is read over the reference's band
+  # instead, so both values cover the same frequencies (owner, 23 Oct 2026: isolation varies with frequency).
+  - {key: insertion_loss_db, label: Insertion loss (worst in band), unit: dB, priority: 2, kind: number, direction: lower, tolerance: 0.05, band: freq_range_ghz, curve: insertion_loss_curve}
+  - {key: isolation_db, label: Isolation (worst in band), unit: dB, priority: 2, kind: number, direction: higher, tolerance: 0.05, band: freq_range_ghz, curve: isolation_curve}
   - {key: p1db_dbm, label: Input P1dB, unit: dBm, priority: 2, kind: number, direction: higher}
   - {key: iip3_dbm, label: IIP3, unit: dBm, priority: 2, kind: number, direction: higher}
   # The board's supply and logic levels must lie inside the candidate's ranges.
@@ -24,3 +26,6 @@ params:
   # --- Priority 3: informative ---
   - {key: switching_time_ns, label: Switching time, unit: ns, priority: 3, kind: number, direction: lower}
   - {key: esd_hbm_kv, label: ESD (HBM), unit: kV, priority: 3, kind: number, direction: higher}
+  # Typical values at the datasheet's test frequencies, worst path at each ([[GHz, dB], ...]); read between points only.
+  - {key: insertion_loss_curve, label: Insertion loss vs frequency, unit: dB, x_unit: GHz, priority: 3, kind: curve}
+  - {key: isolation_curve, label: Isolation vs frequency, unit: dB, x_unit: GHz, priority: 3, kind: curve}

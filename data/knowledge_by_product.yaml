@@ -5,7 +5,8 @@
 #   the spec. kind: cost | bom | robust | design. est: true marks a point BizDev reasoned out itself (not stated in the
 #   guide or a source); the page shows it as "est".
 # products: per product family, the guides, interactive visuals (app/services/library.py VISUALS), RF notes
-#   (data/engineering_rf_notes.yaml ids) and systems library topics that belong to it. Technology reviews are found by
+#   (data/engineering_rf_notes.yaml ids) and systems library topics that belong to it. why_notes: RF notes whose own
+#   "why it matters" points (data/engineering_rf_notes.yaml why) also go on the card, for families without spec guides. Technology reviews are found by
 #   review_words in the review's title, family and application area, so new reviews appear without editing this file.
 
 why_it_matters:
@@ -143,6 +144,26 @@ why_it_matters:
       est: true
     - kind: design
       text: A Y capacitor adds mains-frequency leakage current and must be safety-rated; a common-mode choke only works if it covers every path. Choose the lever that fits the product's safety standard.
+  deadtime:
+    - kind: robust
+      text: Dead time in the driver stops both switches of a half bridge conducting at once (shoot-through), even if the controller's PWM has a glitch, so the power stage survives a software or noise fault.
+    - kind: bom
+      text: When the controller cannot guarantee dead time itself (a simple analog PWM IC), a driver with a DT pin replaces the RC delay or logic the customer would otherwise add.
+      est: true
+    - kind: design
+      text: Most motor-control timers already generate dead time; then the driver's version is a second line of defence, not a reason to reject a cross that lacks it.
+  uwb_signal_path:
+    - kind: robust
+      text: A phase-linear, uncompressed front end lets the receiver find the weak first path, so the car key measures the true distance and a pre-echo cannot fake an early, too-short one (the relay-attack protection depends on it).
+      est: true
+    - kind: cost
+      text: Flat group delay over channel and temperature means one antenna-delay calibration instead of per-channel or per-temperature tables, and fewer re-tests at certification.
+      est: true
+    - kind: bom
+      text: An LNA with a bypass mode (QM14068) handles near keys without compression, so no extra attenuator or limiter is needed in front of the UWB chip.
+      est: true
+    - kind: design
+      text: Ask for S-parameters early and check group delay and gain flatness inside the 499.2 MHz channel, not only insertion loss at the centre; filters near their skirts are the usual problem.
 
 products:
   - key: digital_isolators
@@ -161,16 +182,16 @@ products:
     pitch: Isolated data and isolated power from one part plus a small transformer, for industrial I/O, BMS and automotive modules.
     guides: [emc_eft_cispr, integrated_power, cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, qualification]
     why: [emc_eft_cispr, integrated_power, cmti_kv_us]
-    visuals: [emc, cmti, creep]
+    visuals: [emc, turnon, cmti, creep]
     rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
     review_words: [isolated dc-dc, isolated power]
   - key: gate_drivers
     title: Isolated gate drivers
     line: Skyworks (Si823x, Si827x, Si828x)
     pitch: Drive SiC, IGBT and GaN switches across the barrier in traction inverters, chargers, solar and motor drives.
-    guides: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, prop_delay_ns, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, certifications, qualification, temp_range_c]
-    why: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns]
-    visuals: [cmti, gate, creep, thermal, swloss]
+    guides: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, deadtime, prop_delay_ns, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, certifications, qualification, temp_range_c]
+    why: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, deadtime]
+    visuals: [cmti, gate, turnon, creep, thermal, swloss]
     rf_notes: [phys_isolation_coupling, phys_switching_losses, phys_creepage_clearance, phys_dielectric_breakdown]
     topics: [traction_asil_d]
     review_words: [gate driver]
@@ -190,6 +211,7 @@ products:
     pitch: Route antennas and bands with low loss and high linearity in phones, cars, Wi-Fi and infrastructure.
     guides: []
     why: []
+    why_notes: [rf_switches, vswr_return_loss_mismatch, txrx_isolation_options]
     visuals: [vswr, ip3, dbm]
     rf_notes: [phys_switch_loss_isolation, phys_matching_vswr, rf_switches, vswr_return_loss_mismatch, linearity_p1db_ip3, txrx_isolation_options]
     topics: [roof_coexistence, v2x_frontend]
@@ -200,6 +222,7 @@ products:
     pitch: The radio's last and first stage. Range, battery life and coexistence depend on them.
     guides: []
     why: []
+    why_notes: [cascaded_noise_figure, linearity_p1db_ip3, pa_linearization_dpd_doherty, wifi_fem_and_triband_ap]
     visuals: [link, nf, ip3, dbm]
     rf_notes: [phys_noise_gain, phys_linearity, phys_semiconductors, wifi_fem_and_triband_ap, pa_linearization_dpd_doherty, cascaded_noise_figure, sensitivity_noise_floor, mmwave_5g_front_ends]
     topics: [v2x_frontend, tcu_rf, gnss_frontend]
@@ -210,6 +233,7 @@ products:
     pitch: Keep radios from jamming each other; more bands and radios in one product need more and sharper filters.
     guides: []
     why: []
+    why_notes: [filter_fundamentals, acoustic_filters_duplexers, dynamic_range_sfdr_blocking]
     visuals: [filter, lc, bvd]
     rf_notes: [phys_piezo_acoustic, phys_resonance_q, acoustic_filters_duplexers, filter_fundamentals, dynamic_range_sfdr_blocking]
     topics: [roof_coexistence, tcu_rf]
@@ -220,7 +244,8 @@ products:
     pitch: AM / FM / DAB / HD Radio reception in car head units and consumer radios.
     guides: [qualification, temp_range_c]
     why: [qualification]
-    visuals: [nf, wave, dbm, mod]
+    why_notes: [sensitivity_noise_floor, receiver_architectures, iq_imbalance]
+    visuals: [nf, wave, dbm, mod, dab]
     rf_notes: [phys_am_fm, phys_mixing_superhet, sensitivity_noise_floor, dynamic_range_sfdr_blocking, receiver_architectures]
     topics: [roof_coexistence]
     review_words: [tuner, radio receiver, broadcast]
@@ -230,6 +255,7 @@ products:
     pitch: Clean clocks for data centres, 5G radios and networking; jitter directly limits data rate and link quality.
     guides: [temp_range_c]
     why: []
+    why_notes: [phase_noise_oscillators, phase_noise_and_pll, pll_synthesis]
     visuals: [jitter, bvd]
     rf_notes: [phys_timing_resonators, phys_phase_noise_jitter, phys_pll, phase_noise_oscillators, pll_synthesis, vco_design_tradeoffs]
     topics: []
@@ -238,9 +264,10 @@ products:
     title: UWB and low-power wireless
     line: Qorvo (DW3000, QM33)
     pitch: Secure distance measurement for digital car keys, asset tracking and indoor positioning.
-    guides: [qualification]
-    why: [qualification]
-    visuals: [link, rf-bands]
+    guides: [uwb_signal_path, qualification]
+    why: [uwb_signal_path, qualification]
+    why_notes: [lpwan_uwb_iot_links]
+    visuals: [uwb, link, rf-bands]
     rf_notes: [phys_antennas_wavelength, lpwan_uwb_iot_links]
     topics: [auto_uwb]
     review_words: [uwb, ultra-wideband]

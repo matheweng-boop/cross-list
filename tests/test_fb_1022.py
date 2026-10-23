@@ -66,7 +66,7 @@ def test_walk_cards_short_heading_full_text_and_next_on_top(client, real):  # no
 
 def test_band_tables_do_not_scroll(client):
     rf = client.get("/business/rf-coverage").text
-    assert '<div class="fit-wrap"><table class="rf-matrix stack-table">' in rf and 'data-label="' in rf
+    assert '<div class="fit-wrap"><table class="rf-matrix stack-table rf-small">' in rf and 'data-label="' in rf
     pf = client.get("/portfolio").text
     assert 'class="pf-band small stack-table"' in pf
     css = (ROOT / "app/web/static/app.css").read_text()

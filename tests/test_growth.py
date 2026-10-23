@@ -2,6 +2,7 @@
 knowledge-base links, the schedule-for-business-case-review queue (shared POST /business/schedule contract) and the
 per-field hints on business case pages."""
 
+import glob
 import html
 import json
 import re
@@ -24,7 +25,8 @@ def test_every_report_has_an_opener_and_learn_levels():
 
 def test_learn_links_point_to_real_knowledge_pages(client):
     notes = {t["id"] for _, _, ts in rf_notes.by_category() for t in ts}
-    visuals = set(re.findall(r'id: "([a-z0-9]+)", group:', open("app/web/static/visuals.js").read()))
+    js = "".join(open(f).read() for f in ["app/web/static/visuals.js", *sorted(glob.glob("app/web/static/vz/*.js"))])
+    visuals = set(re.findall(r'id: "([a-z0-9]+)", group:', js))
     for r in rp.reports():
         for k in r["learn_links"]:
             path, _, anchor = k["href"].partition("#")

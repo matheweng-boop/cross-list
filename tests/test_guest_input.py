@@ -329,7 +329,7 @@ def test_reject_changes_nothing_and_owner_sees_full_text(owner, make_guest, sess
     sub = session.scalar(select(ExternalSubmission))
     page = owner.get("/manage/guest-input").text
     assert "Anna Guest" in page and "Feedback button" in page and ("A long comment " * 10).strip() in page
-    assert "1</b> guest input to review" in owner.get("/manage/overview").text
+    assert "<b>1</b><small>guest input pending your review" in owner.get("/manage/overview").text
     before = fingerprint()
     r = owner.post(f"/manage/guest-input/{sub.id}", data={"act": "reject", "note": "off topic"})
     assert r.status_code == 200 and "Rejected" in r.text

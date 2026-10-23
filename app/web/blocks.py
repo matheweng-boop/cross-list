@@ -39,19 +39,35 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
     def facet(key):
         return sorted(Counter(c[key] for c in allcards).items(), key=lambda kv: (-kv[1], kv[0]))
 
-    shown = [c for _, v in cards for c in v]
-    focus = [(k, label, [c for c in shown if k in c["focus"]]) for k, label in blocks.FOCUS_AREAS.items()]
-    other = [(k, [c for c in v if not c["focus"]]) for k, v in cards]
+    shown = {c["i"]: c for _, v in cards for c in v}
+    from app.services import library
+    from app.services import systems as sy
+
+    topics = {t["key"]: t for t in library.topics()}
+    system = request.query_params.get("system", "")
+    subsystem = request.query_params.get("sub", "")
+    system = system if sy.get(system) or system == sy.OTHER else ""
+    subsystem = subsystem if system and sy.sub(system, subsystem) else ""
+    tree = [{**s, "subs": [{**x, "cards": [shown[i] for i in x["idx"] if i in shown],
+                            "deep": [topics[k] for k in x["topics"] if k in topics]} for x in s["subsystems"]]}
+            for s in sy.systems()]  # fmt: skip
+    for s in tree:
+        s["n"] = len({c["i"] for x in s["subs"] for c in x["cards"]})
+    done = sy.assigned()
+    other = [(k, [c for c in v if c["i"] not in done]) for k, v in cards]
+    filtered = bool(market or source or variants or verified in ("yes", "no"))
     ctx = {"designs": designs, "cards": [(k, v) for k, v in cards if v], "n_all": len(allcards),
-           "focus": focus, "other": [(k, v) for k, v in other if v],
+           "tree": tree, "other": [(k, v) for k, v in other if v], "system": system, "sub": subsystem,
+           "expanded": bool(system) or filtered, "filtered": filtered,
            "asked": request.query_params.get("asked") == "1",
            "n_shown": sum(len(v) for _, v in cards), "markets": facet("market"), "sources": facet("source"),
            "market": market, "source": source, "variants": variants, "verified": verified,
            "n_verified": sum(1 for c in allcards if c["verified"]),
            "n_variant": sum(1 for c in allcards if c["variant"]), "n_groups": len(blocks.variant_groups())}  # fmt: skip
-    from app.services import library
+    if subsystem:  # owner, 23 Oct 2026: once a sub-system is picked, its cross-sell sits right below it
+        from app.services import opportunity as op
 
-    ctx["deep_dives"] = library.topics()  # owner, 23 Oct 2026: the Systems library sits with the applications
+        ctx["xsell"] = sy.bottom_up(session, sy.sub(system, subsystem)["idx"], op.company("combined")[2], n_parts=6)
     return templates.TemplateResponse(request, "blocks/index.html", ctx)
 
 

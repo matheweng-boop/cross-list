@@ -1,15 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>RF bands</h1>
-<p class="subtitle muted">Cellular (LTE / 5G), GNSS, Wi-Fi and IoT, UWB and V2X, broadcast, satellite and radar bands. Click a band for what it is used for, the front-end parts it calls for, and our parts whose frequency range covers it. More visuals: <a href="/visuals">sliders and live graphs</a>.</p>
+<link rel="stylesheet" href="/static/rf_visuals.css">
+<p class="subtitle muted">Cellular (LTE / 5G), GNSS, Wi-Fi and IoT, UWB and V2X, broadcast, satellite and radar bands. Pick an application or switch band types on and off to see where they sit and where they overlap; click a band for what it is used for, the front-end parts it calls for, and our parts whose frequency range covers it. More visuals: <a href="/visuals">sliders and live graphs</a>.</p>
 
 <div class="rb-bar">
-  <div class="rb-views small" role="group" aria-label="View">{% for k, label in [('groups', 'By group'), ('spectrum', 'Full spectrum'), ('table', 'Table')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-view="{{ k }}">{{ label }}</button>{% endfor %}</div>
+  <div class="rb-views small" role="group" aria-label="View">{% for k, label in [('types', 'Spectrum by type'), ('groups', 'By group'), ('spectrum', 'All bands, one axis'), ('table', 'Table')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-view="{{ k }}">{{ label }}</button>{% endfor %}</div>
   <div class="rb-zoom small" role="group" aria-label="Frequency range" hidden>{% for k, label in [('all', 'All'), ('sub1', 'Below 1 GHz'), ('l', '1–3 GHz'), ('c', '3–8 GHz'), ('mmw', 'Above 8 GHz')] %}<button type="button" class="fchip{{ ' on' if loop.first }}" data-zoom="{{ k }}">{{ label }}</button>{% endfor %}</div>
-  <div class="rb-groups small" role="group" aria-label="Show">{% for k, label in groups.items() %}<label class="rb-g g-{{ loop.index0 }}"><input type="checkbox" value="{{ k }}"{{ ' checked' if k != 'ieee' }}> {{ label }}</label>{% endfor %}</div>
+  <div class="rb-groups small" role="group" aria-label="Show" hidden>{% for k, label in groups.items() %}<label class="rb-g g-{{ loop.index0 }}"><input type="checkbox" value="{{ k }}"{{ ' checked' if k != 'ieee' }}> {{ label }}</label>{% endfor %}</div>
 </div>
 
-<div id="rb-groupview" class="rb-groupview"></div>
+<div id="rb-types" class="rbt">
+  <div class="rbt-apps small" role="group" aria-label="Application"><span class="muted">Application:</span> <button type="button" class="fchip on" data-app="" aria-pressed="true">All bands</button>{% for a in apps %} <button type="button" class="fchip" data-app="{{ a.id }}" aria-pressed="false">{{ a.label }}</button>{% endfor %}</div>
+  <p class="rbt-appnote small" hidden></p>
+  <div class="rbt-types small" role="group" aria-label="Band types"><span class="muted">Band types (click to show or hide):</span>{% for t in types %} <button type="button" class="rbt-chip" data-type="{{ t.id }}" aria-pressed="{{ 'false' if t.hide else 'true' }}"><i aria-hidden="true"></i>{{ t.label }}</button>{% endfor %} <button type="button" class="rbt-all" data-all="1">all</button> <button type="button" class="rbt-all" data-all="0">none</button></div>
+  <div class="rb-chart-wrap"><svg id="rbt-chart" class="rb-svg" role="img" aria-label="Frequency bands by type"></svg></div>
+  <p class="small muted">Each bar is a band's frequency range on a logarithmic axis; where bands of one type overlap, the bar is darker. The red row marks where two or more of the types shown overlap: the coexistence spots that need filters. The bottom row gives a quarter-wave antenna length (λ/4 = c / 4f) at each frequency: <a href="/visuals#wave">wavelength and antenna size</a>.</p>
+  <div class="rbt-ov small"></div>
+  <div class="rbt-list small"></div>
+</div>
+<div id="rb-groupview" class="rb-groupview" hidden></div>
 <div id="rb-spectrum" hidden><div class="rb-chart-wrap"><svg id="rb-chart" class="rb-svg" role="img" aria-label="Frequency band chart"></svg></div>
   <p class="small muted">Logarithmic frequency axis from 100 kHz to 100 GHz. Use “By group” for a readable view of each band family.</p></div>
 <div id="rb-table" hidden>
@@ -27,7 +37,7 @@
 
 <section id="rb-detail" class="pl-card" aria-live="polite">{% if not band %}<p class="muted">Click a band.</p>{% endif %}</section>
 
-<script id="rb-data" type="application/json">{{ {'groups': groups.items()|list, 'bands': bands}|tojson }}</script>
+<script id="rb-data" type="application/json">{{ {'groups': groups.items()|list, 'bands': bands, 'types': types, 'apps': apps}|tojson }}</script>
 <script>
 (() => {
   const D = JSON.parse(document.getElementById("rb-data").textContent);
@@ -35,7 +45,7 @@
   const groupView = document.getElementById("rb-groupview");
   const ZOOM = {all: [0.1, 110000], sub1: [10, 1100], l: [1000, 3000], c: [3000, 8500], mmw: [8000, 110000]};
   const GKEYS = D.groups.map(g => g[0]), GNAME = Object.fromEntries(D.groups);
-  let zoom = "all", view = "groups", selected = new URLSearchParams(location.search).get("band") || "";
+  let zoom = "all", view = "types", selected = new URLSearchParams(location.search).get("band") || "";
   const shown = () => new Set([...document.querySelectorAll(".rb-groups input:checked")].map(i => i.value));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
   const shortName = b => b.name.split(" (")[0].replace(/^Band /, "B").replace(/ \/ .*$/, "").replace(/:.*$/, "");
@@ -131,13 +141,121 @@
     document.querySelectorAll(".rb-trow").forEach(r => r.classList.toggle("on", r.dataset.id === selected));
   }
 
+  // Spectrum by type: one lane per band type with each band drawn as its frequency range on one row (overlaps inside a
+  // type show darker), a red row where two or more shown types overlap, and a quarter-wave antenna row. Types marked
+  // "hide" (IEEE letter bands: names, not uses) start hidden and never count as an overlap.
+  const PAL = ["#b8452a", "#c27a00", "#8a6d00", "#6b7480", "#2a6fdb", "#1d4fa0", "#5a3fc0", "#8a2fb0", "#0f8a6a", "#0a6d8f",
+    "#2f7fb5", "#3d8a3d", "#a0233c", "#c2410c", "#7a5c2e", "#4b5bb0", "#9b2f6b", "#9aa3ad"];
+  const TCOL = Object.fromEntries(D.types.map((t, i) => [t.id, PAL[i % PAL.length]]));
+  const BAND = Object.fromEntries(D.bands.map(b => [b.id, b]));
+  const typeOn = new Set(D.types.filter(t => !t.hide).map(t => t.id));
+  let app = "";
+  const appBands = () => (app ? new Set(D.apps.find(a => a.id === app).bands) : null);
+  const lam4 = mhz => { const m = 299.792458 / mhz / 4; return m >= 1 ? `${+m.toPrecision(2)} m` : m >= 0.01 ? `${+(m * 100).toPrecision(2)} cm` : `${+(m * 1000).toPrecision(2)} mm`; };
+  // intervals where two or more types overlap: {lo, hi, who: [[type, [band names]], ...]}
+  function overlaps(lanes) {
+    const segs = lanes.filter(L => !L.t.hide).flatMap(L => L.list.flatMap(b => b.ranges.map(r => ({lo: r[0], hi: r[1], t: L.t, b}))));
+    const pts = [...new Set(segs.flatMap(s => [s.lo, s.hi]))].sort((a, c) => a - c), out = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], z = pts[i + 1], by = new Map();
+      for (const s of segs.filter(s => s.lo < z && s.hi > a)) {
+        if (!by.has(s.t.id)) by.set(s.t.id, [s.t, new Set()]);
+        by.get(s.t.id)[1].add(shortName(s.b));
+      }
+      if (by.size < 2) continue;
+      const key = [...by.entries()].map(([k, [, n]]) => k + ":" + [...n].sort().join(",")).sort().join("|"), last = out[out.length - 1];
+      if (last && last.key === key && last.hi === a) last.hi = z;
+      else out.push({lo: a, hi: z, key, who: [...by.values()].map(([t, n]) => [t, [...n]])});
+    }
+    return out;
+  }
+  function drawTypes() {
+    const only = appBands(), el = document.getElementById("rbt-chart");
+    // "All" fits the axis to the bands switched on, so an application fills the width
+    const cand = D.types.filter(t => typeOn.has(t.id)).flatMap(t => t.bands.map(id => BAND[id]).filter(b => b && (!only || only.has(b.id))));
+    const fit = cand.length ? [Math.min(...cand.map(lo)), Math.max(...cand.map(hi))] : ZOOM.all, mg = (Math.log10(fit[1]) - Math.log10(fit[0])) * 0.03 + 0.01;
+    const [f0, f1] = zoom === "all" ? [10 ** (Math.log10(fit[0]) - mg), 10 ** (Math.log10(fit[1]) + mg)] : ZOOM[zoom];
+    document.querySelectorAll(".rbt-chip").forEach(c => {
+      const t = D.types.find(x => x.id === c.dataset.type);
+      c.setAttribute("aria-pressed", typeOn.has(t.id)); c.style.setProperty("--c", TCOL[t.id]);
+      c.hidden = !!only && !t.bands.some(b => only.has(b));
+    });
+    const lanes = D.types.filter(t => typeOn.has(t.id)).map(t => ({t, list: t.bands.map(id => BAND[id])
+      .filter(b => b && (!only || only.has(b.id)) && b.ranges.some(r => r[1] >= f0 && r[0] <= f1))})).filter(L => L.list.length);
+    const W = Math.max(el.parentElement.clientWidth, 300), PAD = 10, LBL = 13, BAR = 16, GAP = 8;
+    const x = f => PAD + (Math.log10(f) - Math.log10(f0)) / (Math.log10(f1) - Math.log10(f0)) * (W - 2 * PAD);
+    const xc = f => x(Math.min(f1, Math.max(f0, f)));
+    const ov = overlaps(lanes).filter(s => s.hi >= f0 && s.lo <= f1), o = [];
+    let y = 24;
+    const rows = lanes.map(L => { const r = {L, y}; y += LBL + BAR + GAP; return r; });
+    const yOv = y, H = y + LBL + BAR + GAP + 30;
+    el.setAttribute("viewBox", `0 0 ${W} ${H}`); el.setAttribute("width", W); el.setAttribute("height", H);
+    const tk = ticks(f0, f1);
+    const anc = f => (x(f) < 34 ? "start" : x(f) > W - 34 ? "end" : "middle");  // keep edge labels inside the chart
+    for (const f of tk) o.push(`<line class="rb-tick" x1="${x(f)}" x2="${x(f)}" y1="16" y2="${H - 26}"/><text class="rb-tl" x="${x(f)}" y="11" text-anchor="${anc(f)}">${fmt(f)}</text>`);
+    if (!lanes.length) o.push(`<text class="rbt-ll" x="${W / 2}" y="44" text-anchor="middle">No band type selected: click a type above.</text>`);
+    for (const {L, y: ly} of rows) {
+      o.push(`<g style="--c:${TCOL[L.t.id]}"><text class="rbt-ll" x="${PAD}" y="${ly + 10}">${esc(L.t.label)} <tspan class="rbt-span">${fmt(Math.min(...L.list.map(lo)))}–${fmt(Math.max(...L.list.map(hi)))}</tspan></text>`);
+      for (const b of L.list) {
+        const tip = `${b.name}: ${b.ranges.map(r => `${r[2]} ${fmt(r[0])}–${fmt(r[1])}`).join(", ")}`;
+        let g = `<g class="rb-band rbt-band${b.id === selected ? " on" : ""}" data-id="${b.id}" tabindex="0" role="button" aria-label="${esc(tip)}"><title>${esc(tip)}</title>`;
+        for (const r of b.ranges.filter(r => r[1] >= f0 && r[0] <= f1)) {
+          const a = xc(r[0]), z = Math.max(xc(r[1]), a + 3);
+          g += `<rect x="${a}" y="${ly + LBL}" width="${z - a}" height="${BAR}" rx="2"${r[2] === "UL" ? ' class="ul"' : ""}/>`;
+        }
+        const a = xc(lo(b)), z = xc(hi(b)), nm = shortName(b);
+        if (z - a > nm.length * 6.2 + 6) g += `<text class="rb-bl" x="${a + 3}" y="${ly + LBL + 12}">${esc(nm)}</text>`;
+        o.push(g + "</g>");
+      }
+      o.push("</g>");
+    }
+    if (lanes.length) {
+      o.push(`<text class="rbt-ll rbt-ovl" x="${PAD}" y="${yOv + 10}">Overlaps between the types shown${ov.length ? ` (${ov.length})` : ": none"}</text>`);
+      for (const s of ov) {
+        const a = xc(s.lo), z = Math.max(xc(s.hi), a + 3), tip = `${fmt(s.lo)}–${fmt(s.hi)}: ${s.who.map(([t, n]) => `${t.label} (${n.join(", ")})`).join(" and ")}`;
+        o.push(`<rect class="rbt-ov-r" x="${a}" y="${yOv + LBL}" width="${z - a}" height="${BAR}" rx="2"><title>${esc(tip)}</title></rect>`);
+      }
+    }
+    o.push(`<text class="rb-tl rbt-lam" x="${PAD}" y="${H - 20}">λ/4 antenna</text>`);
+    const every = W < 560 ? 2 : 1;
+    tk.forEach((f, i) => { if (i % every === 0) o.push(`<text class="rb-tl rbt-lam" x="${x(f)}" y="${H - 6}" text-anchor="${anc(f)}">${lam4(f)}</text>`); });
+    el.innerHTML = o.join("");
+    // the overlaps in words, and the bands shown as buttons (the bars are small on a phone)
+    const MAXO = 14;
+    document.querySelector(".rbt-ov").innerHTML = ov.length ? `<b>Where the types shown overlap</b><ul>${ov.slice(0, MAXO).map(s => `<li><span class="rbt-f">${fmt(s.lo)}–${fmt(s.hi)}</span> ${s.who.map(([t, n]) => `<b style="color:${TCOL[t.id]}">${esc(t.label)}</b> (${esc(n.join(", "))})`).join(" · ")}</li>`).join("")}</ul>${ov.length > MAXO ? `<p class="muted">and ${ov.length - MAXO} more: zoom in, hide types or pick an application.</p>` : ""}` : "";
+    const shownBands = [...new Map(lanes.flatMap(L => L.list.map(b => [b.id, [b, L.t]]))).values()];
+    document.querySelector(".rbt-list").innerHTML = shownBands.length && (app || shownBands.length <= 30) ? `<b>Bands shown (${shownBands.length})</b> <span class="muted">· click one for the parts that cover it</span><div class="rbt-bl">${shownBands.map(([b, t]) => `<button type="button" class="rbt-b rb-band${b.id === selected ? " on" : ""}" data-id="${b.id}" style="--c:${TCOL[t.id]}">${esc(shortName(b))} <small>${fmt(lo(b))}–${fmt(hi(b))}</small></button>`).join("")}</div>` : "";
+  }
+  document.querySelectorAll(".rbt-chip").forEach(c => c.addEventListener("click", () => {
+    const k = c.dataset.type;
+    if (typeOn.has(k)) typeOn.delete(k); else typeOn.add(k);
+    draw();
+  }));
+  document.querySelectorAll(".rbt-all").forEach(c => c.addEventListener("click", () => {
+    typeOn.clear();
+    if (c.dataset.all === "1") D.types.filter(t => !t.hide).forEach(t => typeOn.add(t.id));
+    draw();
+  }));
+  document.querySelectorAll("[data-app]").forEach(c => c.addEventListener("click", () => {
+    app = c.dataset.app;
+    document.querySelectorAll("[data-app]").forEach(x => { x.classList.toggle("on", x === c); x.setAttribute("aria-pressed", x === c); });
+    const a = D.apps.find(x => x.id === app), note = document.querySelector(".rbt-appnote");
+    typeOn.clear();
+    D.types.filter(t => !t.hide && (!a || t.bands.some(b => a.bands.includes(b)))).forEach(t => typeOn.add(t.id));
+    note.hidden = !a;
+    note.innerHTML = a ? `<b>${esc(a.label)}:</b> ${esc(a.note)}` : "";
+    draw();
+  }));
+
   function draw() {
+    document.getElementById("rb-types").hidden = view !== "types";
+    document.querySelector(".rb-groups").hidden = view === "types";
     document.getElementById("rb-groupview").hidden = view !== "groups";
     document.getElementById("rb-spectrum").hidden = view !== "spectrum";
     document.getElementById("rb-table").hidden = view !== "table";
-    document.querySelector(".rb-zoom").hidden = view !== "spectrum";
+    document.querySelector(".rb-zoom").hidden = view !== "spectrum" && view !== "types";
     document.querySelector(".rb-legend").hidden = view === "table";
-    if (view === "groups") drawGroups(); else if (view === "spectrum") drawSpectrum(); else drawTable();
+    if (view === "types") drawTypes(); else if (view === "groups") drawGroups(); else if (view === "spectrum") drawSpectrum(); else drawTable();
   }
 
   async function open(id) {

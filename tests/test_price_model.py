@@ -49,7 +49,7 @@ def test_band_floor_and_calls(client, session, part, real):  # noqa: F811
 def test_no_quote_says_what_is_missing(client, real):  # noqa: F811
     pid = ids(client, "SI86S641EC-IS1")
     html = client.get(f"/pricing/{pid}/model").text
-    assert "Not enough to model yet" in html
+    assert "Not Enough Data</b> to model yet" in html
     assert 'id="price-model"' not in client.get(f"/parts/{pid}").text  # no DigiKey and no list price: no panel
 
 
@@ -127,7 +127,9 @@ def test_oem_targets_and_our_part_from_a_competitor(client, session):
     html = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "name": "GD3162",
                                                    "package": "SOIC-32W", "pins": 32, "wide": "true",
                                                    "automotive": "true", "sop": 2029, "ours": "Si82900"}).text
-    assert "OEM target prices" in html and "SOP 2029" in html and "Si82900" in html and "priced at 90" in html
+    assert "OEM target prices" in html and "SOP 2029" in html
+    # owner, 23 Oct 2026: "take out the our part price": no field, an old link's value is ignored
+    assert "Si82900" not in html and 'name="ours"' not in html and "pe-ours" not in html
 
 
 def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
@@ -163,7 +165,7 @@ def test_fab_scenarios_and_cost_adjustment(client, session, part, real):  # noqa
     assert "never sent, saved or put in the link" in html
     assert 'name="fab"' not in html and "?fab=" not in html and "&fab=" not in html  # never a form field or link
     est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "ours": "X"}).text
-    assert 'data-fab="in_house" hidden>' in est and 'name="fab"' not in est and est.count('class="pe-ours"') == 2
+    assert 'data-fab="in_house" hidden>' in est and 'name="fab"' not in est and 'class="pe-ours"' not in est
 
 def test_oem_path_flattens_after_the_price_down_years():
     m = {"rows": [{"volume": 100000, "low": 0.9, "target": 1.0, "high": 1.1}]}

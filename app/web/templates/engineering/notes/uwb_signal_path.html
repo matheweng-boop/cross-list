@@ -1,0 +1,110 @@
+{% set est = '<span class="kn-est" title="BizDev\'s own reasoning, not from a source">est</span>' %}
+<p class="small">Try it: <a href="/visuals#uwb">UWB visual</a>, mode <i>First path in multipath</i> (add group-delay ripple and watch
+  a pre-echo fake an early path). Systems library: <a href="/library/auto_uwb">Automotive UWB</a>, design rules d11 and
+  d12. Our parts: <a href="/find?q=QM14068">QM14068</a> (bypass switch + LNA), <a href="/find?q=QM14070">QM14070</a>
+  (PA with bypass), <a href="/find?q=SKY5A2108">SKY5A2108</a> (SPDT switch), <a href="/find?q=QPF5100Q">QPF5100Q</a> and
+  <a href="/find?q=DW3300Q">DW3300Q</a> (UWB SoCs). Points marked {{ est|safe }} are BizDev's own reasoning.</p>
+
+<h2>The one idea: the receiver times the first edge of a 2 ns pulse</h2>
+<p>A UWB key measures distance by time of flight: 1 ns is 30 cm. The pulse spreads over the whole 499.2 MHz channel and is
+  only about 2 ns wide. In a car the direct path to the key often goes through a body or a seat, so it arrives
+  <b>weaker</b> than a reflection a few nanoseconds later. The receiver must find that weak first tap in front of the strong
+  ones. Anything in the transmit or receive chain that changes the shape of the pulse changes where its first edge
+  appears:</p>
+<ul>
+  <li><b>Too late:</b> the first path is smeared into the strong reflection or lost in noise, and the distance comes out
+    long (an accuracy problem).</li>
+  <li><b>Too early:</b> a small copy of the strong reflection appears <i>before</i> it (a pre-echo) and is taken for the
+    first path. The key looks closer than it is, which is the direction an attacker wants (a security problem; library rule
+    d11).</li>
+</ul>
+<p>The owner's rule (library d12, confirmed 23 Oct 2026): <b>preserve the TX and RX pulse across the full spectrum so the UWB
+  shape is maintained.</b> A weak signal or first tap is more exposed to echoes, noise and interference, so the signal path
+  must stay phase-linear and the amplifiers must stay out of compression, so that they add no interference of their own.</p>
+
+<h2>Why phase linearity: group delay and its ripple</h2>
+<p>Group delay is the time each frequency takes to pass a part: τ<sub>g</sub> = −dφ/dω, the slope of the phase of S21.
+  If it is the same at every frequency in the channel (linear phase), the pulse is only delayed, and a fixed delay is removed
+  by the antenna-delay calibration. If it varies across the 499.2 MHz, different parts of the pulse arrive at different
+  times and the pulse is distorted.</p>
+<p>A useful way to see it is the <b>paired-echo</b> rule (Wheeler, 1939): a ripple in group delay of peak size ΔGD that
+  repeats every f<sub>p</sub> across frequency acts like two small copies of the pulse, one <b>before</b> and one after the
+  main pulse:</p>
+<p class="small emc-formula">echo spacing = ±1 / f<sub>p</sub> &nbsp;·&nbsp; echo size ≈ ΔGD · f<sub>p</sub> / 2 (relative to the pulse)</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Group-delay ripple (peak)</th><th>Ripple period</th><th>Echoes at</th><th>Echo size</th></tr></thead>
+  <tbody>
+    <tr><td>0.15 ns</td><td>100 MHz</td><td>±10 ns</td><td>−42 dB</td></tr>
+    <tr><td>0.5 ns</td><td>100 MHz</td><td>±10 ns</td><td>−32 dB</td></tr>
+    <tr><td>1 ns</td><td>200 MHz</td><td>±5 ns</td><td>−20 dB</td></tr>
+  </tbody>
+</table></div>
+<p>The echo is relative to <i>each</i> path, including the strongest. If the first path is 15 dB below a reflection, a −20 dB
+  pre-echo of that reflection is only 5 dB below the true first path and can sit in front of it {{ est|safe }}.
+  Amplitude ripple (gain not flat across the channel) makes paired echoes in the same way.</p>
+<p><b>Where it comes from:</b> filter skirts (sharp BAW/SAW filters have group-delay peaks near their band edges), narrow or
+  high-Q matching networks, mismatch between parts (two reflections a line length apart make an echo at twice the line
+  delay, of size |Γ<sub>1</sub>|·|Γ<sub>2</sub>|), and long or poorly matched cables between the antenna and the anchor.
+  A constant delay offset is calibrated out once; its change with temperature, channel and part-to-part spread is not, and
+  becomes a ranging bias: 100 ps is 3 cm {{ est|safe }}.</p>
+
+<h2>Why amplifier linearity: low compression</h2>
+<ul>
+  <li><b>Strong near signals.</b> A key at 30 cm is 30–40 dB stronger than one at 10 m. If the LNA or the receiver's input
+    compresses on the strong taps, it clips them: the energy spreads in time and frequency, the sidelobes rise and can
+    cover the weak first path. A bypass mode for strong signals (as in QM14068) is a linearity tool, not only a power
+    saver.</li>
+  <li><b>Blockers.</b> 6 GHz Wi-Fi 6E/7, 5.9 GHz V2X and other radios in the car reach the UWB front end; a non-linear
+    LNA mixes them into the channel as interference. The ETSI anchor must keep working with a −50 dBm CW interferer
+    (library d5).</li>
+  <li><b>Transmit side.</b> The power is capped at −41.3 dBm/MHz, so a UWB PA such as QM14070 only makes up losses; run
+    it well below its compression point so the transmitted pulse keeps its shape and meets the standard's pulse mask
+    (minimal precursor, which the secure-ranging receivers assume; library d12, r4).</li>
+</ul>
+
+<h2>Choosing the parts in the TX/RX path</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Block</th><th>What to look for</th><th>Ask for / check</th></tr></thead>
+  <tbody>
+    <tr><td><b>Antenna / AoA switch</b><br><small>e.g. SKY5A2108</small></td>
+      <td>Low loss across the whole channel (every dB before the LNA adds to the noise figure); switches are broadband, so
+        their group delay is usually flat. SKY5A2108: 0.9 dB typical, 1.4 dB max insertion loss and 17 dB minimum isolation in
+        7.125–8.3 GHz (data sheet, via library d15).</td>
+      <td>Loss and return loss over 7.7–8.3 GHz (channel 9) at temperature; isolation between AoA ports; linearity next to
+        Wi-Fi and V2X transmitters.</td></tr>
+    <tr><td><b>Filter</b></td>
+      <td>The biggest group-delay risk. Choose a passband wider than the channel so the 499.2 MHz sits in the flat middle,
+        not on a skirt {{ est|safe }}; trade rejection of 6 GHz Wi-Fi against flatness.</td>
+      <td>S-parameters (.s2p) to compute group delay; group-delay variation and amplitude ripple <i>inside</i> the channel,
+        not only insertion loss at the centre.</td></tr>
+    <tr><td><b>LNA</b><br><small>e.g. QM14068</small></td>
+      <td>Low noise figure and flat gain across the channel; input P1dB and IIP3 high enough for the nearest key and the
+        blockers; a bypass mode for strong signals.</td>
+      <td>Gain flatness (dB) and group delay over the channel; input P1dB against the strongest expected signal; switching
+        time between LNA and bypass.</td></tr>
+    <tr><td><b>PA</b><br><small>e.g. QM14070</small></td>
+      <td>Only enough gain to make up the losses to the −41.3 dBm/MHz cap; plenty of back-off from P1dB; flat gain and phase
+        across the channel.</td>
+      <td>Pulse shape at the output (precursor, ringing) against the 802.15.4z pulse mask; output spectrum against the
+        emission mask.</td></tr>
+    <tr><td><b>Matching, baluns, cables</b></td>
+      <td>Broadband, low-Q matching; short, well-matched lines between parts so that reflections do not add echoes.</td>
+      <td>Return loss of each interface over the channel; cable length (each echo appears at twice its delay).</td></tr>
+  </tbody>
+</table></div>
+<p><b>A rule of thumb to start from</b> {{ est|safe }}: keep the whole chain's group-delay variation inside the channel to a
+  few hundred picoseconds peak-to-peak, so that paired echoes stay at least 30 dB below each path, and its gain flat to
+  within about 1 dB. Check it on the cascade, not part by part: ripples of several parts can add.</p>
+<p><b>How to verify:</b> measure S21 of the complete chain with a vector network analyser and read group delay with a
+  smoothing aperture of about 10–20 MHz; or take the inverse FFT of S21 to see the impulse response and look for anything
+  before the main peak. Repeat at hot and cold, and on channel 5 and 9.</p>
+
+<h2>Sources</h2>
+<ul class="small">
+  <li>Systems library topic <a href="/library/auto_uwb">Automotive UWB</a>: ETSI EN 302 065-3-1 limits and blocking
+    (d1, d4, d5), secure first-path detection (d11, Apple arXiv 2312.03964), pulse with minimal precursor (d12), SKY5A2108
+    loss and isolation (d15), QM14068 / QM14070 catalogue descriptions.</li>
+  <li>H. A. Wheeler, "The interpretation of amplitude and phase distortion in terms of paired echoes", Proc. IRE, 1939:
+    the paired-echo rule used above (textbook background).</li>
+  <li>Owner's comments on library item d12 and in the site feedback, 23 Oct 2026.</li>
+</ul>

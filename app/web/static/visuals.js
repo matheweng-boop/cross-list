@@ -113,11 +113,11 @@
   const range = (a, b, n, log) => Array.from({length: n}, (_, i) => (log ? a * (b / a) ** (i / (n - 1)) : a + ((b - a) * i) / (n - 1)));
 
   // Skyworks / Qorvo RF parts (gain, NF, IP3, loss, band) for part suggestions; fetched once, when a visual needs them
-  let PARTS = null, partsLoading = false;
+  let PARTS = null, partsLoading = false, redraw = null;
   function loadParts() {
     if (PARTS || partsLoading) return;
     partsLoading = true;
-    fetch("/api/visuals/rf-parts").then(r => r.json()).then(d => { PARTS = d.parts || []; if (cur && cur.parts) render(); })
+    fetch("/api/visuals/rf-parts").then(r => r.json()).then(d => { PARTS = d.parts || []; if (cur && cur.parts) { if (redraw) redraw(); render(); } })
       .catch(() => { PARTS = []; });
   }
   const covers = (p, f) => p.fmin <= f * 1.02 && p.fmax >= f * 0.98;
@@ -140,6 +140,85 @@
   // ------------------------------------------------------------------ the visuals
   const V = [];
 
+  // the dBm ladder's rungs in plain words (owner 23 Oct 2026: "What does BLE sensitivity mean? Or GNSS antenna? Or
+  // 1 mW? What happens if it is violated? What am I actually blocking?"). Typical values: BizDev summaries (est).
+  const NOTE = id => `/rf-notes#${id}`;
+  const DBM_RUNGS = [
+    {p: -130, name: "GNSS signal at the antenna", short: "GNSS at antenna",
+      what: "A navigation satellite 20,000 km away arrives this weak: below the receiver's own noise. The receiver still finds it by correlating with the known code for a long time.",
+      typ: "About −125 to −130 dBm for GPS L1 in open sky; 10–20 dB weaker indoors, under trees or in a car with metal-coated glass.",
+      bad: "Weaker than this, or more noise from the receiver: slow or no position fix, position jumps. Every 1 dB of loss or noise figure in front of the GNSS LNA costs 1 dB here.",
+      parts: [["GNSS LNA SKY65723-11", "/find?q=SKY65723-11"], ["L5 LNA SKY65728-11", "/find?q=SKY65728-11"]],
+      read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["GNSS L1 band", "/rf-bands?band=gnss_l1"], ["Cascaded NF visual", "#nf"]]},
+    {p: -114, name: "Thermal noise in 1 MHz", short: "noise 1 MHz",
+      what: "The noise every resistor and antenna makes at room temperature: −174 dBm in each hertz of bandwidth, so −114 dBm in 1 MHz and −101 dBm in 20 MHz. No receiver can go below it; it can only add to it (its noise figure).",
+      typ: "−174 dBm/Hz + 10·log10(bandwidth in Hz).",
+      ifLabel: "Why it matters", bad: "A signal must stand above this floor plus the receiver's noise figure by the SNR the modulation needs; otherwise it cannot be decoded.",
+      read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["Cascaded noise figure", NOTE("cascaded_noise_figure")]]},
+    {p: -100, name: "LTE / 5G phone sensitivity", short: "",
+      what: "The weakest cellular downlink a phone must still receive at a stated data rate (3GPP calls it reference sensitivity).",
+      typ: "About −94 to −100 dBm in a 10 MHz channel, depending on the band (est; check the 3GPP edition).",
+      bad: "Below it the phone drops to a lower data rate, then loses the cell at the edge of coverage. A strong signal in a neighbouring band (a blocker) raises the effective floor: the phone is 'desensitised'.",
+      parts: [["LNA SKY67151-396LF", "/find?q=SKY67151-396LF"], ["Switch SKY13489-001", "/find?q=SKY13489-001"]],
+      read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["Cascaded NF visual", "#nf"]]},
+    {p: -95, name: "BLE sensitivity", short: "BLE sensitivity",
+      what: "The weakest Bluetooth Low Energy packet a receiver still decodes with few bit errors (0.1 % in the Bluetooth test).",
+      typ: "Good chips: −95 to −105 dBm at 1 Mb/s; the Bluetooth specification only asks for −70 dBm.",
+      bad: "Below it packets are lost and resent, range shrinks, the connection drops. Wi-Fi or an LTE uplink next to 2.4 GHz can block it: their strong signal overloads the receiver, which then misses the weak BLE packet.",
+      parts: [["2.4 GHz LNA SKY65405-21", "/find?q=SKY65405-21"], ["2.4 GHz front end SKY85203-11", "/find?q=SKY85203-11"]],
+      read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["2.4 GHz band", "/rf-bands?band=ism24"]]},
+    {p: -70, name: "Good Wi-Fi signal", short: "",
+      what: "What a laptop sees in the next room from the access point.",
+      typ: "−50 dBm close by, −70 dBm good, −80 dBm the edge for slow rates.",
+      bad: "Weaker: the link falls back to slower modulations and the throughput drops.",
+      parts: [["5 GHz LNA SKY65404-31", "/find?q=SKY65404-31"], ["5 GHz filter SKY85922-11", "/find?q=SKY85922-11"]],
+      read: [["Wi-Fi front ends", NOTE("wifi_fem_and_triband_ap")], ["Link budget visual", "#link"]]},
+    {p: -30, name: "Strong blocker at a receiver", short: "blocker",
+      what: "A strong unwanted signal next to the band, for example the phone's own transmitter or a nearby base station, as it arrives at the receiver input after the antenna isolation.",
+      typ: "−40 to −10 dBm (est), depending on how close the transmitter is and how much filtering there is.",
+      ifLabel: "What you are blocking", bad: "Nothing is switched off: the weak wanted signal is drowned. The blocker compresses the LNA (its gain drops) or mixes with a second signal into an intermodulation product on the wanted channel. Fix it with filter rejection (BAW / SAW), or with higher linearity (IIP3).",
+      parts: [["High-IIP3 switch SKY13414-485LF", "/find?q=SKY13414-485LF"], ["Filters (SKY85922-11)", "/find?q=SKY85922-11"]],
+      read: [["Blocking and dynamic range", NOTE("dynamic_range_sfdr_blocking")], ["Blocker view (this visual)", "#dbm"]]},
+    {p: 0, name: "1 mW: the reference", short: "1 mW",
+      what: "The zero of the dBm scale: one milliwatt. A BLE transmitter sends about this; it is also a typical drive level for a mixer's local oscillator.",
+      typ: "0 dBm = 1 mW = 0.22 V rms into 50 Ω.",
+      ifLabel: "If a receiver sees it", bad: "At an LNA input 0 dBm is huge: most LNAs compress between −20 and 0 dBm, and +10 to +20 dBm can damage them. Receivers next to transmitters use limiters or switches to protect the LNA.",
+      read: [["dBm and decibels", NOTE("dbm_basics")], ["P1dB and compression", NOTE("p1db_dynamic_range")], ["Limiters", NOTE("limiters_receiver_protection")]]},
+    {p: 10, name: "IIP3 of a good LNA", short: "",
+      what: "Not a real power: the input level at which the intermodulation products of two signals would, extrapolated, be as strong as the signals. It measures linearity.",
+      typ: "LNAs −5 to +20 dBm, mixers +15 to +30 dBm, RF switches +60 to +75 dBm.",
+      ifLabel: "If the signals approach it", bad: "Long before it: each 1 dB more of two blockers makes their third-order product 3 dB stronger, until it lands on the wanted channel above the noise. The part also compresses about 10 dB below IIP3.",
+      parts: [["LNA SKY67021-396LF (IIP3 +22.5 dBm)", "/find?q=SKY67021-396LF"], ["Mixer SKY73090-21", "/find?q=SKY73090-21"]],
+      read: [["IIP3 in plain words", NOTE("iip3_basics")], ["IP3 visual", "#ip3"], ["FM intermodulation visual", "#fmim"]]},
+    {p: 20, name: "Wi-Fi client transmitter", short: "Wi-Fi client",
+      what: "A laptop or phone sending Wi-Fi: 100 mW.",
+      typ: "+15 to +20 dBm; 2.4 GHz in Europe is limited to 20 dBm EIRP.",
+      ifLabel: "If it is exceeded", bad: "Above the legal limit the product fails certification; pushed close to the PA's limit it distorts and spills into neighbouring channels (EVM and spectral mask fail).",
+      parts: [["Wi-Fi front ends (SKY85…)", "/find?q=SKY85"]],
+      read: [["Wi-Fi front ends", NOTE("wifi_fem_and_triband_ap")]]},
+    {p: 23, name: "Phone power amplifier", short: "Phone PA",
+      what: "Maximum output of a phone's cellular PA at the antenna (3GPP power class 3); class 2 allows +26 dBm.",
+      typ: "+23 dBm = 200 mW.",
+      ifLabel: "If it is exceeded", bad: "Not allowed by the standard; in practice the PA's linearity limits it, because distortion breaks the adjacent-channel limits (ACLR). Next to the phone's own GNSS or Wi-Fi receivers this is the blocker.",
+      parts: [["PA modules (SKY78…)", "/find?q=SKY78"]],
+      read: [["PA linearisation", NOTE("pa_linearization_dpd_doherty")]]},
+    {p: 30, name: "1 W", short: "1 W",
+      what: "One watt: small-cell and repeater outputs, handheld two-way radios (about 1–5 W).",
+      typ: "+30 dBm = 1 W = 7.1 V rms into 50 Ω.", ifLabel: "Why it matters",
+      bad: "At this level heat and voltage stress matter: switches need high power handling (P0.1dB), and 1 dB of loss is 200 mW of heat.",
+      read: [["RF switches", NOTE("rf_switches")]]},
+    {p: 46, name: "Macro base station, 40 W", short: "Macro cell 40 W",
+      what: "One carrier of a macro cell site.",
+      typ: "+43 to +49 dBm per carrier (20–80 W).", ifLabel: "Why it matters",
+      bad: "Efficiency and linearity of the PA decide the site's power bill; Doherty PAs and predistortion are used.",
+      parts: [["Qorvo PAs (QPA…)", "/find?q=QPA"]],
+      read: [["PA linearisation", NOTE("pa_linearization_dpd_doherty")]]},
+    {p: 60, name: "Radar transmitter, 1 kW peak", short: "Radar 1 kW",
+      what: "Peak pulse power of a marine or weather radar.",
+      typ: "+60 dBm (1 kW) and far more for air-traffic radar; the average power is much lower because it sends short pulses.",
+      ifLabel: "Why it matters", bad: "The receiver next to it must survive its own transmitter: limiters and switches protect the LNA.",
+      read: [["Radar fundamentals", NOTE("radar_fundamentals")], ["Limiters", NOTE("limiters_receiver_protection")]]},
+  ];
   const BLOCKER = v => v.mode === "blocker", LADDER = v => v.mode !== "blocker";
   V.push({
     id: "dbm", group: "RF links", title: "dBm: the power ladder",
@@ -173,15 +252,25 @@
     compute(v) {
       if (v.mode !== "blocker") {
         const w = 1e-3 * undb(v.p), vr = Math.sqrt(w * 50);
-        const refs = [[-130, "GNSS at antenna"], [-95, "BLE sensitivity"], [0, "1 mW"], [20, "Wi-Fi client"], [24, "Phone PA"], [30, "1 W"], [46, "Macro cell 40 W"], [60, "Radar 1 kW"]];
+        const near = DBM_RUNGS.reduce((a, r) => (Math.abs(r.p - v.p) < Math.abs(a.p - v.p) ? r : a));
+        const link = ([l, h]) => `<a href="${h}">${esc(l)}</a>`;
+        const rung = r => `<details class="vz-rung${r === near ? " near" : ""}"${r === near ? " open" : ""}><summary><b class="lv">${r.p > 0 ? "+" : ""}${r.p} dBm</b><b>${esc(r.name)}</b><span class="muted">${esc(si(1e-3 * undb(r.p), "W"))}</span></summary>
+          <dl><dt>What it is</dt><dd>${r.what}</dd><dt>Typical</dt><dd>${r.typ}</dd><dt>${esc(r.ifLabel || "If it is violated")}</dt><dd>${r.bad}</dd>
+          ${r.parts ? `<dt>Our parts</dt><dd>${r.parts.map(link).join(" · ")}</dd>` : ""}<dt>Read more</dt><dd>${r.read.map(link).join(" · ")}</dd></dl></details>`;
         return {
-          outputs: [["Power", si(w, "W")], ["dBW", `${num(v.p - 30)} dBW`], ["Voltage into 50 Ω", si(vr, "V") + " rms"]],
+          outputs: [["Power", si(w, "W")], ["dBW", `${num(v.p - 30)} dBW`], ["Voltage into 50 Ω", si(vr, "V") + " rms"], ["Nearest rung", `${near.name} (${near.p > 0 ? "+" : ""}${near.p} dBm)`]],
           eq: `P<sub>dBm</sub> = 10 · log<sub>10</sub>( P / 1 mW )`,
           eqn: `${num(v.p)} dBm = 10 · log<sub>10</sub>( ${si(w, "W")} / 1 mW )`,
           chart: {x: {min: -140, max: 70, label: "Power (dBm)"}, y: {min: 1e-18, max: 1e5, log: true, label: "Power (W)", fmt: x => si(x, "W")},
             series: [{pts: range(-140, 70, 60).map(p => [p, 1e-3 * undb(p)])}],
-            vlines: refs.map(([p, l], i) => ({x: p, label: l, row: i % 4, color: C.grey})), marks: [{x: v.p, y: w, label: `${num(v.p)} dBm = ${si(w, "W")}`}]},
-          note: "Every 10 dB is a factor of 10 in power, every 3 dB a factor of 2. A receiver handles signals 20 orders of magnitude below what the transmitter next to it sends: that is why filters, isolation and linearity matter. Switch the view to see a blocker scenario.",
+            vlines: DBM_RUNGS.filter(r => r.short).map((r, i) => ({x: r.p, label: r.short, row: i % 4, color: r === near ? C.orange : C.grey})), marks: [{x: v.p, y: w, label: `${num(v.p)} dBm = ${si(w, "W")}`}]},
+          html: `<div class="vz-terms small"><span><b>dBm</b>: power compared with 1 milliwatt, in decibels. 0 dBm = 1 mW, +10 dBm = 10 mW, +30 dBm = 1 W, −30 dBm = 1 µW. +3 dB doubles the power, +10 dB is ten times.</span>
+            <span><b>dB</b>: a ratio (gain, loss, isolation), no unit. <b>dBc</b>: below the carrier. <b>dBi</b>: antenna gain.</span>
+            <span><b>Sensitivity</b>: the weakest signal a receiver still decodes. <b>Blocker</b>: a strong unwanted signal near the band that overloads the receiver so it loses the weak wanted one.</span>
+            <span><b>IIP3</b>: how strong two unwanted signals may be before the receiver makes its own interference; higher is better (<a href="/rf-notes#iip3_basics">IIP3 in plain words</a>, <a href="#ip3">IP3 visual</a>).</span>
+            <span>Basics: <a href="/rf-notes#dbm_basics">dBm and decibels</a> · <a href="/rf-notes#sensitivity_noise_floor">Sensitivity and noise floor</a> · <a href="/rf-notes#dynamic_range_sfdr_blocking">Blocking</a> · <a href="https://www.minicircuits.com/appdoc/AN60-038.html" target="_blank" rel="noopener noreferrer">Mini-Circuits: amplifier terms defined ↗</a></span></div>
+            <p class="small"><b>The rungs</b> <span class="muted">(click one; the one nearest your slider is open)</span></p><div class="vz-rungs">${DBM_RUNGS.map(rung).join("")}</div>`,
+          note: "Every 10 dB is a factor of 10 in power, every 3 dB a factor of 2. A receiver handles signals 20 orders of magnitude below what the transmitter next to it sends: that is why filters, isolation and linearity matter. Switch the view to see a blocker scenario. Typical values are BizDev summaries of the standards (est); check the spec edition for a design.",
         };
       }
       // two blockers placed so that their 3rd-order product falls on the wanted channel; levels input-referred
@@ -261,33 +350,68 @@
     },
   });
 
-  // receiver chain for the cascaded noise figure: loss stages (filter, switch) set gain = −loss and NF = loss
-  const NF_TYPES = {filter: ["Filter", true, C.grey, ["filter"]], switch: ["Switch", true, C.teal, ["switch"]], lna: ["LNA", false, C.blue, ["lna"]],
-    gain: ["Gain block", false, C.green, ["gain"]], mixer: ["Mixer", false, C.orange, ["mixer"]], if: ["ADC / IF", false, C.purple, []]};
+  // receiver chain for the cascaded noise figure: loss stages (filter, switch) set gain = −loss and NF = loss.
+  // A block can take a real part's numbers (owner 23 Oct 2026: "allow a selection of 1 or 2 Skyworks parts as an
+  // example; graph how the signal behaves through each block"); a number the catalogue does not state stays the
+  // slider's assumed value and is marked "Not Enough Data".
+  const NF_TYPES = {filter: ["Filter", true, C.grey, ["filter"], "Filt"], switch: ["Switch", true, C.teal, ["switch"], "Sw"], lna: ["LNA", false, C.blue, ["lna"], "LNA"],
+    gain: ["Gain block", false, C.green, ["gain"], "Gain"], mixer: ["Mixer", false, C.orange, ["mixer"], "Mix"], if: ["ADC / IF", false, C.purple, [], "ADC"]};
   const NF_DEFAULT = () => [{t: "filter", g: -1, nf: 1}, {t: "lna", g: 18, nf: 0.8}, {t: "mixer", g: 8, nf: 9}, {t: "if", g: 0, nf: 20}];
+  // worked examples with real Skyworks parts (numbers from the catalogue key specs)
+  const NF_EXAMPLES = [
+    {label: "Cellular 1.9 GHz: SKY13489-001 switch + SKY67151-396LF LNA", f: 1.9, bw: 10, chain: [{t: "switch", part: "SKY13489-001"}, {t: "lna", part: "SKY67151-396LF"}, {t: "mixer", part: "SKY73090-21"}, {t: "if", g: 0, nf: 20}]},
+    {label: "GNSS L1: SKY65723-11 LNA", f: 1.575, bw: 2, chain: [{t: "filter", g: -1.5, nf: 1.5}, {t: "lna", part: "SKY65723-11"}, {t: "if", g: 0, nf: 12}]},
+    {label: "Wi-Fi 5.2 GHz: SKY85922-11 filter + SKY65404-31 LNA", f: 5.2, bw: 20, chain: [{t: "filter", part: "SKY85922-11"}, {t: "lna", part: "SKY65404-31"}, {t: "if", g: 0, nf: 15}]},
+  ];
+  const partBy = mpn => (PARTS || []).find(p => p.mpn === mpn);
+  // copy a part's numbers into a block; returns the block with ned = the numbers the catalogue does not give
+  function usePart(s, mpn) {
+    s.part = mpn || "";
+    s.ned = [];
+    const p = partBy(s.part), loss = NF_TYPES[s.t][1];
+    if (!p) { s.part = ""; return s; }
+    if (loss) { if (p.il != null) { s.g = -p.il; s.nf = p.il; } else s.ned.push("loss"); }
+    else {
+      if (p.gain != null) s.g = p.gain; else s.ned.push("gain");
+      if (p.nf != null) s.nf = p.nf; else s.ned.push("NF");
+    }
+    return s;
+  }
   let chain = NF_DEFAULT();
   V.push({
     id: "nf", group: "Receivers", title: "Cascaded noise figure and sensitivity",
     explains: [["Front-end modules and LNAs", "/knowledge#p-front_ends"], ["Broadcast radio tuners", "/knowledge#p-tuners"]],
     physics: [["Gain and noise", "phys_noise_gain"]],
-    lead: "Why the first stage decides the receiver. Build the chain below: drag blocks to reorder them, add or remove stages, and move each block's gain and noise figure. Our parts that meet each block's numbers at the chosen frequency are suggested underneath.",
+    lead: "Why the first stage decides the receiver. Build the chain below or start from an example with real Skyworks parts: pick a part for any block and its catalogue gain, noise figure or loss is used. The graph follows the signal and the noise through each block; the gap between them is the signal-to-noise ratio, and it can only shrink.",
     controls: [
-      {k: "f", label: "Frequency (for part suggestions)", min: 0.05, max: 40, value: 2.4, unit: "GHz", log: true},
+      {k: "f", label: "Frequency", min: 0.05, max: 40, value: 2.4, unit: "GHz", log: true},
       {k: "bw", label: "Channel bandwidth", min: 0.01, max: 400, value: 20, unit: "MHz", log: true},
+      {k: "pin", label: "Signal at the antenna", min: -130, max: -30, step: 1, value: -90, unit: "dBm"},
       {k: "snr", label: "SNR the demodulator needs", min: -5, max: 30, step: 0.5, value: 10, unit: "dB"},
     ],
     parts: true,
-    setup(el, rerender) {
+    setup(el, rerender, setVals) {
       chain = NF_DEFAULT();
       let drag = null;
-      const slider = (i, key, label, min, max, step, val) => `<label class="vz-bs"><span>${label} <output>${num(val)} dB</output></span><input type="range" data-i="${i}" data-f="${key}" min="${min}" max="${max}" step="${step}" value="${val}" aria-valuetext="${num(val)} dB"></label>`;
+      const slider = (i, key, label, min, max, step, val, off) => `<label class="vz-bs"><span>${label} <output>${num(val)} dB</output></span><input type="range" data-i="${i}" data-f="${key}" min="${min}" max="${max}" step="${step}" value="${val}" aria-valuetext="${num(val)} dB"${off ? " disabled" : ""}></label>`;
+      const picker = (i, s) => {
+        const stages = NF_TYPES[s.t][3];
+        if (!stages.length) return "";
+        if (!PARTS) return '<span class="muted small">loading parts…</span>';
+        const opts = mfr => PARTS.filter(p => p.mfr === mfr && stages.includes(p.stage)).sort((a, b) => a.mpn.localeCompare(b.mpn))
+          .map(p => `<option value="${esc(p.mpn)}"${p.mpn === s.part ? " selected" : ""}>${esc(p.mpn)} (${num(p.fmin)}–${num(p.fmax)} GHz)</option>`).join("");
+        return `<select class="vz-part" data-pi="${i}" aria-label="Part for block ${i + 1}"><option value="">Your numbers</option><optgroup label="Skyworks">${opts("Skyworks")}</optgroup><optgroup label="Qorvo (Skyworks)">${opts("Qorvo")}</optgroup></select>`;
+      };
+      const ned = (s, k) => (s.ned || []).includes(k) ? ' <span class="vz-ned">Not Enough Data: assumed</span>' : "";
       const draw = () => {
-        el.innerHTML = `<div class="vz-chain" role="list" aria-label="Receiver chain">${chain.map((s, i) => {
-          const [name, loss, color] = NF_TYPES[s.t];
+        el.innerHTML = `<div class="vz-ex small"><span class="muted">Examples with Skyworks parts:</span>${NF_EXAMPLES.map((x, i) => `<button type="button" class="outline secondary" data-ex="${i}">${esc(x.label)}</button>`).join("")}</div>
+        <div class="vz-chain" role="list" aria-label="Receiver chain">${chain.map((s, i) => {
+          const [name, loss, color] = NF_TYPES[s.t], fixed = !!s.part;
           return `${i ? '<span class="vz-arrow" aria-hidden="true">→</span>' : ""}<div class="vz-blk" role="listitem" draggable="false" data-i="${i}" style="border-top-color:${color}">
             <div class="vz-blk-h"><span class="vz-grip" title="Drag to reorder" aria-hidden="true">⠿</span><b>${i + 1}. ${esc(name)}</b>
               <span class="vz-blk-b"><button type="button" data-mv="-1" data-i="${i}" title="Move earlier" aria-label="Move ${esc(name)} earlier"${i ? "" : " disabled"}>←</button><button type="button" data-mv="1" data-i="${i}" title="Move later" aria-label="Move ${esc(name)} later"${i < chain.length - 1 ? "" : " disabled"}>→</button><button type="button" data-rm="${i}" title="Remove" aria-label="Remove ${esc(name)}"${chain.length > 1 ? "" : " disabled"}>×</button></span></div>
-            ${loss ? slider(i, "loss", "Loss", 0, 6, 0.1, s.nf) : slider(i, "g", "Gain", -10, 35, 0.5, s.g) + slider(i, "nf", "NF", 0.2, 30, 0.05, s.nf)}</div>`;
+            ${picker(i, s)}
+            ${loss ? slider(i, "loss", "Loss" + ned(s, "loss"), 0, 6, 0.05, s.nf, fixed && !ned(s, "loss")) : slider(i, "g", "Gain" + ned(s, "gain"), -10, 35, 0.5, s.g, fixed && !ned(s, "gain")) + slider(i, "nf", "NF" + ned(s, "NF"), 0.2, 30, 0.05, s.nf, fixed && !ned(s, "NF"))}</div>`;
         }).join("")}</div>
         <div class="vz-add"><select aria-label="Stage to add">${Object.entries(NF_TYPES).map(([k, [n]]) => `<option value="${k}">${esc(n)}</option>`).join("")}</select><button type="button" class="small-btn outline">+ Add stage</button></div>`;
         el.querySelectorAll("input[data-f]").forEach(inp => inp.addEventListener("input", () => {
@@ -296,6 +420,13 @@
           inp.previousElementSibling.querySelector("output").textContent = `${num(x)} dB`;
           inp.setAttribute("aria-valuetext", `${num(x)} dB`);
           rerender();
+        }));
+        el.querySelectorAll("select[data-pi]").forEach(sel => sel.addEventListener("change", () => { usePart(chain[+sel.dataset.pi], sel.value); draw(); rerender(); }));
+        el.querySelectorAll("[data-ex]").forEach(btn => btn.addEventListener("click", () => {
+          const x = NF_EXAMPLES[+btn.dataset.ex];
+          chain = x.chain.map(s => (s.part ? usePart({t: s.t, g: 10, nf: 2}, s.part) : {...s}));
+          setVals({f: x.f, bw: x.bw});
+          draw(); rerender();
         }));
         el.querySelectorAll("[data-mv]").forEach(btn => btn.addEventListener("click", () => {
           const i = +btn.dataset.i, j = i + +btn.dataset.mv;
@@ -326,12 +457,30 @@
         });
       };
       draw();
+      return draw;  // redrawn when the parts list arrives
     },
     compute(v) {
+      // stage by stage: cumulative gain and noise factor, signal and noise at each block's output
+      const kTB = -174 + db(v.bw * 1e6);
       let G = 1, F = 0;
-      const terms = chain.map((s, i) => { const t = i === 0 ? undb(s.nf) : (undb(s.nf) - 1) / G; G *= undb(s.g); F += t; return t; });
-      const nf = db(F), sens = -174 + nf + db(v.bw * 1e6) + v.snr, gain = db(G);
-      const extra = terms.map((t, i) => (i === 0 ? t - 1 : t)), tot = extra.reduce((a, b) => a + b, 0) || 1;
+      const st = chain.map((s, i) => {
+        const t = i === 0 ? undb(s.nf) : (undb(s.nf) - 1) / G;
+        G *= undb(s.g); F += t;
+        return {s, t, gc: db(G), nfc: db(F), sig: v.pin + db(G), noise: kTB + db(F) + db(G), snr: v.pin - kTB - db(F)};
+      });
+      const nf = db(F), sens = kTB + nf + v.snr, gain = db(G);
+      const extra = st.map(({t}, i) => (i === 0 ? t - 1 : t)), tot = extra.reduce((a, b) => a + b, 0) || 1;
+      const snr0 = v.pin - kTB, snrEnd = st.length ? st[st.length - 1].snr : snr0;
+      const anyNed = chain.some(s => (s.ned || []).length);
+      const cell = (s, k, val) => ((s.ned || []).includes(k) ? `<span class="vz-ned" title="The catalogue does not state it; the slider value is assumed">Not Enough Data</span> <small class="muted">(${val} assumed)</small>` : val);
+      const tbl = `<div class="vz-cas"><table><thead><tr><th>Block</th><th>Part</th><th class="n">Gain</th><th class="n">NF / loss</th><th class="n">Signal out</th><th class="n">Noise out</th><th class="n">SNR</th><th class="n">NF so far</th><th class="n">Share of noise</th></tr></thead><tbody>
+        <tr><td>Antenna</td><td class="muted">–</td><td></td><td></td><td class="n">${num(v.pin)} dBm</td><td class="n">${num(kTB)} dBm</td><td class="n">${num(snr0)} dB</td><td class="n">0 dB</td><td></td></tr>
+        ${st.map((x, i) => {
+          const [name, loss] = NF_TYPES[x.s.t], p = partBy(x.s.part), cov = p ? covers(p, v.f) : true;
+          return `<tr><td>${i + 1}. ${esc(name)}</td><td>${p ? `<a href="/find?q=${encodeURIComponent(p.mpn)}">${esc(p.mpn)}</a>${cov ? "" : ` <small class="vz-ned">not at ${num(v.f)} GHz</small>`}` : '<span class="muted">your numbers</span>'}</td>
+            <td class="n">${loss ? cell(x.s, "loss", `${num(x.s.g)} dB`) : cell(x.s, "gain", `${num(x.s.g)} dB`)}</td><td class="n">${loss ? cell(x.s, "loss", `${num(x.s.nf)} dB`) : cell(x.s, "NF", `${num(x.s.nf)} dB`)}</td>
+            <td class="n">${num(x.sig)} dBm</td><td class="n">${num(x.noise)} dBm</td><td class="n">${num(x.snr)} dB</td><td class="n">${num(x.nfc)} dB</td><td class="n">${num((100 * extra[i]) / tot, 2)} %</td></tr>`;
+        }).join("")}</tbody></table></div>`;
       const rows = chain.map((s, i) => {
         const [name, loss, , stages] = NF_TYPES[s.t];
         if (!stages.length) return `<tr><td>${i + 1}. ${esc(name)}</td><td class="muted small">Not an RF catalogue part (ADC, IF stage or your own design)</td></tr>`;
@@ -342,23 +491,29 @@
         const target = loss ? `loss ≤ ${num(s.nf)} dB` : `gain ≥ ${num(s.g)} dB, NF ≤ ${num(s.nf)} dB`;
         return `<tr><td>${i + 1}. ${esc(name)}<br><small class="muted">${target}</small></td><td>${suggestionHtml(sg, `no ${name.toLowerCase()} of ours covers ${num(v.f)} GHz in the catalogue`)}</td></tr>`;
       });
+      const xs = [0, ...st.map((_, i) => i + 1)], lab = i => (i === 0 ? "Ant" : `${i} ${NF_TYPES[chain[i - 1].t][4]}`);
+      const ys = [v.pin, kTB, ...st.flatMap(x => [x.sig, x.noise])], ymin = Math.floor((Math.min(...ys) - 10) / 10) * 10, ymax = Math.ceil((Math.max(...ys) + 10) / 10) * 10;
       return {
-        outputs: [["System noise figure", `${num(nf)} dB`], ["Total gain", `${num(gain)} dB`], ["Noise floor", `${num(-174 + db(v.bw * 1e6) + nf)} dBm`], ["Sensitivity", `${num(sens)} dBm`]],
-        eq: `F = F<sub>1</sub> + (F<sub>2</sub> − 1)/G<sub>1</sub> + (F<sub>3</sub> − 1)/(G<sub>1</sub>G<sub>2</sub>) + … &nbsp;·&nbsp; S = −174 dBm/Hz + NF + 10 log<sub>10</sub>(BW) + SNR`,
-        eqn: `S = −174 + ${num(nf)} + ${num(db(v.bw * 1e6))} + ${v.snr} = ${num(sens)} dBm`,
-        bars: chain.map((s, i) => ({label: `${i + 1}. ${NF_TYPES[s.t][0]}`, value: Math.max(extra[i], 0), color: NF_TYPES[s.t][2], text: `${num((100 * extra[i]) / tot, 2)} % of the noise`})),
-        html: `<div class="vz-sugg"><b>Our parts for each block at ${num(v.f)} GHz</b><table class="vz-sugg-t small"><tbody>${rows.join("")}</tbody></table><p class="small muted">From catalogue key specs (typical values at the test frequency; active parts only). Check the full data sheet before choosing.</p></div>`,
-        note: "Drag the filter behind the LNA and watch the noise figure drop: its loss now counts only divided by the LNA gain, but the LNA then sees every blocker unfiltered (see the dBm visual's blocker view). Every 0.1 dB of loss in front of the LNA is 0.1 dB of sensitivity, which is why low-loss BAW filters and LNAs with integrated filters sell.",
+        outputs: [["System noise figure", `${num(nf)} dB`], ["Total gain", `${num(gain)} dB`], ["SNR at the antenna → output", `${num(snr0)} → ${num(snrEnd)} dB`, snrEnd < v.snr ? "bad" : ""],
+          ["Noise floor (input)", `${num(kTB + nf)} dBm`], ["Sensitivity", `${num(sens)} dBm`], ...(anyNed ? [["Catalogue data", "Not Enough Data for some blocks: assumed values used", "warn"]] : [])],
+        eq: `F = F<sub>1</sub> + (F<sub>2</sub> − 1)/G<sub>1</sub> + (F<sub>3</sub> − 1)/(G<sub>1</sub>G<sub>2</sub>) + … &nbsp;·&nbsp; SNR<sub>k</sub> = P<sub>in</sub> − (−174 + 10 log BW + NF<sub>k</sub>) &nbsp;·&nbsp; S = −174 dBm/Hz + NF + 10 log<sub>10</sub>(BW) + SNR`,
+        eqn: `SNR = ${num(v.pin)} − (${num(kTB)} + ${num(nf)}) = ${num(snrEnd)} dB &nbsp;·&nbsp; S = −174 + ${num(nf)} + ${num(db(v.bw * 1e6))} + ${v.snr} = ${num(sens)} dBm`,
+        chart: {x: {min: 0, max: Math.max(1, st.length), label: "Block (Ant = antenna, then the output of each block)", fmt: t => (Number.isInteger(t) && t <= st.length ? lab(t) : "")},
+          y: {min: ymin, max: ymax, label: "Level (dBm)"},
+          series: [{pts: xs.map((x, i) => [x, i ? st[i - 1].sig : v.pin]), color: C.blue, label: "Signal"}, {pts: xs.map((x, i) => [x, i ? st[i - 1].noise : kTB]), color: C.red, label: "Noise in the channel"}],
+          marks: xs.map((x, i) => ({x, y: i ? st[i - 1].sig : v.pin, r: 4, color: C.blue, label: i === xs.length - 1 || i === 0 ? `SNR ${num(i ? st[i - 1].snr : snr0)} dB` : ""}))},
+        html: `${tbl}<div class="vz-sugg"><b>Our parts for each block at ${num(v.f)} GHz</b><table class="vz-sugg-t small"><tbody>${rows.join("")}</tbody></table><p class="small muted">Part numbers from catalogue key specs (typical values at the test frequency; active parts only). "Not Enough Data": the catalogue does not state that number, so the block keeps the slider's assumed value. Check the full data sheet before choosing.</p></div>`,
+        note: "The blue line is the wanted signal, the red line the noise in the channel. Both rise with gain, but each block adds its own noise, so the gap (SNR) only shrinks: most of it is lost in the first blocks. Put a lossy filter or switch first and the SNR drops by its loss straight away; behind a high-gain LNA, the mixer and ADC hardly matter. That is why low-loss switches, BAW filters and low-NF LNAs sell.",
       };
     },
-    related: [["Blocker scenario (dBm visual)", "#dbm"], ["LNAs on the RF coverage page", "/business/rf-coverage"]],
+    related: [["Blocker scenario (dBm visual)", "#dbm"], ["IIP3 in plain words", "/rf-notes#iip3_basics"], ["Cascaded noise figure (note)", "/rf-notes#cascaded_noise_figure"], ["LNAs on the RF coverage page", "/business/rf-coverage"]],
   });
 
   V.push({
     id: "ip3", group: "Receivers", title: "IP3 and intermodulation",
     explains: [["Front-end modules and PAs", "/knowledge#p-front_ends"], ["RF switches", "/knowledge#p-rf_switches"]],
     physics: [["Linearity", "phys_linearity"]],
-    lead: "Two strong signals create third-order products that grow three times as fast as the signals themselves.",
+    lead: "Two strong signals create third-order products that grow three times as fast as the signals themselves. IIP3 is the input level where the two lines would meet: the higher it is, the stronger the signals a part tolerates before it makes its own interference.",
     controls: [
       {k: "g", label: "Gain", min: 0, max: 40, step: 0.5, value: 15, unit: "dB"},
       {k: "oip3", label: "Output IP3", min: 0, max: 55, step: 0.5, value: 32, unit: "dBm"},
@@ -372,11 +527,76 @@
         eqn: `${num(pim)} dBm = 3·(${num(v.pin)}) + ${num(v.g)} − 2·(${num(iip3)})`,
         chart: {x: {min: -60, max: Math.max(iip3 + 8, 0), label: "Input power per tone (dBm)"}, y: {min: -140, max: v.oip3 + 10, label: "Output power (dBm)"},
           series: [{pts: xs.map(p => [p, p + v.g]), label: "Fundamental (slope 1)"}, {pts: xs.map(p => [p, 3 * p + v.g - 2 * iip3]), color: C.orange, label: "IM3 (slope 3)"}],
-          vlines: [{x: v.oip3 - 10 - v.g + 1, label: "≈ 1 dB compression", color: C.red}],
+          vlines: [{x: v.oip3 - 10 - v.g + 1, label: "≈ 1 dB compression", color: C.red}, {x: iip3, label: `IIP3 ${num(iip3)} dBm`, color: C.grey, row: 1}],
           marks: [{x: v.pin, y: pf, label: `tones ${num(pf)} dBm`, color: C.blue}, {x: v.pin, y: pim, label: `IM3 ${num(pim)} dBm`}, {x: iip3, y: v.oip3, label: `IP3 (${num(iip3)}, ${num(v.oip3)})`, color: C.grey}]},
         note: "Lower the input by 1 dB and the IM3 product falls 3 dB, so the gap improves by 2 dB. IP3 is an extrapolation: the real amplifier compresses about 10 dB below it.",
       };
     },
+    related: [["IIP3 in plain words", "/rf-notes#iip3_basics"], ["FM intermodulation", "#fmim"], ["Blocker view of the dBm ladder", "#dbm"]],
+  });
+
+  // FM intermodulation (owner 23 Oct 2026: "when a particular FM frequency is tuned, at which other frequencies could
+  // intermod occur?"): the products of two strong stations, the image and the half-IF spur, and every pair of the
+  // stations in a list whose third-order product lands on the tuned channel.
+  let fmList = "88.1, 89.5, 91.0, 94.3, 96.7, 99.9, 102.4, 105.8";
+  const fmParse = s => [...new Set(String(s).split(/[\s,;]+/).map(Number).filter(f => f >= 60 && f <= 120).map(f => +f.toFixed(2)))].sort((a, b) => a - b);
+  V.push({
+    id: "fmim", group: "Broadcast radio", title: "FM intermodulation: where interference can come from",
+    lead: "Tune an FM frequency and place two strong stations. A receiver that is not perfectly linear mixes them into new frequencies; if one lands on your channel you hear the other stations, a whistle or noise there. The list below checks every pair of the stations you enter.",
+    explains: [["Broadcast radio tuners (Si47xx)", "/knowledge#p-tuners"], ["Front-end LNAs and filters", "/knowledge#p-front_ends"]],
+    physics: [["Linearity", "phys_linearity"], ["Mixing and the superheterodyne", "phys_mixing_superhet"]],
+    controls: [
+      {k: "ft", label: "Tuned station", min: 76, max: 108, step: 0.1, value: 92.5, unit: "MHz"},
+      {k: "f1", label: "Strong station A", min: 76, max: 108, step: 0.1, value: 91, unit: "MHz"},
+      {k: "f2", label: "Strong station B", min: 76, max: 108, step: 0.1, value: 89.5, unit: "MHz"},
+      {k: "ps", label: "Level of A and B at the input", min: -60, max: 0, step: 1, value: -25, unit: "dBm"},
+      {k: "pw", label: "Level of the tuned station", min: -110, max: -30, step: 1, value: -75, unit: "dBm"},
+      {k: "iip3", label: "Receiver input IP3", min: -30, max: 30, step: 0.5, value: 0, unit: "dBm"},
+      {k: "if", label: "Intermediate frequency (IF)", type: "select", options: [["10.7", "10.7 MHz (classic superhet)"], ["0.2", "low IF, about 0.2 MHz (est, Si47xx-type)"]], value: "10.7"},
+    ],
+    setup(el, rerender) {
+      el.innerHTML = `<label class="small">Strong stations where you are (MHz, separated by commas) <input type="text" class="vz-fmlist" value="${esc(fmList)}" inputmode="decimal" aria-label="Strong FM stations in MHz"></label>`;
+      el.querySelector("input").addEventListener("input", e => { fmList = e.target.value; rerender(); });
+    },
+    compute(v) {
+      const IF = +v.if, ch = 0.1, f1 = v.f1, f2 = v.f2, ft = v.ft;  // ±100 kHz: half an FM channel
+      const im3 = 3 * v.ps - 2 * v.iip3, iip2 = v.iip3 + 20, im2 = 2 * v.ps - iip2;  // IIP2 ≈ IIP3 + 20 dB (est)
+      const prods = [
+        ["2A − B", 2 * f1 - f2, 3], ["2B − A", 2 * f2 - f1, 3], ["A + B", f1 + f2, 2], ["|A − B|", Math.abs(f1 - f2), 2],
+        ["2A", 2 * f1, 2], ["2B", 2 * f2, 2], ["2A + B", 2 * f1 + f2, 3], ["2B + A", 2 * f2 + f1, 3],
+      ].map(([l, f, o]) => ({l, f, o, lvl: o === 3 ? im3 : im2, hit: Math.abs(f - ft) <= ch}));
+      const img = ft + 2 * IF, half = ft + IF / 2, lo = ft + IF;  // high-side LO
+      const stations = fmParse(`${fmList}, ${f1}, ${f2}`).filter(f => Math.abs(f - ft) > ch);
+      const pairs = [];
+      for (const a of stations) for (const b of stations) if (a !== b && Math.abs(2 * a - b - ft) <= ch) pairs.push([a, b, 2 * a - b]);
+      const imgSt = stations.filter(f => Math.abs(f - img) <= ch), halfSt = stations.filter(f => Math.abs(f - half) <= ch);
+      const sir = v.pw - im3, hit3 = prods.some(p => p.hit && p.o === 3);
+      const tone = sir < 20 ? "bad" : sir < 35 ? "warn" : "ok";
+      const fmt = f => `${num(f, 4)} MHz`;
+      const inBand = f => f >= 76 && f <= 108;
+      const series = [{pts: [[ft, -130], [ft, v.pw]], color: C.green, width: 5, label: "Tuned"}, {pts: [[f1, -130], [f1, v.ps]], color: C.blue, width: 4, label: "A, B"}, {pts: [[f2, -130], [f2, v.ps]], color: C.blue, width: 4}];
+      prods.filter(p => p.f >= 60 && p.f <= 120).forEach((p, i) => series.push({pts: [[p.f, -130], [p.f, p.lvl]], color: p.hit ? C.red : C.orange, width: 3, ...(i ? {} : {label: "Products"})}));
+      const rowsP = prods.map(p => `<tr class="${p.hit ? "hit" : ""}"><td>${esc(p.l)}</td><td class="n">${fmt(p.f)}</td><td>${p.o === 3 ? "3rd" : "2nd"}</td><td class="n">${num(p.lvl)} dBm</td><td>${p.hit ? "<b>on your channel</b>" : inBand(p.f) ? "inside the FM band" : p.f >= 174 && p.f <= 240 ? "in DAB Band III" : "outside the FM band"}</td></tr>`).join("");
+      return {
+        outputs: [["2A − B / 2B − A", `${fmt(2 * f1 - f2)} / ${fmt(2 * f2 - f1)}`, hit3 ? "bad" : ""], ["Third-order product level", `${num(im3)} dBm`],
+          ["Tuned station above it", `${num(sir)} dB${hit3 ? " (product on your channel)" : ""}`, hit3 ? tone : ""],
+          ["Image frequency", `${fmt(img)}${imgSt.length ? " · a station is there" : ""}`, imgSt.length && IF > 1 ? "warn" : ""], ["Pairs that hit the tuned channel", String(pairs.length), pairs.length ? "warn" : "ok"]],
+        eq: `IM3 at 2f<sub>A</sub> − f<sub>B</sub> and 2f<sub>B</sub> − f<sub>A</sub>, level 3·P − 2·IIP3 &nbsp;·&nbsp; IM2 at f<sub>A</sub> ± f<sub>B</sub> &nbsp;·&nbsp; image = f<sub>tuned</sub> + 2·IF (LO above)`,
+        eqn: `2·${num(f1, 4)} − ${num(f2, 4)} = ${fmt(2 * f1 - f2)} &nbsp;·&nbsp; IM3 = 3·(${v.ps}) − 2·(${num(v.iip3)}) = ${num(im3)} dBm &nbsp;·&nbsp; image = ${num(ft, 4)} + 2·${IF} = ${fmt(img)}`,
+        chart: {x: {min: 76, max: IF > 1 ? Math.min(135, Math.max(112, img + 2)) : 112, label: "Frequency (MHz)"}, y: {min: -130, max: 5, label: "Level at the input (dBm)"}, series,
+          bands: [{x0: ft - ch, x1: ft + ch, color: C.green, opacity: 0.15}, {x0: 108, x1: 112, color: C.grey, opacity: 0.08, label: "above FM"}],
+          vlines: [...(IF > 1 ? [{x: img, label: "image", color: C.purple, row: 0}, {x: half, label: "½ IF", color: C.purple, row: 1}] : []), {x: lo, label: "LO", color: C.grey, row: 2}],
+          hlines: [{y: v.pw - 30, label: "30 dB below tuned (est. limit)", color: C.red}]},
+        html: `<div class="vz-im small"><div class="vz-imwrap"><table><thead><tr><th>Product of A and B</th><th class="n">Frequency</th><th>Order</th><th class="n">Level (est)</th><th>Where</th></tr></thead><tbody>${rowsP}
+          <tr class="${imgSt.length ? "hit" : ""}"><td>Image (LO + IF)</td><td class="n">${fmt(img)}</td><td>mixer</td><td></td><td>${IF > 1 ? (imgSt.length ? `<b>station at ${imgSt.map(fmt).join(", ")}</b>: needs image rejection` : "an RF filter or image-reject mixer must suppress it") : "next to the channel: removed by I/Q image rejection, not a filter"}</td></tr>
+          ${IF > 1 ? `<tr class="${halfSt.length ? "hit" : ""}"><td>Half-IF spur</td><td class="n">${fmt(half)}</td><td>2nd</td><td></td><td>${halfSt.length ? `<b>station at ${halfSt.map(fmt).join(", ")}</b>` : "a strong station here also leaks in"}</td></tr>` : ""}</tbody></table></div>
+          <p><b>Station pairs from your list whose 2f<sub>1</sub> − f<sub>2</sub> lands on ${fmt(ft)}</b>: ${pairs.length ? pairs.map(([a, b, f]) => `2·${num(a, 4)} − ${num(b, 4)} = ${num(f, 4)}`).join(" · ") : "none"}.</p>
+          <p><b>In plain words.</b> Two strong stations 1.5 MHz apart create products another 1.5 MHz further out on each side (2A − B and 2B − A). These third-order products stay inside the FM band, so no band filter can remove them; only a more linear front end (higher IIP3) or less input level (an attenuator, AGC) helps. Each 1 dB stronger stations make them 3 dB stronger; each 1 dB more IIP3 makes them 2 dB weaker. Second-order products (A + B, A − B) fall outside the FM band (A + B lands in DAB Band III, 174–216 MHz), so a car radio with DAB has to care about them too. The image is the other frequency the mixer converts to the same IF; a classic 10.7 MHz radio has it 21.4 MHz away, where aviation and other services sit.</p>
+          <p>Our tuners: <a href="/find?q=Si47">Si47xx AM / FM / DAB receivers</a> (low-IF digital architecture: the image is removed by I/Q processing) · Read more: <a href="/rf-notes#iip3_basics">IIP3 in plain words</a> · <a href="/rf-notes#ip3_intermodulation">IP3 and two-tone intermodulation</a> · <a href="/rf-notes#frequency_planning_pitfalls">Frequency planning pitfalls</a> · <a href="/rf-bands?band=fm">FM band</a></p></div>`,
+        note: "Levels are estimates for a single front end: IM3 = 3·P − 2·IIP3, IM2 with IIP2 ≈ IIP3 + 20 dB (est). The 30 dB line is a rough limit for clean mono FM (est; stereo needs more). The FM capture effect helps when the tuned station is clearly stronger than the product, and hurts when it is not.",
+      };
+    },
+    related: [["IP3 and intermodulation", "#ip3"], ["AM vs FM modulation", "#mod"], ["dBm ladder", "#dbm"]],
   });
 
   V.push({
@@ -998,6 +1218,10 @@
     related: [["Engineering note: EFT burst and CISPR emissions on isolated designs", "/engineering/emc_eft_cispr"], ["CMTI against the switching edge", "#cmti"], ["CMTI guide", "/engineering/cmti_kv_us"]],
   });
 
+  // visuals kept in their own files: each templates/engineering/visuals/_<id>.html include loads a static/vz/<id>.js
+  // that pushes a function onto window.VZ_ADD before this file runs; it receives the helpers and adds its definitions
+  for (const add of window.VZ_ADD || []) add({V, DATA, C, num, si, db, undb, log10, clamp, esc, range});
+
   // ------------------------------------------------------------------ page
   const groups = [...new Set(V.map(v => v.group))];
   const nav = $("#vz-nav"), panel = $("#vz-panel");
@@ -1036,6 +1260,17 @@
       if (c.type !== "select") el.setAttribute("aria-valuetext", show(c, vals[c.k]));  // read as "1.5 dB", not "1.5"
       render();
     }));
+    const setVals = values => {
+      Object.assign(vals, values);
+      for (const c of cur.controls) {  // move the sliders and selects to the new values
+        const el = panel.querySelector(`[data-k="${c.k}"]`);
+        if (!el || !(c.k in values)) continue;
+        el.value = c.type === "select" ? vals[c.k] : toPos(c, vals[c.k]);
+        const o = panel.querySelector(`[data-o="${c.k}"]`);
+        if (o) o.textContent = show(c, vals[c.k]);
+        if (c.type !== "select") el.setAttribute("aria-valuetext", show(c, vals[c.k]));
+      }
+    };
     panel.querySelectorAll(".vz-pre").forEach(b => b.addEventListener("click", () => {
       const p = cur.presets[+b.dataset.p];
       Object.assign(vals, p.values);
@@ -1060,7 +1295,7 @@
       const step = () => { phase = (phase + 0.06) % (2 * Math.PI); render(); anim = requestAnimationFrame(step); };
       anim = requestAnimationFrame(step);
     });
-    if (cur.setup) cur.setup(panel.querySelector(".vz-extra"), render);
+    redraw = cur.setup ? cur.setup(panel.querySelector(".vz-extra"), render, setVals) || null : null;
     if (cur.parts) loadParts();
     render();
   }

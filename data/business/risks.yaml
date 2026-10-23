@@ -1,0 +1,367 @@
+# Opportunities > Risks: competing technologies and products that could endanger our current solutions (owner,
+# 23 Oct 2026: "an additional page called risks, determining competitive technologies and products that could
+# endanger our current solutions"). Public sources only. Likelihood and timing are BizDev's own reading (shown "est").
+#
+# groups:                                     one per product family of ours
+#   - id: isolation
+#     name: Isolation
+#     ours: what we sell in this family (plain text)
+#     risks:
+#       - id: short-id                       (unique)
+#         threat: the technology or competitor product, one plain sentence      (required)
+#         kind: technology | competitor | market
+#         who: [companies]                                                        (required)
+#         likelihood: high | medium | low     (est)
+#         when: now | 1-2 years | 3-5 years | 5+ years   (est)
+#         impact: which of our parts it hits and how                             (required)
+#         signs: [early signs to watch]                                           (required)
+#         links: [{label: ..., href: /path or https://...}]   competitor profiles, crosses, library, reports
+#         sources: ["https://... - what" or "Publication, date - what"]         (required, public only)
+updated: 2026-10-23
+groups:
+  - id: isolation
+    name: Isolation
+    ours: "Skyworks digital isolators (Si86xx), opto-emulators (Si87xx), isolated gate drivers (Si82xx), isolated amplifiers (Si89xx), isolated DC-DC (Si88xx) and optocouplers"
+    risks:
+      - id: iso-low-cost-capacitive
+        threat: "Low-cost capacitive isolators and isolated gate drivers with comparable data sheets and aggressive prices."
+        kind: competitor
+        who: [TI, Novosense, Diodes, Chipanalog]
+        likelihood: high
+        when: now
+        impact: "Price erosion and lost sockets for Si86xx isolators and Si82xx gate drivers, first in China's EV, solar and storage makers, then at global industrial customers who accept a cheaper second source."
+        signs:
+          - "Novosense or Chipanalog named as approved alternates at Western or Japanese Tier 1s."
+          - "Quotes lost on price alone where our part is a technical match."
+          - "Novosense sales and support offices opening in Europe, Japan or Korea."
+          - "TI isolator price cuts or new low-cost families."
+        links:
+          - {label: Novosense profile, href: /business/competitors/novosense}
+          - {label: Novosense parts and our crosses, href: "/parts?company=Novosense"}
+          - {label: "Cross: NSI6602A-DLAR (Novosense gate driver)", href: "/find?q=NSI6602A-DLAR"}
+          - {label: "Cross: ISO7741 (TI isolator)", href: "/find?q=ISO7741"}
+          - {label: "Case: ISO7821DWW-style isolation", href: /business/reports/iso7821dww-isolation}
+        sources:
+          - "Owner's review answer, 23 Oct 2026 - TI, Novosense and Diodes are the true competitors (capacitive technology, aggressive pricing)"
+          - "https://paper.cnstock.com/html/2026-03/31/content_2194446.htm - Novosense 2025 annual report summary: revenue +72 %"
+      - id: iso-integrated-driver-supply
+        threat: "Isolated gate drivers with the isolated bias supply (transformer) built in, and drivers sold inside power modules, so one part replaces a driver plus a separate isolated DC-DC."
+        kind: technology
+        who: [TI, Infineon, ADI]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Fewer Si82xx + Si88xx pairs per inverter or charger; modules with a built-in driver remove the driver socket altogether."
+        signs:
+          - "Reference designs for traction inverters and on-board chargers without a discrete isolated DC-DC."
+          - "SiC module makers offering modules with integrated drivers as standard."
+        links:
+          - {label: Our isolated DC-DC and gate drivers, href: "/parts?q=Si88"}
+          - {label: "Case: extra-wide high-voltage isolation", href: /business/reports/hv-extra-wide-isolation}
+          - {label: "Library: traction inverter (ASIL D)", href: /library/traction_asil_d}
+        sources:
+          - "TI public product pages - UCC14240-Q1 isolated bias supply module with integrated transformer"
+          - "Infineon public product pages - EiceDRIVER isolated gate drivers (coreless transformer)"
+      - id: iso-magnetic-current-sensing
+        threat: "Current sensing moving from shunt plus isolated amplifier to integrated magnetic current sensors (Hall, TMR, fluxgate) that need no separate isolation."
+        kind: technology
+        who: [Allegro, Melexis, Infineon, Novosense, TI]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Si89xx isolated amplifiers in EV chargers, solar inverters and motor drives lose sockets where the magnetic sensor is accurate enough."
+        signs:
+          - "Magnetic sensors reaching about 0.5 % accuracy over temperature at shunt-like cost."
+          - "Novosense pushing its Maxic magnetic sensors together with its isolators."
+        links:
+          - {label: Our isolated amplifiers, href: "/parts?q=Si89"}
+          - {label: Novosense profile (Maxic purchase), href: /business/competitors/novosense}
+        sources:
+          - "https://autonews.gasgoo.com/articles/news/novosense-h1-revenue-reaches-254-billion-yuan-up-6673-yoy-2093273014249799681 - Novosense H1 2026: sensors RMB 643 M (+56 %)"
+      - id: iso-gan-integrated-driver
+        threat: "GaN power chips with the gate driver on the same chip or in the same package."
+        kind: technology
+        who: [Navitas, TI, Infineon, EPC]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Low-side and some half-bridge driver sockets disappear in chargers, server power supplies and solar micro-inverters; high-voltage isolated drivers stay."
+        signs:
+          - "Server power supply and micro-inverter designs using integrated GaN stages."
+          - "GaN with integrated isolation announced."
+        links:
+          - {label: Our gate drivers, href: "/parts?q=Si82"}
+        sources:
+          - "Navitas, TI (LMG35xx) and Infineon public product pages - GaN with integrated driver"
+      - id: iso-opto-migration
+        threat: "Optocouplers being replaced by digital isolators and pin-compatible opto-emulators."
+        kind: technology
+        who: [TI, Novosense, Broadcom]
+        likelihood: high
+        when: now
+        impact: "Our optocoupler line shrinks; partly offset because our own Si87xx opto-emulators are one of the replacements."
+        signs:
+          - "Customers moving opto sockets to emulators at redesign."
+          - "Competitor opto-emulators winning against our Si87xx."
+        links:
+          - {label: Our opto-emulators, href: "/parts?q=Si87"}
+        sources:
+          - "TI public product pages - ISOM87xx opto-emulators"
+  - id: timing
+    name: Timing
+    ours: "Skyworks clock generators (Si5332, Si534x), buffers, jitter attenuators and network synchronisers, crystal oscillators (Si5xx) and BAW-resonator (crystal-free) timing"
+    risks:
+      - id: timing-mems
+        threat: "MEMS oscillators and crystal-free clock generators, now bundled with the Renesas clock lines SiTime bought in July 2026."
+        kind: competitor
+        who: [SiTime, Renesas]
+        likelihood: high
+        when: now
+        impact: "Oscillators (Si5xx), clock generators (Si5332) and jitter attenuators in datacentre, networking and automotive; bundling with Renesas MCUs and SoCs."
+        signs:
+          - "SiTime Grade 1 automotive design wins in ADAS and zone controllers."
+          - "Renesas reference designs that specify SiTime timing."
+          - "Customers asking us for a second source while the Renesas lines change hands (an opportunity as well)."
+        links:
+          - {label: SiTime profile, href: /business/competitors/sitime}
+          - {label: "Case: automotive clock tree", href: /business/reports/auto-clock-tree}
+          - {label: Our Si5332 clock generators, href: "/parts?q=Si5332"}
+        sources:
+          - "https://www.sitime.com/company/newsroom/press-release/sitime-reports-second-quarter-2026-financial-results - SiTime Q2 2026: revenue +127 %, Renesas timing closed 1 Jul 2026"
+      - id: timing-baw-ti
+        threat: "TI's BAW-resonator oscillators and clocks, the same crystal-free story as ours from a larger catalogue supplier."
+        kind: competitor
+        who: [TI]
+        likelihood: medium
+        when: now
+        impact: "Our BAW timing (SKY631xx) and network synchronisers lose their uniqueness; TI can bundle timing with its processors and power."
+        signs:
+          - "New TI BAW clock families for automotive and networking."
+          - "TI timing in reference designs where we used to be named."
+        links:
+          - {label: Our timing parts, href: "/parts?q=SKY631"}
+        sources:
+          - "TI public product pages - BAW oscillators (CDC6C) and BAW network synchronisers (LMK05318B)"
+      - id: timing-on-chip
+        threat: "Clocks moving inside the chips that use them: resonators in the package of MCUs and SoCs, and PCIe or SerDes links that need fewer separate reference clocks."
+        kind: technology
+        who: [SiTime with Renesas, SoC makers]
+        likelihood: medium
+        when: 3-5 years
+        impact: "Fewer clock generators and PCIe buffers per board in servers and cars."
+        signs:
+          - "MCUs or SoCs with an in-package MEMS or BAW resonator (SiTime and Renesas announced they will work on this)."
+          - "Wider use of PCIe separate-reference-clock modes (SRIS) that remove fan-out buffers."
+        links:
+          - {label: SiTime profile, href: /business/competitors/sitime}
+        sources:
+          - "SiTime announcement of the Renesas timing purchase, Feb 2026 - plan to put MEMS timing next to Renesas chips"
+  - id: rf
+    name: RF front ends
+    ours: "Skyworks and Qorvo front-end modules, PAs, LNAs, switches, BAW and SAW filters, Wi-Fi FEMs and Qorvo GaN amplifiers"
+    risks:
+      - id: rf-fem-into-soc
+        threat: "Wi-Fi, Bluetooth and cellular chip makers building the PA, LNA and switch into their SoC, or selling their own front-end modules with the chipset."
+        kind: technology
+        who: [Qualcomm, MediaTek, Broadcom]
+        likelihood: high
+        when: now
+        impact: "Wi-Fi FEMs and cellular PA modules in Android phones, routers and IoT; the attach rate of a separate FEM falls."
+        signs:
+          - "Reference designs with integrated PA (iFEM) at the high end, not only low-cost IoT."
+          - "Chipset makers quoting 'modem to antenna' bundles."
+        links:
+          - {label: RF coverage by band, href: /business/rf-coverage}
+          - {label: "Case: automotive Wi-Fi 7 FEM", href: /business/reports/auto-wifi7-fem}
+        sources:
+          - "Qualcomm and MediaTek public product briefs - integrated RF front-end and 'modem-to-antenna' offers"
+      - id: rf-customer-in-house
+        threat: "The largest phone customer designing its own modem (Apple C1, 2025) and possibly more of the radio over time."
+        kind: market
+        who: [Apple]
+        likelihood: medium
+        when: 3-5 years
+        impact: "Content per phone at our largest customer; front-end modules tuned to a merchant modem may be redesigned."
+        signs:
+          - "Apple job postings and patents on PA, filter or front-end design."
+          - "Teardowns showing fewer merchant front-end parts."
+        links:
+          - {label: Skyworks + Qorvo portfolio, href: /portfolio}
+        sources:
+          - "Apple press release, Feb 2025 - iPhone 16e with the Apple-designed C1 modem"
+          - "Skyworks annual report (10-K) - Apple as the largest customer"
+      - id: rf-china-localisation
+        threat: "Chinese RF suppliers winning Android phone and IoT sockets, moving up from switches and LNAs to PA modules."
+        kind: competitor
+        who: [Maxscend, Vanchip, Smarter Micro]
+        likelihood: high
+        when: now
+        impact: "Switches, LNAs, low and mid-band PA modules and Wi-Fi FEMs at Chinese phone and module makers."
+        signs:
+          - "Chinese PA modules (L-PAMiD) in flagship phones from Chinese brands."
+          - "Price lists 20–30 % below ours on switches and LNAs (est.)."
+        links:
+          - {label: RF coverage by band, href: /business/rf-coverage}
+        sources:
+          - "Maxscend and Vanchip annual reports (Shenzhen and Shanghai exchanges) - growth in RF front-end modules"
+      - id: rf-filters
+        threat: "New filter technologies and rivals for 3–7 GHz: Broadcom FBAR at the high end, Murata XBAR (from Resonant) for Wi-Fi 6E/7 and n77/n79, and Chinese BAW makers."
+        kind: technology
+        who: [Broadcom, Murata, Chinese BAW makers]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Qorvo BAW filters and filters inside our FEMs and modules in the 5–7 GHz bands."
+        signs:
+          - "XBAR filters in Wi-Fi 7 tri-band routers and phones."
+          - "Chinese BAW filters qualified at Chinese phone makers."
+        links:
+          - {label: "Case: filters 1–11 GHz", href: /business/reports/filters-1-11ghz}
+        sources:
+          - "Murata press release, 2022 - purchase of Resonant (XBAR technology)"
+      - id: rf-gan
+        threat: "GaN amplifiers from rivals and from China for base stations, defence and satellite, and GaN-on-silicon moving into lower-cost uses."
+        kind: competitor
+        who: [MACOM, NXP, Ampleon, Chinese GaN makers]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Qorvo GaN PAs and front ends in infrastructure and defence; Skyworks GaAs PAs at higher bands."
+        signs:
+          - "MACOM design wins using the former Wolfspeed RF line."
+          - "Chinese base stations fully on local GaN."
+        links:
+          - {label: RF coverage by band, href: /business/rf-coverage}
+        sources:
+          - "MACOM press release, Dec 2023 - purchase of the Wolfspeed RF business"
+  - id: radio
+    name: Broadcast radio and TV tuners
+    ours: "Skyworks automotive AM/FM tuners, digital radio coprocessors (DAB, HD Radio), consumer single-chip radios, TV tuners and demodulators"
+    risks:
+      - id: radio-sdr-soc
+        threat: "Software-defined radio: one processor or the head-unit SoC demodulates every standard in software, fed by simple RF tuners or direct-sampling ADCs."
+        kind: technology
+        who: [NXP, head-unit SoC makers]
+        likelihood: high
+        when: 1-2 years
+        impact: "Digital radio coprocessors (DAB / HD) first; later the tuners if the SoC maker supplies its own front end."
+        signs:
+          - "Car makers' new head units using an SDR processor with a third-party tuner."
+          - "Cockpit SoCs advertising radio demodulation in software."
+        links:
+          - {label: Radio & audio, href: /broadcast}
+          - {label: "Case: next radio tuner", href: /business/reports/radio-tuner-next}
+        sources:
+          - "NXP public product pages - SAF4000 software-defined car radio processor"
+      - id: radio-broadcast-decline
+        threat: "Less broadcast radio in the car: streaming and connected radio, and some electric cars dropping AM."
+        kind: market
+        who: [Car makers, streaming services]
+        likelihood: medium
+        when: now
+        impact: "Fewer tuners per car (fewer phase-diversity tuners, no AM path); a smaller market for AM/FM tuners."
+        signs:
+          - "Car models launched without AM or with a single tuner."
+          - "Outcome of the US 'AM Radio for Every Vehicle' bill and EU DAB+ mandates (DAB+ is required in new cars in the EU since 2020, which supports our digital radio parts)."
+        links:
+          - {label: Radio configurations, href: /broadcast/configurations}
+        sources:
+          - "EU Electronic Communications Code (Directive 2018/1972), Annex XI - digital radio in new cars"
+          - "US Congress, 'AM Radio for Every Vehicle Act' (public bill text)"
+      - id: radio-low-cost-consumer
+        threat: "Low-cost Chinese single-chip FM/DAB radios for consumer products."
+        kind: competitor
+        who: [Chinese radio chip makers]
+        likelihood: medium
+        when: now
+        impact: "Consumer single-chip radios (Si47xx) lose price-driven sockets."
+        signs:
+          - "Consumer DAB+ radios shipping without our parts."
+        links:
+          - {label: Radio & audio, href: /broadcast}
+        sources:
+          - "Teardowns of consumer DAB+ radios in public reviews (est.)"
+  - id: power
+    name: Power
+    ours: "Skyworks LED and flash drivers, RF PMICs, Power over Ethernet (PSE and PD); Qorvo power management, motor control and SiC FETs"
+    risks:
+      - id: power-china-analog
+        threat: "Chinese analog power suppliers with broad catalogues and low prices."
+        kind: competitor
+        who: [SG Micro, Southchip, Novosense]
+        likelihood: high
+        when: now
+        impact: "LED drivers, load switches, small PMICs and motor drivers in consumer and industrial products."
+        signs:
+          - "Pin-compatible Chinese alternatives listed against our part numbers."
+          - "Chinese suppliers' automotive qualifications."
+        links:
+          - {label: Novosense profile, href: /business/competitors/novosense}
+        sources:
+          - "https://autonews.gasgoo.com/articles/news/novosense-h1-revenue-reaches-254-billion-yuan-up-6673-yoy-2093273014249799681 - Novosense power products +69 % in H1 2026"
+      - id: power-oled
+        threat: "OLED displays and integrated display PMICs removing white-LED backlight drivers; flash drivers built into phone PMICs."
+        kind: technology
+        who: [Display PMIC makers, phone platform PMICs]
+        likelihood: high
+        when: now
+        impact: "Our white-LED backlight and camera flash drivers (about 40 parts)."
+        signs:
+          - "Mid-range phones and laptops moving to OLED."
+        links:
+          - {label: Our LED drivers, href: "/parts?q=AAT"}
+        sources:
+          - "Public display-industry reports on OLED share in phones and laptops (est.)"
+      - id: power-sic-price
+        threat: "A SiC price war: Chinese SiC wafers and devices plus large Western makers pushing prices down."
+        kind: competitor
+        who: [Infineon, onsemi, STMicroelectronics, Chinese SiC makers]
+        likelihood: high
+        when: now
+        impact: "Qorvo SiC FETs (if still in the portfolio) face falling prices and larger rivals."
+        signs:
+          - "SiC device price cuts at EV makers; supplier distress (Wolfspeed filed for Chapter 11 in June 2025)."
+        links:
+          - {label: Skyworks + Qorvo portfolio, href: /portfolio}
+        sources:
+          - "Wolfspeed press release, June 2025 - Chapter 11 restructuring"
+      - id: power-poe
+        threat: "PoE controllers built into switch and PHY chips, and price pressure from large analog catalogues."
+        kind: competitor
+        who: [TI, Microchip, ADI]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Our PoE PSE controllers and PD interfaces."
+        signs:
+          - "Switch reference designs with PSE built in."
+        links:
+          - {label: Browse PoE parts, href: "/parts?q=Si34"}
+        sources:
+          - "TI, Microchip and ADI public PoE product pages"
+  - id: connectivity
+    name: Connectivity (UWB and short range)
+    ours: "Qorvo UWB chips and modules (car access, phones, tags) and short-range radio"
+    risks:
+      - id: uwb-combo
+        threat: "UWB built into Wi-Fi/Bluetooth combo chips and phone SoCs, and phone makers using their own UWB chips."
+        kind: technology
+        who: [Qualcomm, Apple, NXP]
+        likelihood: medium
+        when: 1-2 years
+        impact: "Qorvo UWB in phones and accessories; car access stays separate longer."
+        signs:
+          - "Combo chips with UWB in Android flagships."
+        links:
+          - {label: "Library: automotive UWB", href: /library/auto_uwb}
+          - {label: "Case: UWB 802.15.4ab", href: /business/reports/auto-uwb-15-4ab}
+        sources:
+          - "Qualcomm FastConnect 7900 announcement, Mar 2025 - Wi-Fi 7, Bluetooth and UWB in one chip (est.; announcement not re-read)"
+      - id: uwb-nxp-car
+        threat: "NXP's strong position in car access (UWB anchors plus the car's secure element and MCU) and early 802.15.4ab products."
+        kind: competitor
+        who: [NXP]
+        likelihood: medium
+        when: now
+        impact: "Qorvo UWB in car-access anchors and in-cabin sensing."
+        signs:
+          - "Car makers choosing one supplier for anchors and key ECU."
+        links:
+          - {label: "Library: automotive UWB", href: /library/auto_uwb}
+          - {label: "Case: UWB child presence detection", href: /business/reports/auto-uwb-cpd}
+        sources:
+          - "NXP public product pages - Trimension automotive UWB"

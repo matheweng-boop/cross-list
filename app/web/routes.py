@@ -128,6 +128,7 @@ templates.env.globals.update(
     nav_icons=nav.ICONS,
     page_title=nav.page_title,
     page_label=nav.page_label,
+    owner_page=nav.owner_page,
 )
 
 # grade filter on the cross results: the keys grade_of() returns, worded as everywhere else (app/web/labels.py)
@@ -601,7 +602,8 @@ def rf_bands_page(request: Request, band: str = ""):
 
     d = rf_bands.data()
     ctx = {"groups": d["groups"], "bands": d["bands"], "band": band if rf_bands.band(band) else "",
-           "counts": rf_bands.band_counts()}  # fmt: skip
+           "counts": rf_bands.band_counts(), "types": d.get("types") or [],
+           "apps": d.get("applications") or []}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/rf_bands.html", ctx)
 
 
@@ -638,10 +640,22 @@ def visuals_rf_parts():
 
 @router.get("/library", response_class=HTMLResponse)
 def library_index(request: Request):
+    """Full systems (owner, 23 Oct 2026): each system is a header with its sub-systems, their diagram counts and deep
+    dives; topics not yet in a system follow at the end."""
     from app.services import library
+    from app.services import systems as sy
 
-    return templates.TemplateResponse(request, "library/index.html", {"topics": library.topics(),
-                                                                      "n_sources": len(library.sources())})  # fmt: skip
+    topics = library.topics()
+    by_key = {t["key"]: t for t in topics}
+    tree = [{**s, "subs": [{**x, "deep": [by_key[k] for k in x["topics"] if k in by_key]} for x in s["subsystems"]]}
+            for s in sy.systems()]  # fmt: skip
+    for s in tree:
+        s["deep"] = [t for x in s["subs"] for t in x["deep"]]
+        s["n"] = len({i for x in s["subs"] for i in x["idx"]})
+    placed = {t["key"] for s in tree for t in s["deep"]}
+    ctx = {"tree": tree, "topics": topics, "other": [t for t in topics if t["key"] not in placed],
+           "n_other_diagrams": len(sy.unassigned()), "n_sources": len(library.sources())}  # fmt: skip
+    return templates.TemplateResponse(request, "library/index.html", ctx)
 
 
 @router.get("/library/sources", response_class=HTMLResponse)
@@ -933,7 +947,7 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
 @router.get("/pricing/estimate", response_class=HTMLResponse)
 def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
                    automotive: bool = False, name: str = "", currency: str = "USD",
-                   sop: int = 0, ours: str = "", parity_lo: float = 0, parity_hi: float = 0, gm: int = 0,
+                   sop: int = 0, gm: int = 0,
                    released: int = 0, bq: list[str] = Query([]), bp: list[str] = Query([]),
                    session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
@@ -955,8 +969,6 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     pts = price_model.parse_breaks(breaks)
     currency = currency if currency in price_model.config()["fx"]["usd_per"] else "USD"
     gm_f = price_model.margin(gm / 100 if gm else None)
-    lo, hi = parity_lo or cfg["parity"][0], parity_hi or cfg["parity"][1]
-    lo, hi = sorted((min(max(lo, 0.2), 3.0), min(max(hi, 0.2), 3.0)))
     sop_from = "entered" if 1980 <= sop <= 2050 else ""
     if not sop_from and known.get("released"):
         sop, sop_from = known["released"], "datasheet"  # the year of the datasheet's first revision
@@ -968,9 +980,6 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                                  gm_f, fab, units or None)  # fmt: skip
         m["oem"] = price_model.oem_path(m, sop, released=released)
         m["name"] = name.strip()[:60]
-        if ours.strip():
-            m["ours"] = {"name": ours.strip()[:60], "lo": lo, "hi": hi, "rows": price_model.scaled(m, lo, hi)}
-            m["ours"]["oem"] = price_model.oem_path({"rows": m["ours"]["rows"]}, sop)
         scenarios.append((fab, m))
     m = scenarios[0][1] if scenarios else None
     ctx = {"cfg": cfg, "m": m, "scenarios": scenarios,
@@ -978,8 +987,7 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
            "rows": rows or [("", "")], "pasted": pasted,
            "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
                  "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
-                 "released": released or "",
-                 "ours": ours, "parity_lo": lo, "parity_hi": hi},
+                 "released": released or ""},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     return templates.TemplateResponse(request, "price_estimate.html", ctx)

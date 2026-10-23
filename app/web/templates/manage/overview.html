@@ -1,15 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Data management</h1>
-<p class="subtitle muted">What is waiting for you, and how much of each data set has been checked.</p>
+<p class="subtitle muted">Everything on one page: what came in today, what waits for you, the raw data behind the site and how much of each data set has been checked.</p>
 
-<div class="ov-wait small">
-  <a class="ov-chip" href="/manage/guest-input"><b>{{ waiting.guest }}</b> guest input{{ '' if waiting.guest == 1 else 's' }} to review</a>
-  <a class="ov-chip" href="/manage/verify"><b>{{ waiting.verify }}</b> to verify</a>
-  <a class="ov-chip" href="/business/tam"><b>{{ tam.open }}</b> TAM figures to review</a>
-  <a class="ov-chip" href="/business/quality#questions">Data questions</a>
-  <a class="ov-chip" href="/manage/feedback"><b>{{ waiting.feedback }}</b> new feedback</a>
-  <a class="ov-chip" href="/manage/uploads?status=new"><b>{{ waiting.uploads }}</b> new uploads</a>
+{% macro tile(n, label, href, hot=False) %}<a class="ov-card{{ ' hot' if hot and n }}" href="{{ href }}"><b>{{ n }}</b><small>{{ label }}</small></a>{% endmacro %}
+<h2 class="ov-h">Today and waiting for you</h2>
+<div class="ov-grid" id="ov-waiting">
+  {{ tile(waiting.feedback_today, 'feedback item' ~ ('' if waiting.feedback_today == 1 else 's') ~ ' came in today', '/manage/feedback') }}
+  {{ tile(waiting.feedback, 'new feedback, not answered yet', '/manage/feedback', True) }}
+  {{ tile(waiting.verify, 'open in Verify next' ~ (': ' ~ verify_split if verify_split else ''), '/manage/verify', True) }}
+  {{ tile(waiting.guest, 'guest input' ~ ('' if waiting.guest == 1 else 's') ~ ' pending your review', '/manage/guest-input', True) }}
+  {{ tile(waiting.part_requests, 'open part requests', '/requests') }}
+  {{ tile(waiting.review_requests, 'part review requests open', '/manage/reviews') }}
+  {{ tile(waiting.diagram_feedback, 'open diagram feedback', '/blocks/feedback') }}
+  {{ tile(waiting.area_requests, 'new area requests', '/blocks/area-requests') }}
+  {{ tile(waiting.uploads, 'new uploads', '/manage/uploads?status=new') }}
+  {{ tile(tam.open, 'TAM figures to review', '/business/tam') }}
+</div>
+<p class="small muted">Verify next, requests, site feedback and guest input are under <a href="/manage/verify">Site data</a>. Open <a href="/business/quality#questions">data questions</a> are on Data quality.</p>
+
+<h2 class="ov-h">Raw data</h2>
+<div class="ov-grid" id="ov-raw">
+  {{ tile(raw.parts, 'parts from ' ~ raw.makers ~ ' companies', '/parts') }}
+  {{ tile(raw.ours, 'Skyworks and Qorvo parts', '/portfolio') }}
+  {{ tile(raw.datasheets, 'datasheets' ~ (', newest ' ~ raw.last_datasheet|date('short') if raw.last_datasheet else ''), '/manage/schedule') }}
+  {{ tile(raw.changes_week, 'lifecycle or revision changes in 7 days', '/manage/schedule') }}
+  {{ tile(raw.diagrams, 'library diagrams, ' ~ raw.unassigned ~ ' not yet in a system', '/blocks') }}
+  {{ tile(raw.subsystems, 'sub-systems in ' ~ raw.systems ~ ' systems', '/library') }}
 </div>
 
 <h2 class="ov-h">Review status per data set</h2>

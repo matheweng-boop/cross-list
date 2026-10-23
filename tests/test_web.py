@@ -313,7 +313,7 @@ def test_navigation_sections_and_old_urls(client):
                                ("/parts", "Products", "Browse products"),
                                ("/compare", "Products", "Compare"),
                                ("/broadcast", "Systems &amp; applications", "Radio &amp; audio"),
-                               ("/broadcast/configurations", "Systems &amp; applications", "Radio configurations"),
+                               ("/broadcast/configurations", "Systems &amp; applications", "Radio &amp; audio"),
                                ("/blocks", "Systems &amp; applications", "Application library"),
                                ("/blocks/coverage", "Systems &amp; applications", "Application library"),
                                ("/business", "Systems &amp; applications", "Cross-sell &amp; gaps"),

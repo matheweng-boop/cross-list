@@ -22,7 +22,6 @@ NAV = (
         ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
         ("Technology reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
-        ("Radio configurations", "/broadcast/configurations", "Saved car-radio tuner configurations"),
     )),
     ("opportunities", "Opportunities", (
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
@@ -68,7 +67,7 @@ PLACES = {
     "/parts": ("products", "/parts"),
     "/compare": ("products", "/compare"),
     "/portfolio": ("products", "/portfolio"),
-    "/broadcast/configurations": ("systems", "/broadcast/configurations"),
+    "/broadcast/configurations": ("systems", "/broadcast"),  # owner, 23 Oct 2026: a tab of Radio & audio
     "/broadcast": ("systems", "/broadcast"),
     "/blocks/feedback": ("manage", "/manage/reviews"),
     "/blocks/area-requests": ("manage", "/manage/reviews"),
@@ -138,6 +137,7 @@ TABS = (
     (("Data quality", "/business/quality"), ("Human validation", "/business/validation")),
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),
     (("All visuals", "/visuals"), ("RF bands", "/rf-bands")),
+    (("Tuners & demodulators", "/broadcast"), ("Radio configurations", "/broadcast/configurations")),
     (
         ("Overview", "/knowledge"),
         ("RF fundamentals", "/rf-notes"),
@@ -170,7 +170,7 @@ def state(path: str) -> dict:
     item = next((i for i in section[2] if i[1] == href), section[2][0])
     crumbs = [(section[1], section[2][0][1]), (item[0], item[1])]
     tabs = next((g for g in TABS if any(_tab_match(path, h) for _, h in g)), None)
-    active_tab = next((h for _, h in (tabs or ()) if _tab_match(path, h)), None)
+    active_tab = max((h for _, h in (tabs or ()) if _tab_match(path, h)), key=len, default=None)  # most specific
     return {"section": key, "item": href, "crumbs": crumbs, "tabs": tabs, "active_tab": active_tab}
 
 

@@ -31,7 +31,7 @@ def test_tam_examples_come_with_sources_and_are_labelled():
 
 
 def test_tam_page_review_and_add(client, session):
-    labels = [i[0] for i in nav.UTILITY[2]]
+    labels = [i[0] for i in dict((k, v) for k, _, v in nav.NAV)["growth"]]  # owner, 23 Oct 2026: Future growth
     assert "TAM estimates" in labels and "Commercial inputs" not in labels
     r = client.get("/business/data", follow_redirects=False)
     assert r.status_code == 307 and r.headers["location"] == "/business/tam"
@@ -124,7 +124,7 @@ def test_overview_first_in_data_management(client):
     assert nav.UTILITY[2][0][1] == "/manage/overview"
     html = client.get("/manage/overview").text
     assert 'class="ov-table"' in html and "TAM estimates" in html and "Technology rating" in html
-    assert "to verify" in html and 'aria-current="page"' in html
+    assert "open in Verify next" in html and 'aria-current="page"' in html
     assert '<a href="/manage/overview"' in client.get("/").text  # the Data management link opens it
 
 

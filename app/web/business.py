@@ -214,11 +214,11 @@ EXPLORER_PARAMS = ("scope", "view", "sort", "dir", "f", "t", "g", "s")
 
 @router.get("/business/explorer")
 def explorer_moved(request: Request, co: str = "combined"):
-    """The explorer now opens as Systems & applications > Cross-sell & gaps (owner, 22 Oct 2026); links that sort or
+    """The explorer now opens as Opportunities > Gaps & new technology (owner, 23 Oct 2026); links that sort or
     filter keep landing on the detailed table."""
     if any(k in request.query_params for k in EXPLORER_PARAMS):
         return RedirectResponse(f"/business/explorer/table?{request.url.query}", status_code=307)
-    return RedirectResponse(f"/blocks/cross-sell?co={op.company(co)[0]}", status_code=307)
+    return RedirectResponse(f"/business/opportunities?co={op.company(co)[0]}", status_code=307)
 
 
 def _by_score(e: dict):
@@ -226,19 +226,45 @@ def _by_score(e: dict):
 
 
 @router.get("/blocks/cross-sell", response_class=HTMLResponse)
-def cross_sell_gaps(request: Request, co: str = "combined", session: Session = Depends(get_session)):
-    """Cross-sell & gaps: the explorer's data in three short lists (sell what we have, gaps we can build, new
-    technology), each as compact cards; the sortable table stays one click away."""
+def cross_sell(request: Request, co: str = "combined", system: str = "", sub: str = "", sel: str = "",
+               template: str = "", session: Session = Depends(get_session)):  # fmt: skip
+    """Cross-sell, bottom up (owner, 23 Oct 2026): pick a system, a sub-system or one diagram of the Application
+    library and see which of our parts go together in it. Gaps and new technology are under Opportunities."""
+    from app.services import systems as sy
+
+    if sel:  # the picker sends "system" or "system:sub"
+        system, _, sub = sel.partition(":")
+    template = int(template) if template.isdigit() else None
+    if template is not None and sy.get(system) and template not in sy.selection(system, sub)["idx"]:
+        template = None  # a diagram left over from the previous pick
     c = _ctx(session, co)
     mine = op.company(co)[2]
-    sell = []
-    for e in op.markets(session, c["apps"], mine)["rows"]:
-        if e["group"] == "portfolio":
-            by = e["by_market"]
-            sell.append({"fn": e["fn"], "label": e["label"], "n_apps": sum(len(v) for v in by.values()),
-                         "markets": sorted(by, key=lambda m: (-len(by[m]), m)),
-                         "requalify": e["requalify"]})  # fmt: skip
-    sell.sort(key=lambda e: (-e["n_apps"], e["label"]))
+    picked = sy.selection(system, sub, template)
+    c.update(tree=sy.systems(), system=system if sy.get(system) else "", sub=sub if sy.sub(system, sub) else "",
+             template=template if picked["level"] == "application" else None, picked=picked,
+             names={i: blocks.display_name(t) for i, t in enumerate(blocks.templates())})  # fmt: skip
+    if picked["idx"]:
+        c["xs"] = sy.bottom_up(session, picked["idx"], mine)
+        for pr in c["xs"]["pairs"]:
+            pr["why"] = op.pair_reasons(c["xs"]["apps"], pr["a"], pr["b"])
+        c["in_sel"] = sy.selection(system, sub)["idx"] if picked["level"] == "application" else picked["idx"]
+    else:  # nothing picked yet: what we can sell across the whole library, as before
+        sell = []
+        for e in op.markets(session, c["apps"], mine)["rows"]:
+            if e["group"] == "portfolio":
+                by = e["by_market"]
+                sell.append({"fn": e["fn"], "label": e["label"], "n_apps": sum(len(v) for v in by.values()),
+                             "markets": sorted(by, key=lambda m: (-len(by[m]), m)),
+                             "requalify": e["requalify"]})  # fmt: skip
+        c["sell"] = sorted(sell, key=lambda e: (-e["n_apps"], e["label"]))
+    return templates.TemplateResponse(request, "business/cross_sell.html", c)
+
+
+@router.get("/business/opportunities", response_class=HTMLResponse)
+def gaps_new_tech(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+    """Opportunities > Gaps & new technology (owner, 23 Oct 2026, moved out of Cross-sell & gaps): functions with no
+    part of ours yet that our technology could cover, and those that need new technology; best score first."""
+    c = _ctx(session, co)
     rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
     decisions = {d.fn: d.status for d in session.scalars(select(OpportunityDecision))}
     rows = [{**e, "decision": decisions.get(e["key"])} for e in rows]
@@ -246,10 +272,10 @@ def cross_sell_gaps(request: Request, co: str = "combined", session: Session = D
     new = sorted([e for e in open_rows if (e["path"] or {}).get("path") == "new_capability"], key=_by_score)
     gaps = sorted([e for e in open_rows if e not in new], key=_by_score)
     shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
-    c.update(sell=sell, gaps=gaps, new=new, shortlisted=shortlisted, path_label=op.PATH_LABEL,
+    c.update(gaps=gaps, new=new, shortlisted=shortlisted, path_label=op.PATH_LABEL,
              n_not_ours=sum(e["gap_type"] == "not_ours" for e in rows),
              n_aside=sum(e["decision"] == "set_aside" for e in rows))  # fmt: skip
-    return templates.TemplateResponse(request, "business/cross_sell_gaps.html", c)
+    return templates.TemplateResponse(request, "business/gaps_new.html", c)
 
 
 @router.get("/business/explorer/table", response_class=HTMLResponse)

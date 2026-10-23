@@ -116,8 +116,10 @@ def feedback_context(path: str = "/", heading: str = ""):
 @router.get("/manage/feedback", response_class=HTMLResponse)
 def feedback_digest(request: Request, day: str = "", archive: bool = False, session: Session = Depends(get_session)):
     """One list of the open points (owner, 22 Oct 2026); the per-day digests stay reachable as the archive."""
+    from app.services import runs
+
     days = fb.days(session)
-    ctx = {"days": days, "kinds": fb.KINDS, "statuses": fb.STATUSES}
+    ctx = {"days": days, "kinds": fb.KINDS, "statuses": fb.STATUSES, "questions": runs.open_question_items()}
     if not day and not archive:
         points = fb.open_points(session)
         ctx |= {"open_list": points, "files": attachments(session, [i for g in points["groups"] for i in g["ids"]])}

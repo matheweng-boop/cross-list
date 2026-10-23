@@ -192,5 +192,5 @@ def test_nav_places_reviews_under_products(client):
     assert ("Part reviews", "/reviews") in [(i[0], i[1]) for i in products[2]]
     assert nav.place("/reviews") == ("products", "/reviews")
     assert nav.place("/reviews/qorvo-pac5527-motor-driver") == ("products", "/reviews")
-    assert nav.place("/manage/reviews") == ("manage", "/manage/reviews")
+    assert nav.place("/manage/reviews") == ("manage", "/manage/verify")  # a tab of Site data, 23 Oct 2026
     assert 'href="/reviews"' in client.get("/parts").text

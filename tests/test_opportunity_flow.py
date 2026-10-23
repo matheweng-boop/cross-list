@@ -105,19 +105,45 @@ def test_cross_sell_explains_each_pairing(client):
     assert '<details class="why small" open' not in page.text  # collapsed by default
 
 
-def test_cross_sell_and_gaps_page_in_systems(client):
-    """Owner, 22 Oct 2026: the explorer's data as Systems & applications > Cross-sell & gaps, in three groups."""
+def test_gaps_and_new_technology_under_opportunities(client):
+    """Owner, 23 Oct 2026: gaps and new technology moved out of Cross-sell into Opportunities; the old explorer URL
+    lands there, sorted links keep landing on the detailed table."""
     r = client.get("/business/explorer", follow_redirects=False)
-    assert r.status_code == 307 and r.headers["location"].startswith("/blocks/cross-sell")
+    assert r.status_code == 307 and r.headers["location"].startswith("/business/opportunities")
     r = client.get("/business/explorer?sort=score", follow_redirects=False)
     assert r.headers["location"] == "/business/explorer/table?sort=score"
-    html = client.get("/blocks/cross-sell").text
-    for anchor, title in (("sell", "Sell what we have"), ("gaps", "Gaps to fill"), ("new", "New technology")):
+    html = client.get("/business/opportunities").text
+    for anchor, title in (("gaps", "Gaps to fill"), ("new", "New technology")):
         assert f'id="{anchor}"' in html and title in html
-    assert html.count('class="csg-card"') > 5 and "<table" not in html.split("About this page")[0]
-    assert 'href="/business/explorer/table?co=combined"' in html and 'action="/business/attach"' in html
+    assert 'id="sell"' not in html and html.count('class="csg-card"') > 5
+    assert 'href="/business/explorer/table?co=combined"' in html
     from app.web import nav
 
-    assert nav.place("/blocks/cross-sell") == ("systems", "/blocks/cross-sell")
+    assert nav.place("/business/opportunities") == ("opportunities", "/business/opportunities")
+    assert nav.place("/business/explorer/table") == ("opportunities", "/business/opportunities")
+    assert nav.place("/business/evidence/rf_switch") == ("opportunities", "/business/opportunities")
     opp = dict((k, items) for k, _, items in nav.NAV)["opportunities"]
-    assert ("/business/competitors" in [i[1] for i in opp]) and "/business/explorer" not in [i[1] for i in opp]
+    assert [i[1] for i in opp] == ["/business/opportunities", "/business/competitors"]
+
+
+def test_cross_sell_is_bottom_up_per_system(client):
+    """Owner, 23 Oct 2026: Cross-sell shows which of our parts go together in the selected system, sub-system or
+    diagram; without a selection it offers the systems and what we sell across the library."""
+    from app.services import systems as sy
+    from app.web import nav
+
+    html = client.get("/blocks/cross-sell").text
+    assert "Pick a system" in html and 'id="gaps"' not in html and 'href="/business/opportunities"' in html
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio"' in html
+    page = client.get("/blocks/cross-sell?system=automotive&sub=car-radio").text
+    assert "Automotive › Car radio" in page and "Our parts that go together" in page
+    assert f"{len(sy.sub('automotive', 'car-radio')['idx'])} diagrams" in page
+    same = client.get("/blocks/cross-sell?sel=automotive:car-radio").text  # the picker's form
+    assert "Automotive › Car radio" in same
+    i = sy.sub("automotive", "car-radio")["idx"][0]
+    one = client.get(f"/blocks/cross-sell?system=automotive&sub=car-radio&template={i}").text
+    assert "1 diagram<" in one and "Open the diagram" in one
+    assert client.get("/blocks/cross-sell?sel=automotive:car-radio&template=").status_code == 200  # "all diagrams"
+    assert nav.place("/blocks/cross-sell") == ("systems", "/blocks/cross-sell")
+    assert nav.place("/business/attach") == ("systems", "/blocks/cross-sell")
+    assert 'aria-current="page" class="on">By part<' in client.get("/business/attach").text

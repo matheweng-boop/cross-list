@@ -15,7 +15,7 @@ def _send(client, text, path="/business/rf-coverage", **kw):
 
 def test_send_records_where_it_came_from(client):
     out = _send(client, "Matrix needs a maker split", heading="RF coverage by band", selection="LNA row")
-    assert out["page"] == "Opportunities › RF coverage › RF coverage by band"
+    assert out["page"] == "Systems & applications › RF coverage › RF coverage by band"  # moved 23 Oct 2026
     assert client.post("/site-feedback", json={"text": "  "}).status_code == 400
     assert client.get("/site-feedback/context?path=/blocks").json()["page"].startswith("Systems & applications")
 

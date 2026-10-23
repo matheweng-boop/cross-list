@@ -49,6 +49,13 @@ def open_questions() -> list[str]:
     return re.findall(r"^\d+\. \*\*(.+?)\*\*", text, flags=re.M)
 
 
+def open_question_items() -> list[tuple[str, str]]:
+    """(title, the rest of the item as one line) for each numbered open question, for the Site feedback page."""
+    text = _doc("open_questions.md").split("\n## ", 1)[0]
+    items = re.findall(r"^\d+\. \*\*(.+?)\*\*(.*?)(?=^\d+\. \*\*|\Z)", text, flags=re.M | re.S)
+    return [(t, " ".join(body.split()).lstrip(":. ")) for t, body in items]
+
+
 def queue(session: Session) -> dict[str, int]:
     """Live counts of what is waiting for tonight's run."""
     from app.services import reviews as rv

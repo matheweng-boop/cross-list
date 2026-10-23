@@ -655,7 +655,7 @@
     const target = b ? `${g.label} / ${b.label || fnOf(b).label}` : g ? g.label : "";
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     panel.innerHTML = `<h3>Feedback</h3>
-      <p class="small muted">Type or speak. It goes on the review list (Data management → Requests &amp; reviews) and is reviewed in batches; nothing changes until then.${target ? ` About: <b>${esc(target)}</b>.` : ""}</p>
+      <p class="small muted">Type or speak. It goes on the review list (Data management → Site data) and is reviewed in batches; nothing changes until then.${target ? ` About: <b>${esc(target)}</b>.` : ""}</p>
       <textarea data-fb-msg rows="5" placeholder="What should change?"></textarea>
       <div class="row"><button type="button" class="small-btn" data-fb-save>Save</button>
         ${SR ? `<button type="button" class="outline small-btn" data-fb-mic title="Voice input uses your browser's speech recognition; some browsers (e.g. Chrome) send the audio to their speech service.">🎤 Speak</button>` : `<span class="small muted">Voice: use your keyboard's dictation key.</span>`}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "business/_common.html" import company_switch with context %}
+{% block title %}Cross-sell{% endblock %}
+{% macro why(w, a_label, b_label) %}<details class="why small"><summary>Why?</summary>
+  <p>{{ w.summary|capitalize }}.</p>
+  <ul>{% for r in w.rows %}<li><a href="/blocks/new?template={{ r.i }}">{{ r.name }}</a>:
+    {% if r.same %}both in <b>{{ r.same|join(', ') }}</b>{% else %}{{ a_label }} in <i>{{ r.a_blocks|join(', ') }}</i>, {{ b_label }} in <i>{{ r.b_blocks|join(', ') }}</i>{% endif %}</li>{% endfor %}
+    {% if w.more %}<li class="muted">and {{ w.more }} more</li>{% endif %}</ul>
+</details>{% endmacro %}
+{% block content %}
+<h1>Cross-sell</h1>
+<p class="subtitle muted">Bottom up: pick a system, a sub-system or one diagram from the <a href="/blocks">Application library</a> and see which of {{ co_label }}'s parts go together in it.
+  Modeled from the reference diagrams (two functions in the same design), not from sales. Gaps and new technology are under <a href="/business/opportunities">Opportunities</a>.</p>
+{% set extra = ('&system=' ~ system if system else '') ~ ('&sub=' ~ sub if sub else '') ~ ('&template=' ~ template if template is not none else '') %}
+<div class="scope-bar small">{{ company_switch('/blocks/cross-sell', co, companies, extra) }}</div>
+<form method="get" action="/blocks/cross-sell" class="sys-select small">
+  <input type="hidden" name="co" value="{{ co }}">
+  <label>System or sub-system <select name="sel" onchange="this.form.submit()"><option value="">– pick one –</option>
+    {% for s in tree %}<optgroup label="{{ s.title }}"><option value="{{ s.key }}"{{ ' selected' if system == s.key and not sub }}>{{ s.title }}: all</option>
+      {% for x in s.subsystems %}<option value="{{ s.key }}:{{ x.key }}"{{ ' selected' if system == s.key and sub == x.key }}>{{ x.title }} ({{ x.idx|length }})</option>{% endfor %}</optgroup>{% endfor %}</select></label>
+  {% if in_sel and in_sel|length > 1 %}<label>One diagram <small class="muted">optional</small> <select name="template" onchange="this.form.submit()"><option value="">– all {{ in_sel|length }} diagrams –</option>
+    {% for i in in_sel %}<option value="{{ i }}"{{ ' selected' if template == i }}>{{ names[i]|truncate(70) }}</option>{% endfor %}</select></label>{% endif %}
+  <noscript><button type="submit" class="small-btn">Show</button></noscript>
+</form>
+
+{% if xs %}
+<h2>{{ picked.label }} <small class="muted">· {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }}</small></h2>
+{% if template is not none %}<p class="small"><a href="/blocks/new?template={{ template }}">Open the diagram</a>{% if system %} · <a href="/blocks/cross-sell?co={{ co }}&amp;system={{ system }}{{ '&sub=' ~ sub if sub }}">back to all diagrams of the selection</a>{% endif %}</p>
+{% elif system and sub %}<p class="small"><a href="/blocks?system={{ system }}&amp;sub={{ sub }}#sub-{{ sub }}">See the diagrams in the Application library</a></p>{% endif %}
+<h3>Our parts that go together <small class="muted">· {{ xs.ours|length }} of {{ xs.n_in_scope }} functions have a part of ours</small></h3>
+{% if xs.ours %}<div class="table-wrap"><table class="striped xs-table">
+  <thead><tr><th scope="col">Function</th><th scope="col">In diagrams</th><th scope="col">Our parts</th><th scope="col"></th></tr></thead>
+  <tbody>{% for e in xs.ours %}<tr><td>{{ e.label }}</td><td>{{ e.n_apps }} of {{ xs.apps|length }}</td>
+    <td>{% for p in e.parts %}<a href="{{ p.url }}" title="{{ p.manufacturer|vendor }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% else %}<span class="muted">see What sells with it</span>{% endfor %}</td>
+    <td><a class="small" href="/business/attach?co={{ co }}&amp;fn={{ e.fn|urlencode }}">What sells with it</a></td></tr>{% endfor %}</tbody>
+</table></div>{% else %}<p class="small muted">No part of ours in these diagrams yet.</p>{% endif %}
+<h3>Bundles <small class="muted">· two of our functions in the same diagram</small></h3>
+{% if xs.pairs %}<div class="table-wrap"><table class="striped xs-table">
+  <thead><tr><th scope="col">Offer</th><th scope="col">Together with</th><th scope="col">Together in</th></tr></thead>
+  <tbody>{% for p in xs.pairs %}<tr><td>{{ p.a_label }}</td><td>{{ p.b_label }}{{ why(p.why, p.a_label, p.b_label) }}</td><td>{{ p.apps }} diagram{{ 's' if p.apps != 1 }}</td></tr>{% endfor %}</tbody>
+</table></div>{% else %}<p class="small muted">Fewer than two of our functions in these diagrams.</p>{% endif %}
+<p class="small muted">{{ xs.n_gaps }} function{{ 's' if xs.n_gaps != 1 }} here {{ 'have' if xs.n_gaps != 1 else 'has' }} no part of ours: see <a href="/business/opportunities">Gaps &amp; new technology</a>. Start from one part number instead: <a href="/business/attach">Cross-sell by part</a>.</p>
+{% else %}
+<h2>Pick a system</h2>
+<div class="sys-grid">{% for s in tree %}<article class="sys-sub"><a class="sys-sub-title" href="/blocks/cross-sell?co={{ co }}&amp;system={{ s.key }}"><b>{{ s.title }}</b></a>
+  <small class="sys-links">{% for x in s.subsystems %}<a href="/blocks/cross-sell?co={{ co }}&amp;system={{ s.key }}&amp;sub={{ x.key }}">{{ x.title }} <span class="muted">· {{ x.idx|length }}</span></a>{% endfor %}</small></article>{% endfor %}</div>
+<h2>Sell what we have <small class="muted">· across the whole library</small></h2>
+<p class="small muted">We have parts for these functions; offer them in every design that uses them. Gaps and new technology moved to <a href="/business/opportunities">Opportunities › Gaps &amp; new technology</a>.</p>
+<div class="csg-grid">{% for e in sell[:12] %}<article class="csg-card"><b>{{ e.label }}</b>
+  <small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }} · {{ e.markets[:3]|join(', ') }}{% if e.markets|length > 3 %} +{{ e.markets|length - 3 }}{% endif %}</small>
+  {% if e.requalify %}<small class="csg-flag">Automotive designs need it: qualify a part</small>{% endif %}
+  <small><a href="/business/attach?fn={{ e.fn|urlencode }}&amp;co={{ co }}">What sells with it</a></small></article>{% endfor %}</div>
+{% if sell|length > 12 %}<details class="csg-more small"><summary>Show {{ sell|length - 12 }} more</summary><div class="csg-grid">{% for e in sell[12:] %}<article class="csg-card"><b>{{ e.label }}</b><small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }}</small><small><a href="/business/attach?fn={{ e.fn|urlencode }}&amp;co={{ co }}">What sells with it</a></small></article>{% endfor %}</div></details>{% endif %}
+{% endif %}
+{% endblock %}

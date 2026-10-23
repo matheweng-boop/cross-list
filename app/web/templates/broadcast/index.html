@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 {% macro part_link(mpn) %}{% set href = links.get(mpn) or '/find?q=' ~ mpn|urlencode %}{% if href.startswith('/') %}<a href="{{ href }}"><b>{{ mpn }}</b></a>{% else %}<a href="{{ href }}" target="_blank" rel="noopener"><b>{{ mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% endif %}{% endmacro %}
-<h1>Radio &amp; audio <small class="muted">· broadcast tuners and demodulators</small></h1>
+<h1>Car radio <small class="muted">· broadcast tuners and demodulators</small></h1>
+<p class="small muted">Part of <a href="/blocks?system=automotive&amp;sub=car-radio#sub-car-radio">Automotive › Car radio</a> in the Application library.</p>
 <p class="subtitle muted">Skyworks Si46xx / Si47xx radio ICs, transcribed from their public data shorts and product summaries.
   Build a system from them under <a href="/broadcast/configurations">Configurations</a>.</p>
 {% if not documents %}<p class="banner">No device data loaded yet.</p>{% endif %}

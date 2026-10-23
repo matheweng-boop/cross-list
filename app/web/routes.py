@@ -128,6 +128,7 @@ templates.env.globals.update(
     nav_icons=nav.ICONS,
     page_title=nav.page_title,
     page_label=nav.page_label,
+    owner_page=nav.owner_page,
 )
 
 # grade filter on the cross results: the keys grade_of() returns, worded as everywhere else (app/web/labels.py)
@@ -638,10 +639,22 @@ def visuals_rf_parts():
 
 @router.get("/library", response_class=HTMLResponse)
 def library_index(request: Request):
+    """Full systems (owner, 23 Oct 2026): each system is a header with its sub-systems, their diagram counts and deep
+    dives; topics not yet in a system follow at the end."""
     from app.services import library
+    from app.services import systems as sy
 
-    return templates.TemplateResponse(request, "library/index.html", {"topics": library.topics(),
-                                                                      "n_sources": len(library.sources())})  # fmt: skip
+    topics = library.topics()
+    by_key = {t["key"]: t for t in topics}
+    tree = [{**s, "subs": [{**x, "deep": [by_key[k] for k in x["topics"] if k in by_key]} for x in s["subsystems"]]}
+            for s in sy.systems()]  # fmt: skip
+    for s in tree:
+        s["deep"] = [t for x in s["subs"] for t in x["deep"]]
+        s["n"] = len({i for x in s["subs"] for i in x["idx"]})
+    placed = {t["key"] for s in tree for t in s["deep"]}
+    ctx = {"tree": tree, "topics": topics, "other": [t for t in topics if t["key"] not in placed],
+           "n_other_diagrams": len(sy.unassigned()), "n_sources": len(library.sources())}  # fmt: skip
+    return templates.TemplateResponse(request, "library/index.html", ctx)
 
 
 @router.get("/library/sources", response_class=HTMLResponse)

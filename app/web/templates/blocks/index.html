@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-{% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else '', 'verified': verified} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
+{% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else '', 'verified': verified, 'system': system, 'sub': sub} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
 <h1>Application library</h1>
 <p class="subtitle muted">Reference architectures from public material. Open one to see its blocks, candidate parts and unmet requirements.
   On each card: <span class="tpl-chip have">solid</span> = a Skyworks / Qorvo candidate exists in BizDev, <span class="tpl-chip">dashed</span> = no candidate yet.</p>
 {% set mcount = dict(markets) %}
+<nav class="sys-pick small" aria-label="Systems"><a class="fchip{{ ' on' if not system }}" href="{{ url(system='', sub='') }}">All systems</a>{% for s in tree %}<a class="fchip{{ ' on' if system == s.key }}" href="{{ url(system=s.key, sub='') }}#area-{{ s.key }}">{{ s.title }} <small>{{ s.n }}</small></a>{% endfor %}<a class="fchip{{ ' on' if system == 'other' }}" href="{{ url(system='other', sub='') }}#other-areas">Other <small>{{ other|map(attribute=1)|map('length')|sum }}</small></a><a href="#request-area">Request an area</a></nav>
+<details class="sys-filters small"{{ ' open' if filtered }}><summary>Filters: end market, source, verification, variants{% if filtered %} <small class="muted">· {{ n_shown }} of {{ n_all }} shown</small>{% endif %}</summary>
 <div class="lib-facets small filter-cols">
   {% for title, ms in market_groups(mcount.keys()) %}<div class="chip-row"><span class="chip-lbl">{{ title }}</span>
     {% if loop.first %}<a class="fchip{{ ' on' if not market }}" href="{{ url(market='') }}">All end markets</a>{% endif %}
@@ -17,6 +19,7 @@
 <div class="lib-facets small">
   <p class="muted">{{ n_shown }} of {{ n_all }} library architectures. Related architectures (e.g. two traction inverters) are kept as separate sources and flagged as possible variants; they are not merged and each counts once in every metric.</p>
 </div>
+</details>
 {% macro card(t) %}
   <a class="tpl-card" href="/blocks/new?template={{ t.i }}"><b>{{ t.name }}</b>
     {% if t.sub %}<small class="tpl-sub">{{ t.sub }}</small>{% endif %}
@@ -26,26 +29,36 @@
     {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in BizDev' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
 {% endmacro %}
 {% if not cards %}<div class="empty-state"><p><b>No architecture matches these filters.</b></p><p class="small"><a href="/blocks">Show all</a>.</p></div>{% endif %}
-<nav class="lib-focus-nav small" aria-label="Focus areas">{% for k, label, items in focus %}<a href="#area-{{ k }}">{{ label }} <small class="muted">{{ items|length }}</small></a>{% endfor %}<a href="#other-areas">Other areas</a>{% if deep_dives %}<a href="#deep-dives">System deep dives <small class="muted">{{ deep_dives|length }}</small></a>{% endif %}<a href="#request-area">Request an area</a></nav>
-{% for k, label, items in focus %}
-<h2 class="tpl-cat lib-focus" id="area-{{ k }}">{{ label }} <small class="muted">· {{ items|length }}</small></h2>
-{% if items %}<div class="tpl-grid">{% for t in items %}{{ card(t) }}{% endfor %}</div>
-{% else %}<p class="small muted">No diagram yet{{ ' with these filters' if market or source or variants or verified }}. The daily update researches this area a few documents at a time and adds diagrams here.</p>{% endif %}
-{% endfor %}
-{% if deep_dives %}<section id="deep-dives" aria-labelledby="dd-title">
-<h2 class="tpl-cat lib-focus" id="dd-title">System deep dives <small class="muted">· {{ deep_dives|length }}</small></h2>
-<p class="small muted">How and why a system is built: a block diagram, design rules, trends and six public references each. The diagrams above show what goes into a product and which parts are ours. <a href="/library">Systems library</a></p>
-<div class="rp-list">{% for d in deep_dives %}<a class="rp-card" href="/library/{{ d.key }}"><b class="rp-title">{{ d.title }}</b><span class="small">{{ d.summary|truncate(160) }}</span></a>{% endfor %}</div>
+{% from "_systems.html" import sub_card %}
+{% for s in tree if not system or system == s.key %}
+<section class="sys-block" aria-labelledby="area-{{ s.key }}">
+<h2 class="tpl-cat lib-focus" id="area-{{ s.key }}"><a href="{{ url(system=s.key, sub='') }}#area-{{ s.key }}">{{ s.title }}</a> <small class="muted">· {{ s.n }} diagram{{ 's' if s.n != 1 }} in {{ s.subs|length }} sub-systems</small></h2>
+<p class="small muted">{{ s.summary }}</p>
+<div class="sys-grid">{% for x in s.subs %}{{ sub_card(s, x, x.cards|length, x.deep) }}{% endfor %}</div>
+{% if expanded %}{% for x in s.subs if not sub or sub == x.key %}
+<h3 class="tpl-cat" id="sub-{{ x.key }}">{{ x.title }} <small class="muted">· {{ x.cards|length }}</small></h3>
+{% if x.cards %}<div class="tpl-grid">{% for t in x.cards %}{{ card(t) }}{% endfor %}</div>
+{% else %}<p class="small muted">No diagram yet{{ ' with these filters' if filtered }}. The daily update researches this area a few documents at a time and adds diagrams here.</p>{% endif %}
+{% if sub == x.key and xsell %}<section class="sys-xsell" aria-labelledby="xs-title">
+  <h4 id="xs-title">Cross-sell in {{ x.title }}</h4>
+  <p class="small muted">Our functions that sit together in these {{ xsell.apps|length }} diagrams, most used first. {{ xsell.n_gaps }} function{{ 's' if xsell.n_gaps != 1 }} without a part of ours {{ 'are' if xsell.n_gaps != 1 else 'is' }} listed under <a href="/business/opportunities">Opportunities</a>.</p>
+  {% if xsell.ours %}<ul class="sys-xs-list small">{% for e in xsell.ours[:6] %}<li><b>{{ e.label }}</b> <span class="muted">in {{ e.n_apps }} of {{ xsell.apps|length }}</span>{% if e.parts %} · {% for p in e.parts %}<a href="{{ p.url }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</li>{% endfor %}</ul>
+  {% else %}<p class="small muted">No part of ours in these diagrams yet.</p>{% endif %}
+  <p class="small"><a href="/blocks/cross-sell?system={{ s.key }}&amp;sub={{ x.key }}">Full cross-sell for {{ x.title }}</a></p>
 </section>{% endif %}
-<details class="lib-other" id="other-areas"><summary><b>Other areas</b> <small class="muted">· {{ other|map(attribute=1)|map('length')|sum }} diagrams in {{ other|length }} categories</small></summary>
+{% endfor %}{% endif %}
+</section>
+{% endfor %}
+{% if not system or system == 'other' %}
+<details class="lib-other" id="other-areas"{{ ' open' if system == 'other' }}><summary><b>Other areas</b> <small class="muted">· {{ other|map(attribute=1)|map('length')|sum }} diagrams in {{ other|length }} categories, not yet in a system</small></summary>
 {% for cat, items in other %}
 <h3 class="tpl-cat">{{ cat }}</h3>
 <div class="tpl-grid">{% for t in items %}{{ card(t) }}{% endfor %}</div>
 {% endfor %}
-</details>
+</details>{% endif %}
 <section class="lib-request" id="request-area">
   <h2>Request another area</h2>
-  {% if asked %}<p class="small rp-thanks">Saved. Requests are reviewed in <a href="/manage/reviews?type=area">Requests &amp; reviews</a> and picked up by the daily update.</p>{% endif %}
+  {% if asked %}<p class="small rp-thanks">Saved. Requests are reviewed in <a href="/manage/reviews?type=area">Site data › Review queue</a> and picked up by the daily update.</p>{% endif %}
   <form method="post" action="/blocks/area-request" class="lib-request-form">
     <input name="area" required maxlength="200" placeholder="Area, e.g. robotics, satellites, hearing aids" aria-label="Area">
     <input name="why" maxlength="2000" placeholder="Why (optional)" aria-label="Why">

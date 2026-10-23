@@ -79,7 +79,7 @@ def test_menu_tree_23_oct():
     menu = {k: [i[0] for i in items] for k, _, items in nav.NAV}
     assert menu["systems"] == ["Systems library", "Application library", "Application workspace", "Reference designs",
                                "Cross-sell", "RF coverage", "Automotive map"]  # fmt: skip
-    assert menu["opportunities"] == ["Gaps & new technology", "Competitive analytics"]
+    assert menu["opportunities"] == ["Gaps & new technology", "Competitive analytics", "Risks"]
     assert menu["growth"][-1] == "TAM estimates"
     manage = [i[0] for i in nav.UTILITY[2]]
     assert manage == ["Overview", "Schedule", "Site data", "Uploads", "Data quality", "People & invites", "Methodology"]

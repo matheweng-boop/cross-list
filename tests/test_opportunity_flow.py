@@ -123,7 +123,7 @@ def test_gaps_and_new_technology_under_opportunities(client):
     assert nav.place("/business/explorer/table") == ("opportunities", "/business/opportunities")
     assert nav.place("/business/evidence/rf_switch") == ("opportunities", "/business/opportunities")
     opp = dict((k, items) for k, _, items in nav.NAV)["opportunities"]
-    assert [i[1] for i in opp] == ["/business/opportunities", "/business/competitors"]
+    assert [i[1] for i in opp] == ["/business/opportunities", "/business/competitors", "/business/risks"]
 
 
 def test_cross_sell_is_bottom_up_per_system(client):

@@ -81,7 +81,8 @@ def test_part_number_sets_package_and_channels_and_cost_ratio_sets_the_range(ses
 def test_estimate_page_reads_the_part_number(client):
     html = client.get("/pricing/estimate", params={"name": "Si46922", "family": "", "breaks": "1000 13,29",
                                                    "currency": "EUR", "package": "SOIC-8"}).text  # fmt: skip
-    assert 'name="package" value="QFN-88" readonly' in html and 'name="units"' not in html  # channels: model only
+    assert 'name="package" value="QFN-88"' in html and "(from the part data)" in html
+    assert 'name="units"' not in html  # channels: model only
     assert 'name="wide"' not in html and "From 1 pasted price break" in html
     free = client.get("/pricing/estimate", params={"family": "digital_isolator", "package": "SOIC-16W"}).text
-    assert 'value="SOIC-16W" placeholder' in free and "readonly" not in free.split("Price breaks")[0]
+    assert 'value="SOIC-16W" placeholder' in free and "(from the part data)" not in free.split("Price breaks")[0]

@@ -16,6 +16,14 @@ topics:
     is bounded below by noise figure and above by compression. For mixers the same idea is defined at the RF input (input
     P1dB) rather than at the output, which is a frequent source of confusion when comparing datasheets. Data-sheet "input
     (no damage)" ratings are absolute limits, not operating points.'
+  why:
+  - kind: robust
+    text: 'Enough P1dB above the strongest real signal keeps the radio linear, so a nearby transmitter does not desensitise it or distort the wanted signal.'
+  - kind: cost
+    text: 'Backing off from P1dB costs DC power; a part with higher P1dB at the same current lets the customer run linear with a smaller supply and less heat.'
+    est: true
+  - kind: design
+    text: 'Compare like with like: amplifier P1dB is quoted at the output, mixer P1dB at the input. A data-sheet ''no damage'' rating is not an operating point.'
   key_points:
   - Most amplifiers begin compressing about 5-10 dB below P1dB; running above P1dB is not normal linear operation.
   - Amplifier P1dB is usually quoted at the output; mixer P1dB and IP3 are quoted at the input (RF port for a down-converter,
@@ -41,6 +49,14 @@ topics:
     point where the two lines would meet. Because the slope ratio is fixed, IP3 is a level-independent figure of merit, but
     any measured IM3 (dBc) number is meaningless unless the per-tone input level is stated. Second-order products (f1+f2)
     are characterised the same way with IP2, using a slope of 2.
+  why:
+  - kind: robust
+    text: 'Third-order products land in-band and no filter can remove them; a higher IP3 keeps two strong neighbours from creating a false signal on the customer''s channel.'
+  - kind: bom
+    text: 'A front end with enough IP3 can save an extra pre-filter or a step attenuator that would otherwise be needed to keep strong signals out.'
+    est: true
+  - kind: design
+    text: 'An IM3 number in dBc means nothing without the tone level; ask for IP3, which does not depend on the level.'
   key_points:
   - 'OIP3 (dBm) = Pout per tone (dBm) + delta/2, where delta = carrier-to-IM3 difference in dB. Example: +10 dBm tones with
     IM3 at -30 dBm (40 dB down) gives OIP3 = +30 dBm.'
@@ -86,6 +102,11 @@ topics:
     a passive loss''s NF equals its attenuation. A transistor''s NF depends on source impedance, described by four noise parameters
     (Fmin, magnitude and angle of Gamma_opt, Rn), and the match for minimum noise generally differs from the match for maximum
     gain.'
+  why:
+  - kind: robust
+    text: 'Each dB of noise figure saved is about a dB of sensitivity: longer range, fewer dropped links.'
+  - kind: design
+    text: 'Loss before the LNA adds dB for dB; a low-loss switch or filter in front is worth as much as a better LNA.'
   key_points:
   - 'Passive loss before the LNA sets a floor on NF: a 3 dB pad ahead of an LNA makes system NF at least 3 dB.'
   - NF of an RF switch is taken as equal to its insertion loss.
@@ -111,6 +132,12 @@ topics:
     up in chains of reflective components. A small fixed attenuator between sensitive stages buys roughly twice its value
     in return loss improvement, at the cost of gain, noise figure (if before the LNA) or output power (if after the PA). Amplifier
     active directivity (isolation minus gain) determines how much the load match disturbs the input match.
+  why:
+  - kind: robust
+    text: 'Matched interfaces keep gain ripple and level uncertainty down, so a product calibrates once and stays in spec.'
+  - kind: design
+    text: 'Mismatches multiply in a chain; a small pad or a well-matched part between reflective stages costs a little gain but saves debugging time.'
+    est: true
   key_points:
   - Worst-case VSWR of two cascaded mismatches ~ VSWR1 x VSWR2 (e.g. 3.0:1 with 1.5:1 -> 4.5:1, about 3.9 dB return loss).
   - A 50-ohm part in a 75-ohm system sees ~1.5:1 VSWR (about 14 dB return loss).
@@ -319,6 +346,13 @@ topics:
     Ordinary filters are matched in the passband but strongly reflective in the stopband, which matters next to mixers, oscillators
     and other filters; constant-impedance designs stay matched in both bands. Rejection can be scaled from published data
     by the ratio of cut-off frequencies, and cascading two filters adds their rejection provided each sees a good match.
+  why:
+  - kind: robust
+    text: 'The right filter keeps a strong out-of-band signal from desensitising the receiver or a transmitter''s harmonics from failing emissions tests.'
+  - kind: design
+    text: 'Choose the response for the job: Bessel-type flat group delay keeps pulse shape (UWB, radar), elliptic gives sharp skirts at the cost of delay ripple.'
+  - kind: cost
+    text: 'A low-pass or high-pass where only one side needs rejection has about half the elements of a band-pass: lower loss and cost.'
   key_points:
   - Cut-off fco = 3 dB point; for many low-pass models the 1 dB passband edge is ~0.9 x fco (DC-225 MHz passband -> fco 250
     MHz).
@@ -453,6 +487,11 @@ topics:
     down to DC (limited by blocking capacitors) and have about ten times less video leakage, but their power rating is set
     by peak voltage/current. Absorptive switches terminate the off port in 50 ohms; reflective ones present an open or short.
     Driving a switch into compression creates harmonics and raises loss.
+  why:
+  - kind: robust
+    text: 'Switch loss adds to noise figure and takes transmit power; isolation keeps one path from leaking into another (TX into RX, one antenna into the next).'
+  - kind: design
+    text: 'Use an absorptive switch when the idle port must stay matched; switching time and video leakage matter in pulsed and fast-hopping systems.'
   key_points:
   - 'Video leakage: ~30 mV p-p GaAs vs ~300 mV p-p PIN.'
   - Use an absorptive switch whenever the unselected port must stay matched (e.g. a generator or amplifier on the idle port).
@@ -514,6 +553,11 @@ topics:
     lower Q. VCO parameters trade off: a wider tuning range needs higher tuning sensitivity, which makes the oscillator more
     sensitive to noise on the tuning line and degrades phase noise; better load pulling needs an output pad or buffer amplifier,
     which costs current.'
+  why:
+  - kind: robust
+    text: 'Narrow tuning range and low tuning gain give better phase noise; a VCO with just enough range performs better than a wide one.'
+  - kind: design
+    text: 'Phase noise varies about 3 dB over temperature, and supply and tuning-line noise go straight onto the carrier, so clean supplies matter as much as the part.'
   key_points:
   - Hyperabrupt varactors cover an octave with under ~20 V tuning; abrupt varactors can use 0-60 V.
   - Narrow tuning range + low Kv = better phase noise; higher carrier frequency = harder phase noise, pushing and pulling.
@@ -535,6 +579,12 @@ topics:
     by the division ratio N (20logN), and the VCO''s own noise is suppressed; outside the loop bandwidth the output follows
     the free-running VCO. Phase detector and divider noise also appear inside the loop, so low N and high phase-detector gain
     help. Practical VCO noise also depends on clean supplies, short shielded tuning lines and a well-matched load.'
+  why:
+  - kind: robust
+    text: 'Lower phase noise keeps high-order modulation and adjacent-channel performance in spec; the reference''s noise is multiplied by 20·log(N) inside the loop.'
+  - kind: design
+    text: 'Pick the reference clock and the division ratio together: a cleaner reference or a higher comparison frequency can beat a better VCO.'
+    est: true
   key_points:
   - Oscillator AM noise is typically ~20 dB below phase noise (oscillators run in saturation).
   - 'Inside loop BW: reference (and divider) noise x N; outside: free-running VCO noise.'
@@ -624,6 +674,11 @@ topics:
     of the LNA adds roughly a dB to system NF. Moving a lossy mixer in front of the LNA wrecks sensitivity. The sources stress
     including every element (connectors, cables, filters) and note that the simple equation assumes matched interfaces; mismatched
     stages need S-parameter noise analysis.
+  why:
+  - kind: cost
+    text: 'A high-gain, low-NF first stage hides the noise of everything behind it, so the later mixer and IF stages can be cheaper parts.'
+  - kind: design
+    text: 'Front-end switch and duplexer loss adds about 1:1 to noise figure and takes about 1:1 off transmit power; selling a lower-loss switch is selling range.'
   key_points:
   - F_total = F1 + (F2-1)/G1 + (F3-1)/(G1*G2) + ... (linear ratios, not dB); NF = 10*log10(F)
   - 'Passive stage: F = 1/G (a 3 dB pad has F = 2, G = 0.5)'
@@ -646,6 +701,12 @@ topics:
     the system-level minimum detectable signal by the gain. FEC coding gain lowers the required SNR and so improves sensitivity
     without hardware changes. For a mmWave handset front end with 100 MHz bandwidth and 4.5 dB NF, the noise floor alone is
     about -89.5 dBm before any SNR requirement.
+  why:
+  - kind: robust
+    text: 'Better sensitivity is more range or more margin against fading, body loss and a badly placed antenna.'
+  - kind: cost
+    text: 'A few dB of receiver sensitivity can replace a bigger antenna, a higher-power transmitter at the other end or an extra base station / anchor.'
+    est: true
   key_points:
   - Sensitivity (dBm) = -174 + 10*log10(B_Hz) + NF + SNR_min
   - 'Example: 10 MHz, NF 3 dB, SNR 10 dB -> -91 dBm'
@@ -666,6 +727,11 @@ topics:
     it falls in-band and cannot be filtered. In a cascade, input-referred IP3 combines like parallel resistors weighted by
     the gain ahead of each stage, so a high-gain LNA makes later stages (mixer, IF amp) dominate linearity - the classic NF-versus-IIP3
     trade. Passive filters contribute almost nothing to IM3.
+  why:
+  - kind: design
+    text: 'In a cascade the stage with the most gain in front of it usually sets the input IP3; the right LNA and mixer pairing matters more than one best-in-class part.'
+  - kind: robust
+    text: 'Enough linearity keeps strong nearby radios (another band in the same car or phone) from blocking the receiver.'
   key_points:
   - 1/IIP3_total = 1/IIP3_1 + G1/IIP3_2 + G1*G2/IIP3_3 + ... (mW and linear gain)
   - 'Worked example: LNA 18 dB/-5 dBm, filter -2 dB/+50 dBm, mixer -7 dB/+15 dBm, IF amp 25 dB/+10 dBm -> IIP3 ~ -7.2 dBm
@@ -689,6 +755,12 @@ topics:
     and is set by the worst of three mechanisms: compression, reciprocal mixing of the blocker with LO phase noise, and cross-modulation.
     For a 5G NR base station the source walks from the 3GPP blocker levels to filter rejection, LNA P1dB/OIP3 and ADC bit-depth
     requirements.'
+  why:
+  - kind: robust
+    text: 'Blocking dynamic range decides whether the radio keeps working next to a strong transmitter: the case customers meet in cars, phones and base stations.'
+  - kind: bom
+    text: 'A front end with more blocking margin can relax the filter or the ADC bit count the customer would otherwise need.'
+    est: true
   key_points:
   - SFDR = 2/3 x (IIP3 - N_floor), N_floor = -174 + NF + 10*log10(B); example NF 6 dB, IIP3 -10 dBm, 10 MHz -> 58.7 dB
   - 'Reciprocal-mixing limited blocker: P_block = N_floor - L(offset) + 10*log10(B_IF) (as given by source; sign convention:
@@ -713,6 +785,12 @@ topics:
     wastes under 0.2 dB, 2:1 about half a dB, while 3:1 costs 1.25 dB and is usually unacceptable. S11 of -20 dB (VSWR ~1.22)
     is a good match; -10 dB is marginal. For passive reciprocal parts S21 should equal S12 - a difference on a VNA points
     at a measurement problem unless the part contains ferrite.'
+  why:
+  - kind: robust
+    text: 'A 1.5:1 port wastes under 0.2 dB; 3:1 costs 1.25 dB. Good return loss is range and transmit power the customer keeps.'
+  - kind: design
+    text: 'Antenna detuning by hands, bodies and housings changes VSWR in use; parts that stay matched or an antenna tuner keep the link up.'
+    est: true
   key_points:
   - Gamma = (VSWR-1)/(VSWR+1); RL = -20*log10(Gamma); ML = -10*log10(1-Gamma^2)
   - VSWR 1.2 -> 0.036 dB; 1.5 -> 0.18 dB; 2.0 -> 0.51 dB (RL 9.5 dB); 3.0 -> 1.25 dB; 5.0 -> 2.55 dB
@@ -735,6 +813,11 @@ topics:
     switching but forces time-division operation. A diplexer (two band filters on a common port) gives the highest isolation
     for frequency-division links and FDD cellular, at the price of filter loss and size. Physically separate TX and RX antennas
     (bistatic) remove the blind zone of pulsed radars and achieve 40-60 dB through spacing, directivity and cross-polarization.
+  why:
+  - kind: cost
+    text: 'The isolation method decides the architecture: a switch is cheap but forces time-division; a duplexer allows full duplex but costs loss and board area.'
+  - kind: robust
+    text: 'Enough TX-to-RX isolation keeps the radio''s own transmitter from blocking its receiver.'
   key_points:
   - 'Circulator: isolation 20-30 dB, IL 0.3-0.8 dB, full duplex; isolator = circulator with matched load on port 3'
   - 'SPDT (GaAs MMIC): IL 0.5-1.5 dB, isolation 30-50 dB, 2-10 ns switching, TDD only'
@@ -763,6 +846,12 @@ topics:
     5G, LTE and Wi-Fi transceivers, but it must handle DC offset from LO self-mixing, 1/f noise, even-order distortion and
     I/Q imbalance with digital calibration. Direct RF sampling removes the mixer entirely and is practical below about 6 GHz
     with multi-GSPS ADCs; at mmWave, conversion to an IF remains standard.'
+  why:
+  - kind: bom
+    text: 'Zero-IF removes the image filter and the IF filters, saving parts and area, at the cost of I/Q balance and DC-offset work.'
+    est: true
+  - kind: robust
+    text: 'A superheterodyne gives more image rejection and dynamic range where strong signals are close (broadcast, infrastructure).'
   key_points:
   - Image frequency = f_LO +/- f_IF on the opposite side, 2*f_IF from the wanted signal (1 GHz with 70 MHz IF -> image 1.14
     or 0.86 GHz); image filter 40-60 dB
@@ -792,6 +881,12 @@ topics:
     flat across the band while the last two vary with frequency and need an FIR corrector rather than a single 2x2 matrix.
     Correction uses pilots in communication systems, blind statistical estimation in radar, and factory tone-injection calibration
     stored in non-volatile memory; temperature drift of 1-2 deg per 50 C means wide-temperature products recalibrate.
+  why:
+  - kind: robust
+    text: 'Better I/Q balance means a cleaner image rejection and lower EVM: higher-order modulation and data rate work on a real board.'
+  - kind: design
+    text: 'Mismatch that varies with frequency needs digital correction taps; parts with matched I/Q paths save calibration time in production.'
+    est: true
   key_points:
   - IRR ~ -20*log10( sqrt((10^(eps_dB/20)-1)^2 + (dphi_rad)^2) / 2 )
   - 'Source error: its examples are optimistic. Correct values with that formula: 0.5 dB / 3 deg -> ~28 dB (source says 31),
@@ -812,6 +907,12 @@ topics:
     loaded Q is the strongest lever close in, while device noise figure and signal power set the far-out floor; flicker noise
     steepens the slope very close to the carrier. Measurement uses cross-correlation analyzers that cancel instrument noise;
     a spectrum analyzer can only measure phase noise down to its own LO's level.
+  why:
+  - kind: robust
+    text: 'Phase noise rotates QAM constellations (EVM), hides slow radar targets next to clutter and causes reciprocal mixing with strong neighbours.'
+  - kind: cost
+    text: 'Multiplying a clock up costs 20·log(M) dB of phase noise; starting from a cleaner, higher-frequency source avoids an expensive clean-up stage.'
+    est: true
   key_points:
   - 'Leeson: L(fm) = 10*log[(2FkT/Ps)*(1 + (f0/(2*QL*fm))^2)*(1 + fc/fm)]; doubling QL improves close-in by 6 dB'
   - 'Frequency multiplication by M degrades phase noise by 20*log10(M): x2 +6 dB, x3 +9.5 dB, x4 +12 dB'
@@ -836,6 +937,12 @@ topics:
     lock) at the cost of fractional spurs. Loop bandwidth is the main design knob: wider suppresses VCO noise and locks faster
     but passes more reference noise and spurs. Above ~20 GHz designers either use a native mmWave VCO or synthesize lower
     and multiply, accepting the 20*log(M) penalty, and must watch load-pulling from mismatched transitions.'
+  why:
+  - kind: design
+    text: 'Loop bandwidth trades lock time against spurs and phase noise; fractional-N gives fine steps and fast lock, integer-N the cleanest spurs.'
+  - kind: bom
+    text: 'A synthesizer or jitter attenuator with an integrated VCO replaces a discrete VCO, loop filter and reference clean-up.'
+    est: true
   key_points:
   - f_out = f_ref * N/R (integer-N); f_out = (N + FRAC/MOD) * f_PFD (fractional-N)
   - 'Typical: reference 10-100 MHz (TCXO/OCXO), loop BW 1-100 kHz, lock time 10-500 us, spurs -50..-90 dBc'
@@ -857,6 +964,11 @@ topics:
     the PA run 2-4 dB closer to saturation and roughly doubles efficiency at rated power. The Doherty topology (carrier plus
     peaking amplifier through a quarter-wave inverter) keeps efficiency high across the 6-10 dB back-off range that OFDM signals
     occupy, and is the preferred small-cell PA architecture together with DPD.
+  why:
+  - kind: cost
+    text: 'Linearisation lets the PA run closer to its peak: about twice the efficiency on OFDM, so a smaller power supply and heatsink and lower energy bills.'
+  - kind: robust
+    text: 'Meeting ACLR and EVM with margin keeps the product legal and the link at its highest data rate.'
   key_points:
   - 'DPD models: LUT (memoryless, < 20 MHz), generalised memory polynomial (standard for 100-400 MHz 5G NR), Volterra (research
     / strong memory)'
@@ -909,6 +1021,14 @@ topics:
     one antenna port and must reach 50-70 dB TX-RX isolation, suppress TX noise in the RX band by at least 50 dB and keep
     each path under ~1.5 dB loss inside a duplex gap that can be only 20-80 MHz. TDD mid-band 5G needs only a switch plus
     a band filter, which is one reason TDD was chosen there.
+  why:
+  - kind: bom
+    text: 'One multiplexer or filter module replaces several discrete filters and their matching, which saves board area in phones, Wi-Fi and car modules.'
+  - kind: robust
+    text: 'BAW''s lower drift and higher power handling keep the filter on its band over temperature next to a high-power transmitter.'
+  - kind: cost
+    text: 'SAW stays cheapest below about 2.5 GHz; using BAW only where the band or power needs it keeps the bill of materials down.'
+    est: true
   key_points:
   - 'SAW: IL 1.5-3 dB, -25..-45 ppm/C (TC-SAW ~-15), 1-2 W, $0.10-0.50; BAW: IL 1-2 dB, -20..-30 ppm/C, 2-5 W, $0.30-2.00'
   - 'Example drift: SAW at 868 MHz over 125 C span shifts ~4.9 MHz; TC-SAW ~1.6 MHz'
@@ -931,6 +1051,11 @@ topics:
     320 MHz channels and 4096-QAM, which forces tight EVM and extra PA back-off, and its allowed EIRP depends on the power
     class (VLP, LPI or AFC-controlled standard power). The 2.4 GHz chain is mostly a coexistence problem (Bluetooth, Zigbee,
     ovens), while 5 GHz must handle DFS radar bands.
+  why:
+  - kind: cost
+    text: 'Every stream in every band needs a FEM, so FEMs are the second-largest RF cost in an access point; one integrated FEM per chain saves parts and tuning.'
+  - kind: robust
+    text: 'A lower-NF LNA and a cleaner PA give more range and keep 4096-QAM working; the source quotes about 10 % more range per 0.5 dB of noise figure.'
   key_points:
   - 'PA Pout: 2.4 GHz +20..+23 dBm; 5/6 GHz +17..+20 dBm; LNA NF 1.5-2.5 dB, gain 12-18 dB, IP3 +5..+15 dBm'
   - '6 GHz: EVM <= 1.8 % at 4096-QAM / 320 MHz; FCC EIRP VLP 14 dBm, LPI 18 dBm, standard power with AFC 30 dBm indoor / 36
@@ -1186,6 +1311,12 @@ topics:
     free-space loss. UWB ranging uses roughly 500 MHz channels in the 3.1-10.6 GHz band at a very low emission mask, giving
     nanosecond timing and centimetre-class accuracy for two-way ranging, TDoA positioning and secure car access; range is
     regulation-limited to about 3-10 m indoors and 10-30 m outdoors line-of-sight.
+  why:
+  - kind: robust
+    text: 'UWB''s 500 MHz gives centimetre ranging and resistance to relay attacks; LoRa''s spreading gives kilometres. Matching the radio to the job avoids over-designing the link.'
+  - kind: design
+    text: 'UWB power is capped by regulation, so range comes from receiver noise figure, front-end loss and antenna placement: where our LNAs and switches help.'
+    est: true
   key_points:
   - 'LoRa sensitivity: SF12/125 kHz ~-137 dBm, SF7 ~-123 dBm (~2.5 dB per SF step); TX +14 dBm EU 868, up to +30 dBm US 915'
   - MAPL = Ptx + Gtx + Grx - sensitivity (20 + 2 + 6 + 137 = 165 dB); real range 5-15 km rural, 1-5 km urban (source's 100

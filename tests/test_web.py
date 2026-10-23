@@ -444,7 +444,8 @@ def test_systems_library_links_to_knowledge_and_visuals(client):
 
     ids = {t["id"] for t in rf_notes.topics()}
     assert set(library.RF_NOTES) <= ids and set(library.SPEC_GUIDES) <= set(engineering.NOTES)
-    js = (library.PROJECT_ROOT / "app" / "web" / "static" / "visuals.js").read_text()
+    static = library.PROJECT_ROOT / "app" / "web" / "static"  # visuals.js plus visuals in their own files (vz/)
+    js = "".join(f.read_text() for f in [static / "visuals.js", *sorted(static.glob("vz/*.js"))])
     assert all(f'id: "{k}"' in js for k in library.VISUALS if k != "rf-bands")
     v2x = library.related("v2x_frontend")
     hrefs = {x["href"] for x in v2x["knowledge"] + v2x["visuals"]}

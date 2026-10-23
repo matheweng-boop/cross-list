@@ -38,6 +38,9 @@ NOTES = {
     "emc_eft_cispr": ("EFT burst and CISPR emissions on isolated designs: what the setup and the design change",
                       "Why the return path of common-mode current decides EFT and emissions results "
                       "with Si88 isolators."),
+    "uwb_signal_path": ("UWB signal path: pulse fidelity, group delay ripple and linearity",
+                        "Why the TX/RX chain must keep the 500 MHz pulse intact, and how to pick the LNA, PA, switch "
+                        "and filter for flat group delay and low compression."),
 }
 ALIASES = {"skew_ns": "pwd_ns", "peak_sink_a": "peak_source_a"}
 

@@ -32,6 +32,9 @@ class ParamDef:
     at: str | None = None  # parameter holding the test condition of this value (the supply of a peak current)
     curve: str | None = None  # a ``curve`` parameter giving this value at other test conditions
     x_unit: str = ""  # curve: unit of the test condition
+    # range parameter (an RF part's frequency band): a candidate that covers a wider band than the reference is read
+    # off its ``curve`` at its worst over the reference's band, so both values cover the same frequencies
+    band: str | None = None
     # direction "match": the side that is the safer stand-in when no variant matches (a UVLO threshold: a lower one
     # still starts up at every supply the reference starts at; owner, 22 Oct 2026). Still a deviation, ranked closer.
     prefer: str | None = None
@@ -85,7 +88,29 @@ class FamilyRules:
                     break
         for side, key, cond in moved:  # the condition shown is the one the compared value was read at
             side[key] = cond
+        for p in self.params:  # owner, 23 Oct 2026: compare RF values over the same frequencies
+            if not (p.band and p.curve):
+                continue
+            rb, cb = ref.get(p.band), cand.get(p.band)
+            if not (rb and cb) or (float(cb[0]) >= float(rb[0]) and float(cb[1]) <= float(rb[1])):
+                continue
+            v = curve_worst(cand.get(p.curve), float(rb[0]), float(rb[1]), p.direction)
+            if v is not None:
+                cand[p.key], cand[p.key + BAND_SUFFIX] = v, (float(rb[0]), float(rb[1]))
         return ref, cand
+
+
+BAND_SUFFIX = "@band"  # values key: the band a value was read over (shown next to it)
+
+
+def curve_worst(curve, lo: float, hi: float, direction: str | None) -> float | None:
+    """The curve's worst value between ``lo`` and ``hi`` (highest for a lower-is-better value, lowest otherwise): the
+    stated points inside and the values read at both edges; None when the curve does not cover the whole span."""
+    pts = sorted((float(a), float(b)) for a, b in curve or [])
+    if not pts or pts[0][0] > lo + 1e-9 or pts[-1][0] < hi - 1e-9:
+        return None
+    ys = [y for x, y in pts if lo <= x <= hi] + [v for v in (curve_value(pts, lo), curve_value(pts, hi)) if v is not None]
+    return (max if direction == "lower" else min)(ys) if ys else None
 
 
 def curve_value(curve, x: float) -> float | None:
@@ -151,6 +176,7 @@ def parse_rules(data: dict) -> FamilyRules:
             at=raw.get("at"),
             curve=raw.get("curve"),
             x_unit=raw.get("x_unit", ""),
+            band=raw.get("band"),
             prefer=raw.get("prefer"),
         )
         if p.kind not in KINDS:
@@ -167,8 +193,8 @@ def parse_rules(data: dict) -> FamilyRules:
             raise ValueError(f"{p.key}: ordinal needs levels")
         if p.derive and p.derive not in DERIVE:
             raise ValueError(f"{p.key}: unknown derive {p.derive!r}")
-        if p.kind != "curve" and bool(p.at) != bool(p.curve):
-            raise ValueError(f"{p.key}: at and curve go together")
+        if p.kind != "curve" and (bool(p.at) or bool(p.band)) != bool(p.curve):
+            raise ValueError(f"{p.key}: a curve goes with at (a test condition) or band (a frequency band)")
         params.append(p)
     return FamilyRules(family=data["family"], title=data.get("title", data["family"]), params=tuple(params),
                        functional_focus=bool(data.get("functional_focus")))

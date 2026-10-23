@@ -25,7 +25,7 @@ An engineer can reject a drop-in; it is then listed as a package equivalent.
 import re
 from dataclasses import dataclass, field
 
-from app.matching.rules import FamilyRules, ParamDef
+from app.matching.rules import BAND_SUFFIX, FamilyRules, ParamDef
 from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
@@ -240,6 +240,9 @@ def format_value(p: ParamDef, value) -> str:
 def format_at(rules: FamilyRules, p: ParamDef, values: dict) -> str:
     """The value with its test condition, when the parameter has one (``7.5 A at 18 V``)."""
     text = format_value(p, values.get(p.key))
+    band = values.get(p.key + BAND_SUFFIX) if p.band else None
+    if band and values.get(p.key) is not None:  # read off the part's curve over the reference's band
+        return f"{text} over {_fmt_num(band[0])}–{_fmt_num(band[1])} {(rules.get(p.band) or p).unit}".rstrip()
     cond = rules.get(p.at) if p.at else None
     if cond is None or values.get(p.key) is None or values.get(p.at) is None:
         return text

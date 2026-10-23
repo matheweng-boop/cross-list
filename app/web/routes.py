@@ -60,6 +60,7 @@ templates.env.globals.update(
     has_list_price=price_model.has_list_price,
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
+    signed_in=lambda request: getattr(request.state, "principal", None),
     category_short=CATEGORY_SHORT,
 )
 

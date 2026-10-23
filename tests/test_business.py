@@ -197,7 +197,7 @@ def test_market_size_comes_from_public_tam_estimates(client, session):
 
     pub = tam.by_function(session)
     t = pub["am_fm_tuner"]
-    assert t["n"] >= 3 and t["low"] <= t["usd"] <= t["high"]  # the median of the tuner IC sources
+    assert t["n"] >= 2 and t["low"] <= t["usd"] <= t["high"]  # the median of the total radio market sources
     apps = op.with_status(op.applications(), op.makers(session), op.COMPANIES["combined"][1])
     use = scoring.for_session(session, apps)["usage"]
     if "am_fm_tuner" in use:

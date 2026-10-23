@@ -36,13 +36,15 @@ def test_every_product_family_has_its_physics():
         assert any(words in t["title"] for t in physics()), words
 
 
-def test_links_go_to_hyperphysics_first_and_polite_hosts():
+def test_links_go_to_openstax_first_and_polite_hosts():
     blocked = {urlparse(s["url"]).netloc for s in library.sources() if s["feasibility"] == "blocked" and s.get("url")}
     for t in physics():
         hosts = [urlparse(s["url"]).netloc for s in t["sources"] + t["try"]]
         assert not any(h.endswith("qorvo.com") or h == "www.qualcomm.com" or h in blocked for h in hosts), t["id"]
-    hp = [t for t in physics() if "hyperphysics.phy-astr.gsu.edu" in t["sources"][0]["url"]]
-    assert len(hp) >= 14
+    # owner, 22 Oct 2026: HyperPhysics replaced by OpenStax University Physics
+    assert not any("hyperphysics" in s["url"] for t in physics() for s in t["sources"] + t["try"])
+    first = [t for t in physics() if t["sources"][0]["url"].startswith("https://openstax.org/books/university-physics-volume-")]
+    assert len(first) >= 14
 
 
 def test_rf_notes_page_shows_physics(client):
@@ -51,7 +53,7 @@ def test_rf_notes_page_shows_physics(client):
     assert "Key equations" in page and "Why it matters to the customer" in page
     assert 'href="/knowledge#p-tuners"' in page and 'href="/find?q=Si47"' in page and 'href="/visuals#mod"' in page
     assert 'href="/engineering/cmti_kv_us"' in page and "Try it yourself" in page
-    assert "hyperphysics.phy-astr.gsu.edu/hbase/electric/serres.html" in page
+    assert "university-physics-volume-2/pages/15-5-resonance-in-an-ac-circuit" in page and "hyperphysics" not in page
 
 
 def test_by_product_cards_link_the_physics(client):
@@ -74,7 +76,8 @@ def test_new_visuals_name_their_families_and_topics(client):
 
 def test_resources_recorded_with_what_they_are_good_for(client):
     src = {s["id"]: s for s in library.sources()}
-    for k in ("hyperphysics", "falstad", "phet", "wolframdemos", "desmos", "lamar", "betterexplained", "microwaves101"):
+    for k in ("hyperphysics", "openstax", "falstad", "phet", "wolframdemos", "desmos", "lamar", "betterexplained",
+              "microwaves101"):
         assert src[k]["offers"] and src[k]["access"] and src[k]["licence"], k
     page = client.get("/library/sources").text
     assert "physics and maths" in page and "Falstad" in page

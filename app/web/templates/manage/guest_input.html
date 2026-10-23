@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Guest input</h1>
+<p class="subtitle muted">Everything guests sent. Nothing here has changed the site yet. Approve applies the item exactly as if you had sent it, with the guest's name as author; Reject drops it.</p>
+{% if msg %}<p class="banner" role="status">{{ msg }}</p>{% endif %}
+
+<h2>Waiting for you ({{ pending|length }})</h2>
+{% for x in pending %}<article class="pl-card gi-item">
+  <p><b>{{ x.kind }}</b> · {{ x.author }} · {{ x.created_at.strftime('%Y-%m-%d %H:%M') }}{% if x.page %} · on <a href="{{ x.page }}">{{ x.page }}</a>{% endif %}</p>
+  <p class="small muted">Sent to {{ x.target }}{% if x.status == 'approving' %} · being applied{% endif %}{% if x.result and x.result.error %} · last try: {{ x.result.error }}{% endif %}</p>
+  <dl class="gi-fields small">{% for k, v in shown(x) %}<dt>{{ k }}</dt><dd>{% if v|length > 600 %}<details><summary>{{ v[:200] }}…</summary><pre>{{ v }}</pre></details>{% else %}{{ v }}{% endif %}</dd>{% endfor %}</dl>
+  <form method="post" action="/manage/guest-input/{{ x.id }}" class="gi-form">
+    <input name="note" maxlength="2000" placeholder="Note (optional)" aria-label="Note">
+    <button type="submit" name="act" value="approve" class="small-btn">Approve</button>
+    <button type="submit" name="act" value="reject" class="outline small-btn">Reject</button>
+  </form>
+</article>{% else %}<p class="muted">Nothing waiting.</p>{% endfor %}
+
+{% if done %}<h2>Reviewed recently</h2>
+<div class="table-wrap"><table class="small">
+  <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">What</th><th scope="col">Decision</th><th scope="col">Note</th></tr></thead>
+  <tbody>{% for x in done %}<tr><td>{{ x.reviewed_at.strftime('%Y-%m-%d %H:%M') if x.reviewed_at else '' }}</td><td>{{ x.author }}</td><td>{{ x.kind }}</td><td>{{ x.status }}</td><td>{{ x.owner_note or '' }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
+{% endblock %}

@@ -3,14 +3,15 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **Tuner market figures.** The three public TAM figures for automotive tuner ICs disagree by more than 2x
-   ($0.89 B to $2.31 B for 2024). They are yes/no questions in the Data quality review queue, and the answers now
-   change the Opportunity explorer's market size directly. Owner, 22 Oct: the key is whether a report counts the
-   tuner market (AM/FM tuner only) or the radio market (with digital radio demodulators, which we also sell). The
-   evening run sorts each figure by that scope and compares like with like; answer pending its findings.
+None open right now.
 
 ## Settled (owner, 22 Oct 2026)
 
+- Tuner market: no tuner-only figure. The market that counts is the total radio market (tuners plus digital radio
+  demodulators). Each TAM report is labelled by what it covers (TAM estimates page): MRFR and DataHorizzon cover the
+  total radio market, MarketIntelo digital radio tuners only, Emergen not checked (dead link). Total radio market,
+  2024: $0.89 B (DataHorizzon) to $2.31 B (Market Research Future); the sources disagree, both are shown. Only the
+  total-radio figures set the explorer's market size (median $1.6 B).
 - Microchip timing parts: left out.
 - SiTime datasheets from the "gated" folder: keep reading them (no login or form; robots.txt allows).
 - MSW2060-206: the MACOM datasheet values stand (20–1200 MHz, –65 to +125 °C operating, 8 x 5 x 2.5 mm).

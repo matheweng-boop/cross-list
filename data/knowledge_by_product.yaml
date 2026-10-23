@@ -132,6 +132,17 @@ why_it_matters:
     - kind: bom
       text: The right number and direction of channels in one package replaces two smaller isolators, saving board area and placement cost.
       est: true
+  emc_eft_cispr:
+    - kind: cost
+      text: Passing EFT and CISPR first time saves a re-spin and a second test-house slot. Knowing which setup details change the result keeps a "pass" from turning into a fail at the customer's own lab.
+      est: true
+    - kind: bom
+      text: The right fix is often one part, not many. In Skyworks AN1131 a single 1000 pF Y capacitor near the transformer let a 2-layer Si88241 board pass CISPR 25 class 1 and 2 conducted limits.
+    - kind: robust
+      text: The isolator's CMTI (Si88x2x 40 kV/µs minimum) must hold against the slope that reaches the barrier in the burst test. A local return path keeps that slope, and the secondary rail droop, down.
+      est: true
+    - kind: design
+      text: A Y capacitor adds mains-frequency leakage current and must be safety-rated; a common-mode choke only works if it covers every path. Choose the lever that fits the product's safety standard.
 
 products:
   - key: digital_isolators
@@ -144,6 +155,15 @@ products:
     rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
     topics: [traction_asil_d]
     review_words: [digital isolator, isolator]
+  - key: isolators_dcdc
+    title: Digital isolators with integrated DC-DC (Si88xx)
+    line: Skyworks (Si882xx, Si883xx, Si884xx, Si886xx)
+    pitch: Isolated data and isolated power from one part plus a small transformer, for industrial I/O, BMS and automotive modules.
+    guides: [emc_eft_cispr, integrated_power, cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, qualification]
+    why: [emc_eft_cispr, integrated_power, cmti_kv_us]
+    visuals: [emc, cmti, creep]
+    rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
+    review_words: [isolated dc-dc, isolated power]
   - key: gate_drivers
     title: Isolated gate drivers
     line: Skyworks (Si823x, Si827x, Si828x)

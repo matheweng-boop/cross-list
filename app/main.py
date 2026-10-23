@@ -10,12 +10,13 @@ from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.auth.session import ensure_owner, guard
 from app.config import PROJECT_ROOT, get_settings
 from app.db import Base, init_engine
 from app.models import BusinessInput, Package, Part
@@ -62,6 +63,7 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
     Base.metadata.create_all(engine)
     with Session(engine) as session:
         ensure_local_user(session)
+        ensure_owner(session)
         # the owner deleted the retired commercial inputs (ASPs and volumes), 22 Oct 2026: nothing proprietary is kept
         session.execute(delete(BusinessInput))
         empty = session.scalar(select(func.count(Part.id))) == 0
@@ -123,12 +125,15 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.api.routes import router as api_router
     from app.auth.gate import PasswordGate
     from app.auth.gate import router as auth_router
+    from app.auth.passkeys import router as passkey_router
+    from app.security import ROBOTS, SecurityMiddleware
     from app.web.automotive import router as automotive_router
     from app.web.blocks import router as blocks_router
     from app.web.broadcast import router as broadcast_router
     from app.web.business import router as business_router
     from app.web.competitors import router as competitors_router
     from app.web.feedback import router as feedback_router
+    from app.web.people import router as people_router
     from app.web.pipeline import router as pipeline_router
     from app.web.portfolio import router as portfolio_router
     from app.web.requests import router as requests_router
@@ -139,7 +144,10 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
 
     app.add_middleware(PasswordGate)
     app.add_middleware(GZipMiddleware, minimum_size=1000)  # the larger pages are 0.3-0.6 MB of HTML
+    app.add_middleware(SecurityMiddleware)  # outermost: headers on every response, size limits, same-site check
+    guard.reset()
     app.include_router(auth_router)
+    app.include_router(passkey_router)
 
     @app.exception_handler(Exception)
     async def server_error(request: Request, exc: Exception):
@@ -187,6 +195,10 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     def favicon():
         return RedirectResponse("/static/favicon.svg", status_code=301)
 
+    @app.get("/robots.txt", include_in_schema=False, response_class=PlainTextResponse)
+    def robots():
+        return ROBOTS
+
     @app.get("/healthz", include_in_schema=False)
     def healthz():
         return {"ok": True}
@@ -205,4 +217,5 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(uploads_router)
     app.include_router(reviews_router)
     app.include_router(verify_router)
+    app.include_router(people_router)
     return app

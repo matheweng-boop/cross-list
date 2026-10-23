@@ -50,6 +50,8 @@ UTILITY = ("manage", "Data management", (
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
     ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
+    ("Guest input", "/manage/guest-input", "What invited guests sent: approve or reject each item"),
+    ("People & invites", "/manage/people", "Invite guests, see their passkeys, remove someone"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
 ))  # fmt: skip
 
@@ -105,6 +107,9 @@ PLACES = {
     "/manage/verify": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage/overview": ("manage", "/manage/overview"),
+    "/manage/guest-input": ("manage", "/manage/guest-input"),
+    "/manage/people": ("manage", "/manage/people"),
+    "/owner": ("manage", "/manage/people"),
     "/manage/schedule": ("manage", "/manage/schedule"),
     "/manage": ("manage", "/manage/reviews"),
     "/library": ("knowledge", "/library"),

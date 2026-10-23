@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     digikey_currency: str = "USD"
     # Re-fetch cached prices older than this.
     price_max_age_hours: int = 24
+    # Passkeys (WebAuthn): the site's domain and its full address. Change both only for another domain; local tests
+    # use localhost.
+    rp_id: str = "cross-list.onrender.com"
+    origin: str = "https://cross-list.onrender.com"
+    # Proof of work on the sign-in and invite pages: leading zero bits of SHA-256 (15: about half a second on a phone).
+    pow_bits: int = 15
 
 
 @lru_cache

@@ -23,7 +23,8 @@
     try {
       const res = await fetch(f.action, {method: "POST", body: new FormData(f), headers: {Accept: "application/json"}});
       if (!res.ok) throw new Error(res.status);
-      const {count} = await res.json();
+      const {count, review, message} = await res.json();
+      if (review) { f.outerHTML = `<span class="pushed small" role="status">${message}</span>`; return; }
       f.outerHTML = `<span class="pushed small" role="status">★ Added · <a href="/business/shortlist">view shortlist</a></span>`;
       badge(count);
     } catch (err) {

@@ -17,6 +17,7 @@
       body: JSON.stringify({dataset: box.dataset.ds, key: box.dataset.key, verdict: v, comment, author})});
     if (!res.ok) { alert(`Not saved (${res.status})`); return; }
     const r = await res.json(), st = box.querySelector(".rv-st");
+    if (r.review) { st.textContent = "sent for review"; st.title = r.message; box.classList.add("rv-done"); return; }
     st.className = `rv-st rv-${r.state}`;
     st.textContent = {verified: "reviewed ✓", disputed: "disputed", unverified: "not reviewed"}[r.state] || r.state;
     st.title = `Reviewed by people: ${r.correct} correct, ${r.wrong} wrong, ${r.unsure} unsure`;

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db import get_session
 from app.matching.rules import get_rules
 from app.models import CrossFeedback, Part, SiteFeedback, Upload, VerifyTask
-from app.services import quality, tam, verify
+from app.services import guest_input, quality, tam, verify
 from app.services.compare import compare_parts
 from app.web.routes import templates
 
@@ -26,6 +26,7 @@ def overview(request: Request, session: Session = Depends(get_session)):
         "verify": sum(n_open.values()),
         "feedback": session.scalar(select(func.count()).select_from(SiteFeedback).where(SiteFeedback.status == "new")),
         "uploads": session.scalar(select(func.count()).select_from(Upload).where(Upload.status == "new")),
+        "guest": guest_input.pending_count(session),
     }
     t = tam.counts(session)
     stats = quality.stats(session)

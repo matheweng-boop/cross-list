@@ -1843,6 +1843,7 @@
       {method: configId ? "PUT" : "POST", headers: {"Content-Type": "application/json"}, body});
     if (!res.ok) { $("#bc-status").textContent = `Not saved (${res.status})`; return; }
     const out = await res.json();
+    if (out.review) { dirty = false; $("#bc-status").textContent = out.message; return; }
     if (!configId) { configId = out.id; history.replaceState(null, "", `/broadcast/configurations/${configId}`); }
     $("#bc-name").value = out.name;
     dirty = false;

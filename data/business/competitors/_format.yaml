@@ -10,6 +10,7 @@
 # model: Fabless / own fabs / mixed, and who makes what
 # figures:                                  (required: at least revenue)
 #   - {label: Revenue FY2025, value: "$326.7 M (+61 %)", source: "...", date: YYYY-MM-DD, conf: high|med|low}
+#                                           (source and date are required for every figure)
 # products:                                 main product lines
 #   - {name: ..., what: ...}
 # markets:                                  end markets as the company reports them
@@ -20,4 +21,20 @@
 #   - {area: ..., skyworks: "...", qorvo: "...", level: direct|partial|none, link: /path (optional)}
 # moves: [recent acquisitions, launches, partnerships; with the date]
 # for_bizdev: [what this means for us, plain sentences]
+# financials:                               financial stability (required; owner, 23 Oct 2026). Every number has its
+#                                           source and date; "approx." when sources disagree, "Not Enough Data"
+#                                           when no public number exists (say which source was checked).
+#   currency: "US$ M"                       unit of the table values
+#   years: [FY2023, FY2024, FY2025]         the last 3 fiscal years, oldest first
+#   table:                                  one value per year. Required keys: revenue, rnd, rnd_pct, opex,
+#                                           op_result. Optional: net_result, op_cash, fcf
+#     - {key: revenue, values: ["144.0", "202.7", "326.7"], note: "...", source: "...", date: YYYY-MM-DD}
+#   notes:                                  single figures. Required keys: cash, debt; fcf for a listed company
+#                                           (in the table or here). Optional: equity, other (with a label)
+#     - {key: cash, value: "...", source: "...", date: YYYY-MM-DD, conf: high|med|low}
+#   ownership: {value: "listed / state / strategic investors ...", source: "...", date: YYYY-MM-DD}
+#   supplier_verdict:                       always BizDev's own reading (shown marked "est")
+#     longevity: strong|solid|watch|weak    will the company still be here and investing in 5–10 years?
+#     supply: strong|solid|watch|weak       can a customer rely on it as a stable supplier?
+#     text: [plain sentences: what it means as a supplier]
 # sources: ["https://... - what it is"]

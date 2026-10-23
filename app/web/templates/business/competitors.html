@@ -10,6 +10,7 @@
     <span class="rp-meta small">{{ c.ticker or 'Private' }} · {{ c.hq }} · checked {{ c.updated }}</span>
     <b class="rp-title">{{ c.name }}</b>
     <span class="small">{{ c.summary|truncate(200) }}</span>
+    {% set v = c.financials.supplier_verdict %}<span class="small muted">As a supplier (est): longevity {{ ratings[v.longevity]|lower }}, supply stability {{ ratings[v.supply]|lower }}</span>
     <span class="rp-tags">{% for o in c.overlap or [] if o.level == 'direct' %}<span class="badge">{{ o.area }}</span>{% endfor %}</span>
   </a>{% endfor %}
 </div>

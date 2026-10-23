@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Risks – Opportunities – BizDev{% endblock %}
+{% block content %}
+<h1>Risks</h1>
+<p class="subtitle muted">Competing technologies and products that could endanger our current solutions, by our product family. Each risk names the threat, who is behind it, how likely and how soon (our estimate, marked est), which of our parts it hits, the early signs to watch, and where to read more. Public sources only; checked {{ d.updated }}.</p>
+{% if d.errors %}<p class="small muted">Data problems: {{ d.errors|join('; ') }}</p>{% endif %}
+
+<nav class="rk-jump small">Jump to: {% for g in d.groups %}<a href="#{{ g.id }}">{{ g.name }}</a>{{ ' · ' if not loop.last }}{% endfor %}</nav>
+
+{% if urgent %}<h2>Act first: likely and already happening <span class="badge">est</span></h2>
+<ul>{% for r in urgent %}<li><a href="#{{ r.id }}">{{ r.threat }}</a> <span class="small muted">· {{ r.group }} · {{ r.who|join(', ') }}</span></li>{% endfor %}</ul>{% endif %}
+
+{% for g in d.groups %}
+<h2 id="{{ g.id }}">{{ g.name }}</h2>
+<p class="small"><b>What we sell:</b> {{ g.ours }}</p>
+<div class="rp-list">{% for r in g.risks %}
+  <article class="rp-card" id="{{ r.id }}">
+    <span class="rp-meta small"><span class="badge">{{ kinds[r.kind] }}</span> <span class="badge">{{ likelihood[r.likelihood] }} (est)</span> <span class="badge">{{ when[r.when] }} (est)</span></span>
+    <b class="rp-title">{{ r.threat }}</b>
+    <span class="small"><b>Who:</b> {{ r.who|join(', ') }}</span>
+    <span class="small"><b>Impact on our parts:</b> {{ r.impact }}</span>
+    <span class="small"><b>Early signs to watch:</b></span>
+    <ul class="small">{% for s in r.signs %}<li>{{ s }}</li>{% endfor %}</ul>
+    {% if r.links %}<span class="small"><b>See:</b> {% for ln in r.links %}<a href="{{ ln.href }}"{% if ln.href.startswith('http') %} rel="noopener noreferrer" target="_blank"{% endif %}>{{ ln.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</span>{% endif %}
+    <details class="small"><summary>Sources</summary><ul>{% for s in r.sources %}{% set u = s.split(' - ', 1) %}
+      <li>{% if u[0].startswith('http') %}<a href="{{ u[0] }}" rel="noopener noreferrer" target="_blank">{{ u[1] if u|length > 1 else u[0] }}</a>{% else %}{{ s }}{% endif %}</li>{% endfor %}</ul></details>
+  </article>{% endfor %}
+</div>
+{% endfor %}
+<p class="small muted">Likelihood: Likely, Possible, Unlikely. Timing: already happening, in 1–2, 3–5 or 5+ years. Both are BizDev's own reading of public information, not a forecast. Competitor profiles: <a href="/business/competitors">Competitive analytics</a>.</p>
+{% endblock %}

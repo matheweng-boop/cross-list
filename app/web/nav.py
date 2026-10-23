@@ -28,6 +28,7 @@ NAV = (
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
         ("Cross-sell", "/business/attach", "What else sits next to a product we sell"),
         ("Competitive analytics", "/business/competitors", "Competitor profiles: size, products, strengths, overlap"),
+        ("Risks", "/business/risks", "Competing technologies and products that could endanger our solutions"),
     )),
     ("growth", "Future growth", (
         ("Research & ideas", "/business/reports", "Research reports and preliminary product ideas and cases"),

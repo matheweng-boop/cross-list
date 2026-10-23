@@ -12,6 +12,29 @@
   <li><b>{{ f.label }}:</b> {{ f.value }} <span class="small muted">· {{ f.source }}{% if f.conf %} · confidence {{ f.conf }}{% endif %}</span></li>{% endfor %}
 </ul>
 
+{% set fin = c.financials %}
+<h2 id="financials">Financial stability</h2>
+<p class="small muted">How stable the company is and what that means for it as a supplier. Figures in {{ fin.currency }} unless stated; every number shows its source and date. "Not Enough Data" means no public number was found.</p>
+<div class="overflow-auto"><table class="striped cp-fin">
+  <thead><tr><th>Measure</th>{% for y in fin.years %}<th>{{ y }}</th>{% endfor %}<th>Source</th></tr></thead>
+  <tbody>{% for r in fin.table %}
+    <tr><td><b>{{ r.label or table_keys[r.key] }}</b>{% if r.note %}<br><span class="small muted">{{ r.note }}</span>{% endif %}</td>
+      {% for v in r['values'] %}<td>{{ v }}</td>{% endfor %}
+      <td class="small muted">{{ r.source }} · {{ r.date }}</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+<ul class="cp-figs">{% for n in fin.notes %}
+  <li><b>{{ n.label or note_keys[n.key] }}:</b> {{ n.value }} <span class="small muted">· {{ n.source }} · {{ n.date }}{% if n.conf %} · confidence {{ n.conf }}{% endif %}</span></li>{% endfor %}
+  <li><b>Ownership:</b> {{ fin.ownership.value }} <span class="small muted">· {{ fin.ownership.source }} · {{ fin.ownership.date }}</span></li>
+</ul>
+{% set v = fin.supplier_verdict %}
+<article class="cp-verdict">
+  <h3>What it means as a supplier <span class="badge">est</span></h3>
+  <p class="small"><b>Longevity:</b> <span class="badge">{{ ratings[v.longevity] }}</span> · <b>Supply stability:</b> <span class="badge">{{ ratings[v.supply] }}</span></p>
+  <ul>{% for t in v.text %}<li>{{ t }}</li>{% endfor %}</ul>
+  <p class="small muted">BizDev's own reading of the public figures above (Strong, Solid, Watch, Weak), not a credit rating.</p>
+</article>
+
 {% if c.products %}<h2>Products</h2>
 <ul>{% for p in c.products %}<li><b>{{ p.name }}</b> – {{ p.what }}</li>{% endfor %}</ul>{% endif %}
 

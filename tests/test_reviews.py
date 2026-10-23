@@ -81,7 +81,7 @@ def test_a_broken_file_is_left_out_not_fatal(tmp_path):
 
 def test_list_and_detail_pages_render_for_every_review(client):
     page = client.get("/reviews")
-    assert page.status_code == 200 and "Request a technology review" in page.text
+    assert page.status_code == 200 and "Request a part review" in page.text
     for p in FILES:
         r = rv.get(p.stem)
         assert f'href="/reviews/{p.stem}"' in page.text
@@ -171,7 +171,7 @@ def test_disputed_item_confidence_drops_one_step(session):
 def test_part_pages_show_the_request_button_or_the_review(client, session):
     any_part = session.scalars(select(Part).limit(1)).first()  # any part from the demo data will do
     page = client.get(f"/parts/{any_part.id}")
-    assert "Request a technology review" in page.text
+    assert "Request a part review" in page.text
     assert f"/reviews?part={urllib.parse.quote(any_part.mpn, safe='/')}#request" in page.text.replace("&amp;", "&")
     # catalogue-only parts (most Qorvo parts) get the review link on the search results
     found = client.get("/find?q=PAC5527")
@@ -187,10 +187,10 @@ def test_application_page_lists_reviews_for_its_diagram(client):
     assert "/reviews/qorvo-pac5527-motor-driver" in page.text
 
 
-def test_nav_places_reviews_under_systems_and_applications(client):
-    systems = next(s for s in nav.NAV if s[0] == "systems")
-    assert ("Technology reviews", "/reviews") in [(i[0], i[1]) for i in systems[2]]
-    assert nav.place("/reviews") == ("systems", "/reviews")
-    assert nav.place("/reviews/qorvo-pac5527-motor-driver") == ("systems", "/reviews")
+def test_nav_places_reviews_under_products(client):
+    products = next(s for s in nav.NAV if s[0] == "products")  # owner, 23 Oct 2026: Part reviews sit with the parts
+    assert ("Part reviews", "/reviews") in [(i[0], i[1]) for i in products[2]]
+    assert nav.place("/reviews") == ("products", "/reviews")
+    assert nav.place("/reviews/qorvo-pac5527-motor-driver") == ("products", "/reviews")
     assert nav.place("/manage/reviews") == ("manage", "/manage/reviews")
-    assert 'href="/reviews"' in client.get("/blocks").text
+    assert 'href="/reviews"' in client.get("/parts").text

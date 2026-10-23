@@ -8,6 +8,7 @@ NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
         ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
+        ("Part reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
         ("Skyworks + Qorvo portfolio", "/portfolio",
          "What each company adds: product categories, RF by band, synergies, which to pick"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
@@ -20,7 +21,6 @@ NAV = (
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
         ("Cross-sell & gaps", "/blocks/cross-sell", "What to sell more of, the gaps to fill and new technology"),
         ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
-        ("Technology reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
         ("Radio & audio", "/broadcast", "Broadcast radio tuners and demodulators"),
     )),
     ("opportunities", "Opportunities", (
@@ -76,7 +76,7 @@ PLACES = {
     "/blocks/": ("systems", "/blocks/new"),
     "/blocks": ("systems", "/blocks"),
     "/reference-designs": ("systems", "/reference-designs"),
-    "/reviews": ("systems", "/reviews"),
+    "/reviews": ("products", "/reviews"),  # owner, 23 Oct 2026: reviews belong to parts
     "/business/applications": ("systems", "/blocks"),
     "/blocks/cross-sell": ("systems", "/blocks/cross-sell"),
     "/business/explorer": ("systems", "/blocks/cross-sell"),

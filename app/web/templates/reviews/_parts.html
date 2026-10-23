@@ -2,8 +2,8 @@
 
 {# "Technology review" links for a part, and the button to request one (from the part page or a catalogue row) #}
 {% macro part_reviews(mpn, compact=false) %}{% set found = tech_reviews_for(mpn) %}
-<p class="rv-part small">{% for r in found %}<a class="rv-link" href="/reviews/{{ r.slug }}"><span class="rv-tag">Technology review</span> {{ r.title if not compact else r.parts|join(', ') }}</a>{{ ' · ' if not loop.last }}{% endfor %}
-  <a class="{{ 'button small-btn outline' if not found and not compact }} rv-ask" href="/reviews?part={{ mpn|urlencode }}#request" title="Ask for an explanation of this part: datasheet, problem, concept and the features that matter">{{ 'Ask another question about ' ~ mpn if found else 'Request a technology review' }}</a></p>
+<p class="rv-part small">{% for r in found %}<a class="rv-link" href="/reviews/{{ r.slug }}"><span class="rv-tag">Part review</span> {{ r.title if not compact else r.parts|join(', ') }}</a>{{ ' · ' if not loop.last }}{% endfor %}
+  <a class="{{ 'button small-btn outline' if not found and not compact }} rv-ask" href="/reviews?part={{ mpn|urlencode }}#request" title="Ask for an explanation of this part: datasheet, problem, concept and the features that matter">{{ 'Ask another question about ' ~ mpn if found else 'Request a part review' }}</a></p>
 {% endmacro %}
 
 {# reviews that fit a page (walk-through, application): a short list #}

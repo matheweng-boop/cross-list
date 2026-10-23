@@ -88,6 +88,7 @@ def _broadcast(mpn: str) -> dict | None:
     return cat[base] if base else cat.get(min((k for k in cat if k.startswith(key)), default=""))
 
 
+REV_DATE = re.compile(r"\s*(?:Rev\.?\s*)?([\w.]+),.*?\b((?:19|20)\d\d)\b")  # "Rev. 1.3, November 15, 2021"
 FIRST_ISSUE = re.compile(r"^(?:rev\.?\s*)?(?:\d{6}A|A|V1|1(?:\.0+)?)$", re.I)  # 206709A, Rev A, V1, 1.0
 
 
@@ -164,7 +165,7 @@ def site_info(session: Session, mpn: str) -> dict:
         out["automotive"] = out["automotive"] or bool(bc.get("aec_q100"))
         out["family"] = out["family"] or fam_of.get(bc.get("role") or "", "")
         out["units"] = out["units"] or (bc.get("channels") if bc.get("role") == "coprocessor" else bc.get("tuners"))
-        rev = re.match(r"\s*(?:Rev\.?\s*)?([\w.]+),.*?\b((?:19|20)\d\d)\b", str((bc.get("source") or {}).get("revision")))
+        rev = REV_DATE.match(str((bc.get("source") or {}).get("revision")))
         if out["released"] is None and rev and FIRST_ISSUE.match(rev.group(1)):  # "Rev. 1.0, May 2, 2019"
             out["released"] = int(rev.group(2))
         out["found"].append(f"radio datasheet ({bc['doc']})")

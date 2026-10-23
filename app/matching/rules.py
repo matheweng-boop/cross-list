@@ -109,7 +109,8 @@ def curve_worst(curve, lo: float, hi: float, direction: str | None) -> float | N
     pts = sorted((float(a), float(b)) for a, b in curve or [])
     if not pts or pts[0][0] > lo + 1e-9 or pts[-1][0] < hi - 1e-9:
         return None
-    ys = [y for x, y in pts if lo <= x <= hi] + [v for v in (curve_value(pts, lo), curve_value(pts, hi)) if v is not None]
+    edges = [v for v in (curve_value(pts, lo), curve_value(pts, hi)) if v is not None]
+    ys = [y for x, y in pts if lo <= x <= hi] + edges
     return (max if direction == "lower" else min)(ys) if ys else None
 
 

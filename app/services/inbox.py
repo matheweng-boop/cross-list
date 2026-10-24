@@ -40,6 +40,16 @@ def _one_line(text: str | None) -> str:
     return " ".join((text or "").split())
 
 
+def _new(session: Session, model, start: datetime) -> list:
+    """Rows of ``model`` created since ``start``, oldest first."""
+    return session.scalars(select(model).where(model.created_at >= start).order_by(model.created_at)).unique().all()
+
+
+def _section(title: str, lines: list[str]) -> list[str]:
+    """A heading and its lines; "None." when there are none."""
+    return [title, *(lines or ["None."])]
+
+
 def collect(session: Session, since: date, until: date | None = None) -> str:
     """The text, newest day last; ``until`` is inclusive (default: today)."""
     until = until or datetime.now(UTC).date()
@@ -51,33 +61,26 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out.append("\n## Site feedback\n")
     out.append("\n".join(texts) if texts else "None.\n")
 
-    crosses = session.scalars(select(CrossFeedback).where(CrossFeedback.created_at >= start)
-                              .order_by(CrossFeedback.created_at)).unique().all()  # fmt: skip
+    crosses = _new(session, CrossFeedback, start)
     ids = {i for c in crosses for i in (c.reference_id, c.candidate_id)}
     mpn = dict(session.execute(select(Part.id, Part.mpn).where(Part.id.in_(ids)))) if ids else {}
-    out.append("## Cross verdicts\n")
-    out += [f"- {_when(c.created_at)} {c.verdict.value}: {mpn.get(c.reference_id, c.reference_id)} -> "
-            f"{mpn.get(c.candidate_id, c.candidate_id)}{' · ' + _one_line(c.note) if c.note else ''}"
-            for c in crosses] or ["None."]  # fmt: skip
+    out += _section("## Cross verdicts\n", [f"- {_when(c.created_at)} {c.verdict.value}: "
+                    f"{mpn.get(c.reference_id, c.reference_id)} -> {mpn.get(c.candidate_id, c.candidate_id)}"
+                    f"{' · ' + _one_line(c.note) if c.note else ''}" for c in crosses])  # fmt: skip
 
-    blocks = session.scalars(select(BlockFeedback).where(BlockFeedback.created_at >= start)
-                             .order_by(BlockFeedback.created_at)).all()  # fmt: skip
-    out.append("\n## Block diagram feedback\n")
-    out += [f"- {_when(b.created_at)} [{b.status}] {b.diagram_name or b.diagram_id or ''}"
-            f"{' / ' + b.target if b.target else ''}: {_one_line(b.message)}" for b in blocks] or ["None."]  # fmt: skip
+    blocks = _new(session, BlockFeedback, start)
+    out += _section("\n## Block diagram feedback\n", [f"- {_when(b.created_at)} [{b.status}] "
+                    f"{b.diagram_name or b.diagram_id or ''}{' / ' + b.target if b.target else ''}: "
+                    f"{_one_line(b.message)}" for b in blocks])  # fmt: skip
 
-    tech = session.scalars(select(TechFeedback).where(TechFeedback.created_at >= start)
-                           .order_by(TechFeedback.created_at)).all()  # fmt: skip
-    out.append("\n## Technology feedback\n")
-    out += [f"- {_when(t.created_at)} [{t.status}] {t.kind} {t.topic or ''}: {_one_line(t.text)}" for t in tech] or [
-        "None."
-    ]
+    tech = _new(session, TechFeedback, start)
+    out += _section("\n## Technology feedback\n", [f"- {_when(t.created_at)} [{t.status}] {t.kind} {t.topic or ''}: "
+                    f"{_one_line(t.text)}" for t in tech])  # fmt: skip
 
-    reviews = session.scalars(select(DataReview).where(DataReview.created_at >= start)
-                              .order_by(DataReview.created_at)).all()  # fmt: skip
-    out.append("\n## Review answers (data quality, TAM, cases, library, price calls)\n")
-    out += [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
-            f"{' · ' + _one_line(r.comment) if r.comment else ''}" for r in reviews] or ["None."]  # fmt: skip
+    reviews = _new(session, DataReview, start)
+    out += _section("\n## Review answers (data quality, TAM, cases, library, price calls)\n",
+                    [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
+                     f"{' · ' + _one_line(r.comment) if r.comment else ''}" for r in reviews])  # fmt: skip
 
     # Verify next › Sources (weekly link and source check): ok / fix it / remove, with where it is
     src = session.scalars(select(VerifyTask).where(VerifyTask.kind == "sources", VerifyTask.done_at >= start)
@@ -95,14 +98,12 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     if not src:
         out.append("None.")
 
-    asked = session.scalars(select(ReportQuestion).where(ReportQuestion.created_at >= start)
-                            .order_by(ReportQuestion.created_at)).all()  # fmt: skip
+    asked = _new(session, ReportQuestion, start)
     answered = session.scalars(select(ReportQuestion).where(ReportQuestion.reviewed_at >= start,
                                                             ReportQuestion.created_at < start)).all()  # fmt: skip
-    out.append("\n## Questions on reports\n")
-    out += [f"- {_when(q.created_at)} [{q.status}] {q.slug}: {_one_line(q.text)}"
-            f"{' · answer: ' + _one_line(q.answer) if q.answer else ''}"
-            for q in [*asked, *answered]] or ["None."]  # fmt: skip
+    out += _section("\n## Questions on reports\n", [f"- {_when(q.created_at)} [{q.status}] {q.slug}: "
+                    f"{_one_line(q.text)}{' · answer: ' + _one_line(q.answer) if q.answer else ''}"
+                    for q in [*asked, *answered]])  # fmt: skip
 
     # every open request (the run writes the review), and those closed since the last pull
     from app.services import reviews as rv

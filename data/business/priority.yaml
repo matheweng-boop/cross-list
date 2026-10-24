@@ -1,0 +1,136 @@
+# Priority score for Opportunities > Gaps & new technology (app/services/priority.py), owner's request 25 Oct 2026:
+# "we really need to focus on things we can do that are RF-related or power-related ... a mathematical weighting based
+# on number of diagrams, likeliness and technology relation, and then sort the list of gaps to fill and the list of new
+# technology by that."
+#
+#   Priority = 100 × (wT × T + wL × L + wD × D), each factor 0–1, so the priority is 0–100.
+#
+# T, technology relation: how close the function is to our RF and power strengths (the tables below).
+# L, likeliness: how likely we can build it and win with it (feasibility from the path to product, a platform of ours
+#    that already serves it, the owner's review answers).
+# D, diagrams: how many diagrams of the Application library need it, on a log scale: D = log(1 + n) / log(1 + n_max),
+#    so 40 diagrams is not 10 × better than 4.
+#
+# The Opportunity score (app/services/scoring.py, data/business/scoring.yaml) stays as it was: it measures something
+# else (demand, portfolio distance, architecture fit, competition, market trend) and is shown next to the priority.
+# "est": the T values are our own reading of public portfolios, for the owner to adjust.
+
+# Weights; they are normalised to add up to 1. The owner can try others with the sliders on the page (kept in the URL).
+weights:
+  technology: 0.45   # technology relation leads, as the owner asked
+  likeliness: 0.30
+  diagrams: 0.25
+
+labels:
+  technology: Technology relation
+  likeliness: Likeliness
+  diagrams: Diagrams
+
+# The pages' filter (Gaps & new technology and Markets): "RF & power only" shows T >= focus_from (on by default).
+# "All" lists everything in three groups, each by priority: T >= focus_from, then "General power and adjacent
+# technology", then T below outside_below as "Outside our technology focus"; nothing disappears, and an LDO never sits
+# above RF and power work whatever the weights.
+focus_from: 0.7
+outside_below: 0.4
+
+technology:
+  default: 0.3       # a function in none of the tables below: listed as "not mapped yet" on the page and in the tests
+  levels:            # key: value, label (shown as a chip), what it covers
+    rf_core: {value: 1.0, label: RF core, help: "PA, LNA, front-end modules, BAW/SAW filters, switches, tuners, UWB / BLE / GNSS front ends, mmWave beamformers, RF GaN"}
+    power_core: {value: 0.9, label: Power we differentiate in, help: "Isolated gate drivers, isolators, isolated sensing, isolated DC-DC, high-voltage conversion, eFuse / hot-swap, motor-control SoCs"}
+    timing_ms: {value: 0.7, label: Timing & mixed-signal we have, help: "Clocks, oscillators, jitter attenuators, broadcast radio and TV tuners, voice (SLIC / DAA)"}
+    power_near: {value: 0.7, label: Power next to our drivers, help: "Non-isolated gate drivers, next to our isolated drivers and motor-control SoCs"}
+    adjacent: {value: 0.5, label: Adjacent technology, help: "ADC, DAC, amplifiers, references, optical drivers, Wi-Fi / NFC radios: design we could do, not a strength today"}
+    power_commodity: {value: 0.4, label: General power, help: "LDOs, generic buck / boost, load switches, supervisors, sequencers: listed, but ranked low (owner)"}
+    outside: {value: 0.2, label: Outside our technology, help: "MCUs, memory, processors, generic sensors, wired interfaces, audio, passives, connectors, TVS / ESD"}
+  # function category (data/blocks/functions.yaml) -> level, for functions without their own line below
+  categories:
+    rf: rf_core
+    radio: timing_ms
+    isolation: power_core
+    timing: timing_ms
+    power: power_commodity
+    protection: power_commodity
+    sensing: outside
+    sensors: outside
+    audio: outside
+    interface: outside
+    networking: outside
+    processing: outside
+    memory: outside
+  # function -> level, where it differs from its category
+  functions:
+    # RF and RF-adjacent outside the rf category
+    active_antenna_amp: rf_core      # an LNA for AM/FM antennas; owner 22 Oct 2026: interesting as a solution sell
+    uwb_soc: rf_core                 # Qorvo UWB
+    ble_soc: rf_core                 # Qorvo low-power radio SoCs
+    wireless_soc: rf_core
+    radar_transceiver: rf_core       # mmWave
+    v2x_transceiver: rf_core
+    wifi_soc: adjacent               # RF, but a Wi-Fi SoC business is not ours today (est)
+    wireless_audio_soc: adjacent
+    nfc_frontend: adjacent           # 13.56 MHz front end (est)
+    antenna: outside                 # a system part, never scored
+    # power with our differentiation
+    isolated_dcdc: power_core
+    isolated_can: power_core         # an isolated interface on our isolator technology
+    efuse_hotswap: power_core        # owner 22 Oct 2026: eFuse and hot-swap are extremely interesting for data centers
+    hv_flyback: power_core           # high-voltage power conversion
+    acdc_controller: power_core      # high-voltage power conversion
+    motor_controller: power_core     # motor-control SoCs (Qorvo PAC)
+    poe_pse: power_core              # our PoE line
+    poe_pd: power_core
+    # power next to our drivers
+    half_bridge_driver: power_near
+    three_phase_gate_driver: power_near
+    # adjacent: mixed-signal we could design
+    adc: adjacent
+    dac: adjacent
+    amplifier: adjacent          # incl. current-sense amplifiers; owner 23 Oct 2026: current sensing is big in charging
+    voltage_reference: adjacent
+    optical_driver: adjacent
+    optical_tia: adjacent
+    position_interface: adjacent # resolver interface, next to motor control
+    # commodity timing and power outside the power category
+    rtc: power_commodity
+    watchdog: power_commodity
+    usb_pd_controller: power_commodity
+    led_driver: power_commodity
+    power_fets: power_commodity      # our SiC line was divested
+    power_module: power_commodity
+    # outside our technology
+    tvs_esd: outside                 # owner 22 Oct 2026: unlikely as a product, interesting as a solution
+    temperature_sensor: outside      # owner 22 Oct 2026: ASP most likely too low, focus is RF
+    pcie_buffer: timing_ms           # a clock buffer from our timing line
+    rs485_transceiver: adjacent      # isolated RS-485 sits on our isolator platform; plain RS-485 does not (est)
+    slic: timing_ms              # our voice line (est)
+    modem_daa: timing_ms
+
+likeliness:
+  # Base: the feasibility group of the function (1–3, as in Research & ideas), from its portfolio distance: the path to
+  # product where assessed (exists / spec variant -> 1, new design -> 2, new technology -> 3), else the technology
+  # rating; an RF band gap takes it from RF coverage (no part in the band -> 2, only ageing parts -> 1).
+  feasibility:
+    1: {value: 1.0, label: likely, help: "Close to the portfolio: firmware, packaging, a spec variant or existing dies"}
+    2: {value: 0.6, label: possible, help: "A new chip from technology we already have"}
+    3: {value: 0.3, label: unlikely, help: "New technology: partner or acquire"}
+  not_assessed: 0.45               # no path to product or technology rating yet
+  not_pursue: 0.1                  # path to product "not ours to build" (Markets only; Gaps & new technology leaves it out)
+  # a current public platform of ours (data/business/capabilities.yaml, processes and design IP) already serves it
+  platform_bonus: 0.1
+  # the owner's review answers; the value replaces the computed one
+  owner:
+    temperature_sensor: {value: 0.3, note: "Owner, 22 Oct 2026: ASP most likely too low; the focus is RF."}
+    tvs_esd: {value: 0.2, note: "Owner, 22 Oct 2026: unlikely as a product development; interesting as part of a solution."}
+  # chip label from the final L
+  labels:
+    - {from: 0.8, label: likely}
+    - {from: 0.5, label: possible}
+    - {from: 0.0, label: unlikely}
+
+diagrams:
+  # Gaps & new technology: n = library diagrams + background_weight × background diagrams (1.0: as "Needed in" on the cards; 0.5 would follow
+  # the Opportunity score, where a background diagram counts half).
+  # Markets & customers: n = the applications in the markets chosen there (all markets: the same count), and n_max the
+  # most-needed function in its three tables, so choosing markets reorders by those markets' needs.
+  background_weight: 1.0

@@ -1,18 +1,23 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch, about, term, path_chip, push with context %}
+{% from "business/_priority.html" import prio_bar, prio_chips, prio_weights %}
 {% macro url() -%}
-  {%- set base = {'co': co, 'view': view, 'm': chosen|join(','), 'g': g} -%}{%- set _ = base.update(kwargs) -%}
+  {%- set base = {'co': co, 'view': view, 'm': chosen|join(','), 'g': g, 'show': 'all' if show == 'all' else ''} -%}{%- set _ = base.update(wts) -%}{%- set _ = base.update(kwargs) -%}
   /business/markets?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% block content %}
 <h1>Markets <small class="muted">· one product, several markets</small></h1>
-<p class="subtitle muted">Functions and the end markets whose reference architectures need them, split by the leap it takes: sell what we have, fill a portfolio gap, or new technology.</p>
+<p class="subtitle muted">Functions and the end markets whose reference architectures need them, split by the leap it takes: sell what we have, fill a portfolio gap, or new technology. Each group is in priority order, the same score as on <a href="/business/opportunities">Gaps &amp; new technology</a>: technology relation, likeliness, and the applications in the chosen markets (<a href="/business/opportunities?co={{ co }}{{ '&' ~ (wts|dictsort|urlencode) if wts }}#how">how the score works</a>).</p>
 <div class="scope-bar small filter-cols mk-filters">
   {{ company_switch('/business/markets', co, companies, '&view=' ~ view ~ '&m=' ~ chosen|join(',')) }}
   {% for title, ms in market_groups(markets) %}<div class="chip-row"><span class="chip-lbl">{{ title }}</span>
     {% if loop.first %}<a class="fchip{{ ' on' if not chosen }}" href="{{ url(m='') }}">All {{ markets|length }} markets</a>{% endif %}
     {% for mk in ms %}{% set on = mk in chosen %}{% set nxt = (chosen|reject('equalto', mk)|list) if on else (chosen + [mk]) %}<a class="fchip{{ ' on' if on }}" href="{{ url(m=nxt|join(',')) }}" title="{{ per_market[mk] }} reference architectures">{{ mk }} <small>{{ per_market[mk] }}</small></a>{% endfor %}
   </div>{% endfor %}
+  <div class="chip-row pr-filter"><span class="chip-lbl">Show</span>
+    <a class="fchip{{ ' on' if show != 'all' }}" href="{{ url(show='') }}"{% if show != 'all' %} aria-current="true"{% endif %} title="Technology relation {{ prio.focus_from }} or more">RF &amp; power only</a>
+    <a class="fchip{{ ' on' if show == 'all' }}" href="{{ url(show='all') }}"{% if show == 'all' %} aria-current="true"{% endif %}>All</a>
+  </div>
   <div class="chip-row"><span class="chip-lbl">Leap</span>
     {% for k, label in groups.items() %}<a class="fchip{{ ' on' if g == k }}" href="{{ url(g=('' if g == k else k)) }}" title="{{ label[1] }}">{{ label[0] }} <small>{{ by_group[k]|length }}</small></a>{% endfor %}
   </div>
@@ -25,18 +30,14 @@
   </details>
 </div>
 
-{% for k, (title, help) in groups.items() if not g or g == k %}{% set rows = by_group[k] %}
-<section class="mk-group">
-<h2>{{ title }} <small class="muted">· {{ rows|length }} function{{ 's' if rows|length != 1 }}</small></h2>
-<p class="small muted">{{ help }}</p>
-{% if rows %}
-<div class="table-wrap bo-markets-wrap"><table class="striped bo-markets">
-  <thead><tr><th scope="col" class="bo-fn">{{ term('function', 'Function') }}</th><th scope="col" class="bo-vert"><span>Markets</span></th><th scope="col" class="bo-vert"><span>Applications</span></th>
+{% macro mtable(rows, k, title) %}<div class="table-wrap bo-markets-wrap"><table class="striped bo-markets">
+  <thead><tr><th scope="col" class="bo-fn">{{ term('function', 'Function') }}</th><th scope="col" class="pr-col" data-n>Priority</th><th scope="col" class="bo-vert"><span>Markets</span></th><th scope="col" class="bo-vert"><span>Applications</span></th>
     {% if k != 'portfolio' %}<th scope="col">Path</th>{% endif %}
     {% for mk in shown %}<th scope="col" class="bo-mk bo-vert" title="{{ mk }}: {{ per_market[mk] }} reference architectures"><span>{{ {'Communications equipment': 'Comms equipment', 'Consumer & personal electronics': 'Consumer', 'Enterprise & data center': 'Data center', 'Appliances & building': 'Appliances / building'}.get(mk, mk) }}</span></th>{% endfor %}<th scope="col"></th></tr></thead>
   <tbody>{% for e in rows %}<tr>
     <td class="bo-fn"><b>{{ e.label }}</b> <a class="small" href="/business/customers?co={{ co }}&fn={{ e.fn }}" title="Companies that build systems needing it">customers →</a>
       {% if e.requalify %}<br><span class="bo-requal bo-term" title="{{ bo_help().terms.requalify.short }}">qualify for automotive</span>{% elif e.qual_unknown %}<br><span class="qual q-unknown">grade not stated</span>{% endif %}</td>
+    <td class="pr-cell">{{ prio_bar(e) }}<small>{{ prio_chips(e) }}</small></td>
     <td class="bo-count">{{ e.n_markets }}</td>
     <td class="bo-count">{{ e.n_apps }}</td>
     {% if k != 'portfolio' %}<td>{{ path_chip({'path': e.path} if e.path else none, path_label) }}</td>{% endif %}
@@ -44,10 +45,21 @@
       <div class="bo-mk-apps">{% for x in a %}<a href="/business/applications/{{ x.i }}?co={{ co }}">{{ x.name }}</a>{% endfor %}</div></details>{% endif %}</td>{% endfor %}
     <td>{{ push('markets', e.fn, e.label ~ ' in ' ~ e.n_markets ~ ' market' ~ ('s' if e.n_markets != 1 else ''), title ~ ' · ' ~ e.n_apps ~ ' applications in ' ~ e.by_market.keys()|join(', '), e.fn, e.fn in shortlisted) }}</td>
   </tr>{% endfor %}</tbody>
-</table></div>
-{% else %}<p class="small muted">None in the chosen markets.</p>{% endif %}
+</table></div>{% endmacro %}
+
+{% for k, (title, help) in groups.items() if not g or g == k %}{% set s = sec[k] %}{% set n = s.main|length + s.middle|length + s.outside|length %}
+<section class="mk-group" id="mk-{{ k }}">
+<h2>{{ title }} <small class="muted">· {{ n }} function{{ 's' if n != 1 }}</small></h2>
+<p class="small muted">{{ help }} Highest priority first.</p>
+{% if s.main %}{{ mtable(s.main, k, title) }}{% elif not (s.middle or s.outside) %}<p class="small muted">{{ 'None in the chosen markets.' if show == 'all' else 'No RF or power functions here: see All.' }}</p>{% endif %}
+{% if s.middle %}<details class="pr-middle" open><summary class="small"><b>General power and adjacent technology</b> <span class="muted">· {{ s.middle|length }}, technology relation {{ prio.outside_below }} to below {{ prio.focus_from }}</span></summary>{{ mtable(s.middle, k, title) }}</details>{% endif %}
+{% if s.outside %}<details class="pr-outside" open><summary class="small"><b>Outside our technology focus</b> <span class="muted">· {{ s.outside|length }}, technology relation below {{ prio.outside_below }}</span></summary>{{ mtable(s.outside, k, title) }}</details>{% endif %}
+{% if s.hidden %}<p class="small muted pr-hidden">{{ s.hidden }} more with a weaker technology relation (general power, adjacent or outside our technology): <a href="{{ url(show='all') }}">show all</a>.</p>{% endif %}
 </section>
 {% endfor %}
+{% if prio_sliders %}<details class="ex-fold pr-how"><summary class="small"><b>Weights</b> <span class="muted">· technology {{ prio_w.technology }}% · likeliness {{ prio_w.likeliness }}% · diagrams {{ prio_w.diagrams }}%{{ ' (your weights)' if prio_custom }}</span></summary>
+  {{ prio_weights('/business/markets', {'co': co, 'view': view if view != 'all' else '', 'm': chosen|join(','), 'g': g, 'show': 'all' if show == 'all' else ''}, prio_w, prio.labels, prio_custom, prio_default, url(wt='', wl='', wd='')|trim) }}
+</details>{% endif %}
 <p class="small muted">Numbers in the market columns = reference architectures in that market that need the function; click one to list them.
   Automotive grade comes from the public catalogues (Qorvo's rarely states it).</p>
 {{ about('markets') }}

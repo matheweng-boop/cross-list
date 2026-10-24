@@ -111,9 +111,9 @@ def _chromium() -> str | None:
     return str(CHROMIUM) if CHROMIUM.exists() else None  # never "playwright install"
 
 
-@pytest.mark.skipif(_chromium() is None, reason="no Chromium in /opt/pw-browsers")
-def test_report_pages_fit_390px(client):
-    sync_api = pytest.importorskip("playwright.sync_api")
+@pytest.mark.browser
+def test_report_pages_fit_390px(client, chromium):
+    """Uses the session's shared browser (tests/conftest.py): a second Playwright in one run is refused."""
 
     def serve(route):
         url = route.request.url.replace("http://bizdev.test", "")
@@ -121,9 +121,8 @@ def test_report_pages_fit_390px(client):
         route.fulfill(status=res.status_code, body=res.content,
                       headers={"content-type": res.headers.get("content-type", "text/html")})  # fmt: skip
 
-    with sync_api.sync_playwright() as p:
-        browser = p.chromium.launch(executable_path=_chromium())
-        page = browser.new_page(viewport={"width": 390, "height": 900})
+    page = chromium.new_page(viewport={"width": 390, "height": 900})
+    try:
         page.route("http://bizdev.test/**", serve)
         for r in rp.reports():
             page.goto(f"http://bizdev.test/business/reports/{r['slug']}")
@@ -133,4 +132,5 @@ def test_report_pages_fit_390px(client):
             assert end and end["x"] + end["width"] <= 390, r["slug"]
             wide = page.evaluate("document.documentElement.scrollWidth")
             assert wide <= 390, (r["slug"], wide)
-        browser.close()
+    finally:
+        page.close()

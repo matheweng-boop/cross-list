@@ -49,10 +49,6 @@ def now() -> datetime:
     return datetime.now(UTC)
 
 
-def aware(dt: datetime | None) -> datetime | None:
-    return dt if dt is None or dt.tzinfo else dt.replace(tzinfo=UTC)
-
-
 def site_key() -> bytes | None:
     """The signing key; changing the password signs everyone out. None when the site has neither key nor password."""
     s = get_settings()

@@ -21,6 +21,7 @@ from app.models import (
     SiteFeedback,
     TechFeedback,
     VerifyTask,
+    aware,
 )
 from app.services import feedback as fb
 from app.services import guest_input
@@ -32,11 +33,7 @@ def _since(day: date) -> datetime:
 
 
 def _when(dt: datetime) -> str:
-    return (dt if dt.tzinfo else dt.replace(tzinfo=UTC)).strftime("%Y-%m-%d %H:%M")
-
-
-def _aware(dt: datetime) -> datetime:
-    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+    return aware(dt).strftime("%Y-%m-%d %H:%M")
 
 
 def _one_line(text: str | None) -> str:
@@ -111,7 +108,7 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     from app.services import reviews as rv
 
     rq = [e for e in rv.requests(session)
-          if e["status"] in ("new", "in_progress") or _aware(e["row"].created_at) >= start]  # fmt: skip
+          if e["status"] in ("new", "in_progress") or aware(e["row"].created_at) >= start]  # fmt: skip
     rq.sort(key=lambda e: e["row"].created_at)
     out.append("\n## Technology review requests\n")
     out.append("Open requests get a review written as data/reviews/<slug>.yaml (format: data/reviews/_format.yaml).\n")
@@ -125,7 +122,7 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     # application areas asked for in the library: every open one, and those closed since the last pull
     areas = [a for a in session.scalars(select(AreaRequest).order_by(AreaRequest.created_at))
-             if a.status in ("new", "planned") or _aware(a.updated_at or a.created_at) >= start]  # fmt: skip
+             if a.status in ("new", "planned") or aware(a.updated_at or a.created_at) >= start]  # fmt: skip
     out.append("\n## Application area requests\n")
     out.append("Research a few documents per run; add diagrams to the library and set the status on "
                "Data management > Site data > Requests (/manage/requests?kind=area).\n")

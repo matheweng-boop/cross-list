@@ -36,7 +36,6 @@ from app.auth import stepup
 from app.auth.session import (
     GUEST,
     OWNER,
-    aware,
     client_ip,
     guard,
     new_handle,
@@ -47,7 +46,7 @@ from app.auth.session import (
 )
 from app.config import get_settings
 from app.db import get_engine, get_session
-from app.models import Account, Invite, PasskeyCredential, WebauthnChallenge
+from app.models import Account, Invite, PasskeyCredential, WebauthnChallenge, aware
 from app.services import notify
 from app.web.urls import local_path
 

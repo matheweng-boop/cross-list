@@ -10,10 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.auth import stepup
 from app.auth.passkeys import active_guests, new_invite, open_invites
-from app.auth.session import GUEST, aware, now
+from app.auth.session import GUEST, now
 from app.config import get_settings
 from app.db import get_engine, get_session
-from app.models import Account, ExternalSubmission, Invite, PasskeyCredential
+from app.models import Account, ExternalSubmission, Invite, PasskeyCredential, aware
 from app.services import guest_input, notify
 from app.web.routes import templates
 

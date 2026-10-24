@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.models import ReportQuestion
+from app.models import ReportQuestion, aware
 from app.services.feedback import similar_text
 
 FILE = PROJECT_ROOT / "data" / "business" / "reports.yaml"
@@ -129,7 +129,7 @@ def question_days(session: Session, limit: int = 30) -> list[tuple[date, int, in
     """Days with questions, newest first: (day, asked, still waiting for review)."""
     per: dict[date, list[int]] = {}
     for created, status in session.execute(select(ReportQuestion.created_at, ReportQuestion.status)):
-        d = (created if created.tzinfo else created.replace(tzinfo=UTC)).date()
+        d = aware(created).date()
         per.setdefault(d, [0, 0])
         per[d][0] += 1
         per[d][1] += status == "new"

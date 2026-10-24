@@ -12,7 +12,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import SiteFeedback
+from app.models import SiteFeedback, aware
 
 KINDS = {"problem": "Something is wrong", "idea": "Idea / request", "data": "Data is missing or wrong",
          "question": "Question"}  # fmt: skip
@@ -42,10 +42,6 @@ def similar(a: SiteFeedback, b: SiteFeedback) -> bool:
 def _day_bounds(day: date) -> tuple[datetime, datetime]:
     start = datetime(day.year, day.month, day.day, tzinfo=UTC)
     return start, start + timedelta(days=1)
-
-
-def _as_utc(dt: datetime) -> datetime:
-    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def digest(session: Session, day: date) -> dict:
@@ -98,8 +94,8 @@ def open_points(session: Session) -> dict:
             "ids": [x.id for x in g], "members": g, "lead": max(g, key=lambda x: len(x.text)),
             "pages": sorted({x.page or x.path for x in g}), "kinds": sorted({x.kind for x in g}),
             "status": statuses.most_common(1)[0][0], "response": next((x.response for x in g if x.response), ""),
-            "repeats": None, "newest": max(_as_utc(x.created_at) for x in g),
-            "first": min(_as_utc(x.created_at) for x in g),
+            "repeats": None, "newest": max(aware(x.created_at) for x in g),
+            "first": min(aware(x.created_at) for x in g),
         })  # fmt: skip
     out.sort(key=lambda r: r["newest"], reverse=True)
     return {"n": len(items), "groups": out}
@@ -109,7 +105,7 @@ def days(session: Session, limit: int = 30) -> list[tuple[date, int, int]]:
     """Days with feedback, newest first: (day, items, still open)."""
     per: dict[date, list[int]] = {}
     for created, status in session.execute(select(SiteFeedback.created_at, SiteFeedback.status)):
-        d = _as_utc(created).date()
+        d = aware(created).date()
         per.setdefault(d, [0, 0])
         per[d][0] += 1
         per[d][1] += status in OPEN
@@ -135,7 +131,7 @@ def digest_text(d: dict) -> str:
         lines.append(f"\n- [{STATUSES[g['status']]}] {lead.text.strip()}")
         lines.append(f"  x{len(g['ids'])} · {', '.join(KINDS.get(k, k) for k in g['kinds'])} · {'; '.join(g['pages'])}")
         if g["repeats"]:
-            lines.append(f"  repeats #{g['repeats'].id} from {_as_utc(g['repeats'].created_at):%Y-%m-%d}")
+            lines.append(f"  repeats #{g['repeats'].id} from {aware(g['repeats'].created_at):%Y-%m-%d}")
         if g["response"]:
             lines.append(f"  response: {g['response']}")
     return "\n".join(lines) + "\n"

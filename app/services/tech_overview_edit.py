@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.models import PageComment, PageTextVersion
+from app.models import PageComment, PageTextVersion, aware
 from app.services import tech_overview as to
 
 PAGE = "tech_overview"
@@ -480,7 +480,7 @@ def inbox_lines(session: Session, start: datetime) -> list[str]:
     """For the daily run: what the owner edited since start, overridden numbers whose automatic value changed since,
     and every open comment with its paragraph."""
     out = []
-    recent = [v for v in history(session, 200) if _aware(v.created_at) >= start and v.undone_at is None]
+    recent = [v for v in history(session, 200) if aware(v.created_at) >= start and v.undone_at is None]
     changed = sorted({x.strip() for v in recent if v.note.startswith("Changed: ")
                       for x in v.note.removeprefix("Changed: ").split(",")})  # fmt: skip
     if changed:
@@ -506,7 +506,3 @@ def inbox_lines(session: Session, start: datetime) -> list[str]:
         out.append(f"- Comment #{c.id} on {c.block} ({c.created_at:%Y-%m-%d %H:%M}): “{c.text}”. Current text: "
                    f"“{cur if cur is not None else c.block_text}”")  # fmt: skip
     return out
-
-
-def _aware(dt: datetime) -> datetime:
-    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)

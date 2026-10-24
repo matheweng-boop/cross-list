@@ -190,7 +190,8 @@ def build_lines(state: dict, rows: list[dict]) -> list[dict]:
     return lines
 
 
-def _num(v, cast):
+def form_number(v, cast):
+    """A volume or price typed in a form ("1,000", "$0.45"): commas and $ ignored; None when blank or not a number."""
     try:
         v = str(v).replace(",", "").replace("$", "").strip()
         return cast(float(v)) if v else None
@@ -206,11 +207,11 @@ def revenue(line: dict) -> float | None:
 
 def apply_numbers(state: dict, form) -> None:
     """Volume (systems / year), target price (USD) and include per line, from the numbers step."""
-    volume_all = _num(form.get("volume_all"), int)
+    volume_all = form_number(form.get("volume_all"), int)
     for x in state.get("lines") or []:
         k = x["key"]
-        x["volume"] = _num(form.get(f"vol:{k}"), int) if form.get(f"vol:{k}") not in (None, "") else volume_all
-        x["price"] = _num(form.get(f"price:{k}"), float)
+        x["volume"] = form_number(form.get(f"vol:{k}"), int) if form.get(f"vol:{k}") not in (None, "") else volume_all
+        x["price"] = form_number(form.get(f"price:{k}"), float)
         src = str(form.get(f"src:{k}") or "").strip()[:200]
         x["price_source"] = src or ("assumed" if x["price"] is not None else None)
         x["include"] = bool(form.get(f"inc:{k}"))

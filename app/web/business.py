@@ -462,14 +462,6 @@ def tam_page(request: Request, saved: str = "", error: str = "", session: Sessio
     return templates.TemplateResponse(request, "business/tam.html", ctx)
 
 
-def _num(v: str) -> float | None:
-    v = (v or "").strip().replace(",", "").replace("$", "")
-    try:
-        return float(v) if v else None
-    except ValueError:
-        return None
-
-
 @router.post("/business/tam")
 async def tam_add(request: Request, session: Session = Depends(get_session)):
     form = {k: str(v).strip() for k, v in (await request.form()).items()}
@@ -676,8 +668,8 @@ async def case_update(case_id: int, request: Request, session: Session = Depends
             if form.get(f"del:{ln.id}"):
                 session.delete(ln)
                 continue
-            ln.volume = pipeline._num(form.get(f"vol:{ln.id}"), int)
-            ln.price = pipeline._num(form.get(f"price:{ln.id}"), float)
+            ln.volume = pipeline.form_number(form.get(f"vol:{ln.id}"), int)
+            ln.price = pipeline.form_number(form.get(f"price:{ln.id}"), float)
     elif act == "merge":
         target = session.get(Case, int(form.get("target") or 0)) if str(form.get("target") or "").isdigit() else None
         if target is None or target.id == case.id:

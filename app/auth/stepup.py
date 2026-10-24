@@ -16,11 +16,11 @@ from urllib.parse import quote
 
 from fastapi import Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.auth.session import OWNER, principal, site_key
 from app.config import get_settings
+from app.db import count
 from app.models import Account, PasskeyCredential, SiteSetting
 from app.web.urls import local_path
 
@@ -113,8 +113,7 @@ def set_password_switch(session: Session, allowed: bool) -> None:
 
 
 def owner_passkey_count(session: Session, account_id: int) -> int:
-    return session.scalar(select(func.count()).select_from(PasskeyCredential)
-                          .where(PasskeyCredential.account_id == account_id)) or 0  # fmt: skip
+    return count(session, PasskeyCredential, PasskeyCredential.account_id == account_id)
 
 
 MIN_PASSKEYS_WITHOUT_PASSWORD = 2

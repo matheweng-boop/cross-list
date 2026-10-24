@@ -15,7 +15,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 from webauthn import (
     generate_authentication_options,
@@ -45,7 +45,7 @@ from app.auth.session import (
     set_login_cookie,
 )
 from app.config import get_settings
-from app.db import get_engine, get_session
+from app.db import count, get_engine, get_session
 from app.models import Account, Invite, PasskeyCredential, WebauthnChallenge, aware
 from app.services import notify
 from app.web.urls import local_path
@@ -73,13 +73,11 @@ def new_invite(session: Session, name: str, note: str = "") -> tuple[Invite, str
 
 def open_invites(session: Session) -> int:
     """Invite links that are unused and unexpired."""
-    return session.scalar(select(func.count()).select_from(Invite)
-                          .where(Invite.used_at.is_(None), Invite.expires_at > now())) or 0  # fmt: skip
+    return count(session, Invite, Invite.used_at.is_(None), Invite.expires_at > now())
 
 
 def active_guests(session: Session) -> int:
-    return session.scalar(select(func.count()).select_from(Account)
-                          .where(Account.role == GUEST, Account.disabled.is_(False))) or 0  # fmt: skip
+    return count(session, Account, Account.role == GUEST, Account.disabled.is_(False))
 
 
 def valid_invite(session: Session, token: str) -> Invite | None:
@@ -97,7 +95,7 @@ def _store_challenge(session: Session, resp: Response, request: Request, purpose
     session.execute(delete(WebauthnChallenge).where(WebauthnChallenge.expires_at < now()))
     if old := request.cookies.get(WA_COOKIE):  # the pages fetch options ahead and refresh them: one per browser
         session.execute(delete(WebauthnChallenge).where(WebauthnChallenge.nonce_sha256 == token_hash(old)))
-    if session.scalar(select(func.count()).select_from(WebauthnChallenge)) >= MAX_OPEN_CHALLENGES:
+    if count(session, WebauthnChallenge) >= MAX_OPEN_CHALLENGES:
         raise HTTPException(429, "Too many sign-ins in progress. Try again in a few minutes.")
     nonce = secrets.token_urlsafe(32)
     challenge = secrets.token_bytes(32)

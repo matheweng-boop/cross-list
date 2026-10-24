@@ -6,11 +6,11 @@ from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.db import get_session
+from app.db import count, get_session
 from app.matching import engine
 from app.models import (
     Case,
@@ -397,7 +397,7 @@ async def shortlist_add(request: Request, session: Session = Depends(get_session
 
 
 def _shortlist_count(session: Session) -> int:
-    return session.scalar(select(func.count(ShortlistItem.id))) or 0
+    return count(session, ShortlistItem)
 
 
 @router.get("/api/shortlist/count")

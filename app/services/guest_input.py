@@ -13,9 +13,10 @@ from datetime import UTC, datetime
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
 from fastapi import Request
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.db import count
 from app.models import ExternalSubmission
 from app.web.urls import local_path
 
@@ -117,8 +118,7 @@ def shown(sub: ExternalSubmission) -> list[tuple[str, str]]:
 
 
 def pending_count(session: Session) -> int:
-    return session.scalar(select(func.count()).select_from(ExternalSubmission)
-                          .where(ExternalSubmission.status == "pending")) or 0  # fmt: skip
+    return count(session, ExternalSubmission, ExternalSubmission.status == "pending")
 
 
 def _with_author(sub: ExternalSubmission, author: str) -> tuple[str, bytes]:

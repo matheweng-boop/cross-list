@@ -126,6 +126,7 @@ templates.env.globals.update(
     nav_sections=nav.NAV,
     nav_utility=nav.UTILITY,
     nav_icons=nav.ICONS,
+    nav_homes=nav.HOMES,
     page_title=nav.page_title,
     page_label=nav.page_label,
     owner_page=nav.owner_page,

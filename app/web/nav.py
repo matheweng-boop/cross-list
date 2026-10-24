@@ -41,7 +41,14 @@ NAV = (
         ("Interactive visuals", "/visuals", "Sliders and live graphs: RF links, noise, filters, CMTI; RF band chart"),
         ("General knowledge", "/knowledge", "RF fundamentals, specification guides, technology platforms and search"),
     )),
+    # owner, 24 Oct 2026: a section for shareable content (public information, ready to share or save as PDF)
+    ("shareable", "Shareable", (
+        ("Technology overview", "/shareable/technology-overview", "Public, ready to share or save as PDF"),
+    )),
 )  # fmt: skip
+
+# A section's own landing page, when it has one; the section row links there instead of to the first item
+HOMES = {"shareable": "/shareable"}
 
 UTILITY = ("manage", "Data management", (
     ("Overview", "/manage/overview", "Everything at a glance: raw data, today's feedback, what waits for you"),
@@ -124,6 +131,8 @@ PLACES = {
     "/impact": ("knowledge", "/knowledge"),
     "/technical": ("knowledge", "/knowledge"),
     "/notes": ("knowledge", "/knowledge"),
+    "/shareable/technology-overview": ("shareable", "/shareable/technology-overview"),
+    "/shareable": ("shareable", "/shareable"),
 }
 
 # In-page tabs for views of the same thing (label, href); shown on every page of the group
@@ -192,6 +201,8 @@ def page_label(path: str) -> str:
     menu item."""
     st = state(path)
     section = next(s for s in _sections() if s[0] == st["section"])
+    if HOMES.get(section[0]) == st["item"]:  # a section's landing page is named after the section
+        return section[1]
     item = next((i for i in section[2] if i[1] == st["item"]), section[2][0])
     if st["tabs"] and st["active_tab"] and st["active_tab"] != st["tabs"][0][1]:
         return next(lbl for lbl, h in st["tabs"] if h == st["active_tab"])
@@ -202,7 +213,8 @@ def page_title(path: str, detail: str = "") -> str:
     """<title>: '[detail – ]page – section – BizDev', from the same names as the menus."""
     st = state(path)
     section = next(s for s in _sections() if s[0] == st["section"])
-    return " – ".join(x for x in (detail, page_label(path), section[1], "BizDev") if x)
+    label = page_label(path)
+    return " – ".join(x for x in (detail, "" if label == section[1] else label, section[1], "BizDev") if x)
 
 
 # small line icons for the section row (SVG path data, 24 x 24, stroked)
@@ -212,5 +224,6 @@ ICONS = {  # fmt: skip
     "opportunities": '<path d="M4 19V11M10 19V5M16 19v-6M3 19h18"/>',
     "growth": '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
     "knowledge": '<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h10"/>',
+    "shareable": '<path d="M12 15V4M8 8l4-4 4 4M7 11H5v9h14v-9h-2"/>',
     "manage": '<path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',  # noqa: E501
 }

@@ -1,0 +1,265 @@
+# Technology overview (Shareable > Technology overview): the hand-written words of a short executive brief on the
+# Skyworks + Qorvo portfolio, meant to be shared outside the company and saved as a PDF (at most 4 A4 pages).
+#
+# Only the plain-language lines live here. Everything countable comes from the site's data when the page is built
+# (app/services/tech_overview.py): part and family counts from the public catalogues (data/catalog/*_parts.yaml, the
+# same grouping as Products > Skyworks + Qorvo), who holds each platform from data/business/capabilities.yaml, and the
+# "up to" figures from the catalogue specifications.
+#
+# Rules (owner, 24 Oct 2026): public facts and the public portfolio only; strengths stated positively and factually;
+# no comparisons with other companies, plans, prices or market sizes; nothing about where or how parts are made.
+# tests/test_tech_overview.py checks the rendered page against a word list and checks that every series below
+# matches an active catalogue part.
+updated: 2026-10-24
+title: "Skyworks + Qorvo technology overview"
+positioning: >-
+  Skyworks and Qorvo, combined since October 2026, offer RF, analog and mixed-signal semiconductors from the antenna
+  to the power stage. The portfolio joins high-volume front-end modules and acoustic filters, high-power GaN and
+  broadband GaAs microwave parts, and silicon lines for isolation, timing, broadcast radio, power and short-range
+  wireless.
+
+# Technology platforms (page 2). caps: keys in data/business/capabilities.yaml (the owner comes from there).
+# families: product family labels as in Products > Skyworks + Qorvo (app/services/portfolio.CATEGORY_RULES).
+platforms:
+  - key: baw
+    label: BAW filters
+    caps: [baw_filter]
+    what: "Bulk acoustic wave resonators that pass one band and block its neighbours."
+    good_for: "Sharp filtering at 2-7 GHz: 5G n77/n79, Wi-Fi coexistence, GNSS."
+    families: ["Filters, duplexers and multiplexers", "Front-end modules"]
+  - key: saw
+    label: SAW and TC-SAW filters
+    caps: [saw_filter, tc_saw_filter]
+    what: "Surface acoustic wave filters, also in a temperature-compensated version."
+    good_for: "Filtering below 3 GHz in phones, front-end modules and GNSS receivers."
+    families: ["Filters, duplexers and multiplexers", "Front-end modules"]
+  - key: gaas_hbt
+    label: GaAs HBT
+    caps: [gaas_hbt]
+    what: "Gallium-arsenide bipolar transistors for linear, efficient power amplifiers."
+    good_for: "PAs at 3-5 V for cellular, Wi-Fi, small cells and CATV."
+    families: ["Amplifiers (PA, LNA, gain, CATV)", "Front-end modules"]
+  - key: gaas_phemt
+    label: GaAs pHEMT
+    caps: [gaas_phemt]
+    what: "Gallium-arsenide field-effect transistors with very low noise and wide bandwidth."
+    good_for: "LNAs, switches, attenuators and phase shifters up to 40 GHz and beyond."
+    families: ["Amplifiers (PA, LNA, gain, CATV)", "Attenuators, phase shifters and limiters", "Mixers, modulators and converters"]
+  - key: gan
+    label: GaN on SiC
+    caps: [gan_on_sic]
+    what: "Gallium-nitride transistors on silicon carbide for high power at high frequency."
+    good_for: "Power amplifiers and transistors at 28-48 V up to Ka-band: radar, 5G macro, SATCOM."
+    families: ["RF power transistors", "Amplifiers (PA, LNA, gain, CATV)"]
+  - key: soi
+    label: RF SOI
+    caps: [rf_soi]
+    what: "Silicon-on-insulator CMOS for small, low-loss RF switches and tuners."
+    good_for: "Antenna switches, antenna tuning and LNAs in phones, cars and IoT."
+    families: ["RF switches and antenna tuning", "Front-end modules"]
+  - key: sige
+    label: SiGe / BiCMOS
+    caps: [sige_bicmos]
+    what: "Silicon-germanium transistors next to CMOS on one chip."
+    good_for: "LNAs, mixers and Wi-Fi and Bluetooth front ends."
+    families: ["Front-end modules", "Mixers, modulators and converters"]
+  - key: modules
+    label: Front-end module integration
+    caps: [sip_module_integration]
+    what: "System-in-package modules that combine amplifiers, filters, switches and control."
+    good_for: "Complete, shielded RF front ends: Sky5 cellular, Wi-Fi, V2X and GNSS."
+    families: ["Front-end modules"]
+  - key: beamformers
+    label: Silicon beamformers
+    caps: [mmwave_beamformer]
+    what: "Multi-channel ICs that steer the beam of a phased-array antenna."
+    good_for: "5G mmWave, SATCOM terminals and radar arrays from X-band to 43.5 GHz."
+    families: ["Wireless transceivers and UWB", "Front-end modules"]
+  - key: diodes
+    label: RF diodes
+    caps: [silicon_rf_diodes]
+    what: "PIN, Schottky, varactor and limiter diodes, also in hermetic packages."
+    good_for: "Detectors, tuning, switching and receiver protection."
+    families: ["Diodes"]
+  - key: isolation
+    label: Digital isolation (CMOS capacitive)
+    caps: [digital_isolation_capacitive, optocouplers]
+    what: "A capacitive barrier in CMOS passes data and gate signals across high voltage; plus hermetic optocouplers."
+    good_for: "Gate drivers, isolators and isolated sensing in EVs, solar, motor drives and power supplies."
+    families: ["Isolated gate drivers", "Digital isolators and isolated interfaces", "Isolated amplifiers, ADCs and current sensors", "Optocouplers"]
+  - key: timing
+    label: Timing (crystal-based and crystal-free BAW)
+    caps: [timing_dspll_crystal, timing_baw_resonator]
+    what: "DSPLL and MultiSynth clocks, crystal oscillators and clocks with a built-in BAW resonator."
+    good_for: "Ultra-low-jitter clocks for data centres, optical links, 5G radios and network sync."
+    families: ["Clocks and network timing", "Oscillators, VCOs and synthesizers"]
+  - key: broadcast
+    label: Mixed-signal radio and voice
+    caps: [broadcast_radio_tv, voice_slic_daa_poe]
+    what: "RF CMOS receivers and mixed-signal line interfaces."
+    good_for: "AM/FM, DAB and HD Radio tuners, TV demodulators, VoIP and PoE."
+    families: ["Broadcast radio, TV and audio", "Voice and modems", "Power management"]
+  - key: power
+    label: Power management
+    caps: [pmic_configurable_power, power_management_skyworks]
+    what: "Configurable PMICs, converters and motor-control SoCs."
+    good_for: "Motor control, battery systems, SSDs, power tools, LED backlights and RF supplies."
+    families: ["Power management", "Motor controllers"]
+  - key: wireless
+    label: UWB and low-power wireless
+    caps: [uwb_soc, low_power_radio_soc]
+    what: "Ultra-wideband ranging chips and Matter, Thread, Zigbee and Bluetooth LE SoCs."
+    good_for: "Digital car keys, indoor positioning and smart-home devices."
+    families: ["Wireless transceivers and UWB"]
+
+# End markets (page 3). platforms: keys above (they fill the matrix on page 1). parts: representative series; the
+# trailing x's stand for any characters (each series must match an active catalogue part).
+markets:
+  - key: mobile
+    label: Mobile and wearables
+    short: Mobile
+    brings: "Complete RF front ends for phones, wearables and fixed wireless: amplify, filter, switch and tune."
+    functions: [Power amplifier modules, Diversity receive, Antenna switching and tuning, Wi-Fi and Bluetooth front ends, Power for the RF section]
+    parts:
+      - [Sky5 front-end modules, SKY58xxx]
+      - [Diversity receive and LNA modules, SKY53xxx]
+      - [Antenna switches, SKY13xxx]
+      - [Wi-Fi 7 front-end modules, SKY85xxx]
+    platforms: [baw, saw, gaas_hbt, soi, sige, modules, power, wireless]
+  - key: automotive
+    label: Automotive
+    short: Auto
+    brings: "Connectivity, radio, digital key and isolation for the electric, connected car."
+    functions: [Telematics and V2X, GNSS, Car radio, UWB digital key, EV traction and charging]
+    parts:
+      - [Isolated gate drivers, Si82xx]
+      - [Car radio tuners, Si479xx]
+      - [Automotive switches and front ends, SKY5Axxxx]
+      - [UWB transceivers, DW3xxx]
+    platforms: [baw, saw, gaas_hbt, soi, modules, isolation, timing, broadcast, wireless]
+  - key: infrastructure
+    label: Infrastructure and data centre
+    short: Infra
+    brings: "Transmit, receive and timing for 5G radios, cable networks and data-centre links."
+    functions: [Massive MIMO and macro PAs, Switch-LNA receive, Network synchronisation, Jitter attenuation, Rack power isolation]
+    parts:
+      - [Small-cell and massive MIMO PAs, SKY66xxx]
+      - [RF power transistors, QPDxxxx]
+      - [Switch-LNA modules, QPB9xxx]
+      - [Network synchronizer clocks, SKY69xxx]
+    platforms: [baw, gaas_hbt, gaas_phemt, gan, soi, sige, beamformers, isolation, timing, power]
+  - key: defence
+    label: Defence and aerospace
+    short: Defence
+    brings: "High-power and broadband microwave parts for radar, electronic warfare and SATCOM."
+    functions: [Radar and EW power amplifiers, Broadband control, Phased arrays, Hermetic isolation]
+    parts:
+      - [MMIC power amplifiers, TGA2xxx]
+      - [Phase shifters, TGPxxxx]
+      - [Beamformer ICs, AWMF-xxxx]
+      - [Hermetic optocouplers, OLHxxx]
+    platforms: [baw, gaas_phemt, gan, beamformers, diodes, isolation]
+  - key: iot
+    label: IoT and consumer
+    short: IoT
+    brings: "Short-range wireless, Wi-Fi and broadcast reception for smart-home and consumer devices."
+    functions: ["Matter, Thread and Zigbee", UWB positioning, Wi-Fi front ends, TV and radio reception, Voice over IP]
+    parts:
+      - [Multi-protocol wireless SoCs, QPGxxxx]
+      - [UWB modules, DWMxxxx]
+      - [Wi-Fi front-end modules, QPF4xxx]
+      - [TV tuners and demodulators, Si216x]
+    platforms: [gaas_hbt, soi, sige, modules, broadcast, power, wireless]
+  - key: industrial
+    label: Industrial and energy
+    short: Industry
+    brings: "Safe isolation, sensing, motor control and power for factories, solar and storage."
+    functions: [Isolated gate drive, Isolated sensing, Motor control, Power management, Power over Ethernet]
+    parts:
+      - [Digital isolators, Si86xx]
+      - [Isolated amplifiers and ADCs, Si89xx]
+      - [Motor-control SoCs, PAC55xx]
+      - [Configurable PMICs, ACT88xx]
+    platforms: [isolation, timing, broadcast, power, wireless]
+
+# Product families (page 4), keyed by the family label. headline: what the family is best known for. figures: an
+# "up to" value computed from the catalogue specification named (agg max or min over active parts; scale multiplies;
+# skip: leave out parts whose description matches).
+families:
+  "Isolated gate drivers":
+    headline: "Isolated gate drivers for IGBT and MOSFET power stages, inverters and motor drives"
+    figures:
+      - {spec: "Isolation Rating (kVrms)", agg: max, text: "up to {v} kVrms"}
+      - {spec: "Peak Output Current (A)", agg: max, text: "{v} A peak"}
+  "Digital isolators and isolated interfaces":
+    headline: "Digital isolators, isolated power and isolated interfaces"
+    figures:
+      - {spec: "Max Data Rate (Mbps)", agg: max, text: "up to {v} Mbps"}
+      - {spec: "Isolation Rating (kVrms)", agg: max, text: "{v} kVrms"}
+  "Amplifiers (PA, LNA, gain, CATV)":
+    headline: "Power amplifiers, LNAs, gain blocks and CATV amplifiers"
+    figures:
+      - {spec: "Frequency Max (GHz)", agg: max, text: "to {v} GHz"}
+      - {spec: "Noise Figure (dB)", agg: min, text: "NF from {v} dB"}
+  "Front-end modules":
+    headline: "Cellular, Wi-Fi, V2X and GNSS front-end modules"
+    figures:
+      - {spec: "Frequency (GHz) Max", agg: max, text: "Wi-Fi to {v} GHz"}
+  "Clocks and network timing":
+    headline: "Clock generators, buffers, jitter attenuators and network synchronizers"
+    figures:
+      - {spec: "Phase Jitter (ps RMS)", agg: min, scale: 1000, skip: "PCIe", text: "jitter from {v} fs"}
+  "RF switches and antenna tuning":
+    headline: "Antenna, band and high-power switches and antenna tuners"
+    figures:
+      - {spec: "Frequency (GHz) Max", agg: max, text: "to {v} GHz"}
+  "Attenuators, phase shifters and limiters":
+    headline: "Digital and voltage-variable attenuators, phase shifters and limiters"
+  "Diodes":
+    headline: "PIN, Schottky, varactor and limiter diodes"
+  "Broadcast radio, TV and audio":
+    headline: "AM/FM, DAB/DAB+, HD Radio and DRM receivers; TV tuners and demodulators"
+  "Filters, duplexers and multiplexers":
+    headline: "BAW and SAW filters, duplexers and multiplexers"
+  "Power management":
+    headline: "PMICs, converters, battery chargers, LED drivers and PoE controllers"
+  "Optocouplers":
+    headline: "Hermetic and radiation-tolerant optocouplers"
+  "RF power transistors":
+    headline: "GaN and GaAs power transistors"
+    figures:
+      - {spec: "Output Power (W)", agg: max, text: "up to {v} W"}
+      - {spec: "Frequency Max (GHz)", agg: max, text: "to {v} GHz"}
+  "Isolated amplifiers, ADCs and current sensors":
+    headline: "Isolated amplifiers and delta-sigma modulators for current and voltage sensing"
+    figures:
+      - {spec: "Isolation Rating (kVrms)", agg: max, text: "up to {v} kVrms"}
+  "Oscillators, VCOs and synthesizers":
+    headline: "Crystal oscillators, VCOs and RF synthesizers"
+    figures:
+      - {spec: "Phase Jitter (ps RMS)", agg: min, scale: 1000, text: "jitter from {v} fs"}
+  "Voice and modems":
+    headline: "ProSLIC subscriber-line interfaces and modems"
+  "Motor controllers":
+    headline: "Motor-control SoCs with built-in gate drivers"
+    figures:
+      - {spec: "Power Supply Input Voltage (V)", agg: max, text: "up to {v} V"}
+  "Mixers, modulators and converters":
+    headline: "Mixers, IQ modulators and frequency converters"
+    figures:
+      - {spec: "RF Frequency Range Max (MHz)", agg: max, scale: 0.001, text: "to {v} GHz"}
+  "Wireless transceivers and UWB":
+    headline: "UWB transceivers, wireless SoCs and beamformers"
+  "RF passives":
+    headline: "Couplers, power dividers and other RF passives"
+
+learn_more:
+  - ["Skyworks products", "https://www.skyworksinc.com"]
+  - ["Qorvo products", "https://www.qorvo.com"]
+  - ["Skyworks annual report (Form 10-K, FY2025)", "https://www.sec.gov/Archives/edgar/data/4127/000000412725000085/swks-20251003.htm"]
+  - ["Qorvo annual report (Form 10-K, FY2025)", "https://www.sec.gov/Archives/edgar/data/1604778/000160477825000041/rfmd-20250329.htm"]
+
+sources:
+  - "Parts, families and figures: the public Skyworks and Qorvo product catalogues (skyworksinc.com and the Qorvo online store), active parts only."
+  - "Technology platforms: Skyworks and Qorvo Form 10-K filings (FY2025) and public product pages."
+  - "Combination: Skyworks and Qorvo public announcement, October 2026."

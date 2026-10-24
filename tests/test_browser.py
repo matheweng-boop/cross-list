@@ -298,6 +298,33 @@ def test_overview_waiting_line_opens_the_filtered_requests(page):
     expect(page.locator("li.rq-item", has_text="ZQ4242").locator("select[name=status]")).to_have_value("in_progress")
 
 
+# --- Shareable --------------------------------------------------------------------------------------------------------
+def test_shareable_technology_overview_prints_to_four_a4_pages(page):
+    """Shareable > Technology overview: the section row opens the landing page, its card the brief; the four sections
+    show, Save as PDF calls the print dialog, the print view hides the site's frame, and the A4 PDF has 4 pages at most
+    (owner, 24 Oct 2026)."""
+    go(page, "/")
+    page.locator("nav.main-nav a", has_text="Shareable").click()
+    expect(page).to_have_url(re.compile(r"/shareable$"))
+    expect(page.locator("main h1")).to_have_text("Shareable")
+    page.locator(".sh-card", has_text="Technology overview").click()
+    expect(page).to_have_url(re.compile(r"/shareable/technology-overview$"))
+    for sid, heading in (("at-a-glance", "technology overview"), ("platforms", "Technology platforms"),
+                         ("markets", "End markets"), ("families", "Product families")):  # fmt: skip
+        expect(page.locator(f"section#{sid} :is(h1, h2)").first).to_contain_text(heading)
+    expect(page.locator(".to-matrix .to-dot").first).to_be_visible()
+    page.evaluate("() => { window.__printed = 0; window.print = () => { window.__printed += 1; }; }")  # the dialog
+    page.get_by_role("button", name="Save as PDF").click()
+    assert page.evaluate("window.__printed") == 1
+    page.emulate_media(media="print")
+    for frame in (".site-head", ".site-foot", ".fb", ".to-actions"):
+        expect(page.locator(frame).first).to_be_hidden()
+    expect(page.locator(".to-pfoot").first).to_contain_text("Public information")
+    pdf = page.pdf(format="A4", print_background=True)
+    pages = len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf))
+    assert 1 <= pages <= 4, f"{pages} A4 pages"
+
+
 # --- Signing in -------------------------------------------------------------------------------------------------------
 STUB = """
 window.__calls = [];

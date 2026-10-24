@@ -139,6 +139,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.requests import router as requests_router
     from app.web.reviews import router as reviews_router
     from app.web.routes import router as web_router
+    from app.web.shareable import router as shareable_router
     from app.web.uploads import router as uploads_router
     from app.web.verify import router as verify_router
 
@@ -206,6 +207,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(api_router, prefix="/api")
     app.include_router(web_router)
     app.include_router(portfolio_router)
+    app.include_router(shareable_router)
     app.include_router(broadcast_router)
     app.include_router(requests_router)
     app.include_router(blocks_router)

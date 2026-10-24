@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+{# Shareable > Technology overview: four print pages (A4), each a <section class="to-page">; words from
+   data/business/tech_overview.yaml, numbers from app/services/tech_overview.py #}
+<link rel="stylesheet" href="/static/shareable.css">
+{% set c = t.cur %}
+{% macro who(o) %}<span class="to-who to-{{ (o or 'none')|lower }}">{{ o }}</span>{% endmacro %}
+{% macro pfoot(n) %}<p class="to-pfoot">{{ c.title }} · Public information · {{ today|date }}<span>{{ n }} / 4</span></p>{% endmacro %}
+<div class="to" id="tech-overview">
+  <div class="to-actions">
+    <button type="button" class="to-print" onclick="window.print()">Save as PDF</button>
+    <span class="small muted">Opens the print dialog: choose “Save as PDF” and A4. Four pages; public information only.</span>
+  </div>
+
+  <section class="to-page" id="at-a-glance" aria-labelledby="to-h1">
+    <p class="to-kicker">Technology overview · {{ today|date }}</p>
+    <h1 id="to-h1">{{ c.title }}</h1>
+    <p class="to-lead">{{ c.positioning }}</p>
+    <div class="to-facts">
+      {% for f in t.facts %}<div class="to-fact"><b>{{ f.num }}</b><span>{{ f.label }}</span><small>{{ f.note }}</small></div>{% endfor %}
+    </div>
+    <h2>Technologies and the markets they serve</h2>
+    <div class="to-scroll">
+    <table class="to-matrix">
+      <thead><tr><th scope="col">Platform</th>{% for m in t.markets %}<th scope="col" title="{{ m.label }}">{{ m.short or m.label }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for r in t.matrix %}<tr><th scope="row">{{ r.label }}</th>{% for on in r.cells %}<td>{% if on %}<span class="to-dot to-{{ (r.owner or 'none')|lower }}" role="img" aria-label="yes"></span>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table>
+    </div>
+    <p class="to-legend small">Dot colour: {{ who('Skyworks') }} {{ who('Qorvo') }} {{ who('Both') }} · Markets: {% for m in t.markets %}{{ m.short }} = {{ m.label }}{{ ', ' if not loop.last }}{% endfor %}.</p>
+    {{ pfoot(1) }}
+  </section>
+
+  <section class="to-page" id="platforms" aria-labelledby="to-h-plat">
+    <h2 id="to-h-plat">Technology platforms</h2>
+    <p class="to-sub">What each platform is, what it is good for, and where it shows up in the catalogue.</p>
+    <div class="to-plats">
+      {% for p in t.platforms %}
+      <div class="to-plat">
+        <div class="to-plat-name"><b>{{ p.label }}</b>{{ who(p.owner) }}</div>
+        <div><span class="to-what">{{ p.what }}</span> <span class="to-good">{{ p.good_for }}</span></div>
+        <div class="to-fams">{% for f in p.families %}<span>{{ f }}</span>{% endfor %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {{ pfoot(2) }}
+  </section>
+
+  <section class="to-page" id="markets" aria-labelledby="to-h-mkt">
+    <h2 id="to-h-mkt">End markets</h2>
+    <p class="to-sub">What the combined portfolio brings to each market, with representative part families.</p>
+    <div class="to-mkts">
+      {% for m in t.markets %}
+      <div class="to-mkt">
+        <h3>{{ m.label }}</h3>
+        <p>{{ m.brings }}</p>
+        <p class="to-fns">{% for f in m.functions %}<span>{{ f }}</span>{% endfor %}</p>
+        <ul class="to-parts">{% for name, series in m.parts %}<li>{{ name }} <code>{{ series }}</code></li>{% endfor %}</ul>
+        <p class="to-on small"><span class="muted">Platforms</span> {{ m.platform_labels|join(' · ') }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {{ pfoot(3) }}
+  </section>
+
+  <section class="to-page" id="families" aria-labelledby="to-h-fam">
+    <h2 id="to-h-fam">Product families</h2>
+    <p class="to-sub">Active parts per family in the public catalogue{% if t.catalogue_date %} (as of {{ t.catalogue_date|date }}){% endif %}, with a headline capability. Figures are catalogue values; the part named holds the value.</p>
+    <div class="to-scroll">
+    <table class="to-fam">
+      <thead><tr><th scope="col">Family</th><th scope="col" class="num">Skyworks</th><th scope="col" class="num">Qorvo</th><th scope="col">Headline capability</th></tr></thead>
+      <tbody>{% for f in t.families %}<tr>
+        <th scope="row">{{ f.label }}</th>
+        <td class="num" data-l="Skyworks">{{ '{:,}'.format(f.Skyworks) if f.Skyworks else '–' }}</td><td class="num" data-l="Qorvo">{{ '{:,}'.format(f.Qorvo) if f.Qorvo else '–' }}</td>
+        <td>{{ f.headline }}{% for g in f.figures %}{{ '; ' if loop.first else ', ' }}<b>{{ g.text }}</b> <span class="muted">({{ g.mpn }})</span>{% endfor %}</td>
+      </tr>{% endfor %}</tbody>
+    </table>
+    </div>
+    <div class="to-more">
+      <h3>Learn more</h3>
+      <ul>{% for label, url in c.learn_more %}<li><a href="{{ url }}" rel="noopener" target="_blank">{{ label }}</a> <span class="to-url">{{ url }}</span></li>{% endfor %}</ul>
+    </div>
+    <div class="to-src small">
+      <b>Sources.</b> {% for s in c.sources %}{{ s }} {% endfor %}{% if t.unclassified %}{{ '{:,}'.format(t.unclassified) }} catalogue parts without a family are counted in the total only.{% endif %}
+      Prepared {{ today|date }}{% if t.catalogue_date %}; catalogue as of {{ t.catalogue_date|date }}{% endif %}. Public information.
+    </div>
+    {{ pfoot(4) }}
+  </section>
+</div>
+{% endblock %}

@@ -12,7 +12,7 @@ from urllib.parse import urljoin, urlsplit
 
 import pytest
 
-from app.web.nav import NAV, TABS, UTILITY
+from app.web.nav import HOMES, NAV, TABS, UTILITY
 from tests.conftest import solve_pow
 
 # Forms that delete data or change people, passkeys, invites or sign-in: never sent blind (the owner would lose data,
@@ -156,6 +156,7 @@ def detail_pages(client) -> list[str]:
 def menu_pages() -> list[str]:
     hrefs = [href for _key, _label, items in (*NAV, UTILITY) for _l, href, _d in items]
     hrefs += [href for group in TABS for _l, href in group]
+    hrefs += list(HOMES.values())  # section landing pages (e.g. /shareable)
     return list(dict.fromkeys(hrefs))
 
 

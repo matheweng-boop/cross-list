@@ -1,0 +1,115 @@
+/* Shareable section (owner, 24 Oct 2026): the landing cards and the Technology overview, on screen and printed (A4).
+   Loaded only by the pages of the section, so the print rules below hide the site's frame on these pages only. */
+
+/* landing page */
+.sh-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); gap: .8rem; margin: 1rem 0; }
+.sh-card { display: flex; flex-direction: column; gap: .3rem; padding: .9rem 1rem; border: 1px solid var(--pico-muted-border-color);
+  border-left: 4px solid var(--pico-primary); border-radius: .5rem; text-decoration: none; color: inherit; }
+.sh-card:hover, .sh-card:focus-visible { border-color: var(--pico-primary); }
+.sh-card span { font-size: .88rem; color: var(--pico-muted-color); }
+
+/* technology overview: screen */
+.to { max-width: 62rem; }
+.to-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; margin: 0 0 .8rem; }
+.to-actions button { width: auto; margin: 0; padding: .45rem 1.1rem; }
+.to-page { margin: 0 0 2.2rem; }
+.to-kicker { margin: 0; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color: var(--pico-muted-color); }
+.to h1 { margin: .1rem 0 .5rem; }
+.to h2 { margin: 1.1rem 0 .4rem; font-size: 1.25rem; }
+.to-page > h2:first-child { margin-top: 0; }
+.to-lead { font-size: 1.02rem; line-height: 1.5; max-width: 52rem; }
+.to-sub { margin: 0 0 .7rem; color: var(--pico-muted-color); font-size: .9rem; }
+.to-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr)); gap: .6rem; margin: .8rem 0 1rem; }
+.to-fact { display: flex; flex-direction: column; padding: .55rem .75rem; border-radius: .5rem;
+  background: color-mix(in srgb, var(--pico-primary) 8%, transparent); border-top: 3px solid var(--pico-primary); }
+.to-fact b { font-size: 1.45rem; line-height: 1.15; }
+.to-fact span { font-weight: 600; font-size: .86rem; }
+.to-fact small { color: var(--pico-muted-color); font-size: .74rem; }
+.to-scroll { max-width: 100%; overflow-x: auto; }
+.to table { margin: 0 0 .4rem; font-size: .85rem; }
+.to th, .to td { padding: .28rem .45rem; vertical-align: top; }
+.to-matrix { width: auto; }
+.to-matrix thead th { font-size: .76rem; text-align: center; white-space: nowrap; }
+.to-matrix thead th:first-child { text-align: left; }
+.to-matrix tbody th { font-weight: 500; white-space: nowrap; }
+.to-matrix td { text-align: center; vertical-align: middle; min-width: 2.6rem; }
+.to-dot { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; background: var(--w, var(--pico-muted-color)); }
+.to-skyworks { --w: var(--c-sky); } .to-qorvo { --w: var(--c-qor); } .to-both { --w: var(--c-both); }
+.to-who { display: inline-block; font-size: .72rem; font-weight: 600; padding: 0 .45rem; border-radius: .7rem; margin-left: .35rem;
+  color: #fff; background: var(--w, var(--pico-muted-color)); vertical-align: .1em; }
+.to-legend .to-who { margin: 0 .15rem; }
+.to-plats { display: grid; gap: 0; }
+.to-plat { display: grid; grid-template-columns: 15rem 1fr 15rem; gap: .2rem 1rem; padding: .45rem 0;
+  border-bottom: 1px solid var(--pico-muted-border-color); font-size: .88rem; }
+.to-plat-name b { font-size: .95rem; }
+.to-good { color: var(--pico-muted-color); }
+.to-fams, .to-fns { display: flex; flex-wrap: wrap; gap: .25rem; align-content: flex-start; margin: 0; }
+.to-fams span, .to-fns span { font-size: .72rem; padding: .05rem .45rem; border-radius: .6rem; background: var(--cl-unknown-bg, #eceaf6); }
+.to-mkts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr)); gap: .8rem; }
+.to-mkt { padding: .7rem .85rem; border: 1px solid var(--pico-muted-border-color); border-top: 3px solid var(--pico-primary); border-radius: .5rem; }
+.to-mkt h3 { margin: 0 0 .3rem; font-size: 1.02rem; }
+.to-mkt p { margin: 0 0 .45rem; font-size: .88rem; }
+.to-parts { margin: 0 0 .4rem; padding-left: 1rem; font-size: .85rem; }
+.to-parts li { margin: 0; list-style: square; }
+.to-parts code { font-size: .78rem; padding: 0 .25rem; }
+.to-on { margin: 0 !important; }
+.to-fam { width: 100%; }
+.to-fam .num { text-align: right; white-space: nowrap; }
+.to-fam tbody th { font-weight: 600; }
+.to-more { margin: 1rem 0 .6rem; padding: .7rem .9rem; border-radius: .5rem; background: color-mix(in srgb, var(--pico-primary) 8%, transparent); }
+.to-more h3 { margin: 0 0 .3rem; font-size: 1rem; }
+.to-more ul { margin: 0; padding-left: 1rem; font-size: .88rem; }
+.to-url { display: none; }
+.to-src { color: var(--pico-muted-color); line-height: 1.45; }
+.to-pfoot { display: none; }
+
+@media (max-width: 760px) {
+  .to-plat { grid-template-columns: 1fr; }
+  .to-matrix { font-size: .78rem; }
+  .to-matrix thead th { font-size: .66rem; padding: .25rem .1rem; }
+  .to-matrix td { min-width: 0; padding: .25rem .1rem; }
+  .to-matrix tbody th { white-space: normal; padding-left: 0; }
+  .to-dot { width: .65rem; height: .65rem; }
+  /* families: one block per family (name, then the two counts and the headline) */
+  .to-fam thead { display: none; }
+  .to-fam tr { display: grid; grid-template-columns: auto auto 1fr; gap: 0 .7rem; padding: .35rem 0;
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .to-fam tbody th, .to-fam td:last-child { grid-column: 1 / -1; }
+  .to-fam th, .to-fam td { border: 0; padding: .05rem 0; }
+  .to-fam td.num::before { content: attr(data-l) " "; color: var(--pico-muted-color); font-size: .75rem; }
+}
+
+/* technology overview: print (Save as PDF), four A4 pages */
+@page { size: A4; margin: 12mm 13mm; }
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { background: #fff !important; color: #1b1f27 !important; }
+  html { font-size: 9.3pt; }
+  .site-head, .site-foot, .fb, #fb, .skip-link, .banner, main > nav.page-tabs, .to-actions, .sh-cards { display: none !important; }
+  body.shell .content { padding: 0; margin: 0; max-width: none; }
+  .to { max-width: none; }
+  .to a { color: inherit; text-decoration: none; }
+  /* one section per page; the page footer sits at the bottom (262 mm of the 273 mm printable height) */
+  .to-page { break-before: page; margin: 0; min-height: 262mm; display: flex; flex-direction: column; }
+  .to-page:first-of-type { break-before: auto; }
+  .to-page > * { flex: none; }
+  .to-fact, .to-plat, .to-mkt, .to-more, .to-src, tr { break-inside: avoid; }
+  .to h1 { font-size: 1.9rem; }
+  .to-lead { font-size: 1.05rem; }
+  .to-facts { grid-template-columns: repeat(6, 1fr); }
+  .to-fact b { font-size: 1.3rem; }
+  .to-scroll { overflow: visible; }
+  .to-matrix { width: 100%; }
+  .to-matrix th, .to-matrix td { padding: .34rem .22rem; }
+  .to-dot { width: .95rem; height: .95rem; }
+  .to-plat { grid-template-columns: 12rem 1fr 13rem; padding: .38rem 0; }
+  .to-mkts { grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .to-fam th, .to-fam td { padding: .14rem .35rem; font-size: .8rem; line-height: 1.3; }
+  .to-fam tbody th { width: 24%; }
+  .to-more { margin: .6rem 0 .4rem; padding: .45rem .7rem; }
+  .to-more ul { font-size: .78rem; }
+  .to-url { display: inline; color: #555; font-size: .8rem; }
+  .to-src { font-size: .74rem; }
+  .to-pfoot { display: flex; justify-content: space-between; margin: auto 0 0; padding-top: .3rem; border-top: 1px solid #ccd;
+    font-size: .78rem; color: #555; }
+}

@@ -18,7 +18,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app.auth.session import OWNER, signed_in_owner, site_key
+from app.auth.session import OWNER, sign, signed_in_owner, site_key
 from app.config import get_settings
 from app.db import count
 from app.models import Account, PasskeyCredential, SiteSetting
@@ -35,17 +35,13 @@ def _key() -> bytes | None:
     return hmac.new(base, b"crosslist:stepup", hashlib.sha256).digest() if base else None
 
 
-def _sign(body: str, key: bytes) -> str:
-    return hmac.new(key, body.encode(), hashlib.sha256).hexdigest()
-
-
 def set_confirmed(resp, request: Request, account: Account) -> None:
     """Mark the owner as freshly confirmed in this browser for 5 minutes."""
     key = _key()
     if key is None or account.role != OWNER:
         return
     body = f"u1.{account.id}.{account.session_version}.{int(time.time())}"
-    resp.set_cookie(STEPUP_COOKIE, f"{body}.{_sign(body, key)}", max_age=STEPUP_TTL, httponly=True, samesite="strict",
+    resp.set_cookie(STEPUP_COOKIE, f"{body}.{sign(body, key)}", max_age=STEPUP_TTL, httponly=True, samesite="strict",
                     secure=request.url.scheme == "https", path="/")  # fmt: skip
 
 
@@ -59,7 +55,7 @@ def seconds_left(request: Request, session: Session) -> int:
     if p is None or key is None or not value:
         return 0
     body, _, sig = value.rpartition(".")
-    if not body or not hmac.compare_digest(sig, _sign(body, key)):
+    if not body or not hmac.compare_digest(sig, sign(body, key)):
         return 0
     parts = body.split(".")
     if len(parts) != 4 or parts[0] != "u1":

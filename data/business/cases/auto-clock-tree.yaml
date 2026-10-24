@@ -190,3 +190,18 @@ diagram:
     - [clk, cc, "PCIe 100 MHz (SSC), Ethernet 25/125/156.25 MHz, SerDes refs"]
     - [cc, zone, "Automotive Ethernet backbone"]
     - [zone, radar, "Ethernet / SerDes"]
+
+# One line per section on what it means for the decision (Bottom line in reports.yaml)
+thread:
+  benefit: One clock chip replacing crystal, oscillators and buffer is the gain; it needs the crystal-free resonator to
+    work.
+  position: The breadth of the PCIe line is ours; the crystal, Grade 2 and Gen 5 limits are the three gaps the decision
+    addresses.
+  market: Automotive timing is about $400–500 M (SiTime's view), and SiTime buying Renesas timing makes the window short.
+  outlook: Crystal-free could be the default by about 2029 (est, low); acting after that means following TI and SiTime.
+  features: The distance-1 items (reference designs, Gen 6 data, safety manual) are worth doing whatever the decision.
+  product: ZC-12 for central computers first; ZC-4 for zones once the output count is confirmed.
+  asp: Compare ZC-12 at $4–6.5 (est) with TI's $3.55 two-output part per output, not per chip.
+  attach: SoC reference designs are where clock sockets are won; that is the first lever.
+  questions: The BAW Grade 1 question and the Gen 6 jitter margin are the needed-now items.
+  risks: If the BAW resonator fails Grade 1, fall back to Si5332-AM with the crystal in the package (step 1).

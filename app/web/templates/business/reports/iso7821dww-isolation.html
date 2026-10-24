@@ -1,6 +1,7 @@
 {% raw %}<h1>Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit</h1>
 <p class="meta">21 Oct 2026 · Research idea for a business case · built from BizDev data (parts database for TI, Skyworks and Novosense digital isolators, cross results, block-diagram library with 224 application diagrams, TI reference designs, library topic on traction-inverter isolation), plus public application notes on creepage and pollution degree and TI's public list prices (sections 3 and 4), and a ranked list of the applications that need more than 8 mm (section 2, updated 21 Oct 2026). The business case that follows from it: <a href="/business/reports/hv-extra-wide-isolation">Extra-wide isolation for 1500 V solar, storage and 800 V DC data centers</a>. Open points are marked “open”.</p>
 
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
 <section class="brief" aria-label="Summary">
   <p class="label">In brief</p>
   <ol>
@@ -33,6 +34,7 @@
   <li><b>An extra-wide-package version of our 2-channel isolator.</b> Same die in the announced ultra-wide SOIC (≥15 mm), for reinforced barriers above 800 V (fully charged 800 V batteries, 1000 V chargers, BMS and HV junction boxes) and for basic barriers at pollution degree 3. TI sells it at wide-body reel prices, so it must not cost more to make. <span class="muted">Open: package availability, cost and qualification time. The barrier also needs a higher rating (TI: 2000 Vrms working in DWW vs 1500 Vrms in DW).</span></li>
   <li><b>An isolation set for the charger and inverter:</b> isolator + Si829x / Si8285/86 gate drivers + Si89xx sensing + isolated bias, sold as one reference. <span class="muted">Open: a reinforced isolated bias controller is missing.</span></li>
 </ol>
+<p class="rpt-thread"><b>For the decision:</b> An ultra-wide package is worth more as a set (isolator, isolated amplifier, gate driver) than as one isolator, so the case should price the set.</p>
 
 <h2>2. Where else we see opportunities</h2>
 <ul>
@@ -59,6 +61,7 @@
 </table></div>
 <p class="small"><b>Covered by 8 mm:</b> the car itself (sealed boxes, PD2: 8.0 mm at 800 V; only a full battery near 900 V would need 9 mm), heat pumps and HVAC (400–800 V DC bus, PD2: 4–8 mm), medical (2 MOPP at 250 Vrms, commonly quoted as 8 mm), off-road machines with sealed electronics. Hydrogen electrolysers at 1000–1500 V DC are likely like solar and storage (no public source read). <span class="muted">Our inference where marked est; counts per unit from TI reference designs TIDA-010054, TIDA-01606 and TIDA-010210 and the topologies.</span></p>
 <p class="small"><b>Where the parts sit in these diagrams:</b> gate drivers on the power side often need only functional or basic insulation (AN1456: with a grounded DC midpoint, 8 mm drivers work at 1500 V). The reinforced barrier is the line between the high-voltage power side and the low-voltage control and communication side: the digital isolators (PWM, faults, CAN / RS-485 / Ethernet), the isolated amplifiers (DC-link, string, battery and grid sensing), the isolated bias for that side, and the gate drivers only where the controller is earth- or user-referenced. The new diagrams draw this barrier as its own frames.</p>
+<p class="rpt-thread"><b>For the decision:</b> Every market that needs more than 8 mm is outside the car; 1500 V solar and storage makers are the first customers to ask.</p>
 
 <h2>3. Market trend</h2>
 <ul>
@@ -67,6 +70,7 @@
   <li><b>Wide packages as a differentiator:</b> in BizDev only TI (20 parts) and Novosense (6, e.g. NSI8321W1 at 15 mm and 7.5 kVrms) reach 14.5–15 mm.</li>
   <li><b>Prices (TI store, 21 Oct 2026, 1k units):</b> ISO7821DWWR $2.60 and ISO7821DWR $2.64 (reels); ISO7821DWW $4.12 and ISO7821DW $3.34 (tubes). <span class="muted">Open: market size and volumes; Novosense prices.</span></li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> TI sells the extra-wide reel at the wide-body price, so the package wins sockets, not a premium: its cost must match the wide body.</p>
 
 <h2>4. Creepage, pollution degree and what 800 V systems need</h2>
 <p>Creepage is the distance along the package surface between the two sides. The minimum depends on three things
@@ -105,6 +109,7 @@
   <li><b>No single package is enough</b> for reinforced insulation at PD3 (20–25 mm). Designers seal the box (PD2), coat or pot the board (PD1), or put two isolators in series.</li>
   <li><b>Design measures that relax it:</b> conformal coating or potting, a sealed housing, the reinforced barrier only where people can touch (basic or functional isolation at the drivers), and board slots (at least 1 mm wide at PD2, 1.5 mm at PD3) so the FR4 board keeps the package's distance.</li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> 8 mm is enough at 800 V in a sealed box, so the car is not the reason to build; 1000 V and above, or pollution degree 3, is.</p>
 
 <h2>Risks</h2>
 <ul>
@@ -113,6 +118,7 @@
   <li>A new package means qualification time and cost against a price-driven market.</li>
   <li>Our working voltage (2121 Vpk) is below ISO7821DWW's (2828 Vpk), and our low-temperature end is –40 °C vs –55 °C.</li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> The share of designs that cannot seal, coat or pot decides the volume; it goes into the case's customer questions.</p>
 
 <h2>Open questions</h2>
 <ul>
@@ -122,7 +128,9 @@
   <li>Which 1500 V solar and storage makers accept 14.5 mm, and which ask for 15 mm like the TÜV assessor in TI's forum?</li>
   <li>What does Novosense charge for its 15 mm parts? (TI's prices are in section 3.)</li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> The release date and first dies (third question) are the needed-now item; the rest moves to the case.</p>
 
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
 <h2>Sources</h2>
 <ul class="small">
   <li>BizDev parts database: ISO7821DWW, ISO7821DW (TI data sheet SLLSEM2I), Si86S621/622, Novosense NSI8321W1/NSI8322W1; cross results for ISO7821DWW.</li>

@@ -1,0 +1,15 @@
+{# The report's storyline (reports.yaml: decision, answer, needed_now, say_externally, next_steps): under the title of every report and case, above the summary box. #}
+{% if r.decision %}{% set a = r.answer or {} %}
+<section class="rpt-bl" id="bottom-line" aria-labelledby="bl-title">
+  <p class="label" id="bl-title">Bottom line</p>
+  <p class="rpt-bl-q"><span class="rpt-bl-k">Decision</span> <b>{{ r.decision }}</b></p>
+  <p class="rpt-bl-a"><span class="rpt-bl-k">Answer today</span> {{ a.text }} {% if a.conf %}<span class="pc-conf c-{{ a.conf }}" title="confidence in this answer">{{ a.conf }}</span>{% endif %}</p>
+  <div class="rpt-bl-grid">
+    <div><p class="rpt-bl-k">Needed now</p><ul>{% for x in r.needed_now or [] %}<li>{{ x }}</li>{% endfor %}</ul></div>
+    <div class="rpt-bl-ext"><p class="rpt-bl-k">What you can say outside the team</p><p>“{{ r.say_externally }}”</p></div>
+  </div>
+  <p class="rpt-bl-k">Next steps</p>
+  <ol class="rpt-steps">{% for s in r.next_steps or [] %}
+    <li><b>{{ s.what }}</b> <span class="rpt-who">{{ s.who }}</span>{% if s.case %} <a class="small" href="/business/reports/{{ s.case }}">→ the case</a>{% endif %}<br><small class="muted">Why: {{ s.why }}</small></li>{% endfor %}</ol>
+</section>
+{% endif %}

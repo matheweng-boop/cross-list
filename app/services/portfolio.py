@@ -1,4 +1,5 @@
-"""Skyworks + Qorvo: the two product lines of the combined company side by side (Products > Skyworks + Qorvo).
+"""Skyworks + Qorvo: the two product lines of the combined company side by side (Cross-sell > Skyworks + Qorvo
+portfolio, /portfolio).
 
 Counts come from the catalogues and the cross lists; the reasoning (core competence, which line to pick per
 segment, advantages against each competitor, cross-sell bundles) is curated in data/business/portfolio_compare.yaml.
@@ -190,19 +191,25 @@ def product_categories() -> dict:
     return {"rows": rows, "totals": totals, "lead": _lead(totals["Skyworks"], totals["Qorvo"])}
 
 
+def _part_order(p: dict) -> tuple:
+    """Example parts: in volume before preview, automotive grade first."""
+    return p.get("preview", False), p["values"]["qualification"] != "automotive"
+
+
 # ---- synergies: Skyworks and Qorvo functions that sit next to each other in the library diagrams -----------------
 @lru_cache
-def synergies(limit: int = 12, min_diagrams: int = 2) -> list[dict]:
+def synergies(limit: int = 12, min_diagrams: int = 2, within: frozenset | None = None) -> list[dict]:
     """Pairs of functions where Skyworks has the stronger line in one and Qorvo in the other, and the library diagrams
     put them together: the cross-sell pairing (same block, connected blocks, Bundle strength) limited to the two
-    lines, without gaps or competitors. Example parts are active catalogue parts of each line."""
+    lines, without gaps or competitors. Example parts are active catalogue parts of each line, automotive grade
+    first. `within` limits the diagrams to a selection (a system or sub-system on Cross-sell › By system)."""
     from app.services import opportunity as op
     from app.services import scoring
 
     cp = blocks.catalog_parts()
     has = {fn: Counter(p["manufacturer"] for p in parts if not p.get("risk")) for fn, parts in cp.items()}
     led = {m: {fn for fn, c in has.items() if c[m] > c[[x for x in LINES if x != m][0]]} for m in LINES}
-    apps = [a for a in op.applications() if not a.background]
+    apps = [a for a in op.applications() if not a.background and (within is None or a.i in within)]
     pairs: dict[tuple[str, str], list] = defaultdict(list)
     for a in apps:
         fns = {p.fn for p in a.positions}
@@ -222,13 +229,14 @@ def synergies(limit: int = 12, min_diagrams: int = 2) -> list[dict]:
 
         def examples(fn, m):
             rows = [p for p in cp.get(fn, []) if p["manufacturer"] == m and not p.get("risk")]
-            return sorted(rows, key=lambda p: p.get("preview", False))[:3]
+            return sorted(rows, key=_part_order)[:3]
 
         out.append({"skyworks": s, "qorvo": q, "skyworks_label": vocab.fn_label(s), "qorvo_label": vocab.fn_label(q),
                     "n": len(sub), "same": why["same"], "linked": why["linked"], "summary": why["summary"],
                     "score": scoring.bundle(share, same, linked), "diagrams": why["rows"],
                     "skyworks_parts": examples(s, "Skyworks"), "qorvo_parts": examples(q, "Qorvo"),
-                    "n_skyworks": has[s]["Skyworks"], "n_qorvo": has[q]["Qorvo"]})  # fmt: skip
+                    "n_skyworks": has[s]["Skyworks"], "n_qorvo": has[q]["Qorvo"],
+                    "idx": tuple(sorted(a.i for a in sub))})  # fmt: skip
     out.sort(key=lambda r: (-r["score"], -r["n"], r["skyworks_label"]))
     # one row per function pair; keep the list varied: at most two rows per Skyworks or Qorvo function
     seen: Counter = Counter()
@@ -241,6 +249,67 @@ def synergies(limit: int = 12, min_diagrams: int = 2) -> list[dict]:
         if len(picked) >= limit:
             break
     return picked
+
+
+def curated_bundles() -> list[dict]:
+    """The curated cross-selling bundles (diagrams that need both lines), each with its library diagram index `i`
+    (None when the application name matches no library diagram)."""
+    index = {t.get("name"): i for i, t in enumerate(blocks.templates())}
+    return [{**x, "i": index.get(x.get("application"))} for x in curated().get("cross_sell") or []]
+
+
+NOTES_FILE = PROJECT_ROOT / "data" / "business" / "synergies_auto.yaml"
+
+
+@lru_cache
+def synergy_notes() -> dict[str, dict]:
+    """Curated reasons per pair ("<Skyworks function> + <Qorvo function>": reason, source, weak)."""
+    return ((yamlio.load(NOTES_FILE.read_text()) if NOTES_FILE.exists() else None) or {}).get("pairs") or {}
+
+
+@lru_cache
+def _other_line(fn: str, lead: str, mpn: str) -> dict | None:
+    """Where the other line also sells `fn`: its closest active part against the lead line's part, marked similar or
+    "Further design effort required" by the same rule as Which line to offer (MATCH_RULE)."""
+    other = next(m for m in LINES if m != lead)
+    alts = [p for p in blocks.catalog_parts().get(fn, []) if p["manufacturer"] == other and not p.get("risk")]
+    if not alts:
+        return None
+    rows = {r["mpn"].upper(): r for r in blocks.catalog_rows()}
+    alts.sort(key=_part_order)
+    mine = _pick_part(mpn, rows)
+    cmp = [(_compare(mine, _pick_part(a["mpn"], rows)) if lead == "Skyworks" else _compare(_pick_part(
+        a["mpn"], rows), mine), a["mpn"]) for a in alts[:3]]  # fmt: skip
+    best, alt = max(cmp, key=lambda c: c[0]["score"])
+    return {"line": other, "fn": fn, "label": vocab.fn_label(fn), "mpn": alt, "vs": mpn, "similar": best["similar"],
+            "reasons": best["reasons"], "notes": best["notes"]}  # fmt: skip
+
+
+def together_in(idx, limit: int = 8) -> dict:
+    """Skyworks + Qorvo inside a selection of library diagrams (Cross-sell › By system, owner 25 Oct 2026): the
+    synergy pairs of the selection (the same logic as Synergies, on these diagrams only and from one diagram up, so a
+    small sub-system still shows its pairs), each with a reason (curated in synergies_auto.yaml, else computed), the
+    "Further design effort" mark where the other line also sells one of the two functions, and `n_here` = diagrams
+    of the selection with both functions; then the curated cross-selling bundles whose diagram is one of them, and how
+    many of them both lines supply blocks for."""
+    keep = frozenset(idx)
+    notes = synergy_notes()
+    syn = []
+    for x in synergies(limit=limit, min_diagrams=1, within=keep):
+        note = notes.get(f"{x['skyworks']} + {x['qorvo']}") or {}
+        marks = [
+            m
+            for m in (
+                _other_line(x["skyworks"], "Skyworks", x["skyworks_parts"][0]["mpn"]) if x["skyworks_parts"] else None,
+                _other_line(x["qorvo"], "Qorvo", x["qorvo_parts"][0]["mpn"]) if x["qorvo_parts"] else None,
+            )
+            if m
+        ]
+        syn.append({**x, "n_here": x["n"], "reason": note.get("reason") or "", "source": note.get("source") or "",
+                    "weak": bool(note.get("weak")), "marks": marks})  # fmt: skip
+    syn.sort(key=lambda r: (r["weak"], -r["score"], -r["n"], r["skyworks_label"]))
+    return {"synergies": syn, "bundles": [x for x in curated_bundles() if x["i"] in keep],
+            "n_both": sum(1 for b in bundles(limit=10_000) if b["i"] in keep)}  # fmt: skip
 
 
 # --- Which line to offer: does a Skyworks pick match a Qorvo pick? (owner, 23 Oct 2026) ------------------------------

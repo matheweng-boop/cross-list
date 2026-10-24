@@ -212,6 +212,26 @@ def test_cross_sell_by_system(page):
     assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
 
 
+def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
+    """Owner, 25 Oct 2026: pick Automotive on Cross-sell, see the Skyworks + Qorvo pairs there, open the portfolio tab
+    with the system kept and its pairs marked, and come back to By system."""
+    go(page, "/blocks/cross-sell")
+    with page.expect_navigation():
+        page.locator("select[name=sel]").select_option("automotive")
+    block = page.locator("#together")
+    assert block.get_by_role("heading", name=re.compile("Skyworks \\+ Qorvo together here")).is_visible()
+    assert block.locator(".pf-syn-card").count() >= 5
+    tab = page.locator("nav.page-tabs a", has_text="Skyworks + Qorvo portfolio")
+    assert "system=automotive" in tab.get_attribute("href")
+    with page.expect_navigation():
+        tab.click()
+    assert "/portfolio?system=automotive" in page.url
+    assert page.locator(".pf-from").is_visible() and page.locator(".pf-syn-card.pf-here").count() >= 1
+    with page.expect_navigation():
+        page.locator("nav.page-tabs a", has_text="By system").click()
+    assert "system=automotive" in page.url and page.locator("#together").is_visible()
+
+
 # --- Engineering knowledge --------------------------------------------------------------------------------------------
 def test_rf_bands_type_and_application_chips_change_the_chart(page):
     go(page, "/rf-bands")

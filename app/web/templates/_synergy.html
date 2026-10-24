@@ -1,0 +1,16 @@
+{# One Skyworks + Qorvo synergy pair, the same card on the portfolio (Synergies) and on Cross-sell › By system
+   ("Skyworks + Qorvo together here"). total: diagrams in the selection (By system); places: sub-systems where the
+   pair meets (portfolio); here: the pair meets in the system picked on By system (portfolio, ?system=…). #}
+{% macro chips(parts, k) %}{% for p in parts %}<a class="badge ln-{{ k }}" href="/parts?q={{ p.mpn|urlencode }}"{% if p['values'] and p['values'].qualification == 'automotive' %} title="automotive grade"{% endif %}>{{ p.mpn }}{% if p['values'] and p['values'].qualification == 'automotive' %} <small>auto</small>{% endif %}</a> {% endfor %}{% endmacro %}
+{% macro syn_card(x, total=none, places=none, here=none) %}
+<article class="pf-syn-card small{{ ' pf-here' if here }}{{ ' pf-weak' if x.weak }}">
+  <p class="pf-syn-pair"><span class="ln-skyworks"><b>{{ x.skyworks_label }}</b> <span class="muted">Skyworks · {{ x.n_skyworks }}</span></span><span class="pf-syn-plus" aria-hidden="true">+</span><span class="ln-qorvo"><b>{{ x.qorvo_label }}</b> <span class="muted">Qorvo · {{ x.n_qorvo }}</span></span></p>
+  <p><b>Strength {{ x.score }}</b> · together in {{ x.n }}{% if total %} of {{ total }}{% endif %} diagram{{ 's' if (total or x.n) != 1 }}{{ ' here' if total }}{% if x.same %} · same block in {{ x.same }}{% endif %}{% if x.linked %} · connected in {{ x.linked }}{% endif %}{% if here %} · <b>in {{ here }}</b>{% endif %}</p>
+  {% if x.reason %}<p class="pf-syn-why">{{ x.reason }}{% if x.weak %} <span class="muted">(weak: supply or generic link)</span>{% endif %}{% if x.source %}<br><small class="muted">Source: {{ x.source }}</small>{% endif %}</p>
+  {% elif total %}<p class="pf-syn-why">{{ x.summary|capitalize }}.</p>{% endif %}
+  <p class="muted">{{ 'In' if x.diagrams|length == x.n else 'e.g.' }} {% for d in x.diagrams %}<a href="/blocks/new?template={{ d.i }}">{{ d.name|truncate(60) }}</a>{{ '; ' if not loop.last }}{% endfor %}</p>
+  <p>{{ chips(x.skyworks_parts, 'skyworks') }}{{ chips(x.qorvo_parts, 'qorvo') }}</p>
+  {% for m in x.marks or [] %}<p class="pf-match">{{ m.line }} also sells {{ m.label }}: <b>{{ m.mpn }}</b> vs {{ m.vs }} {% if m.similar %}<span class="pf-sim">Similar</span>{% else %}<span class="pf-effort">Further design effort required</span> <span class="muted">({{ m.reasons|join('; ') }})</span>{% endif %} <span class="muted">est{% if m.notes %} · {{ m.notes|join('; ') }}{% endif %}</span></p>{% endfor %}
+  {% if places %}<p class="pf-syn-places">Systems: {% for p in places[:4] %}<a href="/blocks/cross-sell?system={{ p.system }}&amp;sub={{ p.sub }}">{{ p.system_title }} › {{ p.title }}</a> <span class="muted">({{ p.n }})</span>{{ ', ' if not loop.last }}{% endfor %}{% if places|length > 4 %} <span class="muted">+{{ places|length - 4 }}</span>{% endif %}</p>{% endif %}
+</article>
+{% endmacro %}

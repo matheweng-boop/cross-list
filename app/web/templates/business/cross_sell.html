@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch with context %}
+{% from "_synergy.html" import syn_card %}
 {% block title %}Cross-sell{% endblock %}
 {% macro why(w, a_label, b_label) %}<details class="why small"><summary>Why?</summary>
   <p>{{ w.summary|capitalize }}.</p>
@@ -23,7 +24,7 @@
   <noscript><button type="submit" class="small-btn">Show</button></noscript>
 </form>
 
-{% if xs %}
+{% if xs %}{% set sel_q = 'system=' ~ system ~ ('&sub=' ~ sub if sub else '') %}
 <h2>{{ picked.label }} <small class="muted">· {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }}</small></h2>
 {% if template is not none %}<p class="small"><a href="/blocks/new?template={{ template }}">Open the diagram</a>{% if system %} · <a href="/blocks/cross-sell?co={{ co }}&amp;system={{ system }}{{ '&sub=' ~ sub if sub }}">back to all diagrams of the selection</a>{% endif %}</p>
 {% elif system and sub %}<p class="small"><a href="/blocks?system={{ system }}&amp;sub={{ sub }}#sub-{{ sub }}">See the diagrams in the Application library</a></p>{% endif %}
@@ -35,10 +36,20 @@
     <td><a class="small" href="/business/attach?co={{ co }}&amp;fn={{ e.fn|urlencode }}">What sells with it</a></td></tr>{% endfor %}</tbody>
 </table></div>{% else %}<p class="small muted">No part of ours in these diagrams yet.</p>{% endif %}
 <h3>Bundles <small class="muted">· two of our functions in the same diagram</small></h3>
+{% if xs.n_moved %}<p class="small muted">{{ xs.n_moved }} Skyworks + Qorvo pair{{ 's are' if xs.n_moved != 1 else ' is' }} shown once, under <a href="#together">Skyworks + Qorvo together here</a>.</p>{% endif %}
 {% if xs.pairs %}<div class="table-wrap"><table class="striped xs-table">
   <thead><tr><th scope="col">Offer</th><th scope="col">Together with</th><th scope="col">Together in</th></tr></thead>
   <tbody>{% for p in xs.pairs %}<tr><td>{{ p.a_label }}</td><td>{{ p.b_label }}{{ why(p.why, p.a_label, p.b_label) }}</td><td>{{ p.apps }} diagram{{ 's' if p.apps != 1 }}</td></tr>{% endfor %}</tbody>
-</table></div>{% else %}<p class="small muted">Fewer than two of our functions in these diagrams.</p>{% endif %}
+</table></div>{% elif not xs.n_moved %}<p class="small muted">Fewer than two of our functions in these diagrams.</p>{% endif %}
+{% if tog %}<section class="xs-together" id="together" aria-labelledby="xs-tog">
+  <h3 id="xs-tog">Skyworks + Qorvo together here <small class="muted">· {{ tog.synergies|length }} pair{{ 's' if tog.synergies|length != 1 }}{% if tog.bundles %}, {{ tog.bundles|length }} bundle{{ 's' if tog.bundles|length != 1 }}{% endif %}</small></h3>
+  <p class="small muted">Where a strong Skyworks line and a strong Qorvo line meet in these diagrams (same block or connected blocks), strongest first; supply-only links last. Strength 0–100 is the Bundle strength.</p>
+  {% if tog.synergies %}<div class="pf-syn">{% for x in tog.synergies %}{{ syn_card(x, total=xs.apps|length) }}{% endfor %}</div>{% endif %}
+  {% for x in tog.bundles %}<div class="pf-bundle small"><b><a href="/blocks/new?template={{ x.i }}">{{ names[x.i]|truncate(90) }}</a></b> <span class="muted">· curated bundle</span><p>{{ x.pitch|unit }}</p>
+    <div class="pf-two">{% for m, k in (('Skyworks', 'skyworks'), ('Qorvo', 'qorvo')) %}<div class="ln-{{ k }} pf-pick"><b>{{ m }}</b>{% for b in x[k] or [] %}<div>{{ fn_label(b.function) }}: {% for mpn in b.parts or [] %}<a class="badge ln-{{ k }}" href="/parts?q={{ mpn|urlencode }}">{{ mpn }}</a> {% endfor %}</div>{% endfor %}</div>{% endfor %}</div>
+  </div>{% endfor %}
+  <p class="small">Both lines supply blocks in {{ tog.n_both }} of {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }} here. <a href="/portfolio?{{ sel_q }}#synergies">Library-wide synergies and bundles: Skyworks + Qorvo portfolio</a></p>
+</section>{% endif %}
 <p class="small muted">{{ xs.n_gaps }} function{{ 's' if xs.n_gaps != 1 }} here {{ 'have' if xs.n_gaps != 1 else 'has' }} no part of ours: see <a href="/business/opportunities">Gaps &amp; new technology</a>. Start from one part number instead: <a href="/business/attach">Cross-sell by part</a>.</p>
 {% else %}
 <h2>Pick a system</h2>

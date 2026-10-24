@@ -8,6 +8,28 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
    own diagram: should each get one. Placements and the Car radio split are settled (below).
 
+Cross-sell (25 Oct 2026; recommendation in brackets):
+
+2. **Application library preview:** keep the short "Cross-sell in <sub-system>" preview with its link, without adding
+   the Skyworks + Qorvo pairs there? (Yes.)
+3. **Weak pairs** linked only by a supply rail: keep them, shown last and marked weak? Otherwise UWB in the car has no
+   pair. (Keep.)
+4. **UWB anchor clock block:** add a clock / crystal block to the UWB anchor diagram, only from a public reference
+   design in a daily run, so a Qorvo UWB + Skyworks timing pair can appear? (Yes.)
+5. **Bundle table:** keep the 30 most complementary of 172 diagrams? (Yes.)
+
+Priority score for Gaps & new technology and Markets (25 Oct 2026):
+
+6. **Weights** T 45 / L 30 / D 25? (Keep.)
+7. **"All" view** as three groups (RF & power, general power and adjacent, outside our focus) or one plain list? (Groups.)
+8. **Non-isolated half-bridge and 3-phase gate drivers** at 0.7 rather than 0.9? (0.7.)
+9. **Current sensing:** raise to 0.9 only for isolated or integrated-shunt parts; plain amplifiers stay at 0.5? (Yes.)
+10. **PoE PD/PSE at 0.9** (from the Silicon Labs business) and **isolated RS-485 at 0.9** if we sell it isolated? (Confirm.)
+11. **One-diagram RF band gaps** (frequency multipliers at 78.6): acceptable this high? If not, D 0.30 and T 0.40.
+    (Acceptable.)
+12. **Background diagrams** count fully in D, so the number matches "Needed in"? (Yes.)
+13. **Competition** in likeliness: leave it out, since it is in the Opportunity score? (Leave out.)
+
 ## Settled (owner, 24 Oct 2026, site check): "Yes to all"
 
 - Browse products: the Package column is hidden on desktops below 1400 px, so the table no longer scrolls sideways at

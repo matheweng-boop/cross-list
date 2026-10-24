@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_synergy.html" import syn_card %}
 {% block content %}
 {# one colour per line, used everywhere on the page: Skyworks, Qorvo, both lines, competitors #}
 {% macro w(v) %}{% set v = (v or '')|lower %}{{ 'w-both' if v in ('both', 'split') or ('skyworks' in v and 'qorvo' in v) else 'w-sky' if 'skyworks' in v else 'w-qor' if 'qorvo' in v else 'w-comp' if v == 'competitor' else 'w-none' }}{% endmacro %}
@@ -86,13 +87,8 @@
 
 <h2 id="synergies">Synergies</h2>
 <p class="small muted">Functions where one company has the stronger line and the other company's function sits next to it in the library diagrams (same block or a connected one). Offer them together: a Skyworks lead opens the door for the Qorvo part, and the other way round. Strength 0–100 is the Bundle strength used on Cross-sell.</p>
-{% if syn %}<div class="pf-syn">{% for x in syn %}
-  <article class="pf-syn-card small">
-    <p class="pf-syn-pair"><span class="ln-skyworks"><b>{{ x.skyworks_label }}</b> <span class="muted">Skyworks · {{ x.n_skyworks }}</span></span><span class="pf-syn-plus" aria-hidden="true">+</span><span class="ln-qorvo"><b>{{ x.qorvo_label }}</b> <span class="muted">Qorvo · {{ x.n_qorvo }}</span></span></p>
-    <p><b>Strength {{ x.score }}</b> · together in {{ x.n }} diagrams{% if x.same %} · same block in {{ x.same }}{% endif %}{% if x.linked %} · connected in {{ x.linked }}{% endif %}</p>
-    <p class="muted">e.g. {% for d in x.diagrams %}<a href="/blocks/new?template={{ d.i }}">{{ d.name|truncate(60) }}</a>{{ '; ' if not loop.last }}{% endfor %}</p>
-    <p>{% for mpn in x.skyworks_parts %}<a class="badge ln-skyworks" href="/parts?q={{ mpn.mpn|urlencode }}">{{ mpn.mpn }}</a> {% endfor %}{% for mpn in x.qorvo_parts %}<a class="badge ln-qorvo" href="/parts?q={{ mpn.mpn|urlencode }}">{{ mpn.mpn }}</a> {% endfor %}</p>
-  </article>{% endfor %}
+{% if sel %}<p class="small pf-from">From Cross-sell › By system, <b>{{ sel.label }}</b>: {{ sel.here|length }} of these {{ syn|length }} library-wide pairs meet there (marked). <a href="/blocks/cross-sell?system={{ sel.system }}{{ '&amp;sub=' ~ sel.sub if sel.sub }}#together">The pairs of {{ sel.label }} alone</a></p>{% endif %}
+{% if syn %}<div class="pf-syn">{% for x in syn %}{{ syn_card(x, places=places[(x.skyworks, x.qorvo)], here=sel.label if sel and (x.skyworks, x.qorvo) in sel.here else none) }}{% endfor %}
 </div>{% else %}<p class="muted small">No pairs found yet.</p>{% endif %}
 
 <h2 id="overlap">Overlap and complements</h2>
@@ -119,11 +115,11 @@
 <h2 id="crosssell">Cross-selling: diagrams that need both</h2>
 {% if cur.cross_sell %}
 <div class="pf-segs">{% for x in cur.cross_sell %}
-  <section class="pf-bundle"><b>{{ x.application }}</b><p class="small">{{ x.pitch|unit }}</p>
-    <div class="pf-two small">{% for m, k in (('Skyworks', 'skyworks'), ('Qorvo', 'qorvo')) %}<div class="ln-{{ m|lower }} pf-pick"><b>{{ m }}</b>{% for b in x[k] or [] %}<div>{{ label(b.function) }}: {% for mpn in b.parts or [] %}<a href="/parts?q={{ mpn|urlencode }}">{{ mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}</div>{% endfor %}</div>{% endfor %}</div>
+  <section class="pf-bundle"><b>{{ x.application }}</b>{% for p in bundle_places.get(x.application) or [] %} <small class="muted">· <a href="/blocks/cross-sell?system={{ p.system }}&amp;sub={{ p.sub }}">{{ p.system_title }} › {{ p.title }}</a></small>{% endfor %}<p class="small">{{ x.pitch|unit }}</p>
+    <div class="pf-two small">{% for m, k in (('Skyworks', 'skyworks'), ('Qorvo', 'qorvo')) %}<div class="ln-{{ m|lower }} pf-pick"><b>{{ m }}</b>{% for b in x[k] or [] %}<div>{{ label(b.function) }}: {% for mpn in b.parts or [] %}<a class="badge ln-{{ k }}" href="/parts?q={{ mpn|urlencode }}">{{ mpn }}</a> {% endfor %}</div>{% endfor %}</div>{% endfor %}</div>
   </section>{% endfor %}</div>
 {% endif %}
-<details class="pf-more"><summary class="small">All {{ bundles|length }} block diagrams where both lines supply blocks</summary>
+<details class="pf-more"><summary class="small">{% if bundles_total > bundles|length %}The {{ bundles|length }} most complementary of {{ bundles_total }}{% else %}All {{ bundles|length }}{% endif %} block diagrams where both lines supply blocks</summary>
 <div class="pf-wrap"><table class="small">
   <thead><tr><th scope="col">Application</th><th scope="col">Blocks we fill</th><th scope="col" class="w-sky pf-key">Only Skyworks</th><th scope="col" class="w-qor pf-key">Only Qorvo</th></tr></thead>
   <tbody>{% for b in bundles %}<tr><td><a href="/blocks/new?template={{ b.i }}">{{ b.name[:80] }}</a> <span class="muted">{{ b.category }}</span></td><td class="n">{{ b.covered }} / {{ b.blocks }}</td>

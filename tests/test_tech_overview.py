@@ -147,7 +147,7 @@ def test_four_sections_with_the_numbers_from_the_catalogue(client):
         assert f'class="to-page" id="{sid}"' in html, sid
     assert html.count('class="to-pfoot"') == 4 and html.count('<div class="to-band') == 4
     b = to.build()
-    cats = pf.product_categories()  # the same counts as Products > Skyworks + Qorvo
+    cats = pf.product_categories()  # the same counts as Cross-sell > Skyworks + Qorvo portfolio
     total = cats["totals"]["Skyworks"] + cats["totals"]["Qorvo"]
     nums = {f["key"]: f["num"] for f in b["facts"]}
     assert nums["parts"] == f"{total:,}" and f"{total:,}" in html

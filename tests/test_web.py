@@ -319,6 +319,7 @@ def test_navigation_sections_and_old_urls(client):
                                ("/business", "Opportunities", "Gaps &amp; new technology"),
                                ("/blocks/cross-sell", "Systems &amp; applications", "Cross-sell"),
                                ("/business/attach", "Systems &amp; applications", "Cross-sell"),
+                               ("/portfolio", "Systems &amp; applications", "Cross-sell"),
                                ("/business/rf-coverage", "Systems &amp; applications", "RF coverage"),
                                ("/business/automotive", "Systems &amp; applications", "Automotive map"),
                                ("/business/tam", "Future growth", "TAM estimates"),

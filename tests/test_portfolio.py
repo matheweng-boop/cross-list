@@ -1,4 +1,4 @@
-"""Products > Skyworks + Qorvo: the comparison loads, names real parts and renders."""
+"""Cross-sell > Skyworks + Qorvo portfolio: the comparison loads, names real parts and renders."""
 
 from app.services import blocks
 from app.services import portfolio as pf

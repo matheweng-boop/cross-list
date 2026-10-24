@@ -149,3 +149,4 @@ def test_cross_sell_is_bottom_up_per_system(client):
     assert nav.place("/blocks/cross-sell") == ("systems", "/blocks/cross-sell")
     assert nav.place("/business/attach") == ("systems", "/blocks/cross-sell")
     assert 'aria-current="page" class="on">By part<' in client.get("/business/attach").text
+    assert 'aria-current="page" class="on">Skyworks + Qorvo portfolio<' in client.get("/portfolio").text

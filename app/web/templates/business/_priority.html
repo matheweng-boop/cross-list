@@ -1,0 +1,16 @@
+{# Priority score (app/services/priority.py, owner 25 Oct 2026): a small bar with the number, and the three factors as
+   chips. The tooltip writes the sum out. #}
+{% macro prio_tip(p) %}Priority {{ '%.0f'|format(p.score) }} of 100 = 100 × ({{ '%.2f'|format(p.w.technology) }} × technology {{ '%.2f'|format(p.T) }} + {{ '%.2f'|format(p.w.likeliness) }} × likeliness {{ '%.2f'|format(p.L) }} + {{ '%.2f'|format(p.w.diagrams) }} × diagrams {{ '%.2f'|format(p.D) }}). Likeliness: {{ p.l_basis }}{% endmacro %}
+{% macro prio_bar(e) %}{% set p = e.priority %}<span class="pr-bar" title="{{ prio_tip(p) }}"><span class="pr-track" aria-hidden="true"><span class="pr-fill pr-t-{{ p.t_level or 'none' }}" style="width: {{ '%.0f'|format(p.score) }}%"></span></span><b class="pr-num">{{ '%.0f'|format(p.score) }}</b><span class="visually-hidden"> priority of 100</span></span>{% endmacro %}
+{% macro prio_chips(e) %}{% set p = e.priority %}{% set n = p.n|round(1) %}<span class="pr-chips"><span class="pr-chip pr-t-{{ p.t_level or 'none' }}" title="Technology relation {{ '%.1f'|format(p.T) }}{{ ': ' ~ p.t_help if p.t_help }}">{{ p.t_label }}</span> · <span class="pr-chip" title="Diagrams factor {{ '%.2f'|format(p.D) }} (log scale, most-needed row = 1)">{{ '%g'|format(n) }} diagram{{ 's' if n != 1 }}</span> · <span class="pr-chip pr-l-{{ p.l_label }}" title="Likeliness {{ '%.2f'|format(p.L) }}: {{ p.l_basis }}">{{ p.l_label }}{{ ' (owner)' if p.l_owner }}</span></span>{% endmacro %}
+{# The owner's weight sliders (guests never get them): the same URL parameters wt / wl / wd on Gaps & new technology,
+   its detailed table and Markets #}
+{% macro prio_weights(action, hidden, w, labels, custom, default, reset) %}<form method="get" action="{{ action }}" class="pr-weights" id="pr-weights">
+    {% for k, v in hidden.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+    <p class="small"><b>Try other weights</b> <span class="muted">(owner only; kept in the address, so you can share the link; the same weights work on Gaps &amp; new technology and Markets; guests always see the default)</span></p>
+    {% for k, p in (('technology', 'wt'), ('likeliness', 'wl'), ('diagrams', 'wd')) %}<label class="pr-slider">{{ labels[k] }} <output for="pr-{{ p }}">{{ w[k] }}</output>
+      <input type="range" id="pr-{{ p }}" name="{{ p }}" min="0" max="100" step="5" value="{{ w[k] }}"></label>{% endfor %}
+    <p class="small"><button type="submit" class="small-btn">Apply</button>{% if custom %} <a href="{{ reset }}">Back to the default ({{ default.technology }} / {{ default.likeliness }} / {{ default.diagrams }})</a>{% endif %} <span class="muted">They are scaled to add up to 100.</span></p>
+  </form>
+  <script>(() => { const f = document.getElementById("pr-weights"); if (!f) return;
+    f.querySelectorAll('input[type="range"]').forEach(r => r.addEventListener("input", () => { f.querySelector('output[for="' + r.id + '"]').textContent = r.value; })); })();</script>{% endmacro %}

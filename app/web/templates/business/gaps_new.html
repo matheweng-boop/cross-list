@@ -1,38 +1,77 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import about, company_switch, crowd, path_chip, push, score_chip with context %}
+{% from "business/_priority.html" import prio_bar, prio_chips, prio_weights %}
 {% block title %}Gaps & new technology{% endblock %}
 {% block content %}
 <h1>Gaps &amp; new technology</h1>
-<p class="subtitle muted">Functions the reference diagrams need where {{ co_label }} has no part yet: gaps we could fill on our own technology, and functions that need new technology. “Needed in” counts the reference diagrams ({{ n_library }} library, {{ n_background }} background) that use the function. What we already sell is under <a href="/blocks/cross-sell">Systems &amp; applications › Cross-sell</a>.</p>
-<div class="scope-bar small">{{ company_switch('/business/opportunities', co, companies) }}</div>
+<p class="subtitle muted">Functions the reference diagrams need where {{ co_label }} has no part yet: gaps we could fill on our own technology, and functions that need new technology. Highest priority first: how close it is to our RF and power technology, how likely we can do it, and how many diagrams need it ({{ n_library }} library, {{ n_background }} background). What we already sell is under <a href="/blocks/cross-sell">Systems &amp; applications › Cross-sell</a>.</p>
+{% set sq = '&show=all' if show == 'all' else '' %}
+<div class="scope-bar small">{{ company_switch('/business/opportunities', co, companies, sq ~ wq) }}</div>
+<div class="chip-row pr-filter small"><span class="chip-lbl">Show</span>
+  <a class="fchip{{ ' on' if show != 'all' }}" href="/business/opportunities?co={{ co }}{{ wq }}"{% if show != 'all' %} aria-current="true"{% endif %} title="Technology relation {{ prio.focus_from }} or more">RF &amp; power only</a>
+  <a class="fchip{{ ' on' if show == 'all' }}" href="/business/opportunities?co={{ co }}&show=all{{ wq }}"{% if show == 'all' %} aria-current="true"{% endif %}>All <small>{{ gaps|length + new|length }}</small></a>
+</div>
 <nav class="csg-toc small" aria-label="On this page">
-  <a href="#gaps">1 · Gaps to fill <small>{{ gaps|length }}</small></a>
-  <a href="#new">2 · New technology <small>{{ new|length }}</small></a>
+  <a href="#gaps">1 · Gaps to fill <small>{{ sec.gaps.main|length + sec.gaps.middle|length + sec.gaps.outside|length }}</small></a>
+  <a href="#new">2 · New technology <small>{{ sec.new.main|length + sec.new.middle|length + sec.new.outside|length }}</small></a>
+  <a href="#how">How the score works</a>
 </nav>
 
 {% macro more(items, n) %}{% if items|length > n %}<details class="csg-more small"><summary>Show {{ items|length - n }} more</summary>{{ caller() }}</details>{% endif %}{% endmacro %}
 
-{% macro gap_card(e) %}<article class="csg-card"><b><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></b>
-  <small>Needed in {{ e.reach }} diagram{{ 's' if e.reach != 1 }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM ${{ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
+{% macro gap_card(e) %}<article class="csg-card" data-t="{{ e.priority.t_level or 'none' }}"><b><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></b>
+  {{ prio_bar(e) }}
+  <small>{{ prio_chips(e) }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM ${{ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
   <small>{{ score_chip(e) }} {{ path_chip(e.path, path_label) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}</small>
   <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small></article>{% endmacro %}
 
+{% macro cards(items) %}<div class="csg-grid">{% for e in items[:9] %}{{ gap_card(e) }}{% endfor %}</div>
+  {% call more(items, 9) %}<div class="csg-grid">{% for e in items[9:] %}{{ gap_card(e) }}{% endfor %}</div>{% endcall %}{% endmacro %}
+
+{% macro section(s, empty) %}
+  {% if s.main %}{{ cards(s.main) }}{% elif not (s.middle or s.outside) %}<p class="muted small">{{ empty }}</p>{% endif %}
+  {% if s.middle %}<details class="pr-middle" open><summary class="small"><b>General power and adjacent technology</b> <span class="muted">· {{ s.middle|length }}, technology relation {{ prio.outside_below }} to below {{ prio.focus_from }}</span></summary>{{ cards(s.middle) }}</details>{% endif %}
+  {% if s.outside %}<details class="pr-outside" open><summary class="small"><b>Outside our technology focus</b> <span class="muted">· {{ s.outside|length }}, technology relation below {{ prio.outside_below }}</span></summary>{{ cards(s.outside) }}</details>{% endif %}
+  {% if s.hidden %}<p class="small muted pr-hidden">{{ s.hidden }} more with a weaker technology relation (general power, adjacent or outside our technology): <a href="/business/opportunities?co={{ co }}&show=all{{ wq }}">show all</a>.</p>{% endif %}
+{% endmacro %}
+
 <section class="csg-group csg-gap" id="gaps">
   <h2>1 · Gaps to fill</h2>
-  <p class="small muted">No part of ours yet, but a spec variant or a new design on our technology could cover it (RF band gaps included). Best score first.</p>
-  {% if gaps %}<div class="csg-grid">{% for e in gaps[:9] %}{{ gap_card(e) }}{% endfor %}</div>
-  {% call more(gaps, 9) %}<div class="csg-grid">{% for e in gaps[9:] %}{{ gap_card(e) }}{% endfor %}</div>{% endcall %}
-  {% else %}<p class="muted small">No open gaps.</p>{% endif %}
+  <p class="small muted">No part of ours yet, but a spec variant or a new design on our technology could cover it (RF band gaps included). Highest priority first.</p>
+  {{ section(sec.gaps, 'No open gaps here.' if show == 'all' else 'No RF or power gaps: see All.') }}
 </section>
 
 <section class="csg-group csg-new" id="new">
   <h2>2 · New technology</h2>
-  <p class="small muted">Needs a technology we do not have: partner or acquire.</p>
-  {% if new %}<div class="csg-grid">{% for e in new[:9] %}{{ gap_card(e) }}{% endfor %}</div>
-  {% call more(new, 9) %}<div class="csg-grid">{% for e in new[9:] %}{{ gap_card(e) }}{% endfor %}</div>{% endcall %}
-  {% else %}<p class="muted small">None.</p>{% endif %}
+  <p class="small muted">Needs a technology we do not have: partner or acquire. Highest priority first.</p>
+  {{ section(sec.new, 'None.' if show == 'all' else 'No RF or power items: see All.') }}
 </section>
 
-<p class="small muted">Left out: {{ n_not_ours }} customer parts (chips we do not make){% if n_aside %} and {{ n_aside }} set aside{% endif %}. To sort, filter or set rows aside, open the <a href="/business/explorer/table?co={{ co }}">detailed table</a>.</p>
+{% set w = prio_w %}{% set L = prio.likeliness %}
+<details class="ex-fold pr-how" id="how"><summary><b>How the score works</b> <span class="muted small">· technology {{ w.technology }}% · likeliness {{ w.likeliness }}% · diagrams {{ w.diagrams }}%{{ ' (your weights)' if prio_custom }}</span></summary>
+<div class="small">
+  <p><b>Priority</b> (0–100) = 100 × ({{ '%.2f'|format(w.technology / 100) }} × technology relation + {{ '%.2f'|format(w.likeliness / 100) }} × likeliness + {{ '%.2f'|format(w.diagrams / 100) }} × diagrams). Each of the three is between 0 and 1. Technology relation weighs most, so RF and power work comes first; general power such as an LDO stays listed (under “All”) but below it. The Opportunity score next to it (Quick win, New chip …) is a separate measure: demand, distance, architecture fit, competition and trend (<a href="/business/method#score">method</a>).</p>
+  <p><b>Technology relation</b>: how close the function is to our RF and power strengths. “RF &amp; power only” shows {{ prio.focus_from }} or more. “All” shows every item in three groups, each highest priority first: RF &amp; power ({{ prio.focus_from }} or more), then general power and adjacent technology ({{ prio.outside_below }} to below {{ prio.focus_from }}), then outside our technology focus (below {{ prio.outside_below }}). So an LDO in many diagrams never sits above RF or power work, whatever the weights.</p>
+  <div class="table-wrap"><table class="striped pr-table"><thead><tr><th scope="col" class="n">Value</th><th scope="col">Level</th><th scope="col">Covers</th></tr></thead><tbody>
+    {% for key, lv in prio_levels %}<tr><td class="n">{{ '%.1f'|format(lv.value) }}</td><td><span class="pr-chip pr-t-{{ key }}">{{ lv.label }}</span></td><td>{{ lv.help }}</td></tr>{% endfor %}
+    <tr><td class="n">{{ '%.1f'|format(prio.technology.default) }}</td><td>Not mapped yet</td><td>{% if prio_unmapped %}{{ prio_unmapped|join(', ') }}{% else %}None: every function here is mapped.{% endif %}</td></tr>
+  </tbody></table></div>
+  <p><b>Likeliness</b>: how likely we can build it and win with it, from the feasibility group (the path to product where assessed, else the technology rating; RF band gaps from RF coverage), plus {{ L.platform_bonus }} where a current public platform of ours already serves the function. The owner's review answers replace the value.</p>
+  <div class="table-wrap"><table class="striped pr-table"><thead><tr><th scope="col" class="n">Value</th><th scope="col">Basis</th></tr></thead><tbody>
+    {% for k, f in L.feasibility|dictsort %}<tr><td class="n">{{ '%.2f'|format(f.value) }}</td><td>Feasibility {{ k }} ({{ f.label }}): {{ f.help }}</td></tr>{% endfor %}
+    <tr><td class="n">{{ '%.2f'|format(L.not_assessed) }}</td><td>Not assessed yet</td></tr>
+    <tr><td class="n">{{ '%.2f'|format(L.not_pursue) }}</td><td>Path to product “not ours to build” (only on Markets; left out here)</td></tr>
+    <tr><td class="n">+ {{ L.platform_bonus }}</td><td>A current platform of ours serves it (up to 1.0)</td></tr>
+    {% for label, o in prio_owner %}<tr><td class="n">{{ '%.2f'|format(o.value) }}</td><td>{{ label }}: {{ o.note }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  <p><b>Diagrams</b> = log(1 + n) / log(1 + n<sub>max</sub>), n = the diagrams that need the function{% if prio_top %}, n<sub>max</sub> = {{ '%g'|format(prio_top.priority.n_max) }}{% endif %}. On a log scale, 40 diagrams is not 10 × better than 4. On <a href="/business/markets">Markets</a>, n counts the applications in the markets chosen there; technology relation and likeliness are the same on both pages.</p>
+  {% for label, e in (('Top item', prio_top), ('An LDO', prio_ldo)) if e %}<p class="pr-ex"><b>{{ label }}: {{ e.label }}</b> · {{ e.priority.t_label }} {{ '%.1f'|format(e.priority.T) }} · likeliness {{ '%.2f'|format(e.priority.L) }} ({{ e.priority.l_basis }}) · {{ '%g'|format(e.priority.n) }} diagrams → {{ '%.2f'|format(e.priority.D) }}<br><code>{{ prio_example(e) }}</code></p>{% endfor %}
+  {% if prio_sliders %}
+  {{ prio_weights('/business/opportunities', {'co': co, 'show': 'all' if show == 'all' else ''}, w, prio.labels, prio_custom, prio_default, '/business/opportunities?co=' ~ co ~ sq) }}
+  {% endif %}
+</div>
+</details>
+
+<p class="small muted">Left out: {{ n_not_ours }} customer parts (chips we do not make){% if n_aside %} and {{ n_aside }} set aside{% endif %}. To sort, filter or set rows aside, open the <a href="/business/explorer/table?co={{ co }}{{ wq }}">detailed table</a> (sorted by priority).</p>
 {{ about('explorer') }}
 {% endblock %}

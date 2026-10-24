@@ -1,0 +1,128 @@
+# Why a Skyworks function and a Qorvo function go together in automotive designs (owner, 25 Oct 2026: "find
+# synergies for automotive and make sure that they fit well with the cross-sell system part").
+#
+# Read by app/services/portfolio.py (synergy_notes) for the "Skyworks + Qorvo together here" block on
+# Cross-sell > By system. The pairs themselves are computed from the library diagrams (functions in the same block or
+# in connected blocks, Skyworks leading in one function and Qorvo in the other); this file only adds a plain reason.
+# Key: "<Skyworks function> + <Qorvo function>". source: the library diagram and block the reason is read from
+# (data/blocks/templates.yaml). weak: true = the diagram only links the two by a supply rail or a generic connection;
+# shown as such, never as a strong bundle. No estimates are stated as facts here.
+updated: 2026-10-25
+
+pairs:
+  # --- Car radio ---
+  "antenna_switch + lna":
+    reason: "Both sit in the antenna block: the Skyworks switch picks the antenna path and the Qorvo LNA amplifies it before the tuner."
+    source: "Library diagram: Car radio tuner system, block Antenna & RF"
+  "am_fm_tuner + lna":
+    reason: "The Qorvo LNA is the active-antenna amplifier feeding RF straight into the Skyworks AM/FM/DAB tuner."
+    source: "Library diagrams: Automotive connected radio / entry infotainment (RF amplifier (active antenna LNA) to radio chipset); Car radio tuner system (Antenna & RF to Tuners)"
+  "am_fm_tuner + pmic":
+    reason: "The Qorvo PMIC makes the tuner rails (1.8 V / 3.3 V); a supply link, not an RF bundle."
+    source: "Library diagram: Car radio tuner system, Power rail to Tuners"
+    weak: true
+  "single_chip_radio + pmic":
+    reason: "The Qorvo PMIC supplies the Skyworks radio chipset rails; a supply link only."
+    source: "Library diagram: Automotive connected radio / entry infotainment, Power management IC to Radio chipset"
+    weak: true
+  "rf_frontend + wifi_fem":
+    reason: "Same Wi-Fi front-end block, one module per antenna: a Skyworks automotive FEM on one band and a Qorvo Wi-Fi FEM on the other."
+    source: "Library diagram: Automotive connected radio / entry infotainment, block Wi-Fi front-end modules + diplexer (per antenna)"
+  "rf_frontend + diplexer":
+    reason: "The Qorvo diplexer splits one antenna between the Wi-Fi bands that the Skyworks FEMs serve, in the same block."
+    source: "Library diagram: Automotive connected radio / entry infotainment, block Wi-Fi front-end modules + diplexer (per antenna)"
+  "load_switch + wide_vin_buck":
+    reason: "Off-battery power: the Qorvo wide-input buck makes the system rail and the Skyworks load switch turns branches of it on and off."
+    source: "Library diagrams: Automotive infotainment head unit (Off-battery power); Automotive telematics control unit (Telematics system power); ADAS domain controller (Vehicle data interface)"
+  # --- Telematics and V2X ---
+  "diversity_rx_module + pa_module":
+    reason: "One cellular front end: the Skyworks Sky5A diversity receive module and the Qorvo PA module share the automotive cellular RFFE block."
+    source: "Library diagrams: Automotive telematics (Cellular RF front end (automotive)); Automotive telematics / connectivity (Automotive cellular RFFE)"
+  "antenna_switch + pa_module":
+    reason: "Same cellular front-end block: the Skyworks antenna switch routes the Qorvo PA module's output to the antennas."
+    source: "Library diagrams: Automotive telematics; Automotive telematics / connectivity (cellular RFFE block)"
+  "clock_buffer + lna":
+    reason: "Both are listed in the TCU's wireless connectivity block: a Skyworks clock buffer and a Qorvo LNA on the same radio board."
+    source: "Library diagram: Automotive telematics control unit (TCU) / V2X module, block Wireless connectivity"
+  "load_switch + buck_boost":
+    reason: "Telematics system power: the Qorvo buck-boost holds the modem rail through battery dips, the Skyworks load switch gates its loads."
+    source: "Library diagram: Automotive telematics control unit (TCU) / V2X module, block Telematics system power (9 V, 5 V, 3.3 V, 3.8-4.2 V modem rail)"
+  "clock_buffer + buck_boost":
+    reason: "The Qorvo buck-boost supplies the connectivity block that the Skyworks clock buffer sits in; a supply link only."
+    source: "Library diagram: Automotive telematics control unit (TCU) / V2X module"
+    weak: true
+  "clock_buffer + wide_vin_buck":
+    reason: "The Qorvo off-battery buck feeds the system rails behind the connectivity block that the Skyworks clock buffer sits in; a supply link only."
+    source: "Library diagram: Automotive telematics control unit (TCU) / V2X module, Off-battery power"
+    weak: true
+  "current_sensor + wide_vin_buck":
+    reason: "The Skyworks current sensor watches the off-battery input that the Qorvo buck converts; a supply link only."
+    source: "Library diagram: Automotive telematics control unit (TCU) / V2X module, Off-battery power to Current & voltage sense"
+    weak: true
+  "audio_amp + lna":
+    reason: "eCall hands-free audio and the wireless block are connected in the TCU diagram; no direct electrical bundle."
+    source: "Library diagram: Automotive telematics control unit (TCU) / V2X module, Hands-free (eCall audio) to Wireless connectivity"
+    weak: true
+  "gnss_lna + filter_saw_baw":
+    reason: "GNSS receive chain: the Skyworks GNSS LNA and the Qorvo SAW/BAW filter sit in the same GNSS block."
+    source: "Library diagram: V2X unit with two antenna paths, standalone or companion to the TCU, block GNSS (position and time for every message)"
+  # --- ADAS and sensing ---
+  "gate_driver + wide_vin_buck":
+    reason: "LiDAR laser signal generation: the Skyworks driver fires the laser switch, the Qorvo wide-input buck makes its supply, in the same block."
+    source: "Library diagram: Automotive LiDAR module, block Laser signal generation"
+  # --- Electric powertrain / Battery and power distribution ---
+  "isolated_dcdc + pmic":
+    reason: "Low-voltage supply from the HV side: the Skyworks isolated DC/DC crosses the barrier and the Qorvo PMIC makes the logic rails from it."
+    source: "Library diagrams: Three-level T-type traction inverter (block 800-12 V isolated buck + PMIC); Fuel cell control unit; HEV/EV traction inverter"
+  "isolated_dcdc + wide_vin_buck":
+    reason: "Auxiliary power: Skyworks isolated DC/DC for the HV-side bias, Qorvo wide-input buck for the low-voltage rails, in the same aux-power block."
+    source: "Library diagram: HEV/EV HV-to-LV DC/DC converter, block Aux power"
+  "load_switch + pmic":
+    reason: "The Skyworks load switch protects and switches the 12 V input that feeds the Qorvo PMIC; a supply link."
+    source: "Library diagrams: HEV/EV traction inverter (LV battery input & protection to LV power / PMIC); HEV/EV vehicle control unit"
+    weak: true
+  "digital_isolator + battery_monitor":
+    reason: "Cell monitoring: the Skyworks digital isolator carries the Qorvo battery monitor's data across the HV barrier, in the same block."
+    source: "Library diagram: Fuel cell control unit (FCCU), block Cell monitoring"
+  "digital_isolator + motor_controller":
+    reason: "The Qorvo motor controller talks to the vehicle CAN bus through the Skyworks isolator."
+    source: "Library diagram: Automotive 48 V BLDC drive, 1 kW (Controller to CAN through isolator)"
+  "optocoupler + battery_monitor":
+    reason: "Skyworks optocouplers carry the enable and fault lines of the Qorvo battery management ICs across the isolation barrier."
+    source: "Library diagram: EV battery management system (daisy-chained battery front ends), isolation barrier block"
+  "current_sensor + battery_monitor":
+    reason: "Pack current from the Skyworks sensor and cell voltages from the Qorvo battery monitor together give the state of charge; same junction-box block in one diagram."
+    source: "Library diagrams: EV high-voltage battery management system (Battery junction box: battery pack monitor); Automotive low-voltage battery system; EV battery management system"
+  "rs485_transceiver + pmic":
+    reason: "The Qorvo PMIC powers the vehicle network interface the Skyworks transceiver serves; a supply link only."
+    source: "Library diagram: EV battery management system (PMIC from 12 V battery to Vehicle network)"
+    weak: true
+  "gate_driver + power_loss_protection":
+    reason: "In the HV-to-LV converter the Skyworks isolated gate drivers run the rectifier that feeds the 12 V circuit breaker built with the Qorvo protection part."
+    source: "Library diagram: HEV/EV HV-to-LV DC/DC converter (secondary rectifier to Circuit breaker (HSSC) to 12 V battery)"
+  "load_switch + power_loss_protection":
+    reason: "Both sit in the 12 V circuit-breaker block: Qorvo protection device and Skyworks load switch on the battery output."
+    source: "Library diagram: HEV/EV HV-to-LV DC/DC converter, block Circuit breaker (HSSC) to 12 V battery"
+  # --- Charging ---
+  "gate_driver + pmic":
+    reason: "Charger power stages: Skyworks isolated gate drivers on the GaN/SiC bridges, Qorvo PMIC for the housekeeping and bias rails."
+    source: "Library diagrams: 3.3 kW integrated OBC + HV-to-LV DC/DC; 6.6 kW bidirectional on-board charger; Wireless EV charging ground assembly"
+  "load_switch + motor_controller":
+    reason: "Thermal management block of the on-board charger: Qorvo motor controller for the fan or pump, Skyworks load switch on its supply."
+    source: "Library diagram: HEV/EV on-board charger (two-stage PFC + isolated DC/DC), block Thermal management"
+  "led_driver + motor_controller":
+    reason: "Connector control and indicators block of the on-board charger: Skyworks LED driver for the indicators next to the Qorvo controller."
+    source: "Library diagram: HEV/EV on-board charger (two-stage PFC + isolated DC/DC), block Connector control & diagnostics + indicators"
+  # --- UWB in the car (access and cabin sensing) ---
+  "crystal_oscillator + pmic":
+    reason: "In the in-cabin radar module the Qorvo PMIC supplies the radar front end that the Skyworks oscillator clocks; a supply link only."
+    source: "Library diagram: Automotive in-cabin 60 GHz radar module (System power supply to Radar front end and processing)"
+    weak: true
+  "crystal_oscillator + wide_vin_buck":
+    reason: "The Qorvo wide-input buck supplies the block the Skyworks oscillator clocks; a supply link only."
+    source: "Library diagram: Automotive in-cabin 60 GHz radar module (System power supply to Radar front end and processing)"
+    weak: true
+  "rf_frontend + wide_vin_buck":
+    reason: "On the phone-as-a-key BLE module the Qorvo buck makes the rail for the BLE radio and its Skyworks front end; a supply link only."
+    source: "Library diagram: Automotive phone-as-a-key (PaaK) module with BLE satellite modules (Power supply to RF interface)"
+    weak: true

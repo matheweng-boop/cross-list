@@ -112,3 +112,19 @@ def bottom_up(session, idx: list[int], mine: frozenset, n_parts: int = 12) -> di
     pairs = op.cross_sell_pairs(apps, limit=10)
     return {"apps": apps, "ours": ours, "pairs": pairs, "n_gaps": sum(e["status"] != "supported" for e in rows),
             "n_in_scope": len(rows)}  # fmt: skip
+
+
+def places(idx) -> list[dict]:
+    """The sub-systems a set of library diagrams sits in, most diagrams first: system and sub-system keys and titles
+    and how many of the diagrams are in each (for links from a pair or a function to Cross-sell › By system)."""
+    keep = set(idx)
+    out = [{"system": s["key"], "sub": x["key"], "title": x["title"], "system_title": s["title"],
+            "n": len(keep.intersection(x["idx"]))} for s in systems() for x in s["subsystems"]]  # fmt: skip
+    return sorted((p for p in out if p["n"]), key=lambda p: -p["n"])
+
+
+def places_of_function(fn: str) -> list[dict]:
+    """The sub-systems whose diagrams use a function (Cross-sell › By part: from a part to its systems)."""
+    from app.services import opportunity as op
+
+    return places(a.i for a in op.applications() if not a.background and any(p.fn == fn for p in a.positions))

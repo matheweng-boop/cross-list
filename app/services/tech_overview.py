@@ -1,8 +1,8 @@
 """Shareable > Technology overview: a short brief on the Skyworks + Qorvo portfolio for readers outside the company.
 
 The words come from data/business/tech_overview.yaml; everything countable is built here from the site's data, so the
-page follows the catalogue: part and family counts (the same grouping as Products > Skyworks + Qorvo), who holds each
-technology platform (data/business/capabilities.yaml) and the "up to" figures (catalogue specifications).
+page follows the catalogue: part and family counts (the same grouping as Cross-sell > Skyworks + Qorvo portfolio),
+who holds each technology platform (data/business/capabilities.yaml) and the "up to" figures (catalogue specifications).
 """
 
 import re

@@ -12,7 +12,7 @@
 </nav>
 
 <div class="pf-totals">
-  {% for m in ('Skyworks', 'Qorvo') %}<div class="pf-total ln-{{ m|lower }}"><b>{{ m }}</b><span class="pf-num">{{ '{:,}'.format(ov.totals[m]) }}</span><small>active parts · {{ ov.both|length + ov[m]|length }} functions, {{ ov[m]|length }} only {{ m }}</small></div>{% endfor %}
+  {% for m in ('Skyworks', 'Qorvo') %}<div class="pf-total ln-{{ m|lower }}"><b>{{ m }}</b><span class="pf-num">{{ '{:,}'.format(cats.totals[m]) }}</span><small>active parts · {{ ov.both|length + ov[m]|length }} functions, {{ ov[m]|length }} only {{ m }}</small></div>{% endfor %}
 </div>
 
 <h2 id="competence">Core competence</h2>
@@ -52,7 +52,7 @@
 {% else %}<p class="muted small">The curated comparison is being prepared.</p>{% endif %}
 
 {# each cell: Skyworks count (blue, square, left), Qorvo count (orange, round, right), competitors (grey); the broader line is filled #}
-{% macro pill(m, n, lead) %}{% set big = lead in ('both', m) %}<span class="pf-n pf-{{ 'sky' if m == 'Skyworks' else 'qor' }}{{ ' on' if big and n }}{{ ' zero' if not n }}">{{ n }}</span>{% endmacro %}
+{% macro pill(m, n, lead) %}{% set big = lead in ('both', m) %}<span class="pf-n pf-{{ 'sky' if m == 'Skyworks' else 'qor' }}{{ ' on' if big and n }}{{ ' zero' if not n }}">{{ '{:,}'.format(n) if n is number else n }}</span>{% endmacro %}
 <h2 id="categories">Product categories</h2>
 <p class="small muted">Every active Skyworks and Qorvo catalogue part, sorted into shared product categories: what each company brings to the combined portfolio.</p>
 <div class="pf-bkey small" aria-label="What the table shows">

@@ -8,10 +8,10 @@ from sqlalchemy import func, select
 from app.models import BlockDiagram, SiteFeedback
 from app.services import blocks, walk
 from app.services.seed import load_file
-from tests.test_pipeline import ROOT, ids, real  # noqa: F401  (fixture)
+from tests.conftest import ROOT, ids
 
 
-def test_steps_only_when_asked(client, real):  # noqa: F811
+def test_steps_only_when_asked(client, real):
     comp = ids(client, "ISO7741DBQR")
     page = client.get(f"/parts/{comp}").text
     assert f"/parts/{comp}/walk?upto=2" in page and "Next: 2 Sell around it" in page
@@ -22,7 +22,7 @@ def test_steps_only_when_asked(client, real):  # noqa: F811
     assert any(v in five for v in walk.VERDICTS.values())
 
 
-def test_gaps_go_to_site_feedback_once(client, session, real):  # noqa: F811
+def test_gaps_go_to_site_feedback_once(client, session, real):
     comp = ids(client, "ISO7741DBQR")
 
     def n():
@@ -41,12 +41,12 @@ def test_gaps_go_to_site_feedback_once(client, session, real):  # noqa: F811
     assert "found walking through" in client.get("/manage/feedback").text or rows == []
 
 
-def test_function_page_links_back(client, real):  # noqa: F811
+def test_function_page_links_back(client, real):
     html = client.get("/business/evidence/digital_isolator").text
     assert "Walk through from a competitor part" in html and "/walk" in html
 
 
-def test_sell_around_it_from_the_customer_view(client, real):  # noqa: F811
+def test_sell_around_it_from_the_customer_view(client, real):
     comp = ids(client, "ISO7741DBQR")
     html = client.get(f"/parts/{comp}/walk").text
     assert "You want ISO7741DBQR in this application" in html and "we also have" in html
@@ -57,7 +57,7 @@ def test_sell_around_it_from_the_customer_view(client, real):  # noqa: F811
     assert 'data-q="motor"' in html  # quick picks: general categories over the cards
 
 
-def test_applications_searchable_by_general_category(client, real):  # noqa: F811
+def test_applications_searchable_by_general_category(client, real):
     comp = ids(client, "ISO7741DBQR")
 
     def shown(q):
@@ -87,7 +87,7 @@ def _design(html):
     return json.loads(re.search(r'id="bk-design">(.*?)</script>', html, re.S).group(1))
 
 
-def test_add_part_to_an_application(client, session, real):  # noqa: F811
+def test_add_part_to_an_application(client, session, real):
     tpl = next(i for i, t in enumerate(blocks.templates()) if "digital_isolator" in blocks.template_functions(t))
     design = _design(client.get(f"/blocks/new?template={tpl}&place=ISO7741DBQR&fn=digital_isolator").text)
     assert design["id"] is None and "placed in" in design["prefill"]
@@ -119,7 +119,7 @@ def test_case_only_for_a_part_we_cannot_cross(client, session):
     assert 'action="/pipeline/new"' in client.get(f"/parts/{comp}/walk").text
 
 
-def test_no_case_when_we_can_cross_it(client, real):  # noqa: F811
+def test_no_case_when_we_can_cross_it(client, real):
     """Owner, 22 Oct 2026: a part counts as crossed only with a drop-in; our own parts never get the button."""
     dropin = ids(client, "SC141")  # SR8641 (ours) is a drop-in
     for html in (client.get(f"/parts/{dropin}").text, client.get(f"/parts/{dropin}/walk?upto=5").text):

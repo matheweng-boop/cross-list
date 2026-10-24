@@ -16,7 +16,7 @@ from app.services.cross_notes import notes_for
 from app.services.pipeline import fn_for_part
 from app.services.queries import crosses_for
 from app.services.seed import load_file
-from tests.test_pipeline import ROOT, ids
+from tests.conftest import ROOT, ids
 
 FILES = ("skyworks_timing", "ti_timing", "sitime_timing")
 FUNCTIONS = {"clock_generator", "jitter_attenuator", "clock_buffer", "pcie_buffer", "crystal_oscillator"}

@@ -1,24 +1,13 @@
 """Data management, owner feedback 21 Oct: TAM estimates instead of Commercial inputs, a file in the Feedback window,
 the Verify next pop-up, yes / no review questions, the compact Overview and the public-sources statement."""
 
-import pytest
 from sqlalchemy import select
 
 from app.models import DataReview, FeedbackAttachment, TamEstimate, Upload, VerifyTask
 from app.services import quality, tam
-from app.services import uploads as up
 from app.web import nav
-from tests.test_pipeline import real  # noqa: F401  (fixture)
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
-
-
-@pytest.fixture
-def tmp_uploads(tmp_path, monkeypatch):
-    d = tmp_path / "uploads"
-    d.mkdir()
-    monkeypatch.setattr(up, "upload_dir", lambda: d)
-    return d
 
 
 # ---- 1. TAM estimates ------------------------------------------------------------------------------------------
@@ -78,7 +67,7 @@ def test_feedback_with_a_file(client, session, tmp_uploads):
 
 
 # ---- 3. Verify next: comparison and answer in one pop-up --------------------------------------------------------
-def test_verify_cross_popup(client, session, real):  # noqa: F811
+def test_verify_cross_popup(client, session, real):
     html = client.get("/manage/verify").text
     crosses = session.scalars(select(VerifyTask).where(VerifyTask.kind == "cross", VerifyTask.status == "open")).all()
     assert crosses

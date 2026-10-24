@@ -79,7 +79,7 @@ def test_not_enough_data_instead_of_blanks(client, session, lists):
     b = client.post("/pricing/builder", data={"mpn": "NO-SUCH-PART-9", "qty": "1", "do": "price"}).text
     assert b.count("Not Enough Data") >= 8  # the part's 4 prices and the 4 system totals
     assert "—" not in b.split('id="pb-result"')[1] and "nan" not in b.split('id="pb-result"')[1].lower()
-    from tests.test_pipeline import ids
+    from tests.conftest import ids
 
     panel = client.get(f"/pricing/{ids(client, 'SI86S641EC-IS1')}/model").text  # no prices cached
     assert panel.count("Not Enough Data") >= 1 + 3 * 3  # the note and low / target / high at 3 volumes

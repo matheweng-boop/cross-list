@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.models import PriceQuote
 from app.services import price_model as pm
-from tests.test_pipeline import ids, real  # noqa: F401  (fixture)
+from tests.conftest import ids
 
 BREAKS = [[1, 2.50], [10, 2.10], [100, 1.60], [1000, 1.20], [2500, 1.05]]
 
@@ -27,7 +27,7 @@ def test_fit_and_package_classes():
     assert 0.01 < pm._die_cost(1.2, 200, 750, 0.1) < 0.1
 
 
-def test_band_floor_and_calls(client, session, part, real):  # noqa: F811
+def test_band_floor_and_calls(client, session, part, real):
     p = part("ISO7741DBQR")
     _quote(session, p.id)
     m = pm.model(session, p, session.scalar(select(PriceQuote).where(PriceQuote.part_id == p.id)))
@@ -46,14 +46,14 @@ def test_band_floor_and_calls(client, session, part, real):  # noqa: F811
     assert client.post(f"/pricing/{p.id}/call", data={"verdict": "cheap"}).status_code == 400
 
 
-def test_no_quote_says_what_is_missing(client, real):  # noqa: F811
+def test_no_quote_says_what_is_missing(client, real):
     pid = ids(client, "SI86S641EC-IS1")
     html = client.get(f"/pricing/{pid}/model").text
     assert "Not Enough Data</b> to model yet" in html
     assert 'id="price-model"' not in client.get(f"/parts/{pid}").text  # no DigiKey and no list price: no panel
 
 
-def test_list_price_when_no_digikey(client, session, part, real):  # noqa: F811
+def test_list_price_when_no_digikey(client, session, part, real):
     assert len(pm.list_prices()) >= 10
     p = part("ISO7741DBQR")  # TI list price tiers from ti.com, no DigiKey quote in the test database
     m = pm.model(session, p, None)
@@ -63,7 +63,7 @@ def test_list_price_when_no_digikey(client, session, part, real):  # noqa: F811
     assert "TI list price" in client.get(f"/pricing/{p.id}/model").text
 
 
-def test_monte_carlo_is_stable_and_ordered(session, part, real):  # noqa: F811
+def test_monte_carlo_is_stable_and_ordered(session, part, real):
     p = part("ISO7741DBQR")
     a, b = pm.model(session, p, None), pm.model(session, p, None)
     assert [r["target"] for r in a["rows"]] == [r["target"] for r in b["rows"]]  # seeded by the part number
@@ -132,7 +132,7 @@ def test_oem_targets_and_our_part_from_a_competitor(client, session):
     assert "Si82900" not in html and 'name="ours"' not in html and "pe-ours" not in html
 
 
-def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
+def test_owner_digikey_tables_in_usd(session, part, real):
     lp = pm.list_prices()["ISO7710FDR"]
     assert lp["currency"] == "EUR" and lp["source"].startswith("DigiKey")
     m = pm.model(session, part("ISO7710FDR"), None)
@@ -140,7 +140,7 @@ def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
     assert abs(m["fit"]["p_end"] - lp["breaks"][-1][1] * pm.usd_rate("EUR")) < 1e-9
 
 
-def test_gross_margin_slider(client, session, part, real):  # noqa: F811
+def test_gross_margin_slider(client, session, part, real):
     p = part("ISO7741DBQR")
     low, high = pm.model(session, p, None, 0.30), pm.model(session, p, None, 0.70)
     assert low["gm"] == 0.30 and high["gm"] == 0.70 and high["cost"]["floor"] > low["cost"]["floor"]
@@ -152,7 +152,7 @@ def test_gross_margin_slider(client, session, part, real):  # noqa: F811
     assert "At 60 % gross margin" in est and 'value="60"' in est
 
 
-def test_fab_scenarios_and_cost_adjustment(client, session, part, real):  # noqa: F811
+def test_fab_scenarios_and_cost_adjustment(client, session, part, real):
     p = part("ISO7741DBQR")
     ext, own = pm.cost(p, None, "external"), pm.cost(p, None, "in_house")
     assert own["levels"]["mid"]["total"] < ext["levels"]["mid"]["total"] and pm.config()["cost_adjust"] == 0.9

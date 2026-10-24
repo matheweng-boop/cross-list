@@ -74,8 +74,6 @@ def test_category_search_finds_the_new_applications():
 
 
 def test_walk_through_offers_the_new_diagrams(client):
-    from tests.test_walk import ids, real  # noqa: F401
-
     names = [blocks.display_name(t) for _, t in _new_templates().values()]
     uses = {u["name"] for u in blocks.function_uses()["digital_isolator"]}
     assert set(names) <= uses

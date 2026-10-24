@@ -2,27 +2,11 @@
 the review queue) or the lines into an existing business case."""
 
 import re
-from pathlib import Path
 
-import pytest
 from sqlalchemy import select
 
 from app.models import Case, VolumeRequest
-from app.services.seed import load_file
-
-ROOT = Path(__file__).resolve().parents[1]
-
-
-@pytest.fixture
-def real(session):
-    for f in ("ti_digital_isolators", "skyworks_si86"):
-        load_file(session, ROOT / "data" / "real" / f"{f}.yaml")
-    session.commit()
-
-
-def ids(client, mpn):
-    r = client.get(f"/find?q={mpn}", follow_redirects=False)
-    return int(r.headers["location"].rsplit("/", 1)[1])
+from tests.conftest import ids
 
 
 def new_case(session, title="Existing case"):

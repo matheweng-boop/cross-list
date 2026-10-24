@@ -129,11 +129,6 @@ def principal(request: Request) -> Principal | None:
     return getattr(request.state, "principal", None)
 
 
-def is_guest(request: Request) -> bool:
-    p = principal(request)
-    return bool(p and p.is_guest)
-
-
 def client_ip(request: Request) -> str:
     """The visitor's address. On Render every request comes through Render's proxy, and uvicorn runs with
     --proxy-headers, so request.client is already the first X-Forwarded-For address; locally it is the socket."""

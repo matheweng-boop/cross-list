@@ -322,8 +322,3 @@ def latest_problems(path: Path | None = None) -> list[dict]:
         if r.get("status") in LINK_PROBLEMS and r.get("url") in uses:  # a link removed since then is done
             out.append({**r, "checked": str(data.get("checked") or ""), "uses": uses[r["url"]]})
     return out
-
-
-def clear_cache() -> None:
-    _links.cache_clear()
-    _markers.cache_clear()

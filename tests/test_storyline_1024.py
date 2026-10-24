@@ -104,13 +104,6 @@ def test_hot_swap_storyline_is_the_owners_example(client):
     assert 'href="/business/reports/iso-current-sense-charging">→ the case' in page
 
 
-CHROMIUM = Path("/opt/pw-browsers/chromium")
-
-
-def _chromium() -> str | None:
-    return str(CHROMIUM) if CHROMIUM.exists() else None  # never "playwright install"
-
-
 @pytest.mark.browser
 def test_report_pages_fit_390px(client, chromium):
     """Uses the session's shared browser (tests/conftest.py): a second Playwright in one run is refused."""

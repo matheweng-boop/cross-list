@@ -36,7 +36,6 @@ from app.web.urls import local_path
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
 templates.env.globals["bo_help"] = op.explanations
-_CROWD = {"low": 0, "medium": 1, "high": 2}
 
 
 def _ctx(session: Session, co: str, scope: str = "all") -> dict:

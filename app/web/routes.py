@@ -18,7 +18,6 @@ from app.matching.engine import (
     CATEGORY_ORDER,
     CATEGORY_SHORT,
     DEFAULT_MAX_DEVIATIONS,
-    FFF_STATUS_LABELS,
     format_value,
     ranked,
 )
@@ -54,7 +53,6 @@ templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 templates.env.globals.update(
     lifecycle_badge=lifecycle.badge,
     category_labels=CATEGORY_LABELS,
-    fff_labels=FFF_STATUS_LABELS,
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
     pricing_enabled=pricing.enabled,
     has_list_price=price_model.has_list_price,
@@ -128,7 +126,6 @@ templates.env.globals.update(
     nav_icons=nav.ICONS,
     nav_homes=nav.HOMES,
     page_title=nav.page_title,
-    page_label=nav.page_label,
     owner_page=nav.owner_page,
 )
 
@@ -263,9 +260,6 @@ def index(
            "qual_label": labels.GRADE_LABELS, "cap_label": products.CAPABILITIES,
            "life_label": lifecycle.CLASS_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "index.html", ctx)
-
-
-CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
 def result_rows(crosses: dict) -> list:

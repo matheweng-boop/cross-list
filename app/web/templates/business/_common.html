@@ -7,22 +7,6 @@
 {% endmacro %}
 {% macro status_chip(s, labels) %}<span class="bo-st st-{{ s }}" title="{{ bo_status_help[s] }}">{{ labels[s] }}</span>{% endmacro %}
 {% macro crowd(c, labels) %}{% if c %}<span class="bo-crowd cr-{{ c.crowding }}" title="{{ c.vendors|map('vendor')|join(', ') }}{{ ' – ' ~ c.note if c.note }}">{{ labels[c.crowding] ~ ' · ' ~ c.vendors|length if c.vendors else 'No established supplier' }}</span>{% else %}<span class="muted small">not assessed</span>{% endif %}{% endmacro %}
-{% macro glossary(co_label) %}
-<details class="bo-help"><summary class="small"><b>How to read this</b></summary>
-  <dl class="small">
-    <dt>Application</dt><dd>One end system from the block-diagram library (e.g. an EV on-board charger, a Wi-Fi access point). The library has the
-      applications listed on the Applications page; each is a block diagram built from public reference designs.</dd>
-    <dt>Needed in</dt><dd>How many of these applications have that function in their diagram. 29 of 56 = 29 diagrams contain it.</dd>
-    <dt>Door opener (portfolio anchor)</dt><dd>Of the applications that need the missing function, how many already contain at least one
-      {{ co_label }} part elsewhere in the diagram. There we already talk to the designer, so a new product is easier to place. Open a row to
-      see which of our functions they use.</dd>
-    <dt>Blocks (design-in positions)</dt><dd>Places on the board the function fills, summed over the applications. A diagram with two
-      LDOs counts 2: one product could win both blocks.</dd>
-    <dt>Competition</dt><dd>How many established suppliers sell this function (public catalogues, indicative only, not market share).
-      Hover to see them. A crowded market makes a new product harder to justify.</dd>
-  </dl>
-</details>
-{% endmacro %}
 {% macro term(key, text=none) %}{% set t = bo_help().terms.get(key) %}<span class="bo-term" tabindex="0" title="{{ t.short if t else '' }}">{{ text or (t.term if t else key) }}</span>{% endmacro %}
 {% macro about(page) %}{% set p = bo_help().pages.get(page) %}{% if p %}
 <details class="bo-about" data-about="{{ page }}">

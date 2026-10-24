@@ -44,7 +44,6 @@ LIFECYCLE_RISK = {LifecycleStatus.nrnd, LifecycleStatus.last_time_buy, Lifecycle
 CATEGORY_SHORT = {"fff": "Drop-in", "functional": "Functional", "package": "Package eq."}
 # FFF status: an engineer may reject an FFF cross
 FFF_AUTO, FFF_REJECTED = "auto", "rejected"
-FFF_STATUS_LABELS = {FFF_AUTO: "FFF", FFF_REJECTED: "FFF – rejected"}
 
 
 @dataclass

@@ -147,6 +147,9 @@
   const PAL = ["#b8452a", "#c27a00", "#8a6d00", "#6b7480", "#2a6fdb", "#1d4fa0", "#5a3fc0", "#8a2fb0", "#0f8a6a", "#0a6d8f",
     "#2f7fb5", "#3d8a3d", "#a0233c", "#c2410c", "#7a5c2e", "#4b5bb0", "#9b2f6b", "#9aa3ad"];
   const TCOL = Object.fromEntries(D.types.map((t, i) => [t.id, PAL[i % PAL.length]]));
+  // label text in the band colours, darkened (same hue) to at least 4.5:1 on the page (owner, 24 Oct 2026); fills keep PAL
+  const DARK = {"#c27a00": "#996000", "#8a6d00": "#856900", "#6b7480": "#666f7a", "#2a6fdb": "#246ad7", "#0f8a6a": "#0e7c5f",
+    "#2f7fb5": "#2a72a3", "#3d8a3d": "#377c37", "#9aa3ad": "#646f7b"};
   const BAND = Object.fromEntries(D.bands.map(b => [b.id, b]));
   const typeOn = new Set(D.types.filter(t => !t.hide).map(t => t.id));
   let app = "";
@@ -222,7 +225,7 @@
     el.innerHTML = o.join("");
     // the overlaps in words, and the bands shown as buttons (the bars are small on a phone)
     const MAXO = 14;
-    document.querySelector(".rbt-ov").innerHTML = ov.length ? `<b>Where the types shown overlap</b><ul>${ov.slice(0, MAXO).map(s => `<li><span class="rbt-f">${fmt(s.lo)}–${fmt(s.hi)}</span> ${s.who.map(([t, n]) => `<b style="color:${TCOL[t.id]}">${esc(t.label)}</b> (${esc(n.join(", "))})`).join(" · ")}</li>`).join("")}</ul>${ov.length > MAXO ? `<p class="muted">and ${ov.length - MAXO} more: zoom in, hide types or pick an application.</p>` : ""}` : "";
+    document.querySelector(".rbt-ov").innerHTML = ov.length ? `<b>Where the types shown overlap</b><ul>${ov.slice(0, MAXO).map(s => `<li><span class="rbt-f">${fmt(s.lo)}–${fmt(s.hi)}</span> ${s.who.map(([t, n]) => `<b style="color:${DARK[TCOL[t.id]] || TCOL[t.id]}">${esc(t.label)}</b> (${esc(n.join(", "))})`).join(" · ")}</li>`).join("")}</ul>${ov.length > MAXO ? `<p class="muted">and ${ov.length - MAXO} more: zoom in, hide types or pick an application.</p>` : ""}` : "";
     const shownBands = [...new Map(lanes.flatMap(L => L.list.map(b => [b.id, [b, L.t]]))).values()];
     document.querySelector(".rbt-list").innerHTML = shownBands.length && (app || shownBands.length <= 30) ? `<b>Bands shown (${shownBands.length})</b> <span class="muted">· click one for the parts that cover it</span><div class="rbt-bl">${shownBands.map(([b, t]) => `<button type="button" class="rbt-b rb-band${b.id === selected ? " on" : ""}" data-id="${b.id}" style="--c:${TCOL[t.id]}">${esc(shortName(b))} <small>${fmt(lo(b))}–${fmt(hi(b))}</small></button>`).join("")}</div>` : "";
   }

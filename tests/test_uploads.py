@@ -8,12 +8,7 @@ PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 PDF = b"%PDF-1.7\n" + b"x" * 64
 
 
-@pytest.fixture(autouse=True)
-def tmp_uploads(tmp_path, monkeypatch):
-    d = tmp_path / "uploads"
-    d.mkdir()
-    monkeypatch.setattr(up, "upload_dir", lambda: d)
-    return d
+pytestmark = pytest.mark.usefixtures("tmp_uploads")  # tests/conftest.py
 
 
 def test_sniff_accepts_only_raster_images_and_pdf():

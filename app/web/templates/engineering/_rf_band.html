@@ -12,7 +12,7 @@
   <summary><b>{{ g.label }}</b> <small class="muted">{{ g.specific|length }} band-specific{% if g.wide %} · {{ g.wide|length }} wideband{% endif %}</small></summary>
   {% if g.specific %}<ul class="small">{% for p in g.specific[:15] %}<li><a href="/find?q={{ p.mpn|urlencode }}">{{ p.mpn }}</a> <span class="muted">{{ p.manufacturer|vendor }} · {% for lo, hi in p.shown %}{{ fq(lo, hi) }}{{ ', ' if not loop.last }}{% endfor %} · {{ (p.description|desc(p.mpn))|truncate(90, end='…') }}</span></li>{% endfor %}
     {% if g.specific|length > 15 %}<li class="muted">and {{ g.specific|length - 15 }} more</li>{% endif %}</ul>{% endif %}
-  {% if g.wide %}<details class="small rb-wide"><summary>{{ g.wide|length }} wideband part{{ 's' if g.wide|length != 1 }} that also cover it</summary>
+  {% if g.wide %}<details class="small rb-wide"><summary>{{ g.wide|length }} wideband part{{ "s" if g.wide|length != 1 }} that also cover{{ "s" if g.wide|length == 1 }} it</summary>
     <p>{% for p in g.wide[:40] %}<a href="/find?q={{ p.mpn|urlencode }}" title="{{ p.manufacturer|vendor }} · {{ fq(p.shown[0][0], p.shown[0][1]) }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% if g.wide|length > 40 %} …{% endif %}</p></details>{% endif %}
 </details>
 {% else %}<p class="small muted">No active part of ours states a frequency range that covers this band. That can be a gap, or parts whose data sheet summary gives no frequency.</p>{% endfor %}

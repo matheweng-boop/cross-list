@@ -4,7 +4,6 @@ from sqlalchemy import select
 
 from app.models import DataReview, SiteFeedback, VerifyTask
 from app.services import verify
-from tests.test_pipeline import real  # noqa: F401  (fixture)
 
 
 def _open(session, kind):
@@ -12,7 +11,7 @@ def _open(session, kind):
     return session.scalars(select(VerifyTask).where(VerifyTask.kind == kind, VerifyTask.status == "open")).all()
 
 
-def test_batches_refill_per_kind(client, session, real):  # noqa: F811
+def test_batches_refill_per_kind(client, session, real):
     html = client.get("/manage/verify").text
     assert "Verify next" in html and "Crosses" in html and "Block diagrams" in html
     crosses, diagrams, data = _open(session, "cross"), _open(session, "diagram"), _open(session, "data")
@@ -31,7 +30,7 @@ def test_batches_refill_per_kind(client, session, real):  # noqa: F811
     assert session.scalar(select(SiteFeedback).where(SiteFeedback.author == verify.AUTHOR)) is not None
 
 
-def test_data_answer_feeds_the_score_reviews(client, session, real):  # noqa: F811
+def test_data_answer_feeds_the_score_reviews(client, session, real):
     client.get("/manage/verify")
     t = _open(session, "data")[0]
     client.post(f"/manage/verify/{t.id}", data={"result": "ok"})
@@ -41,7 +40,7 @@ def test_data_answer_feeds_the_score_reviews(client, session, real):  # noqa: F8
     assert client.post(f"/manage/verify/{t.id}", data={"result": "ok"}).status_code == 404  # done once
 
 
-def test_data_batch_includes_a_library_rule(client, session, real):  # noqa: F811
+def test_data_batch_includes_a_library_rule(client, session, real):
     client.get("/manage/verify")
     rule = next(t for t in _open(session, "data") if t.detail["topic"] == "library")
     assert rule.key.startswith("library:") and rule.detail["claim"]
@@ -51,7 +50,7 @@ def test_data_batch_includes_a_library_rule(client, session, real):  # noqa: F81
     assert row is not None and row.verdict == "correct"
 
 
-def test_only_a_few_shown_and_the_rest_wait(client, session, real):  # noqa: F811
+def test_only_a_few_shown_and_the_rest_wait(client, session, real):
     """Owner, 22 Oct 2026: keep more hidden; show the next ones once the shown ones are answered. Larger note field
     and the datasheet links inside the comparison."""
     html = client.get("/manage/verify").text

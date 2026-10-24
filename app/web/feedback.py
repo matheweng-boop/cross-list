@@ -5,11 +5,11 @@ from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.db import get_session
+from app.db import count, get_session
 from app.models import FeedbackAttachment, SiteFeedback, Upload
 from app.services import feedback as fb
 from app.services import inbox as ib
@@ -56,14 +56,14 @@ async def attach_file(item_id: int, client: str = Form(""), file: UploadFile = F
                       session: Session = Depends(get_session)):  # fmt: skip
     """A picture or PDF sent with a feedback item, from the browser that sent the item. Stored like Data management >
     Uploads (same limits, same folder) and linked to the item."""
+
     def refuse(status: int, why: str) -> JSONResponse:  # JSON, so the Feedback window can say why
         return JSONResponse({"detail": why}, status_code=status)
 
     item = session.get(SiteFeedback, item_id)
     if item is None or not client or item.client != client[:40]:
         return refuse(404, "Feedback not found")
-    if session.scalar(select(func.count()).select_from(FeedbackAttachment)
-                      .where(FeedbackAttachment.feedback_id == item_id)) >= MAX_FILES:  # fmt: skip
+    if count(session, FeedbackAttachment, FeedbackAttachment.feedback_id == item_id) >= MAX_FILES:
         return refuse(400, f"At most {MAX_FILES} files per feedback")
     data = await file.read(up.MAX_BYTES + 1)
     if not data:

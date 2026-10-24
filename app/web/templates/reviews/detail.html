@@ -16,7 +16,7 @@
 {% block content %}
 {% set rows = r.rows %}
 <p class="small"><a href="/reviews">← Part reviews</a></p>
-<p class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.app_area }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span> · {{ r.n_feedback }} item{{ 's' if r.n_feedback != 1 }} with feedback</p>
+<p class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.app_area }} · {{ r.date|date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span> · {{ r.n_feedback }} item{{ 's' if r.n_feedback != 1 }} with feedback</p>
 <article class="rpt rv-article">
 <h1>{{ r.title }}</h1>
 <p class="rv-parts">{% for p in r.parts %}<span class="badge">{{ p }}</span> {% endfor %}</p>
@@ -65,7 +65,7 @@
 <ul class="pc-list">{% for x in rows.open_questions %}<li>{{ x.text }}{{ react(x) }}</li>{% endfor %}</ul>{% endif %}
 
 <h2 id="sources">Sources</h2>
-<ol class="small rv-sources">{% for s in r.sources %}<li id="src-{{ s.id }}"><b>[{{ s.id }}]</b> {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.title }}</a>{% else %}{{ s.title }}{% endif %}{% if s.publisher %} · {{ s.publisher }}{% endif %}{% if s.date %} · {{ s.date }}{% endif %}
+<ol class="small rv-sources">{% for s in r.sources %}<li id="src-{{ s.id }}"><b>[{{ s.id }}]</b> {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.title }}</a>{% else %}{{ s.title }}{% endif %}{% if s.publisher %} · {{ s.publisher }}{% endif %}{% if s.date %} · {{ s.date|date }}{% endif %}
   {% if s.note %}{% if 'unofficial' in s.note %}<span class="rv-unoff" title="{{ unofficial_title }}: not from the maker's own site">unofficial copy</span>{% if s.note != 'unofficial copy' %} <span class="muted">{{ s.note|replace('unofficial copy', '')|trim(' ;,:') }}</span>{% endif %}{% else %}<span class="muted">· {{ s.note }}</span>{% endif %}{% endif %}</li>{% endfor %}</ol>
 </article>
 {% if reqs %}<p class="small">Answers {{ reqs|length }} request{{ 's' if reqs|length != 1 }}: {% for e in reqs %}<a href="/reviews#rq-{{ e.row.id }}">{{ e.row.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}

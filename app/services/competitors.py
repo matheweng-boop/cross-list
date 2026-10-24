@@ -92,16 +92,12 @@ def _load(sig: tuple[tuple[str, float], ...]) -> tuple[tuple[dict, ...], tuple[s
     return tuple(sorted(rows, key=lambda r: r["name"].lower())), tuple(errs)
 
 
-def _sig(folder: Path) -> tuple[tuple[str, float], ...]:
-    return tuple(sorted((str(p), p.stat().st_mtime) for p in folder.glob("*.yaml") if not p.name.startswith("_")))
-
-
 def all_profiles(folder: Path = FOLDER) -> list[dict]:
-    return list(_load(_sig(folder))[0])
+    return list(_load(yamlio.folder_signature(folder))[0])
 
 
 def problems(folder: Path = FOLDER) -> list[str]:
-    return list(_load(_sig(folder))[1])
+    return list(_load(yamlio.folder_signature(folder))[1])
 
 
 def get(slug: str) -> dict | None:

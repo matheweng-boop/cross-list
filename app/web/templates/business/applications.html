@@ -7,15 +7,16 @@
 {{ company_switch('/business/applications', co, companies) }}
 {{ about('applications') }}
 {% set ns = namespace(cat='') %}
+{% set hide_asp = guest_blocked(request, '/business/data') %}
 <div class="table-wrap"><table class="striped bo-apps">
-  <thead><tr><th>{{ term('application', 'Application') }}</th><th>{{ term('coverage', 'Candidate coverage') }}</th><th><span class="bo-term" title="blocks with our part / in-scope blocks">Ours / blocks</span></th><th><span class="bo-term" title="blocks no company in BizDev has a part for">Gaps</span></th><th><span class="bo-term" title="blocks only other companies have parts for">Competitor only</span></th><th>{{ term('asp_tam', 'Content (priced)') }}</th></tr></thead>
+  <thead><tr><th>{{ term('application', 'Application') }}</th><th>{{ term('coverage', 'Candidate coverage') }}</th><th class="n"><span class="bo-term" title="blocks with our part / in-scope blocks">Ours / blocks</span></th><th class="n"><span class="bo-term" title="blocks no company in BizDev has a part for">Gaps</span></th><th class="n"><span class="bo-term" title="blocks only other companies have parts for">Competitor only</span></th>{% if not hide_asp %}<th>{{ term('asp_tam', 'Content (priced)') }}</th>{% endif %}</tr></thead>
   <tbody>
   {% for a, m in rows if not a.background %}
-    {% if a.category != ns.cat %}{% set ns.cat = a.category %}<tr class="bo-cat"><td colspan="6">{{ a.category }}</td></tr>{% endif %}
+    {% if a.category != ns.cat %}{% set ns.cat = a.category %}<tr class="bo-cat"><td colspan="{{ 5 if hide_asp else 6 }}">{{ a.category }}</td></tr>{% endif %}
     <tr><td><a href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a></td>
       <td><div class="bo-bar" title="{{ m.supported }} of {{ m.in_scope }}"><span style="width:{{ ((m.coverage or 0) * 100)|round }}%"></span></div> {{ pct(m.coverage) }}</td>
-      <td>{{ m.supported }}/{{ m.in_scope }}</td><td>{{ m.gap }}</td><td>{{ m.competitor }}</td>
-      <td class="small">{% if m.priced %}{{ usd(m.content_mine) }} of {{ usd(m.content_total) }} <span class="muted">({{ m.priced }}/{{ m.in_scope }} priced)</span>{% else %}<span class="muted">no ASPs</span>{% endif %}</td></tr>
+      <td class="n">{{ m.supported }}/{{ m.in_scope }}</td><td class="n">{{ m.gap }}</td><td class="n">{{ m.competitor }}</td>
+      {% if not hide_asp %}<td class="small">{% if m.priced %}{{ usd(m.content_mine) }} of {{ usd(m.content_total) }} <span class="muted">({{ m.priced }}/{{ m.in_scope }} priced)</span>{% else %}<span class="muted">no ASPs</span>{% endif %}</td>{% endif %}</tr>
   {% endfor %}
   </tbody>
 </table></div>

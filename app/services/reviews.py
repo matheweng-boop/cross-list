@@ -188,10 +188,6 @@ def validate(data, slug: str) -> tuple[dict, list[str]]:
     return r, warnings
 
 
-def _files(folder: Path) -> tuple[tuple[str, float], ...]:
-    return tuple(sorted((str(p), p.stat().st_mtime) for p in folder.glob("*.yaml") if not p.name.startswith("_")))
-
-
 @lru_cache(maxsize=4)
 def _load(sig: tuple[tuple[str, float], ...]) -> tuple[dict[str, dict], list[str], list[str]]:
     out, errors, warnings = {}, [], []
@@ -212,7 +208,7 @@ def _load(sig: tuple[tuple[str, float], ...]) -> tuple[dict[str, dict], list[str
 
 def load_dir(folder: Path) -> tuple[dict[str, dict], list[str], list[str]]:
     """(reviews by slug, errors of files left out, warnings) for every review file in a folder."""
-    return _load(_files(folder))
+    return _load(yamlio.folder_signature(folder))
 
 
 def all_reviews() -> list[dict]:

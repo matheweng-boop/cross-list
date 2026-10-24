@@ -12,11 +12,19 @@ from app.web import nav
 
 def _seed(session):
     t = datetime.now(UTC)
-    session.add_all([CrossRequest(mpn="ZQ1234", note="for customer A", created_at=t - timedelta(hours=3)),
-                     CrossRequest(mpn="ZQ9999", status="done", created_at=t - timedelta(hours=4)),
-                     BlockFeedback(message="Add a boost stage", diagram_name="Inverter", target="Gate driver",
-                                   created_at=t - timedelta(hours=2)),
-                     AreaRequest(area="Robotics", why="Humanoid robots", created_at=t - timedelta(hours=1))])
+    session.add_all(
+        [
+            CrossRequest(mpn="ZQ1234", note="for customer A", created_at=t - timedelta(hours=3)),
+            CrossRequest(mpn="ZQ9999", status="done", created_at=t - timedelta(hours=4)),
+            BlockFeedback(
+                message="Add a boost stage",
+                diagram_name="Inverter",
+                target="Gate driver",
+                created_at=t - timedelta(hours=2),
+            ),
+            AreaRequest(area="Robotics", why="Humanoid robots", created_at=t - timedelta(hours=1)),
+        ]
+    )
     session.commit()
 
 
@@ -67,9 +75,9 @@ def test_requests_actions_post_to_their_own_handlers(client, session):
     assert 'action="/requests" class="request-form"' in html  # adding part requests still works here
 
     r = client.post(f"/requests/{req.id}", data={"status": "in_progress"}, follow_redirects=False)
-    assert r.status_code == 303
+    assert r.status_code == 303 and r.headers["location"] == "/manage/requests?kind=part"  # one hop
     r = client.post(f"/blocks/area-requests/{area.id}", data={"status": "planned"}, follow_redirects=False)
-    assert r.status_code == 303
+    assert r.status_code == 303 and r.headers["location"] == "/manage/requests?kind=area"
     r = client.post(f"/blocks/feedback/{fb.id}", data={"status": "agreed"})  # follows to the Requests tab
     assert r.status_code == 200 and "/manage/requests?kind=diagram" in str(r.url)
     session.expire_all()

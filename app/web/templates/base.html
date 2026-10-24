@@ -11,14 +11,14 @@
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
-<body class="shell{{ ' bare' if bare }}">
+<body class="shell{{ ' bare' if bare }}{{ ' guest' if signed_in(request) and signed_in(request).is_guest }}">
 {% set path = request.url.path %}{% set ns = nav_state(path) %}{% set me = signed_in(request) %}{% set guest = me and me.is_guest %}
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
   <div class="head-row">
     <a href="/" class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M7 8h10M7 12h6M7 16h10"/></svg>BizDev</a>
     <nav class="main-nav" aria-label="Sections">
-      {% for key, label, items in nav_sections %}<a href="{{ items[0][1] }}"{% if ns.section == key %} aria-current="true" class="on"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[key]|safe }}</svg>{{ label }}</a>{% endfor %}
+      {% for key, label, items in nav_sections %}<a href="{{ nav_homes.get(key, items[0][1]) }}"{% if ns.section == key %} aria-current="true" class="on"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[key]|safe }}</svg>{{ label }}</a>{% endfor %}
       {% set ukey, ulabel, uitems = nav_utility %}{% if not guest %}<a href="{{ uitems[0][1] }}" class="utility{{ ' on' if ns.section == ukey }}"{% if ns.section == ukey %} aria-current="true"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true">{{ nav_icons[ukey]|safe }}</svg>{{ ulabel }}</a>{% endif %}
     </nav>
     {% if site_locked() %}<span class="sign-out">{% if me and me.is_owner %}<a href="/owner/passkeys" class="my-keys{{ ' on' if path == '/owner/passkeys' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4"/><path d="M10.5 12.5 20 3m-3.5 3.5 3 3m-5.5-.5 2 2"/></svg>My passkeys</a>{% endif %}<a href="/logout" class="small">Sign out</a></span>{% endif %}

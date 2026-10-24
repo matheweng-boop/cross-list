@@ -22,3 +22,20 @@ def test_inbox_needs_its_own_key_and_lists_what_the_owner_said(client, session, 
     assert "ACME" not in r.text and "150000" not in r.text  # requested volumes and customers stay on the site
     bad = client.get("/api/inbox?since=yesterday", headers={"Authorization": "Bearer " + "k" * 40})
     assert bad.status_code == 400
+
+
+def test_inbox_lists_cross_verdicts(client, session, monkeypatch):
+    """A cross verdict in the period used to crash the inbox (the daily run's /api/inbox): the part-number lookup
+    passed a SQLAlchemy result to dict()."""
+    from sqlalchemy import select
+
+    from app.models import CrossFeedback, FeedbackVerdict, Part
+
+    ref, cand = session.scalars(select(Part).order_by(Part.id).limit(2)).all()
+    session.add(CrossFeedback(reference_id=ref.id, candidate_id=cand.id, verdict=FeedbackVerdict.reject,
+                                note="Pins differ"))
+    session.commit()
+    monkeypatch.setattr(get_settings(), "inbox_token", "k" * 40)
+    r = client.get("/api/inbox", headers={"Authorization": "Bearer " + "k" * 40})
+    assert r.status_code == 200
+    assert f"{ref.mpn} -> {cand.mpn}" in r.text and "Pins differ" in r.text

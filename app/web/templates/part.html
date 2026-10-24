@@ -42,8 +42,8 @@
     <tr><th>Package</th><td>{{ part.package.code }}{{ unofficial_mark(part, 'package', uk) }} – {{ part.package.name }} ({{ part.package.body_length_mm }}×{{ part.package.span_mm }} mm, {{ part.package.pin_count }} pins, {{ part.package.pitch_mm }} mm pitch)
       {% if part.package_locked %}<br><span class="badge warn">Package locked</span> <span class="muted">{{ part.package_lock_reason }}</span>{% endif %}</td></tr>
     <tr><th>Lifecycle</th><td>{{ lifecycle_badge(part)[0] }}{% if part.lifecycle_source %} <span class="muted">({{ part.lifecycle_source }})</span>{% endif %}</td></tr>
-    <tr><th>Release date</th><td>{{ part.release_date or 'unknown' }}</td></tr>
-    <tr><th>Datasheet revision</th><td>{{ part.datasheet_revision or 'unknown' }}{% if part.datasheet_date %} ({{ part.datasheet_date }}){% endif %}</td></tr>
+    <tr><th>Release date</th><td>{{ part.release_date|date or 'unknown' }}</td></tr>
+    <tr><th>Datasheet revision</th><td>{{ part.datasheet_revision or 'unknown' }}{% if part.datasheet_date %} ({{ part.datasheet_date|date }}){% endif %}</td></tr>
     <tr><th>DigiKey</th>{% if pricing_enabled() %}<td hx-get="/pricing/{{ part.id }}" hx-trigger="load"><span class="muted"><span class="spinner" aria-hidden="true"></span> Loading price and stock…</span></td>
       {% else %}<td class="muted">Not connected: add a DigiKey API key to see price and stock.</td>{% endif %}</tr>
   </tbody>

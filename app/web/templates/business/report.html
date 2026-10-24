@@ -10,7 +10,7 @@
 <article class="rpt">{% include body %}</article>
 {% else %}
 <p class="small"><a href="/business/reports">← Research &amp; ideas</a></p>
-<p class="rp-meta small">{{ fz.stage(scheduled) }} {{ r.area }} · {{ r.date }}{% if r.sources %} · {{ r.sources }}{% endif %}</p>
+<p class="rp-meta small">{{ fz.stage(scheduled) }} {{ r.area }} · {{ r.date|date }}{% if r.sources %} · {{ r.sources }}{% endif %}</p>
 {{ learn_tab(learn, r.learn_links) }}
 {% for s in r.see_also or [] %}{% set o = report_of(s) %}{% if o %}<p class="small rp-see">See also: <a href="/business/reports/{{ o.slug }}">{{ o.title }}</a></p>{% endif %}{% endfor %}
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}

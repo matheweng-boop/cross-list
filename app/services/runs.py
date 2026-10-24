@@ -4,11 +4,11 @@ weeks (data/manage/schedule.yaml), and the live counts of what tonight's run wil
 import re
 from functools import lru_cache
 
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import yamlio
 from app.config import PROJECT_ROOT
+from app.db import count
 from app.models import AreaRequest
 
 FILE = PROJECT_ROOT / "data" / "manage" / "schedule.yaml"
@@ -66,7 +66,7 @@ def queue(session: Session) -> dict[str, int]:
         "timing_left": len(re.findall(r"^- \[ \]", timing, flags=re.M)),
         "timing_done": len(re.findall(r"^- \[x\]", timing, flags=re.M | re.I)),
         "reviews": sum(e["status"] in ("new", "in_progress") for e in rv.requests(session)),
-        "areas": session.scalar(select(func.count()).select_from(AreaRequest).where(AreaRequest.status == "new")) or 0,
+        "areas": count(session, AreaRequest, AreaRequest.status == "new"),
         "pinouts_left": len(re.findall(r"^- \[ \]", backlog, flags=re.M)),
         "pinouts_done": len(re.findall(r"^- \[x\]", backlog, flags=re.M | re.I)),
         "questions": len(open_questions()),

@@ -15,6 +15,10 @@ from sqlalchemy.orm import Session
 from app.db import get_engine
 from app.main import create_app
 from app.models import Part
+from app.services import uploads as up
+from app.services.seed import load_file
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture
@@ -36,6 +40,29 @@ def part(session):
         return session.scalars(select(Part).where(Part.mpn == mpn)).unique().one()
 
     return get
+
+
+@pytest.fixture
+def real(session):
+    """Real TI and Skyworks digital isolators in the test database (it starts with synthetic parts only)."""
+    for f in ("ti_digital_isolators", "skyworks_si86"):
+        load_file(session, ROOT / "data" / "real" / f"{f}.yaml")
+    session.commit()
+
+
+def ids(client, mpn):
+    """A part's id, from where the search sends an exact part number."""
+    r = client.get(f"/find?q={mpn}", follow_redirects=False)
+    return int(r.headers["location"].rsplit("/", 1)[1])
+
+
+@pytest.fixture
+def tmp_uploads(tmp_path, monkeypatch):
+    """Uploads go to a fresh folder instead of var/."""
+    d = tmp_path / "uploads"
+    d.mkdir()
+    monkeypatch.setattr(up, "upload_dir", lambda: d)
+    return d
 
 
 # --- signing in (passkeys and guests, 23 Oct 2026) --------------------------------------------------------------------

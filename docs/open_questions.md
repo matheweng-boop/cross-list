@@ -8,6 +8,22 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
    own diagram: should each get one. Placements and the Car radio split are settled (below).
 
+## Settled (owner, 24 Oct 2026, site check): "Yes to all"
+
+- Browse products: the Package column is hidden on desktops below 1400 px, so the table no longer scrolls sideways at
+  1280 px; the package stays on each part's page, in the summary line and on phones.
+- Data management › Overview: the tile now reads "Skyworks and Qorvo parts with full data".
+- Touch screens (iPad, phones) only: small buttons and button-like links, Agree / Disagree included, are at least
+  40 px tall; the desktop stays dense.
+- The menu item "Business cases" is now "Shortlist & cases" (title and heading too); the URLs are unchanged.
+- Guests no longer see TAM numbers: the TAM column of the detailed table, TAM on the gap cards, the market size in the
+  walk-through, the TAM basis in score tables, and the ASP-priced content on the application pages are hidden for
+  them (decided by the owner-only list in app/auth/access.py).
+- Numbers are right-aligned in tabular figures in the creepage tables, methodology weights and points, cross-rule
+  priorities, RF coverage, the application coverage table and the detailed table.
+- RF band chart: label colours below 4.5:1 are darkened in the same hue (at least 4.6:1); the bar colours are
+  unchanged.
+
 ## Settled (owner, 23 Oct 2026, systems grouping)
 
 - DC fast chargers under Automotive › Charging, smartwatches under Cellular › Phones and wearables: OK.

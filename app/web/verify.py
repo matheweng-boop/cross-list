@@ -1,15 +1,16 @@
 """Data management: the Overview (review status per data set, what is waiting) and Verify next (the owner's small
 verification batch, refilled per kind when it is done)."""
 
+import threading
 from datetime import UTC, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db import get_session
+from app.db import count, get_engine, get_session
 from app.matching.rules import get_rules
 from app.models import (
     AreaRequest,
@@ -32,16 +33,32 @@ router = APIRouter()
 BERLIN = ZoneInfo("Europe/Berlin")
 
 
+_ASSIGN = threading.Lock()  # one new Verify next batch at a time (Overview in the background, Verify next itself)
+
+
+def _assign(session: Session) -> list[str]:
+    with _ASSIGN:
+        return verify.assign(session)
+
+
+def _assign_later() -> None:
+    """Prepare the next Verify next batch after the Overview is sent: picking one takes seconds (site check, 24 Oct
+    2026), so the Overview no longer waits for it; Verify next shows it, the Overview counts it on the next visit."""
+    with Session(get_engine()) as s:
+        _assign(s)
+
+
 @router.get("/manage/overview", response_class=HTMLResponse)
-def overview(request: Request, session: Session = Depends(get_session)):
+def overview(request: Request, background: BackgroundTasks, session: Session = Depends(get_session)):
     """A compact start page for Data management: what waits for the owner, and review status per data set."""
-    verify.assign(session)  # the next batch is ready, so the count below is what Verify next shows
     n_open = dict(session.execute(select(VerifyTask.kind, func.count()).where(VerifyTask.status == "open")
                                   .group_by(VerifyTask.kind)).all())  # fmt: skip
+    if any(k not in n_open for k in verify.BATCH):
+        background.add_task(_assign_later)
     waiting = {
         "verify": sum(n_open.values()),
-        "feedback": session.scalar(select(func.count()).select_from(SiteFeedback).where(SiteFeedback.status == "new")),
-        "uploads": session.scalar(select(func.count()).select_from(Upload).where(Upload.status == "new")),
+        "feedback": count(session, SiteFeedback, SiteFeedback.status == "new"),
+        "uploads": count(session, Upload, Upload.status == "new"),
         "guest": guest_input.pending_count(session),
     }
     waiting.update(overview_counts(session))
@@ -56,10 +73,6 @@ def overview(request: Request, session: Session = Depends(get_session)):
     return templates.TemplateResponse(request, "manage/overview.html", ctx)
 
 
-def _count(session: Session, model, *where) -> int:
-    return session.scalar(select(func.count()).select_from(model).where(*where)) or 0
-
-
 def overview_counts(session: Session, now: datetime | None = None) -> dict[str, int]:
     """What came in today and the open requests (owner, 23 Oct 2026: everything on one page). "Today" is the calendar
     day in Berlin, where the owner and the daily run are."""
@@ -68,10 +81,10 @@ def overview_counts(session: Session, now: datetime | None = None) -> dict[str, 
     now = now or datetime.now(UTC)
     start = datetime.combine(now.astimezone(BERLIN).date(), time(0), BERLIN).astimezone(UTC)
     return {
-        "feedback_today": _count(session, SiteFeedback, SiteFeedback.created_at >= start),
-        "part_requests": _count(session, CrossRequest, CrossRequest.status.in_(("open", "in_progress"))),
-        "diagram_feedback": _count(session, BlockFeedback, BlockFeedback.status == "open"),
-        "area_requests": _count(session, AreaRequest, AreaRequest.status == "new"),
+        "feedback_today": count(session, SiteFeedback, SiteFeedback.created_at >= start),
+        "part_requests": count(session, CrossRequest, CrossRequest.status.in_(("open", "in_progress"))),
+        "diagram_feedback": count(session, BlockFeedback, BlockFeedback.status == "open"),
+        "area_requests": count(session, AreaRequest, AreaRequest.status == "new"),
         "review_requests": sum(e["status"] in ("new", "in_progress") for e in rv.requests(session)),
     }
 
@@ -127,12 +140,12 @@ def raw_status(session: Session) -> dict:
     ours = select(Manufacturer.id).where(Manufacturer.name.in_(("Skyworks", "Qorvo")))
     week = datetime.now(UTC) - timedelta(days=7)
     return {
-        "parts": _count(session, Part),
-        "ours": _count(session, Part, Part.manufacturer_id.in_(ours)),
-        "makers": _count(session, Manufacturer),
-        "datasheets": _count(session, Datasheet),
+        "parts": count(session, Part),
+        "ours": count(session, Part, Part.manufacturer_id.in_(ours)),
+        "makers": count(session, Manufacturer),
+        "datasheets": count(session, Datasheet),
         "last_datasheet": session.scalar(select(func.max(Datasheet.imported_at))),
-        "changes_week": _count(session, ChangeEvent, ChangeEvent.detected_at >= week),
+        "changes_week": count(session, ChangeEvent, ChangeEvent.detected_at >= week),
         "diagrams": len(blocks.templates()),
         "systems": len(sy.systems()),
         "subsystems": sum(len(s["subsystems"]) for s in sy.systems()),
@@ -163,7 +176,7 @@ def _cross_compare(session: Session, t: VerifyTask) -> dict | None:
 
 @router.get("/manage/verify", response_class=HTMLResponse)
 def verify_page(request: Request, session: Session = Depends(get_session)):
-    new = verify.assign(session)
+    new = _assign(session)
     board = verify.board(session)
     compares = {t.id: _cross_compare(session, t) for t in board["shown"]["cross"]}
     ctx = {"board": board, "kinds": verify.KINDS, "batch": verify.BATCH, "new": new, "topics": verify.DATA_TOPICS,

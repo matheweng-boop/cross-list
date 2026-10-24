@@ -8,7 +8,7 @@
   <li><a href="{{ href }}"><b>{{ n }}</b><span>{{ label }}</span></a></li>{% endfor %}
 </ul>{% else %}<p class="ov-none" id="ov-todo-none"><b>Nothing waiting.</b> <span class="muted small">Everything is answered.</span></p>{% endif %}
 
-{% macro tile(n, label, href, hot=False) %}<a class="ov-card{{ ' hot' if hot and n }}" href="{{ href }}"><b>{{ n }}</b><small>{{ label }}</small></a>{% endmacro %}
+{% macro tile(n, label, href, hot=False) %}<a class="ov-card{{ ' hot' if hot and n }}" href="{{ href }}"><b>{{ '{:,}'.format(n) if n is number else n }}</b><small>{{ label }}</small></a>{% endmacro %}
 <h2 class="ov-h">Today and at a glance</h2>
 <div class="ov-grid" id="ov-waiting">
   {{ tile(waiting.feedback_today, 'feedback item' ~ ('' if waiting.feedback_today == 1 else 's') ~ ' came in today', '/manage/feedback') }}
@@ -27,7 +27,7 @@
 <h2 class="ov-h">Raw data</h2>
 <div class="ov-grid" id="ov-raw">
   {{ tile(raw.parts, 'parts from ' ~ raw.makers ~ ' companies', '/parts') }}
-  {{ tile(raw.ours, 'Skyworks and Qorvo parts', '/portfolio') }}
+  {{ tile(raw.ours, 'Skyworks and Qorvo parts with full data', '/portfolio') }}
   {{ tile(raw.datasheets, 'datasheets' ~ (', newest ' ~ raw.last_datasheet|date('short') if raw.last_datasheet else ''), '/manage/schedule') }}
   {{ tile(raw.changes_week, 'lifecycle or revision changes in 7 days', '/manage/schedule') }}
   {{ tile(raw.diagrams, 'library diagrams, ' ~ raw.unassigned ~ ' not yet in a system', '/blocks') }}

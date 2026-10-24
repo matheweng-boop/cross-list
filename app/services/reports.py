@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.models import ReportQuestion
+from app.models import ReportQuestion, aware
 from app.services.feedback import similar_text
+from app.services.text import whole_words
 
 FILE = PROJECT_ROOT / "data" / "business" / "reports.yaml"
 BODIES = PROJECT_ROOT / "app" / "web" / "templates" / "business" / "reports"
@@ -25,7 +26,7 @@ FEASIBILITY = {  # product ideas: how far from today's portfolio (0 = not scored
 LEARN_AGES = {  # "Learn about this": one short paragraph per age, from simple to technical (default headings)
     5: "What it is", 10: "Why it matters", 15: "What it needs", 20: "Where the request comes from",
     25: "Who else does it, and where we stand",
-}
+}  # fmt: skip
 GENERIC_TAGS = {"automotive", "pricing", "architecture", "filters", "telematics", "front-end module", "defense"}
 OPENER_ID = "q-bu-opener"  # the background question asked first to the business unit (bu_opener in reports.yaml)
 
@@ -79,10 +80,7 @@ CASE_THREADS = ("benefit", "position", "market", "outlook", "features", "product
 
 
 def blocked_words(text: str) -> list[str]:
-    import re
-
-    low = (text or "").lower()
-    return [w for w in EXTERNAL_BLOCKLIST if re.search(rf"\b{re.escape(w)}\b", low)]
+    return whole_words(text, EXTERNAL_BLOCKLIST)
 
 
 def story_problems(r: dict) -> list[str]:
@@ -129,7 +127,7 @@ def question_days(session: Session, limit: int = 30) -> list[tuple[date, int, in
     """Days with questions, newest first: (day, asked, still waiting for review)."""
     per: dict[date, list[int]] = {}
     for created, status in session.execute(select(ReportQuestion.created_at, ReportQuestion.status)):
-        d = (created if created.tzinfo else created.replace(tzinfo=UTC)).date()
+        d = aware(created).date()
         per.setdefault(d, [0, 0])
         per[d][0] += 1
         per[d][1] += status == "new"

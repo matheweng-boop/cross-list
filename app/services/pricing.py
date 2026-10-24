@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.models import Part, PriceQuote
+from app.models import Part, PriceQuote, aware
 from app.sources.digikey import DigiKeyClient, DigiKeyError, Quote, RateLimited  # noqa: F401 (errors re-exported)
 
 SOURCE = "digikey"
@@ -31,8 +31,7 @@ def enabled() -> bool:
 
 
 def _fresh(pq: PriceQuote, max_age: timedelta) -> bool:
-    fetched = pq.fetched_at if pq.fetched_at.tzinfo else pq.fetched_at.replace(tzinfo=UTC)
-    return datetime.now(UTC) - fetched < max_age
+    return datetime.now(UTC) - aware(pq.fetched_at) < max_age
 
 
 def store(session: Session, part: Part, quote: Quote, currency: str) -> PriceQuote:

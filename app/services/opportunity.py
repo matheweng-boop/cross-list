@@ -436,8 +436,6 @@ PROXIMITY_LABEL = {3: "Same technology", 2: "Adjacent", 1: "Distant", 0: "Unrela
 PATH_LABEL = {"exists": "Already in portfolio (mapping missing)", "variant": "Spec variant of an existing line",
               "new_design": "New design on our technology", "new_capability": "New technology: partner / acquire",
               "not_pursue": "Not ours to build"}  # fmt: skip
-PATH_SHORT = {"exists": "Exists?", "variant": "Spec variant", "new_design": "New design",
-              "new_capability": "New technology", "not_pursue": "Not ours"}  # fmt: skip
 EVIDENCE_TOPICS = {"path": "Path to product", "patents": "Patents", "foundry": "Foundry route",
                    "competitor_tech": "Competitor technology", "trends": "Market trend"}  # fmt: skip
 FIT_ORDER = {"high": 0, "medium": 1, "low": 2}

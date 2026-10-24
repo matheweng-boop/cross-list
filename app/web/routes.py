@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, lazyload
 
 from app.auth.deps import get_current_user
+from app.auth.session import principal, signed_in_owner
 from app.config import get_settings
 from app.db import get_engine, get_session
 from app.matching.engine import (
@@ -18,7 +19,6 @@ from app.matching.engine import (
     CATEGORY_ORDER,
     CATEGORY_SHORT,
     DEFAULT_MAX_DEVIATIONS,
-    FFF_STATUS_LABELS,
     format_value,
     ranked,
 )
@@ -54,13 +54,12 @@ templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 templates.env.globals.update(
     lifecycle_badge=lifecycle.badge,
     category_labels=CATEGORY_LABELS,
-    fff_labels=FFF_STATUS_LABELS,
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
     pricing_enabled=pricing.enabled,
     has_list_price=price_model.has_list_price,
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
-    signed_in=lambda request: getattr(request.state, "principal", None),
+    signed_in=principal,
     category_short=CATEGORY_SHORT,
 )
 
@@ -97,8 +96,8 @@ PASSKEY_NUDGE_COOKIE = "crosslist_pk_nudge"
 def _passkey_nudge(request: Request) -> bool:
     """The "Set up a passkey on this device" banner: an owner who signed in with the password and has no passkey yet,
     unless dismissed for this browser session (a session cookie set by the banner's close button)."""
-    p = getattr(request.state, "principal", None)
-    if p is None or not p.is_owner or not p.id or not get_settings().site_password:
+    p = signed_in_owner(request)
+    if p is None or not p.id or not get_settings().site_password:
         return False
     if request.cookies.get(PASSKEY_NUDGE_COOKIE) == "off" or request.url.path == "/owner/passkeys":
         return False
@@ -126,9 +125,10 @@ templates.env.globals.update(
     nav_sections=nav.NAV,
     nav_utility=nav.UTILITY,
     nav_icons=nav.ICONS,
+    nav_homes=nav.HOMES,
     page_title=nav.page_title,
-    page_label=nav.page_label,
     owner_page=nav.owner_page,
+    guest_blocked=nav.guest_blocked,
 )
 
 # grade filter on the cross results: the keys grade_of() returns, worded as everywhere else (app/web/labels.py)
@@ -262,9 +262,6 @@ def index(
            "qual_label": labels.GRADE_LABELS, "cap_label": products.CAPABILITIES,
            "life_label": lifecycle.CLASS_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "index.html", ctx)
-
-
-CATEGORY_RANK = {c: i for i, c in enumerate(CATEGORY_ORDER)}
 
 
 def result_rows(crosses: dict) -> list:
@@ -881,8 +878,6 @@ def feedback(
     return RedirectResponse(f"/parts/{reference_id}#row-{candidate_id}", status_code=303)
 
 
-
-
 @router.get("/pricing/{part_id:int}", response_class=HTMLResponse)
 def pricing_line(
     request: Request,
@@ -935,8 +930,9 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
     scenarios = []
     for fab in price_model.fab_scenarios():
         m = price_model.model(session, part, pq, gm / 100 if gm else None, fab)
-        m["oem"] = price_model.oem_path(m, sop if 2020 <= sop <= 2050 else None,
-                                        released=part.release_date.year if part.release_date else None)
+        m["oem"] = price_model.oem_path(
+            m, sop if 2020 <= sop <= 2050 else None, released=part.release_date.year if part.release_date else None
+        )
         scenarios.append((fab, m))
     ctx = {"part": part, "m": scenarios[0][1], "scenarios": scenarios, "calls": price_model.CALLS,
            "cfg": price_model.config(),

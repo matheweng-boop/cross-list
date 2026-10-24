@@ -65,7 +65,7 @@
 {% if t.open_questions %}<h2 id="questions">Open questions</h2><ul class="small">{% for q in t.open_questions %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
 
 <h2 id="refs">References</h2>
-<ol class="small lib-refs">{% for r in t.references or [] %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved }}</span><br><small>{{ r.why }}</small></li>{% endfor %}</ol>
+<ol class="small lib-refs">{% for r in t.references or [] %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved|date }}</span><br><small>{{ r.why }}</small></li>{% endfor %}</ol>
 <p class="small muted">Summaries are ours; quotes are short and cited. The block diagram is drawn by us from the references.</p>
 {% if notes %}<details class="lib-notes"><summary><b>Full research notes</b> <span class="small muted">· what was read, the reasoning, and the sources that were blocked</span></summary><pre>{{ notes }}</pre></details>{% endif %}
 {% endblock %}

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from tests.test_pipeline import ids, real  # noqa: F401  (fixture)
+from tests.conftest import ids
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -22,7 +22,7 @@ def test_sso8_creepage_is_at_least_not_measured():
     assert "Skyworks is currently developing a new ultra-wide-body (UWB) SOIC package" in bg
 
 
-def test_walk_market_size_points_to_tam_and_is_not_logged(client, session, real):  # noqa: F811
+def test_walk_market_size_points_to_tam_and_is_not_logged(client, session, real):
     from sqlalchemy import select
 
     from app.models import SiteFeedback
@@ -46,7 +46,7 @@ def test_no_feedback_sections_at_the_bottom(client):
     assert r.status_code == 303
 
 
-def test_walk_cards_short_heading_full_text_and_next_on_top(client, real):  # noqa: F811
+def test_walk_cards_short_heading_full_text_and_next_on_top(client, real):
     from app.services import walk
 
     tws = "True-wireless (TWS) earbuds with charging case"
@@ -125,8 +125,16 @@ def test_business_case_asks_feasibility_price_manufacturing_markets_competition(
     page = client.get("/business/cases/new?fn=pol_ldo").text
     assert "Is the technology feasible?" in page and "Anything else to add?" in page
     assert 'data-field="market_size"' in page and "Manufacturing locations" in page
-    r = client.post("/business/cases", data={"title": "LDO case", "fn": "pol_ldo", "feasibility": "Existing die",
-                                              "manufacturing": "Open: not public", "anything_else": "Add export"})
+    r = client.post(
+        "/business/cases",
+        data={
+            "title": "LDO case",
+            "fn": "pol_ldo",
+            "feasibility": "Existing die",
+            "manufacturing": "Open: not public",
+            "anything_else": "Add export",
+        },
+    )
     assert r.status_code in (200, 303)
     cid = int(re.search(r"/business/cases/(\d+)", client.get("/business/cases").text).group(1))
     brief = client.get(f"/business/cases/{cid}/brief.md").text
@@ -136,7 +144,7 @@ def test_business_case_asks_feasibility_price_manufacturing_markets_competition(
     assert sg and "market_size" in sg.group(1)  # a hint for market size (estimate or "add one on TAM estimates")
 
 
-def test_price_estimate_variants_sop_and_break_rows(client, session, real, part):  # noqa: F811
+def test_price_estimate_variants_sop_and_break_rows(client, session, real, part):
     from datetime import date
 
     html = client.get("/pricing/estimate", params={"name": "ISO7741"}).text
@@ -183,4 +191,4 @@ def test_library_focus_areas_and_area_requests(client, session):
     assert client.post(f"/blocks/area-requests/{rid}", data={"status": "x"}).status_code == 400
     daily = (ROOT / "docs/daily_update.md").read_text()
     assert ("Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per "
-            "run") in daily
+            "run") in daily  # fmt: skip

@@ -29,7 +29,7 @@
           {% for s in ['supported', 'gap', 'competitor', 'na'] %}<option value="{{ s }}"{{ ' selected' if p.status == s }}>{{ status_label[s] }}</option>{% endfor %}
         </select>
         <label class="bo-num">qty <input type="number" min="0" step="1" value="{{ p.qty }}" class="bo-qty"></label>
-        <label class="bo-num">ASP $ <input type="number" min="0" step="0.01" value="{{ asp.get(p.fn, '') }}" class="bo-asp" placeholder="?"></label>
+        <label class="bo-num">ASP $ <input type="number" min="0" step="0.01" value="{{ '' if guest_blocked(request, '/business/data') else asp.get(p.fn, '') }}" class="bo-asp" placeholder="?"></label>
         <span class="bo-content small" aria-live="polite"></span>
       </div>
     {% endfor %}

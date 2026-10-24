@@ -24,10 +24,10 @@ ISSUE_TYPES = {
 
 # what a data review affects, per dataset
 AFFECTS = {
-    "technology": "Opportunity explorer fit score (where no path is assessed)",
-    "competition": "Opportunity explorer fit score and competition column",
-    "path": "Gap type and fit score in the Opportunity explorer",
-    "trends": "Opportunity explorer fit score",
+    "technology": "Fit score in Gaps & new technology (where no path is assessed)",
+    "competition": "Fit score and competition column in Gaps & new technology",
+    "path": "Gap type and fit score in Gaps & new technology",
+    "trends": "Fit score in Gaps & new technology",
     "customers": "Customers page and business-case briefs",
     "capabilities": "Technology platforms page",
     "patents": "Evidence page only (not scored)",
@@ -86,7 +86,7 @@ def items(session: Session) -> list[dict]:
                 "status": "confirmed" if m.verdict == "yes" else "rejected",
                 "link": f"/business/evidence/{m.fn}#existing",
                 "resolution": "Applied immediately: a confirmed part counts as a portfolio part.",
-                "affects": "Candidate coverage, gap lists, Opportunity explorer, Markets",
+                "affects": "Candidate coverage, gap lists, Gaps & new technology, Markets",
             }
         )
     for r in session.scalars(select(DataReview)):

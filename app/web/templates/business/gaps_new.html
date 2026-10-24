@@ -13,7 +13,7 @@
 {% macro more(items, n) %}{% if items|length > n %}<details class="csg-more small"><summary>Show {{ items|length - n }} more</summary>{{ caller() }}</details>{% endif %}{% endmacro %}
 
 {% macro gap_card(e) %}<article class="csg-card"><b><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></b>
-  <small>Needed in {{ e.reach }} diagram{{ 's' if e.reach != 1 }}{% if e.tam_apps %} · TAM ${{ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
+  <small>Needed in {{ e.reach }} diagram{{ 's' if e.reach != 1 }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM ${{ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
   <small>{{ score_chip(e) }} {{ path_chip(e.path, path_label) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}</small>
   <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small></article>{% endmacro %}
 

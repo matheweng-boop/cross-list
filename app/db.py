@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -23,6 +23,11 @@ def make_engine(url: str) -> Engine:
             dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
     return engine
+
+
+def count(session: Session, model, *where) -> int:
+    """How many rows of ``model`` match ``where`` (all rows without conditions)."""
+    return session.scalar(select(func.count()).select_from(model).where(*where)) or 0
 
 
 _engine: Engine | None = None

@@ -11,7 +11,7 @@ import secrets
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from fastapi import Request
 from sqlalchemy import delete, select
@@ -19,7 +19,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.models import Account, PowSpent
+from app.models import Account, PowSpent, utcnow
 
 COOKIE = "crosslist_auth"
 MAX_AGE = 30 * 24 * 3600
@@ -45,12 +45,7 @@ class Principal:
         return self.role == GUEST
 
 
-def now() -> datetime:
-    return datetime.now(UTC)
-
-
-def aware(dt: datetime | None) -> datetime | None:
-    return dt if dt is None or dt.tzinfo else dt.replace(tzinfo=UTC)
+now = utcnow  # the same clock as the database defaults
 
 
 def site_key() -> bytes | None:
@@ -62,7 +57,7 @@ def site_key() -> bytes | None:
     return hmac.new(base.encode(), b"crosslist:" + s.site_password.encode(), hashlib.sha256).digest()
 
 
-def _sign(text: str, key: bytes) -> str:
+def sign(text: str, key: bytes) -> str:
     return hmac.new(key, text.encode(), hashlib.sha256).hexdigest()
 
 
@@ -71,7 +66,7 @@ def make_cookie(account: Account) -> str:
     if key is None:
         raise RuntimeError("no site key")
     body = f"v2.{account.id}.{account.role}.{account.session_version}.{int(time.time())}"
-    return f"{body}.{_sign(body, key)}"
+    return f"{body}.{sign(body, key)}"
 
 
 def read_cookie(value: str) -> tuple[int, str, int] | None:
@@ -80,7 +75,7 @@ def read_cookie(value: str) -> tuple[int, str, int] | None:
     if key is None or not value:
         return None
     body, _, sig = value.rpartition(".")
-    if not body or not hmac.compare_digest(sig, _sign(body, key)):
+    if not body or not hmac.compare_digest(sig, sign(body, key)):
         return None
     parts = body.split(".")
     if len(parts) != 5 or parts[0] != "v2" or parts[2] not in (OWNER, GUEST):
@@ -129,9 +124,10 @@ def principal(request: Request) -> Principal | None:
     return getattr(request.state, "principal", None)
 
 
-def is_guest(request: Request) -> bool:
+def signed_in_owner(request: Request) -> Principal | None:
+    """The owner making this request, else None (a guest or nobody)."""
     p = principal(request)
-    return bool(p and p.is_guest)
+    return p if p is not None and p.is_owner else None
 
 
 def client_ip(request: Request) -> str:
@@ -211,7 +207,7 @@ def _pow_key() -> bytes:
 def pow_issue() -> dict:
     bits = max(0, min(get_settings().pow_bits, 28))
     body = f"{secrets.token_hex(16)}.{int(time.time()) + POW_TTL}.{bits}"
-    return {"challenge": f"{body}.{_sign(body, _pow_key())[:32]}", "bits": bits}
+    return {"challenge": f"{body}.{sign(body, _pow_key())[:32]}", "bits": bits}
 
 
 def _zero_bits(digest: bytes) -> int:
@@ -229,7 +225,7 @@ def pow_check(session: Session, challenge: str, nonce: str) -> bool:
     if not challenge or not nonce or len(nonce) > 32 or len(challenge) > 200:
         return False
     body, _, sig = challenge.rpartition(".")
-    if not body or not hmac.compare_digest(sig, _sign(body, _pow_key())[:32]):
+    if not body or not hmac.compare_digest(sig, sign(body, _pow_key())[:32]):
         return False
     try:
         rand, exp, bits = body.split(".")

@@ -15,7 +15,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 from webauthn import (
     generate_authentication_options,
@@ -35,19 +35,17 @@ from webauthn.helpers.structs import (
 from app.auth import stepup
 from app.auth.session import (
     GUEST,
-    OWNER,
-    aware,
     client_ip,
     guard,
     new_handle,
     now,
     pow_check,
-    principal,
     set_login_cookie,
+    signed_in_owner,
 )
 from app.config import get_settings
-from app.db import get_engine, get_session
-from app.models import Account, Invite, PasskeyCredential, WebauthnChallenge
+from app.db import count, get_engine, get_session
+from app.models import Account, Invite, PasskeyCredential, WebauthnChallenge, aware
 from app.services import notify
 from app.web.urls import local_path
 
@@ -74,13 +72,11 @@ def new_invite(session: Session, name: str, note: str = "") -> tuple[Invite, str
 
 def open_invites(session: Session) -> int:
     """Invite links that are unused and unexpired."""
-    return session.scalar(select(func.count()).select_from(Invite)
-                          .where(Invite.used_at.is_(None), Invite.expires_at > now())) or 0  # fmt: skip
+    return count(session, Invite, Invite.used_at.is_(None), Invite.expires_at > now())
 
 
 def active_guests(session: Session) -> int:
-    return session.scalar(select(func.count()).select_from(Account)
-                          .where(Account.role == GUEST, Account.disabled.is_(False))) or 0  # fmt: skip
+    return count(session, Account, Account.role == GUEST, Account.disabled.is_(False))
 
 
 def valid_invite(session: Session, token: str) -> Invite | None:
@@ -98,7 +94,7 @@ def _store_challenge(session: Session, resp: Response, request: Request, purpose
     session.execute(delete(WebauthnChallenge).where(WebauthnChallenge.expires_at < now()))
     if old := request.cookies.get(WA_COOKIE):  # the pages fetch options ahead and refresh them: one per browser
         session.execute(delete(WebauthnChallenge).where(WebauthnChallenge.nonce_sha256 == token_hash(old)))
-    if session.scalar(select(func.count()).select_from(WebauthnChallenge)) >= MAX_OPEN_CHALLENGES:
+    if count(session, WebauthnChallenge) >= MAX_OPEN_CHALLENGES:
         raise HTTPException(429, "Too many sign-ins in progress. Try again in a few minutes.")
     nonce = secrets.token_urlsafe(32)
     challenge = secrets.token_bytes(32)
@@ -163,8 +159,13 @@ def _register(session: Session, row: WebauthnChallenge, credential: dict, accoun
     if session.scalar(select(PasskeyCredential).where(PasskeyCredential.credential_id == cred_id)) is not None:
         raise ValueError("This passkey is already registered.")
     transports = (credential.get("response") or {}).get("transports")
-    pk = PasskeyCredential(account=account, credential_id=cred_id, public_key=v.credential_public_key,
-                           sign_count=v.sign_count, transports=transports if isinstance(transports, list) else None)
+    pk = PasskeyCredential(
+        account=account,
+        credential_id=cred_id,
+        public_key=v.credential_public_key,
+        sign_count=v.sign_count,
+        transports=transports if isinstance(transports, list) else None,
+    )
     session.add(pk)
     return pk
 
@@ -336,8 +337,8 @@ async def invite_verify(token: str, request: Request):
 
 # --- the owner's own passkeys ----------------------------------------------------------------------------------------
 def _owner(request: Request, session: Session) -> Account:
-    p = principal(request)
-    if p is None or p.role != OWNER or not p.id:
+    p = signed_in_owner(request)
+    if p is None or not p.id:
         raise HTTPException(403, "Only the owner can manage the owner's passkeys.")
     acct = session.get(Account, p.id)
     if acct is None:

@@ -59,6 +59,6 @@
 {% else %}{% if not view %}<p class="muted">No design matches. <a href="/reference-designs">Clear the filters</a>.</p>{% endif %}{% endfor %}
 {% if pages > 1 %}<nav class="rd-pager small" aria-label="Pages">{% if page > 1 %}<a href="{{ url(page=page - 1) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url(page=page + 1) }}">Next →</a>{% endif %}</nav>{% endif %}
 
-<p class="small muted rd-sources">Sources: {% for s in sources %}{{ s.vendor|vendor }} ({{ '{:,}'.format(s.n) }}{% if s.collected %}, collected {{ s.collected }}{% endif %}){{ ', ' if not loop.last }}{% endfor %}.
+<p class="small muted rd-sources">Sources: {% for s in sources %}{{ s.vendor|vendor }} ({{ '{:,}'.format(s.n) }}{% if s.collected %}, collected {{ s.collected|date }}{% endif %}){{ ', ' if not loop.last }}{% endfor %}.
   Collected from public pages only; design files are linked, not copied. Analog Devices, ST, NXP, onsemi, Microchip, Toshiba, Nexperia and Qorvo block automated access and are not included.</p>
 {% endblock %}

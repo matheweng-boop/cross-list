@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.models import PriceQuote
 from app.services import price_model as pm
-from tests.test_pipeline import ids, real  # noqa: F401  (fixture)
+from tests.conftest import ids
 
 BREAKS = [[1, 2.50], [10, 2.10], [100, 1.60], [1000, 1.20], [2500, 1.05]]
 
@@ -27,7 +27,7 @@ def test_fit_and_package_classes():
     assert 0.01 < pm._die_cost(1.2, 200, 750, 0.1) < 0.1
 
 
-def test_band_floor_and_calls(client, session, part, real):  # noqa: F811
+def test_band_floor_and_calls(client, session, part, real):
     p = part("ISO7741DBQR")
     _quote(session, p.id)
     m = pm.model(session, p, session.scalar(select(PriceQuote).where(PriceQuote.part_id == p.id)))
@@ -46,14 +46,14 @@ def test_band_floor_and_calls(client, session, part, real):  # noqa: F811
     assert client.post(f"/pricing/{p.id}/call", data={"verdict": "cheap"}).status_code == 400
 
 
-def test_no_quote_says_what_is_missing(client, real):  # noqa: F811
+def test_no_quote_says_what_is_missing(client, real):
     pid = ids(client, "SI86S641EC-IS1")
     html = client.get(f"/pricing/{pid}/model").text
     assert "Not Enough Data</b> to model yet" in html
     assert 'id="price-model"' not in client.get(f"/parts/{pid}").text  # no DigiKey and no list price: no panel
 
 
-def test_list_price_when_no_digikey(client, session, part, real):  # noqa: F811
+def test_list_price_when_no_digikey(client, session, part, real):
     assert len(pm.list_prices()) >= 10
     p = part("ISO7741DBQR")  # TI list price tiers from ti.com, no DigiKey quote in the test database
     m = pm.model(session, p, None)
@@ -63,7 +63,7 @@ def test_list_price_when_no_digikey(client, session, part, real):  # noqa: F811
     assert "TI list price" in client.get(f"/pricing/{p.id}/model").text
 
 
-def test_monte_carlo_is_stable_and_ordered(session, part, real):  # noqa: F811
+def test_monte_carlo_is_stable_and_ordered(session, part, real):
     p = part("ISO7741DBQR")
     a, b = pm.model(session, p, None), pm.model(session, p, None)
     assert [r["target"] for r in a["rows"]] == [r["target"] for r in b["rows"]]  # seeded by the part number
@@ -99,7 +99,7 @@ def test_classes_and_estimate_page(client, session):
     m = pm.estimate(session, "am_fm_tuner", pm.parse_breaks(DK_PASTE), "QFN-48", 48, automotive=True, name="Si47962")
     assert m["cost"]["automotive"] and len(m["rows"]) == 3 and m["rows"][-1]["target"] < 13.13
     html = client.get("/pricing/estimate", params={"family": "am_fm_tuner", "breaks": DK_PASTE, "package": "QFN-48",
-                                                   "pins": 48, "currency": "EUR", "name": "Si47962"}).text
+                                                   "pins": 48, "currency": "EUR", "name": "Si47962"}).text  # fmt: skip
     assert "Si47962" in html and "1,000,000" in html and "converted from EUR" in html and "Low end" not in html
     assert "€" not in html.split('id="price-model"')[1]  # results all in USD
     assert client.get("/pricing/estimate").status_code == 200
@@ -121,18 +121,29 @@ def test_oem_targets_and_our_part_from_a_competitor(client, session):
     o = pm.oem_path(m, 2028)
     assert [r["phase"] for r in o["rows"]][:3] == ["today", "before SOP", "SOP"] and o["rows"][0]["low"] == o["start"]
     sop = next(r for r in o["rows"] if r["phase"] == "SOP")
-    assert abs(sop["high"] - o["start"] * 0.95 ** 2) < 1e-9 and abs(sop["low"] - o["start"] * 0.93 ** 2) < 1e-9
+    assert abs(sop["high"] - o["start"] * 0.95**2) < 1e-9 and abs(sop["low"] - o["start"] * 0.93**2) < 1e-9
     ours = pm.scaled(m, 0.9, 1.0)
     assert all(a["low"] < b["low"] and a["high"] == b["high"] for a, b in zip(ours, m["rows"], strict=True))
-    html = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "name": "GD3162",
-                                                   "package": "SOIC-32W", "pins": 32, "wide": "true",
-                                                   "automotive": "true", "sop": 2029, "ours": "Si82900"}).text
+    html = client.get(
+        "/pricing/estimate",
+        params={
+            "family": "gate_driver",
+            "breaks": GD3162,
+            "name": "GD3162",
+            "package": "SOIC-32W",
+            "pins": 32,
+            "wide": "true",
+            "automotive": "true",
+            "sop": 2029,
+            "ours": "Si82900",
+        },
+    ).text
     assert "OEM target prices" in html and "SOP 2029" in html
     # owner, 23 Oct 2026: "take out the our part price": no field, an old link's value is ignored
     assert "Si82900" not in html and 'name="ours"' not in html and "pe-ours" not in html
 
 
-def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
+def test_owner_digikey_tables_in_usd(session, part, real):
     lp = pm.list_prices()["ISO7710FDR"]
     assert lp["currency"] == "EUR" and lp["source"].startswith("DigiKey")
     m = pm.model(session, part("ISO7710FDR"), None)
@@ -140,7 +151,7 @@ def test_owner_digikey_tables_in_usd(session, part, real):  # noqa: F811
     assert abs(m["fit"]["p_end"] - lp["breaks"][-1][1] * pm.usd_rate("EUR")) < 1e-9
 
 
-def test_gross_margin_slider(client, session, part, real):  # noqa: F811
+def test_gross_margin_slider(client, session, part, real):
     p = part("ISO7741DBQR")
     low, high = pm.model(session, p, None, 0.30), pm.model(session, p, None, 0.70)
     assert low["gm"] == 0.30 and high["gm"] == 0.70 and high["cost"]["floor"] > low["cost"]["floor"]
@@ -152,7 +163,7 @@ def test_gross_margin_slider(client, session, part, real):  # noqa: F811
     assert "At 60 % gross margin" in est and 'value="60"' in est
 
 
-def test_fab_scenarios_and_cost_adjustment(client, session, part, real):  # noqa: F811
+def test_fab_scenarios_and_cost_adjustment(client, session, part, real):
     p = part("ISO7741DBQR")
     ext, own = pm.cost(p, None, "external"), pm.cost(p, None, "in_house")
     assert own["levels"]["mid"]["total"] < ext["levels"]["mid"]["total"] and pm.config()["cost_adjust"] == 0.9
@@ -166,6 +177,7 @@ def test_fab_scenarios_and_cost_adjustment(client, session, part, real):  # noqa
     assert 'name="fab"' not in html and "?fab=" not in html and "&fab=" not in html  # never a form field or link
     est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "ours": "X"}).text
     assert 'data-fab="in_house" hidden>' in est and 'name="fab"' not in est and 'class="pe-ours"' not in est
+
 
 def test_oem_path_flattens_after_the_price_down_years():
     m = {"rows": [{"volume": 100000, "low": 0.9, "target": 1.0, "high": 1.1}]}

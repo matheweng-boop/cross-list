@@ -16,11 +16,11 @@ from urllib.parse import quote
 
 from fastapi import Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.auth.session import OWNER, principal, site_key
+from app.auth.session import OWNER, sign, signed_in_owner, site_key
 from app.config import get_settings
+from app.db import count
 from app.models import Account, PasskeyCredential, SiteSetting
 from app.web.urls import local_path
 
@@ -35,17 +35,13 @@ def _key() -> bytes | None:
     return hmac.new(base, b"crosslist:stepup", hashlib.sha256).digest() if base else None
 
 
-def _sign(body: str, key: bytes) -> str:
-    return hmac.new(key, body.encode(), hashlib.sha256).hexdigest()
-
-
 def set_confirmed(resp, request: Request, account: Account) -> None:
     """Mark the owner as freshly confirmed in this browser for 5 minutes."""
     key = _key()
     if key is None or account.role != OWNER:
         return
     body = f"u1.{account.id}.{account.session_version}.{int(time.time())}"
-    resp.set_cookie(STEPUP_COOKIE, f"{body}.{_sign(body, key)}", max_age=STEPUP_TTL, httponly=True, samesite="strict",
+    resp.set_cookie(STEPUP_COOKIE, f"{body}.{sign(body, key)}", max_age=STEPUP_TTL, httponly=True, samesite="strict",
                     secure=request.url.scheme == "https", path="/")  # fmt: skip
 
 
@@ -53,13 +49,13 @@ def seconds_left(request: Request, session: Session) -> int:
     """How long the owner's last confirmation still counts (0: confirm again). Local use without a password: always."""
     if not get_settings().site_password:
         return STEPUP_TTL
-    p = principal(request)
+    p = signed_in_owner(request)
     key = _key()
     value = request.cookies.get(STEPUP_COOKIE, "")
-    if p is None or not p.is_owner or key is None or not value:
+    if p is None or key is None or not value:
         return 0
     body, _, sig = value.rpartition(".")
-    if not body or not hmac.compare_digest(sig, _sign(body, key)):
+    if not body or not hmac.compare_digest(sig, sign(body, key)):
         return 0
     parts = body.split(".")
     if len(parts) != 4 or parts[0] != "u1":
@@ -113,8 +109,7 @@ def set_password_switch(session: Session, allowed: bool) -> None:
 
 
 def owner_passkey_count(session: Session, account_id: int) -> int:
-    return session.scalar(select(func.count()).select_from(PasskeyCredential)
-                          .where(PasskeyCredential.account_id == account_id)) or 0  # fmt: skip
+    return count(session, PasskeyCredential, PasskeyCredential.account_id == account_id)
 
 
 MIN_PASSKEYS_WITHOUT_PASSWORD = 2

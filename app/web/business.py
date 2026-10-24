@@ -6,11 +6,11 @@ from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.db import get_session
+from app.db import count, get_session
 from app.matching import engine
 from app.models import (
     Case,
@@ -36,7 +36,6 @@ from app.web.urls import local_path
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
 templates.env.globals["bo_help"] = op.explanations
-_CROWD = {"low": 0, "medium": 1, "high": 2}
 
 
 def _ctx(session: Session, co: str, scope: str = "all") -> dict:
@@ -64,10 +63,10 @@ def _ctx(session: Session, co: str, scope: str = "all") -> dict:
 
 
 @router.get("/business")
-def overview(request: Request):
-    """The Opportunities section opens on the explorer (the overview page was retired, feedback 2026-10-20)."""
-    q = f"?{request.url.query}" if request.url.query else ""
-    return RedirectResponse(f"/business/explorer{q}", status_code=307)
+def overview(request: Request, co: str = "combined"):
+    """The Opportunities section opens on the explorer (the overview page was retired, feedback 2026-10-20): one
+    redirect straight to where /business/explorer leads."""
+    return explorer_moved(request, co)
 
 
 @router.get("/business/applications", response_class=HTMLResponse)
@@ -374,7 +373,7 @@ async def decide(request: Request, session: Session = Depends(get_session)):
     return RedirectResponse(_back(request, form, "/business/explorer/table"), status_code=303)
 
 
-SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
+SHORTLIST_ORIGINS = {"explorer": "Gaps & new technology", "crosssell": "Cross-sell", "markets": "Markets",
                      "customers": "Customers", "idea": "New ideas", "report": "Research & ideas",
                      "part": "Part walk-through"}  # fmt: skip
 
@@ -398,7 +397,7 @@ async def shortlist_add(request: Request, session: Session = Depends(get_session
 
 
 def _shortlist_count(session: Session) -> int:
-    return session.scalar(select(func.count(ShortlistItem.id))) or 0
+    return count(session, ShortlistItem)
 
 
 @router.get("/api/shortlist/count")
@@ -461,14 +460,6 @@ def tam_page(request: Request, saved: str = "", error: str = "", session: Sessio
            "fns": fns, "fn_choices": sorted(((k, f.get("label", k)) for k, f in fns.items()),
                                             key=lambda kv: kv[1].lower())}  # fmt: skip
     return templates.TemplateResponse(request, "business/tam.html", ctx)
-
-
-def _num(v: str) -> float | None:
-    v = (v or "").strip().replace(",", "").replace("$", "")
-    try:
-        return float(v) if v else None
-    except ValueError:
-        return None
 
 
 @router.post("/business/tam")
@@ -677,8 +668,8 @@ async def case_update(case_id: int, request: Request, session: Session = Depends
             if form.get(f"del:{ln.id}"):
                 session.delete(ln)
                 continue
-            ln.volume = pipeline._num(form.get(f"vol:{ln.id}"), int)
-            ln.price = pipeline._num(form.get(f"price:{ln.id}"), float)
+            ln.volume = pipeline.form_number(form.get(f"vol:{ln.id}"), int)
+            ln.price = pipeline.form_number(form.get(f"price:{ln.id}"), float)
     elif act == "merge":
         target = session.get(Case, int(form.get("target") or 0)) if str(form.get("target") or "").isdigit() else None
         if target is None or target.id == case.id:

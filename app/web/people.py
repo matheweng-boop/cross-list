@@ -10,10 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.auth import stepup
 from app.auth.passkeys import active_guests, new_invite, open_invites
-from app.auth.session import GUEST, aware, now
+from app.auth.session import GUEST, now
 from app.config import get_settings
 from app.db import get_engine, get_session
-from app.models import Account, ExternalSubmission, Invite, PasskeyCredential
+from app.models import Account, ExternalSubmission, Invite, PasskeyCredential, aware
 from app.services import guest_input, notify
 from app.web.routes import templates
 
@@ -36,8 +36,9 @@ def _limit_reached(session: Session) -> str:
 
 
 def _people_ctx(session: Session, request: Request | None = None) -> dict:
-    guests = session.scalars(select(Account).where(Account.role == "guest").order_by(Account.disabled,
-                                                                                     Account.created_at)).all()
+    guests = session.scalars(
+        select(Account).where(Account.role == "guest").order_by(Account.disabled, Account.created_at)
+    ).all()
     invites = session.scalars(select(Invite).order_by(Invite.created_at.desc()).limit(50)).all()
     t = now()
     rows = [{"i": i, "state": "used" if i.used_at else ("expired" if aware(i.expires_at) <= t else "open")}

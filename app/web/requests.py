@@ -36,7 +36,7 @@ def requests_page(request: Request, session: Session = Depends(get_session)):
 
 @router.post("/requests")
 def add_requests(
-    mpns: str = Form(...), manufacturer: str = Form(""), note: str = Form(""), back: str = Form(""),
+    mpns: str = Form(""), manufacturer: str = Form(""), note: str = Form(""), back: str = Form(""),
     session: Session = Depends(get_session),
 ):  # fmt: skip
     open_keys = {

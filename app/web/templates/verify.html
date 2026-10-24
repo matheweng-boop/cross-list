@@ -1,13 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Verify next<script>
-  // Verify pop-up: the spec comparison and the answer form side by side
-  document.querySelectorAll(".vd-open").forEach(b => b.addEventListener("click", () => document.getElementById(b.dataset.dialog).showModal()));
-  document.querySelectorAll("dialog.vd").forEach(d => {
-    d.querySelector(".vd-close").addEventListener("click", () => d.close());
-    d.addEventListener("click", e => { if (e.target === d) d.close(); });  // click on the backdrop
-  });
-</script>
-{% endblock %}
+{% block title %}Verify next{% endblock %}
 {% macro done_form(t, rows=3) %}<form method="post" action="/manage/verify/{{ t.id }}" class="vf-form">
   <textarea name="note" rows="{{ rows }}" maxlength="2000" placeholder="What is wrong, or a note (optional). Your keyboard's dictation key works here." aria-label="Note for {{ t.title }}"></textarea>
   <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="result" value="ok" class="small-btn">Correct</button><button name="result" value="wrong" class="small-btn outline secondary">Something is wrong</button></span>

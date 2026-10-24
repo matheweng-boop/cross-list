@@ -52,7 +52,7 @@ def test_numbers_right_aligned(client):
     method = client.get("/business/method").text
     assert '<th class="n">Weight</th>' in method and '<th class="n">Points</th>' in method
     assert 'class="num-table"' in client.get("/engineering/creepage_mm").text
-    assert "td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }" in CSS
+    assert "td.n, th.n, th[data-n] { text-align: right; font-variant-numeric: tabular-nums; }" in CSS
 
 
 def test_rf_band_labels_reach_4_5_to_1():

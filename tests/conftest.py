@@ -1,4 +1,11 @@
 import hashlib
+import os
+import socket
+import subprocess
+import sys
+import time
+import urllib.request
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -114,3 +121,59 @@ def alerts(monkeypatch):
     monkeypatch.setattr(notify, "_call", call)
     monkeypatch.setattr(notify, "_start", lambda target, *args: target(*args))
     return sent
+
+
+# --- browser tests (24 Oct 2026): the app on a real port, driven by Chromium -----------------------------------------
+CHROMIUM = Path("/opt/pw-browsers/chromium")
+
+
+@pytest.fixture(scope="session")
+def live_server(tmp_path_factory):
+    """The app served by uvicorn on a free port, in its own process with its own test database and data folder (never
+    var/), as the local owner (no site password), with alerts and DigiKey off. Yields the base URL."""
+    tmp = tmp_path_factory.mktemp("live")
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("CROSSLIST_", "TELEGRAM_"))}
+    env |= {"CROSSLIST_DATABASE_URL": f"sqlite:///{tmp / 'live.db'}", "CROSSLIST_DATA_DIR": str(tmp / "var"),
+            "CROSSLIST_SITE_PASSWORD": "", "CROSSLIST_SEED_SYNTHETIC": "true", "CROSSLIST_LOAD_REAL_ON_START": "false",
+            "CROSSLIST_POW_BITS": "8", "CROSSLIST_RP_ID": "127.0.0.1", "CROSSLIST_ORIGIN": f"http://127.0.0.1:{port}",
+            "PYTHONPATH": str(Path(__file__).resolve().parent.parent)}  # fmt: skip
+    log_path = tmp / "server.log"
+    with open(log_path, "wb") as log:
+        proc = subprocess.Popen([sys.executable, "-m", "uvicorn", "--factory", "app.main:create_app", "--host",
+                                 "127.0.0.1", "--port", str(port), "--log-level", "warning"], cwd=tmp, env=env,
+                                stdout=log, stderr=subprocess.STDOUT)  # fmt: skip
+        url = f"http://127.0.0.1:{port}"
+        try:
+            for _ in range(600):
+                if proc.poll() is not None:
+                    pytest.fail("the server did not start:\n" + log_path.read_text())
+                try:
+                    with urllib.request.urlopen(url + "/healthz", timeout=1):
+                        break
+                except OSError:
+                    time.sleep(0.1)
+            else:
+                pytest.fail("the server did not answer within 60 s")
+            yield url
+        finally:
+            proc.terminate()
+            try:
+                proc.wait(10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+
+@pytest.fixture(scope="session")
+def chromium():
+    """One headless Chromium for the session, from the image's own copy; the browser tests skip without it (Playwright
+    is never asked to download one)."""
+    if not CHROMIUM.exists():
+        pytest.skip(f"no Chromium at {CHROMIUM}")
+    sync_api = pytest.importorskip("playwright.sync_api")
+    with sync_api.sync_playwright() as p:
+        browser = p.chromium.launch(executable_path=str(CHROMIUM))
+        yield browser
+        browser.close()

@@ -1066,6 +1066,18 @@ details.why ul { margin: .25rem 0 .3rem; padding-left: 1rem; } details.why li { 
 .rp-bg-note { padding: .5rem .8rem; border-left: 3px solid var(--pico-primary); }
 .fb-respond input.rp-dup { flex: 0 0 7.5rem; }
 .rpt .adj table td { vertical-align: top; } .rpt .adj li, .rpt .adj p { overflow-wrap: anywhere; }
+/* report storyline (24 Oct 2026): Bottom line under the title, thread lines per section, next steps at the end */
+.rpt .rpt-bl, .rpt .rpt-end { border: 1px solid var(--pico-muted-border-color); border-left: 4px solid var(--pico-primary); border-radius: .5rem; padding: .8rem 1rem; margin: 1rem 0; overflow-wrap: anywhere; }
+.rpt .rpt-bl p, .rpt .rpt-end p { margin: 0 0 .45rem; }
+.rpt .rpt-bl-k { display: block; font-weight: 600; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--pico-muted-color); margin: .2rem 0 .1rem; }
+.rpt .rpt-bl-q b { font-size: 1.02rem; }
+.rpt .rpt-bl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: .3rem 1.4rem; }
+.rpt .rpt-bl ul, .rpt .rpt-steps, .rpt .rpt-check { margin: 0 0 .4rem; padding-left: 1.2rem; display: grid; gap: .3rem; font-size: .9rem; }
+.rpt .rpt-bl-ext p:not(.rpt-bl-k) { font-style: italic; }
+.rpt .rpt-who { font-size: .72rem; padding: 0 .4rem; border-radius: .6rem; background: var(--pico-card-sectioning-background-color, #f3f5f7); color: var(--pico-muted-color); white-space: normal; }
+.rpt .rpt-check { list-style: none; padding-left: 0; } .rpt .rpt-check li { list-style: none; }
+.rpt .rpt-thread { font-size: .86rem; border-left: 3px solid var(--pico-primary); padding: .15rem 0 .15rem .7rem; margin: .7rem 0 0; }
+.rp-card .rp-bl { border-left: 3px solid var(--pico-primary); padding-left: .5rem; }
 
 /* Products > Skyworks + Qorvo */
 .ln-skyworks { --ln: #1f5fa8; } .ln-qorvo { --ln: #c2410c; }
@@ -2001,3 +2013,28 @@ article { border: 1px solid var(--card-line); border-radius: var(--radius-card);
 .ov-card { display: flex; flex-direction: column; gap: .1rem; padding: .6rem .8rem; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; text-decoration: none; color: inherit; min-width: 0; }
 .ov-card:hover { border-color: var(--pico-primary); } .ov-card b { font-size: 1.4rem; line-height: 1.1; color: var(--pico-primary); }
 .ov-card.hot b { color: #b23a0a; } .ov-card small { overflow-wrap: anywhere; }
+
+/* Price estimate: fields filled from the part data are locked; "Override" unlocks them (owner, 23 Oct 2026) */
+.pe-form .pe-locked { background: var(--pico-muted-border-color, #eef0f4); color: inherit; }
+.pe-form select.pe-locked { pointer-events: none; }
+.pe-override { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0 0 .75rem; }
+.pe-override[hidden] { display: none; }
+
+/* Site data > Requests: part requests, diagram feedback and area requests in one list (owner, 24 Oct 2026) */
+.rq-list { list-style: none; padding: 0; margin: .6rem 0; }
+.rq-list .rq-item { list-style: none; padding: .5rem .7rem; margin: 0 0 .45rem; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; overflow-wrap: anywhere; }
+.rq-item.req-done, .rq-item.req-rejected, .rq-item.req-cannot, .rq-item.req-declined { opacity: .65; }
+.rq-kind { display: inline-block; font-size: .7rem; font-weight: 600; padding: 0 .45rem; margin-right: .3rem; border-radius: 1rem; border: 1px solid currentColor; white-space: nowrap; }
+.rq-kind.k-part { color: #1f5fb0; } .rq-kind.k-diagram { color: #7a4fb5; } .rq-kind.k-area { color: #2e7d4f; }
+.rq-acts { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .3rem; }
+.rq-acts form { display: inline; margin: 0; } .rq-acts button { width: auto; margin: 0; }
+.rq-add { margin: 1rem 0; }
+
+/* Overview: "Waiting for you", the owner's to-do list (owner, 24 Oct 2026) */
+.ov-todo { list-style: none; padding: 0; margin: .3rem 0 1rem; display: grid; gap: .3rem; max-width: 34rem; }
+.ov-todo li { list-style: none; margin: 0; }
+.ov-todo a { display: flex; gap: .55rem; align-items: baseline; padding: .35rem .7rem; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; text-decoration: none; color: inherit; overflow-wrap: anywhere; }
+.ov-todo a:hover { border-color: var(--pico-primary); }
+.ov-todo b { min-width: 2ch; text-align: right; color: #b23a0a; font-variant-numeric: tabular-nums; }
+.ov-todo a::after { content: "›"; margin-left: auto; color: var(--pico-muted-color); }
+.ov-none { margin: .3rem 0 1rem; }

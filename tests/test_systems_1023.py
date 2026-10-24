@@ -84,8 +84,10 @@ def test_menu_tree_23_oct():
     manage = [i[0] for i in nav.UTILITY[2]]
     assert manage == ["Overview", "Schedule", "Site data", "Uploads", "Data quality", "People & invites", "Methodology"]
     tabs = next(g for g in nav.TABS if g[0][1] == "/manage/verify")
-    assert [h for _, h in tabs] == ["/manage/verify", "/manage/reviews", "/requests", "/blocks/feedback",
-                                    "/blocks/area-requests", "/manage/feedback", "/manage/guest-input"]  # fmt: skip
+    # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab
+    assert tabs == (("Verify next", "/manage/verify"), ("Review queue", "/manage/reviews"),
+                    ("Requests", "/manage/requests"), ("Site feedback", "/manage/feedback"),
+                    ("Guest input", "/manage/guest-input"))  # fmt: skip
 
 
 def test_old_urls_keep_working(client):

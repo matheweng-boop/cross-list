@@ -1,13 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Verify next<script>
-  // Verify pop-up: the spec comparison and the answer form side by side
-  document.querySelectorAll(".vd-open").forEach(b => b.addEventListener("click", () => document.getElementById(b.dataset.dialog).showModal()));
-  document.querySelectorAll("dialog.vd").forEach(d => {
-    d.querySelector(".vd-close").addEventListener("click", () => d.close());
-    d.addEventListener("click", e => { if (e.target === d) d.close(); });  // click on the backdrop
-  });
-</script>
-{% endblock %}
+{% block title %}Verify next{% endblock %}
+{% macro source_form(t) %}<form method="post" action="/manage/verify/{{ t.id }}" class="vf-form">
+  <textarea name="note" rows="3" maxlength="2000" placeholder="A comment (optional): the right link, what the source says, or what to change." aria-label="Comment on {{ t.title }}"></textarea>
+  <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="result" value="ok" class="small-btn">Checked, OK</button><button name="result" value="fix" class="small-btn outline">Fix it</button><button name="result" value="remove" class="small-btn outline secondary">Remove</button></span>
+</form>{% endmacro %}
 {% macro done_form(t, rows=3) %}<form method="post" action="/manage/verify/{{ t.id }}" class="vf-form">
   <textarea name="note" rows="{{ rows }}" maxlength="2000" placeholder="What is wrong, or a note (optional). Your keyboard's dictation key works here." aria-label="Note for {{ t.title }}"></textarea>
   <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="result" value="ok" class="small-btn">Correct</button><button name="result" value="wrong" class="small-btn outline secondary">Something is wrong</button></span>
@@ -22,9 +18,10 @@
 
 {% for kind, label in kinds.items() %}{% set open = board.open[kind] %}{% set done = board.done[kind] %}
 {% set shown = board.shown[kind] %}{% set waiting = board.waiting[kind] %}
-<section class="vf-sec" id="{{ kind }}"><h2>{{ label }} <small class="muted">· {{ shown|length }} to answer{% if waiting %} · {{ waiting }} more waiting{% endif %}{% if done %} · {{ done|length }} done, vouching for about {{ '{:,}'.format(board.vouched[kind]) }}{% endif %}</small></h2>
+<section class="vf-sec" id="{{ kind }}"><h2>{{ label }} <small class="muted">· {{ shown|length }} to answer{% if waiting %} · {{ waiting }} more waiting{% endif %}{% if done and kind == 'sources' %} · {{ done|length }} done{% elif done %} · {{ done|length }} done, vouching for about {{ '{:,}'.format(board.vouched[kind]) }}{% endif %}</small></h2>
 {% if kind == 'cross' %}<p class="small muted">Open both datasheets and the side-by-side values: are the priority 1 values read correctly, and is the cross type right?</p>
 {% elif kind == 'diagram' %}<p class="small muted">Open the diagram: are the blocks the right functions, in the right groups, with the right links? “Correct” marks it technically verified.</p>
+{% elif kind == 'sources' %}<p class="small muted">From the weekly link and source check: dead or moved links, and figures or sources marked “from memory”, “not read” or “est”. Open the page: is it fine as it is, should the next run fix it (a new link, or read the source), or remove it? Your answer goes to the next daily run.</p>
 {% else %}<p class="small muted">Is the claim right according to its sources? Your answer adjusts the confidence of the scores that use it.</p>{% endif %}
 {% for t in shown %}{% set d = t.detail %}<article class="vf-task">
   <h3>{{ t.title }}</h3>
@@ -50,11 +47,13 @@
   </article></dialog>{% endif %}
   <p class="small">{{ d.type }} · <a href="/compare?ids={{ d.ref }},{{ d.cand }}">values side by side</a> · <a href="/parts/{{ d.ref }}#results">the cross</a> · datasheets: <a href="{{ d.ref_ds }}" target="_blank" rel="noopener">competitor</a>, <a href="{{ d.cand_ds }}" target="_blank" rel="noopener">ours</a></p>
   {% elif kind == 'diagram' %}<p class="small">{{ d.category }} · {{ d.blocks }} blocks · <a href="/blocks/new?template={{ d.i }}">open the diagram</a></p>
+  {% elif kind == 'sources' %}<p class="small"><span class="pill">{{ d.label }}</span>{% if d.what == 'link' %} <a href="{{ d.url }}" target="_blank" rel="noopener">{{ d.url }}</a>{% if d.text %} <span class="muted">· {{ d.text }}</span>{% endif %}{% else %} “{{ d.text }}”{% endif %}</p>
+  <p class="small">{% if d.page %}<a href="{{ d.page }}">Open the page</a> <span class="muted">({{ d.page }})</span>{% else %}Not shown on one page{% endif %}{% if d.entry %} · <span class="muted">entry: {{ d.entry }}</span>{% endif %} · <span class="muted">file: {{ d.file }}, line {{ d.line }}</span></p>
   {% else %}<p class="small"><b>Claim:</b> {{ d.claim }}</p>{% if d.sources %}<p class="small muted">Sources: {{ d.sources|join(' · ') }}</p>{% endif %}<p class="small">{% if d.topic == 'library' %}<a href="/library/{{ d.library }}#{{ d.item }}">The rule in its library topic</a>{% else %}<a href="/business/evidence/{{ d.fn }}">All evidence for this function</a>{% endif %}</p>{% endif %}
-  {{ done_form(t) }}
+  {% if kind == 'sources' %}{{ source_form(t) }}{% else %}{{ done_form(t) }}{% endif %}
 </article>{% else %}<p class="small muted">Nothing to verify here right now.</p>{% endfor %}
 {% if waiting %}<p class="small muted">{{ waiting }} more in this batch, shown once you have answered the one{{ 's' if shown|length != 1 }} above.</p>{% endif %}
-{% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ 'correct' if t.status == 'ok' else 'wrong' }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+{% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ answers.get(t.status, t.status) if kind == 'sources' else ('correct' if t.status == 'ok' else 'wrong') }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
 </section>{% endfor %}
 <script>
   // Verify pop-up: the spec comparison and the answer form side by side

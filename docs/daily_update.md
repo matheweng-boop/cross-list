@@ -45,7 +45,17 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals
    (`category: physics` in `data/engineering_rf_notes.yaml`, visuals in `app/web/static/visuals.js`; OpenStax University Physics first,
    then the physics and maths sources in `data/library/sources.yaml`; link only, never copy).
+   Link and source check (weekly, the Sunday evening run only): `uv run python scripts/check_links.py` (40 links a
+   run, the ones checked longest ago first; it keeps the polite rules itself and never requests qorvo.com,
+   www.qualcomm.com, distributors, iso.org or blocked hosts). Commit the updated `data/manage/link_check.yaml` (its
+   dead and moved links appear in Data management › Site data › Verify next › Sources, next to the "from memory",
+   "not read" and "est" markers); put the summary from `var/links/<date>.md` in the run summary. Act on the owner's
+   answers in the inbox section "Source check answers" on every run: **fix it** = replace a dead or moved link with
+   the publisher's current page if it can be found politely (robots.txt first, `tools/research/fetch.sh`; never an
+   archive or mirror), or read the source and remove the marker (keep "est" where the figure stays our estimate);
+   **remove** = take the link or the figure out; **checked, OK** = drop the marker (or keep the link as it is).
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
+   See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the
    open questions from `docs/open_questions.md` that need an answer before the next merge. End by asking for the
    go-ahead to merge the branch into `main`. If the owner gives it in this session: run the full suite once more on
@@ -61,6 +71,19 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    summary and carry on without Telegram.
 
 If nothing came in and no question was answered, say so in one line (also by Telegram) and do nothing else.
+
+## Tests before GO (24 Oct 2026)
+
+A bug reached the live site on 23 Oct although every test passed: the server HTML was right, but picking a part did
+nothing in the browser. So, before asking for GO (in the session or by Telegram):
+
+- Run the full `uv run pytest -q` on the branch, with nothing deselected. It includes `tests/test_blank_forms.py`
+  (every form on every menu page sent blank: no 422, no server error) and `tests/test_browser.py` (the owner's flows
+  clicked in Chromium: console errors and pages wider than a 390 px phone fail the test). The browser tests are
+  marked `browser` and take about half a minute.
+- They must pass, not skip. If the summary line shows them skipped (no Chromium at `/opt/pw-browsers/chromium`),
+  say so in the summary and do not ask for GO until they have run. Never run `playwright install`.
+- When a page or form is added, add its flow to `tests/test_browser.py` in the same branch.
 
 ## Saving tokens (owner, 22 Oct 2026: slower is fine, cheaper matters)
 

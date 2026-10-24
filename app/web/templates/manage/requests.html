@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "manage/_request_items.html" import part_item, diagram_item, area_item %}
+{% block content %}
+<h1>Requests</h1>
+<p class="subtitle muted">Part requests, diagram feedback and application area requests in one list, newest first. They are still made where they belong: “Request a cross” on a part or search, “Feedback” in a block diagram, and “Ask for another area” in the <a href="/blocks#request-area">Application library</a>.</p>
+{% set q = '&show=all' if show else '' %}
+<div class="small"><div class="chip-row small" id="rq-kinds"><span class="chip-lbl">Kind</span>
+  <a class="fchip{{ ' on' if not kind }}" href="/manage/requests{{ '?show=all' if show }}">All <small>{{ counts.values()|sum }}</small></a>
+  {% for k, label in kinds.items() %}<a class="fchip{{ ' on' if kind == k }}" href="/manage/requests?kind={{ k }}{{ q }}">{{ label }}s <small>{{ counts[k] }}</small></a>{% endfor %}
+</div>
+<div class="chip-row small"><span class="chip-lbl">Status</span>
+  <a class="fchip{{ ' on' if not show }}" href="/manage/requests{{ '?kind=' ~ kind if kind }}">Open</a>
+  <a class="fchip{{ ' on' if show }}" href="/manage/requests?{{ 'kind=' ~ kind ~ '&' if kind }}show=all">Open and closed</a>
+</div></div>
+<p class="small muted">Numbers are open items. As text for a conversation with Claude: <a href="/requests.txt">open part requests</a> · <a href="/blocks/feedback.txt">open diagram feedback</a>.</p>
+
+{% if rows %}<ul class="rq-list">{% for k, r in rows %}
+  {% if k == 'part' %}{{ part_item(r, found[r.id], statuses.part) }}{% elif k == 'diagram' %}{{ diagram_item(r, statuses.diagram) }}{% else %}{{ area_item(r, statuses.area) }}{% endif %}
+{% endfor %}</ul>
+{% else %}<div class="empty-state"><p><b>Nothing {{ 'open ' if not show }}here{{ ' for ' ~ kinds[kind]|lower ~ 's' if kind }}.</b></p>{% if show or kind %}<p class="small"><a href="/manage/requests?show=all">See every request</a></p>{% endif %}</div>{% endif %}
+
+{% if kind in ('', 'part') %}<details class="rq-add"><summary class="small">Add part requests</summary>
+<form method="post" action="/requests" class="request-form">
+  <input type="hidden" name="back" value="/manage/requests?kind=part">
+  <textarea name="mpns" rows="3" placeholder="e.g. ADuM1401ARWZ, ISO7841DWR, NSi8100N" aria-label="Part numbers to cross" required></textarea>
+  <div class="grid">
+    <input name="manufacturer" placeholder="Manufacturer (optional)" aria-label="Manufacturer">
+    <input name="note" placeholder="Note, e.g. customer, application, deadline (optional)" aria-label="Note">
+    <button type="submit">Add requests</button>
+  </div>
+</form></details>{% endif %}
+<script>
+  document.querySelectorAll("form[data-confirm]").forEach(f => f.addEventListener("submit", e => {
+    if (!confirm(f.dataset.confirm)) e.preventDefault();
+  }));
+</script>
+{% endblock %}

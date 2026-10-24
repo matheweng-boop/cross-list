@@ -63,7 +63,8 @@ def test_site_info_release_year_and_radio_parts(session, lists):
 
 def test_estimate_page_texts_and_no_our_part(client, lists):
     html = client.get("/pricing/estimate", params={"name": "UCC21520"}).text
-    assert 'name="package" value="SOIC-16 (DW)" readonly' in html and 'name="pins" type="number" value="16"' in html
+    assert 'name="package" value="SOIC-16 (DW)"' in html
+    assert 'name="pins" type="number" min="1" max="2000" value="16"' in html
     assert 'name="released" type="number" min="1980" max="2050" value="2016"' in html
     assert "a known part number sets package and channels" not in html
     assert "(assumed; the datasheet" not in html
@@ -82,3 +83,28 @@ def test_not_enough_data_instead_of_blanks(client, session, lists):
 
     panel = client.get(f"/pricing/{ids(client, 'SI86S641EC-IS1')}/model").text  # no prices cached
     assert panel.count("Not Enough Data") >= 1 + 3 * 3  # the note and low / target / high at 3 volumes
+
+
+def test_picking_a_part_fills_the_form(client, lists):
+    """Owner, 23 Oct 2026 (iPad): picking a part fills family, package and pins at once and locks them; overriding
+    them is the second option."""
+    d = client.get("/pricing/part-info", params={"name": "Si47962"}).json()
+    assert (d["family"], d["package"], d["pins"]) == ("am_fm_tuner", "QFN-56", 56) and d["found"]
+    assert client.get("/pricing/part-info", params={"name": ""}).json()["found"] == []
+    html = client.get("/pricing/estimate", params={"name": "Si47962", "family": "digital_isolator"}).text
+    assert '<option value="am_fm_tuner" selected' in html  # the part's data wins over a stale family
+    assert 'value="QFN-56" placeholder="e.g. QFN-48, SOIC-16W, LGA" readonly class="pe-locked"' in html
+    assert ">Override</button>" in html and 'fetch("/pricing/part-info?name="' in html
+    own = client.get("/pricing/estimate", params={"name": "Si47962", "family": "digital_isolator", "package": "SOIC-8",
+                                                  "pins": "8", "override": "true"}).text  # fmt: skip
+    assert '<option value="digital_isolator" selected' in own and 'value="SOIC-8" placeholder' in own
+    assert 'name="override" value="true"' in own and "pe-locked" not in own.split("Price breaks")[0]
+    free = client.get("/pricing/estimate", params={"name": "XYZ123", "released": "2015"}).text
+    assert 'name="released" type="number" min="1980" max="2050" value="2015"' in free
+
+
+def test_blank_number_fields_are_no_error(client):
+    """A blank pins / SOP / released / margin field, as the browser sends it, gives the page, not a 422."""
+    r = client.get("/pricing/estimate", params={"name": "XYZ", "family": "digital_isolator", "pins": "", "sop": "",
+                                                "gm": "", "released": "", "override": ""})  # fmt: skip
+    assert r.status_code == 200 and 'name="pins" type="number" min="1" max="2000" value=""' in r.text

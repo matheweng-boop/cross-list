@@ -944,11 +944,19 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
     return templates.TemplateResponse(request, "_price_model.html", ctx)
 
 
+def _whole(text: str) -> int:
+    """A whole number from a form field; 0 when it is blank or not a number."""
+    try:
+        return int(float(str(text).strip().replace(",", ".")))
+    except ValueError:
+        return 0
+
+
 @router.get("/pricing/estimate", response_class=HTMLResponse)
-def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: int = 0,
+def price_estimate(request: Request, family: str = "", breaks: str = "", package: str = "", pins: str = "",
                    automotive: bool = False, name: str = "", currency: str = "USD",
-                   sop: int = 0, gm: int = 0,
-                   released: int = 0, bq: list[str] = Query([]), bp: list[str] = Query([]),
+                   sop: str = "", gm: str = "",
+                   released: str = "", bq: list[str] = Query([]), bp: list[str] = Query([]), override: str = "",
                    session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
     A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely.
@@ -956,11 +964,17 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     datasheet's first revision when the site knows it. Price breaks come as volume / price rows, pasted text or
     both."""
     cfg = price_model.config()
+    pins, sop, gm, released = (_whole(v) for v in (pins, sop, gm, released))  # a blank number field is no error
+    override = override.strip().lower() in ("true", "1", "on")
     known = price_builder.site_info(session, name.strip()) if name.strip() else {}
     variants = price_builder.variants(session, name) if name.strip() else []
     rows = [(q.strip(), p.strip()) for q, p in zip(bq, bp, strict=False) if q.strip() or p.strip()]
     pasted = breaks
     breaks = "\n".join([breaks.strip(), *(f"{q} {p}" for q, p in rows if q and p)]).strip()
+    if override:  # owner, 23 Oct 2026: the part data fills and locks the form; overriding it is the second option
+        known = {**known, "family": "", "package": "", "pins": 0, "released": None}
+    elif known.get("found"):
+        family, released = known.get("family") or family, known.get("released") or released
     family = family if family in cfg["families"] else (known.get("family") or "")
     package, pins = (known["package"], known["pins"] or pins) if known.get("package") else (package, pins)
     units = known.get("units") or 0  # channels / tuners: read from the part number, used by the model only
@@ -987,10 +1001,22 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
            "rows": rows or [("", "")], "pasted": pasted,
            "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
                  "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
-                 "released": released or ""},
+                 "released": released or "", "override": override},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     return templates.TemplateResponse(request, "price_estimate.html", ctx)
+
+
+@router.get("/pricing/part-info")
+def price_part_info(name: str = "", session: Session = Depends(get_session)):
+    """What the site knows about a part number, for the price estimate form to fill in as soon as a part is picked
+    (owner, 23 Oct 2026): model family, package, pins, release year, automotive grade, sources and the variants."""
+    if not name.strip():
+        return {"family": "", "package": "", "pins": 0, "released": None, "automotive": False, "found": [],
+                "variants": []}  # fmt: skip
+    known = price_builder.site_info(session, name.strip())
+    info = {k: known.get(k) for k in ("family", "package", "pins", "released", "automotive", "found")}
+    return info | {"variants": price_builder.variants(session, name)}
 
 
 @router.api_route("/pricing/builder", methods=["GET", "POST"], response_class=HTMLResponse)

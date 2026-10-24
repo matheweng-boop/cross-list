@@ -51,7 +51,8 @@ def overview(request: Request, session: Session = Depends(get_session)):
                   "disputed": t["disagree"], "unverified": t["open"], "src_ok": t["n"] - t["no_link"], "src_corr": 0,
                   "src_no": t["no_link"], "low": 0})  # fmt: skip
     split = ", ".join(f"{n} {verify.KINDS.get(k, k).lower()}" for k, n in sorted(n_open.items()))
-    ctx = {"waiting": waiting, "stats": stats, "tam": t, "raw": raw_status(session), "verify_split": split}
+    ctx = {"waiting": waiting, "stats": stats, "tam": t, "raw": raw_status(session), "verify_split": split,
+           "todo": todo(session, waiting, n_open, t["open"])}  # fmt: skip
     return templates.TemplateResponse(request, "manage/overview.html", ctx)
 
 
@@ -73,6 +74,49 @@ def overview_counts(session: Session, now: datetime | None = None) -> dict[str, 
         "area_requests": _count(session, AreaRequest, AreaRequest.status == "new"),
         "review_requests": sum(e["status"] in ("new", "in_progress") for e in rv.requests(session)),
     }
+
+
+def _n(n: int, one: str, many: str) -> str:
+    return one if n == 1 else many
+
+
+# review queue types with no line of their own on the to-do list (requests and TAM have theirs)
+_QUEUE_TYPES = ("specification", "mapping", "qualification", "evidence")
+_QUEUE_DONE = {"done", "confirmed", "rejected", "cannot", "agreed"}  # as the Review queue's "Open" filter
+
+
+def todo(session: Session, waiting: dict, n_open: dict, tam_open: int) -> list[tuple[int, str, str]]:
+    """The owner's to-do list at the top of the Overview (owner, 24 Oct 2026): (count, label after the count, link to
+    the exact place to act), only lines with something waiting. Uses the counts the Overview already has."""
+    from app.services import maintenance, runs
+
+    queue = sum(i["type"] in _QUEUE_TYPES and i["status"] not in _QUEUE_DONE for i in maintenance.items(session))
+    v = n_open.get
+    lines = [
+        (v("sources", 0), _n(v("sources", 0), "source to check", "sources to check"), "/manage/verify#sources"),
+        (v("cross", 0), _n(v("cross", 0), "cross to verify", "crosses to verify"), "/manage/verify#cross"),
+        (v("diagram", 0), _n(v("diagram", 0), "block diagram to verify", "block diagrams to verify"),
+         "/manage/verify#diagram"),
+        (v("data", 0), _n(v("data", 0), "data item to verify", "data items to verify"), "/manage/verify#data"),
+        (waiting["part_requests"], _n(waiting["part_requests"], "part request", "part requests"),
+         "/manage/requests?kind=part"),
+        (waiting["diagram_feedback"], _n(waiting["diagram_feedback"], "diagram feedback to review",
+                                         "diagram feedback items to review"), "/manage/requests?kind=diagram"),
+        (waiting["area_requests"], _n(waiting["area_requests"], "new area request", "new area requests"),
+         "/manage/requests?kind=area"),
+        (waiting["feedback"], _n(waiting["feedback"], "new site feedback item", "new site feedback items"),
+         "/manage/feedback"),
+        (waiting["guest"], _n(waiting["guest"], "guest input to review", "guest inputs to review"),
+         "/manage/guest-input"),
+        (queue, _n(queue, "review queue item", "review queue items"), "/manage/reviews?status=open"),
+        (waiting["review_requests"], _n(waiting["review_requests"], "part review requested", "part reviews requested"),
+         "/reviews#requested"),
+        (waiting["uploads"], _n(waiting["uploads"], "new upload", "new uploads"), "/manage/uploads?status=new"),
+        (tam_open, _n(tam_open, "TAM figure to review", "TAM figures to review"), "/business/tam"),
+        (len(q := runs.open_questions()), _n(len(q), "open question for you", "open questions for you"),
+         "/manage/feedback#questions"),
+    ]  # fmt: skip
+    return [line for line in lines if line[0] > 0]
 
 
 def raw_status(session: Session) -> dict:
@@ -123,17 +167,22 @@ def verify_page(request: Request, session: Session = Depends(get_session)):
     board = verify.board(session)
     compares = {t.id: _cross_compare(session, t) for t in board["shown"]["cross"]}
     ctx = {"board": board, "kinds": verify.KINDS, "batch": verify.BATCH, "new": new, "topics": verify.DATA_TOPICS,
-           "compares": compares}  # fmt: skip
+           "compares": compares, "answers": verify.SOURCE_ANSWERS}  # fmt: skip
     return templates.TemplateResponse(request, "verify.html", ctx)
 
 
 @router.post("/manage/verify/{task_id:int}")
 def verify_done(task_id: int, result: str = Form(...), note: str = Form(""), author: str = Form(""),
                 session: Session = Depends(get_session)):  # fmt: skip
-    if result not in ("ok", "wrong"):
+    if result not in ("ok", "wrong", *verify.SOURCE_ANSWERS):
         raise HTTPException(400, "Unknown result")
+    task = session.get(VerifyTask, task_id)
+    is_source = task is not None and task.kind == "sources"
+    if task is not None and result not in (verify.SOURCE_ANSWERS if is_source else ("ok", "wrong")):
+        raise HTTPException(400, "Unknown result")  # fix / remove are Sources answers only
     try:
-        t = verify.complete(session, task_id, result == "ok", note, author)
+        answer = result if is_source else None
+        t = verify.complete(session, task_id, result == "ok", note, author, answer)
     except ValueError as e:
         raise HTTPException(404, "No open task") from e
     return RedirectResponse(f"/manage/verify#{t.kind}", status_code=303)

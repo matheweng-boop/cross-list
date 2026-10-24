@@ -9,24 +9,25 @@
 <datalist id="pe-mpns">{% for m in suggest %}<option value="{{ m }}">{% endfor %}</datalist>
 <form method="get" action="/pricing/estimate" class="pe-form">
   <div class="grid">
-    <label>Part (optional) {% if known.found %}<small class="muted">· known: {{ known.found|join(', ') }}</small>{% endif %}<input name="name" value="{{ f.name }}" placeholder="e.g. Si47962" list="pe-mpns">
-      {% if variants %}<select class="pe-variants" aria-label="Pick a variant" onchange="this.previousElementSibling.value = this.value; this.form.requestSubmit()">
-        <option value="{{ f.name }}">{{ variants|length }} variants: pick one…</option>{% for v in variants %}<option value="{{ v.mpn }}"{{ ' selected' if v.mpn|upper == f.name|upper }}>{{ v.mpn }}{% if v.package %} · {{ v.package }}{% endif %}{% if v.pins %} · {{ v.pins }} pins{% endif %}</option>{% endfor %}</select>{% endif %}</label>
-    <label>Family{% if known.family %} <small class="muted">(from the part number)</small>{% endif %}<select name="family" required>{% for k, fam in cfg.families.items() %}<option value="{{ k }}"{{ ' selected' if f.family == k }}>{{ fam.label }} · {{ cfg.classes[fam.class].label.split(' (')[0] }}</option>{% endfor %}</select></label>
+    <label>Part (optional) <small class="muted pe-found">{% if known.found %}· known: {{ known.found|join(', ') }}{% endif %}</small><input name="name" value="{{ f.name }}" placeholder="e.g. Si47962" list="pe-mpns" autocomplete="off">
+      <input type="hidden" name="override" value="{{ 'true' if f.override }}">
+      <select class="pe-variants" aria-label="Pick a variant"{{ ' hidden' if not variants }}>
+        {% if variants %}<option value="{{ f.name }}">{{ variants|length }} variants: pick one…</option>{% for v in variants %}<option value="{{ v.mpn }}"{{ ' selected' if v.mpn|upper == f.name|upper }}>{{ v.mpn }}{% if v.package %} · {{ v.package }}{% endif %}{% if v.pins %} · {{ v.pins }} pins{% endif %}</option>{% endfor %}{% endif %}</select></label>
+    <label>Family <small class="muted pe-from" data-for="family">{% if known.family %}(from the part data){% endif %}</small><select name="family" required{% if known.family %} class="pe-locked" tabindex="-1"{% endif %}>{% for k, fam in cfg.families.items() %}<option value="{{ k }}"{{ ' selected' if f.family == k }}>{{ fam.label }} · {{ cfg.classes[fam.class].label.split(' (')[0] }}</option>{% endfor %}</select></label>
     <label>Currency of the pasted prices <small class="muted">(results in USD)</small><select name="currency">{% for c in ('USD', 'EUR', 'GBP') %}<option{{ ' selected' if f.currency == c }}>{{ c }}</option>{% endfor %}</select></label>
   </div>
   <div class="grid">
-    {% if known.package %}<label>Package <small class="muted">(set by the part number)</small><input name="package" value="{{ f.package }}" readonly></label>
-    <label>Pins <small class="muted">(set by the part number)</small><input name="pins" type="number" value="{{ f.pins }}" readonly></label>
-    {% else %}<label>Package <small class="muted">(wide body is read from it, e.g. SOIC-16W)</small><input name="package" value="{{ f.package }}" placeholder="e.g. QFN-48, SOIC-16W, LGA"></label>
-    <label>Pins<input name="pins" type="number" min="1" max="2000" value="{{ f.pins }}"></label>{% endif %}
+    <label>Package <small class="muted pe-from" data-for="package">{% if known.package %}(from the part data){% else %}(wide body is read from it, e.g. SOIC-16W){% endif %}</small><input name="package" value="{{ f.package }}" placeholder="e.g. QFN-48, SOIC-16W, LGA"{% if known.package %} readonly class="pe-locked"{% endif %}></label>
+    <label>Pins <small class="muted pe-from" data-for="pins">{% if known.pins %}(from the part data){% endif %}</small><input name="pins" type="number" min="1" max="2000" value="{{ f.pins }}"{% if known.pins %} readonly class="pe-locked"{% endif %}></label>
   </div>
+  <p class="pe-override small"{{ ' hidden' if not (known.family or known.package or known.pins or known.released) }}>Filled in from the part data.
+    <button type="button" class="outline small-btn">Override</button></p>
   <div class="grid">
     <label class="pe-checks"><span><input type="checkbox" name="automotive" value="true"{{ ' checked' if f.automotive }}> automotive grade</span></label>
   </div>
   <div class="grid">
     <label>Start of production (SOP) {% if sop_from == 'datasheet' %}<small class="muted">(year of the datasheet's first revision)</small>{% endif %}<input name="sop" type="number" min="1980" max="2050" value="{{ f.sop }}"></label>
-    <label>Released (year) <small class="muted">{% if known.released %}(from the part data){% else %}(optional; blank = new part){% endif %}</small><input name="released" type="number" min="1980" max="2050" value="{{ f.released }}" placeholder="e.g. 2016"></label>
+    <label>Released (year) <small class="muted pe-from" data-for="released">{% if known.released %}(from the part data){% else %}(optional; blank = new part){% endif %}</small><input name="released" type="number" min="1980" max="2050" value="{{ f.released }}" placeholder="e.g. 2016"{% if known.released %} readonly class="pe-locked"{% endif %}></label>
   </div>
   <label class="pm-gm">Gross margin <output>{{ f.gm }}</output> %
     <input type="range" name="gm" min="{{ (cfg.margin.slider[0] * 100)|int }}" max="{{ (cfg.margin.slider[1] * 100)|int }}" step="1" value="{{ f.gm }}"
@@ -45,6 +46,46 @@
   <button type="submit">Estimate</button>
 </form>
 <script>
+(() => {  // picking a part fills family, package, pins, release year and automotive from the part data at once
+  const form = document.querySelector(".pe-form"), name = form.elements.name, vsel = form.querySelector(".pe-variants");
+  const note = (k, txt) => { const s = form.querySelector(`.pe-from[data-for="${k}"]`); if (s) s.textContent = txt; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+  let last = name.value.trim().toUpperCase(), timer;
+  const ovr = form.querySelector(".pe-override");
+  const lock = (el, on) => {  // the part data locks a field; "Override" is the second option
+    el.classList.toggle("pe-locked", on);
+    if (el.tagName === "SELECT") el.tabIndex = on ? -1 : 0; else el.readOnly = on;
+  };
+  ovr.querySelector("button").addEventListener("click", () => {
+    ["family", "package", "pins", "released"].forEach(k => { lock(form.elements[k], false); note(k, "(your value)"); });
+    form.elements.override.value = "true"; ovr.hidden = true; form.elements.family.focus();
+  });
+  async function fill() {
+    const q = name.value.trim();
+    if (!q || q.toUpperCase() === last) return;
+    last = q.toUpperCase();
+    let d;
+    try { d = await (await fetch("/pricing/part-info?name=" + encodeURIComponent(q))).json(); } catch { return; }
+    if (name.value.trim().toUpperCase() !== last) return;  // typed on meanwhile
+    form.querySelector(".pe-found").textContent = d.found.length ? "· known: " + d.found.join(", ") : "· not in the site's data: enter package and pins";
+    form.elements.override.value = "";
+    if (d.family && form.elements.family.querySelector(`option[value="${d.family}"]`)) { form.elements.family.value = d.family; note("family", "(from the part data)"); }
+    else note("family", d.found.length ? "(not set by the part data: pick one)" : "");
+    form.elements.package.value = d.package || ""; note("package", d.package ? "(from the part data)" : "(wide body is read from it, e.g. SOIC-16W)");
+    form.elements.pins.value = d.pins || ""; note("pins", d.pins ? "(from the part data)" : "");
+    form.elements.released.value = d.released || ""; note("released", d.released ? "(from the part data)" : "(optional; blank = new part)");
+    if (d.found.length) form.elements.automotive.checked = !!d.automotive;
+    const locked = [["family", d.family && form.elements.family.value === d.family], ["package", d.package], ["pins", d.pins], ["released", d.released]];
+    locked.forEach(([k, on]) => lock(form.elements[k], !!on));
+    ovr.hidden = !locked.some(([, on]) => on);
+    vsel.hidden = !d.variants.length;
+    vsel.innerHTML = d.variants.length ? `<option value="${esc(q)}">${d.variants.length} variants: pick one…</option>` + d.variants.map(v =>
+      `<option value="${esc(v.mpn)}">${esc(v.mpn)}${v.package ? " · " + esc(v.package) : ""}${v.pins ? " · " + v.pins + " pins" : ""}</option>`).join("") : "";
+  }
+  name.addEventListener("change", fill);
+  name.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(fill, 600); });
+  vsel.addEventListener("change", () => { if (vsel.value && vsel.selectedIndex > 0) { name.value = vsel.value; last = ""; fill(); } });
+})();
 document.querySelector(".pe-add")?.addEventListener("click", e => {  // "+": one more volume / price row
   const rows = e.target.closest(".pe-rows"), last = [...rows.querySelectorAll(".pe-row:not(.pe-row-head)")].pop();
   const row = last.cloneNode(true);

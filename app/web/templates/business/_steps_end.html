@@ -1,0 +1,9 @@
+{# The next steps again at the end of a report, before the sources, with the decision restated. #}
+{% if r.next_steps %}
+<section class="rpt-end" id="next-steps" aria-labelledby="ns-title">
+  <p class="label" id="ns-title">Next steps</p>
+  <p class="small"><span class="rpt-bl-k">For the decision</span> {{ r.decision }}</p>
+  <ul class="rpt-check">{% for s in r.next_steps %}<li><span aria-hidden="true">☐</span> {{ s.what }} <span class="rpt-who">{{ s.who }}</span></li>{% endfor %}</ul>
+  <p class="small muted">Answer today: {{ (r.answer or {}).text }}</p>
+</section>
+{% endif %}

@@ -49,6 +49,10 @@ make run          # then open http://localhost:8000
 make test         # run the automated tests
 ```
 
+The tests include browser tests (`tests/test_browser.py`, marker `browser`): they start the app on a free port and
+click through the main flows in headless Chromium from `/opt/pw-browsers/chromium`, and skip when it is not there.
+`uv run pytest -m browser` runs only them, `uv run pytest -m "not browser"` everything else.
+
 The database is a SQLite file in `var/`. Delete `var/crosslist.db` to start fresh.
 Settings come from environment variables (`CROSSLIST_DATABASE_URL`,
 `CROSSLIST_SEED_SYNTHETIC`, `CROSSLIST_NEW_PART_DAYS`), or a `.env` file.

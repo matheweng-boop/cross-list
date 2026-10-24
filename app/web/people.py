@@ -36,8 +36,9 @@ def _limit_reached(session: Session) -> str:
 
 
 def _people_ctx(session: Session, request: Request | None = None) -> dict:
-    guests = session.scalars(select(Account).where(Account.role == "guest").order_by(Account.disabled,
-                                                                                     Account.created_at)).all()
+    guests = session.scalars(
+        select(Account).where(Account.role == "guest").order_by(Account.disabled, Account.created_at)
+    ).all()
     invites = session.scalars(select(Invite).order_by(Invite.created_at.desc()).limit(50)).all()
     t = now()
     rows = [{"i": i, "state": "used" if i.used_at else ("expired" if aware(i.expires_at) <= t else "open")}

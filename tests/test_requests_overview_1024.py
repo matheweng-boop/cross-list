@@ -12,11 +12,19 @@ from app.web import nav
 
 def _seed(session):
     t = datetime.now(UTC)
-    session.add_all([CrossRequest(mpn="ZQ1234", note="for customer A", created_at=t - timedelta(hours=3)),
-                     CrossRequest(mpn="ZQ9999", status="done", created_at=t - timedelta(hours=4)),
-                     BlockFeedback(message="Add a boost stage", diagram_name="Inverter", target="Gate driver",
-                                   created_at=t - timedelta(hours=2)),
-                     AreaRequest(area="Robotics", why="Humanoid robots", created_at=t - timedelta(hours=1))])
+    session.add_all(
+        [
+            CrossRequest(mpn="ZQ1234", note="for customer A", created_at=t - timedelta(hours=3)),
+            CrossRequest(mpn="ZQ9999", status="done", created_at=t - timedelta(hours=4)),
+            BlockFeedback(
+                message="Add a boost stage",
+                diagram_name="Inverter",
+                target="Gate driver",
+                created_at=t - timedelta(hours=2),
+            ),
+            AreaRequest(area="Robotics", why="Humanoid robots", created_at=t - timedelta(hours=1)),
+        ]
+    )
     session.commit()
 
 

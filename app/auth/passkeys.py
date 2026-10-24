@@ -159,8 +159,13 @@ def _register(session: Session, row: WebauthnChallenge, credential: dict, accoun
     if session.scalar(select(PasskeyCredential).where(PasskeyCredential.credential_id == cred_id)) is not None:
         raise ValueError("This passkey is already registered.")
     transports = (credential.get("response") or {}).get("transports")
-    pk = PasskeyCredential(account=account, credential_id=cred_id, public_key=v.credential_public_key,
-                           sign_count=v.sign_count, transports=transports if isinstance(transports, list) else None)
+    pk = PasskeyCredential(
+        account=account,
+        credential_id=cred_id,
+        public_key=v.credential_public_key,
+        sign_count=v.sign_count,
+        transports=transports if isinstance(transports, list) else None,
+    )
     session.add(pk)
     return pk
 

@@ -56,6 +56,7 @@ async def attach_file(item_id: int, client: str = Form(""), file: UploadFile = F
                       session: Session = Depends(get_session)):  # fmt: skip
     """A picture or PDF sent with a feedback item, from the browser that sent the item. Stored like Data management >
     Uploads (same limits, same folder) and linked to the item."""
+
     def refuse(status: int, why: str) -> JSONResponse:  # JSON, so the Feedback window can say why
         return JSONResponse({"detail": why}, status_code=status)
 

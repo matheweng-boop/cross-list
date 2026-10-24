@@ -26,7 +26,7 @@ FEASIBILITY = {  # product ideas: how far from today's portfolio (0 = not scored
 LEARN_AGES = {  # "Learn about this": one short paragraph per age, from simple to technical (default headings)
     5: "What it is", 10: "Why it matters", 15: "What it needs", 20: "Where the request comes from",
     25: "Who else does it, and where we stand",
-}
+}  # fmt: skip
 GENERIC_TAGS = {"automotive", "pricing", "architecture", "filters", "telematics", "front-end module", "defense"}
 OPENER_ID = "q-bu-opener"  # the background question asked first to the business unit (bu_opener in reports.yaml)
 

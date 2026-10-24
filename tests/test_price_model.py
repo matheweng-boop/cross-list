@@ -99,7 +99,7 @@ def test_classes_and_estimate_page(client, session):
     m = pm.estimate(session, "am_fm_tuner", pm.parse_breaks(DK_PASTE), "QFN-48", 48, automotive=True, name="Si47962")
     assert m["cost"]["automotive"] and len(m["rows"]) == 3 and m["rows"][-1]["target"] < 13.13
     html = client.get("/pricing/estimate", params={"family": "am_fm_tuner", "breaks": DK_PASTE, "package": "QFN-48",
-                                                   "pins": 48, "currency": "EUR", "name": "Si47962"}).text
+                                                   "pins": 48, "currency": "EUR", "name": "Si47962"}).text  # fmt: skip
     assert "Si47962" in html and "1,000,000" in html and "converted from EUR" in html and "Low end" not in html
     assert "€" not in html.split('id="price-model"')[1]  # results all in USD
     assert client.get("/pricing/estimate").status_code == 200
@@ -121,12 +121,23 @@ def test_oem_targets_and_our_part_from_a_competitor(client, session):
     o = pm.oem_path(m, 2028)
     assert [r["phase"] for r in o["rows"]][:3] == ["today", "before SOP", "SOP"] and o["rows"][0]["low"] == o["start"]
     sop = next(r for r in o["rows"] if r["phase"] == "SOP")
-    assert abs(sop["high"] - o["start"] * 0.95 ** 2) < 1e-9 and abs(sop["low"] - o["start"] * 0.93 ** 2) < 1e-9
+    assert abs(sop["high"] - o["start"] * 0.95**2) < 1e-9 and abs(sop["low"] - o["start"] * 0.93**2) < 1e-9
     ours = pm.scaled(m, 0.9, 1.0)
     assert all(a["low"] < b["low"] and a["high"] == b["high"] for a, b in zip(ours, m["rows"], strict=True))
-    html = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "name": "GD3162",
-                                                   "package": "SOIC-32W", "pins": 32, "wide": "true",
-                                                   "automotive": "true", "sop": 2029, "ours": "Si82900"}).text
+    html = client.get(
+        "/pricing/estimate",
+        params={
+            "family": "gate_driver",
+            "breaks": GD3162,
+            "name": "GD3162",
+            "package": "SOIC-32W",
+            "pins": 32,
+            "wide": "true",
+            "automotive": "true",
+            "sop": 2029,
+            "ours": "Si82900",
+        },
+    ).text
     assert "OEM target prices" in html and "SOP 2029" in html
     # owner, 23 Oct 2026: "take out the our part price": no field, an old link's value is ignored
     assert "Si82900" not in html and 'name="ours"' not in html and "pe-ours" not in html
@@ -166,6 +177,7 @@ def test_fab_scenarios_and_cost_adjustment(client, session, part, real):
     assert 'name="fab"' not in html and "?fab=" not in html and "&fab=" not in html  # never a form field or link
     est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "ours": "X"}).text
     assert 'data-fab="in_house" hidden>' in est and 'name="fab"' not in est and 'class="pe-ours"' not in est
+
 
 def test_oem_path_flattens_after_the_price_down_years():
     m = {"rows": [{"volume": 100000, "low": 0.9, "target": 1.0, "high": 1.1}]}

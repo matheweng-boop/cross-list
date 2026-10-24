@@ -125,8 +125,16 @@ def test_business_case_asks_feasibility_price_manufacturing_markets_competition(
     page = client.get("/business/cases/new?fn=pol_ldo").text
     assert "Is the technology feasible?" in page and "Anything else to add?" in page
     assert 'data-field="market_size"' in page and "Manufacturing locations" in page
-    r = client.post("/business/cases", data={"title": "LDO case", "fn": "pol_ldo", "feasibility": "Existing die",
-                                              "manufacturing": "Open: not public", "anything_else": "Add export"})
+    r = client.post(
+        "/business/cases",
+        data={
+            "title": "LDO case",
+            "fn": "pol_ldo",
+            "feasibility": "Existing die",
+            "manufacturing": "Open: not public",
+            "anything_else": "Add export",
+        },
+    )
     assert r.status_code in (200, 303)
     cid = int(re.search(r"/business/cases/(\d+)", client.get("/business/cases").text).group(1))
     brief = client.get(f"/business/cases/{cid}/brief.md").text
@@ -183,4 +191,4 @@ def test_library_focus_areas_and_area_requests(client, session):
     assert client.post(f"/blocks/area-requests/{rid}", data={"status": "x"}).status_code == 400
     daily = (ROOT / "docs/daily_update.md").read_text()
     assert ("Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per "
-            "run") in daily
+            "run") in daily  # fmt: skip

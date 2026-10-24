@@ -108,8 +108,10 @@ class PasswordGate(BaseHTTPMiddleware):
             if request.method not in access.SAFE_METHODS and not guest_input.is_compute_only(path):
                 return await _capture(request, p)
         resp = await call_next(request)
-        if request.cookies.get(FLASH) and request.method == "GET" and resp.headers.get("content-type", "").startswith(
-            "text/html"
+        if (
+            request.cookies.get(FLASH)
+            and request.method == "GET"
+            and resp.headers.get("content-type", "").startswith("text/html")
         ):
             resp.delete_cookie(FLASH)
         return resp

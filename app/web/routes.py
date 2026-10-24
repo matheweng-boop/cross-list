@@ -877,8 +877,6 @@ def feedback(
     return RedirectResponse(f"/parts/{reference_id}#row-{candidate_id}", status_code=303)
 
 
-
-
 @router.get("/pricing/{part_id:int}", response_class=HTMLResponse)
 def pricing_line(
     request: Request,
@@ -931,8 +929,9 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
     scenarios = []
     for fab in price_model.fab_scenarios():
         m = price_model.model(session, part, pq, gm / 100 if gm else None, fab)
-        m["oem"] = price_model.oem_path(m, sop if 2020 <= sop <= 2050 else None,
-                                        released=part.release_date.year if part.release_date else None)
+        m["oem"] = price_model.oem_path(
+            m, sop if 2020 <= sop <= 2050 else None, released=part.release_date.year if part.release_date else None
+        )
         scenarios.append((fab, m))
     ctx = {"part": part, "m": scenarios[0][1], "scenarios": scenarios, "calls": price_model.CALLS,
            "cfg": price_model.config(),

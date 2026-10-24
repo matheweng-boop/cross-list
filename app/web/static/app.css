@@ -2040,6 +2040,17 @@ article { border: 1px solid var(--card-line); border-radius: var(--radius-card);
 .ov-todo a::after { content: "›"; margin-left: auto; color: var(--pico-muted-color); }
 .ov-none { margin: .3rem 0 1rem; }
 
+/* Numbers right-aligned in tabular figures: case price bands and competitor financials (site check, 24 Oct 2026) */
+.cp-fin :is(td, th):not(:first-child):not(:last-child) { text-align: right; font-variant-numeric: tabular-nums; }
+@media (min-width: 601px) {
+  .pc-prices :is(td, th):nth-child(n+2):nth-child(-n+4) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+}
+@media (max-width: 600px) {  /* one block per row on phones: name each price */
+  .pc-prices td:nth-child(2)::before { content: "Entry: "; } .pc-prices td:nth-child(3)::before { content: "Target: "; }
+  .pc-prices td:nth-child(4)::before { content: "Premium: "; }
+  .pc-prices td:nth-child(n+2):nth-child(-n+4)::before { color: var(--pico-muted-color); font-weight: 400; }
+}
+
 /* Guests: links to owner-only pages (Data management, TAM, data quality) read as plain text, not a "not allowed" page */
 body.guest main :is(a[href^="/manage"], a[href^="/owner"], a[href^="/business/tam"], a[href^="/business/quality"],
   a[href^="/business/validation"], a[href^="/business/data"], a[href^="/requests"], a[href^="/blocks/feedback"],

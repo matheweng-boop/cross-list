@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path, 'Car radio') }}{% endblock %}
 {% block content %}
 {% macro part_link(mpn) %}{% set href = links.get(mpn) or '/find?q=' ~ mpn|urlencode %}{% if href.startswith('/') %}<a href="{{ href }}"><b>{{ mpn }}</b></a>{% else %}<a href="{{ href }}" target="_blank" rel="noopener"><b>{{ mpn }}</b> <span aria-hidden="true">↗</span><span class="visually-hidden">(manufacturer page, opens in a new tab)</span></a>{% endif %}{% endmacro %}
 <h1>Car radio <small class="muted">· broadcast tuners and demodulators</small></h1>

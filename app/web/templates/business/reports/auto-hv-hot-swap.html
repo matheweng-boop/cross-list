@@ -1,6 +1,7 @@
 {% raw %}<h1>Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits</h1>
 <p class="meta">23 Oct 2026 · Research topic asked by the owner: “I would like a research topic for hot-swap controllers in automotive. Are there any known pain points in having to get near 800 V and be able to safely plug something in or out?” · built from BizDev data (parts database, Skyworks catalogue, block-diagram library, library topic on traction-inverter isolation, cached Skyworks app notes AN1052 and AN1456) and four public TI pages read on 23 Oct 2026. Standards are paid and were not read: they are summarised at the level the owner asked for. Our own reasoning is marked “est”. All sources: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
 
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
 <section class="brief" aria-label="Summary">
   <p class="label">In brief</p>
   <ol>
@@ -46,6 +47,7 @@
   <li><b>A solid-state pre-charge and disconnect set:</b> the new driver + Si828x DESAT gate drivers for the main SiC switches + Si8921BD / Si8941BD current sensing + Si8931D voltage sensing + Si86xx isolators, as one reference design for the battery junction box and the charger. <span class="muted">Today's parts plus the new driver; competes with TI's TIDA-050063.</span></li>
   <li><b>A 1200 V integrated isolated relay for insulation monitoring (feasibility 3).</b> Driver and back-to-back high-voltage MOSFETs in one package, like TPSI2140-Q1. <span class="muted">Needs 1200 V MOSFETs in the package: new for us.</span></li>
 </ol>
+<p class="rpt-thread"><b>For the decision:</b> Every solid-state switch in the chain needs an isolated driver and isolated sensing. We have all of it except a reinforced switch driver, and that one gap is what the decision is about.</p>
 
 <h2>2. Where else we see opportunities</h2>
 <h3 id="where">Where plugging in and out happens around 400 / 800 V</h3>
@@ -70,6 +72,7 @@
   <li><b>Battery storage racks (1000–1500 V):</b> rack contactors, pre-charge and insulation monitoring as in the car; TI's 1500 V rack monitor reference (TIDA-010272) uses the TPSI2140 relay (<a href="/blocks/new?diagram=Energy%20storage%20system%20battery%20%28multimodule%2C%20daisy%20chain%29%20-%20rack%20BMS%20%28TI%29">rack BMS</a>).</li>
   <li><b>DC fast chargers:</b> output contactors, insulation check before every session and pre-charge of the car's link; the same set of parts (est).</li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> Pre-charge in the battery junction box and the charger is the first socket to ask about; 800 V DC racks and storage use the same set, so one part could serve both (est).</p>
 
 <h2>3. Market trend and technology</h2>
 <h3>400 V and 800 V architectures</h3>
@@ -119,6 +122,7 @@
   </tbody>
 </table></div>
 <p class="small"><b>Price points (TI store, 1k, 23 Oct 2026):</b> TPSI3050-Q1 $2.299 (reel); TPSI2140-Q1 $2.896. Our Si875x price: not public in BizDev.</p>
+<p class="rpt-thread"><b>For the decision:</b> Solid-state wins first in pre-charge, discharge and insulation monitoring, not in the main disconnect. Size the successor for those jobs (10–15 V gate drive, small currents) rather than wait for solid-state contactors.</p>
 
 <h2>Risks</h2>
 <ul>
@@ -127,6 +131,7 @@
   <li>The 12 V / 48 V eFuse market is large but not isolated, so it does not use our technology.</li>
   <li>The standards were not read; the values here are those commonly quoted.</li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> TI's head start is the main risk: the answer stays “build it” only if the BU confirms the reinforced barrier at a cost that allows a price near $2.30 (est).</p>
 
 <h2>Open questions</h2>
 <ul>
@@ -134,7 +139,9 @@
   <li>Do OEMs and Tier-1s plan solid-state pre-charge or battery disconnects for 800 V platforms, and when?</li>
   <li>What does an 800 V DC rack slot use for hot-plug today, and is the driver isolated?</li>
 </ul>
+<p class="rpt-thread"><b>For the decision:</b> The first two questions are the needed-now items; the 800 V rack question can wait until the car answer is in.</p>
 
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
 <h2>Sources</h2>
 <p class="small">TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); Skyworks AN1052 (Si875x) and AN1456 (data-centre creepage); BizDev parts database, Skyworks catalogue and block-diagram library; library topic on traction-inverter isolation; NVIDIA technical blog (20 May 2025) and eeNews Europe (19 Mar 2026) as recorded in the extra-wide isolation case. Every figure with its link and confidence: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
 {% endraw %}

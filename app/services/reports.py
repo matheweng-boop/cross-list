@@ -37,7 +37,8 @@ def reports() -> tuple[dict, ...]:
 
     rows = (yamlio.load(FILE.read_text()) or {}).get("reports") or [] if FILE.exists() else []
     rows = [{**r, "app_type": r.get("app_type") or "Other",
-             "feasibility": int(r.get("feasibility") or 0) or (prelim.derived_feasibility(r["slug"]) or 0)}
+             "feasibility": int(r.get("feasibility") or 0) or (prelim.derived_feasibility(r["slug"]) or 0),
+             "story_issues": story_problems(r)}
             for r in rows if (BODIES / f"{r['slug']}.html").exists()]  # fmt: skip
     return tuple(sorted(rows, key=lambda r: str(r.get("date") or ""), reverse=True))
 
@@ -64,6 +65,40 @@ def related(text: str = "", fn: str | None = None, slugs: tuple[str, ...] = ()) 
         hit = r["slug"] in slugs or (fn and (prelim.raw(r["slug"]) or {}).get("fn") == fn)
         if hit or any(f" {w} " in low or (len(w) > 6 and w in low) for w in words):
             out.append(r)
+    return out
+
+
+# --- the storyline (owner, 24 Oct 2026): one decision per report, shown as the Bottom line and threaded through ------
+CONFIDENCE = ("high", "med", "low")
+STORY_FIELDS = ("decision", "answer", "needed_now", "say_externally", "next_steps")
+# never in what the owner may say outside the team (whole words or phrases, case-insensitive)
+EXTERNAL_BLOCKLIST = ("internal", "confidential", "roadmap", "our price", "margin", "fab", "wafer", "foundry", "est")
+# sections of a preliminary case (business/_prelim.html) that end with a thread line
+CASE_THREADS = ("benefit", "position", "market", "outlook", "features", "product", "asp", "attach", "questions",
+                "risks")  # fmt: skip
+
+
+def blocked_words(text: str) -> list[str]:
+    import re
+
+    low = (text or "").lower()
+    return [w for w in EXTERNAL_BLOCKLIST if re.search(rf"\b{re.escape(w)}\b", low)]
+
+
+def story_problems(r: dict) -> list[str]:
+    """What is missing or wrong in a report's storyline fields (empty when it is complete)."""
+    out = [f"no {f}" for f in STORY_FIELDS if not r.get(f)]
+    a = r.get("answer") or {}
+    if r.get("answer") and (not isinstance(a, dict) or not a.get("text") or a.get("conf") not in CONFIDENCE):
+        out.append("answer needs text and conf (high / med / low)")
+    if not 1 <= len(r.get("needed_now") or []) <= 3:
+        out.append("needed_now: one to three items")
+    steps = r.get("next_steps") or []
+    if len(steps) != 3 or not all(isinstance(s, dict) and s.get("what") and s.get("who") and s.get("why")
+                                  for s in steps):  # fmt: skip
+        out.append("next_steps: three steps, each with what, who and why")
+    if bad := blocked_words(r.get("say_externally") or ""):
+        out.append(f"say_externally uses {', '.join(bad)}")
     return out
 
 

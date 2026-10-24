@@ -6,6 +6,7 @@
     <span class="rp-meta small">{{ fz.stage(scheduled.get(r.slug)) }} {{ r.area }} · {{ r.date }} {{ fz.feas(r.feasibility, r.feasibility_why) }}</span>
     <b class="rp-title">{{ r.title }}</b>
     {% if r.question %}<span class="small muted rp-q">“{{ r.question }}”</span>{% endif %}
+    {% if r.decision %}<span class="small rp-bl"><b>Decision:</b> {{ r.decision }} <b>Answer:</b> {{ (r.answer or {}).text }}</span>{% endif %}
     <span class="small">{{ r.summary }}</span>
     {% if r.feasibility_why %}<span class="small muted">Feasibility: {{ r.feasibility_why }}</span>{% endif %}
     {% if r.tags %}<span class="rp-tags">{% for t in r.tags %}<span class="badge">{{ t }}</span>{% endfor %}</span>{% endif %}

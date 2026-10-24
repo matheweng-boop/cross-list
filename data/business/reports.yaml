@@ -35,6 +35,23 @@
 #   learn_links      knowledge-base pages to read next: {label, href} on /library, /rf-notes, /engineering, /visuals
 #   see_also         slugs of related reports or cases (a research report and the business case built on it), shown
 #                    as "See also" links under the report's header
+#
+# Storyline fields (owner, 24 Oct 2026: one theme through every report; shown as the "Bottom line" under the title, as
+# "Next steps" at the end and as one line per card on Research & ideas; checked by reports.story_problems):
+#   decision         the one question the report answers, phrased as a decision for Skyworks ("Should we ...?")
+#   answer           {text, conf}: the short answer today in one or two sentences; conf high | med | low. If the content
+#                    does not support an answer, start with "Not enough data yet" and say what would settle it; "est"
+#                    marks our estimates
+#   needed_now       one to three things that decide or unblock it now (data, a BU answer, a customer check)
+#   say_externally   two or three sentences the owner can say to a customer, partner or colleague outside the team:
+#                    public facts and our public portfolio only, phrased as an interest or a question, never a
+#                    commitment; no internal plans, prices or estimates, nothing confidential, never where parts are made
+#                    (words like internal, roadmap, margin, fab, est are refused)
+#   next_steps       exactly three {what, who, why} (who: a BU, a customer type, our FAE, a standard or the daily run);
+#                    optional case: <slug> when the step hands over to a business case (see_also pairs share or hand over
+#                    the decision)
+# Thread lines: every main section of a report body ends with <p class="rpt-thread"><b>For the decision:</b> ...</p>;
+# a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
   - slug: auto-hv-hot-swap
     title: 'Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits'
@@ -80,6 +97,35 @@ reports:
     sources: BizDev parts database, Skyworks catalogue, block-diagram library and library topic on traction-inverter isolation;
       Skyworks AN1052 and AN1456; TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); NVIDIA and eeNews Europe pages
       recorded for the extra-wide isolation case; standards summarised, not read
+    decision: Should we build a reinforced successor to Si875x and sell it as an 800 V solid-state pre-charge and disconnect
+      set with our gate drivers and Si89xx sensing?
+    answer:
+      text: Probably yes, aimed at pre-charge, active discharge and insulation monitoring first, not at replacing the main
+        contactors. TI is there first, so it pays only if the BU can make the Si875x barrier reinforced at a cost that lets
+        us price near TI's $2.30 (est).
+      conf: low
+    needed_now:
+    - 'Isolation BU: can the Si875x power transfer cross a reinforced 5 kVrms barrier with 10–15 V gate drive, and at what
+      cost?'
+    - 'One or two battery-junction-box or charger teams: do they plan solid-state pre-charge on 800 V platforms, and from
+      which year?'
+    - 'Sales or FAE: do customers already ask us for a TPSI3050-Q1 cross?'
+    say_externally: We see solid-state pre-charge and insulation monitoring starting to replace resistors and relays in 800
+      V cars and in 800 V DC racks. Skyworks already sells isolated FET drivers (Si875x), isolated gate drivers and isolated
+      current and voltage sensing for these circuits. We would like to learn how you plan pre-charge and disconnect on your
+      next 800 V platform, and what isolation rating you need.
+    next_steps:
+    - what: Ask whether Si875x can be made reinforced (5 kVrms, SSO-8 or wide SOIC) with 10–15 V gate drive and fault feedback
+      who: Isolation BU
+      why: Tells us whether feasibility 2 holds and what the part could cost against TPSI3050-Q1 at $2.30 (1k).
+    - what: Ask two battery-junction-box or on-board-charger teams how they pre-charge and monitor insulation on their next
+        800 V platform
+      who: Tier-1 BDU / OBC hardware lead, through our FAE
+      why: Shows whether solid-state pre-charge is planned, from which year, and which isolation and gate voltage they need.
+    - what: Size the isolated current sensing of the same set in the current-sensing case
+      who: Daily run
+      why: Hands the sensing half of the set to its own case, so the set can be priced as one.
+      case: iso-current-sense-charging
     bu_opener:
       question: In 800 V cars, chargers and the new 800 V DC data-centre racks, solid-state switches are starting to replace the
         pre-charge resistor, insulation-monitor relays and later the contactors. Each one needs an isolated driver with its own
@@ -154,6 +200,31 @@ reports:
       automotive package, about $1.5–1.9 (est). Market: current sensors $3.35 B in 2026 to $6.39 B by 2032 (analyst PR).
     tags: [isolated amplifier, current sensing, shunt, integrated DC-DC, isolated power, EV charging, on-board charger, DC fast charger, wallbox, AMC3301, AMC3302, TMCS1123, Si8921, Si8941, Si86Px, error budget, pricing]
     sources: "BizDev parts database (Skyworks and TI isolated amplifiers), Skyworks AN1270 and the Si86Px datasheet (cache); TI product pages AMC3301 and TMCS1123 and a MarketsandMarkets press release (read 23 Oct 2026); TI reference designs and IEA figures recorded for the extra-wide isolation case; every figure in the background notes"
+    decision: Should we combine an Si89xx sensing die with the Si86Px isolated power stage into one reinforced automotive
+      part (Si89xx-P) for EV chargers, and is a built-in shunt worth it?
+    answer:
+      text: 'Yes for built-in power: TI proves the demand and our die is as accurate and quieter. Not yet for the built-in
+        shunt, since Hall sensors already serve small currents. It hinges on Si86Px reaching a reinforced, automotive rating
+        (est).'
+      conf: med
+    needed_now:
+    - 'Isolation BU: can the Si86Px power stage share a package with the Si892x / Si894x die and reach reinforced and AEC-Q100?'
+    - 'Isolation BU: what it takes to raise CMTI from 50 to at least 100 kV/µs'
+    - 'One charger customer: the current error needed per sense point, and how they power the high side today'
+    say_externally: In 800 V chargers every current measurement across the barrier needs an isolated amplifier and its own
+      floating supply. Skyworks sells reinforced, automotive isolated amplifiers (Si89xx) and isolated bias supplies today.
+      We would like to understand how you power the high side of each sense point and what accuracy you need over temperature
+      and lifetime.
+    next_steps:
+    - what: Ask whether the Si86Px power stage and the Si892x / Si894x die fit one reinforced, AEC-Q100 package
+      who: Isolation BU
+      why: Decides whether Si89xx-P is feasibility 2 or needs a new power stage.
+    - what: Ask about the error budget per sense point and how the high side is powered
+      who: OBC / DC-charger hardware lead, through our FAE
+      why: Gives the accuracy target and what one part with built-in power saves them.
+    - what: Offer Si8921BD / Si8941BD-AS4 with Si88xx bias and the AN1270 error budget in current charger designs
+      who: Our FAE
+      why: Wins sockets today and shows how often customers ask for built-in power.
     bu_opener:
       question: In EV chargers every current measurement across the high-voltage barrier needs an isolated amplifier and its own
         floating supply. TI sells amplifiers with the isolated supply built in (AMC3301 at $1.65, AMC3302-Q1) and uses them in its
@@ -247,6 +318,30 @@ reports:
       traction-inverter isolation; public creepage notes (TI SLUP419/SLUP421, SLUAAR5, SLLA469, SSZTAI4, SBAA527; MINMAX;
       Vishay; Skyworks AN583 and AN1456; CONEC; EV Engineering; a TÜV IEC 62109-1 report; TI E2E; Wolfspeed forum), market
       pages (SolarPower Europe, Wood Mackenzie, GWEC, NVIDIA, UNIFE) and the TI ISO7821 product page (prices), 21 Oct 2026.
+    decision: Should we answer TI's extra-wide isolators (ISO7821DWW, 14.5 mm) by putting our isolator dies into the ultra-wide
+      SOIC (>15 mm) that AN1456 announces?
+    answer:
+      text: 'Yes, worth a business case, but only outside the car: 1500 V solar and storage, 1000 V chargers and 800 V DC
+        data-centre power. Inside the car 8 mm covers 800 V. The case hv-extra-wide-isolation carries the decision on.'
+      conf: med
+    needed_now:
+    - 'Isolation BU: release date, first dies and working-voltage rating of the ultra-wide SOIC'
+    - 'Sales: which customers asked for ISO7821DWW or 15 mm parts, and at what volume'
+    say_externally: Reinforced isolation at 1000 to 1500 V needs about 15 mm creepage, more than standard wide-body packages
+      give. Skyworks' application note AN1456 explains creepage and clearance for these systems. We would like to hear which
+      creepage and working voltage your safety assessor asks for.
+    next_steps:
+    - what: Take the decision to the extra-wide isolation case
+      who: Daily run
+      why: The case prices an ultra-wide family and lists the BU and customer questions; this report only shows where more
+        than 8 mm matters.
+      case: hv-extra-wide-isolation
+    - what: Ask when the ultra-wide SOIC is released, which dies go in first and at what working voltage
+      who: Isolation BU
+      why: Without a date and a rating of about 2000 Vrms the 1500 V sockets cannot be quoted.
+    - what: Ask which customers asked for ISO7821DWW or 15 mm parts, in which product
+      who: Our FAE / sales
+      why: Real requests show which market comes first and at what volume.
     bu_opener:
       question: TI sells ISO7821DWW, a 2-channel reinforced isolator in an extra-wide package (14.5 mm creepage) for high-voltage
         power and charging, at the same reel price as its 8 mm version. Our nearest parts (Si86S621/622) stop at 8 mm, which
@@ -336,6 +431,31 @@ reports:
       $2.6 a part (est). Five block diagrams added (1500 V solar, 1500 V storage, 800 V DC data center, wind, rail).
     tags: [extra-wide package, creepage, reinforced isolation, 1500 V, solar inverter, battery energy storage, BESS, 800 V DC, data center, wind, railway, digital isolator, isolated gate driver, isolated amplifier, pricing]
     sources: "BizDev parts database, block-diagram library and TI list prices; Skyworks AN1456; public pages read 21 Oct 2026 (NVIDIA, TI reference designs and app brief SBAA527, TI E2E, Wolfspeed forum, Wood Mackenzie, SolarPower Europe, GWEC, UNIFE, eeNews Europe) and search snippets (IEA, Broadcom); every figure in the background notes"
+    decision: Should we put our isolator, isolated-amplifier and gate-driver dies into the ultra-wide SOIC (>15 mm) that AN1456
+      announces, and sell a 1500 V barrier set?
+    answer:
+      text: Yes for 1500 V solar and storage and 800 V DC data centres, if the package comes soon and the dies reach about
+        2000 Vrms working voltage; the car does not need it. We are late against TI, Novosense and Broadcom, so it wins redesigns
+        and new platforms first (est).
+      conf: med
+    needed_now:
+    - 'Isolation BU: release date of the ultra-wide SOIC and which dies go in first'
+    - 'Isolation BU: the working-voltage rating our dies reach in it'
+    - 'A 1500 V inverter maker: which creepage the assessor requires (15 mm or 14.5 mm)'
+    say_externally: Utility solar and battery storage at 1500 V DC need about 15 mm creepage across the control barrier, and
+      800 V DC data-centre power at high altitude needs more than 8 mm. Skyworks sells reinforced isolators, isolated amplifiers
+      and gate drivers, and has published AN1456 on creepage and clearance for these systems. We would like to know what creepage
+      and working voltage your assessor asks for, and how you meet it today.
+    next_steps:
+    - what: Ask when the ultra-wide SOIC is released, which dies go first and at what working voltage
+      who: Isolation BU
+      why: Without a date and a rating of about 2000 Vrms there is nothing to quote.
+    - what: Ask what the assessor requires and how many isolators, amplifiers and drivers cross the barrier
+      who: Solar inverter / PCS hardware lead
+      why: Confirms 15 mm against 14.5 mm and the content per inverter behind the volume scenarios.
+    - what: Ask which customers asked for ISO7821DWW or 15 mm parts
+      who: Our FAE / sales
+      why: Real requests show which market and volume come first.
     bu_opener:
       question: Utility solar and battery storage have moved to 1500 V DC, where the safety barrier between power and control needs about
         15 mm creepage; data centers move to 800 V DC at up to 3000 m. Our AN1456 already announces an ultra-wide SOIC (>15 mm). Should we
@@ -394,6 +514,28 @@ reports:
       LTCC or IPD, which we don't have since Trans-Tech (with Lark) was sold; build, buy or partner.
     tags: [filters, Wi-Fi 7, 5G n77, UWB, X-band, defense]
     sources: "BizDev catalogue, competitor and demand data; ~106 public web sources (background notes)"
+    decision: Which combined filter product should we propose first, and how do we cover wideband filters now that Trans-Tech
+      and Lark are sold?
+    answer:
+      text: 'First a Wi-Fi 7/8 BAW multiplexer family: we sell every part of it today. For wideband: not enough data yet to
+        choose between build, buy and partner; a list of partners and their prices would settle it.'
+      conf: low
+    needed_now:
+    - 'Filter BU: release plan for SKY85929/31/32 (preview) and QPQ4701 as one family'
+    - Whether the post-merger plan keeps low-volume standalone filters
+    say_externally: Skyworks sells BAW filters and multiplexers together with Wi-Fi front ends, LNAs and switches from 1 to
+      about 7 GHz. We are interested in where you need a filter combined with an LNA or a switch, and which bandwidths you
+      need above 7 GHz.
+    next_steps:
+    - what: Ask for the release plan of SKY85929/31/32 and QPQ4701, and whether they can be sold as one family
+      who: Filter BU
+      why: Tells us whether idea 1 can be offered within a year.
+    - what: Ask a 5G small-cell or FWA radio maker whether a filtered switch-LNA module would replace their discrete chain
+      who: Small-cell radio hardware lead, through our FAE
+      why: Confirms demand for idea 2, where no integrated equivalent was found.
+    - what: Write the Wi-Fi multiplexer family up as a preliminary case
+      who: Daily run
+      why: Brings idea 1 to the depth of the other ideas, with price, volume and BU questions.
     bu_opener:
       question: Our filters sit next to LNAs, switches and FEMs we already sell. Should we turn that into a few combined filter
         products (a Wi-Fi 7/8 BAW multiplexer family, a filtered switch-LNA for 5G small cells, a protected filter bank for
@@ -458,6 +600,29 @@ reports:
       design from today's parts and CDR to production.
     tags: [car radio, radio node, remote tuner module, SDR, HD Radio, DAB+, DRM, CDR, AMIC, pricing, architecture]
     sources: "BizDev block-diagram library and broadcast data; ~140 public web requests (S&P, OICA, WorldDAB, DRM Consortium, Radio World, Hirschmann, OpenSynergy, distributor snippets)"
+    decision: Should we build a radio node (2 or 4 tuners, decoder and car-network output) from our existing tuner and decoder
+      circuits within 2–3 years?
+    answer:
+      text: Not enough data yet. The node fits zonal cars, but there are no public remote-tuner volumes. It becomes a yes
+        if carmakers confirm the radio moves to the antenna and one package (step 1) can reach about $10–12 for 2 tuners (est).
+      conf: low
+    needed_now:
+    - 'Carmakers: will the next platform move the radio into a remote tuner or roof module, and from which model year?'
+    - 'Radio BU: die costs and contract ASPs of Si4796x and Si469xx'
+    - 'Customers: which link they want from the antenna module (A²B, Ethernet or coax)'
+    say_externally: Car radio is moving towards the antenna and towards central computers. Skyworks sells chainable automotive
+      tuners and multi-standard digital radio decoders (AM/FM, HD Radio, DAB, DRM) today. We would like to learn whether your
+      next platform moves the radio out of the head unit, and which link you would want from the antenna module.
+    next_steps:
+    - what: Ask whether the radio moves to a remote tuner or roof module, and from which model year
+      who: OEM E/E architecture team
+      why: Decides whether the node has a market at all.
+    - what: Ask for die costs and contract ASPs of Si4796x and Si469xx, and whether tuner and decoder can share a die
+      who: Radio BU
+      why: Shows whether RN2 / RN4 can reach their target prices and whether one package is the only near-term route.
+    - what: Build a remote tuner module reference design from today's parts with an antenna maker
+      who: Our FAE with a Tier-1 antenna module team
+      why: Tests the architecture with customers before any new chip.
     bu_opener:
       question: Car radio is moving to the antenna and to central computers. Should we build a radio node (2 or 4 tuners + decoder
         + car-network output) from our existing tuner and decoder circuits in 2–3 years, at about $10–12 (2 tuners) and $16–19
@@ -519,6 +684,30 @@ reports:
       volume (est), an optional anchor FEM (≈$0.6–1.1), and firmware MMS and DK 4.0 on today's QPF5100Q as the bridge.
     tags: [UWB, 802.15.4ab, narrowband assist, digital key, CCC, car access, QPF5100Q, anchor FEM, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; ~20 public web requests and searches (IEEE 802.15, ST blog, CNX Software, Rohde & Schwarz, ABI Research, TI, search snippets)"
+    decision: Should we build an 802.15.4ab anchor chip with narrowband assist from the Qorvo UWB radio and radar, with firmware
+      on today's QPF5100Q as the bridge?
+    answer:
+      text: Probably yes, but first check whether legacy Qorvo already has a 15.4ab project. ST and Calterah already sample,
+        so the firmware bridge on QPF5100Q matters now; the new chip targets programmes from about 2028–2029 (est).
+      conf: low
+    needed_now:
+    - 'UWB BU: is there an 802.15.4ab / NBA chip project, and at what stage?'
+    - 'UWB BU: which programmes have QPF5100Q design wins, with start of production'
+    - 'Carmakers: from which model year they require 802.15.4ab in the anchors'
+    say_externally: Digital car keys are moving to the new UWB standard IEEE 802.15.4ab with narrowband assist, and CCC Digital
+      Key 4.0 is in testing. Skyworks, with the former Qorvo UWB line, sells automotive UWB chips (QPF5100Q) with ranging
+      and radar, and automotive RF front ends. We would like to learn from which model year you need 802.15.4ab in your anchors,
+      and how many anchors you plan per car.
+    next_steps:
+    - what: Ask whether an 802.15.4ab / NBA chip project exists and at what stage
+      who: UWB BU
+      why: If it exists, the case becomes how to position it, not whether to build it.
+    - what: Ask from which model year 15.4ab is required and how long anchors must stay 15.4z-compatible
+      who: OEM car-access / digital-key team
+      why: Sets the timing of the chip and how long the firmware bridge must last.
+    - what: Check that QPF5100Q can run MMS ranging and Digital Key 4.0 in firmware, and plan certification
+      who: UWB BU with our FAE
+      why: Keeps today's part in designs while the new chip is built.
     bu_opener:
       question: Digital car keys move to the new UWB standard 802.15.4ab with narrowband assist. Should we build a 15.4ab anchor
         chip from the Qorvo UWB radio and radar (about $3.5–5.5 ranging, $4.5–6.5 with radar, est), with firmware on today's
@@ -577,6 +766,30 @@ reports:
       pack, standalone module reference), about $0.75–1.5 per car as a licence or $4–6 per standalone CPD chip (est).
     tags: [UWB, child presence detection, Euro NCAP, in-cabin radar, 60 GHz radar, kick sensor, QPF5100Q, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; Euro NCAP OM protocol v1.2; ~20 public web requests and searches (TI, IEEE MTT-S, Rohde & Schwarz, ABI Research, search snippets)"
+    decision: Should we sell child-presence and kick-sensing firmware on today's QPF5100Q key anchors, so cars with a UWB
+      key need no separate 60 GHz radar?
+    answer:
+      text: Yes as a low-cost add-on in cars that already have UWB anchors, if the radar covers every seat and footwell in
+        a real cabin; not as a standalone chip against 60 GHz. Measured cabin results are the missing piece.
+      conf: low
+    needed_now:
+    - 'UWB BU: measured breathing range, seat and footwell separation and false alarms of QPF5100Q radar in a cabin'
+    - 'UWB BU: who owns the CPD and kick algorithm from the CES 2024 demo, and on what licence terms'
+    - 'Carmakers: which sensor they plan for child presence on platforms with a UWB key'
+    say_externally: Euro NCAP rewards child-presence detection from 2026, and UWB key anchors can also sense breathing and
+      kicks. Skyworks, with the former Qorvo UWB line, sells the QPF5100Q automotive UWB chip, which lists child presence
+      and kick sensing among its uses. We would like to know which sensor you plan for child presence on platforms with a
+      UWB key.
+    next_steps:
+    - what: Ask for measured QPF5100Q radar results in a real cabin
+      who: UWB BU
+      why: Shows whether UWB can pass Euro NCAP for every seat and footwell or only some.
+    - what: Find out who owns the CPD and kick algorithm and on what licence terms
+      who: UWB BU and the algorithm partner
+      why: Without production code there is nothing to sell.
+    - what: Ask which child-presence sensor is planned on UWB-key platforms, and from which model year
+      who: OEM occupant-safety team
+      why: Confirms the socket and what a per-car licence could earn.
     bu_opener:
       question: Euro NCAP rewards child-presence detection from 2026. Should we sell 'cabin sense' firmware on today's QPF5100Q
         key anchors (about $0.75–1.5 per car as a licence, or a $4–6 dedicated chip, est), so cars with a UWB key need no extra
@@ -636,6 +849,29 @@ reports:
       and a qualified jitter attenuator now.
     tags: [automotive, timing, clock generator, PCIe, jitter attenuator, BAW, central compute, zonal, radar, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; Si5332-AM data sheet; ~20 public web requests and searches (TI, SiTime, evertiq, Skyworks, Yole, OEM releases, distributor snippets)"
+    decision: Should we build ZoneClock, a crystal-free Grade 1 automotive clock tree from our BAW resonator and MultiSynth,
+      and qualify a jitter attenuator now?
+    answer:
+      text: Not enough data yet. The line and the need exist, but the case hinges on our BAW resonator meeting Grade 1 drift
+        and ageing, which is not public. PCIe Gen 6 data and SoC reference designs are low-cost steps worth doing now.
+      conf: low
+    needed_now:
+    - 'Timing BU: Grade 1 drift, ageing and vibration results of the SKY631xx BAW resonator'
+    - 'Timing BU: jitter margin of Si5332-AM and Si5225x-AM against PCIe Gen 6'
+    - 'A Tier-1: clock outputs and domains per central computer and zone'
+    say_externally: Central computers and zone controllers in new cars need many low-jitter PCIe and Ethernet clocks. Skyworks
+      sells automotive PCIe clock generators and buffers (Si5332-AM, Si5225x, Si5325x) for these designs. We would like to
+      learn how many clock outputs your next computer needs, which PCIe generation and which temperature grade.
+    next_steps:
+    - what: Ask for Grade 1 drift, ageing and vibration results of the SKY631xx BAW resonator
+      who: Timing BU
+      why: Decides whether ZoneClock is a new chip from our technology (distance 3) or new technology.
+    - what: Characterise and publish PCIe Gen 6 compliance for Si5332-AM and Si5225x-AM
+      who: Timing BU
+      why: Keeps today's parts in 2028–2030 designs while the new chip is decided.
+    - what: Ask how many clock outputs and domains each computer and zone needs
+      who: Tier-1 central-compute hardware team
+      why: Sizes ZC-12 against ZC-4 and the volume per car.
     bu_opener:
       question: Central computers and zones need many clean clocks. Should we build ZoneClock, a crystal-free Grade 1 automotive
         clock tree from our BAW resonator and Si5332 MultiSynth (about $4–6.5 for 12 outputs, est), and qualify a jitter attenuator
@@ -694,6 +930,30 @@ reports:
       $0.9–1.4 and a roof-module reference design.
     tags: [automotive, GNSS, L1, L5, L2, E6, LNA, SAW, BAW, shark fin, ADAS, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; SKY5A2110 data sheet; ~15 public web requests and searches (TI, u-blox, ST, ABI public summaries, Infineon, distributor snippets)"
+    decision: Should we build an all-band automotive GNSS front end (L1 + L2/E6 + L5, one input, Grade 1) from our LNAs and
+      Qorvo SAW/BAW filters?
+    answer:
+      text: 'Not enough data yet on demand: receivers are all-band, but no public figure shows carmakers paying for triple
+        band. The single-input L1 + L5 variant and design-in of SKY5A2110 are the safer steps now.'
+      conf: low
+    needed_now:
+    - 'Carmakers: which GNSS bands their 2028–2030 platforms use'
+    - 'Filter BU: can E6/L6 and L-band filters be made at the size and loss needed?'
+    - 'GNSS BU: design wins and volumes of SKY5A2110'
+    say_externally: Lane-level driver assistance is moving car GNSS receivers to several bands, and the roof antenna must
+      also keep out the car's own V2X, cellular and Wi-Fi signals. Skyworks sells an automotive L1 + L5 GNSS front-end module
+      with filters (SKY5A2110) and the other RF parts of the roof module. We would like to learn which GNSS bands your next
+      platforms use, and whether your antennas are single-feed or dual-feed.
+    next_steps:
+    - what: Ask which GNSS bands the 2028–2030 platforms use, and in which segments
+      who: OEM ADAS / positioning team
+      why: Decides between an all-band part and L1 + L5 only.
+    - what: Ask whether E6/L6 and L-band filters can be made at the size and loss needed
+      who: Filter BU
+      why: Without these filters the all-band part cannot be built from existing technology.
+    - what: Push SKY5A2110 into current shark-fin designs with co-location data next to our V2X and cellular FEMs
+      who: Our FAE with Tier-1 antenna module teams
+      why: Wins sockets now and shows whether a single input matters.
     bu_opener:
       question: Lane-level ADAS needs all-band GNSS in the shark fin. Should we build an all-band automotive GNSS front end
         (L1 + L2/E6 + L5, one input, Grade 1) from our LNAs and Qorvo SAW/BAW filters at about $1.6–2.6 (est), when TI sells
@@ -752,6 +1012,30 @@ reports:
       filter variants) at about $7–10 (est), replacing two single FEMs plus filter and switch.
     tags: [V2X, C-V2X, NR-V2X, ITS-G5, front-end module, BAW, coexistence, UNII-4, automotive, pricing, architecture]
     sources: "BizDev catalogue and block-diagram library; ~20 public web requests plus earlier connectivity research (5GAA, Skyworks product summaries, ABI, LG Innotek, LCSC, search snippets)"
+    decision: Should we build a dual-carrier V2X front end (two paths, EU and US filter variants) for a market of about 5.7
+      M V2X cars a year?
+    answer:
+      text: Not enough data yet. EU dual-mode cars will need two carriers from about 2028 (est), but Qualcomm owning Autotalks
+        may close the socket. A yes needs our status on Qualcomm reference designs and a feasible US guard filter.
+      conf: low
+    needed_now:
+    - 'V2X BU: is SKY5A2105 still on Qualcomm / Autotalks reference designs?'
+    - 'Filter BU: can our BAW reach a ~20 MHz transition at 5895 MHz with acceptable loss?'
+    - 'Carmakers: will they use the US second channel or concurrent ITS-G5 + C-V2X, and when?'
+    say_externally: 'V2X is changing: the US moves to C-V2X on two channels and Europe runs ITS-G5, LTE-V2X and NR-V2X side
+      by side. Skyworks, with Qorvo, sells automotive V2X front ends (SKY5A2105, QPF1003Q) and V2X BAW filters. We would like
+      to learn whether your next units need two V2X carriers at once, and where the V2X RF will sit.'
+    next_steps:
+    - what: Ask whether SKY5A2105 is still on Qualcomm / Autotalks reference designs, and whether a Qualcomm V2X front end
+        is known
+      who: V2X BU
+      why: If Qualcomm bundles its own front end, most sockets close.
+    - what: Ask for test data on a ~20 MHz BAW transition at 5895 MHz
+      who: Filter BU
+      why: Decides whether the US guard variant can exist.
+    - what: Ask whether the US second channel or concurrent ITS-G5 + C-V2X will be used, and from which model year
+      who: OEM V2X / connected-safety team
+      why: Confirms the need for two carriers and its timing.
     bu_opener:
       question: 'V2X is changing: the US goes C-V2X only on two channels and Europe runs three systems side by side, but Qualcomm
         now owns our chipset partner Autotalks. Should we build a dual-carrier V2X front end (two paths, EU and US filter variants)
@@ -812,6 +1096,30 @@ reports:
       antenna (est); enabling step: automotive Wi-Fi 7 FEMs with the guard filter (≈$1.6–2.8) and the filters alone.
     tags: [Wi-Fi 7, smart antenna, coexistence, V2X, BAW, front-end module, AEC-Q104, automotive, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; ~45 public web requests (u-blox product summaries, NTIA/US DOT, Wi-Fi Alliance/IDC, LG Innotek, LCSC, FCC and Counterpoint snippets)"
+    decision: Should we build RH57, a radio head per roof antenna with V2X as the base and Wi-Fi 5/6 GHz as an option, with
+      BAW filtering between them?
+    answer:
+      text: 'Not enough data yet for the Wi-Fi part: no carmaker has confirmed a Wi-Fi radio at the roof. The V2X base, automotive
+        Wi-Fi 7 FEMs with the guard filter, and the coexistence filters alone are the safe steps now.'
+      conf: low
+    needed_now:
+    - 'Antenna and roof-TCU makers: does the Wi-Fi radio sit on the roof board or in the cockpit?'
+    - 'Wi-Fi BU: do our Wi-Fi 7 FEM dies pass AEC-Q104 Grade 2 without a redesign?'
+    - 'Filter BU: when do SKY5A1005/1006/1008 leave preview?'
+    say_externally: In-car Wi-Fi sits right next to V2X, and US DOT measurements showed in-car Wi-Fi cutting C-V2X range by
+      more than half. Skyworks, with Qorvo, sells Wi-Fi 7 front ends, V2X front ends and the BAW filters that separate them.
+      We would like to learn where the Wi-Fi radio sits in your roof or smart-antenna design, and how you meet the limits
+      at the V2X band edge.
+    next_steps:
+    - what: Ask whether the Wi-Fi radio sits on the roof board or in the cockpit, and how the cabin is fed
+      who: OEM / Tier-1 antenna team
+      why: The RH57 headline depends on Wi-Fi at the roof.
+    - what: Ask whether our Wi-Fi 7 FEM dies pass AEC-Q104 Grade 2 at 105 °C without a redesign
+      who: Wi-Fi BU
+      why: Decides whether the enabling automotive FEMs are a package step (distance 2).
+    - what: Bring SKY5A1005/1006/1008 out of preview with a coexistence test report against −37 dBm/MHz
+      who: Filter BU
+      why: Sells today and proves the coexistence argument with data.
     bu_opener:
       question: Wi-Fi 7 is coming to the car's smart antenna, right next to V2X. Should we build RH57, a radio head per antenna
         (V2X base, Wi-Fi 5/6 GHz optional, BAW filters and coexistence control between them) at about $8–11 (est), when Qualcomm
@@ -870,6 +1178,30 @@ reports:
       $2.5–3.5 in volume (est), plus an antenna-side compensator variant.
     tags: [automotive, telematics, NTN, satellite, n255, n256, power class 2, Skylo, Iridium, Starlink, MediaTek MT2739, Qualcomm, pricing, architecture]
     sources: "BizDev block-diagram library and catalogue; 5GAA NTN technical report; Skyworks product summaries; MediaTek, CCS Insight, Marelli; search snippets (ABI, Counterpoint, Qualcomm, DCD, RCR); about 10 new public web requests (background notes)"
+    decision: Should we build an automotive NTN add-on module for n255/n256, first at 23 dBm from today's SKY68040-11 die,
+      then at 26 dBm?
+    answer:
+      text: 'Not for 2027: narrowband satellite can run on today''s front ends. Worth preparing for wideband NTN from 2029,
+        if 3GPP adopts a higher vehicle power class and SKY68040-11 passes automotive stress (est).'
+      conf: low
+    needed_now:
+    - 'Cellular BU: SKY68040-11 output power at n255/n256, and can the die pass AEC-Q104?'
+    - 'Carmakers: from which model year satellite, and narrowband by firmware or wideband with new RF?'
+    - 'Filter BU: can n255/n256 duplexers keep deep GNSS L1 rejection?'
+    say_externally: Cars will reach satellites in the n255 and n256 bands, narrowband from about 2027 and wideband later.
+      Skyworks sells a power amplifier that covers both bands (SKY68040-11) and automotive cellular, GNSS and V2X front ends
+      that work with any modem. We would like to learn from which model year you plan satellite connectivity, and whether
+      by firmware only or with new RF.
+    next_steps:
+    - what: Ask for SKY68040-11 output power and linearity at n255/n256, and whether the die can pass AEC-Q104
+      who: Cellular BU
+      why: Decides whether NTN-23 can be built from today's die.
+    - what: Ask from which model year and in which regions satellite is planned, narrowband or wideband
+      who: OEM connected-car team
+      why: Tells us whether there is a hardware socket before 2029.
+    - what: Follow 3GPP Rel-19/20 vehicle power-class work and 5GAA reports on 26 dBm
+      who: Daily run (public standards)
+      why: Without a vehicle power class above 23 dBm, the 26 dBm module is a proprietary option.
     bu_opener:
       question: From 2027 cars will reach satellites in the n255/n256 bands. Should we build an automotive NTN add-on module
         (23 dBm from today's SKY68040-11 die, then 26 dBm) at about $1.5–2.5 and $2.5–3.5 (est), when Qualcomm sells modem plus
@@ -931,6 +1263,29 @@ reports:
       optional second receiver, about $2.2–3.4 and $0.6–1.0 in volume (est), with a satellite-port option.
     tags: [automotive, telematics, NG-eCall, RedCap, eRedCap, LTE Cat-1bis, 2G/3G sunset, Qualcomm A10, MediaTek, Quectel, US connected-vehicle rule, pricing]
     sources: "BizDev block-diagram library and catalogue; 5GAA eCall position paper; Skyworks product summaries; Marelli release; search snippets (EUR-Lex/LawPlayer, ACEA, ABI, Qualcomm, BIS, Counterpoint, ResearchAndMarkets); about 8 new public web requests (background notes)"
+    decision: Should we offer one single-transmit front-end module (VT1) for Cat-1bis, Cat-4 and RedCap NG-eCall telematics
+      units?
+    answer:
+      text: Yes, a near-term module from existing dies is worth it for non-Qualcomm modems. Price against Chinese Cat-1bis
+        vendors is the main doubt, so start with the RedCap kit from today's parts.
+      conf: med
+    needed_now:
+    - 'Cellular BU: can SKY5A2206, SKY5A2205 and the duplexers combine into one AEC-Q104 module, and at what cost?'
+    - 'Tier-1s: which radio their 2027–2030 eCall units use (Cat-1bis, Cat-4 or RedCap)'
+    - 'Sales: how far we are above Chinese Cat-1bis prices, from lost quotes'
+    say_externally: Every new EU car needs an LTE or 5G emergency-call unit from 2027, and many will use low-cost Cat-1bis
+      or 5G RedCap modems. Skyworks sells automotive-qualified cellular front ends and low-cost IoT front ends that work with
+      any modem. We would like to learn which radio your next eCall units use, and who chooses the RF front end.
+    next_steps:
+    - what: Ask whether SKY5A2206, SKY5A2205 and the duplexers combine into one AEC-Q104 module, and what VT1 would cost
+      who: Cellular BU
+      why: Sets the price floor for the $2.2–3.4 range (est).
+    - what: Offer the RedCap kit from today's parts to module makers on non-Qualcomm modems
+      who: Our FAE with module makers (Quectel, Fibocom type)
+      why: Wins early sockets and shows which bands one module must cover.
+    - what: Ask whether 2027–2030 eCall programmes use Cat-1bis, Cat-4 or RedCap
+      who: Tier-1 telematics team
+      why: Decides whether VT1 leads with LTE or RedCap.
     bu_opener:
       question: Every new EU car needs an LTE or 5G emergency-call unit from 2027 (NG-eCall), about 12 M cars and vans a year.
         Should we offer one single-transmit front-end module for Cat-1bis, Cat-4 and RedCap at about $2.2–3.4 (est), when Qualcomm's

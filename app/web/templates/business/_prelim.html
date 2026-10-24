@@ -12,6 +12,7 @@
   </form>
   {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
 </div>{% endmacro %}
+{% macro thread(key) %}{% if (case.thread or {})[key] %}<p class="rpt-thread"><b>For the decision:</b> {{ case.thread[key] }}</p>{% endif %}{% endmacro %}
 {% macro conf(c, was=none) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence{{ ': ' ~ was ~ ', one step lower after a reviewer disagreed' if was }}">{{ c }}{{ ' ↓' if was }}</span>{% endif %}{% endmacro %}
 
 <h1>{{ case.title }}</h1>
@@ -22,6 +23,7 @@
   {% if opp.mismatch %}<span class="feas-flag" title="Derived from the headline feature's distance {{ opp.headline.distance }} (0–1 → 1, 2–3 → 2, 4 → 3); the curated value in reports.yaml is kept">⚑ derived feasibility is {{ opp.derived }}, not {{ opp.curated }}</span>{% endif %}</p>{% endif %}
 <p class="meta">Preliminary case · updated {{ case.updated }} · {{ case.n_feedback }} item{{ 's' if case.n_feedback != 1 }} with feedback · confidence: <b>high</b> primary document read, <b>med</b> trade press or advocacy body, <b>low</b> snippet or analyst PR · “est” = our estimate · <a href="/business/reports/method">How cases are built</a>{% if walk_parts %} · walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>
 
+{% include "business/_bottom_line.html" %}
 <section class="brief" aria-label="Summary"><p class="label">In brief</p><ol>{% for b in case.brief %}<li>{{ b }}</li>{% endfor %}</ol></section>
 {{ library_box(library, 2) }}
 
@@ -34,6 +36,7 @@
   <tbody>{% for g in cb.gains %}<tr><td><span class="pc-kind">{{ benefit_kinds.get(g.kind, g.kind) }}</span></td><td><b>{{ g.gain }}</b></td><td>{{ g.how }}</td><td>{{ g.measure }} {{ conf(g.conf, g.conf_was) }}</td><td>{{ react(g) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {% if cb.gives_up %}<p class="small"><b>What the customer gives up:</b> {{ cb.gives_up|join('; ') }}.</p>{% endif %}
+{{ thread('benefit') }}
 </section>{% endif %}
 
 <h2>1. Position against the competition</h2>
@@ -46,15 +49,18 @@
   <thead><tr><th scope="col">Architecture</th>{% for c in case.architecture.columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
   <tbody>{% for row in case.architecture.rows %}<tr><th scope="row">{{ row[0] }}</th>{% for c in row[1:] %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
 </table></div>{% if case.architecture.note %}<p class="small muted">{{ case.architecture.note }}</p>{% endif %}{% endif %}
+{{ thread('position') }}
 
 <h2>2. The market today</h2>
 <div class="table-wrap"><table class="small pc-table">
   <thead><tr><th scope="col">Figure</th><th scope="col">Value</th><th scope="col">Source</th></tr></thead>
   <tbody>{% for m in case.market_now %}<tr><td>{{ m.figure }}</td><td>{{ m.value }}</td><td>{{ m.source }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody>
 </table></div>
+{{ thread('market') }}
 
 <h2>3. Where it is heading <small class="muted">(our estimates)</small></h2>
 <ul class="pc-list">{% for o in case.outlook %}<li><b>{{ o.text }}</b> {{ conf(o.conf, o.conf_was) }}<br><small class="muted">Basis: {{ o.basis }}</small>{{ react(o) }}</li>{% endfor %}</ul>
+{{ thread('outlook') }}
 
 <h2>4. Features that could benefit us, and how far they are</h2>
 <p class="small pc-scale">{% for n, (label, help) in distance.items() %}<span class="pc-d d-{{ n }}" title="{{ help }}">{{ n }} {{ label }}</span> {% endfor %}<span class="muted">· hover for the meaning; use Closer / Further to adjust</span></p>
@@ -62,6 +68,7 @@
   <thead><tr><th scope="col">Feature</th><th scope="col">Benefit</th><th scope="col">Distance</th><th scope="col">Why</th><th scope="col">Feedback</th></tr></thead>
   <tbody>{% for f in case.features %}<tr><td><b>{{ f.feature }}</b></td><td>{{ f.benefit }}</td><td><span class="pc-d d-{{ f.distance }}" title="{{ distance[f.distance][1] }}">{{ f.distance }} {{ distance[f.distance][0] }}</span></td><td>{{ f.why }}</td><td>{{ react(f, true) }}</td></tr>{% endfor %}</tbody>
 </table></div>
+{{ thread('features') }}
 
 {% if case.product %}<h2>5. Proposed product: {{ case.product.name }}</h2>
 <div class="table-wrap"><table class="small pc-table"><tbody>{% for k, v in case.product.spec %}<tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
@@ -76,6 +83,7 @@
 {% if case.diagram.links %}<p class="small muted pc-dlinks">{% for l in case.diagram.links %}{% set a = case.diagram.groups|selectattr('id', 'eq', l[0])|first %}{% set z = case.diagram.groups|selectattr('id', 'eq', l[1])|first %}{{ a.label if a else l[0] }} → {{ z.label if z else l[1] }}{% if l[2] %} ({{ l[2] }}){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 <p><a class="button small-btn" href="/blocks/new?case={{ slug }}">Open in the application workspace</a> <span class="small muted">to edit it, pick parts and export it as SVG for the customer</span></p>
 {% endif %}
+{% if case.product %}{{ thread('product') }}{% endif %}
 
 <h2 id="asp">6. ASP</h2>
 <p class="small">{{ case.prices.method }}</p>
@@ -85,9 +93,11 @@
   <tbody>{% for p in case.prices["items"] %}<tr id="i-{{ p.id }}"><td><b>{{ p.item }}</b></td><td>${{ '%.2f'|format(p.entry) }}</td><td><b>${{ '%.2f'|format(p.target) }}</b></td><td>${{ '%.2f'|format(p.premium) }}</td><td>{{ p.basis }}</td></td></tr>{% endfor %}</tbody>
 </table></div>
 {% if case.revenue %}<p class="small"><b>Illustration:</b>{% for v in case.revenue %} {{ v.label }} × ${{ '%.2f'|format(v.unit) }} ≈ <b>${{ '{:,.0f}'.format(v.revenue / 1e6) }} M</b> a year{{ ';' if not loop.last else '.' }}{% endfor %} <span class="muted">Volumes are scenarios, not forecasts.</span></p>{% endif %}
+{{ thread('asp') }}
 
 <h2>7. Raising the attach rate</h2>
 <ul class="pc-list">{% for t in case.attach %}<li>{{ t.lever }} <span class="pc-conf">{{ t.effort }} effort</span>{{ react(t) }}</li>{% endfor %}</ul>
+{{ thread('attach') }}
 
 {% if case.questions.bu or case.questions.customer or case.opener %}<h2 id="questions-to-ask">8. Questions to ask</h2>
 <p class="small muted">What this case cannot settle from public data. Record each answer (and who gave it) with “answer”; answered questions feed the next revision.</p>
@@ -96,9 +106,12 @@
     <li class="pc-opener"><span><b>Start here:</b> {{ o.question }}</span><br><small class="muted">Background and idea, with the pros and cons against competitors at the top of the page.</small>{{ react(o, question=true) }}</li>{% endif %}{% for q in case.questions[key] %}
     <li><span>{{ q.text }}</span>{% if q.who %} <small class="muted">ask: {{ q.who }}</small>{% endif %}{% if q.why %}<br><small class="muted">Why: {{ q.why }}</small>{% endif %}{{ react(q, question=true) }}</li>{% endfor %}</ol></section>{% endif %}{% endfor %}
 </div>
+{{ thread('questions') }}
 {% endif %}
 <h2>{{ '9' if case.questions.bu or case.questions.customer or case.opener else '8' }}. Risks and open questions</h2>
 <ul>{% for x in case.risks %}<li>{{ x }}</li>{% endfor %}</ul>
+{{ thread('risks') }}
+{% include "business/_steps_end.html" %}
 <p class="small muted">Feedback on any item is listed in <a href="/manage/reviews">Site data › Review queue</a>; the case is revised from it. Sources and every figure: background notes below.</p>
 <dialog id="pc-dialog" class="pc-dialog" aria-labelledby="pc-dialog-title"><article>
   <h3 id="pc-dialog-title"></h3><div class="pc-dialog-body"></div>

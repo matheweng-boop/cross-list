@@ -253,3 +253,11 @@ def short_description(
     if grade == "automotive":
         bits.append("AEC-Q100")
     return " · ".join(b for b in bits if b)
+
+
+def whole_words(text: str | None, words, plural: bool = False) -> list[str]:
+    """The entries of ``words`` (words or phrases) found in ``text`` as whole words, in any case, in list order;
+    ``plural``: a trailing "s" counts too. One matcher for the share-safety word lists (Technology overview, report
+    storylines)."""
+    s = "s?" if plural else ""
+    return [w for w in words if re.search(rf"\b{re.escape(w)}{s}\b", text or "", re.I)]

@@ -16,6 +16,7 @@ from app.config import PROJECT_ROOT
 from app.services import blocks, lifecycle, vocab
 from app.services import opportunity as op
 from app.services import portfolio as pf
+from app.services.text import whole_words
 
 FILE = PROJECT_ROOT / "data" / "business" / "tech_overview.yaml"
 LINES = pf.LINES
@@ -54,7 +55,7 @@ def competitor_names() -> tuple[str, ...]:
 
 
 def blocked_words(text: str) -> list[str]:
-    hits = [w for w in BLOCKLIST if re.search(rf"\b{re.escape(w)}s?\b", text, re.I)]
+    hits = whole_words(text, BLOCKLIST, plural=True)
     return hits + [n for n in competitor_names() if re.search(rf"\b{re.escape(n)}\b", text)]
 
 

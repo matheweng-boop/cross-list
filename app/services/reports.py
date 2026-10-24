@@ -12,6 +12,7 @@ from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import ReportQuestion, aware
 from app.services.feedback import similar_text
+from app.services.text import whole_words
 
 FILE = PROJECT_ROOT / "data" / "business" / "reports.yaml"
 BODIES = PROJECT_ROOT / "app" / "web" / "templates" / "business" / "reports"
@@ -79,10 +80,7 @@ CASE_THREADS = ("benefit", "position", "market", "outlook", "features", "product
 
 
 def blocked_words(text: str) -> list[str]:
-    import re
-
-    low = (text or "").lower()
-    return [w for w in EXTERNAL_BLOCKLIST if re.search(rf"\b{re.escape(w)}\b", low)]
+    return whole_words(text, EXTERNAL_BLOCKLIST)
 
 
 def story_problems(r: dict) -> list[str]:

@@ -128,7 +128,7 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
              if a.status in ("new", "planned") or _aware(a.updated_at or a.created_at) >= start]  # fmt: skip
     out.append("\n## Application area requests\n")
     out.append("Research a few documents per run; add diagrams to the library and set the status on "
-               "/blocks/area-requests.\n")
+               "Data management > Site data > Requests (/manage/requests?kind=area).\n")
     out += [f"- {_when(a.created_at)} [{a.status}] {_one_line(a.area)}{' · why: ' + _one_line(a.why) if a.why else ''}"
             f"{' · ' + a.author if a.author else ''}" for a in areas] or ["None."]  # fmt: skip
 

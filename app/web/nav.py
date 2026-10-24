@@ -47,7 +47,7 @@ UTILITY = ("manage", "Data management", (
     ("Overview", "/manage/overview", "Everything at a glance: raw data, today's feedback, what waits for you"),
     ("Schedule", "/manage/schedule", "What runs continuously, daily, weekly; what tonight's run picks up"),
     # owner, 23 Oct 2026: Verify next, requests, site feedback and guest input as one item with tabs
-    ("Site data", "/manage/verify", "Verify next, requests, diagram feedback, site feedback and guest input"),
+    ("Site data", "/manage/verify", "Verify next, review queue, requests, site feedback and guest input"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("People & invites", "/manage/people", "Invite guests, see their passkeys, remove someone"),
@@ -106,6 +106,7 @@ PLACES = {
     "/manage/feedback": ("manage", "/manage/verify"),
     "/manage/verify": ("manage", "/manage/verify"),
     "/manage/site-data": ("manage", "/manage/verify"),
+    "/manage/requests": ("manage", "/manage/verify"),
     "/manage/reviews": ("manage", "/manage/verify"),
     "/manage/uploads": ("manage", "/manage/uploads"),
     "/manage/overview": ("manage", "/manage/overview"),
@@ -136,8 +137,8 @@ TABS = (
     (("By system", "/blocks/cross-sell"), ("By part", "/business/attach")),
     (("Gaps & new technology", "/business/opportunities"), ("Detailed table", "/business/explorer/table")),
     (("Shortlist", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
-    (("Verify next", "/manage/verify"), ("Review queue", "/manage/reviews"), ("Part requests", "/requests"),
-     ("Diagram feedback", "/blocks/feedback"), ("Area requests", "/blocks/area-requests"),
+    # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab
+    (("Verify next", "/manage/verify"), ("Review queue", "/manage/reviews"), ("Requests", "/manage/requests"),
      ("Site feedback", "/manage/feedback"), ("Guest input", "/manage/guest-input")),
     (("Data quality", "/business/quality"), ("Human validation", "/business/validation")),
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),

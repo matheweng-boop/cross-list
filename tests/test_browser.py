@@ -277,6 +277,27 @@ def test_verify_next_answer_one_with_a_comment(page):
     assert page.locator("li", has_text=title).filter(has_text="Checked in the browser test.").count() >= 1
 
 
+def test_overview_waiting_line_opens_the_filtered_requests(page):
+    """Owner, 24 Oct 2026: a "Waiting for you" line goes straight to the place to act, here Requests > Part requests."""
+    go(page, "/manage/requests")
+    page.locator("details.rq-add summary").click()
+    page.locator("textarea[name=mpns]").fill("ZQ4242")
+    with page.expect_navigation():
+        page.get_by_role("button", name="Add requests").click()
+    go(page, "/manage/overview")
+    line = page.locator("#ov-todo a", has_text="part request")
+    with page.expect_navigation():
+        line.click()
+    assert page.url.endswith("/manage/requests?kind=part")
+    expect(page.locator("a.fchip.on", has_text="Part requests")).to_be_visible()
+    expect(page.locator("nav.page-tabs a.on", has_text="Requests")).to_be_visible()
+    item = page.locator("li.rq-item", has_text="ZQ4242")
+    expect(item).to_contain_text("Part request")
+    with page.expect_navigation():
+        item.locator("select[name=status]").select_option("in_progress")
+    expect(page.locator("li.rq-item", has_text="ZQ4242").locator("select[name=status]")).to_have_value("in_progress")
+
+
 # --- Signing in -------------------------------------------------------------------------------------------------------
 STUB = """
 window.__calls = [];

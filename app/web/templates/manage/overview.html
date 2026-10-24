@@ -3,17 +3,22 @@
 <h1>Data management</h1>
 <p class="subtitle muted">Everything on one page: what came in today, what waits for you, the raw data behind the site and how much of each data set has been checked.</p>
 
+<h2 class="ov-h" id="waiting-h">Waiting for you</h2>
+{% if todo %}<ul class="ov-todo" id="ov-todo" aria-labelledby="waiting-h">{% for n, label, href in todo %}
+  <li><a href="{{ href }}"><b>{{ n }}</b><span>{{ label }}</span></a></li>{% endfor %}
+</ul>{% else %}<p class="ov-none" id="ov-todo-none"><b>Nothing waiting.</b> <span class="muted small">Everything is answered.</span></p>{% endif %}
+
 {% macro tile(n, label, href, hot=False) %}<a class="ov-card{{ ' hot' if hot and n }}" href="{{ href }}"><b>{{ n }}</b><small>{{ label }}</small></a>{% endmacro %}
-<h2 class="ov-h">Today and waiting for you</h2>
+<h2 class="ov-h">Today and at a glance</h2>
 <div class="ov-grid" id="ov-waiting">
   {{ tile(waiting.feedback_today, 'feedback item' ~ ('' if waiting.feedback_today == 1 else 's') ~ ' came in today', '/manage/feedback') }}
   {{ tile(waiting.feedback, 'new feedback, not answered yet', '/manage/feedback', True) }}
   {{ tile(waiting.verify, 'open in Verify next' ~ (': ' ~ verify_split if verify_split else ''), '/manage/verify', True) }}
   {{ tile(waiting.guest, 'guest input' ~ ('' if waiting.guest == 1 else 's') ~ ' pending your review', '/manage/guest-input', True) }}
-  {{ tile(waiting.part_requests, 'open part requests', '/requests') }}
-  {{ tile(waiting.review_requests, 'part review requests open', '/manage/reviews') }}
-  {{ tile(waiting.diagram_feedback, 'open diagram feedback', '/blocks/feedback') }}
-  {{ tile(waiting.area_requests, 'new area requests', '/blocks/area-requests') }}
+  {{ tile(waiting.part_requests, 'open part requests', '/manage/requests?kind=part') }}
+  {{ tile(waiting.review_requests, 'part review requests open', '/reviews#requested') }}
+  {{ tile(waiting.diagram_feedback, 'open diagram feedback', '/manage/requests?kind=diagram') }}
+  {{ tile(waiting.area_requests, 'new area requests', '/manage/requests?kind=area') }}
   {{ tile(waiting.uploads, 'new uploads', '/manage/uploads?status=new') }}
   {{ tile(tam.open, 'TAM figures to review', '/business/tam') }}
 </div>

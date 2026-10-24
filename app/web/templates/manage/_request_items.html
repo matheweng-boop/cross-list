@@ -1,0 +1,30 @@
+{# One item of each kind on Site data > Requests. The forms post to each kind's own handler, as on the old pages. #}
+{% macro part_item(r, p, statuses) %}
+<li class="rq-item req-{{ r.status }}" id="rq-part-{{ r.id }}"><span class="rq-kind k-part">Part request</span>
+  <b>{{ r.mpn }}</b>{% if r.manufacturer %} <small class="muted">· {{ r.manufacturer|vendor }}</small>{% endif %}
+  <small class="muted">· {{ r.created_at|date('short') }}</small>
+  {% if r.note %}<br><span class="small">{{ r.note }}</span>{% endif %}
+  <div class="rq-acts small">{% if p %}<a href="/parts/{{ p.id }}">yes, see crosses</a>{% else %}<span class="muted">not in the database yet</span>{% endif %}
+    <form method="post" action="/requests/{{ r.id }}" class="inline-form"><select name="status" onchange="this.form.submit()" aria-label="Status of {{ r.mpn }}" class="small-sel">
+      {% for k, label in statuses.items() %}<option value="{{ k }}" {{ 'selected' if r.status == k }}>{{ label }}</option>{% endfor %}</select><noscript><button class="small-btn">Save</button></noscript></form>
+    <form method="post" action="/requests/{{ r.id }}" class="rq-del" data-confirm="Delete the request for {{ r.mpn }}?"><button name="delete" value="1" class="secondary outline small-btn" aria-label="Delete request {{ r.mpn }}">Delete</button></form></div></li>
+{% endmacro %}
+
+{% macro diagram_item(f, statuses) %}
+<li class="rq-item req-{{ f.status }}" id="rq-diagram-{{ f.id }}"><span class="rq-kind k-diagram">Diagram feedback</span>
+  <small>{% if f.diagram_id %}<a href="/blocks/{{ f.diagram_id }}">{{ f.diagram_name or 'diagram' }}</a>{% else %}{{ f.diagram_name or 'Block diagram' }}{% endif %}{% if f.target %} · {{ f.target }}{% endif %}</small>
+  <small class="muted">· {{ f.created_at|date('short') }}</small><br><span class="small">{{ f.message }}</span>
+  <div class="rq-acts small">
+    <form method="post" action="/blocks/feedback/{{ f.id }}" class="inline-form"><select name="status" onchange="this.form.submit()" aria-label="Status" class="small-sel">
+      {% for k, label in statuses.items() %}<option value="{{ k }}" {{ 'selected' if f.status == k }}>{{ label }}</option>{% endfor %}</select><noscript><button class="small-btn">Save</button></noscript></form>
+    <form method="post" action="/blocks/feedback/{{ f.id }}" class="fb-del" data-confirm="Delete this diagram feedback for good?"><button name="delete" value="1" class="secondary outline small-btn" aria-label="Delete this feedback">Delete</button></form></div></li>
+{% endmacro %}
+
+{% macro area_item(a, statuses) %}
+<li class="rq-item req-{{ a.status }}" id="rq-area-{{ a.id }}"><span class="rq-kind k-area">Area request</span>
+  <b>{{ a.area }}</b> <small class="muted">· {{ a.author or 'anonymous' }}, {{ a.created_at|date('short') }}</small>
+  {% if a.why %}<br><span class="small">{{ a.why }}</span>{% endif %}
+  <div class="rq-acts small">
+    <form method="post" action="/blocks/area-requests/{{ a.id }}" class="inline-form"><select name="status" onchange="this.form.submit()" aria-label="Status of {{ a.area }}" class="small-sel">
+      {% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if a.status == k }}>{{ label }}</option>{% endfor %}</select><noscript><button class="small-btn">Save</button></noscript></form></div></li>
+{% endmacro %}

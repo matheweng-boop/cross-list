@@ -469,7 +469,7 @@
       draw("");
     } else if (st === "opp") {
       panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in BizDev. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
-        <a href="/requests">Add a request</a> if a specific part should be crossed.</p>`;
+        <a href="/manage/requests?kind=part">Add a request</a> if a specific part should be crossed.</p>`;
     }
     bindReq(panel, () => showBlock(g, b));
     panel.querySelectorAll("[data-f]").forEach(el => (el.onchange = () => { b[el.dataset.f] = el.dataset.f === "qty" ? Math.max(1, +el.value || 1) : el.value; changed(); }));

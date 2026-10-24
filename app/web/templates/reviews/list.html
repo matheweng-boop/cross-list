@@ -14,7 +14,7 @@
 <h2 class="rp-group">{{ area }} <small class="muted">· {{ group|length }}</small></h2>
 <div class="rp-list">{% for r in group %}
   <a class="rp-card" href="/reviews/{{ r.slug }}">
-    <span class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span></span>
+    <span class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.date|date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span></span>
     <b class="rp-title">{{ r.title }}</b>
     <span class="rp-tags">{% for p in r.parts %}<span class="badge">{{ p }}</span>{% endfor %}</span>
     {% if r.question %}<span class="small muted rp-q">“{{ r.question }}”</span>{% endif %}

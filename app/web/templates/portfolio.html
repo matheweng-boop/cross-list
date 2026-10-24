@@ -4,7 +4,7 @@
 {% macro w(v) %}{% set v = (v or '')|lower %}{{ 'w-both' if v in ('both', 'split') or ('skyworks' in v and 'qorvo' in v) else 'w-sky' if 'skyworks' in v else 'w-qor' if 'qorvo' in v else 'w-comp' if v == 'competitor' else 'w-none' }}{% endmacro %}
 {% set cc = cur.core_competence or {} %}
 <h1>Skyworks + Qorvo</h1>
-<p class="subtitle muted">The two product lines of the combined company side by side: what each is best at, which one to offer for which application, how they compare with each competitor, and where one diagram needs both. Counts are active catalogue parts; the reasoning is curated from public sources{% if cur.updated %} ({{ cur.updated }}){% endif %}.</p>
+<p class="subtitle muted">The two product lines of the combined company side by side: what each is best at, which one to offer for which application, how they compare with each competitor, and where one diagram needs both. Counts are active catalogue parts; the reasoning is curated from public sources{% if cur.updated %} ({{ cur.updated|date }}){% endif %}.</p>
 <p class="pf-legend small" aria-label="Colour key"><span class="pf-sw w-sky">Skyworks</span><span class="pf-sw w-qor">Qorvo</span><span class="pf-sw w-both">Both lines</span><span class="pf-sw w-comp">Competitors</span></p>
 
 <nav class="pf-toc" aria-label="On this page"><span class="muted small">Jump to</span>

@@ -182,8 +182,12 @@ systems:
           - "Flight controller"
           - "Motor drives (ESC)"
           - "Battery and power"
+          - "Remote ID take-off interlock"
         diagrams:
           - "Drone flight controller and motor drives (quadcopter)"
+          - "Drone ESC with sensorless FOC motor drive (2S-14S LiPo, one per motor or 4-in-1)"
+          - "Drone battery and power distribution (2S-14S LiPo, smart BMS, eFuse, BEC rails)"
+        topics: [drone_flight_power]
       - key: radio-links
         title: "Radio links"
         summary: "Remote control, video downlink, GNSS and Remote ID."
@@ -192,15 +196,22 @@ systems:
           - "Video downlink"
           - "GNSS"
           - "Remote ID"
+          - "ADS-B In"
         diagrams:
           - "Drone radio links (remote control, video, GNSS, Remote ID)"
+          - "Drone control link and video downlink RF front ends (868/915 MHz or 2.4 GHz FHSS control, 5.8 GHz video, antenna diversity)"
+        topics: [drone_radio_links]
       - key: cellular-link
         title: "Cellular link (beyond line of sight)"
         summary: "4G / 5G for flights beyond visual range."
         elements:
           - "4G / 5G modem front end"
+          - "Satellite (NTN) fallback"
+          - "eSIM"
         diagrams:
           - "Drone with 4G / 5G link (beyond visual line of sight)"
+          - "Drone cellular link module for BVLOS (LTE / 5G RedCap with NTN fallback, eSIM, GNSS and broadcast Remote ID)"
+        topics: [drone_cellular]
   - key: cellular
     title: "Cellular"
     summary: "Phones, wearables and devices, and the network that serves them."

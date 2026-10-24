@@ -18,7 +18,9 @@
   {% if related.knowledge %}<p><b>Basics in General knowledge:</b> {% for x in related.knowledge %}<a class="kn-chip" href="{{ x.href }}" title="{{ x.kind }}: {{ x.title }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
   {% if related.visuals %}<p><b>Try it in Interactive visuals:</b> {% for x in related.visuals %}<a class="kn-chip vz" href="{{ x.href }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
 </section>{% endif %}
-<nav class="bo-toc small"><a href="#diagram">Block diagram</a> · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a> · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
+<nav class="bo-toc small">{% if t.why_customer %}<a href="#customer">Why it matters to the customer</a> · {% endif %}<a href="#diagram">Block diagram</a> · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a>{% if t.competitors %} · <a href="#competitors">Competitors</a>{% endif %}{% if t.market %} · <a href="#market">Market</a>{% endif %} · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
+{% if t.why_customer %}<h2 id="customer">Why it matters to the customer</h2>
+<ul class="pc-list small">{% for w in t.why_customer %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
 
 {% set d = t.block_diagram %}{% set ours = (t.skyworks_fit or [])|map(attribute='fn')|list %}
 {% if d %}<h2 id="diagram">{{ d.name or 'Block diagram' }}</h2>
@@ -43,6 +45,15 @@
 <h2 id="ours">Where our parts sit</h2>
 <div class="table-wrap"><table class="small pc-table"><tbody>{% for s in t.skyworks_fit or [] %}<tr><th scope="row">{{ label(s.fn) }}</th>
   <td>{% for p in s.parts or [] %}<a href="/find?q={{ p|urlencode }}">{{ p }}</a>{{ ', ' if not loop.last }}{% else %}<span class="muted">none</span>{% endfor %}</td><td>{{ s.note }}</td></tr>{% endfor %}</tbody></table></div>
+
+{% if t.competitors %}<h2 id="competitors">Competitors in these sockets</h2>
+<div class="table-wrap"><table class="small pc-table"><tbody>{% for c in t.competitors %}<tr><th scope="row">{{ label(c.fn) }}</th>
+  <td>{{ (c.names or [])|join(', ') }}</td><td>{{ c.note }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+
+{% if t.market %}<h2 id="market">Market</h2>
+<p class="small muted">Figures marked est are our own reasoning, not a published number.</p>
+<div class="table-wrap"><table class="small pc-table"><tbody>{% for m in t.market %}<tr><th scope="row">{{ m.segment }}</th>
+  <td>{{ m.text }}</td><td>{{ cite(m.refs) }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
 
 {% if t.model_parameters %}<h2 id="numbers">Numbers for the price model</h2>
 <p class="small muted">Used by the price model's complexity classes (<a href="/pricing/estimate">Price estimate</a>). Low-confidence numbers are judgement or search snippets.</p>

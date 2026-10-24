@@ -14797,6 +14797,109 @@
   questions:
   - {id: cell_gen, question: Cellular generation, choices: [LTE Cat-4, 5G sub-6 GHz, 5G RedCap]}
 
+# Drones deep dive (owner, 24 Oct 2026: "do a deep dive for Drones as well"): four more diagrams, drawn by us from
+# the public sources of the Systems library topics drone_flight_power, drone_radio_links and drone_cellular.
+- name: Drone ESC with sensorless FOC motor drive (2S-14S LiPo, one per motor or 4-in-1)
+  category: Motor drives
+  note: "One electronic speed controller (ESC) per motor: an MCU running sensorless field-oriented control at 45-60 kHz PWM, a three-phase gate driver with shunt amplifiers and six MOSFETs (TI's reference: 2-6 cells, 15 A RMS / 20 A peak, up to 500 W per motor). A one-chip controller (CPU + gate drivers + supply) replaces the MCU and the driver. Pack voltage sets the ratings: 25.2 V for 6S, 58.8 V for 14S."
+  sources:
+  - {doc: TIDUCF1, title: 'TI High-Speed Sensorless-FOC Reference Design for Drone ESCs (TIDA-00916)', url: 'https://www.ti.com/lit/ug/tiducf1/tiducf1.pdf'}
+  groups:
+  - {id: input, label: Battery input and protection, col: 0, row: 0, blocks: [{fn: tvs_esd, label: TVS on the pack input}, {fn: dc_link_cap, label: Bulk capacitors}, {fn: efuse_hotswap, label: Anti-spark / inrush limit}]}
+  - {id: supply, label: Local supply, col: 0, row: 1, blocks: [{fn: wide_vin_buck, label: Pack to 3.3 V / 5 V buck}, pol_ldo]}
+  - {id: ctrl, label: Motor control, col: 1, row: 0, blocks: [{fn: motor_controller, label: MCU with sensorless FOC or one-chip controller}, crystal_oscillator]}
+  - {id: drive, label: Gate drive and sensing, col: 2, row: 0, blocks: [{fn: three_phase_gate_driver, label: 3-phase gate driver with charge pump}, {fn: current_sensor, label: 3 low-side shunts + amplifiers}, {fn: temperature_sensor, label: Board temperature}]}
+  - {id: bridge, label: Power stage, col: 2, row: 1, blocks: [{fn: power_fets, label: '6 MOSFETs (60 V for 6S, 100 V for 12-14S)', qty: 6}]}
+  - {id: motor, label: Motor, col: 3, row: 1, blocks: [{fn: motor, label: BLDC / PMSM outrunner}]}
+  - {id: fc, label: Flight controller link, col: 3, row: 0, blocks: [{fn: external_block, label: Throttle in (duty cycle or serial) and telemetry out}]}
+  links:
+  - [input, bridge, pack voltage]
+  - [input, supply, pack voltage]
+  - [supply, ctrl, 3.3 V]
+  - [ctrl, drive, 6 PWM signals]
+  - [drive, bridge, gate signals]
+  - [bridge, motor, 3 phases]
+  - [drive, ctrl, phase currents and voltages (7 signals)]
+  - [fc, ctrl, throttle / telemetry]
+  questions:
+  - {id: cells, question: Battery size, choices: [2-6 cells (25 V full), 8-10 cells (42 V full), 12-14 cells (59 V full)]}
+  - {id: esc_layout, question: Layout, choices: [one ESC per arm, four ESCs on one board (4-in-1)]}
+  - {id: control, question: Control method, choices: [sensorless FOC, trapezoidal (low cost)]}
+
+- name: Drone battery and power distribution (2S-14S LiPo, smart BMS, eFuse, BEC rails)
+  category: Power & isolation
+  note: "The power path of a multirotor (est, from public drone designs): a 2S-14S LiPo pack with protection and, on enterprise drones, a smart BMS read by the flight controller; a distribution board that limits inrush, ORs two packs on heavy drones and senses pack current; and the BEC bucks that make 12 V, 5 V and 3.3 V for the flight controller, radios, camera and gimbal."
+  groups:
+  - {id: pack, label: Battery pack (2S-14S), col: 0, row: 0, blocks: [battery_pack, {fn: battery_monitor, label: BMS / fuel gauge with cell balancing}, battery_protector, temperature_sensor]}
+  - {id: pdb, label: Power distribution board, col: 1, row: 0, blocks: [{fn: efuse_hotswap, label: Anti-spark / eFuse}, {fn: reverse_polarity, label: Ideal-diode OR for two packs}, {fn: current_sensor, label: Pack current sense}, tvs_esd]}
+  - {id: bec, label: BEC rails, col: 2, row: 0, blocks: [{fn: wide_vin_buck, label: Pack to 12 V / 5 V}, pol_buck, pol_ldo, supervisor]}
+  - {id: loads, label: Loads, col: 3, row: 0, blocks: [{fn: external_block, label: 'Flight controller, radios, camera, gimbal'}]}
+  - {id: escs, label: Motor drives, col: 1, row: 1, blocks: [{fn: motor_controller, label: ESC x4-8}]}
+  - {id: charge, label: Charging (on the ground), col: 0, row: 1, blocks: [battery_charger]}
+  links:
+  - [pack, pdb, 7.4-58.8 V]
+  - [pdb, escs, motor power]
+  - [pdb, bec, pack voltage]
+  - [bec, loads, 12 V / 5 V / 3.3 V]
+  - [pack, loads, battery state (SMBus / CAN)]
+  - [charge, pack, balance charging]
+  questions:
+  - {id: cells, question: Battery size, choices: [2-4 cells (small), 6 cells, 12-14 cells (heavy lift)]}
+  - {id: redundancy, question: Batteries, choices: [one pack, two packs ORed]}
+
+- name: Drone control link and video downlink RF front ends (868/915 MHz or 2.4 GHz FHSS control, 5.8 GHz video, antenna diversity)
+  category: RF & connectivity
+  note: "The two radio links of a drone with their front ends (drawn by us from 47 CFR 15.247, ETSI EN 300 328 and our catalogue): a hopping control link at 868/915 MHz or 2.4 GHz with PA, LNA and a diversity switch, and a digital (or analog) video downlink at 5.8 / 2.4 GHz with a Wi-Fi-class FEM. US limit 1 W conducted with up to 6 dBi (36 dBm EIRP); EU 2.4 GHz limit 20 dBm EIRP. GNSS and Remote ID sit beside them and must survive their transmit power."
+  sources:
+  - {doc: CFR47_15_247, title: '47 CFR 15.247 (902-928, 2400-2483.5 and 5725-5850 MHz)', url: 'https://www.law.cornell.edu/cfr/text/47/15.247'}
+  - {doc: EN300328, title: 'ETSI EN 300 328 V2.2.2 (2.4 GHz wideband transmission systems)', url: 'https://www.etsi.org/deliver/etsi_en/300300_300399/300328/02.02.02_60/en_300328v020202p.pdf'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: Control x2}, {fn: antenna, label: Video x2}, {fn: antenna, label: GNSS}, {fn: antenna, label: Remote ID}]}
+  - {id: rcfe, label: Control-link front end, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Diversity + T/R switch}, {fn: power_amplifier, label: PA up to 30 dBm}, lna, {fn: filter_saw_baw, label: Band / harmonic filter}]}
+  - {id: rc, label: Control-link radio, col: 2, row: 0, blocks: [{fn: rf_transceiver, label: FHSS transceiver (chirp or FSK)}, crystal_oscillator]}
+  - {id: vfe, label: Video front end, col: 1, row: 1, blocks: [{fn: wifi_fem, label: 5.8 / 2.4 GHz PA + LNA + switch}, {fn: antenna_switch, label: Antenna diversity}]}
+  - {id: video, label: Video radio, col: 2, row: 1, blocks: [{fn: wifi_soc, label: Video modem (OFDM)}]}
+  - {id: gnss, label: GNSS and Remote ID, col: 1, row: 2, blocks: [{fn: gnss_lna, label: L1 + L5 LNA}, {fn: bt_fem, label: BLE / Wi-Fi Remote ID FEM}]}
+  - {id: proc, label: Flight / video processor, col: 3, row: 0, blocks: [{fn: soc, label: Flight controller and video encoder}]}
+  links:
+  - [ant, rcfe, '']
+  - [rcfe, rc, RF]
+  - [ant, vfe, '']
+  - [vfe, video, RF]
+  - [ant, gnss, '']
+  - [rc, proc, commands and telemetry]
+  - [video, proc, video stream]
+  - [gnss, proc, position; Remote ID messages]
+  questions:
+  - {id: rc_band, question: Control-link band, choices: [868 / 915 MHz, 2.4 GHz, both]}
+  - {id: region, question: Market, choices: [US (36 dBm EIRP), EU (20 dBm EIRP at 2.4 GHz), both with one board]}
+  - {id: video_type, question: Video, choices: [digital HD (OFDM), analog FM]}
+
+- name: Drone cellular link module for BVLOS (LTE / 5G RedCap with NTN fallback, eSIM, GNSS and broadcast Remote ID)
+  category: RF & connectivity
+  note: "A connected drone's link module (drawn by us from Zeng, Lyu and Zhang 2018, 3GPP RedCap and NTN overviews, the FAA Remote ID page and Skyworks data): an LTE-M / RedCap or 4G / 5G front end with antenna selection against interference at altitude, an optional satellite (NTN) path on the same PA, dual-band GNSS, an eSIM, and the broadcast Remote ID radio the FAA still requires."
+  sources:
+  - {doc: arXiv_1804_02217, title: 'Cellular-Connected UAV: Potentials, Challenges and Promising Technologies', url: 'https://arxiv.org/pdf/1804.02217'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: Cellular up- and down-looking}, {fn: antenna, label: GNSS}, {fn: antenna, label: Remote ID}]}
+  - {id: sw, label: Antenna selection, col: 1, row: 0, blocks: [antenna_switch, antenna_tuner]}
+  - {id: fe, label: Cellular front end, col: 2, row: 0, blocks: [{fn: pa_module, label: Multiband PA (LTE-M / NB-IoT / NTN)}, {fn: rf_frontend, label: IoT FEM with switch and coupler}, filter_saw_baw, diversity_rx_module]}
+  - {id: modem, label: Modem, col: 3, row: 0, blocks: [{fn: modem, label: LTE / RedCap / NTN modem}, {fn: secure_element, label: eSIM}, clock_generator]}
+  - {id: gnss, label: GNSS, col: 1, row: 1, blocks: [{fn: gnss_lna, label: L1 + L5 LNA}]}
+  - {id: rid, label: Remote ID broadcast, col: 2, row: 1, blocks: [ble_soc, bt_fem]}
+  - {id: fc, label: Flight computer, col: 3, row: 1, blocks: [soc, pmic]}
+  links:
+  - [ant, sw, cellular]
+  - [sw, fe, RF]
+  - [fe, modem, RF + MIPI RFFE]
+  - [ant, gnss, GNSS]
+  - [gnss, modem, time and position]
+  - [modem, fc, 'commands, telemetry, video']
+  - [fc, rid, Remote ID messages]
+  questions:
+  - {id: cell_class, question: Module class, choices: [LTE-M / NB-IoT (telemetry), 5G RedCap, LTE Cat-4 and up / 5G (video)]}
+  - {id: ntn, question: Satellite fallback, choices: [none, IoT-NTN in L / S band]}
+
 - name: V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)
   category: Automotive systems
   note: "Owner, 23 Oct 2026: Autotalks as the reference for the V2X applications. Autotalks (Qualcomm since Jun 2025) sold a V2X chipset in two set-ups: standalone, with the V2X stack on the chipset's own processor, and companion, attached to the telematics unit's processor; both with an external 5.9 GHz front end per antenna path for diversity or a second channel (est, from public product descriptions; autotalks.com is no longer online, checked 23 Oct 2026). Skyworks' automotive material paired SKY5A2105 with Autotalks parts."

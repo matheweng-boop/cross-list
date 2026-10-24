@@ -128,6 +128,7 @@ templates.env.globals.update(
     nav_homes=nav.HOMES,
     page_title=nav.page_title,
     owner_page=nav.owner_page,
+    guest_blocked=nav.guest_blocked,
 )
 
 # grade filter on the cross results: the keys grade_of() returns, worded as everywhere else (app/web/labels.py)

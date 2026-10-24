@@ -32,9 +32,9 @@
 {% for fam, rules in all_rules.items() %}
 <h2>{{ rules.title }}</h2>
 <div class="table-wrap"><table class="striped">
-  <thead><tr><th>Parameter</th><th>Priority</th><th>Type</th><th>Better when</th></tr></thead>
+  <thead><tr><th>Parameter</th><th class="n">Priority</th><th>Type</th><th>Better when</th></tr></thead>
   {% for p in rules.params %}
-  <tr><td>{{ p.label }}{% if p.unit %} <span class="muted">({{ p.unit }})</span>{% endif %}</td><td>{{ p.priority }}</td>
+  <tr><td>{{ p.label }}{% if p.unit %} <span class="muted">({{ p.unit }})</span>{% endif %}</td><td class="n">{{ p.priority }}</td>
     <td>{{ p.kind }}{% if p.hard %} · <b>hard</b>{% endif %}</td>
     <td>{% if p.kind == 'number' %}{{ p.direction }}{% if p.at %}, at the same {{ rules.get(p.at).label|lower }}{% endif %}{% elif p.kind == 'curve' %}shown only{% elif p.kind == 'range' %}wider range{% elif p.kind == 'ordinal' %}{{ p.levels|join(' < ') }}{% elif p.kind == 'set' %}more items (superset){% else %}must match{% endif %}</td></tr>
   {% endfor %}

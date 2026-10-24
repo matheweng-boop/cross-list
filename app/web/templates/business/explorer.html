@@ -5,7 +5,7 @@
   /business/explorer/table?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro th(key, extra='') %}{% set on = sort == key %}{% set nd = ('asc' if dir == 'desc' else 'desc') if on else sorts[key][1] %}
-  <th scope="col" class="sortable{{ ' sorted' if on }}"{% if on %} aria-sort="{{ 'ascending' if dir == 'asc' else 'descending' }}"{% endif %}><a href="{{ url(sort=key, dir=nd) }}">{{ caller() if caller else sorts[key][0] }}<span class="sort-ind" aria-hidden="true">{{ ('▲' if dir == 'asc' else '▼') if on else '↕' }}</span></a>{{ extra }}</th>
+  <th scope="col" class="sortable{{ ' sorted' if on }}{{ ' n' if key in ('reach', 'tam') }}"{% if on %} aria-sort="{{ 'ascending' if dir == 'asc' else 'descending' }}"{% endif %}><a href="{{ url(sort=key, dir=nd) }}">{{ caller() if caller else sorts[key][0] }}<span class="sort-ind" aria-hidden="true">{{ ('▲' if dir == 'asc' else '▼') if on else '↕' }}</span></a>{{ extra }}</th>
 {%- endmacro %}
 {% macro decide(e, status, label, cls='') %}<form method="post" action="/business/decision" class="push-form"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">{% if status == 'set_aside' %}<input type="hidden" name="note" value="">{% endif %}<button type="submit" class="small-btn {{ cls }}">{{ label }}</button></form>{% endmacro %}
 {% block content %}
@@ -44,17 +44,17 @@
     {% call th('reach') %}Needed in <small class="muted">of {{ apps|length }}</small>{% endcall %}
     {% if not same.crowd %}{{ th('competition') }}{% endif %}
     {% call th('score') %}Type · score{% endcall %}
-    {% if not same.tam %}{{ th('tam') }}{% endif %}
+    {% if not (same.tam or guest_blocked(request, '/business/tam')) %}{{ th('tam') }}{% endif %}
     <th scope="col">Decision</th>
   </tr></thead>
   <tbody>{% for e in rs %}{% set kept = (e.decision or {}).get('status') == 'keep' %}
     <tr{% if kept %} class="kept"{% endif %}>
       <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if e.band_note %} <small class="muted">· {{ e.band_note }} · <a href="{{ e.rf_link }}">RF coverage</a></small>{% endif %}{% if kept %} <span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept</span>{% endif %}</td>
       <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
-      <td title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
+      <td class="n" title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
       {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
       <td>{{ score_chip(e) }}</td>
-      {% if not same.tam %}<td>{% if e.tam_apps %}{{ usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/tam" title="No market size (TAM) yet">— <span class="visually-hidden">add a market size for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
+      {% if not (same.tam or guest_blocked(request, '/business/tam')) %}<td class="n">{% if e.tam_apps %}{{ usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/tam" title="No market size (TAM) yet">— <span class="visually-hidden">add a market size for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
       <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep', 'outline') }}{% endif %}
         <details class="aside-form"><summary class="small-btn outline secondary" role="button">Set aside</summary>
           <form method="post" action="/business/decision"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="set_aside"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">

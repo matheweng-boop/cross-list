@@ -14,7 +14,7 @@
 
 {% if row and row.score is not none %}
 <h2>How it is scored</h2>
-{{ factor_table(row) }}
+{{ factor_table(row, guest_blocked(request, '/business/tam')) }}
 <p class="small muted">Patents, foundry route and competitor technology are shown below but are not in the score.</p>
 {% else %}<p class="small muted">No Opportunity score: the portfolio already covers it, or it is not a chip we would build.</p>{% endif %}
 
@@ -87,6 +87,6 @@
   <input type="hidden" name="title" value="{{ label }}: business case review"><input type="hidden" name="source" value="evidence:{{ fn }}">
   <input type="hidden" name="next" value="/business/evidence/{{ fn }}?co={{ co }}">
   <button type="submit" class="outline small-btn">Schedule business case review for {{ label }}</button>
-  <span class="muted">Business cases start from the scheduled list on <a href="/business/shortlist#scheduled">Business cases</a>.</span></form>
+  <span class="muted">Business cases start from the scheduled list on <a href="/business/shortlist#scheduled">Shortlist &amp; cases</a>.</span></form>
 <script src="/static/business.js" defer></script>
 {% endblock %}

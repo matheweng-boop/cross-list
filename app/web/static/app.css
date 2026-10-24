@@ -924,7 +924,7 @@ details.why ul { margin: .25rem 0 .3rem; padding-left: 1rem; } details.why li { 
 .rb-groups { display: flex; flex-wrap: wrap; gap: .2rem 1rem; } .rb-groups label { margin: 0; }
 .rb-chart-wrap { overflow-x: auto; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; background: #fbfbfc; }
 .rb-svg { display: block; font-size: 10px; }
-.rb-svg .rb-tick { stroke: #e3e6ea; } .rb-svg .rb-tl { fill: #6b7480; font-size: 9.5px; }
+.rb-svg .rb-tick { stroke: #e3e6ea; } .rb-svg .rb-tl { fill: #5f6873; font-size: 9.5px; }
 .rb-svg .rb-ll { fill: #3a4450; font-weight: 600; font-size: 10.5px; }
 .rb-svg .rb-band { cursor: pointer; } .rb-svg .rb-band rect { fill: var(--c); fill-opacity: .8; } .rb-svg .rb-band rect.ul { fill-opacity: .5; }
 .rb-svg .rb-band:hover rect, .rb-svg .rb-band:focus rect { fill-opacity: 1; stroke: #1d2228; stroke-width: 1; }
@@ -1987,3 +1987,20 @@ body.guest main :is(a[href^="/manage"], a[href^="/owner"], a[href^="/business/ta
   a[href^="/business/validation"], a[href^="/business/data"], a[href^="/requests"], a[href^="/blocks/feedback"],
   a[href^="/blocks/area-requests"], a[href^="/shareable/technology-overview/edit"]) {
   pointer-events: none; color: inherit; text-decoration: none; cursor: text; }
+
+/* Owner's answers to the site check (24 Oct 2026) */
+/* Browse products: no sideways scroll on a desktop below 1400 px; the package is in the summary line and on the part */
+@media (min-width: 601px) and (max-width: 1399px) {
+  .browse-table :is(th, td):nth-child(4) { display: none; }
+  .browse-table td:nth-child(2) { min-width: 14rem; }
+}
+/* Touch screens (iPad, phones): small buttons and button-like links at least 40 px tall; desktop stays dense */
+@media (pointer: coarse) {
+  :is(.small-btn, .rv-b, .fchip, .rbt-chip, .bc-chip, .vz-pre, .te-mini, .pc-btns button, a.button, a[role="button"]) { min-height: 40px; }
+  a:is(.small-btn, .button) { display: inline-flex; align-items: center; }
+}
+/* Numbers right-aligned in tabular figures: a cell or header marked .n, and whole number tables */
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.num-table :is(td, th):not(:first-child), .cr-mm :is(td, th):is(:nth-child(2), :nth-child(3)) {
+  text-align: right; font-variant-numeric: tabular-nums; }
+.num-table thead tr + tr th { text-align: right; }

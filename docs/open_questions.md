@@ -7,22 +7,22 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    diagrams under "Other" become more systems, for example Industrial & energy, Consumer & wearables, Aerospace &
    defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
    own diagram: should each get one. Placements and the Car radio split are settled (below).
-2. **Browse products table width (site check, 24 Oct 2026):** on a 1280 px desktop the table is about 180 px wider
-   than the screen (Lifecycle and Data cut off). Hide the Package column below 1400 px, or show the Data badges as
-   small icons? Recommended: hide Package below 1400 px.
-3. **Overview parts tile:** Data management › Overview says "2,487 Skyworks and Qorvo parts" (parts with full data);
-   the portfolio says 4,621 (the whole public catalogue). Rename the tile to "Skyworks and Qorvo parts with full
-   data"? Recommended: yes.
-4. **Touch targets:** make small buttons at least 40 px tall on touch screens (iPad), which makes dense tables and
-   Agree / Disagree rows taller? Recommended: yes, on touch screens only.
-5. **"Business cases" menu item** opens the Shortlist tab, and one of its tabs is also called "Business cases". Rename
-   the menu item to "Shortlist & cases"? Recommended: yes.
-6. **TAM numbers for guests:** guests see TAM numbers in the Gaps & new technology detailed table, though the TAM page
-   is owner-only. Hide that column for guests? Recommended: yes, if TAM is meant to be private.
-7. **Number alignment** in the remaining tables (creepage, methodology weights, cross-rule priorities, RF coverage):
-   right-align them in a later run? Recommended: yes.
-8. **RF band chart contrast:** some labels are at 4.0–4.45:1, just under 4.5:1. Darken those chart colours slightly?
-   Recommended: yes.
+
+## Settled (owner, 24 Oct 2026, site check): "Yes to all"
+
+- Browse products: the Package column is hidden on desktops below 1400 px, so the table no longer scrolls sideways at
+  1280 px; the package stays on each part's page, in the summary line and on phones.
+- Data management › Overview: the tile now reads "Skyworks and Qorvo parts with full data".
+- Touch screens (iPad, phones) only: small buttons and button-like links, Agree / Disagree included, are at least
+  40 px tall; the desktop stays dense.
+- The menu item "Business cases" is now "Shortlist & cases" (title and heading too); the URLs are unchanged.
+- Guests no longer see TAM numbers: the TAM column of the detailed table, TAM on the gap cards, the market size in the
+  walk-through, the TAM basis in score tables, and the ASP-priced content on the application pages are hidden for
+  them (decided by the owner-only list in app/auth/access.py).
+- Numbers are right-aligned in tabular figures in the creepage tables, methodology weights and points, cross-rule
+  priorities, RF coverage, the application coverage table and the detailed table.
+- RF band chart: label colours below 4.5:1 are darkened in the same hue (at least 4.6:1); the bar colours are
+  unchanged.
 
 ## Settled (owner, 23 Oct 2026, systems grouping)
 

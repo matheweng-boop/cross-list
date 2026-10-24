@@ -49,33 +49,33 @@
 <p class="small">The score is the <b>weighted sum</b> of five factors, each 0–100, so every factor counts by its stated weight. Used by
   Gaps &amp; new technology (and its detailed table), the evidence pages, the Automotive map's Top moves and the preliminary cases.
   Functions that are not ours to build (path “Not ours”, customer parts) are not scored. Weights and mappings live in <code>data/business/scoring.yaml</code>.</p>
-<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Factor</th><th>Weight</th><th>What it measures</th><th>0–100 from</th><th>Confidence</th></tr></thead><tbody>
-  <tr><th>{{ cfg.labels.demand }}</th><td>{{ w.demand }}%</td><td>how many systems need it</td>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Factor</th><th class="n">Weight</th><th>What it measures</th><th>0–100 from</th><th>Confidence</th></tr></thead><tbody>
+  <tr><th>{{ cfg.labels.demand }}</th><td class="n">{{ w.demand }}%</td><td>how many systems need it</td>
     <td>Σ sockets (block quantity) in the diagrams; a library diagram counts {{ cfg.demand.library }}, a background diagram {{ cfg.demand.background }}; the most-needed function = 100.
       <b>TAM replaces it</b> as soon as an ASP and a volume are entered for the function: ${{ '{:,.0f}'.format(cfg.demand.tam_low) }} a year or less = 0, ${{ '{:,.0f}'.format(cfg.demand.tam_high) }} or more = 100, log scale. The tooltip says which basis was used.</td>
     <td>high from {{ cfg.demand.confident_from }} library diagrams, medium from 1, low with background diagrams only; TAM {{ cfg.demand.tam_confidence }}</td></tr>
-  <tr><th>{{ cfg.labels.distance }}</th><td>{{ w.distance }}%</td><td>how far from what we can build</td>
+  <tr><th>{{ cfg.labels.distance }}</th><td class="n">{{ w.distance }}%</td><td>how far from what we can build</td>
     <td>distance {% for k, v in d.points.items() %}{{ k }} → {{ v }}{{ ', ' if not loop.last }}{% endfor %} (scale below)</td>
     <td>the path's own confidence; technology rating {{ d.technology_confidence }}; none: low</td></tr>
-  <tr><th>{{ cfg.labels.architecture }}</th><td>{{ w.architecture }}%</td><td>how well it rides on what we already sell</td>
+  <tr><th>{{ cfg.labels.architecture }}</th><td class="n">{{ w.architecture }}%</td><td>how well it rides on what we already sell</td>
     <td>100 × ({{ cfg.architecture.door_opener }} × door-opener share + {{ cfg.architecture.neighbour }} × share of diagrams where one of our parts sits in the same block or a connected one)</td>
     <td>as demand (diagram count)</td></tr>
-  <tr><th>{{ cfg.labels.competition }}</th><td>{{ w.competition }}%</td><td>room to win</td>
+  <tr><th>{{ cfg.labels.competition }}</th><td class="n">{{ w.competition }}%</td><td>room to win</td>
     <td>{% for k, v in cfg.competition['values'].items() %}{{ crowding_label[k] }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; not assessed {{ cfg.neutral }}</td>
     <td>source check {% for k, v in cfg.competition.confidence.items() %}{{ k }} → {{ v }}{{ ', ' if not loop.last }}{% endfor %}; RF band gaps (supplier count) {{ cfg.competition.vendor_count_confidence }}</td></tr>
-  <tr><th>{{ cfg.labels.trend }}</th><td>{{ w.trend }}%</td><td>where the market is heading</td>
+  <tr><th>{{ cfg.labels.trend }}</th><td class="n">{{ w.trend }}%</td><td>where the market is heading</td>
     <td>{% for k, v in cfg.trend['values'].items() %}{{ k }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}; a dated regulation counts as growing; not assessed {{ cfg.neutral }}</td>
     <td>the trend research's own confidence</td></tr>
 </tbody></table></div>
 
 <h3 id="distance">One distance scale, 0–4</h3>
-<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Distance</th><th>Meaning</th><th>Points</th><th>From path to product</th><th>From technology rating</th><th>Automotive ladder</th><th>RF band gap</th><th>Feasibility</th></tr></thead><tbody>
-  {% for k, label in d.labels.items() %}<tr><th>{{ k }}</th><td>{{ label }}</td><td>{{ d.points[k] }}</td>
+<div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Distance</th><th>Meaning</th><th class="n">Points</th><th>From path to product</th><th>From technology rating</th><th>Automotive ladder</th><th>RF band gap</th><th class="n">Feasibility</th></tr></thead><tbody>
+  {% for k, label in d.labels.items() %}<tr><th>{{ k }}</th><td>{{ label }}</td><td class="n">{{ d.points[k] }}</td>
     <td>{% for p, v in d.path.items() if v == k %}{{ path_label[p] }}{{ ', ' if not loop.last }}{% endfor %}</td>
     <td>{% for p, v in d.technology.items() if v == k %}{{ prox_label[p] }}{{ ', ' if not loop.last }}{% endfor %}</td>
     <td>{% for p, v in d.ladder.items() if v == k %}{{ p }}{{ ', ' if not loop.last }}{% endfor %}</td>
     <td>{% for p, v in d.rf.items() if v == k %}{{ {'none': 'no part of ours in the band', 'power': 'power class missing', 'risk': 'only ageing parts'}[p] }}{{ ', ' if not loop.last }}{% endfor %}</td>
-    <td>{{ cfg.feasibility[k] }}</td></tr>{% endfor %}
+    <td class="n">{{ cfg.feasibility[k] }}</td></tr>{% endfor %}
   <tr><th>–</th><td>Not ours to build</td><td colspan="6" class="muted">path “{{ path_label['not_pursue'] }}” or a customer part: excluded, not scored</td></tr>
 </tbody></table></div>
 <p class="small muted">The path to product is used where assessed, else 0 for a function we already sell, else the technology rating. A curated automotive row may set its own distance (e.g. 2 for a package from our dies). Preliminary case features use the same scale.</p>

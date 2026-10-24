@@ -34,7 +34,7 @@ NAV = (
     ("growth", "Future growth", (
         ("Research & ideas", "/business/reports", "Research reports and preliminary product ideas and cases"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
-        ("Business cases", "/business/shortlist", "Candidates from the portfolio pages and new ideas; cases analysed"),
+        ("Shortlist & cases", "/business/shortlist", "Candidates from the portfolio and new ideas; cases analysed"),
         ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
     )),
     ("knowledge", "Engineering knowledge", (
@@ -227,3 +227,12 @@ ICONS = {  # fmt: skip
     "shareable": '<path d="M12 15V4M8 8l4-4 4 4M7 11H5v9h14v-9h-2"/>',
     "manage": '<path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',  # noqa: E501
 }
+
+
+def guest_blocked(request, href: str) -> bool:
+    """A guest is viewing and href is an owner-only page (app/auth/access.py): hide what that page holds, e.g. the TAM
+    numbers from TAM estimates (owner, 24 Oct 2026)."""
+    from app.auth.session import principal
+
+    p = principal(request)
+    return bool(p and p.is_guest and owner_page(href))

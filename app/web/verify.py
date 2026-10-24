@@ -1,15 +1,16 @@
 """Data management: the Overview (review status per data set, what is waiting) and Verify next (the owner's small
 verification batch, refilled per kind when it is done)."""
 
+import threading
 from datetime import UTC, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db import count, get_session
+from app.db import count, get_engine, get_session
 from app.matching.rules import get_rules
 from app.models import (
     AreaRequest,
@@ -32,12 +33,28 @@ router = APIRouter()
 BERLIN = ZoneInfo("Europe/Berlin")
 
 
+_ASSIGN = threading.Lock()  # one new Verify next batch at a time (Overview in the background, Verify next itself)
+
+
+def _assign(session: Session) -> list[str]:
+    with _ASSIGN:
+        return verify.assign(session)
+
+
+def _assign_later() -> None:
+    """Prepare the next Verify next batch after the Overview is sent: picking one takes seconds (site check, 24 Oct
+    2026), so the Overview no longer waits for it; Verify next shows it, the Overview counts it on the next visit."""
+    with Session(get_engine()) as s:
+        _assign(s)
+
+
 @router.get("/manage/overview", response_class=HTMLResponse)
-def overview(request: Request, session: Session = Depends(get_session)):
+def overview(request: Request, background: BackgroundTasks, session: Session = Depends(get_session)):
     """A compact start page for Data management: what waits for the owner, and review status per data set."""
-    verify.assign(session)  # the next batch is ready, so the count below is what Verify next shows
     n_open = dict(session.execute(select(VerifyTask.kind, func.count()).where(VerifyTask.status == "open")
                                   .group_by(VerifyTask.kind)).all())  # fmt: skip
+    if any(k not in n_open for k in verify.BATCH):
+        background.add_task(_assign_later)
     waiting = {
         "verify": sum(n_open.values()),
         "feedback": count(session, SiteFeedback, SiteFeedback.status == "new"),
@@ -159,7 +176,7 @@ def _cross_compare(session: Session, t: VerifyTask) -> dict | None:
 
 @router.get("/manage/verify", response_class=HTMLResponse)
 def verify_page(request: Request, session: Session = Depends(get_session)):
-    new = verify.assign(session)
+    new = _assign(session)
     board = verify.board(session)
     compares = {t.id: _cross_compare(session, t) for t in board["shown"]["cross"]}
     ctx = {"board": board, "kinds": verify.KINDS, "batch": verify.BATCH, "new": new, "topics": verify.DATA_TOPICS,

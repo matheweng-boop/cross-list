@@ -24,6 +24,47 @@ _DATE = re.compile(r"\b(20\d\d-\d\d-\d\d)\b")
 _NUM = re.compile(r"\d+(?:\.\d+)?")
 
 
+# ---- share-safety: words that never go on a page meant for outside readers (owner, 24 Oct 2026) -----------------
+# whole words, any case, plural too ("interest" does not trip "est"); the same check runs on every save and in tests
+_INTERNAL = "looks internal"
+_COMPARE = "reads as a comparison or a weakness"
+_NUMBER = "is our own estimate, not a public fact"
+_MAKING = "is about where or how parts are made"
+REASONS = {
+    "gap": _COMPARE, "risk": _COMPARE, "weakness": _COMPARE, "weaknesses": _COMPARE, "roadmap": _INTERNAL,
+    "internal": _INTERNAL, "confidential": _INTERNAL, "business case": _INTERNAL, "TAM": _NUMBER, "est": _NUMBER,
+    "estimate": _NUMBER, "margin": _NUMBER, "our price": _NUMBER, "fab": _MAKING, "foundry": _MAKING,
+    "wafer": _MAKING, "secret": _INTERNAL, "proprietary data": _INTERNAL, "not public": _INTERNAL,
+    "divested": _INTERNAL, "competitor": _COMPARE, "versus": _COMPARE, "vs": _COMPARE, "beats": _COMPARE,
+    "lags": _COMPARE, "behind": _COMPARE,
+}  # fmt: skip
+BLOCKLIST = tuple(REASONS)
+
+
+@lru_cache
+def competitor_names() -> tuple[str, ...]:
+    """Other companies' names (competitor list and profiles): never named on the shareable page."""
+    from app.services import competitors
+
+    names = set()
+    for c in pf.curated().get("competitors") or []:
+        names |= {c["vendor"], *(c.get("aliases") or [])}
+    names |= {p["name"] for p in competitors.all_profiles() if p.get("name")}
+    return tuple(sorted(n for n in names if len(n) >= 3))
+
+
+def blocked_words(text: str) -> list[str]:
+    hits = [w for w in BLOCKLIST if re.search(rf"\b{re.escape(w)}s?\b", text, re.I)]
+    return hits + [n for n in competitor_names() if re.search(rf"\b{re.escape(n)}\b", text)]
+
+
+def share_problems(text: str, allow: tuple[str, ...] = ()) -> list[str]:
+    """Why a text cannot go on the public page, in words the owner reads (empty: fine). ``allow``: words accepted here
+    (the watermark may say "Confidential": marking the page is the owner's choice)."""
+    return [f"“{w}” {REASONS.get(w, 'names another company')}; this page is public."
+            for w in blocked_words(text) if w.lower() not in allow]  # fmt: skip
+
+
 @lru_cache
 def curated() -> dict:
     return (yamlio.load(FILE.read_text()) if FILE.exists() else None) or {}
@@ -110,30 +151,72 @@ def build() -> dict:
             continue
         c, info = fam_count[label], fam_cur.get(label) or {}
         figs = [f for f in (figure(label, x) for x in info.get("figures") or []) if f]
-        families.append({"label": label, "Skyworks": c["Skyworks"], "Qorvo": c["Qorvo"], "total": sum(c.values()),
-                         "headline": info.get("headline", ""), "figures": figs})  # fmt: skip
+        families.append({"label": label, "slug": slug(label), "Skyworks": c["Skyworks"], "Qorvo": c["Qorvo"],
+                         "total": sum(c.values()), "headline": info.get("headline", ""), "figures": figs})  # fmt: skip
     families.sort(key=lambda f: -f["total"])
     platforms = [{**p, "owner": owner_of(p.get("caps") or [])} for p in cur.get("platforms") or []]
     by_key = {p["key"]: p for p in platforms}
     markets = [{**m, "platform_labels": [by_key[k]["label"] for k in m.get("platforms") or [] if k in by_key]}
                for m in cur.get("markets") or []]  # fmt: skip
-    matrix = [{"label": p["label"], "owner": p["owner"], "cells": [p["key"] in (m.get("platforms") or [])
-               for m in markets]} for p in platforms]  # fmt: skip
+    matrix = [{"key": p["key"], "label": p["label"], "owner": p["owner"],
+               "cells": [p["key"] in (m.get("platforms") or []) for m in markets]} for p in platforms]  # fmt: skip
     rf_top = next((f for fam in families if fam["label"].startswith("Amplifiers") for f in fam["figures"]
                    if "GHz" in f["text"]), None)  # fmt: skip
     auto = sum(1 for r in rows if r["automotive"])
-    facts = [
-        {"num": f"{len(rows):,}", "label": "active parts in the public catalogue",
-         "note": f"Skyworks {per_line['Skyworks']:,} · Qorvo {per_line['Qorvo']:,}"},
-        {"num": str(len(families)), "label": "product families", "note": "from RF front ends to isolation and timing"},
-        {"num": str(len(platforms)), "label": "technology platforms",
-         "note": "compound semiconductor, silicon, acoustic"},
-        {"num": str(len(markets)), "label": "end markets", "note": "mobile to industrial and energy"},
-        {"num": f"{auto:,}", "label": "parts marked automotive grade", "note": "as stated in the catalogue"},
-    ]  # fmt: skip
-    if rf_top:
-        facts.append({"num": rf_top["text"].replace("to ", "up to ", 1), "label": "RF and microwave coverage",
-                      "note": f"highest catalogue amplifier frequency ({rf_top['mpn']})"})  # fmt: skip
+    nums = {"parts": f"{len(rows):,}", "families": str(len(families)), "platforms": str(len(platforms)),
+            "markets": str(len(markets)), "automotive": f"{auto:,}",
+            "rf": rf_top["text"].replace("to ", "up to ", 1) if rf_top else ""}  # fmt: skip
+    notes = {"parts": f"Skyworks {per_line['Skyworks']:,} · Qorvo {per_line['Qorvo']:,}",
+             "rf": f"highest catalogue amplifier frequency ({rf_top['mpn']})" if rf_top else ""}  # fmt: skip
+    words = cur.get("facts") or {}
+    facts = []
+    for k, n in nums.items():
+        w = words.get(k) or {}
+        if n:
+            facts.append({"key": k, "num": n, "label": w.get("label", ""), "note": w.get("note") or notes.get(k, ""),
+                          "auto_note": not w.get("note")})  # fmt: skip
     return {"cur": cur, "facts": facts, "platforms": platforms, "markets": markets, "matrix": matrix,
             "families": families, "catalogue_date": catalogue_date(),
             "unclassified": fam_count.get(pf.OTHER_CATEGORY, Counter()).total()}  # fmt: skip
+
+
+def slug(label: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", label.lower()).strip("-")
+
+
+# ---- market focus: an optional page 5 for one system (owner, 24 Oct 2026) -----------------------------------------
+@lru_cache
+def focus_markets() -> dict[str, dict]:
+    """The systems the focus page can show (data/blocks/systems.yaml): those with words under ``focus`` in the YAML
+    and any with deep dives. Per system: its sub-systems with one line and the series found in the catalogue, the
+    facts (counted from the active parts of the families those series belong to), platforms and standards."""
+    from app.services import systems
+
+    words_all = curated().get("focus") or {}
+    plats = {p["key"]: p for p in curated().get("platforms") or []}
+    out = {}
+    for s in systems.systems():
+        words = words_all.get(s["key"]) or {}
+        if not (words or any(sub.get("topics") for sub in s.get("subsystems") or [])):
+            continue
+        subs, prefixes = [], set()
+        for sub in s.get("subsystems") or []:
+            w = (words.get("subsystems") or {}).get(sub["key"]) or {}
+            series = [x for x in w.get("series") or [] if series_parts(x)]
+            prefixes |= {series_prefix(x).upper() for x in series}
+            subs.append({"key": sub["key"], "title": sub["title"], "line": w.get("line") or sub.get("summary", ""),
+                         "series": series})  # fmt: skip
+        rows = [r for r in active_rows() if r["mpn"].upper().startswith(tuple(prefixes))] if prefixes else []
+        fams = {r["family"] for r in rows} - {pf.OTHER_CATEGORY}
+        keys = [k for k in words.get("platforms") or [] if k in plats]
+        facts = [("parts", f"{len(rows):,}", "active parts in the series named here")]
+        if words.get("automotive_grade"):
+            grade = sum(1 for r in rows if r["automotive"])
+            facts.append(("automotive", f"{grade:,}", "of them marked automotive grade"))
+        facts += [("subsystems", str(len(subs)), "sub-systems covered"),
+                  ("platforms", str(len(keys)), "technology platforms")]  # fmt: skip
+        para = " ".join(str(words.get("paragraph") or s.get("summary", "")).split())
+        out[s["key"]] = {"key": s["key"], "title": s["title"], "paragraph": para, "subsystems": subs, "facts": facts,
+                         "platforms": keys, "standards": list(words.get("standards") or []),
+                         "learn_more": words.get("learn_more") or "", "families": sorted(fams)}  # fmt: skip
+    return out

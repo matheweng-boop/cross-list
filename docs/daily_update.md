@@ -40,6 +40,14 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.
    Open application area requests (inbox section "Application area requests") are researched the same way; set their
    status on `/blocks/area-requests`.
+   **Technology overview (Shareable).** The owner's edits to `/shareable/technology-overview` (texts, numbers, dots,
+   header, logo, default focus and watermark) are overrides that live in the database with their version history;
+   `data/business/tech_overview.yaml` only holds the defaults. A run must never reset, delete or overwrite these
+   overrides. Where the inbox says an overridden value differs from the new automatic value, ask the owner.
+   Technology overview comments: rewrite the paragraph as asked (public-safe check applies), save it as a new version,
+   resolve the comment with a one-line reply. In practice: add an entry (comment, block, text, reply) to
+   `data/business/tech_overview_answers.yaml`; after the merge the site saves it as a new version and closes the
+   comment with the reply (`tests/test_tech_overview.py` runs the same word check on the answers).
    Cross-sell & gaps (owner, 22 Oct 2026): move sort, filter and set-aside from the old explorer table
    (`/business/explorer/table`) into `/blocks/cross-sell`; once nothing is lost, remove the old table.
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals

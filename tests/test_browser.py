@@ -8,6 +8,7 @@ error or uncaught page error, and when a page it visited scrolls sideways at 390
 """
 
 import re
+from urllib.parse import quote
 
 import pytest
 
@@ -323,6 +324,177 @@ def test_shareable_technology_overview_prints_to_four_a4_pages(page):
     pdf = page.pdf(format="A4", print_background=True)
     pages = len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf))
     assert 1 <= pages <= 4, f"{pages} A4 pages"
+
+
+TO = "/shareable/technology-overview"
+
+
+def pdf_pages(pdf: bytes) -> int:
+    return len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf))
+
+
+def pdf_text(pdf: bytes, tmp_path, page_no: int | None = None) -> str | None:
+    """The PDF's text (pdftotext from poppler), or None when the image has no pdftotext."""
+    import shutil
+    import subprocess
+
+    if not shutil.which("pdftotext"):
+        return None
+    f = tmp_path / "page.pdf"
+    f.write_bytes(pdf)
+    pages = ["-f", str(page_no), "-l", str(page_no)] if page_no else []
+    return subprocess.run(["pdftotext", *pages, str(f), "-"], capture_output=True, text=True, check=True).stdout
+
+
+def a4(page) -> bytes:
+    page.emulate_media(media="print")
+    pdf = page.pdf(format="A4", print_background=True)
+    page.emulate_media(media="screen")
+    return pdf
+
+
+def reset_overview(page):
+    """The live server is shared by the browser tests: put the overview back to its defaults."""
+    page.request.post(TO + "/edit/reset", form={"all": "1"})
+
+
+def test_technology_overview_edit_number_paragraph_comment_resolve_undo(page, tmp_path):
+    """Owner, 24 Oct 2026: edit a number, edit a paragraph, Save and see both (also in the PDF); comment on the
+    paragraph, resolve the comment; Undo brings the page back."""
+    page.on("dialog", lambda d: d.accept())
+    try:
+        go(page, TO)
+        page.get_by_role("button", name="Edit", exact=True).click()
+        expect(page).to_have_url(re.compile(r"/edit$"))
+        expect(page.locator("#f-fact\\.parts\\.num .te-auto")).to_contain_text("from the catalogue")
+        page.fill("input[name='fact.parts.num']", "5,000")
+        page.locator("textarea[name='paras.glance']").first.fill("A new intro, written on the iPad.")
+        page.get_by_role("button", name="Save").first.click()
+        expect(page.locator(".te-status")).to_contain_text("Saved")
+        expect(page.locator("#f-fact\\.parts\\.num .te-tag")).to_have_text("overridden")
+        para = page.locator(".te-para").first
+        para.locator("summary", has_text="Comment").click()
+        para.locator("textarea[name^='ctext.']").fill("make this shorter")
+        para.get_by_role("button", name="Send comment").click()
+        expect(page.locator(".te-open").first).to_contain_text("make this shorter")
+        page.locator(".te-open").first.get_by_role("button", name="Resolve").click()
+        expect(page.locator(".te-status")).to_contain_text("Comment resolved")
+        expect(page.locator(".te-open")).to_have_count(0)
+        go(page, TO)
+        expect(page.locator("#at-a-glance .to-lead")).to_have_text("A new intro, written on the iPad.")
+        expect(page.locator(".to-fact b").first).to_have_text("5,000")
+        text = pdf_text(a4(page), tmp_path)
+        if text is not None:
+            assert "A new intro, written on the iPad." in text and "5,000" in text
+        go(page, TO + "/edit")
+        page.get_by_role("button", name="Undo last change").click()
+        go(page, TO)
+        expect(page.locator(".to-fact b").first).not_to_have_text("5,000")
+        expect(page.locator("#at-a-glance .to-lead")).not_to_contain_text("iPad")
+    finally:
+        reset_overview(page)
+
+
+def test_technology_overview_market_focus_and_watermark(page, tmp_path):
+    """Owner, 24 Oct 2026: the focus dropdown adds a page 5 for Automotive, Data center or Drones (the address keeps
+    the choice); the watermark prints on every page and changes no page count; unknown values are ignored."""
+    go(page, TO)
+    page.select_option("select[name='focus']", "automotive")
+    expect(page).to_have_url(re.compile(r"focus=automotive"))
+    expect(page.locator("#market-focus h2")).to_have_text("Automotive")
+    expect(page.locator("#market-focus")).to_contain_text("Car radio")
+    pdf = a4(page)
+    assert pdf_pages(pdf) <= 5
+    page.select_option("select[name='wm']", "draft")
+    expect(page).to_have_url(re.compile(r"wm=draft"))
+    expect(page.locator(".to-wm")).to_have_text("Draft")
+    pdf = a4(page)
+    assert pdf_pages(pdf) <= 5
+    for n in range(1, pdf_pages(pdf) + 1):
+        text = pdf_text(pdf, tmp_path, n)
+        if text is not None:
+            assert "draft" in text.lower(), f"no watermark on page {n}"
+    page.select_option("select[name='wm']", "none")
+    expect(page.locator(".to-wm")).to_have_count(0)
+    page.locator("input[type='checkbox'][name='include']").uncheck()
+    expect(page.locator("#market-focus")).to_have_count(0)
+    assert pdf_pages(a4(page)) <= 4
+    for market, title, sub in (("datacenter", "Data center", "Rack power"), ("drones", "Drones", "Radio links")):
+        go(page, f"{TO}?focus={market}")
+        expect(page.locator("#market-focus")).to_contain_text(title)
+        expect(page.locator("#market-focus")).to_contain_text(sub)
+        assert pdf_pages(a4(page)) <= 5
+    go(page, f"{TO}?focus=bogus&wm=bogus")
+    expect(page.locator("#market-focus")).to_have_count(0)
+    expect(page.locator(".to-wm")).to_have_count(0)
+
+
+def test_technology_overview_logo_upload_and_remove(page):
+    """Owner, 24 Oct 2026: add a logo (only with permission), see it on every page band, remove it."""
+    from tests.test_tech_overview import png
+
+    page.on("dialog", lambda d: d.accept())
+    try:
+        go(page, TO + "/edit")
+        expect(page.locator(".te-logo")).to_contain_text("Use a logo only with permission from its owner.")
+        page.set_input_files("input[name='logo']", files=[{"name": "logo.png", "mimeType": "image/png",
+                                                           "buffer": png(40, 16)}])  # fmt: skip
+        page.get_by_role("button", name="Add logo").click()
+        expect(page.locator(".te-status")).to_contain_text("Logo added")
+        go(page, TO)
+        expect(page.locator(".to-band img.to-logo")).to_have_count(4)
+        assert pdf_pages(a4(page)) <= 4
+        go(page, TO + "/edit")
+        page.get_by_role("button", name="Remove logo").click()
+        expect(page.locator(".te-status")).to_contain_text("Logo removed")
+        go(page, TO)
+        expect(page.locator(".to-band img")).to_have_count(0)
+    finally:
+        reset_overview(page)
+
+
+def _filler(n: int) -> str:
+    words = "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa".split()
+    out, i = "", 0
+    while len(out) < n:
+        out += ("" if not out else " ") + words[i % len(words)]
+        i += 1
+    return out[:n].rstrip()
+
+
+def test_technology_overview_every_field_at_its_limit_still_fits(page):
+    """The length limits keep the PDF at 4 A4 pages (5 with the focus page), even with every text and number at its
+    limit, every dot set, two paragraphs per section and a medium logo."""
+    from app.services import tech_overview_edit as te
+    from tests.test_tech_overview import png
+
+    form: dict = {}
+    for fid, f in te.specs().items():
+        if f.kind in ("line", "text", "data") and f.max and not fid.endswith(".url") and fid != "wm.custom":
+            form[fid] = _filler(f.max)
+        elif f.kind == "chips":
+            form[fid] = "\n".join(_filler(te.CHIP_MAX) for _ in range(f.options[0] if f.options else te.CHIPS))
+        elif f.kind in ("owner", "dot"):
+            form[fid] = "Both"
+    form["hdr.logo_size"] = "medium"
+    multi = [(k, v) for k, v in form.items()]
+    for s in te.sections():
+        most, total = te.para_limits(s)
+        multi += [(f"paras.{s}", _filler(total // most - 1)) for _ in range(most)] + [(f"pid.{s}", "")] * most
+    try:
+        r = page.request.post(TO + "/edit/logo", multipart={"logo": {"name": "l.png", "mimeType": "image/png",
+                                                                      "buffer": png(40, 16)}})  # fmt: skip
+        assert r.ok
+        body = "&".join(f"{quote(k)}={quote(str(v))}" for k, v in multi)
+        r = page.request.post(TO + "/edit", data=body, headers={"content-type": "application/x-www-form-urlencoded"})
+        assert r.ok and "Not saved" not in r.text(), re.findall(r'role="alert">([^<]*)', r.text())[:5]
+        go(page, TO)
+        assert pdf_pages(a4(page)) <= 4
+        for market in te.to.focus_markets():
+            go(page, f"{TO}?focus={market}&wm=draft")
+            assert pdf_pages(a4(page)) <= 5, market
+    finally:
+        reset_overview(page)
 
 
 # --- Signing in -------------------------------------------------------------------------------------------------------

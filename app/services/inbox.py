@@ -137,8 +137,17 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += guests
     approved = not guests[2].startswith("None.")
 
+    # Shareable > Technology overview: the owner's edits (kept in the database), changed automatic numbers, comments
+    from app.services import tech_overview_edit
+
+    overview = tech_overview_edit.inbox_lines(session, start)
+    out.append("\n## Technology overview (Shareable)\n")
+    out.append("The owner's edits live in the database; never reset them. Answer each open comment in "
+               "data/business/tech_overview_answers.yaml (comment, block, text, reply; public-safe check applies).\n")
+    out += overview or ["None."]
+
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
-    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved]):
+    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved, overview]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

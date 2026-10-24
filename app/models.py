@@ -762,3 +762,38 @@ class SiteSetting(Base):
     key: Mapped[str] = mapped_column(String(60), primary_key=True)
     value: Mapped[str] = mapped_column(String(200))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class PageTextVersion(Base):
+    """One save of the owner's edits to a shareable page (Shareable > Technology overview, 24 Oct 2026): the full set
+    of overrides over the page's defaults (data/business/tech_overview.yaml and the catalogue numbers). The newest
+    version not undone is the page; older ones are the history. Never reset by a run (docs/daily_update.md)."""
+
+    __tablename__ = "page_text_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    page: Mapped[str] = mapped_column(String(60), index=True)
+    fields: Mapped[dict] = mapped_column(JSON)  # field id -> value (text, list of chips, or list of paragraphs)
+    auto: Mapped[dict] = mapped_column(JSON)  # automatic value of each overridden number when it was saved
+    note: Mapped[str] = mapped_column(String(500), default="")  # what changed, in words
+    author: Mapped[str] = mapped_column(String(100), default="Owner")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PageComment(Base):
+    """The owner's instruction on one paragraph or text of a shareable page ("make this shorter"); the daily run
+    answers it in data/business/tech_overview_answers.yaml and the site applies the answer and marks it done."""
+
+    __tablename__ = "page_comments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    page: Mapped[str] = mapped_column(String(60), index=True)
+    block: Mapped[str] = mapped_column(String(160))  # field id, or para.<paragraph id>
+    text: Mapped[str] = mapped_column(Text)
+    block_text: Mapped[str] = mapped_column(Text, default="")  # the text it was about, when it was written
+    author: Mapped[str] = mapped_column(String(100), default="Owner")
+    status: Mapped[str] = mapped_column(String(10), default="open", index=True)  # open | done
+    reply: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

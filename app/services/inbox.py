@@ -20,9 +20,11 @@ from app.models import (
     ReportQuestion,
     SiteFeedback,
     TechFeedback,
+    VerifyTask,
 )
 from app.services import feedback as fb
 from app.services import guest_input
+from app.services.verify import SOURCE_ANSWERS
 
 
 def _since(day: date) -> datetime:
@@ -80,6 +82,22 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
             f"{' · ' + _one_line(r.comment) if r.comment else ''}" for r in reviews] or ["None."]  # fmt: skip
 
+    # Verify next › Sources (weekly link and source check): ok / fix it / remove, with where it is
+    src = session.scalars(select(VerifyTask).where(VerifyTask.kind == "sources", VerifyTask.done_at >= start)
+                          .order_by(VerifyTask.done_at)).all()  # fmt: skip
+    out.append("\n## Source check answers\n")
+    out.append("Fix it: replace the dead link with the publisher's current page (polite rules) or read the source and "
+               "drop the marker. Remove: take the link or the figure out. Checked, OK: drop the marker.\n")  # fmt: skip
+    for t in src:
+        d = t.detail or {}
+        what = d.get("url") if d.get("what") == "link" else f"“{_one_line(d.get('text'))}”"
+        out.append(f"- {_when(t.done_at)} {SOURCE_ANSWERS.get(t.status, t.status)}: {d.get('label', '')} {what}"
+                   f" · page {d.get('page') or '–'} · {d.get('file')}:{d.get('line')}"
+                   f"{' (' + str(d.get('entry')) + ')' if d.get('entry') else ''}"
+                   f"{' · ' + _one_line(t.note) if t.note else ''}")  # fmt: skip
+    if not src:
+        out.append("None.")
+
     asked = session.scalars(select(ReportQuestion).where(ReportQuestion.created_at >= start)
                             .order_by(ReportQuestion.created_at)).all()  # fmt: skip
     answered = session.scalars(select(ReportQuestion).where(ReportQuestion.reviewed_at >= start,
@@ -121,6 +139,6 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
-    if not any([n_site, crosses, blocks, tech, reviews, asked, answered, rq, areas, approved]):
+    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

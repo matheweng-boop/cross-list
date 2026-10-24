@@ -45,6 +45,15 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals
    (`category: physics` in `data/engineering_rf_notes.yaml`, visuals in `app/web/static/visuals.js`; OpenStax University Physics first,
    then the physics and maths sources in `data/library/sources.yaml`; link only, never copy).
+   Link and source check (weekly, the Sunday evening run only): `uv run python scripts/check_links.py` (40 links a
+   run, the ones checked longest ago first; it keeps the polite rules itself and never requests qorvo.com,
+   www.qualcomm.com, distributors, iso.org or blocked hosts). Commit the updated `data/manage/link_check.yaml` (its
+   dead and moved links appear in Data management › Site data › Verify next › Sources, next to the "from memory",
+   "not read" and "est" markers); put the summary from `var/links/<date>.md` in the run summary. Act on the owner's
+   answers in the inbox section "Source check answers" on every run: **fix it** = replace a dead or moved link with
+   the publisher's current page if it can be found politely (robots.txt first, `tools/research/fetch.sh`; never an
+   archive or mirror), or read the source and remove the marker (keep "est" where the figure stays our estimate);
+   **remove** = take the link or the figure out; **checked, OK** = drop the marker (or keep the link as it is).
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

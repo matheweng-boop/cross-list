@@ -5,7 +5,10 @@ Each task stands for many items, so a few checks vouch for the rest:
   datasheet are right for one part, they are very likely right for every part on it), spread over the families;
 - block diagrams: a typical-size unverified diagram of the biggest categories (diagrams of one kind were drawn alike);
 - data items: the competition, market-trend and path entries of the most-needed functions (each file was researched
-  the same way).
+  the same way);
+- sources: dead or moved links from the weekly link check and figures or sources marked as not verified ("from
+  memory", "not read", "est", ...; app/services/sources.py). These are answered "checked, OK", "fix it" or "remove";
+  the answers go to the next daily run through the inbox (section "Source check answers").
 
 A kind gets its next batch only when its open tasks are done, so crosses can move on while a diagram waits.
 A task marked wrong is also sent to Site feedback, so the fix is part of the next feedback run.
@@ -23,11 +26,13 @@ from app.services import blocks, scoring, vocab
 from app.services import opportunity as op
 from app.services.queries import crosses_for
 
-BATCH = {"cross": 6, "diagram": 2, "data": 3}
+BATCH = {"cross": 6, "diagram": 2, "data": 3, "sources": 6}
 # Shown at a time (owner, 22 Oct 2026: "keep more hidden in the queue"): the rest of the batch waits and appears as
 # the shown ones are answered.
-SHOW = {"cross": 2, "diagram": 1, "data": 2}
-KINDS = {"cross": "Crosses", "diagram": "Block diagrams", "data": "Other data"}
+SHOW = {"cross": 2, "diagram": 1, "data": 2, "sources": 2}
+KINDS = {"cross": "Crosses", "diagram": "Block diagrams", "data": "Other data", "sources": "Sources"}
+# The answers a Sources item takes (stored as the task's status); the other kinds take ok / wrong.
+SOURCE_ANSWERS = {"ok": "checked, OK", "fix": "fix it", "remove": "remove"}
 AUTHOR = "Verify next"
 DATA_TOPICS = {"competition": "Competition", "trends": "Market trend", "path": "Path to product"}
 
@@ -177,7 +182,51 @@ def _data(session: Session, n: int) -> list[VerifyTask]:
     return out + ([rule] if rule else [])
 
 
-PICK = {"cross": _crosses, "diagram": _diagrams, "data": _data}
+def _sources(session: Session, n: int) -> list[VerifyTask]:
+    """Dead or moved links of the latest link check first, then the markers, weakest evidence first ("from memory"
+    before "est"); one item per page first, so a batch covers several pages."""
+    from app.services import sources as src
+
+    used = _used(session, "sources")
+    cands: list[tuple[int, str, VerifyTask]] = []
+    for r in src.latest_problems():
+        key = f"link:{r['url']}"[:600]
+        if key in used:
+            continue
+        u, n_uses = r["uses"][0], len(r["uses"])
+        target = f" → {r['target']}" if r.get("target") else ""
+        cands.append((0, u.page or u.file, VerifyTask(
+            kind="sources", key=key, covers=n_uses, title=f"{src.LINK_PROBLEMS[r['status']]}: {r['url']}"[:300],
+            detail={"what": "link", "label": src.LINK_PROBLEMS[r["status"]], "url": r["url"], "page": u.page,
+                    "file": u.file, "line": u.line, "entry": u.entry, "target": r.get("target"),
+                    "text": f"{r.get('code') or r.get('error') or ''}{target}".strip(),
+                    "why": f"the link check on {r['checked']} found it {r['status']}; it is used {n_uses} "
+                           f"time{'s' if n_uses != 1 else ''}"})))  # fmt: skip
+    rank = {k: i + 1 for i, (k, _, _) in enumerate(src.MARKERS)}
+    for m in src.markers():
+        if m.key[:600] in used:
+            continue
+        cands.append((rank[m.kind], m.page or m.file, VerifyTask(
+            kind="sources", key=m.key[:600], covers=1, title=f"{m.label}: {m.entry or m.page or m.file}"[:300],
+            detail={"what": "marker", "label": m.label, "marker": m.kind, "page": m.page, "file": m.file,
+                    "line": m.line, "entry": m.entry, "text": m.text,
+                    "why": f"marked “{m.label.lower()}” on this page"})))  # fmt: skip
+    cands.sort(key=lambda c: c[0])
+    out: list[VerifyTask] = []
+    pages: set[str] = set()
+    for _, where, t in cands:
+        if len(out) < n and where not in pages:
+            out.append(t)
+            pages.add(where)
+    for _, _, t in cands:  # fewer pages than items: fill up in the same order
+        if len(out) >= n:
+            break
+        if t not in out:
+            out.append(t)
+    return out
+
+
+PICK = {"cross": _crosses, "diagram": _diagrams, "data": _data, "sources": _sources}
 
 
 def assign(session: Session) -> list[str]:
@@ -206,12 +255,25 @@ def board(session: Session) -> dict:
             "vouched": {k: sum(r.covers for r in done if r.kind == k and r.status == "ok") for k in BATCH}}  # fmt: skip
 
 
-def complete(session: Session, task_id: int, ok: bool, note: str = "", author: str = "") -> VerifyTask:
+def complete(session: Session, task_id: int, ok: bool, note: str = "", author: str = "",
+             answer: str | None = None) -> VerifyTask:  # fmt: skip
+    """Record an answer. A Sources item takes ``answer`` (a key of SOURCE_ANSWERS); it reaches the daily run through
+    the inbox, so it is not copied to Site feedback."""
     t = session.get(VerifyTask, task_id)
     if t is None or t.status != "open":
         raise ValueError("no open task")
-    t.status, t.note, t.author = ("ok" if ok else "wrong"), note.strip()[:2000] or None, author.strip()[:100] or None
+    if t.kind == "sources":
+        answer = answer or ("ok" if ok else "fix")
+        if answer not in SOURCE_ANSWERS:
+            raise ValueError("unknown answer")
+        t.status = answer
+    else:
+        t.status = "ok" if ok else "wrong"
+    t.note, t.author = note.strip()[:2000] or None, author.strip()[:100] or None
     t.done_at = datetime.now(UTC)
+    if t.kind == "sources":
+        session.commit()
+        return t
     d = t.detail or {}
     if t.kind == "diagram" and ok:
         blocks.set_verified(session, d["i"], True, author, note)

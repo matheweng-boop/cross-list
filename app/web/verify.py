@@ -123,17 +123,22 @@ def verify_page(request: Request, session: Session = Depends(get_session)):
     board = verify.board(session)
     compares = {t.id: _cross_compare(session, t) for t in board["shown"]["cross"]}
     ctx = {"board": board, "kinds": verify.KINDS, "batch": verify.BATCH, "new": new, "topics": verify.DATA_TOPICS,
-           "compares": compares}  # fmt: skip
+           "compares": compares, "answers": verify.SOURCE_ANSWERS}  # fmt: skip
     return templates.TemplateResponse(request, "verify.html", ctx)
 
 
 @router.post("/manage/verify/{task_id:int}")
 def verify_done(task_id: int, result: str = Form(...), note: str = Form(""), author: str = Form(""),
                 session: Session = Depends(get_session)):  # fmt: skip
-    if result not in ("ok", "wrong"):
+    if result not in ("ok", "wrong", *verify.SOURCE_ANSWERS):
         raise HTTPException(400, "Unknown result")
+    task = session.get(VerifyTask, task_id)
+    is_source = task is not None and task.kind == "sources"
+    if task is not None and result not in (verify.SOURCE_ANSWERS if is_source else ("ok", "wrong")):
+        raise HTTPException(400, "Unknown result")  # fix / remove are Sources answers only
     try:
-        t = verify.complete(session, task_id, result == "ok", note, author)
+        answer = result if is_source else None
+        t = verify.complete(session, task_id, result == "ok", note, author, answer)
     except ValueError as e:
         raise HTTPException(404, "No open task") from e
     return RedirectResponse(f"/manage/verify#{t.kind}", status_code=303)

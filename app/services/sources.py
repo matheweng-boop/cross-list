@@ -39,9 +39,9 @@ SCAN = (
 # ("pinout not read from the datasheet") are part-data backlog (docs/pinout_backlog.md), not markers.
 CATALOGUE = ("data/catalog/", "data/real/", "data/reference_designs/", "data/mechanical", "data/sources/",
              "data/synthetic/", "data/appnotes")  # fmt: skip
-# The price model's own estimates are what those pages are for; they are not unverified sources.
+# The price model's own estimates are what those pages are for, and the schedule only names the markers.
 NO_MARKERS = ("data/business/price_model.yaml", "data/business/list_prices.yaml", "data/business/scoring.yaml",
-              "data/business/explanations.yaml")  # fmt: skip
+              "data/business/explanations.yaml", "data/manage/schedule.yaml")  # fmt: skip
 LINK_CHECK = PROJECT_ROOT / "data" / "manage" / "link_check.yaml"
 
 URL_RE = re.compile(r"https?://[^\s\"'<>`)\]}\\,|]+")

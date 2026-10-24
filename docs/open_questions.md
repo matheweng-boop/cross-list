@@ -7,6 +7,22 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    diagrams under "Other" become more systems, for example Industrial & energy, Consumer & wearables, Aerospace &
    defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
    own diagram: should each get one. Placements and the Car radio split are settled (below).
+2. **Browse products table width (site check, 24 Oct 2026):** on a 1280 px desktop the table is about 180 px wider
+   than the screen (Lifecycle and Data cut off). Hide the Package column below 1400 px, or show the Data badges as
+   small icons? Recommended: hide Package below 1400 px.
+3. **Overview parts tile:** Data management › Overview says "2,487 Skyworks and Qorvo parts" (parts with full data);
+   the portfolio says 4,621 (the whole public catalogue). Rename the tile to "Skyworks and Qorvo parts with full
+   data"? Recommended: yes.
+4. **Touch targets:** make small buttons at least 40 px tall on touch screens (iPad), which makes dense tables and
+   Agree / Disagree rows taller? Recommended: yes, on touch screens only.
+5. **"Business cases" menu item** opens the Shortlist tab, and one of its tabs is also called "Business cases". Rename
+   the menu item to "Shortlist & cases"? Recommended: yes.
+6. **TAM numbers for guests:** guests see TAM numbers in the Gaps & new technology detailed table, though the TAM page
+   is owner-only. Hide that column for guests? Recommended: yes, if TAM is meant to be private.
+7. **Number alignment** in the remaining tables (creepage, methodology weights, cross-rule priorities, RF coverage):
+   right-align them in a later run? Recommended: yes.
+8. **RF band chart contrast:** some labels are at 4.0–4.45:1, just under 4.5:1. Darken those chart colours slightly?
+   Recommended: yes.
 
 ## Settled (owner, 23 Oct 2026, systems grouping)
 

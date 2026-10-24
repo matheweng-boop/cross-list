@@ -18,7 +18,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app.auth.session import OWNER, principal, site_key
+from app.auth.session import OWNER, signed_in_owner, site_key
 from app.config import get_settings
 from app.db import count
 from app.models import Account, PasskeyCredential, SiteSetting
@@ -53,10 +53,10 @@ def seconds_left(request: Request, session: Session) -> int:
     """How long the owner's last confirmation still counts (0: confirm again). Local use without a password: always."""
     if not get_settings().site_password:
         return STEPUP_TTL
-    p = principal(request)
+    p = signed_in_owner(request)
     key = _key()
     value = request.cookies.get(STEPUP_COOKIE, "")
-    if p is None or not p.is_owner or key is None or not value:
+    if p is None or key is None or not value:
         return 0
     body, _, sig = value.rpartition(".")
     if not body or not hmac.compare_digest(sig, _sign(body, key)):

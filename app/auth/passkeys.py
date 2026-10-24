@@ -35,14 +35,13 @@ from webauthn.helpers.structs import (
 from app.auth import stepup
 from app.auth.session import (
     GUEST,
-    OWNER,
     client_ip,
     guard,
     new_handle,
     now,
     pow_check,
-    principal,
     set_login_cookie,
+    signed_in_owner,
 )
 from app.config import get_settings
 from app.db import count, get_engine, get_session
@@ -333,8 +332,8 @@ async def invite_verify(token: str, request: Request):
 
 # --- the owner's own passkeys ----------------------------------------------------------------------------------------
 def _owner(request: Request, session: Session) -> Account:
-    p = principal(request)
-    if p is None or p.role != OWNER or not p.id:
+    p = signed_in_owner(request)
+    if p is None or not p.id:
         raise HTTPException(403, "Only the owner can manage the owner's passkeys.")
     acct = session.get(Account, p.id)
     if acct is None:

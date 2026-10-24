@@ -125,6 +125,12 @@ def principal(request: Request) -> Principal | None:
     return getattr(request.state, "principal", None)
 
 
+def signed_in_owner(request: Request) -> Principal | None:
+    """The owner making this request, else None (a guest or nobody)."""
+    p = principal(request)
+    return p if p is not None and p.is_owner else None
+
+
 def client_ip(request: Request) -> str:
     """The visitor's address. On Render every request comes through Render's proxy, and uvicorn runs with
     --proxy-headers, so request.client is already the first X-Forwarded-For address; locally it is the socket."""

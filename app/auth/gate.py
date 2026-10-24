@@ -27,8 +27,8 @@ from app.auth.session import (
     guard,
     pow_check,
     pow_issue,
-    principal,
     set_login_cookie,
+    signed_in_owner,
 )
 from app.config import get_settings
 from app.db import get_engine, get_session
@@ -224,8 +224,8 @@ def confirm_page(request: Request, next: str = "/manage/people", msg: str = "",
                  session: Session = Depends(get_session)):  # fmt: skip
     from app.web.routes import templates
 
-    p = principal(request)
-    if p is None or not p.is_owner:
+    p = signed_in_owner(request)
+    if p is None:
         return PlainTextResponse("Only the owner can do this.", status_code=403)
     ctx = {"next": _safe_next(next), "msg": msg[:200], "password": stepup.password_allowed(session),
            "has_passkeys": stepup.owner_passkey_count(session, p.id) > 0,
@@ -236,8 +236,8 @@ def confirm_page(request: Request, next: str = "/manage/people", msg: str = "",
 @router.post("/owner/confirm/password")
 async def confirm_password(request: Request, password: str = Form(""), next: str = Form("/manage/people")):
     """Confirm with the password (only while password sign-in is allowed)."""
-    p = principal(request)
-    if p is None or not p.is_owner:
+    p = signed_in_owner(request)
+    if p is None:
         return PlainTextResponse("Only the owner can do this.", status_code=403)
     ip = client_ip(request)
     why = guard.refuse(ip)

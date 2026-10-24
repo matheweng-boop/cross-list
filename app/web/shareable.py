@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.services import logo, tech_overview, uploads
 from app.services import tech_overview_edit as te
@@ -30,8 +31,8 @@ DONE = {"saved": "Saved.", "nochange": "Nothing changed.", "undone": "Undone: th
 
 
 def _owner(request: Request) -> str:
-    p = getattr(request.state, "principal", None)
-    if p is None or not p.is_owner:
+    p = signed_in_owner(request)
+    if p is None:
         raise HTTPException(403, "Only the owner can edit this page.")
     return p.name or "Owner"
 

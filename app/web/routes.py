@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, lazyload
 
 from app.auth.deps import get_current_user
+from app.auth.session import principal, signed_in_owner
 from app.config import get_settings
 from app.db import get_engine, get_session
 from app.matching.engine import (
@@ -58,7 +59,7 @@ templates.env.globals.update(
     has_list_price=price_model.has_list_price,
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
-    signed_in=lambda request: getattr(request.state, "principal", None),
+    signed_in=principal,
     category_short=CATEGORY_SHORT,
 )
 
@@ -95,8 +96,8 @@ PASSKEY_NUDGE_COOKIE = "crosslist_pk_nudge"
 def _passkey_nudge(request: Request) -> bool:
     """The "Set up a passkey on this device" banner: an owner who signed in with the password and has no passkey yet,
     unless dismissed for this browser session (a session cookie set by the banner's close button)."""
-    p = getattr(request.state, "principal", None)
-    if p is None or not p.is_owner or not p.id or not get_settings().site_password:
+    p = signed_in_owner(request)
+    if p is None or not p.id or not get_settings().site_password:
         return False
     if request.cookies.get(PASSKEY_NUDGE_COOKIE) == "off" or request.url.path == "/owner/passkeys":
         return False

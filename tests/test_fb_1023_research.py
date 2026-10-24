@@ -37,7 +37,7 @@ def test_hot_swap_report_renders_and_answers_the_owner(client):
     page = html.unescape(client.get(f"/business/reports/{HOT}").text)
     assert 'class="rpt"' in page
     for t in ("pre-charge", "HVIL", "ISO 6469-3", "ISO 21498", "TPSI3050-Q1", "TPSI2140-Q1", "Si8751", "Si828x",
-              "Si89", "800 V DC", "data centre", "est"):  # fmt: skip
+              "Si89", "800 V DC", "data center", "est"):  # fmt: skip
         assert t in page, t
     assert "/library/traction_asil_d" in page and f"/business/reports/{CS}" in page
     bg = html.unescape(client.get(f"/business/reports/{HOT}/background").text)

@@ -8,7 +8,7 @@
   <li><a href="{{ href }}"><b>{{ n }}</b><span>{{ label }}</span></a></li>{% endfor %}
 </ul>{% else %}<p class="ov-none" id="ov-todo-none"><b>Nothing waiting.</b> <span class="muted small">Everything is answered.</span></p>{% endif %}
 
-{% macro tile(n, label, href, hot=False) %}<a class="ov-card{{ ' hot' if hot and n }}" href="{{ href }}"><b>{{ n }}</b><small>{{ label }}</small></a>{% endmacro %}
+{% macro tile(n, label, href, hot=False) %}<a class="ov-card{{ ' hot' if hot and n }}" href="{{ href }}"><b>{{ '{:,}'.format(n) if n is number else n }}</b><small>{{ label }}</small></a>{% endmacro %}
 <h2 class="ov-h">Today and at a glance</h2>
 <div class="ov-grid" id="ov-waiting">
   {{ tile(waiting.feedback_today, 'feedback item' ~ ('' if waiting.feedback_today == 1 else 's') ~ ' came in today', '/manage/feedback') }}

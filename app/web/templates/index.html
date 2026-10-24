@@ -21,17 +21,17 @@
 
     <p class="filt-h">Category</p>
     <ul class="cat-tree">
-      <li><a href="{{ url(cat='', sub='') }}"{% if not cat %} class="on" aria-current="true"{% endif %}>All categories <small>{{ res.facets.cat.values()|sum }}</small></a></li>
+      <li><a href="{{ url(cat='', sub='') }}"{% if not cat %} class="on" aria-current="true"{% endif %}>All categories <small>{{ '{:,}'.format(res.facets.cat.values()|sum) }}</small></a></li>
       {% for cid, c in tax.categories.items() if res.facets.cat.get(cid) %}
-      <li><a href="{{ url(cat=cid, sub='') }}"{% if cat == cid and not sub %} class="on" aria-current="true"{% endif %}>{{ c.label }} <small>{{ res.facets.cat[cid] }}</small></a>
-        {% if cat == cid %}<ul>{% for sid in c.subs if res.facets.sub.get(sid) %}<li><a href="{{ url(sub=sid) }}"{% if sub == sid %} class="on" aria-current="true"{% endif %}>{{ tax.subs[sid].label }} <small>{{ res.facets.sub[sid] }}</small></a></li>{% endfor %}</ul>{% endif %}
+      <li><a href="{{ url(cat=cid, sub='') }}"{% if cat == cid and not sub %} class="on" aria-current="true"{% endif %}>{{ c.label }} <small>{{ '{:,}'.format(res.facets.cat[cid]) }}</small></a>
+        {% if cat == cid %}<ul>{% for sid in c.subs if res.facets.sub.get(sid) %}<li><a href="{{ url(sub=sid) }}"{% if sub == sid %} class="on" aria-current="true"{% endif %}>{{ tax.subs[sid].label }} <small>{{ '{:,}'.format(res.facets.sub[sid]) }}</small></a></li>{% endfor %}</ul>{% endif %}
       </li>{% endfor %}
     </ul>
 
     {% macro facet(name, title, labels, current) %}
     <p class="filt-h">{{ title }}</p>
     <ul class="facet">{% for k, n in res.facets[name]|dictsort(by='value', reverse=true) %}
-      <li><a href="{{ url(**{name: ('' if current == k else k)}) }}"{% if current == k %} class="on" aria-current="true"{% endif %}>{{ labels.get(k, k) if labels else k }} <small>{{ n }}</small></a></li>{% endfor %}</ul>
+      <li><a href="{{ url(**{name: ('' if current == k else k)}) }}"{% if current == k %} class="on" aria-current="true"{% endif %}>{{ labels.get(k, k) if labels else k }} <small>{{ '{:,}'.format(n) if n is number else n }}</small></a></li>{% endfor %}</ul>
     {% endmacro %}
     {{ facet('company', 'Manufacturer', none, company) }}
     {{ facet('cap', 'Data available', cap_label, cap) }}
@@ -43,7 +43,7 @@
 
   <section class="browse-results" aria-live="polite">
     <div class="browse-head">
-      <p><b>{{ res.total }}</b> product{{ '' if res.total == 1 else 's' }}{% if res.total != res.all %} <span class="muted">of {{ res.all }}</span>{% endif %}</p>
+      <p><b>{{ '{:,}'.format(res.total) }}</b> product{{ '' if res.total == 1 else 's' }}{% if res.total != res.all %} <span class="muted">of {{ '{:,}'.format(res.all) }}</span>{% endif %}</p>
       {% set active = [] %}{% for k, v in params.items() if v %}{% set _ = active.append((k, v)) %}{% endfor %}
       {% if active %}<div class="active-filters">{% for k, v in active %}<a class="fchip on" href="{{ url(**{k: ''}) }}" aria-label="Remove filter {{ k }}">
         {{ {'q': 'Search: ' ~ v, 'cat': tax.categories[v].label if v in tax.categories else v, 'sub': tax.subs[v].label if v in tax.subs else v,
@@ -61,7 +61,7 @@
           <td class="caps">{% for c in ('detailed', 'crosses', 'pinout', 'catalogue', 'source') if c in r.caps %}<span class="cap cap-{{ c }}" title="{{ cap_label[c] }}">{{ {'detailed': 'Parameters', 'crosses': 'Crosses', 'pinout': 'Pinout', 'catalogue': 'Catalogue', 'source': 'Source'}[c] }}</span>{% endfor %}</td></tr>
       {% endfor %}</tbody>
     </table></div>
-    {% if res.total > rows|length %}<p><a href="{{ url(limit=limit + 200) }}">Show {{ [200, res.total - rows|length]|min }} more</a> <span class="small muted">({{ rows|length }} of {{ res.total }} shown)</span></p>{% endif %}
+    {% if res.total > rows|length %}<p><a href="{{ url(limit=limit + 200) }}">Show {{ [200, res.total - rows|length]|min }} more</a> <span class="small muted">({{ rows|length }} of {{ '{:,}'.format(res.total) }} shown)</span></p>{% endif %}
     {% else %}
     <div class="empty-state"><p><b>No products match these filters.</b></p><p class="small">Remove a filter above or <a href="/parts">reset all</a>. Missing a part? <a href="/manage/requests?kind=part">Request it</a>.</p></div>
     {% endif %}

@@ -46,8 +46,8 @@
   <b>71</b>, type <span class="sg sg-quick_win">{{ sg.labels.quick_win }}</span>. Hover any score for its own sum. Details below.</p>
 
 <h3 id="score-detail">The five factors <small class="muted">· 0–100, one scale on every page</small></h3>
-<p class="small">The score is the <b>weighted sum</b> of five factors, each 0–100, so every factor counts by its stated weight. Used by the
-  Opportunity explorer (and its Technology fit view), the evidence pages, the Automotive map's Top moves and the preliminary cases.
+<p class="small">The score is the <b>weighted sum</b> of five factors, each 0–100, so every factor counts by its stated weight. Used by
+  Gaps &amp; new technology (and its detailed table), the evidence pages, the Automotive map's Top moves and the preliminary cases.
   Functions that are not ours to build (path “Not ours”, customer parts) are not scored. Weights and mappings live in <code>data/business/scoring.yaml</code>.</p>
 <div class="table-wrap"><table class="bo-formulas small"><thead><tr><th>Factor</th><th>Weight</th><th>What it measures</th><th>0–100 from</th><th>Confidence</th></tr></thead><tbody>
   <tr><th>{{ cfg.labels.demand }}</th><td>{{ w.demand }}%</td><td>how many systems need it</td>
@@ -126,14 +126,14 @@
   <tr><th>Competition</th><td>{{ src.competition }} functions assessed</td><td class="muted">public catalogue knowledge, indicative</td></tr>
   <tr><th>Technology proximity</th><td>{{ src.technology }} functions rated</td><td class="muted">public portfolio knowledge, indicative</td></tr>
   <tr><th>Market size (TAM)</th><td>{{ tam_n }} estimates per product or technology</td><td class="muted"><a href="/business/tam">TAM estimates</a> · public sources, each one reviewed</td></tr>
-  {% if asp or vol %}<tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered earlier</td><td class="muted">your inputs; used for TAM in the Opportunity explorer</td></tr>{% endif %}
+  {% if asp or vol %}<tr><th>ASP / volume</th><td>{{ asp|length }} ASPs, {{ vol|length }} volumes entered earlier</td><td class="muted">your inputs; used for TAM in Gaps &amp; new technology</td></tr>{% endif %}
 </tbody></table></div>
 <details class="small muted maint"><summary>For maintainers</summary><p>Files behind these sources: applications <code>data/blocks/templates.yaml</code>, <code>background_templates.yaml</code> (research notes in <code>data/blocks/research/</code>);
   functions <code>data/blocks/functions.yaml</code>; our parts <code>data/catalog/</code>; competition <code>data/business/competition.yaml</code>; technology ratings <code>data/business/technology.yaml</code>;
   research <code>data/business/evidence/*.yaml</code> (path to product <code>path.yaml</code>, trends <code>trends.yaml</code>); customers <code>data/business/customers.yaml</code>.</p></details>
 
 <h2 id="pages">What each page answers</h2>
-<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'explorer': 'Opportunity explorer', 'cases': 'Business cases', 'tam': 'TAM estimates'}.get(k, k|replace('_', ' ')|capitalize) }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
+<dl class="bo-defs">{% for k, p in help.pages.items() %}<dt>{{ {'overview': 'Overview', 'applications': 'Applications', 'markets': 'Markets', 'attach': 'Attach', 'explorer': 'Gaps & new technology', 'cases': 'Business cases', 'tam': 'TAM estimates'}.get(k, k|replace('_', ' ')|capitalize) }}</dt><dd>{{ p.question }}</dd>{% endfor %}</dl>
 
 <h2 id="limits">What the analysis cannot tell you</h2>
 <ul class="small">

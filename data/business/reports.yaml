@@ -73,7 +73,7 @@ reports:
       Hot-swap controllers and eFuses stop at about 80 V; above that the job is done by SiC switches with isolated drivers and
       sensing. TI leads with TPSI3050-Q1 (reinforced isolated switch driver, $2.30 at 1k, active pre-charge design TIDA-050063)
       and TPSI2140-Q1 (1200 V relay for insulation monitoring, $2.90). Our Si875x does the same job but only at 2.5 kVrms. Data
-      centres face the same problem in 800 V DC racks (NVIDIA 2027; TI shows an 800 V hot-swap controller). Next step: a
+      centers face the same problem in 800 V DC racks (NVIDIA 2027; TI shows an 800 V hot-swap controller). Next step: a
       reinforced Si875x successor and a solid-state pre-charge set with our gate drivers and Si89xx sensing.'
     tags:
     - hot-swap
@@ -127,7 +127,7 @@ reports:
       why: Hands the sensing half of the set to its own case, so the set can be priced as one.
       case: iso-current-sense-charging
     bu_opener:
-      question: In 800 V cars, chargers and the new 800 V DC data-centre racks, solid-state switches are starting to replace the
+      question: In 800 V cars, chargers and the new 800 V DC data-center racks, solid-state switches are starting to replace the
         pre-charge resistor, insulation-monitor relays and later the contactors. Each one needs an isolated driver with its own
         floating supply. TI sells a reinforced automotive one (TPSI3050-Q1, 5 kVrms, $2.30 at 1k); our Si875x does the same job
         at 2.5 kVrms only. Should we make a reinforced Si875x successor and sell it as a pre-charge and disconnect set?
@@ -135,7 +135,7 @@ reports:
       - Si875x already builds solid-state relays without a floating supply (AN1052); the technology and the customers exist
       - 'The rest of the set is ours today: Si828x / Si829x gate drivers with fast short-circuit detection, Si89xx current and
         voltage sensing (5 kVrms, automotive), Si86xx isolators, Si88xx isolated bias'
-      - The same set serves 800 V DC data-centre racks, battery storage racks and DC fast chargers
+      - The same set serves 800 V DC data-center racks, battery storage racks and DC fast chargers
       cons:
       - TI is there first with a reinforced driver (TPSI3050-Q1), a 1200 V relay (TPSI2140-Q1) and reference designs
       - Our Si875x is basic 2.5 kVrms in a narrow SOIC-8, not enough for a reinforced 800 V barrier
@@ -158,7 +158,7 @@ reports:
       text: The owner asked whether hot-swap controllers exist for 800 V in cars. They do not as single chips (they stop at about
         80 V); instead, carmakers start to use silicon-carbide switches for pre-charge, discharge and insulation monitoring.
         Each needs an isolated driver with its own floating supply and isolated current sensing. The same appears in 800 V DC
-        data-centre racks, where boards are really plugged in live.
+        data-center racks, where boards are really plugged in live.
     - age: 25
       text: 'TI leads: TPSI3050-Q1 (reinforced isolated switch driver, 5 kVrms, $2.30) with an active pre-charge reference design,
         and TPSI2140-Q1 (1200 V integrated relay, $2.90) for insulation monitoring. Our Si875x isolated FET driver does the same job
@@ -322,7 +322,7 @@ reports:
       SOIC (>15 mm) that AN1456 announces?
     answer:
       text: 'Yes, worth a business case, but only outside the car: 1500 V solar and storage, 1000 V chargers and 800 V DC
-        data-centre power. Inside the car 8 mm covers 800 V. The case hv-extra-wide-isolation carries the decision on.'
+        data-center power. Inside the car 8 mm covers 800 V. The case hv-extra-wide-isolation carries the decision on.'
       conf: med
     needed_now:
     - 'Isolation BU: release date, first dies and working-voltage rating of the ultra-wide SOIC'
@@ -434,7 +434,7 @@ reports:
     decision: Should we put our isolator, isolated-amplifier and gate-driver dies into the ultra-wide SOIC (>15 mm) that AN1456
       announces, and sell a 1500 V barrier set?
     answer:
-      text: Yes for 1500 V solar and storage and 800 V DC data centres, if the package comes soon and the dies reach about
+      text: Yes for 1500 V solar and storage and 800 V DC data centers, if the package comes soon and the dies reach about
         2000 Vrms working voltage; the car does not need it. We are late against TI, Novosense and Broadcom, so it wins redesigns
         and new platforms first (est).
       conf: med
@@ -443,7 +443,7 @@ reports:
     - 'Isolation BU: the working-voltage rating our dies reach in it'
     - 'A 1500 V inverter maker: which creepage the assessor requires (15 mm or 14.5 mm)'
     say_externally: Utility solar and battery storage at 1500 V DC need about 15 mm creepage across the control barrier, and
-      800 V DC data-centre power at high altitude needs more than 8 mm. Skyworks sells reinforced isolators, isolated amplifiers
+      800 V DC data-center power at high altitude needs more than 8 mm. Skyworks sells reinforced isolators, isolated amplifiers
       and gate drivers, and has published AN1456 on creepage and clearance for these systems. We would like to know what creepage
       and working voltage your assessor asks for, and how you meet it today.
     next_steps:

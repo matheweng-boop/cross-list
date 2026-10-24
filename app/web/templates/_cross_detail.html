@@ -3,7 +3,7 @@
 {% from "_macros.html" import diff_table, unofficial_mark, unofficial_footnote %}
         <p class="cd-verdict"><b>{{ v.label }}</b> · Electrical: {{ electrical_verdict(v) }} · {{ fit_verdict(r, v) }}</p>
         {% for n in notes %}<div class="cross-note"><b>{{ n.verdict_label }}{% if n.title %} · {{ n.title }}{% endif %}</b><p>{{ n.note }}</p>
-          <small class="muted">{{ n.author or 'engineer note' }}{% if n.date %}, {{ n.date }}{% endif %}</small></div>{% endfor %}
+          <small class="muted">{{ n.author or 'engineer note' }}{% if n.date %}, {{ n.date|date }}{% endif %}</small></div>{% endfor %}
         {% set top = r.top_differences(10)|reject('in', r.fit_diffs)|list %}{% set top = top[:5] %}
         <b>Top 5 differences</b>
         {% if top %}<ol class="top5">{% for d in top %}<li class="{{ d.status }}">{{ d.summary() }}{{ unofficial_mark(r.candidate, d.key) or unofficial_mark(r.reference, d.key) }}</li>{% endfor %}</ol>

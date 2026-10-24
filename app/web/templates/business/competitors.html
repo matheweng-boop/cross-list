@@ -7,7 +7,7 @@
 {% if not rows %}<p class="muted">No profiles yet.</p>{% endif %}
 <div class="rp-list">{% for c in rows %}
   <a class="rp-card" href="/business/competitors/{{ c.slug }}">
-    <span class="rp-meta small">{{ c.ticker or 'Private' }} · {{ c.hq }} · checked {{ c.updated }}</span>
+    <span class="rp-meta small">{{ c.ticker or 'Private' }} · {{ c.hq }} · checked {{ c.updated|date }}</span>
     <b class="rp-title">{{ c.name }}</b>
     <span class="small">{{ c.summary|truncate(200) }}</span>
     {% set v = c.financials.supplier_verdict %}<span class="small muted">As a supplier (est): longevity {{ ratings[v.longevity]|lower }}, supply stability {{ ratings[v.supply]|lower }}</span>

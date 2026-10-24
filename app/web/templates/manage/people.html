@@ -27,8 +27,8 @@
   <thead><tr><th scope="col">Name</th><th scope="col">Since</th><th scope="col">Passkeys (created · last used)</th><th scope="col"></th></tr></thead>
   <tbody>{% for g in guests %}<tr>
     <th scope="row">{{ g.name }}{% if g.disabled %} <span class="muted small">(removed)</span>{% endif %}</th>
-    <td>{{ g.created_at.strftime('%Y-%m-%d') }}</td>
-    <td class="small">{% for k in g.passkeys %}{{ k.created_at.strftime('%Y-%m-%d') }} · {{ k.last_used_at.strftime('%Y-%m-%d %H:%M') if k.last_used_at else 'not used yet' }}{% if not loop.last %}<br>{% endif %}{% else %}none{% endfor %}</td>
+    <td>{{ g.created_at|date }}</td>
+    <td class="small">{% for k in g.passkeys %}{{ k.created_at|date }} · {{ k.last_used_at|date('stamp') if k.last_used_at else 'not used yet' }}{% if not loop.last %}<br>{% endif %}{% else %}none{% endfor %}</td>
     <td>{% if not g.disabled %}<form method="post" action="/manage/people/{{ g.id }}/remove" class="inline-form" data-confirm="Remove {{ g.name }}? They are signed out at once and their passkeys stop working."><button type="submit" class="outline small-btn">Remove</button></form>{% endif %}</td>
   </tr>{% endfor %}</tbody>
 </table></div>
@@ -39,7 +39,7 @@
 {% if invites %}<div class="table-wrap"><table>
   <thead><tr><th scope="col">For</th><th scope="col">Note</th><th scope="col">Created</th><th scope="col">Status</th><th scope="col"></th></tr></thead>
   <tbody>{% for r in invites %}<tr>
-    <th scope="row">{{ r.i.name }}</th><td class="small">{{ r.i.note or '' }}</td><td>{{ r.i.created_at.strftime('%Y-%m-%d') }}</td>
+    <th scope="row">{{ r.i.name }}</th><td class="small">{{ r.i.note or '' }}</td><td>{{ r.i.created_at|date }}</td>
     <td>{% if r.state == 'used' %}used {{ r.i.used_at.strftime('%Y-%m-%d') }}{% elif r.state == 'expired' %}expired or cancelled{% else %}open until {{ r.i.expires_at.strftime('%Y-%m-%d') }}{% endif %}</td>
     <td>{% if r.state == 'open' %}<form method="post" action="/manage/people/invites/{{ r.i.id }}/cancel" class="inline-form"><button type="submit" class="outline small-btn">Cancel</button></form>{% endif %}</td>
   </tr>{% endfor %}</tbody>

@@ -419,7 +419,7 @@ def scan(session: Session) -> dict:
                     "Evidence",
                     f"{label}: {len(hot)} top-ranked functions without a confirming source",
                     "No public source confirmed it automatically (blocked site, nothing found, or not checked yet).",
-                    "These feed the top of the Opportunity explorer."
+                    "These feed the top of Gaps & new technology."
                     if name in ("path", "technology", "competition", "trends")
                     else "Shown as evidence for top-ranked functions.",
                     "/business/quality",

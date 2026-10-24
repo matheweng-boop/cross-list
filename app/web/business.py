@@ -374,7 +374,7 @@ async def decide(request: Request, session: Session = Depends(get_session)):
     return RedirectResponse(_back(request, form, "/business/explorer/table"), status_code=303)
 
 
-SHORTLIST_ORIGINS = {"explorer": "Opportunity explorer", "crosssell": "Cross-sell", "markets": "Markets",
+SHORTLIST_ORIGINS = {"explorer": "Gaps & new technology", "crosssell": "Cross-sell", "markets": "Markets",
                      "customers": "Customers", "idea": "New ideas", "report": "Research & ideas",
                      "part": "Part walk-through"}  # fmt: skip
 

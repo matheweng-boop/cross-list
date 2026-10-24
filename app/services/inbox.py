@@ -63,7 +63,7 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     crosses = _new(session, CrossFeedback, start)
     ids = {i for c in crosses for i in (c.reference_id, c.candidate_id)}
-    mpn = dict(session.execute(select(Part.id, Part.mpn).where(Part.id.in_(ids)))) if ids else {}
+    mpn = dict(session.execute(select(Part.id, Part.mpn).where(Part.id.in_(ids))).all()) if ids else {}
     out += _section("## Cross verdicts\n", [f"- {_when(c.created_at)} {c.verdict.value}: "
                     f"{mpn.get(c.reference_id, c.reference_id)} -> {mpn.get(c.candidate_id, c.candidate_id)}"
                     f"{' · ' + _one_line(c.note) if c.note else ''}" for c in crosses])  # fmt: skip

@@ -76,7 +76,7 @@ def test_guest_css_covers_every_owner_page():
     from app.auth.access import OWNER_PAGES
 
     css = (ROOT / "app" / "web" / "static" / "app.css").read_text()
-    rule = css[css.index("body.guest main :is("):]
+    rule = css[css.index("body.guest main :is(") :]
     rule = rule[: rule.index("}")]
     missing = [p for p in OWNER_PAGES if not p.startswith("/api/") and not p.endswith(".txt")
                and f'a[href^="{p}"]' not in rule]  # fmt: skip

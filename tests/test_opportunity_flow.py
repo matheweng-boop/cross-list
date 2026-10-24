@@ -80,7 +80,9 @@ def test_candidates_to_business_case(client):
 
 def test_overview_retired_explorer_grouped_with_rf_band_gaps(client):
     r = client.get("/business?co=skyworks", follow_redirects=False)
-    assert r.status_code == 307 and r.headers["location"] == "/business/explorer?co=skyworks"
+    assert r.status_code == 307 and r.headers["location"] == "/business/opportunities?co=skyworks"  # one hop
+    r = client.get("/business?sort=reach&co=qorvo", follow_redirects=False)
+    assert r.headers["location"] == "/business/explorer/table?sort=reach&co=qorvo"
     from app.services import opportunity as op
 
     bands = op.rf_band_rows()

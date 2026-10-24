@@ -75,7 +75,7 @@ def add_requests(
         session.add(CrossRequest(mpn=mpn[:100], manufacturer=manufacturer.strip() or None, note=note.strip() or None))
         open_keys.add(normalize_pn(mpn))
     session.commit()
-    return RedirectResponse(local_path(back, "/requests"), status_code=303)
+    return RedirectResponse(local_path(back, "/manage/requests?kind=part"), status_code=303)
 
 
 @router.post("/requests/{request_id}")
@@ -90,7 +90,7 @@ def update_request(
     elif status in STATUSES:
         r.status = status
     session.commit()
-    return RedirectResponse("/requests", status_code=303)
+    return RedirectResponse("/manage/requests?kind=part", status_code=303)
 
 
 @router.get("/requests.txt", response_class=PlainTextResponse)

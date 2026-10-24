@@ -67,9 +67,9 @@ def test_requests_actions_post_to_their_own_handlers(client, session):
     assert 'action="/requests" class="request-form"' in html  # adding part requests still works here
 
     r = client.post(f"/requests/{req.id}", data={"status": "in_progress"}, follow_redirects=False)
-    assert r.status_code == 303
+    assert r.status_code == 303 and r.headers["location"] == "/manage/requests?kind=part"  # one hop
     r = client.post(f"/blocks/area-requests/{area.id}", data={"status": "planned"}, follow_redirects=False)
-    assert r.status_code == 303
+    assert r.status_code == 303 and r.headers["location"] == "/manage/requests?kind=area"
     r = client.post(f"/blocks/feedback/{fb.id}", data={"status": "agreed"})  # follows to the Requests tab
     assert r.status_code == 200 and "/manage/requests?kind=diagram" in str(r.url)
     session.expire_all()

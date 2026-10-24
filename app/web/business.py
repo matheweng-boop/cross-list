@@ -63,10 +63,10 @@ def _ctx(session: Session, co: str, scope: str = "all") -> dict:
 
 
 @router.get("/business")
-def overview(request: Request):
-    """The Opportunities section opens on the explorer (the overview page was retired, feedback 2026-10-20)."""
-    q = f"?{request.url.query}" if request.url.query else ""
-    return RedirectResponse(f"/business/explorer{q}", status_code=307)
+def overview(request: Request, co: str = "combined"):
+    """The Opportunities section opens on the explorer (the overview page was retired, feedback 2026-10-20): one
+    redirect straight to where /business/explorer leads."""
+    return explorer_moved(request, co)
 
 
 @router.get("/business/applications", response_class=HTMLResponse)

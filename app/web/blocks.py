@@ -101,7 +101,7 @@ def area_request_status(req_id: int, status: str = Form(...), session: Session =
         raise HTTPException(400, "Unknown status")
     row.status = status
     session.commit()
-    return RedirectResponse("/blocks/area-requests", status_code=303)
+    return RedirectResponse("/manage/requests?kind=area", status_code=303)
 
 
 @router.get("/blocks/coverage", response_class=HTMLResponse)
@@ -319,7 +319,7 @@ def update_feedback(
     elif status in FEEDBACK_STATUS:
         fb.status = status
     session.commit()
-    return RedirectResponse("/blocks/feedback", status_code=303)
+    return RedirectResponse("/manage/requests?kind=diagram", status_code=303)
 
 
 @router.get("/blocks/feedback.txt", response_class=PlainTextResponse)

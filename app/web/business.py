@@ -27,6 +27,7 @@ from app.models import (
 )
 from app.services import blocks, cases, library, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
 from app.services import opportunity as op
+from app.services import portfolio as pf
 from app.services import reports as rp
 from app.services import rf_coverage as rf
 from app.services.seed import unofficial_counts
@@ -105,6 +106,11 @@ def attach(request: Request, fn: str = "", co: str = "combined", part: str = "",
     c["fn"] = fn if fn in used else ""
     c["result"] = op.attach(c["apps"], fn) if c["fn"] else None
     c["pairs"] = op.cross_sell_pairs(c["apps"]) if not c["fn"] else []
+    # from a part (or function) to the systems that use it (owner, 25 Oct 2026: the Cross-sell tabs work together)
+    from app.services import systems as sy
+
+    focus = c["fn"] or (c["anchor"]["fns"][0] if c["anchor"] and c["anchor"]["fns"] else "")
+    c["fn_places"] = sy.places_of_function(focus) if focus else []
     mfrs = op.company(co)[2]
 
     def offer(f: str) -> list[dict]:
@@ -244,8 +250,17 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
              names={i: blocks.display_name(t) for i, t in enumerate(blocks.templates())})  # fmt: skip
     if picked["idx"]:
         c["xs"] = sy.bottom_up(session, picked["idx"], mine)
+        # Skyworks + Qorvo together here (owner, 25 Oct 2026): each pair is shown once. A synergy pair leaves the
+        # Bundles table and is shown in the block below with everything (count, reason, diagrams, parts, design mark)
+        # (both lines only when the page shows the combined company)
+        both = op.company(co)[0] == "combined"
+        tog = pf.together_in([a.i for a in c["xs"]["apps"]]) if both else {"synergies": [], "bundles": []}
+        syn = {frozenset((x["skyworks"], x["qorvo"])) for x in tog["synergies"]}
+        c["xs"]["n_moved"] = sum(frozenset((pr["a"], pr["b"])) in syn for pr in c["xs"]["pairs"])
+        c["xs"]["pairs"] = [pr for pr in c["xs"]["pairs"] if frozenset((pr["a"], pr["b"])) not in syn]
         for pr in c["xs"]["pairs"]:
             pr["why"] = op.pair_reasons(c["xs"]["apps"], pr["a"], pr["b"])
+        c["tog"] = tog if tog["synergies"] or tog["bundles"] else None
         c["in_sel"] = sy.selection(system, sub)["idx"] if picked["level"] == "application" else picked["idx"]
     else:  # nothing picked yet: what we can sell across the whole library, as before
         sell = []

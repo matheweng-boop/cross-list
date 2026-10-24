@@ -122,6 +122,7 @@ def _market_groups(names):
 templates.env.globals.update(
     market_groups=_market_groups,
     nav_state=nav.state,
+    tab_href=nav.tab_href,
     nav_sections=nav.NAV,
     nav_utility=nav.UTILITY,
     nav_icons=nav.ICONS,

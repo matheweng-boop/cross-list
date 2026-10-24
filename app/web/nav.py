@@ -9,8 +9,6 @@ NAV = (
         ("Search & replacements", "/", "Find replacements for a reference part"),
         ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
         ("Part reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
-        ("Skyworks + Qorvo portfolio", "/portfolio",
-         "What each company adds: product categories, RF by band, synergies, which to pick"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),
@@ -22,7 +20,8 @@ NAV = (
         ("Application library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
         ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
-        ("Cross-sell", "/blocks/cross-sell", "Which of our parts go together in a system, sub-system or diagram"),
+        ("Cross-sell", "/blocks/cross-sell",
+         "What to sell together: by system, by part, and the Skyworks + Qorvo portfolio side by side"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
     )),
@@ -73,7 +72,7 @@ PLACES = {
     "/pricing/": ("products", "/"),
     "/parts": ("products", "/parts"),
     "/compare": ("products", "/compare"),
-    "/portfolio": ("products", "/portfolio"),
+    "/portfolio": ("systems", "/blocks/cross-sell"),  # owner, 25 Oct 2026: the portfolio is a Cross-sell tab
     "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application
     "/blocks/feedback": ("manage", "/manage/verify"),
     "/blocks/area-requests": ("manage", "/manage/verify"),
@@ -143,7 +142,10 @@ TABS = (
         ("Portfolio coverage", "/business/applications"),
     ),
     (("Markets", "/business/markets"), ("Customers", "/business/customers")),
-    (("By system", "/blocks/cross-sell"), ("By part", "/business/attach")),
+    # owner, 25 Oct 2026: the Skyworks + Qorvo portfolio moved from Products to Cross-sell (cross-sell = how the two
+    # lines go together); the selected system carries over between these tabs (TAB_CARRY)
+    (("By system", "/blocks/cross-sell"), ("By part", "/business/attach"),
+     ("Skyworks + Qorvo portfolio", "/portfolio")),
     (("Gaps & new technology", "/business/opportunities"), ("Detailed table", "/business/explorer/table")),
     (("Shortlist", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
     # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab
@@ -161,6 +163,20 @@ TABS = (
         ("Knowledge search", "/technical"),
     ),
 )
+
+# Query parameters a tab link keeps when you switch tabs inside a group (first tab href -> parameter names)
+TAB_CARRY = {"/blocks/cross-sell": ("system", "sub")}
+
+
+def tab_href(tabs, href: str, params) -> str:
+    """A tab's link, keeping the selection (?system=…&sub=… on the Cross-sell tabs) when its group carries it."""
+    from urllib.parse import urlencode
+
+    given = dict(params)
+    if given.get("sel"):  # the system picker on By system sends "system" or "system:sub"
+        given["system"], _, given["sub"] = given["sel"].partition(":")
+    keep = [(k, given[k]) for k in TAB_CARRY.get(tabs[0][1] if tabs else "", ()) if given.get(k)]
+    return f"{href}?{urlencode(keep)}" if keep else href
 
 
 def _sections():

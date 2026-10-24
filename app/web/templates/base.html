@@ -40,7 +40,7 @@
 <main id="main" class="content" tabindex="-1">
   {% if passkey_nudge(request) %}<div class="banner pk-nudge" id="pk-nudge" role="note"><span>Set up a passkey on this device: sign in faster and more safely.</span>
     <a href="/owner/passkeys" class="pk-nudge-go">Set up now</a><button type="button" class="pk-nudge-close" aria-label="Hide until the browser is closed" title="Hide until the browser is closed">×</button></div>{% endif %}
-  {% if ns.tabs %}<nav class="page-tabs" aria-label="Views">{% for label, href in ns.tabs %}<a href="{{ href }}"{% if ns.active_tab == href %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
+  {% if ns.tabs %}<nav class="page-tabs" aria-label="Views">{% for label, href in ns.tabs %}<a href="{{ tab_href(ns.tabs, href, request.query_params) }}"{% if ns.active_tab == href %} aria-current="page" class="on"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
   {% if guest %}<p class="banner guest-note" role="note">You are signed in as {{ me.name }} (guest). Your input is reviewed before it is used.</p>{% endif %}
   {% if request.cookies.get('crosslist_flash') == 'review' %}<p class="banner" role="status">Thanks, sent for review. The owner reviews every guest input before it is used.</p>{% endif %}
   {% if synthetic_banner() %}<p class="banner">Demo mode: parts from “Syn…” manufacturers are <b>synthetic</b> with invented values. SynRef stands in for Skyworks. Real data comes from public datasheets.</p>{% endif %}

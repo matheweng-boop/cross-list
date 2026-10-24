@@ -9,6 +9,7 @@
     {% if w.more %}<li class="muted">and {{ w.more }} more</li>{% endif %}</ul>
   {% for note in w.notes if note %}<p class="muted">{{ note }}</p>{% endfor %}
 </details>{% endmacro %}
+{% macro systems_line(places, label) %}{% if places %}<p class="small cs-systems">Systems that use {{ label }}: {% for p in places[:6] %}<a href="/blocks/cross-sell?system={{ p.system }}&amp;sub={{ p.sub }}">{{ p.system_title }} › {{ p.title }}</a> <span class="muted">({{ p.n }})</span>{{ ', ' if not loop.last }}{% endfor %}{% if places|length > 6 %} <span class="muted">+{{ places|length - 6 }}</span>{% endif %} <span class="muted">· what sells together there: By system</span></p>{% endif %}{% endmacro %}
 {% block content %}
 <h1>Cross-sell</h1>
 <p class="subtitle muted">Which of our parts to offer together, and which new products would sit next to a product we already sell.
@@ -32,6 +33,7 @@
     {% if q_app and S.apps %}<details class="small cs-apps"><summary>which architectures</summary>{% for a, sc, hit in S.apps[:40] %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}" title="matched: {{ hit|join(', ') }}">{{ a.name }}</a>{% endfor %}</details>{% endif %}
     {% if q_app and not S.n %}<span class="uc-error">No architecture with this part matches these words; try broader words, or leave the application empty.</span>{% endif %}</p>
 </section>
+{{ systems_line(fn_places, fns[anchor.fns[0]].label if anchor.fns[0] in fns else anchor.mpn) }}
 {% if S.n %}
 <h2>Offer with it <small class="muted">· our parts, best first · {{ S.ours|length }}</small></h2>
 {% set bw = bundle_cfg %}<p class="small muted"><b>Bundle strength</b> (0–100) = 100 × ({{ bw.together }} × share of these architectures that also need it + {{ bw.same_block }} × share where both sit in the same block + {{ bw.connected }} × share where their blocks are connected).{% if anchor.automotive %} <b>Grade?</b> flags a suggestion when fewer than {{ (100 * bw.grade_flag_below)|round|int }}% of its architectures are automotive: check that the offer suits an automotive part.{% endif %}</p>
@@ -74,6 +76,7 @@
 {% set n = result.apps|length %}
 <p><b>{{ fns[fn].label }}</b> sits in <b>{{ n }}</b> architecture{{ 's' if n != 1 }} · our parts: {{ partlinks(anchor_parts) }}
   <details class="small bo-inline"><summary>which architectures</summary>{% for a in result.apps %}<a class="bo-ours" href="/business/applications/{{ a.i }}?co={{ co }}">{{ a.name }}</a>{% endfor %}</details></p>
+{{ systems_line(fn_places, fns[fn].label) }}
 {% set ours = result.rows|selectattr('status', 'equalto', 'supported')|list %}
 {% set new = result.rows|rejectattr('status', 'equalto', 'supported')|list %}
 

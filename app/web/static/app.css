@@ -199,7 +199,7 @@ a.dev-link { color: inherit; text-decoration: underline dotted; }
 /* Broadcast: standards chips */
 .std { display: inline-block; font-size: .72rem; padding: 0 .4em; margin: 0 .2em .2em 0; border-radius: .3rem; white-space: nowrap; }
 .std-analog { border: 1px solid var(--pico-muted-border-color); color: var(--pico-muted-color); }
-.std-decode { background: #1baf7a22; color: #128a5f; border: 1px solid #1baf7a66; }
+.std-decode { background: #1baf7a22; color: #0f7a54; border: 1px solid #1baf7a66; }
 .std-iq { background: #2a78d622; color: #1f5fb0; border: 1px solid #2a78d666; }
 .small-btn { padding: .2rem .6rem; font-size: .8rem; margin: 0; }
 
@@ -305,8 +305,8 @@ a.dev-link { color: inherit; text-decoration: underline dotted; }
 .results tr.rank-0 > td:first-child { box-shadow: inset 3px 0 0 #1baf7a; }
 .results tr.rank-1 > td:first-child { box-shadow: inset 3px 0 0 #2a78d6; }
 .badge.rank-badge { font-weight: 700; }
-.badge.rank-badge.rank-0 { background: #1baf7a; color: #fff; }
-.badge.rank-badge.rank-1 { background: #2a78d6; color: #fff; }
+.badge.rank-badge.rank-0 { background: #0f7a54; color: #fff; }
+.badge.rank-badge.rank-1 { background: #1f6fd0; color: #fff; }
 .badge.note-badge { background: #fff4d6; color: #8a5a00; border: 1px solid #eda10066; }
 .rank-reason { color: var(--pico-muted-color); }
 .results tr.rank-divider td { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
@@ -330,7 +330,7 @@ a.dev-link { color: inherit; text-decoration: underline dotted; }
 .compare-add button { width: auto; margin: 0; }
 .compare-alt { display: inline-flex; gap: .3rem; align-items: center; font-size: .85rem; margin: 0; }
 .compare-baseline { max-width: 22rem; }
-.badge.alt-badge { background: #e8f7f0; color: #128a5f; border: 1px solid #1baf7a66; white-space: normal; }
+.badge.alt-badge { background: #e8f7f0; color: #0f7a54; border: 1px solid #1baf7a66; white-space: normal; }
 .compare-list-h { margin-top: 2rem; font-size: 1.1rem; }
 .series-filter { max-width: 22rem; }
 .series-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: .3rem .8rem; margin-bottom: 1rem; }
@@ -647,6 +647,7 @@ button.cov-item:hover { box-shadow: 0 2px 8px #0002; }
 .ct-oem { background: #e8eefb; color: #1f3f8a; } .ct-tier-1 { background: #e7f5ec; color: #1b6b3a; } .ct-module-maker { background: #fff4e8; color: #7a3a06; }
 .ct-odm-ems { background: #f4e9fb; color: #5b2a7a; } .ct-operator-infrastructure { background: #e6f4f6; color: #135e6b; }
 .bo-gap > summary.bo-seg { grid-template-columns: minmax(0, 1.4fr) 7rem minmax(0, 3fr); }
+@media (max-width: 600px) { .bo-gap > summary.bo-seg { grid-template-columns: minmax(0, 1fr) auto; } .bo-gap > summary.bo-seg > span:last-child { grid-column: 1 / -1; } }
 .bo-plat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: .7rem; }
 .bo-plat { margin: 0; padding: .6rem .8rem; } .bo-plat header { margin-bottom: .3rem; padding: 0; background: none; border: 0; }
 .bo-plat p { margin: .25rem 0; } .bo-could { color: #1b6b3a; } .bo-src a { margin-right: .3rem; }
@@ -2038,3 +2039,9 @@ article { border: 1px solid var(--card-line); border-radius: var(--radius-card);
 .ov-todo b { min-width: 2ch; text-align: right; color: #b23a0a; font-variant-numeric: tabular-nums; }
 .ov-todo a::after { content: "›"; margin-left: auto; color: var(--pico-muted-color); }
 .ov-none { margin: .3rem 0 1rem; }
+
+/* Guests: links to owner-only pages (Data management, TAM, data quality) read as plain text, not a "not allowed" page */
+body.guest main :is(a[href^="/manage"], a[href^="/owner"], a[href^="/business/tam"], a[href^="/business/quality"],
+  a[href^="/business/validation"], a[href^="/business/data"], a[href^="/requests"], a[href^="/blocks/feedback"],
+  a[href^="/blocks/area-requests"], a[href^="/shareable/technology-overview/edit"]) {
+  pointer-events: none; color: inherit; text-decoration: none; cursor: text; }

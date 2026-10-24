@@ -27,6 +27,7 @@ from app.models import (
 )
 from app.services import blocks, cases, library, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
 from app.services import opportunity as op
+from app.services import priority as priority
 from app.services import reports as rp
 from app.services import rf_coverage as rf
 from app.services.seed import unofficial_counts
@@ -138,11 +139,13 @@ def gaps_moved(co: str = "combined", sort: str = "reach"):
 
 
 @router.get("/business/markets", response_class=HTMLResponse)
-def markets(request: Request, co: str = "combined", view: str = "all", m: str = "", g: str = "",
-            session: Session = Depends(get_session)):  # fmt: skip
+def markets(request: Request, co: str = "combined", view: str = "all", m: str = "", g: str = "", show: str = "",
+            wt: str = "", wl: str = "", wd: str = "", session: Session = Depends(get_session)):  # fmt: skip
     """Functions by end market, in three groups (existing portfolio, portfolio gap, new technology); market chips
-    choose which markets count."""
+    choose which markets count. Each group is in priority order, "RF & power only" by default, with the same score as
+    Gaps & new technology (owner, 25 Oct 2026); its diagram count is the applications in the chosen markets."""
     c = _ctx(session, co)
+    w, custom = _priority_weights(request, wt, wl, wd)
     data = op.markets(session, c["apps"], op.company(co)[2])
     chosen = [x for x in m.split(",") if x in data["markets"]] if m else []
     shown = chosen or data["markets"]
@@ -153,11 +156,25 @@ def markets(request: Request, co: str = "combined", view: str = "all", m: str = 
         if not by:
             continue
         rows.append({**e, "by_market": by, "n_markets": len(by), "n_apps": sum(len(v) for v in by.values())})
+    tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
+    priority.annotate(priority.with_feasibility(rows, tab), w, count=lambda e: e["n_apps"])
     if c["view"] in ("requalify", "qual_unknown"):
         rows = [e for e in rows if e[c["view"]]]
     elif c["view"] == "multi":
         rows = [e for e in rows if e["n_markets"] > 1]
-    rows.sort(key=lambda e: (-e["n_markets"], -e["n_apps"], e["label"]))
+    rows = priority.ranked(rows)
+    show = "all" if show == "all" else "focus"
+    by_group = {k: [e for e in rows if e["group"] == k] for k in op.MARKET_GROUPS}
+    c.update(
+        show=show,
+        sec={k: priority.sections(v, show) for k, v in by_group.items()},
+        wts={priority.PARAMS[k]: v for k, v in priority.percent(w).items()} if custom else {},
+        prio=priority.config(),
+        prio_w=priority.percent(w),
+        prio_default=priority.percent(priority.default_weights()),
+        prio_custom=custom,
+        prio_sliders=not _is_guest(request),
+    )
     c.update(
         markets=data["markets"],
         chosen=chosen,
@@ -166,7 +183,7 @@ def markets(request: Request, co: str = "combined", view: str = "all", m: str = 
         per_market=data["apps_per_market"],
         groups=op.MARKET_GROUPS,
         g=g if g in op.MARKET_GROUPS else "",
-        by_group={k: [e for e in rows if e["group"] == k] for k in op.MARKET_GROUPS},
+        by_group=by_group,
         n_requalify=sum(e["requalify"] for e in data["rows"]),
         n_qual_unknown=sum(e["qual_unknown"] for e in data["rows"]),
         shortlisted={i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "markets"))},
@@ -187,6 +204,7 @@ PATH_ORDER = {"exists": 0, "variant": 1, "new_design": 2, "new_capability": 3, "
 CROWD_ORDER = {"low": 0, "medium": 1, "high": 2}
 SUGGESTION_ORDER = {"quick_win": 0, "new_chip": 1, "niche": 2, "partner": 3, "unknown": 4}
 EXPLORER_SORTS = {
+    "priority": ("Priority", "desc", lambda e: (e["priority"]["score"], e["priority"]["T"], e["reach"])),
     "label": ("Function", "asc", lambda e: e["label"].lower()),
     "path": ("Gap type · path", "asc", lambda e: (PATH_ORDER.get((e["path"] or {}).get("path"), 5), -e["reach"])),
     "reach": ("Needed in", "desc", lambda e: (e["reach"], e["adjacent"])),
@@ -259,19 +277,44 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
     return templates.TemplateResponse(request, "business/cross_sell.html", c)
 
 
+def _is_guest(request: Request) -> bool:
+    from app.auth.session import principal
+
+    me = principal(request)
+    return bool(me and me.is_guest)
+
+
+def _priority_weights(request: Request, wt: str, wl: str, wd: str) -> tuple[dict, bool]:
+    """The priority weights: the owner's sliders from the URL, the defaults for guests (owner, 25 Oct 2026)."""
+    return priority.weights(wt, wl, wd, allowed=not _is_guest(request))
+
+
 @router.get("/business/opportunities", response_class=HTMLResponse)
-def gaps_new_tech(request: Request, co: str = "combined", session: Session = Depends(get_session)):
+def gaps_new_tech(request: Request, co: str = "combined", show: str = "", wt: str = "", wl: str = "", wd: str = "",
+                  session: Session = Depends(get_session)):  # fmt: skip
     """Opportunities > Gaps & new technology (owner, 23 Oct 2026, moved out of Cross-sell & gaps): functions with no
-    part of ours yet that our technology could cover, and those that need new technology; best score first."""
+    part of ours yet that our technology could cover, and those that need new technology; highest priority first
+    (owner, 25 Oct 2026: technology relation, likeliness and diagrams), "RF & power only" by default."""
     c = _ctx(session, co)
+    w, custom = _priority_weights(request, wt, wl, wd)
     rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
+    priority.annotate(rows, w)
     decisions = {d.fn: d.status for d in session.scalars(select(OpportunityDecision))}
     rows = [{**e, "decision": decisions.get(e["key"])} for e in rows]
     open_rows = [e for e in rows if e["gap_type"] != "not_ours" and e["decision"] != "set_aside"]
-    new = sorted([e for e in open_rows if (e["path"] or {}).get("path") == "new_capability"], key=_by_score)
-    gaps = sorted([e for e in open_rows if e not in new], key=_by_score)
+    new = priority.ranked([e for e in open_rows if (e["path"] or {}).get("path") == "new_capability"])
+    gaps = priority.ranked([e for e in open_rows if e not in new])
+    show = "all" if show == "all" else "focus"
     shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
-    c.update(gaps=gaps, new=new, shortlisted=shortlisted, path_label=op.PATH_LABEL,
+    pc = priority.config()
+    wq = "".join(f"&{priority.PARAMS[k]}={v}" for k, v in priority.percent(w).items()) if custom else ""
+    c.update(gaps=gaps, new=new, show=show, shortlisted=shortlisted, path_label=op.PATH_LABEL, wq=wq,
+             sec={"gaps": priority.sections(gaps, show), "new": priority.sections(new, show)},
+             prio=pc, prio_w=priority.percent(w), prio_default=priority.percent(priority.default_weights()),
+             prio_custom=custom, prio_levels=priority.levels(), prio_example=priority.example,
+             prio_top=priority.ranked(open_rows)[0] if open_rows else None, prio_ldo=priority.ldo_example(open_rows),
+             prio_unmapped=priority.unmapped(open_rows), prio_sliders=not _is_guest(request),
+             prio_owner=[(vocab.fn_label(fn), o) for fn, o in (pc["likeliness"].get("owner") or {}).items()],
              n_not_ours=sum(e["gap_type"] == "not_ours" for e in rows),
              n_aside=sum(e["decision"] == "set_aside" for e in rows))  # fmt: skip
     return templates.TemplateResponse(request, "business/gaps_new.html", c)
@@ -289,17 +332,22 @@ def opportunity_explorer(
     t: str = "",
     g: str = "",
     s: str = "",
+    wt: str = "",
+    wl: str = "",
+    wd: str = "",
     session: Session = Depends(get_session),
 ):
-    """Missing functions and RF band gaps, grouped by big category; any column sorts. Rows set aside are listed
-    separately below."""
+    """Missing functions and RF band gaps, grouped by big category; any column sorts, the priority by default (owner,
+    25 Oct 2026). Rows set aside are listed separately below."""
     c = _ctx(session, co, scope)
+    w, custom = _priority_weights(request, wt, wl, wd)
     rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
+    priority.annotate(rows, w)
     decisions = {d.fn: d for d in session.scalars(select(OpportunityDecision))}
     for e in rows:
         d = decisions.get(e["key"])
         e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at} if d else None
-    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "score")
+    sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "priority")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
     c["type_counts"] = Counter(e["gap_type"] for e in rows)
     if t in op.GAP_TYPE_LABEL:
@@ -342,6 +390,7 @@ def opportunity_explorer(
         path_label=op.PATH_LABEL,
         prox_label=op.PROXIMITY_LABEL,
         scoring=scoring.config(),
+        wts={priority.PARAMS[k]: v for k, v in priority.percent(w).items()} if custom else {},
     )
     return templates.TemplateResponse(request, "business/explorer.html", c)
 

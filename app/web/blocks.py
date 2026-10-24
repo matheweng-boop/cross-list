@@ -86,11 +86,10 @@ def area_request(area: str = Form(""), why: str = Form(""), author: str = Form("
 AREA_STATUSES = {"new": "New", "planned": "Planned", "done": "Added", "declined": "Declined"}
 
 
-@router.get("/blocks/area-requests", response_class=HTMLResponse)
-def area_requests(request: Request, session: Session = Depends(get_session)):
-    rows = session.scalars(select(AreaRequest).order_by(AreaRequest.created_at.desc())).all()
-    ctx = {"rows": rows, "statuses": AREA_STATUSES}
-    return templates.TemplateResponse(request, "blocks/area_requests.html", ctx)
+@router.get("/blocks/area-requests")
+def area_requests():
+    """The old Area requests page: now the Requests tab under Site data, filtered to area requests."""
+    return RedirectResponse("/manage/requests?kind=area", status_code=307)
 
 
 @router.post("/blocks/area-requests/{req_id:int}")
@@ -302,12 +301,10 @@ def list_feedback(diagram_id: int | None = None, session: Session = Depends(get_
     ]  # fmt: skip
 
 
-@router.get("/blocks/feedback", response_class=HTMLResponse)
-def feedback_page(request: Request, session: Session = Depends(get_session)):
-    rows = session.scalars(select(BlockFeedback).order_by(BlockFeedback.created_at.desc())).all()
-    order = list(FEEDBACK_STATUS)
-    rows = sorted(rows, key=lambda f: order.index(f.status) if f.status in order else 9)
-    return templates.TemplateResponse(request, "blocks/feedback.html", {"rows": rows, "statuses": FEEDBACK_STATUS})
+@router.get("/blocks/feedback")
+def feedback_page():
+    """The old Diagram feedback page: now the Requests tab under Site data, filtered to diagram feedback."""
+    return RedirectResponse("/manage/requests?kind=diagram", status_code=307)
 
 
 @router.post("/blocks/feedback/{fb_id}")

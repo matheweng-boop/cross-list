@@ -112,8 +112,8 @@ def _chromium() -> str | None:
 
 
 @pytest.mark.skipif(_chromium() is None, reason="no Chromium in /opt/pw-browsers")
-def test_report_pages_fit_390px(client):
-    sync_api = pytest.importorskip("playwright.sync_api")
+def test_report_pages_fit_390px(client, chromium):
+    """Uses the session's one Chromium (tests/conftest.py): a second sync Playwright in the same run fails."""
 
     def serve(route):
         url = route.request.url.replace("http://bizdev.test", "")
@@ -121,16 +121,15 @@ def test_report_pages_fit_390px(client):
         route.fulfill(status=res.status_code, body=res.content,
                       headers={"content-type": res.headers.get("content-type", "text/html")})  # fmt: skip
 
-    with sync_api.sync_playwright() as p:
-        browser = p.chromium.launch(executable_path=_chromium())
-        page = browser.new_page(viewport={"width": 390, "height": 900})
-        page.route("http://bizdev.test/**", serve)
-        for r in rp.reports():
-            page.goto(f"http://bizdev.test/business/reports/{r['slug']}")
-            box = page.locator(".rpt-bl").bounding_box()
-            assert box and box["x"] >= 0 and box["x"] + box["width"] <= 390, r["slug"]
-            end = page.locator(".rpt-end").bounding_box()
-            assert end and end["x"] + end["width"] <= 390, r["slug"]
-            wide = page.evaluate("document.documentElement.scrollWidth")
-            assert wide <= 390, (r["slug"], wide)
-        browser.close()
+    ctx = chromium.new_context(viewport={"width": 390, "height": 900})
+    page = ctx.new_page()
+    page.route("http://bizdev.test/**", serve)
+    for r in rp.reports():
+        page.goto(f"http://bizdev.test/business/reports/{r['slug']}")
+        box = page.locator(".rpt-bl").bounding_box()
+        assert box and box["x"] >= 0 and box["x"] + box["width"] <= 390, r["slug"]
+        end = page.locator(".rpt-end").bounding_box()
+        assert end and end["x"] + end["width"] <= 390, r["slug"]
+        wide = page.evaluate("document.documentElement.scrollWidth")
+        assert wide <= 390, (r["slug"], wide)
+    ctx.close()

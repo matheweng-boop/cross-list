@@ -1,4 +1,6 @@
-"""Cross requests: parts that still need to be added and crossed."""
+"""Cross requests: parts that still need to be added and crossed; and Data management > Site data > Requests, one list
+of part requests, diagram feedback and application area requests (owner, 24 Oct 2026). Each kind keeps its own table
+and its own POST handlers; this page only shows them together."""
 
 import re
 
@@ -8,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import CrossRequest, Part
+from app.models import AreaRequest, BlockFeedback, CrossRequest, Part
 from app.partnumbers import normalize_pn
 from app.web.routes import templates
 from app.web.urls import local_path
@@ -25,13 +27,38 @@ def _part_for(session: Session, mpn: str) -> Part | None:
     return None
 
 
-@router.get("/requests", response_class=HTMLResponse)
-def requests_page(request: Request, session: Session = Depends(get_session)):
-    rows = session.scalars(select(CrossRequest).order_by(CrossRequest.created_at.desc())).all()
-    order = list(STATUSES)
-    rows = sorted(rows, key=lambda r: order.index(r.status) if r.status in order else 9)
-    found = {r.id: _part_for(session, r.mpn) for r in rows}
-    return templates.TemplateResponse(request, "requests.html", {"rows": rows, "found": found, "statuses": STATUSES})
+# kind -> label, and the statuses that count as open; the status names and labels stay with each kind's handler
+KINDS = {"part": "Part request", "diagram": "Diagram feedback", "area": "Area request"}
+OPEN = {"part": ("open", "in_progress"), "diagram": ("open", "agreed"), "area": ("new", "planned")}
+
+
+@router.get("/requests")
+def requests_page():
+    """The old Part requests page: now the Requests tab, filtered to part requests."""
+    return RedirectResponse("/manage/requests?kind=part", status_code=307)
+
+
+@router.get("/manage/requests", response_class=HTMLResponse)
+def all_requests(request: Request, kind: str = "", show: str = "", session: Session = Depends(get_session)):
+    """Part requests, diagram feedback and area requests in one list, newest first; open ones unless show=all."""
+    from app.web.blocks import AREA_STATUSES, FEEDBACK_STATUS
+
+    kind = kind if kind in KINDS else ""
+    show = "all" if show == "all" else ""
+    rows = [("part", r) for r in session.scalars(select(CrossRequest))]
+    rows += [("diagram", f) for f in session.scalars(select(BlockFeedback))]
+    rows += [("area", a) for a in session.scalars(select(AreaRequest))]
+    counts = {k: sum(1 for kk, r in rows if kk == k and r.status in OPEN[k]) for k in KINDS}
+    if not show:
+        rows = [(k, r) for k, r in rows if r.status in OPEN[k]]
+    if kind:
+        rows = [(k, r) for k, r in rows if k == kind]
+    rows.sort(key=lambda kr: (kr[1].created_at is not None, kr[1].created_at or 0, kr[1].id), reverse=True)
+    found = {r.id: _part_for(session, r.mpn) for k, r in rows if k == "part"}
+    statuses = {"part": STATUSES, "diagram": FEEDBACK_STATUS, "area": AREA_STATUSES}
+    ctx = {"rows": rows, "found": found, "statuses": statuses, "kinds": KINDS, "kind": kind, "show": show,
+           "counts": counts}  # fmt: skip
+    return templates.TemplateResponse(request, "manage/requests.html", ctx)
 
 
 @router.post("/requests")

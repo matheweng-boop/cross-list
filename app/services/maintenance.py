@@ -56,7 +56,7 @@ def items(session: Session) -> list[dict]:
                 "author": None,
                 "date": r.created_at,
                 "status": r.status,
-                "link": "/requests",
+                "link": "/manage/requests?kind=part",
                 "resolution": "Needs a part import (repository update).",
                 "affects": "Search & replacements, Browse products",
             }
@@ -139,7 +139,7 @@ def items(session: Session) -> list[dict]:
                 "author": None,
                 "date": b.created_at,
                 "status": b.status,
-                "link": "/blocks/feedback",
+                "link": "/manage/requests?kind=diagram",
                 "resolution": "Needs a template update in the repository.",
                 "affects": "Application library and every analysis using that architecture",
             }
@@ -153,7 +153,7 @@ def items(session: Session) -> list[dict]:
                 "author": a.author,
                 "date": a.created_at,
                 "status": a.status,
-                "link": "/blocks/area-requests",
+                "link": "/manage/requests?kind=area",
                 "resolution": "The daily update researches it a few documents per run and adds diagrams.",
                 "affects": "Application library",
             }

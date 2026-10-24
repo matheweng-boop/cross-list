@@ -3,7 +3,7 @@
 {% block content %}
 <p class="small"><a href="/business/competitors">← Competitive analytics</a></p>
 <h1>{{ c.name }}</h1>
-<p class="subtitle muted">{{ c.ticker or 'Private company' }} · {{ c.hq }} · profile checked {{ c.updated }}</p>
+<p class="subtitle muted">{{ c.ticker or 'Private company' }} · {{ c.hq }} · profile checked {{ c.updated|date }}</p>
 <p>{{ c.summary }}</p>
 {% if c.model %}<p><b>How it makes its parts:</b> {{ c.model }}</p>{% endif %}
 
@@ -20,12 +20,12 @@
   <tbody>{% for r in fin.table %}
     <tr><td><b>{{ r.label or table_keys[r.key] }}</b>{% if r.note %}<br><span class="small muted">{{ r.note }}</span>{% endif %}</td>
       {% for v in r['values'] %}<td>{{ v }}</td>{% endfor %}
-      <td class="small muted">{{ r.source }} · {{ r.date }}</td></tr>{% endfor %}
+      <td class="small muted">{{ r.source }} · {{ r.date|date }}</td></tr>{% endfor %}
   </tbody>
 </table></div>
 <ul class="cp-figs">{% for n in fin.notes %}
-  <li><b>{{ n.label or note_keys[n.key] }}:</b> {{ n.value }} <span class="small muted">· {{ n.source }} · {{ n.date }}{% if n.conf %} · confidence {{ n.conf }}{% endif %}</span></li>{% endfor %}
-  <li><b>Ownership:</b> {{ fin.ownership.value }} <span class="small muted">· {{ fin.ownership.source }} · {{ fin.ownership.date }}</span></li>
+  <li><b>{{ n.label or note_keys[n.key] }}:</b> {{ n.value }} <span class="small muted">· {{ n.source }} · {{ n.date|date }}{% if n.conf %} · confidence {{ n.conf }}{% endif %}</span></li>{% endfor %}
+  <li><b>Ownership:</b> {{ fin.ownership.value }} <span class="small muted">· {{ fin.ownership.source }} · {{ fin.ownership.date|date }}</span></li>
 </ul>
 {% set v = fin.supplier_verdict %}
 <article class="cp-verdict">
@@ -51,8 +51,8 @@
   <div class="rp-card cp-ov">
     <span class="rp-meta small">{{ levels[o.level] }}</span>
     <b class="rp-title">{{ o.area }}</b>
-    <span class="small"><b>Skyworks:</b> {{ o.skyworks }}</span>
-    <span class="small"><b>Qorvo:</b> {{ o.qorvo }}</span>
+    <span class="small"><b>Skyworks:</b> {{ "No product here" if o.skyworks in (None, "", "None") else o.skyworks }}</span>
+    <span class="small"><b>Qorvo:</b> {{ "No product here" if o.qorvo in (None, "", "None") else o.qorvo }}</span>
     {% if o.link %}<a class="small" href="{{ o.link }}">See our parts or case →</a>{% endif %}
   </div>{% endfor %}
 </div>{% endif %}

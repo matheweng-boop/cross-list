@@ -21,6 +21,8 @@ systems:
           - "Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)"
           - "Automotive phone-as-a-key (PaaK) module with BLE satellite modules (TI)"
           - "Automotive in-cabin 60 GHz radar module (occupancy / child presence / vital signs) (TI)"
+          - "Kick-to-open sensor module (sense element, signal conditioning, MCU, LIN / CAN to the body control module) (after TI)"
+          - "Interior radar for child presence detection (60 GHz radar + MCU on CAN, with optional 3D ToF camera and microphone modules) (after Infineon)"
         topics: [auto_uwb]
       - key: car-radio
         title: "Car radio"
@@ -122,12 +124,14 @@ systems:
           - "Wireless (inductive) EV charging station, ground assembly (PFC + HF inverter + coil, FOD / LOP / alignment, HMI) (TI)"
       - key: cockpit
         title: "Cockpit and body"
-        summary: "Displays and controls in front of the driver."
+        summary: "Displays and controls in front of the driver, and the powered doors and liftgate."
         elements:
           - "Instrument cluster"
           - "Head-unit display"
+          - "Power liftgate and doors"
         diagrams:
           - "Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD) (NXP)"
+          - "Automotive smart power closure (power liftgate, sliding doors, trunk and frunk motors) (after Infineon)"
   - key: datacenter
     title: "Data center"
     summary: "Power into and through the rack, backup, compute and the network."
@@ -139,8 +143,10 @@ systems:
           - "AC/DC power supply (54 V)"
           - "800 V DC distribution"
           - "Isolated converters in the rack"
+          - "48 V intermediate bus converter"
         diagrams:
           - "Server / telecom AC/DC power supply unit (54 V output, with 12 V standby) (TI)"
+          - "48 V intermediate bus converter (two half bridges with hi / low side drivers, hybrid switched-capacitor 8:1, digital controller; or an IBC module) (after Infineon)"
           - "AI data-center 800 V DC power (grid to 800 V DC, busway with protection, energy storage, 800 V to 6-12 V isolated converters in the rack) (after NVIDIA, TI and Skyworks public material)"
       - key: backup
         title: "Backup and energy storage"
@@ -183,10 +189,12 @@ systems:
           - "Motor drives (ESC)"
           - "Battery and power"
           - "Remote ID take-off interlock"
+          - "Gimbal"
         diagrams:
           - "Drone flight controller and motor drives (quadcopter)"
           - "Drone ESC with sensorless FOC motor drive (2S-14S LiPo, one per motor or 4-in-1)"
           - "Drone battery and power distribution (2S-14S LiPo, smart BMS, eFuse, BEC rails)"
+          - "Drone power management, ESC, flight controller and gimbal (BMS, charger, power distribution, 3-phase inverter, sensors, Wi-Fi / cellular) (after Infineon)"
         topics: [drone_flight_power]
       - key: radio-links
         title: "Radio links"
@@ -281,3 +289,305 @@ systems:
           - "5G fixed-wireless-access CPE (Dragonwing FWA Gen 5 / Gen 6 Elite, QTM567 mmWave) (Qualcomm)"
           - "Smart asset tracker (GNSS + cellular + BLE / Wi-Fi) (TI)"
           - "Global asset tracker - LTE-M / NB-IoT / EGPRS with GEO satellite NTN (9205S modem, QTS110 tracker) (Qualcomm)"
+  # Owner, 25 Oct 2026: the library diagrams that sat under "Other" become these systems.
+  - key: industrial
+    title: "Industrial & energy"
+    summary: "Factories, motors, solar, wind, storage and the grid, and the power and isolation inside them."
+    subsystems:
+      - key: factory-automation
+        title: "Factory automation and PLCs"
+        summary: "Controllers and their isolated inputs and outputs."
+        elements:
+          - "PLC CPU"
+          - "Digital and analog I/O modules"
+          - "Isolated fieldbus"
+        diagrams:
+          - "Industrial isolated I/O"
+          - "PLC digital input module (IEC 61131-2, 24 V) (TI)"
+          - "PLC analog input module (voltage and 4-20 mA current inputs, HART) (TI)"
+          - "PLC CPU / programmable controller (standard) (TI)"
+          - "PLC digital output module (IEC 61131-2, 8-channel sink / source solid-state outputs, isolated) (TI)"
+          - "Industrial PLC with analog/digital I/O, fieldbus PHYs and optional functional-safety add-on (Renesas)"
+      - key: motion
+        title: "Motor drives and robots"
+        summary: "AC drives, servos, steppers, robot joints and motor protection."
+        elements:
+          - "AC drive power stage"
+          - "Servo drive"
+          - "Robot joint drive"
+          - "Motor protection relay"
+        diagrams:
+          - "Industrial AC drive power stage (isolated, 200-690 V AC mains) (TI)"
+          - "Industrial servo drive (single axis, AC motor) (TI)"
+          - "HVAC motor control (AC input, PFC + 3-phase inverter) (TI)"
+          - "Humanoid / collaborative robot joint motor drive (48 V) (TI)"
+          - "Closed-loop stepper motor drive (DC input 12-100 V, encoder feedback, industrial Ethernet / fieldbus) (TI)"
+          - "Motor protection relay / electronic contactor (3-phase 100-690 V AC, isolated sensing, fieldbus) (TI)"
+          - "AC servo drive with EtherCAT (MPU, IPM, delta-sigma current sense, encoder) (Renesas)"
+          - "Isolated GaN three-phase motor drive power stage (400 V DC, up to 3 kW) (Renesas)"
+      - key: solar-wind
+        title: "Solar and wind"
+        summary: "From the panel or turbine to the grid."
+        elements:
+          - "String and central inverters"
+          - "Micro inverter and optimizer"
+          - "Rapid shutdown"
+          - "Wind converter"
+        diagrams:
+          - "Three-phase solar string inverter (TI)"
+          - "Solar micro inverter (GaN, single panel) (TI)"
+          - "Solar central inverter (n DC/DC boost modules + m three-phase DC/AC inverter modules, DC / AC relays, host controller) (TI)"
+          - "Solar power optimizer (module-level MPPT buck / buck-boost DC/DC, GaN, PLC / wireless monitoring) (TI)"
+          - "PV module rapid shutdown device (MOSFET relay in string, voltage sense, PLC / Zigbee keep-alive) (TI)"
+          - "Off-grid solar charge controller (MPPT buck stage, input / output enable FETs, battery protection, load output) (TI)"
+          - "Hybrid solar inverter (GaN grid inverter + bidirectional LLC + 4x MPPT + 48 V battery) (Renesas)"
+          - "Utility-scale PV string inverter, 1500 V DC (multi-MPPT boost + three-level inverter, 800 V AC to the MV transformer) (after TI, TÜV and Skyworks public material)"
+          - "Wind turbine converter (back-to-back, 690 V AC, about 1100 V DC link, full-power or doubly-fed) (after TI SBAA527, Skyworks AN1456 and GWEC public material)"
+      - key: storage-grid
+        title: "Energy storage and grid"
+        summary: "Storage converters, grid-scale power and protection."
+        elements:
+          - "Storage power conversion (PCS)"
+          - "Bidirectional PFC / inverter"
+          - "Solid-state transformer"
+          - "Solid-state circuit breaker"
+        diagrams:
+          - "AC solid-state circuit breaker (SSCB) with air-gap relay, AC/DC current sensing, metering and BLE (TI)"
+          - "Energy storage power conversion system (PCS: bidirectional DC/DC + bidirectional 3-phase DC/AC, battery / grid relays) (TI)"
+          - "Solid-state transformer (SST: MV AC 10-35 kV to 800 V-2 kV DC, cascaded H-bridge / ANPC cell stacks with MF transformer) (TI)"
+          - "20 kW bidirectional three-phase PFC / inverter (T-type IGBT, ESS / grid) (Renesas)"
+      - key: power-isolation
+        title: "Power supplies and isolation"
+        summary: "Building blocks used across industrial systems."
+        elements:
+          - "Isolated gate drivers"
+          - "Isolated bias power"
+          - "Isolated flyback"
+          - "DIN-rail power supply"
+        diagrams:
+          - "Isolated gate driver subsystem"
+          - "Isolated bias power for gate drivers"
+          - "Isolated flyback DC/DC with digital isolation (Skyworks AN901, Si886xx)"
+          - "Industrial DIN-rail AC/DC power supply (PFC + isolated DC/DC, 24 V output, housekeeping MCU) (TI)"
+      - key: e-mobility
+        title: "E-mobility, rail and industrial vehicles"
+        summary: "Light EVs, forklifts and rail converters."
+        elements:
+          - "48-72 V traction drives"
+          - "Forklift inverter"
+          - "Railway auxiliary converter"
+        diagrams:
+          - "Light EV BLDC drive, 48 V (TI)"
+          - "2/3-wheeler traction inverter, 48 V 5 kW (TI TIDM-02017)"
+          - "E-mobility BLDC drive, 72 V class up to 85 V (Microchip AN5324)"
+          - "Forklift traction inverter, 48 V 5 kW (TI TIDA-00364)"
+          - "Railway auxiliary converter (750 V-3 kV DC catenary to 400 V AC and 110 V DC battery charging) (after Skyworks AN1456, Wolfspeed forum and UNIFE public material)"
+  - key: aerospace
+    title: "Aerospace & defense"
+    summary: "Radar, electronic warfare, satellite links, tactical radios and RF test equipment."
+    subsystems:
+      - key: radar
+        title: "Radar"
+        summary: "Pulsed, FMCW and phased-array radars and their T/R modules."
+        elements:
+          - "Phased-array T/R module"
+          - "Beamforming"
+          - "Pulse-Doppler and FMCW radar"
+          - "GaN power amplifier"
+        diagrams:
+          - "Pulsed / phased-array radar system (IQ-modulated TX / RX front ends, baseband ADC / DAC, FPGA + ARM/DSP, calibration, GaN power) (TI)"
+          - "Coherent pulse-Doppler radar (STALO + COHO, T/R switch, range gates + Doppler FFT) (RF Essentials)"
+          - "Monostatic FMCW ranging radar (ramp-driven VCO, circulator, dechirp mixer, beat LPF, ADC, range FFT) (RF Essentials)"
+          - "Phased-array beamforming network (per-element phase shifter, PA / LNA and T/R switch, beam controller) (after RF Essentials)"
+          - "AESA radar T/R module (phase shifter, VGA, driver, GaN HPA, circulator, limiter, LNA) (after RF Essentials)"
+      - key: ew
+        title: "Electronic warfare"
+        summary: "Receivers that find emitters and jammers that answer them."
+        elements:
+          - "Wideband receiver"
+          - "Radar warning receiver"
+          - "DRFM jammer"
+        diagrams:
+          - "Electronic warfare receiver / jammer (wideband RF front end with high-speed ADCs / DACs, FPGA + DSP) (TI)"
+          - "Radar warning receiver (spiral antennas, wideband BPF bank, crystal video detection, pulse analyser, threat library, DF) (RF Essentials)"
+          - "DRFM deception jammer (wideband RX, downconvert, >2 GSPS ADC, FPGA memory/modify, DAC, upconvert, PA) (RF Essentials)"
+      - key: satcom
+        title: "SATCOM and space"
+        summary: "User terminals, ground stations and payloads."
+        elements:
+          - "User terminal (dish)"
+          - "Block upconverter (BUC)"
+          - "Ground station RF and power"
+          - "Satellite payload"
+        diagrams:
+          - "Satellite communications payload (RF-sampling transponder with beamforming) (TI)"
+          - "SATCOM user terminal (dish with RF / antenna array, application processor, PoL rails; PoE Wi-Fi router; power supply unit) (after Infineon)"
+          - "Satellite ground station power supply (Vienna rectifier PFC, isolated resonant LLC DC/DC, synchronous rectification, ORing) (after Infineon)"
+          - "SATCOM Ku-band block upconverter core (L-band IF in, LO chain with x3 multiplier, mixer, output amplifier) (after Mini-Circuits)"
+          - "Redundant L-band amplifier for satellite ground equipment (950-2000 MHz, 1:1 switched chains, balanced output, power monitoring) (after Mini-Circuits)"
+          - "Ka-band LEO gateway ground terminal RF chain (feed, OMT, diplexer, LNA, down / up-converters, GaN BUC with uplink power control) (after RF Essentials)"
+      - key: tactical-radio
+        title: "Tactical and public-safety radio"
+        summary: "Handheld and software-defined radios."
+        elements:
+          - "Land mobile radio"
+          - "Software-defined radio"
+          - "Superheterodyne and zero-IF transceivers"
+        diagrams:
+          - "Land mobile radio (public safety handheld) (TI)"
+          - "Defense / tactical software-defined radio (direct-conversion TX/RX, high-speed ADC / DAC, FPGA + DSP/ARM, battery powered) (TI)"
+          - "Superheterodyne transceiver with IF I/Q demodulator / modulator (TDD, shared antenna via T/R switch) (Mini-Circuits)"
+          - "Direct-conversion (zero-IF) I/Q receiver with baseband VGAs and dual ADC (RF Essentials)"
+      - key: test
+        title: "Test and measurement"
+        summary: "Instruments that measure RF parts and signals."
+        elements:
+          - "Spectrum analyzer"
+          - "Vector network analyzer"
+        diagrams:
+          - "Swept-tuned spectrum analyzer (YIG preselector, input attenuator, 1st mixer + YIG LO, IF, RBW, log detector, VBW, ADC, sweep generator) (RF Essentials)"
+          - "Two-port vector network analyzer (synthesized source, splitter, reference / test couplers, coherent receivers, DSP) (RF Essentials)"
+  - key: consumer
+    title: "Consumer & wearables"
+    summary: "Watches, headsets, earbuds, speakers, PCs and the radio chips and modules inside them."
+    subsystems:
+      - key: wearables-xr
+        title: "Wearables and XR"
+        summary: "Smartwatches, VR / MR headsets and AR glasses."
+        elements:
+          - "Smartwatch"
+          - "VR / MR headset"
+          - "AR glasses"
+        diagrams:
+          - "Smartwatch (MCU, PMIC, BLE / Wi-Fi, NFC, sensors, audio codec, eMMC) (NXP)"
+          - "Standalone VR / MR headset (Snapdragon XR2 Gen 2 reference design QXR2230P) (Qualcomm)"
+          - "Wireless-tethered AR smart viewer glasses (Snapdragon AR2 Gen 1 development kit QAR2130P) (Qualcomm)"
+          - "Smartwatch with UWB, Wi-Fi / BT, GNSS, NFC payment and eSIM (host MCU, sensors, USB-C PD) (after Infineon)"
+      - key: audio
+        title: "Audio"
+        summary: "Earbuds, smart speakers and soundbars."
+        elements:
+          - "True wireless earbuds"
+          - "Smart speaker"
+          - "Soundbar"
+        diagrams:
+          - "True wireless (TWS) earbuds + charging case (TI)"
+          - "Smart speaker (voice assistant, Wi-Fi / BT / Thread) (TI)"
+          - "Smart speaker (applications processor, Wi-Fi + BLE with external FEMs, audio amplifier, AC/DC) (NXP)"
+          - "True-wireless (TWS) earbuds with charging case (QCC3020 / QCC5141 / QCC5171 reference designs, S5 Gen 1) (Qualcomm)"
+          - "Soundbar with wireless subwoofer (MAPX audio processor + Bluetooth audio SoC + DDFA power stage) (Qualcomm)"
+      - key: computing
+        title: "PCs, payments and portable power"
+        summary: "Notebooks, payment terminals, power banks and power stations."
+        elements:
+          - "Notebook PC"
+          - "Mobile POS terminal"
+          - "Power bank"
+          - "Portable power station"
+        diagrams:
+          - "USB-C power bank (TI)"
+          - "Notebook PC (power, USB-C charging, embedded controller) (TI)"
+          - "Smart mobile POS terminal (EMV contact + contactless, magstripe, Wi-Fi/BT + cellular, battery) (NXP)"
+          - "Portable power station (bidirectional PFC / inverter + isolated DC/DC, LFP pack BMS, solar MPPT, USB-C / car port) (TI)"
+      - key: connectivity
+        title: "Connectivity chips and modules"
+        summary: "Wi-Fi, Bluetooth and UWB chips and modules for devices."
+        elements:
+          - "Wi-Fi / Bluetooth combo"
+          - "Wi-Fi front end"
+          - "UWB + BLE module"
+          - "IoT Wi-Fi node"
+        diagrams:
+          - "Wi-Fi front end (Skyworks)"
+          - "Wi-Fi 6/6E + Bluetooth (+802.15.4) combo chip application (client / IoT / automotive module) (NXP)"
+          - "Wi-Fi 7 + Bluetooth client / combo (Filogic 380 / 360) (MediaTek)"
+          - "IoT edge-AI board (Genio 700 / MT8390) with companion PMIC, DCXO and Wi-Fi/BT combo (MediaTek)"
+          - "Mobile Wi-Fi 7 + Bluetooth + UWB connectivity (FastConnect 7900) (Qualcomm)"
+          - "IoT Bluetooth LE SoC reference design (QCC711) and IoT processor Wi-Fi companion (QCS6490 + WCN6750) (Qualcomm)"
+          - "Battery-powered Wi-Fi IoT node with external PA (QCC730 xPA, dual-band 802.11n micro-power Wi-Fi) (Qualcomm)"
+          - "UWB + Bluetooth LE module for anchors and tags (UWB transceiver with 38.4 MHz crystal and band-pass filters, BLE MCU with 32 MHz and 32 kHz crystals) (after Murata Type 2AB)"
+  - key: home
+    title: "Home & building"
+    summary: "Smart home devices, home Wi-Fi and broadband, and smart meters."
+    subsystems:
+      - key: smart-home
+        title: "Smart home devices"
+        summary: "Thermostats, cameras, doorbells, locks, plugs and hubs."
+        elements:
+          - "Thermostat"
+          - "Security camera and doorbell"
+          - "Door lock"
+          - "Smart plug and hub"
+          - "Occupancy sensor"
+        diagrams:
+          - "Occupancy / people-counting sensor (mmWave radar or 3D ToF, PoE) (TI)"
+          - "Smart thermostat (HVAC, 24 V AC powered) (TI)"
+          - "Video doorbell (battery powered, Wi-Fi) (TI)"
+          - "Wired IP security camera (PoE) (TI)"
+          - "Smart plug / power socket with energy metering and Zigbee (NXP)"
+          - "Smart home control panel / hub (MPU, touch display, Wi-Fi + Zigbee / BLE, NFC; Matter-style appliance control) (NXP)"
+          - "Smart door lock (NFC controller, MIFARE credentials, BLE / Wi-Fi, motor driver) (NXP)"
+      - key: broadband
+        title: "Home Wi-Fi and broadband"
+        summary: "Routers, fiber gateways and cable amplifiers."
+        elements:
+          - "Wi-Fi router / access point"
+          - "Fiber (PON) gateway"
+          - "Cable (DOCSIS) amplifier"
+        diagrams:
+          - "Wi-Fi access point / router (tri-band, MPU + Wi-Fi radios) (NXP)"
+          - "Wi-Fi 7 access point / router (Filogic 880 / 860) (MediaTek)"
+          - "Optical network terminal (PON ONT) with 4x4 Wi-Fi and PoE ports (TI)"
+          - "Fiber broadband gateway (XGS-PON + Wi-Fi 8, Dragonwing FiberPro A8 Elite IPQ96) (Qualcomm)"
+          - "Wi-Fi 7 home router / broadband gateway with AI coprocessor and 10G PON (Dragonwing NPro A7 Elite IPQ5424) (Qualcomm)"
+          - "CATV / HFC DOCSIS 4.0 line extender amplifier (1.8 GHz downstream, 5-680 MHz upstream, diplexed) (Mini-Circuits)"
+      - key: metering
+        title: "Smart meters"
+        summary: "Electricity and gas meters with radio or power-line links."
+        elements:
+          - "Electricity meter"
+          - "Gas meter"
+        diagrams:
+          - "Single-phase smart electricity meter (e-meter) (TI)"
+          - "Ultrasonic gas meter (battery powered) (TI)"
+          - "Smart electricity meter (metrology AFE + controller, PLC / wireless, LCD, secure element) (NXP)"
+  - key: medical
+    title: "Medical"
+    summary: "Imaging, patient monitoring and therapy devices."
+    subsystems:
+      - key: imaging
+        title: "Imaging"
+        summary: "Ultrasound, X-ray and CT / PET detectors."
+        elements:
+          - "Ultrasound"
+          - "X-ray detector"
+          - "CT / PET detector"
+        diagrams:
+          - "Medical ultrasound scanner (cart-based standard system) (TI)"
+          - "Digital X-ray flat-panel detector (static; TFT row drivers + charge-integrating AFEs, FPGA, battery + wireless) (TI)"
+          - "CT / PET scanner detector module (photodiode / sensor array, multichannel charge-integrating AFEs + ADCs, FPGA, slip-ring I/O) (TI)"
+      - key: monitoring
+        title: "Patient monitoring and diagnostics"
+        summary: "Monitors, ECG, oximeters and blood pressure."
+        elements:
+          - "Patient monitor"
+          - "ECG"
+          - "Pulse oximeter"
+          - "Blood pressure monitor"
+        diagrams:
+          - "Multiparameter patient monitor (ECG, SpO2, NIBP, IBP, CO2, temperature) (TI)"
+          - "Pulse oximeter (SpO2, fingertip or bedside) (TI)"
+          - "Multiparameter patient monitor, mainstream MPU-based (measurement modules, Wi-Fi / BLE / UWB / NFC) (NXP)"
+          - "Diagnostic electrocardiograph (12-lead ECG: defibrillator-protected inputs, biopotential AFE with RLD / pace / lead-off, printer + display) (TI)"
+          - "Automatic blood pressure monitor (oscillometric: pressure sensor chain, pump motor / valve, MPU, BLE) (TI)"
+      - key: therapy
+        title: "Therapy devices"
+        summary: "Pumps and breathing machines."
+        elements:
+          - "Infusion pump"
+          - "Insulin pump"
+          - "CPAP"
+        diagrams:
+          - "Medical infusion pump (stepper / DC pump motor, occlusion / air-in-line / flow sensing, battery backup, wireless) (TI)"
+          - "CPAP / sleep-apnea therapy machine (BLDC blower, flow / pressure / humidity sensing, MPU with touch display) (TI)"
+          - "Wearable insulin pump / patch pump (BLE, safety MCU, H-bridge pump + needle drive, wake-up circuit, wireless charging) (TI)"

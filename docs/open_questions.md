@@ -3,7 +3,19 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-None open.
+1. **New systems (26 Oct 2026).** The 95 diagrams under "Other" now sit in five new systems, none left in Other:
+   Industrial & energy (factory automation, motor drives and robots, solar and wind, energy storage and grid, power
+   supplies and isolation, e-mobility / rail / industrial vehicles), Aerospace & defense (radar, electronic warfare,
+   SATCOM and space, tactical radio, test and measurement), Consumer & wearables (wearables and XR, audio, PCs /
+   payments / portable power, connectivity chips and modules), Home & building (smart home, home Wi-Fi and broadband,
+   smart meters) and Medical (imaging, monitoring, therapy). Are the names and the split right?
+2. **Interior radar diagram.** The new child-presence diagram is drawn after Infineon's 60 GHz radar in-cabin
+   monitoring diagram; no public UWB-radar child-presence block diagram was found (Microwave Journal's robots.txt blocks
+   our reader). The UWB-radar option is a question on the diagram. Is a 60 GHz radar diagram right under "UWB in the
+   car"?
+3. **UWB anchor clock source.** The clock block cites Murata's public UWB module designs (Qorvo QM33120W and NXP SR150,
+   both with a 38.4 MHz crystal); NXP's automotive anchor pages give no clock frequency. Is a module design acceptable
+   as the "public reference design" for the anchor?
 
 ## Settled (owner, 25 Oct 2026: "Yes to all")
 

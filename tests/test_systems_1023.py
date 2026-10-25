@@ -16,7 +16,7 @@ def test_every_diagram_is_in_a_sub_system_or_other():
     assert sy.assigned() | set(sy.unassigned()) == set(range(n)) and not sy.assigned() & set(sy.unassigned())
     for i in sy.unassigned():
         assert sy.place_of(i)[0][0] == sy.OTHER
-    assert [s["key"] for s in sy.systems()] == ["automotive", "datacenter", "drones", "cellular"]
+    assert [s["key"] for s in sy.systems()][:4] == ["automotive", "datacenter", "drones", "cellular"]  # + 25 Oct
     for s in sy.systems():
         assert s["subsystems"], s["key"]  # at least one sub-system per system
         assert len({x["key"] for x in s["subsystems"]}) == len(s["subsystems"])

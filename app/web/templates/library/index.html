@@ -20,7 +20,7 @@
 {% endfor %}
 {% if other %}<section class="sys-block" aria-labelledby="sys-other">
   <h2 class="tpl-cat lib-focus" id="sys-other">Other deep dives <small class="muted">· {{ other|length }}</small></h2>
-  <p class="small muted">Not tied to one system yet. {{ n_other_diagrams }} library diagrams outside the four systems are under <a href="/blocks?system=other#other-areas">Other areas</a>.</p>
+  <p class="small muted">Not tied to one system yet.{% if n_other_diagrams %} {{ n_other_diagrams }} library diagrams outside the systems are under <a href="/blocks?system=other#other-areas">Other areas</a>.{% endif %}</p>
   <div class="lib-grid">{% for t in other %}{{ topic_card(t) }}{% endfor %}</div>
 </section>{% endif %}
 {% if not topics %}<div class="empty-state"><p><b>No deep dives yet.</b></p></div>{% endif %}

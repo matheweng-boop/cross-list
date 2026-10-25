@@ -586,6 +586,85 @@ def test_technology_overview_every_field_at_its_limit_still_fits(page):
         reset_overview(page)
 
 
+def test_shareable_pack_of_all_three_and_each_report_alone(page):
+    """Owner, 25 Oct 2026: the Synergies and Automotive reports print to at most 3 A4 pages each; the combined PDF of
+    all three reports (no focus page) to 10 pages at most, numbered through ("10 / 10" on the last)."""
+    for path in ("/shareable/synergies", "/shareable/automotive"):
+        go(page, path)
+        expect(page.locator(".to-page")).to_have_count(3)
+        assert pdf_pages(a4(page)) <= 3, path
+    go(page, "/shareable/pack?r=overview,synergies,automotive&focus=none&wm=none")
+    expect(page.locator(".to-page")).to_have_count(10)
+    expect(page.locator(".to-pfoot").last).to_contain_text("10 / 10")
+    pdf = a4(page)
+    assert pdf_pages(pdf) == 10
+
+
+def test_shareable_build_pdf_with_two_reports(page, tmp_path):
+    """The landing page's Build a PDF box: untick the overview, Create PDF opens one print view with Synergies then
+    Automotive (the address keeps the choice), each from a new page, one sources list (no overflow at 390 px: the
+    page fixture checks every visited page)."""
+    go(page, "/shareable")
+    box = page.locator("#build-pdf")
+    box.locator("input[value='overview']").uncheck()
+    box.get_by_role("button", name="Create PDF").click()
+    expect(page).to_have_url(re.compile(r"/shareable/pack\?r=synergies,automotive"))
+    ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
+    assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
+    expect(page.locator("text=Sources.")).to_have_count(1)
+    pdf = a4(page)
+    assert pdf_pages(pdf) == 6
+    text = pdf_text(pdf, tmp_path, 4)
+    if text is not None:
+        assert "extension of" in text.lower() and re.search(r"4 ?/ ?6", text)
+
+
+def test_shareable_synergies_owner_edit_and_undo(page):
+    """The new reports edit like the overview: a number (the exact automatic value is shown), Save, Undo."""
+    try:
+        go(page, "/shareable/synergies")
+        page.get_by_role("button", name="Edit", exact=True).click()
+        expect(page.locator("#f-fact\\.parts\\.num .te-auto")).to_contain_text("(exact ")
+        page.fill("input[name='fact.parts.num']", "4,600")
+        page.get_by_role("button", name="Save").first.click()
+        expect(page.locator(".te-status")).to_contain_text("Saved")
+        go(page, "/shareable/synergies")
+        expect(page.locator(".to-fact b").first).to_have_text("4,600")
+        go(page, "/shareable/synergies/edit")
+        page.get_by_role("button", name="Undo last change").click()
+        go(page, "/shareable/synergies")
+        expect(page.locator(".to-fact b").first).not_to_have_text("4,600")
+    finally:
+        page.request.post("/shareable/synergies/edit/reset", form={"all": "1"})
+
+
+@pytest.mark.parametrize("slug", ["synergies", "automotive"])
+def test_shareable_report_every_field_at_its_limit_still_fits(page, slug):
+    """The length limits keep each management report at 3 A4 pages, with every text at its limit."""
+    from app.services import share_reports as sr
+    from app.services import tech_overview_edit as te
+
+    rep = sr.REPORTS[slug]
+    multi = []
+    for fid, f in rep.specs().items():
+        if f.kind in ("line", "text", "data") and f.max:
+            multi.append((fid, _filler(f.max)))
+        elif f.kind == "chips":
+            multi += [(fid, "\n".join(_filler(te.CHIP_MAX) for _ in range(f.options[0] if f.options else te.CHIPS)))]
+    for s in rep.sections():
+        most, total = rep.para_limits(s)
+        multi += [(f"paras.{s}", _filler(total // most - 1)) for _ in range(most)] + [(f"pid.{s}", "")] * most
+    try:
+        body = "&".join(f"{quote(k)}={quote(str(v))}" for k, v in multi)
+        r = page.request.post(f"/shareable/{slug}/edit", data=body,
+                              headers={"content-type": "application/x-www-form-urlencoded"})  # fmt: skip
+        assert r.ok and "Not saved" not in r.text(), re.findall(r'role="alert">([^<]*)', r.text())[:5]
+        go(page, f"/shareable/{slug}?wm=draft")
+        assert pdf_pages(a4(page)) <= 3, slug
+    finally:
+        page.request.post(f"/shareable/{slug}/edit/reset", form={"all": "1"})
+
+
 # --- Signing in -------------------------------------------------------------------------------------------------------
 STUB = """
 window.__calls = [];

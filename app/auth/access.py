@@ -18,10 +18,12 @@ _INVITE = re.compile(r"^/invite/[A-Za-z0-9_-]{20,100}(/options|/verify)?$")
 OWNER_PAGES = ("/manage", "/owner", "/business/tam", "/business/quality", "/business/validation", "/business/data",
                "/requests", "/blocks/feedback", "/blocks/area-requests", "/api/blocks/feedback",
                "/business/capabilities/feedback.txt",
-               "/shareable/technology-overview/edit")  # fmt: skip
+               "/shareable/technology-overview/edit", "/shareable/synergies/edit",
+               "/shareable/automotive/edit")  # fmt: skip
 OWNER_ACTIONS = ("/manage", "/owner", "/business/tam", "/business/quality", "/business/validation", "/business/data",
                  "/requests/", "/blocks/feedback/", "/blocks/area-requests/",
-                 "/shareable/technology-overview/edit")  # fmt: skip
+                 "/shareable/technology-overview/edit", "/shareable/synergies/edit",
+               "/shareable/automotive/edit")  # fmt: skip
 
 
 def is_open(path: str) -> bool:

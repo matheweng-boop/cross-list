@@ -11,17 +11,24 @@ from sqlalchemy.orm import Session
 from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.services import logo, tech_overview, uploads
+from app.services import share_reports as sr
 from app.services import tech_overview_edit as te
+from app.services.text import round_count
 from app.web import nav
 from app.web.routes import templates
 
 router = APIRouter()
+templates.env.filters.setdefault("rounded", round_count)  # counts on the Shareable reports: 4,132 -> "4,000+"
 URL = "/shareable/technology-overview"
 EDIT = URL + "/edit"
 
 # a line more per card on the landing page than the menu's short description
 BLURBS = {URL: "Four A4 pages on the Skyworks + Qorvo portfolio: technology platforms, end markets and product "
-          "families."}  # fmt: skip
+          "families.",
+          "/shareable/synergies": "Three A4 pages for management: manufacturing capabilities, key technologies, "
+          "product overlap and where the two combine.",
+          "/shareable/automotive": "The automotive extension: technologies in the car, applications by sub-system and "
+          "AEC-Q-qualified pairs."}  # fmt: skip
 # what the page says after an edit action (?done=...); only these texts can appear
 DONE = {"saved": "Saved.", "nochange": "Nothing changed.", "undone": "Undone: the page shows the version before.",
         "reset": "Back to the default.", "resetall": "Everything is back to the defaults (Undo brings it back).",
@@ -45,7 +52,13 @@ def _back(done: str, anchor: str = "") -> RedirectResponse:
 def shareable(request: Request):
     section = next(s for s in nav.NAV if s[0] == "shareable")
     items = [(label, href, BLURBS.get(href, desc)) for label, href, desc in section[2]]
-    return templates.TemplateResponse(request, "shareable/index.html", {"items": items})
+    q = request.query_params
+    pack_items = [("overview", "Technology overview", "4-5"), ("synergies", sr.SYNERGIES.label, sr.PAGES["synergies"]),
+                  ("automotive", sr.AUTOMOTIVE.label, sr.PAGES["automotive"])]  # fmt: skip
+    picked = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
+    return templates.TemplateResponse(request, "shareable/index.html", {
+        "items": items, "pack_items": pack_items, "picked": picked, "markets": tech_overview.focus_markets(),
+        "focus": q.get("focus", ""), "wm": q.get("wm", "none"), "watermarks": te.WATERMARKS})  # fmt: skip
 
 
 def _page(request: Request, session: Session, edit: bool, ov: dict | None = None, errors: dict | None = None,
@@ -177,3 +190,175 @@ async def technology_overview_resolve(request: Request, session: Session = Depen
     msg = te.resolve(session, cid, str(form.get(f"reply.{cid}") or ""))
     session.commit()
     return _back("resolved" if msg == "Comment resolved." else "gone")
+
+
+# ---- the management reports (owner, 25 Oct 2026): Skyworks + Qorvo synergies and Automotive -----------------------
+# Same editing as the Technology overview (tech_overview_edit with the report's key); guests read, only the owner edits.
+BODIES = {"synergies": "shareable/_synergies.html", "automotive": "shareable/_automotive.html"}
+
+
+def _report(slug: str) -> te.Report:
+    rep = sr.REPORTS.get(slug)
+    if rep is None:
+        raise HTTPException(404, "No such page.")
+    return rep
+
+
+def _build(rep: te.Report) -> dict:
+    return sr.build_synergies() if rep.key == "synergies" else sr.build_automotive()
+
+
+def _report_ctx(request: Request, session: Session, rep: te.Report, edit: bool = False, ov: dict | None = None,
+                wm: dict | None = None) -> dict:  # fmt: skip
+    """Everything a report body needs: its values (the owner's edits over the defaults), the shared logo and header
+    options (set on the Technology overview), the watermark of this view."""
+    te.apply_answers(session, sr.SYNERGIES if rep.key == "synergies" else sr.AUTOMOTIVE)
+    session.commit()
+    ov = te.overrides(session, rep) if ov is None else ov
+    vals = te.values(ov, rep)
+    ovals = te.values(te.overrides(session))
+    vals.update({k: ovals[k] for k in ("hdr.logo_align", "hdr.logo_size")})
+    wm = wm or te.view_options(ovals, request.query_params)
+    o = {"wm": wm["wm"], "wm_text": wm["wm_text"], "pages": sr.PAGES[rep.key]}
+    return {"t": _build(rep), "today": date.today(), "vals": vals, "edit": edit, "o": o, "specs": rep.specs(),
+            "over": set(ov), "errors": {}, "message": "", "logo": te.logo_of(session, ovals), "ip_note": sr.PATENT_NOTE,
+            "watermarks": te.WATERMARKS, "page_url": rep.url, "edit_url": rep.url + "/edit", "body": BODIES[rep.key],
+            "wm_error": wm["wm_error"]}  # fmt: skip
+
+
+def _report_page(request: Request, session: Session, rep: te.Report, edit: bool, ov: dict | None = None,
+                 errors: dict | None = None, message: str = "", status: int = 200):  # fmt: skip
+    ctx = _report_ctx(request, session, rep, edit, ov)
+    ctx["errors"] = errors or {}
+    ctx["message"] = message or DONE.get(request.query_params.get("done", ""), "")
+    if ctx["wm_error"]:
+        ctx["message"] = f"No watermark: {ctx['wm_error']}"
+    if edit:
+        ctx.update(history=te.history(session, rep=rep), comments=te.comments(session, rep=rep),
+                   auto=lambda fid, shown: te.auto_value(fid, shown, rep), para_limits=rep.para_limits,
+                   owners=te.OWNERS)  # fmt: skip
+    return templates.TemplateResponse(request, "shareable/report.html", ctx, status_code=status)
+
+
+def _rback(rep: te.Report, done: str, anchor: str = "") -> RedirectResponse:
+    return RedirectResponse(f"{rep.url}/edit?done={done}{'#' + anchor if anchor else ''}", status_code=303)
+
+
+@router.get("/shareable/pack", response_class=HTMLResponse)
+def shareable_pack(request: Request, session: Session = Depends(get_session)):
+    """The combined PDF: ?r=overview,synergies,automotive (in this order), &focus= for the overview's market page,
+    &wm= for the watermark. Page numbers run through the whole PDF; the sources come once, at the end."""
+    q = request.query_params
+    keys = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
+    te.apply_answers(session)
+    session.commit()
+    ovals = te.values(te.overrides(session))
+    opts = te.view_options(ovals, q)
+    pages = {k: (opts["pages"] if k == "overview" else sr.PAGES[k]) for k in keys}
+    total, offset = sum(pages.values()), 0
+    ctxs = {}
+    for k in keys:
+        if k == "overview":
+            ctxs[k] = {"t": tech_overview.build(), "today": date.today(), "vals": ovals, "edit": False, "o": opts,
+                       "specs": te.specs(), "over": set(), "errors": {}, "message": "", "watermarks": te.WATERMARKS,
+                       "logo": te.logo_of(session, ovals)}  # fmt: skip
+        else:
+            ctxs[k] = _report_ctx(request, session, sr.REPORTS[k], wm=opts)
+        ctxs[k].update(pack_offset=offset, pack_total=total, pack_sources_later=k != keys[-1], request=request,
+                       signed_in=lambda _r: None)  # fmt: skip
+        offset += pages[k]
+    last = keys[-1]
+    if len(keys) > 1 and last != "overview":
+        reps = [k for k in keys if k != "overview"]
+        ctxs[last]["pack_sources"] = sr.sources(reps, {k: ctxs[k]["vals"] for k in reps})
+    bodies = []
+    for k in keys:
+        if k == "overview":
+            html = templates.get_template("shareable/tech_overview.html").render(ctxs[k])
+            start, end = html.find('<section class="to-page"'), html.rfind("</section>")
+            bodies.append(html[start:end + len("</section>")] if start >= 0 else "")
+        else:
+            bodies.append(templates.get_template(BODIES[k]).render(ctxs[k]))
+    titles = ["Technology overview" if k == "overview" else sr.REPORTS[k].label for k in keys]
+    query = "&".join(f"{k}={v}" for k, v in (("r", ",".join(keys)), ("focus", opts["focus"] or "none"),
+                                              ("wm", opts["wm"])))  # fmt: skip
+    return templates.TemplateResponse(request, "shareable/pack.html", {
+        "bodies": bodies, "titles": titles, "total": total, "wm_text": opts["wm_text"], "keys": keys,
+        "query": query})  # fmt: skip
+
+
+@router.get("/shareable/{slug}", response_class=HTMLResponse)
+def shareable_report(slug: str, request: Request, session: Session = Depends(get_session)):
+    return _report_page(request, session, _report(slug), edit=False)
+
+
+@router.get("/shareable/{slug}/edit", response_class=HTMLResponse)
+def shareable_report_edit(slug: str, request: Request, session: Session = Depends(get_session)):
+    rep = _report(slug)
+    _owner(request)
+    return _report_page(request, session, rep, edit=True)
+
+
+@router.post("/shareable/{slug}/edit", response_class=HTMLResponse)
+async def shareable_report_save(slug: str, request: Request, session: Session = Depends(get_session)):
+    rep = _report(slug)
+    author = _owner(request)
+    form = await request.form()
+    data = {k: [str(v) for v in form.getlist(k)] for k in form.keys()}
+    r = te.save(session, data, (data.get("op") or [""])[0], author, rep)
+    if r["errors"]:
+        session.rollback()
+        return _report_page(request, session, rep, True, r["new"], r["errors"], r["message"], 400)
+    session.commit()
+    return _rback(rep, "saved" if r["saved"] else "nochange")
+
+
+@router.post("/shareable/{slug}/edit/undo")
+def shareable_report_undo(slug: str, request: Request, session: Session = Depends(get_session)):
+    rep = _report(slug)
+    _owner(request)
+    had = te.current(session, rep) is not None
+    te.undo(session, rep)
+    session.commit()
+    return _rback(rep, "undone" if had else "nothing")
+
+
+@router.post("/shareable/{slug}/edit/reset")
+async def shareable_report_reset(slug: str, request: Request, session: Session = Depends(get_session)):
+    rep = _report(slug)
+    author = _owner(request)
+    form = await request.form()
+    everything, fid = form.get("all") == "1", str(form.get("field") or "")
+    before = te.overrides(session, rep)
+    te.reset(session, fid, everything, author, rep)
+    session.commit()
+    changed = before != te.overrides(session, rep)
+    return _rback(rep, ("resetall" if everything else "reset") if changed else "nothing", "" if everything else fid)
+
+
+@router.post("/shareable/{slug}/edit/comment")
+async def shareable_report_comment(slug: str, request: Request, session: Session = Depends(get_session)):
+    rep = _report(slug)
+    author = _owner(request)
+    form = await request.form()
+    block = str(form.get("block") or "")
+    msg = te.add_comment(session, block, str(form.get(f"ctext.{block}") or ""), author, rep)
+    if not msg.startswith("Comment saved"):
+        session.rollback()
+        return _report_page(request, session, rep, True, errors={block: msg}, message="Comment not saved.", status=400)
+    session.commit()
+    return _rback(rep, "comment", block)
+
+
+@router.post("/shareable/{slug}/edit/resolve")
+async def shareable_report_resolve(slug: str, request: Request, session: Session = Depends(get_session)):
+    rep = _report(slug)
+    _owner(request)
+    form = await request.form()
+    try:
+        cid = int(str(form.get("cid") or "0"))
+    except ValueError:
+        cid = 0
+    msg = te.resolve(session, cid, str(form.get(f"reply.{cid}") or ""), rep)
+    session.commit()
+    return _rback(rep, "resolved" if msg == "Comment resolved." else "gone")

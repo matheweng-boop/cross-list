@@ -42,6 +42,8 @@ NAV = (
     # owner, 24 Oct 2026: a section for shareable content (public information, ready to share or save as PDF)
     ("shareable", "Shareable", (
         ("Technology overview", "/shareable/technology-overview", "Public, ready to share or save as PDF"),
+        ("Skyworks + Qorvo synergies", "/shareable/synergies", "For management: capabilities, overlap, pairs"),
+        ("Automotive", "/shareable/automotive", "Extension: technologies and applications in the car"),
     )),
 )  # fmt: skip
 
@@ -130,6 +132,9 @@ PLACES = {
     "/technical": ("knowledge", "/knowledge"),
     "/notes": ("knowledge", "/knowledge"),
     "/shareable/technology-overview": ("shareable", "/shareable/technology-overview"),
+    "/shareable/synergies": ("shareable", "/shareable/synergies"),
+    "/shareable/automotive": ("shareable", "/shareable/automotive"),
+    "/shareable/pack": ("shareable", "/shareable"),
     "/shareable": ("shareable", "/shareable"),
 }
 

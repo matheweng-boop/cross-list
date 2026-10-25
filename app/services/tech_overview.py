@@ -16,7 +16,7 @@ from app.config import PROJECT_ROOT
 from app.services import autograde, blocks, lifecycle, vocab
 from app.services import opportunity as op
 from app.services import portfolio as pf
-from app.services.text import whole_words
+from app.services.text import round_count, whole_words
 
 FILE = PROJECT_ROOT / "data" / "business" / "tech_overview.yaml"
 LINES = pf.LINES
@@ -179,7 +179,7 @@ def build() -> dict:
     nums = {"parts": f"{len(rows):,}", "families": str(len(families)), "platforms": str(len(platforms)),
             "markets": str(len(markets)), "automotive": f"{auto:,}",
             "rf": rf_top["text"].replace("to ", "up to ", 1) if rf_top else ""}  # fmt: skip
-    notes = {"parts": f"Skyworks {per_line['Skyworks']:,} · Qorvo {per_line['Qorvo']:,}",
+    notes = {"parts": f"Skyworks {round_count(per_line['Skyworks'])} · Qorvo {round_count(per_line['Qorvo'])}",
              "rf": f"highest catalogue amplifier frequency ({rf_top['mpn']})" if rf_top else ""}  # fmt: skip
     words = cur.get("facts") or {}
     facts = []

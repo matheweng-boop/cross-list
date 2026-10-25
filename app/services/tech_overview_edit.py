@@ -7,9 +7,14 @@ versions (models.PageTextVersion), never in the repo. The newest version that is
 are lists per section; the owner can add, remove and move them. Comments (models.PageComment) are instructions on a
 paragraph or text for the daily run, which answers them in data/business/tech_overview_answers.yaml; the site applies
 an answer (public-safe check first) as a new version and marks the comment done with the reply.
+
+The same machinery serves every Shareable report (owner, 25 Oct 2026: Skyworks + Qorvo synergies, Automotive): a
+``Report`` names its storage key, fields, paragraph sections and word check; every function takes ``rep`` (default:
+the Technology overview). Comment ids are unique across reports, so one answers file serves them all.
 """
 
 import secrets
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import lru_cache
@@ -21,6 +26,7 @@ from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import PageComment, PageTextVersion, aware
 from app.services import tech_overview as to
+from app.services.text import rounded_count_text
 
 PAGE = "tech_overview"
 ANSWERS = PROJECT_ROOT / "data" / "business" / "tech_overview_answers.yaml"
@@ -48,10 +54,35 @@ class Field:
     max: int = 0
     label: str = ""
     options: tuple = ()
+    exact: str = ""  # a count: the exact automatic value (the default shows it rounded, "4,500+")
 
     @property
     def auto(self) -> bool:
         return self.kind in ("data", "owner", "dot")
+
+
+@dataclass(frozen=True)
+class Report:
+    """One editable Shareable report: its storage key (PageTextVersion.page, PageComment.page), fields, paragraph
+    sections and limits, and the word check that runs on every save."""
+
+    key: str
+    page: str
+    label: str
+    url: str
+    specs: Callable[[], dict]
+    sections: Callable[[], tuple]
+    default_paras: Callable[[str], list]
+    para_limits: Callable[[str], tuple]
+    problems: Callable[..., list]
+    pages_note: str = "4 A4 pages"
+
+
+@lru_cache
+def overview() -> Report:
+    return Report("overview", PAGE, "Technology overview", "/shareable/technology-overview", lambda: specs(),
+                  lambda: sections(), lambda s: default_paras(s), lambda s: para_limits(s),
+                  to.share_problems)  # fmt: skip
 
 
 def sections() -> tuple[str, ...]:
@@ -71,7 +102,10 @@ def specs() -> dict[str, Field]:
     out: dict[str, Field] = {}
 
     def add(fid, kind, default, mx=0, label="", options=()):
-        out[fid] = Field(fid, kind, default, mx, label, tuple(options))
+        exact = ""
+        if kind == "data" and rounded_count_text(default) != default:  # a count: shown rounded (owner, 25 Oct 2026)
+            exact, default = default, rounded_count_text(default)
+        out[fid] = Field(fid, kind, default, mx, label, tuple(options), exact)
 
     hdr = cur.get("header") or {}
     add("hdr.title", "line", hdr.get("title", ""), 60, "Header title")
@@ -143,37 +177,40 @@ def default_paras(section: str) -> list[dict]:
 
 
 # ---- versions --------------------------------------------------------------------------------------------------------
-def current(session: Session) -> PageTextVersion | None:
-    q = select(PageTextVersion).where(PageTextVersion.page == PAGE, PageTextVersion.undone_at.is_(None))
+def current(session: Session, rep: Report | None = None) -> PageTextVersion | None:
+    page = (rep or overview()).page
+    q = select(PageTextVersion).where(PageTextVersion.page == page, PageTextVersion.undone_at.is_(None))
     return session.scalars(q.order_by(PageTextVersion.id.desc()).limit(1)).first()
 
 
-def overrides(session: Session) -> dict:
-    v = current(session)
+def overrides(session: Session, rep: Report | None = None) -> dict:
+    v = current(session, rep)
     return dict(v.fields) if v else {}
 
 
-def history(session: Session, limit: int = 12) -> list[PageTextVersion]:
-    return list(session.scalars(select(PageTextVersion).where(PageTextVersion.page == PAGE)
+def history(session: Session, limit: int = 12, rep: Report | None = None) -> list[PageTextVersion]:
+    page = (rep or overview()).page
+    return list(session.scalars(select(PageTextVersion).where(PageTextVersion.page == page)
                                 .order_by(PageTextVersion.id.desc()).limit(limit)))  # fmt: skip
 
 
-def values(ov: dict) -> dict:
+def values(ov: dict, rep: Report | None = None) -> dict:
     """field id -> shown value, after overrides; dots follow the (possibly overridden) owner of their platform."""
-    sp = specs()
+    rep = rep or overview()
+    sp = rep.specs()
     out = {fid: ov.get(fid, f.default) for fid, f in sp.items()}
     for fid, f in sp.items():
         if f.kind == "dot":
             out[fid] = ov.get(fid, auto_value(fid, out))
-    for s in sections():
-        out[f"paras.{s}"] = ov.get(f"paras.{s}", default_paras(s))
+    for s in rep.sections():
+        out[f"paras.{s}"] = ov.get(f"paras.{s}", rep.default_paras(s))
     return out
 
 
-def auto_value(fid: str, shown: dict | None = None) -> object:
+def auto_value(fid: str, shown: dict | None = None, rep: Report | None = None) -> object:
     """The automatic value of a number, owner or dot (what it would be without the owner's override)."""
-    sp = specs()
-    if not fid.startswith("dot."):
+    sp = (rep or overview()).specs()
+    if not fid.startswith("dot.") or rep not in (None, overview()):
         return sp[fid].default if fid in sp else ""
     _, plat, mkt = fid.split(".", 2)
     m = next((m for m in to.build()["markets"] if m["key"] == mkt), None)
@@ -190,13 +227,14 @@ def _norm(f: Field | None, raw: object) -> object:
     return " ".join(str(raw or "").split())
 
 
-def check(fid: str, value: object) -> str:
+def check(fid: str, value: object, rep: Report | None = None) -> str:
     """Why a value cannot be saved ("" when it can): length, public-safe words, allowed choices, link form."""
-    sp = specs()
+    rep = rep or overview()
+    sp = rep.specs()
     if fid.startswith("paras."):
         s = fid.split(".", 1)[1]
         texts = [p["text"] for p in value]
-        most, total = para_limits(s)
+        most, total = rep.para_limits(s)
         if len(texts) > most:
             return f"At most {most} paragraphs here, so the page stays within its A4 page."
         if sum(map(len, texts)) > total:
@@ -214,7 +252,7 @@ def check(fid: str, value: object) -> str:
         if fid == "wm.custom":
             if len(str(value)) > f.max:
                 return f"Too long: at most {f.max} characters."
-            return " ".join(to.share_problems(str(value), allow=WM_ALLOW))
+            return " ".join(rep.problems(str(value), allow=WM_ALLOW))
         if f.kind == "chips":
             most = f.options[0] if f.options else CHIPS
             if len(value) > most:
@@ -226,31 +264,34 @@ def check(fid: str, value: object) -> str:
         else:
             text = str(value)
             if f.max and len(text) > f.max:
-                return f"Too long: {len(text)} characters, at most {f.max} here (4 A4 pages)."
+                return f"Too long: {len(text)} characters, at most {f.max} here ({rep.pages_note})."
             if fid.endswith(".url") and not text.startswith("https://"):
                 return "A link must start with https://."
-    problems = to.share_problems(text)
+    problems = rep.problems(text)
     return " ".join(problems)
 
 
-def _save(session: Session, new: dict, note: str, author: str) -> PageTextVersion:
-    sp = specs()
-    shown = values(new)
-    auto = {fid: auto_value(fid, shown) for fid in new if fid in sp and sp[fid].auto}
-    v = PageTextVersion(page=PAGE, fields=new, auto=auto, note=note[:500], author=author[:100])
+def _save(session: Session, new: dict, note: str, author: str, rep: Report | None = None) -> PageTextVersion:
+    rep = rep or overview()
+    sp = rep.specs()
+    shown = values(new, rep)
+    auto = {fid: auto_value(fid, shown, rep) for fid in new if fid in sp and sp[fid].auto}
+    v = PageTextVersion(page=rep.page, fields=new, auto=auto, note=note[:500], author=author[:100])
     session.add(v)
     session.flush()
     return v
 
 
-def save(session: Session, form: dict[str, list[str]], op: str = "", author: str = "Owner") -> dict:
+def save(session: Session, form: dict[str, list[str]], op: str = "", author: str = "Owner",
+         rep: Report | None = None) -> dict:  # fmt: skip
     """Apply the edit form: changed fields, paragraph lists and an optional paragraph operation ("del:<section>:<id>",
     "up:...", "down:..."). Returns {"errors": {id: why}, "saved": version or None, "message": text, "values": shown}.
     Nothing is saved when any value fails its check."""
-    sp = specs()
-    old = overrides(session)
+    rep = rep or overview()
+    sp = rep.specs()
+    old = overrides(session, rep)
     new = dict(old)
-    shown_before = values(old)
+    shown_before = values(old, rep)
     for fid, f in sp.items():
         if fid not in form:
             continue
@@ -259,12 +300,12 @@ def save(session: Session, form: dict[str, list[str]], op: str = "", author: str
         if f.kind not in ("owner", "dot") and value in ("", []):
             new.pop(fid, None)  # cleared: back to the default
             continue
-        base = auto_value(fid, shown_before) if f.kind == "dot" else f.default
+        base = auto_value(fid, shown_before, rep) if f.kind == "dot" else f.default
         if value == base:
             new.pop(fid, None)
         else:
             new[fid] = value
-    for s in sections():
+    for s in rep.sections():
         key = f"paras.{s}"
         if key not in form:
             continue
@@ -274,18 +315,18 @@ def save(session: Session, form: dict[str, list[str]], op: str = "", author: str
                  for i, t in enumerate(texts)]  # fmt: skip
         paras = [p for p in paras if p["text"]]
         paras = _apply_op(paras, op, s)
-        if paras == default_paras(s):
+        if paras == rep.default_paras(s):
             new.pop(key, None)
         else:
             new[key] = paras
     errors = {fid: why for fid in set(new) | set(old) if fid in new and new[fid] != old.get(fid)
-              and (why := check(fid, new[fid]))}  # fmt: skip
+              and (why := check(fid, new[fid], rep))}  # fmt: skip
     if errors:
         return {"errors": errors, "saved": None, "message": "Not saved: please fix the marked texts.", "new": new}
     changed = sorted(k for k in set(new) | set(old) if new.get(k) != old.get(k))
     if not changed:
         return {"errors": {}, "saved": None, "message": "Nothing changed.", "new": new}
-    v = _save(session, new, "Changed: " + ", ".join(changed), author)
+    v = _save(session, new, "Changed: " + ", ".join(changed), author, rep)
     return {"errors": {}, "saved": v, "message": f"Saved: {len(changed)} change{'s' if len(changed) != 1 else ''}.",
             "new": new}  # fmt: skip
 
@@ -356,8 +397,8 @@ def set_logo(session: Session, upload_id: int | None, author: str = "Owner") -> 
     _save(session, new, "Logo removed" if upload_id is None else "Changed: hdr.logo", author)
 
 
-def undo(session: Session) -> str:
-    v = current(session)
+def undo(session: Session, rep: Report | None = None) -> str:
+    v = current(session, rep)
     if v is None:
         return "Nothing to undo: the page shows the defaults."
     v.undone_at = datetime.now(UTC)
@@ -365,51 +406,54 @@ def undo(session: Session) -> str:
     return f"Undone: {v.note or 'the last change'}."
 
 
-def reset(session: Session, fid: str = "", everything: bool = False, author: str = "Owner") -> str:
-    old = overrides(session)
+def reset(session: Session, fid: str = "", everything: bool = False, author: str = "Owner",
+          rep: Report | None = None) -> str:  # fmt: skip
+    old = overrides(session, rep)
     if everything:
         if not old:
             return "Nothing to reset: the page shows the defaults."
-        _save(session, {}, "Reset all to the defaults", author)
+        _save(session, {}, "Reset all to the defaults", author, rep)
         return "Everything is back to the defaults and the automatic numbers (Undo brings your edits back)."
     if fid not in old:
         return "That text already shows its default."
     new = {k: v for k, v in old.items() if k != fid}
-    _save(session, new, f"Reset {fid} to default", author)
-    f = specs().get(fid)
+    _save(session, new, f"Reset {fid} to default", author, rep)
+    f = (rep or overview()).specs().get(fid)
     return "Back to the automatic value." if f and f.auto else "Back to the default text."
 
 
 # ---- comments --------------------------------------------------------------------------------------------------------
-def block_text(shown: dict, block: str) -> str | None:
+def block_text(shown: dict, block: str, rep: Report | None = None) -> str | None:
     """The current text of a block (field id or para.<id>); None for an unknown block."""
+    rep = rep or overview()
     if block.startswith("para."):
         pid = block.split(".", 1)[1]
-        return next((p["text"] for s in sections() for p in shown[f"paras.{s}"] if p["id"] == pid), None)
-    if block in specs():
+        return next((p["text"] for s in rep.sections() for p in shown[f"paras.{s}"] if p["id"] == pid), None)
+    if block in rep.specs():
         v = shown[block]
         return " · ".join(v) if isinstance(v, list) else str(v)
     return None
 
 
-def add_comment(session: Session, block: str, text: str, author: str = "Owner") -> str:
+def add_comment(session: Session, block: str, text: str, author: str = "Owner", rep: Report | None = None) -> str:
+    rep = rep or overview()
     text = " ".join((text or "").split())
-    shown = values(overrides(session))
-    current_text = block_text(shown, block)
+    shown = values(overrides(session, rep), rep)
+    current_text = block_text(shown, block, rep)
     if current_text is None:
         return "That paragraph is gone; reload the page."
     if not text:
         return "Write what should change, for example “make this shorter”."
     if len(text) > 1000:
         return "Keep the comment under 1,000 characters."
-    session.add(PageComment(page=PAGE, block=block, text=text, block_text=current_text, author=author[:100]))
+    session.add(PageComment(page=rep.page, block=block, text=text, block_text=current_text, author=author[:100]))
     session.flush()
     return "Comment saved: the next daily run rewrites this text as asked."
 
 
-def resolve(session: Session, cid: int, reply: str = "") -> str:
+def resolve(session: Session, cid: int, reply: str = "", rep: Report | None = None) -> str:
     c = session.get(PageComment, cid)
-    if c is None or c.page != PAGE:
+    if c is None or c.page != (rep or overview()).page:
         return "That comment no longer exists."
     c.status, c.resolved_at = "done", datetime.now(UTC)
     c.reply = " ".join(reply.split()) or "Resolved by the owner"
@@ -417,8 +461,8 @@ def resolve(session: Session, cid: int, reply: str = "") -> str:
     return "Comment resolved."
 
 
-def comments(session: Session, status: str = "open") -> list[PageComment]:
-    q = select(PageComment).where(PageComment.page == PAGE)
+def comments(session: Session, status: str = "open", rep: Report | None = None) -> list[PageComment]:
+    q = select(PageComment).where(PageComment.page == (rep or overview()).page)
     if status:
         q = q.where(PageComment.status == status)
     return list(session.scalars(q.order_by(PageComment.id)))
@@ -430,11 +474,12 @@ def answers() -> list[dict]:
     return list((yamlio.load(ANSWERS.read_text()) or {}).get("answers") or [])
 
 
-def set_block(new: dict, shown: dict, block: str, text: str) -> str:
+def set_block(new: dict, shown: dict, block: str, text: str, rep: Report | None = None) -> str:
     """Put text into a block of the override set; returns the field id it went to ("" for an unknown block)."""
+    rep = rep or overview()
     if block.startswith("para."):
         pid = block.split(".", 1)[1]
-        for s in sections():
+        for s in rep.sections():
             paras = [dict(p) for p in shown[f"paras.{s}"]]
             for p in paras:
                 if p["id"] == pid:
@@ -442,33 +487,34 @@ def set_block(new: dict, shown: dict, block: str, text: str) -> str:
                     new[f"paras.{s}"] = paras
                     return f"paras.{s}"
         return ""
-    f = specs().get(block)
+    f = rep.specs().get(block)
     if f is None:
         return ""
     new[block] = _norm(f, text.splitlines() if f.kind == "chips" else text)
     return block
 
 
-def apply_answers(session: Session) -> int:
+def apply_answers(session: Session, rep: Report | None = None) -> int:
     """The daily run's answers to open comments (data/business/tech_overview_answers.yaml): each one that passes the
     checks becomes a new version and closes its comment with the reply. Answers that fail stay unapplied (the comment
     stays open, with the reason as its reply draft)."""
     todo = answers()
     if not todo:
         return 0
+    rep = rep or overview()
     done = 0
     for a in todo:
         c = session.get(PageComment, int(a.get("comment") or 0))
-        if c is None or c.page != PAGE or c.status != "open" or not str(a.get("text") or "").strip():
+        if c is None or c.page != rep.page or c.status != "open" or not str(a.get("text") or "").strip():
             continue
-        old = overrides(session)
+        old = overrides(session, rep)
         new = dict(old)
-        fid = set_block(new, values(old), str(a.get("block") or c.block), str(a["text"]))
-        why = check(fid, new[fid]) if fid else "unknown block"
+        fid = set_block(new, values(old, rep), str(a.get("block") or c.block), str(a["text"]), rep)
+        why = check(fid, new[fid], rep) if fid else "unknown block"
         if why:
             c.reply = f"Answer not applied: {why}"
             continue
-        _save(session, new, f"Comment #{c.id} answered by the daily run", "Daily run")
+        _save(session, new, f"Comment #{c.id} answered by the daily run", "Daily run", rep)
         c.status, c.reply, c.resolved_at = "done", str(a.get("reply") or "Done."), datetime.now(UTC)
         done += 1
     session.flush()
@@ -476,33 +522,35 @@ def apply_answers(session: Session) -> int:
 
 
 # ---- the daily inbox -------------------------------------------------------------------------------------------------
-def inbox_lines(session: Session, start: datetime) -> list[str]:
+def inbox_lines(session: Session, start: datetime, rep: Report | None = None) -> list[str]:
     """For the daily run: what the owner edited since start, overridden numbers whose automatic value changed since,
     and every open comment with its paragraph."""
+    rep = rep or overview()
     out = []
-    recent = [v for v in history(session, 200) if aware(v.created_at) >= start and v.undone_at is None]
+    where = "" if rep == overview() else f"{rep.label}: "  # the other reports name themselves
+    recent = [v for v in history(session, 200, rep) if aware(v.created_at) >= start and v.undone_at is None]
     changed = sorted({x.strip() for v in recent if v.note.startswith("Changed: ")
                       for x in v.note.removeprefix("Changed: ").split(",")})  # fmt: skip
     if changed:
-        out.append(f"- Technology overview: {len(changed)} text{'s' if len(changed) != 1 else ''} edited by the "
+        out.append(f"- {rep.label}: {len(changed)} text{'s' if len(changed) != 1 else ''} edited by the "
                    f"owner: {', '.join(changed)}. Keep them (they live in the database).")  # fmt: skip
-    v = current(session)
+    v = current(session, rep)
     if v:
-        shown = values(v.fields)
+        shown = values(v.fields, rep)
         for fid, at_save in sorted((v.auto or {}).items()):
-            now = auto_value(fid, shown)
+            now = auto_value(fid, shown, rep)
             if now != at_save:
-                out.append(f"- {fid}: overridden value differs from the new automatic value (shown "
+                out.append(f"- {where}{fid}: overridden value differs from the new automatic value (shown "
                            f"{v.fields.get(fid)!r}; automatic was {at_save!r}, is now {now!r}). "
                            "Ask the owner.")  # fmt: skip
     answered = {int(a.get("comment") or 0) for a in answers()}
-    for c in comments(session):
+    for c in comments(session, rep=rep):
         if c.id in answered:
             out.append(
-                f"- Comment #{c.id} on {c.block}: answered in the repo; the site applies it when the page opens."
+                f"- {where}Comment #{c.id} on {c.block}: answered in the repo; the site applies it when the page opens."
             )
             continue
-        cur = block_text(values(overrides(session)), c.block)
-        out.append(f"- Comment #{c.id} on {c.block} ({c.created_at:%Y-%m-%d %H:%M}): “{c.text}”. Current text: "
+        cur = block_text(values(overrides(session, rep), rep), c.block, rep)
+        out.append(f"- {where}Comment #{c.id} on {c.block} ({c.created_at:%Y-%m-%d %H:%M}): “{c.text}”. Current text: "
                    f"“{cur if cur is not None else c.block_text}”")  # fmt: skip
     return out

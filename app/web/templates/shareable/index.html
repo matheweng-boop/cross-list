@@ -2,14 +2,14 @@
 {% block content %}
 <link rel="stylesheet" href="/static/shareable.css">
 <h1>Shareable</h1>
-<p class="subtitle">Public information, ready to share outside the company. Preview a report, tick several to build one PDF, or build a presentation.</p>
+<p class="subtitle">Public information, ready to share outside the company. Tap a report to read it; tick “Add to PDF” on one or more to build one PDF.</p>
 {# owner, 25 Oct 2026: one page to combine and preview the reports; the address keeps the choice (?r=...&wm=...) #}
 <form class="sh-pack" id="build-pdf" method="get" action="/shareable/pack" aria-label="Reports">
   <ul class="sh-list">
     {% for key, label, line, pages, href, edit in reports %}
     <li class="sh-row">
-      <label class="sh-check"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }}>
-        <span class="sh-name"><b>{{ label }}</b> <span class="muted small">{{ pages }} pages</span><span class="sh-line">{{ line }}</span></span></label>
+      <label class="sh-pick" title="Add to the PDF"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }} aria-label="Add {{ label }} to the PDF">Add to PDF</label>
+      <a class="sh-open" href="{{ href }}" data-lightbox="{{ label }}"><span class="sh-name"><b>{{ label }}</b> <span class="muted small">{{ pages }} pages</span><span class="sh-line">{{ line }}</span></span></a>
       <span class="sh-acts">
         <a class="sh-preview" role="button" href="{{ href }}" data-lightbox="{{ label }}">Preview</a>
         {% if owner %}<a class="sh-edit small" href="{{ edit }}">Edit</a>{% endif %}

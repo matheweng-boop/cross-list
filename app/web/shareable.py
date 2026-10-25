@@ -22,12 +22,12 @@ URL = "/shareable/technology-overview"
 EDIT = URL + "/edit"
 
 # the one list on /shareable (owner, 25 Oct 2026): key in the combined PDF, name, one short line, its page
-REPORT_LIST = (("overview", "Technology overview", "The Skyworks + Qorvo portfolio: platforms, markets, families.",
-                URL),
-               ("synergies", "Skyworks + Qorvo synergies", "For management: capabilities, overlap, where they combine.",
+REPORT_LIST = (("synergies", "Skyworks + Qorvo synergies", "For management: capabilities, overlap, where they combine.",
                 "/shareable/synergies"),
-               ("automotive", "Automotive", "Technologies in the car, applications and AEC-Q pairs.",
-                "/shareable/automotive"))  # fmt: skip
+               ("automotive", "Automotive", "Extension of the synergies: technologies and applications in the car.",
+                "/shareable/automotive"),
+               ("overview", "Technology overview", "The Skyworks + Qorvo portfolio: platforms, markets, families.",
+                URL))  # fmt: skip
 # what the page says after an edit action (?done=...); only these texts can appear
 DONE = {"saved": "Saved.", "nochange": "Nothing changed.", "undone": "Undone: the page shows the version before.",
         "reset": "Back to the default.", "resetall": "Everything is back to the defaults (Undo brings it back).",

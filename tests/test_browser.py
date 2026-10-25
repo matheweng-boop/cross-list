@@ -451,10 +451,20 @@ def test_shareable_technology_overview_prints_to_four_a4_pages(page):
     # owner, 25 Oct 2026: one list; Preview opens the report in the lightbox, then check it as a page of its own
     page.locator(".sh-row", has_text="Technology overview").get_by_role("button", name="Preview").click()
     frame = page.locator("dialog.lb iframe.lb-frame")
-    expect(frame).to_have_attribute("src", re.compile(r"/shareable/technology-overview$"))
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/technology-overview\?embed=1$"))
     expect(page.frame_locator("dialog.lb iframe.lb-frame").locator("section#platforms")).to_be_attached()
+    inner = page.frame_locator("dialog.lb iframe.lb-frame")
+    expect(inner.locator("#tech-overview")).to_be_visible()
+    for chrome in (".site-head", ".site-foot", ".to-actions"):  # only the report shows, like a document
+        expect(inner.locator(chrome).first).to_be_hidden()
     page.get_by_role("button", name="Close preview").click()
     expect(page.locator("dialog.lb")).to_be_hidden()
+    # tapping the report itself opens it too; ticking "Add to PDF" is separate (owner, 25 Oct 2026)
+    page.locator(".sh-open", has_text="Skyworks + Qorvo synergies").click()
+    expect(page.locator("dialog.lb")).to_be_visible()
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/synergies\?embed=1$"))
+    expect(page.locator('input[name="r"][value="synergies"]')).not_to_be_checked()
+    page.get_by_role("button", name="Close preview").click()
     go(page, "/shareable/technology-overview")
     for sid, heading in (("at-a-glance", "technology overview"), ("platforms", "Technology platforms"),
                          ("markets", "End markets"), ("families", "Product families")):  # fmt: skip
@@ -663,7 +673,7 @@ def test_shareable_build_pdf_with_two_reports(page, tmp_path):
     box.get_by_role("button", name="Build a PDF").click()
     # the print view opens in the lightbox (fc109ca); then check the same address as a page of its own
     frame = page.locator("dialog.lb iframe.lb-frame")
-    expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none$"))
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none&embed=1$"))
     expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the last choice stays
     expect(page.locator("dialog.lb").get_by_role("button", name="Print / Save as PDF")).to_be_visible()
     go(page, frame.get_attribute("src"))

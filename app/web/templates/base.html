@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
-<body class="shell{{ ' bare' if bare }}{{ ' guest' if signed_in(request) and signed_in(request).is_guest }}">
+<body class="shell{{ ' bare' if bare }}{{ ' embed' if request.query_params.get('embed') == '1' and request.url.path.startswith('/shareable/') }}{{ ' guest' if signed_in(request) and signed_in(request).is_guest }}">
 {% set path = request.url.path %}{% set ns = nav_state(path) %}{% set me = signed_in(request) %}{% set guest = me and me.is_guest %}
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">

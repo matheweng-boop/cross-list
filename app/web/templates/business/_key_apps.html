@@ -1,0 +1,16 @@
+{# Key applications of a function (data/business/key_applications.yaml via app/services/key_apps.py). #}
+<h2 id="key-apps">Key applications <span class="small muted">· {{ key_apps.n_using }} library diagrams use it</span></h2>
+<p>{{ key_apps.intro }}</p>
+<div class="table-wrap"><table class="striped small ka-table">
+  <thead><tr><th scope="col">Application</th><th scope="col">Voltage · current</th><th scope="col">Why an eFuse</th><th scope="col">Library diagrams that need it</th></tr></thead>
+  <tbody>{% for a in key_apps.applications %}<tr id="ka-{{ a.key }}">
+    <td><b>{{ a.title }}</b><ul>{% for u in a.uses %}<li>{{ u }}</li>{% endfor %}</ul>
+      {% for label, href in a.links %}<a href="{{ href }}">{{ label }}</a>{{ '<br>'|safe if not loop.last }}{% endfor %}</td>
+    <td>{{ a.volts }}<br><span class="muted">{{ a.amps }}</span></td>
+    <td>{{ a.why }}</td>
+    <td>{% if a.diagrams %}<details><summary>{{ a.n }} diagram{{ 's' if a.n != 1 }}</summary><ul>{% for d in a.diagrams %}<li><a href="{{ d.href }}">{{ d.name }}</a></li>{% endfor %}</ul></details>{% else %}<span class="muted">none in the library yet</span>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{% if key_apps.other %}<details class="small"><summary>{{ key_apps.other|length }} more library diagrams use it (medical, building, solar and storage, defense radio)</summary>
+<ul>{% for d in key_apps.other %}<li><a href="{{ d.href }}">{{ d.name }}</a></li>{% endfor %}</ul></details>{% endif %}
+<p class="small muted">Voltage and current classes are typical values; “est” marks our estimates. Diagram counts come from the application library.</p>

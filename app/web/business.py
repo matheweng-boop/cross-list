@@ -25,7 +25,7 @@ from app.models import (
     TamEstimate,
     TechFeedback,
 )
-from app.services import blocks, cases, library, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
+from app.services import blocks, cases, library, patents, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
 from app.services import opportunity as op
 from app.services import portfolio as pf
 from app.services import priority as priority
@@ -250,13 +250,15 @@ def _by_score(e: dict):
 
 @router.get("/blocks/cross-sell", response_class=HTMLResponse)
 def cross_sell(request: Request, co: str = "combined", system: str = "", sub: str = "", sel: str = "",
-               template: str = "", session: Session = Depends(get_session)):  # fmt: skip
+               template: str = "", aec: str = "", session: Session = Depends(get_session)):  # fmt: skip
     """Cross-sell, bottom up (owner, 23 Oct 2026): pick a system, a sub-system or one diagram of the Application
-    library and see which of our parts go together in it. Gaps and new technology are under Opportunities."""
+    library and see which of our parts go together in it. Gaps and new technology are under Opportunities.
+    ?aec=1 / 0: "Automotive-qualified only" (owner, 24 Oct 2026), on by default for the Automotive system."""
     from app.services import systems as sy
 
     if sel:  # the picker sends "system" or "system:sub"
         system, _, sub = sel.partition(":")
+    aec_on = aec == "1" if aec in ("0", "1") else system == "automotive"
     template = int(template) if template.isdigit() else None
     if template is not None and sy.get(system) and template not in sy.selection(system, sub)["idx"]:
         template = None  # a diagram left over from the previous pick
@@ -280,6 +282,15 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
             pr["why"] = op.pair_reasons(c["xs"]["apps"], pr["a"], pr["b"])
         c["tog"] = tog if tog["synergies"] or tog["bundles"] else None
         c["in_sel"] = sy.selection(system, sub)["idx"] if picked["level"] == "application" else picked["idx"]
+        # Skyworks and Qorvo parts here (owner, 25 Oct 2026): the parts by function at the top; a function in a
+        # synergy pair links to its card in the block below (the table lists the parts, the block explains the pairs)
+        c["table"] = sy.parts_table(session, c["xs"]["ours"], mine, aec_on)
+        rows = {r["fn"]: r for r in c["table"]["rows"]}
+        for j, x in enumerate(tog["synergies"], 1):
+            for fn, line, other in ((x["skyworks"], "Skyworks", x["qorvo_label"]),
+                                    (x["qorvo"], "Qorvo", x["skyworks_label"])):  # fmt: skip
+                if fn in rows and line in rows[fn]["pairs"]:
+                    rows[fn]["pairs"][line].append({"j": j, "other": other})
     else:  # nothing picked yet: what we can sell across the whole library, as before
         sell = []
         for e in op.markets(session, c["apps"], mine)["rows"]:
@@ -289,6 +300,10 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
                              "markets": sorted(by, key=lambda m: (-len(by[m]), m)),
                              "requalify": e["requalify"]})  # fmt: skip
         c["sell"] = sorted(sell, key=lambda e: (-e["n_apps"], e["label"]))
+    c["aec"], c["aec_param"] = aec_on, aec if aec in ("0", "1") else ""
+    c["aec_base"] = (f"/blocks/cross-sell?co={op.company(co)[0]}" + (f"&system={system}" if sy.get(system) else "")
+                     + (f"&sub={sub}" if sy.sub(system, sub) else "")
+                     + (f"&template={template}" if c["template"] is not None else ""))  # fmt: skip
     return templates.TemplateResponse(request, "business/cross_sell.html", c)
 
 
@@ -328,6 +343,7 @@ def gaps_new_tech(request: Request, co: str = "combined", show: str = "", wt: st
              prio=pc, prio_w=priority.percent(w), prio_default=priority.percent(priority.default_weights()),
              prio_custom=custom, prio_levels=priority.levels(), prio_example=priority.example,
              prio_top=priority.ranked(open_rows)[0] if open_rows else None, prio_ldo=priority.ldo_example(open_rows),
+             prio_patent=priority.patent_example(open_rows),
              prio_unmapped=priority.unmapped(open_rows), prio_sliders=not _is_guest(request),
              prio_owner=[(vocab.fn_label(fn), o) for fn, o in (pc["likeliness"].get("owner") or {}).items()],
              n_not_ours=sum(e["gap_type"] == "not_ours" for e in rows),
@@ -830,8 +846,12 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
                         if g["fn"] == fn), None),  # fmt: skip
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
+    c["pat_platform"], c["pat_bonus"] = patents.platform_for(fn), priority.patent_bonus(fn)
     c["walk_parts"] = walk.competitor_parts(session, fn)
     c["library"] = library.for_function(fn)
+    from app.services import key_apps  # key applications (owner, 24 Oct 2026)
+
+    c["key_apps"] = key_apps.for_function(fn)
     return templates.TemplateResponse(request, "business/evidence.html", c)
 
 

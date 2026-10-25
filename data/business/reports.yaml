@@ -510,45 +510,59 @@ reports:
     question: "What could Skyworks suggest for standalone filters, especially wide bandwidth between 1 and 11 GHz, and in which applications?"
     summary: >-
       Best bets combine a filter with parts we already sell: a Wi-Fi 7/8 BAW multiplexer family, a filtered switch-LNA
-      module for 5G small cells, and a protected switched filter bank for defense. Wideband (over ~25 %) needs ceramic,
-      LTCC or IPD, which we don't have since Trans-Tech (with Lark) was sold; build, buy or partner.
-    tags: [filters, Wi-Fi 7, 5G n77, UWB, X-band, defense]
+      module for 5G small cells and a protected switched filter bank for defense. Wideband filtering (over ~25 %, or
+      switched over octaves) is needed in Wi-Fi 6E/7, full n77, UWB, satellite terminals, anti-jam GNSS, SDR, test and
+      defense EW. Acoustic filters cannot reach it and we have no LTCC, ceramic or thin-film line since Trans-Tech was
+      sold, so our entry is a switched filter bank of our switches and BAW with partner filters (est).
+    tags: [filters, wideband, Wi-Fi 7, 5G n77, UWB, SDR, X-band, defense]
     sources: "BizDev catalogue, competitor and demand data; ~106 public web sources (background notes)"
-    decision: Which combined filter product should we propose first, and how do we cover wideband filters now that Trans-Tech
-      and Lark are sold?
+    decision: Should we cover wideband filters with a switched filter bank of our switches and BAW plus a partner's LTCC
+      or thin-film filters, after a Wi-Fi 7/8 BAW multiplexer family as the first combined product?
     answer:
-      text: 'First a Wi-Fi 7/8 BAW multiplexer family: we sell every part of it today. For wideband: not enough data yet to
-        choose between build, buy and partner; a list of partners and their prices would settle it.'
+      text: 'Yes, in two steps (est): first the Wi-Fi 7/8 BAW multiplexer family, which we can sell today; then a wideband
+        switched filter bank for SDR, test and defense with partner LTCC or thin-film channels. Our own LTCC line is not
+        worth it for commodity parts, and a BAW + IPD hybrid could cover the 6 GHz Wi-Fi band and full n77. Partner prices
+        and the widest BAW passband the BU can make would settle it.'
       conf: low
     needed_now:
-    - 'Filter BU: release plan for SKY85929/31/32 (preview) and QPQ4701 as one family'
+    - 'Filter BU: the widest BAW and BAW + IPD passband we can make at 3–7 GHz (full n77, the 1.2 GHz Wi-Fi 6 GHz band),
+      and the release plan for SKY85929/31/32 and QPQ4701 as one family'
+    - Two or three LTCC or thin-film filter partners, with prices and parts we could place inside a module
     - Whether the post-merger plan keeps low-volume standalone filters
-    say_externally: Skyworks sells BAW filters and multiplexers together with Wi-Fi front ends, LNAs and switches from 1 to
-      about 7 GHz. We are interested in where you need a filter combined with an LNA or a switch, and which bandwidths you
-      need above 7 GHz.
+    say_externally: Skyworks sells BAW filters, multiplexers and switched filter banks together with the switches, limiters
+      and LNAs around them, from 1 to about 7 GHz. We would like to learn where you need wide passbands, such as the full
+      6 GHz Wi-Fi band, full n77, UWB channels or multi-octave receivers, and whether a switched filter bank with our
+      switches would fit your design.
     next_steps:
-    - what: Ask for the release plan of SKY85929/31/32 and QPQ4701, and whether they can be sold as one family
+    - what: Ask for the widest BAW and BAW + IPD passband we can make at 3–7 GHz, and the release plan of SKY85929/31/32
+        and QPQ4701 as one family
       who: Filter BU
-      why: Tells us whether idea 1 can be offered within a year.
-    - what: Ask a 5G small-cell or FWA radio maker whether a filtered switch-LNA module would replace their discrete chain
-      who: Small-cell radio hardware lead, through our FAE
-      why: Confirms demand for idea 2, where no integrated equivalent was found.
-    - what: Write the Wi-Fi multiplexer family up as a preliminary case
-      who: Daily run
-      why: Brings idea 1 to the depth of the other ideas, with price, volume and BU questions.
+      why: Tells us how much of the wideband need our own filters can cover, and whether idea 1 can be offered within a year.
+    - what: Shortlist two or three LTCC or thin-film filter partners and ask for prices and parts we could place in a module
+      who: Daily run, then sourcing
+      why: Settles build, buy or partner for the wideband channels of a switched filter bank.
+    - what: Ask a defense EW or test-equipment maker which band split, channel count and size they buy in a switched filter
+        bank today
+      who: Defense or test hardware lead, through our FAE
+      why: Confirms demand and gives the first specification for the wideband switched preselector.
     bu_opener:
       question: Our filters sit next to LNAs, switches and FEMs we already sell. Should we turn that into a few combined filter
         products (a Wi-Fi 7/8 BAW multiplexer family, a filtered switch-LNA for 5G small cells, a protected filter bank for
-        defense), and how do we cover wideband filters now that Trans-Tech and Lark are sold?
+        defense), and cover wideband filters with a switched filter bank of our switches and BAW plus a partner's LTCC or
+        thin-film filters, now that Trans-Tech and Lark are sold?
       pros:
       - 'We sell every other block of a 1–11 GHz receive chain: LNAs, switches, limiters, PAs, multiplexers'
+      - 'We already make switched filter banks (QPB1029/1033/1034/1036, QPB1055) and ~131 active switches: the frame of a
+        wideband bank'
       - BAW beats LTCC diplexers (Murata, Johanson, Yageo) on 5/6 GHz rejection
       - 'Fewer acoustic rivals: Akoustis exited in 2025'
       cons:
-      - Our filters stop at about 7 GHz and are narrowband acoustic only
-      - No ceramic, LTCC, IPD or cavity filters since Trans-Tech (with Lark) was sold; they now compete with us
-      - 'Wideband catalogue filters are commodity: LTCC at about $4 or less, ~110 Mini-Circuits filters at 4–11 GHz'
-      vs: Murata, Johanson, Yageo (LTCC); Trans-Tech and Lark (ceramic, cavity); Mini-Circuits; ADI, MACOM, Mercury (defense)
+      - Our filters stop at about 7 GHz and about 20 % width; acoustic only
+      - No ceramic, LTCC, IPD, thin-film or cavity filters since Trans-Tech (with Lark) was sold; they now compete with us
+      - 'Wideband catalogue filters are commodity: LTCC at about $4 or less; Mini-Circuits lists ~52 band-pass filters wider
+        than 25 % at 1–11 GHz'
+      vs: Mini-Circuits, Knowles, Anatech (wideband catalogue and custom); Murata, Johanson, Yageo (LTCC); Trans-Tech and
+        Lark (ceramic, cavity); ADI, MACOM, Mercury (tunable filters and filter banks)
     learn:
     - age: 5
       text: 'A radio hears many stations at once. A filter is like a sieve: it lets the one station you want through and keeps
@@ -562,8 +576,9 @@ reports:
         25 % of the frequency need ceramic, LTCC, IPD or cavity filters.
     - age: 20
       text: 'The question covers 1–11 GHz: Wi-Fi 7/8, 5G n77 small cells, UWB channels 5–9, satellite and S/C/X-band defense
-        radios all need filters. Most filter value now sits inside front-end modules, so a standalone filter sells best combined
-        with parts we already make.'
+        radios all need filters. Many need wide ones: 1.2 GHz for Wi-Fi 6 GHz, 24 % for full n77, octaves for SDR, test and
+        EW receivers. Most filter value now sits inside front-end modules, so a standalone filter sells best combined with
+        parts we already make.'
     - age: 25
       text: 'BAW is about 91 % Broadcom plus Qorvo; Murata''s XBAR is the main new wideband acoustic technology. For wideband
         we have nothing since Trans-Tech (with Lark) was sold in 2023: build, buy or partner. The best bets reuse our BAW: a

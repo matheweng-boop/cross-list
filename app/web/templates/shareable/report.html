@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+{# A Shareable report page (Skyworks + Qorvo synergies, Automotive): the body template holds the print pages; editing,
+   watermark, header band and Save as PDF work as on the Technology overview. #}
+<link rel="stylesheet" href="/static/shareable.css">
+{% set me = signed_in(request) %}
+{% from "shareable/_macros.html" import F with context %}
+{% if o.wm_text %}<div class="to-wm" aria-hidden="true"><span>{{ o.wm_text }}</span></div>{% endif %}
+{% if not edit %}
+<form class="to-controls" method="get" action="{{ page_url }}" aria-label="Page options">
+  <label>Watermark
+    <select name="wm" data-autosubmit>
+      {% for k, word in watermarks.items() %}<option value="{{ k }}"{{ ' selected' if o.wm == k }}>{{ {'none': 'None', 'custom': 'Custom…'}.get(k, word) }}</option>{% endfor %}
+    </select></label>
+  <label class="to-wmt"{% if o.wm != 'custom' %} hidden{% endif %}>Custom text <input name="wmt" maxlength="30" value="{{ o.wm_text if o.wm == 'custom' else '' }}"></label>
+  <button type="submit" class="outline">Apply</button>
+</form>
+<script>
+  (() => {
+    const f = document.querySelector(".to-controls");
+    if (!f) return;
+    const wm = f.elements.wm, box = f.querySelector(".to-wmt");
+    f.addEventListener("submit", () => { box.querySelector("input").disabled = wm.value !== "custom"; });
+    wm.addEventListener("change", () => {
+      if (wm.value === "custom") { box.hidden = false; box.querySelector("input").focus(); return; }
+      f.requestSubmit();
+    });
+  })();
+</script>
+{% endif %}
+<div class="to{{ ' te' if edit }}" id="share-report">
+{% if edit %}
+{% include "shareable/_edit_top.html" %}
+  <fieldset class="te-settings" id="f-settings"><legend>Header</legend>
+    <div class="te-grid">
+      <div>Header title {{ F('hdr.title') }}</div>
+      <div>Header subtitle, e.g. “Prepared for …” {{ F('hdr.subtitle') }}</div>
+    </div>
+    <p class="small muted">The logo and the default watermark are set on the Technology overview’s edit page and used by every report.</p>
+  </fieldset>
+{% else %}
+  <div class="to-actions">
+    <button type="button" class="to-print" onclick="window.print()">Save as PDF</button>
+    {% if me and me.is_owner %}<a href="{{ edit_url }}" role="button" class="outline to-edit">Edit</a>{% endif %}
+    <a href="/shareable#build-pdf" class="small">Combine with other reports</a>
+    <span class="small muted">Opens the print dialog: choose “Save as PDF” and A4. {{ o.pages }} pages; public information only.</span>
+    {% if message %}<span class="small" role="status">{{ message }}</span>{% endif %}
+  </div>
+{% endif %}
+{% include body %}
+{% if edit %}{% include "shareable/_edit_end.html" %}{% endif %}
+</div>
+{% endblock %}

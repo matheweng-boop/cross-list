@@ -7,7 +7,6 @@ working; this module only decides where a page sits.
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
-        ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
         ("Part reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
@@ -43,6 +42,8 @@ NAV = (
     # owner, 24 Oct 2026: a section for shareable content (public information, ready to share or save as PDF)
     ("shareable", "Shareable", (
         ("Technology overview", "/shareable/technology-overview", "Public, ready to share or save as PDF"),
+        ("Skyworks + Qorvo synergies", "/shareable/synergies", "For management: capabilities, overlap, pairs"),
+        ("Automotive", "/shareable/automotive", "Extension: technologies and applications in the car"),
     )),
 )  # fmt: skip
 
@@ -70,7 +71,7 @@ PLACES = {
     "/overlay/": ("products", "/"),
     "/packages/": ("products", "/"),
     "/pricing/": ("products", "/"),
-    "/parts": ("products", "/parts"),
+    "/parts": ("products", "/"),  # owner, 24 Oct 2026: Browse products off the menu (too long); reachable by link
     "/compare": ("products", "/compare"),
     "/portfolio": ("systems", "/blocks/cross-sell"),  # owner, 25 Oct 2026: the portfolio is a Cross-sell tab
     "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application
@@ -131,6 +132,9 @@ PLACES = {
     "/technical": ("knowledge", "/knowledge"),
     "/notes": ("knowledge", "/knowledge"),
     "/shareable/technology-overview": ("shareable", "/shareable/technology-overview"),
+    "/shareable/synergies": ("shareable", "/shareable/synergies"),
+    "/shareable/automotive": ("shareable", "/shareable/automotive"),
+    "/shareable/pack": ("shareable", "/shareable"),
     "/shareable": ("shareable", "/shareable"),
 }
 
@@ -165,7 +169,7 @@ TABS = (
 )
 
 # Query parameters a tab link keeps when you switch tabs inside a group (first tab href -> parameter names)
-TAB_CARRY = {"/blocks/cross-sell": ("system", "sub")}
+TAB_CARRY = {"/blocks/cross-sell": ("system", "sub", "aec")}
 
 
 def tab_href(tabs, href: str, params) -> str:

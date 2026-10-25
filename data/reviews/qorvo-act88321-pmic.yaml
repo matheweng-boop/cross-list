@@ -1,6 +1,8 @@
 # Technology review: Qorvo ACT88321 configurable PMIC (format: see the review schema shared by the review workers).
 # Sources read 2026-10-21. Qorvo's own site is not reachable for us (bot checkpoint), so the Qorvo datasheet is a
 # public copy on a distributor's file server (marked "unofficial copy"); competitor datasheets come from their makers.
+# 25 Oct 2026: concept item 0 (Buck1) corrected after a 'wrong' review answer (24 Oct), against datasheet Rev. C
+# (cached text) and the catalogue; list order unchanged.
 slug: qorvo-act88321-pmic
 title: "Qorvo ACT88321: one small chip that makes all the power rails of an SSD controller, set by a factory code"
 status: draft
@@ -53,9 +55,9 @@ problem:
 concept:
   summary: "Five regulators share one chip and one digital 'master controller'. The controller holds the default settings (from the factory CMI code), runs a small state machine (reset, start sequence, active, sleep, deep sleep, fault), watches the input and every output, and talks to the host processor over I2C and a few configurable pins (power-good, reset, interrupt, enables)."
   blocks:
-    - name: "Buck1: 4 A step-down with bypass switch"
-      what: "A fixed-frequency (1.125 or 2.25 MHz) current-mode buck, 0.6-3.775 V in 25 mV steps. It can also act as a plain switch that passes the 3.3 V input straight through (30 mOhm), with its own over-current and over-voltage cut-off."
-      why: "Makes the 2.5-3.3 V rail for flash or I/O, or switches the 3.3 V bus in sequence without an extra part. Peak efficiency up to 96.5 % per the datasheet text."
+    - name: "Buck1: 4 A step-down that can also be a 3.3 V bypass switch (one or the other, fixed at power-up)"
+      what: "Buck1 is the one buck that is not COT (the store calls the whole chip an 'Advanced COT PMIC', which fits Buck2 and Buck3 only): a peak-current-mode synchronous buck at 1.125 or 2.25 MHz (fixed-frequency PWM at medium and heavy load, DCM, LPM or ULPM at light load), made for outputs close to the input, up to 100 % duty cycle. Range 0.6-3.775 V in 25 mV steps, but Qorvo advises staying within +/-25 % of the factory default; every standard code sets 2.5-3.0 V. If a GPIO is set up as a MODE pin (as in CMI 103), MODE high at power-up turns Buck1 into a 30 mOhm switch that passes a 2.7-3.7 V input through with a soft start. As a switch it warns at 1.6-3.6 A and shuts off at 3.1-5.8 A (4.5 A typical), and it turns off if AVIN rises above 3.8 V."
+      why: "In buck mode it makes the 2.5-3.0 V flash or I/O rail from 3.3 V (peak efficiency up to 96.5 % per the datasheet text). In bypass mode it switches the 3.3 V bus into the start-up order without an extra load switch, but then there is no Buck1 rail, and the 4 A figure is a buck-mode lifetime rating (both balls, 105 C junction): a bypass load above about 3 A can trip it on some parts."
       conf: high
       src: s1
     - name: "Buck2: 4 A core-rail buck (ACOT)"
@@ -274,6 +276,7 @@ open_questions:
   - "What are the minimum order quantity and lead time for a new custom CMI code?"
   - "Is an automotive (AEC-Q100) or functional-safety version of the ACT88xxx line planned, for camera or ADAS sockets?"
   - "Would a user-programmable version (settings saved by the customer, as TI's TPS6521905) speed up design-ins with smaller customers?"
+  - "Concept item 1 (Buck1) was marked wrong on 24 Oct 2026 without a comment. It was rewritten on 25 Oct from datasheet Rev. C (control type vs the store's 'COT' label, buck or bypass fixed at power-up, bypass trip at 3.1-5.8 A, +/-25 % trim limit). If something else in it is wrong, what is it?"
 learn:
   "5": "A chip needs several different 'strengths' of electricity, a bit like a toy that needs a big battery and a small one. The ACT88321 is a tiny box that takes one supply and makes five, and turns them on one after the other in the right order."
   "10": "Computers inside an SSD run on low voltages like 0.8 V, 1.2 V, 1.8 V and 3.3 V. The ACT88321 makes all of them from the 3.3 V that comes from the laptop. It also watches each one and switches everything off if something goes wrong, so the expensive controller chip is not damaged."

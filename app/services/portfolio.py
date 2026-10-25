@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app import yamlio
 from app.config import PROJECT_ROOT
 from app.models import Manufacturer, ManufacturerRole, Part
-from app.services import blocks, vendors, vocab
+from app.services import autograde, blocks, vendors, vocab
 from app.services import rf_coverage as rf
 
 FILE = PROJECT_ROOT / "data" / "business" / "portfolio_compare.yaml"
@@ -192,8 +192,8 @@ def product_categories() -> dict:
 
 
 def _part_order(p: dict) -> tuple:
-    """Example parts: in volume before preview, automotive grade first."""
-    return p.get("preview", False), p["values"]["qualification"] != "automotive"
+    """Example parts: in volume before preview, automotive grade (AEC-Q, autograde) first."""
+    return p.get("preview", False), not autograde.is_aec(p)
 
 
 # ---- synergies: Skyworks and Qorvo functions that sit next to each other in the library diagrams -----------------

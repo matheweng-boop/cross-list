@@ -30,6 +30,15 @@ Priority score for Gaps & new technology and Markets (25 Oct 2026):
 12. **Background diagrams** count fully in D, so the number matches "Needed in"? (Yes.)
 13. **Competition** in likeliness: leave it out, since it is in the Opportunity score? (Leave out.)
 
+## Settled (owner, 25 Oct 2026, Shareable reports and reviews)
+
+- Automotive report: the "from Skyworks" tile is removed.
+- Report length: keep each management report at 3 pages.
+- "Combined since October 2026" is correct.
+- ACT88321 review concept item 0: the owner is not sure what else was wrong; the correction against datasheet Rev. C
+  stands.
+- QPF1003Q stays counted as AEC-Q qualified (Q ending, catalogue entry), marked; recheck at release.
+
 ## Settled (owner, 24 Oct 2026, site check): "Yes to all"
 
 - Browse products: the Package column is hidden on desktops below 1400 px, so the table no longer scrolls sideways at

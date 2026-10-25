@@ -9,6 +9,7 @@ Dropped: the SKYA prefix (17/19: SKYA21002 and SKYA21024 are stated industrial).
 """
 
 import re
+from functools import lru_cache
 
 AUTOMOTIVE, NOT_AUTO, NOT_STATED = "automotive", "industrial/commercial", "not stated"
 
@@ -33,3 +34,47 @@ def grade(part: dict) -> tuple[str, str]:
         if rx.search(mpn):
             return AUTOMOTIVE, how
     return NOT_STATED, ""
+
+
+# ---- the AEC-Q mark on part chips and the "Automotive-qualified only" filter (owner, 24 Oct 2026) ------------------
+# One test everywhere (Cross-sell, portfolio, Technology overview): a part counts as AEC-Q qualified only when grade()
+# says automotive; everything else (stated industrial or not stated) is marked "not automotive".
+@lru_cache
+def _catalogue_index() -> dict[str, dict]:
+    from app.services import blocks
+
+    out: dict[str, dict] = {}
+    for parts in blocks.catalog_parts().values():
+        for p in parts:
+            out.setdefault(str(p["mpn"]).upper(), p)
+    return out
+
+
+def is_aec(part: dict | str) -> bool:
+    """AEC-Q qualified (automotive grade): from the part's own values when it has them ("implies" as parts_for gives
+    them), else from its catalogue entry; a part number alone is looked up in the catalogue."""
+    p = {"mpn": part} if isinstance(part, str) else part
+    if not p.get("values") and p.get("implies"):
+        p = {**p, "values": p["implies"]}
+    g = grade(p)[0]
+    if g == NOT_STATED:
+        known = _catalogue_index().get(str(p.get("mpn") or "").upper())
+        if known is not None and known is not p:
+            g = grade(known)[0]
+    return g == AUTOMOTIVE
+
+
+def of_row(row: dict) -> dict:
+    """A catalogue browse row (blocks.catalog_rows) in the form grade() reads."""
+    a = row.get("automotive")
+    q = "automotive" if a else "not_automotive" if a is False else None
+    return {"mpn": row["mpn"], "values": {"qualification": q}, "description": row.get("description") or "",
+            "detail": " ".join(map(str, (row.get("key_specs") or {}).values()))}  # fmt: skip
+
+
+def marked(parts: list, aec_only: bool = False) -> tuple[list[dict], int]:
+    """Part chips with their mark (`aec`: True / False) and, under the filter, only the AEC-Q ones: (shown, hidden).
+    Nothing is dropped silently: the page says how many non-automotive parts the filter hides."""
+    out = [{**({"mpn": p} if isinstance(p, str) else p), "aec": is_aec(p)} for p in parts]
+    shown = [p for p in out if p["aec"]] if aec_only else out
+    return shown, len(out) - len(shown)

@@ -14,7 +14,7 @@
 # These are the defaults. The owner edits the page on the site (Edit on the page); those edits are stored in the
 # database as versions over these defaults and are never written back here. Answers to the owner's comments on the
 # page go in data/business/tech_overview_answers.yaml.
-updated: 2026-10-24
+updated: 2026-10-25
 title: "Skyworks + Qorvo technology overview"
 
 # Per section: the heading and the paragraphs under it (the owner can add, remove and move paragraphs on the site;
@@ -54,7 +54,7 @@ facts:
   families: {label: "product families", note: "from RF front ends to isolation and timing"}
   platforms: {label: "technology platforms", note: "compound semiconductor, silicon, acoustic"}
   markets: {label: "end markets", note: "mobile to industrial and energy"}
-  automotive: {label: "parts marked automotive grade", note: "as stated in the catalogue"}
+  automotive: {label: "AEC-Q qualified parts", note: "automotive grade: catalogue or ordering code"}
   rf: {label: "RF and microwave coverage"}
 
 # Technology platforms (page 2). caps: keys in data/business/capabilities.yaml (the owner comes from there).
@@ -174,7 +174,7 @@ markets:
       - [Isolated gate drivers, Si82xx]
       - [Car radio tuners, Si479xx]
       - [Automotive switches and front ends, SKY5Axxxx]
-      - [UWB transceivers, DW3xxx]
+      - [UWB transceivers, DW33xx]
     platforms: [baw, saw, gaas_hbt, soi, modules, isolation, timing, broadcast, wireless]
   - key: infrastructure
     label: Infrastructure and data center
@@ -314,6 +314,8 @@ header:
 # (with its own summaries until words are written here). Per sub-system: one line on what we bring and 2-3 series
 # (trailing x's stand for any characters; each must match an active catalogue part). platforms: keys above.
 # standards: public standards by name only. Public and positive: no opportunities, gaps, competitors, prices or ideas.
+# automotive_grade: only series with AEC-Q parts (app/services/autograde) are named, each with its AEC-Q count; a
+# sub-system without one is left off (owner, 24 Oct 2026: "check AEC-Q qual"; cockpit LED drivers state none).
 focus:
   automotive:
     paragraph: >-
@@ -322,14 +324,13 @@ focus:
       charging.
     automotive_grade: true
     subsystems:
-      car-access: {line: "UWB ranging for digital keys, hands-free entry and in-cabin presence.", series: [DW3xxx, QM35xxx]}
+      car-access: {line: "UWB ranging for digital keys, hands-free entry and in-cabin presence.", series: [DW33xx, QPF51xx]}
       car-radio: {line: "AM/FM, DAB and HD Radio tuners and digital radio coprocessors.", series: [Si479xx, Si469xx]}
-      telematics-v2x: {line: "Automotive-grade cellular, V2X, GNSS and Wi-Fi front ends.", series: [SKY5Axxxx, QPF4xxx, SKY559xx]}
-      adas: {line: "Automotive PCIe clock generators and clock buffers for domain controllers.", series: [Si522xx, Si53xx]}
+      telematics-v2x: {line: "Automotive-grade cellular, V2X, GNSS and Wi-Fi front ends and switches.", series: [SKY5Axxxx, QPF10xx, QPC12xx]}
+      adas: {line: "Automotive PCIe clock generators and clock buffers for domain controllers.", series: [Si5332x, Si5335x, Si5225x]}
       powertrain: {line: "Isolated gate drivers and isolated sensing for traction inverters.", series: [Si823x, Si82Fx, Si89xx]}
       battery-power: {line: "Digital isolators and isolated amplifiers for battery management.", series: [Si86xx, Si89xx]}
       charging: {line: "Isolated gate drivers and isolators with power for on-board and DC chargers.", series: [Si82Ex, Si88xx]}
-      cockpit: {line: "Backlight LED drivers for displays in the cockpit.", series: [SKY81xxx, AATxxxx]}
     platforms: [isolation, broadcast, wireless, gaas_hbt, soi, modules, timing]
     standards: [AEC-Q100, ISO 26262, IEC 60747-17, IEEE 802.15.4z, CCC Digital Key, 3GPP C-V2X]
     learn_more: "Automotive products: skyworksinc.com and qorvo.com, automotive sections."

@@ -1,0 +1,15 @@
+{# Shareable reports, edit mode: the side forms, the sticky bar and the help line (owner only) #}
+  <form id="te-cf" method="post" action="{{ edit_url }}/comment"></form>
+  <form id="te-rf" method="post" action="{{ edit_url }}/resolve"></form>
+  <form id="te-undo" method="post" action="{{ edit_url }}/undo"></form>
+  <form id="te-resetall" method="post" action="{{ edit_url }}/reset"><input type="hidden" name="all" value="1"></form>
+  <form id="te-logo" method="post" action="{{ edit_url }}/logo" enctype="multipart/form-data"></form>
+  <form id="te-logo-rm" method="post" action="{{ edit_url }}/logo/remove"></form>
+  <form id="te-form" method="post" action="{{ edit_url }}">
+  <div class="te-bar">
+    <button type="submit" class="te-save">Save</button>
+    <a href="{{ page_url }}" role="button" class="secondary outline te-cancel">Cancel</a>
+    <button type="submit" form="te-undo" class="secondary outline">Undo last change</button>
+    <button type="submit" form="te-resetall" class="secondary outline" data-confirm="Reset every text and number to the defaults? Undo brings your edits back.">Reset all</button>
+    {% if message %}<span class="te-status{{ ' te-bad' if errors }}" role="status">{{ message }}{% for fid, why in errors.items() if fid in specs or fid.startswith('paras.') %} <a href="#f-{{ fid }}">{{ specs[fid].label if fid in specs else 'Paragraphs' }}: {{ why }}</a>{% endfor %}</span>{% endif %}
+  </div>

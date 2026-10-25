@@ -1,0 +1,67 @@
+{# Shared by the Shareable reports (Technology overview, Skyworks + Qorvo synergies, Automotive): every text and
+   number is a field (app/services/tech_overview_edit.py); on the edit page (owner only) each field is an input.
+   Import with context: {% from "shareable/_macros.html" import F, paras, band, pfoot, who with context %} #}
+{% macro who(x) %}<span class="to-who to-{{ (x or 'none')|lower }}">{{ x }}</span>{% endmacro %}
+{% macro pfoot(n) %}<p class="to-pfoot">{{ vals['title'] }} · Public information · {{ today|date }}{% if o.wm_text %} · <span class="to-wm-tag">{{ o.wm_text }}</span>{% endif %}<span>{{ n + (pack_offset or 0) }} / {{ pack_total or o.pages }}</span></p>{% endmacro %}
+{# the header band at the top of every page: optional logo (left or right, small or medium), title line, subtitle #}
+{% macro band() %}<div class="to-band{{ ' to-band-right' if vals['hdr.logo_align'] == 'right' }}">{% if logo %}<img class="to-logo to-logo-{{ vals['hdr.logo_size'] }}" src="/shareable/logo/{{ logo.id }}" alt="Logo">{% endif %}<span class="to-band-text"><b>{{ vals['hdr.title'] }}</b>{% if vals['hdr.subtitle'] %}<span>{{ vals['hdr.subtitle'] }}</span>{% endif %}</span></div>{% endmacro %}
+
+{% macro comment(bid) %}{% if edit %}
+  {% set mine = comments|selectattr('block', 'equalto', bid)|list %}
+  <details class="te-c"{% if errors[bid] and not specs[bid] is defined %} open{% endif %}><summary>Comment{% if mine %} ({{ mine|length }} open){% endif %}</summary>
+    <textarea name="ctext.{{ bid }}" form="te-cf" rows="2" maxlength="1000" aria-label="Comment" placeholder="What should change? For example: make this shorter, mention Wi-Fi 7"></textarea>
+    <button type="submit" form="te-cf" name="block" value="{{ bid }}" class="te-mini">Send comment</button>
+  </details>
+  {% for c in mine %}<div class="te-open" id="c-{{ c.id }}"><span><b>Open comment</b> {{ c.text }} <span class="muted">({{ c.created_at|date }})</span></span>
+    <input name="reply.{{ c.id }}" form="te-rf" maxlength="300" aria-label="Reply" placeholder="Reply (optional)">
+    <button type="submit" form="te-rf" name="cid" value="{{ c.id }}" class="te-mini">Resolve</button></div>{% endfor %}
+{% endif %}{% endmacro %}
+
+{% macro F(fid, rows=2) -%}
+{%- set v = vals[fid] -%}
+{%- if not edit -%}{{ v|join(' · ') if v is iterable and v is not string else v }}{%- else -%}{%- set s = specs[fid] -%}
+<span class="te-f te-{{ s.kind }}{{ ' te-over' if fid in over }}{{ ' te-bad' if errors[fid] }}" id="f-{{ fid }}">
+  {%- if s.kind in ('owner', 'dot', 'choice') -%}
+  {%- set opts = s.options if s.kind == 'choice' else (('',) if s.kind == 'dot' else ()) + owners -%}
+  {%- set names = {'': 'None', 'none': 'None', 'draft': 'Draft', 'confidential': 'Confidential', 'discussion': 'For discussion', 'custom': 'Custom (text below)', 'left': 'Left', 'right': 'Right', 'small': 'Small', 'medium': 'Medium'} -%}
+  <select name="{{ fid }}" aria-label="{{ s.label }}">{% for x in opts %}<option value="{{ x }}"{{ ' selected' if v == x }}>{{ o.markets[x].title if x in o.markets else names.get(x, x) }}</option>{% endfor %}</select>
+  {%- elif s.kind == 'chips' -%}
+  <textarea name="{{ fid }}" rows="{{ [v|length, 3]|max }}" aria-label="{{ s.label }}">{{ v|join('\n') }}</textarea>
+  {%- elif s.kind == 'text' -%}
+  <textarea name="{{ fid }}" rows="{{ rows }}" maxlength="{{ s.max }}" data-max="{{ s.max }}" aria-label="{{ s.label }}">{{ v }}</textarea>
+  {%- else -%}
+  <input name="{{ fid }}" value="{{ v }}" maxlength="{{ s.max }}" data-max="{{ s.max }}" aria-label="{{ s.label }}">
+  {%- endif -%}
+  <span class="te-meta">
+    {%- if s.max and s.kind in ('line', 'text', 'data') %}<span class="te-count">{{ v|string|length }} / {{ s.max }}</span>{% endif -%}
+    {%- if s.auto %}{% set a = auto(fid, vals) %}<span class="te-auto">automatic: {{ a or 'no dot' }}{% if s.exact %} (exact {{ s.exact }}){% endif %}{% if s.kind != 'dot' %} from the catalogue{% endif %}</span>{% endif -%}
+    {%- if fid in over %}<span class="te-tag">{{ 'overridden' if s.auto else 'edited' }}</span><button type="submit" class="te-mini" formaction="{{ edit_url }}/reset" name="field" value="{{ fid }}">{{ 'Back to automatic' if s.auto else 'Reset to default' }}</button>{% endif -%}
+  </span>
+  {%- if errors[fid] %}<span class="te-msg" role="alert">{{ errors[fid] }}</span>{% endif -%}
+  {%- if s.kind in ('line', 'text', 'chips') and not fid.startswith(('hdr.', 'wm.')) %}{{ comment(fid) }}{% endif -%}
+</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro paras(s, cls) %}{% set key = 'paras.' ~ s %}
+{% if edit %}{% set most, most_chars = para_limits(s) %}
+<div class="te-paras{{ ' te-over' if key in over }}{{ ' te-bad' if errors[key] }}" data-section="{{ s }}" data-total="{{ most_chars }}" data-count="{{ most }}" id="f-{{ key }}">
+  {% for p in vals[key] %}
+  <div class="te-para" id="para-{{ p.id }}">
+    <input type="hidden" name="pid.{{ s }}" value="{{ p.id }}">
+    <textarea name="{{ key }}" rows="4" aria-label="Paragraph {{ loop.index }}">{{ p.text }}</textarea>
+    <div class="te-tools">
+      <button type="submit" class="te-mini" name="op" value="up:{{ s }}:{{ p.id }}"{{ ' disabled' if loop.first }}>Move up</button>
+      <button type="submit" class="te-mini" name="op" value="down:{{ s }}:{{ p.id }}"{{ ' disabled' if loop.last }}>Move down</button>
+      <button type="submit" class="te-mini te-del" name="op" value="del:{{ s }}:{{ p.id }}" data-confirm="Delete this paragraph? (Undo brings it back.)">Delete</button>
+      {{ comment('para.' ~ p.id) }}
+    </div>
+  </div>
+  {% endfor %}
+  <p class="te-meta"><button type="button" class="te-mini te-add" data-add="{{ s }}">Add a paragraph</button>
+    <span class="te-count te-ptotal">at most {{ most }} paragraphs, {{ most_chars }} characters together</span>
+    {% if key in over %}<span class="te-tag">edited</span><button type="submit" class="te-mini" formaction="{{ edit_url }}/reset" name="field" value="{{ key }}">Reset to default</button>{% endif %}</p>
+  {% if errors[key] %}<p class="te-msg" role="alert">{{ errors[key] }}</p>{% endif %}
+</div>
+{% else %}{% for p in vals[key] %}<p class="{{ cls }}">{{ p.text }}</p>{% endfor %}{% endif %}
+{% endmacro %}

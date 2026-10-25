@@ -96,8 +96,8 @@ flows (multi-temperature test, PAT, burn-in) could not be read (AEC unreachable)
 **Commercial.** r4 Infineon FY2025: revenue EUR 14,662 M, gross margin 39.2 % (FY2024 41.8 %), R&D 15.2 % and SG&A
 10.8 % of revenue; external foundries used for low-differentiation front-end steps, OSATs for standard packages;
 distributors can claim price adjustments, ship-and-debit credit notes, limited returns and scrap allowances. Skyworks
-FY25 Q3: gross margin 47.1 %; Broad Markets (incl. automotive) has margins above the corporate average; Woburn fab to
-close and consolidate into Newbury Park to raise utilisation. Snippets: TI about 58 % (2024), ADI 61.5 % GAAP / 69.3 %
+FY25 Q3: gross margin 47.1 %; Broad Markets (incl. automotive) has margins above the corporate average; wafer fab
+consolidation planned to raise utilisation. Snippets: TI about 58 % (2024), ADI 61.5 % GAAP / 69.3 %
 adjusted (FY2025), Arrow global components gross margin 11.7 % (2024).
 
 Why distributor curves of expensive, complex parts are flatter (our reasoning, conf low): catalogue distributors carry a

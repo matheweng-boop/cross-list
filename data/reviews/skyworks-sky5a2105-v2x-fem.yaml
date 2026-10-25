@@ -1,0 +1,197 @@
+# Technology review: Skyworks SKY5A2105 5.9 GHz V2X front-end module (request of 24 Oct 2026: "SKY5A2105: Features and
+# differentiator · application: Automotive"). Written 25 Oct 2026 from the public product summary (206756A, cached in an
+# earlier run, no new download), the BizDev catalogue, the V2X library topic and the C-V2X business case. The full
+# datasheet is not public: figures beyond the product summary are not given. "est" marks our estimates.
+slug: skyworks-sky5a2105-v2x-fem
+title: "Skyworks SKY5A2105: one 3 x 5 mm module that makes a car's 5.9 GHz V2X radio loud, clean and controllable"
+status: draft
+date: 2026-10-25
+maker: Skyworks
+family: v2x_fem
+parts: [SKY5A2105]
+app_area: Automotive
+question: "What are the SKY5A2105's features, what sets it apart, and where does it fit in a car's V2X radio?"
+in_brief:
+  - text: "The SKY5A2105 is the whole RF front end of a 5.9 GHz V2X radio in one 24-pin 3 x 5 mm module: an SP4T switch, a power amplifier (PA), a low-noise amplifier (LNA), a BAW band-pass filter, a digital step attenuator (DSA), a log power detector and a temperature sensor."
+    conf: high
+    src: s1
+  - text: "It covers all three V2X waveforms with one part: C-V2X LTE (+29 dBm), C-V2X 5G NR (+26.5 dBm, with 2.5 dB back-off) and 802.11p DSRC / ITS-G5 (+26 dBm), across 5.855-5.925 GHz."
+    conf: high
+    src: [s1, s2]
+  - text: "Its main differentiator is the dual mode: the same part works next to the roof antenna as a cable-loss compensator (SPI, attenuator in 0.25 dB steps) or inside the telematics ECU (GPIO, 5 dB steps), selected by one MODE pin."
+    conf: high
+    src: s1
+  - text: "It is automotive from the start: AEC-Q104 Grade 2 (-40 to +105 C), MSL3 LGA. In the catalogue it is still 'Preview', so design-in status and price are not public."
+    conf: high
+    src: [s1, s2]
+  - text: "Standalone V2X front ends are rare: in public data only Skyworks (SKY5A2105, SKYA21043) and Qorvo (QPF1003Q, QPF1002Q) sell them; others sell chipsets or complete modules. The weak spots are one path per part and a filter that lets the car's own UNII-4 Wi-Fi through in the US."
+    conf: med
+    src: [s3, s4]
+problem:
+  summary: "A V2X radio sends safety messages (position, speed, braking) to other cars and the roadside at 5.9 GHz, often from the roof while the chipset sits metres away in the telematics unit. The coax and a glass roof eat several dB in both directions, the regulator caps the power at the antenna, and the car's own Wi-Fi works right next to the V2X band. The front end must give enough clean power for three waveforms, recover the receive sensitivity lost in the cable, and keep the power exactly where the rules want it."
+  points:
+    - text: "Three waveforms, three power levels: LTE-V2X, NR-V2X (needs more back-off for linearity) and 802.11p / ITS-G5, all through the same PA and switch."
+      conf: high
+      src: [s1, s3]
+    - text: "Cable and roof loss: a coax run from the roof to the ECU costs several dB, and a glass roof about 8 dB at 5.9 GHz (low-confidence figure from earlier notes). A compensator at the antenna makes this up in both directions."
+      conf: med
+      src: s3
+    - text: "Power control: Europe asks for transmit power control from about 3 dBm up to the maximum (about 30 dB); this needs a detector and an attenuator in a closed loop."
+      conf: med
+      src: s3
+    - text: "Roof temperature and car qualification: modules at the roof run hot and need AEC-Q grade parts with PPAP."
+      conf: high
+      src: [s1, s3]
+    - text: "Coexistence with car Wi-Fi: the 5 GHz Wi-Fi front end shares the roof module; in the US, UNII-4 Wi-Fi (5850-5895 MHz) sits directly below the C-V2X channels."
+      conf: high
+      src: [s3, s4]
+concept:
+  summary: "One RF path, shared by transmit and receive. The SP4T switch connects the antenna to the transmit chain (DSA, PA), the receive chain (BAW filter, LNA, DSA), a BAW bypass or off. The detector measures the output power for the closed loop, and the temperature sensor reports the module temperature. A MODE pin sets compensator mode (SPI control) or ECU mode (GPIO control)."
+  blocks:
+    - name: "SP4T antenna switch"
+      what: "A single-pole, four-throw switch at the antenna port: transmit, receive, BAW bypass and off."
+      why: "Lets one antenna serve both directions; the bypass state extends the dynamic range in compensator mode."
+      conf: high
+      src: s1
+    - name: "Power amplifier (PA)"
+      what: "High-power PA for 5.9 GHz: +29 dBm LTE-V2X, +26.5 dBm NR-V2X (2.5 dB MPR), +26 dBm 802.11p, typical across temperature."
+      why: "Enough power to cover the cable loss in ECU mode and the extra back-off NR and 11p need, while staying within the EIRP limit."
+      conf: high
+      src: s1
+    - name: "BAW band-pass filter and LNA"
+      what: "An integrated BAW receive filter for 5.855-5.925 GHz in front of a low-noise amplifier, with a high-gain state in receive."
+      why: "Sets the receive sensitivity at the antenna, before the cable loss, and keeps out-of-band signals (Wi-Fi, radar) away from the chipset. Skyworks and Qorvo make their own V2X BAW filters (e.g. QPQ2200Q); which die sits inside is not public."
+      conf: med
+      src: [s1, s2]
+    - name: "Digital step attenuator (DSA)"
+      what: "0 to 31.75 dB: in 0.25 dB steps over SPI in compensator mode, in 5 dB steps over GPIO in ECU mode."
+      why: "Matches the module gain to the actual cable loss of each car and antenna position, and trims power in the control loop."
+      conf: high
+      src: s1
+    - name: "Log power detector"
+      what: "Logarithmic detector with more than 25 dB range for closed-loop power control."
+      why: "Keeps the radiated power on target over temperature and waveform. The ETSI control span is about 30 dB, so the bottom of the range may need checking (our arithmetic)."
+      conf: med
+      src: [s1, s3]
+    - name: "Temperature sensor and control interface"
+      what: "On-module temperature sensor; MODE pin chooses compensator (SPI) or ECU (GPIO) control; GPIO pins switch fast between states in both modes; PA and LNA are off in off mode for low leakage."
+      why: "Lets the system run reliability and safety checks and switch TX/RX fast enough for V2X time slots."
+      conf: high
+      src: s1
+datasheet:
+  - section: "Product summary, page 1: features and description"
+    reading: "This is the only public document. Read the output power per waveform (typical values), the mode description (compensator vs ECU) and the attenuator steps. Typical values are not guaranteed limits."
+    watch_out: "No gain, noise figure, linearity (ACLR / EVM) or current figures are public; ask for the full datasheet under NDA before a design-in comparison."
+    conf: high
+    src: s1
+  - section: "Ordering information, page 2"
+    reading: "One orderable part (SKY5A2105) and one evaluation kit (SKY5A2105EK1)."
+    watch_out: "The catalogue lists the part as Preview: check samples, PPAP timing and lifetime before quoting."
+    conf: high
+    src: [s1, s2]
+  - section: "Qualification and package"
+    reading: "AEC-Q104 Grade 2 (-40 to +105 C ambient) is the multi-chip-module version of AEC-Q100. MSL3 at 260 C reflow per J-STD-020."
+    watch_out: "Grade 2 stops at 105 C: confirm the roof module's worst-case temperature with the customer."
+    conf: high
+    src: s1
+key_features:
+  - feature: "Three V2X waveforms in one part"
+    value: "LTE-V2X +29 dBm, NR-V2X +26.5 dBm (2.5 dB MPR), 802.11p +26 dBm (typical)"
+    meaning: "The same module serves US C-V2X, China LTE-V2X, future NR-V2X and Europe's ITS-G5."
+    why_it_matters: "One qualified part per car platform and region; dual-mode EU cars (ITS-G5 and C-V2X) need no second front-end type."
+    applications: [Roof V2X module, Telematics control unit, Roadside unit]
+    conf: high
+    src: s1
+  - feature: "Compensator and ECU dual mode"
+    value: "MODE pin: SPI control, DSA 0.25 dB steps (compensator) or GPIO control, 5 dB steps (ECU)"
+    meaning: "It can sit at the antenna to make up the cable loss, or inside the ECU next to the chipset."
+    why_it_matters: "This is the differentiator: one part for both architectures, so the carmaker can move the radio between roof and ECU without a new RF qualification."
+    applications: [Roof V2X module, Telematics control unit]
+    conf: high
+    src: s1
+  - feature: "Integrated BAW receive filter with bypass"
+    value: "5.855-5.925 GHz BAW band-pass; BAW bypass state"
+    meaning: "The filter that keeps strong neighbours out is inside the module."
+    why_it_matters: "Saves an external filter and its matching; BAW gives steep edges in a small size. Limit: in the US the passband also passes UNII-4 Wi-Fi below 5.895 GHz, so protection must come from the Wi-Fi side (e.g. SKY5A1006, which stops at 5.835 GHz)."
+    applications: [Roof V2X module, Wi-Fi and V2X coexistence]
+    conf: high
+    src: [s1, s3]
+  - feature: "Closed-loop power control parts on board"
+    value: "Log detector > 25 dB range; DSA 0-31.75 dB"
+    meaning: "The module measures and trims its own output power."
+    why_it_matters: "Meets transmit power control rules without an external coupler and detector; check the low end of the ~30 dB ETSI span."
+    applications: [Roof V2X module, Telematics control unit]
+    conf: med
+    src: [s1, s3]
+  - feature: "Temperature sensor"
+    value: "Integrated, read by the system"
+    meaning: "The radio knows how hot the front end is."
+    why_it_matters: "Supports reliability and functional-safety checks; roof modules run hot."
+    applications: [Roof V2X module]
+    conf: high
+    src: s1
+  - feature: "Automotive grade, small package"
+    value: "AEC-Q104 Grade 2 (-40 to +105 C); 24-pin 3 x 5 mm LGA, MSL3"
+    meaning: "Qualified for cars as a module; front-end board area cut by more than 50 % per Skyworks."
+    why_it_matters: "Fits a shark-fin or smart-antenna module where space and heat are tight."
+    applications: [Roof V2X module, Telematics control unit]
+    conf: high
+    src: s1
+applications:
+  - diagram: "V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)"
+    role: "One SKY5A2105 per antenna path (two for two paths), between the antenna and the V2X chipset, in compensator or ECU mode."
+    conf: high
+  - diagram: "V2X communications unit (802.11p / DSRC safety modem + cellular + Wi-Fi) (NXP)"
+    role: "Fills the 5.9 GHz front-end block in front of the 802.11p modem (it also covers C-V2X if the modem changes)."
+    conf: med
+  - diagram: "Automotive telematics control unit (TCU) / V2X module (TI)"
+    role: "The V2X front end in ECU mode inside the TCU, beside the cellular and GNSS front ends."
+    conf: med
+  - diagram: "Automotive telematics / connectivity (Snapdragon Auto 5G Modem-RF Gen 2, QCA6696 Wi-Fi/BT, C-V2X 9150) (Qualcomm)"
+    role: "The C-V2X front end after the C-V2X chipset; whether Qualcomm reference designs name it is not public."
+    conf: low
+competitors:
+  - maker: Qorvo (now Skyworks)
+    parts: "QPF1003Q, QPF1002Q"
+    how: "The other standalone V2X front ends: QPF1003Q covers C-V2X, DSRC and Wi-Fi (AEC-Q100 Grade 2 listed as target); QPF1002Q is 5.770-5.925 GHz, 28 dBm. Same company now, so a merged line is a portfolio question, not a competitor fight."
+    conf: med
+    src: [s2, s4]
+  - maker: Skyworks
+    parts: "SKYA21043"
+    how: "Older 802.11p-only front end (Active). SKY5A2105 adds C-V2X LTE and NR, the compensator mode and the integrated BAW."
+    conf: high
+    src: s2
+  - maker: "Qualcomm (with Autotalks), NXP"
+    parts: "C-V2X 9150 / Autotalks chipsets; NXP SAF5400"
+    how: "Chipset makers, not front-end makers: they need a front end like SKY5A2105. NXP's 802.11p modem needs two parts for concurrent dual channel. Since Qualcomm closed Autotalks (June 2025) our reference partner belongs to the main chipset rival."
+    conf: med
+    src: s4
+  - maker: "Module makers (Quectel, Huawei, CICTCI and others)"
+    parts: "Complete V2X modules"
+    how: "Sell the radio as a module with front end inside; in China the domestic chipset and module makers lead (our judgement)."
+    conf: low
+    src: s4
+our_position: "SKY5A2105 is the newest single-path V2X front end in the combined portfolio, next to SKYA21043 (802.11p only) and Qorvo's QPF1003Q / QPF1002Q. Around it we can sell the V2X BAW filters (QPQ2200Q band-pass, SKY5A1005 and QPQ2230Q notch), the car Wi-Fi front ends and filters that protect the V2X band (SKY5A1006 stops at 5.835 GHz), the GNSS L1/L5 LNA SKY5A2110 and the telematics clocks. Gaps: one path per part (two carriers need two front ends plus a filter and switch), no US guard filter against UNII-4 Wi-Fi, and a Preview status. The business case 'auto-cv2x-fe' proposes a dual-carrier successor."
+open_questions:
+  - "Is SKY5A2105 still Preview, and when are samples, PPAP and production planned?"
+  - "Is it on the current Qualcomm / Autotalks reference designs after Qualcomm closed Autotalks (June 2025)?"
+  - "Which of SKY5A2105 and QPF1003Q does the combined company lead with per region?"
+  - "Does the >25 dB detector range cover the full ETSI power-control span (3 dBm to maximum) in closed loop?"
+  - "What gain, noise figure and NR / 802.11p linearity does the full datasheet give?"
+learn:
+  "5": "Cars can talk to each other by radio to warn about a crash ahead. The SKY5A2105 is the small part next to the car's antenna that makes the radio voice loud enough to be heard and the ears sharp enough to hear others."
+  "10": "V2X radios send short safety messages at 5.9 GHz. The antenna is often on the roof and the radio chip far away, so the cable loses signal. The SKY5A2105 sits near the antenna and adds back what the cable loses, for sending and for receiving, and it filters out the car's own Wi-Fi."
+  "15": "Inside are a switch (send or receive), a power amplifier, a low-noise amplifier, a BAW filter, an attenuator to set the gain, a power detector and a temperature sensor. It handles three kinds of V2X signal (LTE, 5G NR and 802.11p) and can work at the antenna (compensator mode) or next to the radio chip (ECU mode)."
+  "20": "The product summary gives +29 dBm for LTE-V2X, +26.5 dBm for NR-V2X with 2.5 dB MPR and +26 dBm for 802.11p, a log detector with more than 25 dB range for closed-loop power control, and a DSA of 0-31.75 dB in 0.25 dB steps (SPI) or 5 dB steps (GPIO). It is AEC-Q104 Grade 2 in a 3 x 5 mm LGA. Gain, noise figure and linearity are only in the full datasheet."
+  "25": "Positioning: the only public standalone V2X front-end line is ours (SKY5A2105, SKYA21043, Qorvo QPF1003Q / QPF1002Q); chipset makers (Qualcomm with Autotalks, NXP) and module makers need such a part. The differentiators are the three-waveform PA, the compensator / ECU dual mode and the integrated BAW. The open issues are a single path per part while Europe and the US move to two carriers, the US UNII-4 Wi-Fi next to the C-V2X channels, and a reference partner now owned by Qualcomm. The dual-carrier successor in the C-V2X case answers the first two."
+learn_links:
+  - {label: "5.9 GHz V2X front ends (library topic)", href: "/library/v2x_frontend"}
+  - {label: "Roof and smart-antenna coexistence (library topic)", href: "/library/roof_coexistence"}
+  - {label: "Business case: a dual-carrier C-V2X front end (auto-cv2x-fe)", href: "/business/reports/auto-cv2x-fe"}
+  - {label: "Automotive grade (AEC-Q100 / Q104)", href: "/engineering/qualification"}
+  - {label: "Operating temperature range", href: "/engineering/temp_range_c"}
+sources:
+  - {id: s1, title: "SKY5A2105: 5.9 GHz C-V2X and 802.11p DSRC High-Power Front-End Module, Product Summary 206756A", publisher: "Skyworks Solutions", url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/3001-3100/SKY5A2105_206756A_PS.pdf", date: "2023-11-16", note: "official"}
+  - {id: s2, title: "BizDev catalogue: SKY5A2105, SKYA21043, SKY5A1005, SKY5A1006 (data/catalog/skyworks_parts.yaml); QPQ2200Q, QPF1002Q (qorvo_parts.yaml); QPF1003Q (qorvo_extra_parts.yaml)", publisher: "BizDev (Skyworks and Qorvo public catalogues)", url: "/parts?q=SKY5A2105", date: "2026-10-19", note: "catalogue"}
+  - {id: s3, title: "5.9 GHz V2X front ends and coexistence with car Wi-Fi (library topic, from ETSI EN 302 571, 3GPP TR 38.886, C2C-CC white papers and the SKY5A2105 summary)", publisher: "BizDev systems library", url: "/library/v2x_frontend", date: "2026-10-21", note: "standard summary"}
+  - {id: s4, title: "Business case: a dual-carrier C-V2X front end (auto-cv2x-fe), position and competitor notes", publisher: "BizDev", url: "/business/reports/auto-cv2x-fe", date: "2026-10-23", note: "catalogue"}

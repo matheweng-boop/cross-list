@@ -171,3 +171,18 @@ def rf_parts() -> list[dict]:
                 out.append({"mpn": p["mpn"], "mfr": mfr, "stage": stage, "preview": "preview" in status.lower(),
                             **{k: round(v, 4) for k, v in nums.items()}})  # fmt: skip
     return out
+
+
+# --- application bands for the frequency axes (owner 24 Oct 2026: "add ranges into the graph to accurately show the
+# application. FM is not only at 100 MHz"): the same data/engineering_rf_bands.yaml as the RF bands chart, in MHz ---
+def band_ranges() -> dict[str, dict]:
+    """Every band of the RF bands chart except the IEEE letter bands: id -> short name, group, ranges and regional
+    sub-bands, each [low MHz, high MHz, label]."""
+    from app.services import rf_bands
+
+    def rows(rs) -> list[list]:
+        return [[float(lo), float(hi), str(lab)] for lo, hi, lab in rs or []]
+
+    return {b["id"]: {"name": b["name"].split(" (")[0].split(":")[0], "group": b["group"], "ranges": rows(b["ranges"]),
+                      "sub": rows(b.get("subbands"))}
+            for b in rf_bands.data()["bands"] if b.get("group") != "ieee"}  # fmt: skip

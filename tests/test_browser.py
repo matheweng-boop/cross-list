@@ -232,6 +232,28 @@ def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     assert "system=automotive" in page.url and page.locator("#together").is_visible()
 
 
+def test_cross_sell_parts_table_and_automotive_filter(page):
+    """Owner, 24-25 Oct 2026: the Skyworks and Qorvo parts table tops the selection; on Automotive the
+    "Automotive-qualified only" filter is on (AEC-Q chips only, the hidden count shown), one click shows every part
+    with its "not automotive" mark, and a pair link jumps to its card. Both views are checked at 390 px too."""
+    go(page, "/blocks/cross-sell?system=automotive&sub=powertrain")
+    table = page.locator("#parts-here")
+    expect(table.get_by_role("heading", name=re.compile("Skyworks and Qorvo parts here"))).to_be_visible()
+    toggle = page.get_by_role("button", name="Automotive-qualified only")
+    expect(toggle).to_have_attribute("aria-pressed", "true")
+    expect(table.locator(".aec-no")).to_have_count(0)
+    with page.expect_navigation():
+        toggle.click()
+    assert "aec=0" in page.url
+    expect(page.get_by_role("button", name="Automotive-qualified only")).to_have_attribute("aria-pressed", "false")
+    expect(page.locator("#parts-here .aec-yes").first).to_be_visible()
+    link = page.locator("#parts-here a.xs-pair").first
+    if link.count():
+        target = link.get_attribute("href")
+        link.click()
+        expect(page.locator(target)).to_be_in_viewport()
+
+
 # --- Engineering knowledge --------------------------------------------------------------------------------------------
 def test_rf_bands_type_and_application_chips_change_the_chart(page):
     go(page, "/rf-bands")
@@ -281,6 +303,53 @@ def test_every_visual_moves_without_errors(page):
             stuck.append(vid)
     assert not stuck, f"controls moved but nothing changed in: {stuck}"
     assert total > len(ids)  # most visuals have several controls
+
+
+def test_hex_visual_converts_flips_bits_and_follows_the_word_size(page):
+    """Owner 24 Oct 2026: the hex / binary visual. Typing in one box fills the others, a clicked bit flips, the word
+    size changes the signed reading, and a value too big for the word is refused."""
+    go(page, "/visuals#hex")
+    panel = page.locator("#vz-panel")
+    expect(panel.locator("h2")).to_have_text("Hex, binary and registers")
+    box = {k: panel.locator(f'[data-hx="{k}"]') for k in ("16", "2", "u", "s", "8")}
+    box["16"].fill("0xFF")
+    expect(box["u"]).to_have_value("255")
+    expect(box["2"]).to_have_value("1111 1111")
+    expect(box["s"]).to_have_value("-1")
+    expect(panel.locator(".vz-kpis")).to_contain_text("0xFF")
+    bit7 = panel.locator('.hx-bit[data-bit="7"]')
+    expect(bit7).to_have_attribute("aria-pressed", "true")
+    bit7.click()
+    expect(panel.locator('.hx-bit[data-bit="7"]')).to_have_attribute("aria-pressed", "false")
+    expect(box["16"]).to_have_value("0x7F")
+    panel.locator('select[data-k="w"]').select_option("16")
+    box["s"].fill("-1")
+    expect(box["16"]).to_have_value("0xFFFF")
+    expect(panel.locator(".hx-reg .hx-bit")).to_have_count(16)
+    expect(panel.locator(".vz-more")).to_contain_text("0xFFFF")
+    box["u"].fill("70000")
+    expect(box["u"]).to_have_attribute("aria-invalid", "true")
+    expect(panel.locator(".hx-msg")).to_contain_text("Does not fit in 16 bits")
+    panel.locator(".hx-fields").fill("[15:8] HIGH, [3:0] LOW")
+    expect(panel.locator(".hx-t").first).to_contain_text("HIGH")
+    slider = panel.locator('input[data-k="bit"]')
+    slider.evaluate("r => { r.value = 5; r.dispatchEvent(new Event('input', {bubbles: true})); }")
+    expect(panel.locator(".vz-more")).to_contain_text("Worked example, bit 5")
+
+
+def test_frequency_visuals_draw_the_bands_as_ranges(page):
+    """Owner 24 Oct 2026: "FM is not only at 100 MHz". The wavelength chart shades AM, FM and DAB as ranges, the FM
+    intermodulation chart shades the FM band by region, and the noise-figure visual shows the band strip."""
+    go(page, "/visuals#wave")
+    chart = page.locator("#vz-panel .vz-chart")
+    for label in ("AM", "FM", "DAB", "GNSS", "UWB"):
+        expect(chart.locator("text.vz-bl", has_text=label).first).to_be_attached()
+    expect(page.locator("#vz-panel .vz-more")).to_contain_text("76–108 MHz")
+    page.locator("#vz-nav a[data-id='fmim']").click()
+    for label in ("Japan", "most countries", "OIRT"):
+        expect(page.locator("#vz-panel .vz-chart text.vz-bl", has_text=label).first).to_be_attached()
+    page.locator("#vz-nav a[data-id='nf']").click()
+    expect(page.locator("#vz-panel .vz-strip .vz-sbar").first).to_be_attached()
 
 
 # --- Data management --------------------------------------------------------------------------------------------------
@@ -515,6 +584,85 @@ def test_technology_overview_every_field_at_its_limit_still_fits(page):
             assert pdf_pages(a4(page)) <= 5, market
     finally:
         reset_overview(page)
+
+
+def test_shareable_pack_of_all_three_and_each_report_alone(page):
+    """Owner, 25 Oct 2026: the Synergies and Automotive reports print to at most 3 A4 pages each; the combined PDF of
+    all three reports (no focus page) to 10 pages at most, numbered through ("10 / 10" on the last)."""
+    for path in ("/shareable/synergies", "/shareable/automotive"):
+        go(page, path)
+        expect(page.locator(".to-page")).to_have_count(3)
+        assert pdf_pages(a4(page)) <= 3, path
+    go(page, "/shareable/pack?r=overview,synergies,automotive&focus=none&wm=none")
+    expect(page.locator(".to-page")).to_have_count(10)
+    expect(page.locator(".to-pfoot").last).to_contain_text("10 / 10")
+    pdf = a4(page)
+    assert pdf_pages(pdf) == 10
+
+
+def test_shareable_build_pdf_with_two_reports(page, tmp_path):
+    """The landing page's Build a PDF box: untick the overview, Create PDF opens one print view with Synergies then
+    Automotive (the address keeps the choice), each from a new page, one sources list (no overflow at 390 px: the
+    page fixture checks every visited page)."""
+    go(page, "/shareable")
+    box = page.locator("#build-pdf")
+    box.locator("input[value='overview']").uncheck()
+    box.get_by_role("button", name="Create PDF").click()
+    expect(page).to_have_url(re.compile(r"/shareable/pack\?r=synergies,automotive"))
+    ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
+    assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
+    expect(page.locator("text=Sources.")).to_have_count(1)
+    pdf = a4(page)
+    assert pdf_pages(pdf) == 6
+    text = pdf_text(pdf, tmp_path, 4)
+    if text is not None:
+        assert "extension of" in text.lower() and re.search(r"4 ?/ ?6", text)
+
+
+def test_shareable_synergies_owner_edit_and_undo(page):
+    """The new reports edit like the overview: a number (the exact automatic value is shown), Save, Undo."""
+    try:
+        go(page, "/shareable/synergies")
+        page.get_by_role("button", name="Edit", exact=True).click()
+        expect(page.locator("#f-fact\\.parts\\.num .te-auto")).to_contain_text("(exact ")
+        page.fill("input[name='fact.parts.num']", "4,600")
+        page.get_by_role("button", name="Save").first.click()
+        expect(page.locator(".te-status")).to_contain_text("Saved")
+        go(page, "/shareable/synergies")
+        expect(page.locator(".to-fact b").first).to_have_text("4,600")
+        go(page, "/shareable/synergies/edit")
+        page.get_by_role("button", name="Undo last change").click()
+        go(page, "/shareable/synergies")
+        expect(page.locator(".to-fact b").first).not_to_have_text("4,600")
+    finally:
+        page.request.post("/shareable/synergies/edit/reset", form={"all": "1"})
+
+
+@pytest.mark.parametrize("slug", ["synergies", "automotive"])
+def test_shareable_report_every_field_at_its_limit_still_fits(page, slug):
+    """The length limits keep each management report at 3 A4 pages, with every text at its limit."""
+    from app.services import share_reports as sr
+    from app.services import tech_overview_edit as te
+
+    rep = sr.REPORTS[slug]
+    multi = []
+    for fid, f in rep.specs().items():
+        if f.kind in ("line", "text", "data") and f.max:
+            multi.append((fid, _filler(f.max)))
+        elif f.kind == "chips":
+            multi += [(fid, "\n".join(_filler(te.CHIP_MAX) for _ in range(f.options[0] if f.options else te.CHIPS)))]
+    for s in rep.sections():
+        most, total = rep.para_limits(s)
+        multi += [(f"paras.{s}", _filler(total // most - 1)) for _ in range(most)] + [(f"pid.{s}", "")] * most
+    try:
+        body = "&".join(f"{quote(k)}={quote(str(v))}" for k, v in multi)
+        r = page.request.post(f"/shareable/{slug}/edit", data=body,
+                              headers={"content-type": "application/x-www-form-urlencoded"})  # fmt: skip
+        assert r.ok and "Not saved" not in r.text(), re.findall(r'role="alert">([^<]*)', r.text())[:5]
+        go(page, f"/shareable/{slug}?wm=draft")
+        assert pdf_pages(a4(page)) <= 3, slug
+    finally:
+        page.request.post(f"/shareable/{slug}/edit/reset", form={"all": "1"})
 
 
 # --- Signing in -------------------------------------------------------------------------------------------------------

@@ -1,0 +1,61 @@
+{# Shareable > Skyworks + Qorvo synergies: three A4 pages for management (owner, 25 Oct 2026). Words from
+   data/business/share_reports.yaml, counts from the catalogue (rounded), pairs from the library diagrams. Capability
+   level only on manufacturing: no site, city or named partner (tests/test_share_reports.py). #}
+{% from "shareable/_macros.html" import who, pfoot, band, comment, F, paras with context %}
+  <section class="to-page" id="syn-glance" aria-labelledby="syn-h1">
+    {{ band() }}
+    <p class="to-kicker">Management brief · {{ today|date }}</p>
+    <h1 id="syn-h1">{{ F('title') }}</h1>
+    {{ paras('glance', 'to-lead') }}
+    <div class="to-facts sr-facts-5">
+      {% for f in t.facts %}<div class="to-fact"><b>{{ F('fact.' ~ f.key ~ '.num') }}</b><span>{{ F('fact.' ~ f.key ~ '.label') }}</span></div>{% endfor %}
+    </div>
+    <h2>{{ F('sec.manufacturing.heading') }}</h2>
+    {{ paras('manufacturing', 'to-sub') }}
+    <div class="to-scroll">
+    <table class="sr-mfg">
+      <thead><tr><th scope="col">Capability</th><th scope="col">{{ who('Skyworks') }}</th><th scope="col">{{ who('Qorvo') }}</th></tr></thead>
+      <tbody>{% for _ in t.mfg %}{% set k = 'mfg.' ~ loop.index0 %}<tr><th scope="row">{{ F(k ~ '.label') }}</th><td data-l="Skyworks">{{ F(k ~ '.skyworks') }}</td><td data-l="Qorvo">{{ F(k ~ '.qorvo') }}</td></tr>{% endfor %}</tbody>
+    </table>
+    </div>
+    {{ pfoot(1) }}
+  </section>
+
+  <section class="to-page" id="syn-tech" aria-labelledby="syn-h-tech">
+    {{ band() }}
+    <h2 id="syn-h-tech">{{ F('sec.technologies.heading') }}</h2>
+    {{ paras('technologies', 'to-sub') }}
+    <div class="sr-cols">
+      {% for side, label in (('Skyworks', 'Skyworks'), ('Both', 'Both'), ('Qorvo', 'Qorvo')) %}
+      <div class="sr-col sr-{{ side|lower }}"><h3>{{ label }} <span class="sr-n">{{ t.tech[side]|length }}</span></h3>
+        <ul>{% for p in t.tech[side] %}<li>{{ p.label }}{% if p.ip %} <span class="sr-ip">{{ p.ip }}</span>{% endif %}</li>{% endfor %}</ul></div>
+      {% endfor %}
+    </div>
+    {% if t.ip %}<p class="sr-note small">{{ ip_note }}</p>{% endif %}
+    <h2>{{ F('sec.overlap.heading') }}</h2>
+    {{ paras('overlap', 'to-sub') }}
+    <div class="sr-cols sr-overlap">
+      {% for side, label, fams in (('Skyworks', 'Skyworks only', t.sky), ('Both', 'Both offer', t.both), ('Qorvo', 'Qorvo only', t.qor)) %}
+      <div class="sr-col sr-{{ side|lower }}"><h3>{{ label }} <span class="sr-n">{{ fams|length|rounded }} families</span></h3>
+        <ul>{% for f in fams %}<li><span>{{ f.label }}</span> <b>{{ f.total|rounded }}</b></li>{% endfor %}</ul></div>
+      {% endfor %}
+    </div>
+    <p class="sr-note small">Active parts per family in the public catalogues, rounded down.</p>
+    {{ pfoot(2) }}
+  </section>
+
+  <section class="to-page" id="syn-combine" aria-labelledby="syn-h-comb">
+    {{ band() }}
+    <h2 id="syn-h-comb">{{ F('sec.combine.heading') }}</h2>
+    {{ paras('combine', 'to-sub') }}
+    <ol class="sr-pairs">
+      {% for p in t.pairs %}<li><b>{{ who('Skyworks') }} {{ p.skyworks }} <span class="sr-plus">+</span> {{ who('Qorvo') }} {{ p.qorvo }}</b>
+        <span>{{ F('pair.' ~ p.key ~ '.line') }}</span>
+        {% if p.s_ex or p.q_ex %}<span class="sr-ex small">For example {% if p.s_ex %}<code>{{ p.s_ex }}</code>{% endif %}{% if p.s_ex and p.q_ex %} with {% endif %}{% if p.q_ex %}<code>{{ p.q_ex }}</code>{% endif %}</span>{% endif %}</li>{% endfor %}
+    </ol>
+    <p class="to-on small"><span class="muted">Continued in</span> <a href="/shareable/automotive">Automotive: technologies and applications</a></p>
+    {% if pack_sources %}<div class="to-src small"><b>Sources.</b> {% for s in pack_sources %}{{ s }} {% endfor %}Prepared {{ today|date }}. Public information.</div>
+    {% elif not pack_sources_later %}<div class="to-src small"><b>Sources.</b> {% for _ in t.cur.sources or [] %}{{ F('src.' ~ loop.index0) }} {% endfor %}
+      Prepared {{ today|date }}{% if t.catalogue_date %}; catalogue as of {{ t.catalogue_date|date }}{% endif %}. Public information.</div>{% endif %}
+    {{ pfoot(3) }}
+  </section>

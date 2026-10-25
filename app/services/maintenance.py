@@ -30,7 +30,7 @@ AFFECTS = {
     "trends": "Fit score in Gaps & new technology",
     "customers": "Customers page and business-case briefs",
     "capabilities": "Technology platforms page",
-    "patents": "Evidence page only (not scored)",
+    "patents": "Priority score: a small bonus to likeliness (strong / some patent depth); evidence page",
     "foundry": "Evidence page only (not scored)",
     "competitor_tech": "Evidence page only (not scored)",
     "new_markets": "Ideas page only (not scored)",

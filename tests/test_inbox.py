@@ -6,6 +6,7 @@ from app.models import DataReview, SiteFeedback, VolumeRequest
 
 def test_inbox_needs_its_own_key_and_lists_what_the_owner_said(client, session, monkeypatch):
     monkeypatch.setattr(get_settings(), "site_password", "s3cret")
+    monkeypatch.setattr(get_settings(), "inbox_token", "")  # independent of a key set in the environment
     assert client.get("/api/inbox").status_code == 404  # no key set: closed, even though the path skips the gate
     monkeypatch.setattr(get_settings(), "inbox_token", "k" * 40)
     assert client.get("/api/inbox").status_code == 401

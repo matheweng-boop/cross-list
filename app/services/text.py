@@ -261,3 +261,24 @@ def whole_words(text: str | None, words, plural: bool = False) -> list[str]:
     storylines)."""
     s = "s?" if plural else ""
     return [w for w in words if re.search(rf"\b{re.escape(w)}{s}\b", text or "", re.I)]
+
+
+# ---- counts on shareable reports (owner, 25 Oct 2026: "if it's 4132 parts, then just say 4000+ parts") -------------
+_COUNT = re.compile(r"\d{1,3}(?:,\d{3})+|\d+")
+
+
+def round_count(n: int) -> str:
+    """A count of things (parts, families, diagrams) as shown on the Shareable reports: 1,000 and up rounded down to
+    the nearest 500, 100-999 to the nearest 50, 20-99 to the nearest 10, each with "+"; under 20 exact. Specifications
+    (GHz, kVrms, W, fs) are not counts and never go through here."""
+    n = int(n)
+    step = 500 if n >= 1000 else 50 if n >= 100 else 10 if n >= 20 else 0
+    if not step:
+        return str(n)
+    return f"{n // step * step:,}+"
+
+
+def rounded_count_text(text: str) -> str:
+    """'4,132' or '4132' -> '4,000+'; anything that is not a plain count (a spec, a dash, a word) unchanged."""
+    s = str(text).strip()
+    return round_count(int(s.replace(",", ""))) if _COUNT.fullmatch(s) else str(text)

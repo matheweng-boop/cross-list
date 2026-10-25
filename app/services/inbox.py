@@ -145,6 +145,9 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
         "data/business/tech_overview_answers.yaml (comment, block, text, reply; public-safe check applies).\n"
     )
     out += overview or ["None."]
+    from app.services import share_reports  # the other Shareable reports: same storage and answers file
+
+    out += [x for rep in share_reports.REPORTS.values() for x in tech_overview_edit.inbox_lines(session, start, rep)]
 
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too

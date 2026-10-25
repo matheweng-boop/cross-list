@@ -1,0 +1,16 @@
+{# The technology platform behind this function in the US patent landscape (data/business/evidence/patents_platforms.yaml;
+   owner, 25 Oct 2026: background only, shown here). Expects pat_platform = (key, entry). #}
+{% set pk, pp = pat_platform %}{% set lead = {'skyworks': 'Skyworks stronger', 'qorvo': 'Qorvo stronger', 'both': 'Both strong (overlap)'} %}
+<div class="pt-plat">
+  <p class="small"><b>Platform: {{ pp.label }}</b> · {{ pp.depth|replace('_', ' ') }} · {{ lead.get(pp.leader, pp.leader) }}</p>
+  {% set top = [pp.skyworks, pp.qorvo, 1]|max %}
+  <table class="pt-bars small"><tbody>
+    {% for co, name in (('skyworks', 'Skyworks'), ('qorvo', 'Qorvo group')) %}{% set t = pp.trend[co] %}
+    <tr><th scope="row">{{ name }}</th><td class="n">{{ pp[co] }}</td>
+      <td class="pt-bar-cell"><span class="pt-bar pt-{{ co }}" style="width: {{ '%.0f'|format(100 * pp[co] / top) }}%"></span></td>
+      <td class="muted" title="US families by earliest filing: up to 2019 / 2020–2022 / 2023–2026">{{ t|join(' / ') }} {{ {'rising': '↑', 'steady': '→', 'falling': '↓'}.get(pp.trend_dir[co], '') }}</td></tr>{% endfor %}
+  </tbody></table>
+  {% if pp.auto %}<p class="small">In the car ({{ pp.auto.label }}): Skyworks {{ pp.auto.skyworks }} / Qorvo group {{ pp.auto.qorvo }} families with automotive terms in title, abstract or claims; {{ pp.auto.broad_skyworks }} / {{ pp.auto.broad_qorvo }} in the wider text.</p>{% endif %}
+  <ul class="small">{% for co in ('skyworks', 'qorvo') %}{% for x in (pp.examples[co] or [])[:1] %}<li><a href="{{ x.url }}" rel="noopener">{{ x.id }}</a> {{ x.title }} ({{ x.year }})</li>{% endfor %}{% endfor %}</ul>
+  <p class="small muted">US families, {{ pp.date }}, USPTO Patent Public Search; keyword counts, indicative, not legal advice. Re-run: <code>{{ pp.query }}</code></p>
+</div>

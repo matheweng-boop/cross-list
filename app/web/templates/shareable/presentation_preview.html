@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+{# Presentation preview (owner, 25 Oct 2026): 16:9 slides one at a time (Previous / Next, arrow keys, swipe,
+   thumbnails, full screen); printed, one slide per 13.333 x 7.5 in page. Text sizes are fixed parts of the slide
+   width, so a slide looks the same on a phone, the iPad, a projector and the PDF; long sections were already split
+   into continuation slides by app/services/presentation.py. #}
+<link rel="stylesheet" href="/static/shareable.css">
+<link rel="stylesheet" href="/static/presentation.css">
+<div class="pv-bar">
+  <a href="{{ back }}" class="pv-back">← Back to edit</a>
+  <button type="button" class="pv-print" onclick="window.print()">Save as PDF</button>
+  <form method="get" action="{{ request.url.path }}" class="pv-wmf"><input type="hidden" name="s" value="{{ s }}">{% if deck_slug %}<input type="hidden" name="deck" value="{{ deck_slug }}">{% endif %}
+    <label>Watermark <select name="wm" onchange="this.form.submit()">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>
+    <noscript><button type="submit">Apply</button></noscript></form>
+  <span class="small muted">Save as PDF: choose “Save as PDF” in the print dialog; each slide is one landscape page.</span>
+</div>
+{% if not slides %}
+<p>No sections selected. <a href="{{ back }}">Go back and tick some topics.</a></p>
+{% else %}
+<div class="pv-stage" id="pv-stage" tabindex="-1">
+  <div class="pv-deck" id="pv-deck" aria-roledescription="slide deck" aria-live="polite">
+    {% for sl in slides %}{% set b = sl.body %}
+    <section class="pv-slide pv-{{ sl.kind }}" id="slide-{{ loop.index }}" data-i="{{ loop.index }}" aria-roledescription="slide" aria-label="{{ loop.index }} / {{ total }}: {{ sl.title }}">
+      <div class="pv-in">
+        {% if wm_text %}<div class="pv-wm" aria-hidden="true"><span>{{ wm_text }}</span></div>{% endif %}
+        <header class="pv-band{{ ' pv-band-right' if vals['hdr.logo_align'] == 'right' }}">{% if logo %}<img class="pv-logo" src="/shareable/logo/{{ logo.id }}" alt="Logo">{% endif %}<span>{{ vals['hdr.title'] or 'Skyworks + Qorvo' }}</span></header>
+        {% if sl.kind == 'title' %}
+        <div class="pv-body pv-cover"><h1>{{ b.heading }}</h1><p class="pv-subt">{{ b.sub }}</p><p class="pv-date">{{ b.date|date }}</p></div>
+        {% else %}
+        <h2 class="pv-title">{{ sl.title }}</h2>
+        <div class="pv-body">
+          {% if sl.kind in ('bullets', 'agenda') %}
+            {% if b.lead %}<p class="pv-lead">{{ b.lead }}</p>{% endif %}
+            {% if sl.kind == 'agenda' %}<ol class="pv-points pv-agenda" start="{{ b.start or 1 }}">{% else %}<ul class="pv-points">{% endif %}
+            {% for p in b.points %}<li>{{ p }}</li>{% endfor %}
+            {% if sl.kind == 'agenda' %}</ol>{% else %}</ul>{% endif %}
+          {% elif sl.kind == 'diagram' %}
+            <p class="pv-dname">{{ b.name }}</p>
+            <div class="pv-diagram" style="--cols: {{ b.cols }}">{% for g in b.groups %}
+              <div class="pv-dgrp"><b>{{ g.label }}</b>{% for k in g.blocks %}<span class="pv-blk{{ ' pv-ours' if k.ours }}">{{ k.label }}</span>{% endfor %}</div>{% endfor %}</div>
+            <p class="pv-legend"><span class="pv-blk pv-ours">Skyworks / Qorvo part</span> <span class="pv-blk">other blocks</span></p>
+          {% elif sl.kind == 'parts' %}
+            <table class="pv-table"><thead><tr><th>Function</th><th>Skyworks</th><th>Qorvo</th></tr></thead><tbody>
+            {% for r in b.rows %}<tr><th scope="row">{{ r.fn }}</th>{% for line in ('Skyworks', 'Qorvo') %}<td>{% for p in r.parts[line] %}<code>{{ p.mpn }}</code>{% if p.aec %} <span class="pv-aec">AEC-Q</span>{% endif %}{{ ', ' if not loop.last }}{% endfor %}{% if r.counts[line] %}<small>{{ r.counts[line] }} {{ 'AEC-Q ' if b.automotive }}part{{ '' if r.counts[line] == '1' else 's' }} in the catalogue</small>{% endif %}</td>{% endfor %}</tr>{% endfor %}
+            </tbody></table>
+            <p class="pv-note">Representative parts{% if b.automotive %}; AEC-Q: automotive qualified{% endif %}. Counts: active catalogue parts, rounded.</p>
+          {% elif sl.kind == 'together' %}
+            <ol class="pv-pairs">{% for p in b.pairs %}<li><b><span class="pv-who pv-sky">Skyworks</span> {{ p.skyworks }} <span class="pv-plus">+</span> <span class="pv-who pv-qor">Qorvo</span> {{ p.qorvo }}</b>{% if p.line %}<span>{{ p.line }}</span>{% endif %}{% if p.s_ex or p.q_ex %}<small>For example <code>{{ p.s_ex }}</code> with <code>{{ p.q_ex }}</code>{% if p.n %} · together in {{ p.n }} reference designs{% endif %}</small>{% endif %}</li>{% endfor %}</ol>
+          {% elif sl.kind == 'facts' %}
+            <div class="pv-facts">
+            {% if b.standards %}<div><h3>Standards</h3><ul>{% for x in b.standards %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if b.bands %}<div><h3>Frequency bands</h3><ul>{% for x in b.bands %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if b.specs %}<div class="pv-wide"><h3>Typical specifications of our parts</h3><ul>{% for x in b.specs %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+            </div>
+          {% elif sl.kind == 'glance' %}
+            {% if b.lead %}<p class="pv-lead">{{ b.lead }}</p>{% endif %}
+            <div class="pv-tiles">{% for f in b.facts %}<div><b>{{ f.num }}</b><span>{{ f.label }}</span></div>{% endfor %}</div>
+            {% if b.pairs %}<p class="pv-pairline"><b>Where the two combine:</b> {{ b.pairs|join(' · ') }}</p>{% endif %}
+          {% elif sl.kind == 'closing' %}
+            <p class="pv-closing">{{ b.text }}</p><p class="pv-contact">{{ b.contact }}</p>
+          {% endif %}
+        </div>
+        {% endif %}
+        <footer class="pv-foot"><span>{{ deck_title }} · {{ today|date }} · Public information{% if wm_text %} · {{ wm_text }}{% endif %}</span><span class="pv-n">{{ loop.index }} / {{ total }}</span></footer>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+  <div class="pv-nav" role="toolbar" aria-label="Slides">
+    <button type="button" id="pv-prev" aria-label="Previous slide">‹ Previous</button>
+    <span class="pv-counter" id="pv-counter" aria-live="polite">1 / {{ total }}</span>
+    <button type="button" id="pv-next" aria-label="Next slide">Next ›</button>
+    <button type="button" id="pv-full" class="outline">Full screen</button>
+  </div>
+</div>
+<div class="pv-thumbs" id="pv-thumbs" aria-label="All slides"></div>
+{% endif %}
+<script src="/static/presentation_preview.js" defer></script>
+{% endblock %}

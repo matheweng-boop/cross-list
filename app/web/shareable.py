@@ -28,7 +28,9 @@ BLURBS = {URL: "Four A4 pages on the Skyworks + Qorvo portfolio: technology plat
           "/shareable/synergies": "Three A4 pages for management: manufacturing capabilities, key technologies, "
           "product overlap and where the two combine.",
           "/shareable/automotive": "The automotive extension: technologies in the car, applications by sub-system and "
-          "AEC-Q-qualified pairs."}  # fmt: skip
+          "AEC-Q-qualified pairs.",
+          "/shareable/presentation": "Make your own slides: pick topics such as UWB in the car and their technical "
+          "knowledge, put them in order, preview slide by slide and save as PDF."}  # fmt: skip
 # what the page says after an edit action (?done=...); only these texts can appear
 DONE = {"saved": "Saved.", "nochange": "Nothing changed.", "undone": "Undone: the page shows the version before.",
         "reset": "Back to the default.", "resetall": "Everything is back to the defaults (Undo brings it back).",

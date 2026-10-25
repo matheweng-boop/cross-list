@@ -44,6 +44,7 @@ NAV = (
         ("Technology overview", "/shareable/technology-overview", "Public, ready to share or save as PDF"),
         ("Skyworks + Qorvo synergies", "/shareable/synergies", "For management: capabilities, overlap, pairs"),
         ("Automotive", "/shareable/automotive", "Extension: technologies and applications in the car"),
+        ("Presentation builder", "/shareable/presentation", "Pick topics, preview the slides, save as PDF"),
     )),
 )  # fmt: skip
 
@@ -135,6 +136,7 @@ PLACES = {
     "/shareable/synergies": ("shareable", "/shareable/synergies"),
     "/shareable/automotive": ("shareable", "/shareable/automotive"),
     "/shareable/pack": ("shareable", "/shareable"),
+    "/shareable/presentation": ("shareable", "/shareable/presentation"),
     "/shareable": ("shareable", "/shareable"),
 }
 

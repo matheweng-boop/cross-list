@@ -1,0 +1,152 @@
+/* Shareable > Presentation builder and preview (owner, 25 Oct 2026). Slides are 16:9 and every size inside them is a
+   share of the slide width (cqw), so a slide looks the same on a phone, the iPad, a projector and the printed page;
+   long sections are split into continuation slides on the server instead of shrinking the text. Slides are always
+   light (white paper, the site's pastel accents), also in dark mode, so the screen matches the PDF. */
+
+/* ---- builder ---------------------------------------------------------------------------------------------------- */
+.pb { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
+.pb-msg { padding: .45rem .7rem; border-radius: .4rem; background: color-mix(in srgb, var(--pico-primary) 10%, transparent); }
+.pb-msg.pb-bad { background: var(--cl-worse-bg, #fde8e8); color: var(--cl-worse, #9b1c1c); }
+.pb-group { margin: 0 0 1rem; padding: .5rem .8rem .3rem; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; }
+.pb-group legend { padding: 0 .3rem; font-weight: 600; }
+.pb-topic { border-bottom: 1px solid var(--pico-muted-border-color); padding: .1rem 0; }
+.pb-topic:last-child { border-bottom: 0; }
+.pb-tlabel, .pb-item { display: flex; align-items: center; gap: .55rem; min-height: 44px; margin: 0; overflow-wrap: anywhere; }
+.pb-tlabel input, .pb-item input { flex: none; margin: 0; }
+.pb-items { margin: 0 0 .4rem 1.7rem; padding-left: .7rem; border-left: 3px solid color-mix(in srgb, var(--pico-primary) 35%, transparent); }
+.pb-item { min-height: 40px; font-size: .93rem; }
+.pb-sub { margin: .35rem 0 0; font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; color: var(--pico-muted-color); }
+.pb-note { font-size: .88rem; }
+.pb-left { margin: .4rem 0 1rem; }
+.pb-left summary { cursor: pointer; min-height: 32px; }
+.pb-deck { position: sticky; top: .8rem; padding: .8rem 1rem; border: 1px solid var(--pico-muted-border-color); border-top: 3px solid var(--pico-primary);
+  border-radius: .5rem; max-height: calc(100vh - 1.6rem); overflow-y: auto; }
+.pb-deck h2 { margin: 0 0 .4rem; font-size: 1.15rem; }
+.pb-list { margin: 0 0 .6rem; padding-left: 1.6rem; }
+.pb-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .4rem; padding: .25rem 0; border-bottom: 1px dotted var(--pico-muted-border-color); }
+.pb-name { flex: 1 1 10rem; min-width: 0; font-size: .92rem; overflow-wrap: anywhere; }
+.pb-tools { display: flex; gap: .25rem; }
+.pb-mini { width: auto; margin: 0; min-width: 40px; min-height: 40px; padding: .2rem .55rem; font-size: .9rem; line-height: 1; }
+.pb .pb-del { background: var(--cl-worse-bg, #fde8e8); color: var(--cl-worse, #9b1c1c); border-color: var(--cl-worse, #9b1c1c); }
+.pb-title { flex-basis: 100%; margin: .1rem 0 0 !important; min-height: 40px; padding: .3rem .5rem !important; font-size: .88rem !important; }
+.pb-err { display: block; flex-basis: 100%; color: var(--cl-worse, #9b1c1c); font-size: .8rem; font-weight: 600; }
+.pb-go { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: .4rem 0; }
+.pb-go [role="button"] { min-height: 44px; padding: .5rem 1.4rem; }
+.pb-own { margin: .6rem 0; } .pb-own summary { cursor: pointer; min-height: 40px; }
+.pb-own label { margin: .35rem 0; font-size: .9rem; }
+.pb-own input, .pb-own textarea { margin: .1rem 0 0; }
+.pb-own button { width: auto; min-height: 44px; }
+.pb-saved h3 { margin: .8rem 0 .3rem; font-size: 1rem; }
+.pb-saved ul { padding-left: 1rem; font-size: .92rem; }
+.pb-saved li { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .6rem; }
+.pb-inline { display: inline; margin: 0; }
+@media (max-width: 860px) {
+  .pb { grid-template-columns: minmax(0, 1fr); }
+  .pb-deck { position: static; max-height: none; }
+}
+
+/* ---- preview: the slide ----------------------------------------------------------------------------------------- */
+.pv-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; margin: 0 0 .8rem; }
+.pv-bar button, .pv-bar select { width: auto; margin: 0; min-height: 44px; }
+.pv-back { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.pv-wmf { display: flex; align-items: center; gap: .4rem; margin: 0; } .pv-wmf label { margin: 0; font-size: .9rem; }
+.pv-stage { max-width: 64rem; outline: none; }
+/* the slide is the size container; everything inside it is sized in cqw (a share of the slide's width) */
+.pv-slide { margin: 0 0 1rem; container-type: inline-size; }
+.pv-in { --ink: #1b1f27; --muted: #5b6270; --accent: #0b6b74; --soft: #e7f3f2; --line: #d7dbe3;
+  position: relative; aspect-ratio: 16 / 9; width: 100%; overflow: hidden;
+  display: flex; flex-direction: column; padding: 0 4.5cqw; background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: .4rem; box-shadow: 0 2px 10px rgba(20, 30, 50, .08);
+  font-size: 2cqw; line-height: 1.32; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pv-band { display: flex; align-items: center; gap: 1.2cqw; flex: none; height: 6.4cqw; margin: 0 -4.5cqw; padding: 0 4.5cqw;
+  background: linear-gradient(90deg, var(--soft), #f1eefa); border-bottom: .3cqw solid var(--accent); font-size: 1.35cqw; font-weight: 600; color: var(--accent); }
+.pv-band-right { flex-direction: row-reverse; justify-content: space-between; }
+.pv-logo { height: 4cqw; width: auto; max-width: 16cqw; object-fit: contain; }
+.pv-title { flex: none; margin: 2.2cqw 0 1.4cqw; font-size: 3.1cqw; line-height: 1.15; color: var(--ink); }
+.pv-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.pv-foot { display: flex; justify-content: space-between; gap: 2cqw; flex: none; margin: 0 -4.5cqw; padding: .9cqw 4.5cqw;
+  border-top: .12cqw solid var(--line); font-size: 1.15cqw; color: var(--muted); }
+.pv-lead { margin: 0 0 1.2cqw; font-size: 2.1cqw; color: var(--ink); }
+.pv-points { margin: 0; padding-left: 2.6cqw; }
+.pv-points li { margin: 0 0 .75cqw; padding-left: .3cqw; }
+.pv-points li::marker { color: var(--accent); }
+.pv-agenda li { font-size: 2.2cqw; margin-bottom: 1cqw; }
+.pv-cover { display: flex; flex-direction: column; justify-content: center; padding-bottom: 4cqw; }
+.pv-cover h1 { margin: 0 0 1.5cqw; font-size: 5.2cqw; line-height: 1.1; color: var(--ink); }
+.pv-subt { margin: 0 0 2cqw; font-size: 2.6cqw; color: var(--accent); }
+.pv-date { margin: 0; font-size: 1.7cqw; color: var(--muted); }
+.pv-closing { margin: 4cqw 0 2cqw; font-size: 3cqw; line-height: 1.3; }
+.pv-contact { font-size: 2.1cqw; color: var(--accent); }
+/* diagram: groups as boxes in the library's columns; our blocks filled */
+.pv-dname { margin: 0 0 1cqw; font-size: 1.5cqw; color: var(--muted); }
+.pv-diagram { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 1.1cqw; }
+.pv-dgrp { display: flex; flex-wrap: wrap; align-content: flex-start; gap: .5cqw; padding: .9cqw 1cqw; border: .15cqw solid var(--line); border-top: .45cqw solid var(--accent);
+  border-radius: .7cqw; background: #fafbfd; font-size: 1.35cqw; line-height: 1.2; }
+.pv-dgrp b { flex-basis: 100%; font-size: 1.45cqw; margin-bottom: .2cqw; }
+.pv-blk { display: inline-block; padding: .35cqw .6cqw; border-radius: .5cqw; border: .12cqw solid var(--line); background: #fff; }
+.pv-blk.pv-ours { background: #dff0ec; border-color: #7fb9ae; font-weight: 600; }
+.pv-legend { margin: 1cqw 0 0; font-size: 1.2cqw; color: var(--muted); }
+/* parts */
+.pv-table { width: 100%; border-collapse: collapse; font-size: 1.6cqw; line-height: 1.25; }
+.pv-table th, .pv-table td { padding: .7cqw .9cqw; border-bottom: .12cqw solid var(--line); text-align: left; vertical-align: top; background: transparent; color: var(--ink); }
+.pv-table thead th { font-size: 1.35cqw; color: var(--muted); border-bottom: .25cqw solid var(--accent); }
+.pv-table tbody th { width: 30%; font-weight: 600; }
+.pv-table code { font-size: 1.5cqw; padding: 0 .3cqw; background: #f1f3f7; color: var(--ink); }
+.pv-table small { display: block; margin-top: .3cqw; font-size: 1.2cqw; color: var(--muted); }
+.pv-aec { font-size: 1.1cqw; font-weight: 700; padding: 0 .4cqw; border-radius: .4cqw; background: #e3efd6; color: #3d6118; }
+.pv-note { margin: 1cqw 0 0; font-size: 1.2cqw; color: var(--muted); }
+/* Skyworks + Qorvo pairs */
+.pv-pairs { margin: 0; padding-left: 2.6cqw; }
+.pv-pairs li { margin: 0 0 1.4cqw; }
+.pv-pairs li > b, .pv-pairs li > span, .pv-pairs li > small { display: block; }
+.pv-pairs li > span { font-size: 1.8cqw; margin-top: .3cqw; }
+.pv-pairs small { font-size: 1.35cqw; color: var(--muted); margin-top: .2cqw; }
+.pv-pairs code { font-size: 1.3cqw; background: #f1f3f7; color: var(--ink); padding: 0 .3cqw; }
+.pv-who { display: inline-block; padding: 0 .6cqw; border-radius: 1cqw; font-size: 1.2cqw; color: #fff; vertical-align: .15em; }
+.pv-sky { background: var(--c-sky, #1f5fa8); } .pv-qor { background: var(--c-qor, #c2410c); }
+.pv-plus { color: var(--muted); margin: 0 .4cqw; }
+/* key facts */
+.pv-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2cqw 3cqw; font-size: 1.8cqw; }
+.pv-facts h3 { margin: 0 0 .6cqw; font-size: 1.5cqw; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.pv-facts ul { margin: 0; padding-left: 2.2cqw; }
+.pv-facts li { margin: 0 0 .4cqw; }
+.pv-wide { grid-column: 1 / -1; }
+/* at a glance */
+.pv-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(14cqw, 1fr)); gap: 1.2cqw; margin: .5cqw 0 1.6cqw; }
+.pv-tiles div { display: flex; flex-direction: column; padding: 1cqw 1.2cqw; border-radius: .8cqw; background: var(--soft); border-top: .4cqw solid var(--accent); }
+.pv-tiles b { font-size: 3.4cqw; line-height: 1.1; }
+.pv-tiles span { font-size: 1.45cqw; font-weight: 600; }
+.pv-pairline { font-size: 1.8cqw; }
+/* watermark, inside each slide so it shows in full screen and on every printed page */
+.pv-wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 3; }
+.pv-wm span { transform: rotate(-24deg); font-size: 11cqw; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #1b1f27; opacity: .08; white-space: nowrap; }
+
+/* ---- preview: one slide at a time (with JavaScript) ------------------------------------------------------------- */
+.pv-nav { display: none; }
+.pv-js .pv-slide { display: none; margin: 0; }
+.pv-js .pv-slide.pv-on { display: block; }
+.pv-js .pv-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem 1rem; margin: .7rem 0; }
+.pv-nav button { width: auto; margin: 0; min-height: 44px; min-width: 44px; padding: .45rem 1rem; }
+.pv-counter { min-width: 4.5rem; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pv-thumbs { display: flex; gap: .5rem; overflow-x: auto; padding: .3rem .1rem .6rem; max-width: 64rem; }
+.pv-thumb { flex: none; width: 9.5rem; margin: 0; padding: 0; text-align: left; border: 2px solid transparent; border-radius: .35rem; background: none; cursor: pointer; }
+.pv-thumb[aria-current="true"] { border-color: var(--pico-primary); }
+.pv-thumb .pv-slide { display: block !important; margin: 0; pointer-events: none; }
+.pv-thumb .pv-in { box-shadow: none; border-radius: .2rem; }
+/* full screen: the slide as large as the screen allows, on black */
+.pv-stage.pv-full { position: fixed; inset: 0; z-index: 1000; max-width: none; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; background: #111; padding: 0; }
+.pv-full .pv-deck { width: min(100vw, calc((100vh - 4rem) * 16 / 9)); }
+.pv-full .pv-in { border: 0; border-radius: 0; box-shadow: none; }
+.pv-full .pv-nav { margin: .4rem 0; color: #eee; }
+.pv-stage:fullscreen { background: #111; }
+
+/* ---- printed: one slide per 16:9 page (13.333 x 7.5 in) --------------------------------------------------------- */
+@page { size: 13.333in 7.5in; margin: 0; }
+@media print {
+  .pv-bar, .pv-nav, .pv-thumbs, .pb-deck, .site-head, .site-foot { display: none !important; }
+  .pv-stage { max-width: none; }
+  .pv-js .pv-slide, .pv-slide { display: block !important; width: 13.333in; height: 7.5in; margin: 0; break-after: page; break-inside: avoid; }
+  .pv-slide:last-child { break-after: auto; }
+  .pv-in { width: 13.333in; height: 7.5in; aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; }
+}

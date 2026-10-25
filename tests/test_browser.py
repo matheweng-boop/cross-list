@@ -283,6 +283,53 @@ def test_every_visual_moves_without_errors(page):
     assert total > len(ids)  # most visuals have several controls
 
 
+def test_hex_visual_converts_flips_bits_and_follows_the_word_size(page):
+    """Owner 24 Oct 2026: the hex / binary visual. Typing in one box fills the others, a clicked bit flips, the word
+    size changes the signed reading, and a value too big for the word is refused."""
+    go(page, "/visuals#hex")
+    panel = page.locator("#vz-panel")
+    expect(panel.locator("h2")).to_have_text("Hex, binary and registers")
+    box = {k: panel.locator(f'[data-hx="{k}"]') for k in ("16", "2", "u", "s", "8")}
+    box["16"].fill("0xFF")
+    expect(box["u"]).to_have_value("255")
+    expect(box["2"]).to_have_value("1111 1111")
+    expect(box["s"]).to_have_value("-1")
+    expect(panel.locator(".vz-kpis")).to_contain_text("0xFF")
+    bit7 = panel.locator('.hx-bit[data-bit="7"]')
+    expect(bit7).to_have_attribute("aria-pressed", "true")
+    bit7.click()
+    expect(panel.locator('.hx-bit[data-bit="7"]')).to_have_attribute("aria-pressed", "false")
+    expect(box["16"]).to_have_value("0x7F")
+    panel.locator('select[data-k="w"]').select_option("16")
+    box["s"].fill("-1")
+    expect(box["16"]).to_have_value("0xFFFF")
+    expect(panel.locator(".hx-reg .hx-bit")).to_have_count(16)
+    expect(panel.locator(".vz-more")).to_contain_text("0xFFFF")
+    box["u"].fill("70000")
+    expect(box["u"]).to_have_attribute("aria-invalid", "true")
+    expect(panel.locator(".hx-msg")).to_contain_text("Does not fit in 16 bits")
+    panel.locator(".hx-fields").fill("[15:8] HIGH, [3:0] LOW")
+    expect(panel.locator(".hx-t").first).to_contain_text("HIGH")
+    slider = panel.locator('input[data-k="bit"]')
+    slider.evaluate("r => { r.value = 5; r.dispatchEvent(new Event('input', {bubbles: true})); }")
+    expect(panel.locator(".vz-more")).to_contain_text("Worked example, bit 5")
+
+
+def test_frequency_visuals_draw_the_bands_as_ranges(page):
+    """Owner 24 Oct 2026: "FM is not only at 100 MHz". The wavelength chart shades AM, FM and DAB as ranges, the FM
+    intermodulation chart shades the FM band by region, and the noise-figure visual shows the band strip."""
+    go(page, "/visuals#wave")
+    chart = page.locator("#vz-panel .vz-chart")
+    for label in ("AM", "FM", "DAB", "GNSS", "UWB"):
+        expect(chart.locator("text.vz-bl", has_text=label).first).to_be_attached()
+    expect(page.locator("#vz-panel .vz-more")).to_contain_text("76–108 MHz")
+    page.locator("#vz-nav a[data-id='fmim']").click()
+    for label in ("Japan", "most countries", "OIRT"):
+        expect(page.locator("#vz-panel .vz-chart text.vz-bl", has_text=label).first).to_be_attached()
+    page.locator("#vz-nav a[data-id='nf']").click()
+    expect(page.locator("#vz-panel .vz-strip .vz-sbar").first).to_be_attached()
+
+
 # --- Data management --------------------------------------------------------------------------------------------------
 def test_verify_next_answer_one_with_a_comment(page):
     go(page, "/manage/verify")

@@ -624,7 +624,8 @@ def visuals_page(request: Request, session: Session = Depends(get_session)):
     """Interactive visuals: sliders, live graphs and equations; reference lines from the cross lists."""
     from app.services import visuals
 
-    data = {**visuals.reference_values(session), "creepage": visuals.package_creepage(session)}
+    data = {**visuals.reference_values(session), "creepage": visuals.package_creepage(session),
+            "bands": visuals.band_ranges()}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/visuals.html", {"data": data})
 
 

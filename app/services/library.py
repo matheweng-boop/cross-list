@@ -222,6 +222,8 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id
             ("DAB", "DAB+", "ensemble", "multiplex", "I/Q", "OFDM")),
     "turnon": ("Three-step turn-on: overshoot, ringing, EMI and the filter", "/visuals#turnon",  # static/vz/turnon.js
                ("turn-on", "overshoot", "ringing", "EMI filter", "ProVCD", "di/dt")),
+    "hex": ("Hex, binary and registers", "/visuals#hex",  # static/vz/hex.js
+            ("hexadecimal", "register map", "register maps", "bit field", "bit fields", "endianness")),
     "rf-bands": ("RF bands chart", "/rf-bands", ("GNSS", "LTE", "5G", "V2X", "UWB", "Wi-Fi", "NTN", "band", "bands")),
 }  # fmt: skip
 _NEVER = re.compile(r"(?!x)x")

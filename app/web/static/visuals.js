@@ -45,8 +45,9 @@
     o.push(`<rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" class="vz-plot"/>`);
     for (const b of spec.bands || []) {
       const a = sx(clamp(b.x0, X.min, X.max)), z = sx(clamp(b.x1, X.min, X.max));
-      o.push(`<rect x="${a}" y="${T}" width="${Math.max(0, z - a)}" height="${H - T - B}" fill="${b.color || C.grey}" opacity="${b.opacity || 0.1}"/>`);
-      if (b.label) o.push(`<text class="vz-bl" x="${(a + z) / 2}" y="${H - B - 8}" text-anchor="middle">${esc(b.label)}</text>`);
+      if (b.x1 < X.min || b.x0 > X.max) continue;
+      o.push(`<rect x="${a}" y="${T}" width="${Math.max(b.minw || 0, z - a)}" height="${H - T - B}" fill="${b.color || C.grey}" opacity="${b.opacity || 0.1}"/>`);
+      if (b.label) o.push(`<text class="vz-bl" x="${clamp((a + z) / 2, L + b.label.length * 3.3, W - R - b.label.length * 3.3)}" y="${H - B - 8 - (b.row || 0) * 13}" text-anchor="middle">${esc(b.label)}</text>`);
     }
     for (const t of ticksFor(X)) o.push(`<line class="vz-grid" x1="${sx(t)}" x2="${sx(t)}" y1="${T}" y2="${H - B}"/><text class="vz-tick" x="${sx(t)}" y="${H - B + 16}" text-anchor="middle">${esc((X.fmt || num)(t))}</text>`);
     for (const t of ticksFor(Y)) o.push(`<line class="vz-grid" x1="${L}" x2="${W - R}" y1="${sy(t)}" y2="${sy(t)}"/><text class="vz-tick" x="${L - 6}" y="${sy(t) + 4}" text-anchor="end">${esc((Y.fmt || num)(t))}</text>`);
@@ -111,6 +112,39 @@
     el.innerHTML = o.join("");
   }
   const range = (a, b, n, log) => Array.from({length: n}, (_, i) => (log ? a * (b / a) ** (i / (n - 1)) : a + ((b - a) * i) / (n - 1)));
+
+  // application bands (owner 24 Oct 2026: "add ranges into the graph to accurately show the application. FM is not
+  // only at 100 MHz"): data/engineering_rf_bands.yaml, the source of the RF bands chart, in MHz. Charts draw them as
+  // ranges; a visual that calculates at one frequency keeps that centre value and shows the band strip around it.
+  const BANDS = DATA.bands || {};
+  const mhzR = (a, b) => (b >= 10000 ? `${+(a / 1000).toPrecision(4)}–${+(b / 1000).toPrecision(4)} GHz` : `${+a.toPrecision(5)}–${+b.toPrecision(5)} MHz`);
+  const bandText = id => (BANDS[id] ? BANDS[id].ranges.map(([a, b, l]) => (BANDS[id].ranges.length > 1 ? `${l} ` : "") + mhzR(a, b)).join(", ") : "");
+  // bands whose ranges hold f (MHz), narrowest first
+  const bandsAt = f => Object.entries(BANDS).filter(([, b]) => b.ranges.some(([a, z]) => f >= a && f <= z))
+    .sort((p, q) => Math.min(...p[1].ranges.map(r => r[1] - r[0])) - Math.min(...q[1].ranges.map(r => r[1] - r[0]))).map(([id]) => id);
+  const bandOut = (fMHz, n = 2) => { const ids = bandsAt(fMHz).slice(0, n); return ["Band at this frequency", ids.length ? ids.map(id => `${BANDS[id].name}: ${bandText(id)}`).join(" · ") : "none in the RF bands chart"]; };
+  // chart bands: [[id, label, row, color]] -> plot() bands in the chart's unit (k: MHz -> unit)
+  const appBands = (list, k = 1, sub = false) => list.flatMap(([id, label, row = 0, color = C.teal]) => {
+    const b = BANDS[id];
+    if (!b) return [];
+    const rs = sub && b.sub.length ? b.sub : b.ranges;
+    return rs.map(([a, z, l], i) => ({x0: a * k, x1: z * k, color, opacity: 0.16, minw: 3, row: sub ? i : row, label: sub ? l : i ? "" : label}));
+  });
+  // a strip of the frequency axis around f (MHz): the bands there as ranges (one row each, bars on a log scale) and f
+  // as a line; HTML, not SVG, so the text keeps its size on a phone
+  function bandStrip(f, opts = {}) {
+    const lo = opts.lo || f / 1.6, hi = opts.hi || f * 1.6;
+    const pc = v => (100 * (log10(Math.min(Math.max(v, lo), hi)) - log10(lo))) / (log10(hi) - log10(lo));
+    const mid = b => Math.min(...b.ranges.map(r => Math.abs(log10(Math.sqrt(r[0] * r[1]) / f))));
+    const ids = Object.entries(BANDS).filter(([, b]) => b.ranges.some(([a, z]) => z >= lo && a <= hi))
+      .map(([id, b]) => [id, b, b.ranges.some(([a, z]) => f >= a && f <= z)])
+      .sort((p, q) => q[2] - p[2] || mid(p[1]) - mid(q[1])).slice(0, opts.n || 6);
+    const rows = ids.map(([id, b, on]) => `<div class="vz-sr">${b.ranges.filter(([a, z]) => z >= lo && a <= hi)
+      .map(([a, z]) => `<i class="vz-sbar${on ? " on" : ""}" style="left:${pc(a).toFixed(2)}%;width:${Math.max(0.8, pc(z) - pc(a)).toFixed(2)}%"></i>`).join("")}<span>${esc(b.name)}: ${esc(bandText(id))}</span></div>`).join("");
+    return `<figure class="vz-strip"><figcaption class="small muted">${esc(opts.caption || "Where this frequency sits: the bands around it as ranges (from the RF bands chart)")}</figcaption>
+      <div class="vz-sb" role="img" aria-label="Bands around ${esc(si(f * 1e6, "Hz"))}">${rows || '<div class="vz-sr"><span class="muted">no band of the RF bands chart here</span></div>'}<b class="vz-sf" style="left:${pc(f).toFixed(2)}%"></b>
+      <div class="vz-sax"><span>${esc(si(lo * 1e6, "Hz"))}</span><span class="vz-sfl" style="left:${pc(f).toFixed(2)}%">${esc(si(f * 1e6, "Hz"))}</span><span>${esc(si(hi * 1e6, "Hz"))}</span></div></div></figure>`;
+  }
 
   // Skyworks / Qorvo RF parts (gain, NF, IP3, loss, band) for part suggestions; fetched once, when a visual needs them
   let PARTS = null, partsLoading = false, redraw = null;
@@ -286,7 +320,7 @@
         outputs: [["Blocker after the filter", `${num(pin)} dBm`], ["Noise floor", `${num(N)} dBm`],
           [`IM3 with IIP3 ${num(v.ia)} dBm`, `${num(im3(v.ia))} dBm → SINR ${num(sinr(v.ia))} dB${comp(v.ia) ? ", compressed" : ""}`, tone(v.ia)],
           [`IM3 with IIP3 ${num(v.ib)} dBm`, `${num(im3(v.ib))} dBm → SINR ${num(sinr(v.ib))} dB${comp(v.ib) ? ", compressed" : ""}`, tone(v.ib)],
-          ["Input IP3 needed", isFinite(need) ? `≥ ${num(need)} dBm` : "wanted signal is below the noise: raise it or lower the NF", isFinite(need) ? "" : "bad"]],
+          ["Input IP3 needed", isFinite(need) ? `≥ ${num(need)} dBm` : "wanted signal is below the noise: raise it or lower the NF", isFinite(need) ? "" : "bad"], bandOut(v.f * 1000)],
         eq: `IM3<sub>in</sub> = 3·P<sub>blk</sub> − 2·IIP3 &nbsp;·&nbsp; SINR = P<sub>wanted</sub> − 10 log(10<sup>N/10</sup> + 10<sup>IM3/10</sup>) &nbsp;·&nbsp; IIP3<sub>min</sub> = (3·P<sub>blk</sub> − I<sub>allowed</sub>) / 2`,
         eqn: `IM3 = 3·(${num(pin)}) − 2·(${num(v.ia)}) = ${num(im3(v.ia))} dBm (standard) &nbsp;·&nbsp; ${num(im3(v.ib))} dBm (high linearity) &nbsp;·&nbsp; noise floor ${num(N)} dBm`,
         chart: {x: {min: -90, max: 20, label: "Blocker at the receiver input, per tone (dBm)"}, y: {min: -180, max: 10, label: "Level at the input (dBm)"},
@@ -294,7 +328,7 @@
           hlines: [{y: N, label: `noise floor ${num(N)}`, color: C.grey}, {y: v.pw, label: `wanted ${num(v.pw)}`, color: C.blue, dash: ""}, ...(isFinite(allow) ? [{y: allow, label: "max interference for the SNR", color: C.red}] : [])],
           vlines: [{x: pin, label: "blocker after filter", color: C.purple, row: 1}],
           marks: [{x: pin, y: im3(v.ia), color: C.orange, label: `${num(im3(v.ia))} dBm`}, {x: pin, y: im3(v.ib), color: C.green, label: `${num(im3(v.ib))} dBm`}]},
-        html: `<div class="vz-sugg"><b>Our ${v.pt === "switch" ? "switches" : "LNAs"} at ${num(v.f)} GHz with input IP3 ≥ ${isFinite(need) ? num(need) + " dBm" : "–"}</b>${suggestionHtml(sg, "no part of ours covers this frequency with a stated IP3")}<p class="small muted">From catalogue key specs; IIP3 is taken from the data sheet or as OIP3 − gain. Check the full data sheet.</p></div>`,
+        html: `${bandStrip(v.f * 1000)}<div class="vz-sugg"><b>Our ${v.pt === "switch" ? "switches" : "LNAs"} at ${num(v.f)} GHz with input IP3 ≥ ${isFinite(need) ? num(need) + " dBm" : "–"}</b>${suggestionHtml(sg, "no part of ours covers this frequency with a stated IP3")}<p class="small muted">From catalogue key specs; IIP3 is taken from the data sheet or as OIP3 − gain. Check the full data sheet.</p></div>`,
         note: "Each 1 dB more blocker raises the IM3 product by 3 dB; each 1 dB more IIP3 lowers it by 2 dB. Filtering helps three times over (1 dB more rejection = 3 dB less IM3), but an in-band blocker can only be handled by linearity. If the blocker reaches the input 1 dB compression point (about IIP3 − 10 dB) the receiver is blocked outright.",
       };
     },
@@ -316,35 +350,41 @@
       const dmax = 10 ** ((v.pt + v.g - v.s - 20 * log10(v.f * 1000) - 32.44) / 20);
       const ds = range(0.001, 100, 80, true);
       return {
-        outputs: [["Path loss", `${num(L)} dB`], ["Received", `${num(pr(v.d))} dBm`], ["Margin", `${num(margin)} dB`, margin < 0 ? "bad" : margin < 10 ? "warn" : "ok"], ["Free-space range", si(dmax * 1000, "m")]],
+        outputs: [["Path loss", `${num(L)} dB`], ["Received", `${num(pr(v.d))} dBm`], ["Margin", `${num(margin)} dB`, margin < 0 ? "bad" : margin < 10 ? "warn" : "ok"], ["Free-space range", si(dmax * 1000, "m")], bandOut(v.f * 1000)],
         eq: `FSPL = 20 log<sub>10</sub>(d<sub>km</sub>) + 20 log<sub>10</sub>(f<sub>MHz</sub>) + 32.44 &nbsp;·&nbsp; P<sub>rx</sub> = P<sub>tx</sub> + G − FSPL`,
         eqn: `${num(L)} dB = 20 log(${num(v.d)}) + 20 log(${num(v.f * 1000)}) + 32.44 &nbsp;·&nbsp; ${num(pr(v.d))} dBm = ${v.pt} + ${v.g} − ${num(L)}`,
         chart: {x: {min: 0.001, max: 100, log: true, label: "Distance (km)", fmt: x => si(x * 1000, "m")}, y: {min: -160, max: 40, label: "Received power (dBm)"},
           series: [[0.9, C.grey], [5.8, C.purple], [28, C.teal]].filter(([f]) => Math.abs(f - v.f) > 0.05).map(([f, c]) => ({pts: ds.map(d => [d, v.pt + v.g - fspl(d, f)]), color: c, width: 1.5, dash: "4 3", label: `${f} GHz`}))
             .concat([{pts: ds.map(d => [d, pr(d)]), color: C.blue, width: 3, label: `${num(v.f)} GHz`}]),
           hlines: [{y: v.s, label: `sensitivity ${v.s} dBm`, color: C.red}], marks: [{x: v.d, y: pr(v.d), label: `${num(pr(v.d))} dBm at ${si(v.d * 1000, "m")}`}]},
+        html: `${bandStrip(v.f * 1000, {caption: "The path loss is worked out at one frequency; across a band it changes by 20·log(high / low) dB. The bands around it, as ranges:"})}`,
         note: "Each doubling of distance or frequency costs 6 dB. Higher bands lose more with fixed antenna gains, but an antenna of the same size has more gain at a higher frequency, which is how mmWave links close. Real paths add walls, rain and fading on top of this free-space line.",
       };
     },
     related: [["RF bands", "/rf-bands"]],
   });
 
+  // the application bands on the wavelength chart: [band id, label, label row]; ranges come from the RF bands data
+  const WAVE_BANDS = [["am", "AM", 0], ["fm", "FM", 1], ["dab", "DAB", 2], ["b8", "LTE 900", 0], ["gnss_l5", ""], ["gnss_l2", ""], ["gnss_l1", "GNSS", 1],
+    ["ism24", "2.4 GHz", 2], ["wifi5", "Wi-Fi 5/6", 3], ["wifi6", ""], ["uwb5", ""], ["uwb9", "UWB", 4], ["n257", "n257", 0], ["radar_77", "radar", 1]];
   V.push({
     id: "wave", group: "RF links", title: "Wavelength and antenna size",
     explains: [["UWB", "/knowledge#p-uwb"], ["Broadcast radio tuners", "/knowledge#p-tuners"]],
     physics: [["Antennas and wavelength", "phys_antennas_wavelength"]],
     lead: "Wavelength sets antenna size and tells you when a PCB trace starts behaving like a transmission line.",
-    controls: [{k: "f", label: "Frequency", min: 0.001, max: 100, value: 2.4, unit: "GHz", log: true}],
+    controls: [{k: "f", label: "Frequency", min: 0.0001, max: 100, value: 2.4, unit: "GHz", log: true}],
     compute(v) {
-      const lam = 0.299792458 / v.f, pcb = lam / Math.sqrt(3.3);
+      const lam = 0.299792458 / v.f, pcb = lam / Math.sqrt(3.3), id = bandsAt(v.f * 1000)[0];
+      const span = id ? [Math.min(...BANDS[id].ranges.map(r => r[0])), Math.max(...BANDS[id].ranges.map(r => r[1]))] : null;  // MHz
       return {
-        outputs: [["Wavelength λ", si(lam, "m")], ["λ/4 monopole", si(lam / 4, "m")], ["λ/2 dipole", si(lam / 2, "m")], ["λ on FR-4 microstrip", si(pcb, "m")], ["Trace is a line above ≈ λ/10", si(pcb / 10, "m")]],
+        outputs: [["Wavelength λ", si(lam, "m")], ["λ/4 monopole", si(lam / 4, "m")], ["λ/2 dipole", si(lam / 2, "m")], ["λ on FR-4 microstrip", si(pcb, "m")], ["Trace is a line above ≈ λ/10", si(pcb / 10, "m")],
+          bandOut(v.f * 1000, 1), ...(span ? [[`λ/4 across ${BANDS[id].name}`, `${si(299.792458 / span[1] / 4, "m")} to ${si(299.792458 / span[0] / 4, "m")}`]] : [])],
         eq: `λ = c / f &nbsp;·&nbsp; λ<sub>PCB</sub> ≈ λ / √ε<sub>r,eff</sub> (FR-4 microstrip ε<sub>r,eff</sub> ≈ 3.3)`,
         eqn: `${si(lam, "m")} = 3·10<sup>8</sup> m/s / ${si(v.f * 1e9, "Hz")}`,
-        chart: {x: {min: 0.001, max: 100, log: true, label: "Frequency", fmt: x => si(x * 1e9, "Hz")}, y: {min: 1e-3, max: 300, log: true, label: "Length", fmt: x => si(x, "m")},
-          series: [{pts: range(0.001, 100, 40, true).map(f => [f, 0.299792458 / f]), label: "λ in air"}, {pts: range(0.001, 100, 40, true).map(f => [f, 0.299792458 / f / 4]), color: C.orange, dash: "6 4", label: "λ/4 antenna"}],
-          vlines: [[0.1, "FM"], [0.9, "LTE 900"], [2.4, "Wi-Fi"], [5.8, "5.8 GHz"], [28, "n257"], [77, "car radar"]].map(([f, l], i) => ({x: f, label: l, row: i % 3})),
-          marks: [{x: v.f, y: lam, label: `λ = ${si(lam, "m")}`}]},
+        chart: {x: {min: 0.0001, max: 100, log: true, label: "Frequency (bands as ranges, from the RF bands chart)", fmt: x => si(x * 1e9, "Hz")}, y: {min: 1e-3, max: 3000, log: true, label: "Length", fmt: x => si(x, "m")},
+          series: [{pts: range(0.0001, 100, 50, true).map(f => [f, 0.299792458 / f]), label: "λ in air"}, {pts: range(0.0001, 100, 50, true).map(f => [f, 0.299792458 / f / 4]), color: C.orange, dash: "6 4", label: "λ/4 antenna"}],
+          bands: appBands(WAVE_BANDS, 1e-3), marks: [{x: v.f, y: lam, label: `λ = ${si(lam, "m")}`}]},
+        html: `<p class="small">The shaded ranges are the real bands, not one frequency: FM is ${bandText("fm")} (${BANDS.fm ? BANDS.fm.sub.map(([a, b, l]) => `${l} ${mhzR(a, b)}`).join(", ") : ""}), AM ${bandText("am")}, DAB ${bandText("dab")}. An antenna for a whole band is a compromise across it; the <a href="/rf-bands">RF bands chart</a> lists every band.</p>`,
         note: "At 2.4 GHz a quarter-wave antenna is 31 mm; at 28 GHz it is under 3 mm, small enough to put arrays of them in a package (antenna-in-package). Above λ/10 a trace needs controlled impedance.",
       };
     },
@@ -495,14 +535,14 @@
       const ys = [v.pin, kTB, ...st.flatMap(x => [x.sig, x.noise])], ymin = Math.floor((Math.min(...ys) - 10) / 10) * 10, ymax = Math.ceil((Math.max(...ys) + 10) / 10) * 10;
       return {
         outputs: [["System noise figure", `${num(nf)} dB`], ["Total gain", `${num(gain)} dB`], ["SNR at the antenna → output", `${num(snr0)} → ${num(snrEnd)} dB`, snrEnd < v.snr ? "bad" : ""],
-          ["Noise floor (input)", `${num(kTB + nf)} dBm`], ["Sensitivity", `${num(sens)} dBm`], ...(anyNed ? [["Catalogue data", "Not Enough Data for some blocks: assumed values used", "warn"]] : [])],
+          ["Noise floor (input)", `${num(kTB + nf)} dBm`], ["Sensitivity", `${num(sens)} dBm`], bandOut(v.f * 1000), ...(anyNed ? [["Catalogue data", "Not Enough Data for some blocks: assumed values used", "warn"]] : [])],
         eq: `F = F<sub>1</sub> + (F<sub>2</sub> − 1)/G<sub>1</sub> + (F<sub>3</sub> − 1)/(G<sub>1</sub>G<sub>2</sub>) + … &nbsp;·&nbsp; SNR<sub>k</sub> = P<sub>in</sub> − (−174 + 10 log BW + NF<sub>k</sub>) &nbsp;·&nbsp; S = −174 dBm/Hz + NF + 10 log<sub>10</sub>(BW) + SNR`,
         eqn: `SNR = ${num(v.pin)} − (${num(kTB)} + ${num(nf)}) = ${num(snrEnd)} dB &nbsp;·&nbsp; S = −174 + ${num(nf)} + ${num(db(v.bw * 1e6))} + ${v.snr} = ${num(sens)} dBm`,
         chart: {x: {min: 0, max: Math.max(1, st.length), label: "Block (Ant = antenna, then the output of each block)", fmt: t => (Number.isInteger(t) && t <= st.length ? lab(t) : "")},
           y: {min: ymin, max: ymax, label: "Level (dBm)"},
           series: [{pts: xs.map((x, i) => [x, i ? st[i - 1].sig : v.pin]), color: C.blue, label: "Signal"}, {pts: xs.map((x, i) => [x, i ? st[i - 1].noise : kTB]), color: C.red, label: "Noise in the channel"}],
           marks: xs.map((x, i) => ({x, y: i ? st[i - 1].sig : v.pin, r: 4, color: C.blue, label: i === xs.length - 1 || i === 0 ? `SNR ${num(i ? st[i - 1].snr : snr0)} dB` : ""}))},
-        html: `${tbl}<div class="vz-sugg"><b>Our parts for each block at ${num(v.f)} GHz</b><table class="vz-sugg-t small"><tbody>${rows.join("")}</tbody></table><p class="small muted">Part numbers from catalogue key specs (typical values at the test frequency; active parts only). "Not Enough Data": the catalogue does not state that number, so the block keeps the slider's assumed value. Check the full data sheet before choosing.</p></div>`,
+        html: `${tbl}${bandStrip(v.f * 1000, {caption: "The parts are chosen at one frequency; the band around it is a range (from the RF bands chart)"})}<div class="vz-sugg"><b>Our parts for each block at ${num(v.f)} GHz</b><table class="vz-sugg-t small"><tbody>${rows.join("")}</tbody></table><p class="small muted">Part numbers from catalogue key specs (typical values at the test frequency; active parts only). "Not Enough Data": the catalogue does not state that number, so the block keeps the slider's assumed value. Check the full data sheet before choosing.</p></div>`,
         note: "The blue line is the wanted signal, the red line the noise in the channel. Both rise with gain, but each block adds its own noise, so the gap (SNR) only shrinks: most of it is lost in the first blocks. Put a lossy filter or switch first and the SNR drops by its loss straight away; behind a high-gain LNA, the mixer and ADC hardly matter. That is why low-loss switches, BAW filters and low-NF LNAs sell.",
       };
     },
@@ -573,18 +613,19 @@
       const sir = v.pw - im3, hit3 = prods.some(p => p.hit && p.o === 3);
       const tone = sir < 20 ? "bad" : sir < 35 ? "warn" : "ok";
       const fmt = f => `${num(f, 4)} MHz`;
-      const inBand = f => f >= 76 && f <= 108;
+      const inR = (id, f) => (BANDS[id] ? BANDS[id].ranges : [[76, 108]]).some(([a, z]) => f >= a && f <= z), inBand = f => inR("fm", f);  // the RF bands data
+      const oirt = f => !!BANDS.fm && BANDS.fm.sub.some(([a, z, l]) => /OIRT/.test(l) && f >= a && f <= z);
       const series = [{pts: [[ft, -130], [ft, v.pw]], color: C.green, width: 5, label: "Tuned"}, {pts: [[f1, -130], [f1, v.ps]], color: C.blue, width: 4, label: "A, B"}, {pts: [[f2, -130], [f2, v.ps]], color: C.blue, width: 4}];
       prods.filter(p => p.f >= 60 && p.f <= 120).forEach((p, i) => series.push({pts: [[p.f, -130], [p.f, p.lvl]], color: p.hit ? C.red : C.orange, width: 3, ...(i ? {} : {label: "Products"})}));
-      const rowsP = prods.map(p => `<tr class="${p.hit ? "hit" : ""}"><td>${esc(p.l)}</td><td class="n">${fmt(p.f)}</td><td>${p.o === 3 ? "3rd" : "2nd"}</td><td class="n">${num(p.lvl)} dBm</td><td>${p.hit ? "<b>on your channel</b>" : inBand(p.f) ? "inside the FM band" : p.f >= 174 && p.f <= 240 ? "in DAB Band III" : "outside the FM band"}</td></tr>`).join("");
+      const rowsP = prods.map(p => `<tr class="${p.hit ? "hit" : ""}"><td>${esc(p.l)}</td><td class="n">${fmt(p.f)}</td><td>${p.o === 3 ? "3rd" : "2nd"}</td><td class="n">${num(p.lvl)} dBm</td><td>${p.hit ? "<b>on your channel</b>" : inBand(p.f) ? "inside the FM band" : oirt(p.f) ? "in the old OIRT band" : inR("dab", p.f) ? "in DAB Band III" : "outside the FM band"}</td></tr>`).join("");
       return {
         outputs: [["2A − B / 2B − A", `${fmt(2 * f1 - f2)} / ${fmt(2 * f2 - f1)}`, hit3 ? "bad" : ""], ["Third-order product level", `${num(im3)} dBm`],
           ["Tuned station above it", `${num(sir)} dB${hit3 ? " (product on your channel)" : ""}`, hit3 ? tone : ""],
           ["Image frequency", `${fmt(img)}${imgSt.length ? " · a station is there" : ""}`, imgSt.length && IF > 1 ? "warn" : ""], ["Pairs that hit the tuned channel", String(pairs.length), pairs.length ? "warn" : "ok"]],
         eq: `IM3 at 2f<sub>A</sub> − f<sub>B</sub> and 2f<sub>B</sub> − f<sub>A</sub>, level 3·P − 2·IIP3 &nbsp;·&nbsp; IM2 at f<sub>A</sub> ± f<sub>B</sub> &nbsp;·&nbsp; image = f<sub>tuned</sub> + 2·IF (LO above)`,
         eqn: `2·${num(f1, 4)} − ${num(f2, 4)} = ${fmt(2 * f1 - f2)} &nbsp;·&nbsp; IM3 = 3·(${v.ps}) − 2·(${num(v.iip3)}) = ${num(im3)} dBm &nbsp;·&nbsp; image = ${num(ft, 4)} + 2·${IF} = ${fmt(img)}`,
-        chart: {x: {min: 76, max: IF > 1 ? Math.min(135, Math.max(112, img + 2)) : 112, label: "Frequency (MHz)"}, y: {min: -130, max: 5, label: "Level at the input (dBm)"}, series,
-          bands: [{x0: ft - ch, x1: ft + ch, color: C.green, opacity: 0.15}, {x0: 108, x1: 112, color: C.grey, opacity: 0.08, label: "above FM"}],
+        chart: {x: {min: 64, max: IF > 1 ? Math.min(135, Math.max(112, img + 2)) : 112, label: "Frequency (MHz); FM band by region as ranges"}, y: {min: -130, max: 5, label: "Level at the input (dBm)"}, series,
+          bands: [...appBands([["fm"]], 1, true), {x0: ft - ch, x1: ft + ch, color: C.green, opacity: 0.15}, {x0: 108, x1: 112, color: C.grey, opacity: 0.08, label: "above FM"}],
           vlines: [...(IF > 1 ? [{x: img, label: "image", color: C.purple, row: 0}, {x: half, label: "½ IF", color: C.purple, row: 1}] : []), {x: lo, label: "LO", color: C.grey, row: 2}],
           hlines: [{y: v.pw - 30, label: "30 dB below tuned (est. limit)", color: C.red}]},
         html: `<div class="vz-im small"><div class="vz-imwrap"><table><thead><tr><th>Product of A and B</th><th class="n">Frequency</th><th>Order</th><th class="n">Level (est)</th><th>Where</th></tr></thead><tbody>${rowsP}
@@ -592,6 +633,7 @@
           ${IF > 1 ? `<tr class="${halfSt.length ? "hit" : ""}"><td>Half-IF spur</td><td class="n">${fmt(half)}</td><td>2nd</td><td></td><td>${halfSt.length ? `<b>station at ${halfSt.map(fmt).join(", ")}</b>` : "a strong station here also leaks in"}</td></tr>` : ""}</tbody></table></div>
           <p><b>Station pairs from your list whose 2f<sub>1</sub> − f<sub>2</sub> lands on ${fmt(ft)}</b>: ${pairs.length ? pairs.map(([a, b, f]) => `2·${num(a, 4)} − ${num(b, 4)} = ${num(f, 4)}`).join(" · ") : "none"}.</p>
           <p><b>In plain words.</b> Two strong stations 1.5 MHz apart create products another 1.5 MHz further out on each side (2A − B and 2B − A). These third-order products stay inside the FM band, so no band filter can remove them; only a more linear front end (higher IIP3) or less input level (an attenuator, AGC) helps. Each 1 dB stronger stations make them 3 dB stronger; each 1 dB more IIP3 makes them 2 dB weaker. Second-order products (A + B, A − B) fall outside the FM band (A + B lands in DAB Band III, 174–216 MHz), so a car radio with DAB has to care about them too. The image is the other frequency the mixer converts to the same IF; a classic 10.7 MHz radio has it 21.4 MHz away, where aviation and other services sit.</p>
+          <p><b>The FM band is a range, by region</b> (shaded): ${BANDS.fm ? BANDS.fm.sub.map(([a, b, l]) => `${esc(l)} ${mhzR(a, b)}`).join(" · ") : ""}. A car radio sold worldwide tunes ${bandText("fm")}; DAB Band III is ${bandText("dab")}.</p>
           <p>Our tuners: <a href="/find?q=Si47">Si47xx AM / FM / DAB receivers</a> (low-IF digital architecture: the image is removed by I/Q processing) · Read more: <a href="/rf-notes#iip3_basics">IIP3 in plain words</a> · <a href="/rf-notes#ip3_intermodulation">IP3 and two-tone intermodulation</a> · <a href="/rf-notes#frequency_planning_pitfalls">Frequency planning pitfalls</a> · <a href="/rf-bands?band=fm">FM band</a></p></div>`,
         note: "Levels are estimates for a single front end: IM3 = 3·P − 2·IIP3, IM2 with IIP2 ≈ IIP3 + 20 dB (est). The 30 dB line is a rough limit for clean mono FM (est; stereo needs more). The FM capture effect helps when the tuned station is clearly stronger than the product, and hurts when it is not.",
       };
@@ -943,7 +985,7 @@
           ]};
       }
       return {outputs, eq, eqn, chart,
-        note: "Waveforms: the carrier is drawn only 12 times faster than the tone so you can see it (a real FM station's carrier is about 100 MHz) and the FM swing is capped for drawing. AM's envelope is the audio itself, so any noise that changes the amplitude is heard; FM ignores amplitude, which is why it sounds cleaner and the stronger station 'captures' the receiver. The price is bandwidth: broadcast FM needs about 20 times more than AM."};
+        note: `Waveforms: the carrier is drawn only 12 times faster than the tone so you can see it (a real FM station's carrier is anywhere in ${bandText("fm")}, not one frequency) and the FM swing is capped for drawing. AM's envelope is the audio itself, so any noise that changes the amplitude is heard; FM ignores amplitude, which is why it sounds cleaner and the stronger station 'captures' the receiver. The price is bandwidth: broadcast FM needs about 20 times more than AM.`};
     },
     related: [["Wavelength and antenna size", "#wave"], ["Cascaded noise figure and sensitivity", "#nf"]],
   });
@@ -1220,7 +1262,7 @@
 
   // visuals kept in their own files: each templates/engineering/visuals/_<id>.html include loads a static/vz/<id>.js
   // that pushes a function onto window.VZ_ADD before this file runs; it receives the helpers and adds its definitions
-  for (const add of window.VZ_ADD || []) add({V, DATA, C, num, si, db, undb, log10, clamp, esc, range});
+  for (const add of window.VZ_ADD || []) add({V, DATA, C, num, si, db, undb, log10, clamp, esc, range, BANDS, bandText, bandStrip, appBands, mhzR});
 
   // ------------------------------------------------------------------ page
   const groups = [...new Set(V.map(v => v.group))];

@@ -247,7 +247,10 @@ def table(apps: list[op.Application], asp: dict | None = None, vol: dict | None 
 
 def verdicts(session: Session) -> dict[tuple[str, str], str]:
     """Latest verdict per (dataset, key) for the datasets behind a factor."""
-    q = select(DataReview.dataset, DataReview.key, DataReview.verdict).where(DataReview.dataset.in_(REVIEWED))
+    from app.services.review_history import COMMENT_VERDICTS  # a Data quality comment is not a verdict
+
+    q = select(DataReview.dataset, DataReview.key, DataReview.verdict)
+    q = q.where(DataReview.dataset.in_(REVIEWED), DataReview.verdict.notin_(COMMENT_VERDICTS))
     return {(ds, k): v for ds, k, v in session.execute(q.order_by(DataReview.id))}
 
 

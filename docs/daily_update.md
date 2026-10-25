@@ -23,6 +23,14 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    else from `main`, fix and build what the comments ask
    (same quality bar as the feedback batches: tests for every change, plain-English page text, public data only, the
    polite-access rules for any web research), and add new questions for the owner to `docs/open_questions.md`.
+   **Data quality comments** (inbox section "Data quality comments (being checked)"; owner, 25 Oct 2026: the Data
+   quality questions take a comment and Submit, no yes / no). Each line gives the item, its current value and the
+   comment. Check every one: apply it (fix the data file, with a public source where a figure changes) or find out
+   why the value stands. Then add the item to `data/business/quality_checked.yaml` (dataset, key, date of the run,
+   comment_at = the time printed on the inbox line, note = what was done or found, one or two plain sentences; update
+   the entry if the item is already there). After the merge the site asks the owner again: "Checked: <note> – OK
+   now?", with the comment box and one "Looks right now" button. A comment in that second round comes back in the
+   same section; never answer or close an item yourself.
    For each open request under "Technology review requests", write the review as `data/reviews/<slug>.yaml` in the
    format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
    Standing work when the day's comments leave room: the next unticked lines of `docs/pinout_backlog.md` (pinouts of

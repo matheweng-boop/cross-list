@@ -1,0 +1,203 @@
+# Technology review: TI TPSI3050-Q1 automotive reinforced isolated switch driver (request of 25 Oct 2026:
+# "TPSI3050-Q1: Features and block diagram"). Written 25 Oct 2026 from the public TI datasheet SLVSFJ7D (Rev. D,
+# Aug 2023, downloaded once from ti.com) and the TI product page (cached from the 23 Oct run, no new request), the
+# BizDev catalogue (Skyworks Si875x, Si88xx) and the hot-swap report auto-hv-hot-swap. "est" marks our estimates.
+slug: ti-tpsi3050-q1-isolated-switch
+title: "TI TPSI3050-Q1: an isolated switch driver that sends its own power across the barrier, so a FET becomes a solid-state relay"
+status: draft
+date: 2026-10-25
+maker: TI
+family: isolated_switch_driver
+parts: [TPSI3050-Q1, TPSI3050S-Q1]
+app_area: Automotive
+question: "What are the TPSI3050-Q1's features, what is inside (block diagram), and how does it compare with Skyworks' isolated FET drivers?"
+in_brief:
+  - text: "The TPSI3050-Q1 is an isolated switch driver: with one or two external MOSFETs (or an SCR) it forms a complete isolated solid-state relay (SSR). It needs no isolated supply on the switch side, because it sends power across the barrier together with the on/off signal."
+    conf: high
+    src: s1
+  - text: "Inside are a modulator and transmitter on the input side, an integrated transformer across a reinforced barrier, and a rectifier, shunt regulator (10 V), demodulator and gate driver on the switch side."
+    conf: high
+    src: s1
+  - text: "Key numbers: 5 kVrms reinforced isolation (VDE 0884-17, 7071 Vpk; UL 1577), 10 V gate drive with 1.5 A source / 3 A sink, up to 50 mW spare power for circuits on the switch side, CMTI 100 V/ns, AEC-Q100 Grade 1 (-40 to +125 C), 8-pin wide SOIC."
+    conf: high
+    src: [s1, s2]
+  - text: "Two ways to wire it: two-wire mode (the enable pin, 6.5 to 48 V, is also the power, like a relay coil) or three-wire mode (3 to 5.5 V supply plus a logic enable, faster and more power). Seven power levels are set with one resistor."
+    conf: high
+    src: s1
+  - text: "Against Skyworks: our Si875x isolated FET drivers do the same job (no floating supply needed) but at 2.5 kVrms basic isolation and at or below 7.5 kHz switching; TI's reinforced 5 kVrms barrier is what 400-800 V car batteries ask for. TI lists it at $2.30 at 1k."
+    conf: med
+    src: [s2, s3, s4]
+problem:
+  summary: "Electric cars, chargers and battery racks have many switches that are not switched often but must be isolated from the low-voltage controller: the pre-charge path, the insulation-monitor relays, active discharge of the DC link, and battery disconnects. Mechanical relays and optocoupler-based SSRs are large, wear out or age, and a normal isolated gate driver needs a separate isolated bias supply on the switch side. The part solves this: one chip drives an external FET across a reinforced barrier and makes its own gate supply."
+  points:
+    - text: "No floating supply: a normal isolated gate driver needs an isolated DC-DC or bootstrap on the high-voltage side; here the secondary bias is made from the power sent across the barrier."
+      conf: high
+      src: s1
+    - text: "Replacing relays and optocouplers: TI claims higher reliability, lower power and wider temperature range than mechanical relays and optocouplers."
+      conf: med
+      src: s1
+    - text: "800 V batteries need reinforced isolation (a single barrier that protects a person on its own): basic 2.5 kVrms parts are not enough there."
+      conf: med
+      src: s4
+    - text: "AC and DC loads: back-to-back MOSFETs switch AC (or block current both ways in DC); a single MOSFET is enough for one-way DC; an SCR needs only a pulse."
+      conf: high
+      src: s1
+concept:
+  summary: "The input side drives a high-frequency (89 MHz typical, spread spectrum for CISPR 25 Class 5) alternating current into the primary winding of an integrated transformer. The same carrier carries power and the enable state. On the switch side the induced voltage is rectified, a shunt regulator holds VDDH at about 10 V (with a mid rail VDDM), and a demodulator reads the enable state and drives the gate pin VDRV high or low. Pins: EN, PXFR, VDDP, VSSP on the input side; VDRV, VDDH, VDDM, VSSS on the switch side."
+  blocks:
+    - name: "Control and modulator (input side)"
+      what: "Takes the enable (EN) and the power setting (resistor on PXFR, seven levels); modulates EN onto the 89 MHz carrier. In two-wire mode it is powered from EN itself (6.5-48 V, current limited by the PXFR setting); in three-wire mode from VDDP (3-5.5 V)."
+      why: "Two-wire mode is a drop-in for a relay coil drive; three-wire mode gives more power and faster switching."
+      conf: high
+      src: s1
+    - name: "Transmitter and integrated transformer across a reinforced barrier"
+      what: "Drives the primary winding differentially at high frequency with spread spectrum; the transformer carries power and data. Reinforced isolation: 5 kVrms for 1 minute, 7071 Vpk transient, 1000 Vrms working, 12 kVpk surge, 8.5 mm creepage and clearance."
+      why: "One barrier for signal and power: no separate isolated DC-DC, and enough isolation for 800 V systems. The spread spectrum is there to pass automotive EMI tests."
+      conf: high
+      src: s1
+    - name: "Rectifier and 10 V shunt regulator (switch side)"
+      what: "Rectifies the transformer output and regulates VDDH to 10.2 V typical (9.4-11 V) and a mid rail VDDM; two capacitors (VDDH-VDDM, VDDM-VSSS) store the energy for the gate pulses. Up to 50 mW can be taken for circuits on the switch side."
+      why: "Makes the floating gate supply; the capacitors (about 20 times the FET gate capacitance) give the peak current."
+      conf: high
+      src: s1
+    - name: "Demodulator and gate driver"
+      what: "Decodes the enable state and drives VDRV: 1.5 A peak source, 3 A peak sink, rise 6 ns and fall 5 ns into 100 pF. Active clamp keeps VDRV under 2 V if the secondary loses power. TPSI3050S-Q1: one-shot pulse (about 2.5 us) for SCRs, three-wire mode only."
+      why: "Enough drive for back-to-back MOSFETs, IGBTs or SCRs; the clamp keeps the switch off when power is lost (a safe default)."
+      conf: high
+      src: s1
+    - name: "Protection: UVLO and integrated temperature sensor"
+      what: "Under-voltage lockout on VDDP (2.7 V rising) and VDDH (8.6 V rising, 6.6 V falling); an on-chip temperature sensor stops the power transfer and pulls the driver low at about 173 C (32 C hysteresis); in three-wire mode VDRV goes low about 100 us after VDDP is lost."
+      why: "The FET is never driven with a weak gate voltage, and the chip protects itself. The integrated temperature sensor is an example of sensing built into another IC (see Path to product, temperature sensing)."
+      conf: high
+      src: s1
+datasheet:
+  - section: "1-3 Features, Applications, Description (page 1)"
+    reading: "The simplified schematic shows the main use: DC-link pre-charge with back-to-back MOSFETs. The applications list: SSR, battery management, on-board charger, hybrid / electric powertrain, building and factory automation."
+    watch_out: "The 50 mW auxiliary power is a maximum at the highest power setting; it costs input power and heat."
+    conf: high
+    src: s1
+  - section: "6.3 Recommended operating conditions and 6.5 power ratings"
+    reading: "VDDP 3-5.5 V (three-wire), EN up to 48 V (two-wire); ambient -40 to +125 C. Maximum dissipation 250 mW (three-wire, VDDP 5 V) and 350 mW (two-wire, EN 48 V); RθJA 89.3 C/W."
+    watch_out: "In two-wire mode at 48 V the chip itself can heat up by about 30 C (350 mW x 89 C/W, est); pick the lowest power level that drives the FET."
+    conf: high
+    src: s1
+  - section: "6.6-6.7 Insulation specifications and safety certifications"
+    reading: "Reinforced per DIN EN IEC 60747-17 (VDE 0884-17): VIORM 1414 Vpk, VIOWM 1000 Vrms, VIOTM 7071 Vpk, VIOSM 12 kVpk; UL 1577 5 kVrms for 1 minute; creepage and clearance at least 8.5 mm; CTI at least 600 V."
+    watch_out: "1000 Vrms working voltage covers 800 V battery systems; check the board creepage, not only the package."
+    conf: high
+    src: s1
+  - section: "6.10 Switching characteristics"
+    reading: "Three-wire: EN to gate high 3 us typical (4.5 max), EN to gate low 2.5 us (3 max). Two-wire: first turn-on about 260 us (the secondary must charge first), turn-off 2.4 us."
+    watch_out: "This is a slow on/off switch (relay replacement), not a PWM gate driver for an inverter."
+    conf: high
+    src: s1
+  - section: "8.3 Feature description and Table 8-1 / 8-2 (power levels)"
+    reading: "Seven PXFR resistor values (7.32 to 20 kΩ) set the converter duty cycle from 13.3 % to 93.3 % (three-wire) or the EN current limit (two-wire). The setting is read at power-up."
+    watch_out: "Higher power means more input current and heat; TI gives a design calculator (SLVRBI9) to size it."
+    conf: high
+    src: [s1, s2]
+key_features:
+  - feature: "No isolated secondary supply"
+    value: "Power and signal through one integrated transformer; VDDH 10.2 V typical"
+    meaning: "The chip makes its own gate supply on the high-voltage side."
+    why_it_matters: "Saves the isolated DC-DC, transformer and parts that a normal isolated gate driver needs for each switch."
+    applications: [Pre-charge, Battery disconnect, Insulation monitoring]
+    conf: high
+    src: s1
+  - feature: "Reinforced isolation"
+    value: "5 kVrms (UL 1577), 7071 Vpk VIOTM, 1000 Vrms working (VDE 0884-17); CMTI 100 V/ns"
+    meaning: "One barrier is enough to protect a person; it holds 800 V battery voltage in long-term use."
+    why_it_matters: "This is the gap to our Si875x (2.5 kVrms basic): 800 V car platforms ask for reinforced isolation."
+    applications: [Pre-charge, Battery junction box, On-board charger]
+    conf: high
+    src: [s1, s3]
+  - feature: "Strong 10 V gate drive"
+    value: "1.5 A source / 3 A sink peak; 6 ns rise, 5 ns fall (100 pF)"
+    meaning: "It can switch large MOSFETs, IGBTs or SCRs cleanly."
+    why_it_matters: "Lets the designer pick the external switch (silicon or SiC MOSFET, current and voltage rating) for each job."
+    applications: [Pre-charge, Active discharge, Solid-state relay]
+    conf: high
+    src: s1
+  - feature: "Two-wire or three-wire mode"
+    value: "Two-wire: EN 6.5-48 V powers the chip; three-wire: VDDP 3-5.5 V plus logic EN"
+    meaning: "It can replace a relay coil drive one-for-one, or run from a logic supply for speed and power."
+    why_it_matters: "Easy upgrade from mechanical relays in existing designs (two pins), and a faster option for new ones."
+    applications: [Solid-state relay, Building automation, Battery disconnect]
+    conf: high
+    src: s1
+  - feature: "Auxiliary power on the switch side"
+    value: "Up to 50 mW; seven power levels by resistor"
+    meaning: "Small circuits next to the switch (a comparator, a current sense, a second driver) can run from it."
+    why_it_matters: "TI uses it for overcurrent and overtemperature protection in its SSR reference design; the successor TPSI3100-Q1 adds comparators inside."
+    applications: [Solid-state relay, Pre-charge]
+    conf: high
+    src: [s1, s2]
+  - feature: "Automotive and safety"
+    value: "AEC-Q100 Grade 1 (-40 to +125 C); Functional Safety-Capable (FIT rate, FMD documents); 8-pin SOIC DWZ 7.5 x 5.85 mm"
+    meaning: "Qualified for cars, with documents for ISO 26262 safety analysis."
+    why_it_matters: "Battery and charger makers can use it in safety paths without extra qualification work."
+    applications: [Battery management, On-board charger, Pre-charge]
+    conf: high
+    src: [s1, s2]
+applications:
+  - diagram: "EV high-voltage battery system (wired cell supervision, BDU, BMU) (TI)"
+    role: "Fills the 'Precharge driver (solid-state switch driver)' block and the switches of the insulation monitor in the battery disconnect unit; replaces the pre-charge relay and resistor path drive."
+    conf: high
+  - diagram: "HEV/EV traction inverter (TI reference)"
+    role: "Drives the DC-link active discharge switch (empties the DC-link capacitor after switch-off)."
+    conf: med
+  - diagram: "Automotive low-voltage (12 V / 48 V Li-ion) battery system with BMS, pyrofuse and contactors (TI)"
+    role: "Disconnect and breaker control with back-to-back MOSFETs in place of a contactor in the low-voltage battery."
+    conf: med
+  - diagram: "DC fast charging station (power module + controller + HMI) (TI)"
+    role: "Switches of the insulation monitor (industrial TPSI3050 for the charger side)."
+    conf: med
+  - diagram: "AC solid-state circuit breaker (SSCB) with air-gap relay, AC/DC current sensing, metering and BLE (TI)"
+    role: "Solid-state relay control: drives back-to-back MOSFETs for AC switching."
+    conf: med
+competitors:
+  - maker: Skyworks
+    parts: "Si8751, Si8752 (Si875x isolated FET drivers, automotive and industrial)"
+    how: "Same idea: an isolated FET driver that makes its own gate voltage, no floating supply; Si8751 has a CMOS logic input, Si8752 a diode-emulation input (like an optocoupler LED). Gate voltage typically 8-12 V, switching at or below 7.5 kHz, 2.5 kVrms basic isolation in SOIC-8, AEC-Q100. TPSI3050-Q1 is stronger on isolation (5 kVrms reinforced), gate current and the 48 V two-wire mode."
+    conf: med
+    src: [s3, s5]
+  - maker: Skyworks
+    parts: "Si88xx isolators with integrated DC-DC plus Si828x / Si829x isolated gate drivers"
+    how: "The discrete alternative: an isolated DC-DC makes the floating supply and a gate driver switches the FET. More parts and board area, but faster PWM switching and fault feedback; overkill for a pre-charge or relay switch (est)."
+    conf: med
+    src: [s3, s4]
+  - maker: TI
+    parts: "TPSI3052-Q1, TPSI3100-Q1, TPSI2140-Q1, TPSI3050 (industrial)"
+    how: "TI's own family: TPSI3052-Q1 15 V gate supply (drop-in), TPSI3100-Q1 17 V with two isolated comparators for fault feedback, TPSI2140-Q1 with integrated high-voltage switch for insulation monitoring, TPSI3050 industrial 3 kV version."
+    conf: high
+    src: [s2, s4]
+  - maker: "Infineon, ADI, optocoupler SSR makers"
+    parts: "Isolated SSR drivers and photovoltaic MOSFET drivers"
+    how: "Named in the hot-swap report as other suppliers; optocoupler-based photovoltaic drivers give only microamps of gate current and age with the LED (our judgement, not checked in this run)."
+    conf: low
+    src: s4
+our_position: "Skyworks (with Qorvo) sells the closest part, the Si875x isolated FET driver, but only at 2.5 kVrms basic isolation; TI's TPSI3050-Q1 family has the reinforced 5 kVrms version, a 48 V two-wire mode and successors with comparators. The hot-swap report (auto-hv-hot-swap) proposes a reinforced Si875x successor sold as a pre-charge and disconnect set with our Si828x / Si829x gate drivers, Si89xx isolated current and voltage sensing, Si86xx isolators and Si88xx isolated bias. TI's built-in temperature shutdown shows that the successor should also carry on-chip temperature sensing (est)."
+open_questions:
+  - "Can the Si875x power transfer cross a reinforced 5 kVrms barrier with 10-15 V gate drive, and at what cost against TI's $2.30 (1k)?"
+  - "Do battery-junction-box and on-board-charger customers already ask for a TPSI3050-Q1 cross?"
+  - "Is the 48 V two-wire mode (relay coil replacement) a must-have, or is a logic-input part enough for most sockets?"
+  - "What are the Si875x maximum gate current and turn-on time compared with TPSI3050-Q1 (from the Si875x datasheet)?"
+learn:
+  "5": "An electric car has a very strong battery. To turn parts of it on and off safely, a small chip on the safe side tells a big switch on the dangerous side what to do, without any wire touching both sides. The TPSI3050-Q1 is such a chip, and it even sends the switch the energy it needs."
+  "10": "The chip has two halves separated by a thin wall that electricity cannot cross. A tiny transformer sends energy and a yes/no message through the wall by magnetism. On the other side the chip turns that energy into 10 V and uses it to turn a big transistor on or off. Together they work like a relay, but with no moving parts."
+  "15": "With one or two MOSFETs, the TPSI3050-Q1 makes a solid-state relay. It is used to pre-charge the big capacitor in an electric car before the main contactors close, to discharge it after switch-off, and in insulation monitors. You can power it from the enable pin itself (6.5 to 48 V, like a relay coil) or from a 3-5.5 V supply with a logic enable."
+  "20": "Inside: a modulator and transmitter running an 89 MHz spread-spectrum carrier into an integrated transformer, then a rectifier, a 10 V shunt regulator with a mid rail, a demodulator and a 1.5 A / 3 A gate driver. Isolation is reinforced (5 kVrms, 7071 Vpk, 1000 Vrms working), CMTI 100 V/ns, AEC-Q100 Grade 1. Power transfer is set with one resistor in seven steps, up to 50 mW spare for switch-side circuits. Turn-on takes 3 us in three-wire mode."
+  "25": "Positioning: TI leads automotive isolated SSR drivers with the TPSI3050-Q1 / 3052-Q1 / 3100-Q1 and TPSI2140-Q1 and reference designs for pre-charge and SSR protection. Skyworks' Si875x is the same architecture class at basic 2.5 kVrms. For 800 V platforms the gap is reinforced isolation, gate voltage options (15-17 V for SiC) and fault feedback. A reinforced Si875x successor bundled with our gate drivers, isolated sensing and isolated bias is the answer the hot-swap report proposes."
+learn_links:
+  - {label: "Hot-swap at 400 V and 800 V in the car (report)", href: "/business/reports/auto-hv-hot-swap"}
+  - {label: "Basic vs reinforced isolation", href: "/engineering/isolation_class"}
+  - {label: "Isolation rating", href: "/engineering/isolation_rating_kvrms"}
+  - {label: "CMTI", href: "/engineering/cmti_kv_us"}
+  - {label: "Under-voltage lockout (UVLO)", href: "/engineering/uvlo_v"}
+  - {label: "Automotive grade (AEC-Q100 / Q104)", href: "/engineering/qualification"}
+sources:
+  - {id: s1, title: "TPSI3050-Q1 Automotive Reinforced Isolated Switch Driver With Integrated 10-V Gate Supply, datasheet SLVSFJ7D (Rev. D)", publisher: "Texas Instruments", url: "https://www.ti.com/lit/ds/symlink/tpsi3050-q1.pdf", date: "2023-08", note: "official"}
+  - {id: s2, title: "TPSI3050-Q1 product page (features, price $2.299 at 1k, related parts and documents)", publisher: "Texas Instruments", url: "https://www.ti.com/product/TPSI3050-Q1", date: "read 2026-10-23", note: "official"}
+  - {id: s3, title: "BizDev catalogue: Si8751AB-AS, Si8752AB-AS, Si8751AB-IS, Si8752AB-IS (Si875x isolated FET drivers), Si88xx isolators with integrated dc-dc (data/catalog/skyworks_parts.yaml)", publisher: "BizDev (Skyworks public catalogue)", url: "/parts?q=Si875", date: "2026-10-19", note: "catalogue"}
+  - {id: s4, title: "Report: Hot-swap at 400 V and 800 V in the car (auto-hv-hot-swap), competitor and portfolio notes", publisher: "BizDev", url: "/business/reports/auto-hv-hot-swap", date: "2026-10-23", note: "catalogue"}
+  - {id: s5, title: "AN1052: Selecting a FET for use with the Si875x driver", publisher: "Skyworks Solutions", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1052.pdf", date: "2021-07-26", note: "official"}

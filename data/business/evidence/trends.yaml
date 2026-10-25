@@ -9,10 +9,10 @@
 # ---------------------------------------------------------------- power
 pol_ldo:
   outlook: stable
-  drivers: ["more low-noise rails per SoC, RF and sensor", "integration into PMICs and SoCs"]
-  note: "Each new SoC, radio and camera still needs clean low-noise rails, but many rails move inside PMICs; discrete demand roughly tracks unit volumes."
+  drivers: ["more low-noise rails per SoC, RF and sensor", "integration into PMICs and SoCs", "board space is tight (owner, 25 Oct 2026): LDOs with lower power dissipation win - very low dropout, low quiescent current and small packages that shed heat well", "board space is tight (owner, 25 Oct 2026): higher output accuracy wins, so fewer trim and margin parts are needed around the rail"]
+  note: "Each new SoC, radio and camera still needs clean low-noise rails, but many rails move inside PMICs; discrete demand roughly tracks unit volumes. Owner's view (25 Oct 2026, outlook confirmed): because space constraints are strong, lower power dissipation and higher accuracy will be the prevalent trends. In a small package every watt lost raises the chip temperature, so a lower dropout and a lower quiescent current let the LDO stay in a smaller package; tighter accuracy lets the rail run closer to the load's limit. Support in BizDev data: the Qorvo ACT88321 PMIC review shows the arithmetic (37 C/W, 1.5 W lost = about 55 C rise) and quotes LDO dropout up to 400 mV at 400 mA and accuracy of +/-1 % at 25 C; no public demand figure was found."
   confidence: low
-  sources: ["Texas Instruments, LDO application-note topical index SBVA026, ti.com/lit/SBVA026"]
+  sources: ["Texas Instruments, LDO application-note topical index SBVA026, ti.com/lit/SBVA026", "Owner review, 25 Oct 2026 (space constraints: lower power dissipation and higher accuracy)", "BizDev review qorvo-act88321-pmic (thermal resistance, LDO dropout and accuracy from the Qorvo ACT88321 datasheet)"]
   check:
     status: unconfirmed
     date: 2026-10-19

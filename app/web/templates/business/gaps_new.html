@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import about, company_switch, crowd, path_chip, push, score_chip with context %}
 {% from "business/_priority.html" import prio_bar, prio_chips, prio_weights %}
+{% from "_refs.html" import found_in with context %}
 {% block title %}Gaps & new technology{% endblock %}
 {% block content %}
 <h1>Gaps &amp; new technology</h1>
@@ -23,7 +24,7 @@
   {{ prio_bar(e) }}
   <small>{{ prio_chips(e) }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM {{ e.tam_src.band if e.tam_src and e.tam_src.band else '$' ~ '{:,.0f}'.format(e.tam) }} / year{% if e.tam_src and e.tam_src.layer %} ({{ e.tam_src.layer }}){% endif %}{% endif %}</small>
   <small>{{ score_chip(e) }} {{ path_chip(e.path, path_label) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}</small>
-  <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small></article>{% endmacro %}
+  <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small>{{ found_in(e.fn) }}</article>{% endmacro %}
 
 {% macro cards(items) %}<div class="csg-grid">{% for e in items[:9] %}{{ gap_card(e) }}{% endfor %}</div>
   {% call more(items, 9) %}<div class="csg-grid">{% for e in items[9:] %}{{ gap_card(e) }}{% endfor %}</div>{% endcall %}{% endmacro %}

@@ -111,8 +111,12 @@ def bottom_up(session, idx: list[int], mine: frozenset, n_parts: int = 12) -> di
                                    for p in m["best"]]  # fmt: skip
             e["parts"] = e["parts"][:4]
     pairs = op.cross_sell_pairs(apps, limit=10)
+    from app.services import refmatch
+
+    lib = blocks.templates()
+    anchors = refmatch.anchors_for([lib[i] for i in idx if 0 <= i < len(lib)], blocks.counts(session))
     return {"apps": apps, "ours": ours, "pairs": pairs, "n_gaps": sum(e["status"] != "supported" for e in rows),
-            "n_in_scope": len(rows)}  # fmt: skip
+            "n_in_scope": len(rows), "anchors": anchors}  # fmt: skip
 
 
 LINES = ("Skyworks", "Qorvo")

@@ -1,16 +1,17 @@
 {% extends "base.html" %}
 {% macro url() -%}
-  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view if view != 'types' else '', 'atype': atype, 'sub': sub} -%}{%- set _ = base.update(kwargs) -%}
+  {%- set base = {'q': q, 'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view if view != 'types' else '', 'atype': atype, 'sub': sub, 'diagram': diagram, 'part': part, 'anchor': anchor} -%}{%- set _ = base.update(kwargs) -%}
   /reference-designs?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro fchip(f) %}<a class="lg rd-fn {{ {'supported': 'lg-have', 'gap': 'lg-opp', 'competitor': 'lg-opp'}.get(status.get(f), 'lg-ext') }}" href="{{ url(fn=f) }}" title="{{ bo_status_help.get(status.get(f), '') }}">{{ label[f] }}</a>{% endmacro %}
 {% block content %}
-<h1>Reference designs</h1>
+<h1>{{ heading or 'Reference designs' }}</h1>
+{% if heading %}<p class="small"><b>{{ '{:,}'.format(n) }}</b> public reference design{{ 's' if n != 1 }} · <a href="/reference-designs">all reference designs</a></p>{% endif %}
 <p class="subtitle muted">{{ '{:,}'.format(n_all) }} public reference designs from manufacturers' sites, with links to their design guides, schematics and BOMs.
   Functions are marked <span class="lg lg-have">we have a part</span> or <span class="lg lg-opp">no part of ours</span>; customer parts are grey.</p>
 
 <form method="get" action="/reference-designs" class="rd-search" role="search">
-  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view if view != 'types' else '', 'atype': atype, 'sub': sub}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  {% for k, v in {'vendor': vendor, 'market': market, 'fn': fn, 'iso': 1 if iso else '', 'docs': 1 if docs else '', 'view': view if view != 'types' else '', 'atype': atype, 'sub': sub, 'diagram': diagram, 'part': part, 'anchor': anchor}.items() if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
   <input type="search" name="q" value="{{ q }}" placeholder="Search title, part number or application, e.g. traction inverter, UCC21750" aria-label="Search reference designs">
   <button type="submit">Search</button>
 </form>
@@ -54,6 +55,7 @@
   {% if d.applications %}<p class="small muted">Applications: {{ d.applications[:6]|join(' · ') }}</p>{% endif %}
   {% if d.functions %}<p class="rd-fnrow">{% for f in d.functions %}{{ fchip(f) }}{% endfor %}</p>{% endif %}
   {% if d.parts %}<p class="small">Parts: {% for fam, ms in grouped(d.parts)[:12] %}{% if ms|length > 1 or fam != ms[0]|upper %}<a href="{{ url(view='families', q=ms[0], page=1) }}" title="family {{ fam }}">{{ fam }}</a> <span class="muted">({{ ms|join(', ') }})</span>{% else %}<a href="{{ url(view='families', q=ms[0], page=1) }}">{{ ms[0] }}</a>{% endif %}{{ ', ' if not loop.last }}{% endfor %}{% if grouped(d.parts)|length > 12 %} …{% endif %}</p>{% endif %}
+  {% set anc = anchors_of(d) %}{% if anc %}<p class="small rd-anchor">{% for p, a in anc.items() %}<span class="anchor-badge" title="A part we cross: the socket where our part goes in">Anchor</span> <b>{{ p }}</b> → we cross with <a href="/find?q={{ a.ours|urlencode }}">{{ a.ours }}</a> <span class="muted">({{ a.type }})</span>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
   {% if d.documents %}<p class="small rd-docs">{% for k, v in d.documents.items() if k != 'other' and v %}<a href="{{ v }}" target="_blank" rel="noopener">{{ doc_labels.get(k, k) }} ↗</a>{% endfor %}{% for v in d.documents.other or [] %}<a href="{{ v }}" target="_blank" rel="noopener">Other document ↗</a>{% endfor %}</p>{% endif %}
 </article>
 {% else %}{% if not view %}<p class="muted">No design matches. <a href="/reference-designs">Clear the filters</a>.</p>{% endif %}{% endfor %}

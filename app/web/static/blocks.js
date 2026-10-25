@@ -9,6 +9,9 @@
   const J = id => JSON.parse(document.getElementById(id).textContent);
   const CAT = J("bk-catalogue"), design = J("bk-design"), tpl = J("bk-template"), REQ = J("bk-reqdata"), HELP = J("bk-help");
   let COUNTS = J("bk-counts");
+  // public reference designs: designs per function (gap lines) and this library diagram's anchors (function -> text)
+  const REFS = document.getElementById("bk-refs") ? J("bk-refs") : {counts: {}, anchors: {}};
+  const refLine = fn => REFS.counts[fn] ? `<a class="ref-line" href="/reference-designs?fn=${encodeURIComponent(fn)}">Found in ${REFS.counts[fn]} public reference design${REFS.counts[fn] === 1 ? "" : "s"}</a>` : "";
   const FN = CAT.functions, CATS = CAT.categories;
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   let seq = 1;
@@ -175,6 +178,7 @@
         const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "gap" : st === "ext" ? "customer part" : "");
         parts.push(`<g class="blk st-${st}${DIM.has(st) ? " dim" : ""}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
           `<rect x="${cx}" y="${cy}" width="${BW}" height="${BH}"/>` +
+          (REFS.anchors[b.fn] ? `<text class="b-anchor" x="${cx + BW - 3}" y="${cy + 9}" text-anchor="end"><title>Anchor: ${esc(REFS.anchors[b.fn])}</title>Anchor</text>` : "") +
           wrap(label, 16).slice(0, 2).map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + 15 + k * 13}" text-anchor="middle">${esc(t)}</text>`).join("") +
           `<text class="b-sub" x="${cx + BW / 2}" y="${cy + BH - 5}" text-anchor="middle">${esc(sub.slice(0, 19))}${b.qty > 1 ? ` ×${b.qty}` : ""}</text></g>`);
       });
@@ -241,15 +245,16 @@
     const all = S.groups.flatMap(g => g.blocks);
     const by = {part: 0, have: 0, opp: 0, ext: 0};
     all.forEach(b => (by[status(b)] += b.qty || 1));
-    const opp = {}, chosen = [];
-    all.forEach(b => { if (status(b) === "opp") opp[fnOf(b).label] = (opp[fnOf(b).label] || 0) + (b.qty || 1); if (b.part) chosen.push(`${b.part}${b.qty > 1 ? ` ×${b.qty}` : ""}`); });
+    const opp = {}, oppFn = {}, chosen = [];
+    all.forEach(b => { if (status(b) === "opp") { opp[fnOf(b).label] = (opp[fnOf(b).label] || 0) + (b.qty || 1); oppFn[fnOf(b).label] = b.fn; } if (b.part) chosen.push(`${b.part}${b.qty > 1 ? ` ×${b.qty}` : ""}`); });
     // covered = a part chosen or Skyworks / Qorvo parts available; choosing a part never lowers it
     const total = by.part + by.have + by.opp, covered = by.part + by.have;
     const progress = `Covered <b>${covered}</b> of ${total} blocks <span class="muted">(chosen ${by.part} · options available ${by.have})</span> · <b>${by.opp}</b> gap${by.opp === 1 ? "" : "s"} · ${by.ext} customer part${by.ext === 1 ? "" : "s"}`;
     $("#bk-headline").innerHTML = progress + (by.opp ? ` · <a href="#bk-summary">see the gaps</a>` : "");
     $("#bk-summary").innerHTML = `<p class="bk-progress">${progress}</p>` +
       (chosen.length ? `<p><b>Skyworks bill of materials:</b> ${esc(chosen.join(", "))}</p>` : "") +
-      (Object.keys(opp).length ? `<p><b>Gaps</b> (no Skyworks or Qorvo part in BizDev yet): ${Object.entries(opp).map(([k, n]) => `${esc(k)}${n > 1 ? ` ×${n}` : ""}`).join(" · ")}</p>` : "");
+      (Object.keys(opp).length ? `<p><b>Gaps</b> (no Skyworks or Qorvo part in BizDev yet):</p><ul class="bk-gaps small">${Object.entries(opp).map(([k, n]) => `<li>${esc(k)}${n > 1 ? ` ×${n}` : ""} ${refLine(oppFn[k])}</li>`).join("")}</ul>` : "") +
+      (Object.keys(REFS.anchors).length ? `<p class="small"><span class="anchor-badge">Anchor</span> start here: ${Object.entries(REFS.anchors).map(([f, t]) => `${esc(FN[f]?.label || f)}: ${esc(t)}`).join(" · ")} <a href="#bk-refkb">what the designs around it use</a></p>` : "");
   }
 
   // ---- legend: one button per status; a pressed button is highlighted, the others are greyed out
@@ -469,7 +474,7 @@
       draw("");
     } else if (st === "opp") {
       panel.querySelector("#bk-parts").innerHTML = `<p class="small">No Skyworks part for this function is in BizDev. This can be a gap in the portfolio or a product family not imported yet (full portfolio import is on the backlog).
-        <a href="/manage/requests?kind=part">Add a request</a> if a specific part should be crossed.</p>`;
+        <a href="/manage/requests?kind=part">Add a request</a> if a specific part should be crossed.</p>${refLine(b.fn)}`;
     }
     bindReq(panel, () => showBlock(g, b));
     panel.querySelectorAll("[data-f]").forEach(el => (el.onchange = () => { b[el.dataset.f] = el.dataset.f === "qty" ? Math.max(1, +el.value || 1) : el.value; changed(); }));

@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.session import signed_in_owner
 from app.config import get_settings
 from app.db import count, get_session
 from app.matching import engine
@@ -26,6 +27,7 @@ from app.models import (
     TechFeedback,
 )
 from app.services import blocks, cases, library, patents, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
+from app.services import idea_requests as ir
 from app.services import opportunity as op
 from app.services import portfolio as pf
 from app.services import priority as priority
@@ -1023,6 +1025,7 @@ def product_reports(request: Request, kind: str = "", tag: str = "", session: Se
     tags = sorted({t for r in rp.reports() for t in r.get("tags") or []})
     ctx = {"rows": rows, "kinds": rp.KINDS, "statuses": rp.STATUSES, "kind": kind, "tag": tag, "tags": tags,
            "n_all": len(rp.reports()), "scheduled": schedule.by_source(session, "research")}  # fmt: skip
+    ctx |= {"expansions": ir.by_slug(session), "owner": signed_in_owner(request) is not None}
     return templates.TemplateResponse(request, "business/reports.html", ctx)
 
 
@@ -1085,6 +1088,7 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx["learn"] = rp.learn(r)
     ctx["opener"] = (ctx["case"] or {}).get("opener") or prelim.opener(session, slug)
     ctx["tam_notes"] = tam_notes(request, session, slug)
+    ctx |= {"expansion": ir.get(session, slug), "owner": signed_in_owner(request) is not None}
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

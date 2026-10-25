@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% import "business/_feasibility.html" as fz %}
 {% from "business/_growth.html" import schedule_button %}
+{% from "business/_expand.html" import expand_box %}
 {% macro card(r) %}
   <div class="rp-item"><a class="rp-card" href="/business/reports/{{ r.slug }}">
     <span class="rp-meta small">{{ fz.stage(scheduled.get(r.slug)) }} {{ r.area }} · {{ r.date|date }} {{ fz.feas(r.feasibility, r.feasibility_why) }}</span>
@@ -10,7 +11,8 @@
     <span class="small">{{ r.summary }}</span>
     {% if r.feasibility_why %}<span class="small muted">Feasibility: {{ r.feasibility_why }}</span>{% endif %}
     {% if r.tags %}<span class="rp-tags">{% for t in r.tags %}<span class="badge">{{ t }}</span>{% endfor %}</span>{% endif %}
-  </a>{{ schedule_button(r, scheduled.get(r.slug), request.url.path ~ '?' ~ request.url.query) }}</div>{% endmacro %}
+  </a>{{ schedule_button(r, scheduled.get(r.slug), request.url.path ~ '?' ~ request.url.query) }}
+  {{ expand_box(r, expansions.get(r.slug), owner, request.url.path ~ '?' ~ request.url.query) }}</div>{% endmacro %}
 {% block content %}
 {% set view = request.query_params.get('view') or 'type' %}
 {% set q = 'kind=' ~ kind ~ '&tag=' ~ tag|urlencode %}

@@ -700,3 +700,24 @@ def test_sign_in_passkey_button_calls_credentials_inside_the_tap(page):
     assert calls == [{"kind": "get", "inClick": True, "challenge": True}]
     expect(page.locator("#auth-msg")).to_contain_text("cancelled")
     assert page.locator("#passkey-login").is_enabled()
+
+
+# --- Research & ideas -------------------------------------------------------------------------------------------------
+def test_expand_this_idea_asks_once_and_shows_the_request(page):
+    """Owner, 25 Oct 2026: "Expand this idea" under a card opens a note field; sent, the button is gone on the list
+    and on the report page, replaced by "Expansion requested" and the note (390 px checked after the test)."""
+    go(page, "/business/reports")
+    box = page.locator("details.rp-exp").first
+    slug = box.get_attribute("id").removeprefix("exp-")
+    expect(box.locator("summary")).to_contain_text("a deeper look at the applications before a business case")
+    box.locator("summary").click()
+    box.locator("textarea[name=note]").fill("Robot joints first")
+    with page.expect_navigation():
+        box.get_by_role("button", name="Ask for the expansion").click()
+    done = page.locator(f"#exp-{slug}")
+    expect(done).to_contain_text("Expansion requested")
+    expect(done).to_contain_text("Robot joints first")
+    assert page.locator(f"details#exp-{slug}").count() == 0
+    go(page, f"/business/reports/{slug}")
+    expect(page.locator(f"p#exp-{slug}")).to_contain_text("Robot joints first")
+    assert page.locator("details.rp-exp").count() == 0

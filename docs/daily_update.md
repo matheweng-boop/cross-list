@@ -40,6 +40,17 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.
    Open application area requests (inbox section "Application area requests") are researched the same way; set their
    status on `/blocks/area-requests`.
+   **Idea expansion requests** (inbox section "Idea expansion requests"; the owner's "Expand this idea" button on
+   Research & ideas, owner 25 Oct 2026): for each open request, add a section
+   `<section id="applications-in-depth"><h2>Applications in depth</h2> ...</section>` to that report's body
+   (`app/web/templates/business/reports/<slug>.html`), after the opportunities part, about one page, shorter than a
+   business case. Weigh the owner's note first. Cover: the concrete applications and end products; the customers and
+   system makers (public names only); what the system needs from us (blocks, key specs); volumes and timing where
+   public (our own figures marked est); and how it differs from what we sell today. End it with one more
+   `<p class="rpt-thread"><b>For the decision:</b> ...</p>` line, as the reports.yaml layout asks. Then mark the
+   request done: set `expanded: <date of the run>` on the report's entry in `data/business/reports.yaml` (the site
+   sets the request to Expanded with that date and links the section; the owner can also set it on
+   `/manage/requests?kind=idea`). Public sources only, polite rules as above; at most 1–2 requests per run.
    **Technology overview (Shareable).** The owner's edits to `/shareable/technology-overview` (texts, numbers, dots,
    header, logo and default watermark) are overrides that live in the database with their version history;
    `data/business/tech_overview.yaml` only holds the defaults. A run must never reset, delete or overwrite these

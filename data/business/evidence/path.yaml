@@ -197,15 +197,17 @@ usb_pd_controller:
   sources: ["qorvo_parts.yaml: ACT4752QI101-T, ACT4751MQI101 ('bias supply rails for ... USB PD controllers'), ACT4529YH-T0010"]
 
 temperature_sensor:
+  # Reworked 25 Oct 2026 after the owner's review ("path / temperature_sensor: wrong · I think integrated makes more
+  # sense"): the path is temperature sensing integrated into our own ICs, not a standalone sensor product.
   path: variant
   existing_parts: []
-  catalog_keywords: [Isolated Delta-Sigma Modulator, Isolated Amplifier, NTC]
-  base: "Skyworks Si894x/Si893x isolated modulators and Si892x isolated amplifiers already sense power-module NTCs across the barrier; a dedicated isolated temperature-sense part is a variant."
-  missing: ["NTC/diode excitation + linearisation", "standalone non-isolated digital temp sensor (new design)"]
+  catalog_keywords: [temperature sensor, NTC, Isolated Delta-Sigma Modulator, Isolated Amplifier, gate driver, PMIC, front-end module]
+  base: "Integrated, not standalone (owner, 25 Oct 2026). Temperature sensing is a block we add inside parts we already sell, where it raises their value, rather than a standalone sensor product: standalone sensors are crowded and cheap (11 makers, price-driven) and the owner rates their price too low for us (22 Oct). Our parts already do it: the Skyworks SKY5A2105 V2X front-end module has an on-module temperature sensor for reliability and safety checks; the Qorvo PAC5527 motor controller has temperature monitoring in its protection block; the Qorvo ACT88321 PMIC has a 155 C thermal shutdown; the Skyworks Si894x/Si893x isolated modulators and Si892x isolated amplifiers read power-module NTCs across the barrier; and the Si829x isolated gate driver has a 4-channel ADC that can read the module NTC or diode. Competitors do the same: TI's TPSI3050-Q1 isolated switch driver has an on-chip temperature sensor that stops it at about 173 C (review ti-tpsi3050-q1-isolated-switch). The traction-inverter library notes that gate drivers absorb this sensing (on-chip ADC for NTC/diode temperature). The next steps are the same block in more products: isolators and isolated gate drivers (barrier-side temperature, readout of the power module NTC), PMICs and power stages (die temperature reported over I2C/SPI, not only a shutdown), and RF front ends (PA temperature for power control and safety) (est)."
+  missing: ["a reusable on-chip temperature-sense block with ADC readout (diode / PTAT plus trim) shared across product lines", "NTC / diode excitation and linearisation in isolated gate drivers and modulators", "reporting over SPI / I2C with safety diagnostics (ISO 26262) instead of a shutdown flag only", "no standalone digital temperature sensor: not pursued (crowded, low price)"]
   effort: short
-  route: "build - Skyworks isolation analog line"
+  route: "build - add the block to existing product lines (isolation, gate drivers, PMICs, RF front ends)"
   confidence: medium
-  sources: ["skyworks_parts.yaml: Isolation > Isolated Analog and ADCs (Si894x, Si892x)"]
+  sources: ["owner review, 25 Oct 2026 (integrated makes more sense)", "data/reviews/skyworks-sky5a2105-v2x-fem.yaml (on-module temperature sensor)", "data/reviews/qorvo-pac5527-motor-driver.yaml (temperature monitoring)", "data/reviews/qorvo-act88321-pmic.yaml (155 C thermal shutdown)", "data/reviews/ti-tpsi3050-q1-isolated-switch.yaml (TI datasheet SLVSFJ7D 8.3.9: integrated temperature sensor)", "data/library/topics/traction_asil_d.yaml trend t3 (gate drivers absorb NTC/diode sensing; Si829x 4-channel ADC)", "skyworks_parts.yaml: Isolation > Isolated Analog and ADCs (Si894x, Si892x)", "data/business/competition.yaml temperature_sensor (crowded, price-driven)"]
 
 active_antenna_amp:
   path: variant

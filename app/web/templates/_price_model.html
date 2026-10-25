@@ -56,6 +56,7 @@
 {% endcall %}{% endfor %}
 {% if m.rows and not estimate %}<form method="post" action="/pricing/{{ part.id }}/call" class="pm-call">
   <p class="small"><b>Where do real prices sit?</b>{% if m.call %} Your last call: <span class="pc-v">{{ calls[m.call.verdict] }}</span>{% if m.call.comment %} <span class="muted">· {{ m.call.comment }}</span>{% endif %}{% endif %}</p>
+  {{ review_history(request, 'price', part.mpn, 1 if m.call else 0) }}
   <input type="text" name="comment" maxlength="2000" placeholder="Optional: what you know, e.g. 'about 0.45 at 500k'" aria-label="Comment">
   <span class="pc-btns"><button name="verdict" value="low" class="small-btn outline">Low end</button><button name="verdict" value="ok" class="small-btn outline">In the band</button><button name="verdict" value="high" class="small-btn outline">High end</button></span>
 </form>

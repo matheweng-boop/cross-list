@@ -24,7 +24,7 @@ from app.models import (
     aware,
 )
 from app.services import feedback as fb
-from app.services import guest_input
+from app.services import guest_input, review_history
 from app.services.verify import SOURCE_ANSWERS
 
 
@@ -43,6 +43,12 @@ def _one_line(text: str | None) -> str:
 def _new(session: Session, model, start: datetime) -> list:
     """Rows of ``model`` created since ``start``, oldest first."""
     return session.scalars(select(model).where(model.created_at >= start).order_by(model.created_at)).unique().all()
+
+
+def _earlier(session: Session, r) -> str:
+    """Up to two earlier answers to the same item, so the daily run sees a change of mind."""
+    note = review_history.earlier_note(review_history.history(session, r.dataset, r.key, n=6), before_id=r.id)
+    return f"\n  {note}" if note else ""
 
 
 def _section(title: str, lines: list[str]) -> list[str]:
@@ -80,7 +86,8 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     reviews = _new(session, DataReview, start)
     out += _section("\n## Review answers (data quality, TAM, cases, library, price calls)\n",
                     [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
-                     f"{' · ' + _one_line(r.comment) if r.comment else ''}" for r in reviews])  # fmt: skip
+                     f"{' · ' + _one_line(r.comment) if r.comment else ''}{_earlier(session, r)}"
+                     for r in reviews])  # fmt: skip
 
     # Verify next › Sources (weekly link and source check): ok / fix it / remove, with where it is
     src = session.scalars(select(VerifyTask).where(VerifyTask.kind == "sources", VerifyTask.done_at >= start)

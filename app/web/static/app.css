@@ -2054,3 +2054,22 @@ td.n, th.n, th[data-n] { text-align: right; font-variant-numeric: tabular-nums; 
 .pt-bars { width: 100%; margin: .2rem 0 .4rem; } .pt-bars th, .pt-bars td { padding: .1rem .3rem; border: 0; font-weight: normal; }
 .pt-bar-cell { width: 35%; } .pt-bar { display: block; height: .5rem; min-width: 2px; border-radius: .25rem; }
 .pt-skyworks { background: var(--c-sky); } .pt-qorvo { background: var(--c-qor); }
+/* review history: "History (n)" under a review box, one line per earlier answer (app/web/review_history.py) */
+.rv-hist { display: block; margin: .15rem 0; font-size: .78rem; max-width: 100%; }
+.rv-hist > summary { cursor: pointer; color: var(--pico-muted-color); list-style: none; display: inline; }
+.rv-hist > summary::-webkit-details-marker { display: none; }
+.rv-hist > summary::after { display: none !important; }
+.rv-hist > summary::before { content: "▸ "; }
+.rv-hist[open] > summary::before { content: "▾ "; }
+.rv-hist ul { margin: .15rem 0 .2rem; padding-left: .9rem; }
+.rv-hist li { margin: 0; list-style: disc; overflow-wrap: anywhere; }
+.rv-hist time { color: var(--pico-muted-color); white-space: nowrap; }
+.rv-hist .rh-v { font-weight: 600; }
+.rv-hist .rh-v.v-correct { color: var(--cl-better); } .rv-hist .rh-v.v-wrong { color: var(--cl-worse); }
+.rv-hist .rh-more { display: inline; margin: 0; }
+.rv-hist .rh-more > summary { display: inline; cursor: pointer; text-decoration: underline dotted; list-style: none; }
+.rv-hist .rh-more > summary::-webkit-details-marker { display: none; }
+.rv-hist .rh-more > summary::after { display: none !important; }
+.rv-hist .rh-more[open] > summary { display: none; }
+.rv-hist .rh-more[open] { display: block; }
+.tam-applied .badge { white-space: nowrap; }

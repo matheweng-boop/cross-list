@@ -195,6 +195,7 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
             "templates_": blocks.templates(),
             "tpl_i": tpl_i,
             "verified": blocks.verifications(session).get(blocks.verify_key(tpl)) if tpl else None,
+            "verify_key": blocks.verify_key(tpl) if tpl else "",
             "bare": bare,
         },
     )

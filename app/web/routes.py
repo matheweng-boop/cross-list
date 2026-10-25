@@ -47,7 +47,7 @@ from app.services.queries import (
     search_parts,
     single_cross,
 )
-from app.web import labels, nav
+from app.web import labels, nav, review_history
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -109,6 +109,7 @@ def _passkey_nudge(request: Request) -> bool:
 
 templates.env.globals["passkey_nudge"] = _passkey_nudge
 labels.register(templates.env)
+review_history.register(templates.env)
 templates.env.globals.update(fn_label=vocab.fn_label, family_title=vocab.family_title)
 
 

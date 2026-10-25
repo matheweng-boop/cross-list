@@ -53,7 +53,7 @@
   {% if kind == 'sources' %}{{ source_form(t) }}{% else %}{{ done_form(t) }}{% endif %}
 </article>{% else %}<p class="small muted">Nothing to verify here right now.</p>{% endfor %}
 {% if waiting %}<p class="small muted">{{ waiting }} more in this batch, shown once you have answered the one{{ 's' if shown|length != 1 }} above.</p>{% endif %}
-{% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ answers.get(t.status, t.status) if kind == 'sources' else ('correct' if t.status == 'ok' else 'wrong') }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+{% if done %}<details class="small"><summary>Done ({{ done|length }})</summary><ul>{% for t in done|reverse %}<li><span class="pc-v v-{{ 'correct' if t.status == 'ok' else 'wrong' }}">{{ answers.get(t.status, t.status) if kind == 'sources' else ('correct' if t.status == 'ok' else 'wrong') }}</span> {{ t.title }}{% if t.note %} <span class="muted">· {{ t.note }}</span>{% endif %}{% set d = t.detail or {} %}{% if t.kind == 'data' and d.topic %}{{ review_history(request, ('library:' ~ d.library)[:40] if d.topic == 'library' else d.topic, d.item if d.topic == 'library' else d.fn, 0) }}{% endif %}</li>{% endfor %}</ul></details>{% endif %}
 </section>{% endfor %}
 <script>
   // Verify pop-up: the spec comparison and the answer form side by side

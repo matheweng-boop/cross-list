@@ -16,6 +16,7 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     LargeBinary,
     String,
@@ -366,6 +367,8 @@ class DataReview(Base):
     segment, a platform, an evidence entry): correct, wrong or unsure, with an optional comment."""
 
     __tablename__ = "data_reviews"
+    # answers to one item, newest first (review history); created with the table, existing databases work without it
+    __table_args__ = (Index("ix_data_reviews_item", "dataset", "key", "created_at"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     dataset: Mapped[str] = mapped_column(String(40))  # competition | technology | path | patents | foundry | ...

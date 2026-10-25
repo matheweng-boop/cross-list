@@ -11,7 +11,7 @@
     {% else %}<span class="vbadge">Entered, not verified</span>
       <input type="hidden" name="on" value="1"><input name="author" maxlength="100" placeholder="Your name" aria-label="Verified by">
       <input name="note" maxlength="300" placeholder="How it was checked (optional)" aria-label="How it was checked"><button class="small-btn outline">Mark technically verified</button>{% endif %}
-  </form>{% endif %}
+  {{ review_history(request, 'application', verify_key, 0) if verify_key }}</form>{% endif %}
   <div class="bc-bar">
     <input id="bk-name" type="text" placeholder="Block diagram name" aria-label="Block diagram name">
     <button id="bk-save" type="button" class="small-btn">Save</button>

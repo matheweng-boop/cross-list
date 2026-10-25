@@ -17,6 +17,24 @@ from app.models import DataReview, TamEstimate
 DATASET = "tam"
 _FILE = PROJECT_ROOT / "data" / "business" / "tam.yaml"
 VERDICT = {"correct": "agree", "wrong": "disagree", "unsure": "unsure"}
+_APPLIED = PROJECT_ROOT / "data" / "business" / "tam_applied.yaml"
+
+
+@lru_cache
+def applied() -> dict[str, dict]:
+    """Answers already worked into a report or the market size (data/business/tam_applied.yaml): key -> entry with
+    verdict, date, applied_in (list of {label, href}) and note. These items take no new verdict until the entry is
+    removed (owner, 25 Oct 2026)."""
+    data = (yamlio.load(_APPLIED.read_text()) if _APPLIED.exists() else None) or {}
+    out = {}
+    for e in data.get("applied") or []:
+        where = [str(w) for w in e.get("applied_in") or []]
+        out[str(e["key"])] = {
+            "verdict": e.get("verdict") or "", "date": e.get("date"), "note": e.get("note") or "",
+            "applied_in": [{"label": "TAM page" if w == "TAM page" else w,
+                            "href": "/business/tam" if w == "TAM page" else f"/business/reports/{w}"} for w in where],
+        }  # fmt: skip
+    return out
 
 
 @lru_cache
@@ -62,6 +80,7 @@ def estimates(session: Session) -> list[dict]:
         e["review"] = {"verdict": VERDICT.get(r.verdict, r.verdict), "comment": r.comment or "", "author": r.author,
                        "date": r.created_at} if r else None  # fmt: skip
         e["question"] = question(e)
+        e["applied"] = applied().get(e["key"])
     rows.sort(key=lambda e: (e["product"].lower(), -(e["usd"] or 0)))
     return rows
 

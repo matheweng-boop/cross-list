@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_synergy.html" import syn_card %}
+{% from "_aec.html" import toggle as aec_toggle %}
 {% block content %}
 {# one colour per line, used everywhere on the page: Skyworks, Qorvo, both lines, competitors #}
 {% macro w(v) %}{% set v = (v or '')|lower %}{{ 'w-both' if v in ('both', 'split') or ('skyworks' in v and 'qorvo' in v) else 'w-sky' if 'skyworks' in v else 'w-qor' if 'qorvo' in v else 'w-comp' if v == 'competitor' else 'w-none' }}{% endmacro %}
@@ -88,7 +89,8 @@
 <h2 id="synergies">Synergies</h2>
 <p class="small muted">Functions where one company has the stronger line and the other company's function sits next to it in the library diagrams (same block or a connected one). Offer them together: a Skyworks lead opens the door for the Qorvo part, and the other way round. Strength 0–100 is the Bundle strength used on Cross-sell.</p>
 {% if sel %}<p class="small pf-from">From Cross-sell › By system, <b>{{ sel.label }}</b>: {{ sel.here|length }} of these {{ syn|length }} library-wide pairs meet there (marked). <a href="/blocks/cross-sell?system={{ sel.system }}{{ '&amp;sub=' ~ sel.sub if sel.sub }}#together">The pairs of {{ sel.label }} alone</a></p>{% endif %}
-{% if syn %}<div class="pf-syn">{% for x in syn %}{{ syn_card(x, places=places[(x.skyworks, x.qorvo)], here=sel.label if sel and (x.skyworks, x.qorvo) in sel.here else none) }}{% endfor %}
+{{ aec_toggle(aec, aec_base, '#synergies') }}
+{% if syn %}<div class="pf-syn">{% for x in syn %}{{ syn_card(x, places=places[(x.skyworks, x.qorvo)], here=sel.label if sel and (x.skyworks, x.qorvo) in sel.here else none, aec_only=aec) }}{% endfor %}
 </div>{% else %}<p class="muted small">No pairs found yet.</p>{% endif %}
 
 <h2 id="overlap">Overlap and complements</h2>

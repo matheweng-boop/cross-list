@@ -1,0 +1,6 @@
+{# AEC-Q marks on part chips and the "Automotive-qualified only" filter (owner, 24 Oct 2026). One test for every chip
+   (app/services/autograde.is_aec, Jinja test "aec"); the mark is a text label, never colour only. #}
+{% macro mark(ok) %}{% if ok %}<small class="aec-mark aec-yes" title="Automotive grade (AEC-Q) stated in the catalogue or data">AEC-Q</small>{% else %}<small class="aec-mark aec-no" title="No automotive grade (AEC-Q) stated">not automotive</small>{% endif %}{% endmacro %}
+{% macro hidden(n) %}{% if n %}<small class="aec-hidden">{{ n }} non-automotive part{{ 's' if n != 1 }} hidden</small>{% endif %}{% endmacro %}
+{% macro toggle(on, base, frag='') %}{% set sep = '' if base.endswith('?') else ('&' if '?' in base else '?') %}<div class="chip-row aec-filter"><span class="chip-lbl">Filter</span><a class="fchip{{ ' on' if on }}" role="button" aria-pressed="{{ 'true' if on else 'false' }}" href="{{ base }}{{ sep }}aec={{ '0' if on else '1' }}{{ frag }}">Automotive-qualified only</a>{% if on %}<small class="muted">AEC-Q parts only</small>{% endif %}</div>{% endmacro %}
+{% macro chip(p, k) %}{% set mpn = p if p is string else p.mpn %}{% set ok = p.aec if p is mapping and p.aec is defined else p is aec %}<a class="badge ln-{{ k }} aec-chip" href="/parts?q={{ mpn|urlencode }}">{{ mpn }} {{ mark(ok) }}</a>{% endmacro %}

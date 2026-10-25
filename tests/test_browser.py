@@ -232,6 +232,28 @@ def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     assert "system=automotive" in page.url and page.locator("#together").is_visible()
 
 
+def test_cross_sell_parts_table_and_automotive_filter(page):
+    """Owner, 24-25 Oct 2026: the Skyworks and Qorvo parts table tops the selection; on Automotive the
+    "Automotive-qualified only" filter is on (AEC-Q chips only, the hidden count shown), one click shows every part
+    with its "not automotive" mark, and a pair link jumps to its card. Both views are checked at 390 px too."""
+    go(page, "/blocks/cross-sell?system=automotive&sub=powertrain")
+    table = page.locator("#parts-here")
+    expect(table.get_by_role("heading", name=re.compile("Skyworks and Qorvo parts here"))).to_be_visible()
+    toggle = page.get_by_role("button", name="Automotive-qualified only")
+    expect(toggle).to_have_attribute("aria-pressed", "true")
+    expect(table.locator(".aec-no")).to_have_count(0)
+    with page.expect_navigation():
+        toggle.click()
+    assert "aec=0" in page.url
+    expect(page.get_by_role("button", name="Automotive-qualified only")).to_have_attribute("aria-pressed", "false")
+    expect(page.locator("#parts-here .aec-yes").first).to_be_visible()
+    link = page.locator("#parts-here a.xs-pair").first
+    if link.count():
+        target = link.get_attribute("href")
+        link.click()
+        expect(page.locator(target)).to_be_in_viewport()
+
+
 # --- Engineering knowledge --------------------------------------------------------------------------------------------
 def test_rf_bands_type_and_application_chips_change_the_chart(page):
     go(page, "/rf-bands")

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import company_switch with context %}
 {% from "_synergy.html" import syn_card %}
+{% from "_aec.html" import chip, hidden, toggle %}
 {% block title %}Cross-sell{% endblock %}
 {% macro why(w, a_label, b_label) %}<details class="why small"><summary>Why?</summary>
   <p>{{ w.summary|capitalize }}.</p>
@@ -12,10 +13,10 @@
 <h1>Cross-sell</h1>
 <p class="subtitle muted">Bottom up: pick a system, a sub-system or one diagram from the <a href="/blocks">Application library</a> and see which of {{ co_label }}'s parts go together in it.
   Modeled from the reference diagrams (two functions in the same design), not from sales. Gaps and new technology are under <a href="/business/opportunities">Opportunities</a>.</p>
-{% set extra = ('&system=' ~ system if system else '') ~ ('&sub=' ~ sub if sub else '') ~ ('&template=' ~ template if template is not none else '') %}
+{% set extra = ('&system=' ~ system if system else '') ~ ('&sub=' ~ sub if sub else '') ~ ('&template=' ~ template if template is not none else '') ~ ('&aec=' ~ aec_param if aec_param else '') %}
 <div class="scope-bar small">{{ company_switch('/blocks/cross-sell', co, companies, extra) }}</div>
 <form method="get" action="/blocks/cross-sell" class="sys-select small">
-  <input type="hidden" name="co" value="{{ co }}">
+  <input type="hidden" name="co" value="{{ co }}">{% if aec_param %}<input type="hidden" name="aec" value="{{ aec_param }}">{% endif %}
   <label>System or sub-system <select name="sel" onchange="this.form.submit()"><option value="">– pick one –</option>
     {% for s in tree %}<optgroup label="{{ s.title }}"><option value="{{ s.key }}"{{ ' selected' if system == s.key and not sub }}>{{ s.title }}: all</option>
       {% for x in s.subsystems %}<option value="{{ s.key }}:{{ x.key }}"{{ ' selected' if system == s.key and sub == x.key }}>{{ x.title }} ({{ x.idx|length }})</option>{% endfor %}</optgroup>{% endfor %}</select></label>
@@ -28,11 +29,20 @@
 <h2>{{ picked.label }} <small class="muted">· {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }}</small></h2>
 {% if template is not none %}<p class="small"><a href="/blocks/new?template={{ template }}">Open the diagram</a>{% if system %} · <a href="/blocks/cross-sell?co={{ co }}&amp;system={{ system }}{{ '&sub=' ~ sub if sub }}">back to all diagrams of the selection</a>{% endif %}</p>
 {% elif system and sub %}<p class="small"><a href="/blocks?system={{ system }}&amp;sub={{ sub }}#sub-{{ sub }}">See the diagrams in the Application library</a></p>{% endif %}
-<h3>Our parts that go together <small class="muted">· {{ xs.ours|length }} of {{ xs.n_in_scope }} functions have a part of ours</small></h3>
+{{ toggle(aec, aec_base) }}
+{% if table.rows %}<section class="xs-lines" id="parts-here" aria-labelledby="xs-lines-h">
+  <h3 id="xs-lines-h">{{ table.lines|join(' and ') }} parts here <small class="muted">· {{ table.rows|length }} function{{ 's' if table.rows|length != 1 }}, most used first</small></h3>
+  <div class="table-wrap"><table class="xs-lines-table">
+    <thead><tr>{% for l in table.lines %}<th scope="col" class="ln-{{ l|lower }}">{{ l }} <small class="muted">· {{ table.count[l] }} part{{ 's' if table.count[l] != 1 }} in {{ table.fns[l] }} function{{ 's' if table.fns[l] != 1 }}</small></th>{% endfor %}</tr></thead>
+    {% for r in table.rows %}<tbody{% if r.pairs.values()|select|list %} class="xs-syn"{% endif %}><tr class="xs-fn"><th scope="rowgroup" colspan="{{ table.lines|length }}">{{ r.label }} <small class="muted">· in {{ r.n_apps }} of {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }}</small></th></tr>
+      <tr>{% for l in table.lines %}<td class="ln-{{ l|lower }}">{% for p in r.cells[l] %}{{ chip(p, l|lower) }} {% else %}<span class="muted small">{{ 'no AEC-Q part' if aec else '–' }}</span>{% endfor %}{% for pr in r.pairs[l] %} <a class="xs-pair small" href="#pair-{{ pr.j }}" title="Synergy pair: see the card below">↓ pair with {{ pr.other }}</a>{% endfor %}</td>{% endfor %}</tr></tbody>{% endfor %}
+  </table></div>
+  {{ hidden(table.hidden) }}
+</section>{% endif %}
+<h3>Our parts that go together <small class="muted">· {{ xs.ours|length }} of {{ xs.n_in_scope }} functions have a part of ours{% if table.rows %}; the parts are in the table above{% endif %}</small></h3>
 {% if xs.ours %}<div class="table-wrap"><table class="striped xs-table">
-  <thead><tr><th scope="col">Function</th><th scope="col">In diagrams</th><th scope="col">Our parts</th><th scope="col"></th></tr></thead>
+  <thead><tr><th scope="col">Function</th><th scope="col">In diagrams</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in xs.ours %}<tr><td>{{ e.label }}</td><td>{{ e.n_apps }} of {{ xs.apps|length }}</td>
-    <td>{% for p in e.parts %}<a href="{{ p.url }}" title="{{ p.manufacturer|vendor }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% else %}<span class="muted">see What sells with it</span>{% endfor %}</td>
     <td><a class="small" href="/business/attach?co={{ co }}&amp;fn={{ e.fn|urlencode }}">What sells with it</a></td></tr>{% endfor %}</tbody>
 </table></div>{% else %}<p class="small muted">No part of ours in these diagrams yet.</p>{% endif %}
 <h3>Bundles <small class="muted">· two of our functions in the same diagram</small></h3>
@@ -44,9 +54,9 @@
 {% if tog %}<section class="xs-together" id="together" aria-labelledby="xs-tog">
   <h3 id="xs-tog">Skyworks + Qorvo together here <small class="muted">· {{ tog.synergies|length }} pair{{ 's' if tog.synergies|length != 1 }}{% if tog.bundles %}, {{ tog.bundles|length }} bundle{{ 's' if tog.bundles|length != 1 }}{% endif %}</small></h3>
   <p class="small muted">Where a strong Skyworks line and a strong Qorvo line meet in these diagrams (same block or connected blocks), strongest first; supply-only links last. Strength 0–100 is the Bundle strength.</p>
-  {% if tog.synergies %}<div class="pf-syn">{% for x in tog.synergies %}{{ syn_card(x, total=xs.apps|length) }}{% endfor %}</div>{% endif %}
+  {% if tog.synergies %}<div class="pf-syn">{% for x in tog.synergies %}{{ syn_card(x, total=xs.apps|length, aec_only=aec, anchor=loop.index) }}{% endfor %}</div>{% endif %}
   {% for x in tog.bundles %}<div class="pf-bundle small"><b><a href="/blocks/new?template={{ x.i }}">{{ names[x.i]|truncate(90) }}</a></b> <span class="muted">· curated bundle</span><p>{{ x.pitch|unit }}</p>
-    <div class="pf-two">{% for m, k in (('Skyworks', 'skyworks'), ('Qorvo', 'qorvo')) %}<div class="ln-{{ k }} pf-pick"><b>{{ m }}</b>{% for b in x[k] or [] %}<div>{{ fn_label(b.function) }}: {% for mpn in b.parts or [] %}<a class="badge ln-{{ k }}" href="/parts?q={{ mpn|urlencode }}">{{ mpn }}</a> {% endfor %}</div>{% endfor %}</div>{% endfor %}</div>
+    <div class="pf-two">{% for m, k in (('Skyworks', 'skyworks'), ('Qorvo', 'qorvo')) %}<div class="ln-{{ k }} pf-pick"><b>{{ m }}</b>{% for b in x[k] or [] %}{% set ps = b.parts or [] %}{% set shown = ps|select('aec')|list if aec else ps %}<div>{{ fn_label(b.function) }}: {% for mpn in shown %}{{ chip(mpn, k) }} {% endfor %}{{ hidden(ps|length - shown|length) }}</div>{% endfor %}</div>{% endfor %}</div>
   </div>{% endfor %}
   <p class="small">Both lines supply blocks in {{ tog.n_both }} of {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }} here. <a href="/portfolio?{{ sel_q }}#synergies">Library-wide synergies and bundles: Skyworks + Qorvo portfolio</a></p>
 </section>{% endif %}

@@ -236,7 +236,7 @@
     </div>
     <div class="to-subs">
       {% for s in m.subsystems %}{% set sk = k ~ '.sub.' ~ s.key %}
-      <div class="to-sub-row"><b>{{ F(sk ~ '.title') }}</b><span>{{ F(sk ~ '.line') }}</span><span class="to-series">{% for x in s.series %}<code>{{ x }}</code> {% endfor %}</span></div>
+      <div class="to-sub-row"><b>{{ F(sk ~ '.title') }}</b><span>{{ F(sk ~ '.line') }}</span><span class="to-series">{% for x in s.series %}<span class="to-ser"><code>{{ x }}</code>{% if s.aec %} <small>{{ '{:,}'.format(s.aec[x]) }} AEC-Q</small>{% endif %}</span> {% endfor %}</span></div>
       {% endfor %}
     </div>
     <p class="to-on small"><span class="muted">Platforms</span> {% for pk in m.platforms %}{{ vals['plat.' ~ pk ~ '.label'] }}{{ ' · ' if not loop.last }}{% endfor %}</p>

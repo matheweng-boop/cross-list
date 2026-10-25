@@ -6,12 +6,14 @@ from datetime import date
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.services import presentation as pr
+from app.services import presentation_pptx as pp
+from app.services import site_guard, uploads
 from app.services import tech_overview_edit as te
 from app.web.routes import templates
 
@@ -63,22 +65,50 @@ def builder(request: Request, session: Session = Depends(get_session)):
     return _builder(request, session, _ids(request, deck), deck)
 
 
-@router.get(URL + "/preview", response_class=HTMLResponse)
-def preview(request: Request, session: Session = Depends(get_session)):
-    """The slides, one at a time on screen (Previous / Next, arrow keys, swipe, thumbnails, full screen) and one per
-    16:9 page when printed."""
+def _view(request: Request, session: Session) -> dict:
+    """What the preview and the PowerPoint download share: the slides, the deck title, watermark and logo."""
     deck = _deck(request, session)
     ids = _ids(request, deck)
     ovals = te.values(te.overrides(session))
     opts = te.view_options(ovals, request.query_params)
-    slides = pr.build(ids, deck)
     q = {"s": pr.query(ids)} | ({"deck": deck["slug"]} if deck else {})
-    back = f"{URL}?{urlencode(q, safe=',')}"
-    return templates.TemplateResponse(request, "shareable/presentation_preview.html", {
-        "slides": slides, "total": len(slides), "deck_title": (deck or {}).get("title") or pr.DEFAULT_TITLE,
-        "today": date.today(), "vals": ovals, "logo": te.logo_of(session, ovals), "wm_text": opts["wm_text"],
-        "wm": opts["wm"], "watermarks": te.WATERMARKS, "back": back, "s": pr.query(ids),
-        "deck_slug": (deck or {}).get("slug", "")})  # fmt: skip
+    return {"slides": pr.build(ids, deck), "deck_title": (deck or {}).get("title") or pr.DEFAULT_TITLE,
+            "today": date.today(), "vals": ovals, "logo": te.logo_of(session, ovals), "wm_text": opts["wm_text"],
+            "wm": opts["wm"], "s": pr.query(ids), "deck_slug": (deck or {}).get("slug", ""),
+            "back": f"{URL}?{urlencode(q, safe=',')}",
+            "pptx": f"{URL}/pptx?{urlencode(q | {'wm': opts['wm']}, safe=',')}"}  # fmt: skip
+
+
+@router.get(URL + "/preview", response_class=HTMLResponse)
+def preview(request: Request, session: Session = Depends(get_session)):
+    """The slides, one at a time on screen (Previous / Next, arrow keys, swipe, thumbnails, full screen) and one per
+    16:9 page when printed."""
+    v = _view(request, session)
+    return templates.TemplateResponse(request, "shareable/presentation_preview.html", v | {
+        "total": len(v["slides"]), "watermarks": te.WATERMARKS})  # fmt: skip
+
+
+def _logo_bytes(up) -> bytes | None:
+    """The header logo for PowerPoint: PNG / JPEG / GIF only (an SVG logo would need a converter; left out)."""
+    if up is None or up.content_type not in ("image/png", "image/jpeg", "image/gif"):
+        return None
+    path = uploads.path_of(up.file_name)
+    return path.read_bytes() if path else None
+
+
+@router.get(URL + "/pptx")
+def pptx(request: Request, session: Session = Depends(get_session)):
+    """The preview's slides as an editable PowerPoint file (same address parameters as the preview)."""
+    v = _view(request, session)
+    if not v["slides"]:
+        return RedirectResponse(v["back"], status_code=303)
+    data = pp.build(v["slides"], v["deck_title"], v["today"], v["wm_text"], _logo_bytes(v["logo"]))
+    found = [h for t in pp.texts(data) for x in t for h in site_guard.hits(x)]
+    if found:  # never expected: every slide already passed the word check
+        raise HTTPException(409, "This presentation cannot be downloaded: it failed the public-safe word check.")
+    name = pp.filename(v["deck_title"])
+    return Response(data, media_type=pp.MEDIA_TYPE, headers={
+        "Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "private, no-store"})  # fmt: skip
 
 
 def _form_deck(form) -> dict:

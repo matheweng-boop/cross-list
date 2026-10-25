@@ -6,6 +6,7 @@
   if (!pick || !list) return;
   const hidden = document.getElementById("pb-s");
   const preview = document.getElementById("pb-preview");
+  const pptx = document.getElementById("pb-pptx");
   const count = document.getElementById("pb-count");
   const empty = document.querySelector(".pb-empty");
   const owner = !!document.querySelector(".pb-own");
@@ -52,6 +53,7 @@
     hidden.value = s;
     const q = "s=" + s + (deck ? "&deck=" + encodeURIComponent(deck.value) : "");
     preview.href = pick.action.replace(/\/$/, "") + "/preview?" + q;
+    if (pptx) { pptx.href = pick.action.replace(/\/$/, "") + "/pptx?" + q; pptx.hidden = ids.length === 0; }
     count.textContent = ids.length + (ids.length === 1 ? " section" : " sections");
     if (empty) empty.hidden = ids.length > 0;
     history.replaceState(null, "", location.pathname + (ids.length || deck ? "?" + q : ""));

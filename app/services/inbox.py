@@ -16,6 +16,7 @@ from app.models import (
     BlockFeedback,
     CrossFeedback,
     DataReview,
+    IdeaRequest,
     Part,
     ReportQuestion,
     SiteFeedback,
@@ -130,6 +131,15 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += [f"- {_when(a.created_at)} [{a.status}] {_one_line(a.area)}{' · why: ' + _one_line(a.why) if a.why else ''}"
             f"{' · ' + a.author if a.author else ''}" for a in areas] or ["None."]  # fmt: skip
 
+    # "Expand this idea" on Research & ideas: every open one, and those closed since the last pull
+    ideas = [i for i in session.scalars(select(IdeaRequest).order_by(IdeaRequest.created_at))
+             if i.status == "new" or aware(i.updated_at or i.created_at) >= start]  # fmt: skip
+    out.append("\n## Idea expansion requests\n")
+    out.append("Add an \"Applications in depth\" section to each report (docs/daily_update.md), then set the status "
+               "to Expanded on Data management > Site data > Requests (/manage/requests?kind=idea).\n")  # fmt: skip
+    out += [f"- {_when(i.created_at)} [{i.status}] {i.slug}: {_one_line(i.title)}"
+            f"{' · note: ' + _one_line(i.note) if i.note else ''}" for i in ideas] or ["None."]  # fmt: skip
+
     # guest input: only what the owner approved (already applied, with names); pending items only as a count
     guests = guest_input.inbox_lines(session, start)
     out += guests
@@ -151,6 +161,6 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
-    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved, overview]):
+    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, ideas, approved, overview]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

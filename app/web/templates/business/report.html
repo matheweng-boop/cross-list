@@ -2,6 +2,7 @@
 {% import "business/_feasibility.html" as fz %}
 {% from "business/_common.html" import push with context %}
 {% from "business/_growth.html" import schedule_button, learn_tab, opener_box %}
+{% from "business/_expand.html" import expand_box %}
 {% block title %}{{ page_title(request.url.path, r.title ~ (' – background' if background else '')) }}{% endblock %}
 {% block content %}
 {% if background %}
@@ -16,6 +17,7 @@
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
 {{ opener_box(opener, r.slug, answer_form=not case) }}{% if opener and case %}<p class="small muted">Answer it under <a href="#questions-to-ask">8. Questions to ask</a>, where it is the first business-unit question.</p>{% endif %}
 {{ schedule_button(r, scheduled, request.url.path) }}
+{{ expand_box(r, expansion, owner, request.url.path) }}
 <article class="rpt">{% include body %}</article>
 {% if has_background %}<p class="small"><a href="/business/reports/{{ r.slug }}/background">Background notes: data tables, detail and all sources →</a></p>{% endif %}
 

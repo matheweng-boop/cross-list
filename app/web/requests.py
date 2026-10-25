@@ -1,6 +1,6 @@
 """Cross requests: parts that still need to be added and crossed; and Data management > Site data > Requests, one list
-of part requests, diagram feedback and application area requests (owner, 24 Oct 2026). Each kind keeps its own table
-and its own POST handlers; this page only shows them together."""
+of part requests, diagram feedback, application area requests (owner, 24 Oct 2026) and "Expand this idea" requests
+(owner, 25 Oct 2026). Each kind keeps its own table and its own POST handlers; this page only shows them together."""
 
 import re
 
@@ -10,8 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import AreaRequest, BlockFeedback, CrossRequest, Part
+from app.models import AreaRequest, BlockFeedback, CrossRequest, IdeaRequest, Part
 from app.partnumbers import normalize_pn
+from app.services import idea_requests as ir
 from app.web.routes import templates
 from app.web.urls import local_path
 
@@ -28,8 +29,8 @@ def _part_for(session: Session, mpn: str) -> Part | None:
 
 
 # kind -> label, and the statuses that count as open; the status names and labels stay with each kind's handler
-KINDS = {"part": "Part request", "diagram": "Diagram feedback", "area": "Area request"}
-OPEN = {"part": ("open", "in_progress"), "diagram": ("open", "agreed"), "area": ("new", "planned")}
+KINDS = {"part": "Part request", "diagram": "Diagram feedback", "area": "Area request", "idea": "Idea expansion"}
+OPEN = {"part": ("open", "in_progress"), "diagram": ("open", "agreed"), "area": ("new", "planned"), "idea": ir.OPEN}
 
 
 @router.get("/requests")
@@ -48,6 +49,7 @@ def all_requests(request: Request, kind: str = "", show: str = "", session: Sess
     rows = [("part", r) for r in session.scalars(select(CrossRequest))]
     rows += [("diagram", f) for f in session.scalars(select(BlockFeedback))]
     rows += [("area", a) for a in session.scalars(select(AreaRequest))]
+    rows += [("idea", i) for i in ir.by_slug(session).values()]
     counts = {k: sum(1 for kk, r in rows if kk == k and r.status in OPEN[k]) for k in KINDS}
     if not show:
         rows = [(k, r) for k, r in rows if r.status in OPEN[k]]
@@ -55,10 +57,38 @@ def all_requests(request: Request, kind: str = "", show: str = "", session: Sess
         rows = [(k, r) for k, r in rows if k == kind]
     rows.sort(key=lambda kr: (kr[1].created_at is not None, kr[1].created_at or 0, kr[1].id), reverse=True)
     found = {r.id: _part_for(session, r.mpn) for k, r in rows if k == "part"}
-    statuses = {"part": STATUSES, "diagram": FEEDBACK_STATUS, "area": AREA_STATUSES}
+    statuses = {"part": STATUSES, "diagram": FEEDBACK_STATUS, "area": AREA_STATUSES, "idea": ir.STATUSES}
     ctx = {"rows": rows, "found": found, "statuses": statuses, "kinds": KINDS, "kind": kind, "show": show,
            "counts": counts}  # fmt: skip
     return templates.TemplateResponse(request, "manage/requests.html", ctx)
+
+
+@router.post("/manage/ideas/{slug}/expand")
+def expand_idea(slug: str, note: str = Form(""), back: str = Form(""), session: Session = Depends(get_session)):
+    """"Expand this idea" (owner only: under /manage). Once per report: a second request gets 409."""
+    from app.services import reports as rp
+
+    r = rp.report(slug)
+    if r is None:
+        raise HTTPException(404, "Report not found")
+    try:
+        ir.add(session, slug, r.get("title") or slug, note)
+    except ir.AlreadyRequested:
+        raise HTTPException(409, "Expansion already requested for this idea") from None
+    to = local_path(back, f"/business/reports/{slug}").split("#")[0]
+    return RedirectResponse(f"{to}#exp-{slug}", status_code=303)
+
+
+@router.post("/manage/ideas/requests/{req_id:int}")
+def idea_request_status(req_id: int, status: str = Form(...), session: Session = Depends(get_session)):
+    row = session.get(IdeaRequest, req_id)
+    if row is None:
+        raise HTTPException(404)
+    try:
+        ir.set_status(session, row, status)
+    except ValueError:
+        raise HTTPException(400, "Unknown status") from None
+    return RedirectResponse("/manage/requests?kind=idea", status_code=303)
 
 
 @router.post("/requests")

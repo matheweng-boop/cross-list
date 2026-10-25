@@ -695,6 +695,29 @@ def test_shareable_build_a_presentation_button(page):
     expect(page.locator("nav.sub-nav a.on")).to_have_text("Reports")
 
 
+def test_shareable_download_as_powerpoint_with_two_reports(page, tmp_path):
+    """Owner, 25 Oct 2026: Download as PowerPoint sits with Build a PDF; nothing ticked asks to pick a report; two
+    ticked download one .pptx with both reports (iPad-size window)."""
+    from pptx import Presentation
+
+    go(page, "/shareable")
+    box = page.locator("#build-pdf")
+    box.get_by_role("button", name="Download as PowerPoint").click()
+    expect(page.locator("#sh-err")).to_have_text("Pick at least one report.")
+    box.locator("input[value='synergies']").check()
+    box.locator("input[value='automotive']").check()
+    with page.expect_download() as dl:
+        box.get_by_role("button", name="Download as PowerPoint").click()
+    d = dl.value
+    assert d.suggested_filename == "skyworks-qorvo-synergies-automotive.pptx"
+    path = tmp_path / d.suggested_filename
+    d.save_as(path)
+    heads = {sh.text_frame.text for s in Presentation(path).slides for sh in s.shapes
+             if sh.has_text_frame and sh.text_frame.text.startswith("Skyworks + Qorvo · ")}  # fmt: skip
+    assert heads == {"Skyworks + Qorvo · Synergies", "Skyworks + Qorvo · Automotive"}
+    expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the page stays
+
+
 def test_shareable_synergies_owner_edit_and_undo(page):
     """The new reports edit like the overview: a number (the exact automatic value is shown), Save, Undo."""
     try:

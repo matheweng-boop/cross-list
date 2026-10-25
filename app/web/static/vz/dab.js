@@ -3,7 +3,12 @@
 // the audio is that is produced"). Registers with the visuals engine in visuals.js (window.VZ_ADD). Transmission mode I
 // numbers from ETSI EN 300 401; the example ensemble is made up; thresholds marked est are BizDev's own.
 (window.VZ_ADD = window.VZ_ADD || []).push(({V, C, num, esc, log10, bandStrip}) => {
-  const BLOCKS = [["5C", 178.352], ["8A", 195.936], ["10B", 211.648], ["11D", 222.064], ["12B", 225.648], ["12C", 227.360], ["12D", 229.072]];
+  // Band III block raster (ETSI EN 300 401, centre frequencies in MHz); the extra N blocks 10N, 11N and 12N are left out
+  const BLOCKS = [["5A", 174.928], ["5B", 176.640], ["5C", 178.352], ["5D", 180.064], ["6A", 181.936], ["6B", 183.648], ["6C", 185.360], ["6D", 187.072],
+    ["7A", 188.928], ["7B", 190.640], ["7C", 192.352], ["7D", 194.064], ["8A", 195.936], ["8B", 197.648], ["8C", 199.360], ["8D", 201.072],
+    ["9A", 202.928], ["9B", 204.640], ["9C", 206.352], ["9D", 208.064], ["10A", 209.936], ["10B", 211.648], ["10C", 213.360], ["10D", 215.072],
+    ["11A", 216.928], ["11B", 218.640], ["11C", 220.352], ["11D", 222.064], ["12A", 223.936], ["12B", 225.648], ["12C", 227.360], ["12D", 229.072],
+    ["13A", 230.784], ["13B", 232.496], ["13C", 234.208], ["13D", 235.776], ["13E", 237.488], ["13F", 239.200]];
   // protection level -> CU per kbit/s (EEP-A: 12n, 8n, 6n, 4n CU for 8n kbit/s), code rate, rough C/N needed (est)
   const EEP = {"1A": [1.5, "1/4", 5], "2A": [1, "3/8", 6.5], "3A": [0.75, "1/2", 8], "4A": [0.5, "3/4", 11]};
   const SERVICES = [  // a made-up ensemble: name, kbit/s, kind, what the display shows
@@ -56,6 +61,53 @@
     <circle cx="125" cy="30" r="16" fill="#fff" opacity=".35"/><path d="M0 120 L50 70 L80 95 L110 60 L160 110 L160 120 Z" fill="#fff" opacity=".3"/>
     <text x="10" y="24" fill="#fff" font-size="14" font-weight="700">${esc(name)}</text><text x="10" y="112" fill="#fff" font-size="9">MOT slideshow, 320 × 240</text></svg>`;
 
+  // ------------------------------------------------------------------ blocks and ensembles (owner, 25 Oct 2026: "Can you
+  // visualize the DAB Blocks and Ensembles better"): the Band III raster, the 96 ms transmission frame (FIC + MSC) and
+  // one 24 ms CIF as a map of 864 capacity units with each service's sub-channel. Click a block or a service.
+  const SHORT = ["City Pop", "News", "Classics", "Sport", "Jazz", "Rock", "Dance", "Kids", "Local", "Chill", "TPEG", "EPG"];
+  function rasterSvg(fc) {
+    const W = 340, H = 86, x = f => 8 + ((f - 174) / 66) * (W - 16);
+    const rects = BLOCKS.map(([b, f]) => { const on = f === fc;
+      return `<g class="dab-rb" data-dab-blk="${f}" tabindex="0" role="button" aria-label="Block ${b}, ${f} MHz"${on ? ' aria-pressed="true"' : ""}><title>${b} · ${f} MHz</title>`
+        + `<rect x="${x(f - 0.856).toFixed(1)}" y="22" width="${(x(f + 0.856) - x(f - 0.856)).toFixed(1)}" height="38" fill="transparent"/>`
+        + `<rect x="${x(f - 0.768).toFixed(1)}" y="26" width="${(x(f + 0.768) - x(f - 0.768)).toFixed(1)}" height="30" rx="1" fill="${on ? C.blue : "#9fb4cc"}" opacity="${on ? 1 : 0.55}"${on ? ' stroke="#1d2228" stroke-width="1.2"' : ""}/></g>`; }).join("");
+    const chans = [5, 6, 7, 8, 9, 10, 11, 12, 13].map(n => { const fs = BLOCKS.filter(([b]) => parseInt(b, 10) === n).map(([, f]) => f);
+      const a = x(Math.min(...fs) - 0.768), b = x(Math.max(...fs) + 0.768);
+      return `<line x1="${a.toFixed(1)}" x2="${b.toFixed(1)}" y1="63" y2="63" stroke="#8a94a3"/><text x="${((a + b) / 2).toFixed(1)}" y="73" text-anchor="middle" class="dab-t">${n}</text>`; }).join("");
+    const sel = BLOCKS.find(b => b[1] === fc);
+    return `<svg viewBox="0 0 ${W} ${H}" class="dab-svg" role="group" aria-label="DAB Band III block raster, click a block">
+      <text x="${x(fc).toFixed(1)}" y="16" text-anchor="${fc > 222 ? "end" : fc < 192 ? "start" : "middle"}" class="dab-t" font-weight="700">${sel[0]} · ${fc} MHz · 1.536 MHz wide</text>${rects}${chans}
+      <text x="8" y="${H - 1}" class="dab-t">174 MHz</text><text x="${W / 2}" y="${H - 1}" text-anchor="middle" class="dab-t">channels 5–13, blocks A–D (13: A–F)</text><text x="${W - 8}" y="${H - 1}" text-anchor="end" class="dab-t">240 MHz</text></svg>`;
+  }
+  function frameSvg() {  // transmission mode I: 96 ms = null (1.297 ms) + phase reference + 3 FIC + 72 MSC symbols (1.246 ms each)
+    const W = 340, x = ms => 8 + (ms / 96) * (W - 16), Ts = 1.246, nul = 1.297, fic0 = nul + Ts, msc0 = fic0 + 3 * Ts;
+    const cif = k => { const a = msc0 + k * 18 * Ts, b = a + 18 * Ts;
+      return `<rect x="${x(a).toFixed(1)}" y="30" width="${(x(b) - x(a) - 0.8).toFixed(1)}" height="22" fill="${C.green}" opacity="${k === 0 ? 0.75 : 0.35}"/><text x="${((x(a) + x(b)) / 2).toFixed(1)}" y="45" text-anchor="middle" class="dab-t">CIF ${k + 1} · 24 ms</text>`; };
+    return `<svg viewBox="0 0 ${W} 94" class="dab-svg" role="img" aria-label="DAB transmission frame of 96 ms">
+      <rect x="${x(0)}" y="30" width="${(x(nul) - x(0)).toFixed(1)}" height="22" fill="#1d2228"/><rect x="${x(nul).toFixed(1)}" y="30" width="${(x(fic0) - x(nul)).toFixed(1)}" height="22" fill="${C.grey}"/>
+      <rect x="${x(fic0).toFixed(1)}" y="30" width="${(x(msc0) - x(fic0)).toFixed(1)}" height="22" fill="${C.orange}"/>${[0, 1, 2, 3].map(cif).join("")}
+      <path d="M${x(nul / 2).toFixed(1)} 30 L12 12" stroke="#1d2228" fill="none"/><text x="12" y="9" class="dab-t">null symbol + phase reference (sync)</text>
+      <path d="M${x((fic0 + msc0) / 2).toFixed(1)} 30 L${x(14).toFixed(1)} 22" stroke="${C.orange}" fill="none"/><text x="${x(14.5).toFixed(1)}" y="24" class="dab-t" fill="${C.orange}">FIC: the table of contents (3 symbols)</text>
+      <text x="${x(0)}" y="64" class="dab-t">0</text><text x="${x(96)}" y="64" text-anchor="end" class="dab-t">96 ms</text>
+      <text x="${x(50)}" y="64" text-anchor="middle" class="dab-t" fill="${C.green}">MSC: the programmes (72 symbols)</text>
+      <path d="M${x(msc0).toFixed(1)} 69 L8 80 M${x(msc0 + 18 * Ts).toFixed(1)} 69 L${W - 8} 80" stroke="#8a94a3" stroke-dasharray="3 2" fill="none"/>
+      <text x="${W / 2}" y="90" text-anchor="middle" class="dab-t">each CIF, zoomed below: 864 capacity units (CU) of 64 bits</text></svg>`;
+  }
+  function cifSvg(rows, sel, used) {
+    const W = 340, scale = Math.max(864, used), x = cu => 8 + (cu / scale) * (W - 16);
+    let at = 0;
+    const segs = rows.map((r, i) => { const a = x(at), b = x(at + r.cu); r.start = at; at += r.cu; const on = i === sel, w = b - a;
+      const lab = w > 20 ? `<text x="${((a + b) / 2).toFixed(1)}" y="31" text-anchor="middle" class="dab-t dab-tw">${esc(SHORT[i].slice(0, Math.floor(w / 5.2)))}</text>` : "";
+      return `<g class="dab-sv" data-dab-svc="${i}" role="button" tabindex="0" aria-label="${esc(SERVICES[i][0])}: sub-channel ${i}, ${r.cu} CU"${on ? ' aria-pressed="true"' : ""}><title>${esc(SERVICES[i][0])} · ${r.cu} CU</title><rect x="${a.toFixed(1)}" y="12" width="${Math.max(0.8, w - 0.8).toFixed(1)}" height="30" fill="${COL[i]}" opacity="${on ? 1 : 0.6}"${on ? ' stroke="#1d2228" stroke-width="2"' : ""}/>${lab}</g>`; }).join("");
+    const free = used < 864 ? `<rect x="${x(used).toFixed(1)}" y="12" width="${(x(864) - x(used)).toFixed(1)}" height="30" fill="#eef1f4" stroke="#d5dae0" stroke-dasharray="3 2"/><text x="${((x(used) + x(864)) / 2).toFixed(1)}" y="31" text-anchor="middle" class="dab-t">free ${864 - used}</text>` : "";
+    const lim = used > 864 ? `<line x1="${x(864).toFixed(1)}" x2="${x(864).toFixed(1)}" y1="8" y2="46" stroke="${C.red}" stroke-width="2"/>` : "";
+    const r = rows[sel], a = x(r.start), b = x(r.start + r.cu);
+    return `<svg viewBox="0 0 ${W} 68" class="dab-svg" role="group" aria-label="One CIF: 864 capacity units shared by the sub-channels, click a service">${segs}${free}${lim}
+      <path d="M${a.toFixed(1)} 44 v6 h${(b - a).toFixed(1)} v-6" stroke="#1d2228" fill="none"/><text x="${Math.min(W - 120, Math.max(8, a)).toFixed(1)}" y="61" class="dab-t" font-weight="700">sub-channel ${sel}: CU ${r.start}–${r.start + r.cu - 1}</text>
+      <text x="8" y="8" class="dab-t">CU 0</text><text x="${W - 8}" y="8" text-anchor="end" class="dab-t">${used > 864 ? `${used} CU: does not fit (limit 864)` : "CU 863"}</text></svg>`;
+  }
+  const sid = i => "0x" + (SERVICES[i][2] === "audio" ? 0xD210 + i * 0x11 : 0xE0D210 + i).toString(16).toUpperCase();
+
   V.push({
     id: "dab", group: "Broadcast radio", title: "DAB: from I/Q samples to the ensemble and the audio",
     explains: [["Broadcast radio tuners and demodulators", "/knowledge#p-tuners"], ["Si468x digital radios", "/find?q=Si468"], ["Si4790x / Si4796x tuners", "/find?q=Si479"], ["Si469xx DAB coprocessors", "/find?q=Si469"]],
@@ -67,6 +119,18 @@
       {k: "eep", label: "Protection level (EEP)", type: "select", options: [["1A", "EEP-1A, code rate 1/4 (strongest)"], ["2A", "EEP-2A, 3/8"], ["3A", "EEP-3A, 1/2 (common)"], ["4A", "EEP-4A, 3/4 (weakest)"]], value: "3A"},
       {k: "snr", label: "Signal-to-noise ratio at the tuner", min: 0, max: 30, step: 0.5, value: 15, unit: "dB"},
     ],
+    setup(el, render, setVals) {  // clicks on a Band III block or a service in the ensemble pictures
+      el.hidden = true;
+      const more = el.parentElement.querySelector(".vz-more");
+      const pick = t => {
+        const b = t.closest("[data-dab-blk]"), s = t.closest("[data-dab-svc]");
+        if (b) setVals({blk: b.dataset.dabBlk}); else if (s) setVals({svc: s.dataset.dabSvc}); else return false;
+        render();
+        return true;
+      };
+      more.addEventListener("click", e => pick(e.target));
+      more.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && pick(e.target)) e.preventDefault(); });
+    },
     compute(v) {
       const fc = +v.blk, sel = +v.svc, [cuPer, rate, need] = EEP[v.eep], s = SERVICES[sel];
       const rows = SERVICES.map(x => ({cu: Math.round(x[1] * cuPer)})), used = rows.reduce((a, r) => a + r.cu, 0);
@@ -79,7 +143,7 @@
       const cons = Array.from({length: 260}, (_, i) => { const p = ideal[i % 4]; return [p[0] + gauss(r) * sn * 2.2 * Math.SQRT2, p[1] + gauss(r) * sn * 2.2 * Math.SQRT2]; });
       const msc = 72 * 1536 * 2;  // bits per 96 ms frame in the 72 MSC symbols
       const list = SERVICES.map((x, i) => `<li${i === sel ? ' class="on"' : ""}><i style="background:${COL[i]}"></i>${esc(x[0])} <span class="muted">${x[1]} kbit/s · ${rows[i].cu} CU${x[2] === "data" ? " · data" : ""}</span></li>`).join("");
-      const audio = s[2] === "audio";
+      const audio = s[2] === "audio", blkName = BLOCKS.find(b => b[1] === fc)[0];
       const html = `<style>
         .dab-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(17rem,100%),1fr));gap:.6rem;margin:.4rem 0}
         .dab-card{border:1px solid var(--pico-muted-border-color);border-radius:.45rem;padding:.5rem .7rem;background:#fff;min-width:0}
@@ -93,6 +157,24 @@
         .dab-sees{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(14rem,100%),1fr));gap:.6rem;margin:.6rem 0}
         .dab-sees>div{border-left:4px solid var(--pico-primary);padding:.3rem .6rem;background:#f6f8fb;font-size:.85rem}
       </style>
+      <section class="dab-ens" aria-label="Blocks and ensembles">
+        <h3>Blocks and ensembles</h3>
+        <p class="small">A DAB <b>block</b> is one 1.536 MHz slot on a fixed raster in Band III (blocks 5A to 13F). One block carries exactly one <b>ensemble</b> (also called a multiplex): a bundle of about 10–18 stations and data services from one operator, sent together on one frequency. Click a block, then a service.</p>
+        <div class="dab-ens-g">
+          <div class="dab-ens-c"><h4>1 · Band III: the block raster</h4>${rasterSvg(fc)}
+            <p class="small">${BLOCKS.length} blocks, 1.712 MHz apart. A region may use several blocks (several ensembles); the tuner tunes to one block at a time.</p></div>
+          <div class="dab-ens-c"><h4>2 · Block ${blkName}: one ensemble, framed every 96 ms</h4>${frameSvg()}
+            <p class="small">The <b>FIC</b> (fast information channel) lists the ensemble "BizDev Demo" (made up) and each service: name, service ID, which sub-channel, where it starts and how it is protected. The <b>MSC</b> (main service channel) carries the programmes themselves.</p></div>
+          <div class="dab-ens-c dab-wide"><h4>3 · Inside one CIF: each service has its own sub-channel</h4>${cifSvg(rows, sel, used)}
+            <div class="dab-ens-two"><table class="dab-tbl small"><thead><tr><th>Service</th><th>kbit/s</th><th>CU</th><th>start</th></tr></thead><tbody>
+              ${SERVICES.map((x, i) => `<tr data-dab-svc="${i}" tabindex="0" role="button"${i === sel ? ' class="on" aria-pressed="true"' : ""}><td><i style="background:${COL[i]}"></i>${esc(x[0])}${x[2] === "data" ? " <span class=\"muted\">data</span>" : ""}</td><td>${x[1]}</td><td>${rows[i].cu}</td><td>${rows[i].start}</td></tr>`).join("")}
+              <tr class="dab-sum"><td>Total</td><td>${SERVICES.reduce((a, x) => a + x[1], 0)}</td><td>${used}</td><td>of 864</td></tr></tbody></table>
+            <div class="dab-detail" style="border-color:${COL[sel]}"><b>${esc(s[0])}</b> <span class="muted small">${audio ? "audio service, DAB+ (HE-AAC v2)" : "data service, packet mode"}</span>
+              <dl><dt>Service ID (SId)</dt><dd>${sid(sel)}</dd><dt>Sub-channel</dt><dd>${sel}</dd><dt>Start address</dt><dd>CU ${rows[sel].start}</dd><dt>Size</dt><dd>${rows[sel].cu} CU = ${rows[sel].cu * 64} bit per 24 ms</dd>
+                <dt>Bit rate</dt><dd>${s[1]} kbit/s</dd><dt>Protection</dt><dd>EEP-${esc(v.eep)}, code rate ${rate}</dd><dt>Share of ensemble</dt><dd>${num((100 * rows[sel].cu) / 864)} % of the CUs</dd></dl>
+              <p class="small">${rows[sel].cu} CU = ${s[1]} kbit/s × ${cuPer} CU per kbit/s at EEP-${esc(v.eep)}: stronger protection costs more CUs for the same bit rate.</p></div></div></div>
+        </div>
+      </section>
       <div class="dab-sees"><div><b>What the tuner sees</b><br>One 1.536 MHz block at ${fc} MHz: about 2 million I/Q number pairs per second that look like noise, carrying the whole ensemble (${SERVICES.length} services) at once.</div>
         <div><b>What comes out</b><br>${audio ? `One station: ${s[1]} kbit/s DAB+ audio (HE-AAC), its scrolling text (DLS) and slideshow pictures.` : `One data service: ${s[1]} kbit/s of ${esc(s[0].toLowerCase())} for the head unit; no sound.`} The other ${SERVICES.length - 1} services are skipped after the FFT.</div></div>
       <div class="dab-flow">

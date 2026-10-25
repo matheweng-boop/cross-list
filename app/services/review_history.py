@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 from app.models import DataReview
 
 N = 5
-_DEFAULT = {"correct": "agree", "wrong": "disagree", "unsure": "unsure", "answered": "answered"}
+# Data quality comments (owner, 25 Oct 2026): a comment instead of yes / no, checked by the daily run, then a second
+# round. These rows are kept in the history like any answer but never count as a verdict.
+COMMENT, COMMENT2 = "comment", "comment2"
+COMMENT_VERDICTS = (COMMENT, COMMENT2)
+_DEFAULT = {"correct": "agree", "wrong": "disagree", "unsure": "unsure", "answered": "answered",
+            COMMENT: "comment", COMMENT2: "comment (2nd round)"}  # fmt: skip
 _LABELS = {
     "price": {"low": "low end", "ok": "in the band", "high": "high end"},
     "auto_reach": {"correct": "accepted", "wrong": "rejected", "unsure": "back to proposed"},

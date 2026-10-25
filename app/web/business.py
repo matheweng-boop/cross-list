@@ -26,7 +26,21 @@ from app.models import (
     TamEstimate,
     TechFeedback,
 )
-from app.services import blocks, cases, library, patents, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
+from app.services import (
+    blocks,
+    cases,
+    library,
+    patents,
+    pipeline,
+    prelim,
+    quality,
+    review_history,
+    schedule,
+    scoring,
+    tam,
+    vocab,
+    walk,
+)
 from app.services import idea_requests as ir
 from app.services import opportunity as op
 from app.services import portfolio as pf
@@ -927,26 +941,38 @@ def data_quality(request: Request, co: str = "combined", session: Session = Depe
     tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
     c.update(checks=quality.checks(c["apps"]), questions=quality.questions(session, c["apps"], tab),
              research=quality.research(c["apps"], tab),
-             rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
+             rev=_rev(session), verdicts={**quality.VERDICTS, **quality.COMMENT_LABELS},
+             ds_labels={k: v[0] for k, v in quality.datasets().items()},
              mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip
     return templates.TemplateResponse(request, "business/quality.html", c)
 
 
 @router.post("/business/quality/answer")
-def quality_answer(dataset: str = Form(...), key: str = Form(...), answer: str = Form(...), comment: str = Form(""),
+def quality_answer(dataset: str = Form(""), key: str = Form(""), comment: str = Form(""), action: str = Form("submit"),
                    author: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
-    """Yes / No to one review question, with an optional comment: stored as a review of the item."""
-    verdict = {"yes": "correct", "no": "wrong"}.get(answer)
+    """A comment on one question (owner, 25 Oct 2026: no yes / no here): stored as a DataReview "comment" row, checked
+    by the daily run, then asked again in a second round ("comment2"). In the second round only, "Looks right now"
+    (action=confirm) closes the item with a "correct" verdict. Earlier yes / no answers stay in the history."""
     known = tam.known_key(session, key) if dataset == tam.DATASET else key in (quality.datasets().get(dataset) or
                                                                                 ("", {}))[1]  # fmt: skip
-    if verdict is None or not known:
+    if not key or not known or action not in ("submit", "confirm"):
         raise HTTPException(400, "Unknown question or answer")
     if dataset == tam.DATASET and key in tam.applied():
         raise HTTPException(409, APPLIED_MSG)
-    session.add(DataReview(dataset=dataset, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
+    thread = quality.threads(session).get((dataset, key[:120])) or {}
+    if action == "confirm":
+        if thread.get("status") != "round2":
+            raise HTTPException(400, "Only a checked item can be confirmed")
+        verdict, text = "correct", comment.strip()[:2000] or None
+    else:
+        text = comment.strip()[:2000]
+        if not text:
+            return RedirectResponse(f"/business/quality?empty=1#q-{dataset}-{key}", status_code=303)
+        verdict = review_history.COMMENT2 if thread.get("status") == "round2" else review_history.COMMENT
+    session.add(DataReview(dataset=dataset, key=key[:120], verdict=verdict, comment=text,
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
-    return RedirectResponse("/business/quality?answered=1#questions", status_code=303)
+    return RedirectResponse(f"/business/quality?answered=1#q-{dataset}-{key}", status_code=303)
 
 
 @router.get("/business/quality/todo.txt", response_class=PlainTextResponse)

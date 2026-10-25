@@ -81,8 +81,11 @@ def _row(r: TamEstimate) -> dict:
 
 
 def reviews(session: Session) -> dict[str, DataReview]:
-    """The latest review per estimate key."""
-    q = select(DataReview).where(DataReview.dataset == DATASET).order_by(DataReview.created_at, DataReview.id)
+    """The latest review per estimate key (Data quality comments are not a verdict and are left out)."""
+    from app.services.review_history import COMMENT_VERDICTS
+
+    q = select(DataReview).where(DataReview.dataset == DATASET, DataReview.verdict.notin_(COMMENT_VERDICTS))
+    q = q.order_by(DataReview.created_at, DataReview.id)
     return {r.key: r for r in session.scalars(q)}
 
 

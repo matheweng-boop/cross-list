@@ -120,7 +120,7 @@ def test_applied_item_has_no_buttons_and_refuses_a_new_verdict(client, session):
     n = session.query(DataReview).count()
     r = client.post("/business/tam/review", data={"key": "tuner-ic-mrfr", "answer": "disagree"}, follow_redirects=False)
     assert r.status_code == 409 and "already worked into a report" in r.text
-    r = client.post("/business/quality/answer", data={"dataset": "tam", "key": "tuner-ic-mrfr", "answer": "no"},
+    r = client.post("/business/quality/answer", data={"dataset": "tam", "key": "tuner-ic-mrfr", "comment": "no"},
                     follow_redirects=False)  # fmt: skip
     assert r.status_code == 409
     assert session.query(DataReview).count() == n

@@ -85,7 +85,8 @@ def test_questions_are_specific_yes_no(client, session):
     html = client.get("/business/quality").text
     assert 'id="questions"' in html and "Questions for you" in html
     queue = html.split('id="questions"', 1)[1].split('id="research"', 1)[0]
-    assert "confidence" not in queue.lower() and ">Yes<" in queue and ">No<" in queue and 'name="comment"' in queue
+    assert "confidence" not in queue.lower() and ">Submit<" in queue and 'name="comment"' in queue
+    assert ">Yes<" not in queue and ">No<" not in queue  # owner, 25 Oct 2026: a comment, no yes / no
     assert "Review status per dataset" not in html
     from app.services import opportunity as op
 
@@ -99,14 +100,14 @@ def test_questions_are_specific_yes_no(client, session):
     trend = quality.ask("trends", "gate_driver", "Gate driver", entry)
     assert "gate driver" in trend["question"] and trend["links"] == [("x.org", "https://x.org/a")]
     assert "Open the source" in trend["check"]
-    # answering: Yes / No with a comment becomes a review of the item
+    # answering: a comment becomes a review row of the item (being checked by the daily run)
     q = next(q for q in qs if q["dataset"] != "tam")
-    answer = {"dataset": q["dataset"], "key": q["key"], "answer": "no", "comment": "one more supplier"}
+    answer = {"dataset": q["dataset"], "key": q["key"], "comment": "one more supplier"}
     r = client.post("/business/quality/answer", data=answer, follow_redirects=False)
-    assert r.status_code == 303 and "#questions" in r.headers["location"]
+    assert r.status_code == 303 and f"#q-{q['dataset']}-{q['key']}" in r.headers["location"]
     row = session.scalar(select(DataReview).where(DataReview.dataset == q["dataset"], DataReview.key == q["key"]))
-    assert row.verdict == "wrong" and row.comment == "one more supplier"
-    unknown = {"dataset": "x", "key": "y", "answer": "yes"}
+    assert row.verdict == "comment" and row.comment == "one more supplier"
+    unknown = {"dataset": "x", "key": "y", "comment": "hm"}
     assert client.post("/business/quality/answer", data=unknown).status_code == 400
 
 

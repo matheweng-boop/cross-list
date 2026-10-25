@@ -1,9 +1,9 @@
 """Everything the owner said on the site since a day, as one text for the daily update run (GET /api/inbox).
 
 Site feedback (grouped as in the daily digest), cross verdicts, diagram and technology feedback, data-review answers
-(agree / disagree, yes / no, with comments), questions asked on reports with their answers and the technology review
-requests and application area requests (all open ones, and those closed since the day). Requested volumes,
-customers and markets are left out on purpose: they stay on the site.
+(agree / disagree, yes / no, with comments), the Data quality comments still being checked, questions asked on
+reports with their answers and the technology review requests and application area requests (all open ones, and
+those closed since the day). Requested volumes, customers and markets are left out on purpose: they stay on the site.
 """
 
 from datetime import UTC, date, datetime, timedelta
@@ -90,6 +90,14 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
                      f"{' · ' + _one_line(r.comment) if r.comment else ''}{_earlier(session, r)}"
                      for r in reviews])  # fmt: skip
 
+    # Data quality comments still being checked (every open one, not only new ones): the run checks each, then
+    # records it in data/business/quality_checked.yaml so the owner gets the second round (owner, 25 Oct 2026)
+    from app.services import quality
+
+    dq = quality.inbox_lines(session)
+    out += dq
+    dq_open = dq[-1] != "None."
+
     # Verify next › Sources (weekly link and source check): ok / fix it / remove, with where it is
     src = session.scalars(select(VerifyTask).where(VerifyTask.kind == "sources", VerifyTask.done_at >= start)
                           .order_by(VerifyTask.done_at)).all()  # fmt: skip
@@ -175,7 +183,7 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
-    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, ideas, approved, overview,
-                tam_changes]):
+    if not any([n_site, crosses, blocks, tech, reviews, dq_open, src, asked, answered, rq, areas, ideas, approved,
+                overview, tam_changes]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

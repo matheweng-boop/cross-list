@@ -254,7 +254,7 @@ def grouped_parts(parts: list[str]) -> list[tuple[str, list[str]]]:
 
 @lru_cache(maxsize=512)
 def view(q: str = "", vendor: str = "", market: str = "", fn: str = "", iso: bool = False, docs: bool = False,
-         atype: str = "", sub: str = "", diagram: str = "", part: str = "", anchor: str = "") -> dict:
+         atype: str = "", sub: str = "", diagram: str = "", part: str = "", anchor: str = "", fb: tuple = ()) -> dict:
     """One list of the Reference designs page, computed once per set of filters (the designs never change while the
     site runs): the precise list a link asks for (?diagram=, &anchor=, ?part=, ?fn=) with its heading, then the search
     and filters on it; the type tree and the facets of the result."""
@@ -262,7 +262,7 @@ def view(q: str = "", vendor: str = "", market: str = "", fn: str = "", iso: boo
 
     pool, heading = None, ""
     if diagram:
-        e = refmatch.data()["by_key"].get(diagram) or {}
+        e = refmatch.entry(diagram) or {}  # without the designs the owner marked "Doesn't fit" (fb: their token)
         keys = e.get("designs") or []
         if anchor:
             hit = {k for a in e.get("anchors") or [] if anchor in (a.get("fn"), a.get("part")) for k in a["designs"]}

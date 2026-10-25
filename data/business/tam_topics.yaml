@@ -15,9 +15,16 @@
 #   members   {key, verdict (the owner's answer from the live site: agree | disagree | unsure), date, note}
 #   low, high (US dollars), year, cagr_low, cagr_high (% a year), n (members used)
 #   combined  the day the band was written; excluded = members left out and why; note = anything else
+#   layer     optional: what the band counts, shown as its label (and on the explorer, walk-through and gap cards)
+#   bottom_up optional: "radio" = also show the car radio market bottom-up from our price estimates
+#             (app/services/radio_market.py: market at current BOM content, layers, prices needed, mandates)
+#   discrepancies  optional: {key, why} members shown as an open discrepancy, not as a figure for any layer
+#   Growth rates are shown only "as reported by" each source; projections use the content-driven CAGR of the bottom-up.
 topics:
   - id: auto-radio-tuner-ics
     title: Automotive radio tuner ICs (total radio market)
+    layer: "Radio content (tuners + digital radio demodulators), analyst reports"
+    bottom_up: radio
     fn: am_fm_tuner
     scope: "Tuner ICs for car radios: AM / FM, digital radio (DAB / HD / DRM) and multi-standard tuners"
     coverage: full
@@ -35,8 +42,12 @@ topics:
     combined: '2026-10-25'
     excluded:
       - {key: tuner-ic-emergen, why: "owner disagreed 22 Oct 2026: link is dead (the 25 Oct check met a bot check)"}
+    discrepancies:
+      - {key: digital-radio-tuner-marketintelo, why: "Open discrepancy: $1.8 B (2025) for digital radio tuners alone is above the owner's whole tuner-content cross-check ($0.45–0.92 B a year); likely a different definition (modules, aftermarket or non-automotive). Not used for any layer."}
     note: >-
-      Band set by the two full-coverage sources (DataHorizzon $0.89 B and MRFR $2.31 B for 2024, both found on their
-      pages on 25 Oct 2026). MarketIntelo ($1.8 B for 2025, digital radio tuners only) lies inside the band and is kept
-      as a source. MRFR's page now also shows $2.43 B for 2025 (check 25 Oct 2026: changed); the band stays on 2024,
-      the year all full-coverage sources share.
+      Radio content layer (tuners + digital radio demodulators), as the analyst reports define it. Band set by the two
+      full-coverage sources (DataHorizzon $0.89 B and MRFR $2.31 B for 2024, both found on their pages on 25 Oct 2026).
+      MarketIntelo ($1.8 B for 2025, digital radio tuners only) is an open discrepancy, not a figure for either layer.
+      MRFR's page now also shows $2.43 B for 2025 (check 25 Oct 2026: changed); the band stays on 2024, the year all
+      full-coverage sources share. Tuner content (tuner ICs only) and the total radio market with adjacent content are
+      worked out bottom-up from our price estimates below.

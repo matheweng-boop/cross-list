@@ -956,7 +956,7 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                    automotive: bool = False, name: str = "", currency: str = "USD",
                    sop: str = "", gm: str = "",
                    released: str = "", bq: list[str] = Query([]), bp: list[str] = Query([]), override: str = "",
-                   session: Session = Depends(get_session)):  # fmt: skip
+                   price_saved: str = "", session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
     A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely.
     Several orderable variants of the part number are offered to pick from. SOP defaults to the year of the
@@ -1003,7 +1003,20 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                  "released": released or "", "override": override},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
+    ctx |= _required_prices(request, session, price_saved)
     return templates.TemplateResponse(request, "price_estimate.html", ctx)
+
+
+def _required_prices(request: Request, session: Session, saved: str) -> dict:
+    """The parts the market estimates still need prices for (app/services/radio_market.py), with entry forms; guests
+    see none of it (they cannot enter prices)."""
+    from app.auth.session import principal
+    from app.services import radio_market
+
+    who = principal(request)
+    if who is not None and who.is_guest:
+        return {"radio": None, "price_saved": ""}
+    return {"radio": radio_market.summary(session), "price_saved": saved.strip()[:120]}
 
 
 @router.get("/pricing/part-info")

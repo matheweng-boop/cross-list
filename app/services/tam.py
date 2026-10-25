@@ -299,7 +299,12 @@ def combine(defn: dict, rows: list[dict]) -> dict:
     high = max((e["usd_high"] or e["usd"] for e in setters), default=None)
     year = max((e.get("year") or 0 for e in setters), default=0) or None
     cagrs = [e["cagr"] for e in used if e.get("cagr") is not None]
-    return {**{k: defn.get(k) for k in ("id", "title", "fn", "scope", "coverage", "combined", "note")},
+    reported = [{"who": e["source"]["publisher"] or e["source"]["title"], "cagr": e["cagr"]}
+                for e in used if e.get("cagr") is not None]  # growth rates only as each source reports them
+    disc = {str(d.get("key")): d.get("why") or "" for d in defn.get("discrepancies") or [] if isinstance(d, dict)}
+    return {**{k: defn.get(k) for k in ("id", "title", "fn", "scope", "coverage", "combined", "note", "layer",
+                                        "bottom_up")},
+            "reported": reported, "discrepancies": disc,
             "members": members, "used": used, "excluded": out_ex, "n": len(used), "n_reviewed": len(reviewed),
             "setters": [e["key"] for e in setters], "is_combined": len(reviewed) >= 2 and low is not None,
             "low": low, "high": high, "year": year, "band": band_text(low, high, year),
@@ -343,5 +348,6 @@ def by_function(session: Session) -> dict[str, dict]:
         if t["is_combined"] and t["fn"]:
             out[t["fn"]] = {"usd": (t["low"] + t["high"]) / 2, "low": t["low"], "high": t["high"], "n": t["n"],
                             "agreed": t["agreed"], "year": t["year"], "band": t["band"], "topic": t["id"],
-                            "cagr_low": t["cagr_low"], "cagr_high": t["cagr_high"]}  # fmt: skip
+                            "cagr_low": t["cagr_low"], "cagr_high": t["cagr_high"],
+                            "layer": t.get("layer") or ""}  # fmt: skip
     return out

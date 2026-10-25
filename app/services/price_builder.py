@@ -2,8 +2,9 @@
 
 Each part is priced from its own prices (DigiKey prices pasted on the page, a public list price, or the DigiKey
 quote the site cached) or, without any, from a priced sibling times a parity range. What the site knows about a part
-(family, package, pins, automotive grade, release date) fills in by itself and can be changed on the page. Nothing is
-stored: the parts and assumptions live in the page's form only.
+(family, package, pins, automotive grade, release date) fills in by itself and can be changed on the page. The page
+itself stores nothing (parts and assumptions live in its form); prices the owner entered for the market estimates
+(price_model.entered) count as the part's own prices.
 """
 
 from __future__ import annotations
@@ -227,6 +228,10 @@ def own_prices(session: Session, row: Row, info: dict) -> tuple[list[tuple[int, 
     pasted = pm.parse_breaks(row.breaks)
     if pasted:
         return pasted, row.currency, "pasted"
+    mine = pm.entered(session).get(row.mpn.strip().upper())
+    if mine is not None:  # prices the owner entered for the market estimates (newest entry)
+        return [(int(q), float(p)) for q, p in mine["breaks"]], mine["currency"], \
+            f"entered by the owner ({mine['date']:%d %b %Y})"  # fmt: skip
     lp = _list_price(row.mpn)
     if lp is not None:
         name, v = lp

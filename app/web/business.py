@@ -573,7 +573,10 @@ def tam_page_extra(session: Session, rows: list[dict]) -> dict:
     for a in tam_links.applied():  # the applied-answers lock (data/business/tam_applied.yaml), when it exists
         for where in [a.get("applied_in")] if isinstance(a.get("applied_in"), str) else a.get("applied_in") or []:
             pages.setdefault(str(a.get("key")), []).append({"slug": None, "label": str(where)})
-    return {"check": tam.check_summary(), "flags": [e for e in rows if e["flag"]], "topics": combined,
+    from app.services import radio_market
+
+    radio = radio_market.summary(session) if any(t.get("bottom_up") == "radio" for t in combined) else None
+    return {"check": tam.check_summary(), "flags": [e for e in rows if e["flag"]], "topics": combined, "radio": radio,
             "combined_keys": {e["key"] for t in combined for e in t["members"]}, "history": tam.history(session),
             "applied_in": pages, "check_labels": tam.CHECK_LABELS, "money": tam.money}  # fmt: skip
 
@@ -598,6 +601,38 @@ async def tam_add(request: Request, session: Session = Depends(get_session)):
     ))  # fmt: skip
     session.commit()
     return RedirectResponse("/business/tam?saved=1", status_code=303)
+
+
+@router.post("/business/tam/prices")
+async def tam_prices(request: Request, session: Session = Depends(get_session)):
+    """Owner only (app/auth/access.py, /business/tam): prices for the radio market estimate (owner, 25 Oct 2026:
+    "force me to enter the appropriate data in our pricing section"). Public distributor or list price breaks and/or a
+    low / in band / high call, for a part on the Prices needed list; a part number for a block without one."""
+    from app.services import price_model as pm
+    from app.services import radio_market as rm
+
+    form = {k: str(v).strip() for k, v in (await request.form()).items()}
+    back = form.get("back") or "/pricing/estimate"
+    back = back if back.startswith("/") and not back.startswith("//") else "/pricing/estimate"
+    mpn, block, author = form.get("mpn", "")[:120], form.get("block", ""), form.get("author", "")
+    pts = pm.parse_breaks(form.get("breaks", ""))
+    call = form.get("call", "")
+    if not mpn or not (pts or call in pm.SIGN):
+        raise HTTPException(400, "Give a part number and price breaks or a low / in band / high call")
+    if block:
+        try:
+            rm.choose(session, block, mpn, author)
+        except ValueError:
+            raise HTTPException(400, "Unknown block") from None
+    if pts:
+        pm.record_breaks(session, mpn, pts, form.get("currency", "USD"), form.get("note", ""), author)
+    if call in pm.SIGN:
+        pm.record(session, mpn, call, form.get("note", ""), author)
+    from urllib.parse import quote
+
+    base, _, frag = back.partition("#")
+    url = base + ("&" if "?" in base else "?") + "price_saved=" + quote(mpn) + (f"#{frag}" if frag else "")
+    return RedirectResponse(url, status_code=303)
 
 
 APPLIED_MSG = ("This estimate's answer is already worked into a report, so it takes no new answer. It reopens when "
@@ -1114,8 +1149,30 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx["learn"] = rp.learn(r)
     ctx["opener"] = (ctx["case"] or {}).get("opener") or prelim.opener(session, slug)
     ctx["tam_notes"] = tam_notes(request, session, slug)
+    ctx["radio"] = radio_summary(request, session, slug)
+    ctx["radio_mandates"] = radio_mandates(slug)
     ctx |= {"expansion": ir.get(session, slug), "owner": signed_in_owner(request) is not None}
     return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+def radio_summary(request: Request, session: Session, slug: str) -> dict | None:
+    """The car radio market bottom-up for the radio case (app/services/radio_market.py); guests see none of it."""
+    from app.auth.session import principal
+    from app.services import radio_market
+
+    who = principal(request)
+    if slug != radio_market.CASE or (who is not None and who.is_guest):
+        return None
+    out = radio_market.summary(session)
+    out["reports_band"] = (tam.by_function(session).get("am_fm_tuner") or {}).get("band") or ""
+    return out
+
+
+def radio_mandates(slug: str) -> list[dict]:
+    """Standards, mandates and adoption for the radio case (qualitative, so guests see them too)."""
+    from app.services import radio_market
+
+    return radio_market.config().get("mandates") or [] if slug == radio_market.CASE else []
 
 
 def tam_notes(request: Request, session: Session, slug: str) -> dict:

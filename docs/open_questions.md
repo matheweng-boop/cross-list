@@ -20,6 +20,17 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    market size in the radio-tuner-next case; it is marked as applied on the TAM estimates page only. Should it also
    be linked to the case (and locked as applied there)?
 
+5. **Car radio market, prices needed (26 Oct 2026).** The radio market at current BOM content is "Not Enough Data"
+   until these have a price basis: Si47961 (dual AM/FM tuner: only its sibling Si47962 is priced; enter prices or a
+   low / in band / high call), Si46922 (DAB demodulator: no price on the site) and a part for each adjacent block
+   (antenna amplifier / LNA, antenna switch, audio amplifier). Enter them under Price estimate > Required for market
+   estimates (public distributor or list prices only). Are these the right reference systems and blocks?
+6. **Digital share of new-car radios.** Today's mix is 26–90 % digital (Europe, US, India known; China, Japan and the
+   rest of the world have no public share, so they count both ways). Do you know a public figure for China's or the
+   world's share, and should the 2030 projection assume every new radio is digital (the upper bound used now)?
+7. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
+   congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
+
 ## Settled (owner, 25 Oct 2026: "Yes to all")
 
 - Systems grouping: the diagrams under "Other" become more systems (e.g. Industrial & energy, Consumer & wearables,
@@ -77,6 +88,13 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
   reference's band from its datasheet points. Over 0.05–1 GHz the SKY12212 has 0.47 dB insertion loss and about
   36 dB isolation (worst common port, between the 0.6 and 1.2 GHz points), against 0.30 dB and 52 dB: still worse
   on both, so it stays a cross with deviations.
+
+## Settled (owner, 25 Oct 2026, radio market)
+
+- Market size: total radio market incl. adjacent technologies (owner, 25 Oct 2026). Tuner content (tuner ICs only) is
+  a labelled sub-layer inside it, not a separate market size. Content per vehicle comes from the site's price
+  estimates; the owner's $5 (AM/FM only, 2–4 tuners) and $10 (DAB system by 2030) per vehicle are a cross-check.
+  Vehicles: 90–92 M radio systems a year, flat; growth comes from content per vehicle.
 
 ## Settled (owner, 22 Oct 2026)
 

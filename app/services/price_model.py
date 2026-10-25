@@ -29,6 +29,7 @@ from app.models import DataReview, Part, PriceQuote
 FILE = PROJECT_ROOT / "data" / "business" / "price_model.yaml"
 LIST_FILE = PROJECT_ROOT / "data" / "business" / "list_prices.yaml"  # public list prices from makers' own pages
 DATASET = "price"  # DataReview rows: key = part number, verdict = low | ok | high
+ENTERED = "price_breaks"  # DataReview rows: key = part number (upper case), verdict "entered", comment = JSON breaks
 CALLS = {"low": "Our real price is at or below the low end", "ok": "Within the band",
          "high": "Our real price is at or above the high end"}  # fmt: skip
 SIGN = {"low": -1, "ok": 0, "high": 1}
@@ -318,6 +319,37 @@ def record(session: Session, mpn: str, verdict: str, comment: str = "", author: 
     session.add(DataReview(dataset=DATASET, key=mpn[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
+
+
+def record_breaks(session: Session, mpn: str, breaks_: list[tuple[int, float]], currency: str = "USD",
+                  note: str = "", author: str = "") -> None:
+    """Price breaks the owner entered for a part (public distributor or list prices only), kept so the market
+    estimates can use them (owner, 25 Oct 2026). The newest entry per part counts."""
+    import json
+
+    if not mpn.strip() or not breaks_:
+        raise ValueError("a part number and at least one price break are needed")
+    cur = currency.upper() if currency.upper() in config()["fx"]["usd_per"] else "USD"
+    data = {"breaks": [[int(q), float(p)] for q, p in breaks_], "currency": cur, "note": note.strip()[:300]}
+    session.add(DataReview(dataset=ENTERED, key=mpn.strip().upper()[:120], verdict="entered",
+                           comment=json.dumps(data), author=author.strip()[:100] or None))  # fmt: skip
+    session.commit()
+
+
+def entered(session: Session) -> dict[str, dict]:
+    """The newest owner-entered price breaks per part number (upper case): {breaks, currency, note, author, date}."""
+    import json
+
+    out: dict[str, dict] = {}
+    q = select(DataReview).where(DataReview.dataset == ENTERED).order_by(DataReview.id)
+    for r in session.scalars(q):
+        try:
+            d = json.loads(r.comment or "{}")
+        except ValueError:
+            continue
+        if d.get("breaks"):
+            out[r.key] = {**d, "author": r.author, "date": r.created_at}
+    return out
 
 
 def _num(tok: str) -> float:

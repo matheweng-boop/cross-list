@@ -1,0 +1,5 @@
+{# Biweekly check status of one TAM estimate (scripts/check_tam.py); needs e #}{% set c = e.check %}{% if c %}<details class="tam-chk"><summary><span class="tam-chip chk-{{ c.status }}" title="{{ c.evidence or c.why }}">{{ c.status }}</span></summary>
+  <p class="small">Checked {{ c.date }}: {{ c.why }}{% if c.new_value %} · newer figure: <b>{{ c.new_value }}</b> for {{ c.new_year }}{% endif %}</p>
+  {% if c.evidence %}<p class="small muted">“{{ c.evidence }}”</p>{% endif %}
+  {% if e.flag %}<p class="small uc-error">{{ e.flag }}. Your answer still counts; look again and change it if needed.</p>{% elif e.excluded %}<p class="small muted">Left out of the market size: {{ e.excluded }}.</p>{% endif %}
+</details>{% endif %}

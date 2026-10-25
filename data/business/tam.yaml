@@ -19,6 +19,13 @@
 #             it; coverage_note says which. Where a function has full-coverage figures, only those set its market size
 #             (owner, 22 Oct 2026, radio tuners: the market that counts is the total radio market, tuners plus digital
 #             radio demodulators).
+#
+# Biweekly check (scripts/check_tam.py, results in tam_checks.yaml): each source is fetched politely and marked
+# verified, changed, unverifiable or disqualified. Never delete an entry because of a check: a disqualified entry is
+# left out of the market size (tam.by_function) the same way an owner "disagree" is. Owner answers win: if the owner
+# agreed and the check disqualifies, the entry stays in and is flagged for the owner. Estimates of the same function
+# and scope are combined into one low–high band in tam_topics.yaml once 2 of them are reviewed or verified; report and
+# case figures that rest on them are listed in tam_links.yaml.
 estimates:
   - id: tuner-ic-mrfr
     product: Automotive tuner ICs

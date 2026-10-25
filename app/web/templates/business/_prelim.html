@@ -54,7 +54,7 @@
 <h2>2. The market today</h2>
 <div class="table-wrap"><table class="small pc-table">
   <thead><tr><th scope="col">Figure</th><th scope="col">Value</th><th scope="col">Source</th></tr></thead>
-  <tbody>{% for m in case.market_now %}<tr><td>{{ m.figure }}</td><td>{{ m.value }}</td><td>{{ m.source }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for m in case.market_now %}<tr><td>{{ m.figure }}</td><td>{{ m.value }}{% set n = (tam_notes or {}).get('market_now', {}).get(loop.index0) %}{% if n %}{% include "business/_tam_fig.html" %}{% endif %}</td><td>{{ m.source }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 {{ thread('market') }}
 

@@ -1,0 +1,3 @@
+{# Market figures quoted in this report's text or background notes, against the current TAM (owner view only) #}
+{% set bg = background|default(false) %}{% set notes = [] %}{% for n in (tam_notes or {}).get('other', []) if (n.where|string).startswith('background') == bg %}{% set _ = notes.append(n) %}{% endfor %}
+{% if notes %}<section class="small tam-notes"><b>Market figures on this page</b><ul>{% for n in notes %}<li>“{{ n.text }}” <span class="muted">({{ n.where }})</span>{% include "business/_tam_fig.html" %}</li>{% endfor %}</ul></section>{% endif %}

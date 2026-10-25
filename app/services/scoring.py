@@ -159,7 +159,8 @@ def _demand(u: dict, top: float) -> tuple:
         lo, hi = math.log10(cfg["tam_low"]), math.log10(cfg["tam_high"])
         v = min(100.0, max(0.0, 100 * (math.log10(u["tam"]) - lo) / (hi - lo)))
         n = u["tam_apps"]
-        basis = f"TAM ${u['tam']:,.0f} per year (public estimate, {n} source{'' if n == 1 else 's'})"
+        size = u.get("tam_band") or f"${u['tam']:,.0f}"
+        basis = f"TAM {size} per year (public estimate, {n} source{'' if n == 1 else 's'})"
         return v, basis, cfg["tam_confidence"]
     c = _diagram_confidence(u["lib"])
     sockets = f"{u['raw']:g} socket{'' if u['raw'] == 1 else 's'}"
@@ -232,7 +233,8 @@ def table(apps: list[op.Application], asp: dict | None = None, vol: dict | None 
     use, verdicts = _usage(apps, asp or {}, vol or {}), verdicts or {}
     for fn, t in (public_tam or {}).items():  # public market size per function (app/services/tam.py)
         if fn in use:
-            use[fn]["tam"], use[fn]["tam_apps"] = t["usd"], t["n"]
+            use[fn]["tam"], use[fn]["tam_apps"] = t["usd"], t["n"]  # usd: the midpoint of a combined band
+            use[fn]["tam_band"] = t.get("band")
     top = max((u["raw"] for fn, u in use.items() if scorable(fn, u)), default=0)
     out = {"rows": {fn: _score(fn, u, top, verdicts) for fn, u in use.items() if scorable(fn, u)},
            "usage": use, "top": top, "verdicts": verdicts}  # fmt: skip

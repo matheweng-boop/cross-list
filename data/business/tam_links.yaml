@@ -1,0 +1,27 @@
+# Market figures quoted as text in reports and cases, and the TAM estimates they rest on (owner, 25 Oct 2026: "update
+# the overall report"). Report and case text does not change by itself: app/services/tam_links.py compares each figure
+# below with the current market size of its function (tam.by_function: the combined topic's band where there is one,
+# after owner answers and the biweekly check). Where they differ by more than 15 %, or a key it rests on is now left
+# out (owner disagree or disqualified), the daily inbox gets a to-do under "TAM changes for reports"; the run then
+# updates the text here and in the report or case, and records the applied answer in data/business/tam_applied.yaml.
+#
+# Fields
+#   id      unique: <slug>.<place>
+#   slug    the report or case (data/business/reports.yaml); page = /business/reports/<slug>
+#   where   case: market_now[<i>] or thread.market (data/business/cases/<slug>.yaml) · report: summary
+#           (data/business/reports.yaml) · background: <note number> (app/web/templates/business/reports/<slug>.background.html)
+#   text    the figure exactly as quoted there (kept in step when the run updates it)
+#   low, high  what the text states, in US dollars, for year
+#   fn      function (data/blocks/functions.yaml); keys = the tam.yaml ids it rests on; topic = combined topic, if any
+links:
+  - {id: radio-tuner-next.market_now.7, slug: radio-tuner-next, where: "case: market_now[7]", text: "$0.9–2.3 B (2024)", low: 900000000, high: 2300000000, year: 2024, fn: am_fm_tuner, topic: auto-radio-tuner-ics, keys: [tuner-ic-mrfr, tuner-ic-datahorizzon, digital-radio-tuner-marketintelo]}
+  - {id: radio-tuner-next.background.4-13, slug: radio-tuner-next, where: "background: 4.13", text: "$2.31 B (2024) (MRFR); $1.42 B (2024) (Emergen); $0.89 B (2024) (DataHorizzon); digital radio tuner IC $1.8 B (2025) (MarketIntelo)", low: 890000000, high: 2310000000, year: 2024, fn: am_fm_tuner, topic: auto-radio-tuner-ics, keys: [tuner-ic-mrfr, tuner-ic-emergen, tuner-ic-datahorizzon, digital-radio-tuner-marketintelo]}
+  - {id: auto-clock-tree.market_now.1, slug: auto-clock-tree, where: "case: market_now[1]", text: "$400–500 M (2024)", low: 400000000, high: 500000000, year: 2024, fn: clock_generator, keys: [auto-timing-sitime]}
+  - {id: auto-clock-tree.thread.market, slug: auto-clock-tree, where: "case: thread.market", text: "Automotive timing is about $400–500 M (SiTime's view)", low: 400000000, high: 500000000, year: 2024, fn: clock_generator, keys: [auto-timing-sitime]}
+  - {id: auto-clock-tree.background.sam, slug: auto-clock-tree, where: "background: SiTime automotive SAM", text: "SiTime automotive SAM $400–500 M (2024)", low: 400000000, high: 500000000, year: 2024, fn: clock_generator, keys: [auto-timing-sitime]}
+  - {id: auto-uwb-cpd.market_now.4, slug: auto-uwb-cpd, where: "case: market_now[4]", text: "$1.5 B (2024) → $3.0 B (2030)", low: 1500000000, high: 1500000000, year: 2024, fn: radar_transceiver, keys: [cpd-system-ksm]}
+  - {id: auto-uwb-cpd.background.cpd, slug: auto-uwb-cpd, where: "background: CPD system market", text: "CPD system market $1.50 B (2024) → $3.00 B (2030)", low: 1500000000, high: 1500000000, year: 2024, fn: radar_transceiver, keys: [cpd-system-ksm]}
+  - {id: auto-wifi7-fem.market_now.7, slug: auto-wifi7-fem, where: "case: market_now[7]", text: "≈$3.7–3.9 B (2025), ≈10 % a year", low: 3700000000, high: 3900000000, year: 2025, fn: wifi_fem, keys: [auto-wifi-modules]}
+  - {id: iso-current-sense-charging.market_now.0, slug: iso-current-sense-charging, where: "case: market_now[0]", text: "$3.35 B in 2026 → $6.39 B in 2032 (11.4 % a year)", low: 3350000000, high: 3350000000, year: 2026, fn: current_sensor, keys: [current-sensor-mm]}
+  - {id: iso-current-sense-charging.summary, slug: iso-current-sense-charging, where: "report: summary", text: "current sensors $3.35 B in 2026 to $6.39 B by 2032", low: 3350000000, high: 3350000000, year: 2026, fn: current_sensor, keys: [current-sensor-mm]}
+  - {id: iso-current-sense-charging.background.3-1, slug: iso-current-sense-charging, where: "background: 3.1", text: "USD 3.35 billion in 2026 to 6.39 billion by 2032", low: 3350000000, high: 3350000000, year: 2026, fn: current_sensor, keys: [current-sensor-mm]}

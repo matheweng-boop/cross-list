@@ -149,8 +149,16 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     out += [x for rep in share_reports.REPORTS.values() for x in tech_overview_edit.inbox_lines(session, start, rep)]
 
+    # report and case market figures that no longer match the TAM (data/business/tam_links.yaml)
+    from app.services import tam_links
+
+    tam_todo = tam_links.inbox_lines(session)
+    out += tam_todo
+    tam_changes = tam_todo[-1] != "None."
+
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
-    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved, overview]):
+    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved, overview,
+                tam_changes]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

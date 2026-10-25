@@ -1,0 +1,20 @@
+{# TAM estimates: the biweekly check summary, flags for the owner and the combined topics (data/business/tam_topics.yaml) #}
+{% if check %}<p class="small tam-check-sum"><b>Last check {{ check.date|date }}:</b> {{ check.verified }} verified, {{ check.changed }} changed, {{ check.unverifiable }} unverifiable, {{ check.disqualified }} disqualified <span class="muted">· every second Sunday; nothing is deleted, disqualified figures are left out of the market size unless you agreed</span></p>{% endif %}
+{% if flags %}<div class="banner small"><b>Please look again:</b><ul>{% for e in flags %}<li><a href="#t-{{ e.key }}">{{ e.product }} {{ e.value }}</a>: {{ e.flag }}</li>{% endfor %}</ul></div>{% endif %}
+{% if topics %}<h2 class="tam-h">Combined market sizes</h2>
+<div class="tam-list">{% for t in topics %}
+<article class="tam-card tam-topic" id="topic-{{ t.id }}">
+  <header><b>{{ t.title }}</b>{% if t.fn and t.fn in fns %} <a class="small muted" href="/business/evidence/{{ t.fn }}">{{ fns[t.fn].label }}</a>{% endif %} <span class="badge">combined from {{ t.n }} source{{ 's' if t.n != 1 }}</span></header>
+  <p class="tam-value">{% if t.high >= 1e9 %}Low <b>${{ '%.2f'|format(t.low / 1e9) }} B</b> – High <b>${{ '%.2f'|format(t.high / 1e9) }} B</b>{% else %}Low <b>{{ money(t.low) }}</b> – High <b>{{ money(t.high) }}</b>{% endif %}{% if t.year %} <span class="muted">({{ t.year }})</span>{% endif %}{% if t.cagr_low is not none %} <span class="muted">· growth {{ t.cagr_low }}{% if t.cagr_high != t.cagr_low %}–{{ t.cagr_high }}{% endif %} % a year</span>{% endif %}</p>
+  {% if t.scope %}<p class="small">{{ t.scope }}</p>{% endif %}
+  {% if t.note %}<p class="small muted">{{ t.note }}</p>{% endif %}
+  {% set used = applied_in.get(t.id) or [] %}{% if used %}<p class="small"><b>Applied in:</b> {% for p in used %}{% if p.slug %}<a href="/business/reports/{{ p.slug }}">{{ p.label }}</a>{% else %}{{ p.label }}{% endif %}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+  <details><summary class="small">Sources in this band ({{ t.members|length }})</summary>
+  <ul class="small tam-members">{% for e in t.members %}<li id="t-{{ e.key }}"><b>{{ e.source.publisher or e.source.title }}</b>: {{ e.value }}{% if e.year %} in {{ e.year }}{% endif %}{% if e.coverage %} · <span class="badge">{{ {'full': 'covers the whole market', 'part': 'covers less than the whole market', 'not_stated': 'coverage not checked'}[e.coverage] }}</span>{% if e.coverage_note %} <span class="muted">{{ e.coverage_note }}</span>{% endif %}{% endif %}
+    {% if e.excluded %}<span class="tam-chip chk-disqualified">left out</span> <span class="muted">{{ e.excluded }}</span>{% elif e.key not in t.setters %}<span class="muted">· inside the band, does not set it</span>{% endif %}
+    {% if e.source.url %}· <a href="{{ e.source.url }}" target="_blank" rel="noopener">source</a>{% endif %}
+    {% include "business/_tam_chip.html" %}
+    {% set hist = history.get(e.key) or [] %}{% if hist %}<br><span class="muted">Your answers:</span> {% for r in hist %}{{ {'correct': 'agree', 'wrong': 'disagree'}.get(r.verdict, r.verdict) }}{% if r.comment %} (“{{ r.comment }}”){% endif %} {{ r.created_at|date }}{{ '; ' if not loop.last }}{% endfor %}{% elif e.review %}<br><span class="muted">Your answer (recorded {{ e.review.date }}): {{ e.review.verdict }}{% if e.review.comment %} (“{{ e.review.comment }}”){% endif %}</span>{% endif %}
+  </li>{% endfor %}</ul></details>
+</article>{% endfor %}</div>
+<h2 class="tam-h">Single estimates</h2>{% endif %}

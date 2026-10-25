@@ -14,7 +14,8 @@ def test_tuner_figures_labelled_by_scope():
 
 def test_total_radio_market_is_the_range_of_full_coverage_figures(session):
     t = tam.by_function(session)["am_fm_tuner"]
-    assert (t["low"], t["high"], t["n"]) == (890000000, 2310000000, 2)  # digital-only and unchecked figures left out
+    # band set by the full-coverage figures; since 25 Oct 2026 a combined topic of 3 reviewed sources (Emergen left out)
+    assert (t["low"], t["high"], t["n"]) == (890000000, 2310000000, 3)
     assert t["usd"] == (890000000 + 2310000000) / 2
 
 

@@ -5,15 +5,17 @@ too (app/auth/access.py does not list /shareable as owner-only); editing the Tec
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.auth.session import signed_in_owner
 from app.db import get_session
-from app.services import logo, tech_overview, uploads
+from app.services import logo, site_guard, tech_overview, uploads
+from app.services import presentation_pptx as pp
 from app.services import share_reports as sr
 from app.services import tech_overview_edit as te
 from app.services.text import round_count
+from app.web.presentation import _logo_bytes
 from app.web.routes import templates
 
 router = APIRouter()
@@ -21,13 +23,8 @@ templates.env.filters.setdefault("rounded", round_count)  # counts on the Sharea
 URL = "/shareable/technology-overview"
 EDIT = URL + "/edit"
 
-# the one list on /shareable (owner, 25 Oct 2026): key in the combined PDF, name, one short line, its page
-REPORT_LIST = (("synergies", "Skyworks + Qorvo synergies", "For management: capabilities, overlap, where they combine.",
-                "/shareable/synergies"),
-               ("automotive", "Automotive", "Extension of the synergies: technologies and applications in the car.",
-                "/shareable/automotive"),
-               ("overview", "Technology overview", "The Skyworks + Qorvo portfolio: platforms, markets, families.",
-                URL))  # fmt: skip
+# the reports on /shareable, in the combined PDF and in PowerPoint all come from one list: share_reports.REGISTRY
+# (its top says how to add a report)
 # what the page says after an edit action (?done=...); only these texts can appear
 DONE = {"saved": "Saved.", "nochange": "Nothing changed.", "undone": "Undone: the page shows the version before.",
         "reset": "Back to the default.", "resetall": "Everything is back to the defaults (Undo brings it back).",
@@ -50,14 +47,15 @@ def _back(done: str, anchor: str = "") -> RedirectResponse:
 @router.get("/shareable", response_class=HTMLResponse)
 def shareable(request: Request):
     """One page: the reports in a list (preview each, tick the ones to combine), a watermark, Build a PDF (the ticked
-    reports in one print view) and Build a presentation (the topic builder). Nothing
+    reports in one print view), Download as PowerPoint (the ticked reports as one .pptx) and Build a presentation
+    (the topic builder). Nothing
     is ticked unless the address carries the last choice (?r=...)."""
     q = request.query_params
-    reports = [(key, label, line, sr.PAGES[key], href, href + "/edit") for key, label, line, href in REPORT_LIST]
+    reports = [(r.key, r.label, r.line, r.pages, r.url, r.url + "/edit") for r in sr.REGISTRY]
     return templates.TemplateResponse(request, "shareable/index.html", {
         "reports": reports, "picked": sr.pack_selection(",".join(q.getlist("r"))),
         "owner": signed_in_owner(request) is not None, "wm": q.get("wm", "none"),
-        "watermarks": te.WATERMARKS})  # fmt: skip
+        "watermarks": te.WATERMARKS, "pick": q.get("pick") == "1"})  # fmt: skip
 
 
 def _page(request: Request, session: Session, edit: bool, ov: dict | None = None, errors: dict | None = None,
@@ -193,35 +191,30 @@ async def technology_overview_resolve(request: Request, session: Session = Depen
 
 # ---- the management reports (owner, 25 Oct 2026): Skyworks + Qorvo synergies and Automotive -----------------------
 # Same editing as the Technology overview (tech_overview_edit with the report's key); guests read, only the owner edits.
-BODIES = {"synergies": "shareable/_synergies.html", "automotive": "shareable/_automotive.html"}
-
-
+# Each report's build, body template and page count come from its share_reports.REGISTRY entry.
 def _report(slug: str) -> te.Report:
-    rep = sr.REPORTS.get(slug)
+    rep = sr.reports().get(slug)
     if rep is None:
         raise HTTPException(404, "No such page.")
     return rep
-
-
-def _build(rep: te.Report) -> dict:
-    return sr.build_synergies() if rep.key == "synergies" else sr.build_automotive()
 
 
 def _report_ctx(request: Request, session: Session, rep: te.Report, edit: bool = False, ov: dict | None = None,
                 wm: dict | None = None) -> dict:  # fmt: skip
     """Everything a report body needs: its values (the owner's edits over the defaults), the shared logo and header
     options (set on the Technology overview), the watermark of this view."""
-    te.apply_answers(session, sr.SYNERGIES if rep.key == "synergies" else sr.AUTOMOTIVE)
+    entry = sr.registry()[rep.key]
+    te.apply_answers(session, rep)
     session.commit()
     ov = te.overrides(session, rep) if ov is None else ov
     vals = te.values(ov, rep)
     ovals = te.values(te.overrides(session))
     vals.update({k: ovals[k] for k in ("hdr.logo_align", "hdr.logo_size")})
     wm = wm or te.view_options(ovals, request.query_params)
-    o = {"wm": wm["wm"], "wm_text": wm["wm_text"], "pages": sr.PAGES[rep.key]}
-    return {"t": _build(rep), "today": date.today(), "vals": vals, "edit": edit, "o": o, "specs": rep.specs(),
+    o = {"wm": wm["wm"], "wm_text": wm["wm_text"], "pages": entry.pages}
+    return {"t": entry.build(), "today": date.today(), "vals": vals, "edit": edit, "o": o, "specs": rep.specs(),
             "over": set(ov), "errors": {}, "message": "", "logo": te.logo_of(session, ovals), "ip_note": sr.PATENT_NOTE,
-            "watermarks": te.WATERMARKS, "page_url": rep.url, "edit_url": rep.url + "/edit", "body": BODIES[rep.key],
+            "watermarks": te.WATERMARKS, "page_url": rep.url, "edit_url": rep.url + "/edit", "body": entry.body,
             "wm_error": wm["wm_error"]}  # fmt: skip
 
 
@@ -249,12 +242,13 @@ def shareable_pack(request: Request, session: Session = Depends(get_session)):
     ignored: the market focus page was removed, owner 25 Oct 2026). Page numbers run through the whole PDF; the
     sources come once, at the end."""
     q = request.query_params
-    keys = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
+    keys = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.pack_order())
     te.apply_answers(session)
     session.commit()
     ovals = te.values(te.overrides(session))
     opts = te.view_options(ovals, q)
-    pages = {k: sr.PAGES[k] for k in keys}
+    reg = sr.registry()
+    pages = {k: reg[k].pages for k in keys}
     total, offset = sum(pages.values()), 0
     ctxs = {}
     for k in keys:
@@ -263,7 +257,7 @@ def shareable_pack(request: Request, session: Session = Depends(get_session)):
                        "specs": te.specs(), "over": set(), "errors": {}, "message": "", "watermarks": te.WATERMARKS,
                        "logo": te.logo_of(session, ovals)}  # fmt: skip
         else:
-            ctxs[k] = _report_ctx(request, session, sr.REPORTS[k], wm=opts)
+            ctxs[k] = _report_ctx(request, session, reg[k].edit, wm=opts)
         ctxs[k].update(pack_offset=offset, pack_total=total, pack_sources_later=k != keys[-1], request=request,
                        signed_in=lambda _r: None)  # fmt: skip
         offset += pages[k]
@@ -278,12 +272,40 @@ def shareable_pack(request: Request, session: Session = Depends(get_session)):
             start, end = html.find('<section class="to-page"'), html.rfind("</section>")
             bodies.append(html[start:end + len("</section>")] if start >= 0 else "")
         else:
-            bodies.append(templates.get_template(BODIES[k]).render(ctxs[k]))
-    titles = ["Technology overview" if k == "overview" else sr.REPORTS[k].label for k in keys]
+            bodies.append(templates.get_template(reg[k].body).render(ctxs[k]))
+    titles = ["Technology overview" if k == "overview" else reg[k].edit.label for k in keys]
     query = f"r={','.join(keys)}&wm={opts['wm']}"
     return templates.TemplateResponse(request, "shareable/pack.html", {
         "bodies": bodies, "titles": titles, "total": total, "wm_text": opts["wm_text"], "keys": keys,
         "query": query})  # fmt: skip
+
+
+@router.get("/shareable/pptx")
+def shareable_pptx(request: Request, session: Session = Depends(get_session)):
+    """Download as PowerPoint (owner, 25 Oct 2026): the ticked reports (?r=synergies,automotive) as one editable 16:9
+    .pptx, in the list's order, with the watermark (&wm=). The slides come from the same data and values (the owner's
+    edits) as the report pages. Nothing ticked: back to the list, which asks to pick a report."""
+    q = request.query_params
+    keys = sr.list_order(",".join(q.getlist("r")).split(","))
+    if not keys:
+        return RedirectResponse("/shareable?pick=1#build-pdf", status_code=303)
+    te.apply_answers(session)
+    for rep in sr.reports().values():
+        te.apply_answers(session, rep)
+    session.commit()
+    ovals = te.values(te.overrides(session))
+    opts = te.view_options(ovals, q)
+    today, reg, slides = date.today(), sr.registry(), []
+    for k in keys:
+        entry = reg[k]
+        vals = ovals if entry.edit is None else te.values(te.overrides(session, entry.edit), entry.edit)
+        slides += entry.slides(entry.build(), vals, today, sr.PATENT_NOTE)
+    data = pp.build(slides, "Shareable reports", today, opts["wm_text"], _logo_bytes(te.logo_of(session, ovals)))
+    if [h for t in pp.texts(data) for x in t for h in site_guard.hits(x)]:  # never expected: the pages pass it
+        raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
+    name = "skyworks-qorvo-" + "-".join(keys) + ".pptx"
+    return Response(data, media_type=pp.MEDIA_TYPE, headers={
+        "Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "private, no-store"})  # fmt: skip
 
 
 @router.get("/shareable/{slug}", response_class=HTMLResponse)

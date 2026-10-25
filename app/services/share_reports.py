@@ -9,10 +9,13 @@ Technology overview's (tech_overview_edit.Report), each report under its own sto
 
 import importlib
 import re
+from collections.abc import Callable
+from dataclasses import dataclass
 from functools import lru_cache
 
 from app import yamlio
 from app.config import PROJECT_ROOT
+from app.services import share_slides as ss
 from app.services import tech_overview as to
 from app.services import tech_overview_edit as te
 from app.services.text import round_count, whole_words
@@ -340,15 +343,77 @@ SYNERGIES = te.Report("synergies", "share_synergies", "Skyworks + Qorvo synergie
 AUTOMOTIVE = te.Report("automotive", "share_automotive", "Automotive: technologies and applications",
                        "/shareable/automotive", lambda: specs_automotive(), _sections("automotive"),
                        _paras("automotive"), _limits, to.share_problems, "3 A4 pages")  # fmt: skip
-REPORTS = {"synergies": SYNERGIES, "automotive": AUTOMOTIVE}
-PAGES = {"overview": 4, "synergies": 3, "automotive": 3}  # printed A4 pages
-PACK_ORDER = ("overview", "synergies", "automotive")
+
+
+# ---- THE REGISTRY: every report on /shareable (owner, 25 Oct 2026) ---------------------------------------------------
+# How to add a report (e.g. "Drones", built like Automotive):
+#   1. Words: a new top-level section in data/business/share_reports.yaml (title, header, sections with paragraphs,
+#      facts, sources), like "automotive:".
+#   2. Data: a build_<key>() here returning what the page shows (facts, lists), a specs_<key>() for its editable
+#      fields and a te.Report(...) for editing and storage, like AUTOMOTIVE above.
+#   3. Page: a body template app/web/templates/shareable/_<key>.html (one <section class="to-page"> per A4 page),
+#      like _automotive.html.
+#   4. Slides: a function in app/services/share_slides.py that returns the PowerPoint slides from (data, vals).
+#   5. One ShareReport(...) entry in REGISTRY below. Nothing else: the report then shows on /shareable as a row (tap
+#      to preview, Add to PDF, Edit for the owner), in the combined PDF (/shareable/pack), in Download as PowerPoint
+#      (/shareable/pptx), and at /shareable/<key> (+ /edit) under the menu's "Reports" entry.
+#   tests/test_share_registry.py checks that an extra entry shows up in the list, the PDF and the PowerPoint.
+@dataclass(frozen=True)
+class ShareReport:
+    key: str  # in addresses (?r=...) and /shareable/<key>
+    label: str  # the name in the list
+    line: str  # one short line under the name
+    url: str
+    pages: int  # printed A4 pages
+    build: Callable[[], dict]  # the data the page renders
+    slides: Callable[..., list[dict]]  # (data, vals, today, ip_note) -> PowerPoint slides (share_slides.py)
+    body: str = ""  # the body template (its A4 pages); "" for the Technology overview, which has its own page
+    edit: te.Report | None = None  # editing and stored values; None: the Technology overview's own
+    pack_rank: int = 50  # place in the combined PDF (lower first); the list and PowerPoint follow REGISTRY's order
+
+
+REGISTRY: list[ShareReport] = [
+    ShareReport("synergies", "Skyworks + Qorvo synergies", "For management: capabilities, overlap, where they combine.",
+                SYNERGIES.url, 3, build_synergies, ss.synergies, "shareable/_synergies.html", SYNERGIES, 10),
+    ShareReport("automotive", "Automotive", "Extension of the synergies: technologies and applications in the car.",
+                AUTOMOTIVE.url, 3, build_automotive, ss.automotive, "shareable/_automotive.html", AUTOMOTIVE, 20),
+    ShareReport("overview", "Technology overview", "The Skyworks + Qorvo portfolio: platforms, markets, families.",
+                "/shareable/technology-overview", 4, to.build, ss.overview, pack_rank=0),
+]  # fmt: skip
+
+
+def registry() -> dict[str, ShareReport]:
+    """key -> report, in the list's order (read at call time, so a test can add an entry)."""
+    return {r.key: r for r in REGISTRY}
+
+
+def reports() -> dict[str, te.Report]:
+    """The report pages with their own editing (/shareable/<key>)."""
+    return {r.key: r.edit for r in REGISTRY if r.edit is not None}
+
+
+def pages() -> dict[str, int]:
+    return {r.key: r.pages for r in REGISTRY}
+
+
+def pack_order() -> tuple[str, ...]:
+    return tuple(r.key for r in sorted(REGISTRY, key=lambda r: r.pack_rank))
+
+
+def list_order(keys) -> list[str]:
+    """The known keys among the given ones, in the list's order, each once (Download as PowerPoint)."""
+    asked = {str(k).strip() for k in keys}
+    return [r.key for r in REGISTRY if r.key in asked]
+
+
+# the same, as fixed values for older callers (the inbox, tests); new code calls the functions above
+REPORTS, PAGES, PACK_ORDER = reports(), pages(), pack_order()
 
 
 def pack_selection(raw: str) -> list[str]:
-    """?r=overview,synergies,automotive -> the known reports in the fixed order, each once."""
+    """?r=overview,synergies,automotive -> the known reports in the combined PDF's order, each once."""
     asked = {x.strip() for x in (raw or "").split(",")}
-    return [k for k in PACK_ORDER if k in asked]
+    return [k for k in pack_order() if k in asked]
 
 
 def sources(keys: list[str], vals_by: dict[str, dict]) -> list[str]:

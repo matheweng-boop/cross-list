@@ -102,6 +102,7 @@ def _bullets(slide, x, y, w, h, points: list[str], size: float, *, lead: str = "
 
 # ---- slide frame ----------------------------------------------------------------------------------------------------
 def _frame(prs, deck_title: str, today, wm_text: str, n: int, total: int, logo: bytes | None):
+    """One blank 16:9 slide with the header band, footer and watermark (the deck title, or the slide's own "head")."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank
     if wm_text:  # first, so it sits behind everything
         wm = _text(slide, Inches(1), Inches(2.6), W - Inches(2), Inches(2.2), wm_text.upper(), 96, bold=True,
@@ -302,7 +303,43 @@ def _closing(slide, b: dict):
           align=PP_ALIGN.CENTER)  # fmt: skip
 
 
-BODIES = {"bullets": _points, "agenda": _points, "diagram": _diagram, "parts": _parts, "together": _together,
+def _table(slide, b: dict):
+    """A native table (the Shareable reports, app/services/share_slides.py): a header row, then text rows; a short
+    lead above and a note below. Font size follows the amount of text, so the table stays inside the body."""
+    cols, rows = list(b.get("cols") or []), [list(r) for r in b.get("rows") or []]
+    if not cols:
+        return
+    y = BODY_TOP
+    if b.get("lead"):
+        size = 14 if len(b["lead"]) < 260 else 12
+        _text(slide, MX, y, W - 2 * MX, Inches(0.75), b["lead"], size, color=MUTED)
+        y += Inches(0.8)
+    bottom = BODY_BOTTOM - (Inches(0.45) if b.get("note") else 0)
+    chars = sum(len(str(c)) for r in rows for c in r) + 40 * len(rows)
+    size = max(9.0, min(14.0, 14 * (1200 / max(chars, 1)) ** 0.5))
+    width = W - 2 * MX
+    gf = slide.shapes.add_table(len(rows) + 1, len(cols), MX, y, width, min(bottom - y, Inches(0.42) * (len(rows) + 1)))
+    t = gf.table
+    widths = [float(x) for x in b.get("widths") or []]
+    if len(widths) == len(cols):
+        unit = width / sum(widths)
+        for i, x in enumerate(widths):
+            t.columns[i].width = Emu(int(unit * x))
+    else:
+        for i in range(len(cols)):
+            t.columns[i].width = Emu(int(width / len(cols)))
+    for i, head in enumerate(cols):
+        _run(_cell(t.cell(0, i), size, ACCENT), str(head), size, True, RGBColor(0xFF, 0xFF, 0xFF))
+    for r, row in enumerate(rows, start=1):
+        bg = RGBColor(0xFF, 0xFF, 0xFF) if r % 2 else RGBColor(0xF6, 0xF8, 0xFA)
+        for c in range(len(cols)):
+            _run(_cell(t.cell(r, c), size, bg), str(row[c] if c < len(row) else ""), size, c == 0)
+    if b.get("note"):
+        _text(slide, MX, BODY_BOTTOM - Inches(0.4), W - 2 * MX, Inches(0.4), b["note"], 11, color=MUTED)
+
+
+BODIES = {"table": _table,
+          "bullets": _points, "agenda": _points, "diagram": _diagram, "parts": _parts, "together": _together,
           "facts": _facts, "glance": _glance, "closing": _closing}  # fmt: skip
 
 
@@ -316,7 +353,7 @@ def build(slides: list[dict], deck_title: str, today=None, wm_text: str = "", lo
     today = today or date.today()
     total = len(slides)
     for n, sl in enumerate(slides, start=1):
-        slide = _frame(prs, deck_title, today, wm_text, n, total, logo)
+        slide = _frame(prs, sl.get("head") or deck_title, today, wm_text, n, total, logo)
         kind, b = sl.get("kind"), sl.get("body") or {}
         if kind == "title":
             _cover(slide, b)

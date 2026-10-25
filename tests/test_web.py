@@ -310,7 +310,7 @@ def test_automotive_reference_banner(client):
 def test_navigation_sections_and_old_urls(client):
     """Sections in the top row, the section's pages in the second: every old URL lands in the right section and item."""
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
-                               ("/parts", "Products", "Browse products"),
+                               ("/parts", "Products", "Search &amp; replacements"),
                                ("/compare", "Products", "Compare"),
                                ("/broadcast", "Systems &amp; applications", "Application library"),
                                ("/broadcast/configurations", "Systems &amp; applications", "Application library"),
@@ -420,11 +420,12 @@ def test_cross_row_links_part_and_has_details_toggle(client):
     assert "Electrical: " in html  # electrical verdict kept apart from package and pinout
 
 
-def test_footer_and_browse_in_menu(client):
+def test_footer_and_browse_off_the_menu(client):
+    """Owner, 24 Oct 2026: Browse products is off the menu (too long); the page still opens from links."""
     html = client.get("/parts").text
-    assert 'class="site-foot"' in html and "Cross rules" in html
-    assert 'href="/parts" title="Every part by function' in html
-    assert 'aria-current="page" class="on">Browse products' in html
+    assert 'class="site-foot"' in html and "Cross rules" in html and "<h1>Browse products</h1>" in html
+    assert 'href="/parts" title="Every part by function' not in html
+    assert 'aria-current="page" class="on">Search &amp; replacements' in html
 
 
 def test_suggestions_are_a_combobox(client):

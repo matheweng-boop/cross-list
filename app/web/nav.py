@@ -7,7 +7,6 @@ working; this module only decides where a page sits.
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
-        ("Browse products", "/parts", "Every part by function, with filters for line, grade and lifecycle"),
         ("Part reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
@@ -70,7 +69,7 @@ PLACES = {
     "/overlay/": ("products", "/"),
     "/packages/": ("products", "/"),
     "/pricing/": ("products", "/"),
-    "/parts": ("products", "/parts"),
+    "/parts": ("products", "/"),  # owner, 24 Oct 2026: Browse products off the menu (too long); reachable by link
     "/compare": ("products", "/compare"),
     "/portfolio": ("systems", "/blocks/cross-sell"),  # owner, 25 Oct 2026: the portfolio is a Cross-sell tab
     "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application

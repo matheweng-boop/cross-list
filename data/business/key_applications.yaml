@@ -1,0 +1,105 @@
+# Key applications per function, shown as "Key applications" on the function's bigger-picture page
+# (/business/evidence/<fn>; Opportunities > Gaps & new technology > <function> > the bigger picture).
+# Owner, 24 Oct 2026, on eFuse / hot-swap controller: "Add the key applications for Auto, Drones etc."
+#
+# Per application:
+#   title, uses     the application and where the function sits in it (short lines)
+#   volts, amps     voltage and current class; "est" marks our estimates
+#   why             why this function (here: why an eFuse rather than a fuse, relay or plain switch)
+#   links           [label, href] to reports, library topics and other pages
+#   systems         where its library diagrams sit: a system key or "system/sub-system" from data/blocks/systems.yaml
+#   categories      library diagram categories, for areas that are not a system yet (Industrial, Consumer ...)
+# The page lists, per application, the library diagrams that use the function (data/blocks/templates.yaml), so the
+# counts follow the library; app/services/key_apps.py does the matching (tests/test_fb_1025_u.py).
+efuse_hotswap:
+  intro: >-
+    An eFuse (or a hot-swap controller with an external FET) limits the inrush current when a board, battery or
+    connector is plugged in, cuts a short within microseconds and, unlike a melting fuse, can be reset and report
+    current and faults. Hot-swap controllers and eFuses stop at about 80 V; above that the same job is done by
+    pre-charge circuits with SiC switches and isolated drivers (see the 800 V report).
+  applications:
+    - key: automotive
+      title: Automotive
+      uses:
+        - "Zonal controllers: eFuses replace melting fuses and relays on the 12 V and 48 V outputs"
+        - "Smart power distribution box (resettable, diagnosable channels)"
+        - "ADAS and central compute: protected 12 V / 48 V input of the computer"
+        - "400–800 V battery: pre-charge and solid-state switching instead of an eFuse"
+      volts: "12 V (load dump to about 35–40 V) and 48 V boards (to about 70 V); 400–800 V only through pre-charge"
+      amps: "About 1–25 A per channel (est); compute inputs up to about 50 A (est)"
+      why: >-
+        No fuse box to reach and no fuse to replace: the zonal controller switches each load, trips in microseconds,
+        resets by software and reports current for diagnostics. Smaller wires are allowed because the eFuse trips
+        faster than a fuse (est).
+      links:
+        - ["Report: hot-swap at 400 V and 800 V in the car", "/business/reports/auto-hv-hot-swap"]
+        - ["Library: power distribution and battery", "/blocks?system=automotive&sub=battery-power#sub-battery-power"]
+      systems: [automotive]
+    - key: drones
+      title: Drones
+      uses:
+        - "Battery pack and power distribution board (smart BMS, eFuse, BEC rails)"
+        - "Anti-spark connector: no arc when the pack is plugged in"
+        - "ESC power-up: limited inrush into the ESC bulk capacitors"
+      volts: "2S–14S LiPo, about 7–59 V"
+      amps: "About 30–200 A total on the motor bus (est); 1–10 A on the avionics rails (est)"
+      why: >-
+        Plugging a pack into ESCs with large capacitors draws a spark that pits the connector; an eFuse or pre-charge
+        stage limits it, and it also cuts a shorted ESC or motor before the pack is damaged.
+      links:
+        - ["Library: drone flight power", "/library/drone_flight_power"]
+      systems: [drones]
+    - key: datacenter
+      title: Data centre
+      uses:
+        - "48 V rack busbar: hot-swap at every server, switch and power shelf input"
+        - "800 V DC racks for AI (from 2027): hot-swap and solid-state protection at high voltage"
+        - "Hot-swap boards, drives and fans; battery backup units"
+      volts: "12 V and 48–54 V boards; 800 V DC racks"
+      amps: "About 20–100 A per board input, more with paralleled eFuses (est)"
+      why: >-
+        A server must be pulled and inserted while the rack runs: the hot-swap controller limits inrush, stops one
+        faulty board from pulling the busbar down and reports power over PMBus.
+      links:
+        - ["Library: data-center rack power", "/blocks?system=datacenter&sub=rack-power#sub-rack-power"]
+        - ["Report: 800 V hot-swap (data centres face the same problem)", "/business/reports/auto-hv-hot-swap"]
+      systems: [datacenter]
+    - key: industrial
+      title: Industrial
+      uses:
+        - "PLC CPU and I/O modules on the 24 V field supply"
+        - "Motor drives and robot joints on 24–48 V"
+      volts: "24 V nominal (about 19–30 V, with surges); 48 V in drives"
+      amps: "About 0.5–10 A (est)"
+      why: >-
+        Field wiring gets shorted, reversed and hot-plugged; an eFuse protects the module, limits inrush and reports
+        the fault to the controller instead of blowing a fuse in a cabinet.
+      links:
+        - ["Library: other areas (industrial)", "/blocks?system=other#other-areas"]
+      categories: [Industrial, Motor drives]
+    - key: telecom
+      title: Telecom
+      uses:
+        - "−48 V input of baseband units, routers and backhaul radios"
+        - "Hot-swap line cards"
+      volts: "−48 V (about −36 to −75 V)"
+      amps: "About 5–50 A (est)"
+      why: >-
+        Line cards are swapped live on a shared −48 V bus; a negative-rail hot-swap controller limits inrush and keeps
+        one card's fault off the bus.
+      links:
+        - ["Library: cellular timing, baseband and transport", "/blocks?system=cellular&sub=transport#sub-transport"]
+      systems: [cellular/transport]
+    - key: consumer
+      title: Consumer
+      uses:
+        - "USB-C power delivery input of laptops, tablets, power banks and speakers"
+      volts: "USB PD 5–20 V, up to 48 V with extended power range"
+      amps: "3–5 A (up to 240 W)"
+      why: >-
+        The USB-C port meets any charger and any cable: the eFuse blocks overvoltage and reverse current and limits
+        inrush when the source switches up from 5 V.
+      links:
+        - ["Library: phones, tablets and wearables", "/blocks?system=cellular&sub=devices#sub-devices"]
+      categories: [Consumer & personal electronics]
+      systems: [cellular/devices]

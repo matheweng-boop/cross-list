@@ -1,5 +1,5 @@
 {% raw %}<h1>Standalone filter opportunities, 1–11 GHz</h1>
-<p class="meta">20 Oct 2026 · BizDev catalogue (Skyworks + Qorvo, competitors, 219 application diagrams) and public web sources · “est” = estimate. Data tables, detail and all sources are in the background notes.</p>
+<p class="meta">20 Oct 2026, wideband section added 25 Oct 2026 · BizDev catalogue (Skyworks + Qorvo, competitors, 219 application diagrams) and public web sources · “est” = estimate. Data tables, detail and all sources are in the background notes.</p>
 
 {% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
 <section class="brief" aria-label="Summary">
@@ -7,7 +7,8 @@
   <ol>
     <li><b>The best bets combine a filter with parts we already sell.</b> For a filtered receive chain we have every other block from 1 to 11 GHz: LNAs, switches, limiters, PAs and multiplexers. Only our filters stop at about 7 GHz.</li>
     <li><b>Our standalone filters are narrowband acoustic (BAW/SAW).</b> Wide bandwidth (over ~25 %, e.g. full n77, UWB ch5–9, X-band) needs ceramic, LTCC, IPD or cavity filters. We have none of these since Trans-Tech (with Lark) was sold in 2023; it is now a competitor, so wideband means build, buy or partner.</li>
-    <li><b>Top three ideas:</b> a Wi-Fi 7/8 BAW multiplexer family, a filtered switch-LNA receive module for 5G small cells, and a protected switched filter bank for defense.</li>
+    <li><b>Wideband need is real and growing:</b> Wi-Fi 6E/7 (1.2 GHz of spectrum), full n77, UWB, satellite terminals, anti-jam GNSS, SDR, test and defense EW all need passbands over ~25 % or filters switched over octaves. Our best entry is a switched filter bank: our switches and BAW around partner LTCC or thin-film filters (est).</li>
+    <li><b>Top ideas:</b> a Wi-Fi 7/8 BAW multiplexer family, a filtered switch-LNA receive module for 5G small cells, a protected switched filter bank for defense, and a wideband switched preselector for SDR and test.</li>
   </ol>
 </section>
 
@@ -40,9 +41,67 @@
   <li><b>UWB filtered LNA, channels 5 and 9.</b> QM14068 switch-LNA plus a channel filter, sold with our UWB chips.
     <p class="ev"><span class="pill none">filter gap</span> · one BAW filter per channel may work (est); both channels in one filter need LTCC.</p></li>
 </ol>
-<p class="rpt-thread"><b>For the decision:</b> Ideas 1 and 2 use only parts we sell today, so they can be decided quickly; ideas 3–5 depend on filters we do not make.</p>
+<p class="rpt-thread"><b>For the decision:</b> Ideas 1 and 2 use only parts we sell today, so they can be decided quickly; ideas 3–5 depend on filters we do not make, which is the wideband question below.</p>
 
-<h2>2. Where else we see opportunities</h2>
+<h2>2. Wideband filters: where they are needed and how we could cover them</h2>
+<p>“Wideband” here means a passband wider than about 25 % of its centre frequency, or one that must be moved or switched over an octave or more. Acoustic filters (our BAW and SAW) cannot reach that alone; the need is real and growing.</p>
+
+<h3>Where wideband or tunable filtering is needed</h3>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Application</th><th scope="col">What must pass</th><th scope="col">Width</th><th scope="col">Why wide</th><th scope="col">Filter used today</th></tr></thead>
+  <tbody>
+    <tr><td>Software-defined and multi-band radios</td><td>e.g. 30 MHz–6 GHz, tactical 225 MHz–6 GHz</td><td class="n">many octaves</td><td>One radio for many bands; a preselector must stop harmonics and the image in every band</td><td>switched filter banks, tunable filters</td></tr>
+    <tr><td>Test and measurement</td><td>analyzers and generators to 6, 18 or 50 GHz</td><td class="n">multi-octave</td><td>Preselection and harmonic filtering over the whole range</td><td>YIG preselectors, switched banks</td></tr>
+    <tr><td>Defense EW, SIGINT, radar warning</td><td>0.5–18 GHz, 2–18 GHz</td><td class="n">&gt; 1 octave</td><td>Must see every threat at once, then pick one channel</td><td>switched banks, tunable MMIC, YIG</td></tr>
+    <tr><td>Wideband receivers (direct RF sampling)</td><td>one Nyquist zone, often 1–3 GHz wide</td><td class="n">25–60 %</td><td>Anti-alias filter in front of a fast ADC</td><td>LTCC, thin film, lumped LC</td></tr>
+    <tr><td>Satellite user terminals</td><td>Ku 10.7–12.75 GHz; L-band 1.5–1.7 GHz</td><td class="n">10–17 %</td><td>Whole downlink band plus steep rejection of the uplink and 5G</td><td>thin film, waveguide, LTCC</td></tr>
+    <tr><td>Anti-jamming and multi-band GNSS</td><td>L1 to L5, 1.16–1.61 GHz</td><td class="n">~32 %</td><td>One element for all bands, many elements per antenna (CRPA)</td><td>ceramic, LTCC; SAW per band</td></tr>
+    <tr><td>UWB</td><td>channels 499.2 MHz to ~1.3 GHz wide; ch5–9 6.24–8.24 GHz</td><td class="n">6–8 % per channel, 28 % for ch5–9</td><td>The pulse needs the whole channel, with flat phase</td><td>LTCC, IPD</td></tr>
+    <tr><td>Wi-Fi 6E / 7</td><td>5.925–7.125 GHz (1.2 GHz)</td><td class="n">18 %</td><td>All 6 GHz channels incl. 320 MHz, while 5 GHz runs next door</td><td>BAW (ours, at the edge), XBAR, LTCC</td></tr>
+    <tr><td>5G FR1 wide bands</td><td>n77 3.3–4.2 GHz; n79 4.4–5.0 GHz</td><td class="n">24 % / 13 %</td><td>Full-band radios, FWA and small cells</td><td>LTCC, ceramic, BAW + IPD hybrid</td></tr>
+  </tbody>
+</table></div>
+<p class="meta">Band edges from the public standards; width = passband ÷ centre frequency. BizDev's library has the matching diagrams: defense SDR, EW receiver / jammer, radar warning receiver (wideband BPF bank), swept spectrum analyzer (YIG preselector), satellite payload, Wi-Fi 7 APs, 5G radios and UWB access. Details in the background notes.</p>
+
+<h3>Technologies and their trade-offs</h3>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Technology</th><th scope="col">Widest useful passband</th><th scope="col">Good at</th><th scope="col">Weak at</th><th scope="col">We have</th></tr></thead>
+  <tbody>
+    <tr><td>SAW / TC-SAW</td><td class="n">a few %, below ~3.5 GHz</td><td>small, cheap, sharp</td><td>narrow; low power</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>BAW (AlN, ScAlN)</td><td class="n">~3–10 % plain (est); ~20 % with matching (our Wi-Fi 6 GHz part)</td><td>steep edges at 2–8 GHz, power, small</td><td>width capped by the coupling coefficient: ~7 % AlN, ~18 % ScAlN</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>XBAR and other wide-coupling resonators</td><td class="n">~25 % coupling; n77, n79, Wi-Fi 6 GHz in one filter</td><td>acoustic sharpness at wider width</td><td>new, IP held by Murata; power handling still developing</td><td><span class="pill none">no</span></td></tr>
+    <tr><td>LC (lumped) and LTCC</td><td class="n">any, up to octave</td><td>cheap (a few dollars or less), 0603–1206</td><td>soft edges, more loss above ~6 GHz</td><td><span class="pill none">no</span></td></tr>
+    <tr><td>IPD / thin film (glass, silicon, alumina)</td><td class="n">10–60 %</td><td>tiny, repeatable, fits inside modules; pairs with BAW (hybrid)</td><td>loss higher than ceramic</td><td><span class="pill part">passives only, no filter</span></td></tr>
+    <tr><td>Ceramic (coaxial resonator, dielectric)</td><td class="n">~1–10 %</td><td>low loss, power, to ~8 GHz</td><td>size; narrow</td><td><span class="pill none">sold (Trans-Tech)</span></td></tr>
+    <tr><td>Cavity / waveguide</td><td class="n">narrow to moderate</td><td>lowest loss, highest power, to 40 GHz+</td><td>large, expensive</td><td><span class="pill none">sold (Lark)</span></td></tr>
+    <tr><td>Tunable (varactor, MEMS, YIG, switched-capacitor MMIC)</td><td class="n">tunes over an octave, each state narrow</td><td>one part for many bands</td><td>5–9 dB loss, linearity, cost</td><td><span class="pill part">parts: varactors, PIN diodes</span></td></tr>
+    <tr><td>Switched filter bank</td><td class="n">any span, channel by channel</td><td>best filter per channel; fast</td><td>switch loss, size, cost per channel</td><td><span class="pill have">yes, S and C band</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Who makes them</h3>
+<p>Competitors, summary level: <b>Mini-Circuits</b> (in BizDev data ~330 band-pass filters centred at 1–11 GHz, 52 of them wider than 25 %, mostly LTCC, lumped and thin film), <b>Knowles</b> (thin-film, ceramic and cavity filters and filter banks for defense), <b>Murata</b> (LTCC filters and diplexers; XBAR), <b>Anatech Electronics</b> (cavity, ceramic and LC, custom), <b>Trans-Tech with Lark</b> (ceramic, cavity, custom to 40 GHz), Johanson, Yageo and Kyocera AVX (LTCC, thin film), ADI (tunable MMIC filters to 18 GHz), and MACOM, Mercury, Quantic PMI and ED2 (switched filter banks).</p>
+
+<h3>Where Skyworks + Qorvo stand</h3>
+<ul>
+  <li><span class="pill have">have</span> BAW and SAW up to ~20 % width and ~7 GHz; four switched filter banks plus QPB1055 (C-band); ~131 active switches (QPC2180 SP8T 0.1–8 GHz, QPC6144 SP4T to 10 GHz); limiters and LNAs to 20 GHz (QPM1000); varactors and PIN diodes.</li>
+  <li><span class="pill none">gap</span> No LTCC, ceramic-resonator, cavity, thin-film or IPD filter in either catalogue (“ceramic” appears only as a package). Trans-Tech (ceramic) and Lark (cavity) were sold and now compete; no tunable filter; nothing above ~8 GHz.</li>
+</ul>
+
+<h3>What a wideband product could be</h3>
+<ol class="opps">
+  <li><b>Switched preselector bank for SDR, test and multi-band radios</b> (about 0.4–6 GHz, 6–8 channels, est). Our multi-throw switches (QPC6144, QPC2180, QPC8400), bypass and LNA around partner LTCC or thin-film channel filters, in one module.
+    <p class="ev"><span class="pill part">switches ours, filters from a partner</span> · vs MACOM, Quantic PMI, ED2 banks and ADI tunable filters.</p></li>
+  <li><b>Wide BAW + IPD hybrid filters</b> for the full 6 GHz Wi-Fi band and full n77. Closest to what we make; the volume play.
+    <p class="ev"><span class="pill part">own technology, needs the hybrid step</span> · vs Murata XBAR and LTCC.</p></li>
+  <li><b>Wideband filtered front end for anti-jam GNSS and satellite terminals</b>: one L1–L5 filter, limiter and LNA per antenna element (4–16 elements, est).
+    <p class="ev"><span class="pill part">LNA and limiter ours; the all-band filter from a partner</span> · vs ceramic and LTCC houses.</p></li>
+  <li><b>Tunable preselector</b> from our varactors and switches (longer shot).
+    <p class="ev"><span class="pill none">new design</span> · vs ADI ADMV8818-class MMICs.</p></li>
+</ol>
+<p class="rpt-thread"><b>For the decision:</b> The wideband need is real (Wi-Fi 6E/7, full n77, UWB, defense, test, SDR), but we can only meet it by combining our switches and BAW with partner LTCC or thin-film filters; the switched bank is the fastest entry (est).</p>
+
+<h2>3. Where else we see opportunities</h2>
 <ul>
   <li><b>Automotive coexistence</b> (Wi-Fi, C-V2X, GNSS): parts exist (SKY5A100x, QPQ2200Q); AEC-Q keeps newcomers out.</li>
   <li><b>Radio-altimeter and C-band earth-station protection</b> (3.98–4.4 GHz): US retrofit by 2030; today a ceramic and cavity niche (Trans-Tech, Lark, K&amp;L), so only via a partner.</li>
@@ -50,16 +109,17 @@
   <li><b>X-band chain</b> (limiter + filter + LNA): we have every block except an X-band filter; crowded, low volume.</li>
   <li><b>BizDev demand:</b> RF filter blocks are needed in 25 S-band, 22 C-band and 6 each X- and Ku-band applications. At X and Ku, only competitors serve them today.</li>
 </ul>
-<p class="rpt-thread"><b>For the decision:</b> These are second-wave markets; none changes the first pick, and C-band protection would need a partner.</p>
+<p class="rpt-thread"><b>For the decision:</b> These are second-wave markets; none changes the first pick, and like the wideband filters, C-band protection and X-band would need a partner.</p>
 
-<h2>3. Market trend</h2>
+<h2>4. Market trend</h2>
 <ul>
   <li><b>Filters are moving into modules.</b> Most filter value sits inside FEMs; BAW is ~91 % Broadcom + Qorvo. Standalone 1–11 GHz is likely low billions (est).</li>
   <li><b>New bands drive new sockets:</b> Wi-Fi 7/8 (~118 M APs in 2026, unverified), US upper C-band auction (2027), UWB (~1.4 B devices by 2030), FR3.</li>
   <li><b>Wideband catalogue filters are commodity.</b> LTCC sells at ~$4 or less; Mini-Circuits lists ~110 active filters at 4–11 GHz.</li>
   <li><b>Fewer acoustic rivals:</b> Akoustis exited in 2025; XBAR (Murata) is the main new wideband acoustic technology.</li>
+  <li><b>Wider channels everywhere:</b> 320 MHz Wi-Fi 7 channels, full-band 5G radios, LEO user terminals and direct-RF-sampling receivers all push filters wider; defense and test move from switched banks to tunable MMIC filters where size matters.</li>
 </ul>
-<p class="rpt-thread"><b>For the decision:</b> Filter value is moving into modules, which supports combined products over new standalone filters.</p>
+<p class="rpt-thread"><b>For the decision:</b> Filter value is moving into modules and wideband catalogue filters are commodity, which supports combined products and a filter partner over a new LTCC line of our own (est).</p>
 
 <h2>Risks</h2>
 <ul>
@@ -68,7 +128,7 @@
   <li>Filter market figures differ 2–3× between sources.</li>
   <li>Qorvo data is still incomplete where only qorvo.com lists parts (blocked to automated access); 229 parts were added from public sources, mostly legacy.</li>
 </ul>
-<p class="rpt-thread"><b>For the decision:</b> Before proposing anything, check that the post-merger plan keeps low-volume standalone filters.</p>
+<p class="rpt-thread"><b>For the decision:</b> Before proposing anything, check that the post-merger plan keeps low-volume standalone filters and that a wideband filter partner would supply parts for our modules.</p>
 
 {% endraw %}{% include "business/_steps_end.html" %}{% raw %}
 {% endraw %}

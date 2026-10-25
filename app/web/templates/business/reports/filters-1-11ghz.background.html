@@ -55,7 +55,7 @@
   <li><b>5G FR1 infrastructure and CPE: n77 / n78 / n79 and upper C-band.</b> Qorvo QPQ3509 (C-band), QPQ4900 (n79) and QPQ1298 (n41) are the base. The gap is a full-n77 standalone filter, which needs a BAW + IPD/LTCC hybrid (shown at 2.5 dB loss in IEEE work). The US upper C-band auction (3.98–4.14 GHz, 2027) adds new radios and edge filters.
     <p class="ev">Fit: <span class="pill part">partly; needs a hybrid</span> · Price point: QPQ4900 ~$4.5 at volume, 98–112-week reel lead time listed.<sup>19 26 40 41 61 71 82</sup></p></li>
   <li><b>Radio-altimeter and C-band earth-station protection, 3.98–4.4 GHz.</b> US airline fleets must be retrofitted by the end of 2030, funded from the auction (single trade-press source); earth-station LNBs need sharper edges. High power and AS9100 suit Trans-Tech ceramic and Lark cavity filters.
-    <p class="ev">Fit: <span class="pill part">via Trans-Tech / Lark</span> · Timing: 2027–2030.<sup>14 17 70 71 72</sup></p></li>
+    <p class="ev">Fit: <span class="pill part">via a ceramic partner (e.g. Trans-Tech / Lark, now competitors)</span> · Timing: 2027–2030.<sup>14 17 70 71 72</sup></p></li>
   <li><b>UWB channel 5/9 filters.</b> ~1.4 B UWB devices by 2030 (ABI). Today's parts are LTCC (Abracon, Johanson) at a few dollars; Skyworks has no UWB filter and no LTCC line, so this needs build, buy or partner.
     <p class="ev">Fit: <span class="pill none">capability gap</span> · High volume, low price.<sup>45 46 66</sup></p></li>
   <li><b>Defense: IFF / GNSS BAW, ceramic L/S/C, X-band thin film, 2–18 GHz banks.</b> Qorvo's ITAR-free IFF BAW is ~10× smaller than ceramic; its in-house BAW fab has DoD Trusted 1A accreditation; Lark covers custom work to 40 GHz. Sticky, high-value sockets, but Knowles, Smiths, Mercury, K&L and Spectrum Control are entrenched.
@@ -69,7 +69,7 @@
 <div class="wrap"><table>
   <thead><tr><th scope="col">Route</th><th scope="col">Covers</th><th scope="col">Starting point</th><th scope="col">Trade-off</th></tr></thead>
   <tbody>
-    <tr><td>Scale Trans-Tech / Lark into a catalogue line</td><td>L/S/C ceramic, custom cavity and lumped to 40 GHz</td><td>~120-person AS9100 business, already owned</td><td>Low volume; custom engineering per program</td></tr>
+    <tr><td>Scale Trans-Tech / Lark into a catalogue line</td><td>L/S/C ceramic, custom cavity and lumped to 40 GHz</td><td>~120-person AS9100 business, sold in 2023 (now PIDC, a competitor): partner or buy back</td><td>Low volume; custom engineering per program</td></tr>
     <tr><td>Hybrid acoustic + IPD/LTCC</td><td>full n77, wider 5/6 GHz, FR3</td><td>Skyworks + Qorvo BAW fabs</td><td>Needs IPD or LTCC process or a partner; best fit with existing customers</td></tr>
     <tr><td>Buy or partner for LTCC / thin film / IPD</td><td>UWB, X-band, multi-GHz catalogue filters</td><td>LTCC houses, glass-IPD firms (est)</td><td>Commodity pricing at the low end; competes with Mini-Circuits, Murata, Kyocera AVX</td></tr>
   </tbody>
@@ -171,7 +171,7 @@
 <tr><td>Skyworks BAW (in-house wafer processing)</td><td>SKY8591x/2x Wi-Fi, SKY5A100x auto, FR3 BAW sampling</td><td>Coexistence filters; filters inside multiplexers and FEMs</td><td>[S27][S28][S75]; BizDev data: <code>business/capabilities.yaml</code> (baw_filter)</td></tr>
 <tr><td>Qorvo BAW (in-house, DoD Trusted 1A)</td><td>QPQ infrastructure/Wi-Fi/V2X; 880xxx IFF/GPS; BAW switched banks QPB10xx</td><td>Defense filter banks; ITAR-free IFF</td><td>[S5][S69][A1]</td></tr>
 <tr><td>SAW / TC-SAW (in-house at both; Qorvo consolidating SAW production); LowDrift/NoDrift</td><td>GNSS SAW QPQ1060/1061/1062/1065, QPQ1063 diplexer</td><td>GNSS / NTN L-band filtered LNAs</td><td>BizDev data: <code>business/capabilities.yaml</code> (saw_filter, tc_saw_filter)</td></tr>
-<tr><td>Trans-Tech ceramics (~120 staff, AS9100)</td><td>Coaxial-resonator BPFs 0.2–8 GHz, up to 10 W; dielectric resonators; ferrite/garnet materials (43 patent families incl. ferrites)</td><td>High-power filter + limiter; ceramic diplexers; DROs</td><td>[S14][S15][S16]; BizDev data: <code>business/evidence/patents.yaml</code> (circulator_isolator)</td></tr>
+<tr><td>Trans-Tech ceramics (~120 staff, AS9100; sold 2023, now a competitor)</td><td>Coaxial-resonator BPFs 0.2–8 GHz, up to 10 W; dielectric resonators; ferrite/garnet materials (43 patent families incl. ferrites)</td><td>High-power filter + limiter; ceramic diplexers; DROs</td><td>[S14][S15][S16]; BizDev data: <code>business/evidence/patents.yaml</code> (circulator_isolator)</td></tr>
 <tr><td>Lark Engineering (2025)</td><td>Custom cavity, lumped and mmWave filters 1 MHz–40 GHz</td><td>X-band / Ku filters; switched banks; multiplexers for defense and test</td><td>[S17]</td></tr>
 <tr><td>GaAs pHEMT / GaN-on-SiC MMIC (Qorvo QGaN15/25, 90 nm pHEMT)</td><td>Broadband switches, LNAs, VPIN limiters, X-band FEMs</td><td>MMIC filters (none in catalogue today), tunable or switched MMIC banks, limiter+filter+LNA</td><td>BizDev data: <code>business/capabilities.yaml</code> (gaas_phemt, gan_on_sic)</td></tr>
 <tr><td>SiP / module integration (Sky5, Qorvo modules, Qorvo in-house microwave module assembly)</td><td>Filter+LNA, filter+switch and FEM modules in volume</td><td>Packaging for filter+X combos; heterogeneous assembly of BAW + GaAs + ceramic</td><td>BizDev data: <code>business/capabilities.yaml</code> (sip_module_integration, microwave_module_assembly)</td></tr>
@@ -210,7 +210,7 @@
 <p><b>3. Defense S/C-band protected switched-filter-bank receive module</b></p>
 <ul>
 <li>What it is: extend QPB1029/1033/1034/1036 [A1] into C-band using QPQ BAW at 3.5–6 GHz, and add a front limiter (TGL2927-SM, TGL2206) and LNA (CMD283C3, CMD270P3).</li>
-<li>Our base: Trans-Tech ceramic channels for high power; Qorvo's DoD Trusted 1A BAW fab [S5].</li>
+<li>Our base: high-power ceramic only through a partner (Trans-Tech was sold in 2023); Qorvo's DoD Trusted 1A BAW fab [S5].</li>
 <li>Competitors:</li>
 <ul>
 <li>MACOM MAFL-011202 (2–18 GHz, 3-band with bypass, about 6 dB IL, 9×7 mm) [A9]</li>
@@ -246,14 +246,14 @@
 </ul>
 <p><b>6. GNSS / L-band / NTN filtered LNA family (L1/L5, L-band NTN n253–n256)</b></p>
 <ul>
-<li>What it is: build on SKY55951-11, SKY65943-11 and SKY5A2110 with Qorvo SAW QPQ1060/61/62/65 and the QPQ1063 diplexer. Add a high-power defense variant with Trans-Tech TT49778E.</li>
+<li>What it is: build on SKY55951-11, SKY65943-11 and SKY5A2110 with Qorvo SAW QPQ1060/61/62/65 and the QPQ1063 diplexer. Add a high-power defense variant with a partner ceramic diplexer (e.g. Trans-Tech TT49778E).</li>
 <li>Competitors: Taoglas TFM.100B / TFM.115A (SAW-LNA-SAW-LNA, 20×18 mm) [A10]; Infineon BGA123L4 (LNA only) (BizDev data: <code>catalog/rf_competitors/infineon.yaml</code>).</li>
 <li>Why we'd win: we own both acoustic filters and LNAs, AEC-Q automotive grade, and 2×1.6 mm size vs 20×18 mm modules [A10]. NTN bands are a new socket (BizDev data: <code>business/evidence/new_markets.yaml</code> baw_filters).</li>
 <li>Why we might not: below 2 GHz this is SAW and LNA commodity, with low price per unit.</li>
 </ul>
 <p><b>7. (Lower priority) High-power ceramic/cavity filter + limiter for radio-altimeter and C-band earth-station protection</b></p>
 <ul>
-<li>What it is: Trans-Tech ceramic or Lark cavity filter plus Skyworks CLA460x limiter diodes [S14][S17].</li>
+<li>What it is: a partner ceramic or cavity filter (e.g. Trans-Tech, Lark) plus Skyworks CLA460x limiter diodes [S14][S17].</li>
 <li>Competitors: K&amp;L, Knowles, Smiths [S49][S52][S33]; filtered LNBs [S70].</li>
 <li>Why it is lower priority: the timing (retrofit by 2030) and the AS9100 fit help [S72], but volume is small.</li>
 </ul>

@@ -124,7 +124,7 @@ def test_business_case_asks_feasibility_price_manufacturing_markets_competition(
         assert k in keys, k
     page = client.get("/business/cases/new?fn=pol_ldo").text
     assert "Is the technology feasible?" in page and "Anything else to add?" in page
-    assert 'data-field="market_size"' in page and "Manufacturing locations" in page
+    assert 'data-field="market_size"' in page and "Manufacturing capability" in page
     r = client.post(
         "/business/cases",
         data={

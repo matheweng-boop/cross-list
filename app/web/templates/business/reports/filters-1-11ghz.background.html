@@ -58,7 +58,7 @@
     <p class="ev">Fit: <span class="pill part">via Trans-Tech / Lark</span> · Timing: 2027–2030.<sup>14 17 70 71 72</sup></p></li>
   <li><b>UWB channel 5/9 filters.</b> ~1.4 B UWB devices by 2030 (ABI). Today's parts are LTCC (Abracon, Johanson) at a few dollars; Skyworks has no UWB filter and no LTCC line, so this needs build, buy or partner.
     <p class="ev">Fit: <span class="pill none">capability gap</span> · High volume, low price.<sup>45 46 66</sup></p></li>
-  <li><b>Defense: IFF / GNSS BAW, ceramic L/S/C, X-band thin film, 2–18 GHz banks.</b> Qorvo's ITAR-free IFF BAW is ~10× smaller than ceramic; its Richardson BAW fab is DoD Trusted 1A; Lark covers custom work to 40 GHz. Sticky, high-value sockets, but Knowles, Smiths, Mercury, K&L and Spectrum Control are entrenched.
+  <li><b>Defense: IFF / GNSS BAW, ceramic L/S/C, X-band thin film, 2–18 GHz banks.</b> Qorvo's ITAR-free IFF BAW is ~10× smaller than ceramic; its in-house BAW fab has DoD Trusted 1A accreditation; Lark covers custom work to 40 GHz. Sticky, high-value sockets, but Knowles, Smiths, Mercury, K&L and Spectrum Control are entrenched.
     <p class="ev">Fit: <span class="pill part">partly</span> · BizDev demand: 6 applications each at X and Ku band.<sup>5 17 33 49 55 69</sup></p></li>
   <li><b>6G FR3 (7–8 GHz) and mmWave IF (~3.3–7.1 GHz) filters.</b> Skyworks already samples FR3 front ends and says it has BAW for early FR3; FR2 converters use 3.3–7.125 GHz IFs suited to BAW or LTCC.
     <p class="ev">Fit: <span class="pill have">BAW in development</span> · Timing tied to 6G (~2029+, est).<sup>74 75 76</sup></p></li>
@@ -168,13 +168,13 @@
 </ul>
 <h3>2. Our adjacent technologies and IP</h3>
 <div class="wrap"><table><thead><tr><th scope="col">Technology</th><th scope="col">What we have (public)</th><th scope="col">Adjacent use with filters</th><th scope="col">Source</th></tr></thead><tbody>
-<tr><td>Skyworks BAW (Osaka)</td><td>SKY8591x/2x Wi-Fi, SKY5A100x auto, FR3 BAW sampling</td><td>Coexistence filters; filters inside multiplexers and FEMs</td><td>[S27][S28][S75]; BizDev data: <code>business/capabilities.yaml</code> (baw_filter)</td></tr>
-<tr><td>Qorvo BAW (Richardson, DoD Trusted 1A)</td><td>QPQ infrastructure/Wi-Fi/V2X; 880xxx IFF/GPS; BAW switched banks QPB10xx</td><td>Defense filter banks; ITAR-free IFF</td><td>[S5][S69][A1]</td></tr>
-<tr><td>SAW / TC-SAW (Osaka; Qorvo moving Greensboro to Texas); LowDrift/NoDrift</td><td>GNSS SAW QPQ1060/1061/1062/1065, QPQ1063 diplexer</td><td>GNSS / NTN L-band filtered LNAs</td><td>BizDev data: <code>business/capabilities.yaml</code> (saw_filter, tc_saw_filter)</td></tr>
-<tr><td>Trans-Tech ceramics (Adamstown, ~120 staff, AS9100)</td><td>Coaxial-resonator BPFs 0.2–8 GHz, up to 10 W; dielectric resonators; ferrite/garnet materials (43 patent families incl. ferrites)</td><td>High-power filter + limiter; ceramic diplexers; DROs</td><td>[S14][S15][S16]; BizDev data: <code>business/evidence/patents.yaml</code> (circulator_isolator)</td></tr>
+<tr><td>Skyworks BAW (in-house wafer processing)</td><td>SKY8591x/2x Wi-Fi, SKY5A100x auto, FR3 BAW sampling</td><td>Coexistence filters; filters inside multiplexers and FEMs</td><td>[S27][S28][S75]; BizDev data: <code>business/capabilities.yaml</code> (baw_filter)</td></tr>
+<tr><td>Qorvo BAW (in-house, DoD Trusted 1A)</td><td>QPQ infrastructure/Wi-Fi/V2X; 880xxx IFF/GPS; BAW switched banks QPB10xx</td><td>Defense filter banks; ITAR-free IFF</td><td>[S5][S69][A1]</td></tr>
+<tr><td>SAW / TC-SAW (in-house at both; Qorvo consolidating SAW production); LowDrift/NoDrift</td><td>GNSS SAW QPQ1060/1061/1062/1065, QPQ1063 diplexer</td><td>GNSS / NTN L-band filtered LNAs</td><td>BizDev data: <code>business/capabilities.yaml</code> (saw_filter, tc_saw_filter)</td></tr>
+<tr><td>Trans-Tech ceramics (~120 staff, AS9100)</td><td>Coaxial-resonator BPFs 0.2–8 GHz, up to 10 W; dielectric resonators; ferrite/garnet materials (43 patent families incl. ferrites)</td><td>High-power filter + limiter; ceramic diplexers; DROs</td><td>[S14][S15][S16]; BizDev data: <code>business/evidence/patents.yaml</code> (circulator_isolator)</td></tr>
 <tr><td>Lark Engineering (2025)</td><td>Custom cavity, lumped and mmWave filters 1 MHz–40 GHz</td><td>X-band / Ku filters; switched banks; multiplexers for defense and test</td><td>[S17]</td></tr>
 <tr><td>GaAs pHEMT / GaN-on-SiC MMIC (Qorvo QGaN15/25, 90 nm pHEMT)</td><td>Broadband switches, LNAs, VPIN limiters, X-band FEMs</td><td>MMIC filters (none in catalogue today), tunable or switched MMIC banks, limiter+filter+LNA</td><td>BizDev data: <code>business/capabilities.yaml</code> (gaas_phemt, gan_on_sic)</td></tr>
-<tr><td>SiP / module integration (Sky5, Qorvo modules, Richardson microwave module assembly)</td><td>Filter+LNA, filter+switch and FEM modules in volume</td><td>Packaging for filter+X combos; heterogeneous assembly of BAW + GaAs + ceramic</td><td>BizDev data: <code>business/capabilities.yaml</code> (sip_module_integration, microwave_module_assembly)</td></tr>
+<tr><td>SiP / module integration (Sky5, Qorvo modules, Qorvo in-house microwave module assembly)</td><td>Filter+LNA, filter+switch and FEM modules in volume</td><td>Packaging for filter+X combos; heterogeneous assembly of BAW + GaAs + ceramic</td><td>BizDev data: <code>business/capabilities.yaml</code> (sip_module_integration, microwave_module_assembly)</td></tr>
 <tr><td>IPD / thin-film passives</td><td>Skyworks "leader in passive devices": MIS capacitors, splitters, Meshplexer. No named IPD process is public; Qorvo has none public</td><td>IPD baluns, couplers and LPFs as discretes; BAW + IPD hybrid for full n77</td><td>BizDev data: <code>business/capabilities.yaml</code> (ipd_thin_film); [S19][S26]</td></tr>
 <tr><td>LTCC</td><td>None found</td><td>Needed for UWB and wide-band catalogue filters (build, buy or partner)</td><td>market.md §5; BizDev data: <code>business/technology.yaml</code> (rates LTCC as "minor extension", <b>unverified</b>)</td></tr>
 <tr><td>Tunable</td><td>Varactors (Skyworks), RF MEMS (Qorvo, ex-Cavendish; status not public), DTCs discontinued</td><td>Varactor or switched-element tunable filter vs ADI ADMV8818 / ADMV8913</td><td>BizDev data: <code>business/capabilities.yaml</code> (rf_mems, silicon_rf_diodes); [A4][A5]</td></tr>
@@ -210,7 +210,7 @@
 <p><b>3. Defense S/C-band protected switched-filter-bank receive module</b></p>
 <ul>
 <li>What it is: extend QPB1029/1033/1034/1036 [A1] into C-band using QPQ BAW at 3.5–6 GHz, and add a front limiter (TGL2927-SM, TGL2206) and LNA (CMD283C3, CMD270P3).</li>
-<li>Our base: Trans-Tech ceramic channels for high power; Richardson Trusted 1A [S5].</li>
+<li>Our base: Trans-Tech ceramic channels for high power; Qorvo's DoD Trusted 1A BAW fab [S5].</li>
 <li>Competitors:</li>
 <ul>
 <li>MACOM MAFL-011202 (2–18 GHz, 3-band with bypass, about 6 dB IL, 9×7 mm) [A9]</li>
@@ -309,7 +309,7 @@
 <ul>
   <li><b>Market shape:</b> BAW is ~91 % Broadcom + Qorvo by revenue, and most filter value sits inside modules; the standalone 1–11 GHz market is likely in the low billions (est).<sup>80</sup></li>
   <li><b>Pricing:</b> commodity LTCC sells for about $4; Chinese suppliers dominate massive-MIMO ceramic filters.<sup>43 47</sup></li>
-  <li><b>Capacity and integration:</b> Qorvo's SAW fab transfer is under way, the Singapore filter site must move by 2030, and post-merger cost targets could prune low-volume standalone SKUs (est).<sup>5 91</sup></li>
+  <li><b>Capacity and integration:</b> Qorvo's SAW production is being consolidated, and post-merger cost targets could prune low-volume standalone SKUs (est).<sup>5</sup></li>
   <li><b>IP:</b> XBAR belongs to Murata/Resonant; Akoustis' IP went to a SpaceX subsidiary; Qorvo has enforced BAW IP in court.<sup>6 8 30</sup></li>
   <li><b>Data:</b> filter market figures differ 2–3× between firms and are mostly paywalled summaries ($10–16 B total RF filters in 2024).<sup>36 78 79</sup></li>
 </ul>
@@ -318,7 +318,7 @@
 <ol class="src">
   <li value="1">Qorvo: Skyworks completes combination with Qorvo, Oct 2026 — qorvo.com/about/news-events/news-releases/2026/skyworks-completes-combination-with-qorvo</li>
   <li value="2">Semiconductor Today, 6 Oct 2026 — semiconductor-today.com/news_items/2026/oct/skyworks-qorvo-061026.shtml</li>
-  <li value="5">Qorvo FY2026 10-K (Richardson BAW, Trusted 1A; SAW transfer) — sec.gov/Archives/edgar/data/1604778/000162828026032873/rfmd-20260328.htm</li>
+  <li value="5">Qorvo FY2026 10-K (in-house BAW, Trusted 1A; SAW consolidation) — sec.gov/Archives/edgar/data/1604778/000162828026032873/rfmd-20260328.htm</li>
   <li value="6">Akoustis Chapter 11 — financierworldwide.com/fw-news/2024/12/17/akoustis-technologies-files-for-chapter-11-protection</li>
   <li value="8">Akoustis asset sale to SpaceX — microwavejournal.com/articles/43990</li>
   <li value="10">Akoustis Wi-Fi 7 tier-1 enterprise OEM win (2024) — globenewswire.com</li>
@@ -364,7 +364,7 @@
   <li value="82">Avnet / RFMW QPQ4900 pricing and lead time — avnet.com</li>
   <li value="83">Broadcom Wi-Fi 7 FEMs with FBAR — everythingrf.com</li>
   <li value="86">Akoustis C-V2X filter — ir.akoustis.com</li>
-  <li value="91">Skyworks FY2025 10-K (Osaka fab, Singapore filter facility) — sec.gov</li>
+  <li value="91">Skyworks FY2025 10-K (manufacturing capabilities) — sec.gov</li>
 </ol>
 <p class="meta">BizDev data: Skyworks and Qorvo public catalogues; competitor parts from Mini-Circuits, MACOM, Infineon, pSemi and Broadcom public product pages (collected Oct 2026); application demand from data/business/rf_block_bands.yaml. Source numbers follow the full research notes kept with this analysis.</p>
 {% endraw %}

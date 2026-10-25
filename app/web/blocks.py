@@ -8,9 +8,10 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.models import AreaRequest, BlockDiagram, BlockFeedback
-from app.services import blocks, prelim, refdesigns, schematic, vocab
+from app.services import blocks, prelim, refdesigns, refmatch, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -199,6 +200,8 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
             "verified": blocks.verifications(session).get(blocks.verify_key(tpl)) if tpl else None,
             "verify_key": blocks.verify_key(tpl) if tpl else "",
             "bare": bare,
+            "kb": refmatch.kb_view(tpl, blocks.counts(session)) if tpl else None,
+            "ref_counts": refmatch.fn_counts(),
         },
     )
 
@@ -338,30 +341,37 @@ def feedback_text(session: Session = Depends(get_session)):
 @router.get("/reference-designs", response_class=HTMLResponse)
 def reference_designs(request: Request, q: str = "", vendor: str = "", market: str = "", fn: str = "",
                       iso: bool = False, docs: bool = False, page: int = 1, view: str = "", atype: str = "",
-                      sub: str = "", session: Session = Depends(get_session)):  # fmt: skip
+                      sub: str = "", diagram: str = "", part: str = "", anchor: str = "",
+                      session: Session = Depends(get_session)):  # fmt: skip
     """Manufacturers' public reference designs, searchable; each function is marked portfolio / gap for us. The
     types view groups them broadly (application type, then voltage class or frequency band); the families view lists
     each product family once, with its member parts and the designs that use them. With no search or filter the
-    page opens on the types view."""
-    base = refdesigns.search(q, vendor, market, fn, iso, docs)
-    tree = refdesigns.type_tree(base)
-    rows = [d for d in base if (not atype or d["_type"] == atype) and (not sub or d["_sub"] == sub)]
-    if not view and not any((q, vendor, market, fn, iso, docs, atype, sub, page > 1)):
+    page opens on the types view. Not in the menu (owner, 25 Oct 2026): the data works behind the library diagrams,
+    the gaps and the part pages, which link here with a reproducible list: ?diagram=<library diagram key> (the designs
+    the diagram is based on; with &anchor=<part or function> those with that anchor), ?part=<part number>,
+    ?fn=<function>."""
+    fb = refmatch.token() if diagram else ()
+    v = refdesigns.view(q, vendor, market, fn, iso, docs, atype, sub, diagram, part.strip(), anchor, fb)
+    tree, rows = v["tree"], v["rows"]
+    if not view and not any((q, vendor, market, fn, iso, docs, atype, sub, diagram, part, page > 1)):
         view = "types"
     view = view if view in ("families", "types") else ""
-    items = refdesigns.families(rows, q) if view == "families" else [] if view == "types" else rows
+    items = refdesigns.families(list(rows), q) if view == "families" else [] if view == "types" else rows
     per = 50
     pages = max(1, -(-len(items) // per))
     page = min(max(page, 1), pages)
     shown = items[(page - 1) * per : page * per]
-    mk = op.makers(session)
-    mine = op.company("combined")[2]
+    facets = v["facets"]
     fns = (
         {f for d in shown for f in d.get("functions") or []}
         if view != "families"
         else {f for x in shown for f, _ in x["functions"]}
     )
-    facets = refdesigns.facets(rows)
+    status = {}
+    if view != "types":  # the coloured function chips (the types view shows none)
+        mk = op.makers(session)
+        mine = op.company("combined")[2]
+        status = {f: op.status_of(f, mk, mine) for f in fns}
     fns |= {f for f, _ in facets["function"]}
     ctx = {"rows": shown if not view else [], "fams": shown if view == "families" else [], "view": view,
            "n_items": len(items), "tree": tree, "atype": atype, "sub": sub,
@@ -369,6 +379,44 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
            "n": len(rows), "n_all": len(refdesigns.designs()),
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
            "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
-           "status": {f: op.status_of(f, mk, mine) for f in fns},
-           "label": {f: vocab.fn_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
+           "diagram": diagram, "part": part.strip(), "anchor": anchor, "heading": v["heading"],
+           "anchors_of": refmatch.anchors_of_design, "design_key": refmatch.design_key,
+           "fbe": _fb_view(diagram) if diagram else None,
+           "can_answer": bool(diagram) and signed_in_owner(request) is not None,
+           "status": status, "label": {f: vocab.fn_label(f) for f in fns},
+           "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/reference_designs.html", ctx)
+
+
+def _fb_view(diagram: str) -> dict | None:
+    """The owner's answers on one diagram's list: designs confirmed and removed (removed ones listed to put back)."""
+    e = refmatch.entry(diagram)
+    if not e:
+        return None
+    idx = refmatch.index()["by_key"]
+    return {"fits": set(e.get("fits") or []), "removed": [idx[k] for k in e.get("removed") or [] if k in idx]}
+
+
+FB_VERDICTS = {"fits": refmatch.FITS, "nofit": refmatch.NOFIT, "reset": refmatch.RESET}
+
+
+@router.post("/reference-designs/feedback")
+def reference_design_feedback(request: Request, diagram: str = Form(...), item: str = Form(...),
+                              verdict: str = Form(...), comment: str = Form(""), back: str = Form(""),
+                              session: Session = Depends(get_session)):  # fmt: skip
+    """The owner's answer on a matched design ("Fits" / "Doesn't fit" / back to the script's decision) or a
+    suggestion ("fn:<function>", "Doesn't fit" = not a block for this diagram). Append-only, the latest counts."""
+    me = signed_in_owner(request)
+    if me is None:
+        raise HTTPException(403, "Only the owner can answer.")
+    e = refmatch.data()["by_key"].get(diagram)
+    if e is None or verdict not in FB_VERDICTS:
+        raise HTTPException(404, "Unknown diagram or answer")
+    if item.startswith("fn:"):
+        if item[3:] not in blocks.catalogue()["functions"]:
+            raise HTTPException(404, "Unknown function")
+    elif item not in (e.get("designs") or []):
+        raise HTTPException(404, "This design is not matched to the diagram")
+    refmatch.record(session, diagram, item, FB_VERDICTS[verdict], comment, me.name or "Owner")
+    ok = back.startswith("/") and not back.startswith("//")
+    return RedirectResponse(back if ok else f"/reference-designs?diagram={diagram}", status_code=303)

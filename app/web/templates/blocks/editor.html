@@ -12,6 +12,7 @@
       <input type="hidden" name="on" value="1"><input name="author" maxlength="100" placeholder="Your name" aria-label="Verified by">
       <input name="note" maxlength="300" placeholder="How it was checked (optional)" aria-label="How it was checked"><button class="small-btn outline">Mark technically verified</button>{% endif %}
   {{ review_history(request, 'application', verify_key, 0) if verify_key }}</form>{% endif %}
+  {% include "blocks/_refkb.html" %}
   <div class="bc-bar">
     <input id="bk-name" type="text" placeholder="Block diagram name" aria-label="Block diagram name">
     <button id="bk-save" type="button" class="small-btn">Save</button>
@@ -64,6 +65,7 @@
 #bk-svg .blk.dim { opacity: .28; filter: grayscale(1); }
 #bk-svg .b-label { font-size: 12px; font-weight: 600; }
 #bk-svg .b-sub { font-size: 10px; }
+#bk-svg .b-anchor { font-size: 8px; font-weight: 700; fill: #1f4f86; }
 #bk-svg .link { stroke: #3a3f47; stroke-width: 1.4; fill: none; marker-end: url(#arrow); stroke-linejoin: round; }
 #bk-svg .grp rect.frame { cursor: move; }
 #bk-svg .grp-add { cursor: pointer; } #bk-svg .grp-add rect { fill: #e8f6ef; stroke: #1baf7a; stroke-width: 1; }
@@ -80,5 +82,6 @@
 <script type="application/json" id="bk-counts">{{ counts|tojson }}</script>
 <script type="application/json" id="bk-design">{{ design|tojson }}</script>
 <script type="application/json" id="bk-template">{{ template|tojson }}</script>
+<script type="application/json" id="bk-refs">{{ {"counts": ref_counts, "anchors": kb.anchor_fns if kb else {}}|tojson }}</script>
 <script src="/static/blocks.js" defer></script>
 {% endblock %}

@@ -1,0 +1,4 @@
+{# Public reference designs behind the gaps and parts (owner, 25 Oct 2026): a small line with the count, linking to
+   the list of those designs. Public data: guests see it too. #}
+{% macro found_in(fn) %}{% set n = ref_count(fn) if fn else 0 %}{% if n %}<small class="ref-line">Found in <a href="/reference-designs?fn={{ fn|urlencode }}">{{ n }} public reference design{{ 's' if n != 1 }}</a></small>{% endif %}{% endmacro %}
+{% macro used_in(mpn, cross=none) %}{% set u = ref_part(mpn) %}{% if u.n %}<p class="ref-line">Used in <a href="/reference-designs?part={{ u.name|urlencode }}">{{ u.n }} public reference design{{ 's' if u.n != 1 }}</a>{% if u.anchor %} – <span class="anchor-badge">Anchor</span> for {{ u.anchor.ours }} <span class="muted">({{ u.anchor.type }})</span>{% elif cross %} – <span class="anchor-badge">Anchor</span> for {{ cross }}{% endif %}</p>{% endif %}{% endmacro %}

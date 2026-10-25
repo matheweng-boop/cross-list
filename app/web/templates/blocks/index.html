@@ -27,6 +27,7 @@
   <a class="tpl-card" href="/blocks/new?template={{ t.i }}"><b>{{ t.name }}</b>
     {% if t.sub %}<small class="tpl-sub">{{ t.sub }}</small>{% endif %}
     <small class="muted">{{ t.market }} · source {{ t.source }} · {{ t.blocks }} blocks{% if t.questions %} · {{ t.questions }} design questions{% endif %}</small>
+    {% if t.refs %}<small class="muted">Based on {{ t.refs }} public reference design{{ 's' if t.refs != 1 }}{% if t.anchors %} · <span class="anchor-badge">{{ t.anchors }} anchor{{ 's' if t.anchors != 1 }}</span>{% endif %}</small>{% endif %}
     <small>{% if t.verified %}<span class="vbadge on" title="by {{ t.verified.by or 'anonymous' }}, {{ t.verified.at|date('short') }}">✓ Technically verified</span>{% else %}<span class="vbadge">Entered</span>{% endif %}</small>
     {% if t.variant %}<small class="tpl-variant" title="{{ t.peers|join('; ') }}">Possible variant of {{ t.peers|length }} other{{ 's' if t.peers|length != 1 }} ({{ t.variant }})</small>{% endif %}
     {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in BizDev' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>

@@ -84,11 +84,26 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += _section("\n## Technology feedback\n", [f"- {_when(t.created_at)} [{t.status}] {t.kind} {t.topic or ''}: "
                     f"{_one_line(t.text)}" for t in tech])  # fmt: skip
 
-    reviews = _new(session, DataReview, start)
+    from app.services import refmatch
+
+    reviews = [r for r in _new(session, DataReview, start) if r.dataset != refmatch.FEEDBACK]
     out += _section("\n## Review answers (data quality, TAM, cases, library, price calls)\n",
                     [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
                      f"{' · ' + _one_line(r.comment) if r.comment else ''}{_earlier(session, r)}"
                      for r in reviews])  # fmt: skip
+
+    # the owner's answers on the reference designs matched to the library diagrams (owner, 25 Oct 2026: matching
+    # "based on feedback"): the run looks for patterns and tunes app/services/refmatch.py (docs/daily_update.md)
+    out.append("\n## Reference design feedback\n")
+    rf = [r for r in _new(session, DataReview, start) if r.dataset == refmatch.FEEDBACK]
+    if rf:
+        out.append("Doesn't fit = the design (or the suggested block) does not belong to the diagram; Fits = "
+                   "confirmed; reset = back to the rules. When several Doesn't fit answers share a pattern, tune "
+                   "the thresholds or stop-words in app/services/refmatch.py and re-run scripts/match_refdesigns.py.\n")
+    for r in rf:
+        out.append(refmatch.inbox_line(r, _when(r.created_at)))
+    if not rf:
+        out.append("None.")
 
     # Data quality comments still being checked (every open one, not only new ones): the run checks each, then
     # records it in data/business/quality_checked.yaml so the owner gets the second round (owner, 25 Oct 2026)

@@ -24,7 +24,7 @@ OWNER_ACTIONS = ("/manage", "/owner", "/business/tam", "/business/quality", "/bu
                  "/requests/", "/blocks/feedback/", "/blocks/area-requests/",
                  "/shareable/technology-overview/edit", "/shareable/synergies/edit",
                "/shareable/automotive/edit", "/shareable/presentation/save",
-               "/shareable/presentation/delete")  # fmt: skip
+               "/shareable/presentation/delete", "/reference-designs/feedback")  # fmt: skip
 
 
 def is_open(path: str) -> bool:
@@ -37,6 +37,10 @@ def _under(path: str, prefix: str) -> bool:
     return path == prefix or path.startswith((prefix + "/", prefix + "."))
 
 
+# every Shareable report's editor, also one added later to share_reports.REGISTRY (/shareable/<key>/edit...)
+_SHARE_EDIT = re.compile(r"^/shareable/[^/]+/edit(/|$)")
+
+
 def owner_only(path: str, method: str) -> bool:
     prefixes = OWNER_PAGES if method in SAFE_METHODS else OWNER_ACTIONS
-    return any(_under(path, p) for p in prefixes)
+    return any(_under(path, p) for p in prefixes) or bool(_SHARE_EDIT.match(path))

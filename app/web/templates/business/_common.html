@@ -1,10 +1,6 @@
 {% macro pct(v) %}{{ '—' if v is none else ((v * 100)|round|int ~ '%') }}{% endmacro %}
 {% macro usd(v) %}${{ '{:,.2f}'.format(v) }}{% endmacro %}
-{% macro company_switch(path, co, companies, extra='') %}
-<div class="chip-row bo-co"><span class="chip-lbl">Portfolio</span>
-  {% for k, (label, _) in companies.items() %}<a class="fchip{{ ' on' if co == k }}" href="{{ path }}?co={{ k }}{{ extra }}">{{ label }}</a>{% endfor %}
-</div>
-{% endmacro %}
+{% macro company_switch(path, co, companies, extra='') %}{# one company now (owner, 25 Oct 2026): no switch #}{% endmacro %}
 {% macro status_chip(s, labels) %}<span class="bo-st st-{{ s }}" title="{{ bo_status_help[s] }}">{{ labels[s] }}</span>{% endmacro %}
 {% macro crowd(c, labels) %}{% if c %}<span class="bo-crowd cr-{{ c.crowding }}" title="{{ c.vendors|map('vendor')|join(', ') }}{{ ' – ' ~ c.note if c.note }}">{{ labels[c.crowding] ~ ' · ' ~ c.vendors|length if c.vendors else 'No established supplier' }}</span>{% else %}<span class="muted small">not assessed</span>{% endif %}{% endmacro %}
 {% macro term(key, text=none) %}{% set t = bo_help().terms.get(key) %}<span class="bo-term" tabindex="0" title="{{ t.short if t else '' }}">{{ text or (t.term if t else key) }}</span>{% endmacro %}

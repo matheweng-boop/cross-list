@@ -194,6 +194,11 @@ def template_cards(session: Session) -> list[tuple[str, list[dict]]]:
                 "market": market_of(t.get("name", ""), t.get("category") or "Other"), "variant": key if peers else None,
                 "peers": peers}  # fmt: skip
         card["focus"] = focus_of(display_name(t), t.get("category") or "", card["market"])
+        from app.services.refmatch import for_template
+
+        kb = for_template(t) or {}
+        card["refs"] = kb.get("n") or 0  # public reference designs the diagram is based on
+        card["anchors"] = len(kb.get("anchors") or [])
         out.setdefault(t.get("category") or "Other", []).append(card)
     return list(out.items())
 

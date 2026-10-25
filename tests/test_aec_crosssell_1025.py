@@ -93,9 +93,10 @@ def test_skyworks_and_qorvo_parts_table_tops_the_selection(client):
 
 
 def test_table_on_a_single_line_and_on_one_diagram(client):
+    # one company (owner, 25 Oct 2026): an old ?co=skyworks link shows both lines
     html = client.get(f"{URL}?co=skyworks&system=automotive&sub=car-radio").text
     table = _section(html, 'id="parts-here"', "</section>")
-    assert "Skyworks parts here" in table and "Qorvo <small" not in table
+    assert "Skyworks" in table and "Qorvo" in table
     i = sy.sub("automotive", "car-radio")["idx"][0]
     one = client.get(f"{URL}?system=automotive&sub=car-radio&template={i}").text
     assert 'id="parts-here"' in one

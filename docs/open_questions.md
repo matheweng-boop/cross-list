@@ -27,6 +27,18 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
 
+## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
+
+- Matching rules made a bit stricter (app/services/refmatch.py, old → new): title-word weight 60 % → 70 %; shared
+  functions ≥ 2 → ≥ 3 (1 → 2 when the title words match fully); suggestions ≥ 30 % of ≥ 3 designs → ≥ 40 % of
+  ≥ 4; automatic block additions ≥ 50 % and ≥ 5 → ≥ 60 % and ≥ 8 (still only with no close alternative). Result:
+  127 → 111 of 190 diagrams with matches, median 19 → 13 designs, 150 → 107 suggestions, 2 → 0 blocks added (the two
+  earlier additions, power_fets in the USB-C power bank and digital_isolator in the DC fast charging power module, no
+  longer qualified and were removed).
+- Feedback adjusts it: on a diagram's reference-design list the owner marks each design "Fits" / "Doesn't fit" and
+  can dismiss a suggestion; a design that does not fit leaves that diagram at once. The daily run looks for patterns
+  in those answers and tightens or loosens the rules (docs/daily_update.md).
+
 ## Settled (owner, 25 Oct 2026, radio market)
 
 - MarketIntelo ($1.8 B, digital radio tuners only): not linked to the radio-tuner-next case's market size; shown as an

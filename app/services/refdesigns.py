@@ -1,7 +1,11 @@
 """Reference designs collected from manufacturers' public sites (data/reference_designs/*.yaml, see its README)."""
 
+import hashlib
+import json
 import re
+import threading
 from collections import Counter
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -17,36 +21,72 @@ DOC_LABELS = {
 }
 
 
-@lru_cache
-def _files() -> tuple[tuple[Path, dict], ...]:
-    """Every design file, parsed once per process."""
+_LOCK = threading.Lock()
+
+
+def _parse() -> tuple[tuple[Path, dict], ...]:
     paths = sorted(DIR.glob("*.yaml"))
     return tuple((path, yamlio.load(path.read_text()) or {}) for path in paths)
 
 
+def _cache_file() -> Path:
+    """A JSON copy of the indexed designs, named by a hash of the design files and of this module (the type rules):
+    loading it takes a fraction of parsing and classifying 4,000+ designs."""
+    from app.config import get_settings
+
+    h = hashlib.sha256(Path(__file__).read_bytes())
+    for p in sorted(DIR.glob("*.yaml")):
+        h.update(p.name.encode() + p.read_bytes())
+    return get_settings().data_dir / "cache" / f"refdesigns-{h.hexdigest()[:16]}.json"
+
+
 @lru_cache
+def _load() -> dict:
+    """Designs (with their search text, type and sub-class) and sources, once per process; from the JSON cache when
+    the files are unchanged. The lock keeps the start-up warm-up and a first visitor from doing it twice."""
+    with _LOCK:
+        cache = _cache_file()
+        try:
+            data = json.loads(cache.read_text())
+            for s in data["sources"]:
+                if isinstance(s.get("collected"), str):
+                    s["collected"] = date.fromisoformat(s["collected"])
+            return {"designs": tuple(data["designs"]), "sources": tuple(data["sources"])}
+        except (OSError, ValueError, KeyError):
+            pass
+        files = _parse()
+        out = []
+        for _path, data in files:
+            for d in data.get("designs") or []:
+                if d.get("id") and d.get("url"):
+                    d["_text"] = " ".join(
+                        str(x)
+                        for x in [d["id"], d.get("title"), d.get("summary"), *(d.get("parts") or []),
+                                  *(d.get("applications") or [])]
+                        if x
+                    ).lower()  # fmt: skip
+                    d["_type"] = app_type(d)
+                    d["_sub"] = sub_class(d, d["_type"])
+                    out.append(d)
+        srcs = tuple({**(data.get("source") or {}), "file": path.name, "n": len(data.get("designs") or [])}
+                     for path, data in files)  # fmt: skip
+        try:
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            tmp = cache.with_suffix(".tmp")
+            tmp.write_text(json.dumps({"designs": out, "sources": srcs}, default=str))
+            tmp.replace(cache)
+        except OSError:
+            pass
+        return {"designs": tuple(out), "sources": srcs}
+
+
 def sources() -> tuple[dict, ...]:
     """The `source` block of every design file (vendor, pages, collected, method)."""
-    return tuple({**(data.get("source") or {}), "file": path.name, "n": len(data.get("designs") or [])}
-                 for path, data in _files())  # fmt: skip
+    return _load()["sources"]
 
 
-@lru_cache
 def designs() -> tuple[dict, ...]:
-    out = []
-    for _path, data in _files():
-        for d in data.get("designs") or []:
-            if d.get("id") and d.get("url"):
-                d["_text"] = " ".join(
-                    str(x)
-                    for x in [d["id"], d.get("title"), d.get("summary"), *(d.get("parts") or []),
-                              *(d.get("applications") or [])]
-                    if x
-                ).lower()  # fmt: skip
-                d["_type"] = app_type(d)
-                d["_sub"] = sub_class(d, d["_type"])
-                out.append(d)
-    return tuple(out)
+    return _load()["designs"]
 
 
 # Broad application types: a design takes the type most of its application tags (and its title) point to.
@@ -95,9 +135,15 @@ def _from_tags(d: dict, table) -> str | None:
     return next((c for c, rx in table if rx.search(tags)), None)
 
 
+@lru_cache(maxsize=8192)
+def _type_hits(tag: str) -> tuple[bool, ...]:
+    """Which type patterns a tag matches (the same few hundred application tags repeat across thousands of designs)."""
+    return tuple(bool(rx.search(tag)) for _, rx in _TYPE_RE)
+
+
 def app_type(d: dict) -> str:
-    tags = [*(d.get("applications") or []), d.get("title") or ""]
-    score = [(sum(1 for x in tags if rx.search(x)), -i, t) for i, (t, rx) in enumerate(_TYPE_RE)]
+    hits = [_type_hits(x) for x in [*(d.get("applications") or []), d.get("title") or ""]]
+    score = [(sum(h[i] for h in hits), -i, t) for i, (t, _) in enumerate(_TYPE_RE)]
     best = max(score)
     return best[2] if best[0] else OTHER_TYPE
 
@@ -119,11 +165,11 @@ def sub_class(d: dict, atype: str) -> str:
 
 
 def search(q: str = "", vendor: str = "", market: str = "", fn: str = "", isolation: bool = False,
-           docs: bool = False, atype: str = "", sub: str = "") -> list[dict]:  # fmt: skip
+           docs: bool = False, atype: str = "", sub: str = "", pool=None) -> list[dict]:  # fmt: skip
     words = q.lower().split()
     return [
         d
-        for d in designs()
+        for d in (designs() if pool is None else pool)
         if all(w in d["_text"] for w in words)
         and (not vendor or d.get("vendor") == vendor)
         and (not market or market in (d.get("markets") or []))
@@ -204,3 +250,40 @@ def grouped_parts(parts: list[str]) -> list[tuple[str, list[str]]]:
     for p in parts:
         out.setdefault(family_of(p), []).append(p)
     return list(out.items())
+
+
+@lru_cache(maxsize=512)
+def view(q: str = "", vendor: str = "", market: str = "", fn: str = "", iso: bool = False, docs: bool = False,
+         atype: str = "", sub: str = "", diagram: str = "", part: str = "", anchor: str = "", fb: tuple = ()) -> dict:
+    """One list of the Reference designs page, computed once per set of filters (the designs never change while the
+    site runs): the precise list a link asks for (?diagram=, &anchor=, ?part=, ?fn=) with its heading, then the search
+    and filters on it; the type tree and the facets of the result."""
+    from app.services import blocks, refmatch, vocab
+
+    pool, heading = None, ""
+    if diagram:
+        e = refmatch.entry(diagram) or {}  # without the designs the owner marked "Doesn't fit" (fb: their token)
+        keys = e.get("designs") or []
+        if anchor:
+            hit = {k for a in e.get("anchors") or [] if anchor in (a.get("fn"), a.get("part")) for k in a["designs"]}
+            keys = [k for k in keys if k in hit]
+        idx = refmatch.index()["by_key"]
+        pool = [idx[k] for k in keys if k in idx]
+        name = blocks.display_name(e) if e else diagram
+        heading = f"Reference designs used for the block diagram {name}"
+        if anchor:
+            known = anchor in blocks.catalogue()["functions"]
+            heading += f", with an anchor for {vocab.fn_label(anchor) if known else anchor}"
+        if fn:
+            heading += f", where {vocab.fn_label(fn)} appears"
+    elif part:
+        name, keys = refmatch.part_designs(part)
+        idx = refmatch.index()["by_key"]
+        pool = [idx[k] for k in keys]
+        heading = f"Reference designs that use {name or part.upper()}"
+    elif fn:
+        heading = f"Reference designs where {vocab.fn_label(fn)} appears"
+    base = search(q, vendor, market, fn, iso, docs, pool=pool)
+    rows = tuple(d for d in base if (not atype or d["_type"] == atype) and (not sub or d["_sub"] == sub))
+    return {"base": tuple(base), "tree": type_tree(base), "rows": rows, "facets": facets(list(rows)),
+            "heading": heading}

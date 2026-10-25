@@ -2,14 +2,14 @@
 {% block content %}
 <link rel="stylesheet" href="/static/shareable.css">
 <h1>Shareable</h1>
-<p class="subtitle">Public information, ready to share outside the company. Preview a report, tick several to build one PDF, or build a presentation.</p>
+<p class="subtitle">Public information, ready to share outside the company. Tap a report to read it; tick “Add to PDF” on one or more to build one PDF.</p>
 {# owner, 25 Oct 2026: one page to combine and preview the reports; the address keeps the choice (?r=...&wm=...) #}
 <form class="sh-pack" id="build-pdf" method="get" action="/shareable/pack" aria-label="Reports">
   <ul class="sh-list">
     {% for key, label, line, pages, href, edit in reports %}
     <li class="sh-row">
-      <label class="sh-check"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }}>
-        <span class="sh-name"><b>{{ label }}</b> <span class="muted small">{{ pages }} pages</span><span class="sh-line">{{ line }}</span></span></label>
+      <label class="sh-pick" title="Add to the PDF"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }} aria-label="Add {{ label }} to the PDF">Add to PDF</label>
+      <a class="sh-open" href="{{ href }}" data-lightbox="{{ label }}"><span class="sh-name"><b>{{ label }}</b> <span class="muted small">{{ pages }} pages</span><span class="sh-line">{{ line }}</span></span></a>
       <span class="sh-acts">
         <a class="sh-preview" role="button" href="{{ href }}" data-lightbox="{{ label }}">Preview</a>
         {% if owner %}<a class="sh-edit small" href="{{ edit }}">Edit</a>{% endif %}
@@ -22,12 +22,14 @@
       <select name="wm">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>
     <span class="sh-btns">
       <button type="submit">Build a PDF</button>
+      <button type="button" class="sh-pptx" id="sh-pptx" data-href="/shareable/pptx">Download as PowerPoint</button>
       <a class="sh-ppt" role="button" href="/shareable/presentation">Build a presentation</a>
     </span>
   </div>
-  <p class="sh-err" id="sh-err" role="alert" hidden>Pick at least one report.</p>
+  <p class="sh-err" id="sh-err" role="alert"{{ '' if pick else ' hidden' }}>Pick at least one report.</p>
   <p class="small muted">Build a PDF previews the ticked reports together, with Print / Save as PDF; they print in this
-    order, each from a new page. Build a presentation makes slides from topics you pick.</p>
+    order, each from a new page. Download as PowerPoint saves the ticked reports as one editable PowerPoint file.
+    Build a presentation makes slides from topics you pick.</p>
 </form>
 <script>
   // the address lists the reports as r=overview,synergies,automotive (a plain form sends r=..&r=.., which works too)
@@ -42,6 +44,14 @@
       const url = f.action + "?" + q.toString().replaceAll("%2C", ",");
       history.replaceState(null, "", "?" + q.toString().replaceAll("%2C", ","));  // the last choice stays
       if (window.shareableLightbox) window.shareableLightbox(url, "Build a PDF"); else location.href = url;
+    });
+    // Download as PowerPoint: the same ticked reports and watermark, as one .pptx (the file downloads, the page stays)
+    document.getElementById("sh-pptx").addEventListener("click", e => {
+      const r = [...f.querySelectorAll("input[name=r]:checked")].map(x => x.value);
+      if (!r.length) { err.hidden = false; return; }
+      const q = new URLSearchParams({r: r.join(","), wm: f.elements.wm.value});
+      history.replaceState(null, "", "?" + q.toString().replaceAll("%2C", ","));
+      location.href = e.currentTarget.dataset.href + "?" + q.toString().replaceAll("%2C", ",");
     });
   })();
 </script>

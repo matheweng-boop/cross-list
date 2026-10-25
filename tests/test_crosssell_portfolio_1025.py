@@ -145,7 +145,7 @@ def test_no_together_block_when_nothing_matches(client):
     assert not pf.together_in(sy.sub("automotive", "cockpit")["idx"])["synergies"]
     assert 'id="together"' not in html and "Skyworks + Qorvo together here" not in html
     one_line = client.get("/blocks/cross-sell?co=skyworks&system=automotive&sub=car-radio").text
-    assert 'id="together"' not in one_line  # only for the combined company
+    assert 'id="together"' in one_line  # one company now: an old ?co=skyworks link shows the combined view
 
 
 def test_by_part_links_a_function_to_its_systems(client):

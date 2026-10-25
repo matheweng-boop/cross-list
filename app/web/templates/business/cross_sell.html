@@ -60,6 +60,10 @@
   </div>{% endfor %}
   <p class="small">Both lines supply blocks in {{ tog.n_both }} of {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }} here. <a href="/portfolio?{{ sel_q }}#synergies">Library-wide synergies and bundles: Skyworks + Qorvo portfolio</a></p>
 </section>{% endif %}
+{% if xs.anchors %}<section class="rd-kb card small" id="xs-anchors"><h3>Anchors: where to start <small class="muted">· parts in the public reference designs of these diagrams that we cross</small></h3>
+  {% for a in xs.anchors %}<p><span class="anchor-badge">Anchor</span> {% if a.label %}{{ a.label }}: {% endif %}<b>{{ a.part }}</b> → <a href="/find?q={{ a.ours|urlencode }}">{{ a.ours }}</a> <span class="muted">({{ a.type }})</span> · found in <a href="/reference-designs?part={{ a.part|urlencode }}">{{ a.n }} reference design{{ 's' if a.n != 1 }}</a>
+    {% if a.around %}<br><span class="muted">Designs with this anchor also use:</span> {% for f, c, lab, st in a.around %}{{ lab }} <span class="muted">({{ c }}, {{ st }})</span>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>{% endfor %}
+</section>{% endif %}
 <p class="small muted">{{ xs.n_gaps }} function{{ 's' if xs.n_gaps != 1 }} here {{ 'have' if xs.n_gaps != 1 else 'has' }} no part of ours: see <a href="/business/opportunities">Gaps &amp; new technology</a>. Start from one part number instead: <a href="/business/attach">Cross-sell by part</a>.</p>
 {% else %}
 <h2>Pick a system</h2>

@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import status_chip, crowd, review, path_chip, about, checked, factor_table, library_box with context %}
+{% from "_refs.html" import found_in with context %}
 {% block title %}{{ page_title(request.url.path, label ~ ' evidence') }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/opportunities?co={{ co }}">← Gaps &amp; new technology</a></p>
 <h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
+{{ found_in(fn) }}
 <p class="subtitle muted">Everything BizDev knows about this function: how it is scored, the path to a product, and the background evidence
   (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
   <a href="/business/quality">Data quality</a> and feed the next data update.</p>

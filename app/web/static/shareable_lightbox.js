@@ -24,7 +24,9 @@
   function open(url, title) {
     if (!box) build();
     box.querySelector(".lb-title").textContent = title || "Preview";
-    frame.src = url;
+    // inside the window only the report shows (?embed=1); "Open in a new tab" keeps the full page
+    const path = new URL(url, location.href).pathname;
+    frame.src = path.startsWith("/shareable/") ? url + (url.includes("?") ? "&" : "?") + "embed=1" : url;
     newTab.href = url;
     document.documentElement.classList.add("lb-open");
     if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open", "");

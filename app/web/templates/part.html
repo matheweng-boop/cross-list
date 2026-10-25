@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% from "_macros.html" import part_badges, diff_table, unofficial_mark, unofficial_footnote %}
 {% from "reviews/_parts.html" import part_reviews %}
+{% from "_refs.html" import used_in with context %}
 {% set uk = unofficial_keys(part) %}
 {% block title %}{{ page_title(request.url.path, part.mpn) }}{% endblock %}
 {% block content %}
 {% set back = request.query_params.get('from', '') %}{% if back.startswith('/parts?') or back == '/parts' %}<p class="small"><a href="{{ back }}">← Back to results</a></p>{% endif %}
 <h1>{{ part.mpn }}</h1>
+{% if not part.is_reference %}{{ used_in(part.mpn, rows[0][0].candidate.mpn if rows else none) }}{% endif %}
 <dl class="ref-summary">
   <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name|vendor }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>
   <div><dt>Function</dt><dd>{{ family_title(part.family) }}</dd></div>

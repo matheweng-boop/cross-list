@@ -31,11 +31,9 @@ from app import yamlio
 from app.models import Manufacturer, ManufacturerRole, ParamValue, Part, PartMapping
 from app.services import blocks, vocab
 
-COMPANIES = {
-    "combined": ("Skyworks + Qorvo", frozenset({"Skyworks", "Qorvo"})),
-    "skyworks": ("Skyworks", frozenset({"Skyworks"})),
-    "qorvo": ("Qorvo", frozenset({"Qorvo"})),
-}
+# One company (owner, 25 Oct 2026: "it's the same company now, so I'm not interested in the gaps between each separate
+# one"): coverage and gaps are always for Skyworks + Qorvo together; old ?co=skyworks / ?co=qorvo links show the same.
+COMPANIES = {"combined": ("Skyworks + Qorvo", frozenset({"Skyworks", "Qorvo"}))}
 IN_SCOPE = ("supported", "gap", "competitor")
 CROWDING_LABEL = {"low": "Few suppliers", "medium": "Several suppliers", "high": "Crowded"}
 _COMPETITION = Path(__file__).resolve().parents[2] / "data" / "business" / "competition.yaml"
@@ -52,8 +50,7 @@ STATUS_HELP = {
 
 
 def company(key: str) -> tuple[str, str, frozenset]:
-    key = key if key in COMPANIES else "combined"
-    return (key, *COMPANIES[key])
+    return ("combined", *COMPANIES["combined"])
 
 
 # ---- products per function -------------------------------------------------------------------------------

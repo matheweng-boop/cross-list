@@ -2,6 +2,7 @@
 {% set slug = r.slug %}
 {% import "business/_feasibility.html" as fz %}
 {% from "business/_common.html" import score_chip, library_box %}
+{% from "_refs.html" import found_in with context %}
 {% macro react(x, scale=false, question=false) %}{% set f = x.fb or {} %}
 <div class="pc-react pc-inline" id="i-{{ x.id }}" data-title="{{ x.text or x.gain or x.feature or x.lever or x.item }}"><span class="pc-state">{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</span>{{ review_history(request, ('case:' ~ slug)[:40], x.id) }}
   <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form">
@@ -17,7 +18,7 @@
 
 <h1>{{ case.title }}</h1>
 {% set opp = case.opportunity %}
-<p class="pc-feas">{% if opp.score %}<span class="small">Opportunity score</span> {{ score_chip(opp.score) }} <small class="muted">· {{ label(opp.fn) }} at distance {{ opp.headline.distance }} ({{ opp.headline.feature }})</small>{% elif opp.fn %}<small class="muted">{{ label(opp.fn) }}: not in the block diagrams, no Opportunity score</small>{% endif %}
+<p class="pc-feas">{% if opp.score %}<span class="small">Opportunity score</span> {{ score_chip(opp.score) }} <small class="muted">· {{ label(opp.fn) }} at distance {{ opp.headline.distance }} ({{ opp.headline.feature }})</small>{% elif opp.fn %}<small class="muted">{{ label(opp.fn) }}: not in the block diagrams, no Opportunity score</small>{% endif %}{{ found_in(opp.fn) }}
   · <span class="small">confidence</span> <span class="pc-conf c-{{ opp.confidence }}" title="the score's confidence{{ ', one step lower: a reviewer disagreed with ' ~ opp.disputed|join(', ') if opp.disputed }}">{{ opp.confidence }}{{ ' ↓' if opp.disputed }}</span></p>
 {% if opp.feasibility %}<p class="pc-feas">{{ fz.feas(opp.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span>
   {% if opp.mismatch %}<span class="feas-flag" title="Derived from the headline feature's distance {{ opp.headline.distance }} (0–1 → 1, 2–3 → 2, 4 → 3); the curated value in reports.yaml is kept">⚑ derived feasibility is {{ opp.derived }}, not {{ opp.curated }}</span>{% endif %}</p>{% endif %}

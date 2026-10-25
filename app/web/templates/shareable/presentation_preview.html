@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/static/shareable.css">
 <link rel="stylesheet" href="/static/presentation.css">
 <div class="pv-bar">
-  <a href="{{ back }}" class="pv-back">← Back to edit</a>
+  <a href="{{ back }}" class="pv-back" onclick="if (window.parent !== window) { window.parent.postMessage('lightbox:close', location.origin); return false; }">← Back to edit</a>
   <button type="button" class="pv-print" onclick="window.print()">Save as PDF</button>
   <form method="get" action="{{ request.url.path }}" class="pv-wmf"><input type="hidden" name="s" value="{{ s }}">{% if deck_slug %}<input type="hidden" name="deck" value="{{ deck_slug }}">{% endif %}
     <label>Watermark <select name="wm" onchange="this.form.submit()">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>

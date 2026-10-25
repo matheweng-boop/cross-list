@@ -5,7 +5,8 @@
 <p class="subtitle">Everything here is public information, ready to share outside the company or save as PDF.</p>
 <div class="sh-cards">
   {% for label, href, desc in items %}
-  <a class="sh-card" href="{{ href }}"><b>{{ label }}</b><span>{{ desc }}</span></a>
+  <div class="sh-card-wrap"><a class="sh-card" href="{{ href }}"><b>{{ label }}</b><span>{{ desc }}</span></a>
+    {% if href in ('/shareable/technology-overview', '/shareable/synergies', '/shareable/automotive') %}<a class="sh-preview small" href="{{ href }}" data-lightbox="{{ label }}">Preview</a>{% endif %}</div>
   {% endfor %}
 </div>
 {# Build a PDF (owner, 25 Oct 2026): pick reports, one print view with all of them; the address keeps the choice #}
@@ -30,8 +31,10 @@
       const r = [...f.querySelectorAll("input[name=r]:checked")].map(x => x.value);
       if (!r.length) { alert("Pick at least one report."); return; }
       const q = new URLSearchParams({r: r.join(","), focus: f.elements.focus.value, wm: f.elements.wm.value});
-      location.href = f.action + "?" + q.toString().replaceAll("%2C", ",");
+      const url = f.action + "?" + q.toString().replaceAll("%2C", ",");
+      if (window.shareableLightbox) window.shareableLightbox(url, "Build a PDF"); else location.href = url;
     });
   })();
 </script>
+<script src="/static/shareable_lightbox.js" defer></script>
 {% endblock %}

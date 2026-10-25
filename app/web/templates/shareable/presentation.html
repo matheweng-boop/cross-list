@@ -57,7 +57,7 @@
       </li>
       {% endfor %}
     </ol>
-    <p class="pb-go"><a role="button" id="pb-preview" href="{{ request.url.path }}/preview?s={{ s }}{% if deck.slug %}&deck={{ deck.slug }}{% endif %}">Preview</a>
+    <p class="pb-go"><a role="button" id="pb-preview" data-lightbox="Presentation preview" href="{{ request.url.path }}/preview?s={{ s }}{% if deck.slug %}&deck={{ deck.slug }}{% endif %}">Preview</a>
       <span class="small muted" id="pb-count">{{ ids|length }} section{{ '' if ids|length == 1 else 's' }}</span></p>
     {% if owner %}
     <details class="pb-own"{{ ' open' if errors or deck.slug }}><summary><b>Save</b> <span class="small muted">(owner only)</span></summary>
@@ -74,11 +74,12 @@
   {% if owner and decks %}
   <section class="pb-saved" aria-labelledby="pb-saved-h"><h3 id="pb-saved-h">Saved presentations</h3>
     <ul>{% for d in decks %}<li><a href="{{ request.url.path }}?deck={{ d.slug }}">{{ d.name }}</a> <span class="small muted">{{ d.saved|date }}</span>
-      <a class="small" href="{{ request.url.path }}/preview?deck={{ d.slug }}">Preview</a>
+      <a class="small" data-lightbox="{{ d.name or 'Presentation preview' }}" href="{{ request.url.path }}/preview?deck={{ d.slug }}">Preview</a>
       <form method="post" action="{{ request.url.path }}/delete" class="pb-inline"><input type="hidden" name="deck" value="{{ d.slug }}"><button type="submit" class="pb-mini pb-del" data-confirm="Delete “{{ d.name }}”?">Delete</button></form></li>{% endfor %}</ul>
   </section>
   {% endif %}
 </aside>
 </div>
 <script src="/static/presentation_builder.js" defer></script>
+<script src="/static/shareable_lightbox.js" defer></script>
 {% endblock %}

@@ -26,6 +26,14 @@ HEADERS = [
     (b"x-robots-tag", b"noindex, nofollow"),
 ]
 HSTS = (b"strict-transport-security", b"max-age=31536000")
+# Shareable previews open in a lightbox on the same site (owner, 25 Oct 2026): these pages may be framed by this site
+# only (frame-ancestors 'self', SAMEORIGIN); every other page stays unframeable.
+_FRAMEABLE = re.compile(r"^/shareable/(pack|presentation/preview|technology-overview|synergies|automotive)$")
+HEADERS_SAMEORIGIN = [
+    (k, CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'").encode() if k == b"content-security-policy"
+     else b"SAMEORIGIN" if k == b"x-frame-options" else v)
+    for k, v in HEADERS
+]
 
 MAX_BODY = 4 * 1024 * 1024  # forms and JSON (saved diagrams are the largest)
 MAX_UPLOAD = 11 * 1024 * 1024  # the 10 MB upload limit plus the form around the file
@@ -51,7 +59,8 @@ class SecurityMiddleware:
         async def send_with_headers(message):
             if message["type"] == "http.response.start":
                 names = {k.lower() for k, _ in message.get("headers", [])}
-                extra = [h for h in HEADERS if h[0] not in names] + ([HSTS] if https else [])
+                base = HEADERS_SAMEORIGIN if _FRAMEABLE.match(scope.get("path", "")) else HEADERS
+                extra = [h for h in base if h[0] not in names] + ([HSTS] if https else [])
                 message = {**message, "headers": list(message.get("headers", [])) + extra}
             await send(message)
 

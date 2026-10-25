@@ -276,3 +276,20 @@
 .sh-sub { margin-left: 1.8rem !important; font-size: .88rem; }
 .sh-sub select { width: auto; max-width: 100%; margin: .15rem 0 0; min-height: 44px; }
 .sh-pack button { width: auto; margin-top: .6rem; min-height: 44px; }
+
+/* Lightbox for previews (owner, 25 Oct 2026): the preview opens over the page instead of leaving it */
+dialog.lb { width: min(96vw, 1400px); height: 92vh; max-width: none; max-height: none; padding: 0; border: 0;
+  border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+dialog.lb:not([open]) { display: none; }
+dialog.lb::backdrop { background: rgba(20, 24, 40, .55); }
+.lb-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .5rem .75rem; border-bottom: 1px solid var(--pico-muted-border-color, #e3e6ee); }
+.lb-tools { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.lb-tools button, .lb-tools a { margin: 0; min-height: 40px; padding: .35rem .8rem; font-size: .9rem; }
+.lb-frame { flex: 1; width: 100%; border: 0; background: #fff; }
+html.lb-open { overflow: hidden; }
+@media (max-width: 600px) { dialog.lb { width: 100vw; height: 100vh; border-radius: 0; } }
+@media print { dialog.lb { display: none !important; } }
+.sh-card-wrap { display: flex; flex-direction: column; gap: .25rem; }
+.sh-card-wrap .sh-card { flex: 1; }
+.sh-preview { align-self: flex-start; padding: .35rem .2rem; min-height: 40px; display: inline-flex; align-items: center; }

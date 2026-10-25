@@ -54,12 +54,12 @@ def test_expansion_items_come_from_reports_marked_expanded(monkeypatch):
     base = rp.reports()
     r0 = {**base[0], "expanded": "2026-10-26"}
     monkeypatch.setattr(rp, "reports", lambda: (r0, *base[1:]))
-    digest._all.cache_clear()
+    digest._all.cache_clear(), digest._index.cache_clear()
     try:
         x = digest.gist_for("expansion", r0["slug"])
         assert x and x["gist"] and x["href"].endswith("#applications-in-depth") and x["date"] == date(2026, 10, 26)
     finally:
-        digest._all.cache_clear()
+        digest._all.cache_clear(), digest._index.cache_clear()
 
 
 def test_first_sentence_is_cut_to_25_words():

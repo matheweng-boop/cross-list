@@ -58,13 +58,15 @@
       {% if t.sources %}<p class="small muted">Sources: {{ t.sources|join('; ') }}</p>{% endif %}{% else %}<p class="muted">no trend data</p>{% endif %}{{ checked(t) }}</article>
 </div>
 
-<h2>Background evidence <span class="small muted">· shown for judgement, not in the score</span></h2>
+<h2>Background evidence <span class="small muted">· shown for judgement; only patents add a small bonus to the priority score</span></h2>
 <div class="bo-ev-grid">
   {% set pt = ev.patents %}
-  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">not in score</span></span>{{ review('patents', fn, rev, pt.confidence if pt else none, pt.check if pt else none) }}</header>
+  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">small bonus in the priority score</span></span>{{ review('patents', fn, rev, pt.confidence if pt else none, pt.check if pt else none) }}</header>
     {% if pt %}<p><b>{{ pt.depth|replace('_', ' ')|capitalize }}</b>{% if pt.count %} · about {{ pt.count }} results{% endif %}</p><p>{{ pt.note }}</p>
       {% if pt.examples %}<ul>{% for x in pt.examples %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
-      {% if pt.query %}<p class="small muted">Re-run: <code>{{ pt.query }}</code></p>{% endif %}{% else %}<p class="muted">not researched yet</p>{% endif %}{{ checked(pt) }}</article>
+      {% if pt.query %}<p class="small muted">Re-run: <code>{{ pt.query }}</code></p>{% endif %}{% elif not pat_platform %}<p class="muted">not researched yet</p>{% endif %}{{ checked(pt) }}
+    {% if pat_platform %}{% include "business/_patent_platform.html" %}{% endif %}
+    <p class="small">Priority score: {% if pat_bonus.bonus %}+ {{ '%g'|format(pat_bonus.bonus) }} to likeliness for {{ pat_bonus.depth }} patent depth{{ ' (from the ' ~ pat_bonus.label ~ ' platform)' if pat_bonus.source == 'platform' }}, up to 1.0{% else %}no patent bonus{% endif %}.</p></article>
   {% set fo = ev.foundry %}
   <article class="bo-ev"><header><span>Foundry route <span class="bo-notscore">not in score</span></span>{{ review('foundry', fn, rev, fo.confidence if fo else none, fo.check if fo else none) }}</header>
     {% if fo %}<p><b>{{ fo.foundry_route }}</b> · {{ fo.typical_process }}</p>{% if fo.foundries %}<p>{{ fo.foundries|join(', ') }}</p>{% endif %}

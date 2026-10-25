@@ -3,32 +3,17 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **Grouping of the diagrams into systems (Systems & applications, 23 Oct 2026), still open:** (a) should the 95
-   diagrams under "Other" become more systems, for example Industrial & energy, Consumer & wearables, Aerospace &
-   defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
-   own diagram: should each get one. Placements and the Car radio split are settled (below).
+None open.
 
-Cross-sell (25 Oct 2026; recommendation in brackets):
+## Settled (owner, 25 Oct 2026: "Yes to all")
 
-2. **Application library preview:** keep the short "Cross-sell in <sub-system>" preview with its link, without adding
-   the Skyworks + Qorvo pairs there? (Yes.)
-3. **Weak pairs** linked only by a supply rail: keep them, shown last and marked weak? Otherwise UWB in the car has no
-   pair. (Keep.)
-4. **UWB anchor clock block:** add a clock / crystal block to the UWB anchor diagram, only from a public reference
-   design in a daily run, so a Qorvo UWB + Skyworks timing pair can appear? (Yes.)
-5. **Bundle table:** keep the 30 most complementary of 172 diagrams? (Yes.)
-
-Priority score for Gaps & new technology and Markets (25 Oct 2026):
-
-6. **Weights** T 45 / L 30 / D 25? (Keep.)
-7. **"All" view** as three groups (RF & power, general power and adjacent, outside our focus) or one plain list? (Groups.)
-8. **Non-isolated half-bridge and 3-phase gate drivers** at 0.7 rather than 0.9? (0.7.)
-9. **Current sensing:** raise to 0.9 only for isolated or integrated-shunt parts; plain amplifiers stay at 0.5? (Yes.)
-10. **PoE PD/PSE at 0.9** (from the Silicon Labs business) and **isolated RS-485 at 0.9** if we sell it isolated? (Confirm.)
-11. **One-diagram RF band gaps** (frequency multipliers at 78.6): acceptable this high? If not, D 0.30 and T 0.40.
-    (Acceptable.)
-12. **Background diagrams** count fully in D, so the number matches "Needed in"? (Yes.)
-13. **Competition** in likeliness: leave it out, since it is in the Opportunity score? (Leave out.)
+- Systems grouping: the diagrams under "Other" become more systems (e.g. Industrial & energy, Consumer & wearables,
+  Aerospace & defense); Kick sensor and Interior radar each get their own diagram. To build in the next run.
+- Cross-sell: keep the Application library preview without pairs; keep weak supply-only pairs (shown last); add a
+  clock / crystal block to the UWB anchor diagram from a public reference design; keep the bundle table at 30 of 172.
+- Priority score: weights T 45 / L 30 / D 25; "All" in three groups; non-isolated gate drivers 0.7; current sensing
+  0.9 only for isolated or integrated-shunt parts; PoE and isolated RS-485 at 0.9; one-diagram RF band gaps
+  acceptable; background diagrams count fully in D; competition stays out of likeliness.
 
 ## Settled (owner, 25 Oct 2026, Shareable reports and reviews)
 

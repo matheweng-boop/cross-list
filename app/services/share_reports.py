@@ -39,18 +39,11 @@ NAMED_PARTNERS = ("TSMC", "GlobalFoundries", "UMC", "TowerJazz", "Tower Semicond
 MAKING_WORDS = ("fab", "wafer fab", "foundry", "foundries", "wafer")
 
 
-@lru_cache
 def site_names() -> tuple[str, ...]:
-    """Place names of the manufacturing sites in data/business/capabilities.yaml ("Woburn, MA (Skyworks)" -> Woburn),
-    so the synergies page can never name one."""
-    from app.services import opportunity as op
+    """Manufacturing site names the synergies page must never name: the site-wide list in app/services/site_guard.py."""
+    from app.services import site_guard
 
-    out = set()
-    for k, p in op.capabilities().items():
-        if k.startswith("site_"):
-            place = re.split(r"[,(]", str(p.get("name") or ""))[0]
-            out |= {x.strip() for x in re.split(r"/|\band\b", place) if len(x.strip()) >= 4}
-    return tuple(sorted(out))
+    return tuple(s for s in site_guard.SITES if s.isalpha() or " " in s)
 
 
 def making_problems(text: str) -> list[str]:
@@ -59,7 +52,10 @@ def making_problems(text: str) -> list[str]:
     for ok in GENERIC_OK:
         t = re.sub(rf"\b{re.escape(ok)}\b", " ", t, flags=re.I)
     hits = whole_words(t, MAKING_WORDS, plural=True)
-    hits += [n for n in (*NAMED_PARTNERS, *site_names()) if re.search(rf"\b{re.escape(n)}\b", t)]
+    hits += [n for n in NAMED_PARTNERS if re.search(rf"\b{re.escape(n)}\b", t)]
+    from app.services import site_guard
+
+    hits += site_guard.hits(t)
     return [f"“{w}” is about where or how parts are made; this page names capabilities only." for w in hits]
 
 

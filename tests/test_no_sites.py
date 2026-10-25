@@ -7,30 +7,12 @@ import re
 import subprocess
 
 from app.services import opportunity as op
+from app.services.site_guard import hits  # the one list of site names
 from tests.conftest import ROOT
 
-# Skyworks / Qorvo (and former Trans-Tech) fab, assembly and test sites; whole words, any case. "Richardson RFPD"
-# and "Richardson Electronics" are distributors, not the fab.
-SITES = (
-    "osaka", "kadoma", r"richardson(?!\s*(?:rfpd|electronics))", "adamstown", "singapore", "mexicali", "woburn",
-    "newbury park", "hillsboro", "greensboro", "apopka", "farmers branch", "beijing", "dezhou", "hiroshima", "lowell",
-    "haverhill", "cedar rapids", "ottawa", "heredia", "costa rica", "nuremberg", "milpitas", "east fishkill",
-)  # fmt: skip
-SITE = re.compile(r"\b(?:" + "|".join(SITES) + r")\b", re.I)
-# a place next to a fab word: "Texas fab", "fabs in NC, OR, TX", "assembly in Mexico"
-_FAB = (r"(?i:fabs?|foundry|foundries|wafer (?:fab|processing|production)|assembly(?: and test)?|test sites?|plants?|"
-        r"facilit(?:y|ies))")  # fmt: skip
-_PLACE = (r"(?:Texas|Japan|Mexico|Oregon|North Carolina|Massachusetts|California|Maryland|Florida|Costa Rica|Germany|"
-          r"Singapore|Malaysia|China|Taiwan|Korea|Philippines|TX|NC|OR|MA|CA|MD|FL)")  # fmt: skip
-NEAR = re.compile(rf"\b{_PLACE}\s+{_FAB}\b|\b{_FAB}\b[^.;\n<]{{0,30}}?\b(?:in|at)\s+{_PLACE}\b")
-
 SCOPE = ("data/business", "data/library", "app", "docs")
-SKIP = ("data/catalog/", "data/real/", "data/appnotes.jsonl")
+SKIP = ("data/catalog/", "data/real/", "data/appnotes.jsonl", "app/services/site_guard.py")
 BINARY = (".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".woff", ".woff2", ".sqlite", ".db")
-
-
-def hits(text: str) -> list[str]:
-    return [m.group(0) for m in SITE.finditer(text)] + [m.group(0) for m in NEAR.finditer(text)]
 
 
 def tracked() -> list[str]:

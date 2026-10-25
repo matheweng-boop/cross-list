@@ -69,7 +69,7 @@ def test_the_manufacturing_guard_blocks_fabs_sites_and_named_partners():
     for bad in ("Made in our wafer fab", "Our fab runs GaAs", "Built at TSMC", "Assembly in Mexicali",
                 "GaAs from the Newbury Park site", "a foundry in Asia"):  # fmt: skip
         assert sr.synergy_problems(bad), bad
-    assert "Woburn" in sr.site_names() and "Mexicali" in sr.site_names()
+    assert "woburn" in sr.site_names() and "mexicali" in sr.site_names()
     # and on save: the owner cannot put a site name on the page
     vals = te.values({}, sr.SYNERGIES)
     assert te.check("mfg.0.skyworks", vals["mfg.0.skyworks"], sr.SYNERGIES) == ""

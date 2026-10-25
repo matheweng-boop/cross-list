@@ -141,14 +141,19 @@ def test_the_pack_combines_the_selected_reports_in_order(client):
     assert "<span>Draft</span>" in html
     two = client.get(f"{PACK}?r=synergies&r=automotive").text
     assert re.findall(r'class="to-page[^"]*" id="([^"]+)"', two)[0] == "syn-glance" and "6 / 6<" in two
-    focus = client.get(f"{PACK}?r=overview&focus=automotive").text
-    assert 'id="market-focus"' in focus and "5 / 5<" in focus
+    # the market focus page was removed (owner, 25 Oct 2026): an old &focus= is ignored, the overview stays 4 pages
+    old = client.get(f"{PACK}?r=overview&focus=automotive")
+    assert old.status_code == 200 and 'id="market-focus"' not in old.text and "4 / 4<" in old.text
+    assert "focus=" not in old.text.split("Change the selection")[0].rsplit("<a ", 1)[-1]
     from app.config import PROJECT_ROOT
 
     css = (PROJECT_ROOT / "app" / "web" / "static" / "shareable.css").read_text()
     assert ".sr-pack-part .to-page { break-before: page; }" in css  # each report from a new page
     landing = client.get("/shareable").text
     assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and "Create PDF" in landing
+    form = landing[landing.index('id="build-pdf"'):landing.index("</form>", landing.index('id="build-pdf"'))]
+    assert 'name="focus"' not in form and "Market focus" not in form and "(4 pages)" in form  # no focus option
+    assert "focus:" not in landing.split('id="build-pdf"', 1)[1].split("</script>", 1)[0]
 
 
 def test_patent_tags_come_from_a_fixture_and_are_quiet_without_data(monkeypatch, tmp_path):

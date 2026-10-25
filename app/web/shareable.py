@@ -55,12 +55,13 @@ def shareable(request: Request):
     section = next(s for s in nav.NAV if s[0] == "shareable")
     items = [(label, href, BLURBS.get(href, desc)) for label, href, desc in section[2]]
     q = request.query_params
-    pack_items = [("overview", "Technology overview", "4-5"), ("synergies", sr.SYNERGIES.label, sr.PAGES["synergies"]),
+    pack_items = [("overview", "Technology overview", sr.PAGES["overview"]),
+                  ("synergies", sr.SYNERGIES.label, sr.PAGES["synergies"]),
                   ("automotive", sr.AUTOMOTIVE.label, sr.PAGES["automotive"])]  # fmt: skip
     picked = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
     return templates.TemplateResponse(request, "shareable/index.html", {
-        "items": items, "pack_items": pack_items, "picked": picked, "markets": tech_overview.focus_markets(),
-        "focus": q.get("focus", ""), "wm": q.get("wm", "none"), "watermarks": te.WATERMARKS})  # fmt: skip
+        "items": items, "pack_items": pack_items, "picked": picked,
+        "wm": q.get("wm", "none"), "watermarks": te.WATERMARKS})  # fmt: skip
 
 
 def _page(request: Request, session: Session, edit: bool, ov: dict | None = None, errors: dict | None = None,
@@ -248,15 +249,16 @@ def _rback(rep: te.Report, done: str, anchor: str = "") -> RedirectResponse:
 
 @router.get("/shareable/pack", response_class=HTMLResponse)
 def shareable_pack(request: Request, session: Session = Depends(get_session)):
-    """The combined PDF: ?r=overview,synergies,automotive (in this order), &focus= for the overview's market page,
-    &wm= for the watermark. Page numbers run through the whole PDF; the sources come once, at the end."""
+    """The combined PDF: ?r=overview,synergies,automotive (in this order), &wm= for the watermark (an old &focus= is
+    ignored: the market focus page was removed, owner 25 Oct 2026). Page numbers run through the whole PDF; the
+    sources come once, at the end."""
     q = request.query_params
     keys = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
     te.apply_answers(session)
     session.commit()
     ovals = te.values(te.overrides(session))
     opts = te.view_options(ovals, q)
-    pages = {k: (opts["pages"] if k == "overview" else sr.PAGES[k]) for k in keys}
+    pages = {k: sr.PAGES[k] for k in keys}
     total, offset = sum(pages.values()), 0
     ctxs = {}
     for k in keys:
@@ -282,8 +284,7 @@ def shareable_pack(request: Request, session: Session = Depends(get_session)):
         else:
             bodies.append(templates.get_template(BODIES[k]).render(ctxs[k]))
     titles = ["Technology overview" if k == "overview" else sr.REPORTS[k].label for k in keys]
-    query = "&".join(f"{k}={v}" for k, v in (("r", ",".join(keys)), ("focus", opts["focus"] or "none"),
-                                              ("wm", opts["wm"])))  # fmt: skip
+    query = f"r={','.join(keys)}&wm={opts['wm']}"
     return templates.TemplateResponse(request, "shareable/pack.html", {
         "bodies": bodies, "titles": titles, "total": total, "wm_text": opts["wm_text"], "keys": keys,
         "query": query})  # fmt: skip

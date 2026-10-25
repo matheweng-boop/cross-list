@@ -15,8 +15,6 @@
   <p class="small muted">Pick the reports to put in one PDF. They print in this order, each from a new page.</p>
   {% for key, label, pages in pack_items %}
   <label class="sh-check"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }}> {{ label }} <span class="muted small">({{ pages }} pages)</span></label>
-  {% if key == 'overview' %}<label class="sh-sub">Market focus page
-    <select name="focus"><option value="none">None</option>{% for k, m in markets.items() %}<option value="{{ k }}"{{ ' selected' if focus == k }}>{{ m.title }}</option>{% endfor %}</select></label>{% endif %}
   {% endfor %}
   <label class="sh-sub">Watermark
     <select name="wm">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>
@@ -30,7 +28,7 @@
       e.preventDefault();
       const r = [...f.querySelectorAll("input[name=r]:checked")].map(x => x.value);
       if (!r.length) { alert("Pick at least one report."); return; }
-      const q = new URLSearchParams({r: r.join(","), focus: f.elements.focus.value, wm: f.elements.wm.value});
+      const q = new URLSearchParams({r: r.join(","), wm: f.elements.wm.value});
       const url = f.action + "?" + q.toString().replaceAll("%2C", ",");
       if (window.shareableLightbox) window.shareableLightbox(url, "Build a PDF"); else location.href = url;
     });

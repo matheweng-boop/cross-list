@@ -307,7 +307,7 @@ AUTOMOTIVE = te.Report("automotive", "share_automotive", "Automotive: technologi
                        "/shareable/automotive", lambda: specs_automotive(), _sections("automotive"),
                        _paras("automotive"), _limits, to.share_problems, "3 A4 pages")  # fmt: skip
 REPORTS = {"synergies": SYNERGIES, "automotive": AUTOMOTIVE}
-PAGES = {"overview": 4, "synergies": 3, "automotive": 3}  # printed A4 pages (the overview: 5 with its focus page)
+PAGES = {"overview": 4, "synergies": 3, "automotive": 3}  # printed A4 pages
 PACK_ORDER = ("overview", "synergies", "automotive")
 
 

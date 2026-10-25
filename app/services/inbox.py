@@ -172,6 +172,9 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     tam_todo = tam_links.inbox_lines(session)
     out += tam_todo
     tam_changes = tam_todo[-1] != "None."
+    from app.services import radio_market  # prices the owner must enter before the radio market can be computed
+
+    out += radio_market.inbox_lines(session)
 
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too

@@ -54,8 +54,13 @@
 <h2>2. The market today</h2>
 <div class="table-wrap"><table class="small pc-table">
   <thead><tr><th scope="col">Figure</th><th scope="col">Value</th><th scope="col">Source</th></tr></thead>
-  <tbody>{% for m in case.market_now %}<tr><td>{{ m.figure }}</td><td>{{ m.value }}{% set n = (tam_notes or {}).get('market_now', {}).get(loop.index0) %}{% if n %}{% include "business/_tam_fig.html" %}{% endif %}</td><td>{{ m.source }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for m in case.market_now %}<tr><td>{{ m.figure }}</td><td>{% if m.live and radio and radio.layers[m.live] %}{% set lv = radio.layers[m.live] %}<b>{{ lv.band }}</b> a year ({{ lv.per_vehicle_text }} a car; {{ radio.assumption }}; today's mix, no growth){% if not lv.ok %} – prices needed, see below{% endif %}{% else %}{{ m.value }}{% endif %}{% set n = (tam_notes or {}).get('market_now', {}).get(loop.index0) %}{% if n %}{% include "business/_tam_fig.html" %}{% endif %}</td><td>{{ m.source }} {{ conf(m.conf) }}</td></tr>{% endfor %}</tbody>
 </table></div>
+{% if radio_mandates %}{% from "business/_radio_market.html" import mandates, prices_needed, panel %}
+<h3 id="drivers-mandates">Standards, mandates and adoption</h3>
+<p class="small muted">Each item's status is as its public source states it on that date; a bill is not a law. The effect column says what it does to the radio BOM; the mix column says whether it drives today's mix (current BOM figure) or the {{ (radio or {}).get('target_year', 2030) }} mix (projection).</p>
+{{ mandates({'mandates': radio_mandates}) }}{% endif %}
+{% if radio %}{{ prices_needed(radio, '/business/reports/' ~ r.slug ~ '#radio-market') }}{{ panel(radio, radio.reports_band) }}{% endif %}
 {{ thread('market') }}
 
 <h2>3. Where it is heading <small class="muted">(our estimates)</small></h2>

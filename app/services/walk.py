@@ -132,7 +132,8 @@ def walk(session: Session, part: Part, rows: list, upto: int = 2, co: str = "com
         gaps.append((4, f"{label}: no technical-library topic covers it yet (design rules, research trends)"))
     s4 = {"library": lib, "short": s1["worse"], "short_everywhere": s1["short_everywhere"], "markets": markets,
           "n_apps": len(apps), "comp": comp, "trend": trend, "hunt": hunt, "tam": tam,
-          "tam_apps": use.get("tam_apps", 0), "tam_band": use.get("tam_band")}  # fmt: skip
+          "tam_apps": use.get("tam_apps", 0), "tam_band": use.get("tam_band"),
+          "tam_layer": use.get("tam_layer") or ""}  # fmt: skip
     out["s4"] = s4
     if upto < 5:
         return out

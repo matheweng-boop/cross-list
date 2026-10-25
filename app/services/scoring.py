@@ -235,6 +235,7 @@ def table(apps: list[op.Application], asp: dict | None = None, vol: dict | None 
         if fn in use:
             use[fn]["tam"], use[fn]["tam_apps"] = t["usd"], t["n"]  # usd: the midpoint of a combined band
             use[fn]["tam_band"] = t.get("band")
+            use[fn]["tam_layer"] = t.get("layer") or ""  # what the band counts, e.g. radio content
     top = max((u["raw"] for fn, u in use.items() if scorable(fn, u)), default=0)
     out = {"rows": {fn: _score(fn, u, top, verdicts) for fn, u in use.items() if scorable(fn, u)},
            "usage": use, "top": top, "verdicts": verdicts}  # fmt: skip

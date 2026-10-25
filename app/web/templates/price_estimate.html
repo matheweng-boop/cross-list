@@ -6,6 +6,8 @@
   DigiKey, without VAT). Same model as the part pages: the tested scaling equation (or the part's own flat curve for
   complex parts), direct purchasing at most two-thirds of the distributor price, and a cost floor by family and package.
   For several parts, a radio set-up or a block diagram, use the <a href="/pricing/builder">solution price builder</a>.</p>
+{% if price_saved %}<p class="banner small">Saved prices for {{ price_saved }}. The market estimates use them now.</p>{% endif %}
+{% if radio %}{% from "business/_radio_market.html" import prices_needed %}{{ prices_needed(radio, '/pricing/estimate#prices-needed', true) }}{% endif %}
 <datalist id="pe-mpns">{% for m in suggest %}<option value="{{ m }}">{% endfor %}</datalist>
 <form method="get" action="/pricing/estimate" class="pe-form">
   <div class="grid">

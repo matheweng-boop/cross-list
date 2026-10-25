@@ -536,10 +536,30 @@ def tam_page(request: Request, saved: str = "", error: str = "", session: Sessio
     """TAM estimates: market size per product or technology, each with its source and the owner's review."""
     rows = tam.estimates(session)
     fns = blocks.catalogue()["functions"]
-    ctx = {"rows": rows, "counts": tam.counts(session), "hint": tam.check_hint, "saved": saved, "error": error,
-           "fns": fns, "fn_choices": sorted(((k, f.get("label", k)) for k, f in fns.items()),
+    tam_ctx = tam_page_extra(session, rows)
+    rows = [e for e in rows if e["key"] not in tam_ctx["combined_keys"]]  # members show inside their combined topic
+    ctx = {**tam_ctx, "rows": rows, "counts": tam.counts(session), "hint": tam.check_hint, "saved": saved,
+           "error": error, "fns": fns, "fn_choices": sorted(((k, f.get("label", k)) for k, f in fns.items()),
                                             key=lambda kv: kv[1].lower())}  # fmt: skip
     return templates.TemplateResponse(request, "business/tam.html", ctx)
+
+
+def tam_page_extra(session: Session, rows: list[dict]) -> dict:
+    """The biweekly check summary, flags and combined topics for the TAM estimates page."""
+    from app.services import tam_links
+
+    combined = [t for t in tam.topics(session, rows) if t["is_combined"]]
+    pages: dict[str, list[dict]] = {}
+    for lk in tam_links.links():
+        for ref in [lk.get("topic"), *(lk.get("keys") or [])]:
+            if ref and not any(p["slug"] == lk["slug"] for p in pages.get(ref, [])):
+                pages.setdefault(ref, []).append({"slug": lk["slug"], "label": lk["slug"]})
+    for a in tam_links.applied():  # the applied-answers lock (data/business/tam_applied.yaml), when it exists
+        for where in [a.get("applied_in")] if isinstance(a.get("applied_in"), str) else a.get("applied_in") or []:
+            pages.setdefault(str(a.get("key")), []).append({"slug": None, "label": str(where)})
+    return {"check": tam.check_summary(), "flags": [e for e in rows if e["flag"]], "topics": combined,
+            "combined_keys": {e["key"] for t in combined for e in t["members"]}, "history": tam.history(session),
+            "applied_in": pages, "check_labels": tam.CHECK_LABELS, "money": tam.money}  # fmt: skip
 
 
 @router.post("/business/tam")
@@ -1064,7 +1084,17 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx["scheduled"] = schedule.by_source(session, "research").get(slug)
     ctx["learn"] = rp.learn(r)
     ctx["opener"] = (ctx["case"] or {}).get("opener") or prelim.opener(session, slug)
+    ctx["tam_notes"] = tam_notes(request, session, slug)
     return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+def tam_notes(request: Request, session: Session, slug: str) -> dict:
+    """Owner view only: is each market figure quoted on this page still in line with the TAM? Guests see nothing."""
+    from app.auth.session import principal
+    from app.services import tam_links
+
+    who = principal(request)
+    return {} if who is not None and who.is_guest else tam_links.for_slug(session, slug)
 
 
 @router.post("/business/reports/{slug}/react")
@@ -1080,13 +1110,13 @@ async def case_react(request: Request, slug: str, session: Session = Depends(get
 
 
 @router.get("/business/reports/{slug}/background", response_class=HTMLResponse)
-def product_report_background(request: Request, slug: str):
+def product_report_background(request: Request, slug: str, session: Session = Depends(get_session)):
     """The detail behind a report: the data tables and long-form notes kept out of the report itself."""
     r = rp.report(slug)
     if r is None or not rp.has_background(slug):
         raise HTTPException(404, "No background for this report")
     ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.background.html",
-           "background": True}  # fmt: skip
+           "background": True, "tam_notes": tam_notes(request, session, slug)}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

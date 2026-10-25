@@ -8,6 +8,7 @@
 <p class="small"><a href="/business/reports/{{ r.slug }}">← Back to the report</a></p>
 <p class="rp-bg-note small">Background notes for <b>{{ r.title }}</b>: the data tables, detail and full source list behind the report. Used to answer questions; the report itself stays short.</p>
 <article class="rpt">{% include body %}</article>
+{% include "business/_tam_notes.html" %}
 {% else %}
 <p class="small"><a href="/business/reports">← Research &amp; ideas</a></p>
 <p class="rp-meta small">{{ fz.stage(scheduled) }} {{ r.area }} · {{ r.date|date }}{% if r.sources %} · {{ r.sources }}{% endif %}</p>
@@ -17,6 +18,7 @@
 {{ opener_box(opener, r.slug, answer_form=not case) }}{% if opener and case %}<p class="small muted">Answer it under <a href="#questions-to-ask">8. Questions to ask</a>, where it is the first business-unit question.</p>{% endif %}
 {{ schedule_button(r, scheduled, request.url.path) }}
 <article class="rpt">{% include body %}</article>
+{% include "business/_tam_notes.html" %}
 {% if has_background %}<p class="small"><a href="/business/reports/{{ r.slug }}/background">Background notes: data tables, detail and all sources →</a></p>{% endif %}
 
 {% if questions %}<section class="rp-ask" id="questions">

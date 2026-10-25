@@ -62,6 +62,22 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    the publisher's current page if it can be found politely (robots.txt first, `tools/research/fetch.sh`; never an
    archive or mirror), or read the source and remove the marker (keep "est" where the figure stays our estimate);
    **remove** = take the link or the figure out; **checked, OK** = drop the marker (or keep the link as it is).
+   TAM verification (biweekly, the evening run of every second Sunday, after the link check; owner, 25 Oct 2026):
+   `uv run python scripts/check_tam.py` (25 estimates a run, rotating; same polite fetcher and policy hosts as the
+   link check). Commit `data/business/tam_checks.yaml` (verified / changed / unverifiable / disqualified, with a
+   ≤ 200-character evidence snippet); never delete a TAM entry because of it (a disqualified one leaves the market
+   size by itself; if the owner agreed, it stays and the page asks the owner to look again). Put its summary line in
+   the run summary. Then, on every run:
+   - **Combine same topics** (owner, 25 Oct 2026): after review answers or a TAM check, group the estimates for the
+     same function and scope into one topic in `data/business/tam_topics.yaml` (members with the owner's verdict and
+     date from the inbox, low, high, year, CAGR band, `combined` date) and note the members left out and why. Combine
+     only when at least 2 sources are reviewed (owner agree) or verified; owner "disagree" and disqualified members
+     are excluded and noted. The site recomputes the band from live answers; keep the recorded numbers in step.
+   - **"TAM changes for reports"** (inbox section): for each to-do, update the report text (body, background notes
+     or `data/business/reports.yaml`) or the case figure (`data/business/cases/<slug>.yaml` market_now / thread) to
+     the new range, update the figure and keys in `data/business/tam_links.yaml`, and record the applied answer in
+     `data/business/tam_applied.yaml` (key, verdict, date, applied_in, note; create the file in that format if it
+     does not exist yet). Add any new market figure quoted in a report or case to `tam_links.yaml`.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

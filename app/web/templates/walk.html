@@ -98,7 +98,7 @@
     {% if s4.hunt %}<p class="small">Customers to ask: {% for c in s4.hunt %}{{ c.name }}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}</div>
   <div><h3>Competition and market</h3>
     <p class="small">{% if s4.comp %}{{ crowd(s4.comp, crowding_label) }}{% else %}<span class="muted">competition not assessed</span>{% endif %}</p>
-    {% if not guest_blocked(request, "/business/tam") %}<p class="small">Market size: {% if s4.tam %}{{ usd(s4.tam) }} a year <small class="muted">(public estimate, {{ s4.tam_apps }} source{{ 's' if s4.tam_apps != 1 }})</small>{% else %}<span class="muted">no public market-size estimate yet — <a href="/business/tam">add one on TAM estimates</a></span>{% endif %}</p>{% endif %}
+    {% if not guest_blocked(request, "/business/tam") %}<p class="small">Market size: {% if s4.tam %}{{ s4.tam_band or usd(s4.tam) }} a year <small class="muted">(public estimate, {{ s4.tam_apps }} source{{ 's' if s4.tam_apps != 1 }})</small>{% else %}<span class="muted">no public market-size estimate yet — <a href="/business/tam">add one on TAM estimates</a></span>{% endif %}</p>{% endif %}
     <p class="small">Trend: {% if s4.trend %}<b>{{ s4.trend.outlook or ('growing: ' ~ s4.trend.regulation) }}</b>{% if s4.trend.note %}<br><small class="muted">{{ s4.trend.note }}</small>{% endif %}{% else %}<span class="muted">not recorded</span>{% endif %}</p></div>
 </div>
 {{ library_box(s4.library) }}

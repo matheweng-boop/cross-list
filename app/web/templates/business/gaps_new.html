@@ -21,7 +21,7 @@
 
 {% macro gap_card(e) %}<article class="csg-card" data-t="{{ e.priority.t_level or 'none' }}"><b><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a></b>
   {{ prio_bar(e) }}
-  <small>{{ prio_chips(e) }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM ${{ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
+  <small>{{ prio_chips(e) }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM {{ e.tam_src.band if e.tam_src and e.tam_src.band else '$' ~ '{:,.0f}'.format(e.tam) }} / year{% endif %}</small>
   <small>{{ score_chip(e) }} {{ path_chip(e.path, path_label) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}</small>
   <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small></article>{% endmacro %}
 

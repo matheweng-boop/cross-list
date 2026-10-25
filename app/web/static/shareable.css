@@ -1,13 +1,6 @@
 /* Shareable section (owner, 24 Oct 2026): the landing cards and the Technology overview, on screen and printed (A4).
    Loaded only by the pages of the section, so the print rules below hide the site's frame on these pages only. */
 
-/* landing page */
-.sh-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); gap: .8rem; margin: 1rem 0; }
-.sh-card { display: flex; flex-direction: column; gap: .3rem; padding: .9rem 1rem; border: 1px solid var(--pico-muted-border-color);
-  border-left: 4px solid var(--pico-primary); border-radius: .5rem; text-decoration: none; color: inherit; }
-.sh-card:hover, .sh-card:focus-visible { border-color: var(--pico-primary); }
-.sh-card span { font-size: .88rem; color: var(--pico-muted-color); }
-
 /* technology overview: screen */
 .to { max-width: 62rem; }
 .to-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; margin: 0 0 .8rem; }
@@ -262,16 +255,26 @@
   .sr-pack-part:first-child .to-page:first-of-type { break-before: auto; }
 }
 
-/* landing page: Build a PDF */
-.sh-pack { max-width: 40rem; margin: 1.4rem 0; padding: .9rem 1rem; border: 1px solid var(--pico-muted-border-color);
+/* landing page (owner, 25 Oct 2026): one list of the reports, a watermark, Build a PDF and Build a presentation */
+.sh-pack { max-width: 44rem; margin: 1rem 0; padding: .4rem 1rem .6rem; border: 1px solid var(--pico-muted-border-color);
   border-radius: .5rem; border-top: 3px solid var(--pico-primary); }
-.sh-pack h2 { margin: 0 0 .3rem; font-size: 1.15rem; }
-.sh-pack label { margin: .3rem 0; }
-.sh-check { display: flex; align-items: center; gap: .5rem; min-height: 44px; font-weight: 600; }
-.sh-check input { margin: 0; }
-.sh-sub { margin-left: 1.8rem !important; font-size: .88rem; }
-.sh-sub select { width: auto; max-width: 100%; margin: .15rem 0 0; min-height: 44px; }
-.sh-pack button { width: auto; margin-top: .6rem; min-height: 44px; }
+.sh-list { margin: 0; padding: 0; }
+.sh-row { list-style: none; display: flex; align-items: center; gap: .5rem 1rem; padding: .45rem 0; margin: 0;
+  border-bottom: 1px solid var(--pico-muted-border-color); }
+.sh-check { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: .6rem; min-height: 44px; margin: 0; cursor: pointer; }
+.sh-check input { margin: .25rem 0 0; flex: none; }
+.sh-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .5rem; }
+.sh-line { flex-basis: 100%; font-size: .86rem; color: var(--pico-muted-color); }
+.sh-acts { display: flex; align-items: center; gap: .6rem; flex: none; }
+.sh-preview { margin: 0; padding: .3rem .8rem; min-height: 40px; display: inline-flex; align-items: center; font-size: .9rem; }
+.sh-edit { padding: .3rem .1rem; }
+.sh-go { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin-top: .7rem; }
+.sh-wm { margin: 0; font-size: .88rem; }
+.sh-wm select { width: auto; max-width: 100%; margin: .15rem 0 0; min-height: 44px; }
+.sh-btns { display: flex; flex-wrap: wrap; gap: .5rem; }
+.sh-go button, .sh-ppt { width: auto; margin: 0; min-height: 44px; display: inline-flex; align-items: center; }
+.sh-err { margin: .5rem 0 0; color: var(--pico-del-color, #b3261e); font-weight: 600; }
+.sh-pack > p.small { margin: .5rem 0 0; }
 
 /* Lightbox for previews (owner, 25 Oct 2026): the preview opens over the page instead of leaving it */
 dialog.lb { width: min(96vw, 1400px); height: 92vh; max-width: none; max-height: none; padding: 0; border: 0;
@@ -286,6 +289,3 @@ dialog.lb::backdrop { background: rgba(20, 24, 40, .55); }
 html.lb-open { overflow: hidden; }
 @media (max-width: 600px) { dialog.lb { width: 100vw; height: 100vh; border-radius: 0; } }
 @media print { dialog.lb { display: none !important; } }
-.sh-card-wrap { display: flex; flex-direction: column; gap: .25rem; }
-.sh-card-wrap .sh-card { flex: 1; }
-.sh-preview { align-self: flex-start; padding: .35rem .2rem; min-height: 40px; display: inline-flex; align-items: center; }

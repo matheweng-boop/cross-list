@@ -16,15 +16,15 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 3. **UWB anchor clock source.** The clock block cites Murata's public UWB module designs (Qorvo QM33120W and NXP SR150,
    both with a 38.4 MHz crystal); NXP's automotive anchor pages give no clock frequency. Is a module design acceptable
    as the "public reference design" for the anchor?
-5. **Car radio market, prices needed (26 Oct 2026).** The radio market at current BOM content is "Not Enough Data"
+4. **Car radio market, prices needed (26 Oct 2026).** The radio market at current BOM content is "Not Enough Data"
    until these have a price basis: Si47961 (dual AM/FM tuner: only its sibling Si47962 is priced; enter prices or a
    low / in band / high call), Si46922 (DAB demodulator: no price on the site) and a part for each adjacent block
    (antenna amplifier / LNA, antenna switch, audio amplifier). Enter them under Price estimate > Required for market
    estimates (public distributor or list prices only). Are these the right reference systems and blocks?
-6. **Digital share of new-car radios.** Today's mix is 26–90 % digital (Europe, US, India known; China, Japan and the
+5. **Digital share of new-car radios.** Today's mix is 26–90 % digital (Europe, US, India known; China, Japan and the
    rest of the world have no public share, so they count both ways). Do you know a public figure for China's or the
    world's share, and should the 2030 projection assume every new radio is digital (the upper bound used now)?
-7. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
+6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
 
 ## Settled (owner, 25 Oct 2026, radio market)

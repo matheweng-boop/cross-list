@@ -26,6 +26,12 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    world's share, and should the 2030 projection assume every new radio is digital (the upper bound used now)?
 6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
+7. **Reference designs matched to the library diagrams (26 Oct 2026).** A public reference design counts for a library
+   diagram when its application tags or title name the diagram's application and it shares at least two functions;
+   127 of 190 diagrams have matches (median 19). A function common in the matched designs (at least 30 %, at least 3
+   designs) that the diagram lacks is shown as a suggestion; it is added to the diagram automatically only when at least
+   half of them (and at least 5) use it and no close alternative is already there (2 blocks added so far). Stricter or
+   looser?
 
 ## Settled (owner, 25 Oct 2026, radio market)
 

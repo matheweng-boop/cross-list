@@ -3,7 +3,9 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-None open.
+1. TAM estimate "MarketIntelo, digital radio tuners": it covers digital radio tuners only, so it is not used for the
+   market size in the radio-tuner-next case; it is marked as applied on the TAM estimates page only. Should it also
+   be linked to the case (and locked as applied there)?
 
 ## Settled (owner, 25 Oct 2026: "Yes to all")
 

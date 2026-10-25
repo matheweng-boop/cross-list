@@ -1,0 +1,38 @@
+# TAM answers already worked into a report or the market size (Data management > TAM estimates).
+#
+# An estimate listed here is locked: its review box shows "Applied <date> in: <links>" and its history instead of the
+# agree / disagree buttons, and POST /business/tam/review refuses a new verdict for it (409) (owner, 25 Oct 2026:
+# "For already agreed or disagreed statements that went into the report, I shouldn't be able to select agree or
+# disagree after").
+#
+# Who writes it: the daily or biweekly run, when it works an owner's answer into a report, a case or the market size.
+# Reopen: if the biweekly check later disqualifies or changes the figure, the run removes the entry (or updates it
+# with the new verdict, date and note); a removed entry reopens the item for a new answer.
+#
+# Fields
+#   key         the estimate id in data/business/tam.yaml (or u<n> for an estimate added on the page)
+#   verdict     the owner's answer that was applied: agree | disagree
+#   date        when it was applied (YYYY-MM-DD)
+#   applied_in  where: report / case slugs (data/business/cases/<slug>.yaml, /business/reports/<slug>) or "TAM page"
+#   note        what was done with it
+applied:
+  - key: tuner-ic-datahorizzon
+    verdict: agree
+    date: 2026-10-22
+    applied_in: [radio-tuner-next, TAM page]
+    note: "Consolidated into the total radio market range $0.89-2.31 B (2024) with MRFR (update-2026-10-22c); full coverage, so it sets the tuner market size used in the radio-tuner-next case."
+  - key: tuner-ic-mrfr
+    verdict: agree
+    date: 2026-10-22
+    applied_in: [radio-tuner-next, TAM page]
+    note: "Consolidated into the total radio market range $0.89-2.31 B (2024) with DataHorizzon (update-2026-10-22c); full coverage, so it sets the tuner market size used in the radio-tuner-next case."
+  - key: digital-radio-tuner-marketintelo
+    verdict: agree
+    date: 2026-10-22
+    applied_in: [TAM page]
+    note: "Worked in the same consolidation (update-2026-10-22c): labelled digital radio tuners only (part coverage), so it is not used for the market size."
+  - key: tuner-ic-emergen
+    verdict: disagree
+    date: 2026-10-22
+    applied_in: [TAM page]
+    note: "Dead link; not replaced, no tuner-only figure is needed (owner). Removed from the market size, coverage not checked (update-2026-10-22c)."

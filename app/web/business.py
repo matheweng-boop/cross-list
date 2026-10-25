@@ -564,6 +564,10 @@ async def tam_add(request: Request, session: Session = Depends(get_session)):
     return RedirectResponse("/business/tam?saved=1", status_code=303)
 
 
+APPLIED_MSG = ("This estimate's answer is already worked into a report, so it takes no new answer. It reopens when "
+               "the next check changes or removes the figure.")
+
+
 @router.post("/business/tam/review")
 def tam_review(key: str = Form(...), answer: str = Form(...), comment: str = Form(""), author: str = Form(""),
                back: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
@@ -571,6 +575,8 @@ def tam_review(key: str = Form(...), answer: str = Form(...), comment: str = For
     verdict = {"agree": "correct", "yes": "correct", "disagree": "wrong", "no": "wrong"}.get(answer)
     if verdict is None or not tam.known_key(session, key):
         raise HTTPException(400, "Unknown estimate or answer")
+    if key in tam.applied():
+        raise HTTPException(409, APPLIED_MSG)
     session.add(DataReview(dataset=tam.DATASET, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
@@ -913,6 +919,8 @@ def quality_answer(dataset: str = Form(...), key: str = Form(...), answer: str =
                                                                                 ("", {}))[1]  # fmt: skip
     if verdict is None or not known:
         raise HTTPException(400, "Unknown question or answer")
+    if dataset == tam.DATASET and key in tam.applied():
+        raise HTTPException(409, APPLIED_MSG)
     session.add(DataReview(dataset=dataset, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()

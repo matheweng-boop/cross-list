@@ -2,7 +2,7 @@
 {% from "business/_growth.html" import learn_tab %}
 {% block title %}{{ page_title(request.url.path, r.parts|first) }}{% endblock %}
 {% macro react(x) %}{% set f = x.fb or {} %}
-<div class="pc-react pc-inline" id="i-{{ x.key|replace('.', '-') }}" data-title="{{ x.text or x.feature or x.name or x.section or x.maker or x.diagram }}"><span class="pc-state">{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</span>
+<div class="pc-react pc-inline" id="i-{{ x.key|replace('.', '-') }}" data-title="{{ x.text or x.feature or x.name or x.section or x.maker or x.diagram }}"><span class="pc-state">{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ verdict_label.get(f.verdict, f.verdict) }}</span>{% else %}{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }} comment{{ 's' if f.comments|length != 1 }}</small>{% endif %}</span>{{ review_history(request, 'review:' ~ r.slug, x.key) }}
   <form method="post" action="/reviews/{{ r.slug }}/react" class="pc-form">
     <input type="hidden" name="key" value="{{ x.key }}">
     <input name="comment" maxlength="2000" placeholder="Why (optional)" aria-label="Comment">

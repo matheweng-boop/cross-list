@@ -191,7 +191,7 @@ def test_human_validation_page_and_scan(client, session):
     assert client.get("/business/validation?prio=high").status_code == 200
 
 
-def test_market_size_comes_from_public_tam_estimates(client, session):
+def test_market_size_comes_from_public_tam_estimates(client, session, monkeypatch):
     """The explorer's TAM and the demand score use public TAM estimates per function, without disagreed ones."""
     from app.services import scoring, tam
 
@@ -202,6 +202,7 @@ def test_market_size_comes_from_public_tam_estimates(client, session):
     use = scoring.for_session(session, apps)["usage"]
     if "am_fm_tuner" in use:
         assert use["am_fm_tuner"]["tam"] == t["usd"]
+    monkeypatch.setattr(tam, "applied", lambda: {})  # as if the 22 Oct application were reopened
     client.post("/business/tam/review", data={"key": "tuner-ic-mrfr", "answer": "disagree"})
     session.expire_all()
     assert tam.by_function(session)["am_fm_tuner"]["high"] < 2.31e9  # the disagreed figure drops out

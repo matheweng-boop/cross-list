@@ -27,7 +27,7 @@ def test_tam_page_review_and_add(client, session):
     html = client.get("/business/tam").text
     assert "TAM estimates" in html and "Market Research Future" in html and "example from research notes" in html
     assert "Source quality" in html and 'aria-current="page"' in html
-    key = tam.researched()[0]["key"]
+    key = next(e["key"] for e in tam.researched() if e["key"] not in tam.applied())  # applied ones are locked
     r = client.post("/business/tam/review", data={"key": key, "answer": "disagree", "comment": "counts modules"},
                     follow_redirects=False)  # fmt: skip
     assert r.status_code == 303

@@ -165,7 +165,7 @@ TABS = (
 )
 
 # Query parameters a tab link keeps when you switch tabs inside a group (first tab href -> parameter names)
-TAB_CARRY = {"/blocks/cross-sell": ("system", "sub")}
+TAB_CARRY = {"/blocks/cross-sell": ("system", "sub", "aec")}
 
 
 def tab_href(tabs, href: str, params) -> str:

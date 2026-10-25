@@ -114,6 +114,43 @@ def bottom_up(session, idx: list[int], mine: frozenset, n_parts: int = 12) -> di
             "n_in_scope": len(rows)}  # fmt: skip
 
 
+LINES = ("Skyworks", "Qorvo")
+
+
+def parts_table(session, ours: list[dict], mine: frozenset, aec_only: bool = False, per_line: int = 2) -> dict:
+    """The "Skyworks and Qorvo parts here" table (owner, 25 Oct 2026): one group per function of the selection we
+    have parts for (most used first), a cell per line with its best parts, each marked AEC-Q or not automotive
+    (autograde.is_aec). Under "Automotive-qualified only" a cell shows the line's best AEC-Q parts instead, and
+    `hidden` counts the non-automotive parts that the filter takes off the table (never removed silently)."""
+    from app.services import autograde
+
+    lines = [m for m in LINES if m in mine]
+    rows, hidden = [], 0
+    count = {m: 0 for m in lines}
+    fns = {m: 0 for m in lines}
+    for e in ours:
+        by = {m["manufacturer"]: m for m in blocks.parts_for(session, e["fn"], top=per_line)["manufacturers"]}
+        cells = {}
+        for m in lines:
+            g = by.get(m)
+            if not g:
+                cells[m] = []
+                continue
+            shown, h = autograde.marked(g["best"], aec_only)
+            if aec_only:  # the line's best qualified parts, one per series, not only those among the unfiltered best
+                seen, shown = set(), []
+                for p in g["all"]:
+                    if len(shown) < per_line and blocks._series(p["mpn"]) not in seen and autograde.is_aec(p):
+                        seen.add(blocks._series(p["mpn"]))
+                        shown.append({**p, "aec": True})
+            cells[m], hidden = shown, hidden + h
+            count[m] += len(shown)
+            fns[m] += bool(shown)
+        rows.append({"fn": e["fn"], "label": e["label"], "n_apps": len(e["apps"]), "cells": cells,
+                     "pairs": {m: [] for m in lines}})  # fmt: skip
+    return {"lines": lines, "rows": rows, "count": count, "fns": fns, "hidden": hidden, "aec_only": aec_only}
+
+
 def places(idx) -> list[dict]:
     """The sub-systems a set of library diagrams sits in, most diagrams first: system and sub-system keys and titles
     and how many of the diagrams are in each (for links from a pair or a function to Cross-sell › By system)."""

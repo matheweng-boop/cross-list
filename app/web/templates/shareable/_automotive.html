@@ -12,7 +12,7 @@
     <h2>{{ F('sec.technologies.heading') }}</h2>
     {{ paras('technologies', 'to-sub') }}
     <div class="to-subs">
-      {% for x in t.tech %}<div class="sr-row"><b>{{ x.label }}{{ who(x.owner) }}{% if x.ip %} <span class="sr-ip">{{ x.ip }}</span>{% endif %}</b><span>{{ F('tech.' ~ x.key ~ '.car') }}</span></div>{% endfor %}
+      {% for x in t.tech %}<div class="sr-row"><b class="to-marks-right"><span>{{ x.label }}</span><span class="to-marks">{{ who(x.owner) }}{% if x.ip %} <span class="sr-ip">{{ x.ip }}</span>{% endif %}</span></b><span>{{ F('tech.' ~ x.key ~ '.car') }}</span></div>{% endfor %}
     </div>
     {% if t.ip %}<p class="sr-note small">{{ ip_note }}</p>{% endif %}
     {{ pfoot(1) }}
@@ -24,10 +24,10 @@
     {{ paras('applications', 'to-sub') }}
     <div class="to-subs">
       {% for s in t.subsystems %}{% set sk = 'sub.' ~ s.key %}
-      <div class="to-sub-row"><b>{{ F(sk ~ '.title') }}</b><span>{{ F(sk ~ '.line') }}</span><span class="to-series">{% for x in s.series %}<code>{{ x }}</code> {% endfor %}{% if s.n %}<small class="muted">{{ s.n|rounded }} AEC-Q parts</small>{% endif %}</span></div>
+      <div class="to-sub-row"><b>{{ F(sk ~ '.title') }}</b><span>{{ F(sk ~ '.line') }}</span><span class="to-series">{% for x in s.series %}<code>{{ x }}</code> {% endfor %}</span></div>
       {% endfor %}
     </div>
-    <p class="sr-note small">Series ending in x stand for a family of parts; counts are AEC-Q-qualified active parts, rounded down.</p>
+    <p class="sr-note small">All series listed are AEC-Q qualified; an x stands for any character.</p>
     {{ pfoot(2) }}
   </section>
 
@@ -36,7 +36,7 @@
     <h2 id="auto-h-pairs">{{ F('sec.pairs.heading') }}</h2>
     {{ paras('pairs', 'to-sub') }}
     <ol class="sr-pairs">
-      {% for p in t.pairs %}<li><b>{{ who('Skyworks') }} {{ p.skyworks }} <span class="sr-plus">+</span> {{ who('Qorvo') }} {{ p.qorvo }}</b>
+      {% for p in t.pairs %}{% set bk = 'pair.' ~ p.key ~ '.benefit' %}<li><b class="to-marks-right"><span>{{ who('Skyworks') }} {{ p.skyworks }} <span class="sr-plus">+</span> {{ who('Qorvo') }} {{ p.qorvo }}</span>{% if edit %}{{ F(bk) }}{% else %}<span class="sr-ben">{{ vals[bk] }}</span>{% endif %}</b>
         <span>{{ F('pair.' ~ p.key ~ '.line') }}</span>
         {% if p.s_ex or p.q_ex %}<span class="sr-ex small">AEC-Q example {% if p.s_ex %}<code>{{ p.s_ex }}</code>{% endif %}{% if p.s_ex and p.q_ex %} with {% endif %}{% if p.q_ex %}<code>{{ p.q_ex }}</code>{% endif %}</span>{% endif %}</li>{% endfor %}
     </ol>

@@ -28,7 +28,7 @@
     <div class="sr-cols">
       {% for side, label in (('Skyworks', 'Skyworks'), ('Both', 'Both'), ('Qorvo', 'Qorvo')) %}
       <div class="sr-col sr-{{ side|lower }}"><h3>{{ label }} <span class="sr-n">{{ t.tech[side]|length }}</span></h3>
-        <ul>{% for p in t.tech[side] %}<li>{{ p.label }}{% if p.ip %} <span class="sr-ip">{{ p.ip }}</span>{% endif %}</li>{% endfor %}</ul></div>
+        <ul>{% for p in t.tech[side] %}<li class="to-marks-right"><span>{{ p.label }}</span>{% if p.ip %}<span class="sr-ip">{{ p.ip }}</span>{% endif %}</li>{% endfor %}</ul></div>
       {% endfor %}
     </div>
     {% if t.ip %}<p class="sr-note small">{{ ip_note }}</p>{% endif %}
@@ -37,6 +37,7 @@
     <div class="sr-cols sr-overlap">
       {% for side, label, fams in (('Skyworks', 'Skyworks only', t.sky), ('Both', 'Both offer', t.both), ('Qorvo', 'Qorvo only', t.qor)) %}
       <div class="sr-col sr-{{ side|lower }}"><h3>{{ label }} <span class="sr-n">{{ fams|length|rounded }} families</span></h3>
+        {% set ok = 'ovl.' ~ side|lower %}<p class="sr-why to-marks-right"><span>{{ F(ok ~ '.line') }}</span>{% if edit %}{{ F(ok ~ '.benefit') }}{% else %}<span class="sr-ben">{{ vals[ok ~ '.benefit'] }}</span>{% endif %}</p>
         <ul>{% for f in fams %}<li><span>{{ f.label }}</span> <b>{{ f.total|rounded }}</b></li>{% endfor %}</ul></div>
       {% endfor %}
     </div>
@@ -49,7 +50,7 @@
     <h2 id="syn-h-comb">{{ F('sec.combine.heading') }}</h2>
     {{ paras('combine', 'to-sub') }}
     <ol class="sr-pairs">
-      {% for p in t.pairs %}<li><b>{{ who('Skyworks') }} {{ p.skyworks }} <span class="sr-plus">+</span> {{ who('Qorvo') }} {{ p.qorvo }}</b>
+      {% for p in t.pairs %}{% set bk = 'pair.' ~ p.key ~ '.benefit' %}<li><b class="to-marks-right"><span>{{ who('Skyworks') }} {{ p.skyworks }} <span class="sr-plus">+</span> {{ who('Qorvo') }} {{ p.qorvo }}</span>{% if edit %}{{ F(bk) }}{% else %}<span class="sr-ben">{{ vals[bk] }}</span>{% endif %}</b>
         <span>{{ F('pair.' ~ p.key ~ '.line') }}</span>
         {% if p.s_ex or p.q_ex %}<span class="sr-ex small">For example {% if p.s_ex %}<code>{{ p.s_ex }}</code>{% endif %}{% if p.s_ex and p.q_ex %} with {% endif %}{% if p.q_ex %}<code>{{ p.q_ex }}</code>{% endif %}</span>{% endif %}</li>{% endfor %}
     </ol>

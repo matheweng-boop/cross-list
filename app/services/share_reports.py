@@ -117,6 +117,34 @@ def patent_tag(platform: dict, marks: dict, automotive_only: bool = False) -> st
     return "IP: both" if m["leader"] == "Both" else f"IP: {m['leader']}-led"
 
 
+# ---- what each synergy is good for (owner, 25 Oct 2026: "how are these synergies useful?") -------------------------
+# A fixed set of benefit types (data/business/share_reports.yaml, synergies.benefit_types); cost savings always say
+# "assumed". One type per pair, a default for a pair the file does not list.
+BENEFIT_KEYS = ("manufacturing", "shared_tech", "new_tech", "cost", "market")
+
+
+def benefit_labels() -> dict[str, str]:
+    words = (curated().get("synergies") or {}).get("benefit_types") or {}
+    return {k: str(words.get(k) or k) for k in BENEFIT_KEYS}
+
+
+def benefit_of(pair_key: str) -> str:
+    """The benefit label of one pair ("<Skyworks function> + <Qorvo function>")."""
+    cur = curated().get("synergies") or {}
+    kind = (cur.get("benefits") or {}).get(pair_key) or cur.get("benefit_default") or "shared_tech"
+    labels = benefit_labels()
+    return labels.get(kind, labels["shared_tech"])
+
+
+def overlap_benefits() -> dict[str, dict]:
+    """Skyworks | Both | Qorvo -> {"benefit": label, "line": one line} for the overlap view."""
+    labels = benefit_labels()
+    rows = (curated().get("synergies") or {}).get("overlap_benefits") or {}
+    return {side: {"benefit": labels.get((rows.get(side) or {}).get("type"), labels["market"]),
+                   "line": str((rows.get(side) or {}).get("line") or "")}
+            for side in ("Skyworks", "Both", "Qorvo")}  # fmt: skip
+
+
 # ---- the numbers and lists of each report --------------------------------------------------------------------------
 def _qualified(r: dict) -> bool:
     """AEC-Q qualified: the one site-wide test (app.services.autograde.is_aec), as on Cross-sell and the overview."""
@@ -148,8 +176,8 @@ def build_synergies() -> dict:
     marks = patent_marks()
     plats = [{**p, "ip": patent_tag(p, marks)} for p in b["platforms"]]
     tech = {side: [p for p in plats if p["owner"] == side] for side in ("Skyworks", "Both", "Qorvo")}
-    nums = {"parts": len(rows), "families": len(fams), "shared": len(both), "platforms": len(plats),
-            "automotive": sum(1 for r in rows if _qualified(r))}  # fmt: skip
+    # no AEC-Q part count (owner, 25 Oct 2026: "I just want AEC-Q part counts out, filters and designations remain")
+    nums = {"parts": len(rows), "families": len(fams), "shared": len(both), "platforms": len(plats)}
     words = cur.get("facts") or {}
     facts = [{"key": k, "num": f"{n:,}", "label": (words.get(k) or {}).get("label", "")} for k, n in nums.items()]
     notes, lines = pf.synergy_notes(), cur.get("pairs") or {}
@@ -161,13 +189,14 @@ def build_synergies() -> dict:
             continue  # a supply link only: not a management-level synergy
         line = lines.get(key) or note.get("reason") or f"Used together in {round_count(x['n'])} reference designs."
         pairs.append({"key": key.replace(" + ", "-"), "skyworks": x["skyworks_label"], "qorvo": x["qorvo_label"],
-                      "line": " ".join(str(line).split()), "n": x["n"],
+                      "line": " ".join(str(line).split()), "n": x["n"], "benefit": benefit_of(key),
                       "s_ex": x["skyworks_parts"][0]["mpn"] if x["skyworks_parts"] else "",
                       "q_ex": x["qorvo_parts"][0]["mpn"] if x["qorvo_parts"] else ""})  # fmt: skip
         if len(pairs) >= 6:
             break
     return {"cur": cur, "facts": facts, "tech": tech, "both": both, "sky": sky, "qor": qor, "pairs": pairs,
             "mfg": list(cur.get("manufacturing") or []), "ip": any(p["ip"] for p in plats),
+            "overlap": overlap_benefits(),
             "catalogue_date": b["catalogue_date"]}  # fmt: skip
 
 
@@ -189,9 +218,8 @@ def build_automotive() -> dict:
     for s in sys["subsystems"]:
         w = words.get(s["key"]) or {}
         series = [x for x in w.get("series") or [] if qualified_series(x)]
-        n = len({r["mpn"] for x in series for r in series_rows(x) if _qualified(r)})
         subs.append({"key": s["key"], "title": s["title"], "line": w.get("line") or s.get("summary", ""),
-                     "series": series, "n": n})  # fmt: skip
+                     "series": series})  # fmt: skip
     idx = systems.selection("automotive")["idx"]
     lines = (curated().get("synergies") or {}).get("pairs") or {}
     pairs = []
@@ -202,14 +230,15 @@ def build_automotive() -> dict:
         s_ex = next((p["mpn"] for p in x["skyworks_parts"] if p["mpn"] in aecq), "")
         q_ex = next((p["mpn"] for p in x["qorvo_parts"] if p["mpn"] in aecq), "")
         pairs.append({"key": key.replace(" + ", "-"), "skyworks": x["skyworks_label"], "qorvo": x["qorvo_label"],
-                      "line": " ".join(str(x["reason"] or lines.get(key) or "").split()), "s_ex": s_ex,
+                      "line": " ".join(str(lines.get(key) or x["reason"] or "").split()), "s_ex": s_ex,
+                      "benefit": benefit_of(key),
                       "q_ex": q_ex})  # fmt: skip
         if len(pairs) >= 6:
             break
     fams = {r["family"] for r in rows} - {pf.OTHER_CATEGORY}
-    # owner, 25 Oct 2026: no "from Skyworks" tile (the public Qorvo catalogue marks few parts automotive, so it
-    # only repeated the total)
-    nums = {"automotive": len(rows), "platforms": len(tech), "subsystems": len(subs), "families": len(fams)}
+    # owner, 25 Oct 2026: no "from Skyworks" tile, and no AEC-Q part count at all ("I just want AEC-Q part counts
+    # out, filters and designations should remain"): which series are AEC-Q qualified is still shown
+    nums = {"platforms": len(tech), "subsystems": len(subs), "families": len(fams)}
     fw = cur.get("facts") or {}
     facts = [{"key": k, "num": f"{n:,}", "label": (fw.get(k) or {}).get("label", "")} for k, n in nums.items()]
     return {"cur": cur, "facts": facts, "tech": tech, "subsystems": subs, "pairs": pairs,
@@ -256,7 +285,11 @@ def specs_synergies() -> dict:
         add(f"mfg.{i}.skyworks", "line", m.get("skyworks", ""), 24, "Skyworks")
         add(f"mfg.{i}.qorvo", "line", m.get("qorvo", ""), 24, "Qorvo")
     for p in b["pairs"]:
-        add(f"pair.{p['key']}.line", "text", p["line"], 140, "Why they go together")
+        add(f"pair.{p['key']}.benefit", "choice", p["benefit"], 0, "Benefit", tuple(benefit_labels().values()))
+        add(f"pair.{p['key']}.line", "text", p["line"], 140, "What it is useful for")
+    for side, o in b["overlap"].items():
+        add(f"ovl.{side.lower()}.benefit", "choice", o["benefit"], 0, "Benefit", tuple(benefit_labels().values()))
+        add(f"ovl.{side.lower()}.line", "text", o["line"], 80, "What it is useful for")
     for i, s in enumerate(b["cur"].get("sources") or []):
         add(f"src.{i}", "text", s, 200, "Source line")
     return out
@@ -277,6 +310,7 @@ def specs_automotive() -> dict:
         add(f"sub.{s['key']}.title", "line", s["title"], 44, "Sub-system")
         add(f"sub.{s['key']}.line", "text", s["line"], 110, "What we bring")
     for p in b["pairs"]:
+        add(f"pair.{p['key']}.benefit", "choice", p["benefit"], 0, "Benefit", tuple(benefit_labels().values()))
         add(f"pair.{p['key']}.line", "text", p["line"], 170, "Why they go together")
     add("standards", "chips", b["standards"], te.CHIP_MAX, "Standards (one per line)", (8,))
     for i, s in enumerate(b["cur"].get("sources") or []):

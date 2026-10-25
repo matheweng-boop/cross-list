@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_gist.html" import gist_box, gist_line %}
 {% from "business/_common.html" import about %}
 {% block content %}
 <h1>TAM estimates</h1>
@@ -17,6 +18,7 @@
     {% if e.example %}<span class="badge" title="{{ e.origin }}">example from research notes</span>{% else %}<span class="badge">added{{ ' by ' ~ e.author if e.author }}</span>{% endif %}
     {% include "business/_tam_chip.html" %}</header>
   <p class="tam-value"><b>{{ e.value }}</b>{% if e.year %} <span class="muted">in {{ e.year }}</span>{% endif %}{% if e.region %} <span class="muted">· {{ e.region }}</span>{% endif %}</p>
+  {{ gist_line(gist_for("tam", e.key)) }}
   {% if e.scope %}<p class="small">{{ e.scope }}</p>{% endif %}
   {% if e.coverage %}<p class="small tam-cov"><span class="badge">{{ {'full': 'covers the whole market', 'part': 'covers less than the whole market', 'not_stated': 'coverage not checked'}[e.coverage] }}</span>{% if e.coverage_note %} {{ e.coverage_note }}{% endif %}</p>{% endif %}
   <p class="small"><b>Source:</b> {% if e.source.url %}<a href="{{ e.source.url }}" target="_blank" rel="noopener">{{ e.source.title or e.source.url }}</a>{% else %}{{ e.source.title or 'not stated' }} <span class="muted">(no link)</span>{% endif %}{% if e.source.publisher %} · {{ e.source.publisher }}{% endif %}{% if e.source.date %} · {{ e.source.date }}{% endif %}</p>

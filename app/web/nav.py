@@ -59,6 +59,8 @@ NAMES = {
 }
 
 UTILITY = ("manage", "Data management", (
+    # owner, 25 Oct 2026: every research item as one sentence to confirm or ignore, first (the menu shows its count)
+    ("To confirm", "/manage/to-confirm", "Every research item in one sentence: read, confirm or ignore"),
     ("Overview", "/manage/overview", "Everything at a glance: raw data, today's feedback, what waits for you"),
     ("Schedule", "/manage/schedule", "What runs continuously, daily, weekly; what tonight's run picks up"),
     # owner, 23 Oct 2026: Verify next, requests, site feedback and guest input as one item with tabs
@@ -130,6 +132,7 @@ PLACES = {
     "/manage/people": ("manage", "/manage/people"),
     "/owner": ("manage", "/manage/people"),
     "/manage/schedule": ("manage", "/manage/schedule"),
+    "/manage/to-confirm": ("manage", "/manage/to-confirm"),
     "/manage": ("manage", "/manage/overview"),
     "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications
     "/visuals": ("knowledge", "/visuals"),

@@ -18,6 +18,10 @@ wireless_audio:
   platform: null
   ideas:
     - market: "Musician and live-performance gear"
+      gist: "Our low-latency wireless audio chips could power guitar links and in-ear monitors, where low, fixed delay is the selling point."
+      abstract:
+        - "SKY76303 and SKY7636x already deliver the latency these products advertise."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "5 GHz wireless instrument (guitar/bass) links and personal in-ear monitor packs"
       why_fit: "SKY76303 already provides a complete 5 GHz point-to-multipoint digital audio node, and SKY7636x already gives fixed latency under 10 ms. Instrument and in-ear monitor (IEM) links need exactly this low, fixed latency."
       needed: ["latency budget nearer 4-5 ms end-to-end", "instrument-level analog front end / ADC in a reference design", "rugged beltpack reference design", "multi-unit channel coordination for stages"]
@@ -30,6 +34,10 @@ wireless_audio:
       fit: high
       confidence: medium
     - market: "Assistive listening in venues (churches, lecture halls, theatres, transport)"
+      gist: "Venues could stream speech to hearing aids and earbuds with our one-to-many audio chips, keeping lips and sound in sync."
+      abstract:
+        - "The chips already stream synchronised audio from one source to many receivers."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Low-latency broadcast audio from the venue mixer to hearing aids, earbuds and loaner receivers"
       why_fit: "The SoCs already stream synchronised audio from one source to many receivers at low latency, which venue assistive listening needs so that lips and the room sound stay in sync."
       needed: ["Bluetooth LE Audio / Auracast interoperability (hearing aids will not receive a proprietary link)", "transmitter-side product (mixer input, many listeners)", "accessibility-standard compliance"]
@@ -41,6 +49,10 @@ wireless_audio:
       fit: medium
       confidence: medium
     - market: "Conference and simultaneous-interpretation systems"
+      gist: "Conference interpretation receivers could move from infrared and analog FM to our multi-channel digital audio links."
+      abstract:
+        - "Multi-channel, synchronised one-to-many audio is what interpretation needs; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Delegate/interpreter wireless receivers replacing IR and analog FM tour-guide sets"
       why_fit: "Multi-channel, synchronised, low-latency point-to-multipoint digital audio is what interpretation receivers need, both indoors and outdoors."
       needed: ["many selectable language channels", "encryption for confidential meetings", "long battery life in a pocket receiver", "ISO 20109-related system design with partners"]
@@ -50,6 +62,10 @@ wireless_audio:
       fit: medium
       confidence: low
     - market: "Automotive rear-seat / multi-zone audio"
+      gist: "Rear-seat wireless headphones in cars could use our low-latency audio links instead of infrared analog sets."
+      abstract:
+        - "Fixed low latency keeps lip-sync with rear-seat screens; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Low-latency wireless headphones for rear-seat screens (replacing IR analog headphones)"
       why_fit: "Fixed low latency keeps lip-sync on rear-seat video, and multipoint links serve several passengers at once."
       needed: ["AEC-Q100 qualification", "in-cabin coexistence with car Wi-Fi/BT", "OEM infotainment integration"]
@@ -58,6 +74,10 @@ wireless_audio:
       fit: medium
       confidence: low
     - market: "XR / VR headsets"
+      gist: "A dedicated low-latency audio link for wireless VR headsets is a possible niche for our audio chips."
+      abstract:
+        - "Fit and evidence are both low."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Dedicated low-latency audio link for wireless VR headsets and accessories"
       why_fit: "Gaming-grade fixed latency matches VR, where audio delay breaks immersion."
       needed: ["very low power", "co-design with headset SoC vendors", "coexistence with the headset's Wi-Fi video link"]
@@ -73,6 +93,10 @@ uwb:
   platform: uwb_soc
   ideas:
     - market: "Automotive in-cabin sensing"
+      gist: "Car UWB key anchors could also detect a child left in the car, with no extra sensor."
+      abstract:
+        - "The automotive DW3300Q and QM35 already range for the key; radar mode senses breathing."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Child-presence detection and occupancy radar reusing digital-key UWB anchors"
       why_fit: "The automotive DW3300Q and QM35 parts already range for digital key. The same anchors in radar mode can detect breathing, so child-presence detection (CPD) needs no extra sensor."
       needed: ["radar firmware/algorithms certified to Euro NCAP CPD protocol", "AEC-Q100 radar-mode reference design", "Tier-1 partnerships"]
@@ -82,6 +106,10 @@ uwb:
       fit: high
       confidence: medium
     - market: "Industrial safety and intralogistics"
+      gist: "UWB tags could warn workers and slow robots and vehicles in warehouses and mines."
+      abstract:
+        - "Centimetre ranging between tags is exactly what the DW3000 family does."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Worker-vehicle proximity warning and AMR/AGV slow-down zones in warehouses and mines"
       why_fit: "Centimetre-level two-way ranging between tags is already what the DW3000 family does, and safety zones are a ranging problem."
       needed: ["functional-safety (SIL2) collateral", "rugged/intrinsically-safe modules for mines", "long-battery tags"]
@@ -92,6 +120,10 @@ uwb:
       fit: high
       confidence: medium
     - market: "Smart home and elder care"
+      gist: "UWB radar could sense presence, breathing and falls at home and in care homes without cameras."
+      abstract:
+        - "Radar mode detects small movements and avoids privacy worries."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Hidden presence, breathing and fall/absence-of-activity sensing"
       why_fit: "UWB radar mode already detects micro-movement without cameras. This addresses privacy concerns in homes and care settings."
       needed: ["standalone radar SKU and reference module", "Matter/Thread integration (pairs with QPG SoCs)", "validated fall/vital-sign algorithms"]
@@ -101,6 +133,10 @@ uwb:
       fit: medium
       confidence: medium
     - market: "Professional and collegiate sports"
+      gist: "UWB tags could track players, balls and equipment in professional sports."
+      abstract:
+        - "Fast, sub-10 cm ranging from small tags is the core DW3000 strength."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Player, ball and equipment tracking tags and stadium anchors"
       why_fit: "Sub-10 cm, high-update-rate ranging from small tags is the core DW3000 capability."
       needed: ["high-update-rate tag firmware", "anchor infrastructure partners", "ruggedised tags in balls and pads"]
@@ -118,6 +154,10 @@ matter_thread:
   platform: low_power_radio_soc
   ideas:
     - market: "Home energy management"
+      gist: "Heat pumps, home batteries, solar inverters and EV chargers could join the smart home through our Matter/Thread chips."
+      abstract:
+        - "QPG chips already run Matter over Thread, and Matter now defines energy devices."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Matter/Thread radios inside heat pumps, water heaters, solar inverters, home batteries and EV chargers"
       why_fit: "QPG SoCs already run Matter over Thread. Matter 1.3/1.4 adds energy device types, so appliances can be scheduled and managed through the same smart-home stack."
       needed: ["Matter energy-cluster certified reference stacks", "appliance-grade (105 C, long life) qualification", "partnering with appliance/inverter makers"]
@@ -128,6 +168,10 @@ matter_thread:
       fit: high
       confidence: medium
     - market: "Home networking equipment"
+      gist: "Wi-Fi routers and set-top boxes could carry our Thread chips as smart-home border routers."
+      abstract:
+        - "QPG7015M is already sold for gateways, and Matter now certifies routers."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Thread border-router radios in Wi-Fi routers, mesh points and set-top boxes"
       why_fit: "QPG7015M is already a Zigbee/Thread/BLE controller sold for gateways. Matter 1.4 now certifies home routers and access points as Thread border routers."
       needed: ["Wi-Fi coexistence reference with Skyworks/Qorvo Wi-Fi FEMs", "operator/ISP router-vendor engagement"]
@@ -137,6 +181,10 @@ matter_thread:
       fit: medium
       confidence: medium
     - market: "Commercial buildings and hospitality"
+      gist: "Hotel and office room controls could use our low-power mesh chips for wireless retrofits."
+      abstract:
+        - "Multi-protocol mesh suits retrofits; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Thread/Matter room controls, lighting and sensors in hotels and offices"
       why_fit: "Low-power mesh with multi-protocol support suits retrofit wireless room controls."
       needed: ["commercial-scale commissioning tools", "building-management integration (BACnet)", "long product-life commitments"]
@@ -152,6 +200,10 @@ baw_filters:
   platform: baw_filter
   ideas:
     - market: "Satellite direct-to-device and NTN IoT"
+      gist: "Phones and IoT modules that talk to satellites need steep filters next to cellular bands, which our BAW already makes."
+      abstract:
+        - "Satellite bands sit close to terrestrial bands and need the same sharp filters."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "L-band (n253-n255) and S-band (n256) filters for NTN-capable phones and IoT modules"
       why_fit: "Qorvo/Skyworks BAW already rejects adjacent bands for 1.5-2.7 GHz handset bands. NTN bands sit close to terrestrial bands and need the same steep skirts."
       needed: ["filters for n253-n256 and Skylo/Iridium L-band", "integration into NTN-ready module FEMs"]
@@ -162,6 +214,10 @@ baw_filters:
       fit: high
       confidence: medium
     - market: "Wi-Fi 6E / 7 access points and mesh"
+      gist: "Our 5–6 GHz BAW filters, today inside our Wi-Fi modules, could be sold alone to tri-band access-point makers."
+      abstract:
+        - "Selling the filter alone answers the narrow guard band in Wi-Fi 6E/7."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "5 / 6 GHz coexistence filters sold as discretes for tri-band APs and enterprise APs"
       why_fit: "Qorvo and Skyworks already make 5-6 GHz BAW for their own Wi-Fi FEMs. Selling the filter as a discrete addresses the narrow U-NII-4/U-NII-5 guard band."
       needed: ["discrete 5.6 / 6.6 GHz coexistence filter SKUs", "power handling for enterprise AP Tx"]
@@ -171,6 +227,10 @@ baw_filters:
       fit: high
       confidence: medium
     - market: "Drones, robots and robotic mowers (dual-band GNSS)"
+      gist: "Drones, robots and robotic mowers with dual-band GNSS need sharp L1 filters, which Qorvo already sells."
+      abstract:
+        - "Dual-band receivers sit next to LTE modems and need interference rejection."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "L1/L5 pre-filters for SAW-LNA-SAW GNSS chains with cellular-interference rejection"
       why_fit: "Qorvo already sells BAW GPS filters (880273), and dual-band receivers need a sharp L1 filter beside LTE modems."
       needed: ["L5 (1176 MHz) filter", "tiny CSP packages for modules"]
@@ -180,6 +240,10 @@ baw_filters:
       fit: medium
       confidence: medium
     - market: "UWB channel 9 and FR3 (7-15 GHz)"
+      gist: "BAW filters for UWB channel 9 and the new 7–15 GHz cellular bands are a possible later step."
+      abstract:
+        - "BAW scales to higher frequencies better than SAW; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Discrete BAW filters for UWB channel 9 (8 GHz) and FR3 user equipment"
       why_fit: "The capabilities file lists these as BAW `could_also`. BAW scales in frequency better than SAW."
       needed: ["BAW resonators above 7 GHz", "co-packaging with QM35 UWB SoC"]
@@ -195,6 +259,10 @@ gan_pa:
   platform: gan_on_sic
   ideas:
     - market: "Counter-drone (C-UAS) and civil protection jammers"
+      gist: "Our wideband GaN amplifiers are the building block of compact counter-drone jammers."
+      abstract:
+        - "Qorvo's 1–6 and 1–8 GHz GaN chips fit multi-band jammers."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Wideband 0.4-6 GHz high-power GaN modules for jammers covering control links and GNSS"
       why_fit: "Qorvo's wideband GaN MMICs (QPA0106 1-6 GHz, 18 W, and QPA1003P 1-8 GHz, 10 W) are the building block of compact multi-band jammers."
       needed: ["pallet/module-level products (100 W+)", "export-control handling", "cost-down for high-volume non-defence buyers"]
@@ -204,6 +272,10 @@ gan_pa:
       fit: high
       confidence: medium
     - market: "Semiconductor process equipment"
+      gist: "Plasma tools in chip-making equipment could switch to our GaN RF power instead of tubes and magnetrons."
+      abstract:
+        - "GaN gives efficient, stable, fast-controlled power; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Solid-state GaN RF / microwave generators for plasma etch, deposition and cleaning"
       why_fit: "High-efficiency, stable, fast-control GaN power stages replace tubes and magnetrons in plasma sources."
       needed: ["kW-class transistors at 2.45 GHz and 13.56/40 MHz drivers", "industrial-grade long-life qualification", "partnerships with generator OEMs"]
@@ -213,6 +285,10 @@ gan_pa:
       fit: medium
       confidence: low
     - market: "Solid-state cooking and industrial RF heating"
+      gist: "Solid-state cooking and industrial RF heating need efficient 2.45 GHz amplifiers, which GaN provides."
+      abstract:
+        - "A possible niche; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "2.45 GHz multi-feed solid-state ovens, drying and industrial heating"
       why_fit: "Closed-loop, multi-antenna RF energy needs efficient 2.45 GHz PAs, which GaN provides."
       needed: ["low-cost plastic-packaged 250-300 W parts", "appliance cost targets"]
@@ -229,6 +305,10 @@ digital_isolators:
   platform: digital_isolation_capacitive
   ideas:
     - market: "Battery energy storage systems (BESS)"
+      gist: "1500 V battery storage racks need reinforced isolation, isolated power and isolated sensing, all of which we sell."
+      abstract:
+        - "Si86xx, Si88xx and Si89xx cover every isolation need in such a rack."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Reinforced isolation in 1500 V rack/BMU daisy-chain and BCU links, isolated current/voltage sensing"
       why_fit: "Si86xx/Si88xx give reinforced isolation plus isolated power, and Si892x/Si894x measure current and voltage. A 1500 V BESS rack needs all of these."
       needed: ["1500 V-rated reinforced parts with long creepage", "isolated CAN/daisy-chain reference designs", "battery-monitor AFE partners"]
@@ -238,6 +318,10 @@ digital_isolators:
       fit: high
       confidence: medium
     - market: "Space (LEO constellations)"
+      gist: "Low-cost satellite constellations could use our plastic digital isolators instead of optocouplers."
+      abstract:
+        - "Capacitive isolators are faster and denser; we also have a space-grade channel."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Radiation-tolerant plastic digital isolators replacing optocouplers and pulse transformers"
       why_fit: "Capacitive isolators beat optocouplers on speed and channel count. Skyworks also owns a space-heritage (Isolink) channel."
       needed: ["radiation testing (TID/SEE) and space-enhanced plastic flow", "lot traceability"]
@@ -247,6 +331,10 @@ digital_isolators:
       fit: medium
       confidence: medium
     - market: "Heat pumps"
+      gist: "Heat-pump compressor and fan drives need the same isolation our parts already serve in industrial drives."
+      abstract:
+        - "The fit is good, but public evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Isolation for inverter-compressor and fan drives and communication in heat pumps"
       why_fit: "Inverter heat pumps share the motor-drive isolation needs that Si86xx/Si82xx already serve in industrial drives."
       needed: ["appliance-grade cost points", "IEC 60335 / 60730 collateral"]
@@ -256,6 +344,10 @@ digital_isolators:
       fit: medium
       confidence: low
     - market: "Residential solar and hybrid inverters"
+      gist: "Home solar microinverters and hybrid inverters need reinforced isolation, a standard use for our isolators."
+      abstract:
+        - "A standard use case; public evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Reinforced isolation in microinverters and battery-hybrid inverters"
       why_fit: "IEC 62109 reinforced insulation at 600-800 V is a standard isolator use case."
       needed: ["solar-specific certification collateral", "integrated isolated power"]
@@ -271,6 +363,10 @@ isolated_gate_drivers:
   platform: digital_isolation_capacitive
   ideas:
     - market: "AI data-center 800 VDC power"
+      gist: "800 V DC power in AI data centers needs many isolated gate drivers for SiC and GaN stages, which we already make."
+      abstract:
+        - "Si823Hx and Si828x drive SiC and GaN half-bridges with high noise immunity."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Gate drivers for 800 V to 50 V rack converters and solid-state transformers feeding 800 VDC"
       why_fit: "Si823Hx/Si828x already drive SiC and GaN half-bridges with high CMTI. 800 VDC racks use stacked GaN half-bridges and SiC SST stages behind galvanic isolation."
       needed: ["GaN-optimised drivers (fast, low-skew, negative bias)", "reference designs with GaN/SiC partners", "data-center reliability data"]
@@ -280,6 +376,10 @@ isolated_gate_drivers:
       fit: high
       confidence: medium
     - market: "Bidirectional EV charging (V2H / V2G)"
+      gist: "Two-way EV charging (car to home and grid) needs many isolated SiC gate drivers, and ours are already car-qualified."
+      abstract:
+        - "Bidirectional chargers use more driver sockets than one-way ones."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Isolated gate drivers for SiC DC wallboxes and bidirectional on-board chargers"
       why_fit: "Bidirectional DAB/CLLC stages need many isolated SiC gate drivers, and Si829x/Si823Hx are already automotive-qualified for SiC."
       needed: ["reference designs with charge-controller vendors", "ISO 15118-20 ecosystem partnerships (not silicon)"]
@@ -290,6 +390,10 @@ isolated_gate_drivers:
       fit: high
       confidence: medium
     - market: "Heat-pump compressor drives"
+      gist: "Variable-speed heat-pump compressors need isolated gate drivers like ours."
+      abstract:
+        - "Our drivers already serve industrial motor inverters; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Gate drivers for variable-speed compressor inverters"
       why_fit: "Si82xx drivers already serve industrial motor inverters."
       needed: ["low-cost IGBT/IPM-friendly SKUs"]
@@ -299,6 +403,10 @@ isolated_gate_drivers:
       fit: medium
       confidence: low
     - market: "Electric aviation and eVTOL"
+      gist: "Electric aircraft propulsion inverters could use our high-noise-immunity SiC drivers, a small, long-term niche."
+      abstract:
+        - "Fit and evidence are both low."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "High-reliability isolated gate drivers for propulsion inverters"
       why_fit: "High-CMTI SiC drivers with automotive heritage could serve aerospace inverters."
       needed: ["DO-254 / aerospace qualification support", "extended temperature"]
@@ -314,6 +422,10 @@ timing:
   platform: timing_dspll_crystal
   ideas:
     - market: "Power-utility substations and grid"
+      gist: "Digital substations need precise time that survives GPS loss, which our network synchronisers already provide."
+      abstract:
+        - "NetSync parts already do IEEE 1588 and SyncE with holdover."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "IEC 61850-9-3 PTP clocks and holdover for digital substations and synchrophasors"
       why_fit: "NetSync parts already do IEEE 1588 / SyncE with holdover. The same function makes substation time resilient to GPS loss."
       needed: ["power-profile (IEC/IEEE 61850-9-3) firmware support", "long holdover (OCXO/BAW)", "partners making substation clocks/switches"]
@@ -323,6 +435,10 @@ timing:
       fit: medium
       confidence: medium
     - market: "Broadcast and pro-AV over IP"
+      gist: "Broadcast and pro-AV over IP need low-jitter PTP clocks in every camera and endpoint."
+      abstract:
+        - "Every ST 2110 device needs a disciplined clock."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "PTP (SMPTE ST 2059 / ST 2110) grandmasters, boundary clocks and endpoint clocks"
       why_fit: "Low-jitter PTP-disciplined clocks are what every ST 2110 camera, audio and playout endpoint needs."
       needed: ["ST 2059-2 profile reference software", "video-rate clock outputs (27/148.5 MHz families)"]
@@ -332,6 +448,10 @@ timing:
       fit: medium
       confidence: medium
     - market: "Open RAN and private 5G radio units"
+      gist: "The many new Open RAN radio makers need ready-made synchronisers and converter clocks."
+      abstract:
+        - "SKY69xxx NetSync clocks target 5G and 6G radios."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Class-C radio synchronizers and JESD204 clocking for O-RU / small-cell vendors"
       why_fit: "SKY69xxx NetSync clocks target 5G/6G radios, and the many new O-RU makers need ready-made timing."
       needed: ["O-RU reference clock trees", "support for smaller, non-tier-1 radio vendors"]
@@ -349,6 +469,10 @@ broadcast_radio:
   platform: broadcast_radio_tv
   ideas:
     - market: "India automotive digital radio (DRM)"
+      gist: "India is fitting DRM digital radio in new cars, which our tuners and coprocessors support."
+      abstract:
+        - "Si4791x already lists DRM; the Indian fleet is growing."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "DRM AM+FM tuners/coprocessors for Indian line-fit car radios and retrofits"
       why_fit: "Si4791x already supports DRM in its tuner list, and Si469xx coprocessors cover digital radio standards. India's DRM fleet is growing on line-fit radios."
       needed: ["DRM-in-FM-band support", "cost-down single-chip for entry cars", "Emergency Warning Functionality"]
@@ -359,6 +483,10 @@ broadcast_radio:
       fit: high
       confidence: medium
     - market: "Emergency alerting and FM in phones (India, disaster-prone regions)"
+      gist: "Low-cost FM receivers in phones and alert devices help emergency warnings in disaster-prone regions."
+      abstract:
+        - "Si47xx single-chip receivers are small, low-power and proven."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Low-cost FM/RDS receivers in phones, feature phones and public-alert receivers"
       why_fit: "Si47xx single-chip FM/AM receivers are low-power, small and proven."
       needed: ["phone-OEM design wins at very low price", "headphone-free (embedded) antenna support"]
@@ -368,6 +496,10 @@ broadcast_radio:
       fit: medium
       confidence: medium
     - market: "Mobile broadcast TV (ATSC 3.0 / 5G Broadcast)"
+      gist: "Broadcast TV to phones and cars (ATSC 3.0, 5G Broadcast) could reuse our TV tuners, but demand is unproven."
+      abstract:
+        - "Fit and evidence are both low."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Tuner/demodulator for phones, tablets and in-vehicle NextGen TV"
       why_fit: "Si21xx TV tuners and demodulators already exist, and broadcasters keep pushing for receiver chips in mobile devices."
       needed: ["ATSC 3.0 / 5G Broadcast demodulator", "ultra-low-power mobile tuner"]
@@ -384,6 +516,10 @@ rf_switches_soi:
   platform: rf_soi
   ideas:
     - market: "LEO satellite user terminals"
+      gist: "Flat-panel satellite terminals need thousands of switches, attenuators and phase shifters, a volume fit for our SOI know-how."
+      abstract:
+        - "Handset volume skills transfer to phased-array terminals; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "SOI switches, attenuators and phase shifters for Ku/Ka flat-panel and fixed-beam IoT terminals"
       why_fit: "High-volume SOI switch/DSA know-how from handsets transfers to the thousands of RF elements per phased-array terminal."
       needed: ["Ku/Ka-band SOI phase shifters and DSAs", "tile-level reference designs with Anokiwave beamformers"]
@@ -393,6 +529,10 @@ rf_switches_soi:
       fit: medium
       confidence: low
     - market: "Wi-Fi HaLow and sub-GHz industrial IoT"
+      gist: "Wi-Fi HaLow access points and modules need sub-GHz front ends that we could re-spin from existing parts."
+      abstract:
+        - "Sub-GHz PAs, switches and LNAs already exist in both catalogues."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Sub-GHz FEM/switches for 802.11ah HaLow access points and modules"
       why_fit: "Sub-GHz PAs, switches and LNAs already exist in both catalogues (for example SKY65111 ISM PA), so a HaLow FEM is a re-spin."
       needed: ["HaLow-specific FEM (PA+LNA+switch, 850-950 MHz)", "reference with Morse Micro/Newracom"]
@@ -402,6 +542,10 @@ rf_switches_soi:
       fit: medium
       confidence: medium
     - market: "Hybrid cellular + satellite IoT modules"
+      gist: "IoT modules that share one antenna between cellular and satellite need our antenna switches and tuners."
+      abstract:
+        - "Handset antenna switches fit; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Antenna switching between terrestrial LTE-M/NB-IoT and NTN L/S-band paths"
       why_fit: "Antenna switches and tuners from handsets fit modules that must share one antenna across TN and NTN bands."
       needed: ["L/S-band NTN-qualified switch paths", "module-maker design-ins"]
@@ -418,6 +562,10 @@ mems_force_sensing:
   platform: mems_force_sensing
   ideas:
     - market: "Automotive interiors (solid-surface HMI)"
+      gist: "Force-sensed buttons on steering wheels and door panels could use our MEMS force sensors as Euro NCAP favours real buttons."
+      abstract:
+        - "Force sensing rejects accidental touches through solid trim."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Force-sensed buttons on steering wheels, touch bars, door panels and consoles"
       why_fit: "MEMS force sensors detect a deliberate press through solid trim and reject accidental capacitive touches. Euro NCAP's 2026 push for tactile controls favours this."
       needed: ["AEC-Q100 qualification and automotive controller/haptics partner", "decision on the business (Qorvo started a sales process in 2025)"]
@@ -429,6 +577,10 @@ mems_force_sensing:
       fit: high
       confidence: medium
     - market: "Appliances and industrial controls"
+      gist: "Sealed, wipe-clean force buttons on appliances and medical panels are a possible use for our force sensors."
+      abstract:
+        - "Seamless surfaces are easy to clean; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Sealed, wipe-clean force buttons on appliances, medical and industrial panels"
       why_fit: "Force-through-metal/glass sensing allows seamless, washable surfaces."
       needed: ["low-cost single-channel sensor + controller", "industrial temperature"]
@@ -444,6 +596,10 @@ mmwave_beamformers:
   platform: mmwave_beamformer
   ideas:
     - market: "LEO/MEO satellite user terminals (SATCOM-on-the-move)"
+      gist: "Satellite terminals on vehicles, ships and aircraft need Ku/Ka beamformers; ours plus Qorvo GaN and LNAs make a full tile."
+      abstract:
+        - "Anokiwave beamformers are already in partner flat panels."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Ku and K/Ka-band beamformer ICs for flat-panel terminals on vehicles, ships and aircraft"
       why_fit: "Anokiwave silicon beamformers are already in partner flat panels. Pairing them with Qorvo GaN/LNA front ends gives a full tile."
       needed: ["higher-integration Ku/Ka tiles with Qorvo FEMs", "cost-down for consumer/enterprise volumes"]
@@ -453,6 +609,10 @@ mmwave_beamformers:
       fit: high
       confidence: medium
     - market: "Small-satellite X-band SAR and radar"
+      gist: "Small radar satellites and airborne radar use X-band phased arrays that our beamformers can steer."
+      abstract:
+        - "AWS-0103 covers 8.5–10.55 GHz."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "X-band beamformers for electronically steered SAR panels and ground/airborne radar"
       why_fit: "AWS-0103 is an 8.5-10.55 GHz X-band beamformer, and small-sat SAR constellations use active phased arrays in that band."
       needed: ["radiation-tolerant variants", "T/R module partners (with Qorvo GaN)"]
@@ -462,6 +622,10 @@ mmwave_beamformers:
       fit: medium
       confidence: medium
     - market: "mmWave fixed wireless access and repeaters"
+      gist: "28/39 GHz fixed wireless and repeaters could use our mmWave beamformers built for 5G."
+      abstract:
+        - "AWMF parts were built for 5G mmWave; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "28/39 GHz CPE and network repeaters for dense venues and multi-dwelling units"
       why_fit: "AWMF 24-30 GHz parts were built for 5G mmWave FWA."
       needed: ["operator demand recovery (C-band currently favoured)"]
@@ -477,6 +641,10 @@ motor_control_pmic:
   platform: pmic_configurable_power
   ideas:
     - market: "Battery outdoor power equipment"
+      gist: "Battery lawn mowers, blowers and chainsaws use the same one-chip motor controller platform as cordless tools."
+      abstract:
+        - "PAC52xx already covers 20–160 V tool drives."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "BLDC controllers for battery lawn mowers, blowers, trimmers and chainsaws"
       why_fit: "PAC52xx already integrates MCU, gate drivers and power for cordless tools at 20-160 V, the same platform outdoor equipment uses."
       needed: ["higher-current reference designs (40-80 V packs)", "pack-side BMS pairing"]
@@ -486,6 +654,10 @@ motor_control_pmic:
       fit: high
       confidence: medium
     - market: "Humanoid and service robots"
+      gist: "Humanoid and service robots need 25–30 compact motor drives each, a fit for our one-chip PAC controllers."
+      abstract:
+        - "One chip with MCU, drivers and power fits inside each joint."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Compact integrated BLDC drives inside joint actuators"
       why_fit: "A single-chip MCU + drivers + power fits the tight space inside each joint, and robots need 25-30+ of them."
       needed: ["FOC with high-resolution encoder interfaces", "functional-safety features (PAC52411 'advanced safety' is a start)", "EtherCAT/CAN-FD interfaces"]
@@ -495,6 +667,10 @@ motor_control_pmic:
       fit: medium
       confidence: medium
     - market: "E-bikes and micro-mobility"
+      gist: "E-bike and scooter motor controllers could use our higher-voltage PAC parts."
+      abstract:
+        - "44–160 V PAC parts cover 36–48 V packs; evidence is thin."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Hub/mid-drive motor controllers with integrated battery-side power"
       why_fit: "44-160 V PAC parts cover 36-48 V e-bike packs with integrated drivers."
       needed: ["EN 15194 / UL 2849 collateral", "sensorless FOC firmware"]
@@ -510,6 +686,10 @@ optocouplers:
   platform: optocouplers
   ideas:
     - market: "NewSpace / LEO satellites"
+      gist: "A cheaper screened tier of our radiation-tolerant optocouplers could reach high-volume satellite constellations."
+      abstract:
+        - "The hermetic space line already exists."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Lower-cost radiation-tolerant isolation for constellation buses and payloads"
       why_fit: "The OLx radiation-tolerant hermetic line already serves space. A cheaper screened tier could reach high-volume constellations."
       needed: ["plastic or lower-screening tier", "pairing with capacitive isolators for speed (see digital_isolators)"]
@@ -519,6 +699,10 @@ optocouplers:
       fit: medium
       confidence: medium
     - market: "High-temperature power modules and downhole tools"
+      gist: "Optocouplers rated above 125 C could serve oil and gas tools and dense power modules, a small niche."
+      abstract:
+        - "Fit and evidence are both low."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Optocouplers rated above 125 C for oil & gas, geothermal and dense power modules"
       why_fit: "Hermetic packaging and photovoltaic gate drivers (OLH910) suit harsh, hot environments."
       needed: ["175-200 C qualification", "CTR-degradation data at temperature"]
@@ -535,6 +719,10 @@ lna:
   platform: gaas_phemt
   ideas:
     - market: "Satellite NB-IoT / NTN asset trackers"
+      gist: "Satellite-connected asset trackers need low-noise, low-current L- and S-band LNAs from our GNSS and cellular lines."
+      abstract:
+        - "Weak satellite downlinks in battery trackers need exactly that."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "L-band and S-band LNAs and FEMs for NTN-capable IoT modules and trackers"
       why_fit: "Low-noise, low-current LNAs from GNSS and cellular lines suit the weak satellite downlink in battery trackers."
       needed: ["n255/n256 band-tuned LNA+filter FEM", "low quiescent current"]
@@ -545,6 +733,10 @@ lna:
       fit: high
       confidence: medium
     - market: "Drones, robotic mowers and precision agriculture"
+      gist: "Drones, robotic mowers and farm machines need dual-band GNSS LNAs with strong jamming immunity."
+      abstract:
+        - "Our L1 GNSS LNAs exist; adding L5 serves high-accuracy robots."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Dual-band (L1+L5) GNSS LNA/FEMs with high jamming immunity"
       why_fit: "SKY65605/SKY657xx GNSS LNAs and pre-filter FEMs already exist for L1. Adding L5 serves high-accuracy robots and drones."
       needed: ["L1+L5 dual-band FEM", "high out-of-band linearity next to LTE/Wi-Fi"]
@@ -555,6 +747,10 @@ lna:
       fit: high
       confidence: medium
     - market: "Amateur radio astronomy and SDR"
+      gist: "Hobby radio telescopes use low-noise LNAs like our SKY67151 for the 1420 MHz hydrogen line, a tiny niche."
+      abstract:
+        - "Fit is good, but the market is small."
+        - "Confirm it is worth a deeper look, or ignore it."
       application: "Filtered 1420 MHz hydrogen-line LNA modules for hobby telescopes"
       why_fit: "Sub-1 dB-NF LNAs (SKY67151) are exactly what hobby hydrogen-line front ends use."
       needed: ["distributor/eval-board channel only (no custom silicon)"]

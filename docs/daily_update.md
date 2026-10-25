@@ -48,6 +48,20 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.
    Open application area requests (inbox section "Application area requests") are researched the same way; set their
    status on `/blocks/area-requests`.
+   **Gists and To confirm** (owner, 25 Oct 2026: "boil it down to the most simple idea or abstract, then I can
+   decide if I want to read or ignore it, then I can confirm it"; standing, every run). Every research item has a
+   `gist:` (one plain sentence, at most 25 words, the single idea) and an `abstract:` (at most 3 short bullets: what it
+   says, why it matters to us, what decision it asks for) in its own YAML entry (reports.yaml, cases, reviews,
+   competitor profiles, risks.yaml, tam.yaml, tam_topics.yaml, the new-market ideas, the evidence files, the RF notes);
+   items that are HTML or Markdown only (background notes, an "Applications in depth" section, open questions) take
+   them in `data/business/gists.yaml` under `<type>:<id>`. (1) Every new or reworked research item the run writes gets
+   a written gist and abstract in the same commit: plain words, estimates marked "est" (never stated as facts),
+   public-safe (`site_guard`; `tests/test_to_confirm.py` checks length and words). (2) Rewrite about 15 "auto summary"
+   items per run: `uv run python scripts/auto_gists.py -n 15` lists the next ones and where to write them.
+   (3) Inbox section "To confirm: comments": the counts (waiting, confirmed, ignored since the last pull) go in the run
+   summary; act on each comment (rewrite the gist, fix the item, or answer in it). Confirm and Ignore are the owner's
+   alone (Data management › To confirm, DataReview dataset "digest"): never set them, and an ignored item stays on the
+   site.
    **Idea expansion requests** (inbox section "Idea expansion requests"; the owner's "Expand this idea" button on
    Research & ideas, owner 25 Oct 2026): for each open request, add a section
    `<section id="applications-in-depth"><h2>Applications in depth</h2> ...</section>` to that report's body

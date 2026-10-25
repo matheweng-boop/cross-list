@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_gist.html" import gist_box, gist_line %}
 {% import "business/_feasibility.html" as fz %}
 {% from "business/_common.html" import push with context %}
 {% from "business/_growth.html" import schedule_button, learn_tab, opener_box %}
@@ -8,11 +9,13 @@
 {% if background %}
 <p class="small"><a href="/business/reports/{{ r.slug }}">← Back to the report</a></p>
 <p class="rp-bg-note small">Background notes for <b>{{ r.title }}</b>: the data tables, detail and full source list behind the report. Used to answer questions; the report itself stays short.</p>
+{{ gist_box(gist_for("background", r.slug), not guest_blocked(request, '/manage')) }}
 <article class="rpt">{% include body %}</article>
 {% include "business/_tam_notes.html" %}
 {% else %}
 <p class="small"><a href="/business/reports">← Research &amp; ideas</a></p>
 <p class="rp-meta small">{{ fz.stage(scheduled) }} {{ r.area }} · {{ r.date|date }}{% if r.sources %} · {{ r.sources }}{% endif %}</p>
+{{ gist_box(gist_for("case", r.slug) or gist_for("report", r.slug), not guest_blocked(request, '/manage')) }}
 {{ learn_tab(learn, r.learn_links) }}
 {% for s in r.see_also or [] %}{% set o = report_of(s) %}{% if o %}<p class="small rp-see">See also: <a href="/business/reports/{{ o.slug }}">{{ o.title }}</a></p>{% endif %}{% endfor %}
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}

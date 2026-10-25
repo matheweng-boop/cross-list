@@ -16,6 +16,7 @@
   <div class="bo-ev-grid">
   {% for i in ideas %}
     <article class="bo-ev"><header><span><b>{{ i.market }}</b>: {{ i.application }}</span><span><span class="bo-fit ft-{{ i.fit }}">fit {{ i.fit }}</span> <span class="rv-st" title="source confidence">{{ i.confidence }}</span></span></header>
+      {% if i.gist %}<p class="gist-card small"><span class="gist-label">In short</span> {{ i.gist }}</p>{% endif %}
       <p>{{ i.why_fit }}</p>
       {% if i.needed %}<p><b>Would need:</b> {{ i.needed|join('; ') }}</p>{% endif %}
       {% if i.incumbents %}<p><b>Serving it today:</b> {{ i.incumbents|join(', ') }}</p>{% endif %}

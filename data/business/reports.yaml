@@ -39,6 +39,11 @@
 #                    (section <section id="applications-in-depth"> in the body; docs/daily_update.md); marks the
 #                    request done, so the page shows "Expanded" with a link to the section
 #
+# Gist fields (owner, 25 Oct 2026: shown first on the page, on the cards and in Data management > To confirm):
+#   gist             one plain sentence, at most 25 words: the single idea of the report ("est" marks our estimates)
+#   abstract         at most 3 short bullets: what it says, why it matters to us, what decision it asks for
+#                    (a business case, kind: idea, keeps both in data/business/cases/<slug>.yaml instead)
+#
 # Storyline fields (owner, 24 Oct 2026: one theme through every report; shown as the "Bottom line" under the title, as
 # "Next steps" at the end and as one line per card on Research & ideas; checked by reports.story_problems):
 #   decision         the one question the report answers, phrased as a decision for Skyworks ("Should we ...?")
@@ -57,6 +62,11 @@
 # a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
   - slug: auto-hv-hot-swap
+    gist: "Cars never hot-plug at 800 V; pre-charge and disconnect switches do the job, and a reinforced Si875x successor could win those sockets."
+    abstract:
+      - "Contactors, pre-charge and insulation monitors make 400–800 V safe; isolated drivers and SiC switches do the work above 80 V."
+      - "TI leads with TPSI3050-Q1; our Si875x does the same job but only with basic isolation."
+      - "Decide whether to ask the BU for a reinforced Si875x successor sold as a pre-charge and disconnect set."
     title: 'Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits'
     kind: report
     area: Power & isolation
@@ -278,6 +288,11 @@ reports:
     - label: 'Library: isolation in the traction inverter'
       href: /library/traction_asil_d
   - slug: iso7821dww-isolation
+    gist: "TI sells 14.5 mm extra-wide isolators; ours stop at 8 mm: enough in the car, not for 1500 V solar or storage."
+    abstract:
+      - "TI and Novosense offer 14.5–15 mm creepage; none of our digital isolators passes 8 mm."
+      - "Outside the car (1500 V solar, storage, 1000 V chargers, 800 V DC data centers) we lose sockets without a wider package."
+      - "Decide whether the extra-wide isolation business case should go ahead (it is carried on in hv-extra-wide-isolation)."
     title: 'Reinforced digital isolators for power, charging and cars: TI ISO7821DWW and our 8 mm limit'
     kind: report
     area: Power & isolation
@@ -504,6 +519,11 @@ reports:
     - label: 'Library: isolation in the traction inverter'
       href: /library/traction_asil_d
   - slug: filters-1-11ghz
+    gist: "Wideband filters are out of reach for acoustic parts; a Wi-Fi 7/8 BAW multiplexer first, then a switched filter bank with partners."
+    abstract:
+      - "Wi-Fi 6E/7, full n77, UWB, satellite, SDR and defense need filters wider than BAW or SAW can make alone."
+      - "We have switches and BAW but no LTCC or thin-film line since Trans-Tech was sold, so partners fill the gap."
+      - "Decide whether to start with the Wi-Fi 7/8 BAW multiplexer family and look for an LTCC or thin-film partner."
     title: "Standalone filter opportunities, 1–11 GHz"
     kind: report
     area: RF filters

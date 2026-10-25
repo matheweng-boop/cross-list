@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_systems.html" import sub_card %}
+{% from "_systems.html" import sub_card, diagram_flag %}
 {% block title %}Systems library{% endblock %}
 {% block content %}
 <h1>Systems library</h1>
@@ -8,13 +8,13 @@
   and where Skyworks and Qorvo parts sit, each built from six public references. Background: <a href="/library/sources">all {{ n_sources }} sources assessed</a>.</p>
 {% macro topic_card(t) %}<a class="lib-card" href="/library/{{ t.key }}">
   <h2>{{ t.title }}</h2><p class="small lib-sum">{{ t.summary }}</p>
-  <p class="small muted">{{ (t.references or [])|length }} references · {{ (t.design_rules or [])|length }} design rules · {{ (t.trends or [])|length }} trends</p></a>{% endmacro %}
+  <p class="small muted">{{ diagram_flag(1 if t.block_diagram else 0) }} · {{ (t.references or [])|length }} references · {{ (t.design_rules or [])|length }} design rules · {{ (t.trends or [])|length }} trends</p></a>{% endmacro %}
 <nav class="sys-pick small" aria-label="Systems">{% for s in tree %}<a class="fchip" href="#sys-{{ s.key }}">{{ s.title }} <small>{{ s.subs|length }}</small></a>{% endfor %}{% if other %}<a class="fchip" href="#sys-other">Other deep dives <small>{{ other|length }}</small></a>{% endif %}</nav>
 {% for s in tree %}
 <section class="sys-block" aria-labelledby="sys-{{ s.key }}">
-  <h2 class="tpl-cat lib-focus" id="sys-{{ s.key }}">{{ s.title }} <small class="muted">· {{ s.subs|length }} sub-systems · {{ s.n }} diagram{{ 's' if s.n != 1 }}</small></h2>
-  <p class="small muted">{{ s.summary }} <a href="/blocks?system={{ s.key }}#area-{{ s.key }}">All {{ s.title }} diagrams</a></p>
-  <div class="sys-grid">{% for x in s.subs %}{{ sub_card(s, x, x.idx|length, x.deep) }}{% endfor %}</div>
+  <h2 class="tpl-cat lib-focus" id="sys-{{ s.key }}">{{ s.title }} <small class="muted">· {{ s.subs|length }} sub-systems · {{ s.n }} block diagram{{ 's' if s.n != 1 }}</small></h2>
+  <p class="small muted">{{ s.summary }} <a href="/blocks?system={{ s.key }}#diagrams-{{ s.key }}">All {{ s.title }} block diagrams</a></p>
+  <div class="sys-grid">{% for x in s.subs %}{{ sub_card(s, x, x.idx|length, x.deep, x.diagrams) }}{% endfor %}</div>
   {% if s.deep %}<h3 class="small muted">Deep dives in {{ s.title }}</h3><div class="lib-grid">{% for t in s.deep %}{{ topic_card(t) }}{% endfor %}</div>{% endif %}
 </section>
 {% endfor %}

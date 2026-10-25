@@ -57,7 +57,7 @@ def test_application_library_groups_by_system_and_sub_system(client):
     assert order == sorted(order) and order[-1] < html.index('id="other-areas"')
     assert 'href="/blocks?system=automotive&amp;sub=car-radio#sub-car-radio"' in html
     n_radio = len(sy.sub("automotive", "car-radio")["idx"])
-    assert f"{n_radio} diagrams" in html.split('id="card-automotive-car-radio"')[1].split("</article>")[0]
+    assert f"Block diagram ✓ ({n_radio})" in html.split('id="card-automotive-car-radio"')[1].split("</article>")[0]
     one = client.get("/blocks?system=automotive&sub=car-radio").text
     assert 'id="sub-car-radio"' in one and 'id="sub-adas"' not in one and 'id="area-datacenter"' not in one
     assert "Cross-sell in Car radio" in one and 'href="/blocks/cross-sell?system=automotive&amp;sub=car-radio"' in one

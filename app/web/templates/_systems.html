@@ -1,8 +1,14 @@
-{# Systems and sub-systems (owner, 23 Oct 2026): shared by the Systems library and the Application library. #}
-{% macro sub_card(s, x, n, deep) -%}
+{# Systems and sub-systems (owner, 23 Oct 2026): shared by the Systems library and the Application library.
+   Owner, 25 Oct 2026: every card says whether a block diagram exists ("Block diagram ✓ (n)" / "No diagram yet") and
+   links straight to each diagram, so one click opens it. `diagrams`: [{i, name}] of the sub-system's diagrams. #}
+{% macro diagram_flag(n) -%}
+{% if n %}<span class="dg-flag has" title="{{ n }} block diagram{{ 's' if n != 1 }} available">Block diagram ✓ ({{ n }})</span>{% else %}<span class="dg-flag none" title="No block diagram drawn for this yet">No diagram yet</span>{% endif %}
+{%- endmacro %}
+{% macro sub_card(s, x, n, deep, diagrams=none) -%}
 <article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}">
   <a class="sys-sub-title" href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}"><b>{{ x.title }}</b></a>
-  <small class="muted">{{ n }} diagram{{ 's' if n != 1 }}{% if deep %} · {{ deep|length }} deep dive{{ 's' if deep|length != 1 }}{% endif %}</small>
+  <small>{{ diagram_flag(n) }}{% if deep %} <span class="muted">· {{ deep|length }} deep dive{{ 's' if deep|length != 1 }}</span>{% endif %}</small>
+  {% if diagrams %}<small class="sys-diags">{% for d in diagrams[:3] %}<a href="/blocks/new?template={{ d.i }}" title="Open the block diagram: {{ d.name }}">▸ {{ d.name|truncate(46) }}</a>{% endfor %}{% if diagrams|length > 3 %}<a href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}">All {{ diagrams|length }} diagrams</a>{% endif %}</small>{% endif %}
   {% if x.elements %}<span class="sys-els small">{% for e in x.elements %}<span class="sys-el">{{ e }}</span>{% endfor %}</span>{% endif %}
   {% if deep or x.links %}<small class="sys-links">{% for t in deep %}<a href="/library/{{ t.key }}" title="{{ t.title }}">Deep dive: {{ t.title|truncate(48) }}</a>{% endfor %}{% for label, href in x.links %}<a href="{{ href }}">{{ label }}</a>{% endfor %}</small>{% endif %}
 </article>

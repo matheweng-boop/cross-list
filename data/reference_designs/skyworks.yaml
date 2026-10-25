@@ -1,0 +1,66 @@
+# Skyworks timing reference designs (our own public material), from the "Reference Designs - Timing" application page.
+# Format and rules: README.md in this folder. Collected 26 Oct 2026: robots.txt read first, one request at a time,
+# >= 5 s apart; the page and its six two-to-four-page PDFs (May 2026) were read with pdftotext. Parts = the Skyworks
+# timing parts the PDF recommends next to the named SoC / FPGA families; functions mapped from the part types.
+source: {vendor: Skyworks, pages: ["https://www.skyworksinc.com/Application-Pages/Reference-Designs-Timing"], collected: 2026-10-26, method: "Application page (6 reference-design PDFs, May 2026), each PDF read once (pdftotext); parts from its recommendation table"}
+designs:
+  - id: SKY-RD-TIMING-NXP
+    title: "Timing Solutions for NXP SOCs"
+    url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-nxp.pdf"
+    vendor: Skyworks
+    applications: [Networking, Wireless infrastructure, Automotive processor]
+    markets: [Communications equipment, Automotive]
+    summary: "Recommended Skyworks clocks for NXP Layerscape NPUs (Si5518 network synchronizer, Si5341 / Si5391 / Si5332 clock generators, Si53301/07 buffers), i.MX 8 / 9 applications processors (Si52202, Si5332AM) and S32 automotive processors S32G / J / K / N / R (Si5332AM clock generator, Si53254/8AM buffers, Si531 oscillator)."
+    parts: [Si5518, Si5341, Si5391, Si5332, Si52208, Si52212, Si53301, Si53307, Si52202, Si5332AM, Si53254AM, Si53258AM, Si531]
+    functions: [jitter_attenuator, clock_generator, clock_buffer, crystal_oscillator]
+    documents: {design_guide: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-nxp.pdf"}
+  - id: SKY-RD-TIMING-BROADCOM
+    title: "Timing Solutions for Broadcom SOCs"
+    url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf"
+    vendor: Skyworks
+    applications: [Data center switch, Broadband PON]
+    markets: [Enterprise & data center, Communications equipment]
+    summary: "Jitter requirements and recommended Skyworks clocks for Broadcom StrataXGS / StrataDNX switches (Tomahawk 6 to Tomahawk, Jericho, Qumran, Ramon: Si5403 / SKY69002 network synchronizers, Si5363/2/1, SKY631xx, Si5395 / Si5391 / Si5332 clocks, SKY53510 and Si53307 buffers) and xPON chips for central office and CPE (Si5361, SKY63104, Si5395/4/2)."
+    parts: [Si5403, SKY69002, Si5363, Si5362, Si5361, SKY63101, SKY63104, SKY63106, SKY53510, Si53307, Si5395, Si5394, Si5392, Si5391, Si5332]
+    functions: [jitter_attenuator, clock_generator, clock_buffer]
+    documents: {design_guide: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf"}
+  - id: SKY-RD-TIMING-MARVELL
+    title: "Timing Solutions for Marvell SOCs"
+    url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-marvell.pdf"
+    vendor: Skyworks
+    applications: [Data center switch, Ethernet PHY]
+    markets: [Enterprise & data center, Communications equipment]
+    summary: "Recommended Skyworks clocks for Marvell Teralynx and Prestera switches and Alaska C PHYs at 156.25 MHz (Si5403/2/1 network synchronizers, Si5363/2/1, SKY63106/5/4, Si5395, Si5391, Si5332)."
+    parts: [Si5403, Si5402, Si5401, Si5363, Si5362, Si5361, SKY63106, SKY63105, SKY63104, Si5395, Si5391, Si5332]
+    functions: [jitter_attenuator, clock_generator]
+    documents: {design_guide: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-marvell.pdf"}
+  - id: SKY-RD-TIMING-AMD
+    title: "Timing Solutions for AMD FPGAs"
+    url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-amd.pdf"
+    vendor: Skyworks
+    applications: [FPGA, Wireless infrastructure, Test and measurement]
+    markets: [Communications equipment, Industrial]
+    summary: "Recommended Skyworks clocks for AMD Versal, Zynq UltraScale+ (incl. RFSoC), Virtex / Kintex UltraScale(+) and 7-series FPGAs (Si5403 / Si5518 synchronizers, Si5332 / Si5381/2 / Si5341 / Si5328 / Si5348 clocks, Si53340 buffers, Si570 oscillator), with the FPGA transceiver phase-noise masks."
+    parts: [Si5403, Si5518, Si5332, Si5381, Si5382, Si5341, Si5328, Si5324, Si5348, Si5335, Si53340, Si53306, Si53301, Si570]
+    functions: [jitter_attenuator, clock_generator, clock_buffer, crystal_oscillator]
+    documents: {design_guide: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-amd.pdf"}
+  - id: SKY-RD-TIMING-ALTERA
+    title: "Timing Solutions for Altera FPGAs"
+    url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-altera.pdf"
+    vendor: Skyworks
+    applications: [FPGA, Wireless infrastructure]
+    markets: [Communications equipment, Industrial]
+    summary: "Recommended Skyworks clocks for Altera Agilex 9 Direct RF, Agilex 7 / 5 / 3 and Stratix 10 FPGAs (Si5518 / Si5403 synchronizers, Si5510/08, Si5391, Si5341, Si5395, Si5332, Si5338 and Si5220x clocks, Si53311 / Si53254 / Si53307 buffers, Si549 / Si510 / Si569 / Si570 / Si566 / Si548 oscillators)."
+    parts: [Si5518, Si5403, Si5510, Si5508, Si5391, Si5341, Si5395, Si5332, Si5338, Si52202, Si52204, Si53311, Si53254, Si53307, Si549, Si510, Si569, Si570, Si566, Si548]
+    functions: [jitter_attenuator, clock_generator, clock_buffer, crystal_oscillator]
+    documents: {design_guide: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-altera.pdf"}
+  - id: SKY-RD-TIMING-LATTICE
+    title: "Timing Solutions for Lattice Semiconductor FPGAs"
+    url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-lattice.pdf"
+    vendor: Skyworks
+    applications: [FPGA]
+    markets: [Communications equipment, Industrial]
+    summary: "Recommended Skyworks clocks and oscillators for Lattice Certus NX, CertusPro NX, CrossLink-NX and ECP5 evaluation boards (Si5332, Si5350, Si5338, Si5324C, Si5342 clocks; Si510 and Si540 oscillators)."
+    parts: [Si5332, Si5350, Si5338, Si5324C, Si5342, Si510, Si540]
+    functions: [jitter_attenuator, clock_generator, crystal_oscillator]
+    documents: {design_guide: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-lattice.pdf"}

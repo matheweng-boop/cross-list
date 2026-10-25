@@ -1,0 +1,29 @@
+# Murata UWB modules (public module reference designs with their block diagrams), from murata.com product pages.
+# Format and rules: README.md in this folder. Collected 26 Oct 2026: robots.txt read first, one request at a time,
+# >= 10 s apart; no log-in (the my Murata document site was not used). The Type 2AB datasheet was read with pdftotext
+# and its section 3 block diagram rendered locally. Used for the UWB anchor clock block (owner, 25 Oct 2026).
+source: {vendor: Murata, pages: ["https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band"], collected: 2026-10-26, method: "UWB module pages (NXP- and Qorvo-based) and the public Type 2AB preliminary specification PDF; files linked, not stored"}
+designs:
+  - id: LBUA5QJ2AB-828
+    title: "Type 2AB UWB + Bluetooth LE combo module (Qorvo QM33120W + Nordic nRF52840)"
+    url: "https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band/qorvo"
+    vendor: Murata
+    applications: [UWB anchor and tag, Indoor positioning, Wireless connectivity]
+    markets: [RF & connectivity, Consumer & personal electronics]
+    summary: "IEEE 802.15.4z (BPRF) UWB + Bluetooth 5.2 module. Block diagram: UWB transceiver QM33120W with its DC-DC, a 38.4 MHz crystal and a band-pass filter on each of two UWB antenna ports; nRF52840 BLE MCU with 32 MHz and 32 kHz crystals; 3-axis motion sensor; USB / UART / SPI / I2C host interfaces. Hardware design guide, EVB schematic and reference antenna are public."
+    parts: [QM33120W, nRF52840]
+    functions: [uwb_soc, ble_soc, crystal_oscillator, filter_saw_baw, pol_buck]
+    documents:
+      block_diagram: "https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/qorvo/type2ab/uwb-ble-module-preliminary-datasheet-sp-2ab-828i.ashx?la=en&cvid=20250701063023000000"
+      schematic: "https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/qorvo/type2ab/js-1055-2ab-evb-schematic-v2.ashx?la=en&cvid=20250701063023000000"
+      design_guide: "https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/qorvo/type2ab/applicationnote_type2ab-hardware-design-guide_g_web.ashx?la=en&cvid=20250708060000000000"
+  - id: LBUA0VG2BP
+    title: "Type 2BP UWB module (NXP Trimension SR150)"
+    url: "https://www.murata.com/products/connectivitymodule/ultra-wide-band/nxp/type2bp"
+    vendor: Murata
+    applications: [UWB anchor and tag, Angle of arrival, Wireless connectivity, IoT devices]
+    markets: [RF & connectivity, Consumer & personal electronics]
+    summary: "Ultra-small UWB module with NXP SR150, clock, filters and peripheral components; channels 5 and 9, SPI, three antennas for 3D or 2D angle of arrival; internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals, power and crystal calibration support; FiRa certified."
+    parts: [SR150]
+    functions: [uwb_soc, crystal_oscillator, filter_saw_baw]
+    documents: {}

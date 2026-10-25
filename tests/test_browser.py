@@ -212,6 +212,21 @@ def test_cross_sell_by_system(page):
     assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
 
 
+def test_new_systems_in_the_libraries_and_cross_sell(page):
+    """Owner, 25 Oct 2026: the diagrams under Other became new systems. The pages are opened again at 390 px by the
+    fixture (no sideways scrolling)."""
+    go(page, "/library")
+    assert page.locator("#sys-aerospace").is_visible()
+    go(page, "/blocks?system=aerospace")
+    assert page.locator(".sys-pick a.fchip.on").inner_text().startswith("Aerospace")
+    go(page, "/blocks?system=consumer&sub=connectivity")
+    assert page.locator("#sub-connectivity").is_visible()
+    go(page, "/blocks/cross-sell?sel=aerospace:satcom")
+    assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
+    go(page, "/blocks/cross-sell?sel=industrial")
+    assert page.locator("main h2").first.is_visible()
+
+
 def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     """Owner, 25 Oct 2026: pick Automotive on Cross-sell, see the Skyworks + Qorvo pairs there, open the portfolio tab
     with the system kept and its pairs marked, and come back to By system."""

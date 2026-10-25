@@ -114,6 +114,9 @@ pairs:
     reason: "Connector control and indicators block of the on-board charger: Skyworks LED driver for the indicators next to the Qorvo controller."
     source: "Library diagram: HEV/EV on-board charger (two-stage PFC + isolated DC/DC), block Connector control & diagnostics + indicators"
   # --- UWB in the car (access and cabin sensing) ---
+  "crystal_oscillator + uwb_soc":
+    reason: "Every UWB anchor runs its UWB IC (the Qorvo part in this pair) from a reference crystal (38.4 MHz in the public module designs); the Skyworks oscillator is that clock, and its accuracy sets the ranging timestamps."
+    source: "Library diagram: Smart car access (UWB anchors + BLE + NFC, CCC digital key), block UWB reference clock to the UWB anchors (after the Murata Type 2AB and Type 2BP module block diagrams)"
   "crystal_oscillator + pmic":
     reason: "In the in-cabin radar module the Qorvo PMIC supplies the radar front end that the Skyworks oscillator clocks; a supply link only."
     source: "Library diagram: Automotive in-cabin 60 GHz radar module (System power supply to Radar front end and processing)"

@@ -113,11 +113,12 @@ def test_questions_are_specific_yes_no(client, session):
 
 # ---- 5. compact overview at the front of Data management --------------------------------------------------------
 def test_overview_first_in_data_management(client):
-    assert nav.UTILITY[2][0][1] == "/manage/overview"
+    # owner, 25 Oct 2026: To confirm (every research item as one sentence) is first; the Overview follows it
+    assert [i[1] for i in nav.UTILITY[2][:2]] == ["/manage/to-confirm", "/manage/overview"]
     html = client.get("/manage/overview").text
     assert 'class="ov-table"' in html and "TAM estimates" in html and "Technology rating" in html
     assert "open in Verify next" in html and 'aria-current="page"' in html
-    assert '<a href="/manage/overview"' in client.get("/").text  # the Data management link opens it
+    assert '<a href="/manage/to-confirm" class="utility' in client.get("/").text  # the Data management link
 
 
 # ---- 6. methodology: public sources and polite collection -------------------------------------------------------

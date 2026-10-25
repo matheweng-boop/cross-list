@@ -1,9 +1,11 @@
 {% extends "base.html" %}
+{% from "_gist.html" import gist_box, gist_line %}
 {% block title %}{{ c.name }} · Competitive analytics{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/competitors">← Competitive analytics</a></p>
 <h1>{{ c.name }}</h1>
 <p class="subtitle muted">{{ c.ticker or 'Private company' }} · {{ c.hq }} · profile checked {{ c.updated|date }}</p>
+{{ gist_box(gist_for("competitor", c.slug), not guest_blocked(request, '/manage')) }}
 <p>{{ c.summary }}</p>
 {% if c.model %}<p><b>How it makes its parts:</b> {{ c.model }}</p>{% endif %}
 

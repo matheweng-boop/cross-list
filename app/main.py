@@ -144,6 +144,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.broadcast import router as broadcast_router
     from app.web.business import router as business_router
     from app.web.competitors import router as competitors_router
+    from app.web.digest import router as digest_router
     from app.web.feedback import router as feedback_router
     from app.web.people import router as people_router
     from app.web.pipeline import router as pipeline_router
@@ -233,5 +234,6 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(uploads_router)
     app.include_router(reviews_router)
     app.include_router(verify_router)
+    app.include_router(digest_router)
     app.include_router(people_router)
     return app

@@ -1,0 +1,10 @@
+{# The gist and abstract of a research item, at the very top of its page (owner, 25 Oct 2026); g = gist_for(type, id) #}
+{% macro gist_box(g, owner=True) %}{% if g %}
+<aside class="gist-box" aria-label="In short">
+  <p class="gist-line"><span class="gist-label">In short</span>{% if g.auto %} <span class="badge muted" title="Made from the first sentence; the daily run rewrites it">auto summary</span>{% endif %}<br><b>{{ g.gist }}</b></p>
+  {% if g.abstract %}<ul class="gist-abstract">{% for a in g.abstract %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+  {% if owner %}<p class="small gist-confirm"><a href="/manage/to-confirm?q={{ g.title[:40]|urlencode }}&amp;type={{ g.type }}">Confirm or ignore in To confirm →</a></p>{% endif %}
+</aside>
+{% endif %}{% endmacro %}
+{# one line on a card or list row #}
+{% macro gist_line(g) %}{% if g %}<p class="gist-card small"><span class="gist-label">In short</span> {{ g.gist }}{% if g.auto %} <span class="muted">(auto summary)</span>{% endif %}</p>{% endif %}{% endmacro %}

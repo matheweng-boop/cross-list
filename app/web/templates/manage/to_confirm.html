@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>To confirm</h1>
+<p class="subtitle muted">Every research item in one sentence, newest first, with nothing filtered out. <b>Read</b> opens a short abstract; <b>Confirm</b> or <b>Ignore</b> takes it off this list (ignored items stay on the site). A comment goes to tonight's run.</p>
+
+<nav class="tc-tabs" aria-label="Lists">{% for k, label in tabs.items() %}<a href="/manage/to-confirm?tab={{ k }}"{% if tab == k %} aria-current="page" class="on"{% endif %}>{{ label }} <span class="badge muted" data-count="{{ k }}">{{ f.counts[k] }}</span></a>{% endfor %}</nav>
+
+<form method="get" action="/manage/to-confirm" class="tc-filter" role="search">
+  <input type="hidden" name="tab" value="{{ tab }}">
+  {% if typ %}<input type="hidden" name="type" value="{{ typ }}">{% endif %}
+  <input type="search" name="q" value="{{ q }}" placeholder="Search titles and gists" aria-label="Search titles and gists">
+  <button type="submit" class="outline">Search</button>
+</form>
+<div class="tc-chips" aria-label="Item types">
+  <a href="/manage/to-confirm?{{ {'tab': tab, 'q': q}|urlencode if q else 'tab=' ~ tab }}" class="tc-chip{{ ' on' if not typ }}">All {{ f.by_type.values()|sum }}</a>
+  {% for t, label in types.items() if f.by_type[t] %}<a href="/manage/to-confirm?tab={{ tab }}&amp;type={{ t }}{{ '&q=' ~ q|urlencode if q }}" class="tc-chip{{ ' on' if typ == t }}">{{ label }} {{ f.by_type[t] }}</a>{% endfor %}
+</div>
+
+{% if not cards %}<p class="ov-none" id="tc-empty"><b>{{ 'Nothing left to confirm.' if tab == 'open' else 'Nothing here yet.' }}</b>{% if q or typ %} <a href="/manage/to-confirm?tab={{ tab }}">Show all</a>{% endif %}</p>{% endif %}
+<p class="small muted" id="tc-status" role="status" aria-live="polite"></p>
+
+<ol class="tc-feed" id="tc-feed">
+{% for c in cards %}
+<li class="tc-card" id="c-{{ loop.index }}" data-key="{{ c.key }}">
+  <div class="tc-meta"><span class="badge cat">{{ c.type_label }}</span>{% if c.date %} <span class="small muted">{{ c.date.day }} {{ c.date.strftime('%b %Y') }}</span>{% endif %}{% if c.auto %} <span class="badge muted" title="Made from the item's first sentence; the daily run rewrites it">auto summary</span>{% endif %}</div>
+  <h3 class="tc-title">{{ c.title }}</h3>
+  <p class="tc-gist">{{ c.gist }}</p>
+  {% if c.other %}<p class="small tc-other">You {{ c.other.label }}{% if c.other.date %} {{ c.other.date.day }} {{ c.other.date.strftime('%b') }}{% endif %} on its page{{ ' (applied, so it counts as confirmed)' if c.other.applied }}.</p>{% endif %}
+  {% if c.answer and c.answer.comments %}<p class="small muted tc-other">Your comment: “{{ c.answer.comments[0].text }}”</p>{% endif %}
+  <details class="tc-read"><summary>Read</summary>
+    {% if c.abstract %}<ul class="tc-abstract">{% for a in c.abstract %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+    <p><a href="{{ c.href }}">Full text →</a></p>
+    {% if c.answer and c.answer.history %}<details class="small"><summary>History ({{ c.answer.history|length }})</summary><ul>{% for h in c.answer.history[:8] %}<li>{{ h.date.strftime('%d %b %H:%M') }} · {{ h.label }}{% if h.comment %} · “{{ h.comment }}”{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+  </details>
+  <div class="tc-actions">
+    {% if tab == 'open' %}
+    <form method="post" action="/manage/to-confirm/act" class="tc-act"><input type="hidden" name="key" value="{{ c.key }}"><input type="hidden" name="back" value="{{ here }}"><input type="hidden" name="action" value="confirm"><button type="submit">Confirm</button></form>
+    <form method="post" action="/manage/to-confirm/act" class="tc-act"><input type="hidden" name="key" value="{{ c.key }}"><input type="hidden" name="back" value="{{ here }}"><input type="hidden" name="action" value="ignore"><button type="submit" class="secondary outline">Ignore</button></form>
+    {% else %}
+    <span class="small">{{ 'Confirmed' if tab == 'confirmed' else 'Ignored' }}{% if c.answer and c.answer.at %} {{ c.answer.at.day }} {{ c.answer.at.strftime('%b') }}{% endif %}</span>
+    {% if c.answer and c.answer.state == tab %}<form method="post" action="/manage/to-confirm/act" class="tc-act"><input type="hidden" name="key" value="{{ c.key }}"><input type="hidden" name="back" value="{{ here }}"><input type="hidden" name="action" value="undo"><button type="submit" class="secondary outline">Undo</button></form>{% endif %}
+    {% endif %}
+  </div>
+  <form method="post" action="/manage/to-confirm/act" class="tc-comment"><input type="hidden" name="key" value="{{ c.key }}"><input type="hidden" name="action" value="comment"><input type="hidden" name="back" value="{{ here }}">
+    <input type="text" name="comment" maxlength="2000" placeholder="Comment for tonight's run" aria-label="Comment on {{ c.title }}" required><button type="submit" class="outline">Send</button></form>
+</li>
+{% endfor %}
+</ol>
+{% if more > 0 %}<p><a role="button" class="outline" href="{{ here }}{{ '' if here.endswith('?') else '&' }}n={{ n + 60 }}">Show {{ [more, 60]|min }} more ({{ more }} left)</a></p>{% endif %}
+<p class="small muted">Confirm, Ignore and comments are kept with their history; the newest answer counts. Your agree / disagree answers on the item pages stay as they are.</p>
+
+<script>
+(() => {
+  const feed = document.getElementById("tc-feed"), status = document.getElementById("tc-status");
+  if (!feed) return;
+  const post = (data) => fetch("/manage/to-confirm/act", {method: "POST", body: new URLSearchParams(data),
+    headers: {"X-Requested-With": "fetch"}}).then(r => r.ok ? r.json() : Promise.reject(r));
+  const badge = (n) => { const b = document.querySelector('.tc-tabs [data-count="open"]'); if (b) b.textContent = n;
+    document.querySelectorAll("[data-to-confirm-count]").forEach(x => { x.textContent = n; }); };
+  feed.addEventListener("submit", (ev) => {
+    const form = ev.target, card = form.closest(".tc-card");
+    const data = new FormData(form), action = data.get("action");
+    ev.preventDefault();
+    post(data).then((res) => {
+      badge(res.open);
+      if (action === "comment") { form.reset(); status.textContent = "Comment sent to tonight's run."; return; }
+      const title = card.querySelector(".tc-title").textContent;
+      card.hidden = true;
+      status.innerHTML = "";
+      const word = {confirm: "Confirmed", ignore: "Ignored", undo: "Back in the feed"}[action] || "Saved";
+      status.append(word + ": " + title + " ");
+      if (action !== "undo") {
+        const u = document.createElement("button"); u.type = "button"; u.className = "outline small-btn"; u.textContent = "Undo";
+        u.addEventListener("click", () => post({key: data.get("key"), action: "undo"}).then((r) => {
+          badge(r.open); card.hidden = false; status.textContent = "Undone.";
+        }));
+        status.append(u);
+      }
+    }).catch(() => form.submit());
+  });
+})();
+</script>
+{% endblock %}

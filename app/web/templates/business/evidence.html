@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% from "_gist.html" import gist_box, gist_line %}
 {% from "business/_common.html" import status_chip, crowd, review, path_chip, about, checked, factor_table, library_box with context %}
 {% from "_refs.html" import found_in with context %}
 {% block title %}{{ page_title(request.url.path, label ~ ' evidence') }}{% endblock %}
 {% block content %}
 <p class="small"><a href="/business/opportunities?co={{ co }}">← Gaps &amp; new technology</a></p>
 <h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
+{% set gs = gist_list("evidence", fn) %}{% if gs %}<aside class="gist-box" aria-label="In short"><p class="gist-line"><span class="gist-label">In short</span></p><ul class="gist-abstract">{% for g in gs %}<li><b>{{ g.title.split(":")[0] }}:</b> {{ g.gist }}{% if g.auto %} <span class="muted small">(auto summary)</span>{% endif %}</li>{% endfor %}</ul></aside>{% endif %}
 {{ found_in(fn) }}
 <p class="subtitle muted">Everything BizDev knows about this function: how it is scored, the path to a product, and the background evidence
   (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on

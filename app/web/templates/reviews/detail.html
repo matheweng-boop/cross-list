@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_gist.html" import gist_box, gist_line %}
 {% from "business/_growth.html" import learn_tab %}
 {% block title %}{{ page_title(request.url.path, r.parts|first) }}{% endblock %}
 {% macro react(x) %}{% set f = x.fb or {} %}
@@ -19,6 +20,7 @@
 <p class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.app_area }} · {{ r.date|date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span> · {{ r.n_feedback }} item{{ 's' if r.n_feedback != 1 }} with feedback</p>
 <article class="rpt rv-article">
 <h1>{{ r.title }}</h1>
+{{ gist_box(gist_for("review", r.slug), not guest_blocked(request, '/manage')) }}
 <p class="rv-parts">{% for p in r.parts %}<span class="badge">{{ p }}</span> {% endfor %}</p>
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
 {{ learn_tab(r.levels, r.learn_links) }}

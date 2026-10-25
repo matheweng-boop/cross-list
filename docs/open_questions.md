@@ -16,10 +16,6 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 3. **UWB anchor clock source.** The clock block cites Murata's public UWB module designs (Qorvo QM33120W and NXP SR150,
    both with a 38.4 MHz crystal); NXP's automotive anchor pages give no clock frequency. Is a module design acceptable
    as the "public reference design" for the anchor?
-4. TAM estimate "MarketIntelo, digital radio tuners": it covers digital radio tuners only, so it is not used for the
-   market size in the radio-tuner-next case; it is marked as applied on the TAM estimates page only. Should it also
-   be linked to the case (and locked as applied there)?
-
 5. **Car radio market, prices needed (26 Oct 2026).** The radio market at current BOM content is "Not Enough Data"
    until these have a price basis: Si47961 (dual AM/FM tuner: only its sibling Si47962 is priced; enter prices or a
    low / in band / high call), Si46922 (DAB demodulator: no price on the site) and a part for each adjacent block
@@ -30,6 +26,12 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    world's share, and should the 2030 projection assume every new radio is digital (the upper bound used now)?
 7. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
+
+## Settled (owner, 25 Oct 2026, radio market)
+
+- MarketIntelo ($1.8 B, digital radio tuners only): not linked to the radio-tuner-next case's market size; shown as an
+  open discrepancy (different definition), since the market that counts is the total radio market incl. adjacent
+  technologies.
 
 ## Settled (owner, 25 Oct 2026: "Yes to all")
 

@@ -2,6 +2,7 @@
 
     uv run python scripts/match_refdesigns.py            # matches + anchors (crosses from data/real, ~2 minutes)
     uv run python scripts/match_refdesigns.py --add      # also add clearly missing, common blocks to the templates
+                                                          # (and remove earlier additions that no longer qualify)
     uv run python scripts/match_refdesigns.py --no-crosses --out /tmp/x.yaml   # quick run without anchors
 
 Run it in the daily update when data/reference_designs/, data/real/ or data/blocks/templates.yaml changed. The output
@@ -23,7 +24,7 @@ HEADER = """# Public reference designs behind the library block diagrams (owner,
 # anchors: design part (as the design names it) -> our crossed part (the site's crosses; type as on the part pages)
 # design_anchors: design (vendor:id) -> its anchor parts
 # diagrams: per library diagram its matched designs (best first), how many of them contain each function,
-#   the diagram's functions they confirm, the common functions it lacks (suggested, >= 30 %) and the anchors.
+#   the diagram's functions they confirm, the common functions it lacks (suggested, >= 40 %, n >= 4) and anchors.
 """
 
 
@@ -58,6 +59,12 @@ def run(out: Path, crosses: bool = True) -> dict:
     return data
 
 
+def refmatch_rule() -> str:
+    from app.services import refmatch
+
+    return f">= {refmatch.ADD_SHARE:.0%} and >= {refmatch.ADD_MIN} matched designs"
+
+
 def _group_for(t: dict, fn: str) -> str | None:
     """The frame a new block goes in: the one holding most blocks of the same category; None when no frame holds
     one (then the block stays a suggestion: there is no natural place for it)."""
@@ -73,7 +80,7 @@ def _group_for(t: dict, fn: str) -> str | None:
 
 
 def add_blocks(data: dict, path: Path) -> list[tuple[str, str, int, int]]:
-    """Add each clearly missing, common function (>= 50 % and >= 5 matched designs) to its template, in place in the
+    """Add each clearly missing, common function (>= 60 % and >= 8 matched designs) to its template, in place in the
     YAML text: a block {fn: <id>, src: refdesigns} in the best frame and a refdesigns_added note on the template."""
     from app.services import blocks, refmatch
 
@@ -110,9 +117,48 @@ def add_blocks(data: dict, path: Path) -> list[tuple[str, str, int, int]]:
             done.append((e["name"], s["fn"], s["n"], e["n"]))
         if notes:
             line = ("  refdesigns_added: \"Added from the matched public reference designs "
-                    f"(scripts/match_refdesigns.py, in at least half of them): {'; '.join(notes)}\"\n")  # fmt: skip
+                    f"(scripts/match_refdesigns.py, in at least 60 % of them): {'; '.join(notes)}\"\n")  # fmt: skip
             head_end = chunk.index("\n") + 1
             chunk = chunk[:head_end] + line + chunk[head_end:]
+        text = text[:start] + chunk + text[end:]
+    path.write_text(text)
+    return done
+
+
+_ADDED = re.compile(r", \{fn: ([a-z0-9_]+), src: refdesigns\}")
+
+
+def prune_blocks(data: dict, path: Path) -> list[tuple[str, str]]:
+    """Remove earlier automatic additions ({fn: x, src: refdesigns}) that no longer qualify under the current
+    thresholds (the function in at least ADD_SHARE and ADD_MIN of the matched designs). Only blocks still exactly as
+    the script wrote them (marker and note unchanged) are removed: a block the owner touched stays."""
+    from app.services import refmatch
+
+    text = path.read_text()
+    by_name = {e["name"]: e for e in data["diagrams"]}
+    done = []
+    for name, e in by_name.items():
+        start = text.find(f"- name: {name}\n")
+        if start < 0:
+            continue
+        end = text.find("\n- name:", start + 1)
+        end = len(text) if end < 0 else end
+        chunk = text[start:end]
+        note = re.search(r'  refdesigns_added: "[^"]*"\n', chunk)
+        if not note:
+            continue  # no note from the script: the owner changed it, leave the blocks alone
+        n, fns = e.get("n") or 0, e.get("functions") or {}
+        drop = [fn for fn in _ADDED.findall(chunk) if f"{fn} (" in note.group(0)
+                and not (fns.get(fn, 0) >= refmatch.ADD_MIN and n and fns.get(fn, 0) / n >= refmatch.ADD_SHARE)]
+        if not drop:
+            continue
+        for fn in drop:
+            chunk = chunk.replace(f", {{fn: {fn}, src: refdesigns}}", "", 1)
+            done.append((name, fn))
+        kept = [x for x in re.findall(r"([a-z0-9_]+ \(\d+ of \d+ designs\))", note.group(0))
+                if x.split()[0] not in drop]
+        new = note.group(0).split("): ")[0] + "): " + "; ".join(kept) + '"\n' if kept else ""
+        chunk = chunk.replace(note.group(0), new, 1)
         text = text[:start] + chunk + text[end:]
     path.write_text(text)
     return done
@@ -126,7 +172,16 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     data = run(a.out, not a.no_crosses)
     if a.add:
-        added = add_blocks(data, ROOT / "data" / "blocks" / "templates.yaml")
+        tfile = ROOT / "data" / "blocks" / "templates.yaml"
+        removed = prune_blocks(data, tfile)
+        for name, fn in removed:
+            print(f"removed {fn} from {name} (no longer in {refmatch_rule()})")
+        if removed:
+            from app.services import blocks
+
+            blocks.templates.cache_clear()
+            data = run(a.out, not a.no_crosses)
+        added = add_blocks(data, tfile)
         for name, fn, n, of in added:
             print(f"added {fn} to {name} ({n} of {of} designs)")
         if added:  # the templates changed: match again so the file reflects them

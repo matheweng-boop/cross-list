@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.models import AreaRequest, BlockDiagram, BlockFeedback
 from app.services import blocks, prelim, refdesigns, refmatch, schematic, vocab
@@ -349,7 +350,8 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
     the gaps and the part pages, which link here with a reproducible list: ?diagram=<library diagram key> (the designs
     the diagram is based on; with &anchor=<part or function> those with that anchor), ?part=<part number>,
     ?fn=<function>."""
-    v = refdesigns.view(q, vendor, market, fn, iso, docs, atype, sub, diagram, part.strip(), anchor)
+    fb = refmatch.token() if diagram else ()
+    v = refdesigns.view(q, vendor, market, fn, iso, docs, atype, sub, diagram, part.strip(), anchor, fb)
     tree, rows = v["tree"], v["rows"]
     if not view and not any((q, vendor, market, fn, iso, docs, atype, sub, diagram, part, page > 1)):
         view = "types"
@@ -378,7 +380,43 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
            "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
            "diagram": diagram, "part": part.strip(), "anchor": anchor, "heading": v["heading"],
-           "anchors_of": refmatch.anchors_of_design,
+           "anchors_of": refmatch.anchors_of_design, "design_key": refmatch.design_key,
+           "fbe": _fb_view(diagram) if diagram else None,
+           "can_answer": bool(diagram) and signed_in_owner(request) is not None,
            "status": status, "label": {f: vocab.fn_label(f) for f in fns},
            "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/reference_designs.html", ctx)
+
+
+def _fb_view(diagram: str) -> dict | None:
+    """The owner's answers on one diagram's list: designs confirmed and removed (removed ones listed to put back)."""
+    e = refmatch.entry(diagram)
+    if not e:
+        return None
+    idx = refmatch.index()["by_key"]
+    return {"fits": set(e.get("fits") or []), "removed": [idx[k] for k in e.get("removed") or [] if k in idx]}
+
+
+FB_VERDICTS = {"fits": refmatch.FITS, "nofit": refmatch.NOFIT, "reset": refmatch.RESET}
+
+
+@router.post("/reference-designs/feedback")
+def reference_design_feedback(request: Request, diagram: str = Form(...), item: str = Form(...),
+                              verdict: str = Form(...), comment: str = Form(""), back: str = Form(""),
+                              session: Session = Depends(get_session)):  # fmt: skip
+    """The owner's answer on a matched design ("Fits" / "Doesn't fit" / back to the script's decision) or a
+    suggestion ("fn:<function>", "Doesn't fit" = not a block for this diagram). Append-only, the latest counts."""
+    me = signed_in_owner(request)
+    if me is None:
+        raise HTTPException(403, "Only the owner can answer.")
+    e = refmatch.data()["by_key"].get(diagram)
+    if e is None or verdict not in FB_VERDICTS:
+        raise HTTPException(404, "Unknown diagram or answer")
+    if item.startswith("fn:"):
+        if item[3:] not in blocks.catalogue()["functions"]:
+            raise HTTPException(404, "Unknown function")
+    elif item not in (e.get("designs") or []):
+        raise HTTPException(404, "This design is not matched to the diagram")
+    refmatch.record(session, diagram, item, FB_VERDICTS[verdict], comment, me.name or "Owner")
+    ok = back.startswith("/") and not back.startswith("//")
+    return RedirectResponse(back if ok else f"/reference-designs?diagram={diagram}", status_code=303)

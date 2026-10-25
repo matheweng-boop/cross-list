@@ -5,6 +5,20 @@ Each library diagram (data/blocks/templates.yaml) is matched to the public refer
 the site crosses to one of our parts (the socket where our part goes in). The matching and the crosses are computed
 offline by scripts/match_refdesigns.py into data/blocks/refdesign_matches.yaml; the function and part counts are
 indexed once per process from the designs themselves.
+
+Matching rules, a bit stricter (owner, 25 Oct 2026: "Should be based on feedback. So a bit stricter at first"):
+  title-word weight        60 %             -> 70 %   (TITLE_SHARE)
+  shared functions         >= 2 (1 if the   -> >= 3 (2 if the title words match fully)  (MIN_SHARED, MIN_SHARED_FULL)
+                           title matches fully)
+  suggestions              >= 30 %, >= 3    -> >= 40 % of at least 4 matched designs   (SUGGEST_SHARE, MIN_DESIGNS_...)
+                           matched designs
+  automatic block addition >= 50 %, >= 5    -> >= 60 % and >= 8 designs (ADD_SHARE, ADD_MIN); still only when no close
+                                               alternative is in the diagram (CLOSE)
+Feedback then adjusts it: on a diagram's list (/reference-designs?diagram=...) the owner marks each design "Fits" or
+"Doesn't fit" and can dismiss a suggestion (DataReview rows, dataset "refmatch", latest answer wins). A design that
+does not fit drops out of that diagram's count, list, function shares, suggestions and anchors at render time
+(``entry``); the daily run looks for patterns in those answers and tightens or loosens the constants here
+(docs/daily_update.md).
 """
 
 import math
@@ -16,9 +30,11 @@ from pathlib import Path
 from app import yamlio
 
 FILE = Path(__file__).resolve().parents[2] / "data" / "blocks" / "refdesign_matches.yaml"
-SUGGEST_SHARE = 0.30  # a function in at least this share of the matched designs is a suggestion when missing
-ADD_SHARE, ADD_MIN = 0.50, 5  # ... and is added to the template when this common and in at least this many designs
-MIN_DESIGNS_FOR_SUGGESTIONS = 3  # fewer matched designs give no suggestions (one design is not a pattern)
+TITLE_SHARE = 0.70  # share of the diagram's title-word weight a design must name (was 0.60)
+MIN_SHARED, MIN_SHARED_FULL = 3, 2  # functions shared with the diagram; fewer when the title matches fully (was 2, 1)
+SUGGEST_SHARE = 0.40  # a function in at least this share of the matched designs is a suggestion when missing (was 0.30)
+ADD_SHARE, ADD_MIN = 0.60, 8  # ... added to the template when this common and in this many designs (was 0.50, 5)
+MIN_DESIGNS_FOR_SUGGESTIONS = 4  # fewer matched designs give no suggestions (was 3)
 MAX_MATCHES = 150
 RARE = 5.5  # a single-word application tag must be at least this rare (about 1 in 100 designs)
 MIN_WEIGHT = 4.6  # word weight log((n+1)/(df+1)) + 1: about 4.6 for a word in 1 of 40 designs
@@ -96,10 +112,10 @@ def match(templates: list[dict], designs, fns_of) -> list[list[tuple]]:
     """For each template: the matched designs as (score, design key, shared functions), best first.
 
     A design matches a diagram when
-      - its application tags and title name the diagram's application: at least 60 % of the weight of the words of
+      - its application tags and title name the diagram's application: at least 70 % of the weight of the words of
         the diagram's short title (rare words weigh more), or one of its application tags lies wholly inside the
         diagram's name (a tag of two or more words, or one rare word), and
-      - it shares functions with the diagram: at least 2, or 1 when the title words match fully.
+      - it shares functions with the diagram: at least 3, or 2 when the title words match fully.
     """
     from app.services.blocks import display_name, title_parts
 
@@ -121,7 +137,8 @@ def match(templates: list[dict], designs, fns_of) -> list[list[tuple]]:
             cov = max(_cover(title, x, idf) for x in texts)
             tag_in = any(tg and tg <= name_words and (len(tg) >= 2 or idf.get(next(iter(tg)), 0) >= RARE)
                          for tg in tags)  # fmt: skip
-            ok = (cov >= 0.6 and len(shared) >= (1 if cov >= 0.999 else 2)) or (tag_in and len(shared) >= 2)
+            need = MIN_SHARED_FULL if cov >= 0.999 else MIN_SHARED
+            ok = (cov >= TITLE_SHARE and len(shared) >= need) or (tag_in and len(shared) >= MIN_SHARED)
             if ok:
                 score = round(cov + (0.5 if tag_in else 0) + 0.05 * len(shared), 4)
                 row = (score, design_key(d), sorted(shared))
@@ -219,31 +236,39 @@ def build(session) -> dict:
         if hit and d.get("vendor") not in OUR_VENDORS:
             design_anchors[design_key(d)] = hit
     tpls = blocks.templates()
+    fns_of = {k: d.get("functions") or [] for k, d in by.items()}
     diagrams = []
     for t, rows in zip(tpls, match(tpls, designs, blocks.template_functions), strict=True):
         keys = [k for _, k, _ in rows]
-        n = len(keys)
-        cnt = Counter(f for k in keys for f in by[k].get("functions") or [])
-        have = blocks.template_functions(t)
-        common = sorted(((f, c) for f, c in cnt.items() if f not in have and c / n >= SUGGEST_SHARE),
-                        key=lambda fc: (-fc[1], fc[0])) if n >= MIN_DESIGNS_FOR_SUGGESTIONS else []  # fmt: skip
-        anc: dict[str, dict] = {}
-        for k in keys:
-            for p in design_anchors.get(k, []):
-                a = anchors[p]
-                e = anc.setdefault(stem(p), {"part": stem(p), "fn": a["fn"], "ours": a["ours"], "maker": a["maker"],
-                                             "type": a["type"], "designs": []})  # fmt: skip
-                if k not in e["designs"]:
-                    e["designs"].append(k)
-        diagrams.append({
-            "name": t.get("name"), "key": diagram_key(t), "n": n, "designs": keys,
-            "functions": {f: c for f, c in sorted(cnt.items(), key=lambda fc: (-fc[1], fc[0]))},
-            "confirmed": [f for f in have if cnt[f] and (cnt[f] >= 2 or cnt[f] / n >= SUGGEST_SHARE)],
-            "suggested": [{"fn": f, "n": c} for f, c in common],
-            "anchors": sorted(({**e, "n": len(e["designs"])} for e in anc.values()),
-                              key=lambda e: (-e["n"], e["part"])),
-        })  # fmt: skip
+        diagrams.append({"name": t.get("name"), "key": diagram_key(t),
+                         **_derive(keys, blocks.template_functions(t), fns_of, anchors, design_anchors)})  # fmt: skip
     return {"anchors": dict(sorted(anchors.items())), "design_anchors": design_anchors, "diagrams": diagrams}
+
+
+def _derive(keys: list[str], have: list[str], fns_of: dict, anchors: dict, design_anchors: dict) -> dict:
+    """A diagram's summary from its matched designs: count, how often each function appears, the diagram's functions
+    they confirm, the common functions it lacks (suggestions) and the anchors (design parts we cross)."""
+    n = len(keys)
+    cnt = Counter(f for k in keys for f in fns_of.get(k) or [])
+    common = sorted(((f, c) for f, c in cnt.items() if f not in have and c / n >= SUGGEST_SHARE),
+                    key=lambda fc: (-fc[1], fc[0])) if n >= MIN_DESIGNS_FOR_SUGGESTIONS else []  # fmt: skip
+    anc: dict[str, dict] = {}
+    for k in keys:
+        for p in design_anchors.get(k, []):
+            a = anchors.get(p)
+            if not a:
+                continue
+            e = anc.setdefault(stem(p), {"part": stem(p), "fn": a["fn"], "ours": a["ours"], "maker": a["maker"],
+                                         "type": a["type"], "designs": []})  # fmt: skip
+            if k not in e["designs"]:
+                e["designs"].append(k)
+    return {
+        "n": n, "designs": keys,
+        "functions": {f: c for f, c in sorted(cnt.items(), key=lambda fc: (-fc[1], fc[0]))},
+        "confirmed": [f for f in have if cnt[f] and (cnt[f] >= 2 or cnt[f] / n >= SUGGEST_SHARE)],
+        "suggested": [{"fn": f, "n": c} for f, c in common],
+        "anchors": sorted(({**e, "n": len(e["designs"])} for e in anc.values()), key=lambda e: (-e["n"], e["part"])),
+    }  # fmt: skip
 
 
 # close alternatives: a diagram that has one of them does not clearly lack another (a PMIC covers the PoL bucks)
@@ -258,7 +283,7 @@ CLOSE = (
 
 
 def to_add(entry: dict, have: list[str] | None = None) -> list[dict]:
-    """Suggestions to add to the template itself: in at least 50 % and at least 5 of the matched designs, and
+    """Suggestions to add to the template itself: in at least 60 % and at least 8 of the matched designs, and
     clearly missing (neither the function nor a close alternative is in the diagram)."""
     n = entry.get("n") or 0
     fns = set(have or [])
@@ -276,8 +301,124 @@ def data() -> dict:
     return raw
 
 
+# ---- the owner's feedback on the matches (owner, 25 Oct 2026: "Should be based on feedback") ----------------------
+FEEDBACK = "refmatch"  # DataReview dataset; key "<diagram key>|<design key>" or "<diagram key>|fn:<function>"
+FITS, NOFIT, RESET = "correct", "wrong", "unsure"  # Fits / Doesn't fit / back to the script's decision
+_VER = [0]  # bumped on every new answer: the cached feedback and the diagrams built from it are recomputed
+
+
+def fb_key(diagram: str, item: str) -> str:
+    return f"{diagram}|{item}"[:120]
+
+
+def _fb_load() -> dict[str, dict]:
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from app.db import get_engine
+    from app.models import DataReview
+
+    out: dict[str, dict] = {}
+    q = select(DataReview).where(DataReview.dataset == FEEDBACK).order_by(DataReview.created_at, DataReview.id)
+    with Session(get_engine()) as s:
+        for r in s.scalars(q):  # oldest first: the latest answer wins
+            diag, _, item = r.key.partition("|")
+            e = out.setdefault(diag, {"fits": set(), "out": set(), "fn_out": set()})
+            if item.startswith("fn:"):
+                (e["fn_out"].add if r.verdict == NOFIT else e["fn_out"].discard)(item[3:])
+                continue
+            e["fits"].discard(item)
+            e["out"].discard(item)
+            if r.verdict in (FITS, NOFIT):
+                e["fits" if r.verdict == FITS else "out"].add(item)
+    return out
+
+
+@lru_cache(maxsize=4)
+def _fb_cached(url: str, ver: int) -> dict[str, dict]:
+    return _fb_load()
+
+
+def token() -> tuple[str, int]:
+    """Identifies the current feedback (database and answer count); part of every cache key built from it."""
+    from app.db import get_engine
+
+    return str(get_engine().url), _VER[0]
+
+
+def feedback() -> dict[str, dict]:
+    """Per diagram key: designs marked Fits ("fits"), Doesn't fit ("out") and dismissed suggestions ("fn_out")."""
+    return _fb_cached(*token())
+
+
+def record(session, diagram: str, item: str, verdict: str, comment: str = "", author: str = "") -> None:
+    """Store one answer (append-only) and drop the cached feedback so pages show it at once."""
+    from app.models import DataReview
+
+    session.add(DataReview(dataset=FEEDBACK, key=fb_key(diagram, item), verdict=verdict,
+                           comment=comment.strip()[:2000] or None, author=author.strip()[:100] or None))  # fmt: skip
+    session.commit()
+    _VER[0] += 1
+
+
+_ANSWER = {FITS: "Fits", NOFIT: "Doesn't fit", RESET: "reset"}
+
+
+def inbox_line(r, when: str) -> str:
+    """One answer for the daily inbox: diagram, design (title, application tags) or suggested block, comment."""
+    diag, _, item = r.key.partition("|")
+    e = data()["by_key"].get(diag) or {}
+    if item.startswith("fn:"):
+        what = f"suggested block {item[3:]} (not a block for this diagram)" if r.verdict == NOFIT else \
+            f"suggested block {item[3:]}"
+    else:
+        d = index()["by_key"].get(item) or {}
+        tags = ", ".join((d.get("applications") or [])[:4])
+        what = f"{item} {d.get('title') or ''}".strip() + (f" [tags: {tags}]" if tags else "")
+    return (f"- {when} {_ANSWER.get(r.verdict, r.verdict)}: {e.get('name') or diag} / {what}"
+            f"{' · ' + ' '.join(r.comment.split()) if r.comment else ''}")
+
+
+@lru_cache(maxsize=1)
+def _tpl_by_key() -> dict[str, dict]:
+    from app.services import blocks
+
+    return {diagram_key(t): t for t in blocks.templates()}
+
+
+@lru_cache(maxsize=256)
+def _entry(key: str, url: str, ver: int) -> dict | None:
+    from app.services import blocks
+
+    e = data()["by_key"].get(key)
+    fb = _fb_cached(url, ver).get(key)
+    if e is None:
+        return None
+    if not fb:
+        return {**e, "fits": [], "removed": [], "fn_out": []}
+    keys = [k for k in e.get("designs") or [] if k not in fb["out"]]
+    t = _tpl_by_key().get(key)
+    have = blocks.template_functions(t) if t else list(e.get("confirmed") or [])
+    fns_of = {k: (index()["by_key"].get(k) or {}).get("functions") or [] for k in keys}
+    d = data()
+    out = {**e, **_derive(keys, have, fns_of, d["anchors"], d["design_anchors"])}
+    out["suggested"] = [s for s in out["suggested"] if s["fn"] not in fb["fn_out"]]
+    out["fits"] = [k for k in keys if k in fb["fits"]]
+    out["removed"] = [k for k in e.get("designs") or [] if k in fb["out"]]
+    out["fn_out"] = sorted(fb["fn_out"])
+    return out
+
+
+def entry(key: str) -> dict | None:
+    """A diagram's matches as the site shows them: the script's file minus the designs the owner marked "Doesn't
+    fit" (count, list, function shares, suggestions and anchors recomputed), without the dismissed suggestions; with
+    "fits" (designs confirmed), "removed" and "fn_out" (dismissed suggestions). Cached per process; a new answer
+    starts a new cache key (``record``)."""
+    return _entry(key, *token())
+
+
 def for_template(t: dict | None) -> dict | None:
-    return data()["by_key"].get(diagram_key(t)) if t else None
+    return entry(diagram_key(t)) if t else None
 
 
 def anchors_of_design(d: dict) -> dict[str, dict]:
@@ -362,6 +503,8 @@ def kb_view(t: dict, counts: dict) -> dict | None:
     added = [b["fn"] for g in t.get("groups") or [] for b in g.get("blocks") or []
              if isinstance(b, dict) and b.get("src") == "refdesigns"]  # fmt: skip
     return {"key": e["key"], "n": e.get("n") or 0, "anchors": anchors,
+            "n_fits": len(e.get("fits") or []), "n_removed": len(e.get("removed") or []),
+            "fn_out": [(f, vocab.fn_label(f)) for f in e.get("fn_out") or []],
             "confirmed": [(f, fns.get(f, 0), vocab.fn_label(f)) for f in e.get("confirmed") or []],
             "suggested": [(s["fn"], s["n"], vocab.fn_label(s["fn"]), st(s["fn"])) for s in e.get("suggested") or []
                           if s["fn"] not in added],

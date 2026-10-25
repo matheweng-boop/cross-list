@@ -4,9 +4,17 @@
   /reference-designs?{{ base|dictsort|selectattr('1')|list|urlencode }}
 {%- endmacro %}
 {% macro fchip(f) %}<a class="lg rd-fn {{ {'supported': 'lg-have', 'gap': 'lg-opp', 'competitor': 'lg-opp'}.get(status.get(f), 'lg-ext') }}" href="{{ url(fn=f) }}" title="{{ bo_status_help.get(status.get(f), '') }}">{{ label[f] }}</a>{% endmacro %}
+{% macro fbform(item, fits=false, small_label='') %}{% set back = request.url.path ~ '?' ~ request.url.query %}<form method="post" action="/reference-designs/feedback" class="rd-fb small">
+  <input type="hidden" name="diagram" value="{{ diagram }}"><input type="hidden" name="item" value="{{ item }}"><input type="hidden" name="back" value="{{ back }}">
+  {% if fits %}<span class="vbadge on">✓ Fits · confirmed by you</span> {% endif %}<input name="comment" maxlength="300" placeholder="Comment (optional)" aria-label="Comment">
+  {% if not fits %}<button name="verdict" value="fits" class="small-btn outline" title="This design belongs to this diagram">Fits</button>{% else %}<button name="verdict" value="reset" class="small-btn outline secondary" title="Back to the matching rules' decision">Undo</button>{% endif %}
+  <button name="verdict" value="nofit" class="small-btn outline secondary" title="Remove this design from this diagram">Doesn't fit</button>
+  {{ review_history(request, 'refmatch', diagram ~ '|' ~ item, 0) }}</form>{% endmacro %}
 {% block content %}
 <h1>{{ heading or 'Reference designs' }}</h1>
 {% if heading %}<p class="small"><b>{{ '{:,}'.format(n) }}</b> public reference design{{ 's' if n != 1 }} · <a href="/reference-designs">all reference designs</a></p>{% endif %}
+{% if fbe and (fbe.fits or fbe.removed) %}<p class="small rd-fbsum">{{ fbe.fits|length }} confirmed by you, {{ fbe.removed|length }} removed{% if fbe.removed %} · <a href="#rd-removed">see removed</a>{% endif %}</p>{% endif %}
+{% if can_answer %}<p class="small muted">Does each design fit this diagram? "Doesn't fit" removes it from this diagram at once (count, functions, suggestions, anchors); the daily update uses the answers to tune the matching rules.</p>{% endif %}
 <p class="subtitle muted">{{ '{:,}'.format(n_all) }} public reference designs from manufacturers' sites, with links to their design guides, schematics and BOMs.
   Functions are marked <span class="lg lg-have">we have a part</span> or <span class="lg lg-opp">no part of ours</span>; customer parts are grey.</p>
 
@@ -56,9 +64,12 @@
   {% if d.functions %}<p class="rd-fnrow">{% for f in d.functions %}{{ fchip(f) }}{% endfor %}</p>{% endif %}
   {% if d.parts %}<p class="small">Parts: {% for fam, ms in grouped(d.parts)[:12] %}{% if ms|length > 1 or fam != ms[0]|upper %}<a href="{{ url(view='families', q=ms[0], page=1) }}" title="family {{ fam }}">{{ fam }}</a> <span class="muted">({{ ms|join(', ') }})</span>{% else %}<a href="{{ url(view='families', q=ms[0], page=1) }}">{{ ms[0] }}</a>{% endif %}{{ ', ' if not loop.last }}{% endfor %}{% if grouped(d.parts)|length > 12 %} …{% endif %}</p>{% endif %}
   {% set anc = anchors_of(d) %}{% if anc %}<p class="small rd-anchor">{% for p, a in anc.items() %}<span class="anchor-badge" title="A part we cross: the socket where our part goes in">Anchor</span> <b>{{ p }}</b> → we cross with <a href="/find?q={{ a.ours|urlencode }}">{{ a.ours }}</a> <span class="muted">({{ a.type }})</span>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% if fbe %}{% set dk = design_key(d) %}{% if can_answer %}{{ fbform(dk, dk in fbe.fits) }}{% elif dk in fbe.fits %}<p class="small"><span class="vbadge on">✓ Fits · confirmed by the owner</span></p>{% endif %}{% endif %}
   {% if d.documents %}<p class="small rd-docs">{% for k, v in d.documents.items() if k != 'other' and v %}<a href="{{ v }}" target="_blank" rel="noopener">{{ doc_labels.get(k, k) }} ↗</a>{% endfor %}{% for v in d.documents.other or [] %}<a href="{{ v }}" target="_blank" rel="noopener">Other document ↗</a>{% endfor %}</p>{% endif %}
 </article>
 {% else %}{% if not view %}<p class="muted">No design matches. <a href="/reference-designs">Clear the filters</a>.</p>{% endif %}{% endfor %}
+{% if fbe and fbe.removed %}<details id="rd-removed" class="small"><summary>Removed from this diagram ({{ fbe.removed|length }}): marked "Doesn't fit"</summary><ul>
+  {% for d in fbe.removed %}<li><a href="{{ d.url }}" target="_blank" rel="noopener">{{ d.id }} {{ d.title }} ↗</a>{% if can_answer %}{% set back = request.url.path ~ '?' ~ request.url.query %} <form method="post" action="/reference-designs/feedback" class="rd-fb"><input type="hidden" name="diagram" value="{{ diagram }}"><input type="hidden" name="item" value="{{ design_key(d) }}"><input type="hidden" name="back" value="{{ back }}"><button name="verdict" value="reset" class="small-btn outline secondary">Put back</button></form>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
 {% if pages > 1 %}<nav class="rd-pager small" aria-label="Pages">{% if page > 1 %}<a href="{{ url(page=page - 1) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url(page=page + 1) }}">Next →</a>{% endif %}</nav>{% endif %}
 
 <p class="small muted rd-sources">Sources: {% for s in sources %}{{ s.vendor|vendor }} ({{ '{:,}'.format(s.n) }}{% if s.collected %}, collected {{ s.collected|date }}{% endif %}){{ ', ' if not loop.last }}{% endfor %}.

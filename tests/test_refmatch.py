@@ -68,7 +68,13 @@ def test_suggestions_and_additions_follow_the_thresholds():
             assert e["n"] >= refmatch.MIN_DESIGNS_FOR_SUGGESTIONS and s["n"] / e["n"] >= refmatch.SUGGEST_SHARE
     added = [(t["name"], b["fn"]) for t in blocks.templates() for g in t["groups"] for b in g["blocks"]
              if isinstance(b, dict) and b.get("src") == "refdesigns"]  # fmt: skip
-    assert added, "the common, clearly missing blocks were added"
+    # stricter since 25 Oct 2026 (>= 60 % and >= 8 designs): the two earlier additions no longer qualified and were
+    # removed with their note; any addition left must still follow the thresholds
+    assert not any(t["name"] == "USB-C power bank (TI)" and "power_fets" in blocks.template_functions(t)
+                   for t in blocks.templates())  # fmt: skip
+    for e in data["diagrams"]:
+        t = next(t for t in blocks.templates() if refmatch.diagram_key(t) == e["key"])
+        assert not refmatch.to_add(e, blocks.template_functions(t)), "the script added every qualifying block"
     for name, fn in added:
         t = next(t for t in blocks.templates() if t["name"] == name)
         e = refmatch.for_template(t)

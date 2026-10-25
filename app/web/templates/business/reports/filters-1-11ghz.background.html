@@ -75,6 +75,59 @@
   </tbody>
 </table></div>
 
+<h2>Wideband filters: detail (added 25 Oct 2026)</h2>
+<p>Added after the owner's comment of 24 Oct 2026 (“it didn't explore the need for wideband filters”). From BizDev data and the sources already listed here; no new web requests. “est” marks our estimates; standards band edges are from general knowledge of the public specifications (802.11ax/be 6 GHz, 802.15.4z UWB channels, 3GPP TS 38.101-1 bands, GNSS signal plans).</p>
+
+<h3>Why acoustic filters run out of width</h3>
+<ul>
+  <li>An acoustic filter's width is capped by its resonators' electromechanical coupling (k²): about 7 % for AlN BAW, up to ~18 % with scandium-doped AlN, about 25 % and more for XBAR in thin lithium niobate.<sup>21 23 24</sup></li>
+  <li>A plain ladder filter passes well below k² (est). Wider parts add passive matching: our widest active filters are ~18–20 % (SKY85921-11 Wi-Fi 6 GHz; QPB1033 bank). Full n77 (24 %) has been shown with an IPD + acoustic hybrid at about 2.5 dB loss.<sup>19 26</sup></li>
+  <li>Above ~25 %, or over octaves, the choices are LC / LTCC, thin film / IPD, ceramic, cavity, tunable filters or switched filter banks.</li>
+</ul>
+
+<h3>Mini-Circuits band-pass filters centred at 1–11 GHz (BizDev data)</h3>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Width (passband ÷ centre)</th><th scope="col">Parts</th><th scope="col">Main technologies</th><th scope="col">Examples</th></tr></thead>
+  <tbody>
+    <tr><td>below 10 %</td><td class="n">162</td><td>ceramic 54, LTCC 52, cavity 43</td><td>ABF-8R075G+ (thin film, 7.75–8.4 GHz)</td></tr>
+    <tr><td>10–25 %</td><td class="n">116</td><td>ceramic 46, LTCC 44, lumped 10, thin film 8, cavity 7</td><td>ABF-3R3G+ (thin film, 3.1–3.5 GHz)</td></tr>
+    <tr><td>25–67 %</td><td class="n">43</td><td>LTCC 22, lumped 9, suspended substrate 5, thin film 4, reflectionless 3</td><td>ABF-8G+ (thin film, 6.2–9.8 GHz); BFCN-1801+ (LTCC, 1.4–2.32 GHz)</td></tr>
+    <tr><td>octave and more</td><td class="n">9</td><td>lumped 4, LTCC 3, suspended substrate 2</td><td>BFCN-5100+ (LTCC, 3.1–7.1 GHz); BFCG-162W+ (LTCC, 0.95–2.2 GHz)</td></tr>
+  </tbody>
+</table></div>
+<p class="meta">Parsed from the passband in each part's description in data/catalog/rf_competitors/mini-circuits.yaml (330 band-pass filters with a stated passband centred at 1–11 GHz; ±a few for parsing). Skyworks and Qorvo: no LTCC, ceramic-resonator, cavity, thin-film or IPD filter in the catalogues; “ceramic” appears only as a package material.</p>
+
+<h3>Where the BizDev library needs wideband filtering</h3>
+<ul>
+  <li><b>Defense and test:</b> defense / tactical software-defined radio (TI); electronic warfare receiver / jammer (TI); radar warning receiver with a wideband band-pass filter bank (RF Essentials); swept-tuned spectrum analyzer with YIG preselector and two-port vector network analyzer (RF Essentials).</li>
+  <li><b>Satellite:</b> satellite communications payload with RF sampling (TI); LEO user terminals are covered in the market notes below.</li>
+  <li><b>Wi-Fi 6E/7 and 5G FR1:</b> Wi-Fi 7 access points (MediaTek, Qualcomm, NXP, TI), massive MIMO and small-cell radios (Skyworks, TI, NXP).</li>
+  <li><b>UWB:</b> smart car access with UWB anchors (NXP) and phone UWB sockets.</li>
+</ul>
+
+<h3>Who makes wideband filters (competitors, summary)</h3>
+<div class="wrap"><table>
+  <thead><tr><th scope="col">Maker</th><th scope="col">Wideband technologies</th><th scope="col">Basis</th></tr></thead>
+  <tbody>
+    <tr><td>Mini-Circuits</td><td>LTCC, lumped LC, thin film, suspended substrate, reflectionless, cavity; catalogue to 40 GHz+</td><td>BizDev data (high)</td></tr>
+    <tr><td>Knowles (Dielectric Labs, Novacap and others)</td><td>thin-film and ceramic filters, cavity filters, filter banks for defense</td><td>source 49 (med)</td></tr>
+    <tr><td>Murata</td><td>LTCC filters and diplexers; XBAR acoustic filters for n77, n79 and Wi-Fi 6 GHz</td><td>sources 30, A7 (med)</td></tr>
+    <tr><td>Anatech Electronics</td><td>cavity, ceramic, LC and microstrip filters, standard and custom</td><td>general knowledge, not checked (low)</td></tr>
+    <tr><td>Trans-Tech with Lark (PIDC)</td><td>ceramic 0.2–8 GHz; custom cavity, lumped and waveguide to 40 GHz</td><td>sources 14, 17; BizDev data (med)</td></tr>
+    <tr><td>Johanson, Yageo, Kyocera AVX, Abracon</td><td>LTCC and thin-film chip filters (Wi-Fi, UWB)</td><td>sources A7, 45, 46 (med)</td></tr>
+    <tr><td>ADI</td><td>tunable MMIC filters (ADMV8818 2–18 GHz, ADMV8913 7–12 GHz)</td><td>sources A4, A5 (med)</td></tr>
+    <tr><td>MACOM, Mercury, Quantic PMI, ED2, K&amp;L, Smiths</td><td>switched filter banks, MMIC and planar filters for defense</td><td>sources A9, 33, 55 (med)</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Wideband product options, with our parts</h3>
+<ol class="opps">
+  <li><b>Switched preselector bank (about 0.4–6 GHz, 6–8 channels, est).</b> QPC2180 SP8T (0.1–8 GHz) or QPC6144 SP4T (to 10 GHz) at both ends, bypass path, optional TGL2206 limiter and QPL9097-class LNA; channels from a partner's LTCC or thin-film filters, BAW where a channel is narrow enough. Starting point: the QPB1029/1033/1034/1036 bank designs.</li>
+  <li><b>BAW + IPD hybrid</b> for the full 6 GHz Wi-Fi band and full n77: grows SKY85921-11 and the Meshplexer passives (source 19 shows the method).</li>
+  <li><b>Anti-jam GNSS / L-band element front end:</b> one 1.16–1.61 GHz filter (partner ceramic or LTCC), CLA460x limiter and SKY55951-class LNA per element; SAW per band where needed.</li>
+  <li><b>Tunable preselector:</b> SMV varactors and our switches; long shot against ADI's MMICs (5–9 dB loss is the bar).</li>
+</ol>
+
 <h2>Adjacent products and technologies: detail</h2>
 <div class="adj">
 <p>Compiled 2026-10-20 to support <code>filters-1-11ghz.html</code>. "Ours" = Skyworks + Qorvo (combination closed Oct 2026, market.md [S1–S4]).</p>

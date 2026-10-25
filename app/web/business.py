@@ -832,6 +832,9 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
     c["verdicts"] = quality.VERDICTS
     c["walk_parts"] = walk.competitor_parts(session, fn)
     c["library"] = library.for_function(fn)
+    from app.services import key_apps  # key applications (owner, 24 Oct 2026)
+
+    c["key_apps"] = key_apps.for_function(fn)
     return templates.TemplateResponse(request, "business/evidence.html", c)
 
 

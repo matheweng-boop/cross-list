@@ -1,0 +1,143 @@
+# Shareable reports for management (owner, 25 Oct 2026: "2 different reports that are more applicable to a management
+# level"): Skyworks + Qorvo synergies (/shareable/synergies) and its extension, Automotive: technologies and
+# applications (/shareable/automotive). Each is about 3 A4 pages, public and positive.
+#
+# Only the plain-language words live here; every count comes from the site's data when the page is built
+# (app/services/share_reports.py) and is shown rounded ("4,500+"). The owner edits the pages on the site (Edit, owner
+# only); edits are stored in the database over these defaults, the same way as the Technology overview.
+#
+# Rules: public facts only (10-K filings, public catalogues); no comparisons with other companies, plans, prices or
+# market sizes. Manufacturing is described at capability level only: which processes each company runs in-house,
+# assembly and test, module integration, silicon from foundry partners. Never a site, a city, a named partner, or
+# which product is made where (tests/test_share_reports.py checks the rendered pages against the word list).
+updated: 2026-10-25
+
+synergies:
+  title: "Skyworks + Qorvo synergies"
+  header: {title: "Skyworks + Qorvo · Synergies", subtitle: ""}
+  sections:
+    glance:
+      heading: "Combined at a glance"
+      paragraphs:
+        - id: syn-glance-1
+          text: >-
+            Skyworks and Qorvo, combined since October 2026, bring together two complementary RF and mixed-signal
+            portfolios: high-volume front ends and acoustic filters, high-power GaN and broadband microwave parts, and
+            silicon lines for isolation, timing, broadcast radio and power.
+    manufacturing:
+      heading: "Manufacturing capabilities"
+      paragraphs:
+        - id: syn-mfg-1
+          text: >-
+            Both companies make their key RF technologies in-house and combine them in modules; silicon comes from
+            foundry partners. Capability level only, from the public annual reports (Form 10-K).
+    technologies:
+      heading: "Key technologies per company"
+      paragraphs:
+        - id: syn-tech-1
+          text: "Who brings which technology platform to the combined company."
+    overlap:
+      heading: "Product overlap"
+      paragraphs:
+        - id: syn-overlap-1
+          text: >-
+            Product families in the public catalogues, by who offers them. Shared families give customers a second
+            source within one company; the others add reach.
+    combine:
+      heading: "Where the two combine"
+      paragraphs:
+        - id: syn-combine-1
+          text: >-
+            Pairs of products that sit next to each other in reference designs, with Skyworks leading in one and Qorvo
+            in the other. One example series each.
+  facts:
+    parts: {label: "active parts"}
+    families: {label: "product families"}
+    shared: {label: "families both offer"}
+    platforms: {label: "technology platforms"}
+    automotive: {label: "automotive-grade parts"}
+  # capability rows: who runs it (In-house / Foundry partners / In-house and partners / "–" for not offered)
+  manufacturing:
+    - {label: "GaAs HBT (power amplifiers)", skyworks: "In-house", qorvo: "In-house"}
+    - {label: "GaAs pHEMT (switches, low-noise amplifiers)", skyworks: "In-house", qorvo: "In-house"}
+    - {label: "BAW filters", skyworks: "In-house", qorvo: "In-house"}
+    - {label: "SAW and TC-SAW filters", skyworks: "In-house", qorvo: "In-house"}
+    - {label: "GaN on SiC (high power)", skyworks: "–", qorvo: "In-house"}
+    - {label: "Silicon: RF SOI, SiGe, CMOS mixed-signal", skyworks: "Foundry partners", qorvo: "Foundry partners"}
+    - {label: "Module and system-in-package integration", skyworks: "In-house", qorvo: "In-house"}
+    - {label: "Assembly and test", skyworks: "In-house and partners", qorvo: "In-house and partners"}
+  # one plain line per pair ("<Skyworks function> + <Qorvo function>"); pairs without a line use the automotive
+  # reasons in synergies_auto.yaml, else a generic line
+  pairs:
+    "rf_synthesizer + rf_mixer": "A Skyworks synthesizer drives the local oscillator of a Qorvo mixer in the same radio chain."
+    "rf_synthesizer + rf_gain_block": "The Skyworks synthesizer's output is lifted by a Qorvo gain block before the mixer or transmitter."
+    "diversity_rx_module + pa_module": "One cellular front end: Skyworks diversity receive next to Qorvo transmit modules."
+    "diversity_rx_module + filter_saw_baw": "Skyworks receive modules with Qorvo acoustic filters on the same antenna paths."
+    "antenna_switch + lna": "The Skyworks switch picks the antenna path, the Qorvo LNA amplifies it."
+    "schottky_diode + filter_saw_baw": "Skyworks detector diodes and Qorvo filters in the same receive and sensing chains."
+    "poe_pd + wide_vin_buck": "Skyworks Power over Ethernet interfaces feed Qorvo wide-input converters in networked devices."
+    "am_fm_tuner + lna": "A Qorvo active-antenna LNA feeds the Skyworks car radio tuner."
+  sources:
+    - "Parts and families: the public Skyworks and Qorvo product catalogues, active parts only; counts rounded down."
+    - "Manufacturing and technology platforms: Skyworks and Qorvo Form 10-K filings (FY2025)."
+    - "Pairs: public reference designs and application diagrams."
+
+automotive:
+  title: "Automotive: technologies and applications"
+  header: {title: "Skyworks + Qorvo · Automotive", subtitle: ""}
+  sections:
+    offer:
+      heading: "The combined automotive offer"
+      paragraphs:
+        - id: auto-offer-1
+          text: >-
+            In the car, the combined portfolio connects, senses and powers: UWB digital keys, broadcast radio,
+            telematics and V2X front ends, clocks for compute, and isolated gate drivers and sensing for the electric
+            powertrain, battery and charging.
+    technologies:
+      heading: "Key technologies in the car"
+      paragraphs:
+        - id: auto-tech-1
+          text: "The technology platforms of the automotive parts, and what each does in the car."
+    applications:
+      heading: "Applications by sub-system"
+      paragraphs:
+        - id: auto-apps-1
+          text: "Where the parts go in the car. Series listed are AEC-Q qualified (automotive grade in the catalogue)."
+    pairs:
+      heading: "Skyworks + Qorvo in the car"
+      paragraphs:
+        - id: auto-pairs-1
+          text: >-
+            Pairs that sit together in automotive reference designs. Example series are AEC-Q qualified only.
+  facts:
+    automotive: {label: "automotive-grade parts"}
+    skyworks: {label: "from Skyworks"}
+    platforms: {label: "technology platforms in the car"}
+    subsystems: {label: "sub-systems in the car"}
+    families: {label: "product families with automotive parts"}
+  # platform keys of data/business/tech_overview.yaml with what each does in the car
+  technologies:
+    isolation: "Isolated gate drivers, isolators and isolated sensing for inverters, battery and chargers."
+    broadcast: "AM/FM, DAB and HD Radio tuners for the head unit."
+    wireless: "UWB ranging for digital keys and in-cabin presence."
+    gaas_hbt: "Power amplifiers in cellular, V2X and Wi-Fi front ends."
+    soi: "RF switches and antenna routing in telematics units."
+    modules: "Complete front-end modules for cellular, V2X and GNSS."
+    timing: "PCIe clocks and buffers for domain controllers."
+  # sub-systems of data/blocks/systems.yaml (automotive): one line and 2-3 candidate series (trailing x's stand for
+  # any characters); only series with AEC-Q-qualified active parts are shown
+  subsystems:
+    car-access: {line: "UWB ranging for digital keys, hands-free entry and in-cabin presence.", series: [DW3300Q, QPF5100Q]}
+    car-radio: {line: "AM/FM, DAB and HD Radio tuners and digital radio coprocessors.", series: [Si479xx, Si469xx]}
+    telematics-v2x: {line: "Automotive cellular, V2X and GNSS front-end modules.", series: [SKY5Axxxx, QPF4554Q, QPF1003Q]}
+    adas: {line: "Automotive PCIe clock generators and buffers for domain controllers.", series: [Si5332x, Si522xx]}
+    powertrain: {line: "Isolated gate drivers and isolated sensing for traction inverters.", series: [Si823x, Si82Fx, Si89xx]}
+    battery-power: {line: "Digital isolators for battery management; wide-input converters off the battery.", series: [Si86xx, ACT4751xx]}
+    charging: {line: "Isolated gate drivers and isolators with power for on-board and DC chargers.", series: [Si82Ex, Si88xx]}
+    cockpit: {line: "Wi-Fi diplexers and RF switches for the head unit and connected cockpit.", series: [TQM2M9xxx, QPC80xx]}
+  standards: [AEC-Q100, AEC-Q200, ISO 26262, IEC 60747-17, IEEE 802.15.4z, CCC Digital Key, 3GPP C-V2X, PCI Express]
+  sources:
+    - "Automotive-grade parts: as marked in the public Skyworks and Qorvo catalogues (AEC-Q); counts rounded down."
+    - "Sub-systems and pairs: public reference designs and application diagrams."
+    - "Standards: named for orientation only."

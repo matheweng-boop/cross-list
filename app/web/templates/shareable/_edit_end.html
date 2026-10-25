@@ -1,0 +1,40 @@
+{# Shareable reports, edit mode: version history, end of the edit form, the paragraph template and the editor script #}
+  <details class="te-history"><summary>Version history ({{ history|length }})</summary>
+    <ol>{% for v in history %}<li>{{ v.created_at|date('stamp') }} · {{ v.author }} · {{ v.note or 'Saved' }}{% if v.undone_at %} <span class="te-tag">undone</span>{% endif %}</li>{% else %}<li>No edits yet: the page shows the defaults.</li>{% endfor %}</ol>
+  </details>
+  </form>
+  <template id="te-para-tpl"><div class="te-para"><input type="hidden" name="pid.SECTION" value=""><textarea name="paras.SECTION" rows="4" aria-label="New paragraph"></textarea><div class="te-tools"><span class="small muted">New paragraph: Save to keep it.</span></div></div></template>
+  <script>
+  (() => {
+    const form = document.getElementById("te-form");
+    const count = el => {
+      const c = el.closest(".te-f")?.querySelector(".te-count");
+      if (c && el.dataset.max) c.textContent = `${el.value.length} / ${el.dataset.max}`;
+    };
+    const total = box => {
+      const n = [...box.querySelectorAll("textarea[name^='paras.']")].reduce((s, t) => s + t.value.trim().length, 0);
+      const k = box.querySelectorAll("textarea[name^='paras.']").length, max = +box.dataset.total, most = +box.dataset.count;
+      const c = box.querySelector(".te-ptotal");
+      if (c) c.textContent = `${k} of at most ${most} paragraphs, ${n} of ${max} characters`;
+      box.classList.toggle("te-bad", n > max || k > most);
+    };
+    document.querySelectorAll(".te-paras").forEach(total);
+    document.addEventListener("input", e => {
+      if (e.target.dataset.max) count(e.target);
+      const box = e.target.closest(".te-paras");
+      if (box) total(box);
+      if (e.target.form === form || e.target.getAttribute("form") === null) form.dataset.dirty = "1";
+    });
+    document.addEventListener("click", e => {
+      const ask = e.target.closest("[data-confirm]");
+      if (ask && !confirm(ask.dataset.confirm)) { e.preventDefault(); return; }
+      const add = e.target.closest("[data-add]");
+      if (!add) return;
+      const s = add.dataset.add, box = add.closest(".te-paras");
+      const html = document.getElementById("te-para-tpl").innerHTML.replaceAll("SECTION", s);
+      add.closest("p").insertAdjacentHTML("beforebegin", html);
+      box.querySelectorAll("textarea[name^='paras.']")[box.querySelectorAll("textarea[name^='paras.']").length - 1].focus();
+      total(box);
+    });
+  })();
+  </script>

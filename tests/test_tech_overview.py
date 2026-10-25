@@ -19,6 +19,7 @@ from app.services import opportunity as op
 from app.services import portfolio as pf
 from app.services import tech_overview as to
 from app.services import tech_overview_edit as te
+from app.services.text import round_count
 from app.web import nav
 
 URL = "/shareable/technology-overview"
@@ -150,7 +151,7 @@ def test_four_sections_with_the_numbers_from_the_catalogue(client):
     cats = pf.product_categories()  # the same counts as Cross-sell > Skyworks + Qorvo portfolio
     total = cats["totals"]["Skyworks"] + cats["totals"]["Qorvo"]
     nums = {f["key"]: f["num"] for f in b["facts"]}
-    assert nums["parts"] == f"{total:,}" and f"{total:,}" in html
+    assert nums["parts"] == f"{total:,}" and f">{round_count(total)}<" in html  # shown rounded (owner, 25 Oct 2026)
     assert int(nums["families"]) == len([r for r in cats["rows"] if r["label"] != pf.OTHER_CATEGORY])
     assert int(nums["platforms"]) == len(b["platforms"]) == len(b["matrix"])
     assert int(nums["markets"]) == len(b["markets"]) == 6
@@ -233,7 +234,7 @@ def _versions() -> list[PageTextVersion]:
 
 def test_owner_edits_a_text_and_a_number_and_undoes(client):
     edit = client.get(EDIT).text
-    assert "automatic: 4,621 from the catalogue" in edit or "automatic: " in edit
+    assert "automatic: 4,500+ (exact 4,621) from the catalogue" in edit or "automatic: " in edit
     assert 'name="fact.parts.num"' in edit and 'name="paras.glance"' in edit
     r = client.post(EDIT, data={"fact.parts.num": "5,000", "plat.gan.what": "Wide-bandgap transistors for power.",
                                 "dot.gan.mobile": "Qorvo"}, follow_redirects=False)  # fmt: skip
@@ -243,11 +244,11 @@ def test_owner_edits_a_text_and_a_number_and_undoes(client):
     gan = re.search(r'<tr><th scope="row">GaN on SiC</th>(.*?)</tr>', html).group(1)
     assert gan.startswith('<td><span class="to-dot to-qorvo"')  # the owner's dot in the Mobile column
     edit = client.get(EDIT).text
-    assert "overridden" in edit and "Back to automatic" in edit and "automatic: 4,621 from the catalogue" in edit
+    assert "overridden" in edit and "Back to automatic" in edit and "automatic: 4,500+ (exact 4,621)" in edit
     v = _versions()[-1]
-    assert v.fields["fact.parts.num"] == "5,000" and v.auto["fact.parts.num"] == "4,621"
+    assert v.fields["fact.parts.num"] == "5,000" and v.auto["fact.parts.num"] == "4,500+"
     client.post(EDIT + "/undo")
-    assert ">5,000<" not in client.get(URL).text and ">4,621<" in client.get(URL).text
+    assert ">5,000<" not in client.get(URL).text and ">4,500+<" in client.get(URL).text
 
 
 def test_a_blocked_word_is_not_saved_and_says_why(client):

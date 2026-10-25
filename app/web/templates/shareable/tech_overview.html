@@ -5,70 +5,7 @@
    owner's edits from the database. On the edit page (owner only) each field is an input. #}
 <link rel="stylesheet" href="/static/shareable.css">
 {% set me = signed_in(request) %}
-{% macro who(x) %}<span class="to-who to-{{ (x or 'none')|lower }}">{{ x }}</span>{% endmacro %}
-{% macro pfoot(n) %}<p class="to-pfoot">{{ vals['title'] }} · Public information · {{ today|date }}{% if o.wm_text %} · <span class="to-wm-tag">{{ o.wm_text }}</span>{% endif %}<span>{{ n }} / {{ o.pages }}</span></p>{% endmacro %}
-{# the header band at the top of every page: optional logo (left or right, small or medium), title line, subtitle #}
-{% macro band() %}<div class="to-band{{ ' to-band-right' if vals['hdr.logo_align'] == 'right' }}">{% if logo %}<img class="to-logo to-logo-{{ vals['hdr.logo_size'] }}" src="/shareable/logo/{{ logo.id }}" alt="Logo">{% endif %}<span class="to-band-text"><b>{{ vals['hdr.title'] }}</b>{% if vals['hdr.subtitle'] %}<span>{{ vals['hdr.subtitle'] }}</span>{% endif %}</span></div>{% endmacro %}
-
-{% macro comment(bid) %}{% if edit %}
-  {% set mine = comments|selectattr('block', 'equalto', bid)|list %}
-  <details class="te-c"{% if errors[bid] and not specs[bid] is defined %} open{% endif %}><summary>Comment{% if mine %} ({{ mine|length }} open){% endif %}</summary>
-    <textarea name="ctext.{{ bid }}" form="te-cf" rows="2" maxlength="1000" aria-label="Comment" placeholder="What should change? For example: make this shorter, mention Wi-Fi 7"></textarea>
-    <button type="submit" form="te-cf" name="block" value="{{ bid }}" class="te-mini">Send comment</button>
-  </details>
-  {% for c in mine %}<div class="te-open" id="c-{{ c.id }}"><span><b>Open comment</b> {{ c.text }} <span class="muted">({{ c.created_at|date }})</span></span>
-    <input name="reply.{{ c.id }}" form="te-rf" maxlength="300" aria-label="Reply" placeholder="Reply (optional)">
-    <button type="submit" form="te-rf" name="cid" value="{{ c.id }}" class="te-mini">Resolve</button></div>{% endfor %}
-{% endif %}{% endmacro %}
-
-{% macro F(fid, rows=2) -%}
-{%- set v = vals[fid] -%}
-{%- if not edit -%}{{ v|join(' · ') if v is iterable and v is not string else v }}{%- else -%}{%- set s = specs[fid] -%}
-<span class="te-f te-{{ s.kind }}{{ ' te-over' if fid in over }}{{ ' te-bad' if errors[fid] }}" id="f-{{ fid }}">
-  {%- if s.kind in ('owner', 'dot', 'choice') -%}
-  {%- set opts = s.options if s.kind == 'choice' else (('',) if s.kind == 'dot' else ()) + owners -%}
-  {%- set names = {'': 'None', 'none': 'None', 'draft': 'Draft', 'confidential': 'Confidential', 'discussion': 'For discussion', 'custom': 'Custom (text below)', 'left': 'Left', 'right': 'Right', 'small': 'Small', 'medium': 'Medium'} -%}
-  <select name="{{ fid }}" aria-label="{{ s.label }}">{% for x in opts %}<option value="{{ x }}"{{ ' selected' if v == x }}>{{ o.markets[x].title if x in o.markets else names.get(x, x) }}</option>{% endfor %}</select>
-  {%- elif s.kind == 'chips' -%}
-  <textarea name="{{ fid }}" rows="{{ [v|length, 3]|max }}" aria-label="{{ s.label }}">{{ v|join('\n') }}</textarea>
-  {%- elif s.kind == 'text' -%}
-  <textarea name="{{ fid }}" rows="{{ rows }}" maxlength="{{ s.max }}" data-max="{{ s.max }}" aria-label="{{ s.label }}">{{ v }}</textarea>
-  {%- else -%}
-  <input name="{{ fid }}" value="{{ v }}" maxlength="{{ s.max }}" data-max="{{ s.max }}" aria-label="{{ s.label }}">
-  {%- endif -%}
-  <span class="te-meta">
-    {%- if s.max and s.kind in ('line', 'text', 'data') %}<span class="te-count">{{ v|string|length }} / {{ s.max }}</span>{% endif -%}
-    {%- if s.auto %}{% set a = auto(fid, vals) %}<span class="te-auto">automatic: {{ a or 'no dot' }}{% if s.kind != 'dot' %} from the catalogue{% endif %}</span>{% endif -%}
-    {%- if fid in over %}<span class="te-tag">{{ 'overridden' if s.auto else 'edited' }}</span><button type="submit" class="te-mini" formaction="{{ edit_url }}/reset" name="field" value="{{ fid }}">{{ 'Back to automatic' if s.auto else 'Reset to default' }}</button>{% endif -%}
-  </span>
-  {%- if errors[fid] %}<span class="te-msg" role="alert">{{ errors[fid] }}</span>{% endif -%}
-  {%- if s.kind in ('line', 'text', 'chips') and not fid.startswith(('hdr.', 'wm.')) %}{{ comment(fid) }}{% endif -%}
-</span>
-{%- endif -%}
-{%- endmacro %}
-
-{% macro paras(s, cls) %}{% set key = 'paras.' ~ s %}
-{% if edit %}{% set most, most_chars = para_limits(s) %}
-<div class="te-paras{{ ' te-over' if key in over }}{{ ' te-bad' if errors[key] }}" data-section="{{ s }}" data-total="{{ most_chars }}" data-count="{{ most }}" id="f-{{ key }}">
-  {% for p in vals[key] %}
-  <div class="te-para" id="para-{{ p.id }}">
-    <input type="hidden" name="pid.{{ s }}" value="{{ p.id }}">
-    <textarea name="{{ key }}" rows="4" aria-label="Paragraph {{ loop.index }}">{{ p.text }}</textarea>
-    <div class="te-tools">
-      <button type="submit" class="te-mini" name="op" value="up:{{ s }}:{{ p.id }}"{{ ' disabled' if loop.first }}>Move up</button>
-      <button type="submit" class="te-mini" name="op" value="down:{{ s }}:{{ p.id }}"{{ ' disabled' if loop.last }}>Move down</button>
-      <button type="submit" class="te-mini te-del" name="op" value="del:{{ s }}:{{ p.id }}" data-confirm="Delete this paragraph? (Undo brings it back.)">Delete</button>
-      {{ comment('para.' ~ p.id) }}
-    </div>
-  </div>
-  {% endfor %}
-  <p class="te-meta"><button type="button" class="te-mini te-add" data-add="{{ s }}">Add a paragraph</button>
-    <span class="te-count te-ptotal">at most {{ most }} paragraphs, {{ most_chars }} characters together</span>
-    {% if key in over %}<span class="te-tag">edited</span><button type="submit" class="te-mini" formaction="{{ edit_url }}/reset" name="field" value="{{ key }}">Reset to default</button>{% endif %}</p>
-  {% if errors[key] %}<p class="te-msg" role="alert">{{ errors[key] }}</p>{% endif %}
-</div>
-{% else %}{% for p in vals[key] %}<p class="{{ cls }}">{{ p.text }}</p>{% endfor %}{% endif %}
-{% endmacro %}
+{% from "shareable/_macros.html" import who, pfoot, band, comment, F, paras with context %}
 
 {% if o.wm_text %}<div class="to-wm" aria-hidden="true"><span>{{ o.wm_text }}</span></div>{% endif %}
 {% if not edit %}
@@ -103,20 +40,7 @@
 {% endif %}
 <div class="to{{ ' te' if edit }}" id="tech-overview">
 {% if edit %}
-  <form id="te-cf" method="post" action="{{ edit_url }}/comment"></form>
-  <form id="te-rf" method="post" action="{{ edit_url }}/resolve"></form>
-  <form id="te-undo" method="post" action="{{ edit_url }}/undo"></form>
-  <form id="te-resetall" method="post" action="{{ edit_url }}/reset"><input type="hidden" name="all" value="1"></form>
-  <form id="te-logo" method="post" action="{{ edit_url }}/logo" enctype="multipart/form-data"></form>
-  <form id="te-logo-rm" method="post" action="{{ edit_url }}/logo/remove"></form>
-  <form id="te-form" method="post" action="{{ edit_url }}">
-  <div class="te-bar">
-    <button type="submit" class="te-save">Save</button>
-    <a href="/shareable/technology-overview" role="button" class="secondary outline te-cancel">Cancel</a>
-    <button type="submit" form="te-undo" class="secondary outline">Undo last change</button>
-    <button type="submit" form="te-resetall" class="secondary outline" data-confirm="Reset every text and number to the defaults? Undo brings your edits back.">Reset all</button>
-    {% if message %}<span class="te-status{{ ' te-bad' if errors }}" role="status">{{ message }}{% for fid, why in errors.items() if fid in specs or fid.startswith('paras.') %} <a href="#f-{{ fid }}">{{ specs[fid].label if fid in specs else 'Paragraphs' }}: {{ why }}</a>{% endfor %}</span>{% endif %}
-  </div>
+{% set page_url = "/shareable/technology-overview" %}{% include "shareable/_edit_top.html" %}
   <p class="te-help small">Edit any text or number, then Save. Numbers show their automatic value from the catalogue; “Back to automatic” returns to it. A comment asks the next daily run to rewrite that text. {% if comments %}<b>{{ comments|length }} open comment{{ 's' if comments|length != 1 }}.</b>{% endif %}</p>
   <fieldset class="te-settings" id="f-settings"><legend>Header, logo and page options</legend>
     <div class="te-grid">
@@ -218,10 +142,10 @@
       <h3>Learn more</h3>
       <ul>{% for _ in t.cur.learn_more or [] %}{% set k = 'learn.' ~ loop.index0 %}<li>{% if edit %}{{ F(k ~ '.label') }} {{ F(k ~ '.url') }}{% else %}<a href="{{ vals[k ~ '.url'] }}" rel="noopener" target="_blank">{{ vals[k ~ '.label'] }}</a> <span class="to-url">{{ vals[k ~ '.url'] }}</span>{% endif %}</li>{% endfor %}</ul>
     </div>
-    <div class="to-src small">
-      <b>Sources.</b> {% for _ in t.cur.sources or [] %}{{ F('src.' ~ loop.index0) }} {% endfor %}{% if t.unclassified %}{{ '{:,}'.format(t.unclassified) }} catalogue parts without a family are counted in the total only.{% endif %}
+    {% if not pack_sources_later %}<div class="to-src small">
+      <b>Sources.</b> {% for _ in t.cur.sources or [] %}{{ F('src.' ~ loop.index0) }} {% endfor %}{% if t.unclassified %}{{ t.unclassified|rounded }} catalogue parts without a family are counted in the total only.{% endif %}
       Prepared {{ today|date }}{% if t.catalogue_date %}; catalogue as of {{ t.catalogue_date|date }}{% endif %}. Public information.
-    </div>
+    </div>{% endif %}
     {{ pfoot(4) }}
   </section>
 
@@ -247,45 +171,7 @@
   {% endif %}
 
 {% if edit %}
-  <details class="te-history"><summary>Version history ({{ history|length }})</summary>
-    <ol>{% for v in history %}<li>{{ v.created_at|date('stamp') }} · {{ v.author }} · {{ v.note or 'Saved' }}{% if v.undone_at %} <span class="te-tag">undone</span>{% endif %}</li>{% else %}<li>No edits yet: the page shows the defaults.</li>{% endfor %}</ol>
-  </details>
-  </form>
-  <template id="te-para-tpl"><div class="te-para"><input type="hidden" name="pid.SECTION" value=""><textarea name="paras.SECTION" rows="4" aria-label="New paragraph"></textarea><div class="te-tools"><span class="small muted">New paragraph: Save to keep it.</span></div></div></template>
-  <script>
-  (() => {
-    const form = document.getElementById("te-form");
-    const count = el => {
-      const c = el.closest(".te-f")?.querySelector(".te-count");
-      if (c && el.dataset.max) c.textContent = `${el.value.length} / ${el.dataset.max}`;
-    };
-    const total = box => {
-      const n = [...box.querySelectorAll("textarea[name^='paras.']")].reduce((s, t) => s + t.value.trim().length, 0);
-      const k = box.querySelectorAll("textarea[name^='paras.']").length, max = +box.dataset.total, most = +box.dataset.count;
-      const c = box.querySelector(".te-ptotal");
-      if (c) c.textContent = `${k} of at most ${most} paragraphs, ${n} of ${max} characters`;
-      box.classList.toggle("te-bad", n > max || k > most);
-    };
-    document.querySelectorAll(".te-paras").forEach(total);
-    document.addEventListener("input", e => {
-      if (e.target.dataset.max) count(e.target);
-      const box = e.target.closest(".te-paras");
-      if (box) total(box);
-      if (e.target.form === form || e.target.getAttribute("form") === null) form.dataset.dirty = "1";
-    });
-    document.addEventListener("click", e => {
-      const ask = e.target.closest("[data-confirm]");
-      if (ask && !confirm(ask.dataset.confirm)) { e.preventDefault(); return; }
-      const add = e.target.closest("[data-add]");
-      if (!add) return;
-      const s = add.dataset.add, box = add.closest(".te-paras");
-      const html = document.getElementById("te-para-tpl").innerHTML.replaceAll("SECTION", s);
-      add.closest("p").insertAdjacentHTML("beforebegin", html);
-      box.querySelectorAll("textarea[name^='paras.']")[box.querySelectorAll("textarea[name^='paras.']").length - 1].focus();
-      total(box);
-    });
-  })();
-  </script>
+{% include "shareable/_edit_end.html" %}
 {% endif %}
 </div>
 {% endblock %}

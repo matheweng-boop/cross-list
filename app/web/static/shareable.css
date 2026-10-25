@@ -211,3 +211,68 @@
 }
 /* editor: the comment box and counter inside the title use body text, not the heading font */
 #to-h1 .te-c, #to-h1 .te-meta { font-family: var(--pico-font-family); font-weight: 400; letter-spacing: normal; text-transform: none; }
+
+/* management reports (owner, 25 Oct 2026): Skyworks + Qorvo synergies and Automotive; same pages, band and footer
+   as the Technology overview */
+.sr-facts-5 { grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); }
+.sr-mfg { width: 100%; }
+.sr-mfg thead th:not(:first-child) { width: 24%; }
+.sr-mfg tbody th { font-weight: 500; }
+.sr-mfg .to-who { margin-left: 0; }
+.sr-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: .3rem 0 .4rem; }
+.sr-col { padding: .5rem .7rem; border-radius: .5rem; border-top: 4px solid var(--w, var(--pico-primary));
+  background: color-mix(in srgb, var(--w, var(--pico-primary)) 9%, transparent); }
+.sr-skyworks { --w: var(--c-sky); } .sr-qorvo { --w: var(--c-qor); } .sr-both { --w: var(--c-both); }
+.sr-col h3 { display: flex; justify-content: space-between; gap: .4rem; margin: 0 0 .3rem; font-size: .95rem; }
+.sr-n { font-size: .75rem; font-weight: 500; color: var(--pico-muted-color); }
+.sr-col ul { margin: 0; padding: 0; font-size: .84rem; }
+.sr-col li { list-style: none; margin: 0 0 .12rem; }
+.sr-overlap li { display: flex; justify-content: space-between; gap: .5rem; border-bottom: 1px dotted var(--pico-muted-border-color); }
+.sr-overlap li b { white-space: nowrap; font-weight: 600; }
+.sr-ip { display: inline-block; font-size: .66rem; font-weight: 600; padding: 0 .35rem; border-radius: .5rem;
+  border: 1px solid var(--pico-muted-border-color); color: var(--pico-muted-color); white-space: nowrap; }
+.sr-note { margin: .1rem 0 .6rem; color: var(--pico-muted-color); }
+.sr-pairs { margin: .2rem 0 .8rem; padding-left: 1.3rem; }
+.sr-pairs li { margin: 0 0 .55rem; font-size: .9rem; }
+.sr-pairs li > b, .sr-pairs li > span { display: block; }
+.sr-pairs .to-who { margin: 0 .2rem 0 0; }
+.sr-plus { margin: 0 .3rem; color: var(--pico-muted-color); }
+.sr-ex { color: var(--pico-muted-color); } .sr-ex code { font-size: .78rem; padding: 0 .25rem; }
+.sr-row { display: grid; grid-template-columns: 16rem 1fr; gap: .2rem 1rem; padding: .35rem 0;
+  border-bottom: 1px solid var(--pico-muted-border-color); font-size: .9rem; }
+.sr-ext a { text-transform: none; }
+.sr-std { margin: .2rem 0 .6rem !important; }
+.to-series small { display: block; }
+@media (max-width: 760px) {
+  .sr-cols { grid-template-columns: 1fr; }
+  .sr-row { grid-template-columns: 1fr; }
+  .sr-mfg thead { display: none; }
+  .sr-mfg tr { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .7rem; padding: .3rem 0;
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .sr-mfg tbody th { grid-column: 1 / -1; }
+  .sr-mfg th, .sr-mfg td { border: 0; padding: .05rem 0; }
+  .sr-mfg td::before { content: attr(data-l) ": "; color: var(--pico-muted-color); font-size: .75rem; }
+}
+.te .sr-row, .te .sr-cols { grid-template-columns: 1fr; }
+@media print {
+  .sr-facts-5 { grid-template-columns: repeat(5, 1fr); }
+  .sr-cols { grid-template-columns: repeat(3, 1fr); }
+  .sr-col li { font-size: .8rem; }
+  .sr-pairs li { font-size: .84rem; margin-bottom: .4rem; }
+  .sr-row { grid-template-columns: 14rem 1fr; font-size: .84rem; padding: .28rem 0; }
+  .sr-mfg th, .sr-mfg td { padding: .2rem .35rem; font-size: .84rem; }
+  /* the combined PDF: every report starts on a new page (each .to-page already does) */
+  .sr-pack-part .to-page { break-before: page; }
+  .sr-pack-part:first-child .to-page:first-of-type { break-before: auto; }
+}
+
+/* landing page: Build a PDF */
+.sh-pack { max-width: 40rem; margin: 1.4rem 0; padding: .9rem 1rem; border: 1px solid var(--pico-muted-border-color);
+  border-radius: .5rem; border-top: 3px solid var(--pico-primary); }
+.sh-pack h2 { margin: 0 0 .3rem; font-size: 1.15rem; }
+.sh-pack label { margin: .3rem 0; }
+.sh-check { display: flex; align-items: center; gap: .5rem; min-height: 44px; font-weight: 600; }
+.sh-check input { margin: 0; }
+.sh-sub { margin-left: 1.8rem !important; font-size: .88rem; }
+.sh-sub select { width: auto; max-width: 100%; margin: .15rem 0 0; min-height: 44px; }
+.sh-pack button { width: auto; margin-top: .6rem; min-height: 44px; }

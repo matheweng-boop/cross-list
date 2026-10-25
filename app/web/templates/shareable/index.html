@@ -8,4 +8,30 @@
   <a class="sh-card" href="{{ href }}"><b>{{ label }}</b><span>{{ desc }}</span></a>
   {% endfor %}
 </div>
+{# Build a PDF (owner, 25 Oct 2026): pick reports, one print view with all of them; the address keeps the choice #}
+<form class="sh-pack" id="build-pdf" method="get" action="/shareable/pack" aria-labelledby="sh-pack-h">
+  <h2 id="sh-pack-h">Build a PDF</h2>
+  <p class="small muted">Pick the reports to put in one PDF. They print in this order, each from a new page.</p>
+  {% for key, label, pages in pack_items %}
+  <label class="sh-check"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }}> {{ label }} <span class="muted small">({{ pages }} pages)</span></label>
+  {% if key == 'overview' %}<label class="sh-sub">Market focus page
+    <select name="focus"><option value="none">None</option>{% for k, m in markets.items() %}<option value="{{ k }}"{{ ' selected' if focus == k }}>{{ m.title }}</option>{% endfor %}</select></label>{% endif %}
+  {% endfor %}
+  <label class="sh-sub">Watermark
+    <select name="wm">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>
+  <button type="submit">Create PDF</button>
+</form>
+<script>
+  // the address lists the reports as r=overview,synergies,automotive (a plain form sends r=..&r=.., which works too)
+  (() => {
+    const f = document.getElementById("build-pdf");
+    f.addEventListener("submit", e => {
+      e.preventDefault();
+      const r = [...f.querySelectorAll("input[name=r]:checked")].map(x => x.value);
+      if (!r.length) { alert("Pick at least one report."); return; }
+      const q = new URLSearchParams({r: r.join(","), focus: f.elements.focus.value, wm: f.elements.wm.value});
+      location.href = f.action + "?" + q.toString().replaceAll("%2C", ",");
+    });
+  })();
+</script>
 {% endblock %}

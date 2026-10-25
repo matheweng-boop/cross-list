@@ -1,0 +1,47 @@
+{# Shareable > Automotive: technologies and applications, the extension of Skyworks + Qorvo synergies (owner, 25 Oct
+   2026). Three A4 pages. Only AEC-Q-qualified series are named (automotive grade in the catalogue). #}
+{% from "shareable/_macros.html" import who, pfoot, band, comment, F, paras with context %}
+  <section class="to-page" id="auto-offer" aria-labelledby="auto-h1">
+    {{ band() }}
+    <p class="to-kicker sr-ext">Extension of: <a href="/shareable/synergies">Skyworks + Qorvo synergies</a></p>
+    <h1 id="auto-h1">{{ F('title') }}</h1>
+    {{ paras('offer', 'to-lead') }}
+    <div class="to-facts sr-facts-5">
+      {% for f in t.facts %}<div class="to-fact"><b>{{ F('fact.' ~ f.key ~ '.num') }}</b><span>{{ F('fact.' ~ f.key ~ '.label') }}</span></div>{% endfor %}
+    </div>
+    <h2>{{ F('sec.technologies.heading') }}</h2>
+    {{ paras('technologies', 'to-sub') }}
+    <div class="to-subs">
+      {% for x in t.tech %}<div class="sr-row"><b>{{ x.label }}{{ who(x.owner) }}{% if x.ip %} <span class="sr-ip">{{ x.ip }}</span>{% endif %}</b><span>{{ F('tech.' ~ x.key ~ '.car') }}</span></div>{% endfor %}
+    </div>
+    {% if t.ip %}<p class="sr-note small">{{ ip_note }}</p>{% endif %}
+    {{ pfoot(1) }}
+  </section>
+
+  <section class="to-page" id="auto-apps" aria-labelledby="auto-h-apps">
+    {{ band() }}
+    <h2 id="auto-h-apps">{{ F('sec.applications.heading') }}</h2>
+    {{ paras('applications', 'to-sub') }}
+    <div class="to-subs">
+      {% for s in t.subsystems %}{% set sk = 'sub.' ~ s.key %}
+      <div class="to-sub-row"><b>{{ F(sk ~ '.title') }}</b><span>{{ F(sk ~ '.line') }}</span><span class="to-series">{% for x in s.series %}<code>{{ x }}</code> {% endfor %}{% if s.n %}<small class="muted">{{ s.n|rounded }} AEC-Q parts</small>{% endif %}</span></div>
+      {% endfor %}
+    </div>
+    <p class="sr-note small">Series ending in x stand for a family of parts; counts are AEC-Q-qualified active parts, rounded down.</p>
+    {{ pfoot(2) }}
+  </section>
+
+  <section class="to-page" id="auto-pairs" aria-labelledby="auto-h-pairs">
+    {{ band() }}
+    <h2 id="auto-h-pairs">{{ F('sec.pairs.heading') }}</h2>
+    {{ paras('pairs', 'to-sub') }}
+    <ol class="sr-pairs">
+      {% for p in t.pairs %}<li><b>{{ who('Skyworks') }} {{ p.skyworks }} <span class="sr-plus">+</span> {{ who('Qorvo') }} {{ p.qorvo }}</b>
+        <span>{{ F('pair.' ~ p.key ~ '.line') }}</span>
+        {% if p.s_ex or p.q_ex %}<span class="sr-ex small">AEC-Q example {% if p.s_ex %}<code>{{ p.s_ex }}</code>{% endif %}{% if p.s_ex and p.q_ex %} with {% endif %}{% if p.q_ex %}<code>{{ p.q_ex }}</code>{% endif %}</span>{% endif %}</li>{% endfor %}
+    </ol>
+    <div class="to-on small sr-std"><span class="muted">Standards</span> {% if edit %}{{ F('standards') }}{% else %}{{ vals['standards']|join(' · ') }}{% endif %}</div>
+    {% if pack_sources %}<div class="to-src small"><b>Sources.</b> {% for s in pack_sources %}{{ s }} {% endfor %}Prepared {{ today|date }}. Public information.</div>
+    {% elif not pack_sources_later %}<div class="to-src small"><b>Sources.</b> {% for _ in t.cur.sources or [] %}{{ F('src.' ~ loop.index0) }} {% endfor %}Prepared {{ today|date }}. Public information.</div>{% endif %}
+    {{ pfoot(3) }}
+  </section>

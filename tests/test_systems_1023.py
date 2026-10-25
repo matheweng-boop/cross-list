@@ -82,7 +82,8 @@ def test_menu_tree_23_oct():
     assert menu["opportunities"] == ["Gaps & new technology", "Competitive analytics", "Risks"]
     assert menu["growth"][-1] == "TAM estimates"
     # owner, 24 Oct 2026: a section for shareable content, after Engineering knowledge, with its own landing page
-    assert list(menu)[-2:] == ["knowledge", "shareable"] and menu["shareable"] == ["Technology overview", "Skyworks + Qorvo synergies", "Automotive"]
+    assert list(menu)[-2:] == ["knowledge", "shareable"]
+    assert menu["shareable"] == ["Technology overview", "Skyworks + Qorvo synergies", "Automotive"]
     assert nav.HOMES == {"shareable": "/shareable"}
     manage = [i[0] for i in nav.UTILITY[2]]
     assert manage == ["Overview", "Schedule", "Site data", "Uploads", "Data quality", "People & invites", "Methodology"]

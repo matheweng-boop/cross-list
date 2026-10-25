@@ -598,7 +598,10 @@ def test_shareable_build_pdf_with_two_reports(page, tmp_path):
     box = page.locator("#build-pdf")
     box.locator("input[value='overview']").uncheck()
     box.get_by_role("button", name="Create PDF").click()
-    expect(page).to_have_url(re.compile(r"/shareable/pack\?r=synergies,automotive"))
+    # the print view opens in the lightbox (fc109ca); then check the same address as a page of its own
+    frame = page.locator("dialog.lb iframe.lb-frame")
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none$"))
+    go(page, frame.get_attribute("src"))
     ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
     assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
     expect(page.locator("text=Sources.")).to_have_count(1)

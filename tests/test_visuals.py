@@ -11,7 +11,7 @@ def test_page_renders_with_reference_data(client):
     assert page.status_code == 200 and "/static/visuals.js" in page.text
     raw = re.search(r'<script id="vz-data" type="application/json">(.*?)</script>', page.text, re.S).group(1)
     data = json.loads(raw)
-    assert set(data) == {"cmti", "drivers", "creepage"}
+    assert set(data) == {"cmti", "drivers", "creepage", "bands"}  # bands: RF bands data for the ranges (24 Oct)
 
 
 def test_reference_parts_are_exact_part_numbers():

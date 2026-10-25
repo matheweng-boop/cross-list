@@ -2,7 +2,7 @@
 // I/Q data description for DAB ... a visualization of DAB ensembles, how it is decoded and what the tuner sees vs. what
 // the audio is that is produced"). Registers with the visuals engine in visuals.js (window.VZ_ADD). Transmission mode I
 // numbers from ETSI EN 300 401; the example ensemble is made up; thresholds marked est are BizDev's own.
-(window.VZ_ADD = window.VZ_ADD || []).push(({V, C, num, esc, log10}) => {
+(window.VZ_ADD = window.VZ_ADD || []).push(({V, C, num, esc, log10, bandStrip}) => {
   const BLOCKS = [["5C", 178.352], ["8A", 195.936], ["10B", 211.648], ["11D", 222.064], ["12B", 225.648], ["12C", 227.360], ["12D", 229.072]];
   // protection level -> CU per kbit/s (EEP-A: 12n, 8n, 6n, 4n CU for 8n kbit/s), code rate, rough C/N needed (est)
   const EEP = {"1A": [1.5, "1/4", 5], "2A": [1, "3/8", 6.5], "3A": [0.75, "1/2", 8], "4A": [0.5, "3/4", 11]};
@@ -96,7 +96,7 @@
       <div class="dab-sees"><div><b>What the tuner sees</b><br>One 1.536 MHz block at ${fc} MHz: about 2 million I/Q number pairs per second that look like noise, carrying the whole ensemble (${SERVICES.length} services) at once.</div>
         <div><b>What comes out</b><br>${audio ? `One station: ${s[1]} kbit/s DAB+ audio (HE-AAC), its scrolling text (DLS) and slideshow pictures.` : `One data service: ${s[1]} kbit/s of ${esc(s[0].toLowerCase())} for the head unit; no sound.`} The other ${SERVICES.length - 1} services are skipped after the FFT.</div></div>
       <div class="dab-flow">
-        <div class="dab-card"><h3><span class="dab-step">1</span>At the antenna</h3>${spectrumSvg(fc, v.snr)}
+        <div class="dab-card"><h3><span class="dab-step">1</span>At the antenna</h3>${spectrumSvg(fc, v.snr)}${bandStrip(fc, {lo: 150, hi: 260, n: 3, caption: "The block is one slot in DAB Band III, a range (from the RF bands chart)"})}
           <p>One DAB block is 1.536 MHz wide; blocks sit 1.712 MHz apart in Band III (174–240 MHz). Inside are 1536 carriers, 1 kHz apart (transmission mode I).</p></div>
         <div class="dab-card"><h3><span class="dab-step">2</span>What the tuner hands over: I/Q</h3>${iqTraceSvg(iq)}
           <p><b>I/Q in plain words:</b> the tuner shifts the block down to around 0 Hz with two copies of its oscillator, 90° apart. The first output is I (in-phase), the second Q (quadrature). Each I/Q pair is one arrow: its length is the signal strength and its angle the phase at that instant. With only one output, a carrier 1 kHz above the tuned frequency and one 1 kHz below would look the same; with I and Q the demodulator can tell them apart. In a car radio the tuner (Si4790x / Si4796x) sends these samples digitally (ZIF I/Q) to the DAB coprocessor (Si469xx); a consumer Si468x does both in one chip.</p></div>

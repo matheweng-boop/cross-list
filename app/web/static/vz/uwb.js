@@ -2,7 +2,7 @@
 // "equations and calculations related to UWB ... safety requirements, range ... keyless entry, path and measurement").
 // Registers with the visuals engine in visuals.js (window.VZ_ADD); textbook equations, limits from ETSI EN 302 065-3-1
 // as summarised in the Systems library topic auto_uwb. Our own simplifications are marked est on the page.
-(window.VZ_ADD = window.VZ_ADD || []).push(({V, C, num, si, log10, esc, range}) => {
+(window.VZ_ADD = window.VZ_ADD || []).push(({V, C, num, si, log10, esc, range, bandText}) => {
   const c0 = 299792458, BW = 499.2;  // m/s; HRP UWB channel 5 and 9 bandwidth in MHz
   const FC = {"5": 6489.6, "9": 7987.2};  // channel centre frequencies (MHz)
   const PSD = -41.3, PEAK_PSD = 0 - 10 * log10(50);  // mean dBm/MHz; 0 dBm peak in 50 MHz as dBm/MHz
@@ -134,7 +134,7 @@
     lead: "UWB car keys in four steps: how much power the rules allow and what range it gives, how time of flight becomes distance, why a relay attack fails, and how the receiver finds the first path among reflections.",
     controls: [
       {k: "mode", label: "Topic", type: "select", options: [["range", "Power limit, link budget and range"], ["tof", "Time of flight and two-way ranging"], ["relay", "Relay attack and distance bounding"], ["path", "First path in multipath"]], value: "range"},
-      {k: "ch", label: "UWB channel", type: "select", options: [["9", "Channel 9 (7987.2 MHz, global)"], ["5", "Channel 5 (6489.6 MHz)"]], value: "9", when: mode("range")},
+      {k: "ch", label: "UWB channel", type: "select", options: [["9", `Channel 9: ${bandText("uwb9") || "7738–8237 MHz"} (centre 7987.2, global)`], ["5", `Channel 5: ${bandText("uwb5") || "6240–6739 MHz"} (centre 6489.6)`]], value: "9", when: mode("range")},
       {k: "pkt", label: "Packet length", min: 50, max: 2000, value: 200, unit: "µs", log: true, when: mode("range")},
       {k: "rate", label: "Data rate", type: "select", options: RATES, value: "6.8e6", when: mode("range")},
       {k: "nf", label: "Receiver noise figure (incl. front-end loss)", min: 2, max: 14, step: 0.5, value: 7, unit: "dB", when: mode("range")},

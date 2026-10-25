@@ -1,0 +1,32 @@
+/* Interactive visual "Hex, binary and registers" (static/vz/hex.js) */
+.hx-conv { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .4rem .8rem; }
+.hx-conv label { display: grid; gap: .15rem; font-size: .8rem; margin: 0; }
+.hx-conv input { margin: 0; padding: .3rem .5rem; height: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem; }
+.hx-conv input[aria-invalid="true"] { border-color: #b42318; }
+.hx-conv .hx-wide { grid-column: 1 / -1; }
+.hx-msg { min-height: 1.2em; color: #b42318; margin: .2rem 0 0; }
+.hx h3 { font-size: 1rem; margin: 1rem 0 .4rem; }
+.hx-reg { display: grid; gap: .3rem; margin-bottom: .5rem; }
+.hx-row { display: flex; align-items: stretch; gap: 3px; flex-wrap: nowrap; }
+.hx-rl { width: 3.6rem; flex: none; line-height: 1.15; font-size: .72rem; align-self: center; }
+.hx-bit { flex: 1 1 0; min-width: 0; max-width: 3rem; padding: .15rem 0 .25rem; margin: 0; border: 1px solid #c9d0d8; border-radius: 4px;
+  background: #fff; color: #1d2228; font: 700 1rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; display: grid; justify-items: center; cursor: pointer; }
+.hx-bit small { font-size: .62rem; font-weight: 400; color: #5b6573; }
+.hx-bit.on { background: #1f5fa8; border-color: #1f5fa8; color: #fff; } .hx-bit.on small { color: #dbe6f3; }
+.hx-bit.hx-gap { margin-right: 6px; }
+.hx-bit:focus-visible { outline: 2px solid #c2410c; outline-offset: 1px; }
+/* field colours: a band under each bit and a swatch in the field table */
+.hx-f0 { box-shadow: inset 0 -4px 0 #f4a259; } .hx-f1 { box-shadow: inset 0 -4px 0 #5fb38a; } .hx-f2 { box-shadow: inset 0 -4px 0 #9b7fd4; }
+.hx-f3 { box-shadow: inset 0 -4px 0 #e57a7a; } .hx-f4 { box-shadow: inset 0 -4px 0 #4fb0c6; } .hx-f5 { box-shadow: inset 0 -4px 0 #c9a227; }
+.hx-sw { display: inline-block; width: .8rem; height: .8rem; border-radius: 2px; margin-right: .35rem; vertical-align: -1px; }
+.hx-sw.hx-f0 { background: #f4a259; } .hx-sw.hx-f1 { background: #5fb38a; } .hx-sw.hx-f2 { background: #9b7fd4; }
+.hx-sw.hx-f3 { background: #e57a7a; } .hx-sw.hx-f4 { background: #4fb0c6; } .hx-sw.hx-f5 { background: #c9a227; }
+.hx-t { font-size: .8rem; width: auto; margin-bottom: .5rem; }
+.hx-t th, .hx-t td { padding: .15rem .45rem; } .hx-t td.n, .hx-t th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.hx-t code { font-size: .8rem; padding: 0 .2rem; white-space: nowrap; }
+.hx-nib td.hx-h { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.hx-nib td.hx-h.in { background: #fde7cf; }
+.hx-scroll { overflow-x: auto; max-width: 100%; }
+.hx-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 0 1.2rem; }
+.hx-cols > div { min-width: 0; }
+.hx-why li { margin-bottom: .3rem; }

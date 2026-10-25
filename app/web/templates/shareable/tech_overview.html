@@ -10,12 +10,6 @@
 {% if o.wm_text %}<div class="to-wm" aria-hidden="true"><span>{{ o.wm_text }}</span></div>{% endif %}
 {% if not edit %}
 <form class="to-controls" method="get" action="/shareable/technology-overview" aria-label="Page options">
-  <label>Market focus
-    <select name="focus" data-autosubmit>
-      <option value="none"{{ ' selected' if not o.focus }}>None</option>
-      {% for k, m in o.markets.items() %}<option value="{{ k }}"{{ ' selected' if o.focus == k }}>{{ m.title }}</option>{% endfor %}
-    </select></label>
-  <label class="to-check"><input type="hidden" name="include" value="0"><input type="checkbox" name="include" value="1"{{ ' checked' if o.include }} data-autosubmit> Include market focus page</label>
   <label>Watermark
     <select name="wm" data-autosubmit>
       {% for k, word in watermarks.items() %}<option value="{{ k }}"{{ ' selected' if o.wm == k }}>{{ {'none': 'None', 'custom': 'Custom…'}.get(k, word) }}</option>{% endfor %}
@@ -46,7 +40,6 @@
     <div class="te-grid">
       <div>Header title {{ F('hdr.title') }}</div>
       <div>Header subtitle, e.g. “Prepared for …” {{ F('hdr.subtitle') }}</div>
-      <div>Market focus page by default {{ F('focus.default') }}</div>
       <div>Watermark by default {{ F('wm.default') }}</div>
       <div>Custom watermark text {{ F('wm.custom') }}</div>
     </div>
@@ -64,7 +57,7 @@
 {% else %}
   <div class="to-actions">
     <button type="button" class="to-print" onclick="window.print()">Save as PDF</button>
-    {% if me and me.is_owner %}<a href="/shareable/technology-overview/edit{{ '?focus=' ~ o.focus if o.show_focus }}" role="button" class="outline to-edit">Edit</a>{% endif %}
+    {% if me and me.is_owner %}<a href="/shareable/technology-overview/edit" role="button" class="outline to-edit">Edit</a>{% endif %}
     <span class="small muted">Opens the print dialog: choose “Save as PDF” and A4. {{ o.pages }} pages; public information only.</span>
     {% if message %}<span class="small" role="status">{{ message }}</span>{% endif %}
   </div>
@@ -148,27 +141,6 @@
     </div>{% endif %}
     {{ pfoot(4) }}
   </section>
-
-  {% if o.show_focus %}{% set m = o.market %}{% set k = 'focus.' ~ m.key %}
-  <section class="to-page to-focus" id="market-focus" aria-labelledby="to-h-focus">
-    {{ band() }}
-    <p class="to-kicker">Market focus</p>
-    <h2 id="to-h-focus">{{ F(k ~ '.title') }}</h2>
-    {{ paras('focus-' ~ m.key, 'to-lead') }}
-    <div class="to-facts to-facts-4">
-      {% for name, _num, _label in m.facts %}<div class="to-fact"><b>{{ F(k ~ '.fact.' ~ name ~ '.num') }}</b><span>{{ F(k ~ '.fact.' ~ name ~ '.label') }}</span></div>{% endfor %}
-    </div>
-    <div class="to-subs">
-      {% for s in m.subsystems %}{% set sk = k ~ '.sub.' ~ s.key %}
-      <div class="to-sub-row"><b>{{ F(sk ~ '.title') }}</b><span>{{ F(sk ~ '.line') }}</span><span class="to-series">{% for x in s.series %}<span class="to-ser"><code>{{ x }}</code>{% if s.aec %} <small>{{ '{:,}'.format(s.aec[x]) }} AEC-Q</small>{% endif %}</span> {% endfor %}</span></div>
-      {% endfor %}
-    </div>
-    <p class="to-on small"><span class="muted">Platforms</span> {% for pk in m.platforms %}{{ vals['plat.' ~ pk ~ '.label'] }}{{ ' · ' if not loop.last }}{% endfor %}</p>
-    <div class="to-on small"><span class="muted">Standards</span> {% if edit %}{{ F(k ~ '.standards') }}{% else %}{{ vals[k ~ '.standards']|join(' · ') }}{% endif %}</div>
-    <p class="to-src small"><b>Learn more.</b> {{ F(k ~ '.learn') }} Series and counts from the public catalogues; active parts only.</p>
-    {{ pfoot(5) }}
-  </section>
-  {% endif %}
 
 {% if edit %}
 {% include "shareable/_edit_end.html" %}

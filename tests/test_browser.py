@@ -499,37 +499,30 @@ def test_technology_overview_edit_number_paragraph_comment_resolve_undo(page, tm
         reset_overview(page)
 
 
-def test_technology_overview_market_focus_and_watermark(page, tmp_path):
-    """Owner, 24 Oct 2026: the focus dropdown adds a page 5 for Automotive, Data center or Drones (the address keeps
-    the choice); the watermark prints on every page and changes no page count; unknown values are ignored."""
+def test_technology_overview_is_four_pages_with_a_watermark(page, tmp_path):
+    """Owner, 25 Oct 2026: the market focus page is gone, so the overview PDF is 4 A4 pages; an old ?focus= link opens
+    the same 4 pages without error. The watermark prints on every page and changes no page count."""
     go(page, TO)
-    page.select_option("select[name='focus']", "automotive")
-    expect(page).to_have_url(re.compile(r"focus=automotive"))
-    expect(page.locator("#market-focus h2")).to_have_text("Automotive")
-    expect(page.locator("#market-focus")).to_contain_text("Car radio")
-    pdf = a4(page)
-    assert pdf_pages(pdf) <= 5
+    expect(page.locator("select[name='focus']")).to_have_count(0)
+    expect(page.locator("input[name='include']")).to_have_count(0)
+    expect(page.locator(".to-page")).to_have_count(4)
+    assert pdf_pages(a4(page)) == 4
     page.select_option("select[name='wm']", "draft")
     expect(page).to_have_url(re.compile(r"wm=draft"))
     expect(page.locator(".to-wm")).to_have_text("Draft")
     pdf = a4(page)
-    assert pdf_pages(pdf) <= 5
+    assert pdf_pages(pdf) == 4
     for n in range(1, pdf_pages(pdf) + 1):
         text = pdf_text(pdf, tmp_path, n)
         if text is not None:
             assert "draft" in text.lower(), f"no watermark on page {n}"
     page.select_option("select[name='wm']", "none")
     expect(page.locator(".to-wm")).to_have_count(0)
-    page.locator("input[type='checkbox'][name='include']").uncheck()
+    go(page, f"{TO}?focus=automotive")  # an old link: status 200, no error
     expect(page.locator("#market-focus")).to_have_count(0)
-    assert pdf_pages(a4(page)) <= 4
-    for market, title, sub in (("datacenter", "Data center", "Rack power"), ("drones", "Drones", "Radio links")):
-        go(page, f"{TO}?focus={market}")
-        expect(page.locator("#market-focus")).to_contain_text(title)
-        expect(page.locator("#market-focus")).to_contain_text(sub)
-        assert pdf_pages(a4(page)) <= 5
+    expect(page.locator(".to-page")).to_have_count(4)
+    assert pdf_pages(a4(page)) == 4
     go(page, f"{TO}?focus=bogus&wm=bogus")
-    expect(page.locator("#market-focus")).to_have_count(0)
     expect(page.locator(".to-wm")).to_have_count(0)
 
 
@@ -567,7 +560,7 @@ def _filler(n: int) -> str:
 
 
 def test_technology_overview_every_field_at_its_limit_still_fits(page):
-    """The length limits keep the PDF at 4 A4 pages (5 with the focus page), even with every text and number at its
+    """The length limits keep the PDF at 4 A4 pages, even with every text and number at its
     limit, every dot set, two paragraphs per section and a medium logo."""
     from app.services import tech_overview_edit as te
     from tests.test_tech_overview import png
@@ -594,21 +587,18 @@ def test_technology_overview_every_field_at_its_limit_still_fits(page):
         assert r.ok and "Not saved" not in r.text(), re.findall(r'role="alert">([^<]*)', r.text())[:5]
         go(page, TO)
         assert pdf_pages(a4(page)) <= 4
-        for market in te.to.focus_markets():
-            go(page, f"{TO}?focus={market}&wm=draft")
-            assert pdf_pages(a4(page)) <= 5, market
     finally:
         reset_overview(page)
 
 
 def test_shareable_pack_of_all_three_and_each_report_alone(page):
     """Owner, 25 Oct 2026: the Synergies and Automotive reports print to at most 3 A4 pages each; the combined PDF of
-    all three reports (no focus page) to 10 pages at most, numbered through ("10 / 10" on the last)."""
+    all three reports to 10 pages at most, numbered through ("10 / 10" on the last)."""
     for path in ("/shareable/synergies", "/shareable/automotive"):
         go(page, path)
         expect(page.locator(".to-page")).to_have_count(3)
         assert pdf_pages(a4(page)) <= 3, path
-    go(page, "/shareable/pack?r=overview,synergies,automotive&focus=none&wm=none")
+    go(page, "/shareable/pack?r=overview,synergies,automotive&wm=none")
     expect(page.locator(".to-page")).to_have_count(10)
     expect(page.locator(".to-pfoot").last).to_contain_text("10 / 10")
     pdf = a4(page)
@@ -623,7 +613,10 @@ def test_shareable_build_pdf_with_two_reports(page, tmp_path):
     box = page.locator("#build-pdf")
     box.locator("input[value='overview']").uncheck()
     box.get_by_role("button", name="Create PDF").click()
-    expect(page).to_have_url(re.compile(r"/shareable/pack\?r=synergies,automotive"))
+    # the print view opens in the lightbox (fc109ca); then check the same address as a page of its own
+    frame = page.locator("dialog.lb iframe.lb-frame")
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none$"))
+    go(page, frame.get_attribute("src"))
     ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
     assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
     expect(page.locator("text=Sources.")).to_have_count(1)

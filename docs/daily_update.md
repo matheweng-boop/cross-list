@@ -41,7 +41,7 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Open application area requests (inbox section "Application area requests") are researched the same way; set their
    status on `/blocks/area-requests`.
    **Technology overview (Shareable).** The owner's edits to `/shareable/technology-overview` (texts, numbers, dots,
-   header, logo, default focus and watermark) are overrides that live in the database with their version history;
+   header, logo and default watermark) are overrides that live in the database with their version history;
    `data/business/tech_overview.yaml` only holds the defaults. A run must never reset, delete or overwrite these
    overrides. Where the inbox says an overridden value differs from the new automatic value, ask the owner.
    Technology overview comments: rewrite the paragraph as asked (public-safe check applies), save it as a new version,

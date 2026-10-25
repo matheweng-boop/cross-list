@@ -24,7 +24,7 @@
   {%- if s.kind in ('owner', 'dot', 'choice') -%}
   {%- set opts = s.options if s.kind == 'choice' else (('',) if s.kind == 'dot' else ()) + owners -%}
   {%- set names = {'': 'None', 'none': 'None', 'draft': 'Draft', 'confidential': 'Confidential', 'discussion': 'For discussion', 'custom': 'Custom (text below)', 'left': 'Left', 'right': 'Right', 'small': 'Small', 'medium': 'Medium'} -%}
-  <select name="{{ fid }}" aria-label="{{ s.label }}">{% for x in opts %}<option value="{{ x }}"{{ ' selected' if v == x }}>{{ o.markets[x].title if x in o.markets else names.get(x, x) }}</option>{% endfor %}</select>
+  <select name="{{ fid }}" aria-label="{{ s.label }}">{% for x in opts %}<option value="{{ x }}"{{ ' selected' if v == x }}>{{ names.get(x, x) }}</option>{% endfor %}</select>
   {%- elif s.kind == 'chips' -%}
   <textarea name="{{ fid }}" rows="{{ [v|length, 3]|max }}" aria-label="{{ s.label }}">{{ v|join('\n') }}</textarea>
   {%- elif s.kind == 'text' -%}

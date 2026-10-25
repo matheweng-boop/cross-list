@@ -33,11 +33,11 @@ ANSWERS = PROJECT_ROOT / "data" / "business" / "tech_overview_answers.yaml"
 OWNERS = ("Skyworks", "Qorvo", "Both")
 MAIN_SECTIONS = ("glance", "platforms", "markets", "families")
 # Length limits: what the A4 layout holds (tests/test_browser.py prints the page with every field at its limit and
-# checks it still fits on 4 pages, 5 with the focus page). Paragraphs: at most PARA_COUNT per section and PARA_TOTAL
-# characters together; a focus section ("focus-<system>") has FOCUS_PARAS.
+# checks it still fits on 4 pages). Paragraphs: at most PARA_COUNT per section and PARA_TOTAL characters together.
+# The market focus page 5 was removed (owner, 25 Oct 2026: the Automotive report and the Presentation builder cover
+# it); old "focus.*" and "paras.focus-*" overrides stay stored but are no longer read.
 PARA_COUNT = {"glance": 2, "platforms": 2, "markets": 2, "families": 2}
 PARA_TOTAL = {"glance": 560, "platforms": 160, "markets": 160, "families": 220}
-FOCUS_PARAS = (2, 420)
 CHIP_MAX, CHIPS = 30, 6
 # watermark choices (owner, 24 Oct 2026): key -> the word on the page; "custom" uses the owner's text
 WATERMARKS = {"none": "", "draft": "Draft", "confidential": "Confidential", "discussion": "For discussion",
@@ -86,12 +86,12 @@ def overview() -> Report:
 
 
 def sections() -> tuple[str, ...]:
-    """The paragraph sections: the four pages and one per focus market."""
-    return MAIN_SECTIONS + tuple(f"focus-{k}" for k in to.focus_markets())
+    """The paragraph sections: one per page."""
+    return MAIN_SECTIONS
 
 
 def para_limits(section: str) -> tuple[int, int]:
-    return (PARA_COUNT[section], PARA_TOTAL[section]) if section in PARA_COUNT else FOCUS_PARAS
+    return PARA_COUNT[section], PARA_TOTAL[section]
 
 
 @lru_cache
@@ -113,7 +113,6 @@ def specs() -> dict[str, Field]:
     add("hdr.logo", "logo", "", 0, "Logo")
     add("hdr.logo_align", "choice", "left", 0, "Logo position", LOGO_ALIGN)
     add("hdr.logo_size", "choice", "small", 0, "Logo size", LOGO_SIZE)
-    add("focus.default", "choice", "", 0, "Market focus page by default", ("", *to.focus_markets()))
     add("wm.default", "choice", "none", 0, "Watermark by default", tuple(WATERMARKS))
     add("wm.custom", "line", "", 30, "Custom watermark text")
     add("title", "line", cur.get("title", ""), 70, "Title")
@@ -154,23 +153,10 @@ def specs() -> dict[str, Field]:
         add(f"learn.{i}.url", "line", url, 200, "Address (https://...)")
     for i, s in enumerate(cur.get("sources") or []):
         add(f"src.{i}", "text", s, 230, "Source line")
-    for k, m in to.focus_markets().items():
-        add(f"focus.{k}.title", "line", m["title"], 40, "Market")
-        for name, num, label in m["facts"]:
-            add(f"focus.{k}.fact.{name}.num", "data", num, 12, "Number")
-            add(f"focus.{k}.fact.{name}.label", "line", label, 40, "Label")
-        for sub in m["subsystems"]:
-            add(f"focus.{k}.sub.{sub['key']}.title", "line", sub["title"], 44, "Sub-system")
-            add(f"focus.{k}.sub.{sub['key']}.line", "text", sub["line"], 100, "What we bring")
-        add(f"focus.{k}.standards", "chips", m["standards"], CHIP_MAX, "Standards (one per line)", (6,))
-        add(f"focus.{k}.learn", "text", m["learn_more"], 120, "Learn more")
     return out
 
 
 def default_paras(section: str) -> list[dict]:
-    if section.startswith("focus-"):
-        m = to.focus_markets().get(section.removeprefix("focus-"))
-        return [{"id": f"{section}-1", "text": m["paragraph"]}] if m and m["paragraph"] else []
     secs = to.curated().get("sections") or {}
     paras = (secs.get(section) or {}).get("paragraphs") or []
     return [{"id": p["id"], "text": " ".join(str(p["text"]).split())} for p in paras]
@@ -354,15 +340,9 @@ def _apply_op(paras: list[dict], op: str, section: str) -> list[dict]:
 
 
 def view_options(vals: dict, q) -> dict:
-    """Market focus page and watermark for this view: the address (?focus=, ?include=0, ?wm=, ?wmt=) first, else the
-    owner's saved defaults. Unknown values are ignored (the default applies); a custom watermark with a blocked word
-    shows no watermark and says why."""
-    fm = to.focus_markets()
-    focus = q.get("focus")
-    if focus not in fm and focus != "none":
-        focus = vals.get("focus.default") or ""
-    focus = focus if focus in fm else ""
-    include = q.get("include", "1") != "0"
+    """Watermark for this view: the address (?wm=, ?wmt=) first, else the owner's saved default. Unknown values are
+    ignored (the default applies); a custom watermark with a blocked word shows no watermark and says why. The old
+    ?focus= and ?include= of the removed market focus page are ignored (owner, 25 Oct 2026)."""
     wm = q.get("wm")
     from_url = wm in WATERMARKS
     if not from_url:
@@ -374,9 +354,7 @@ def view_options(vals: dict, q) -> dict:
         error = check("wm.custom", text) if text else ""
         if error:
             text = ""
-    show = bool(focus and include)
-    return {"focus": focus, "include": include, "show_focus": show, "market": fm.get(focus), "wm": wm,
-            "wm_text": text, "wm_error": error, "pages": 5 if show else 4, "markets": fm}  # fmt: skip
+    return {"wm": wm, "wm_text": text, "wm_error": error, "pages": 4}
 
 
 def logo_of(session: Session, vals: dict):
@@ -538,6 +516,8 @@ def inbox_lines(session: Session, start: datetime, rep: Report | None = None) ->
     if v:
         shown = values(v.fields, rep)
         for fid, at_save in sorted((v.auto or {}).items()):
+            if fid not in rep.specs():  # a retired field (e.g. the removed market focus page): nothing to compare
+                continue
             now = auto_value(fid, shown, rep)
             if now != at_save:
                 out.append(f"- {where}{fid}: overridden value differs from the new automatic value (shown "

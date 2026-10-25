@@ -9,7 +9,6 @@ Technology overview's (tech_overview_edit.Report), each report under its own sto
 
 import importlib
 import re
-from collections import Counter
 from functools import lru_cache
 
 from app import yamlio
@@ -180,7 +179,6 @@ def build_automotive() -> dict:
     cur = curated().get("automotive") or {}
     rows = [r for r in to.active_rows() if _qualified(r)]
     aecq = {r["mpn"] for r in rows}  # AEC-Q-qualified active parts: the only examples named
-    per = Counter(r["manufacturer"] for r in rows)
     plats = {p["key"]: p for p in to.build()["platforms"]}
     marks = patent_marks()
     tech = [{**plats[k], "car": line, "ip": patent_tag(plats[k], marks, automotive_only=True)}
@@ -209,8 +207,9 @@ def build_automotive() -> dict:
         if len(pairs) >= 6:
             break
     fams = {r["family"] for r in rows} - {pf.OTHER_CATEGORY}
-    nums = {"automotive": len(rows), "skyworks": per["Skyworks"], "platforms": len(tech), "subsystems": len(subs),
-            "families": len(fams)}  # fmt: skip
+    # owner, 25 Oct 2026: no "from Skyworks" tile (the public Qorvo catalogue marks few parts automotive, so it
+    # only repeated the total)
+    nums = {"automotive": len(rows), "platforms": len(tech), "subsystems": len(subs), "families": len(fams)}
     fw = cur.get("facts") or {}
     facts = [{"key": k, "num": f"{n:,}", "label": (fw.get(k) or {}).get("label", "")} for k, n in nums.items()]
     return {"cur": cur, "facts": facts, "tech": tech, "subsystems": subs, "pairs": pairs,

@@ -168,9 +168,9 @@ def build() -> dict:
                "cells": [p["key"] in (m.get("platforms") or []) for m in markets]} for p in platforms]  # fmt: skip
     rf_top = next((f for fam in families if fam["label"].startswith("Amplifiers") for f in fam["figures"]
                    if "GHz" in f["text"]), None)  # fmt: skip
-    auto = sum(1 for r in rows if is_aec(r))
+    # no AEC-Q part count (owner, 25 Oct 2026: "I just want AEC-Q part counts out"); the marks stay on Cross-sell
     nums = {"parts": f"{len(rows):,}", "families": str(len(families)), "platforms": str(len(platforms)),
-            "markets": str(len(markets)), "automotive": f"{auto:,}",
+            "markets": str(len(markets)),
             "rf": rf_top["text"].replace("to ", "up to ", 1) if rf_top else ""}  # fmt: skip
     notes = {"parts": f"Skyworks {round_count(per_line['Skyworks'])} · Qorvo {round_count(per_line['Qorvo'])}",
              "rf": f"highest catalogue amplifier frequency ({rf_top['mpn']})" if rf_top else ""}  # fmt: skip

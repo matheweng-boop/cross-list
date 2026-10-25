@@ -25,27 +25,25 @@ sections:
     paragraphs:
       - id: glance-1
         text: >-
-          Skyworks and Qorvo, combined since October 2026, offer RF, analog and mixed-signal semiconductors from the
-          antenna to the power stage. The portfolio joins high-volume front-end modules and acoustic filters,
-          high-power GaN and broadband GaAs microwave parts, and silicon lines for isolation, timing, broadcast radio,
-          power and short-range wireless.
+          Skyworks and Qorvo, combined since October 2026, supply RF, analog and mixed-signal chips from antenna to
+          power stage. Key strength: front-end module (FEM) integration, with amplifiers, filters and switches from
+          both companies in one module. Also: high-power GaN, microwave GaAs, isolation, timing, radio and power.
   platforms:
     heading: "Technology platforms"
     paragraphs:
       - id: platforms-1
-        text: "What each platform is, what it is good for, and where it shows up in the catalogue."
+        text: "What each platform is and what it is good for."
   markets:
     heading: "End markets"
     paragraphs:
       - id: markets-1
-        text: "What the combined portfolio brings to each market, with representative part families."
+        text: "What we bring to each market, with example part families."
   families:
     heading: "Product families"
     paragraphs:
       - id: families-1
         text: >-
-          Active parts per family in the public catalogue, with a headline capability. Figures are catalogue values;
-          the part named holds the value.
+          Active parts per family in the public catalogue. Figures are catalogue values of the part named.
 
 # The headline facts on page 1: the numbers are automatic (the owner can override them); these are their words.
 # A fact without a note here gets an automatic note (the Skyworks / Qorvo split, the part holding the RF figure).
@@ -54,47 +52,52 @@ facts:
   families: {label: "product families", note: "from RF front ends to isolation and timing"}
   platforms: {label: "technology platforms", note: "compound semiconductor, silicon, acoustic"}
   markets: {label: "end markets", note: "mobile to industrial and energy"}
-  automotive: {label: "AEC-Q qualified parts", note: "automotive grade: catalogue or ordering code"}
   rf: {label: "RF and microwave coverage"}
 
 # Technology platforms (page 2). caps: keys in data/business/capabilities.yaml (the owner comes from there).
 # families: product family labels as in Cross-sell > Skyworks + Qorvo portfolio (app/services/portfolio.CATEGORY_RULES).
 platforms:
+  - key: modules
+    label: Front-end module (FEM) integration
+    caps: [sip_module_integration]
+    what: "Amplifiers, filters and switches of both companies in one shielded module."
+    good_for: "Complete RF front ends: Sky5 cellular, Wi-Fi, V2X and GNSS."
+    families: ["Front-end modules"]
   - key: baw
     label: BAW filters
     caps: [baw_filter]
-    what: "Bulk acoustic wave resonators that pass one band and block its neighbours."
-    good_for: "Sharp filtering at 2-7 GHz: 5G n77/n79, Wi-Fi coexistence, GNSS."
+    what: "Acoustic filters that pass one band and block its neighbours."
+    good_for: "Sharp filtering at 2-7 GHz: 5G, Wi-Fi, GNSS; core of our FEMs."
     families: ["Filters, duplexers and multiplexers", "Front-end modules"]
   - key: saw
     label: SAW and TC-SAW filters
     caps: [saw_filter, tc_saw_filter]
-    what: "Surface acoustic wave filters, also in a temperature-compensated version."
-    good_for: "Filtering below 3 GHz in phones, front-end modules and GNSS receivers."
+    what: "Acoustic filters, also temperature-compensated (TC-SAW)."
+    good_for: "Filtering below 3 GHz in phones, FEMs and GNSS."
     families: ["Filters, duplexers and multiplexers", "Front-end modules"]
   - key: gaas_hbt
     label: GaAs HBT
     caps: [gaas_hbt]
-    what: "Gallium-arsenide bipolar transistors for linear, efficient power amplifiers."
-    good_for: "PAs at 3-5 V for cellular, Wi-Fi, small cells and CATV."
+    what: "Gallium-arsenide transistors for efficient power amplifiers."
+    good_for: "PAs for cellular, Wi-Fi, small cells and CATV."
     families: ["Amplifiers (PA, LNA, gain, CATV)", "Front-end modules"]
   - key: gaas_phemt
     label: GaAs pHEMT
     caps: [gaas_phemt]
-    what: "Gallium-arsenide field-effect transistors with very low noise and wide bandwidth."
-    good_for: "LNAs, switches, attenuators and phase shifters up to 40 GHz and beyond."
+    what: "Low-noise, wideband gallium-arsenide transistors."
+    good_for: "LNAs, switches, attenuators and phase shifters to 40 GHz+."
     families: ["Amplifiers (PA, LNA, gain, CATV)", "Attenuators, phase shifters and limiters", "Mixers, modulators and converters"]
   - key: gan
     label: GaN on SiC
     caps: [gan_on_sic]
-    what: "Gallium-nitride transistors on silicon carbide for high power at high frequency."
-    good_for: "Power amplifiers and transistors at 28-48 V up to Ka-band: radar, 5G macro, SATCOM."
+    what: "Gallium nitride on silicon carbide: high power at high frequency."
+    good_for: "PAs and transistors to Ka-band: radar, 5G macro, SATCOM."
     families: ["RF power transistors", "Amplifiers (PA, LNA, gain, CATV)"]
   - key: soi
     label: RF SOI
     caps: [rf_soi]
-    what: "Silicon-on-insulator CMOS for small, low-loss RF switches and tuners."
-    good_for: "Antenna switches, antenna tuning and LNAs in phones, cars and IoT."
+    what: "Silicon-on-insulator CMOS for small, low-loss switches and tuners."
+    good_for: "Antenna switches, tuners and LNAs; the switching in our FEMs."
     families: ["RF switches and antenna tuning", "Front-end modules"]
   - key: sige
     label: SiGe / BiCMOS
@@ -102,53 +105,47 @@ platforms:
     what: "Silicon-germanium transistors next to CMOS on one chip."
     good_for: "LNAs, mixers and Wi-Fi and Bluetooth front ends."
     families: ["Front-end modules", "Mixers, modulators and converters"]
-  - key: modules
-    label: Front-end module integration
-    caps: [sip_module_integration]
-    what: "System-in-package modules that combine amplifiers, filters, switches and control."
-    good_for: "Complete, shielded RF front ends: Sky5 cellular, Wi-Fi, V2X and GNSS."
-    families: ["Front-end modules"]
   - key: beamformers
     label: Silicon beamformers
     caps: [mmwave_beamformer]
-    what: "Multi-channel ICs that steer the beam of a phased-array antenna."
-    good_for: "5G mmWave, SATCOM terminals and radar arrays from X-band to 43.5 GHz."
+    what: "ICs that steer the beam of a phased-array antenna."
+    good_for: "5G mmWave, SATCOM and radar arrays to 43.5 GHz."
     families: ["Wireless transceivers and UWB", "Front-end modules"]
   - key: diodes
     label: RF diodes
     caps: [silicon_rf_diodes]
-    what: "PIN, Schottky, varactor and limiter diodes, also in hermetic packages."
+    what: "PIN, Schottky, varactor and limiter diodes, also hermetic."
     good_for: "Detectors, tuning, switching and receiver protection."
     families: ["Diodes"]
   - key: isolation
     label: Digital isolation (CMOS capacitive)
     caps: [digital_isolation_capacitive, optocouplers]
-    what: "A capacitive CMOS barrier passes data and gate signals across high voltage; plus optocouplers."
-    good_for: "Gate drivers, isolators and isolated sensing in EVs, solar, motor drives and power supplies."
+    what: "A CMOS barrier passes signals across high voltage; plus optocouplers."
+    good_for: "Gate drivers, isolators and sensing in EVs, solar and motor drives."
     families: ["Isolated gate drivers", "Digital isolators and isolated interfaces", "Isolated amplifiers, ADCs and current sensors", "Optocouplers"]
   - key: timing
     label: Timing (crystal and crystal-free BAW)
     caps: [timing_dspll_crystal, timing_baw_resonator]
-    what: "DSPLL and MultiSynth clocks, crystal oscillators and clocks with a built-in BAW resonator."
-    good_for: "Ultra-low-jitter clocks for data centers, optical links, 5G radios and network sync."
+    what: "Clocks and oscillators, with crystal or built-in BAW resonator."
+    good_for: "Ultra-low-jitter clocks for data centers, optics, 5G and network sync."
     families: ["Clocks and network timing", "Oscillators, VCOs and synthesizers"]
   - key: broadcast
     label: Mixed-signal radio and voice
     caps: [broadcast_radio_tv, voice_slic_daa_poe]
-    what: "RF CMOS receivers and mixed-signal line interfaces."
+    what: "RF CMOS receivers and line interfaces."
     good_for: "AM/FM, DAB and HD Radio tuners, TV demodulators, VoIP and PoE."
     families: ["Broadcast radio, TV and audio", "Voice and modems", "Power management"]
   - key: power
     label: Power management
     caps: [pmic_configurable_power, power_management_skyworks]
-    what: "Configurable PMICs, converters and motor-control SoCs."
-    good_for: "Motor control, battery systems, SSDs, power tools, LED backlights and RF supplies."
+    what: "Configurable PMICs, converters and motor-control chips."
+    good_for: "Motors, batteries, SSDs, power tools and RF supplies."
     families: ["Power management", "Motor controllers"]
   - key: wireless
     label: UWB and low-power wireless
     caps: [uwb_soc, low_power_radio_soc]
-    what: "Ultra-wideband ranging chips and Matter, Thread, Zigbee and Bluetooth LE SoCs."
-    good_for: "Digital car keys, indoor positioning and smart-home devices."
+    what: "UWB ranging chips and Matter, Thread, Zigbee and Bluetooth LE chips."
+    good_for: "Digital car keys, indoor positioning, smart home."
     families: ["Wireless transceivers and UWB"]
 
 # End markets (page 3). platforms: keys above (they fill the matrix on page 1). parts: representative series; the
@@ -157,7 +154,7 @@ markets:
   - key: mobile
     label: Mobile and wearables
     short: Mobile
-    brings: "Complete RF front ends for phones, wearables and fixed wireless: amplify, filter, switch and tune."
+    brings: "Complete front-end modules for phones and wearables: amplify, filter, switch, tune."
     functions: [Power amplifier modules, Diversity receive, Antenna switching and tuning, Wi-Fi and Bluetooth front ends, Power for the RF section]
     parts:
       - [Sky5 front-end modules, SKY58xxx]
@@ -168,7 +165,7 @@ markets:
   - key: automotive
     label: Automotive
     short: Auto
-    brings: "Connectivity, radio, digital key and isolation for the electric, connected car."
+    brings: "Connectivity, radio, digital key and isolation for the electric car."
     functions: [Telematics and V2X, GNSS, Car radio, UWB digital key, EV traction and charging]
     parts:
       - [Isolated gate drivers, Si82xx]
@@ -179,7 +176,7 @@ markets:
   - key: infrastructure
     label: Infrastructure and data center
     short: Infra
-    brings: "Transmit, receive and timing for 5G radios, cable networks and data-center links."
+    brings: "Transmit, receive and timing for 5G, cable and data centers."
     functions: [Massive MIMO and macro PAs, Switch-LNA receive, Network synchronisation, Jitter attenuation, Rack power isolation]
     parts:
       - [Small-cell and massive MIMO PAs, SKY66xxx]
@@ -190,7 +187,7 @@ markets:
   - key: defence
     label: Defence and aerospace
     short: Defence
-    brings: "High-power and broadband microwave parts for radar, electronic warfare and SATCOM."
+    brings: "High-power, wideband microwave parts for radar, EW and SATCOM."
     functions: [Radar and EW power amplifiers, Broadband control, Phased arrays, Hermetic isolation]
     parts:
       - [MMIC power amplifiers, TGA2xxx]
@@ -201,7 +198,7 @@ markets:
   - key: iot
     label: IoT and consumer
     short: IoT
-    brings: "Short-range wireless, Wi-Fi and broadcast reception for smart-home and consumer devices."
+    brings: "Short-range wireless, Wi-Fi and radio/TV reception for the home."
     functions: ["Matter, Thread and Zigbee", UWB positioning, Wi-Fi front ends, TV and radio reception, Voice over IP]
     parts:
       - [Multi-protocol wireless SoCs, QPGxxxx]
@@ -212,7 +209,7 @@ markets:
   - key: industrial
     label: Industrial and energy
     short: Industry
-    brings: "Safe isolation, sensing, motor control and power for factories, solar and storage."
+    brings: "Isolation, sensing, motor control and power for factories and solar."
     functions: [Isolated gate drive, Isolated sensing, Motor control, Power management, Power over Ethernet]
     parts:
       - [Digital isolators, Si86xx]

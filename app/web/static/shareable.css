@@ -96,7 +96,7 @@
   .to-fact, .to-plat, .to-mkt, .to-more, .to-src, tr { break-inside: avoid; }
   .to h1 { font-size: 1.9rem; }
   .to-lead { font-size: 1.05rem; }
-  .to-facts { grid-template-columns: repeat(6, 1fr); }
+  .to-facts { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }  /* one row, any count */
   .to-fact b { font-size: 1.3rem; }
   .to-scroll { overflow: visible; }
   .to-matrix { width: 100%; }
@@ -228,6 +228,17 @@
 .sr-ip { display: inline-block; font-size: .66rem; font-weight: 600; padding: 0 .35rem; border-radius: .5rem;
   border: 1px solid var(--pico-muted-border-color); color: var(--pico-muted-color); white-space: nowrap; }
 .sr-note { margin: .1rem 0 .6rem; color: var(--pico-muted-color); }
+/* the small Skyworks / Qorvo / Both, IP and benefit markers sit at the right end of their row, on screen and in
+   print (owner, 25 Oct 2026: "right align the little markers"); the label wraps, the marker never does */
+.to-marks-right, .sr-pairs li > b.to-marks-right { display: flex; align-items: baseline; justify-content: space-between;
+  gap: .15rem .5rem; }
+.to-marks-right > :first-child { min-width: 0; overflow-wrap: anywhere; }
+.to-marks-right > :not(:first-child) { flex: none; margin-left: auto; white-space: nowrap; }
+.to-marks-right .to-who { margin: 0 0 0 .2rem; }
+.te .to-marks-right { flex-wrap: wrap; }
+.sr-ben { display: inline-block; font-size: .66rem; font-weight: 600; padding: 0 .4rem; border-radius: .5rem;
+  color: var(--pico-primary); background: color-mix(in srgb, var(--pico-primary) 12%, transparent); white-space: nowrap; }
+.sr-why { margin: 0 0 .3rem; font-size: .76rem; color: var(--pico-muted-color); }
 .sr-pairs { margin: .2rem 0 .8rem; padding-left: 1.3rem; }
 .sr-pairs li { margin: 0 0 .55rem; font-size: .9rem; }
 .sr-pairs li > b, .sr-pairs li > span { display: block; }
@@ -251,7 +262,7 @@
 }
 .te .sr-row, .te .sr-cols { grid-template-columns: 1fr; }
 @media print {
-  .sr-facts-5 { grid-template-columns: repeat(5, 1fr); }
+  .sr-facts-5 { grid-template-columns: none; }
   .sr-cols { grid-template-columns: repeat(3, 1fr); }
   .sr-col li { font-size: .8rem; }
   .sr-pairs li { font-size: .84rem; margin-bottom: .4rem; }

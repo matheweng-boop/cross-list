@@ -175,3 +175,66 @@ def test_patent_tags_come_from_a_fixture_and_are_quiet_without_data(monkeypatch,
     assert sr.patent_tag(gan, marks, automotive_only=True) == ""
     assert sr.patent_tag(iso, marks, True) == "IP: Skyworks-led"
     assert sr.patent_tag({"key": "x"}, marks) == ""
+
+
+# ---- owner, 25 Oct 2026 comments on the Technology overview (and the same elements on the two reports) -------------
+AEC_COUNT = re.compile(r"\d[\d,]*\+?\s*(?:AEC-Q|automotive-grade)[\w -]{0,12}?\b(?:parts|qualified)\b|"
+                       r"\bAEC-Q qualified parts\b|\bautomotive-grade parts\b", re.I)  # fmt: skip
+
+
+def test_no_aec_q_part_counts_but_the_designations_stay(client):
+    """ "I just want AEC-Q part counts out, filters and designations should remain." """
+    over = body_text(client.get("/shareable/technology-overview").text, 'id="tech-overview"')
+    syn = body_text(client.get(SYN).text, 'id="share-report"')
+    auto = body_text(client.get(AUTO).text, 'id="share-report"')
+    for text in (over, syn, auto):
+        assert not AEC_COUNT.search(text), AEC_COUNT.search(text)
+    assert AEC_COUNT.search("Car radio (12 AEC-Q parts)") and AEC_COUNT.search("1,500+ AEC-Q qualified")
+    for facts in (to.build()["facts"], sr.build_synergies()["facts"], sr.build_automotive()["facts"]):
+        assert all(f["key"] != "automotive" for f in facts)
+    assert all("n" not in s for s in sr.build_automotive()["subsystems"])
+    # the designations remain: which series are AEC-Q qualified, the AEC-Q examples, the standards
+    assert "Series listed are AEC-Q qualified" in auto and "AEC-Q example" in auto and "AEC-Q100" in auto
+    assert sr.build_automotive()["subsystems"][0]["series"]
+
+
+def test_every_synergy_states_one_benefit_from_the_fixed_set(client):
+    """ "How are these synergies useful? Better manufacturing capability, shared tech, new tech, cost savings
+    assumed?" One tag from a fixed set per pair and per overlap column; cost savings always say "assumed". """
+    labels = sr.benefit_labels()
+    assert set(labels) == {"manufacturing", "shared_tech", "new_tech", "cost", "market"}
+    assert "assumed" in labels["cost"].lower()
+    words = sr.curated()["synergies"]
+    assert set(words["benefits"].values()) <= set(labels) and words["benefit_default"] in labels
+    syn, auto = sr.build_synergies(), sr.build_automotive()
+    assert syn["pairs"] and auto["pairs"]
+    for p in syn["pairs"] + auto["pairs"]:
+        assert p["benefit"] in labels.values() and p["line"], p
+    assert {o["benefit"] for o in syn["overlap"].values()} <= set(labels.values())
+    assert all(o["line"] for o in syn["overlap"].values())
+    for url, b, extra in ((SYN, syn, 3), (AUTO, auto, 0)):
+        tags = [unescape(x) for x in re.findall(r'<span class="sr-ben">([^<]+)</span>', client.get(url).text)]
+        assert len(tags) == len(b["pairs"]) + extra and set(tags) <= set(labels.values()), (url, tags)
+    edit = client.get(SYN + "/edit").text
+    assert f'name="pair.{syn["pairs"][0]["key"]}.benefit"' in edit  # the owner can change the tag
+
+
+def test_the_little_markers_are_right_aligned(client):
+    """ "Right align the little markers for both etc": each Skyworks / Qorvo / Both, IP and benefit marker sits in a
+    row with the to-marks-right class (flex; the marker is pushed right and never wraps), on screen and in print. """
+    from app.config import PROJECT_ROOT
+
+    css =(PROJECT_ROOT / "app" / "web" / "static" / "shareable.css").read_text()
+    rule = css[css.index(".to-marks-right > :not(:first-child)"):]
+    assert "margin-left: auto" in rule.split("}")[0] and "white-space: nowrap" in rule.split("}")[0]
+    over = client.get("/shareable/technology-overview").text
+    assert over.count('class="to-plat-name to-marks-right"') == len(to.build()["platforms"])
+    closers = ("</li>", "</b>", "</p>", "</div>")
+    for url in (SYN, AUTO):
+        html = client.get(url).text.split('id="share-report"', 1)[1]
+        marks = [m.start() for m in re.finditer(r'<span class="(?:sr-ip|sr-ben)">', html)]
+        marks += [m.start() for m in re.finditer(r'<span class="to-marks">', html)]
+        assert marks, url
+        for at in marks:
+            row = html.rfind("to-marks-right", 0, at)
+            assert row > 0 and not any(c in html[row:at] for c in closers), (url, html[max(0, at - 200):at + 40])

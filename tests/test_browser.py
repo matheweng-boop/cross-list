@@ -227,6 +227,42 @@ def test_new_systems_in_the_libraries_and_cross_sell(page):
     assert page.locator("main h2").first.is_visible()
 
 
+def test_library_card_opens_its_block_diagram_in_one_click(page):
+    """Owner, 25 Oct 2026: each card says whether a block diagram exists, and one click on a diagram name opens it
+    (the editor is visited last: leaving it asks before unload)."""
+    go(page, "/library")
+    expect(page.locator(".sys-sub .dg-flag").first).to_be_visible()
+    go(page, "/blocks")
+    expect(page.locator("#diagrams")).to_be_in_viewport()  # the summary sits at the top
+    card = page.locator(".sys-sub", has=page.locator(".dg-flag.has")).first
+    expect(card.locator(".dg-flag")).to_contain_text("Block diagram ✓")
+    with page.expect_navigation():
+        card.locator(".sys-diags a").first.click()
+    assert "/blocks/new?template=" in page.url
+
+
+def test_efuse_key_applications_table_fits_desktop_and_phone(page, chromium, live_server):
+    """Owner, 25 Oct 2026: the eFuse key-applications table: short cells without wrapping at 1280 px, cards at 390 px
+    (no sideways scrolling of the page); "More" opens the details and the diagram count opens them too."""
+    path = "/business/evidence/efuse_hotswap"
+    page.set_viewport_size({"width": 1280, "height": 900})
+    go(page, path)
+    table = page.locator("table.ka-table")
+    assert table.evaluate("t => t.scrollWidth <= t.parentElement.clientWidth + 1")
+    heights = table.locator("tr.ka-main").evaluate_all("rows => rows.map(r => r.getBoundingClientRect().height)")
+    assert max(heights) < 80, heights  # one or two lines per row, not a wall of wrapped text
+    page.locator("a.ka-n").first.click()
+    expect(page.locator(".ka-more details").first).to_have_attribute("open", "")
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + path, wait_until="load")
+    assert overflow(tab) <= 1
+    box = tab.locator("table.ka-table").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert tab.locator("tr.ka-main th").first.evaluate("e => getComputedStyle(e).display") == "block"
+    ctx.close()
+
+
 def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     """Owner, 25 Oct 2026: pick Automotive on Cross-sell, see the Skyworks + Qorvo pairs there, open the portfolio tab
     with the system kept and its pairs marked, and come back to By system."""

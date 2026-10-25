@@ -1,16 +1,36 @@
-{# Key applications of a function (data/business/key_applications.yaml via app/services/key_apps.py). #}
+{# Key applications of a function (data/business/key_applications.yaml via app/services/key_apps.py).
+   Owner, 25 Oct 2026: short cells, no wrapping mess. One short line per application; the long texts (uses, full
+   voltage and current ranges, why, links, diagrams) sit in a "More" line under it. On a phone each row is a card. #}
 <h2 id="key-apps">Key applications <span class="small muted">· {{ key_apps.n_using }} library diagrams use it</span></h2>
 <p>{{ key_apps.intro }}</p>
-<div class="table-wrap"><table class="striped small ka-table">
-  <thead><tr><th scope="col">Application</th><th scope="col">Voltage · current</th><th scope="col">Why an eFuse</th><th scope="col">Library diagrams that need it</th></tr></thead>
-  <tbody>{% for a in key_apps.applications %}<tr id="ka-{{ a.key }}">
-    <td><b>{{ a.title }}</b><ul>{% for u in a.uses %}<li>{{ u }}</li>{% endfor %}</ul>
-      {% for label, href in a.links %}<a href="{{ href }}">{{ label }}</a>{{ '<br>'|safe if not loop.last }}{% endfor %}</td>
-    <td>{{ a.volts }}<br><span class="muted">{{ a.amps }}</span></td>
-    <td>{{ a.why }}</td>
-    <td>{% if a.diagrams %}<details><summary>{{ a.n }} diagram{{ 's' if a.n != 1 }}</summary><ul>{% for d in a.diagrams %}<li><a href="{{ d.href }}">{{ d.name }}</a></li>{% endfor %}</ul></details>{% else %}<span class="muted">none in the library yet</span>{% endif %}</td>
-  </tr>{% endfor %}</tbody>
+<div class="table-wrap ka-wrap"><table class="small ka-table">
+  <colgroup><col class="ka-c-app"><col class="ka-c-where"><col class="ka-c-v"><col class="ka-c-a"><col class="ka-c-n"></colgroup>
+  <thead><tr><th scope="col">Application</th><th scope="col">Where it sits</th><th scope="col">Voltage</th><th scope="col">Current</th><th scope="col">Diagrams</th></tr></thead>
+  {% for a in key_apps.applications %}<tbody class="ka-row" id="ka-{{ a.key }}">
+  <tr class="ka-main">
+    <th scope="row" data-label="Application">{{ a.title }}</th>
+    <td data-label="Where it sits">{{ a.where or (a.uses|first) }}</td>
+    <td data-label="Voltage" class="ka-nw">{{ a.v or a.volts }}</td>
+    <td data-label="Current" class="ka-nw">{{ a.a or a.amps }}</td>
+    <td data-label="Diagrams" class="ka-nw">{% if a.n %}<a href="#ka-{{ a.key }}-more" class="ka-n" data-open="ka-{{ a.key }}-more">{{ a.n }}</a>{% else %}<span class="muted">none yet</span>{% endif %}</td>
+  </tr>
+  <tr class="ka-more"><td colspan="5">
+    <details id="ka-{{ a.key }}-more"><summary>More: uses, full ranges, {{ key_apps.why_label[:1]|lower ~ key_apps.why_label[1:] }}{% if a.n %}, the {{ a.n }} diagram{{ 's' if a.n != 1 }}{% endif %}</summary>
+    <div class="ka-detail">
+      <div><b>Uses</b><ul>{% for u in a.uses %}<li>{{ u }}</li>{% endfor %}</ul></div>
+      <div><b>Voltage · current</b><p>{{ a.volts }}<br><span class="muted">{{ a.amps }}</span></p>
+        <b>{{ key_apps.why_label }}</b><p>{{ a.why }}</p>
+        {% if a.links %}<p>{% for label, href in a.links %}<a href="{{ href }}">{{ label }}</a>{{ '<br>'|safe if not loop.last }}{% endfor %}</p>{% endif %}</div>
+      {% if a.diagrams %}<div class="ka-diags"><b>Library diagrams that need it</b><ul>{% for d in a.diagrams %}<li><a href="{{ d.href }}">{{ d.name }}</a></li>{% endfor %}</ul></div>{% endif %}
+    </div></details>
+  </td></tr>
+  </tbody>{% endfor %}
 </table></div>
+<script>
+document.querySelectorAll('.ka-table [data-open]').forEach(function (a) {
+  a.addEventListener('click', function () { var d = document.getElementById(a.dataset.open); if (d) d.open = true; });
+});
+</script>
 {% if key_apps.other %}<details class="small"><summary>{{ key_apps.other|length }} more library diagrams use it (medical, building, solar and storage, defense radio)</summary>
 <ul>{% for d in key_apps.other %}<li><a href="{{ d.href }}">{{ d.name }}</a></li>{% endfor %}</ul></details>{% endif %}
 <p class="small muted">Voltage and current classes are typical values; “est” marks our estimates. Diagram counts come from the application library.</p>

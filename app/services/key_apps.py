@@ -49,4 +49,5 @@ def for_function(fn: str) -> dict | None:
                                   for i in mine]})  # fmt: skip
     other = [{"i": i, "name": blocks.display_name(lib[i]), "href": f"/blocks/new?template={i}"}
              for i in using if i not in placed]  # fmt: skip
-    return {"intro": entry.get("intro") or "", "applications": rows, "other": other, "n_using": len(using)}
+    return {"intro": entry.get("intro") or "", "applications": rows, "other": other, "n_using": len(using),
+            "why_label": entry.get("why_label") or "Why it is used"}  # fmt: skip

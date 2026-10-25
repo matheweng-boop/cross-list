@@ -642,12 +642,15 @@ def visuals_rf_parts():
 def library_index(request: Request):
     """Full systems (owner, 23 Oct 2026): each system is a header with its sub-systems, their diagram counts and deep
     dives; topics not yet in a system follow at the end."""
-    from app.services import library
+    from app.services import blocks, library
     from app.services import systems as sy
 
     topics = library.topics()
     by_key = {t["key"]: t for t in topics}
-    tree = [{**s, "subs": [{**x, "deep": [by_key[k] for k in x["topics"] if k in by_key]} for x in s["subsystems"]]}
+    lib = blocks.templates()
+    tree = [{**s, "subs": [{**x, "deep": [by_key[k] for k in x["topics"] if k in by_key],
+                            "diagrams": [{"i": i, "name": blocks.display_name(lib[i])} for i in x["idx"]]}
+                           for x in s["subsystems"]]}
             for s in sy.systems()]  # fmt: skip
     for s in tree:
         s["deep"] = [t for x in s["subs"] for t in x["deep"]]

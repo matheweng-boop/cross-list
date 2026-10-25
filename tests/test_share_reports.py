@@ -85,11 +85,11 @@ def test_automotive_names_only_aec_q_series_and_opens_as_an_extension(client):
     assert named and all(sr.qualified_series(x) for x in named)
     for x in re.findall(r"<code>([^<]+)</code>", html):
         rows = sr.series_rows(x)
-        assert any(r["automotive"] is True for r in rows), f"{x} is not AEC-Q qualified"
+        assert any(sr._qualified(r) for r in rows), f"{x} is not AEC-Q qualified"  # the one site-wide AEC-Q test
     for p in b["pairs"]:
         for mpn in (p["s_ex"], p["q_ex"]):
             if mpn:
-                assert any(r["mpn"] == mpn and r["automotive"] is True for r in to.active_rows()), mpn
+                assert any(r["mpn"] == mpn and sr._qualified(r) for r in to.active_rows()), mpn
     assert "AEC-Q100" in html and "ISO 26262" in html
 
 

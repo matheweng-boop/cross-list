@@ -124,8 +124,10 @@ def patent_tag(platform: dict, marks: dict, automotive_only: bool = False) -> st
 
 # ---- the numbers and lists of each report --------------------------------------------------------------------------
 def _qualified(r: dict) -> bool:
-    """AEC-Q qualified: the catalogue marks the part automotive grade (the same flag as price_model.is_automotive)."""
-    return r.get("automotive") is True
+    """AEC-Q qualified: the one site-wide test (app.services.autograde.is_aec), as on Cross-sell and the overview."""
+    from app.services import autograde
+
+    return r.get("automotive") is True or autograde.is_aec(r)
 
 
 def series_rows(series: str) -> list[dict]:

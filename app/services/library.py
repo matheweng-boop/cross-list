@@ -220,6 +220,10 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id
             ("time of flight", "two-way ranging", "first path", "relay attack", "distance bounding", "STS", "ranging")),
     "dab": ("DAB: from I/Q samples to the ensemble and the audio", "/visuals#dab",  # static/vz/dab.js
             ("DAB", "DAB+", "ensemble", "multiplex", "I/Q", "OFDM")),
+    "flow": ("Signal flow: from the antenna to the audio", "/visuals#flow",  # static/vz/flow.js
+             ("signal flow", "signal chain", "FM stereo", "de-emphasis", "MPX", "envelope detector")),
+    "rds": ("RDS: the data under FM (PS name, traffic, AF, clock)", "/visuals#rds",  # static/vz/rds.js
+            ("RDS", "RBDS", "RadioText", "traffic announcement", "alternative frequency")),
     "turnon": ("Three-step turn-on: overshoot, ringing, EMI and the filter", "/visuals#turnon",  # static/vz/turnon.js
                ("turn-on", "overshoot", "ringing", "EMI filter", "ProVCD", "di/dt")),
     "hex": ("Hex, binary and registers", "/visuals#hex",  # static/vz/hex.js

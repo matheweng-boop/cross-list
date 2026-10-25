@@ -190,7 +190,8 @@ def test_tam_page_shows_summary_chips_and_one_tuner_row(client):
     assert r.text.count('id="topic-auto-radio-tuner-ics"') == 1 and "Low <b>$0.89 B</b> – High <b>$2.31 B</b>" in r.text
     assert 'value="tuner-ic-mrfr"' not in r.text  # a member is no longer a separate review item
     assert 'id="t-tuner-ic-mrfr"' in r.text  # ... but stays visible inside the topic
-    assert 'value="cpd-system-ksm"' in r.text  # a single estimate stays separate, for review
+    single = next(e["key"] for e in tam.researched() if e["fn"] != "am_fm_tuner" and e["key"] not in tam.applied())
+    assert f'value="{single}"' in r.text  # a single estimate stays separate, for review
     assert "Applied in:" in r.text
 
 

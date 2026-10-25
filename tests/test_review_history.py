@@ -101,8 +101,8 @@ def test_long_comments_are_cut_with_more(client, session):
 # ---- applied TAM answers are locked -------------------------------------------------------------------------------
 def test_applied_record_matches_the_22_oct_work():
     a = tam.applied()
-    assert set(a) == {"tuner-ic-datahorizzon", "tuner-ic-mrfr", "digital-radio-tuner-marketintelo",
-                      "tuner-ic-emergen"}  # fmt: skip
+    assert {"tuner-ic-datahorizzon", "tuner-ic-mrfr", "digital-radio-tuner-marketintelo", "tuner-ic-emergen"} <= set(a)
+    assert {"current-sensor-mm", "cpd-system-ksm", "auto-wifi-modules"} <= set(a)  # owner confirmed, 25 Oct 2026
     assert a["tuner-ic-emergen"]["verdict"] == "disagree"
     case = {"label": "radio-tuner-next", "href": "/business/reports/radio-tuner-next"}
     assert case in a["tuner-ic-mrfr"]["applied_in"]

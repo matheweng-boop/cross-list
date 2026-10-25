@@ -3,9 +3,9 @@ gap, so RF and power work comes first and an LDO is listed but ranks low.
 
     Priority = 100 × (wT × T + wL × L + wD × D)
 
-T technology relation (curated table), L likeliness (feasibility, a platform of ours, the owner's review answers) and
-D diagrams (log scale), each 0–1. Weights and tables live in data/business/priority.yaml. The Opportunity score
-(app/services/scoring.py) is a different measure and stays as it is.
+T technology relation (curated table), L likeliness (feasibility, a platform of ours, US patent depth, the owner's
+review answers) and D diagrams (log scale), each 0–1. Weights and tables live in data/business/priority.yaml. The
+Opportunity score (app/services/scoring.py) is a different measure and stays as it is.
 """
 
 import math
@@ -13,7 +13,7 @@ from functools import lru_cache
 
 from app import yamlio
 from app.config import PROJECT_ROOT
-from app.services import blocks, scoring
+from app.services import blocks, patents, scoring
 from app.services import opportunity as op
 
 FILE = PROJECT_ROOT / "data" / "business" / "priority.yaml"
@@ -97,12 +97,24 @@ def _platforms() -> dict[str, list[str]]:
     return out
 
 
+def patent_bonus(fn: str) -> dict:
+    """The likeliness bonus for US patent depth (owner, 25 Oct 2026): from the function's entry in patents.yaml, else
+    the platform entry of patents_platforms.yaml that covers it. {depth, bonus, source, label}; bonus 0 without data."""
+    got = patents.depth(fn)
+    if not got:
+        return {"depth": None, "bonus": 0.0, "source": "", "label": ""}
+    table = config()["likeliness"].get("patent_bonus") or {}
+    return {**got, "bonus": float(table.get(got["depth"]) or 0)}
+
+
 def likeliness(e: dict) -> dict:
-    """L for a row: from its feasibility group (1–3), plus a bonus for a platform of ours, or the owner's answer."""
+    """L for a row: from its feasibility group (1–3), plus a bonus for a platform of ours and one for US patent depth
+    (capped at 1.0), or the owner's answer (no bonus then)."""
     cfg = config()["likeliness"]
     own = (cfg.get("owner") or {}).get(e["fn"])
     path = e.get("path")
     path = path.get("path") if isinstance(path, dict) else path
+    pat = {"depth": None, "bonus": 0.0, "source": "", "label": ""}
     if own:
         v, basis = float(own["value"]), own["note"]
     elif path == "not_pursue":
@@ -120,8 +132,15 @@ def likeliness(e: dict) -> dict:
         if plats and v < 1.0:
             v = min(1.0, v + float(cfg["platform_bonus"]))
             basis += f" · + {cfg['platform_bonus']:g} for a platform of ours ({plats[0]})"
+        pat = patent_bonus(e["fn"])
+        if pat["bonus"]:
+            where = f", {pat['label']} platform" if pat["source"] == "platform" else ""
+            capped = (" (L already 1.0)" if v >= 1.0 - 1e-9 else
+                      " (capped at 1.0)" if v + pat["bonus"] > 1.0 + 1e-9 else "")  # fmt: skip
+            v = min(1.0, v + pat["bonus"])
+            basis += f" · + {pat['bonus']:g} for US patents ({pat['depth']}{where}){capped}"
     label = next(x["label"] for x in cfg["labels"] if v >= x["from"] - 1e-9)
-    return {"value": round(v, 3), "label": label, "basis": basis, "owner": bool(own)}
+    return {"value": round(v, 3), "label": label, "basis": basis, "owner": bool(own), "patent": pat}
 
 
 def diagrams_n(e: dict) -> float:
@@ -146,7 +165,7 @@ def score(e: dict, n_max: float, w: dict[str, float] | None = None, n: float | N
     return {
         "score": round(total, 1), "T": t["value"], "L": li["value"], "D": round(d, 3), "n": n, "n_max": n_max,
         "t_level": t["level"], "t_label": t["label"], "t_help": t["help"], "mapped": t["mapped"],
-        "l_label": li["label"], "l_basis": li["basis"], "l_owner": li["owner"],
+        "l_label": li["label"], "l_basis": li["basis"], "l_owner": li["owner"], "patent": li["patent"],
         "focus": t["value"] >= cfg["focus_from"] - 1e-9, "outside": t["value"] < cfg["outside_below"] - 1e-9,
         "w": w,
     }  # fmt: skip
@@ -205,7 +224,8 @@ def unmapped(rows: list[dict]) -> list[str]:
 def chips(e: dict) -> list[str]:
     p = e["priority"]
     n = round(p["n"]) if abs(p["n"] - round(p["n"])) < 1e-9 else p["n"]
-    return [p["t_label"], f"{n:g} diagram{'' if n == 1 else 's'}", p["l_label"]]
+    out = [p["t_label"], f"{n:g} diagram{'' if n == 1 else 's'}", p["l_label"]]
+    return out + ([f"patents: {p['patent']['depth']}"] if p["patent"]["bonus"] else [])
 
 
 def example(e: dict) -> str:
@@ -213,6 +233,15 @@ def example(e: dict) -> str:
     p, w = e["priority"], e["priority"]["w"]
     return (f"100 × ({w['technology']:.2f} × {p['T']:.2f} + {w['likeliness']:.2f} × {p['L']:.2f} + "
             f"{w['diagrams']:.2f} × {p['D']:.2f}) = {p['score']:.1f}")  # fmt: skip
+
+
+def patent_example(rows: list[dict]) -> dict | None:
+    """The highest-priority row whose likeliness the patent bonus raised, other than the top item, for the worked
+    examples."""
+    top = (ranked(rows) or [None])[0]
+    hit = [e for e in rows if e is not top and "for US patents" in e["priority"]["l_basis"]
+           and "already 1.0" not in e["priority"]["l_basis"] and "@" not in e.get("key", e["fn"])]  # fmt: skip
+    return (ranked(hit) or [None])[0]
 
 
 def ldo_example(rows: list[dict]) -> dict | None:

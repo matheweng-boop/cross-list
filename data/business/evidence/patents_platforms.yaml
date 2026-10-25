@@ -1,0 +1,1521 @@
+# US patent landscape of Skyworks and the Qorvo group per technology platform, plus an automotive cut and where the two
+# overlap or complement each other. Indicative, not legal advice. Owner, 25 Oct 2026: background only (no page of its
+# own); shown on the per-function evidence pages, used as a small bonus in the priority score's likeliness
+# (data/business/priority.yaml patent_bonus) and summarised for the synergies report (app/services/patents.py
+# patent_summary).
+# Source: USPTO Patent Public Search (ppubs.uspto.gov, anonymous, BRS syntax), US grants + published applications,
+# searched 2026-10-25, one request at a time, >= 10 s apart per host: 36 searches, 2 batched record look-ups and 4 sessions on
+# ppubs.uspto.gov, 19 full-text PDFs on image-ppubs.uspto.gov, robots.txt of both (none published); no block or bot check.
+# Espacenet, Lens, PATENTSCOPE and Google Patents block automated access and EPO OPS needs registration
+# (see patents.yaml), so US only; no EP / CN families.
+# Method: count = US patent families (one per family id) whose title, abstract or claims match the platform terms and
+#   whose assignee is Skyworks (Skyworks Solutions, Skyworks Global, its Japan filter unit; ex-Silicon Labs I&A only where
+#   recorded under Skyworks) or the Qorvo group (Qorvo, RF Micro Devices, TriQuint, Active-Semi, Decawave, GreenPeak,
+#   United Silicon Carbide, Anokiwave). skyworks / qorvo split the families by assignee name.
+#   trend = families by earliest US filing in the family (the application or a parent / provisional it claims; a
+#   priority proxy): [up to 2019, 2020-2022, 2023-2026]. trend_dir (est): share first filed 2020 or later >= 40 %
+#   rising, 20-40 % steady, below 20 % falling; under 5 families thin.
+#   depth (est, by count): strong >= 100 families, some 20-99, little 1-19, none_found 0.
+#   leader: both when the smaller holds at least half of the larger count, else the larger; overridden from the titles
+#   where keyword noise is large (said in the note).
+#   examples: the 3 most recently published families per company (grant preferred), linked to the USPTO full-text PDF.
+#   automotive: the same platform terms AND automotive terms (vehicle, automotive, V2X, telematics, car, AEC, AEC-Q100) in
+#   title / abstract / claims (count); broad_count puts the automotive terms in the default search fields instead.
+# Limits: keyword hits, not a legal or technical review; a family may count in several platforms; patents that never name
+#   the platform term in title, abstract or claims are missed (e.g. most PA patents do not say HBT); recent filings are
+#   under-counted (18-month publication lag); many Silicon Labs I&A patents are still recorded under Silicon Laboratories.
+# check: 3 examples per platform (2 per automotive entry) spot-checked 2026-10-25: the Patent Public Search record resolves
+#   with the same title and an assignee of the group; one example per platform also by the USPTO full-text PDF
+#   (image-ppubs.uspto.gov; image-only PDFs, so "served as application/pdf" is checked, not their text).
+source: "USPTO Patent Public Search (ppubs.uspto.gov), US grants and published applications"
+searched: 2026-10-25
+disclaimer: "Indicative public patent counts, not legal advice."
+buckets: ["up to 2019", "2020-2022", "2023-2026"]
+platforms:
+  baw:
+    label: BAW filters
+    tech_overview: baw
+    functions: [filter_saw_baw, diplexer]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("bulk acoustic wave" OR BAW OR FBAR OR "film bulk acoustic").ti,ab,clm.
+    count: 274
+    skyworks: 133
+    qorvo: 141
+    depth: strong
+    leader: both
+    trend:
+      skyworks: [66, 62, 5]
+      qorvo: [122, 15, 4]
+    trend_dir:
+      skyworks: rising
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12744513B2
+        title: Acoustic wave device having stacked piezoelectric layers between electrodes
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744513
+      - id: US12738915B2
+        title: Methods of manufacturing film bulk acoustic wave resonators
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12738915
+      - id: US12726166B2
+        title: Bulk acoustic wave device with piezoelectric layer formed by atomic layer deposition
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12726166
+      qorvo:
+      - id: US12744505B2
+        title: Multiplexing for filter-banks complexity reduction
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744505
+      - id: US12652018B2
+        title: Acoustic load-line tuning in a wireless transmission circuit
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12652018
+      - id: US12597902B2
+        title: Piezoelectric bulk layers with tilted c-axis orientation and methods for making the same
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12597902
+    note: BAW / FBAR resonators and filters; Qorvo's older TriQuint BAW base and Skyworks' newer filings are about level
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12744513B2: Patent Public Search record found, title matches, assignee Skyworks Global Pte. Ltd.'
+      - 'US12744505B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12738915B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744505 - USPTO full-text PDF of US12744505B2
+        served (HTTP 200, application/pdf)
+  saw:
+    label: SAW / TC-SAW filters
+    tech_overview: saw
+    functions: [filter_saw_baw, diplexer]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("surface acoustic wave" OR "TC-SAW" OR TCSAW OR "temperature compensated SAW" OR "interdigital
+      transducer").ti,ab,clm.
+    count: 297
+    skyworks: 204
+    qorvo: 93
+    depth: strong
+    leader: skyworks
+    trend:
+      skyworks: [123, 77, 4]
+      qorvo: [87, 5, 1]
+    trend_dir:
+      skyworks: steady
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12756408B2
+        title: Radio frequency module with reduced intermodulation distortion
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756408
+      - id: US12756376B2
+        title: Surface acoustic wave device with acoustic wave energy confinement
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756376
+      - id: US12756372B2
+        title: Packaged acoustic wave devices with multilayer piezoelectric substrate
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756372
+      qorvo:
+      - id: US12744505B2
+        title: Multiplexing for filter-banks complexity reduction
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744505
+      - id: US12676587B2
+        title: Plate wave devices with wave confinement structures and fabrication methods
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12676587
+      - id: US12500567B2
+        title: Acoustic filters with improved return loss
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12500567
+    note: SAW, TC-SAW and multilayer piezoelectric substrates; Skyworks (incl. its Japan filter unit) files most
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12756408B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12744505B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12756376B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744505 - USPTO full-text PDF of US12744505B2
+        served (HTTP 200, application/pdf)
+  gaas_hbt:
+    label: GaAs HBT power amplifiers
+    tech_overview: gaas_hbt
+    functions: [power_amplifier, pa_module, rf_predriver, rf_gain_block, catv_amplifier]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("heterojunction bipolar" OR HBT).ti,ab,clm.
+    count: 111
+    skyworks: 52
+    qorvo: 59
+    depth: strong
+    leader: both
+    trend:
+      skyworks: [49, 3, 0]
+      qorvo: [56, 2, 1]
+    trend_dir:
+      skyworks: falling
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12763729B2
+        title: Circuits and devices related to radio-frequency amplifiers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12763729
+      - id: US12695432B2
+        title: Power amplifier systems with frequency response compensation
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12695432
+      - id: US12494743B2
+        title: Power amplifier with variable bias impedance
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12494743
+      qorvo:
+      - id: US12744496B2
+        title: Thermal droop compensation in power amplifiers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744496
+      - id: US12732139B2
+        title: Broadband LNA structure using offset active coupled segments
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732139
+      - id: US11777455B2
+        title: Integrated circuit amplifier and thermal protection circuitry
+        year: 2023
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11777455
+    note: only families naming HBT in title, abstract or claims; most PA patents do not, so this undercounts PA work
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12763729B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12744496B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12695432B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12744496 - USPTO full-text PDF of US12744496B2
+        served (HTTP 200, application/pdf)
+  gaas_phemt:
+    label: GaAs pHEMT
+    tech_overview: gaas_phemt
+    functions: []
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (pHEMT OR "pseudomorphic high electron mobility" OR "pseudomorphic HEMT").ti,ab,clm.
+    count: 51
+    skyworks: 15
+    qorvo: 36
+    depth: some
+    leader: qorvo
+    trend:
+      skyworks: [14, 1, 0]
+      qorvo: [35, 1, 0]
+    trend_dir:
+      skyworks: falling
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12652004B2
+        title: Apparatus and methods for amplifier linearization
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12652004
+      - id: US10700646B2
+        title: pHEMT switch circuits with enhanced linearity performance
+        year: 2020
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10700646
+      - id: US10651812B2
+        title: Cascode amplifier having feedback circuits
+        year: 2020
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10651812
+      qorvo:
+      - id: US12732139B2
+        title: Broadband LNA structure using offset active coupled segments
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732139
+      - id: US11152895B2
+        title: Doherty amplifier
+        year: 2021
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11152895
+      - id: US10249608B1
+        title: ESD protection circuit
+        year: 2019
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10249608
+    note: pHEMT devices, switches and LNAs; mostly older filings
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12652004B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12732139B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US10700646B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732139 - USPTO full-text PDF of US12732139B2
+        served (HTTP 200, application/pdf)
+  gan:
+    label: GaN
+    tech_overview: gan
+    functions: [rf_power_transistor, rf_limiter]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("gallium nitride" OR GaN).ti,ab,clm.
+    count: 125
+    skyworks: 7
+    qorvo: 118
+    depth: strong
+    leader: qorvo
+    trend:
+      skyworks: [3, 4, 0]
+      qorvo: [100, 15, 3]
+    trend_dir:
+      skyworks: rising
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12771300B2
+        title: Dynamic optimization of transistor array in power amplifier
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771300
+      - id: US12652004B2
+        title: Apparatus and methods for amplifier linearization
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12652004
+      - id: US12562691B2
+        title: Power amplifier having adaptive array size
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12562691
+      qorvo:
+      - id: US12751034B2
+        title: Dual-gate semiconductor structures for power applications
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12751034
+      - id: US12733519B2
+        title: Multichip module thermal management through backside metal
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12733519
+      - id: US12696510B2
+        title: Enhancement-mode GaN HFET including ScAIN and method of manufacturing the same
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12696510
+    note: GaN HEMT devices, GaN PAs and limiters; almost all Qorvo group (TriQuint / RFMD / UnitedSiC)
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12771300B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12751034B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12652004B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12751034 - USPTO full-text PDF of US12751034B2
+        served (HTTP 200, application/pdf)
+  soi:
+    label: RF SOI switches and tuners
+    tech_overview: soi
+    functions: [rf_switch, antenna_switch, rf_attenuator]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("silicon-on-insulator" OR "silicon on insulator" OR SOI).ti,ab,clm. AND (switch OR
+      tuner OR tuning OR tunable).ti,ab,clm.
+    count: 102
+    skyworks: 60
+    qorvo: 42
+    depth: strong
+    leader: both
+    trend:
+      skyworks: [54, 6, 0]
+      qorvo: [38, 4, 0]
+    trend_dir:
+      skyworks: falling
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12707716B2
+        title: Silicon-on-insulator substrate processing for transistor enhancement
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12707716
+      - id: US12593491B2
+        title: Semiconductor devices with Schottky barriers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12593491
+      - id: US12580565B2
+        title: Biasing of radio-frequency switches
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12580565
+      qorvo:
+      - id: US12671368B2
+        title: Amplitude modulation-phase modulation (AM-PM) linearization in a power amplifier using bias circuitry
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12671368
+      - id: US12489408B2
+        title: Power amplifier system
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12489408
+      - id: US11575373B2
+        title: Switch circuitry
+        year: 2023
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11575373
+    note: silicon-on-insulator switches, tuners and their biasing
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12707716B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12671368B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12593491B2: Patent Public Search record found, title matches, assignee Skyworks Solution, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12671368 - USPTO full-text PDF of US12671368B2
+        served (HTTP 200, application/pdf)
+  sige:
+    label: SiGe / BiCMOS
+    tech_overview: sige
+    functions: [rf_mixer]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (SiGe OR "silicon germanium" OR "silicon-germanium" OR BiCMOS).ti,ab,clm.
+    count: 45
+    skyworks: 18
+    qorvo: 27
+    depth: some
+    leader: both
+    trend:
+      skyworks: [18, 0, 0]
+      qorvo: [26, 1, 0]
+    trend_dir:
+      skyworks: falling
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12418265B2
+        title: Direct substrate to solder bump connection for thermal management in flip chip amplifiers
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12418265
+      - id: US11778915B2
+        title: Substituted aluminum nitride for improved acoustic wave filters
+        year: 2023
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11778915
+      - id: US10869362B2
+        title: WLAN front-end
+        year: 2020
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10869362
+      qorvo:
+      - id: US12740412B2
+        title: RF devices with nanotube particles for enhanced performance and methods of forming the same
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12740412
+      - id: US12368056B2
+        title: RF devices with enhanced performance and methods of forming the same
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12368056
+      - id: US12062571B2
+        title: Selective etching process for SiGe and doped epitaxial silicon
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12062571
+    note: SiGe / BiCMOS devices and amplifiers; small, older sets
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12418265B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12740412B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US11778915B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12418265 - USPTO full-text PDF of US12418265B2
+        served (HTTP 200, application/pdf)
+  modules:
+    label: FEM / SiP integration and packaging
+    tech_overview: modules
+    functions: [rf_frontend, wifi_fem, bt_fem, uwb_fem, v2x_fem, diversity_rx_module]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("front end module" OR "front-end module" OR FEM OR "system in package" OR "system-in-package"
+      OR "multi-chip module" OR "multichip module").ti,ab,clm.
+    count: 246
+    skyworks: 224
+    qorvo: 22
+    depth: strong
+    leader: skyworks
+    trend:
+      skyworks: [153, 65, 6]
+      qorvo: [15, 6, 1]
+    trend_dir:
+      skyworks: steady
+      qorvo: steady
+    examples:
+      skyworks:
+      - id: US12771343B2
+        title: Fast switching radio frequency switch with reduced spurs
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771343
+      - id: US12756372B2
+        title: Packaged acoustic wave devices with multilayer piezoelectric substrate
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756372
+      - id: US12756408B2
+        title: Radio frequency module with reduced intermodulation distortion
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756408
+      qorvo:
+      - id: US12733519B2
+        title: Multichip module thermal management through backside metal
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12733519
+      - id: US12683485B2
+        title: Ripple reduction for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683485
+      - id: US12658860B2
+        title: Analog predistortion (APD) for power amplifier
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12658860
+    note: front-end module and system-in-package language; Skyworks claims name the module far more often, so the gap partly
+      reflects claim wording (est)
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12771343B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12733519B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12756372B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771343 - USPTO full-text PDF of US12771343B2
+        served (HTTP 200, application/pdf)
+  beamformers:
+    label: Beamformers / phased array
+    tech_overview: beamformers
+    functions: [beamformer_ic, rf_phase_shifter, mmwave_antenna_module]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (beamform$ OR "phased array" OR "phased-array").ti,ab,clm.
+    count: 66
+    skyworks: 21
+    qorvo: 45
+    depth: some
+    leader: qorvo
+    trend:
+      skyworks: [5, 16, 0]
+      qorvo: [34, 10, 1]
+    trend_dir:
+      skyworks: rising
+      qorvo: steady
+    examples:
+      skyworks:
+      - id: US12756436B2
+        title: Beamforming communication system with crossbar switch
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756436
+      - id: US12732214B2
+        title: Reprogrammable array of selectable antenna elements for frequency adjustment
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732214
+      - id: US12731909B2
+        title: Staggered rows of antennas for dual frequency operation
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12731909
+      qorvo:
+      - id: US12750104B2
+        title: Beamforming phase correction in a wireless communication circuit
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750104
+      - id: US12676409B2
+        title: Integrated circuit and system with tracking
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12676409
+      - id: US12658950B1
+        title: Flexible online loft compensation in RF communication systems and devices
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12658950
+    note: beamforming and phased-array ICs and antennas; Qorvo group incl. Anokiwave
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12756436B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12750104B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12732214B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756436 - USPTO full-text PDF of US12756436B2
+        served (HTTP 200, application/pdf)
+  isolation:
+    label: Digital isolation and isolated gate drivers
+    tech_overview: isolation
+    functions: [digital_isolator, gate_driver, isolated_amplifier, isolated_can, isolated_dcdc, isolated_digital_input,
+      isolated_smart_switch, isolated_switch_driver]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("digital isolator" OR "galvanic isolation" OR "galvanically isolated" OR "isolation
+      barrier" OR "isolated gate driver" OR "capacitive isolation").ti,ab,clm.
+    count: 10
+    skyworks: 9
+    qorvo: 1
+    depth: little
+    leader: skyworks
+    trend:
+      skyworks: [2, 7, 0]
+      qorvo: [1, 0, 0]
+    trend_dir:
+      skyworks: rising
+      qorvo: thin
+    examples:
+      skyworks:
+      - id: US12592683B2
+        title: Variable current drive for isolated gate drivers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12592683
+      - id: US12316256B2
+        title: Flexible fault detection
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12316256
+      - id: US12294335B2
+        title: Receiver front end for digital isolators
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12294335
+      qorvo:
+      - id: US11609131B2
+        title: Wafer bonded piezoresistive and piezoelectric force sensor and related methods of manufacture
+        year: 2023
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11609131
+    note: 'thin: most ex-Silicon Labs isolation patents are still recorded under Silicon Laboratories, not counted; the
+      one Qorvo hit is a force sensor (keyword noise)'
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12592683B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US11609131B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12316256B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12592683 - USPTO full-text PDF of US12592683B2
+        served (HTTP 200, application/pdf)
+  timing:
+    label: Timing, clocks and oscillators
+    tech_overview: timing
+    functions: [clock_generator, clock_buffer, jitter_attenuator, crystal_oscillator, rf_synthesizer]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("clock generator" OR "clock buffer" OR "jitter attenuator" OR "jitter attenuation"
+      OR "crystal oscillator" OR "clock synthesizer" OR "timing device" OR "BAW oscillator").ti,ab,clm.
+    count: 41
+    skyworks: 27
+    qorvo: 14
+    depth: some
+    leader: skyworks
+    trend:
+      skyworks: [17, 7, 3]
+      qorvo: [12, 2, 0]
+    trend_dir:
+      skyworks: steady
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12712491B2
+        title: Back gate biasing of crystal oscillators for enhanced negative resistance
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12712491
+      - id: US12681526B2
+        title: Timing synchronization system
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12681526
+      - id: US12587197B2
+        title: Multi-phase clock generator circuit
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12587197
+      qorvo:
+      - id: US12627267B1
+        title: Hybrid power management integrated circuit
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12627267
+      - id: US12265108B2
+        title: On-chip capacitance measurement method and apparatus
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12265108
+      - id: US11984804B2
+        title: Resonant charge pump circuit
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11984804
+    note: Skyworks hits are clocks and crystal oscillators; Qorvo hits are clock blocks inside PMICs and charge pumps (est);
+      most ex-Silicon Labs timing patents are still recorded under Silicon Laboratories (counted leader both, judged skyworks
+      from the titles, est)
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12712491B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12627267B1: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12681526B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12712491 - USPTO full-text PDF of US12712491B2
+        served (HTTP 200, application/pdf)
+  broadcast:
+    label: Broadcast radio and tuners
+    tech_overview: broadcast
+    functions: [am_fm_tuner, digital_radio_demod, tv_tuner, tv_demodulator, single_chip_radio, active_antenna_amp]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("FM radio" OR "AM radio" OR "FM receiver" OR "AM receiver" OR "FM tuner" OR "broadcast
+      radio" OR "digital audio broadcasting" OR DAB OR "HD radio" OR "broadcast receiver" OR "radio tuner" OR "television
+      tuner" OR "TV tuner").ti,ab,clm.
+    count: 21
+    skyworks: 9
+    qorvo: 12
+    depth: some
+    leader: skyworks
+    trend:
+      skyworks: [7, 0, 2]
+      qorvo: [12, 0, 0]
+    trend_dir:
+      skyworks: steady
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12665801B2
+        title: Radio receiver with frequency segment offset compensation and related methods
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12665801
+      - id: US12592733B2
+        title: Tone tracking and cancellation for radio receivers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12592733
+      - id: US11979680B2
+        title: System, apparatus and method for providing remote tuner options in a vehicle entertainment system
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11979680
+      qorvo:
+      - id: US9659898B1
+        title: Apparatuses, systems, and methods for die attach coatings for semiconductor packages
+        year: 2017
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9659898
+      - id: US8901657B1
+        title: Integrated capacitor having an overhanging top capacitor plate
+        year: 2014
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8901657
+      - id: US8778747B2
+        title: Regrown Schottky structures for GAN HEMT devices
+        year: 2014
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8778747
+    note: Skyworks hits are radio receivers and tuners; the Qorvo group hits are older TriQuint process patents that match
+      the acronym DAB (keyword noise, est) (counted leader both, judged skyworks from the titles, est)
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12665801B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US9659898B1: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12592733B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12665801 - USPTO full-text PDF of US12665801B2
+        served (HTTP 200, application/pdf)
+  power:
+    label: Power management / PMIC
+    tech_overview: power
+    functions: [pmic, buck_boost, pol_buck, wide_vin_buck, power_module]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("power management integrated circuit" OR PMIC OR "DC-DC converter" OR "DC-to-DC converter"
+      OR "buck converter" OR "boost converter" OR "switching regulator").ti,ab,clm.
+    count: 207
+    skyworks: 54
+    qorvo: 153
+    depth: strong
+    leader: qorvo
+    trend:
+      skyworks: [46, 7, 1]
+      qorvo: [116, 31, 6]
+    trend_dir:
+      skyworks: falling
+      qorvo: steady
+    examples:
+      skyworks:
+      - id: US12756316B2
+        title: Systems and methods for integrated multi-mode power management for uplink carrier aggregated transmitter
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756316
+      - id: US12695432B2
+        title: Power amplifier systems with frequency response compensation
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12695432
+      - id: US12683563B2
+        title: Envelope tracking with adjustable slew rate
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683563
+      qorvo:
+      - id: US12771296B2
+        title: Doherty power amplifier system
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771296
+      - id: US12763656B2
+        title: Dynamic current limits for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12763656
+      - id: US12750104B2
+        title: Beamforming phase correction in a wireless communication circuit
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750104
+    note: DC-DC converters and PMICs, largely supplies for RF power amplifiers; Qorvo incl. Active-Semi
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12756316B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12771296B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12695432B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756316 - USPTO full-text PDF of US12756316B2
+        served (HTTP 200, application/pdf)
+  motor:
+    label: Motor control
+    tech_overview: power
+    functions: [motor_controller, motor_driver_brushed, three_phase_gate_driver]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("motor control" OR "motor controller" OR "motor driver" OR BLDC OR "brushless DC"
+      OR "brushless motor").ti,ab,clm.
+    count: 1
+    skyworks: 0
+    qorvo: 1
+    depth: little
+    leader: qorvo
+    trend:
+      skyworks: [0, 0, 0]
+      qorvo: [1, 0, 0]
+    trend_dir:
+      skyworks: thin
+      qorvo: thin
+    examples:
+      skyworks: []
+      qorvo:
+      - id: US11940776B2
+        title: Methods and apparatus for detecting aging and predicting failures in BLDC and PMSM motors
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11940776
+    note: 'thin: one Active-Semi family; Qorvo''s motor-control SoC know-how is not visible in US keyword hits'
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US11940776B2: Patent Public Search record found, title matches, assignee Active-Semi, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11940776 - USPTO full-text PDF of US11940776B2
+        served (HTTP 200, application/pdf)
+  uwb:
+    label: UWB
+    tech_overview: wireless
+    functions: [uwb_soc, uwb_fem]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("ultra-wideband" OR "ultra wideband" OR UWB).ti,ab,clm.
+    count: 35
+    skyworks: 0
+    qorvo: 35
+    depth: some
+    leader: qorvo
+    trend:
+      skyworks: [0, 0, 0]
+      qorvo: [21, 10, 4]
+    trend_dir:
+      skyworks: thin
+      qorvo: rising
+    examples:
+      skyworks: []
+      qorvo:
+      - id: US12756423B2
+        title: Ultra-wideband method and apparatus
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756423
+      - id: US12621191B2
+        title: System and methods for generating supercomplementary zero-sum correlation sequence blocks
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12621191
+      - id: US12584994B2
+        title: Wireless device operable to detect a nearby object
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12584994
+    note: ultra-wideband ranging and radios; Qorvo (Decawave) only
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12756423B2: Patent Public Search record found, title matches, assignee Decawave Limited'
+      - 'US12621191B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756423 - USPTO full-text PDF of US12756423B2
+        served (HTTP 200, application/pdf)
+  ble:
+    label: BLE / 802.15.4
+    tech_overview: wireless
+    functions: [ble_soc]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (bluetooth OR BLE OR "802.15.4" OR zigbee).ti,ab,clm.
+    count: 27
+    skyworks: 10
+    qorvo: 17
+    depth: some
+    leader: both
+    trend:
+      skyworks: [9, 0, 1]
+      qorvo: [11, 5, 1]
+    trend_dir:
+      skyworks: falling
+      qorvo: steady
+    examples:
+      skyworks:
+      - id: US12581251B2
+        title: Method of providing improved audio processing model
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12581251
+      - id: US10530050B2
+        title: Selectively shielding radio frequency module with multi-layer antenna
+        year: 2020
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10530050
+      - id: US10257119B2
+        title: Multi-standard radio switchable multiplexer
+        year: 2019
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10257119
+      qorvo:
+      - id: US12609721B2
+        title: Isolation provision from multiple antennas to a single antenna
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12609721
+      - id: US12609753B2
+        title: Low-power auto-correlation antenna selection for multi-antenna system
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12609753
+      - id: US12494818B2
+        title: Ultra-wideband-enabled devices and systems for facilitating access control
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12494818
+    note: Bluetooth / Zigbee front ends and antenna sharing more than radio SoCs (as in patents.yaml ble_soc)
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12581251B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12609721B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US10530050B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12581251 - USPTO full-text PDF of US12581251B2
+        served (HTTP 200, application/pdf)
+  envelope_tracking:
+    label: Envelope tracking
+    tech_overview: power
+    functions: [rf_pa_bias]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("envelope tracking" OR "envelope tracker" OR "average power tracking").ti,ab,clm.
+    count: 278
+    skyworks: 72
+    qorvo: 206
+    depth: strong
+    leader: qorvo
+    trend:
+      skyworks: [54, 18, 0]
+      qorvo: [141, 63, 2]
+    trend_dir:
+      skyworks: steady
+      qorvo: steady
+    examples:
+      skyworks:
+      - id: US12763729B2
+        title: Circuits and devices related to radio-frequency amplifiers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12763729
+      - id: US12683563B2
+        title: Envelope tracking with adjustable slew rate
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683563
+      - id: US12640695B2
+        title: High efficiency power amplifier
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12640695
+      qorvo:
+      - id: US12771296B2
+        title: Doherty power amplifier system
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771296
+      - id: US12738894B2
+        title: Progressive envelope tracking with delay compensation
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12738894
+      - id: US12683485B2
+        title: Ripple reduction for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683485
+    note: envelope / average power tracking supplies for PAs; Qorvo files most
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12763729B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12771296B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12683563B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771296 - USPTO full-text PDF of US12771296B2
+        served (HTTP 200, application/pdf)
+  antenna_tuning:
+    label: Antenna tuning
+    tech_overview: soi
+    functions: [antenna_tuner, varactor_diode]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("antenna tuning" OR "antenna tuner" OR "aperture tuning" OR "aperture tuner" OR "impedance
+      tuner").ti,ab,clm.
+    count: 39
+    skyworks: 8
+    qorvo: 31
+    depth: some
+    leader: qorvo
+    trend:
+      skyworks: [8, 0, 0]
+      qorvo: [25, 6, 0]
+    trend_dir:
+      skyworks: falling
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12470179B2
+        title: RF transceiver front end module with improved linearity
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12470179
+      - id: US12206440B2
+        title: Impedance tuning circuits, devices and methods
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12206440
+      - id: US11979178B2
+        title: Circuits, devices and methods related to impedance tuners
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11979178
+      qorvo:
+      - id: US12573760B2
+        title: Antenna tuning circuit
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12573760
+      - id: US12294395B2
+        title: Multi-mode antenna tuner circuit and related apparatus
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12294395
+      - id: US12126306B2
+        title: Systems and methods for providing an envelope tracking supply voltage
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12126306
+    note: antenna, aperture and impedance tuners
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12470179B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12573760B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12206440B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12470179 - USPTO full-text PDF of US12470179B2
+        served (HTTP 200, application/pdf)
+  lna:
+    label: LNA
+    tech_overview: gaas_phemt
+    functions: [lna, gnss_lna]
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("low noise amplifier" OR "low-noise amplifier" OR LNA).ti,ab,clm.
+    count: 257
+    skyworks: 174
+    qorvo: 83
+    depth: strong
+    leader: skyworks
+    trend:
+      skyworks: [119, 55, 0]
+      qorvo: [63, 19, 1]
+    trend_dir:
+      skyworks: steady
+      qorvo: steady
+    examples:
+      skyworks:
+      - id: US12750073B2
+        title: Front end module and wireless device having multiple pre-amplifier bandpass filters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750073
+      - id: US12750076B2
+        title: Power detectors with enhanced dynamic range
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750076
+      - id: US12732214B2
+        title: Reprogrammable array of selectable antenna elements for frequency adjustment
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732214
+      qorvo:
+      - id: US12732139B2
+        title: Broadband LNA structure using offset active coupled segments
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732139
+      - id: US12712498B2
+        title: Switched RC network to improve the noise and stability of a low-noise amplifier
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12712498
+      - id: US12633880B2
+        title: Inductorless self-tuned input-matching low-noise amplifier with very low noise figure and Gm boost
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12633880
+    note: low-noise amplifiers in RF front ends
+    date: '2026-10-25'
+    confidence: medium
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12750073B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12732139B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12750076B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732139 - USPTO full-text PDF of US12732139B2
+        served (HTTP 200, application/pdf)
+  wifi_filters:
+    label: Filters for Wi-Fi 6E / 7
+    tech_overview: baw
+    functions: []
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (filter).ti,ab,clm. AND ("Wi-Fi 6E" OR "WiFi 6E" OR "Wi-Fi 7" OR "WiFi 7" OR "802.11ax"
+      OR "802.11be" OR UNII OR "U-NII" OR "6 GHz").ti,ab,clm.
+    count: 8
+    skyworks: 3
+    qorvo: 5
+    depth: little
+    leader: qorvo
+    trend:
+      skyworks: [1, 1, 1]
+      qorvo: [0, 5, 0]
+    trend_dir:
+      skyworks: thin
+      qorvo: rising
+    examples:
+      skyworks:
+      - id: US12750073B2
+        title: Front end module and wireless device having multiple pre-amplifier bandpass filters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750073
+      - id: US12531581B2
+        title: Dynamic signal processing configuration for multilink operation
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12531581
+      - id: US11509316B2
+        title: Injection-locked oscillator distribution systems, methods, and devices
+        year: 2022
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11509316
+      qorvo:
+      - id: US12456964B2
+        title: Programmable acoustic filter circuit
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12456964
+      - id: US12375063B2
+        title: Dynamic band steering filter bank die
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12375063
+      - id: US12149230B2
+        title: Dynamic band steering filter bank die having filter skirt management
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12149230
+    note: 'thin: filters with Wi-Fi 6E / 7, 802.11ax / be, U-NII or 6 GHz terms; Qorvo''s band-steering filter banks lead;
+      Skyworks hits are front-end modules (est) (counted leader both, judged qorvo from the titles, est)'
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12750073B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12456964B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12531581B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750073 - USPTO full-text PDF of US12750073B2
+        served (HTTP 200, application/pdf)
+  nr_5g:
+    label: 5G NR FR1 / FR2
+    tech_overview: modules
+    functions: []
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("5G" OR "new radio" OR "fifth generation" OR FR1 OR FR2 OR "millimeter wave" OR "millimeter-wave"
+      OR mmWave).ti,ab,clm.
+    count: 90
+    skyworks: 49
+    qorvo: 41
+    depth: some
+    leader: both
+    trend:
+      skyworks: [12, 36, 1]
+      qorvo: [34, 7, 0]
+    trend_dir:
+      skyworks: rising
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12771386B2
+        title: Consolidation of amplifier ramping for 2G and 5G transmission
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771386
+      - id: US12750036B2
+        title: Dispersive delay line with piezoelectric substrate and lamb wave propagation
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750036
+      - id: US12732214B2
+        title: Reprogrammable array of selectable antenna elements for frequency adjustment
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12732214
+      qorvo:
+      - id: US12695428B2
+        title: Power protection loop for amplifier chain elements
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12695428
+      - id: US12658950B1
+        title: Flexible online loft compensation in RF communication systems and devices
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12658950
+      - id: US11929300B2
+        title: Method for packaging an integrated circuit (IC) package with embedded heat spreader in a redistribution layer
+          (RDL)
+        year: 2024
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11929300
+    note: 5G, new radio, FR1 / FR2 or millimetre-wave terms; broad, so hits mix PAs, filters and antennas
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12771386B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12695428B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12750036B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771386 - USPTO full-text PDF of US12771386B2
+        served (HTTP 200, application/pdf)
+  gnss:
+    label: GNSS
+    tech_overview: wireless
+    functions: []
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (GNSS OR GPS OR "global navigation satellite" OR "satellite navigation" OR BeiDou OR
+      GLONASS).ti,ab,clm.
+    count: 30
+    skyworks: 10
+    qorvo: 20
+    depth: some
+    leader: both
+    trend:
+      skyworks: [7, 1, 2]
+      qorvo: [18, 0, 2]
+    trend_dir:
+      skyworks: steady
+      qorvo: falling
+    examples:
+      skyworks:
+      - id: US12719447B2
+        title: Filter module with improved linearity response
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12719447
+      - id: US12581251B2
+        title: Method of providing improved audio processing model
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12581251
+      - id: US12362720B2
+        title: Single filter with two passbands
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12362720
+      qorvo:
+      - id: US12683485B2
+        title: Ripple reduction for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683485
+      - id: US12494818B2
+        title: Ultra-wideband-enabled devices and systems for facilitating access control
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12494818
+      - id: US10491193B2
+        title: Circuit for suppressing signals adjacent to a passband
+        year: 2019
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10491193
+    note: GNSS / GPS front ends and filters; Qorvo group mostly older RFMD GPS
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12719447B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12683485B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12581251B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12581251 - USPTO full-text PDF of US12581251B2
+        served (HTTP 200, application/pdf)
+automotive:
+  auto_uwb:
+    label: UWB (car access, ranging)
+    platform: uwb
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("ultra-wideband" OR "ultra wideband" OR UWB).ti,ab,clm. AND (vehicle OR automotive
+      OR V2X OR telematics OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 1
+    skyworks: 0
+    qorvo: 1
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND ("ultra-wideband" OR "ultra wideband" OR UWB).ti,ab,clm. AND (vehicle OR automotive
+      OR V2X OR telematics OR car OR AEC OR "AEC-Q100")
+    broad_count: 5
+    broad_skyworks: 0
+    broad_qorvo: 5
+    examples_from: broad_count
+    examples:
+      skyworks: []
+      qorvo:
+      - id: US12493099B2
+        title: Method of skipping UWB ranging rounds to reduce the mobile phone power consumption
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12493099
+      - id: US12436257B2
+        title: Ultra-wideband communication system
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12436257
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12493099B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US12436257B2: Patent Public Search record found, title matches, assignee DecaWave, Ltd.'
+  auto_isolation:
+    label: Isolation and gate drivers
+    platform: isolation
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("digital isolator" OR "galvanic isolation" OR "galvanically isolated" OR "isolation
+      barrier" OR "capacitive isolation" OR "gate driver" OR "gate drive").ti,ab,clm. AND (vehicle OR automotive OR V2X
+      OR telematics OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 0
+    skyworks: 0
+    qorvo: 0
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND ("digital isolator" OR "galvanic isolation" OR "galvanically isolated" OR "isolation
+      barrier" OR "capacitive isolation" OR "gate driver" OR "gate drive").ti,ab,clm. AND (vehicle OR automotive OR V2X
+      OR telematics OR car OR AEC OR "AEC-Q100")
+    broad_count: 4
+    broad_skyworks: 4
+    broad_qorvo: 0
+    examples_from: broad_count
+    examples:
+      skyworks:
+      - id: US12592683B2
+        title: Variable current drive for isolated gate drivers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12592683
+      - id: US12316256B2
+        title: Flexible fault detection
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12316256
+      qorvo: []
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12592683B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12316256B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+  auto_timing:
+    label: Timing
+    platform: timing
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("clock generator" OR "clock buffer" OR "jitter attenuator" OR "jitter attenuation"
+      OR "crystal oscillator" OR "clock synthesizer" OR "timing device" OR "BAW oscillator").ti,ab,clm. AND (vehicle OR
+      automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 0
+    skyworks: 0
+    qorvo: 0
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND ("clock generator" OR "clock buffer" OR "jitter attenuator" OR "jitter attenuation"
+      OR "crystal oscillator" OR "clock synthesizer" OR "timing device" OR "BAW oscillator").ti,ab,clm. AND (vehicle OR
+      automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100")
+    broad_count: 4
+    broad_skyworks: 4
+    broad_qorvo: 0
+    examples_from: broad_count
+    examples:
+      skyworks:
+      - id: US12681526B2
+        title: Timing synchronization system
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12681526
+      - id: US12542572B2
+        title: Systems and methods for asynchronous data flow in digital radios
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12542572
+      qorvo: []
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12681526B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12542572B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+  auto_fem:
+    label: FEM / telematics
+    platform: modules
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("front end module" OR "front-end module" OR FEM OR "system in package" OR "system-in-package"
+      OR telematics OR "cellular module").ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 1
+    skyworks: 0
+    qorvo: 1
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND ("front end module" OR "front-end module" OR FEM OR "system in package" OR
+      "system-in-package" OR telematics OR "cellular module").ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics
+      OR car OR AEC OR "AEC-Q100")
+    broad_count: 59
+    broad_skyworks: 58
+    broad_qorvo: 1
+    examples_from: broad_count
+    examples:
+      skyworks:
+      - id: US12771343B2
+        title: Fast switching radio frequency switch with reduced spurs
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771343
+      - id: US12756372B2
+        title: Packaged acoustic wave devices with multilayer piezoelectric substrate
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756372
+      qorvo:
+      - id: US12683485B2
+        title: Ripple reduction for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683485
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12771343B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12683485B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+  auto_gnss:
+    label: GNSS
+    platform: gnss
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND (GNSS OR GPS OR "global navigation satellite" OR "satellite navigation" OR BeiDou OR
+      GLONASS).ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 1
+    skyworks: 0
+    qorvo: 1
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND (GNSS OR GPS OR "global navigation satellite" OR "satellite navigation" OR
+      BeiDou OR GLONASS).ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100")
+    broad_count: 13
+    broad_skyworks: 3
+    broad_qorvo: 10
+    examples_from: broad_count
+    examples:
+      skyworks:
+      - id: US12581251B2
+        title: Method of providing improved audio processing model
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12581251
+      - id: US12362720B2
+        title: Single filter with two passbands
+        year: 2025
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12362720
+      qorvo:
+      - id: US12683485B2
+        title: Ripple reduction for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683485
+      - id: US7889123B1
+        title: Global positioning system (GPS) assembly test using wireless transmission
+        year: 2011
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7889123
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12581251B2: Patent Public Search record found, title matches, assignee SKYWORKS SOLUTIONS, INC.'
+      - 'US12683485B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+  auto_broadcast:
+    label: Broadcast radio
+    platform: broadcast
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("FM radio" OR "AM radio" OR "FM receiver" OR "AM receiver" OR "FM tuner" OR "broadcast
+      radio" OR "digital audio broadcasting" OR DAB OR "HD radio" OR "broadcast receiver" OR "radio tuner" OR "television
+      tuner" OR "TV tuner").ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 1
+    skyworks: 1
+    qorvo: 0
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND ("FM radio" OR "AM radio" OR "FM receiver" OR "AM receiver" OR "FM tuner" OR
+      "broadcast radio" OR "digital audio broadcasting" OR DAB OR "HD radio" OR "broadcast receiver" OR "radio tuner" OR
+      "television tuner" OR "TV tuner").ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics OR car OR AEC OR "AEC-Q100")
+    broad_count: 3
+    broad_skyworks: 3
+    broad_qorvo: 0
+    examples_from: broad_count
+    examples:
+      skyworks:
+      - id: US12665801B2
+        title: Radio receiver with frequency segment offset compensation and related methods
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12665801
+      - id: US12592733B2
+        title: Tone tracking and cancellation for radio receivers
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12592733
+      qorvo: []
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12665801B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+      - 'US12592733B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
+  auto_power_motor:
+    label: Power and motor control
+    platform: power
+    query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united silicon
+      carbide" OR anokiwave).as. AND ("power management integrated circuit" OR PMIC OR "DC-DC converter" OR "DC-to-DC converter"
+      OR "buck converter" OR "boost converter" OR "switching regulator" OR "motor control" OR "motor controller" OR "motor
+      driver" OR BLDC OR "brushless DC" OR "brushless motor").ti,ab,clm. AND (vehicle OR automotive OR V2X OR telematics
+      OR car OR AEC OR "AEC-Q100").ti,ab,clm.
+    count: 2
+    skyworks: 0
+    qorvo: 2
+    broad_query: (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak OR "united
+      silicon carbide" OR anokiwave).as. AND ("power management integrated circuit" OR PMIC OR "DC-DC converter" OR "DC-to-DC
+      converter" OR "buck converter" OR "boost converter" OR "switching regulator" OR "motor control" OR "motor controller"
+      OR "motor driver" OR BLDC OR "brushless DC" OR "brushless motor").ti,ab,clm. AND (vehicle OR automotive OR V2X OR
+      telematics OR car OR AEC OR "AEC-Q100")
+    broad_count: 10
+    broad_skyworks: 6
+    broad_qorvo: 4
+    examples_from: count
+    examples:
+      skyworks: []
+      qorvo:
+      - id: US12683485B2
+        title: Ripple reduction for direct current-to-direct current (DC-DC) converters
+        year: 2026
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683485
+      - id: US8159204B2
+        title: Regulating current output from a buck converter without external current sensing
+        year: 2012
+        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8159204
+    date: '2026-10-25'
+    confidence: low
+    check:
+      status: confirmed
+      date: '2026-10-25'
+      evidence:
+      - 'US12683485B2: Patent Public Search record found, title matches, assignee Qorvo US, Inc.'
+      - 'US8159204B2: Patent Public Search record found, title matches, assignee Active-Semi, Inc.'
+overlap:
+  overlap: [baw, gaas_hbt, soi, sige, nr_5g]
+  complement:
+    skyworks: [saw, modules, timing, broadcast, lna]
+    qorvo: [gaas_phemt, gan, beamformers, power, uwb, envelope_tracking, antenna_tuning]
+  thin: [isolation, motor, wifi_filters]
+  note: overlap = both hold at least half of the other's family count and 40+ families together; complement = one clearly
+    ahead (judged from the titles where keyword noise is large); thin = under 20 families. est

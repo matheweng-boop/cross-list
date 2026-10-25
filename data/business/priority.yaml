@@ -7,7 +7,7 @@
 #
 # T, technology relation: how close the function is to our RF and power strengths (the tables below).
 # L, likeliness: how likely we can build it and win with it (feasibility from the path to product, a platform of ours
-#    that already serves it, the owner's review answers).
+#    that already serves it, US patent depth as a small bonus, the owner's review answers).
 # D, diagrams: how many diagrams of the Application library need it, on a log scale: D = log(1 + n) / log(1 + n_max),
 #    so 40 diagrams is not 10 × better than 4.
 #
@@ -118,6 +118,10 @@ likeliness:
   not_pursue: 0.1                  # path to product "not ours to build" (Markets only; Gaps & new technology leaves it out)
   # a current public platform of ours (data/business/capabilities.yaml, processes and design IP) already serves it
   platform_bonus: 0.1
+  # owner, 25 Oct 2026: US patent depth of Skyworks / Qorvo (data/business/evidence/patents.yaml per function, else the
+  # platform entry in patents_platforms.yaml that covers the function); added after the platform bonus, L capped at 1.0;
+  # not added to the owner's review answers. Indicative public searches, not legal advice.
+  patent_bonus: {strong: 0.10, some: 0.05, little: 0.0, none_found: 0.0}
   # the owner's review answers; the value replaces the computed one
   owner:
     temperature_sensor: {value: 0.3, note: "Owner, 22 Oct 2026: ASP most likely too low; the focus is RF."}

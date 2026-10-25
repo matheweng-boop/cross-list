@@ -25,7 +25,7 @@ from app.models import (
     TamEstimate,
     TechFeedback,
 )
-from app.services import blocks, cases, library, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
+from app.services import blocks, cases, library, patents, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
 from app.services import opportunity as op
 from app.services import portfolio as pf
 from app.services import priority as priority
@@ -328,6 +328,7 @@ def gaps_new_tech(request: Request, co: str = "combined", show: str = "", wt: st
              prio=pc, prio_w=priority.percent(w), prio_default=priority.percent(priority.default_weights()),
              prio_custom=custom, prio_levels=priority.levels(), prio_example=priority.example,
              prio_top=priority.ranked(open_rows)[0] if open_rows else None, prio_ldo=priority.ldo_example(open_rows),
+             prio_patent=priority.patent_example(open_rows),
              prio_unmapped=priority.unmapped(open_rows), prio_sliders=not _is_guest(request),
              prio_owner=[(vocab.fn_label(fn), o) for fn, o in (pc["likeliness"].get("owner") or {}).items()],
              n_not_ours=sum(e["gap_type"] == "not_ours" for e in rows),
@@ -830,6 +831,7 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
                         if g["fn"] == fn), None),  # fmt: skip
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
+    c["pat_platform"], c["pat_bonus"] = patents.platform_for(fn), priority.patent_bonus(fn)
     c["walk_parts"] = walk.competitor_parts(session, fn)
     c["library"] = library.for_function(fn)
     return templates.TemplateResponse(request, "business/evidence.html", c)

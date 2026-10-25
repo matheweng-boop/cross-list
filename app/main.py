@@ -78,14 +78,26 @@ def _warm_caches() -> None:
     """Parse the catalogues and data files and compute per-function candidates once, after start-up."""
     try:
         from app.db import get_session
-        from app.services import automotive, blocks, broadcast, opportunity, products, refdesigns, rf_bands, rf_coverage
+        from app.services import (
+            automotive,
+            blocks,
+            broadcast,
+            opportunity,
+            products,
+            refdesigns,
+            refmatch,
+            rf_bands,
+            rf_coverage,
+        )
 
+        refdesigns.view()  # first: the reference designs index (designs, by function / part, the opening list)
+        refmatch.index()
+        refmatch.data()
         blocks.catalog_rows()
         blocks.catalog_parts()
         products._catalogue_index()
         blocks.templates()
         blocks.background_templates()
-        refdesigns.designs()
         broadcast.documents()
         rf_coverage.parts()
         rf_coverage.competitor_parts()

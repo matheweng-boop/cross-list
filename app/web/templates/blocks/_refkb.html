@@ -1,0 +1,19 @@
+{# A library diagram's public reference designs (owner, 25 Oct 2026): one representative diagram informed by all of
+   them; anchors (parts we cross) first, then confirmed blocks and what the designs add. #}
+{% if kb %}{% set L = '/reference-designs?diagram=' ~ kb.key|urlencode %}
+<section id="bk-refkb" class="rd-kb card small" aria-label="Public reference designs">
+  {% if kb.n %}
+  <p><b>Based on <a href="{{ L }}">{{ kb.n }} public reference design{{ 's' if kb.n != 1 }}</a></b> <span class="muted">· the same application from manufacturers' sites; one diagram for all of them</span></p>
+  {% for a in kb.anchors %}
+  <p><span class="anchor-badge">Anchor</span> {% if a.label %}{{ a.label }}: {% endif %}<a href="{{ L }}&anchor={{ a.part|urlencode }}">{{ a.n }} reference design{{ 's' if a.n != 1 }}</a> use <b>{{ a.part }}</b> → we cross with <a href="/find?q={{ a.ours|urlencode }}">{{ a.ours }}</a> <span class="muted">({{ a.type }})</span>
+    {% if a.around %}<br><span class="muted">Designs with this anchor also use:</span> {% for f, c, lab, st in a.around %}<a href="{{ L }}&anchor={{ a.part|urlencode }}&fn={{ f|urlencode }}">{{ lab }}</a> <span class="muted">({{ c }}, {{ st }})</span>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>
+  {% endfor %}
+  {% if kb.suggested %}<p><b>What the reference designs add</b> <span class="muted">(common in them, not in this diagram; suggestions from reference designs)</span>:
+    {% for f, c, lab, st in kb.suggested %}<span class="sugg"><a href="{{ L }}&fn={{ f|urlencode }}">{{ lab }}</a> <span class="muted">{{ c }} of {{ kb.n }} · {{ st }}</span></span>{{ ' ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% if kb.added %}<p><b>Added from reference designs</b>: {% for f, c, lab in kb.added %}<a href="{{ L }}&fn={{ f|urlencode }}">{{ lab }}</a> <span class="muted">({{ c }} of {{ kb.n }})</span>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% if kb.confirmed %}<p><b>Confirmed by the designs</b>: {% for f, c, lab in kb.confirmed %}<a href="{{ L }}&fn={{ f|urlencode }}">{{ lab }}</a> <span class="muted">{{ c }}</span>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+  {% else %}
+  <p class="muted">No public reference design matched this diagram yet (the collected designs are mostly power, industrial and automotive).</p>
+  {% endif %}
+</section>
+{% endif %}

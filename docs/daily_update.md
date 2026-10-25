@@ -97,6 +97,11 @@ blocked unless the owner confirms them several times (CLAUDE.md).
      the new range, update the figure and keys in `data/business/tam_links.yaml`, and record the applied answer in
      `data/business/tam_applied.yaml` (key, verdict, date, applied_in, note; create the file in that format if it
      does not exist yet). Add any new market figure quoted in a report or case to `tam_links.yaml`.
+   - **Reference designs knowledge base** (owner, 25 Oct 2026): when `data/reference_designs/`, `data/real/` or
+     `data/blocks/templates.yaml` changed, run `uv run python scripts/match_refdesigns.py` (about 2 minutes; add
+     `--add` to put clearly missing, common blocks into the templates with a source note) and commit
+     `data/blocks/refdesign_matches.yaml`. It feeds "Based on N public reference designs", the anchors and the
+     "Found in N" lines on the gaps.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import AreaRequest, BlockDiagram, BlockFeedback
-from app.services import blocks, prelim, refdesigns, schematic, vocab
+from app.services import blocks, prelim, refdesigns, refmatch, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -199,6 +199,8 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
             "verified": blocks.verifications(session).get(blocks.verify_key(tpl)) if tpl else None,
             "verify_key": blocks.verify_key(tpl) if tpl else "",
             "bare": bare,
+            "kb": refmatch.kb_view(tpl, blocks.counts(session)) if tpl else None,
+            "ref_counts": refmatch.fn_counts(),
         },
     )
 
@@ -338,30 +340,36 @@ def feedback_text(session: Session = Depends(get_session)):
 @router.get("/reference-designs", response_class=HTMLResponse)
 def reference_designs(request: Request, q: str = "", vendor: str = "", market: str = "", fn: str = "",
                       iso: bool = False, docs: bool = False, page: int = 1, view: str = "", atype: str = "",
-                      sub: str = "", session: Session = Depends(get_session)):  # fmt: skip
+                      sub: str = "", diagram: str = "", part: str = "", anchor: str = "",
+                      session: Session = Depends(get_session)):  # fmt: skip
     """Manufacturers' public reference designs, searchable; each function is marked portfolio / gap for us. The
     types view groups them broadly (application type, then voltage class or frequency band); the families view lists
     each product family once, with its member parts and the designs that use them. With no search or filter the
-    page opens on the types view."""
-    base = refdesigns.search(q, vendor, market, fn, iso, docs)
-    tree = refdesigns.type_tree(base)
-    rows = [d for d in base if (not atype or d["_type"] == atype) and (not sub or d["_sub"] == sub)]
-    if not view and not any((q, vendor, market, fn, iso, docs, atype, sub, page > 1)):
+    page opens on the types view. Not in the menu (owner, 25 Oct 2026): the data works behind the library diagrams,
+    the gaps and the part pages, which link here with a reproducible list: ?diagram=<library diagram key> (the designs
+    the diagram is based on; with &anchor=<part or function> those with that anchor), ?part=<part number>,
+    ?fn=<function>."""
+    v = refdesigns.view(q, vendor, market, fn, iso, docs, atype, sub, diagram, part.strip(), anchor)
+    tree, rows = v["tree"], v["rows"]
+    if not view and not any((q, vendor, market, fn, iso, docs, atype, sub, diagram, part, page > 1)):
         view = "types"
     view = view if view in ("families", "types") else ""
-    items = refdesigns.families(rows, q) if view == "families" else [] if view == "types" else rows
+    items = refdesigns.families(list(rows), q) if view == "families" else [] if view == "types" else rows
     per = 50
     pages = max(1, -(-len(items) // per))
     page = min(max(page, 1), pages)
     shown = items[(page - 1) * per : page * per]
-    mk = op.makers(session)
-    mine = op.company("combined")[2]
+    facets = v["facets"]
     fns = (
         {f for d in shown for f in d.get("functions") or []}
         if view != "families"
         else {f for x in shown for f, _ in x["functions"]}
     )
-    facets = refdesigns.facets(rows)
+    status = {}
+    if view != "types":  # the coloured function chips (the types view shows none)
+        mk = op.makers(session)
+        mine = op.company("combined")[2]
+        status = {f: op.status_of(f, mk, mine) for f in fns}
     fns |= {f for f, _ in facets["function"]}
     ctx = {"rows": shown if not view else [], "fams": shown if view == "families" else [], "view": view,
            "n_items": len(items), "tree": tree, "atype": atype, "sub": sub,
@@ -369,6 +377,8 @@ def reference_designs(request: Request, q: str = "", vendor: str = "", market: s
            "n": len(rows), "n_all": len(refdesigns.designs()),
            "page": page, "pages": pages, "facets": facets, "sources": refdesigns.sources(),
            "q": q, "vendor": vendor, "market": market, "fn": fn, "iso": iso, "docs": docs,
-           "status": {f: op.status_of(f, mk, mine) for f in fns},
-           "label": {f: vocab.fn_label(f) for f in fns}, "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
+           "diagram": diagram, "part": part.strip(), "anchor": anchor, "heading": v["heading"],
+           "anchors_of": refmatch.anchors_of_design,
+           "status": status, "label": {f: vocab.fn_label(f) for f in fns},
+           "doc_labels": refdesigns.DOC_LABELS}  # fmt: skip
     return templates.TemplateResponse(request, "blocks/reference_designs.html", ctx)

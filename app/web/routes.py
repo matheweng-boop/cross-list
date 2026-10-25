@@ -170,6 +170,24 @@ def _has_synthetic() -> bool:
 templates.env.globals["synthetic_banner"] = _has_synthetic
 
 
+def _ref_count(fn: str) -> int:
+    from app.services import refmatch
+
+    return refmatch.fn_count(fn)
+
+
+def _ref_part(mpn: str) -> dict:
+    """Public reference designs that use a part, and its anchor cross (our part) when we cross it."""
+    from app.services import refmatch
+
+    name, keys = refmatch.part_designs(mpn)
+    return {"name": name, "n": len(keys), "anchor": refmatch.anchor_of_part(name) if name else None}
+
+
+templates.env.globals["ref_count"] = _ref_count  # templates/_refs.html
+templates.env.globals["ref_part"] = _ref_part
+
+
 def _parse_ids(ids: str) -> list[int]:
     out = []
     for chunk in ids.replace(" ", "").split(","):

@@ -360,7 +360,7 @@ def test_navigation_sections_and_old_urls(client):
     assert [i[0] for i in knowledge[2]] == ["Interactive visuals", "General knowledge"]
     systems = next(s for s in nav.NAV if s[0] == "systems")
     assert [i[0] for i in systems[2]] == ["Systems library", "Application library", "Application workspace",
-                                         "Reference designs", "Cross-sell", "RF coverage", "Automotive map"]
+                                         "Cross-sell", "RF coverage", "Automotive map"]
     rf = client.get("/rf-notes").text
     assert 'aria-current="page" class="on">RF fundamentals<' in rf and 'href="/engineering"' in rf
     assert 'aria-current="page" class="on">Specification guides<' in client.get("/engineering/cmti_kv_us").text

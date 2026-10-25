@@ -18,7 +18,6 @@ NAV = (
         ("Systems library", "/library", "Full systems and their sub-systems, with deep dives"),
         ("Application library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
-        ("Reference designs", "/reference-designs", "Manufacturers' public reference designs and their documents"),
         ("Cross-sell", "/blocks/cross-sell",
          "What to sell together: by system, by part, and the Skyworks + Qorvo portfolio side by side"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
@@ -90,7 +89,8 @@ PLACES = {
     "/blocks/new": ("systems", "/blocks/new"),
     "/blocks/": ("systems", "/blocks/new"),
     "/blocks": ("systems", "/blocks"),
-    "/reference-designs": ("systems", "/reference-designs"),
+    # owner, 25 Oct 2026: not in the menu; its data works behind the diagrams, gaps and part pages, which link to it
+    "/reference-designs": ("systems", "/blocks"),
     "/reviews": ("products", "/reviews"),  # owner, 23 Oct 2026: reviews belong to parts
     "/business/applications": ("systems", "/blocks"),
     "/blocks/cross-sell": ("systems", "/blocks/cross-sell"),

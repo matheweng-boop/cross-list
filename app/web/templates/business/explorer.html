@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import pct, usd, company_switch, crowd, about, term, path_chip, push, score_chip with context %}
 {% from "business/_priority.html" import prio_bar, prio_chips %}
+{% from "_refs.html" import found_in with context %}
 {% macro url() -%}
   {%- set base = {'co': co, 'scope': scope, 'sort': sort, 'dir': dir, 'f': f, 't': t, 'g': g, 's': s} -%}{%- set _ = base.update(wts) -%}{%- set _ = base.update(kwargs) -%}
   /business/explorer/table?{{ base|dictsort|selectattr('1')|list|urlencode }}
@@ -52,7 +53,7 @@
   </tr></thead>
   <tbody>{% for e in rs %}{% set kept = (e.decision or {}).get('status') == 'keep' %}
     <tr{% if kept %} class="kept"{% endif %}>
-      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if e.band_note %} <small class="muted">· {{ e.band_note }} · <a href="{{ e.rf_link }}">RF coverage</a></small>{% endif %}{% if kept %} <span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept</span>{% endif %}</td>
+      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if e.band_note %} <small class="muted">· {{ e.band_note }} · <a href="{{ e.rf_link }}">RF coverage</a></small>{% endif %}{% if kept %} <span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept</span>{% endif %}{{ found_in(e.fn) }}</td>
       <td class="pr-cell">{{ prio_bar(e) }}<small>{{ prio_chips(e) }}</small></td>
       <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
       <td class="n" title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>

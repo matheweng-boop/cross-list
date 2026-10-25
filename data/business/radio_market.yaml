@@ -1,0 +1,123 @@
+# Car radio market, bottom-up (owner, 25 Oct 2026): "we are interested in the total market - so we should look at the
+# overall radio market as this may include adjacent technologies ... pull pricing data from our price estimates" and
+# "estimate market size in terms of current BOM content". Computed by app/services/radio_market.py; shown on the TAM
+# estimates page (radio topic) and in the radio-tuner-next case (market section).
+#
+# Market at current BOM content = radio BOM per vehicle (reference systems below, each part priced with the site's
+# price model at `volume` a year, low / target / high) x vehicles a year x today's system mix. Today's architecture and
+# today's prices only, no growth. A part without a usable price basis (no list price in list_prices.yaml, no prices
+# the owner entered, no owner low / in band / high call on a sibling-priced part) makes the figure "Not Enough Data"
+# and puts the part on the "Prices needed" list (TAM page, case, Price estimate page, daily inbox).
+#
+# Layers (owner, 25 Oct 2026; the market that counts is the total radio market incl. adjacent technologies):
+#   tuner     tuner content: tuner ICs only (a labelled sub-layer, not a market size of its own)
+#   demod     digital radio demodulator; tuner + demod = radio content (what the analyst reports count)
+#   adjacent  adjacent radio content in the same car-radio diagrams (antenna amplifier / LNA, antenna switch, audio
+#             amplifier: only blocks the library diagram "Car radio tuner system" contains)
+#
+# Growth: vehicles are flat (owner), so the market grows only with content per vehicle: the mix moving from AM/FM-only
+# to digital systems (driven by the mandates below), at today's prices. One CAGR, used for every projection.
+
+vehicles:
+  low: 90000000
+  high: 92000000
+  note: "90–92 M radio systems a year, without much growth (owner, 25 Oct 2026)"
+volume: 1000000          # a year: the price model's automotive volume (data/business/price_model.yaml volumes)
+base_year: 2026
+target_year: 2030
+
+# The owner's own per-vehicle figures (25 Oct 2026), shown next to the price-model result as a cross-check only.
+owner_check:
+  analog: 5.0            # "an AM FM only system with 2-4 tuners may be around 5 dollars or less"
+  digital_2030: 10.0     # "a DAB system may be around 10$ by 2030"
+  source: "Owner, 25 Oct 2026"
+
+# Reference systems: from the broadcast configurator presets (data/broadcast/configurations.yaml) and the library
+# diagram "Car radio tuner system" (data/blocks/templates.yaml). qty = [low, high] per vehicle. part: null = no part
+# chosen yet (the owner picks one on the Prices needed list). alt = a competitor part for the same socket, shown for
+# comparison when it has a price, never summed.
+systems:
+  - id: analog
+    name: "AM/FM only, 2–4 tuners"
+    preset: "AM/FM, dual tuner, no demod"
+    rows:
+      - {layer: tuner, block: am_fm_tuner, label: "Dual AM/FM tuner", part: Si47961, qty: [1, 2], alt: TDA7707}
+      - {layer: adjacent, block: lna, label: "Antenna amplifier / LNA", part: null, qty: [1, 2]}
+      - {layer: adjacent, block: antenna_switch, label: "Antenna switch", part: null, qty: [1, 1]}
+      - {layer: adjacent, block: audio_amp, label: "Audio amplifier", part: null, qty: [1, 1]}
+  - id: digital
+    name: "Digital radio (DAB / HD / DRM): tuners + demodulator"
+    preset: "DAB, two antennas, 2x Si47962 + DAB demod"
+    rows:
+      - {layer: tuner, block: am_fm_tuner, label: "Dual AM/FM/DAB tuner", part: Si47962, qty: [1, 2], alt: TDA7707}
+      - {layer: demod, block: digital_radio_demod, label: "Digital radio demodulator", part: Si46922A1GE1AM, qty: [1, 1], alt: STA680}
+      - {layer: adjacent, block: lna, label: "Antenna amplifier / LNA", part: null, qty: [1, 2]}
+      - {layer: adjacent, block: antenna_switch, label: "Antenna switch", part: null, qty: [1, 1]}
+      - {layer: adjacent, block: audio_amp, label: "Audio amplifier", part: null, qty: [1, 1]}
+
+# Today's system mix: share of new-car radios that are digital, by region. Vehicles = 2025 production (OICA 2026,
+# background note 4.1; world 96.4 M). share: null = Not Enough Data (no public share found). Unknown regions are counted
+# both ways: as all AM/FM (low end of the mix) and as all digital (high end), never as an invented share.
+mix:
+  world_m: 96.4
+  regions:
+    - {region: Europe, vehicles_m: 17.2, share: 0.95, standard: DAB+, driver: eecc, source: "WorldDAB: 95 % of new cars in key EU markets (2021); \"almost all\" (2026)"}
+    - {region: US, vehicles_m: 10.2, share: 0.60, standard: HD Radio, driver: us-hd, source: "Radio World (Xperi column), 7 Sep 2026: >60 % of new US vehicles"}
+    - {region: India, vehicles_m: 6.5, share: 0.33, standard: DRM, driver: in-drm, source: "DRM Consortium, 29 Oct 2025: 1 in 3 passenger cars sold over the past decade"}
+    - {region: China, vehicles_m: 34.5, share: null, standard: "CDR / DRM", driver: cn-cdr, source: "Mandatory standard drafted, not adopted; integration still testing (Radio World 30 Sep 2024; DRM Consortium 2026)"}
+    - {region: Japan, vehicles_m: 8.4, share: null, standard: "", driver: "", source: "No public share found"}
+    - {region: Rest of world, vehicles_m: 19.6, share: null, standard: "DAB+ (e.g. Australia), others", driver: "", source: "No public share found (world 96.4 M minus the regions above)"}
+  target: null           # 2030 share digital: Not Enough Data (depends on China's mandate and India's choice)
+
+# Standards, mandates and adoption (owner, 25 Oct 2026: "consider standardization and other adoptions in the market
+# like AM Mandate in the US"). Status as stated by the source on its date; a bill is never stated as law.
+# effect = what it does to radio BOM content; mix = whether it drives today's mix, the 2030 mix, or both.
+mandates:
+  - id: us-am
+    region: US
+    what: "AM for Every Vehicle Act: AM radio required in new passenger vehicles, at no extra charge"
+    status: "Bill: passed the House on 16 Sep 2026 (PBS NewsHour / AP). Not law per that source; Senate and signature not checked (congress.gov blocks our reader)."
+    date: "16 Sep 2026"
+    source: {title: "House gives green light to bill requiring AM radios in new cars", publisher: "PBS NewsHour / AP", url: "https://www.pbs.org/newshour/politics/house-gives-green-light-to-bill-requiring-am-radios-in-new-cars"}
+    effect: "Keeps AM tuning in EVs: the AM path and EV noise mitigation (e.g. AMIC) stay in the BOM; no tuner removed for AM-less EVs"
+    mix: "2030"
+  - id: us-hd
+    region: US
+    what: "HD Radio adoption (voluntary, no mandate): >60 % of new vehicles, 125 M on the road"
+    status: "Adoption, not a requirement"
+    date: "7 Sep 2026"
+    source: {title: "The State of HD Radio: 125 Million Cars and Counting", publisher: "Radio World (Xperi column)", url: "https://www.radioworld.com/columns-and-views/guest-commentaries/the-state-of-hd-radio-125-million-cars-and-counting"}
+    effect: "Adds an HD demodulator (chip or software) and per-unit HD licence to the US radio BOM"
+    mix: "today"
+  - id: eecc
+    region: EU
+    what: "European Electronic Communications Code (Directive (EU) 2018/1972): car radios in new passenger cars must receive digital terrestrial radio"
+    status: "In force; applies to new cars from 21 Dec 2020 (WorldDAB summary; EUR-Lex not read: bot check)"
+    date: "2018 (applies from Dec 2020)"
+    source: {title: "EU directive reveals European vision for radio digitisation", publisher: WorldDAB, url: "https://www.worlddab.org/newsroom/blogs/30/eu-directive-reveals-european-vision-for-radio-digitisation"}
+    effect: "Digital radio required: a DAB+ demodulator (and Band III tuning) in every new EU car radio"
+    mix: "today"
+  - id: dab-national
+    region: "Europe, national"
+    what: "National DAB+ rollouts and FM plans: WorldDAB country pages (Germany, Switzerland); UK government review of radio's future"
+    status: "Country by country; Norway, Australia and other FM switch-off dates not checked in this run"
+    date: "2026"
+    source: {title: "Ministers kick off review to safeguard radio's future", publisher: "GOV.UK", url: "https://www.gov.uk/government/news/ministers-kick-off-review-to-safeguard-radios-future"}
+    effect: "Where FM is switched off, the digital path is the main radio; FM tuning may shrink but the demodulator stays"
+    mix: "today"
+  - id: cn-cdr
+    region: China
+    what: "Mandatory on-board broadcast receiver standard (CDR in FM, DRM in AM), framed as emergency / public service"
+    status: "Drafted since Sep 2024 (MIIT / NRTA); not adopted; automaker integration still testing in 2026"
+    date: "30 Sep 2024"
+    source: {title: "Chinese project to mandate in-car radios moves forward", publisher: "Radio World", url: "https://www.radioworld.com/global/chinese-project-to-mandate-in-car-radios-moves-forward"}
+    effect: "If adopted (from about 2028, est), adds a CDR / DRM demodulator to most of China's ~34 M cars a year: the largest mix change to 2030"
+    mix: "2030"
+  - id: in-drm
+    region: India
+    what: "DRM in cars (adoption; digital FM standard still to be decided: DRM or HD Radio)"
+    status: ">13 M Indian cars with DRM by end-2025; policy decision on digital FM pending (Jan 2026)"
+    date: "29 Oct 2025"
+    source: {title: "India Tuning In – DRM Digital Radio in over 13 Million Indian Cars by end of 2025", publisher: "DRM Consortium", url: "https://www.drm.org/india-tuning-in-drm-digital-radio-in-over-13-million-indian-cars-by-end-of-2025/"}
+    effect: "A DRM demodulator in about 1 in 3 cars today; a digital-FM decision would move India's mix by 2030"
+    mix: "today, 2030"

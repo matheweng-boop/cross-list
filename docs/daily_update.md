@@ -23,6 +23,14 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    else from `main`, fix and build what the comments ask
    (same quality bar as the feedback batches: tests for every change, plain-English page text, public data only, the
    polite-access rules for any web research), and add new questions for the owner to `docs/open_questions.md`.
+   **Data quality comments** (inbox section "Data quality comments (being checked)"; owner, 25 Oct 2026: the Data
+   quality questions take a comment and Submit, no yes / no). Each line gives the item, its current value and the
+   comment. Check every one: apply it (fix the data file, with a public source where a figure changes) or find out
+   why the value stands. Then add the item to `data/business/quality_checked.yaml` (dataset, key, date of the run,
+   comment_at = the time printed on the inbox line, note = what was done or found, one or two plain sentences; update
+   the entry if the item is already there). After the merge the site asks the owner again: "Checked: <note> – OK
+   now?", with the comment box and one "Looks right now" button. A comment in that second round comes back in the
+   same section; never answer or close an item yourself.
    For each open request under "Technology review requests", write the review as `data/reviews/<slug>.yaml` in the
    format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
    Standing work when the day's comments leave room: the next unticked lines of `docs/pinout_backlog.md` (pinouts of
@@ -40,8 +48,19 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    Deep dives for data centres and drones (main areas outside automotive and cellular): a few documents per run.
    Open application area requests (inbox section "Application area requests") are researched the same way; set their
    status on `/blocks/area-requests`.
+   **Idea expansion requests** (inbox section "Idea expansion requests"; the owner's "Expand this idea" button on
+   Research & ideas, owner 25 Oct 2026): for each open request, add a section
+   `<section id="applications-in-depth"><h2>Applications in depth</h2> ...</section>` to that report's body
+   (`app/web/templates/business/reports/<slug>.html`), after the opportunities part, about one page, shorter than a
+   business case. Weigh the owner's note first. Cover: the concrete applications and end products; the customers and
+   system makers (public names only); what the system needs from us (blocks, key specs); volumes and timing where
+   public (our own figures marked est); and how it differs from what we sell today. End it with one more
+   `<p class="rpt-thread"><b>For the decision:</b> ...</p>` line, as the reports.yaml layout asks. Then mark the
+   request done: set `expanded: <date of the run>` on the report's entry in `data/business/reports.yaml` (the site
+   sets the request to Expanded with that date and links the section; the owner can also set it on
+   `/manage/requests?kind=idea`). Public sources only, polite rules as above; at most 1–2 requests per run.
    **Technology overview (Shareable).** The owner's edits to `/shareable/technology-overview` (texts, numbers, dots,
-   header, logo, default focus and watermark) are overrides that live in the database with their version history;
+   header, logo and default watermark) are overrides that live in the database with their version history;
    `data/business/tech_overview.yaml` only holds the defaults. A run must never reset, delete or overwrite these
    overrides. Where the inbox says an overridden value differs from the new automatic value, ask the owner.
    Technology overview comments: rewrite the paragraph as asked (public-safe check applies), save it as a new version,
@@ -62,6 +81,22 @@ blocked unless the owner confirms them several times (CLAUDE.md).
    the publisher's current page if it can be found politely (robots.txt first, `tools/research/fetch.sh`; never an
    archive or mirror), or read the source and remove the marker (keep "est" where the figure stays our estimate);
    **remove** = take the link or the figure out; **checked, OK** = drop the marker (or keep the link as it is).
+   TAM verification (biweekly, the evening run of every second Sunday, after the link check; owner, 25 Oct 2026):
+   `uv run python scripts/check_tam.py` (25 estimates a run, rotating; same polite fetcher and policy hosts as the
+   link check). Commit `data/business/tam_checks.yaml` (verified / changed / unverifiable / disqualified, with a
+   ≤ 200-character evidence snippet); never delete a TAM entry because of it (a disqualified one leaves the market
+   size by itself; if the owner agreed, it stays and the page asks the owner to look again). Put its summary line in
+   the run summary. Then, on every run:
+   - **Combine same topics** (owner, 25 Oct 2026): after review answers or a TAM check, group the estimates for the
+     same function and scope into one topic in `data/business/tam_topics.yaml` (members with the owner's verdict and
+     date from the inbox, low, high, year, CAGR band, `combined` date) and note the members left out and why. Combine
+     only when at least 2 sources are reviewed (owner agree) or verified; owner "disagree" and disqualified members
+     are excluded and noted. The site recomputes the band from live answers; keep the recorded numbers in step.
+   - **"TAM changes for reports"** (inbox section): for each to-do, update the report text (body, background notes
+     or `data/business/reports.yaml`) or the case figure (`data/business/cases/<slug>.yaml` market_now / thread) to
+     the new range, update the figure and keys in `data/business/tam_links.yaml`, and record the applied answer in
+     `data/business/tam_applied.yaml` (key, verdict, date, applied_in, note; create the file in that format if it
+     does not exist yet). Add any new market figure quoted in a report or case to `tam_links.yaml`.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

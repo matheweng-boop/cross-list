@@ -136,6 +136,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.people import router as people_router
     from app.web.pipeline import router as pipeline_router
     from app.web.portfolio import router as portfolio_router
+    from app.web.presentation import router as presentation_router
     from app.web.requests import router as requests_router
     from app.web.reviews import router as reviews_router
     from app.web.routes import router as web_router
@@ -207,6 +208,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(api_router, prefix="/api")
     app.include_router(web_router)
     app.include_router(portfolio_router)
+    app.include_router(presentation_router)  # before shareable: /shareable/{slug} would take /shareable/presentation
     app.include_router(shareable_router)
     app.include_router(broadcast_router)
     app.include_router(requests_router)

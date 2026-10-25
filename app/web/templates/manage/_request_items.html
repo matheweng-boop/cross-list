@@ -28,3 +28,12 @@
     <form method="post" action="/blocks/area-requests/{{ a.id }}" class="inline-form"><select name="status" onchange="this.form.submit()" aria-label="Status of {{ a.area }}" class="small-sel">
       {% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if a.status == k }}>{{ label }}</option>{% endfor %}</select><noscript><button class="small-btn">Save</button></noscript></form></div></li>
 {% endmacro %}
+
+{% macro idea_item(i, statuses) %}
+<li class="rq-item req-{{ i.status }}" id="rq-idea-{{ i.id }}"><span class="rq-kind k-idea">Idea expansion</span>
+  <a href="/business/reports/{{ i.slug }}"><b>{{ i.title }}</b></a> <small class="muted">· {{ i.created_at|date('short') }}{% if i.done_at %} · expanded {{ i.done_at|date('short') }}{% endif %}</small>
+  {% if i.note %}<br><span class="small">{{ i.note }}</span>{% endif %}
+  <div class="rq-acts small">
+    <form method="post" action="/manage/ideas/requests/{{ i.id }}" class="inline-form"><select name="status" onchange="this.form.submit()" aria-label="Status of the expansion request for {{ i.title }}" class="small-sel">
+      {% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if i.status == k }}>{{ label }}</option>{% endfor %}</select><noscript><button class="small-btn">Save</button></noscript></form></div></li>
+{% endmacro %}

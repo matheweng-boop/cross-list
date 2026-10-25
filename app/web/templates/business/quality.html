@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "business/_common.html" import about, review %}
+{% from "business/_common.html" import about, review with context %}
 {% block content %}
 <h1>Data quality</h1>
 <p class="subtitle muted">How far the business data can be trusted, and where a review helps most. Automated checks run on every page load;
@@ -16,18 +16,28 @@
   <p>Switch: set <code>CROSSLIST_USE_UNOFFICIAL_DATA=false</code> (Render: service › Environment) and restart, or delete <code>data/real/unofficial/</code>; the next load restores the official values.</p></details>
 
 <h2 id="questions">Questions for you <span class="small muted">· most important first</span></h2>
-<p class="small muted">One question per item. Answer Yes or No; add a comment if something should change. Review status per data set: <a href="/manage/overview">Overview</a>.</p>
-{% if request.query_params.get('answered') %}<p class="banner small">Saved. Thank you.</p>{% endif %}
+<p class="small muted">One question per item. Write what you found in the comment and press Submit. The next daily update checks
+  each comment, fixes the data or explains why it stays, and then asks you again here. Review status per data set: <a href="/manage/overview">Overview</a>.</p>
+{% if request.query_params.get('answered') %}<p class="banner small">Saved. Thank you: the next daily update checks it.</p>{% endif %}
+{% if request.query_params.get('empty') %}<p class="banner small">Write a comment first, then press Submit.</p>{% endif %}
 {% if questions %}
-<ol class="qa-list">{% for q in questions %}<li class="qa-item">
+<ol class="qa-list">{% for q in questions %}{% set t = q.thread %}<li class="qa-item" id="q-{{ q.dataset }}-{{ q.key }}">
   <div class="qa-q"><b>{{ q.question }}</b>
     <p class="small muted">{{ q.check }}</p>
     {% if q.links or q.page %}<p class="small">{% for site, url in q.links %}<a href="{{ url }}" target="_blank" rel="noopener">{{ site }}</a> · {% endfor %}<a href="{{ q.page }}">more detail</a></p>{% endif %}</div>
-  <form method="post" action="/business/quality/answer" class="qa-form">
-    <input type="hidden" name="dataset" value="{{ q.dataset }}"><input type="hidden" name="key" value="{{ q.key }}">
-    <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="answer" value="yes" class="small-btn">Yes</button><button name="answer" value="no" class="small-btn outline secondary">No</button></span>
-    <input type="text" name="comment" maxlength="2000" placeholder="Comment (optional)" aria-label="Comment on question {{ loop.index }}">
-  </form>
+  <div class="qa-a">
+  {% if t and t.status == 'checking' %}
+    <p class="qa-status small"><b>Comment received – being checked.</b><br><span class="muted">“{{ t.comment }}” · {{ t.date|date }}</span></p>
+  {% else %}
+    {% if t %}<p class="qa-status small"><b>Checked: {{ t.check.note or 'no change needed' }} – OK now?</b><br><span class="muted">Your comment: “{{ t.comment }}”</span></p>{% endif %}
+    <form method="post" action="/business/quality/answer" class="qa-form{{ ' qa-r2' if t }}">
+      <input type="hidden" name="dataset" value="{{ q.dataset }}"><input type="hidden" name="key" value="{{ q.key }}">
+      <input type="text" name="comment" maxlength="2000" required placeholder="{{ 'What is still wrong?' if t else 'Your comment' }}" aria-label="Comment on question {{ loop.index }}">
+      <button name="action" value="submit" class="small-btn">Submit</button>
+      {% if t %}<button name="action" value="confirm" class="small-btn outline secondary" formnovalidate>Looks right now</button>{% endif %}
+    </form>
+  {% endif %}
+  </div>
 </li>{% endfor %}</ol>
 {% else %}<p class="small q-ok">No open questions: everything behind the top-ranked functions and every TAM estimate has an answer.</p>{% endif %}
 

@@ -1,4 +1,5 @@
-"""Systems and sub-systems (owner, 23 Oct 2026): Automotive, Data center, Drones and Cellular, each made of
+"""Systems and sub-systems (owner, 23 and 25 Oct 2026): Automotive, Data center, Drones, Cellular, Industrial & energy,
+Aerospace & defense, Consumer & wearables, Home & building and Medical, each made of
 sub-systems such as "UWB in the car" or "Car radio". The Systems library shows them as headers with their
 sub-systems; the Application library groups its diagrams by them; Cross-sell works on a selected system or
 sub-system. The assignment lives in data/blocks/systems.yaml; diagrams it does not list sit under "Other"."""

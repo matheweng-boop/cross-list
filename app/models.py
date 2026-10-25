@@ -16,6 +16,7 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     LargeBinary,
     String,
@@ -366,6 +367,8 @@ class DataReview(Base):
     segment, a platform, an evidence entry): correct, wrong or unsure, with an optional comment."""
 
     __tablename__ = "data_reviews"
+    # answers to one item, newest first (review history); created with the table, existing databases work without it
+    __table_args__ = (Index("ix_data_reviews_item", "dataset", "key", "created_at"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     dataset: Mapped[str] = mapped_column(String(40))  # competition | technology | path | patents | foundry | ...
@@ -660,6 +663,23 @@ class AreaRequest(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
+
+
+class IdeaRequest(Base):
+    """"Expand this idea" on Research & ideas (owner, 25 Oct 2026): the owner asks for a deeper look at a report's
+    applications before a business case. One request per report (slug is unique, so the button never comes back);
+    the daily run writes the "Applications in depth" section and sets the status to done."""
+
+    __tablename__ = "idea_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(120), unique=True)
+    title: Mapped[str] = mapped_column(String(300))
+    note: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(12), default="new")  # new | done | declined
+    done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 # --- Sign-in with passkeys and invited guests (owner, 23 Oct 2026) ---------------------------------------------------
 # The older `User` table above stays as it is (it carries no role); the people who can sign in are `Account` rows.

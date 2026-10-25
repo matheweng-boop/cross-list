@@ -76,3 +76,16 @@ def test_inbox_bearer_still_works(locked, monkeypatch):
 def test_guest_note_and_auth_script_have_no_outside_sources(locked):
     page = locked.get("/login").text
     assert "/static/auth.js" in page and "http" not in page.split("<body>")[1].split("</main>")[0]
+
+
+def test_only_shareable_previews_may_be_framed_and_only_by_this_site(client):
+    """Owner, 25 Oct 2026: Shareable previews open in a lightbox (an iframe on the same site); every other page stays
+    unframeable."""
+    for path in ("/shareable/pack?r=synergies", "/shareable/synergies", "/shareable/presentation/preview?s=title"):
+        r = client.get(path)
+        csp = r.headers["content-security-policy"]
+        assert r.headers["x-frame-options"] == "SAMEORIGIN" and "frame-ancestors 'self'" in csp, path
+    for path in ("/", "/shareable", "/shareable/presentation", "/manage/overview"):
+        r = client.get(path, follow_redirects=False)
+        csp = r.headers["content-security-policy"]
+        assert r.headers["x-frame-options"] == "DENY" and "frame-ancestors 'none'" in csp, path

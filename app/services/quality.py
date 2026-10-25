@@ -3,14 +3,21 @@ ordered by impact on the rankings, catalogue parts that may already fill a gap, 
 
 import re
 from collections import Counter, defaultdict
+from datetime import date, datetime
 from functools import lru_cache
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import DataReview, PartMapping, TechFeedback
+from app import yamlio
+from app.config import PROJECT_ROOT
+from app.models import DataReview, PartMapping, TechFeedback, aware
 from app.services import blocks
 from app.services import opportunity as op
+from app.services.review_history import COMMENT2, COMMENT_VERDICTS
+
+COMMENT_LABELS = {"comment": "Comment", "comment2": "Comment (2nd round)"}
+CHECKED_FILE = PROJECT_ROOT / "data" / "business" / "quality_checked.yaml"
 
 VERDICTS = {"correct": "Correct", "wrong": "Wrong", "unsure": "Unsure"}
 
@@ -240,25 +247,25 @@ def ask(dataset: str, fn: str, label: str, e: dict) -> dict | None:
         vendors = e.get("vendors") or []
         if not vendors:
             q = f"Is it right that no established company (other than us) sells a {lab} today?"
-            check = "Search for the product type. Answer No and name a company if you find one."
+            check = "Search for the product type. If you find one, name it in the comment."
         else:
             q = f"Do these companies sell a {lab} today: {_names(vendors)}?"
-            check = ("Look at each company's product pages. Answer No if one does not sell it, or if a big supplier "
+            check = ("Look at each company's product pages. Comment if one does not sell it, or if a big supplier "
                      "is missing (name it in the comment).")  # fmt: skip
     elif dataset == "technology":
         p = e.get("proximity")
         if p not in _PROX_WORDS:
             return None
         q = f"Is a {lab} {_PROX_WORDS[p]} at Skyworks / Qorvo?"
-        check = f"The reason given: “{str(e.get('reasoning') or '').strip()}” Answer No if this is not right."
+        check = f"The reason given: “{str(e.get('reasoning') or '').strip()}” Comment if this is not right."
     elif dataset == "path":
         if e.get("path") == "exists":
             parts = e.get("existing_parts") or []
             q = f"Can these parts of ours be sold as a {lab}: {_names(parts, 5)}?" if parts else f"Do we sell a {lab}?"
-            check = "Open the parts on our product pages. Answer Yes if at least one does the job."
+            check = "Open the parts on our product pages. Comment if none of them does the job."
         elif e.get("path") in _PATH_WORDS:
             q = f"Would a {lab} be {_PATH_WORDS[e['path']]}?"
-            check = (f"What it builds on: {str(e.get('base') or 'not stated').strip()} Answer No if we already sell "
+            check = (f"What it builds on: {str(e.get('base') or 'not stated').strip()} Comment if we already sell "
                      f"it, or if it needs much more (or less) than that.")  # fmt: skip
         else:
             return None
@@ -295,4 +302,125 @@ def questions(session: Session, apps: list[op.Application], scores: dict | None 
         item = ask(q["dataset"], q["fn"], q["label"], ds[q["dataset"]][1][q["fn"]])
         if item:
             out.append(item)
-    return out[:limit]
+    # commented items stay on the page until the owner closes them: the second round first, then the open
+    # questions, then the comments being checked
+    th = {k: t for k, t in threads(session).items() if t["status"] != "closed"}
+    seen = {(q["dataset"], q["key"]) for q in out}
+    out += [q for k in th if k not in seen and (q := item_question(session, *k))]
+    for q in out:
+        q["thread"] = th.get((q["dataset"], q["key"]))
+    rank = {"round2": 0, None: 1, "checking": 2}
+    out = [q for q in out if q["thread"]] + [q for q in out if not q["thread"]][: max(limit - len(th), 0)]
+    return sorted(out, key=lambda q: rank[(q["thread"] or {}).get("status")])
+
+
+# ---- comments on the questions, checked by the daily run, then a second round (owner, 25 Oct 2026) ----------------
+# A comment is a DataReview row with verdict "comment" (first round) or "comment2" (second round). The daily run checks
+# it and records the item in data/business/quality_checked.yaml (it cannot write the live database); the item then
+# comes back as "Checked: <note> – OK now?" with the comment box again and one "Looks right now" (verdict "correct").
+_CHECKED_CACHE: dict = {}
+
+
+def _minute(x) -> datetime | None:
+    """A time from the YAML or the database as a UTC-aware datetime to the minute (the inbox prints minutes)."""
+    if isinstance(x, str):
+        try:
+            x = datetime.fromisoformat(x.strip())
+        except ValueError:
+            return None
+    if isinstance(x, datetime):
+        return aware(x).replace(second=0, microsecond=0)
+    return None
+
+
+def checked() -> dict[tuple[str, str], dict]:
+    """The daily run's checks of commented items: (dataset, key) -> {date, comment_at, note}."""
+    try:
+        stamp = (str(CHECKED_FILE), CHECKED_FILE.stat().st_mtime_ns)
+    except OSError:
+        return {}
+    if _CHECKED_CACHE.get("stamp") != stamp:
+        data = yamlio.load(CHECKED_FILE.read_text()) or {}
+        out = {}
+        for e in data.get("checked") or []:
+            if isinstance(e, dict) and e.get("dataset") and e.get("key"):
+                out[(str(e["dataset"]), str(e["key"]))] = {"date": e.get("date"), "comment_at": e.get("comment_at"),
+                                                           "note": str(e.get("note") or "").strip()}  # fmt: skip
+        _CHECKED_CACHE.update(stamp=stamp, data=out)
+    return _CHECKED_CACHE["data"]
+
+
+def _covers(chk: dict | None, r: DataReview) -> bool:
+    """Whether the run's check covers comment ``r`` (by comment_at to the minute, else by the check's date)."""
+    if not chk:
+        return False
+    at, when = _minute(chk.get("comment_at")), _minute(r.created_at)
+    if at is not None:
+        return when <= at
+    d = chk.get("date")
+    try:
+        d = d if isinstance(d, date) else date.fromisoformat(str(d))
+    except ValueError:
+        return False
+    return when.date() <= d
+
+
+def threads(session: Session) -> dict[tuple[str, str], dict]:
+    """Comment threads per (dataset, key): status "checking" (comment received, being checked), "round2" (checked,
+    back to the owner) or "closed" (the owner said it looks right now), with the last comment and the check."""
+    rows: dict[tuple[str, str], list[DataReview]] = defaultdict(list)
+    q = select(DataReview).order_by(DataReview.created_at, DataReview.id)
+    for r in session.scalars(q.where(DataReview.key.in_(
+            select(DataReview.key).where(DataReview.verdict.in_(COMMENT_VERDICTS))))):  # fmt: skip
+        rows[(r.dataset, r.key)].append(r)
+    chk = checked()
+    out = {}
+    for item, rs in rows.items():
+        last = max((i for i, r in enumerate(rs) if r.verdict in COMMENT_VERDICTS), default=None)
+        if last is None:
+            continue
+        c = rs[last]
+        if any(r.verdict == "correct" for r in rs[last + 1 :]):
+            status = "closed"
+        elif _covers(chk.get(item), c):
+            status = "round2"
+        else:
+            status = "checking"
+        out[item] = {"status": status, "round": 2 if c.verdict == COMMENT2 else 1, "comment": c.comment or "",
+                     "author": c.author, "date": c.created_at, "check": chk.get(item)}  # fmt: skip
+    return out
+
+
+def item_question(session: Session, dataset: str, key: str) -> dict | None:
+    """The question for one item as on the Data quality page (it states the current value), or None."""
+    from app.services import tam, vocab
+
+    if dataset == tam.DATASET:
+        e = next((e for e in tam.estimates(session) if e["key"] == key), None)
+        if e is None:
+            return None
+        url = e["source"]["url"]
+        return {"dataset": dataset, "key": key, "question": e["question"], "check": tam.check_hint(e),
+                "links": [(url.split("/")[2], url)] if url.count("/") >= 2 else [],
+                "page": f"/business/tam#t-{key}"}  # fmt: skip
+    entry = (datasets().get(dataset) or ("", {}))[1].get(key)
+    return ask(dataset, key, vocab.fn_label(key), entry) if isinstance(entry, dict) else None
+
+
+def inbox_lines(session: Session) -> list[str]:
+    """The inbox section: every comment still being checked, with the item, its current value and the comment."""
+    out = ["\n## Data quality comments (being checked)\n",
+           "Check each comment: apply it (fix the data) or find out why the value stands. Then add the item to "
+           "data/business/quality_checked.yaml (dataset, key, date, comment_at, note: what was done or found); the "
+           "site then asks the owner again (second round).\n"]  # fmt: skip
+    ds = datasets()
+    lines = []
+    for (dataset, key), t in sorted(threads(session).items(), key=lambda kv: kv[1]["date"]):
+        if t["status"] != "checking":
+            continue
+        q = item_question(session, dataset, key)
+        label = "TAM estimate" if dataset == "tam" else ds.get(dataset, (dataset,))[0]
+        lines.append(f"- {aware(t['date']):%Y-%m-%d %H:%M} [round {t['round']}] {label} / {key} · now: "
+                     f"{q['question'] if q else '(item no longer on the page)'} · comment: "
+                     f"{' '.join(t['comment'].split())}")  # fmt: skip
+    return out + (lines or ["None."])

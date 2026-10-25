@@ -3,32 +3,45 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **Grouping of the diagrams into systems (Systems & applications, 23 Oct 2026), still open:** (a) should the 95
-   diagrams under "Other" become more systems, for example Industrial & energy, Consumer & wearables, Aerospace &
-   defense; (c) Kick sensor and Interior radar are listed under "UWB in the car" but only the in-cabin radar has its
-   own diagram: should each get one. Placements and the Car radio split are settled (below).
+1. **New systems (26 Oct 2026).** The 95 diagrams under "Other" now sit in five new systems, none left in Other:
+   Industrial & energy (factory automation, motor drives and robots, solar and wind, energy storage and grid, power
+   supplies and isolation, e-mobility / rail / industrial vehicles), Aerospace & defense (radar, electronic warfare,
+   SATCOM and space, tactical radio, test and measurement), Consumer & wearables (wearables and XR, audio, PCs /
+   payments / portable power, connectivity chips and modules), Home & building (smart home, home Wi-Fi and broadband,
+   smart meters) and Medical (imaging, monitoring, therapy). Are the names and the split right?
+2. **Interior radar diagram.** The new child-presence diagram is drawn after Infineon's 60 GHz radar in-cabin
+   monitoring diagram; no public UWB-radar child-presence block diagram was found (Microwave Journal's robots.txt blocks
+   our reader). The UWB-radar option is a question on the diagram. Is a 60 GHz radar diagram right under "UWB in the
+   car"?
+3. **UWB anchor clock source.** The clock block cites Murata's public UWB module designs (Qorvo QM33120W and NXP SR150,
+   both with a 38.4 MHz crystal); NXP's automotive anchor pages give no clock frequency. Is a module design acceptable
+   as the "public reference design" for the anchor?
+4. **Car radio market, prices needed (26 Oct 2026).** The radio market at current BOM content is "Not Enough Data"
+   until these have a price basis: Si47961 (dual AM/FM tuner: only its sibling Si47962 is priced; enter prices or a
+   low / in band / high call), Si46922 (DAB demodulator: no price on the site) and a part for each adjacent block
+   (antenna amplifier / LNA, antenna switch, audio amplifier). Enter them under Price estimate > Required for market
+   estimates (public distributor or list prices only). Are these the right reference systems and blocks?
+5. **Digital share of new-car radios.** Today's mix is 26–90 % digital (Europe, US, India known; China, Japan and the
+   rest of the world have no public share, so they count both ways). Do you know a public figure for China's or the
+   world's share, and should the 2030 projection assume every new radio is digital (the upper bound used now)?
+6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
+   congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
 
-Cross-sell (25 Oct 2026; recommendation in brackets):
+## Settled (owner, 25 Oct 2026, radio market)
 
-2. **Application library preview:** keep the short "Cross-sell in <sub-system>" preview with its link, without adding
-   the Skyworks + Qorvo pairs there? (Yes.)
-3. **Weak pairs** linked only by a supply rail: keep them, shown last and marked weak? Otherwise UWB in the car has no
-   pair. (Keep.)
-4. **UWB anchor clock block:** add a clock / crystal block to the UWB anchor diagram, only from a public reference
-   design in a daily run, so a Qorvo UWB + Skyworks timing pair can appear? (Yes.)
-5. **Bundle table:** keep the 30 most complementary of 172 diagrams? (Yes.)
+- MarketIntelo ($1.8 B, digital radio tuners only): not linked to the radio-tuner-next case's market size; shown as an
+  open discrepancy (different definition), since the market that counts is the total radio market incl. adjacent
+  technologies.
 
-Priority score for Gaps & new technology and Markets (25 Oct 2026):
+## Settled (owner, 25 Oct 2026: "Yes to all")
 
-6. **Weights** T 45 / L 30 / D 25? (Keep.)
-7. **"All" view** as three groups (RF & power, general power and adjacent, outside our focus) or one plain list? (Groups.)
-8. **Non-isolated half-bridge and 3-phase gate drivers** at 0.7 rather than 0.9? (0.7.)
-9. **Current sensing:** raise to 0.9 only for isolated or integrated-shunt parts; plain amplifiers stay at 0.5? (Yes.)
-10. **PoE PD/PSE at 0.9** (from the Silicon Labs business) and **isolated RS-485 at 0.9** if we sell it isolated? (Confirm.)
-11. **One-diagram RF band gaps** (frequency multipliers at 78.6): acceptable this high? If not, D 0.30 and T 0.40.
-    (Acceptable.)
-12. **Background diagrams** count fully in D, so the number matches "Needed in"? (Yes.)
-13. **Competition** in likeliness: leave it out, since it is in the Opportunity score? (Leave out.)
+- Systems grouping: the diagrams under "Other" become more systems (e.g. Industrial & energy, Consumer & wearables,
+  Aerospace & defense); Kick sensor and Interior radar each get their own diagram. To build in the next run.
+- Cross-sell: keep the Application library preview without pairs; keep weak supply-only pairs (shown last); add a
+  clock / crystal block to the UWB anchor diagram from a public reference design; keep the bundle table at 30 of 172.
+- Priority score: weights T 45 / L 30 / D 25; "All" in three groups; non-isolated gate drivers 0.7; current sensing
+  0.9 only for isolated or integrated-shunt parts; PoE and isolated RS-485 at 0.9; one-diagram RF band gaps
+  acceptable; background diagrams count fully in D; competition stays out of likeliness.
 
 ## Settled (owner, 25 Oct 2026, Shareable reports and reviews)
 
@@ -77,6 +90,13 @@ Priority score for Gaps & new technology and Markets (25 Oct 2026):
   reference's band from its datasheet points. Over 0.05–1 GHz the SKY12212 has 0.47 dB insertion loss and about
   36 dB isolation (worst common port, between the 0.6 and 1.2 GHz points), against 0.30 dB and 52 dB: still worse
   on both, so it stays a cross with deviations.
+
+## Settled (owner, 25 Oct 2026, radio market)
+
+- Market size: total radio market incl. adjacent technologies (owner, 25 Oct 2026). Tuner content (tuner ICs only) is
+  a labelled sub-layer inside it, not a separate market size. Content per vehicle comes from the site's price
+  estimates; the owner's $5 (AM/FM only, 2–4 tuners) and $10 (DAB system by 2030) per vehicle are a cross-check.
+  Vehicles: 90–92 M radio systems a year, flat; growth comes from content per vehicle.
 
 ## Settled (owner, 22 Oct 2026)
 

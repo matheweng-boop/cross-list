@@ -5,6 +5,8 @@
 # Per application:
 #   title, uses     the application and where the function sits in it (short lines)
 #   volts, amps     voltage and current class; "est" marks our estimates
+#   where, v, a     short labels for the table (owner, 25 Oct 2026: short cells, no wrapping); the long texts
+#                   above go in the row's "More" line
 #   why             why this function (here: why an eFuse rather than a fuse, relay or plain switch)
 #   links           [label, href] to reports, library topics and other pages
 #   systems         where its library diagrams sit: a system key or "system/sub-system" from data/blocks/systems.yaml
@@ -12,6 +14,7 @@
 # The page lists, per application, the library diagrams that use the function (data/blocks/templates.yaml), so the
 # counts follow the library; app/services/key_apps.py does the matching (tests/test_fb_1025_u.py).
 efuse_hotswap:
+  why_label: Why an eFuse
   intro: >-
     An eFuse (or a hot-swap controller with an external FET) limits the inrush current when a board, battery or
     connector is plugged in, cuts a short within microseconds and, unlike a melting fuse, can be reset and report
@@ -25,6 +28,9 @@ efuse_hotswap:
         - "Smart power distribution box (resettable, diagnosable channels)"
         - "ADAS and central compute: protected 12 V / 48 V input of the computer"
         - "400–800 V battery: pre-charge and solid-state switching instead of an eFuse"
+      where: "Zonal controllers, power box, compute input"
+      v: "12 V · 48 V"
+      a: "1–25 A (est)"
       volts: "12 V (load dump to about 35–40 V) and 48 V boards (to about 70 V); 400–800 V only through pre-charge"
       amps: "About 1–25 A per channel (est); compute inputs up to about 50 A (est)"
       why: >-
@@ -41,6 +47,9 @@ efuse_hotswap:
         - "Battery pack and power distribution board (smart BMS, eFuse, BEC rails)"
         - "Anti-spark connector: no arc when the pack is plugged in"
         - "ESC power-up: limited inrush into the ESC bulk capacitors"
+      where: "Battery pack, anti-spark connector, ESC power-up"
+      v: "7–59 V"
+      a: "30–200 A bus (est)"
       volts: "2S–14S LiPo, about 7–59 V"
       amps: "About 30–200 A total on the motor bus (est); 1–10 A on the avionics rails (est)"
       why: >-
@@ -55,6 +64,9 @@ efuse_hotswap:
         - "48 V rack busbar: hot-swap at every server, switch and power shelf input"
         - "800 V DC racks for AI (from 2027): hot-swap and solid-state protection at high voltage"
         - "Hot-swap boards, drives and fans; battery backup units"
+      where: "Server, switch and power-shelf inputs"
+      v: "12 V · 48 V · 800 V"
+      a: "20–100 A (est)"
       volts: "12 V and 48–54 V boards; 800 V DC racks"
       amps: "About 20–100 A per board input, more with paralleled eFuses (est)"
       why: >-
@@ -69,19 +81,25 @@ efuse_hotswap:
       uses:
         - "PLC CPU and I/O modules on the 24 V field supply"
         - "Motor drives and robot joints on 24–48 V"
+      where: "PLC CPU and I/O, motor drives"
+      v: "24 V · 48 V"
+      a: "0.5–10 A (est)"
       volts: "24 V nominal (about 19–30 V, with surges); 48 V in drives"
       amps: "About 0.5–10 A (est)"
       why: >-
         Field wiring gets shorted, reversed and hot-plugged; an eFuse protects the module, limits inrush and reports
         the fault to the controller instead of blowing a fuse in a cabinet.
       links:
-        - ["Library: other areas (industrial)", "/blocks?system=other#other-areas"]
-      categories: [Industrial, Motor drives]
+        - ["Library: Industrial & energy", "/blocks?system=industrial#area-industrial"]
+      systems: [industrial]
     - key: telecom
       title: Telecom
       uses:
         - "−48 V input of baseband units, routers and backhaul radios"
         - "Hot-swap line cards"
+      where: "Baseband, router and line-card inputs"
+      v: "−48 V"
+      a: "5–50 A (est)"
       volts: "−48 V (about −36 to −75 V)"
       amps: "About 5–50 A (est)"
       why: >-
@@ -94,6 +112,9 @@ efuse_hotswap:
       title: Consumer
       uses:
         - "USB-C power delivery input of laptops, tablets, power banks and speakers"
+      where: "USB-C power input"
+      v: "5–48 V (USB PD)"
+      a: "3–5 A"
       volts: "USB PD 5–20 V, up to 48 V with extended power range"
       amps: "3–5 A (up to 240 W)"
       why: >-
@@ -101,5 +122,4 @@ efuse_hotswap:
         inrush when the source switches up from 5 V.
       links:
         - ["Library: phones, tablets and wearables", "/blocks?system=cellular&sub=devices#sub-devices"]
-      categories: [Consumer & personal electronics]
-      systems: [cellular/devices]
+      systems: [cellular/devices, consumer]

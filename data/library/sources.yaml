@@ -118,3 +118,27 @@ sources:
   - {id: astm, name: "ASTM F3411 Remote ID standard", url: "https://www.astm.org", area: rf, kind: standard,
      offers: "The Bluetooth / Wi-Fi Remote ID message format and transports", licence: "Paid",
      access: "Not requested (paywalled); the FAA rule text was used instead", feasibility: blocked}
+  # block and application diagrams, 26 Oct 2026 (owner, 25 Oct: "search online for more resources on block diagrams
+  # and application diagrams"). robots.txt read first, GET only, one request at a time. Used for the library diagrams
+  # in data/blocks/templates.yaml (each cites its page) and for /reference-designs.
+  - {id: tiSolutions, name: "TI application pages (ti.com/solution) and reference designs", url: "https://www.ti.com/solution/automotive-kick-to-open-module", area: both, kind: block_diagram,
+     offers: "Interactive block diagram per end equipment (Visio SVG + subsystem list with product families and reference designs in the page). Read: Kick to open module (sense element, analog inputs, MCU, LIN / CAN; TIDA-01409 capacitive, TIDA-01424 ultrasonic, TIDEP-01036 radar). in-cabin-sensing-radar-module redirects to the in-cabin radar module already used",
+     licence: "Copyright TI; we redraw the blocks with a citation", access: "Allowed (robots.txt checked 26 Oct 2026)", feasibility: high}
+  - {id: infineonApps, name: "Infineon application pages (block diagrams)", url: "https://www.infineon.com/applications", area: both, kind: block_diagram,
+     offers: "Block diagram per application as SVG plus a JSON list of blocks with product families. Read: in-cabin monitoring (60 GHz radar child presence), smart power closure, drones, smartwatch (with UWB), 48 V intermediate bus converter, satellite user terminals and ground stations. Also listed, not read yet: LEO satellites, satellite payload, defense, EV charging, BESS, robotics, wearables",
+     licence: "Copyright Infineon; redrawn with a citation", access: "Allowed (robots.txt allows *.json and *.svg; checked 26 Oct 2026)", feasibility: high}
+  - {id: murataUwb, name: "Murata UWB modules (Type 2AB Qorvo-based, Type 2BP NXP-based)", url: "https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band", area: rf, kind: reference_design,
+     offers: "Public module block diagrams: QM33120W UWB IC with a 38.4 MHz crystal and band-pass filters next to an nRF52840 BLE MCU (Type 2AB datasheet section 3); SR150 module with internal 38.4 MHz system clock and 32.768 kHz sleep clock (Type 2BP page). Source of the UWB anchor clock block. Hardware design guide and EVB schematic linked",
+     licence: "Copyright Murata; summaries with citation", access: "Allowed (robots.txt checked 26 Oct 2026); the my Murata document site needs a log-in and was not used", feasibility: high}
+  - {id: skyworksTimingRD, name: "Skyworks timing reference designs", url: "https://www.skyworksinc.com/Application-Pages/Reference-Designs-Timing", area: rf, kind: reference_design,
+     offers: "Six PDFs (May 2026): recommended clocks, buffers and oscillators for NXP (incl. S32 automotive), Broadcom (Tomahawk / Jericho switches, xPON), Marvell (Teralynx, Prestera, Alaska), AMD, Altera and Lattice FPGAs. No UWB entry",
+     licence: "Own public material", access: "Allowed (robots.txt checked 26 Oct 2026)", feasibility: high}
+  - {id: microwavejournal, name: "Microwave Journal", url: "https://www.microwavejournal.com", area: rf, kind: white_paper,
+     offers: "Article 'Revving up automotive safety: advances in UWB for in-cabin sensing' (IR-UWB transceiver figure)",
+     licence: "Copyright", access: "Not read: robots.txt disallows the anthropic-ai crawler (checked 26 Oct 2026)", feasibility: blocked}
+  - {id: congress-gov, name: "Congress.gov (US legislation)", url: "https://www.congress.gov", area: business, kind: regulation,
+     offers: "Bill text and status (e.g. AM for Every Vehicle Act)",
+     licence: "Public domain", access: "Not read: robots.txt disallows Claude agents (checked 25 Oct 2026)", feasibility: blocked}
+  - {id: eur-lex, name: "EUR-Lex (EU law)", url: "https://eur-lex.europa.eu", area: business, kind: regulation,
+     offers: "EU legal texts (e.g. European Electronic Communications Code, digital radio in new cars)",
+     licence: "Reuse allowed with attribution", access: "Not read: robots.txt returned an empty 202 (bot check) (checked 25 Oct 2026)", feasibility: blocked}

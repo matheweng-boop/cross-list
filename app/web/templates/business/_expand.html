@@ -1,0 +1,15 @@
+{# "Expand this idea" (owner, 25 Oct 2026): a deeper look at the applications before a business case. The button is the
+   owner's only and goes away for good once asked (one request per report; a second POST gets 409). #}
+{% macro expand_box(r, req, owner, next) %}
+{% if req and req.status == 'done' %}<p class="rp-exp done small" id="exp-{{ r.slug }}">✓ Expanded {{ req.done_at|date }} · see section <a href="/business/reports/{{ r.slug }}#applications-in-depth">‘Applications in depth’</a></p>
+{% elif req and owner %}<p class="rp-exp small" id="exp-{{ r.slug }}">Expansion requested {{ req.created_at|date }}{% if req.status == 'declined' %} <span class="muted">· declined</span>{% endif %}{% if req.note %}<br><span class="muted">Note: {{ req.note }}</span>{% endif %}</p>
+{% elif owner and not req %}<details class="rp-exp" id="exp-{{ r.slug }}">
+  <summary><span class="rp-exp-btn">Expand this idea</span> <small class="muted">a deeper look at the applications before a business case</small></summary>
+  <form method="post" action="/manage/ideas/{{ r.slug }}/expand" class="rp-exp-form">
+    <input type="hidden" name="back" value="{{ next }}">
+    <textarea name="note" rows="2" maxlength="2000" placeholder="What to focus on (optional). Your keyboard's dictation key works here." aria-label="What to focus on for {{ r.title }}"></textarea>
+    <p class="dict small" hidden><button type="button" class="outline small-btn dict-mic" aria-pressed="false" title="Dictation uses your browser's own speech recognition; BizDev receives only the text. Some browsers (e.g. Chrome) send the audio to their own speech service.">🎤 Dictate</button> <span class="dict-st muted" aria-live="polite"></span></p>
+    <button type="submit" class="small-btn">Ask for the expansion</button>
+  </form>
+</details>{% endif %}
+{% endmacro %}

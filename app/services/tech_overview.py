@@ -117,13 +117,6 @@ def is_aec(row: dict) -> bool:
     return autograde.is_aec(autograde.of_row(row))
 
 
-@lru_cache
-def series_aec(series: str) -> int:
-    """Active AEC-Q qualified parts in a series (owner, 24 Oct 2026: "check AEC-Q qual" on the Automotive page)."""
-    pre = series_prefix(series).upper()
-    return sum(1 for r in active_rows() if r["mpn"].upper().startswith(pre) and is_aec(r))
-
-
 def _fmt(v: float) -> str:
     return f"{v:,.0f}" if v >= 100 or v == int(v) else f"{v:g}"
 
@@ -175,9 +168,9 @@ def build() -> dict:
                "cells": [p["key"] in (m.get("platforms") or []) for m in markets]} for p in platforms]  # fmt: skip
     rf_top = next((f for fam in families if fam["label"].startswith("Amplifiers") for f in fam["figures"]
                    if "GHz" in f["text"]), None)  # fmt: skip
-    auto = sum(1 for r in rows if is_aec(r))
+    # no AEC-Q part count (owner, 25 Oct 2026: "I just want AEC-Q part counts out"); the marks stay on Cross-sell
     nums = {"parts": f"{len(rows):,}", "families": str(len(families)), "platforms": str(len(platforms)),
-            "markets": str(len(markets)), "automotive": f"{auto:,}",
+            "markets": str(len(markets)),
             "rf": rf_top["text"].replace("to ", "up to ", 1) if rf_top else ""}  # fmt: skip
     notes = {"parts": f"Skyworks {round_count(per_line['Skyworks'])} · Qorvo {round_count(per_line['Qorvo'])}",
              "rf": f"highest catalogue amplifier frequency ({rf_top['mpn']})" if rf_top else ""}  # fmt: skip
@@ -196,48 +189,3 @@ def build() -> dict:
 def slug(label: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", label.lower()).strip("-")
 
-
-# ---- market focus: an optional page 5 for one system (owner, 24 Oct 2026) -----------------------------------------
-@lru_cache
-def focus_markets() -> dict[str, dict]:
-    """The systems the focus page can show (data/blocks/systems.yaml): those with words under ``focus`` in the YAML
-    and any with deep dives. Per system: its sub-systems with one line and the series found in the catalogue, the
-    facts (counted from the active parts of the families those series belong to), platforms and standards. With
-    ``automotive_grade`` only series with AEC-Q parts are named, each with its count (`aec`), and a sub-system left
-    without a series is not shown."""
-    from app.services import systems
-
-    words_all = curated().get("focus") or {}
-    plats = {p["key"]: p for p in curated().get("platforms") or []}
-    out = {}
-    for s in systems.systems():
-        words = words_all.get(s["key"]) or {}
-        if not (words or any(sub.get("topics") for sub in s.get("subsystems") or [])):
-            continue
-        subs, prefixes = [], set()
-        for sub in s.get("subsystems") or []:
-            w = (words.get("subsystems") or {}).get(sub["key"]) or {}
-            series = [x for x in w.get("series") or [] if series_parts(x)]
-            aec = {}
-            if words.get("automotive_grade"):
-                aec = {x: series_aec(x) for x in series if series_aec(x)}
-                series = list(aec)
-                if not series:
-                    continue
-            prefixes |= {series_prefix(x).upper() for x in series}
-            subs.append({"key": sub["key"], "title": sub["title"], "line": w.get("line") or sub.get("summary", ""),
-                         "series": series, "aec": aec})  # fmt: skip
-        rows = [r for r in active_rows() if r["mpn"].upper().startswith(tuple(prefixes))] if prefixes else []
-        fams = {r["family"] for r in rows} - {pf.OTHER_CATEGORY}
-        keys = [k for k in words.get("platforms") or [] if k in plats]
-        facts = [("parts", f"{len(rows):,}", "active parts in the series named here")]
-        if words.get("automotive_grade"):
-            grade = sum(1 for r in rows if is_aec(r))
-            facts.append(("automotive", f"{grade:,}", "of them AEC-Q qualified"))
-        facts += [("subsystems", str(len(subs)), "sub-systems covered"),
-                  ("platforms", str(len(keys)), "technology platforms")]  # fmt: skip
-        para = " ".join(str(words.get("paragraph") or s.get("summary", "")).split())
-        out[s["key"]] = {"key": s["key"], "title": s["title"], "paragraph": para, "subsystems": subs, "facts": facts,
-                         "platforms": keys, "standards": list(words.get("standards") or []),
-                         "learn_more": words.get("learn_more") or "", "families": sorted(fams)}  # fmt: skip
-    return out

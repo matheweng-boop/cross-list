@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.session import signed_in_owner
 from app.config import get_settings
 from app.db import count, get_session
 from app.matching import engine
@@ -25,7 +26,22 @@ from app.models import (
     TamEstimate,
     TechFeedback,
 )
-from app.services import blocks, cases, library, patents, pipeline, prelim, quality, schedule, scoring, tam, vocab, walk
+from app.services import (
+    blocks,
+    cases,
+    library,
+    patents,
+    pipeline,
+    prelim,
+    quality,
+    review_history,
+    schedule,
+    scoring,
+    tam,
+    vocab,
+    walk,
+)
+from app.services import idea_requests as ir
 from app.services import opportunity as op
 from app.services import portfolio as pf
 from app.services import priority as priority
@@ -536,10 +552,33 @@ def tam_page(request: Request, saved: str = "", error: str = "", session: Sessio
     """TAM estimates: market size per product or technology, each with its source and the owner's review."""
     rows = tam.estimates(session)
     fns = blocks.catalogue()["functions"]
-    ctx = {"rows": rows, "counts": tam.counts(session), "hint": tam.check_hint, "saved": saved, "error": error,
-           "fns": fns, "fn_choices": sorted(((k, f.get("label", k)) for k, f in fns.items()),
+    tam_ctx = tam_page_extra(session, rows)
+    rows = [e for e in rows if e["key"] not in tam_ctx["combined_keys"]]  # members show inside their combined topic
+    ctx = {**tam_ctx, "rows": rows, "counts": tam.counts(session), "hint": tam.check_hint, "saved": saved,
+           "error": error, "fns": fns, "fn_choices": sorted(((k, f.get("label", k)) for k, f in fns.items()),
                                             key=lambda kv: kv[1].lower())}  # fmt: skip
     return templates.TemplateResponse(request, "business/tam.html", ctx)
+
+
+def tam_page_extra(session: Session, rows: list[dict]) -> dict:
+    """The biweekly check summary, flags and combined topics for the TAM estimates page."""
+    from app.services import tam_links
+
+    combined = [t for t in tam.topics(session, rows) if t["is_combined"]]
+    pages: dict[str, list[dict]] = {}
+    for lk in tam_links.links():
+        for ref in [lk.get("topic"), *(lk.get("keys") or [])]:
+            if ref and not any(p["slug"] == lk["slug"] for p in pages.get(ref, [])):
+                pages.setdefault(ref, []).append({"slug": lk["slug"], "label": lk["slug"]})
+    for a in tam_links.applied():  # the applied-answers lock (data/business/tam_applied.yaml), when it exists
+        for where in [a.get("applied_in")] if isinstance(a.get("applied_in"), str) else a.get("applied_in") or []:
+            pages.setdefault(str(a.get("key")), []).append({"slug": None, "label": str(where)})
+    from app.services import radio_market
+
+    radio = radio_market.summary(session) if any(t.get("bottom_up") == "radio" for t in combined) else None
+    return {"check": tam.check_summary(), "flags": [e for e in rows if e["flag"]], "topics": combined, "radio": radio,
+            "combined_keys": {e["key"] for t in combined for e in t["members"]}, "history": tam.history(session),
+            "applied_in": pages, "check_labels": tam.CHECK_LABELS, "money": tam.money}  # fmt: skip
 
 
 @router.post("/business/tam")
@@ -564,6 +603,42 @@ async def tam_add(request: Request, session: Session = Depends(get_session)):
     return RedirectResponse("/business/tam?saved=1", status_code=303)
 
 
+@router.post("/business/tam/prices")
+async def tam_prices(request: Request, session: Session = Depends(get_session)):
+    """Owner only (app/auth/access.py, /business/tam): prices for the radio market estimate (owner, 25 Oct 2026:
+    "force me to enter the appropriate data in our pricing section"). Public distributor or list price breaks and/or a
+    low / in band / high call, for a part on the Prices needed list; a part number for a block without one."""
+    from app.services import price_model as pm
+    from app.services import radio_market as rm
+
+    form = {k: str(v).strip() for k, v in (await request.form()).items()}
+    back = form.get("back") or "/pricing/estimate"
+    back = back if back.startswith("/") and not back.startswith("//") else "/pricing/estimate"
+    mpn, block, author = form.get("mpn", "")[:120], form.get("block", ""), form.get("author", "")
+    pts = pm.parse_breaks(form.get("breaks", ""))
+    call = form.get("call", "")
+    if not mpn or not (pts or call in pm.SIGN):
+        raise HTTPException(400, "Give a part number and price breaks or a low / in band / high call")
+    if block:
+        try:
+            rm.choose(session, block, mpn, author)
+        except ValueError:
+            raise HTTPException(400, "Unknown block") from None
+    if pts:
+        pm.record_breaks(session, mpn, pts, form.get("currency", "USD"), form.get("note", ""), author)
+    if call in pm.SIGN:
+        pm.record(session, mpn, call, form.get("note", ""), author)
+    from urllib.parse import quote
+
+    base, _, frag = back.partition("#")
+    url = base + ("&" if "?" in base else "?") + "price_saved=" + quote(mpn) + (f"#{frag}" if frag else "")
+    return RedirectResponse(url, status_code=303)
+
+
+APPLIED_MSG = ("This estimate's answer is already worked into a report, so it takes no new answer. It reopens when "
+               "the next check changes or removes the figure.")
+
+
 @router.post("/business/tam/review")
 def tam_review(key: str = Form(...), answer: str = Form(...), comment: str = Form(""), author: str = Form(""),
                back: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
@@ -571,6 +646,8 @@ def tam_review(key: str = Form(...), answer: str = Form(...), comment: str = For
     verdict = {"agree": "correct", "yes": "correct", "disagree": "wrong", "no": "wrong"}.get(answer)
     if verdict is None or not tam.known_key(session, key):
         raise HTTPException(400, "Unknown estimate or answer")
+    if key in tam.applied():
+        raise HTTPException(409, APPLIED_MSG)
     session.add(DataReview(dataset=tam.DATASET, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
@@ -899,24 +976,38 @@ def data_quality(request: Request, co: str = "combined", session: Session = Depe
     tab = scoring.for_session(session, c["apps"], c["asp"], c["vol"])
     c.update(checks=quality.checks(c["apps"]), questions=quality.questions(session, c["apps"], tab),
              research=quality.research(c["apps"], tab),
-             rev=_rev(session), verdicts=quality.VERDICTS, ds_labels={k: v[0] for k, v in quality.datasets().items()},
+             rev=_rev(session), verdicts={**quality.VERDICTS, **quality.COMMENT_LABELS},
+             ds_labels={k: v[0] for k, v in quality.datasets().items()},
              mappings=session.scalars(select(PartMapping).order_by(PartMapping.created_at.desc())).all())  # fmt: skip
     return templates.TemplateResponse(request, "business/quality.html", c)
 
 
 @router.post("/business/quality/answer")
-def quality_answer(dataset: str = Form(...), key: str = Form(...), answer: str = Form(...), comment: str = Form(""),
+def quality_answer(dataset: str = Form(""), key: str = Form(""), comment: str = Form(""), action: str = Form("submit"),
                    author: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
-    """Yes / No to one review question, with an optional comment: stored as a review of the item."""
-    verdict = {"yes": "correct", "no": "wrong"}.get(answer)
+    """A comment on one question (owner, 25 Oct 2026: no yes / no here): stored as a DataReview "comment" row, checked
+    by the daily run, then asked again in a second round ("comment2"). In the second round only, "Looks right now"
+    (action=confirm) closes the item with a "correct" verdict. Earlier yes / no answers stay in the history."""
     known = tam.known_key(session, key) if dataset == tam.DATASET else key in (quality.datasets().get(dataset) or
                                                                                 ("", {}))[1]  # fmt: skip
-    if verdict is None or not known:
+    if not key or not known or action not in ("submit", "confirm"):
         raise HTTPException(400, "Unknown question or answer")
-    session.add(DataReview(dataset=dataset, key=key[:120], verdict=verdict, comment=comment.strip()[:2000] or None,
+    if dataset == tam.DATASET and key in tam.applied():
+        raise HTTPException(409, APPLIED_MSG)
+    thread = quality.threads(session).get((dataset, key[:120])) or {}
+    if action == "confirm":
+        if thread.get("status") != "round2":
+            raise HTTPException(400, "Only a checked item can be confirmed")
+        verdict, text = "correct", comment.strip()[:2000] or None
+    else:
+        text = comment.strip()[:2000]
+        if not text:
+            return RedirectResponse(f"/business/quality?empty=1#q-{dataset}-{key}", status_code=303)
+        verdict = review_history.COMMENT2 if thread.get("status") == "round2" else review_history.COMMENT
+    session.add(DataReview(dataset=dataset, key=key[:120], verdict=verdict, comment=text,
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
-    return RedirectResponse("/business/quality?answered=1#questions", status_code=303)
+    return RedirectResponse(f"/business/quality?answered=1#q-{dataset}-{key}", status_code=303)
 
 
 @router.get("/business/quality/todo.txt", response_class=PlainTextResponse)
@@ -995,6 +1086,7 @@ def product_reports(request: Request, kind: str = "", tag: str = "", session: Se
     tags = sorted({t for r in rp.reports() for t in r.get("tags") or []})
     ctx = {"rows": rows, "kinds": rp.KINDS, "statuses": rp.STATUSES, "kind": kind, "tag": tag, "tags": tags,
            "n_all": len(rp.reports()), "scheduled": schedule.by_source(session, "research")}  # fmt: skip
+    ctx |= {"expansions": ir.by_slug(session), "owner": signed_in_owner(request) is not None}
     return templates.TemplateResponse(request, "business/reports.html", ctx)
 
 
@@ -1056,7 +1148,40 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx["scheduled"] = schedule.by_source(session, "research").get(slug)
     ctx["learn"] = rp.learn(r)
     ctx["opener"] = (ctx["case"] or {}).get("opener") or prelim.opener(session, slug)
+    ctx["tam_notes"] = tam_notes(request, session, slug)
+    ctx["radio"] = radio_summary(request, session, slug)
+    ctx["radio_mandates"] = radio_mandates(slug)
+    ctx |= {"expansion": ir.get(session, slug), "owner": signed_in_owner(request) is not None}
     return templates.TemplateResponse(request, "business/report.html", ctx)
+
+
+def radio_summary(request: Request, session: Session, slug: str) -> dict | None:
+    """The car radio market bottom-up for the radio case (app/services/radio_market.py); guests see none of it."""
+    from app.auth.session import principal
+    from app.services import radio_market
+
+    who = principal(request)
+    if slug != radio_market.CASE or (who is not None and who.is_guest):
+        return None
+    out = radio_market.summary(session)
+    out["reports_band"] = (tam.by_function(session).get("am_fm_tuner") or {}).get("band") or ""
+    return out
+
+
+def radio_mandates(slug: str) -> list[dict]:
+    """Standards, mandates and adoption for the radio case (qualitative, so guests see them too)."""
+    from app.services import radio_market
+
+    return radio_market.config().get("mandates") or [] if slug == radio_market.CASE else []
+
+
+def tam_notes(request: Request, session: Session, slug: str) -> dict:
+    """Owner view only: is each market figure quoted on this page still in line with the TAM? Guests see nothing."""
+    from app.auth.session import principal
+    from app.services import tam_links
+
+    who = principal(request)
+    return {} if who is not None and who.is_guest else tam_links.for_slug(session, slug)
 
 
 @router.post("/business/reports/{slug}/react")
@@ -1072,13 +1197,13 @@ async def case_react(request: Request, slug: str, session: Session = Depends(get
 
 
 @router.get("/business/reports/{slug}/background", response_class=HTMLResponse)
-def product_report_background(request: Request, slug: str):
+def product_report_background(request: Request, slug: str, session: Session = Depends(get_session)):
     """The detail behind a report: the data tables and long-form notes kept out of the report itself."""
     r = rp.report(slug)
     if r is None or not rp.has_background(slug):
         raise HTTPException(404, "No background for this report")
     ctx = {"r": r, "kinds": rp.KINDS, "statuses": rp.STATUSES, "body": f"business/reports/{slug}.background.html",
-           "background": True}  # fmt: skip
+           "background": True, "tam_notes": tam_notes(request, session, slug)}  # fmt: skip
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

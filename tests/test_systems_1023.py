@@ -16,7 +16,7 @@ def test_every_diagram_is_in_a_sub_system_or_other():
     assert sy.assigned() | set(sy.unassigned()) == set(range(n)) and not sy.assigned() & set(sy.unassigned())
     for i in sy.unassigned():
         assert sy.place_of(i)[0][0] == sy.OTHER
-    assert [s["key"] for s in sy.systems()] == ["automotive", "datacenter", "drones", "cellular"]
+    assert [s["key"] for s in sy.systems()][:4] == ["automotive", "datacenter", "drones", "cellular"]  # + 25 Oct
     for s in sy.systems():
         assert s["subsystems"], s["key"]  # at least one sub-system per system
         assert len({x["key"] for x in s["subsystems"]}) == len(s["subsystems"])
@@ -57,7 +57,7 @@ def test_application_library_groups_by_system_and_sub_system(client):
     assert order == sorted(order) and order[-1] < html.index('id="other-areas"')
     assert 'href="/blocks?system=automotive&amp;sub=car-radio#sub-car-radio"' in html
     n_radio = len(sy.sub("automotive", "car-radio")["idx"])
-    assert f"{n_radio} diagrams" in html.split('id="card-automotive-car-radio"')[1].split("</article>")[0]
+    assert f"Block diagram ✓ ({n_radio})" in html.split('id="card-automotive-car-radio"')[1].split("</article>")[0]
     one = client.get("/blocks?system=automotive&sub=car-radio").text
     assert 'id="sub-car-radio"' in one and 'id="sub-adas"' not in one and 'id="area-datacenter"' not in one
     assert "Cross-sell in Car radio" in one and 'href="/blocks/cross-sell?system=automotive&amp;sub=car-radio"' in one
@@ -83,7 +83,7 @@ def test_menu_tree_23_oct():
     assert menu["growth"][-1] == "TAM estimates"
     # owner, 24 Oct 2026: a section for shareable content, after Engineering knowledge, with its own landing page
     assert list(menu)[-2:] == ["knowledge", "shareable"]
-    assert menu["shareable"] == ["Technology overview", "Skyworks + Qorvo synergies", "Automotive"]
+    assert menu["shareable"] == ["Reports"]  # owner, 25 Oct 2026: one page, no sub-items
     assert nav.HOMES == {"shareable": "/shareable"}
     manage = [i[0] for i in nav.UTILITY[2]]
     assert manage == ["Overview", "Schedule", "Site data", "Uploads", "Data quality", "People & invites", "Methodology"]

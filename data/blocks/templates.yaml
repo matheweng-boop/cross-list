@@ -3046,9 +3046,11 @@
     source: automotive application
 - name: Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)
   category: Automotive systems
-  note: 'From NXP public material: NXP_CAR_ACCESS, NXP_NCJ29D5_PAGE, NXP_NCJ29D5FS, NXP_NCX3321_PAGE'
+  note: 'From NXP public material: NXP_CAR_ACCESS, NXP_NCJ29D5_PAGE, NXP_NCJ29D5FS, NXP_NCX3321_PAGE. Reference clock (added 26 Oct 2026, owner): every UWB IC runs from its own reference crystal; the public module reference designs MURATA-2AB-DS (Qorvo QM33120W with a 38.4 MHz crystal) and MURATA-2BP (NXP SR150 with internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals) show it next to the UWB IC. The automotive anchor IC''s own clock frequency is not in the NXP public pages.'
   sources:
   - {doc: NXP_CAR_ACCESS, title: 'NXP Smart Car Access application page (4 diagrams: vehicle, key fob, phone, smart card)', url: 'https://www.nxp.com/applications/SMART-CAR-ACCESS'}
+  - {doc: MURATA-2AB-DS, title: 'Murata Type 2AB UWB + BLE combo module (Qorvo QM33120W + Nordic nRF52840), preliminary specification SP-2AB-828, section 3 block diagram: 38.4 MHz crystal at the UWB transceiver', url: 'https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/qorvo/type2ab/uwb-ble-module-preliminary-datasheet-sp-2ab-828i.ashx?la=en&cvid=20250701063023000000'}
+  - {doc: MURATA-2BP, title: 'Murata Type 2BP UWB module (NXP SR150) product page: internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals', url: 'https://www.murata.com/products/connectivitymodule/ultra-wide-band/nxp/type2bp'}
   - {doc: NXP_NCJ29D5_PAGE, title: NXP Trimension NCJ29D5 UWB IC for automotive product page, url: 'https://www.nxp.com/products/NCJ29D5'}
   - {doc: NXP_NCJ29D5FS, title: NCJ29D5 Ultra-Wideband ICs for Automotive Applications (fact sheet), url: 'https://www.nxp.com/docs/en/fact-sheet/NCJ29D5FS.pdf'}
   - {doc: NXP_NCX3321_PAGE, title: NXP NCx3321 automotive NFC frontend product page, url: 'https://www.nxp.com/products/NCx3321'}
@@ -3098,9 +3100,17 @@
     blocks: [pmic, can_transceiver]
     col: 0
     row: 2
+  - id: uwb_clock
+    label: UWB reference clock (crystal per anchor; 38.4 MHz in the public module designs)
+    blocks: [crystal_oscillator]
+    col: 1
+    row: 2
+    source: MURATA-2AB-DS section 3 block diagram (38.4M crystal at the UWB transceiver); MURATA-2BP (system clock 38.4 MHz, sleep clock 32.768 kHz)
   links:
   - [uwb_antenna_path, uwb_anchor_outside, UWB]
   - [uwb_antenna_path, uwb_anchor_inside, UWB]
+  - [uwb_clock, uwb_anchor_outside, reference clock]
+  - [uwb_clock, uwb_anchor_inside, reference clock]
   - [uwb_anchor_outside, access_mcu, '']
   - [uwb_anchor_inside, access_mcu, '']
   - [ble_frontend, ble, 2.4 GHz]
@@ -14929,3 +14939,587 @@
   - {id: v2x_mode, question: Set-up, choices: [standalone V2X unit, companion to the telematics unit, inside a smart antenna module]}
   - {id: v2x_tech, question: Radio technology, choices: [802.11p / ITS-G5, LTE-V2X (PC5), NR-V2X, dual mode 802.11p + C-V2X]}
   - {id: v2x_paths, question: Antenna paths, choices: [one path, two paths for diversity, two paths for two channels at once]}
+
+# ---- added 26 Oct 2026 (owner, 25 Oct: "search online for more resources on block diagrams and application diagrams";
+# kick sensor and interior radar each get their own diagram; new systems for the diagrams under "Other").
+# Every diagram below is drawn after the public diagram named in its sources; blocks map the source's own block
+# names to our function ids, links follow the arrows of the source figure (or are marked "as described" in the note).
+- name: Kick-to-open sensor module (sense element, signal conditioning, MCU, LIN / CAN to the body control module) (after TI)
+  category: Automotive systems
+  note: "After TI public material: TI-SOL-KICK (block diagram 'Kick to Open ECU': sense element in the rear bumper, analog inputs / sensor signal conditioning, MCU, LDO power supply with reverse battery protection, LIN with LIN ESD to the body control module). The three TI reference designs on the page show the sense-element choices: capacitive (TIDA-01409), ultrasonic (TIDA-01424) and 77 GHz mmWave radar (TIDEP-01036). The module opens the power liftgate, see the smart power closure diagram."
+  sources:
+  - {doc: TI-SOL-KICK, title: 'TI Kick to open module - block diagram + subsystems (power supply, analog inputs, communication interface, MCU)', url: 'https://www.ti.com/solution/automotive-kick-to-open-module'}
+  - {doc: TI-TIDEP-01036, title: 'TI TIDEP-01036 mmWave radar sensor kick-to-open reference design (design guide TIDUF96, Oct 2024)', url: 'https://www.ti.com/tool/TIDEP-01036'}
+  groups:
+  - {id: sense, label: Sense element in the rear bumper (electrodes, ultrasonic transducers or radar antennas), col: 0, row: 0, blocks: [external_block]}
+  - {id: cond, label: Analog inputs / sensor signal conditioning (capacitive, ultrasonic or radar front end), col: 1, row: 0, blocks: [touch_controller, ultrasonic_afe, radar_transceiver]}
+  - {id: mcu, label: MCU (kick detection), col: 2, row: 0, blocks: [mcu]}
+  - {id: comm, label: Communication interface (LIN or CAN, ESD), col: 3, row: 0, blocks: [lin_transceiver, can_transceiver, tvs_esd]}
+  - {id: battery, label: Car battery, col: 0, row: 1, blocks: [external_block]}
+  - {id: power, label: Power supply (reverse battery protection, LDO; discrete or system basis chip), col: 1, row: 1, blocks: [reverse_polarity, pol_ldo]}
+  - {id: bcm, label: Body control module / rest of vehicle, col: 3, row: 1, blocks: [external_block]}
+  links:
+  - [sense, cond, '']
+  - [cond, mcu, sensor data]
+  - [mcu, comm, '']
+  - [comm, bcm, LIN / CAN]
+  - [battery, power, '12 V']
+  - [power, cond, '']
+  - [power, mcu, '']
+  questions:
+  - {id: sense_element, question: Sense element, choices: [capacitive electrodes (TIDA-01409), ultrasonic transducers (TIDA-01424), 77 GHz mmWave radar (TIDEP-01036)], source: TI-SOL-KICK reference designs}
+  - {id: bus, question: Vehicle bus, choices: [LIN, CAN], source: "TI-SOL-KICK 'Communication interface: CAN or LIN communication'"}
+  - {id: power_impl, question: Power supply, choices: [discrete LDO, system basis chip (SBC)], source: "TI-SOL-KICK SVG 'Discrete implementation or system basis chip (SBC)'"}
+
+- name: Interior radar for child presence detection (60 GHz radar + MCU on CAN, with optional 3D ToF camera and microphone modules) (after Infineon)
+  category: Automotive systems
+  note: "After Infineon public material: IFX-APP-ICMS (In-cabin monitoring system block diagram: radar module with PMIC, two LDOs, MCU, 60 GHz radar and CAN transceiver; camera module with MOSFET, load guard, PMIC, VCSEL driver, VCSEL, ToF imager and SerDes; other sensing modules with PMIC, LDO, MCU and MEMS microphone; external processing in the ADAS / AD or cockpit domain controller). The figure draws no connecting lines; the links follow the module grouping. A UWB alternative uses the in-cabin UWB anchors as a radar (NXP Smart car access diagram)."
+  sources:
+  - {doc: IFX-APP-ICMS, title: 'Infineon In-cabin monitoring system (ICMS) application page - block diagram (radar, camera and other sensing modules)', url: 'https://www.infineon.com/applications/automotive/adas-autonomous-driving/in-cabin-monitoring'}
+  - {doc: IFX-BGT60ATR24C, title: 'Infineon XENSIV BGT60ATR24C 60 GHz automotive radar sensor product page', url: 'https://www.infineon.com/part/BGT60ATR24C'}
+  - {doc: NXP_CAR_ACCESS, title: 'NXP Smart Car Access application page (UWB anchor inside, also UWB radar for child presence)', url: 'https://www.nxp.com/applications/SMART-CAR-ACCESS'}
+  groups:
+  - {id: radar_power, label: 'Radar module power (PMIC, LDOs)', col: 0, row: 0, blocks: [pmic, pol_ldo]}
+  - {id: radar, label: 60 GHz radar sensor (FMCW, antennas in package), col: 1, row: 0, blocks: [radar_transceiver, antenna]}
+  - {id: mcu, label: MCU (radar signal processing, child presence algorithm), col: 2, row: 0, blocks: [mcu]}
+  - {id: can, label: CAN transceiver, col: 3, row: 0, blocks: [can_transceiver]}
+  - {id: cam_power, label: 'Camera module power (MOSFET, load guard, PMIC)', col: 0, row: 1, blocks: [power_fets, load_switch, pmic]}
+  - {id: camera, label: '3D ToF camera (ToF imager, VCSEL and VCSEL driver)', col: 1, row: 1, blocks: [camera_radar]}
+  - {id: serdes, label: SerDes link to the domain controller, col: 2, row: 1, blocks: [serdes]}
+  - {id: domain, label: ADAS / AD or cockpit domain controller (external processing), col: 3, row: 1, blocks: [adas_processor]}
+  - {id: other, label: 'Other sensing module (PMIC, LDO, MCU, MEMS microphone)', col: 0, row: 2, blocks: [pmic, pol_ldo, mcu, acoustic_transducer]}
+  links:
+  - [radar_power, radar, rails]
+  - [radar, mcu, radar data]
+  - [mcu, can, '']
+  - [can, domain, CAN]
+  - [cam_power, camera, rails]
+  - [camera, serdes, '']
+  - [serdes, domain, video / depth]
+  - [other, domain, '']
+  questions:
+  - {id: technology, question: Sensing technology, choices: [60 GHz radar (as drawn), UWB radar on the in-cabin anchors, 3D ToF camera], source: IFX-APP-ICMS modules; NXP_CAR_ACCESS}
+  - {id: use_case, question: Use case, choices: [child presence detection, occupancy / seat-belt reminder, driver monitoring], source: "IFX-BGT60ATR24C page ('in-cabin monitoring, child presence detection, occupancy monitoring, driver monitoring')"}
+
+- name: Automotive smart power closure (power liftgate, sliding doors, trunk and frunk motors) (after Infineon)
+  category: Automotive systems
+  note: "After Infineon public material: IFX-APP-CLOSURE (Advanced smart power closure block diagram: +12 V through a reverse polarity protection MOSFET, microcontroller, system basis chip with LIN / CAN transceivers, LDO, wake inputs, watchdog and HS outputs; motor system IC with half-bridge IC and gate driver ICs driving MOSFET bridges for the left and right power lift gates, trunk and frunk and power sliding doors; smart high-side switch for the lock solenoid; position sensor feedback). Opened by the kick-to-open sensor or the digital key."
+  sources:
+  - {doc: IFX-APP-CLOSURE, title: 'Infineon Automotive smart power closure application page - block diagram', url: 'https://www.infineon.com/application/automotive-smart-power-closure'}
+  groups:
+  - {id: rpp, label: Reverse polarity protection MOSFET, col: 0, row: 0, blocks: [reverse_polarity]}
+  - {id: mcu, label: Microcontroller, col: 1, row: 0, blocks: [mcu]}
+  - {id: hss, label: Smart high-side switch (lock solenoid), col: 2, row: 0, blocks: [load_switch]}
+  - {id: lock, label: Lock solenoid, col: 3, row: 0, blocks: [external_block]}
+  - {id: sbc, label: 'System basis chip (LIN / CAN transceivers, LDO, wake inputs, watchdog, HS outputs)', col: 0, row: 1, blocks: [lin_transceiver, can_transceiver, pol_ldo, watchdog]}
+  - {id: msic, label: Motor system IC (half-bridge IC + gate driver ICs), col: 1, row: 1, blocks: [half_bridge_driver, motor_driver_brushed]}
+  - {id: fets, label: MOSFET bridges (one per motor), col: 2, row: 1, blocks: [power_fets]}
+  - {id: motors, label: 'Motors: power lift gate (L / R), trunk and frunk, power sliding doors', col: 3, row: 1, blocks: [external_block]}
+  - {id: pos, label: Position sensor, col: 3, row: 2, blocks: [hall_switch]}
+  links:
+  - [rpp, sbc, '+12 V']
+  - [rpp, hss, '+12 V']
+  - [rpp, fets, '+12 V']
+  - [sbc, mcu, SPI / supply]
+  - [mcu, msic, '']
+  - [hss, msic, '']
+  - [hss, lock, '']
+  - [msic, fets, gate drive]
+  - [fets, motors, '']
+  - [pos, mcu, position]
+
+- name: UWB + Bluetooth LE module for anchors and tags (UWB transceiver with 38.4 MHz crystal and band-pass filters, BLE MCU with 32 MHz and 32 kHz crystals) (after Murata Type 2AB)
+  category: Consumer & personal electronics
+  note: "After Murata public material: MURATA-2AB-DS block diagram (UWB transceiver QM33120W with its own DC-DC, a 38.4 MHz crystal and a band-pass filter on each of the two UWB antenna ports; BLE microprocessor nRF52840 with 32 MHz and 32 kHz crystals, the BT antenna and the host interfaces; a 3-axis motion sensor). Murata's Type 2BP module (NXP SR150) also embeds a 38.4 MHz system clock crystal and a 32.768 kHz sleep clock (MURATA-2BP). The reference clock sets the UWB carrier and the ranging timestamps, so its accuracy is calibrated per module ('Xtal calibration support')."
+  sources:
+  - {doc: MURATA-2AB-DS, title: 'Murata Type 2AB UWB + BLE combo module (Qorvo QM33120W + Nordic nRF52840), preliminary specification SP-2AB-828, section 3 block diagram', url: 'https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/qorvo/type2ab/uwb-ble-module-preliminary-datasheet-sp-2ab-828i.ashx?la=en&cvid=20250701063023000000'}
+  - {doc: MURATA-2BP, title: 'Murata Type 2BP UWB module (NXP SR150) product page: internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals', url: 'https://www.murata.com/products/connectivitymodule/ultra-wide-band/nxp/type2bp'}
+  groups:
+  - {id: uwb_ant, label: 'UWB antennas 1 and 2 (AoA)', col: 0, row: 0, blocks: [antenna x2]}
+  - {id: bpf, label: Band-pass filter per UWB antenna port, col: 1, row: 0, blocks: [filter_saw_baw x2]}
+  - {id: uwb, label: UWB transceiver (channels 5 and 9) with its DC-DC, col: 2, row: 0, blocks: [uwb_soc, pol_buck]}
+  - {id: uwb_clk, label: 38.4 MHz crystal (UWB reference clock), col: 3, row: 0, blocks: [crystal_oscillator]}
+  - {id: ble, label: BLE microprocessor (Arm Cortex-M4) and BT antenna, col: 2, row: 1, blocks: [ble_soc, antenna]}
+  - {id: ble_clk, label: 32 MHz and 32 kHz crystals (BLE clock and sleep clock), col: 3, row: 1, blocks: [crystal_oscillator, rtc]}
+  - {id: sensor, label: 3-axis motion sensor (wake on movement), col: 1, row: 1, blocks: [env_sensor]}
+  - {id: host, label: 'Host interfaces (USB, UART, SPI, I2C, GPIO)', col: 0, row: 1, blocks: [external_block]}
+  links:
+  - [uwb_ant, bpf, UWB]
+  - [bpf, uwb, '']
+  - [uwb_clk, uwb, 38.4 MHz]
+  - [ble, uwb, SPI]
+  - [ble_clk, ble, 32 MHz / 32 kHz]
+  - [sensor, ble, IRQ / I2C]
+  - [host, ble, '']
+  questions:
+  - {id: role, question: Role, choices: [anchor (fixed), tag (mobile), phone accessory], source: "MURATA-2BP ('Two-Way ranging and One-Way ranging, Angle of Arrival')"}
+  - {id: aoa, question: Angle of arrival, choices: [none (one antenna), 2D AoA (two antennas), 3D AoA (three antennas)], source: MURATA-2AB-DS (two UWB antenna ports); MURATA-2BP (3 antenna support)}
+  - {id: clock, question: UWB reference clock, choices: [crystal on the board (as drawn), TCXO], source: MURATA-2AB-DS block diagram (38.4M crystal)}
+
+- name: Smartwatch with UWB, Wi-Fi / BT, GNSS, NFC payment and eSIM (host MCU, sensors, USB-C PD) (after Infineon)
+  category: Consumer & personal electronics
+  note: "After Infineon public material: IFX-APP-WATCH (Smartwatch block diagram: power with ESD diode, USB-C PD and power management from the battery; sensing with biomarker, temperature, 3D Hall (crown), pressure, MEMS microphone and motion sensors; host microcontroller with memory (PSRAM, NOR flash over xSPI) and display (MIPI); wireless connectivity with RF front end, cellular modem with eSIM, Wi-Fi / BT combo with RF switch, NFC payment, GPS with GNSS LNA and UWB; audio amplifier and speaker; multi-sense controller and authentication)."
+  sources:
+  - {doc: IFX-APP-WATCH, title: 'Infineon Smartwatch application page - block diagram', url: 'https://www.infineon.com/application/smartwatch'}
+  groups:
+  - {id: power, label: 'Power (ESD diode, USB-C PD, power management, battery)', col: 0, row: 0, blocks: [tvs_esd, usb_pd_controller, pmic, battery_charger]}
+  - {id: host, label: 'Host microcontroller (ML, sensor hub, security, GPU, DSP)', col: 1, row: 0, blocks: [soc]}
+  - {id: memory, label: 'Memory (PSRAM, NOR flash) and display', col: 1, row: 1, blocks: [flash, display]}
+  - {id: sensing, label: 'Sensing (biomarker, temperature, 3D Hall crown, pressure, microphone, motion)', col: 0, row: 1, blocks: [ppg_afe, temperature_sensor, position_sensor, env_sensor, acoustic_transducer]}
+  - {id: cell, label: Cellular modem with RF front end and eSIM, col: 2, row: 0, blocks: [modem, rf_frontend, antenna_tuner, secure_element]}
+  - {id: wifi, label: Wi-Fi / BT combo with RF switch, col: 3, row: 0, blocks: [wifi_soc, rf_switch]}
+  - {id: gnss, label: GPS with GNSS LNA, col: 2, row: 1, blocks: [gnss_lna]}
+  - {id: uwb, label: UWB, col: 3, row: 1, blocks: [uwb_soc]}
+  - {id: nfc, label: 'NFC payment, authentication, multi-sense controller', col: 2, row: 2, blocks: [nfc_frontend, secure_element, touch_controller]}
+  - {id: audio, label: Audio amplifier and speaker, col: 3, row: 2, blocks: [audio_amp, acoustic_transducer]}
+  links:
+  - [power, host, '']
+  - [sensing, host, 'I2C / UART / PDM / SPI']
+  - [memory, host, xSPI / MIPI]
+  - [cell, host, '']
+  - [wifi, host, SDIO / UART]
+  - [gnss, host, SPI]
+  - [uwb, host, SPI]
+  - [nfc, host, I2C]
+  - [host, audio, '']
+
+- name: Drone power management, ESC, flight controller and gimbal (BMS, charger, power distribution, 3-phase inverter, sensors, Wi-Fi / cellular) (after Infineon)
+  category: Motor drives
+  note: "After Infineon public material: IFX-APP-DRONES (Drones block diagram: battery with pre-charge and charge / discharge FETs, gate driver, Schottky diode, controller, balancing and monitoring, memory and authentication; charger with AC-DC, USB-C PD controller, DC-DC and wireless charging; ESD protection; power distribution with DC-DC, LDO and PMIC; electronic speed control with integrated controller + gate driver, microcontroller, gate driver, 3-phase MOSFET or GaN inverter and current sensor; flight controller with microcontroller, CAN, encryption and authentication, Wi-Fi / Bluetooth and cellular, USB-C PD peripheral MCU, memory and sensors (24 and 60 GHz radar, 3D ToF, pressure, GPS with LNA, 9-axis IMU, VPS camera); gimbal with microcontroller, video camera, 6-axis IMU, gate driver, MOSFET and magnetic position sensor)."
+  sources:
+  - {doc: IFX-APP-DRONES, title: 'Infineon Drones application page - block diagram', url: 'https://www.infineon.com/application/drones'}
+  groups:
+  - {id: battery, label: 'Battery (charge / discharge FETs, controller, balancing and monitoring, memory, authentication)', col: 0, row: 0, blocks: [battery_protector, battery_monitor, mcu, power_fets, schottky_diode, secure_element]}
+  - {id: charger, label: 'Charger (AC-DC, USB-C PD, DC-DC, wireless charging)', col: 0, row: 1, blocks: [acdc_controller, usb_pd_controller, buck_boost, wireless_power]}
+  - {id: power, label: 'Power distribution (DC-DC, LDO, PMIC) and ESD protection', col: 1, row: 0, blocks: [wide_vin_buck, pol_ldo, pmic, tvs_esd]}
+  - {id: esc, label: 'Electronic speed control (MCU, gate driver, 3-phase MOSFET / GaN inverter, current sensor)', col: 2, row: 0, blocks: [mcu, three_phase_gate_driver, power_fets, amplifier]}
+  - {id: motor, label: Propeller motors, col: 3, row: 0, blocks: [motor]}
+  - {id: fc, label: Flight controller (microcontroller, memory, encryption and authentication), col: 2, row: 1, blocks: [mcu, flash, secure_element, can_transceiver]}
+  - {id: radio, label: 'Wireless connectivity (Wi-Fi & Bluetooth / BLE, cellular)', col: 1, row: 1, blocks: [wifi_soc, modem]}
+  - {id: sensors, label: 'Sensors (24 / 60 GHz radar, 3D ToF, pressure, GPS with LNA, 9-axis IMU)', col: 3, row: 1, blocks: [radar_transceiver, env_sensor, gnss_lna, vehicle_sensors]}
+  - {id: gimbal, label: 'Gimbal (microcontroller, gate driver, MOSFETs, magnetic position sensor, camera, IMU)', col: 2, row: 2, blocks: [mcu, three_phase_gate_driver, power_fets, position_sensor, camera_radar]}
+  links:
+  - [charger, battery, '']
+  - [battery, power, '']
+  - [battery, esc, battery bus]
+  - [esc, motor, 3-phase]
+  - [esc, fc, CAN]
+  - [power, fc, '']
+  - [power, gimbal, '']
+  - [radio, fc, '']
+  - [sensors, fc, '']
+  - [fc, gimbal, '']
+
+- name: 48 V intermediate bus converter (two half bridges with hi / low side drivers, hybrid switched-capacitor 8:1, digital controller; or an IBC module) (after Infineon)
+  category: Enterprise & data center
+  note: "After Infineon public material: IFX-APP-IBC (IBC block diagram, medium voltage HSC unregulated 8:1: two half bridges Q1 / Q2 and Q4 / Q5 driven by hi / low side driver ICs, Q3 and Q6 driven by low side driver ICs, a shared inductor, and a controller driving all four drivers; or a single IBC module). It sits in the server tray between the 48 V / 54 V rack bus and the processor regulators."
+  sources:
+  - {doc: IFX-APP-IBC, title: 'Infineon Intermediate bus converter (IBC) application page - block diagram', url: 'https://www.infineon.com/applications/ai-data-center/data-center-power-solutions/server-rack-power-management/ibc'}
+  groups:
+  - {id: bus, label: 48 V / 54 V rack bus, col: 0, row: 0, blocks: [external_block]}
+  - {id: hb, label: 'Two half bridges (Q1 / Q2, Q4 / Q5) with hi / low side driver ICs', col: 1, row: 0, blocks: [half_bridge_driver x2, power_fets]}
+  - {id: ls, label: Low side switches (Q3, Q6) with low side driver ICs and the inductor, col: 2, row: 0, blocks: [gate_driver, power_fets]}
+  - {id: ctrl, label: Digital controller, col: 1, row: 1, blocks: [multiphase]}
+  - {id: module, label: or an IBC module, col: 2, row: 1, blocks: [power_module]}
+  - {id: load, label: Intermediate bus to the processor regulators, col: 3, row: 0, blocks: [external_block]}
+  links:
+  - [bus, hb, 48 V]
+  - [hb, ls, '']
+  - [ls, load, 8:1]
+  - [ctrl, hb, PWM]
+  - [ctrl, ls, PWM]
+  - [bus, module, '']
+  - [module, load, '']
+
+- name: SATCOM user terminal (dish with RF / antenna array, application processor, PoL rails; PoE Wi-Fi router; power supply unit) (after Infineon)
+  category: RF & connectivity
+  note: "After Infineon public material: IFX-APP-SATUT (Satellite user terminal block diagram: power supply unit with power switches, auxiliary power, driver ICs, microcontroller, current sensor and authentication, feeding a Wi-Fi router (PoE) with power switches, microcontroller, driver ICs, authentication and Wi-Fi, feeding the dish: DC-DC step-down (power switches, driver ICs, controller) to PoL converters for the SoC / application processor and the RF / antenna array, plus microcontroller, authentication, eSIM and memory). The RF / antenna array is a box without detail in the figure; its beamforming chain is in the phased-array diagrams."
+  sources:
+  - {doc: IFX-APP-SATUT, title: 'Infineon Satellite communications - user terminals application page - block diagram', url: 'https://www.infineon.com/application/user-terminals'}
+  groups:
+  - {id: psu, label: 'Power supply unit (power switches, auxiliary power, driver ICs, MCU, current sensor)', col: 0, row: 0, blocks: [acdc_controller, power_fets, gate_driver, mcu, current_sensor]}
+  - {id: router, label: 'Wi-Fi router (PoE): power switches, driver ICs, microcontroller, Wi-Fi', col: 1, row: 0, blocks: [poe_pse, mcu, wifi_soc, wifi_fem]}
+  - {id: dcdc, label: 'Dish DC-DC step-down (power switches, driver ICs, controller)', col: 2, row: 0, blocks: [wide_vin_buck, power_fets]}
+  - {id: pol, label: PoL converters, col: 3, row: 0, blocks: [pol_buck, pol_ldo]}
+  - {id: soc, label: SoC / application processor, col: 3, row: 1, blocks: [soc]}
+  - {id: rf, label: RF / antenna array, col: 2, row: 1, blocks: [beamformer_ic, antenna]}
+  - {id: misc, label: 'Dish microcontroller, authentication, eSIM, memory', col: 1, row: 1, blocks: [mcu, secure_element, flash]}
+  links:
+  - [psu, router, '']
+  - [router, dcdc, PoE]
+  - [dcdc, pol, '']
+  - [pol, soc, rails]
+  - [pol, rf, rails]
+  - [soc, rf, '']
+  - [misc, soc, '']
+
+- name: Satellite ground station power supply (Vienna rectifier PFC, isolated resonant LLC DC/DC, synchronous rectification, ORing) (after Infineon)
+  category: Power & isolation
+  note: "After Infineon public material: IFX-APP-SATGS (Ground stations block diagram: 3-phase AC source, power factor correction with a Vienna rectifier (switches, driver ICs, SiC diode), HV isolated DC-DC with a resonant half / full-bridge LLC primary side and a full-bridge synchronous rectification secondary side across the transformer, ORing switches with driver ICs to the DC output; current sensor, auxiliary power and PFC / DC-DC controllers)."
+  sources:
+  - {doc: IFX-APP-SATGS, title: 'Infineon Satellite communications - ground stations application page - block diagram', url: 'https://www.infineon.com/application/ground-stations'}
+  groups:
+  - {id: ac, label: 3-phase AC source, col: 0, row: 0, blocks: [external_block]}
+  - {id: pfc, label: 'PFC: Vienna rectifier (switches, driver ICs, SiC diode)', col: 1, row: 0, blocks: [power_fets, gate_driver, schottky_diode]}
+  - {id: llc, label: 'Isolated DC-DC primary: resonant HB / FB LLC (switches, driver ICs)', col: 2, row: 0, blocks: [power_fets, gate_driver]}
+  - {id: sr, label: 'Isolated DC-DC secondary: full-bridge synchronous rectification', col: 3, row: 0, blocks: [power_fets, gate_driver]}
+  - {id: oring, label: ORing (switches, driver ICs) to the DC output, col: 3, row: 1, blocks: [efuse_hotswap, power_fets]}
+  - {id: ctrl, label: 'PFC and DC-DC controllers, current sensor, auxiliary power', col: 1, row: 1, blocks: [acdc_controller, current_sensor, hv_flyback]}
+  links:
+  - [ac, pfc, '']
+  - [pfc, llc, DC bus]
+  - [llc, sr, transformer]
+  - [sr, oring, '']
+  - [ctrl, pfc, '']
+  - [ctrl, llc, '']
+
+- name: SATCOM Ku-band block upconverter core (L-band IF in, LO chain with x3 multiplier, mixer, output amplifier) (after Mini-Circuits)
+  category: RF & connectivity
+  note: 'After Mini-Circuits public material: MC-BD-KUBUC. Figure stops at AMP5 ''Output''. A complete BUC adds an image/LO-reject bandpass filter, a high-power PA (SSPA), output isolator and a reference-locked LO (10 MHz from the modem); these are NOT in the figure.'
+  sources:
+  - {doc: MC-BD-KUBUC, title: Ku-Band Block Upconverter - block diagram + model families, url: 'https://www.minicircuits.com/pdfs/KU-BAND%20BLOCK%20UPCONVERTER.pdf'}
+  groups:
+  - id: if_in
+    label: IF input amplifier AMP4
+    col: 0
+    row: 0
+    blocks: [rf_gain_block]
+  - id: mixer
+    label: MIX1 (up-converter)
+    col: 1
+    row: 0
+    blocks: [rf_mixer]
+  - id: rf_out
+    label: Output amplifier AMP5
+    col: 2
+    row: 0
+    blocks: [rf_gain_block]
+  - id: lo_source
+    label: 'LO source: OSC1 -> ATT1 -> AMP1 -> LPF1 -> ATT2'
+    col: 3
+    row: 0
+    blocks: [rf_synthesizer, rf_attenuator, rf_gain_block, filter_saw_baw]
+  - id: lo_mult
+    label: 'LO multiplier: MULT1 (x3) -> HPF1 -> ATT3'
+    col: 0
+    row: 1
+    blocks: [frequency_multiplier, filter_saw_baw, rf_attenuator]
+  - id: lo_amp
+    label: LO amplifiers AMP2 -> AMP3 (drive mixer LO port)
+    col: 1
+    row: 1
+    blocks: [rf_gain_block]
+  links:
+  - [if_in, mixer, IF input]
+  - [mixer, rf_out, Ku-band output]
+  - [lo_source, lo_mult, '']
+  - [lo_mult, lo_amp, '']
+  - [lo_amp, mixer, LO]
+  questions:
+  - id: lo_generation
+    question: How is the Ku LO generated?
+    choices: ['lower-frequency VCO/PLL + multiplier (as drawn, x3)', direct microwave PLL/VCO, DRO]
+    source: MC-BD-KUBUC (MULT1 X3)
+  - id: lo_reference
+    question: LO reference
+    choices: [external 10 MHz from IDU/modem, internal OCXO/TCXO]
+    source: general BUC practice (not in figure)
+  - id: output_power
+    question: BUC output power
+    choices: [driver only (as drawn), 2-8 W SSPA, '> 8 W GaN SSPA']
+    source: figure ends at AMP5
+- name: Redundant L-band amplifier for satellite ground equipment (950-2000 MHz, 1:1 switched chains, balanced output, power monitoring) (after Mini-Circuits)
+  category: RF & connectivity
+  note: 'After Mini-Circuits public material: MC-BD-LBAND'
+  sources:
+  - {doc: MC-BD-LBAND, title: Redundant L-Band Amplifier - block diagram + model families, url: 'https://www.minicircuits.com/pdfs/Redundant%20L-Band%20Amplifier.pdf'}
+  groups:
+  - id: in_switch
+    label: SW1 input redundancy switch (SPDT), input 950-2000 MHz @ -30 dBm
+    col: 0
+    row: 0
+    blocks: [rf_switch]
+  - id: chain_a_in
+    label: 'Chain A: ATT1 (variable) -> CPL1 -> AMP1 -> ATT2 -> AMP2 -> ATT3'
+    col: 1
+    row: 0
+    blocks: [rf_attenuator, rf_passive, rf_gain_block]
+  - id: chain_a_out
+    label: 'Chain A balanced output: SPL1 (0/180) -> 2x AMP3 -> SPL2 (0/180) -> CPL2'
+    col: 2
+    row: 0
+    blocks: [rf_passive, power_amplifier]
+  - id: chain_b
+    label: 'Chain B: identical standby chain (ATT1 ... CPL2)'
+    col: 3
+    row: 0
+    blocks: [rf_attenuator, rf_passive, rf_gain_block, power_amplifier]
+  - id: detectors
+    label: PD1 power detectors on CPL1 / CPL2 coupled ports (DC out to control logic), both chains
+    col: 0
+    row: 1
+    blocks: [schottky_diode]
+  - id: out_switch
+    label: SW2 output redundancy switch (SPDT)
+    col: 1
+    row: 1
+    blocks: [rf_switch]
+  - id: control_logic
+    label: Control logic (named, not drawn as a block)
+    col: 2
+    row: 1
+    blocks: [mcu]
+  links:
+  - [in_switch, chain_a_in, 950-2000 MHz]
+  - [in_switch, chain_b, '']
+  - [chain_a_in, chain_a_out, '']
+  - [chain_a_out, out_switch, '']
+  - [chain_b, out_switch, '']
+  - [chain_a_in, detectors, CPL1 coupled port]
+  - [chain_a_out, detectors, CPL2 coupled port]
+  - [detectors, control_logic, DC out to control logic]
+  - [control_logic, in_switch, switchover (inferred)]
+  - [control_logic, out_switch, switchover (inferred)]
+  questions:
+  - id: redundancy
+    question: Redundancy scheme
+    choices: ['1:1 hot/cold standby with input + output switches (as drawn)', none, N+1]
+    source: MC-BD-LBAND (SW1, SW2)
+  - id: output_topology
+    question: Output stage topology
+    choices: [180-degree balanced / push-pull (cancels 2nd harmonic), 90-degree balanced, single-ended]
+    source: MC-BD-LBAND figure note
+  - id: monitoring
+    question: Health monitoring
+    choices: [input + output couplers with diode detectors (as drawn), output only, none]
+    source: MC-BD-LBAND (CPL1, CPL2, PD1)
+  - id: switch_type
+    question: Redundancy switch technology
+    choices: ['mechanical (as drawn: MSP2T)', solid-state]
+    source: MC-BD-LBAND table
+- name: Phased-array beamforming network (per-element phase shifter, PA / LNA and T/R switch, beam controller) (after RF Essentials)
+  category: RF & connectivity
+  note: 'After RF Essentials public material: RFE-BD-PHASED. Figure draws each row as a single series chain PHASE SHIFT -> PA -> LNA -> T/R SW -> ANT (arrows left-to-right), i.e. PA and LNA in series. That is not a working T/R module; the page text says each element has a PA for TX and an LNA for RX selected by the T/R switch. Links above use the physical arrangement (PA and LNA on separate paths of the T/R switch). Phased-array spec table lists ''5-7 bits (5.6 - 1.4 deg)''; 5 bits is 11.25 deg, 7 bits 2.8 deg.'
+  sources:
+  - {doc: RFE-BD-PHASED, title: Phased Array Beamforming Network, url: 'https://rfessentials.com/resources/block-diagrams/phased-array-beamforming/'}
+  groups:
+  - id: beam_ctrl
+    label: Beam controller
+    col: 0
+    row: 0
+    blocks: [mcu, soc]
+  - id: phase_shift
+    label: Phase shifter (element 1..N)
+    col: 1
+    row: 0
+    blocks: [rf_phase_shifter, beamformer_ic]
+  - id: pa
+    label: PA (per element)
+    col: 2
+    row: 0
+    blocks: [power_amplifier]
+  - id: lna
+    label: LNA (per element)
+    col: 3
+    row: 0
+    blocks: [lna]
+  - id: tr_switch
+    label: T/R switch (per element)
+    col: 0
+    row: 1
+    blocks: [rf_switch]
+  - id: antenna
+    label: Antenna elements 1..N
+    col: 1
+    row: 1
+    blocks: [antenna]
+  links:
+  - [beam_ctrl, phase_shift, phase states]
+  - [phase_shift, pa, TX]
+  - [pa, tr_switch, TX]
+  - [tr_switch, lna, RX]
+  - [lna, phase_shift, RX]
+  - [tr_switch, antenna, '']
+  questions:
+  - id: elements
+    question: Array size
+    choices: [16-64, '256', 1024-4096]
+    source: spec table 16-4096
+  - id: ps_bits
+    question: Phase-shifter resolution
+    choices: [5 bit, 6 bit, 7 bit]
+    source: spec table
+  - id: pa_tech
+    question: Element PA technology
+    choices: [GaN-on-SiC (radar), SiGe BFIC (commercial 5G)]
+    source: design note
+- name: AESA radar T/R module (phase shifter, VGA, driver, GaN HPA, circulator, limiter, LNA) (after RF Essentials)
+  category: RF & connectivity
+  note: 'After RF Essentials public material: RFE-ART-AESA. Article lists the TX path (phase shifter, VGA, driver, HPA, circulator) and RX path (circulator, limiter, LNA, phase shifter, VGA) as separate ordered lists and says the phase shifter may be shared; the common-leg T/R select switch and the filter position are inferred. No figure on the page.'
+  sources:
+  - {doc: RFE-ART-AESA, title: AESA Radar TR Module Architecture, url: 'https://rfessentials.com/industry-news/radar-defense/aesa-tr-module-architecture/'}
+  groups:
+  - id: manifold
+    label: Array manifold / beamformer port
+    col: 0
+    row: 0
+    blocks: [rf_passive]
+  - id: phase_shifter
+    label: Phase shifter (6 bit, shared TX/RX or dual)
+    col: 1
+    row: 0
+    blocks: [rf_phase_shifter, beamformer_ic]
+  - id: vga
+    label: VGA (amplitude taper / calibration)
+    col: 2
+    row: 0
+    blocks: [rf_gain_block, rf_attenuator]
+  - id: tr_select
+    label: T/R select switch (common leg)
+    col: 3
+    row: 0
+    blocks: [rf_switch]
+  - id: driver
+    label: Driver amplifier
+    col: 0
+    row: 1
+    blocks: [rf_predriver, rf_gain_block]
+  - id: hpa
+    label: High-power amplifier (GaN MMIC, 5-20 W/element)
+    col: 1
+    row: 1
+    blocks: [power_amplifier]
+  - id: circulator
+    label: Circulator (+ matched load on 3rd port)
+    col: 2
+    row: 1
+    blocks: [circulator_isolator, rf_passive]
+  - id: limiter
+    label: Limiter (PIN, < 100 ns recovery)
+    col: 3
+    row: 1
+    blocks: [rf_limiter, pin_diode]
+  - id: rx_bpf
+    label: Bandpass filter (before LNA)
+    col: 0
+    row: 2
+    blocks: [filter_saw_baw]
+  - id: lna
+    label: LNA (NF 1.5-3 dB)
+    col: 1
+    row: 2
+    blocks: [lna]
+  - id: element
+    label: Antenna element (via coax / waveguide transition)
+    col: 2
+    row: 2
+    blocks: [antenna]
+  - id: control
+    label: DC / control interface (phase, amplitude, T/R timing)
+    col: 3
+    row: 2
+    blocks: [mcu, rf_pa_bias]
+  links:
+  - [manifold, phase_shifter, '']
+  - [phase_shifter, vga, '']
+  - [vga, tr_select, '']
+  - [tr_select, driver, TX]
+  - [driver, hpa, TX]
+  - [hpa, circulator, TX]
+  - [circulator, element, '']
+  - [circulator, limiter, RX]
+  - [limiter, rx_bpf, RX]
+  - [rx_bpf, lna, RX]
+  - [lna, tr_select, RX]
+  - [control, phase_shifter, phase state]
+  - [control, vga, gain state]
+  - [control, tr_select, T/R timing]
+  questions:
+  - id: band
+    question: Band
+    choices: ['S (3-4 GHz, 20-50 W)', 'X (9-10 GHz, 10-20 W)', 'Ka (34-36 GHz, 2-5 W)']
+    source: article spec table
+  - id: hpa_tech
+    question: HPA technology
+    choices: [GaN-on-SiC, GaAs (legacy)]
+    source: section 2
+  - id: ps_bits
+    question: Phase-shifter bits
+    choices: ['6', '7']
+    source: spec table
+- name: Ka-band LEO gateway ground terminal RF chain (feed, OMT, diplexer, LNA, down / up-converters, GaN BUC with uplink power control) (after RF Essentials)
+  category: RF & connectivity
+  note: 'After RF Essentials public material: RFE-ART-LEO, RFE-ART-RAIN. Component list (not a figure); ordering and the beacon/UPC loop are inferred from the two articles. BUC normally integrates the upconverter; kept separate because the article lists frequency converters separately.'
+  sources:
+  - {doc: RFE-ART-LEO, title: LEO Mega-Constellations and the Ground Segment Bottleneck, url: 'https://rfessentials.com/industry-news/industry-trends/leo-constellations-ground-segment/'}
+  - {doc: RFE-ART-RAIN, title: Ka-Band Rain Fade Mitigation for Satellite Ground Stations, url: 'https://rfessentials.com/industry-news/satellite-space/ka-band-rain-fade-mitigation/'}
+  groups:
+  - id: antenna
+    label: Reflector 2-5 m + corrugated feed horn (tracking mount, 5 deg/s)
+    col: 0
+    row: 0
+    blocks: [antenna, external_block]
+  - id: omt
+    label: OMT (polarization separation)
+    col: 1
+    row: 0
+    blocks: [rf_passive]
+  - id: diplexer
+    label: Diplexer / triplexer (TX / RX share feed)
+    col: 2
+    row: 0
+    blocks: [diplexer]
+  - id: lna
+    label: LNA 17.7-20.2 GHz (NF < 1.5 dB, gain 35+ dB)
+    col: 3
+    row: 0
+    blocks: [lna]
+  - id: downconv
+    label: Downconverter (Ka -> IF)
+    col: 0
+    row: 1
+    blocks: [rf_mixer, rf_synthesizer]
+  - id: upconv
+    label: Upconverter (IF -> Ka)
+    col: 1
+    row: 1
+    blocks: [rf_mixer, rf_synthesizer]
+  - id: buc
+    label: BUC / HPA 27.5-30 GHz (GaN, 10-80 W, 5-15 dB UPC headroom)
+    col: 2
+    row: 1
+    blocks: [power_amplifier, rf_mixer]
+  - id: beacon
+    label: Beacon receiver (rain-fade detection for UPC)
+    col: 3
+    row: 1
+    blocks: [rf_transceiver]
+  - id: modem
+    label: Modem / baseband (ACM)
+    col: 0
+    row: 2
+    blocks: [modem, external_block]
+  links:
+  - [antenna, omt, '']
+  - [omt, diplexer, '']
+  - [diplexer, lna, RX 17.7-20.2 GHz]
+  - [lna, downconv, '']
+  - [downconv, modem, IF]
+  - [modem, upconv, IF]
+  - [upconv, buc, '']
+  - [buc, diplexer, TX 27.5-30 GHz]
+  - [downconv, beacon, beacon]
+  - [beacon, buc, uplink power control]
+  questions:
+  - id: band
+    question: Band
+    choices: [Ka (17.7-20.2 / 27.5-30 GHz), Q/V band (next wave)]
+    source: LEO article
+  - id: buc_power
+    question: BUC power
+    choices: [10 W, 20-40 W, 80 W]
+    source: LEO + rain-fade articles
+  - id: fade_mitigation
+    question: Rain-fade mitigation
+    choices: [ACM, UPC, site diversity, antenna oversizing]
+    source: RFE-ART-RAIN

@@ -119,3 +119,33 @@
   root.querySelector("form")?.addEventListener("submit", stop);
   root.querySelector(".fb-close")?.addEventListener("click", stop);
 })();
+
+// Dictation in other note fields (e.g. "Expand this idea"): a form holding a hidden <p class="dict"> with a .dict-mic
+// button fills its textarea the same way as the feedback window.
+(() => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  document.querySelectorAll("form .dict").forEach(box => {
+    const form = box.closest("form"), mic = box.querySelector(".dict-mic"), st = box.querySelector(".dict-st");
+    const text = form.querySelector("textarea");
+    if (!mic || !text) return;
+    box.hidden = false;
+    let rec = null;
+    mic.addEventListener("click", () => {
+      if (rec) { rec.stop(); return; }
+      rec = new SR();
+      rec.lang = document.documentElement.lang || navigator.language || "en-US";
+      rec.interimResults = false;
+      rec.continuous = true;
+      rec.onresult = e => {
+        for (let i = e.resultIndex; i < e.results.length; i++)
+          if (e.results[i].isFinal) text.value = `${text.value} ${e.results[i][0].transcript}`.trim();
+      };
+      rec.onend = () => { rec = null; mic.textContent = "🎤 Dictate"; mic.setAttribute("aria-pressed", "false"); st.textContent = ""; };
+      rec.onerror = e => { st.textContent = `Dictation not available (${e.error})`; };
+      try { rec.start(); } catch { rec = null; return; }
+      mic.textContent = "■ Stop"; mic.setAttribute("aria-pressed", "true"); st.textContent = "Listening…";
+    });
+    form.addEventListener("submit", () => { if (rec) rec.stop(); });
+  });
+})();

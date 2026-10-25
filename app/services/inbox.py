@@ -1,9 +1,9 @@
 """Everything the owner said on the site since a day, as one text for the daily update run (GET /api/inbox).
 
 Site feedback (grouped as in the daily digest), cross verdicts, diagram and technology feedback, data-review answers
-(agree / disagree, yes / no, with comments), questions asked on reports with their answers and the technology review
-requests and application area requests (all open ones, and those closed since the day). Requested volumes,
-customers and markets are left out on purpose: they stay on the site.
+(agree / disagree, yes / no, with comments), the Data quality comments still being checked, questions asked on
+reports with their answers and the technology review requests and application area requests (all open ones, and
+those closed since the day). Requested volumes, customers and markets are left out on purpose: they stay on the site.
 """
 
 from datetime import UTC, date, datetime, timedelta
@@ -16,6 +16,7 @@ from app.models import (
     BlockFeedback,
     CrossFeedback,
     DataReview,
+    IdeaRequest,
     Part,
     ReportQuestion,
     SiteFeedback,
@@ -24,7 +25,7 @@ from app.models import (
     aware,
 )
 from app.services import feedback as fb
-from app.services import guest_input
+from app.services import guest_input, review_history
 from app.services.verify import SOURCE_ANSWERS
 
 
@@ -43,6 +44,12 @@ def _one_line(text: str | None) -> str:
 def _new(session: Session, model, start: datetime) -> list:
     """Rows of ``model`` created since ``start``, oldest first."""
     return session.scalars(select(model).where(model.created_at >= start).order_by(model.created_at)).unique().all()
+
+
+def _earlier(session: Session, r) -> str:
+    """Up to two earlier answers to the same item, so the daily run sees a change of mind."""
+    note = review_history.earlier_note(review_history.history(session, r.dataset, r.key, n=6), before_id=r.id)
+    return f"\n  {note}" if note else ""
 
 
 def _section(title: str, lines: list[str]) -> list[str]:
@@ -80,7 +87,16 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     reviews = _new(session, DataReview, start)
     out += _section("\n## Review answers (data quality, TAM, cases, library, price calls)\n",
                     [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
-                     f"{' · ' + _one_line(r.comment) if r.comment else ''}" for r in reviews])  # fmt: skip
+                     f"{' · ' + _one_line(r.comment) if r.comment else ''}{_earlier(session, r)}"
+                     for r in reviews])  # fmt: skip
+
+    # Data quality comments still being checked (every open one, not only new ones): the run checks each, then
+    # records it in data/business/quality_checked.yaml so the owner gets the second round (owner, 25 Oct 2026)
+    from app.services import quality
+
+    dq = quality.inbox_lines(session)
+    out += dq
+    dq_open = dq[-1] != "None."
 
     # Verify next › Sources (weekly link and source check): ok / fix it / remove, with where it is
     src = session.scalars(select(VerifyTask).where(VerifyTask.kind == "sources", VerifyTask.done_at >= start)
@@ -130,6 +146,15 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += [f"- {_when(a.created_at)} [{a.status}] {_one_line(a.area)}{' · why: ' + _one_line(a.why) if a.why else ''}"
             f"{' · ' + a.author if a.author else ''}" for a in areas] or ["None."]  # fmt: skip
 
+    # "Expand this idea" on Research & ideas: every open one, and those closed since the last pull
+    ideas = [i for i in session.scalars(select(IdeaRequest).order_by(IdeaRequest.created_at))
+             if i.status == "new" or aware(i.updated_at or i.created_at) >= start]  # fmt: skip
+    out.append("\n## Idea expansion requests\n")
+    out.append("Add an \"Applications in depth\" section to each report (docs/daily_update.md), then set the status "
+               "to Expanded on Data management > Site data > Requests (/manage/requests?kind=idea).\n")  # fmt: skip
+    out += [f"- {_when(i.created_at)} [{i.status}] {i.slug}: {_one_line(i.title)}"
+            f"{' · note: ' + _one_line(i.note) if i.note else ''}" for i in ideas] or ["None."]  # fmt: skip
+
     # guest input: only what the owner approved (already applied, with names); pending items only as a count
     guests = guest_input.inbox_lines(session, start)
     out += guests
@@ -149,8 +174,19 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     out += [x for rep in share_reports.REPORTS.values() for x in tech_overview_edit.inbox_lines(session, start, rep)]
 
+    # report and case market figures that no longer match the TAM (data/business/tam_links.yaml)
+    from app.services import tam_links
+
+    tam_todo = tam_links.inbox_lines(session)
+    out += tam_todo
+    tam_changes = tam_todo[-1] != "None."
+    from app.services import radio_market  # prices the owner must enter before the radio market can be computed
+
+    out += radio_market.inbox_lines(session)
+
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
-    if not any([n_site, crosses, blocks, tech, reviews, src, asked, answered, rq, areas, approved, overview]):
+    if not any([n_site, crosses, blocks, tech, reviews, dq_open, src, asked, answered, rq, areas, ideas, approved,
+                overview, tam_changes]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

@@ -1,0 +1,45 @@
+{# Car radio market bottom-up (app/services/radio_market.py, data/business/radio_market.yaml). Needs `radio` (summary).
+   prices_needed: the required to-do (with entry forms when form=true, owner only). panel: layers, BOM, mandates. #}
+{% macro prices_needed(radio, back, form=false) %}{% if radio.needed %}
+<div class="banner small rm-needed" id="prices-needed"><b>{{ 'Required for market estimates' if form else 'Prices needed before this figure can be computed' }}:</b>
+  {% if not form %}{% for n in radio.needed %}{{ n.part or n.label ~ ' (no part chosen)' }}{{ ', ' if not loop.last }}{% endfor %} → <a href="/pricing/estimate#prices-needed">enter on Price estimate</a>{% endif %}
+  {% if form %}<p class="small">The car radio market at current BOM content stays “{{ radio.ned }}” until these have prices. Enter <b>public distributor or list prices</b> (price breaks as pasted, e.g. from DigiKey without VAT), or a <b>low / in band / high</b> call – never internal or customer pricing.</p>
+  <ul class="rm-forms">{% for n in radio.needed %}<li><b>{{ n.part or n.label }}</b> <span class="muted">· {{ n.label }} · {{ n.why }}</span> · <a href="{{ n.href }}">check the band on Price estimate</a>
+    <form method="post" action="/business/tam/prices" class="rm-form">
+      <input type="hidden" name="back" value="{{ back }}">
+      {% if n.part %}<input type="hidden" name="mpn" value="{{ n.part }}">{% else %}<input type="hidden" name="block" value="{{ n.block }}"><label>Part number <input name="mpn" maxlength="120" required placeholder="the part for this block"></label>{% endif %}
+      <label>Price breaks <small class="muted">(quantity price per line)</small><textarea name="breaks" rows="3" placeholder="1000 4.20&#10;2500 3.90"></textarea></label>
+      <label>Currency <select name="currency">{% for c in ('USD', 'EUR', 'GBP') %}<option>{{ c }}</option>{% endfor %}</select></label>
+      <label>Or a call <select name="call"><option value="">–</option><option value="low">low end</option><option value="ok">in band</option><option value="high">high end</option></select></label>
+      <label>Where from <input name="note" maxlength="300" placeholder="e.g. DigiKey, 25 Oct 2026"></label>
+      <button type="submit" class="small-btn">Save</button>
+    </form></li>{% endfor %}</ul>{% endif %}
+</div>{% endif %}{% endmacro %}
+
+{% macro panel(radio, reports_band='') %}
+<section class="rm-panel small" id="radio-market">
+  <h3>Car radio market, bottom-up from our price estimates</h3>
+  <p class="muted">Total radio market including adjacent technologies (owner, 25 Oct 2026). Tuner content is a labelled part of it, not a market of its own. Basis: {{ radio.assumption }}; parts priced at {{ '{:,}'.format(radio.volume) }} a year with the price model; today's system mix.</p>
+  <div class="table-wrap"><table class="small pc-table rm-layers">
+    <thead><tr><th scope="col">Layer</th><th scope="col">Market at current BOM content ({{ radio.base_year }}, no growth)</th><th scope="col">Per vehicle</th><th scope="col">{{ radio.target_year }} projection (target prices; content growth only)</th></tr></thead>
+    <tbody>{% for k in ('tuner', 'radio', 'adjacent', 'total') %}{% set v = radio.layers[k] %}<tr><th scope="row">{{ v.label }}</th><td>{{ v.band }}</td><td>{{ v.per_vehicle_text }}</td><td>{% if v.ok %}{{ v.y_text }} · {{ v.cagr_text }} <span class="muted">(est; {{ radio.assumption }})</span>{% else %}{{ radio.ned }}{% endif %}</td></tr>{% endfor %}
+    {% if reports_band %}<tr><th scope="row">Radio content, analyst reports</th><td>{{ reports_band }}</td><td>–</td><td class="muted">growth only as reported by each source; not used to project</td></tr>{% endif %}</tbody>
+  </table></div>
+  <p><b>Owner cross-check</b> (not the result): ≤ ${{ '%.0f'|format(radio.check.analog) }} a car for AM/FM only (2–4 tuners), ≈ ${{ '%.0f'|format(radio.check.digital) }} for a DAB system by {{ radio.target_year }} → {{ '$%.2f'|format(radio.check.low / 1e9) }}–{{ '%.2f'|format(radio.check.high / 1e9) }} B a year (all AM/FM to all DAB); content growth at most {{ '%.1f'|format(radio.check.cagr_max) }} % a year if every radio went from $5 to $10 by {{ radio.target_year }} <span class="muted">({{ radio.check.source }}; {{ radio.assumption }})</span>.</p>
+  <p><b>System mix today:</b> {{ '%.0f'|format(radio.mix.low * 100) }}–{{ '%.0f'|format(radio.mix.high * 100) }} % of new-car radios digital (est): {% for r in radio.mix.regions if r.share is not none %}{{ r.region }} {{ '%.0f'|format(r.share * 100) }} % {{ r.standard }}{{ ', ' if not loop.last }}{% endfor %}; {{ radio.ned }} for {{ radio.mix.unknown|join(', ') }} (counted as all AM/FM at the low end, all digital at the high end).
+    <b>{{ radio.target_year }} mix:</b> {% if radio.mix.target is not none %}{{ '%.0f'|format(radio.mix.target * 100) }} %{% else %}{{ radio.ned }}{% endif %} – driven by {% for m in radio.mandates if '2030' in (m.mix|string) %}{{ m.region }}: {{ m.what.split(':')[0] }}{{ '; ' if not loop.last }}{% endfor %}. Until it is known the projection assumes every new radio is digital by {{ radio.target_year }} (upper bound).</p>
+  <details><summary>Radio BOM per vehicle (reference systems)</summary>
+  {% for s in radio.systems %}<p><b>{{ s.name }}</b> <span class="muted">· broadcast preset “{{ s.preset }}”</span></p>
+  <div class="table-wrap"><table class="small pc-table rm-bom">
+    <thead><tr><th scope="col">Block</th><th scope="col">Part</th><th scope="col">Qty</th><th scope="col">Price basis</th><th scope="col">Low</th><th scope="col">Target</th><th scope="col">High</th></tr></thead>
+    <tbody>{% for r in s.rows %}{% set p = r.price %}<tr><td>{{ r.label }} <span class="muted">({{ r.layer }})</span></td><td>{{ r.part or '–' }}{% if r.chosen %} <span class="muted">(owner)</span>{% endif %}{% if r.alt_price %}<br><span class="muted">vs {{ r.alt }}: ${{ '%.2f'|format(r.alt_price.target) }}</span>{% endif %}</td><td>{{ r.qty[0] }}{% if r.qty[1] != r.qty[0] %}–{{ r.qty[1] }}{% endif %}</td>
+      {% if p.ok %}<td>{{ p.basis }} <span class="muted">· {{ p.source }}</span></td><td>${{ '%.2f'|format(p.low) }}</td><td>${{ '%.2f'|format(p.target) }}</td><td>${{ '%.2f'|format(p.high) }}</td>{% else %}<td class="uc-error">{{ radio.ned }}: {{ p.why }}</td><td>–</td><td>–</td><td>–</td>{% endif %}</tr>{% endfor %}
+    {% set c = s.content.total %}<tr><th scope="row" colspan="4">Content per vehicle (all layers)</th>{% if c.ok %}<td>${{ '%.2f'|format(c.low) }}</td><td>${{ '%.2f'|format(c.target) }}</td><td>${{ '%.2f'|format(c.high) }}</td>{% else %}<td colspan="3">{{ radio.ned }}</td>{% endif %}</tr></tbody>
+  </table></div>{% endfor %}</details>
+</section>{% endmacro %}
+
+{% macro mandates(radio) %}
+<div class="table-wrap"><table class="small pc-table rm-mandates" id="mandates">
+  <thead><tr><th scope="col">Region</th><th scope="col">Requires or adopts</th><th scope="col">Status (as the source states)</th><th scope="col">Effect on radio BOM content</th><th scope="col">Mix</th></tr></thead>
+  <tbody>{% for m in radio.mandates %}<tr id="mandate-{{ m.id }}"><td>{{ m.region }}</td><td>{{ m.what }}</td><td>{{ m.status }} <span class="muted">· <a href="{{ m.source.url }}" target="_blank" rel="noopener">{{ m.source.publisher }}, {{ m.date }}</a></span></td><td>{{ m.effect }}</td><td>{{ m.mix }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endmacro %}

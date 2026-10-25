@@ -17,5 +17,5 @@ def test_jobs_and_tonight():
 def test_page(client):
     page = client.get("/manage/schedule").text
     assert "Tonight's run" in page and "Pull your comments" in page and "pinout datasheets left" in page
-    assert "Every two weeks" in page and "Nothing runs every two weeks yet" in page
+    assert "Every two weeks" in page and "TAM verification" in page  # biweekly since 25 Oct 2026
     assert 'href="/manage/schedule"' in page

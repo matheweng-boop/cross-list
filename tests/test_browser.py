@@ -212,6 +212,57 @@ def test_cross_sell_by_system(page):
     assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
 
 
+def test_new_systems_in_the_libraries_and_cross_sell(page):
+    """Owner, 25 Oct 2026: the diagrams under Other became new systems. The pages are opened again at 390 px by the
+    fixture (no sideways scrolling)."""
+    go(page, "/library")
+    assert page.locator("#sys-aerospace").is_visible()
+    go(page, "/blocks?system=aerospace")
+    assert page.locator(".sys-pick a.fchip.on").inner_text().startswith("Aerospace")
+    go(page, "/blocks?system=consumer&sub=connectivity")
+    assert page.locator("#sub-connectivity").is_visible()
+    go(page, "/blocks/cross-sell?sel=aerospace:satcom")
+    assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
+    go(page, "/blocks/cross-sell?sel=industrial")
+    assert page.locator("main h2").first.is_visible()
+
+
+def test_library_card_opens_its_block_diagram_in_one_click(page):
+    """Owner, 25 Oct 2026: each card says whether a block diagram exists, and one click on a diagram name opens it
+    (the editor is visited last: leaving it asks before unload)."""
+    go(page, "/library")
+    expect(page.locator(".sys-sub .dg-flag").first).to_be_visible()
+    go(page, "/blocks")
+    expect(page.locator("#diagrams")).to_be_in_viewport()  # the summary sits at the top
+    card = page.locator(".sys-sub", has=page.locator(".dg-flag.has")).first
+    expect(card.locator(".dg-flag")).to_contain_text("Block diagram ✓")
+    with page.expect_navigation():
+        card.locator(".sys-diags a").first.click()
+    assert "/blocks/new?template=" in page.url
+
+
+def test_efuse_key_applications_table_fits_desktop_and_phone(page, chromium, live_server):
+    """Owner, 25 Oct 2026: the eFuse key-applications table: short cells without wrapping at 1280 px, cards at 390 px
+    (no sideways scrolling of the page); "More" opens the details and the diagram count opens them too."""
+    path = "/business/evidence/efuse_hotswap"
+    page.set_viewport_size({"width": 1280, "height": 900})
+    go(page, path)
+    table = page.locator("table.ka-table")
+    assert table.evaluate("t => t.scrollWidth <= t.parentElement.clientWidth + 1")
+    heights = table.locator("tr.ka-main").evaluate_all("rows => rows.map(r => r.getBoundingClientRect().height)")
+    assert max(heights) < 80, heights  # one or two lines per row, not a wall of wrapped text
+    page.locator("a.ka-n").first.click()
+    expect(page.locator(".ka-more details").first).to_have_attribute("open", "")
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + path, wait_until="load")
+    assert overflow(tab) <= 1
+    box = tab.locator("table.ka-table").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert tab.locator("tr.ka-main th").first.evaluate("e => getComputedStyle(e).display") == "block"
+    ctx.close()
+
+
 def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     """Owner, 25 Oct 2026: pick Automotive on Cross-sell, see the Skyworks + Qorvo pairs there, open the portfolio tab
     with the system kept and its pairs marked, and come back to By system."""
@@ -397,8 +448,14 @@ def test_shareable_technology_overview_prints_to_four_a4_pages(page):
     page.locator("nav.main-nav a", has_text="Shareable").click()
     expect(page).to_have_url(re.compile(r"/shareable$"))
     expect(page.locator("main h1")).to_have_text("Shareable")
-    page.locator(".sh-card", has_text="Technology overview").click()
-    expect(page).to_have_url(re.compile(r"/shareable/technology-overview$"))
+    # owner, 25 Oct 2026: one list; Preview opens the report in the lightbox, then check it as a page of its own
+    page.locator(".sh-row", has_text="Technology overview").get_by_role("button", name="Preview").click()
+    frame = page.locator("dialog.lb iframe.lb-frame")
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/technology-overview$"))
+    expect(page.frame_locator("dialog.lb iframe.lb-frame").locator("section#platforms")).to_be_attached()
+    page.get_by_role("button", name="Close preview").click()
+    expect(page.locator("dialog.lb")).to_be_hidden()
+    go(page, "/shareable/technology-overview")
     for sid, heading in (("at-a-glance", "technology overview"), ("platforms", "Technology platforms"),
                          ("markets", "End markets"), ("families", "Product families")):  # fmt: skip
         expect(page.locator(f"section#{sid} :is(h1, h2)").first).to_contain_text(heading)
@@ -484,37 +541,30 @@ def test_technology_overview_edit_number_paragraph_comment_resolve_undo(page, tm
         reset_overview(page)
 
 
-def test_technology_overview_market_focus_and_watermark(page, tmp_path):
-    """Owner, 24 Oct 2026: the focus dropdown adds a page 5 for Automotive, Data center or Drones (the address keeps
-    the choice); the watermark prints on every page and changes no page count; unknown values are ignored."""
+def test_technology_overview_is_four_pages_with_a_watermark(page, tmp_path):
+    """Owner, 25 Oct 2026: the market focus page is gone, so the overview PDF is 4 A4 pages; an old ?focus= link opens
+    the same 4 pages without error. The watermark prints on every page and changes no page count."""
     go(page, TO)
-    page.select_option("select[name='focus']", "automotive")
-    expect(page).to_have_url(re.compile(r"focus=automotive"))
-    expect(page.locator("#market-focus h2")).to_have_text("Automotive")
-    expect(page.locator("#market-focus")).to_contain_text("Car radio")
-    pdf = a4(page)
-    assert pdf_pages(pdf) <= 5
+    expect(page.locator("select[name='focus']")).to_have_count(0)
+    expect(page.locator("input[name='include']")).to_have_count(0)
+    expect(page.locator(".to-page")).to_have_count(4)
+    assert pdf_pages(a4(page)) == 4
     page.select_option("select[name='wm']", "draft")
     expect(page).to_have_url(re.compile(r"wm=draft"))
     expect(page.locator(".to-wm")).to_have_text("Draft")
     pdf = a4(page)
-    assert pdf_pages(pdf) <= 5
+    assert pdf_pages(pdf) == 4
     for n in range(1, pdf_pages(pdf) + 1):
         text = pdf_text(pdf, tmp_path, n)
         if text is not None:
             assert "draft" in text.lower(), f"no watermark on page {n}"
     page.select_option("select[name='wm']", "none")
     expect(page.locator(".to-wm")).to_have_count(0)
-    page.locator("input[type='checkbox'][name='include']").uncheck()
+    go(page, f"{TO}?focus=automotive")  # an old link: status 200, no error
     expect(page.locator("#market-focus")).to_have_count(0)
-    assert pdf_pages(a4(page)) <= 4
-    for market, title, sub in (("datacenter", "Data center", "Rack power"), ("drones", "Drones", "Radio links")):
-        go(page, f"{TO}?focus={market}")
-        expect(page.locator("#market-focus")).to_contain_text(title)
-        expect(page.locator("#market-focus")).to_contain_text(sub)
-        assert pdf_pages(a4(page)) <= 5
+    expect(page.locator(".to-page")).to_have_count(4)
+    assert pdf_pages(a4(page)) == 4
     go(page, f"{TO}?focus=bogus&wm=bogus")
-    expect(page.locator("#market-focus")).to_have_count(0)
     expect(page.locator(".to-wm")).to_have_count(0)
 
 
@@ -552,7 +602,7 @@ def _filler(n: int) -> str:
 
 
 def test_technology_overview_every_field_at_its_limit_still_fits(page):
-    """The length limits keep the PDF at 4 A4 pages (5 with the focus page), even with every text and number at its
+    """The length limits keep the PDF at 4 A4 pages, even with every text and number at its
     limit, every dot set, two paragraphs per section and a medium logo."""
     from app.services import tech_overview_edit as te
     from tests.test_tech_overview import png
@@ -579,21 +629,18 @@ def test_technology_overview_every_field_at_its_limit_still_fits(page):
         assert r.ok and "Not saved" not in r.text(), re.findall(r'role="alert">([^<]*)', r.text())[:5]
         go(page, TO)
         assert pdf_pages(a4(page)) <= 4
-        for market in te.to.focus_markets():
-            go(page, f"{TO}?focus={market}&wm=draft")
-            assert pdf_pages(a4(page)) <= 5, market
     finally:
         reset_overview(page)
 
 
 def test_shareable_pack_of_all_three_and_each_report_alone(page):
     """Owner, 25 Oct 2026: the Synergies and Automotive reports print to at most 3 A4 pages each; the combined PDF of
-    all three reports (no focus page) to 10 pages at most, numbered through ("10 / 10" on the last)."""
+    all three reports to 10 pages at most, numbered through ("10 / 10" on the last)."""
     for path in ("/shareable/synergies", "/shareable/automotive"):
         go(page, path)
         expect(page.locator(".to-page")).to_have_count(3)
         assert pdf_pages(a4(page)) <= 3, path
-    go(page, "/shareable/pack?r=overview,synergies,automotive&focus=none&wm=none")
+    go(page, "/shareable/pack?r=overview,synergies,automotive&wm=none")
     expect(page.locator(".to-page")).to_have_count(10)
     expect(page.locator(".to-pfoot").last).to_contain_text("10 / 10")
     pdf = a4(page)
@@ -601,14 +648,25 @@ def test_shareable_pack_of_all_three_and_each_report_alone(page):
 
 
 def test_shareable_build_pdf_with_two_reports(page, tmp_path):
-    """The landing page's Build a PDF box: untick the overview, Create PDF opens one print view with Synergies then
-    Automotive (the address keeps the choice), each from a new page, one sources list (no overflow at 390 px: the
-    page fixture checks every visited page)."""
+    """The one Shareable page (owner, 25 Oct 2026): nothing ticked asks to pick a report; tick Synergies and Automotive,
+    Build a PDF opens one print view with Synergies then Automotive (the address keeps the choice), each from a new
+    page, one sources list (no overflow at 390 px: the page fixture checks every visited page)."""
     go(page, "/shareable")
     box = page.locator("#build-pdf")
-    box.locator("input[value='overview']").uncheck()
-    box.get_by_role("button", name="Create PDF").click()
-    expect(page).to_have_url(re.compile(r"/shareable/pack\?r=synergies,automotive"))
+    expect(box.locator("input[name=r]:checked")).to_have_count(0)
+    box.get_by_role("button", name="Build a PDF").click()
+    expect(page.locator("#sh-err")).to_have_text("Pick at least one report.")
+    expect(page.locator("dialog.lb[open]")).to_have_count(0)
+    box.locator("input[value='synergies']").check()
+    box.locator("input[value='automotive']").check()
+    expect(page.locator("#sh-err")).to_be_hidden()
+    box.get_by_role("button", name="Build a PDF").click()
+    # the print view opens in the lightbox (fc109ca); then check the same address as a page of its own
+    frame = page.locator("dialog.lb iframe.lb-frame")
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none$"))
+    expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the last choice stays
+    expect(page.locator("dialog.lb").get_by_role("button", name="Print / Save as PDF")).to_be_visible()
+    go(page, frame.get_attribute("src"))
     ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
     assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
     expect(page.locator("text=Sources.")).to_have_count(1)
@@ -617,6 +675,14 @@ def test_shareable_build_pdf_with_two_reports(page, tmp_path):
     text = pdf_text(pdf, tmp_path, 4)
     if text is not None:
         assert "extension of" in text.lower() and re.search(r"4 ?/ ?6", text)
+
+
+def test_shareable_build_a_presentation_button(page):
+    """Owner, 25 Oct 2026: Build a presentation sits next to Build a PDF and opens the topic builder."""
+    go(page, "/shareable")
+    page.locator("#build-pdf").get_by_role("button", name="Build a presentation").click()
+    expect(page).to_have_url(re.compile(r"/shareable/presentation$"), timeout=90_000)
+    expect(page.locator("nav.sub-nav a.on")).to_have_text("Reports")
 
 
 def test_shareable_synergies_owner_edit_and_undo(page):
@@ -692,3 +758,24 @@ def test_sign_in_passkey_button_calls_credentials_inside_the_tap(page):
     assert calls == [{"kind": "get", "inClick": True, "challenge": True}]
     expect(page.locator("#auth-msg")).to_contain_text("cancelled")
     assert page.locator("#passkey-login").is_enabled()
+
+
+# --- Research & ideas -------------------------------------------------------------------------------------------------
+def test_expand_this_idea_asks_once_and_shows_the_request(page):
+    """Owner, 25 Oct 2026: "Expand this idea" under a card opens a note field; sent, the button is gone on the list
+    and on the report page, replaced by "Expansion requested" and the note (390 px checked after the test)."""
+    go(page, "/business/reports")
+    box = page.locator("details.rp-exp").first
+    slug = box.get_attribute("id").removeprefix("exp-")
+    expect(box.locator("summary")).to_contain_text("a deeper look at the applications before a business case")
+    box.locator("summary").click()
+    box.locator("textarea[name=note]").fill("Robot joints first")
+    with page.expect_navigation():
+        box.get_by_role("button", name="Ask for the expansion").click()
+    done = page.locator(f"#exp-{slug}")
+    expect(done).to_contain_text("Expansion requested")
+    expect(done).to_contain_text("Robot joints first")
+    assert page.locator(f"details#exp-{slug}").count() == 0
+    go(page, f"/business/reports/{slug}")
+    expect(page.locator(f"p#exp-{slug}")).to_contain_text("Robot joints first")
+    assert page.locator("details.rp-exp").count() == 0

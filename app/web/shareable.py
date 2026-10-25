@@ -14,7 +14,6 @@ from app.services import logo, tech_overview, uploads
 from app.services import share_reports as sr
 from app.services import tech_overview_edit as te
 from app.services.text import round_count
-from app.web import nav
 from app.web.routes import templates
 
 router = APIRouter()
@@ -22,13 +21,13 @@ templates.env.filters.setdefault("rounded", round_count)  # counts on the Sharea
 URL = "/shareable/technology-overview"
 EDIT = URL + "/edit"
 
-# a line more per card on the landing page than the menu's short description
-BLURBS = {URL: "Four A4 pages on the Skyworks + Qorvo portfolio: technology platforms, end markets and product "
-          "families.",
-          "/shareable/synergies": "Three A4 pages for management: manufacturing capabilities, key technologies, "
-          "product overlap and where the two combine.",
-          "/shareable/automotive": "The automotive extension: technologies in the car, applications by sub-system and "
-          "AEC-Q-qualified pairs."}  # fmt: skip
+# the one list on /shareable (owner, 25 Oct 2026): key in the combined PDF, name, one short line, its page
+REPORT_LIST = (("overview", "Technology overview", "The Skyworks + Qorvo portfolio: platforms, markets, families.",
+                URL),
+               ("synergies", "Skyworks + Qorvo synergies", "For management: capabilities, overlap, where they combine.",
+                "/shareable/synergies"),
+               ("automotive", "Automotive", "Technologies in the car, applications and AEC-Q pairs.",
+                "/shareable/automotive"))  # fmt: skip
 # what the page says after an edit action (?done=...); only these texts can appear
 DONE = {"saved": "Saved.", "nochange": "Nothing changed.", "undone": "Undone: the page shows the version before.",
         "reset": "Back to the default.", "resetall": "Everything is back to the defaults (Undo brings it back).",
@@ -50,15 +49,15 @@ def _back(done: str, anchor: str = "") -> RedirectResponse:
 
 @router.get("/shareable", response_class=HTMLResponse)
 def shareable(request: Request):
-    section = next(s for s in nav.NAV if s[0] == "shareable")
-    items = [(label, href, BLURBS.get(href, desc)) for label, href, desc in section[2]]
+    """One page: the reports in a list (preview each, tick the ones to combine), a watermark, Build a PDF (the ticked
+    reports in one print view) and Build a presentation (the topic builder). Nothing
+    is ticked unless the address carries the last choice (?r=...)."""
     q = request.query_params
-    pack_items = [("overview", "Technology overview", "4-5"), ("synergies", sr.SYNERGIES.label, sr.PAGES["synergies"]),
-                  ("automotive", sr.AUTOMOTIVE.label, sr.PAGES["automotive"])]  # fmt: skip
-    picked = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
+    reports = [(key, label, line, sr.PAGES[key], href, href + "/edit") for key, label, line, href in REPORT_LIST]
     return templates.TemplateResponse(request, "shareable/index.html", {
-        "items": items, "pack_items": pack_items, "picked": picked, "markets": tech_overview.focus_markets(),
-        "focus": q.get("focus", ""), "wm": q.get("wm", "none"), "watermarks": te.WATERMARKS})  # fmt: skip
+        "reports": reports, "picked": sr.pack_selection(",".join(q.getlist("r"))),
+        "owner": signed_in_owner(request) is not None, "wm": q.get("wm", "none"),
+        "watermarks": te.WATERMARKS})  # fmt: skip
 
 
 def _page(request: Request, session: Session, edit: bool, ov: dict | None = None, errors: dict | None = None,
@@ -246,15 +245,16 @@ def _rback(rep: te.Report, done: str, anchor: str = "") -> RedirectResponse:
 
 @router.get("/shareable/pack", response_class=HTMLResponse)
 def shareable_pack(request: Request, session: Session = Depends(get_session)):
-    """The combined PDF: ?r=overview,synergies,automotive (in this order), &focus= for the overview's market page,
-    &wm= for the watermark. Page numbers run through the whole PDF; the sources come once, at the end."""
+    """The combined PDF: ?r=overview,synergies,automotive (in this order), &wm= for the watermark (an old &focus= is
+    ignored: the market focus page was removed, owner 25 Oct 2026). Page numbers run through the whole PDF; the
+    sources come once, at the end."""
     q = request.query_params
     keys = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.PACK_ORDER)
     te.apply_answers(session)
     session.commit()
     ovals = te.values(te.overrides(session))
     opts = te.view_options(ovals, q)
-    pages = {k: (opts["pages"] if k == "overview" else sr.PAGES[k]) for k in keys}
+    pages = {k: sr.PAGES[k] for k in keys}
     total, offset = sum(pages.values()), 0
     ctxs = {}
     for k in keys:
@@ -280,8 +280,7 @@ def shareable_pack(request: Request, session: Session = Depends(get_session)):
         else:
             bodies.append(templates.get_template(BODIES[k]).render(ctxs[k]))
     titles = ["Technology overview" if k == "overview" else sr.REPORTS[k].label for k in keys]
-    query = "&".join(f"{k}={v}" for k, v in (("r", ",".join(keys)), ("focus", opts["focus"] or "none"),
-                                              ("wm", opts["wm"])))  # fmt: skip
+    query = f"r={','.join(keys)}&wm={opts['wm']}"
     return templates.TemplateResponse(request, "shareable/pack.html", {
         "bodies": bodies, "titles": titles, "total": total, "wm_text": opts["wm_text"], "keys": keys,
         "query": query})  # fmt: skip

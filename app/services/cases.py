@@ -316,10 +316,10 @@ def suggestions(session: Session, case, ctx: dict | None, lines: list, sched=Non
             add("competitors", src + ": how many", f"{n} established supplier{'s' if n != 1 else ''}{crowd}{note}")
         size = tam.by_function(session).get(ctx["fn"])
         if size:
-            year = f", {size['year']}" if size.get("year") else ""
+            band = size.get("band") or tam.band_text(size["low"], size["high"], size.get("year"))
             add("market_size", "TAM estimates (public)",
-                f"{ctx['label']}: about ${size['usd'] / 1e6:,.0f} M a year (range ${size['low'] / 1e6:,.0f}–"
-                f"{size['high'] / 1e6:,.0f} M, {size['n']} source{'s' if size['n'] != 1 else ''}{year})")  # fmt: skip
+                f"{ctx['label']}: {band} a year ({size['n']} source{'s' if size['n'] != 1 else ''}"
+                f"{', combined band' if size.get('topic') else ''})")  # fmt: skip
         else:
             add("market_size", "TAM estimates", f"No public market-size estimate for {ctx['label']} yet: add one on "
                 "TAM estimates")  # fmt: skip

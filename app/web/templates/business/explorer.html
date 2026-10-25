@@ -58,7 +58,7 @@
       <td class="n" title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
       {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
       <td>{{ score_chip(e) }}</td>
-      {% if not (same.tam or guest_blocked(request, '/business/tam')) %}<td class="n">{% if e.tam_apps %}{{ usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/tam" title="No market size (TAM) yet">— <span class="visually-hidden">add a market size for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
+      {% if not (same.tam or guest_blocked(request, '/business/tam')) %}<td class="n">{% if e.tam_apps %}{{ e.tam_src.band if e.tam_src and e.tam_src.band else usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/tam" title="No market size (TAM) yet">— <span class="visually-hidden">add a market size for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
       <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep', 'outline') }}{% endif %}
         <details class="aside-form"><summary class="small-btn outline secondary" role="button">Set aside</summary>
           <form method="post" action="/business/decision"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="set_aside"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">

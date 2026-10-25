@@ -47,7 +47,7 @@ from app.services.queries import (
     search_parts,
     single_cross,
 )
-from app.web import labels, nav
+from app.web import labels, nav, review_history
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -109,6 +109,7 @@ def _passkey_nudge(request: Request) -> bool:
 
 templates.env.globals["passkey_nudge"] = _passkey_nudge
 labels.register(templates.env)
+review_history.register(templates.env)
 templates.env.globals.update(fn_label=vocab.fn_label, family_title=vocab.family_title)
 
 
@@ -641,12 +642,15 @@ def visuals_rf_parts():
 def library_index(request: Request):
     """Full systems (owner, 23 Oct 2026): each system is a header with its sub-systems, their diagram counts and deep
     dives; topics not yet in a system follow at the end."""
-    from app.services import library
+    from app.services import blocks, library
     from app.services import systems as sy
 
     topics = library.topics()
     by_key = {t["key"]: t for t in topics}
-    tree = [{**s, "subs": [{**x, "deep": [by_key[k] for k in x["topics"] if k in by_key]} for x in s["subsystems"]]}
+    lib = blocks.templates()
+    tree = [{**s, "subs": [{**x, "deep": [by_key[k] for k in x["topics"] if k in by_key],
+                            "diagrams": [{"i": i, "name": blocks.display_name(lib[i])} for i in x["idx"]]}
+                           for x in s["subsystems"]]}
             for s in sy.systems()]  # fmt: skip
     for s in tree:
         s["deep"] = [t for x in s["subs"] for t in x["deep"]]
@@ -955,7 +959,7 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                    automotive: bool = False, name: str = "", currency: str = "USD",
                    sop: str = "", gm: str = "",
                    released: str = "", bq: list[str] = Query([]), bp: list[str] = Query([]), override: str = "",
-                   session: Session = Depends(get_session)):  # fmt: skip
+                   price_saved: str = "", session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
     A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely.
     Several orderable variants of the part number are offered to pick from. SOP defaults to the year of the
@@ -1002,7 +1006,20 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                  "released": released or "", "override": override},
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
+    ctx |= _required_prices(request, session, price_saved)
     return templates.TemplateResponse(request, "price_estimate.html", ctx)
+
+
+def _required_prices(request: Request, session: Session, saved: str) -> dict:
+    """The parts the market estimates still need prices for (app/services/radio_market.py), with entry forms; guests
+    see none of it (they cannot enter prices)."""
+    from app.auth.session import principal
+    from app.services import radio_market
+
+    who = principal(request)
+    if who is not None and who.is_guest:
+        return {"radio": None, "price_saved": ""}
+    return {"radio": radio_market.summary(session), "price_saved": saved.strip()[:120]}
 
 
 @router.get("/pricing/part-info")

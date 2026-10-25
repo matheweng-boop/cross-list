@@ -21,41 +21,39 @@ synergies:
       paragraphs:
         - id: syn-glance-1
           text: >-
-            Skyworks and Qorvo, combined since October 2026, bring together two complementary RF and mixed-signal
-            portfolios: high-volume front ends and acoustic filters, high-power GaN and broadband microwave parts, and
-            silicon lines for isolation, timing, broadcast radio and power.
+            Skyworks and Qorvo, combined since October 2026, join two complementary portfolios. The key combined
+            strength is front-end module (FEM) integration: amplifiers, acoustic filters and switches from both in one
+            module. Qorvo adds GaN and microwave; Skyworks adds isolation, timing and radio.
     manufacturing:
       heading: "Manufacturing capabilities"
       paragraphs:
         - id: syn-mfg-1
           text: >-
-            Both companies make their key RF technologies in-house and combine them in modules; silicon comes from
-            foundry partners. Capability level only, from the public annual reports (Form 10-K).
+            Both make their key RF technologies in-house and integrate them in front-end modules; silicon comes from
+            foundry partners. Capability level, from the public annual reports (Form 10-K).
     technologies:
       heading: "Key technologies per company"
       paragraphs:
         - id: syn-tech-1
-          text: "Who brings which technology platform to the combined company."
+          text: "Who brings which technology platform."
     overlap:
       heading: "Product overlap"
       paragraphs:
         - id: syn-overlap-1
           text: >-
-            Product families in the public catalogues, by who offers them. Shared families give customers a second
-            source within one company; the others add reach.
+            Product families in the public catalogues, by who offers them, and what each group is useful for.
     combine:
       heading: "Where the two combine"
       paragraphs:
         - id: syn-combine-1
           text: >-
-            Pairs of products that sit next to each other in reference designs, with Skyworks leading in one and Qorvo
-            in the other. One example series each.
+            Skyworks and Qorvo products used together in reference designs, and what each pair is useful for. Cost
+            savings are assumed, not measured.
   facts:
     parts: {label: "active parts"}
     families: {label: "product families"}
     shared: {label: "families both offer"}
     platforms: {label: "technology platforms"}
-    automotive: {label: "automotive-grade parts"}
   # capability rows: who runs it (In-house / Foundry partners / In-house and partners / "–" for not offered)
   manufacturing:
     - {label: "GaAs HBT (power amplifiers)", skyworks: "In-house", qorvo: "In-house"}
@@ -66,17 +64,60 @@ synergies:
     - {label: "Silicon: RF SOI, SiGe, CMOS mixed-signal", skyworks: "Foundry partners", qorvo: "Foundry partners"}
     - {label: "Module and system-in-package integration", skyworks: "In-house", qorvo: "In-house"}
     - {label: "Assembly and test", skyworks: "In-house and partners", qorvo: "In-house and partners"}
-  # one plain line per pair ("<Skyworks function> + <Qorvo function>"); pairs without a line use the automotive
-  # reasons in synergies_auto.yaml, else a generic line
+  # one plain line per pair ("<Skyworks function> + <Qorvo function>"): what the pair is useful for. Pairs without a
+  # line use the automotive reasons in synergies_auto.yaml, else a generic line
   pairs:
-    "rf_synthesizer + rf_mixer": "A Skyworks synthesizer drives the local oscillator of a Qorvo mixer in the same radio chain."
-    "rf_synthesizer + rf_gain_block": "The Skyworks synthesizer's output is lifted by a Qorvo gain block before the mixer or transmitter."
-    "diversity_rx_module + pa_module": "One cellular front end: Skyworks diversity receive next to Qorvo transmit modules."
-    "diversity_rx_module + filter_saw_baw": "Skyworks receive modules with Qorvo acoustic filters on the same antenna paths."
-    "antenna_switch + lna": "The Skyworks switch picks the antenna path, the Qorvo LNA amplifies it."
-    "schottky_diode + filter_saw_baw": "Skyworks detector diodes and Qorvo filters in the same receive and sensing chains."
-    "poe_pd + wide_vin_buck": "Skyworks Power over Ethernet interfaces feed Qorvo wide-input converters in networked devices."
-    "am_fm_tuner + lna": "A Qorvo active-antenna LNA feeds the Skyworks car radio tuner."
+    "rf_synthesizer + rf_mixer": "Synthesizer and mixer from one company: a matched radio chain and a step toward one integrated part."
+    "rf_synthesizer + rf_gain_block": "A complete local-oscillator chain from one company: synthesizer plus gain block."
+    "diversity_rx_module + pa_module": "FEM integration: receive and transmit for one cellular front end from one company."
+    "diversity_rx_module + filter_saw_baw": "Qorvo acoustic filters inside Skyworks receive modules: fewer bought-in filters."
+    "antenna_switch + lna": "Switch and LNA can merge into one front-end module (FEM integration)."
+    "antenna_switch + filter_saw_baw": "Switches and acoustic filters of both companies in one front-end module."
+    "schottky_diode + filter_saw_baw": "Detector diodes and filters for the same receive and sensing chains."
+    "pin_diode + rf_switch": "Diodes and switches both route RF signals: shared switching know-how."
+    "pin_diode + rf_limiter": "Diodes and limiters both protect receivers: shared protection know-how."
+    "poe_pd + wide_vin_buck": "A complete Power over Ethernet power path from one supplier."
+    "poe_pse + wide_vin_buck": "Power over Ethernet sourcing plus its converter from one supplier."
+    "poe_pse + wifi_fem": "Power over Ethernet and the Wi-Fi front end: one supplier for access points."
+    "am_fm_tuner + lna": "Active antenna to tuner: the whole car-radio front end from one supplier."
+    "am_fm_tuner + pmic": "Radio tuner and its power from one supplier."
+    "single_chip_radio + pmic": "Radio chip and its power from one supplier."
+    "antenna_switch + pa_module": "Switch and PA module of one cellular front end: a step toward one FEM."
+    "gnss_lna + filter_saw_baw": "GNSS LNA and acoustic filter can merge into one GNSS front-end module."
+    "load_switch + wide_vin_buck": "Off-battery power from one supplier: converter plus load switches."
+  # owner, 25 Oct 2026 ("how are these synergies useful?"): one benefit type per synergy, from this fixed set. Cost
+  # savings are always marked "assumed" (no public source measures them).
+  benefit_types:
+    manufacturing: "Better manufacturing"
+    shared_tech: "Shared technology"
+    new_tech: "New technology"
+    cost: "Cost savings (assumed)"
+    market: "Market access"
+  benefit_default: shared_tech  # a pair not listed below
+  benefits:
+    "rf_synthesizer + rf_mixer": new_tech
+    "rf_synthesizer + rf_gain_block": new_tech
+    "diversity_rx_module + pa_module": new_tech
+    "diversity_rx_module + filter_saw_baw": cost
+    "antenna_switch + lna": new_tech
+    "antenna_switch + filter_saw_baw": manufacturing
+    "antenna_switch + pa_module": new_tech
+    "gnss_lna + filter_saw_baw": new_tech
+    "schottky_diode + filter_saw_baw": shared_tech
+    "pin_diode + rf_switch": shared_tech
+    "pin_diode + rf_limiter": shared_tech
+    "poe_pd + wide_vin_buck": market
+    "poe_pse + wide_vin_buck": market
+    "poe_pse + wifi_fem": market
+    "am_fm_tuner + lna": market
+    "am_fm_tuner + pmic": market
+    "single_chip_radio + pmic": market
+    "load_switch + wide_vin_buck": market
+  # the overlap view: one benefit type and one line per column
+  overlap_benefits:
+    Skyworks: {type: market, line: "Adds families Qorvo did not offer."}
+    Both: {type: cost, line: "A second source within one company; scale on shared lines."}
+    Qorvo: {type: market, line: "Adds families Skyworks did not offer."}
   sources:
     - "Parts and families: the public Skyworks and Qorvo product catalogues, active parts only; counts rounded down."
     - "Manufacturing and technology platforms: Skyworks and Qorvo Form 10-K filings (FY2025)."
@@ -91,27 +132,26 @@ automotive:
       paragraphs:
         - id: auto-offer-1
           text: >-
-            In the car, the combined portfolio connects, senses and powers: UWB digital keys, broadcast radio,
-            telematics and V2X front ends, clocks for compute, and isolated gate drivers and sensing for the electric
-            powertrain, battery and charging.
+            In the car we connect, sense and power: UWB digital keys, radio, telematics and V2X front-end modules,
+            clocks, and isolated gate drivers and sensing for the electric powertrain and charging.
     technologies:
       heading: "Key technologies in the car"
       paragraphs:
         - id: auto-tech-1
-          text: "The technology platforms of the automotive parts, and what each does in the car."
+          text: "Our technology platforms and what each does in the car."
     applications:
       heading: "Applications by sub-system"
       paragraphs:
         - id: auto-apps-1
-          text: "Where the parts go in the car. Series listed are AEC-Q qualified (automotive grade in the catalogue)."
+          text: "Where the parts go in the car. Series listed are AEC-Q qualified."
     pairs:
       heading: "Skyworks + Qorvo in the car"
       paragraphs:
         - id: auto-pairs-1
           text: >-
-            Pairs that sit together in automotive reference designs. Example series are AEC-Q qualified only.
+            Pairs used together in automotive reference designs, and what each is useful for. Examples are AEC-Q
+            qualified.
   facts:
-    automotive: {label: "automotive-grade parts"}
     platforms: {label: "technology platforms in the car"}
     subsystems: {label: "sub-systems in the car"}
     families: {label: "product families with automotive parts"}
@@ -137,6 +177,6 @@ automotive:
     cockpit: {line: "Wi-Fi diplexers and RF switches for the head unit and connected cockpit.", series: [TQM2M9xxx, QPC80xx]}
   standards: [AEC-Q100, AEC-Q200, ISO 26262, IEC 60747-17, IEEE 802.15.4z, CCC Digital Key, 3GPP C-V2X, PCI Express]
   sources:
-    - "Automotive-grade parts: as marked in the public Skyworks and Qorvo catalogues (AEC-Q); counts rounded down."
+    - "AEC-Q qualification: as marked in the public Skyworks and Qorvo catalogues."
     - "Sub-systems and pairs: public reference designs and application diagrams."
     - "Standards: named for orientation only."

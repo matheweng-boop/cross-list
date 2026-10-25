@@ -6,6 +6,7 @@
   Say if you agree with it, and why. Nothing here is estimated by BizDev.</p>
 {{ about('tam') }}
 <p class="small tam-sum"><b>{{ counts.n }}</b> estimates · <span class="q-ok">{{ counts.agree }} agreed</span> · {% if counts.disagree %}<b class="q-error">{{ counts.disagree }} disagreed</b>{% else %}0 disagreed{% endif %} · {{ counts.open }} not reviewed{% if counts.no_link %} · {{ counts.no_link }} without a source link{% endif %}</p>
+{% include "business/_tam_checks.html" %}
 {% if saved %}<p class="banner small">Saved. The new estimate is in the list and in the Data quality questions.</p>{% endif %}
 
 {% if rows %}
@@ -13,18 +14,24 @@
 {% for e in rows %}{% set r = e.review %}
 <article class="tam-card{{ ' tam-' ~ r.verdict if r }}" id="t-{{ e.key }}">
   <header><b>{{ e.product }}</b>{% if e.fn and e.fn in fns %} <a class="small muted" href="/business/evidence/{{ e.fn }}">{{ fns[e.fn].label }}</a>{% endif %}
-    {% if e.example %}<span class="badge" title="{{ e.origin }}">example from research notes</span>{% else %}<span class="badge">added{{ ' by ' ~ e.author if e.author }}</span>{% endif %}</header>
+    {% if e.example %}<span class="badge" title="{{ e.origin }}">example from research notes</span>{% else %}<span class="badge">added{{ ' by ' ~ e.author if e.author }}</span>{% endif %}
+    {% include "business/_tam_chip.html" %}</header>
   <p class="tam-value"><b>{{ e.value }}</b>{% if e.year %} <span class="muted">in {{ e.year }}</span>{% endif %}{% if e.region %} <span class="muted">· {{ e.region }}</span>{% endif %}</p>
   {% if e.scope %}<p class="small">{{ e.scope }}</p>{% endif %}
   {% if e.coverage %}<p class="small tam-cov"><span class="badge">{{ {'full': 'covers the whole market', 'part': 'covers less than the whole market', 'not_stated': 'coverage not checked'}[e.coverage] }}</span>{% if e.coverage_note %} {{ e.coverage_note }}{% endif %}</p>{% endif %}
   <p class="small"><b>Source:</b> {% if e.source.url %}<a href="{{ e.source.url }}" target="_blank" rel="noopener">{{ e.source.title or e.source.url }}</a>{% else %}{{ e.source.title or 'not stated' }} <span class="muted">(no link)</span>{% endif %}{% if e.source.publisher %} · {{ e.source.publisher }}{% endif %}{% if e.source.date %} · {{ e.source.date }}{% endif %}</p>
   {% if e.quality %}<p class="small"><b>Source quality:</b> {{ e.quality }}</p>{% endif %}
-  <form method="post" action="/business/tam/review" class="tam-review">
+  {% set ap = e.applied %}{% set verdict_line %}{% if r %}<p class="small"><span class="pc-v v-{{ 'correct' if r.verdict == 'agree' else 'wrong' }}">you {{ r.verdict }}</span>{% if r.comment %} · {{ r.comment }}{% endif %} <span class="muted">· {{ r.date|date }}</span></p>{% endif %}{% endset %}
+  {% if ap %}<div class="tam-review tam-applied">
+    {{ verdict_line }}
+    <p class="small"><span class="badge">Applied {{ ap.date|date }}</span> in: {% for w in ap.applied_in %}<a href="{{ w.href }}">{{ w.label }}</a>{{ ', ' if not loop.last }}{% endfor %}{% if ap.note %} <span class="muted">· {{ ap.note }}</span>{% endif %}</p>
+    {{ review_history(request, 'tam', e.key, 1 if r else 0) }}
+  </div>{% else %}<form method="post" action="/business/tam/review" class="tam-review">
     <input type="hidden" name="key" value="{{ e.key }}">
-    {% if r %}<p class="small"><span class="pc-v v-{{ 'correct' if r.verdict == 'agree' else 'wrong' }}">you {{ r.verdict }}</span>{% if r.comment %} · {{ r.comment }}{% endif %} <span class="muted">· {{ r.date|date }}</span></p>{% endif %}
+    {{ verdict_line }}{{ review_history(request, 'tam', e.key) }}
     <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button><span class="pc-btns"><button name="answer" value="agree" class="small-btn">Agree</button><button name="answer" value="disagree" class="small-btn outline secondary">Disagree</button></span>
     <input type="text" name="comment" maxlength="2000" placeholder="Why, or what next (e.g. dive deeper) – optional" aria-label="Comment on {{ e.product }} {{ e.value }}">
-  </form>
+  </form>{% endif %}
 </article>
 {% endfor %}
 </div>

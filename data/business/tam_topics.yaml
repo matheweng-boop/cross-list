@@ -1,0 +1,53 @@
+# Combined TAM topics (Future growth > TAM estimates; owner, 25 Oct 2026: "combine same topics together ... stated in
+# high and low bands"). A topic groups the estimates of data/business/tam.yaml for the same function and scope.
+#
+# Rules (app/services/tam.py, combine):
+# - A topic is shown as ONE combined entry once at least 2 of its members are reviewed (owner agree) or verified by
+#   the biweekly check (data/business/tam_checks.yaml). Before that, its members stay separate review items.
+# - Members the owner disagreed with, or the check disqualified (unless the owner agreed), are left out and noted.
+# - The band is set by the full-coverage members where there are any (owner, 22 Oct 2026: for tuners the market that
+#   counts is the total radio market); part-coverage members are kept as sources inside the topic.
+# - The site recomputes the band from the live reviews and checks; low / high / year / cagr below are the record as of
+#   "combined" and are rewritten by the daily run when a review answer or a TAM check changes a member.
+#
+# Fields
+#   id, title, fn (data/blocks/functions.yaml), scope, coverage   what the topic counts
+#   members   {key, verdict (the owner's answer from the live site: agree | disagree | unsure), date, note}
+#   low, high (US dollars), year, cagr_low, cagr_high (% a year), n (members used)
+#   combined  the day the band was written; excluded = members left out and why; note = anything else
+#   layer     optional: what the band counts, shown as its label (and on the explorer, walk-through and gap cards)
+#   bottom_up optional: "radio" = also show the car radio market bottom-up from our price estimates
+#             (app/services/radio_market.py: market at current BOM content, layers, prices needed, mandates)
+#   discrepancies  optional: {key, why} members shown as an open discrepancy, not as a figure for any layer
+#   Growth rates are shown only "as reported by" each source; projections use the content-driven CAGR of the bottom-up.
+topics:
+  - id: auto-radio-tuner-ics
+    title: Automotive radio tuner ICs (total radio market)
+    layer: "Radio content (tuners + digital radio demodulators), analyst reports"
+    bottom_up: radio
+    fn: am_fm_tuner
+    scope: "Tuner ICs for car radios: AM / FM, digital radio (DAB / HD / DRM) and multi-standard tuners"
+    coverage: full
+    members:
+      - {key: tuner-ic-mrfr, verdict: agree, date: '2026-10-22', note: "Double check with the other data"}
+      - {key: tuner-ic-datahorizzon, verdict: agree, date: '2026-10-22', note: "Everyone seems to agree on the CAGR, but the total market varies greatly. Double check with other reports and consolidate."}
+      - {key: digital-radio-tuner-marketintelo, verdict: agree, date: '2026-10-22', note: "Dive deeper into the data, as there is consensus on CAGR, but total sales seem to differ"}
+      - {key: tuner-ic-emergen, verdict: disagree, date: '2026-10-22', note: "Link is dead"}
+    low: 890000000
+    high: 2310000000
+    year: 2024
+    cagr_low: 5.2
+    cagr_high: 6.2
+    n: 3
+    combined: '2026-10-25'
+    excluded:
+      - {key: tuner-ic-emergen, why: "owner disagreed 22 Oct 2026: link is dead (the 25 Oct check met a bot check)"}
+    discrepancies:
+      - {key: digital-radio-tuner-marketintelo, why: "Open discrepancy: $1.8 B (2025) for digital radio tuners alone is above the owner's whole tuner-content cross-check ($0.45–0.92 B a year); likely a different definition (modules, aftermarket or non-automotive). Not used for any layer."}
+    note: >-
+      Radio content layer (tuners + digital radio demodulators), as the analyst reports define it. Band set by the two
+      full-coverage sources (DataHorizzon $0.89 B and MRFR $2.31 B for 2024, both found on their pages on 25 Oct 2026).
+      MarketIntelo ($1.8 B for 2025, digital radio tuners only) is an open discrepancy, not a figure for either layer.
+      MRFR's page now also shows $2.43 B for 2025 (check 25 Oct 2026: changed); the band stays on 2024, the year all
+      full-coverage sources share. Tuner content (tuner ICs only) and the total radio market with adjacent content are
+      worked out bottom-up from our price estimates below.

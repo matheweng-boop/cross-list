@@ -25,7 +25,7 @@ from app.models import (
     Upload,
     VerifyTask,
 )
-from app.services import guest_input, quality, tam, verify
+from app.services import guest_input, idea_requests, quality, tam, verify
 from app.services.compare import compare_parts
 from app.web.routes import templates
 
@@ -85,6 +85,7 @@ def overview_counts(session: Session, now: datetime | None = None) -> dict[str, 
         "part_requests": count(session, CrossRequest, CrossRequest.status.in_(("open", "in_progress"))),
         "diagram_feedback": count(session, BlockFeedback, BlockFeedback.status == "open"),
         "area_requests": count(session, AreaRequest, AreaRequest.status == "new"),
+        "idea_requests": idea_requests.open_count(session),
         "review_requests": sum(e["status"] in ("new", "in_progress") for e in rv.requests(session)),
     }
 
@@ -117,6 +118,8 @@ def todo(session: Session, waiting: dict, n_open: dict, tam_open: int) -> list[t
                                          "diagram feedback items to review"), "/manage/requests?kind=diagram"),
         (waiting["area_requests"], _n(waiting["area_requests"], "new area request", "new area requests"),
          "/manage/requests?kind=area"),
+        (waiting.get("idea_requests", 0), _n(waiting.get("idea_requests", 0), "idea to expand", "ideas to expand"),
+         "/manage/requests?kind=idea"),
         (waiting["feedback"], _n(waiting["feedback"], "new site feedback item", "new site feedback items"),
          "/manage/feedback"),
         (waiting["guest"], _n(waiting["guest"], "guest input to review", "guest inputs to review"),

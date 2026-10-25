@@ -1,8 +1,8 @@
 """Shareable > Technology overview (owner, 24 Oct 2026): a public brief on the Skyworks + Qorvo portfolio, meant to be
 shared outside the company and saved as PDF; editable by the owner (texts, numbers, paragraphs, comments, header and
-logo), with an optional market focus page and a watermark. The page must stay share-safe, take its numbers from the
-site's data unless the owner overrides them, and be readable by guests. Printed page counts are checked in
-tests/test_browser.py (Chromium)."""
+logo), with a watermark (the market focus page was removed, owner 25 Oct 2026). The page must stay share-safe, take
+its numbers from the site's data unless the owner overrides them, and be readable by guests. Printed page counts are
+checked in tests/test_browser.py (Chromium)."""
 
 import re
 import struct
@@ -10,7 +10,6 @@ import zlib
 from datetime import UTC, datetime, timedelta
 from html import unescape
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.db import get_engine
@@ -59,9 +58,9 @@ def test_menu_has_a_shareable_section_after_engineering_knowledge():
     keys = [s[0] for s in nav.NAV]
     assert keys[-2:] == ["knowledge", "shareable"]
     items = next(s for s in nav.NAV if s[0] == "shareable")[2]
-    assert items[0] == ("Technology overview", URL, "Public, ready to share or save as PDF")
+    assert [i[1] for i in items] == ["/shareable"]  # owner, 25 Oct 2026: one page, the reports open from there
     assert nav.HOMES["shareable"] == "/shareable"
-    assert nav.place(URL) == ("shareable", URL) and nav.place("/shareable") == ("shareable", "/shareable")
+    assert nav.place(URL) == ("shareable", "/shareable") and nav.place("/shareable") == ("shareable", "/shareable")
     assert nav.page_title(URL) == "Technology overview – Shareable – BizDev"
     assert nav.page_title("/shareable") == "Shareable – BizDev"
     assert "shareable" in nav.ICONS
@@ -69,10 +68,10 @@ def test_menu_has_a_shareable_section_after_engineering_knowledge():
 
 def test_landing_page_lists_the_shareable_pages(client):
     html = client.get("/shareable").text
-    assert "Everything here is public information" in html
-    assert f'class="sh-card" href="{URL}"' in html
+    assert "Public information, ready to share" in html
+    assert f'class="sh-preview" role="button" href="{URL}" data-lightbox="Technology overview"' in html
     assert 'href="/shareable"' in html  # the section row opens the landing page
-    assert 'aria-current="page" class="on">Technology overview<' in client.get(URL).text
+    assert 'aria-current="page" class="on">Reports<' in client.get(URL).text  # the menu highlights the one entry
 
 
 def test_the_page_is_share_safe(client):
@@ -84,36 +83,28 @@ def test_the_page_is_share_safe(client):
         assert words in r.text, words
 
 
-@pytest.mark.parametrize("market", ["automotive", "datacenter", "drones"])
-def test_each_market_focus_page_is_share_safe_with_its_sub_systems(client, market):
-    html = client.get(f"{URL}?focus={market}").text
-    assert 'id="market-focus"' in html and "/ 5<" in html
-    m = to.focus_markets()[market]
-    text = content_text(html)
-    assert blocked(text) == [], blocked(text)
-    assert m["title"] in text.split("Market focus", 1)[1]
-    for s in m["subsystems"]:
-        assert s["title"] in html, s["title"]
-        assert 2 <= len(s["series"]) <= 3 and all(to.series_parts(x) for x in s["series"]), s["key"]
-
-
-def test_focus_markets_come_from_the_systems_with_words_or_deep_dives():
-    assert list(to.focus_markets()) == ["automotive", "datacenter", "drones"]
-    auto = to.focus_markets()["automotive"]
-    assert [s["title"] for s in auto["subsystems"]][:3] == ["UWB in the car: access and cabin sensing", "Car radio",
-                                                             "Telematics and V2X"]  # fmt: skip
-    names = [f[0] for f in auto["facts"]]
-    assert names == ["parts", "automotive", "subsystems", "platforms"]
-    assert "ISO 26262" in auto["standards"] and "AEC-Q100" in auto["standards"]
-
-
-def test_no_focus_by_default_and_unknown_values_are_ignored(client):
+def test_the_overview_is_four_pages_and_old_focus_links_still_open_it(client):
+    """Owner, 25 Oct 2026: "Remove the Market focus page, as I can now separately select it." The page has no
+    market focus page or controls; an old link with ?focus= / ?include= opens the same 4-page overview."""
     html = client.get(URL).text
-    assert 'id="market-focus"' not in html and "/ 4<" in html and 'class="to-wm"' not in html
-    r = client.get(f"{URL}?focus=bogus&wm=bogus&include=x")
-    assert r.status_code == 200 and 'id="market-focus"' not in r.text and 'class="to-wm"' not in r.text
-    assert 'id="market-focus"' not in client.get(f"{URL}?focus=drones&include=0").text
-    assert 'id="market-focus"' in client.get(f"{URL}?focus=drones&include=0&include=1").text  # the ticked box wins
+    assert html.count('class="to-page') == 4 and "/ 4<" in html and "/ 5<" not in html
+    assert 'id="market-focus"' not in html and 'name="focus"' not in html and 'name="include"' not in html
+    assert "Market focus" not in html
+    for q in ("focus=automotive", "focus=drones&include=1", "focus=bogus&include=x", "focus=none"):
+        r = client.get(f"{URL}?{q}")
+        assert r.status_code == 200, q
+        assert r.text.count('class="to-page') == 4 and "/ 4<" in r.text and 'id="market-focus"' not in r.text, q
+    assert "focus" not in te.view_options({}, {"focus": "automotive"})
+    assert te.view_options({}, {"focus": "automotive"})["pages"] == 4
+    assert not any(fid.startswith("focus.") for fid in te.specs()) and te.sections() == te.MAIN_SECTIONS
+    assert not hasattr(to, "focus_markets") and "focus" not in to.curated()
+
+
+def test_no_watermark_by_default_and_unknown_values_are_ignored(client):
+    html = client.get(URL).text
+    assert 'class="to-wm"' not in html
+    r = client.get(f"{URL}?wm=bogus")
+    assert r.status_code == 200 and 'class="to-wm"' not in r.text
 
 
 def test_watermark_choices_and_custom_text(client):
@@ -130,7 +121,7 @@ def test_watermark_choices_and_custom_text(client):
 
 def test_guests_read_the_whole_section_but_never_edit(make_guest, owner):
     g, _ = make_guest()
-    for url in ("/shareable", URL, f"{URL}?focus=automotive&wm=draft"):
+    for url in ("/shareable", URL, f"{URL}?wm=draft"):
         assert g.get(url, follow_redirects=False).status_code == 200, url
     html = g.get(URL).text
     assert blocked(content_text(html)) == [] and f'href="{EDIT}' not in html
@@ -175,10 +166,6 @@ def test_curated_words_point_at_real_data():
         assert 3 <= len(m["parts"]) <= 4, m["key"]
         for _name, series in m["parts"]:
             assert to.series_parts(series), f"{series} matches no active catalogue part"
-    for k, f in (cur.get("focus") or {}).items():
-        assert set(f["platforms"]) <= keys, k
-        for sub, w in f["subsystems"].items():
-            assert all(to.series_parts(x) for x in w["series"]), (k, sub)
     assert set(cur["families"]) <= labels
     for label, f in cur["families"].items():
         for fig in f.get("figures") or []:
@@ -369,13 +356,31 @@ def test_without_a_logo_the_band_has_only_text(client):
     assert client.get(URL).text.count("Prepared for the board") == 4
 
 
-def test_owner_saves_a_default_focus_and_watermark(client):
-    client.post(EDIT, data={"focus.default": "automotive", "wm.default": "draft"})
-    html = client.get(URL).text
-    assert 'id="market-focus"' in html and "<span>Draft</span>" in html
-    assert 'id="market-focus"' not in client.get(f"{URL}?focus=none&wm=none").text  # the address wins
+def test_owner_saves_a_default_watermark(client):
+    assert 'name="focus.default"' not in client.get(EDIT).text  # the default focus setting is gone
+    client.post(EDIT, data={"wm.default": "draft"})
+    assert "<span>Draft</span>" in client.get(URL).text
+    assert 'class="to-wm"' not in client.get(f"{URL}?wm=none").text  # the address wins
     r = client.post(EDIT, data={"wm.default": "custom", "wm.custom": "Our TAM"})
     assert r.status_code == 400 and "“TAM” is our own estimate" in r.text
     assert client.post(EDIT, data={"wm.default": "custom", "wm.custom": "Confidential"},
                        follow_redirects=False).status_code == 303  # fmt: skip
     assert "<span>Confidential</span>" in client.get(URL).text
+
+
+def test_stored_focus_edits_are_ignored_and_other_edits_kept(client, session):
+    """A version saved while the focus page existed (focus.default, focus texts, focus paragraphs) still loads: the
+    focus values are ignored, every other edit stays, and saving again keeps it."""
+    old = {"focus.default": "automotive", "focus.automotive.title": "Cars", "paras.focus-automotive": [
+        {"id": "p-1", "text": "Old focus words."}], "hdr.subtitle": "Prepared for the board"}
+    session.add(PageTextVersion(page=te.PAGE, fields=old, auto={"focus.automotive.fact.parts.num": "1,000"},
+                                note="Changed: focus.default", author="Owner"))  # fmt: skip
+    session.commit()
+    html = client.get(URL).text
+    assert html.count("Prepared for the board") == 4 and "Old focus words." not in html and "Cars" not in html
+    assert html.count('class="to-page') == 4 and 'id="market-focus"' not in html
+    assert client.get(EDIT).status_code == 200
+    r = client.post(EDIT, data={"hdr.title": "Skyworks + Qorvo · Portfolio brief"}, follow_redirects=False)
+    assert r.status_code == 303
+    html = client.get(URL).text
+    assert "Portfolio brief" in html and html.count("Prepared for the board") == 4

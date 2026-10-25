@@ -2,7 +2,7 @@
 {% block title %}{{ t.title }}{% endblock %}
 {% macro cite(ids) %}{% for i in ids or [] %}{% set r = refs.get(i) %}<a class="lib-cite" href="#ref-{{ i }}" title="{{ r.title if r else i }}">[{{ i[1:] if i.startswith('r') else i }}]</a>{% endfor %}{% endmacro %}
 {% macro conf(c, was=none) %}{% if c %}<span class="pc-conf c-{{ c }}" title="confidence{{ ': ' ~ was ~ ', one step lower after a reviewer disagreed' if was }}">{{ c }}{{ ' ↓' if was }}</span>{% endif %}{% endmacro %}
-{% macro react(x) %}{% set f = x.fb or {} %}<div class="pc-react pc-inline" id="i-{{ x.id }}"><span class="pc-state">{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ 'agreed' if f.verdict == 'correct' else 'disputed' }}</span>{% else %}{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }}</small>{% endif %}</span>
+{% macro react(x) %}{% set f = x.fb or {} %}<div class="pc-react pc-inline" id="i-{{ x.id }}"><span class="pc-state">{% if f.verdict %}<span class="pc-v v-{{ f.verdict }}">{{ 'agreed' if f.verdict == 'correct' else 'disputed' }}</span>{% else %}{% endif %}{% if f.comments %} <small class="muted">· {{ f.comments|length }}</small>{% endif %}</span>{{ review_history(request, ('library:' ~ key)[:40], x.id) }}
   <form method="post" action="/library/{{ key }}/react" class="pc-form"><input type="hidden" name="item" value="{{ x.id }}">
     <input name="comment" maxlength="2000" placeholder="Why (optional)" aria-label="Comment">
     <span class="pc-btns"><button name="verdict" value="agree" class="small-btn">Agree</button><button name="verdict" value="disagree" class="small-btn outline secondary">Disagree</button>{% if f.verdict %}<button name="verdict" value="reset" class="small-btn outline secondary">Reset</button>{% endif %}</span></form>
@@ -18,7 +18,7 @@
   {% if related.knowledge %}<p><b>Basics in General knowledge:</b> {% for x in related.knowledge %}<a class="kn-chip" href="{{ x.href }}" title="{{ x.kind }}: {{ x.title }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
   {% if related.visuals %}<p><b>Try it in Interactive visuals:</b> {% for x in related.visuals %}<a class="kn-chip vz" href="{{ x.href }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
 </section>{% endif %}
-<nav class="bo-toc small">{% if t.why_customer %}<a href="#customer">Why it matters to the customer</a> · {% endif %}<a href="#diagram">Block diagram</a> · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a>{% if t.competitors %} · <a href="#competitors">Competitors</a>{% endif %}{% if t.market %} · <a href="#market">Market</a>{% endif %} · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
+<nav class="bo-toc small">{% if t.why_customer %}<a href="#customer">Why it matters to the customer</a> · {% endif %}{% if t.block_diagram %}<a href="#diagram">Block diagram ✓</a>{% else %}<span class="muted">No block diagram yet</span>{% endif %} · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a>{% if t.competitors %} · <a href="#competitors">Competitors</a>{% endif %}{% if t.market %} · <a href="#market">Market</a>{% endif %} · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
 {% if t.why_customer %}<h2 id="customer">Why it matters to the customer</h2>
 <ul class="pc-list small">{% for w in t.why_customer %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
 

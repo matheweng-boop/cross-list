@@ -11,7 +11,7 @@
 </div></div>
 {% for k, t, ideas in techs %}
 <section class="bo-nm" id="t-{{ k }}">
-  <h2>{{ t.technology }} {% for o in t.owner or [] %}<span class="bo-owner ow-{{ o|lower }}">{{ o }}</span>{% endfor %} {{ review('new_markets', k, rev) }}</h2>
+  <h2>{{ t.technology }} {% for o in t.owner or [] %}<span class="bo-owner ow-{{ o|lower }}">{{ o }}</span>{% endfor %} {{ review('new_markets', k, rev, hist=false) }}</h2>{{ review_history(request, 'new_markets', k, 0) }}
   <p class="small muted">{% if t.products %}Products: {{ t.products|join(', ') }}{% endif %}{% if t.platform and t.platform in plats %} · platform: <a href="/business/capabilities#p-{{ t.platform }}">{{ plats[t.platform].name }}</a>{% endif %}</p>
   <div class="bo-ev-grid">
   {% for i in ideas %}

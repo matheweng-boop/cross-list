@@ -141,14 +141,19 @@ def test_the_pack_combines_the_selected_reports_in_order(client):
     assert "<span>Draft</span>" in html
     two = client.get(f"{PACK}?r=synergies&r=automotive").text
     assert re.findall(r'class="to-page[^"]*" id="([^"]+)"', two)[0] == "syn-glance" and "6 / 6<" in two
-    focus = client.get(f"{PACK}?r=overview&focus=automotive").text
-    assert 'id="market-focus"' in focus and "5 / 5<" in focus
+    # the market focus page was removed (owner, 25 Oct 2026): an old &focus= is ignored, the overview stays 4 pages
+    old = client.get(f"{PACK}?r=overview&focus=automotive")
+    assert old.status_code == 200 and 'id="market-focus"' not in old.text and "4 / 4<" in old.text
+    assert "focus=" not in old.text.split("Change the selection")[0].rsplit("<a ", 1)[-1]
     from app.config import PROJECT_ROOT
 
     css = (PROJECT_ROOT / "app" / "web" / "static" / "shareable.css").read_text()
     assert ".sr-pack-part .to-page { break-before: page; }" in css  # each report from a new page
     landing = client.get("/shareable").text
-    assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and "Create PDF" in landing
+    assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and ">Build a PDF<" in landing
+    form = landing[landing.index('id="build-pdf"'):landing.index("</form>", landing.index('id="build-pdf"'))]
+    assert 'name="focus"' not in form and "Market focus" not in form and "4 pages" in form  # no focus option
+    assert "focus:" not in landing.split('id="build-pdf"', 1)[1].split("</script>", 1)[0]
 
 
 def test_patent_tags_come_from_a_fixture_and_are_quiet_without_data(monkeypatch, tmp_path):
@@ -170,3 +175,109 @@ def test_patent_tags_come_from_a_fixture_and_are_quiet_without_data(monkeypatch,
     assert sr.patent_tag(gan, marks, automotive_only=True) == ""
     assert sr.patent_tag(iso, marks, True) == "IP: Skyworks-led"
     assert sr.patent_tag({"key": "x"}, marks) == ""
+
+
+# ---- owner, 25 Oct 2026 comments on the Technology overview (and the same elements on the two reports) -------------
+AEC_COUNT = re.compile(r"\d[\d,]*\+?\s*(?:AEC-Q|automotive-grade)[\w -]{0,12}?\b(?:parts|qualified)\b|"
+                       r"\bAEC-Q qualified parts\b|\bautomotive-grade parts\b", re.I)  # fmt: skip
+
+
+def test_no_aec_q_part_counts_but_the_designations_stay(client):
+    """ "I just want AEC-Q part counts out, filters and designations should remain." """
+    over = body_text(client.get("/shareable/technology-overview").text, 'id="tech-overview"')
+    syn = body_text(client.get(SYN).text, 'id="share-report"')
+    auto = body_text(client.get(AUTO).text, 'id="share-report"')
+    for text in (over, syn, auto):
+        assert not AEC_COUNT.search(text), AEC_COUNT.search(text)
+    assert AEC_COUNT.search("Car radio (12 AEC-Q parts)") and AEC_COUNT.search("1,500+ AEC-Q qualified")
+    for facts in (to.build()["facts"], sr.build_synergies()["facts"], sr.build_automotive()["facts"]):
+        assert all(f["key"] != "automotive" for f in facts)
+    assert all("n" not in s for s in sr.build_automotive()["subsystems"])
+    # the designations remain: which series are AEC-Q qualified, the AEC-Q examples, the standards
+    assert "Series listed are AEC-Q qualified" in auto and "AEC-Q example" in auto and "AEC-Q100" in auto
+    assert sr.build_automotive()["subsystems"][0]["series"]
+
+
+def test_every_synergy_states_one_benefit_from_the_fixed_set(client):
+    """ "How are these synergies useful? Better manufacturing capability, shared tech, new tech, cost savings
+    assumed?" One tag from a fixed set per pair and per overlap column; cost savings always say "assumed". """
+    labels = sr.benefit_labels()
+    assert set(labels) == {"manufacturing", "shared_tech", "new_tech", "cost", "market"}
+    assert "assumed" in labels["cost"].lower()
+    words = sr.curated()["synergies"]
+    assert set(words["benefits"].values()) <= set(labels) and words["benefit_default"] in labels
+    syn, auto = sr.build_synergies(), sr.build_automotive()
+    assert syn["pairs"] and auto["pairs"]
+    for p in syn["pairs"] + auto["pairs"]:
+        assert p["benefit"] in labels.values() and p["line"], p
+    assert {o["benefit"] for o in syn["overlap"].values()} <= set(labels.values())
+    assert all(o["line"] for o in syn["overlap"].values())
+    for url, b, extra in ((SYN, syn, 3), (AUTO, auto, 0)):
+        tags = [unescape(x) for x in re.findall(r'<span class="sr-ben">([^<]+)</span>', client.get(url).text)]
+        assert len(tags) == len(b["pairs"]) + extra and set(tags) <= set(labels.values()), (url, tags)
+    edit = client.get(SYN + "/edit").text
+    assert f'name="pair.{syn["pairs"][0]["key"]}.benefit"' in edit  # the owner can change the tag
+
+
+def test_the_little_markers_are_right_aligned(client):
+    """ "Right align the little markers for both etc": each Skyworks / Qorvo / Both, IP and benefit marker sits in a
+    row with the to-marks-right class (flex; the marker is pushed right and never wraps), on screen and in print. """
+    from app.config import PROJECT_ROOT
+
+    css =(PROJECT_ROOT / "app" / "web" / "static" / "shareable.css").read_text()
+    rule = css[css.index(".to-marks-right > :not(:first-child)"):]
+    assert "margin-left: auto" in rule.split("}")[0] and "white-space: nowrap" in rule.split("}")[0]
+    over = client.get("/shareable/technology-overview").text
+    assert over.count('class="to-plat-name to-marks-right"') == len(to.build()["platforms"])
+    closers = ("</li>", "</b>", "</p>", "</div>")
+    for url in (SYN, AUTO):
+        html = client.get(url).text.split('id="share-report"', 1)[1]
+        marks = [m.start() for m in re.finditer(r'<span class="(?:sr-ip|sr-ben)">', html)]
+        marks += [m.start() for m in re.finditer(r'<span class="to-marks">', html)]
+        assert marks, url
+        for at in marks:
+            row = html.rfind("to-marks-right", 0, at)
+            assert row > 0 and not any(c in html[row:at] for c in closers), (url, html[max(0, at - 200):at + 40])
+
+
+# ---- one Shareable page (owner, 25 Oct 2026): no sub-tabs; the reports in one list -----------------------------------
+def test_menu_has_one_shareable_entry_and_no_report_items():
+    from app.web import nav
+
+    labels = [i[0] for _, _, items in nav.NAV for i in items]
+    hrefs = [i[1] for _, _, items in nav.NAV for i in items]
+    assert not {"Skyworks + Qorvo synergies", "Automotive", "Technology overview", "Presentation builder"} & set(labels)
+    assert not [h for h in hrefs if h.startswith("/shareable/")]
+    assert next(s for s in nav.NAV if s[0] == "shareable")[2] == (
+        ("Reports", "/shareable", "Pick reports, preview them and save one PDF"),)
+    for path in ("/shareable/technology-overview", SYN, AUTO, PACK, "/shareable/presentation",
+                 "/shareable/presentation/preview", f"{SYN}/edit"):  # fmt: skip
+        assert nav.place(path) == ("shareable", "/shareable"), path
+    assert nav.page_title(SYN) == "Skyworks + Qorvo synergies – Shareable – BizDev"  # still named in the title
+
+
+def test_shareable_lists_the_three_reports_with_previews_and_two_actions(client):
+    html = client.get("/shareable").text
+    rows = re.findall(r'<li class="sh-row">.*?</li>', html, re.S)
+    assert len(rows) == 3
+    want = (("overview", "Technology overview", 4, "/shareable/technology-overview"),
+            ("synergies", "Skyworks + Qorvo synergies", 3, SYN), ("automotive", "Automotive", 3, AUTO))  # fmt: skip
+    for row, (key, label, pages, href) in zip(rows, want, strict=True):
+        assert f'name="r" value="{key}"' in row and ' checked' not in row  # nothing ticked by default
+        assert f"<b>{label}</b>" in unescape(row) and f"{pages} pages" in row
+        assert f'href="{href}" data-lightbox="{label}">Preview</a>' in unescape(row)
+    form = html[html.index('id="build-pdf"'):html.index("</form>", html.index('id="build-pdf"'))]
+    assert form.count('type="submit"') == 1 and ">Build a PDF</button>" in form  # one combine button
+    assert 'class="sh-ppt" role="button" href="/shareable/presentation">Build a presentation</a>' in html
+    assert "Pick at least one report." in html and 'class="sh-cards"' not in html
+    again = client.get("/shareable?r=automotive,synergies&wm=draft").text  # the last choice from the address
+    assert 'value="synergies" checked' in again and 'value="automotive" checked' in again
+    assert 'value="overview" checked' not in again and 'value="draft" selected' in again
+
+
+def test_owner_sees_edit_links_guest_does_not(owner, make_guest):
+    html = owner.get("/shareable").text
+    for href in ("/shareable/technology-overview", SYN, AUTO):
+        assert f'class="sh-edit small" href="{href}/edit"' in html
+    g, _ = make_guest()
+    assert 'class="sh-edit' not in g.get("/shareable").text

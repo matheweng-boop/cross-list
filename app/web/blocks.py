@@ -56,8 +56,10 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
     done = sy.assigned()
     other = [(k, [c for c in v if c["i"] not in done]) for k, v in cards]
     filtered = bool(market or source or variants or verified in ("yes", "no"))
+    subs = [x for s in sy.systems() for x in s["subsystems"]]
+    dg = {"subs": len(subs), "with": sum(1 for x in subs if x["idx"]), "other": len(sy.unassigned())}
     ctx = {"designs": designs, "cards": [(k, v) for k, v in cards if v], "n_all": len(allcards),
-           "tree": tree, "other": [(k, v) for k, v in other if v], "system": system, "sub": subsystem,
+           "tree": tree, "dg": dg, "other": [(k, v) for k, v in other if v], "system": system, "sub": subsystem,
            "expanded": bool(system) or filtered, "filtered": filtered,
            "asked": request.query_params.get("asked") == "1",
            "n_shown": sum(len(v) for _, v in cards), "markets": facet("market"), "sources": facet("source"),
@@ -195,6 +197,7 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
             "templates_": blocks.templates(),
             "tpl_i": tpl_i,
             "verified": blocks.verifications(session).get(blocks.verify_key(tpl)) if tpl else None,
+            "verify_key": blocks.verify_key(tpl) if tpl else "",
             "bare": bare,
         },
     )

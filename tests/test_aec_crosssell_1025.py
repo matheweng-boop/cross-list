@@ -2,15 +2,14 @@
 not automotive but simply mark that they are not automotive and make the selection filterable", and "at the top of
 each application-specific page a table for Skyworks and Qorvo parts". One AEC-Q test (autograde.is_aec) marks every
 part chip on Cross-sell › By system and the portfolio synergy cards; the "Automotive-qualified only" filter (?aec=1)
-is on by default for Automotive and says how many parts it hides; the Technology overview's Automotive page names
-only series with AEC-Q parts, with their counts."""
+is on by default for Automotive and says how many parts it hides. (The Technology overview's Automotive focus page
+was removed on 25 Oct 2026; the Automotive report covers it.)"""
 
 import re
 from urllib.parse import unquote
 
-from app.services import autograde, blocks
+from app.services import autograde
 from app.services import systems as sy
-from app.services import tech_overview as to
 
 URL = "/blocks/cross-sell"
 CHIP = re.compile(
@@ -113,28 +112,3 @@ def test_portfolio_synergy_cards_are_marked_and_filterable(client):
     cards = _section(auto, '<div class="pf-syn">', "</div>\n</div>")
     assert "aec-no" not in cards and "aec-yes" in cards
 
-
-def test_automotive_focus_names_only_series_with_aec_q_parts():
-    m = to.focus_markets()["automotive"]
-    assert m["subsystems"], m
-    for s in m["subsystems"]:
-        assert 2 <= len(s["series"]) <= 3, s["key"]
-        for x in s["series"]:
-            n = to.series_aec(x)
-            assert n > 0 and s["aec"][x] == n, (s["key"], x)
-    named = {x for s in m["subsystems"] for x in s["series"]}
-    assert not named & {"QM35xxx", "SKY559xx", "SKY81xxx", "AATxxxx", "Si53xx"}  # none or few qualified: swapped
-    facts = dict((k, v) for k, v, _ in m["facts"])
-    assert int(facts["automotive"].replace(",", "")) <= int(facts["parts"].replace(",", ""))
-    # the other markets keep their series as before (the AEC-Q count is only for Automotive)
-    assert all(not s.get("aec") for s in to.focus_markets()["datacenter"]["subsystems"])
-
-
-def test_automotive_focus_page_shows_the_counts(client):
-    html = client.get("/shareable/technology-overview?focus=automotive").text
-    focus = _section(html, 'id="market-focus"', "</section>")
-    m = to.focus_markets()["automotive"]
-    for s in m["subsystems"]:
-        for x in s["series"]:
-            assert f"<code>{x}</code> <small>{s['aec'][x]:,} AEC-Q</small>" in focus, x
-    assert "AEC-Q" in focus and blocks.catalog_parts()

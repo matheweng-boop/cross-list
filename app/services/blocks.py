@@ -51,7 +51,7 @@ def question_help() -> dict[str, str]:
 # vendor / source in a template name ("(TI)", "(NXP)", "(Microchip AN5324)", "(TI reference)") is kept in the data
 # (sources) but not shown
 _SOURCE_PAREN = re.compile(
-    r"\s*\((?:[^()]*\b(?:TI|NXP|MediaTek|Qualcomm|Microchip|Skyworks|Infineon|RF|TIDM|TIDA|AN\d+|reference|Airfast|Dimensity|Filogic|Genio|MT\d+|T930|FastConnect|Dragonwing|QTM\d*|QCC\d*|QCS\d*|WCN\d*|Snapdragon|SAF\w*|TEF\w*)\b[^()]*)\)",
+    r"\s*\((?:[^()]*\b(?:after|Murata|TI|NXP|MediaTek|Qualcomm|Microchip|Skyworks|Infineon|RF|TIDM|TIDA|AN\d+|reference|Airfast|Dimensity|Filogic|Genio|MT\d+|T930|FastConnect|Dragonwing|QTM\d*|QCC\d*|QCS\d*|WCN\d*|Snapdragon|SAF\w*|TEF\w*)\b[^()]*)\)",
     re.I,
 )
 

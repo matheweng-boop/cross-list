@@ -23,7 +23,8 @@ OWNER_PAGES = ("/manage", "/owner", "/business/tam", "/business/quality", "/busi
 OWNER_ACTIONS = ("/manage", "/owner", "/business/tam", "/business/quality", "/business/validation", "/business/data",
                  "/requests/", "/blocks/feedback/", "/blocks/area-requests/",
                  "/shareable/technology-overview/edit", "/shareable/synergies/edit",
-               "/shareable/automotive/edit")  # fmt: skip
+               "/shareable/automotive/edit", "/shareable/presentation/save",
+               "/shareable/presentation/delete")  # fmt: skip
 
 
 def is_open(path: str) -> bool:

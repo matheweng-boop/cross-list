@@ -30,6 +30,17 @@ Priority score for Gaps & new technology and Markets (25 Oct 2026):
 12. **Background diagrams** count fully in D, so the number matches "Needed in"? (Yes.)
 13. **Competition** in likeliness: leave it out, since it is in the Opportunity score? (Leave out.)
 
+Shareable reports and reviews (25 Oct 2026):
+
+14. **Automotive report tile "1,500+ from Skyworks":** the public Qorvo catalogue marks only 8 parts automotive, so
+    the tile repeats the total. Remove it? (Yes.)
+15. **Report density:** pack each management report into about 2 pages instead of one section per page? (Yes.)
+16. **"Combined since October 2026"** on the Technology overview and Synergies report: confirm the date and wording.
+17. **ACT88321 review, concept item 0 marked wrong:** corrected against datasheet Rev. C (Buck1 peak-current mode,
+    4 A is a buck-mode lifetime rating). What else was wrong?
+18. **QPF1003Q** counts as AEC-Q qualified (Q ending, catalogue entry) although its text calls AEC-Q100 Grade 2 a
+    "target". Keep it counted? (Keep, marked; recheck at release.)
+
 ## Settled (owner, 24 Oct 2026, site check): "Yes to all"
 
 - Browse products: the Package column is hidden on desktops below 1400 px, so the table no longer scrolls sideways at

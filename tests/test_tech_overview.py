@@ -58,9 +58,9 @@ def test_menu_has_a_shareable_section_after_engineering_knowledge():
     keys = [s[0] for s in nav.NAV]
     assert keys[-2:] == ["knowledge", "shareable"]
     items = next(s for s in nav.NAV if s[0] == "shareable")[2]
-    assert items[0] == ("Technology overview", URL, "Public, ready to share or save as PDF")
+    assert [i[1] for i in items] == ["/shareable"]  # owner, 25 Oct 2026: one page, the reports open from there
     assert nav.HOMES["shareable"] == "/shareable"
-    assert nav.place(URL) == ("shareable", URL) and nav.place("/shareable") == ("shareable", "/shareable")
+    assert nav.place(URL) == ("shareable", "/shareable") and nav.place("/shareable") == ("shareable", "/shareable")
     assert nav.page_title(URL) == "Technology overview – Shareable – BizDev"
     assert nav.page_title("/shareable") == "Shareable – BizDev"
     assert "shareable" in nav.ICONS
@@ -68,10 +68,10 @@ def test_menu_has_a_shareable_section_after_engineering_knowledge():
 
 def test_landing_page_lists_the_shareable_pages(client):
     html = client.get("/shareable").text
-    assert "Everything here is public information" in html
-    assert f'class="sh-card" href="{URL}"' in html
+    assert "Public information, ready to share" in html
+    assert f'class="sh-preview" role="button" href="{URL}" data-lightbox="Technology overview"' in html
     assert 'href="/shareable"' in html  # the section row opens the landing page
-    assert 'aria-current="page" class="on">Technology overview<' in client.get(URL).text
+    assert 'aria-current="page" class="on">Reports<' in client.get(URL).text  # the menu highlights the one entry
 
 
 def test_the_page_is_share_safe(client):

@@ -412,8 +412,14 @@ def test_shareable_technology_overview_prints_to_four_a4_pages(page):
     page.locator("nav.main-nav a", has_text="Shareable").click()
     expect(page).to_have_url(re.compile(r"/shareable$"))
     expect(page.locator("main h1")).to_have_text("Shareable")
-    page.locator(".sh-card", has_text="Technology overview").click()
-    expect(page).to_have_url(re.compile(r"/shareable/technology-overview$"))
+    # owner, 25 Oct 2026: one list; Preview opens the report in the lightbox, then check it as a page of its own
+    page.locator(".sh-row", has_text="Technology overview").get_by_role("button", name="Preview").click()
+    frame = page.locator("dialog.lb iframe.lb-frame")
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/technology-overview$"))
+    expect(page.frame_locator("dialog.lb iframe.lb-frame").locator("section#platforms")).to_be_attached()
+    page.get_by_role("button", name="Close preview").click()
+    expect(page.locator("dialog.lb")).to_be_hidden()
+    go(page, "/shareable/technology-overview")
     for sid, heading in (("at-a-glance", "technology overview"), ("platforms", "Technology platforms"),
                          ("markets", "End markets"), ("families", "Product families")):  # fmt: skip
         expect(page.locator(f"section#{sid} :is(h1, h2)").first).to_contain_text(heading)
@@ -606,16 +612,24 @@ def test_shareable_pack_of_all_three_and_each_report_alone(page):
 
 
 def test_shareable_build_pdf_with_two_reports(page, tmp_path):
-    """The landing page's Build a PDF box: untick the overview, Create PDF opens one print view with Synergies then
-    Automotive (the address keeps the choice), each from a new page, one sources list (no overflow at 390 px: the
-    page fixture checks every visited page)."""
+    """The one Shareable page (owner, 25 Oct 2026): nothing ticked asks to pick a report; tick Synergies and Automotive,
+    Build a PDF opens one print view with Synergies then Automotive (the address keeps the choice), each from a new
+    page, one sources list (no overflow at 390 px: the page fixture checks every visited page)."""
     go(page, "/shareable")
     box = page.locator("#build-pdf")
-    box.locator("input[value='overview']").uncheck()
-    box.get_by_role("button", name="Create PDF").click()
+    expect(box.locator("input[name=r]:checked")).to_have_count(0)
+    box.get_by_role("button", name="Build a PDF").click()
+    expect(page.locator("#sh-err")).to_have_text("Pick at least one report.")
+    expect(page.locator("dialog.lb[open]")).to_have_count(0)
+    box.locator("input[value='synergies']").check()
+    box.locator("input[value='automotive']").check()
+    expect(page.locator("#sh-err")).to_be_hidden()
+    box.get_by_role("button", name="Build a PDF").click()
     # the print view opens in the lightbox (fc109ca); then check the same address as a page of its own
     frame = page.locator("dialog.lb iframe.lb-frame")
     expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none$"))
+    expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the last choice stays
+    expect(page.locator("dialog.lb").get_by_role("button", name="Print / Save as PDF")).to_be_visible()
     go(page, frame.get_attribute("src"))
     ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
     assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
@@ -625,6 +639,14 @@ def test_shareable_build_pdf_with_two_reports(page, tmp_path):
     text = pdf_text(pdf, tmp_path, 4)
     if text is not None:
         assert "extension of" in text.lower() and re.search(r"4 ?/ ?6", text)
+
+
+def test_shareable_build_a_presentation_button(page):
+    """Owner, 25 Oct 2026: Build a presentation sits next to Build a PDF and opens the topic builder."""
+    go(page, "/shareable")
+    page.locator("#build-pdf").get_by_role("button", name="Build a presentation").click()
+    expect(page).to_have_url(re.compile(r"/shareable/presentation$"), timeout=90_000)
+    expect(page.locator("nav.sub-nav a.on")).to_have_text("Reports")
 
 
 def test_shareable_synergies_owner_edit_and_undo(page):

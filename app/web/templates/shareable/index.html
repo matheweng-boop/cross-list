@@ -2,34 +2,45 @@
 {% block content %}
 <link rel="stylesheet" href="/static/shareable.css">
 <h1>Shareable</h1>
-<p class="subtitle">Everything here is public information, ready to share outside the company or save as PDF.</p>
-<div class="sh-cards">
-  {% for label, href, desc in items %}
-  <div class="sh-card-wrap"><a class="sh-card" href="{{ href }}"><b>{{ label }}</b><span>{{ desc }}</span></a>
-    {% if href in ('/shareable/technology-overview', '/shareable/synergies', '/shareable/automotive') %}<a class="sh-preview small" href="{{ href }}" data-lightbox="{{ label }}">Preview</a>{% endif %}</div>
-  {% endfor %}
-</div>
-{# Build a PDF (owner, 25 Oct 2026): pick reports, one print view with all of them; the address keeps the choice #}
-<form class="sh-pack" id="build-pdf" method="get" action="/shareable/pack" aria-labelledby="sh-pack-h">
-  <h2 id="sh-pack-h">Build a PDF</h2>
-  <p class="small muted">Pick the reports to put in one PDF. They print in this order, each from a new page.</p>
-  {% for key, label, pages in pack_items %}
-  <label class="sh-check"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }}> {{ label }} <span class="muted small">({{ pages }} pages)</span></label>
-  {% endfor %}
-  <label class="sh-sub">Watermark
-    <select name="wm">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>
-  <button type="submit">Create PDF</button>
+<p class="subtitle">Public information, ready to share outside the company. Preview a report, tick several to build one PDF, or build a presentation.</p>
+{# owner, 25 Oct 2026: one page to combine and preview the reports; the address keeps the choice (?r=...&wm=...) #}
+<form class="sh-pack" id="build-pdf" method="get" action="/shareable/pack" aria-label="Reports">
+  <ul class="sh-list">
+    {% for key, label, line, pages, href, edit in reports %}
+    <li class="sh-row">
+      <label class="sh-check"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }}>
+        <span class="sh-name"><b>{{ label }}</b> <span class="muted small">{{ pages }} pages</span><span class="sh-line">{{ line }}</span></span></label>
+      <span class="sh-acts">
+        <a class="sh-preview" role="button" href="{{ href }}" data-lightbox="{{ label }}">Preview</a>
+        {% if owner %}<a class="sh-edit small" href="{{ edit }}">Edit</a>{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="sh-go">
+    <label class="sh-wm">Watermark
+      <select name="wm">{% for k, word in watermarks.items() if k != 'custom' %}<option value="{{ k }}"{{ ' selected' if wm == k }}>{{ word or 'None' }}</option>{% endfor %}</select></label>
+    <span class="sh-btns">
+      <button type="submit">Build a PDF</button>
+      <a class="sh-ppt" role="button" href="/shareable/presentation">Build a presentation</a>
+    </span>
+  </div>
+  <p class="sh-err" id="sh-err" role="alert" hidden>Pick at least one report.</p>
+  <p class="small muted">Build a PDF previews the ticked reports together, with Print / Save as PDF; they print in this
+    order, each from a new page. Build a presentation makes slides from topics you pick.</p>
 </form>
 <script>
   // the address lists the reports as r=overview,synergies,automotive (a plain form sends r=..&r=.., which works too)
   (() => {
-    const f = document.getElementById("build-pdf");
+    const f = document.getElementById("build-pdf"), err = document.getElementById("sh-err");
+    f.addEventListener("change", () => { err.hidden = true; });
     f.addEventListener("submit", e => {
       e.preventDefault();
       const r = [...f.querySelectorAll("input[name=r]:checked")].map(x => x.value);
-      if (!r.length) { alert("Pick at least one report."); return; }
+      if (!r.length) { err.hidden = false; return; }
       const q = new URLSearchParams({r: r.join(","), wm: f.elements.wm.value});
       const url = f.action + "?" + q.toString().replaceAll("%2C", ",");
+      history.replaceState(null, "", "?" + q.toString().replaceAll("%2C", ","));  // the last choice stays
       if (window.shareableLightbox) window.shareableLightbox(url, "Build a PDF"); else location.href = url;
     });
   })();

@@ -40,16 +40,24 @@ NAV = (
         ("General knowledge", "/knowledge", "RF fundamentals, specification guides, technology platforms and search"),
     )),
     # owner, 24 Oct 2026: a section for shareable content (public information, ready to share or save as PDF)
+    # owner, 25 Oct 2026: one shareable page to combine and preview the reports; no sub-items (the reports, the
+    # combined PDF and the presentation builder open from /shareable)
     ("shareable", "Shareable", (
-        ("Technology overview", "/shareable/technology-overview", "Public, ready to share or save as PDF"),
-        ("Skyworks + Qorvo synergies", "/shareable/synergies", "For management: capabilities, overlap, pairs"),
-        ("Automotive", "/shareable/automotive", "Extension: technologies and applications in the car"),
-        ("Presentation builder", "/shareable/presentation", "Pick topics, preview the slides, save as PDF"),
+        ("Reports", "/shareable", "Pick reports, preview them and save one PDF"),
     )),
 )  # fmt: skip
 
 # A section's own landing page, when it has one; the section row links there instead of to the first item
 HOMES = {"shareable": "/shareable"}
+
+# Pages with no menu item of their own, still named in the <title> (path prefix -> name; longest prefix wins)
+NAMES = {
+    "/shareable/technology-overview": "Technology overview",
+    "/shareable/synergies": "Skyworks + Qorvo synergies",
+    "/shareable/automotive": "Automotive",
+    "/shareable/pack": "Combined PDF",
+    "/shareable/presentation": "Presentation builder",
+}
 
 UTILITY = ("manage", "Data management", (
     ("Overview", "/manage/overview", "Everything at a glance: raw data, today's feedback, what waits for you"),
@@ -132,11 +140,11 @@ PLACES = {
     "/impact": ("knowledge", "/knowledge"),
     "/technical": ("knowledge", "/knowledge"),
     "/notes": ("knowledge", "/knowledge"),
-    "/shareable/technology-overview": ("shareable", "/shareable/technology-overview"),
-    "/shareable/synergies": ("shareable", "/shareable/synergies"),
-    "/shareable/automotive": ("shareable", "/shareable/automotive"),
+    "/shareable/technology-overview": ("shareable", "/shareable"),
+    "/shareable/synergies": ("shareable", "/shareable"),
+    "/shareable/automotive": ("shareable", "/shareable"),
     "/shareable/pack": ("shareable", "/shareable"),
-    "/shareable/presentation": ("shareable", "/shareable/presentation"),
+    "/shareable/presentation": ("shareable", "/shareable"),
     "/shareable": ("shareable", "/shareable"),
 }
 
@@ -221,6 +229,9 @@ def state(path: str) -> dict:
 def page_label(path: str) -> str:
     """The page's own name as the menus show it: the in-page tab (the first tab of a group is the menu item), else the
     menu item."""
+    named = max((p for p in NAMES if path == p or path.startswith(p + "/")), key=len, default=None)
+    if named:
+        return NAMES[named]
     st = state(path)
     section = next(s for s in _sections() if s[0] == st["section"])
     if HOMES.get(section[0]) == st["item"]:  # a section's landing page is named after the section

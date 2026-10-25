@@ -150,9 +150,9 @@ def test_the_pack_combines_the_selected_reports_in_order(client):
     css = (PROJECT_ROOT / "app" / "web" / "static" / "shareable.css").read_text()
     assert ".sr-pack-part .to-page { break-before: page; }" in css  # each report from a new page
     landing = client.get("/shareable").text
-    assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and "Create PDF" in landing
+    assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and ">Build a PDF<" in landing
     form = landing[landing.index('id="build-pdf"'):landing.index("</form>", landing.index('id="build-pdf"'))]
-    assert 'name="focus"' not in form and "Market focus" not in form and "(4 pages)" in form  # no focus option
+    assert 'name="focus"' not in form and "Market focus" not in form and "4 pages" in form  # no focus option
     assert "focus:" not in landing.split('id="build-pdf"', 1)[1].split("</script>", 1)[0]
 
 
@@ -238,3 +238,46 @@ def test_the_little_markers_are_right_aligned(client):
         for at in marks:
             row = html.rfind("to-marks-right", 0, at)
             assert row > 0 and not any(c in html[row:at] for c in closers), (url, html[max(0, at - 200):at + 40])
+
+
+# ---- one Shareable page (owner, 25 Oct 2026): no sub-tabs; the reports in one list -----------------------------------
+def test_menu_has_one_shareable_entry_and_no_report_items():
+    from app.web import nav
+
+    labels = [i[0] for _, _, items in nav.NAV for i in items]
+    hrefs = [i[1] for _, _, items in nav.NAV for i in items]
+    assert not {"Skyworks + Qorvo synergies", "Automotive", "Technology overview", "Presentation builder"} & set(labels)
+    assert not [h for h in hrefs if h.startswith("/shareable/")]
+    assert next(s for s in nav.NAV if s[0] == "shareable")[2] == (
+        ("Reports", "/shareable", "Pick reports, preview them and save one PDF"),)
+    for path in ("/shareable/technology-overview", SYN, AUTO, PACK, "/shareable/presentation",
+                 "/shareable/presentation/preview", f"{SYN}/edit"):  # fmt: skip
+        assert nav.place(path) == ("shareable", "/shareable"), path
+    assert nav.page_title(SYN) == "Skyworks + Qorvo synergies – Shareable – BizDev"  # still named in the title
+
+
+def test_shareable_lists_the_three_reports_with_previews_and_two_actions(client):
+    html = client.get("/shareable").text
+    rows = re.findall(r'<li class="sh-row">.*?</li>', html, re.S)
+    assert len(rows) == 3
+    want = (("overview", "Technology overview", 4, "/shareable/technology-overview"),
+            ("synergies", "Skyworks + Qorvo synergies", 3, SYN), ("automotive", "Automotive", 3, AUTO))  # fmt: skip
+    for row, (key, label, pages, href) in zip(rows, want, strict=True):
+        assert f'name="r" value="{key}"' in row and ' checked' not in row  # nothing ticked by default
+        assert f"<b>{label}</b>" in unescape(row) and f"{pages} pages" in row
+        assert f'href="{href}" data-lightbox="{label}">Preview</a>' in unescape(row)
+    form = html[html.index('id="build-pdf"'):html.index("</form>", html.index('id="build-pdf"'))]
+    assert form.count('type="submit"') == 1 and ">Build a PDF</button>" in form  # one combine button
+    assert 'class="sh-ppt" role="button" href="/shareable/presentation">Build a presentation</a>' in html
+    assert "Pick at least one report." in html and 'class="sh-cards"' not in html
+    again = client.get("/shareable?r=automotive,synergies&wm=draft").text  # the last choice from the address
+    assert 'value="synergies" checked' in again and 'value="automotive" checked' in again
+    assert 'value="overview" checked' not in again and 'value="draft" selected' in again
+
+
+def test_owner_sees_edit_links_guest_does_not(owner, make_guest):
+    html = owner.get("/shareable").text
+    for href in ("/shareable/technology-overview", SYN, AUTO):
+        assert f'class="sh-edit small" href="{href}/edit"' in html
+    g, _ = make_guest()
+    assert 'class="sh-edit' not in g.get("/shareable").text

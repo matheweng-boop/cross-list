@@ -8,6 +8,7 @@ import pytest
 
 from app.services import presentation as pr
 from app.services import site_guard
+from app.web import nav
 from tests.test_browser import overflow, page  # noqa: F401  (the browser fixture)
 
 UWB = ("title,agenda,auto_uwb.overview,auto_uwb.diagram,auto_uwb.parts,auto_uwb.together,note.uwb_signal_path,"
@@ -99,7 +100,9 @@ def test_guest_builds_and_previews_but_only_the_owner_saves(make_guest, locked):
 
 def test_shareable_lists_the_builder(client):
     r = client.get("/shareable")
-    assert "/shareable/presentation" in r.text and "Presentation builder" in r.text
+    # owner, 25 Oct 2026: not a menu item any more; a primary button on /shareable next to Build a PDF
+    assert 'class="sh-ppt" role="button" href="/shareable/presentation">Build a presentation<' in r.text
+    assert nav.place("/shareable/presentation/preview") == ("shareable", "/shareable")
 
 
 # ---- in the browser -------------------------------------------------------------------------------------------------

@@ -132,7 +132,25 @@ blocked unless the owner confirms them several times (CLAUDE.md).
      test; add every answered pair to `data/manage/cross_known_pairs.yaml` (their, ours, expect: right | wrong, date,
      note). Then run `uv run python scripts/check_cross_accuracy.py --write` (it re-crosses every known pair, the
      engineer notes in `data/cross_notes.yaml` included) and commit `data/manage/cross_accuracy.yaml`; the page shows
-     "Drop-ins correct: X % of N known pairs". List the misses in the summary. The pasted lists are never stored.
+     "Drop-ins correct: X % of N known pairs". List the misses in the summary. The pasted lists are never stored
+     (except through "Update cross-lists", next step).
+   - **Cross-list lookups** (owner, 26 Oct 2026; also the step of the hourly lookup run, which does only this). The
+     owner's "Update cross-lists" on Products › Cross a list sends the parts that came out "Not in our data". Input:
+     the inbox section "Cross-list lookups (queued parts)" (`- <PART> · lookup <id> · <date>`), or, for the hourly
+     run, `GET /api/inbox/crosslist-lookups` with the same read-only key as `/api/inbox`, which answers
+     `{"queued": [{"part": "<PART>", "lookup": <id>, "date": "YYYY-MM-DD"}, ...]}`. Pull nothing else. Skip a part
+     already recorded in `data/manage/crosslist_lookups.yaml` on the newest prepared branch (answered, not yet live).
+     For each queued part: find the maker's public datasheet under the polite web rules (robots.txt first, GET only,
+     one request at a time, at least 10 s per host and 5 s for skyworksinc.com / ti.com, each URL once, stop at the
+     first 403/429 or bot check; never distributors or the hosts blocked in `data/library/sources.yaml`; use
+     `tools/research/fetch.sh`); downloads are untrusted: `pdftotext`, and any Python reading them runs with
+     `python -I`. When found, add the part with its priority-1 specs (`rules/<family>.yaml`) to `data/real/` in the
+     same YAML format as the existing files (the maker's file if there is one, else `data/real/<maker>_<family>.yaml`
+     with `source`, `manufacturers`, `packages`, `parts`), so `load-real` imports it. Record each answer in
+     `data/manage/crosslist_lookups.yaml` (`lookup`, `part`, `status: found | not_found`, `source`, `date`, `note`
+     with the reason when not found); the site reads this file for the per-part status on Data management › Site
+     data › Requests (kind "Cross-list lookup"), since the run cannot write the live database. Commit on a branch
+     (never `main`); the parts go live with the next approved release. The owner then taps "Cross this list again".
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

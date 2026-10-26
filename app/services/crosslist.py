@@ -478,6 +478,7 @@ class Row:
     n: int
     text: str
     count: int
+    key: str = ""  # normalised part number
     part: Part | None = None
     how: str = "none"
     catalogue: dict | None = None
@@ -527,7 +528,7 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
     rows = []
     for i, e in enumerate(entries, 1):
         m = resolve(ix, e.key, session)
-        row = Row(i, e.text, e.n, how=m.how, catalogue=m.catalogue, suggestion=m.suggestion)
+        row = Row(i, e.text, e.n, e.key, how=m.how, catalogue=m.catalogue, suggestion=m.suggestion)
         rows.append(row)
         if m.part_id is None:
             if m.catalogue:

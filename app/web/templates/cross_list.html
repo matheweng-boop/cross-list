@@ -23,7 +23,7 @@
 <form method="post" action="/cross-list" class="cx-paste">
   <label for="cx-parts" class="visually-hidden">Part numbers</label>
   <textarea id="cx-parts" name="parts" rows="7" maxlength="60000" placeholder="ISO7741DWR&#10;UCC21520DW, 2000 pcs&#10;NSI8241W1&#9;500&#9;0.85">{{ text }}</textarea>
-  <div class="cx-row-inline"><button type="submit">Cross all</button><span class="cx-privacy">{{ privacy }} Nothing you paste is stored. Up to {{ max_lines }} lines; commas, semicolons and tabs work too.</span></div>
+  <div class="cx-row-inline"><button type="submit">Cross all</button><span class="cx-privacy">{{ privacy }} Nothing you paste is stored{{ ' unless you tap Update cross-lists' if owner }}. Up to {{ max_lines }} lines; commas, semicolons and tabs work too.</span></div>
 </form>
 
 {% if submitted %}
@@ -44,6 +44,12 @@
     <span id="cx-copied" class="small muted" aria-live="polite"></span>
   </span>
 </div>
+{% if sent %}<p class="cx-sent" role="status">Sent {{ sent }} unknown part{{ 's' if sent != 1 }} for lookup (checked hourly). Progress: <a href="/manage/requests?kind=lookup">Requests</a>.</p>
+{% elif owner and unknown %}<form method="post" action="/cross-list/lookup" class="cx-lookup">
+  <textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea>
+  <span class="cx-hint">Too many unknown?</span> <button type="submit" class="outline">Update cross-lists</button>
+  <span class="small muted">Sends the {{ unknown }} part number{{ 's' if unknown != 1 }} “Not in our data” for a datasheet lookup (checked hourly) and keeps the list's part numbers to cross it again. Nothing else is stored.</span>
+</form>{% endif %}
 {% endif %}
 {% endif %}
 {# shown once enough pairs are confirmed (owner, 26 Oct 2026: hidden until then) #}{% if accuracy and accuracy.n >= 30 %}<p class="cx-acc">Drop-ins correct: <b>{{ accuracy.rate }} %</b> of {{ accuracy.n }} known pairs (checked {{ accuracy.checked }}).</p>{% endif %}

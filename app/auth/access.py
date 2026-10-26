@@ -7,7 +7,7 @@ SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 # Reachable without signing in. Everything else needs the owner or a guest.
 OPEN_EXACT = frozenset({
     "/login", "/login/pow", "/healthz", "/robots.txt",
-    "/api/inbox",  # checks its own read-only Bearer key
+    "/api/inbox", "/api/inbox/crosslist-lookups",  # check their own read-only Bearer key
     "/passkey/login/options", "/passkey/login/verify",
 })  # fmt: skip
 OPEN_PREFIXES = ("/static/",)
@@ -25,7 +25,7 @@ OWNER_ACTIONS = ("/manage", "/owner", "/business/tam", "/business/quality", "/bu
                  "/shareable/technology-overview/edit", "/shareable/synergies/edit",
                "/shareable/automotive/edit", "/shareable/presentation/save",
                "/shareable/presentation/delete", "/reference-designs/feedback",
-               "/cross-list/feedback")  # fmt: skip
+               "/cross-list/feedback", "/cross-list/lookup")  # fmt: skip
 
 
 def is_open(path: str) -> bool:

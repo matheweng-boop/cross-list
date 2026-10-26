@@ -150,11 +150,9 @@ def feedback_respond(ids: str = Form(...), status: str = Form(...), response: st
     return RedirectResponse(f"/manage/feedback?day={day}" if day else "/manage/feedback", status_code=303)
 
 
-@router.get("/api/inbox", response_class=PlainTextResponse)
-def inbox(request: Request, since: str = "", session: Session = Depends(get_session)):
-    """Everything the owner said on the site since a day (default: yesterday), for the daily update run. Needs the
-    read-only key (CROSSLIST_INBOX_TOKEN) as "Authorization: Bearer <key>"; without one set, it is closed whenever
-    the site has a password."""
+def _inbox_key(request: Request) -> None:
+    """The read-only inbox key (CROSSLIST_INBOX_TOKEN) as "Authorization: Bearer <key>"; without one set, the inbox
+    is closed whenever the site has a password."""
     s = get_settings()
     sent = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
     if s.inbox_token:
@@ -162,6 +160,25 @@ def inbox(request: Request, since: str = "", session: Session = Depends(get_sess
             raise HTTPException(401, "A valid inbox key is needed")
     elif s.site_password:
         raise HTTPException(404)
+
+
+@router.get("/api/inbox/crosslist-lookups")
+def inbox_crosslist_lookups(request: Request, session: Session = Depends(get_session)):
+    """The parts queued by "Update cross-lists" (the hourly lookup run's only input), with the same key as
+    /api/inbox: {"queued": [{"part", "lookup", "date"}, ...]}. A part leaves the list once it is recorded in
+    data/manage/crosslist_lookups.yaml on the live site."""
+    from app.services import crosslist_lookups
+
+    _inbox_key(request)
+    return {"queued": crosslist_lookups.queued(session)}
+
+
+@router.get("/api/inbox", response_class=PlainTextResponse)
+def inbox(request: Request, since: str = "", session: Session = Depends(get_session)):
+    """Everything the owner said on the site since a day (default: yesterday), for the daily update run. Needs the
+    read-only key (CROSSLIST_INBOX_TOKEN) as "Authorization: Bearer <key>"; without one set, it is closed whenever
+    the site has a password."""
+    _inbox_key(request)
     try:
         day = date.fromisoformat(since) if since else datetime.now(UTC).date() - timedelta(days=1)
     except ValueError:

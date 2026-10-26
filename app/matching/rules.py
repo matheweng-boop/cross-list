@@ -38,6 +38,9 @@ class ParamDef:
     # direction "match": the side that is the safer stand-in when no variant matches (a UVLO threshold: a lower one
     # still starts up at every supply the reference starts at; owner, 22 Oct 2026). Still a deviation, ranked closer.
     prefer: str | None = None
+    # the value decides only when both sides took it from a datasheet (a page reference); a product-table or
+    # estimated value is shown with "check datasheet" and never decides the ranking (owner, 26 Oct 2026, data rate)
+    datasheet_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -179,6 +182,7 @@ def parse_rules(data: dict) -> FamilyRules:
             x_unit=raw.get("x_unit", ""),
             band=raw.get("band"),
             prefer=raw.get("prefer"),
+            datasheet_only=bool(raw.get("datasheet_only", False)),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")

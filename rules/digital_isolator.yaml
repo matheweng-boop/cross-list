@@ -18,7 +18,11 @@ params:
   - {key: integrated_power, label: Integrated isolated power, priority: 1, kind: category, hard: true}
   # Owner, 26 Oct 2026: a 10 Mbps part (Si86S F/H codes, 36 ns deglitch filter) cannot carry a 150 Mbps reference's
   # signals, so the data rate must be equal or better; the deglitch codes stay listed with it as a deviation.
-  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 1, kind: number, direction: higher, unknown_ok: true}
+  # Owner, 26 Oct 2026: "The 10Mbps spec is often times wrong ... better researched from the datasheet": the data rate
+  # decides only when both values come from a datasheet page; a product-table or estimated value is shown amber with
+  # "check datasheet" and never decides the ranking on its own (datasheet_only).
+  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 1, kind: number, direction: higher, unknown_ok: true,
+     datasheet_only: true}
   # Optocoupler-replacement parts (LED-emulator input, often inverting) are not interchangeable with CMOS-input
   # isolators; parts that state nothing are the usual CMOS-input, non-inverting kind.
   - {key: input_type, label: Input type, priority: 1, kind: category, hard: true, default: cmos}

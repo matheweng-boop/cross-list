@@ -59,6 +59,10 @@ def test_ca_is3720hg_q1_crosses_to_the_150_mbps_si86s620ee(session, load):
     assert r.functional.result.candidate.mpn in ("SI86S620EE-AS4", "SI86SO20EE-AS4")
     deglitch = cross(get("CA-IS3720HG-Q1"), get("SI86S620HE-AS4"), get_rules("digital_isolator"))
     assert "data_rate_mbps" in [d.key for d in deglitch.deviations]  # 10 Mbps (36 ns deglitch) for 150 Mbps
+    # AV, 26 Oct 2026 (owner: "better researched from the datasheet"): AW's 10 Mbps holds, now from datasheet pages
+    # on both sides (si86s61x_2x_Ox-datasheet.pdf p.9, CAIS372xQ1 datasheet p.6), so it may decide the cross
+    srcs = {pv.key: pv.source for pv in get("SI86S620HE-AS4").params}
+    assert srcs["data_rate_mbps"].startswith("si86s61x_2x_Ox-datasheet.pdf p.9 (max 10 Mbps")
 
 
 # ---------------------------------------------------------------- 2. LMK3H0102-Q1 jitter
@@ -92,7 +96,10 @@ def test_nsi8240s0_q1ssr_is_basic_565_vpk(session, load):
 
 def test_nsi8320n0_q1spr_prefers_the_higher_cmti(session, load):
     get = load("novosense_digital_isolators", "skyworks_si86")
-    assert row(session, "NSI8320N0-Q1SPR").functional.result.candidate.mpn == "SI86S620BC-AS"
+    r = row(session, "NSI8320N0-Q1SPR")
+    assert r.functional.result.candidate.mpn == "SI86S620BC-AS"
+    # its 150 Mbps is from Novosense's product table (the datasheet is served encrypted): amber, check datasheet
+    assert "Data rate not from their datasheet: check datasheet" in r.functional.comment
     si8620 = get("SI8620BC-AS").param_map()  # every priority 1 value as in si861x-2x-datasheet.pdf
     assert (si8620["isolation_class"], si8620["isolation_rating_kvrms"], si8620["cmti_kv_us"]) == ("basic", 3.75, 50)
     assert (si8620["default_output"], si8620["data_rate_mbps"], si8620["channel_config"]) == ("low", 150, "2/0")

@@ -59,10 +59,11 @@ class Diff:
     must_meet: bool = False
     exception: bool = False  # worse = an exception to list, not a deviation
     unknown_ok: bool = False  # an unknown value is shown but not counted as a deviation
+    unverified: bool = False  # a ``datasheet_only`` value not from a datasheet page on one side: shown, never decides
 
     @property
     def score(self) -> float:
-        if self.status == EQUAL:
+        if self.status == EQUAL or self.unverified:
             return 0.0
         sev = UNKNOWN_SEVERITY if self.status == UNKNOWN else self.severity
         return PRIORITY_WEIGHT[self.priority] * max(sev, 0.01)
@@ -72,7 +73,8 @@ class Diff:
         return self.status in (WORSE, DIFFERENT)
 
     def summary(self) -> str:
-        return f"{self.label}: {self.cand_display} vs {self.ref_display} (P{self.priority}, {self.status})"
+        check = ", not from a datasheet: check datasheet" if self.unverified else ""
+        return f"{self.label}: {self.cand_display} vs {self.ref_display} (P{self.priority}, {self.status}{check})"
 
 
 @dataclass
@@ -155,6 +157,12 @@ class CrossResult:
         return _deviations(self.diffs)
 
     @property
+    def unverified_worse(self) -> int:
+        """Priority 1 values worse on an unverified (product table, estimated) value: never a deviation, only a
+        tie-break between candidates with as many verified deviations (owner, 26 Oct 2026)."""
+        return sum(1 for d in self.diffs if d.priority == 1 and d.unverified and d.is_negative)
+
+    @property
     def exceptions(self) -> list[Diff]:
         """Parameters marked ``exception`` where the candidate is worse: listed, never blocking."""
         return [d for d in self.diffs if d.exception and d.is_negative]
@@ -166,7 +174,7 @@ class CrossResult:
     def verdict(self) -> Verdict:
         p1 = [d for d in self.diffs if d.priority == 1]
         info = [d for d in self.diffs if d.priority in (2, 3)]
-        better = [d for d in p1 if d.status == BETTER]
+        better = [d for d in p1 if d.status == BETTER and not d.unverified]
         worse = self.deviations
         spec = ("mixed" if better else "under") if worse else ("over" if better else "exact")
         return Verdict(
@@ -472,12 +480,36 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 def _deviations(diffs: list[Diff]) -> list[Diff]:
     """Priority 1 parameters that are worse, different or unknown; an ``exception`` parameter that is worse is
     listed separately and does not count (an unknown value still does: it cannot be checked, unless the parameter is
-    ``unknown_ok``)."""
+    ``unknown_ok``). An ``unverified`` value (not from a datasheet page) never counts: it is a data gap to check."""
     return [
         d
         for d in diffs
-        if d.priority == 1 and ((d.is_negative and not d.exception) or (d.status == UNKNOWN and not d.unknown_ok))
+        if d.priority == 1
+        and not d.unverified
+        and ((d.is_negative and not d.exception) or (d.status == UNKNOWN and not d.unknown_ok))
     ]
+
+
+# a page reference in a datasheet ("si86s6xx-datasheet.pdf p.22 (...)"); product tables and selection guides have none
+_DATASHEET_PAGE = re.compile(r"\.pdf\b[^;]*?\bp\.\s?\d+", re.I)
+
+
+def is_estimate_source(src: str | None) -> bool:
+    """A value source that is our estimate, an assumption or an unofficial copy (shown amber, "check datasheet")."""
+    from app.services.seed import is_unofficial
+
+    return bool(src) and (is_unofficial(src) or bool(re.search(r"\best\b|estimat|assumed|typical value from", src,
+                                                                  re.I)))  # fmt: skip
+
+
+def from_datasheet(src: str | None) -> bool:
+    """The value was read in a datasheet, with its page (owner, 26 Oct 2026: data rate "should at least be better
+    researched from the datasheet")."""
+    return bool(src) and bool(_DATASHEET_PAGE.search(src)) and not is_estimate_source(src)
+
+
+def _sources(part) -> dict:
+    return {pv.key: pv.source for pv in getattr(part, "params", None) or []}
 
 
 def cross(
@@ -485,11 +517,17 @@ def cross(
 ) -> CrossResult:
     fit = check_fit(ref, cand)
     rv, cv = rules.at_same_conditions(rules.values(ref), rules.values(cand))
+    srcs = (_sources(ref), _sources(cand)) if any(p.datasheet_only for p in rules.params) else ({}, {})
     diffs = []
     for p in rules.params:
         if p.kind == "curve":
             continue
         status, sev = compare_param(p, rv.get(p.key), cv.get(p.key))
+        unverified = (
+            p.datasheet_only
+            and status != UNKNOWN
+            and not (from_datasheet(srcs[0].get(p.key)) and from_datasheet(srcs[1].get(p.key)))
+        )
         diffs.append(
             Diff(
                 p.key,
@@ -503,6 +541,7 @@ def cross(
                 p.must_meet,
                 p.exception,
                 p.unknown_ok,
+                unverified,
             )
         )
 
@@ -545,9 +584,9 @@ def sort_key(category: str):
 
     def key(r: CrossResult):
         if category == "functional":
-            main = (len(r.deviations), len(r.exceptions), r.closeness)  # fewest deviations first
+            main = (len(r.deviations), r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
         elif category == "package":
-            main = (len(r.deviations), not r.fit.same_pinout, len(r.exceptions), r.closeness)  # fewest deviations first
+            main = (len(r.deviations), r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
         return (r.lifecycle_risk, main, r.candidate.label)
@@ -573,6 +612,7 @@ def rank_key(r: CrossResult):
         len(r.deviations),
         pkg and not r.fit.same_package,
         pkg and not r.fit.same_pinout,
+        r.unverified_worse,  # an unverified data rate only breaks ties (owner, 26 Oct 2026)
         len(r.exceptions),
         r.closeness,
         r.candidate.label,

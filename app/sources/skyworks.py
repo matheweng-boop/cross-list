@@ -367,16 +367,17 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
         pin_source = base.get("inferred") and "pinout inferred" or f"{ds_name} pinout"
         sources.update(channel_config=pin_source, enable_pins=pin_source, integrated_power=f"{ds_name}")
         for key, fact in dsf.items():
+            variant = "value"
             if "by_package" in fact:
                 value = fact["by_package"].get(pkg)
             elif t_option and "t_option" in fact:
-                value = fact["t_option"]
+                value, variant = fact["t_option"], "t_option"
             elif high_cmti and "high_cmti" in fact:
-                value = fact["high_cmti"]
+                value, variant = fact["high_cmti"], "high_cmti"
             elif high_cmti and "deglitch" in fact:  # Si86S F/H codes: 36 ns deglitch filter (timing, data rate)
-                value = fact["deglitch"]
+                value, variant = fact["deglitch"], "deglitch"
             elif low_power and "low_power" in fact:  # Si86SLx: low-power mode timing
-                value = fact["low_power"]
+                value, variant = fact["low_power"], "low_power"
             else:
                 value = fact.get("value")  # facts with only `t_option` apply to T parts only
                 if value is None or (key in params and params[key] is not None and "value" not in fact):
@@ -384,7 +385,11 @@ def build(facts_file: Path = FACTS_FILE, raw_dir: Path = RAW_DIR, ds_dir: Path =
             if value is None:
                 continue
             params[key] = value
-            sources[key] = f"{ds_name} p.{sheet.find(fact['evidence'])}"
+            # the evidence may differ per variant (data rate: no deglitch vs 36 ns deglitch); `note` says how the
+            # datasheet states the value (min / typ / max, condition), owner 26 Oct 2026
+            evidence = (fact.get("evidence_by") or {}).get(variant, fact["evidence"])
+            note = (fact.get("note_by") or {}).get(variant, fact.get("note"))
+            sources[key] = f"{ds_name} p.{sheet.find(evidence)}" + (f" ({note})" if note else "")
         # default output state: the ordering guide decides (it is authoritative), the web table fills gaps
         if guide_default and params.get("default_output") != guide_default:
             if params.get("default_output"):

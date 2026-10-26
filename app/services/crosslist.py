@@ -164,6 +164,8 @@ def resolve(ix: Index, key: str, session: Session) -> Match:
             return Match(_pick(session, ix.by_key[best]), "variant")
     if pre:
         return Match(_pick(session, ix.by_key[pre]), "variant")
+    if dev := _device_q1(ix, key):  # a TI device name such as ADS131B02-Q1 for its orderable ADS131B02QPWRQ1
+        return Match(_pick(session, ix.by_key[dev]), "variant")
     if key in ix.catalogue:
         return Match(None, "catalogue", ix.catalogue[key])
     cpre = _known_prefix(key, ix.catalogue)
@@ -175,6 +177,21 @@ def resolve(ix: Index, key: str, session: Session) -> Match:
         p = session.get(Part, ix.by_key[close[0]][0])
         return Match(suggestion=p.mpn if p else close[0])
     return Match()
+
+
+def _device_q1(ix: Index, key: str) -> str | None:
+    """A TI automotive device name pasted without its package code (ADS131B02-Q1 → ADS131B02Q1): the shortest known
+    orderable code that starts with the device and ends in Q1 (owner's lookup 1, 26 Oct 2026)."""
+    base = key[:-2]
+    if not key.endswith("Q1") or len(base) < 5:
+        return None
+    i = bisect.bisect_left(ix.keys, base)
+    hits = []
+    while i < len(ix.keys) and ix.keys[i].startswith(base) and len(hits) < 50:
+        if ix.keys[i].endswith("Q1"):
+            hits.append(ix.keys[i])
+        i += 1
+    return min(hits, key=lambda k: (len(k), k)) if hits else None
 
 
 def _pick(session: Session, ids: list[int]) -> int:

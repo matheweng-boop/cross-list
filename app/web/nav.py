@@ -65,6 +65,8 @@ UTILITY = ("manage", "Data management", (
     ("To confirm", "/manage/to-confirm", "Every research item in one sentence: read, confirm or ignore"),
     ("Overview", "/manage/overview", "Everything at a glance: raw data, today's feedback, what waits for you"),
     ("Schedule", "/manage/schedule", "What runs continuously, daily, weekly; what tonight's run picks up"),
+    # owner, 26 Oct 2026: every path the data takes, as a chart to move and change; tonight's run adapts to it
+    ("Data flow", "/manage/data-flow", "Every path the data takes, as a chart you can move and change"),
     # owner, 23 Oct 2026: Verify next, requests, site feedback and guest input as one item with tabs
     ("Site data", "/manage/verify", "Verify next, review queue, requests, site feedback and guest input"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
@@ -135,6 +137,7 @@ PLACES = {
     "/manage/people": ("manage", "/manage/people"),
     "/owner": ("manage", "/manage/people"),
     "/manage/schedule": ("manage", "/manage/schedule"),
+    "/manage/data-flow": ("manage", "/manage/data-flow"),
     "/manage/to-confirm": ("manage", "/manage/to-confirm"),
     "/manage": ("manage", "/manage/overview"),
     "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications

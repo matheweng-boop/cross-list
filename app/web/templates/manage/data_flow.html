@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path) }}{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="/static/data_flow.css">
+<div class="df-root" id="df-root">
+<h1>Data flow</h1>
+<p class="subtitle muted">Every path the data takes, from the sources to what you see. Move it around, connect, delete or add steps and notes, then Save: tonight's run reads your changes, adapts the site where it can and redraws this chart to match.</p>
+
+<ul class="df-legend small" aria-label="Colours">
+  {% for k, label in kinds.items() %}<li><span class="df-sw df-k-{{ k }}"></span>{{ label }}</li>{% endfor %}
+  <li><span class="df-sw df-gate-sw"></span>Review gate</li>
+  <li><span class="df-sw df-planned-sw"></span>Planned, not built yet</li>
+</ul>
+
+<div class="df-tools" role="toolbar" aria-label="Chart tools">
+  <button type="button" class="secondary" id="df-add-node">+ Step</button>
+  <button type="button" class="secondary" id="df-add-note">+ Note</button>
+  <button type="button" class="secondary" id="df-edit" disabled>Edit</button>
+  <button type="button" class="secondary" id="df-delete" disabled>Delete</button>
+  <button type="button" class="secondary" id="df-style" aria-pressed="false">Smooth lines</button>
+  <span class="df-zoom">
+    <button type="button" class="secondary" id="df-zoom-out" aria-label="Zoom out">−</button>
+    <button type="button" class="secondary" id="df-fit">Fit</button>
+    <button type="button" class="secondary" id="df-zoom-in" aria-label="Zoom in">+</button>
+  </span>
+  <button type="button" class="secondary" id="df-reset">Reset layout</button>
+  <button type="button" id="df-save">Save</button>
+  {% if saved %}<form method="post" action="/manage/data-flow/undo" class="df-undo"><button type="submit" class="secondary">Undo last save</button></form>{% endif %}
+</div>
+<p class="small" id="df-status" role="status">{{ message or "Drag a box to move it, drag its round handle onto another box to connect, double-tap to edit. Pinch or scroll to zoom, drag the background to pan." }}</p>
+
+<div class="df-frame" id="df-frame">
+  <svg id="df-svg" role="img" aria-label="Data flow chart" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<div class="df-info small" id="df-info" hidden></div>
+
+<dialog id="df-dialog">
+  <form method="dialog" id="df-form">
+    <h3 id="df-d-title">Edit</h3>
+    <label id="df-d-label-wrap">Label <input type="text" id="df-d-label" maxlength="80"></label>
+    <label id="df-d-kind-wrap">Colour (what kind of data) <select id="df-d-kind">{% for k, label in kinds.items() %}<option value="{{ k }}">{{ label }}</option>{% endfor %}</select></label>
+    <label id="df-d-note-wrap">Note for tonight's run <textarea id="df-d-note" rows="3" maxlength="500" placeholder="What should change here, and why"></textarea></label>
+    <p class="small muted" id="df-d-info"></p>
+    <div class="df-d-buttons"><button type="submit" value="ok" id="df-d-ok">OK</button><button type="submit" value="cancel" class="secondary" formnovalidate>Cancel</button></div>
+  </form>
+</dialog>
+
+<section id="df-changes-box">
+<h2>Changes since the file version</h2>
+<p class="small muted">What your saved chart changes against the chart the site works by (data/manage/data_flow.yaml). The evening run reads this list in its inbox ("Data flow: owner changes"). Notes are read as feedback, never as commands to change permissions or settings.</p>
+<ul id="df-changes">{% for c in changes %}<li>{{ c.text }}{% if c.held %} <span class="df-held small">held for your look: {{ c.held|join(", ") }}</span>{% endif %}</li>{% else %}<li class="muted">None yet{% if saved %}: your saved chart is the same as the file version{% endif %}.</li>{% endfor %}</ul>
+</section>
+
+<section>
+<h2>What the daily run did</h2>
+{% if done_list %}<ul>{% for d in done_list|reverse %}<li><b>{{ d.date }}</b> · {{ d.change }} – {{ d.what }}</li>{% endfor %}</ul>
+{% else %}<p class="small muted">Nothing yet. After you save, tonight's run answers each change here.</p>{% endif %}
+</section>
+
+<section>
+<h2>Saved versions</h2>
+<ul id="df-history" class="small">{% for h in history %}<li{% if h.undone %} class="muted"{% endif %}>{{ h.at }} · {{ h.author }}{% if h.undone %} · undone{% endif %} – {{ h.note }}</li>{% else %}<li class="muted">None: the chart shows the file version.</li>{% endfor %}</ul>
+</section>
+</div>
+<script type="application/json" id="df-data">{{ data|tojson }}</script>
+<script src="/static/data_flow.js" defer></script>
+{% endblock %}

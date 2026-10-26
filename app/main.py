@@ -240,6 +240,9 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.crosslist import router as crosslist_router  # Products › Cross a list (26 Oct 2026)
 
     app.include_router(crosslist_router)
+    from app.web.data_flow import router as data_flow_router  # Data management › Data flow (26 Oct 2026)
+
+    app.include_router(data_flow_router)
     app.include_router(digest_router)
     app.include_router(people_router)
     return app

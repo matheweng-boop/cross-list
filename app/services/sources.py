@@ -41,7 +41,8 @@ CATALOGUE = ("data/catalog/", "data/real/", "data/reference_designs/", "data/mec
              "data/synthetic/", "data/appnotes")  # fmt: skip
 # The price model's own estimates are what those pages are for, and the schedule only names the markers.
 NO_MARKERS = ("data/business/price_model.yaml", "data/business/list_prices.yaml", "data/business/scoring.yaml",
-              "data/business/explanations.yaml", "data/manage/schedule.yaml")  # fmt: skip
+              "data/business/explanations.yaml", "data/manage/schedule.yaml",
+              "data/manage/data_flow.yaml")  # fmt: skip
 LINK_CHECK = PROJECT_ROOT / "data" / "manage" / "link_check.yaml"
 
 URL_RE = re.compile(r"https?://[^\s\"'<>`)\]}\\,|]+")
@@ -150,6 +151,7 @@ def page_for(rel: str, entry: str | None = None) -> str | None:
         "data/blocks/templates.yaml": "/blocks",
         "data/business/customers.yaml": "/business/markets",
         "data/manage/schedule.yaml": "/manage/schedule",
+        "data/manage/data_flow.yaml": "/manage/data-flow",
     }.get(rel)
 
 

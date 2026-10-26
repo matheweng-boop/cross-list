@@ -681,6 +681,23 @@ class IdeaRequest(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
+class CrossListLookup(Base):
+    """"Update cross-lists" on Products › Cross a list (owner, 26 Oct 2026): the part numbers of a pasted list that
+    were "Not in our data", sent for a lookup of the maker's public datasheet (checked hourly by a run that reads the
+    inbox), and the list's part numbers so it can be crossed again. Public part numbers only: no quantities, prices,
+    names or other columns. Per part: {"part", "status": queued | found | not_found, "note", "source"}; the run's
+    answers come from data/manage/crosslist_lookups.yaml (app/services/crosslist_lookups.py)."""
+
+    __tablename__ = "crosslist_lookups"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    author: Mapped[str | None] = mapped_column(String(120))
+    list_parts: Mapped[list] = mapped_column(JSON, default=list)  # the pasted list's part numbers, in order
+    unknown_parts: Mapped[list] = mapped_column(JSON, default=list)  # one dict per unknown part (normalised)
+    done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
 # --- Sign-in with passkeys and invited guests (owner, 23 Oct 2026) ---------------------------------------------------
 # The older `User` table above stays as it is (it carries no role); the people who can sign in are `Account` rows.
 

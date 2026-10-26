@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% from "manage/_request_items.html" import part_item, diagram_item, area_item, idea_item %}
+{% from "manage/_request_items.html" import part_item, diagram_item, area_item, idea_item, lookup_item %}
 {% block content %}
 <h1>Requests</h1>
-<p class="subtitle muted">Part requests, diagram feedback, application area requests and idea expansions in one list, newest first. They are still made where they belong: “Request a cross” on a part or search, “Feedback” in a block diagram, and “Ask for another area” in the <a href="/blocks#request-area">Application library</a>, and “Expand this idea” on <a href="/business/reports">Research &amp; ideas</a>.</p>
+<p class="subtitle muted">Part requests, diagram feedback, application area requests, idea expansions and cross-list lookups in one list, newest first. They are still made where they belong: “Request a cross” on a part or search, “Feedback” in a block diagram, “Ask for another area” in the <a href="/blocks#request-area">Application library</a>, “Expand this idea” on <a href="/business/reports">Research &amp; ideas</a>, and “Update cross-lists” on <a href="/cross-list">Cross a list</a>.</p>
 {% set q = '&show=all' if show else '' %}
 <div class="small"><div class="chip-row small" id="rq-kinds"><span class="chip-lbl">Kind</span>
   <a class="fchip{{ ' on' if not kind }}" href="/manage/requests{{ '?show=all' if show }}">All <small>{{ counts.values()|sum }}</small></a>
@@ -15,7 +15,7 @@
 <p class="small muted">Numbers are open items. As text for a conversation with Claude: <a href="/requests.txt">open part requests</a> · <a href="/blocks/feedback.txt">open diagram feedback</a>.</p>
 
 {% if rows %}<ul class="rq-list">{% for k, r in rows %}
-  {% if k == 'part' %}{{ part_item(r, found[r.id], statuses.part) }}{% elif k == 'diagram' %}{{ diagram_item(r, statuses.diagram) }}{% elif k == 'idea' %}{{ idea_item(r, statuses.idea) }}{% else %}{{ area_item(r, statuses.area) }}{% endif %}
+  {% if k == 'part' %}{{ part_item(r, found[r.id], statuses.part) }}{% elif k == 'diagram' %}{{ diagram_item(r, statuses.diagram) }}{% elif k == 'idea' %}{{ idea_item(r, statuses.idea) }}{% elif k == 'lookup' %}{{ lookup_item(r) }}{% else %}{{ area_item(r, statuses.area) }}{% endif %}
 {% endfor %}</ul>
 {% else %}<div class="empty-state"><p><b>Nothing {{ 'open ' if not show }}here{{ ' for ' ~ kinds[kind]|lower ~ 's' if kind }}.</b></p>{% if show or kind %}<p class="small"><a href="/manage/requests?show=all">See every request</a></p>{% endif %}</div>{% endif %}
 

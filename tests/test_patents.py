@@ -89,27 +89,46 @@ def _row(fn, feas):
             "gap_type": "true_gap"}  # fmt: skip
 
 
-def test_a_large_bonus_is_capped_at_one(monkeypatch):
-    monkeypatch.setitem(pr.config()["likeliness"]["patent_bonus"], "strong", 0.5)
-    li = pr.likeliness(_row("power_amplifier", 2))  # 0.6 + 0.1 (GaAs HBT platform of ours) + 0.5 -> 1.0
-    assert li["value"] == 1.0
-    assert "+ 0.5 for US patents (strong, GaAs HBT power amplifiers platform) (capped at 1.0)" in li["basis"]
+def test_a_large_bonus_is_capped(monkeypatch):
+    """Owner, 26 Oct 2026: patents are machine-checked, so the bonus stays small: whatever the table says, it never
+    exceeds patent_bonus_cap (half the platform bonus), and L never exceeds 1.0."""
+    cfg = pr.config()["likeliness"]
+    assert cfg["patent_bonus_cap"] == 0.05 and cfg["patent_bonus_cap"] <= cfg["platform_bonus"] / 2
+    monkeypatch.setitem(cfg["patent_bonus"], "strong", 0.5)
+    li = pr.likeliness(_row("power_amplifier", 2))  # 0.6 + 0.1 (GaAs HBT platform of ours) + 0.05 (capped)
+    assert li["value"] == pytest.approx(0.75) and li["patent"]["bonus"] == 0.05
+    assert "+ 0.05 for US patents (strong, GaAs HBT power amplifiers platform; indicative, not reviewed)" in li["basis"]
+    monkeypatch.setitem(cfg, "patent_bonus_cap", 0.5)  # a raised cap still stops L at 1.0
+    li = pr.likeliness(_row("power_amplifier", 2))
+    assert li["value"] == 1.0 and "(capped at 1.0)" in li["basis"]
+
+
+def test_the_patent_bonus_never_decides_more_than_a_few_points():
+    """At the default weights the patent bonus moves a priority by at most 1.5 of 100 points, less than any other
+    part of the score can (platform bonus 3 points, a feasibility step 9 points)."""
+    cfg, w = pr.config()["likeliness"], pr.default_weights()
+    assert max(cfg["patent_bonus"].values()) <= cfg["patent_bonus_cap"]
+    assert 100 * w["likeliness"] * cfg["patent_bonus_cap"] <= 1.5 + 1e-9
+    assert cfg["patent_bonus_cap"] < cfg["platform_bonus"]
+    steps = sorted(f["value"] for f in cfg["feasibility"].values())
+    assert cfg["patent_bonus_cap"] < min(b - a for a, b in zip(steps, steps[1:], strict=False))
 
 
 def test_patent_bonus_in_likeliness_capped_and_not_on_owner_answers():
     bonus = pr.config()["likeliness"]["patent_bonus"]
-    assert bonus == {"strong": 0.10, "some": 0.05, "little": 0.0, "none_found": 0.0}
-    assert pr.patent_bonus("pol_ldo")["bonus"] == 0.10  # strong
-    assert pr.patent_bonus("adc")["bonus"] == 0.05  # some
+    assert bonus == {"strong": 0.05, "some": 0.025, "little": 0.0, "none_found": 0.0}
+    assert pr.patent_bonus("pol_ldo")["bonus"] == 0.05  # strong
+    assert pr.patent_bonus("adc")["bonus"] == 0.025  # some
     assert pr.patent_bonus("supervisor")["bonus"] == 0.0  # little
     assert pr.patent_bonus("frequency_multiplier") == {"depth": None, "bonus": 0.0, "source": "", "label": ""}
-    adc = pr.likeliness(_row("adc", 2))  # 0.6 (+ 0.1 for a platform of ours) + 0.05
+    adc = pr.likeliness(_row("adc", 2))  # 0.6 (+ 0.1 for a platform of ours) + 0.025
     plat = pr.config()["likeliness"]["platform_bonus"] if pr._platforms().get("adc") else 0
-    assert adc["value"] == pytest.approx(0.6 + plat + 0.05) and "+ 0.05 for US patents (some)" in adc["basis"]
-    ldo = pr.likeliness(_row("pol_ldo", 1))  # 1.0 + 0.1 stays 1.0
+    assert adc["value"] == pytest.approx(0.6 + plat + 0.025)
+    assert "+ 0.025 for US patents (some; indicative, not reviewed)" in adc["basis"]
+    ldo = pr.likeliness(_row("pol_ldo", 1))  # 1.0 + 0.05 stays 1.0
     assert ldo["value"] == 1.0 and "L already 1.0" in ldo["basis"]
-    flt = pr.likeliness(_row("filter_saw_baw", 3))  # 0.3 + 0.1 (platform of ours) + 0.1 (BAW platform, strong)
-    assert flt["value"] == pytest.approx(0.5) and "BAW filters platform" in flt["basis"]
+    flt = pr.likeliness(_row("filter_saw_baw", 3))  # 0.3 + 0.1 (platform of ours) + 0.05 (BAW platform, strong)
+    assert flt["value"] == pytest.approx(0.45) and "BAW filters platform" in flt["basis"]
     temp = pr.likeliness(_row("temperature_sensor", 1))  # the owner's answer replaces the value: no bonus
     assert temp["value"] == 0.3 and temp["patent"]["bonus"] == 0.0
     for fn in ("pol_ldo", "adc", "filter_saw_baw", "power_amplifier", "circulator_isolator", "rf_synthesizer"):
@@ -129,9 +148,21 @@ def test_evidence_page_shows_the_platform_and_bonus(client):
     assert r.status_code == 200
     assert "small bonus in the priority score" in r.text and "Platform: UWB" in r.text
     assert "image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/" in r.text
-    assert "Priority score: + 0.05 to likeliness" in r.text or "Priority score: + 0.1 to likeliness" in r.text
+    assert "Priority score: + 0.025 to likeliness" in r.text or "Priority score: + 0.05 to likeliness" in r.text
     r = client.get("/business/evidence/pol_ldo")  # no platform: only its own entry and the bonus line
-    assert "Platform:" not in r.text and "Priority score: + 0.1 to likeliness for strong patent depth" in r.text
+    assert "Platform:" not in r.text and "Priority score: + 0.05 to likeliness for strong patent depth" in r.text
+    assert "indicative, not reviewed" in r.text
+
+
+def test_patents_are_checked_automatically_not_reviewed(client):
+    """Owner, 26 Oct 2026: "I can't check patents": no review buttons on patents, a "checked automatically" label with
+    the date of the machine check on the evidence page and the Technology platforms page."""
+    html = client.get("/business/evidence/pol_ldo").text
+    assert "checked automatically, 19 Oct 2026" in html
+    assert 'data-ds="patents"' not in html  # no ✓ / ✗ / ? on patents
+    assert 'data-ds="foundry"' in html  # the other evidence keeps its review buttons
+    caps = client.get("/business/capabilities").text
+    assert "US patents:" in caps and "checked automatically, 25 Oct 2026" in caps and "indicative, not reviewed" in caps
 
 
 def test_how_the_score_works_lists_the_patent_bonus(client):

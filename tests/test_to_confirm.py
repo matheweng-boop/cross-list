@@ -13,8 +13,9 @@ from app.web import nav
 
 # every type that has items in the data today (an idea expansion appears once a report has `expanded:`)
 # types that may be empty: idea expansions (none requested yet), open questions (none while all are settled) and
-# datasheet families (they come from the owner's Right / Wrong answers, app/services/families.py)
-WITH_ITEMS = [t for t in digest.TYPES if t not in ("expansion", "question", "family")]
+# datasheet families (they come from the owner's Right / Wrong answers, app/services/families.py) and patent changes
+# (only when the quarterly patent re-check records a change)
+WITH_ITEMS = [t for t in digest.TYPES if t not in ("expansion", "question", "family", "patent-change")]
 
 
 def _n_open() -> int:
@@ -117,7 +118,7 @@ def test_confirm_ignore_undo_and_comment(client, session):
 def test_answer_elsewhere_is_shown_and_applied_counts_as_confirmed(client, session):
     session.add(DataReview(dataset="trends", key="pol_ldo", verdict="correct"))
     session.commit()
-    html = client.get("/manage/to-confirm?q=Market+trend+LDO").text
+    html = client.get("/manage/to-confirm?q=Evidence+PoL+LDO").text
     assert "You agree" in html and "on its page" in html  # still in the feed until confirmed here
     applied = client.get("/manage/to-confirm?tab=confirmed&type=tam").text
     assert "applied, so it counts as confirmed" in applied  # tam_applied.yaml entries
@@ -161,3 +162,107 @@ def test_guests_never_see_the_feed(method, path, make_guest, session):
     assert r.status_code == 403
     assert session.scalar(select(DataReview.id).where(DataReview.dataset == "digest")) is None
     assert "data-to-confirm-count" not in guest.get("/parts").text
+
+
+# ---- evidence: one card per function, patents machine-checked (owner, 26 Oct 2026: "I can't check patents") --------
+def _fns() -> set[str]:
+    from app.services import opportunity as op
+
+    return {fn for t in digest.EVIDENCE_ASPECTS for fn, e in op.evidence(t).items() if isinstance(e, dict)}
+
+
+def test_one_evidence_card_per_function_and_no_patent_items():
+    rows = [r for r in digest.items() if r["type"] == "evidence"]
+    assert len(_fns()) == 69 and len(rows) == 69  # was 5 × 69 + 22 platforms + 7 automotive = 374 items
+    assert {r["key"] for r in rows} == {f"evidence:{fn}" for fn in _fns()}
+    for r in rows:
+        assert digest.words(r["gist"]) <= digest.MAX_WORDS and 1 <= len(r["abstract"]) <= 3, r["key"]
+        assert r["abstract"][0].startswith("Path:") and r["abstract"][1].startswith("Manufacturing:"), r["key"]
+        assert "competitor technology" in r["abstract"][1] and r["abstract"][2].startswith("Trend:"), r["key"]
+    # no patent item is put to the owner: none of the old patent keys, no patent change while nothing changed
+    keys = {r["key"] for r in digest.items()}
+    assert not any(k.startswith(("evidence:patents/", "evidence:platforms/", "evidence:automotive/")) for k in keys)
+    assert not any(r["type"] == "patent-change" for r in digest.items())
+    # patents are shown read-only on the card
+    ldo = digest.by_key()["evidence:pol_ldo"]
+    assert ldo["patents"] == "Patents: strong · checked automatically, 19 Oct 2026; indicative, not reviewed."
+
+
+def test_evidence_card_in_the_feed_shows_patents_read_only(client):
+    html = client.get("/manage/to-confirm?type=evidence").text
+    assert html.count('class="tc-card"') == 60  # the first page of 69
+    assert "checked automatically, 19 Oct 2026; indicative, not reviewed. Nothing to confirm here." in html
+    page = client.get("/business/evidence/pol_ldo").text
+    assert str(escape(digest.gist_for("evidence", "pol_ldo")["gist"])) in page
+
+
+def test_patent_change_item_appears_only_on_change(monkeypatch, client):
+    """The quarterly re-check writes a `changed:` block on a patents.yaml entry; only then is there a patent item."""
+    real, changes = digest._load, {}
+
+    def load(path):
+        d = real(path)
+        if path.name == "patents.yaml":
+            d = {**d, **{fn: {**d[fn], "changed": ch} for fn, ch in changes.items()}}
+        return d
+
+    def items_after(**ch):
+        changes.clear(), changes.update(ch)
+        digest._all.cache_clear(), digest._index.cache_clear()
+        return [r for r in digest.items() if r["type"] == "patent-change"]
+
+    monkeypatch.setattr(digest, "_load", load)
+    try:
+        got = items_after(pol_ldo={"date": "2027-01-20", "old_depth": "strong", "new_depth": "little",
+                                   "note": "Quarterly re-run: 14 families left after a query fix."})  # fmt: skip
+        assert [r["key"] for r in got] == ["patent-change:pol_ldo@2027-01-20"]
+        assert "strong → little" in got[0]["gist"] and digest.words(got[0]["gist"]) <= digest.MAX_WORDS
+        assert got[0]["href"] == "/business/evidence/pol_ldo"
+        html = client.get("/manage/to-confirm?type=patent-change").text
+        assert html.count('class="tc-card"') == 1 and "Patent change: PoL LDO" in html
+        # a failed check with the depth unchanged is a change too
+        got = items_after(adc={"date": "2027-01-20", "old_depth": "some", "new_depth": "some",
+                               "check": "US12345678B2 no longer resolves"})  # fmt: skip
+        assert [r["key"] for r in got] == ["patent-change:adc@2027-01-20"]
+        assert "a check failed" in got[0]["gist"] and "no longer resolves" in " ".join(got[0]["abstract"])
+        # no `changed:` block, or an empty one: no item
+        assert items_after() == [] and items_after(pol_ldo={}) == []
+    finally:
+        digest._all.cache_clear(), digest._index.cache_clear()
+
+
+def _old(session, fn, topic, verdict, comment=None):
+    session.add(DataReview(dataset="digest", key=f"evidence:{topic}/{fn}", verdict=verdict, comment=comment))
+    session.commit()
+
+
+def test_old_per_aspect_answers_carry_over(client, session):
+    """Answers on the old keys ("evidence:path/<fn>" ...) are kept and count for the one card."""
+    n0 = digest.open_count(session)
+    for t in digest.EVIDENCE_ASPECTS:  # all four old items of the LDO confirmed -> the card counts as confirmed
+        _old(session, "pol_ldo", t, "confirmed")
+    _old(session, "pol_ldo", "patents", "confirmed")  # an old patent answer changes nothing
+    st = digest.states(session)
+    assert st["evidence:pol_ldo"]["state"] == digest.CONFIRMED and st["evidence:pol_ldo"]["carried"]
+    assert digest.open_count(session) == n0 - 1
+    confirmed = client.get("/manage/to-confirm?tab=confirmed&type=evidence").text
+    assert 'data-key="evidence:pol_ldo"' in confirmed and "you confirmed all of its old evidence items" in confirmed
+    # three of four confirmed and one ignored: still open, the ignored aspect is shown
+    fn = sorted(_fns() - {"pol_ldo"})[0]
+    for t in ("path", "competitor_tech", "trends"):
+        _old(session, fn, t, "confirmed")
+    _old(session, fn, "foundry", "ignored")
+    _old(session, fn, "trends", "comment", "check the 2027 outlook")
+    e = digest.states(session)[f"evidence:{fn}"]
+    assert e["state"] == digest.OPEN and e["ignored_aspects"] == ["manufacturing"]
+    assert e["comments"][0]["text"].startswith("check the 2027 outlook")
+    assert any("(old market trend item)" in h["label"] for h in e["history"])
+    html = client.get("/manage/to-confirm?type=evidence&n=100").text
+    card = html.split(f'data-key="evidence:{fn}"', 1)[1].split('class="tc-card"', 1)[0]
+    assert "You ignored the old manufacturing item" in card and "check the 2027 outlook" in card
+    assert "History (5)" in card
+    # the card's own answer wins over the carried one; the old rows are never changed or deleted
+    client.post("/manage/to-confirm/act", data={"key": "evidence:pol_ldo", "action": "undo"})
+    assert digest.states(session)["evidence:pol_ldo"]["state"] == digest.OPEN
+    old = session.scalars(select(DataReview).where(DataReview.key.like("evidence:%/%"))).all()
+    assert len(old) == 10

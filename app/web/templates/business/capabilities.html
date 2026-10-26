@@ -15,6 +15,7 @@
     <p class="small">{{ p.details }}</p>
     {% if p.functions %}<p class="small"><b>Serves:</b> {% for f in p.functions %}<a class="bo-ours" href="/business/evidence/{{ f }}?co={{ co }}" title="{{ prox_label[tech[f].proximity] if f in tech else '' }}">{{ fns[f].label if f in fns else f }}</a>{% endfor %}</p>{% endif %}
     {% if p.could_also %}<p class="small bo-could"><b>Could also:</b> {{ p.could_also }}</p>{% endif %}
+    {% set pts = pat_for(p.functions) if pat_for is defined else [] %}{% if pts %}<p class="small muted bo-pat"><b>US patents:</b> {% for x in pts %}{{ x.label }} {{ x.depth }}{{ ', ' if not loop.last }}{% endfor %} · {{ checked_auto(pts[0].date) }} (indicative, not reviewed)</p>{% endif %}
     {% if p.source %}<p class="small muted bo-src">Source: {% for u in (p.source|string).split(' ') if u.startswith('http') %}<a href="{{ u.rstrip(',;') }}" target="_blank" rel="noopener">{{ u.split('/')[2] }}</a>{{ ' ' }}{% else %}{{ p.source }}{% endfor %}</p>{% endif %}
   </article>
   {% endfor %}

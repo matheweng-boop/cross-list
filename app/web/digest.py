@@ -28,6 +28,8 @@ def _count() -> int:
 templates.env.globals["to_confirm_count"] = _count
 templates.env.globals["gist_for"] = digest.gist_for
 templates.env.globals["gist_list"] = digest.gist_list
+templates.env.globals["patent_line"] = digest.patent_line  # machine-checked patent depth (owner, 26 Oct 2026)
+templates.env.globals["checked_auto"] = digest.checked_label
 
 
 @router.get("/manage/to-confirm", response_class=HTMLResponse)

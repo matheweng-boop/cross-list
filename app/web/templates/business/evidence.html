@@ -8,6 +8,7 @@
 <h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
 {% set gs = gist_list("evidence", fn) %}{% if gs %}<aside class="gist-box" aria-label="In short"><p class="gist-line"><span class="gist-label">In short</span></p><ul class="gist-abstract">{% for g in gs %}<li><b>{{ g.title.split(":")[0] }}:</b> {{ g.gist }}{% if g.auto %} <span class="muted small">(auto summary)</span>{% endif %}</li>{% endfor %}</ul></aside>{% endif %}
 {{ found_in(fn) }}
+{% import "_demand.html" as dmd %}{{ dmd.case_line(demand_seen(request), fn) }}
 <p class="subtitle muted">Everything BizDev knows about this function: how it is scored, the path to a product, and the background evidence
   (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
   <a href="/business/quality">Data quality</a> and feed the next data update.</p>

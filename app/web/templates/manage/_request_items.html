@@ -38,11 +38,12 @@
       {% for k, label in statuses.items() %}<option value="{{ k }}"{{ ' selected' if i.status == k }}>{{ label }}</option>{% endfor %}</select><noscript><button class="small-btn">Save</button></noscript></form></div></li>
 {% endmacro %}
 
-{% macro lookup_item(v) %}
+{% macro lookup_item(v, dm=none) %}
 <li class="rq-item req-{{ v.status }}" id="rq-lookup-{{ v.id }}"><span class="rq-kind k-lookup">Cross-list lookup</span>
   <b>{{ v.parts|length }} unknown part{{ 's' if v.parts|length != 1 }}</b> <small class="muted">· list of {{ v.row.list_parts|length }} · {{ v.row.author or 'owner' }}, {{ v.created_at|date('short') }}{% if v.row.done_at %} · done {{ v.row.done_at|date('short') }}{% endif %}</small>
   <br><span class="small">{{ v.progress }}</span>
   <details class="small"><summary>Parts</summary><ul>{% for p in v.parts %}<li>{{ p.part }} – {{ {'queued': 'queued', 'found': 'found', 'not_found': 'not found'}[p.status] }}{% if p.note %} · {{ p.note }}{% endif %}{% if p.source %} · <a href="{{ p.source }}" rel="noopener noreferrer" target="_blank">datasheet</a>{% endif %}</li>{% endfor %}</ul></details>
+  {% set vols = dm.lookup(v.id) if dm else [] %}{% if vols %}<details class="small rq-vols"><summary>Lifetime volumes · {{ vols|length }} <small class="muted">(owner estimates, kept 12 months)</small></summary><ul>{% for e in vols %}{% set t = dm.part(e.part) %}<li>{{ e.part }}{% if e.fn %} · {{ fn_label(e.fn) }}{% endif %}: <b>{{ demand_fmt(e.volume) }}</b>{% if t and t.n > 1 %} <small class="muted">· all requests: {{ t.text }}</small>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
   <div class="rq-acts small"><a href="/cross-list?lookup={{ v.id }}">Cross this list again</a>
-    <form method="post" action="/manage/crosslist-lookups/{{ v.id }}/delete" class="rq-del" data-confirm="Delete this lookup?"><button class="secondary outline small-btn" aria-label="Delete lookup {{ v.id }}">Delete</button></form></div></li>
+    <form method="post" action="/manage/crosslist-lookups/{{ v.id }}/delete" class="rq-del" data-confirm="Delete this lookup{{ ' and its volumes' if vols }}?"><button class="secondary outline small-btn" aria-label="Delete lookup {{ v.id }}">Delete</button></form></div></li>
 {% endmacro %}

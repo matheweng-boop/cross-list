@@ -159,6 +159,11 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      once, no branch, no message. The daily run, first thing after creating its branch: if `origin/lookups` has commits
      not in `main`, merge it into the run's branch (it then goes live with the daily run, and `lookups` is reset to
      `main` by the next hourly run). The owner then taps "Cross this list again".
+     Lifetime volumes (owner, 26 Oct 2026, confidential): the same send can carry the owner's rough lifetime volume
+     per unknown or gap part. They stay in the live database, on owner pages only, for 12 months
+     (`app/services/demand.py`). The inbox shows only a count ("N new volume entries"); the run never asks for,
+     copies or commits volume values, and gap parts with a volume are not looked up (they are known). A part's first
+     volume also files a Part review request (fixed question, no values), which the run handles like any other.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before going live" below: the full suite includes the browser tests.
 5. **Merge and go live (owner, 26 Oct 2026: no confirmation needed for automated runs).** Merge the branch into an

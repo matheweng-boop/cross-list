@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title(request.url.path) }}{% endblock %}
 {% block content %}
+{% import "_demand.html" as dmd %}
 <h1>Part reviews</h1>
 <p class="subtitle muted">One part explained for business development: the problem it solves, the idea behind it, how to read its datasheet and which features matter in which application. Each item can be agreed or disputed. Ask for a part that has no review yet with the form below; requests are picked up by the daily update.</p>
 
@@ -47,6 +48,7 @@
   <li id="rq-{{ x.id }}" class="rv-rq"><b>{{ x.mpn }}</b> <span class="rv-st s-{{ e.status }}">{{ e.label }}</span>
     <small class="muted">· {{ x.created_at|date('short') }}{% if x.application %} · {{ x.application }}{% endif %}</small><br>
     <span class="small">{{ x.question }}</span>
+    {% set dm = demand_seen(request) %}{% if dm and dm.part(x.mpn) %}<br>{{ dmd.line(dm.part(x.mpn), 'Demand', 'span') }}{% endif %}
     {% if e.review %}<br><a class="small" href="/reviews/{{ e.review.slug }}">→ {{ e.review.title }}</a>{% endif %}
     <details class="small rv-rq-edit"><summary class="muted">change status</summary>
       <form method="post" action="/reviews/requests/{{ x.id }}" class="inline-form">

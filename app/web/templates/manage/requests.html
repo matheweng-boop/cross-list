@@ -15,7 +15,7 @@
 <p class="small muted">Numbers are open items. As text for a conversation with Claude: <a href="/requests.txt">open part requests</a> · <a href="/blocks/feedback.txt">open diagram feedback</a>.</p>
 
 {% if rows %}<ul class="rq-list">{% for k, r in rows %}
-  {% if k == 'part' %}{{ part_item(r, found[r.id], statuses.part) }}{% elif k == 'diagram' %}{{ diagram_item(r, statuses.diagram) }}{% elif k == 'idea' %}{{ idea_item(r, statuses.idea) }}{% elif k == 'lookup' %}{{ lookup_item(r) }}{% else %}{{ area_item(r, statuses.area) }}{% endif %}
+  {% if k == 'part' %}{{ part_item(r, found[r.id], statuses.part) }}{% elif k == 'diagram' %}{{ diagram_item(r, statuses.diagram) }}{% elif k == 'idea' %}{{ idea_item(r, statuses.idea) }}{% elif k == 'lookup' %}{{ lookup_item(r, demand_seen(request)) }}{% else %}{{ area_item(r, statuses.area) }}{% endif %}
 {% endfor %}</ul>
 {% else %}<div class="empty-state"><p><b>Nothing {{ 'open ' if not show }}here{{ ' for ' ~ kinds[kind]|lower ~ 's' if kind }}.</b></p>{% if show or kind %}<p class="small"><a href="/manage/requests?show=all">See every request</a></p>{% endif %}</div>{% endif %}
 

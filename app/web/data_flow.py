@@ -35,9 +35,8 @@ def data_flow_page(request: Request, done: str = "", session: Session = Depends(
     state = df.view(session)
     v = df.current(session)
     ch = df.changes(state, file) if v else []
-    data = {"lanes": file["lanes"], "rows": file["rows"], "file": {"nodes": file["nodes"], "edges": file["edges"]},
-            "state": state,
-            "kinds": df.KINDS, "laneW": df.LANE_W, "nodeW": df.NODE_W, "left": df.LEFT}  # fmt: skip
+    data = {"lanes": file["lanes"], "file": {"nodes": file["nodes"], "edges": file["edges"]}, "state": state,
+            "kinds": df.KINDS, "nodeW": df.NODE_W, "nodeH": df.NODE_H, "noteW": df.NOTE_W}  # fmt: skip
     ctx = {"data": data, "changes": ch, "history": _history(session), "saved": v is not None,
            "done_list": file["done"], "kinds": df.KINDS, "message": DONE.get(done, "")}  # fmt: skip
     return templates.TemplateResponse(request, "manage/data_flow.html", ctx)

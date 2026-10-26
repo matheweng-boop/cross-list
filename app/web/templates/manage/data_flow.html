@@ -4,15 +4,20 @@
 <link rel="stylesheet" href="/static/data_flow.css">
 <div class="df-root" id="df-root">
 <h1>Data flow</h1>
-<p class="subtitle muted">Every path the data takes, from the sources to what you see. Move it around, connect, delete or add steps and notes, then Save: tonight's run reads your changes, adapts the site where it can and redraws this chart to match.</p>
-<p class="small muted">Two separate processes, each read left to right: the cross process (a part number to a cross) and the research process (public sources and comments to reports). They talk only through the purple handover arrows. The daily run (18:42 Berlin) works both.</p>
+<p class="subtitle muted">Two separate processes. Everything about a part goes through the cross engine; research runs next to it and only talks to it through the handovers (purple).</p>
+<p class="small muted">Tap a box or a line for its details below the chart. Move things, connect, delete or add steps and notes, then Save: tonight's run (18:42 Berlin) reads your changes, adapts the site where it can and redraws this chart to match.</p>
 
 <ul class="df-legend small" aria-label="Colours">
-  {% for k, label in kinds.items() %}<li><span class="df-sw df-k-{{ k }}"></span>{{ label }}</li>{% endfor %}
+  <li><span class="df-sw df-k-public"></span>Public data</li>
+  <li><span class="df-sw df-k-owner"></span>Your input</li>
+  <li><span class="df-sw df-k-guest"></span>Guest input</li>
+  <li><span class="df-sw df-p-crosses"></span>Cross process</li>
+  <li><span class="df-sw df-p-research"></span>Research process</li>
+  <li><span class="df-sw df-k-output"></span>You see</li>
   <li><span class="df-sw df-gate-sw"></span>Review gate</li>
-  <li><span class="df-sw df-planned-sw"></span>Planned, not built yet</li>
+  <li><span class="df-sw df-planned-sw"></span>Planned</li>
   <li><span class="df-sw df-handover-sw"></span>Handover between the processes</li>
-  <li><span class="df-sw df-handover-planned-sw"></span>Handover not built yet</li>
+  <li><span class="df-mark">✎</span>Your note</li>
 </ul>
 
 <div class="df-tools" role="toolbar" aria-label="Chart tools">
@@ -30,7 +35,7 @@
   <button type="button" id="df-save">Save</button>
   {% if saved %}<form method="post" action="/manage/data-flow/undo" class="df-undo"><button type="submit" class="secondary">Undo last save</button></form>{% endif %}
 </div>
-<p class="small" id="df-status" role="status">{{ message or "Drag a box to move it, drag its round handle onto another box to connect, double-tap to edit. Pinch or scroll to zoom, drag the background to pan." }}</p>
+<p class="small" id="df-status" role="status">{{ message or "Tap a box for its details. Drag a box to move it, drag its round handle onto another box to connect, double-tap to edit. Pinch or scroll to zoom, drag the background to pan." }}</p>
 
 <div class="df-frame" id="df-frame">
   <svg id="df-svg" role="img" aria-label="Data flow chart" xmlns="http://www.w3.org/2000/svg"></svg>

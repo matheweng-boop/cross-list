@@ -1,33 +1,37 @@
-/* Data management › Data flow (owner, 26 Oct 2026): the chart, its colours and the tools. Self-contained. */
-.df-root { --df-public: #e3f4e8; --df-public-ink: #1c6b3a; --df-owner: #fde9d9; --df-owner-ink: #a3450f;
-  --df-guest: #ece6fa; --df-guest-ink: #5b3fa0; --df-step: #e4edf9; --df-step-ink: #1f4f8a;
-  --df-store: #eef0f3; --df-store-ink: #3f4c66; --df-output: #e2f3f4; --df-output-ink: #0b5560;
-  --df-gate: #c0392b; --df-handover: #7a3db8; --df-lane: #f6f4fa; --df-lane-line: #e3dfee; --df-edge: #7b879b; --df-sel: #2a78d6;
-  --df-note: #fff6c7; --df-note-ink: #5a4a00; --df-text: #23304a; --df-canvas: #fdfcff; }
+/* Data management › Data flow (owner, 26 Oct 2026; three columns 27 Oct 2026): the chart, its colours and the tools.
+   Self-contained. Cross process blue, research process purple, handovers thick purple, every other line thin grey. */
+.df-root { --df-public-ink: #2f8a57; --df-owner-ink: #c96b1f; --df-guest-ink: #6a55b5; --df-box: #ffffff;
+  --df-cross: #2457a6; --df-cross-bg: #e3edf9; --df-research: #7a3db8; --df-research-bg: #efe7fa;
+  --df-inputs-bg: #eef1f6; --df-output: #dff2ee; --df-output-ink: #2f7a6c;
+  --df-gate: #c0392b; --df-handover: #7a3db8; --df-lane-line: #e3dfee; --df-lane: #f6f4fa; --df-edge: #7b879b;
+  --df-muted: #5d6676; --df-sel: #2a78d6;
+  --df-note: #fff6c7; --df-note-ink: #5a4a00; --df-text: #1b2433; --df-canvas: #fdfcff; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .df-root { --df-public: #173d24; --df-public-ink: #9fe3b4; --df-owner: #4a2a14;
-    --df-owner-ink: #f7b98a; --df-guest: #2f2650; --df-guest-ink: #cdbcf7; --df-step: #1c2c44; --df-step-ink: #a9c8f2;
-    --df-store: #262c36; --df-store-ink: #c3cad6; --df-output: #16393d; --df-output-ink: #bfe7e3; --df-gate: #ff8a7a;
-    --df-handover: #b58cf0; --df-lane: #171e29; --df-lane-line: #2c3646; --df-edge: #8e9ab0; --df-sel: #6fb0ff; --df-note: #3d3514;
-    --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
+  :root:not([data-theme="light"]) .df-root { --df-public-ink: #8fd6a8; --df-owner-ink: #f2a36a; --df-guest-ink: #c3b2f5;
+    --df-box: #1b2230; --df-cross: #7fa9ec; --df-cross-bg: #17243a; --df-research: #b58cf0; --df-research-bg: #241b36;
+    --df-inputs-bg: #19202b; --df-output: #16393d; --df-output-ink: #9fdcd0; --df-gate: #ff8a7a; --df-handover: #b58cf0;
+    --df-lane-line: #2c3646; --df-lane: #171e29; --df-edge: #8e9ab0; --df-muted: #9aa5b8; --df-sel: #6fb0ff;
+    --df-note: #3d3514; --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
 }
-:root[data-theme="dark"] .df-root { --df-public: #173d24; --df-public-ink: #9fe3b4; --df-owner: #4a2a14;
-  --df-owner-ink: #f7b98a; --df-guest: #2f2650; --df-guest-ink: #cdbcf7; --df-step: #1c2c44; --df-step-ink: #a9c8f2;
-  --df-store: #262c36; --df-store-ink: #c3cad6; --df-output: #16393d; --df-output-ink: #bfe7e3; --df-gate: #ff8a7a;
-  --df-handover: #b58cf0; --df-lane: #171e29; --df-lane-line: #2c3646; --df-edge: #8e9ab0; --df-sel: #6fb0ff; --df-note: #3d3514;
-  --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
+:root[data-theme="dark"] .df-root { --df-public-ink: #8fd6a8; --df-owner-ink: #f2a36a; --df-guest-ink: #c3b2f5;
+  --df-box: #1b2230; --df-cross: #7fa9ec; --df-cross-bg: #17243a; --df-research: #b58cf0; --df-research-bg: #241b36;
+  --df-inputs-bg: #19202b; --df-output: #16393d; --df-output-ink: #9fdcd0; --df-gate: #ff8a7a; --df-handover: #b58cf0;
+  --df-lane-line: #2c3646; --df-lane: #171e29; --df-edge: #8e9ab0; --df-muted: #9aa5b8; --df-sel: #6fb0ff;
+  --df-note: #3d3514; --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
 
 .df-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; list-style: none; padding: 0; margin: 0 0 .6rem; }
 .df-legend li { list-style: none; display: inline-flex; align-items: center; gap: .35rem; margin: 0; }
-.df-sw { width: 1.1rem; height: .8rem; border-radius: 3px; border: 1.5px solid transparent; display: inline-block; }
-.df-k-public { background: var(--df-public); border-color: var(--df-public-ink); }
-.df-k-owner { background: var(--df-owner); border-color: var(--df-owner-ink); }
-.df-k-guest { background: var(--df-guest); border-color: var(--df-guest-ink); }
-.df-k-step { background: var(--df-step); border-color: var(--df-step-ink); }
-.df-k-store { background: var(--df-store); border-color: var(--df-store-ink); }
-.df-k-output { background: var(--df-output); border-color: var(--df-output-ink); }
-.df-gate-sw { border: 2.5px dashed var(--df-gate); }
+.df-sw { width: 1.1rem; height: .8rem; border-radius: 3px; border: 1.5px solid transparent; display: inline-block; background: var(--df-box); }
+.df-k-public { border-color: var(--df-public-ink); }
+.df-k-owner { border-color: var(--df-owner-ink); }
+.df-k-guest { border-color: var(--df-guest-ink); }
+.df-p-crosses { background: var(--df-cross-bg); border: 2px solid var(--df-cross); }
+.df-p-research { background: var(--df-research-bg); border: 2px solid var(--df-research); }
+.df-k-output { background: var(--df-output); border-color: var(--df-output-ink); border-radius: .5rem; }
+.df-gate-sw { border: 2px dashed var(--df-gate); }
 .df-planned-sw { border: 1.5px dashed var(--df-edge); opacity: .7; }
+.df-handover-sw { border: 0; border-top: 3px solid var(--df-handover); height: 0 !important; margin-top: .45em; background: none; }
+.df-mark { font-size: .85rem; color: var(--df-muted); }
 
 .df-tools { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .4rem; }
 .df-tools button { margin: 0; padding: .45rem .8rem; min-height: 44px; width: auto; }
@@ -40,51 +44,62 @@
 #df-svg { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none;
   cursor: grab; font-family: var(--pico-font-family-sans-serif, system-ui, sans-serif); }
 #df-svg.panning { cursor: grabbing; }
-#df-svg .lane rect { fill: var(--df-lane); stroke: var(--df-lane-line); }
-#df-svg .lane text { fill: var(--df-text); font-weight: 700; font-size: 15px; }
+
+/* the three columns: inputs plain, each process a framed panel in its own colour */
+#df-svg .lane rect { fill: var(--df-inputs-bg); stroke: none; }
+#df-svg .lane-crosses rect { fill: var(--df-cross-bg); stroke: var(--df-cross); stroke-width: 2.5; }
+#df-svg .lane-research rect { fill: var(--df-research-bg); stroke: var(--df-research); stroke-width: 2.5; }
+#df-svg .lane text { pointer-events: none; }
+#df-svg .lane .lane-title { fill: var(--df-text); font-weight: 700; font-size: 18px; }
+#df-svg .lane-crosses .lane-title, #df-svg .lane-crosses .lane-sub { fill: var(--df-cross); }
+#df-svg .lane-research .lane-title, #df-svg .lane-research .lane-sub { fill: var(--df-research); }
+#df-svg .lane .lane-sub { font-size: 12px; }
+#df-svg .lane .caption { font-size: 12px; fill: var(--df-muted); }
+#df-svg .bracket { fill: none; stroke-width: 2; pointer-events: none; }
+#df-svg .bracket.g-cross { stroke: var(--df-cross); } #df-svg .bracket.g-research { stroke: var(--df-research); }
+#df-svg .bundle path { fill: none; stroke: var(--df-edge); stroke-width: 3; }
+#df-svg .bundle text { font-size: 12px; font-weight: 650; fill: var(--df-muted); }
+
+/* boxes: white with a border in the kind's or process's colour; the engine filled; outputs as chips */
 #df-svg .node { cursor: move; }
-#df-svg .node rect.box { stroke-width: 1.5; }
-#df-svg .node text { font-size: 12.5px; pointer-events: none; }
-#df-svg .node.k-public rect.box { fill: var(--df-public); stroke: var(--df-public-ink); } #df-svg .node.k-public text { fill: var(--df-public-ink); }
-#df-svg .node.k-owner rect.box { fill: var(--df-owner); stroke: var(--df-owner-ink); } #df-svg .node.k-owner text { fill: var(--df-owner-ink); }
-#df-svg .node.k-guest rect.box { fill: var(--df-guest); stroke: var(--df-guest-ink); } #df-svg .node.k-guest text { fill: var(--df-guest-ink); }
-#df-svg .node.k-step rect.box { fill: var(--df-step); stroke: var(--df-step-ink); } #df-svg .node.k-step text { fill: var(--df-step-ink); }
-#df-svg .node.k-store rect.box { fill: var(--df-store); stroke: var(--df-store-ink); } #df-svg .node.k-store text { fill: var(--df-store-ink); }
-#df-svg .node.k-output rect.box { fill: var(--df-output); stroke: var(--df-output-ink); } #df-svg .node.k-output text { fill: var(--df-output-ink); }
-#df-svg .node.gate rect.box { stroke: var(--df-gate); stroke-width: 2.5; stroke-dasharray: 6 3; }
-#df-svg .node.planned { opacity: .72; }
+#df-svg .node rect.box { fill: var(--df-box); stroke: var(--df-edge); stroke-width: 1.3; }
+#df-svg .node text { font-size: 13px; fill: var(--df-text); pointer-events: none; }
+#df-svg .node.k-public rect.box { stroke: var(--df-public-ink); }
+#df-svg .node.k-owner rect.box { stroke: var(--df-owner-ink); }
+#df-svg .node.k-guest rect.box { stroke: var(--df-guest-ink); }
+#df-svg .node.k-step.p-crosses rect.box { stroke: var(--df-cross); }
+#df-svg .node.k-step.p-research rect.box { stroke: var(--df-research); }
+#df-svg .node.k-output rect.box { fill: var(--df-output); stroke: var(--df-output-ink); }
+#df-svg .node.gate.gate.gate rect.box { stroke: var(--df-gate); stroke-width: 1.5; stroke-dasharray: 4 3; }
+#df-svg .node.planned { opacity: .8; }
 #df-svg .node.planned rect.box { stroke-dasharray: 4 3; }
-/* the cross engine is the centre of the chart; research still using parts not from the crosses is marked */
-#df-svg .node.hub rect.box { stroke-width: 3.5; }
-#df-svg .node.hub text { font-size: 15px; }
-/* the two processes as bands; arrows between them (handovers) stand out, dashed when not built yet */
-#df-svg .row-band rect { fill: none; stroke: var(--df-handover); stroke-width: 1.5; stroke-dasharray: 8 6; opacity: .55; }
-#df-svg .row-band text { font-size: 15px; font-weight: 700; fill: var(--df-handover); }
-#df-svg .edge.handover path.line { stroke: var(--df-handover); stroke-width: 3; }
-#df-svg .edge.handover text { fill: var(--df-handover); font-weight: 650; }
-#df-svg .edge.planned path.line { stroke-dasharray: 6 4; }
-#df-svg .edge.uncrossed path.line { stroke: #c2410c; stroke-dasharray: 3 3; }
-.df-handover-sw { border-top: 3px solid var(--df-handover); height: 0 !important; margin-top: .45em; }
-.df-handover-planned-sw { border-top: 3px dashed var(--df-handover); height: 0 !important; margin-top: .45em; }
-#df-svg .node text.tag { font-size: 10px; font-weight: 700; fill: var(--df-gate); }
-#df-svg .node text.notemark { font-size: 10.5px; font-style: italic; }
+#df-svg .node.hub rect.box { fill: var(--df-cross); stroke: var(--df-cross); stroke-width: 2; }
+#df-svg .node.hub text.hub-label { fill: #fff; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+#df-svg .node text.notemark { font-size: 11px; fill: var(--df-owner-ink); }
+#df-svg .node.hub text.notemark { fill: #fff; }
 #df-svg .sel rect.box, #df-svg .sel rect.paper { stroke: var(--df-sel) !important; stroke-width: 3 !important; stroke-dasharray: none !important; }
-#df-svg .handle { fill: var(--df-canvas); stroke: var(--df-sel); stroke-width: 2; pointer-events: none; }
+/* the connect handle shows on the chosen box (and on hover); it can be dragged on any box */
+#df-svg .handle { fill: var(--df-canvas); stroke: var(--df-sel); stroke-width: 2; pointer-events: none; opacity: 0; }
+#df-svg .node.sel .handle, #df-svg .node:hover .handle { opacity: 1; }
 #df-svg .handle-hit { fill: transparent; cursor: crosshair; }
-#df-svg .edge path.line { fill: none; stroke: var(--df-edge); stroke-width: 1.6; }
-#df-svg .edge.e-public path.line { stroke: var(--df-public-ink); }
-#df-svg .edge.e-owner path.line { stroke: var(--df-owner-ink); }
-#df-svg .edge.e-guest path.line { stroke: var(--df-guest-ink); }
-#df-svg .edge path.hit { fill: none; stroke: transparent; stroke-width: 16; cursor: pointer; }
-#df-svg .edge.sel path.line { stroke: var(--df-sel); stroke-width: 3.2; }
-#df-svg .edge text { font-size: 10.5px; fill: var(--df-text); paint-order: stroke; stroke: var(--df-canvas); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+
+/* lines: thin grey without a label until tapped; handovers thick purple and always labelled */
+#df-svg .edge path.line { fill: none; stroke: var(--df-edge); stroke-width: 1.4; }
+#df-svg .edge path.hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
+#df-svg .edge.handover path.line { stroke: var(--df-handover); stroke-width: 3.5; }
+#df-svg .edge.planned path.line { stroke-dasharray: 6 4; }
+#df-svg .edge text { font-size: 11px; fill: var(--df-text); paint-order: stroke; stroke: var(--df-canvas); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+#df-svg .edge.handover text { fill: var(--df-handover); font-weight: 650; stroke: var(--df-research-bg); }
+#df-svg .edge.hl path.line { stroke: var(--df-sel); stroke-width: 2.4; }
+#df-svg .edge.handover.hl path.line { stroke-width: 3.5; }
+#df-svg .edge.sel path.line { stroke-width: 3.2; }
+#df-svg.has-sel .edge:not(.hl) { opacity: .45; }
 #df-svg .temp { fill: none; stroke: var(--df-sel); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
 #df-svg .note rect.paper { fill: var(--df-note); stroke: #d9c46a; stroke-width: 1; cursor: move; }
-#df-svg .note text { fill: var(--df-note-ink); font-size: 12px; pointer-events: none; }
+#df-svg .note text { fill: var(--df-note-ink); font-size: 10.5px; pointer-events: none; }
 #df-svg .target rect.box { stroke: var(--df-sel) !important; stroke-width: 3 !important; }
 #df-svg marker path { fill: var(--df-edge); }
-#df-svg marker.m-public path { fill: var(--df-public-ink); } #df-svg marker.m-owner path { fill: var(--df-owner-ink); }
-#df-svg marker.m-guest path { fill: var(--df-guest-ink); } #df-svg marker.m-sel path { fill: var(--df-sel); }
+#df-svg marker.m-handover path { fill: var(--df-handover); } #df-svg marker.m-hl path { fill: var(--df-sel); }
 
 #df-dialog { max-width: min(92vw, 30rem); }
 #df-dialog .df-d-buttons { display: flex; gap: .5rem; }
@@ -93,3 +108,4 @@
 #df-changes li, #df-history li { overflow-wrap: anywhere; }
 .df-info { margin-top: .5rem; padding: .6rem .8rem; border: 1px solid var(--df-lane-line); border-radius: 10px; background: var(--df-lane); overflow-wrap: anywhere; }
 .df-info ul { margin: .3rem 0 0; padding-left: 1.2rem; } .df-info li { list-style: disc; margin: 0; } .df-info-note { margin: .3rem 0 0; font-style: italic; }
+.df-info-lines { margin: .3rem 0 0; color: var(--df-muted); } .df-kept { color: var(--df-muted); }

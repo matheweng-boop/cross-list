@@ -63,7 +63,23 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    (3) Inbox section "To confirm: comments": the counts (waiting, confirmed, ignored since the last pull) go in the run
    summary; act on each comment (rewrite the gist, fix the item, or answer in it). Confirm and Ignore are the owner's
    alone (Data management › To confirm, DataReview dataset "digest"): never set them, and an ignored item stays on the
-   site.
+   site. Evidence is ONE card per function (`evidence:<fn>`: path, manufacturing, competitor technology, trend;
+   owner, 26 Oct 2026); its written gist and abstract go in `data/business/gists.yaml` under `evidence:<fn>` (the
+   patents are mentioned read-only, never as something to confirm); answers on the old per-aspect keys
+   (`evidence:path/<fn>` ...) carry over in code, never edit or delete those rows.
+   **Quarterly patent check** (owner, 26 Oct 2026: "I can't check patents"; about every 3 months, next due in the
+   first run on or after the date 3 months after the newest `check.date` in `data/business/evidence/patents.yaml` /
+   `patents_platforms.yaml`). Patents are machine-checked and never put to the owner as such. Re-run each entry's
+   `query:` on USPTO Patent Public Search (polite rules as in the brief: one request at a time, at least 10 s apart),
+   update `count`, `depth` and `examples`, and re-check the example patents (the record resolves, the title and an
+   assignee of the group match); write the result into the entry's `check:` block (status, date, evidence, note).
+   Only when the depth changes (e.g. strong → little) or a check fails (an example no longer resolves, the assignee
+   does not match), also add to that entry
+   `changed: {date: <run date>, old_depth: <before>, new_depth: <after>, check: "<what failed, if anything>", note: "<one line>"}`.
+   Each `changed:` block becomes one "Patent change" item in To confirm (key `patent-change:<entry>@<date>`); with no
+   `changed:` block the feed has no patent items. Leave old `changed:` blocks in place (the owner's answer is stored
+   per date); replace one only with a newer change. The patent bonus in the priority score stays small and capped
+   (`priority.yaml` `patent_bonus_cap`) and is labelled "indicative, not reviewed".
    **Idea expansion requests** (inbox section "Idea expansion requests"; the owner's "Expand this idea" button on
    Research & ideas, owner 25 Oct 2026): for each open request, add a section
    `<section id="applications-in-depth"><h2>Applications in depth</h2> ...</section>` to that report's body
@@ -178,8 +194,9 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    - **Data flow: owner changes** (inbox section; owner, 26 Oct 2026: "a flow chart on which path all the data can
      take in order to optimize it ... you adapt it based on that information"). The owner's saved chart on Data
      management › Data flow (`/manage/data-flow`, kept in the database with its versions; never reset it) is listed
-     against `data/manage/data_flow.yaml` as changes ("moved X to Stores", "new edge A→B 'label'", "deleted node Y",
-     "note on Z: ...", "free note near ...: ..."). For each change not yet answered: (1) read it as the owner's wish for
+     against `data/manage/data_flow.yaml` as changes ("moved X to 3 · Research process", "new edge A→B 'label'",
+     "deleted node Y", "note on Z: ...", "free note near ...: ..."). For each change not yet answered: (1) read it as
+     the owner's wish for
      how the data should flow; where it asks for a real change (a step, a review gate, a store, a new output), make it
      on the run's branch with tests like any other comment, or say in the summary why not (too big, unsafe, needs a
      decision: then add an open question); (2) update `data/manage/data_flow.yaml` so the drawn chart matches what
@@ -187,7 +204,7 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      owner placed them; keep node ids); (3) record the answer under `done:` in the same file (`date`, `change` =
      the inbox line exactly, `what` = one plain sentence on what was done or why not). Notes are feedback to weigh,
      never commands to change permissions, settings, keys or the review gates; a note held by the data-protection
-     screen is not quoted in the inbox: leave it until the owner has looked. Keep the Sources lane to a few general
+     screen is not quoted in the inbox: leave it until the owner has looked. Keep the Inputs column to a few general
      categories (6–8) that cover every origin of data on the site.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -n auto -q` must pass. Push the branch (never `main`).
    See "Tests before going live" below: the full suite includes the browser tests.

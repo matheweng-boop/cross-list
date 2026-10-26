@@ -61,6 +61,101 @@
 # Thread lines: every main section of a report body ends with <p class="rpt-thread"><b>For the decision:</b> ...</p>;
 # a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
+  - slug: radio-auto-fit
+    gist: "Around our automotive tuners, 11 part groups are car-ready, 6 need work, 6 only lack AEC-Q; audio, interfaces and protection stay gaps."
+    abstract:
+      - "Tuners, decoders, two low-band switches, a satellite-radio LNA, clock buffers and a 2 MHz buck are AEC-Q today."
+      - "Si468x receivers, wide-band SPDTs, the Si510/511 oscillator and a PMIC only lack qualification; consumer tuners and audio need redesign."
+      - "Decide which of the six to qualify first, and to leave audio, CAN/Ethernet and protection to partners."
+    title: "Car radio: which of our parts fit each block for automotive, which need work and which only lack qualification"
+    kind: report
+    area: Broadcast radio
+    app_type: Car radio
+    feasibility: 1
+    feasibility_why: "Most moves qualify parts we already sell (AEC-Q100 runs, PPAP); only the audio and power blocks would need new designs"
+    date: 2026-10-26
+    status: draft
+    see_also: [radio-tuner-next, auto-wifi-antenna, auto-gnss-l1l5, auto-clock-tree]
+    question: "For the Car radio tuner system diagram: which existing Skyworks and Qorvo parts fit each block for automotive and
+      why, which would need improvements, and which only lack qualification?"
+    summary: >-
+      Preliminary analysis from the owner's comment of 26 Oct 2026 on the library diagram Car radio tuner system (antenna &
+      RF, tuners, digital radio, head unit, audio, power rail, timing). Group A, automotive today (11 part groups): the
+      Si479xx tuners, Si469xx / Si461x coprocessors and Si462x receivers, SKYA21001 and QPC8010Q switches that reach the FM
+      band, QPL62xxQ satellite-radio LNAs, Si5335x-AM clock buffers, the ACT4751 2 MHz buck and the SKY5A2110 GNSS LNA.
+      Group B, needs improvement (6): Si473x / Si470x consumer tuners (−20 °C), QPL7433/7442 wideband LNAs (no automotive
+      amplifier design), SKY76206 audio amplifier, SKY8700x bucks (WLCSP, last time buy) and the 125 kHz ACT4529 buck.
+      Group C, only lacks qualification (6): Si468x receivers, Si47992, AS169/AS183 and SKY13374 switches, Si510/511 XOs,
+      ACT8832x PMIC. Gaps: protection, reverse polarity, LDO, supervisor, audio codec, CAN, Ethernet, A²B, active antenna
+      amplifier.
+    tags: [car radio, AEC-Q100, qualification, PPAP, tuner, DAB, HD Radio, antenna switch, SDARS, clock buffer, buck, PMIC,
+      audio amplifier, gaps]
+    sources: "BizDev catalogue with the AEC-Q rule, Automotive map (data/business/auto_reach.yaml), broadcast device data,
+      cached Skyworks data shorts, Cross-sell pairs; 4 public requests to www.skyworksinc.com"
+    decision: Should we qualify the radio-block parts that only lack AEC-Q, so that we sell more of the car radio diagram
+      than the tuner and the decoder?
+    answer:
+      text: 'Yes for a short list (est): the antenna switches, the Si510/511 oscillator and the Si468x receivers fit the specs
+        and need only AEC-Q100 and PPAP. The tuners, decoders and five other part groups are automotive today. Audio, CAN/Ethernet
+        and protection stay gaps; leave them to partners.'
+      conf: med
+    needed_now:
+    - 'Radio BU: is the Si468x die the same as the AEC-Q100 Si462x, and is Si47992 already automotive grade?'
+    - 'Switch and timing BUs: cost and time of an AEC-Q100 run for AS183/SKY13374 and Si510/511 (Grade 3 or 2)'
+    - 'One head-unit or antenna Tier-1: would they take our switch and oscillator with the tuner?'
+    say_externally: Skyworks sells automotive AM/FM, HD Radio, DAB and DRM tuners and decoders, and with Qorvo also automotive
+      RF switches, satellite-radio amplifiers, clock buffers and power converters. We would like to learn which other parts
+      around the tuner you would like to buy from the same supplier.
+    next_steps:
+    - what: Ask whether Si468x shares the die of the AEC-Q100 Si462x, and the grade and status of Si47992
+      who: Radio BU
+      why: If the die is shared, the whole Si468x line is a paperwork step, not a qualification run.
+    - what: Ask for the cost and time of AEC-Q100 Grade 3 runs for AS183-92LF, SKY13374-397LF and Si510/511
+      who: Switch BU and timing BU
+      why: These three only lack qualification and would add a switch and the reference clock to every tuner sale.
+    - what: Offer the tuner with switch, oscillator and 2 MHz buck as one radio kit to a remote tuner module maker
+      who: Our FAE with a Tier-1 antenna module team
+      why: Tests the attach rate before any qualification money is spent, and feeds the radio node case.
+      case: radio-tuner-next
+    bu_opener:
+      question: Around our automotive tuners and decoders sit about 15 other blocks. Should we qualify the switches, the
+        oscillator and the Si468x receivers that already fit the specs (AEC-Q100 and PPAP only), so we sell more of the car
+        radio than the tuner, against NXP and ST who sell a one-chip radio and their own power parts?
+      pros:
+      - Tuners, decoders and receivers are all AEC-Q100 today; we start from the radio's main chips
+      - Switches, oscillator and Si468x already meet the specs; qualification, not invention
+      - Qorvo adds automotive 12 V bucks, SDARS LNAs and switches to the same kit
+      cons:
+      - No automotive audio, CAN/Ethernet, protection or LDO; a full radio still needs partners
+      - NXP and ST sell their own power and interface parts next to the tuner
+      - A switch or an oscillator is a small socket next to the tuner (low value per car, est)
+      vs: NXP, ST, TI, ADI
+    learn:
+    - age: 5
+      text: A car radio has many small chips around the main one, and each must survive heat, cold and shaking.
+    - age: 10
+      text: The main radio chips (tuners) are already made for cars. The chips around them, like switches, clocks and power
+        chips, must also pass a car test before a car maker can use them.
+    - age: 15
+      text: Car parts follow AEC-Q100, a test list for chips (temperature grades, long life, ESD), and the maker sends a PPAP
+        file showing the production process is stable. A part can meet every spec and still not be sold for cars because it
+        never went through these tests.
+    - age: 20
+      text: The owner asked how to fill the car radio diagram with our parts. We sort each part into automotive today, needs
+        a better design, or only needs qualification. The last group is the cheapest win, because the chip does not change.
+    - age: 25
+      text: Our tuners and decoders are AEC-Q100. Around them, Qorvo brings automotive bucks, switches and SDARS LNAs; Skyworks
+        brings clock buffers and switches. Si468x, wideband switches, the Si510/511 oscillator and a PMIC only lack
+        qualification. Audio, CAN/Ethernet, protection and LDOs are gaps where NXP, ST, TI and ADI sell the whole set.
+    learn_links:
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: Receiver architectures
+      href: /rf-notes#receiver_architectures
+    - label: Sensitivity and noise floor
+      href: /rf-notes#sensitivity_noise_floor
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost
   - slug: auto-wifi-antenna
     gist: "Cars move to Wi-Fi 6E/7 next to V2X; with Qorvo we cover the antenna module, but lack an automotive 5/6 GHz Wi-Fi FEM."
     abstract:

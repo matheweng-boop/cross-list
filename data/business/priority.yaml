@@ -121,7 +121,12 @@ likeliness:
   # owner, 25 Oct 2026: US patent depth of Skyworks / Qorvo (data/business/evidence/patents.yaml per function, else the
   # platform entry in patents_platforms.yaml that covers the function); added after the platform bonus, L capped at 1.0;
   # not added to the owner's review answers. Indicative public searches, not legal advice.
-  patent_bonus: {strong: 0.10, some: 0.05, little: 0.0, none_found: 0.0}
+  # Owner, 26 Oct 2026 ("I can't check patents"): patents are machine-checked, not reviewed by the owner, so they stay
+  # background with a small, labelled weight ("indicative, not reviewed"). patent_bonus_cap caps any bonus at half the
+  # platform bonus (the smallest other part of the score): at most 0.05 of L = 1.5 points of 100 at the default
+  # weights (5 points even with all weight on likeliness), less than any step between the feasibility groups (0.3).
+  patent_bonus: {strong: 0.05, some: 0.025, little: 0.0, none_found: 0.0}
+  patent_bonus_cap: 0.05
   # the owner's review answers; the value replaces the computed one
   owner:
     temperature_sensor: {value: 0.3, note: "Owner, 22 Oct 2026: ASP most likely too low; the focus is RF."}

@@ -1,15 +1,22 @@
-// Data management › Data flow (owner, 26 Oct 2026): the chart of every path the data takes, drawn from
-// data/manage/data_flow.yaml (sent in #df-data). The owner drags boxes, connects them by dragging a box's round handle
-// onto another box, double-taps to edit, adds steps and notes, zooms (pinch / wheel) and pans; Save sends the whole
-// chart to /manage/data-flow/save, which stores a version and answers with the change list against the file version.
-// Pointer events only, so mouse, pen and touch (iPad) work the same. Self-contained: no libraries.
+// Data management › Data flow (owner, 26 Oct 2026; three columns 27 Oct 2026): the chart of every path the data takes,
+// drawn from data/manage/data_flow.yaml (sent in #df-data). Column 1 holds the inputs in two bracketed groups, column 2
+// the cross process around the CROSS ENGINE, column 3 the research process; the two processes talk only through the
+// purple handover arrows (always labelled). Every other line is thin grey and shows its label only when it or one of
+// its boxes is tapped; the research inputs travel as one bundled arrow below the cross process. Boxes carry 1-3 words;
+// tapping one shows what it is, where its data is kept and its lines in the info box under the chart.
+// The owner drags boxes, connects them by dragging a box's round handle onto another box, double-taps to edit, adds
+// steps and notes, zooms (pinch / wheel) and pans; Save sends the whole chart to /manage/data-flow/save, which stores a
+// version and answers with the change list against the file version. Pointer events only, so mouse, pen and touch
+// (iPad) work the same. Self-contained: no libraries.
 (() => {
   const $ = s => document.querySelector(s);
   const D = JSON.parse($("#df-data").textContent);
   const svg = $("#df-svg"), frame = $("#df-frame"), status = $("#df-status");
-  const NW = D.nodeW, LW = D.laneW, LEFT = D.left, NOTE_W = 180;
+  const NW = D.nodeW, NH = D.nodeH, NOTE_W = D.noteW;
+  const LANES = D.lanes, laneById = Object.fromEntries(LANES.map(l => [l.id, l]));
   const fileNode = Object.fromEntries(D.file.nodes.map(n => [n.id, n]));
   const S = JSON.parse(JSON.stringify(D.state));
+  for (const n of S.nodes) { n.w = n.w || fileNode[n.id]?.w || NW; n.h = n.h || fileNode[n.id]?.h || NH; }
   let view = null, sel = null, dirty = false, action = null, pinch = null, lastTap = {id: null, t: 0};
   const pointers = new Map();
   let smooth = false;
@@ -19,6 +26,17 @@
   const say = t => { status.textContent = t; };
   const byId = () => Object.fromEntries(S.nodes.map(n => [n.id, n]));
   const newId = p => `${p}-${Math.random().toString(36).slice(2, 8)}`;
+  // the column a box stands in (same rule as app/services/data_flow.py lane_at)
+  function laneAt(x, w) {
+    const c = x + w / 2;
+    let best = null, off = Infinity;
+    for (const l of LANES) {
+      const o = c >= l.x && c < l.x + l.w ? 0 : Math.min(Math.abs(c - l.x), Math.abs(c - l.x - l.w));
+      if (o < off) { off = o; best = l.id; }
+    }
+    return best || "";
+  }
+  const laneOf = n => laneAt(n.x, n.w);
 
   function wrap(text, width, max) {
     const words = String(text || "").split(/\s+/).filter(Boolean), lines = [];
@@ -30,139 +48,246 @@
     if (lines.length > max) { lines.length = max; lines[max - 1] = lines[max - 1].replace(/.{0,2}$/, "…"); }
     return lines.length ? lines : [""];
   }
-  const tagOf = n => n.gate ? (n.status === "planned" ? "REVIEW GATE · PLANNED" : "REVIEW GATE") : (n.status === "planned" ? "PLANNED" : "");
   function nodeBox(n) {
-    const lines = wrap(n.label, 27, 3);
-    const h = 14 + lines.length * 15 + (tagOf(n) ? 13 : 0) + (n.note ? 14 : 0) + 4;
-    return {x: n.x, y: n.y, w: NW, h, lines};
+    const w = n.w || NW;
+    if (n.hub) return {x: n.x, y: n.y, w, h: n.h || 72, lines: wrap(n.label, Math.floor(w / 13), 2)};
+    const lines = wrap(n.label, Math.floor((w - 22) / 6.3), 2);
+    return {x: n.x, y: n.y, w, h: Math.max(n.h || NH, 15 + lines.length * 15 + 6), lines};
   }
   function noteBox(t) {
-    const lines = wrap(t.text, 26, 7);
-    return {x: t.x, y: t.y, w: NOTE_W, h: 12 + lines.length * 15, lines};
+    const lines = wrap(t.text, 27, 6);
+    return {x: t.x, y: t.y, w: NOTE_W, h: 9 + lines.length * 13, lines};
   }
 
-  // ---- edges: each leaves the side facing the other box; ports spread along a side; square or smooth lines
-  const cx = R => R.x + R.w / 2, cy = R => R.y + R.h / 2;
-  function routes(boxes) {
-    const N = byId(), items = [];
+  // ---- layout around the boxes: the column panels, the two input brackets and the bundle under the cross process
+  function frameOf(boxes) {
+    const N = byId(), panels = {};
+    for (const l of LANES) panels[l.id] = {x: l.x, y: 0, w: l.w, h: l.h, lane: l};
+    for (const n of S.nodes) {
+      const p = panels[laneOf(n)], b = boxes[n.id];
+      if (p) p.h = Math.max(p.h, b.y + b.h + 26);
+    }
+    // inputs grouped by the process they feed, each with a bracket in that process colour
+    const brackets = [];
+    for (const g of ["cross", "research"]) {
+      const list = S.nodes.filter(n => n.group === g && laneOf(n) === "inputs").map(n => boxes[n.id]);
+      if (!list.length) continue;
+      const x = Math.max(...list.map(b => b.x + b.w)) + 4, y0 = Math.min(...list.map(b => b.y)), y1 = Math.max(...list.map(b => b.y + b.h));
+      brackets.push({group: g, x, y0, y1});
+    }
+    const cross = panels.crosses, research = panels.research;
+    const bundled = S.edges.map((e, i) => [e, i]).filter(([e]) => isBundled(e, N)).map(([, i]) => i);
+    let bundle = null;
+    const rb = brackets.find(b => b.group === "research");
+    if (rb && cross && research && bundled.length) {
+      const y = Math.max(cross.y + cross.h, rb.y1) + 30;
+      bundle = {x0: rb.x + 10, ymid: (rb.y0 + rb.y1) / 2, xr: rb.x + 24, y, x1: research.x + research.w / 2, y1: research.y + research.h, edges: bundled};
+      if (panels.inputs) panels.inputs.h = Math.max(panels.inputs.h, y + 40);
+    }
+    return {panels, brackets, bundle};
+  }
+  // a research input feeding the research process: drawn inside the one bundle, its own line only when tapped
+  function isBundled(e, N) {
+    const a = N[e.from], b = N[e.to];
+    return !!(a && b && !e.handover && a.group === "research" && laneOf(a) === "inputs" && laneOf(b) === "research");
+  }
+
+  // ---- edges: square lines that go around the boxes (candidate shapes, the clear and short one wins)
+  const R = b => ({l: b.x, r: b.x + b.w, t: b.y, b: b.y + b.h, cx: b.x + b.w / 2, cy: b.y + b.h / 2});
+  function segHits(p, q, o) {
+    const pad = 3;
+    const x0 = Math.min(p[0], q[0]), x1 = Math.max(p[0], q[0]), y0 = Math.min(p[1], q[1]), y1 = Math.max(p[1], q[1]);
+    return x1 > o.l - pad && x0 < o.r + pad && y1 > o.t - pad && y0 < o.b + pad;
+  }
+  function cost(pts, obstacles) {
+    let hits = 0, len = 0;
+    for (let k = 1; k < pts.length; k++) {
+      len += Math.abs(pts[k][0] - pts[k - 1][0]) + Math.abs(pts[k][1] - pts[k - 1][1]);
+      for (const o of obstacles) if (segHits(pts[k - 1], pts[k], o)) hits++;
+    }
+    return hits * 1000 + len + (pts.length - 2) * 25;
+  }
+  function between(lo, hi, cuts) {
+    const out = [(lo + hi) / 2];
+    for (const c of cuts) if (c > lo + 6 && c < hi - 6) out.push(c);
+    return out;
+  }
+  function candidates(a, b, xs, ys) {
+    const out = [];
+    if (b.l >= a.r + 10) for (const mx of between(a.r, b.l, xs)) out.push([[a.r, a.cy], [mx, a.cy], [mx, b.cy], [b.l, b.cy]]);
+    if (a.l >= b.r + 10) for (const mx of between(b.r, a.l, xs)) out.push([[a.l, a.cy], [mx, a.cy], [mx, b.cy], [b.r, b.cy]]);
+    if (b.t >= a.b + 8) for (const my of between(a.b, b.t, ys)) out.push([[a.cx, a.b], [a.cx, my], [b.cx, my], [b.cx, b.t]]);
+    if (a.t >= b.b + 8) for (const my of between(b.b, a.t, ys)) out.push([[a.cx, a.t], [a.cx, my], [b.cx, my], [b.cx, b.b]]);
+    // L shapes: out of a side, into the top or bottom (and the other way round)
+    const side = b.cx > a.cx ? a.r : a.l, into = b.cx > a.cx ? b.l : b.r;
+    if (b.t > a.cy + 8) out.push([[side, a.cy], [b.cx, a.cy], [b.cx, b.t]]);
+    if (b.b < a.cy - 8) out.push([[side, a.cy], [b.cx, a.cy], [b.cx, b.b]]);
+    if (b.cy > a.b + 8) out.push([[a.cx, a.b], [a.cx, b.cy], [into, b.cy]]);
+    if (b.cy < a.t - 8) out.push([[a.cx, a.t], [a.cx, b.cy], [into, b.cy]]);
+    // over the top or under the bottom of both
+    const y0 = Math.min(a.t, b.t) - 14, y1 = Math.max(a.b, b.b) + 14;
+    out.push([[a.cx, a.t], [a.cx, y0], [b.cx, y0], [b.cx, b.t]], [[a.cx, a.b], [a.cx, y1], [b.cx, y1], [b.cx, b.b]]);
+    // down a free corridor between the boxes
+    if (b.t >= a.b + 30) for (const cx of xs) out.push([[a.cx, a.b], [a.cx, a.b + 12], [cx, a.b + 12], [cx, b.t - 12], [b.cx, b.t - 12], [b.cx, b.t]]);
+    return out;
+  }
+  const tidy = pts => pts.filter((p, k) => !k || Math.abs(p[0] - pts[k - 1][0]) + Math.abs(p[1] - pts[k - 1][1]) > 0.5);
+  function pathD(pts) {
+    if (!smooth || pts.length < 3) return "M" + pts.map(p => `${p[0]} ${p[1]}`).join("L");
+    let d = `M${pts[0][0]} ${pts[0][1]}`;
+    for (let k = 1; k < pts.length - 1; k++) {  // rounded corners
+      const [p, q, r] = [pts[k - 1], pts[k], pts[k + 1]];
+      const l1 = Math.hypot(q[0] - p[0], q[1] - p[1]), l2 = Math.hypot(r[0] - q[0], r[1] - q[1]), c = Math.min(14, l1 / 2, l2 / 2);
+      const s = [q[0] - (q[0] - p[0]) * c / (l1 || 1), q[1] - (q[1] - p[1]) * c / (l1 || 1)], t = [q[0] + (r[0] - q[0]) * c / (l2 || 1), q[1] + (r[1] - q[1]) * c / (l2 || 1)];
+      d += `L${s[0]} ${s[1]}Q${q[0]} ${q[1]} ${t[0]} ${t[1]}`;
+    }
+    const z = pts[pts.length - 1];
+    return d + `L${z[0]} ${z[1]}`;
+  }
+  function routes(boxes, layout) {
+    const N = byId(), items = [], all = Object.entries(boxes);
+    const xs = [], ys = [];
+    for (const [, b] of all) { xs.push(b.x - 12, b.x + b.w + 12); ys.push(b.y - 12, b.y + b.h + 12); }
+    const research = layout.panels.research, rb = layout.brackets.find(b => b.group === "research");
+    let k = 0;
     S.edges.forEach((e, i) => {
       const a = N[e.from], b = N[e.to];
       if (!a || !b) return;
-      const A = boxes[a.id], B = boxes[b.id];
-      let sa, sb;
-      if (B.x >= A.x + A.w + 16) { sa = "r"; sb = "l"; }
-      else if (B.x + B.w + 16 <= A.x) { sa = "l"; sb = "r"; }
-      else if (cy(B) >= cy(A)) { sa = "b"; sb = "t"; }
-      else { sa = "t"; sb = "b"; }
-      items.push({i, e, a, A, B, sa, sb});
+      const A = R(boxes[a.id]), B = R(boxes[b.id]);
+      const obstacles = all.filter(([id]) => id !== a.id && id !== b.id).map(([, o]) => R(o));
+      if (layout.bundle && isBundled(e, N)) {  // along the bundle: down the bracket, under the cross process, up the research gutter
+        const gx = research.x + 12 + (k++ % 4) * 3, y = layout.bundle.y;
+        const head = [[A.r, A.cy], [rb.x + 20, A.cy], [rb.x + 20, y], [gx, y]];
+        const legs = [[[gx, B.cy], [B.l, B.cy]], [[gx, B.t - 12], [B.cx, B.t - 12], [B.cx, B.t]],
+          [[gx, B.b + 12], [B.cx, B.b + 12], [B.cx, B.b]]];
+        let leg = legs[0], lc = Infinity;
+        for (const l of legs) { const v = cost([[gx, y], ...l], obstacles); if (v < lc) { lc = v; leg = l; } }
+        items.push({i, e, a, b, pts: tidy([...head, ...leg]), from: head.length - 1, bundled: true});
+        return;
+      }
+      let best = null, bc = Infinity;
+      for (const c of candidates(A, B, xs, ys)) {
+        const v = cost(c, obstacles);
+        if (v < bc) { bc = v; best = c; }
+      }
+      items.push({i, e, a, b, pts: tidy(best || [[A.cx, A.cy], [B.cx, B.cy]])});
     });
+    // arrows into the same side of a box sit side by side
     const sides = {};
     for (const it of items) {
-      (sides[`${it.e.from}|${it.sa}`] ||= []).push([it, "a"]);
-      (sides[`${it.e.to}|${it.sb}`] ||= []).push([it, "b"]);
+      if (it.bundled || it.pts.length < 3) continue;
+      const [p, q] = it.pts.slice(-2), vert = Math.abs(p[0] - q[0]) < 0.5;
+      (sides[`${it.e.to}|${vert ? (q[1] > p[1] ? "t" : "b") : (q[0] > p[0] ? "l" : "r")}`] ||= []).push([it, vert]);
     }
-    for (const [key, list] of Object.entries(sides)) {
-      const side = key.split("|").pop(), vert = side === "l" || side === "r";
-      const other = ([it, end]) => end === "a" ? it.B : it.A;
-      list.sort((p, q) => vert ? cy(other(p)) - cy(other(q)) : cx(other(p)) - cx(other(q)));
-      list.forEach(([it, end], k) => {
-        const f = (k + 1) / (list.length + 1), R = end === "a" ? it.A : it.B;
-        const pt = side === "r" ? {x: R.x + R.w, y: R.y + R.h * f} : side === "l" ? {x: R.x, y: R.y + R.h * f}
-          : side === "b" ? {x: R.x + R.w * f, y: R.y + R.h} : {x: R.x + R.w * f, y: R.y};
-        it[end === "a" ? "pa" : "pb"] = pt;
+    for (const list of Object.values(sides)) {
+      if (list.length < 2) continue;
+      const vert = list[0][1], B = boxes[list[0][0].e.to];
+      list.sort(([p], [q]) => vert ? p.pts[p.pts.length - 3][0] - q.pts[q.pts.length - 3][0] : p.pts[p.pts.length - 3][1] - q.pts[q.pts.length - 3][1]);
+      list.forEach(([it], j) => {
+        const f = (j + 1) / (list.length + 1), n = it.pts.length, z = it.pts[n - 1], y = it.pts[n - 2];
+        if (vert) { z[0] = y[0] = B.x + B.w * (0.25 + 0.5 * f); } else { z[1] = y[1] = B.y + B.h * (0.2 + 0.6 * f); }
       });
     }
-    // vertical runs that share a gap between lanes sit side by side
-    const gaps = {};
-    for (const it of items) if (it.sa === "r" || it.sa === "l") (gaps[Math.round((it.pa.x + it.pb.x) / 80)] ||= []).push(it);
-    for (const list of Object.values(gaps)) {
-      list.sort((p, q) => p.pa.y - q.pa.y);
-      list.forEach((it, k) => { it.mx = (it.pa.x + it.pb.x) / 2 + (k - (list.length - 1) / 2) * Math.min(7, 40 / list.length); });
-    }
-    const dir = {r: [1, 0], l: [-1, 0], b: [0, 1], t: [0, -1]};
+    // labels: a handover's sits in the gap between the two processes, any other line's on its longest run
+    const gapX = layout.panels.crosses && research ? (layout.panels.crosses.x + layout.panels.crosses.w + research.x) / 2 : null;
     for (const it of items) {
-      const {pa, pb} = it;
-      if (smooth) {
-        const c = Math.max(40, Math.hypot(pb.x - pa.x, pb.y - pa.y) / 3);
-        const c1 = {x: pa.x + dir[it.sa][0] * c, y: pa.y + dir[it.sa][1] * c}, c2 = {x: pb.x + dir[it.sb][0] * c, y: pb.y + dir[it.sb][1] * c};
-        it.d = `M${pa.x} ${pa.y}C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${pb.x} ${pb.y}`;
-        it.lx = (pa.x + 3 * c1.x + 3 * c2.x + pb.x) / 8; it.ly = (pa.y + 3 * c1.y + 3 * c2.y + pb.y) / 8 - 4;
-      } else if (it.sa === "r" || it.sa === "l") {
-        it.d = Math.abs(pa.y - pb.y) < 1 ? `M${pa.x} ${pa.y}H${pb.x}` : `M${pa.x} ${pa.y}H${it.mx}V${pb.y}H${pb.x}`;
-        it.lx = it.mx; it.ly = (pa.y + pb.y) / 2;
-      } else {
-        const my = (pa.y + pb.y) / 2;
-        it.d = Math.abs(pa.x - pb.x) < 1 ? `M${pa.x} ${pa.y}V${pb.y}` : `M${pa.x} ${pa.y}V${my}H${pb.x}V${pb.y}`;
-        it.lx = (pa.x + pb.x) / 2; it.ly = my - 4;
+      it.anchor = "middle";
+      const segs = it.pts.slice(1).map((q, k2) => [it.pts[k2], q]).slice(it.from || 0);  // a bundled line: its own leg only
+      let s = it.e.handover && gapX !== null ? segs.find(([p, q]) => p[1] === q[1] && Math.min(p[0], q[0]) <= gapX && Math.max(p[0], q[0]) >= gapX) : null;
+      if (s) {  // leaving the cross process: just after the start, clear of the joining runs; else centred in the gap
+        if (s[0][0] < gapX) { it.lx = s[0][0] + 7; it.anchor = "start"; } else it.lx = gapX;
+        it.ly = s[0][1] - 6;
+        continue;
       }
+      s = segs.reduce((m, x) => Math.hypot(x[1][0] - x[0][0], x[1][1] - x[0][1]) > Math.hypot(m[1][0] - m[0][0], m[1][1] - m[0][1]) ? x : m, segs[0]);
+      it.lx = (s[0][0] + s[1][0]) / 2; it.ly = (s[0][1] + s[1][1]) / 2 - 5;
     }
     return items;
   }
 
   // ---- drawing
-  function extent(boxes) {
-    const all = [...Object.values(boxes), ...S.notes.map(noteBox)];
+  function extent(boxes, layout) {
+    const all = [...Object.values(boxes), ...S.notes.map(noteBox), ...Object.values(layout.panels)];
     const x0 = Math.min(0, ...all.map(b => b.x)), y0 = Math.min(0, ...all.map(b => b.y));
-    const x1 = Math.max(LEFT + D.lanes.length * LW - (LW - NW), ...all.map(b => b.x + b.w));
-    const y1 = Math.max(400, ...all.map(b => b.y + b.h));
-    return {x: x0 - 20, y: y0 - 10, w: x1 - x0 + 40, h: y1 - y0 + 40};
+    const x1 = Math.max(...all.map(b => b.x + b.w)), y1 = Math.max(400, ...all.map(b => b.y + b.h));
+    return {x: x0 - 12, y: y0 - 12, w: x1 - x0 + 24, h: y1 - y0 + 24};
   }
+  const layoutNow = () => { const boxes = Object.fromEntries(S.nodes.map(n => [n.id, nodeBox(n)])); return {boxes, layout: frameOf(boxes)}; };
   function render() {
-    const boxes = Object.fromEntries(S.nodes.map(n => [n.id, nodeBox(n)]));
-    const ext = extent(boxes), m = (LW - NW) / 2;
-    const out = [`<defs>${["", "public", "owner", "guest", "sel"].map(k =>
-      `<marker id="df-m${k ? "-" + k : ""}" class="m-${k || "def"}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>`).join("")}</defs>`];
+    const {boxes, layout} = layoutNow(), N = byId();
+    const selNode = sel && sel.type === "node" ? sel.id : null;
+    const out = [`<defs>${["", "handover", "hl"].map(k =>
+      `<marker id="df-m${k ? "-" + k : ""}" class="m-${k || "def"}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="${k === "handover" ? 5 : 7}" markerHeight="${k === "handover" ? 5 : 7}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>`).join("")}</defs>`];
     out.push('<g class="lanes">');
-    D.lanes.forEach((l, i) => {
-      const x = LEFT - m + i * LW + 6;
-      out.push(`<g class="lane"><rect x="${x}" y="${ext.y + 4}" width="${LW - 12}" height="${ext.h - 8}" rx="14"/><text x="${x + 14}" y="${Math.max(ext.y + 30, 40)}">${esc(l.label)}</text></g>`);
-    });
-    // the two processes as bands across the lanes (file layout); handover arrows cross between them
-    for (const r of D.rows || []) {
-      out.push(`<g class="row-band"><rect x="${ext.x + 8}" y="${r.y0}" width="${ext.w - 16}" height="${r.y1 - r.y0}" rx="16"/><text x="${ext.x + ext.w / 2}" y="${r.y0 + 22}" text-anchor="middle">${esc(r.label)}</text></g>`);
+    for (const l of LANES) {
+      const p = layout.panels[l.id];
+      out.push(`<g class="lane lane-${esc(l.id)}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="16"/>` +
+        `<text class="lane-title" x="${p.x + 20}" y="${p.y + 34}">${esc(l.label)}</text>` +
+        (l.subtitle ? `<text class="lane-sub" x="${p.x + 20}" y="${p.y + 54}">${esc(l.subtitle)}</text>` : "") +
+        l.captions.map(c => `<text class="caption" x="${c.x}" y="${c.y}">${esc(c.text)}</text>`).join("") + "</g>");
+    }
+    for (const b of layout.brackets) out.push(`<path class="bracket g-${b.group}" d="M${b.x} ${b.y0}H${b.x + 10}V${b.y1}H${b.x}"/>`);
+    const bu = layout.bundle;
+    if (bu) {
+      out.push(`<g class="bundle"><title>Research inputs: one arrow under the cross process, never through it. Tap an input for its own lines.</title>` +
+        `<path d="M${bu.x0} ${bu.ymid}H${bu.xr}V${bu.y}H${bu.x1}V${bu.y1 + 2}" marker-end="url(#df-m)"/>` +
+        `<text x="${layout.panels.crosses ? layout.panels.crosses.x + 30 : bu.xr + 20}" y="${bu.y - 7}">research inputs</text></g>`);
     }
     out.push('</g><g class="edges">');
-    for (const it of routes(boxes)) {
-      const k = it.a.kind, isSel = sel && sel.type === "edge" && sel.i === it.i;
-      const cls = (["public", "owner", "guest"].includes(k) ? ` e-${k}` : "") + (it.e.handover ? " handover" : "") +
-        (it.e.status === "planned" ? " planned" : it.e.status === "uncrossed" ? " uncrossed" : "");
-      const mk = isSel ? "df-m-sel" : cls ? `df-m-${k}` : "df-m";
-      out.push(`<g class="edge${cls}${isSel ? " sel" : ""}" data-edge="${it.i}"><path class="hit" d="${it.d}"/><path class="line" d="${it.d}" marker-end="url(#${mk})"/>` +
-        (it.e.label ? `<text x="${it.lx}" y="${it.ly}" text-anchor="middle">${esc(it.e.label)}${it.e.status === "planned" ? " (planned)" : it.e.status === "uncrossed" ? " (not yet all from crosses)" : ""}</text>` : "") + "</g>");
+    const items = routes(boxes, layout);
+    for (const it of items) {
+      const isSel = sel && sel.type === "edge" && sel.i === it.i, hl = isSel || (selNode && (it.e.from === selNode || it.e.to === selNode));
+      if (it.bundled && !hl) continue;  // inside the bundle
+      const cls = (it.e.handover ? " handover" : "") + (it.e.status === "planned" ? " planned" : "") + (hl ? " hl" : "") + (isSel ? " sel" : "");
+      const mk = hl ? "df-m-hl" : it.e.handover ? "df-m-handover" : "df-m";
+      const label = it.e.label ? esc(it.e.label) + (it.e.status === "planned" ? " (planned)" : "") : "";
+      out.push(`<g class="edge${cls}" data-edge="${it.i}"><path class="hit" d="${pathD(it.pts)}"/><path class="line" d="${pathD(it.pts)}" marker-end="url(#${mk})"/>` +
+        (label && (it.e.handover || hl) ? `<text x="${it.lx}" y="${it.ly}" text-anchor="${it.anchor}">${label}</text>` : "") + "</g>");
     }
     out.push('</g><g class="nodes">');
     for (const n of S.nodes) {
-      const b = boxes[n.id], tag = tagOf(n), isSel = sel && sel.type === "node" && sel.id === n.id;
-      const cls = `node k-${esc(n.kind)}${n.gate ? " gate" : ""}${n.status === "planned" ? " planned" : ""}${n.hub ? " hub" : ""}${isSel ? " sel" : ""}`;
-      let y = 12;
-      const parts = [`<rect class="box" width="${b.w}" height="${b.h}" rx="10"/>`];
-      if (tag) { parts.push(`<text class="tag" x="10" y="${y + 4}">${tag}</text>`); y += 13; }
-      b.lines.forEach((ln, k) => parts.push(`<text x="10" y="${y + 12 + k * 15}" font-weight="600">${esc(ln)}</text>`));
-      y += 12 + b.lines.length * 15;
-      if (n.note) parts.push(`<text class="notemark" x="10" y="${y + 2}">✎ ${esc(n.note.slice(0, 30))}${n.note.length > 30 ? "…" : ""}</text>`);
-      parts.push(`<circle class="handle-hit" data-handle="${esc(n.id)}" cx="${b.w}" cy="${b.h / 2}" r="16"/><circle class="handle" cx="${b.w}" cy="${b.h / 2}" r="6"/>`);
-      out.push(`<g class="${cls}" data-node="${esc(n.id)}" transform="translate(${n.x},${n.y})"><title>${esc(n.desc || n.label)}</title>${parts.join("")}</g>`);
+      const b = boxes[n.id], isSel = selNode === n.id, lane = laneOf(n);
+      const cls = `node k-${esc(n.kind)} p-${esc(lane)}${n.group ? " g-" + esc(n.group) : ""}${n.gate ? " gate" : ""}${n.status === "planned" ? " planned" : ""}${n.hub ? " hub" : ""}${isSel ? " sel" : ""}`;
+      const parts = [`<rect class="box" width="${b.w}" height="${b.h}" rx="${n.hub ? 14 : n.kind === "output" ? 18 : 9}"/>`];
+      if (n.hub) b.lines.forEach((ln, k) => parts.push(`<text class="hub-label" x="${b.w / 2}" y="${b.h / 2 + 7 + (k - (b.lines.length - 1) / 2) * 22}" text-anchor="middle">${esc(ln)}</text>`));
+      else b.lines.forEach((ln, k) => parts.push(`<text x="12" y="${23 + k * 15}">${esc(ln)}</text>`));
+      if (n.note) parts.push(`<text class="notemark" x="${b.w - 6}" y="13" text-anchor="end">✎</text>`);
+      parts.push(`<circle class="handle-hit" data-handle="${esc(n.id)}" cx="${b.w}" cy="${b.h / 2}" r="14"/><circle class="handle" cx="${b.w}" cy="${b.h / 2}" r="5"/>`);
+      out.push(`<g class="${cls}" data-node="${esc(n.id)}" transform="translate(${n.x},${n.y})"><title>${esc(n.label)}</title>${parts.join("")}</g>`);
     }
     out.push('</g><g class="notes">');
     for (const t of S.notes) {
       const b = noteBox(t), isSel = sel && sel.type === "note" && sel.id === t.id;
       out.push(`<g class="note${isSel ? " sel" : ""}" data-note="${esc(t.id)}" transform="translate(${t.x},${t.y})"><rect class="paper" width="${b.w}" height="${b.h}" rx="4"/>` +
-        b.lines.map((ln, k) => `<text x="9" y="${18 + k * 15}">${esc(ln)}</text>`).join("") + "</g>");
+        b.lines.map((ln, k) => `<text x="7" y="${15 + k * 13}">${esc(ln)}</text>`).join("") + "</g>");
     }
     out.push('</g><path class="temp" id="df-temp" d=""/>');
     svg.innerHTML = out.join("");
+    svg.classList.toggle("has-sel", !!sel);
     $("#df-edit").disabled = $("#df-delete").disabled = !sel;
-    showInfo();
+    showInfo(N);
   }
-  // tap a box: what it is, what falls under it (Sources) and where it lives
-  function showInfo() {
-    const box = $("#df-info"), n = sel && sel.type === "node" ? byId()[sel.id] : null;
+  // tap a box or a line: what it is, where its data is kept, what falls under it, and its lines with their labels
+  const linkHtml = l => l ? (l.startsWith("/") ? ` · <a href="${esc(l)}">Open the page</a>` : ` · <code>${esc(l)}</code>`) : "";
+  function showInfo(N) {
+    const box = $("#df-info");
+    if (sel && sel.type === "edge" && S.edges[sel.i]) {
+      const e = S.edges[sel.i];
+      box.innerHTML = `<b>${esc(N[e.from]?.label)} → ${esc(N[e.to]?.label)}</b>${e.label ? `: ${esc(e.label)}` : ""} <span class="muted">${e.handover ? "· handover between the processes" : ""}${e.status === "planned" ? " · planned" : ""}</span>`;
+      box.hidden = false;
+      return;
+    }
+    const n = sel && sel.type === "node" ? N[sel.id] : null;
     if (!n) { box.hidden = true; box.innerHTML = ""; return; }
-    const f = fileNode[n.id] || {}, inc = f.includes || [];
-    const where = f.link ? (f.link.startsWith("/") ? ` · <a href="${esc(f.link)}">Open the page</a>` : ` · <code>${esc(f.link)}</code>`) : "";
-    box.innerHTML = `<b>${esc(n.label)}</b> <span class="muted">· ${esc(D.kinds[n.kind] || n.kind)}${f.gate ? " · review gate" : ""}${f.status === "planned" ? " · planned" : ""}</span><br>` +
-      `${esc(f.desc || "Your own step.")}${where}` + (inc.length ? `<ul>${inc.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") +
-      (n.note ? `<p class="df-info-note">Your note: ${esc(n.note)}</p>` : "");
+    const f = fileNode[n.id] || {}, inc = f.includes || [], lane = laneById[laneOf(n)];
+    const group = n.group && laneOf(n) === "inputs" ? ` · feeds the ${n.group} process` : "";
+    const lines = S.edges.filter(e => e.from === n.id || e.to === n.id).map(e => e.from === n.id
+      ? `→ ${esc(N[e.to]?.label)}${e.label ? `: ${esc(e.label)}` : ""}` : `← ${esc(N[e.from]?.label)}${e.label ? `: ${esc(e.label)}` : ""}`);
+    box.innerHTML = `<b>${esc(n.label)}</b> <span class="muted">· ${esc(D.kinds[n.kind] || n.kind)}${lane ? " · " + esc(lane.label) : ""}${group}${f.gate ? " · review gate" : ""}${f.status === "planned" ? " · planned" : ""}</span><br>` +
+      `${esc(f.desc || "Your own step.")}${linkHtml(f.link)}` + (f.kept ? `<br><span class="df-kept">Kept in: ${esc(f.kept)}</span>` : "") +
+      (inc.length ? `<ul>${inc.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") +
+      (lines.length ? `<p class="df-info-lines">${lines.join("<br>")}</p>` : "") +
+      (n.note ? `<p class="df-info-note">✎ Your note: ${esc(n.note)}</p>` : "");
     box.hidden = false;
   }
 
@@ -173,11 +298,12 @@
     svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
     svg.setAttribute("preserveAspectRatio", "none");
   }
+  function chartExtent() { const {boxes, layout} = layoutNow(); return extent(boxes, layout); }
   function fit() {
-    const e = extent(Object.fromEntries(S.nodes.map(n => [n.id, nodeBox(n)])));
+    const e = chartExtent();
     const r = svg.getBoundingClientRect(), aspect = (r.height || 1) / (r.width || 1);
     const w = Math.max(e.w, e.h / aspect);
-    view = {x: e.x, y: e.y, w, h: w * aspect};
+    view = {x: e.x - (w - e.w) / 2, y: e.y, w, h: w * aspect};
     applyView();
   }
   function zoomAt(f, p) {
@@ -307,7 +433,7 @@
       const n = N[sel.id], f = fileNode[n.id];
       $("#df-d-title").textContent = "Edit step";
       $("#df-d-label").value = n.label; $("#df-d-kind").value = n.kind; $("#df-d-note").value = n.note || "";
-      $("#df-d-info").innerHTML = (f && f.desc ? esc(f.desc) : "Your own step.") + (f && f.link ? ` · ${f.link.startsWith("/") ? `<a href="${esc(f.link)}">Open the page</a>` : `<code>${esc(f.link)}</code>`}` : "");
+      $("#df-d-info").innerHTML = (f && f.desc ? esc(f.desc) : "Your own step.") + linkHtml(f && f.link);
       show("#df-d-label-wrap", true); show("#df-d-kind-wrap", true); show("#df-d-note-wrap", true);
     } else if (sel.type === "edge") {
       const e = S.edges[sel.i];
@@ -367,7 +493,7 @@
     if ((e.key === "Delete" || e.key === "Backspace") && sel) { e.preventDefault(); deleteSel(); }
   });
   $("#df-add-node").onclick = () => {
-    const c = center(), n = {id: newId("n"), label: "New step", kind: "step", note: "", x: Math.round(c.x - NW / 2), y: Math.round(c.y - 25)};
+    const c = center(), n = {id: newId("n"), label: "New step", kind: "step", note: "", x: Math.round(c.x - NW / 2), y: Math.round(c.y - NH / 2), w: NW, h: NH};
     S.nodes.push(n);
     sel = {type: "node", id: n.id};
     changed("Added a step.");
@@ -432,7 +558,7 @@
   showStyle();
   render();
   (() => {  // the frame no taller than the chart needs at full width (no empty band under it)
-    const e = extent(Object.fromEntries(S.nodes.map(n => [n.id, nodeBox(n)])));
+    const e = chartExtent();
     const want = e.h * frame.clientWidth / e.w + 4;
     if (want < frame.clientHeight) frame.style.height = `${Math.max(360, Math.round(want))}px`;
   })();

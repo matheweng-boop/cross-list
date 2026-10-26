@@ -17,7 +17,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.services import digest  # noqa: E402
 
 WHERE = {
-    "evidence": "data/business/evidence/<topic>.yaml, entry <fn> (patent platforms: patents_platforms.yaml)",
+    "evidence": "data/business/gists.yaml, key evidence:<fn> (one card per function: path, manufacturing, competitor "
+                "technology, trend; patents stay read-only)",
+    "patent-change": "data/business/gists.yaml, key patent-change:<entry>@<date>",
     "note": "data/engineering_rf_notes.yaml, topic <id>",
     "question": "data/business/gists.yaml, key question:<id>",
     "expansion": "data/business/gists.yaml, key expansion:<slug>",

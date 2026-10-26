@@ -1,0 +1,133 @@
+{% raw %}<h1>Car radio: which of our parts fit each block for automotive, which need work and which only lack qualification</h1>
+<p class="meta">26 Oct 2026 · Owner's comment of 26 Oct 2026: “For the Car Radio System Block Diagram 1 there's a lot of potential around the system to place parts. Can we do a preliminary analysis on how to fit everything into Automotive? List existing automotive parts and why they work, which ones would maybe need improvements and which ones are just lacking qual.” Diagram used: the library diagram <a href="/blocks/new?diagram=Car%20radio%20tuner%20system">Car radio tuner system</a> (the only car radio system diagram in the library; the alternative is the Skyworks radio application page diagram EU4, which shows only antennas, band select, tuners and coprocessor). Built from BizDev data (catalogue with the AEC-Q rule, the Automotive map, broadcast device data, cached Skyworks data shorts) and 4 public requests to www.skyworksinc.com. “est” = our estimate. Every figure and link: <a href="/business/reports/radio-auto-fit/background">background notes</a>.</p>
+
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>The radio core is automotive already.</b> All Si479xx tuners (24 of 25), all Si469xx and Si461x coprocessors and the Si462x receivers are AEC-Q100; the Si469xx run from −40 to 105 °C.</li>
+    <li><b>(A) Automotive today, 11 part groups:</b> besides the radio core, SKYA21001 and QPC8010Q switches that reach the FM band, QPL6202Q/6208Q/6220Q satellite-radio (SDARS) LNAs, Si5335x-AM clock buffers, the ACT4751 2 MHz buck and the SKY5A2110 GNSS LNA.</li>
+    <li><b>(B) Would need improvements, 6:</b> Si473x and Si470x consumer tuners (−20 °C, one tuner), QPL7433/7442 wideband LNAs (no automotive amplifier design), the SKY76206 audio amplifier (phone class), SKY8700x bucks (WLCSP, last time buy) and the ACT4529 buck (125 kHz, harmonics in the AM band).</li>
+    <li><b>(C) Only lacks qualification, 6:</b> Si468x digital radio receivers (−40 to 85 °C, same functions as the AEC-Q100 Si462x), Si47992 (grade not in our data), AS169/AS183 and SKY13374 switches (300 kHz up, so they also cover AM), Si510/511 oscillators (−40 to 85 °C), ACT8832x PMIC (Not enough data on temperature).</li>
+    <li><b>Gaps, 9 blocks:</b> TVS/ESD, reverse polarity, LDO, supervisor, audio codec, CAN, automotive Ethernet, A²B and the active antenna amplifier. Flash, the head-unit SoC and the antenna are the customer's parts.</li>
+  </ol>
+</section>
+
+<h2>1. Adjacent products and technologies: the blocks of the car radio</h2>
+<p>The diagram has seven blocks: Antenna &amp; RF (antenna, antenna switch, LNA, TVS/ESD), Tuners (2 × AM/FM tuner), Digital radio (demodulator, flash), Head unit (SoC), Audio (codec, amplifier), Power rail (reverse polarity, PMIC, point-of-load buck, LDO, supervisor) and Timing (crystal oscillator, clock buffer, 36.864 MHz to the tuners). Per block, the best part group of ours and its group:</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">Function</th><th scope="col">Ours (best fit)</th><th scope="col">Group</th></tr></thead>
+  <tbody>
+    <tr><td>Antenna &amp; RF</td><td>Antenna switch (diversity, AM/FM/DAB)</td><td>SKYA21001, QPC8010Q; AS183-92LF, SKY13374-397LF</td><td><span class="pill have">A</span> <span class="pill part">C</span></td></tr>
+    <tr><td>Antenna &amp; RF</td><td>LNA / active antenna amplifier</td><td>QPL62xxQ (SDARS 2.3 GHz) automotive; QPL7433/7442 wideband (FM/DAB)</td><td><span class="pill have">A</span> <span class="pill part">B</span></td></tr>
+    <tr><td>Antenna &amp; RF</td><td>TVS / ESD</td><td>none</td><td><span class="pill none">gap</span></td></tr>
+    <tr><td>Tuners</td><td>AM/FM/DAB/HD/DRM tuner</td><td>Si479xx (24 AEC-Q100); Si47992 grade not stated; Si473x/Si470x consumer</td><td><span class="pill have">A</span> <span class="pill part">C</span> <span class="pill part">B</span></td></tr>
+    <tr><td>Digital radio</td><td>Demodulator / coprocessor</td><td>Si469xx, Si461x, Si462x (AEC-Q100); Si468x</td><td><span class="pill have">A</span> <span class="pill part">C</span></td></tr>
+    <tr><td>Digital radio, head unit</td><td>Flash, SoC</td><td>customer's parts</td><td>—</td></tr>
+    <tr><td>Audio</td><td>Codec / amplifier</td><td>SKY76206 (mono, phone class); no codec</td><td><span class="pill part">B</span> <span class="pill none">gap</span></td></tr>
+    <tr><td>Power rail</td><td>12 V buck / PMIC / POL buck</td><td>ACT4751 (A); ACT4529, SKY8700x (B); ACT8832x (C)</td><td><span class="pill have">A</span> <span class="pill part">B</span> <span class="pill part">C</span></td></tr>
+    <tr><td>Power rail</td><td>Reverse polarity, LDO, supervisor</td><td>none</td><td><span class="pill none">gap</span></td></tr>
+    <tr><td>Timing</td><td>Crystal oscillator, clock buffer</td><td>Si5335x-AM buffers (A); Si510/511 XO (C)</td><td><span class="pill have">A</span> <span class="pill part">C</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">Cross-sell pairs already recorded for this diagram (data/business/synergies_auto.yaml): antenna switch + LNA and tuner + LNA (Antenna &amp; RF feeding the tuner), tuner + PMIC (supply link only, weak). Not on this diagram but in the same car radio: the satellite-radio antenna (QPL62xxQ) and the GNSS antenna (SKY5A2110) in the roof module.</p>
+<p class="rpt-thread"><b>For the decision:</b> We fill the tuner and digital radio blocks fully; the antenna, timing and power blocks are where qualifying a few parts would add sockets next to every tuner.</p>
+
+<h2>2. (A) Automotive today, and why it works</h2>
+<p>Grade from the site's AEC-Q rule (stated grade, AEC-Q in the text, or the Qorvo “…Q” suffix). Temperature and specs from the datasheet or data short in our data.</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Part</th><th scope="col">Block</th><th scope="col">Grade</th><th scope="col">Why it works</th><th scope="col">Source</th><th scope="col">Conf.</th></tr></thead>
+  <tbody>
+    <tr><td><a href="/find?q=Si47961">Si4796x / Si4797x</a> dual tuners (Si47961/62/67/71/72/75/77)</td><td>Tuners</td><td>AEC-Q100 (A-grade)</td><td>Two tuners per chip for FM phase diversity and a background tuner; AM/FM plus HD Radio, DAB/DAB+ or DRM front end; 3.3 V analog, 1.8 V digital. Temperature range not given in the public data shorts.</td><td>Skyworks data shorts Si47961-62, Si47971-72</td><td>high</td></tr>
+    <tr><td><a href="/find?q=Si47901">Si4790x–Si4798x</a> single tuners (17 parts) and Si47942 dual DAB</td><td>Tuners</td><td>AEC-Q100 (A-grade)</td><td>Same family and software API from 1 to 4+ tuners; versions with an audio system (DAC) for entry radios.</td><td>Skyworks data shorts (Si47901-02 … Si47957)</td><td>high</td></tr>
+    <tr><td><a href="/find?q=Si46922">Si469xx</a> 2/3/4-channel coprocessors (HD Radio, DAB, CDR, DRM, with or without MCU)</td><td>Digital radio</td><td>AEC-Q100, −40 to 105 °C</td><td>Decodes every digital standard; 105 °C covers a head unit behind the dashboard. Si46933 and Si46943 (CDR) are Preview.</td><td>Si469xx product summary</td><td>high</td></tr>
+    <tr><td><a href="/find?q=Si4614">Si4614 / Si4617</a> coprocessors</td><td>Digital radio</td><td>AEC-Q100</td><td>DAB/DAB+ (Si4614) or HD Radio alignment (Si4617) next to the tuners.</td><td>Skyworks data shorts</td><td>high</td></tr>
+    <tr><td><a href="/find?q=Si4624">Si4622 / Si4624 / Si4629</a> digital data receivers</td><td>Tuners + digital radio</td><td>AEC-Q100</td><td>One chip: FM (and AM, DAB Band III on Si4629) with HD Radio or DAB decode, 1.8 V rails; for one-tuner digital radios.</td><td>Skyworks data shorts</td><td>high</td></tr>
+    <tr><td><a href="/find?q=SKYA21001">SKYA21001</a> SPDT</td><td>Antenna &amp; RF</td><td>AEC-Q100, −40 to 105 °C</td><td>Title range 20 MHz–3 GHz covers FM and DAB Band III; IP3 +53 dBm handles strong FM stations. But the datasheet specifies loss and isolation only from 0.7 GHz, and ESD is Class 1A (250 V HBM), so it needs a TVS at the antenna (gap).</td><td>SKYA21001 datasheet rev I</td><td>med</td></tr>
+    <tr><td><a href="/find?q=QPC8010Q">QPC8010Q</a> SPDT</td><td>Antenna &amp; RF</td><td>Automotive (Q suffix)</td><td>5 MHz–6 GHz, IIP3 75 dBm, 0.75 dB loss: one switch for FM, DAB and the higher bands in a combined antenna.</td><td>Qorvo store listing (site catalogue)</td><td>med</td></tr>
+    <tr><td><a href="/find?q=QPL6202Q">QPL6202Q / QPL6208Q / QPL6220Q</a> LNAs</td><td>Antenna &amp; RF (SDARS, US)</td><td>Automotive (Q suffix)</td><td>2.32–2.345 GHz satellite radio band, NF 0.52 dB, 3.3–5.25 V; the active stage of a US radio antenna.</td><td>Qorvo store listing (site catalogue)</td><td>med</td></tr>
+    <tr><td><a href="/find?q=Si53352A-01AM">Si53350A / 52A / 54A / 58A-01AM</a> clock buffers</td><td>Timing</td><td>Automotive (-AM code)</td><td>1:2 to 1:10 fan-out with LVCMOS outputs: one reference for several tuners and the coprocessor.</td><td>Skyworks catalogue</td><td>high</td></tr>
+    <tr><td><a href="/find?q=ACT4751MQI101">ACT4751MQI101</a> buck</td><td>Power rail</td><td>Automotive</td><td>4.5–40 V input (12 V battery with cold crank), 4 A; switching 450–2250 kHz: set above 1.71 MHz, its harmonics stay out of the AM band (est on the setting).</td><td>Qorvo catalogue</td><td>med</td></tr>
+    <tr><td><a href="/find?q=SKY5A2110">SKY5A2110</a> GNSS L1 + L5 LNA module</td><td>Antenna (roof module, next to the radio)</td><td>Automotive</td><td>Pre- and post-filtered dual-band LNA for the navigation antenna that shares the fin with radio.</td><td>Skyworks catalogue</td><td>high</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Skyworks' public product menu also lists AEC-Q101 attenuator PIN, switching PIN, hyperabrupt varactor and Schottky diode categories, useful for antenna AGC and tuned front ends; the part numbers are not in our data (Not enough data).</p>
+<p class="rpt-thread"><b>For the decision:</b> The radio core is car-ready; the A parts around it are the kit we can already offer with every tuner, at no qualification cost.</p>
+
+<h2>3. (B) Would need improvements for automotive</h2>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Part</th><th scope="col">Block</th><th scope="col">Grade</th><th scope="col">What falls short</th><th scope="col">Improvement</th><th scope="col">Source</th></tr></thead>
+  <tbody>
+    <tr><td><a href="/find?q=Si4730">Si4730/31/34/35</a> AM/FM receivers</td><td>Tuners</td><td>none</td><td>−20 to 85 °C; one tuner, no phase diversity, no HD Radio or DAB; 2.7–5.5 V supply. EN55020 compliant.</td><td>−40 °C characterisation and AEC-Q100 Grade 3 for entry radios, two-wheelers and aftermarket (est); for car head units Si479xx already fits.</td><td>Si4730-31-34-35 datasheet (read 26 Oct 2026)</td></tr>
+    <tr><td><a href="/find?q=Si4704">Si4704/05/06</a> FM receivers</td><td>Tuners</td><td>none</td><td>−20 to 85 °C; FM only.</td><td>As Si473x; low value in cars (est).</td><td>Skyworks data shorts</td></tr>
+    <tr><td><a href="/find?q=QPL7433">QPL7433 / QPL7442</a> wideband LNAs</td><td>Antenna &amp; RF (active antenna)</td><td>not stated</td><td>50 MHz–3.3/4 GHz covers FM and DAB, but an active antenna amplifier also needs AGC against strong stations, phantom feed over the coax and load-dump survival; IP3 34 dBm (QPL7433).</td><td>An automotive antenna amplifier around the die (the Automotive map rates this a variant, level C).</td><td>Qorvo catalogue; Automotive map</td></tr>
+    <tr><td><a href="/find?q=SKY76206-21">SKY76206-21</a> class-D amplifier</td><td>Audio</td><td>not stated</td><td>Mono, low power, 1.54 mm WLCSP for phones; car audio needs 4 channels of tens of watts from 14.4 V, load-dump and speaker diagnostics.</td><td>A new automotive amplifier; not a qualification step (est).</td><td>Skyworks data sheet (site catalogue)</td></tr>
+    <tr><td><a href="/find?q=SKY87006">SKY87006</a>, SKY87000 bucks</td><td>Power rail (point of load)</td><td>not stated</td><td>2.5–5.1 V input fits a 5 V rail, but WLCSP packages and last-time-buy or obsolete status do not meet a 10–15-year car life.</td><td>QFN with wettable flanks, AEC-Q100 Grade 2, long-term supply.</td><td>Skyworks catalogue</td></tr>
+    <tr><td><a href="/find?q=ACT4529MYH-T0010">ACT4529MYH</a> buck</td><td>Power rail</td><td>Automotive</td><td>Qualified, but 125 kHz switching puts harmonics into long wave and AM (148 kHz–1.71 MHz).</td><td>A switching frequency above 1.8 MHz or spread spectrum; use ACT4751 instead (est).</td><td>Qorvo catalogue</td></tr>
+  </tbody>
+</table></div>
+<p class="rpt-thread"><b>For the decision:</b> None of the B items is a quick win: the tuners are covered by Si479xx, and audio and point-of-load power would be new automotive designs.</p>
+
+<h2>4. (C) Only lacks qualification</h2>
+<p>Specs fit the block; no AEC-Q grade is listed. Qualifying means an AEC-Q100 stress run at the chosen grade (Grade 3 −40 to 85 °C, Grade 2 −40 to 105 °C), a PPAP file and a long-term supply commitment; effort and time are est, about 6–12 months per family (est).</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Part</th><th scope="col">Block</th><th scope="col">Grade today</th><th scope="col">Why the specs already fit</th><th scope="col">What qualifying would mean</th><th scope="col">Source</th></tr></thead>
+  <tbody>
+    <tr><td><a href="/find?q=Si4684">Si4682/83/84/85/88/89</a> digital radio receivers</td><td>Tuners + digital radio</td><td>not stated</td><td>−40 to 85 °C; FM, AM, DAB Band III and HD Radio in one chip; 1.8 V rails, QFN48 7 × 7 mm. The AEC-Q100 Si462x has the same function set.</td><td>AEC-Q100 Grade 3 and PPAP; if the die is shared with Si462x, mainly paperwork (est).</td><td>Si468x product summaries</td></tr>
+    <tr><td>Si47992 single tuner (AM, FM, DAB, HD, DRM, AMIC)</td><td>Tuners</td><td>Not enough data</td><td>Same family and feature set as the AEC-Q100 Si4798x; grade missing from our data.</td><td>Check first; probably already automotive (est).</td><td>Broadcast tuner features (site data)</td></tr>
+    <tr><td><a href="/find?q=AS183-92LF">AS183-92LF</a>, <a href="/find?q=AS169-73LF">AS169-73LF</a> SPDT</td><td>Antenna &amp; RF</td><td>industrial, −40 to 85 °C</td><td>300 kHz–2.5 GHz: the only switches of ours specified down into AM; IP3 50 dBm; AS169 0.4 dB loss, 24 dB isolation.</td><td>AEC-Q100 Grade 3; ESD Class 1A needs a TVS next to it.</td><td>Skyworks datasheets (site switch data)</td></tr>
+    <tr><td><a href="/find?q=SKY13374-397LF">SKY13374-397LF</a> SPDT</td><td>Antenna &amp; RF</td><td>industrial, −40 to 85 °C</td><td>300 kHz–6 GHz, IIP3 68 dBm: AM to DAB and the higher bands in one switch.</td><td>AEC-Q100 Grade 3 (Grade 2 for roof modules).</td><td>Skyworks datasheet (site switch data)</td></tr>
+    <tr><td><a href="/find?q=Si510">Si510 / Si511</a> oscillators</td><td>Timing</td><td>not stated, −40 to 85 °C</td><td>Any frequency 0.1–250 MHz (36.864 MHz for the tuners), 2.5 × 3.2 mm up.</td><td>AEC-Q100 Grade 3 for the head unit; Grade 2 for remote tuner modules (est).</td><td>Skyworks catalogue</td></tr>
+    <tr><td><a href="/find?q=ACT88320QI103-T">ACT88320 / ACT88321</a> PMICs</td><td>Power rail</td><td>Not enough data</td><td>3 bucks + 2 LDOs makes the 1.8 V and 3.3 V tuner rails from 5 V; temperature not in our data, several codes discontinued.</td><td>Check temperature first, then AEC-Q100 Grade 2 (est).</td><td>Qorvo catalogue</td></tr>
+  </tbody>
+</table></div>
+<p class="rpt-thread"><b>For the decision:</b> The switches, the oscillator and Si468x are the short list: same chips, only qualification, and each adds a socket next to a tuner we already sell.</p>
+
+<h2>5. Gaps: blocks where we have nothing</h2>
+<p>From the Automotive map (Opportunities › Automotive map, row Infotainment, radio &amp; cluster; data/business/auto_reach.yaml): neither Skyworks nor Qorvo sells a part of these functions.</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">Function</th><th scope="col">Map level</th><th scope="col">Note</th></tr></thead>
+  <tbody>
+    <tr><td>Antenna &amp; RF</td><td>TVS / ESD</td><td><span class="pill none">gap</span></td><td>Needed at every antenna input; our switches have Class 1A ESD.</td></tr>
+    <tr><td>Antenna &amp; RF</td><td>Active antenna amplifier (AM/FM/DAB)</td><td><span class="pill part">C variant</span></td><td>No part; our pHEMT/SiGe LNAs and tuners are the starting technology.</td></tr>
+    <tr><td>Power rail</td><td>Reverse polarity</td><td><span class="pill none">gap</span></td><td>—</td></tr>
+    <tr><td>Power rail</td><td>LDO</td><td><span class="pill none">gap</span></td><td>Low-noise LDO for the tuner analog rail.</td></tr>
+    <tr><td>Power rail</td><td>Supervisor</td><td><span class="pill part">D adjacent</span></td><td>CMOS design flows exist; no product.</td></tr>
+    <tr><td>Audio</td><td>Audio codec</td><td><span class="pill none">gap</span></td><td>Si479xx versions with an audio DAC cover entry radios.</td></tr>
+    <tr><td>Interfaces</td><td>CAN transceiver</td><td><span class="pill none">gap</span></td><td>Our automotive isolators sit next to CAN, not in it.</td></tr>
+    <tr><td>Interfaces</td><td>Automotive Ethernet PHY</td><td><span class="pill none">gap</span></td><td>The link of a remote tuner module (see the radio node case).</td></tr>
+    <tr><td>Interfaces</td><td>A²B audio bus</td><td>not in the site's function list</td><td>Not enough data; one-supplier bus.</td></tr>
+  </tbody>
+</table></div>
+<p class="rpt-thread"><b>For the decision:</b> The gaps are standard car parts that NXP, ST, TI and ADI already sell; we leave them to partners and do not chase them for the radio.</p>
+
+<h2>6. Where else we see opportunities</h2>
+<ul>
+  <li><b>Remote tuner and roof modules:</b> the radio moves to the antenna in zonal cars; a kit of tuner, switch, oscillator and 2 MHz buck is the step before the radio node of the case <a href="/business/reports/radio-tuner-next">radio-tuner-next</a>. Grade 2 (105 °C) matters there (est).</li>
+  <li><b>US satellite radio antennas:</b> QPL62xxQ LNAs are automotive already; pairing them with our tuners and the GNSS module gives one antenna supplier for SDARS, GNSS and FM (est).</li>
+  <li><b>Head-unit clocks:</b> the Si5332-AM clock generators (automotive) serve the head-unit SoC, PCIe and Ethernet; see <a href="/business/reports/auto-clock-tree">auto-clock-tree</a>.</li>
+  <li><b>Two-wheelers, trucks and aftermarket radios:</b> the place for a Si473x with a −40 °C grade (est).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> The same short list sells into remote tuner and roof modules, where the radio is heading.</p>
+
+<h2>7. Market trend</h2>
+<ul>
+  <li><b>Volume:</b> about 90–92 M car radio systems a year, flat (owner, 25 Oct 2026); car radio content $0.89–2.31 B (2024) in the site's TAM band.</li>
+  <li><b>Digital radio rules:</b> EU new cars must receive digital radio (EECC, from Dec 2020); HD Radio in more than 60 % of new US cars; DRM in 1 in 3 Indian cars; China's CDR rule drafted, not adopted (sources of the radio-tuner-next case).</li>
+  <li><b>Architecture:</b> software radio on central computers and remote tuner modules at the antenna (radio-tuner-next); NXP sells a one-chip radio, ST cheaper tuners.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Volume is flat; growth comes from content per car, so more of our parts per radio is the lever.</p>
+
+<h2>Risks</h2>
+<ul>
+  <li>Grades of Si47992 and ACT8832x and the temperature range of the Si479xx tuners are not in our data.</li>
+  <li>Switches and oscillators are low-value sockets; qualification cost may exceed the gain at low attach (est).</li>
+  <li>Qorvo grades come from the “Q” suffix and the store listing; qorvo.com was not requested.</li>
+  <li>Several C parts are older families; long-term supply must be confirmed before a car design-in.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Confirm the missing grades and the die question with the BUs before any qualification money is spent.</p>
+
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
+<h2>Sources</h2>
+<p class="small">Skyworks data shorts and product summaries for Si479xx, Si469xx, Si461x, Si462x, Si468x, Si470x (cached in the site's broadcast data); Si4730-31-34-35 datasheet (read 26 Oct 2026); SKYA21001 and switch datasheets in the site's switch data; Skyworks and Qorvo catalogues with the AEC-Q rule; Automotive map; Cross-sell pairs; radio-tuner-next case sources. Full list: <a href="/business/reports/radio-auto-fit/background">background notes</a>.</p>
+{% endraw %}

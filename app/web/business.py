@@ -872,7 +872,7 @@ def capabilities(request: Request, co: str = "combined", session: Session = Depe
     kinds: dict[str, list] = {}
     for k, p in plats.items():
         kinds.setdefault(p.get("kind") or "other", []).append((k, p))
-    c.update(kinds=kinds, tech=op.technology(), prox_label=op.PROXIMITY_LABEL,
+    c.update(kinds=kinds, tech=op.technology(), prox_label=op.PROXIMITY_LABEL, pat_for=patents.for_functions,
              feedback=session.scalars(select(TechFeedback).order_by(TechFeedback.created_at.desc())).all(),
              topics=sorted(plats.items(), key=lambda kv: kv[1].get("name", kv[0])))  # fmt: skip
     return templates.TemplateResponse(request, "business/capabilities.html", c)

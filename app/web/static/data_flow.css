@@ -2,19 +2,19 @@
 .df-root { --df-public: #e3f4e8; --df-public-ink: #1c6b3a; --df-owner: #fde9d9; --df-owner-ink: #a3450f;
   --df-guest: #ece6fa; --df-guest-ink: #5b3fa0; --df-step: #e4edf9; --df-step-ink: #1f4f8a;
   --df-store: #eef0f3; --df-store-ink: #3f4c66; --df-output: #e2f3f4; --df-output-ink: #0b5560;
-  --df-gate: #c0392b; --df-lane: #f6f4fa; --df-lane-line: #e3dfee; --df-edge: #7b879b; --df-sel: #2a78d6;
+  --df-gate: #c0392b; --df-handover: #7a3db8; --df-lane: #f6f4fa; --df-lane-line: #e3dfee; --df-edge: #7b879b; --df-sel: #2a78d6;
   --df-note: #fff6c7; --df-note-ink: #5a4a00; --df-text: #23304a; --df-canvas: #fdfcff; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .df-root { --df-public: #173d24; --df-public-ink: #9fe3b4; --df-owner: #4a2a14;
     --df-owner-ink: #f7b98a; --df-guest: #2f2650; --df-guest-ink: #cdbcf7; --df-step: #1c2c44; --df-step-ink: #a9c8f2;
     --df-store: #262c36; --df-store-ink: #c3cad6; --df-output: #16393d; --df-output-ink: #bfe7e3; --df-gate: #ff8a7a;
-    --df-lane: #171e29; --df-lane-line: #2c3646; --df-edge: #8e9ab0; --df-sel: #6fb0ff; --df-note: #3d3514;
+    --df-handover: #b58cf0; --df-lane: #171e29; --df-lane-line: #2c3646; --df-edge: #8e9ab0; --df-sel: #6fb0ff; --df-note: #3d3514;
     --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
 }
 :root[data-theme="dark"] .df-root { --df-public: #173d24; --df-public-ink: #9fe3b4; --df-owner: #4a2a14;
   --df-owner-ink: #f7b98a; --df-guest: #2f2650; --df-guest-ink: #cdbcf7; --df-step: #1c2c44; --df-step-ink: #a9c8f2;
   --df-store: #262c36; --df-store-ink: #c3cad6; --df-output: #16393d; --df-output-ink: #bfe7e3; --df-gate: #ff8a7a;
-  --df-lane: #171e29; --df-lane-line: #2c3646; --df-edge: #8e9ab0; --df-sel: #6fb0ff; --df-note: #3d3514;
+  --df-handover: #b58cf0; --df-lane: #171e29; --df-lane-line: #2c3646; --df-edge: #8e9ab0; --df-sel: #6fb0ff; --df-note: #3d3514;
   --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
 
 .df-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; list-style: none; padding: 0; margin: 0 0 .6rem; }
@@ -57,8 +57,15 @@
 /* the cross engine is the centre of the chart; research still using parts not from the crosses is marked */
 #df-svg .node.hub rect.box { stroke-width: 3.5; }
 #df-svg .node.hub text { font-size: 15px; }
-#df-svg .node.uncrossed rect.box { stroke: #c2410c; stroke-dasharray: 2 3; }
-.df-uncrossed-sw { border: 1.5px dashed #c2410c; }
+/* the two processes as bands; arrows between them (handovers) stand out, dashed when not built yet */
+#df-svg .row-band rect { fill: none; stroke: var(--df-handover); stroke-width: 1.5; stroke-dasharray: 8 6; opacity: .55; }
+#df-svg .row-band text { font-size: 15px; font-weight: 700; fill: var(--df-handover); }
+#df-svg .edge.handover path.line { stroke: var(--df-handover); stroke-width: 3; }
+#df-svg .edge.handover text { fill: var(--df-handover); font-weight: 650; }
+#df-svg .edge.planned path.line { stroke-dasharray: 6 4; }
+#df-svg .edge.uncrossed path.line { stroke: #c2410c; stroke-dasharray: 3 3; }
+.df-handover-sw { border-top: 3px solid var(--df-handover); height: 0 !important; margin-top: .45em; }
+.df-handover-planned-sw { border-top: 3px dashed var(--df-handover); height: 0 !important; margin-top: .45em; }
 #df-svg .node text.tag { font-size: 10px; font-weight: 700; fill: var(--df-gate); }
 #df-svg .node text.notemark { font-size: 10.5px; font-style: italic; }
 #df-svg .sel rect.box, #df-svg .sel rect.paper { stroke: var(--df-sel) !important; stroke-width: 3 !important; stroke-dasharray: none !important; }

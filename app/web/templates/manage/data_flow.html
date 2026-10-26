@@ -5,13 +5,14 @@
 <div class="df-root" id="df-root">
 <h1>Data flow</h1>
 <p class="subtitle muted">Every path the data takes, from the sources to what you see. Move it around, connect, delete or add steps and notes, then Save: tonight's run reads your changes, adapts the site where it can and redraws this chart to match.</p>
-<p class="small muted">Everything goes through the cross engine first: datasheet values, then crosses, then the checks on them. Research runs alongside and takes its parts and functions from the crosses. The daily run (18:42 Berlin) works both paths.</p>
+<p class="small muted">Two separate processes, each read left to right: the cross process (a part number to a cross) and the research process (public sources and comments to reports). They talk only through the purple handover arrows. The daily run (18:42 Berlin) works both.</p>
 
 <ul class="df-legend small" aria-label="Colours">
   {% for k, label in kinds.items() %}<li><span class="df-sw df-k-{{ k }}"></span>{{ label }}</li>{% endfor %}
   <li><span class="df-sw df-gate-sw"></span>Review gate</li>
   <li><span class="df-sw df-planned-sw"></span>Planned, not built yet</li>
-  <li><span class="df-sw df-uncrossed-sw"></span>Not yet all from the crosses</li>
+  <li><span class="df-sw df-handover-sw"></span>Handover between the processes</li>
+  <li><span class="df-sw df-handover-planned-sw"></span>Handover not built yet</li>
 </ul>
 
 <div class="df-tools" role="toolbar" aria-label="Chart tools">

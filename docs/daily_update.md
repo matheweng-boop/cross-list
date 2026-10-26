@@ -220,5 +220,6 @@ nothing in the browser. So, before any merge into `main` (automated or with the 
   first (var/datasheets, var/appnotes, var/text, the scratchpad research folders). Fetch one document at a time with
   the polite fetch helper, convert PDFs with `pdftotext` and search the text with `grep` for the needed sections
   instead of reading it all. At most about 5 new documents per run; leave the rest as an open item for the next run.
-- Tests: run only the test files for what changed while working; run the full suite once, at the end, before pushing.
+- Tests: run only the test files for what changed while working; run the full suite once, at the end, before the
+  merge (owner, 26 Oct 2026: no full runs before things are confirmed and signed off; workers never run it).
 - Write the summary short: one line per comment, then the open questions.

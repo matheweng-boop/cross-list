@@ -30,8 +30,6 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 7. **Data protection (26 Oct 2026, docs/plan_data_protection.md):** does your own input (prices, uploads, edits) also
    wait for a second look before it shows (suggested: yes, one-tap approve)?
 8. **Retention:** delete feedback and comments after 12 months and the daily inbox files after 30 days?
-9. **Customer-name list** for the confidential-data check (you enter the names; stored privately)?
-10. **Approvers:** only you?
 
 ## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
 
@@ -44,6 +42,13 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 - Feedback adjusts it: on a diagram's reference-design list the owner marks each design "Fits" / "Doesn't fit" and
   can dismiss a suggestion; a design that does not fit leaves that diagram at once. The daily run looks for patterns
   in those answers and tightens or loosens the rules (docs/daily_update.md).
+
+## Settled (owner, 26 Oct 2026, data protection)
+
+- No customer names are stored unless they come from public sources the site has pulled itself (with the link); no
+  private customer-name list. The confidential-data check uses only patterns (e-mail, phone, "confidential",
+  "internal", quote-like prices) and public names already in the data.
+- Only the owner can approve data (no other approvers, guests never).
 
 ## Settled (owner, 25 Oct 2026, radio market)
 

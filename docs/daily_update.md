@@ -143,7 +143,8 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      re-read every priority-1 value (`rules/<family>.yaml`) of every code from that datasheet: each value gets a page
      reference (`<file>.pdf p.N`) or is marked "est … check datasheet" (`is_estimate_source` / `from_datasheet` in
      `app/matching/engine.py`). Never copy values between codes or grades. Report what changed for the whole family
-     in the summary, and add an entry to `data/manage/family_checks.yaml` (family, datasheet, date re-read, done).
+     in the summary, and add an entry to `data/manage/family_checks.yaml` (family, datasheet, `reread_at`: the UTC time the
+     re-read finished, e.g. `2026-10-27T18:55:00Z`, done); a Wrong given after that time stays open.
      Once re-read, a family with 3 crosses marked Right and no newer Wrong appears as one item in Data management ›
      To confirm; only the owner confirms it.
    - **Cross-list lookups** (owner, 26 Oct 2026; also the step of the hourly lookup run, which does only this). The

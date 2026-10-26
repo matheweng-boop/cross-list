@@ -69,7 +69,7 @@ class Family:
     part_ids: set[int] = field(default_factory=set)
     right: list[DataReview] = field(default_factory=list)  # latest answer Right
     wrong: list[DataReview] = field(default_factory=list)  # latest answer Wrong
-    reread: date | None = None
+    reread: datetime | None = None  # UTC time of the last re-read
     reread_note: str = ""
     confirmed_at: datetime | None = None
     sourced: bool = False  # every priority-1 value has a datasheet page or an est marker (checked only when needed)
@@ -83,7 +83,7 @@ class Family:
         """Wrongs not covered by the last re-read (all of them before the first one)."""
         if self.reread is None:
             return self.wrong
-        end = datetime.combine(self.reread, time.max, tzinfo=UTC)  # the run handles that day's answers
+        end = self.reread  # a Wrong counts as handled only when it is older than the re-read
         return [w for w in self.wrong if aware(w.created_at) > end]
 
     @property
@@ -111,11 +111,23 @@ def checks() -> dict[str, dict]:
         return {}
     out: dict[str, dict] = {}
     for c in (yamlio.load(CHECKS_FILE.read_text()) or {}).get("checks") or []:
-        d = c.get("date")
-        d = d if isinstance(d, date) else date.fromisoformat(str(d)[:10])
-        if c.get("datasheet") and (c["datasheet"] not in out or out[c["datasheet"]]["date"] <= d):
-            out[c["datasheet"]] = {**c, "date": d}
+        d = reread_time(c.get("reread_at") or c.get("date"))
+        if c.get("datasheet") and d and (c["datasheet"] not in out or out[c["datasheet"]]["reread_at"] <= d):
+            out[c["datasheet"]] = {**c, "reread_at": d}
     return out
+
+
+def reread_time(v) -> datetime | None:
+    """A re-read time as UTC: an ISO timestamp (2026-10-27T18:55:00Z); an old date-only entry is the start of that
+    day (so a Wrong given that day still counts as open)."""
+    if v is None or v == "":
+        return None
+    if isinstance(v, datetime):
+        return v.astimezone(UTC) if v.tzinfo else v.replace(tzinfo=UTC)
+    if isinstance(v, date):
+        return datetime.combine(v, time.min, tzinfo=UTC)
+    t = str(v).strip().replace("Z", "+00:00")
+    return reread_time(datetime.fromisoformat(t) if "T" in t or ":" in t else date.fromisoformat(t[:10]))
 
 
 def sheets(session: Session) -> dict[int, str]:
@@ -171,7 +183,7 @@ def status(session: Session) -> dict[str, Family]:
     def fam(sheet: str) -> Family:
         if sheet not in fams:
             c = reread.get(sheet) or {}
-            fams[sheet] = Family(sheet, c.get("family") or family_name(sheet), reread=c.get("date"),
+            fams[sheet] = Family(sheet, c.get("family") or family_name(sheet), reread=c.get("reread_at"),
                                  reread_note=c.get("done") or "")  # fmt: skip
         return fams[sheet]
 
@@ -224,7 +236,8 @@ def digest_items(session: Session) -> list[dict]:
         if not (f.candidate or f.confirmed):
             continue
         when = max([aware(r.created_at) for r in f.right], default=None)
-        when = max(d for d in (when and when.date(), f.reread, f.confirmed_at and aware(f.confirmed_at).date()) if d)
+        when = max(d for d in (when and when.date(), f.reread and f.reread.date(),
+                              f.confirmed_at and aware(f.confirmed_at).date()) if d)
         rights = "; ".join(_pair(r) for r in f.right[:3]) + (f" and {len(f.right) - 3} more" if len(f.right) > 3
                                                                else "")  # fmt: skip
         checked = (f"Re-read from {f.sheet} on {f.reread:%d %b %Y}." if f.reread

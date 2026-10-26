@@ -15,15 +15,17 @@ THEIRS = ["ISO7740DWR", "ISO7741DWR", "ISO7742DWR", "ISO7720DR", "ISO7721DR"]
 
 @pytest.fixture
 def checks(tmp_path, monkeypatch):
-    """A family_checks.yaml of the test's own: write(sheet, day) records a re-read."""
+    """A family_checks.yaml of the test's own: write(sheet, when) records a re-read (a UTC time as reread_at, or an
+    old date-only entry)."""
     path = tmp_path / "family_checks.yaml"
     path.write_text("checks: []\n")
     monkeypatch.setattr(families, "CHECKS_FILE", path)
     rows = []
 
-    def write(sheet: str, day: date):
-        line = f"{{family: {families.family_name(sheet)}, datasheet: {sheet}, date: {day.isoformat()}, done: x}}"
-        rows.append(f"  - {line}\n")
+    def write(sheet: str, when: date | datetime):
+        at = (f"reread_at: {when.astimezone(UTC):%Y-%m-%dT%H:%M:%SZ}" if isinstance(when, datetime)
+              else f"date: {when.isoformat()}")  # fmt: skip
+        rows.append(f"  - {{family: {families.family_name(sheet)}, datasheet: {sheet}, {at}, done: x}}\n")
         path.write_text("checks:\n" + "".join(rows))
 
     return write
@@ -172,3 +174,27 @@ def test_guests_cannot_confirm_a_family(make_guest, session):
     r = guest.post("/manage/to-confirm/act", data={"key": "family:si864x-datasheet.pdf", "action": "confirm"})
     assert r.status_code == 403
     assert session.scalar(select(DataReview.id).where(DataReview.dataset == families.DATASET)) is None
+
+
+def test_reread_time_counts_same_day_wrongs_after_it_as_open(client, session, real, checks):
+    """A re-read is a UTC time: a Wrong is handled only when it is older than it (a Wrong left after the 18:42 run on
+    the same day stays open). An old date-only entry counts as the start of that day."""
+    assert families.reread_time("2026-10-27T18:55:00Z") == datetime(2026, 10, 27, 18, 55, tzinfo=UTC)
+    assert families.reread_time("2026-10-27") == datetime(2026, 10, 27, tzinfo=UTC)
+    assert families.reread_time(date(2026, 10, 27)) == datetime(2026, 10, 27, tzinfo=UTC)
+    ours = _codes(session, "si864x-datasheet.pdf")
+    their = _theirs(session)
+    day = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
+    _answer(session, their[0], ours[0], "wrong", when=day + timedelta(hours=10))
+    _answer(session, their[1], ours[1], "wrong", when=day + timedelta(hours=20))
+    _answer(session, their[2], ours[2], "wrong", when=day + timedelta(hours=21))
+    checks("si864x-datasheet.pdf", day.date())  # date only: start of the day, all three stay open
+    f = families.status(session)["si864x-datasheet.pdf"]
+    assert len(f.open_wrong) == 3 and f.flagged
+    checks("si864x-datasheet.pdf", day + timedelta(hours=18, minutes=55))  # the run finished at 18:55 UTC
+    f = families.status(session)["si864x-datasheet.pdf"]
+    assert f.reread == day + timedelta(hours=18, minutes=55)
+    assert {w.key.split("|")[0] for w in f.open_wrong} == {their[1], their[2]} and f.flagged
+    checks("si864x-datasheet.pdf", day + timedelta(hours=22))
+    f = families.status(session)["si864x-datasheet.pdf"]
+    assert not f.open_wrong and not f.flagged

@@ -1,0 +1,9 @@
+{# Plain-language explanation under each visual's graph (owner, 26 Oct 2026; data/engineering_visual_explanations.yaml).
+   Rendered once per visual, hidden; visuals.js moves the one for the open visual into the panel below the graph. #}
+{% macro explain_box(id, parts) %}<div class="vz-explain" data-for="{{ id }}">
+  <h3>How to read this visual</h3>
+  {% for label, text in parts %}<p><b>{{ label }}:</b> {{ text }}</p>{% endfor %}
+</div>{% endmacro %}
+{% if explain %}<div id="vz-explain-src" hidden>{% for id, parts in explain.items() if id != 'rf-bands' %}
+{{ explain_box(id, parts) }}{% endfor %}
+</div>{% endif %}

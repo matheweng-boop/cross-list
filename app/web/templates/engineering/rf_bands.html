@@ -16,6 +16,7 @@
   <div class="rbt-types small" role="group" aria-label="Band types"><span class="muted">Band types (click to show or hide):</span>{% for t in types %} <button type="button" class="rbt-chip" data-type="{{ t.id }}" aria-pressed="{{ 'false' if t.hide else 'true' }}"><i aria-hidden="true"></i>{{ t.label }}</button>{% endfor %} <button type="button" class="rbt-all" data-all="1">all</button> <button type="button" class="rbt-all" data-all="0">none</button></div>
   <div class="rb-chart-wrap"><svg id="rbt-chart" class="rb-svg" role="img" aria-label="Frequency bands by type"></svg></div>
   <p class="small muted">Each bar is a band's frequency range on a logarithmic axis; where bands of one type overlap, the bar is darker. The red row marks where two or more of the types shown overlap: the coexistence spots that need filters. The bottom row gives a quarter-wave antenna length (λ/4 = c / 4f) at each frequency: <a href="/visuals#wave">wavelength and antenna size</a>.</p>
+  {% if explain %}{% from "engineering/visuals/_explain.html" import explain_box %}{{ explain_box("rf-bands", explain) }}{% endif %}
   <div class="rbt-ov small"></div>
   <div class="rbt-list small"></div>
 </div>

@@ -64,10 +64,18 @@ mix:
     - {region: Europe, vehicles_m: 17.2, share: 0.95, standard: DAB+, driver: eecc, source: "WorldDAB: 95 % of new cars in key EU markets (2021); \"almost all\" (2026)"}
     - {region: US, vehicles_m: 10.2, share: 0.60, standard: HD Radio, driver: us-hd, source: "Radio World (Xperi column), 7 Sep 2026: >60 % of new US vehicles"}
     - {region: India, vehicles_m: 6.5, share: 0.33, standard: DRM, driver: in-drm, source: "DRM Consortium, 29 Oct 2025: 1 in 3 passenger cars sold over the past decade"}
-    - {region: China, vehicles_m: 34.5, share: null, standard: "CDR / DRM", driver: cn-cdr, source: "Mandatory standard drafted, not adopted; integration still testing (Radio World 30 Sep 2024; DRM Consortium 2026)"}
-    - {region: Japan, vehicles_m: 8.4, share: null, standard: "", driver: "", source: "No public share found"}
-    - {region: Rest of world, vehicles_m: 19.6, share: null, standard: "DAB+ (e.g. Australia), others", driver: "", source: "No public share found (world 96.4 M minus the regions above)"}
-  target: null           # 2030 share digital: Not Enough Data (depends on China's mandate and India's choice)
+    - {region: China, vehicles_m: 34.5, share: 0.10, standard: "CDR / DRM", driver: cn-cdr, source: "No public share; about 10 % digital today (owner: slow adoption, est). Mandatory standard drafted, not adopted (Radio World 30 Sep 2024; DRM Consortium 2026)"}
+    - {region: Japan, vehicles_m: 8.4, share: 0.10, standard: "", driver: "", source: "No public share; about 10 % digital today (owner: slow adoption, est)"}
+    - {region: Rest of world, vehicles_m: 19.6, share: 0.10, standard: "DAB+ (e.g. Australia), others", driver: "", source: "No public share; about 10 % digital today (owner: slow adoption, est); world 96.4 M minus the regions above"}
+  # Owner, 26 Oct 2026: "no share known, assume slow digital radio adoption" and "assume about 10% for slow
+  # adoption, if it is mandated fast adoption would be 100% within a few years". Regions without a public share
+  # (China, Japan, rest of world) are about 10 % digital today and stay there without a mandate (est). 2030 base case
+  # (no new mandate): Europe 1.00 (mandated, EECC), US 0.65 (voluntary HD Radio, slow), India 0.35 (no mandate yet),
+  # the others 0.10 -> (17.2 + 6.63 + 2.28 + (34.5 + 8.4 + 19.6) x 0.10) / 96.4 = 0.34. Mandate scenario: if China
+  # adopts its CDR mandate, China goes to 100 % within a few years -> about 0.66 of new-car radios digital (est).
+  assumption: "Slow adoption (owner, 26 Oct 2026): about 10 % digital where no share is known; a mandate takes a region to 100 % within a few years (est)"
+  mandate_scenario: 0.66 # 2030 share if China mandates CDR (est, owner's fast-adoption rule)
+  target: 0.34           # 2030 share digital, base case without a new mandate (est; see above)
 
 # Standards, mandates and adoption (owner, 25 Oct 2026: "consider standardization and other adoptions in the market
 # like AM Mandate in the US"). Status as stated by the source on its date; a bill is never stated as law.

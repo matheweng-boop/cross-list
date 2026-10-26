@@ -3,29 +3,7 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **New systems (26 Oct 2026).** The 95 diagrams under "Other" now sit in five new systems, none left in Other:
-   Industrial & energy (factory automation, motor drives and robots, solar and wind, energy storage and grid, power
-   supplies and isolation, e-mobility / rail / industrial vehicles), Aerospace & defense (radar, electronic warfare,
-   SATCOM and space, tactical radio, test and measurement), Consumer & wearables (wearables and XR, audio, PCs /
-   payments / portable power, connectivity chips and modules), Home & building (smart home, home Wi-Fi and broadband,
-   smart meters) and Medical (imaging, monitoring, therapy). Are the names and the split right?
-2. **Interior radar diagram.** The new child-presence diagram is drawn after Infineon's 60 GHz radar in-cabin
-   monitoring diagram; no public UWB-radar child-presence block diagram was found (Microwave Journal's robots.txt blocks
-   our reader). The UWB-radar option is a question on the diagram. Is a 60 GHz radar diagram right under "UWB in the
-   car"?
-3. **UWB anchor clock source.** The clock block cites Murata's public UWB module designs (Qorvo QM33120W and NXP SR150,
-   both with a 38.4 MHz crystal); NXP's automotive anchor pages give no clock frequency. Is a module design acceptable
-   as the "public reference design" for the anchor?
-4. **Car radio market, prices needed (26 Oct 2026).** The radio market at current BOM content is "Not Enough Data"
-   until these have a price basis: Si47961 (dual AM/FM tuner: only its sibling Si47962 is priced; enter prices or a
-   low / in band / high call), Si46922 (DAB demodulator: no price on the site) and a part for each adjacent block
-   (antenna amplifier / LNA, antenna switch, audio amplifier). Enter them under Price estimate > Required for market
-   estimates (public distributor or list prices only). Are these the right reference systems and blocks?
-5. **Digital share of new-car radios.** Today's mix is 26–90 % digital (Europe, US, India known; China, Japan and the
-   rest of the world have no public share, so they count both ways). Do you know a public figure for China's or the
-   world's share, and should the 2030 projection assume every new radio is digital (the upper bound used now)?
-6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
-   congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
+None open.
 
 ## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
 
@@ -38,6 +16,19 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 - Feedback adjusts it: on a diagram's reference-design list the owner marks each design "Fits" / "Doesn't fit" and
   can dismiss a suggestion; a design that does not fit leaves that diagram at once. The daily run looks for patterns
   in those answers and tightens or loosens the rules (docs/daily_update.md).
+
+## Settled (owner, 26 Oct 2026, questions 1-6)
+
+- New systems (Industrial & energy, Aerospace & defense, Consumer & wearables, Home & building, Medical): OK.
+- Interior radar diagram drawn after a 60 GHz radar design under "UWB in the car": OK for now.
+- UWB anchor clock from Murata's public module designs: OK.
+- Car radio reference systems (Si47961 / Si47962 tuners, Si46922 demodulator, LNA, antenna switch, audio amplifier):
+  OK; the prices are still to be entered by the owner under Price estimate.
+- Digital share of new-car radios: no share known; slow adoption, about 10 % digital where nothing is mandated; a
+  mandate takes a region to 100 % within a few years (data/business/radio_market.yaml: 2030 base 0.34, China-mandate
+  scenario 0.66, est).
+- US AM for Every Vehicle Act: no new status known; it stays as shown (passed the House 16 Sep 2026, Senate not
+  checked).
 
 ## Settled (owner, 26 Oct 2026, shareable documents)
 

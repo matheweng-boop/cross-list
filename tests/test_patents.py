@@ -161,6 +161,14 @@ def test_patents_are_checked_automatically_not_reviewed(client):
     assert "checked automatically, 19 Oct 2026" in html
     assert 'data-ds="patents"' not in html  # no ✓ / ✗ / ? on patents
     assert 'data-ds="foundry"' in html  # the other evidence keeps its review buttons
+    from app.services import opportunity as op
+    from app.services import quality
+
+    low = next(c for c in quality.checks(op.applications()) if c["title"] == "Low-confidence evidence")
+    assert any(e.get("confidence") == "low" for e in patents.per_function().values())  # there are some to leave out
+    assert low["n"] == sum(e.get("confidence") == "low" for t in op.EVIDENCE_TOPICS if t != "patents"
+                           for e in op.evidence(t).values() if isinstance(e, dict))  # fmt: skip
+    assert not any(x.startswith("patents:") for x in low["examples"])  # Data quality never asks for a patent review
     caps = client.get("/business/capabilities").text
     assert "US patents:" in caps and "checked automatically, 25 Oct 2026" in caps and "indicative, not reviewed" in caps
 

@@ -136,7 +136,7 @@ def checks(apps: list[op.Application]) -> list[dict]:
         nosrc += [f"{ds}: {k}" for k, e in datasets()[ds][1].items()
                   if isinstance(e, dict) and not (e.get("source") or e.get("sources"))]  # fmt: skip
     add("warn", "Entries without a source", nosrc, "Unsourced entries cannot be checked.")
-    low = [f"{ds}: {k}" for ds in op.EVIDENCE_TOPICS for k, e in datasets()[ds][1].items()
+    low = [f"{ds}: {k}" for ds in op.EVIDENCE_TOPICS if ds != "patents" for k, e in datasets()[ds][1].items()
            if isinstance(e, dict) and e.get("confidence") == "low"]  # fmt: skip
     add("warn", "Low-confidence evidence", low, "Review these first if they feed a top-ranked function.")
     nomatch = [a.name for a in apps if not a.background and not op.segments_of(a.name)]

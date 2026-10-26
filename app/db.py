@@ -14,7 +14,9 @@ class Base(DeclarativeBase):
 
 
 def make_engine(url: str) -> Engine:
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
+    # SQLite: wait up to 30 s for another connection's write lock instead of failing after the default 5 s ("database
+    # is locked" on a short write while a long read or write runs, seen under load in the parallel test run)
+    connect_args = {"check_same_thread": False, "timeout": 30} if url.startswith("sqlite") else {}
     engine = create_engine(url, connect_args=connect_args)
     if url.startswith("sqlite"):
 

@@ -39,6 +39,12 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
   can dismiss a suggestion; a design that does not fit leaves that diagram at once. The daily run looks for patterns
   in those answers and tightens or loosens the rules (docs/daily_update.md).
 
+## Settled (owner, 26 Oct 2026, shareable documents)
+
+- Shareable reports, PDFs, PowerPoints and presentations are built only from content already on the site; no
+  research or new content is generated on request for them. New research comes in through the usual channels (daily
+  run, requests, reviews) and then appears on the site, from where the shareables pick it up.
+
 ## Settled (owner, 26 Oct 2026, data protection)
 
 - No customer names are stored unless they come from public sources the site has pulled itself (with the link); no

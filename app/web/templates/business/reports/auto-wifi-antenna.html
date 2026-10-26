@@ -1,0 +1,124 @@
+{% raw %}<h1>Wi-Fi 6, 6E and 7 in cars, Wi-Fi and antenna synergies, and the gaps we could fill</h1>
+<p class="meta">26 Oct 2026 · Research topic from the owner's site comments of 26 Oct 2026: “Run a report for WiFi6 and 7 for cars. Then also look at future growth topics.” · “Also look at WiFi and Antenna Synergies.” · “run a report for WiFi topics here, and find a few gaps to fill or new technology”. Built from BizDev data (Skyworks and Qorvo catalogues with the AEC-Q rule, the Systems library diagrams, the Cross-sell pairs, 4,186 public reference designs) and public web sources. It builds on the business case <a href="/business/reports/auto-wifi7-fem">Automotive Wi-Fi 7: a radio head for the smart antenna</a> and does not repeat its pricing. “est” = our estimate. Every figure and link: <a href="/business/reports/auto-wifi-antenna/background">background notes</a>.</p>
+
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>Wi-Fi is now in most new cars, and 6 GHz is coming.</b> About 99 M automotive Wi-Fi devices ship in 2026, 21 % of them 6 GHz-capable (IDC, quoted by the Wi-Fi Alliance). The first Wi-Fi 7 car programme starts production in 2027 (LG Innotek, Qualcomm chip). Wi-Fi sits in the head unit, the telematics unit (TCU), rear-seat screens and, more and more, in the roof antenna module next to V2X.</li>
+    <li><b>We cover the antenna side well, the Wi-Fi amplifier side poorly.</b> With Qorvo we have automotive (AEC-Q) switches, V2X front ends, GNSS, cellular and BAW coexistence filters. But only 3 of our 89 Wi-Fi FEMs are AEC-Q, none of them a Wi-Fi 6 or 7 power amplifier at 5 or 6 GHz, and the three automotive Wi-Fi filters are still Preview.</li>
+    <li><b>Synergy:</b> Skyworks + Qorvo together cover almost every block of a roof or smart-antenna module (cellular, GNSS, V2X, Wi-Fi switch and LNA, UWB, filters, switches). The missing blocks are the automotive 5/6 GHz Wi-Fi power amplifier, an automotive 5/6 GHz splitter for Wi-Fi 7 multi-link, and an automotive antenna tuner.</li>
+    <li><b>Five gaps, strongest first:</b> (1) an automotive Wi-Fi 7 FEM at 6 GHz and 5 GHz, AEC-Q100 Grade 2; (2) the 5–7 GHz coexistence filters out of Preview, with a sharper V2X edge; (3) an automotive 5/6 GHz multiplexer for multi-link (MLO) on one antenna; (4) UWB channel 5 and 6 GHz Wi-Fi share the same spectrum in the cabin; (5) an automotive antenna tuner (weak evidence). Gap 1 and 2 are the enabling step of the business case.</li>
+    <li><b>Next wave:</b> Wi-Fi 8 (802.11bn, final approval expected May 2028), Wi-Fi sensing (802.11bf, published 2025: child presence detection with the car's own Wi-Fi) and Wi-Fi positioning (802.11bk). Cars follow phones and routers by about 3–4 years (est).</li>
+  </ol>
+</section>
+
+<h2>1. Adjacent products and technologies</h2>
+<h3>Where Wi-Fi sits in the car</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Unit</th><th scope="col">What Wi-Fi does there</th><th scope="col">Bands, generation</th><th scope="col">Library diagram</th></tr></thead>
+  <tbody>
+    <tr><td>Head unit (infotainment, AVN)</td><td>Wireless phone projection (CarPlay, Android Auto), screen mirroring, app downloads, hotspot client</td><td>2.4 + 5 GHz; Wi-Fi 5/6 today, first Wi-Fi 7 in 2027</td><td><a href="/blocks/new?diagram=Automotive%20connected%20radio%20%2F%20entry%20infotainment%20%28AM%2FFM%2FDAB%20tuner%20%2B%20Wi-Fi%2FBT%20%2B%20MPU%29%20%28NXP%29">Connected radio (NXP)</a></td></tr>
+    <tr><td>Telematics unit (TCU)</td><td>In-car hotspot fed by 4G/5G, software updates (OTA) over home or depot Wi-Fi, EV charging data</td><td>2.4 + 5 GHz, 6 GHz where allowed</td><td><a href="/blocks/new?diagram=Automotive%20telematics%20%2F%20connectivity%20%28Snapdragon%20Auto%205G%20Modem-RF%20Gen%202%2C%20QCA6696%20Wi-Fi%2FBT%2C%20C-V2X%209150%29%20%28Qualcomm%29">Telematics (Qualcomm)</a>, <a href="/blocks/new?diagram=Automotive%20telematics%20control%20unit%20%28TCU%29%20%2F%20V2X%20module%20%28TI%29">TCU / V2X (TI)</a></td></tr>
+    <tr><td>Rear-seat entertainment</td><td>Video streaming to several screens and passengers' devices</td><td>5 and 6 GHz; wide channels (160–320 MHz)</td><td>—</td></tr>
+    <tr><td>Roof or smart-antenna module</td><td>Antennas (and in some designs the radios) for cellular, GNSS, V2X, Wi-Fi, BT, UWB in one unit</td><td>Wi-Fi next to V2X at 5.9 GHz</td><td><a href="/library/roof_coexistence">Roof coexistence</a>, <a href="/blocks/new?diagram=V2X%20communications%20unit%20%28802.11p%20%2F%20DSRC%20safety%20modem%20%2B%20cellular%20%2B%20Wi-Fi%29%20%28NXP%29">V2X unit (NXP)</a></td></tr>
+    <tr><td>V2X unit</td><td>Not Wi-Fi, but the closest neighbour: in-car Wi-Fi cut C-V2X range by more than half in a US DOT test</td><td>5.855–5.925 GHz</td><td><a href="/blocks/new?diagram=V2X%20unit%20with%20two%20antenna%20paths%2C%20standalone%20or%20companion%20to%20the%20TCU%20%28after%20Autotalks%2C%20Skyworks%20and%205GAA%20public%20material%29">V2X unit, two antenna paths</a></td></tr>
+  </tbody>
+</table></div>
+
+<h3>The RF front end per antenna, and which parts of ours fit today</h3>
+<p>“AEC-Q” = automotive grade by the site's rule (stated grade, AEC-Q in the text, or the Qorvo “…Q” suffix). Consumer Wi-Fi 7 parts are listed because their dies are the starting point for automotive versions.</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Path (per antenna)</th><th scope="col">Blocks</th><th scope="col">Ours, automotive (AEC-Q)</th><th scope="col">Ours, consumer Wi-Fi 7 only</th><th scope="col">Cover</th></tr></thead>
+  <tbody>
+    <tr><td>2.4 GHz Wi-Fi + Bluetooth</td><td>FEM (PA, LNA, T/R switch, BT path), BAW filter against LTE bands 40/41</td><td><a href="/find?q=QPF4239Q">QPF4239Q</a> FEM (14.5 dBm), <a href="/find?q=SKYA21040">SKYA21040</a> switch + LNA, <a href="/find?q=QPQ2254Q">QPQ2254Q</a> BAW</td><td>SKY55208-11, QM42500</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>5 GHz Wi-Fi</td><td>FEM; filter that stops at 5.835 GHz to protect V2X</td><td><a href="/find?q=SKYA21041">SKYA21041</a> and <a href="/find?q=QPF4554Q">QPF4554Q</a> (switch + LNA, no PA; QPF4554Q Preview); <a href="/find?q=SKY5A1006">SKY5A1006</a> filter (Preview)</td><td>SKY85509-11, QPF4507</td><td><span class="pill part">no PA</span></td></tr>
+    <tr><td>6 GHz Wi-Fi (6E, 7)</td><td>FEM; filter 5.945–7.125 GHz</td><td><a href="/find?q=SKY5A1008">SKY5A1008</a> filter only (Preview)</td><td>SKY85639-11, SKY55714-11 (5–7 GHz), QPF4659</td><td><span class="pill none">no FEM</span></td></tr>
+    <tr><td>5 + 6 GHz on one antenna (Wi-Fi 7 multi-link)</td><td>Diplexer or “meshplexer” with high isolation</td><td>none</td><td>SKY85929-11 meshplexer (Preview), SKY85931-11 triplexer</td><td><span class="pill none">no</span></td></tr>
+    <tr><td>V2X 5.9 GHz next door</td><td>FEM or compensator, band filter, notch on the Wi-Fi path</td><td><a href="/find?q=SKY5A2105">SKY5A2105</a> (Preview), <a href="/find?q=SKYA21043">SKYA21043</a>, <a href="/find?q=QPF1003Q">QPF1003Q</a>, QPF1004Q/1005Q; <a href="/find?q=QPQ2200Q">QPQ2200Q</a>, QPQ2230Q, <a href="/find?q=SKY5A1005">SKY5A1005</a> notch (Preview)</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Antenna and band switching</td><td>SPDT to SP6T, antenna routing</td><td><a href="/find?q=SKY5A2108">SKY5A2108</a> (2.4–8.3 GHz), <a href="/find?q=SKYA21003">SKYA21003</a> (to 8.5 GHz), SKY5A5109/5110, <a href="/find?q=QPC8019Q">QPC8019Q</a> (to 8 GHz), QPC1251Q</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Antenna tuning</td><td>Aperture tuner or tunable capacitor</td><td>none</td><td>QM13011, QM13024/25, RFAC3313/3612/3632 (not automotive)</td><td><span class="pill none">no</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">In the site's data: 3 of 89 Wi-Fi FEMs are AEC-Q (QPF4239Q, QPF1002Q at 5.77–5.925 GHz, and QPF4550Q, known only from an evaluation board); 12 of 211 SAW/BAW filters and 17 of 290 RF switches are AEC-Q. The Systems library draws Wi-Fi FEMs per antenna with a diplexer in the NXP connected-radio diagram; no library diagram draws a filter between Wi-Fi and V2X, which the case already flags.</p>
+
+<h3>Wi-Fi and antenna synergies: Skyworks + Qorvo pairs</h3>
+<p>Pairs from the Cross-sell system (functions in the same or a connected block of a library diagram), with one benefit tag from the Synergies report's fixed set. “Cost savings” is always assumed.</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Skyworks</th><th scope="col">+ Qorvo</th><th scope="col">Where they meet</th><th scope="col">Benefit</th></tr></thead>
+  <tbody>
+    <tr><td>Automotive Wi-Fi switch + LNA (SKYA21040/41)</td><td>Wi-Fi FEM (QPF4239Q, QPF4554Q)</td><td>Same Wi-Fi front-end block, one module per antenna (NXP connected radio)</td><td>New technology: one automotive FEM per antenna</td></tr>
+    <tr><td>Automotive Wi-Fi front end</td><td>Diplexer (QPQ4701 class)</td><td>Same block: one antenna split between Wi-Fi bands</td><td>Cost savings (assumed)</td></tr>
+    <tr><td>Coexistence BAW (SKY5A1005/1006/1008)</td><td>V2X / Wi-Fi FEM (QPF1003Q, QPF4554Q), BAW (QPQ2200Q, QPQ2230Q)</td><td>Wi-Fi path next to the V2X path in the roof module (library: roof coexistence)</td><td>New technology: Wi-Fi and V2X front ends with the filters between them</td></tr>
+    <tr><td>GNSS LNA module (SKY5A2110)</td><td>SAW/BAW filter</td><td>GNSS block of the V2X unit and the roof module</td><td>New technology: one GNSS front-end module</td></tr>
+    <tr><td>Crystal oscillator</td><td>Automotive UWB SoC (QPF5100Q, DW3300Q)</td><td>UWB anchors (smart car access); the UWB anchor in the roof module</td><td>Shared technology</td></tr>
+    <tr><td>Automotive switches (SKY5A2108, SKYA21003)</td><td>Tunable capacitors (QM13011, RFAC33xx)</td><td>Antenna block (est: not in a library diagram yet)</td><td>New technology: an automotive antenna tuner (gap 5)</td></tr>
+    <tr><td>Sky5 diversity receive and FEMs (SKY5A3xxx/5xxx)</td><td>BAW filters</td><td>Cellular front end of the roof TCU</td><td>Cost savings (assumed)</td></tr>
+  </tbody>
+</table></div>
+<p>The roof or smart-antenna module is where these pairs come together. GM says it moves the TCU, radios and antennas into one roof “Connectivity Hub Module” with an Ethernet link; LG has a 5G roof telematics unit in production (Aug 2026); Harman and Continental sell roof units that list Wi-Fi. Antenna isolation in a fin is often only 15–20 dB, so the filters do the rest (library: roof coexistence). Whether the Wi-Fi <i>radio</i> moves to the roof is still open; the case <a href="/business/reports/auto-wifi7-fem">auto-wifi7-fem</a> builds its RH57 radio head on that question.</p>
+<p class="rpt-thread"><b>For the decision:</b> We already sell almost every block of a roof antenna module with Qorvo; the two blocks that would make Wi-Fi part of the set are an automotive 5/6 GHz Wi-Fi FEM and the coexistence filters in production.</p>
+
+<h2>2. Gaps and new technology</h2>
+<p>Each gap: what is missing, why it matters, the public evidence and how often the function shows up in the 4,186 public reference designs in the site's data (TI, Renesas, ROHM, Murata). Those designs show the Wi-Fi radio (156 designs, 13 automotive) but never its RF front end: Wi-Fi FEMs, filters and tuners appear in 0 of them, because they sit inside modules. Public reference designs are therefore no guide to demand here.</p>
+<ol class="opps">
+  <li><b>Automotive Wi-Fi 7 FEM at 6 GHz and 5 GHz, AEC-Q100 Grade 2 (−40 to 105 °C).</b> We have consumer Wi-Fi 7 FEMs (SKY85639-11, SKY85509-11, QPF4659, QPF4507) but no automotive Wi-Fi PA above 802.11ac; Qorvo's earlier automotive Wi-Fi FEMs went end of life in 2024. Qualcomm pairs its automotive Wi-Fi 7 chip with its own AEC-Q100 FEM (QXM19xx), and a public module comparison shows an external FEM gives about 21 dBm versus 13–16 dBm on chip. A 6 GHz part should aim at linearity and receive noise, not high power: in-car 6 GHz power is capped (US very low power; EU low-power indoor not allowed in road vehicles).
+    <p class="ev"><span class="pill none">gap</span> · Found in 0 public reference designs (FEM hidden in modules) · evidence: u-blox RUBY-W2 and JODY-W6 product summaries; LG Innotek 2027 order · enabling step of the case (feature A5/A6).</p></li>
+  <li><b>5–7 GHz coexistence filters in production, with a sharper V2X edge.</b> SKY5A1005 (V2X notch), SKY5A1006 (5 GHz) and SKY5A1008 (6 GHz) are defined but Preview. The notch needs about 40 MHz to go from pass to stop; the 6 GHz Wi-Fi band starts at 5.925 GHz, right where V2X ends, so a filter that passes all of 6 GHz Wi-Fi and still protects V2X needs a much steeper edge (est). US DOT measured in-car Wi-Fi cutting C-V2X range by more than half; NTIA and DOT asked for −37 dBm/MHz at the band edge.
+    <p class="ev"><span class="pill part">defined, Preview</span> · Found in 0 public reference designs · evidence: NTIA/US DOT exhibit (2023); u-blox RUBY-W2 lists optional coexistence filters · sells even into designs with an on-chip PA.</p></li>
+  <li><b>Automotive 5/6 GHz multiplexer for Wi-Fi 7 multi-link (MLO) on one antenna.</b> Multi-link runs the 5 and 6 GHz radios at the same time; on a shared antenna the two need a splitter with high isolation, or one radio deafens the other. Our only 5/6 GHz part is the consumer SKY85929-11 meshplexer (Preview). Automotive Wi-Fi 7 modules already advertise 2×2 multi-link on 5 + 6 GHz.
+    <p class="ev"><span class="pill none">gap</span> · Found in 0 public reference designs · evidence: u-blox RUBY-W2 (MLO on 5 + 6 GHz) · reuse: SKY85929-11 die and the automotive BAW flow (est).</p></li>
+  <li><b>UWB and 6 GHz Wi-Fi in the same cabin.</b> UWB channel 5 (6.24–6.74 GHz) lies inside the 6 GHz Wi-Fi band, and digital-key UWB anchors sit in the same doors, pillars and roof as Wi-Fi antennas. Today the radios take turns (time sharing); a filtered UWB receive path for channel 9 (about 7.7–8.2 GHz) that rejects 6 GHz Wi-Fi would let both run at once (est). We have the automotive UWB SoCs (QPF5100Q, DW3300Q) and a UWB switch + LNA (QM14068, not automotive), but no such filter.
+    <p class="ev"><span class="pill part">SoC yes, filter no</span> · Found in 2 public reference designs (Murata UWB modules with a SAW/BAW filter; neither automotive) · evidence: IEEE 802.15.4 channel plan; see the <a href="/business/reports/auto-uwb-15-4ab">UWB 802.15.4ab case</a> (est on the need).</p></li>
+  <li><b>Automotive antenna tuner (weak evidence).</b> A shark fin must cover 617 MHz to 6 GHz in a few centimetres; published fin antennas reach only about 6 dB isolation at low band. Phones solve this with aperture tuners, and Qorvo makes tunable capacitors, but none is automotive and no public car design names a tuner. Worth one question to an antenna maker, not a product yet (est).
+    <p class="ev"><span class="pill none">gap, unproven need</span> · Found in 0 public reference designs · evidence: IEEE fin-antenna letter (2024, search snippet); no carmaker statement found.</p></li>
+</ol>
+<p>The integrated radio head per antenna (Wi-Fi 5 + V2X + Wi-Fi 6 GHz in one module) is the headline of the business case <a href="/business/reports/auto-wifi7-fem">auto-wifi7-fem</a> and is not repeated here.</p>
+<p class="rpt-thread"><b>For the decision:</b> Gaps 1 and 2 reuse dies and filters we have and serve every car with Wi-Fi; gap 3 follows once Wi-Fi 7 multi-link reaches cars; gaps 4 and 5 need a customer to confirm the need first.</p>
+
+<h2>3. Where else we see opportunities</h2>
+<ul>
+  <li><b>EV chargers and charging depots:</b> Wi-Fi radios appear in 5 Renesas EV charger and wallbox reference designs; the charger talks to the car and the cloud. Industrial grade, not AEC-Q: our consumer Wi-Fi FEMs fit as they are.</li>
+  <li><b>Trucks, buses and fleets:</b> roof antennas that combine 3× Wi-Fi 6E, V2X and an active GNSS amplifier are already sold for fleets (Pulse/Larsen, search snippet); passenger Wi-Fi in buses and trains needs the same filters.</li>
+  <li><b>Two-wheelers and agricultural machines:</b> telematics boxes with Wi-Fi and GPS (Renesas 4G + GPS telematics box design).</li>
+  <li><b>Wi-Fi sensing in the cabin:</b> child presence detection with two of the car's own Wi-Fi radios and software (Murata with Origin AI); little new hardware, but a reason to keep a Wi-Fi radio in the cabin even if the TCU moves to the roof (est).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> These are add-ons; none changes the first steps, but chargers and fleets can take consumer or industrial Wi-Fi parts now.</p>
+
+<h2>4. Future growth topics</h2>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Topic</th><th scope="col">Status (public)</th><th scope="col">What it could mean for us</th><th scope="col">Cars, when (est)</th></tr></thead>
+  <tbody>
+    <tr><td>Wi-Fi 8 / UHR (IEEE 802.11bn): reliability, lower latency, multi-AP coordination</td><td>Draft 2.0 balloted Sep 2026; final IEEE approval predicted May 2028 (IEEE 802.11 timelines); Wi-Fi Alliance certification around early 2028 (trade press)</td><td>FEMs with more power modes and better linearity; our SKY85509-11 is already sold for Wi-Fi 7/8</td><td>about 2030–2031</td></tr>
+    <tr><td>Wi-Fi sensing (IEEE 802.11bf-2025)</td><td>Published Sep 2025; child presence detection shown with commercial Wi-Fi in cars (academic tests, Murata offer)</td><td>Mostly software; good receive linearity and LNA bypass help</td><td>pilots now; volume with child-presence rules (est)</td></tr>
+    <tr><td>Wi-Fi positioning (IEEE 802.11bk-2025, 320 MHz)</td><td>Published 2025</td><td>Competes with and complements UWB for keys and parking; same 6 GHz front end</td><td>after Wi-Fi 7 in cars, ~2029+</td></tr>
+    <tr><td>Integrated mmWave Wi-Fi (IEEE 802.11bq)</td><td>Task group; approval predicted 2028–2029</td><td>60 GHz in-cabin links and sensing; far from our automotive range today</td><td>uncertain</td></tr>
+    <tr><td>6 GHz rules for vehicles</td><td>US very low power only; EU low-power indoor not allowed in road vehicles; China no 6 GHz Wi-Fi</td><td>If rules relax, 6 GHz FEM power matters more</td><td>open</td></tr>
+  </tbody>
+</table></div>
+<p class="rpt-thread"><b>For the decision:</b> Wi-Fi 8 and sensing do not change the near-term gaps; they make an automotive 6 GHz front end more valuable over time.</p>
+
+<h2>5. Market trend</h2>
+<ul>
+  <li><b>Volume:</b> about 99 M automotive Wi-Fi devices in 2026, 21 % 6 GHz-capable (IDC via Wi-Fi Alliance); 83 % of new cars connected in 2025 (Berg Insight, snippet).</li>
+  <li><b>Generations:</b> Wi-Fi 5 is still the majority; Wi-Fi 6 cars grew 142 % in 2025, to about 11 % of Wi-Fi cars, led by China (Counterpoint, snippets). First Wi-Fi 7 automotive chip 2024 (Qualcomm), modules sampling 2025 (u-blox), first car production 2027 (LG Innotek). Wi-Fi 7 at 10–20 % of automotive Wi-Fi by 2030 (est, from the case).</li>
+  <li><b>Who supplies the front end:</b> Qualcomm bundles its own automotive FEM; NXP (AW693) and Synaptics put the PA on the chip; module makers (u-blox, LG Innotek, Murata) choose. China uses 2.4 + 5 GHz with local FEM suppliers.</li>
+  <li><b>Architecture:</b> radios and antennas move into the roof module (GM, LG, Harman, Continental); coexistence becomes a filter problem inside one box.</li>
+  <li><b>Value:</b> automotive Wi-Fi modules about $3.7–3.9 B in 2025 (analyst releases, low confidence).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Volume is there and moving to 6 GHz; the share open to an external FEM is the uncertain part, while filters fit every design.</p>
+
+<h2>Risks</h2>
+<ul>
+  <li>Qualcomm's chip-plus-FEM bundle and on-chip PAs at NXP and Synaptics may leave few sockets for an external Wi-Fi FEM.</li>
+  <li>All our automotive Wi-Fi filters and two key front ends are Preview; customers ask 10–15 years of supply after Qorvo's 2024 end-of-life notices.</li>
+  <li>In-car 6 GHz power limits cap the value of a 6 GHz PA.</li>
+  <li>Automotive qualification and design-in take 12–36 months (trade press), so a 2027 Wi-Fi 7 start is already decided.</li>
+  <li>Qorvo data is incomplete where only qorvo.com lists the parts (not requested); QPF4550Q is known only from an evaluation board.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Start with what sells into every design (the filters) and ask the Wi-Fi BU about an automotive die before committing to the FEM.</p>
+
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
+<h2>Sources</h2>
+<p class="small">IEEE 802.11 timelines page (read 26 Oct 2026); Murata Wi-Fi sensing for child presence detection page (read 26 Oct 2026); Skyworks 2025 CES Wi-Fi 7 brochure (read 26 Oct 2026); MediaTek Dimensity Auto release (read, no Wi-Fi statement); u-blox RUBY-W2 and JODY-W6 product summaries, NTIA/US DOT exhibit, Wi-Fi Alliance automotive page, LG Innotek release and the other sources of the <a href="/business/reports/auto-wifi7-fem/background">auto-wifi7-fem background notes</a>; BizDev catalogue, Systems library, Cross-sell pairs and reference designs. Full list with confidence: <a href="/business/reports/auto-wifi-antenna/background">background notes</a>.</p>
+{% endraw %}

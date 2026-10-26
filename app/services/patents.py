@@ -70,6 +70,19 @@ def _round(n: int) -> int:
     return n if n < 20 else 5 * round(n / 5) if n < 100 else 10 * round(n / 10)
 
 
+def for_functions(fns) -> list[dict]:
+    """The patent platforms covering any of these functions, for the Technology platforms page: {key, label, depth,
+    date}. Machine-checked, indicative, not reviewed by the owner (owner, 26 Oct 2026)."""
+    want = set(fns or [])
+    out = []
+    for key, p in platforms().items():
+        if want & set(p.get("functions") or []):
+            chk = p.get("check") or {}
+            out.append({"key": key, "label": p.get("label", key), "depth": str(p.get("depth", "")).replace("_", " "),
+                        "date": chk.get("date") or p.get("date")})  # fmt: skip
+    return out
+
+
 def patent_summary() -> dict:
     """Compact, public summary for the synergies report: per platform the leader (Skyworks | Qorvo | both), rounded US
     family counts and whether the platform has an automotive cut; plus overlap and complement lists."""

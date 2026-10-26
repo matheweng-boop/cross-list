@@ -64,7 +64,7 @@
     <tr><td class="n">{{ '%.2f'|format(L.not_assessed) }}</td><td>Not assessed yet</td></tr>
     <tr><td class="n">{{ '%.2f'|format(L.not_pursue) }}</td><td>Path to product “not ours to build” (only on Markets; left out here)</td></tr>
     <tr><td class="n">+ {{ L.platform_bonus }}</td><td>A current platform of ours serves it (up to 1.0)</td></tr>
-    <tr><td class="n">+ {{ '%g'|format(L.patent_bonus.strong) }} / + {{ '%g'|format(L.patent_bonus.some) }}</td><td>US patents of Skyworks / Qorvo: strong / some depth (per function, else its technology platform; public USPTO searches, indicative; up to 1.0)</td></tr>
+    <tr><td class="n">+ {{ '%g'|format(L.patent_bonus.strong) }} / + {{ '%g'|format(L.patent_bonus.some) }}</td><td>US patents of Skyworks / Qorvo: strong / some depth (per function, else its technology platform; public USPTO searches, checked automatically: <b>indicative, not reviewed</b>; never more than + {{ '%g'|format(L.patent_bonus_cap or 0.05) }}, so it cannot decide a ranking on its own; up to 1.0)</td></tr>
     {% for label, o in prio_owner %}<tr><td class="n">{{ '%.2f'|format(o.value) }}</td><td>{{ label }}: {{ o.note }}</td></tr>{% endfor %}
   </tbody></table></div>
   <p><b>Diagrams</b> = log(1 + n) / log(1 + n<sub>max</sub>), n = the diagrams that need the function{% if prio_top %}, n<sub>max</sub> = {{ '%g'|format(prio_top.priority.n_max) }}{% endif %}. On a log scale, 40 diagrams is not 10 × better than 4. On <a href="/business/markets">Markets</a>, n counts the applications in the markets chosen there; technology relation and likeliness are the same on both pages.</p>

@@ -19,6 +19,9 @@ from app.services import opportunity as op
 FILE = PROJECT_ROOT / "data" / "business" / "priority.yaml"
 KEYS = ("technology", "likeliness", "diagrams")
 PARAMS = {"technology": "wt", "likeliness": "wl", "diagrams": "wd"}  # URL parameters of the owner's sliders
+# owner, 26 Oct 2026: patents are machine-checked, never reviewed by the owner: a small, labelled bonus, capped
+PATENT_LABEL = "indicative, not reviewed"
+PATENT_CAP = 0.05  # default cap on the patent bonus to L (priority.yaml patent_bonus_cap)
 
 
 @lru_cache
@@ -103,8 +106,10 @@ def patent_bonus(fn: str) -> dict:
     got = patents.depth(fn)
     if not got:
         return {"depth": None, "bonus": 0.0, "source": "", "label": ""}
-    table = config()["likeliness"].get("patent_bonus") or {}
-    return {**got, "bonus": float(table.get(got["depth"]) or 0)}
+    cfg = config()["likeliness"]
+    table = cfg.get("patent_bonus") or {}
+    cap = float(cfg.get("patent_bonus_cap", PATENT_CAP))
+    return {**got, "bonus": min(cap, float(table.get(got["depth"]) or 0))}
 
 
 def likeliness(e: dict) -> dict:
@@ -138,7 +143,7 @@ def likeliness(e: dict) -> dict:
             capped = (" (L already 1.0)" if v >= 1.0 - 1e-9 else
                       " (capped at 1.0)" if v + pat["bonus"] > 1.0 + 1e-9 else "")  # fmt: skip
             v = min(1.0, v + pat["bonus"])
-            basis += f" · + {pat['bonus']:g} for US patents ({pat['depth']}{where}){capped}"
+            basis += f" · + {pat['bonus']:g} for US patents ({pat['depth']}{where}; {PATENT_LABEL}){capped}"
     label = next(x["label"] for x in cfg["labels"] if v >= x["from"] - 1e-9)
     return {"value": round(v, 3), "label": label, "basis": basis, "owner": bool(own), "patent": pat}
 

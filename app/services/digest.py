@@ -43,6 +43,7 @@ TYPES = {
     "tam": "TAM estimate",
     "tam-topic": "TAM topic",
     "evidence": "Evidence",
+    "patent-change": "Patent change",  # only when the quarterly patent re-check found a change (owner, 26 Oct 2026)
     "note": "Engineering note",
     "family": "Datasheet family",  # crosses grouped by datasheet, offered for a batch confirm (families.py)
     "question": "Open question",
@@ -237,51 +238,111 @@ def _tam(gists: dict) -> list[dict]:
     return out
 
 
-_EVIDENCE_TEXT = {  # topic -> (field with the main sentence, field for "why it matters")
-    "path": ("base", "missing"),
-    "patents": ("note", "examples"),
-    "foundry": ("note", "typical_process"),
-    "competitor_tech": ("lead_tech", "note"),
-    "trends": ("note", "drivers"),
-}
+# Evidence (owner, 26 Oct 2026: "I can't check patents"): ONE item per function ("evidence:<fn>") covering path to
+# product, manufacturing (foundry route), competitor technology and market trend. Patents are machine-checked: they
+# are shown read-only on the item and never asked of the owner; a patent item ("patent-change") appears only when the
+# quarterly re-check (docs/daily_update.md) records a `changed:` block on a patents.yaml / patents_platforms.yaml entry.
+EVIDENCE_ASPECTS = {"path": "path", "foundry": "manufacturing", "competitor_tech": "competitor technology",
+                    "trends": "market trend"}  # fmt: skip
+_OLD_EVIDENCE = re.compile(r"^evidence:(path|foundry|competitor_tech|trends)/(.+)$")  # keys before 26 Oct 2026
 
 
-def _first(v) -> str:
-    return str(v[0]) if isinstance(v, list) and v else str(v or "")
+def _cut(text: str, n: int = MAX_WORDS) -> str:
+    w = _plain(text).split()
+    return " ".join(w) if len(w) <= n else " ".join(w[:n]).rstrip(",;:–-") + "…"
+
+
+def patent_line(fn: str) -> dict | None:
+    """The read-only patent depth of a function: {depth, date, source, label, status, changed}, or None.
+    Machine-checked (owner, 26 Oct 2026), shown as "checked automatically, <date>"."""
+    from app.services import patents
+
+    own = patents.per_function().get(fn)
+    if isinstance(own, dict) and own.get("depth"):
+        chk = own.get("check") or {}
+        return {"depth": str(own["depth"]).replace("_", " "), "date": _date(chk.get("date")), "source": "function",
+                "label": "", "status": chk.get("status") or "", "changed": own.get("changed")}  # fmt: skip
+    plat = patents.platform_for(fn)
+    if plat and plat[1].get("depth"):
+        chk = plat[1].get("check") or {}
+        return {"depth": str(plat[1]["depth"]).replace("_", " "),
+                "date": _date(chk.get("date") or plat[1].get("date")), "source": "platform",
+                "label": plat[1].get("label", plat[0]), "status": chk.get("status") or "",
+                "changed": plat[1].get("changed")}  # fmt: skip
+    return None
+
+
+def checked_label(d) -> str:
+    """ "checked automatically, 19 Oct 2026" for a check date (or without a date)."""
+    d = _date(d)
+    return f"checked automatically, {d.day} {d:%b %Y}" if d else "checked automatically"
+
+
+def patent_text(p: dict | None) -> str:
+    if not p:
+        return ""
+    where = f" ({p['label']} platform)" if p["source"] == "platform" else ""
+    return f"Patents{where}: {p['depth']} · {checked_label(p['date'])}; indicative, not reviewed."
 
 
 def _evidence(gists: dict) -> list[dict]:
     from app.services import opportunity as op
     from app.services.vocab import fn_label
 
+    ev = {t: op.evidence(t) for t in EVIDENCE_ASPECTS}
+    fns = sorted({fn for t in ev.values() for fn, e in t.items() if isinstance(e, dict)})
     out = []
-    for topic, label in op.EVIDENCE_TOPICS.items():
-        main, why = _EVIDENCE_TEXT[topic]
-        for fn, e in op.evidence(topic).items():
-            if not isinstance(e, dict):
-                continue
-            lead = {"path": f"path: {e.get('path', '')}", "patents": f"patents: {e.get('depth', '')}",
-                    "foundry": f"foundry route: {e.get('foundry_route', '')}",
-                    "trends": f"outlook: {e.get('outlook', '')}",
-                    "competitor_tech": f"leaders: {', '.join(map(str, (e.get('leaders') or [])[:3]))}"}[topic]
-            lead = lead.replace("_", " ")
-            text = _plain(e.get(main) or e.get("note") or "")
-            text = text[:1].upper() + text[1:]
-            out.append(_item("evidence", f"{topic}/{fn}", f"{label}: {fn_label(fn)}", f"/business/evidence/{fn}",
-                             (e.get("check") or {}).get("date"), e, f"{fn_label(fn)} ({lead}): {text}",
-                             _abstract(text, _first(e.get(why)), f"{lead[:1].upper()}{lead[1:]}."), gists,
-                             ((topic, fn),)))
+    for fn in fns:
+        pa, fo, ct, tr = (ev[t].get(fn) if isinstance(ev[t].get(fn), dict) else {} for t in EVIDENCE_ASPECTS)
+        label = fn_label(fn)
+        path = op.PATH_LABEL.get(pa.get("path"), str(pa.get("path") or "no path yet")).lower()
+        leaders = ", ".join(map(str, (ct.get("leaders") or [])[:2]))
+        gist = f"{label}: {path}; market {tr.get('outlook') or 'not assessed'}"
+        gist += f"; leaders {leaders}." if leaders else "."
+        base = first_sentence(pa.get("base")).rstrip(".…")
+        process = f" ({_plain(fo.get('typical_process'))})" if fo.get("typical_process") else ""
+        bullets = [
+            _cut(f"Path: {path}. Builds on {base}." if base else f"Path: {path}."),
+            _cut(f"Manufacturing: foundry route {fo.get('foundry_route') or '?'}{process}; competitor technology: "
+                 f"{first_sentence(ct.get('lead_tech')) or 'not researched'}"),
+            _cut(f"Trend: {tr.get('outlook') or 'not assessed'}. {first_sentence(tr.get('note'))}"),
+        ]  # fmt: skip
+        when = max((d for d in (_date((e.get("check") or {}).get("date")) for e in (pa, fo, ct, tr)) if d),
+                   default=None)  # fmt: skip
+        it = _item("evidence", fn, f"Evidence: {label}", f"/business/evidence/{fn}", when, None, _cut(gist),
+                   bullets, gists, tuple((t, fn) for t in EVIDENCE_ASPECTS))  # fmt: skip
+        it["patents"] = patent_text(patent_line(fn))  # read-only, never to confirm
+        out.append(it)
+    return out
+
+
+def _patent_changes(gists: dict) -> list[dict]:
+    """Patent items for the owner only when the quarterly re-check found a change: an entry of patents.yaml or
+    patents_platforms.yaml with a `changed:` block {date, old_depth, new_depth, check, note}. None otherwise."""
+    from app.services.vocab import fn_label
+
     pp = _load(_BIZ / "evidence" / "patents_platforms.yaml")
-    for part, prefix in (("platforms", "Patents by platform"), ("automotive", "Automotive patents")):
+    entries = [(fn, f"/business/evidence/{fn}", fn_label(fn), e)
+               for fn, e in _load(_BIZ / "evidence" / "patents.yaml").items()]  # fmt: skip
+    for part in ("platforms", "automotive"):
         for k, p in (pp.get(part) or {}).items():
-            if not isinstance(p, dict):
-                continue
+            p = p if isinstance(p, dict) else {}
             fns = p.get("functions") or []
             href = f"/business/evidence/{fns[0]}" if fns else "/business/capabilities"
-            lead = f"{p.get('label', k)}: {p.get('count', '?')} US patent families, depth {p.get('depth', '?')}"
-            out.append(_item("evidence", f"{part}/{k}", f"{prefix}: {p.get('label', k)}", href,
-                             p.get("date") or pp.get("searched"), p, f"{lead}; {first_sentence(p.get('note'))}",
-                             _abstract(lead, p.get("note")), gists))  # fmt: skip
+            entries.append((f"{part}/{k}", href, f"{p.get('label', k)} platform", p))
+    out = []
+    for ident, href, label, e in entries:
+        ch = e.get("changed") if isinstance(e, dict) else None
+        if not isinstance(ch, dict) or not ch.get("date"):
+            continue
+        old, new = ch.get("old_depth"), ch.get("new_depth")
+        moved = bool(new) and old != new
+        what = (f"depth {str(old).replace('_', ' ')} → {str(new).replace('_', ' ')}" if moved
+                else "a check failed")  # fmt: skip
+        ab = [f"Patents, {label}: {what}.", _cut(ch.get("check") or ""), _cut(ch.get("note") or "")]
+        out.append(_item("patent-change", f"{ident}@{_date(ch['date'])}", f"Patent change: {label}", href,
+                         ch["date"], None, _cut(f"Quarterly patent re-check, {label}: {what}."), [x for x in ab if x],
+                         gists))  # fmt: skip
     return out
 
 
@@ -314,7 +375,7 @@ def _questions(gists: dict) -> list[dict]:
 def _all(sig: tuple) -> tuple[dict, ...]:
     gists = (_load(GISTS_FILE).get("gists") or {}) if GISTS_FILE.exists() else {}
     rows = [*_reports(gists), *_reviews(gists), *_ideas(gists), *_competitors(gists), *_risks(gists), *_tam(gists),
-            *_evidence(gists), *_notes(gists), *_questions(gists)]  # fmt: skip
+            *_evidence(gists), *_patent_changes(gists), *_notes(gists), *_questions(gists)]  # fmt: skip
     return tuple(rows)
 
 
@@ -340,11 +401,9 @@ def gist_for(typ: str, ident: str) -> dict | None:
 
 
 def gist_list(typ: str, fn: str) -> list[dict]:
-    """The evidence items of one function (path, patents, foundry, competitor technology, trend), for its page."""
-    from app.services import opportunity as op
-
-    found = (gist_for(typ, f"{t}/{fn}") for t in op.EVIDENCE_TOPICS)
-    return [g for g in found if g]
+    """The evidence item of one function (one card since 26 Oct 2026), as a list."""
+    g = gist_for(typ, fn)
+    return [g] if g else []
 
 
 # ---- the owner's answers -------------------------------------------------------------------------------------------
@@ -366,7 +425,39 @@ def states(session: Session) -> dict[str, dict]:
             e["state"], e["at"] = r.verdict, r.created_at
         elif r.verdict == COMMENT and r.comment:
             e["comments"].insert(0, {"text": r.comment, "date": r.created_at})
+    _carry_over(out)
     return out
+
+
+def _ts(d) -> float:
+    return aware(d).timestamp() if d else 0.0
+
+
+def _carry_over(out: dict[str, dict]) -> None:
+    """The owner's answers on the old per-aspect evidence keys ("evidence:path/<fn>", foundry, competitor_tech,
+    trends) carry over to the one card "evidence:<fn>" (26 Oct 2026); the old rows stay as they are (append-only).
+    All old aspect items confirmed -> the card counts as confirmed, unless the card has a state answer of its own; an
+    ignored aspect is shown on the card; old answers and comments join the card's history."""
+    from app.services import opportunity as op
+
+    old: dict[str, dict[str, dict]] = {}
+    for k, e in out.items():
+        if m := _OLD_EVIDENCE.match(k):
+            old.setdefault(m.group(2), {})[m.group(1)] = e
+    for fn, asp in old.items():
+        key = f"evidence:{fn}"[:120]
+        own = any(h["verdict"] in STATES for h in (out.get(key) or {}).get("history", []))
+        e = out.setdefault(key, {"state": OPEN, "at": None, "comments": [], "history": []})
+        for t, a in asp.items():
+            name = EVIDENCE_ASPECTS[t]
+            e["history"] += [{**h, "label": f"{h['label']} (old {name} item)"} for h in a["history"]]
+            e["comments"] += [{**c, "text": f"{c['text']} (on the old {name} item)"} for c in a["comments"]]
+        e["history"].sort(key=lambda h: _ts(h["date"]), reverse=True)
+        e["comments"].sort(key=lambda c: _ts(c["date"]), reverse=True)
+        want = [t for t in EVIDENCE_ASPECTS if isinstance(op.evidence(t).get(fn), dict)]
+        e["ignored_aspects"] = [EVIDENCE_ASPECTS[t] for t in want if asp.get(t, {}).get("state") == IGNORED]
+        if not own and want and all(asp.get(t, {}).get("state") == CONFIRMED for t in want):
+            e["state"], e["at"], e["carried"] = CONFIRMED, max((asp[t]["at"] for t in want), key=_ts), True
 
 
 def _family_keys(session: Session) -> dict[str, dict]:

@@ -27,8 +27,11 @@
   <p class="tc-gist">{{ c.gist }}</p>
   {% if c.other %}<p class="small tc-other">You {{ c.other.label }}{% if c.other.date %} {{ c.other.date.day }} {{ c.other.date.strftime('%b') }}{% endif %} on its page{{ ' (applied, so it counts as confirmed)' if c.other.applied }}.</p>{% endif %}
   {% if c.answer and c.answer.comments %}<p class="small muted tc-other">Your comment: “{{ c.answer.comments[0].text }}”</p>{% endif %}
+  {% if c.answer and c.answer.ignored_aspects %}<p class="small tc-other tc-ignored">You ignored the old {{ c.answer.ignored_aspects|join(', ') }} item{{ 's' if c.answer.ignored_aspects|length > 1 }} of this function (before its evidence became one card).</p>{% endif %}
+  {% if c.answer and c.answer.carried and c.answer.state == 'confirmed' %}<p class="small muted tc-other">Counts as confirmed: you confirmed all of its old evidence items.</p>{% endif %}
   <details class="tc-read"><summary>Read</summary>
     {% if c.abstract %}<ul class="tc-abstract">{% for a in c.abstract %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+    {% if c.patents %}<p class="small muted tc-patents">{{ c.patents }} Nothing to confirm here.</p>{% endif %}
     <p><a href="{{ c.href }}">Full text →</a></p>
     {% if c.answer and c.answer.history %}<details class="small"><summary>History ({{ c.answer.history|length }})</summary><ul>{% for h in c.answer.history[:8] %}<li>{{ h.date.strftime('%d %b %H:%M') }} · {{ h.label }}{% if h.comment %} · “{{ h.comment }}”{% endif %}</li>{% endfor %}</ul></details>{% endif %}
   </details>

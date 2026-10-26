@@ -6,11 +6,11 @@
 {% block content %}
 <p class="small"><a href="/business/opportunities?co={{ co }}">← Gaps &amp; new technology</a></p>
 <h1>{{ label }} <small class="muted">· the bigger picture</small></h1>
-{% set gs = gist_list("evidence", fn) %}{% if gs %}<aside class="gist-box" aria-label="In short"><p class="gist-line"><span class="gist-label">In short</span></p><ul class="gist-abstract">{% for g in gs %}<li><b>{{ g.title.split(":")[0] }}:</b> {{ g.gist }}{% if g.auto %} <span class="muted small">(auto summary)</span>{% endif %}</li>{% endfor %}</ul></aside>{% endif %}
+{{ gist_box(gist_for("evidence", fn), not guest_blocked(request, '/manage')) }}
 {{ found_in(fn) }}
 {% import "_demand.html" as dmd %}{{ dmd.case_line(demand_seen(request), fn) }}
 <p class="subtitle muted">Everything BizDev knows about this function: how it is scored, the path to a product, and the background evidence
-  (patents, foundry route, competitor technology, market trend). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
+  (foundry route, competitor technology, market trend; patents are checked automatically). Mark each item ✓ correct, ✗ wrong or ? unsure: reviews are collected on
   <a href="/business/quality">Data quality</a> and feed the next data update.</p>
 {% if walk_parts %}<p class="small walk-back">Walk through from a competitor part: {% for p in walk_parts %}<a href="/parts/{{ p.id }}/walk">{{ p.mpn }}</a> <small class="muted">{{ p.manufacturer.name|vendor }}</small>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 {{ library_box(library) }}
@@ -65,13 +65,15 @@
 
 <h2>Background evidence <span class="small muted">· shown for judgement; only patents add a small bonus to the priority score</span></h2>
 <div class="bo-ev-grid">
-  {% set pt = ev.patents %}
-  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">small bonus in the priority score</span></span>{{ review('patents', fn, rev, pt.confidence if pt else none, pt.check if pt else none) }}</header>
+  {% set pt = ev.patents %}{% set pl = patent_line(fn) %}
+  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">small bonus in the priority score</span></span><span class="rv"><span class="rv-st rv-auto" title="Patent searches are re-run by the quarterly check, not reviewed by you (owner, 26 Oct 2026)">{{ checked_auto(pl.date if pl else none) }}</span></span></header>
+    <p class="small muted pt-auto">Indicative, not reviewed: machine-checked against USPTO records, re-run every quarter. You only see a patent item in To confirm when its depth changes or a check fails.</p>
+    {% if pl and pl.changed %}<p class="small"><b>Changed {{ pl.changed.date }}:</b> {{ (pl.changed.old_depth or '')|replace('_', ' ') }} → {{ (pl.changed.new_depth or '')|replace('_', ' ') }}{{ ' · ' ~ pl.changed.check if pl.changed.check }}</p>{% endif %}
     {% if pt %}<p><b>{{ pt.depth|replace('_', ' ')|capitalize }}</b>{% if pt.count %} · about {{ pt.count }} results{% endif %}</p><p>{{ pt.note }}</p>
       {% if pt.examples %}<ul>{% for x in pt.examples %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
       {% if pt.query %}<p class="small muted">Re-run: <code>{{ pt.query }}</code></p>{% endif %}{% elif not pat_platform %}<p class="muted">not researched yet</p>{% endif %}{{ checked(pt) }}
     {% if pat_platform %}{% include "business/_patent_platform.html" %}{% endif %}
-    <p class="small">Priority score: {% if pat_bonus.bonus %}+ {{ '%g'|format(pat_bonus.bonus) }} to likeliness for {{ pat_bonus.depth }} patent depth{{ ' (from the ' ~ pat_bonus.label ~ ' platform)' if pat_bonus.source == 'platform' }}, up to 1.0{% else %}no patent bonus{% endif %}.</p></article>
+    <p class="small">Priority score: {% if pat_bonus.bonus %}+ {{ '%g'|format(pat_bonus.bonus) }} to likeliness for {{ pat_bonus.depth }} patent depth{{ ' (from the ' ~ pat_bonus.label ~ ' platform)' if pat_bonus.source == 'platform' }}, up to 1.0 (indicative, not reviewed){% else %}no patent bonus{% endif %}.</p></article>
   {% set fo = ev.foundry %}
   <article class="bo-ev"><header><span>Foundry route <span class="bo-notscore">not in score</span></span>{{ review('foundry', fn, rev, fo.confidence if fo else none, fo.check if fo else none) }}</header>
     {% if fo %}<p><b>{{ fo.foundry_route }}</b> · {{ fo.typical_process }}</p>{% if fo.foundries %}<p>{{ fo.foundries|join(', ') }}</p>{% endif %}

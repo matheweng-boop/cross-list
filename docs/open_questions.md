@@ -27,6 +27,12 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
 
+7. **Data protection (26 Oct 2026, docs/plan_data_protection.md):** does your own input (prices, uploads, edits) also
+   wait for a second look before it shows (suggested: yes, one-tap approve)?
+8. **Retention:** delete feedback and comments after 12 months and the daily inbox files after 30 days?
+9. **Customer-name list** for the confidential-data check (you enter the names; stored privately)?
+10. **Approvers:** only you?
+
 ## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
 
 - Matching rules made a bit stricter (app/services/refmatch.py, old → new): title-word weight 60 % → 70 %; shared

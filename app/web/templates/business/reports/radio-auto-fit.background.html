@@ -1,0 +1,43 @@
+{% raw %}<h1>Car radio parts for automotive: background notes</h1>
+<p class="meta">26 Oct 2026. Every figure with its source and confidence (high = primary document read; med = catalogue listing or part-number rule; low = estimate basis). “est” = our estimate, with its basis. Public data only: robots.txt read first, GET only, one request at a time, at least 5 s between requests to www.skyworksinc.com, each URL once; qorvo.com not requested.</p>
+
+<h2>1. Which diagram</h2>
+<ul class="small">
+<li>“Car Radio System Block Diagram 1” was matched to the library diagram “Car radio tuner system” (data/blocks/templates.yaml): the only car radio system diagram in the library, and the one the radio market and the Cross-sell pairs use. Alternative: the Skyworks Automotive Radio / Infotainment application page, diagrams EU4/EU5/EU6/US2/US3/India2/World (data/blocks/research/motor_and_switches.yaml, SKY_RADIO), which shows only antennas, LC band select, tuners and coprocessor; its blocks are a subset of the library diagram.</li>
+</ul>
+
+<h2>2. Public sources read for this report</h2>
+<ul class="small rp-src">
+<li>2.1 · Si4730/31/34/35: ambient temperature −20 to 85 °C; VA 2.7–5.5 V, VD 1.62–3.6 V; no AEC-Q statement · Skyworks, Si4730-31-34-35 datasheet rev D60, read 26 Oct 2026 · high — <a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/Si4730-31-34-35-D60.pdf" rel="noopener" target="_blank">www.skyworksinc.com/…/Si4730-31-34-35-D60.pdf</a></li>
+<li>2.2 · Si47961 product page: no temperature range stated; the product menu lists AEC-Q101 attenuator PIN, switching PIN, hyperabrupt varactor and Schottky diode categories · Skyworks, read 26 Oct 2026 · high (menu), n/a (temperature) — <a href="https://www.skyworksinc.com/en/Products/Audio-and-Radio/Si4796x-Automotive-Dual-Receivers/Si47961" rel="noopener" target="_blank">www.skyworksinc.com/en/Products/Audio-and-Radio/…/Si47961</a></li>
+<li>2.3 · Attenuator PIN diodes AEC-Q101 category page: the part list loads by script, so no part numbers could be read; recorded so it is not fetched again · Skyworks, read 26 Oct 2026 · n/a — <a href="https://www.skyworksinc.com/Product-Specification?family=Diodes&amp;categories=Attenuator%20PIN%20Diodes%20-%20AEC-Q101%20Qualified" rel="noopener" target="_blank">www.skyworksinc.com/Product-Specification?…AEC-Q101</a></li>
+</ul>
+
+<h2>3. Cached documents in the site's data (not fetched again)</h2>
+<ul class="small rp-src">
+<li>3.1 · Si47901-02, Si47907, Si47942, Si47951-52, Si47957, Si47961-62, Si47967, Si47971-72: “AEC-Q100 qualified (A-grade parts / devices)”; Si47961-62 3.3 V analog, 1.8 V digital, 1.8 or 3.3 V I/O · Skyworks data shorts · high</li>
+<li>3.2 · Si469xx: AEC-Q100 qualified; every ordering code −40 to 105 °C; Si46933 and Si46943 Preview · Skyworks Si469xx product summary · high</li>
+<li>3.3 · Si4614, Si4617, Si4622, Si4624, Si4629: AEC-Q100 qualified; Si4622 1.8 V analog (1.71–2.0 V) · Skyworks data shorts · high</li>
+<li>3.4 · Si4682/83/84/85/88/89: ambient −40 to 85 °C; 1.8 V rails; QFN48 7 × 7 mm; no AEC-Q statement · Skyworks product summaries · high</li>
+<li>3.5 · Si4704/05 and Si4706: ambient −20 to 85 °C · Skyworks data shorts · high</li>
+<li>3.6 · SKYA21001: AEC-Q100, −40 to 105 °C, title 20 MHz–3.0 GHz but specs from 0.7 GHz, IP3 +53 dBm, ESD HBM 250 V (Class 1A) · Skyworks datasheet rev I (site switch data) · high</li>
+<li>3.7 · AS183-92LF and AS169-73LF: 0.3 MHz–2.5 GHz, industrial, −40 to 85 °C, IP3 50 dBm; SKY13374-397LF 0.3 MHz–6 GHz, IIP3 68 dBm, −40 to 85 °C · Skyworks datasheets (site switch data) · high</li>
+<li>3.8 · Si510/511: 0.1–250 MHz, −40 to 85 °C, no automotive grade · Skyworks catalogue · med</li>
+</ul>
+
+<h2>4. BizDev data behind the tables</h2>
+<ul class="small">
+<li>Parts per function of the diagram, Skyworks + Qorvo, with the AEC-Q rule (app/services/autograde.py) on a database with the catalogue and every Skyworks / Qorvo real-data file: AM/FM tuner 25 (24 AEC-Q; Si47992 not stated); digital radio demodulator 29 (29); single-chip radio 16 (3: Si4622/24/29); antenna switch 226 (13); LNA 214 (7: QPL6202Q, QPL6208Q, QPL6216Q, QPL6220Q, QPL9036Q, QPL9037Q, SKY5A2110); clock buffer 54 (4); crystal oscillator 43 (0); PMIC 66 (0); point-of-load buck 8 (0); wide-input buck 20 (4: ACT4529MYH ×2, ACT4530MYH discontinued, ACT4751MQI101); audio amplifier 2 (0); TVS/ESD, reverse polarity, LDO, supervisor, audio codec, CAN, Ethernet PHY 0.</li>
+<li>Switches that cover FM (88 MHz) to DAB Band III (240 MHz) by their stated range: automotive SKYA21001, QPC8010Q; industrial AS169-73LF, AS183-92LF, SKY13374-397LF, SKY13270-92LF, SKYA21024, SKY13453-385LF and others. Only AS169, AS183 and SKY13374 are specified down to 300 kHz (AM).</li>
+<li>Automotive map, row Infotainment, radio &amp; cluster: am_fm_tuner A (24 of 25), digital_radio_demod A (29 of 29), single_chip_radio A (3 of 16), antenna_switch A (13 of 226), lna A (7 of 214), clock_buffer A (4 of 54), crystal_oscillator B, pmic B, pol_buck B, audio_amp B, active_antenna_amp C, supervisor D, tvs_esd / reverse_polarity / pol_ldo / audio_codec / can_transceiver / ethernet_phy gap.</li>
+<li>Cross-sell pairs for this diagram: data/business/synergies_auto.yaml (antenna_switch + lna, am_fm_tuner + lna, am_fm_tuner + pmic weak).</li>
+<li>Qorvo grades: “Q” suffix rule (6 of 6 parts with a stated grade automotive) and the store listings in the site catalogue; QPL62xxQ band 2.32–2.345 GHz, NF 0.52 dB, 3.3–5.25 V (QPL6202Q).</li>
+<li>Estimates: qualification 6–12 months per family (est, typical AEC-Q100 stress-test duration plus PPAP); ACT4751 set above 1.71 MHz keeps harmonics out of the AM band (est, from its 450–2250 kHz range); low value of switch and oscillator sockets (est).</li>
+</ul>
+
+<h2>5. Requests made for this report</h2>
+<ul class="small">
+<li>www.skyworksinc.com: 4 (robots.txt; Si47961 product page; AEC-Q101 attenuator PIN diode category page; Si4730-31-34-35 datasheet PDF, read with pdftotext)</li>
+<li>Not requested: www.qorvo.com and distributors (rules). No web searches.</li>
+</ul>
+{% endraw %}

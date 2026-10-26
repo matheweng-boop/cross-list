@@ -182,3 +182,58 @@ def results_csv(rows) -> str:
     for r, v in rows:
         w.writerow(_result_cells(r, v))
     return buf.getvalue()
+
+
+# Products › Cross a list (owner, 26 Oct 2026): the on-screen table, light as text and fill colour, and a Summary sheet
+LIGHT_FILLS = {"Green": PatternFill("solid", fgColor="C6EFCE"), "Amber": PatternFill("solid", fgColor="FFEB9C"),
+               "Red": PatternFill("solid", fgColor="FFC7CE")}  # fmt: skip
+CROSS_LIST_WIDTHS = {"#": 5, "Your part": 20, "Maker": 14, "Status": 11, "Light": 8, "Drop-in part": 20,
+                     "Drop-in maker": 12, "Drop-in type": 22, "Drop-in comment": 60, "Functional fit part": 20,
+                     "Functional fit maker": 12, "Functional fit type": 24, "Functional fit comment": 60,
+                     "Checked on (P1 specs)": 40, "Verified": 11, "Your comment": 30}  # fmt: skip
+
+
+def cross_list_xlsx(rows, summary: dict, over: int = 0, accuracy: dict | None = None, shown: str = "") -> bytes:
+    from app.services.crosslist import EXPORT_HEADER, MAX_LINES, PRECHECK_NOTE, export_cells, today
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Cross list"
+    ws.append(EXPORT_HEADER)
+    for cell in ws[1]:
+        cell.font = BOLD
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+    light_col = EXPORT_HEADER.index("Light") + 1
+    wrap = {i + 1 for i, h in enumerate(EXPORT_HEADER) if "comment" in h.lower() or h.startswith("Checked")}
+    for r in rows:
+        ws.append(export_cells(r))
+        n = ws.max_row
+        ws.cell(n, light_col).fill = LIGHT_FILLS[ws.cell(n, light_col).value]
+        for c in range(1, len(EXPORT_HEADER) + 1):
+            ws.cell(n, c).alignment = Alignment(wrap_text=c in wrap, vertical="top")
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:{get_column_letter(len(EXPORT_HEADER))}{ws.max_row}"
+    for i, h in enumerate(EXPORT_HEADER, 1):
+        ws.column_dimensions[get_column_letter(i)].width = CROSS_LIST_WIDTHS.get(h, 14)
+
+    sm = wb.create_sheet("Summary")
+    lines = [["Cross a list", ""], ["Date", today()], ["Parts", summary["n"]], ["Green", summary["green"]],
+             ["Amber", summary["amber"]], ["Red", summary["red"]], ["Coverage", f"{summary['coverage']} %"],
+             ["Verified", summary["verified"]]]  # fmt: skip
+    if shown:
+        lines.append(["Rows exported", f"{shown} only"])
+    if accuracy:
+        lines.append(["Accuracy", f"Drop-ins correct: {accuracy.get('rate')} % of {accuracy.get('n')} known pairs "
+                                  f"(checked {accuracy.get('checked')})"])  # fmt: skip
+    if over:
+        lines.append(["Left out", f"{over} lines beyond the first {MAX_LINES}"])
+    if any(r.part is not None and r.part.is_synthetic for r in rows):
+        lines.append(["Note", SYNTHETIC_NOTE])
+    lines.append(["Note", PRECHECK_NOTE])
+    for line in lines:
+        sm.append(line)
+    sm["A1"].font = Font(bold=True, size=13)
+    sm.column_dimensions["A"].width, sm.column_dimensions["B"].width = 16, 100
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()

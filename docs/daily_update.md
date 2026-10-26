@@ -126,6 +126,13 @@ blocked unless the owner confirms them several times (CLAUDE.md).
      `uv run python scripts/match_refdesigns.py --add`, and record what was changed (old → new, which answers led to
      it, the new counts) in the `refmatch.py` docstring and the run summary. A single answer is not a pattern: leave
      the rules as they are then.
+   - **Cross a list answers and accuracy** (owner, 26 Oct 2026). Inbox sections "Cross list: wrong crosses" and
+     "Cross list: confirmed crosses" hold the owner's Wrong (with the reason) and Right answers on Products › Cross a
+     list. For each Wrong pair check both datasheets and fix the data file or the rule (`rules/<family>.yaml`), with a
+     test; add every answered pair to `data/manage/cross_known_pairs.yaml` (their, ours, expect: right | wrong, date,
+     note). Then run `uv run python scripts/check_cross_accuracy.py --write` (it re-crosses every known pair, the
+     engineer notes in `data/cross_notes.yaml` included) and commit `data/manage/cross_accuracy.yaml`; the page shows
+     "Drop-ins correct: X % of N known pairs". List the misses in the summary. The pasted lists are never stored.
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before GO" below: the full suite includes the browser tests.
 5. **Summary for the owner.** Short: what came in, what was done (per comment), what was not done and why, and the

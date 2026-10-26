@@ -234,6 +234,9 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(uploads_router)
     app.include_router(reviews_router)
     app.include_router(verify_router)
+    from app.web.crosslist import router as crosslist_router  # Products › Cross a list (26 Oct 2026)
+
+    app.include_router(crosslist_router)
     app.include_router(digest_router)
     app.include_router(people_router)
     return app

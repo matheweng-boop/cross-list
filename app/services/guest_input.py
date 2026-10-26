@@ -23,7 +23,7 @@ from app.web.urls import local_path
 MESSAGE = "Thanks, sent for review. The owner reviews every guest input before it is used."
 
 # POSTs that only compute and store nothing: guests use them like the owner
-COMPUTE_ONLY = ("/pricing/builder", "/api/blocks/counts", "/api/blocks/schematic")
+COMPUTE_ONLY = ("/pricing/builder", "/api/blocks/counts", "/api/blocks/schematic", "/cross-list", "/cross-list.xlsx")
 
 # plain-English names of the inputs, first match wins
 KINDS = (

@@ -27,6 +27,7 @@ from app.models import Package, Part, User
 from app.services import (
     alternates,
     cross_notes,
+    crosslist,
     engineering,
     export,
     lifecycle,
@@ -414,6 +415,7 @@ def _part_context(
         "closest_cross": closest,
         "no_cross": not graded,
         "requested": _requested(session, part.mpn),
+        "verified_ids": {c for r, c in crosslist.verified_pairs(session) if r == part.id},
     }
 
 

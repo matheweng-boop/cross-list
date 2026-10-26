@@ -24,7 +24,8 @@ OWNER_ACTIONS = ("/manage", "/owner", "/business/tam", "/business/quality", "/bu
                  "/requests/", "/blocks/feedback/", "/blocks/area-requests/",
                  "/shareable/technology-overview/edit", "/shareable/synergies/edit",
                "/shareable/automotive/edit", "/shareable/presentation/save",
-               "/shareable/presentation/delete", "/reference-designs/feedback")  # fmt: skip
+               "/shareable/presentation/delete", "/reference-designs/feedback",
+               "/cross-list/feedback")  # fmt: skip
 
 
 def is_open(path: str) -> bool:

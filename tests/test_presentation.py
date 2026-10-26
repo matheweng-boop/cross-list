@@ -165,3 +165,10 @@ def test_no_slide_overflows_and_the_pdf_has_one_slide_per_page(chromium, live_se
     assert m.locator("#pv-counter").inner_text() == f"2 / {n}"
     ctx.close()
     phone.close()
+
+
+def test_preview_has_no_save_as_pdf_button(client):
+    """Owner, 26 Oct 2026: the presentation preview stays as it is, without its "Save as PDF" (print) button."""
+    html = client.get("/shareable/presentation/preview?s=title").text
+    assert "Save as PDF" not in html and "window.print()" not in html
+    assert "Download as PowerPoint" in html

@@ -136,6 +136,16 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      engineer notes in `data/cross_notes.yaml` included) and commit `data/manage/cross_accuracy.yaml`; the page shows
      "Drop-ins correct: X % of N known pairs". List the misses in the summary. The pasted lists are never stored
      (except through "Update cross-lists", next step).
+   - **Datasheet families to re-read** (owner, 26 Oct 2026: "check the whole product family and therefore batch
+     confirm"). Inbox section "Cross list: datasheet families to re-read" lists each family (all codes from one
+     datasheet, `app/services/families.py`) with 2 or more open Wrong crosses, or a Wrong after the family was
+     confirmed: its datasheet, the Wrong pairs with the owner's comments, and how many codes it has. For each one,
+     re-read every priority-1 value (`rules/<family>.yaml`) of every code from that datasheet: each value gets a page
+     reference (`<file>.pdf p.N`) or is marked "est … check datasheet" (`is_estimate_source` / `from_datasheet` in
+     `app/matching/engine.py`). Never copy values between codes or grades. Report what changed for the whole family
+     in the summary, and add an entry to `data/manage/family_checks.yaml` (family, datasheet, date re-read, done).
+     Once re-read, a family with 3 crosses marked Right and no newer Wrong appears as one item in Data management ›
+     To confirm; only the owner confirms it.
    - **Cross-list lookups** (owner, 26 Oct 2026; also the step of the hourly lookup run, which does only this). The
      owner's "Update cross-lists" on Products › Cross a list sends the parts that came out "Not in our data". Input:
      the inbox section "Cross-list lookups (queued parts)" (`- <PART> · lookup <id> · <date>`), or, for the hourly

@@ -84,10 +84,10 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += _section("\n## Technology feedback\n", [f"- {_when(t.created_at)} [{t.status}] {t.kind} {t.topic or ''}: "
                     f"{_one_line(t.text)}" for t in tech])  # fmt: skip
 
-    from app.services import crosslist, digest, refmatch
+    from app.services import crosslist, digest, families, refmatch
 
     # the To confirm feed has its own section below (Confirm / Ignore are counted, comments listed)
-    own = (refmatch.FEEDBACK, digest.DATASET, crosslist.DATASET)  # sections of their own
+    own = (refmatch.FEEDBACK, digest.DATASET, crosslist.DATASET, families.DATASET)  # sections of their own
     reviews = [r for r in _new(session, DataReview, start) if r.dataset not in own]
     out += _section("\n## Review answers (data quality, TAM, cases, library, price calls)\n",
                     [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
@@ -98,6 +98,10 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     cx = crosslist.inbox_lines(session, start)
     out += cx
     cx_new = any(x.startswith("- ") for x in cx)
+    # datasheet families flagged for a re-read (every one still open) and family verdicts (owner, 26 Oct 2026)
+    fam = families.inbox_lines(session, start)
+    out += fam
+    cx_new = cx_new or any(x.startswith("- ") for x in fam)
     # Cross a list › "Update cross-lists": parts queued for a datasheet lookup (also read by the hourly lookup run)
     from app.services import crosslist_lookups
 

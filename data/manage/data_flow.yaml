@@ -105,6 +105,14 @@ nodes:
     gate: true
     desc: The owner's verdict on a cross; a Wrong one drops in the ranking and goes to the next run to fix.
     link: /cross-list
+  - id: family_check
+    label: Family check & batch confirm
+    lane: after
+    row: cross
+    kind: step
+    gate: true
+    desc: 2 Wrong in one datasheet family flag it for a re-read; 3 Right after that offer the whole family to confirm.
+    link: app/services/families.py
   - id: accuracy
     label: Accuracy check vs known pairs
     lane: after
@@ -325,6 +333,10 @@ edges:
   - {from: crosslist_out, to: right_wrong, label: Right / Wrong}
   - {from: right_wrong, to: cross_engine, label: ranking}
   - {from: right_wrong, to: live_db, label: verdicts}
+  - {from: right_wrong, to: family_check, label: 2 Wrong / 3 Right per datasheet}
+  - {from: family_check, to: ds_check, label: family re-read}
+  # to the owner's To confirm feed (an output, not a handover: nothing goes on into the research process)
+  - {from: family_check, to: to_confirm, label: family to confirm}
   - {from: cross_engine, to: accuracy, label: drop-ins}
   - {from: accuracy, to: data_real, label: misses fixed}
   - {from: cross_engine, to: no_cross, label: no cross}

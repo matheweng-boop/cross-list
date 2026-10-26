@@ -44,6 +44,7 @@ TYPES = {
     "tam-topic": "TAM topic",
     "evidence": "Evidence",
     "note": "Engineering note",
+    "family": "Datasheet family",  # crosses grouped by datasheet, offered for a batch confirm (families.py)
     "question": "Open question",
 }
 # the owner's state answers; "comment" rows are kept in the history and sent to the daily inbox, never a state
@@ -368,9 +369,18 @@ def states(session: Session) -> dict[str, dict]:
     return out
 
 
+def _family_keys(session: Session) -> dict[str, dict]:
+    from app.services import families
+
+    return {r["key"]: r for r in families.digest_items(session)}
+
+
 def act(session: Session, key: str, action: str, comment: str = "", author: str = "") -> None:
-    """Confirm, ignore, undo (back to the feed) or comment on one item; appends a row, never changes one."""
-    if key not in by_key():
+    """Confirm, ignore, undo (back to the feed) or comment on one item; appends a row, never changes one. A datasheet
+    family's Confirm / Undo is also its family verdict (DataReview "crossfamily"), which sets
+    Verified on its crosses."""
+    fam = _family_keys(session).get(key) if key.startswith("family:") else None
+    if key not in by_key() and fam is None:
         raise ValueError("unknown item")
     verdict = {"confirm": CONFIRMED, "ignore": IGNORED, "undo": OPEN, "comment": COMMENT}.get(action)
     comment = (comment or "").strip()[:2000]
@@ -379,6 +389,11 @@ def act(session: Session, key: str, action: str, comment: str = "", author: str 
     session.add(DataReview(dataset=DATASET, key=key[:120], verdict=verdict, comment=comment or None,
                            author=author or None))  # fmt: skip
     session.commit()
+    if fam is not None and verdict in (CONFIRMED, OPEN) and (verdict == CONFIRMED) != fam["confirmed"]:
+        from app.services import families
+
+        families.confirm(session, fam["id"], families.CONFIRMED if verdict == CONFIRMED else families.OPEN,
+                         author)  # fmt: skip
 
 
 def _elsewhere(session: Session, rows: list[dict]) -> dict[str, dict]:
@@ -414,11 +429,14 @@ def _elsewhere(session: Session, rows: list[dict]) -> dict[str, dict]:
 def feed(session: Session, tab: str = "open", typ: str = "", q: str = "") -> dict:
     """The To confirm page: the items of one tab (open | confirmed | ignored), counts per tab and per type."""
     rows = [dict(r) for r in items()]  # the cached items stay untouched
+    rows += _family_keys(session).values()  # datasheet families: from the owner's answers, not from files
     st = states(session)
     other = _elsewhere(session, rows)
 
     def state(r: dict) -> str:
         s = st.get(r["key"], {}).get("state", OPEN)
+        if r["type"] == "family" and s != IGNORED:  # the family verdict decides (a later Wrong reopens it)
+            return CONFIRMED if r["confirmed"] else OPEN
         if s == OPEN and (other.get(r["key"]) or {}).get("applied"):
             return CONFIRMED
         return s
@@ -446,7 +464,9 @@ def open_count(session: Session) -> int:
 
     st = {k: e["state"] for k, e in states(session).items()}
     applied = {f"tam:{k}" for k in tam.applied()}
-    return sum(st.get(r["key"], OPEN) == OPEN and r["key"] not in applied for r in _all(_sig()))
+    fams = [r for r in _family_keys(session).values() if not r["confirmed"]]
+    return sum(st.get(r["key"], OPEN) == OPEN and r["key"] not in applied for r in _all(_sig())) + sum(
+        st.get(r["key"], OPEN) != IGNORED for r in fams)
 
 
 def inbox_lines(session: Session, start: datetime) -> list[str]:

@@ -56,6 +56,7 @@ def load() -> dict:
         y = n.get("y", TOP + round(k * step))
         nodes.append({"id": str(n["id"]), "label": str(n["label"]), "lane": lane, "kind": str(n.get("kind") or "step"),
                       "desc": str(n.get("desc") or ""), "link": str(n.get("link") or ""), "gate": bool(n.get("gate")),
+                      "hub": bool(n.get("hub")),
                       "status": str(n.get("status") or ""), "note": str(n.get("note") or ""),
                       "includes": [str(x) for x in n.get("includes") or []],
                       "x": float(x), "y": float(y)})  # fmt: skip
@@ -154,7 +155,7 @@ def merged(file: dict, saved: dict | None) -> dict:
         if n["id"] in full:
             nodes.append(full[n["id"]] | {k: n[k] for k in ("label", "kind", "note", "x", "y", "lane") if k in n})
         elif n["id"] not in base_nodes:  # the owner's own node (one the file dropped since is left out)
-            nodes.append(n | {"desc": "", "link": "", "gate": False, "status": "", "includes": []})
+            nodes.append(n | {"desc": "", "link": "", "gate": False, "hub": False, "status": "", "includes": []})
     have = {n["id"] for n in nodes}
     nodes += [dict(n) for n in file["nodes"] if n["id"] not in base_nodes and n["id"] not in have]
     have = {n["id"] for n in nodes}

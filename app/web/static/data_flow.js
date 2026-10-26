@@ -30,7 +30,8 @@
     if (lines.length > max) { lines.length = max; lines[max - 1] = lines[max - 1].replace(/.{0,2}$/, "…"); }
     return lines.length ? lines : [""];
   }
-  const tagOf = n => n.gate ? (n.status === "planned" ? "REVIEW GATE · PLANNED" : "REVIEW GATE") : (n.status === "planned" ? "PLANNED" : "");
+  const tagOf = n => n.status === "uncrossed" ? "NOT YET ALL FROM CROSSES"
+    : n.gate ? (n.status === "planned" ? "REVIEW GATE · PLANNED" : "REVIEW GATE") : (n.status === "planned" ? "PLANNED" : "");
   function nodeBox(n) {
     const lines = wrap(n.label, 27, 3);
     const h = 14 + lines.length * 15 + (tagOf(n) ? 13 : 0) + (n.note ? 14 : 0) + 4;
@@ -128,7 +129,7 @@
     out.push('</g><g class="nodes">');
     for (const n of S.nodes) {
       const b = boxes[n.id], tag = tagOf(n), isSel = sel && sel.type === "node" && sel.id === n.id;
-      const cls = `node k-${esc(n.kind)}${n.gate ? " gate" : ""}${n.status === "planned" ? " planned" : ""}${isSel ? " sel" : ""}`;
+      const cls = `node k-${esc(n.kind)}${n.gate ? " gate" : ""}${n.status === "planned" ? " planned" : ""}${n.status === "uncrossed" ? " uncrossed" : ""}${n.hub ? " hub" : ""}${isSel ? " sel" : ""}`;
       let y = 12;
       const parts = [`<rect class="box" width="${b.w}" height="${b.h}" rx="10"/>`];
       if (tag) { parts.push(`<text class="tag" x="10" y="${y + 4}">${tag}</text>`); y += 13; }

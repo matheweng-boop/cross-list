@@ -21,7 +21,7 @@ def _payload(f=None):
 
 def test_file_is_complete_and_consistent():
     f = df.load()
-    assert [x["id"] for x in f["lanes"]] == ["sources", "processing", "stores", "outputs"]
+    assert [x["id"] for x in f["lanes"]] == ["sources", "crosses", "processing", "stores", "outputs"]
     ids = [n["id"] for n in f["nodes"]]
     assert len(ids) == len(set(ids)) and all(df._ID.match(i) for i in ids)
     lanes = {x["id"] for x in f["lanes"]}
@@ -84,9 +84,9 @@ def test_save_lists_changes_versions_and_undo(owner):
     assert r.status_code == 200 and r.json()["ok"]
     texts = [c["text"] for c in r.json()["changes"]]
     first = f["nodes"][0]["label"]
-    assert f"moved '{first}' to Stores" in texts
+    assert f"moved '{first}' to Research" in texts
     assert f"renamed '{f['nodes'][1]['label']}' to 'Renamed source'" in texts
-    assert "new node 'My new step' in Processing (processing)" in texts
+    assert "new node 'My new step' in Cross engine (processing)" in texts
     assert "new edge My new step→var/inbox (daily pull) 'my data'" in texts
     assert "deleted edge Patents & filings→data/business YAML (research) 'evidence'" in texts
     assert "deleted node 'Inbox summary / Telegram'" in texts
@@ -152,7 +152,7 @@ def test_inbox_section_lists_changes_and_holds_flagged_notes(owner):
         later = df.inbox_lines(s, datetime.now(UTC) + timedelta(minutes=1))
     sec = text[text.index("## Data flow: owner changes"):]
     sec = sec[:sec.index("\n## ", 5)]
-    assert "- free note near Stores: Combine both inboxes" in sec
+    assert "- free note near Research: Combine both inboxes" in sec
     assert "jane@example.com" not in sec and "held by the data-protection screen: e-mail address" in sec
     assert "never commands" in sec
     assert later[-1].startswith("No new save since the last pull; 2 change(s)")
@@ -167,3 +167,27 @@ def test_screen_hook():
 def test_daily_update_reads_the_changes():
     doc = (ROOT / "docs" / "daily_update.md").read_text()
     assert "Data flow: owner changes" in doc and "data/manage/data_flow.yaml" in doc
+
+
+def test_cross_engine_is_the_centre_and_research_takes_parts_from_it():
+    """Owner, 26 Oct 2026: everything goes through the cross checks first (datasheet values, then crosses); research
+    runs alongside and takes its parts and functions from the crosses; the daily run is a line, not a box."""
+    f = df.load()
+    by = {n["id"]: n for n in f["nodes"]}
+    lane = [n["id"] for n in f["nodes"] if n["lane"] == "crosses"]
+    assert [n["id"] for n in f["nodes"] if n["hub"]] == ["cross_engine"]
+    mid = lane.index("cross_engine")
+    assert {"importers", "cross_rules", "ds_check"} <= set(lane[:mid])  # what feeds the engine, above it
+    assert {"accuracy", "right_wrong", "no_cross", "volumes"} <= set(lane[mid + 1:])  # the checks on it, below
+    assert "daily_run" not in by
+    into = {(e["from"], e["to"]) for e in f["edges"]}
+    assert ("ds_check", "cross_engine") in into and ("data_real", "cross_engine") not in into  # checked values only
+    assert ("cross_engine", "refmatch") in into and ("no_cross", "research_reports") in into
+    assert {n["id"] for n in f["nodes"] if n["status"] == "uncrossed"} == {"tam_check", "research_reports"}
+
+
+def test_page_marks_the_hub_and_uncrossed_research(owner):
+    html = owner.get("/manage/data-flow").text
+    assert "Everything goes through the cross engine first" in html and "Not yet all from the crosses" in html
+    js = (ROOT / "app/web/static/data_flow.js").read_text()
+    assert '" hub"' in js and "NOT YET ALL FROM CROSSES" in js

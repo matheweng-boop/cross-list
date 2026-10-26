@@ -14,13 +14,21 @@
 #         step   = processing done by the site or a run   store = where data lives   output = what the owner sees
 # nodes:  id (never change it: saved versions refer to it), label, lane, kind, desc (one short sentence),
 #         link (page or repo file), gate: true for a review gate, status: planned when not built yet,
-#         includes (Sources: what falls under it, shown on tap), x / y (optional fixed place).
+#         includes (Sources: what falls under it, shown on tap), x / y (optional fixed place),
+#         hub: true for the cross engine (drawn larger), status: uncrossed for research that still uses parts or
+#         functions not taken from the crosses (the rule below; marked until it is closed).
 # edges:  from, to, label (short).
 # done:   date, change (as listed in the inbox), what (what the run did, or why not).
 
+# Layout (owner, 26 Oct 2026): everything goes through the cross engine first. Datasheet values, then crosses, then
+# the checks on the crosses; research runs alongside, but any part or function it uses comes from the crosses
+# ("most of what we do has to go through the crosschecks ... a research box that comes after crosschecking everything
+# or simultaneously"). The daily run runs both paths, so it is a line on the page, not a box. The lane id
+# `processing` is kept for Research so saved versions still place its boxes.
 lanes:
   - {id: sources, label: Sources}
-  - {id: processing, label: Processing}
+  - {id: crosses, label: Cross engine}
+  - {id: processing, label: Research}
   - {id: stores, label: Stores}
   - {id: outputs, label: Outputs}
 
@@ -107,25 +115,74 @@ nodes:
       - Requests (reviews, application areas)
       - Saved designs
 
-  # --- Processing ------------------------------------------------------------------------------------------------
+  # --- Cross engine: what feeds it (above), the engine (middle), the checks on the crosses (below) ---------------
   - id: importers
     label: Importers into data/real
-    lane: processing
+    lane: crosses
     kind: step
     desc: Datasheet specs written as YAML (priority-1 specs first) and loaded by load-real.
     link: app/cli.py
   - id: hourly_lookup
     label: Hourly lookup run
-    lane: processing
+    lane: crosses
     kind: step
     desc: Finds datasheets for queued parts and commits them to the lookups branch; the daily run takes them live.
     link: data/manage/crosslist_lookups.yaml
+  - id: cross_rules
+    label: Rules per family (priority-1 specs)
+    lane: crosses
+    kind: step
+    desc: Which specs must match, which may deviate and how far; one file per product family.
+    link: rules/
+  - id: ds_check
+    label: Datasheet value check
+    lane: crosses
+    kind: step
+    gate: true
+    status: planned
+    desc: A value decides a cross only with a datasheet page behind it; other values count as estimates (amber).
+    link: data/real/
   - id: cross_engine
-    label: Cross engine + priority-1 rules
+    label: CROSS ENGINE
+    lane: crosses
+    kind: step
+    hub: true
+    desc: "The centre: every part gets its drop-in and best functional fit, compared on the family rules."
+    link: /business/method
+  - id: accuracy
+    label: Accuracy check vs known pairs
+    lane: crosses
+    kind: step
+    desc: Drop-ins compared daily with published cross pairs; the rate shows once 30 pairs are checked.
+    link: scripts/check_cross_accuracy.py
+  - id: right_wrong
+    label: Right / Wrong review
+    lane: crosses
+    kind: step
+    gate: true
+    desc: The owner's verdict on a cross; a Wrong one drops in the ranking and goes to the next run to fix.
+    link: /cross-list
+  - id: no_cross
+    label: No cross → gap
+    lane: crosses
+    kind: step
+    desc: A known part with no Skyworks/Qorvo cross becomes a gap, with its function.
+    link: /business/opportunities
+  - id: volumes
+    label: Volume estimates (100k steps)
+    lane: crosses
+    kind: step
+    desc: Lifetime volume per gap part, summed over requests; owner only, kept 12 months.
+    link: app/services/demand.py
+
+  # --- Research: runs alongside the crosses; parts and functions come from the crosses -----------------------------
+  - id: research_reports
+    label: Research reports, ideas & cases
     lane: processing
     kind: step
-    desc: Drop-in and best-fit crosses, compared on the rules per family (rules/*.yaml), checked against known pairs.
-    link: /business/method
+    status: uncrossed
+    desc: Markets, competitors, technologies and product ideas; some functions have no crossed parts yet.
+    link: data/business/reports.yaml
   - id: refmatch
     label: Reference-design matching + anchors
     lane: processing
@@ -136,6 +193,7 @@ nodes:
     label: TAM check + combined bands
     lane: processing
     kind: step
+    status: uncrossed
     desc: Biweekly check of 25 estimates; same topics combined into one band once 2 sources agree.
     link: scripts/check_tam.py
   - id: gists
@@ -152,13 +210,6 @@ nodes:
     status: planned
     desc: Every input screened for personal data and insider information; flagged items wait for the owner (plan, 26 Oct 2026).
     link: docs/plan_data_protection.md
-  - id: daily_run
-    label: Daily update run (18:42 Berlin)
-    lane: processing
-    kind: step
-    gate: true
-    desc: Pulls the inbox, fixes and builds what the comments ask, full tests, then goes live.
-    link: docs/daily_update.md
 
   # --- Stores ----------------------------------------------------------------------------------------------------
   - id: data_real
@@ -243,13 +294,11 @@ edges:
   - {from: pasted_lists, to: hourly_lookup, label: queued parts}
   - {from: hourly_lookup, to: importers, label: found datasheets}
   - {from: importers, to: data_real, label: YAML}
-  - {from: data_real, to: cross_engine, label: parts}
   - {from: pasted_lists, to: cross_engine, label: "pasted list (not stored)"}
   - {from: cross_engine, to: part_pages, label: replacements}
   - {from: cross_engine, to: crosslist_out, label: crosses}
   - {from: refmatch, to: gaps, label: "Found in N"}
   - {from: market_sources, to: tam_check, label: market figures}
-  - {from: market_sources, to: daily_run, label: research}
   - {from: patents, to: data_business, label: evidence}
   - {from: tam_check, to: data_business, label: bands}
   - {from: derived, to: data_business, label: "matches, bands, gists"}
@@ -265,11 +314,31 @@ edges:
   - {from: protect_screen, to: live_db, label: approved}
   - {from: protect_screen, to: to_confirm, label: held items}
   - {from: live_db, to: inbox, label: daily pull}
-  - {from: inbox, to: daily_run, label: comments}
-  - {from: daily_run, to: data_real, label: fixes}
-  - {from: daily_run, to: data_business, label: research}
-  - {from: daily_run, to: telegram, label: summary}
   - {from: data_business, to: shareable, label: public-safe text}
   - {from: live_db, to: shareable, label: owner edits}
+  # the cross engine: fed by checked datasheet values and the rules; checks and uses below it
+  - {from: data_real, to: ds_check, label: values}
+  - {from: ds_check, to: cross_engine, label: checked values}
+  - {from: cross_rules, to: cross_engine, label: rules}
+  - {from: cross_engine, to: accuracy, label: drop-ins}
+  - {from: accuracy, to: data_real, label: misses fixed}
+  - {from: crosslist_out, to: right_wrong, label: Right / Wrong}
+  - {from: right_wrong, to: cross_engine, label: ranking}
+  - {from: right_wrong, to: live_db, label: verdicts}
+  - {from: cross_engine, to: no_cross, label: no cross}
+  - {from: no_cross, to: gaps, label: gap}
+  - {from: no_cross, to: volumes, label: gap parts}
+  - {from: owner_input, to: volumes, label: volume step}
+  - {from: volumes, to: research, label: totals}
+  - {from: volumes, to: cases, label: business case}
+  # research: alongside the crosses, taking its parts and functions from them
+  - {from: cross_engine, to: refmatch, label: crossed parts (anchors)}
+  - {from: no_cross, to: research_reports, label: gap functions}
+  - {from: market_sources, to: research_reports, label: research}
+  - {from: research_reports, to: data_business, label: reports}
+  # the daily run (18:42 Berlin) reads the inbox and works both paths
+  - {from: inbox, to: data_real, label: fixes (daily run)}
+  - {from: inbox, to: research_reports, label: comments (daily run)}
+  - {from: inbox, to: telegram, label: summary (daily run)}
 
 done: []

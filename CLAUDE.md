@@ -18,9 +18,10 @@
 - Never commit anything local to one machine: `.venv`, `var/`, caches, or symbolic links. `tests/test_repo.py` fails
   if one is tracked; run the full test suite before every merge.
 - Full test suite only once per release (owner, 26 Oct 2026: "stop running full tests before things are finally
-  confirmed and signed off on"): while work is open, run only the tests for what changed; run the full suite once,
-  after the owner's final sign-off (in the automated daily run: once, at the end), right before the merge. Workers
-  never run the full suite.
+  confirmed and signed off on"): while work is open, run the quick check `uv run pytest -m smoke` (about half a
+  minute) plus the test files for what changed; run the full suite once per release, in parallel
+  (`uv run pytest -n auto`), after the owner's final sign-off (in the automated daily run: once, at the end), right
+  before the merge. Workers never run the full suite.
 - A second checkout (git worktree) gets its own environment with `uv sync`, never a symlink to another checkout's
   `.venv`: a committed link replaces the real folder on merge.
 - Research reports for Future growth > Research & ideas follow the layout and priorities at the top of

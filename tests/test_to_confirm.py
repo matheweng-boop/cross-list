@@ -12,8 +12,9 @@ from app.services import digest, inbox, site_guard
 from app.web import nav
 
 # every type that has items in the data today (an idea expansion appears once a report has `expanded:`)
-# types that may be empty: idea expansions (none requested yet) and open questions (none while all are settled)
-WITH_ITEMS = [t for t in digest.TYPES if t not in ("expansion", "question")]
+# types that may be empty: idea expansions (none requested yet), open questions (none while all are settled) and
+# datasheet families (they come from the owner's Right / Wrong answers, app/services/families.py)
+WITH_ITEMS = [t for t in digest.TYPES if t not in ("expansion", "question", "family")]
 
 
 def _n_open() -> int:

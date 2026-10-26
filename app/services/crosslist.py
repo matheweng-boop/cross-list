@@ -471,6 +471,40 @@ def verified_pairs(session: Session) -> set[tuple[int, int]]:
     return pairs
 
 
+class Verified:
+    """Membership test for (reference id, candidate id): a pair a person confirmed (verified_pairs), or any cross with a
+    part of a confirmed datasheet family (app/services/families.py), unless the pair's own latest answer is Wrong."""
+
+    def __init__(self, session: Session):
+        from app.services import families
+
+        self.pairs = verified_pairs(session)
+        self.family = families.verified_part_ids(session)
+        wrong = {k for k, r in answers(session).items() if r.verdict == "wrong"}
+        self.wrong: set[tuple[int, int]] = set()
+        if wrong and self.family:
+            mpns = {normalize_pn(m): i for i, m in session.execute(select(Part.id, Part.mpn))}
+            self.wrong = {(mpns[a], mpns[b]) for a, b in wrong if a in mpns and b in mpns}
+
+    def __contains__(self, pair: tuple[int, int]) -> bool:
+        if pair in self.pairs:
+            return True
+        return bool(self.family & set(pair)) and pair not in self.wrong
+
+    def of(self, ref: int) -> "_OfRef":
+        """Candidate ids verified for one reference part (the part page)."""
+        return _OfRef(self, ref)
+
+
+@dataclass
+class _OfRef:
+    verified: Verified
+    ref: int
+
+    def __contains__(self, cand: int) -> bool:
+        return (self.ref, cand) in self.verified
+
+
 def record(session: Session, their: str, ours: str, verdict: str, comment_text: str, author: str | None) -> DataReview:
     r = DataReview(dataset=DATASET, key=_pair_key(their.strip(), ours.strip()), verdict=verdict,
                    comment=(comment_text or "").strip()[:2000] or None, author=author)  # fmt: skip
@@ -569,7 +603,7 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
 def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
     ix = build_index(session)
     crosser = Crosser(session)
-    verified = verified_pairs(session)
+    verified = Verified(session)
     said = answers(session)
     rows = []
     for i, e in enumerate(entries, 1):

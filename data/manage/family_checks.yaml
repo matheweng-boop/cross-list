@@ -1,0 +1,12 @@
+# Datasheet families re-read by the daily run (owner, 26 Oct 2026: "check the whole product family and therefore
+# batch confirm"; app/services/families.py, docs/daily_update.md).
+#
+# A family is every code whose values come from one datasheet (the `datasheet:` field in data/real/*.yaml). When the
+# owner marks 2 or more of its crosses Wrong, the family is flagged in the daily inbox; the run re-reads every
+# priority-1 value of every code from that datasheet (page reference, or "est … check datasheet") and records it here.
+# A Wrong given after `reread_at` opens the family again (only older Wrongs count as handled).
+#
+# checks: family (short name), datasheet (file name as in data/real), reread_at (UTC time the re-read finished,
+#         ISO, e.g. 2026-10-27T18:55:00Z; an old date-only `date:` counts as the start of that day), done (what was
+#         checked and changed, for the whole family).
+checks: []

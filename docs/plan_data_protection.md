@@ -2,8 +2,7 @@
 
 Owner, verbatim: "we need to start implementing functions that are related to data protection. And everything that is
 not publicly sourced needs to be reviewed first before going to the site." Agreed to build in the daily run of
-26 Oct 2026 ("Data protection can run this evening"). Ask the owner the four decisions below first (open questions 7-10),
-then build on the run's branch.
+26 Oct 2026 ("Data protection can run this evening"). All four decisions are settled (below); build on the run's branch.
 
 ## 1. Source label on all content
 public (with link) · generated from public data · owner input · guest input (already reviewed before use).
@@ -40,6 +39,6 @@ Screen for:
 
 ## Decisions to ask (suggested answers in brackets)
 1. Settled (owner, 26 Oct 2026): every input, the owner's own included, is screened; flagged items wait for the owner's approval.
-2. Retention: feedback and comments 12 months, inbox files 30 days? (yes)
+2. Settled (owner, 26 Oct 2026): retention 12 months for feedback, comments, lookup requests and inbox files.
 3. ~~Customer-name list~~ Settled (owner, 26 Oct 2026): no customer names stored unless from public sources the site pulled itself; no private list.
 4. Settled (owner, 26 Oct 2026): only the owner can approve data.

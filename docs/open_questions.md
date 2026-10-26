@@ -27,8 +27,6 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
 
-8. **Retention:** delete feedback and comments after 12 months and the daily inbox files after 30 days?
-
 ## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
 
 - Matching rules made a bit stricter (app/services/refmatch.py, old → new): title-word weight 60 % → 70 %; shared
@@ -49,6 +47,8 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 - Only the owner can approve data (no other approvers, guests never).
 - Every input, the owner's own included, is screened for patterns and potential insider information; flagged items wait
   for the owner's approval (docs/plan_data_protection.md, section 2b).
+- Retention: 12 months (owner, 26 Oct 2026) for feedback, comments, lookup requests and the daily inbox files; then
+  deleted automatically.
 
 ## Settled (owner, 25 Oct 2026, radio market)
 

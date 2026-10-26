@@ -98,8 +98,9 @@ parts:
   datasheet_url: https://www.ti.com/lit/ds/symlink/lmk03328.pdf
   product_url: https://www.ti.com/product/LMK03328
   notes: 'Two fractional-N PLLs, 8 outputs (AC-LVPECL, AC-LVDS, AC-CML, HCSL or LVCMOS), 1–1000 MHz (LVCMOS to 200
-    MHz). 100 fs typ. (50 MHz crystal, integer mode, 12 kHz–20 MHz; 120 fs with 19.2–38.88 MHz crystals). Single 3.3 V
-    core, outputs 1.8 / 2.5 / 3.3 V. Pin mode, I2C or EEPROM start-up. Closest TI match for Si5332 (6–12 outputs)
+    MHz). 100 fs typ. / 150 fs max at 156.25 MHz (50 MHz crystal, integer mode, 12 kHz–20 MHz); 120 fs typ. / 200 fs max with
+    19.2–38.88 MHz crystals; the datasheet states these for outputs of 100 MHz and up, nothing typical below 100 MHz.
+    Single 3.3 V core rail (3.135–3.465 V); output supplies 1.8 / 2.5 / 3.3 V (1.7–3.465 V). Pin mode, I2C or EEPROM start-up. Closest TI match for Si5332 (6–12 outputs)
     and the 4-output Si5340, but it needs a 3.3 V core rail.'
   lifecycle:
     status: active
@@ -116,15 +117,19 @@ parts:
     pcie_gen: gen6
     inputs: 2
     control: [I2C, pin]
+    jitter_fout_mhz: 156.25
+    core_rails: 1
   param_sources:
     function_type: lmk03328.pdf p1
     outputs: lmk03328.pdf p1
     output_formats: lmk03328.pdf p1
     freq_range_mhz: lmk03328.pdf 6.x output characteristics (AC-LVPECL / CML 1–1000 MHz)
-    vdd_range_v: lmk03328.pdf 6.5 conditions (3.3 V ±5 %)
-    jitter_fs: lmk03328.pdf 6.x RMS phase jitter (50 MHz crystal, integer-N)
+    vdd_range_v: 'lmk03328.pdf p.5 (6.3: VDD_IN, VDD_PLL1, VDD_PLL2, VDD_DIG 3.135-3.465 V; the VDDO_x output supplies, 1.7-3.465 V, are separate)'
+    jitter_fs: 'lmk03328.pdf p.15 (6.26: 50 MHz crystal, integer-N, fOUT 156.25 MHz, typ 100 fs, max 150 fs; 120 typ / 200 max fs with 19.2-38.88 MHz crystals, fOUT >= 100 MHz; no figure below 100 MHz)'
     temp_range_c: lmk03328.pdf p1
     pcie_gen: lmk03328.pdf p1 (PCIe Gen1–Gen6) and RJGEN6 spec
+    jitter_fout_mhz: lmk03328.pdf p.15 (6.26 test condition)
+    core_rails: 'lmk03328.pdf p.5 (6.3: all core pins on one 3.3 V rail)'
 - mpn: LMK3H0102-Q1
   manufacturer: TI
   family: timing
@@ -135,8 +140,9 @@ parts:
   datasheet_url: https://www.ti.com/lit/ds/symlink/lmk3h0102-q1.pdf
   product_url: https://www.ti.com/product/LMK3H0102-Q1
   notes: 'AEC-Q100 grade 2 (–40 to 105 °C). Built-in BAW resonator: no crystal needed, ±25 ppm total stability.
-    2 differential outputs (AC-LVDS, DC-LVDS, LP-HCSL) or up to 5 LVCMOS, 2.5–400 MHz. 12 kHz–20 MHz random jitter only
-    stated as 0.5 ps max (LVCMOS, 50 MHz; no typical differential figure); built for PCIe (Gen 6 CC 34.5 fs max with SSC). 1.8 / 2.5 / 3.3 V. A smaller, crystal-free answer to
+    2 differential outputs (AC-LVDS, DC-LVDS, LP-HCSL) or up to 5 LVCMOS, 2.5–400 MHz. 105 fs typ. (144 fs max)
+    12 kHz–20 MHz at 156.25 MHz (0.5 ps max is the LVCMOS figure at 50 MHz). Built for PCIe: Gen 7 Common Clock 29.6 fs
+    max with SSC (15.4 fs without; PCIe limit 67 fs), Gen 6 34.5 fs, Gen 5 57.5 fs. One 1.8 / 2.5 / 3.3 V supply. A smaller, crystal-free answer to
     Si5332-AM where only one or two PCIe / Ethernet clocks are needed.'
   lifecycle:
     status: active
@@ -147,22 +153,26 @@ parts:
     output_formats: [LVDS, HCSL, LVCMOS]
     freq_range_mhz: [2.5, 400]
     vdd_range_v: [1.71, 3.465]
-    jitter_fs: 500
+    jitter_fs: 105
     qualification: automotive
     temp_range_c: [-40, 105]
     pcie_gen: gen7
     inputs: 0
     control: [I2C, pin]
+    jitter_fout_mhz: 156.25
+    core_rails: 1
   param_sources:
     function_type: lmk3h0102-q1.pdf p1
     outputs: lmk3h0102-q1.pdf p1
     output_formats: lmk3h0102-q1.pdf p1
     freq_range_mhz: lmk3h0102-q1.pdf p1
     vdd_range_v: lmk3h0102-q1.pdf 5.3
-    jitter_fs: lmk3h0102-q1.pdf 5.x (12 kHz–20 MHz random jitter, max)
+    jitter_fs: lmk3h0102-q1.pdf p.10 (RJRMS 12 kHz-20 MHz at fout 156.25 MHz, typ 105 fs, max 144 fs; the 0.5 ps on p.9 is the LVCMOS random-jitter max at 50 MHz)
     qualification: lmk3h0102-q1.pdf p1 (AEC-Q100 grade 2)
     temp_range_c: lmk3h0102-q1.pdf 5.3
     pcie_gen: lmk3h0102-q1.pdf p1
+    jitter_fout_mhz: lmk3h0102-q1.pdf p.10 (RJRMS test condition)
+    core_rails: lmk3h0102-q1.pdf p.1 (one 1.8 V to 3.3 V supply, VDD = VDDO)
 - mpn: CDCE6214-Q1
   manufacturer: TI
   family: timing

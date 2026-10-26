@@ -44,11 +44,11 @@
     <span id="cx-copied" class="small muted" aria-live="polite"></span>
   </span>
 </div>
-{% if sent %}<p class="cx-sent" role="status">Sent {{ sent }} unknown part{{ 's' if sent != 1 }} for lookup (checked hourly). Progress: <a href="/manage/requests?kind=lookup">Requests</a>.</p>
-{% elif owner and unknown %}<form method="post" action="/cross-list/lookup" class="cx-lookup">
+{% if sent is not none %}<p class="cx-sent" role="status">Sent {{ sent }} unknown part{{ 's' if sent != 1 }} for lookup (checked hourly){% if sent_vols %} and recorded {{ sent_vols }} lifetime volume{{ 's' if sent_vols != 1 }} (owner only){% endif %}. Progress: <a href="/manage/requests?kind=lookup">Requests</a>.</p>
+{% elif owner and (unknown or gaps) %}<form method="post" action="/cross-list/lookup" class="cx-lookup" id="cx-lookup-form">
   <textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea>
   <span class="cx-hint">Too many unknown?</span> <button type="submit" class="outline">Update cross-lists</button>
-  <span class="small muted">Sends the {{ unknown }} part number{{ 's' if unknown != 1 }} “Not in our data” for a datasheet lookup (checked hourly) and keeps the list's part numbers to cross it again. Nothing else is stored.</span>
+  <span class="small muted">Sends the {{ unknown }} part number{{ 's' if unknown != 1 }} “Not in our data” for a datasheet lookup (checked hourly) and keeps the list's part numbers to cross it again.{% if vol_rows %} Pick a rough lifetime volume on those rows and on the {{ gaps }} gap part{{ 's' if gaps != 1 }} (“no cross”), or leave “—”: totals show on your pages only, kept 12 months.{% endif %} Nothing else is stored.</span>
 </form>{% endif %}
 {% endif %}
 {% endif %}
@@ -71,7 +71,8 @@
     <td class="cx-n">{{ r.n }}</td>
     <td class="cx-yours"><div class="cx-mpn">{% if r.part %}<a href="/parts/{{ r.part.id }}">{{ r.text }}</a>{% else %}{{ r.text }}{% endif %}</div>
       <div class="cx-mk">{% if r.maker %}{{ r.maker|vendor }}{% if r.status %} · {{ r.status|lower }}{% endif %}{% else %}not recognised{% endif %}{% if r.count > 1 %} · ×{{ r.count }}{% endif %}</div>
-      {% if r.how == 'variant' and r.part %}<div class="cx-mk">ordering-code variant of {{ r.part.mpn }}</div>{% endif %}</td>
+      {% if r.how == 'variant' and r.part %}<div class="cx-mk">ordering-code variant of {{ r.part.mpn }}</div>{% endif %}
+      {% if r.n in vol_rows and sent is none %}<label class="cx-vol small">Lifetime volume <select name="v{{ r.n }}" form="cx-lookup-form" aria-label="Lifetime volume of {{ r.text }}"><option value="">—</option>{% for v, label in steps %}<option value="{{ v }}">{{ label }}</option>{% endfor %}</select></label>{% endif %}</td>
     <td class="cx-lt"><span class="cx-dot cx-{{ r.light }}" role="img" aria-label="{{ lights[r.light] }}" title="{{ lights[r.light] }}{% if r.checked_on %} · checked on priority-1 specs: {{ r.checked_on|join(', ') }}{% endif %}"></span><span class="cx-lt-word">{{ lights[r.light] }}</span></td>
     {% if r.drop_in or r.functional %}
     <td data-label="Drop-in">{% if r.drop_in %}{{ col(r, r.drop_in) }}{% else %}<span class="cx-none">No drop-in</span><div class="cx-cm">No same-package part with the same pinout.</div>{% endif %}</td>

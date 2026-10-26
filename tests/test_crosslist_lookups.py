@@ -27,8 +27,10 @@ def test_button_only_with_unknown_rows_and_only_for_the_owner(owner, make_guest)
     client = owner
     page = client.post("/cross-list", data={"parts": PASTE}).text
     assert "Update cross-lists" in page and "Too many unknown?" in page and 'action="/cross-list/lookup"' in page
-    known = client.post("/cross-list", data={"parts": "SC141\nSC142"}).text  # known, one without a cross
+    known = client.post("/cross-list", data={"parts": "SC141"}).text  # known, with a cross
     assert 'action="/cross-list/lookup"' not in known
+    gap = client.post("/cross-list", data={"parts": "SC141\nSC142"}).text  # a gap part: now sent for its volume
+    assert 'action="/cross-list/lookup"' in gap and 'name="v2"' in gap and 'name="v1"' not in gap
     guest, _ = make_guest()
     assert 'action="/cross-list/lookup"' not in guest.post("/cross-list", data={"parts": PASTE}).text
 

@@ -104,6 +104,12 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     lookups = crosslist_lookups.inbox_lines(session)
     out += lookups
     cx_new = cx_new or lookups[-1] != "None."
+    # lifetime volume estimates sent with those lookups: a count only, never values (owner's safeguard, 26 Oct 2026)
+    from app.services import demand
+
+    n_vol = demand.new_count(session, since)
+    out.append(f"\nLifetime volume entries (owner only, values stay on the site): {n_vol} new volume "
+               f"entr{'y' if n_vol == 1 else 'ies'}.")  # fmt: skip
 
     # the owner's answers on the reference designs matched to the library diagrams (owner, 25 Oct 2026: matching
     # "based on feedback"): the run looks for patterns and tunes app/services/refmatch.py (docs/daily_update.md)

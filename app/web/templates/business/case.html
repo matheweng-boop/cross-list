@@ -4,6 +4,7 @@
 {% block content %}
 <p class="small"><a href="/business/cases">← All cases</a></p>
 <h1>{{ title or 'New case' }}</h1>
+{% import "_demand.html" as dmd %}{{ dmd.case_line(demand_seen(request), fn) }}
 {% if case and case.status == 'merged' %}<p class="banner">Merged into {% if merged_into %}<a href="/business/cases/{{ merged_into.id }}">{{ merged_into.title }}</a>{% else %}another case{% endif %}: its parts, notes and inputs are there now.</p>{% endif %}
 {% if case %}<form method="post" action="/business/cases/{{ case.id }}" class="case-status">
   <input type="hidden" name="act" value="status">

@@ -7,6 +7,7 @@
 {% block content %}
 {% set back = request.query_params.get('from', '') %}{% if back.startswith('/parts?') or back == '/parts' %}<p class="small"><a href="{{ back }}">← Back to results</a></p>{% endif %}
 <h1>{{ part.mpn }}</h1>
+{% if not part.is_reference %}{% import "_demand.html" as dmd %}{% set dm = demand_seen(request) %}{{ dmd.line(dm.part(part.mpn) if dm else none) }}{% endif %}
 {% if not part.is_reference %}{{ used_in(part.mpn, rows[0][0].candidate.mpn if rows else none) }}{% endif %}
 <dl class="ref-summary">
   <div><dt>Manufacturer</dt><dd>{{ part.manufacturer.name|vendor }}{% if part.is_reference %} <span class="badge cat">Skyworks / Qorvo</span>{% endif %}</dd></div>

@@ -26,6 +26,7 @@
   {% if tags %}<details class="rp-topics"{% if tag %} open{% endif %}><summary class="chip-lbl">Topic{% if tag %}: {{ tag }}{% endif %}</summary><div class="chip-row"><a class="fchip{{ ' on' if not tag }}" href="/business/reports?view={{ view }}&kind={{ kind }}">All</a>{% for t in tags %}<a class="fchip{{ ' on' if tag == t }}" href="/business/reports?view={{ view }}&kind={{ kind }}&tag={{ t|urlencode }}">{{ t }}</a>{% endfor %}</div></details>{% endif %}
 </div>
 {{ fz.legend() }}
+{% include "business/_demand_ideas.html" %}
 
 {% if not rows %}<p class="muted">No product idea{{ ' with this filter' if kind or tag }} yet.</p>
 {% elif view == 'feasibility' %}

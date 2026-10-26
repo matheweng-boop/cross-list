@@ -66,6 +66,9 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
         ensure_owner(session)
         # the owner deleted the retired commercial inputs (ASPs and volumes), 22 Oct 2026: nothing proprietary is kept
         session.execute(delete(BusinessInput))
+        from app.services import demand  # owner volume estimates: 12 months, then deleted
+
+        demand.purge(session)
         empty = session.scalar(select(func.count(Part.id))) == 0
         if get_settings().load_real_on_start:
             load_real_if_changed(session)

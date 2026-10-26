@@ -147,3 +147,15 @@ def inbox_lines(session: Session) -> list[str]:
 def is_unknown(row) -> bool:
     """A Cross a list row whose part number is not in our data at all (not a known part without a cross)."""
     return row.part is None and not row.catalogue
+
+
+def is_gap(row) -> bool:
+    """A Cross a list row for a known part with no Skyworks/Qorvo cross (the red "Function known …, no cross" rows):
+    not looked up (it is known), but the owner can record a lifetime volume for it (app/services/demand.py)."""
+    return (row.part is not None and not row.part.is_reference and row.drop_in is None and row.functional is None
+            and row.light == "red")  # fmt: skip
+
+
+def volume_rows(rows) -> list:
+    """The rows that get a volume step select: unknown parts and gap parts."""
+    return [r for r in rows if is_unknown(r) or is_gap(r)]

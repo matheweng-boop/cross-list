@@ -3,6 +3,8 @@ visual or a diagram visual puts its "How to read this visual" box in the panel, 
 
 import pytest
 
+from tests.conftest import PAGE_TIMEOUT
+
 pytest.importorskip("playwright.sync_api")
 
 pytestmark = pytest.mark.browser
@@ -13,7 +15,7 @@ def test_box_shows_below_the_graph(chromium, live_server):
     page = ctx.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    page.set_default_timeout(10_000)
+    page.set_default_timeout(PAGE_TIMEOUT)
     try:
         for vid, below in (("link", ".vz-chartwrap"), ("dab", ".vz-more"), ("hex", ".vz-more")):
             page.goto(f"/visuals#{vid}")

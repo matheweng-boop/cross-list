@@ -3,6 +3,7 @@ the light filter, and no sideways scrolling on an iPad or a phone."""
 
 import pytest
 
+from tests.conftest import PAGE_TIMEOUT
 from tests.test_browser import PHONE, Watch, overflow
 
 expect = pytest.importorskip("playwright.sync_api").expect
@@ -17,7 +18,7 @@ def test_paste_submit_summary_and_red_row(chromium, live_server, viewport):
     watch = Watch(live_server)
     ctx = chromium.new_context(base_url=live_server, viewport=viewport, has_touch=True)
     page = watch.attach(ctx.new_page())
-    page.set_default_timeout(10_000)
+    page.set_default_timeout(PAGE_TIMEOUT)
     page.goto("/cross-list", wait_until="load")
     expect(page.locator(".cx-privacy")).to_contain_text("public part numbers only")
     page.locator("#cx-parts").fill("SC141\t2000\t$0.85\nSD4100, SC142\nZZZ999\nSC141")

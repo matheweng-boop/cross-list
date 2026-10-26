@@ -9,6 +9,7 @@ import pytest
 
 from app.config import PROJECT_ROOT
 from app.services import engineering, knowledge, library, rf_bands, rf_notes, visuals
+from tests.conftest import PAGE_TIMEOUT
 
 
 def test_page_renders_with_reference_data(client):
@@ -447,7 +448,7 @@ def test_radio_visuals_click_through_on_a_phone(chromium, live_server):
         base_url=live_server, viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True
     )
     page = watch.attach(ctx.new_page())
-    page.set_default_timeout(10_000)
+    page.set_default_timeout(PAGE_TIMEOUT)
     try:
         page.goto("/visuals#dab", wait_until="load")
         panel = page.locator("#vz-panel")

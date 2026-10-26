@@ -217,6 +217,9 @@ def alerts(monkeypatch):
 
 # --- browser tests (24 Oct 2026): the app on a real port, driven by Chromium -----------------------------------------
 CHROMIUM = Path("/opt/pw-browsers/chromium")
+# Default wait for a page or element. Under `pytest -n auto` every core is busy and the server shares them with the
+# workers, so a page that opens in 2 s alone can take over 10 s: allow 30 s there.
+PAGE_TIMEOUT = 30_000 if os.environ.get("PYTEST_XDIST_WORKER") else 10_000
 
 
 @pytest.fixture(scope="session")

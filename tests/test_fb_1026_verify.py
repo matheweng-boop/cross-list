@@ -6,7 +6,8 @@
 4. NSI8320N0-Q1SPR: crosses to the Si86S620BC-AS (CMTI 100) before the Si8620BC-AS (CMTI 50).
 5. NSI6801B-DSPR -> SI8261BBC-C-IS: 1.8 A source / 4.0 A sink typ. confirmed (Si826x.pdf p.5).
 6. LMK03328 -> Si5341A: jitter compared at the same output frequency; the Si5341 needs two core rails.
-7. ISOW7841AQDWERQ1: the Si86P (integrated isolated DC-DC) is shown although it is industrial grade only.
+7. ISOW7841AQDWERQ1: the Si86P matches on integrated power but is industrial only, so no cross is shown
+   (owner, 26 Oct 2026: "No industrial fallback. Automotive needs automotive").
 8. ISO7761: CMTI typ. 100 kV/us (min 85).
 """
 
@@ -143,9 +144,9 @@ def test_si86p_family_and_integrated_power(session, load):
     ctrl = next(p for p in session.scalars(select(Part)).unique()
                 if str(p.param_map().get("integrated_power")).startswith("isolated dc-dc controller"))  # fmt: skip
     assert cross(ref, ctrl, rules).hard_fail  # a DC-DC controller needs an external transformer: not the same
-    for mpn in ("ISOW7841AQDWERQ1", "ISOW7741QDFMRQ1"):
+    for mpn in ("ISOW7841AQDWERQ1", "ISOW7741QDFMRQ1"):  # automotive needs automotive: no industrial fallback
         r = row(session, mpn)
-        assert r.functional.result.candidate.mpn.startswith("SI86P341") and r.light == "amber"
+        assert r.drop_in is None and r.functional is None and r.light == "red"
 
 
 # ---------------------------------------------------------------- 8. ISO7761 CMTI

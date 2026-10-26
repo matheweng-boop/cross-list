@@ -336,9 +336,7 @@ def test_ti_reel_code_before_q1_is_recognised(session, real):
 
     r = rows_for(session, "ISOW7841AQDWERQ1")["ISOW7841AQDWERQ1"]
     assert r.part.mpn == "ISOW7841AQDWEQ1" and r.how == "variant"
-    # owner, 26 Oct 2026: the Si86P (integrated isolated power, industrial only) is shown, its grade a deviation
-    assert r.functional.result.candidate.mpn.startswith("SI86P341") and r.light == "amber"
-    assert "grade automotive vs industrial (ours worse)" in r.functional.comment
+    assert "Function known (Digital isolator)" in r.reason  # no Skyworks isolator with an integrated-power module
     assert [p.mpn for p in search_parts(session, "ISOW7841AQDWERQ1")] == ["ISOW7841AQDWEQ1"]  # the single search too
 
 

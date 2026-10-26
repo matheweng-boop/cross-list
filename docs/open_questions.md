@@ -3,11 +3,14 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **Cross rules from the 26 Oct verification.** (a) Isolator data rate is now priority 1: a 10 Mbps deglitch code
-   (Si86S F/H) no longer comes first for a 150 Mbps part; the B/E codes do. (b) An AEC-Q100 part with no AEC-Q100
-   cross now shows the closest industrial part, grade marked worse (ISOW7841A-Q1 → Si86P341, industrial only).
-   (c) Si86S620HE / SI86S640FC are 36 ns, 10 Mbps per the datasheet ordering guide (H/F = deglitch); 10 ns is the E/B
-   code. Are (a) and (b) right?
+1. **Isolator data rate as priority 1 (26 Oct 2026).** A 10 Mbps deglitch code (Si86S F/H) no longer comes first
+   for a 150 Mbps part; the B/E codes do (Si86S620HE / SI86S640FC are 36 ns, 10 Mbps per the datasheet ordering
+   guide; 10 ns is the E/B code). Is that right?
+
+## Settled (owner, 26 Oct 2026, automotive crosses): "No industrial fallback. Automotive needs automotive"
+
+- An AEC-Q100 part is crossed to AEC-Q100 parts only; with none, the row stays red (ISOW7841AQDWERQ1, no automotive
+  Si86P). The fallback to the closest industrial part was removed before it went live.
 
 ## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
 

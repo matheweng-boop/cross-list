@@ -270,9 +270,21 @@ def test_known_pairs_include_engineer_notes():
     assert any(p["source"].startswith("engineer note") for p in pairs)
 
 
-def test_page_shows_the_accuracy_line(client, monkeypatch):
+def test_page_shows_the_accuracy_line_once_enough_pairs_are_known(client, monkeypatch):
     monkeypatch.setattr(cl, "accuracy", lambda: {"rate": 88, "n": 25, "checked": "2026-10-26"})
-    assert "Drop-ins correct: <b>88 %</b> of 25 known pairs (checked 2026-10-26)" in client.get("/cross-list").text
+    assert "Drop-ins correct" not in client.get("/cross-list").text  # hidden below 30 known pairs (owner)
+    monkeypatch.setattr(cl, "accuracy", lambda: {"rate": 93, "n": 30, "checked": "2026-10-26"})
+    assert "Drop-ins correct: <b>93 %</b> of 30 known pairs (checked 2026-10-26)" in client.get("/cross-list").text
+
+
+def test_p1_specs_behind_a_tap_and_no_repeated_reason(client):
+    html = client.post("/cross-list", data={"parts": "XYZ12345"}).text
+    cell = html[html.index('class="cx-reason"'):]
+    cell = cell[:cell.index("</td>")]
+    assert cell.count("Not in our data") == 1  # said once in the row (the copy-table text keeps its own)
+    ok = client.post("/cross-list", data={"parts": "ISO7741DW"}).text
+    if "P1 specs checked" in ok:
+        assert '<details class="cx-p1"><summary>P1 specs checked' in ok
 
 
 @pytest.mark.parametrize("tok,ok", [("SI8641BD-IS", True), ("2000", False), ("$0.85", False), ("10k", False),

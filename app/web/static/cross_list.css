@@ -66,3 +66,9 @@
   .cx-lt-word { display: inline; font-size: .75rem; margin-left: .25rem; }
   .cx-table td[data-label]::before { content: attr(data-label); display: block; font-weight: 600; color: var(--pico-muted-color); font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; margin-top: .3rem; }
 }
+
+/* the priority-1 specs behind a tap (owner, 26 Oct 2026) */
+details.cx-p1 > summary { cursor: pointer; color: var(--pico-muted-color); list-style: none; display: inline; }
+details.cx-p1 > summary::-webkit-details-marker { display: none; }
+details.cx-p1 > summary::before { content: "▸ "; } details.cx-p1[open] > summary::before { content: "▾ "; }
+details.cx-p1 > summary::after { display: none !important; }

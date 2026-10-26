@@ -4,7 +4,7 @@
 <div class="cx-mpn"><a href="/parts/{{ c.part.id }}">{{ c.part.mpn }}</a> <span class="cx-tag cx-tag-{{ c.part.manufacturer.name|lower|replace(' ', '-') }}">{{ c.part.manufacturer.name|vendor }}</span></div>
 <span class="cx-ty cx-ty-{{ kinds.get(c.type, 'fn') }}">{{ c.type }}</span>{% if c.answer == 'wrong' %} <span class="badge bad">Marked wrong</span>{% endif %}
 <div class="cx-cm">{{ c.comment }}</div>
-{% if r.checked_on %}<div class="cx-p1">Checked on P1: {{ r.checked_on|join(', ') }}</div>{% endif %}
+{% if r.checked_on %}<details class="cx-p1"><summary>P1 specs checked ({{ r.checked_on|length }})</summary>{{ r.checked_on|join(', ') }}</details>{% endif %}
 <a href="/compare?ids={{ r.part.id }},{{ c.part.id }}&amp;baseline={{ r.part.id }}" class="cx-cmp">Compare →</a>
 {% endmacro %}
 {% macro feedback(r, c, label) %}
@@ -46,7 +46,7 @@
 </div>
 {% endif %}
 {% endif %}
-{% if accuracy %}<p class="cx-acc">Drop-ins correct: <b>{{ accuracy.rate }} %</b> of {{ accuracy.n }} known pairs (checked {{ accuracy.checked }}).</p>{% endif %}
+{# shown once enough pairs are confirmed (owner, 26 Oct 2026: hidden until then) #}{% if accuracy and accuracy.n >= 30 %}<p class="cx-acc">Drop-ins correct: <b>{{ accuracy.rate }} %</b> of {{ accuracy.n }} known pairs (checked {{ accuracy.checked }}).</p>{% endif %}
 
 <details class="cx-how">
   <summary>How the columns are chosen</summary>
@@ -74,7 +74,7 @@
     <td data-label="Drop-in"><span class="cx-none">No drop-in</span></td>
     <td data-label="Best functional fit"><span class="cx-none">No functional fit</span><div class="cx-cm">{{ r.reason }}{% if r.reason_link %} <a href="{{ r.reason_link }}">Open →</a>{% endif %}</div></td>
     {% else %}
-    <td colspan="2" class="cx-reason">{% if r.light == 'red' %}<span class="cx-none">Not in our data</span>{% endif %}<div class="cx-cm">{{ r.reason }}{% if r.suggestion %} <a href="{{ r.reason_link }}">Search {{ r.suggestion }} →</a>{% endif %}</div></td>
+    <td colspan="2" class="cx-reason">{% if r.light == 'red' %}<span class="cx-none">Not in our data</span>{% endif %}<div class="cx-cm">{% if not (r.light == 'red' and r.reason.rstrip('.') == 'Not in our data') %}{{ r.reason }}{% endif %}{% if r.suggestion %} <a href="{{ r.reason_link }}">Search {{ r.suggestion }} →</a>{% endif %}</div></td>
     {% endif %}
     <td{% if r.verified or (owner and (r.drop_in or r.functional)) %} data-label="Verified"{% endif %}>{% if r.verified %}<span class="cx-vf">✓ Verified</span>{% endif %}
       {% if owner %}{% if r.drop_in %}{{ feedback(r, r.drop_in, 'Drop-in' if r.functional else '') }}{% endif %}{% if r.functional %}{{ feedback(r, r.functional, 'Functional fit' if r.drop_in else '') }}{% endif %}{% endif %}</td>

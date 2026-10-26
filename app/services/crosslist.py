@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 from app.matching.engine import BETTER, DIFFERENT, EQUAL, UNKNOWN, WORSE, CrossResult, compare_param, find_crosses
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
-from app.partnumbers import normalize_pn
+from app.partnumbers import normalize_pn, reel_q1_variants
 from app.services import cross_notes, lifecycle
 from app.services.queries import candidates_for, feedback_for
 
@@ -141,11 +141,17 @@ def _known_prefix(key: str, keys: dict) -> str | None:
 
 def resolve(ix: Index, key: str, session: Session) -> Match:
     """Exact first; then an ordering-code variant (the pasted number with or without a reel / temperature / package
-    suffix of a known one, as the single search finds it by prefix); then the catalogue; else a suggestion."""
+    suffix of a known one, as the single search finds it by prefix, or the reel "R" before a trailing "Q1"); then
+    the catalogue; else a suggestion."""
     if not key:
         return Match()
     if key in ix.by_key:
         return Match(_pick(session, ix.by_key[key]), "exact")
+    for alt in reel_q1_variants(key):  # …RQ1 is the reel of …Q1 (TI automotive), and the other way round
+        if alt in ix.by_key:
+            return Match(_pick(session, ix.by_key[alt]), "variant")
+        if alt in ix.catalogue:
+            return Match(None, "catalogue", ix.catalogue[alt])
     pre = _known_prefix(key, ix.by_key)
     i = bisect.bisect_left(ix.keys, key)
     longer = []
@@ -512,8 +518,10 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
 
     fn = pipeline.fn_for_part(part)
     what = vocab.fn_label(fn) if fn else vocab.family_title(part.family)
-    if not any_ours:
-        return f"No {OURS} part for this function ({what}).", (f"/business/evidence/{fn}" if fn else None)
+    if not any_ours:  # e.g. an isolated DC-DC module (owner, 26 Oct 2026: UCC12051QDVERQ1)
+        form = next((pv.value for pv in part.params if pv.key == "construction"), None)
+        what = f"{what}, {form}" if form else what
+        return f"Function known ({what}), no {OURS} part in our data.", (f"/business/evidence/{fn}" if fn else None)
     case = session.scalar(select(Case.id).where(Case.fn == fn).order_by(Case.id.desc()).limit(1)) if fn else None
     link = f"/business/cases/{case}" if case else (f"/business/evidence/{fn}" if fn else "/business/opportunities")
     return f"Function known ({what}), no cross yet – see Opportunities › Gaps.", link

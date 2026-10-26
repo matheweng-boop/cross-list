@@ -15,6 +15,20 @@ public (with link) · generated from public data · owner input · guest input (
 - Reviewed in Data management > To confirm (Approve / Reject, one tap, with the reason it was held).
 - Shareable exports refuse to build while an unreviewed item would be included, naming the item.
 
+## 2b. Every input is screened (owner, 26 Oct 2026)
+Owner, verbatim: "Any input should be evaluated for pattern and potential insider information that needs to be
+approved." Every input - the owner's own, guests', uploads, comments, prices, edits, and anything a run adds - is
+screened before it shows. Flagged items are held for the owner's approval; unflagged public-sourced items pass.
+Screen for:
+- patterns: e-mail addresses, phone numbers, personal names with company context, "confidential", "internal",
+  "NDA", "do not share", "preliminary", "roadmap", "under development", "not yet announced";
+- potential insider information: unannounced products or part numbers not in any public catalogue or datasheet we
+  hold, roadmaps and launch dates, internal codes or project names, manufacturing site / fab names
+  (app/services/site_guard.py), customer programmes or design wins without a public source, prices or quotes,
+  revenue, volume or forecast figures without a public source, internal e-mail domains or file paths;
+- each flag says why ("part number not in any public source", "looks like a quote") and the owner approves, edits or
+  rejects in To confirm.
+
 ## 3. Data-protection functions
 - Checks on every text field and upload: e-mail addresses, phone numbers, "confidential" / "internal", public names already in the data, quote-like prices -> warning and hold for review. Strip image metadata (EXIF, GPS) on upload.
 - Minimisation: pasted input is not stored unless the owner saves it (as Cross a list already works).
@@ -25,7 +39,7 @@ public (with link) · generated from public data · owner input · guest input (
 - Access log of owner pages, kept 90 days.
 
 ## Decisions to ask (suggested answers in brackets)
-1. Does the owner's own input (prices, uploads, edits) also wait for a second look? (yes, one-tap approve)
+1. Settled (owner, 26 Oct 2026): every input, the owner's own included, is screened; flagged items wait for the owner's approval.
 2. Retention: feedback and comments 12 months, inbox files 30 days? (yes)
 3. ~~Customer-name list~~ Settled (owner, 26 Oct 2026): no customer names stored unless from public sources the site pulled itself; no private list.
 4. Settled (owner, 26 Oct 2026): only the owner can approve data.

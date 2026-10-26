@@ -27,8 +27,6 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 6. **US AM mandate status.** The AM for Every Vehicle Act is shown as passed by the House on 16 Sep 2026 (PBS / AP);
    congress.gov blocks our reader, so the Senate step is not checked. Do you know its current status?
 
-7. **Data protection (26 Oct 2026, docs/plan_data_protection.md):** does your own input (prices, uploads, edits) also
-   wait for a second look before it shows (suggested: yes, one-tap approve)?
 8. **Retention:** delete feedback and comments after 12 months and the daily inbox files after 30 days?
 
 ## Settled (owner, 25 Oct 2026, reference-design matching): "Should be based on feedback. So a bit stricter at first"
@@ -49,6 +47,8 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
   private customer-name list. The confidential-data check uses only patterns (e-mail, phone, "confidential",
   "internal", quote-like prices) and public names already in the data.
 - Only the owner can approve data (no other approvers, guests never).
+- Every input, the owner's own included, is screened for patterns and potential insider information; flagged items wait
+  for the owner's approval (docs/plan_data_protection.md, section 2b).
 
 ## Settled (owner, 25 Oct 2026, radio market)
 

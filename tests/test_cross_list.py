@@ -14,6 +14,8 @@ from app.matching.engine import WORSE, Diff, Fit
 from app.models import DataReview, ExternalSubmission
 from app.services import crosslist as cl
 from app.services import inbox
+from app.services.seed import load_file
+from tests.conftest import ROOT
 
 
 def post(client, text: str):
@@ -318,3 +320,36 @@ def test_si86s_drop_in_offers_an_si86_second_option():
     c1, c2 = cl.columns(ref, {"x": [_fake("SI8641ET-IS", 4, fff=True, fits=True), other, si86]})  # not Si86S
     assert c2 is None
     assert cl.is_si86s("Si86S641HE-IS2") and cl.is_si86("SI8641ET-IS") and not cl.is_si86("SI86SL41EC-IS1")
+
+
+# --- TI automotive reel codes and the isolated DC-DC family (owner, 26 Oct 2026) --------------------------------------
+def test_reel_letter_before_q1_is_a_variant():
+    from app.partnumbers import reel_q1_variants
+
+    assert reel_q1_variants("ISOW7841AQDWERQ1") == ["ISOW7841AQDWEQ1"]
+    assert reel_q1_variants("ISOW7841AQDWEQ1") == ["ISOW7841AQDWERQ1"]
+    assert reel_q1_variants("SI8641BD") == [] and reel_q1_variants("RQ1") == []
+
+
+def test_ti_reel_code_before_q1_is_recognised(session, real):
+    from app.services.queries import search_parts
+
+    r = rows_for(session, "ISOW7841AQDWERQ1")["ISOW7841AQDWERQ1"]
+    assert r.part.mpn == "ISOW7841AQDWEQ1" and r.how == "variant"
+    assert "Function known (Digital isolator)" in r.reason  # no Skyworks isolator with an integrated-power module
+    assert [p.mpn for p in search_parts(session, "ISOW7841AQDWERQ1")] == ["ISOW7841AQDWEQ1"]  # the single search too
+
+
+def test_isolated_dcdc_module_is_known_without_a_cross(session):
+    load_file(session, ROOT / "data" / "real" / "ti_isolated_dcdc.yaml")
+    session.commit()
+    rows = rows_for(session, "UCC12051QDVERQ1\nUCC12051QDVEQ1")
+    for text, how in (("UCC12051QDVERQ1", "exact"), ("UCC12051QDVEQ1", "variant")):
+        r = rows[text]
+        assert r.part.mpn == "UCC12051QDVERQ1" and r.how == how and r.part.family == "isolated_dcdc"
+        assert r.light == "red" and r.drop_in is None and r.functional is None
+        assert r.reason == ("Function known (Isolated DC-DC, integrated-transformer module), no Skyworks/Qorvo part "
+                            "in our data.")  # fmt: skip
+        assert r.reason_link == "/business/evidence/isolated_dcdc"
+    p = {pv.key: pv.value for pv in rows["UCC12051QDVERQ1"].part.params}
+    assert p["isolation_rating_kvrms"] == 5.0 and p["qualification"] == "automotive" and p["output_power_mw"] == 500.0

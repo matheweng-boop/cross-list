@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.matching.engine import DEFAULT_MAX_DEVIATIONS, CrossResult, cross, find_crosses
 from app.matching.rules import get_rules
 from app.models import CrossFeedback, FeedbackVerdict, LifecycleStatus, Manufacturer, ManufacturerRole, Part
-from app.partnumbers import SEPARATORS, normalize_pn  # noqa: F401  (re-exported for callers)
+from app.partnumbers import SEPARATORS, normalize_pn, reel_q1_variants  # noqa: F401  (re-exported for callers)
 
 
 def _pn_column():
@@ -44,7 +44,12 @@ def search_parts(
     if company:
         stmt = stmt.where(Manufacturer.name == company)
     stmt = stmt.order_by(*order, Manufacturer.role, Part.family, Part.mpn).limit(limit)
-    return list(session.scalars(stmt).unique())
+    found = list(session.scalars(stmt).unique())
+    if not found and q.strip():  # a TI automotive reel code: …RQ1 is the reel of …Q1 (and the other way round)
+        for alt in reel_q1_variants(normalize_pn(q)):
+            if found := search_parts(session, alt, family, role, lifecycle, limit, company):
+                break
+    return found
 
 
 def candidates_for(session: Session, ref: Part, scope: str = "auto") -> list[Part]:

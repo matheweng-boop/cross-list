@@ -3,6 +3,7 @@ too (app/auth/access.py does not list /shareable as owner-only); editing the Tec
 (/shareable/technology-overview/edit is owner-only in access.py, and every edit route checks again)."""
 
 from datetime import date
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
@@ -12,6 +13,8 @@ from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.services import logo, site_guard, tech_overview, uploads
 from app.services import presentation_pptx as pp
+from app.services import share_doc as sd
+from app.services import share_pdf as spdf
 from app.services import share_reports as sr
 from app.services import tech_overview_edit as te
 from app.services.text import round_count
@@ -20,6 +23,7 @@ from app.web.routes import templates
 
 router = APIRouter()
 templates.env.filters.setdefault("rounded", round_count)  # counts on the Shareable reports: 4,132 -> "4,000+"
+templates.env.filters.setdefault("first_sentence", sd.first_sentence)  # the default slide text (Edit)
 URL = "/shareable/technology-overview"
 EDIT = URL + "/edit"
 
@@ -215,7 +219,7 @@ def _report_ctx(request: Request, session: Session, rep: te.Report, edit: bool =
     return {"t": entry.build(), "today": date.today(), "vals": vals, "edit": edit, "o": o, "specs": rep.specs(),
             "over": set(ov), "errors": {}, "message": "", "logo": te.logo_of(session, ovals), "ip_note": sr.PATENT_NOTE,
             "watermarks": te.WATERMARKS, "page_url": rep.url, "edit_url": rep.url + "/edit", "body": entry.body,
-            "wm_error": wm["wm_error"]}  # fmt: skip
+            "wm_error": wm["wm_error"], "key": rep.key}  # fmt: skip
 
 
 def _report_page(request: Request, session: Session, rep: te.Report, edit: bool, ov: dict | None = None,
@@ -236,76 +240,71 @@ def _rback(rep: te.Report, done: str, anchor: str = "") -> RedirectResponse:
     return RedirectResponse(f"{rep.url}/edit?done={done}{'#' + anchor if anchor else ''}", status_code=303)
 
 
-@router.get("/shareable/pack", response_class=HTMLResponse)
-def shareable_pack(request: Request, session: Session = Depends(get_session)):
-    """The combined PDF: ?r=overview,synergies,automotive (in this order), &wm= for the watermark (an old &focus= is
-    ignored: the market focus page was removed, owner 25 Oct 2026). Page numbers run through the whole PDF; the
-    sources come once, at the end."""
+@router.get("/shareable/pack")
+def shareable_pack(request: Request):
+    """The old combined print view (owner, 26 Oct 2026: no more browser printing): its links now download the same
+    reports as one PDF (?r=..., &wm=..., all three when none is named)."""
     q = request.query_params
     keys = sr.pack_selection(",".join(q.getlist("r"))) or list(sr.pack_order())
-    te.apply_answers(session)
-    session.commit()
-    ovals = te.values(te.overrides(session))
-    opts = te.view_options(ovals, q)
-    reg = sr.registry()
-    pages = {k: reg[k].pages for k in keys}
-    total, offset = sum(pages.values()), 0
-    ctxs = {}
-    for k in keys:
-        if k == "overview":
-            ctxs[k] = {"t": tech_overview.build(), "today": date.today(), "vals": ovals, "edit": False, "o": opts,
-                       "specs": te.specs(), "over": set(), "errors": {}, "message": "", "watermarks": te.WATERMARKS,
-                       "logo": te.logo_of(session, ovals)}  # fmt: skip
-        else:
-            ctxs[k] = _report_ctx(request, session, reg[k].edit, wm=opts)
-        ctxs[k].update(pack_offset=offset, pack_total=total, pack_sources_later=k != keys[-1], request=request,
-                       signed_in=lambda _r: None)  # fmt: skip
-        offset += pages[k]
-    last = keys[-1]
-    if len(keys) > 1 and last != "overview":
-        reps = [k for k in keys if k != "overview"]
-        ctxs[last]["pack_sources"] = sr.sources(reps, {k: ctxs[k]["vals"] for k in reps})
-    bodies = []
-    for k in keys:
-        if k == "overview":
-            html = templates.get_template("shareable/tech_overview.html").render(ctxs[k])
-            start, end = html.find('<section class="to-page"'), html.rfind("</section>")
-            bodies.append(html[start:end + len("</section>")] if start >= 0 else "")
-        else:
-            bodies.append(templates.get_template(reg[k].body).render(ctxs[k]))
-    titles = ["Technology overview" if k == "overview" else reg[k].edit.label for k in keys]
-    query = f"r={','.join(keys)}&wm={opts['wm']}"
-    return templates.TemplateResponse(request, "shareable/pack.html", {
-        "bodies": bodies, "titles": titles, "total": total, "wm_text": opts["wm_text"], "keys": keys,
-        "query": query})  # fmt: skip
+    extra = "".join(f"&{k}={quote(q[k])}" for k in ("wm", "wmt") if q.get(k))
+    return RedirectResponse(f"/shareable/pdf?r={','.join(keys)}{extra}", status_code=303)
 
 
-@router.get("/shareable/pptx")
-def shareable_pptx(request: Request, session: Session = Depends(get_session)):
-    """Download as PowerPoint (owner, 25 Oct 2026): the ticked reports (?r=synergies,automotive) as one editable 16:9
-    .pptx, in the list's order, with the watermark (&wm=). The slides come from the same data and values (the owner's
-    edits) as the report pages. Nothing ticked: back to the list, which asks to pick a report."""
-    q = request.query_params
-    keys = sr.list_order(",".join(q.getlist("r")).split(","))
-    if not keys:
-        return RedirectResponse("/shareable?pick=1#build-pdf", status_code=303)
+def _versions(request: Request, session: Session, keys: list[str]) -> tuple[list[tuple], dict, dict]:
+    """[(registry entry, data, vals)] of the asked reports, read fresh: the current data and the owner's saved edits
+    (owner, 26 Oct 2026: "generated live on each click"); plus the shared values (logo, header) and view options."""
     te.apply_answers(session)
     for rep in sr.reports().values():
         te.apply_answers(session, rep)
     session.commit()
     ovals = te.values(te.overrides(session))
-    opts = te.view_options(ovals, q)
-    today, reg, slides = date.today(), sr.registry(), []
+    opts = te.view_options(ovals, request.query_params)
+    reg, out = sr.registry(), []
     for k in keys:
         entry = reg[k]
         vals = ovals if entry.edit is None else te.values(te.overrides(session, entry.edit), entry.edit)
-        slides += entry.slides(entry.build(), vals, today, sr.PATENT_NOTE)
+        out.append((entry, entry.build(), vals))
+    return out, ovals, opts
+
+
+def _download(data: bytes, media: str, name: str) -> Response:
+    return Response(data, media_type=media, headers={
+        "Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "private, no-store"})  # fmt: skip
+
+
+@router.get("/shareable/pdf")
+def shareable_pdf(request: Request, session: Session = Depends(get_session)):
+    """Create PDF (owner, 26 Oct 2026): the ticked reports (?r=synergies,automotive) as one A4 PDF made on the server
+    (app/services/share_pdf.py), in the combined order (Technology overview first), with the watermark (&wm=). Built
+    on every click from the current data and the owner's edits. Nothing ticked: back to the list."""
+    keys = sr.pack_selection(",".join(request.query_params.getlist("r")))
+    if not keys:
+        return RedirectResponse("/shareable?pick=1#build-pdf", status_code=303)
+    today = date.today()
+    found, ovals, opts = _versions(request, session, keys)
+    docs = [sd.doc(e.key, data, vals, today, sr.PATENT_NOTE) for e, data, vals in found]
+    if [h for d in docs for h in site_guard.hits(sd.all_text(d))]:  # never expected: every edit passed the check
+        raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
+    data = spdf.build(docs, today, opts["wm_text"], _logo_bytes(te.logo_of(session, ovals)),
+                      ovals.get("hdr.logo_align") == "right")  # fmt: skip
+    return _download(data, spdf.MEDIA_TYPE, spdf.filename(keys))
+
+
+@router.get("/shareable/pptx")
+def shareable_pptx(request: Request, session: Session = Depends(get_session)):
+    """Create PowerPoint (owner, 25 and 26 Oct 2026): the ticked reports (?r=synergies,automotive) as one editable 16:9
+    .pptx, in the list's order, with the watermark (&wm=). The slides come from the same content model as the PDF
+    (app/services/share_doc.py), with shorter wording; built on every click. Nothing ticked: back to the list."""
+    keys = sr.list_order(",".join(request.query_params.getlist("r")).split(","))
+    if not keys:
+        return RedirectResponse("/shareable?pick=1#build-pdf", status_code=303)
+    today = date.today()
+    found, ovals, opts = _versions(request, session, keys)
+    slides = [x for e, data, vals in found for x in e.slides(data, vals, today, sr.PATENT_NOTE)]
     data = pp.build(slides, "Shareable reports", today, opts["wm_text"], _logo_bytes(te.logo_of(session, ovals)))
     if [h for t in pp.texts(data) for x in t for h in site_guard.hits(x)]:  # never expected: the pages pass it
         raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
-    name = "skyworks-qorvo-" + "-".join(keys) + ".pptx"
-    return Response(data, media_type=pp.MEDIA_TYPE, headers={
-        "Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "private, no-store"})  # fmt: skip
+    return _download(data, pp.MEDIA_TYPE, "skyworks-qorvo-" + "-".join(keys) + ".pptx")
 
 
 @router.get("/shareable/{slug}", response_class=HTMLResponse)

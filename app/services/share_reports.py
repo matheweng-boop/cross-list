@@ -256,6 +256,7 @@ def _common(out: dict, cur: dict, add) -> None:
     add("title", "line", cur.get("title", ""), 70, "Title")
     for s, v in (cur.get("sections") or {}).items():
         add(f"sec.{s}.heading", "line", v.get("heading", ""), 50, "Heading")
+        add(f"slide.{s}", "text", v.get("slide", ""), te.SLIDE_MAX, "Slide text (PowerPoint)")
 
 
 def _adder(out: dict):

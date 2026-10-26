@@ -311,3 +311,52 @@ body.embed .content { max-width: 60rem; margin: 0 auto; padding: 1rem 1.2rem 2re
 .sh-pick { display: flex; flex-direction: column; align-items: center; gap: .1rem; margin: 0; min-width: 3.4rem; min-height: 44px;
   justify-content: center; cursor: pointer; font-size: .72rem; color: var(--pico-muted-color); text-align: center; }
 .sh-pick input { margin: 0; }
+
+/* the reports on screen (owner, 26 Oct 2026: "it would be good if the formatting were generally cleaner"): the PDF and
+   PowerPoint are made on the server now, so the screen no longer doubles as print. Each page block is a card, the
+   page band shows once, headings carry a rule, tables get room and a header row, pairs are separated. */
+@media screen {
+  .to { max-width: 60rem; }
+  .to-actions { gap: .5rem .8rem; }
+  .to-actions [role=button] { width: auto; margin: 0; padding: .45rem 1.1rem; }
+  .to-page { margin: 0 0 1.4rem; padding: 1.4rem 1.6rem 1.2rem; border: 1px solid var(--pico-muted-border-color);
+    border-radius: .8rem; background: var(--pico-card-background-color, var(--pico-background-color));
+    box-shadow: 0 1px 3px rgba(27, 31, 39, .06); }
+  .to-page + .to-page .to-band, .sr-pack-part + .sr-pack-part .to-band { display: none; }
+  .to-band { margin-bottom: 1rem; }
+  .to h1 { font-size: 1.85rem; line-height: 1.2; margin: .2rem 0 .7rem; }
+  .to h2 { margin: 1.6rem 0 .35rem; padding-bottom: .3rem; font-size: 1.2rem; color: var(--pico-primary);
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .to-page > h2:first-of-type:not(:first-child) { margin-top: .4rem; }
+  .to-lead { font-size: 1.05rem; line-height: 1.6; }
+  .to-sub { margin: 0 0 .9rem; line-height: 1.5; }
+  .to-facts { gap: .8rem; margin: 1.1rem 0 1.3rem; }
+  .to-fact { padding: .75rem .9rem; }
+  .to-fact b { font-size: 1.6rem; }
+  .to table { font-size: .9rem; }
+  .to th, .to td { padding: .5rem .65rem; }
+  .to thead th { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
+    color: var(--pico-muted-color); background: color-mix(in srgb, var(--pico-primary) 7%, transparent);
+    border-bottom: 2px solid var(--pico-primary); }
+  .to tbody tr:nth-child(even) > * { background: color-mix(in srgb, var(--pico-muted-border-color) 22%, transparent); }
+  .sr-cols { gap: .8rem; }
+  .sr-col { padding: .7rem .85rem; }
+  .sr-col li { margin: 0 0 .25rem; line-height: 1.4; }
+  .sr-pairs { padding-left: 1.5rem; }
+  .sr-pairs li { margin: 0; padding: .7rem 0; border-bottom: 1px solid var(--pico-muted-border-color); line-height: 1.5; }
+  .sr-pairs li:last-child { border-bottom: 0; }
+  .sr-row, .to-sub-row, .to-plat { padding: .6rem 0; line-height: 1.45; }
+  .to-src { margin-top: 1.2rem; padding-top: .8rem; border-top: 1px solid var(--pico-muted-border-color); }
+  .te-slide { margin: .5rem 0 0; padding: .5rem .7rem; border-left: 3px solid var(--pico-primary);
+    background: color-mix(in srgb, var(--pico-primary) 5%, transparent); }
+}
+@media screen and (max-width: 760px) {
+  .to-page { padding: 1rem .9rem; border-radius: .6rem; }
+  .to h1 { font-size: 1.5rem; }
+}
+@media screen {
+  /* in the narrow company columns a marker that does not fit moves under its label (still right-aligned) */
+  .sr-col li.to-marks-right { flex-wrap: wrap; }
+  .sr-why.to-marks-right { flex-direction: column; align-items: flex-start; gap: .25rem; }
+  .sr-why.to-marks-right > :not(:first-child) { margin-left: 0; }
+}

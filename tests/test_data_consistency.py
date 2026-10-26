@@ -5,10 +5,13 @@ from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
 
+import pytest
+
 from app import yamlio
 from app.matching.rules import load_all_rules
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "real"
+pytestmark = pytest.mark.smoke  # part of the quick check (tests/test_smoke.py)
 
 
 @lru_cache

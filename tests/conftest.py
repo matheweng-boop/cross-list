@@ -22,6 +22,17 @@ from app.services.seed import load_file
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _own_data_dir(tmp_path_factory):
+    """Each test session (each worker under `pytest -n auto`) writes its caches, markers and uploads to its own data
+    folder, never to var/. Tests that need an empty one still set their own."""
+    from app.config import get_settings
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(get_settings(), "data_dir", tmp_path_factory.mktemp("var"))
+        yield
+
+
 # --- the test database (26 Oct 2026): built once per worker and copied for each test ----------------------------------
 # Real data files that a fixture stands for, loaded into a template database once per worker instead of into every
 # test's own database: {fixture name: (file names in data/real, unofficial)}. A test module adds its own with a PRELOAD

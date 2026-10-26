@@ -152,7 +152,10 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      `data/manage/crosslist_lookups.yaml` (`lookup`, `part`, `status: found | not_found`, `source`, `date`, `note`
      with the reason when not found); the site reads this file for the per-part status on Data management › Site
      data › Requests (kind "Cross-list lookup"), since the run cannot write the live database. Commit on a branch
-     (never `main`); the parts go live with the next approved release. The owner then taps "Cross this list again".
+     and go live on its own as an automated run (owner, 26 Oct 2026; CLAUDE.md): merge into an up-to-date `main`, run
+     the full suite and ruff on the merged result, push `main` only if both pass, check the site serves it, and send
+     one Telegram line ("N parts found, M not found, live"). Nothing to do (no queued parts): stop at once, no branch,
+     no message. The owner then taps "Cross this list again".
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before going live" below: the full suite includes the browser tests.
 5. **Merge and go live (owner, 26 Oct 2026: no confirmation needed for automated runs).** Merge the branch into an

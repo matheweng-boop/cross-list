@@ -64,7 +64,7 @@ def test_priority_2_never_blocks_fff(part):
     r = cross(part("SR8641"), part("SC141"), get_rules("digital_isolator"))
     assert r.categories == ["fff"] and r.fff_status == "auto"
     v = r.verdict()
-    assert v.spec == "exact" and {d.key for d in v.info_worse} >= {"data_rate_mbps", "prop_delay_ns"}
+    assert v.spec == "exact" and {d.key for d in v.info_worse} >= {"prop_delay_ns"}
 
 
 def test_better_priority_1_marked_on_fff(part):

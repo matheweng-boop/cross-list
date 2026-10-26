@@ -48,7 +48,8 @@ def test_timing_rules_priorities():
     assert p1 == {"function_type", "outputs", "output_formats", "freq_range_mhz", "jitter_fs"}
     assert rules.functional_focus and rules.get("vdd_range_v").priority == 2
     assert rules.get("function_type").hard
-    assert {p.key for p in rules.by_priority(2)} == {"vdd_range_v", "qualification", "temp_range_c", "pcie_gen"}
+    p2 = {p.key for p in rules.by_priority(2)}
+    assert p2 == {"vdd_range_v", "core_rails", "qualification", "temp_range_c", "pcie_gen"}
     assert rules.get("qualification").must_meet and rules.get("jitter_fs").direction == "lower"
 
 

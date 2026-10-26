@@ -21,7 +21,7 @@ other cross, or a missing / estimated priority 1 value; red = no cross, or the p
 import bisect
 import difflib
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 
 from sqlalchemy import select
@@ -208,8 +208,12 @@ class Crosser:
             self._values[p.id] = rules.values(p)
         return self._values[p.id]
 
-    def crosses(self, ref: Part) -> dict[str, list[CrossResult]]:
+    def crosses(self, ref: Part, any_grade: bool = False) -> dict[str, list[CrossResult]]:
+        """``any_grade``: the automotive grade is compared but no longer must be met (the fallback for an AEC-Q100
+        part with no AEC-Q100 cross: the industrial part is listed with the grade as a deviation)."""
         rules = get_rules(ref.family)
+        if any_grade:
+            rules = relax_grade(rules)
         ck = (ref.family, ref.is_reference, ref.manufacturer_id if ref.is_reference else None)
         if ck not in self._cands:
             self._cands[ck] = candidates_for(self.session, ref)
@@ -235,6 +239,12 @@ class Crosser:
         return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id))
 
 
+def relax_grade(rules: FamilyRules) -> FamilyRules:
+    """The family's rules with the automotive grade compared but no longer a must-meet gate."""
+    params = tuple(replace(p, must_meet=False) if p.key == "qualification" else p for p in rules.params)
+    return replace(rules, params=params)
+
+
 def _p1(r: CrossResult) -> list:
     return [d for d in r.diffs if d.priority == 1]
 
@@ -243,15 +253,16 @@ def _worse_score(r: CrossResult) -> float:
     return sum(d.score for d in r.deviations)
 
 
-def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
+def _pool(ref: Part, crosses: dict, any_grade: bool = False) -> list[CrossResult]:
     """Every listed candidate once; at-risk (NRND, obsolete) ones only when nothing else is left. An automotive part
-    takes automotive crosses only (as on the part page); a non-automotive part prefers non-automotive ones."""
+    takes automotive crosses only (as on the part page) unless ``any_grade`` (no automotive cross exists); a
+    non-automotive part prefers non-automotive ones."""
     seen: dict[int, CrossResult] = {}
     for rs in crosses.values():
         for r in rs:
             seen.setdefault(r.candidate.id, r)
     rs = list(seen.values())
-    if _qual(ref) == "automotive":
+    if _qual(ref) == "automotive" and not any_grade:
         rs = [r for r in rs if _qual(r.candidate) == "automotive"]
     else:
         rs = [r for r in rs if _qual(r.candidate) != "automotive"] or rs
@@ -268,9 +279,9 @@ def functional_key(r: CrossResult):
             r.closeness, r.candidate.mpn)  # fmt: skip
 
 
-def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult | None]:
+def columns(ref: Part, crosses: dict, any_grade: bool = False) -> tuple[CrossResult | None, CrossResult | None]:
     """(drop-in, best functional fit); the second is None when it is the same part as the first."""
-    pool = _pool(ref, crosses)
+    pool = _pool(ref, crosses, any_grade)
     fits = [r for r in pool if r.fit.fits]
     c1 = min(fits, key=drop_in_key) if fits else None
     c2 = min(pool, key=functional_key) if pool else None
@@ -555,6 +566,11 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
             continue
         crosses = crosser.crosses(part)
         c1, c2 = columns(part, crosses)
+        if c1 is None and c2 is None and _qual(part) == "automotive":
+            # owner, 26 Oct 2026 (ISOW7841AQDWERQ1 -> Si86P): no AEC-Q100 cross, so the closest industrial part is
+            # shown, its grade listed as a deviation (amber), rather than no cross at all
+            crosses = crosser.crosses(part, any_grade=True)
+            c1, c2 = columns(part, crosses, any_grade=True)
         for col, r in ((1, c1), (2, c2)):
             if r is None:
                 continue

@@ -3,11 +3,11 @@
 - `main` deploys to Render automatically. Merge into it only with the owner's go-ahead, except in the automated runs
   below.
 - Automated runs go live on their own (owner, 26 Oct 2026: "on the automated runs, don't wait for my confirmation"):
-  the daily update run (scheduled, 18:42 Berlin, `docs/daily_update.md`) and the hourly cross-list lookup merge their
-  branch into `main` without asking, but only when the full test suite (browser tests included) passes on the merged
+  the daily update run (scheduled, 18:42 Berlin, `docs/daily_update.md`) merges its branch into `main` without asking, but only when the full test suite (browser tests included) passes on the merged
   result. If anything fails, nothing goes live and the owner is told. Data protection still applies
   (`docs/plan_data_protection.md`): anything flagged as possibly non-public or insider information is held for the
-  owner's approval, never published by a run. Each run leaves a short summary of what went live (inbox, Telegram).
+  owner's approval, never published by a run. Each run leaves a short summary of what went live (inbox, Telegram). The hourly cross-list lookup never updates the
+  site: it only pushes the branch `lookups`, which the daily run merges (owner, 26 Oct 2026, to save resources).
 - Before a merge that needs the owner's go-ahead, put the questions in `docs/open_questions.md` to the owner; record the
   answers there and remove what is settled. Automated runs list open questions in their summary instead of waiting.
 - When a task the owner asked for finishes, tell them in one line on Telegram (`scripts/telegram.py send`; needs

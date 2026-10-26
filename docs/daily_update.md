@@ -141,7 +141,8 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      the inbox section "Cross-list lookups (queued parts)" (`- <PART> · lookup <id> · <date>`), or, for the hourly
      run, `GET /api/inbox/crosslist-lookups` with the same read-only key as `/api/inbox`, which answers
      `{"queued": [{"part": "<PART>", "lookup": <id>, "date": "YYYY-MM-DD"}, ...]}`. Pull nothing else. Skip a part
-     already recorded in `data/manage/crosslist_lookups.yaml` on the newest prepared branch (answered, not yet live).
+     already recorded in `data/manage/crosslist_lookups.yaml` on `origin/lookups` or the newest prepared branch (answered,
+     not yet live).
      For each queued part: find the maker's public datasheet under the polite web rules (robots.txt first, GET only,
      one request at a time, at least 10 s per host and 5 s for skyworksinc.com / ti.com, each URL once, stop at the
      first 403/429 or bot check; never distributors or the hosts blocked in `data/library/sources.yaml`; use
@@ -151,11 +152,13 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      with `source`, `manufacturers`, `packages`, `parts`), so `load-real` imports it. Record each answer in
      `data/manage/crosslist_lookups.yaml` (`lookup`, `part`, `status: found | not_found`, `source`, `date`, `note`
      with the reason when not found); the site reads this file for the per-part status on Data management › Site
-     data › Requests (kind "Cross-list lookup"), since the run cannot write the live database. Commit on a branch
-     and go live on its own as an automated run (owner, 26 Oct 2026; CLAUDE.md): merge into an up-to-date `main`, run
-     the full suite and ruff on the merged result, push `main` only if both pass, check the site serves it, and send
-     one Telegram line ("N parts found, M not found, live"). Nothing to do (no queued parts): stop at once, no branch,
-     no message. The owner then taps "Cross this list again".
+     data › Requests (kind "Cross-list lookup"), since the run cannot write the live database. The hourly run only
+     commits to the branch `lookups` (create it from `main` if missing; rebase it on `main` when `main` moved) and
+     pushes that branch; it never merges into `main` and never runs the full suite (owner, 26 Oct 2026: "do not update
+     the webpage after the hourly run, for the sake of saving resources"). Nothing to do (no queued parts): stop at
+     once, no branch, no message. The daily run, first thing after creating its branch: if `origin/lookups` has commits
+     not in `main`, merge it into the run's branch (it then goes live with the daily run, and `lookups` is reset to
+     `main` by the next hourly run). The owner then taps "Cross this list again".
 4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
    See "Tests before going live" below: the full suite includes the browser tests.
 5. **Merge and go live (owner, 26 Oct 2026: no confirmation needed for automated runs).** Merge the branch into an

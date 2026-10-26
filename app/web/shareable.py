@@ -50,10 +50,9 @@ def _back(done: str, anchor: str = "") -> RedirectResponse:
 
 @router.get("/shareable", response_class=HTMLResponse)
 def shareable(request: Request):
-    """One page: the reports in a list (preview each, tick the ones to combine), a watermark, Build a PDF (the ticked
-    reports in one print view), Download as PowerPoint (the ticked reports as one .pptx) and Build a presentation
-    (the topic builder). Nothing
-    is ticked unless the address carries the last choice (?r=...)."""
+    """One page: the reports in a list (preview each, tick the ones to include), a watermark, Create PDF (the ticked
+    reports as one A4 PDF made on the server), Create PowerPoint (one .pptx) and Build a presentation (the topic
+    builder). Nothing is ticked unless the address carries the last choice (?r=...)."""
     q = request.query_params
     reports = [(r.key, r.label, r.line, r.pages, r.url, r.url + "/edit") for r in sr.REGISTRY]
     return templates.TemplateResponse(request, "shareable/index.html", {

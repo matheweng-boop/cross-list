@@ -1,5 +1,5 @@
 """Shareable reports for management (owner, 25 Oct 2026): "Skyworks + Qorvo synergies" (/shareable/synergies) and its
-extension "Automotive: technologies and applications" (/shareable/automotive), plus the combined PDF (/shareable/pack).
+extension "Automotive: technologies and applications" (/shareable/automotive), plus Create PDF and PowerPoint.
 
 The words come from data/business/share_reports.yaml; every count is built here from the site's data (the same
 catalogue rows, families and platforms as the Technology overview, app/services/tech_overview.py; the synergy pairs of

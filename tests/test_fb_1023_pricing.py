@@ -8,17 +8,17 @@ from types import SimpleNamespace
 import pytest
 
 from app.services import price_builder as pb
-from app.services.seed import load_file
 
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ("ti_digital_isolators", "ti_gate_drivers_more", "skyworks_switches", "macom_switches", "skyworks_si86")
 
 
+PRELOAD = {"lists": (FILES, None)}
+
+
 @pytest.fixture
 def lists(session):
-    for f in FILES:
-        load_file(session, ROOT / "data" / "real" / f"{f}.yaml")
-    session.commit()
+    """The FILES in the test database; loaded through PRELOAD (tests/conftest.py)."""
 
 
 def test_pins_from_package_text():

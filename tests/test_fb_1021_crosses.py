@@ -18,7 +18,6 @@ from app.matching.engine import cross, pins_compatible, ranked
 from app.matching.rules import curve_value, gate_output_config, get_rules
 from app.models import Package, ParamValue, Part
 from app.services.queries import crosses_for
-from app.services.seed import load_file
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "real"
 FILES = ("ti_gate_drivers_more", "novosense_isolation", "skyworks_gate_drivers_more")
@@ -218,12 +217,11 @@ def test_stated_output_option_agrees_with_the_pinout():
 # ---------------------------------------------------------------- the two named crosses
 
 
+PRELOAD = {"gate": (FILES, None)}  # loaded into the test database through tests/conftest.py
+
+
 @pytest.fixture
 def gate(session):
-    for f in FILES:
-        load_file(session, DATA / f"{f}.yaml")
-    session.commit()
-
     def get(mpn: str) -> Part:
         return session.scalars(select(Part).where(Part.mpn == mpn)).unique().one()
 

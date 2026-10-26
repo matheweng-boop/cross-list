@@ -1,6 +1,7 @@
 // Shareable previews open in a lightbox over the current page instead of leaving it (owner, 25 Oct 2026).
-// Links with data-lightbox, and the "Build a PDF" form, open their address in a framed window with Print / Save as
-// PDF, Open in a new tab and Close (Esc). Pages shown inside call window.parent.postMessage("lightbox:close").
+// Links with data-lightbox open their address in a framed window with Open in a new tab and Close (Esc). No print
+// button (owner, 26 Oct 2026): Create PDF and Create PowerPoint on /shareable make the files. Pages shown inside call
+// window.parent.postMessage("lightbox:close").
 (() => {
   let box, frame, newTab;
   function build() {
@@ -8,7 +9,6 @@
     box.className = "lb";
     box.setAttribute("aria-label", "Preview");
     box.innerHTML = '<div class="lb-bar"><b class="lb-title">Preview</b><span class="lb-tools">'
-      + '<button type="button" class="lb-print">Print / Save as PDF</button>'
       + '<a class="lb-new" target="_blank" rel="noopener">Open in a new tab</a>'
       + '<button type="button" class="lb-close outline" aria-label="Close preview">Close</button></span></div>'
       + '<iframe class="lb-frame" title="Preview" allow="fullscreen" allowfullscreen></iframe>';
@@ -16,7 +16,6 @@
     frame = box.querySelector(".lb-frame");
     newTab = box.querySelector(".lb-new");
     box.querySelector(".lb-close").addEventListener("click", close);
-    box.querySelector(".lb-print").addEventListener("click", () => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { window.open(frame.src, "_blank"); } });
     box.addEventListener("click", e => { if (e.target === box) close(); });  // a click on the backdrop
     box.addEventListener("close", () => { frame.src = "about:blank"; document.documentElement.classList.remove("lb-open"); });
   }

@@ -43,7 +43,7 @@ def test_each_report_renders_for_a_guest_and_is_share_safe(make_guest, url, mark
     assert to.blocked_words(text) == [] or url == SYN and all(w == "foundry" for w in to.blocked_words(text))
     problems = (sr.synergy_problems if url == SYN else to.share_problems)(text)
     assert problems == [], problems
-    assert "Save as PDF" in r.text and f'href="{url}/edit"' not in r.text
+    assert ">Create PDF<" in r.text and "window.print()" not in r.text and f'href="{url}/edit"' not in r.text
     assert g.get(url + "/edit", follow_redirects=False).status_code == 403
     assert g.post(url + "/edit", data={"title": "x"}, follow_redirects=False).status_code == 403
 
@@ -131,29 +131,21 @@ def test_owner_edits_a_new_report_comments_and_undoes(client):
     assert "Automotive at a glance" not in client.get(AUTO).text
 
 
-def test_the_pack_combines_the_selected_reports_in_order(client):
-    html = client.get(f"{PACK}?r=automotive,overview,synergies&wm=draft").text
-    ids = re.findall(r'class="to-page[^"]*" id="([^"]+)"', html)
-    assert ids == ["at-a-glance", "platforms", "markets", "families", "syn-glance", "syn-tech", "syn-combine",
-                   "auto-offer", "auto-apps", "auto-pairs"]  # fmt: skip
-    assert html.count('class="to-pfoot"') == 10 and "1 / 10<" in html and "10 / 10<" in html
-    assert html.count("<b>Sources.</b>") == 1  # one list, at the end
-    assert "<span>Draft</span>" in html
-    two = client.get(f"{PACK}?r=synergies&r=automotive").text
-    assert re.findall(r'class="to-page[^"]*" id="([^"]+)"', two)[0] == "syn-glance" and "6 / 6<" in two
-    # the market focus page was removed (owner, 25 Oct 2026): an old &focus= is ignored, the overview stays 4 pages
-    old = client.get(f"{PACK}?r=overview&focus=automotive")
-    assert old.status_code == 200 and 'id="market-focus"' not in old.text and "4 / 4<" in old.text
-    assert "focus=" not in old.text.split("Change the selection")[0].rsplit("<a ", 1)[-1]
-    from app.config import PROJECT_ROOT
-
-    css = (PROJECT_ROOT / "app" / "web" / "static" / "shareable.css").read_text()
-    assert ".sr-pack-part .to-page { break-before: page; }" in css  # each report from a new page
+def test_old_pack_links_now_download_the_pdf(client):
+    """Owner, 26 Oct 2026: no browser printing; the old combined print view's links download the server PDF of the
+    same reports (pack order: overview first), with the watermark; an old &focus= is ignored."""
+    r = client.get(f"{PACK}?r=automotive,overview,synergies&wm=draft", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/shareable/pdf?r=overview,synergies,automotive&wm=draft"
+    for q in ("", "?r=overview&focus=automotive", "?r=synergies&r=automotive", "?wm=custom&wmt=For%20Anna"):
+        got = client.get(PACK + q)
+        assert got.status_code == 200 and got.headers["content-type"] == "application/pdf", q
+        assert got.content.startswith(b"%PDF"), q
+    assert client.get(PACK, follow_redirects=False).headers["location"].startswith(
+        "/shareable/pdf?r=overview,synergies,automotive")  # fmt: skip
     landing = client.get("/shareable").text
-    assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and ">Build a PDF<" in landing
+    assert 'id="build-pdf"' in landing and 'value="synergies"' in landing and ">Create PDF<" in landing
     form = landing[landing.index('id="build-pdf"'):landing.index("</form>", landing.index('id="build-pdf"'))]
     assert 'name="focus"' not in form and "Market focus" not in form and "4 pages" in form  # no focus option
-    assert "focus:" not in landing.split('id="build-pdf"', 1)[1].split("</script>", 1)[0]
 
 
 def test_patent_tags_come_from_a_fixture_and_are_quiet_without_data(monkeypatch, tmp_path):
@@ -268,9 +260,10 @@ def test_shareable_lists_the_three_reports_with_previews_and_two_actions(client)
         assert f"<b>{label}</b>" in unescape(row) and f"{pages} pages" in row
         assert f'href="{href}" data-lightbox="{label}">Preview</a>' in unescape(row)
         assert f'class="sh-open" href="{href}" data-lightbox="{label}"' in unescape(row)  # tapping the report opens it
-        assert "Add to PDF" in row
+        assert ">Include</label>" in row
     form = html[html.index('id="build-pdf"'):html.index("</form>", html.index('id="build-pdf"'))]
-    assert form.count('type="submit"') == 1 and ">Build a PDF</button>" in form  # one combine button
+    assert form.count('type="submit"') == 1 and ">Create PDF</button>" in form  # one combine button
+    assert ">Create PowerPoint</button>" in form and 'action="/shareable/pdf"' in form
     assert 'class="sh-ppt" role="button" href="/shareable/presentation">Build a presentation</a>' in html
     assert "Pick at least one report." in html and 'class="sh-cards"' not in html
     again = client.get("/shareable?r=automotive,synergies&wm=draft").text  # the last choice from the address
@@ -289,8 +282,7 @@ def test_owner_sees_edit_links_guest_does_not(owner, make_guest):
 def test_shareable_documents_carry_no_reference_to_the_site(client):
     """Owner, 26 Oct 2026: "Leave all references to the site out of the shareable documentation" - no site footer,
     no site name in the title (browsers print it in a PDF's header), no links from one report to another."""
-    for url in (SYN, AUTO, "/shareable/technology-overview", PACK + "?r=synergies,automotive,overview",
-                "/shareable/presentation/preview?s=title"):  # fmt: skip
+    for url in (SYN, AUTO, "/shareable/technology-overview", "/shareable/presentation/preview?s=title"):
         html = client.get(url).text
         title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
         assert "BizDev" not in title and "Shareable" not in title, (url, title)

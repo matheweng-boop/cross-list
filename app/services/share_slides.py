@@ -1,175 +1,122 @@
-"""Shareable > Download as PowerPoint (owner, 25 Oct 2026: "the creating a PowerPoint version functionality is not
-visible"): the slides of each Shareable report, built from the same data and the same values (the owner's edits over
-the defaults) the report pages render. Each function takes (data, vals): data is the report's build() and vals its
-edited values; it returns slide dicts for app/services/presentation_pptx.build (kinds "title", "glance", "table",
-"bullets"). Roughly one slide per page block; a long table continues on a second slide.
+"""Shareable > Create PowerPoint (owner, 26 Oct 2026: "how the PowerPoint is presented ... it would be good if the
+formatting were generally cleaner"): the slides of each Shareable report, laid out for a screen in a room. Built
+from the same content model as the PDF (app/services/share_doc.py), so the facts, numbers, part names, categories
+and sources are the same; only the wording is shorter: one message per slide, a headline, the section's short slide
+text (the owner's "slide" field, else the first sentence), and either number tiles, at most 5 bullets, three short
+company columns or a table of at most 6 rows (a longer one continues on the next slide).
 
-The registry in app/services/share_reports.py (REGISTRY) names the slide function of each report."""
+Each function takes (data, vals, today, ip_note): data is the report's build() and vals its shown values (the owner's
+edits over the defaults); it returns slide dicts for app/services/presentation_pptx.build. The registry in
+app/services/share_reports.py (REGISTRY) names the slide function of each report."""
 
-from itertools import zip_longest
+from app.services import share_doc as sd
 
-from app.services.text import round_count
-
-PREFIX = "Skyworks + Qorvo · "
-TABLE_ROWS, TABLE_CHARS = 9, 1300  # per table slide before it continues on the next (est: what 16:9 holds readably)
+PREFIX = sd.PREFIX
+TABLE_ROWS = 6  # rows per table slide before it continues on the next
+COL_ITEMS = 8  # items per company column on one slide
+BULLETS = 5  # bullets per slide
+PAIRS = 3  # Skyworks + Qorvo pairs per slide
+CELL_CHARS = 90  # a long table text is cut to its first sentence, at most this long
 
 
 def head_of(vals: dict, fallback: str) -> str:
-    """The header band title: the report's header title without the company prefix the slide frame adds."""
-    t = str(vals.get("hdr.title") or "").strip() or fallback
-    return t[len(PREFIX):] if t.startswith(PREFIX) else t
+    return sd.head_of(vals, fallback)
 
 
-def paras(vals: dict, section: str) -> str:
-    return " ".join(str(p.get("text") or "") for p in vals.get(f"paras.{section}") or [])
-
-
-def _facts(data: dict, vals: dict) -> list[dict]:
-    return [{"num": str(vals.get(f"fact.{f['key']}.num", f["num"])),
-             "label": str(vals.get(f"fact.{f['key']}.label", f["label"]))} for f in data["facts"]]  # fmt: skip
+def chunks(items: list, most: int) -> list[list]:
+    """Split a list into even parts of at most `most` items (no slide with a lone last row)."""
+    if len(items) <= most:
+        return [items]
+    n = -(-len(items) // most)
+    per = -(-len(items) // n)
+    return [items[i : i + per] for i in range(0, len(items), per)]
 
 
 def table(head: str, title: str, cols: list[str], rows: list[list[str]], lead: str = "", note: str = "",
-          widths: tuple[float, ...] = ()) -> list[dict]:  # fmt: skip
-    """One native table slide, continued on more slides when it is long."""
-    chunks: list[list] = [[]]
-    for r in rows:  # a new slide after TABLE_ROWS rows or about TABLE_CHARS characters of text
-        size = sum(len(str(c)) for c in r) + 60
-        if chunks[-1] and (len(chunks[-1]) >= TABLE_ROWS or
-                           sum(sum(len(str(c)) for c in x) + 60 for x in chunks[-1]) + size > TABLE_CHARS):  # fmt: skip
-            chunks.append([])
-        chunks[-1].append(r)
-    if len(chunks) > 1:  # spread the rows evenly, so no slide carries a lone last row
-        per = -(-len(rows) // len(chunks))
-        chunks = [rows[i : i + per] for i in range(0, len(rows), per)]
+          widths: tuple[float, ...] = (), who_cols: tuple[int, ...] = (),
+          most: int = TABLE_ROWS) -> list[dict]:  # fmt: skip
+    """One native table slide of at most `most` rows (TABLE_ROWS), continued on more slides when longer."""
+    parts = chunks(rows, min(most, TABLE_ROWS))
     out = []
-    for n, chunk in enumerate(chunks):
+    for n, chunk in enumerate(parts):
         out.append({"kind": "table", "head": head, "title": title + (" (continued)" if n else ""),
-                    "body": {"lead": "" if n else lead, "cols": cols, "rows": chunk, "widths": list(widths),
-                             "note": note if n == len(chunks) - 1 else ""}})  # fmt: skip
+                    "body": {"lead": lead, "cols": cols, "rows": chunk, "widths": list(widths),
+                             "who_cols": list(who_cols), "note": note if n == len(parts) - 1 else ""}})  # fmt: skip
     return out
 
 
-def _cover(head: str, vals: dict, sub: str, today) -> dict:
-    return {"kind": "title", "head": head, "title": str(vals.get("title") or head),
-            "body": {"heading": str(vals.get("title") or head), "sub": sub, "date": today}}  # fmt: skip
+def bullets(head: str, title: str, points: list[str], lead: str = "") -> list[dict]:
+    parts = chunks([p for p in points if p], BULLETS)
+    return [{"kind": "bullets", "head": head, "title": title + (" (continued)" if n else ""),
+             "body": {"lead": lead if not n else "", "points": c}} for n, c in enumerate(parts)]  # fmt: skip
 
 
-def _sources(head: str, vals: dict, extra: list[str] = ()) -> dict:
-    lines, n = [], 0
-    while f"src.{n}" in vals:
-        if s := str(vals[f"src.{n}"]).strip():
-            lines.append(s)
-        n += 1
-    return {"kind": "bullets", "head": head, "title": "Sources",
-            "body": {"points": [*extra, *lines, "Public information."]}}  # fmt: skip
+def _short(text: str) -> str:
+    return sd.first_sentence(text, CELL_CHARS)
 
 
-def _pairs(data: dict, vals: dict, example: str) -> list[list[str]]:
-    rows = []
-    for i, p in enumerate(data["pairs"], start=1):
-        ex = " with ".join(x for x in (p.get("s_ex"), p.get("q_ex")) if x)
-        line = str(vals.get(f"pair.{p['key']}.line", p["line"]))
-        rows.append([str(i), p["skyworks"], p["qorvo"], str(vals.get(f"pair.{p['key']}.benefit", p["benefit"])),
-                     line + (f" {example} {ex}." if ex else "")])  # fmt: skip
-    return rows
+def _cell_text(c: dict, keep: bool) -> str:
+    t = c["t"] if keep else _short(c["t"])
+    return " · ".join(x for x in (t, ", ".join(c["code"]), *(m for m, _ in c["marks"])) if x)
 
 
-PAIR_COLS = ["#", "Skyworks", "Qorvo", "Benefit", "What it is useful for"]
-PAIR_W = (0.5, 2.4, 2.4, 1.9, 4.9)
+def _block(head: str, title: str, lead: str, b: dict) -> list[dict]:
+    kind = b["kind"]
+    if kind == "facts":
+        return [{"kind": "glance", "head": head, "title": title,
+                 "body": {"lead": lead, "facts": [{"num": f["num"], "label": f["label"], "note": f.get("note", "")}
+                                                  for f in b["items"]]}}]  # fmt: skip
+    if kind == "table":
+        keep = {0, *(b.get("keep_cols") or ())}  # the first column and the fact columns stay whole
+        rows = [[_cell_text(c, i in keep) for i, c in enumerate(r)] for r in b["rows"]]
+        who = tuple(range(1, len(b["cols"]))) if b.get("dots") else tuple(
+            i for i in range(len(b["cols"])) if b["rows"] and all(not r[i]["t"] and r[i]["marks"] for r in b["rows"]))
+        return table(head, title, list(b["cols"]), rows, lead, b.get("note", ""), tuple(b.get("widths") or ()), who,
+                     b.get("slide_rows") or TABLE_ROWS)
+    if kind == "cols":
+        parts = chunks(list(range(max(len(c["items"]) for c in b["cols"]))), COL_ITEMS)
+        out = []
+        for n, idx in enumerate(parts):
+            cols = [{"who": c["who"], "head": f"{c['head']} ({c['count']})" if c["count"] else c["head"],
+                     "line": " · ".join(x for x in (c["line"], c["tag"]) if x) if not n else "",
+                     "items": [" · ".join([c["items"][i]["t"], *(m for m, _ in c["items"][i]["marks"])])
+                               for i in idx if i < len(c["items"])]} for c in b["cols"]]  # fmt: skip
+            out.append({"kind": "cols", "head": head, "title": title + (" (continued)" if n else ""),
+                        "body": {"lead": lead if not n else "", "cols": cols,
+                                 "note": b.get("note", "") if n == len(parts) - 1 else ""}})  # fmt: skip
+        return out
+    if kind == "pairs":
+        parts = chunks(b["items"], PAIRS)
+        return [{"kind": "pairs", "head": head, "title": title + (" (continued)" if n else ""),
+                 "body": {"lead": lead if not n else "",
+                          "items": [{**p, "line": sd.first_sentence(p["line"], 130)} for p in c],
+                          "note": b.get("note", "") if n == len(parts) - 1 else ""}}
+                for n, c in enumerate(parts)]  # fmt: skip
+    if kind == "links":
+        return bullets(head, b["head"], b["items"])
+    return []
 
 
-def synergies(data: dict, vals: dict, today=None, ip_note: str = "") -> list[dict]:
-    h = head_of(vals, "Synergies")
-    v = vals.get
-    slides = [_cover(h, vals, "Management brief", today),
-              {"kind": "glance", "head": h, "title": str(v("sec.glance.heading") or "Combined at a glance"),
-               "body": {"lead": paras(vals, "glance"), "facts": _facts(data, vals)}}]  # fmt: skip
-    mfg = [[str(v(f"mfg.{i}.label", m.get("label", ""))), str(v(f"mfg.{i}.skyworks", m.get("skyworks", ""))),
-            str(v(f"mfg.{i}.qorvo", m.get("qorvo", "")))] for i, m in enumerate(data["mfg"])]  # fmt: skip
-    slides += table(h, str(v("sec.manufacturing.heading") or ""), ["Capability", "Skyworks", "Qorvo"], mfg,
-                    paras(vals, "manufacturing"), widths=(5.6, 3.0, 3.0))  # fmt: skip
-    tech = data["tech"]
-    cols = [[p["label"] + (f" ({p['ip']})" if p.get("ip") else "") for p in tech[s]] for s in ("Skyworks", "Both",
-                                                                                               "Qorvo")]  # fmt: skip
-    slides += table(h, str(v("sec.technologies.heading") or ""),
-                    [f"Skyworks ({len(tech['Skyworks'])})", f"Both ({len(tech['Both'])})",
-                     f"Qorvo ({len(tech['Qorvo'])})"],
-                    [[a or "", b or "", c or ""] for a, b, c in zip_longest(*cols)], paras(vals, "technologies"),
-                    ip_note if data.get("ip") else "")  # fmt: skip
-    sides = (("Skyworks", "Skyworks only", data["sky"]), ("Both", "Both offer", data["both"]),
-             ("Qorvo", "Qorvo only", data["qor"]))  # fmt: skip
-    useful = [f"{v(f'ovl.{s.lower()}.line', '')} [{v(f'ovl.{s.lower()}.benefit', '')}]" for s, _, _ in sides]
-    fams = [[f"{f['label']} ({round_count(f['total'])})" for f in fs] for _, _, fs in sides]
-    slides += table(h, str(v("sec.overlap.heading") or ""),
-                    [f"{label} ({round_count(len(fs))} families)" for _, label, fs in sides],
-                    [useful, *([a or "", b or "", c or ""] for a, b, c in zip_longest(*fams))], paras(vals, "overlap"),
-                    "Active parts per family in the public catalogues, rounded down.")  # fmt: skip
-    slides += table(h, str(v("sec.combine.heading") or ""), PAIR_COLS, _pairs(data, vals, "For example"),
-                    paras(vals, "combine"), "Continued in: Automotive: technologies and applications.",
-                    PAIR_W)  # fmt: skip
-    return [*slides, _sources(h, vals)]
+def from_doc(d: dict, today=None, sub: str = "") -> list[dict]:
+    """The slides of one report's content model: a cover, one slide (or more) per block, the sources."""
+    h = d["head"]
+    slides = [{"kind": "title", "head": h, "title": d["title"],
+               "body": {"heading": d["title"], "sub": sub or d["kicker"], "date": today}}]  # fmt: skip
+    for s in d["sections"]:
+        title = s["heading"] or d["title"]
+        for i, b in enumerate(s["blocks"]):
+            slides += _block(h, title, s["slide"] if i == 0 else "", b)
+    slides += bullets(h, "Sources", [*d["sources"], d["prepared"]])
+    return slides
 
 
-def automotive(data: dict, vals: dict, today=None, ip_note: str = "") -> list[dict]:
-    h = head_of(vals, "Automotive")
-    v = vals.get
-    slides = [_cover(h, vals, "Extension of: Skyworks + Qorvo synergies", today),
-              {"kind": "glance", "head": h, "title": str(v("sec.offer.heading") or "At a glance"),
-               "body": {"lead": paras(vals, "offer"), "facts": _facts(data, vals)}}]  # fmt: skip
-    tech = [[t["label"], t["owner"] + (f" · {t['ip']}" if t.get("ip") else ""),
-             str(v(f"tech.{t['key']}.car", t["car"]))]
-            for t in data["tech"]]  # fmt: skip
-    slides += table(h, str(v("sec.technologies.heading") or ""), ["Technology", "Company", "In the car"], tech,
-                    paras(vals, "technologies"), ip_note if data.get("ip") else "", (3.4, 2.2, 6.5))  # fmt: skip
-    subs = [[str(v(f"sub.{s['key']}.title", s["title"])), str(v(f"sub.{s['key']}.line", s["line"])),
-             ", ".join(s["series"])] for s in data["subsystems"]]  # fmt: skip
-    slides += table(h, str(v("sec.applications.heading") or ""), ["Sub-system", "What we bring", "AEC-Q series"],
-                    subs, paras(vals, "applications"),
-                    "All series listed are AEC-Q qualified; an x stands for any character.",
-                    (3.6, 5.6, 2.9))  # fmt: skip
-    slides += table(h, str(v("sec.pairs.heading") or ""), PAIR_COLS, _pairs(data, vals, "AEC-Q example"),
-                    paras(vals, "pairs"), widths=PAIR_W)  # fmt: skip
-    std = v("standards") or data.get("standards") or []
-    return [*slides, _sources(h, vals, ["Standards: " + " · ".join(std)] if std else [])]
+def _slides(key: str, sub: str = ""):
+    def make(data: dict, vals: dict, today=None, ip_note: str = "") -> list[dict]:
+        return from_doc(sd.doc(key, data, vals, today, ip_note), today, sub)
+
+    return make
 
 
-def overview(data: dict, vals: dict, today=None, ip_note: str = "") -> list[dict]:
-    h = head_of(vals, "Technology overview")
-    v = vals.get
-    facts = [{"num": str(v(f"fact.{f['key']}.num", f["num"])), "label": str(v(f"fact.{f['key']}.label", f["label"]))}
-             for f in data["facts"]]  # fmt: skip
-    slides = [_cover(h, vals, "Technology overview", today),
-              {"kind": "glance", "head": h, "title": "At a glance",
-               "body": {"lead": paras(vals, "glance"), "facts": facts}}]  # fmt: skip
-    mk = data["markets"]
-    matrix = [[str(v(f"plat.{r['key']}.label", r["label"])), *(str(v(f"dot.{r['key']}.{m['key']}") or "") for m in mk)]
-              for r in data["matrix"]]  # fmt: skip
-    slides += table(h, str(v("sec.glance.heading") or "Platforms by market"),
-                    ["Platform", *(str(v(f"mkt.{m['key']}.short", m["short"])) for m in mk)], matrix,
-                    note="Who offers each platform in each market: Skyworks, Qorvo or Both.")  # fmt: skip
-    plats = []
-    for p in data["platforms"]:
-        k = f"plat.{p['key']}"
-        plats.append([str(v(f"{k}.label", p["label"])), str(v(f"{k}.owner", p["owner"])),
-                      f"{v(k + '.what', '')} {v(k + '.good_for', '')}".strip()])  # fmt: skip
-    slides += table(h, str(v("sec.platforms.heading") or ""), ["Platform", "Company", "What it is and is good for"],
-                    plats, paras(vals, "platforms"), widths=(3.4, 1.6, 7.1))  # fmt: skip
-    mkts = []
-    for m in mk:
-        k = f"mkt.{m['key']}"
-        parts = [f"{v(f'{k}.part.{i}', name)} ({series})" for i, (name, series) in enumerate(m["parts"])]
-        mkts.append([str(v(f"{k}.label", m["label"])), str(v(f"{k}.brings", m["brings"])),
-                     ", ".join(v(f"{k}.functions") or m["functions"]), "; ".join(parts)])  # fmt: skip
-    slides += table(h, str(v("sec.markets.heading") or ""), ["Market", "What we bring", "Functions", "Example parts"],
-                    mkts, paras(vals, "markets"), widths=(2.2, 3.3, 3.2, 3.4))  # fmt: skip
-    fams = []
-    for f in data["families"]:
-        k = f"fam.{f['slug']}"
-        figs = ", ".join(f"{v(f'{k}.fig.{i}.text', g['text'])} ({v(f'{k}.fig.{i}.part', g['mpn'])})"
-                         for i, g in enumerate(f.get("figures") or []))  # fmt: skip
-        fams.append([f["label"], str(v(f"{k}.skyworks", f["Skyworks"])), str(v(f"{k}.qorvo", f["Qorvo"])),
-                     str(v(f"{k}.headline", f["headline"])) + (f"; {figs}" if figs else "")])  # fmt: skip
-    slides += table(h, str(v("sec.families.heading") or ""), ["Family", "Skyworks", "Qorvo", "Headline capability"],
-                    fams, paras(vals, "families"), widths=(3.0, 1.3, 1.3, 6.5))  # fmt: skip
-    return [*slides, _sources(h, vals)]
+synergies = _slides("synergies", "Management brief")
+automotive = _slides("automotive", "Extension of: Skyworks + Qorvo synergies")
+overview = _slides("overview", "Technology overview")

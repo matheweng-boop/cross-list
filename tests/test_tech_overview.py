@@ -79,7 +79,7 @@ def test_the_page_is_share_safe(client):
     assert r.status_code == 200
     text = content_text(r.text)
     assert blocked(text) == [], blocked(text)
-    for words in ("Public information", "Save as PDF", "Learn more", "Sources."):
+    for words in ("Public information", ">Create PDF<", ">Create PowerPoint<", "Learn more", "Sources."):
         assert words in r.text, words
 
 

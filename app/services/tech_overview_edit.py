@@ -31,6 +31,7 @@ from app.services.text import rounded_count_text
 PAGE = "tech_overview"
 ANSWERS = PROJECT_ROOT / "data" / "business" / "tech_overview_answers.yaml"
 OWNERS = ("Skyworks", "Qorvo", "Both")
+SLIDE_MAX = 160  # characters of a section's short slide text (app/services/share_doc.py)
 MAIN_SECTIONS = ("glance", "platforms", "markets", "families")
 # Length limits: what the A4 layout holds (tests/test_browser.py prints the page with every field at its limit and
 # checks it still fits on 4 pages). Paragraphs: at most PARA_COUNT per section and PARA_TOTAL characters together.
@@ -118,6 +119,9 @@ def specs() -> dict[str, Field]:
     add("title", "line", cur.get("title", ""), 70, "Title")
     for s in MAIN_SECTIONS:
         add(f"sec.{s}.heading", "line", ((cur.get("sections") or {}).get(s) or {}).get("heading", ""), 50, "Heading")
+        # the short text of the section's PowerPoint slide (owner, 26 Oct 2026); empty: its first sentence
+        add(f"slide.{s}", "text", ((cur.get("sections") or {}).get(s) or {}).get("slide", ""), SLIDE_MAX,
+            "Slide text (PowerPoint)")  # fmt: skip
     for f in b["facts"]:
         k = f["key"]
         add(f"fact.{k}.num", "data", f["num"], 14, "Number")

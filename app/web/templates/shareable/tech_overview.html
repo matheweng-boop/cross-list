@@ -56,9 +56,12 @@
   </fieldset>
 {% else %}
   <div class="to-actions">
-    <button type="button" class="to-print" onclick="window.print()">Save as PDF</button>
+    {% set fq = 'r=overview&wm=' ~ o.wm ~ ('&wmt=' ~ o.wm_text|urlencode if o.wm == 'custom' else '') %}
+    <a href="/shareable/pdf?{{ fq }}" role="button" class="to-pdf" download>Create PDF</a>
+    <a href="/shareable/pptx?{{ fq }}" role="button" class="outline to-pptx" download>Create PowerPoint</a>
     {% if me and me.is_owner %}<a href="/shareable/technology-overview/edit" role="button" class="outline to-edit">Edit</a>{% endif %}
-    <span class="small muted">Opens the print dialog: choose “Save as PDF” and A4. {{ o.pages }} pages; public information only.</span>
+    <a href="/shareable#build-pdf" class="small">Combine with other reports</a>
+    <span class="small muted">A4 PDF, at most {{ o.pages }} pages; public information only.</span>
     {% if message %}<span class="small" role="status">{{ message }}</span>{% endif %}
   </div>
 {% endif %}

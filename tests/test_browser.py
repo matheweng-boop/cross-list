@@ -442,8 +442,8 @@ def test_overview_waiting_line_opens_the_filtered_requests(page):
 # --- Shareable --------------------------------------------------------------------------------------------------------
 def test_shareable_technology_overview_prints_to_four_a4_pages(page):
     """Shareable > Technology overview: the section row opens the landing page, its card the brief; the four sections
-    show, Save as PDF calls the print dialog, the print view hides the site's frame, and the A4 PDF has 4 pages at most
-    (owner, 24 Oct 2026)."""
+    show, the preview has no print button (owner, 26 Oct 2026: Create PDF makes the file instead), the page links to
+    Create PDF, the print view still hides the site's frame, and the A4 print has 4 pages at most."""
     go(page, "/")
     page.locator("nav.main-nav a", has_text="Shareable").click()
     expect(page).to_have_url(re.compile(r"/shareable$"))
@@ -457,6 +457,8 @@ def test_shareable_technology_overview_prints_to_four_a4_pages(page):
     expect(inner.locator("#tech-overview")).to_be_visible()
     for chrome in (".site-head", ".site-foot", ".to-actions"):  # only the report shows, like a document
         expect(inner.locator(chrome).first).to_be_hidden()
+    expect(page.locator("dialog.lb").get_by_role("button", name=re.compile("Print"))).to_have_count(0)
+    expect(page.locator("dialog.lb").get_by_role("link", name="Open in a new tab")).to_be_visible()
     page.get_by_role("button", name="Close preview").click()
     expect(page.locator("dialog.lb")).to_be_hidden()
     # tapping the report itself opens it too; ticking "Add to PDF" is separate (owner, 25 Oct 2026)
@@ -470,9 +472,8 @@ def test_shareable_technology_overview_prints_to_four_a4_pages(page):
                          ("markets", "End markets"), ("families", "Product families")):  # fmt: skip
         expect(page.locator(f"section#{sid} :is(h1, h2)").first).to_contain_text(heading)
     expect(page.locator(".to-matrix .to-dot").first).to_be_visible()
-    page.evaluate("() => { window.__printed = 0; window.print = () => { window.__printed += 1; }; }")  # the dialog
-    page.get_by_role("button", name="Save as PDF").click()
-    assert page.evaluate("window.__printed") == 1
+    expect(page.get_by_role("button", name="Create PDF")).to_have_attribute("href", "/shareable/pdf?r=overview&wm=none")
+    expect(page.get_by_role("button", name="Save as PDF")).to_have_count(0)
     page.emulate_media(media="print")
     for frame in (".site-head", ".site-foot", ".fb", ".to-actions"):
         expect(page.locator(frame).first).to_be_hidden()
@@ -644,70 +645,70 @@ def test_technology_overview_every_field_at_its_limit_still_fits(page):
 
 
 def test_shareable_pack_of_all_three_and_each_report_alone(page):
-    """Owner, 25 Oct 2026: the Synergies and Automotive reports print to at most 3 A4 pages each; the combined PDF of
-    all three reports to 10 pages at most, numbered through ("10 / 10" on the last)."""
+    """Owner, 25 Oct 2026: the Synergies and Automotive reports are at most 3 A4 pages each; the combined PDF of all
+    three reports at most 10 pages, numbered through. Owner, 26 Oct 2026: the PDF is made on the server; an old link
+    to the combined print view downloads it."""
     for path in ("/shareable/synergies", "/shareable/automotive"):
         go(page, path)
         expect(page.locator(".to-page")).to_have_count(3)
-        assert pdf_pages(a4(page)) <= 3, path
-    go(page, "/shareable/pack?r=overview,synergies,automotive&wm=none")
-    expect(page.locator(".to-page")).to_have_count(10)
-    expect(page.locator(".to-pfoot").last).to_contain_text("10 / 10")
-    pdf = a4(page)
-    assert pdf_pages(pdf) == 10
+        r = page.request.get(path.replace("/shareable/", "/shareable/pdf?r="))
+        assert r.ok and r.headers["content-type"] == "application/pdf" and pdf_pages(r.body()) <= 3, path
+    r = page.request.get("/shareable/pack?r=overview,synergies,automotive&wm=none")
+    assert r.ok and r.headers["content-type"] == "application/pdf"
+    assert pdf_pages(r.body()) <= 10
 
 
-def test_shareable_build_pdf_with_two_reports(page, tmp_path):
-    """The one Shareable page (owner, 25 Oct 2026): nothing ticked asks to pick a report; tick Synergies and Automotive,
-    Build a PDF opens one print view with Synergies then Automotive (the address keeps the choice), each from a new
-    page, one sources list (no overflow at 390 px: the page fixture checks every visited page)."""
+def test_shareable_create_pdf_with_two_reports(page, tmp_path):
+    """The one Shareable page (owner, 26 Oct 2026): nothing ticked asks to pick a report; tick Synergies and
+    Automotive, Create PDF downloads one A4 PDF (application/pdf) with Synergies then Automotive, made on the server;
+    the page stays and the address keeps the choice."""
     go(page, "/shareable")
     box = page.locator("#build-pdf")
     expect(box.locator("input[name=r]:checked")).to_have_count(0)
-    box.get_by_role("button", name="Build a PDF").click()
+    box.get_by_role("button", name="Create PDF").click()
     expect(page.locator("#sh-err")).to_have_text("Pick at least one report.")
     expect(page.locator("dialog.lb[open]")).to_have_count(0)
     box.locator("input[value='synergies']").check()
     box.locator("input[value='automotive']").check()
     expect(page.locator("#sh-err")).to_be_hidden()
-    box.get_by_role("button", name="Build a PDF").click()
-    # the print view opens in the lightbox (fc109ca); then check the same address as a page of its own
-    frame = page.locator("dialog.lb iframe.lb-frame")
-    expect(frame).to_have_attribute("src", re.compile(r"/shareable/pack\?r=synergies,automotive&wm=none&embed=1$"))
-    expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the last choice stays
-    expect(page.locator("dialog.lb").get_by_role("button", name="Print / Save as PDF")).to_be_visible()
-    go(page, frame.get_attribute("src"))
-    ids = page.locator(".to-page").evaluate_all("els => els.map(e => e.id)")
-    assert ids == ["syn-glance", "syn-tech", "syn-combine", "auto-offer", "auto-apps", "auto-pairs"]
-    expect(page.locator("text=Sources.")).to_have_count(1)
-    pdf = a4(page)
-    assert pdf_pages(pdf) == 6
-    text = pdf_text(pdf, tmp_path, 4)
+    with page.expect_download() as dl:
+        box.get_by_role("button", name="Create PDF").click()
+    d = dl.value
+    assert d.suggested_filename == "skyworks-qorvo-synergies-automotive.pdf"
+    path = tmp_path / d.suggested_filename
+    d.save_as(path)
+    pdf = path.read_bytes()
+    assert pdf.startswith(b"%PDF") and 2 <= pdf_pages(pdf) <= 6
+    r = page.request.get("/shareable/pdf?r=synergies,automotive&wm=none")
+    assert r.headers["content-type"] == "application/pdf"
+    text = pdf_text(pdf, tmp_path)
     if text is not None:
-        assert "extension of" in text.lower() and re.search(r"4 ?/ ?6", text)
+        assert text.index("Skyworks + Qorvo synergies") < text.index("Extension of: Skyworks + Qorvo synergies")
+        assert "Sources" in text and "BizDev" not in text
+    expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the page stays
 
 
 def test_shareable_build_a_presentation_button(page):
-    """Owner, 25 Oct 2026: Build a presentation sits next to Build a PDF and opens the topic builder."""
+    """Owner, 25 Oct 2026: Build a presentation sits next to Create PDF and opens the topic builder."""
     go(page, "/shareable")
     page.locator("#build-pdf").get_by_role("button", name="Build a presentation").click()
     expect(page).to_have_url(re.compile(r"/shareable/presentation$"), timeout=90_000)
     expect(page.locator("nav.sub-nav a.on")).to_have_text("Reports")
 
 
-def test_shareable_download_as_powerpoint_with_two_reports(page, tmp_path):
-    """Owner, 25 Oct 2026: Download as PowerPoint sits with Build a PDF; nothing ticked asks to pick a report; two
+def test_shareable_create_powerpoint_with_two_reports(page, tmp_path):
+    """Owner, 25 and 26 Oct 2026: Create PowerPoint sits with Create PDF; nothing ticked asks to pick a report; two
     ticked download one .pptx with both reports (iPad-size window)."""
     from pptx import Presentation
 
     go(page, "/shareable")
     box = page.locator("#build-pdf")
-    box.get_by_role("button", name="Download as PowerPoint").click()
+    box.get_by_role("button", name="Create PowerPoint").click()
     expect(page.locator("#sh-err")).to_have_text("Pick at least one report.")
     box.locator("input[value='synergies']").check()
     box.locator("input[value='automotive']").check()
     with page.expect_download() as dl:
-        box.get_by_role("button", name="Download as PowerPoint").click()
+        box.get_by_role("button", name="Create PowerPoint").click()
     d = dl.value
     assert d.suggested_filename == "skyworks-qorvo-synergies-automotive.pptx"
     path = tmp_path / d.suggested_filename

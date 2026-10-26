@@ -399,7 +399,8 @@ def _table(slide, b: dict):
     y = BODY_TOP + _lead(slide, b.get("lead", ""), BODY_TOP)
     bottom = BODY_BOTTOM - (Inches(0.45) if b.get("note") else 0)
     longest = max((sum(len(str(c)) for c in r) for r in rows), default=0)
-    size = 16.0 if longest < 70 and len(rows) <= 5 else 14.0 if longest < 150 else 12.0
+    chars = sum(len(str(c)) for r in rows for c in r)
+    size = 16.0 if longest < 70 and len(rows) <= 5 else 14.0 if longest < 150 or chars < 950 else 12.0
     width = W - 2 * MX
     row_h = Inches(0.5 if size >= 14 else 0.42)
     gf = slide.shapes.add_table(len(rows) + 1, len(cols), MX, y, width, min(bottom - y, row_h * (len(rows) + 1)))

@@ -36,7 +36,7 @@ from app.services import share_doc as sd
 
 MEDIA_TYPE = "application/pdf"
 PAGE_W, PAGE_H = A4
-MX, TOP, BOTTOM = 18 * mm, 27 * mm, 18 * mm
+MX, TOP, BOTTOM = 18 * mm, 27 * mm, 16 * mm
 BODY_W = PAGE_W - 2 * MX - 12  # the frame keeps 6 pt padding on each side
 INK, MUTED, ACCENT = colors.HexColor("#1B1F27"), colors.HexColor("#5B6270"), colors.HexColor("#0B6B74")
 SOFT, LINE, ZEBRA = colors.HexColor("#E7F3F2"), colors.HexColor("#D7DBE3"), colors.HexColor("#F6F8FA")
@@ -135,6 +135,32 @@ def _widths(ws: list[float], n: int) -> list[float]:
     return [BODY_W * x / sum(ws) for x in ws]
 
 
+def _finish(data: list, widths: list[float], st: list, notes: list, tight: bool = False) -> Table:
+    """The table with its notes as a last, full-width row that never parts from the row above it, so a note never
+    stands alone at the top of a page; the header row repeats after a page break; rows never split."""
+    end = len(data) - 1
+
+    def fix(cmd):
+        name, (c0, r0), (c1, r1), *rest = cmd
+        return (name, (c0, end if r0 == -1 else r0), (c1, end if r1 == -1 else r1), *rest)
+
+    st = [fix(c) for c in st]
+    if tight:  # the second try, when only a few lines spilled onto an extra page
+        st += [("TOPPADDING", (0, 1), (-1, end), 2), ("BOTTOMPADDING", (0, 1), (-1, end), 2)]
+    if notes:
+        data = [*data, [notes] + [""] * (len(widths) - 1)]
+        n = end + 1
+        st += [("SPAN", (0, n), (-1, n)), ("NOSPLIT", (0, end), (-1, n)), ("LEFTPADDING", (0, n), (-1, n), 0),
+               ("TOPPADDING", (0, n), (-1, n), 3), ("BOTTOMPADDING", (0, n), (-1, n), 0)]  # fmt: skip
+    t = Table(data, colWidths=widths, repeatRows=1, splitInRow=0)
+    t.setStyle(TableStyle(st))
+    return t
+
+
+def _notes(b: dict, *extra) -> list:
+    return [*extra, *([P(b["note"], "note")] if b.get("note") else [])]
+
+
 def table(b: dict) -> list:
     cols, rows = b["cols"], b["rows"]
     widths = _widths(b.get("widths") or [], len(cols))
@@ -158,20 +184,15 @@ def table(b: dict) -> list:
             else:
                 out.append(_cell(c, widths[i] - 10, first=i == 0, compact=bool(b.get("compact"))))
         data.append(out)
-    t = Table(data, colWidths=widths, repeatRows=1, splitInRow=0)
     st = [*BASE, ("BACKGROUND", (0, 0), (-1, 0), ACCENT), ("LINEBELOW", (0, 1), (-1, -1), 0.4, LINE)]
     st += [("BACKGROUND", (0, i), (-1, i), ZEBRA) for i in range(2, len(data), 2)]
+    extra = []
     if dots:
         st += [("VALIGN", (1, 1), (-1, -1), "MIDDLE"), ("TOPPADDING", (0, 1), (-1, -1), 3),
                ("BOTTOMPADDING", (0, 1), (-1, -1), 3)]  # fmt: skip
-    t.setStyle(TableStyle(st))
-    out = [t]
-    if dots:
         legend = " ".join(f'<font size="12" color="{_hex(WHO_COLOR[w])}">•</font> {w}' for w in sd.WHO)
-        out.append(Paragraph(f'<font color="{_hex(MUTED)}">Dot colour:</font> {legend}', S["small"]))
-    if b.get("note"):
-        out.append(P(b["note"], "note"))
-    return out
+        extra.append(Paragraph(f'<font color="{_hex(MUTED)}">Dot colour:</font> {legend}', S["small"]))
+    return [_finish(data, widths, st, _notes(b, *extra), b.get("tight", False))]
 
 
 def facts(b: dict) -> list:
@@ -212,12 +233,10 @@ def cols(b: dict) -> list:
     first_item = len(data)
     for r in sd.zipped([c["items"] for c in cs]):
         data.append([_cell(x, w - 10) if x else "" for x in r])
-    t = Table(data, colWidths=[w] * len(cs), repeatRows=1, splitInRow=0)
     st = [*BASE, ("LINEBELOW", (0, first_item), (-1, -1), 0.4, LINE), ("LINEBELOW", (0, 0), (-1, 0), 1.2, ACCENT)]
     st += [("BACKGROUND", (i, 0), (i, first_item - 1), TINT[c["who"]]) for i, c in enumerate(cs)]
     st += [("LINEAFTER", (0, 0), (-2, -1), 3, colors.white)]
-    t.setStyle(TableStyle(st))
-    return [t] + ([P(b["note"], "note")] if b.get("note") else [])
+    return [_finish(data, [w] * len(cs), st, _notes(b), b.get("tight", False))]
 
 
 def pairs(b: dict) -> list:
@@ -232,11 +251,9 @@ def pairs(b: dict) -> list:
             cell.append(Paragraph(f'{clean(p["ex_word"])} ' + ' <font color="#5B6270">with</font> '.join(
                 code_html([x]) for x in p["ex"]), S["small"]))  # fmt: skip
         data.append([P(str(p["n"]), "cellb"), cell, Paragraph(mark_html(p["benefit"], "ben"), S["mark"])])
-    t = Table(data, colWidths=[8 * mm, BODY_W - 8 * mm - 34 * mm, 34 * mm], repeatRows=1, splitInRow=0)
     st = [*BASE, ("BACKGROUND", (0, 0), (-1, 0), ACCENT), ("LINEBELOW", (0, 1), (-1, -1), 0.4, LINE),
           ("TOPPADDING", (0, 1), (-1, -1), 6), ("BOTTOMPADDING", (0, 1), (-1, -1), 6)]  # fmt: skip
-    t.setStyle(TableStyle(st))
-    return [t] + ([P(b["note"], "note")] if b.get("note") else [])
+    return [_finish(data, [8 * mm, BODY_W - 8 * mm - 34 * mm, 34 * mm], st, _notes(b), b.get("tight", False))]
 
 
 def links(b: dict) -> list:
@@ -265,7 +282,7 @@ def _height(flows: list) -> float:
     return sum(f.wrap(BODY_W, FRAME_H)[1] + f.getSpaceBefore() + f.getSpaceAfter() for f in flows)
 
 
-def story(d: dict, first: bool, with_sources: bool = True) -> list:
+def story(d: dict, first: bool, with_sources: bool = True, tight: bool = False) -> list:
     out: list = [] if first else [PageBreak()]
     out += [Head(d["head"], d.get("subtitle", "")), P(d["kicker"], "kicker"), P(d["title"], "h1")]
     for i, s in enumerate(d["sections"]):
@@ -274,7 +291,7 @@ def story(d: dict, first: bool, with_sources: bool = True) -> list:
             part += [P(x, "lead") for x in s["paras"]]
         else:
             part += [P(s["heading"], "h2")] + [P(x, "sub") for x in s["paras"]]
-        blocks = [f for b in s["blocks"] for f in BLOCKS[b["kind"]](b)]
+        blocks = [f for b in s["blocks"] for f in BLOCKS[b["kind"]]({**b, "tight": tight})]
         if not part:
             out += blocks
         elif _height([*part, *blocks]) < FRAME_H * 0.45:  # a short section stays on one page
@@ -375,6 +392,17 @@ def build(docs: list[dict], today=None, wm_text: str = "", logo: bytes | None = 
     """The PDF bytes of one or more reports (content models from share_doc.doc), each from a new page. With several
     reports, the sources come once, at the end."""
     today = today or date.today()
+    data = _build(docs, today, wm_text, logo, logo_right, title, tight=False)
+    pages = texts(data)
+    if len(pages) > 1 and pages[-1].split("\n", 2)[1:2] == ["Sources"]:  # only the sources spilled over: try tighter
+        tighter = _build(docs, today, wm_text, logo, logo_right, title, tight=True)
+        if len(texts(tighter)) < len(pages):
+            return tighter
+    return data
+
+
+def _build(docs: list[dict], today, wm_text: str, logo: bytes | None, logo_right: bool, title: str,
+           tight: bool) -> bytes:  # fmt: skip
     buf = io.BytesIO()
     pdf = SimpleDocTemplate(buf, pagesize=A4, leftMargin=MX, rightMargin=MX, topMargin=TOP, bottomMargin=BOTTOM,
                             title="Skyworks + Qorvo · " + (title or " + ".join(d["head"] for d in docs)),
@@ -382,7 +410,7 @@ def build(docs: list[dict], today=None, wm_text: str = "", logo: bytes | None = 
                             producer="")  # fmt: skip
     flow: list = []
     for i, d in enumerate(docs):
-        flow += story(d, first=i == 0, with_sources=len(docs) == 1)
+        flow += story(d, first=i == 0, with_sources=len(docs) == 1, tight=tight)
     if len(docs) > 1:
         lines = list(dict.fromkeys(x for d in docs for x in d["sources"]))
         flow += sources(lines, docs[0]["prepared"])

@@ -282,7 +282,7 @@ def shareable_pdf(request: Request, session: Session = Depends(get_session)):
         return RedirectResponse("/shareable?pick=1#build-pdf", status_code=303)
     today = date.today()
     found, ovals, opts = _versions(request, session, keys)
-    docs = [sd.doc(e.key, data, vals, today, sr.PATENT_NOTE) for e, data, vals in found]
+    docs = [e.content(data, vals, today) for e, data, vals in found]
     if [h for d in docs for h in site_guard.hits(sd.all_text(d))]:  # never expected: every edit passed the check
         raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
     data = spdf.build(docs, today, opts["wm_text"], _logo_bytes(te.logo_of(session, ovals)),

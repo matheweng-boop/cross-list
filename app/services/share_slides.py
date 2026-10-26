@@ -33,9 +33,10 @@ def chunks(items: list, most: int) -> list[list]:
 
 
 def table(head: str, title: str, cols: list[str], rows: list[list[str]], lead: str = "", note: str = "",
-          widths: tuple[float, ...] = (), who_cols: tuple[int, ...] = ()) -> list[dict]:  # fmt: skip
-    """One native table slide of at most TABLE_ROWS rows, continued on more slides when longer."""
-    parts = chunks(rows, TABLE_ROWS)
+          widths: tuple[float, ...] = (), who_cols: tuple[int, ...] = (),
+          most: int = TABLE_ROWS) -> list[dict]:  # fmt: skip
+    """One native table slide of at most `most` rows (TABLE_ROWS), continued on more slides when longer."""
+    parts = chunks(rows, min(most, TABLE_ROWS))
     out = []
     for n, chunk in enumerate(parts):
         out.append({"kind": "table", "head": head, "title": title + (" (continued)" if n else ""),
@@ -54,8 +55,8 @@ def _short(text: str) -> str:
     return sd.first_sentence(text, CELL_CHARS)
 
 
-def _cell_text(c: dict, first: bool) -> str:
-    t = c["t"] if first else _short(c["t"])
+def _cell_text(c: dict, keep: bool) -> str:
+    t = c["t"] if keep else _short(c["t"])
     return " · ".join(x for x in (t, ", ".join(c["code"]), *(m for m, _ in c["marks"])) if x)
 
 
@@ -66,10 +67,12 @@ def _block(head: str, title: str, lead: str, b: dict) -> list[dict]:
                  "body": {"lead": lead, "facts": [{"num": f["num"], "label": f["label"], "note": f.get("note", "")}
                                                   for f in b["items"]]}}]  # fmt: skip
     if kind == "table":
-        rows = [[_cell_text(c, i == 0) for i, c in enumerate(r)] for r in b["rows"]]
+        keep = {0, *(b.get("keep_cols") or ())}  # the first column and the fact columns stay whole
+        rows = [[_cell_text(c, i in keep) for i, c in enumerate(r)] for r in b["rows"]]
         who = tuple(range(1, len(b["cols"]))) if b.get("dots") else tuple(
             i for i in range(len(b["cols"])) if b["rows"] and all(not r[i]["t"] and r[i]["marks"] for r in b["rows"]))
-        return table(head, title, list(b["cols"]), rows, lead, b.get("note", ""), tuple(b.get("widths") or ()), who)
+        return table(head, title, list(b["cols"]), rows, lead, b.get("note", ""), tuple(b.get("widths") or ()), who,
+                     b.get("slide_rows") or TABLE_ROWS)
     if kind == "cols":
         parts = chunks(list(range(max(len(c["items"]) for c in b["cols"]))), COL_ITEMS)
         out = []

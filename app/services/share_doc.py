@@ -179,8 +179,10 @@ def overview(data: dict, vals: dict, today=None) -> dict:
         parts = [f"{v(f'{k}.part.{i}', name)} ({series})" for i, (name, series) in enumerate(m["parts"])]
         mrows.append([cell(v(f"{k}.label", m["label"])), cell(v(f"{k}.brings", m["brings"])),
                       cell(", ".join(v(f"{k}.functions") or m["functions"])), cell("; ".join(parts))])  # fmt: skip
+    # slides keep the functions and example parts whole (they are facts) and show 3 markets per slide
     mkts = {"kind": "table", "cols": ["Market", "What we bring", "Functions", "Example parts"],
-            "widths": [1.8, 2.9, 2.7, 3.0], "rows": mrows, "note": "", "compact": True}  # fmt: skip
+            "widths": [1.8, 2.9, 2.7, 3.0], "rows": mrows, "note": "", "compact": True, "keep_cols": [2, 3],
+            "slide_rows": 3, "facts": [series for m in mk for _, series in m["parts"]]}  # fmt: skip
     frows = []
     for f in data["families"]:
         k = f"fam.{f['slug']}"
@@ -190,7 +192,10 @@ def overview(data: dict, vals: dict, today=None) -> dict:
                       cell(str(v(f"{k}.qorvo", f["Qorvo"]))),
                       cell(str(v(f"{k}.headline", f["headline"])) + (f"; {figs}" if figs else ""))])  # fmt: skip
     fams = {"kind": "table", "cols": ["Family", "Skyworks", "Qorvo", "Headline capability"],
-            "widths": [2.6, 1.2, 1.0, 5.6], "num_cols": [1, 2], "rows": frows, "note": "", "compact": True}  # fmt: skip
+            "widths": [2.6, 1.2, 1.0, 5.6], "num_cols": [1, 2], "rows": frows, "note": "", "compact": True,
+            "keep_cols": [3], "slide_rows": 5,
+            "facts": [str(v(f"fam.{f['slug']}.fig.{i}.part", g["mpn"])) for f in data["families"]
+                      for i, g in enumerate(f.get("figures") or [])]}  # fmt: skip
     links, n = [], 0
     while f"learn.{n}.label" in vals:
         host = urlparse(str(vals.get(f"learn.{n}.url") or "")).netloc.removeprefix("www.")
@@ -233,6 +238,7 @@ def facts_of(d: dict) -> list[str]:
                 for r in b["rows"]:
                     out.append(r[0]["t"])
                     out += [m[0] for c in r for m in c["marks"]] + [x for c in r for x in c["code"]]
+                out += b.get("facts") or []
             elif b["kind"] == "cols":
                 for c in b["cols"]:
                     out += [c["head"], *(i["t"] for i in c["items"]), *(m[0] for i in c["items"] for m in i["marks"])]

@@ -11,6 +11,8 @@ import pytest
 from pptx import Presentation
 
 from app.services import presentation_pptx as pp
+from app.services import share_doc as sd
+from app.services import share_pdf as spdf
 from app.services import share_reports as sr
 from app.services import site_guard
 
@@ -27,8 +29,11 @@ def drones(monkeypatch):
         return [{"kind": "title", "head": "Drones", "title": "Drones", "body": {"heading": "Drones", "date": today}},
                 *sr.ss.table("Drones", "Drones table", ["A", "B"], [["1", "2"]])]  # fmt: skip
 
+    def doc(data, vals, today=None):
+        return {**sd.automotive(data, vals, today), "key": "drones", "title": "Drones: test report", "head": "Drones"}
+
     entry = sr.ShareReport("drones", "Drones", "A test report.", rep.url, 2, sr.build_automotive, slides,
-                           "shareable/_automotive.html", rep)  # fmt: skip
+                           "shareable/_automotive.html", rep, doc=doc)  # fmt: skip
     monkeypatch.setattr(sr, "REGISTRY", [*sr.REGISTRY, entry])
     return entry
 
@@ -42,11 +47,13 @@ def test_an_extra_registry_entry_shows_as_a_row_in_the_pack_and_in_powerpoint(cl
     assert len(rows(html)) == 4
     last = unescape(rows(html)[-1])
     assert 'name="r" value="drones"' in last and "<b>Drones</b>" in last and "2 pages" in last
-    assert 'class="sh-open" href="/shareable/drones" data-lightbox="Drones"' in last and "Add to PDF" in last
+    assert 'class="sh-open" href="/shareable/drones" data-lightbox="Drones"' in last and "Include" in last
     assert client.get("/shareable/drones").status_code == 200  # its own page, via the registry
-    pack = client.get("/shareable/pack?r=drones,synergies").text
-    assert "Skyworks + Qorvo synergies + Drones: test report" in unescape(pack) and "5 / 5<" in pack
-    assert "/shareable/pptx?r=synergies,drones" in pack  # the pack's own PowerPoint link
+    pdf = client.get("/shareable/pdf?r=drones,synergies")
+    assert pdf.status_code == 200 and pdf.headers["content-type"] == spdf.MEDIA_TYPE
+    pages = spdf.texts(pdf.content)
+    assert "Skyworks + Qorvo synergies" in pages[0] and "Drones: test report" in "".join(pages)
+    assert f"page {len(pages)} / {len(pages)}" in pages[-1] and len(pages) <= 5
     r = client.get(f"{PPTX}?r=drones,synergies")
     assert r.status_code == 200
     texts = pp.texts(r.content)
@@ -72,7 +79,7 @@ def test_pptx_has_the_ticked_reports_in_list_order_with_tables_and_watermark(cli
     assert len(tables) >= 8
     every = [x for t in texts for x in t]
     assert "DRAFT" in every and any("Public information" in x for x in every)
-    assert "Combined at a glance" in every and "Where the two combine" in every and "Benefit" in every
+    assert "Combined at a glance" in every and "Where the two combine" in every and "New technology" in every
     assert not [h for x in every for h in site_guard.hits(x)]  # the public-safe word check
     # the text stays editable: titles are text boxes, not pictures
     assert not [sh for s in prs.slides for sh in s.shapes if sh.shape_type == 13]  # 13: picture (no logo set)
@@ -103,10 +110,10 @@ def test_pptx_refuses_when_the_word_check_finds_something(client, monkeypatch):
     assert client.get(f"{PPTX}?r=synergies").status_code == 409
 
 
-def test_download_as_powerpoint_button_sits_with_the_main_buttons(client):
+def test_create_pdf_and_powerpoint_sit_with_the_main_buttons(client):
     html = client.get("/shareable").text
     btns = html.split('class="sh-btns"', 1)[1].split("</span>", 1)[0]
-    assert btns.index(">Build a PDF<") < btns.index(">Download as PowerPoint<") < btns.index(">Build a presentation<")
+    assert btns.index(">Create PDF<") < btns.index(">Create PowerPoint<") < btns.index(">Build a presentation<")
     assert 'id="sh-pptx" data-href="/shareable/pptx"' in btns
 
 

@@ -11,6 +11,7 @@ import importlib
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from functools import lru_cache
 
 from app import yamlio
@@ -354,10 +355,12 @@ AUTOMOTIVE = te.Report("automotive", "share_automotive", "Automotive: technologi
 #      fields and a te.Report(...) for editing and storage, like AUTOMOTIVE above.
 #   3. Page: a body template app/web/templates/shareable/_<key>.html (one <section class="to-page"> per A4 page),
 #      like _automotive.html.
-#   4. Slides: a function in app/services/share_slides.py that returns the PowerPoint slides from (data, vals).
+#   4. PDF and slides: a content-model function in app/services/share_doc.py (data, vals, today) -> the sections and
+#      blocks, like automotive(); the A4 PDF (share_pdf.py) and the slides (share_slides.from_doc) are laid out from
+#      it, so all three versions carry the same facts.
 #   5. One ShareReport(...) entry in REGISTRY below. Nothing else: the report then shows on /shareable as a row (tap
-#      to preview, Add to PDF, Edit for the owner), in the combined PDF (/shareable/pack), in Download as PowerPoint
-#      (/shareable/pptx), and at /shareable/<key> (+ /edit) under the menu's "Reports" entry.
+#      to preview, tick, Edit for the owner), in Create PDF (/shareable/pdf), in Create PowerPoint (/shareable/pptx),
+#      and at /shareable/<key> (+ /edit) under the menu's "Reports" entry.
 #   tests/test_share_registry.py checks that an extra entry shows up in the list, the PDF and the PowerPoint.
 @dataclass(frozen=True)
 class ShareReport:
@@ -371,6 +374,14 @@ class ShareReport:
     body: str = ""  # the body template (its A4 pages); "" for the Technology overview, which has its own page
     edit: te.Report | None = None  # editing and stored values; None: the Technology overview's own
     pack_rank: int = 50  # place in the combined PDF (lower first); the list and PowerPoint follow REGISTRY's order
+    doc: Callable[..., dict] | None = None  # (data, vals, today) -> content model; None: share_doc.BUILDERS[key]
+
+    def content(self, data: dict, vals: dict, today=None) -> dict:
+        """The content model the PDF and the slides are laid out from (app/services/share_doc.py)."""
+        from app.services import share_doc as sd
+
+        make = self.doc or sd.BUILDERS[self.key]
+        return make({**data, "ip_note": PATENT_NOTE}, vals, today or date.today())
 
 
 REGISTRY: list[ShareReport] = [

@@ -10,3 +10,13 @@ _SEP = re.compile("[" + re.escape("".join(SEPARATORS)) + r"\s]")
 
 def normalize_pn(text: str | None) -> str:
     return _SEP.sub("", text or "").upper()
+
+
+def reel_q1_variants(key: str) -> list[str]:
+    """The same automotive ordering code with and without its reel letter: TI puts the reel "R" before the "Q1"
+    suffix (ISOW7841AQDWERQ1 is the reel of ISOW7841AQDWEQ1). Takes and returns normalised part numbers."""
+    if not key.endswith("Q1") or len(key) < 7:
+        return []
+    if key.endswith("RQ1"):
+        return [key[:-3] + "Q1"]
+    return [key[:-2] + "RQ1"]

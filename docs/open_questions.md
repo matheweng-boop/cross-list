@@ -39,6 +39,17 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
   can dismiss a suggestion; a design that does not fit leaves that diagram at once. The daily run looks for patterns
   in those answers and tightens or loosens the rules (docs/daily_update.md).
 
+## Settled (owner, 26 Oct 2026, data protection)
+
+- No customer names are stored unless they come from public sources the site has pulled itself (with the link); no
+  private customer-name list. The confidential-data check uses only patterns (e-mail, phone, "confidential",
+  "internal", quote-like prices) and public names already in the data.
+- Only the owner can approve data (no other approvers, guests never).
+- Every input, the owner's own included, is screened for patterns and potential insider information; flagged items wait
+  for the owner's approval (docs/plan_data_protection.md, section 2b).
+- Retention: 12 months (owner, 26 Oct 2026) for feedback, comments, lookup requests and the daily inbox files; then
+  deleted automatically.
+
 ## Settled (owner, 25 Oct 2026, radio market)
 
 - MarketIntelo ($1.8 B, digital radio tuners only): not linked to the radio-tuner-next case's market size; shown as an

@@ -1,0 +1,69 @@
+# TI isolated DC-DC power modules (owner, 26 Oct 2026). Values from the TI datasheet SNVSBY2A (revision A, June
+# 2021), read with pdftotext; page numbers are the datasheet's. Its safety certifications were "planned" then.
+source: ti.com datasheet
+manufacturers:
+- name: TI
+  role: competitor
+  website: https://www.ti.com
+packages:
+- code: SOIC-16 (DVE)
+  name: TI DVE 16-pin SO-MOD (wide-body SOIC with integrated transformer)
+  pin_count: 16
+  pitch_mm: 1.27
+  body_length_mm: 10.3
+  body_width_mm: 7.5
+  span_mm: 10.3
+  height_mm: 2.65
+datasheets:
+- file: ucc12051-q1.pdf
+  url: https://www.ti.com/lit/ds/symlink/ucc12051-q1.pdf
+  sha256: 50c7a30efb2ae52aecfd413ac90f9ca6b7a806b0fbac983bff0d212f67c99e69
+  revision: A
+  revision_date: 2021-06-01
+parts:
+- mpn: UCC12051QDVERQ1
+  manufacturer: TI
+  family: isolated_dcdc
+  description: 'UCC12051-Q1: Automotive 500-mW, 5-kVrms isolated DC/DC converter module with integrated transformer'
+  package: SOIC-16 (DVE)
+  pinout: [EN, GNDP, VINP, SYNC, SYNC_OK, NC, NC, NC, GNDS, NC, NC, NC, SEL, VISO, GNDS, GNDS]
+  datasheet: ucc12051-q1.pdf
+  datasheet_url: https://www.ti.com/lit/ds/symlink/ucc12051-q1.pdf
+  product_url: https://www.ti.com/product/UCC12051-Q1
+  notes: >-
+    The only orderable code in the datasheet addendum (2000-unit reel); the base number UCC12051QDVEQ1 is found as its
+    reel variant. Regulated 5.0 / 5.4 / 3.3 / 3.7 V output set by the SEL pin; 500 mW typical at 25 °C. Partial
+    alternative, not a cross: Skyworks Si88xx digital isolators with an integrated DC-DC controller (up to 5 W with an
+    external transformer and Schottky diode, si88x2x / Si88x4x datasheets) give isolated power plus data channels, but
+    they are not transformer-integrated modules.
+  lifecycle:
+    status: active
+    release_date: 2021-01-01
+    revision: A
+    revision_date: 2021-06-01
+    source: 'TI orderable addendum: ACTIVE; release date = first datasheet issue (January 2021)'
+  params:
+    construction: integrated-transformer module
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    working_voltage_vrms: 1200.0
+    vin_range_v: [4.5, 5.5]
+    vout_options_v: [3.3, 3.7, 5.0, 5.4]
+    output_power_mw: 500.0
+    cmti_kv_us: 100.0
+    qualification: automotive
+    temp_range_c: [-40.0, 125.0]
+    creepage_mm: 8.0
+  param_sources:
+    construction: ucc12051-q1.pdf p.1
+    isolation_rating_kvrms: ucc12051-q1.pdf p.1, p.6
+    isolation_class: ucc12051-q1.pdf p.6 (reinforced; VDE and UL certification planned in revision A)
+    working_voltage_vrms: ucc12051-q1.pdf p.5 (VIOWM, sine wave)
+    vin_range_v: ucc12051-q1.pdf p.4
+    vout_options_v: ucc12051-q1.pdf p.3 (SEL pin), p.7
+    output_power_mw: ucc12051-q1.pdf p.4 (typical, Ta = 25 °C)
+    cmti_kv_us: ucc12051-q1.pdf p.8 (100 V/ns minimum)
+    qualification: ucc12051-q1.pdf p.1 (AEC-Q100 Grade 1)
+    temp_range_c: ucc12051-q1.pdf p.4 (ambient)
+    creepage_mm: ucc12051-q1.pdf p.5 (> 8 mm)
+    pinout: ucc12051-q1.pdf p.3

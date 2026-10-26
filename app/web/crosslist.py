@@ -1,16 +1,20 @@
 """Products › Cross a list: paste part numbers, get the two result columns per part and an Excel download. Nothing
-pasted is stored (app/services/crosslist.py); only the owner's Right / Wrong answers on a shown pair are."""
+pasted is stored (app/services/crosslist.py); only the owner's Right / Wrong answers on a shown pair are, and, when
+the owner taps "Update cross-lists", the list's part numbers and the unknown ones
+(app/services/crosslist_lookups.py)."""
 
 from datetime import date
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.auth.session import principal, signed_in_owner
 from app.db import get_session
 from app.matching.rules import load_all_rules
+from app.models import CrossListLookup
 from app.services import crosslist as cl
+from app.services import crosslist_lookups as lk
 from app.services import export
 from app.web.routes import XLSX, templates
 
@@ -18,11 +22,12 @@ router = APIRouter()
 MAX_CHARS = 60_000
 
 
-def _ctx(request: Request, text: str, session: Session) -> dict:
+def _ctx(request: Request, text: str, session: Session, sent: int | None = None) -> dict:
     entries, over = cl.parse(text)
     rows = cl.cross_list(session, entries) if entries else []
     families = sorted({r.part.family for r in rows if r.part})
-    return {"text": text, "rows": rows, "sum": cl.summary(rows), "over": over, "max_lines": cl.MAX_LINES,
+    return {"text": text, "unknown": sum(1 for r in rows if lk.is_unknown(r)), "sent": sent,
+            "rows": rows, "sum": cl.summary(rows), "over": over, "max_lines": cl.MAX_LINES,
             "submitted": bool(text.strip()), "owner": signed_in_owner(request) is not None,
             "privacy": cl.PRIVACY_NOTE, "precheck": cl.PRECHECK_NOTE, "how": cl.HOW_NOTE, "lights": cl.LIGHTS,
             "light_help": cl.LIGHT_HELP, "accuracy": cl.accuracy(), "header": cl.EXPORT_HEADER,
@@ -32,8 +37,18 @@ def _ctx(request: Request, text: str, session: Session) -> dict:
 
 
 @router.get("/cross-list", response_class=HTMLResponse)
-def page(request: Request, session: Session = Depends(get_session)):
-    return templates.TemplateResponse(request, "cross_list.html", _ctx(request, "", session))
+def page(request: Request, lookup: int | None = None, sent: int = 0, session: Session = Depends(get_session)):
+    """With ?lookup=<id> ("Cross this list again" on Requests, owner only): the stored list, pre-filled and crossed."""
+    text, n_sent = "", None
+    if lookup is not None:
+        if signed_in_owner(request) is None:
+            raise HTTPException(403, "Only the owner can open a sent list.")
+        row = session.get(CrossListLookup, lookup)
+        if row is None:
+            raise HTTPException(404, "Lookup not found")
+        text = "\n".join(row.list_parts or [])
+        n_sent = len(row.unknown_parts or []) if sent else None
+    return templates.TemplateResponse(request, "cross_list.html", _ctx(request, text, session, n_sent))
 
 
 @router.post("/cross-list", response_class=HTMLResponse)
@@ -41,6 +56,23 @@ def run(request: Request, parts: str = Form(""), session: Session = Depends(get_
     """Compute only: the pasted list is read, crossed and shown; nothing is written."""
     ctx = _ctx(request, parts[:MAX_CHARS], session)
     return templates.TemplateResponse(request, "cross_list.html", ctx)
+
+
+@router.post("/cross-list/lookup")
+def send_lookup(request: Request, parts: str = Form(""), session: Session = Depends(get_session)):
+    """"Update cross-lists" (owner only): stores the unknown part numbers and the list's part numbers, as parsed
+    (no quantities, prices, names or other columns), for the hourly lookup run."""
+    if signed_in_owner(request) is None:
+        raise HTTPException(403, "Only the owner can send parts for lookup.")
+    text = parts[:MAX_CHARS]
+    entries, _ = cl.parse(text)
+    rows = cl.cross_list(session, entries) if entries else []
+    unknown = [r.key for r in rows if lk.is_unknown(r)]
+    if not unknown:
+        raise HTTPException(400, "No unknown parts in this list.")
+    p = principal(request)
+    row = lk.create(session, [e.text for e in entries], unknown, p.name if p else None)
+    return RedirectResponse(f"/cross-list?lookup={row.id}&sent=1", status_code=303)  # a reload does not send twice
 
 
 @router.post("/cross-list.xlsx")

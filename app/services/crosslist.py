@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 from app.matching.engine import BETTER, DIFFERENT, EQUAL, UNKNOWN, WORSE, CrossResult, compare_param, find_crosses
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
-from app.partnumbers import normalize_pn
+from app.partnumbers import normalize_pn, reel_q1_variants
 from app.services import cross_notes, lifecycle
 from app.services.queries import candidates_for, feedback_for
 
@@ -42,7 +42,8 @@ PRECHECK_NOTE = ("Pre-check from public datasheets. Green rows were checked spec
                  "before quoting to a customer.")  # fmt: skip
 HOW_NOTE = ("Drop-in: same package and pinout. A direct package equivalent (every priority 1 spec equal or better) "
             "comes first; without one, the package drop-in with the fewest and smallest priority 1 deviations. "
-            "Best functional fit: the closest priority 1 match in any package; left out when it is the drop-in part.")
+            "Best functional fit: the closest priority 1 match in any package; left out when it is the drop-in part. "
+            "When the drop-in is an Si86S part, the second column offers the best suitable Si86 part instead.")
 LIGHTS = {"green": "Green", "amber": "Amber", "red": "Red"}
 LIGHT_HELP = {
     "green": "direct package equivalent, priority 1 specs from datasheets on both sides",
@@ -140,11 +141,17 @@ def _known_prefix(key: str, keys: dict) -> str | None:
 
 def resolve(ix: Index, key: str, session: Session) -> Match:
     """Exact first; then an ordering-code variant (the pasted number with or without a reel / temperature / package
-    suffix of a known one, as the single search finds it by prefix); then the catalogue; else a suggestion."""
+    suffix of a known one, as the single search finds it by prefix, or the reel "R" before a trailing "Q1"); then
+    the catalogue; else a suggestion."""
     if not key:
         return Match()
     if key in ix.by_key:
         return Match(_pick(session, ix.by_key[key]), "exact")
+    for alt in reel_q1_variants(key):  # …RQ1 is the reel of …Q1 (TI automotive), and the other way round
+        if alt in ix.by_key:
+            return Match(_pick(session, ix.by_key[alt]), "variant")
+        if alt in ix.catalogue:
+            return Match(None, "catalogue", ix.catalogue[alt])
     pre = _known_prefix(key, ix.by_key)
     i = bisect.bisect_left(ix.keys, key)
     longer = []
@@ -267,9 +274,25 @@ def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult |
     fits = [r for r in pool if r.fit.fits]
     c1 = min(fits, key=drop_in_key) if fits else None
     c2 = min(pool, key=functional_key) if pool else None
+    if c1 is not None and is_si86s(c1.candidate.mpn):
+        # owner, 26 Oct 2026: "if a Si86S family is crossed, then offer Si86 as a second option if suitable" - the
+        # best Si86 (not Si86S) candidate the engine kept (it passed the function-defining and must-meet checks)
+        si86 = [r for r in pool if is_si86(r.candidate.mpn)]
+        if si86:
+            c2 = min(si86, key=functional_key)
     if c1 is not None and c2 is not None and c2.candidate.id == c1.candidate.id:
         c2 = None
     return c1, c2
+
+
+def is_si86s(mpn: str) -> bool:
+    return mpn.upper().startswith("SI86S")
+
+
+def is_si86(mpn: str) -> bool:
+    """An Si86 part outside the Si86S family (e.g. SI8641ET-IS)."""
+    m = mpn.upper()
+    return m.startswith("SI86") and not m.startswith("SI86S")
 
 
 # ---------------------------------------------------------------- words
@@ -461,6 +484,7 @@ class Row:
     n: int
     text: str
     count: int
+    key: str = ""  # normalised part number
     part: Part | None = None
     how: str = "none"
     catalogue: dict | None = None
@@ -495,8 +519,10 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
 
     fn = pipeline.fn_for_part(part)
     what = vocab.fn_label(fn) if fn else vocab.family_title(part.family)
-    if not any_ours:
-        return f"No {OURS} part for this function ({what}).", (f"/business/evidence/{fn}" if fn else None)
+    if not any_ours:  # e.g. an isolated DC-DC module (owner, 26 Oct 2026: UCC12051QDVERQ1)
+        form = next((pv.value for pv in part.params if pv.key == "construction"), None)
+        what = f"{what}, {form}" if form else what
+        return f"Function known ({what}), no {OURS} part in our data.", (f"/business/evidence/{fn}" if fn else None)
     case = session.scalar(select(Case.id).where(Case.fn == fn).order_by(Case.id.desc()).limit(1)) if fn else None
     link = f"/business/cases/{case}" if case else (f"/business/evidence/{fn}" if fn else "/business/opportunities")
     return f"Function known ({what}), no cross yet – see Opportunities › Gaps.", link
@@ -510,7 +536,7 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
     rows = []
     for i, e in enumerate(entries, 1):
         m = resolve(ix, e.key, session)
-        row = Row(i, e.text, e.n, how=m.how, catalogue=m.catalogue, suggestion=m.suggestion)
+        row = Row(i, e.text, e.n, e.key, how=m.how, catalogue=m.catalogue, suggestion=m.suggestion)
         rows.append(row)
         if m.part_id is None:
             if m.catalogue:
@@ -533,7 +559,10 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
             if r is None:
                 continue
             a = said.get((normalize_pn(part.mpn), normalize_pn(r.candidate.mpn)))
-            c = Column(r, cross_type(r, col), comment(r, col), (part.id, r.candidate.id) in verified,
+            kind = cross_type(r, col)
+            if col == 2 and c1 is not None and is_si86s(c1.candidate.mpn) and is_si86(r.candidate.mpn):
+                kind = "Si86 option · " + kind  # the owner's Si86S → Si86 rule
+            c = Column(r, kind, comment(r, col), (part.id, r.candidate.id) in verified,
                        a.verdict if a else None)  # fmt: skip
             if c.answer == "wrong":
                 c.verified = False

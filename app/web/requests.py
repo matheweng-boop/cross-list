@@ -10,8 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import AreaRequest, BlockFeedback, CrossRequest, IdeaRequest, Part
+from app.models import AreaRequest, BlockFeedback, CrossListLookup, CrossRequest, IdeaRequest, Part
 from app.partnumbers import normalize_pn
+from app.services import crosslist_lookups as lk
 from app.services import idea_requests as ir
 from app.web.routes import templates
 from app.web.urls import local_path
@@ -29,8 +30,10 @@ def _part_for(session: Session, mpn: str) -> Part | None:
 
 
 # kind -> label, and the statuses that count as open; the status names and labels stay with each kind's handler
-KINDS = {"part": "Part request", "diagram": "Diagram feedback", "area": "Area request", "idea": "Idea expansion"}
-OPEN = {"part": ("open", "in_progress"), "diagram": ("open", "agreed"), "area": ("new", "planned"), "idea": ir.OPEN}
+KINDS = {"part": "Part request", "diagram": "Diagram feedback", "area": "Area request", "idea": "Idea expansion",
+         "lookup": "Cross-list lookup"}  # fmt: skip
+OPEN = {"part": ("open", "in_progress"), "diagram": ("open", "agreed"), "area": ("new", "planned"), "idea": ir.OPEN,
+        "lookup": ("queued",)}  # fmt: skip
 
 
 @router.get("/requests")
@@ -50,6 +53,7 @@ def all_requests(request: Request, kind: str = "", show: str = "", session: Sess
     rows += [("diagram", f) for f in session.scalars(select(BlockFeedback))]
     rows += [("area", a) for a in session.scalars(select(AreaRequest))]
     rows += [("idea", i) for i in ir.by_slug(session).values()]
+    rows += [("lookup", v) for v in lk.views(session)]
     counts = {k: sum(1 for kk, r in rows if kk == k and r.status in OPEN[k]) for k in KINDS}
     if not show:
         rows = [(k, r) for k, r in rows if r.status in OPEN[k]]
@@ -57,7 +61,8 @@ def all_requests(request: Request, kind: str = "", show: str = "", session: Sess
         rows = [(k, r) for k, r in rows if k == kind]
     rows.sort(key=lambda kr: (kr[1].created_at is not None, kr[1].created_at or 0, kr[1].id), reverse=True)
     found = {r.id: _part_for(session, r.mpn) for k, r in rows if k == "part"}
-    statuses = {"part": STATUSES, "diagram": FEEDBACK_STATUS, "area": AREA_STATUSES, "idea": ir.STATUSES}
+    statuses = {"part": STATUSES, "diagram": FEEDBACK_STATUS, "area": AREA_STATUSES, "idea": ir.STATUSES,
+                "lookup": lk.STATUSES}  # fmt: skip
     ctx = {"rows": rows, "found": found, "statuses": statuses, "kinds": KINDS, "kind": kind, "show": show,
            "counts": counts}  # fmt: skip
     return templates.TemplateResponse(request, "manage/requests.html", ctx)
@@ -89,6 +94,17 @@ def idea_request_status(req_id: int, status: str = Form(...), session: Session =
     except ValueError:
         raise HTTPException(400, "Unknown status") from None
     return RedirectResponse("/manage/requests?kind=idea", status_code=303)
+
+
+@router.post("/manage/crosslist-lookups/{lookup_id:int}/delete")
+def delete_lookup(lookup_id: int, session: Session = Depends(get_session)):
+    """Delete a cross-list lookup (owner only: under /manage); its parts are no longer queued."""
+    row = session.get(CrossListLookup, lookup_id)
+    if row is None:
+        raise HTTPException(404, "Lookup not found")
+    session.delete(row)
+    session.commit()
+    return RedirectResponse("/manage/requests?kind=lookup", status_code=303)
 
 
 @router.post("/requests")

@@ -1,0 +1,18 @@
+# Isolated DC-DC converters (owner, 26 Oct 2026: "add something for UCC12051QDVERQ1"). A family entry only, so a
+# pasted isolated DC-DC part is recognised and shown with its datasheet values: no crossing rules yet (every
+# parameter is priority 3, for information) and no Skyworks/Qorvo part in this family. Skyworks Si88xx are digital
+# isolators with a DC-DC controller that need an external transformer (family digital_isolator), not modules.
+family: isolated_dcdc
+title: Isolated DC-DC converters
+params:
+  - {key: construction, label: Construction, priority: 3, kind: category}
+  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 3, kind: number, direction: higher}
+  - {key: isolation_class, label: Isolation class, priority: 3, kind: ordinal, levels: [basic, reinforced]}
+  - {key: working_voltage_vrms, label: Working isolation voltage, unit: Vrms, priority: 3, kind: number, direction: higher}
+  - {key: vin_range_v, label: Input voltage, unit: V, priority: 3, kind: range}
+  - {key: vout_options_v, label: Output voltage options, unit: V, priority: 3, kind: set}
+  - {key: output_power_mw, label: Output power (typ.), unit: mW, priority: 3, kind: number, direction: higher}
+  - {key: cmti_kv_us, label: CMTI (min.), unit: kV/µs, priority: 3, kind: number, direction: higher}
+  - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 3, kind: ordinal, levels: [commercial, industrial, automotive]}
+  - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 3, kind: range}
+  - {key: creepage_mm, label: Creepage, unit: mm, priority: 3, kind: number, direction: higher}

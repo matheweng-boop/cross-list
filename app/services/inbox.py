@@ -98,6 +98,12 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     cx = crosslist.inbox_lines(session, start)
     out += cx
     cx_new = any(x.startswith("- ") for x in cx)
+    # Cross a list › "Update cross-lists": parts queued for a datasheet lookup (also read by the hourly lookup run)
+    from app.services import crosslist_lookups
+
+    lookups = crosslist_lookups.inbox_lines(session)
+    out += lookups
+    cx_new = cx_new or lookups[-1] != "None."
 
     # the owner's answers on the reference designs matched to the library diagrams (owner, 25 Oct 2026: matching
     # "based on feedback"): the run looks for patterns and tunes app/services/refmatch.py (docs/daily_update.md)

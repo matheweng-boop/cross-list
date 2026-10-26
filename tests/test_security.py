@@ -81,7 +81,7 @@ def test_guest_note_and_auth_script_have_no_outside_sources(locked):
 def test_only_shareable_previews_may_be_framed_and_only_by_this_site(client):
     """Owner, 25 Oct 2026: Shareable previews open in a lightbox (an iframe on the same site); every other page stays
     unframeable."""
-    for path in ("/shareable/pack?r=synergies", "/shareable/synergies", "/shareable/presentation/preview?s=title"):
+    for path in ("/shareable/technology-overview", "/shareable/synergies", "/shareable/presentation/preview?s=title"):
         r = client.get(path)
         csp = r.headers["content-security-policy"]
         assert r.headers["x-frame-options"] == "SAMEORIGIN" and "frame-ancestors 'self'" in csp, path

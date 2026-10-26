@@ -98,10 +98,14 @@ def idea_request_status(req_id: int, status: str = Form(...), session: Session =
 
 @router.post("/manage/crosslist-lookups/{lookup_id:int}/delete")
 def delete_lookup(lookup_id: int, session: Session = Depends(get_session)):
-    """Delete a cross-list lookup (owner only: under /manage); its parts are no longer queued."""
+    """Delete a cross-list lookup (owner only: under /manage); its parts are no longer queued and its volume
+    entries are deleted."""
     row = session.get(CrossListLookup, lookup_id)
     if row is None:
         raise HTTPException(404, "Lookup not found")
+    from app.services import demand
+
+    demand.delete_for_lookup(session, lookup_id)  # its lifetime volumes go with it
     session.delete(row)
     session.commit()
     return RedirectResponse("/manage/requests?kind=lookup", status_code=303)

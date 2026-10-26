@@ -51,7 +51,17 @@ from app.services.queries import (
 from app.web import labels, nav, review_history
 
 router = APIRouter()
+_SHARE_DOC = re.compile(r"^/shareable/(pack|presentation/preview|technology-overview|synergies|automotive)$")
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+# a shareable document (report, pack, presentation preview) carries no reference to the site (owner, 26 Oct 2026)
+def _shareable_document(path: str | None) -> bool:
+    from app.services import share_reports as sr
+
+    path = path or ""
+    return bool(_SHARE_DOC.match(path)) or path.removeprefix("/shareable/") in {r.key for r in sr.REGISTRY}
+
+
+templates.env.tests["shareable_document"] = _shareable_document
 templates.env.globals.update(
     lifecycle_badge=lifecycle.badge,
     category_labels=CATEGORY_LABELS,

@@ -62,6 +62,10 @@
     <span class="te-count te-ptotal">at most {{ most }} paragraphs, {{ most_chars }} characters together</span>
     {% if key in over %}<span class="te-tag">edited</span><button type="submit" class="te-mini" formaction="{{ edit_url }}/reset" name="field" value="{{ key }}">Reset to default</button>{% endif %}</p>
   {% if errors[key] %}<p class="te-msg" role="alert">{{ errors[key] }}</p>{% endif %}
+  {% if ('slide.' ~ s) in specs %}{# the short text of this section's PowerPoint slide (owner, 26 Oct 2026) #}
+  <div class="te-slide"><b>Slide text (PowerPoint)</b> {{ F('slide.' ~ s) }}
+    <span class="small muted">Leave empty to use the first sentence: “{{ vals[key]|map(attribute='text')|join(' ')|first_sentence }}”</span></div>
+  {% endif %}
 </div>
 {% else %}{% for p in vals[key] %}<p class="{{ cls }}">{{ p.text }}</p>{% endfor %}{% endif %}
 {% endmacro %}

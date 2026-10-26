@@ -66,6 +66,9 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
         ensure_owner(session)
         # the owner deleted the retired commercial inputs (ASPs and volumes), 22 Oct 2026: nothing proprietary is kept
         session.execute(delete(BusinessInput))
+        from app.services import demand  # owner volume estimates: 12 months, then deleted
+
+        demand.purge(session)
         empty = session.scalar(select(func.count(Part.id))) == 0
         if get_settings().load_real_on_start:
             load_real_if_changed(session)
@@ -237,6 +240,9 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.crosslist import router as crosslist_router  # Products › Cross a list (26 Oct 2026)
 
     app.include_router(crosslist_router)
+    from app.web.data_flow import router as data_flow_router  # Data management › Data flow (26 Oct 2026)
+
+    app.include_router(data_flow_router)
     app.include_router(digest_router)
     app.include_router(people_router)
     return app

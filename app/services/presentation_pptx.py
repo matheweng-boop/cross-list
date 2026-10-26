@@ -128,7 +128,7 @@ def _frame(prs, deck_title: str, today, wm_text: str, n: int, total: int, logo: 
 
 
 def _title(slide, title: str):
-    _text(slide, MX, Inches(0.75), W - 2 * MX, Inches(0.75), title, 28 if len(title) < 60 else 22, bold=True,
+    _text(slide, MX, Inches(0.75), W - 2 * MX, Inches(0.75), title, 30 if len(title) < 50 else 24, bold=True,
           anchor=MSO_ANCHOR.MIDDLE)  # fmt: skip
 
 
@@ -270,30 +270,81 @@ def _facts(slide, b: dict):
         _column(slide, MX, y, W - 2 * MX, BODY_BOTTOM - y, "Typical specifications of our parts", specs, size)
 
 
+def _lead(slide, text: str, y, size: float = 18) -> int:
+    """The slide's one short message under the headline; returns the height it took."""
+    if not text:
+        return 0
+    h = Inches(0.45) if len(text) < 95 else Inches(0.8)
+    _text(slide, MX, y, W - 2 * MX, h, text, size, color=MUTED)
+    return h + Inches(0.15)
+
+
 def _glance(slide, b: dict):
-    y = BODY_TOP
-    if b.get("lead"):
-        _text(slide, MX, y, W - 2 * MX, Inches(0.9), b["lead"], 16, color=MUTED)
-        y += Inches(1.0)
+    y = BODY_TOP + _lead(slide, b.get("lead", ""), BODY_TOP, 20)
     facts = b.get("facts") or []
     n = max(1, len(facts))
-    gap = Inches(0.2)
+    gap = Inches(0.25)
     tw = (W - 2 * MX - gap * (n - 1)) // n
+    notes = any(f.get("note") for f in facts)
+    th = Inches(2.1 if notes else 1.8)
+    y = max(y, BODY_TOP + Inches(0.9))
     for i, f in enumerate(facts):
-        sh, tf = _box(slide, MX + i * (tw + gap), y, tw, Inches(1.6), fill=SOFT, line=None,
-                      shape=MSO_SHAPE.ROUNDED_RECTANGLE)  # fmt: skip
+        x = MX + i * (tw + gap)
+        sh, tf = _box(slide, x, y, tw, th, fill=SOFT, line=None)
+        _box(slide, x, y, tw, Inches(0.06), fill=ACCENT)
         tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tf.margin_left = tf.margin_right = Inches(0.15)
         p = tf.paragraphs[0]
-        p.alignment = PP_ALIGN.CENTER
-        _run(p, f.get("num", ""), 32, True, ACCENT)
+        _run(p, f.get("num", ""), 36 if n <= 4 else 30, True, ACCENT)
         q = tf.add_paragraph()
-        q.alignment = PP_ALIGN.CENTER
-        _run(q, f.get("label", ""), 14, color=INK)
+        _run(q, f.get("label", ""), 16 if n <= 4 else 14, color=INK)
+        if f.get("note"):
+            q = tf.add_paragraph()
+            q.space_before = Pt(4)
+            _run(q, f["note"], 11, color=MUTED)
     if b.get("pairs"):
-        _, tf = _box(slide, MX, y + Inches(2.0), W - 2 * MX, Inches(1.6))
+        _, tf = _box(slide, MX, y + th + Inches(0.4), W - 2 * MX, Inches(1.6))
         p = tf.paragraphs[0]
         _run(p, "Where the two combine: ", 16, True)
         _run(p, " · ".join(b["pairs"]), 16)
+
+
+WHO_RGB = {"Skyworks": SKY, "Qorvo": QOR, "Both": ACCENT}
+TINT_RGB = {"Skyworks": RGBColor(0xE8, 0xF0, 0xFA), "Both": SOFT, "Qorvo": RGBColor(0xFC, 0xED, 0xE6)}
+
+
+def _cols(slide, b: dict):
+    """Three company columns (Shareable reports): a tinted heading, one short line, then the items as bullets."""
+    y = BODY_TOP + _lead(slide, b.get("lead", ""), BODY_TOP)
+    cols = b.get("cols") or []
+    n = max(1, len(cols))
+    gap = Inches(0.3)
+    cw = (W - 2 * MX - gap * (n - 1)) // n
+    most = max((len(c.get("items") or []) for c in cols), default=1)
+    lines = any(c.get("line") for c in cols)
+    size = 16 if most <= 5 else 14 if most <= 6 or not lines else 13
+    bottom = BODY_BOTTOM - (Inches(0.4) if b.get("note") else 0)
+    for i, c in enumerate(cols):
+        x = MX + i * (cw + gap)
+        who = c.get("who", "")
+        _text(slide, x, y, cw, Inches(0.5), c.get("head", ""), 18, bold=True, color=WHO_RGB.get(who, INK),
+              fill=TINT_RGB.get(who, SOFT), anchor=MSO_ANCHOR.MIDDLE)  # fmt: skip
+        _box(slide, x, y + Inches(0.5), cw, Inches(0.04), fill=WHO_RGB.get(who, ACCENT))
+        top = y + Inches(0.62)
+        if c.get("line"):
+            _text(slide, x, top, cw, Inches(0.55), c["line"], 12, color=MUTED)
+            top += Inches(0.6)
+        _, tf = _box(slide, x, top, cw, bottom - top)
+        for j, item in enumerate(c.get("items") or []):
+            p = tf.paragraphs[0] if j == 0 else tf.add_paragraph()
+            label, _, tag = str(item).partition(" · ")
+            _run(p, "•  ", size, True, WHO_RGB.get(who, ACCENT))
+            _run(p, label, size)
+            if tag:
+                _run(p, f"  {tag}", size * 0.75, True, MUTED)
+            p.space_after = Pt(size * 0.4)
+    if b.get("note"):
+        _text(slide, MX, BODY_BOTTOM - Inches(0.35), W - 2 * MX, Inches(0.35), b["note"], 11, color=MUTED)
 
 
 def _closing(slide, b: dict):
@@ -303,22 +354,56 @@ def _closing(slide, b: dict):
           align=PP_ALIGN.CENTER)  # fmt: skip
 
 
+def _pairs(slide, b: dict):
+    """Skyworks + Qorvo pairs as cards, at most 3 per slide: the pair, why it goes together, an example, the benefit."""
+    y = BODY_TOP + _lead(slide, b.get("lead", ""), BODY_TOP)
+    items = b.get("items") or []
+    bottom = BODY_BOTTOM - (Inches(0.4) if b.get("note") else Inches(0.12))
+    gap = Inches(0.18)
+    ch = min(Inches(1.5), (bottom - y - gap * (len(items) - 1)) // max(1, len(items)))
+    for i, it in enumerate(items):
+        top = y + i * (ch + gap)
+        _box(slide, MX, top, W - 2 * MX, ch, fill=RGBColor(0xFA, 0xFB, 0xFD), line=LINE)
+        _box(slide, MX, top, Inches(0.07), ch, fill=ACCENT)
+        _, tf = _box(slide, MX + Inches(0.2), top + Inches(0.06), W - 2 * MX - Inches(2.5), ch - Inches(0.1))
+        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = tf.paragraphs[0]
+        _run(p, f"{it.get('n', i + 1)}.  ", 17, True, ACCENT)
+        _run(p, "Skyworks ", 17, True, SKY)
+        _run(p, it.get("skyworks", ""), 17, True)
+        _run(p, "  +  ", 17, True, MUTED)
+        _run(p, "Qorvo ", 17, True, QOR)
+        _run(p, it.get("qorvo", ""), 17, True)
+        q = tf.add_paragraph()
+        q.space_before = Pt(3)
+        _run(q, it.get("line", ""), 14)
+        if it.get("ex"):
+            q = tf.add_paragraph()
+            q.space_before = Pt(3)
+            _run(q, f"{it.get('ex_word', 'For example')} ", 12, color=MUTED)
+            for j, x in enumerate(it["ex"]):
+                _run(q, (" with " if j else ""), 12, color=MUTED)
+                _run(q, x, 12, mono=True)
+        _text(slide, W - MX - Inches(2.3), top, Inches(2.15), ch, it.get("benefit", ""), 13,
+              bold=True, color=ACCENT, align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)  # fmt: skip
+    if b.get("note"):
+        _text(slide, MX, BODY_BOTTOM - Inches(0.35), W - 2 * MX, Inches(0.35), b["note"], 11, color=MUTED)
+
+
 def _table(slide, b: dict):
-    """A native table (the Shareable reports, app/services/share_slides.py): a header row, then text rows; a short
-    lead above and a note below. Font size follows the amount of text, so the table stays inside the body."""
+    """A native table (the Shareable reports, app/services/share_slides.py): the slide's short message, a header row
+    and at most about 6 short rows, a note below. Company columns are coloured Skyworks / Qorvo / Both."""
     cols, rows = list(b.get("cols") or []), [list(r) for r in b.get("rows") or []]
     if not cols:
         return
-    y = BODY_TOP
-    if b.get("lead"):
-        size = 14 if len(b["lead"]) < 260 else 12
-        _text(slide, MX, y, W - 2 * MX, Inches(0.75), b["lead"], size, color=MUTED)
-        y += Inches(0.8)
+    y = BODY_TOP + _lead(slide, b.get("lead", ""), BODY_TOP)
     bottom = BODY_BOTTOM - (Inches(0.45) if b.get("note") else 0)
-    chars = sum(len(str(c)) for r in rows for c in r) + 40 * len(rows)
-    size = max(9.0, min(14.0, 14 * (1200 / max(chars, 1)) ** 0.5))
+    longest = max((sum(len(str(c)) for c in r) for r in rows), default=0)
+    chars = sum(len(str(c)) for r in rows for c in r)
+    size = 16.0 if longest < 70 and len(rows) <= 5 else 14.0 if longest < 150 or chars < 950 else 12.0
     width = W - 2 * MX
-    gf = slide.shapes.add_table(len(rows) + 1, len(cols), MX, y, width, min(bottom - y, Inches(0.42) * (len(rows) + 1)))
+    row_h = Inches(0.5 if size >= 14 else 0.42)
+    gf = slide.shapes.add_table(len(rows) + 1, len(cols), MX, y, width, min(bottom - y, row_h * (len(rows) + 1)))
     t = gf.table
     widths = [float(x) for x in b.get("widths") or []]
     if len(widths) == len(cols):
@@ -328,17 +413,30 @@ def _table(slide, b: dict):
     else:
         for i in range(len(cols)):
             t.columns[i].width = Emu(int(width / len(cols)))
+    who_cols = set(b.get("who_cols") or [])
     for i, head in enumerate(cols):
-        _run(_cell(t.cell(0, i), size, ACCENT), str(head), size, True, RGBColor(0xFF, 0xFF, 0xFF))
+        p = _cell(t.cell(0, i), size, ACCENT)
+        _run(p, str(head), size * 0.9, True, RGBColor(0xFF, 0xFF, 0xFF))
+        t.cell(0, i).vertical_anchor = MSO_ANCHOR.MIDDLE
     for r, row in enumerate(rows, start=1):
         bg = RGBColor(0xFF, 0xFF, 0xFF) if r % 2 else RGBColor(0xF6, 0xF8, 0xFA)
         for c in range(len(cols)):
-            _run(_cell(t.cell(r, c), size, bg), str(row[c] if c < len(row) else ""), size, c == 0)
+            text = str(row[c] if c < len(row) else "")
+            cell = t.cell(r, c)
+            cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p = _cell(cell, size, bg)
+            if c in who_cols:
+                who, _, tag = text.partition(" · ")
+                _run(p, who, size * 0.9, True, WHO_RGB.get(who, INK))
+                if tag:
+                    _run(p, f"  {tag}", size * 0.7, color=MUTED)
+            else:
+                _run(p, text, size, c == 0)
     if b.get("note"):
         _text(slide, MX, BODY_BOTTOM - Inches(0.4), W - 2 * MX, Inches(0.4), b["note"], 11, color=MUTED)
 
 
-BODIES = {"table": _table,
+BODIES = {"table": _table, "cols": _cols, "pairs": _pairs,
           "bullets": _points, "agenda": _points, "diagram": _diagram, "parts": _parts, "together": _together,
           "facts": _facts, "glance": _glance, "closing": _closing}  # fmt: skip
 

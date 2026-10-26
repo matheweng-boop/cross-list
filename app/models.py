@@ -698,6 +698,22 @@ class CrossListLookup(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
+class DemandEntry(Base):
+    """One owner estimate of a part's lifetime volume, entered with "Update cross-lists" on Products › Cross a list
+    (owner, 26 Oct 2026). Confidential: owner pages only, never in exports, shareable outputs, the inbox or repo files;
+    deleted after 12 months (app/services/demand.py). By the owner's safeguard these five fields and nothing else:
+    no customer, no note, no price."""
+
+    __tablename__ = "demand_entries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    part: Mapped[str] = mapped_column(String(100), index=True)  # the part number as resolved
+    fn: Mapped[str | None] = mapped_column(String(80), index=True)  # block-catalogue function, if known
+    volume: Mapped[int] = mapped_column(Integer)  # lifetime pieces, one of demand.STEPS
+    day: Mapped[date] = mapped_column(Date, index=True)
+    lookup_id: Mapped[int] = mapped_column(Integer, index=True)  # the CrossListLookup it was sent with
+
+
 # --- Sign-in with passkeys and invited guests (owner, 23 Oct 2026) ---------------------------------------------------
 # The older `User` table above stays as it is (it carries no role); the people who can sign in are `Account` rows.
 

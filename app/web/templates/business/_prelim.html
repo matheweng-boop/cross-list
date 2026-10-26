@@ -18,6 +18,7 @@
 
 <h1>{{ case.title }}</h1>
 {% set opp = case.opportunity %}
+{% import "_demand.html" as dmd %}{{ dmd.case_line(demand_seen(request), opp.fn) }}
 <p class="pc-feas">{% if opp.score %}<span class="small">Opportunity score</span> {{ score_chip(opp.score) }} <small class="muted">· {{ label(opp.fn) }} at distance {{ opp.headline.distance }} ({{ opp.headline.feature }})</small>{% elif opp.fn %}<small class="muted">{{ label(opp.fn) }}: not in the block diagrams, no Opportunity score</small>{% endif %}{{ found_in(opp.fn) }}
   · <span class="small">confidence</span> <span class="pc-conf c-{{ opp.confidence }}" title="the score's confidence{{ ', one step lower: a reviewer disagreed with ' ~ opp.disputed|join(', ') if opp.disputed }}">{{ opp.confidence }}{{ ' ↓' if opp.disputed }}</span></p>
 {% if opp.feasibility %}<p class="pc-feas">{{ fz.feas(opp.feasibility, r.feasibility_why) }} <span class="small muted">{{ r.feasibility_why }}</span>

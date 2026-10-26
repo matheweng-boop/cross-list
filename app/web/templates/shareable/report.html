@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 {# A Shareable report page (Skyworks + Qorvo synergies, Automotive): the body template holds the print pages; editing,
-   watermark, header band and Save as PDF work as on the Technology overview. #}
+   watermark and header band work as on the Technology overview; Create PDF / Create PowerPoint download the files. #}
 <link rel="stylesheet" href="/static/shareable.css">
 {% set me = signed_in(request) %}
 {% from "shareable/_macros.html" import F with context %}
@@ -40,10 +40,12 @@
   </fieldset>
 {% else %}
   <div class="to-actions">
-    <button type="button" class="to-print" onclick="window.print()">Save as PDF</button>
+    {% set fq = 'r=' ~ key ~ '&wm=' ~ o.wm ~ ('&wmt=' ~ o.wm_text|urlencode if o.wm == 'custom' else '') %}
+    <a href="/shareable/pdf?{{ fq }}" role="button" class="to-pdf" download>Create PDF</a>
+    <a href="/shareable/pptx?{{ fq }}" role="button" class="outline to-pptx" download>Create PowerPoint</a>
     {% if me and me.is_owner %}<a href="{{ edit_url }}" role="button" class="outline to-edit">Edit</a>{% endif %}
     <a href="/shareable#build-pdf" class="small">Combine with other reports</a>
-    <span class="small muted">Opens the print dialog: choose “Save as PDF” and A4. {{ o.pages }} pages; public information only.</span>
+    <span class="small muted">A4 PDF, at most {{ o.pages }} pages; public information only.</span>
     {% if message %}<span class="small" role="status">{{ message }}</span>{% endif %}
   </div>
 {% endif %}

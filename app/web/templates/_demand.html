@@ -1,0 +1,7 @@
+{# Owner-only lifetime demand lines (app/services/demand.py). Callers pass demand_seen(request), which is None for a
+   guest, for nobody signed in and on Shareable outputs, so nothing renders there. #}
+{% macro line(t, lead='Lifetime demand seen', tag='p') %}{% if t %}<{{ tag }} class="dm-line small"><span class="dm-tag" title="Your rough lifetime volume estimates from Cross a list › Update cross-lists; only you see them; kept 12 months">Owner only</span> {{ lead }}: <b>{{ demand_fmt(t.volume) }}</b> over {{ t.n }} request{{ 's' if t.n != 1 }} <span class="muted">· {{ t.first|date('short') }}{% if t.last != t.first %} – {{ t.last|date('short') }}{% endif %}</span></{{ tag }}>{% endif %}{% endmacro %}
+
+{% macro case_line(dm, fn) %}{% set t = dm.fn(fn) if dm else none %}{% if t %}<p class="dm-line small"><span class="dm-tag">Owner only</span> Demand seen (owner estimates): <b>{{ demand_fmt(t.volume) }}</b> lifetime over {{ t.n }} request{{ 's' if t.n != 1 }}, {{ t.parts|length }} part{{ 's' if t.parts|length != 1 }} ({{ t.parts.keys()|join(', ') }})
+  {%- set sc = dm.scores.get(fn) if dm.scoring else none %}{% if sc and sc.with_seen is not none %} · score with demand seen <b>{{ sc.with_seen }}</b> <span class="muted">(shared score {{ sc.score }}, unchanged)</span>{% endif %}
+  · <a href="/business/reports#demand-seen">All demand seen</a></p>{% endif %}{% endmacro %}

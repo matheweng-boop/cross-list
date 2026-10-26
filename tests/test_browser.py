@@ -12,6 +12,8 @@ from urllib.parse import quote
 
 import pytest
 
+from tests.conftest import PAGE_TIMEOUT
+
 expect = pytest.importorskip("playwright.sync_api").expect
 
 pytestmark = pytest.mark.browser
@@ -49,7 +51,7 @@ def page(chromium, live_server):
     watch = Watch(live_server)
     ctx = chromium.new_context(base_url=live_server, viewport=WIDE)
     pg = watch.attach(ctx.new_page())
-    pg.set_default_timeout(10_000)
+    pg.set_default_timeout(PAGE_TIMEOUT)
     yield pg
     ctx.close()
     phone = chromium.new_context(viewport=PHONE, is_mobile=True, has_touch=True)

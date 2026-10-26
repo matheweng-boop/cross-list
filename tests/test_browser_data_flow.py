@@ -35,7 +35,8 @@ def test_drag_connect_save_reload_at_ipad_size(chromium, live_server):
     page.set_default_timeout(10_000)
     try:
         page.goto("/manage/data-flow")
-        expect(page.locator("#df-svg .lane")).to_have_count(4)
+        expect(page.locator("#df-svg .lane")).to_have_count(5)
+        expect(page.locator("#df-svg .row-band")).to_have_count(2)  # the cross and the research process
         n_nodes = page.locator("#df-svg .node").count()
         assert n_nodes >= 25
         n_edges = page.locator("#df-svg .edge").count()

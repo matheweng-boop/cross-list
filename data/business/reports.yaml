@@ -61,6 +61,103 @@
 # Thread lines: every main section of a report body ends with <p class="rpt-thread"><b>For the decision:</b> ...</p>;
 # a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
+  - slug: auto-wifi-antenna
+    gist: "Cars move to Wi-Fi 6E/7 next to V2X; with Qorvo we cover the antenna module, but lack an automotive 5/6 GHz Wi-Fi FEM."
+    abstract:
+      - "About 99 M car Wi-Fi devices ship in 2026, 21 % 6 GHz-capable; first Wi-Fi 7 car starts production 2027."
+      - "We have automotive switches, V2X, GNSS and coexistence filters; gaps: Wi-Fi 7 FEM, filters still Preview, a 5/6 GHz splitter."
+      - "Decide whether to ask the Wi-Fi BU for an automotive 5/6 GHz FEM and to move the filters to production."
+    title: "Wi-Fi 6, 6E and 7 in cars, Wi-Fi and antenna synergies, and the gaps we could fill"
+    kind: report
+    area: Automotive connectivity
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "The first gaps reuse consumer Wi-Fi 7 dies and BAW filters we already make, qualified for cars: new parts from technology we have"
+    date: 2026-10-26
+    status: draft
+    see_also: [auto-wifi7-fem, auto-cv2x-fe, auto-uwb-15-4ab, filters-1-11ghz]
+    question: "Where do Wi-Fi 6, 6E and 7 sit in cars, which Skyworks and Qorvo parts fit today, where do Wi-Fi and the antenna
+      module give us synergies, which gaps or new technologies could we fill, and what are the next growth topics?"
+    summary: >-
+      Research topic from the owner's comments of 26 Oct 2026. Wi-Fi sits in the head unit, the TCU, rear-seat screens and
+      the roof antenna module, right next to V2X; about 99 M automotive Wi-Fi devices ship in 2026, 21 % of them 6 GHz-capable,
+      and the first Wi-Fi 7 car starts production in 2027. With Qorvo we cover almost every block of a roof antenna module
+      (automotive switches, V2X, GNSS, cellular, UWB, coexistence BAW), but only 3 of 89 Wi-Fi FEMs are AEC-Q and none is a
+      Wi-Fi 6/7 power amplifier at 5 or 6 GHz. Five gaps: an automotive Wi-Fi 7 FEM at 5/6 GHz (AEC-Q100 Grade 2), the 5–7 GHz
+      coexistence filters out of Preview, an automotive 5/6 GHz multiplexer for multi-link, UWB channel 5 inside the 6 GHz
+      Wi-Fi band, and an automotive antenna tuner (weak evidence). Next wave: Wi-Fi 8 (2028), Wi-Fi sensing and positioning.
+      Builds on the business case auto-wifi7-fem.
+    tags: [Wi-Fi 6, Wi-Fi 6E, Wi-Fi 7, Wi-Fi 8, smart antenna, roof module, coexistence, MLO, Wi-Fi sensing, antenna tuner,
+      UWB, V2X, AEC-Q100, automotive]
+    sources: "BizDev catalogue with the AEC-Q rule, Systems library, Cross-sell pairs and 4,186 public reference designs; 8 public
+      web requests (IEEE 802.11 timelines, Murata, MediaTek, Skyworks) and 6 web searches; sources of the auto-wifi7-fem case"
+    decision: Should we fill the automotive Wi-Fi gaps, an AEC-Q100 Wi-Fi 7 FEM at 5/6 GHz and the coexistence filters in
+      production, and sell them with our antenna-module parts as one set?
+    answer:
+      text: 'Probably yes for the filters and the 5/6 GHz FEM (est): both reuse dies and filters we have, and the filters fit every
+        car with Wi-Fi, even with an on-chip amplifier. The FEM pays only where Qualcomm''s bundle leaves room; the roof radio head
+        stays with the business case until a carmaker confirms Wi-Fi at the roof.'
+      conf: low
+    needed_now:
+    - 'Wi-Fi BU: can SKY85639-11 / SKY85509-11 (or QPF4659 / QPF4507) dies pass AEC-Q100 Grade 2 at 105 °C without a redesign?'
+    - 'Filter BU: production dates for SKY5A1005/1006/1008, and how steep a 5.925 GHz edge BAW can make'
+    - 'One module maker (u-blox, LG Innotek or Murata type): would they place a non-Qualcomm FEM or our coexistence filter?'
+    say_externally: Cars are moving to Wi-Fi 6E and Wi-Fi 7, often in the same roof module as 5G, GNSS and V2X. Skyworks, with
+      Qorvo, sells automotive front ends, switches and filters for most of the radios in that module. We would like to learn how
+      you plan the Wi-Fi front end and the filtering between Wi-Fi and V2X in your next design.
+    next_steps:
+    - what: Ask whether our consumer Wi-Fi 7 FEM dies at 5 and 6 GHz pass AEC-Q100 Grade 2 without a redesign, and at what cost
+      who: Wi-Fi BU
+      why: Decides whether gap 1 is a qualification step or a new chip, and so the timing of the whole set.
+      case: auto-wifi7-fem
+    - what: Ask for production dates of SKY5A1005/1006/1008 and a coexistence test report against −37 dBm/MHz at the V2X edge
+      who: Filter BU
+      why: The filters sell into every car with Wi-Fi and V2X, even where the chip has its own amplifier.
+    - what: Ask one Wi-Fi module maker and one roof-antenna maker which front end and filters they use for Wi-Fi 7 multi-link
+      who: Module maker and antenna Tier-1, through our FAE
+      why: Confirms gaps 3 to 5 (multi-link splitter, UWB next to 6 GHz Wi-Fi, antenna tuner) before any product work.
+    bu_opener:
+      question: Cars are getting Wi-Fi 6E and 7 right next to V2X, often in one roof module. Should we fill our two automotive
+        Wi-Fi gaps, an AEC-Q100 Wi-Fi 7 FEM at 5/6 GHz and the coexistence filters in production, and sell them with the
+        switches, V2X, GNSS and UWB parts we already have for that module?
+      pros:
+      - With Qorvo we sell almost every block of a roof antenna module, all automotive grade
+      - Consumer Wi-Fi 7 FEMs and automotive coexistence BAW already exist; qualification, not invention
+      - Coexistence filters fit every design, even with an on-chip amplifier
+      cons:
+      - Only 3 of 89 Wi-Fi FEMs are AEC-Q, none a Wi-Fi 6/7 amplifier at 5 or 6 GHz
+      - Qualcomm bundles its own automotive FEM; NXP and Synaptics put the amplifier on chip
+      - In-car 6 GHz power is capped, so a 6 GHz amplifier adds less than in a router
+      vs: Qualcomm, NXP, Synaptics, Murata, Chinese FEM suppliers
+    learn:
+    - age: 5
+      text: Cars have Wi-Fi like a house, so phones and screens inside can go online and the car can update itself.
+    - age: 10
+      text: The car's Wi-Fi shows the phone's map on the car screen without a cable, streams films to the back seats and
+        downloads new software. Newer Wi-Fi (6E and 7) uses a new band, 6 GHz, that is faster but sits right next to the radio
+        cars use to warn each other (V2X).
+    - age: 15
+      text: Each Wi-Fi antenna needs a front end, an amplifier, a receive amplifier and a switch, plus filters so Wi-Fi does not
+        disturb V2X, GNSS or UWB. In a car all of it must be automotive grade (AEC-Q), work from −40 to 105 °C and be made for
+        10–15 years.
+    - age: 20
+      text: The request comes from the owner's comments on Wi-Fi 6 and 7 for cars and Wi-Fi with antennas. Carmakers move
+        radios and antennas into one roof module, where antennas are close together and filters do most of the separation.
+        That favours a supplier with every front end and filter in that module.
+    - age: 25
+      text: 'With Qorvo we have automotive switches, V2X front ends, GNSS, cellular, UWB and coexistence BAW, but no automotive
+        Wi-Fi 6/7 amplifier at 5 or 6 GHz, and the filters are Preview. Qualcomm bundles its own AEC-Q100 FEM; NXP and
+        Synaptics put the amplifier on chip. Gaps: an automotive Wi-Fi 7 FEM, filters in production, a 5/6 GHz splitter for
+        multi-link, UWB next to 6 GHz Wi-Fi, and possibly an antenna tuner. Wi-Fi 8 is expected in 2028, sensing is published.'
+    learn_links:
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: 'Library: 5.9 GHz V2X front ends'
+      href: /library/v2x_frontend
+    - label: Wi-Fi FEMs and tri-band APs
+      href: /rf-notes#wifi_fem_and_triband_ap
+    - label: Acoustic filters and duplexers
+      href: /rf-notes#acoustic_filters_duplexers
   - slug: auto-hv-hot-swap
     gist: "Cars never hot-plug at 800 V; pre-charge and disconnect switches do the job, and a reinforced Si875x successor could win those sockets."
     abstract:

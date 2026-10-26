@@ -2,10 +2,10 @@
 # "TPSI3050-Q1: Features and block diagram"). Written 25 Oct 2026 from the public TI datasheet SLVSFJ7D (Rev. D,
 # Aug 2023, downloaded once from ti.com) and the TI product page (cached from the 23 Oct run, no new request), the
 # BizDev catalogue (Skyworks Si875x, Si88xx) and the hot-swap report auto-hv-hot-swap. "est" marks our estimates.
-gist: "TI's TPSI3050-Q1 sends its own power across a reinforced barrier, turning a FET into a solid-state relay; our Si875x only has basic isolation."
+gist: "TI's TPSI3050-Q1 makes its own 10 V floating gate supply, so one chip plus MOSFETs or an SCR replaces mechanical relays and optocouplers."
 abstract:
-  - "One chip plus one or two MOSFETs makes an isolated solid-state relay with no supply on the switch side."
-  - "It is the part to beat for 800 V pre-charge and disconnect in cars."
+  - "No secondary bias supply: it switches DC with one MOSFET, AC with two back-to-back MOSFETs, or fires an SCR (TPSI3050S-Q1)."
+  - "Reinforced 5 kVrms isolation makes it the part to beat for 800 V pre-charge and disconnect; our Si875x is 2.5 kVrms basic."
   - "Confirm the review; it supports the reinforced Si875x successor in the hot-swap report."
 slug: ti-tpsi3050-q1-isolated-switch
 title: "TI TPSI3050-Q1: an isolated switch driver that sends its own power across the barrier, so a FET becomes a solid-state relay"
@@ -18,6 +18,9 @@ app_area: Automotive
 question: "What are the TPSI3050-Q1's features, what is inside (block diagram), and how does it compare with Skyworks' isolated FET drivers?"
 in_brief:
   - text: "The TPSI3050-Q1 is an isolated switch driver: with one or two external MOSFETs (or an SCR) it forms a complete isolated solid-state relay (SSR). It needs no isolated supply on the switch side, because it sends power across the barrier together with the on/off signal."
+    conf: high
+    src: s1
+  - text: "What TI's datasheet description says, in short: it makes a regulated, floating 10 V supply rail for the switch, so there is no need for a secondary bias supply; it drives single power switches for DC or dual back-to-back switches for AC, and the S version drives SCRs. TI says the result is more reliable than mechanical relays and optocouplers."
     conf: high
     src: s1
   - text: "Inside are a modulator and transmitter on the input side, an integrated transformer across a reinforced barrier, and a rectifier, shunt regulator (10 V), demodulator and gate driver on the switch side."
@@ -44,7 +47,7 @@ problem:
     - text: "800 V batteries need reinforced isolation (a single barrier that protects a person on its own): basic 2.5 kVrms parts are not enough there."
       conf: med
       src: s4
-    - text: "AC and DC loads: back-to-back MOSFETs switch AC (or block current both ways in DC); a single MOSFET is enough for one-way DC; an SCR needs only a pulse."
+    - text: "AC and DC loads: a single MOSFET is enough to switch DC one way; two back-to-back MOSFETs (sources joined) switch AC or block current both ways in DC; an SCR (thyristor) needs only a short gate pulse, which the TPSI3050S-Q1 gives (about 2.5 us). So one chip covers DC switches, AC switches and SCR-based switches."
       conf: high
       src: s1
 concept:

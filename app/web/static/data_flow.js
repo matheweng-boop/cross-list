@@ -117,18 +117,23 @@
       const x = LEFT - m + i * LW + 6;
       out.push(`<g class="lane"><rect x="${x}" y="${ext.y + 4}" width="${LW - 12}" height="${ext.h - 8}" rx="14"/><text x="${x + 14}" y="${Math.max(ext.y + 30, 40)}">${esc(l.label)}</text></g>`);
     });
+    // the two processes as bands across the lanes (file layout); handover arrows cross between them
+    for (const r of D.rows || []) {
+      out.push(`<g class="row-band"><rect x="${ext.x + 8}" y="${r.y0}" width="${ext.w - 16}" height="${r.y1 - r.y0}" rx="16"/><text x="${ext.x + ext.w / 2}" y="${r.y0 + 22}" text-anchor="middle">${esc(r.label)}</text></g>`);
+    }
     out.push('</g><g class="edges">');
     for (const it of routes(boxes)) {
       const k = it.a.kind, isSel = sel && sel.type === "edge" && sel.i === it.i;
-      const cls = ["public", "owner", "guest"].includes(k) ? ` e-${k}` : "";
+      const cls = (["public", "owner", "guest"].includes(k) ? ` e-${k}` : "") + (it.e.handover ? " handover" : "") +
+        (it.e.status === "planned" ? " planned" : it.e.status === "uncrossed" ? " uncrossed" : "");
       const mk = isSel ? "df-m-sel" : cls ? `df-m-${k}` : "df-m";
       out.push(`<g class="edge${cls}${isSel ? " sel" : ""}" data-edge="${it.i}"><path class="hit" d="${it.d}"/><path class="line" d="${it.d}" marker-end="url(#${mk})"/>` +
-        (it.e.label ? `<text x="${it.lx}" y="${it.ly}" text-anchor="middle">${esc(it.e.label)}</text>` : "") + "</g>");
+        (it.e.label ? `<text x="${it.lx}" y="${it.ly}" text-anchor="middle">${esc(it.e.label)}${it.e.status === "planned" ? " (planned)" : it.e.status === "uncrossed" ? " (not yet all from crosses)" : ""}</text>` : "") + "</g>");
     }
     out.push('</g><g class="nodes">');
     for (const n of S.nodes) {
       const b = boxes[n.id], tag = tagOf(n), isSel = sel && sel.type === "node" && sel.id === n.id;
-      const cls = `node k-${esc(n.kind)}${n.gate ? " gate" : ""}${n.status === "planned" ? " planned" : ""}${isSel ? " sel" : ""}`;
+      const cls = `node k-${esc(n.kind)}${n.gate ? " gate" : ""}${n.status === "planned" ? " planned" : ""}${n.hub ? " hub" : ""}${isSel ? " sel" : ""}`;
       let y = 12;
       const parts = [`<rect class="box" width="${b.w}" height="${b.h}" rx="10"/>`];
       if (tag) { parts.push(`<text class="tag" x="10" y="${y + 4}">${tag}</text>`); y += 13; }

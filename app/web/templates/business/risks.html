@@ -21,6 +21,7 @@
     {{ gist_line(gist_for("risk", r.id)) }}
     <span class="small"><b>Who:</b> {{ r.who|join(', ') }}</span>
     <span class="small"><b>Impact on our parts:</b> {{ r.impact }}</span>
+    {% if r.answer %}<span class="small rp-answer"><b>On your comment:</b> {{ r.answer }}</span>{% endif %}
     <span class="small"><b>Early signs to watch:</b></span>
     <ul class="small">{% for s in r.signs %}<li>{{ s }}</li>{% endfor %}</ul>
     {% if r.links %}<span class="small"><b>See:</b> {% for ln in r.links %}<a href="{{ ln.href }}"{% if ln.href.startswith('http') %} rel="noopener noreferrer" target="_blank"{% endif %}>{{ ln.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</span>{% endif %}

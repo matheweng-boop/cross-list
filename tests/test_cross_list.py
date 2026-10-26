@@ -56,6 +56,7 @@ def test_page_in_products_menu_with_privacy_note(client):
     assert 'href="/cross-list"' in client.get("/").text  # in the Products menu
 
 
+@pytest.mark.smoke
 def test_every_part_listed_in_order_with_lights_and_reasons(client):
     page = post(client, "SC141\nSD4100\nSC142\nZZZ999\nSC141\nSR8641\nSC14l")
     order = [page.index(f">{p}<") for p in ("SC141", "SD4100", "SC142", "ZZZ999")]
@@ -93,6 +94,7 @@ def test_ordering_code_variant_is_recognised(session):
     assert rows["SB8641"].part.mpn == "SB8641N" and rows["SB8641"].how == "variant"
 
 
+@pytest.mark.smoke
 def test_known_drop_in_with_datasheets_is_green(session, real):
     rows = rows_for(session, "ISO6760QDWRQ1\nISO6431DBQR")
     g = rows["ISO6760QDWRQ1"]

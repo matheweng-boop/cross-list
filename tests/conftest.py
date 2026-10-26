@@ -1,5 +1,6 @@
 import hashlib
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -21,9 +22,75 @@ from app.services.seed import load_file
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _own_data_dir(tmp_path_factory):
+    """Each test session (each worker under `pytest -n auto`) writes its caches, markers and uploads to its own data
+    folder, never to var/. Tests that need an empty one still set their own."""
+    from app.config import get_settings
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(get_settings(), "data_dir", tmp_path_factory.mktemp("var"))
+        yield
+
+
+# --- the test database (26 Oct 2026): built once per worker and copied for each test ----------------------------------
+# Real data files that a fixture stands for, loaded into a template database once per worker instead of into every
+# test's own database: {fixture name: (file names in data/real, unofficial)}. A test module adds its own with a PRELOAD
+# dict of the same shape (its entries win); such a fixture then only marks "these files are loaded".
+PRELOAD = {"real": (("ti_digital_isolators", "skyworks_si86"), None)}
+
+
+def _build_db(path: Path, files: tuple[str, ...] = (), unofficial: bool | None = None) -> Path:
+    """A database as create_app() leaves it (schema and synthetic parts), plus the given real data files."""
+    from app.db import init_engine
+    from app.main import bootstrap
+
+    engine = init_engine(f"sqlite:///{path}")
+    bootstrap(engine, True)
+    if files:
+        with Session(engine) as s:
+            for f in files:
+                load_file(s, ROOT / "data" / "real" / f"{f}.yaml", unofficial=unofficial)
+            s.commit()
+    engine.dispose()
+    return path
+
+
+@pytest.fixture(scope="session")
+def _db_templates(tmp_path_factory):
+    """Template databases, each built on first use and kept for the session. Under `pytest -n auto` every worker has
+    its own tmp folder, so workers never share a database file."""
+    folder, made = tmp_path_factory.mktemp("templates"), {}
+
+    def get(files: tuple[str, ...] = (), unofficial: bool | None = None) -> Path:
+        if (files, unofficial) not in made:
+            made[files, unofficial] = _build_db(folder / f"t{len(made)}.db", files, unofficial)
+        return made[files, unofficial]
+
+    return get
+
+
+def _preload(request) -> tuple[tuple[str, ...], bool | None]:
+    """The real data files the test's fixtures stand for (PRELOAD), in order."""
+    table = {**PRELOAD, **getattr(request.module, "PRELOAD", {})}
+    hits = [table[n] for n in request.node.fixturenames if n in table]
+    if not hits:
+        return (), None
+    assert len({u for _, u in hits}) == 1, "preloaded fixtures disagree on unofficial data"
+    return tuple(dict.fromkeys(f for files, _ in hits for f in files)), hits[0][1]
+
+
 @pytest.fixture
-def client(tmp_path):
-    app = create_app(f"sqlite:///{tmp_path / 'test.db'}", seed_synthetic=True)
+def client(request, tmp_path, _db_templates, monkeypatch):
+    """The app on its own copy of a template database (synthetic parts, plus any real data files from PRELOAD). The
+    start-up cache warm-up thread is off: tests fill the caches on demand, and a warm-up left running from one test
+    would compete with (and read the database of) the next."""
+    from app import main
+
+    monkeypatch.setattr(main, "_warm_caches", lambda: None)
+    db = tmp_path / "test.db"
+    shutil.copyfile(_db_templates(*_preload(request)), db)
+    app = create_app(f"sqlite:///{db}", seed_synthetic=True)
     with TestClient(app) as c:
         yield c
 
@@ -44,10 +111,8 @@ def part(session):
 
 @pytest.fixture
 def real(session):
-    """Real TI and Skyworks digital isolators in the test database (it starts with synthetic parts only)."""
-    for f in ("ti_digital_isolators", "skyworks_si86"):
-        load_file(session, ROOT / "data" / "real" / f"{f}.yaml")
-    session.commit()
+    """Real TI and Skyworks digital isolators in the test database (it starts with synthetic parts only); loaded into
+    the template database through PRELOAD."""
 
 
 def ids(client, mpn):
@@ -152,6 +217,9 @@ def alerts(monkeypatch):
 
 # --- browser tests (24 Oct 2026): the app on a real port, driven by Chromium -----------------------------------------
 CHROMIUM = Path("/opt/pw-browsers/chromium")
+# Default wait for a page or element. Under `pytest -n auto` every core is busy and the server shares them with the
+# workers, so a page that opens in 2 s alone can take over 10 s: allow 30 s there.
+PAGE_TIMEOUT = 30_000 if os.environ.get("PYTEST_XDIST_WORKER") else 10_000
 
 
 @pytest.fixture(scope="session")

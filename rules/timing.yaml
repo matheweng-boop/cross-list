@@ -18,12 +18,17 @@ params:
   - {key: freq_range_mhz, label: Output frequency range, unit: MHz, priority: 1, kind: range, tolerance: 0.01}
   # Core supply (the main VDD pin). Other rails (an extra 3.3 V analog rail, output-bank supplies) are in the notes.
   - {key: vdd_range_v, label: Core supply range, unit: V, priority: 2, kind: range}
+  # Owner, 26 Oct 2026: core supply ranges differ by rail (Si5341: VDD 1.8 V and VDDA 3.3 V, both core). The number of
+  # separate core rails the part needs: one more rail than the reference is a board change.
+  - {key: core_rails, label: Core supply rails needed, priority: 2, kind: number, direction: lower, tolerance: 0}
   # --- Priority 2: should match ---
   # Typical RMS jitter, 12 kHz to 20 MHz unless the notes say otherwise. Clock generators, jitter attenuators and
   # oscillators: phase jitter of the output. Buffers: additive jitter; PCIe buffers: the newest PCIe generation's
   # additive jitter the datasheet states. Vendors measure at different frequencies and with different filters, so
   # values within 10 % count as equal.
-  - {key: jitter_fs, label: RMS jitter (typ.), unit: fs, priority: 1, kind: number, direction: lower, tolerance: 0.1}
+  # Owner, 26 Oct 2026: jitter depends on the output frequency (LMK03328: 100 fs typ. stated for fOUT >= 100 MHz).
+  # The value is stored with its output frequency (jitter_fout_mhz); a part with jitter_curve is read at the other's.
+  - {key: jitter_fs, label: RMS jitter (typ.), unit: fs, priority: 1, kind: number, direction: lower, tolerance: 0.1, at: jitter_fout_mhz, curve: jitter_curve}
   # An AEC-Q100 reference only gets AEC-Q100 candidates. Parts that state no grade are the usual industrial kind.
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 2, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true, default: industrial}
   - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
@@ -34,3 +39,5 @@ params:
   - {key: control, label: Configuration interface, priority: 3, kind: set}
   # Oscillators: total frequency stability (best option offered), ± ppm.
   - {key: stability_ppm, label: Frequency stability (best option), unit: ± ppm, priority: 3, kind: number, direction: lower, unknown_ok: true}
+  - {key: jitter_fout_mhz, label: Jitter stated at output frequency, unit: MHz, priority: 3, kind: number, direction: match, unknown_ok: true}
+  - {key: jitter_curve, label: RMS jitter vs output frequency, unit: fs, x_unit: MHz, priority: 3, kind: curve}

@@ -16,6 +16,13 @@ params:
   # What the part does: a 3/1 isolator cannot replace a 4/0 one.
   - {key: channel_config, label: Channels (fwd/rev), priority: 1, kind: category, hard: true}
   - {key: integrated_power, label: Integrated isolated power, priority: 1, kind: category, hard: true}
+  # Owner, 26 Oct 2026: a 10 Mbps part (Si86S F/H codes, 36 ns deglitch filter) cannot carry a 150 Mbps reference's
+  # signals, so the data rate must be equal or better; the deglitch codes stay listed with it as a deviation.
+  # Owner, 26 Oct 2026: "The 10Mbps spec is often times wrong ... better researched from the datasheet": the data rate
+  # decides only when both values come from a datasheet page; a product-table or estimated value is shown amber with
+  # "check datasheet" and never decides the ranking on its own (datasheet_only).
+  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 1, kind: number, direction: higher, unknown_ok: true,
+     datasheet_only: true}
   # Optocoupler-replacement parts (LED-emulator input, often inverting) are not interchangeable with CMOS-input
   # isolators; parts that state nothing are the usual CMOS-input, non-inverting kind.
   - {key: input_type, label: Input type, priority: 1, kind: category, hard: true, default: cmos}
@@ -24,7 +31,6 @@ params:
   - {key: vdd_range_v, label: Supply range, unit: V, priority: 2, kind: range}
   - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 2, kind: number, direction: higher}
   - {key: prop_delay_ns, label: "Propagation delay (typ, else max)", unit: ns, priority: 2, kind: number, direction: lower}
-  - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 2, kind: number, direction: higher}
   - {key: certifications, label: Safety certifications (UL, VDE, CSA, CQC), priority: 2, kind: set, exclude: [TUV]}
   - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
   - {key: enable_pins, label: Enable pins, priority: 2, kind: category}

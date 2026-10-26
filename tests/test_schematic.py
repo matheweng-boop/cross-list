@@ -5,8 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from app.services.seed import load_file
-
 ROOT = Path(__file__).resolve().parents[1]
 
 DIAGRAM = {
@@ -23,12 +21,13 @@ DIAGRAM = {
 }  # fmt: skip
 
 
+PRELOAD = {"real": (("ti_digital_isolators", "skyworks_si823x", "skyworks_switches"), None)}
+
+
 @pytest.fixture
 def real(session):
-    """The real parts the diagram uses (test databases start with synthetic parts only)."""
-    for f in ("ti_digital_isolators", "skyworks_si823x", "skyworks_switches"):
-        load_file(session, ROOT / "data" / "real" / f"{f}.yaml")
-    session.commit()
+    """The real parts the diagram uses (test databases start with synthetic parts only); loaded through PRELOAD
+    (tests/conftest.py)."""
 
 
 def post(client, **kw):

@@ -1,0 +1,168 @@
+# Plain-language explanation under the graph of every interactive visual (Engineering knowledge > Interactive visuals).
+# Owner, 26 Oct 2026: "I want slightly longer technical explanations. This assumes a lot of pre Knowledge. It would be
+# good to have the explanations below all graphs."
+#
+# One entry per visual id in app/services/library.py VISUALS (tests/test_visual_explanations.py checks that every
+# visual has one). Shown in a box "How to read this graph" below the graph (or below the diagram for visuals that draw
+# a diagram instead of a chart); the RF bands chart shows its entry on its own page.
+#   shows  what the graph shows, in one sentence
+#   read   how to read the axes and lines (one or two sentences)
+#   try    what to try with the controls (one sentence)
+#   why    why it matters for our products and customers (one sentence)
+# Plain words, no formulas; together 3-6 sentences. General engineering knowledge, no figures that need a source.
+
+dbm:
+  shows: "dBm is a way to write power: 0 dBm is one milliwatt, every +10 dBm is ten times more power and every -10 dBm ten times less, so one short scale covers a GPS signal and a radar transmitter."
+  read: "The horizontal axis is the power in dBm and the vertical axis is the same power in watts, on a scale where each step is ten times the one below; the straight line shows that the two are just two ways to write the same thing. In the blocker view, the lines show the wanted signal, the receiver's own noise floor and a strong unwanted signal (the blocker) next to the band."
+  try: "Move a marker from the antenna to the transmitter and see how many factors of ten lie between them, then load a preset in the blocker view and raise the filter rejection until the wanted signal is safe."
+  why: "Datasheets for LNAs, switches, filters and power amplifiers give almost every level in dBm, so this scale is the language of every RF discussion with customers."
+
+link:
+  shows: "How the received power drops as the distance grows, and the distance at which it falls below what the receiver can still decode (its sensitivity)."
+  read: "The horizontal axis is the distance, on a scale where each step is ten times further; the vertical axis is the received power in dBm. The falling line is the signal; where it crosses the sensitivity line is the maximum range."
+  try: "Raise the transmit power or the antenna gain by 6 dB and see the range roughly double in free space; then lower the receiver sensitivity instead and see the same effect."
+  why: "A better LNA (lower noise) or a lower-loss switch and filter in front of it buys range just like more transmit power, which is how our front-end parts are sold."
+
+wave:
+  shows: "The wavelength of a radio signal at each frequency, and how long a simple quarter-wave antenna has to be."
+  read: "Both axes use steps of ten: frequency runs to the right, length runs up. The upper line is the full wavelength in air, the lower one a quarter of it (a typical antenna); the coloured ranges are the bands from the RF bands chart."
+  try: "Move from the FM band (about 100 MHz, a 75 cm antenna) to Wi-Fi at 5 GHz (about 1.5 cm) and see why phone antennas can be tiny while a car radio still needs a long antenna or an amplified one."
+  why: "When a circuit board trace gets close to a tenth of a wavelength it starts to act like an antenna or a transmission line, which is why high-frequency parts need careful layout and matching."
+
+nf:
+  shows: "How a signal and the noise travel through a receiver chain (switch, filter, LNA, mixer), and how much each block adds to the noise."
+  read: "The horizontal axis is the position in the chain, from the antenna on the left to the output of each block; the vertical axis is the level in dBm. The blue line is the signal and the red line the noise; the gap between them is the signal-to-noise ratio, and it can only get smaller along the chain."
+  try: "Put a lossy filter or switch before the LNA and see the gap shrink at once, then swap in a lower-noise LNA as the first active block and see most of the gap come back."
+  why: "The first stage after the antenna decides the receiver's sensitivity, which is why low-noise amplifiers and low-loss switches sit right at the antenna in phones, GNSS and car radios."
+
+ip3:
+  shows: "What happens when two strong signals enter an amplifier that is not perfectly linear: it creates new, unwanted signals (intermodulation products) close to the wanted ones."
+  read: "The horizontal axis is the input power of each of the two signals and the vertical axis the output power, both in dBm. The steeper orange line is the unwanted product: it grows three times as fast as the wanted signal, and the input level where the two lines would meet is the IIP3."
+  try: "Raise the IIP3 by 10 dB and see the unwanted products drop by 20 dB at the same input; then raise the input power and see how quickly the products catch up."
+  why: "A higher IIP3 lets a receiver work next to strong transmitters (a phone's own uplink, a nearby base station or FM transmitter), a key number for LNAs, switches and tuners."
+
+fmim:
+  shows: "Where two strong FM stations can mix inside the receiver and land on the station you are tuned to, which you then hear as another programme, a whistle or noise."
+  read: "The horizontal axis is the frequency in MHz across the FM band and the vertical axis the level at the receiver input in dBm. The green bar is the station you want, the blue bars are the two strong stations, and orange or red bars are the mixing products; a red one falls on your channel."
+  try: "Move one strong station until a product turns red on your channel, then raise the receiver's linearity or lower the station levels until it falls below the dashed limit line."
+  why: "Car radios near transmitters must cope with this every day, which is why tuner linearity and the antenna amplifier design matter in car radio sockets."
+
+vswr:
+  shows: "What happens when a cable or trace meets a load that is not the expected 50 ohms: part of the wave bounces back and adds to the forward wave, making a standing wave."
+  read: "The horizontal axis is the distance from the load, measured in wavelengths; the vertical axis is the voltage compared with the forward wave. The thick line is the envelope (the highest voltage at each point), the thin line the wave at one instant; a flat envelope at 1 means a perfect match."
+  try: "Change the load away from 50 ohms and see the envelope get peaks and dips, then press Play to watch the wave move."
+  why: "A mismatch wastes power and can stress a power amplifier, which is why antenna tuners, matching networks and filters are designed and tested for return loss and VSWR."
+
+filter:
+  shows: "How well a band-pass filter lets the wanted band through and how strongly it blocks a signal just outside it."
+  read: "The horizontal axis is the frequency and the vertical axis the response in dB: 0 dB means the signal passes, -40 dB means it is 10,000 times weaker in power. The shaded area is the passband and the orange line marks the blocker with the rejection it gets."
+  try: "Raise the filter order and see the edges get steeper; then widen the band and see how hard it becomes to block a signal that sits close to the edge."
+  why: "Phones and Wi-Fi routers pack many bands close together, and this is where acoustic (SAW and BAW) filters earn their place."
+
+lc:
+  shows: "An inductor and a capacitor together let one frequency through best (resonance); the quality factor Q sets how sharp that peak is."
+  read: "The horizontal axis is the frequency on a scale where each step is a factor; the vertical axis is the response in dB, with 0 dB at the peak. The grey line at -3 dB marks the bandwidth: the narrower the curve there, the higher the Q."
+  try: "Raise Q and see the peak get narrow and steep; change the inductor or the capacitor and see the peak move."
+  why: "Every filter, oscillator and matching network is built on this, and the Q of the parts limits how sharp a filter can be."
+
+skin:
+  shows: "At high frequency the current flows only in a thin layer at the surface of a conductor; this layer is the skin depth."
+  read: "Both axes use steps of ten: frequency runs to the right, skin depth runs up. The grey lines mark the thickness of normal circuit board copper and of a thin plating; once the line falls below them, only that top layer carries the current."
+  try: "Move from 50 Hz to a few GHz and see the depth drop from about a centimetre to about a micrometre."
+  why: "At GHz frequencies the surface finish and plating of traces and filters decide the loss, which matters for low-loss RF parts."
+
+cmti:
+  shows: "How fast the voltage swings across an isolator when the power switch next to it turns on or off, and whether the isolator can ride through that swing (its CMTI rating)."
+  read: "Both axes use steps of ten: the horizontal axis is the edge time (how long the switch takes to turn), the vertical axis the resulting voltage slope in kV per microsecond. The coloured areas show typical GaN, SiC and silicon switches; the reference lines are the CMTI of real isolators from the cross lists."
+  try: "Pick the SiC traction inverter preset, then make the edge faster and see which isolators drop below the line."
+  why: "Faster SiC and GaN switches need isolators and isolated gate drivers with higher CMTI, which is a main selling point in isolation."
+
+creep:
+  shows: "How far apart, measured along the package surface, the two sides of an isolator must be for a given working voltage."
+  read: "The horizontal axis is the working voltage and the vertical axis the required creepage in millimetres. The three lines are the insulating material groups (I is the best material, III the weakest; the pollution level is a control); the grey lines are the creepage of real packages from the cross lists."
+  try: "Raise the working voltage toward 800 V or 1000 V and see when a narrow package no longer meets the line and a wide one is needed."
+  why: "800 V cars and solar inverters push isolators into wide packages, which changes board space and cost and is a common customer question."
+
+gate:
+  shows: "How much peak current a gate driver must deliver to switch a power transistor quickly, and how much power the driver uses for it."
+  read: "The horizontal axis is the total resistance in the gate path in ohms; the vertical axis is the peak gate current in amps. The curve falls as the resistance rises; the reference lines are the peak currents of real drivers from the cross lists."
+  try: "Lower the gate resistance and see the current climb above what a small driver can give, then raise the switching frequency and see the driver power go up."
+  why: "Choosing a driver with enough peak current but no more than needed is a cost and heat question in every inverter and power supply design."
+
+thermal:
+  shows: "How hot the chip inside a package gets: the room (ambient) temperature plus the power it uses times how well the package gets rid of heat (its thermal resistance)."
+  read: "The horizontal axis is the power in watts and the vertical axis the chip (junction) temperature in degrees Celsius. The thick rising line is the chip temperature for your package, the dashed lines are typical packages for comparison, and where a line reaches the red maximum line the part is at its limit."
+  try: "Raise the ambient temperature to 105 or 125 °C, as in a car, and see how little power is left before the limit."
+  why: "Car and industrial customers check this first, so the package's thermal resistance can win or lose a design."
+
+bvd:
+  shows: "The electrical behaviour of an acoustic resonator, the building block of SAW and BAW filters: one frequency where it conducts easily and, just above it, one where it blocks."
+  read: "The horizontal axis is the frequency and the vertical axis the impedance on a scale where each step is a factor. The dip (fs) and the peak (fp) are the two resonances; the wider they are apart, the wider a filter built from them can be."
+  try: "Load the BAW, SAW and wide-band presets and see how the coupling sets the spacing and Q sets how sharp the dip and peak are."
+  why: "This is why some wide 5G bands need new resonator materials, and why the filter technology choice matters in front-end modules."
+
+mod:
+  shows: "The same audio tone sent two ways: AM changes the strength of the carrier, FM changes its frequency."
+  read: "In the time view the horizontal axis is time and the vertical axis the amplitude: the AM wave grows and shrinks, the FM wave keeps its size but its waves crowd and spread. In the spectrum view the horizontal axis is the distance from the carrier in kHz and the shaded areas show how wide a channel each method needs."
+  try: "Load the AM and FM broadcast presets and compare the bandwidth, then raise the FM deviation and see the signal spread wider."
+  why: "This explains why FM sounds better but needs wider channels, and what car radio tuners have to receive."
+
+jitter:
+  shows: "How the noise of a clock, measured at each distance from its frequency (phase noise), adds up to timing jitter."
+  read: "The horizontal axis is the distance from the clock frequency, in steps of ten; the vertical axis is the phase noise in dBc/Hz, where lower is cleaner. The shaded range is the part that is added up into jitter, and the orange line marks the loop bandwidth of the PLL."
+  try: "Lower the PLL's in-band noise or move the loop bandwidth and see the jitter number change, then see what it means for an ADC or a radio."
+  why: "Low-jitter clocks are what our timing products sell on, for data centres, 5G radios and fast data converters."
+
+swloss:
+  shows: "The two losses in a power switch: conduction loss, which does not depend on how often it switches, and switching loss, which grows with every switching edge."
+  read: "Both axes use steps of ten: the horizontal axis is the switching frequency and the vertical axis the loss per switch in watts. The dashed green line is conduction, the orange line switching and the blue line the total; the crossover marks where switching starts to dominate."
+  try: "Load the silicon IGBT, SiC and GaN presets and see the crossover move to higher frequencies as the edges get faster."
+  why: "Faster switches allow smaller magnetics but need faster gate drivers and isolators with higher CMTI, which links power and isolation products."
+
+emc:
+  shows: "A diagram (no graph here) of the two common tests for electrical noise: a fast burst injected into a product (EFT) and the noise a product sends out (CISPR emissions), with the path the unwanted current takes."
+  read: "Follow the coloured arrows: they show the common-mode current flowing from the noisy side, across the isolation barrier and back to the ground plane. The side panel says how large the effect is and what each design choice changes."
+  try: "Switch between the EFT and CISPR setups, then add or remove the Y capacitor or change the layout and watch the current path change."
+  why: "Passing these tests is a frequent customer problem in isolated designs, and the right isolator and layout can save extra filter parts."
+
+uwb:
+  shows: "UWB car keys in four views: how much power the rules allow and the range that gives, how the travel time of a pulse becomes a distance, why relay attacks fail, and how the receiver finds the direct path among reflections."
+  read: "In the range view the horizontal axis is the distance (steps of ten) and the vertical axis the received power; in the multipath view the horizontal axis is time in nanoseconds, where 1 ns is about 30 cm of distance, and the peaks are the direct path and its reflections. The topic selector switches between the views."
+  try: "In the multipath view, make the direct path weaker than a reflection and see whether the receiver still picks the first, true path."
+  why: "UWB measures distance to within centimetres, which is what makes keyless entry safe against relay theft and is the selling point of UWB chips."
+
+dab:
+  shows: "A diagram (no graph) of how a digital radio (DAB) signal becomes sound: one 1.5 MHz wide block carries many stations together (an ensemble), which the demodulator unpacks."
+  read: "Read the steps in order: the tuner turns the block into digital I/Q samples, the demodulator recovers the data, and the station you choose is cut out of the ensemble and decoded. The bar of capacity units shows how the stations share one block: each coloured piece is one station, and the red line is the limit of the block."
+  try: "Change the protection level and see how a stronger error protection costs data rate, so fewer or lower-quality stations fit in one block."
+  why: "Every new car in the EU must receive digital radio, so DAB tuners and demodulators are a growing part of the car radio content."
+
+flow:
+  shows: "A diagram (no graph) that follows one station through a radio receiver, block by block, for DAB, FM or AM."
+  read: "Each step shows a small picture of the signal (its spectrum or its shape over time) and a sentence on what that block changed. The highlighted block is the step you are looking at."
+  try: "Pick FM and step through with Next, then switch to DAB and compare where the digital processing takes over."
+  why: "It shows which block each of our parts fills (antenna amplifier, tuner, demodulator) and where a competitor could take a socket."
+
+rds:
+  shows: "A diagram (no graph) of RDS, the slow data stream hidden in every FM station that carries the station name, traffic announcements and alternative frequencies."
+  read: "The picture shows where the RDS signal sits (a 57 kHz subcarrier above the stereo signal) and how one data group is built: four blocks, each of 16 data bits plus 10 check bits; the text below decodes what the group says and what the car radio does with it."
+  try: "Change the segment to spell out the station name piece by piece, and switch the traffic announcement on to see the flag a car radio reacts to."
+  why: "RDS features are expected in every FM car radio and are handled by our tuners."
+
+turnon:
+  shows: "How the way a power switch is turned on (in three steps with different gate currents) changes the voltage overshoot, the ringing and the electrical noise it sends out."
+  read: "The Show selector switches between two views: the turn-on waveforms (switch voltage and current over time, with the overshoot and ringing) and the emissions spectrum against frequency with the filter it needs and a CISPR 25 limit for reference. A faster edge gives a higher overshoot and more noise at high frequencies."
+  try: "Compare the one-fixed-current preset with the low-EMI preset and see the ringing and the noise drop, at the cost of some more switching loss."
+  why: "Smart gate drivers that shape the turn-on can save filter parts and help pass emissions tests, a growing feature in SiC drivers."
+
+hex:
+  shows: "A tool (no graph) that shows the same number in decimal, binary and hexadecimal, the way chips store settings in registers."
+  read: "Each box shows the same value: binary has one digit per on/off switch (bit), and one hex digit stands for exactly four bits. The clickable bits show which switch is on."
+  try: "Click single bits and watch the hex digits change, then type a register value from a datasheet and see what each field means."
+  why: "Datasheets set up chips through register maps written in hex, so this helps when reading configuration tables and customer questions."
+
+rf-bands:
+  shows: "Where each radio band (cellular, GNSS, Wi-Fi, satellite, radar and others) sits on the frequency scale, and which of our parts cover it."
+  read: "The horizontal position is the frequency, on a scale where each step is ten times higher; each bar is one band and its row tells the group. The red row marks where two or more bands overlap, the spots that need filters. Click a band to see what it is, the front-end parts it calls for, and our parts that cover it."
+  try: "Pick an application such as a car or a phone and see how many bands one product has to cover and where they overlap."
+  why: "The more bands a product must cover, the more switches, filters and amplifiers it needs, which is the content our front-end business sells."

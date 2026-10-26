@@ -16,6 +16,10 @@ specifications unless required"); a lower-priority spec is mentioned ("also: …
 
 Light: green = a direct package equivalent whose priority 1 values come from datasheets on both sides; amber = any
 other cross, or a missing / estimated priority 1 value; red = no cross, or the part is not recognised.
+
+A ``datasheet_only`` value (the isolator data rate) that is not from a datasheet page on one side is a data gap
+("check datasheet"): never a deviation, only a tie-break (owner, 26 Oct 2026: data rate "better researched from the
+datasheet").
 """
 
 import bisect
@@ -27,7 +31,18 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.matching.engine import BETTER, DIFFERENT, EQUAL, UNKNOWN, WORSE, CrossResult, compare_param, find_crosses
+from app.matching.engine import (
+    BETTER,
+    DIFFERENT,
+    EQUAL,
+    UNKNOWN,
+    WORSE,
+    CrossResult,
+    compare_param,
+    find_crosses,
+    from_datasheet,
+    is_estimate_source,
+)
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
 from app.partnumbers import normalize_pn, reel_q1_variants
@@ -47,7 +62,7 @@ HOW_NOTE = ("Drop-in: same package and pinout. A direct package equivalent (ever
 LIGHTS = {"green": "Green", "amber": "Amber", "red": "Red"}
 LIGHT_HELP = {
     "green": "direct package equivalent, priority 1 specs from datasheets on both sides",
-    "amber": "a cross with deviations, another package, or a missing or estimated value",
+    "amber": "a cross with deviations, another package, or a missing, estimated or not-from-datasheet value",
     "red": "no cross, or the part is not in our data",
 }
 OURS = "Skyworks/Qorvo"
@@ -164,6 +179,8 @@ def resolve(ix: Index, key: str, session: Session) -> Match:
             return Match(_pick(session, ix.by_key[best]), "variant")
     if pre:
         return Match(_pick(session, ix.by_key[pre]), "variant")
+    if dev := _device_q1(ix, key):  # a TI device name such as ADS131B02-Q1 for its orderable ADS131B02QPWRQ1
+        return Match(_pick(session, ix.by_key[dev]), "variant")
     if key in ix.catalogue:
         return Match(None, "catalogue", ix.catalogue[key])
     cpre = _known_prefix(key, ix.catalogue)
@@ -175,6 +192,21 @@ def resolve(ix: Index, key: str, session: Session) -> Match:
         p = session.get(Part, ix.by_key[close[0]][0])
         return Match(suggestion=p.mpn if p else close[0])
     return Match()
+
+
+def _device_q1(ix: Index, key: str) -> str | None:
+    """A TI automotive device name pasted without its package code (ADS131B02-Q1 → ADS131B02Q1): the shortest known
+    orderable code that starts with the device and ends in Q1 (owner's lookup 1, 26 Oct 2026)."""
+    base = key[:-2]
+    if not key.endswith("Q1") or len(base) < 5:
+        return None
+    i = bisect.bisect_left(ix.keys, base)
+    hits = []
+    while i < len(ix.keys) and ix.keys[i].startswith(base) and len(hits) < 50:
+        if ix.keys[i].endswith("Q1"):
+            hits.append(ix.keys[i])
+        i += 1
+    return min(hits, key=lambda k: (len(k), k)) if hits else None
 
 
 def _pick(session: Session, ids: list[int]) -> int:
@@ -259,13 +291,15 @@ def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
 
 
 def drop_in_key(r: CrossResult):
-    return (r.category != "fff", len(r.deviations), _worse_score(r), len(r.exceptions), r.closeness, r.candidate.mpn)
+    return (r.category != "fff", len(r.deviations), getattr(r, "unverified_worse", 0), _worse_score(r),
+            len(r.exceptions), r.closeness,
+            r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
-    return (len(r.deviations), p1_off, len(r.exceptions), not r.fit.same_package, not r.fit.same_pinout,
-            r.closeness, r.candidate.mpn)  # fmt: skip
+    return (len(r.deviations), getattr(r, "unverified_worse", 0), p1_off, len(r.exceptions), not r.fit.same_package,
+            not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult | None]:
@@ -299,10 +333,7 @@ def is_si86(mpn: str) -> bool:
 
 
 def _is_estimate(src: str | None) -> bool:
-    from app.services.seed import is_unofficial
-
-    return bool(src) and (is_unofficial(src) or bool(re.search(r"\best\b|estimat|assumed|typical value from", src,
-                                                                  re.I)))  # fmt: skip
+    return is_estimate_source(src)
 
 
 def data_gaps(r: CrossResult) -> list[str]:
@@ -327,7 +358,12 @@ def data_gaps(r: CrossResult) -> list[str]:
             else:
                 gaps.append(f"{_short(d.label)} not comparable ({d.ref_display} vs {d.cand_display})")
         for side in ("their", "our"):
-            if _is_estimate(srcs[side].get(d.key)):
+            src = srcs[side].get(d.key)
+            if d.unverified and _is_estimate(src):  # a datasheet-only value: it did not decide the ranking
+                gaps.append(f"{_short(d.label)} estimated ({side}s): check datasheet")
+            elif d.unverified and not from_datasheet(src):
+                gaps.append(f"{_short(d.label)} not from {side} datasheet: check datasheet")
+            elif _is_estimate(src):
                 gaps.append(f"{_short(d.label)} estimated ({side}s)")
     return list(dict.fromkeys(gaps))
 
@@ -337,6 +373,8 @@ def _short(label: str) -> str:
 
 
 def _tag(d) -> str:
+    if d.unverified and d.status != EQUAL:
+        return {BETTER: "ours better", WORSE: "ours worse", DIFFERENT: "different"}[d.status] + ", unverified"
     return {BETTER: "ours better", WORSE: "ours worse", DIFFERENT: "different", UNKNOWN: "not stated"}.get(d.status,
                                                                                                           "close")
 
@@ -431,6 +469,40 @@ def verified_pairs(session: Session) -> set[tuple[int, int]]:
         mpns = {normalize_pn(m): i for i, m in session.execute(select(Part.id, Part.mpn))}
         pairs |= {(mpns[a], mpns[b]) for a, b in right if a in mpns and b in mpns}
     return pairs
+
+
+class Verified:
+    """Membership test for (reference id, candidate id): a pair a person confirmed (verified_pairs), or any cross with a
+    part of a confirmed datasheet family (app/services/families.py), unless the pair's own latest answer is Wrong."""
+
+    def __init__(self, session: Session):
+        from app.services import families
+
+        self.pairs = verified_pairs(session)
+        self.family = families.verified_part_ids(session)
+        wrong = {k for k, r in answers(session).items() if r.verdict == "wrong"}
+        self.wrong: set[tuple[int, int]] = set()
+        if wrong and self.family:
+            mpns = {normalize_pn(m): i for i, m in session.execute(select(Part.id, Part.mpn))}
+            self.wrong = {(mpns[a], mpns[b]) for a, b in wrong if a in mpns and b in mpns}
+
+    def __contains__(self, pair: tuple[int, int]) -> bool:
+        if pair in self.pairs:
+            return True
+        return bool(self.family & set(pair)) and pair not in self.wrong
+
+    def of(self, ref: int) -> "_OfRef":
+        """Candidate ids verified for one reference part (the part page)."""
+        return _OfRef(self, ref)
+
+
+@dataclass
+class _OfRef:
+    verified: Verified
+    ref: int
+
+    def __contains__(self, cand: int) -> bool:
+        return (self.ref, cand) in self.verified
 
 
 def record(session: Session, their: str, ours: str, verdict: str, comment_text: str, author: str | None) -> DataReview:
@@ -531,7 +603,7 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
 def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
     ix = build_index(session)
     crosser = Crosser(session)
-    verified = verified_pairs(session)
+    verified = Verified(session)
     said = answers(session)
     rows = []
     for i, e in enumerate(entries, 1):

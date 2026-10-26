@@ -29,6 +29,7 @@ KINDS = {"public": "Public data", "owner": "Owner input", "guest": "Guest input"
          "store": "Store", "output": "Output"}  # fmt: skip
 # default layout (the page draws with the same numbers): lanes are columns LANE_W wide, nodes NODE_W wide
 LANE_W, NODE_W, LEFT, TOP, STEP_Y = 260, 200, 30, 70, 92
+ROW_GAP = 70  # space between the process bands (rows), which stack top to bottom
 MOVED = 30  # a node counts as moved when it is this far from its file place
 MAX_NODES, MAX_EDGES, MAX_NOTES = 150, 400, 60
 LABEL_MAX, NOTE_MAX = 80, 500
@@ -36,32 +37,48 @@ _ID = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 
 
 def load() -> dict:
-    """The file version: lanes, nodes (with their place on the page), edges and what the daily run did."""
+    """The file version: lanes (columns), rows (the processes, as bands), nodes (with their place on the page), edges
+    and what the daily run did."""
     raw = yamlio.load(FILE.read_text(encoding="utf-8")) or {}
     lanes = [{"id": str(x["id"]), "label": str(x["label"])} for x in raw.get("lanes") or []]
     order = {x["id"]: i for i, x in enumerate(lanes)}
+    rows = [{"id": str(x["id"]), "label": str(x["label"])} for x in raw.get("rows") or []] or [{"id": "", "label": ""}]
     raw_nodes = raw.get("nodes") or []
-    size: dict[str, int] = {}
+    size: dict[tuple[str, str], int] = {}
     for n in raw_nodes:
-        size[str(n.get("lane"))] = size.get(str(n.get("lane")), 0) + 1
-    tallest = max(size.values(), default=1) - 1
-    count: dict[str, int] = {}
+        key = (str(n.get("row") or rows[0]["id"]), str(n.get("lane")))
+        size[key] = size.get(key, 0) + 1
+    # each row (process) is a band as tall as its fullest lane; a short lane spreads over its band's height
+    top = TOP + (30 if rows[0]["id"] else 0)  # room for the lane titles above the first band
+    for r in rows:
+        tallest = max((v for (row, _), v in size.items() if row == r["id"]), default=1)
+        r["y0"], r["y1"] = top - 40, top + (tallest - 1) * STEP_Y + 60
+        r["tallest"] = tallest - 1
+        top = r["y1"] + ROW_GAP + 40
+    band = {r["id"]: r for r in rows}
+    count: dict[tuple[str, str], int] = {}
     nodes = []
     for n in raw_nodes:
         lane = str(n.get("lane") or lanes[0]["id"])
-        k = count.get(lane, 0)
-        count[lane] = k + 1
-        step = max(STEP_Y, tallest * STEP_Y / max(1, size.get(lane, 1) - 1))  # a short lane spreads over the height
+        row = str(n.get("row") or rows[0]["id"])
+        k = count.get((row, lane), 0)
+        count[(row, lane)] = k + 1
+        r = band.get(row, rows[0])
+        step = max(STEP_Y, r["tallest"] * STEP_Y / max(1, size.get((row, lane), 1) - 1))
         x = n.get("x", LEFT + order.get(lane, 0) * LANE_W)
-        y = n.get("y", TOP + round(k * step))
-        nodes.append({"id": str(n["id"]), "label": str(n["label"]), "lane": lane, "kind": str(n.get("kind") or "step"),
+        y = n.get("y", r["y0"] + 40 + round(k * step))
+        nodes.append({"id": str(n["id"]), "label": str(n["label"]), "lane": lane, "row": row,
+                      "kind": str(n.get("kind") or "step"),
                       "desc": str(n.get("desc") or ""), "link": str(n.get("link") or ""), "gate": bool(n.get("gate")),
+                      "hub": bool(n.get("hub")),
                       "status": str(n.get("status") or ""), "note": str(n.get("note") or ""),
                       "includes": [str(x) for x in n.get("includes") or []],
                       "x": float(x), "y": float(y)})  # fmt: skip
-    edges = [{"from": str(e["from"]), "to": str(e["to"]), "label": str(e.get("label") or "")}
+    edges = [{"from": str(e["from"]), "to": str(e["to"]), "label": str(e.get("label") or ""),
+              "handover": bool(e.get("handover")), "status": str(e.get("status") or "")}
              for e in raw.get("edges") or []]  # fmt: skip
-    return {"lanes": lanes, "nodes": nodes, "edges": edges, "done": list(raw.get("done") or [])}
+    rows = [{k: r[k] for k in ("id", "label", "y0", "y1")} for r in rows if r["id"]]
+    return {"lanes": lanes, "rows": rows, "nodes": nodes, "edges": edges, "done": list(raw.get("done") or [])}
 
 
 def lane_at(x: float, lanes: list[dict]) -> str:
@@ -154,12 +171,15 @@ def merged(file: dict, saved: dict | None) -> dict:
         if n["id"] in full:
             nodes.append(full[n["id"]] | {k: n[k] for k in ("label", "kind", "note", "x", "y", "lane") if k in n})
         elif n["id"] not in base_nodes:  # the owner's own node (one the file dropped since is left out)
-            nodes.append(n | {"desc": "", "link": "", "gate": False, "status": "", "includes": []})
+            nodes.append(n | {"desc": "", "link": "", "gate": False, "hub": False, "row": "", "status": "",
+                              "includes": []})
     have = {n["id"] for n in nodes}
     nodes += [dict(n) for n in file["nodes"] if n["id"] not in base_nodes and n["id"] not in have]
     have = {n["id"] for n in nodes}
-    file_pairs = {(e["from"], e["to"]) for e in file["edges"]}
-    edges = [dict(e) for e in saved.get("edges") or [] if e["from"] in have and e["to"] in have
+    file_edges = {(e["from"], e["to"]): e for e in file["edges"]}
+    file_pairs = set(file_edges)
+    edges = [file_edges.get((e["from"], e["to"]), {}) | dict(e) for e in saved.get("edges") or []
+             if e["from"] in have and e["to"] in have
              and ((e["from"], e["to"]) in file_pairs or (e["from"], e["to"]) not in base_edges)]  # fmt: skip
     pairs = {(e["from"], e["to"]) for e in edges}
     edges += [dict(e) for e in file["edges"] if (e["from"], e["to"]) not in base_edges

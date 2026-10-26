@@ -7,7 +7,7 @@ def test_all_families_load_with_three_priority_groups():
     rules = load_all_rules()
     assert {"digital_isolator", "gate_driver", "isolated_amplifier", "current_sensor"} <= set(rules)
     for fam in rules.values():
-        if fam.family == "isolated_dcdc":  # a family entry without crossing rules yet (owner, 26 Oct 2026)
+        if fam.family in ("isolated_dcdc", "other_known"):  # family entries without crossing rules (26 Oct 2026)
             assert {p.priority for p in fam.params} == {3}
             continue
         assert {p.priority for p in fam.params} == {1, 2, 3}, fam.family

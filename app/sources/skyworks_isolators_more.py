@@ -223,7 +223,8 @@ SI88_DCDC = {
 # by_base. `min_kv`: the fact applies only to parts rated at least that many kVrms.
 
 SI84_SPEED = {  # Si84xx speed grades: A = 1 Mbps, B = 150 Mbps (datasheet timing tables)
-    "data_rate_mbps": {"by_speed": {"A": 1.0, "B": 150.0}, "evidence": r"Maximum Data Rate 0 — 150 Mbps"},
+    "data_rate_mbps": {"by_speed": {"A": 1.0, "B": 150.0}, "evidence": r"Maximum Data Rate 0 — 150 Mbps",
+                       "evidence_by_speed": {"A": r"Maximum Data Rate 0 — 1\.0 Mbps"}},
     "prop_delay_ns": {
         "by_speed": {"A": 35.0, "B": 9.5},
         "evidence": r"Propagation Delay tPHL, ?tPLH See Figure \d 3\.0 6\.0 9\.5 ns",
@@ -700,7 +701,9 @@ def build(raw_dir: Path = RAW_DIR, ds_dir: Path = DATASHEET_DIR) -> dict:
             value = _resolve(fact, ctx)
             if value is None:
                 continue
-            params[key], sources[key] = value, f"{ds_name} p.{sheet.find(fact['evidence'])}"
+            # the page of the row for this speed grade (data rate: the 1 Mbps grade has its own table)
+            evidence = [(fact.get("evidence_by_speed") or {}).get(ctx["speed"]), fact["evidence"]]
+            params[key], sources[key] = value, f"{ds_name} p.{_find_first(sheet, [e for e in evidence if e])}"
         # the ordering guide line decides default output where it states one
         if guide and "default_output" in params:
             d = re.search(r"\b(Low|High)\b", guide[0])

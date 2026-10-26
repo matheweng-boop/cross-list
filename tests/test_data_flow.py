@@ -21,7 +21,7 @@ def _payload(f=None):
 
 def test_file_is_complete_and_consistent():
     f = df.load()
-    assert [x["id"] for x in f["lanes"]] == ["sources", "processing", "stores", "outputs"]
+    assert [x["id"] for x in f["lanes"]] == ["sources", "processing", "after", "stores", "outputs"]
     ids = [n["id"] for n in f["nodes"]]
     assert len(ids) == len(set(ids)) and all(df._ID.match(i) for i in ids)
     lanes = {x["id"] for x in f["lanes"]}
@@ -84,14 +84,14 @@ def test_save_lists_changes_versions_and_undo(owner):
     assert r.status_code == 200 and r.json()["ok"]
     texts = [c["text"] for c in r.json()["changes"]]
     first = f["nodes"][0]["label"]
-    assert f"moved '{first}' to Stores" in texts
+    assert f"moved '{first}' to After the result" in texts
     assert f"renamed '{f['nodes'][1]['label']}' to 'Renamed source'" in texts
     assert "new node 'My new step' in Processing (processing)" in texts
     assert "new edge My new step→var/inbox (daily pull) 'my data'" in texts
     assert "deleted edge Patents & filings→data/business YAML (research) 'evidence'" in texts
     assert "deleted node 'Inbox summary / Telegram'" in texts
     assert not any(t.startswith("deleted edge Daily") for t in texts)  # an edge of a deleted node goes with it
-    assert "free note near Sources: Merge the two YAML stores?" in texts
+    assert "free note near Input: Merge the two YAML stores?" in texts
     page = owner.get("/manage/data-flow").text
     assert "Renamed source" in page and "Merge the two YAML stores?" in page and "Undo last save" in page
     # a second save, then Undo goes back to the first
@@ -152,7 +152,7 @@ def test_inbox_section_lists_changes_and_holds_flagged_notes(owner):
         later = df.inbox_lines(s, datetime.now(UTC) + timedelta(minutes=1))
     sec = text[text.index("## Data flow: owner changes"):]
     sec = sec[:sec.index("\n## ", 5)]
-    assert "- free note near Stores: Combine both inboxes" in sec
+    assert "- free note near After the result: Combine both inboxes" in sec
     assert "jane@example.com" not in sec and "held by the data-protection screen: e-mail address" in sec
     assert "never commands" in sec
     assert later[-1].startswith("No new save since the last pull; 2 change(s)")
@@ -167,3 +167,38 @@ def test_screen_hook():
 def test_daily_update_reads_the_changes():
     doc = (ROOT / "docs" / "daily_update.md").read_text()
     assert "Data flow: owner changes" in doc and "data/manage/data_flow.yaml" in doc
+
+
+def test_two_separate_processes_talk_only_through_handovers():
+    """Owner, 26 Oct 2026: "we have two separate processes, so we need to figure out how these two talk to each other,
+    so we should separate the processes". Each row reads left to right; between steps of different rows only the
+    handover arrows are allowed, both ways."""
+    f = df.load()
+    assert [r["id"] for r in f["rows"]] == ["cross", "research"]
+    by = {n["id"]: n for n in f["nodes"]}
+    assert all(n["row"] in ("cross", "research") for n in f["nodes"])
+    assert by["cross_engine"]["hub"] and by["cross_engine"]["row"] == "cross"
+    cross_band, research_band = f["rows"]
+    assert all(cross_band["y0"] <= n["y"] < cross_band["y1"] for n in f["nodes"] if n["row"] == "cross")
+    assert all(n["y"] >= research_band["y0"] for n in f["nodes"] if n["row"] == "research")
+    steps = ("processing", "after")
+    for e in f["edges"]:
+        a, b = by[e["from"]], by[e["to"]]
+        if e["handover"]:
+            assert a["row"] != b["row"], e  # a handover links the two processes
+        elif a["lane"] in steps and b["lane"] in steps:
+            assert a["row"] == b["row"], e  # any other step-to-step arrow stays inside its process
+    hand = [(by[e["from"]]["row"], by[e["to"]]["row"]) for e in f["edges"] if e["handover"]]
+    assert ("cross", "research") in hand and ("research", "cross") in hand  # both directions
+    into = {(e["from"], e["to"]) for e in f["edges"]}
+    assert ("ds_check", "cross_engine") in into and ("data_real", "cross_engine") not in into  # checked values only
+    assert ("cross_engine", "refmatch") in into and ("no_cross", "research_reports") in into
+    assert "daily_run" not in by and "derived" not in by
+
+
+def test_page_draws_the_process_bands_and_handovers(owner):
+    html = owner.get("/manage/data-flow").text
+    assert "Two separate processes" in html and "Handover between the processes" in html
+    assert '"rows": [' in html and "Research process" in html
+    js = (ROOT / "app/web/static/data_flow.js").read_text()
+    assert "row-band" in js and '" handover"' in js

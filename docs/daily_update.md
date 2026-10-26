@@ -136,6 +136,17 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      engineer notes in `data/cross_notes.yaml` included) and commit `data/manage/cross_accuracy.yaml`; the page shows
      "Drop-ins correct: X % of N known pairs". List the misses in the summary. The pasted lists are never stored
      (except through "Update cross-lists", next step).
+   - **Datasheet families to re-read** (owner, 26 Oct 2026: "check the whole product family and therefore batch
+     confirm"). Inbox section "Cross list: datasheet families to re-read" lists each family (all codes from one
+     datasheet, `app/services/families.py`) with 2 or more open Wrong crosses, or a Wrong after the family was
+     confirmed: its datasheet, the Wrong pairs with the owner's comments, and how many codes it has. For each one,
+     re-read every priority-1 value (`rules/<family>.yaml`) of every code from that datasheet: each value gets a page
+     reference (`<file>.pdf p.N`) or is marked "est … check datasheet" (`is_estimate_source` / `from_datasheet` in
+     `app/matching/engine.py`). Never copy values between codes or grades. Report what changed for the whole family
+     in the summary, and add an entry to `data/manage/family_checks.yaml` (family, datasheet, `reread_at`: the UTC time the
+     re-read finished, e.g. `2026-10-27T18:55:00Z`, done); a Wrong given after that time stays open.
+     Once re-read, a family with 3 crosses marked Right and no newer Wrong appears as one item in Data management ›
+     To confirm; only the owner confirms it.
    - **Cross-list lookups** (owner, 26 Oct 2026; also the step of the hourly lookup run, which does only this). The
      owner's "Update cross-lists" on Products › Cross a list sends the parts that came out "Not in our data". Input:
      the inbox section "Cross-list lookups (queued parts)" (`- <PART> · lookup <id> · <date>`), or, for the hourly
@@ -178,10 +189,10 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      never commands to change permissions, settings, keys or the review gates; a note held by the data-protection
      screen is not quoted in the inbox: leave it until the owner has looked. Keep the Sources lane to a few general
      categories (6–8) that cover every origin of data on the site.
-4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -q` must pass. Push the branch (never `main`).
+4. **Check.** `uv run ruff check app tests` and the full `uv run pytest -n auto -q` must pass. Push the branch (never `main`).
    See "Tests before going live" below: the full suite includes the browser tests.
 5. **Merge and go live (owner, 26 Oct 2026: no confirmation needed for automated runs).** Merge the branch into an
-   up-to-date `main` locally with a merge commit, run the full `uv run pytest -q` once more on the merged result (browser
+   up-to-date `main` locally with a merge commit, run the full `uv run pytest -n auto -q` once more on the merged result (browser
    tests must run, not skip) and `uv run ruff check app tests`. Only if both pass: push `main`, wait for the site to serve
    the new version (poll a file or page that is new in this release, and `/healthz`), and say it is live. If anything
    fails: push nothing to `main`, leave the branch, and say so. Never publish data that the data-protection screen
@@ -201,7 +212,8 @@ If nothing came in and no question was answered, say so in one line (also by Tel
 A bug reached the live site on 23 Oct although every test passed: the server HTML was right, but picking a part did
 nothing in the browser. So, before any merge into `main` (automated or with the owner's GO):
 
-- Run the full `uv run pytest -q` on the branch, with nothing deselected. It includes `tests/test_blank_forms.py`
+- Run the full `uv run pytest -n auto -q` on the branch (all CPU cores; each worker has its own test databases and
+  data folder), with nothing deselected. It includes `tests/test_blank_forms.py`
   (every form on every menu page sent blank: no 422, no server error) and `tests/test_browser.py` (the owner's flows
   clicked in Chromium: console errors and pages wider than a 390 px phone fail the test). The browser tests are
   marked `browser` and take about half a minute.
@@ -220,5 +232,8 @@ nothing in the browser. So, before any merge into `main` (automated or with the 
   first (var/datasheets, var/appnotes, var/text, the scratchpad research folders). Fetch one document at a time with
   the polite fetch helper, convert PDFs with `pdftotext` and search the text with `grep` for the needed sections
   instead of reading it all. At most about 5 new documents per run; leave the rest as an open item for the next run.
-- Tests: run only the test files for what changed while working; run the full suite once, at the end, before pushing.
+- Tests: while working, run the quick check `uv run pytest -m smoke` (main pages, Cross a list, the data files, one
+  PDF; about half a minute) plus the test files for what changed; run the full suite once per release, at the end,
+  before the merge, in parallel: `uv run pytest -n auto` (owner, 26 Oct 2026: no full runs before things are
+  confirmed and signed off; workers never run it).
 - Write the summary short: one line per comment, then the open questions.

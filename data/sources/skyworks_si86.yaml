@@ -138,7 +138,10 @@ base_parts:
 # `t_option` values apply to Si86xx "T" grade parts (reinforced, 10 kV surge).
 datasheets:
   # typ first (owner, 22 Oct 2026): prop delay and CMTI are the datasheet's typical at VDD = 5 V; max / min only when no typ is stated
+  # data rate (owner, 26 Oct 2026: "should at least be better researched from the datasheet"): the datasheet's own
+  # row, with how it is stated in `note`; the web product table is wrong for the 1 Mbps codes and the Si86S60x
   si864x-datasheet.pdf:
+    data_rate_mbps: {value: 150.0, evidence: "Maximum Data Rate 0 — 150 Mbps", note: "max 150 Mbps (min 0), timing characteristics; speed grade B/E = 150 Mbps, p.40"}
     isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8640BT-IS Si8640BT-AS 4 0 150 Low 5.0"}
     prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation 5.0 8.0 13 ns"}
     cmti_kv_us:  {value: 50, t_option: 100, evidence: "Si86xxxA/B/C/D See Figure 4.3 Common- 35 50"}
@@ -150,6 +153,7 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si863x-datasheet.pdf:
+    data_rate_mbps: {value: 150.0, evidence: "Maximum Data Rate 0 — 150 Mbps", note: "max 150 Mbps (min 0), timing characteristics; speed grade B/E = 150 Mbps, p.33"}
     isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8630BT-IS Si8630BT-AS 3 0 150 Low 5.0"}
     prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation 5.0 8.0 13 ns"}
     cmti_kv_us:  {value: 50, t_option: 100, evidence: "Si86xxxT Circuit on page 14 60 100"}
@@ -160,6 +164,7 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si861x-2x-datasheet.pdf:
+    data_rate_mbps: {value: 150.0, evidence: "Data rate 0 — 150 Mbps", note: "max 150 Mbps (min 0), timing characteristics; speed grade B/E = 150 Mbps, p.25"}
     isolation_rating_kvrms: {t_option: 5.0, evidence: "Si8620BT-IS Si8620BT-AS 2 0 150 Low 5.0"}
     prop_delay_ns: {value: 8.0, evidence: "Propagation delay t , t 5.0 8.0 13 ns"}
     cmti_kv_us:  {value: 50, t_option: 100, evidence: "Si86xxxT Mode Transient Immunity 60 100"}
@@ -170,6 +175,7 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-channel skew t — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature1 TA –40 25 125"}
   si865x-datasheet.pdf:
+    data_rate_mbps: {value: 150.0, evidence: "Maximum Data Rate 0 — 150 Mbps", note: "max 150 Mbps (min 0), timing characteristics; speed grade B/E = 150 Mbps, A/D = 1 Mbps, p.37"}
     prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation 5.0 8.0 13 ns"}
     cmti_kv_us:  {value: 50, evidence: "Common Mode Transient Immunity CMTI V = V or 0 V 35 50"}
     isolation_class: {value: basic, evidence: "VDE 0884-10"}
@@ -179,6 +185,7 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si866x.pdf:
+    data_rate_mbps: {value: 150.0, evidence: "Maximum Data Rate 0 — 150 Mbps", note: "max 150 Mbps (min 0), timing characteristics; speed grade B/E = 150 Mbps, p.37"}
     prop_delay_ns: {value: 8.0, evidence: "Propagation Delay t PHL , t PLH Delay Timing on page 14 5.0 8.0 13 ns"}
     cmti_kv_us:  {value: 50, evidence: "CMTI 35 50 — kV/µs"}
     isolation_class: {value: basic, evidence: "VDE 0884-10"}
@@ -189,6 +196,7 @@ datasheets:
     skew_ns:     {value: 2.5, evidence: "Channel-Channel Skew t PSK — 0.4 2.5 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature 1 T A –40 25 125"}
   si860x.pdf:
+    data_rate_mbps: {value: 1.7, evidence: "Maximum I2C Bus Frequency Fmax — — 1.7 MHz", note: "I2C channels: max bus frequency 1.7 MHz (bus speed 1.7 Mbps, p.6; speed grade A = 1.7 Mbps, p.34); the non-I2C channels: max 10 Mbps, p.16"}
     cmti_kv_us:  {value: 50, evidence: "CMTI 35 50 — kV/µs"}
     isolation_class: {value: basic, evidence: "60747-5-2: Up to 1200 V for basic insulation working voltage"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si860x is certified under GB4943.1-2011"}
@@ -197,6 +205,7 @@ datasheets:
     skew_ns:     {value: 10, evidence: "Channel-Channel Skew t PSK — — 10 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature1 T A –40 25 125"}
   si86xx-1Mbps-datasheet.pdf:
+    data_rate_mbps: {value: 1.0, evidence: "Maximum Data Rate 0 — 1 Mbps", note: "max 1 Mbps (min 0), all models, timing characteristics; ordering guide p.2: max data rate 1 Mbps; speed grade A/D = 1 Mbps, p.43; the web product table says 150"}
     prop_delay_ns: {value: 35.0, evidence: "Propagation Delay t , t See Figure 4.2 Propagation — — 35 ns"}  # max: no typ stated
     cmti_kv_us:  {value: 50, evidence: "Common Mode CMTI V = V or 0 V 35 50"}
     isolation_class: {value: basic, evidence: "certified according to IEC 60747-5-2"}
@@ -205,6 +214,7 @@ datasheets:
     skew_ns:     {value: 35, evidence: "Channel-Channel Skew t — — 35 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient Operating Temperature1 T A –40 25 125"}
   si86s60x-datasheet.pdf:
+    data_rate_mbps: {value: 1.7, evidence: "Fmax — — 1.7 MHz", note: "I2C channels: max clock 1.7 MHz (bus speed 1.7 Mbps, p.7; speed grade A = 1.7 MHz, p.34); the non-I2C channels: max 150 Mbps, p.15; the web product table says 3.4"}
     cmti_kv_us:  {value: 100, evidence: "Common mode transient immunity CMTI VCM = 1500 V 100"}
     isolation_class: {value: reinforced, evidence: "60747-17 \\(reinforced insulation\\)"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86S60x is certified under GB4943.1"}
@@ -216,7 +226,10 @@ datasheets:
   si86s61x_2x_Ox-datasheet.pdf:
     cmti_kv_us:  {value: 100, high_cmti: 150, evidence: "Si86SxxxB/Ex 100"}
     prop_delay_ns: {value: 9.0, deglitch: 36.0, evidence: "Si86SxxxF/Hx t PHL , t PLH See Propagation Delay Timing, Figure 7 30.5 36 41.5 ns"}
-    data_rate_mbps: {deglitch: 10.0, evidence: "Data rate Si86SxxxF/Hx — — 10 Mbps"}
+    data_rate_mbps: {value: 150.0, deglitch: 10.0, evidence: "Data rate Si86SxxxB/Ex — — 150 Mbps",
+                     evidence_by: {deglitch: "Data rate Si86SxxxF/Hx — — 10 Mbps"},
+                     note: "max 150 Mbps for Si86SxxxB/Ex (no deglitch filter; min pulse width 6.7 ns), VDD = 5 V; the same at 3.3 V p.10 and 2.5 V p.12",
+                     note_by: {deglitch: "max 10 Mbps for Si86SxxxF/Hx (36 ns deglitch filter; min pulse width 100 ns), VDD = 5 V; the same at 3.3 V p.10 and 2.5 V p.12; ordering guide p.25 lists the F/H codes with 36 ns deglitch"}}
     isolation_class: {value: reinforced, evidence: "Reinforced IEC 60747-17 rating"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86S61x/2x/Ox is certified under GB4943.1"}
     creepage_mm: {by_package: {SSO-8: 8.0, SOIC-8N: 3.9}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.9"}
@@ -227,7 +240,10 @@ datasheets:
   si86s6xx-datasheet.pdf:
     cmti_kv_us:  {value: 100, high_cmti: 150, evidence: "Si86SxxxB/Ex 100 — —"}
     prop_delay_ns: {value: 9.0, deglitch: 36.0, low_power: 11.5, evidence: "\\(Si86SLx, low power mode\\) t PHL , t PLH See Figure 17"}
-    data_rate_mbps: {deglitch: 10.0, evidence: "Data Rate Si86SxxxF/Hx — — 10 Mbps"}
+    data_rate_mbps: {value: 150.0, deglitch: 10.0, evidence: "Data rate Si86SxxxB/Ex — — 150 Mbps",
+                     evidence_by: {deglitch: "Data Rate Si86SxxxF/Hx — — 10 Mbps"},
+                     note: "max 150 Mbps for Si86SxxxB/Ex (no deglitch filter; min pulse width 6.7 ns), VDD = 5 V; the Si86SL low-power codes have no own data-rate row (only their timing differs, p.23)",
+                     note_by: {deglitch: "max 10 Mbps for Si86SxxxF/Hx (36 ns deglitch filter; min pulse width 100 ns), VDD = 5 V; also p.26 at 3.3 V; ordering guide p.49 lists the F/H codes with 36 ns deglitch"}}
     isolation_class: {value: reinforced, evidence: "Reinforced IEC 60747-17 rating"}
     certifications: {value: [UL, CSA, VDE, CQC], evidence: "The Si86Sx is certified under GB4943.1"}
     creepage_mm: {by_package: {SOIC-16W: 8.0, SOIC-16N: 3.9, QSOP-16: 3.6}, evidence: "Nominal external tracking \\(creepage\\) CRP 8.0 3.9 3.6"}
@@ -236,6 +252,7 @@ datasheets:
     skew_ns:     {value: 2, evidence: "\\(Si86SxxxB/Ex\\) t PSK — 0.8 2 ns"}
     temp_range_c: {value: [-40, 125], evidence: "Ambient operating temperature1 T A –40 25 125"}
   Si86Px-datasheet.pdf:
+    data_rate_mbps: {value: 150.0, evidence: "Data rate — — 150 Mbps", note: "max 150 Mbps, electrical characteristics; B and E codes alike"}
     integrated_power: {value: isolated dc-dc, evidence: "Power supply for integrated power"}
     prop_delay_ns: {value: 8.0, evidence: "Propagation delay t , t 5.0 8.0 15.0 ns"}
     cmti_kv_us:  {value: 100, evidence: "Common-mode transient immunity CMTI\\W*100 — — kV"}

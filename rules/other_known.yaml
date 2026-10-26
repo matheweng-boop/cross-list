@@ -1,0 +1,31 @@
+# Other known parts (owner, 26 Oct 2026: "Update cross-lists", lookup 1). A family entry only, like isolated_dcdc:
+# parts of functions the site has no crossing rules for (LDOs, op-amps, comparators, logic, high-side switches, CAN
+# transceivers, motor and solenoid drivers, ADCs, temperature sensors...) are recognised on Products › Cross a list
+# and shown with a few datasheet values. Every parameter is priority 3 (for information): no crosses are made here.
+# `function_type` names the block-diagram function (data/blocks/functions.yaml), so Cross a list says
+# "Function known (<function>), no Skyworks/Qorvo part in our data." A function that gets real crossing rules later
+# moves to its own family file.
+family: other_known
+title: Other known parts (no crossing rules)
+params:
+  - {key: function_type, label: Function, priority: 3, kind: category}
+  - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 3, kind: ordinal, levels: [commercial, industrial, automotive]}
+  - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 3, kind: range}
+  - {key: vin_range_v, label: Supply / input voltage, unit: V, priority: 3, kind: range}
+  - {key: vout_v, label: Output voltage (fixed), unit: V, priority: 3, kind: set}
+  - {key: vout_range_v, label: Output voltage (adjustable), unit: V, priority: 3, kind: range}
+  - {key: iout_max_a, label: Output / load current (max.), unit: A, priority: 3, kind: number, direction: higher}
+  - {key: iq_ua, label: Quiescent current (typ.), unit: µA, priority: 3, kind: number, direction: lower}
+  - {key: channels, label: Channels, priority: 3, kind: number, direction: match}
+  - {key: ron_mohm, label: On-resistance (typ.), unit: mΩ, priority: 3, kind: number, direction: lower}
+  - {key: gbw_mhz, label: Gain bandwidth, unit: MHz, priority: 3, kind: number, direction: higher}
+  - {key: gain_vv, label: Gain, unit: V/V, priority: 3, kind: number, direction: match}
+  - {key: vcm_max_v, label: Common-mode voltage (max.), unit: V, priority: 3, kind: number, direction: higher}
+  - {key: resolution_bits, label: Resolution, unit: bit, priority: 3, kind: number, direction: higher}
+  - {key: data_rate_ksps, label: Data rate (max.), unit: kSPS, priority: 3, kind: number, direction: higher}
+  - {key: bus_rate_mbps, label: Bus data rate (max.), unit: Mbps, priority: 3, kind: number, direction: higher}
+  - {key: logic_function, label: Logic function, priority: 3, kind: category}
+  - {key: accuracy_pct, label: Accuracy / tolerance, unit: "%", priority: 3, kind: number, direction: lower}
+  - {key: isolation_rating_vrms, label: Isolation rating, unit: Vrms, priority: 3, kind: number, direction: higher}
+  - {key: standoff_v, label: Switch standoff voltage, unit: V, priority: 3, kind: number, direction: higher}
+  - {key: resistance_ohm, label: Nominal resistance (25 °C), unit: Ω, priority: 3, kind: number, direction: match}

@@ -291,3 +291,30 @@ def test_p1_specs_behind_a_tap_and_no_repeated_reason(client):
                                     ("Texas", False), ("ISO7741DWR", True), ("AB12", True)])  # fmt: skip
 def test_looks_like_pn(tok, ok):
     assert cl.looks_like_pn(tok) is ok
+
+
+def _fake(mpn: str, pid: int, *, fff: bool, fits: bool, same_package: bool = True):
+    from types import SimpleNamespace as NS
+
+    return NS(candidate=NS(id=pid, mpn=mpn, params=[]), category="fff" if fff else "functional", deviations=[],
+              exceptions=[], closeness=0, diffs=[], lifecycle_risk=False,
+              fit=NS(fits=fits, same_package=same_package, same_pinout=same_package))  # fmt: skip
+
+
+def test_si86s_drop_in_offers_an_si86_second_option():
+    """Owner, 26 Oct 2026 (Cross a list only): if an Si86S part is the drop-in, the second column offers the best
+    suitable Si86 part, even when another part would rank as the best functional fit."""
+    from types import SimpleNamespace as NS
+
+    ref = NS(params=[])
+    s = _fake("SI86S640EE-IS2", 1, fff=True, fits=True)
+    other = _fake("SI8285DD-IS", 2, fff=False, fits=False, same_package=False)
+    si86 = _fake("SI8641ET-IS", 3, fff=False, fits=False, same_package=False)
+    si86.deviations = [NS(score=1.0)]  # ranks below `other` as a plain functional fit
+    c1, c2 = cl.columns(ref, {"x": [s, other, si86]})
+    assert c1 is s and c2 is si86
+    c1, c2 = cl.columns(ref, {"x": [s, other]})  # no Si86 candidate: the usual rule ("= Drop-in" here)
+    assert c1 is s and c2 is None
+    c1, c2 = cl.columns(ref, {"x": [_fake("SI8641ET-IS", 4, fff=True, fits=True), other, si86]})  # not Si86S
+    assert c2 is None
+    assert cl.is_si86s("Si86S641HE-IS2") and cl.is_si86("SI8641ET-IS") and not cl.is_si86("SI86SL41EC-IS1")

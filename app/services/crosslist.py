@@ -42,7 +42,8 @@ PRECHECK_NOTE = ("Pre-check from public datasheets. Green rows were checked spec
                  "before quoting to a customer.")  # fmt: skip
 HOW_NOTE = ("Drop-in: same package and pinout. A direct package equivalent (every priority 1 spec equal or better) "
             "comes first; without one, the package drop-in with the fewest and smallest priority 1 deviations. "
-            "Best functional fit: the closest priority 1 match in any package; left out when it is the drop-in part.")
+            "Best functional fit: the closest priority 1 match in any package; left out when it is the drop-in part. "
+            "When the drop-in is an Si86S part, the second column offers the best suitable Si86 part instead.")
 LIGHTS = {"green": "Green", "amber": "Amber", "red": "Red"}
 LIGHT_HELP = {
     "green": "direct package equivalent, priority 1 specs from datasheets on both sides",
@@ -267,9 +268,25 @@ def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult |
     fits = [r for r in pool if r.fit.fits]
     c1 = min(fits, key=drop_in_key) if fits else None
     c2 = min(pool, key=functional_key) if pool else None
+    if c1 is not None and is_si86s(c1.candidate.mpn):
+        # owner, 26 Oct 2026: "if a Si86S family is crossed, then offer Si86 as a second option if suitable" - the
+        # best Si86 (not Si86S) candidate the engine kept (it passed the function-defining and must-meet checks)
+        si86 = [r for r in pool if is_si86(r.candidate.mpn)]
+        if si86:
+            c2 = min(si86, key=functional_key)
     if c1 is not None and c2 is not None and c2.candidate.id == c1.candidate.id:
         c2 = None
     return c1, c2
+
+
+def is_si86s(mpn: str) -> bool:
+    return mpn.upper().startswith("SI86S")
+
+
+def is_si86(mpn: str) -> bool:
+    """An Si86 part outside the Si86S family (e.g. SI8641ET-IS)."""
+    m = mpn.upper()
+    return m.startswith("SI86") and not m.startswith("SI86S")
 
 
 # ---------------------------------------------------------------- words
@@ -533,7 +550,10 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
             if r is None:
                 continue
             a = said.get((normalize_pn(part.mpn), normalize_pn(r.candidate.mpn)))
-            c = Column(r, cross_type(r, col), comment(r, col), (part.id, r.candidate.id) in verified,
+            kind = cross_type(r, col)
+            if col == 2 and c1 is not None and is_si86s(c1.candidate.mpn) and is_si86(r.candidate.mpn):
+                kind = "Si86 option · " + kind  # the owner's Si86S → Si86 rule
+            c = Column(r, kind, comment(r, col), (part.id, r.candidate.id) in verified,
                        a.verdict if a else None)  # fmt: skip
             if c.answer == "wrong":
                 c.verified = False

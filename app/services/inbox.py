@@ -202,6 +202,13 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
 
     out += [x for rep in share_reports.REPORTS.values() for x in tech_overview_edit.inbox_lines(session, start, rep)]
 
+    # Data management › Data flow (owner, 26 Oct 2026): the owner's chart changes against data/manage/data_flow.yaml
+    from app.services import data_flow
+
+    flow = data_flow.inbox_lines(session, start)
+    out += flow
+    flow_new = flow[-1] != "None." and not flow[-1].startswith("No new save")
+
     # report and case market figures that no longer match the TAM (data/business/tam_links.yaml)
     from app.services import tam_links
 
@@ -220,6 +227,6 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
     if not any([n_site, crosses, blocks, tech, reviews, dq_open, src, asked, answered, rq, areas, ideas, approved,
-                overview, tam_changes, tc_comments, cx_new]):
+                overview, tam_changes, tc_comments, cx_new, flow_new]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

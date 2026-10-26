@@ -8,6 +8,8 @@ from functools import lru_cache
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app import yamlio
+from app.config import PROJECT_ROOT
 from app.models import Package, ParamValue, Part
 from app.services import blocks
 
@@ -186,3 +188,17 @@ def band_ranges() -> dict[str, dict]:
     return {b["id"]: {"name": b["name"].split(" (")[0].split(":")[0], "group": b["group"], "ranges": rows(b["ranges"]),
                       "sub": rows(b.get("subbands"))}
             for b in rf_bands.data()["bands"] if b.get("group") != "ieee"}  # fmt: skip
+
+
+# --- plain-language explanation under each graph (owner, 26 Oct 2026: "I want slightly longer technical explanations.
+# This assumes a lot of pre Knowledge. It would be good to have the explanations below all graphs") --------------------
+EXPLAIN_FILE = PROJECT_ROOT / "data" / "engineering_visual_explanations.yaml"
+EXPLAIN_PARTS = (("shows", "What it shows"), ("read", "How to read it"), ("try", "What to try"),
+                 ("why", "Why it matters"))  # fmt: skip
+
+
+def explanations() -> dict[str, list[tuple[str, str]]]:
+    """Visual id -> [(label, text)] for the "How to read this graph" box, in the order of EXPLAIN_PARTS."""
+    data = yamlio.load(EXPLAIN_FILE.read_text()) or {}
+    return {str(k): [(label, str(e[f]).strip()) for f, label in EXPLAIN_PARTS if e.get(f)]
+            for k, e in data.items() if isinstance(e, dict)}  # fmt: skip

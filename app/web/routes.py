@@ -633,6 +633,9 @@ def rf_bands_page(request: Request, band: str = ""):
     ctx = {"groups": d["groups"], "bands": d["bands"], "band": band if rf_bands.band(band) else "",
            "counts": rf_bands.band_counts(), "types": d.get("types") or [],
            "apps": d.get("applications") or []}  # fmt: skip
+    from app.services import visuals
+
+    ctx["explain"] = visuals.explanations().get("rf-bands") or []
     return templates.TemplateResponse(request, "engineering/rf_bands.html", ctx)
 
 
@@ -657,7 +660,8 @@ def visuals_page(request: Request, session: Session = Depends(get_session)):
 
     data = {**visuals.reference_values(session), "creepage": visuals.package_creepage(session),
             "bands": visuals.band_ranges()}  # fmt: skip
-    return templates.TemplateResponse(request, "engineering/visuals.html", {"data": data})
+    return templates.TemplateResponse(request, "engineering/visuals.html",
+                                      {"data": data, "explain": visuals.explanations()})  # fmt: skip
 
 
 @router.get("/api/visuals/rf-parts")

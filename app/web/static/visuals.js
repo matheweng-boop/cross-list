@@ -1293,7 +1293,11 @@
       <div class="vz-chartwrap"><svg class="vz-chart" role="img" aria-label="${esc(cur.title)}"></svg></div>
       <div class="vz-eq"><div class="vz-eq-sym"></div><div class="vz-eq-num"></div></div>
       <div class="vz-more"></div>
+      <div class="vz-explain-slot"></div>
       <p class="vz-note"></p>${cur.related ? `<p class="small">Related: ${cur.related.map(([l, h]) => `<a href="${h}">${esc(l)}</a>`).join(" · ")}</p>` : ""}`;
+    // plain-language "How to read this visual" box below the graph (owner, 26 Oct 2026), rendered by the page
+    const ex = document.querySelector(`#vz-explain-src [data-for="${cur.id}"]`);
+    if (ex) panel.querySelector(".vz-explain-slot").replaceWith(ex.cloneNode(true));
     panel.querySelectorAll("[data-k]").forEach(el => el.addEventListener("input", () => {
       const c = cur.controls.find(x => x.k === el.dataset.k);
       vals[c.k] = c.type === "select" ? el.value : fromPos(c, el.value);

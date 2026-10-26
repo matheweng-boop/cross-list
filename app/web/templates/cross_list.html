@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+{% macro col(r, c) %}
+<div class="cx-mpn"><a href="/parts/{{ c.part.id }}">{{ c.part.mpn }}</a> <span class="cx-tag cx-tag-{{ c.part.manufacturer.name|lower|replace(' ', '-') }}">{{ c.part.manufacturer.name|vendor }}</span></div>
+<span class="cx-ty cx-ty-{{ kinds.get(c.type, 'fn') }}">{{ c.type }}</span>{% if c.answer == 'wrong' %} <span class="badge bad">Marked wrong</span>{% endif %}
+<div class="cx-cm">{{ c.comment }}</div>
+{% if r.checked_on %}<details class="cx-p1"><summary>P1 specs checked ({{ r.checked_on|length }})</summary>{{ r.checked_on|join(', ') }}</details>{% endif %}
+<a href="/compare?ids={{ r.part.id }},{{ c.part.id }}&amp;baseline={{ r.part.id }}" class="cx-cmp">Compare →</a>
+{% endmacro %}
+{% macro feedback(r, c, label) %}
+<form class="cx-fb" method="post" action="/cross-list/feedback" hx-post="/cross-list/feedback" hx-target="find .cx-fb-msg" hx-swap="innerHTML">
+  {% if label %}<span class="cx-fb-lbl">{{ label }}</span>{% endif %}
+  <input type="hidden" name="their" value="{{ r.part.mpn }}"><input type="hidden" name="ours" value="{{ c.part.mpn }}">
+  <button type="submit" name="verdict" value="right" class="outline">Right</button><button type="submit" name="verdict" value="wrong" class="outline">Wrong</button>
+  <input name="comment" maxlength="2000" placeholder="Comment (needed for Wrong)" aria-label="Comment on {{ r.part.mpn }} → {{ c.part.mpn }}">
+  <span class="cx-fb-msg" aria-live="polite"></span>
+</form>
+{% endmacro %}
+<link rel="stylesheet" href="/static/cross_list.css">
+<h1>Cross a list</h1>
+<p class="subtitle muted">Paste part numbers (one per line, or a column copied from Excel). Every part is listed, in your order, including those we cannot cross.</p>
+
+<form method="post" action="/cross-list" class="cx-paste">
+  <label for="cx-parts" class="visually-hidden">Part numbers</label>
+  <textarea id="cx-parts" name="parts" rows="7" maxlength="60000" placeholder="ISO7741DWR&#10;UCC21520DW, 2000 pcs&#10;NSI8241W1&#9;500&#9;0.85">{{ text }}</textarea>
+  <div class="cx-row-inline"><button type="submit">Cross all</button><span class="cx-privacy">{{ privacy }} Nothing you paste is stored. Up to {{ max_lines }} lines; commas, semicolons and tabs work too.</span></div>
+</form>
+
+{% if submitted %}
+{% if over %}<p class="cx-over" role="alert">Only the first {{ max_lines }} lines were crossed; {{ over }} more line{{ 's' if over != 1 }} left out. Paste the rest in a second round.</p>{% endif %}
+{% if not rows %}<p>No part numbers found in the pasted text. A part number has letters and digits (quantities, prices and names are skipped).</p>
+{% else %}
+<div class="cx-sum">
+  <b class="cx-summary">{{ sum.n }} part{{ 's' if sum.n != 1 }}:</b>
+  <span class="cx-chips" role="group" aria-label="Show">
+    <button type="button" class="cx-chip on" data-light="">All {{ sum.n }}</button>
+    {% for k, label in lights.items() %}<button type="button" class="cx-chip" data-light="{{ k }}"><span class="cx-dot cx-{{ k }}" aria-hidden="true"></span> {{ label }} {{ sum[k] }}</button>{% endfor %}
+  </span>
+  <span class="cx-chip cx-static">Coverage {{ sum.coverage }} %</span>{% if sum.verified %}<span class="cx-chip cx-static">{{ sum.verified }} verified</span>{% endif %}
+  <span class="cx-export">
+    <form method="post" action="/cross-list.xlsx" class="cx-dl"><textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea><input type="hidden" name="lights" value="" id="cx-dl-lights"><button type="submit" class="outline">Download Excel</button></form>
+    <button type="button" class="outline" id="cx-copy">Copy table</button>
+    <label class="cx-shown"><input type="checkbox" id="cx-only-shown"> Export shown rows</label>
+    <span id="cx-copied" class="small muted" aria-live="polite"></span>
+  </span>
+</div>
+{% endif %}
+{% endif %}
+{# shown once enough pairs are confirmed (owner, 26 Oct 2026: hidden until then) #}{% if accuracy and accuracy.n >= 30 %}<p class="cx-acc">Drop-ins correct: <b>{{ accuracy.rate }} %</b> of {{ accuracy.n }} known pairs (checked {{ accuracy.checked }}).</p>{% endif %}
+
+<details class="cx-how">
+  <summary>How the columns are chosen</summary>
+  <p class="small">{{ how }}</p>
+  <p class="small">{% for k, label in lights.items() %}<span class="cx-dot cx-{{ k }}" aria-hidden="true"></span> <b>{{ label }}</b> = {{ light_help[k] }}.{% if k == 'green' %} ✓ Verified = a person confirmed that exact pair.{% endif %} {% endfor %}</p>
+  <p class="small">Checked on priority-1 specs only; lower-priority specs count only when a rule makes them a must:</p>
+  <ul class="small">{% for fam, labels in p1_all.items() %}<li><b>{{ family_title(fam) }}</b>: {{ labels|join(', ') if labels else '(no priority list yet)' }}</li>{% endfor %}</ul>
+</details>
+
+{% if submitted and rows %}
+<div class="cx-wrap"><table class="cx-table">
+  <thead><tr><th>#</th><th>Your part</th><th><span class="visually-hidden">Light</span></th><th>Drop-in</th><th>Best functional fit</th><th>Verified</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr class="cx-row cx-row-{{ r.light }}" data-light="{{ r.light }}">
+    <td class="cx-n">{{ r.n }}</td>
+    <td class="cx-yours"><div class="cx-mpn">{% if r.part %}<a href="/parts/{{ r.part.id }}">{{ r.text }}</a>{% else %}{{ r.text }}{% endif %}</div>
+      <div class="cx-mk">{% if r.maker %}{{ r.maker|vendor }}{% if r.status %} · {{ r.status|lower }}{% endif %}{% else %}not recognised{% endif %}{% if r.count > 1 %} · ×{{ r.count }}{% endif %}</div>
+      {% if r.how == 'variant' and r.part %}<div class="cx-mk">ordering-code variant of {{ r.part.mpn }}</div>{% endif %}</td>
+    <td class="cx-lt"><span class="cx-dot cx-{{ r.light }}" role="img" aria-label="{{ lights[r.light] }}" title="{{ lights[r.light] }}{% if r.checked_on %} · checked on priority-1 specs: {{ r.checked_on|join(', ') }}{% endif %}"></span><span class="cx-lt-word">{{ lights[r.light] }}</span></td>
+    {% if r.drop_in or r.functional %}
+    <td data-label="Drop-in">{% if r.drop_in %}{{ col(r, r.drop_in) }}{% else %}<span class="cx-none">No drop-in</span><div class="cx-cm">No same-package part with the same pinout.</div>{% endif %}</td>
+    <td data-label="Best functional fit">{% if r.functional %}{{ col(r, r.functional) }}{% else %}<span class="cx-same">= Drop-in</span>{% endif %}</td>
+    {% elif r.part and not r.part.is_reference %}
+    <td data-label="Drop-in"><span class="cx-none">No drop-in</span></td>
+    <td data-label="Best functional fit"><span class="cx-none">No functional fit</span><div class="cx-cm">{{ r.reason }}{% if r.reason_link %} <a href="{{ r.reason_link }}">Open →</a>{% endif %}</div></td>
+    {% else %}
+    <td colspan="2" class="cx-reason">{% if r.light == 'red' %}<span class="cx-none">Not in our data</span>{% endif %}<div class="cx-cm">{% if not (r.light == 'red' and r.reason.rstrip('.') == 'Not in our data') %}{{ r.reason }}{% endif %}{% if r.suggestion %} <a href="{{ r.reason_link }}">Search {{ r.suggestion }} →</a>{% endif %}</div></td>
+    {% endif %}
+    <td{% if r.verified or (owner and (r.drop_in or r.functional)) %} data-label="Verified"{% endif %}>{% if r.verified %}<span class="cx-vf">✓ Verified</span>{% endif %}
+      {% if owner %}{% if r.drop_in %}{{ feedback(r, r.drop_in, 'Drop-in' if r.functional else '') }}{% endif %}{% if r.functional %}{{ feedback(r, r.functional, 'Functional fit' if r.drop_in else '') }}{% endif %}{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+<table id="cx-export" hidden aria-hidden="true">
+  <thead><tr>{% for h in header %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for r in rows %}<tr data-light="{{ r.light }}">{% for v in cells(r) %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table>
+<p class="cx-foot">{{ precheck }}</p>
+<script>
+(() => {
+  let want = "";
+  const only = document.getElementById("cx-only-shown"), dl = document.getElementById("cx-dl-lights");
+  const sync = () => { dl.value = only.checked ? want : ""; };
+  document.querySelectorAll(".cx-chips .cx-chip").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".cx-chips .cx-chip").forEach(x => x.classList.toggle("on", x === b));
+    want = b.dataset.light;
+    document.querySelectorAll(".cx-row").forEach(tr => { tr.hidden = !!want && tr.dataset.light !== want; });
+    sync();
+  }));
+  only.addEventListener("change", sync);
+  // the same cells as the Excel download, as tab-separated text and an HTML table
+  window.cxTable = shownOnly => {
+    const t = document.getElementById("cx-export");
+    const rows = [t.tHead.rows[0], ...[...t.tBodies[0].rows].filter(tr => !shownOnly || !want || tr.dataset.light === want)];
+    const cells = tr => [...tr.cells].map(c => c.textContent.replace(/\s+/g, " ").trim());
+    const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    const tsv = rows.map(tr => cells(tr).join("\t")).join("\n") + "\n";
+    const fills = {Green: "#C6EFCE", Amber: "#FFEB9C", Red: "#FFC7CE"};
+    const html = "<table border=1 style='border-collapse:collapse'>" + rows.map((tr, i) => "<tr>" + cells(tr).map((v, j) =>
+      i ? `<td${j === 4 && fills[v] ? ` style="background:${fills[v]}"` : ""}>${esc(v)}</td>` : `<th>${esc(v)}</th>`).join("") + "</tr>").join("") + "</table>";
+    return {tsv, html};
+  };
+  document.getElementById("cx-copy").addEventListener("click", async () => {
+    const {tsv, html} = window.cxTable(only.checked), msg = document.getElementById("cx-copied");
+    try {
+      if (window.ClipboardItem && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({"text/plain": new Blob([tsv], {type: "text/plain"}),
+                                                            "text/html": new Blob([html], {type: "text/html"})})]);
+      } else { await navigator.clipboard.writeText(tsv); }
+      msg.textContent = "Copied – paste into Excel, Outlook or PowerPoint.";
+    } catch (e) {
+      const ta = document.createElement("textarea"); ta.value = tsv; document.body.append(ta); ta.select();
+      msg.textContent = document.execCommand("copy") ? "Copied." : "Copying is blocked here: use Download Excel.";
+      ta.remove();
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -84,14 +84,20 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += _section("\n## Technology feedback\n", [f"- {_when(t.created_at)} [{t.status}] {t.kind} {t.topic or ''}: "
                     f"{_one_line(t.text)}" for t in tech])  # fmt: skip
 
-    from app.services import digest, refmatch
+    from app.services import crosslist, digest, refmatch
 
     # the To confirm feed has its own section below (Confirm / Ignore are counted, comments listed)
-    reviews = [r for r in _new(session, DataReview, start) if r.dataset not in (refmatch.FEEDBACK, digest.DATASET)]
+    own = (refmatch.FEEDBACK, digest.DATASET, crosslist.DATASET)  # sections of their own
+    reviews = [r for r in _new(session, DataReview, start) if r.dataset not in own]
     out += _section("\n## Review answers (data quality, TAM, cases, library, price calls)\n",
                     [f"- {_when(r.created_at)} {r.dataset} / {r.key}: {r.verdict}"
                      f"{' · ' + _one_line(r.comment) if r.comment else ''}{_earlier(session, r)}"
                      for r in reviews])  # fmt: skip
+
+    # Products › Cross a list: pairs marked Wrong (fix data or rules) and Right (known answers; owner, 26 Oct 2026)
+    cx = crosslist.inbox_lines(session, start)
+    out += cx
+    cx_new = any(x.startswith("- ") for x in cx)
 
     # the owner's answers on the reference designs matched to the library diagrams (owner, 25 Oct 2026: matching
     # "based on feedback"): the run looks for patterns and tunes app/services/refmatch.py (docs/daily_update.md)
@@ -208,6 +214,6 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
     if not any([n_site, crosses, blocks, tech, reviews, dq_open, src, asked, answered, rq, areas, ideas, approved,
-                overview, tam_changes, tc_comments]):
+                overview, tam_changes, tc_comments, cx_new]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

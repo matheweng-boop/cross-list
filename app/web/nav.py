@@ -7,6 +7,8 @@ working; this module only decides where a page sits.
 NAV = (
     ("products", "Products", (
         ("Search & replacements", "/", "Find replacements for a reference part"),
+        # owner, 26 Oct 2026: a pasted list of parts crossed in one go, with an Excel download
+        ("Cross a list", "/cross-list", "Paste many part numbers: drop-in and best fit for each, in your order"),
         ("Part reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
@@ -74,6 +76,7 @@ UTILITY = ("manage", "Data management", (
 # path prefix -> (section key, nav item href); longest matching prefix wins. "/" only matches itself and /find.
 PLACES = {
     "/find": ("products", "/"),
+    "/cross-list": ("products", "/cross-list"),
     "/parts/": ("products", "/"),
     "/pricing/estimate": ("products", "/pricing/estimate"),
     "/pricing/builder": ("products", "/pricing/builder"),

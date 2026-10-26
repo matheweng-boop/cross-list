@@ -135,6 +135,7 @@
         <a href="/parts/{{ c.id }}" class="cand-link"><b>{{ c.mpn }}</b></a>
         {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
+        {% if c.id in verified_ids %}<span class="badge ok" title="A person confirmed this pair">✓ Verified</span>{% endif %}
         <br><small class="muted">{{ c.manufacturer.name|vendor }}</small>
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
         {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}

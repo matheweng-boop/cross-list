@@ -60,6 +60,7 @@ def test_pdf_and_powerpoint_carry_the_same_facts_within_the_page_budget(client, 
         assert f in text and f in slides, f
 
 
+@pytest.mark.smoke
 def test_pdf_has_no_reference_to_the_site_and_no_links(client):
     r = client.get(f"{PDF}?r=overview,synergies,automotive&wm=draft")
     text = " ".join(spdf.texts(r.content))

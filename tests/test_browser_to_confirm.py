@@ -3,6 +3,8 @@ iPad): Read opens the abstract, Confirm takes the card off the feed with an Undo
 
 import pytest
 
+from tests.conftest import PAGE_TIMEOUT
+
 expect = pytest.importorskip("playwright.sync_api").expect
 
 pytestmark = pytest.mark.browser
@@ -21,7 +23,7 @@ def _tab(chromium, live_server, viewport):
     errors = []
     page.on("console", lambda m: m.type == "error" and errors.append(m.text))
     page.on("pageerror", lambda e: errors.append(str(e)))
-    page.set_default_timeout(10_000)
+    page.set_default_timeout(PAGE_TIMEOUT)
     return ctx, page, errors
 
 

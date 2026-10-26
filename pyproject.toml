@@ -23,6 +23,7 @@ dev = [
     "httpx>=0.28.1",
     "playwright>=1.64.0",
     "pytest>=9.1.1",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.17.1",
 ]
 
@@ -37,4 +38,7 @@ ignore = ["B008"]  # FastAPI Depends()/Query() defaults
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning:fastapi.testclient"]
-markers = ["browser: clicks through pages in Chromium against the app on a real port (tests/test_browser.py)"]
+markers = [
+    "browser: clicks through pages in Chromium against the app on a real port (tests/test_browser.py)",
+    "smoke: the quick check run while working (uv run pytest -m smoke): main pages, Cross a list, data files, one PDF",
+]

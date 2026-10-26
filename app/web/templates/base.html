@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>{% block title %}{{ page_title(request.url.path) }}{% endblock %}</title>
+  {#- shareable documents name only themselves: no site name in the title, which browsers print in a PDF's header (owner, 26 Oct 2026) -#}
+  {% set share_doc = request.url.path is shareable_document %}
+  <title>{% block title %}{% if share_doc %}{{ page_title(request.url.path).split(' – ')[0] }}{% else %}{{ page_title(request.url.path) }}{% endif %}{% endblock %}</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/vendor/pico.min.css">
@@ -47,12 +49,12 @@
   {% block content %}{% endblock %}
   {% if ns.tabs %}<script>(() => { const t = document.querySelector("main > nav.page-tabs"), h = document.querySelector("main h1"); if (t && h) h.after(t); })();</script>{% endif %}
 </main>
-<footer class="site-foot">
+{% if not share_doc %}<footer class="site-foot">
   {% set asof = data_as_of() %}{% if asof %}<span>Cross lists loaded {{ asof|date }}</span>{% endif %}
   <span>Built from public datasheets and catalogues</span>
   <a href="/business/method">Methodology</a> · <a href="/rules">Cross rules</a>
   <button type="button" onclick="document.querySelector('.fb-open').click()">Send feedback or ask a question</button>
-</footer>
+</footer>{% endif %}
 <div id="fb" class="fb">
   <button type="button" class="fb-open" aria-expanded="false" aria-controls="fb-panel" title="Send feedback on this page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback</button>
   <div class="fb-panel" id="fb-panel" hidden role="dialog" aria-label="Send feedback">

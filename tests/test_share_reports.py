@@ -78,7 +78,7 @@ def test_the_manufacturing_guard_blocks_fabs_sites_and_named_partners():
 
 def test_automotive_names_only_aec_q_series_and_opens_as_an_extension(client):
     html = client.get(AUTO).text
-    assert "Extension of:" in html and 'href="/shareable/synergies"' in html
+    assert "Extension of: Skyworks + Qorvo synergies" in html  # named, not linked: no reference to the site
     b = sr.build_automotive()
     assert [s["key"] for s in b["subsystems"]][:3] == ["car-access", "car-radio", "telematics-v2x"]
     named = [x for s in b["subsystems"] for x in s["series"]]
@@ -284,3 +284,18 @@ def test_owner_sees_edit_links_guest_does_not(owner, make_guest):
         assert f'class="sh-edit small" href="{href}/edit"' in html
     g, _ = make_guest()
     assert 'class="sh-edit' not in g.get("/shareable").text
+
+
+def test_shareable_documents_carry_no_reference_to_the_site(client):
+    """Owner, 26 Oct 2026: "Leave all references to the site out of the shareable documentation" - no site footer,
+    no site name in the title (browsers print it in a PDF's header), no links from one report to another."""
+    for url in (SYN, AUTO, "/shareable/technology-overview", PACK + "?r=synergies,automotive,overview",
+                "/shareable/presentation/preview?s=title"):  # fmt: skip
+        html = client.get(url).text
+        title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
+        assert "BizDev" not in title and "Shareable" not in title, (url, title)
+        assert 'class="site-foot"' not in html and "Cross lists loaded" not in html, url
+        if 'id="share-report"' in html:
+            doc = html.split('id="share-report"', 1)[1]
+            assert 'href="/shareable/synergies"' not in doc and 'href="/shareable/automotive"' not in doc, url
+    assert 'class="site-foot"' in client.get("/shareable").text  # the site's own pages keep their footer

@@ -42,6 +42,7 @@ from app.matching.engine import (
     find_crosses,
     from_datasheet,
     is_estimate_source,
+    rank_key,
 )
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
@@ -338,8 +339,10 @@ def other_family(shown: list, pool: list) -> tuple[str, CrossResult] | None:
     if both families are available"; 26 Oct: "if a Si86S family is crossed, then offer Si86 as a second option if
     suitable"). When the parts shown (``shown``, None entries skipped) are all from one family, Si86S or Si86, the
     best part of the other family in ``pool`` (the engine's list: it passed the function-defining and must-meet
-    checks) by ``functional_key``, with the family's name; None when the other family is already shown, nothing
-    shown is from either family, or the other family has no suitable part."""
+    checks) by the usual order (``rank_key``: fewest deviations, then the same package and pinout before
+    another; owner, 27 Oct 2026: "We still follow the same rules for package comparisons"), with the family's
+    name; None when the other family is already shown, nothing shown is from either family, or the other family
+    has no suitable part."""
     shown = [r for r in shown if r is not None]
     fams = {isolator_family(r.candidate.mpn) for r in shown} - {None}
     if len(fams) != 1:
@@ -347,7 +350,7 @@ def other_family(shown: list, pool: list) -> tuple[str, CrossResult] | None:
     want = OTHER_FAMILY[fams.pop()]
     ids = {r.candidate.id for r in shown}
     cands = [r for r in pool if r.candidate.id not in ids and isolator_family(r.candidate.mpn) == want]
-    return (want, min(cands, key=functional_key)) if cands else None
+    return (want, min(cands, key=rank_key)) if cands else None
 
 
 def _dev_set(r: CrossResult) -> set:

@@ -7,12 +7,10 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    for a 150 Mbps part; the B/E codes do (Si86S620HE / SI86S640FC are 36 ns, 10 Mbps per the datasheet ordering
    guide; 10 ns is the E/B code). Is that right?
 
-2. **Which Si86 part for NSI8321N1-Q1SPR (27 Oct 2026).** Both families now show everywhere. The Si86 option is
-   picked like the "Best functional fit" column (smallest deviation first), so Cross a list offers SI8621ET-AS
-   (CMTI 100 vs 200 kV/µs, but SOIC-16W against their SOP8) rather than SI8621EC-AS (same SOIC-8 package, CMTI 50 vs
-   200 kV/µs), which the part page lists first (it puts the same package before the size of the deviation). Should
-   the other-family pick, or the whole "Best functional fit" column, prefer the same package when the number of
-   deviations is equal?
+## Settled (owner, 27 Oct 2026, other-family option): "We still follow the same rules for package comparisons. I simply want to make sure that when I offer the SI86 family, I also get the choice of the SI86 as family and vice versa"
+
+- The other-family option is picked by the usual order (fewest deviations, then the same package and pinout), so
+  NSI8321N1-Q1SPR gets SI8621EC-AS (same SOIC-8), not SI8621ET-AS (the T code is the 10 kV surge version, SOIC-16W).
 
 ## Settled (owner, 26 Oct 2026, automotive crosses): "No industrial fallback. Automotive needs automotive"
 

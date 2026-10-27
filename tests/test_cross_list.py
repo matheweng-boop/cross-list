@@ -301,8 +301,9 @@ def test_looks_like_pn(tok, ok):
 def _fake(mpn: str, pid: int, *, fff: bool, fits: bool, same_package: bool = True):
     from types import SimpleNamespace as NS
 
-    return NS(candidate=NS(id=pid, mpn=mpn, params=[]), category="fff" if fff else "functional", deviations=[],
-              exceptions=[], closeness=0, diffs=[], lifecycle_risk=False,
+    return NS(candidate=NS(id=pid, mpn=mpn, params=[], label=mpn), category="fff" if fff else "functional",
+              deviations=[], exceptions=[], closeness=0, diffs=[], lifecycle_risk=False, unverified_worse=0,
+              reference=NS(family="digital_isolator"),
               fit=NS(fits=fits, same_package=same_package, same_pinout=same_package))  # fmt: skip
 
 
@@ -353,6 +354,9 @@ def test_nsi8321_offers_both_families_on_cross_a_list(session, isolators):
     row = rows_for(session, "NSI8321N1-Q1SPR")["NSI8321N1-Q1SPR"]
     assert row.drop_in is None and cl.isolator_family(row.functional.part.mpn) == "Si86S"
     assert row.other is not None and cl.isolator_family(row.other.part.mpn) == "Si86"
+    # owner, 27 Oct 2026: "We still follow the same rules for package comparisons" - the same SOIC-8 first, not the
+    # 10 kV surge T code in SOIC-16W
+    assert row.other.part.mpn == "SI8621EC-AS"
     assert row.other.type == "Also in the Si86 family" and "CMTI" in row.other.comment
     cell = cl.export_cells(row)[cl.EXPORT_HEADER.index("Other family option")]
     assert cell.startswith(f"Also in the Si86 family: {row.other.part.mpn} – ")

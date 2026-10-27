@@ -170,11 +170,18 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      (except through "Update cross-lists", next step).
    - **Both Skyworks isolator families** (owner, 27 Oct 2026: "I thought we established as a rule to always offer
      both families if both families are available"; 26 Oct: "if a Si86S family is crossed, then offer Si86 as a second
-     option if suitable"). Wherever a cross is offered (Cross a list, its Excel and Copy table, the part page), when
-     the parts shown are all Si86S or all Si86 (non-S) and a suitable part of the other family is in the engine's list
-     (it passed the function-defining and must-meet checks), the best one of it by `functional_key` is offered too:
-     "Also in the Si86 family: …" under the row and the "Other family option" column, "Other family: …" on the part
-     page (`other_family` in `app/services/crosslist.py`). Keep it when changing the cross columns or the ranking.
+     option if suitable"; "We still follow the same rules for package comparisons"; "just add a third option which
+     shows the family equivalent and same goes if there is a package equivalent in another family"; "it's a third
+     row in that becomes part of each selection"). Wherever a cross is offered, when the parts shown are all Si86S
+     or all Si86 (non-S), the other family's best suitable part (from the engine's list: it passed the
+     function-defining and must-meet checks) is offered as a full cross: its package drop-in or direct package
+     equivalent (`drop_in_key`) when it has one, else its best functional fit by the usual order (`rank_key`). When
+     both families are shown already, only a package drop-in of the family shown as a functional fit alone is
+     added. Cross a list: a third row of the part's entry ("Other family" / "Other family · package equivalent")
+     with type, comment, P1 tap, Verified and Right / Wrong; in Excel and Copy table a line "↳ other family" under
+     the part's line, the cross in the Drop-in cells when it fits, else in the Functional fit cells. Part page: a
+     result row "Other family equivalent" / "Other family package equivalent". Never a note line. Code:
+     `other_family` in `app/services/crosslist.py`. Keep it when changing the cross columns or the ranking.
    - **Datasheet families to re-read** (owner, 26 Oct 2026: "check the whole product family and therefore batch
      confirm"). Inbox section "Cross list: datasheet families to re-read" lists each family (all codes from one
      datasheet, `app/services/families.py`) with 2 or more open Wrong crosses, or a Wrong after the family was

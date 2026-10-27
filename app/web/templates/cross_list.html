@@ -67,7 +67,7 @@
   <thead><tr><th>#</th><th>Your part</th><th><span class="visually-hidden">Light</span></th><th>Drop-in</th><th>Best functional fit</th><th>Verified</th></tr></thead>
   <tbody>
   {% for r in rows %}
-  <tr class="cx-row cx-row-{{ r.light }}" data-light="{{ r.light }}">
+  <tr class="cx-row cx-row-{{ r.light }}{{ ' cx-has-other' if r.other }}" data-light="{{ r.light }}">
     <td class="cx-n">{{ r.n }}</td>
     <td class="cx-yours"><div class="cx-mpn">{% if r.part %}<a href="/parts/{{ r.part.id }}">{{ r.text }}</a>{% else %}{{ r.text }}{% endif %}</div>
       <div class="cx-mk">{% if r.maker %}{{ r.maker|vendor }}{% if r.status %} · {{ r.status|lower }}{% endif %}{% else %}not recognised{% endif %}{% if r.count > 1 %} · ×{{ r.count }}{% endif %}</div>
@@ -76,23 +76,29 @@
     <td class="cx-lt"><span class="cx-dot cx-{{ r.light }}" role="img" aria-label="{{ lights[r.light] }}" title="{{ lights[r.light] }}{% if r.checked_on %} · checked on priority-1 specs: {{ r.checked_on|join(', ') }}{% endif %}"></span><span class="cx-lt-word">{{ lights[r.light] }}</span></td>
     {% if r.drop_in or r.functional %}
     <td data-label="Drop-in">{% if r.drop_in %}{{ col(r, r.drop_in) }}{% else %}<span class="cx-none">No drop-in</span><div class="cx-cm">No same-package part with the same pinout.</div>{% endif %}</td>
-    <td data-label="Best functional fit">{% if r.functional %}{{ col(r, r.functional) }}{% else %}<span class="cx-same">= Drop-in</span>{% endif %}
-      {% if r.other %}<div class="cx-cm cx-other">{{ r.other.type }}: <a href="/parts/{{ r.other.part.id }}"><b>{{ r.other.part.mpn }}</b></a> – {{ r.other.comment }}</div>{% endif %}</td>
+    <td data-label="Best functional fit">{% if r.functional %}{{ col(r, r.functional) }}{% else %}<span class="cx-same">= Drop-in</span>{% endif %}</td>
     {% elif r.part and not r.part.is_reference %}
     <td data-label="Drop-in"><span class="cx-none">No drop-in</span></td>
     <td data-label="Best functional fit"><span class="cx-none">No functional fit</span><div class="cx-cm">{{ r.reason }}{% if r.reason_link %} <a href="{{ r.reason_link }}">Open →</a>{% endif %}</div></td>
     {% else %}
     <td colspan="2" class="cx-reason">{% if r.light == 'red' %}<span class="cx-none">Not in our data</span>{% endif %}<div class="cx-cm">{% if not (r.light == 'red' and r.reason.rstrip('.') == 'Not in our data') %}{{ r.reason }}{% endif %}{% if r.suggestion %} <a href="{{ r.reason_link }}">Search {{ r.suggestion }} →</a>{% endif %}</div></td>
     {% endif %}
-    <td{% if r.verified or (owner and (r.drop_in or r.functional)) %} data-label="Verified"{% endif %}>{% if r.verified %}<span class="cx-vf">✓ Verified</span>{% endif %}
+    <td{% if r.main_verified or (owner and (r.drop_in or r.functional)) %} data-label="Verified"{% endif %}>{% if r.main_verified %}<span class="cx-vf">✓ Verified</span>{% endif %}
       {% if owner %}{% if r.drop_in %}{{ feedback(r, r.drop_in, 'Drop-in' if r.functional else '') }}{% endif %}{% if r.functional %}{{ feedback(r, r.functional, 'Functional fit' if r.drop_in else '') }}{% endif %}{% endif %}</td>
   </tr>
+  {% if r.other %}{% set o = r.other %}{% set olbl = 'Other family · package equivalent' if o.result.fit.fits else 'Other family' %}{# the other Skyworks isolator family, a third row of the same selection (owner, 27 Oct 2026) #}
+  <tr class="cx-row cx-other cx-row-{{ r.light }}" data-light="{{ r.light }}">
+    <td class="cx-n"></td><td class="cx-yours"></td><td class="cx-lt"></td>
+    <td colspan="2" class="cx-other-cell"><span class="cx-other-lbl">{{ olbl }}</span>{{ col(r, o) }}</td>
+    <td{% if o.verified or owner %} data-label="Verified"{% endif %}>{% if o.verified %}<span class="cx-vf">✓ Verified</span>{% endif %}
+      {% if owner %}{{ feedback(r, o, 'Other family') }}{% endif %}</td>
+  </tr>{% endif %}
   {% endfor %}
   </tbody>
 </table></div>
 <table id="cx-export" hidden aria-hidden="true">
   <thead><tr>{% for h in header %}<th>{{ h }}</th>{% endfor %}</tr></thead>
-  <tbody>{% for r in rows %}<tr data-light="{{ r.light }}">{% for v in cells(r) %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  <tbody>{% for r in rows %}{% for line in lines(r) %}<tr data-light="{{ r.light }}">{% for v in line %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}{% endfor %}</tbody>
 </table>
 <p class="cx-foot">{{ precheck }}</p>
 <script>

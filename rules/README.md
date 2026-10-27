@@ -26,8 +26,11 @@ Edit a file and restart the app to apply changes.
 Rules that live in code rather than in these files:
 
 - **Both Skyworks isolator families** (owner, 27 Oct 2026: "always offer both families if both families are
-  available"). When the parts offered for a cross are all Si86S or all Si86 (non-S), the best suitable part of the
-  other family is offered as well (`other_family` in `app/services/crosslist.py`; Cross a list and the part page).
+  available"; "add a third option which shows the family equivalent and same goes if there is a package equivalent
+  in another family"). When the parts offered for a cross are all Si86S or all Si86 (non-S), the other family's
+  package drop-in, else its best functional fit, is offered as a cross of its own: a third row of the part on Cross
+  a list, a result "Other family (package) equivalent" on the part page (`other_family` in
+  `app/services/crosslist.py`).
 
 ## Shared vocabulary
 

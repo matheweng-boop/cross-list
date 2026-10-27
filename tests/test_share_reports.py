@@ -251,11 +251,11 @@ def test_menu_has_one_shareable_entry_and_no_report_items():
 def test_shareable_lists_the_three_reports_with_previews_and_two_actions(client):
     html = client.get("/shareable").text
     rows = re.findall(r'<li class="sh-row">.*?</li>', html, re.S)
-    assert len(rows) == 3
+    assert len(rows) == 3 + 4  # then the four system briefs (owner, 27 Oct 2026; tests/test_share_systems.py)
     # the synergies report first, its automotive extension next (owner, 25 Oct 2026)
     want = (("synergies", "Skyworks + Qorvo synergies", 3, SYN), ("automotive", "Automotive", 3, AUTO),
             ("overview", "Technology overview", 4, "/shareable/technology-overview"))  # fmt: skip
-    for row, (key, label, pages, href) in zip(rows, want, strict=True):
+    for row, (key, label, pages, href) in zip(rows[:3], want, strict=True):
         assert f'name="r" value="{key}"' in row and ' checked' not in row  # nothing ticked by default
         assert f"<b>{label}</b>" in unescape(row) and f"{pages} pages" in row
         assert f'href="{href}" data-lightbox="{label}">Preview</a>' in unescape(row)

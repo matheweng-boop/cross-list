@@ -143,8 +143,20 @@ def _cover(slide, b: dict):
 def _points(slide, b: dict, kind: str):
     pts = list(b.get("points") or [])
     size = _fit([b.get("lead", ""), *pts], 22, 1400)
-    _bullets(slide, MX, BODY_TOP, W - 2 * MX, BODY_BOTTOM - BODY_TOP, pts, size, lead=b.get("lead", ""),
+    note = b.get("note") or []  # small lines under the bullets (a Shareable system brief's sources)
+    bottom = BODY_BOTTOM - (Inches(0.3) * len(note) + Inches(0.1) if note else 0)
+    _bullets(slide, MX, BODY_TOP, W - 2 * MX, bottom - BODY_TOP, pts, size, lead=b.get("lead", ""),
              numbered_from=(b.get("start") or 1) if kind == "agenda" else 0)  # fmt: skip
+    for i, line in enumerate(note):
+        _text(slide, MX, bottom + Inches(0.1) + Inches(0.3) * i, W - 2 * MX, Inches(0.3), line, 11, color=MUTED)
+
+
+def _sysdiagram(slide, b: dict):
+    """A Shareable system brief's block diagram (app/services/share_diagram.py), as native boxes and arrows."""
+    from app.services import share_diagram
+
+    y = BODY_TOP + _lead(slide, b.get("lead", ""), BODY_TOP, 18)
+    share_diagram.to_slide(slide, b["layout"], MX, y, W - 2 * MX, BODY_BOTTOM - y)
 
 
 def _diagram(slide, b: dict):
@@ -438,7 +450,7 @@ def _table(slide, b: dict):
 
 BODIES = {"table": _table, "cols": _cols, "pairs": _pairs,
           "bullets": _points, "agenda": _points, "diagram": _diagram, "parts": _parts, "together": _together,
-          "facts": _facts, "glance": _glance, "closing": _closing}  # fmt: skip
+          "facts": _facts, "glance": _glance, "closing": _closing, "sysdiagram": _sysdiagram}  # fmt: skip
 
 
 def build(slides: list[dict], deck_title: str, today=None, wm_text: str = "", logo: bytes | None = None) -> bytes:

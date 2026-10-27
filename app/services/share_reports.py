@@ -394,6 +394,22 @@ REGISTRY: list[ShareReport] = [
 ]  # fmt: skip
 
 
+def _system_briefs() -> list[ShareReport]:
+    """The four system briefs (owner, 27 Oct 2026: UWB, V2X, GNSS, car radio), app/services/share_systems.py: block
+    diagram, core and peripheral parts, talking points. One body template for all four."""
+    from app.services import share_systems as sy
+
+    out = []
+    for i, k in enumerate(sy.KEYS):
+        c, rep = sy.cur(k), sy.REPORTS[k]
+        out.append(ShareReport(k, str(c.get("label") or k), str(c.get("line") or ""), rep.url, 3, sy.builder(k),
+                               sy.slides_of(k), "shareable/_system.html", rep, 30 + i, sy.content(k)))  # fmt: skip
+    return out
+
+
+REGISTRY += _system_briefs()
+
+
 def registry() -> dict[str, ShareReport]:
     """key -> report, in the list's order (read at call time, so a test can add an entry)."""
     return {r.key: r for r in REGISTRY}

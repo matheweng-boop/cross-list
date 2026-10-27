@@ -58,7 +58,8 @@ PRECHECK_NOTE = ("Pre-check from public datasheets. Green rows were checked spec
 HOW_NOTE = ("Drop-in: same package and pinout. A direct package equivalent (every priority 1 spec equal or better) "
             "comes first; without one, the package drop-in with the fewest and smallest priority 1 deviations. "
             "Best functional fit: the closest priority 1 match in any package; left out when it is the drop-in part. "
-            "When the drop-in is an Si86S part, the second column offers the best suitable Si86 part instead.")
+            "Skyworks isolators: when the parts shown are all Si86S or all Si86, the best suitable part of the other "
+            "family is offered too, under the row (\"Also in the … family\").")  # fmt: skip
 LIGHTS = {"green": "Green", "amber": "Amber", "red": "Red"}
 LIGHT_HELP = {
     "green": "direct package equivalent, priority 1 specs from datasheets on both sides",
@@ -303,17 +304,12 @@ def functional_key(r: CrossResult):
 
 
 def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult | None]:
-    """(drop-in, best functional fit); the second is None when it is the same part as the first."""
+    """(drop-in, best functional fit); the second is None when it is the same part as the first. The other Skyworks
+    isolator family (Si86 / Si86S) is offered apart, by ``other_family``."""
     pool = _pool(ref, crosses)
     fits = [r for r in pool if r.fit.fits]
     c1 = min(fits, key=drop_in_key) if fits else None
     c2 = min(pool, key=functional_key) if pool else None
-    if c1 is not None and is_si86s(c1.candidate.mpn):
-        # owner, 26 Oct 2026: "if a Si86S family is crossed, then offer Si86 as a second option if suitable" - the
-        # best Si86 (not Si86S) candidate the engine kept (it passed the function-defining and must-meet checks)
-        si86 = [r for r in pool if is_si86(r.candidate.mpn)]
-        if si86:
-            c2 = min(si86, key=functional_key)
     if c1 is not None and c2 is not None and c2.candidate.id == c1.candidate.id:
         c2 = None
     return c1, c2
@@ -327,6 +323,51 @@ def is_si86(mpn: str) -> bool:
     """An Si86 part outside the Si86S family (e.g. SI8641ET-IS)."""
     m = mpn.upper()
     return m.startswith("SI86") and not m.startswith("SI86S")
+
+
+def isolator_family(mpn: str) -> str | None:
+    """The family name, Si86S or Si86, for a Skyworks digital isolator of one of the two families, else None."""
+    return "Si86S" if is_si86s(mpn) else "Si86" if is_si86(mpn) else None
+
+
+OTHER_FAMILY = {"Si86S": "Si86", "Si86": "Si86S"}
+
+
+def other_family(shown: list, pool: list) -> tuple[str, CrossResult] | None:
+    """Both Skyworks isolator families wherever a cross is offered (owner, 27 Oct 2026: "always offer both families
+    if both families are available"; 26 Oct: "if a Si86S family is crossed, then offer Si86 as a second option if
+    suitable"). When the parts shown (``shown``, None entries skipped) are all from one family, Si86S or Si86, the
+    best part of the other family in ``pool`` (the engine's list: it passed the function-defining and must-meet
+    checks) by ``functional_key``, with the family's name; None when the other family is already shown, nothing
+    shown is from either family, or the other family has no suitable part."""
+    shown = [r for r in shown if r is not None]
+    fams = {isolator_family(r.candidate.mpn) for r in shown} - {None}
+    if len(fams) != 1:
+        return None
+    want = OTHER_FAMILY[fams.pop()]
+    ids = {r.candidate.id for r in shown}
+    cands = [r for r in pool if r.candidate.id not in ids and isolator_family(r.candidate.mpn) == want]
+    return (want, min(cands, key=functional_key)) if cands else None
+
+
+def _dev_set(r: CrossResult) -> set:
+    return {(d.key, d.cand_display) for d in r.deviations}
+
+
+def other_family_note(r: CrossResult, main: CrossResult | None = None) -> str:
+    """The other-family part in one short line: package and the priority 1 deviations, their value vs ours ("same
+    deviations" when they are those of the part offered first)."""
+    if r.fit.fits:
+        fit = "same package and pinout"
+    elif r.fit.same_package:
+        fit = "same package, different pinout"
+    else:
+        fit = f"package {r.reference.package.code} vs {r.candidate.package.code}"
+    devs = [f"{_short(d.label)} {d.ref_display} vs {d.cand_display}" for d in r.deviations]
+    if not devs:
+        return f"no priority 1 deviation; {fit}"
+    same = main is not None and _dev_set(main) == _dev_set(r)
+    return f"{'same deviations' if same else 'deviations'}: {', '.join(devs)}; {fit}"
 
 
 # ---------------------------------------------------------------- words
@@ -567,6 +608,7 @@ class Row:
     reason: str = ""
     reason_link: str | None = None
     checked_on: list[str] = field(default_factory=list)
+    other: Column | None = None  # the other Skyworks isolator family's best part (Si86 / Si86S)
 
     @property
     def maker(self) -> str:
@@ -627,21 +669,22 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
             continue
         crosses = crosser.crosses(part)
         c1, c2 = columns(part, crosses)
-        for col, r in ((1, c1), (2, c2)):
+        alt = other_family([c1, c2], _pool(part, crosses))
+        for col, r in ((1, c1), (2, c2), (3, alt[1] if alt else None)):
             if r is None:
                 continue
             a = said.get((normalize_pn(part.mpn), normalize_pn(r.candidate.mpn)))
-            kind = cross_type(r, col)
-            if col == 2 and c1 is not None and is_si86s(c1.candidate.mpn) and is_si86(r.candidate.mpn):
-                kind = "Si86 option · " + kind  # the owner's Si86S → Si86 rule
-            c = Column(r, kind, comment(r, col), (part.id, r.candidate.id) in verified,
-                       a.verdict if a else None)  # fmt: skip
+            kind, note = (cross_type(r, col), comment(r, col)) if col < 3 else (
+                f"Also in the {alt[0]} family", other_family_note(r, c1 or c2))  # fmt: skip
+            c = Column(r, kind, note, (part.id, r.candidate.id) in verified, a.verdict if a else None)
             if c.answer == "wrong":
                 c.verified = False
             if col == 1:
                 row.drop_in = c
-            else:
+            elif col == 2:
                 row.functional = c
+            else:
+                row.other = c
         if c1 is None and c2 is None:
             row.reason, row.reason_link = _no_cross(session, part, bool(crosser._cands.get(
                 (part.family, False, None))))  # fmt: skip
@@ -654,7 +697,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
 
 EXPORT_HEADER = ["#", "Your part", "Maker", "Status", "Light", "Drop-in part", "Drop-in maker", "Drop-in type",
                  "Drop-in comment", "Functional fit part", "Functional fit maker", "Functional fit type",
-                 "Functional fit comment", "Checked on (P1 specs)", "Verified", "Your comment"]  # fmt: skip
+                 "Functional fit comment", "Other family option", "Checked on (P1 specs)", "Verified",
+                 "Your comment"]  # fmt: skip
 
 
 def export_cells(r: Row) -> list:
@@ -668,8 +712,9 @@ def export_cells(r: Row) -> list:
         first = col(r.drop_in) if r.drop_in else ["No drop-in", "", "", ""]
         second = col(r.functional) if r.functional else ["= Drop-in", "", "", ""]
     part = r.text + (f" ×{r.count}" if r.count > 1 else "")
+    other = f"{r.other.type}: {r.other.part.mpn} – {r.other.comment}" if r.other else ""
     return [r.n, part, r.maker or ("not recognised" if r.part is None and not r.catalogue else ""), r.status,
-            LIGHTS[r.light], *first, *second, ", ".join(r.checked_on), "✓ Verified" if r.verified else "", ""]
+            LIGHTS[r.light], *first, *second, other, ", ".join(r.checked_on), "✓ Verified" if r.verified else "", ""]
 
 
 def tsv(rows: list[Row]) -> str:
@@ -711,8 +756,9 @@ def known_pairs() -> list[dict]:
 
 
 def check_accuracy(session: Session, pairs: list[dict]) -> dict:
-    """Re-cross every known pair's part: a Right pair counts as a hit when ours is shown in one of the two columns, a
-    Wrong pair when it is not. Pairs whose part is not in the data are counted apart, never as misses."""
+    """Re-cross every known pair's part: a Right pair counts as a hit when ours is shown (either column or the other
+    Skyworks isolator family option), a Wrong pair when it is not. Pairs whose part is not in the data are counted
+    apart, never as misses."""
     ix, crosser = build_index(session), Crosser(session)
     hits, misses, skipped = 0, [], []
     for p in pairs:
@@ -721,7 +767,10 @@ def check_accuracy(session: Session, pairs: list[dict]) -> dict:
         if part is None or part.is_reference:
             skipped.append(p["their"])
             continue
-        shown = [c.candidate.mpn for c in columns(part, crosser.crosses(part)) if c is not None]
+        crosses = crosser.crosses(part)
+        cols = list(columns(part, crosses))
+        alt = other_family(cols, _pool(part, crosses))
+        shown = [c.candidate.mpn for c in [*cols, alt[1] if alt else None] if c is not None]
         found = any(normalize_pn(s).startswith(normalize_pn(p["ours"])) for s in shown)
         if found == (p["expect"] == "right"):
             hits += 1

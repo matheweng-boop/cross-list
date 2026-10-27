@@ -168,6 +168,13 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      engineer notes in `data/cross_notes.yaml` included) and commit `data/manage/cross_accuracy.yaml`; the page shows
      "Drop-ins correct: X % of N known pairs". List the misses in the summary. The pasted lists are never stored
      (except through "Update cross-lists", next step).
+   - **Both Skyworks isolator families** (owner, 27 Oct 2026: "I thought we established as a rule to always offer
+     both families if both families are available"; 26 Oct: "if a Si86S family is crossed, then offer Si86 as a second
+     option if suitable"). Wherever a cross is offered (Cross a list, its Excel and Copy table, the part page), when
+     the parts shown are all Si86S or all Si86 (non-S) and a suitable part of the other family is in the engine's list
+     (it passed the function-defining and must-meet checks), the best one of it by `functional_key` is offered too:
+     "Also in the Si86 family: …" under the row and the "Other family option" column, "Other family: …" on the part
+     page (`other_family` in `app/services/crosslist.py`). Keep it when changing the cross columns or the ranking.
    - **Datasheet families to re-read** (owner, 26 Oct 2026: "check the whole product family and therefore batch
      confirm"). Inbox section "Cross list: datasheet families to re-read" lists each family (all codes from one
      datasheet, `app/services/families.py`) with 2 or more open Wrong crosses, or a Wrong after the family was

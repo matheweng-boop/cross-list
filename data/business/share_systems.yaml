@@ -1,0 +1,580 @@
+# Shareable system documents (owner, 27 Oct 2026): "For the shareables, create a portion for UWB and for V2X and GNSS
+# and for Automotive Radio (AM/FM/DAB) with Block Diagrams and listing some parts from both Skyworks and Qorvo that's
+# 4 different Docs." Built by app/services/share_systems.py; listed on Shareable through share_reports.REGISTRY.
+#
+# Rules (owner): only content already on the site, no new research. The words below come from the site's research
+# reports and cases (data/business/reports.yaml: learn, say_externally; data/library/topics/*.yaml: summary, trends);
+# talking points are the reports' say_externally lines. No reference to the site, no prices, estimates or plans,
+# nothing on where parts are made (the word check and site_guard run on every save and download).
+#
+# diagram: the library diagram it is drawn from (from: "template:<name in data/blocks/templates.yaml>" or
+#   "topic:<data/library/topics key>"), a title, the groups to leave out (drop), new places (place: gid: [col, row]),
+#   shorter group labels (labels), shorter block labels by function (short) and the links to keep (links: [a, b]).
+# parts: core (the parts that define the system; every one must be AEC-Q qualified in the catalogue data) and
+#   peripherals (around the core: switches, LNAs, filters, clocks, power; automotive or not, as bundle options).
+#   at: "<group id>.<function>" - the diagram block the part sits in (core: solid highlight; peripheral: outline).
+#   spec: one or two key specs as the public catalogue / data sheet states them; grade: as the data states it
+#   (empty: "Automotive (AEC-Q)" or "Not automotive" from app/services/autograde.py).
+# Every part must be active in the catalogue (not NRND, last time buy or obsolete); others are left out.
+#
+# Depth rule (owner, 27 Oct 2026: "this is the sort of depth I expect when you put together these documents"): every
+# block of a shareable system brief is checked for both companies, including acquired brands (Qorvo: Active-Semi ACT…,
+# Decawave DW…, UnitedSiC, RFMD, TriQuint, GreenPeak; Skyworks: the ex-Silicon Labs I&A Si… parts), with automotive /
+# bundle option / nothing-that-fits and the reason. Search data/catalog/*_parts.yaml, data/real/*.yaml and
+# data/broadcast by function id, category and description keywords; check band, frequency and voltage against the
+# system. The findings go under coverage: (one entry per diagram block, "gid.function"), so the next run starts there.
+#   coverage: {block: {skyworks: "...", qorvo: "...", note: "..."}}; each company value starts with
+#   "auto: MPN[, MPN] - why" (best active AEC-Q part), "bundle: MPN[, MPN] - why" (best active non-automotive part,
+#   with why it is still relevant) or "none: why" (all discontinued, wrong band, not in our catalogue (store crawl
+#   2026-10-19), ...). Parts named under auto/bundle need not all be in parts: (the page and slide limits decide);
+#   tests/test_share_systems.py checks every diagram block has both entries and every named part is active.
+#   The shareable page shows only one line from this: the blocks without a Skyworks or Qorvo part.
+#
+# Explanation (owner, 27 Oct 2026: an internal "Explanation" next to Preview on Shareable, owner only, never in the
+# PDF, PowerPoint or shared page): built from coverage: above plus, per brief, checked: (the date of the last depth
+# pass) and changes: (what was added, swapped or removed and why, one plain line each, newest pass first). A run that
+# changes a brief's parts or coverage updates changes: in the same commit (docs/daily_update.md). The reports the
+# words come from are listed in data/business/share_explain.yaml. Shown by app/services/share_explain.py.
+
+defaults:
+  sections:
+    intro: {heading: "What it is and why it matters"}
+    diagram: {heading: "Block diagram"}
+    core: {heading: "Core solution: Skyworks and Qorvo parts"}
+    peripherals: {heading: "Peripherals: Skyworks and Qorvo parts"}
+    talk: {heading: "Talking points"}
+  core_note: "Core solution: every part is AEC-Q qualified as stated in the public catalogue."
+  peripheral_note: >-
+    Peripherals marked not automotive are shown as bundle options; they would need qualification for the vehicle.
+  sources:
+    - "Parts, grades and specifications: public Skyworks and Qorvo catalogues and data sheets."
+    - "Block diagram: simplified from public reference designs and application diagrams."
+
+uwb:
+  label: "UWB in the car"
+  line: "Digital key, child presence and anchors: block diagram and parts."
+  title: "Automotive UWB: digital key, child presence and anchors"
+  header: {title: "Skyworks + Qorvo · Automotive UWB", subtitle: ""}
+  kicker: "System brief · Automotive UWB"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "QPC8019Q added at the antenna switch: Qorvo's automotive SPDT up to 8.0 GHz (0.60 dB loss); Qorvo's other automotive switches stop at 6 GHz."
+    - "QPF4239Q added for the Bluetooth LE wake-up: an automotive 2.402-2.481 GHz front end; it is listed for Wi-Fi, but the band is the Bluetooth LE band (est fit)."
+    - "SKY5A1005 moved from the Wi-Fi / V2X filters to the narrowband-assist filter: its 5855-5925 MHz notch keeps V2X out of the narrowband-assist bands either side."
+    - "QM14070 (UWB PA, not automotive) and QPF1004Q (V2X front end) no longer shown: at most 6 rows per slide; QPF1004Q is in the V2X and GNSS briefs."
+  sections:
+    intro:
+      paragraphs:
+        - id: uwb-intro-1
+          text: >-
+            A car with a phone-as-key carries several UWB anchors that measure secure time of flight to the phone or
+            key fob. UWB measures the distance very precisely, so the doors open as the driver comes close and a
+            relayed signal cannot fool the car.
+        - id: uwb-intro-2
+          text: >-
+            The same anchors can act as a small radar: the interior anchor senses a child left in the car, an
+            exterior one a kick under the bumper. Euro NCAP rewards child-presence detection from 2026. Next is IEEE
+            802.15.4ab with narrowband assist and a standard sensing mode.
+    diagram:
+      paragraphs:
+        - id: uwb-diag-1
+          text: >-
+            Exterior anchors range to the phone or fob on UWB channel 9; the interior anchor also runs radar for
+            child presence. Bluetooth LE wakes the anchors, which report to the access controller over CAN or LIN.
+    core:
+      paragraphs:
+        - id: uwb-core-1
+          text: "The UWB ICs at the heart of every anchor."
+    peripherals:
+      paragraphs:
+        - id: uwb-peri-1
+          text: >-
+            Around the UWB IC: the antenna switch, front ends that make up losses, the Bluetooth LE wake-up radio,
+            and filters that keep V2X and Wi-Fi out of the UWB and narrowband-assist receivers.
+    talk:
+      paragraphs:
+        - id: uwb-talk-1
+          text: >-
+            Digital car keys are moving to the new UWB standard IEEE 802.15.4ab with narrowband assist, and CCC
+            Digital Key 4.0 is in testing.
+        - id: uwb-talk-2
+          text: >-
+            Euro NCAP rewards child-presence detection from 2026, and UWB key anchors can also sense breathing and
+            kicks; the QPF5100Q lists child presence and kick sensing among its uses.
+        - id: uwb-talk-3
+          text: >-
+            We would like to learn from which model year you need 802.15.4ab in your anchors, and which sensor you
+            plan for child presence on platforms with a UWB key.
+  diagram:
+    from: "topic:auto_uwb"
+    title: "Phone-as-key car access with UWB anchors"
+    labels:
+      g1: "Phone or key fob"
+      g2: "Exterior UWB anchor (several)"
+      g3: "Interior anchor: ranging + radar"
+      g4: "Wake-up and control"
+      g5: "Access controller"
+      g6: "Other radios in the car"
+    short:
+      g1.external_block: "Phone or fob: UWB + BLE + NFC"
+      g2.antenna: "Antennas (2 for angle)"
+      g2.rf_switch: "Antenna switch"
+      g2.uwb_fem: "Bypass LNA / PA"
+      g2.uwb_soc: "UWB IC"
+      g2.crystal_oscillator: "Crystal"
+      g2.pol_ldo: "LDO"
+      g2.tvs_esd: "ESD protection"
+      g3.antenna: "Cabin antennas"
+      g3.uwb_soc: "UWB IC in radar mode"
+      g3.crystal_oscillator: "Crystal"
+      g4.ble_soc: "Bluetooth LE"
+      g4.bt_fem: "BLE front end"
+      g4.nfc_frontend: "Door-handle NFC"
+      g4.filter_saw_baw: "Narrowband-assist filter"
+      g5.mcu: "MCU"
+      g5.secure_element: "Secure element"
+      g5.can_transceiver: "CAN"
+      g5.lin_transceiver: "LIN"
+      g6.wifi_soc: "Wi-Fi 6E/7"
+      g6.wifi_fem: "Wi-Fi front end"
+      g6.filter_saw_baw: "6 GHz Wi-Fi / V2X filters"
+      g6.v2x_transceiver: "5.9 GHz V2X"
+      g6.v2x_fem: "V2X front end"
+    place: {g1: [0, 0], g2: [1, 0], g5: [2, 0], g4: [0, 1], g3: [1, 1], g6: [2, 1]}
+    links: [[g1, g2], [g1, g3], [g1, g4], [g4, g2], [g2, g5], [g3, g5]]
+  parts:
+    core:
+      - {mpn: QPF5100Q, at: g2.uwb_soc, spec: "UWB SoC with integrated Tx filtering, 2 MB flash; digital key, child presence, kick sensing", grade: "Automotive qualified (AEC-Q)"}
+      - {mpn: DW3300Q, at: g3.uwb_soc, spec: "UWB transceiver, 6.5 to 8.0 GHz (channels 5 and 9)", grade: "Automotive (AEC-Q), -40 to 105 °C"}
+    peripherals:
+      - {mpn: SKY5A2108, at: g2.rf_switch, spec: "SPDT, 2.4 to 8.3 GHz, lists UWB and Wi-Fi 6E; IL 0.5 to 0.9 dB", grade: "AEC-Q100 Grade 2"}
+      - {mpn: QPC8019Q, at: g2.rf_switch, spec: "SPDT, 0.617 to 8.0 GHz, IL 0.60 dB, 1.8 V"}
+      - {mpn: QM14068, at: g2.uwb_fem, spec: "UWB bypass switch and LNA, 6.2 to 8.3 GHz (channels 5 and 9)"}
+      - {mpn: SKY5A1005, at: g4.filter_saw_baw, spec: "C-V2X notch, 5855 to 5925 MHz: keeps V2X out of the narrowband-assist bands either side"}
+      - {mpn: QPF4239Q, at: g4.bt_fem, spec: "2.4 GHz front end, 2.402 to 2.481 GHz (the Bluetooth LE band), 30 dB gain"}
+      - {mpn: SKY5A1008, at: g6.filter_saw_baw, spec: "6 GHz Wi-Fi filter, 5.945 to 7.125 GHz"}
+  coverage:  # checked 27 Oct 2026 against the catalogues (Qorvo store crawl 2026-10-19), data/real and data/broadcast
+    g1.external_block: {skyworks: "none: the phone or key fob is the user's device, not part of the car system", qorvo: "none: as Skyworks"}
+    g2.antenna: {skyworks: "none: no antennas in the catalogue", qorvo: "none: no antennas in the catalogue"}
+    g2.rf_switch:
+      skyworks: "auto: SKY5A2108 - SPDT 2.4 to 8.3 GHz covers UWB channels 5 and 9 (6.5 / 8.0 GHz), AEC-Q100 Grade 2"
+      qorvo: "auto: QPC8019Q - SPDT 0.617 to 8.0 GHz, 0.60 dB IL: covers channel 5 and reaches 8.0 GHz, the centre of channel 9 (est: the top of channel 9 is outside the stated range)"
+      note: "Qorvo's other automotive switches (QPC8010Q, QPC8013Q, QPC8020Q) stop at 6 GHz; QPC6122 (50 MHz to 10 GHz) covers all of UWB but is not automotive. Skyworks SKY13298 (UWB 3-8 GHz) is last time buy."
+    g2.uwb_fem:
+      skyworks: "none: no UWB front end; SKY13298-360LF (UWB switch) is last time buy"
+      qorvo: "bundle: QM14068, QM14070 - bypass LNA 6.2 to 8.3 GHz and PA 6 to 9 GHz; no automotive UWB front end in our data; QM14070 not shown (6 rows per slide)"
+    g2.uwb_soc:
+      skyworks: "none: no UWB transceiver"
+      qorvo: "auto: QPF5100Q, DW3300Q - automotive UWB SoC and transceiver (Decawave line)"
+      note: "Qorvo QM35825, DW3110, DW3210 and the DWM modules are active but not automotive."
+    g2.crystal_oscillator:
+      skyworks: "bundle: Si511 - general-purpose XO that could clock the UWB IC instead of a crystal (est); not automotive, not shown"
+      qorvo: "none: no crystals or oscillators in the Qorvo catalogue"
+    g2.pol_ldo:
+      skyworks: "none: no LDO regulators (Skyworks PMICs are phone PA supplies)"
+      qorvo: "bundle: ACT88321VU101 - PMIC with 3 bucks and 2 LDOs (Active-Semi line); not automotive, not shown"
+    g2.tvs_esd: {skyworks: "none: no ESD / TVS parts (Skyworks diodes are RF PIN, Schottky and varactor)", qorvo: "none: no ESD / TVS parts"}
+    g3.antenna: {skyworks: "none: no antennas in the catalogue", qorvo: "none: no antennas in the catalogue"}
+    g3.uwb_soc: {skyworks: "none: no UWB transceiver", qorvo: "auto: DW3300Q - automotive UWB transceiver, channels 5 and 9, radar mode for child presence"}
+    g3.crystal_oscillator: {skyworks: "bundle: Si511 - as the exterior anchor; not shown", qorvo: "none: no crystals or oscillators"}
+    g4.ble_soc:
+      skyworks: "none: no Bluetooth SoC (the wireless SoC line is not part of Skyworks)"
+      qorvo: "bundle: QPG6200L - Bluetooth LE / Thread / Zigbee SoC (GreenPeak line); smart-home grade, not automotive; not shown (6 rows per slide)"
+    g4.bt_fem:
+      skyworks: "bundle: SKY66114-11 - Bluetooth LE / 802.15.4 front end, 2400-2483 MHz; not automotive, not shown (Qorvo has an automotive one)"
+      qorvo: "auto: QPF4239Q - automotive 2.402-2.481 GHz front end, listed for Wi-Fi; the band is the Bluetooth LE band (est fit)"
+      note: "Skyworks SKYA21040 is an automotive 2.4 GHz switch / LNA, but for Wi-Fi; no Bluetooth port is stated. Qorvo QM42655 (2402-2481 MHz) is not automotive."
+    g4.nfc_frontend: {skyworks: "none: no NFC parts", qorvo: "none: no NFC parts"}
+    g4.filter_saw_baw:
+      skyworks: "auto: SKY5A1005 - notch 5855-5925 MHz: the V2X band between the two narrowband-assist bands (5.725-5.850 and 5.925-6.425 GHz)"
+      qorvo: "auto: QPQ2230Q - BAW V2X notch filter; not shown (6 rows per slide; SKY5A1005 does the same job)"
+    g5.mcu: {skyworks: "none: no MCUs", qorvo: "none: no MCUs"}
+    g5.secure_element: {skyworks: "none: no secure elements", qorvo: "none: no secure elements"}
+    g5.can_transceiver: {skyworks: "none: no CAN transceivers (Skyworks isolators are not CAN PHYs)", qorvo: "none: no CAN transceivers"}
+    g5.lin_transceiver: {skyworks: "none: no LIN transceivers", qorvo: "none: no LIN transceivers"}
+    g6.wifi_soc: {skyworks: "none: no Wi-Fi SoCs", qorvo: "none: no Wi-Fi SoCs"}
+    g6.wifi_fem:
+      skyworks: "auto: SKYA21041 - automotive 5 GHz switch / LNA, 4.9-5.9 GHz; no 6 GHz, so not Wi-Fi 6E / 7; not shown"
+      qorvo: "auto: QPF4239Q, QPF1002Q - automotive 2.4 GHz and 5.77-5.925 GHz front ends; no 6 GHz; not shown"
+      note: "No automotive 6 GHz Wi-Fi front end from either company in our data; Qorvo QPF4657 / QPF4659 cover 5.925-7.125 GHz but are not automotive. QPF4554Q (5.18-5.925 GHz, preview) is known only from a qorvo.com snippet."
+    g6.filter_saw_baw: {skyworks: "auto: SKY5A1008 - 6 GHz Wi-Fi filter 5.945-7.125 GHz", qorvo: "bundle: QPQ5610 - BAW 5945-7245 MHz, 1.7 dB IL; not automotive, not shown"}
+    g6.v2x_transceiver: {skyworks: "none: no V2X chipsets", qorvo: "none: no V2X chipsets"}
+    g6.v2x_fem: {skyworks: "auto: SKY5A2105 - C-V2X and 802.11p front end (preview); not shown here, it is in the V2X brief", qorvo: "auto: QPF1004Q - C-V2X / DSRC front end; not shown here (6 rows per slide), it is in the V2X and GNSS briefs"}
+
+v2x:
+  label: "V2X"
+  line: "Vehicle-to-everything at 5.9 GHz: block diagram and parts."
+  title: "V2X: vehicle-to-everything at 5.9 GHz"
+  header: {title: "Skyworks + Qorvo · V2X", subtitle: ""}
+  kicker: "System brief · V2X"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "QPQ1060 replaces 880273 at the GNSS filter: SAW L1 / E1 / B1, 1.3 dB loss instead of 2.35 dB, and it also covers Galileo E1 and BeiDou B1."
+    - "QPQ2230Q removed from the path 2 filter: a V2X notch for the Wi-Fi path, not a V2X band-pass filter. QPQ2200Q is the band-pass, one per antenna path."
+    - "ACT88321VU101 added at the LDO: Qorvo (Active-Semi line) PMIC with 2 x 390 mA LDOs and 3 bucks; not automotive, a bundle option."
+  sections:
+    intro:
+      paragraphs:
+        - id: v2x-intro-1
+          text: >-
+            V2X (vehicle-to-everything) lets cars warn each other and the road around them by radio, for example
+            about a crash ahead or a car hidden around a corner, which makes roads safer.
+        - id: v2x-intro-2
+          text: >-
+            The V2X front end amplifies the transmit signal (+26 to +29 dBm), receives with low noise and filters out
+            the car's own Wi-Fi and cellular radios at 5.9 GHz. The US moves to C-V2X on two channels and Europe runs
+            ITS-G5, LTE-V2X and NR-V2X side by side, so cars need two V2X paths.
+    diagram:
+      paragraphs:
+        - id: v2x-diag-1
+          text: >-
+            Two antenna paths, each with its own 5.9 GHz front end, feed the V2X chipset. GNSS gives position and time
+            for every message, and a security element signs and checks each one.
+    core:
+      paragraphs:
+        - id: v2x-core-1
+          text: "The 5.9 GHz front ends: one per antenna path."
+    peripherals:
+      paragraphs:
+        - id: v2x-peri-1
+          text: "Around the front ends: the V2X band filter, the GNSS front end for timing, and power."
+    talk:
+      paragraphs:
+        - id: v2x-talk-1
+          text: >-
+            V2X is changing: the US moves to C-V2X on two channels and Europe runs ITS-G5, LTE-V2X and NR-V2X side by
+            side.
+        - id: v2x-talk-2
+          text: "Skyworks, with Qorvo, sells automotive V2X front ends and V2X BAW filters."
+        - id: v2x-talk-3
+          text: >-
+            We would like to learn whether your next units need two V2X carriers at once, and where the V2X RF will
+            sit.
+  diagram:
+    from: "template:V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)"
+    title: "V2X unit with two antenna paths"
+    labels:
+      ant: "V2X antennas"
+      fe1: "5.9 GHz front end, path 1"
+      fe2: "5.9 GHz front end, path 2"
+      chip: "V2X chipset"
+      host: "Processor with the V2X stack"
+      hsm: "Security"
+      gnss: "GNSS (position and time)"
+      pwr: "Power"
+      net: "Vehicle network"
+    short:
+      ant.antenna: "Antennas ×2"
+      fe1.v2x_fem: "5.9 GHz front end (PA, LNA, switch)"
+      fe1.filter_saw_baw: "5.9 GHz filter"
+      fe2.v2x_fem: "5.9 GHz front end (PA, LNA, switch)"
+      fe2.filter_saw_baw: "5.9 GHz filter"
+      chip.v2x_transceiver: "Transceiver + modem"
+      chip.crystal_oscillator: "Crystal"
+      host.soc: "Processor"
+      hsm.secure_element: "Secure element"
+      gnss.gnss_lna: "GNSS LNA"
+      gnss.filter_saw_baw: "GNSS filter"
+      pwr.pmic: "Regulator"
+      pwr.pol_ldo: "LDO"
+      net.can_transceiver: "CAN"
+      net.ethernet_phy: "Ethernet"
+    drop: [net]
+    place: {ant: [0, 0], fe1: [1, 0], chip: [2, 0], host: [3, 0], pwr: [0, 1], fe2: [1, 1], gnss: [2, 1], hsm: [3, 1]}
+    links: [[ant, fe1], [ant, fe2], [fe1, chip], [fe2, chip], [chip, host], [gnss, chip], [host, hsm]]
+  parts:
+    core:
+      - {mpn: SKY5A2105, at: fe1.v2x_fem, spec: "C-V2X and 802.11p front end, 5.855 to 5.925 GHz, high power (preview)"}
+      - {mpn: SKYA21043, at: fe1.v2x_fem, spec: "802.11p front end, 5.85 to 5.925 GHz, high power"}
+      - {mpn: QPF1004Q, at: fe2.v2x_fem, spec: "C-V2X / DSRC integrated front end"}
+      - {mpn: QPF1005Q, at: fe2.v2x_fem, spec: "V2X RF front end"}
+    peripherals:
+      - {mpn: QPQ2200Q, at: fe1.filter_saw_baw, spec: "BAW band-pass, 5.855 to 5.925 GHz, 1.3 dB IL; one per antenna path"}
+      - {mpn: SKY5A2110, at: gnss.gnss_lna, spec: "GNSS L1 + L5 LNA front end with pre- and post-filters", grade: "AEC-Q104 Grade 2"}
+      - {mpn: QPQ1060, at: gnss.filter_saw_baw, spec: "SAW band-pass, 1559.92 to 1590.92 MHz (GPS L1, Galileo E1, BeiDou B1), 1.3 dB IL"}
+      - {mpn: ACT4751MQI101, at: pwr.pmic, spec: "Step-down regulator, 4.5 to 40 V in, 4 A", grade: "Automotive grade"}
+      - {mpn: ACT88321VU101, at: pwr.pol_ldo, spec: "PMIC: 3 bucks, 2 LDOs (390 mA each), load bypass switches, I2C"}
+  coverage:  # checked 27 Oct 2026 against the catalogues (Qorvo store crawl 2026-10-19), data/real and data/broadcast
+    ant.antenna: {skyworks: "none: no antennas in the catalogue", qorvo: "none: no antennas in the catalogue"}
+    fe1.v2x_fem:
+      skyworks: "auto: SKY5A2105, SKYA21043 - 5.9 GHz C-V2X / 802.11p high-power front ends (SKY5A2105 preview)"
+      qorvo: "auto: QPF1004Q, QPF1005Q - C-V2X / DSRC front ends"
+      note: "Qorvo QPF1002Q (automotive, 5.770-5.925 GHz, 28 dBm) also spans the V2X band but is listed as Wi-Fi. QPF1003Q (multi-standard V2X + Wi-Fi, AEC-Q100 as target) and QPF4554Q (Wi-Fi / C-V2X, preview) are known only from qorvo.com snippets, status not confirmed; not shown."
+    fe1.filter_saw_baw:
+      skyworks: "none: no 5.9 GHz band-pass; SKY5A1005 is a V2X notch (protects the other radios), SKY5A1006 stops at 5.835 GHz"
+      qorvo: "auto: QPQ2200Q - BAW band-pass 5.855-5.925 GHz, 1.3 dB IL"
+    fe2.v2x_fem: {skyworks: "auto: SKY5A2105, SKYA21043 - as path 1", qorvo: "auto: QPF1004Q, QPF1005Q - as path 1"}
+    fe2.filter_saw_baw:
+      skyworks: "none: as path 1"
+      qorvo: "auto: QPQ2200Q - as path 1 (listed once)"
+      note: "QPQ2230Q, shown here before, is a V2X notch for the Wi-Fi path, not a V2X band-pass, so it was removed from this block."
+    chip.v2x_transceiver: {skyworks: "none: no V2X chipsets", qorvo: "none: no V2X chipsets"}
+    chip.crystal_oscillator:
+      skyworks: "bundle: Si511 - general-purpose XO (est fit as the chipset reference); not automotive, not shown"
+      qorvo: "none: no crystals or oscillators"
+      note: "Skyworks automotive timing is clock generators and buffers (Si5332-AM, Si5335x-01AM), not reference crystals."
+    host.soc: {skyworks: "none: no processors", qorvo: "none: no processors"}
+    hsm.secure_element: {skyworks: "none: no secure elements", qorvo: "none: no secure elements"}
+    gnss.gnss_lna:
+      skyworks: "auto: SKY5A2110 - L1 + L5 LNA front end with filters, AEC-Q104 Grade 2"
+      qorvo: "none: no GNSS LNA in the catalogue; Qorvo's automotive LNAs (QPL6202Q, QPL6220Q) are SDARS 2.32-2.345 GHz"
+    gnss.filter_saw_baw:
+      skyworks: "none: no standalone GNSS filter (the filters sit inside SKY5A2110)"
+      qorvo: "bundle: QPQ1060 - SAW L1 / E1 / B1, 1.3 dB IL; not automotive"
+      note: "QPQ1060 replaces 880273 (BAW L1, 10 MHz wide, 2.35 dB IL): lower loss and also covers Galileo E1 and BeiDou B1."
+    pwr.pmic:
+      skyworks: "none: no automotive regulators; Skyworks PMICs (SKY87020, SKY51001) are phone PA supplies"
+      qorvo: "auto: ACT4751MQI101 - 4.5-40 V in, 4 A step-down (Active-Semi line)"
+      note: "ACT4529M (40 V, 3 A, automotive) is an alternative; it is a USB charging converter."
+    pwr.pol_ldo:
+      skyworks: "none: no LDO regulators"
+      qorvo: "bundle: ACT88321VU101 - PMIC with 2 x 390 mA LDOs and 3 bucks; not automotive"
+
+gnss:
+  label: "GNSS"
+  line: "Satellite positioning in the roof antenna: block diagram and parts."
+  title: "Automotive GNSS: multi-band front ends for lane-level positioning"
+  header: {title: "Skyworks + Qorvo · GNSS", subtitle: ""}
+  kicker: "System brief · Automotive GNSS"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "QPQ1060 + QPQ1062 replace 880273 (L1, 2.35 dB) and 880060 (L2, 1.8 dB): SAW L1 and L5 filters that match the L1 + L5 core SKY5A2110, 1.3 / 1.2 dB loss."
+    - "QPQ1028 (L1 / L2 diplexer) no longer shown: L2 does not match the L1 + L5 core; its successor QPQ1063 is recorded but not shown."
+    - "SKYA21041 added at the Wi-Fi front end in the fin: Skyworks automotive 5 GHz switch / LNA, 4.9-5.9 GHz."
+  sections:
+    intro:
+      paragraphs:
+        - id: gnss-intro-1
+          text: >-
+            Satellites send signals that tell the car where it is. Cars that steer and keep their lane by themselves
+            need their position within a lane, and several satellite frequencies at once make it much more exact.
+        - id: gnss-intro-2
+          text: >-
+            The GNSS front end sits in the roof antenna: a very quiet amplifier and filters that keep out the strong
+            cellular, Wi-Fi and V2X signals in the same shark fin. Receivers are moving from L1 only to dual- and
+            triple-frequency (L1/E1, L2, L5/E5, E6).
+    diagram:
+      paragraphs:
+        - id: gnss-diag-1
+          text: >-
+            The active antenna in the shark fin filters, amplifies and splits the bands and feeds one coax (RF up, DC
+            down) to the receiver, which takes corrections and feeds positioning for driver assistance.
+    core:
+      paragraphs:
+        - id: gnss-core-1
+          text: "The GNSS LNA front end of the active antenna."
+    peripherals:
+      paragraphs:
+        - id: gnss-peri-1
+          text: >-
+            Around it: diplexers and L1 and L5 band filters, and the front ends of the V2X, cellular and Wi-Fi radios
+            that share the fin.
+    talk:
+      paragraphs:
+        - id: gnss-talk-1
+          text: >-
+            Lane-level driver assistance is moving car GNSS receivers to several bands, and the roof antenna must
+            also keep out the car's own V2X, cellular and Wi-Fi signals.
+        - id: gnss-talk-2
+          text: >-
+            Skyworks sells an automotive L1 + L5 GNSS front-end module with filters (SKY5A2110) and the other RF parts
+            of the roof module.
+        - id: gnss-talk-3
+          text: >-
+            We would like to learn which GNSS bands your next platforms use, and whether your antennas are
+            single-feed or dual-feed.
+  diagram:
+    from: "topic:gnss_frontend"
+    title: "Automotive multi-band GNSS active antenna to receiver"
+    labels:
+      g1: "Antenna element"
+      g2: "Active antenna front end (shark fin)"
+      g3: "Other radios in the fin"
+      g4: "Receiver side"
+      g5: "Corrections"
+      g6: "Positioning"
+    short:
+      g1.antenna: "Multi-band patch"
+      g2.filter_saw_baw: "Pre- and post-filters"
+      g2.gnss_lna: "L1 and L5 LNAs"
+      g2.diplexer: "Band split / diplexer"
+      g2.tvs_esd: "ESD protection"
+      g3.modem: "LTE / 5G"
+      g3.v2x_fem: "V2X 5.9 GHz"
+      g3.wifi_fem: "Wi-Fi 2.4 / 5 / 6 GHz"
+      g4.rf_passive: "Bias-T"
+      g4.load_switch: "Antenna supply switch"
+      g4.soc: "Multi-band GNSS receiver"
+      g5.modem: "Cellular corrections"
+      g5.soc: "L-band corrections"
+      g6.adas_processor: "Positioning + IMU fusion"
+    links: [[g1, g2], [g3, g1], [g2, g4], [g5, g4], [g4, g6]]
+  parts:
+    core:
+      - {mpn: SKY5A2110, at: g2.gnss_lna, spec: "GNSS L1 + L5 LNA front end with pre- and post-filters, B13 notch and diplexed output", grade: "AEC-Q104 Grade 2"}
+    peripherals:
+      - {mpn: TQM2M9016, at: g2.diplexer, spec: "Diplexer module splitting SDARS and GPS from one antenna"}
+      - {mpn: QPQ1060, at: g2.filter_saw_baw, spec: "SAW L1 band-pass, 1559.92 to 1590.92 MHz (GPS L1, Galileo E1, BeiDou B1), 1.3 dB IL"}
+      - {mpn: QPQ1062, at: g2.filter_saw_baw, spec: "SAW L5 band-pass, 1160.95 to 1191.95 MHz (GPS L5, Galileo E5a), 1.2 dB IL"}
+      - {mpn: SKY5A2105, at: g3.v2x_fem, spec: "C-V2X and 802.11p front end in the same fin (preview)"}
+      - {mpn: QPF1004Q, at: g3.v2x_fem, spec: "C-V2X / DSRC integrated front end in the same fin"}
+      - {mpn: SKYA21041, at: g3.wifi_fem, spec: "5 GHz Wi-Fi switch and LNA front end, 4.9 to 5.9 GHz"}
+  coverage:  # checked 27 Oct 2026 against the catalogues (Qorvo store crawl 2026-10-19), data/real and data/broadcast
+    g1.antenna: {skyworks: "none: no antennas in the catalogue", qorvo: "none: no antennas in the catalogue"}
+    g2.filter_saw_baw:
+      skyworks: "none: no standalone GNSS filter (the pre- and post-filters sit inside SKY5A2110)"
+      qorvo: "bundle: QPQ1060, QPQ1062 - SAW L1 and L5 band-pass, 1.3 / 1.2 dB IL, match the L1 + L5 core; not automotive"
+      note: "They replace 880273 (BAW L1, 2.35 dB IL) and 880060 (L2, 1.8 dB IL). QPQ1061 is the L2 filter (1.2 dB IL). The L1 / L5 diplexer 890086 and the 857xxx GPS filters are discontinued."
+    g2.gnss_lna:
+      skyworks: "auto: SKY5A2110 - L1 + L5 LNA front end with filters and diplexed output, AEC-Q104 Grade 2"
+      qorvo: "none: no GNSS LNA in the catalogue; Qorvo's automotive LNAs (QPL6202Q, QPL6220Q) are SDARS 2.32-2.345 GHz"
+      note: "Skyworks SKY55951-11 (L1 + L5) and SKY65943-11 are active but not automotive."
+    g2.diplexer:
+      skyworks: "none: no standalone diplexer (SKY5A2110 has a diplexed output)"
+      qorvo: "auto: TQM2M9016 - SDARS / GPS diplexer module; bundle: QPQ1063 - L1 / L2 SAW diplexer, 1.6 / 1.3 dB IL, not shown (L2 does not match the L1 + L5 core; 6 rows per slide)"
+      note: "QPQ1063 replaces QPQ1028 (same bands, 3.0 / 2.6 dB IL)."
+    g2.tvs_esd: {skyworks: "none: no ESD / TVS parts", qorvo: "none: no ESD / TVS parts"}
+    g3.modem:
+      skyworks: "auto: SKY5A2206 - LTE / 5G PA module for automotive (the RF next to the modem; no modem itself); not shown (6 rows per slide)"
+      qorvo: "none: no modems; QPF5602Q is an automotive PA module but our data gives no band, so it is not offered"
+    g3.v2x_fem: {skyworks: "auto: SKY5A2105 - C-V2X / 802.11p front end (preview)", qorvo: "auto: QPF1004Q - C-V2X / DSRC front end"}
+    g3.wifi_fem:
+      skyworks: "auto: SKYA21041 - 5 GHz switch / LNA, 4.9-5.9 GHz (SKYA21040 is the 2.4 GHz one)"
+      qorvo: "auto: QPF4239Q, QPF1002Q - automotive 2.4 GHz and 5.77-5.925 GHz front ends; not shown"
+    g4.rf_passive: {skyworks: "none: no bias-T parts", qorvo: "none: no bias-T parts"}
+    g4.load_switch: {skyworks: "none: SKY87604 is listed as a load switch but is a fuse", qorvo: "none: no load switches"}
+    g4.soc: {skyworks: "none: no GNSS receivers", qorvo: "none: no GNSS receivers"}
+    g5.modem: {skyworks: "none: no modems", qorvo: "none: no modems"}
+    g5.soc: {skyworks: "none: no L-band correction receivers", qorvo: "none: no L-band correction receivers"}
+    g6.adas_processor: {skyworks: "none: no processors", qorvo: "none: no processors"}
+
+radio:
+  label: "Car radio (AM/FM/DAB)"
+  line: "Broadcast radio in the car: block diagram and parts."
+  title: "Car radio: AM, FM and digital radio (DAB, HD Radio, DRM)"
+  header: {title: "Skyworks + Qorvo · Car radio", subtitle: ""}
+  kicker: "System brief · Car radio"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "Si47972 added to the core at the audio codec: a dual tuner with on-chip audio DAC and audio processing, so the tuner can replace a separate codec."
+    - "TQP3M9036 replaces QPL7433 at the LNA: NF 0.45 dB instead of 1.5 dB, OIP3 36 dBm instead of 34 dBm (TriQuint line, not automotive)."
+    - "SKY76206-21 removed from the audio amplifier: a mono low-power class-D amplifier for battery devices, not a car speaker amplifier (est)."
+    - "ACT88321VU101 added at the PMIC (owner: Qorvo might have a PMIC): 3 bucks, 2 LDOs, I2C (Active-Semi line); not automotive, a bundle option."
+    - "SKYA21001 and QPC8010Q: the specs now say which bands they cover (FM and DAB band III, not AM)."
+  sections:
+    intro:
+      paragraphs:
+        - id: radio-intro-1
+          text: >-
+            Cars still need radio: it is free, works without a phone and carries traffic and emergency news. New cars
+            receive AM, FM and digital radio (DAB+, HD Radio, DRM).
+        - id: radio-intro-2
+          text: >-
+            A radio needs tuners to pick the station and a decoder to turn digital radio into sound; several tuners
+            give better reception while driving. Car radio is moving towards the antenna and towards central
+            computers.
+    diagram:
+      paragraphs:
+        - id: radio-diag-1
+          text: >-
+            Antenna to audio: the antenna and RF stage feed the tuners, the digital radio decoder turns DAB, HD Radio
+            or DRM into audio, and the head unit plays it.
+    core:
+      paragraphs:
+        - id: radio-core-1
+          text: "Tuners and digital radio decoders: the parts that make the radio. The Si47972 tuner also has the audio DAC on chip."
+    peripherals:
+      paragraphs:
+        - id: radio-peri-1
+          text: "Around the tuner: antenna switches and LNA, clock, power and audio."
+    talk:
+      paragraphs:
+        - id: radio-talk-1
+          text: >-
+            Skyworks sells automotive AM/FM, HD Radio, DAB and DRM tuners and decoders, and with Qorvo also
+            automotive RF switches, clock buffers and power converters.
+        - id: radio-talk-2
+          text: >-
+            Car radio is moving towards the antenna and towards central computers; we would like to learn whether
+            your next platform moves the radio out of the head unit.
+        - id: radio-talk-3
+          text: "We would like to learn which other parts around the tuner you would like to buy from the same supplier."
+  diagram:
+    from: "template:Car radio tuner system"
+    title: "Car radio tuner system"
+    short:
+      ant.antenna: "Antenna"
+      ant.antenna_switch: "Antenna switch"
+      ant.lna: "LNA"
+      ant.tvs_esd: "ESD protection"
+      tuners.am_fm_tuner: "AM/FM and DAB tuners"
+      demod.digital_radio_demod: "Digital radio decoder"
+      demod.flash: "Flash"
+      proc.soc: "Processor"
+      audio.audio_codec: "Audio codec"
+      audio.audio_amp: "Audio amplifier"
+      power.reverse_polarity: "Reverse polarity"
+      power.pmic: "PMIC"
+      power.pol_buck: "Buck"
+      power.pol_ldo: "LDO"
+      power.supervisor: "Supervisor"
+      timing.crystal_oscillator: "Crystal / oscillator"
+      timing.clock_buffer: "Clock buffer"
+    links: [[ant, tuners], [tuners, demod], [demod, proc], [proc, audio], [power, tuners], [timing, tuners]]
+  parts:
+    core:
+      - {mpn: Si47962, at: tuners.am_fm_tuner, spec: "Dual AM/FM tuner with HD Radio / DAB / DAB+ / DRM, FM diversity", grade: "AEC-Q100"}
+      - {mpn: Si47942, at: tuners.am_fm_tuner, spec: "Dual DAB / DAB+ / DMB tuner", grade: "AEC-Q100"}
+      - {mpn: Si46942, at: demod.digital_radio_demod, spec: "Four-channel DAB coprocessor, DAB/FM seamless linking", grade: "AEC-Q100"}
+      - {mpn: Si4629, at: demod.digital_radio_demod, spec: "Digital data receiver: AM, FM, HD Radio, DAB/DAB+", grade: "AEC-Q100"}
+      - {mpn: Si47972, at: audio.audio_codec, spec: "Dual AM/FM / DAB / HD Radio / DRM tuner with on-chip audio DAC and audio processing: no separate codec", grade: "AEC-Q100"}
+    peripherals:
+      - {mpn: SKYA21001, at: ant.antenna_switch, spec: "SPDT, 20 MHz to 3.0 GHz (FM and DAB band III), IL 0.3 to 0.4 dB", grade: "AEC-Q100"}
+      - {mpn: QPC8010Q, at: ant.antenna_switch, spec: "SPDT, 5 MHz to 6.0 GHz (FM and DAB band III), IL 0.75 dB max"}
+      - {mpn: TQP3M9036, at: ant.lna, spec: "LNA, 50 MHz to 2 GHz (FM and DAB), NF 0.45 dB, 19.8 dB gain, OIP3 36 dBm"}
+      - {mpn: Si53352A-01AM, at: timing.clock_buffer, spec: "1:2 clock buffer, 0.1 ps additive jitter"}
+      - {mpn: ACT4751MQI101, at: power.pol_buck, spec: "Step-down regulator, 4.5 to 40 V in, 4 A", grade: "Automotive grade"}
+      - {mpn: ACT88321VU101, at: power.pmic, spec: "PMIC: 3 bucks, 2 LDOs, load bypass switches, I2C"}
+  coverage:  # checked 27 Oct 2026 against the catalogues (Qorvo store crawl 2026-10-19), data/real and data/broadcast
+    ant.antenna:
+      skyworks: "none: no antennas; the active antenna-tuning switches (SKY19243, SKY19245, SKY19249, SKY19257) are 0.1-3.8 GHz cellular parts and miss AM and the lower FM band"
+      qorvo: "none: no antennas; every Qorvo antenna tuner in our data is discontinued (QM13011 / 13024 / 13025, RFAC3313 / 3612 / 3632)"
+    ant.antenna_switch:
+      skyworks: "auto: SKYA21001 - SPDT 20 MHz-3 GHz, covers FM (88-108 MHz) and DAB band III (174-240 MHz), not AM"
+      qorvo: "auto: QPC8010Q - SPDT 5 MHz-6 GHz, covers FM and DAB, not AM"
+      note: "For AM too: Skyworks AS169-73LF / AS183-92LF (300 kHz-2.5 GHz) are active but not automotive. Qorvo's other automotive switches (QPC8013Q, QPC8019Q, QPC8020Q, QPC8015Q, QPC1217Q) start at 617-700 MHz, above FM and DAB."
+    ant.lna:
+      skyworks: "none: the lowest Skyworks LNA starts at 200 MHz (SKYA21051, SKY67159-396LF), above FM; nothing automotive"
+      qorvo: "bundle: TQP3M9036 - 50 MHz-2 GHz, NF 0.45 dB, OIP3 36 dBm (TriQuint line); not automotive"
+      note: "TQP3M9036 replaces QPL7433 (NF 1.5 dB, IP3 34 dBm). Qorvo's automotive LNAs are for SDARS (QPL6202Q, QPL6220Q: 2.32-2.345 GHz) or have no band in our data (QPL6216Q, QPL9036Q, QPL9037Q)."
+    ant.tvs_esd: {skyworks: "none: no ESD / TVS parts", qorvo: "none: no ESD / TVS parts"}
+    tuners.am_fm_tuner:
+      skyworks: "auto: Si47962, Si47942 - dual AM/FM with HD Radio / DAB / DRM, and dual DAB tuners (Silicon Labs line)"
+      qorvo: "none: no broadcast tuners"
+    demod.digital_radio_demod:
+      skyworks: "auto: Si46942, Si4629 - four-channel DAB coprocessor and digital data receiver"
+      qorvo: "none: no digital radio decoders"
+    demod.flash: {skyworks: "none: no memory", qorvo: "none: no memory"}
+    proc.soc: {skyworks: "none: no processors (the Si469xxC coprocessors carry an MCU, not a head-unit processor)", qorvo: "none: no processors"}
+    audio.audio_codec:
+      skyworks: "auto: Si47972 - dual tuner with on-chip audio DAC and post-processing, so the tuner can replace the codec"
+      qorvo: "none: no audio parts"
+    audio.audio_amp:
+      skyworks: "none: SKY76206-21 is a mono low-power class-D amplifier for battery devices, not a car speaker amplifier (est)"
+      qorvo: "none: no audio amplifiers"
+    power.reverse_polarity: {skyworks: "none: no reverse-polarity protection parts", qorvo: "none: no reverse-polarity protection parts"}
+    power.pmic:
+      skyworks: "none: Skyworks PMICs (SKY87020, SKY51001) are phone PA supplies"
+      qorvo: "bundle: ACT88321VU101 - 3 bucks, 2 LDOs, I2C (Active-Semi line); not automotive"
+    power.pol_buck:
+      skyworks: "none: Skyworks step-down converters (SKY87006) are phone PA supplies"
+      qorvo: "auto: ACT4751MQI101 - 4.5-40 V in, 4 A"
+      note: "ACT4529M (40 V, 3 A, automotive) is a USB charging converter; ACT41000 (24 V) is not automotive."
+    power.pol_ldo: {skyworks: "none: no LDO regulators", qorvo: "bundle: ACT88321VU101 - its 2 LDOs; shown under PMIC"}
+    power.supervisor: {skyworks: "none: no supervisors", qorvo: "none: no supervisors"}
+    timing.crystal_oscillator:
+      skyworks: "bundle: Si511 - general-purpose XO; not automotive, not shown (the tuner takes a crystal)"
+      qorvo: "none: no crystals or oscillators"
+    timing.clock_buffer:
+      skyworks: "auto: Si53352A-01AM - 1:2 automotive clock buffer"
+      qorvo: "none: no clock parts"

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Explanation: {{ x.label }} – Shareable – BizDev{% endblock %}
+{% block content %}
+{# Explanation (owner, 27 Oct 2026): how a shareable document was made. Internal and owner only (app/auth/access.py);
+   a page of its own, never part of the document, its PDF, its PowerPoint or the combined file
+   (app/services/share_explain.py). Opens in the Shareable lightbox with ?embed=1. #}
+<link rel="stylesheet" href="/static/shareable.css">
+<article class="sx" id="share-explain">
+  <p class="sx-internal" role="note"><b>Internal</b> · only you see this. It is not part of the document, the PDF or the PowerPoint.</p>
+  <h1>Explanation: {{ x.label }}</h1>
+  <p class="sx-sub"><a href="{{ x.url }}">{{ x.label }}</a> · up to {{ x.pages }} A4 pages{% if x.checked %} · checked {{ x.checked }}{% endif %}</p>
+
+  {% if x.system %}
+  <section id="sx-short"><h2>In short</h2>
+    {% for line in x.short %}<p>{{ line }}</p>{% endfor %}
+  </section>
+
+  <section id="sx-blocks"><h2>Block by block</h2>
+    <p class="small muted">Every block of the diagram, checked for Skyworks and Qorvo, acquired brands included.
+      <span class="sx-k sx-auto">Automotive</span> AEC-Q part · <span class="sx-k sx-bundle">Bundle option</span> active, not automotive ·
+      <span class="sx-k sx-none">Nothing that fits</span>. Part numbers in bold are shown in the document; the others are recorded only.</p>
+    <div class="sx-scroll">
+    <table class="sx-table">
+      <thead><tr><th>Block</th><th>Skyworks</th><th>Qorvo</th><th>Note</th></tr></thead>
+      <tbody>
+      {% for r in x.rows %}
+        <tr class="sx-row-{{ r.kind or 'open' }}">
+          <th scope="row">{{ r.label }}{% if r.kind == 'outside' %}<br><span class="small muted">outside the system</span>{% endif %}</th>
+          {% for co in ('skyworks', 'qorvo') %}
+          <td data-l="{{ co|capitalize }}">{% if r[co] %}{% for f in r[co]['items'] %}<div class="sx-f"><span class="sx-k sx-{{ f.kind or 'open' }}">{{ f.label }}</span>
+            {% for p in f.parts %}{% if p.shown %}<b><code>{{ p.mpn }}</code></b>{% else %}<code class="sx-rec">{{ p.mpn }}</code>{% endif %}{{ ', ' if not loop.last }}{% endfor %}
+            {% if f.why %}<span class="sx-why">{{ f.why }}</span>{% endif %}</div>{% endfor %}{% else %}<span class="muted">Not checked yet.</span>{% endif %}</td>
+          {% endfor %}
+          <td data-l="Note" class="sx-note">{{ r.note }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section id="sx-changes"><h2>What we changed and why</h2>
+    {% if x.changes %}<ul>{% for c in x.changes %}<li>{{ c }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ x.none_yet }}</p>{% endif %}
+  </section>
+
+  <section id="sx-gaps"><h2>Blocks without a part</h2>
+    {% if x.gaps %}<ul>{% for g in x.gaps %}<li><b>{{ g.label }}</b>: Skyworks: {{ g.skyworks }}. Qorvo: {{ g.qorvo }}.</li>{% endfor %}</ul>
+    {% else %}<p>Every block has a Skyworks or Qorvo part.</p>{% endif %}
+  </section>
+  {% else %}
+  <section id="sx-built"><h2>What it is built from</h2>
+    {% if x.built_from %}<ul>{% for b in x.built_from %}<li>{{ b }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ x.none_yet }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  <section id="sx-checks"><h2>Its checks</h2>
+    {% if x.checks %}<ul>{% for c in x.checks %}<li>{{ c }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ x.none_yet }}</p>{% endif %}
+  </section>
+
+  <section id="sx-limits"><h2>{{ 'Limits and open points' if x.system else 'Known limits' }}</h2>
+    {% if x.limits %}<ul>{% for l in x.limits %}<li>{{ l }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ x.none_yet }}</p>{% endif %}
+  </section>
+
+  {% if x.system or x.sources %}
+  <section id="sx-sources"><h2>Sources</h2>
+    {% if x.system and x.built_from %}<ul>{% for b in x.built_from %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+    {% if x.sources %}<ul>{% for s in x.sources %}<li>{% if s.href %}<a href="{{ s.href }}" target="_top">{{ s.text }}</a>{% else %}{{ s.text }}{% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

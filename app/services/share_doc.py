@@ -245,6 +245,8 @@ def facts_of(d: dict) -> list[str]:
                     out += [c["tag"]] if c["tag"] else []
             elif b["kind"] == "pairs":
                 out += [x for p in b["items"] for x in (p["skyworks"], p["qorvo"], p["benefit"], *p["ex"])]
+            elif b["kind"] == "diagram":
+                out.append(b["title"])
     out += d["sources"]
     return [x for x in dict.fromkeys(out) if x]
 
@@ -262,8 +264,10 @@ def all_text(d: dict) -> str:
                 parts += [x for c in b["cols"] for x in (c["head"], c["line"], *(i["t"] for i in c["items"]))]
             elif b["kind"] == "pairs":
                 parts += [p["line"] for p in b["items"]]
-            elif b["kind"] == "links":
+            elif b["kind"] in ("links", "bullets"):
                 parts += b["items"]
+            elif b["kind"] == "diagram":
+                parts += [b["title"], *b["layout"]["labels"]]
     parts += facts_of(d)
     return "\n".join(str(p) for p in parts if p)
 

@@ -714,6 +714,20 @@ class DemandEntry(Base):
     lookup_id: Mapped[int] = mapped_column(Integer, index=True)  # the CrossListLookup it was sent with
 
 
+class UnknownWord(Base):
+    """A word the owner typed in the block editor's "Describe your system" box that it did not understand, counted per
+    day so the daily run can add synonyms (owner, 27 Oct 2026). The word and its count only: never the text, never a
+    guest's words, no names; deleted after 12 months (app/services/wordblocks.py)."""
+
+    __tablename__ = "unknown_words"
+    __table_args__ = (UniqueConstraint("word", "day"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    word: Mapped[str] = mapped_column(String(30), index=True)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    count: Mapped[int] = mapped_column(Integer, default=1)
+
+
 # --- Sign-in with passkeys and invited guests (owner, 23 Oct 2026) ---------------------------------------------------
 # The older `User` table above stays as it is (it carries no role); the people who can sign in are `Account` rows.
 

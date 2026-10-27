@@ -260,7 +260,22 @@ def links(b: dict) -> list:
     return [P(b["head"], "h3"), *(Paragraph("•  " + clean(x), S["cell"]) for x in b["items"])]
 
 
-BLOCKS = {"table": table, "facts": facts, "cols": cols, "pairs": pairs, "links": links}
+def diagram(b: dict) -> list:
+    """A system brief's block diagram (app/services/share_diagram.py) as a vector drawing, with its title and note."""
+    from app.services import share_diagram
+
+    d = share_diagram.drawing(b["layout"], BODY_W)
+    head = P(b["title"], "h3") if b.get("title") else Spacer(1, 2)
+    return [head, d, *_notes(b)]
+
+
+def bullets(b: dict) -> list:
+    return [Paragraph("•  " + clean(x), ParagraphStyle("bul", parent=S["sub"], textColor=INK, leftIndent=9,
+                                                        firstLineIndent=-9)) for x in b["items"]]  # fmt: skip
+
+
+BLOCKS = {"table": table, "facts": facts, "cols": cols, "pairs": pairs, "links": links, "diagram": diagram,
+          "bullets": bullets}  # fmt: skip
 
 
 class Head(Flowable):

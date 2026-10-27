@@ -1,0 +1,84 @@
+# What the "Describe your system" box in the block editor understands (app/services/wordblocks.py; owner, 27 Oct 2026:
+# "if somebody says, I have a 48V input and an MCU then this text should already build the first 2-3 blocks").
+# Rules only, on the server: no AI, nothing sent out. The daily run extends this file from the owner-only list of
+# unknown words in the inbox ("Block builder: unknown words", docs/daily_update.md): add synonyms, never names.
+#
+# terms: one entry per thing people name. Matching ignores case and hyphens ("Wi-Fi" = "wifi"); several words in
+#        one synonym are a phrase ("gate driver"); the longest match wins.
+#   fn:    the function id in data/blocks/functions.yaml (the block it builds)
+#   label: the block's text and the chip shown to the user (default: the function's label); chip: other chip text
+#   words: how people write it
+#   chain: the blocks it brings, in signal order, left to right; "hub" is the processor the others connect to
+#          (default: [hub, <fn>], i.e. the processor drives it). A term whose fn is "hub" is the processor itself.
+#   role:  hub (the processor) or source (the supply: the power chain starts here)
+#   rail:  the supply it usually needs (V): the power chain is built down to the processor's rail
+terms:
+  - {fn: mcu, role: hub, rail: 3.3, label: Microcontroller, words: [mcu, microcontroller, micro controller, µc, uc, processor, cpu]}
+  - {fn: soc, role: hub, rail: 3.3, label: SoC / application processor, words: [soc, application processor, system on chip, apu]}
+  - {fn: battery_pack, role: source, label: Battery, words: [battery, batteries, battery pack, accu, li-ion, lithium]}
+  - {fn: can_transceiver, label: CAN transceiver, words: [can, can bus, canbus, can fd, canfd, can transceiver, can-xl, canxl]}
+  - {fn: lin_transceiver, label: LIN transceiver, words: [lin, lin bus, linbus, lin transceiver]}
+  - {fn: ethernet_phy, label: Ethernet PHY, words: [ethernet, eth, ethernet phy, phy, 100base-t1, 1000base-t1, t1 ethernet, rj45]}
+  - {fn: rs485_transceiver, label: RS-485 transceiver, words: [rs485, rs-485, modbus]}
+  - {fn: three_phase_gate_driver, label: Gate driver, chip: Gate driver + motor, chain: [hub, three_phase_gate_driver, motor],
+     words: [motor, motors, bldc, bldc motor, brushless, pmsm, gate driver, gate drivers, motor driver, motor drive, inverter]}
+  - {fn: digital_isolator, label: Digital isolator, chain: [hub, digital_isolator], words: [isolator, digital isolator]}
+  - {fn: current_sensor, label: Current sensor, chain: [current_sensor, hub],
+     words: [current sense, current sensing, current sensor, current measurement, shunt, sensor, sensors]}
+  - {fn: temperature_sensor, label: Temperature sensor, chain: [temperature_sensor, hub], words: [temperature sensor, temp sensor, ntc, thermistor]}
+  - {fn: gnss_lna, label: GNSS front end, chain: [antenna, gnss_lna, hub], words: [gnss, gps, galileo, glonass, beidou, gnss receiver, navigation]}
+  - {fn: wifi_soc, label: Wi-Fi / Bluetooth, words: [wifi, wlan, wi-fi 6, wifi 6, bluetooth, bt, ble, bluetooth le, wireless]}
+  - {fn: am_fm_tuner, label: Radio tuner, chain: [antenna, am_fm_tuner, hub], words: [radio, tuner, am, fm, am/fm, dab, broadcast radio, radio tuner]}
+  - {fn: usb_typec_hub, label: USB port, words: [usb, usb-c, usb c, type-c, typec, usb port, usb hub]}
+  - {fn: display, label: Display, words: [display, screen, lcd, oled, tft, touchscreen]}
+  - {fn: audio_amp, label: Audio amplifier, words: [audio amp, audio amplifier, amplifier, amp, speaker, speakers, class-d, class d, audio]}
+  - {fn: crystal_oscillator, label: Crystal / oscillator, chain: [crystal_oscillator, hub], words: [clock, crystal, oscillator, xtal, xo, tcxo, clock source]}
+  - {fn: flash, label: Flash memory, words: [flash, memory, flash memory, nor flash, nand, eeprom, storage, external memory]}
+  - {fn: relay_driver, label: Relay driver, words: [relay, relays, contactor, contactors, solenoid, relay driver]}
+  - {fn: led_driver, label: LED driver, words: [led, leds, led driver, backlight, lighting]}
+  - {fn: modem, label: Cellular modem, words: [lte, 4g, 5g, cellular, modem, nb-iot, lte-m]}
+  - {fn: ble_soc, label: Bluetooth LE SoC, words: [zigbee, thread, matter, 802.15.4]}
+  - {fn: uwb_soc, label: UWB, words: [uwb, ultra-wideband, ultra wideband]}
+  - {fn: nfc_frontend, label: NFC, words: [nfc, rfid]}
+  - {fn: adc, label: ADC, chain: [adc, hub], words: [adc, analog input, analog inputs]}
+  - {fn: rtc, label: RTC, chain: [rtc, hub], words: [rtc, real-time clock, real time clock]}
+  - {fn: battery_charger, label: Battery charger, words: [charger, charging, battery charger]}
+
+# "isolated CAN", "CAN with isolation": the term nearest after the word (else before it) gets isolated. Its function is
+# swapped for the isolated one listed here; a function not listed gets a digital isolator between the processor and it.
+isolation:
+  words: [isolated, isolation, galvanic, galvanically]
+  swap:
+    can_transceiver: isolated_can            # isolated CAN transceiver (one part instead of isolator + transceiver)
+    three_phase_gate_driver: gate_driver     # isolated gate driver
+    current_sensor: current_sensor           # already an isolated current sensor
+    digital_isolator: digital_isolator
+
+# Words written only in capitals count ("CAN", "LIN", "AM"): in lower case they are also ordinary English words.
+caps_only: [can, lin, am, bt, eth, thread, matter, uc, xo, apu]
+
+# The power chain from the highest input voltage down to the processor's rail. Voltages are read as "48V", "48 V",
+# "48-volt", "3V3", "1V8"; a word right after it ("bus", "input", "battery", "rail", "supply") belongs to it.
+power:
+  input_words: [input, in, bus, supply, rail, rails, vin, dc, battery, net, line, power]
+  default_rail: 3.3          # the processor's rail when nothing else is said
+  ldo_from:                  # an LDO makes these rails, from the rail on the right (the last small step) ...
+    3.3: 5
+    1.8: 3.3
+    1.2: 3.3
+  ldo_max_drop: 2.0          # ... and any step of at most 2 V; bigger steps get a buck
+  wide_vin_above: 16         # a buck from above 16 V is a wide-Vin buck (wide_vin_buck), else a PoL buck (pol_buck)
+  protect_above: 5           # inputs above 5 V get input protection: TVS and reverse polarity
+  hv_above: 60               # from above 60 V (400 / 800 V battery): first an isolated DC-DC down to 12 V
+  hv_to: 12
+
+# Block text for the blocks a chain brings (default: the function's label).
+chain_labels: {motor: Motor, antenna: Antenna}
+
+# Ordinary words: shown grey, never collected as unknown.
+stop_words: [a, an, the, i, we, you, it, my, our, have, has, had, need, needs, want, wants, with, and, or, plus, to,
+  of, for, from, on, at, by, is, are, am, be, will, would, should, can, could, also, one, two, three, four,
+  this, that, these, those, there, which, use, uses, using, used, like, then, into, via, per, as, but, so, if, all,
+  system, design, board, module, unit, block, blocks, diagram, v, volt, volts, vdc, me, us, its, do, does, make,
+  build, get, out, up, over, under, about, connected, connect, connects, talk, talks, drive, drives, driving,
+  controls, control, controller, run, runs, x, small, big, low, high, main, simple, new, some, each, every, both]

@@ -44,7 +44,7 @@ def rows(html: str) -> list[str]:
 
 def test_an_extra_registry_entry_shows_as_a_row_in_the_pack_and_in_powerpoint(client, drones):
     html = client.get("/shareable").text
-    assert len(rows(html)) == 4
+    assert len(rows(html)) == len(sr.REGISTRY)  # the reports and the system briefs, then drones
     last = unescape(rows(html)[-1])
     assert 'name="r" value="drones"' in last and "<b>Drones</b>" in last and "2 pages" in last
     assert 'class="sh-open" href="/shareable/drones" data-lightbox="Drones"' in last and "Include" in last
@@ -126,7 +126,8 @@ def test_every_report_editor_is_owner_only_also_a_new_one():
 
 
 def test_registry_keeps_the_list_and_pack_orders():
-    assert [r.key for r in sr.REGISTRY] == ["synergies", "automotive", "overview"]
-    assert sr.pack_order() == ("overview", "synergies", "automotive") == sr.PACK_ORDER
+    briefs = ["uwb", "v2x", "gnss", "radio"]  # the system briefs (owner, 27 Oct 2026), tests/test_share_systems.py
+    assert [r.key for r in sr.REGISTRY] == ["synergies", "automotive", "overview", *briefs]
+    assert sr.pack_order() == ("overview", "synergies", "automotive", *briefs) == sr.PACK_ORDER
     assert sr.list_order(["overview", "x", "synergies", "synergies"]) == ["synergies", "overview"]
-    assert set(sr.reports()) == {"synergies", "automotive"} and sr.pages() == sr.PAGES
+    assert set(sr.reports()) == {"synergies", "automotive", *briefs} and sr.pages() == sr.PAGES

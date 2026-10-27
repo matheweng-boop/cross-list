@@ -1,0 +1,54 @@
+{# Shareable > a system brief (owner, 27 Oct 2026): UWB, V2X, GNSS or car radio, from app/services/share_systems.py.
+   Page 1: intro and the block diagram (solid: core, outline: peripherals); page 2: the parts, core solution
+   (AEC-Q only) and peripherals with their grade; page 3: talking points and sources. #}
+{% from "shareable/_macros.html" import who, pfoot, band, F, paras with context %}
+{% macro parts_table(rows, label) %}
+<div class="sd-table" role="region" aria-label="{{ label }}" tabindex="0"><table>
+  <thead><tr><th>Part</th><th>Block</th><th>Key specs</th><th>Automotive grade</th></tr></thead>
+  <tbody>{% for p in rows %}<tr><td><code>{{ p.mpn }}</code> {{ who(p.who) }}</td><td>{{ p.block }}</td><td>{{ p.spec }}{% if p.preview and 'preview' not in p.spec %} (preview){% endif %}</td><td class="{{ 'sd-auto' if p.aec else 'sd-notauto' }}">{{ p.grade }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endmacro %}
+<style>
+  .sd-diagram { width: 100%; height: auto; display: block; margin: .4rem 0 .2rem; background: #fff; border-radius: .4rem; }
+  .sd-table { overflow-x: auto; }
+  .sd-table td code { white-space: nowrap; }
+  .sd-auto { color: #0B6B74; font-weight: 600; }
+  .sd-notauto { color: var(--pico-muted-color); }
+  .sd-talk li { margin-bottom: .35rem; }
+</style>
+  <section class="to-page" id="sys-{{ key }}-intro" aria-labelledby="sys-h1">
+    {{ band() }}
+    <p class="to-kicker">{{ t.cur.kicker }}</p>
+    <h1 id="sys-h1">{{ F('title') }}</h1>
+    {{ paras('intro', 'to-lead') }}
+    <h2>{{ F('sec.diagram.heading') }}</h2>
+    {{ paras('diagram', 'to-sub') }}
+    <figure class="sd-figure">
+      {{ t.diagram.svg|safe }}
+      <figcaption class="sr-note small"><b>{{ t.diagram.title }}.</b> Solid: core solution. Outline: peripherals. Simplified from public reference designs.</figcaption>
+    </figure>
+    {{ pfoot(1) }}
+  </section>
+
+  <section class="to-page" id="sys-{{ key }}-parts" aria-labelledby="sys-h-core">
+    {{ band() }}
+    <h2 id="sys-h-core">{{ F('sec.core.heading') }}</h2>
+    {{ paras('core', 'to-sub') }}
+    {{ parts_table(t.core, 'Core solution') }}
+    <p class="sr-note small">{{ F('note.core') }}</p>
+    <h2>{{ F('sec.peripherals.heading') }}</h2>
+    {{ paras('peripherals', 'to-sub') }}
+    {{ parts_table(t.peripherals, 'Peripherals') }}
+    <p class="sr-note small">{{ F('note.peripherals') }}</p>
+    {% if t.gaps %}<p class="sr-note small">{{ t.gaps }}</p>{% endif %}
+    {{ pfoot(2) }}
+  </section>
+
+  <section class="to-page" id="sys-{{ key }}-talk" aria-labelledby="sys-h-talk">
+    {{ band() }}
+    <h2 id="sys-h-talk">{{ F('sec.talk.heading') }}</h2>
+    {% if edit %}{{ paras('talk', 'to-sub') }}{% else %}<ul class="sd-talk">{% for p in vals['paras.talk'] %}<li>{{ p.text }}</li>{% endfor %}</ul>{% endif %}
+    {% if pack_sources %}<div class="to-src small"><b>Sources.</b> {% for s in pack_sources %}{{ s }} {% endfor %}Prepared {{ today|date }}. Public information.</div>
+    {% elif not pack_sources_later %}<div class="to-src small"><b>Sources.</b> {% for _ in t.cur.sources or [] %}{{ F('src.' ~ loop.index0) }} {% endfor %}Prepared {{ today|date }}. Public information.</div>{% endif %}
+    {{ pfoot(3) }}
+  </section>

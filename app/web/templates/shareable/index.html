@@ -7,13 +7,15 @@
    Owner, 26 Oct 2026: the files are made on the server from the same data, each laid out for its medium. #}
 <form class="sh-pack" id="build-pdf" method="get" action="/shareable/pdf" aria-label="Reports">
   <ul class="sh-list">
-    {% for key, label, line, pages, href, edit in reports %}
+    {% for key, label, line, pages, href, edit, explain in reports %}
     <li class="sh-row">
       <label class="sh-pick" title="Include in the PDF or PowerPoint"><input type="checkbox" name="r" value="{{ key }}"{{ ' checked' if key in picked }} aria-label="Include {{ label }}">Include</label>
       <a class="sh-open" href="{{ href }}" data-lightbox="{{ label }}"><span class="sh-name"><b>{{ label }}</b> <span class="muted small">up to {{ pages }} pages</span><span class="sh-line">{{ line }}</span></span></a>
       <span class="sh-acts">
         <a class="sh-preview" role="button" href="{{ href }}" data-lightbox="{{ label }}">Preview</a>
-        {% if owner %}<a class="sh-edit small" href="{{ edit }}">Edit</a>{% endif %}
+        {# owner, 27 Oct 2026: how the document was made; internal, owner only, never in the PDF or PowerPoint #}
+        {% if owner %}<a class="sh-preview sh-explain outline" role="button" href="{{ explain }}" data-lightbox="{{ label }}: explanation" title="How this document was made (internal, only you see it)">Explanation</a>
+        <a class="sh-edit small" href="{{ edit }}">Edit</a>{% endif %}
       </span>
     </li>
     {% endfor %}

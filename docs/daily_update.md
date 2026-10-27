@@ -99,6 +99,22 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    resolve the comment with a one-line reply. In practice: add an entry (comment, block, text, reply) to
    `data/business/tech_overview_answers.yaml`; after the merge the site saves it as a new version and closes the
    comment with the reply (`tests/test_tech_overview.py` runs the same word check on the answers).
+   **Shareable system briefs** (UWB, V2X, GNSS, car radio; `data/business/share_systems.yaml`): every block of a
+   shareable system brief is checked for both companies, including acquired brands, with automotive / bundle option /
+   nothing-that-fits and the reason (owner, 27 Oct 2026: "this is the sort of depth I expect"). Search
+   `data/catalog/*_parts.yaml`, `data/real/*.yaml` and `data/broadcast` by function id, category and description
+   keywords (Qorvo: Active-Semi ACT…, Decawave DW…, UnitedSiC, RFMD, TriQuint, GreenPeak; Skyworks: ex-Silicon Labs
+   Si…), check band, frequency and voltage against the system, and record the findings under the brief's `coverage:`
+   (format in the file's header); start from what is recorded there. A new or changed brief, block or catalogue
+   refresh means re-checking the blocks it touches. `tests/test_share_systems.py` fails if a block lacks an entry.
+   **Shareable explanations** (owner, 27 Oct 2026: the internal "Explanation" button next to Preview, owner only):
+   when the run changes a shareable document, it updates that document's explanation in the same commit. A system
+   brief: its `coverage:` findings, `checked:` date and a plain line per change under `changes:` (what was added,
+   swapped or removed and why, newest first) in `data/business/share_systems.yaml`. Any document: what it is built
+   from, its research reports and known limits in `data/business/share_explain.yaml`; a new REGISTRY document gets an
+   entry there. Plain words, facts from the data only; where there is nothing, leave it empty ("No technical notes
+   yet" shows). The explanation is never part of the PDF, the PowerPoint or the shared page
+   (`tests/test_share_explain.py`).
    Cross-sell & gaps (owner, 22 Oct 2026): move sort, filter and set-aside from the old explorer table
    (`/business/explorer/table`) into `/blocks/cross-sell`; once nothing is lost, remove the old table.
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals
@@ -191,6 +207,12 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      (`app/services/demand.py`). The inbox shows only a count ("N new volume entries"); the run never asks for,
      copies or commits volume values, and gap parts with a volume are not looked up (they are known). A part's first
      volume also files a Part review request (fixed question, no values), which the run handles like any other.
+   - **Block builder: unknown words** (inbox section; owner, 27 Oct 2026: "a block diagram builder that allows for
+     word input"). Words the owner typed in the block editor's "Describe your system" box that it did not
+     understand, with counts (the text itself is never stored; guests' words are never collected). Review them and
+     add the useful ones as synonyms in `data/blocks/word_synonyms.yaml` (to an existing term's `words`, or a new
+     term with its function id from `data/blocks/functions.yaml`), with a test line in `tests/test_wordblocks.py`.
+     Add synonyms, never names: skip anything that looks like a person, company, customer or project name.
    - **Data flow: owner changes** (inbox section; owner, 26 Oct 2026: "a flow chart on which path all the data can
      take in order to optimize it ... you adapt it based on that information"). The owner's saved chart on Data
      management › Data flow (`/manage/data-flow`, kept in the database with its versions; never reset it) is listed

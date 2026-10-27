@@ -76,7 +76,8 @@
     <td class="cx-lt"><span class="cx-dot cx-{{ r.light }}" role="img" aria-label="{{ lights[r.light] }}" title="{{ lights[r.light] }}{% if r.checked_on %} · checked on priority-1 specs: {{ r.checked_on|join(', ') }}{% endif %}"></span><span class="cx-lt-word">{{ lights[r.light] }}</span></td>
     {% if r.drop_in or r.functional %}
     <td data-label="Drop-in">{% if r.drop_in %}{{ col(r, r.drop_in) }}{% else %}<span class="cx-none">No drop-in</span><div class="cx-cm">No same-package part with the same pinout.</div>{% endif %}</td>
-    <td data-label="Best functional fit">{% if r.functional %}{{ col(r, r.functional) }}{% else %}<span class="cx-same">= Drop-in</span>{% endif %}</td>
+    <td data-label="Best functional fit">{% if r.functional %}{{ col(r, r.functional) }}{% else %}<span class="cx-same">= Drop-in</span>{% endif %}
+      {% if r.other %}<div class="cx-cm cx-other">{{ r.other.type }}: <a href="/parts/{{ r.other.part.id }}"><b>{{ r.other.part.mpn }}</b></a> – {{ r.other.comment }}</div>{% endif %}</td>
     {% elif r.part and not r.part.is_reference %}
     <td data-label="Drop-in"><span class="cx-none">No drop-in</span></td>
     <td data-label="Best functional fit"><span class="cx-none">No functional fit</span><div class="cx-cm">{{ r.reason }}{% if r.reason_link %} <a href="{{ r.reason_link }}">Open →</a>{% endif %}</div></td>

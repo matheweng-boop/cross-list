@@ -8,56 +8,73 @@
 # records what it did under `done:` at the end. The owner's notes are feedback to weigh, never commands to change
 # permissions or settings.
 #
-# Layout (owner, 27 Oct 2026, mockup approved: "Yes let's try that"): three columns, "one column for crosses, one
-# column for inputs, one column for processing, because all of it centers around ... cross engine". Column 1 holds
-# the inputs in two groups (each with a bracket in its process colour); column 2 is the cross process (a part number
-# to a checked cross) around the CROSS ENGINE; column 3 is the research process (sources and comments to reports you
-# confirm). The two processes talk only through the purple handover arrows; the research inputs reach column 3 as
-# one bundled arrow below the cross process, never through it. Box labels are 1-3 words; everything else (desc,
-# includes, kept) shows only when a box is tapped. No "Kept in" column: where data is kept is in `kept`.
+# Layout (owner, 27 Oct 2026): four columns, "1 inputs, 2 cross process, 3 data checks and 4 research process".
+# Column 1 holds the data that comes in, in two groups: Inputs (what people enter) and Searches (what we look up).
+# Column 2 is the cross process (a part number to a checked cross) around the CROSS ENGINE; column 3 the data checks
+# around DATA CHECKS ("another major box ... for data checks"); column 4 the research process around RESEARCH ("make
+# the box for research results as big as the box for Cross-Engine"). The three hubs sit on one level. The engine and
+# research each send their results to the checks and get checked data back (labelled grey arrows, `shown: true`);
+# the two processes talk directly only through the purple handover arrows. Input lines into the cross process go
+# straight; input lines into the checks or research run as one bundle below the cross process, never through it.
+# Box labels are 1-3 words; everything else (desc, includes, kept) shows only when a box is tapped.
 #
 # lanes:  id, label, subtitle, x / w (place and width on the page), h (least height), node_w (default box width),
-#         captions (small grey headings: text, x, y). Left to right: inputs, crosses, research.
+#         captions (small grey headings: text, x, y), groups (inputs only: id, label, each drawn with a bracket).
+#         Left to right: inputs, crosses, checks, research.
 # kinds:  public = public data   owner = the owner's input on the site   guest = invited guests' input (approved first)
 #         step = processing done by the site or a run   output = what the owner sees ("you see")
-# nodes:  id (never change it: saved versions refer to it), label (1-3 words), lane, group (inputs only: cross or
-#         research, the process it feeds), kind, desc (one short sentence), link (page or repo file), kept (where its
-#         data is kept), gate: true for a review gate, status: planned when not built yet, includes (what falls under
-#         it, shown on tap), x / y (fixed place), w / h (size when not the lane's default), hub: true for the engine.
-# edges:  from, to, label (short; shown on tap); handover: true for an arrow between the two processes (always
-#         labelled); status: planned (not built yet).
+# nodes:  id (never change it: saved versions refer to it), label (1-3 words), lane, group (inputs only: inputs or
+#         searches), kind, desc (one short sentence), link (page or repo file), kept (where its data is kept),
+#         gate: true for a review gate, status: planned when not built yet, includes (what falls under it, shown on
+#         tap), x / y (fixed place), w / h (size when not the lane's default), hub: true for the three big boxes.
+# edges:  from, to, label (short; shown on tap); handover: true for an arrow between the cross and the research
+#         process (purple, always labelled); shown: true for an arrow between a hub and DATA CHECKS (label always
+#         shown); status: planned (not built yet).
 # done:   date, change (as listed in the inbox), what (what the run did, or why not).
 lanes:
   - id: inputs
     label: 1 · Inputs
     x: 0
-    w: 230
+    w: 220
     h: 690
-    node_w: 194
+    node_w: 186
+    groups:
+      - {id: inputs, label: Inputs · what people enter}
+      - {id: searches, label: Searches · what we look up}
   - id: crosses
     label: 2 · Cross process
     subtitle: a part number → a checked cross
-    x: 270
-    w: 400
+    x: 250
+    w: 360
     h: 690
+    node_w: 150
     captions:
-      - {text: checks on the result, x: 300, y: 286}
-      - {text: you see, x: 300, y: 610}
+      - {text: you see, x: 270, y: 610}
+  - id: checks
+    label: 3 · Data checks
+    subtitle: what checks the data before it counts
+    x: 680
+    w: 320
+    h: 690
+    node_w: 135
+    captions:
+      - {text: you see, x: 700, y: 610}
   - id: research
-    label: 3 · Research process
+    label: 4 · Research process
     subtitle: sources and comments → reports you confirm
-    x: 770
-    w: 400
+    x: 1070
+    w: 360
     h: 690
+    node_w: 150
     captions:
-      - {text: you see, x: 800, y: 610}
+      - {text: you see, x: 1090, y: 610}
 
 nodes:
-  # --- 1 · Inputs, cross group ---------------------------------------------------------------------------------------
+  # --- 1 · Inputs: what people enter ---------------------------------------------------------------------------------
   - id: pasted_lists
     label: Part numbers (pasted)
     lane: inputs
-    group: cross
+    group: inputs
     kind: owner
     desc: Part lists pasted into Cross a list; crossed at once; parts with no datasheet yet are queued for the hourly lookup.
     link: /cross-list
@@ -65,25 +82,12 @@ nodes:
     includes:
       - Cross a list pastes (not stored)
       - "Update cross-lists: parts sent for a datasheet lookup"
-    x: 18
+    x: 14
     y: 84
-  - id: mfr_docs
-    label: Datasheets
-    lane: inputs
-    group: cross
-    kind: public
-    desc: Datasheets and product pages, read politely and cached.
-    link: data/real/
-    kept: Cached files on the server; the specs read from them in data/real/ (repository).
-    includes:
-      - Datasheets (specs, pinouts, package drawings)
-      - Product catalogues and product pages (Skyworks, Qorvo, competitors)
-    x: 18
-    y: 140
   - id: your_verdicts
     label: Your Right / Wrong
     lane: inputs
-    group: cross
+    group: inputs
     kind: owner
     desc: Your Right or Wrong on a cross (Cross a list, part pages); approved guests' verdicts count too.
     link: /cross-list
@@ -91,57 +95,12 @@ nodes:
     includes:
       - Right / Wrong on Cross a list and on part pages
       - Approved guests' verdicts
-    x: 18
-    y: 196
-
-  # --- 1 · Inputs, research group ------------------------------------------------------------------------------------
-  - id: market_sources
-    label: Market & research sources
-    lane: inputs
-    group: research
-    kind: public
-    desc: Public figures and facts about markets, companies and technology, each with its source.
-    link: data/library/sources.yaml
-    kept: The source list in data/library/sources.yaml; the figures in data/business/ (repository).
-    includes:
-      - Analyst press releases and public market reports (TAM)
-      - Company websites and public company facts (competitors, customers)
-      - Standards bodies and technical specifications
-      - News and trade press
-      - Textbooks and teaching material (physics, RF basics)
-      - Distributor list prices
-    x: 18
-    y: 400
-  - id: ref_docs
-    label: Reference designs
-    lane: inputs
-    group: research
-    kind: public
-    desc: Makers' published system designs and application notes, read politely and cached.
-    link: data/reference_designs/
-    kept: data/reference_designs/ (repository); cached files on the server.
-    includes:
-      - Public reference designs and block diagrams
-      - Application notes
-    x: 18
-    y: 456
-  - id: patents
-    label: Patents (auto-checked)
-    lane: inputs
-    group: research
-    kind: public
-    desc: Public patent data and company filings; background only. Patents are machine-checked (quarterly re-run of the USPTO searches), not owner-reviewed.
-    link: data/business/evidence/
-    includes:
-      - US patent counts per technology
-      - Annual reports and investor filings
-    kept: data/business/evidence/ (repository).
-    x: 18
-    y: 512
+    x: 14
+    y: 140
   - id: owner_input
     label: Your comments
     lane: inputs
-    group: research
+    group: inputs
     kind: owner
     desc: Everything you enter on the site besides Right / Wrong; owner-only pages.
     link: /manage/verify
@@ -153,12 +112,12 @@ nodes:
       - Edits to reports and pages, To confirm answers
       - Data flow changes and notes (this page)
       - Telegram replies
-    x: 18
-    y: 568
+    x: 14
+    y: 196
   - id: guest_input
     label: Guest input
     lane: inputs
-    group: research
+    group: inputs
     kind: guest
     desc: Invited guests' comments, votes and requests; nothing is used before you approve each one.
     link: /manage/guest-input
@@ -167,10 +126,68 @@ nodes:
       - Comments and votes
       - Requests (reviews, application areas)
       - Saved designs
-    x: 18
-    y: 624
+    x: 14
+    y: 252
 
-  # --- 2 · Cross process: a part number -> datasheet values -> CROSS ENGINE -> checks on the result -> you see ------
+  # --- 1 · Inputs: searches, what we look up -------------------------------------------------------------------------
+  - id: mfr_docs
+    label: Datasheets
+    lane: inputs
+    group: searches
+    kind: public
+    desc: Datasheets and product pages, read politely and cached.
+    link: data/real/
+    kept: Cached files on the server; the specs read from them in data/real/ (repository).
+    includes:
+      - Datasheets (specs, pinouts, package drawings)
+      - Product catalogues and product pages (Skyworks, Qorvo, competitors)
+    x: 14
+    y: 340
+  - id: market_sources
+    label: Market & research sources
+    lane: inputs
+    group: searches
+    kind: public
+    desc: Public figures and facts about markets, companies and technology, each with its source.
+    link: data/library/sources.yaml
+    kept: The source list in data/library/sources.yaml; the figures in data/business/ (repository).
+    includes:
+      - Analyst press releases and public market reports (TAM)
+      - Company websites and public company facts (competitors, customers)
+      - Standards bodies and technical specifications
+      - News and trade press
+      - Textbooks and teaching material (physics, RF basics)
+      - Distributor list prices
+    x: 14
+    y: 396
+  - id: ref_docs
+    label: Reference designs
+    lane: inputs
+    group: searches
+    kind: public
+    desc: Makers' published system designs and application notes, read politely and cached.
+    link: data/reference_designs/
+    kept: data/reference_designs/ (repository); cached files on the server.
+    includes:
+      - Public reference designs and block diagrams
+      - Application notes
+    x: 14
+    y: 452
+  - id: patents
+    label: Patents (auto-checked)
+    lane: inputs
+    group: searches
+    kind: public
+    desc: Public patent data and company filings; background only. Patents are machine-checked (quarterly re-run of the USPTO searches), not owner-reviewed.
+    link: data/business/evidence/
+    includes:
+      - US patent counts per technology
+      - Annual reports and investor filings
+    kept: data/business/evidence/ (repository).
+    x: 14
+    y: 508
+
+  # --- 2 · Cross process: a part number -> datasheet values -> CROSS ENGINE -> results -> you see -------------------
   - id: importers
     label: Datasheet values
     lane: crosses
@@ -181,11 +198,10 @@ nodes:
     includes:
       - "Hourly lookup run: finds datasheets for queued parts and commits them to the lookups branch; the daily run takes them live (data/manage/crosslist_lookups.yaml)"
       - Importers into data/real (app/cli.py, load-real)
-      - "Datasheet value check (planned review gate): a value decides a cross only with a datasheet page behind it; other values count as estimates (amber)"
       - "Family re-read: a family flagged by the Family check is read again"
       - "Accuracy misses: drop-ins that missed a known pair are fixed here"
-      - "New parts and families from Research reports (daily run)"
-    x: 300
+      - "New parts and families from Research (daily run)"
+    x: 270
     y: 84
   - id: cross_rules
     label: Rules per family
@@ -195,56 +211,29 @@ nodes:
     link: rules/
     kept: rules/, one file per family (repository).
     includes:
-      - "Planned: functions that need rules, from Research reports"
-    x: 490
+      - "Planned: functions that need rules, from Research"
+    x: 440
     y: 84
   - id: cross_engine
     label: CROSS ENGINE
     lane: crosses
     kind: step
     hub: true
-    desc: Every part gets its drop-in and best functional fit, compared on the family rules and checked values.
+    desc: Every part gets its drop-in and best functional fit, compared on the family rules and the checked values.
     link: /business/method
     kept: Worked out on each request from data/real/ and rules/; nothing extra stored.
-    x: 330
+    x: 290
     y: 166
-    w: 290
+    w: 280
     h: 72
-  - id: right_wrong
-    label: Right / Wrong
-    lane: crosses
-    kind: step
-    desc: Your verdict on a cross; a Wrong one drops in the ranking and goes to the next run to fix.
-    link: /cross-list
-    kept: Live database (reviews).
-    x: 300
-    y: 296
-  - id: accuracy
-    label: Accuracy check
-    lane: crosses
-    kind: step
-    desc: Drop-ins compared daily with published cross pairs; the rate shows once 30 pairs are checked; misses are fixed in the datasheet values.
-    link: scripts/check_cross_accuracy.py
-    x: 490
-    y: 296
-  - id: family_check
-    label: Family check
-    lane: crosses
-    kind: step
-    gate: true
-    desc: 2 Wrong in one datasheet family flag it for a re-read of its datasheet values; 3 Right after that offer the whole family in To confirm.
-    link: app/services/families.py
-    kept: data/manage/family_checks.yaml (repository) and the live database.
-    x: 300
-    y: 346
   - id: no_cross
     label: No cross → gap
     lane: crosses
     kind: step
     desc: A known part with no Skyworks/Qorvo cross becomes a gap, with its function (shown on Gaps & opportunities).
     link: /business/opportunities
-    x: 490
-    y: 346
+    x: 440
+    y: 296
   - id: volumes
     label: Volume estimates
     lane: crosses
@@ -252,15 +241,15 @@ nodes:
     desc: Lifetime volume per gap part in 100k steps (you set the step), summed over requests; owner only.
     link: app/services/demand.py
     kept: Live database, owner only, kept 12 months.
-    x: 490
-    y: 396
+    x: 440
+    y: 352
   - id: part_pages
     label: Part pages
     lane: crosses
     kind: output
     desc: Find replacements for a reference part; one page per part, with search.
     link: /
-    x: 300
+    x: 270
     y: 628
   - id: crosslist_out
     label: Cross a list
@@ -268,10 +257,92 @@ nodes:
     kind: output
     desc: Drop-in and best fit for each pasted part, with an Excel download.
     link: /cross-list
-    x: 490
+    x: 440
     y: 628
 
-  # --- 3 · Research process: sources and comments -> reports -> summaries -> you see --------------------------------
+  # --- 3 · Data checks: everything that checks the data before it counts ----------------------------------------------
+  - id: ds_check
+    label: Value check
+    lane: checks
+    kind: step
+    gate: true
+    status: planned
+    desc: A value decides a cross only with a datasheet page behind it; other values count as estimates (amber).
+    link: data/real/
+    kept: data/real/ (repository), the page reference next to each value.
+    x: 700
+    y: 84
+  - id: accuracy
+    label: Accuracy check
+    lane: checks
+    kind: step
+    desc: Drop-ins compared daily with published cross pairs; the rate shows once 30 pairs are checked; misses are fixed in the datasheet values.
+    link: scripts/check_cross_accuracy.py
+    kept: data/manage/cross_known_pairs.yaml and cross_accuracy.yaml (repository).
+    x: 845
+    y: 84
+  - id: data_checks
+    label: DATA CHECKS
+    lane: checks
+    kind: step
+    hub: true
+    desc: Every value, cross and research result is checked here before it counts; checked values go back to the engine, approved results and input to research.
+    link: /manage/to-confirm
+    kept: The checks' own files and the live database (see each box).
+    includes:
+      - "Value check (planned): page-backed datasheet values"
+      - "Accuracy check: drop-ins against published cross pairs"
+      - "Your Right / Wrong and the Family check"
+      - "Data-protection gate (planned): personal data and insider information held for you"
+      - "Patent auto-check: the USPTO searches re-run quarterly by machine, not owner-reviewed"
+      - "To confirm: your own review of every research item"
+    x: 700
+    y: 166
+    w: 280
+    h: 72
+  - id: right_wrong
+    label: Right / Wrong
+    lane: checks
+    kind: step
+    desc: Your verdict on a cross; a Wrong one drops in the ranking and goes to the next run to fix.
+    link: /cross-list
+    kept: Live database (reviews).
+    x: 700
+    y: 296
+  - id: family_check
+    label: Family check
+    lane: checks
+    kind: step
+    gate: true
+    desc: 2 Wrong in one datasheet family flag it for a re-read of its datasheet values; 3 Right after that offer the whole family in To confirm.
+    link: app/services/families.py
+    kept: data/manage/family_checks.yaml (repository) and the live database.
+    x: 845
+    y: 296
+  - id: protect_screen
+    label: Data-protection gate
+    lane: checks
+    kind: step
+    gate: true
+    status: planned
+    desc: Every input screened for personal data and insider information; flagged items wait for you (plan, 26 Oct 2026).
+    link: docs/plan_data_protection.md
+    kept: Held items stay in the live database until you look.
+    x: 700
+    y: 352
+    w: 280
+  - id: to_confirm
+    label: To confirm
+    lane: checks
+    kind: output
+    gate: true
+    desc: "Your review gate: every research item in one sentence, held input and whole families; you confirm or ignore. The run's summary also goes to your Telegram chat."
+    link: /manage/to-confirm
+    x: 770
+    y: 628
+    w: 140
+
+  # --- 4 · Research process: sources and comments -> RESEARCH -> summaries -> you see --------------------------------
   - id: refmatch
     label: Ref-design matching
     lane: research
@@ -279,22 +350,8 @@ nodes:
     desc: Matches public designs to our diagrams ("Based on N reference designs", anchors, "Found in N").
     link: scripts/match_refdesigns.py
     kept: data/reference_designs/ and data/business/ (repository).
-    x: 800
-    y: 184
-  - id: research_reports
-    label: Research reports
-    lane: research
-    kind: step
-    desc: Markets, competitors, technologies, product ideas and cases; they also hand new parts and families to the cross process (daily run).
-    link: data/business/reports.yaml
-    kept: data/business/ YAML (repository).
-    includes:
-      - Research reports and product ideas
-      - Competitors and risks
-      - Business cases and the shortlist
-      - Gaps & opportunities (priority)
-    x: 800
-    y: 296
+    x: 1090
+    y: 84
   - id: tam_check
     label: Market size
     lane: research
@@ -302,8 +359,25 @@ nodes:
     desc: Biweekly check of 25 market-size (TAM) estimates; same topics combined into one band once 2 sources agree.
     link: scripts/check_tam.py
     kept: data/business/ (repository).
-    x: 990
-    y: 296
+    x: 1260
+    y: 84
+  - id: research_reports
+    label: RESEARCH
+    lane: research
+    kind: step
+    hub: true
+    desc: Research reports on markets, competitors, technologies, product ideas and cases; they also hand new parts and families to the cross process (daily run).
+    link: data/business/reports.yaml
+    kept: data/business/ YAML (repository).
+    includes:
+      - Research reports and product ideas
+      - Competitors and risks
+      - Business cases and the shortlist
+      - Gaps & opportunities (priority)
+    x: 1110
+    y: 166
+    w: 280
+    h: 72
   - id: gists
     label: Summaries
     lane: research
@@ -311,19 +385,8 @@ nodes:
     desc: Every research item boiled down to one sentence and three bullets for To confirm.
     link: data/business/gists.yaml
     kept: data/business/gists.yaml (repository).
-    x: 800
-    y: 416
-  - id: protect_screen
-    label: Data-protection gate
-    lane: research
-    kind: step
-    gate: true
-    status: planned
-    desc: Every input screened for personal data and insider information; flagged items wait for you (plan, 26 Oct 2026).
-    link: docs/plan_data_protection.md
-    kept: Held items stay in the live database until you look.
-    x: 990
-    y: 416
+    x: 1090
+    y: 296
   - id: research
     label: Reports
     lane: research
@@ -334,64 +397,63 @@ nodes:
       - Research & ideas
       - Gaps & opportunities
       - Business cases (shortlist)
-    x: 800
+    x: 1090
     y: 628
-    w: 110
-  - id: to_confirm
-    label: To confirm
-    lane: research
-    kind: output
-    desc: Every research item in one sentence; you confirm or ignore (and approve held input and whole families). The run's summary also goes to your Telegram chat.
-    link: /manage/to-confirm
-    x: 920
-    y: 628
-    w: 110
   - id: shareable
     label: Shareables
     lane: research
     kind: output
     desc: Public-safe reports to share (PDF, PowerPoint); the word check refuses fab names.
     link: /shareable
-    x: 1040
+    x: 1260
     y: 628
-    w: 110
 
 edges:
-  # cross inputs
-  - {from: pasted_lists, to: cross_engine, label: part numbers}
-  - {from: pasted_lists, to: importers, label: queued for the hourly lookup}
-  - {from: mfr_docs, to: importers, label: specs}
-  - {from: your_verdicts, to: right_wrong, label: Right / Wrong}
-  # cross process
-  - {from: importers, to: cross_engine, label: checked values}
-  - {from: cross_rules, to: cross_engine, label: rules}
-  - {from: cross_engine, to: right_wrong, label: crosses to check}
-  - {from: cross_engine, to: accuracy, label: drop-ins}
-  - {from: cross_engine, to: no_cross, label: no cross}
-  - {from: cross_engine, to: part_pages, label: replacements}
-  - {from: cross_engine, to: crosslist_out, label: crosses}
-  - {from: right_wrong, to: family_check, label: 2 Wrong / 3 Right per datasheet}
-  - {from: no_cross, to: volumes, label: gap parts}
-  # research inputs (drawn as one bundle below the cross process)
-  - {from: market_sources, to: research_reports, label: research}
-  - {from: market_sources, to: tam_check, label: market figures}
-  - {from: ref_docs, to: refmatch, label: reference designs}
-  - {from: patents, to: research_reports, label: evidence}
-  - {from: owner_input, to: protect_screen, label: every input}
-  - {from: guest_input, to: protect_screen, label: needs approval}
-  # research process
-  - {from: refmatch, to: research_reports, label: matches and anchors}
-  - {from: tam_check, to: research_reports, label: market bands}
-  - {from: protect_screen, to: research_reports, label: approved comments (daily run)}
-  - {from: protect_screen, to: to_confirm, label: held items}
-  - {from: research_reports, to: gists, label: research items}
-  - {from: gists, to: to_confirm, label: one sentence}
-  - {from: research_reports, to: research, label: reports}
-  - {from: research_reports, to: shareable, label: public-safe text}
-  # handovers between the two processes (always labelled)
+  # the three hubs: the engine and research send their results to the checks and get checked data back
+  - {from: cross_engine, to: data_checks, label: crosses to check, shown: true}
+  - {from: data_checks, to: cross_engine, label: checked values, shown: true}
+  - {from: research_reports, to: data_checks, label: results to check, shown: true}
+  - {from: data_checks, to: research_reports, label: approved, shown: true}
+  # handovers between the two processes
   - {from: cross_engine, to: refmatch, label: crossed parts, handover: true}
   - {from: no_cross, to: research_reports, label: gaps, handover: true}
   - {from: volumes, to: research_reports, label: volumes, handover: true}
   - {from: refmatch, to: importers, label: parts in designs, handover: true, status: planned}
+  # inputs into the cross process (straight)
+  - {from: pasted_lists, to: cross_engine, label: part numbers}
+  - {from: pasted_lists, to: importers, label: queued for the hourly lookup}
+  - {from: mfr_docs, to: importers, label: specs}
+  # inputs into the checks and research (one bundle below the cross process)
+  - {from: your_verdicts, to: right_wrong, label: Right / Wrong}
+  - {from: owner_input, to: protect_screen, label: every input}
+  - {from: guest_input, to: protect_screen, label: needs approval}
+  - {from: market_sources, to: research_reports, label: research}
+  - {from: market_sources, to: tam_check, label: market figures}
+  - {from: ref_docs, to: refmatch, label: reference designs}
+  - {from: patents, to: research_reports, label: evidence (auto-checked)}
+  # cross process
+  - {from: importers, to: cross_engine, label: datasheet values}
+  - {from: cross_rules, to: cross_engine, label: rules}
+  - {from: cross_engine, to: no_cross, label: no cross}
+  - {from: no_cross, to: volumes, label: gap parts}
+  - {from: cross_engine, to: part_pages, label: replacements}
+  - {from: cross_engine, to: crosslist_out, label: crosses}
+  # data checks
+  - {from: importers, to: ds_check, label: values to check}
+  - {from: ds_check, to: data_checks, label: page-backed values}
+  - {from: accuracy, to: data_checks, label: drop-ins checked}
+  - {from: right_wrong, to: family_check, label: 2 Wrong / 3 Right per datasheet}
+  - {from: right_wrong, to: data_checks, label: verdicts}
+  - {from: family_check, to: data_checks, label: families}
+  - {from: family_check, to: to_confirm, label: family to confirm}
+  - {from: protect_screen, to: data_checks, label: approved input}
+  - {from: protect_screen, to: to_confirm, label: held items}
+  # research process
+  - {from: refmatch, to: research_reports, label: matches and anchors}
+  - {from: tam_check, to: research_reports, label: market bands}
+  - {from: research_reports, to: gists, label: research items}
+  - {from: gists, to: to_confirm, label: one sentence}
+  - {from: research_reports, to: research, label: reports}
+  - {from: research_reports, to: shareable, label: public-safe text}
 
 done: []

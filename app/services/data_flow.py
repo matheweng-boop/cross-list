@@ -27,7 +27,7 @@ FILE = PROJECT_ROOT / "data" / "manage" / "data_flow.yaml"
 PAGE = "data_flow"
 KINDS = {"public": "Public data", "owner": "Owner input", "guest": "Guest input", "step": "Processing",
          "output": "Output"}  # fmt: skip
-GROUPS = ("cross", "research")  # the process an input feeds (its bracket in the Inputs column)
+GROUPS = ("inputs", "searches")  # what people enter / what we look up (each with its bracket in the Inputs column)
 # default sizes (the page draws with the same numbers); lanes and nodes carry their own x / y / w in the file
 LANE_W, NODE_W, NODE_H, TOP, STEP_Y, NOTE_W = 420, 160, 36, 84, 56, 150
 MOVED = 30  # a node counts as moved when it is this far from its file place
@@ -37,7 +37,7 @@ _ID = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 
 
 def load() -> dict:
-    """The file version: lanes (the three columns, each with its place and width), nodes (with their place and size on
+    """The file version: lanes (the four columns, each with its place and width), nodes (with their place and size on
     the page), edges and what the daily run did."""
     raw = yamlio.load(FILE.read_text(encoding="utf-8")) or {}
     lanes = []
@@ -46,7 +46,9 @@ def load() -> dict:
                       "x": float(x.get("x", i * LANE_W)), "w": float(x.get("w", LANE_W - 40)),
                       "h": float(x.get("h", 600)), "node_w": float(x.get("node_w") or NODE_W),
                       "captions": [{"text": str(c["text"]), "x": float(c["x"]), "y": float(c["y"])}
-                                   for c in x.get("captions") or []]})  # fmt: skip
+                                   for c in x.get("captions") or []],
+                      "groups": [{"id": str(g["id"]), "label": str(g["label"])}
+                                 for g in x.get("groups") or []]})  # fmt: skip
     by_lane = {x["id"]: x for x in lanes}
     count: dict[str, int] = {}
     nodes = []
@@ -64,7 +66,7 @@ def load() -> dict:
                       "x": float(n.get("x", ln["x"] + 30)), "y": float(n.get("y", TOP + k * STEP_Y)),
                       "w": float(n.get("w") or ln["node_w"]), "h": float(n.get("h") or NODE_H)})  # fmt: skip
     edges = [{"from": str(e["from"]), "to": str(e["to"]), "label": str(e.get("label") or ""),
-              "handover": bool(e.get("handover")), "status": str(e.get("status") or "")}
+              "handover": bool(e.get("handover")), "shown": bool(e.get("shown")), "status": str(e.get("status") or "")}
              for e in raw.get("edges") or []]  # fmt: skip
     return {"lanes": lanes, "nodes": nodes, "edges": edges, "done": list(raw.get("done") or [])}
 

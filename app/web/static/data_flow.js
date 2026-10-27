@@ -1,9 +1,11 @@
-// Data management › Data flow (owner, 26 Oct 2026; three columns 27 Oct 2026): the chart of every path the data takes,
-// drawn from data/manage/data_flow.yaml (sent in #df-data). Column 1 holds the inputs in two bracketed groups, column 2
-// the cross process around the CROSS ENGINE, column 3 the research process; the two processes talk only through the
-// purple handover arrows (always labelled). Every other line is thin grey and shows its label only when it or one of
-// its boxes is tapped; the research inputs travel as one bundled arrow below the cross process. Boxes carry 1-3 words;
-// tapping one shows what it is, where its data is kept and its lines in the info box under the chart.
+// Data management › Data flow (owner, 26 Oct 2026; four columns 27 Oct 2026): the chart of every path the data takes,
+// drawn from data/manage/data_flow.yaml (sent in #df-data). Column 1 holds the inputs in two bracketed groups (Inputs,
+// Searches), column 2 the cross process around the CROSS ENGINE, column 3 the data checks around DATA CHECKS, column 4
+// the research process around RESEARCH; the three hubs sit on one level. The hubs' links to the checks (`shown`) and
+// the purple handovers between the two processes are always labelled. Every other line is thin grey and shows its
+// label only when it or one of its boxes is tapped; input lines into the checks or research travel as one bundled
+// arrow below the cross process. Boxes carry 1-3 words; tapping one shows what it is, where its data is kept and its
+// lines in the info box under the chart.
 // The owner drags boxes, connects them by dragging a box's round handle onto another box, double-taps to edit, adds
 // steps and notes, zooms (pinch / wheel) and pans; Save sends the whole chart to /manage/data-flow/save, which stores a
 // version and answers with the change list against the file version. Pointer events only, so mouse, pen and touch
@@ -19,7 +21,7 @@
   for (const n of S.nodes) { n.w = n.w || fileNode[n.id]?.w || NW; n.h = n.h || fileNode[n.id]?.h || NH; }
   let view = null, sel = null, dirty = false, action = null, pinch = null, lastTap = {id: null, t: 0};
   const pointers = new Map();
-  let smooth = false;
+  let smooth = false, frameQueued = false;
   try { smooth = localStorage.getItem("df-smooth") === "1"; } catch (e) { /* storage blocked: square lines */ }
 
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
@@ -67,29 +69,35 @@
       const p = panels[laneOf(n)], b = boxes[n.id];
       if (p) p.h = Math.max(p.h, b.y + b.h + 26);
     }
-    // inputs grouped by the process they feed, each with a bracket in that process colour
-    const brackets = [];
-    for (const g of ["cross", "research"]) {
-      const list = S.nodes.filter(n => n.group === g && laneOf(n) === "inputs").map(n => boxes[n.id]);
+    // the inputs in their groups (what people enter, what we look up), each with a neutral bracket and its name
+    const brackets = [], inputs = laneById.inputs;
+    for (const g of inputs ? inputs.groups : []) {
+      const list = S.nodes.filter(n => n.group === g.id && laneOf(n) === "inputs").map(n => boxes[n.id]);
       if (!list.length) continue;
       const x = Math.max(...list.map(b => b.x + b.w)) + 4, y0 = Math.min(...list.map(b => b.y)), y1 = Math.max(...list.map(b => b.y + b.h));
-      brackets.push({group: g, x, y0, y1});
+      brackets.push({group: g.id, label: g.label, x, y0, y1, lx: Math.min(...list.map(b => b.x))});
     }
-    const cross = panels.crosses, research = panels.research;
+    // input lines into the checks or research leave on the left, down one spine, under the cross process (a bundle)
+    const cross = panels.crosses, from = S.nodes.filter(n => laneOf(n) === "inputs");
     const bundled = S.edges.map((e, i) => [e, i]).filter(([e]) => isBundled(e, N)).map(([, i]) => i);
     let bundle = null;
-    const rb = brackets.find(b => b.group === "research");
-    if (rb && cross && research && bundled.length) {
-      const y = Math.max(cross.y + cross.h, rb.y1) + 30;
-      bundle = {x0: rb.x + 10, ymid: (rb.y0 + rb.y1) / 2, xr: rb.x + 24, y, x1: research.x + research.w / 2, y1: research.y + research.h, edges: bundled};
+    if (cross && from.length && bundled.length) {
+      const srcs = [...new Set(bundled.map(i => S.edges[i].from))].map(id => boxes[id]);
+      const lanesTo = [...new Set(bundled.map(i => laneOf(N[S.edges[i].to])))].map(id => panels[id]).filter(Boolean);
+      const sx = Math.min(...from.map(n => n.x)) - 8;
+      const y = Math.max(...Object.values(panels).filter(p => p.lane.id !== "inputs").map(p => p.y + p.h), ...srcs.map(b => b.y + b.h)) + 30;
+      bundle = {sx, y, stubs: srcs.map(b => [b.x, b.y + b.h / 2]), y0: Math.min(...srcs.map(b => b.y + b.h / 2)),
+        ends: lanesTo.map(p => [p.x + 12, p.y + p.h]), edges: bundled};  // up the column's left gutter
       if (panels.inputs) panels.inputs.h = Math.max(panels.inputs.h, y + 40);
     }
     return {panels, brackets, bundle};
   }
-  // a research input feeding the research process: drawn inside the one bundle, its own line only when tapped
+  // an input line into the checks or the research: inside the one bundle, its own line only when tapped
   function isBundled(e, N) {
     const a = N[e.from], b = N[e.to];
-    return !!(a && b && !e.handover && a.group === "research" && laneOf(a) === "inputs" && laneOf(b) === "research");
+    if (!a || !b || e.handover || laneOf(a) !== "inputs") return false;
+    const lb = laneOf(b);
+    return lb !== "inputs" && lb !== "crosses";
   }
 
   // ---- edges: square lines that go around the boxes (candidate shapes, the clear and short one wins)
@@ -99,13 +107,23 @@
     const x0 = Math.min(p[0], q[0]), x1 = Math.max(p[0], q[0]), y0 = Math.min(p[1], q[1]), y1 = Math.max(p[1], q[1]);
     return x1 > o.l - pad && x0 < o.r + pad && y1 > o.t - pad && y0 < o.b + pad;
   }
-  function cost(pts, obstacles) {
-    let hits = 0, len = 0;
+  // a line through a box costs most; running along another line (not of the same box) costs too, then length and bends
+  function overlaps(p, q, u) {
+    const h = Math.abs(p[1] - q[1]) < 0.5, uh = Math.abs(u.p[1] - u.q[1]) < 0.5;
+    if (h !== uh) return false;
+    const [a, b] = h ? [p[1], u.p[1]] : [p[0], u.p[0]];
+    if (Math.abs(a - b) > 4) return false;
+    const i = h ? 0 : 1, lo = Math.max(Math.min(p[i], q[i]), Math.min(u.p[i], u.q[i])), hi = Math.min(Math.max(p[i], q[i]), Math.max(u.p[i], u.q[i]));
+    return hi - lo > 6;
+  }
+  function cost(pts, obstacles, used, e) {
+    let hits = 0, len = 0, over = 0;
     for (let k = 1; k < pts.length; k++) {
       len += Math.abs(pts[k][0] - pts[k - 1][0]) + Math.abs(pts[k][1] - pts[k - 1][1]);
       for (const o of obstacles) if (segHits(pts[k - 1], pts[k], o)) hits++;
+      if (used) for (const u of used) if (u.from !== e.from && overlaps(pts[k - 1], pts[k], u)) over++;
     }
-    return hits * 1000 + len + (pts.length - 2) * 25;
+    return hits * 1000 + over * 300 + len + (pts.length - 2) * 25;
   }
   function between(lo, hi, cuts) {
     const out = [(lo + hi) / 2];
@@ -114,8 +132,10 @@
   }
   function candidates(a, b, xs, ys) {
     const out = [];
-    if (b.l >= a.r + 10) for (const mx of between(a.r, b.l, xs)) out.push([[a.r, a.cy], [mx, a.cy], [mx, b.cy], [b.l, b.cy]]);
-    if (a.l >= b.r + 10) for (const mx of between(b.r, a.l, xs)) out.push([[a.l, a.cy], [mx, a.cy], [mx, b.cy], [b.r, b.cy]]);
+    for (const d of [-11, 11, 0]) {  // a second line between the same two boxes runs beside the first
+      if (b.l >= a.r + 10) for (const mx of between(a.r, b.l, xs)) out.push([[a.r, a.cy + d], [mx, a.cy + d], [mx, b.cy + d], [b.l, b.cy + d]]);
+      if (a.l >= b.r + 10) for (const mx of between(b.r, a.l, xs)) out.push([[a.l, a.cy + d], [mx, a.cy + d], [mx, b.cy + d], [b.r, b.cy + d]]);
+    }
     if (b.t >= a.b + 8) for (const my of between(a.b, b.t, ys)) out.push([[a.cx, a.b], [a.cx, my], [b.cx, my], [b.cx, b.t]]);
     if (a.t >= b.b + 8) for (const my of between(b.b, a.t, ys)) out.push([[a.cx, a.t], [a.cx, my], [b.cx, my], [b.cx, b.b]]);
     // L shapes: out of a side, into the top or bottom (and the other way round)
@@ -127,11 +147,22 @@
     // over the top or under the bottom of both
     const y0 = Math.min(a.t, b.t) - 14, y1 = Math.max(a.b, b.b) + 14;
     out.push([[a.cx, a.t], [a.cx, y0], [b.cx, y0], [b.cx, b.t]], [[a.cx, a.b], [a.cx, y1], [b.cx, y1], [b.cx, b.b]]);
+    // across a whole column: out of the side, along a free row between its boxes, into the side
+    const right = b.l >= a.r + 30, left = a.l >= b.r + 30;
+    if (right || left) {
+      const x1 = right ? a.r + 16 : a.l - 16, x2 = right ? b.l - 16 : b.r + 16, s1 = right ? a.r : a.l, s2 = right ? b.l : b.r;
+      for (const yc of ys) out.push([[s1, a.cy], [x1, a.cy], [x1, yc], [x2, yc], [x2, b.cy], [s2, b.cy]]);
+    }
     // down a free corridor between the boxes
     if (b.t >= a.b + 30) for (const cx of xs) out.push([[a.cx, a.b], [a.cx, a.b + 12], [cx, a.b + 12], [cx, b.t - 12], [b.cx, b.t - 12], [b.cx, b.t]]);
     return out;
   }
-  const tidy = pts => pts.filter((p, k) => !k || Math.abs(p[0] - pts[k - 1][0]) + Math.abs(p[1] - pts[k - 1][1]) > 0.5);
+  // drop repeated points and the middle of straight runs
+  function tidy(pts) {
+    const q = pts.filter((p, k) => !k || Math.abs(p[0] - pts[k - 1][0]) + Math.abs(p[1] - pts[k - 1][1]) > 0.5);
+    return q.filter((p, k) => k === 0 || k === q.length - 1 ||
+      !((Math.abs(q[k - 1][0] - p[0]) < 0.5 && Math.abs(q[k + 1][0] - p[0]) < 0.5) || (Math.abs(q[k - 1][1] - p[1]) < 0.5 && Math.abs(q[k + 1][1] - p[1]) < 0.5)));
+  }
   function pathD(pts) {
     if (!smooth || pts.length < 3) return "M" + pts.map(p => `${p[0]} ${p[1]}`).join("L");
     let d = `M${pts[0][0]} ${pts[0][1]}`;
@@ -144,38 +175,44 @@
     const z = pts[pts.length - 1];
     return d + `L${z[0]} ${z[1]}`;
   }
+  const always = e => e.handover || e.shown;
   function routes(boxes, layout) {
-    const N = byId(), items = [], all = Object.entries(boxes);
+    const N = byId(), items = [], all = Object.entries(boxes), used = [];
     const xs = [], ys = [];
     for (const [, b] of all) { xs.push(b.x - 12, b.x + b.w + 12); ys.push(b.y - 12, b.y + b.h + 12); }
-    const research = layout.panels.research, rb = layout.brackets.find(b => b.group === "research");
-    let k = 0;
-    S.edges.forEach((e, i) => {
-      const a = N[e.from], b = N[e.to];
-      if (!a || !b) return;
+    const gutter = {};
+    // the labelled lines first, so the others go round them
+    const order = S.edges.map((e, i) => i).sort((p, q) => always(S.edges[q]) - always(S.edges[p]));
+    for (const i of order) {
+      const e = S.edges[i], a = N[e.from], b = N[e.to];
+      if (!a || !b) continue;
       const A = R(boxes[a.id]), B = R(boxes[b.id]);
       const obstacles = all.filter(([id]) => id !== a.id && id !== b.id).map(([, o]) => R(o));
-      if (layout.bundle && isBundled(e, N)) {  // along the bundle: down the bracket, under the cross process, up the research gutter
-        const gx = research.x + 12 + (k++ % 4) * 3, y = layout.bundle.y;
-        const head = [[A.r, A.cy], [rb.x + 20, A.cy], [rb.x + 20, y], [gx, y]];
+      if (layout.bundle && isBundled(e, N)) {  // along the bundle: down the spine, under the cross process, up the gutter of its column
+        const lane = layout.panels[laneOf(b)], k = gutter[lane.lane.id] = (gutter[lane.lane.id] || 0) + 1;
+        const gx = lane.x + 8 + (k % 4) * 3, y = layout.bundle.y, sx = layout.bundle.sx;
+        const head = [[A.l, A.cy], [sx, A.cy], [sx, y], [gx, y]];
         const legs = [[[gx, B.cy], [B.l, B.cy]], [[gx, B.t - 12], [B.cx, B.t - 12], [B.cx, B.t]],
           [[gx, B.b + 12], [B.cx, B.b + 12], [B.cx, B.b]]];
         let leg = legs[0], lc = Infinity;
         for (const l of legs) { const v = cost([[gx, y], ...l], obstacles); if (v < lc) { lc = v; leg = l; } }
         items.push({i, e, a, b, pts: tidy([...head, ...leg]), from: head.length - 1, bundled: true});
-        return;
+        continue;
       }
       let best = null, bc = Infinity;
       for (const c of candidates(A, B, xs, ys)) {
-        const v = cost(c, obstacles);
+        const v = cost(c, obstacles, used, e);
         if (v < bc) { bc = v; best = c; }
       }
-      items.push({i, e, a, b, pts: tidy(best || [[A.cx, A.cy], [B.cx, B.cy]])});
-    });
+      const pts = tidy(best || [[A.cx, A.cy], [B.cx, B.cy]]);
+      for (let k = 1; k < pts.length; k++) used.push({p: pts[k - 1], q: pts[k], from: e.from, to: e.to});
+      items.push({i, e, a, b, pts});
+    }
+    items.sort((p, q) => p.i - q.i);
     // arrows into the same side of a box sit side by side
     const sides = {};
     for (const it of items) {
-      if (it.bundled || it.pts.length < 3) continue;
+      if (it.bundled || it.e.shown || it.pts.length < 3) continue;  // a hub pair keeps its own two rows
       const [p, q] = it.pts.slice(-2), vert = Math.abs(p[0] - q[0]) < 0.5;
       (sides[`${it.e.to}|${vert ? (q[1] > p[1] ? "t" : "b") : (q[0] > p[0] ? "l" : "r")}`] ||= []).push([it, vert]);
     }
@@ -188,22 +225,28 @@
         if (vert) { z[0] = y[0] = B.x + B.w * (0.25 + 0.5 * f); } else { z[1] = y[1] = B.y + B.h * (0.2 + 0.6 * f); }
       });
     }
-    // labels: a handover's sits in the gap between the two processes, any other line's on its longest run
-    const gapX = layout.panels.crosses && research ? (layout.panels.crosses.x + layout.panels.crosses.w + research.x) / 2 : null;
+    // labels: an always-labelled line's sits in the first gap between two columns it crosses; any other line's on
+    // its longest run
+    const panels = Object.values(layout.panels).sort((p, q) => p.x - q.x);
+    const gaps = panels.slice(1).map((p, k) => (panels[k].x + panels[k].w + p.x) / 2);
     for (const it of items) {
       it.anchor = "middle";
       const segs = it.pts.slice(1).map((q, k2) => [it.pts[k2], q]).slice(it.from || 0);  // a bundled line: its own leg only
-      let s = it.e.handover && gapX !== null ? segs.find(([p, q]) => p[1] === q[1] && Math.min(p[0], q[0]) <= gapX && Math.max(p[0], q[0]) >= gapX) : null;
-      if (s) {  // leaving the cross process: just after the start, clear of the joining runs; else centred in the gap
-        if (s[0][0] < gapX) { it.lx = s[0][0] + 7; it.anchor = "start"; } else it.lx = gapX;
-        it.ly = s[0][1] - 6;
-        continue;
+      let done = false;
+      if (always(it.e)) {
+        for (const [p, q] of segs) {
+          if (Math.abs(p[1] - q[1]) > 0.5) continue;
+          const inGap = gaps.filter(g => g >= Math.min(p[0], q[0]) && g <= Math.max(p[0], q[0])).sort((g, h) => Math.abs(g - p[0]) - Math.abs(h - p[0]));
+          if (inGap.length) { it.lx = inGap[0]; it.ly = p[1] - 6; done = true; break; }  // just above the line
+        }
       }
-      s = segs.reduce((m, x) => Math.hypot(x[1][0] - x[0][0], x[1][1] - x[0][1]) > Math.hypot(m[1][0] - m[0][0], m[1][1] - m[0][1]) ? x : m, segs[0]);
+      if (done) continue;
+      const s = segs.reduce((m, x) => Math.hypot(x[1][0] - x[0][0], x[1][1] - x[0][1]) > Math.hypot(m[1][0] - m[0][0], m[1][1] - m[0][1]) ? x : m, segs[0]);
       it.lx = (s[0][0] + s[1][0]) / 2; it.ly = (s[0][1] + s[1][1]) / 2 - 5;
     }
     return items;
   }
+
 
   // ---- drawing
   function extent(boxes, layout) {
@@ -226,23 +269,29 @@
         (l.subtitle ? `<text class="lane-sub" x="${p.x + 20}" y="${p.y + 54}">${esc(l.subtitle)}</text>` : "") +
         l.captions.map(c => `<text class="caption" x="${c.x}" y="${c.y}">${esc(c.text)}</text>`).join("") + "</g>");
     }
-    for (const b of layout.brackets) out.push(`<path class="bracket g-${b.group}" d="M${b.x} ${b.y0}H${b.x + 10}V${b.y1}H${b.x}"/>`);
+    for (const b of layout.brackets) {
+      out.push(`<path class="bracket g-${esc(b.group)}" d="M${b.x} ${b.y0}H${b.x + 10}V${b.y1}H${b.x}"/>` +
+        `<text class="group-label" x="${b.lx}" y="${b.y0 - 7}">${esc(b.label)}</text>`);
+    }
     const bu = layout.bundle;
     if (bu) {
-      out.push(`<g class="bundle"><title>Research inputs: one arrow under the cross process, never through it. Tap an input for its own lines.</title>` +
-        `<path d="M${bu.x0} ${bu.ymid}H${bu.xr}V${bu.y}H${bu.x1}V${bu.y1 + 2}" marker-end="url(#df-m)"/>` +
-        `<text x="${layout.panels.crosses ? layout.panels.crosses.x + 30 : bu.xr + 20}" y="${bu.y - 7}">research inputs</text></g>`);
+      const far = Math.max(...bu.ends.map(p => p[0]));
+      out.push(`<g class="bundle"><title>Inputs to the data checks and the research: one arrow under the cross process, never through it. Tap an input for its own lines.</title>` +
+        bu.stubs.map(([x, y]) => `<path class="stub" d="M${x} ${y}H${bu.sx}"/>`).join("") +
+        `<path d="M${bu.sx} ${bu.y0}V${bu.y}H${far}" />` +
+        bu.ends.map(([x, y]) => `<path d="M${x} ${bu.y}V${y + 2}" marker-end="url(#df-m)"/>`).join("") +
+        `<text x="${layout.panels.crosses ? layout.panels.crosses.x + 20 : bu.sx + 20}" y="${bu.y - 7}">inputs to the checks and research</text></g>`);
     }
     out.push('</g><g class="edges">');
     const items = routes(boxes, layout);
     for (const it of items) {
       const isSel = sel && sel.type === "edge" && sel.i === it.i, hl = isSel || (selNode && (it.e.from === selNode || it.e.to === selNode));
       if (it.bundled && !hl) continue;  // inside the bundle
-      const cls = (it.e.handover ? " handover" : "") + (it.e.status === "planned" ? " planned" : "") + (hl ? " hl" : "") + (isSel ? " sel" : "");
+      const cls = (it.e.handover ? " handover" : "") + (it.e.shown ? " shown" : "") + (it.e.status === "planned" ? " planned" : "") + (hl ? " hl" : "") + (isSel ? " sel" : "");
       const mk = hl ? "df-m-hl" : it.e.handover ? "df-m-handover" : "df-m";
       const label = it.e.label ? esc(it.e.label) + (it.e.status === "planned" ? " (planned)" : "") : "";
       out.push(`<g class="edge${cls}" data-edge="${it.i}"><path class="hit" d="${pathD(it.pts)}"/><path class="line" d="${pathD(it.pts)}" marker-end="url(#${mk})"/>` +
-        (label && (it.e.handover || hl) ? `<text x="${it.lx}" y="${it.ly}" text-anchor="${it.anchor}">${label}</text>` : "") + "</g>");
+        (label && (always(it.e) || hl) ? `<text x="${it.lx}" y="${it.ly}" text-anchor="${it.anchor}">${label}</text>` : "") + "</g>");
     }
     out.push('</g><g class="nodes">');
     for (const n of S.nodes) {
@@ -273,14 +322,15 @@
     const box = $("#df-info");
     if (sel && sel.type === "edge" && S.edges[sel.i]) {
       const e = S.edges[sel.i];
-      box.innerHTML = `<b>${esc(N[e.from]?.label)} → ${esc(N[e.to]?.label)}</b>${e.label ? `: ${esc(e.label)}` : ""} <span class="muted">${e.handover ? "· handover between the processes" : ""}${e.status === "planned" ? " · planned" : ""}</span>`;
+      box.innerHTML = `<b>${esc(N[e.from]?.label)} → ${esc(N[e.to]?.label)}</b>${e.label ? `: ${esc(e.label)}` : ""} <span class="muted">${e.handover ? "· handover between the processes" : e.shown ? "· to or from the data checks" : ""}${e.status === "planned" ? " · planned" : ""}</span>`;
       box.hidden = false;
       return;
     }
     const n = sel && sel.type === "node" ? N[sel.id] : null;
     if (!n) { box.hidden = true; box.innerHTML = ""; return; }
     const f = fileNode[n.id] || {}, inc = f.includes || [], lane = laneById[laneOf(n)];
-    const group = n.group && laneOf(n) === "inputs" ? ` · feeds the ${n.group} process` : "";
+    const g = n.group && laneOf(n) === "inputs" ? (laneById.inputs?.groups || []).find(x => x.id === n.group) : null;
+    const group = g ? ` · ${esc(g.label)}` : "";
     const lines = S.edges.filter(e => e.from === n.id || e.to === n.id).map(e => e.from === n.id
       ? `→ ${esc(N[e.to]?.label)}${e.label ? `: ${esc(e.label)}` : ""}` : `← ${esc(N[e.from]?.label)}${e.label ? `: ${esc(e.label)}` : ""}`);
     box.innerHTML = `<b>${esc(n.label)}</b> <span class="muted">· ${esc(D.kinds[n.kind] || n.kind)}${lane ? " · " + esc(lane.label) : ""}${group}${f.gate ? " · review gate" : ""}${f.status === "planned" ? " · planned" : ""}</span><br>` +
@@ -374,7 +424,7 @@
       if (!action.moved && Math.hypot(dx, dy) < 5 * view.w / svg.getBoundingClientRect().width) return;
       action.moved = true;
       action.obj.x = Math.round(action.ox + dx); action.obj.y = Math.round(action.oy + dy);
-      render();
+      if (!frameQueued) { frameQueued = true; requestAnimationFrame(() => { frameQueued = false; render(); }); }  // one redraw per frame
     } else if (action.type === "connect") {
       const p = toSvg(e), s = action.start;
       action.moved = true;

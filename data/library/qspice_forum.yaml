@@ -1,0 +1,752 @@
+# QSPICE library: design threads from the QSPICE section of the Qorvo Tech Forum, summarised in our own words.
+#
+# SOURCE  https://forum.qorvo.com/c/qspice/9 (Discourse; QSPICE category id 9). qspice.com forwards to a www.qorvo.com
+#         page, which we never request, so the forum section is the only source used.
+# EXCEPTION (owner, 27 Oct 2026). The standing rule is "never any qorvo.com host". The owner asked "Use the Qspice forum
+#         for design discussions and things. Also, if you can draw useful conclusions to block diagrams." and, told the
+#         forum sits on forum.qorvo.com, answered "Remove user names. If the data is public, then the customer names can
+#         be used." The exception covers only forum.qorvo.com paths for the QSPICE category and the topics in it
+#         (/c/qspice/9..., /t/<id>.json of topics in that category). Nothing else on any qorvo.com host. Recorded in
+#         data/library/sources.yaml (id qspice_forum).
+# RULES   robots.txt first (read 27 Oct 2026: allows /c/ and /t/ for all agents; disallows /search, /admin, /auth,
+#         /session, /my, /badges, /g, RSS feeds); GET only, one request at a time, >= 10 s apart, each URL once, stop at
+#         the first 403 / 429 / bot check (tools/research/fetch.sh). About 80 requests per full run; the weekly check about 20.
+# DATA PROTECTION  No user names, handles, avatars, signatures or e-mails, ever (tests/test_qspice.py checks for
+#         @handles and name fields). Company names only where the thread shows them publicly (vendors of models, a
+#         book's publisher). Our own words, 1-3 sentences; no long quotes. Part numbers may be stored.
+# CHECKED 2026-10-27: 73 forum requests (robots.txt, 8 listings, 52 design topics, 12 guide topics); 0 blocks.
+#
+# topics:   id, title, url, date (thread start), fns (function ids, data/blocks/functions.yaml), circuit, problem, fix,
+#           parts (MPNs named in the thread), gist (<= 25 words, for To confirm)
+# practice: "Seen in practice (QSPICE forum)" notes per function: id, fn, title, text (1-2 sentences), topics (>= 2 ids),
+#           gist. Shown in the block editor and on the function's evidence page.
+# fixes:    common fixes, each from >= 2 threads: id, title, text, topics
+# help:     how-tos, commands and model syntax from the section's guide threads: id, title, kind, text, commands, links
+# models:   which Skyworks / Qorvo parts have a public SPICE model in our data: parts, vendor, model, source, url
+# answers:  answer notes the daily run adds for the owner's unanswered Ask questions: id, question, date, text, links
+source:
+  section: https://forum.qorvo.com/c/qspice/9
+  checked: 2026-10-27
+  requests: 73
+checked: 2026-10-27
+topics:
+  - id: 16824
+    title: Problem simulating a buck converter
+    url: https://forum.qorvo.com/t/16824
+    date: 2024-02-06
+    fns: [wide_vin_buck, pol_buck]
+    circuit: Open-loop buck converter with a sine perturbation on the duty cycle, measured with .meas FRA for the control-to-output Bode plot.
+    problem: The waveforms looked far worse than in LTspice with the same circuit.
+    fix: The .tran line used the traditional syntax, whose first value QSPICE ignores, so no maximum step was set. Use ".tran 5m" with ".option maxstep", or better, logic devices with TTOL, which keep switching edges sharp at less run time.
+    parts: []
+    gist: A buck FRA run looked wrong in QSPICE because the .tran syntax set no maximum step; TTOL logic is the faster fix.
+  - id: 17303
+    title: 2 phase buck converter
+    url: https://forum.qorvo.com/t/17303
+    date: 2024-03-19
+    fns: [multiphase]
+    circuit: Two-phase interleaved buck converter in open loop, ported from PSIM.
+    problem: No output voltage in QSPICE although the PSIM version worked.
+    fix: The PWM generation was wrong; with the phase shift between the two legs corrected, the converter ran.
+    parts: []
+    gist: A two-phase buck gave no output until the interleaved PWM phase shift was generated correctly.
+  - id: 22448
+    title: Help regarding obtaining bode plot using FRA block
+    url: https://forum.qorvo.com/t/22448
+    date: 2025-05-15
+    fns: [multiphase]
+    circuit: Four-channel interleaved buck converter; open-loop duty-to-output response with a community FRA block and with .bode.
+    problem: Floating-node and singular-matrix errors on every run.
+    fix: The duty path needed a behavioural voltage source to inject the perturbation; then both the FRA block and .bode gave the response. Results export as real and imaginary parts, and the perturbation must beat the ripple yet keep the loop linear.
+    parts: []
+    gist: An interleaved buck Bode plot failed until a behavioural source injected the perturbation; QSPICE exports real and imaginary parts only.
+  - id: 26216
+    title: Load step response not reflected in the PWM signal
+    url: https://forum.qorvo.com/t/26216
+    date: 2026-08-20
+    fns: [pol_buck]
+    circuit: Synchronous buck converter with a Type III (two zeros, three poles) compensator under a load step.
+    problem: The PWM duty cycle did not rise with load as it does on the bench.
+    fix: In a nearly loss-free model the duty cycle is Vout/Vin at any load; adding realistic inductor resistance and switch losses makes it rise with load. .print keeps only the printed signals in the result file, so use .plot while debugging.
+    parts: [AO4262E]
+    gist: Duty cycle only rises with load in simulation once inductor and switch losses are modelled.
+  - id: 26392
+    title: Compensator values from theory need added inductor ESR to work
+    url: https://forum.qorvo.com/t/26392
+    date: 2026-09-09
+    fns: [pol_buck]
+    circuit: Synchronous buck with a Type III-B compensator designed per the International Rectifier application note AN-1162.
+    problem: With the calculated values the simulation failed unless about 1 ohm was added in series with the inductor or the low-side FET.
+    fix: At start-up the output LC filter rang through the low-side FET and the extra resistance only damped it. Checking in open loop with a fixed duty first, then re-tuning the compensator to about 74 degrees phase margin, made it work.
+    parts: []
+    gist: A textbook Type III buck compensator failed at start-up; open-loop checks and more phase margin fixed it without extra resistance.
+  - id: 26682
+    title: Differential op-amp vs transconductance op-amp feedback
+    url: https://forum.qorvo.com/t/26682
+    date: 2026-10-21
+    fns: [pol_buck, buck_boost]
+    circuit: Error amplifier for an SMPS compensator - classic op-amp (differential) or transconductance amplifier with the network to ground.
+    problem: Whether the choice is arbitrary or depends on the controller.
+    fix: The transconductance amplifier saves a pin and silicon for the IC maker and is easy for the user, but its network and the divider interact, so the compensation is less independent; the controller IC decides.
+    parts: [LM5155]
+    gist: Transconductance error amplifiers save a pin but tie the compensation to the divider; the controller IC decides.
+  - id: 16580
+    title: Loop stability analysis
+    url: https://forum.qorvo.com/t/16580
+    date: 2024-01-16
+    fns: [pol_buck, pol_ldo]
+    circuit: Control-loop stability checks for regulators (output impedance, non-invasive stability measurement, step response).
+    problem: Which methods give the loop margins in QSPICE.
+    fix: Several work - fast FRA, the Winslow impedance probe, a Virtuoso-style stability analysis and phase margin from output impedance; loop data can even come from one step-response simulation without an AC model.
+    parts: []
+    gist: QSPICE users measure loop stability several ways, including from output impedance and from one step response.
+  - id: 15532
+    title: QSPICE vs LTspice loop gain differences
+    url: https://forum.qorvo.com/t/15532
+    date: 2023-09-28
+    fns: [amplifier, voltage_reference]
+    circuit: Loop gain of negative-feedback amplifiers and TL431-based Type II / Type III compensators.
+    problem: Gain and especially phase differed a lot from LTspice for the same circuit.
+    fix: The differences came from models and defaults, not the solver - a capacitor's series resistance and LTspice rounding small diode emission coefficients up to 0.1. With matched models the results agree; the Tian method is the more robust loop-gain probe.
+    parts: [TL431, BC546B]
+    gist: Loop-gain differences against LTspice came from model defaults; matched models give the same result.
+  - id: 17852
+    title: Bode plot of a resonant (dual active bridge) converter
+    url: https://forum.qorvo.com/t/17852
+    date: 2024-05-05
+    fns: [isolated_dcdc]
+    circuit: Dual active bridge (DAB) resonant DC-DC converter, control-to-output transfer function with .bode.
+    problem: The Bode plot did not look right.
+    fix: Above 0.5 duty both switches of a leg conduct together; keep the duty below 0.5, use ".option BODEAMPFREQ=0" for a constant perturbation in open loop, perturb only after steady state, and check the operating point with .tran first.
+    parts: []
+    gist: A DAB Bode plot was wrong because both switches conducted above 50 % duty; check the operating point with .tran first.
+  - id: 18253
+    title: Voltage oscillation with different transformer models
+    url: https://forum.qorvo.com/t/18253
+    date: 2024-06-12
+    fns: [isolated_dcdc, hv_flyback]
+    circuit: Transformer T-model with the leakage placed on the primary or the secondary side, feeding an output diode.
+    problem: The diode voltage rang in one model and not the other.
+    fix: It was trapezoidal-integration ringing when the inductor current reaches zero, not a circuit effect. It goes with method=gear, a tighter reltol or trtol, or a small damping resistor; "fast math" is not always faster.
+    parts: []
+    gist: Ringing in a transformer model was numerical trapezoidal ringing; gear integration or a damping resistor removes it.
+  - id: 24532
+    title: Parameters for ZVS in LLC simulations
+    url: https://forum.qorvo.com/t/24532
+    date: 2025-12-16
+    fns: [isolated_dcdc, acdc_controller]
+    circuit: LLC resonant converter with ideal switches and diodes, closed loop in a C block.
+    problem: Zero-voltage-switching waveforms rang in QSPICE although the same circuit looked clean in LTspice.
+    fix: LTspice silently gives pulse sources a rise and fall time; set them explicitly. Ringing at ZVS edges is reduced with ".option trtol=0.1", a soft start of the switching frequency and Trunc() in the C-block modulator.
+    parts: []
+    gist: LLC ZVS ringing came from zero edge times and trapezoidal ringing; set edges, trtol and Trunc() in C blocks.
+  - id: 26529
+    title: LLC with an ideal transformer
+    url: https://forum.qorvo.com/t/26529
+    date: 2026-09-30
+    fns: [isolated_dcdc]
+    circuit: LLC converter ported from an LTspice textbook example, later with C-based control.
+    problem: Timestep-too-small errors from the transformer subcircuit.
+    fix: The LTspice ideal-transformer subcircuit is not accepted; QSPICE has a built-in ideal transformer device, which replaces the old trick of two very large coupled inductors.
+    parts: []
+    gist: Use QSPICE's built-in ideal transformer instead of LTspice's coupled-inductor subcircuit in an LLC.
+  - id: 26432
+    title: Schematic capture - heater LLC
+    url: https://forum.qorvo.com/t/26432
+    date: 2026-09-16
+    fns: [isolated_dcdc, power_fets]
+    circuit: Half-bridge LLC resonant converter for a heater with GaN switches and a high-frequency transformer.
+    problem: Shared as a worked example of a complete power system.
+    fix: A full LLC system runs in QSPICE with GaN device models; the schematic is attached to the thread.
+    parts: [GS66508B]
+    gist: A complete half-bridge GaN LLC heater supply is shared as a QSPICE example.
+  - id: 26662
+    title: Current-mode flyback with opto and TL431, ported from LTspice
+    url: https://forum.qorvo.com/t/26662
+    date: 2026-10-18
+    fns: [hv_flyback, optocoupler, voltage_reference]
+    circuit: Current-mode flyback averaged model with optocoupler and TL431 feedback, from a public textbook example.
+    problem: Results differed from LTspice after porting.
+    fix: The TL431 model had not been rebuilt like the original hierarchy, and the 0 V current-sense source was reversed (the viewer shows -I(V) for a non-zero source). Once fixed, .ac and .dc results matched LTspice closely.
+    parts: [TL431]
+    gist: An opto-TL431 flyback ported from LTspice matched once the TL431 model and a reversed sense source were fixed.
+  - id: 24314
+    title: Flyback simulation with a 2SK2225 MOSFET model
+    url: https://forum.qorvo.com/t/24314
+    date: 2025-11-19
+    fns: [hv_flyback, power_fets]
+    circuit: Flyback converter with a 1500 V MOSFET and coupled inductors.
+    problem: The switch-node ringing differed from LTspice.
+    fix: QSPICE inductors have a default parallel damping resistance (use Rpar=0 to compare), and the body-diode parameter VP defaults to 0.01 in QSPICE but 0 in LTspice; the drain-gate capacitance model also matters.
+    parts: [2SK2225]
+    gist: Flyback ringing differed from LTspice because of default inductor damping and the body-diode VP default.
+  - id: 17553
+    title: LM5030 model for a push-pull converter
+    url: https://forum.qorvo.com/t/17553
+    date: 2024-04-08
+    fns: [isolated_dcdc, optocoupler, voltage_reference]
+    circuit: Push-pull converter with a TI LM5030 controller, opto and TL431 feedback.
+    problem: How to load the controller model and where to find PC817, TL431 and rectifier models.
+    fix: The vendor PSpice library loads after renaming it to .lib; community symbols cover TL431 and PC817, and other models come from vendor or legacy libraries.
+    parts: [LM5030, PC817, TL431, MBR20200CT, IRFP150N]
+    gist: A push-pull LM5030 design needed vendor PSpice models plus community TL431 and PC817 symbols.
+  - id: 16494
+    title: TI LM25037 not running
+    url: https://forum.qorvo.com/t/16494
+    date: 2024-01-08
+    fns: [isolated_dcdc]
+    circuit: High-voltage (about 1 kV) converter with a TI LM25037 PWM controller.
+    problem: The PSpice model failed on the SDT function, then ran very slowly and locked up after one gate pulse.
+    fix: Replace PSpice SDT with QSPICE IDT; a unity-gain buffer at the FB input fixed the convergence, since the feedback return differed in the netlist.
+    parts: [LM25037]
+    gist: A PSpice controller model ran after SDT became IDT and a buffer was added at the FB pin.
+  - id: 24224
+    title: TI LM5156x model
+    url: https://forum.qorvo.com/t/24224
+    date: 2025-11-11
+    fns: [buck_boost, hv_flyback]
+    circuit: Boost converter with the TI LM5156 controller, following the vendor's PSpice demo.
+    problem: QSPICE found no DC solution for the controller subcircuit.
+    fix: The PSpice logic built from E-sources was rewritten with QSPICE logic devices or B-sources with Rser and Cpar, plus behavioural switches and diodes; the start-up and steady-state demos then ran.
+    parts: [LM5156]
+    gist: The LM5156 PSpice model ran once its E-source logic was rewritten with QSPICE logic or B-sources.
+  - id: 25744
+    title: QSPICE model for TPS6291x
+    url: https://forum.qorvo.com/t/25744
+    date: 2026-06-08
+    fns: [pol_buck]
+    circuit: Low-noise buck converter from TI.
+    problem: Looking for a QSPICE model.
+    fix: The vendor models are encrypted for PSpice, and an encrypted model only runs in that simulator; QSPICE can draw a symbol but not simulate it. Ask the vendor for an unencrypted model.
+    parts: [TPS62912, TPS62913, TPS54824]
+    gist: Encrypted PSpice models cannot run in QSPICE; ask the vendor for an unencrypted one.
+  - id: 24619
+    title: Running SMPS simulations fast and reliably
+    url: https://forum.qorvo.com/t/24619
+    date: 2025-12-30
+    fns: [acdc_controller, wide_vin_buck]
+    circuit: Switching converters built from C blocks, ideal switches and diodes.
+    problem: Random "timestep too small" errors and long run times.
+    fix: Try method=gear, cshunt and gshunt (small C or R to ground at every node) and a tighter reltol; in C blocks request small steps (MaxExtStepSize or Trunc()) only at real edges, save fewer signals with .save and thin the data with CULLTIME.
+    parts: []
+    gist: For fast, stable SMPS runs use gear, cshunt or gshunt, and careful timestep control in C blocks.
+  - id: 25199
+    title: Three-phase PFC active front end
+    url: https://forum.qorvo.com/t/25199
+    date: 2026-03-22
+    fns: [acdc_controller]
+    circuit: Three-phase PWM rectifier with power-factor correction.
+    problem: A first attempt did not work.
+    fix: Two working examples exist - a textbook PWM rectifier converted from PSIM and a full C-block controller with its own PWM; C blocks can be edited and compiled from VS Code with the bundled compiler.
+    parts: []
+    gist: Working three-phase PFC examples exist in QSPICE, including a full C-coded controller.
+  - id: 25961
+    title: Totem-pole PFC digital control loop
+    url: https://forum.qorvo.com/t/25961
+    date: 2026-07-16
+    fns: [acdc_controller, mcu]
+    circuit: Totem-pole PFC with feed-forward and a PI current loop coded in a C block as a digital controller.
+    problem: Odd phase delay and overshoot; sampled values changed within a cycle.
+    fix: Keep the controller state in the C block's data structure and sample only at real clock edges - skip hypothetical timesteps or use Trunc() to land on the edge; centre-aligned sampling removed most of the delay.
+    parts: []
+    gist: A digital totem-pole PFC loop in a C block needs state kept per instance and sampling exactly at clock edges.
+  - id: 26634
+    title: Schematic capture - self-oscillating AC-DC converter
+    url: https://forum.qorvo.com/t/26634
+    date: 2026-10-15
+    fns: [acdc_controller]
+    circuit: Discrete self-oscillating converter from 230 V AC with a bipolar high-voltage switch.
+    problem: Shared as an example; the plot setup gave an error without its settings file.
+    fix: Replacing the .plot lines with explicit expressions removes the viewer error.
+    parts: [MJE13005, BC550B]
+    gist: A discrete self-oscillating AC-DC converter is shared as an example; explicit .plot lines avoid a viewer error.
+  - id: 26584
+    title: Schematic capture - flying-capacitor three-level buck
+    url: https://forum.qorvo.com/t/26584
+    date: 2026-10-07
+    fns: [wide_vin_buck]
+    circuit: Open-loop flying-capacitor three-level buck with four ideal MOSFETs.
+    problem: Shared as an example.
+    fix: Shows the three-level switch-node waveform from a high input voltage; examples by topology are collected under the forum's schematic-capture tag.
+    parts: []
+    gist: A flying-capacitor three-level buck example shows the three-level switch node in QSPICE.
+  - id: 23047
+    title: Current limit modeling
+    url: https://forum.qorvo.com/t/23047
+    date: 2025-07-23
+    fns: [cc_regulator, efuse_hotswap]
+    circuit: Voltage source feeding a variable load with a 1 A peak current limit.
+    problem: How to limit a source's current for any load.
+    fix: Set the voltage source's current source and sink limits; the output voltage then clamps as Ohm's law demands. A behavioural diode has no current limit.
+    parts: []
+    gist: A QSPICE voltage source can limit its own current; set its source and sink limits.
+  - id: 22195
+    title: Simulation of UCC27282
+    url: https://forum.qorvo.com/t/22195
+    date: 2025-04-19
+    fns: [half_bridge_driver, buck_boost]
+    circuit: Synchronous buck-boost converter with a TI half-bridge gate driver PSpice model.
+    problem: Unresolved-parameter errors and no waveform.
+    fix: Updating QSPICE and regenerating the model symbols fixed it; the remaining warnings come from the model and can be ignored. It then ran faster than LTspice.
+    parts: [UCC27282]
+    gist: A half-bridge driver model ran after updating QSPICE and regenerating its symbol.
+  - id: 16315
+    title: Importing the LMG3522R030 model
+    url: https://forum.qorvo.com/t/16315
+    date: 2023-12-16
+    fns: [gate_driver, power_fets, digital_isolator]
+    circuit: GaN half bridge with integrated driver, the control signal passed through a digital isolator.
+    problem: Pins after a "+" continuation were lost; later the run seemed to crash.
+    fix: Put the continued pins on one .SUBCKT line; "^" is not exclusive-or in QSPICE. The "crash" was a huge result file and a slow internal LDO start-up - replace the LDO with a source and use .save.
+    parts: [LMG3522R030, ISO7710]
+    gist: A GaN power-stage model needed its pin list fixed; .save keeps the result file from exploding.
+  - id: 22702
+    title: Dual-pulse test
+    url: https://forum.qorvo.com/t/22702
+    date: 2025-06-12
+    fns: [gate_driver, power_fets]
+    circuit: Double-pulse test of a 650 V IGBT.
+    problem: The run was extremely slow.
+    fix: The circuit had no ground and shorted the load inductor; drawn as a proper half bridge it ran. Fast math changes speed both ways; two cursors come from double-clicking a trace label.
+    parts: [IKW50N65ES5]
+    gist: A slow IGBT double-pulse test had no ground and a shorted inductor; fixed, it ran normally.
+  - id: 24142
+    title: Infineon SiC SPICE model takes long to simulate
+    url: https://forum.qorvo.com/t/24142
+    date: 2025-11-03
+    fns: [gate_driver, power_fets]
+    circuit: Double-pulse test of a 650 V SiC MOSFET to study turn-off loss against gate resistance.
+    problem: 0.5 ms of simulated time took 20-30 minutes.
+    fix: Equation-heavy vendor models are slow; the 80-bit solver (fast math off) helps. Energy is measured with .meas, minding that time restarts at Tstart unless ".option ABSOLUTETIME" is set.
+    parts: []
+    gist: Equation-heavy SiC models are slow; use the 80-bit solver and .meas for switching energy.
+  - id: 24800
+    title: SiC MOSFET time step error
+    url: https://forum.qorvo.com/t/24800
+    date: 2026-01-25
+    fns: [power_fets, buck_boost]
+    circuit: Boost converter with a 1200 V SiC MOSFET at several temperatures.
+    problem: Time-step errors and no direct current or power probe.
+    fix: A 0 V source in series is the current probe; losses come from .meas of Vds times Id, with conditions to split conduction and switching loss, or from a C-block loss calculator.
+    parts: []
+    gist: Measure SiC switch losses with a 0 V current probe and .meas of Vds times Id.
+  - id: 21005
+    title: MOSFET avalanche energy circuit
+    url: https://forum.qorvo.com/t/21005
+    date: 2024-12-03
+    fns: [power_fets]
+    circuit: Unclamped inductive switching (avalanche) test of a power MOSFET.
+    problem: Currents far above the datasheet avalanche rating.
+    fix: A comparator turns the switch off at the target avalanche current; avalanche energy depends on the inductor and the supply voltage, not the inductor alone. An external breakdown diode can stand in for the body diode.
+    parts: [DMTH10H1M7STLWQ]
+    gist: An avalanche test circuit needs turn-off at the rated current; energy depends on inductance and supply voltage.
+  - id: 26522
+    title: Schematic capture - traction inverter with isolated gate drivers and FOC
+    url: https://forum.qorvo.com/t/26522
+    date: 2026-09-29
+    fns: [gate_driver, motor_controller, motor]
+    circuit: Low-voltage three-phase traction inverter with six isolated gate-driver models, field-oriented control in C, current sensing and a motor model.
+    problem: Shared as a system example.
+    fix: Control code, isolated drivers, power stage and motor run in one simulation, so start-up, current control and switching can be studied before hardware.
+    parts: [UCC5350SBD]
+    gist: A complete traction inverter with isolated gate drivers and FOC runs in one QSPICE simulation.
+  - id: 16312
+    title: Three-phase inverter fails to simulate
+    url: https://forum.qorvo.com/t/16312
+    date: 2023-12-15
+    fns: [three_phase_gate_driver, motor_controller]
+    circuit: Three-phase inverter with behavioural gate drive.
+    problem: The run stopped with "timestep too small" although LTspice ran it.
+    fix: Adding ".options cshunt=1f gmin=1e-7" got it much further; ideal behavioural diodes, a complementary low-side drive and the 80-bit solver did the rest.
+    parts: []
+    gist: A three-phase inverter ran after cshunt, gmin and ideal behavioural diodes were used.
+  - id: 23522
+    title: Inverter circuit using MOSFETs
+    url: https://forum.qorvo.com/t/23522
+    date: 2025-08-29
+    fns: [three_phase_gate_driver, power_fets]
+    circuit: Vendor (ROHM) three-phase inverter example for motor loss and efficiency.
+    problem: Convergence errors in QSPICE.
+    fix: It ran with fast math off, a 100 ns maximum step and one model substitution; for losses, an ideal switch with a loss lookup table (as in PLECS or PSIM) is more reliable than device models.
+    parts: []
+    gist: Motor inverter losses are better estimated with ideal switches and loss tables than with device models.
+  - id: 25529
+    title: Schematic capture - space-vector PWM
+    url: https://forum.qorvo.com/t/25529
+    date: 2026-05-13
+    fns: [motor_controller]
+    circuit: Space-vector PWM for a three-phase inverter.
+    problem: Shared as a tutorial.
+    fix: Two versions - a C++ block and a behavioural-source-only one - show how to build SVPWM.
+    parts: []
+    gist: Space-vector PWM tutorial in QSPICE, as a C++ block and as plain behavioural sources.
+  - id: 17687
+    title: Three-phase induction motor model error
+    url: https://forum.qorvo.com/t/17687
+    date: 2024-04-19
+    fns: [motor]
+    circuit: Induction motor model from a published paper, ported from LTspice.
+    problem: '"Mutual coupling physically impossible" error.'
+    fix: K is a reserved constant (Boltzmann) in QSPICE, and a B-source cannot sense another B-source's current; add a 0 V source as the current sensor.
+    parts: []
+    gist: A motor model failed because K is reserved in QSPICE and B-sources cannot sense each other's current.
+  - id: 23759
+    title: BLDC motor model ported from LTspice
+    url: https://forum.qorvo.com/t/23759
+    date: 2025-09-22
+    fns: [motor, motor_controller]
+    circuit: Mathematical brushless DC motor with trapezoidal back-EMF and Hall outputs.
+    problem: The port to QSPICE did not run.
+    fix: The subcircuit model still applies; the aim is to test FOC code in a C block against it. The thread mostly sorts out files and conversion steps, without a final model yet.
+    parts: []
+    gist: A trapezoidal BLDC motor model is being ported to QSPICE to test FOC code against it.
+  - id: 26428
+    title: Simulating a DC motor
+    url: https://forum.qorvo.com/t/26428
+    date: 2026-09-16
+    fns: [motor, motor_driver_brushed]
+    circuit: Brushed DC motor model for compensator design.
+    problem: How to model the motor.
+    fix: The PLECS and PSIM DC-machine equations translate to QSPICE; a brushless model is in a schematic-capture post.
+    parts: []
+    gist: Brushed DC motor models can follow the PLECS or PSIM DC-machine equations in QSPICE.
+  - id: 16900
+    title: Looking for an optocoupler
+    url: https://forum.qorvo.com/t/16900
+    date: 2024-02-13
+    fns: [optocoupler]
+    circuit: CNY17-type optocoupler in an isolated feedback loop.
+    problem: No such optocoupler in the default library.
+    fix: The vendor (Vishay) publishes a SPICE model; generic 4- and 5-pin opto symbols reuse any model. The suffix (-1 to -4) is the CTR group, which sets the gain parameter.
+    parts: [CNY17]
+    gist: Optocoupler models come from the vendor; the CTR suffix sets the model's gain.
+  - id: 26258
+    title: High-side current source differs from LTspice
+    url: https://forum.qorvo.com/t/26258
+    date: 2026-08-27
+    fns: [amplifier, cc_regulator]
+    circuit: High-side current source built around an op-amp model.
+    problem: Wrong output current in QSPICE.
+    fix: The op-amp model's supply pins were swapped; even fixed, its supply current and bias point stayed wrong, so the model itself is suspect.
+    parts: []
+    gist: A high-side current source failed on a swapped op-amp model pin order; check vendor model pins.
+  - id: 23057
+    title: LC low-pass filter attenuation
+    url: https://forum.qorvo.com/t/23057
+    date: 2025-07-24
+    fns: [wide_vin_buck]
+    circuit: Large LC low-pass power filter (hundreds of microhenries, many paralleled capacitors with ESR and ESL).
+    problem: How to get the attenuation chart, and a resonance near 13 MHz in LTspice.
+    fix: Use an AC source with .ac. The resonance was a parallel capacitance LTspice adds when a capacitor's Lser is set; QSPICE has no capacitor Lser, so add ESL as a separate inductor. QSPICE inductors are not ideal by default.
+    parts: []
+    gist: For LC filter attenuation use .ac; add capacitor ESL as a separate inductor in QSPICE.
+  - id: 23536
+    title: Band-pass filter attenuation
+    url: https://forum.qorvo.com/t/23536
+    date: 2025-08-30
+    fns: [amplifier]
+    circuit: Single-supply op-amp band-pass (3 Hz to 3 kHz, 40-80 dB gain) designed in Analog Devices' Filter Wizard.
+    problem: Attenuation unlike the design tool's.
+    fix: Two resistors were unconnected; and with a single supply the input needs a DC bias at mid-rail, which .op confirms.
+    parts: []
+    gist: A single-supply band-pass needed two wiring fixes and mid-rail bias, checked with .op.
+  - id: 17927
+    title: Voltage-controlled oscillator in simulation
+    url: https://forum.qorvo.com/t/17927
+    date: 2024-05-10
+    fns: [rf_synthesizer]
+    circuit: Behavioural VCO with frequency proportional to a control voltage, for PLL-type work.
+    problem: How to build one, and warnings on unused pins.
+    fix: An integrating (IDT) behavioural source with a TTOL logic device gives a clean VCO with frequency and duty control; grounding unused pins removes the warnings.
+    parts: []
+    gist: A behavioural VCO uses an integrating source and a TTOL logic device; ground unused pins.
+  - id: 25473
+    title: Crystal oscillator does not start
+    url: https://forum.qorvo.com/t/25473
+    date: 2026-05-02
+    fns: [crystal_oscillator]
+    circuit: 15 MHz transistor crystal oscillator showing negative resistance at the crystal frequency.
+    problem: Nothing oscillated in the time domain.
+    fix: A probe coupling capacitor was left connected; start-up also depends on the time step - set ".option maxstep" to at most a hundredth of the period and give the oscillator a kick.
+    parts: [MMBT5179]
+    gist: A crystal oscillator only starts in simulation with maxstep at most one hundredth of the period.
+  - id: 26443
+    title: 38 kHz crystal oscillator example
+    url: https://forum.qorvo.com/t/26443
+    date: 2026-09-18
+    fns: [crystal_oscillator, rtc]
+    circuit: Low-frequency crystal oscillator with CMOS inverters (as used for 32 kHz real-time clocks).
+    problem: Looking for a practical circuit to try in simulation first.
+    fix: QSPICE has a crystal device (press "y"); a one- or two-inverter Pierce circuit works, frequency is measured with .meas and ".option maxstep=1/38k/1000" gives smooth waveforms.
+    parts: []
+    gist: A 38 kHz CMOS crystal oscillator runs with QSPICE's crystal device and a small maxstep.
+  - id: 18831
+    title: Transmission lines and DC
+    url: https://forum.qorvo.com/t/18831
+    date: 2024-08-07
+    fns: [rf_passive]
+    circuit: Coaxial cables in a low-frequency four-terminal impedance measurement.
+    problem: The line models gave odd DC voltages.
+    fix: Line models take the shield as the reference and carry no common DC; ground the shield nodes. The lossy model with L and C gave wrong DC (use G instead); for DC over coax use RLC ladder sections.
+    parts: []
+    gist: SPICE line models carry no DC across the shield; use RLC ladders to model power over coax.
+  - id: 16239
+    title: S-parameters of a passive network
+    url: https://forum.qorvo.com/t/16239
+    date: 2023-12-06
+    fns: [filter_saw_baw, rf_passive]
+    circuit: Five-pole Chebyshev band-pass filter.
+    problem: QSPICE had no .net directive for S11 and S21 at the time.
+    fix: A test bench with a 1 V source at the port gives S11 directly; .net with Touchstone .s2p output is now supported.
+    parts: []
+    gist: QSPICE now supports .net for S-parameters; before, a simple port test bench gave S11 and S21.
+  - id: 24329
+    title: Self-oscillating class-D amplifier
+    url: https://forum.qorvo.com/t/24329
+    date: 2025-11-21
+    fns: [audio_amp]
+    circuit: Self-oscillating class-D amplifier with integrator and Schmitt trigger, dual and single supply.
+    problem: A first simulation of a hobby design gave odd integrator waveforms.
+    fix: The single-supply version needs a half-supply bias and an initial condition on the integrator capacitor; the Schmitt trigger's Vh is half the hysteresis, as in other SPICE tools.
+    parts: []
+    gist: A self-oscillating class-D needs mid-supply bias and an integrator initial condition on a single supply.
+  - id: 20915
+    title: Schematic capture - major feedback loop response
+    url: https://forum.qorvo.com/t/20915
+    date: 2024-11-22
+    fns: [audio_amp, amplifier]
+    circuit: Linear audio power amplifier's major feedback loop, from a published design book.
+    problem: Shared as an example of loop-gain simulation.
+    fix: Shows the loop response of a linear power amplifier; the loop-gain expression follows published loop-gain simulation methods.
+    parts: []
+    gist: Example of measuring an audio power amplifier's feedback loop gain in QSPICE.
+practice:
+  - id: gate-driver-models
+    fn: gate_driver
+    title: Gate driver
+    text: Vendor gate-driver and GaN power-stage models usually need small edits before they run (pin list on one line, PSpice-only operators, a regenerated symbol); once running, isolated-driver models go into full inverter simulations together with the control code.
+    topics: [16315, 22195, 26522]
+    gist: Vendor gate-driver models often need small edits before they run; then they go into full inverter simulations.
+  - id: power-switch-tests
+    fn: power_fets
+    title: Power switches
+    text: Double-pulse, avalanche and loss tests of SiC, IGBT and MOSFET switches recur; energy is read with .meas of Vds times Id, and slow equation-heavy vendor models push users to the 80-bit solver or to ideal switches with loss tables.
+    topics: [22702, 24142, 24800, 21005, 23522]
+    gist: Switch double-pulse and loss tests recur; losses come from .meas of Vds times Id, slow vendor models need care.
+  - id: opto-tl431-feedback
+    fn: optocoupler
+    title: Optocoupler
+    text: Isolated flyback and push-pull supplies regulate through an optocoupler and a TL431; neither model is in the default library, so they come from the vendor or community symbols, and the opto's CTR group sets its gain.
+    topics: [16900, 17553, 26662]
+    gist: Isolated supplies regulate via optocoupler and TL431; both models come from vendors or community symbols.
+  - id: buck-compensation
+    fn: pol_buck
+    title: Point-of-load buck
+    text: Buck compensation questions recur - textbook Type III values that ring at start-up, duty that only follows load once losses are modelled, and the error-amplifier type changing how the network behaves; check open loop and phase margin first.
+    topics: [26216, 26392, 26682, 16580]
+    gist: Buck compensation threads recur; check open loop and phase margin first, and model the losses.
+  - id: wide-vin-buck-switching
+    fn: wide_vin_buck
+    title: Wide-Vin buck
+    text: Buck threads are mostly about getting the switching right (a maximum step or TTOL logic, solver options) and about the LC filters around the stage, where capacitor ESL must be added as its own inductor.
+    topics: [16824, 23057, 24619]
+    gist: Buck simulations need a maximum step or TTOL logic; LC filters around them need ESL as separate inductors.
+  - id: multiphase-interleave
+    fn: multiphase
+    title: Multiphase
+    text: In interleaved bucks the usual error is the phase-shifted PWM generation, and measuring the loop needs a behavioural source to inject the perturbation into the duty path.
+    topics: [17303, 22448]
+    gist: Interleaved bucks fail on the phase-shifted PWM; loop measurement needs a behavioural perturbation source.
+  - id: resonant-ringing
+    fn: isolated_dcdc
+    title: Isolated DC-DC
+    text: In LLC and DAB stages much of the ringing at soft-switching edges is numerical (trapezoidal ringing); set edge times, use trtol or gear and the built-in ideal transformer, and confirm the operating point with .tran before a Bode plot.
+    topics: [24532, 18253, 26529, 17852]
+    gist: LLC and DAB ringing is often numerical; set edge times, trtol or gear, and check the operating point first.
+  - id: flyback-defaults
+    fn: hv_flyback
+    title: Flyback
+    text: Flyback and transformer ringing changes with model defaults (inductor parallel resistance, body-diode VP) and the integration method, so compare simulators only with matched defaults.
+    topics: [24314, 18253]
+    gist: Flyback ringing depends on model defaults and integration method; compare simulators with matched defaults.
+  - id: pfc-c-control
+    fn: acdc_controller
+    title: AC-DC / PFC controller
+    text: PFC stages (totem-pole, three-phase) are simulated with the controller coded in C blocks; the code must keep per-instance state and act on real clock edges (Trunc), and solver options keep long runs stable.
+    topics: [25961, 25199, 24619, 24532]
+    gist: PFC controllers are coded in C blocks; keep per-instance state and sample on real clock edges.
+  - id: inverter-convergence
+    fn: three_phase_gate_driver
+    title: Three-phase inverter drive
+    text: Three-phase inverters converge with cshunt, gmin, ideal behavioural diodes and the 80-bit solver; for losses, ideal switches with loss tables beat device models.
+    topics: [16312, 23522]
+    gist: Three-phase inverters converge with cshunt, gmin and ideal diodes; use loss tables for losses.
+  - id: motor-control-in-loop
+    fn: motor_controller
+    title: Motor controller
+    text: Motor control is tested in one simulation with FOC or space-vector PWM coded in C blocks, driver models and a motor model.
+    topics: [26522, 25529, 23759]
+    gist: Motor control code (FOC, SVPWM) is tested in one simulation with driver and motor models.
+  - id: motor-models
+    fn: motor
+    title: Motor
+    text: Motor models are ported from LTspice, PLECS or PSIM equations; watch reserved names (K is a constant) and that a behavioural source cannot sense another's current.
+    topics: [17687, 26428, 23759]
+    gist: Motor models port from other tools; mind reserved names and behavioural-source current sensing.
+  - id: oscillator-step
+    fn: crystal_oscillator
+    title: Crystal oscillator
+    text: Oscillators only start and look clean with a maximum step of at most a hundredth of the period, and sometimes a start-up kick.
+    topics: [25473, 26443]
+    gist: Oscillators need a maximum step of at most a hundredth of the period to start in simulation.
+  - id: opamp-models
+    fn: amplifier
+    title: Amplifier
+    text: Op-amp circuit differences usually come from the model (pin order, defaults) or a missing DC bias on a single supply, so check .op first.
+    topics: [26258, 23536, 15532]
+    gist: Op-amp differences usually come from the model or missing single-supply bias; check .op first.
+fixes:
+  - id: timestep-too-small
+    title: '"Timestep too small"'
+    text: Try method=gear, cshunt or gshunt (small C or R from every node to ground), gmin and a sensible reltol; replace hard diodes with behavioural ideal ones and try the 80-bit solver.
+    topics: [24619, 16312, 23522, 24224]
+  - id: trapezoidal-ringing
+    title: Ringing that is not in the circuit (trapezoidal ringing)
+    text: Ringing when an inductor current stops changing is often numerical. Give sources real rise and fall times and use method=gear, ".option trtol", a tighter reltol or a small damping resistor.
+    topics: [18253, 24532]
+  - id: maxstep
+    title: Maximum step and the .tran syntax
+    text: In the traditional .tran syntax QSPICE ignores the first value, so set ".option maxstep". Oscillators need at most a hundredth of the period per step; switching circuits run faster with TTOL logic devices than with a small maxstep.
+    topics: [16824, 25473, 26443]
+  - id: vendor-models
+    title: Importing vendor PSpice models
+    text: Rename the file to .lib and set it as the symbol's library file; replace PSpice-only functions (SDT becomes IDT, "^" is not exclusive-or), put continued pins on one .SUBCKT line and rewrite E-source logic with QSPICE logic devices or B-sources with Rser and Cpar. Encrypted models only run in their own simulator.
+    topics: [16494, 24224, 16315, 25744, 17553, 22195]
+  - id: current-probe
+    title: Measuring current and losses
+    text: A 0 V source in series is the current probe; the viewer shows -I(V) for a non-zero source. A behavioural source cannot sense another behavioural source's current, so put the 0 V source in between. Losses are .meas of Vds times Id.
+    topics: [24800, 26662, 17687]
+  - id: defaults
+    title: Defaults that differ from LTspice
+    text: QSPICE inductors are not ideal by default (parallel resistance), the body-diode VP default differs, capacitors have no Lser, and LTspice silently adds pulse rise times and rounds small diode emission coefficients. Match these before comparing results.
+    topics: [24314, 23057, 15532, 24532]
+  - id: c-block-timing
+    title: C blocks that control a converter
+    text: Keep each block's variables in its per-instance data, act only on real (not hypothetical) timesteps, and use Trunc() or MaxExtStepSize() to land exactly on clock edges.
+    topics: [25961, 24532, 24619]
+  - id: slow-runs
+    title: Slow runs and huge result files
+    text: Try the 80-bit solver (fast math off) and the other way round, save only needed signals with .save and thin data with CULLTIME; slow equation-heavy vendor models are a common cause.
+    topics: [22702, 24142, 16315, 24619]
+help:
+  - id: c-block-basics
+    title: C-block basics
+    kind: how-to
+    text: A C block is a compiled DLL in the schematic. Keep variables in the per-instance data structure so two copies do not share state; Trunc() lets the block ask the simulator for a smaller step just before its output changes.
+    commands: [Trunc(), MaxExtStepSize()]
+    links: [https://forum.qorvo.com/t/15697]
+  - id: bode
+    title: Frequency response with .bode
+    kind: command
+    text: .bode runs a transient simulation with an injected perturbation and turns it into a Bode plot; its settings are split between .bode and .option (e.g. BODEAMPFREQ). Compare with .meas FRA plus .step when in doubt, and start from a valid operating point.
+    commands: [.bode, .option BODEAMPFREQ=0, .meas FRA]
+    links: [https://forum.qorvo.com/t/15954, https://forum.qorvo.com/t/17852]
+  - id: viewer
+    title: Probing and the waveform viewer
+    kind: how-to
+    text: Hold Alt to probe without editing. Save plot settings to a .pfg file (disk icon), press the space bar after a rerun to get them back, or drag a .pfg into the viewer. Double-click a trace label for up to two cursors.
+    commands: []
+    links: [https://forum.qorvo.com/t/14173, https://forum.qorvo.com/t/22702]
+  - id: operating-point
+    title: Operating point on the schematic
+    kind: how-to
+    text: Hover over a wire or part to see its operating point; F6 recomputes .op without a full run. ".option keepopinfo" saves the data to a .op.qraw file that the viewer can export.
+    commands: [.op, .option keepopinfo]
+    links: [https://forum.qorvo.com/t/15033]
+  - id: add-models
+    title: Adding your own models
+    kind: model syntax
+    text: Put .model or .subckt text in your own file (not the program's library files, which updates replace) and set it as the symbol's Library File; the netlist then shows a .lib line. The built-in Level2010.txt holds the models used by the double-pulse demo.
+    commands: [.lib, .model]
+    links: [https://forum.qorvo.com/t/14963]
+  - id: ltspice
+    title: Moving LTspice designs over
+    kind: how-to
+    text: Hierarchical LTspice schematics move most easily as netlist or .subckt text; check defaults, reserved names and syntax afterwards (see Common fixes).
+    commands: []
+    links: [https://forum.qorvo.com/t/14156, https://forum.qorvo.com/t/26662]
+  - id: ideal-switch
+    title: Ideal switches and diodes
+    kind: model syntax
+    text: Use the SW model with a small Ron and large Roff and a behavioural diode (Vfwd, Ron, Roff) for fast, near-ideal power stages; true zero and infinite resistance does not work in any SPICE.
+    commands: [".model SW SW(Ron=10m Roff=100Meg Vt=0.5)", ".model D D(Ron=1m Roff=100Meg Vfwd=1)"]
+    links: [https://forum.qorvo.com/t/21500, https://forum.qorvo.com/t/24532]
+  - id: monte-carlo
+    title: Monte Carlo
+    kind: command
+    text: Step a dummy parameter and give parts random() or gauss() values in curly braces; ".option seed" fixes the sequence and ".options seedclock" gives a new one on each run.
+    commands: [.step, random(), gauss(), .options seedclock]
+    links: [https://forum.qorvo.com/t/15199]
+  - id: transformer
+    title: Ideal transformer device
+    kind: model syntax
+    text: QSPICE has a built-in ideal transformer device, so the old trick of two very large coupled inductors is not needed.
+    commands: []
+    links: [https://forum.qorvo.com/t/26529]
+  - id: source-limit
+    title: Current-limited voltage source
+    kind: model syntax
+    text: A voltage source takes current source and sink limits, so a limited supply needs no extra circuit.
+    commands: []
+    links: [https://forum.qorvo.com/t/23047]
+  - id: crystal
+    title: Crystal device
+    kind: how-to
+    text: Press "y" in a schematic to place a crystal from the built-in library; measure the frequency with .meas.
+    commands: [.meas]
+    links: [https://forum.qorvo.com/t/26443]
+  - id: s-parameters
+    title: S-parameters
+    kind: command
+    text: .net now gives network parameters with Touchstone .s2p output; a 1 V source port test bench also gives S11 directly.
+    commands: [.net]
+    links: [https://forum.qorvo.com/t/16239]
+  - id: examples
+    title: Example circuits
+    kind: how-to
+    text: A community repository holds more than 170 standalone example schematics (symbols carry their subcircuits), including ports of PLECS demo models; the forum's weekly schematic-capture posts add complete systems.
+    commands: []
+    links: [https://forum.qorvo.com/t/26461, https://forum.qorvo.com/t/26584]
+  - id: magnetics
+    title: Magnetics library
+    kind: model syntax
+    text: A third-party magnetics library for QSPICE is shared with examples.
+    commands: []
+    links: [https://forum.qorvo.com/t/18569]
+models:
+  - parts: UF3C120040K3S and other UnitedSiC SiC FETs
+    vendor: Qorvo until the UnitedSiC sale to onsemi (Jan 2025, per our catalogue notes)
+    model: Built into QSPICE (library Level2010.txt, used by the double-pulse demo)
+    source: QSPICE forum
+    url: https://forum.qorvo.com/t/14963
+  - parts: ACT72350
+    vendor: Qorvo
+    model: Built into QSPICE's ACT72350 examples
+    source: QSPICE forum
+    url: https://forum.qorvo.com/t/23759
+  - parts: SMP1307
+    vendor: Skyworks
+    model: PIN diode SPICE model (attenuator note, p. 4)
+    source: Skyworks app note 200313B
+    url: https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/1-100/200313B.pdf#page=4
+  - parts: SMP1320, SMP1304
+    vendor: Skyworks
+    model: Small-signal PIN diode SPICE models (switch note APN1011, pp. 3-4)
+    source: Skyworks app note 200321A
+    url: https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/1-100/200321A.pdf#page=4
+  - parts: Every other Skyworks or Qorvo part
+    vendor: Skyworks, Qorvo
+    model: Not in our data
+    source: catalogue and app notes checked 27 Oct 2026
+    url: ""
+answers: []

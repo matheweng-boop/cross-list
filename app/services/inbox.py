@@ -123,6 +123,12 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out += words
     words_new = words[-1] != "None."
 
+    # the QSPICE library's Ask box: the owner's questions with no good match, screened (owner, 27 Oct 2026); the run
+    # researches them in the allowed sources and adds answer notes (docs/daily_update.md)
+    from app.services import qspice
+
+    out += qspice.inbox_lines(session, since)
+
     # the owner's answers on the reference designs matched to the library diagrams (owner, 25 Oct 2026: matching
     # "based on feedback"): the run looks for patterns and tunes app/services/refmatch.py (docs/daily_update.md)
     out.append("\n## Reference design feedback\n")

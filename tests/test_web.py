@@ -356,11 +356,12 @@ def test_navigation_sections_and_old_urls(client):
     assert (
         'id="global-search"' in client.get("/broadcast").text and 'id="global-search"' not in client.get("/parts").text
     )
-    # Engineering knowledge: two items (the Systems library moved to Systems & applications, owner 23 Oct 2026)
+    # Engineering knowledge (the Systems library moved to Systems & applications, owner 23 Oct 2026; the QSPICE
+    # library added 27 Oct 2026)
     from app.web import nav
 
     knowledge = next(s for s in nav.NAV if s[0] == "knowledge")
-    assert [i[0] for i in knowledge[2]] == ["Interactive visuals", "General knowledge"]
+    assert [i[0] for i in knowledge[2]] == ["Interactive visuals", "General knowledge", "QSPICE library"]
     systems = next(s for s in nav.NAV if s[0] == "systems")
     assert [i[0] for i in systems[2]] == ["Systems library", "Application library", "Application workspace",
                                          "Cross-sell", "RF coverage", "Automotive map"]

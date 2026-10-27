@@ -224,7 +224,7 @@ def test_menu_tree_23_oct():
     manage = [i[0] for i in nav.UTILITY[2]]
     # owner, 25 Oct 2026: To confirm first; 26 Oct 2026: Data flow after Schedule
     assert manage == ["To confirm", "Overview", "Schedule", "Data flow", "Site data", "Uploads", "Data quality",
-                      "People & invites", "Methodology"]
+                      "People & invites", "Methodology", "AI services (later)"]
     tabs = next(g for g in nav.TABS if g[0][1] == "/manage/verify")
     # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab
     assert tabs == (("Verify next", "/manage/verify"), ("Review queue", "/manage/reviews"),

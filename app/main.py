@@ -245,4 +245,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(data_flow_router)
     app.include_router(digest_router)
     app.include_router(people_router)
+    from app.web.qspice import router as qspice_router  # QSPICE library + AI services (later) (27 Oct 2026)
+
+    app.include_router(qspice_router)
     return app

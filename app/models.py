@@ -869,3 +869,15 @@ class PageComment(Base):
     reply: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class QspiceQuestion(Base):
+    """A question the owner asked in the QSPICE library's Ask box that found no good match (owner, 27 Oct 2026). The
+    screened text only (no names, e-mails, web addresses or handles), never a guest's question; the daily run answers
+    it from the allowed sources; deleted after 12 months (app/services/qspice.py)."""
+
+    __tablename__ = "qspice_questions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str] = mapped_column(String(300))
+    day: Mapped[date] = mapped_column(Date, index=True)

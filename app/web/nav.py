@@ -39,6 +39,8 @@ NAV = (
     ("knowledge", "Engineering knowledge", (
         ("Interactive visuals", "/visuals", "Sliders and live graphs: RF links, noise, filters, CMTI; RF band chart"),
         ("General knowledge", "/knowledge", "RF fundamentals, specification guides, technology platforms and search"),
+        # owner, 27 Oct 2026: QSPICE forum design discussions and "a full user library where I can ask questions"
+        ("QSPICE library", "/qspice", "Simulator threads summarised by function, common fixes, models; ask a question"),
     )),
     # owner, 24 Oct 2026: a section for shareable content (public information, ready to share or save as PDF)
     # owner, 25 Oct 2026: one shareable page to combine and preview the reports; no sub-items (the reports, the
@@ -73,6 +75,8 @@ UTILITY = ("manage", "Data management", (
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("People & invites", "/manage/people", "Invite guests, see their passkeys, remove someone"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
+    # owner, 27 Oct 2026: "keep a list of running AI services we may want to deploy in the future" (read-only)
+    ("AI services (later)", "/manage/ai-services", "AI services we may run one day and the data they would send"),
 ))  # fmt: skip
 
 # path prefix -> (section key, nav item href); longest matching prefix wins. "/" only matches itself and /find.
@@ -139,6 +143,7 @@ PLACES = {
     "/manage/schedule": ("manage", "/manage/schedule"),
     "/manage/data-flow": ("manage", "/manage/data-flow"),
     "/manage/to-confirm": ("manage", "/manage/to-confirm"),
+    "/manage/ai-services": ("manage", "/manage/ai-services"),
     "/manage": ("manage", "/manage/overview"),
     "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications
     "/visuals": ("knowledge", "/visuals"),
@@ -149,6 +154,7 @@ PLACES = {
     "/impact": ("knowledge", "/knowledge"),
     "/technical": ("knowledge", "/knowledge"),
     "/notes": ("knowledge", "/knowledge"),
+    "/qspice": ("knowledge", "/qspice"),
     "/shareable/technology-overview": ("shareable", "/shareable"),
     "/shareable/synergies": ("shareable", "/shareable"),
     "/shareable/automotive": ("shareable", "/shareable"),

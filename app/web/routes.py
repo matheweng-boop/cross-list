@@ -382,6 +382,10 @@ def _part_context(
                 break
     rest = [rv for rv in rows if rv[0].candidate.id not in best]
     top = [rv for rv in rows if rv[0].candidate.id in best]  # in the overall ranking, not grouped by type
+    # both Skyworks isolator families (owner, 27 Oct 2026): the other family's best part when the best shown are all
+    # Si86S or all Si86 (the same pick as Cross a list: crosslist.other_family)
+    listed = [r for r, _ in rows]
+    other = crosslist.other_family([r for r, _ in top], [r for r in listed if not r.lifecycle_risk] or listed)
     rows = top + (rest if all else [])
     values = rules.values(part)
     sources = {pv.key: pv.source for pv in part.params}
@@ -409,6 +413,7 @@ def _part_context(
         "n_top": len(top),
         "n_rest": len(rest),
         "show_all": all,
+        "other_family": other and (other[0], other[1], crosslist.other_family_note(other[1], top[0][0])),
         "alternates": alternates.alternates(session, part),
         "alts_for": lambda p: alternates.alternates(session, p, limit=1),
         "pkg_options": lambda p: alternates.package_options(session, p),

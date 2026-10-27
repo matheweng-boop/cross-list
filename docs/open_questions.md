@@ -7,6 +7,11 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    for a 150 Mbps part; the B/E codes do (Si86S620HE / SI86S640FC are 36 ns, 10 Mbps per the datasheet ordering
    guide; 10 ns is the E/B code). Is that right?
 
+## Settled (owner, 27 Oct 2026, other-family option): "We still follow the same rules for package comparisons. I simply want to make sure that when I offer the SI86 family, I also get the choice of the SI86 as family and vice versa"
+
+- The other-family option is picked by the usual order (fewest deviations, then the same package and pinout), so
+  NSI8321N1-Q1SPR gets SI8621EC-AS (same SOIC-8), not SI8621ET-AS (the T code is the 10 kV surge version, SOIC-16W).
+
 ## Settled (owner, 26 Oct 2026, automotive crosses): "No industrial fallback. Automotive needs automotive"
 
 - An AEC-Q100 part is crossed to AEC-Q100 parts only; with none, the row stays red (ISOW7841AQDWERQ1, no automotive

@@ -14,6 +14,7 @@ from app.db import get_session
 from app.services import logo, site_guard, tech_overview, uploads
 from app.services import presentation_pptx as pp
 from app.services import share_doc as sd
+from app.services import share_explain as sx
 from app.services import share_pdf as spdf
 from app.services import share_reports as sr
 from app.services import tech_overview_edit as te
@@ -54,7 +55,7 @@ def shareable(request: Request):
     reports as one A4 PDF made on the server), Create PowerPoint (one .pptx) and Build a presentation (the topic
     builder). Nothing is ticked unless the address carries the last choice (?r=...)."""
     q = request.query_params
-    reports = [(r.key, r.label, r.line, r.pages, r.url, r.url + "/edit") for r in sr.REGISTRY]
+    reports = [(r.key, r.label, r.line, r.pages, r.url, r.url + "/edit", r.url + "/explain") for r in sr.REGISTRY]
     return templates.TemplateResponse(request, "shareable/index.html", {
         "reports": reports, "picked": sr.pack_selection(",".join(q.getlist("r"))),
         "owner": signed_in_owner(request) is not None, "wm": q.get("wm", "none"),
@@ -304,6 +305,18 @@ def shareable_pptx(request: Request, session: Session = Depends(get_session)):
     if [h for t in pp.texts(data) for x in t for h in site_guard.hits(x)]:  # never expected: the pages pass it
         raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
     return _download(data, pp.MEDIA_TYPE, "skyworks-qorvo-" + "-".join(keys) + ".pptx")
+
+
+@router.get("/shareable/{slug}/explain", response_class=HTMLResponse)
+def shareable_explain(slug: str, request: Request):
+    """Explanation (owner, 27 Oct 2026): how a shareable document was made, for the owner only (guests: 403, also in
+    app/auth/access.py). Internal: a page of its own, never part of the document, its PDF or its PowerPoint."""
+    if signed_in_owner(request) is None:
+        raise HTTPException(403, "Only the owner can read the explanation.")
+    key = next((e.key for e in sr.REGISTRY if e.url == f"/shareable/{slug}"), None)  # e.g. technology-overview
+    if key is None:
+        raise HTTPException(404, "No such page.")
+    return templates.TemplateResponse(request, "shareable/explain.html", {"x": sx.build(key)})
 
 
 @router.get("/shareable/{slug}", response_class=HTMLResponse)

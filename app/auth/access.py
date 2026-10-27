@@ -40,8 +40,10 @@ def _under(path: str, prefix: str) -> bool:
 
 # every Shareable report's editor, also one added later to share_reports.REGISTRY (/shareable/<key>/edit...)
 _SHARE_EDIT = re.compile(r"^/shareable/[^/]+/edit(/|$)")
+# and every Shareable document's explanation (owner, 27 Oct 2026: internal notes on how it was made)
+_SHARE_EXPLAIN = re.compile(r"^/shareable/[^/]+/explain/?$")
 
 
 def owner_only(path: str, method: str) -> bool:
     prefixes = OWNER_PAGES if method in SAFE_METHODS else OWNER_ACTIONS
-    return any(_under(path, p) for p in prefixes) or bool(_SHARE_EDIT.match(path))
+    return any(_under(path, p) for p in prefixes) or bool(_SHARE_EDIT.match(path) or _SHARE_EXPLAIN.match(path))

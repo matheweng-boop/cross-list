@@ -107,6 +107,14 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    Si…), check band, frequency and voltage against the system, and record the findings under the brief's `coverage:`
    (format in the file's header); start from what is recorded there. A new or changed brief, block or catalogue
    refresh means re-checking the blocks it touches. `tests/test_share_systems.py` fails if a block lacks an entry.
+   **Shareable explanations** (owner, 27 Oct 2026: the internal "Explanation" button next to Preview, owner only):
+   when the run changes a shareable document, it updates that document's explanation in the same commit. A system
+   brief: its `coverage:` findings, `checked:` date and a plain line per change under `changes:` (what was added,
+   swapped or removed and why, newest first) in `data/business/share_systems.yaml`. Any document: what it is built
+   from, its research reports and known limits in `data/business/share_explain.yaml`; a new REGISTRY document gets an
+   entry there. Plain words, facts from the data only; where there is nothing, leave it empty ("No technical notes
+   yet" shows). The explanation is never part of the PDF, the PowerPoint or the shared page
+   (`tests/test_share_explain.py`).
    Cross-sell & gaps (owner, 22 Oct 2026): move sort, filter and set-aside from the old explorer table
    (`/business/explorer/table`) into `/blocks/cross-sell`; once nothing is lost, remove the old table.
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals

@@ -1,0 +1,81 @@
+# Explanations of the Shareable documents (owner, 27 Oct 2026: "another button next to the shareable pages where I can
+# click preview or I can read the explanation ... similar to what you just gave me for all the depth checks").
+#
+# INTERNAL: shown only to the owner, at /shareable/<key>/explain (the "Explanation" button next to Preview). Never part
+# of the page that is shared, the PDF, the PowerPoint or the combined file. Built by app/services/share_explain.py.
+#
+# One entry per share_reports.REGISTRY key:
+#   built_from: what the document is made of (site reports, data files), one plain line each
+#   reports: slugs of the site's research reports the words come from (data/business/reports.yaml); linked on the page
+#   limits: known limits, one plain line each
+# The four system briefs (uwb, v2x, gnss, radio) also get their block-by-block findings, changes and gaps from
+# data/business/share_systems.yaml (coverage:, changes:, checked:). A document without an entry, or with nothing
+# under a heading, says "No technical notes yet". Only facts that are in the code or the data: never invent.
+# A run that changes a shareable document updates its entry here in the same commit (docs/daily_update.md).
+
+checks:
+  - "Word check: every saved edit goes through the public-safe word check (no comparisons, gaps or risks, roadmap, internal or confidential words, estimates, margins or our prices, where parts are made, other companies' names; app/services/tech_overview.py share_problems); the tests run it on every default text."
+  - "Site guard: the PDF and the PowerPoint are checked again for manufacturing site names when they are made (app/services/site_guard.py); a hit stops the download."
+  - "Page budget: the document must fit its A4 page count in the PDF; the paragraph and character limits per section keep it there."
+  - "No site references: the shared page, the PDF and the PowerPoint carry no site name, link or footer."
+
+overview:
+  built_from:
+    - "Words: data/business/tech_overview.yaml (intro, market lines, sources)."
+    - "Counts: active Skyworks and Qorvo catalogue parts and families, grouped as on Cross-sell > Skyworks + Qorvo portfolio; shown rounded down (4,132 becomes 4,000+)."
+    - "Technology platforms and who holds them: data/business/capabilities.yaml."
+    - "\"Up to\" figures: the catalogue specifications."
+  limits:
+    - "Counts follow the catalogue as loaded; they change when the catalogue is refreshed."
+    - "The logo and default watermark set here are used by every shareable document."
+
+synergies:
+  built_from:
+    - "Words: data/business/share_reports.yaml (synergies)."
+    - "Counts: active catalogue parts, families shared by both companies, technology platforms (the Technology overview's data)."
+    - "Pairs: the Skyworks + Qorvo pairs found together in reference designs (Cross-sell > Skyworks + Qorvo portfolio), with the benefit type per pair from the same file."
+    - "Manufacturing: capability level only, from the Form 10-K filings (FY2025)."
+    - "IP tags: data/business/evidence/patents_platforms.yaml, when a platform has a public patent summary."
+  limits:
+    - "At most 6 pairs; pairs that are only a supply link are left out."
+    - "No AEC-Q part count (owner, 25 Oct 2026); filters and designations stay."
+    - "No site, city or named partner for manufacturing; an extra word check on this page stops them."
+
+automotive:
+  built_from:
+    - "Words: data/business/share_reports.yaml (automotive)."
+    - "Technologies: the Technology overview's platforms, with one car line each."
+    - "Sub-systems: the automotive system of the Systems library, with the AEC-Q qualified series named as examples."
+    - "Pairs: the Skyworks + Qorvo pairs in the automotive reference designs; examples only from AEC-Q qualified active parts."
+  limits:
+    - "At most 6 pairs; pairs that are only a supply link are left out."
+    - "Only series with at least one AEC-Q qualified active part are named."
+    - "Standards are named for orientation only."
+
+uwb:
+  reports: [auto-uwb-15-4ab, auto-uwb-cpd]
+  built_from:
+    - "Words and talking points: the research reports below (learn, say_externally)."
+    - "Block diagram: the Systems library topic below, simplified."
+    - "Parts and findings: the depth pass in data/business/share_systems.yaml (catalogues, Qorvo store crawl 2026-10-19, data/real, data/broadcast)."
+
+v2x:
+  reports: [auto-cv2x-fe]
+  built_from:
+    - "Words and talking points: the research report below (learn, say_externally)."
+    - "Block diagram: the block-editor template below, simplified."
+    - "Parts and findings: the depth pass in data/business/share_systems.yaml (catalogues, Qorvo store crawl 2026-10-19, data/real, data/broadcast)."
+
+gnss:
+  reports: [auto-gnss-l1l5]
+  built_from:
+    - "Words and talking points: the research report below (learn, say_externally)."
+    - "Block diagram: the Systems library topic below, simplified."
+    - "Parts and findings: the depth pass in data/business/share_systems.yaml (catalogues, Qorvo store crawl 2026-10-19, data/real, data/broadcast)."
+
+radio:
+  reports: [radio-auto-fit, radio-tuner-next]
+  built_from:
+    - "Words and talking points: the research reports below (learn, say_externally)."
+    - "Block diagram: the block-editor template below, simplified."
+    - "Parts and findings: the depth pass in data/business/share_systems.yaml (catalogues, Qorvo store crawl 2026-10-19, data/real, data/broadcast)."

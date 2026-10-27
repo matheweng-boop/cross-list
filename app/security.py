@@ -29,6 +29,21 @@ HSTS = (b"strict-transport-security", b"max-age=31536000")
 # Shareable previews open in a lightbox on the same site (owner, 25 Oct 2026): these pages may be framed by this site
 # only (frame-ancestors 'self', SAMEORIGIN); every other page stays unframeable.
 _FRAMEABLE = re.compile(r"^/shareable/(pack|presentation/preview|technology-overview|synergies|automotive)$")
+
+
+def _frameable(path: str) -> bool:
+    """The fixed pages above, every share_reports.REGISTRY document (the system briefs too) and its owner-only
+    Explanation (owner, 27 Oct 2026), which open in the same lightbox."""
+    if not path.startswith("/shareable/"):
+        return False
+    if _FRAMEABLE.match(path):
+        return True
+    from app.services import share_reports as sr
+
+    base = path.removesuffix("/explain")
+    return any(r.url == base for r in sr.REGISTRY)
+
+
 HEADERS_SAMEORIGIN = [
     (k, CSP.replace("frame-ancestors 'none'", "frame-ancestors 'self'").encode() if k == b"content-security-policy"
      else b"SAMEORIGIN" if k == b"x-frame-options" else v)
@@ -59,7 +74,7 @@ class SecurityMiddleware:
         async def send_with_headers(message):
             if message["type"] == "http.response.start":
                 names = {k.lower() for k, _ in message.get("headers", [])}
-                base = HEADERS_SAMEORIGIN if _FRAMEABLE.match(scope.get("path", "")) else HEADERS
+                base = HEADERS_SAMEORIGIN if _frameable(scope.get("path", "")) else HEADERS
                 extra = [h for h in base if h[0] not in names] + ([HSTS] if https else [])
                 message = {**message, "headers": list(message.get("headers", [])) + extra}
             await send(message)

@@ -29,6 +29,12 @@
 #   2026-10-19), ...). Parts named under auto/bundle need not all be in parts: (the page and slide limits decide);
 #   tests/test_share_systems.py checks every diagram block has both entries and every named part is active.
 #   The shareable page shows only one line from this: the blocks without a Skyworks or Qorvo part.
+#
+# Explanation (owner, 27 Oct 2026: an internal "Explanation" next to Preview on Shareable, owner only, never in the
+# PDF, PowerPoint or shared page): built from coverage: above plus, per brief, checked: (the date of the last depth
+# pass) and changes: (what was added, swapped or removed and why, one plain line each, newest pass first). A run that
+# changes a brief's parts or coverage updates changes: in the same commit (docs/daily_update.md). The reports the
+# words come from are listed in data/business/share_explain.yaml. Shown by app/services/share_explain.py.
 
 defaults:
   sections:
@@ -50,6 +56,12 @@ uwb:
   title: "Automotive UWB: digital key, child presence and anchors"
   header: {title: "Skyworks + Qorvo · Automotive UWB", subtitle: ""}
   kicker: "System brief · Automotive UWB"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "QPC8019Q added at the antenna switch: Qorvo's automotive SPDT up to 8.0 GHz (0.60 dB loss); Qorvo's other automotive switches stop at 6 GHz."
+    - "QPF4239Q added for the Bluetooth LE wake-up: an automotive 2.402-2.481 GHz front end; it is listed for Wi-Fi, but the band is the Bluetooth LE band (est fit)."
+    - "SKY5A1005 moved from the Wi-Fi / V2X filters to the narrowband-assist filter: its 5855-5925 MHz notch keeps V2X out of the narrowband-assist bands either side."
+    - "QM14070 (UWB PA, not automotive) and QPF1004Q (V2X front end) no longer shown: at most 6 rows per slide; QPF1004Q is in the V2X and GNSS briefs."
   sections:
     intro:
       paragraphs:
@@ -195,6 +207,11 @@ v2x:
   title: "V2X: vehicle-to-everything at 5.9 GHz"
   header: {title: "Skyworks + Qorvo · V2X", subtitle: ""}
   kicker: "System brief · V2X"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "QPQ1060 replaces 880273 at the GNSS filter: SAW L1 / E1 / B1, 1.3 dB loss instead of 2.35 dB, and it also covers Galileo E1 and BeiDou B1."
+    - "QPQ2230Q removed from the path 2 filter: a V2X notch for the Wi-Fi path, not a V2X band-pass filter. QPQ2200Q is the band-pass, one per antenna path."
+    - "ACT88321VU101 added at the LDO: Qorvo (Active-Semi line) PMIC with 2 x 390 mA LDOs and 3 bucks; not automotive, a bundle option."
   sections:
     intro:
       paragraphs:
@@ -319,6 +336,11 @@ gnss:
   title: "Automotive GNSS: multi-band front ends for lane-level positioning"
   header: {title: "Skyworks + Qorvo · GNSS", subtitle: ""}
   kicker: "System brief · Automotive GNSS"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "QPQ1060 + QPQ1062 replace 880273 (L1, 2.35 dB) and 880060 (L2, 1.8 dB): SAW L1 and L5 filters that match the L1 + L5 core SKY5A2110, 1.3 / 1.2 dB loss."
+    - "QPQ1028 (L1 / L2 diplexer) no longer shown: L2 does not match the L1 + L5 core; its successor QPQ1063 is recorded but not shown."
+    - "SKYA21041 added at the Wi-Fi front end in the fin: Skyworks automotive 5 GHz switch / LNA, 4.9-5.9 GHz."
   sections:
     intro:
       paragraphs:
@@ -432,6 +454,13 @@ radio:
   title: "Car radio: AM, FM and digital radio (DAB, HD Radio, DRM)"
   header: {title: "Skyworks + Qorvo · Car radio", subtitle: ""}
   kicker: "System brief · Car radio"
+  checked: 2026-10-27
+  changes:  # depth pass, 27 Oct 2026
+    - "Si47972 added to the core at the audio codec: a dual tuner with on-chip audio DAC and audio processing, so the tuner can replace a separate codec."
+    - "TQP3M9036 replaces QPL7433 at the LNA: NF 0.45 dB instead of 1.5 dB, OIP3 36 dBm instead of 34 dBm (TriQuint line, not automotive)."
+    - "SKY76206-21 removed from the audio amplifier: a mono low-power class-D amplifier for battery devices, not a car speaker amplifier (est)."
+    - "ACT88321VU101 added at the PMIC (owner: Qorvo might have a PMIC): 3 bucks, 2 LDOs, I2C (Active-Semi line); not automotive, a bundle option."
+    - "SKYA21001 and QPC8010Q: the specs now say which bands they cover (FM and DAB band III, not AM)."
   sections:
     intro:
       paragraphs:

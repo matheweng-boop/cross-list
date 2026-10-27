@@ -721,6 +721,29 @@ def test_shareable_create_powerpoint_with_two_reports(page, tmp_path):
     expect(page).to_have_url(re.compile(r"/shareable\?r=synergies,automotive&wm=none$"))  # the page stays
 
 
+def test_shareable_explanation_opens_in_the_lightbox_at_ipad_size(page):
+    """Owner, 27 Oct 2026: "another button next to the shareable pages where I can click preview or I can read the
+    explanation": Explanation sits next to Preview and opens the same lightbox (?embed=1) with the block table, both
+    companies' columns; it fits an iPad held sideways and upright (390 px checked after the test)."""
+    go(page, "/shareable")
+    page.locator(".sh-row", has_text="Car radio").get_by_role("button", name="Explanation").click()
+    frame = page.locator("dialog.lb iframe.lb-frame")
+    expect(frame).to_have_attribute("src", re.compile(r"/shareable/radio/explain\?embed=1$"))
+    inner = page.frame_locator("dialog.lb iframe.lb-frame")
+    expect(inner.locator("h1")).to_contain_text("Explanation: Car radio", timeout=PAGE_TIMEOUT)  # built on first use
+    for who in ("Skyworks", "Qorvo"):
+        expect(inner.locator(".sx-table thead")).to_contain_text(who)
+    for chrome in (".site-head", ".site-foot"):  # only the explanation shows inside the window
+        expect(inner.locator(chrome).first).to_be_hidden()
+    page.get_by_role("button", name="Close preview").click()
+    expect(page.locator("dialog.lb")).to_be_hidden()
+    for size in ({"width": 1180, "height": 900}, {"width": 820, "height": 1180}):
+        page.set_viewport_size(size)
+        for path in ("/shareable", "/shareable/radio/explain", "/shareable/uwb/explain"):
+            go(page, path)
+            assert overflow(page) <= 1, (size, path)
+
+
 def test_shareable_synergies_owner_edit_and_undo(page):
     """The new reports edit like the overview: a number (the exact automatic value is shown), Save, Undo."""
     try:

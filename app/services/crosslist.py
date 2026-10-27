@@ -59,8 +59,8 @@ PRECHECK_NOTE = ("Pre-check from public datasheets. Green rows were checked spec
 HOW_NOTE = ("Drop-in: same package and pinout. A direct package equivalent (every priority 1 spec equal or better) "
             "comes first; without one, the package drop-in with the fewest and smallest priority 1 deviations. "
             "Best functional fit: the closest priority 1 match in any package; left out when it is the drop-in part. "
-            "Skyworks isolators: when the parts shown are all Si86S or all Si86, the best suitable part of the other "
-            "family is offered too, under the row (\"Also in the … family\").")  # fmt: skip
+            "Other family: for Skyworks isolators, the best Si86 part when an Si86S part is shown, and the other way "
+            "round – its package drop-in when it has one, else its best functional fit.")  # fmt: skip
 LIGHTS = {"green": "Green", "amber": "Amber", "red": "Red"}
 LIGHT_HELP = {
     "green": "direct package equivalent, priority 1 specs from datasheets on both sides",
@@ -336,41 +336,38 @@ OTHER_FAMILY = {"Si86S": "Si86", "Si86": "Si86S"}
 
 def other_family(shown: list, pool: list) -> tuple[str, CrossResult] | None:
     """Both Skyworks isolator families wherever a cross is offered (owner, 27 Oct 2026: "always offer both families
-    if both families are available"; 26 Oct: "if a Si86S family is crossed, then offer Si86 as a second option if
-    suitable"). When the parts shown (``shown``, None entries skipped) are all from one family, Si86S or Si86, the
-    best part of the other family in ``pool`` (the engine's list: it passed the function-defining and must-meet
-    checks) by the usual order (``rank_key``: fewest deviations, then the same package and pinout before
-    another; owner, 27 Oct 2026: "We still follow the same rules for package comparisons"), with the family's
-    name; None when the other family is already shown, nothing shown is from either family, or the other family
-    has no suitable part."""
+    if both families are available"; "just add a third option which shows the family equivalent and same goes if
+    there is a package equivalent in another family"). From ``pool`` (the engine's list: it passed the
+    function-defining and must-meet checks), never a part in ``shown`` (None entries skipped), with the family's name:
+
+    - the parts shown are all Si86S or all Si86: the other family's best package drop-in or direct package
+      equivalent (``drop_in_key``, as column 1), else its best functional fit by the usual order (``rank_key``:
+      fewest deviations, then the same package and pinout; owner: "We still follow the same rules for package
+      comparisons");
+    - both families are shown already: only a package drop-in of the family shown as a functional fit alone (a
+      further functional fit of a family already shown adds nothing);
+    - None when nothing shown is from either family, or the other family has no suitable part."""
     shown = [r for r in shown if r is not None]
-    fams = {isolator_family(r.candidate.mpn) for r in shown} - {None}
-    if len(fams) != 1:
+    by: dict[str, list] = {}
+    for r in shown:
+        f = isolator_family(r.candidate.mpn)
+        if f:
+            by.setdefault(f, []).append(r)
+    if not by:
         return None
-    want = OTHER_FAMILY[fams.pop()]
+    if len(by) == 1:
+        want, fit_only = OTHER_FAMILY[next(iter(by))], False
+    else:
+        lacking = [f for f, rs in by.items() if not any(r.fit.fits for r in rs)]
+        if len(lacking) != 1:
+            return None
+        want, fit_only = lacking[0], True
     ids = {r.candidate.id for r in shown}
     cands = [r for r in pool if r.candidate.id not in ids and isolator_family(r.candidate.mpn) == want]
-    return (want, min(cands, key=rank_key)) if cands else None
-
-
-def _dev_set(r: CrossResult) -> set:
-    return {(d.key, d.cand_display) for d in r.deviations}
-
-
-def other_family_note(r: CrossResult, main: CrossResult | None = None) -> str:
-    """The other-family part in one short line: package and the priority 1 deviations, their value vs ours ("same
-    deviations" when they are those of the part offered first)."""
-    if r.fit.fits:
-        fit = "same package and pinout"
-    elif r.fit.same_package:
-        fit = "same package, different pinout"
-    else:
-        fit = f"package {r.reference.package.code} vs {r.candidate.package.code}"
-    devs = [f"{_short(d.label)} {d.ref_display} vs {d.cand_display}" for d in r.deviations]
-    if not devs:
-        return f"no priority 1 deviation; {fit}"
-    same = main is not None and _dev_set(main) == _dev_set(r)
-    return f"{'same deviations' if same else 'deviations'}: {', '.join(devs)}; {fit}"
+    fits = [r for r in cands if r.fit.fits]
+    if fits:
+        return want, min(fits, key=drop_in_key)
+    return (want, min(cands, key=rank_key)) if cands and not fit_only else None
 
 
 # ---------------------------------------------------------------- words
@@ -611,7 +608,7 @@ class Row:
     reason: str = ""
     reason_link: str | None = None
     checked_on: list[str] = field(default_factory=list)
-    other: Column | None = None  # the other Skyworks isolator family's best part (Si86 / Si86S)
+    other: Column | None = None  # third column: the other Skyworks isolator family's best part (Si86 / Si86S)
 
     @property
     def maker(self) -> str:
@@ -627,6 +624,12 @@ class Row:
 
     @property
     def verified(self) -> bool:
+        """Any cross of the selection confirmed, the other-family row included."""
+        return any(c and c.verified for c in (self.drop_in, self.functional, self.other))
+
+    @property
+    def main_verified(self) -> bool:
+        """The part's own row (drop-in or functional fit) confirmed."""
         return any(c and c.verified for c in (self.drop_in, self.functional))
 
 
@@ -677,9 +680,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
             if r is None:
                 continue
             a = said.get((normalize_pn(part.mpn), normalize_pn(r.candidate.mpn)))
-            kind, note = (cross_type(r, col), comment(r, col)) if col < 3 else (
-                f"Also in the {alt[0]} family", other_family_note(r, c1 or c2))  # fmt: skip
-            c = Column(r, kind, note, (part.id, r.candidate.id) in verified, a.verdict if a else None)
+            note = comment(r, col) if col < 3 else f"{alt[0]} family · {comment(r, col)}"
+            c = Column(r, cross_type(r, col), note, (part.id, r.candidate.id) in verified, a.verdict if a else None)
             if c.answer == "wrong":
                 c.verified = False
             if col == 1:
@@ -691,7 +693,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
         if c1 is None and c2 is None:
             row.reason, row.reason_link = _no_cross(session, part, bool(crosser._cands.get(
                 (part.family, False, None))))  # fmt: skip
-        elif c1 is not None and c1.category == "fff" and not data_gaps(c1) and not c1.lifecycle_risk:
+        elif any(c is not None and c.category == "fff" and not data_gaps(c) and not c.lifecycle_risk
+                 for c in (c1, alt[1] if alt else None)):  # fmt: skip
             row.light = "green"
         else:
             row.light = "amber"
@@ -700,8 +703,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
 
 EXPORT_HEADER = ["#", "Your part", "Maker", "Status", "Light", "Drop-in part", "Drop-in maker", "Drop-in type",
                  "Drop-in comment", "Functional fit part", "Functional fit maker", "Functional fit type",
-                 "Functional fit comment", "Other family option", "Checked on (P1 specs)", "Verified",
-                 "Your comment"]  # fmt: skip
+                 "Functional fit comment", "Checked on (P1 specs)", "Verified", "Your comment"]  # fmt: skip
+OTHER_LINE = "↳ other family"  # first cell of the other-family line under a part's line
 
 
 def export_cells(r: Row) -> list:
@@ -715,9 +718,24 @@ def export_cells(r: Row) -> list:
         first = col(r.drop_in) if r.drop_in else ["No drop-in", "", "", ""]
         second = col(r.functional) if r.functional else ["= Drop-in", "", "", ""]
     part = r.text + (f" ×{r.count}" if r.count > 1 else "")
-    other = f"{r.other.type}: {r.other.part.mpn} – {r.other.comment}" if r.other else ""
     return [r.n, part, r.maker or ("not recognised" if r.part is None and not r.catalogue else ""), r.status,
-            LIGHTS[r.light], *first, *second, other, ", ".join(r.checked_on), "✓ Verified" if r.verified else "", ""]
+            LIGHTS[r.light], *first, *second, ", ".join(r.checked_on), "✓ Verified" if r.main_verified else "", ""]
+
+
+def other_cells(r: Row) -> list:
+    """The other-family line under a part's line (owner, 27 Oct 2026: "a third row ... that becomes part of each
+    selection"): "↳ other family", the part's light, the cross in the Drop-in cells when it fits, else in the
+    Functional fit cells."""
+    c = r.other
+    cells = [c.part.mpn, c.part.manufacturer.name, c.type, c.comment]
+    first, second = (cells, ["", "", "", ""]) if c.result.fit.fits else (["", "", "", ""], cells)
+    return [OTHER_LINE, "", "", "", LIGHTS[r.light], *first, *second, ", ".join(r.checked_on),
+            "✓ Verified" if c.verified else "", ""]  # fmt: skip
+
+
+def export_lines(r: Row) -> list[list]:
+    """A part's exported lines: its own, plus the other-family line when there is one."""
+    return [export_cells(r)] + ([other_cells(r)] if r.other else [])
 
 
 def tsv(rows: list[Row]) -> str:
@@ -725,7 +743,8 @@ def tsv(rows: list[Row]) -> str:
     def clean(v):
         return " ".join(str(v).split())
 
-    return "\n".join("\t".join(clean(v) for v in line) for line in [EXPORT_HEADER, *map(export_cells, rows)]) + "\n"
+    lines = [EXPORT_HEADER, *(x for r in rows for x in export_lines(r))]
+    return "\n".join("\t".join(clean(v) for v in line) for line in lines) + "\n"
 
 
 def summary(rows: list[Row]) -> dict:

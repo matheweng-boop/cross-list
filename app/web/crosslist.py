@@ -36,7 +36,7 @@ def _ctx(request: Request, text: str, session: Session, sent: int | None = None)
             "submitted": bool(text.strip()), "owner": signed_in_owner(request) is not None,
             "privacy": cl.PRIVACY_NOTE, "precheck": cl.PRECHECK_NOTE, "how": cl.HOW_NOTE, "lights": cl.LIGHTS,
             "light_help": cl.LIGHT_HELP, "accuracy": cl.accuracy(), "header": cl.EXPORT_HEADER,
-            "cells": cl.export_cells, "kinds": cl.TYPE_KIND,
+            "lines": cl.export_lines, "kinds": cl.TYPE_KIND,
             "p1": {f: cl.p1_labels(f) for f in families},
             "p1_all": {f: cl.p1_labels(f) for f in load_all_rules()}}  # fmt: skip
 

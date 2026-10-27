@@ -33,8 +33,6 @@
 {% if alternates %}<p class="alt-line"><b>{{ alternates[0].family_label }} alternate{{ 's' if alternates|length > 1 }}:</b>
   {% for a in alternates %}<a href="/parts/{{ a.part.id }}">{{ a.part.mpn }}</a> <small class="muted">({{ a.label }})</small>{{ ' · ' if not loop.last }}{% endfor %}
   · <a href="/compare?ids={{ part.id }}">compare</a></p>{% endif %}
-{% if other_family %}{% set of = other_family %}<p class="alt-line other-family"><b>Other family:</b> also in the {{ of[0] }} family,
-  <a href="/parts/{{ of[1].candidate.id }}">{{ of[1].candidate.mpn }}</a> <small class="muted">({{ of[2] }})</small></p>{% endif %}
 {% if part.notes %}<p class="banner">{{ part.notes }}</p>{% endif %}
 {% if uk %}{{ unofficial_footnote() }}{% endif %}
 
@@ -136,7 +134,8 @@
     <tr class="result-row cross-{{ v.category }}{{ ' ranked rank-' ~ rank if rank is not none }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
       <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
         <a href="/parts/{{ c.id }}" class="cand-link"><b>{{ c.mpn }}</b></a>
-        {% if rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
+        {% if c.id in other_fam %}<span class="badge rank-badge rank-other" title="The other Skyworks isolator family (Si86 / Si86S)">{{ other_fam[c.id] }}</span>
+        {% elif rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
         {% if c.id in verified_ids %}<span class="badge ok" title="A person confirmed this pair">✓ Verified</span>{% endif %}
         <br><small class="muted">{{ c.manufacturer.name|vendor }}</small>

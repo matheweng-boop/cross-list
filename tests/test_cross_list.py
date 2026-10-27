@@ -189,8 +189,8 @@ def test_excel_download_mirrors_the_table(client):
     assert body[1][5] == "No drop-in" and body[1][11].startswith("Functional")
     assert body[2][9] == "No functional fit" and body[2][12]  # the reason
     assert body[3][2] == "not recognised" and body[3][12] == "Not in our data."
-    assert body[0][13] is None  # no other Skyworks isolator family option for synthetic parts
-    assert "Isolation rating" in body[0][14] and body[0][16] is None  # checked on; the owner's comment column
+    assert "Isolation rating" in body[0][13] and body[0][15] is None  # checked on; the owner's comment column
+    assert cl.OTHER_LINE not in [v[0] for v in body]  # no other-family line for synthetic parts
     summary = {r[0]: r[1] for r in wb["Summary"].iter_rows(values_only=True)}
     assert summary["Parts"] == 4 and summary["Red"] == 2 and summary["Coverage"] == "50 %"
     assert cl.PRECHECK_NOTE in [r[1] for r in wb["Summary"].iter_rows(values_only=True)]
@@ -322,7 +322,7 @@ def test_columns_keep_the_best_functional_fit_for_an_si86s_drop_in():
 
 def test_other_family_both_directions():
     """Owner, 27 Oct 2026: "always offer both families if both families are available" - Si86S shown: the best
-    suitable Si86 part; Si86 shown: the best suitable Si86S part; by functional_key, parts shown left out."""
+    suitable Si86 part; Si86 shown: the best suitable Si86S part; parts shown left out."""
     from types import SimpleNamespace as NS
 
     s = _fake("SI86S640EE-IS2", 1, fff=True, fits=True)
@@ -334,56 +334,110 @@ def test_other_family_both_directions():
     assert cl.other_family([s, other], pool) == ("Si86", si86)  # an Si86S drop-in still gets an Si86 option
     assert cl.other_family([None, s], pool) == ("Si86", si86)  # no drop-in: the functional fit alone
     assert cl.other_family([si86, None], pool) == ("Si86S", s)  # an Si86 drop-in gets an Si86S option
-    assert cl.other_family([s, si86], pool) is None  # both families shown already
+    assert cl.other_family([s, si86], pool) is None  # both families shown, no Si86 package drop-in to add
     assert cl.other_family([other, None], pool) is None  # not a Skyworks isolator family
     assert cl.other_family([s, other], [s, other]) is None  # no suitable part in the other family
     assert cl.other_family([si86, None], [si86, si86_worse, other]) is None
 
 
-PRELOAD = {"isolators": (("novosense_digital_isolators", "skyworks_si86", "skyworks_isolators_more"), None)}
+def test_other_family_package_equivalent_comes_first():
+    """Owner, 27 Oct 2026: "same goes if there is a package equivalent in another family" - the other family's
+    package drop-in (drop_in_key) before its closer functional fit; with both families shown, only that adds."""
+    from types import SimpleNamespace as NS
+
+    s = _fake("SI86S640EE-IS2", 1, fff=True, fits=True)
+    si86_fn = _fake("SI8641ET-IS", 3, fff=False, fits=False, same_package=False)
+    si86_pe = _fake("SI8641BB-IS", 4, fff=True, fits=True)
+    si86_pe.deviations = [NS(score=1.0)]
+    pool = [s, si86_fn, si86_pe]
+    assert cl.other_family([s, None], pool) == ("Si86", si86_pe)
+    assert cl.other_family([s, si86_fn], pool) == ("Si86", si86_pe)  # Si86 shown only as a functional fit
+    assert cl.other_family([si86_pe, s], pool) is None  # the Si86S shown fits: nothing to add
+
+
+PRELOAD = {"isolators": (("ti_digital_isolators", "novosense_digital_isolators", "skyworks_si86",
+                          "skyworks_isolators_more"), None)}  # fmt: skip
 
 
 @pytest.fixture
 def isolators(session):
-    """The Novosense and Skyworks digital isolator files in the test database (PRELOAD, tests/conftest.py)."""
+    """The TI, Novosense and Skyworks digital isolator files in the test database (PRELOAD, tests/conftest.py)."""
 
 
 def test_nsi8321_offers_both_families_on_cross_a_list(session, isolators):
-    """Owner, 27 Oct 2026: NSI8321N1-Q1SPR gave one family only. No drop-in; the functional fit is Si86S, the Si86
-    family is offered under it (export and Copy table too)."""
+    """Owner, 27 Oct 2026: NSI8321N1-Q1SPR gave one family only. No drop-in; the functional fit is Si86S and the Si86
+    family is a third row of the same selection: SI8621EC-AS (the same SOIC-8 package, the usual package rules)."""
     row = rows_for(session, "NSI8321N1-Q1SPR")["NSI8321N1-Q1SPR"]
     assert row.drop_in is None and cl.isolator_family(row.functional.part.mpn) == "Si86S"
-    assert row.other is not None and cl.isolator_family(row.other.part.mpn) == "Si86"
-    # owner, 27 Oct 2026: "We still follow the same rules for package comparisons" - the same SOIC-8 first, not the
-    # 10 kV surge T code in SOIC-16W
-    assert row.other.part.mpn == "SI8621EC-AS"
-    assert row.other.type == "Also in the Si86 family" and "CMTI" in row.other.comment
-    cell = cl.export_cells(row)[cl.EXPORT_HEADER.index("Other family option")]
-    assert cell.startswith(f"Also in the Si86 family: {row.other.part.mpn} – ")
-    assert row.other.part.mpn in cl.tsv([row])
+    assert row.other.part.mpn == "SI8621EC-AS" and row.other.type.startswith("Functional · other pinout")
+    assert row.other.comment.startswith("Si86 family · Same package (SOIC-8N)") and "CMTI" in row.other.comment
+    main, extra = cl.export_lines(row)
+    assert main[5] == "No drop-in" and main[9] == row.functional.part.mpn
+    assert extra[0] == cl.OTHER_LINE and extra[1] == "" and extra[4] == main[4]  # no index, the part's light
+    assert extra[5] == "" and extra[9:13] == ["SI8621EC-AS", "Skyworks", row.other.type, row.other.comment]
+    lines = cl.tsv([row]).splitlines()
+    assert len(lines) == 3 and lines[2].startswith(cl.OTHER_LINE + "\t")
 
 
-def test_other_family_in_the_excel_and_on_the_page(client, isolators):
-    r = client.post("/cross-list.xlsx", data={"parts": "NSI8321N1-Q1SPR"})
+def test_si86s_drop_in_gets_an_si86_package_equivalent(session, isolators):
+    """ISO6760QDWRQ1: Si86S direct package equivalent; the Si86 family has a package drop-in, shown in the Drop-in
+    cells of the other-family line."""
+    row = rows_for(session, "ISO6760QDWRQ1")["ISO6760QDWRQ1"]
+    assert cl.isolator_family(row.drop_in.part.mpn) == "Si86S" and row.light == "green"
+    assert cl.isolator_family(row.other.part.mpn) == "Si86" and row.other.result.fit.fits
+    assert row.other.type in ("Direct package equivalent", "Package drop-in, deviations")
+    extra = cl.export_lines(row)[1]
+    assert extra[5] == row.other.part.mpn and extra[9] == ""
+
+
+def test_other_family_row_on_the_page_and_in_the_excel(client, isolators):
+    page = post(client, "NSI8321N1-Q1SPR\nISO6760QDWRQ1")
+    assert "Also in the" not in page and "cx-other-lbl" in page  # no note line any more: a row of its own
+    assert page.count('class="cx-row cx-other ') == 2
+    assert ">Other family</span>" in page and ">Other family · package equivalent</span>" in page
+    body = page[page.index('<table class="cx-table">'):page.index('id="cx-export"')]
+    assert body.count('class="cx-n">1<') == 1 and 'class="cx-n">3<' not in body  # no new index
+    r = client.post("/cross-list.xlsx", data={"parts": "NSI8321N1-Q1SPR\nISO6760QDWRQ1"})
     ws = load_workbook(io.BytesIO(r.content))["Cross list"]
-    head = [c.value for c in ws[1]]
-    assert "Other family option" in head
-    assert ws.cell(2, head.index("Other family option") + 1).value.startswith("Also in the Si86 family: SI86")
-    assert "Also in the Si86 family" in post(client, "NSI8321N1-Q1SPR")
+    vals = [[c.value for c in row] for row in ws.iter_rows()]
+    assert vals[0] == cl.EXPORT_HEADER and "Other family option" not in vals[0]
+    assert [v[0] for v in vals[1:]] == [1, cl.OTHER_LINE, 2, cl.OTHER_LINE]
+    assert vals[2][9] == "SI8621EC-AS" and vals[2][5] is None and vals[4][5].startswith("SI86")
+    assert ws.cell(3, 5).fill.fgColor.rgb[-6:] == "FFEB9C"  # the part's amber light on its other-family line
 
 
-def test_part_page_shows_the_other_family(client, session, isolators):
-    """The part page ranks by the engine's order (Si86 first for NSI8321N1-Q1SPR): its Other family line offers the
-    best Si86S part, so both families show there as well."""
+def test_owner_marks_the_other_family_row(owner, session, isolators):
+    page = owner.post("/cross-list", data={"parts": "NSI8321N1-Q1SPR"}).text
+    assert 'name="ours" value="SI8621EC-AS"' in page and '<span class="cx-fb-lbl">Other family</span>' in page
+    r = owner.post("/cross-list/feedback", data={"their": "NSI8321N1-Q1SPR", "ours": "SI8621EC-AS",
+                                                 "verdict": "right"})  # fmt: skip
+    assert r.status_code == 200 and "Verified" in r.text
+    got = session.scalars(select(DataReview).where(DataReview.dataset == cl.DATASET)).all()
+    assert [(x.key, x.verdict) for x in got] == [("NSI8321N1-Q1SPR|SI8621EC-AS", "right")]
+    row = rows_for(session, "NSI8321N1-Q1SPR")["NSI8321N1-Q1SPR"]
+    assert row.other.answer == "right" and row.verified and not row.main_verified
+    assert cl.export_lines(row)[1][-2] == "✓ Verified" and cl.export_lines(row)[0][-2] == ""
+    owner.post("/cross-list/feedback", data={"their": "NSI8321N1-Q1SPR", "ours": "SI8621EC-AS", "verdict": "wrong",
+                                             "comment": "pinout differs"})  # fmt: skip
+    assert "Marked wrong" in owner.post("/cross-list", data={"parts": "NSI8321N1-Q1SPR"}).text
+
+
+def test_part_page_shows_the_other_family_as_a_result(client, session, isolators):
+    """The part page ranks by the engine's order (Si86 first for NSI8321N1-Q1SPR): SI86S621EC-AS joins the results
+    as "Other family equivalent", with its details; no note line."""
     from app.models import Part
 
     pid = session.scalar(select(Part.id).where(Part.mpn == "NSI8321N1-Q1SPR"))
     html = client.get(f"/parts/{pid}").text
-    line = html[html.index('class="alt-line other-family"'):]
-    line = line[:line.index("</p>")]
-    assert "Other family:</b> also in the Si86S family" in line and "SI86S6" in line and "CMTI" in line
-    ours = session.scalar(select(Part.id).where(Part.mpn == "SI8641BD-IS"))
-    assert ours and 'class="alt-line other-family"' not in client.get(f"/parts/{ours}").text  # nothing crossed: no line
+    assert "Other family:" not in html and 'class="alt-line other-family"' not in html
+    cand = session.scalar(select(Part.id).where(Part.mpn == "SI86S621EC-AS"))
+    row = html[html.index(f'id="row-{cand}"'):]
+    row = row[:row.index("</tr>")]
+    assert ">Other family equivalent</span>" in row and "rank-reason" in row
+    detail = html[html.index(f'id="d-{cand}"'):]
+    assert "detail-lazy" not in detail[:detail.index("</tr>")]  # full details inline, as the best results
+    iso = session.scalar(select(Part.id).where(Part.mpn == "ISO6760QDWRQ1"))
+    assert "Other family" not in client.get(f"/parts/{iso}").text  # both families among the best already
 
 
 # --- TI automotive reel codes and the isolated DC-DC family (owner, 26 Oct 2026) --------------------------------------

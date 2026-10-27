@@ -115,6 +115,14 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     out.append(f"\nLifetime volume entries (owner only, values stay on the site): {n_vol} new volume "
                f"entr{'y' if n_vol == 1 else 'ies'}.")  # fmt: skip
 
+    # the block editor's "Describe your system" box: words the owner typed that it did not understand, counts only
+    # (owner, 27 Oct 2026); the run adds synonyms to data/blocks/word_synonyms.yaml, never names
+    from app.services import wordblocks
+
+    words = wordblocks.inbox_lines(session, since)
+    out += words
+    words_new = words[-1] != "None."
+
     # the owner's answers on the reference designs matched to the library diagrams (owner, 25 Oct 2026: matching
     # "based on feedback"): the run looks for patterns and tunes app/services/refmatch.py (docs/daily_update.md)
     out.append("\n## Reference design feedback\n")
@@ -237,6 +245,6 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
     if not any([n_site, crosses, blocks, tech, reviews, dq_open, src, asked, answered, rq, areas, ideas, approved,
-                overview, tam_changes, tc_comments, cx_new, flow_new]):
+                overview, tam_changes, tc_comments, cx_new, flow_new, words_new]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

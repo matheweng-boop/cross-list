@@ -191,6 +191,12 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      (`app/services/demand.py`). The inbox shows only a count ("N new volume entries"); the run never asks for,
      copies or commits volume values, and gap parts with a volume are not looked up (they are known). A part's first
      volume also files a Part review request (fixed question, no values), which the run handles like any other.
+   - **Block builder: unknown words** (inbox section; owner, 27 Oct 2026: "a block diagram builder that allows for
+     word input"). Words the owner typed in the block editor's "Describe your system" box that it did not
+     understand, with counts (the text itself is never stored; guests' words are never collected). Review them and
+     add the useful ones as synonyms in `data/blocks/word_synonyms.yaml` (to an existing term's `words`, or a new
+     term with its function id from `data/blocks/functions.yaml`), with a test line in `tests/test_wordblocks.py`.
+     Add synonyms, never names: skip anything that looks like a person, company, customer or project name.
    - **Data flow: owner changes** (inbox section; owner, 26 Oct 2026: "a flow chart on which path all the data can
      take in order to optimize it ... you adapt it based on that information"). The owner's saved chart on Data
      management › Data flow (`/manage/data-flow`, kept in the database with its versions; never reset it) is listed

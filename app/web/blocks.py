@@ -160,6 +160,30 @@ def new(request: Request, template: int | None = None, case: str = "", library: 
     return _editor(request, session, None, tpl, template if tpl else None, bare)
 
 
+@router.get("/blocks/words")
+def words_page():
+    """A reload of the built page (the text is not kept): back to a new diagram."""
+    return RedirectResponse("/blocks/new#bk-words", status_code=303)
+
+
+@router.post("/blocks/words", response_class=HTMLResponse)
+def from_words(request: Request, text: str = Form(""), bare: str = Form(""), session: Session = Depends(get_session)):
+    """"Describe your system": the text read by rules (app/services/wordblocks.py) into a new, unsaved diagram. The text
+    is never stored; for the owner only, the words not understood are counted (guests: nothing)."""
+    from app.services import wordblocks
+
+    text = text[: wordblocks.MAX_TEXT]
+    built = wordblocks.build(text)
+    if signed_in_owner(request) is not None:
+        wordblocks.count_unknown(session, wordblocks.unknown_words(text))
+    n = built["n"]
+    info = {"id": None, "name": "From your description", "data": built["data"],
+            "prefill": f"{n} block{'' if n == 1 else 's'} built from your description: press Save to keep them"
+            if n else "Nothing recognised yet: try words like 48 V input, MCU, CAN"}  # fmt: skip
+    return _editor(request, session, None, None, None, bare == "1", info,
+                   words={"text": text, "chips": built["chips"], "notes": built["notes"], "n": n})  # fmt: skip
+
+
 @router.post("/blocks/verify")
 def verify(i: int = Form(...), on: str = Form("1"), author: str = Form(""), note: str = Form(""),
            bare: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
@@ -181,7 +205,7 @@ def edit(request: Request, design_id: int, bare: bool = False, place: str = "", 
     return _editor(request, session, d, None, None, bare)
 
 
-def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
+def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None, words=None):
     info = info or {"id": None, "name": blocks.display_name(tpl) if tpl else "", "data": None}
     if design:
         info = {"id": design.id, "name": design.name, "data": design.data}
@@ -202,6 +226,7 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None):
             "bare": bare,
             "kb": refmatch.kb_view(tpl, blocks.counts(session)) if tpl else None,
             "ref_counts": refmatch.fn_counts(),
+            "words": words,
         },
     )
 

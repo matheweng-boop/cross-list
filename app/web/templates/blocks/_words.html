@@ -1,0 +1,33 @@
+{# "Describe your system" (owner, 27 Oct 2026): text read by rules on the server into blocks (app/services/wordblocks.py).
+   The text is never stored. Open on a blank editor and after a build; folded over a library or saved diagram. #}
+<details id="bk-words" class="bk-words"{% if words or not (design.data or template) %} open{% endif %}>
+  <summary>Describe your system</summary>
+  <form method="post" action="/blocks/words" class="bk-words-form">
+    {% if bare %}<input type="hidden" name="bare" value="1">{% endif %}
+    <label for="bk-words-text" class="small muted">Type what the system has, e.g. “I have a 48 V input, an MCU, isolated CAN and a BLDC motor”.{% if design.data or template %} Build starts a new diagram.{% endif %}</label>
+    <div class="bk-words-row">
+      <textarea id="bk-words-text" name="text" rows="2" maxlength="1000" placeholder="I have a 48 V input and an MCU">{{ words.text if words else '' }}</textarea>
+      <button id="bk-words-build" type="submit" class="small-btn">Build</button>
+    </div>
+  </form>
+  {% if words %}<div id="bk-words-echo" class="bk-words-echo" aria-label="What was understood">
+    <p class="bk-words-text">{% for c in words.chips %}{% if c.kind == 'hit' %}<span class="wchip">{% if c.text|lower != c.label|lower %}<b>{{ c.text }}</b> → {% endif %}{{ c.label }}</span>{% elif c.kind == 'grey' %}<span class="wgrey">{{ c.text }}</span>{% else %}{{ c.text }}{% endif %}{% endfor %}</p>
+    {% for n in words.notes %}<p class="small muted">{{ n }}</p>{% endfor %}
+    <p class="small muted">Grey words were not understood. Rephrase and press Build again, or edit the blocks below: click a block for its Skyworks / Qorvo parts.</p>
+  </div>{% endif %}
+</details>
+<style>
+.bk-words { margin: .3rem 0 .6rem; padding: .4rem .7rem; border: 1px solid var(--pico-muted-border-color); border-radius: 8px; }
+.bk-words summary { font-weight: 600; }
+.bk-words-form { margin: .3rem 0 0; }
+.bk-words-row { display: flex; gap: .5rem; align-items: flex-start; }
+.bk-words-row textarea { flex: 1 1 auto; width: auto; min-width: 0; margin: 0; min-height: 2.6rem; }
+.bk-words-row button { flex: 0 0 auto; width: auto; align-self: stretch; padding: .2rem 1.1rem; }
+.bk-words-echo { margin-top: .4rem; }
+.bk-words-text { line-height: 2; margin: 0 0 .2rem; }
+.wchip { display: inline-block; padding: 0 .45rem; margin: 0 .1rem; border-radius: 999px; background: #e3f4ec; color: #0d5e40;
+  font-size: .85rem; line-height: 1.6; border: 1px solid #9fd8bf; }
+.wgrey { color: #9a9a9a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wchip { background: #173d2c; color: #b8ecd3; border-color: #2f7a58; }
+  :root:not([data-theme="light"]) .wgrey { color: #8a8f96; } }
+</style>

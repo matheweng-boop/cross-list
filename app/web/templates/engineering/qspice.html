@@ -72,6 +72,9 @@
   <thead><tr><th>Parts</th><th>Maker</th><th>Model</th><th>Where we found it</th></tr></thead>
   <tbody>{% for m in models %}<tr><td>{{ m.parts }}</td><td>{{ m.vendor }}</td><td>{{ m.model }}</td><td>{% if m.url %}<a href="{{ m.url }}" target="_blank" rel="noopener noreferrer">{{ m.source }} ↗</a>{% else %}{{ m.source }}{% endif %}</td></tr>{% endfor %}</tbody>
 </table></div>
+{% if former %}<h3 id="models-former">Former Qorvo (UnitedSiC, now onsemi): models built into QSPICE</h3>
+<p class="small muted">Not our parts any more; listed because QSPICE ships their models.</p>
+<ul class="small">{% for m in former %}<li>{{ m.parts }} · {{ m.model }} · <a href="{{ m.url }}" target="_blank" rel="noopener noreferrer">{{ m.source }} ↗</a></li>{% endfor %}</ul>{% endif %}
 
 {% if answers %}<h2 id="answers">Answer notes</h2>{% for a in answers %}
 <article class="qs-note" id="answer-{{ a.id }}"><p><b>{{ a.question }}</b> <small class="muted">· {{ a.date }}</small></p><p class="small">{{ a.text }}</p>

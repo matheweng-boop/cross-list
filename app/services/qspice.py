@@ -78,8 +78,9 @@ def fixes() -> list[dict]:
     return [f | {"threads": [by_id[i] for i in f.get("topics") or [] if i in by_id]} for f in data().get("fixes") or []]
 
 
-def models() -> list[dict]:
-    return list(data().get("models") or [])
+def models(group: str = "") -> list[dict]:
+    """Model rows of our current parts (group ""), or of former parts (group "former": UnitedSiC, now onsemi)."""
+    return [m for m in data().get("models") or [] if (m.get("group") or "") == group]
 
 
 def answers() -> list[dict]:

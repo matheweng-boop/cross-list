@@ -116,6 +116,12 @@ def test_page_renders_with_filter_notes_help_and_models(client):
     assert 'id="fixes"' in html and 'id="help"' in html and 'id="models"' in html and "Not AI" in html
     assert html.count('class="qs-topic"') == len(D["topics"])
     assert "Not in our data" in html and "SMP1320" in html
+    # UnitedSiC went to onsemi: listed apart, never in the table of our current parts
+    ours = html.split('id="models"')[1].split('id="models-former"')[0]
+    assert "UnitedSiC" not in ours and "UF3C120040K3S" not in ours and "ACT72350" in ours
+    assert "Former Qorvo (UnitedSiC, now onsemi): models built into QSPICE" in html
+    assert all("UnitedSiC" not in m["parts"] for m in qspice.models())
+    assert [m["parts"] for m in qspice.models("former")] == ["UF3C120040K3S and other UnitedSiC SiC FETs"]
     one = client.get("/qspice?fn=optocoupler").text
     n = len(qspice.topics("optocoupler"))
     assert one.count('class="qs-topic"') == n >= 2 and 'aria-current="true" class="qs-on">Optocoupler' in one

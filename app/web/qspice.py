@@ -29,6 +29,7 @@ def library(request: Request, fn: str = "", q: str = "", session: Session = Depe
     ctx = {"q": q, "hits": hits, "answered": qspice.answered(hits), "stored": stored, "owner": owner,
            "fn": fn, "fns": fns, "topics": qspice.topics(fn), "practice": qspice.practice(fn),
            "help": qspice.help_items(), "fixes": qspice.fixes(), "models": qspice.models(),
+           "former": qspice.models("former"),
            "answers": qspice.answers(), "meta": qspice.data().get("source") or {}, "label": vocab.fn_label,
            "unanswered": qspice.unanswered(session)[:20] if owner else []}  # fmt: skip
     return templates.TemplateResponse(request, "engineering/qspice.html", ctx)

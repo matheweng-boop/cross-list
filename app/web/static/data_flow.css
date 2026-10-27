@@ -1,20 +1,20 @@
 /* Data management › Data flow (owner, 26 Oct 2026; three columns 27 Oct 2026): the chart, its colours and the tools.
    Self-contained. Cross process blue, research process purple, handovers thick purple, every other line thin grey. */
 .df-root { --df-public-ink: #2f8a57; --df-owner-ink: #c96b1f; --df-guest-ink: #6a55b5; --df-box: #ffffff;
-  --df-cross: #2457a6; --df-cross-bg: #e3edf9; --df-research: #7a3db8; --df-research-bg: #efe7fa;
+  --df-cross: #2457a6; --df-cross-bg: #e3edf9; --df-research: #7a3db8; --df-research-bg: #efe7fa; --df-checks: #2f7a4f; --df-checks-bg: #e6f4ea;
   --df-inputs-bg: #eef1f6; --df-output: #dff2ee; --df-output-ink: #2f7a6c;
   --df-gate: #c0392b; --df-handover: #7a3db8; --df-lane-line: #e3dfee; --df-lane: #f6f4fa; --df-edge: #7b879b;
   --df-muted: #5d6676; --df-sel: #2a78d6;
   --df-note: #fff6c7; --df-note-ink: #5a4a00; --df-text: #1b2433; --df-canvas: #fdfcff; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .df-root { --df-public-ink: #8fd6a8; --df-owner-ink: #f2a36a; --df-guest-ink: #c3b2f5;
-    --df-box: #1b2230; --df-cross: #7fa9ec; --df-cross-bg: #17243a; --df-research: #b58cf0; --df-research-bg: #241b36;
+    --df-box: #1b2230; --df-cross: #7fa9ec; --df-cross-bg: #17243a; --df-research: #b58cf0; --df-research-bg: #241b36; --df-checks: #8fd6a8; --df-checks-bg: #16301f;
     --df-inputs-bg: #19202b; --df-output: #16393d; --df-output-ink: #9fdcd0; --df-gate: #ff8a7a; --df-handover: #b58cf0;
     --df-lane-line: #2c3646; --df-lane: #171e29; --df-edge: #8e9ab0; --df-muted: #9aa5b8; --df-sel: #6fb0ff;
     --df-note: #3d3514; --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
 }
 :root[data-theme="dark"] .df-root { --df-public-ink: #8fd6a8; --df-owner-ink: #f2a36a; --df-guest-ink: #c3b2f5;
-  --df-box: #1b2230; --df-cross: #7fa9ec; --df-cross-bg: #17243a; --df-research: #b58cf0; --df-research-bg: #241b36;
+  --df-box: #1b2230; --df-cross: #7fa9ec; --df-cross-bg: #17243a; --df-research: #b58cf0; --df-research-bg: #241b36; --df-checks: #8fd6a8; --df-checks-bg: #16301f;
   --df-inputs-bg: #19202b; --df-output: #16393d; --df-output-ink: #9fdcd0; --df-gate: #ff8a7a; --df-handover: #b58cf0;
   --df-lane-line: #2c3646; --df-lane: #171e29; --df-edge: #8e9ab0; --df-muted: #9aa5b8; --df-sel: #6fb0ff;
   --df-note: #3d3514; --df-note-ink: #f4e6a8; --df-text: #e6e9ef; --df-canvas: #121820; }
@@ -27,6 +27,7 @@
 .df-k-guest { border-color: var(--df-guest-ink); }
 .df-p-crosses { background: var(--df-cross-bg); border: 2px solid var(--df-cross); }
 .df-p-research { background: var(--df-research-bg); border: 2px solid var(--df-research); }
+.df-p-checks { background: var(--df-checks-bg); border: 2px solid var(--df-checks); }
 .df-k-output { background: var(--df-output); border-color: var(--df-output-ink); border-radius: .5rem; }
 .df-gate-sw { border: 2px dashed var(--df-gate); }
 .df-planned-sw { border: 1.5px dashed var(--df-edge); opacity: .7; }
@@ -49,16 +50,20 @@
 #df-svg .lane rect { fill: var(--df-inputs-bg); stroke: none; }
 #df-svg .lane-crosses rect { fill: var(--df-cross-bg); stroke: var(--df-cross); stroke-width: 2.5; }
 #df-svg .lane-research rect { fill: var(--df-research-bg); stroke: var(--df-research); stroke-width: 2.5; }
+#df-svg .lane-checks rect { fill: var(--df-checks-bg); stroke: var(--df-checks); stroke-width: 2.5; }
 #df-svg .lane text { pointer-events: none; }
 #df-svg .lane .lane-title { fill: var(--df-text); font-weight: 700; font-size: 18px; }
 #df-svg .lane-crosses .lane-title, #df-svg .lane-crosses .lane-sub { fill: var(--df-cross); }
 #df-svg .lane-research .lane-title, #df-svg .lane-research .lane-sub { fill: var(--df-research); }
+#df-svg .lane-checks .lane-title, #df-svg .lane-checks .lane-sub { fill: var(--df-checks); }
 #df-svg .lane .lane-sub { font-size: 12px; }
 #df-svg .lane .caption { font-size: 12px; fill: var(--df-muted); }
 #df-svg .bracket { fill: none; stroke-width: 2; pointer-events: none; }
-#df-svg .bracket.g-cross { stroke: var(--df-cross); } #df-svg .bracket.g-research { stroke: var(--df-research); }
+#df-svg .bracket { stroke: var(--df-muted); }
+#df-svg .group-label { font-size: 11.5px; font-weight: 650; fill: var(--df-muted); pointer-events: none; }
 #df-svg .bundle path { fill: none; stroke: var(--df-edge); stroke-width: 3; }
 #df-svg .bundle text { font-size: 12px; font-weight: 650; fill: var(--df-muted); }
+#df-svg .bundle path.stub { stroke-width: 1.4; }
 
 /* boxes: white with a border in the kind's or process's colour; the engine filled; outputs as chips */
 #df-svg .node { cursor: move; }
@@ -69,11 +74,14 @@
 #df-svg .node.k-guest rect.box { stroke: var(--df-guest-ink); }
 #df-svg .node.k-step.p-crosses rect.box { stroke: var(--df-cross); }
 #df-svg .node.k-step.p-research rect.box { stroke: var(--df-research); }
+#df-svg .node.k-step.p-checks rect.box { stroke: var(--df-checks); }
 #df-svg .node.k-output rect.box { fill: var(--df-output); stroke: var(--df-output-ink); }
 #df-svg .node.gate.gate.gate rect.box { stroke: var(--df-gate); stroke-width: 1.5; stroke-dasharray: 4 3; }
 #df-svg .node.planned { opacity: .8; }
 #df-svg .node.planned rect.box { stroke-dasharray: 4 3; }
 #df-svg .node.hub rect.box { fill: var(--df-cross); stroke: var(--df-cross); stroke-width: 2; }
+#df-svg .node.hub.p-checks rect.box { fill: var(--df-checks); stroke: var(--df-checks); }
+#df-svg .node.hub.p-research rect.box { fill: var(--df-research); stroke: var(--df-research); }
 #df-svg .node.hub text.hub-label { fill: #fff; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
 #df-svg .node text.notemark { font-size: 11px; fill: var(--df-owner-ink); }
 #df-svg .node.hub text.notemark { fill: #fff; }
@@ -92,6 +100,8 @@
 #df-svg .edge.handover text { fill: var(--df-handover); font-weight: 650; stroke: var(--df-research-bg); }
 #df-svg .edge.hl path.line { stroke: var(--df-sel); stroke-width: 2.4; }
 #df-svg .edge.handover.hl path.line { stroke-width: 3.5; }
+#df-svg .edge.shown path.line { stroke-width: 2.6; }
+#df-svg .edge.shown text { font-weight: 650; fill: var(--df-muted); }
 #df-svg .edge.sel path.line { stroke-width: 3.2; }
 #df-svg.has-sel .edge:not(.hl) { opacity: .45; }
 #df-svg .temp { fill: none; stroke: var(--df-sel); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }

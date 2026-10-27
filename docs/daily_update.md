@@ -216,7 +216,7 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    - **Data flow: owner changes** (inbox section; owner, 26 Oct 2026: "a flow chart on which path all the data can
      take in order to optimize it ... you adapt it based on that information"). The owner's saved chart on Data
      management › Data flow (`/manage/data-flow`, kept in the database with its versions; never reset it) is listed
-     against `data/manage/data_flow.yaml` as changes ("moved X to 3 · Research process", "new edge A→B 'label'",
+     against `data/manage/data_flow.yaml` as changes ("moved X to 4 · Research process", "new edge A→B 'label'",
      "deleted node Y", "note on Z: ...", "free note near ...: ..."). For each change not yet answered: (1) read it as
      the owner's wish for
      how the data should flow; where it asks for a real change (a step, a review gate, a store, a new output), make it

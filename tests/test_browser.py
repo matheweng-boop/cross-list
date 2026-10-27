@@ -815,3 +815,25 @@ def test_expand_this_idea_asks_once_and_shows_the_request(page):
     go(page, f"/business/reports/{slug}")
     expect(page.locator(f"p#exp-{slug}")).to_contain_text("Robot joints first")
     assert page.locator("details.rp-exp").count() == 0
+
+
+# --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------
+def test_describe_your_system_builds_blocks_at_ipad_size(page):
+    """Type a sentence, Build: the 48 V input, protection, buck, LDO and MCU frames appear, linked left to right, with
+    the understood words as chips (iPad held upright; 390 px checked after the test)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/blocks/new")
+    box = page.locator("#bk-words")
+    expect(box).to_have_attribute("open", "")
+    box.locator("textarea[name=text]").fill("I have a 48 V input and an MCU with isolated CAN")
+    with page.expect_navigation():
+        box.get_by_role("button", name="Build").click()
+    expect(page.locator("#bk-svg .grp")).to_have_count(6)
+    for label in ("48 V input", "Input protection", "Step-down 48 V → 5 V", "LDO 5 V → 3.3 V", "Microcontroller",
+                  "Isolated CAN transceiver"):
+        expect(page.locator("#bk-svg .grp-title", has_text=label).first).to_be_visible()
+    expect(page.locator("#bk-svg .link")).to_have_count(5)
+    expect(page.locator("#bk-words-echo .wchip").first).to_have_text("48 V input")
+    expect(page.locator("#bk-words-echo")).to_contain_text("MCU → Microcontroller")
+    expect(page.locator("#bk-status")).to_contain_text("built from your description")
+    assert overflow(page) <= 1

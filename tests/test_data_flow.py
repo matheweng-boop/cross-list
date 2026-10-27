@@ -28,8 +28,10 @@ def _chart(html: str) -> dict:
 
 def test_file_is_complete_and_consistent():
     f = df.load()
-    assert [x["id"] for x in f["lanes"]] == ["inputs", "crosses", "research"]
-    assert [x["label"] for x in f["lanes"]] == ["1 · Inputs", "2 · Cross process", "3 · Research process"]
+    # owner, 27 Oct 2026: "so that we have 1 inputs, 2 cross process, 3 data checks and 4 research process"
+    assert [x["id"] for x in f["lanes"]] == ["inputs", "crosses", "checks", "research"]
+    assert [x["label"] for x in f["lanes"]] == ["1 · Inputs", "2 · Cross process", "3 · Data checks",
+                                                "4 · Research process"]  # fmt: skip
     ids = [n["id"] for n in f["nodes"]]
     assert len(ids) == len(set(ids)) and all(df._ID.match(i) for i in ids)
     lanes = {x["id"] for x in f["lanes"]}
@@ -80,7 +82,7 @@ def test_guest_gets_403_and_owner_sees_all_lanes_and_nodes(owner, make_guest):
 def test_save_lists_changes_versions_and_undo(owner):
     f = df.load()
     p = _payload(f)
-    p["nodes"][0]["x"] = f["lanes"][2]["x"] + 40  # into another lane (column)
+    p["nodes"][0]["x"] = f["lanes"][3]["x"] + 40  # into another lane (column)
     p["nodes"][1]["label"] = "Renamed source"
     p["nodes"].append({"id": "n-new1", "label": "My new step", "kind": "step", "x": 300, "y": 1200})
     p["edges"] = [e for e in p["edges"] if (e["from"], e["to"]) != ("patents", "research_reports")]
@@ -91,13 +93,13 @@ def test_save_lists_changes_versions_and_undo(owner):
     assert r.status_code == 200 and r.json()["ok"]
     texts = [c["text"] for c in r.json()["changes"]]
     first = f["nodes"][0]["label"]
-    assert f"moved '{first}' to 3 · Research process" in texts
+    assert f"moved '{first}' to 4 · Research process" in texts
     assert f"renamed '{f['nodes'][1]['label']}' to 'Renamed source'" in texts
     assert "new node 'My new step' in 2 · Cross process (processing)" in texts
     assert "new edge My new step→Summaries 'my data'" in texts
-    assert "deleted edge Patents (auto-checked)→Research reports 'evidence'" in texts
+    assert "deleted edge Patents (auto-checked)→RESEARCH 'evidence (auto-checked)'" in texts
     assert "deleted node 'Shareables'" in texts
-    assert not any(t.startswith("deleted edge Research reports→Shareables") for t in texts)  # goes with its node
+    assert not any(t.startswith("deleted edge RESEARCH→Shareables") for t in texts)  # goes with its node
     assert "free note near 1 · Inputs: Merge the two YAML stores?" in texts
     page = owner.get("/manage/data-flow").text
     assert "Renamed source" in page and "Merge the two YAML stores?" in page and "Undo last save" in page
@@ -152,7 +154,7 @@ def test_inbox_section_lists_changes_and_holds_flagged_notes(owner):
         assert df.inbox_lines(s, start)[-1] == "None."
     p = _payload()
     p["nodes"][2]["note"] = "Mail jane@example.com about this"
-    p["notes"] = [{"id": "t-2", "text": "Combine both inboxes", "x": 600, "y": 10}]
+    p["notes"] = [{"id": "t-2", "text": "Combine both inboxes", "x": 300, "y": 10}]
     owner.post("/manage/data-flow/save", json=p)
     with Session(get_engine()) as s:
         text = inbox.collect(s, start.date())
@@ -176,34 +178,43 @@ def test_daily_update_reads_the_changes():
     assert "Data flow: owner changes" in doc and "data/manage/data_flow.yaml" in doc
 
 
-def test_three_columns_two_input_groups_and_handovers():
-    """Owner, 27 Oct 2026 (mockup approved): "one column for crosses, one column for inputs, one column for processing,
-    because all of it centers around ... cross engine"; "you didn't make the two separate processes obvious enough".
-    Inputs come in two groups, one per process; the processes talk only through the handover arrows, both ways."""
+def test_four_columns_input_groups_hubs_and_handovers():
+    """Owner, 27 Oct 2026: "1 inputs, 2 cross process, 3 data checks and 4 research process"; "make the box for research
+    results as big as the box for Cross-Engine and also group the input data slightly different between inputs and
+    searches"; "another major box ... for data checks". The engine and research send their results to the checks and
+    get checked data back; the two processes talk directly only through the handover arrows, both ways."""
     f = df.load()
     by = {n["id"]: n for n in f["nodes"]}
     inputs = [n for n in f["nodes"] if n["lane"] == "inputs"]
     assert all(n["group"] in df.GROUPS for n in inputs) and not any(n["group"] for n in f["nodes"] if n not in inputs)
+    assert [g["id"] for g in f["lanes"][0]["groups"]] == list(df.GROUPS)
     groups = {g: [n["id"] for n in inputs if n["group"] == g] for g in df.GROUPS}
-    assert groups["cross"] == ["pasted_lists", "mfr_docs", "your_verdicts"]
-    assert groups["research"] == ["market_sources", "ref_docs", "patents", "owner_input", "guest_input"]
-    assert by["cross_engine"]["hub"] and by["cross_engine"]["lane"] == "crosses"
-    assert by["family_check"]["gate"] and by["family_check"]["lane"] == "crosses"
-    assert by["protect_screen"]["gate"] and by["protect_screen"]["lane"] == "research"
-    process = {"cross": "crosses", "research": "research"}
+    assert groups["inputs"] == ["pasted_lists", "your_verdicts", "owner_input", "guest_input"]  # what people enter
+    assert groups["searches"] == ["mfr_docs", "market_sources", "ref_docs", "patents"]  # what we look up
+    # the checking steps sit in the data checks column, under their old ids
+    for n in ("right_wrong", "accuracy", "family_check", "ds_check", "protect_screen", "to_confirm", "data_checks"):
+        assert by[n]["lane"] == "checks", n
+    assert by["family_check"]["gate"] and by["protect_screen"]["gate"] and by["ds_check"]["status"] == "planned"
+    assert any("Patent auto-check" in x for x in by["data_checks"]["includes"])
     for e in f["edges"]:
         a, b = by[e["from"]], by[e["to"]]
-        if a["lane"] == "inputs":  # an input feeds only its own process
-            assert not e["handover"] and b["lane"] == process[a["group"]], e
+        lanes = {a["lane"], b["lane"]}
+        if a["lane"] == "inputs":
+            assert not e["handover"] and b["lane"] in ("crosses", "checks", "research"), e
         elif e["handover"]:
-            assert {a["lane"], b["lane"]} == {"crosses", "research"}, e  # a handover links the two processes
+            assert lanes == {"crosses", "research"}, e  # a handover links the two processes
         else:
-            assert a["lane"] == b["lane"], e  # any other arrow stays inside its process
+            assert len(lanes) == 1 or "checks" in lanes, e  # otherwise inside a column, or to / from the checks
     hand = {e["label"]: (by[e["from"]]["lane"], by[e["to"]]["lane"], e["status"]) for e in f["edges"] if e["handover"]}
     assert hand == {"crossed parts": ("crosses", "research", ""), "gaps": ("crosses", "research", ""),
                     "volumes": ("crosses", "research", ""),
                     "parts in designs": ("research", "crosses", "planned")}  # fmt: skip
-    # the stores column is gone: where data is kept shows on tap; ids that stayed are the ones saved versions know
+    shown = {(e["from"], e["to"]): e["label"] for e in f["edges"] if e["shown"]}
+    assert shown == {("cross_engine", "data_checks"): "crosses to check",
+                     ("data_checks", "cross_engine"): "checked values",
+                     ("research_reports", "data_checks"): "results to check",
+                     ("data_checks", "research_reports"): "approved"}  # fmt: skip
+    # where data is kept shows on tap; ids that stayed are the ones saved versions know
     assert not any(n["kind"] == "store" for n in f["nodes"]) and "store" not in df.KINDS
     assert sum(bool(n["kept"]) for n in f["nodes"]) >= 15
     for kept in ("pasted_lists", "mfr_docs", "market_sources", "ref_docs", "patents", "owner_input", "guest_input",
@@ -213,21 +224,27 @@ def test_three_columns_two_input_groups_and_handovers():
         assert kept in by, kept
 
 
-def test_short_labels_and_fixed_layout():
-    """Box labels are 1-3 words (details on tap); every box has its fixed place inside its column and none overlap."""
+def test_short_labels_fixed_layout_and_three_hubs_on_one_level():
+    """Box labels are 1-3 words (details on tap); every box has its fixed place inside its column and none overlap; the
+    three hubs (CROSS ENGINE, DATA CHECKS, RESEARCH) are the same size on one level."""
     raw = df.yamlio.load(df.FILE.read_text(encoding="utf-8"))
     assert all("x" in n and "y" in n for n in raw["nodes"])
     f = df.load()
     for n in f["nodes"]:
         assert 1 <= len(re.findall(r"[A-Za-z0-9][\w-]*", n["label"])) <= 3, n["label"]
         assert df.lane_at(n["x"], f["lanes"], n["w"]) == n["lane"], n["id"]
+        lane = next(x for x in f["lanes"] if x["id"] == n["lane"])
+        assert lane["x"] <= n["x"] and n["x"] + n["w"] <= lane["x"] + lane["w"], n["id"]  # inside its panel
+        assert n["y"] + n["h"] <= lane["h"], n["id"]
     boxes = [(n["x"], n["y"], n["x"] + n["w"], n["y"] + n["h"], n["id"]) for n in f["nodes"]]
     for i, a in enumerate(boxes):
         for b in boxes[i + 1:]:
             assert a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1], (a[4], b[4])
-    by = {n["id"]: n for n in f["nodes"]}
-    eng, ref = by["cross_engine"], by["refmatch"]
-    assert eng["y"] < ref["y"] + ref["h"] / 2 < eng["y"] + eng["h"]  # ref-design matching level with the engine
+    hubs = [n for n in f["nodes"] if n["hub"]]
+    assert [(n["id"], n["label"], n["lane"]) for n in hubs] == [
+        ("cross_engine", "CROSS ENGINE", "crosses"), ("data_checks", "DATA CHECKS", "checks"),
+        ("research_reports", "RESEARCH", "research")]  # fmt: skip
+    assert len({(n["y"], n["w"], n["h"]) for n in hubs}) == 1
 
 
 def test_a_saved_old_store_kind_falls_back():
@@ -238,17 +255,19 @@ def test_a_saved_old_store_kind_falls_back():
     assert next(n for n in df.merged(f, saved)["nodes"] if n["id"] == "importers")["kind"] == "step"
 
 
-def test_page_draws_three_columns_brackets_bundle_and_handovers(owner):
+
+def test_page_draws_four_columns_groups_bundle_and_labels(owner):
     html = owner.get("/manage/data-flow").text
-    assert "Two separate processes" in html and "Handover between the processes" in html
+    assert "Two separate processes" in html and "Handover between the processes" in html and "Data checks" in html
     data = _chart(html)
     assert [(x["label"], x["subtitle"]) for x in data["lanes"]] == [
         ("1 · Inputs", ""), ("2 · Cross process", "a part number → a checked cross"),
-        ("3 · Research process", "sources and comments → reports you confirm")]  # fmt: skip
+        ("3 · Data checks", "what checks the data before it counts"),
+        ("4 · Research process", "sources and comments → reports you confirm")]  # fmt: skip
     nodes = {n["id"]: n for n in data["state"]["nodes"]}
-    assert nodes["patents"]["group"] == "research" and nodes["importers"]["kept"].startswith("data/real/")
+    assert nodes["patents"]["group"] == "searches" and nodes["importers"]["kept"].startswith("data/real/")
     assert "rows" not in data
     js = (ROOT / "app/web/static/data_flow.js").read_text()
-    assert "bracket" in js and "bundle" in js and "isBundled" in js and '" handover"' in js
-    # labels: a handover's always, any other line's only when it or one of its boxes is tapped
-    assert "it.e.handover || hl" in js
+    assert "bracket" in js and "group-label" in js and "bundle" in js and "isBundled" in js and '" handover"' in js
+    # labels: a handover's and a hub link's always, any other line's only when it or one of its boxes is tapped
+    assert "always(it.e) || hl" in js

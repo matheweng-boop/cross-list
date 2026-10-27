@@ -1,7 +1,7 @@
-"""Data management › Data flow in a real Chromium at iPad size (owner, 26 Oct 2026; the owner uses an iPad): the three
-columns (27 Oct 2026), handover labels always shown and other labels only on tap, the research inputs as one bundle;
-drag a box, connect two boxes with the handle, tap for details, save, reload keeps it, Undo; no console errors, no
-sideways scroll."""
+"""Data management › Data flow in a real Chromium at iPad size (owner, 26 Oct 2026; the owner uses an iPad): the four
+columns (27 Oct 2026), handover and hub-link labels always shown and other labels only on tap, the input lines into the
+checks and research as one bundle; drag a box, connect two boxes with the handle, tap for details, save, reload keeps
+it, Undo; no console errors, no sideways scroll."""
 
 import os
 import re
@@ -37,51 +37,69 @@ def test_drag_connect_save_reload_at_ipad_size(chromium, live_server):
     page.set_default_timeout(10_000)
     try:
         page.goto("/manage/data-flow")
-        # three columns: inputs, then each process as a framed panel; two input brackets; one bundled research arrow
-        expect(page.locator("#df-svg .lane")).to_have_count(3)
+        # four columns: inputs, then the cross process, the data checks and the research process as framed panels;
+        # the inputs in two bracketed groups; one bundled arrow for the input lines into the checks and research
+        expect(page.locator("#df-svg .lane")).to_have_count(4)
         expect(page.locator("#df-svg .lane-crosses .lane-title")).to_have_text("2 · Cross process")
+        expect(page.locator("#df-svg .lane-checks .lane-title")).to_have_text("3 · Data checks")
+        expect(page.locator("#df-svg .lane-research .lane-title")).to_have_text("4 · Research process")
         sub = "sources and comments → reports you confirm"
         expect(page.locator("#df-svg .lane-research .lane-sub")).to_have_text(sub)
-        expect(page.locator("#df-svg .bracket.g-cross")).to_have_count(1)
-        expect(page.locator("#df-svg .bracket.g-research")).to_have_count(1)
+        expect(page.locator("#df-svg .bracket.g-inputs")).to_have_count(1)
+        expect(page.locator("#df-svg .bracket.g-searches")).to_have_count(1)
+        expect(page.locator("#df-svg .group-label")).to_have_count(2)
         expect(page.locator("#df-svg .bundle")).to_have_count(1)
-        expect(page.locator("#df-svg .row-band")).to_have_count(0)
+        expect(page.locator("#df-svg .node.hub")).to_have_count(3)
         data = page.evaluate("JSON.parse(document.querySelector('#df-data').textContent)")
         n_nodes = len(data["state"]["nodes"])
         expect(page.locator("#df-svg .node")).to_have_count(n_nodes)
-        group = {n["id"]: n.get("group") for n in data["state"]["nodes"]}
-        bundled = [e for e in data["state"]["edges"] if group.get(e["from"]) == "research" and not e.get("handover")]
-        assert len(bundled) >= 5
+        lane = {n["id"]: n["lane"] for n in data["state"]["nodes"]}
+        bundled = [e for e in data["state"]["edges"] if lane[e["from"]] == "inputs"
+                   and lane[e["to"]] in ("checks", "research")]  # fmt: skip
+        assert len(bundled) >= 7
         n_edges = page.locator("#df-svg .edge").count()
-        assert n_edges == len(data["state"]["edges"]) - len(bundled)  # the research inputs ride in the bundle
+        assert n_edges == len(data["state"]["edges"]) - len(bundled)  # they ride in the bundle
         assert page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
 
-        # labels: the four handovers always, every other line none until tapped
+        # labels: the four handovers and the four hub links always, every other line none until tapped
         expect(page.locator("#df-svg .edge.handover text")).to_have_count(4)
         for t in ("crossed parts", "gaps", "volumes", "parts in designs (planned)"):
             expect(page.locator("#df-svg .edge.handover text", has_text=t).first).to_be_visible()
-        expect(page.locator("#df-svg .edge:not(.handover) text")).to_have_count(0)
+        expect(page.locator("#df-svg .edge.shown text")).to_have_count(4)
+        for t in ("crosses to check", "checked values", "results to check", "approved"):
+            expect(page.locator("#df-svg .edge.shown text", has_text=t).first).to_be_visible()
+        expect(page.locator("#df-svg .edge:not(.handover):not(.shown) text")).to_have_count(0)
 
         page.locator("#df-frame").scroll_into_view_if_needed()
-        # tap a research input: its own lines show (highlighted, labelled), routed below the cross panel
+        rect = "#df-svg .lane-{} rect"
+        bottom = {k: float(page.locator(rect.format(k)).get_attribute("height")) for k in ("crosses", "checks")}
+        col = {x["id"]: x for x in data["lanes"]}
+
+        def below(edge, lanes):  # every corner of the line inside these columns lies below their panels
+            pts = [float(v) for v in re.findall(r"-?\d+(?:\.\d+)?", edge.locator("path.line").get_attribute("d"))]
+            for px, py in zip(pts[::2], pts[1::2], strict=True):
+                for k in lanes:
+                    if col[k]["x"] < px < col[k]["x"] + col[k]["w"]:
+                        assert py > bottom[k], (k, px, py)
+
+        # tap a search: its own lines show (highlighted, labelled), routed below the cross and checks panels
         page.locator('#df-svg [data-node="market_sources"] rect.box').click()
         expect(page.locator("#df-info")).to_contain_text("Analyst press releases")
         expect(page.locator("#df-info")).to_contain_text("Kept in:")
         hl = page.locator("#df-svg .edge.hl")
         expect(hl).to_have_count(2)
         expect(page.locator("#df-svg .edge.hl text", has_text="market figures")).to_have_count(1)
-        cross = data["lanes"][1]
-        panel_bottom = float(page.locator("#df-svg .lane-crosses rect").get_attribute("height"))
         for k in range(2):
-            pts = [float(v) for v in re.findall(r"-?\d+(?:\.\d+)?", hl.nth(k).locator("path.line").get_attribute("d"))]
-            for px, py in zip(pts[::2], pts[1::2], strict=True):
-                if cross["x"] < px < cross["x"] + cross["w"]:
-                    assert py > panel_bottom, (px, py)  # never through the cross column
+            below(hl.nth(k), ("crosses", "checks"))
+        # an input into the checks: never through the cross column
+        page.locator('#df-svg [data-node="owner_input"] rect.box').click()
+        expect(page.locator("#df-svg .edge.hl")).to_have_count(1)
+        below(page.locator("#df-svg .edge.hl"), ("crosses",))
 
         # tap a cross box: where its data is kept shows below the chart; its own line labels appear
         page.locator('#df-svg [data-node="importers"] rect.box').click()
         expect(page.locator("#df-info")).to_contain_text("Kept in: data/real/")
-        expect(page.locator("#df-svg .edge.hl text", has_text="checked values")).to_have_count(1)
+        expect(page.locator("#df-svg .edge.hl text", has_text="values to check")).to_have_count(1)
 
         # drag a box
         node = page.locator('#df-svg [data-node="gists"]')

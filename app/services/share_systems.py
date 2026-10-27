@@ -158,6 +158,55 @@ def parts(key: str, at: dict) -> dict:
     return out
 
 
+# ---- coverage: every block checked for both companies (owner, 27 Oct 2026: "this is the sort of depth I expect") -----
+COMPANIES = ("skyworks", "qorvo")
+KINDS = ("auto", "bundle", "none")
+_SEG = re.compile(r";\s*(?=(?:auto|bundle|none):)")
+
+
+def finding(text: str) -> list[dict]:
+    """One company's finding for a block, "auto: MPN[, MPN] - why", "bundle: ...", "none: why" (several joined by
+    "; "), as [{"kind", "mpns", "why"}]. A malformed entry gives kind ""."""
+    out = []
+    for seg in _SEG.split(str(text or "").strip()):
+        kind, _, rest = seg.partition(":")
+        kind, rest = kind.strip(), rest.strip()
+        if kind not in KINDS or not rest:
+            out.append({"kind": "", "mpns": [], "why": seg})
+            continue
+        if kind == "none":
+            out.append({"kind": kind, "mpns": [], "why": rest})
+            continue
+        names, _, why = rest.partition(" - ")
+        out.append({"kind": kind, "mpns": [m.strip() for m in names.split(",") if m.strip()], "why": why.strip()})
+    return out
+
+
+def coverage(key: str) -> dict[str, dict]:
+    """{"gid.fn": {"skyworks": [finding], "qorvo": [finding], "note": str}} from the brief's coverage: entries."""
+    raw = cur(key).get("coverage") or {}
+    return {ref: {**{co: finding((v or {}).get(co, "")) for co in COMPANIES}, "note": str((v or {}).get("note") or "")}
+            for ref, v in raw.items()}  # fmt: skip
+
+
+def gaps(key: str, at: dict) -> list[str]:
+    """Labels of the diagram blocks for which neither company has a part (auto or bundle), in diagram order; the
+    outside device (the phone) is not counted."""
+    cov = coverage(key)
+    out: list[str] = []
+    for ref, label in at.items():
+        if ref.endswith(".external_block"):
+            continue
+        found = cov.get(ref)
+        if found and all(f["kind"] == "none" for co in COMPANIES for f in found[co]) and label not in out:
+            out.append(label)
+    return out
+
+
+def gap_line(labels: list[str]) -> str:
+    return f"Blocks without a Skyworks or Qorvo part: {', '.join(labels)}." if labels else ""
+
+
 def build(key: str) -> dict:
     c = cur(key)
     d = diagram(key)
@@ -165,7 +214,8 @@ def build(key: str) -> dict:
     every = ps["core"] + ps["peripherals"]
     return {"cur": c, "key": key, "diagram": d, "core": ps["core"], "peripherals": ps["peripherals"],
             "left_out": ps["left_out"], "companies": sorted({p["who"] for p in every}),
-            "core_companies": sorted({p["who"] for p in ps["core"]})}  # fmt: skip
+            "core_companies": sorted({p["who"] for p in ps["core"]}),
+            "gaps": gap_line(gaps(key, d["at"]))}  # fmt: skip
 
 
 def builder(key: str):
@@ -228,7 +278,7 @@ def content(key: str):
         dia = {"kind": "diagram", "title": dg["title"], "layout": dg["layout"],
                "note": "Solid: core solution. Outline: peripherals. Simplified from public reference designs."}
         core = _table(data["core"], str(v("note.core", "")))
-        peri = _table(data["peripherals"], str(v("note.peripherals", "")))
+        peri = _table(data["peripherals"], " ".join(x for x in (str(v("note.peripherals", "")), data["gaps"]) if x))
         talk = {"kind": "bullets", "items": sd.paras(vals, "talk")}
         prepared = f"Prepared {sd.date_text(today)}. Public information."
         return {"key": key, "title": str(v("title") or c.get("title", "")),

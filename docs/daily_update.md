@@ -99,6 +99,14 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    resolve the comment with a one-line reply. In practice: add an entry (comment, block, text, reply) to
    `data/business/tech_overview_answers.yaml`; after the merge the site saves it as a new version and closes the
    comment with the reply (`tests/test_tech_overview.py` runs the same word check on the answers).
+   **Shareable system briefs** (UWB, V2X, GNSS, car radio; `data/business/share_systems.yaml`): every block of a
+   shareable system brief is checked for both companies, including acquired brands, with automotive / bundle option /
+   nothing-that-fits and the reason (owner, 27 Oct 2026: "this is the sort of depth I expect"). Search
+   `data/catalog/*_parts.yaml`, `data/real/*.yaml` and `data/broadcast` by function id, category and description
+   keywords (Qorvo: Active-Semi ACT…, Decawave DW…, UnitedSiC, RFMD, TriQuint, GreenPeak; Skyworks: ex-Silicon Labs
+   Si…), check band, frequency and voltage against the system, and record the findings under the brief's `coverage:`
+   (format in the file's header); start from what is recorded there. A new or changed brief, block or catalogue
+   refresh means re-checking the blocks it touches. `tests/test_share_systems.py` fails if a block lacks an entry.
    Cross-sell & gaps (owner, 22 Oct 2026): move sort, filter and set-aside from the old explorer table
    (`/business/explorer/table`) into `/blocks/cross-sell`; once nothing is lost, remove the old table.
    Physics & visuals (weekly, the Saturday evening run only): one or two more fundamentals topics or visuals

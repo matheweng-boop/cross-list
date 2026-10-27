@@ -163,3 +163,54 @@ def test_every_default_text_passes_the_checks():
         bad |= {s: why for s in rep.sections() if (why := te.check(f"paras.{s}", vals[f"paras.{s}"], rep))}
         assert bad == {}, (k, bad)
         assert len(vals["paras.talk"]) in (2, 3)
+
+
+@pytest.mark.parametrize("key", KEYS)
+def test_every_block_is_checked_for_both_companies(key):
+    """Depth rule (owner, 27 Oct 2026: "this is the sort of depth I expect"): every block of the diagram has a coverage
+    entry for Skyworks and for Qorvo, each the best automotive part, a bundle option or "none" with the reason; every
+    part named there is active, from that company and graded as stated; every part shown sits in its block's entry."""
+    from app.services import autograde
+
+    b = sr.registry()[key].build()
+    cov = sy.coverage(key)
+    at = b["diagram"]["at"]
+    assert set(at) == set(cov), (sorted(set(at) - set(cov)), sorted(set(cov) - set(at)))
+    rows = {r["mpn"].upper(): r for r in to.active_rows()}
+    for ref, c in cov.items():
+        for co in sy.COMPANIES:
+            assert c[co], (ref, co)
+            for f in c[co]:
+                assert f["kind"] in sy.KINDS, (ref, co, f)
+                assert len(f["why"]) >= 5, (ref, co, f)  # always a reason
+                assert bool(f["mpns"]) == (f["kind"] != "none"), (ref, co, f)
+                for m in f["mpns"]:
+                    r = rows.get(m.upper())
+                    assert r is not None, (ref, co, m)  # active in the catalogue
+                    assert r["manufacturer"].lower() == co, (ref, co, m)
+                    aec = r.get("automotive") is True or autograde.is_aec(r)
+                    assert aec == (f["kind"] == "auto"), (ref, co, m, f["kind"])
+    for p in b["core"] + b["peripherals"]:
+        named = {m for co in sy.COMPANIES for f in cov[p["at"]][co] for m in f["mpns"]}
+        assert p["mpn"] in named, (p["mpn"], p["at"])
+
+
+def test_coverage_entries_parse():
+    f = sy.finding("auto: TQM2M9016 - SDARS / GPS module; bundle: QPQ1063, QPQ1028 - L1 / L2 diplexers")
+    assert [(x["kind"], x["mpns"]) for x in f] == [("auto", ["TQM2M9016"]), ("bundle", ["QPQ1063", "QPQ1028"])]
+    assert sy.finding("none: all discontinued") == [{"kind": "none", "mpns": [], "why": "all discontinued"}]
+    assert sy.finding("maybe QM1")[0]["kind"] == ""
+
+
+@pytest.mark.parametrize("key", KEYS)
+def test_the_gap_line_names_the_blocks_neither_company_covers(client, key):
+    b = sr.registry()[key].build()
+    cov = sy.coverage(key)
+    at = b["diagram"]["at"]
+    want = {label for ref, label in at.items() if not ref.endswith(".external_block")
+            and all(f["kind"] == "none" for co in sy.COMPANIES for f in cov[ref][co])}  # fmt: skip
+    gaps = sy.gaps(key, at)
+    assert set(gaps) == want and gaps and b["gaps"] == sy.gap_line(gaps)
+    text = page_text(client.get(f"/shareable/{key}").text)
+    assert b["gaps"] in text
+    assert "coverage" not in text.lower() and "not shown" not in text and "est fit" not in text  # no internal notes

@@ -241,8 +241,9 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id
     # owner, 28 Oct 2026: animated circuits, current shown moving along the wires (static/vz/circuit.js)
     "bootstrap": ("Gate driver and half-bridge: bootstrap, dead time, Miller plateau", "/visuals#bootstrap",
                   ("bootstrap", "half-bridge", "half bridge", "dead time", "Miller plateau", "shoot-through")),
-    "bldc": ("BLDC motor: 6-step commutation and FOC", "/visuals#bldc",
-             ("BLDC", "brushless", "6-step", "six-step", "commutation", "FOC", "field-oriented control")),
+    "bldc": ("BLDC motor: 6-step commutation, FOC and back-EMF", "/visuals#bldc",
+             ("BLDC", "brushless", "6-step", "six-step", "commutation", "FOC", "field-oriented control", "back-EMF",
+              "back EMF", "sensorless", "zero crossing")),
     "buck": ("Buck converter: on loop, freewheel loop, inductor current", "/visuals#buck",
              ("buck converter", "buck converters", "freewheel", "inductor ripple", "duty cycle")),
     "efuse": ("Hot-swap / eFuse: inrush, short and trip", "/visuals#efuse",

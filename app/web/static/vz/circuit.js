@@ -2,7 +2,8 @@
 // "Build the six examples you mentioned ... Put it in the engineering knowledge"). Six visuals that register with the
 // visuals engine in visuals.js (window.VZ_ADD), group "Circuits in motion":
 //   bootstrap  gate driver and half-bridge with the bootstrap supply, dead time and the Miller plateau
-//   bldc       BLDC motor: 6-step commutation, with a toggle to FOC (sine currents)
+//   bldc       BLDC motor: 6-step commutation, with a toggle to FOC (sine currents); back-EMF per phase, the floating
+//              phase's zero crossing and the 30° commutation delay, and a speed slider (back-EMF against the bus)
 //   buck       buck converter: on loop, freewheel loop, inductor-current triangle; duty-cycle slider
 //   efuse      hot-swap / eFuse: inrush in the linear region, then a short, the fast trip and latch-off or retry
 //   isosense   isolated current sensing: shunt, RC filter, isolated amplifier, error tags (AN1270 numbers)
@@ -64,10 +65,11 @@
   }
 
   // ------------------------------------------------------------------ small waveform panel below a schematic
-  // rows: [{label, lo, hi, series: [{pts: [[x 0..1, y]], c, dash}], zero}], o: {cursor, shades: [{x0, x1, label}], foot}
+  // rows: [{label, lo, hi, h, series: [{pts: [[x 0..1, y]], c, dash}], zero, marks, vlines: [{x, cls}]}], o: {cursor, shades: [{x0, x1, label}], foot}
   function waveSvg(rows, o) {
-    const L = 122, R = 10, rh = o.rowH || 40, gap = 10, T = o.top || 6;
-    const H = T + rows.length * (rh + gap) + (o.foot ? 18 : 4);
+    const L = 122, R = 10, rh0 = o.rowH || 40, gap = 10, T = o.top || 6;
+    const tops = rows.reduce((a, r) => [...a, a[a.length - 1] + (r.h || rh0) + gap], [T]);  // a row may set its own height h
+    const H = tops[rows.length] + (o.foot ? 18 : 4);
     const X = x => L + clamp01(x) * (W - L - R);
     let s = `<svg viewBox="0 0 ${W} ${H}" class="cf-wsvg" role="img" aria-label="${esc(o.label)}" font-size="11">`;
     for (const sh of o.shades || []) {
@@ -75,13 +77,14 @@
       if (sh.label) s += `<text x="${(X(sh.x0) + X(sh.x1)) / 2}" y="${T + 6}" text-anchor="middle" class="cf-ts">${esc(sh.label)}</text>`;
     }
     rows.forEach((r, i) => {
-      const y0 = T + i * (rh + gap), Y = v => y0 + rh - ((v - r.lo) / (r.hi - r.lo)) * rh;
+      const rh = r.h || rh0, y0 = tops[i], Y = v => y0 + rh - ((v - r.lo) / (r.hi - r.lo)) * rh;
       s += `<line x1="${L}" x2="${W - R}" y1="${Y(r.zero ?? r.lo)}" y2="${Y(r.zero ?? r.lo)}" class="cf-axis"/>`;
       s += `<text x="${L - 8}" y="${y0 + rh / 2 + 4}" text-anchor="end" class="cf-ts">${esc(r.label)}</text>`;
       for (const se of r.series) {
         if (!se.pts.length) continue;
         s += `<path d="${se.pts.map(([x, y], k) => `${k ? "L" : "M"}${X(x).toFixed(1)} ${Y(Math.max(r.lo, Math.min(r.hi, y))).toFixed(1)}`).join("")}" class="cf-trace cf-c${se.c}${se.dash ? " cf-dash" : ""}"/>`;
       }
+      for (const vl of r.vlines || []) s += `<line x1="${X(vl.x).toFixed(1)}" x2="${X(vl.x).toFixed(1)}" y1="${y0}" y2="${y0 + rh}" class="${vl.cls || "cf-zc"}"/>`;
       for (const m of r.marks || []) s += `<text x="${X(m.x)}" y="${Y(m.y) - 4}" text-anchor="${m.a || "middle"}" class="cf-ts">${esc(m.t)}</text>`;
     });
     if (o.cursor != null) s += `<line x1="${X(o.cursor)}" x2="${X(o.cursor)}" y1="${T - 4}" y2="${H - (o.foot ? 18 : 4)}" class="cf-cur"/>`;
@@ -329,30 +332,50 @@
     }
     const focI = (th, k) => Math.cos(((th + 90 - AX[k]) * Math.PI) / 180);
     const sixI = (th, k) => { const [X, Y] = STEPS[sixState(th)]; return k === X ? 1 : k === Y ? -1 : 0; };
+    // back-EMF (owner, 28 Oct 2026: "BLDC Motor Functionality - including Back EMF"): the voltage the turning magnet
+    // induces in each winding, in phase with the FOC current for the most torque. A BLDC motor has a trapezoidal
+    // back-EMF (flat for 120°, ramps between), a PMSM a sine. In 6-step the floating phase's back-EMF crosses zero in the
+    // middle of each 60° step; the next commutation comes 30° later (TI SPRABQ7A section 4.5).
+    const VBUS = 48;
+    const wrap180 = a => ((((a + 180) % 360) + 360) % 360) - 180;
+    const trap = a => { const p = Math.abs(wrap180(a)); return p <= 60 ? 1 : p >= 120 ? -1 : 1 - (p - 60) / 30; };
+    const emfTrap = (th, k) => trap(th + 90 - AX[k]);
+    const emfSine = (th, k) => Math.cos(((th + 90 - AX[k]) * Math.PI) / 180);
+    const floating = k => "ABC".split("").find(L => !STEPS[k].includes(L));
+    // the motor model behind the speed slider (est): back-EMF grows with speed; at full PWM duty the current the bus
+    // can push is (VBUS - back-EMF) / R, here scaled so that it equals 200 % of the rated current at standstill
+    function bemfDrive(v) {
+      const s = clamp01(v.spd / 100), e = s * VBUS, avail = 200 * (1 - s), i = Math.min(v.amp, avail);
+      return {s, e, head: VBUS - e, avail, i, limited: avail < v.amp};
+    }
     visual(V, {
-      id: "bldc", group: "Circuits in motion", title: "BLDC motor: 6-step commutation and FOC",
+      id: "bldc", group: "Circuits in motion", title: "BLDC motor: 6-step commutation, FOC and back-EMF",
       explains: [PK.motor, PK.gd],
-      lead: "A three-phase inverter drives a brushless motor. In 6-step drive two phases carry current at a time and the pattern steps every 60° as the rotor turns; switch to FOC and all three phases carry smooth sine currents.",
-      controls: [{k: "amp", label: "Phase current (torque)", min: 20, max: 100, step: 5, value: 70, unit: "%"},
+      lead: "A three-phase inverter drives a brushless motor. In 6-step drive two phases carry current at a time and the pattern steps every 60° as the rotor turns; the third phase floats, and the zero crossing of its back-EMF tells a sensorless controller when to switch next. Switch to FOC and all three phases carry smooth sine currents. Raise the speed: the back-EMF grows and leaves less voltage to push current.",
+      controls: [{k: "amp", label: "Phase current command (torque)", min: 20, max: 100, step: 5, value: 70, unit: "%"},
+        {k: "spd", label: "Motor speed (share of no-load speed)", min: 5, max: 100, step: 5, value: 40, unit: "%"},
         {k: "pp", label: "Motor pole pairs", min: 1, max: 8, step: 1, value: 4, unit: ""}],
       result(v, st) {
-        const foc = st.flags && st.flags.foc;
+        const foc = st.flags && st.flags.foc, d = bemfDrive(v);
         return {
           outputs: [["Drive", foc ? "FOC (sine currents)" : "6-step (trapezoidal)"], ["Commutation steps per electrical turn", foc ? "continuous" : "6"],
-            ["Steps per mechanical turn", foc ? "continuous" : `${6 * v.pp}`], ["Torque ripple from the current pattern (ideal motor)", foc ? "≈ 0 %" : "≈ 13 %", foc ? "ok" : "warn"]],
-          eq: "6-step: the field jumps in 60° steps and stays 60°–120° ahead of the rotor → torque ∝ sin(angle) = 0.87 … 1 → ripple ≈ 1 − cos 30° ≈ 13 %",
-          eqn: `FOC: i<sub>A</sub> = I cos θ, i<sub>B</sub> = I cos(θ − 120°), i<sub>C</sub> = I cos(θ + 120°) → field always 90° ahead → constant torque · ${v.pp} pole pairs → ${6 * v.pp} steps per turn in 6-step`,
-          html: simp("an ideal motor with sine-shaped back-EMF and no inductance delay; the rotor turns slowly and at constant speed. Real 6-step drives also PWM the on switches to set the current; FOC needs the rotor angle (sensor or observer) and current sensing.")
-            + more(PK.motor, PK.gd, PK.cs),
-          note: "6-step is simple (Hall sensors or back-EMF zero crossings are enough) but gives torque ripple and noise; FOC needs current sensing and more computing, and gives smooth, quiet torque. The ripple figures are for an idealised motor.",
+            ["Steps per mechanical turn", foc ? "continuous" : `${6 * v.pp}`], ["Torque ripple from the current pattern (ideal motor)", foc ? "≈ 0 %" : "≈ 13 %", foc ? "ok" : "warn"],
+            ["Back-EMF (line to line, peak)", `${d.e.toFixed(1)} V of the ${VBUS} V bus`], ["Voltage left to push current", `${d.head.toFixed(1)} V`, d.head < 10 ? "warn" : "ok"],
+            ["Phase current", `${Math.round(d.i)} % of rated${d.limited ? " (limited by the back-EMF)" : " (as commanded)"}`, d.limited ? "warn" : "ok"],
+            ["Sensorless position from", foc ? "an observer (currents and voltages)" : "back-EMF zero crossing of the floating phase, commutate 30° later"]],
+          eq: "back-EMF e = k<sub>e</sub> × ω &nbsp;·&nbsp; at full duty I = (V<sub>bus</sub> − e) / R &nbsp;·&nbsp; 6-step: commutate 30° after the back-EMF zero crossing; torque ripple ≈ 1 − cos 30° ≈ 13 %",
+          eqn: `${v.spd} % speed → e ≈ ${d.e.toFixed(1)} V · (48 − ${d.e.toFixed(1)}) V / R → up to ${Math.round(d.avail)} % current, command ${v.amp} % → ${Math.round(d.i)} % · ${v.pp} pole pairs → ${6 * v.pp} steps per turn in 6-step`,
+          html: simp(`an ideal motor (trapezoidal back-EMF in 6-step, sine in FOC) on a ${VBUS} V bus, turning at constant speed; the current model is round numbers (stall current twice the rated current), not a specific motor. Real 6-step drives PWM the on switches; the floating terminal is compared with the star point (or half the bus) and a few samples after each commutation are ignored. FOC needs the rotor angle (sensor or observer) and current sensing.`)
+            + more(PK.motor, PK.gd, PK.cs, ["Research: 48 V motor control in the car", "/business/reports/auto-48v-motor-control"]),
+          note: "6-step is simple (Hall sensors or back-EMF zero crossings are enough) but gives torque ripple and noise; FOC needs current sensing and more computing, and gives smooth, quiet torque. At low speed the back-EMF is too small to detect, so sensorless drives start open loop. The ripple figures are for an idealised motor.",
         };
       },
       related: [["Gate driver and bootstrap", "#bootstrap"], ["Isolated current sensing", "#isosense"]],
     }, {
-      id: "bldc", label: "Three-phase inverter and a brushless motor, current flow animated", flags: {foc: false},
+      id: "bldc", label: "Three-phase inverter and a brushless motor, current flow and back-EMF animated", flags: {foc: false},
       init(st) { st.theta = 15; },
       phases: st => (st.flags.foc ? [{label: "FOC", dur: 1}] : STEPS.map(([X, Y]) => ({label: `${X}+ → ${Y}−`, dur: 1}))),
-      tick(st, dt) { st.theta = (st.theta + dt * 40) % 360; st.i = st.flags.foc ? 0 : sixState(st.theta); },
+      tick(st, dt, v) { st.theta = (st.theta + dt * (8 + 64 * bemfDrive(v).s)) % 360; st.i = st.flags.foc ? 0 : sixState(st.theta); },
       step(st) {
         st.theta = st.flags.foc ? (st.theta + 30) % 360 : ((Math.floor(st.theta / 60) + 1) * 60 + 2) % 360;
         st.i = st.flags.foc ? 0 : sixState(st.theta);
@@ -360,8 +383,8 @@
       buttons: [{k: "foc", label: st => (st.flags.foc ? "Switch to 6-step" : "Switch to FOC"), pressed: st => st.flags.foc,
         click(st) { st.flags.foc = !st.flags.foc; st.i = st.flags.foc ? 0 : sixState(st.theta); }}],
       draw(st, F, v) {
-        const foc = st.flags.foc, th = st.theta, k = sixState(th), [X, Y] = STEPS[k], cur = (v.amp / 100) * 1.8;
-        let s = wire("M50 152V40H290") + wire("M50 188V270H290") + src(50, 170) + txt(74, 174, "DC bus", "start", "cf-ts");
+        const foc = st.flags.foc, th = st.theta, k = sixState(th), [X, Y] = STEPS[k], d = bemfDrive(v), cur = (d.i / 100) * 1.8;
+        let s = wire("M50 152V40H290") + wire("M50 188V270H290") + src(50, 170) + txt(74, 174, "DC bus", "start", "cf-ts") + txt(74, 188, `${VBUS} V`, "start", "cf-ts");
         for (const L of "ABC") {
           const x = LEG[L], hs = foc ? "pwm" : L === X ? "on" : "off", ls = foc ? "pwm" : L === Y ? "on" : "off";
           s += wire(`M${x} 40V60`) + wire(`M${x} 105V195`) + wire(`M${x} 240V270`) + fet(x - 24, 60, 48, 45, hs, `${L} hi`) + fet(x - 24, 195, 48, 45, ls, `${L} lo`)
@@ -392,18 +415,36 @@
           + `<path d="M${MC[0]} ${MC[1] - 9}H${MC[0] + 30}V${MC[1] - 15}L${MC[0] + 42} ${MC[1]}L${MC[0] + 30} ${MC[1] + 15}V${MC[1] + 9}H${MC[0]}Z" class="cf-north"/>`
           + `<rect x="${MC[0] - 36}" y="${MC[1] - 9}" width="36" height="18" class="cf-south"/>`
           + `<text x="${MC[0] + 16}" y="${MC[1] + 4}" text-anchor="middle" class="cf-ts cf-b cf-on">N</text><text x="${MC[0] - 18}" y="${MC[1] + 4}" text-anchor="middle" class="cf-ts cf-b cf-on">S</text></g>`;
+        // back-EMF of the floating phase (6-step) and the zero-crossing timing, as a tag under the inverter
+        const t360 = ((th % 360) + 360) % 360, start = Math.floor(t360 / 60) * 60, zc = start + 30;
+        const emfV = L => (foc ? emfSine : emfTrap)(th, L) * d.e / 2;
+        if (!foc) {
+          const Fl = floating(k), when = t360 < zc ? `zero crossing in ${Math.round(zc - t360)}°` : `zero crossed: commutate in ${Math.round(start + 60 - t360)}°`;
+          s += tag(20, 352, [`Phase ${Fl} floats: back-EMF ${emfV(Fl).toFixed(1)} V`, when, "commutation = zero crossing + 30°"], PC[Fl], "cf-bemf");
+        } else {
+          s += tag(20, 352, ["FOC: no phase floats", "a sensorless drive estimates the angle", "from currents and voltages (observer)"], 4, "cf-bemf");
+        }
+        s += tag(400, 352, [`Back-EMF ${d.e.toFixed(1)} V of ${VBUS} V`, `left to push current: ${d.head.toFixed(1)} V`, `current ${Math.round(d.i)} %${d.limited ? ", limited by back-EMF" : ""}`], d.limited ? 5 : 3, "cf-head");
         // waveform over one electrical turn
         const ths = Array.from({length: 361}, (_, j) => j);
-        const fn = foc ? focI : sixI;
-        const torque = t => (foc ? 1 : Math.sin(((fieldAngle(sixState(t)) - t) * Math.PI) / 180));
+        const fn = foc ? focI : sixI, emf = foc ? emfSine : emfTrap, ia = d.i / 100;
+        const torque = t => ia * (foc ? 1 : Math.sin(((fieldAngle(sixState(t)) - t) * Math.PI) / 180));
+        const zcs = [30, 90, 150, 210, 270, 330], cms = [0, 60, 120, 180, 240, 300, 360];
+        const vlines = foc ? zcs.map(z => ({x: z / 360, cls: "cf-zc"})) : [...zcs.map(z => ({x: z / 360, cls: "cf-zc"})), ...cms.map(c => ({x: c / 360, cls: "cf-cm"}))];
+        // the floating phase's back-EMF in each 60° step, drawn bold over the three thin traces
+        const flo = foc ? [] : Array.from({length: 6}, (_, m) => ({pts: ths.filter(t => t >= m * 60 && t <= m * 60 + 60).map(t => [t / 360, emf(t, floating(sixState(Math.min(t, m * 60 + 59.9)))) * d.s]), c: 5}));
         const wave = waveSvg([
-          ...["A", "B", "C"].map(L => ({label: `Phase ${L} current`, lo: -1.3, hi: 1.3, zero: 0, series: [{pts: ths.map(t => [t / 360, fn(t, L)]), c: PC[L]}]})),
+          ...["A", "B", "C"].map(L => ({label: `Phase ${L} current`, lo: -1.3, hi: 1.3, zero: 0, series: [{pts: ths.map(t => [t / 360, fn(t, L) * ia]), c: PC[L]}]})),
+          {label: "Back-EMF A, B, C", lo: -1.15, hi: 1.15, zero: 0, h: 76, vlines,
+            series: [...["A", "B", "C"].map(L => ({pts: ths.map(t => [t / 360, emf(t, L) * d.s]), c: PC[L], dash: true})), ...flo],
+            marks: foc ? [{x: 30 / 360, y: 0.05, t: "zero crossings", a: "start"}] : [{x: 30 / 360, y: -1.1, t: "zero crossing", a: "middle"}, {x: 61 / 360, y: 0.9, t: "+30° → commutate", a: "start"}]},
           {label: "Torque (relative)", lo: 0, hi: 1.1, series: [{pts: ths.map(t => [t / 360, torque(t)]), c: 4}]},
-        ], {label: "Phase currents and torque over one electrical turn", cursor: (((th % 360) + 360) % 360) / 360, rowH: 30, foot: "one electrical turn of the rotor (0° to 360°)"});
+        ], {label: "Phase currents, back-EMF with its zero crossings, and torque over one electrical turn", cursor: t360 / 360, rowH: 30,
+          foot: foc ? "one electrical turn (0° to 360°) · back-EMF scaled to the speed" : "one electrical turn · red solid: floating phase, red ticks: zero crossings, teal dashed: commutations"});
         const phase = foc ? `FOC: all three phases carry sine currents · rotor at ${Math.round(th)}°` : `Step ${k + 1} of 6: current into ${X}, out of ${Y} · rotor at ${Math.round(th)}°`;
-        const cap = foc ? "Each phase current follows a sine wave, 120° apart; the sum of the three is always zero. The stator field (dashed) turns smoothly, always 90° ahead of the rotor, which gives the most torque per amp."
-          : `The high-side switch of ${X} and the low-side switch of ${Y} are on: current flows from the bus into winding ${X}, through the star point and out of winding ${Y}. The third phase floats. The stator field (dashed) jumps 60° at each step and pulls the rotor (N) round.`;
-        return {svg: s, h: 350, wave, phase, cap, legend: [[1, "Phase A"], [2, "Phase B"], [3, "Phase C"], [4, "DC bus current"]]};
+        const cap = foc ? "Each phase current follows a sine wave, 120° apart and in step with that phase's back-EMF; the sum of the three is always zero. The stator field (dashed) turns smoothly, always 90° ahead of the rotor, which gives the most torque per amp."
+          : `The high-side switch of ${X} and the low-side switch of ${Y} are on: current flows from the bus into winding ${X}, through the star point and out of winding ${Y}. Phase ${floating(k)} floats: its back-EMF ramps through zero in the middle of the step, and the controller switches to the next step 30° later. The stator field (dashed) jumps 60° at each step and pulls the rotor (N) round.`;
+        return {svg: s, h: 410, wave, phase, cap, legend: [[1, "Phase A"], [2, "Phase B"], [3, "Phase C"], [4, "DC bus current"], [5, "Back-EMF of the floating phase"]]};
       },
     });
 

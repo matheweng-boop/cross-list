@@ -1,0 +1,181 @@
+{% raw %}<h1>48 V motor control in the car: actuators moving from 12 V to 48 V, and where Qorvo's intelligent motor control fits</h1>
+<p class="meta">28 Oct 2026 · Preliminary report from two owner comments: “48V Motor Control Applications in Cars. Actuators transitioning from 12V to 48V, Motor Control SoCs” (Systems library, 27 Oct 2026) and “Non safety critical actuator replacement using Qorvo Intelligent motor control” (28 Oct 2026). Built from BizDev data (Skyworks and Qorvo catalogues with the AEC-Q rule, the <a href="/reviews/how/motor">Part knowledge page on motor drivers</a>, the <a href="/reviews/qorvo-pac5527-motor-driver">PAC5527 review</a>, the Systems library) and public web sources; no qorvo.com host was requested. “est” = our estimate. Every figure and link: <a href="/business/reports/auto-48v-motor-control/background">background notes</a>.</p>
+
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>Why 48 V:</b> the same power at a quarter of the current, so thinner wires and a lighter harness, and room for bigger pumps, fans, blowers and compressors. Tesla's Cybertruck runs its whole low-voltage net at 48 V; mild hybrids add a 48 V net next to 12 V.</li>
+    <li><b>What a 48 V drive needs:</b> 80–100 V MOSFETs, a gate driver that survives the 60–70 V transients of the 48 V standards with margin (est), an MCU for 6-step or FOC, current sensing and LIN or CAN. Steering and brakes stay safety critical (ASIL C/D); pumps, fans, blowers, flaps and seat motors are comfort or thermal loads (QM to ASIL B, est).</li>
+    <li><b>Competitors split it in two:</b> a qualified 12 V motor-control MCU plus a separate 48 V gate driver (Infineon MOTIX TLE989x + TLE9140EQW, TI DRV8363-Q1, ST L9908, Allegro AMT49100, NXP GD3000). Only Elmos sells a one-chip 48 V controller (E523.52, 9–72 V).</li>
+    <li><b>Ours fits the voltage and the integration:</b> PAC5532AQX (25–160 V, Cortex-M4F, CAN controller, 2 A drivers) is a one-chip 48 V controller; ACT72350 (160 V gate driver with buck and sensing, host MCU outside) replaces up to 40 parts; PAC5527 (48 V absolute maximum) suits 12 V comfort motors only.</li>
+    <li><b>What is missing is the grade:</b> no PAC or ACT part has a stated AEC-Q100 grade in our data or in the public sources read, and no ISO 26262 process is stated. Answer: qualify one 160 V part and test it in one non-safety socket (est, low confidence).</li>
+  </ol>
+</section>
+
+<h2>1. Adjacent products and technologies</h2>
+<h3>What moves to 48 V, and why</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Actuator</th><th scope="col">Power (est)</th><th scope="col">Why 48 V</th><th scope="col">Safety</th><th scope="col">Fit for our controllers</th></tr></thead>
+  <tbody>
+    <tr><td>Coolant, oil and battery-cooling pumps</td><td>0.1–1 kW</td><td>Bigger thermal loads in hybrids and EVs; a quarter of the current</td><td>QM to ASIL A/B (est)</td><td><span class="pill have">good</span> sensorless BLDC, LIN/CAN</td></tr>
+    <tr><td>Radiator and battery cooling fans</td><td>0.3–1 kW</td><td>A 1 kW fan at 12 V needs about 80 A; at 48 V about 20 A</td><td>QM (est)</td><td><span class="pill have">good</span></td></tr>
+    <tr><td>HVAC blower, A/C flap actuators</td><td>blower 0.2–0.5 kW; flaps a few W</td><td>Blower on 48 V; flaps stay 12 V LIN (Melexis MLX81350: 5.5–28 V)</td><td>QM</td><td><span class="pill have">blower</span> flaps: too small</td></tr>
+    <tr><td>Electric A/C compressor (mild hybrid, 48 V EV)</td><td>2–6 kW</td><td>Belt-free cooling with the engine off</td><td>QM to ASIL A (est)</td><td><span class="pill part">possible</span> needs parallel MOSFETs</td></tr>
+    <tr><td>Seat, window, door, tailgate, mirror motors</td><td>20–200 W</td><td>Only where the whole body net is 48 V (Cybertruck); most stay 12 V brushed</td><td>QM; anti-pinch for windows</td><td><span class="pill have">12 V: PAC5527</span> 48 V: PAC5532 / ACT72350</td></tr>
+    <tr><td>Electric power steering, brake-by-wire, steer-by-wire</td><td>0.5–2 kW</td><td>More power for heavy vehicles; redundancy</td><td>ASIL C/D</td><td><span class="pill none">no</span> needs ASIL D parts</td></tr>
+    <tr><td>Belt starter-generator, electric turbo</td><td>5–15 kW</td><td>The reason mild hybrids have 48 V</td><td>ASIL B–C (est)</td><td><span class="pill none">no</span> traction-class inverter</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Power and safety levels are typical values (est); Infineon lists pumps and fans, a 48 V HVAC module, wipers and light EVs as uses of its 48 V gate driver; Allegro names steer-by-wire and electric power steering for its 48 V driver, and fans and pumps for the sister part.</p>
+
+<h3>What 48 V motor control needs</h3>
+<ul>
+  <li><b>Voltage class:</b> the 48 V net runs at about 36–52 V in normal use, with overvoltage near 60 V and short transients to about 70 V (est, as commonly quoted from VDA 320 / LV 148, not read). MOSFETs of 80–100 V and a gate driver of 80 V or more with margin: TI's DRV8363-Q1 runs 8–85 V, ST's L9908 4.5–75 V (95 V on the motor pins), Allegro's AMT49100 to 80 V, Infineon's TLE9140EQW 8–60 V (75 V absolute, 110 V robustness).</li>
+  <li><b>Gate drive:</b> bootstrap plus a charge pump for 100 % duty; 1–2 A peak for 0.3–1 kW (TLE9140EQW: about 230 nC per MOSFET at 20 kHz; DRV8363-Q1: 1 A source, 2 A sink). See <a href="/visuals#bootstrap">gate driver and bootstrap</a>.</li>
+  <li><b>MCU:</b> sensorless 6-step for fans and pumps, FOC for quiet blowers and compressors (Cortex-M3/M4 class). See <a href="/visuals#bldc">BLDC with back-EMF</a>.</li>
+  <li><b>Current and back-EMF sensing:</b> one to three shunt amplifiers, phase comparators for the back-EMF zero crossing.</li>
+  <li><b>Vehicle side:</b> LIN or CAN (FD), reverse-polarity protection, and often isolation between the 12 V control side and the 48 V power side (TI's 1 kW reference design isolates them).</li>
+  <li><b>Automotive grade:</b> AEC-Q100 (Grade 1, −40 to 125 °C ambient, or Grade 0 next to the engine), PPAP and, from ASIL A up, an ISO 26262 process.</li>
+</ul>
+
+<h3>A 48 V actuator drive, with our parts</h3>
+<figure class="mc-fig" style="margin:.6rem 0">
+<style>
+  .mc-fig svg { width: 100%; max-width: 760px; height: auto; display: block; }
+  .mc-fig .box { fill: var(--pico-card-background-color, #fff); stroke: var(--pico-muted-border-color, #cfc8e0); }
+  .mc-fig .ours { fill: var(--chip-bg, #e6f3f4); stroke: var(--pico-primary, #0b6b74); }
+  .mc-fig .cons { fill: var(--pico-mark-background-color, #fff4e8); stroke: #a15c00; stroke-dasharray: 4 3; }
+  .mc-fig .gap { fill: none; stroke: #a3302a; stroke-dasharray: 2 3; }
+  .mc-fig text { fill: var(--pico-color, #23304a); font-size: 11px; font-family: inherit; }
+  .mc-fig .h { font-weight: 700; font-size: 12px; }
+  .mc-fig .m { fill: var(--pico-muted-color, #6b7486); font-size: 10px; }
+  .mc-fig .ln { stroke: var(--pico-primary, #0b6b74); stroke-width: 1.6; fill: none; }
+</style>
+<svg viewBox="0 0 760 270" role="img" aria-labelledby="mc-t mc-d">
+  <title id="mc-t">48 V actuator drive</title>
+  <desc id="mc-d">12 V control side with LIN or CAN and isolation, 48 V power side with protection, a 160 V motor controller, MOSFETs, current sensing and the BLDC motor.</desc>
+  <rect class="box" x="8" y="8" width="230" height="230" rx="10"/>
+  <text class="h" x="20" y="28">12 V control side</text>
+  <rect class="gap" x="20" y="40" width="206" height="34" rx="6"/>
+  <text x="28" y="56">LIN / CAN transceiver</text><text class="m" x="28" y="68">not ours</text>
+  <rect class="ours" x="20" y="82" width="206" height="34" rx="6"/>
+  <text x="28" y="98">Digital isolator (optional)</text><text class="m" x="28" y="110">Si86xx, AEC-Q100</text>
+  <rect class="ours" x="20" y="124" width="206" height="34" rx="6"/>
+  <text x="28" y="140">Isolated DC-DC (optional)</text><text class="m" x="28" y="152">Si88xx, AEC-Q100</text>
+  <rect class="ours" x="20" y="166" width="206" height="34" rx="6"/>
+  <text x="28" y="182">12 V buck</text><text class="m" x="28" y="194">ACT4751, AEC-Q100</text>
+  <text class="m" x="20" y="226">TI's 1 kW design isolates 12 V from 48 V</text>
+  <path class="ln" d="M238 120 H 280"/>
+  <rect class="box" x="280" y="8" width="472" height="230" rx="10"/>
+  <text class="h" x="292" y="28">48 V power side</text>
+  <rect class="gap" x="292" y="40" width="140" height="34" rx="6"/>
+  <text x="300" y="56">Reverse polarity, TVS</text><text class="m" x="300" y="68">not ours</text>
+  <rect class="cons" x="292" y="82" width="300" height="50" rx="6"/>
+  <text x="300" y="98">Motor controller: MCU + 3-phase gate drivers + buck</text><text class="m" x="300" y="112">PAC5532AQX (160 V, M4F) or ACT72350 + host MCU</text><text class="m" x="300" y="124">grade not stated: needs AEC-Q100</text>
+  <rect class="gap" x="600" y="82" width="140" height="50" rx="6"/>
+  <text x="608" y="98">6 MOSFETs</text><text class="m" x="608" y="112">80–100 V</text><text class="m" x="608" y="124">not ours</text>
+  <rect class="cons" x="292" y="140" width="300" height="34" rx="6"/>
+  <text x="300" y="156">Shunt amplifiers, back-EMF comparators</text><text class="m" x="300" y="168">on chip in PAC / ACT72350</text>
+  <rect class="box" x="600" y="140" width="140" height="34" rx="6"/>
+  <text x="608" y="156">BLDC motor</text><text class="m" x="608" y="168">pump, fan, blower, seat</text>
+  <path class="ln" d="M592 107 H 600"/><path class="ln" d="M670 132 V 140"/>
+  <text class="m" x="292" y="200">12 V comfort motors: PAC5527 (6–40 V in use, 48 V absolute) does the same in one chip.</text>
+  <text class="m" x="292" y="216">Safety-critical drives (steering, brakes) need ASIL D parts: not in scope.</text>
+  <rect class="ours" x="8" y="248" width="12" height="10"/><text class="m" x="24" y="257">ours, automotive</text>
+  <rect class="cons" x="130" y="248" width="12" height="10"/><text class="m" x="146" y="257">ours, grade not stated</text>
+  <rect class="gap" x="300" y="248" width="12" height="10"/><text class="m" x="316" y="257">not ours</text>
+</svg>
+<figcaption class="small">Teal: ours and AEC-Q by the site's rule. Orange dashed: ours, voltage and function fit, automotive grade not stated. Red dotted: not ours. Library diagrams: <a href="/blocks/new?diagram=Automotive%2048%20V%20coolant%20pump%2C%20oil%20pump%20and%20cooling%20fan%20drive%20with%20an%20integrated%20160%20V%20gate%20driver%20%28after%20TI%20TIDA-00281%20and%20Infineon%29">48 V pump and fan drive</a>, <a href="/blocks/new?diagram=Automotive%2048%20V%20HVAC%20blower%20and%20electric%20A/C%20compressor%20drive%20%28mild%20hybrid%20or%2048%20V%20EV%2C%20integrated%20160%20V%20gate%20driver%29%20%28after%20TI%20TIDA-00281%20and%20Infineon%29">48 V HVAC blower and A/C compressor</a>, <a href="/blocks/new?diagram=Automotive%20seat%20adjustment%20and%20comfort%20actuators%20on%2012%20V%20or%2048%20V%20%28BLDC%20motor%20drives%20with%20a%20motor%20control%20SoC%2C%20non-safety-critical%29%20%28after%20Infineon%29">seat adjustment and comfort actuators</a>, <a href="/blocks/new?diagram=Automotive%2048%20V%20BLDC%20drive%2C%201%20kW%20%28TI%20TIDA-00281%29">48 V BLDC drive, 1 kW</a>.</figcaption>
+</figure>
+
+<h3>Depth check: our best part per block</h3>
+<p>Best automotive part first, else a non-automotive option, else “nothing that fits” with the reason. “AEC-Q” = automotive grade by the site's rule (stated grade, AEC-Q in the text, or the Qorvo “…Q” suffix, which the PAC “QM / QX / QF” package codes do not count as).</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">Ours, automotive</th><th scope="col">Ours, not automotive (or grade not stated)</th><th scope="col">Cover</th></tr></thead>
+  <tbody>
+    <tr><td>Motor controller SoC (MCU + gate drivers + supply), 48 V</td><td>none</td><td><a href="/find?q=PAC5532AQX">PAC5532AQX</a> (25–160 V, 150 MHz Cortex-M4F, CAN, 3 + 3 drivers 2 A); PAC5523/5524 (70–72 V, marginal at 48 V)</td><td><span class="pill part">needs AEC-Q</span></td></tr>
+    <tr><td>Gate driver with buck and sensing, host MCU outside</td><td>none</td><td><a href="/find?q=ACT72350">ACT72350</a> (5.2–160 V in our data, 25–160 V in the launch; high side 180 V / 2 A; UART/SPI)</td><td><span class="pill part">needs AEC-Q</span></td></tr>
+    <tr><td>Motor controller SoC, 12 V comfort motors</td><td>none</td><td><a href="/find?q=PAC5527QM">PAC5527</a> (6–40 V in use, charge pump for 100 % duty, CAN); PAC52xx (44 V)</td><td><span class="pill part">needs AEC-Q</span></td></tr>
+    <tr><td>MOSFETs 40 / 80–100 V</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span> we make no power MOSFETs</td></tr>
+    <tr><td>Current sensing (non-isolated)</td><td>none</td><td>on chip in PAC and ACT72350</td><td><span class="pill have">on chip</span></td></tr>
+    <tr><td>Isolation 12 V control ↔ 48 V power (optional)</td><td>Si86xx digital isolators (854 of 1,018 AEC-Q), Si88xx isolated DC-DC (92 of 92)</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Isolated gate drivers (above about 100 V only)</td><td>Si823x (73 of 154 AEC-Q), Si8239x / Si827x / Si828x</td><td>—</td><td><span class="pill have">yes</span> not needed at 48 V</td></tr>
+    <tr><td>12 V logic supply</td><td><a href="/find?q=ACT4751MQI101">ACT4751</a> (4.5–40 V), ACT4529/4530</td><td>—</td><td><span class="pill have">12 V side</span> no 48 V-input automotive buck</td></tr>
+    <tr><td>LIN / CAN transceiver, reverse polarity, TVS, MCU alone</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">In the site's data: 40 Qorvo motor controllers (motor_controller), 0 AEC-Q; no non-isolated three-phase or half-bridge gate driver of ours; 4 of 20 wide-input bucks AEC-Q (none above 40 V input). The PAC5527 review (datasheet Rev 1.2) gives −40 to 105 °C ambient, short of AEC-Q100 Grade 1 (125 °C). The ACT72350 launch names “automotive and industrial” uses and −40 to 125 °C (search summary), but no AEC-Q grade.</p>
+<p class="rpt-thread"><b>For the decision:</b> Voltage, integration and sensing fit 48 V today; the only block that keeps our controllers out of a car is the missing automotive grade, plus the parts we never make (MOSFETs, transceivers).</p>
+
+<h2>2. The owner's angle: replacing non-safety-critical actuators</h2>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Actuator (non-safety)</th><th scope="col">Net</th><th scope="col">Our part</th><th scope="col">What fits today</th><th scope="col">What is missing</th></tr></thead>
+  <tbody>
+    <tr><td>Seat adjustment (fore/aft, height, recline, lumbar)</td><td>12 V (48 V in a 48 V body net)</td><td>PAC5527; PAC5532 or ACT72350 on 48 V</td><td>One chip per BLDC motor; Qorvo markets PAC parts for lift gates and seat adjustment (search snippet)</td><td>AEC-Q100; most seat motors are brushed (H-bridge, not 3-phase); LIN transceiver</td></tr>
+    <tr><td>HVAC blower</td><td>12 V or 48 V</td><td>PAC5527 (12 V), PAC5532 (48 V)</td><td>FOC on the Cortex-M4F for a quiet blower</td><td>AEC-Q100; HVAC flaps are too small (5 W LIN parts)</td></tr>
+    <tr><td>Coolant, oil, battery-cooling pumps</td><td>12 V or 48 V</td><td>PAC5532AQX, ACT72350 + MCU</td><td>Sensorless 6-step or FOC, 2 A drive for 0.3–1 kW</td><td>AEC-Q100 Grade 1 (Grade 0 near the engine); ISO 26262 process where the pump is ASIL A/B</td></tr>
+    <tr><td>Radiator and battery fans</td><td>12 V or 48 V</td><td>as pumps</td><td>as pumps</td><td>AEC-Q100; large fans need parallel MOSFETs</td></tr>
+    <tr><td>Mirrors, sunroof, tailgate</td><td>12 V</td><td>PAC5527</td><td>Fits BLDC versions</td><td>AEC-Q100; mostly brushed motors today</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><b>Qualification path (est):</b> AEC-Q100 stress tests on the existing die and package (Grade 1), PPAP, automotive part numbers; ISO 26262 safety manual for pumps rated ASIL A/B; LIN/CAN conformance for the system, not the chip. Trade press puts automotive qualification at 12–36 months (as used in the Wi-Fi report).</li>
+  <li><b>Temperature:</b> the PAC5527 copy gives 105 °C ambient; Grade 1 needs 125 °C, so the PAC5527 may need more than a test run (est). ACT72350 is quoted at −40 to 125 °C, which suits Grade 1 if it passes.</li>
+  <li><b>What a 100 V-class part would add:</b> not more voltage (160 V is plenty) but a smaller, cheaper die for 48 V only, with LIN or CAN FD on chip, like Elmos's E523.52 (est).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> The owner's angle works technically for pumps, fans, blowers and BLDC seat motors; it waits on one AEC-Q100 part and on a Tier-1 that wants a single-chip 48 V drive.</p>
+
+<h2>3. Gaps and new technology</h2>
+<ol class="opps">
+  <li><b>An AEC-Q100 version of PAC5532 or ACT72350.</b> The single most valuable step: it turns the only one-chip 160 V controller of a broad-line vendor into an automotive part. <p class="ev"><span class="pill part">part exists</span> · evidence: catalogue, ACT72350 launch (Apr 2025), Infineon and TI two-chip 48 V offers.</p></li>
+  <li><b>LIN and CAN FD on the controller.</b> PAC5527 and PAC5532 have a CAN controller, not the transceiver; Melexis and Elmos put LIN on the motor chip. <p class="ev"><span class="pill none">gap</span> · evidence: Melexis MLX81350 news (snippet), Elmos flyer.</p></li>
+  <li><b>An ISO 26262 safety package</b> (safety manual, FMEDA) for ASIL A/B pumps and fans: Infineon's TLE9140EQW is ASIL B, ST's L9908 ASIL D, Allegro's AMT49100 is designed to ISO 26262. <p class="ev"><span class="pill none">gap</span> · evidence: vendor pages read.</p></li>
+  <li><b>Isolation where 12 V meets 48 V.</b> Our automotive Si86xx isolators and Si88xx isolated DC-DC fit the isolated CAN and supply of TI's 1 kW reference design; an attach for every isolated 48 V drive. <p class="ev"><span class="pill have">automotive today</span> · evidence: TIDUAY9 p.6 (isolated 12 V side), our catalogue.</p></li>
+  <li><b>Power MOSFETs, transceivers and protection</b> stay with partners. <p class="ev"><span class="pill none">not ours</span></p></li>
+</ol>
+<p class="rpt-thread"><b>For the decision:</b> Gap 1 decides everything; gaps 2 and 3 make the part competitive once it is qualified; gap 4 is an attach we can sell today.</p>
+
+<h2>4. Where else we see opportunities</h2>
+<ul>
+  <li><b>Light electric vehicles (e-bikes, scooters, 2/3-wheelers, 48–72 V):</b> not automotive, but the same 160 V controllers fit without qualification; ACT72350 and PAC5532 already name e-bikes and light EVs (launch and catalogue).</li>
+  <li><b>Trucks and buses (24 V):</b> PAC5523/5524 (70–72 V) and PAC5532 cover 24 V nets with load-dump margin (est); Elmos and ST address 24 V too.</li>
+  <li><b>Robots, drones, power and garden tools (24–120 V):</b> covered in the library diagrams for robot joints and drone ESCs; industrial grade is enough.</li>
+  <li><b>48 V data-centre fans and pumps:</b> server racks moved to 48 V; liquid-cooling pumps and fans need the same 48 V BLDC drive (est).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> The non-automotive 48 V markets can carry the same parts now, so an automotive version adds to a line that already sells.</p>
+
+<h2>5. Market trend and who is doing it</h2>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Vendor</th><th scope="col">48 V offer</th><th scope="col">One chip?</th><th scope="col">Grade, safety</th></tr></thead>
+  <tbody>
+    <tr><td>Infineon (MOTIX)</td><td>TLE9140EQW 3-phase gate driver, 8–60 V (75 V abs., 110 V robustness), 230 nC at 20 kHz, with the TLE987x/989x MCUs (12 V class, Cortex-M3, CAN FD)</td><td>no: MCU + driver</td><td>AEC-Q100, ISO 26262 ASIL B</td></tr>
+    <tr><td>Texas Instruments</td><td>DRV8363-Q1 smart gate driver, 8–85 V, 1 A / 2 A, charge pump, current-sense amplifiers</td><td>no: driver + MCU</td><td>AEC-Q100, −40 to 125 °C</td></tr>
+    <tr><td>STMicroelectronics</td><td>L9908 gate driver for 12 / 24 / 48 V, 4.5–75 V (95 V motor pins)</td><td>no</td><td>AEC-Q100, ASIL D (snippet)</td></tr>
+    <tr><td>Allegro</td><td>AMT49100 / AMT49101 3-phase MOSFET drivers for 48 V, to 80 V; steering, braking, fans and pumps</td><td>no</td><td>AEC-Q100, designed to ISO 26262</td></tr>
+    <tr><td>NXP (via non-NXP pages)</td><td>GD3000 3-phase driver, 6–58 V (75 V transient), covers 12 and 48 V; MC33937 pre-driver (8–40 V specified)</td><td>no</td><td>MC33937 AEC-Q100 Grade 1 (snippet)</td></tr>
+    <tr><td>Elmos</td><td>E523.52 BLDC controller, 9–72 V, 16-bit MCU, gate driver for about 1 kW; pumps, fans, e-turbo</td><td><b>yes</b></td><td>automotive (flyer)</td></tr>
+    <tr><td>Melexis</td><td>MLX81350 LIN motor driver for HVAC flaps, 5.5–28 V, FOC</td><td>yes, 12 V only</td><td>AEC-Q100 (snippet)</td></tr>
+    <tr><td><b>Qorvo (ours)</b></td><td>PAC5532AQX 25–160 V with Cortex-M4F; ACT72350 160 V driver + buck; PAC5527 for 12 V</td><td><b>yes</b> (PAC5532)</td><td>not stated</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><b>Trend:</b> 48 V spreads from mild hybrids to the whole low-voltage net (Cybertruck; reported wiring and copper savings, snippets, low); zonal controllers bring the drives closer to the motors.</li>
+  <li><b>Volume:</b> Not enough data on unit counts of 48 V actuators; no market figure is used.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Everyone except Elmos sells two chips at 48 V, and all of them are qualified; a qualified one-chip 160 V controller would be different, an unqualified one is not in the race.</p>
+
+<h2>Risks</h2>
+<ul>
+  <li>The 48 V body net may stay rare outside mild hybrids and a few EVs; most comfort motors stay 12 V brushed.</li>
+  <li>Qualification cost and time (12–36 months) for a line that sells well in tools and light EVs without it.</li>
+  <li>The PAC5527 copy gives 105 °C ambient; Grade 1 at 125 °C may need a redesign (est).</li>
+  <li>Incumbents (Infineon, TI, ST, NXP) are in the thermal and body ECUs already and offer safety packages.</li>
+  <li>Qorvo data comes from our catalogue, a distributor-hosted PAC5527 copy and trade press; qorvo.com was not requested, so an automotive variant listed only there would be missed.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Ask the BU for the grade first; spend nothing on a 48 V automotive push until one controller can be qualified and a Tier-1 asks for it.</p>
+
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
+<h2>Sources</h2>
+<p class="small">TI SPRABQ7A, DRV8363-Q1 product page and TIDA-00281 (TIDUAY9, in the library); Infineon TLE9140EQW product page; Allegro AMT49100/AMT49101 product page; Elmos BLDC motor control flyer; Electronics For You on the ACT72350 launch (7 Apr 2025); search snippets for Tesla Cybertruck 48 V, ST L9908, NXP GD3000/MC33937, Melexis MLX81350 and Qorvo's body-controls page; BizDev catalogue, Part knowledge and the PAC5527 review. Full list with confidence: <a href="/business/reports/auto-48v-motor-control/background">background notes</a>.</p>
+{% endraw %}

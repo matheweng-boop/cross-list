@@ -17,7 +17,7 @@
 <p class="rp-meta small">{{ fz.stage(scheduled) }} {{ r.area }} · {{ r.date|date }}{% if r.sources %} · {{ r.sources }}{% endif %}</p>
 {{ gist_box(gist_for("case", r.slug) or gist_for("report", r.slug), not guest_blocked(request, '/manage')) }}
 {{ learn_tab(learn, r.learn_links) }}
-{% for s in r.see_also or [] %}{% set o = report_of(s) %}{% if o %}<p class="small rp-see">See also: <a href="/business/reports/{{ o.slug }}">{{ o.title }}</a></p>{% endif %}{% endfor %}
+{% for s in r.see_also or [] %}{% if s is mapping %}<p class="small rp-see">See also: <a href="{{ s.href }}">{{ s.label }}</a></p>{% else %}{% set o = report_of(s) %}{% if o %}<p class="small rp-see">See also: <a href="/business/reports/{{ o.slug }}">{{ o.title }}</a></p>{% endif %}{% endif %}{% endfor %}
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
 {% if r.terms %}<aside class="rp-terms small" aria-label="Terms used">{% for k in r.terms %}{% set t = bo_help().terms.get(k) %}{% if t %}<p id="term-{{ k }}"><b>What is {{ t.term }}?</b> {{ t.short }}{% if t.href %} Source: <a href="{{ t.href }}" target="_blank" rel="noopener">{{ t.href_label or t.href }}</a>.{% endif %} <a href="/business/method#t-{{ k }}">More in Definitions</a></p>{% endif %}{% endfor %}</aside>{% endif %}
 {{ opener_box(opener, r.slug, answer_form=not case) }}{% if opener and case %}<p class="small muted">Answer it under <a href="#questions-to-ask">8. Questions to ask</a>, where it is the first business-unit question.</p>{% endif %}

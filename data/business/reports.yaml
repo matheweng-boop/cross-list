@@ -34,7 +34,8 @@
 #                    matters, what it needs, where the request comes from, competitors and where we stand)
 #   learn_links      knowledge-base pages to read next: {label, href} on /library, /rf-notes, /engineering, /visuals
 #   see_also         slugs of related reports or cases (a research report and the business case built on it), shown
-#                    as "See also" links under the report's header
+#                    as "See also" links under the report's header; or {label, href} for another page of the site (a Part knowledge
+#                    page, a part review), shown the same way
 #   expanded         date the "Applications in depth" section was added for the owner's "Expand this idea" request
 #                    (section <section id="applications-in-depth"> in the body; docs/daily_update.md); marks the
 #                    request done, so the page shows "Expanded" with a link to the section
@@ -61,6 +62,103 @@
 # Thread lines: every main section of a report body ends with <p class="rpt-thread"><b>For the decision:</b> ...</p>;
 # a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
+  - slug: auto-48v-motor-control
+    gist: "Our PAC and ACT72350 motor controllers already cover 48 V and integrate MCU and gate drive; without AEC-Q100 they cannot enter comfort actuators yet (est)."
+    abstract:
+      - "Cars move pumps, fans, blowers and comfort motors to 48 V: a quarter of the current, thinner wires; steering and brakes stay safety critical."
+      - "PAC5532 and ACT72350 reach 160 V with 2 A gate drive and current sensing; PAC5527 fits 12 V; none has a stated automotive grade."
+      - "Decide whether to qualify one 160 V part to AEC-Q100 for non-safety comfort and thermal actuators, starting with one Tier-1 socket."
+    title: "48 V motor control in the car: actuators moving from 12 V to 48 V, and where Qorvo's intelligent motor control fits"
+    kind: report
+    area: Automotive motor control
+    app_type: Automotive
+    feasibility: 1
+    feasibility_why: "The parts exist (PAC5532AQX, ACT72350 at 160 V, PAC5527 at 12 V); the step is AEC-Q100 qualification, PPAP and automotive firmware, not a new chip"
+    date: 2026-10-28
+    status: draft
+    see_also:
+      - {label: "Part knowledge: motor drivers and motor controllers", href: "/reviews/how/motor"}
+      - {label: "Part review: Qorvo PAC5527 and the PAC family", href: "/reviews/qorvo-pac5527-motor-driver"}
+    question: "48V Motor Control Applications in Cars. Actuators transitioning from 12V to 48V, Motor Control SoCs (Systems
+      library, 27 Oct 2026); Non safety critical actuator replacement using Qorvo Intelligent motor control (28 Oct 2026).
+      Should Skyworks + Qorvo offer its intelligent motor controllers for non-safety-critical 48 V car actuators?"
+    summary: >-
+      Preliminary report from the owner's comments of 27 and 28 Oct 2026. 48 V and zonal low-voltage nets (Tesla
+      Cybertruck, mild hybrids) carry the same power at a quarter of the current, so wires get thinner and pumps, fans,
+      blowers and compressors gain power. A 48 V drive needs 80-100 V MOSFETs and a gate driver rated for 60-70 V
+      transients with margin, plus an MCU and current sensing. Competitors pair a 12 V motor-control MCU with a separate
+      48 V gate driver (Infineon TLE9140EQW with MOTIX TLE989x, TI DRV8363-Q1, ST L9908, Allegro AMT49100, NXP GD3000);
+      only Elmos sells a one-chip 48 V controller (E523.52). Ours: PAC5532AQX (160 V, Cortex-M4F, CAN controller) and
+      ACT72350 (160 V gate driver with buck, no MCU) fit the voltage; PAC5527 (48 V absolute maximum) fits 12 V comfort
+      motors only. None has a stated AEC-Q grade, so the owner's angle (replace non-safety comfort and thermal actuators)
+      needs one qualified part first. Skyworks adds automotive isolation (Si86xx, Si88xx) where 12 V and 48 V meet.
+    tags: [48 V, mild hybrid, zonal architecture, BLDC, motor control SoC, gate driver, PAC5532, PAC5527, ACT72350,
+      sensorless, back-EMF, pumps and fans, HVAC blower, seat adjustment, AEC-Q100, ISO 26262]
+    sources: "BizDev catalogue with the AEC-Q rule, Part knowledge (motor drivers), PAC5527 review, Systems library diagrams;
+      13 public web requests (ti.com, infineon.com, allegromicro.com, elmos.com, electronicsforu.com; st.com did not
+      answer) and 11 web searches; no qorvo.com host requested"
+    decision: Should Skyworks + Qorvo qualify one intelligent motor controller for non-safety-critical 48 V car actuators?
+    answer:
+      text: 'Yes, as a test with one part (est). Voltage and integration already fit: PAC5532AQX and ACT72350 cover 48 V with
+        160 V ratings, and PAC5527 suits 12 V comfort motors. But no PAC or ACT part has a stated AEC-Q100 grade, so first
+        ask the motor-control BU whether one 160 V part can be qualified, then offer it for one pump, fan or seat socket.'
+      conf: low
+    needed_now:
+    - 'Motor-control BU: is any PAC55xx or ACT72350 qualified or qualifiable to AEC-Q100 (Grade 1), with PPAP, and at what cost and time?'
+    - 'One Tier-1 for thermal management or seats: which 48 V actuators are in their next platform, and does a one-chip controller save them a part?'
+    - "The owner's Qorvo seat-adjustment application note (live library upload): what it recommends, to add its details here"
+    say_externally: Cars are moving pumps, fans, blowers and comfort motors to 48 V, which needs motor drives rated well above
+      the battery voltage. Qorvo, now part of Skyworks, makes intelligent motor controllers that combine power supply,
+      microcontroller and gate drivers up to 160 V. We would like to learn which 48 V actuators you plan and what
+      qualification they need.
+    next_steps:
+    - what: Ask whether PAC5532AQX or ACT72350 can be qualified to AEC-Q100 Grade 1 with PPAP, and what an automotive variant would cost and take
+      who: Power management BU (Qorvo motor control)
+      why: Every automotive socket in this report depends on it; voltage and integration already fit, the grade does not.
+    - what: Take the 48 V pump and fan diagram and the seat adjustment diagram to one thermal-management or seat Tier-1 and ask for one non-safety socket
+      who: Our FAE with a Tier-1 thermal or seating team
+      why: A first customer for a single-chip 48 V controller shows the demand before any qualification money is spent.
+    - what: Read the owner's seat-adjustment application note from the live library uploads and add its design details to Part knowledge and this report
+      who: The daily run
+      why: The note is only on the live site; its seat-module details make the comfort-actuator case concrete.
+    bu_opener:
+      question: Cars move pumps, fans, blowers and comfort motors from 12 V to 48 V, and competitors still need two chips
+        (a 12 V motor MCU plus a 48 V gate driver). Should we qualify our 160 V intelligent motor controller (PAC5532 or
+        ACT72350) for non-safety-critical 48 V actuators, against Infineon, TI, ST, Allegro, NXP and Elmos?
+      pros:
+      - One chip with MCU, gate drivers, buck and current sensing up to 160 V; most rivals need two chips at 48 V
+      - 2 A gate drive and a charge pump or bootstrap already cover 0.3-1 kW pump and fan motors
+      - Skyworks adds automotive isolators and isolated DC-DC where 12 V and 48 V meet
+      cons:
+      - No PAC or ACT part has a stated AEC-Q100 grade or ISO 26262 process
+      - No LIN or CAN transceiver and no automotive MOSFETs of ours
+      - Infineon, TI, ST and NXP already sit in body and thermal ECUs with qualified parts
+      vs: Infineon (MOTIX), TI, STMicroelectronics, Allegro, NXP, Elmos, Melexis
+    learn:
+    - age: 5
+      text: A car has many small electric motors that pump water, blow air and move the seats. Each motor needs a little brain that tells it when to push.
+    - age: 10
+      text: Most car motors run on 12 volts today. New cars add a 48 volt battery, so the same motor needs four times less
+        current and the wires can be thinner. The chip that drives the motor must then handle the higher voltage safely.
+    - age: 15
+      text: A brushless motor needs six switches, a gate driver to turn them on, a microcontroller that decides when, and a
+        way to measure current or the voltage the spinning motor makes (back-EMF). At 48 V the switches and the driver must
+        survive 60-70 V spikes, and in a car every chip must pass the AEC-Q100 tests.
+    - age: 20
+      text: The owner asked how 48 V motor control in cars works and whether Qorvo's intelligent motor controllers could
+        replace non-safety-critical actuators. The report checks each block of a 48 V drive for our best part, compares the
+        competitors' motor-control chips and says what is missing for the car.
+    - age: 25
+      text: 'Infineon, TI, ST, Allegro and NXP sell qualified 48 V gate drivers next to a 12 V motor MCU; Elmos sells a
+        one-chip 48 V controller. Our PAC5532AQX and ACT72350 reach 160 V with 2 A gate drive and on-chip sensing, and PAC5527
+        fits 12 V; none has a stated AEC-Q grade. Gap: qualification and ISO 26262 process, not voltage.'
+    learn_links:
+    - label: 'Animated circuit: BLDC 6-step, FOC and back-EMF'
+      href: /visuals#bldc
+    - label: 'Animated circuit: gate driver, half-bridge and bootstrap'
+      href: /visuals#bootstrap
+    - label: 'Library: traction inverter isolation (ASIL D)'
+      href: /library/traction_asil_d
   - slug: auto-wireless-audio
     gist: "Wireless car audio suits headphones and add-on speakers, not the main system; start with automotive 2.4 GHz front ends, then our low-latency audio chips (est)."
     abstract:

@@ -127,7 +127,7 @@ def test_hot_swap_expansion_compares_cars_and_data_centres(client):
     assert not rp.story_problems(r)
     page = html.unescape(client.get(f"/business/reports/{HOT}").text)
     sec = page.split('<section id="applications-in-depth">', 1)[1].split("</section>", 1)[0]
-    assert "Cars and data centres: the same problem at two scales" in sec
+    assert "Cars and data centers: the same problem at two scales" in sec
     table = sec.split('id="efuse-car-dc-table"', 1)[1].split("</table>", 1)[0]
     for row in ("Inrush control and dV/dt", "safe operating area", "Current sensing", "Fault response time",
                 "Latch vs auto-retry", "Reverse current blocking", "Ideal diode / ORing", "Telemetry",

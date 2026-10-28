@@ -204,7 +204,7 @@
   (window.VZ_ADD = window.VZ_ADD || []).push(({V}) => {
     const PK = {motor: ["Part knowledge: motor drivers and controllers", "/reviews/how/motor"], gd: ["Part knowledge: isolated gate drivers", "/reviews/how/gatedriver"],
       iso: ["Part knowledge: capacitive digital isolators", "/reviews/how/isolator"], cs: ["Part knowledge: isolated current sensing", "/reviews/how/currentsense"],
-      hs: ["Research: hot-swap and eFuses, cars and data centres", "/business/reports/auto-hv-hot-swap#applications-in-depth"]};
+      hs: ["Research: hot-swap and eFuses, cars and data centers", "/business/reports/auto-hv-hot-swap#applications-in-depth"]};
     const more = (...ls) => `<p class="small">More: ${ls.map(([l, h]) => `<a href="${h}">${esc(l)}</a>`).join(" · ")}</p>`;
     const simp = s => `<p class="small"><b>Simplified</b> ${EST}: ${s}</p>`;
 

@@ -1,0 +1,124 @@
+# Application knowledge (owner, 28 Oct 2026, comments on "Interior radar for child presence detection"): short explainers
+# shown on application pages (data/blocks/templates.yaml `knowledge: [ids]`) and Systems library topics
+# (data/library/topics/<key>.yaml `knowledge: [ids]`), each with its public sources (app/services/app_knowledge.py).
+#
+# Fields: id, title, intro, points (list of plain sentences), table (optional: head + rows), note (optional), sources.
+# Sources: {title, url, kind}; kind: read (fetched and read on the date), snippet (search snippet only, page not read),
+# ours (BizDev data or a page that cites its own sources). "est" in a text marks BizDev's own reasoning.
+items:
+  - id: cpd_regulation
+    title: "Why it matters: regulation"
+    intro: >-
+      Child presence detection (CPD) is driven by crash-test ratings first and by law second. In Europe and Australia a
+      car without it loses rating points; in the US the law asks only for a rear-seat reminder.
+    points:
+      - "Euro NCAP (Europe): CPD has earned points since 2023. From 2025 only direct sensing counts: the system must sense the child itself (movement, breathing or heartbeat), not guess from door openings. Direct-sensing systems rose from 12 % to 31 % of rated cars."
+      - "Euro NCAP 2026 protocol (Safe Driving, Occupant Monitoring): direct-sensing CPD is worth up to 5 points, from January 2026. The bulletin asks for detection within 15 s of locking, across all seats and footwells, for children up to six (from the SD-102 v2.0 summary; the PDF was not read)."
+      - "ANCAP (Australia and New Zealand): CPD has been assessed since 2023, up to 4 points in Child Occupant Protection, when it is standard and covers all rear rows (search snippets of the ANCAP protocols; not read)."
+      - "US: no direct-sensing mandate. The Infrastructure Investment and Jobs Act (2021, from the HOT CARS Act) told NHTSA to require a rear-seat reminder alert after the engine is switched off; the rule was due in November 2023 and had not been proposed by mid-2025 (search snippet; not read)."
+      - "What it means for us (est): in Europe a five-star car needs a direct sensor in every new model. A UWB key system already has anchors in the cabin, so CPD can run on them instead of a separate 60 GHz radar module."
+    see:
+      - {label: "Child presence detection vs ranging", href: "/library/auto_uwb#k-cpd_vs_ranging"}
+      - {label: "Case: UWB child presence detection (driver: Euro NCAP)", href: "/business/reports/auto-uwb-cpd"}
+    sources:
+      - {title: "Euro NCAP rewards only direct-sensing CPD from 2025; direct sensing 12 % to 31 % of rated cars (summary of CLIV-21-07)", url: "https://globalautoregs.com/documents/43460", kind: ours}
+      - {title: "Euro NCAP Safe Driving - Occupant Monitoring Protocol v1.2 (2026): direct-sensing CPD up to 5 points", url: "https://cdn.euroncap.com/cars/assets/Euro_NCAP_Protocol_Safe_Driving_Occupant_Monitoring_v1_2_aebbc7361f.pdf", kind: ours}
+      - {title: "Euro NCAP Technical Bulletin SD 102, Child Presence Detection Evaluation v2.0 (July 2025, from 1 Jan 2026)", url: "https://cdn.euroncap.com/media/88529/sd-102-cpd-evaluation-v20.pdf", kind: snippet}
+      - {title: "What Euro NCAP 2026 says about child presence detection (Smart Eye blog)", url: "https://smarteye.se/blog/what-euro-ncap-2026-says-about-child-presence-detection/", kind: snippet}
+      - {title: "ANCAP Test and Assessment Protocol, Child Presence Detection v1.2 (2023-2025)", url: "https://ctms.ancap.com.au/publications/ancap-test-assessment-protocol-child-presence-detection-v1-2.pdf", kind: snippet}
+      - {title: "HOT CARS Act of 2019 (S. 1601), bill text: rear-seat occupant alert", url: "https://www.govinfo.gov/content/pkg/BILLS-116s1601is/html/BILLS-116s1601is.htm", kind: snippet}
+
+  - id: anchors_tags
+    title: "UWB anchors and tags: how many, and which anchor does what"
+    intro: >-
+      An anchor is a UWB node fixed at a known place: in a car in the mirrors, door handles, pillars, bumpers and roof
+      lining; in a building on walls and ceilings. A tag is the thing being located: a phone, key fob or watch with the
+      car key, or a badge on a person or pallet. Anchors range to the tag (two-way ranging), or a tag sends and
+      synchronised anchors compare arrival times (TDoA, used in factories).
+    points:
+      - "How many in a car: Huf places four anchors (\"satellites\") in the corners of the car plus two in the passenger compartment, six in all. Valeo sells 2 to 6 anchors, up to 7 in its full passive-entry version."
+      - "A market report quotes 4 to 6 anchors as usual, most often 4 outside + 1 inside, or 0 outside + 4 inside; ZEEKR and XPeng use 6 (search snippet; not read). Fewer anchors (2-3) give passive start and light passive entry only."
+      - "Specific anchors do have specific jobs. Corner anchors outside find the phone around the car (which door, welcome light, walk-away lock). Interior anchors decide \"inside or outside\", which CCC needs before the engine may start."
+      - "The rearmost interior anchor in the roof lining can also watch the rear seats and the trunk, so it doubles as the child-presence radar (Huf). A rear or bumper anchor can do kick or gesture sensing to open the trunk in radar mode (Infineon AIROC UWB, ST64UWB)."
+      - "Angle-capable anchors have two or three antennas and measure direction as well as distance (phase difference); one such anchor sees more than a distance-only one, so a vendor claims fewer anchors per car (est)."
+      - "There is usually no \"master anchor\": the access ECU (or zone controller) runs the BLE link, wakes the anchors and computes the position from their ranges over CAN or LIN; the anchors are its satellites (est, from the public block diagrams). In factory TDoA systems one anchor is the clock reference for the others."
+      - "Radar or CPD adds no new anchor where the roof anchor already exists; a car without a UWB key needs a stand-alone sensor (est)."
+    table:
+      head: ["Anchor", "Where", "Job"]
+      rows:
+        - ["Exterior corner anchors (x4 typical)", "Mirrors, door handles, bumpers, B-pillars", "Range to the phone outside: approach, which door, walk-away lock"]
+        - ["Interior anchors (x1-2)", "Centre console, roof lining", "Inside or outside (engine start); the rear one also CPD radar"]
+        - ["Rear / trunk anchor", "Rear bumper or tailgate", "Trunk access; kick or gesture sensing in radar mode"]
+        - ["Angle-capable anchor (2-3 antennas)", "Any position where coverage is hard", "Distance and direction; may save an anchor (est)"]
+        - ["Access ECU (not an anchor)", "Body or zone controller", "BLE wake-up, scheduling, position estimate, unlock decision"]
+    see:
+      - {label: "How UWB works (Part knowledge)", href: "/reviews/how/uwb"}
+      - {label: "UWB and Wi-Fi channels: overlap and decision matrix", href: "/engineering/uwb_wifi_coexistence"}
+    sources:
+      - {title: "Phone as a Key: how the Huf digital car key works (four corner satellites, two in the cabin, rear one for CPD)", url: "https://www.huf-group.com/en/news/magazine/Phone-as-a-Key-How-the-Huf-digital-car-key-works", kind: read}
+      - {title: "Valeo Ultra Wide Band phone as a car key (2 to 6 anchors; 2 to 7 in the full version)", url: "https://www.valeo.com/en/catalogue/cda/ultra-wide-band-uwb-phone-as-a-car-key/", kind: read}
+      - {title: "Automotive Digital Key Industry Trend Report 2026 (ResearchInChina): 4-6 anchors, 4+1 and 0+4 layouts", url: "https://www.marketresearch.com/Research-in-China-v3266/Automotive-Digital-Key-Trend-45017764/", kind: snippet}
+      - {title: "CCC UWB Spectrum Regulatory Position v2025 R2 (Digital Key use cases: unlock, lock, start inside the vehicle)", url: "https://carconnectivity.org/wp-content/uploads/2022/12/CCC-UWB-Spectrum-Regulatory-Position_v2025-R2.pdf", kind: ours}
+      - {title: "Infineon AIROC automotive UWB: digital key, CPD, kick sensing and intrusion on one chip", url: "https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions", kind: ours}
+      - {title: "ST64UWB: 802.15.4ab with radar mode (kick sensor, CPD)", url: "https://blog.st.com/st64uwb/", kind: ours}
+
+  - id: cpd_vs_ranging
+    title: "Child presence detection vs ranging: the same UWB chip, two jobs"
+    intro: >-
+      In ranging mode the anchor talks to a phone or fob and measures how far away it is. In radar mode (CPD) there is
+      no second device: the anchor listens to the echoes of its own pulses and looks for the tiny, slow changes that
+      breathing makes.
+    points:
+      - "Ranging: two-way time of flight (poll, response, final) between anchor and tag, secured by the 802.15.4z STS; angle from the phase difference at two antennas. It answers \"where is the key?\"."
+      - "CPD radar: the chip records the channel impulse response again and again, removes the static part (seats, doors) and looks for changes of a few millimetres at breathing rate in windows of about 10 s. It answers \"is anyone alive in here?\"."
+      - "Monostatic: one anchor sends and receives. Bistatic: one anchor sends and another receives, which uses two anchors the car already has (est). IEEE 802.15.4ab adds a standard sensing mode; today radar mode is each vendor's own."
+      - "One chip can do both, but not at the same time: ranging while the key is near, radar after the car is locked (est). QPF5100Q, Infineon's AIROC UWB, ST64UWB-A500 and Calterah's chip all list both."
+    table:
+      head: ["", "Ranging (key, access)", "Radar (CPD, intrusion, kick)"]
+      rows:
+        - ["Second device", "Yes: phone, fob or watch (the tag)", "None: echoes from people"]
+        - ["What is measured", "Time of flight, angle of arrival", "Changes of the impulse response over seconds (micro-motion)"]
+        - ["Standard", "IEEE 802.15.4z HRP, CCC Digital Key, FiRa", "Vendor-specific today; 802.15.4ab sensing mode next"]
+        - ["Antennas", "1 per anchor for distance; 2-3 for angle", "Roof antennas near the A- and B-pillars, nulls facing each other; 2 ports help separate seats (est)"]
+        - ["TX power and duty", "Short bursts after a BLE or NFC trigger; a few % airtime", "Same power cap; frames for seconds to minutes after locking, so parked current matters (est)"]
+        - ["Processing", "Timestamps, first-path and STS check on the chip; position on the ECU", "Clutter removal and a small classifier (under 1e7 operations); memory for CIR history (est)"]
+        - ["Timing", "Unlock in well under a second (est)", "Euro NCAP: detect within 15 s of locking"]
+        - ["Front end", "Low loss before the LNA; flat group delay", "Linear receiver; TX-to-RX isolation when the same anchor sends and listens (est)"]
+    see:
+      - {label: "How UWB works (Part knowledge)", href: "/reviews/how/uwb"}
+      - {label: "UWB signal path", href: "/engineering/uwb_signal_path"}
+      - {label: "UWB and Wi-Fi channels", href: "/engineering/uwb_wifi_coexistence"}
+    sources:
+      - {title: "Systems library: Automotive UWB, rules d10, d13, d14 (UWBCarGraz arXiv 2311.10478, IEEE 802.15.4ab coexistence document)", url: "/library/auto_uwb", kind: ours}
+      - {title: "UWBCarGraz dataset for car occupancy detection using UWB radar (arXiv 2311.10478)", url: "https://arxiv.org/abs/2311.10478", kind: ours}
+      - {title: "Qorvo QPF5100Q automotive UWB SoC press release (StockTitan copy, 7 Jan 2025): digital key and UWB radar for CPD and motion sensing", url: "https://www.stocktitan.net/news/QRVO/qorvo-automotive-qualified-uwb-so-c-drives-innovation-with-1y18rni0bv49.html", kind: read}
+      - {title: "ST64UWB, the first 802.15.4ab device with narrowband assistance and radar mode", url: "https://blog.st.com/st64uwb/", kind: ours}
+      - {title: "Infineon AIROC automotive UWB (CCC digital key and CPD on one chip)", url: "https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions", kind: ours}
+
+  - id: qpf5100q_pairing
+    title: "QPF5100Q together with QPF5001Q as a solution?"
+    intro: >-
+      What our data and public pages say about the two parts, and which pairing works for a UWB anchor.
+    points:
+      - "QPF5100Q: automotive-qualified UWB SoC with integrated TX filtering, 2 MB flash and 256 KB SRAM, for digital key, keyless entry and UWB radar (child presence, motion and kick sensing). Sampling in January 2025, in design verification with car makers, production planned for later 2025. Its status in our catalogue is \"unknown\": no lifecycle source."
+      - "QPF5001Q: not in our data, and no public page was found for it. Our catalogue has QPF5001 (no Q): a front-end module for 8-12 GHz (X band) with 12 W transmit, limiter and LNA, made for radar; it is not marked automotive. It was not added to the catalogue."
+      - "As a UWB pair, QPF5100Q + QPF5001 does not work (est): QPF5001 starts at 8.0 GHz, so it misses channel 5 and covers only the top 0.24 GHz of channel 9 (7.74-8.24 GHz); its 12 W is about 55 dB above the UWB limit (-41.3 dBm/MHz mean is about -14 dBm over a 500 MHz channel); and it is not automotive."
+      - "The pairing that does fill the anchor's blocks (est): QPF5100Q as the SoC (ranging + radar); QM14068 bypass LNA (6.2-8.3 GHz) at weak exterior positions; QM14070 PA with bypass only to make up board losses; SKY5A2108 switch (AEC-Q100 Grade 2) for two antennas or angle; SKY5A1008 6 GHz Wi-Fi BAW filter on the car's Wi-Fi side. QM14068 and QM14070 have no automotive grade in our catalogue."
+      - "Question for the owner: did you mean another part (for example a front end such as QM14068 / QM14070, or DW3300Q)? The answer goes into docs/open_questions.md."
+    table:
+      head: ["Part", "Block it fills", "Band", "Automotive", "Status in our data"]
+      rows:
+        - ["QPF5100Q", "UWB SoC: ranging + radar (CPD, kick)", "UWB ch5 and ch9 (est)", "Yes (qualified, press 2025)", "unknown (sampling Jan 2025)"]
+        - ["QPF5001Q", "-", "-", "-", "not found (no public page)"]
+        - ["QPF5001", "X-band radar T/R front end (not UWB)", "8-12 GHz", "not stated", "Standard"]
+        - ["QM14068", "Bypass LNA in the anchor RX", "6.2-8.3 GHz", "not stated", "Standard"]
+        - ["QM14070", "PA with bypass in the anchor TX", "6-9 GHz", "not stated", "Standard"]
+        - ["SKY5A2108", "Antenna / AoA switch", "2.4-8.3 GHz", "AEC-Q100 Grade 2", "active (Skyworks catalogue)"]
+    see:
+      - {label: "How UWB works: parts table and pairing", href: "/reviews/how/uwb#parts"}
+      - {label: "QPF5100Q in BizDev", href: "/find?q=QPF5100Q"}
+    sources:
+      - {title: "Qorvo QPF5100Q press release (StockTitan copy, 7 Jan 2025): automotive-qualified, sampling, production later 2025", url: "https://www.stocktitan.net/news/QRVO/qorvo-automotive-qualified-uwb-so-c-drives-innovation-with-1y18rni0bv49.html", kind: read}
+      - {title: "QPF5100Q catalogue row (RFMW product page title, search snippet)", url: "https://rfmw.com/products/detail/qpf5100q-qorvo/858672/", kind: snippet}
+      - {title: "QPF5001 8-12 GHz 12 W transmit/receive module (GlobalSpec datasheet listing)", url: "https://datasheets.globalspec.com/ds/qorvo/qpf5001/f5508ac4-b97d-4f34-adf6-7c232f224276", kind: snippet}
+      - {title: "Part knowledge: How UWB works (parts table, QM14068, QM14070, SKY5A2108)", url: "/reviews/how/uwb", kind: ours}

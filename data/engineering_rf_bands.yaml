@@ -73,14 +73,15 @@ bands:
   - {id: ism915, name: "902-928 MHz ISM (US)", group: wlan, mode: TDD, ranges: [[902, 928, ISM]], regions: "Americas", uses: "LoRa, Wi-SUN, 802.15.4g, RFID, Z-Wave (908 MHz)"}
   - {id: ism24, name: "2.4 GHz ISM: Wi-Fi, Bluetooth, 802.15.4", group: wlan, mode: TDD, ranges: [[2400, 2483.5, ISM]], regions: "worldwide", uses: "Wi-Fi 4-7, Bluetooth / BLE, Zigbee, Thread, Matter"}
   - {id: wifi5, name: "Wi-Fi 5 GHz (U-NII-1 to 4)", group: wlan, mode: TDD, ranges: [[5150, 5350, "U-NII-1/2A"], [5470, 5730, "U-NII-2C"], [5735, 5895, "U-NII-3/4"]], regions: "worldwide (channels vary)", uses: "Wi-Fi 5/6/7; DFS radar detection in U-NII-2"}
-  - {id: wifi6, name: "Wi-Fi 6 GHz (6E / 7)", group: wlan, mode: TDD, ranges: [[5925, 7125, "U-NII-5 to 8"]], regions: "US (1200 MHz), Europe (5945-6425 MHz)", uses: "Wi-Fi 6E and 7, 320 MHz channels"}
+  - {id: wifi6, name: "Wi-Fi 6 GHz (6E / 7)", group: wlan, mode: TDD, ranges: [[5925, 6425, "U-NII-5"], [6425, 6525, "U-NII-6"], [6525, 6875, "U-NII-7"], [6875, 7125, "U-NII-8"]], regions: "US, Canada, Korea (all 1200 MHz); Europe 5945-6425; UK, Japan 5925-6425; China none (6425-7125 for IMT, est)", uses: "Wi-Fi 6E and 7, 320 MHz channels"}
   - {id: wigig, name: "60 GHz WiGig (802.11ad / ay)", group: wlan, mode: TDD, ranges: [[57000, 71000, "60 GHz"]], regions: "worldwide (57-66 / 57-71 GHz)", uses: "multi-gigabit short range, in-cabin radar"}
   # ---- UWB, V2X, NFC, RFID
   - {id: nfc, name: "NFC / HF RFID (13.56 MHz)", group: short, mode: TDD, ranges: [[13.553, 13.567, HF]], regions: "worldwide", uses: "payment, access, wireless charging handshake"}
   - {id: uhf_rfid, name: "UHF RFID (860-960 MHz)", group: short, mode: TDD, ranges: [[860, 960, UHF]], regions: "865-868 MHz EU, 902-928 MHz US", uses: "RAIN RFID tags, logistics"}
   - {id: v2x, name: "ITS 5.9 GHz: C-V2X (n47) / DSRC", group: short, mode: TDD, ranges: [[5855, 5925, ITS]], regions: "US (5895-5925), Europe, China", uses: "vehicle-to-everything safety messages"}
-  - {id: uwb5, name: "UWB channel 5 (6.5 GHz)", group: short, mode: TDD, ranges: [[6240, 6739, ch5]], regions: "worldwide", uses: "secure ranging: digital car key, tags (802.15.4z)"}
-  - {id: uwb9, name: "UWB channel 9 (8 GHz)", group: short, mode: TDD, ranges: [[7738, 8237, ch9]], regions: "worldwide", uses: "secure ranging, in-cabin radar (802.15.4z / 4ab)"}
+  - {id: uwb5, name: "UWB channel 5 (6.5 GHz)", group: short, mode: TDD, ranges: [[6240, 6739, ch5]], regions: "US, Europe; not China (7163-8812 MHz from Aug 2025); inside 6 GHz Wi-Fi", uses: "secure ranging: digital car key, tags (802.15.4z); losing ground to Wi-Fi 6E/7 and IMT"}
+  - {id: uwb6, name: "UWB channel 6 (7.0 GHz)", group: short, mode: TDD, ranges: [[6739, 7238, ch6]], regions: "US, Europe; not China; inside US 6 GHz Wi-Fi up to 7125 MHz", uses: "secure ranging (802.15.4z), rarely used"}
+  - {id: uwb9, name: "UWB channel 9 (8 GHz)", group: short, mode: TDD, ranges: [[7738, 8237, ch9]], regions: "worldwide (CCC: the only global UWB channel)", uses: "secure ranging, in-cabin radar (802.15.4z / 4ab)"}
   # ---- broadcast
   - {id: am, name: "AM broadcast (MW 0.53-1.71 MHz, LW)", group: broadcast, mode: RX, ranges: [[0.148, 0.283, LW], [0.53, 1.71, MW]], regions: "worldwide", uses: "AM radio, car radios"}
   - {id: fm, name: "FM broadcast (76-108 MHz)", group: broadcast, mode: RX, ranges: [[76, 108, FM]], regions: "87.5-108 MHz most countries, 76-95 MHz Japan", uses: "FM radio, RDS, HD Radio",
@@ -127,7 +128,7 @@ types:
   - {id: wifi, label: Wi-Fi, bands: [ism24, wifi5, wifi6, wigig]}
   - {id: ble, label: "Bluetooth / BLE", bands: [ism24]}
   - {id: subghz, label: "Sub-GHz IoT", bands: [ism433, srd868, ism915]}
-  - {id: uwb, label: UWB, bands: [uwb5, uwb9]}
+  - {id: uwb, label: UWB, bands: [uwb5, uwb6, uwb9]}
   - {id: v2x, label: V2X, bands: [v2x]}
   - {id: nfc, label: "NFC / RFID", bands: [nfc, uhf_rfid]}
   - {id: satcom, label: Satcom, bands: [sat_l, sat_c, sat_ku, sat_ka]}

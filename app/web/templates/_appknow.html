@@ -1,0 +1,27 @@
+{# Application knowledge (owner, 28 Oct 2026): explainers from data/library/app_knowledge.yaml, each with its sources.
+   Call app_knowledge(ids) for the items; "est" marks BizDev's own reasoning. #}
+{% macro est(text) %}{{ (text|e)|replace('(est)', '<span class="kn-est" title="BizDev\'s own reasoning, not from a source">est</span>')|replace('(est, ', '(<span class="kn-est" title="BizDev\'s own reasoning, not from a source">est</span>, ')|safe }}{% endmacro %}
+{% macro app_knowledge_list(items, heading='Application knowledge') %}{% if items %}
+<section class="ak small" id="app-knowledge" aria-label="{{ heading }}">
+  <h2>{{ heading }}</h2>
+  <p class="muted">{% for x in items %}<a href="#k-{{ x.id }}">{{ x.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>
+  {% for x in items %}<details class="ak-item" id="k-{{ x.id }}" open>
+    <summary><b>{{ x.title }}</b></summary>
+    <p>{{ est(x.intro) }}</p>
+    <ul>{% for p in x.points %}<li>{{ est(p) }}</li>{% endfor %}</ul>
+    {% if x.table %}<div class="table-wrap"><table class="small">
+      <thead><tr>{% for h in x.table.head %}<th scope="col">{{ h }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for r in x.table.rows %}<tr>{% for c in r %}{% if loop.first %}<td><b>{{ c }}</b></td>{% else %}<td data-label="{{ x.table.head[loop.index0] }}">{{ est(c) }}</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody>
+    </table></div>{% endif %}
+    {% if x.see %}<p><b>See also:</b> {% for l in x.see %}<a href="{{ l.href }}">{{ l.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+    <p class="muted"><b>Sources:</b> {% for s in x.sources %}<a href="{{ s.url }}"{% if not s.url.startswith('/') %} target="_blank" rel="noopener"{% endif %}>{{ s.title }}</a> <span class="ak-kind">({{ {'read': 'read 28 Oct 2026', 'snippet': 'search snippet, not read', 'ours': 'our data'}.get(s.kind, s.kind) }})</span>{{ ' · ' if not loop.last }}{% endfor %}</p>
+  </details>{% endfor %}
+</section>
+<style>
+.ak { margin: 1rem 0; }
+.ak h2 { font-size: 1.15rem; margin-bottom: .3rem; }
+.ak-item { border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; padding: .3rem .8rem; margin: .4rem 0; }
+.ak-item ul { margin-bottom: .4rem; }
+.ak-kind { color: var(--pico-muted-color); font-size: .75rem; }
+</style>
+{% endif %}{% endmacro %}

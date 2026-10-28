@@ -1,0 +1,91 @@
+{% set est = '<span class="kn-est" title="BizDev\'s own reasoning, not from a source">est</span>' %}
+<p class="small">Owner, 28 Oct 2026: "UWB-WiFi Channel 5/6 issues and overlap decision matrix into the knowledge base."
+  UWB channels 5 and 6 both overlap the 6 GHz Wi-Fi band, so both are covered. Related: <a href="/reviews/how/uwb">How UWB
+  works</a> (Part knowledge), <a href="/library/auto_uwb">Automotive UWB</a> (Systems library, rules d6-d10),
+  <a href="/rf-bands?band=uwb9">RF bands chart</a>. Points marked {{ est|safe }} are BizDev's own reasoning.</p>
+
+<h2>The bands side by side</h2>
+{% include "engineering/_uwb_wifi_bands.html" %}
+<div class="table-wrap"><table class="small">
+  <thead><tr><th scope="col">Band</th><th scope="col">Range (MHz)</th><th scope="col">Overlap with UWB</th></tr></thead>
+  <tbody>
+    <tr><td><b>UWB channel 5</b></td><td>6240-6739.2 (centre 6489.6)</td><td>Fully inside US 6 GHz Wi-Fi (U-NII-5 to 7); 185 MHz of it inside EU Wi-Fi (to 6425)</td></tr>
+    <tr><td><b>UWB channel 6</b></td><td>6739.2-7238.4 (centre 6988.8)</td><td>386 MHz inside US Wi-Fi (U-NII-7/8, to 7125); clear of EU Wi-Fi; inside upper-6 GHz IMT (6425-7125)</td></tr>
+    <tr><td><b>UWB channel 8</b></td><td>7238.4-7737.6 (centre 7488.0)</td><td>Clear of Wi-Fi; inside the WRC-27 IMT study range</td></tr>
+    <tr><td><b>UWB channel 9</b></td><td>7737.6-8236.8 (centre 7987.2)</td><td>612 MHz above the top of Wi-Fi (7125); the CCC car-key channel; inside the WRC-27 IMT study range (7.125-8.4 GHz)</td></tr>
+    <tr><td><b>Wi-Fi 6E / 7 (6 GHz)</b></td><td>5925-7125: U-NII-5 5925-6425, U-NII-6 6425-6525, U-NII-7 6525-6875, U-NII-8 6875-7125</td><td>US, Canada, Korea: all 1200 MHz. EU 5945-6425; UK and Japan 5925-6425. China: no 6 GHz Wi-Fi (6425-7125 for IMT) {{ est|safe }}</td></tr>
+    <tr><td><b>Wi-Fi 5 GHz</b></td><td>5150-5895 (U-NII-1 to 4)</td><td>None: 345 MHz below channel 5</td></tr>
+    <tr><td><b>V2X (ITS 5.9 GHz)</b></td><td>5855-5925</td><td>None with UWB; it sits between the two 802.15.4ab assist (NBA) bands 5725-5850 and 5925-6425</td></tr>
+  </tbody>
+</table></div>
+<p>Channel numbers and centres are those of IEEE 802.15.4z (HRP UWB, 499.2 MHz channels). The Car Connectivity
+  Consortium (CCC) says channel 5 "will soon be rendered useless" by Wi-Fi and IMT and that channel 9 is "the only global
+  channel" left for the digital key.</p>
+
+<h2>What goes wrong</h2>
+<ul>
+  <li><b>In-band interference.</b> A Wi-Fi 6E/7 transmitter puts tens of dB more power per MHz on channel 5 or 6 than
+    UWB is allowed (-41.3 dBm/MHz). While Wi-Fi sends, the UWB receiver loses the packet. UWB is far below Wi-Fi's
+    energy-detect threshold, so Wi-Fi never waits for UWB: the UWB side must avoid Wi-Fi, not the other way round
+    (802.15.4ab coexistence study, rule d8).</li>
+  <li><b>Desense from out-of-band noise.</b> Even on channel 9 the Wi-Fi transmitter's noise skirt and harmonics
+    raise the UWB noise floor when the antennas are close; every dB of noise is a dB of range lost {{ est|safe }}.</li>
+  <li><b>Blocking and compression.</b> A strong Wi-Fi or phone signal a few centimetres away can push the UWB LNA or
+    switch into compression although it is outside the channel. ETSI EN 302 065-3-1 asks anchors to keep working with a
+    -50 dBm interferer (rule d5); a compressed front end also distorts the pulse and the first-path timing.</li>
+  <li><b>Shared antenna fin or cabin.</b> A roof module with Wi-Fi, V2X, cellular and a UWB or NBA antenna has only
+    20-30 dB of antenna-to-antenna isolation {{ est|safe }}; a phone hotspot or the car's own access point sits in the
+    same cabin as the interior anchors.</li>
+  <li><b>The phone side.</b> The phone (the tag) carries 6 GHz Wi-Fi and UWB in one device; the phone maker schedules
+    them, the car cannot {{ est|safe }}.</li>
+</ul>
+
+<h2>Mitigations</h2>
+<ul>
+  <li><b>Prefer channel 9.</b> It is allowed in every main region and 612 MHz away from Wi-Fi; use channel 5 only as a
+    fallback where no 6 GHz Wi-Fi is near (rule d6).</li>
+  <li><b>Filtering.</b> A BAW filter on the Wi-Fi transmitter (SKY5A1008, 5945-7125 MHz; its rejection at UWB channel 9 is
+    not stated) cuts the noise it puts on UWB; a channel-9 band-pass in front of the anchor's LNA rejects Wi-Fi and IMT
+    blockers (no Skyworks or Qorvo channel-9 filter in our catalogue: a gap). For 802.15.4ab assist radios a V2X notch
+    (QPQ2230Q, SKY5A1005) keeps the 5.9 GHz V2X transmitter out of the NBA receiver.</li>
+  <li><b>Time-domain coexistence.</b> Short UWB ranging slots (about 1.5-5 % airtime, rule d10), a coexistence signal
+    from the UWB chip to the Wi-Fi chip so Wi-Fi pauses during a ranging round {{ est|safe }}, and the 802.15.4ab tools:
+    spectrum-sensing deferral (listen before talk), detect-and-avoid and channel-map exclusion (trend t6).</li>
+  <li><b>Antenna isolation and a robust front end.</b> Separate the UWB and Wi-Fi antennas, point their nulls at each
+    other; aim for 40 dB or more of isolation plus filter rejection {{ est|safe }}. Use an LNA with a bypass mode
+    (QM14068) and a switch that survives strong signals (SKY5A2108, AEC-Q100 Grade 2).</li>
+</ul>
+
+<h2>Decision matrix</h2>
+<p class="small">Rows are situations, columns what to do. Channel rules per region are from the sources below; "from
+  memory" marks rules not read this run. Risk is our estimate {{ est|safe }}.</p>
+<div class="table-wrap"><table class="small uwf-matrix">
+  <thead><tr><th scope="col">Situation</th><th scope="col">UWB channels allowed / in conflict</th><th scope="col">Recommended UWB channel</th><th scope="col">Filtering</th><th scope="col">Coexistence handling</th><th scope="col">Risk</th></tr></thead>
+  <tbody>
+    <tr><td><b>Car with a Wi-Fi 6E/7 hotspot (US, Canada, Korea: full 6 GHz)</b></td><td data-label="Channels">Ch5 and ch6 inside Wi-Fi</td><td data-label="Recommended">Ch9 only</td><td data-label="Filtering">BAW on the Wi-Fi TX (SKY5A1008); ch9 band-pass at the anchor RX</td><td data-label="Coexistence">Wi-Fi pauses during ranging slots; UWB airtime under 5 %</td><td data-label="Risk">ch5/ch6 high; ch9 low-med (est)</td></tr>
+    <tr><td><b>Car with a Wi-Fi 6E hotspot (EU, UK, Japan: lower 6 GHz)</b></td><td data-label="Channels">Ch5 partly inside (6240-6425); ch6 clear</td><td data-label="Recommended">Ch9; ch6 possible in the EU</td><td data-label="Filtering">BAW on the Wi-Fi TX</td><td data-label="Coexistence">Drop ch5 from the channel map while the hotspot is on (est)</td><td data-label="Risk">ch5 med-high; ch9 low (est)</td></tr>
+    <tr><td><b>Car with 5 GHz Wi-Fi only</b></td><td data-label="Channels">No overlap (345 MHz gap to ch5)</td><td data-label="Recommended">Ch9 (ch5 legal in EU and US)</td><td data-label="Filtering">None special</td><td data-label="Coexistence">Standard</td><td data-label="Risk">low (est)</td></tr>
+    <tr><td><b>Phone with 6 GHz Wi-Fi as the key</b></td><td data-label="Channels">Ch5/ch6 conflict inside the phone</td><td data-label="Recommended">Ch9 (CCC)</td><td data-label="Filtering">Anchor RX band-pass; phone side is the phone maker's</td><td data-label="Coexistence">Phone schedules its radios (est); anchor tolerates -50 dBm blockers (ETSI)</td><td data-label="Risk">med near the door handle (est)</td></tr>
+    <tr><td><b>Roof fin or module with Wi-Fi, V2X and UWB / NBA</b></td><td data-label="Channels">NBA next to V2X; ch5 next to Wi-Fi</td><td data-label="Recommended">Ch9; NBA with a V2X notch</td><td data-label="Filtering">V2X notch (QPQ2230Q, SKY5A1005); Wi-Fi BAW</td><td data-label="Coexistence">Antenna isolation 30-40 dB plus filters (est)</td><td data-label="Risk">med (est)</td></tr>
+    <tr><td><b>Region EU</b></td><td data-label="Channels">6.0-8.5 GHz: ch5, ch6, ch8, ch9; anchors transmit only after a trigger</td><td data-label="Recommended">Ch9</td><td data-label="Filtering">As above when 6 GHz Wi-Fi or IMT is near</td><td data-label="Coexistence">Trigger-before-transmit (BLE / NFC wake-up)</td><td data-label="Risk">ch5 rising with upper-6 GHz IMT (est)</td></tr>
+    <tr><td><b>Region US</b></td><td data-label="Channels">3.1-10.6 GHz (FCC Part 15 F, from memory): all; ch5 and ch6 inside Wi-Fi</td><td data-label="Recommended">Ch9</td><td data-label="Filtering">Wi-Fi BAW; ch9 band-pass</td><td data-label="Coexistence">Time sharing with the car's Wi-Fi</td><td data-label="Risk">ch5/ch6 high (est)</td></tr>
+    <tr><td><b>Region China</b></td><td data-label="Channels">7163-8812 MHz from 1 Aug 2025: ch9 (and ch8); ch5 and ch6 not allowed</td><td data-label="Recommended">Ch9 only</td><td data-label="Filtering">Upper-6 GHz IMT blockers: ch9 band-pass</td><td data-label="Coexistence">No 6 GHz Wi-Fi to share with (est)</td><td data-label="Risk">low-med (est)</td></tr>
+    <tr><td><b>Region Japan</b></td><td data-label="Channels">About 7.25-10.25 GHz (from memory, not read): ch9</td><td data-label="Recommended">Ch9</td><td data-label="Filtering">As EU</td><td data-label="Coexistence">Wi-Fi 5925-6425 does not reach ch9</td><td data-label="Risk">low (est)</td></tr>
+    <tr><td><b>Region Korea</b></td><td data-label="Channels">About 7.2-10.2 GHz (from memory, not read): ch9; full 6 GHz Wi-Fi</td><td data-label="Recommended">Ch9</td><td data-label="Filtering">Wi-Fi BAW; ch9 band-pass</td><td data-label="Coexistence">Time sharing with the car's Wi-Fi</td><td data-label="Risk">low-med (est)</td></tr>
+    <tr><td><b>802.15.4ab with narrowband assist</b></td><td data-label="Channels">UWB on ch9; NBA in 5725-5850 and 5925-6425</td><td data-label="Recommended">Ch9 + NBA</td><td data-label="Filtering">NBA filter passing both NBA bands and rejecting V2X 5855-5925</td><td data-label="Coexistence">Listen before talk (SSBD), channel hopping</td><td data-label="Risk">med (final NB plan not public)</td></tr>
+  </tbody>
+</table></div>
+<p><b>Rule of thumb</b> {{ est|safe }}: design every car-access anchor for channel 9 with a front end that covers it to
+  8.25 GHz; treat channels 5 and 6 as "only where no 6 GHz Wi-Fi is near and the region allows it".</p>
+
+<h2>Sources</h2>
+<ul class="small">
+  <li>IEEE 802.15.4z-2020, HRP UWB channel plan (standard page): <a href="https://standards.ieee.org/ieee/802.15.4z/10230/" target="_blank" rel="noopener">standards.ieee.org</a>; FiRa, <a href="https://www.firaconsortium.org/discover/how-uwb-works" target="_blank" rel="noopener">How UWB works</a>.</li>
+  <li>CCC, <a href="https://carconnectivity.org/wp-content/uploads/2022/12/CCC-UWB-Spectrum-Regulatory-Position_v2025-R2.pdf" target="_blank" rel="noopener">UWB Spectrum Regulatory Position v2025 R2</a> (read from our cache): channel 9 the only global channel; channel 5 lost to Wi-Fi and IMT; WRC-27 item 1.7.</li>
+  <li>ETSI <a href="https://www.etsi.org/deliver/etsi_en/302000_302099/3020650301/03.02.01_60/en_3020650301v030201p.pdf" target="_blank" rel="noopener">EN 302 065-3-1 V3.2.1</a>: 6.0-8.5 GHz for vehicle access, -41.3 dBm/MHz, trigger-before-transmit, blocking (library rules d1-d5).</li>
+  <li>IEEE 802.15 <a href="https://mentor.ieee.org/802.15/dcn/23/15-23-0452-07-04ab-coexistence-assessment-document.pdf" target="_blank" rel="noopener">coexistence document for 802.15.4ab</a>: NBA bands, Wi-Fi 6E/7 studies, SSBD (rules d7-d10).</li>
+  <li>6 GHz Wi-Fi by region: ABI Research, <a href="https://abiresearch.com/market-research/insight/7780399-uneven-allocation-of-the-6-ghz-spectrum-gl" target="_blank" rel="noopener">Uneven allocation of the 6 GHz spectrum</a>, and AccessAgility, <a href="https://www.accessagility.com/blog/countries-with-wifi-6e-6ghz" target="_blank" rel="noopener">countries with Wi-Fi 6E</a> (search snippets, not read). Wi-Fi Alliance and FCC pages were not read.</li>
+  <li>China UWB rules (MIIT, 22 Apr 2024, 7163-8812 MHz from 1 Aug 2025): <a href="https://sesec.eu/?p=2965" target="_blank" rel="noopener">SESEC</a> and <a href="https://ib-lenhardt.com/news/china-notice-of-provisions-on-uwb-equipment" target="_blank" rel="noopener">IB-Lenhardt</a> (search snippets, not read).</li>
+  <li>US FCC Part 15 Subpart F (3.1-10.6 GHz), Japan and Korea UWB bands: from memory, not read this run.</li>
+  <li>Our parts: <a href="/find?q=SKY5A1008">SKY5A1008</a>, <a href="/find?q=QPQ2230Q">QPQ2230Q</a>, <a href="/find?q=SKY5A1005">SKY5A1005</a>, <a href="/find?q=QM14068">QM14068</a>, <a href="/find?q=SKY5A2108">SKY5A2108</a> (catalogue and datasheets).</li>
+</ul>

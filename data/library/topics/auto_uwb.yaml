@@ -9,6 +9,14 @@ summary: >-
   narrowband assist (NBA) radio in 5.725-5.850 and 5.925-6.425 GHz, multi-millisecond (MMS) ranging and a sensing mode,
   so the interior anchors can also detect a child left in the car. The main RF risks are collocated 6 GHz Wi-Fi 6E/7
   (now also IMT) and 5.9 GHz V2X: these are the points where filters, switches and LNAs make a difference.
+# owner, 28 Oct 2026, on the child-presence page: "Driven by regulations - important." Short and factual; the sources
+# are in the application knowledge item cpd_regulation (data/library/app_knowledge.yaml).
+why_customer:
+  - "Why it matters: regulation. Euro NCAP has rewarded child presence detection since 2023 and, from 2025, only direct sensing (the system senses the child's movement or breathing); in the 2026 protocol it is worth up to 5 points, with detection within 15 s of locking."
+  - "ANCAP (Australia, New Zealand) has assessed CPD since 2023 (up to 4 points). In the US there is no direct-sensing mandate: the 2021 Infrastructure Act asks NHTSA for a rear-seat reminder, still not proposed in mid-2025."
+  - "So every new European model that aims at five stars needs a direct sensor, and the interior UWB anchors of a digital-key car can be that sensor without an extra radar module (est)."
+# application knowledge explainers shown on this page (owner, 28 Oct 2026, comments b-e)
+knowledge: [cpd_regulation, anchors_tags, cpd_vs_ranging, qpf5100q_pairing]
 references:
   - {id: r1, title: "ETSI EN 302 065-3-1 V3.2.1 (2025-02): UWB; Part 3: Sub-part 1, vehicular access systems within 3.8-4.2 GHz or 6-8.5 GHz", publisher: "ETSI", year: 2025, url: "https://www.etsi.org/deliver/etsi_en/302000_302099/3020650301/03.02.01_60/en_3020650301v030201p.pdf", type: standard, licence: "ETSI copyright; free download, no redistribution", retrieved: 2026-10-21, why: "The harmonised EU standard for car-access UWB: power limits, trigger-before-transmit, duty cycle, receiver sensitivity and blocking"}
   - {id: r2, title: "Coexistence Document for IEEE 802.15.4ab (IEEE P802.15-23-0452-07-04ab)", publisher: "IEEE 802.15 WG (Rolfe, Krebs/Apple, Zakaib/Spark)", year: 2024, url: "https://mentor.ieee.org/802.15/dcn/23/15-23-0452-07-04ab-coexistence-assessment-document.pdf", type: standard, licence: "IEEE 802 public contribution", retrieved: 2026-10-21, why: "Public summary of the 4ab amendment (NBA, MMS, sensing, LE-UWB, SSBD) and measured UWB vs Wi-Fi 6E/7 coexistence"}
@@ -75,4 +83,4 @@ open_questions:
   - "CCC Digital Key 3/4 RF requirements (anchor count, sensitivity, latency) are member-only; how much does DK4 rely on 4ab MMS/NBA?"
   - "Euro NCAP child presence detection test protocol and the ETSI EN 302 065-3-3 radiodetermination limits for cabin radar were not read."
   - "SKY5A1008 rejection at 7.7-8.3 GHz (does it protect UWB ch9 from the car's Wi-Fi?), and whether QM14068 / QM14070 are AEC-Q qualified."
-  - "Typical anchor count and exterior positions per car (our estimate 4-8 from the case, not a source)."
+  - "Anchor count per car: public figures are 2-7 (Valeo), 6 (Huf: four corners plus two inside) and 4-6 in a market report (snippet); the CCC specification itself (member-only) was not read."

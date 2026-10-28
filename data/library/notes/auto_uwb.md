@@ -102,3 +102,20 @@ These are the same as in the yaml: the final 4ab NBA masks around V2X; the FCC P
 - **www.qorvo.com:** not allowed (DW3000/QPF5100Q application notes live there).
 - **nxp.com, st.com, ieeexplore:** blocked earlier.
 - **docs.fcc.gov:** stopped earlier, so the FCC Part 15 UWB text was not read.
+
+## 9. Added 28 Oct 2026 (owner's comments on the child-presence page)
+
+- **Regulation (a):** Euro NCAP rewards only direct-sensing CPD from 2025 and gives up to 5 points from January 2026
+  (detect within 15 s of locking); ANCAP assesses CPD since 2023 (up to 4 points); the US has only the 2021
+  rear-seat-reminder mandate to NHTSA, not yet proposed in mid-2025. Shown as "Why it matters" on this topic and as the
+  application knowledge item `cpd_regulation`; marked as `regulation` on uwb_soc and radar_transceiver in
+  data/business/evidence/trends.yaml. cdn.euroncap.com robots.txt returned 400, so the 2026 bulletin was not read.
+- **UWB and Wi-Fi (b):** new Engineering knowledge page `/engineering/uwb_wifi_coexistence` with the channel table
+  (ch5, ch6, ch8, ch9 against 5/6 GHz Wi-Fi, V2X, NBA and IMT), what goes wrong, mitigations and a decision matrix by
+  situation and region (China 7163-8812 MHz from Aug 2025; Japan and Korea bands from memory, not read).
+- **Anchors vs tags (c):** Huf (read): four corner anchors plus two in the cabin, the rear one also for CPD; Valeo
+  (read): 2 to 6 anchors (2 to 7 in the full version); a market report (snippet): 4-6, 4+1 or 0+4. EE Times disallows
+  the anthropic-ai crawler, so the Calterah article was not read.
+- **CPD vs ranging (d)** and **QPF5100Q + QPF5001Q (e):** application knowledge items `cpd_vs_ranging` and
+  `qpf5100q_pairing`. QPF5001Q is not in our data and has no public page; our QPF5001 is an 8-12 GHz 12 W X-band front
+  end, not a UWB part (est). The owner was asked which part was meant.

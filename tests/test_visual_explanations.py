@@ -8,7 +8,7 @@ from datetime import date
 import yaml
 
 from app.config import PROJECT_ROOT
-from app.services import library, quality, site_guard, visuals
+from app.services import digest, library, quality, site_guard, visuals
 
 STATIC = PROJECT_ROOT / "app" / "web" / "static"
 
@@ -66,7 +66,10 @@ def test_quality_checked_entries_are_valid():
     assert {("competition", "pol_ldo"), ("competition", "efuse_hotswap")} <= keys
     ds = quality.datasets()
     for e in entries:
-        assert e["dataset"] in ds and e["key"] in ds[e["dataset"]][1], e
+        if e["dataset"] == digest.DATASET:  # a To confirm comment the inbox listed with the quality ones (28 Oct 2026)
+            assert e["key"].split(":")[0] in digest.TYPES and e.get("comment_at"), e
+        else:
+            assert e["dataset"] in ds and e["key"] in ds[e["dataset"]][1], e
         assert isinstance(e["date"], date) and str(e.get("note") or "").strip(), e
         assert not site_guard.hits(e["note"])
     assert set(quality.checked()) >= keys

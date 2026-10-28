@@ -33,10 +33,15 @@ def test_paste_submit_summary_and_red_row(chromium, live_server, viewport):
     expect(red).to_be_visible()
     every = page.evaluate("window.cxTable(false).tsv").strip().split("\n")
     shown = page.evaluate("window.cxTable(true).tsv").strip().split("\n")
+    crossed = page.evaluate("window.cxTable(false, true).tsv").strip().split("\n")
+    assert len(crossed) == 3 and "ZZZ999" not in "".join(crossed)  # header + SC141, SD4100 (owner, 27 Oct 2026)
+    assert page.evaluate("window.cxTable(true, true).tsv").strip().split("\n") == crossed[:1]  # red and crossed
     assert every[0].startswith("#\tYour part") and len(every) == 5 and len(shown) == 3  # header + parts
     assert "<table" in page.evaluate("window.cxTable(false).html")
     page.locator("#cx-only-shown").check()
     assert page.locator("#cx-dl-lights").input_value() == "red"
+    page.locator("#cx-only-crossed").check()
+    assert page.locator("#cx-dl-crossed").input_value() == "1"
     assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll at {viewport['width']} px"
     ctx.close()
     assert not watch.errors, watch.errors

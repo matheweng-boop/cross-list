@@ -1,0 +1,99 @@
+<p class="small">Part knowledge: <a href="/reviews/how/currentsense">isolated current sensing</a> · <a href="/reviews/how/isolator">capacitive digital isolators</a> · <a href="/reviews/how/gatedriver">isolated gate drivers</a></p>
+
+<h2 id="kinds">Offset and gain: two kinds of error</h2>
+<ul>
+  <li><b>Offset</b> is the same at every reading: the output is wrong by a fixed amount, even at zero. It is given in mV or µV
+    at the input. To compare it with other errors, divide it by the full-scale input: then it is a <b>% of full scale</b>
+    (absolute error). At one tenth of full scale the same offset is ten times larger as a % of the reading.</li>
+  <li><b>Gain error</b> scales with the signal: the slope is a little wrong. It is a <b>% of reading</b> (relative error);
+    at zero input it is zero, at full scale it is largest.</li>
+  <li><b>Nonlinearity</b> is the bend away from the best straight line, given as % of reading or full scale. A two-point
+    calibration (zero and full scale) removes offset and gain at that temperature, but not nonlinearity.</li>
+</ul>
+<p>Skyworks AN1270 adds the three as percentages after turning the offset into % of the 250 mV full scale of the Si8922B
+  (AN1270 p. 9). That is exact at full scale; at small currents the offset share grows.</p>
+
+<h2 id="temperature">From a 25 °C value to a band over temperature</h2>
+<p>Data sheets give each error at 25 °C plus a drift per °C. The error at another temperature is the 25 °C value plus
+  drift × (T − 25 °C), keeping the sign: −40 °C is −65 °C away (AN1270 p. 8). With a minimum and a maximum for both the
+  value and the drift there are four lines; the outermost at each temperature form the band (the "four-line method",
+  AN1270 p. 7).</p>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Si8922B, −40 to 125 °C</th><th scope="col">At 25 °C</th><th scope="col">Drift</th><th scope="col">Band over temperature</th><th scope="col">AN1270</th></tr></thead>
+  <tbody>
+    <tr><td>Offset</td><td>±0.35 mV (±0.140 % FS)</td><td>−0.3 to +3 µV/°C</td><td>−0.545 to +0.650 mV (−0.218 % to +0.260 % FS)</td><td>p. 8-9, Tables 2-3</td></tr>
+    <tr><td>Gain error</td><td>±0.2 %</td><td>−24 to 0 ppm/°C</td><td>−0.440 % to +0.356 %</td><td>p. 10, Table 4</td></tr>
+    <tr><td>Nonlinearity</td><td>±0.04 %</td><td>±16 ppm/°C</td><td>±0.200 %</td><td>p. 11, Table 5</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Worked example (AN1270 p. 8): minimum offset at −40 °C = −0.350 mV + (−65 °C × 3 µV/°C) = −0.545 mV; maximum
+  = 0.350 mV + (−65 °C × −0.3 µV/°C) = 0.370 mV. The largest positive offset appears at 125 °C: 0.350 mV + 100 °C × 3 µV/°C
+  = 0.650 mV.</p>
+
+<h2 id="combine">Worst case or root-sum-of-squares</h2>
+<ul>
+  <li><b>Straight sum (worst case).</b> Add the limits. It is right when the errors are <b>correlated</b> and reach their
+    limits together (for example two drifts caused by the same temperature, or an error that appears twice in a chain).
+    It guarantees the limit, but is usually too pessimistic for independent errors.</li>
+  <li><b>Root-sum-of-squares (RSS).</b> √(a² + b² + c²). It is right when the errors are <b>independent</b>: the standard
+    deviation of a sum of independent variations is the RSS of their standard deviations (AN1270 p. 12; the "law of
+    propagation of uncertainty", NIST).</li>
+</ul>
+<p>For the Si8922B over −40 to 125 °C: straight sum −0.858 % / +0.816 %, RSS −0.530 % / +0.484 % (AN1270 p. 12, Table 6).
+  AN1270 recommends RSS as the best estimate of the total static error (p. 13). Correlated parts of a budget are summed
+  first and the result is then combined by RSS with the independent parts (est).</p>
+
+<h2 id="typical">Typical, minimum, maximum: what the numbers mean</h2>
+<ul>
+  <li><b>Typical</b> is roughly the average part at the stated conditions. It is not a promise; about half the parts are
+    worse (est).</li>
+  <li><b>Minimum / maximum</b> are limits the maker tests in production or guarantees by design and characterisation. For a
+    normal distribution, limits at ±3σ hold 99.73 % of parts; makers often set limits wider than that (est for the margin
+    makers use; NIST for the 99.73 %).</li>
+  <li>To use a limit in a statistical (RSS) budget, turn it into a standard deviation: a normally distributed limit at
+    ±3σ gives σ = limit / 3; a limit with no information about the spread is treated as rectangular, σ = limit / √3
+    (NIST, Type B evaluation).</li>
+  <li>An <b>uncertainty band</b> is then the combined standard deviation times a coverage factor: k = 2 for about 95 %
+    confidence, k = 3 for more than 99 % (NIST).</li>
+</ul>
+
+<h2 id="bands">Uncertainty bands in practice</h2>
+<ol>
+  <li><b>Initial error</b> at 25 °C: offset, gain, nonlinearity, plus the shunt tolerance and the ADC.</li>
+  <li><b>Over temperature</b>: add drift × ΔT from 25 °C to each, with its sign (four-line method).</li>
+  <li><b>Over life</b>: add the ageing the data sheet states (shunt resistors drift too); where none is stated, say so
+    and keep a margin (est).</li>
+  <li><b>After calibration</b>: a two-point calibration at 25 °C removes the initial offset and gain error of that board;
+    what remains is drift × ΔT, nonlinearity, noise and the calibration's own uncertainty (est).</li>
+  <li><b>Combine</b> correlated parts by straight sum, independent parts by RSS, and state the confidence (k).</li>
+</ol>
+
+<h2 id="timing">The same thinking for timing across a digital isolator</h2>
+<ul>
+  <li><b>Propagation delay</b> (tPHL, tPLH) shifts every edge; it matters when a signal goes out and back (an SPI read).</li>
+  <li><b>Pulse-width distortion</b> (PWD = |tPHL − tPLH|) shortens or lengthens each pulse.</li>
+  <li><b>Channel-to-channel skew</b> is the delay difference between channels of one part; <b>part-to-part skew</b>
+    (tPSK) between two parts, which matters when, for example, the high-side and low-side signals use different
+    isolators or drivers.</li>
+</ul>
+<p><b>Isolated SPI, from AN1359 (p. 4-8).</b> With the Si86SS51 (PWD &lt; 3 ns, skew &lt; 3 ns, delay 9 ns), a write
+  cycle loses PWD + skew = 6 ns of setup and hold time. A read loses 24 ns, because the clock goes out and the data comes
+  back through two more delays (PWD + skew + tPHL + tPLH). That limits a normal SPI clock to 10 MHz. An asymmetric clock
+  shares the delay between read and write (15 ns lost, 20 MHz); looping the isolated clock back so the controller samples
+  with it removes the absolute delay (6 ns lost, 40 MHz). Timing limits move together with temperature and supply, so a
+  timing budget is usually a straight sum of the limits (est).</p>
+<p><b>Gate drive.</b> In a half bridge the dead time must cover the worst-case difference in delay between the high-side
+  and low-side paths plus the transistor's turn-off time. On the Si823x the delay is 30 ns typical and 45 ns maximum, with
+  PWD below 5.6 ns (data sheet p. 23); between two separate parts the mismatch can approach the spread between their
+  fastest and slowest delay, which is why one dual driver (matched channels) or a stated part-to-part skew is preferred
+  (est). Deglitch filters add a fixed delay (30 ns on the Si86Sx deglitch options, AN1359 p. 13) and, if asymmetric,
+  distortion (AN1462 p. 1).</p>
+
+<h2 id="sources">Sources</h2>
+<ol class="small">
+  <li><a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf" target="_blank" rel="noopener">AN1270: Estimating Total Static Error for Si89xx Isolated Amplifiers and Delta-Sigma Modulators</a>, Skyworks, 2023.</li>
+  <li><a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1359-si86Sx_design_considerations.pdf" target="_blank" rel="noopener">AN1359: Design Considerations for the Si86Sx family</a>, Skyworks.</li>
+  <li><a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1462_Si82Ax-Fx_Isolated_Gate_Driver_Deglitch_Filter.pdf" target="_blank" rel="noopener">AN1462: Si82Ax-Fx Isolated Gate Driver Deglitch Filter</a>, Skyworks.</li>
+  <li><a href="https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si823x-datasheet.pdf" target="_blank" rel="noopener">Si823x data sheet</a>, Skyworks (timing table p. 23).</li>
+  <li>NIST, Uncertainty of Measurement Results: <a href="https://physics.nist.gov/cuu/Uncertainty/combination.html" target="_blank" rel="noopener">combining uncertainty components</a>, <a href="https://physics.nist.gov/cuu/Uncertainty/typeb.html" target="_blank" rel="noopener">Type B evaluation</a>, <a href="https://physics.nist.gov/cuu/Uncertainty/coverage.html" target="_blank" rel="noopener">expanded uncertainty and coverage factors</a> (read 28 Oct 2026; summarised in our own words).</li>
+</ol>

@@ -34,7 +34,19 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    now?", with the comment box and one "Looks right now" button. A comment in that second round comes back in the
    same section; never answer or close an item yourself.
    For each open request under "Technology review requests", write the review as `data/reviews/<slug>.yaml` in the
-   format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
+   format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers). (The section is
+   called "Part knowledge" on the site since 28 Oct 2026; the URLs stay at `/reviews`.)
+   **Part knowledge › How it works (owner, 28 Oct 2026).** When the owner asks for another product group ("how do X
+   work"), add it to `data/library/how_it_works.yaml` in the same format as the existing groups (layout at the top of
+   the file): about the PART only (what it does in the system, how it works inside, key specs and why they matter,
+   choosing between parts, our active Skyworks / Qorvo parts from the catalogue and part data, honest gaps);
+   applications only as "Used in" links to existing Systems & applications pages; one small inline diagram
+   (`app/web/templates/reviews/how/_<id>_svg.html`); and sources with links. **Standing rule:** every group includes
+   an "appnotes" block of 4-8 concrete design details from the application notes (layout, bypassing, creepage, shunt
+   sizing, gate resistors, bootstrap sizing, error budgets, test conditions), each with its app-note number, page and
+   link: first the app notes in the repo (`data/appnotes.jsonl`, the /technical search, `var/appnotes`), then
+   skyworksinc.com (polite), then third-party app notes for general principles; never qorvo.com. The group gets a To
+   confirm item (type "howto") by itself; `tests/test_how_it_works.py` checks every group.
    Standing work when the day's comments leave room: the next unticked lines of `docs/pinout_backlog.md` (pinouts of
    Infineon and Chipanalog gate drivers; these datasheets count toward the download cap below).
    Timing crosses: the next 2–3 datasheets from `docs/timing_backlog.md` per run (data/real/*_timing.yaml, rules

@@ -2,9 +2,14 @@
 {% block title %}{{ page_title(request.url.path) }}{% endblock %}
 {% block content %}
 {% import "_demand.html" as dmd %}
-<h1>Part reviews</h1>
+<h1>Part knowledge</h1>
 <p class="subtitle muted">One part explained for business development: the problem it solves, the idea behind it, how to read its datasheet and which features matter in which application. Each item can be agreed or disputed. Ask for a part that has no review yet with the form below; requests are picked up by the daily update.</p>
 
+<section id="how" aria-labelledby="how-title"><h2 id="how-title" class="rp-group">How it works, by product group</h2>
+<p class="small muted">How the part itself works, its key values, what the application notes say, and our Skyworks and Qorvo parts in the group.</p>
+<div class="rp-list">{% for x in how_groups() %}<a class="rp-card" href="{{ how_href(x) }}"><span class="rp-meta small">Part knowledge › How it works</span><b class="rp-title">{{ x.title }}</b><span class="small muted rp-q">{{ x.gist }}</span></a>{% endfor %}</div>
+</section>
+<h2 class="rp-group">Single parts</h2>
 <form method="get" action="/reviews" class="rv-search" role="search">
   <input type="search" name="q" value="{{ q }}" placeholder="Part number or words" aria-label="Search the reviews">
   <button type="submit" class="small-btn">Search</button>{% if q %} <a class="small" href="/reviews">Show all</a>{% endif %}
@@ -24,7 +29,7 @@
 {% endfor %}
 
 <section class="rv-request" id="request" aria-labelledby="rq-title">
-  <h2 id="rq-title">Request a part review</h2>
+  <h2 id="rq-title">Request part knowledge for a part</h2>
   <p class="small muted">For any part, ours or a competitor's. Say what you want to understand; the review answers that first.</p>
   <form method="post" action="/reviews/request">
     <label>Part number

@@ -36,7 +36,9 @@ TYPES = {
     "case": "Business case",
     "background": "Background notes",
     "expansion": "Idea expansion",
-    "review": "Technology review",
+    "review": "Part knowledge",  # owner, 28 Oct 2026: "Part reviews" renamed "Part knowledge"
+    "howto": "Part knowledge: how it works",  # one product group (data/library/how_it_works.yaml)
+    "guide": "Engineering knowledge page",
     "idea": "New-market idea",
     "competitor": "Competitor profile",
     "risk": "Risk",
@@ -90,6 +92,7 @@ def _sig() -> tuple:
     files = [*_BIZ.glob("*.yaml"), *(_BIZ / "evidence").glob("*.yaml"), *(_BIZ / "cases").glob("*.yaml"),
              *(_BIZ / "competitors").glob("*.yaml"), *(PROJECT_ROOT / "data" / "reviews").glob("*.yaml"),
              PROJECT_ROOT / "data" / "engineering_rf_notes.yaml",
+             PROJECT_ROOT / "data" / "library" / "how_it_works.yaml",
              PROJECT_ROOT / "docs" / "open_questions.md"]  # fmt: skip
     return tuple(sorted((str(p), p.stat().st_mtime) for p in files if p.exists()))
 
@@ -375,8 +378,21 @@ def _questions(gists: dict) -> list[dict]:
 def _all(sig: tuple) -> tuple[dict, ...]:
     gists = (_load(GISTS_FILE).get("gists") or {}) if GISTS_FILE.exists() else {}
     rows = [*_reports(gists), *_reviews(gists), *_ideas(gists), *_competitors(gists), *_risks(gists), *_tam(gists),
-            *_evidence(gists), *_patent_changes(gists), *_notes(gists), *_questions(gists)]  # fmt: skip
+            *_evidence(gists), *_patent_changes(gists), *_notes(gists), *_questions(gists),
+            *_howto(gists)]  # fmt: skip
     return tuple(rows)
+
+
+def _howto(gists: dict) -> list[dict]:
+    """Part knowledge › How it works groups and the Engineering knowledge pages written with them (28 Oct 2026)."""
+    from app.services import how_it_works as hw
+
+    out = [_item("howto", g["id"], f"How it works: {g['title']}", hw.href(g), g.get("date"), g, g.get("what"),
+                 _abstract(g.get("what"), "Confirm the section; the daily run adds more groups on request."), gists)
+           for g in hw.groups()]  # fmt: skip
+    out += [_item("guide", p["id"], p["title"], p["href"], p.get("date"), p, p.get("gist"), p.get("abstract") or [],
+                  gists) for p in hw.knowledge_pages()]  # fmt: skip
+    return out
 
 
 def items() -> list[dict]:

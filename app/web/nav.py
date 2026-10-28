@@ -9,7 +9,7 @@ NAV = (
         ("Search & replacements", "/", "Find replacements for a reference part"),
         # owner, 26 Oct 2026: a pasted list of parts crossed in one go, with an Excel download
         ("Cross a list", "/cross-list", "Paste many part numbers: drop-in and best fit for each, in your order"),
-        ("Part reviews", "/reviews", "A part explained: datasheet, problem, concept, key features; request one"),
+        ("Part knowledge", "/reviews", "A part explained: how it works, datasheet, key values, app notes; request one"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),

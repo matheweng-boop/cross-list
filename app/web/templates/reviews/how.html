@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_gist.html" import gist_box %}
+{% block title %}{{ page_title(request.url.path, g.title) }}{% endblock %}
+{% block content %}
+<p class="small"><a href="/reviews">← Part knowledge</a> · How it works: {% for x in groups %}{% if x.id == g.id %}<b>{{ x.title }}</b>{% else %}<a href="/reviews/how/{{ x.id }}">{{ x.title }}</a>{% endif %}{{ ' · ' if not loop.last }}{% endfor %}</p>
+<article class="rpt rv-article hw-page" data-group="{{ g.id }}">
+<p class="label">Part knowledge › How it works</p>
+<h1>{{ g.title }}</h1>
+{{ gist_box(gist_for("howto", g.id), not guest_blocked(request, '/manage')) }}
+<p class="meta">About the part itself: what it does, how it works inside, the values that matter and what the application notes say. Applications are linked under “Used in”. “est” = our own reasoning. Updated {{ g.date|date }}.</p>
+<nav class="hw-toc small" aria-label="On this page"><a href="#what">What it does</a> · <a href="#how">How it works</a> · <a href="#specs">Key specs</a> · <a href="#choosing">Choosing</a> · <a href="#appnotes">From the application notes</a> · <a href="#parts">Our parts</a> · <a href="#used-in">Used in</a> · <a href="#sources">Sources</a></nav>
+
+<section id="what" class="hw-sec"><h2>What the part does</h2>
+<p>{{ g.what }}</p></section>
+
+<section id="how" class="hw-sec"><h2>How it works</h2>
+{% if g.how.diagram %}<figure class="hw-fig">{% include "reviews/how/" ~ g.how.diagram %}</figure>{% endif %}
+<ol class="hw-steps">{% for s in g.how.steps %}<li><b>{{ s.title }}</b><p class="small">{{ s.text }}{% if s.cite %} <span class="hw-cite">({{ s.cite }})</span>{% endif %}</p></li>{% endfor %}</ol>
+</section>
+
+<section id="specs" class="hw-sec"><h2>Key specs, and why each matters</h2>
+<div class="table-wrap"><table class="small pc-table rv-cards hw-specs">
+  <thead><tr><th scope="col">Spec</th><th scope="col">Typical values</th><th scope="col">Why it matters</th><th scope="col">More</th></tr></thead>
+  <tbody>{% for s in g.specs %}{% set l = spec_link(s.note) %}<tr><td><b>{{ s.name }}</b></td><td data-label="Typical">{{ s.typical }}</td><td data-label="Why">{{ s.why }}</td>
+    <td data-label="More">{% if l %}<a href="{{ l.href }}">{{ l.title or 'Engineering knowledge' }}</a>{% else %}<span class="muted">–</span>{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div></section>
+
+<section id="choosing" class="hw-sec"><h2>Choosing between parts: key aspects and trade-offs</h2>
+<ul class="pc-list">{% for c in g.choosing %}<li>{{ c }}</li>{% endfor %}</ul></section>
+
+<section id="appnotes" class="hw-sec hw-an"><h2>From the application notes</h2>
+<ul class="pc-list">{% for a in g.appnotes %}<li>{{ a.text }} <a class="hw-an-ref" href="{{ a.url }}" target="_blank" rel="noopener">{{ a.ref }}, p. {{ a.page }} ↗</a></li>{% endfor %}</ul>
+<p class="small muted">Search all application notes: <a href="/technical">Technical search</a>.</p></section>
+
+<section id="parts" class="hw-sec"><h2>Skyworks and Qorvo parts in this group</h2>
+<p class="small muted">Active parts only, from our catalogue and part data. A part with full data links to its part page; a catalogue-only part to the maker's page (↗). A series row stands for many orderable variants. “{{ 'not in our data' }}” marks a gap.</p>
+{% set t = table %}
+<div class="table-wrap"><table class="small pc-table rv-cards hw-parts">
+  <thead><tr><th scope="col">Part</th><th scope="col">Role</th>{% for c in t.columns %}<th scope="col">{{ c }}</th>{% endfor %}<th scope="col">Package</th><th scope="col">Automotive</th></tr></thead>
+  <tbody>
+  {% for r in t.series %}<tr class="hw-series"><td><b>{% if r.href %}<a href="{{ r.href }}"{% if r.external %} target="_blank" rel="noopener"{% endif %}>{{ r.mpn }}</a>{% else %}{{ r.mpn }}{% endif %}</b> <span class="badge">{{ r.maker }}</span><br><span class="muted">{{ r.label }}</span><br><a href="{{ r.browse }}">{{ r.variants }} active variant{{ 's' if r.variants != 1 }} →</a></td>
+    <td data-label="Role">{{ r.role }}</td>{% for c in t.columns %}<td data-label="{{ c }}"{% if r['values'][c] == 'not in our data' %} class="muted"{% endif %}>{{ r['values'][c] }}</td>{% endfor %}
+    <td data-label="Package">{{ r.package }}</td><td data-label="Automotive">{{ r.automotive }}</td></tr>{% endfor %}
+  {% for r in t.rows %}<tr><td><b>{% if r.href %}<a href="{{ r.href }}"{% if r.external %} target="_blank" rel="noopener"{% endif %}>{{ r.mpn }}{% if r.external %} ↗{% endif %}</a>{% else %}{{ r.mpn }}{% endif %}</b> <span class="badge">{{ r.maker }}</span></td>
+    <td data-label="Role">{{ r.role }}</td>{% for c in t.columns %}<td data-label="{{ c }}"{% if r['values'][c] == 'not in our data' %} class="muted"{% endif %}>{{ r['values'][c] }}</td>{% endfor %}
+    <td data-label="Package"{% if r.package == 'not in our data' %} class="muted"{% endif %}>{{ r.package }}</td><td data-label="Automotive">{{ r.automotive }}</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% if g.gaps or t.missing %}<h3>Gaps in our data</h3>
+<ul class="small">{% for x in g.gaps %}<li>{{ x }}</li>{% endfor %}{% if t.missing %}<li>Listed but not active (or not found) in our data, so left out: {{ t.missing|join(', ') }}.</li>{% endif %}</ul>{% endif %}
+</section>
+
+<section id="used-in" class="hw-sec"><h2>Used in</h2>
+<p class="small">The applications are described in Systems &amp; applications; this page stays with the part.</p>
+<ul class="small hw-used">{% for u in used_in %}<li><span class="muted">{{ u.kind }}:</span> <a href="{{ u.href }}">{{ u.label }}</a></li>{% endfor %}</ul>
+{% if reviews %}<p class="small"><b>Part reviews in this group:</b> {% for r in reviews %}<a href="/reviews/{{ r.slug }}">{{ r.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+{% if g.see_also %}<p class="small"><b>See also:</b> {% for s in g.see_also %}<a href="{{ s.href }}">{{ s.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+</section>
+
+<section id="sources" class="hw-sec"><h2>Sources</h2>
+<ol class="small rv-sources">{% for s in g.sources %}<li><a href="{{ s.url }}"{% if not s.url.startswith('/') %} target="_blank" rel="noopener"{% endif %}>{{ s.title }}</a> · {{ s.publisher }} <span class="muted">({{ {'ours': 'our data', 'cached': 'read from our cache', 'fetched': 'read 28 Oct 2026'}.get(s.kind, s.kind) }})</span></li>{% endfor %}</ol>
+</section>
+</article>
+<style>
+.hw-toc { margin: .4rem 0 1rem; }
+.hw-steps { display: grid; gap: .5rem; padding-left: 1.3rem; }
+.hw-steps p { margin: .15rem 0 0; }
+.hw-cite, .hw-an-ref { white-space: nowrap; font-size: .8rem; }
+.hw-cite { color: var(--pico-muted-color); }
+.hw-fig { margin: .5rem 0 1rem; max-width: 46rem; }
+.hw-fig svg { width: 100%; height: auto; display: block; }
+.hw-fig figcaption { font-size: .8rem; color: var(--pico-muted-color); }
+.hw-an { background: var(--pico-card-sectioning-background-color, #f3f5f7); border-radius: .5rem; padding: .2rem 1rem .6rem; }
+.hw-an h2 { border-top: 0; }
+.hw-series td:first-child { min-width: 12rem; }
+.hw-used { columns: 2 16rem; }
+.hw-card { border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; padding: .6rem .9rem; margin: .4rem 0 1rem; }
+</style>
+{% endblock %}

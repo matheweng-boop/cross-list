@@ -228,6 +228,15 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id
                ("turn-on", "overshoot", "ringing", "EMI filter", "ProVCD", "di/dt")),
     "hex": ("Hex, binary and registers", "/visuals#hex",  # static/vz/hex.js
             ("hexadecimal", "register map", "register maps", "bit field", "bit fields", "endianness")),
+    # owner, 28 Oct 2026: GNSS in general (static/vz/gnss.js)
+    "gnssbands": ("GNSS band plan and the interferers around it", "/visuals#gnssbands",
+                  ("band plan", "GPS L1", "GPS L5", "E5a", "B1C", "GLONASS", "Galileo", "BeiDou")),
+    "gnsstri": ("Pseudoranges: why the receiver clock needs one more satellite", "/visuals#gnsstri",
+                ("pseudorange", "pseudoranges", "trilateration", "receiver clock")),
+    "gnssdop": ("Satellite geometry: dilution of precision (DOP)", "/visuals#gnssdop",
+                ("DOP", "dilution of precision", "HDOP", "satellite geometry")),
+    "gnssiono": ("Ionosphere: why dual frequency removes the delay", "/visuals#gnssiono",
+                 ("ionosphere", "ionospheric", "dual-frequency", "dual frequency", "TEC")),
     "rf-bands": ("RF bands chart", "/rf-bands", ("GNSS", "LTE", "5G", "V2X", "UWB", "Wi-Fi", "NTN", "band", "bands")),
 }  # fmt: skip
 _NEVER = re.compile(r"(?!x)x")

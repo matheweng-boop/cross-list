@@ -1,0 +1,93 @@
+<p class="small">Interactive visuals: <a href="/visuals#gnssbands">GNSS band plan and interferers</a> · <a href="/visuals#gnsstri">Pseudoranges and the clock</a> · <a href="/visuals#gnssdop">Satellite geometry (DOP)</a> · <a href="/visuals#gnssiono">Dual-frequency ionosphere correction</a> · Part knowledge: <a href="/reviews/how/gnss">GNSS front-end parts</a> · Systems library: <a href="/library/gnss_frontend">Automotive multi-band GNSS front ends</a></p>
+
+<h2 id="positioning">How positioning works</h2>
+<ol>
+  <li><b>Each satellite says where it is and what time it is.</b> It sends a ranging code (a known pseudo-random sequence)
+    and a navigation message with its orbit (ephemeris) and clock correction. Satellite clocks are atomic and steered
+    to system time (Navipedia, GNSS signal).</li>
+  <li><b>The receiver measures travel time.</b> It lines up its own copy of the code with the received one; the shift is
+    the travel time, about 67-90 ms from a GPS satellite. Times the speed of light gives a range of roughly 20 000 km.</li>
+  <li><b>It is a pseudorange.</b> The receiver's clock is a cheap crystal, so every measured range carries the same
+    unknown clock error: 1 µs of clock error is 300 m on every satellite at once.</li>
+  <li><b>Four unknowns, four satellites.</b> Position x, y, z plus the receiver clock offset: four unknowns need at least
+    four satellites. More satellites are combined in a least-squares fit, which also shows when one measurement is
+    wrong.</li>
+  <li><b>Geometry matters (DOP).</b> If the satellites are bunched together in one part of the sky, their range
+    "circles" cross at shallow angles and a small range error moves the position a lot. Dilution of precision (DOP)
+    is that magnification factor: position error ≈ DOP × range error. Satellites spread over the sky, with some low on
+    the horizon and one overhead, give a low DOP (Navipedia, Positioning Error).</li>
+</ol>
+
+<h2 id="bands">The band plan</h2>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Band (centre, MHz)</th><th scope="col">GPS (USA)</th><th scope="col">Galileo (EU)</th><th scope="col">BeiDou (China)</th><th scope="col">GLONASS (Russia)</th><th scope="col">QZSS (Japan) / NavIC (India)</th></tr></thead>
+  <tbody>
+    <tr><td><b>L1 / E1 / B1</b> (1575.42)</td><td>L1 C/A, L1C</td><td>E1</td><td>B1C (1575.42), B1I (1561.098)</td><td>G1 (1598-1606, FDMA)</td><td>QZSS L1</td></tr>
+    <tr><td><b>L2</b> (1227.60)</td><td>L2C</td><td>–</td><td>–</td><td>G2 (1242-1249)</td><td>QZSS L2</td></tr>
+    <tr><td><b>E6 / B3 / L6</b> (1278.75)</td><td>–</td><td>E6 (high-accuracy service)</td><td>B3I (1268.52)</td><td>–</td><td>QZSS L6 (corrections)</td></tr>
+    <tr><td><b>E5b / B2b</b> (1207.14)</td><td>–</td><td>E5b</td><td>B2b (PPP service)</td><td>–</td><td>–</td></tr>
+    <tr><td><b>L5 / E5a / B2a</b> (1176.45)</td><td>L5</td><td>E5a</td><td>B2a</td><td>–</td><td>QZSS L5, NavIC L5</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Galileo frequencies from Navipedia's Galileo Signal Plan (E1 1575.420, E6 1278.750, E5a 1176.450, E5b 1207.140 MHz);
+  BeiDou B1I 1561.098 MHz from Navipedia's BeiDou Signal Plan; other centre frequencies from the systems' public signal
+  descriptions as stored in our <a href="/rf-bands">RF bands chart</a>. NavIC also uses an S-band signal at 2492 MHz.</p>
+<ul>
+  <li><b>Why the bands pair up.</b> Systems share centre frequencies on purpose (L1 = E1 = B1C, L5 = E5a = B2a) so one
+    antenna and one front-end path receive several constellations.</li>
+  <li><b>Protected and less protected.</b> 1559-1610 MHz and 1164-1214 MHz are also allocated to aeronautical radio
+    navigation, so no other users may interfere there; L2 and E6 (1215-1350 MHz) are shared with ground radars and are
+    more exposed (Navipedia, GNSS signal).</li>
+  <li><b>Why L1 + L5 removes the ionosphere.</b> The ionosphere delays the code by 40.3 · TEC / f²: it depends on the
+    frequency. Measuring the same range on two frequencies gives two equations with one common unknown (TEC), so the
+    delay can be calculated and removed (Navipedia, Ionospheric Delay). L1 and L5 are far apart in frequency, which makes
+    the correction strong; the price is about 2.6 times more noise in the combined range (est from the standard
+    ionosphere-free combination).</li>
+</ul>
+
+<h2 id="errors">Error sources and corrections</h2>
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr><th scope="col">Error</th><th scope="col">Typical size (est)</th><th scope="col">How it is reduced</th></tr></thead>
+  <tbody>
+    <tr><td>Ionosphere</td><td>several m by day, tens of m in solar storms (L1)</td><td>Dual frequency; broadcast models (single frequency); SBAS, PPP corrections</td></tr>
+    <tr><td>Troposphere</td><td>about 2.5 m at zenith, more at low elevation</td><td>Models; not frequency-dependent, so dual frequency does not remove it</td></tr>
+    <tr><td>Satellite clock and orbit</td><td>about 1 m</td><td>Broadcast corrections; SBAS; precise orbits and clocks (PPP)</td></tr>
+    <tr><td>Multipath</td><td>0.5 m to tens of m near buildings</td><td>Antenna with a good ground plane and axial ratio; wide-band signals (L5 / E5); masking low satellites</td></tr>
+    <tr><td>Receiver noise</td><td>decimetres (code), millimetres (carrier phase)</td><td>Good C/N0 (low NF front end), carrier-phase processing</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><b>SBAS</b> (WAAS, EGNOS, MSAS, GAGAN): geostationary satellites broadcast clock, orbit and ionosphere corrections
+    and integrity on L1 / L5; about 1 m.</li>
+  <li><b>RTK</b>: a base station a few km away sends its measurements; differencing cancels almost all common errors and
+    carrier phase gives centimetres, once the integer ambiguities are fixed.</li>
+  <li><b>PPP / PPP-RTK</b>: precise orbit, clock and bias corrections from a service (over cellular or satellite, e.g.
+    Galileo E6 HAS, QZSS L6, BeiDou B2b) give decimetres to centimetres anywhere, after a convergence time.</li>
+  <li><b>Dead reckoning with an IMU and wheel speed</b> bridges tunnels and garages; the library topic quotes 7 cm
+    (triple frequency) against 124 cm (single) horizontal rms with PPP + IMU on a low-cost antenna.</li>
+</ul>
+
+<h2 id="caveats">Caveats</h2>
+<ul>
+  <li><b>Urban canyons:</b> few visible satellites, high DOP, reflections instead of direct signals.</li>
+  <li><b>Jamming and spoofing:</b> the signal is far below noise, so a small jammer overwhelms it; spoofers send fake
+    signals. Defences: interference monitoring (AGC, C/N0), multi-band, authenticated signals (Galileo OSNMA), IMU
+    plausibility checks.</li>
+  <li><b>Interference from in-car radios:</b> LTE / 5G uplink, Band 13 / 14 harmonics on L1, V2X and Wi-Fi in the same fin
+    (see <a href="/reviews/how/gnss">GNSS front-end parts</a>).</li>
+  <li><b>Antenna placement:</b> roof or fin over a ground plane; dashboard or mirror positions lose sky view.</li>
+  <li><b>Time to first fix:</b> a cold start must download the orbits (up to about half a minute or more); hot starts with
+    stored ephemeris and assistance data (A-GNSS) take seconds.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<ol class="small">
+  <li>ESA Navipedia: <a href="https://gssc.esa.int/navipedia/index.php/GNSS_signal" target="_blank" rel="noopener">GNSS signal</a>,
+    <a href="https://gssc.esa.int/navipedia/index.php/Galileo_Signal_Plan" target="_blank" rel="noopener">Galileo Signal Plan</a>,
+    <a href="https://gssc.esa.int/navipedia/index.php/BeiDou_Signal_Plan" target="_blank" rel="noopener">BeiDou Signal Plan</a>,
+    <a href="https://gssc.esa.int/navipedia/index.php/Ionospheric_Delay" target="_blank" rel="noopener">Ionospheric Delay</a>,
+    <a href="https://gssc.esa.int/navipedia/index.php/Positioning_Error" target="_blank" rel="noopener">Positioning Error (DOP)</a> (read 28 Oct 2026; summarised in our own words).</li>
+  <li><a href="https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf" target="_blank" rel="noopener">u-blox ZED-X20P Integration manual</a> (interference, active antenna, bias-T).</li>
+  <li>Systems library topic <a href="/library/gnss_frontend">Automotive multi-band GNSS front ends</a> (ETSI EN 303 413, PPP + IMU study, SKY5A2110).</li>
+  <li>The error sizes in the table are typical textbook figures (est), not measured by us.</li>
+</ol>

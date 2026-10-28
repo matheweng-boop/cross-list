@@ -19,6 +19,7 @@
 </dl>
 <p class="part-summary"><b>{{ part_summary(part) }}</b></p>
 {{ part_reviews(part.mpn) }}
+{% from "reviews/_how.html" import how_links %}{{ how_links(how_for_part(part.mpn, part.family)) }}
 {% if not part.is_reference %}<nav class="walk-bar small" aria-label="Walk-through from this part"><span><span class="walk-n">1</span> Replacement: below</span>
   <a class="button small-btn outline" href="/parts/{{ part.id }}/walk?upto=2#step-2">Next: 2 Sell around it →</a>
   <span class="muted">then best of ours, make it better, future · one step at a time</span></nav>{% endif %}

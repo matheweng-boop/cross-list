@@ -1,0 +1,824 @@
+# Part knowledge › How it works: one page per product group (owner, 28 Oct 2026).
+#
+# Each group explains the PART, not the application (owner, 28 Oct 2026: "differentiate between how the part works and
+# how the application works"). Applications are only linked under "Used in", to the Systems & applications pages that
+# already exist. Shown at /reviews/how/<id> (Products › Part knowledge), linked from the browse page of the group's
+# subfamilies, from the part pages of its parts and from its part reviews and library topics. To add a group, copy one
+# entry and keep every key (docs/daily_update.md).
+#
+# STANDING RULE (owner, 28 Oct 2026): every Part knowledge group includes concrete design details from the application
+# notes (layout, bypassing, creepage, shunt sizing, gate resistors, bootstrap sizing, error budgets, test conditions),
+# each with its app-note number and page and a link: the "appnotes" block, 4-8 bullets. Use the app notes in the repo
+# first (data/appnotes.jsonl, the /technical search, var/appnotes), then skyworksinc.com (polite), then third-party
+# app notes (TI, ADI, Infineon) for general principles.
+#
+# Keys per group:
+#   id, title, link (the short link text on other pages), gist (<= 25 words, the To confirm card), date
+#   subs:       taxonomy subfamilies (data/taxonomy.yaml) whose browse page shows the card
+#   families:   BizDev families whose part pages show the link (parts listed by name or series show it too)
+#   table_subs: subfamilies whose active Skyworks / Qorvo parts fill the parts table, one row each
+#   role:       role shown for those rows
+#   columns:    parts-table columns: {label, keys: catalogue key_specs names or param:<BizDev parameter>, tried in
+#               order}; package and automotive are always added
+#   parts:      parts listed by hand (mpn, role, specs: {column label: value}); also used to override a row
+#   exclude:    part numbers left out of the table, with the reason
+#   series:     parts shown one row per series (many orderable variants): {id, label, match (regex on the part
+#               number), sub (optional), q (browse search), role, note}; counts the active and automotive variants
+#   what:       what the part does inside the system (one paragraph)
+#   how:        {diagram (template include in reviews/how/), steps: [{title, text, cite (optional)}]}
+#   specs:      key values: {name, typical, why, note: engineering:<key> | rf:<id> | /path | ""}
+#   choosing:   key aspects and trade-offs when choosing between parts
+#   appnotes:   from the application notes: [{text, ref (AN number or document), page, url}]
+#   gaps:       what our data does not say yet (honest gaps)
+#   used_in:    [{label, app: application name (start of it) | topic: library topic key}]
+#   reviews:    part review slugs (data/reviews)
+#   see_also:   [{label, href}] other Part knowledge or Engineering knowledge pages
+#   sources:    [{title, publisher, url, kind: ours | cached | fetched}]
+# Our own reasoning is marked "est". Qorvo facts come from our catalogue, cached datasheet copies or third-party pages;
+# qorvo.com is never requested.
+#
+# knowledge_pages: Engineering knowledge pages written with these groups (To confirm items of type "guide").
+
+groups:
+  - id: motor
+    title: "Motor drivers and motor controllers"
+    link: "How motor drivers work"
+    gist: "How motor controller chips and gate drivers spin a brushless motor: commutation, FOC, bootstrap gate drive, current sensing, protection; our Qorvo and Skyworks parts."
+    date: 2026-10-28
+    subs: [motor_controller]
+    families: []
+    table_subs: [motor_controller]
+    role: "Motor controller SoC"
+    columns:
+      - {label: "Supply (V)", keys: ["Power Supply Input Voltage (V)", "Input Supply (V)"]}
+      - {label: "Gate drive", keys: ["Gate Drivers (High-Side)", "Peak Output Current (A)"]}
+      - {label: "MCU", keys: ["Microcontroller"]}
+      - {label: "Interfaces", keys: ["Serial Interfaces"]}
+    parts: []
+    exclude: []
+    series:
+      - {id: Si823x, label: "Si823x isolated half-bridge drivers (two outputs, dead time)", match: "^SI823[0-8]", sub: isolated_gate_driver, q: Si823, role: "Isolated gate driver (see Isolated gate drivers)", specs: {"Supply (V)": "floating driver supply", "MCU": "-", "Interfaces": "-"}}
+      - {id: Si828x, label: "Si828x isolated gate drivers (DESAT, Miller clamp, soft shutdown)", match: "^SI828[1-6]", sub: isolated_gate_driver, q: Si828, role: "Isolated gate driver (see Isolated gate drivers)", specs: {"Supply (V)": "floating driver supply", "MCU": "-", "Interfaces": "-"}}
+    what: >-
+      A brushless motor has three windings and no brushes, so electronics must switch the current from winding to
+      winding at the right moment. A motor driver chip does this switching. Three kinds sit in this group. A motor
+      controller SoC (Qorvo PAC52xx / PAC55xx, ACT72350) holds the whole drive except the power transistors: power
+      supply, microcontroller, current-sense amplifiers and six gate drivers. A gate driver (non-isolated or isolated,
+      such as Skyworks Si823x / Si828x) only turns the controller's logic signals into strong gate pulses for the
+      transistors. A brushed / stepper driver has small transistors inside and drives a small motor directly.
+    how:
+      diagram: _motor_svg.html
+      steps:
+        - title: "Commutation: which winding gets current"
+          text: >-
+            Six power transistors form three half-bridges, one per winding. At any moment one high-side and one
+            low-side transistor are on, so current flows in through one winding and out through another. The
+            controller must know where the rotor is: from Hall sensors, from an encoder, or sensorless, from the
+            voltage the spinning magnet induces in the free winding (back-EMF).
+        - title: "6-step (trapezoidal) or field-oriented control (FOC)"
+          text: >-
+            6-step control switches between six fixed current patterns per electrical turn. It needs little computing
+            and one current measurement, but the torque ripples and the motor is louder. FOC measures two or three phase
+            currents, converts them into a frame that turns with the rotor (Clarke and Park transforms), regulates
+            torque and flux there and sends sine-shaped voltages back (space-vector PWM). It is smooth, quiet and
+            efficient at all speeds, but it needs a fast MCU with floating point, which is why the PAC55xx parts use a
+            150 MHz Cortex-M4F.
+        - title: "The gate drive chain, with bootstrap"
+          text: >-
+            The MCU's PWM timers make the switching pattern; the gate driver lifts each signal to 10-12 V and pushes a
+            peak current of 0.1-4 A into the transistor gate, so it switches in tens of nanoseconds. The high-side gate
+            sits on the moving switch node, so it needs a supply that floats with it: a bootstrap capacitor is charged
+            through a diode while the low-side transistor is on and then powers the high-side driver. A charge pump
+            (PAC5527) keeps the high side on indefinitely (100% duty). Dead time between the two transistors of a
+            half-bridge stops both from conducting at once (shoot-through).
+        - title: "Current sensing"
+          text: >-
+            A small shunt resistor in each low-side leg (or one in the DC return) turns current into a few tens of
+            millivolts. A current-sense amplifier inside the chip amplifies it and the ADC samples it at a moment set by
+            the PWM timer. One shunt is enough for 6-step and protection; FOC and sensorless control need two or three.
+        - title: "Protection"
+          text: >-
+            Comparators switch the drivers off within the same PWM cycle on over-current, before software reacts.
+            Undervoltage lockout (UVLO) stops the transistors being driven with too little gate voltage, where they would
+            overheat. Over-temperature and over-voltage shut-downs and a watchdog complete it. Isolated drivers add
+            desaturation (DESAT) detection, soft shutdown and an active Miller clamp for IGBTs and SiC.
+        - title: "Isolated gate drivers for high-voltage drives"
+          text: >-
+            Above about 100 V, or where a person can touch the control side, the gate signal crosses an isolation
+            barrier. Skyworks Si823x / Si828x carry it across an on-chip capacitive barrier and drive each transistor
+            from its own floating supply.
+    specs:
+      - {name: "Supply / bus voltage range", typical: "PAC52xx/55xx: 5.2-44, 70, 160 or 600 V; ACT72350: 5.2-160 V", why: "Sets the battery or bus the part can run from. The operating range is narrower than the absolute maximum, and a full battery sits above its nominal voltage.", note: "engineering:vdd_range_v"}
+      - {name: "Gate drive current (source / sink)", typical: "0.06-2 A in the PAC parts; 0.5-4 A in Si823x / Si828x", why: "How fast the gate charge moves: sets switching loss, EMI and the largest transistor the driver can handle at a given PWM frequency.", note: "engineering:peak_source_a"}
+      - {name: "Integrated MCU and peripherals", typical: "50 MHz Cortex-M0 or 150 MHz Cortex-M4F; PWM timers, 12-bit ADC, CAN / I2C / UART", why: "Decides whether FOC and sensorless control fit, and how many extra chips the board needs.", note: ""}
+      - {name: "Current-sense amplifiers", typical: "1-3 differential amplifiers, programmable gain; offset a few mV", why: "Number of phases measured (one for 6-step, two or three for FOC) and offset decide low-speed and low-current accuracy.", note: ""}
+      - {name: "Protection: UVLO, over-current, dead time, DESAT", typical: "cycle-by-cycle current limit; programmable dead time; DESAT on isolated drivers", why: "Saves the transistors and the battery in hardware when the motor stalls or the software hangs.", note: "engineering:deadtime"}
+      - {name: "UVLO threshold", typical: "about 5-12 V on the gate supply", why: "Must suit the transistor: a MOSFET, IGBT and SiC need different minimum gate voltages, so UVLO variants are not interchangeable.", note: "engineering:uvlo_v"}
+      - {name: "AEC-Q grade", typical: "PAC parts not stated in our data; many Si823x / Si827x / Si828x listed AEC-Q100", why: "A part used in a car must be AEC-Q100 qualified; an industrial part cannot replace it.", note: "engineering:qualification"}
+      - {name: "Package and temperature", typical: "QFN 6 x 6 to 9 x 9 mm (PAC); SOIC-8 to SOIC-24 (isolated drivers)", why: "Board space and heat: the controller sits next to hot transistors; wide-body packages give the creepage an isolated driver needs.", note: "engineering:temp_range_c"}
+    choosing:
+      - "Integrated controller or separate gate driver + MCU: one chip saves board space and parts, but fixes the MCU and the gate-drive strength (est)."
+      - "Bus voltage first: pick the PAC branch (44, 70, 160 or 600 V) that covers the full battery voltage with margin, not the nominal voltage."
+      - "Gate-drive current against the transistors: large or parallel MOSFETs at high PWM frequency need more peak current than 1 A."
+      - "6-step or FOC: FOC needs the Cortex-M4F parts and two or three current-sense channels."
+      - "Charge pump or bootstrap: a charge pump allows 100% duty (stall torque, slow running); bootstrap alone needs the low side to switch regularly."
+      - "Isolated or not: above about 100 V, or with a touchable control side, an isolated driver (Si823x / Si828x) and its safety ratings are needed."
+    appnotes:
+      - {text: "Size the gate resistor from the gate charge: the gate current is Ig = Qg / t (rise or fall time wanted), and RH = VDD / Ig_on minus the driver's own pull-up resistance; RL the same with the pull-down.", ref: AN1009, page: 9, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf"}
+      - {text: "In a half bridge, turn on slowly and turn off quickly (larger RH than RL, possible with separate VH / VL outputs): one transistor is nearly off before the other turns on, which cuts shoot-through current.", ref: AN1009, page: 5, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf"}
+      - {text: "Bootstrap capacitor: at least 10 times the transistor's gate capacitance (Qg / VGS), so it droops less than about 10 % per switching cycle; the driver's VDD bypass capacitor at least 10 times the bootstrap capacitor.", ref: "TI SLUA887A", page: "3-4", url: "https://www.ti.com/lit/an/slua887a/slua887a.pdf"}
+      - {text: "Use low-ESR ceramic (MLCC) capacitors for the bootstrap and bypass, placed next to the driver pins, and a fast or Schottky bootstrap diode; a small bootstrap resistor (a few ohms) limits the inrush and the ringing on the switch node.", ref: "TI SLUA887A", page: "4-7", url: "https://www.ti.com/lit/an/slua887a/slua887a.pdf"}
+      - {text: "One current-sense amplifier is enough for protection and for 6-step current regulation; FOC needs two or three (with two, the MCU calculates the third phase), and sensorless control needs accurate phase currents to estimate the rotor position.", ref: "TI SLVA999A", page: 1, url: "https://www.ti.com/lit/an/slva999a/slva999a.pdf"}
+      - {text: "A classic BLDC drive needs six PWM signals (one per transistor) and three Hall sensors for position; putting the 6-step commutation table in the driver cuts the MCU's work to a direction and a PWM command, as simple as a brushed motor. Hall elements (analog) need extra comparators.", ref: "TI SLVA980C", page: "1-2", url: "https://www.ti.com/lit/ab/slva980c/slva980c.pdf"}
+      - {text: "Desaturation (DESAT) protection on isolated drivers: a comparator trips at 7 V on the DSAT pin; a blanking capacitor CBL = t_blank x I_chg / 7 V (about 390 pF for 3 µs on the Si828x) stops false trips during turn-on.", ref: AN1009, page: 16, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf"}
+    see_also:
+      - {label: "Part knowledge: isolated gate drivers", href: "/reviews/how/gatedriver"}
+      - {label: "Part knowledge: isolated current sensing", href: "/reviews/how/currentsense"}
+      - {label: "Animated circuit: gate driver, half-bridge and bootstrap", href: "/visuals#bootstrap"}
+      - {label: "Animated circuit: BLDC 6-step commutation and FOC", href: "/visuals#bldc"}
+    gaps:
+      - "Automotive grade of the PAC and ACT72350 parts: not stated in our catalogue (none listed as AEC-Q)."
+      - "The catalogue has no supply, gate-drive or package data for some newer PAC numbers (PAC5523AQM, PAC5532BQX, PAC5556AQX)."
+      - "No non-isolated 3-phase / half-bridge gate driver or brushed / stepper driver of ours is in the catalogue: the functions three_phase_gate_driver, half_bridge_driver and motor_driver_brushed have no Skyworks or Qorvo part."
+      - "Qorvo's own PAC datasheets are not used (qorvo.com is not requested); the PAC5527 figures come from a public distributor copy (see the review)."
+    used_in:
+      - {label: "Cordless power tool", app: "Cordless power tool"}
+      - {label: "Automotive electric pump / fan drive", app: "Automotive electric pump / fan drive"}
+      - {label: "Robot joint motor drive (48 V)", app: "Humanoid / collaborative robot joint motor drive"}
+      - {label: "Drone ESC (sensorless FOC)", app: "Drone ESC with sensorless FOC motor drive"}
+      - {label: "HVAC motor control", app: "HVAC motor control"}
+      - {label: "Industrial servo drive", app: "Industrial servo drive"}
+      - {label: "Drone flight control and motor drives", topic: drone_flight_power}
+      - {label: "Traction inverter isolation (isolated gate drivers)", topic: traction_asil_d}
+    reviews: [qorvo-pac5527-motor-driver]
+    sources:
+      - {title: "Part review: Qorvo PAC5527 and the PAC family (PAC5527 datasheet Rev 1.2, public distributor copy)", publisher: "BizDev", url: "/reviews/qorvo-pac5527-motor-driver", kind: ours}
+      - {title: "Qorvo catalogue rows: motor_controller (PAC52xx, PAC55xx, ACT72350)", publisher: "BizDev catalogue (store crawl, Oct 2026)", url: "/parts?sub=motor_controller", kind: ours}
+      - {title: "Skyworks catalogue rows: isolated gate drivers", publisher: "BizDev catalogue", url: "/parts?sub=isolated_gate_driver", kind: ours}
+      - {title: "AN1009: Driving MOSFET and IGBT Switches Using the Si828x", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf", kind: cached}
+      - {title: "Architecture for Brushless-DC Gate Drive Systems (SLVA999A)", publisher: "Texas Instruments", url: "https://www.ti.com/lit/an/slva999a/slva999a.pdf", kind: fetched}
+      - {title: "Brushless-DC Made Simple: Sensored Motor Control (SLVA980C)", publisher: "Texas Instruments", url: "https://www.ti.com/lit/ab/slva980c/slva980c.pdf", kind: fetched}
+      - {title: "Sensorless Field Oriented Control of 3-Phase PMSM (SPRABQ3)", publisher: "Texas Instruments", url: "https://www.ti.com/lit/an/sprabq3/sprabq3.pdf", kind: fetched}
+      - {title: "Bootstrap Circuitry Selection for Half-Bridge Configurations (SLUA887A)", publisher: "Texas Instruments", url: "https://www.ti.com/lit/an/slua887a/slua887a.pdf", kind: fetched}
+
+  - id: uwb
+    title: "Ultra-wideband (UWB) transceivers and front ends"
+    link: "How UWB works"
+    gist: "How a UWB chip measures distance and angle: 2 ns pulses, two-way ranging, phase-difference angle, channels 5/9, STS security; our Qorvo and Skyworks parts."
+    date: 2026-10-28
+    subs: [uwb]
+    families: []
+    table_subs: [uwb]
+    role: "UWB transceiver / module"
+    columns:
+      - {label: "Type", keys: []}
+      - {label: "Channels / band", keys: []}
+      - {label: "Antenna ports / AoA", keys: []}
+      - {label: "Key figure", keys: []}
+    parts:
+      - {mpn: DW3110, role: "UWB transceiver", specs: {"Type": "Transceiver IC (WLCSP)", "Channels / band": "5 and 9", "Antenna ports / AoA": "1 port", "Key figure": "-100 dBm sensitivity (ch5, typ.); ±6 cm ranging after calibration"}}
+      - {mpn: DW3210, role: "UWB transceiver", specs: {"Type": "Transceiver IC (QFN 5 x 5 mm)", "Channels / band": "5 and 9", "Antenna ports / AoA": "1 port", "Key figure": "about 2 dB less TX power than the WLCSP version"}}
+      - {mpn: QM33120W, role: "UWB transceiver", specs: {"Type": "Transceiver IC (WLCSP), 802.15.4z", "Channels / band": "not in our data", "Antenna ports / AoA": "2 ports (AoA)", "Key figure": "not in our data"}}
+      - {mpn: QM33110W, role: "UWB transceiver", specs: {"Type": "Transceiver IC (WLCSP), 802.15.4z", "Channels / band": "not in our data", "Antenna ports / AoA": "1 port", "Key figure": "not in our data"}}
+      - {mpn: DW3300Q, role: "UWB transceiver", specs: {"Type": "Transceiver IC, automotive", "Channels / band": "not in our data", "Antenna ports / AoA": "not in our data", "Key figure": "automotive listed in our catalogue"}}
+      - {mpn: QM35825, role: "UWB SoC", specs: {"Type": "SoC (radio + MCU)", "Channels / band": "6.5 and 8.0 GHz (ch5, ch9)", "Antenna ports / AoA": "not in our data", "Key figure": "stack runs on the chip"}}
+      - {mpn: DW1000-I-TR13, role: "UWB transceiver (older generation)", specs: {"Type": "Transceiver IC, 802.15.4-2011", "Channels / band": "not in our data", "Antenna ports / AoA": "1 port", "Key figure": "no STS (pre-802.15.4z)"}}
+      - {mpn: DWM3000, role: "UWB module", specs: {"Type": "Module (DW3000 + antenna)", "Channels / band": "5 and 9", "Antenna ports / AoA": "1 (on-module antenna)", "Key figure": "not in our data"}}
+      - {mpn: DWM3001C, role: "UWB module", specs: {"Type": "Module: UWB + BLE SoC + motion sensor", "Channels / band": "6.5 and 8 GHz", "Antenna ports / AoA": "not in our data", "Key figure": "not in our data"}}
+      - {mpn: DWM1000, role: "UWB module (older generation)", specs: {"Type": "Module, 802.15.4-2011", "Channels / band": "not in our data", "Antenna ports / AoA": "not in our data", "Key figure": "no STS (pre-802.15.4z)"}}
+      - {mpn: DWM1001C, role: "UWB module (older generation)", specs: {"Type": "Module, 802.15.4-2011", "Channels / band": "not in our data", "Antenna ports / AoA": "not in our data", "Key figure": "no STS (pre-802.15.4z)"}}
+      - {mpn: QPK3000, role: "UWB module", specs: {"Type": "RTLS module", "Channels / band": "not in our data", "Antenna ports / AoA": "not in our data", "Key figure": "not in our data"}}
+      - {mpn: QM14068, role: "UWB front end", specs: {"Type": "Bypass switch + LNA", "Channels / band": "6.2-8.3 GHz (ch5 and ch9)", "Antenna ports / AoA": "-", "Key figure": "adds receive gain ahead of the transceiver"}}
+      - {mpn: QM14070, role: "UWB front end", specs: {"Type": "PA with bypass", "Channels / band": "6-9 GHz", "Antenna ports / AoA": "-", "Key figure": "14.2 dB TX gain, 23.1 dBm (catalogue)"}}
+      - {mpn: SKY5A2108, role: "Antenna / AoA switch", specs: {"Type": "SPDT switch", "Channels / band": "2.4-8.3 GHz (ch5 and ch9)", "Antenna ports / AoA": "-", "Key figure": "0.5-0.9 dB loss, 20-28 dB isolation; AEC-Q100 Grade 2"}}
+      - {mpn: QPC8019Q, role: "Antenna / AoA switch", specs: {"Type": "SPDT switch", "Channels / band": "0.617-8.0 GHz (ch5; top of ch9 not covered, est)", "Antenna ports / AoA": "-", "Key figure": "0.60 dB loss, 27 dB isolation"}}
+    exclude:
+      - {mpn: "DWM3000.E1.1", why: "pre-production engineering parts"}
+      - {mpn: "QM14068 - SG", why: "same part as QM14068 (sales variant)"}
+    series: []
+    what: >-
+      A UWB transceiver sends and receives very short radio pulses and timestamps them precisely, so two devices can
+      measure the distance between them to about 10 cm, and with two antennas the direction too. It also carries a
+      small amount of data. Around it, front-end parts help the weak signal: an antenna switch picks the antenna (or
+      switches between two for angle), an LNA adds receive gain, a PA with bypass makes up board losses, and filters keep
+      strong nearby transmitters out. Qorvo makes the transceivers, SoCs and modules (DW3xxx, QM33xxx, QM35xxx, DWMxxxx)
+      and UWB front ends (QM14068, QM14070); Skyworks and Qorvo make the switches and filters.
+    how:
+      diagram: _uwb_svg.html
+      steps:
+        - title: "Impulse radio"
+          text: >-
+            Instead of a steady carrier, the transmitter sends pulses about 2 ns long, spread over a 500 MHz wide channel.
+            A short pulse has a sharp arrival time. Light travels 30 cm in a nanosecond, so timestamping to a fraction of
+            a nanosecond gives centimetre distance. The power is spread so thin (-41.3 dBm/MHz mean) that it sits under
+            other radios' noise.
+        - title: "Finding the first path"
+          text: >-
+            Indoors and in a car the pulse arrives many times (echoes). The receiver builds the channel impulse response
+            and takes the timestamp from the first, often weaker, path: that one is the true distance.
+        - title: "Two-way ranging (time of flight)"
+          text: >-
+            Device A sends a poll, B answers after a known delay, A sends a final message. Each side notes its send and
+            receive times; the round-trip times minus the reply delays give the flight time. Using three messages
+            (double-sided ranging) cancels most of the clock error between the two crystals. In TDoA mode a tag only
+            transmits and synchronised anchors compare arrival times.
+        - title: "Angle of arrival with two or more antennas"
+          text: >-
+            A part with two antenna ports measures the phase difference of the same pulse at two antennas about half a
+            wavelength apart (about 2 cm at 8 GHz). The phase difference gives the angle (PDoA); distance plus angle from
+            one device gives a position. Three antennas give angle in two planes.
+        - title: "Channels 5 and 9"
+          text: >-
+            Channel 5 is centred at 6489.6 MHz and channel 9 at 7987.2 MHz, each 499.2 MHz wide. Channel 9 is the one
+            accepted almost worldwide and mandatory in FiRa-certified devices; channel 5 is losing ground to 6 GHz Wi-Fi.
+            Every switch, filter and LNA in the path must cover the channel used, up to about 8.25 GHz for channel 9.
+        - title: "Secure ranging: IEEE 802.15.4z, STS"
+          text: >-
+            IEEE 802.15.4z (2020) added the scrambled timestamp sequence (STS): a pseudo-random pulse pattern made with
+            AES from a shared key. The receiver timestamps on the STS, so an attacker who does not know the key cannot
+            make a signal arrive earlier (closer). A relay can only add delay.
+        - title: "Profiles and the next step: FiRa, CCC, 802.15.4ab"
+          text: >-
+            FiRa (devices, phones, tags) and the Car Connectivity Consortium (CCC Digital Key) define how parts from
+            different makers range with each other on top of 802.15.4z. IEEE 802.15.4ab, in ballot, adds a narrowband
+            assist radio in the 5.7-6.4 GHz range, multi-millisecond ranging and a radar-style sensing mode.
+    specs:
+      - {name: "Channels supported", typical: "5 (6.5 GHz) and 9 (8.0 GHz)", why: "Channel 9 is the globally accepted one; a part or front end that stops at 8.0 GHz does not cover all of it.", note: "rf:lpwan_uwb_iot_links"}
+      - {name: "TX power", typical: "up to about -31 dBm/MHz from the chip; legal limit -41.3 dBm/MHz mean e.i.r.p.", why: "Power is capped by regulation, so the extra headroom only makes up antenna and board losses; range comes from the receiver.", note: "rf:lpwan_uwb_iot_links"}
+      - {name: "RX sensitivity", typical: "about -94 to -100 dBm (channel 5, at the stated data rate and preamble)", why: "Sets the range. Compare at the same data rate, preamble, STS setting and packet error rate; every dB of switch or filter loss in front comes off it.", note: "rf:sensitivity_noise_floor"}
+      - {name: "Ranging accuracy", typical: "±6 cm after calibration, ±15 cm without (DW3110, line of sight)", why: "What the product can promise; crystal error and board delay need calibration per board.", note: ""}
+      - {name: "AoA support", typical: "1 port (distance only) or 2 ports (PDoA, about ±5° angle)", why: "Angle needs two or more antenna ports, or an external antenna switch; PDoA versions lose about 1.2-1.4 dB in their internal switch.", note: ""}
+      - {name: "Power consumption", typical: "receive 72-88 mA; sleep 260 nA (DW3110)", why: "The receiver dominates; a coin-cell tag lives on its duty cycle, so check sleep current and wake time as well as the peak.", note: ""}
+      - {name: "Security (STS, AES)", typical: "802.15.4z STS with AES-128; older 802.15.4-2011 parts have none", why: "Without STS the distance can be faked; car keys and door locks need it.", note: ""}
+      - {name: "Front-end loss, isolation and pulse fidelity", typical: "switch 0.5-0.9 dB loss; flat group delay across 500 MHz", why: "Loss before the first gain stage costs sensitivity; group-delay ripple can create a false early path.", note: "engineering:uwb_signal_path"}
+      - {name: "AEC-Q grade", typical: "DW3300Q and SKY5A2108 listed automotive; most others not stated", why: "Car parts must be AEC-Q100 qualified (Grade 2, -40 to +105 °C, for most mounting positions).", note: "engineering:qualification"}
+    choosing:
+      - "Transceiver, SoC or module: a transceiver (DW3110) needs a host MCU running the ranging stack; an SoC (QM35825) runs it on the chip; a module adds antenna and certification but costs more (est)."
+      - "One or two antenna ports: two for angle of arrival, or one port plus an external switch."
+      - "802.15.4z with STS for anything secure; the DW1000 generation has no STS."
+      - "Channel 9 coverage of every part in the RF path, to 8.25 GHz."
+      - "Front end only where the link budget needs it: an LNA ahead of a lossy switch at weak positions; a PA with bypass only makes up losses under the power cap."
+      - "Automotive grade and the absolute-maximum RF input when other transmitters sit close."
+    appnotes:
+      - {text: "Terminate the unused antenna path in 50 Ω (an absorptive switch, or a DPDT with an external termination) when a ranging radio switches between antennas: it steadies the measurement and cuts reflections. Shown for Bluetooth Channel Sounding; the same holds for a UWB AoA switch (est).", ref: AN1451, page: 1, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Application-Notes/AN1451_Enabling_High_Performance_Bluetooth_207463A.pdf"}
+      - {text: "Matching networks and antenna switches typically cost 1 to 1.5 dB of insertion loss, taken straight from the link margin of a ranging radio.", ref: AN1451, page: 3, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Application-Notes/AN1451_Enabling_High_Performance_Bluetooth_207463A.pdf"}
+      - {text: "Angle of arrival with two antennas is the basic set-up; four antennas (SP4T / DP4T switches) improve angular resolution and robustness against device orientation and multipath.", ref: AN1451, page: 3, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Application-Notes/AN1451_Enabling_High_Performance_Bluetooth_207463A.pdf"}
+      - {text: "A front-end module sits between the radio chip and the antenna switch; prefer a single-antenna FEM plus an absorptive switch, because diversity FEMs do not terminate the idle antenna in 50 Ω.", ref: AN1451, page: 4, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Application-Notes/AN1451_Enabling_High_Performance_Bluetooth_207463A.pdf"}
+      - {text: "Link budget table: 85-91 dB of path loss for data frames and up to 97-98 dB for ranging-only frames at the legal power with 0 dBi antennas; every dB lost between antenna and pin comes off it.", ref: "DW3000 datasheet v1.3 (public copy)", page: "Table 12", url: "https://raw.githubusercontent.com/SendingA/Some-UWB-Papers/main/DW3000_Data_Sheet.pdf"}
+      - {text: "Clock error becomes distance error: the 38.4 MHz crystal (±20 ppm, trimmable on chip) should be trimmed per board in production, or a TCXO used for anchors; ranging is ±6 cm after calibration and about ±15 cm without.", ref: "DW3000 datasheet v1.3 (public copy)", page: "Tables 10 and 14", url: "https://raw.githubusercontent.com/SendingA/Some-UWB-Papers/main/DW3000_Data_Sheet.pdf"}
+    see_also: []
+    gaps:
+      - "QPF5100Q (automotive UWB SoC) and QM35826 have no lifecycle status in our data, so they are not listed; no public datasheet was found."
+      - "Channels, TX power and sensitivity of QM33110W / QM33120W, DW3300Q and QPK3000: not in our data."
+      - "Automotive grade of QM14068 and QM14070: not stated in our catalogue."
+      - "No Skyworks or Qorvo filter made for UWB channel 9 in our catalogue; SKY5A1008 (6 GHz Wi-Fi filter that protects UWB) is still Preview."
+      - "SKY13298-360LF (UWB switch, 3-8 GHz) is last-time-buy and is left out."
+      - "No 802.15.4ab part of ours yet."
+    used_in:
+      - {label: "Phone-as-a-key car access (automotive UWB)", topic: auto_uwb}
+      - {label: "Smart car access (UWB anchors + BLE + NFC)", app: "Smart car access (UWB anchors"}
+      - {label: "UWB + BLE module for anchors and tags", app: "UWB + Bluetooth LE module for anchors and tags"}
+      - {label: "Smartphone peripheral sockets (UWB)", app: "Smartphone peripheral sockets"}
+      - {label: "Smartwatch with UWB", app: "5G RedCap smartwatch"}
+    reviews: [qorvo-dw3000-uwb]
+    sources:
+      - {title: "Part review: Qorvo DW3000 UWB (DW3000 datasheet v1.3, public copy)", publisher: "BizDev", url: "/reviews/qorvo-dw3000-uwb", kind: ours}
+      - {title: "Library topic: Automotive UWB (ETSI EN 302 065-3-1, IEEE 802.15.4ab coexistence document, CCC position, SKY5A2108 datasheet)", publisher: "BizDev", url: "/library/auto_uwb", kind: ours}
+      - {title: "Qorvo and Skyworks catalogue rows: uwb_soc, uwb_fem, switches", publisher: "BizDev catalogue (store crawl, Oct 2026)", url: "/parts?sub=uwb", kind: ours}
+      - {title: "SKY5A2108 Sky5 2.4 to 8.3 GHz SPDT switch, data sheet 206432E", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Data-Sheet/SKY5A2108_206432E.pdf", kind: cached}
+      - {title: "How UWB Works", publisher: "FiRa Consortium", url: "https://www.firaconsortium.org/discover/how-uwb-works", kind: fetched}
+      - {title: "IEEE 802.15.4z-2020: Enhanced UWB PHYs and associated ranging techniques (standard page)", publisher: "IEEE Standards Association", url: "https://standards.ieee.org/ieee/802.15.4z/10230/", kind: fetched}
+      - {title: "CCC Digital Key overview", publisher: "Car Connectivity Consortium", url: "https://carconnectivity.org/digital-key/", kind: cached}
+      - {title: "Coexistence Document for IEEE 802.15.4ab (P802.15-23-0452-07-04ab)", publisher: "IEEE 802.15 WG", url: "https://mentor.ieee.org/802.15/dcn/23/15-23-0452-07-04ab-coexistence-assessment-document.pdf", kind: cached}
+
+  - id: isolator
+    title: "Capacitive digital isolators"
+    link: "How digital isolators work"
+    gist: "How a capacitive digital isolator carries logic across a SiO2 barrier: on-off keyed carrier, CMTI, default output, insulation ratings, creepage and timing; our Skyworks parts."
+    date: 2026-10-28
+    subs: [digital_isolator]
+    families: [digital_isolator]
+    table_subs: []
+    role: "Digital isolator"
+    columns:
+      - {label: "Data rate (Mbps)", keys: ["Max Data Rate (Mbps)", "param:data_rate_mbps"]}
+      - {label: "Isolation (kVrms)", keys: ["Isolation Rating (kVrms)", "param:isolation_rating_kvrms"]}
+      - {label: "Default output", keys: ["Default Output State", "param:default_output"]}
+      - {label: "Max prop. delay (ns)", keys: ["Max Propagation Delay", "param:prop_delay_ns"]}
+    parts: []
+    exclude: []
+    series:
+      - {id: Si86Sx, label: "Si86Sx (newest generation: >100 kV/µs CMTI, deglitch options)", match: "^SI86S", sub: digital_isolator, q: Si86S, role: "Digital isolator"}
+      - {id: Si86xx, label: "Si86xx (1-6 channels, up to 150 Mbps)", match: "^SI86[0-6]\\d", sub: digital_isolator, q: Si86, role: "Digital isolator"}
+      - {id: Si84xx, label: "Si84xx (first generation)", match: "^SI84\\d", sub: digital_isolator, q: Si84, role: "Digital isolator"}
+      - {id: Si80xx, label: "Si80xx (1 kV, small QSOP)", match: "^SI80\\d", sub: digital_isolator, q: Si80, role: "Digital isolator"}
+      - {id: Si87xx, label: "Si87xx (LED-emulator input: optocoupler replacement)", match: "^SI87\\d", sub: digital_isolator, q: Si87, role: "Digital isolator"}
+      - {id: Si88xx, label: "Si88xx (isolator + isolated DC-DC controller)", match: "^SI88\\d", sub: digital_isolator, q: Si88, role: "Digital isolator with power"}
+    what: >-
+      A digital isolator passes logic signals (PWM, SPI, I2C, UART, enable lines) from one circuit to another that sits
+      at a different, possibly lethal, voltage, with no electrical connection between them. It replaces the
+      optocoupler: faster, smaller, with timing that does not drift with LED ageing. Inside the package are two (or more)
+      silicon dies, one per side, joined only through tiny capacitors whose insulation is silicon dioxide (SiO2). Each
+      side has its own supply and ground; nothing but the signal crosses.
+    how:
+      diagram: _isolator_svg.html
+      steps:
+        - title: "An RF carrier switched on and off (on-off keying)"
+          text: >-
+            The transmitter die has an RF oscillator. A logic high on the input switches the carrier on, a low switches it
+            off. The carrier crosses the barrier through the capacitors; the receiver die detects RF energy and sets its
+            output high or low. Skyworks says this on-off keying gives better noise immunity, lower power and better
+            immunity to magnetic fields than pulse-coded schemes.
+          cite: "Si823x data sheet p. 7 (the same channel as the digital isolators)"
+        - title: "Two capacitors in series, differential signal"
+          text: >-
+            The barrier is two SiO2 capacitors in series, one on each die, joined by bond wires. The carrier is sent
+            differentially, so a voltage jump between the two grounds (common mode) reaches both lines equally and is
+            rejected (est for the differential detail). If one capacitor is damaged, the other still isolates.
+          cite: "AN1167 p. 16"
+        - title: "Common-mode transient immunity (CMTI)"
+          text: >-
+            When a power switch turns on, the ground of one side can jump hundreds of volts in nanoseconds. That edge
+            pushes current through the barrier capacitance. CMTI is the steepest edge (kV/µs) the part tolerates without a
+            wrong output. Si86xx parts are rated above 35 kV/µs; the newer Si86Sx above 100 kV/µs (150 kV/µs with the
+            deglitch option).
+          cite: "AN1359 p. 17"
+        - title: "Default output state"
+          text: >-
+            With the input side unpowered or the input floating, the receiver sees no carrier, so the output goes to a
+            set state, low or high depending on the part number option. Pick the default that keeps the load safe, for
+            example a gate-driver enable held low.
+        - title: "Insulation ratings"
+          text: >-
+            Basic insulation is one level of protection, reinforced is two (needed when the low-voltage side can be
+            touched). The data sheet gives the 1-minute withstand voltage (VISO, e.g. 2.5, 3.75 or 5 kVrms), the
+            continuous working voltage (VIORM / VIOWM) from lifetime (TDDB) tests, the transient overvoltage (VIOTM) and
+            the surge rating (10 kV on surge-rated parts). SiO2 withstands about 500 V/µm, which lets a thin barrier
+            carry high voltage.
+          cite: "AN583 p. 2-3, AN1167 p. 17"
+        - title: "Creepage and clearance belong to the package"
+          text: >-
+            The barrier inside is not the limit outside: the distance along the package surface (creepage) and through air
+            (clearance) between the two pin rows must meet the safety standard, so the package choice (narrow or wide
+            body) follows from the working voltage.
+          cite: "AN583 p. 4-7"
+        - title: "Timing: propagation delay, pulse-width distortion, skew"
+          text: >-
+            Each channel adds a delay, a small difference between rising and falling edges (pulse-width distortion) and
+            channel-to-channel or part-to-part differences (skew). These, not the maximum data rate, usually set the
+            fastest SPI clock or the PWM dead time. Deglitch versions filter out pulses under 30 ns at the cost of more
+            delay.
+          cite: "AN1359 p. 4-5, 13"
+        - title: "Separate power domains"
+          text: >-
+            Each die runs from its own supply and ground, so the input and output side can use different logic levels and
+            the isolator also level-shifts. Where the far side has no supply, an isolated DC-DC brings one across: the
+            Si884xx / Si886xx add a DC-DC controller for an external transformer.
+          cite: "AN901 p. 1"
+    specs:
+      - {name: "Isolation rating (VISO)", typical: "1, 2.5, 3.75 or 5 kVrms for 1 minute", why: "The headline safety number; the standard and the working voltage decide which one is needed.", note: "engineering:isolation_rating_kvrms"}
+      - {name: "Basic vs reinforced", typical: "reinforced needs about twice the creepage and test voltage", why: "Reinforced is required when a person can touch the low-voltage side.", note: "engineering:isolation_class"}
+      - {name: "Working voltage (VIORM / VIOWM)", typical: "hundreds of V to above 1 kV peak", why: "What the barrier may see for its whole life; set by TDDB lifetime tests.", note: "engineering:viorm_vpk"}
+      - {name: "Creepage / clearance", typical: "set by the package (narrow or wide body)", why: "Must meet the end standard; set by the package, not the die.", note: "engineering:creepage_mm"}
+      - {name: "CMTI", typical: ">35 kV/µs (Si86xx), >100 kV/µs (Si86Sx)", why: "Margin against fast switch-node edges, especially with SiC and GaN.", note: "engineering:cmti_kv_us"}
+      - {name: "Default output state", typical: "low or high", why: "Decides what the load sees while one side is unpowered.", note: "engineering:default_output"}
+      - {name: "Data rate and propagation delay", typical: "up to 150 Mbps; about 10-40 ns delay", why: "Delay, distortion and skew set the timing budget of SPI and PWM paths.", note: "engineering:prop_delay_ns"}
+      - {name: "Pulse-width distortion and skew", typical: "a few ns", why: "Eat into SPI setup / hold time and PWM dead time.", note: "engineering:pwd_ns"}
+      - {name: "Channel configuration", typical: "1-6 channels, forward / reverse mix", why: "Must match the signals; never a deviation in a cross.", note: "engineering:channel_config"}
+      - {name: "AEC-Q grade", typical: "-A / -AS suffix parts listed AEC-Q100", why: "Required in cars.", note: "engineering:qualification"}
+    choosing:
+      - "Insulation first: basic or reinforced, the working voltage, then the package that gives the creepage."
+      - "Timing budget, not data rate: check delay, distortion and skew against the SPI clock or the PWM dead time."
+      - "CMTI margin at the real dv/dt of the switch node (SiC and GaN need the newer parts)."
+      - "Default output that keeps the load safe."
+      - "Channel count and direction, and whether a deglitch filter is worth its extra delay in a noisy system."
+      - "Whether the far side needs power too: an isolator with a DC-DC controller (Si88xx) saves a module."
+    appnotes:
+      - {text: "Rule of thumb for most standards: basic insulation needs about 3.2 mm creepage / clearance and a 2500 Vrms 1-minute test; reinforced about 6.4 mm and 5000 Vrms (6000 Vrms for 1 s in production).", ref: AN583, page: 3, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN583.pdf"}
+      - {text: "Skyworks isolator packages are rated Material Group I (CTI): in many standards that halves the creepage needed (for example 4 mm to 2 mm at 400 Vrms); PCB grooves can lengthen creepage, but not clearance.", ref: AN583, page: 5, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN583.pdf"}
+      - {text: "Layout: four-layer board with a solid ground plane next to the signal layer; 0.1 µF and 1 µF bypass capacitors right at the supply pins; in noisy systems add 100 Ω in series with inputs and outputs.", ref: AN583, page: 8, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN583.pdf"}
+      - {text: "The two series SiO2 capacitors sit on separate dice: if an overstress destroys one side, a 5 kVrms isolator still withstands about 2500 Vrms.", ref: AN1167, page: 18, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1167.pdf"}
+      - {text: "Lifetime: the Si86xx TDDB curve predicts 100 years at 1000 Vrms working voltage for a 10 ppm failure rate; SiO2 withstands 500 V/µm against 50-200 V/µm for other dielectrics.", ref: AN1167, page: 17, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1167.pdf"}
+      - {text: "Isolated SPI budget with Si86SS51 (<3 ns PWD, <3 ns skew, 9 ns delay): a write loses 6 ns of setup / hold, a read 24 ns (two extra delays), so 10 MHz with a normal clock, 20 MHz with an asymmetric clock, 40 MHz with a looped-back clock.", ref: AN1359, page: "5-8", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1359-si86Sx_design_considerations.pdf"}
+      - {text: "Deglitch versions (Si86SxxxHx / Fx) block pulses under 30 ns; the total delay rises to about 36 ns typical, close to the competitor parts they may replace.", ref: AN1359, page: 13, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1359-si86Sx_design_considerations.pdf"}
+      - {text: "Si86SW options tune the internal on-off-keying carrier away from 2.4 / 5 GHz Wi-Fi and 1.9 GHz DECT.", ref: AN1359, page: 14, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1359-si86Sx_design_considerations.pdf"}
+    see_also:
+      - {label: "Engineering knowledge: error propagation and timing budgets", href: "/engineering/error_budget"}
+      - {label: "Part knowledge: isolated gate drivers", href: "/reviews/how/gatedriver"}
+      - {label: "Animated circuit: capacitive isolator, on-off keying and common-mode rejection", href: "/visuals#ook"}
+    gaps:
+      - "Most Si84xx part numbers are not active in our data (only some Si841x / Si842x); the Si86Px samples are not active yet."
+      - "No Qorvo digital isolator in our catalogue."
+      - "CMTI and surge ratings per orderable part are only in the BizDev data for the parts loaded with full parameters."
+    used_in:
+      - {label: "Industrial isolated I/O", app: "Industrial isolated I/O"}
+      - {label: "PLC analog input module", app: "PLC analog input module"}
+      - {label: "EV high-voltage battery system", app: "EV high-voltage battery system (wired"}
+      - {label: "Traction inverter isolation", topic: traction_asil_d}
+    reviews: []
+    sources:
+      - {title: "AN583: Safety Considerations and Layout Recommendations for Digital Isolators", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN583.pdf", kind: cached}
+      - {title: "AN1167: Safety Considerations for Capacitive Isolators", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1167.pdf", kind: cached}
+      - {title: "AN1359: Design Considerations for the Si86Sx family", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1359-si86Sx_design_considerations.pdf", kind: cached}
+      - {title: "AN901: Design Guide for Isolated DC/DC Using the Si884xx, Si886xx, or Si8282/84", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an901-Si884xx-Si886xx-design-guide.pdf", kind: cached}
+      - {title: "Si823x data sheet (channel description, on-off keying)", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si823x-datasheet.pdf", kind: cached}
+      - {title: "Skyworks catalogue and BizDev parameters: digital isolators", publisher: "BizDev", url: "/parts?sub=digital_isolator", kind: ours}
+
+  - id: gatedriver
+    title: "Isolated gate drivers"
+    link: "How isolated gate drivers work"
+    gist: "How an isolated gate driver switches IGBT, SiC and GaN: peak current, CMTI, UVLO, Miller clamp, DESAT, soft shutdown; our Skyworks parts."
+    date: 2026-10-28
+    subs: [isolated_gate_driver]
+    families: [gate_driver]
+    table_subs: []
+    role: "Isolated gate driver"
+    columns:
+      - {label: "Peak current (A)", keys: ["Peak Output Current (A)", "param:peak_source_a"]}
+      - {label: "UVLO (V)", keys: ["UVLO Voltage (V)", "UVLO", "param:uvlo_v"]}
+      - {label: "Isolation (kVrms)", keys: ["Isolation Rating (kVrms)", "param:isolation_rating_kvrms"]}
+      - {label: "Outputs / input", keys: ["Output Configuration", "Input Type"]}
+    parts: []
+    exclude: []
+    series:
+      - {id: Si823x, label: "Si823x dual drivers (high side / low side, programmable dead time)", match: "^SI823[0-8]", sub: isolated_gate_driver, q: Si823, role: "Dual isolated driver"}
+      - {id: Si8239x, label: "Si8239x dual drivers, automotive", match: "^SI8239", sub: isolated_gate_driver, q: Si8239, role: "Dual isolated driver"}
+      - {id: Si82Ax-Fx, label: "Si82Ax-Fx performance drivers (deglitch options)", match: "^SI82[A-F]\\d", sub: isolated_gate_driver, q: Si82, role: "Dual isolated driver"}
+      - {id: Si8252x, label: "Si8252x dual drivers (DFN)", match: "^SI8252", sub: isolated_gate_driver, q: Si8252, role: "Dual isolated driver"}
+      - {id: Si827x, label: "Si827x single drivers (split pull-up / pull-down)", match: "^SI827", sub: isolated_gate_driver, q: Si827, role: "Single isolated driver"}
+      - {id: Si826x, label: "Si826x opto-compatible single drivers (LED-emulator input)", match: "^SI826", sub: isolated_gate_driver, q: Si826, role: "Single isolated driver"}
+      - {id: Si822x, label: "Si822x opto-compatible drivers", match: "^SI822", sub: isolated_gate_driver, q: Si822, role: "Single isolated driver"}
+      - {id: Si828x, label: "Si828x drivers with DESAT, Miller clamp, soft shutdown (Si8281 / 83: DC-DC)", match: "^SI828[1-6]", sub: isolated_gate_driver, q: Si828, role: "Single isolated driver with protection"}
+    what: >-
+      An isolated gate driver takes the logic PWM signal from a controller and turns it into a strong, fast gate pulse for
+      a power transistor (IGBT, silicon MOSFET, SiC or GaN) that sits at a high, moving voltage. It does three jobs in one
+      package: it carries the signal across an isolation barrier, it shifts the level to the transistor's own floating
+      supply, and it delivers amperes of peak current to charge and discharge the gate quickly. Protection features
+      (UVLO, desaturation detection, Miller clamp, soft shutdown) keep the transistor safe.
+    how:
+      diagram: _gatedriver_svg.html
+      steps:
+        - title: "Signal across the barrier"
+          text: >-
+            The input die encodes the PWM on an RF carrier (on-off keying) and sends it through the SiO2 capacitor
+            barrier; the output die decodes it, as in a digital isolator. On the Si823x the delay is 30 ns typical, 45 ns
+            maximum, with pulse-width distortion under 5.6 ns.
+          cite: "Si823x data sheet p. 7, 23"
+        - title: "Output stage: source and sink"
+          text: >-
+            A strong pull-up and pull-down push amperes of peak current into the gate (more with an external booster).
+            Separate pull-up and pull-down pins (VH / VL) let the designer set turn-on and turn-off speed with two
+            resistors.
+          cite: "AN1009 p. 1, 9"
+        - title: "Floating supply: bootstrap or isolated bias"
+          text: >-
+            The output die needs its own supply referenced to the transistor's source (or emitter). A bootstrap
+            capacitor and diode do it cheaply for the high side of a half bridge. A separate isolated supply is needed for
+            a negative turn-off voltage, 100 % duty cycle or high power; the Si8282 / Si8284 integrate a DC-DC controller.
+          cite: "AN901 p. 1"
+        - title: "UVLO"
+          text: >-
+            Under-voltage lockout keeps the outputs low until the driver supply is high enough to switch the transistor
+            fully on; the threshold option (5, 8, 10 or 12.5 V on the Si823x) must suit the transistor type.
+          cite: "Si823x data sheet p. 15, 23"
+        - title: "Miller clamp"
+          text: >-
+            When the other transistor of a half bridge switches, the fast voltage edge couples through the gate-drain
+            (Miller) capacitance and can lift the off-gate enough to turn it on. A clamp pin holds the gate low with a
+            low-impedance path once it is below about 2 V.
+          cite: "AN1009 p. 1, 13"
+        - title: "Desaturation (DESAT) and soft shutdown"
+          text: >-
+            In a short circuit the transistor leaves saturation and its collector voltage rises while it is on. The driver
+            watches it through a diode on the DSAT pin; above 7 V it turns the transistor off slowly through a 60 Ω path,
+            so the large current does not cause a voltage spike in the wiring inductance, and reports a fault.
+          cite: "AN1009 p. 12-13"
+        - title: "Dead time and overlap protection"
+          text: >-
+            Dual drivers add a programmable delay between one output going low and the other going high, set by one
+            resistor, and keep both outputs from being high together.
+          cite: "Si823x data sheet p. 17"
+        - title: "SiC, GaN and IGBT needs"
+          text: >-
+            SiC has low transconductance: it needs a high on-voltage, often a negative off-voltage and may need a lower
+            DESAT threshold; its hard-switched edges can exceed 100 kV/µs, so CMTI matters. GaN needs tight gate-voltage
+            limits and very small delay mismatch (est).
+          cite: "AN1306 p. 4-5"
+    specs:
+      - {name: "Peak source / sink current", typical: "0.5-4 A; above 20 A with an external booster", why: "Sets how fast the gate charge moves: switching loss against EMI.", note: "engineering:peak_source_a"}
+      - {name: "CMTI", typical: "20 kV/µs min, 45 typ (Si823x); higher in newer families", why: "The switch node of a SiC half bridge can exceed 100 kV/µs.", note: "engineering:cmti_kv_us"}
+      - {name: "UVLO threshold", typical: "5, 8, 10 or 12.5 V", why: "Must suit MOSFET, IGBT or SiC gate voltage; variants are not interchangeable.", note: "engineering:uvlo_v"}
+      - {name: "Propagation delay and matching", typical: "30 ns typ, 45 ns max; PWD below 5.6 ns (Si823x)", why: "Delay mismatch between high and low side must be covered by dead time.", note: "engineering:prop_delay_ns"}
+      - {name: "Dead time / overlap protection", typical: "set by one resistor (Si823x)", why: "Stops shoot-through when the controller cannot guarantee it.", note: "engineering:deadtime"}
+      - {name: "Protection: DESAT, Miller clamp, soft shutdown", typical: "Si828x", why: "Short-circuit survival of IGBT and SiC modules.", note: ""}
+      - {name: "Isolation and certifications", typical: "2.5-5 kVrms; UL 1577, VDE", why: "Basic or reinforced, by the voltage and whether the controller side can be touched.", note: "engineering:certifications"}
+      - {name: "AEC-Q grade", typical: "many Si823x / Si827x / Si828x listed AEC-Q100", why: "Traction inverters, chargers and pumps in cars.", note: "engineering:qualification"}
+    choosing:
+      - "Single or dual: a dual driver (Si823x) fits a half bridge with a bootstrap; single drivers (Si827x, Si828x) give each transistor its own isolated supply."
+      - "Protection: IGBT and SiC modules want DESAT, soft shutdown and Miller clamp (Si828x); low-voltage MOSFET bridges may not."
+      - "Drive current against the transistor's gate charge; split outputs to set turn-on and turn-off speed separately."
+      - "UVLO matched to the transistor; negative off-voltage for SiC."
+      - "CMTI at the real dv/dt; delay matching covered by dead time."
+      - "Bias supply: bootstrap (cheap, limited duty cycle) or an isolated DC-DC (Si8282 / 84 integrate the controller)."
+    appnotes:
+      - {text: "Gate resistors: Ig = Qg / t for the wanted rise or fall time; RH = VDDB / Ig_on minus the driver's pull-up resistance, RL the same with the pull-down.", ref: AN1009, page: 9, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf"}
+      - {text: "Soft shutdown: the internal 60 Ω path with RH = 20 Ω gives about 2 µs for 250 nC of gate charge; a steering diode allows a larger external resistor for longer.", ref: AN1009, page: 13, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf"}
+      - {text: "DESAT blanking: CBL = t_blank x I_chg / 7 V; a 3 µs blanking needs about 390 pF (1 mA charge current) or 100 pF on the Si8286 (250 µA).", ref: AN1009, page: 16, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf"}
+      - {text: "SiC: hard switching can put more than 100 kV/µs on the barrier; check CMTI and, if needed, slow the edges with the gate resistors. Working voltage (VIOWM) and creepage must match the bus.", ref: AN1306, page: 5, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1306-si828x-driving-sic-mosftets.pdf"}
+      - {text: "Protect a SiC gate with Schottky diodes from VSSB to the gate and from the gate to VDDB, against current injected through the drain-gate capacitance.", ref: AN1306, page: 11, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1306-si828x-driving-sic-mosftets.pdf"}
+      - {text: "Si828x standard drive is about 3 A source and 6 A sink; a low-cost external booster lifts it above 20 A for large modules, with DESAT response under 1 µs and an adjustable threshold.", ref: AN1288, page: "1-3", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1288-si828x-ext-enhan-circs.pdf"}
+      - {text: "Layout: 0.1 µF plus 10 µF bypass at the supply pins; for very high CMTI add 10 nF from each logic input (and NC pins) to the input ground; gate traces at least 20 mil; keep about 1 mm per kV between high-voltage traces and logic.", ref: "Si823x data sheet", page: 21, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si823x-datasheet.pdf"}
+      - {text: "Deglitch filters on the logic inputs reject noise pulses but add delay and, if rise and fall filters differ, pulse-width distortion; choose the option with the timing budget in mind.", ref: AN1462, page: 1, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1462_Si82Ax-Fx_Isolated_Gate_Driver_Deglitch_Filter.pdf"}
+    see_also:
+      - {label: "Part knowledge: motor drivers and controllers", href: "/reviews/how/motor"}
+      - {label: "Part knowledge: capacitive digital isolators", href: "/reviews/how/isolator"}
+      - {label: "Engineering knowledge: error propagation and timing budgets", href: "/engineering/error_budget"}
+      - {label: "Animated circuit: gate driver, half-bridge and bootstrap", href: "/visuals#bootstrap"}
+    gaps:
+      - "Si8290x / Si8291x (SPI-configurable automotive drivers) are not active in our data."
+      - "No Qorvo isolated gate driver; Qorvo's motor controllers drive non-isolated gates."
+      - "CMTI per orderable part only for the parts loaded with full parameters."
+    used_in:
+      - {label: "EV traction inverter", app: "EV traction inverter"}
+      - {label: "Industrial AC drive power stage", app: "Industrial AC drive power stage"}
+      - {label: "HEV/EV on-board charger", app: "HEV/EV on-board charger"}
+      - {label: "Traction inverter isolation (ASIL-D)", topic: traction_asil_d}
+    reviews: []
+    sources:
+      - {title: "AN1009: Driving MOSFET and IGBT Switches Using the Si828x", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1009-driving-mosfet-and-igbt-switches-using-the-si828x.pdf", kind: cached}
+      - {title: "AN1306: Driving SiC MOSFET Switches Using the Si828x", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1306-si828x-driving-sic-mosftets.pdf", kind: cached}
+      - {title: "AN1288: Si828x External Enhancement Circuits", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1288-si828x-ext-enhan-circs.pdf", kind: cached}
+      - {title: "AN1462: Si82Ax-Fx Isolated Gate Driver Deglitch Filter", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1462_Si82Ax-Fx_Isolated_Gate_Driver_Deglitch_Filter.pdf", kind: cached}
+      - {title: "AN901: Design Guide for Isolated DC/DC Using the Si884xx, Si886xx, or Si8282/84", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an901-Si884xx-Si886xx-design-guide.pdf", kind: cached}
+      - {title: "Si823x data sheet", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si823x-datasheet.pdf", kind: cached}
+      - {title: "Skyworks catalogue and BizDev parameters: isolated gate drivers", publisher: "BizDev", url: "/parts?sub=isolated_gate_driver", kind: ours}
+
+  - id: currentsense
+    title: "Isolated current sensing"
+    link: "How isolated current sensing works"
+    gist: "How an isolated amplifier or delta-sigma modulator measures shunt current across a barrier, and how offset, gain and nonlinearity add up (AN1270); our Skyworks parts."
+    date: 2026-10-28
+    subs: [isolated_analog, isolated_current_sensor]
+    families: [isolated_amplifier, current_sensor]
+    table_subs: []
+    role: "Isolated amplifier / modulator"
+    columns:
+      - {label: "Input range", keys: ["param:input_range", "Specified Input Range"]}
+      - {label: "Output", keys: ["Output Mode"]}
+      - {label: "Offset (µV, max 25 °C)", keys: ["param:offset_uv"]}
+      - {label: "Gain error (%, max 25 °C)", keys: ["param:gain_error_pct"]}
+      - {label: "Bandwidth (kHz)", keys: ["param:bandwidth_khz"]}
+      - {label: "CMTI (kV/µs)", keys: ["param:cmti_kv_us"]}
+    parts: []
+    exclude: []
+    series:
+      - {id: Si8921, label: "Si8921 isolated amplifier, current shunt, differential output", match: "^SI8921", sub: isolated_analog, q: Si8921, role: "Isolated amplifier (current)"}
+      - {id: Si8922, label: "Si8922 isolated amplifier, current shunt, single-ended output", match: "^SI8922", sub: isolated_analog, q: Si8922, role: "Isolated amplifier (current)"}
+      - {id: Si8941, label: "Si8941 delta-sigma modulator, current shunt, external clock", match: "^SI8941", sub: isolated_analog, q: Si8941, role: "Isolated modulator (current)"}
+      - {id: Si8946-47, label: "Si8946 / Si8947 delta-sigma modulators, current shunt, internal clock", match: "^SI894[67]", sub: isolated_analog, q: Si894, role: "Isolated modulator (current)"}
+      - {id: Si8931-32, label: "Si8931 / Si8932 isolated amplifiers, voltage", match: "^SI893[12]", sub: isolated_analog, q: Si893, role: "Isolated amplifier (voltage)"}
+      - {id: Si8935-37, label: "Si8935 / 36 / 37 delta-sigma modulators, voltage", match: "^SI893[5-7]", sub: isolated_analog, q: Si893, role: "Isolated modulator (voltage)"}
+    what: >-
+      An isolated current-sense part measures the small voltage across a shunt resistor that sits on a high-voltage
+      rail (a motor phase, a battery line, a charger output) and hands the result to a controller on the safe,
+      low-voltage side. It does three things: amplifies or digitises a signal of a few tens of millivolts very
+      accurately, carries it across an isolation barrier, and survives the fast voltage jumps of the switching power
+      stage. The isolated amplifier gives an analog output for the controller's ADC; the delta-sigma modulator gives a
+      1-bit stream that the controller filters into a number.
+    how:
+      diagram: _currentsense_svg.html
+      steps:
+        - title: "1. Shunt: current becomes a small voltage"
+          text: >-
+            Current through a low-value resistor makes a voltage the part can read; the full current should fill the
+            specified linear input range (for example 30 to 250 mV on the Si8922B). A smaller shunt wastes less power but
+            uses less of the range, so offset matters more. The shunt's own tolerance and drift add to the gain error
+            (est).
+          cite: "AN1270 p. 6, Table 1"
+        - title: "2. Input filter"
+          text: >-
+            The data sheet circuit puts 20 Ω in each input line and 10 nF across the inputs: a low-pass filter (corner
+            about 400 kHz, est) that keeps switching spikes out of the input. Larger resistors would turn the input current
+            into extra offset and gain error (est).
+          cite: "AN1270 p. 2, Figure 1"
+        - title: "3. Amplifier or modulator, across the barrier"
+          text: >-
+            The amplifier (Si8921 / 22) gives an analog output on the far side for the controller's ADC; the modulator
+            (Si8941 / 46 / 47) sends a second-order delta-sigma bit stream that an MCU or FPGA filters, for example with a
+            SINC3 filter. The high-voltage side needs its own 3 to 5.5 V supply, here taken from the floating gate-driver
+            supply with a 5.6 V Zener.
+          cite: "AN1270 p. 2-3, Figures 1-2"
+        - title: "4. Offset: the error at zero"
+          text: >-
+            Offset is the input that gives zero output, given at 25 °C plus a drift per °C. AN1270 draws four lines (min
+            and max offset, each with min and max drift) and takes the outer ones as the band: for the Si8922B ±0.35 mV
+            at 25 °C becomes -0.545 to +0.650 mV over -40 to 125 °C, or -0.218 % to +0.260 % of the 250 mV full scale.
+          cite: "AN1270 p. 7-9, Tables 2-3"
+        - title: "5. Gain error: the error in slope"
+          text: >-
+            Gain error scales with the reading: ±0.2 % at 25 °C with a drift of -24 to 0 ppm/°C gives -0.440 % to
+            +0.356 % over temperature.
+          cite: "AN1270 p. 9-10, Table 4"
+        - title: "6. Nonlinearity"
+          text: >-
+            The bend of the transfer curve away from a straight line: ±0.04 % at 25 °C, with ±16 ppm/°C drift, becomes
+            ±0.200 % over temperature.
+          cite: "AN1270 p. 11, Table 5"
+        - title: "7. Adding the errors"
+          text: >-
+            Straight addition (worst case) gives -0.858 % to +0.816 %; root-sum-of-squares, valid when the errors are
+            independent, gives -0.530 % to +0.484 %. AN1270 recommends RSS as the best estimate of total static error.
+            The shunt's tolerance and the output ADC add on top. CMTI is not a static error: a too-fast switching edge
+            can disturb the output briefly, so the controller samples away from the edges (est).
+          cite: "AN1270 p. 12-13, Table 6"
+    specs:
+      - {name: "Specified linear input range", typical: "±62.5 mV (Si8921A) to 250 mV (Si8922B)", why: "Sets the shunt value and the power it burns; the errors are only specified inside it.", note: "/engineering/error_budget"}
+      - {name: "Offset and offset drift", typical: "±0.35 mV max, -0.3 to 3 µV/°C (Si8922B)", why: "Dominates at small currents; converts to % of full scale.", note: "/engineering/error_budget"}
+      - {name: "Gain error and drift", typical: "±0.2 % max, -24 to 0 ppm/°C (Si8922B)", why: "Dominates at large currents; scales with the reading.", note: "/engineering/error_budget"}
+      - {name: "Nonlinearity", typical: "±0.04 % at 25 °C (Si8922B)", why: "Cannot be removed by a two-point calibration.", note: "/engineering/error_budget"}
+      - {name: "Bandwidth", typical: "about 600 kHz (Si8921, typ)", why: "Over-current must be seen within a switching cycle; control loops need phase margin.", note: ""}
+      - {name: "CMTI", typical: "50 kV/µs min (Si8921)", why: "Fast switch-node edges must not disturb the output.", note: "engineering:cmti_kv_us"}
+      - {name: "Isolation", typical: "basic or reinforced", why: "Battery and inverter voltages up to 800 V need reinforced parts.", note: "engineering:isolation_class"}
+      - {name: "AEC-Q grade", typical: "-A suffix parts AEC-Q100", why: "Required in EV chargers, inverters and battery systems.", note: "engineering:qualification"}
+    choosing:
+      - "Shunt or Hall: a shunt with an isolated amplifier is more accurate and drifts less; a Hall sensor with the conductor in the package needs no high-side supply and no shunt loss, but is less accurate without calibration (est)."
+      - "Amplifier or modulator: analog output for an MCU ADC; a bit stream for an FPGA or MCU with a digital filter, more robust on a long trace, with resolution set by the filter (est)."
+      - "Input range against the shunt: a higher range means a larger shunt and more power, a smaller range more relative offset."
+      - "Error budget: offset matters at low current, gain at high current; a calibration at 25 °C removes most of the initial error, the drift remains."
+      - "High-side supply: each sense point needs a floating 3-5.5 V supply (from the gate-driver bias or an isolated DC-DC)."
+      - "Bandwidth and CMTI for fast over-current detection in SiC inverters."
+    appnotes:
+      - {text: "Static error has three parts: offset, gain error and nonlinearity; each is specified at 25 °C plus a drift, and the drift is multiplied by the distance from 25 °C (keep the sign: -40 °C is -65 °C away).", ref: AN1270, page: "6-8", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+      - {text: "Four-line method: min and max offset each with min and max drift give the offset band over temperature; for the Si8922B -0.545 to +0.650 mV from -40 to 125 °C.", ref: AN1270, page: "7-9", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+      - {text: "Convert offset to % of full scale (divide by the 250 mV range of the Si8922B) so it can be added to gain error and nonlinearity, which are % values.", ref: AN1270, page: 9, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+      - {text: "Total static error of the Si8922B over -40 to 125 °C: straight sum -0.858 / +0.816 %, root-sum-of-squares -0.530 / +0.484 %; RSS is the realistic estimate when the error sources are uncorrelated.", ref: AN1270, page: 12, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+      - {text: "Data sheet circuit: 20 Ω in each input and 10 nF across them; the high-side supply from the floating gate-driver supply through a resistor and a 5.6 V Zener, with 0.1 µF at each supply pin.", ref: AN1270, page: 2, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+      - {text: "Single-ended-output parts (Si8922) cannot show negative currents: their linear range starts at 30 mV, so offset is tested at 30 mV in; differential-output parts are tested at 0 V.", ref: AN1270, page: 6, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+      - {text: "Modulator output: a second-order delta-sigma bit stream, clocked externally (Si8941) or internally (Si8946 / 47), filtered in the MCU or FPGA, typically with a SINC3 filter.", ref: AN1270, page: 3, url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf"}
+    see_also:
+      - {label: "Engineering knowledge: error propagation and uncertainty bands", href: "/engineering/error_budget"}
+      - {label: "Part knowledge: isolated gate drivers", href: "/reviews/how/gatedriver"}
+      - {label: "Animated circuit: isolated current sensing, error by error", href: "/visuals#isosense"}
+    gaps:
+      - "Si8540 (high-side DC current sensor) has no active status in our data."
+      - "No Hall-effect current sensor and no Qorvo isolated amplifier in our catalogue."
+      - "AN1270 covers static error only; noise, bandwidth and CMTI effects come from the data sheets and our reading (est)."
+    used_in:
+      - {label: "EV traction inverter", app: "EV traction inverter"}
+      - {label: "Industrial servo drive", app: "Industrial servo drive"}
+      - {label: "6.6 kW bidirectional on-board charger", app: "6.6 kW single-stage bidirectional on-board charger"}
+      - {label: "Traction inverter isolation (ASIL-D)", topic: traction_asil_d}
+    reviews: []
+    sources:
+      - {title: "AN1270: Estimating Total Static Error for Si89xx Isolated Amplifiers and Delta-Sigma Modulators", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1270-si89xx-estimating-total-static-error.pdf", kind: cached}
+      - {title: "Si8921 / Si8922 data sheet (parameters in our part data, p. 8-10)", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si8921-22-datasheet.pdf", kind: ours}
+      - {title: "Skyworks catalogue and BizDev parameters: isolated amplifiers and modulators", publisher: "BizDev", url: "/parts?sub=isolated_analog", kind: ours}
+
+  - id: gnss
+    title: "GNSS front-end parts: LNAs, filters and diplexers"
+    link: "How GNSS front ends work"
+    gist: "How a GNSS front end keeps a signal below the noise usable: pre-filter, LNA, post-filter, Friis noise, rejection of nearby transmitters; our parts."
+    date: 2026-10-28
+    subs: []
+    families: []
+    table_subs: []
+    role: "GNSS front end"
+    columns:
+      - {label: "Band (MHz)", keys: ["Frequency (MHz)", "Center Frequency", "Centre Frequency 1"]}
+      - {label: "Gain (dB)", keys: ["Gain (dB)"]}
+      - {label: "NF (dB)", keys: ["NF (dB)"]}
+      - {label: "IP1dB (dBm)", keys: ["IP1 dB (dBm)", "I P1 dB (dBm)"]}
+      - {label: "Insertion loss (dB)", keys: ["Insertion Loss TYP (dB)", "Insertion Loss Typ 1"]}
+    parts:
+      - {mpn: SKY5A2110, role: "L1 + L5 LNA module (pre- and post-filters)", specs: {"Band (MHz)": "1559-1606 (L1) + 1164-1189 (L5)", "Gain (dB)": "18.8 typ (L1)", "NF (dB)": "1.2 typ, 1.7 max (L1, 25 °C)", "IP1dB (dBm)": "IIP3 -8 typ", "Insertion loss (dB)": "-"}}
+      - {mpn: SKY55951-11, role: "L1 + L5 LNA module", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY55950-11, role: "L1 LNA module (pre- and post-filters)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65943-11, role: "L1 LNA module (pre- and post-filters)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65723-11, role: "L1 LNA module (pre-filter)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65723-81, role: "L1 LNA module (pre-filter)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65724-11, role: "L1 LNA module (pre-filter)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65725-11, role: "L1 LNA module (pre-filter, shielded)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65728-11, role: "L5 LNA module (pre-filter, shielded)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65730-13, role: "L5 / E5a LNA module", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: SKY65624-682LF, role: "L1 LNA (bare)", specs: {"Insertion loss (dB)": "-"}}
+      - {mpn: QPQ1060, role: "L1 SAW filter", specs: {"Band (MHz)": "1559.92-1590.92", "Gain (dB)": "-", "NF (dB)": "-", "IP1dB (dBm)": "-"}}
+      - {mpn: QPQ1062, role: "L5 SAW filter", specs: {"Band (MHz)": "1160.95-1191.95", "Gain (dB)": "-", "NF (dB)": "-", "IP1dB (dBm)": "-"}}
+      - {mpn: QPQ1063, role: "L1 / L2 SAW diplexer", specs: {"Band (MHz)": "1575.42 / 1227.6", "Gain (dB)": "-", "NF (dB)": "-", "IP1dB (dBm)": "-", "Insertion loss (dB)": "1.6 / 1.3"}}
+      - {mpn: "880273", role: "L1 BAW filter", specs: {"Gain (dB)": "-", "NF (dB)": "-", "IP1dB (dBm)": "-"}}
+      - {mpn: "880094", role: "L1 BAW filter (wide band)", specs: {"Gain (dB)": "-", "NF (dB)": "-", "IP1dB (dBm)": "-"}}
+      - {mpn: "880060", role: "L2 filter (wide band)", specs: {"Gain (dB)": "-", "NF (dB)": "-", "IP1dB (dBm)": "-"}}
+      - {mpn: TQM2M9016, role: "SDARS / GPS diplexer module (automotive)"}
+      - {mpn: QPQ1028, role: "L1 / L2 SAW diplexer"}
+    exclude: []
+    series: []
+    what: >-
+      The GNSS signal arrives at about -130 dBm, below the thermal noise of the receiver's own bandwidth; the receiver
+      digs it out by correlation. The front-end parts make sure there is still something to dig out. A band-pass
+      pre-filter keeps strong nearby transmitters out, a low-noise amplifier (LNA) adds gain while adding as little
+      noise as possible, and a post-filter cleans up before the cable or the receiver. Single-band modules cover L1 (GPS
+      L1, Galileo E1, BeiDou B1, GLONASS G1); dual-band modules add L5 / E5a. Diplexers split or combine two bands on one
+      line. In a car the module sits in the active antenna (shark fin) and is powered over the coax.
+    how:
+      diagram: _gnss_svg.html
+      steps:
+        - title: "Pre-filter → LNA → post-filter"
+          text: >-
+            The pre-filter blocks out-of-band power before it can overload the LNA; the LNA sets the noise figure of the
+            whole receiver; the post-filter removes what the LNA let through or created (harmonics, intermodulation)
+            before the cable and the receiver. SKY5A2110 puts all three, for L1 and L5, in one 2.2 x 2.7 mm module with a
+            diplexed output.
+          cite: "SKY5A2110 data sheet p. 1"
+        - title: "Why the first stage decides the noise (Friis)"
+          text: >-
+            Total noise factor F = F1 + (F2 - 1)/G1 + (F3 - 1)/(G1 G2) + …: the first stage's noise counts in full, every
+            later stage is divided by the gain before it. A lossy filter in front of the LNA adds its loss dB for dB to
+            the noise figure; an LNA with 18 dB gain makes the cable and receiver behind it almost irrelevant.
+          cite: "library topic gnss_frontend d3"
+        - title: "Rejecting nearby transmitters"
+          text: >-
+            The car's own LTE / 5G uplink (+23 dBm and more), V2X at 5.9 GHz and Wi-Fi share the antenna fin, often with
+            only 15-20 dB isolation. The front end must keep them below the receiver's immunity limit: required rejection
+            = coupled power - immunity limit, usually one or two SAW filters; gain in the path reduces the effective
+            rejection.
+          cite: "u-blox ZED-X20P integration manual p. 83"
+        - title: "Linearity: blockers, harmonics and intermodulation"
+          text: >-
+            A strong blocker can compress the LNA and collapse C/N0 on every band. A non-linear stage also makes
+            harmonics: the second harmonic of LTE Band 13 / 14 uplink (777-798 MHz) lands on 1554-1596 MHz, right on L1,
+            so a notch must stop the fundamental before the first active stage.
+          cite: "u-blox p. 83; SKY5A2110 p. 5"
+        - title: "Active antenna: DC over the coax (bias-T)"
+          text: >-
+            The receiver feeds DC to the antenna LNA through the same coax that carries RF back. An inductor (above
+            500 Ω at 1-1.8 GHz) passes DC and blocks RF; a resistor or current limiter protects against a shorted cable
+            and lets the receiver detect an open or shorted antenna.
+          cite: "u-blox ZED-X20P integration manual p. 85-86"
+        - title: "Gain and current budget"
+          text: >-
+            After cable, connector and filter losses, the net gain into the receiver must fall inside its window (17 to
+            40 dB in the u-blox example): too little and the cable noise counts, too much and the receiver's own gain
+            stage runs out of range. Active antennas draw 5-20 mA; SKY5A2110 takes about 5 mA per band at 1.8 V, with a
+            low-current mode around 1.2 mA.
+          cite: "u-blox p. 81, 86; SKY5A2110 p. 5-6"
+    specs:
+      - {name: "Noise figure (NF)", typical: "1.2-1.9 dB for our L1 modules (25 °C); max at temperature higher", why: "Sets C/N0 and so sensitivity, time to first fix and accuracy; check the max at the hot corner.", note: "rf:cascaded_noise_figure"}
+      - {name: "Gain", typical: "16-19 dB per module", why: "Must overcome the cable and fit the receiver's gain window.", note: "rf:noise_figure_cascade"}
+      - {name: "IIP3 / input P1dB", typical: "IIP3 about -8 dBm (SKY5A2110); IP1dB -13 to -19 dBm (modules)", why: "How much blocker power the LNA takes before it compresses or makes intermodulation.", note: "rf:linearity_p1db_ip3"}
+      - {name: "Out-of-band rejection at named interferers", typical: "-42 to -79 dB by band (SKY5A2110, max to typ)", why: "Check each aggressor at the maximum line, not the typical.", note: "rf:filter_fundamentals"}
+      - {name: "Filter insertion loss", typical: "1.2-2.35 dB (our SAW / BAW filters)", why: "Loss in front of the LNA adds directly to NF.", note: "rf:acoustic_filters_duplexers"}
+      - {name: "Supply current", typical: "about 5 mA per band at 1.8 V (SKY5A2110)", why: "Comes over the coax; matters for battery and telematics budgets.", note: ""}
+      - {name: "ESD", typical: "2 kV HBM, 1 kV CDM (SKY5A2110)", why: "The antenna port is exposed; the system usually adds protection.", note: ""}
+      - {name: "AEC grade", typical: "SKY5A2110 AEC-Q104 Grade 2 (-40 to +105 °C)", why: "Roof modules get hot; Grade 2 is the usual minimum for the fin.", note: "engineering:qualification"}
+    choosing:
+      - "Single-band (L1) or dual-band (L1 + L5): dual-band removes most of the ionospheric error and helps in multipath, at the cost of a second path, more current and a diplexer."
+      - "Module or bare LNA: compare cascaded NF including the filter a bare LNA still needs in front."
+      - "Filter before the LNA: more rejection and linearity, but every 0.1 dB of loss adds to NF; a post-filter alone protects the cable and receiver but not the LNA."
+      - "Rejection at the maximum, per aggressor in the same fin (LTE / 5G, V2X, Wi-Fi), and a B13 / B14 notch if those bands are used."
+      - "Gain inside the receiver's window after cable loss; low-current mode for battery products."
+      - "Grade and temperature: NF at +105 °C, not only at 25 °C."
+    appnotes:
+      - {text: "SKY5A2110 keeps 17-21 dB gain with a +15 dBm blocker at 600-960 MHz and a +10 dBm blocker at 1.7-8 GHz; absolute maximum RF input is +10 dBm.", ref: "SKY5A2110 data sheet", page: "3, 7", url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Data-Sheet/SKY5A2110_206174G.pdf"}
+      - {text: "Design to the maximum rejection, not the typical: on L1 the 1710-1980 MHz band is -66.2 dB typical but -47 dB maximum, 2.4 GHz Wi-Fi -63.3 typical but -42 maximum.", ref: "SKY5A2110 data sheet", page: 5, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Data-Sheet/SKY5A2110_206174G.pdf"}
+      - {text: "The Band 13 second harmonic at the output is -111.6 dBm typical, -104 dBm maximum at room temperature but up to -91 dBm at the automotive extreme: budget it hot.", ref: "SKY5A2110 data sheet", page: 5, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Data-Sheet/SKY5A2110_206174G.pdf"}
+      - {text: "Required out-of-band rejection = maximum power coupled into the antenna input - receiver immunity limit; antenna isolation is 15-20 dB, down to 6-10 dB in very small modules; one or two SAW filters usually close the gap.", ref: "u-blox ZED-X20P integration manual", page: 83, url: "https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf"}
+      - {text: "If LTE Band 13 / 14 is near, add a 777-798 MHz notch before the external LNA so the second harmonic is not created in-band.", ref: "u-blox ZED-X20P integration manual", page: 83, url: "https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf"}
+      - {text: "Active antenna for an all-band receiver: 17-50 dB gain, out-of-band rejection 40 dB typical, in-band group-delay variation under 10 ns, 15 kV ESD (air).", ref: "u-blox ZED-X20P integration manual", page: 84, url: "https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf"}
+      - {text: "Bias-T: inductor above 500 Ω across 1-1.8 GHz, rated 300 mA or more; a 10 Ω current-limit resistor and a 60 mA short-circuit threshold, with a ferrite bead recommended.", ref: "u-blox ZED-X20P integration manual", page: "85-86", url: "https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf"}
+    see_also:
+      - {label: "Engineering knowledge: GNSS, how positioning works", href: "/engineering/gnss_how_it_works"}
+      - {label: "Interactive visuals: GNSS bands, pseudoranges, DOP, ionosphere", href: "/visuals#gnssbands"}
+    gaps:
+      - "No L2 / E6 or L-band LNA module of ours; no single-input all-band module."
+      - "TQM2M9016 and QPQ1028 have no lifecycle status in our data, so they are left out of the table."
+      - "Automotive grade is stated only for SKY5A2110 and TQM2M9016; the Qorvo GNSS filters have no grade in our catalogue."
+      - "Several older Skyworks GNSS modules are last-time-buy or obsolete (left out)."
+      - "No catalogued part for the NTN / L-band uplink next to L1 (1626.5-1660.5 MHz)."
+    used_in:
+      - {label: "Automotive multi-band GNSS front ends (library topic)", topic: gnss_frontend}
+      - {label: "Automotive GNSS L1 + L5 (research report)", href: "/business/reports/auto-gnss-l1l5"}
+      - {label: "Smart asset tracker", app: "Smart asset tracker"}
+      - {label: "Drone radio links (GNSS)", topic: drone_radio_links}
+    reviews: []
+    sources:
+      - {title: "SKY5A2110 Automotive GNSS L1 + L5 LNA FEM, data sheet 206174G", publisher: "Skyworks", url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Data-Sheet/SKY5A2110_206174G.pdf", kind: fetched}
+      - {title: "ZED-X20P Integration manual R05", publisher: "u-blox", url: "https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf", kind: fetched}
+      - {title: "Library topic: Automotive multi-band GNSS front ends (ETSI EN 303 413 and more)", publisher: "BizDev", url: "/library/gnss_frontend", kind: ours}
+      - {title: "Skyworks and Qorvo catalogue rows: GNSS LNAs, filters and diplexers", publisher: "BizDev catalogue", url: "/parts?q=GNSS", kind: ours}
+
+knowledge_pages:
+  - id: error_budget
+    title: "Error propagation and uncertainty bands"
+    href: "/engineering/error_budget"
+    date: 2026-10-28
+    gist: "How datasheet errors add up: offset vs gain, worst case vs RSS, typical vs limits, temperature bands, and timing budgets across a digital isolator."
+    abstract:
+      - "Worked through Skyworks AN1270 (Si8922B: about ±0.5 % RSS over -40 to 125 °C) and AN1359 (isolated SPI timing)."
+      - "Confirm the page; it is linked from the isolator, gate-driver and current-sensing Part knowledge pages."
+  - id: gnss_how_it_works
+    title: "GNSS: how satellite positioning works"
+    href: "/engineering/gnss_how_it_works"
+    date: 2026-10-28
+    gist: "How GNSS positioning works: pseudoranges, four satellites, DOP, the band plan of all constellations, error sources and corrections, and the caveats; four interactive visuals."
+    abstract:
+      - "Explains positioning, the band plan (GPS, Galileo, BeiDou, GLONASS, QZSS, NavIC), dual-frequency ionosphere correction, SBAS, RTK and PPP."
+      - "Confirm the page and the four new GNSS visuals."

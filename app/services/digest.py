@@ -36,7 +36,9 @@ TYPES = {
     "case": "Business case",
     "background": "Background notes",
     "expansion": "Idea expansion",
-    "review": "Technology review",
+    "review": "Part knowledge",  # owner, 28 Oct 2026: "Part reviews" renamed "Part knowledge"
+    "howto": "Part knowledge: how it works",  # one product group (data/library/how_it_works.yaml)
+    "guide": "Engineering knowledge page",
     "idea": "New-market idea",
     "competitor": "Competitor profile",
     "risk": "Risk",
@@ -47,6 +49,8 @@ TYPES = {
     "note": "Engineering note",
     "family": "Datasheet family",  # crosses grouped by datasheet, offered for a batch confirm (families.py)
     "question": "Open question",
+    "forum": "QSPICE forum thread",  # our summary of a public design thread (owner, 27 Oct 2026)
+    "forum-note": "Seen in practice",  # a block-diagram note from two or more forum threads
 }
 # the owner's state answers; "comment" rows are kept in the history and sent to the daily inbox, never a state
 CONFIRMED, IGNORED, OPEN, COMMENT = "confirmed", "ignored", "open", "comment"
@@ -90,6 +94,8 @@ def _sig() -> tuple:
     files = [*_BIZ.glob("*.yaml"), *(_BIZ / "evidence").glob("*.yaml"), *(_BIZ / "cases").glob("*.yaml"),
              *(_BIZ / "competitors").glob("*.yaml"), *(PROJECT_ROOT / "data" / "reviews").glob("*.yaml"),
              PROJECT_ROOT / "data" / "engineering_rf_notes.yaml",
+             PROJECT_ROOT / "data" / "library" / "qspice_forum.yaml",
+             PROJECT_ROOT / "data" / "library" / "how_it_works.yaml",
              PROJECT_ROOT / "docs" / "open_questions.md"]  # fmt: skip
     return tuple(sorted((str(p), p.stat().st_mtime) for p in files if p.exists()))
 
@@ -371,12 +377,41 @@ def _questions(gists: dict) -> list[dict]:
     return out
 
 
+def _forum(gists: dict) -> list[dict]:
+    """QSPICE forum threads and "Seen in practice" notes (owner, 27 Oct 2026): public data, but summarised by us."""
+    d = _load(PROJECT_ROOT / "data" / "library" / "qspice_forum.yaml")
+    when = d.get("checked")
+    out = []
+    for t in d.get("topics") or []:
+        out.append(_item("forum", str(t["id"]), f"QSPICE forum: {t['title']}", f"/qspice#t-{t['id']}",
+                         t.get("added") or when, t, t.get("fix"), _abstract(t.get("problem"), t.get("fix")),
+                         gists))  # fmt: skip
+    for n in d.get("practice") or []:
+        out.append(_item("forum-note", n["id"], f"Seen in practice: {n.get('title') or n['fn']}",
+                         f"/qspice?fn={n['fn']}#p-{n['id']}", n.get("added") or when, n, n.get("text"),
+                         _abstract(n.get("text")), gists))  # fmt: skip
+    return out
+
+
 @lru_cache(maxsize=2)
 def _all(sig: tuple) -> tuple[dict, ...]:
     gists = (_load(GISTS_FILE).get("gists") or {}) if GISTS_FILE.exists() else {}
     rows = [*_reports(gists), *_reviews(gists), *_ideas(gists), *_competitors(gists), *_risks(gists), *_tam(gists),
-            *_evidence(gists), *_patent_changes(gists), *_notes(gists), *_questions(gists)]  # fmt: skip
+            *_evidence(gists), *_patent_changes(gists), *_notes(gists), *_questions(gists), *_forum(gists),
+            *_howto(gists)]  # fmt: skip
     return tuple(rows)
+
+
+def _howto(gists: dict) -> list[dict]:
+    """Part knowledge › How it works groups and the Engineering knowledge pages written with them (28 Oct 2026)."""
+    from app.services import how_it_works as hw
+
+    out = [_item("howto", g["id"], f"How it works: {g['title']}", hw.href(g), g.get("date"), g, g.get("what"),
+                 _abstract(g.get("what"), "Confirm the section; the daily run adds more groups on request."), gists)
+           for g in hw.groups()]  # fmt: skip
+    out += [_item("guide", p["id"], p["title"], p["href"], p.get("date"), p, p.get("gist"), p.get("abstract") or [],
+                  gists) for p in hw.knowledge_pages()]  # fmt: skip
+    return out
 
 
 def items() -> list[dict]:

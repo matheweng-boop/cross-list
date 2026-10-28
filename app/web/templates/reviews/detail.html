@@ -16,12 +16,13 @@
 {% macro tail(x) %} {{ conf(x) }}{{ cite(x) }}{{ react(x) }}{% endmacro %}
 {% block content %}
 {% set rows = r.rows %}
-<p class="small"><a href="/reviews">← Part reviews</a></p>
+<p class="small"><a href="/reviews">← Part knowledge</a></p>
 <p class="rp-meta small">{{ r.maker }} · {{ label(r.family) }} · {{ r.app_area }} · {{ r.date|date }} · <span class="rp-st st-{{ r.status }}">{{ statuses.get(r.status, r.status) }}</span> · {{ r.n_feedback }} item{{ 's' if r.n_feedback != 1 }} with feedback</p>
 <article class="rpt rv-article">
 <h1>{{ r.title }}</h1>
 {{ gist_box(gist_for("review", r.slug), not guest_blocked(request, '/manage')) }}
 <p class="rv-parts">{% for p in r.parts %}<span class="badge">{{ p }}</span> {% endfor %}</p>
+{% from "reviews/_how.html" import how_links %}{{ how_links(how_for_review(r.slug)) }}
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
 {{ learn_tab(r.levels, r.learn_links) }}
 <p class="meta">Confidence: <b>high</b> read in the datasheet or the maker's own page, <b>med</b> a secondary source or our reading of several, <b>low</b> a snippet or our estimate · “est” = our estimate · [s1] = source, listed at the end · react to any item to agree or disagree.</p>

@@ -34,7 +34,19 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    now?", with the comment box and one "Looks right now" button. A comment in that second round comes back in the
    same section; never answer or close an item yourself.
    For each open request under "Technology review requests", write the review as `data/reviews/<slug>.yaml` in the
-   format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers).
+   format of `data/reviews/_format.yaml` (it is linked to the request on the site by its part numbers). (The section is
+   called "Part knowledge" on the site since 28 Oct 2026; the URLs stay at `/reviews`.)
+   **Part knowledge › How it works (owner, 28 Oct 2026).** When the owner asks for another product group ("how do X
+   work"), add it to `data/library/how_it_works.yaml` in the same format as the existing groups (layout at the top of
+   the file): about the PART only (what it does in the system, how it works inside, key specs and why they matter,
+   choosing between parts, our active Skyworks / Qorvo parts from the catalogue and part data, honest gaps);
+   applications only as "Used in" links to existing Systems & applications pages; one small inline diagram
+   (`app/web/templates/reviews/how/_<id>_svg.html`); and sources with links. **Standing rule:** every group includes
+   an "appnotes" block of 4-8 concrete design details from the application notes (layout, bypassing, creepage, shunt
+   sizing, gate resistors, bootstrap sizing, error budgets, test conditions), each with its app-note number, page and
+   link: first the app notes in the repo (`data/appnotes.jsonl`, the /technical search, `var/appnotes`), then
+   skyworksinc.com (polite), then third-party app notes for general principles; never qorvo.com. The group gets a To
+   confirm item (type "howto") by itself; `tests/test_how_it_works.py` checks every group.
    Standing work when the day's comments leave room: the next unticked lines of `docs/pinout_backlog.md` (pinouts of
    Infineon and Chipanalog gate drivers; these datasheets count toward the download cap below).
    Timing crosses: the next 2–3 datasheets from `docs/timing_backlog.md` per run (data/real/*_timing.yaml, rules
@@ -227,6 +239,26 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      add the useful ones as synonyms in `data/blocks/word_synonyms.yaml` (to an existing term's `words`, or a new
      term with its function id from `data/blocks/functions.yaml`), with a test line in `tests/test_wordblocks.py`.
      Add synonyms, never names: skip anything that looks like a person, company, customer or project name.
+   - **QSPICE forum, about weekly** (owner, 27 Oct 2026: "Use the Qspice forum for design discussions and things").
+     Only the owner's exception in `data/library/sources.yaml` (id `qspice_forum`): forum.qorvo.com paths of the
+     QSPICE category (`/c/qspice/9/l/latest.json`) and its topics (`/t/<id>.json`), nothing else on any qorvo.com
+     host. `tools/research/fetch.sh` (robots.txt first, GET only, one at a time, >= 10 s, each URL once, stop at the
+     first 403 / 429 / bot check), a budget of about 20 requests. For each new design thread with a conclusion (power
+     conversion, gate drivers, isolation, LDO, filters, RF / oscillators, motor drives; tool bugs only when they show
+     a model or part gap) add an entry to `data/library/qspice_forum.yaml` the same way: title, link, date, function
+     ids, circuit, problem, conclusion in 1-3 sentences of our own words, MPNs, a gist of at most 25 words (it
+     becomes a To confirm item). Never user names, handles, avatars, signatures or e-mails; company names only where
+     the thread shows them. Add or extend a "Seen in practice" note only when 2+ threads support it. Update
+     `checked:` and run `tests/test_qspice.py`.
+   - **QSPICE: unanswered questions** (inbox section; owner, 27 Oct 2026: "a full user library where I can ask
+     questions"). The owner's Ask-box questions with no good match (screened, no names; guests' questions are never
+     kept). Research each in the allowed sources (the forum section above, within its budget, and the library's own
+     data) and add an answer note under `answers:` in `data/library/qspice_forum.yaml` (`id`, `question`, `date`,
+     `text` in our own words, `links` to the threads used). If nothing answers it, say so in the summary.
+   - **AI services for later** (owner, 27 Oct 2026: "we should keep a list of running AI services we may want to
+     deploy in the future"). Whenever the owner mentions a future AI use, add it to `data/manage/ai_services.yaml`
+     (name, what it would do, where, data it would send out, status idea or parked, needs, date and the owner's
+     words). Nothing in that list is built without an API key and the owner's approval of the data sharing.
    - **Data flow: owner changes** (inbox section; owner, 26 Oct 2026: "a flow chart on which path all the data can
      take in order to optimize it ... you adapt it based on that information"). The owner's saved chart on Data
      management › Data flow (`/manage/data-flow`, kept in the database with its versions; never reset it) is listed

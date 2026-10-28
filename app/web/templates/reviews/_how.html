@@ -1,0 +1,8 @@
+{# Part knowledge › How it works: the small link (part pages, reviews, library topics) and the card (browse page). #}
+{% macro how_links(found, cls='small') %}{% if found %}<p class="{{ cls }} hw-link">{% for g in found %}<a class="rv-link" href="{{ how_href(g) }}"><span class="rv-tag">Part knowledge</span> {{ g.link }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}{% endmacro %}
+
+{% macro how_card(found) %}{% for g in found %}<aside class="hw-card rv-box" aria-label="How it works">
+  <p class="small" style="margin:0"><b>How it works</b> · <span class="rv-tag">Part knowledge</span></p>
+  <p style="margin:.3rem 0"><a href="{{ how_href(g) }}"><b>{{ g.link }}</b></a>: {{ g.gist }}</p>
+  <p class="small muted" style="margin:0">What the part does, how it works inside, key specs, app-note details and our Skyworks and Qorvo parts.</p>
+</aside>{% endfor %}{% endmacro %}

@@ -119,6 +119,27 @@ def test_hot_swap_report_renders_and_answers_the_owner(client):
     assert "$2.299" in bg and "$2.896" in bg and "not read" in bg
 
 
+def test_hot_swap_expansion_compares_cars_and_data_centres(client):
+    """Owner, 28 Oct 2026: expand the same report on eFuse / hot-swap similarities between cars and data centres."""
+    r = rp.report(HOT)
+    assert r["expanded"] and str(r["expanded"]) == str(r["date"]) == "2026-10-28"
+    assert {"iso-current-sense-charging", "hv-extra-wide-isolation"} <= set(r["see_also"])
+    assert not rp.story_problems(r)
+    page = html.unescape(client.get(f"/business/reports/{HOT}").text)
+    sec = page.split('<section id="applications-in-depth">', 1)[1].split("</section>", 1)[0]
+    assert "Cars and data centers: the same problem at two scales" in sec
+    table = sec.split('id="efuse-car-dc-table"', 1)[1].split("</table>", 1)[0]
+    for row in ("Inrush control and dV/dt", "safe operating area", "Current sensing", "Fault response time",
+                "Latch vs auto-retry", "Reverse current blocking", "Ideal diode / ORing", "Telemetry",
+                "Functional safety", "Voltage classes", "Standards"):  # fmt: skip
+        assert row in table, row
+    assert "same" in table and "differs" in table and "PMBus" in table and "ISO 26262" in table
+    for t in ("ACT4910", "ACT85610", "Si875", "Si89", "onsemi", "Not Enough Data", "rpt-thread"):
+        assert t in sec, t
+    bg = html.unescape(client.get(f"/business/reports/{HOT}/background").text)
+    assert "STDA058" in bg and "LMI800PS" in bg and "Requests made on 28 Oct 2026" in bg
+
+
 def test_current_sense_case_renders_with_error_budget_and_prices(client):
     page = html.unescape(client.get(f"/business/reports/{CS}").text)
     assert "Advantages" in page and "AMC3301" in page and "TMCS1123" in page
@@ -184,7 +205,8 @@ HINT = "a deeper look at the applications before a business case"
 
 
 def _slug() -> str:
-    return rp.reports()[0]["slug"]
+    """A report not expanded yet (a report with `expanded:` turns its request done at once, see idea_requests.sync)."""
+    return next(r["slug"] for r in rp.reports() if not r.get("expanded"))
 
 
 def _ask(c, slug, note="Focus on robotics", back=""):

@@ -111,7 +111,7 @@ jitter:
   shows: "How the noise of a clock, measured at each distance from its frequency (phase noise), adds up to timing jitter."
   read: "The horizontal axis is the distance from the clock frequency, in steps of ten; the vertical axis is the phase noise in dBc/Hz, where lower is cleaner. The shaded range is the part that is added up into jitter, and the orange line marks the loop bandwidth of the PLL."
   try: "Lower the PLL's in-band noise or move the loop bandwidth and see the jitter number change, then see what it means for an ADC or a radio."
-  why: "Low-jitter clocks are what our timing products sell on, for data centres, 5G radios and fast data converters."
+  why: "Low-jitter clocks are what our timing products sell on, for data centers, 5G radios and fast data converters."
 
 swloss:
   shows: "The two losses in a power switch: conduction loss, which does not depend on how often it switches, and switching loss, which grows with every switching edge."
@@ -160,6 +160,68 @@ hex:
   read: "Each box shows the same value: binary has one digit per on/off switch (bit), and one hex digit stands for exactly four bits. The clickable bits show which switch is on."
   try: "Click single bits and watch the hex digits change, then type a register value from a datasheet and see what each field means."
   why: "Datasheets set up chips through register maps written in hex, so this helps when reading configuration tables and customer questions."
+
+gnssbands:
+  shows: "Where the satellite navigation signals of GPS, Galileo, BeiDou, GLONASS, QZSS and NavIC sit on the frequency scale, and which transmitters sit right next to them."
+  read: "Each row is one constellation and each coloured bar one of its bands, so bars at the same place mean a shared centre frequency; the orange bars near the axis are the nearby or harmful transmitters, such as the second harmonic of LTE Band 13 / 14 that lands on L1."
+  try: "Highlight one constellation, then switch to the wide view to see the car's own LTE, Wi-Fi and V2X radios next to the GNSS bands."
+  why: "Every interferer next to a GNSS band is a filter, rejection or linearity requirement for the LNA and filter parts we sell."
+
+gnsstri:
+  shows: "How a receiver turns satellite range measurements into a position, and why its cheap clock makes every range wrong by the same amount."
+  read: "Each satellite draws a dashed circle at its measured range; when the receiver clock is off, the circles do not meet, and the blue circles show them after the solved clock error is removed."
+  try: "Move the clock error with only two satellites and watch the estimate drift, then use three or four and see it stay on the true position."
+  why: "This is why a receiver needs one satellite more than the dimensions it solves, and why weak signals that drop satellites hurt the fix."
+
+gnssdop:
+  shows: "How the spread of satellites across the sky turns the same range error into a small or a large position error (dilution of precision)."
+  read: "The circle is the sky seen from above with north up; purple dots are satellites and the orange ellipse is the likely position error, stretched where the geometry is weak."
+  try: "Narrow the spread as in a street between tall buildings and watch the error grow across the street, then add satellites from other constellations."
+  why: "Receiving more constellations and bands with a good front end gives more satellites to choose from, which keeps the geometry good in towns."
+
+gnssiono:
+  shows: "How much the ionosphere delays the signal at each frequency, and how measuring on two frequencies removes that delay."
+  read: "The curve falls with the square of the frequency, so L5 is delayed more than L1; the two marked points are the delays the receiver sees on each band, and the boxes show what is left after combining them."
+  try: "Raise the electron content as on a stormy day and compare L1 + L5 with L1 + L2 for the noise penalty."
+  why: "This is the main reason cars and phones move from L1-only to L1 + L5 front ends, which needs a second LNA path and a diplexer."
+
+# owner, 28 Oct 2026: animated circuits (static/vz/circuit.js). Moving dots are current: faster means more current,
+# the direction of travel is the direction of flow, each loop or phase has its own colour. Numbers name their source.
+bootstrap:
+  shows: "A half-bridge (two switches between the bus and ground) with its gate driver, showing how the bootstrap capacitor is charged while the low side is on and then powers the high-side gate."
+  read: "Green dots are the bootstrap charging current, orange dots the gate charge flowing into the high-side switch and blue dots the load current; the traces below show the gate voltage pausing on the Miller plateau while the switch node climbs from 0 to 48 V."
+  try: "Step through the five phases, then shorten the dead time below 50 ns and see the shoot-through warning, or lengthen it and watch the body-diode loss grow."
+  why: "Every motor drive and many power supplies use this circuit, and the bootstrap sizing rule shown (Cboot at least 10 × Qg / VGS) is the one from TI SLUA887A quoted on the Part knowledge page for gate drivers."
+
+bldc:
+  shows: "A three-phase inverter driving a brushless (BLDC) motor, in 6-step commutation where two phases carry current at a time, or in FOC where all three carry sine currents."
+  read: "Blue, orange and green dots are the currents in phases A, B and C, purple the DC bus current; the dashed purple arrow is the stator field and the red and blue bar the rotor magnet it pulls round."
+  try: "Step through the six states and watch the field jump 60 degrees each time, then press Switch to FOC and compare the torque line below: rippled in 6-step, flat in FOC."
+  why: "Our motor controllers and gate drivers do exactly this switching, and FOC also needs accurate isolated current sensing, which we sell too."
+
+buck:
+  shows: "A buck converter stepping 12 V down: one current loop while the high-side switch is on and another, freewheeling loop through the low side while it is off."
+  read: "Blue dots are the on loop and orange dots the freewheel loop, while purple dots show the capacitor taking the ripple; the triangle below is the inductor current, rising while the switch is on and falling while it is off, with its average equal to the load current."
+  try: "Move the duty cycle and see the output voltage follow it and the ripple peak at 50 %, then swap the low-side FET for a diode and compare the loss."
+  why: "Buck converters power almost every chip in a car or a server, and the same switch, inductor and gate-drive questions come up with every power-stage customer."
+
+efuse:
+  shows: "An eFuse (hot-swap controller with its pass switch) letting power into a board gently when it is plugged in, and cutting a short circuit fast."
+  read: "Orange dots are the controlled inrush while the switch works in its linear region, blue the normal load current and red the fault current; the meter at the bottom is the stress on the switch against its trip limit, and the traces show the output voltage and the current."
+  try: "Raise the output slope until the stress meter trips during the plug-in, then press Short the output in each fault mode and compare latch-off with auto-retry."
+  why: "The hot-swap research report shows cars and data centers need the same four jobs (limit inrush, protect the switch, cut a short, report), and at 800 V our isolated drivers and sensing do the switching and the measuring."
+
+isosense:
+  shows: "How an isolated amplifier measures a load current: through a shunt resistor, an RC filter and an isolation barrier to the controller, with the error added at each stage."
+  read: "Blue dots are the load current, green the signal (a small voltage), and red the common-mode current at a switching edge; each tag and bar gives one error from Skyworks AN1270 for the Si8922B over −40 to 125 °C: offset -0.218 / +0.260 %, gain -0.440 / +0.356 %, nonlinearity ±0.200 %, total (RSS) -0.530 / +0.484 %."
+  try: "Step through the seven stages, then lower the load current to 10 % and see how offset and nonlinearity grow as a share of the reading."
+  why: "This error budget is how a customer compares our Si89xx parts with a competitor's, and the same numbers are worked through on the error-budget page."
+
+ook:
+  shows: "How a capacitive digital isolator carries a logic signal across a silicon-dioxide barrier as a radio carrier switched on and off (on-off keying), on two lines in opposite phase."
+  read: "The blue and orange waves are the carrier on lines P and N, the red dots the current a common-mode transient pushes through the barrier, equal on both lines so the detector subtracting them cancels it; the CMTI ratings come from AN1359 (Si86xx above 35 kV/µs, Si86Sx above 100 kV/µs)."
+  try: "Press the common-mode button with the slope inside and then above the chosen part's rating, and switch side 1 off to see the output go to its default state."
+  why: "CMTI and the default output state are among the first questions a gate-driver or isolator customer asks, because a wrong pulse can turn on the wrong switch."
 
 rf-bands:
   shows: "Where each radio band (cellular, GNSS, Wi-Fi, satellite, radar and others) sits on the frequency scale, and which of our parts cover it."

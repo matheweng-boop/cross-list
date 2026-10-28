@@ -164,6 +164,23 @@ why_it_matters:
       est: true
     - kind: design
       text: Ask for S-parameters early and check group delay and gain flatness inside the 499.2 MHz channel, not only insertion loss at the centre; filters near their skirts are the usual problem.
+  error_budget:
+    - kind: design
+      text: A published error-budget method (AN1270) lets the customer state the measurement accuracy of the whole chain with numbers the safety and control engineers can check.
+    - kind: cost
+      text: An honest RSS budget instead of a straight worst-case sum can avoid an over-specified, more expensive part or an extra calibration step.
+      est: true
+    - kind: robust
+      text: Timing budgets across the isolator (delay, distortion, skew) show the real SPI clock or dead-time margin, so the design does not fail only on some parts or at temperature extremes.
+  gnss_how_it_works:
+    - kind: design
+      text: Knowing which bands each constellation uses and why dual-frequency removes the ionospheric error explains why customers move from L1-only to L1 + L5 front ends.
+    - kind: robust
+      text: The receiver can only be as good as the C/N0 the front end delivers; low NF and enough rejection against the car's own transmitters keep the fix in towns and under jamming.
+      est: true
+    - kind: cost
+      text: Good geometry and dual-frequency corrections can replace an expensive survey antenna in many lane-level designs.
+      est: true
 
 products:
   - key: digital_isolators
@@ -172,7 +189,7 @@ products:
     pitch: Safe, fast data across a high-voltage barrier in inverters, chargers, BMS and industrial I/O.
     guides: [cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, prop_delay_ns, data_rate_mbps, channel_config, vdd_range_v, temp_range_c, certifications, qualification]
     why: [cmti_kv_us, creepage_mm, isolation_class, default_output]
-    visuals: [cmti, creep]
+    visuals: [ook, cmti, creep]
     rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
     topics: [traction_asil_d]
     review_words: [digital isolator, isolator]
@@ -191,7 +208,7 @@ products:
     pitch: Drive SiC, IGBT and GaN switches across the barrier in traction inverters, chargers, solar and motor drives.
     guides: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, deadtime, prop_delay_ns, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, default_output, certifications, qualification, temp_range_c]
     why: [cmti_kv_us, peak_source_a, uvlo_v, pwd_ns, deadtime]
-    visuals: [cmti, gate, turnon, creep, thermal, swloss]
+    visuals: [bootstrap, cmti, gate, turnon, creep, thermal, swloss]
     rf_notes: [phys_isolation_coupling, phys_switching_losses, phys_creepage_clearance, phys_dielectric_breakdown]
     topics: [traction_asil_d]
     review_words: [gate driver]
@@ -199,9 +216,9 @@ products:
     title: Isolated amplifiers, ADCs and current sensors
     line: Skyworks (Si89xx)
     pitch: Measure current and voltage on the high-voltage side and pass the result safely to the controller.
-    guides: [cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, certifications, qualification, temp_range_c]
-    why: [cmti_kv_us, creepage_mm, isolation_class]
-    visuals: [cmti, creep]
+    guides: [error_budget, cmti_kv_us, isolation_rating_kvrms, isolation_class, creepage_mm, viorm_vpk, certifications, qualification, temp_range_c]
+    why: [error_budget, cmti_kv_us, creepage_mm, isolation_class]
+    visuals: [isosense, cmti, creep]
     rf_notes: [phys_isolation_coupling, phys_dielectric_breakdown, phys_creepage_clearance]
     topics: [traction_asil_d]
     review_words: [isolated amplifier, isolated adc, current sens]
@@ -277,7 +294,7 @@ products:
     pitch: Highly integrated power and motor-control chips that cut parts count in SSDs, tools and appliances.
     guides: [temp_range_c, qualification]
     why: [qualification]
-    visuals: [thermal, swloss]
+    visuals: [bldc, bootstrap, buck, efuse, thermal, swloss]
     rf_notes: [phys_lc_energy, phys_switching_losses, phys_semiconductors]
     topics: [semiconductor_cost]
     review_words: [pmic, power management, motor]

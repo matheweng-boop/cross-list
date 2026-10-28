@@ -1,0 +1,81 @@
+/* Animated circuit visuals (static/vz/circuit.js): loop colours, parts and the moving dots, light and dark */
+.cf { --cf-1: #1f5fa8; --cf-2: #c2410c; --cf-3: #2e7d4f; --cf-4: #6b46c1; --cf-5: #b42318; --cf-6: #0f766e;
+  --cf-ink: var(--pico-color, #23304a); --cf-panel: var(--pico-background-color, #fff); --cf-line: #b9c3d3;
+  --cf-on: #d6f0df; --cf-lin: #fde6c4; --cf-pwm: #e4e0f6; --cf-hv: #fbe9e7; --cf-lv: #e8f4ec; --cf-tag: #fffdf7; color: var(--cf-ink); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cf { --cf-1: #7fb2ef; --cf-2: #f4a06b; --cf-3: #6fcf97; --cf-4: #b9a2f0; --cf-5: #ff8a80; --cf-6: #5fd0c3;
+    --cf-line: #4a5568; --cf-on: #1d4a2f; --cf-lin: #4a3814; --cf-pwm: #2f2a4a; --cf-hv: #3a1f1f; --cf-lv: #17321f; --cf-tag: #1c2230; }
+}
+:root[data-theme="dark"] .cf { --cf-1: #7fb2ef; --cf-2: #f4a06b; --cf-3: #6fcf97; --cf-4: #b9a2f0; --cf-5: #ff8a80; --cf-6: #5fd0c3;
+  --cf-line: #4a5568; --cf-on: #1d4a2f; --cf-lin: #4a3814; --cf-pwm: #2f2a4a; --cf-hv: #3a1f1f; --cf-lv: #17321f; --cf-tag: #1c2230; }
+
+.cf-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .2rem 0 .3rem; }
+.cf-bar button { width: auto; margin: 0; touch-action: manipulation; }
+.cf-ph { font-weight: 600; font-size: .9rem; margin: .2rem 0; min-height: 1.3em; }
+.cf-cap { margin: .3rem 0 .5rem; min-height: 2.6em; }
+.cf-fig, .cf-wave { max-width: 100%; overflow: hidden; }
+.cf-svg, .cf-wsvg { width: 100%; height: auto; display: block; max-width: 760px; touch-action: manipulation; }
+.cf-wsvg { margin-top: .2rem; max-width: 760px; }
+.cf-legend { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin: .3rem 0 0; }
+.cf-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.cf-sw { display: inline-block; width: 1.6rem; height: .45rem; border-radius: 3px; }
+.cf-b1 { background: var(--cf-1); fill: var(--cf-1); } .cf-b2 { background: var(--cf-2); fill: var(--cf-2); } .cf-b3 { background: var(--cf-3); fill: var(--cf-3); }
+.cf-b4 { background: var(--cf-4); fill: var(--cf-4); } .cf-b5 { background: var(--cf-5); fill: var(--cf-5); } .cf-b6 { background: var(--cf-6); fill: var(--cf-6); }
+
+/* parts */
+.cf-svg text, .cf-wsvg text { fill: currentColor; }
+.cf-t { font-size: 12px; } .cf-ts { font-size: 10.5px; } .cf-b { font-weight: 700; }
+.cf-simp { font-style: italic; opacity: .7; }
+.cf-w { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-opacity: .6; stroke-linejoin: round; }
+.cf-w.cf-thin { stroke-width: 1; stroke-dasharray: 3 3; }
+.cf-w.cf-shortw { stroke: var(--cf-5); stroke-opacity: 1; stroke-width: 3.5; }
+.cf-w.cf-bond { stroke-width: 1.4; }
+.cf-part, .cf-cap { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
+.cf-diode { fill: currentColor; fill-opacity: .75; }
+.cf-dot { fill: currentColor; }
+.cf-box { fill: var(--cf-panel); stroke: currentColor; stroke-opacity: .55; stroke-width: 1.4; }
+.cf-box.cf-float { stroke-dasharray: 4 3; fill: none; }
+.cf-box.cf-die { fill: none; stroke-width: 1.8; stroke-dasharray: 6 4; }
+.cf-box.cf-jump { stroke: var(--cf-5); stroke-opacity: .9; }
+.cf-box.cf-blank { fill: none; stroke: none; }
+.cf-src, .cf-stator { fill: var(--cf-panel); stroke: currentColor; stroke-width: 1.8; stroke-opacity: .7; }
+.cf-stator { fill: none; stroke-opacity: .35; stroke-dasharray: 2 4; }
+.cf-conn { fill: none; stroke: currentColor; stroke-opacity: .3; stroke-dasharray: 2 3; }
+.cf-fet rect { fill: var(--cf-panel); stroke: currentColor; stroke-width: 1.6; stroke-opacity: .7; }
+.cf-fet.on rect { fill: var(--cf-on); stroke: var(--cf-3); stroke-opacity: 1; }
+.cf-fet.lin rect { fill: var(--cf-lin); stroke: var(--cf-2); stroke-opacity: 1; }
+.cf-fet.pwm rect { fill: var(--cf-pwm); stroke: var(--cf-4); stroke-opacity: 1; }
+.cf-badge rect { fill: var(--cf-panel); stroke: currentColor; stroke-opacity: .5; }
+.cf-badge.bad rect, .cf-status.s3 rect, .cf-status.s4 rect, .cf-status.s5 rect { stroke: var(--cf-5); stroke-opacity: 1; stroke-width: 2; }
+.cf-status.s2 rect { stroke: var(--cf-3); stroke-opacity: 1; stroke-width: 2; }
+.cf-tag rect { fill: var(--cf-tag); stroke-width: 1.6; }
+.cf-tc1 rect { stroke: var(--cf-1); } .cf-tc2 rect { stroke: var(--cf-2); } .cf-tc3 rect { stroke: var(--cf-3); }
+.cf-tc4 rect { stroke: var(--cf-4); } .cf-tc5 rect { stroke: var(--cf-5); }
+.cf-tag.cf-old { opacity: .7; } .cf-tag.cf-now rect { stroke-width: 2.6; }
+.cf-fc1 { fill: var(--cf-1) !important; } .cf-fc2 { fill: var(--cf-2) !important; } .cf-fc3 { fill: var(--cf-3) !important; } .cf-fc5 { fill: var(--cf-5) !important; }
+.cf-zone.hv { fill: var(--cf-hv); } .cf-zone.lv { fill: var(--cf-lv); }
+.cf-barrier { stroke: var(--cf-4); stroke-width: 3; stroke-dasharray: 6 4; fill: none; }
+.cf-bit { fill: currentColor; fill-opacity: .25; } .cf-bit.one { fill: var(--cf-4); fill-opacity: 1; }
+.cf-meter { fill: none; stroke: currentColor; stroke-opacity: .5; }
+.cf-meterfill { fill: var(--cf-3); } .cf-meterfill.warn { fill: var(--cf-2); } .cf-meterfill.full { fill: var(--cf-5); }
+.cf-trip { stroke: var(--cf-5); stroke-width: 2.5; }
+.cf-field { stroke: var(--cf-4); stroke-width: 2.5; stroke-dasharray: 6 4; } .cf-fieldend { fill: var(--cf-4); }
+.cf-rotorbg { fill: var(--cf-panel); fill-opacity: .85; stroke: currentColor; stroke-opacity: .4; }
+.cf-north { fill: var(--cf-5); } .cf-south { fill: var(--cf-1); }
+.cf-svg text.cf-on { fill: #fff; }
+.cf-carrier { fill: none; stroke-width: 2.2; }
+
+/* current: a row of dots moving along the wire (stroke-dashoffset set each frame) */
+.cf-flow { fill: none; stroke-width: 5.5; stroke-linecap: round; stroke-dasharray: .5 13.5; }
+.cf-flow.cf-wide { stroke-width: 7; }
+.cf-c1 { stroke: var(--cf-1); } .cf-c2 { stroke: var(--cf-2); } .cf-c3 { stroke: var(--cf-3); }
+.cf-c4 { stroke: var(--cf-4); } .cf-c5 { stroke: var(--cf-5); } .cf-c6 { stroke: var(--cf-6); }
+
+/* waveform panel */
+.cf-trace { fill: none; stroke-width: 2; stroke-linejoin: round; } .cf-trace.cf-dash { stroke-dasharray: 5 4; stroke-width: 1.4; }
+.cf-axis { stroke: currentColor; stroke-opacity: .35; } .cf-axis.cf-faint { stroke-opacity: .15; }
+.cf-wsvg .cf-faint { opacity: .45; }
+.cf-shade { fill: none; } .cf-shade.cf-sh1 { fill: var(--cf-2); fill-opacity: .1; } .cf-shade.cf-sh2 { fill: var(--cf-4); fill-opacity: .1; } .cf-shade.cf-sh5 { fill: var(--cf-5); fill-opacity: .08; }
+.cf-cur { stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 3 3; }
+.cf-ebar { fill-opacity: .85; }
+@media (prefers-reduced-motion: reduce) { .cf-pop { animation: none; } }

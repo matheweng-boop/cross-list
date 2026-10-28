@@ -61,6 +61,106 @@
 # Thread lines: every main section of a report body ends with <p class="rpt-thread"><b>For the decision:</b> ...</p>;
 # a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
+  - slug: auto-wireless-audio
+    gist: "Wireless car audio suits headphones and add-on speakers, not the main system; start with automotive 2.4 GHz front ends, then our low-latency audio chips (est)."
+    abstract:
+      - "Bluetooth LE Audio and Auracast reach car head units; noise cancellation, chimes and main speakers stay wired (2–4 ms budgets)."
+      - "We have automotive 2.4 GHz front ends and filters, plus consumer audio links under 9 ms, but no Bluetooth audio chip and no automotive audio SoC."
+      - "Decide whether to attach front ends now and test demand before qualifying the SKY7636x audio link for cars."
+    title: "Wireless audio in the car: what fits, what stays wired, and which of our parts to offer first"
+    kind: report
+    area: Automotive connectivity
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "Front ends and filters are automotive today; the audio link chips exist but are consumer grade (0–70 °C) and need an automotive version"
+    date: 2026-10-28
+    status: draft
+    see_also: [auto-wifi-antenna, radio-auto-fit, auto-clock-tree]
+    question: "Can you do a preliminary research report on topic wireless audio in a car? Should Skyworks + Qorvo build a
+      wireless car audio offer, and with which parts first?"
+    summary: >-
+      Preliminary report from the owner's request of 28 Oct 2026. Wireless audio in the car means rear-seat and
+      passenger headphones, phone and headphone sharing (Bluetooth LE Audio, Auracast), removable or add-on speakers and,
+      in concept form, wireless speakers that cut harness weight. Latency decides where it fits: road-noise cancellation
+      needs the sensor signal in under 2 ms and the whole loop within about 4 ms, A2B carries audio in under 50 µs, while
+      Bluetooth needs tens of milliseconds and our own UL2X link under 9 ms. So noise cancellation, safety chimes and the
+      main speakers stay wired (est); headphones, sharing and add-on speakers can go wireless. Our position: automotive
+      2.4 GHz front ends (QPF4239Q FEM, SKYA21040 switch + LNA), coexistence BAW (QPQ2254Q), antenna switches, Si5332-AM
+      clocks and the ACT4751 buck on the car side; consumer low-latency audio SoCs (SKY76303 at 5 GHz, SKY76360/76361 at
+      2.4 GHz), Bluetooth FEMs and a phone-class amplifier on the node side. Gaps: a Bluetooth LE Audio chip, an
+      automotive audio SoC, a codec and speaker-level amplifiers. No carmaker announcement of Auracast was found.
+    tags: [wireless audio, Bluetooth LE Audio, LC3, Auracast, rear-seat headphones, sound zones, road noise cancellation,
+      A2B, UL2X, SKY76303, SKY76360, QPF4239Q, coexistence, latency, AEC-Q100]
+    sources: "BizDev catalogue with the AEC-Q rule, Systems library, new-market evidence (wireless audio), 4,186 public
+      reference designs; 13 public web requests (bluetooth.com, skyworksinc.com, infineon.com; molex.com did not answer,
+      sparkmicro.com refused) and 14 web searches; cached u-blox RUBY-W2 summary"
+    decision: Should Skyworks + Qorvo build a wireless car audio offer, and with which parts first?
+    answer:
+      text: 'Not as a full audio system yet (est). First sell what is automotive today with every Bluetooth and Wi-Fi audio
+        hub: the 2.4 GHz FEM, switch + LNA, coexistence BAW and clocks. Second, test demand for an automotive version of the
+        SKY7636x low-latency audio link for rear-seat headphones and add-on speakers before any qualification money.'
+      conf: low
+    needed_now:
+    - 'Audio BU: can the SKY76360/76361 and SKY76303 dies run at −40 to 85 °C (AEC-Q100 Grade 3), and what would it cost?'
+    - 'One head-unit or rear-seat Tier-1: which link do their next headphones use (Bluetooth Classic, LE Audio, Auracast, proprietary) and where is the front end?'
+    - 'One carmaker programme with Auracast or wireless rear speakers in production, to show the demand is real'
+    say_externally: Cars are adding Bluetooth LE Audio, shared listening and wireless headphones for passengers, while noise
+      cancellation stays on wired audio buses. Skyworks, with Qorvo, sells automotive 2.4 GHz front ends, coexistence
+      filters, switches and clocks, and low-latency wireless audio chips for headsets and speakers. We would like to learn
+      which wireless audio features you plan for the cabin and what latency they need.
+    next_steps:
+    - what: Ask whether the SKY76360/76361 (2.4 GHz) and SKY76303 (5 GHz) dies can be qualified to AEC-Q100 Grade 3 and at what cost and time
+      who: Audio BU
+      why: Decides whether our strongest differentiator, an audio link under 9 ms with clients in sync to 1 µs, can enter the car side at all.
+    - what: Offer QPF4239Q, SKYA21040, QPQ2254Q and SKY5A2108 as one 2.4 GHz audio-hub front-end set to a head-unit or rear-seat entertainment maker
+      who: Our FAE with a Tier-1 infotainment team
+      why: These parts are automotive today and attach to every Bluetooth or Wi-Fi audio hub, whatever link wins.
+    - what: Ask whether ZoneClock outputs can carry audio-rate references, so zones and wireless speakers play in sync
+      who: Timing BU, through the auto-clock-tree case
+      why: Multi-speaker and zone audio need one shared clock; it adds a clock socket to every audio zone controller.
+      case: auto-clock-tree
+    bu_opener:
+      question: Cars are adding wireless headphones, Auracast sharing and add-on speakers, while noise cancellation stays wired.
+        Should we sell our automotive 2.4 GHz front ends and filters to every audio hub now, and qualify the SKY7636x
+        low-latency audio link for cars, against Qualcomm, NXP and Infineon who sell Bluetooth audio chips with the
+        amplifier on board?
+      pros:
+      - Automotive 2.4 GHz FEM, switch + LNA, coexistence BAW, switches, clocks and buck exist today
+      - SKY7636x audio link is under 9 ms with clients in sync to 1 µs, far below Bluetooth
+      - Consumer headphones and speakers can use our consumer parts as they are
+      cons:
+      - No Bluetooth LE Audio chip; carmakers follow the phone, and phones speak Bluetooth
+      - Our audio SoCs are 0–70 °C and proprietary, so not ready for the car side
+      - Combo chips have their own PA and LNA, so an external FEM is optional
+      vs: Qualcomm, NXP, Infineon, Realtek, Barrot, Analog Devices (A2B)
+    learn:
+    - age: 5
+      text: Some car passengers want to listen to their own music or film with headphones, without a cable, while others listen to something else.
+    - age: 10
+      text: Wireless headphones and speakers in a car get their sound by radio, mostly Bluetooth. The sound must arrive
+        quickly, or the voice in a film does not match the lips, and many radios in the car must not disturb each other.
+    - age: 15
+      text: A wireless audio link needs a radio chip, a front end (amplifier, receive amplifier, switch, filter), a clock
+        and a battery for headphones. Bluetooth LE Audio adds a better codec (LC3) and Auracast, one sender to many
+        headphones. Noise cancellation needs the sound in a few milliseconds, so it stays on wired audio buses like A2B.
+    - age: 20
+      text: The owner asked for a preliminary report on wireless audio in the car. It builds on a new-market idea in our
+        evidence (rear-seat and multi-zone audio with our low-latency audio chips) and on the car Wi-Fi report, and checks
+        each block of a wireless headphone, speaker and audio hub for our best part.
+    - age: 25
+      text: 'Qualcomm, NXP, Infineon and Barrot sell automotive Bluetooth with LE Audio; the PA and LNA are on chip. Analog
+        Devices owns the wired A2B bus. We have automotive 2.4 GHz front ends, filters, switches, clocks and power, and
+        consumer low-latency audio SoCs (SKY76303, SKY7636x) and Bluetooth FEMs. Gaps: a Bluetooth audio chip, an automotive
+        audio SoC, a codec and speaker amplifiers.'
+    learn_links:
+    - label: Wi-Fi FEMs and tri-band APs
+      href: /rf-notes#wifi_fem_and_triband_ap
+    - label: Low-power IoT and UWB links
+      href: /rf-notes#lpwan_uwb_iot_links
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: 'Library: automotive UWB'
+      href: /library/auto_uwb
   - slug: radio-auto-fit
     gist: "Around our automotive tuners, 11 part groups are car-ready, 6 need work, 6 only lack AEC-Q; audio, interfaces and protection stay gaps."
     abstract:
@@ -254,20 +354,21 @@ reports:
     - label: Acoustic filters and duplexers
       href: /rf-notes#acoustic_filters_duplexers
   - slug: auto-hv-hot-swap
-    gist: "Cars never hot-plug at 800 V; pre-charge and disconnect switches do the job, and a reinforced Si875x successor could win those sockets."
+    gist: "Cars and data centers need the same eFuse and hot-swap jobs; at 800 V one reinforced Si875x successor could serve both (est)."
     abstract:
-      - "Contactors, pre-charge and insulation monitors make 400–800 V safe; isolated drivers and SiC switches do the work above 80 V."
-      - "TI leads with TPSI3050-Q1; our Si875x does the same job but only with basic isolation."
-      - "Decide whether to ask the BU for a reinforced Si875x successor sold as a pre-charge and disconnect set."
+      - "Cars and racks climb the same 12 V, 48 V, 800 V ladder; inrush, SOA, fast trip and reporting work alike, buses and certificates differ."
+      - "We are strong at 800 V (isolated drive and sensing), have a 12 V eFuse inside Qorvo's PLP ICs and nothing at 48 V."
+      - "Decide whether to ask the BU for a reinforced Si875x successor sold as an 800 V pre-charge and hot-swap set for both markets."
     title: 'Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits'
     kind: report
     area: Power & isolation
     app_type: Automotive
     feasibility: 2
     feasibility_why: "The next step is a reinforced successor of our Si875x isolated FET driver: a new chip from isolation and driver technology we already have"
-    date: 2026-10-23
+    date: 2026-10-28
+    expanded: 2026-10-28
     status: draft
-    see_also: [iso-current-sense-charging, hv-extra-wide-isolation]
+    see_also: [iso-current-sense-charging, hv-extra-wide-isolation, iso7821dww-isolation]
     question: Are there known pain points in getting near 800 V in a car and being able to plug something in or out safely, who
       makes the parts that solve them (hot-swap controllers, eFuses, contactors, solid-state switches, insulation monitors), and
       where do Skyworks' isolated drivers, isolators and isolated sensing fit?
@@ -279,7 +380,12 @@ reports:
       sensing. TI leads with TPSI3050-Q1 (reinforced isolated switch driver, $2.30 at 1k, active pre-charge design TIDA-050063)
       and TPSI2140-Q1 (1200 V relay for insulation monitoring, $2.90). Our Si875x does the same job but only at 2.5 kVrms. Data
       centers face the same problem in 800 V DC racks (NVIDIA 2027; TI shows an 800 V hot-swap controller). Next step: a
-      reinforced Si875x successor and a solid-state pre-charge set with our gate drivers and Si89xx sensing.'
+      reinforced Si875x successor and a solid-state pre-charge set with our gate drivers and Si89xx sensing. Expanded 28 Oct 2026
+      (section 2b): eFuses and hot-swap controllers in cars (12 V and 48 V zonal smart fuses with I²t wire protection, SPI and
+      ISO 26262; 400–800 V pre-charge) and data centers (12 V board eFuses, 48–54 V OCP and NVIDIA racks with PMBus, 800 V DC
+      racks with TI''s isolated LMI800PS, power-loss protection for SSDs) do the same jobs; they differ in what they protect,
+      the bus and the certificates. We are strong at 800 V, have a 12 V eFuse inside Qorvo''s ACT4910 / ACT85610 PLP ICs and
+      nothing at 48 V; a common platform makes sense at 800 V, not yet at 48 V (est).'
     tags:
     - hot-swap
     - eFuse
@@ -299,34 +405,50 @@ reports:
     - 800 V
     - 800 V DC
     - data center
+    - zonal
+    - smart fuse
+    - I2t
+    - PMBus
+    - OCP ORv3
+    - LMI800PS
+    - power-loss protection
+    - ACT4910
+    - ACT85610
     sources: BizDev parts database, Skyworks catalogue, block-diagram library and library topic on traction-inverter isolation;
       Skyworks AN1052 and AN1456; TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); NVIDIA and eeNews Europe pages
-      recorded for the extra-wide isolation case; standards summarised, not read
-    decision: Should we build a reinforced successor to Si875x and sell it as an 800 V solid-state pre-charge and disconnect
-      set with our gate drivers and Si89xx sensing?
+      recorded for the extra-wide isolation case; standards summarised, not read. Expansion of 28 Oct 2026 - TI STDA058, SSZTD31,
+      SDAA247 and eight TI product pages; Infineon eFuse, XDP710-001 and 2ED4820-EM pages; NVIDIA technical blog (13 Oct 2025);
+      OCP Open Rack v3 and Rack & Power pages; Qorvo and Skyworks catalogues and gap data in BizDev
+    decision: Should we build a reinforced successor to Si875x and sell it as an 800 V solid-state pre-charge and hot-swap
+      set for cars and data centers, with our gate drivers and Si89xx sensing?
     answer:
-      text: Probably yes, aimed at pre-charge, active discharge and insulation monitoring first, not at replacing the main
-        contactors. TI is there first, so it pays only if the BU can make the Si875x barrier reinforced at a cost that lets
-        us price near TI's $2.30 (est).
+      text: Probably yes, as one 800 V platform for car pre-charge and disconnect and for 800 V rack hot-swap, with 12–18 V gate
+        drive for SiC; a common 48 V eFuse for both markets is not yet worth it, and a 12 V data-centre eFuse from Qorvo's PLP
+        silicon is a separate, later step. TI is there first, so it pays only if the BU can make the barrier reinforced at
+        a cost near TI's $2.30 (est).
       conf: low
     needed_now:
-    - 'Isolation BU: can the Si875x power transfer cross a reinforced 5 kVrms barrier with 10–15 V gate drive, and at what
-      cost?'
-    - 'One or two battery-junction-box or charger teams: do they plan solid-state pre-charge on 800 V platforms, and from
-      which year?'
-    - 'Sales or FAE: do customers already ask us for a TPSI3050-Q1 cross?'
-    say_externally: We see solid-state pre-charge and insulation monitoring starting to replace resistors and relays in 800
-      V cars and in 800 V DC racks. Skyworks already sells isolated FET drivers (Si875x), isolated gate drivers and isolated
-      current and voltage sensing for these circuits. We would like to learn how you plan pre-charge and disconnect on your
-      next 800 V platform, and what isolation rating you need.
+    - 'Isolation BU: can the Si875x power transfer cross a reinforced 5 kVrms barrier with 12–18 V gate drive (SiC MOSFETs need
+      18 V), and at what cost?'
+    - 'Qorvo power team: can the eFuse block of ACT4910 / ACT85610 be sold on its own, and how far does its process go in
+      voltage (12 V only, or 48–80 V)?'
+    - 'One battery-junction-box team and one 800 V rack power maker, through our FAE: which isolated driver and sensing do they
+      use for pre-charge and hot-swap, and from which year?'
+    say_externally: Cars and data centers now face the same protection job at 48 V and at 800 V, limiting inrush, cutting
+      a short in microseconds and reporting what happened. Skyworks sells isolated FET drivers (Si875x), isolated gate
+      drivers, isolated current and voltage sensing and isolators for the 800 V side, and power-loss-protection ICs with an
+      integrated eFuse for storage. We would like to learn how you protect and hot-plug your 48 V and 800 V boards, and which
+      isolation rating and telemetry you need.
     next_steps:
-    - what: Ask whether Si875x can be made reinforced (5 kVrms, SSO-8 or wide SOIC) with 10–15 V gate drive and fault feedback
+    - what: Ask whether Si875x can be made reinforced (5 kVrms, SSO-8 or wide SOIC) with 12–18 V gate drive and fault feedback,
+        for SiC switches in cars and in 800 V racks
       who: Isolation BU
-      why: Tells us whether feasibility 2 holds and what the part could cost against TPSI3050-Q1 at $2.30 (1k).
-    - what: Ask two battery-junction-box or on-board-charger teams how they pre-charge and monitor insulation on their next
-        800 V platform
-      who: Tier-1 BDU / OBC hardware lead, through our FAE
-      why: Shows whether solid-state pre-charge is planned, from which year, and which isolation and gate voltage they need.
+      why: Tells us whether feasibility 2 holds for both markets and what the part could cost against TPSI3050-Q1 at $2.30 (1k).
+    - what: Ask whether the eFuse block of the ACT4910 / ACT85610 power-loss-protection ICs can become a standalone 12 V
+        data-centre eFuse, and whether its process reaches 48–80 V
+      who: Qorvo power BU (power-loss-protection team)
+      why: Our gap data says "build - subset of PLP silicon"; this shows whether that reaches 12 V only or also the 48 V
+        car and rack market.
     - what: Size the isolated current sensing of the same set in the current-sensing case
       who: Daily run
       why: Hands the sensing half of the set to its own case, so the set can be priced as one.

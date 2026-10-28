@@ -13,6 +13,9 @@
   const REFS = document.getElementById("bk-refs") ? J("bk-refs") : {counts: {}, anchors: {}};
   const refLine = fn => REFS.counts[fn] ? `<a class="ref-line" href="/reference-designs?fn=${encodeURIComponent(fn)}">Found in ${REFS.counts[fn]} public reference design${REFS.counts[fn] === 1 ? "" : "s"}</a>` : "";
   const FN = CAT.functions, CATS = CAT.categories;
+  // "Seen in practice (QSPICE forum)": recurring patterns from 2+ forum threads per function (27 Oct 2026)
+  const PRACTICE = document.getElementById("bk-practice") ? J("bk-practice") : {};
+  const practiceLine = fn => (PRACTICE[fn] || []).map(n => `<p class="small bk-practice"><b>Seen in practice (QSPICE forum):</b> ${esc(n.text)} <a href="/qspice?fn=${encodeURIComponent(fn)}#practice">${n.n} threads</a></p>`).join("");
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   let seq = 1;
   const uid = p => `${p}${Date.now().toString(36)}${seq++}`;
@@ -441,6 +444,7 @@
     panel.innerHTML = `<h3>${esc(b.label || f.label)}</h3>
       <p class="small"><span class="lg lg-${st}">${esc(STATUS_TEXT[st])}</span> · ${esc(CATS[f.category] || f.category || "")}</p>
       ${f.note ? `<p class="small muted">${esc(f.note)}</p>` : ""}
+      ${practiceLine(b.fn)}
       ${b.part ? `<p>Chosen: <b>${esc(b.part)}</b> <button type="button" class="outline secondary small-btn" data-act="unpick">clear</button></p>` : ""}
       <div class="row"><label class="small">Label <input data-f="label" value="${esc(b.label || "")}" placeholder="${esc(f.label)}"></label>
         <label class="small">Qty <input data-f="qty" type="number" min="1" max="99" value="${b.qty || 1}" style="width:4rem"></label></div>

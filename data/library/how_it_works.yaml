@@ -192,6 +192,8 @@ groups:
       - {mpn: QM14070, role: "UWB front end", specs: {"Type": "PA with bypass", "Channels / band": "6-9 GHz", "Antenna ports / AoA": "-", "Key figure": "14.2 dB TX gain, 23.1 dBm (catalogue)"}}
       - {mpn: SKY5A2108, role: "Antenna / AoA switch", specs: {"Type": "SPDT switch", "Channels / band": "2.4-8.3 GHz (ch5 and ch9)", "Antenna ports / AoA": "-", "Key figure": "0.5-0.9 dB loss, 20-28 dB isolation; AEC-Q100 Grade 2"}}
       - {mpn: QPC8019Q, role: "Antenna / AoA switch", specs: {"Type": "SPDT switch", "Channels / band": "0.617-8.0 GHz (ch5; top of ch9 not covered, est)", "Antenna ports / AoA": "-", "Key figure": "0.60 dB loss, 27 dB isolation"}}
+      # owner, 28 Oct 2026 ("QPF5100Q together with QPF5001Q as a solution"): shown with its status; see pairing
+      - {mpn: QPF5100Q, maker: Qorvo, role: "UWB SoC", automotive: "yes (qualified, press Jan 2025)", status: "status unknown in our data: sampling Jan 2025, production planned later 2025", specs: {"Type": "Automotive SoC: ranging + radar (CPD, kick)", "Channels / band": "not in our data", "Antenna ports / AoA": "not in our data", "Key figure": "2 MB flash, 256 KB SRAM; integrated TX filtering"}}
     exclude:
       - {mpn: "DWM3000.E1.1", why: "pre-production engineering parts"}
       - {mpn: "QM14068 - SG", why: "same part as QM14068 (sales variant)"}
@@ -251,6 +253,7 @@ groups:
       - {name: "Power consumption", typical: "receive 72-88 mA; sleep 260 nA (DW3110)", why: "The receiver dominates; a coin-cell tag lives on its duty cycle, so check sleep current and wake time as well as the peak.", note: ""}
       - {name: "Security (STS, AES)", typical: "802.15.4z STS with AES-128; older 802.15.4-2011 parts have none", why: "Without STS the distance can be faked; car keys and door locks need it.", note: ""}
       - {name: "Front-end loss, isolation and pulse fidelity", typical: "switch 0.5-0.9 dB loss; flat group delay across 500 MHz", why: "Loss before the first gain stage costs sensitivity; group-delay ripple can create a false early path.", note: "engineering:uwb_signal_path"}
+      - {name: "Coexistence with 6 GHz Wi-Fi", typical: "channels 5 and 6 inside 6 GHz Wi-Fi; channel 9 612 MHz above it", why: "A car or phone with Wi-Fi 6E/7 can block channel 5/6 ranging; channel 9 plus filtering and time sharing avoids it.", note: "engineering:uwb_wifi_coexistence"}
       - {name: "AEC-Q grade", typical: "DW3300Q and SKY5A2108 listed automotive; most others not stated", why: "Car parts must be AEC-Q100 qualified (Grade 2, -40 to +105 °C, for most mounting positions).", note: "engineering:qualification"}
     choosing:
       - "Transceiver, SoC or module: a transceiver (DW3110) needs a host MCU running the ranging stack; an SoC (QM35825) runs it on the chip; a module adds antenna and certification but costs more (est)."
@@ -266,9 +269,17 @@ groups:
       - {text: "A front-end module sits between the radio chip and the antenna switch; prefer a single-antenna FEM plus an absorptive switch, because diversity FEMs do not terminate the idle antenna in 50 Ω.", ref: AN1451, page: 4, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Application-Notes/AN1451_Enabling_High_Performance_Bluetooth_207463A.pdf"}
       - {text: "Link budget table: 85-91 dB of path loss for data frames and up to 97-98 dB for ranging-only frames at the legal power with 0 dBi antennas; every dB lost between antenna and pin comes off it.", ref: "DW3000 datasheet v1.3 (public copy)", page: "Table 12", url: "https://raw.githubusercontent.com/SendingA/Some-UWB-Papers/main/DW3000_Data_Sheet.pdf"}
       - {text: "Clock error becomes distance error: the 38.4 MHz crystal (±20 ppm, trimmable on chip) should be trimmed per board in production, or a TCXO used for anchors; ranging is ±6 cm after calibration and about ±15 cm without.", ref: "DW3000 datasheet v1.3 (public copy)", page: "Tables 10 and 14", url: "https://raw.githubusercontent.com/SendingA/Some-UWB-Papers/main/DW3000_Data_Sheet.pdf"}
-    see_also: []
+    see_also:
+      - {label: "UWB and Wi-Fi channels: overlap and decision matrix", href: "/engineering/uwb_wifi_coexistence"}
+      - {label: "Anchors vs tags (application knowledge)", href: "/library/auto_uwb#k-anchors_tags"}
+      - {label: "Child presence detection vs ranging", href: "/library/auto_uwb#k-cpd_vs_ranging"}
+      - {label: "QPF5100Q with QPF5001Q?", href: "/library/auto_uwb#k-qpf5100q_pairing"}
+    # owner, 28 Oct 2026 (comment e): the pairing note under the parts table
+    pairing:
+      - "QPF5100Q (automotive UWB SoC: digital key ranging and radar for CPD and kick sensing) is the anchor chip. In an exterior anchor it pairs with QM14068 (bypass LNA, 6.2-8.3 GHz) where the link is weak, QM14070 (PA with bypass) only to make up board losses, and SKY5A2108 (AEC-Q100 switch) for two antennas or angle; on the car's Wi-Fi side SKY5A1008 (6 GHz BAW) protects UWB (est)."
+      - "QPF5001Q is not in our data and no public page was found. Our QPF5001 is an 8-12 GHz, 12 W X-band radar front end, not automotive: it misses UWB channel 5, covers only the top 0.24 GHz of channel 9 and is about 55 dB above the UWB power limit, so it is not a UWB partner for QPF5100Q (est). The owner was asked which part was meant."
     gaps:
-      - "QPF5100Q (automotive UWB SoC) and QM35826 have no lifecycle status in our data, so they are not listed; no public datasheet was found."
+      - "QPF5100Q (automotive UWB SoC) and QM35826 have no lifecycle status in our data and no public datasheet; QPF5100Q is shown with its status from the January 2025 press release, QM35826 is left out."
       - "Channels, TX power and sensitivity of QM33110W / QM33120W, DW3300Q and QPK3000: not in our data."
       - "Automotive grade of QM14068 and QM14070: not stated in our catalogue."
       - "No Skyworks or Qorvo filter made for UWB channel 9 in our catalogue; SKY5A1008 (6 GHz Wi-Fi filter that protects UWB) is still Preview."
@@ -282,6 +293,9 @@ groups:
       - {area: Automotive, label: "Digital key / phone-as-a-key (CCC)", topic: auto_uwb, src: "Car Connectivity Consortium: Digital Key", src_url: "https://carconnectivity.org/digital-key/"}
       - {area: Automotive, label: "UWB anchors in doors, pillars and roof", app: "Smart car access (UWB anchors", src: "Infineon: smart car access block diagram (UWB and BLE anchors)", src_url: "https://www.infineon.com/application/automotive-car-access"}
       - {area: Automotive, label: "Child presence detection (UWB radar)", app: "UWB radar in the car", src: "Infineon: AIROC UWB automotive (CPD, intrusion, in-cabin sensing)", src_url: "https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions"}
+      # owner, 28 Oct 2026 (comments c, d): the application-knowledge sections, by their anchor on the page
+      - {area: Automotive, label: "Anchors vs tags: how many anchors a car uses and which anchor does what", topic: auto_uwb, anchor: k-anchors_tags, src: "Huf: four corner anchors plus two in the cabin", src_url: "https://www.huf-group.com/en/news/magazine/Phone-as-a-Key-How-the-Huf-digital-car-key-works"}
+      - {area: Automotive, label: "Child presence detection vs ranging: one chip, two modes", app: "UWB radar in the car", anchor: k-cpd_vs_ranging, src: "Qorvo QPF5100Q press release (StockTitan copy): digital key and UWB radar for CPD", src_url: "https://www.stocktitan.net/news/QRVO/qorvo-automotive-qualified-uwb-so-c-drives-innovation-with-1y18rni0bv49.html"}
       - {area: Automotive, label: "Kick sensing and gesture to open the trunk (UWB radar)", app: "UWB radar in the car", src: "ST blog: ST64UWB radar mode (gesture to open the trunk)", src_url: "https://blog.st.com/st64uwb/"}
       # emerging (owner, 28 Oct 2026: "Do 'emerging'"): shown with a tag; each needs a public source and a why
       - {area: Automotive, status: emerging, why: "Radar mode of the new 802.15.4ab chips, sampling in 2026", label: "Seat occupancy and seatbelt reminder (UWB radar)", app: "UWB radar in the car", src: "ST blog: ST64UWB radar checks that passengers wear their seat belts", src_url: "https://blog.st.com/st64uwb/"}

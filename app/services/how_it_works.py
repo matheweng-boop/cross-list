@@ -117,6 +117,8 @@ def used_in(g: dict) -> list[dict]:
                    "kind": "Application"}  # fmt: skip
         # optional: the area the case belongs to (groups the list) and the public source that shows UWB used there
         # status "emerging" (owner, 28 Oct 2026: "Do 'emerging'"): evaluation, research or proposal stage, with a why
+        if row["href"] and u.get("anchor"):  # a section of the page (owner, 28 Oct 2026: application knowledge)
+            row["href"] += f"#{u['anchor']}"
         out.append({**row, "area": u.get("area", ""), "src": u.get("src", ""), "src_url": u.get("src_url", ""),
                     "emerging": u.get("status") == "emerging", "why": u.get("why", "")})  # fmt: skip
     return out
@@ -237,7 +239,16 @@ def parts_table(session: Session, g: dict) -> dict:
     seen = {normalize_pn(r["mpn"]) for r in picked}
     for pn, p in listed.items():
         r = by_pn.get(pn)
-        if r is None or r["lifecycle"] != "active":
+        if (r is None or r["lifecycle"] != "active") and p.get("status"):
+            # shown although not active in our data (owner, 28 Oct 2026: QPF5100Q in the table), with its status
+            rows.append({"mpn": p["mpn"], "maker": (r or {}).get("manufacturer") or p.get("maker", ""),
+                         "role": p.get("role") or g.get("role", ""),
+                         "values": {c: (p.get("specs") or {}).get(c) or NOT_IN_DATA for c in cols},
+                         "package": (r or {}).get("package") or NOT_IN_DATA,
+                         "automotive": p.get("automotive", "not stated"), "variants": 0, "status": p["status"],
+                         "href": f"/find?q={p['mpn']}", "external": False})  # fmt: skip
+            seen.add(pn)
+        elif r is None or r["lifecycle"] != "active":
             missing.append(p["mpn"])
         elif pn not in seen:
             picked.append(r)

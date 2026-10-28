@@ -13,6 +13,7 @@
       <input name="note" maxlength="300" placeholder="How it was checked (optional)" aria-label="How it was checked"><button class="small-btn outline">Mark technically verified</button>{% endif %}
   {{ review_history(request, 'application', verify_key, 0) if verify_key }}</form>{% endif %}
   {% include "blocks/_refkb.html" %}
+  {% from "_appknow.html" import app_knowledge_list %}{{ app_knowledge_list(app_knowledge(template.knowledge)) if template }}
   {% include "blocks/_words.html" %}
   <div class="bc-bar">
     <input id="bk-name" type="text" placeholder="Block diagram name" aria-label="Block diagram name">

@@ -23,6 +23,8 @@
 {% if t.why_customer %}<h2 id="customer">Why it matters to the customer</h2>
 <ul class="pc-list small">{% for w in t.why_customer %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
 
+{% from "_appknow.html" import app_knowledge_list %}{{ app_knowledge_list(app_knowledge(t.knowledge)) }}
+
 {% set d = t.block_diagram %}{% set ours = (t.skyworks_fit or [])|map(attribute='fn')|list %}
 {% if d %}<h2 id="diagram">{{ d.name or 'Block diagram' }}</h2>
 <p class="small muted">{{ d.note }}</p>

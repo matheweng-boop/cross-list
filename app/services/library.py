@@ -185,6 +185,7 @@ SPEC_GUIDES = {  # specification guide keys (app/services/engineering.py NOTES)
     "certifications": ("UL 1577", "VDE", "IEC 60747-17", "certification", "certifications"),
     "integrated_power": ("isolated power", "isolated bias", "isolated supply", "isolated supplies"),
     "uwb_signal_path": ("group delay", "group-delay", "pre-echo", "precursor", "pulse fidelity", "phase linearity"),
+    "uwb_wifi_coexistence": ("Wi-Fi 6E", "6 GHz Wi-Fi", "UNII-5", "U-NII-5", "UWB channel", "UWB channels"),
     "emc_eft_cispr": ("EFT", "burst", "IEC 61000-4-4", "CISPR 25", "CISPR 32", "conducted emissions",
                       "radiated emissions"),
 }  # fmt: skip

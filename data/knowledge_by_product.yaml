@@ -164,6 +164,15 @@ why_it_matters:
       est: true
     - kind: design
       text: Ask for S-parameters early and check group delay and gain flatness inside the 499.2 MHz channel, not only insertion loss at the centre; filters near their skirts are the usual problem.
+  uwb_wifi_coexistence:
+    - kind: robust
+      text: A digital key on UWB channel 9 keeps working next to the car's own Wi-Fi 6E/7 hotspot; on channel 5 or 6 it can lose packets whenever Wi-Fi transmits, which the driver feels as a door that does not open.
+      est: true
+    - kind: design
+      text: One channel plan for all regions (channel 9) means one front end, one filter and one certification set instead of regional variants (CCC calls channel 9 the only global UWB channel).
+    - kind: bom
+      text: Filtering the Wi-Fi transmitter (6 GHz BAW) and the UWB receiver together can save a second antenna position or extra anchor that would otherwise be added to recover range.
+      est: true
   error_budget:
     - kind: design
       text: A published error-budget method (AN1270) lets the customer state the measurement accuracy of the whole chain with numbers the safety and control engineers can check.
@@ -281,8 +290,8 @@ products:
     title: UWB and low-power wireless
     line: Qorvo (DW3000, QM33)
     pitch: Secure distance measurement for digital car keys, asset tracking and indoor positioning.
-    guides: [uwb_signal_path, qualification]
-    why: [uwb_signal_path, qualification]
+    guides: [uwb_signal_path, uwb_wifi_coexistence, qualification]
+    why: [uwb_signal_path, uwb_wifi_coexistence, qualification]
     why_notes: [lpwan_uwb_iot_links]
     visuals: [uwb, link, rf-bands]
     rf_notes: [phys_antennas_wavelength, lpwan_uwb_iot_links]

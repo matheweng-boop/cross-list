@@ -15523,3 +15523,140 @@
     question: Rain-fade mitigation
     choices: [ACM, UPC, site diversity, antenna oversizing]
     source: RFE-ART-RAIN
+
+# ---- UWB applications (owner, 28 Oct 2026: "expand the UWB 'used in' cases"): lightweight entries, each from public
+# sources named in its note; linked from Part knowledge > UWB (data/library/how_it_works.yaml, used_in).
+- name: UWB radar in the car - child presence, intrusion and kick / gesture sensing (UWB SoC in radar mode on the interior and rear anchors) (after Infineon AIROC UWB and ST)
+  category: Automotive systems
+  note: "After Infineon public material: IFX-UWB-AUTO (AIROC UWB automotive page: one UWB chip does CCC Digital Key ranging and radar sensing, for NCAP child presence detection, kick sensing, intrusion detection and in-cabin sensing) and ST-ST64UWB (ST blog: the 802.15.4ab radar mode detects a baby left in the car, checks seat belts and recognises a hand gesture to open the trunk with one chip). NOVELDA-CPD shows the same idea as a stand-alone UWB sensor (child presence, seat occupancy, intrusion, driver vital signs). The radar reuses the digital-key anchors, so the RF path is the same as for ranging: antenna, optional switch, filter, UWB SoC and its crystal. Our parts that fit: QM35825 and DW3300Q (UWB), SKY5A2108 (antenna switch, AEC-Q100), QM14068 (LNA, automotive grade not stated)."
+  sources:
+  - {doc: IFX-UWB-AUTO, title: 'Infineon AIROC Automotive Ultra-Wideband solutions (TSL100): CCC digital key, key fobs, child presence detection, kick sensing, intrusion detection', url: 'https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions'}
+  - {doc: ST-ST64UWB, title: 'ST blog: ST64UWB, the first 802.15.4ab device with narrowband assistance and radar mode (4 May 2026)', url: 'https://blog.st.com/st64uwb/'}
+  - {doc: NOVELDA-CPD, title: 'NOVELDA UWB CPD & Vital Signs Sensor (child presence, seat occupancy, intrusion, vital signs)', url: 'https://novelda.com/ultra-wideband-child-presence-sensor/'}
+  groups:
+  - {id: cabin_ant, label: 'Roof / pillar antennas (cabin radar and ranging)', col: 0, row: 0, blocks: [antenna x2]}
+  - {id: rf, label: 'Antenna switch and band-pass filter (est)', col: 1, row: 0, blocks: [rf_switch, filter_saw_baw]}
+  - {id: uwb, label: 'UWB SoC: secure ranging + radar mode (802.15.4z / 4ab)', col: 2, row: 0, blocks: [uwb_soc, crystal_oscillator]}
+  - {id: rear, label: 'Rear anchor: kick / gesture sensing for the trunk', col: 2, row: 1, blocks: [uwb_soc, antenna]}
+  - {id: ecu, label: 'Access ECU / zone controller (alarm, trunk, CPD warning)', col: 3, row: 0, blocks: [mcu, can_transceiver]}
+  - {id: power, label: 'Anchor supply and protection', col: 1, row: 1, blocks: [pol_ldo, tvs_esd]}
+  links:
+  - [cabin_ant, rf, UWB ch9]
+  - [rf, uwb, '']
+  - [uwb, ecu, 'CAN-FD: presence / intrusion alarm']
+  - [rear, ecu, 'kick / gesture event']
+  - [power, uwb, '']
+
+- name: Smart door lock with UWB hands-free unlock (UWB SoC, BLE MCU, Wi-Fi / BT, NFC, secure element, motor H-bridge) (after Infineon)
+  category: Appliances & building
+  note: "After Infineon public material: IFX-APP-LOCK (Smart door lock block diagram: UWB SoC and UWB antenna with ESD diode, Bluetooth LE MCU, Wi-Fi / Bluetooth combo, NFC with ESD diode, secure element, MCU with serial NOR flash, capacitive sensing MCU for the keypad, MEMS microphone, DC-DC / LDO with over-voltage protection MOSFET, IO expander, H-bridge driver for the bolt motor and a position sensor). The UWB SoC tells when the phone or badge is outside the door and coming closer, so the lock opens hands-free; FiRa (FIRA-HOME, FIRA-BLDG) describes the same for homes and offices. Our parts that fit: DW3110 / QM33120W or QM35825 (UWB), DWM3001C (UWB + BLE module), SKY5A2108 (antenna switch)."
+  sources:
+  - {doc: IFX-APP-LOCK, title: 'Infineon Smart door lock application page - block diagram', url: 'https://www.infineon.com/applications/smart-home-building/home-building-automation/smart-door-lock'}
+  - {doc: FIRA-HOME, title: 'FiRa Consortium: UWB use cases, Smart Home and Consumer (residential access control)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-home-consumer'}
+  - {doc: FIRA-BLDG, title: 'FiRa Consortium: UWB use cases, Smart Building and Industrial (physical access control)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-building-industrial'}
+  groups:
+  - {id: uwb, label: 'UWB SoC with UWB antenna and ESD diode', col: 0, row: 0, blocks: [uwb_soc, antenna, tvs_esd]}
+  - {id: radio, label: 'Bluetooth LE MCU, Wi-Fi / BT combo, NFC', col: 1, row: 0, blocks: [ble_soc, wifi_soc, nfc_frontend]}
+  - {id: mcu, label: 'MCU, serial NOR flash and secure element', col: 2, row: 0, blocks: [mcu, flash, secure_element]}
+  - {id: hmi, label: 'Keypad (capacitive sensing MCU), microphone', col: 3, row: 0, blocks: [touch_controller, acoustic_transducer]}
+  - {id: power, label: 'DC-DC / LDO with over-voltage protection, USB-C ESD', col: 0, row: 1, blocks: [pol_buck, pol_ldo, tvs_esd]}
+  - {id: motor, label: 'H-bridge driver, bolt motor and position sensor', col: 2, row: 1, blocks: [motor_driver_brushed, position_sensor, io_expander]}
+  links:
+  - [uwb, mcu, 'SPI: distance / direction of the credential']
+  - [radio, mcu, 'BLE wake-up, Wi-Fi to the home hub']
+  - [hmi, mcu, '']
+  - [mcu, motor, lock / unlock]
+  - [power, mcu, '']
+
+- name: UWB radar presence and vital-sign sensor (room occupancy, laptop wake, breathing and heartbeat) (after Novelda)
+  category: Appliances & building
+  note: "After Novelda public material: NOVELDA-HOME (a UWB radar sensor detects people from tiny movements such as breathing; it wakes a laptop when the user comes and locks it when the user leaves, and runs lights and heating by presence in homes, offices and hotel rooms) and NOVELDA-CPD (the same X7 UWB radar chip detects breathing and heartbeat). FiRa lists presence-based device activation in the smart home (FIRA-HOME). One UWB radar SoC with its antennas and crystal next to a host MCU; no second UWB device is needed. Our parts that fit: QM35825 (UWB with radar per our auto UWB notes), crystal, LDO; the radar chip itself is often a dedicated one (est)."
+  sources:
+  - {doc: NOVELDA-HOME, title: 'NOVELDA Ultra-Wideband Sensor: human presence detection for consumer devices, smart buildings and cars', url: 'https://novelda.com/'}
+  - {doc: NOVELDA-CPD, title: 'NOVELDA UWB CPD & Vital Signs Sensor (breathing and heartbeat detection, X7 UWB radar SoC)', url: 'https://novelda.com/ultra-wideband-child-presence-sensor/'}
+  - {doc: FIRA-HOME, title: 'FiRa Consortium: UWB use cases, Smart Home and Consumer (presence-based device activation)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-home-consumer'}
+  groups:
+  - {id: ant, label: 'TX and RX antennas', col: 0, row: 0, blocks: [antenna x2]}
+  - {id: radar, label: 'UWB impulse radar SoC', col: 1, row: 0, blocks: [uwb_soc, crystal_oscillator]}
+  - {id: host, label: 'Host MCU or the device SoC (presence, breathing rate)', col: 2, row: 0, blocks: [mcu]}
+  - {id: link, label: 'Link to the building or home system (BLE / Wi-Fi / Thread)', col: 3, row: 0, blocks: [ble_soc]}
+  - {id: power, label: 'Low-power supply', col: 1, row: 1, blocks: [pol_ldo]}
+  links:
+  - [ant, radar, 'UWB pulses / echoes']
+  - [radar, host, 'SPI: range-Doppler data']
+  - [host, link, presence / vital signs]
+  - [power, radar, '']
+
+- name: UWB real-time locating system (RTLS) for factories, warehouses and hospitals (tags, synchronised anchors, location engine) (after Kinexon and MobileKnowledge)
+  category: Industrial
+  note: "After Kinexon public material: KINEXON-UWB (tags send UWB signals that synchronised anchors receive; TDoA for many assets at the lowest energy, two-way ranging for workers, tools and driverless vehicles; used for asset tracking, worker safety monitoring and AGV / AMR navigation in factories, warehouses and logistics) and MK-RTLS (MobileKnowledge MK UWB Kit RTLS 2.0: tags on a Murata Type 2DK module, wall or tripod anchors on a Type 2HQ module, FiRa UL-TDoA for asset tracking and DL-TDoA so a phone or robot finds its own position for indoor navigation). FiRa lists asset tracking, find equipment and patient tracking in hospitals (FIRA-BLDG). Our parts that fit: QPK3000 (RTLS module), DWM3001C, DW3110 / QM33120W (UWB), QM14068 (LNA for long-range anchors, est), crystal / TCXO for anchor timing."
+  sources:
+  - {doc: KINEXON-UWB, title: 'KINEXON: Ultra-Wideband (UWB) tracking - technologies, sensors, use cases', url: 'https://kinexon.com/resources/uwb-technology'}
+  - {doc: MK-RTLS, title: 'MobileKnowledge MK UWB Kit RTLS 2.0 (FiRa UL-TDoA asset tracking and DL-TDoA indoor navigation)', url: 'https://www.themobileknowledge.com/product/mk-uwb-kit-rtls-2-0/'}
+  - {doc: FIRA-BLDG, title: 'FiRa Consortium: UWB use cases, Smart Building and Industrial (asset tracking, patient tracking, indoor navigation)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-building-industrial'}
+  groups:
+  - {id: tag, label: 'Tag on an asset, worker or patient (UWB + BLE, motion sensor, coin cell)', col: 0, row: 0, blocks: [uwb_soc, ble_soc, env_sensor]}
+  - {id: phone, label: 'Phone or robot (DL-TDoA: computes its own position)', col: 0, row: 1, blocks: [external_block]}
+  - {id: anchor, label: 'Anchor (ceiling or wall): UWB SoC, antenna, optional LNA (est), clock', col: 1, row: 0, blocks: [uwb_soc, antenna, uwb_fem, crystal_oscillator]}
+  - {id: sync, label: 'Anchor clock sync and backhaul (Ethernet / PoE)', col: 2, row: 0, blocks: [ethernet_phy, poe_pd]}
+  - {id: engine, label: 'Location engine / RTLS server (positions, zones, safety alerts)', col: 3, row: 0, blocks: [external_block]}
+  links:
+  - [tag, anchor, 'UWB blink (UL-TDoA) or ranging (TWR)']
+  - [anchor, phone, 'UWB broadcast (DL-TDoA)']
+  - [anchor, sync, timestamps]
+  - [sync, engine, Ethernet]
+
+- name: UWB positioning for mobile robots and drones (AGV / AMR navigation, follow-me, return to base, landing where GPS is missing) (after MobileKnowledge)
+  category: Industrial
+  note: "After MobileKnowledge public material: MK-ROBOTICS (MK UWB Kit Robotics: a UWB subsystem with a Bluetooth LE SoC (Arm Cortex-M4) and a FiRa UWB module (Murata Type 2BP, NXP SR150, 3D angle-of-arrival antenna board) connects to the host robot running ROS2, PX4 or ArduPilot; use cases are follow-me, home-base and indoor navigation of AGV / AMR and household robots, worker safety, and autonomous drone landing on UWB landing stations). UAV-UWB (arXiv 2003.04380) characterises a portable UWB anchor system (DWM1001 nodes) for UAV flight in GNSS-denied places. Our parts that fit: DWM1001C / DWM3001C (UWB modules), QM33120W (two-port AoA UWB), SKY5A2108 (AoA antenna switch)."
+  sources:
+  - {doc: MK-ROBOTICS, title: 'MobileKnowledge MK UWB Kit Robotics (product page and product brief v1.1)', url: 'https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/'}
+  - {doc: UAV-UWB, title: 'Queralta et al.: UWB-based system for UAV localization in GNSS-denied environments - characterization and dataset (arXiv 2003.04380)', url: 'https://arxiv.org/abs/2003.04380'}
+  groups:
+  - {id: host, label: 'Host robot or drone flight controller (ROS2, PX4, ArduPilot)', col: 0, row: 0, blocks: [soc]}
+  - {id: ble, label: 'Bluetooth LE SoC: discovery, UWB set-up, robotics protocol', col: 1, row: 0, blocks: [ble_soc]}
+  - {id: uwb, label: 'FiRa UWB module with 3D AoA antenna board', col: 2, row: 0, blocks: [uwb_soc, antenna x3, crystal_oscillator]}
+  - {id: peer, label: 'UWB counterpart: anchor, landing station or phone', col: 3, row: 0, blocks: [external_block]}
+  - {id: power, label: 'Supply from the robot battery', col: 1, row: 1, blocks: [pol_buck]}
+  links:
+  - [host, ble, 'UART: robotics protocol']
+  - [ble, uwb, SPI]
+  - [uwb, peer, 'UWB ranging + angle']
+  - [power, ble, '']
+
+- name: Tap-free payment and store access with UWB (payment terminal with a UWB reader, phone as credential) (after FiRa)
+  category: Consumer & personal electronics
+  note: "After FiRa public material: FIRA-RETAIL (Smart Retail use cases: tap-free mobile payment with the phone left in the pocket, unmanned store access, in-vehicle payment, foot-traffic analytics) and IFX-UWB-CI (Infineon AIROC UWB for consumer and industrial devices lists tap-free payment and smart access, FiRa and Aliro compliant). The terminal adds a UWB SoC next to its NFC and secure element so it knows which phone is at the counter. Drawn by us from these descriptions; no vendor block diagram of a UWB payment terminal was found. Our parts that fit: QM33120W / DW3110 (UWB), DWM3001C (module), SKY5A2108 (antenna switch)."
+  sources:
+  - {doc: FIRA-RETAIL, title: 'FiRa Consortium: UWB use cases, Smart Retail (tap-free mobile payment, unmanned store access)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-retail'}
+  - {doc: IFX-UWB-CI, title: 'Infineon AIROC UWB for consumer and industrial applications (smart access, asset tracking, collision avoidance, tap-free payment, robotics)', url: 'https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-consumer-industrial-ultra-wide-band-solutions'}
+  groups:
+  - {id: phone, label: 'Customer phone or wearable (UWB + NFC + secure element)', col: 0, row: 0, blocks: [external_block]}
+  - {id: uwb, label: 'UWB SoC and antennas at the counter (who is paying)', col: 1, row: 0, blocks: [uwb_soc, antenna, crystal_oscillator]}
+  - {id: nfc, label: 'NFC reader and secure element (fallback tap)', col: 1, row: 1, blocks: [nfc_frontend, secure_element]}
+  - {id: host, label: 'Payment terminal processor', col: 2, row: 0, blocks: [mcu]}
+  - {id: net, label: 'Wi-Fi / BT and cellular to the payment network', col: 3, row: 0, blocks: [wifi_soc, modem]}
+  links:
+  - [phone, uwb, 'UWB secure ranging']
+  - [phone, nfc, NFC tap]
+  - [uwb, host, SPI]
+  - [nfc, host, '']
+  - [host, net, '']
+
+- name: Sports player tracking with UWB (wearable tags, arena anchors, real-time server) (after KINEXON Sports)
+  category: Consumer & personal electronics
+  note: "After KINEXON public material: KINEXON-LPS (KINEXON PERFORM LPS: a real-time ultra-wideband system for indoor athlete tracking, used for performance analysis, tactics and player load) and KINEXON-UWB (tags transmit, anchors around the field receive; TDoA for many tags at low energy). The player wears a small UWB tag with a motion sensor; anchors around the arena feed a server that computes positions live. Ball tracking is offered by the same company but its radio is not stated on the pages read. Our parts that fit: DW3110 / QM33110W (UWB), crystal, LDO; anchors as in the RTLS diagram."
+  sources:
+  - {doc: KINEXON-LPS, title: 'KINEXON PERFORM LPS: real-time UWB indoor player tracking system', url: 'https://kinexon-sports.com/products/perform-lps/'}
+  - {doc: KINEXON-UWB, title: 'KINEXON: Ultra-Wideband (UWB) tracking - technologies, sensors, use cases', url: 'https://kinexon.com/resources/uwb-technology'}
+  groups:
+  - {id: tag, label: 'Wearable tag: UWB SoC, motion sensor (IMU), battery', col: 0, row: 0, blocks: [uwb_soc, env_sensor, battery_pack]}
+  - {id: tag_rf, label: 'Tag antenna and clock', col: 0, row: 1, blocks: [antenna, crystal_oscillator]}
+  - {id: anchor, label: 'Arena anchors (UWB receivers)', col: 1, row: 0, blocks: [uwb_soc, antenna]}
+  - {id: sync, label: 'Anchor timing and network', col: 2, row: 0, blocks: [ethernet_phy, poe_pd]}
+  - {id: server, label: 'Real-time server (positions, load, statistics)', col: 3, row: 0, blocks: [external_block]}
+  links:
+  - [tag_rf, tag, '']
+  - [tag, anchor, 'UWB (TDoA)']
+  - [anchor, sync, timestamps]
+  - [sync, server, Ethernet]

@@ -52,7 +52,9 @@
 
 <section id="used-in" class="hw-sec"><h2>Used in</h2>
 <p class="small">The applications are described in Systems &amp; applications; this page stays with the part.</p>
-<ul class="small hw-used">{% for u in used_in %}<li><span class="muted">{{ u.kind }}:</span> <a href="{{ u.href }}">{{ u.label }}</a></li>{% endfor %}</ul>
+{% if seen_in and seen_in.n %}<p class="small hw-seen"><b>Seen in <a href="{{ seen_in.fns[0].href }}">{{ seen_in.n }} public block diagram{{ 's' if seen_in.n != 1 }}</a></b> <span class="muted">(manufacturers' reference designs and module diagrams:{% for f in seen_in.fns %} {% if f.n %}<a href="{{ f.href }}">{{ f.label }} {{ f.n }}</a>{% else %}{{ f.label }} 0{% endif %}{{ ',' if not loop.last }}{% endfor %})</span></p>{% endif %}
+{% for area, rows in used_areas %}{% if area %}<h3 class="hw-area">{{ area }}</h3>{% endif %}
+<ul class="small hw-used">{% for u in rows %}<li><span class="muted">{{ u.kind }}:</span> <a href="{{ u.href }}">{{ u.label }}</a>{% if u.src %} <span class="muted hw-src">· source: <a href="{{ u.src_url }}"{% if not u.src_url.startswith('/') %} target="_blank" rel="noopener"{% endif %}>{{ u.src }}</a></span>{% endif %}</li>{% endfor %}</ul>{% endfor %}
 {% if reviews %}<p class="small"><b>Part reviews in this group:</b> {% for r in reviews %}<a href="/reviews/{{ r.slug }}">{{ r.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 {% if g.see_also %}<p class="small"><b>See also:</b> {% for s in g.see_also %}<a href="{{ s.href }}">{{ s.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 </section>
@@ -74,6 +76,9 @@
 .hw-an h2 { border-top: 0; }
 .hw-series td:first-child { min-width: 12rem; }
 .hw-used { columns: 2 16rem; }
+.hw-area { font-size: 1rem; margin: .7rem 0 .2rem; }
+.hw-used li { break-inside: avoid; }
+.hw-src { font-size: .85em; }
 .hw-card { border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; padding: .6rem .9rem; margin: .4rem 0 1rem; }
 </style>
 {% endblock %}

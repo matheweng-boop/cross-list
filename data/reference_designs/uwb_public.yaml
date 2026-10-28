@@ -1,0 +1,84 @@
+# Public UWB block diagrams from several publishers (owner, 28 Oct 2026: "if we can find more block diagrams, please
+# do so"). Format and rules: README.md in this folder. Collected 28 Oct 2026: robots.txt of each host read first, GET
+# only, one request at a time, >= 10 s per host (15 s for arxiv.org); nothing behind a log-in. Only the blocks each page
+# or document shows are listed as functions; our summaries, the files themselves are linked, not stored. The Murata
+# module diagrams found in the same run are in murata.yaml. Hosts not used: NXP, Qorvo, Qualcomm (blocked or never
+# requested); ST's product site (st.com) was not requested, its blog was read from an earlier run's cache.
+source: {vendor: "UWB public diagrams (Infineon, MobileKnowledge, Android, arXiv)", pages: ["https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions", "https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/", "https://source.android.com/docs/core/connect/uwb", "https://arxiv.org/abs/2003.04380"], collected: 2026-10-28, method: "application pages with block diagrams (block lists read from the page's structured data or the public block-diagram JSON), product briefs read with pdftotext and their diagram page rendered locally, one paper abstract page"}
+designs:
+  - id: AIROC-UWB-TSL100
+    title: "AIROC UWB TSL100 ranging and sensing SoC (product brief block diagram)"
+    url: "https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-consumer-industrial-ultra-wide-band-solutions"
+    vendor: Infineon
+    applications: [UWB radio, Wireless connectivity, Car access, Radar sensing, Asset tracking, Access control, Navigation]
+    markets: [Automotive, RF & connectivity, Consumer & personal electronics]
+    summary: "UWB SoC for CCC digital key, FiRa and Aliro, with a radar sensing mode (child presence, kick sensing, presence). Block diagram: RX and TX analog front ends on one TX and one RX antenna, modem PHY, pulse shaper, RF and system PLL with an external crystal, PMU fed from VBAT and a 1.1-1.2 V DC-DC rail, Arm Cortex-M33 with TrustZone and crypto accelerators, SPI master / slave and GPIO. HRP channels 8, 9, 10 and 12 (6-9 GHz); automotive version AEC-Q100 Grade 2."
+    parts: [TSL100]
+    functions: [uwb_soc, crystal_oscillator, antenna]
+    documents:
+      block_diagram: "https://www.infineon.com/assets/row/public/documents/30/45/tsl100-product-brief-v1.7.pdf"
+      other: ["https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions"]
+  - id: IFX-APP-SMART-DOOR-LOCK
+    title: "Smart door lock with UWB, BLE, Wi-Fi and NFC (application block diagram)"
+    url: "https://www.infineon.com/applications/smart-home-building/home-building-automation/smart-door-lock"
+    vendor: Infineon
+    applications: [Smart door lock, Access control, Smart home, Wireless connectivity]
+    markets: [Appliances & building, RF & connectivity]
+    summary: "Interactive system diagram of a smart door lock: UWB SoC with ESD diodes on the UWB and BLE antennas, Bluetooth LE MCU, Wi-Fi / Bluetooth combo, NFC with ESD diode, secure element, MCU with serial NOR flash, capacitive-sensing MCU for the keypad, MEMS microphone, DC-DC / LDO behind an over-voltage protection MOSFET, IO expander, H-bridge driver for the bolt motor and a position sensor."
+    parts: []
+    functions: [uwb_soc, ble_soc, wifi_soc, nfc_frontend, secure_element, mcu, flash, touch_controller, acoustic_transducer, pol_buck, pol_ldo, tvs_esd, io_expander, motor_driver_brushed, position_sensor, antenna]
+    documents:
+      block_diagram: "https://www.infineon.com/dataApi/en/applications/smart-home-building/home-building-automation/smart-door-lock.initialBlockDiagram.en.693.json"
+  - id: IFX-APP-CAR-ACCESS
+    title: "Smart car access with UWB and BLE anchors, key fob, trunk sensor and door handles (application block diagram)"
+    url: "https://www.infineon.com/application/automotive-car-access"
+    vendor: Infineon
+    applications: [Car access, Digital key, Body electronics, Wireless connectivity]
+    markets: [Automotive]
+    summary: "Interactive system diagram of smart car access: UWB and BLE anchors with their system basis chips, a BLE key fob, a master controller (body MCU, SBC, BLE), a trunk sensor with a 24 GHz radar and MCU (kick to open), and door handles with a capacitive-sensing MCU and regulator; wired links to the body network."
+    parts: [CYW89829, TLE9471ES, CYT2B95BACQ0AZEGS, BGT24ATR22, CY8C4147LQS-S283, CY8C4125PVA-S412T]
+    functions: [uwb_soc, ble_soc, mcu, pre_regulator, radar_transceiver, touch_controller, can_transceiver]
+    documents:
+      block_diagram: "https://www.infineon.com/dataApi/en/applications/automotive/body-electronics/car-access.initialBlockDiagram.en.732.json"
+  - id: MK-UWB-KIT-ROBOTICS
+    title: "MK UWB Kit Robotics: UWB subsystem for robots and drones (follow-me, home-base and indoor navigation, autonomous landing)"
+    url: "https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/"
+    vendor: MobileKnowledge
+    applications: [AGV / AMR navigation, Drone landing, Positioning, UWB radio, Wireless connectivity]
+    markets: [Industrial, RF & connectivity]
+    summary: "System diagram: the host robot (ROS2, PX4, ArduPilot) talks a robotics protocol to the MK UWB subsystem, made of a Bluetooth LE SoC (Arm Cortex-M4) for discovery and UWB set-up and a FiRa UWB module (Murata Type 2BP, NXP SR150) with a 3D angle-of-arrival antenna board (UWB channels 5 and 9, 6.5 / 8 GHz); it ranges to a UWB counterpart (another subsystem, a landing station or a phone). Accuracy +/-5 cm and +/-1 degree offset."
+    parts: [SR150, LBUA0VG2BP]
+    functions: [uwb_soc, ble_soc, antenna, soc]
+    documents:
+      other: ["https://www.themobileknowledge.com/wp-content/uploads/2025/11/MK-UWB-Kit-Robotics-Product-brief-v1.1.pdf"]
+  - id: MK-UWB-KIT-RTLS-2
+    title: "MK UWB Kit RTLS 2.0: FiRa UL-TDoA asset tracking and DL-TDoA indoor navigation"
+    url: "https://www.themobileknowledge.com/product/mk-uwb-kit-rtls-2-0/"
+    vendor: MobileKnowledge
+    applications: [UWB radio, Asset tracking, Positioning, Navigation, RTLS, Wireless connectivity]
+    markets: [Industrial, RF & connectivity]
+    summary: "System (UWB channels 5 and 9, 6.5 / 8 GHz): tags on Murata Type 2DK (SR040 + QN9090) broadcast to synchronised wall or tripod anchors on Murata Type 2HQ (SR250); an RTLS engine computes tag positions (UL-TDoA, 90 % within +/-20 cm), or anchors broadcast and a phone or robot computes its own position (DL-TDoA, 90 % within +/-10 cm); one 4-anchor cell covers up to 500 m2."
+    parts: [SR250, SR040, QN9090, LBUA0ZZ2HQ, LBUA2ZZ2DK]
+    functions: [uwb_soc, ble_soc, antenna]
+    documents: {}
+  - id: AOSP-UWB-STACK
+    title: "Android UWB stack architecture (phone: UWB framework, FiRa UCI HAL, vendor HAL and UWB chip)"
+    url: "https://source.android.com/docs/core/connect/uwb"
+    vendor: Google
+    applications: [Smartphone, Precise finding, UWB radio, Wireless connectivity]
+    markets: [Consumer & personal electronics, RF & connectivity]
+    summary: "Figure 1 of the Android source page: the UWB mainline module (platform API, UwbService and the FiRa common service layer, native UCI layer) over the UWB HAL defined by the FiRa UWB command interface, and the vendor's HAL, driver and UWB device in the phone."
+    parts: []
+    functions: [uwb_soc, soc]
+    documents:
+      block_diagram: "https://source.android.com/static/docs/core/connect/images/uwb-stack-architecture.png"
+  - id: ARXIV-2003.04380
+    title: "UWB-based system for UAV localization in GNSS-denied environments (DWM1001 anchors and tag)"
+    url: "https://arxiv.org/abs/2003.04380"
+    vendor: "University of Turku / EPFL (arXiv)"
+    applications: [Drone, Positioning, GNSS-denied navigation, UWB radio, Wireless connectivity]
+    markets: [Industrial, RF & connectivity]
+    summary: "Portable, battery-powered UWB anchor set (Decawave DWM1001 nodes) and a tag on the drone give its position indoors or where GNSS is missing; the paper characterises accuracy against anchor geometry and altitude and shares open data."
+    parts: [DWM1001]
+    functions: [uwb_soc, mcu]
+    documents: {}

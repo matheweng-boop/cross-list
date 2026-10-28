@@ -445,13 +445,13 @@ anchors:
     fn: digital_isolator
   ISO7240C:
     mpn: ISO7240CFQDWRQ1
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     fn: digital_isolator
   ISO7240CF-Q1:
     mpn: ISO7240CFQDWRQ1
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     fn: digital_isolator
@@ -2567,7 +2567,7 @@ diagrams:
     n: 2
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -2929,7 +2929,7 @@ diagrams:
     n: 2
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -3697,7 +3697,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -4442,7 +4442,7 @@ diagrams:
     n: 2
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -5399,10 +5399,22 @@ diagrams:
   anchors: []
 - name: Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)
   key: smart-car-access-uwb-anchors-ble-nfc-ccc-digital-key-nxp
-  n: 0
-  designs: []
-  functions: {}
-  confirmed: []
+  n: 1
+  designs:
+  - Infineon:IFX-APP-CAR-ACCESS
+  functions:
+    ble_soc: 1
+    can_transceiver: 1
+    mcu: 1
+    pre_regulator: 1
+    radar_transceiver: 1
+    touch_controller: 1
+    uwb_soc: 1
+  confirmed:
+  - uwb_soc
+  - mcu
+  - ble_soc
+  - can_transceiver
   suggested: []
   anchors: []
 - name: Wi-Fi access point / router (tri-band, MPU + Wi-Fi radios) (NXP)
@@ -5543,10 +5555,19 @@ diagrams:
   anchors: []
 - name: IoT Bluetooth LE SoC reference design (QCC711) and IoT processor Wi-Fi companion (QCS6490 + WCN6750) (Qualcomm)
   key: iot-bluetooth-le-soc-reference-design-qcc711-and-iot-processor-wi-fi-companion-q
-  n: 0
-  designs: []
-  functions: {}
-  confirmed: []
+  n: 1
+  designs:
+  - Murata:LBUA2ZZ2DK
+  functions:
+    antenna: 1
+    ble_soc: 1
+    crystal_oscillator: 1
+    env_sensor: 1
+    uwb_soc: 1
+  confirmed:
+  - ble_soc
+  - antenna
+  - crystal_oscillator
   suggested: []
   anchors: []
 - name: Automotive telematics / connectivity (Snapdragon Auto 5G Modem-RF Gen 2, QCA6696 Wi-Fi/BT, C-V2X 9150) (Qualcomm)
@@ -5930,7 +5951,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -6358,7 +6379,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -6589,7 +6610,7 @@ diagrams:
   anchors:
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -9984,7 +10005,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -10080,21 +10101,37 @@ diagrams:
   anchors: []
 - name: Smart door lock (NFC controller, MIFARE credentials, BLE / Wi-Fi, motor driver) (NXP)
   key: smart-door-lock-nfc-controller-mifare-credentials-ble-wi-fi-motor-driver-nxp
-  n: 1
+  n: 2
   designs:
+  - Infineon:IFX-APP-SMART-DOOR-LOCK
   - Renesas:WC-smart-wireless-door-lock
   functions:
-    ble_soc: 1
+    ble_soc: 2
+    mcu: 2
+    nfc_frontend: 2
+    pol_buck: 2
+    acoustic_transducer: 1
+    antenna: 1
     buck_boost: 1
+    flash: 1
     half_bridge_driver: 1
-    mcu: 1
-    nfc_frontend: 1
-    pol_buck: 1
+    io_expander: 1
+    motor_driver_brushed: 1
+    pol_ldo: 1
+    position_sensor: 1
     pre_regulator: 1
+    secure_element: 1
+    touch_controller: 1
+    tvs_esd: 1
+    uwb_soc: 1
+    wifi_soc: 1
   confirmed:
   - nfc_frontend
   - mcu
   - pol_buck
+  - motor_driver_brushed
+  - secure_element
+  - wifi_soc
   - ble_soc
   suggested: []
   anchors: []
@@ -10315,10 +10352,19 @@ diagrams:
   anchors: []
 - name: Battery-powered Wi-Fi IoT node with external PA (QCC730 xPA, dual-band 802.11n micro-power Wi-Fi) (Qualcomm)
   key: battery-powered-wi-fi-iot-node-with-external-pa-qcc730-xpa-dual-band-802-11n-mic
-  n: 0
-  designs: []
-  functions: {}
-  confirmed: []
+  n: 1
+  designs:
+  - Murata:LBUA2ZZ2DK
+  functions:
+    antenna: 1
+    ble_soc: 1
+    crystal_oscillator: 1
+    env_sensor: 1
+    uwb_soc: 1
+  confirmed:
+  - antenna
+  - crystal_oscillator
+  - ble_soc
   suggested: []
   anchors: []
 - name: Fiber broadband gateway (XGS-PON + Wi-Fi 8, Dragonwing FiberPro A8 Elite IPQ96) (Qualcomm)
@@ -11043,7 +11089,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -11423,7 +11469,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -12244,7 +12290,7 @@ diagrams:
     n: 1
   - part: ISO7240CF
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -12667,7 +12713,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -13255,7 +13301,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -16060,7 +16106,7 @@ diagrams:
     n: 2
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -16747,7 +16793,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -17308,7 +17354,7 @@ diagrams:
     n: 1
   - part: ISO7240C
     fn: digital_isolator
-    ours: SI8640AB-AS
+    ours: SI8640BB-AS
     maker: Skyworks
     type: Functional
     designs:
@@ -17882,10 +17928,26 @@ diagrams:
 - name: UWB + Bluetooth LE module for anchors and tags (UWB transceiver with 38.4 MHz crystal and band-pass filters, BLE MCU
     with 32 MHz and 32 kHz crystals) (after Murata Type 2AB)
   key: uwb-bluetooth-le-module-for-anchors-and-tags-uwb-transceiver-with-38-4-mhz-cryst
-  n: 0
-  designs: []
-  functions: {}
-  confirmed: []
+  n: 4
+  designs:
+  - Murata:LBUA2ZZ2DK
+  - Murata:LBUA5QJ2AB-828
+  - Murata:LBUA0ZZ2HQ
+  - Murata:LBUA0VG2BP
+  functions:
+    crystal_oscillator: 4
+    uwb_soc: 4
+    filter_saw_baw: 3
+    antenna: 2
+    ble_soc: 2
+    env_sensor: 1
+    pol_buck: 1
+  confirmed:
+  - antenna
+  - filter_saw_baw
+  - uwb_soc
+  - crystal_oscillator
+  - ble_soc
   suggested: []
   anchors: []
 - name: Smartwatch with UWB, Wi-Fi / BT, GNSS, NFC payment and eSIM (host MCU, sensors, USB-C PD) (after Infineon)
@@ -18130,5 +18192,182 @@ diagrams:
   designs: []
   functions: {}
   confirmed: []
+  suggested: []
+  anchors: []
+- name: UWB radar in the car - child presence, intrusion and kick / gesture sensing (UWB SoC in radar mode on the interior
+    and rear anchors) (after Infineon AIROC UWB and ST)
+  key: uwb-radar-in-the-car-child-presence-intrusion-and-kick-gesture-sensing-uwb-soc-i
+  n: 1
+  designs:
+  - Infineon:AIROC-UWB-TSL100
+  functions:
+    antenna: 1
+    crystal_oscillator: 1
+    uwb_soc: 1
+  confirmed:
+  - antenna
+  - uwb_soc
+  - crystal_oscillator
+  suggested: []
+  anchors: []
+- name: Smart door lock with UWB hands-free unlock (UWB SoC, BLE MCU, Wi-Fi / BT, NFC, secure element, motor H-bridge) (after
+    Infineon)
+  key: smart-door-lock-with-uwb-hands-free-unlock-uwb-soc-ble-mcu-wi-fi-bt-nfc-secure-e
+  n: 1
+  designs:
+  - Infineon:IFX-APP-SMART-DOOR-LOCK
+  functions:
+    acoustic_transducer: 1
+    antenna: 1
+    ble_soc: 1
+    flash: 1
+    io_expander: 1
+    mcu: 1
+    motor_driver_brushed: 1
+    nfc_frontend: 1
+    pol_buck: 1
+    pol_ldo: 1
+    position_sensor: 1
+    secure_element: 1
+    touch_controller: 1
+    tvs_esd: 1
+    uwb_soc: 1
+    wifi_soc: 1
+  confirmed:
+  - uwb_soc
+  - antenna
+  - tvs_esd
+  - ble_soc
+  - wifi_soc
+  - nfc_frontend
+  - mcu
+  - flash
+  - secure_element
+  - touch_controller
+  - acoustic_transducer
+  - pol_buck
+  - pol_ldo
+  - motor_driver_brushed
+  - position_sensor
+  - io_expander
+  suggested: []
+  anchors: []
+- name: UWB radar presence and vital-sign sensor (room occupancy, laptop wake, breathing and heartbeat) (after Novelda)
+  key: uwb-radar-presence-and-vital-sign-sensor-room-occupancy-laptop-wake-breathing-an
+  n: 1
+  designs:
+  - Infineon:AIROC-UWB-TSL100
+  functions:
+    antenna: 1
+    crystal_oscillator: 1
+    uwb_soc: 1
+  confirmed:
+  - antenna
+  - uwb_soc
+  - crystal_oscillator
+  suggested: []
+  anchors: []
+- name: UWB real-time locating system (RTLS) for factories, warehouses and hospitals (tags, synchronised anchors, location
+    engine) (after Kinexon and MobileKnowledge)
+  key: uwb-real-time-locating-system-rtls-for-factories-warehouses-and-hospitals-tags-s
+  n: 4
+  designs:
+  - Murata:LBUA2ZZ2DK
+  - MobileKnowledge:MK-UWB-KIT-RTLS-2
+  - Murata:LBUA0ZZ2HQ
+  - Murata:LBUA5QJ2AB-828
+  functions:
+    uwb_soc: 4
+    antenna: 3
+    ble_soc: 3
+    crystal_oscillator: 3
+    filter_saw_baw: 2
+    env_sensor: 1
+    pol_buck: 1
+  confirmed:
+  - uwb_soc
+  - ble_soc
+  - antenna
+  - crystal_oscillator
+  suggested:
+  - fn: filter_saw_baw
+    n: 2
+  anchors: []
+- name: UWB positioning for mobile robots and drones (AGV / AMR navigation, follow-me, return to base, landing where GPS is
+    missing) (after MobileKnowledge)
+  key: uwb-positioning-for-mobile-robots-and-drones-agv-amr-navigation-follow-me-return
+  n: 5
+  designs:
+  - MobileKnowledge:MK-UWB-KIT-ROBOTICS
+  - Renesas:WC-autonomous-mobile-robot-amr
+  - Renesas:WC-unmanned-aerial-vehicle-uav
+  - Infineon:AIROC-UWB-TSL100
+  - MobileKnowledge:MK-UWB-KIT-RTLS-2
+  functions:
+    ble_soc: 4
+    antenna: 3
+    soc: 3
+    uwb_soc: 3
+    gate_driver: 2
+    half_bridge_driver: 2
+    mcu: 2
+    motor_controller: 2
+    pmic: 2
+    pol_buck: 2
+    power_fets: 2
+    wifi_soc: 2
+    battery_monitor: 1
+    clock_generator: 1
+    crystal_oscillator: 1
+    nfc_frontend: 1
+    rs485_transceiver: 1
+  confirmed:
+  - soc
+  - ble_soc
+  - uwb_soc
+  - antenna
+  - pol_buck
+  suggested:
+  - fn: gate_driver
+    n: 2
+  - fn: half_bridge_driver
+    n: 2
+  - fn: mcu
+    n: 2
+  - fn: motor_controller
+    n: 2
+  - fn: pmic
+    n: 2
+  - fn: power_fets
+    n: 2
+  - fn: wifi_soc
+    n: 2
+  anchors: []
+- name: Tap-free payment and store access with UWB (payment terminal with a UWB reader, phone as credential) (after FiRa)
+  key: tap-free-payment-and-store-access-with-uwb-payment-terminal-with-a-uwb-reader-ph
+  n: 0
+  designs: []
+  functions: {}
+  confirmed: []
+  suggested: []
+  anchors: []
+- name: Sports player tracking with UWB (wearable tags, arena anchors, real-time server) (after KINEXON Sports)
+  key: sports-player-tracking-with-uwb-wearable-tags-arena-anchors-real-time-server-aft
+  n: 2
+  designs:
+  - Murata:LBUA2ZZ2DK
+  - Murata:LBUA0ZZ2HQ
+  functions:
+    antenna: 2
+    crystal_oscillator: 2
+    uwb_soc: 2
+    ble_soc: 1
+    env_sensor: 1
+    filter_saw_baw: 1
+  confirmed:
+  - uwb_soc
+  - env_sensor
+  - antenna
+  - crystal_oscillator
   suggested: []
   anchors: []

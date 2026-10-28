@@ -1,5 +1,6 @@
 {% raw %}<h1>Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits</h1>
 <p class="meta">23 Oct 2026 · Research topic asked by the owner: “I would like a research topic for hot-swap controllers in automotive. Are there any known pain points in having to get near 800 V and be able to safely plug something in or out?” · built from BizDev data (parts database, Skyworks catalogue, block-diagram library, library topic on traction-inverter isolation, cached Skyworks app notes AN1052 and AN1456) and four public TI pages read on 23 Oct 2026. Standards are paid and were not read: they are summarised at the level the owner asked for. Our own reasoning is marked “est”. All sources: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
+<p class="meta"><b>Expanded 28 Oct 2026</b> at the owner's request: “Can you take that same report and expand it a bit more in terms of similarities between eFuses and hot swap controllers for cars and data centres?” · new section <a href="#applications-in-depth">Cars and data centres: the same problem at two scales</a>, built from BizDev data (Skyworks and Qorvo catalogues, gap and technology data) and public TI, Infineon, NVIDIA and Open Compute Project pages read on 28 Oct 2026.</p>
 
 {% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
 <section class="brief" aria-label="Summary">
@@ -11,6 +12,7 @@
     <li><b>Where we fit:</b> our <b>Si875x isolated FET driver</b> builds exactly such solid-state relays without a floating supply (AN1052), but only at <b>2.5 kVrms in a narrow SOIC-8</b>; TI's equivalent, TPSI3050-Q1, is <b>5 kVrms reinforced, 1000 Vrms working, automotive, $2.30 at 1k</b>. Around it we have the full set: isolated gate drivers with fast short-circuit detection (Si828x, Si829x), isolated current and voltage sensing (Si89xx), isolators (Si86xx) and isolated bias (Si88xx).</li>
     <li><b>Data centers (the owner's earlier remark):</b> the same problem appears in 48 V racks, where hot-swap controllers and eFuses are mature, and in the new <b>800 V DC racks</b> (NVIDIA from 2027), where boards really are plugged in live; TI already shows an “800 V hot-swap controller” in its data-center line-up. The car and the data center need the same building blocks (est).</li>
     <li><b>Next step (feasibility 2):</b> a reinforced, automotive successor of Si875x (5 kVrms, SSO-8, higher gate drive, fault feedback) sold as a <b>solid-state pre-charge and disconnect set</b> with our gate drivers and Si89xx sensing, for 800 V cars and 800 V DC racks.</li>
+    <li><b>Cars and data centres (expanded 28 Oct):</b> eFuses and hot-swap controllers do the same four jobs in both (limit inrush, protect the switch, cut a short in microseconds, report). They differ in what they protect (the wire in a car, the FET and the uptime in a rack), in the bus (SPI vs PMBus) and in the paperwork (AEC-Q100 and ISO 26262 vs UL 2367 and IEC 62368). A common platform makes sense for us <b>at 800 V</b>, where both need our isolated driver and sensing; <b>at 12–48 V</b> it would start from the eFuse inside Qorvo's power-loss-protection ICs and is not proven yet (est). See <a href="#applications-in-depth">the new section</a>.</li>
   </ol>
 </section>
 
@@ -23,7 +25,7 @@
     <tr><td>Isolated gate driver for SiC pre-charge or disconnect switches</td><td><span class="pill have">yes</span> Si828x (DESAT), Si829x (ASIL D), Si823x</td><td>TI UCC217xx, Infineon EiceDRIVER, ADI, ST, NXP</td></tr>
     <tr><td>Isolated current and voltage sensing (inrush, over-current, DC-link voltage)</td><td><span class="pill have">yes</span> <a href="/find?q=SI8921BD-AS4">Si8921BD-AS4</a>, Si8941, <a href="/find?q=SI8931D-AS4">Si8931D-AS4</a> (5 kVrms, automotive)</td><td>TI AMC13xx / AMC33xx, TMCS1123 (Hall); ADI; LEM modules</td></tr>
     <tr><td>Isolator and isolated bias for the controller</td><td><span class="pill have">yes</span> Si86xx, Si88xx (automotive), Si86Px (integrated power, samples)</td><td>TI ISO77xx / ISOW, UCC14130-Q1; ADI isoPower</td></tr>
-    <tr><td>Hot-swap / eFuse controller (12–80 V)</td><td><span class="pill none">no</span></td><td>TI, ADI, Infineon, ST, onsemi, MPS (not read)</td></tr>
+    <tr><td>Hot-swap / eFuse controller (12–80 V)</td><td><span class="pill part">eFuse block only, ≤18 V, not automotive</span> inside Qorvo <a href="/find?q=ACT4910">ACT4910</a> / <a href="/find?q=ACT85610">ACT85610</a> power-loss-protection ICs; no standalone eFuse or 48 V hot-swap controller (see <a href="#ours-both">section 2b</a>)</td><td>TI (TPS25985, TPS1685 / TPS1689, LM5066H2, TPS2HCS10-Q1), Infineon (XDP, PROFET / SPOC Wire Guard), ADI, ST, onsemi, MPS</td></tr>
     <tr><td>Contactors, pyro fuses, fuses</td><td><span class="pill none">not our field</span></td><td>TE, Sensata, Panasonic, Littelfuse, Eaton, Autoliv (not read)</td></tr>
   </tbody>
 </table></div>
@@ -74,6 +76,97 @@
 </ul>
 <p class="rpt-thread"><b>For the decision:</b> Pre-charge in the battery junction box and the charger is the first socket to ask about; 800 V DC racks and storage use the same set, so one part could serve both (est).</p>
 
+<section id="applications-in-depth">
+<h2>2b. Cars and data centres: the same problem at two scales</h2>
+<p class="small muted">Applications in depth, added 28 Oct 2026 for the owner's “expand” request. Sources and figures: background notes, sections 7–9.</p>
+<p>An eFuse and a hot-swap controller do one job: let power into a load gently, cut it fast when something goes wrong, and say what happened. The car and the data centre both climb the same voltage ladder, 12 V → 48 V → 800 V, for the same reason (more power through less copper), and at each step the protection part changes in the same way. NVIDIA says so itself: electric cars and solar “have already embraced 800 VDC”, and their parts and practices can be adapted for the data centre.</p>
+
+<h3 id="ladder">The voltage ladder in both markets</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Level</th><th scope="col">Car</th><th scope="col">Data centre</th><th scope="col">Protection part today</th></tr></thead>
+  <tbody>
+    <tr><td>12 V</td><td>Zonal controllers and the power box: <b>smart fuses</b> (eFuse high-side switches) replace melting fuses and relays, with an I²t curve that protects the wire harness, SPI diagnostics and a low-current sleep mode for parked loads</td><td>Server board and GPU tray input on a 12 V backplane: <b>eFuses</b> up to 60 A each, stacked in parallel for several kW; SSDs with <b>power-loss protection</b> (hold-up energy when the input fails)</td><td>Both: integrated eFuse (switch + controller in one chip)</td></tr>
+    <tr><td>48 V (car) / 48–54 V (rack)</td><td>48 V board net: eFuse <b>gate drivers</b> with external back-to-back MOSFETs (20–70 V, SPI, ISO 26262), 100 V high-side drivers with pre-charge</td><td>OCP Open Rack v3 48 V busbar; NVIDIA GB200 / GB300 racks at 54 V DC; 5–6 kW per board. <b>Hot-swap controllers</b> with external FETs and PMBus, and the first 48 V eFuses (TI TPS1685 / TPS1689, 20 A, stackable; Infineon XDP)</td><td>Car: smart gate driver + FETs. Rack: hot-swap controller or 80 V eFuse</td></tr>
+    <tr><td>400–800 V</td><td>Battery pack: contactors, pre-charge, insulation monitor (sections 1–3 above); solid-state pre-charge and disconnect coming</td><td>800 V DC racks (NVIDIA Kyber from 2027) and ±400 V racks (OCP Mt. Diablo and Diablo 400): the tray is <b>really hot-plugged at 800 V</b>; TI's LMI800PS isolated hot-swap controller drives SiC FETs across a 5 kVrms barrier</td><td>Both: SiC switch + <b>isolated driver</b> + <b>isolated sensing</b>: our technology</td></tr>
+  </tbody>
+</table></div>
+
+<h3 id="side-by-side">Side by side: functions and specs</h3>
+<div class="wrap"><table class="small" id="efuse-car-dc-table">
+  <thead><tr><th scope="col">Function</th><th scope="col">Car (12 V / 48 V, and 800 V)</th><th scope="col">Data centre (12 V / 48–54 V, and 800 V)</th><th scope="col">Same or different</th></tr></thead>
+  <tbody>
+    <tr><td>Inrush control and dV/dt</td><td>Capacitive-charging mode in zonal eFuses (constant current or fixed dV/dt for ECU input capacitors); 800 V: pre-charge resistor or active pre-charge</td><td>Adjustable output slew rate (dV/dt pin) on every eFuse and hot-swap controller; 800 V: soft start with the SiC FET in linear mode</td><td><span class="pill have">same</span> same circuit; the rack has far bigger output capacitors</td></tr>
+    <tr><td>FET safe operating area (SOA) and timer</td><td>Overload is handled by the I²t fuse curve (nominal current, I²t threshold, fixed-delay and immediate trip); the switch rarely runs in linear mode for long (est)</td><td>Central: power limit and fault timer keep the FET inside its SOA during start-up into large capacitors (TPS1685 rated 0.7 W√s, TPS25985 12 W√s; dual-gate LM5066H2 uses one strong-SOA FET plus low-resistance FETs; Infineon XDP710 “SOA current control”)</td><td><span class="pill part">differs</span> the car protects the <b>wire</b>, the rack protects the <b>FET</b> and the uptime</td></tr>
+    <tr><td>Current sensing and accuracy</td><td>Integrated ADC read over SPI (TPS2HCS10-Q1); external shunt ±2 % at 30 mV (TPS4811-Q1); at 800 V isolated amplifiers (our Si89xx)</td><td>Analog IMON &lt;1–3 % (TPS1689, TPS1685), ±1.4 % (TPS25985); digital V ±0.5 %, I and P ±2 %, energy ±5 % (XDP710)</td><td><span class="pill have">same</span> same amplifier; the rack asks for tighter digital power and energy readings</td></tr>
+    <tr><td>Fault response time</td><td>Short circuit 1.2–4 µs (TPS4811-Q1, TPS1213-Q1); overload by I²t in milliseconds to seconds, matched to the wire; 800 V: SiC driver short detection well under 1 µs</td><td>Fast trip &lt;200 ns (TPS25985); circuit breaker with an adjustable transient-overcurrent timer for GPU load peaks</td><td><span class="pill have">same</span> µs for shorts; the overload rule differs (wire heat vs GPU peaks)</td></tr>
+    <tr><td>Latch vs auto-retry</td><td>The microcontroller decides over SPI; persistent overload is blocked so a damaged wire is not re-heated; load shedding by priority (Infineon)</td><td>Pin- or PMBus-selectable latch-off or auto-retry (TPS1685, TPS1689, TPS25985, XDP710); black-box fault recording</td><td><span class="pill have">same</span> both offer both; the decision sits in software in the car, in a pin or register in the rack</td></tr>
+    <tr><td>Reverse current blocking</td><td>Reverse battery (−30 to −40 V on TI 48 V / 12 V drivers); back-to-back MOSFETs (Infineon 2ED4820-EM)</td><td>“Reverse current blocking always” with back-to-back FETs (TPS25947, −15 V); stops a dead supply pulling from the bus</td><td><span class="pill have">same</span> same back-to-back FET; different reason (wrong battery vs failed supply)</td></tr>
+    <tr><td>Ideal diode / ORing</td><td>Ideal-diode controllers for redundant supplies and reverse battery (LM74700-Q1: 3.2–65 V, −65 V, charge pump, &lt;0.75 µs reverse blocking)</td><td>ORing of redundant power supplies and the battery backup unit (OCP BBU)</td><td><span class="pill have">same</span> same controller type</td></tr>
+    <tr><td>Telemetry</td><td>SPI with diagnostics: open load, short to battery, current, voltage, temperature; feeds ISO 26262 safety mechanisms</td><td>PMBus (PMBus 1.3 at 1 MHz on XDP710): V, I, P, energy, temperature, fault log; feeds rack power management</td><td><span class="pill part">differs</span> different bus, nearly the same data</td></tr>
+    <tr><td>Functional safety and reliability</td><td>ISO 26262 (Infineon: every automotive eFuse developed as a safety element; TI 48 V drivers “functional-safety capable”); AEC-Q100 grade 1 (−40 to 125 °C); 36 V load dump; ISO 7637 transients</td><td>Uptime: hot-plug without shutting the rack down; UL 2367 and IEC 62368 recognition (TPS25947); IPC-9592B spacing; 800 V: reinforced insulation, 3,050 m altitude, discharge below 120 V within 2 s</td><td><span class="pill part">differs</span> the car certifies safety, the rack certifies uptime and electrical safety</td></tr>
+    <tr><td>Voltage classes</td><td>12 V (load dump to about 36 V), 48 V (to 70 V on gate drivers, 100 V abs max), 400–800 V</td><td>12 V (4.5–16 V), 48–54 V (9–80 V eFuses), ±400 V / 800 V</td><td><span class="pill have">same</span> the same ladder</td></tr>
+    <tr><td>Standards</td><td>AEC-Q100, ISO 26262, ISO 7637, ISO 6469-3, ISO 21498; LV 148 for 48 V (not read)</td><td>OCP Open Rack v3, Mt. Diablo / Diablo 400 (±400 V); UL 2367, IEC 62368-1; PMBus</td><td><span class="pill part">differs</span> no overlap</td></tr>
+    <tr><td>Isolation at 800 V</td><td>Reinforced isolated switch driver (TI TPSI3050-Q1, 5 kVrms) for pre-charge and disconnect</td><td>Isolated hot-swap controller (TI LMI800PS: 5 kVrms, ≥8 mm creepage, 10 kV surge) driving SiC (18 V gate) or SiC cascode JFETs (12 V gate)</td><td><span class="pill have">same</span> the same barrier and the same jobs</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Reading the table (est): eight of twelve rows are the same circuit. What differs is what is protected, which bus reports it and which papers the part needs.</p>
+
+<h3 id="shared">Shared technology: where one design could serve both markets</h3>
+<p><b>IP blocks that carry over (est):</b></p>
+<ul>
+  <li><b>Current-sense amplifier</b> (high-side, 25–30 mV across a shunt) with a fast comparator for short-circuit trips: the same in a zonal eFuse, a 48 V hot-swap controller and, behind a barrier, at 800 V.</li>
+  <li><b>SOA-aware gate control:</b> dV/dt or current-limited start-up, power limit, fault timer, and the I²t integrator (a digital version of the same timer).</li>
+  <li><b>Charge pump</b> for an N-channel FET above the supply (11–12 V pumps in TI's automotive drivers; also inside any integrated high-side eFuse).</li>
+  <li><b>ADC plus a small digital core:</b> it runs the I²t curve in a car and the PMBus telemetry and fault log in a rack; only the interface on top differs.</li>
+  <li><b>Isolated gate drive with its own floating supply at 800 V:</b> the job of our Si875x, TI's TPSI3050-Q1 in the car and TI's LMI800PS in the rack.</li>
+  <li><b>Isolation for high-voltage sensing</b> and signals: isolated amplifiers, digital isolators and isolated DC-DC bias.</li>
+</ul>
+<p><b>What each market adds on top:</b></p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Car adds</th><th scope="col">Data centre adds</th></tr></thead>
+  <tbody>
+    <tr><td>AEC-Q100 grade 1, PPAP, long supply</td><td>High current: 20–80 A per chip, stacking with current sharing</td></tr>
+    <tr><td>ISO 26262 process and diagnostics (ASIL), SPI</td><td>PMBus, black-box fault log, energy metering</td></tr>
+    <tr><td>Load dump, reverse battery, ISO 7637 transients</td><td>UL 2367 / IEC 62368 recognition; IPC-9592B spacing</td></tr>
+    <tr><td>Microamp sleep current for parked loads</td><td>Large-capacitor start-up and GPU load peaks (strong SOA)</td></tr>
+    <tr><td>I²t wire-protection curves</td><td>Power-loss protection for storage (hold-up)</td></tr>
+  </tbody>
+</table></div>
+<p class="small">So one silicon core could serve both (est); it would ship as two products: an automotive one with SPI and AEC-Q100 / ASIL, and a data-centre one with PMBus and a high-current package. TI already does this with separate families on shared blocks (TPS2HCS10-Q1 and TPS4811-Q1 for cars, TPS1685 / TPS1689 and LM5066H2 for racks).</p>
+
+<h3 id="ours-both">What Skyworks + Qorvo have, block by block</h3>
+<p class="small">From BizDev data first (Skyworks and Qorvo catalogues, gap data). “Depth” = how far our part goes for each market: <b>fits</b>, <b>part</b> (close, needs work) or <b>none</b>.</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">Our best part (automotive first)</th><th scope="col">Car depth</th><th scope="col">Data-centre depth</th><th scope="col">Otherwise</th></tr></thead>
+  <tbody>
+    <tr><td>Integrated eFuse (switch + inrush, UV / OV / OC / short protection)</td><td>Qorvo <a href="/find?q=ACT4910">ACT4910</a> (2.7–18 V in, 24 V abs max, 17 mΩ, 10 A) and <a href="/find?q=ACT85610">ACT85610</a> (2.7–14 V, 20 V abs max, 10 A; eFuse, bucks and boost in one chip). No automotive grade</td><td><span class="pill none">none</span> not qualified; 36 V load dump is above its rating</td><td><span class="pill part">part</span> 12 V SSD and small boards yes; 12 V GPU trays need 60 A parts</td><td>Build: the site's gap data says “build – subset of PLP silicon” and ranks eFuse / hot-swap as our first gap (score 91). Qorvo's automotive 40 V buck <a href="/find?q=ACT4751M">ACT4751M</a> shows an automotive power flow at 40 V exists (est)</td></tr>
+    <tr><td>Hot-swap controller with external FET, SOA timer, 48–80 V</td><td>—</td><td><span class="pill none">none</span></td><td><span class="pill none">none</span></td><td>Nothing that fits: no 80–100 V controller in either catalogue; a controller (no power FET) avoids our missing power-FET technology (est)</td></tr>
+    <tr><td>Current sensing</td><td>Isolated: <a href="/find?q=SI8921BD-AS4">Si8921BD-AS4</a> (automotive, 5 kVrms), Si8921AB-AS (2.5 kVrms), Si8941 modulator. Non-isolated shunt amplifier: none</td><td><span class="pill have">fits</span> at 400–800 V; overkill at 12–48 V</td><td><span class="pill have">fits</span> at 800 V; none at 12–54 V</td><td>At 12–54 V the amplifier belongs inside the eFuse; see the <a href="/business/reports/iso-current-sense-charging">current-sensing case</a></td></tr>
+    <tr><td>SOA-aware gate control, charge pump</td><td>Inside the ACT4910 / ACT85610 eFuse (est: an integrated high-side switch needs a gate pump); Si875x makes its own 8–12 V gate drive across the barrier</td><td><span class="pill part">part</span></td><td><span class="pill part">part</span></td><td>Reuse from the PLP silicon (est); confirm with the Qorvo power team</td></tr>
+    <tr><td>Isolated switch / gate drive at 800 V</td><td><a href="/find?q=Si8751AB-AS">Si8751AB-AS</a> / Si8752AB-AS (automotive, 2.5 kVrms, 8–12 V); Si828x (automotive, DESAT, 4 A); Si829x (automotive, 6 kV, SPI, designed to ISO 26262)</td><td><span class="pill part">part</span> Si875x basic only; Si828x / Si829x fit the main SiC switches</td><td><span class="pill part">part</span> 8–12 V suits SiC cascode JFETs (12 V), not SiC MOSFETs (18 V); LMI800PS is 5 kVrms reinforced</td><td>Bundle: reinforced Si875x successor with 12–18 V drive + Si828x, as in section 1</td></tr>
+    <tr><td>Isolation for HV sensing, signals and bias</td><td>Si86xx digital isolators (automotive, e.g. Si86S600AC-AS, 3.75 kVrms); <a href="/find?q=Si88620BC-AS">Si88620BC-AS</a> isolator with on-chip DC-DC (automotive); Si86Px with integrated power (samples)</td><td><span class="pill have">fits</span></td><td><span class="pill have">fits</span> at 800 V; check 8 mm creepage and altitude (see the <a href="/business/reports/hv-extra-wide-isolation">extra-wide isolation case</a>)</td><td>—</td></tr>
+    <tr><td>Telemetry: PMBus / SPI diagnostics</td><td>SPI with safety diagnostics only in Si829x gate drivers; ACT PMICs use I²C (46 parts); no PMBus part in either catalogue</td><td><span class="pill part">part</span></td><td><span class="pill none">none</span></td><td>Build: PMBus is a digital block; the gap data lists “standalone eFuse / hot-swap controller with telemetry” as missing</td></tr>
+    <tr><td>Ideal diode / ORing, reverse blocking</td><td>—</td><td><span class="pill none">none</span></td><td><span class="pill none">none</span></td><td>Nothing that fits: our technology data says neither company has a line; it shares the charge pump and gate drive with eFuse work (est)</td></tr>
+    <tr><td>Power-loss protection (hold-up for storage)</td><td>Qorvo ACT4910 / ACT4911 / ACT85610 / ACT85611 (boost charges a 5–36 V storage capacitor, buck back-up)</td><td><span class="pill none">none</span> not qualified; car data loggers and ADAS storage need hold-up too (est)</td><td><span class="pill have">fits</span> enterprise SSDs (our strongest data-centre block)</td><td>—</td></tr>
+    <tr><td>Power switch (SiC / GaN / power MOSFET)</td><td>—</td><td><span class="pill none">none</span></td><td><span class="pill none">none</span></td><td>Nothing that fits: Qorvo's SiC (UnitedSiC) went to onsemi in Jan 2025; Qorvo GaN is for RF. Partner with SiC makers</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Summary (est): <b>strong at 800 V</b> (isolated drive, isolated sensing, isolators, isolated bias) in both markets; <b>one real asset at 12 V in data centres</b> (the PLP eFuse); <b>nothing at 48 V</b> in either market (no 80 V controller, no PMBus, no ideal diode, no power FETs).</p>
+
+<h3 id="platform">Opportunity: one eFuse / hot-swap platform for both?</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Platform</th><th scope="col">Makes sense?</th><th scope="col">Confidence</th><th scope="col">Why</th></tr></thead>
+  <tbody>
+    <tr><td><b>800 V isolated set</b>: car pre-charge / disconnect and rack hot-swap</td><td><b>Yes</b> (est)</td><td>med</td><td>Same barrier, same SiC switch, same sensing in both. Isolated sensing, isolators and isolated bias are ours today, the driver needs a reinforced successor and the SiC switch comes from partners; TI shows the same split (TPSI3050-Q1 in cars, LMI800PS in racks). One reinforced Si875x successor with 12–18 V drive could cover both gate types</td></tr>
+    <tr><td><b>12 V data-centre eFuse</b> from the Qorvo PLP silicon</td><td>Probably (est)</td><td>low</td><td>Short path in our gap data; but the market is crowded (11 named vendors) and high-current trays need 60 A parts</td></tr>
+    <tr><td><b>48 V car + 48–54 V rack eFuse / hot-swap controller</b></td><td>Not yet</td><td>low</td><td>Needs an 80–100 V process, PMBus and SPI, AEC-Q100 and ASIL at once; none of it is ours. The shared blocks are real (about 60–70 % of the core, est) but the market is the most crowded of the three</td></tr>
+    <tr><td>Market size of 48 V car eFuses and 48–54 V rack hot-swap</td><td colspan="3">Not Enough Data: no public market figures read in this run; a volume per rack and per 48 V car would settle it</td></tr>
+  </tbody>
+</table></div>
+<p><b>Next steps:</b> (1) ask the isolation BU for the reinforced Si875x successor with 12–18 V gate drive, so it fits SiC MOSFETs in cars and racks; (2) ask the Qorvo power team whether the PLP eFuse block can become a standalone 12 V eFuse and how far its process goes in voltage; (3) ask one 800 V rack power maker and one battery-junction-box maker which isolated driver and sensing they use.</p>
+<p class="rpt-thread"><b>For the decision:</b> The common platform is the 800 V isolated set, not a 48 V eFuse: build the reinforced Si875x successor so it serves both car pre-charge and rack hot-swap, and treat a Qorvo PLP-based eFuse as a separate, later 12 V data-centre step (est).</p>
+</section>
+
 <h2>3. Market trend and technology</h2>
 <h3>400 V and 800 V architectures</h3>
 <p>Most EVs use a 400 V class battery (about 250–450 V); a growing share uses 800 V class (about 550–900 V) for faster charging and thinner cables, usually with SiC in the inverter. A fully charged “800 V” pack sits near 900 V, and fast chargers go to 1000 V. Every high-voltage component has capacitors on its input, so every switch-on is a capacitor charge (est, common knowledge; not researched in this run).</p>
@@ -97,7 +190,7 @@
 </table></div>
 
 <h3>eFuses and hot-swap controllers</h3>
-<p>A hot-swap controller limits the inrush when a board is plugged into a live bus and switches it off on a short; an eFuse puts the switch and the controller in one part. Both exist up to about 80 V (12 V and 48 V cars, 48 V racks) and are not isolated. Above that, the same job is built from discrete SiC switches, an isolated driver, isolated sensing and a controller: a “solid-state circuit breaker” (est). TI announced an 800 V hot-swap controller for data centers (eeNews Europe, Mar 2026); details not read.</p>
+<p>A hot-swap controller limits the inrush when a board is plugged into a live bus and switches it off on a short; an eFuse puts the switch and the controller in one part. Both exist up to about 80 V (12 V and 48 V cars, 48 V racks) and are not isolated. Above that, the same job is built from discrete SiC switches, an isolated driver, isolated sensing and a controller: a “solid-state circuit breaker” (est). TI announced an 800 V hot-swap controller for data centers (eeNews Europe, Mar 2026); details not read. Update 28 Oct 2026: TI's white paper STDA058 names it LMI800PS, an isolated hot-swap controller with integrated power and signal isolation (5 kVrms, ≥8 mm creepage), usable on the high or the low rail; the car / data-centre comparison is in <a href="#applications-in-depth">section 2b</a>.</p>
 
 <h3>Isolation monitoring</h3>
 <p>The high-voltage system floats against the chassis, so a single insulation fault is not dangerous yet; the car must find it before a second one makes it so. An insulation monitor switches known resistors between the high-voltage rails and the chassis and measures the voltage shift; the switches must stand the full voltage plus test pulses. TI builds this with TPSI2140-Q1 (1200 V, 50 mA, 2 mA avalanche for HiPot and charger surge tests) and isolated amplifiers (TIDA-01513, TIDA-010232).</p>
@@ -137,11 +230,12 @@
 <ul>
   <li>Can the Si875x power transfer be made reinforced (5 kVrms) with a higher gate voltage, and at what cost?</li>
   <li>Do OEMs and Tier-1s plan solid-state pre-charge or battery disconnects for 800 V platforms, and when?</li>
-  <li>What does an 800 V DC rack slot use for hot-plug today, and is the driver isolated?</li>
+  <li>What does an 800 V DC rack slot use for hot-plug today, and is the driver isolated? <span class="muted">Partly answered 28 Oct: TI's LMI800PS and its discrete version (isolated gate drivers, sense amplifiers, digital isolators, auxiliary supply) are isolated; what the first racks use is still open.</span></li>
+  <li>Can the eFuse block of Qorvo's power-loss-protection ICs be sold on its own, and how far does its process go in voltage (12 V only, or 48–80 V)?</li>
 </ul>
 <p class="rpt-thread"><b>For the decision:</b> The first two questions are the needed-now items; the 800 V rack question can wait until the car answer is in.</p>
 
 {% endraw %}{% include "business/_steps_end.html" %}{% raw %}
 <h2>Sources</h2>
-<p class="small">TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); Skyworks AN1052 (Si875x) and AN1456 (data-center creepage); BizDev parts database, Skyworks catalogue and block-diagram library; library topic on traction-inverter isolation; NVIDIA technical blog (20 May 2025) and eeNews Europe (19 Mar 2026) as recorded in the extra-wide isolation case. Every figure with its link and confidence: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
+<p class="small">TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); Skyworks AN1052 (Si875x) and AN1456 (data-center creepage); BizDev parts database, Skyworks catalogue and block-diagram library; library topic on traction-inverter isolation; NVIDIA technical blog (20 May 2025) and eeNews Europe (19 Mar 2026) as recorded in the extra-wide isolation case. Added 28 Oct 2026 (section 2b): TI white paper STDA058 (800 V hot-swap, LMI800PS), TI SSZTD31 and SDAA247 (eFuses replacing melting fuses in cars), TI product pages TPS1685, TPS1689, TPS25985, TPS25947, TPS2HCS10-Q1, TPS4811-Q1, TPS1213-Q1 and LM74700-Q1; Infineon eFuse, XDP710-001 and 2ED4820-EM pages; NVIDIA technical blog (13 Oct 2025); Open Compute Project Open Rack v3 and Rack &amp; Power pages; Skyworks and Qorvo catalogues and gap data in BizDev. Every figure with its link and confidence: <a href="/business/reports/auto-hv-hot-swap/background">background notes</a>.</p>
 {% endraw %}

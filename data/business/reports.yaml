@@ -354,20 +354,21 @@ reports:
     - label: Acoustic filters and duplexers
       href: /rf-notes#acoustic_filters_duplexers
   - slug: auto-hv-hot-swap
-    gist: "Cars never hot-plug at 800 V; pre-charge and disconnect switches do the job, and a reinforced Si875x successor could win those sockets."
+    gist: "Cars and data centres need the same eFuse and hot-swap jobs; at 800 V one reinforced Si875x successor could serve both (est)."
     abstract:
-      - "Contactors, pre-charge and insulation monitors make 400–800 V safe; isolated drivers and SiC switches do the work above 80 V."
-      - "TI leads with TPSI3050-Q1; our Si875x does the same job but only with basic isolation."
-      - "Decide whether to ask the BU for a reinforced Si875x successor sold as a pre-charge and disconnect set."
+      - "Cars and racks climb the same 12 V, 48 V, 800 V ladder; inrush, SOA, fast trip and reporting work alike, buses and certificates differ."
+      - "We are strong at 800 V (isolated drive and sensing), have a 12 V eFuse inside Qorvo's PLP ICs and nothing at 48 V."
+      - "Decide whether to ask the BU for a reinforced Si875x successor sold as an 800 V pre-charge and hot-swap set for both markets."
     title: 'Hot-swap at 400 V and 800 V in the car: pre-charge, DC arcs, solid-state switches and where our isolation fits'
     kind: report
     area: Power & isolation
     app_type: Automotive
     feasibility: 2
     feasibility_why: "The next step is a reinforced successor of our Si875x isolated FET driver: a new chip from isolation and driver technology we already have"
-    date: 2026-10-23
+    date: 2026-10-28
+    expanded: 2026-10-28
     status: draft
-    see_also: [iso-current-sense-charging, hv-extra-wide-isolation]
+    see_also: [iso-current-sense-charging, hv-extra-wide-isolation, iso7821dww-isolation]
     question: Are there known pain points in getting near 800 V in a car and being able to plug something in or out safely, who
       makes the parts that solve them (hot-swap controllers, eFuses, contactors, solid-state switches, insulation monitors), and
       where do Skyworks' isolated drivers, isolators and isolated sensing fit?
@@ -379,7 +380,12 @@ reports:
       sensing. TI leads with TPSI3050-Q1 (reinforced isolated switch driver, $2.30 at 1k, active pre-charge design TIDA-050063)
       and TPSI2140-Q1 (1200 V relay for insulation monitoring, $2.90). Our Si875x does the same job but only at 2.5 kVrms. Data
       centers face the same problem in 800 V DC racks (NVIDIA 2027; TI shows an 800 V hot-swap controller). Next step: a
-      reinforced Si875x successor and a solid-state pre-charge set with our gate drivers and Si89xx sensing.'
+      reinforced Si875x successor and a solid-state pre-charge set with our gate drivers and Si89xx sensing. Expanded 28 Oct 2026
+      (section 2b): eFuses and hot-swap controllers in cars (12 V and 48 V zonal smart fuses with I²t wire protection, SPI and
+      ISO 26262; 400–800 V pre-charge) and data centres (12 V board eFuses, 48–54 V OCP and NVIDIA racks with PMBus, 800 V DC
+      racks with TI''s isolated LMI800PS, power-loss protection for SSDs) do the same jobs; they differ in what they protect,
+      the bus and the certificates. We are strong at 800 V, have a 12 V eFuse inside Qorvo''s ACT4910 / ACT85610 PLP ICs and
+      nothing at 48 V; a common platform makes sense at 800 V, not yet at 48 V (est).'
     tags:
     - hot-swap
     - eFuse
@@ -399,34 +405,50 @@ reports:
     - 800 V
     - 800 V DC
     - data center
+    - zonal
+    - smart fuse
+    - I2t
+    - PMBus
+    - OCP ORv3
+    - LMI800PS
+    - power-loss protection
+    - ACT4910
+    - ACT85610
     sources: BizDev parts database, Skyworks catalogue, block-diagram library and library topic on traction-inverter isolation;
       Skyworks AN1052 and AN1456; TI product pages TPSI3050-Q1 and TPSI2140-Q1 (read 23 Oct 2026); NVIDIA and eeNews Europe pages
-      recorded for the extra-wide isolation case; standards summarised, not read
-    decision: Should we build a reinforced successor to Si875x and sell it as an 800 V solid-state pre-charge and disconnect
-      set with our gate drivers and Si89xx sensing?
+      recorded for the extra-wide isolation case; standards summarised, not read. Expansion of 28 Oct 2026 - TI STDA058, SSZTD31,
+      SDAA247 and eight TI product pages; Infineon eFuse, XDP710-001 and 2ED4820-EM pages; NVIDIA technical blog (13 Oct 2025);
+      OCP Open Rack v3 and Rack & Power pages; Qorvo and Skyworks catalogues and gap data in BizDev
+    decision: Should we build a reinforced successor to Si875x and sell it as an 800 V solid-state pre-charge and hot-swap
+      set for cars and data centres, with our gate drivers and Si89xx sensing?
     answer:
-      text: Probably yes, aimed at pre-charge, active discharge and insulation monitoring first, not at replacing the main
-        contactors. TI is there first, so it pays only if the BU can make the Si875x barrier reinforced at a cost that lets
-        us price near TI's $2.30 (est).
+      text: Probably yes, as one 800 V platform for car pre-charge and disconnect and for 800 V rack hot-swap, with 12–18 V gate
+        drive for SiC; a common 48 V eFuse for both markets is not yet worth it, and a 12 V data-centre eFuse from Qorvo's PLP
+        silicon is a separate, later step. TI is there first, so it pays only if the BU can make the barrier reinforced at
+        a cost near TI's $2.30 (est).
       conf: low
     needed_now:
-    - 'Isolation BU: can the Si875x power transfer cross a reinforced 5 kVrms barrier with 10–15 V gate drive, and at what
-      cost?'
-    - 'One or two battery-junction-box or charger teams: do they plan solid-state pre-charge on 800 V platforms, and from
-      which year?'
-    - 'Sales or FAE: do customers already ask us for a TPSI3050-Q1 cross?'
-    say_externally: We see solid-state pre-charge and insulation monitoring starting to replace resistors and relays in 800
-      V cars and in 800 V DC racks. Skyworks already sells isolated FET drivers (Si875x), isolated gate drivers and isolated
-      current and voltage sensing for these circuits. We would like to learn how you plan pre-charge and disconnect on your
-      next 800 V platform, and what isolation rating you need.
+    - 'Isolation BU: can the Si875x power transfer cross a reinforced 5 kVrms barrier with 12–18 V gate drive (SiC MOSFETs need
+      18 V), and at what cost?'
+    - 'Qorvo power team: can the eFuse block of ACT4910 / ACT85610 be sold on its own, and how far does its process go in
+      voltage (12 V only, or 48–80 V)?'
+    - 'One battery-junction-box team and one 800 V rack power maker, through our FAE: which isolated driver and sensing do they
+      use for pre-charge and hot-swap, and from which year?'
+    say_externally: Cars and data centres now face the same protection job at 48 V and at 800 V, limiting inrush, cutting
+      a short in microseconds and reporting what happened. Skyworks sells isolated FET drivers (Si875x), isolated gate
+      drivers, isolated current and voltage sensing and isolators for the 800 V side, and power-loss-protection ICs with an
+      integrated eFuse for storage. We would like to learn how you protect and hot-plug your 48 V and 800 V boards, and which
+      isolation rating and telemetry you need.
     next_steps:
-    - what: Ask whether Si875x can be made reinforced (5 kVrms, SSO-8 or wide SOIC) with 10–15 V gate drive and fault feedback
+    - what: Ask whether Si875x can be made reinforced (5 kVrms, SSO-8 or wide SOIC) with 12–18 V gate drive and fault feedback,
+        for SiC switches in cars and in 800 V racks
       who: Isolation BU
-      why: Tells us whether feasibility 2 holds and what the part could cost against TPSI3050-Q1 at $2.30 (1k).
-    - what: Ask two battery-junction-box or on-board-charger teams how they pre-charge and monitor insulation on their next
-        800 V platform
-      who: Tier-1 BDU / OBC hardware lead, through our FAE
-      why: Shows whether solid-state pre-charge is planned, from which year, and which isolation and gate voltage they need.
+      why: Tells us whether feasibility 2 holds for both markets and what the part could cost against TPSI3050-Q1 at $2.30 (1k).
+    - what: Ask whether the eFuse block of the ACT4910 / ACT85610 power-loss-protection ICs can become a standalone 12 V
+        data-centre eFuse, and whether its process reaches 48–80 V
+      who: Qorvo power BU (power-loss-protection team)
+      why: Our gap data says "build - subset of PLP silicon"; this shows whether that reaches 12 V only or also the 48 V
+        car and rack market.
     - what: Size the isolated current sensing of the same set in the current-sensing case
       who: Daily run
       why: Hands the sensing half of the set to its own case, so the set can be priced as one.

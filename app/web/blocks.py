@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.models import AreaRequest, BlockDiagram, BlockFeedback
-from app.services import blocks, prelim, refdesigns, refmatch, schematic, vocab
+from app.services import blocks, prelim, qspice, refdesigns, refmatch, schematic, vocab
 from app.services import opportunity as op
 from app.web.routes import templates
 
@@ -227,6 +227,7 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None, wo
             "kb": refmatch.kb_view(tpl, blocks.counts(session)) if tpl else None,
             "ref_counts": refmatch.fn_counts(),
             "words": words,
+            "practice": qspice.practice_by_fn(),  # "Seen in practice (QSPICE forum)" per function (27 Oct 2026)
         },
     )
 

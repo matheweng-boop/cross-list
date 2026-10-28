@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>QSPICE library</h1>
+<p class="subtitle muted">What engineers work out with QSPICE, Qorvo's free circuit simulator: design threads from the
+  <a href="{{ meta.section or 'https://forum.qorvo.com/c/qspice/9' }}" target="_blank" rel="noopener noreferrer">QSPICE section of the Qorvo Tech Forum ↗</a>,
+  summarised in our own words (no user names), with what they teach about our block diagrams. Checked {{ meta.checked }}; the daily run adds new threads about weekly.
+  Part of <a href="/knowledge">General knowledge</a>.</p>
+
+<form method="get" action="/qspice" role="search" class="qs-ask" id="ask">
+  <label for="qs-q"><b>Ask</b> a question in plain words</label>
+  <div class="row"><input type="search" id="qs-q" name="q" value="{{ q }}" maxlength="300"
+    placeholder="e.g. timestep too small in my LLC" aria-label="Ask the QSPICE library">
+    {% if fn %}<input type="hidden" name="fn" value="{{ fn }}">{% endif %}<button>Ask</button></div>
+  <p class="small muted">Not AI: a keyword search over the threads, notes and how-tos below, best match first.{% if owner %} A question with no good match is kept for you (no names) and the daily run researches it.{% else %} Your questions are not stored.{% endif %}</p>
+</form>
+
+{% if q %}
+<section class="qs-results" aria-label="Answers">
+  {% if hits %}
+  {% if not answered %}<p class="banner">No good match yet.{% if stored %} Kept for the daily run to research.{% endif %} Closest items:</p>{% endif %}
+  <ol class="qs-hits">{% for h in hits %}
+    <li><span class="badge">{{ h.kind }}</span> <a href="{{ h.url }}"{% if h.url.startswith('http') %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ h.title }}{% if h.url.startswith('http') %} ↗{% endif %}</a>
+      <br><span class="small muted">{{ h.text|truncate(220) }}</span></li>{% endfor %}
+  </ol>
+  {% else %}<p class="banner">Nothing matched.{% if stored %} Kept for the daily run to research.{% endif %}</p>{% endif %}
+</section>
+{% endif %}
+
+<nav class="small qs-toc" aria-label="Sections"><a href="#threads">Design discussions</a> · <a href="#practice">Seen in practice</a> · <a href="#fixes">Common fixes</a> · <a href="#help">How-tos</a> · <a href="#models">Models for our parts</a>{% if owner %} · <a href="#unanswered">Unanswered questions</a>{% endif %}</nav>
+
+<h2 id="threads">Design discussions <small class="muted">{{ topics|length }}</small></h2>
+<p class="small">Filter by function:
+  <a href="/qspice#threads"{% if not fn %} aria-current="true" class="qs-on"{% endif %}>All</a>{% for f, l, n in fns %} ·
+  <a href="/qspice?fn={{ f }}#threads"{% if fn == f %} aria-current="true" class="qs-on"{% endif %}>{{ l }} ({{ n }})</a>{% endfor %}</p>
+<div class="qs-topics">{% for t in topics %}
+  <article class="qs-topic" id="t-{{ t.id }}">
+    <p><a href="{{ t.url }}" target="_blank" rel="noopener noreferrer"><b>{{ t.title }}</b> ↗</a> <small class="muted">· {{ t.date }}</small></p>
+    <p class="small"><b>Circuit:</b> {{ t.circuit }}</p>
+    <p class="small"><b>Problem:</b> {{ t.problem }}</p>
+    <p class="small"><b>Conclusion:</b> {{ t.fix }}</p>
+    <p class="small muted">{% for f in t.fns %}<a href="/qspice?fn={{ f }}#threads">{{ label(f) }}</a>{{ ' · ' if not loop.last }}{% endfor %}{% if t.parts %} · parts: {{ t.parts|join(', ') }}{% endif %}</p>
+  </article>{% endfor %}
+</div>
+
+<h2 id="practice">Seen in practice <small class="muted">for the block diagrams</small></h2>
+<p class="small muted">Circuit patterns that come back in several threads around one function. The block editor shows them on the block.</p>
+{% for n in practice %}
+<article class="qs-note" id="p-{{ n.id }}"><p><b>{{ label(n.fn) }}</b> <small class="muted">· {{ n.threads|length }} threads</small></p>
+  <p class="small">{{ n.text }}</p>
+  <p class="small muted">Threads: {% for t in n.threads %}<a href="{{ t.url }}" target="_blank" rel="noopener noreferrer">{{ t.title }} ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p></article>
+{% else %}<p class="small muted">None for this function.</p>{% endfor %}
+
+<h2 id="fixes">Common fixes</h2>
+{% for f in fixes %}
+<details class="qs-note" id="fix-{{ f.id }}"><summary><b>{{ f.title }}</b> <small class="muted">· {{ f.threads|length }} threads</small></summary>
+  <p class="small">{{ f.text }}</p>
+  <p class="small muted">Threads: {% for t in f.threads %}<a href="{{ t.url }}" target="_blank" rel="noopener noreferrer">{{ t.title }} ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p></details>
+{% endfor %}
+
+<h2 id="help">How-tos, commands and model syntax</h2>
+<p class="small muted">From the guide threads in the QSPICE section, in our own words. The official help ships with QSPICE (Help menu); qspice.com forwards to a Qorvo page we do not read.</p>
+{% for h in help %}
+<details class="qs-note" id="help-{{ h.id }}"><summary><b>{{ h.title }}</b> <small class="muted">· {{ h.kind }}</small></summary>
+  <p class="small">{{ h.text }}</p>
+  {% if h.commands %}<p class="small">{% for c in h.commands %}<code>{{ c }}</code>{{ ' ' if not loop.last }}{% endfor %}</p>{% endif %}
+  <p class="small muted">Source: {% for u in h.links %}<a href="{{ u }}" target="_blank" rel="noopener noreferrer">forum thread ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p></details>
+{% endfor %}
+
+<h2 id="models">Models for our parts</h2>
+<p class="small muted">Which Skyworks and Qorvo parts have a public SPICE or QSPICE model, from the data we already hold and the forum threads. Every other part: Not in our data.</p>
+<div class="table-wrap"><table class="small">
+  <thead><tr><th>Parts</th><th>Maker</th><th>Model</th><th>Where we found it</th></tr></thead>
+  <tbody>{% for m in models %}<tr><td>{{ m.parts }}</td><td>{{ m.vendor }}</td><td>{{ m.model }}</td><td>{% if m.url %}<a href="{{ m.url }}" target="_blank" rel="noopener noreferrer">{{ m.source }} ↗</a>{% else %}{{ m.source }}{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if former %}<h3 id="models-former">Former Qorvo (UnitedSiC, now onsemi): models built into QSPICE</h3>
+<p class="small muted">Not our parts any more; listed because QSPICE ships their models.</p>
+<ul class="small">{% for m in former %}<li>{{ m.parts }} · {{ m.model }} · <a href="{{ m.url }}" target="_blank" rel="noopener noreferrer">{{ m.source }} ↗</a></li>{% endfor %}</ul>{% endif %}
+
+{% if answers %}<h2 id="answers">Answer notes</h2>{% for a in answers %}
+<article class="qs-note" id="answer-{{ a.id }}"><p><b>{{ a.question }}</b> <small class="muted">· {{ a.date }}</small></p><p class="small">{{ a.text }}</p>
+  <p class="small muted">Sources: {% for u in a.links %}<a href="{{ u }}" target="_blank" rel="noopener noreferrer">thread ↗</a>{{ ' · ' if not loop.last }}{% endfor %}</p></article>{% endfor %}{% endif %}
+
+{% if owner %}
+<h2 id="unanswered">Unanswered questions <small class="muted">owner only</small></h2>
+<p class="small muted">Your questions with no good match (names removed, kept 12 months). The daily run researches them.</p>
+<ul class="small">{% for r in unanswered %}<li>{{ r.day.strftime('%d %b %Y') }}: {{ r.text }}</li>{% else %}<li class="muted">None.</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

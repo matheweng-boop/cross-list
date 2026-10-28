@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>AI services (later)</h1>
+<p class="subtitle muted">AI services we may want to run one day. None runs today: the site sends nothing to an AI service.
+  Each needs an API key and your approval of the data it would send out. The daily run adds one whenever you mention a future AI use.</p>
+<div class="table-wrap"><table class="small">
+  <thead><tr><th>Service</th><th>What it would do</th><th>Where</th><th>Data it would send out</th><th>Status</th><th>Needs</th><th>From</th></tr></thead>
+  <tbody>{% for s in d %}<tr id="{{ s.id }}">
+    <td><b>{{ s.name }}</b></td><td>{{ s.does }}</td><td>{{ s.where }}</td><td>{{ s.data_out }}</td>
+    <td><span class="badge">{{ status.get(s.status, s.status) }}</span></td><td>{{ s.needs }}</td>
+    <td class="muted">{{ s.added }}: “{{ s.quote }}”</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}
